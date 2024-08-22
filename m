@@ -1,80 +1,140 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D5D1D0DC7;
-	Thu, 22 Aug 2024 19:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A78417588
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 19:59:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724354971; cv=none; b=huMud2LxsW7IhzfRbFShc7ppl3ZG/tNvLct4aLGxH/4Ms/t39QDw9XTEVYjEMFq0uegmHRc/3DXm3sAYOOwGMCLHmw4gD3Tpbi8MON5r6tRBfdjJ5nlukCWmOzhR3zUNP83x2gcDTAngRfyi2OliElVQPCpZQULOim0uxIuBl/M=
+	t=1724356796; cv=none; b=NO7OmTzt5RC45sUcITgjNooDrl7wnJC+DTkiIKziYLiWkUIsjyURtb42eVTnPfvTfaHoXRx3xXVm3sCPLV4n7CliaG3A1jC6HqHAJOJzmENtk9IOYQrdI0kzC/xm1vRTJJLDUZFRsz/pQvLmQSNJalxzSg7tJDWvcRPO+GV2pZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724354971; c=relaxed/simple;
-	bh=9ZEgusTWJU2HXLnzHir15+nHfQOEL9J2dmjPlBk4gZ4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=kDgVgdBAyWKK2gVCJqtJJfHOWDkG2juaVCeYCuug5TytmDhz1CaxzBZKh7UsN8htL10qWQNTMFyigTYKaKPH21HBBS85PMAiqtAJpeNQAWCqsJX4UzqegmqdtJFL4ylqVeRMA6I3oq3loY2AGGkjTQZHG62zPBbbgWbUhOFlhiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Q80JPWcP; arc=none smtp.client-ip=199.89.1.12
+	s=arc-20240116; t=1724356796; c=relaxed/simple;
+	bh=nhVVotkjEidO4CY+SZ9H4P3QGraIgrfjAdA9kvwfBx4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BZ3Ii0DFpAPNexdAPNflSb7WShfHEcwOp1WpFOVKKnTNIZmK2/X41P3Vial6KFzxlxR+QSN35dqajSxxKF5AI5b9IebYPdFaEQb318nZZiSavOrKXCCYKCMF/XZybnLM5n1YFiv/fOpX7aQ8Huhxqv904NrHQg3JLwobKwqp3HY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=G4N/JgN+; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Q80JPWcP"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="G4N/JgN+"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WqYDT0MPfzlgVnK;
-	Thu, 22 Aug 2024 19:29:29 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WqYvZ2ssjz6ClY9K;
+	Thu, 22 Aug 2024 19:59:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724354964; x=1726946965; bh=9ZEgusTWJU2HXLnzHir15+nH
-	fQOEL9J2dmjPlBk4gZ4=; b=Q80JPWcPlkv2CO7rMQcOBV9cJQj4CxnH8yk4cRxO
-	1nfR9UrEJAzCs41yxpGZg2MZWpK6InAbCRglO7WakUDR4dP6dMVqJMlaIINenVTD
-	rGn+PuDbqf59N9yxrvJq0CyK9ZHs3XK2tYrmI9RKb70tVcS0t0cUwRx/dy1/rvZq
-	Laar2dL9MOWAc4J5YUs/zfBnhh49UdXKCAIymaCND9Kba2legHFyDhYRbFUfCF4h
-	c/w3qL6ZtGV7m5jA3NroU3bHhypV41Wshg8HYHB/+b1Ngm5XpizUduyPJgd2pz8W
-	UNIB+/2P3SWRDWs+ITC9BqqXG0o0j1UgeU+KWsWuZTJ6yg==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1724356791; x=1726948792; bh=4x2n0gWdMV04aRUL5bF8MYt61K8wnuYHRkY
+	kGktryQY=; b=G4N/JgN+rnsyZZG2F/9EMM/YMbzFP4ZzJxn4vaT4BIFk5DluNY3
+	zKgYSvGE6vVu05fMOpPXvPyJ++6a1S2+Dweqk+ooJJGaLdK0NRbZavwmT5ITzpsX
+	3eopyHbdxm/Z7fuSzQWLkFUgdWWQ41xSN2oqXOhJG/RuTJjqIb6ZTbYhgcq05kzu
+	lN+n2oyhX+asO+e0A5e/Hb0GIX1UQdHaLRoWv/lgelyc2HWf2R+re/6jM8NoDJcN
+	JoADuIXpEEVCnp8SIbKURfurNtmBdL24csiB+5bvBRLy57vPEWB7hwv7auY9g2/A
+	E0bgr+7QsSGes3MfSg+7T+8cdhSYOrL9+Xw==
 X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id itsm-lJJiOpf; Thu, 22 Aug 2024 19:29:24 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id VXrBKQnX_6DI; Thu, 22 Aug 2024 19:59:51 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WqYDL0lXRzlgVnF;
-	Thu, 22 Aug 2024 19:29:21 +0000 (UTC)
-Message-ID: <f8bb65ed-cdf2-4d23-b794-765ce0b48a4b@acm.org>
-Date: Thu, 22 Aug 2024 12:29:21 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WqYvW4bVVz6ClY9J;
+	Thu, 22 Aug 2024 19:59:51 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 00/18] Simplify multiple create*_workqueue() invocations
+Date: Thu, 22 Aug 2024 12:59:04 -0700
+Message-ID: <20240822195944.654691-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.46.0.295.g3b9ea8a38a-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 0/7] Introduce swiotlb throttling
-To: mhklinux@outlook.com, kbusch@kernel.org, axboe@kernel.dk,
- sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
- wei.liu@kernel.org, decui@microsoft.com, robin.murphy@arm.com, hch@lst.de,
- m.szyprowski@samsung.com, petr@tesarici.cz, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
- linux-coco@lists.linux.dev
-References: <20240822183718.1234-1-mhklinux@outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240822183718.1234-1-mhklinux@outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 8/22/24 11:37 AM, mhkelley58@gmail.com wrote:
-> Linux device drivers may make DMA map/unmap calls in contexts that
-> cannot block, such as in an interrupt handler.
+Hi Martin,
 
-Although I really appreciate your work, what alternatives have been
-considered? How many drivers perform DMA mapping from atomic context?
-Would it be feasible to modify these drivers such that DMA mapping
-always happens in a context in which sleeping is allowed?
+Multiple SCSI drivers use snprintf() to format a workqueue name before
+invoking one of the create*_workqueue() macros. This patch series
+simplifies such code by passing the format string and arguments to
+alloc_workqueue(). Additionally, the structure members that are only used
+as a temporary buffer for formatting workqueue names are removed. Please
+consider this patch series for the next merge window.
 
 Thanks,
 
 Bart.
+
+Changes compared to v2:
+ - Added more Reviewed-by tags.
+
+Changes compared to v1:
+ - Added several Reviewed-by tags.
+
+Bart Van Assche (18):
+  scsi: Expand all create*_workqueue() invocations
+  scsi: mptfusion: Simplify the alloc*_workqueue() invocations
+  scsi: be2iscsi: Simplify an alloc_workqueue() invocation
+  scsi: bfa: Simplify an alloc_ordered_workqueue() invocation
+  scsi: esas2r: Simplify an alloc_ordered_workqueue() invocation
+  scsi: fcoe: Simplify alloc_ordered_workqueue() invocations
+  scsi: ibmvscsi_tgt: Simplify an alloc_workqueue() invocation
+  scsi: mpi3mr: Simplify an alloc_ordered_workqueue() invocation
+  scsi: mpt3sas: Simplify an alloc_ordered_workqueue() invocation
+  scsi: myrb: Simplify an alloc_ordered_workqueue() invocation
+  scsi: myrs: Simplify an alloc_ordered_workqueue() invocation
+  scsi: qedf: Simplify alloc_workqueue() invocations
+  scsi: qedi: Simplify an alloc_workqueue() invocation
+  scsi: snic: Simplify alloc_workqueue() invocations
+  scsi: scsi_transport_fc: Simplify alloc_workqueue() invocations
+  scsi: stex: Simplify an alloc_ordered_workqueue() invocation
+  scsi: ufs: Simplify alloc*_workqueue() invocation
+  scsi: core: Simplify an alloc_workqueue() invocation
+
+ drivers/message/fusion/mptbase.c            | 10 +++-------
+ drivers/message/fusion/mptbase.h            |  3 ---
+ drivers/message/fusion/mptfc.c              |  7 ++-----
+ drivers/scsi/be2iscsi/be_main.c             |  6 ++----
+ drivers/scsi/bfa/bfad_im.c                  |  5 ++---
+ drivers/scsi/bfa/bfad_im.h                  |  1 -
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c           |  4 ++--
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |  3 ++-
+ drivers/scsi/elx/efct/efct_lio.c            |  3 ++-
+ drivers/scsi/esas2r/esas2r.h                |  1 -
+ drivers/scsi/esas2r/esas2r_init.c           |  5 ++---
+ drivers/scsi/fcoe/fcoe_sysfs.c              | 18 +++++------------
+ drivers/scsi/fnic/fnic_main.c               |  6 ++++--
+ drivers/scsi/hisi_sas/hisi_sas_main.c       |  3 ++-
+ drivers/scsi/hosts.c                        |  9 ++++-----
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c    |  5 ++---
+ drivers/scsi/libfc/fc_exch.c                |  3 ++-
+ drivers/scsi/libfc/fc_rport.c               |  3 ++-
+ drivers/scsi/libsas/sas_init.c              |  4 ++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  4 ++--
+ drivers/scsi/mpi3mr/mpi3mr.h                |  2 --
+ drivers/scsi/mpi3mr/mpi3mr_fw.c             |  4 ++--
+ drivers/scsi/mpi3mr/mpi3mr_os.c             |  4 +---
+ drivers/scsi/mpt3sas/mpt3sas_base.c         |  4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_base.h         |  4 +---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  4 +---
+ drivers/scsi/myrb.c                         |  5 ++---
+ drivers/scsi/myrb.h                         |  1 -
+ drivers/scsi/myrs.c                         |  5 ++---
+ drivers/scsi/myrs.h                         |  1 -
+ drivers/scsi/qedf/qedf_main.c               | 20 +++++++++----------
+ drivers/scsi/qedi/qedi_main.c               |  8 +++++---
+ drivers/scsi/qla2xxx/qla_os.c               |  6 ++++--
+ drivers/scsi/qla4xxx/ql4_os.c               |  2 +-
+ drivers/scsi/scsi_transport_fc.c            | 11 +++--------
+ drivers/scsi/snic/snic_main.c               |  8 ++++----
+ drivers/scsi/stex.c                         |  6 ++----
+ drivers/scsi/vmw_pvscsi.c                   |  3 ++-
+ drivers/ufs/core/ufshcd.c                   | 22 +++++++--------------
+ include/scsi/fcoe_sysfs.h                   |  2 --
+ include/scsi/scsi_host.h                    |  1 -
+ include/scsi/scsi_transport_fc.h            |  6 ------
+ 42 files changed, 90 insertions(+), 142 deletions(-)
+
