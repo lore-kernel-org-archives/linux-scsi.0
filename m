@@ -1,113 +1,380 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B0D51607AA;
-	Fri, 23 Aug 2024 10:07:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A91B9187349
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 10:48:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724407638; cv=none; b=aQul3PS//ZQFtiqa0YZ0dnINlnJ5MM8tpKtrN+6eq4yd4fpOpZw16CFMmnRhXHG9phGXSh0xRk/XsazG/ALVM71x/NR/KYqqeOa5I+Ud2NBG9OX5bI+m5Yk5+V3T1UhFta96T1RFOer3AiGP+TySUvsr+wjLupO8QjRL3RjP9dI=
+	t=1724410091; cv=none; b=UswWUbYtf64PJXb11PREfXx/4YVnopekFKtqpWxXGfR29b3FkYWifQer2HzKvw5VuaAGNkONoPigwG06Bm6uFtQxeM4fQAj+MCy/0vHDc9AqDvjViNsTlkOQUrVGAoQ/j7mqszrb9TzCGqL5bqE351Rb6+8/zAyj7eNIrojrMjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724407638; c=relaxed/simple;
-	bh=GDu1Dmo0obYx3kikcXFy8nHInWtzJqBpUs5HH2QE9LU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TdTAAI3BdCz7LQY3uc+INV+npxw+QQVCTKFn1wCyzvxN625vZ+qI6Fggk8kson1qAn/zwzLOCsBHIGy4wQ4Qo8jPNMYFK7XuXi8xJhMiCyhiuTPCVwILS8kuzh3KjgappVbu+Dxhv2L1XacCxnvr5+2/GDktA3uS6yhuN+UntVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=nilores/; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1724410091; c=relaxed/simple;
+	bh=EgOo2RdVvxEfaspXutVpouY3tst4yPfc+l642W7oIQo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=oy9+CeXwSgeulyaV8uK9czdjuxwEHQFB4AW0Z23nPZvQwb7OKgRSwPCLQTYq/r19Rz9EsRx9Ek6DAMK63pKnldIwwlmL0BaAVrKJiWhCwqKftPNMfA04enzcTH/iHy/8WL/W06IELlLJHBwCYcCFbt9NWU27Y9RUvfdum7HZFaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=vYgwok+A; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="nilores/"
-X-UUID: 754c3796613711ef8b96093e013ec31c-20240823
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Q/hVDi5QlE7twKetiUuJWI0sQsaizIXKv/4S0mRRLMs=;
-	b=nilores/ifgJbNFLNxbKyTOBmGeCFx1zggzRJSGOv6FHouMlwV4tDrOmqSi4oG/+M3mqVY+F2wR9Qd9NQwR+MRYRvfoXVkEl1BCnXkR/CQsdj2MIcgCjaoxnHYgLKSnGdiG+0C2ZX01TWl8l6macYjIzJehzOcfFz5BTWRHY+nU=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:547aa801-8c89-4273-a212-66417edc1500,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:6dc6a47,CLOUDID:ecb411cf-7921-4900-88a1-3aef019a55ce,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 754c3796613711ef8b96093e013ec31c-20240823
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 805658517; Fri, 23 Aug 2024 18:07:09 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 23 Aug 2024 03:07:09 -0700
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 23 Aug 2024 18:07:09 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>, <stable@vger.kernel.org>
-Subject: [PATCH v1 1/2] ufs: core: complete scsi command after release
-Date: Fri, 23 Aug 2024 18:07:06 +0800
-Message-ID: <20240823100707.6699-2-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20240823100707.6699-1-peter.wang@mediatek.com>
-References: <20240823100707.6699-1-peter.wang@mediatek.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="vYgwok+A"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240823104759epoutp02e5551f228b6863ad90d5e07b1ea0d7a7~uVdTZDHOa0949009490epoutp02e
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 10:47:59 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240823104759epoutp02e5551f228b6863ad90d5e07b1ea0d7a7~uVdTZDHOa0949009490epoutp02e
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1724410080;
+	bh=ADBIpkeIB8Qi21TqEW0JFS/Lus6pDiHqXhO9uvgTh08=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=vYgwok+AM8RR8j/BEt4YSPOg6zSNcWLAWEGTpohx6yASU0GOsXPga52CCW9GU5caL
+	 vXYRRPfXi3YtYzs9/nRXFVE83qI4HPg87I95vttWaPddDXmPkbDtSnQMeMlYcVfMiE
+	 s/gOMwI/p73Hs7cxRf5WfXcGhxBe3RC+w1ocWLMU=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+	20240823104759epcas5p201ae2ecf4f855e66d2c4b5e06368aaf7~uVdS3L3pZ2862728627epcas5p2c;
+	Fri, 23 Aug 2024 10:47:59 +0000 (GMT)
+Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.174]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4WqxcF4njbz4x9Py; Fri, 23 Aug
+	2024 10:47:57 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	2C.7A.19863.DD868C66; Fri, 23 Aug 2024 19:47:57 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240823104552epcas5p226dbbbd448cd0ee0955ffdd3ad1b112d~uVbdEJJAv1853818538epcas5p2J;
+	Fri, 23 Aug 2024 10:45:52 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240823104552epsmtrp1fce2f756964da5da85f1fe7c679dcebe~uVbdDfnuq0200102001epsmtrp1S;
+	Fri, 23 Aug 2024 10:45:52 +0000 (GMT)
+X-AuditID: b6c32a50-ef5fe70000004d97-ce-66c868ddd764
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	EA.40.19367.06868C66; Fri, 23 Aug 2024 19:45:52 +0900 (KST)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20240823104550epsmtip207cc970cee2c454ad86ac71f553e16a2~uVbbI4dcd1240712407epsmtip2T;
+	Fri, 23 Aug 2024 10:45:50 +0000 (GMT)
+From: Anuj Gupta <anuj20.g@samsung.com>
+To: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
+	martin.petersen@oracle.com, asml.silence@gmail.com, krisman@suse.de
+Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com,
+	linux-scsi@vger.kernel.org, Anuj Gupta <anuj20.g@samsung.com>
+Subject: [PATCH v3 00/10] Read/Write with meta/integrity
+Date: Fri, 23 Aug 2024 16:08:00 +0530
+Message-Id: <20240823103811.2421-1-anuj20.g@samsung.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLJsWRmVeSWpSXmKPExsWy7bCmuu7djBNpBheWKVg0TfjLbDFn1TZG
+	i9V3+9ksbh7YyWSxcvVRJot3redYLCYdusZosf3MUmaLvbe0LeYve8pu0X19B5vF8uP/mBx4
+	PHbOusvucflsqcemVZ1sHpuX1HvsvtnA5vHx6S0Wj74tqxg9Np+u9vi8SS6AMyrbJiM1MSW1
+	SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNctMwfoXiWFssScUqBQQGJx
+	sZK+nU1RfmlJqkJGfnGJrVJqQUpOgUmBXnFibnFpXrpeXmqJlaGBgZEpUGFCdsai1RtYCma4
+	V8xu+83WwPjTsIuRk0NCwETi1bJuli5GLg4hgT2MEhu697NBOJ8YJRpa7jHCOW2nT7HAtPy4
+	OwsqsZNRYtnci+wQzmdGiSl9D5lBqtgE1CWOPG9lBLFFBColnu/6AbaEWWATo8Sv68eYQBLC
+	AhYS299uZgexWQRUJfb2LAGL8wLFX9y7ygaxTl5i5qXv7BBxQYmTM5+AncEMFG/eOpsZZKiE
+	QCuHROvLi0AOB5DjIvH1pz1Er7DEq+Nb2CFsKYmX/W1QdrrEj8tPmSDsAonmY/sYIWx7idZT
+	/WBjmAU0Jdbv0ocIy0pMPbWOCWItn0Tv7ydQrbwSO+bB2EoS7SvnQNkSEnvPNTBBXOMh0X2M
+	DyQsJBArcXveJuYJjPKzkDwzC8kzsxAWL2BkXsUolVpQnJuemmxaYKibl1oOj9nk/NxNjOB0
+	qxWwg3H1hr96hxiZOBgPMUpwMCuJ8CbdO5omxJuSWFmVWpQfX1Sak1p8iNEUGMQTmaVEk/OB
+	CT+vJN7QxNLAxMzMzMTS2MxQSZz3devcFCGB9MSS1OzU1ILUIpg+Jg5OqQYm3lP/uGZXbBJy
+	trv+Qqxe+6aqQe4+l65epZ0CXp5W/9mb3Nunn1tmzfbqQqTPQX+etWnHJt2T//xn118vnkLm
+	/5s5N101nZTJN8vyzgyxQwcOS51eHHXRbq/T+feKR1dvvd9ud+r5gyKPmXKKCjFnv3q9uThl
+	f8H1H/d1/8RMdDHMuqZV6j/j9tW4nID86iWL82+KpWWsLvzuVPT5ub2FyfuQ1THz/Y52vY74
+	cWHRfS6HOWKlrV2Fy3jn7W4t1Khf1tErNPFYXUdWjqf9HcnZV6o8vX+JJ56x+rrk5PzZxrMm
+	NhQ+4EhIPHL+0FLJO2rl7Nv+vFb5N2+ul0+QSO/cem6zq1qnGHTXfs+6EbrslxJLcUaioRZz
+	UXEiAOAkDb5ABAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKLMWRmVeSWpSXmKPExsWy7bCSvG5Cxok0g8kzjC2aJvxltpizahuj
+	xeq7/WwWNw/sZLJYufook8W71nMsFpMOXWO02H5mKbPF3lvaFvOXPWW36L6+g81i+fF/TA48
+	Hjtn3WX3uHy21GPTqk42j81L6j1232xg8/j49BaLR9+WVYwem09Xe3zeJBfAGcVlk5Kak1mW
+	WqRvl8CVsWj1BpaCGe4Vs9t+szUw/jTsYuTkkBAwkfhxdxYjiC0ksJ1RYuf5VIi4hMSpl8sY
+	IWxhiZX/nrN3MXIB1XxklPj28QhYgk1AXeLI81ZGkISIQCOjxJbmLywgDrPADkaJdc8Wg1UJ
+	C1hIbH+7mR3EZhFQldjbs4QJxOYFir+4d5UNYoW8xMxL39kh4oISJ2c+YQGxmYHizVtnM09g
+	5JuFJDULSWoBI9MqRtHUguLc9NzkAkO94sTc4tK8dL3k/NxNjOCQ1wrawbhs/V+9Q4xMHIyH
+	GCU4mJVEeJPuHU0T4k1JrKxKLcqPLyrNSS0+xCjNwaIkzquc05kiJJCeWJKanZpakFoEk2Xi
+	4JRqYFp9aU/vnS9eG5sjF7peZt+vr+5T9v3Rita+6kTF+uq/544JihbzL1wzuz9V+4ahDltw
+	TFBWnhCveqq9i/kLA72eP0G35K5U/eENn6LFfPRhg4fRQgPhlCTh1KPzaq8oXrJpMeCedDS/
+	4vkE8wnHxZ65m4ed+bBwmdUXA/ZtTgu//dA8vljXLMDV0qtU5cOpCREnz0y/zf/Ru767rWDK
+	HPfJvySe1Lpf2Cu6UpTpNfu9Y217t+8trQydY/z60371nLaTfJHPOfr1p/fKN9j0uh87X8x2
+	Y9umdWuTgzW+PJfQVVnu8if8XejMBY68HIqHF5ya9jj++fLk16LKXSmfDt5y6J3ieMdMgzvh
+	tvPtECWW4oxEQy3mouJEALqBhZroAgAA
+X-CMS-MailID: 20240823104552epcas5p226dbbbd448cd0ee0955ffdd3ad1b112d
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240823104552epcas5p226dbbbd448cd0ee0955ffdd3ad1b112d
+References: <CGME20240823104552epcas5p226dbbbd448cd0ee0955ffdd3ad1b112d@epcas5p2.samsung.com>
 
-From: Peter Wang <peter.wang@mediatek.com>
+This adds a new io_uring interface to exchange meta along with read/write.
 
-When the error handler successfully aborts a MCQ request,
-it only releases the command and does not notify the SCSI layer.
-This may cause another abort after 30 seconds timeout.
-This patch notifies the SCSI layer to requeue the request.
+Interface:
+Meta information is represented using a newly introduced 'struct io_uring_meta'.
+Application sets up a SQE128 ring, and prepares io_uring_meta within second
+SQE. Application populates 'struct io_uring_meta' fields as below:
 
-Below is error log
-[   14.183804][   T74] ufshcd-mtk 112b0000.ufshci: ufshcd_err_handler started; HBA state eh_non_fatal; powered 1; shutting down 0; saved_err = 4; saved_uic_err = 64; force_reset = 0
-[   14.256164][   T74] ufshcd-mtk 112b0000.ufshci: ufshcd_try_to_abort_task: cmd pending in the device. tag = 19
-[   14.257511][   T74] ufshcd-mtk 112b0000.ufshci: Aborting tag 19 / CDB 0x35 succeeded
-[   34.287949][    T8] ufshcd-mtk 112b0000.ufshci: ufshcd_abort: Device abort task at tag 19
-[   34.290514][    T8] ufshcd-mtk 112b0000.ufshci: ufshcd_mcq_abort: skip abort. cmd at tag 19 already completed.
+* meta_type: describes type of meta that is passed. Currently one type
+"Integrity" is supported.
+* meta_flags: these are meta-type specific flags. Three flags are exposed for
+integrity type, namely INTEGRITY_CHK_GUARD/APPTAG/REFTAG.
+* meta_len: length of the meta buffer
+* meta_addr: address of the meta buffer
+* app_tag: optional application-specific 16b value; this goes along with
+INTEGRITY_CHK_APPTAG flag.
 
-Fixes:93e6c0e19d5b ("scsi: ufs: core: Clear cmd if abort succeeds in MCQ mode")
-Cc: <stable@vger.kernel.org> 6.6.x
+Block path (direct IO) , NVMe and SCSI driver are modified to support
+this.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+The first three patches are required to make the user metadata split
+work correctly.
+Patch 4,5 are prep patches.
+Patch 6 adds the io_uring support.
+Patch 7 gives us unified interface for user and kernel generated
+integrity.
+Patch 8 adds the support for block direct IO, patch 9 for NVMe, and
+patch 10 for SCSI.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0b3d0c8e0dda..4bcd4e5b62bd 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6482,8 +6482,12 @@ static bool ufshcd_abort_one(struct request *rq, void *priv)
- 		if (!hwq)
- 			return 0;
- 		spin_lock_irqsave(&hwq->cq_lock, flags);
--		if (ufshcd_cmd_inflight(lrbp->cmd))
-+		if (ufshcd_cmd_inflight(lrbp->cmd)) {
-+			struct scsi_cmnd *cmd = lrbp->cmd;
-+			set_host_byte(cmd, DID_REQUEUE);
- 			ufshcd_release_scsi_cmd(hba, lrbp);
-+			scsi_done(cmd);
-+		}
- 		spin_unlock_irqrestore(&hwq->cq_lock, flags);
- 	}
- 
+Some of the design choices came from this discussion [2].
+
+Example program on how to use the interface is appended below [3]
+
+Tree:
+https://github.com/SamsungDS/linux/tree/feat/pi_us_v3
+Testing:
+has been done by modifying fio to use this interface.
+https://github.sec.samsung.net/DS8-MemoryOpenSource/fio/tree/feat/test-meta-v4
+
+Changes since v2:
+https://lore.kernel.org/linux-block/20240626100700.3629-1-anuj20.g@samsung.com/
+- io_uring error handling styling (Gabriel)
+- add documented helper to get metadata bytes from data iter (hch)
+- during clone specify "what flags to clone" rather than
+"what not to clone" (hch)
+- Move uio_meta defination to bio-integrity.h (hch)
+- Rename apptag field to app_tag (hch)
+- Change datatype of flags field in uio_meta to bitwise (hch)
+- Don't introduce BIP_USER_CHK_FOO flags (hch, martin)
+- Driver should rely on block layer flags instead of seeing if it is
+user-passthrough (hch)
+- update the scsi code for handling user-meta (hch, martin)
+
+Changes since v1:
+https://lore.kernel.org/linux-block/20240425183943.6319-1-joshi.k@samsung.com/
+- Do not use new opcode for meta, and also add the provision to introduce new
+meta types beyond integrity (Pavel)
+- Stuff IOCB_HAS_META check in need_complete_io (Jens)
+- Split meta handling in NVMe into a separate handler (Keith)
+- Add meta handling for __blkdev_direct_IO too (Keith)
+- Don't inherit BIP_COPY_USER flag for cloned bio's (Christoph)
+- Better commit descriptions (Christoph)
+
+Changes since RFC:
+- modify io_uring plumbing based on recent async handling state changes
+- fixes/enhancements to correctly handle the split for meta buffer
+- add flags to specify guard/reftag/apptag checks
+- add support to send apptag
+
+[1] https://lore.kernel.org/linux-block/719d2e-b0e6-663c-ec38-acf939e4a04b@redhat.com/
+
+[2] https://lore.kernel.org/linux-block/20240705083205.2111277-1-hch@lst.de/
+
+[3]
+
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <linux/io_uring.h>
+#include <linux/types.h>
+#include "liburing.h"
+
+/* write data/meta. read both. compare. send apptag too.
+* prerequisite:
+* unprotected xfer: format namespace with 4KB + 8b, pi_type = 0
+* protected xfer: format namespace with 4KB + 8b, pi_type = 1
+*/
+
+#define DATA_LEN 4096
+#define META_LEN 8
+
+struct t10_pi_tuple {
+        __be16  guard;
+        __be16  apptag;
+        __be32  reftag;
+};
+
+int main(int argc, char *argv[])
+{
+         struct io_uring ring;
+         struct io_uring_sqe *sqe = NULL;
+         struct io_uring_cqe *cqe = NULL;
+         void *wdb,*rdb;
+         char wmb[META_LEN], rmb[META_LEN];
+         char *data_str = "data buffer";
+         char *meta_str = "meta";
+         int fd, ret, blksize;
+         struct stat fstat;
+         unsigned long long offset = DATA_LEN;
+         struct t10_pi_tuple *pi;
+         struct io_uring_meta *md;
+
+         if (argc != 2) {
+                 fprintf(stderr, "Usage: %s <block-device>", argv[0]);
+                 return 1;
+         };
+
+         if (stat(argv[1], &fstat) == 0) {
+                 blksize = (int)fstat.st_blksize;
+         } else {
+                 perror("stat");
+                 return 1;
+         }
+
+         if (posix_memalign(&wdb, blksize, DATA_LEN)) {
+                 perror("posix_memalign failed");
+                 return 1;
+         }
+         if (posix_memalign(&rdb, blksize, DATA_LEN)) {
+                 perror("posix_memalign failed");
+                 return 1;
+         }
+
+         strcpy(wdb, data_str);
+         strcpy(wmb, meta_str);
+
+         fd = open(argv[1], O_RDWR | O_DIRECT);
+         if (fd < 0) {
+                 printf("Error in opening device\n");
+                 return 0;
+         }
+
+         ret = io_uring_queue_init(8, &ring, IORING_SETUP_SQE128);
+         if (ret) {
+                 fprintf(stderr, "ring setup failed: %d\n", ret);
+                 return 1;
+         }
+
+         /* write data + meta-buffer to device */
+         sqe = io_uring_get_sqe(&ring);
+         if (!sqe) {
+                 fprintf(stderr, "get sqe failed\n");
+                 return 1;
+         }
+
+         io_uring_prep_write(sqe, fd, wdb, DATA_LEN, offset);
+
+         md = (struct io_uring_meta *) sqe->big_sqe_cmd;
+         md->meta_type = META_TYPE_INTEGRITY;
+         md->meta_addr = (__u64)wmb;
+         md->meta_len = META_LEN;
+         /* flags to ask for guard/reftag/apptag*/
+         md->meta_flags = INTEGRITY_CHK_APPTAG;
+         md->app_tag = 0x1234;
+
+         pi = (struct t10_pi_tuple *)wmb;
+         pi->apptag = 0x3412;
+
+         ret = io_uring_submit(&ring);
+         if (ret <= 0) {
+                 fprintf(stderr, "sqe submit failed: %d\n", ret);
+                 return 1;
+         }
+
+         ret = io_uring_wait_cqe(&ring, &cqe);
+         if (!cqe) {
+                 fprintf(stderr, "cqe is NULL :%d\n", ret);
+                 return 1;
+         }
+         if (cqe->res < 0) {
+                 fprintf(stderr, "write cqe failure: %d", cqe->res);
+                 return 1;
+         }
+
+         io_uring_cqe_seen(&ring, cqe);
+
+         /* read data + meta-buffer back from device */
+         sqe = io_uring_get_sqe(&ring);
+         if (!sqe) {
+                 fprintf(stderr, "get sqe failed\n");
+                 return 1;
+         }
+
+         io_uring_prep_read(sqe, fd, rdb, DATA_LEN, offset);
+
+         md = (struct io_uring_meta *) sqe->big_sqe_cmd;
+         md->meta_type = META_TYPE_INTEGRITY;
+         md->meta_addr = (__u64)rmb;
+         md->meta_len = META_LEN;
+         md->meta_flags = INTEGRITY_CHK_APPTAG;
+         md->app_tag = 0x1234;
+
+         ret = io_uring_submit(&ring);
+         if (ret <= 0) {
+                 fprintf(stderr, "sqe submit failed: %d\n", ret);
+                 return 1;
+         }
+
+         ret = io_uring_wait_cqe(&ring, &cqe);
+         if (!cqe) {
+                 fprintf(stderr, "cqe is NULL :%d\n", ret);
+                 return 1;
+         }
+
+         if (cqe->res < 0) {
+                 fprintf(stderr, "read cqe failure: %d", cqe->res);
+                 return 1;
+         }
+         io_uring_cqe_seen(&ring, cqe);
+
+         if (strncmp(wmb, rmb, META_LEN))
+                 printf("Failure: meta mismatch!, wmb=%s, rmb=%s\n", wmb, rmb);
+
+         if (strncmp(wdb, rdb, DATA_LEN))
+                 printf("Failure: data mismatch!\n");
+
+         io_uring_queue_exit(&ring);
+         free(rdb);
+         free(wdb);
+         return 0;
+}
+
+Anuj Gupta (7):
+  block: define set of integrity flags to be inherited by cloned bip
+  block: introduce a helper to determine metadata bytes from data iter
+  block: handle split correctly for user meta bounce buffer
+  block: modify bio_integrity_map_user to accept iov_iter as argument
+  io_uring/rw: add support to send meta along with read/write
+  block,nvme: introduce BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
+  scsi: add support for user-meta interface
+
+Kanchan Joshi (3):
+  block: define meta io descriptor
+  block: add support to pass user meta buffer
+  nvme: add handling for app_tag
+
+ block/bio-integrity.c         | 71 ++++++++++++++++++++++++++++++-----
+ block/fops.c                  | 25 ++++++++++++
+ block/t10-pi.c                |  6 +++
+ drivers/nvme/host/core.c      | 24 +++++++-----
+ drivers/nvme/host/ioctl.c     | 11 +++++-
+ drivers/scsi/sd.c             | 25 +++++++++++-
+ drivers/scsi/sd_dif.c         |  2 +-
+ include/linux/bio-integrity.h | 33 ++++++++++++++--
+ include/linux/blk-integrity.h | 17 +++++++++
+ include/linux/fs.h            |  1 +
+ include/uapi/linux/io_uring.h | 32 ++++++++++++++++
+ io_uring/io_uring.c           |  6 +++
+ io_uring/rw.c                 | 70 ++++++++++++++++++++++++++++++++--
+ io_uring/rw.h                 | 10 ++++-
+ 14 files changed, 302 insertions(+), 31 deletions(-)
+
 -- 
-2.45.2
+2.25.1
 
