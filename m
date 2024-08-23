@@ -1,96 +1,104 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B137A25740
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 01:56:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBC75A934
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 02:06:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724378218; cv=none; b=cxHYRVBeFuGtJod7L/5uVGlCCit8Gi2cAS1gfEkl9i6Sve0WZ77vpe5gs23zpmeNLLRQGigNGGIK7eTasTXx4qhRdrIOnFgEMOFJIJG2RLgZv59oc4wGJ4mQDqmfU7x+cGNzNRk78YKD1E37MPzc1iGaYkmw3/le88tZXBNaKQA=
+	t=1724378818; cv=none; b=OoWOKqk1r4Ho1ynfdsU/7J0nRaINwsgSnwtKi3qYkQg61ScwGcl0JM26eSVkEL4P2IkSHZ3xp/5UUkNAWHFzzK+T/T9eUslV2Kq360RsGunNE+mioTNQdeqMK1l8U4PtT5lqgSAi3D/o1nXree0R+m4b+pSZdoBxfHyerxoGRP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724378218; c=relaxed/simple;
-	bh=PI1aGltKC0J2ROjz7Bpz86AN3ibusGIF1jx1xcN7ERg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OqbiEG9CcX/S2yMICRILdp9DNxZAZQDGkCuH9QyduFlltQEPKXyF8hyhMZMjeV0U4px0h6Lw3/pjpA54Z59GJgvy0pjhoRC5bwxOXEjvjHGx7uzgqiGalFS/xgMibiMbJYoAzdr9hZaT5oK7hGPblWa8zpqnu5WWl/n9UC/pdbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VxHYydbB; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1724378818; c=relaxed/simple;
+	bh=hn2LpM+GC2Y6DJO5FO9nWXbmB1/AlZGK7n5z3NT43E0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AhjY5Km30KTMQHc5Ux+5I6NwQna5fQg+N6x9vg82qBH3xUs8+zcGcPiFfnrUchmh2AgtAZ7GNgnERXbn8GrQJH3Z/Co89h2ETcNCGjD/cf8eFzD8wUZp6bNV2mbiPPgqzyIcGMZhYQCLt4ns9CC5sxdaZcHE+ptj4UG1ULvhCdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gmusOzsl; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VxHYydbB"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47N0CNkB008274;
-	Fri, 23 Aug 2024 01:56:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=rK4TLGlKy5hSZji3VsYAelFCu5oZpcf3eYC7m9vcsiU=; b=
-	VxHYydbBcVs8FE6YawRmXQ/jf/f0Noxnw0SucFMQkF+RkUX1QqzFydvd8ilX3+k1
-	7KlVbKoE1F/iITajn+rYgqksycxKlPNIbBLfWJBl81iUCBmC1eUf0yBysYfm1hpO
-	R3LFPK0lYu6vEn0pWKHJk2iaspSHTAeWIINgKBYckpx8O0nl2n+UDTB5smgDy8ht
-	l7b+LyPKoedtLbT4dxl02mQCCwS/HLQ1L1YqXxOOI6E9B0TnVg82NjdeSJCqBvst
-	6Af5wRsgeEbm2gGb3azehPojNFpDKRjQ/RS3Gl5m40Ye0lV/yngINLRo+xjB3yaS
-	WBCbdJki7pxBQsXrSi24HQ==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 412mdt3bw3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 23 Aug 2024 01:56:43 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 47N0YEwY012194;
-	Fri, 23 Aug 2024 01:56:43 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 416g0e9qn5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 23 Aug 2024 01:56:43 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47N1ugAs033471;
-	Fri, 23 Aug 2024 01:56:42 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 416g0e9qmh-1;
-	Fri, 23 Aug 2024 01:56:42 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Ben Hutchings <benh@debian.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] aacraid: Fix double-free on probe failure
-Date: Thu, 22 Aug 2024 21:56:02 -0400
-Message-ID: <172437814915.4018943.4501213018691926046.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <ZsZvfqlQMveoL5KQ@decadent.org.uk>
-References: <ZsZvfqlQMveoL5KQ@decadent.org.uk>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gmusOzsl"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wqk3375DnzlgVnK;
+	Fri, 23 Aug 2024 02:06:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1724378811; x=1726970812; bh=oqAuOwcX/z5dHla+zSNXdtfa
+	KaVlcHR852eGvMyOpxE=; b=gmusOzslo79n4ZeEwtH8fmUIJjrFXKZbLP/rMZBr
+	nC4k2/JRrQc9FtNtUUjYnl5FZZlxy52u2cILBKTW2kyNjvQdvW41MnWyawxe2oSX
+	G4ekNAzaNV6GAbkwTzNF1rZWnXsZja4mc60ofuRh3LN2TuqEjeqyZ1v/k4hhV4NC
+	71JXtTJwiUxjFfr9zamTL+Igd8J4aTvHR25ogjZyGSxyeo8DdsMEICviBRZAJ7dL
+	IDW0PjY3y5KU8055HbcGL9s1FI3n2L4eOYMjjwGQngLBCcHnpGxoEGGZwuyrCEcH
+	yQdiNGDcD7NUpHytIR17tsYbbExSuWQJNf28bgTvFHffVQ==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id T3639KqRSL57; Fri, 23 Aug 2024 02:06:51 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wqk2w0KS8zlgVnF;
+	Fri, 23 Aug 2024 02:06:47 +0000 (UTC)
+Message-ID: <20c1866f-9bb2-406f-a819-74ad936d92d5@acm.org>
+Date: Thu, 22 Aug 2024 19:06:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-23_01,2024-08-22_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 adultscore=0
- malwarescore=0 suspectscore=0 mlxscore=0 mlxlogscore=823 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
- definitions=main-2408230010
-X-Proofpoint-ORIG-GUID: R1uB_xwfRmIjOFQKVYHqiRYgozLr7kSs
-X-Proofpoint-GUID: R1uB_xwfRmIjOFQKVYHqiRYgozLr7kSs
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
+ hibernation
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Peter Wang <peter.wang@mediatek.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Avri Altman <avri.altman@wdc.com>, Andrew Halaney <ahalaney@redhat.com>,
+ Bean Huo <beanhuo@micron.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
+ Maramaina Naresh <quic_mnaresh@quicinc.com>
+References: <20240821182923.145631-1-bvanassche@acm.org>
+ <20240821182923.145631-3-bvanassche@acm.org>
+ <ba9ae5a8-6021-f906-9ce1-d637534ac9cf@quicinc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ba9ae5a8-6021-f906-9ce1-d637534ac9cf@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, 22 Aug 2024 00:51:42 +0200, Ben Hutchings wrote:
+On 8/22/24 4:34 PM, Bao D. Nguyen wrote:
+> Let's say you are sending a ufshcd_uic_pwr_ctrl() command. You will get 
+> 2 uic completion interrupts:
+> [1] ufshcd_uic_cmd_compl() is called for the first interrupt which 
+> happens to be UFSHCD_UIC_PWR_MASK only. At the end of the 
+> ufshcd_uic_pwr_ctrl(), you would set the hba->active_uic_cmd to NULL.
 
-> aac_probe_one() calls hardware-specific init functions through the
-> aac_driver_ident::init pointer, all of which eventually call down to
-> aac_init_adapter().
-> 
-> If aac_init_adapter() fails after allocating memory for
-> aac_dev::queues, it frees the memory but does not clear that member.
-> 
-> [...]
+That's not correct. ufshcd_uic_pwr_ctrl() only clears
+hba->active_uic_cmd after the power mode change interrupt has been
+processed.
 
-Applied to 6.11/scsi-fixes, thanks!
+> [2]The second uic completion interrupt for UIC_COMMAND_COMP is delayed.
+> This interrupt is newly introduced by this patch.
 
-[1/1] aacraid: Fix double-free on probe failure
-      https://git.kernel.org/mkp/scsi/c/919ddf8336f0
+If UIC_COMMAND_COMPL is delivered after UFSHCD_UIC_PWR_MASK then the
+UIC_COMMAND_COMPL interrupt will be ignored because hba->active_uic_cmd
+is cleared by ufshcd_uic_pwr_ctrl() after it has processed the
+power mode change interrupt.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> Now let's say you have a new UIC command coming via 
+> ufshcd_send_uic_cmd(). The ufshcd_dispatch_uic_cmd() will update your 
+> hba->active_uic_cmd to the new uic_cmd.
+
+UIC command processing is serialized by hba->uic_cmd_mutex. Hence only
+one UIC command is processed at any given time.
+
+Does this address your concerns?
+
+Thanks,
+
+Bart.
