@@ -1,63 +1,63 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47A581CD00;
-	Fri, 23 Aug 2024 01:56:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B137A25740
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 01:56:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724378211; cv=none; b=d6dJClOxSI58B7jSHh/W1UfmTJgWU49A+LlNw1uF4ZHBAnBigcxBlaG9IKw6iujqMKfhs1GmOqRvOo/3Xnovn2gU8uWtoX2fXbQTc8tZl5S/V6Dq002PRUDcIFubUxqzSZAu59izjOqNCijr7peIUFS8Jbt41Ka+4e9Q4/z56lM=
+	t=1724378218; cv=none; b=cxHYRVBeFuGtJod7L/5uVGlCCit8Gi2cAS1gfEkl9i6Sve0WZ77vpe5gs23zpmeNLLRQGigNGGIK7eTasTXx4qhRdrIOnFgEMOFJIJG2RLgZv59oc4wGJ4mQDqmfU7x+cGNzNRk78YKD1E37MPzc1iGaYkmw3/le88tZXBNaKQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724378211; c=relaxed/simple;
-	bh=78ppxU2DrcTP4h2rajHNIVga77Utrr1L21C0Cez+C5E=;
+	s=arc-20240116; t=1724378218; c=relaxed/simple;
+	bh=PI1aGltKC0J2ROjz7Bpz86AN3ibusGIF1jx1xcN7ERg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uUTUQ5TNpsB53OKF+JIcSjD0BA0oqIl8ZFy0JQRLTd0R+U2vstFQzgyFSyKkpwtNtHvyaEyz8lPBFHCS1lCSVPx1wS/Vse29G288S+lzHZtA1GaLeHfpyW+N8amzByAiN2GM334SWJSw45kRBxI72tSpjxAhA9n4VBeEyHs9OY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MJCXrCIE; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=OqbiEG9CcX/S2yMICRILdp9DNxZAZQDGkCuH9QyduFlltQEPKXyF8hyhMZMjeV0U4px0h6Lw3/pjpA54Z59GJgvy0pjhoRC5bwxOXEjvjHGx7uzgqiGalFS/xgMibiMbJYoAzdr9hZaT5oK7hGPblWa8zpqnu5WWl/n9UC/pdbY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VxHYydbB; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MJCXrCIE"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47N0BUZw026907;
-	Fri, 23 Aug 2024 01:56:45 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VxHYydbB"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47N0CNkB008274;
+	Fri, 23 Aug 2024 01:56:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=V5djnhEUpPQwDTbcUtQo9lJiA5uCN1pFKUt6h7Xfgp4=; b=
-	MJCXrCIEpJyw2g4vWRu5JrBf3urS66r1Hh5suuyaWukiZ53HeD9ZggsBJcaut8wn
-	AYnyFmL8cZE/pYnlgWyA/2jUCYVxIQkVJRVyPID8f5Lplx304cEIlNmc9gZXvbPZ
-	uGvzJm2h2G8f/j3z36Oqd1YnjabgkkRRQZ6fMC/eQyPbB3f5MfuNBih3II+3xf3u
-	2Aa8vv+pchuKS+KOvmkeGAuo06eE4kbikZoOaKtvrb5zphCE9UePgBS7o1P7aGF5
-	x5ZKBxpiipU5Oxc6nbsCc7RyWT3Gi/Mrc03YfDjpdF2+tWEgv5cSKo3IsFlvPnAn
-	1EUbMxZvRJMCHjre2v00fA==
+	corp-2023-11-20; bh=rK4TLGlKy5hSZji3VsYAelFCu5oZpcf3eYC7m9vcsiU=; b=
+	VxHYydbBcVs8FE6YawRmXQ/jf/f0Noxnw0SucFMQkF+RkUX1QqzFydvd8ilX3+k1
+	7KlVbKoE1F/iITajn+rYgqksycxKlPNIbBLfWJBl81iUCBmC1eUf0yBysYfm1hpO
+	R3LFPK0lYu6vEn0pWKHJk2iaspSHTAeWIINgKBYckpx8O0nl2n+UDTB5smgDy8ht
+	l7b+LyPKoedtLbT4dxl02mQCCwS/HLQ1L1YqXxOOI6E9B0TnVg82NjdeSJCqBvst
+	6Af5wRsgeEbm2gGb3azehPojNFpDKRjQ/RS3Gl5m40Ye0lV/yngINLRo+xjB3yaS
+	WBCbdJki7pxBQsXrSi24HQ==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 412m2dke88-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 412mdt3bw3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 23 Aug 2024 01:56:45 +0000 (GMT)
+	Fri, 23 Aug 2024 01:56:43 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 47N0Y9WZ012035;
-	Fri, 23 Aug 2024 01:56:44 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 416g0e9qnf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 23 Aug 2024 01:56:44 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47N1ugAu033471;
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 47N0YEwY012194;
 	Fri, 23 Aug 2024 01:56:43 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 416g0e9qmh-2;
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 416g0e9qn5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Fri, 23 Aug 2024 01:56:43 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47N1ugAs033471;
+	Fri, 23 Aug 2024 01:56:42 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 416g0e9qmh-1;
+	Fri, 23 Aug 2024 01:56:42 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        James.Bottomley@HansenPartnership.com,
-        Sherry Yang <sherry.yang@oracle.com>
+To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Ben Hutchings <benh@debian.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: lpfc: fix overflow build issue
-Date: Thu, 22 Aug 2024 21:56:03 -0400
-Message-ID: <172437814913.4018943.7804520176988407566.b4-ty@oracle.com>
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] aacraid: Fix double-free on probe failure
+Date: Thu, 22 Aug 2024 21:56:02 -0400
+Message-ID: <172437814915.4018943.4501213018691926046.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240821065131.1180791-1-sherry.yang@oracle.com>
-References: <20240821065131.1180791-1-sherry.yang@oracle.com>
+In-Reply-To: <ZsZvfqlQMveoL5KQ@decadent.org.uk>
+References: <ZsZvfqlQMveoL5KQ@decadent.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,37 +70,27 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-23_01,2024-08-22_01,2024-05-17_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 adultscore=0
- malwarescore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 suspectscore=0 mlxscore=0 mlxlogscore=823 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
  definitions=main-2408230010
-X-Proofpoint-GUID: oOU0im97jwUWzAICyTrndUHYVFxPameN
-X-Proofpoint-ORIG-GUID: oOU0im97jwUWzAICyTrndUHYVFxPameN
+X-Proofpoint-ORIG-GUID: R1uB_xwfRmIjOFQKVYHqiRYgozLr7kSs
+X-Proofpoint-GUID: R1uB_xwfRmIjOFQKVYHqiRYgozLr7kSs
 
-On Tue, 20 Aug 2024 23:51:31 -0700, Sherry Yang wrote:
+On Thu, 22 Aug 2024 00:51:42 +0200, Ben Hutchings wrote:
 
-> Build failed while enabling "CONFIG_GCOV_KERNEL=y" and
-> "CONFIG_GCOV_PROFILE_ALL=y" with following error:
+> aac_probe_one() calls hardware-specific init functions through the
+> aac_driver_ident::init pointer, all of which eventually call down to
+> aac_init_adapter().
 > 
-> BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c: In function 'lpfc_get_cgnbuf_info':
-> BUILDSTDERR: ./include/linux/fortify-string.h:114:33: error: '__builtin_memcpy' accessing 18446744073709551615 bytes at offsets 0 and 0 overlaps 9223372036854775807 bytes at offset -9223372036854775808 [-Werror=restrict]
-> BUILDSTDERR:   114 | #define __underlying_memcpy     __builtin_memcpy
-> BUILDSTDERR:       |                                 ^
-> BUILDSTDERR: ./include/linux/fortify-string.h:637:9: note: in expansion of macro '__underlying_memcpy'
-> BUILDSTDERR:   637 |         __underlying_##op(p, q, __fortify_size);                        \
-> BUILDSTDERR:       |         ^~~~~~~~~~~~~
-> BUILDSTDERR: ./include/linux/fortify-string.h:682:26: note: in expansion of macro '__fortify_memcpy_chk'
-> BUILDSTDERR:   682 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
-> BUILDSTDERR:       |                          ^~~~~~~~~~~~~~~~~~~~
-> BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c:5468:9: note: in expansion of macro 'memcpy'
-> BUILDSTDERR:  5468 |         memcpy(cgn_buff, cp, cinfosz);
-> BUILDSTDERR:       |         ^~~~~~
+> If aac_init_adapter() fails after allocating memory for
+> aac_dev::queues, it frees the memory but does not clear that member.
 > 
 > [...]
 
 Applied to 6.11/scsi-fixes, thanks!
 
-[1/1] scsi: lpfc: fix overflow build issue
-      https://git.kernel.org/mkp/scsi/c/3417c9574e36
+[1/1] aacraid: Fix double-free on probe failure
+      https://git.kernel.org/mkp/scsi/c/919ddf8336f0
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
