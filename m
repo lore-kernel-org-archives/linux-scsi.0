@@ -1,227 +1,107 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCDD8187855
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 10:48:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F63237144
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 10:54:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724410136; cv=none; b=GX4WpZfAtslJAWGR2Pr10lbbQnQdqX80Fx3H/jyjLrTrFTXDFYmfFH0UqGCa57/0pGWOkQal2BuWrpJV3SnF2178k5MbKVupK1dEvx0t2FSYyC9t8YZDEcFyYiyEg0r4cKjULAHBCKNBYBCRdZFf7ji0kxiQHul7nFEkasMrjVw=
+	t=1724410500; cv=none; b=Z/z70jlh7qnqozvJ8Amfwsdn306NRXeg5pp5jS34MqoYBD0EDsJWSkFJIahw73FRO/A1Vyjwr7LP7WS+fRxV7a3Cj1bfqUc8ncc0q/3fv/LiMMv3NyPfj+NJKwqtrZVNwln6n/jb27v4I6JG6rqT3dHTOQScx6crdB3nEqv/5KA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724410136; c=relaxed/simple;
-	bh=d8uLLwSdbzE5G1fR2VMdUPEYeU0UD3cRDnuIOnqv5P4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=A4y9XFMopzOA5EzW2Cbkh+AsYFjmATjSnIqcdIOErH+QfUYk5lUlsbAzGhf7zIlgpkdIFRVXJUkMz0k/+f1J5GUj0zaaXoe8ZnX2OclOGjpE6WOnmDks0Ai6K0RsEZeY2qpHWlh8kfQBLS5xAsrWNAfoR1IvfgsE7ywKGfjlFWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Zi/TY8EA; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1724410500; c=relaxed/simple;
+	bh=omruiQm6a5bc66MUXbQR9m5P3TmPXwromhV72gtRPA8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=T8X9K6LFXJP05l1HvYAU1PH8X+VJqMDU9tIGaXnTsCKy749cRlvYCU0wJKMGlwSZ3U+hu6Hq8EUYFQ9XpD0NQjAb0zh/zVYkQdyVoY4DANPRJIVKgFUr1mVsxKFRRW3JKBrlFEwJl0V4T+pN6+nO3lMsVt2bZLH+E3VA0botRd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iPbz2+gJ; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Zi/TY8EA"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240823104852epoutp0282fccb39a1221884e3643641dd8b52e4~uVeEgimtk1185311853epoutp02U
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 10:48:52 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240823104852epoutp0282fccb39a1221884e3643641dd8b52e4~uVeEgimtk1185311853epoutp02U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1724410132;
-	bh=YAT9f3XY8IKgq4WGMiK0V4o2WovD1lxpk8P5rBhzxR4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Zi/TY8EA4txsjwhM/vQbcI663nD8acr+pVTsqZg9o4LAx+BMurmS8TPsWrc2qvn3f
-	 AZix6GMsf784zmL6M3zfzBCbhu5kdll2tZAacIuMY3iNeUio9A19pItbqVZe0zPhkB
-	 M9fDUgfbZNeW+Vs0jwEBlvLJWucYPvPm/9m1j1VA=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-	20240823104852epcas5p424c5a420f83babade5eb18c7b817db39~uVeEBmsGG1746017460epcas5p4S;
-	Fri, 23 Aug 2024 10:48:52 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.180]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4WqxdG4j1Yz4x9Pv; Fri, 23 Aug
-	2024 10:48:50 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	7F.28.09642.21968C66; Fri, 23 Aug 2024 19:48:50 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20240823104639epcas5p11dbab393122841419368a86b4bd5c04b~uVcIMnAqt0371903719epcas5p1h;
-	Fri, 23 Aug 2024 10:46:39 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240823104639epsmtrp2a5af888759a8b81fe7731ecd1c213759~uVcILd2ID0163301633epsmtrp2m;
-	Fri, 23 Aug 2024 10:46:39 +0000 (GMT)
-X-AuditID: b6c32a4b-613ff700000025aa-8d-66c86912ad23
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	5D.50.19367.F8868C66; Fri, 23 Aug 2024 19:46:39 +0900 (KST)
-Received: from localhost.localdomain (unknown [107.99.41.245]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240823104636epsmtip20ab42e1096e1e413e32f65d84bf4f0bb~uVcFxtx0q1442714427epsmtip2y;
-	Fri, 23 Aug 2024 10:46:36 +0000 (GMT)
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
-	martin.petersen@oracle.com, asml.silence@gmail.com, krisman@suse.de
-Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	linux-scsi@vger.kernel.org, Anuj Gupta <anuj20.g@samsung.com>
-Subject: [PATCH v3 10/10] scsi: add support for user-meta interface
-Date: Fri, 23 Aug 2024 16:08:11 +0530
-Message-Id: <20240823103811.2421-12-anuj20.g@samsung.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240823103811.2421-1-anuj20.g@samsung.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iPbz2+gJ"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5bed0a2ae0fso2318523a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 03:54:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1724410498; x=1725015298; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=omruiQm6a5bc66MUXbQR9m5P3TmPXwromhV72gtRPA8=;
+        b=iPbz2+gJQqPv5x7gnMdzB74+udK5Lz+aAKJhVQokvS1P0vmauS9WKL2eCkCKwOCb5S
+         1a8yzSguZUU4Kc0RxL9HIm/WjVHtEUZAtmLg5hfWVHWZAlvpdSqMd7K35pEn/zn8pZFA
+         uSylsBcWx3+rnR5wDBkmiwt+ss8/ZgXeicBNCHGSVJVggHJs2flkOyZ1FBLY0YSRU5hw
+         hpQHjrjuvMC7Gv7ojAvUTBMwI6dXDF+h+Zf7esiNsAH7pnt49Xq8GLXYooyb+JhxbVBE
+         /ZtNEmarRtxKZQQwKgjgHJDf0XK0iVRk2Df5v9FjTVy8lftwptJbp/S9nvdgw/9fkKiF
+         EFdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724410498; x=1725015298;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=omruiQm6a5bc66MUXbQR9m5P3TmPXwromhV72gtRPA8=;
+        b=RUY4cRihD66aJpQoL6Gf0/TWibN4eUprOKcLaMlvNz9NjoQp4UsvlpfgUqAnqTUU81
+         lITHonII6PO5OK0N4vFHll1CuHWWbMJ/L8li6IoAcGgaufdcxTaQTHqujOeI8Ibrz5DP
+         x6y9JLLjY0xQSGH0MPptx7M3UJkzWOuFKnscQbaahXMlSEWv1Z/MG0RUfvJON4Z8W/gY
+         ic+zQEldqlwRdhtJuPHR2AfE/aWHOon2D2R2SfQNl9EheHqni8Nx7mklNrcRX+Ge0EAb
+         /1l2dFE/gObO9y/eNDo3nlTy5l4TLVnEU84tli6uupgB4Ch69Xw1lblj387DPJ44UuMW
+         sX3g==
+X-Gm-Message-State: AOJu0Yw6ytuN9c/k2m1F0uOEYpsKkj5yiwJUq8I9c7etUR7A0ztlj5nb
+	o4/AlRyiqEzvSSIhcdq8u/ceBiaxVE2VNkVTL2ayUoxbM45cRocr
+X-Google-Smtp-Source: AGHT+IGymMQJHR0jLDqcL5AWE+iaajVGADhtsGvJJ+LdcOXmiPyu36a4Rl8ILOA0TlMTk63lrbWTBA==
+X-Received: by 2002:a17:906:f58b:b0:a7d:e956:ad51 with SMTP id a640c23a62f3a-a86a52b899amr128447066b.21.1724410497265;
+        Fri, 23 Aug 2024 03:54:57 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a868f4360c0sm242595666b.108.2024.08.23.03.54.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Aug 2024 03:54:56 -0700 (PDT)
+Message-ID: <8a81431a90c9c0c5bb0c90deba825284bff55d83.camel@gmail.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
+ hibernation
+From: Bean Huo <huobean@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>, quic_cang@quicinc.com
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, Peter Wang
+ <peter.wang@mediatek.com>,  Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, Avri Altman <avri.altman@wdc.com>,
+ Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>, Alim
+ Akhtar <alim.akhtar@samsung.com>, Eric Biggers <ebiggers@google.com>,
+ Minwoo Im <minwoo.im@samsung.com>, Maramaina Naresh
+ <quic_mnaresh@quicinc.com>
+Date: Fri, 23 Aug 2024 12:54:55 +0200
+In-Reply-To: <4964ac76-abdd-4cdc-b8d0-3484b3286449@acm.org>
+References: <20240821182923.145631-1-bvanassche@acm.org>
+	 <20240821182923.145631-3-bvanassche@acm.org>
+	 <0e552232c1759ba1749acb9b606a03670bbe1ba1.camel@gmail.com>
+	 <25ba6504-9a10-4c59-a180-620ddfd06622@acm.org>
+	 <bb2a1649ef94637f236dece7255d497f7fe03f19.camel@gmail.com>
+	 <4964ac76-abdd-4cdc-b8d0-3484b3286449@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrJJsWRmVeSWpSXmKPExsWy7bCmpq5Q5ok0g2sn5S2aJvxltpizahuj
-	xeq7/WwWNw/sZLJYufook8W71nMsFpMOXWO02H5mKbPF3lvaFvOXPWW36L6+g81i+fF/TA48
-	Hjtn3WX3uHy21GPTqk42j81L6j1232xg8/j49BaLR9+WVYwem09Xe3zeJBfAGZVtk5GamJJa
-	pJCal5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0r5JCWWJOKVAoILG4
-	WEnfzqYov7QkVSEjv7jEVim1ICWnwKRArzgxt7g0L10vL7XEytDAwMgUqDAhO+PJu8tMBS0K
-	FZvaVjE2MF6V6mLk5JAQMJFo2LmesYuRi0NIYDejxJ7fy9kgnE+MEr0fLzHDOR2dj5lgWjZO
-	nMMCkdjJKLFo21mols+MEkvefGMEqWITUJc48rwVzBYRqJR4vusHWAezwCZGiV/Xj4GNEhZw
-	lrjW+hyom4ODRUBV4tzxHJAwr4ClxNPbL9ggtslLzLz0nR3E5gSKN81uYIGoEZQ4OfMJmM0M
-	VNO8dTbYqRICCzkkdp1bwQzR7CIx7XcrC4QtLPHq+BZ2CFtK4vO7vVAL0iV+XH4K9VqBRPOx
-	fYwQtr1E66l+ZpDbmAU0Jdbv0ocIy0pMPbWOCWIvn0Tv7ydQrbwSO+bB2EoS7SvnQNkSEnvP
-	NTCBjJEQ8JA4PAsaVj2MEtf297BMYFSYheSdWUjemYWweQEj8ypGydSC4tz01GLTAuO81HJ4
-	LCfn525iBKdhLe8djI8efNA7xMjEwXiIUYKDWUmEN+ne0TQh3pTEyqrUovz4otKc1OJDjKbA
-	4J7ILCWanA/MBHkl8YYmlgYmZmZmJpbGZoZK4ryvW+emCAmkJ5akZqemFqQWwfQxcXBKNTB1
-	Z5msFxLKXZn7snzOF7Wjbww+8W0WWZ/V8Kb928f2N34n2aN2PCna6nb6xvp5hXrhyrPSL66x
-	f7N7ls4fhXcWn2qzTtzfxLhn5S4B9u86E5q3Lpyc6m+9bUVWe02r/LWA5X+23JJapGQqJiog
-	814pU/0yZ4ui8Lwlk/jcn5yYYcoscH3D0cCApzdCPviUi9bOXhn3SXSz/A2TkuXtD9/HSm8t
-	/tbvtYU9KjDy2q5bQU+NP93fkSbLcqsmz+46Y/jiKUE66/yXFb3kkX0oYBR/nC3phljT9szj
-	ivWqLd8XhFRmTvKIWHtDvSZqc+RP28NC1wXXMXT6euQ5bmi5oPNqm6nQG7ld927dudevui9P
-	iaU4I9FQi7moOBEALz1gXkwEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrLLMWRmVeSWpSXmKPExsWy7bCSvG5/xok0g6dnOC2aJvxltpizahuj
-	xeq7/WwWNw/sZLJYufook8W71nMsFpMOXWO02H5mKbPF3lvaFvOXPWW36L6+g81i+fF/TA48
-	Hjtn3WX3uHy21GPTqk42j81L6j1232xg8/j49BaLR9+WVYwem09Xe3zeJBfAGcVlk5Kak1mW
-	WqRvl8CV8eTdZaaCFoWKTW2rGBsYr0p1MXJySAiYSGycOIeli5GLQ0hgO6PE+k3XWSASEhKn
-	Xi5jhLCFJVb+e84OUfSRUeL4pbfsIAk2AXWJI89bGUESIgKNjBJbmr+AjWIW2MEose7ZYrB2
-	YQFniWutz9m6GDk4WARUJc4dzwEJ8wpYSjy9/YINYoO8xMxL38GGcgLFm2Y3gF0hJGAhsWz5
-	GUaIekGJkzOfgMWZgeqbt85mnsAoMAtJahaS1AJGplWMoqkFxbnpuckFhnrFibnFpXnpesn5
-	uZsYwTGiFbSDcdn6v3qHGJk4GA8xSnAwK4nwJt07mibEm5JYWZValB9fVJqTWnyIUZqDRUmc
-	VzmnM0VIID2xJDU7NbUgtQgmy8TBKdXAVHnw3Kx58kwVyaVBhqX/OxqsgkISGQvlv/aern1V
-	pxhYfWvrrP4XGef7JFSCMqbmf1ojoR9aduD1TVGFXecXhN5iai+8ym3XPbO5edvP/1wF77c5
-	eAkcbTStYErufGHitWpHb8xkJmW/GpEPQR8ZrGVPPa696349/JjR/rR4UUUGsxaBpN1ezEaz
-	/9XGOGlo58yqvJ6y/vqTnatnWmc9eHZ8vipr1VGJQzO8/LrcV5ROasy/GqD58tYUoTu65e0T
-	Tglv/s7I9j663CTeJsz34tPblwTMLtn/ltYV2N0jOGnnl23Gx6Ieb5Gv7BcweXb5433F1Obz
-	f/uXXLR+y8Uh+vbx/l/sQfesD1+b9vi8EktxRqKhFnNRcSIAVsx/6QADAAA=
-X-CMS-MailID: 20240823104639epcas5p11dbab393122841419368a86b4bd5c04b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240823104639epcas5p11dbab393122841419368a86b4bd5c04b
-References: <20240823103811.2421-1-anuj20.g@samsung.com>
-	<CGME20240823104639epcas5p11dbab393122841419368a86b4bd5c04b@epcas5p1.samsung.com>
 
-Add support for sending user-meta buffer. Set tags to be checked
-using flags specified by user/block-layer user and underlying DIF/DIX
-configuration. Introduce BLK_INTEGRITY_APP_TAG to specify apptag.
-This provides a way for upper layers to specify apptag checking.
+On Thu, 2024-08-22 at 10:51 -0700, Bart Van Assche wrote:
+> On 8/22/24 7:17 AM, Bean Huo wrote:
+> > Do you mean re-enabling UIC complete interrupt will cause the
+> > problem?
+>=20
+> That's correct. ufshcd_uic_hibern8_enter() calls
+> ufshcd_uic_pwr_ctrl()
+> indirectly. For the test setup that is on my desk, the code in
+> ufshcd_uic_pwr_ctrl() that re-enables the UIC completion interrupt
+> causes the UFS host controller to exit hibernation.
+>=20
+> Thanks,
+>=20
+> Bart.
 
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
----
- block/bio-integrity.c         |  2 ++
- drivers/scsi/sd.c             | 25 +++++++++++++++++++++++--
- drivers/scsi/sd_dif.c         |  2 +-
- include/linux/blk-integrity.h |  1 +
- 4 files changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 02b766c2e57d..ff7de4fe74c4 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -492,6 +492,8 @@ bool bio_integrity_prep(struct bio *bio)
- 		bip->bip_flags |= BIP_CHECK_GUARD;
- 	if (bi->flags & BLK_INTEGRITY_REF_TAG)
- 		bip->bip_flags |= BIP_CHECK_REFTAG;
-+	if (bi->flags & BLK_INTEGRITY_APP_TAG)
-+		bip->bip_flags |= BIP_CHECK_APPTAG;
- 	if (bio_integrity_add_page(bio, virt_to_page(buf), len,
- 			offset_in_page(buf)) < len) {
- 		printk(KERN_ERR "could not attach integrity payload\n");
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 699f4f9674d9..6ebef140cec2 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -803,6 +803,23 @@ static unsigned int sd_prot_flag_mask(unsigned int prot_op)
- 	return flag_mask[prot_op];
- }
- 
-+/*
-+ * Can't check reftag alone or apptag alone
-+ */
-+static bool sd_prot_flags_valid(struct scsi_cmnd *scmd)
-+{
-+	struct request *rq = scsi_cmd_to_rq(scmd);
-+	struct bio *bio = rq->bio;
-+
-+	if (bio_integrity_flagged(bio, BIP_CHECK_REFTAG) &&
-+	    !bio_integrity_flagged(bio, BIP_CHECK_APPTAG))
-+		return false;
-+	if (!bio_integrity_flagged(bio, BIP_CHECK_REFTAG) &&
-+	    bio_integrity_flagged(bio, BIP_CHECK_APPTAG))
-+		return false;
-+	return true;
-+}
-+
- static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
- 					   unsigned int dix, unsigned int dif)
- {
-@@ -815,14 +832,16 @@ static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
- 		if (bio_integrity_flagged(bio, BIP_IP_CHECKSUM))
- 			scmd->prot_flags |= SCSI_PROT_IP_CHECKSUM;
- 
--		if (bio_integrity_flagged(bio, BIP_CTRL_NOCHECK) == false)
-+		if (bio_integrity_flagged(bio, BIP_CTRL_NOCHECK) == false &&
-+		    (bio_integrity_flagged(bio, BIP_CHECK_GUARD)))
- 			scmd->prot_flags |= SCSI_PROT_GUARD_CHECK;
- 	}
- 
- 	if (dif != T10_PI_TYPE3_PROTECTION) {	/* DIX/DIF Type 0, 1, 2 */
- 		scmd->prot_flags |= SCSI_PROT_REF_INCREMENT;
- 
--		if (bio_integrity_flagged(bio, BIP_CTRL_NOCHECK) == false)
-+		if ((bio_integrity_flagged(bio, BIP_CTRL_NOCHECK) == false) &&
-+			(!dix || bio_integrity_flagged(bio, BIP_CHECK_REFTAG)))
- 			scmd->prot_flags |= SCSI_PROT_REF_CHECK;
- 	}
- 
-@@ -1374,6 +1393,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
- 	dld = sd_cdl_dld(sdkp, cmd);
- 
-+	if (!sd_prot_flags_valid(cmd))
-+		goto fail;
- 	if (dif || dix)
- 		protect = sd_setup_protect_cmnd(cmd, dix, dif);
- 	else
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index ae6ce6f5d622..6c53e3b9d7d7 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -50,7 +50,7 @@ void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim)
- 		bi->csum_type = BLK_INTEGRITY_CSUM_CRC;
- 
- 	if (type != T10_PI_TYPE3_PROTECTION)
--		bi->flags |= BLK_INTEGRITY_REF_TAG;
-+		bi->flags |= BLK_INTEGRITY_REF_TAG | BLK_INTEGRITY_APP_TAG;
- 
- 	bi->tuple_size = sizeof(struct t10_pi_tuple);
- 
-diff --git a/include/linux/blk-integrity.h b/include/linux/blk-integrity.h
-index 2ff65c933c50..865e0c4a7255 100644
---- a/include/linux/blk-integrity.h
-+++ b/include/linux/blk-integrity.h
-@@ -13,6 +13,7 @@ enum blk_integrity_flags {
- 	BLK_INTEGRITY_DEVICE_CAPABLE	= 1 << 2,
- 	BLK_INTEGRITY_REF_TAG		= 1 << 3,
- 	BLK_INTEGRITY_STACKED		= 1 << 4,
-+	BLK_INTEGRITY_APP_TAG		= 1 << 5,
- };
- 
- const char *blk_integrity_profile_name(struct blk_integrity *bi);
--- 
-2.25.1
+Do you think this is only true in your case or for a specific UFS
+controller vendor? and this doesnnot mean that all UFS controller
+vendors have this problem? Maybe MTK has confirmed this.
 
+Kind regards,
+Bean
