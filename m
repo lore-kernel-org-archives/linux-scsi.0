@@ -1,165 +1,81 @@
-Received: from bee.tesarici.cz (bee.tesarici.cz [37.205.15.56])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4047142E9D;
-	Fri, 23 Aug 2024 08:26:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.205.15.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAB4A1BF3A
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 10:07:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724401606; cv=none; b=ExdnjF/ctOb3YWfHbstWCISuF2/dpY2shUVSlDbzkijY945txTfOJVtek+QygrpAYhrxDMLRm9V12OLCfMVVCrUi/QWJ7UutaK7CBZIDjk3Ia4oQ4JPqbN8VYxUu1fxreTaQmoOV6pj6sI+swYBMT26cupWlCQDPE9qKboBvyXU=
+	t=1724407637; cv=none; b=EnTDIGPe54bEr0iiWXMc1bZhvhikWvICK7IM2hMD/gu61iZdfT0XMTGOlv5IbVb6SmluxqOFXDGut4ITC6hKLHgUaox5h+xyCRx7/fZs2xrzOqTuWTN0wYuz/hlNN6cl5V+98VIS0e5+z+aZ7DJoaLnYUPJc+99lKVKtSSzmDBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724401606; c=relaxed/simple;
-	bh=7T7/wu2fTf7TBVQfzGOrguX+PSXn0cZDoDAeHENBD68=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eyGYWYYAhb5mwzviBXHklz44Ii9C7to3DY1GtmiskYoQxDyE1FE/egnN5eB878SGbrx/KIF9X4xSSrpIVv3o4MgJL8iYWP2KR1ynpTCk+xcpubqVKDFd2bbN70UCl0OZ4XHLxummS03YbStQr5zXYNG3OVDFmC3quGQ2iJ0DRR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz; spf=pass smtp.mailfrom=tesarici.cz; dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b=XC9qMPOO; arc=none smtp.client-ip=37.205.15.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tesarici.cz
+	s=arc-20240116; t=1724407637; c=relaxed/simple;
+	bh=kVXSpDBjpqeIA9h/JrCMEWc0xvlaSHtAgxR+7HXSlh8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uJ4NLpmpfLA9DB+ehbDE/Nlkbx2vc6B1dL+eVnT/ZxuHsj93LFYZOg1tvtbEKcSxEZKeIT5TSNkNcG91TP7XJ+Xzo0rlJu7WwZZu1eRAVvl0Vct665Hd0A29X4rK9r9LN/4elDcaULbWJ0dOXJU9BNCmP5kenJU1fFkA6IkswRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=VWnvUEjD; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b="XC9qMPOO"
-Received: from meshulam.tesarici.cz (dynamic-2a00-1028-83b8-1e7a-4427-cc85-6706-c595.ipv6.o2.cz [IPv6:2a00:1028:83b8:1e7a:4427:cc85:6706:c595])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by bee.tesarici.cz (Postfix) with ESMTPSA id DE4CB1EFCD7;
-	Fri, 23 Aug 2024 10:26:42 +0200 (CEST)
-Authentication-Results: mail.tesarici.cz; dmarc=fail (p=quarantine dis=none) header.from=tesarici.cz
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tesarici.cz; s=mail;
-	t=1724401603; bh=Cb6PqhKpP7ar8ly8cR261dRzbAdFkd8uMnNKWb2a72o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=XC9qMPOORHKhGxtuEqYZWhvcUQLSNDTTWFjMy7+rqMjBR9aYZGjGlBG+CmW7OwuBd
-	 79L2I6aLuc6yr04anJqToCOvN8WGrTn4Qj3hDxFjqcIPA19NIw9Qv5BX9fA94+0GLp
-	 l0KLIqCBvO5HvmmGNdpFXIx5W/2SAWYzfdlkVsvrgKK7684mvl3vazypXIiu4q3eT6
-	 ly51l/+pDVIJAnQLo31UocvED2gBi2BKjLawYJsX20XKZjre3ZP5ZDr36H+cLhz3Cq
-	 FS9QfPScXdp/I8kJkYGIub0pHKSC4fz0ZnE8ceUv/MIW5c8GKhp+GCt7HxqKo4RFyf
-	 E3DQF8XeboGVQ==
-Date: Fri, 23 Aug 2024 10:26:42 +0200
-From: Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
-To: mhkelley58@gmail.com
-Cc: mhklinux@outlook.com, kbusch@kernel.org, axboe@kernel.dk,
- sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
- wei.liu@kernel.org, decui@microsoft.com, robin.murphy@arm.com, hch@lst.de,
- m.szyprowski@samsung.com, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
- linux-coco@lists.linux.dev
-Subject: Re: [RFC 7/7] nvme: Enable swiotlb throttling for NVMe PCI devices
-Message-ID: <20240823102642.3f7f893a@meshulam.tesarici.cz>
-In-Reply-To: <20240822183718.1234-8-mhklinux@outlook.com>
-References: <20240822183718.1234-1-mhklinux@outlook.com>
-	<20240822183718.1234-8-mhklinux@outlook.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.43; x86_64-suse-linux-gnu)
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="VWnvUEjD"
+X-UUID: 754a190c613711ef8b96093e013ec31c-20240823
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Fdq16s+JWgRTDOO2fTXORoRgv/0rmwreJrXDzyZgQbo=;
+	b=VWnvUEjDehtEvDx1cBztaJsTNIfR9Geufx+xr3KC30z+NVuv4kIpIiRSSkYWeEm1VDN2cwLRI1ZBAOw8VyFHmcHa+ssWbUtIBPf46cVvf76nxSgcgQ5joHscGOETULpyX8Ksg5sbKiKwXLNB/uaPKlIBtFUHsep79QdvVp+hncI=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:8563a014-c7eb-4b70-bd6c-c2fd882056c4,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6dc6a47,CLOUDID:e9b411cf-7921-4900-88a1-3aef019a55ce,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: 754a190c613711ef8b96093e013ec31c-20240823
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 703298884; Fri, 23 Aug 2024 18:07:09 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 23 Aug 2024 03:07:09 -0700
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 23 Aug 2024 18:07:09 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>
+Subject: [PATCH v1 0/2] ufs: core: fix err handler mcq abort defect
+Date: Fri, 23 Aug 2024 18:07:05 +0800
+Message-ID: <20240823100707.6699-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK: N
 
-On Thu, 22 Aug 2024 11:37:18 -0700
-mhkelley58@gmail.com wrote:
+From: Peter Wang <peter.wang@mediatek.com>
 
-> From: Michael Kelley <mhklinux@outlook.com>
-> 
-> In a CoCo VM, all DMA-based I/O must use swiotlb bounce buffers
-> because DMA cannot be done to private (encrypted) portions of VM
-> memory. The bounce buffer memory is marked shared (decrypted) at
-> boot time, so I/O is done to/from the bounce buffer memory and then
-> copied by the CPU to/from the final target memory (i.e, "bounced").
-> Storage devices can be large consumers of bounce buffer memory because
-> it is possible to have large numbers of I/Os in flight across multiple
-> devices. Bounce buffer memory must be pre-allocated at boot time, and
-> it is difficult to know how much memory to allocate to handle peak
-> storage I/O loads. Consequently, bounce buffer memory is typically
-> over-provisioned, which wastes memory, and may still not avoid a peak
-> that exhausts bounce buffer memory and cause storage I/O errors.
-> 
-> For Coco VMs running with NVMe PCI devices, update the driver to
-> permit bounce buffer throttling. Gate the throttling behavior
-> on a DMA layer check indicating that throttling is useful, so that
-> no change occurs in a non-CoCo VM. If throttling is useful, enable
-> the BLK_MQ_F_BLOCKING flag, and pass the DMA_ATTR_MAY_BLOCK attribute
-> into dma_map_bvec() and dma_map_sgtable() calls. With these options in
-> place, DMA map requests are pended when necessary to reduce the
-> likelihood of usage peaks caused by the NVMe driver that could exhaust
-> bounce buffer memory and generate errors.
-> 
-> Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+This series fixes ufshcd_err_handler abort defect in mcq mode.
 
-LGTM.
+Peter Wang (2):
+  ufs: core: complete scsi command after release
+  ufs: core: force reset after mcq abort all
 
-Reviewed-by: Petr Tesarik <ptesarik@suse.com>
+ drivers/ufs/core/ufshcd.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Petr T
-
-> ---
->  drivers/nvme/host/pci.c | 18 ++++++++++++++----
->  1 file changed, 14 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index 6cd9395ba9ec..2c39943a87f8 100644
-> --- a/drivers/nvme/host/pci.c
-> +++ b/drivers/nvme/host/pci.c
-> @@ -156,6 +156,7 @@ struct nvme_dev {
->  	dma_addr_t host_mem_descs_dma;
->  	struct nvme_host_mem_buf_desc *host_mem_descs;
->  	void **host_mem_desc_bufs;
-> +	unsigned long dma_attrs;
->  	unsigned int nr_allocated_queues;
->  	unsigned int nr_write_queues;
->  	unsigned int nr_poll_queues;
-> @@ -735,7 +736,8 @@ static blk_status_t nvme_setup_prp_simple(struct nvme_dev *dev,
->  	unsigned int offset = bv->bv_offset & (NVME_CTRL_PAGE_SIZE - 1);
->  	unsigned int first_prp_len = NVME_CTRL_PAGE_SIZE - offset;
->  
-> -	iod->first_dma = dma_map_bvec(dev->dev, bv, rq_dma_dir(req), 0);
-> +	iod->first_dma = dma_map_bvec(dev->dev, bv, rq_dma_dir(req),
-> +					dev->dma_attrs);
->  	if (dma_mapping_error(dev->dev, iod->first_dma))
->  		return BLK_STS_RESOURCE;
->  	iod->dma_len = bv->bv_len;
-> @@ -754,7 +756,8 @@ static blk_status_t nvme_setup_sgl_simple(struct nvme_dev *dev,
->  {
->  	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
->  
-> -	iod->first_dma = dma_map_bvec(dev->dev, bv, rq_dma_dir(req), 0);
-> +	iod->first_dma = dma_map_bvec(dev->dev, bv, rq_dma_dir(req),
-> +					dev->dma_attrs);
->  	if (dma_mapping_error(dev->dev, iod->first_dma))
->  		return BLK_STS_RESOURCE;
->  	iod->dma_len = bv->bv_len;
-> @@ -800,7 +803,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
->  		goto out_free_sg;
->  
->  	rc = dma_map_sgtable(dev->dev, &iod->sgt, rq_dma_dir(req),
-> -			     DMA_ATTR_NO_WARN);
-> +			     dev->dma_attrs | DMA_ATTR_NO_WARN);
->  	if (rc) {
->  		if (rc == -EREMOTEIO)
->  			ret = BLK_STS_TARGET;
-> @@ -828,7 +831,8 @@ static blk_status_t nvme_map_metadata(struct nvme_dev *dev, struct request *req,
->  	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
->  	struct bio_vec bv = rq_integrity_vec(req);
->  
-> -	iod->meta_dma = dma_map_bvec(dev->dev, &bv, rq_dma_dir(req), 0);
-> +	iod->meta_dma = dma_map_bvec(dev->dev, &bv, rq_dma_dir(req),
-> +					dev->dma_attrs);
->  	if (dma_mapping_error(dev->dev, iod->meta_dma))
->  		return BLK_STS_IOERR;
->  	cmnd->rw.metadata = cpu_to_le64(iod->meta_dma);
-> @@ -3040,6 +3044,12 @@ static struct nvme_dev *nvme_pci_alloc_dev(struct pci_dev *pdev,
->  	 * a single integrity segment for the separate metadata pointer.
->  	 */
->  	dev->ctrl.max_integrity_segments = 1;
-> +
-> +	if (dma_recommend_may_block(dev->dev)) {
-> +		dev->ctrl.blocking = true;
-> +		dev->dma_attrs = DMA_ATTR_MAY_BLOCK;
-> +	}
-> +
->  	return dev;
->  
->  out_put_device:
+-- 
+2.45.2
 
