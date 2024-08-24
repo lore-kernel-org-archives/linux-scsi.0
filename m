@@ -1,35 +1,33 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C641179BD;
-	Sat, 24 Aug 2024 08:16:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DA5E155730;
+	Sat, 24 Aug 2024 08:24:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724487385; cv=none; b=ICqCANXD1z/dowhtaF9UFnAaM9umJzKHuwABnpUpLiJ4brCfUFW73hV+U2U2jkfXIrJztkZGnxp3kQSPt4ausI+2uzz4rp+ga75y/T9K4qIOwlAZD1G/OqFbt7NIsVJ9o421g7SHOEfpE+mLqQ0oAgJbFelISYiuK5YL/ACkZLE=
+	t=1724487876; cv=none; b=hDBUsNzNHml3u/aiBxLdhd4ViYeiIHJpimNsVqVMFQ2EQ5cIpQaFk+Tz2O7CDjHPpfHDsypKee7+BMHPzowgKRaXWpwIKT+Sag1iTN/tRbCeNdTNekjzi1GYzQbOTWCYBPKgWJUOD7BvcNm6GXnx8v+6ln54xzZGtlOfAjGw8m8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724487385; c=relaxed/simple;
-	bh=tPuCwHyIKcY3Z4wwkH2t8Pvr1gWq8xRTEmWqoLqXl88=;
+	s=arc-20240116; t=1724487876; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GphJcCz3Q6Uzfy9OaZ1fZuTLnwFnuXWX0l6O5dgzBt8mGU0bwyd97rb1NuD8Lq0Df+ncsmFdQa2U4PHK1jWJvP72OHviXUQT1r0Cv4WoWatJybHqsAmvZFyM4+istFHMg2ZlBsH6UYwkNEmx+muLVYdme6hSTE05ksHTVg2YeC8=
+	 Content-Type:Content-Disposition:In-Reply-To; b=urYlNyJVgNstMRCPvAu4Ri9em6f8JwmaO79/DLo3BR1iLq6Sz1ncwmp0spqyNb58ZnLfaD1DYfygFa+Mf8bY+RLCemvQPkHGOMUkoX4xWWOESEoPIQ+3E9WjBPmwGe8d6arXgBJonJNzJ97pvc7x5eyrdLKdcUT7+KXA44I7BTI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 4F46A227A87; Sat, 24 Aug 2024 10:16:18 +0200 (CEST)
-Date: Sat, 24 Aug 2024 10:16:18 +0200
+	id 1C257227A87; Sat, 24 Aug 2024 10:24:30 +0200 (CEST)
+Date: Sat, 24 Aug 2024 10:24:30 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: mhklinux@outlook.com
-Cc: kbusch@kernel.org, axboe@kernel.dk, sagi@grimberg.me,
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-	kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-	decui@microsoft.com, robin.murphy@arm.com, hch@lst.de,
-	m.szyprowski@samsung.com, petr@tesarici.cz, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-coco@lists.linux.dev
-Subject: Re: [RFC 0/7] Introduce swiotlb throttling
-Message-ID: <20240824081618.GB8527@lst.de>
-References: <20240822183718.1234-1-mhklinux@outlook.com>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
+	martin.petersen@oracle.com, asml.silence@gmail.com, krisman@suse.de,
+	io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org, gost.dev@samsung.com,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 01/10] block: define set of integrity flags to be
+ inherited by cloned bip
+Message-ID: <20240824082430.GA8805@lst.de>
+References: <20240823103811.2421-1-anuj20.g@samsung.com> <CGME20240823104616epcas5p4bd315bd116ea7e32b1abf7e174af64a1@epcas5p4.samsung.com> <20240823103811.2421-2-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,41 +36,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240822183718.1234-1-mhklinux@outlook.com>
+In-Reply-To: <20240823103811.2421-2-anuj20.g@samsung.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Aug 22, 2024 at 11:37:11AM -0700, mhkelley58@gmail.com wrote:
-> Because it's not possible to detect at runtime whether a DMA map call
-> is made in a context that can block, the calls in key device drivers
-> must be updated with a MAY_BLOCK attribute, if appropriate. When this
-> attribute is set and swiotlb memory usage is above a threshold, the
-> swiotlb allocation code can serialize swiotlb memory usage to help
-> ensure that it is not exhausted.
+Looks good:
 
-One thing I've been doing for a while but haven't gotten to due to
-my lack of semantic patching skills is that we really want to split
-the few flags useful for dma_map* from DMA_ATTR_* which largely
-only applies to dma_alloc.
-
-Only DMA_ATTR_WEAK_ORDERING (if we can't just kill it entirely)
-and for now DMA_ATTR_NO_WARN is used for both.
-
-DMA_ATTR_SKIP_CPU_SYNC and your new SLEEP/BLOCK attribute is only
-useful for mapping, and the rest is for allocation only.
-
-So I'd love to move to a DMA_MAP_* namespace for the mapping flags
-before adding more on potentially widely used ones.
-
-With a little grace period we can then also phase out DMA_ATTR_NO_WARN
-for allocations, as the gfp_t can control that much better.
-
-> In general, storage device drivers can take advantage of the MAY_BLOCK
-> option, while network device drivers cannot. The Linux block layer
-> already allows storage requests to block when the BLK_MQ_F_BLOCKING
-> flag is present on the request queue.
-
-Note that this also in general involves changes to the block drivers
-to set that flag, which is a bit annoying, but I guess there is not
-easy way around it without paying the price for the BLK_MQ_F_BLOCKING
-overhead everywhere.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
