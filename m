@@ -1,74 +1,67 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C4D381B9
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 02:29:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B32E5AD5B
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 02:48:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724466588; cv=none; b=X6o2/xDaERm6ILASvdPu46JVayg0rQyN7iDSpRnuUO9G+37Wr0N+Sh5LMo/EPk6SaFcxbbZVScaEHGa+yCW+QeuHUEjYxSY+iw0OxxIBIk8sIyvX45FTaxUjULhiVUqo9WRL6zDmmPvzEzGmCHzr75OfgtxIKesKjk4iwWF4Tmg=
+	t=1724467740; cv=none; b=dQsTEhkSBqcEkpb2ieDkdseo+Eju38DXZeoeUtKz94KJSGDM9H5hANXVvPuy9iHR8FHmQEkLAL8UWA4W511aezAefLs54K9H6rKmObzHpBJe+9OQRSbbMSn5YETDO3fYo/e4MGV9hlHLsOmu9Kom9/c0EIzyrp7LsBLdxVet1Vg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724466588; c=relaxed/simple;
-	bh=HB8sOVmVq2SFOhyTL0BsBPc1nEGkXN0Wg6F7BI0Pcts=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MCrVrgM2Yopxbu2PCoK+jIffm+NfBqPkMhhZFCA4PhrGzFaDa/yxM7aJvEl4Edd31n4SAs2jfof2NNEKtJRuMyNzrsGhljdbL4pb6hq8AKcHJMbQDAA+2HCXsSjmvVt3NTdAt/Pl6S/Tlm3w3vhvOhCeFW8+k4l8kF5cKm7WO3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=QG4QjkzB; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1724467740; c=relaxed/simple;
+	bh=OqhlSOxTWbvDrmgo/e2KIcsuH1lIbMJGvdh+F9GdbIg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NXCtDKPx472xe06TPsXYR+0YPmkxco3sWcu5HhYHRFTla46gMj2Z0++ZaQYlTDtEH+MD5/Qwd1XFjG8OjJ7qkVfjIJzoj6dEJ5hihWbnI0IEPbLjihAKbKYIbPDMKzCna3Wd6WpXOyhtRqCfZi8FTQVocB0oVcB0E+8hrCGWd4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qhF4Avzo; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QG4QjkzB"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1fee6435a34so18883185ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 19:29:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724466586; x=1725071386; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=1Y/+D85iiWw9j17ToU29/DDlQs8mVd/ieEio6xVmFjA=;
-        b=QG4QjkzBwdlLTkU17x5V4WiHYOPEc0urwHdv7AvS3c5Sh2jg2VjPnZfHgYKcR8clTn
-         Hnnrx8lH/y+OEMct5Nb5eVSg9plt5zcgSrKJzvMFQsbtA5ZK5mVvNW3Lw6uuxJspvidL
-         +8VsA8QOdoinQNmx/FvxWXj0CsTpTJKA8Lq0qLXdTLAgksGZjbCpSHOA/cDdiKcVgLnA
-         /sc8Wp7QMZtW/qARTO9Lipd+IZwCz8ojHo0MLq1f9VB1wd/duBfhlwBSZFIqLtA6KnFO
-         jQgR2pom6r3ebxLWefeq0EJ1/5EK/wfJ8OLVZb1JfEDLNdOgEXPqOdPUyVaY7bkX+pTy
-         +8lQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724466586; x=1725071386;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1Y/+D85iiWw9j17ToU29/DDlQs8mVd/ieEio6xVmFjA=;
-        b=nL7k+vUeBVxeTe/p0uLjCB0OZf3+JIR1tHRSjskU6a9d479u+1uzJGEFGThtelRBjh
-         bLhAwSrBpEdJhqklakX2Nko1bMzNzj5hAMN3P8BKew+/RBIONi9BFO8Y84mAmtZKUaRF
-         8YdfbrBC9HQEqITeqF36FyinqgPWqfmQOkavWLPjQhVTyOMmugWjUJ0wYTJV6ul9lSAk
-         r3iy+GyOUE788m3HbUve+IQ4/G87OsCviP19X3nTwmJGlIxk9sVyFtdqDir2RWrmI45+
-         jB0tQ+VWU5AUWKLJoufiZ7mz+1sxMxuhIM2LwqKa744U6gabkhnviYu04NtyLB8FN6Zc
-         wgZA==
-X-Forwarded-Encrypted: i=1; AJvYcCUG/aNHIhxysNpqAkGwNBq43YP2pHix8NLVw0ozDACOvCfp+wNK/OI/i6ovvSD9beY9xax3VO4VEMAC@vger.kernel.org
-X-Gm-Message-State: AOJu0YzsCi1IesLrAuUGfwwWM3XzBlnxs6M0zYaH9VvS96HFPClffarH
-	XhWnGpppfEJb/qXS2tUxR2JRBRy9OYOPYX2XAp3B9JxPYfNnhskuYFlYWrg/3w==
-X-Google-Smtp-Source: AGHT+IEn81lUMvOaVUlLCSFD7ITJcagH8cK0XYUU7n/Xxb9zJ+EEhqSp9PqjLOVWcPSr791fhMNm3Q==
-X-Received: by 2002:a17:902:d2cc:b0:202:11ab:ccf4 with SMTP id d9443c01a7336-2039e442d21mr51531555ad.6.1724466586333;
-        Fri, 23 Aug 2024 19:29:46 -0700 (PDT)
-Received: from thinkpad ([120.60.50.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385fc538bsm34396795ad.290.2024.08.23.19.29.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Aug 2024 19:29:45 -0700 (PDT)
-Date: Sat, 24 Aug 2024 07:59:29 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Eric Biggers <ebiggers@google.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qhF4Avzo"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WrLx60MlzzlgVnf;
+	Sat, 24 Aug 2024 02:48:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1724467734; x=1727059735; bh=OqhlSOxTWbvDrmgo/e2KIcsu
+	H1lIbMJGvdh+F9GdbIg=; b=qhF4Avzo3U3zYo2HGhBrsZx9uXs2FPfNv6OefOPR
+	Cumg96gangAOBdwqbHPLQ9Rfv5Ee322cgpBJliLa0j92aTg54lSlAqipWAcFu+EU
+	rZsClIJNlq43DAXMizHedNSINLebzw9yAA9cEo6a+uRtZNN04IkRdx9lE6IC6dH0
+	8Kbx5kyPfndi8y67Q8Tbxgo5uCq7vryZkGXpz6FnMMMFyLFl2SOUNplM/DNuJH00
+	6BM+58DIPX47YSRfJBb0n18PydOMuIY8iJruO1EUpe3sQnXesxoXJe6VxbyFHg5t
+	tP24uUpOu26MFIu7wGgDVUfNDgfJsHr/t3Dck/y+FNEckQ==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id hozhmgqbk0_k; Sat, 24 Aug 2024 02:48:54 +0000 (UTC)
+Received: from [172.20.20.20] (unknown [98.51.1.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WrLwz4JTZzlgVnF;
+	Sat, 24 Aug 2024 02:48:51 +0000 (UTC)
+Message-ID: <861b64b8-d0cc-42b3-bf57-375f84f4fe85@acm.org>
+Date: Fri, 23 Aug 2024 19:48:50 -0700
+Precedence: bulk
+X-Mailing-List: linux-scsi@vger.kernel.org
+List-Id: <linux-scsi.vger.kernel.org>
+List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
  hibernation
-Message-ID: <20240824022929.sxnh7sjl2tb6pmbm@thinkpad>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@wdc.com>,
+ Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Eric Biggers <ebiggers@google.com>,
+ Minwoo Im <minwoo.im@samsung.com>,
+ Maramaina Naresh <quic_mnaresh@quicinc.com>
 References: <6fceba57-e1f6-e76b-94f3-1684c1fe6e98@quicinc.com>
  <85481ed2-a911-41a4-8fd4-80e4d20dbf04@acm.org>
  <3a455ddb-7dad-cb2c-7b80-ec355221fb0a@quicinc.com>
@@ -79,57 +72,33 @@ References: <6fceba57-e1f6-e76b-94f3-1684c1fe6e98@quicinc.com>
  <c5699d57-cd51-4bff-95f4-372a00b2a3dd@acm.org>
  <20240823164822.fdkfswpyhlwnfgfl@thinkpad>
  <4b7d6a81-a0ac-4f1e-9744-6fc1ed4c6c43@acm.org>
-Precedence: bulk
-X-Mailing-List: linux-scsi@vger.kernel.org
-List-Id: <linux-scsi.vger.kernel.org>
-List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4b7d6a81-a0ac-4f1e-9744-6fc1ed4c6c43@acm.org>
+ <20240824022929.sxnh7sjl2tb6pmbm@thinkpad>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240824022929.sxnh7sjl2tb6pmbm@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Aug 23, 2024 at 11:05:12AM -0700, Bart Van Assche wrote:
-> On 8/23/24 9:48 AM, Manivannan Sadhasivam wrote:
-> > On Fri, Aug 23, 2024 at 09:07:18AM -0700, Bart Van Assche wrote:
-> > > On 8/23/24 7:58 AM, Manivannan Sadhasivam wrote:
-> > > > Then why can't you send the change at that time?
-> > > 
-> > > We use the Android GKI kernel and any patches must be sent upstream
-> > > first before these can be considered for inclusion in the GKI kernel.
-> > 
-> > But that's the same requirement for other SoC vendors as well. Anyway, these
-> > don't justify the fact that the core code should be modified to workaround a
-> > controller defect. Please use quirks as like other vendors.
-> 
-> Let me repeat what I mentioned earlier:
-> * Introducing a new quirk without introducing a user for that quirk is
->   not acceptable because that would involve introducing code that is
->   dead code from the point of view of the upstream kernel.
+On 8/23/24 7:29 PM, Manivannan Sadhasivam wrote:
+> What if other vendors start adding the workaround in the core driver citing GKI
+> requirement (provided it also removes some code as you justified)? Will it be
+> acceptable? NO.
 
-As I pointed out earlier, you should just submit the quirk change when you are
-submitting your driver. But you said that for GKI requirement you are doing the
-change in core driver. But again, that is applicable for other vendors as well.
-What if other vendors start adding the workaround in the core driver citing GKI
-requirement (provided it also removes some code as you justified)? Will it be
-acceptable? NO.
+It's not up to you to define new rules for upstream kernel development.
+Anyone is allowed to publish patches that rework kernel code, whether
+or not the purpose of such a patch is to work around a SoC bug.
 
-> * The UFS driver core is already complicated. If we don't need a new
->   quirk we shouldn't introduce a new quirk.
-> 
+Additionally, it has already happened that one of your colleagues
+submitted a workaround for a SoC bug to the UFS core driver.
+ From the description of commit 0f52fcb99ea2 ("scsi: ufs: Try to save
+power mode change and UIC cmd completion timeout"): "This is to deal
+with the scenario in which completion has been raised but the one
+waiting for the completion cannot be awaken in time due to kernel
+scheduling problem." That description makes zero sense to me. My
+conclusion from commit 0f52fcb99ea2 is that it is a workaround for a
+bug in a UFS host controller, namely that a particular UFS host
+controller not always generates a UIC completion interrupt when it
+should.
 
-Sorry, the quirk is a quirk. All the existing quirks can be worked around in the
-core driver in some way. But we have the quirk mechanisms to specifically not to
-do that to avoid polluting the core code which has to follow the spec.
+Bart.
 
-Moreover, this workaround you are adding is not at all common for other
-controllers. So this definitely doesn't justify modifying the core code.
-
-IMO adding more code alone will not make a driver complicated, but changing the
-logic will.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
