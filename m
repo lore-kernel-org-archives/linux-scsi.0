@@ -1,140 +1,89 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B81A182C5
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 03:03:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A5A23214;
+	Sat, 24 Aug 2024 03:49:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724468607; cv=none; b=G+Jmd+coA5m3t+wuOQQOy2m5MufvbFb3ASKihuyln8kYd/A4aVxYh9dxxqihgm78O2S8axgcoPl0wvG7Ae6mTXnnxPDKQr/GHA1NWFBm5pCZausDn8HLNhwcY2ijgab9QlBTWOwdeqE2ILPqC1QyVrxBzJg7tsal+/RfmI1LF44=
+	t=1724471371; cv=none; b=ByR4oxGRLeuoy1jNEGlb0vhxCpNoxOm2+DqZIixkdIffcWdrq/3lMc7B+jiadpXrqXFM277DZ18jV0WHnezogyfBZMIITlzoCe2Ds538KYRVSjaZmywlOILxJ42n5/Xx0p1wYHseQEdSwUnUmhrk5T5BsqzUw0aAFfyz4mHvFns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724468607; c=relaxed/simple;
-	bh=P0H2c1MZ+T7ykWgEYoZgjktZcfTvFH6nmSn8V2Ajlgs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mHoRV317+XsLU6j+Ku6PjUlzphtE6Mhds0G4n4LLPIBgSUxt4eDGnvJiZXeeSFPjF7+vyOi1g2JaG4vPejFuRA4FCjLMvMiwaM3vRnPYWvX6Md9iLgO0nePhLvL4aRBdB57LQBPqusoPf3COrq+RAZNzWTcvKBCVTol4v2Cppm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WQ8MDSru; arc=none smtp.client-ip=209.85.215.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1724471371; c=relaxed/simple;
+	bh=oUiQbPGEIGbA8nli/SmRi3mzqzziuakoXIzOXtb+xpE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZKKGAq+RXw6d5KuKWwmNlxYIYrBLWJsV8C0Kj1UXoMHZRkP1YTDs8D4FBhkZ7GhkhE7lGk2XIfgKLuiBmLFvf+ItNxHwuhG411SYQkemZm/YEpznemRvdrQkCVaXNI401prHE6zmjv42Hq2cNoFbQRupHl3ThZm7R+GBBkfwQwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ici0RPIL; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WQ8MDSru"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-7163489149eso1551564a12.1
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 20:03:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724468605; x=1725073405; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=KhC5nkpFOp0M/9ADExwfC0zOfh4qmr79nXiSJvjBjas=;
-        b=WQ8MDSrugDXkdp4cRJNUU9EpuhQDH15u4BmtYzDf4QJ9BMwU19mvjMLmw5JpUr3Z91
-         YoOoicWBwe+bg0Lm4RXKvsBuNyMTESQgW2UeMDvculMfRekwwV28vulkOMFlv1MYEKX0
-         6BpdWGziQIwX2uLnnKsg6d4enTQxS0WrezKpc7ieQTvKAJX21S7AMZinEKydnZNHLj6B
-         NdpRNwx0S2HC7keotzP+colG9c1k/+BsXT1eRZcWWWpH9tQbX9TCj73s1H8OmmRapEs5
-         +SPnHtGUDQ+fZ660eEoPYqu/0Ez5WNhZoa60ICtKd2GrqljtFpNBJe8eBwOkDtT1DyM+
-         eZ2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724468605; x=1725073405;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=KhC5nkpFOp0M/9ADExwfC0zOfh4qmr79nXiSJvjBjas=;
-        b=DrHICgjASkRRicJ5l3CF98TxMN/Er2pYFGwUzBMTcdCml2BiL/i7KaHFosoa0zMpDA
-         ewexG+6vBxEWhNHYVlVIsWmpcN4qeLe47FSSp31x/ONR6ZKHb+08uqn91YsvcOCdwxWO
-         d4eWKtXk82H2l9PjEP6xfgsQXCrbZwUGOzq8KozsMOtxIKmgnO/S5vJZsbXE8KXjRXH1
-         qYFKjkx+Q3dyXUWNP12/NhDYgqWuIDu+gd8nner0qAU8hXXlMB850a7MVusHDhpnHPth
-         EJXv9+1cW5kueDj8Pp2JyZ0j4KIBhIXzx05gvp5H0DdtjXAcCdxklwhzzol2XnnJxCLH
-         CbyQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUk2gnkdguIolzcmdmivBhluEKxYYi3BCFrzldjgXgdvyAJ7Y53+YiVN128TO8twqjhSQXZ1D8yjPf1@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywrw2/qILXnnz4yZK/Y06fd1ZRcRqeMXw+rChN1O7LWOPLXYKKx
-	vMyOrd0B0pqoF2HX72EYZU1m+t0z12RdamXV/MYNs+YJUm0YpTD64U5Nf8blZw==
-X-Google-Smtp-Source: AGHT+IGU0Mhzyvl5egT3Rm4QGqSzgOBJ56K6wSybAa2hhlqrgOyIz3ssvJNaXuj7dbbl+6h0miL2KQ==
-X-Received: by 2002:a17:903:18e:b0:203:8df1:1233 with SMTP id d9443c01a7336-2039e484574mr54592975ad.23.1724468605305;
-        Fri, 23 Aug 2024 20:03:25 -0700 (PDT)
-Received: from thinkpad ([120.60.50.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385566479sm34530635ad.58.2024.08.23.20.03.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Aug 2024 20:03:24 -0700 (PDT)
-Date: Sat, 24 Aug 2024 08:33:14 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ici0RPIL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=lT8Q7lVbYLqAyc8sacwXTnlCDNIWPRROT3qiMFaqTZk=; b=ici0RPIL/M2nHmgpbOTzIczhfy
+	Xf064nAGTpp3wblOY3ztqrmNg4G/oRrsm5TKwa4zywRcNwzYu1Rf08QJQ65m5S/L2Jx3eV+UQGsf7
+	Mff+VAf+rr/L13sUmvF8WDOG+nvWHJYug58RxXvej6IIhW42tl98VqftFcYlm4cOdm5oA9+3nebE8
+	5wFm2Mr7RYRQ+elxXzSZwHxZgjr9NAWBba6mtZDB6PDwBmc/tqvLVQB7URXCL2TWBxLx7QqSC3E5g
+	vah03tQD4MtZdIu0x0BotBzYDJN+KnTgC3ow+x5Hd71rRPBnzVus8CdHINbN7Me70ym6TfyJiPRsl
+	dh9ksCqA==;
+Received: from 2a02-8389-2341-5b80-7457-864c-9b77-b751.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:7457:864c:9b77:b751] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1shhmJ-00000001Mzu-3l73;
+	Sat, 24 Aug 2024 03:49:28 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: iommu@lists.linux.dev
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
 	linux-scsi@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Eric Biggers <ebiggers@google.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
- hibernation
-Message-ID: <20240824030314.rhsfdhralfpcdjgt@thinkpad>
-References: <3a455ddb-7dad-cb2c-7b80-ec355221fb0a@quicinc.com>
- <7d5c2cf5-24a3-4a1c-810f-f80ba367237e@acm.org>
- <20240823120104.siy54o6qja75lpwh@thinkpad>
- <5b3057e7-0d0f-4601-bf96-5d2111af2362@acm.org>
- <20240823145817.e24ka7mmbkn5purd@thinkpad>
- <c5699d57-cd51-4bff-95f4-372a00b2a3dd@acm.org>
- <20240823164822.fdkfswpyhlwnfgfl@thinkpad>
- <4b7d6a81-a0ac-4f1e-9744-6fc1ed4c6c43@acm.org>
- <20240824022929.sxnh7sjl2tb6pmbm@thinkpad>
- <861b64b8-d0cc-42b3-bf57-375f84f4fe85@acm.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	dmaengine@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-hyperv@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: remove the dma_set_{max_seg_size,seg_boundary,min_align_mask} return value v2
+Date: Sat, 24 Aug 2024 05:49:11 +0200
+Message-ID: <20240824034925.1163244-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <861b64b8-d0cc-42b3-bf57-375f84f4fe85@acm.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Aug 23, 2024 at 07:48:50PM -0700, Bart Van Assche wrote:
-> On 8/23/24 7:29 PM, Manivannan Sadhasivam wrote:
-> > What if other vendors start adding the workaround in the core driver citing GKI
-> > requirement (provided it also removes some code as you justified)? Will it be
-> > acceptable? NO.
-> 
-> It's not up to you to define new rules for upstream kernel development.
+Hi all,
 
-I'm not framing new rules, but just pointing out the common practice.
+the above three functions can only return errors if the bus code failed
+to allocate the dma_parms structure, which is a grave error that won't
+get us far.  Thus remove the pointless return values, that so far have
+fortunately been mostly ignored, but which the cleanup brigade now wants
+to check for for no good reason.
 
-> Anyone is allowed to publish patches that rework kernel code, whether
-> or not the purpose of such a patch is to work around a SoC bug.
-> 
+Changes since v1:
+ - fix SCSI to not call dma_set_max_seg_size and dma_set_seg_boundary
+   unconditionally
 
-Yes, at the same time if that code deviates from the norm, then anyone can
-complain. We are all working towards making the code better.
-
-> Additionally, it has already happened that one of your colleagues
-> submitted a workaround for a SoC bug to the UFS core driver.
-> From the description of commit 0f52fcb99ea2 ("scsi: ufs: Try to save
-> power mode change and UIC cmd completion timeout"): "This is to deal
-> with the scenario in which completion has been raised but the one
-> waiting for the completion cannot be awaken in time due to kernel
-> scheduling problem." That description makes zero sense to me. My
-> conclusion from commit 0f52fcb99ea2 is that it is a workaround for a
-> bug in a UFS host controller, namely that a particular UFS host
-> controller not always generates a UIC completion interrupt when it
-> should.
-> 
-
-0f52fcb99ea2 was submitted in 2020 before I started contributing to UFS driver
-seriously. But the description of that commit never mentioned any issue with the
-controller. It vaguely mentions 'kernel scheduling problem' which I don't know
-how to interpret. If I were looking into the code at that time, I would've
-definitely asked for clarity during the review phase.
-
-But there is no need to take it as an example. I can only assert the fact that
-working around the controller defect in core code when we already have quirks
-for the same purpose defeats the purpose of quirks. And it will encourage other
-people to start changing the core code in the future thus bypassing the quirks.
-
-But I'm not a maintainer of this part of the code. So I cannot definitely stop
-you from getting this patch merged. I'll leave it up to Martin to decide.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Diffstat:
+ drivers/accel/qaic/qaic_drv.c                         |    4 --
+ drivers/dma/idma64.c                                  |    4 --
+ drivers/dma/pl330.c                                   |    5 ---
+ drivers/dma/qcom/bam_dma.c                            |    6 ----
+ drivers/dma/sh/rcar-dmac.c                            |    4 --
+ drivers/dma/ste_dma40.c                               |    6 ----
+ drivers/gpu/drm/mediatek/mtk_drm_drv.c                |    6 ----
+ drivers/media/common/videobuf2/videobuf2-dma-contig.c |    3 --
+ drivers/media/pci/intel/ipu6/ipu6.c                   |    4 --
+ drivers/mmc/host/mmci_stm32_sdmmc.c                   |    3 +-
+ drivers/net/ethernet/microsoft/mana/gdma_main.c       |    6 ----
+ drivers/scsi/lpfc/lpfc_init.c                         |    7 -----
+ drivers/scsi/scsi_lib.c                               |   11 ++++++-
+ include/linux/dma-mapping.h                           |   25 +++++++-----------
+ 14 files changed, 32 insertions(+), 62 deletions(-)
