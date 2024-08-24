@@ -1,176 +1,377 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from msa.smtpout.orange.fr (msa-218.smtpout.orange.fr [193.252.23.218])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0556528DB3
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 10:12:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724494348; cv=fail; b=VuVXnqiFHaHXSf1P9CKp3yv+Edjcm8CUPr/7KQNO0jB6JphCOxmTUCj+G2ajeFgSO7bd3RpsAvIYBGG4P3NslMJmP/i0NiUE8q2pZKApbC/okgcXAEG/U19mEfaVZUCJcOA8WIdaKUJs24Ta9/x3UdHaaT1CkvPZpV6Z+aDmv20=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724494348; c=relaxed/simple;
-	bh=4Vev5tIFIpv8qPZeEc6oGRuaXlUWp5r3IF7pl1ytGdM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=fdd8G76LJFdnZJ9Nzv1tma9wPIGFKkm17gZgfXO7SYdkFv0P5ll1PsO0zMbk4M7f0aI05th0cyj85+XNlcVdstiv5XWvXw5VIYVbgYa66WhIYoVDRGxySvYiIw6Zerwnq9QUz8XtL0jYgJzoVrnu42tOOdjNDKOR49Rp/ym109c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=CB+jsUP9; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=PzDVX9NY; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F6D15098F;
+	Sat, 24 Aug 2024 13:47:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.252.23.218
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724507255; cv=none; b=r3J5gHdkvQGbxq6dAobebbSOsFOdtX9bdZkHEohhmcwyuu9nbrRgRZzGEejcJCeG9gaZrXtuVjByLc0MZhUfaSWG6vBpuZEQsN8vQpNqENSZOQrlvFN0DbcURM+MRDhQODX8IcfFli8Pf+KTMoMb40/qhBlXrtk1RhLeQQTiSQk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724507255; c=relaxed/simple;
+	bh=rYV7YbbPPMai7nwihdtZF7TUUXb9Shf6UFzB1mgO7XM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DvrnFIeS2fdPpTd1s1OPjAseEnoCHjtM5qqEW0BmqflxNcBwgIr3yLDyXZFHeCIrKWSQbrqdS+zb4VCqcDNuJvRyreL3RMW9Bs/ctYsiyY/0sZ7sFkpXjPX3Zc1knfRdYNzbq9GFL9uphaTSA5sLESiaIdyq6Eo4Iyp2HoL3aJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=AQac5zvA; arc=none smtp.client-ip=193.252.23.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="CB+jsUP9";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="PzDVX9NY"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1724494344; x=1756030344;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=4Vev5tIFIpv8qPZeEc6oGRuaXlUWp5r3IF7pl1ytGdM=;
-  b=CB+jsUP9XOLT/f3x/aP9QaSygXlfaVcF+5hIbb6geOhRGPLgMBcitOmW
-   UVYJ81TUqPj4Din07eNtJSqhplRDz0bfmipnNu+w9n7PXwJHC9I9pxpe3
-   /k8B18twD+qqSOVZxIGM8XDMS0i3aeYv/YyE9Qbq8hl2m+9zHfCmX8JUo
-   AuCZ8rjE+iO/mclnPnE7w8d6Aj+3K7tWQCBd2nsFOpoNiPXaUiPic7Aq3
-   XHRDpQaL8B9plqSC3IE86jy6M3UJnR+WJu+1pL0Spzimv/CV3PQdCv8zf
-   ATmFb2jXa+yyJiycFMBw+Byimjze2hOX3YIxja3AEagg2plX/QW+jy6wt
-   w==;
-X-CSE-ConnectionGUID: Dkq8NStYQwmwFm6nDmn1Vg==
-X-CSE-MsgGUID: jWnDbnQUSr2RVJTg5OqqLg==
-X-IronPort-AV: E=Sophos;i="6.10,173,1719849600"; 
-   d="scan'208";a="25116138"
-Received: from mail-eastusazlp17010003.outbound.protection.outlook.com (HELO BL2PR02CU003.outbound.protection.outlook.com) ([40.93.11.3])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Aug 2024 18:12:22 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=L51+yV0vpXqOW33adybUOoBGR3pP69IJf5eFz5+NR89LW61/teKQA2XC+rclrFyOJWA3EzKZK0WJ8Bhh7xuF23fhvPXMIlXAyLgEfjgv6TIgrwrcW9bYoRoHGCNVi8sF4v1ZzzUuFpbJLvC0dRBaePE2eR6jEmZJfNqsel1dcje3HofkovZ5V8hTjbTH/8TCUbbb/4my7f83TsB65tUGop7WCtc04TH9OzAnLNvSO17nOpExU0ddsc1s3u/+8/9bW7qtcgABBtpK6jbAyTqScixMN0TEWqjHiXFAFWAQ9KsP45B8XZGqd5CO9INVmeZhpTN/lerHFM7Jdrzr/UIf6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4Vev5tIFIpv8qPZeEc6oGRuaXlUWp5r3IF7pl1ytGdM=;
- b=KEzKraQZ16bun8tEzPTNj1azEQJPVhJKvaRrXh3BcFqcZ9fjgCFaSJVTieJ53Y/XAwfZOZdgU4xdx8+DLtm1Rc4MRvC7Zl16GHpzpMVKAbFD/3a3HSRbJ2W/aGIb9VE75NkpQ6Vk0ipdgkD5Gv1zQucYynYlxWphwCD80OF1SaDCXusQ9YE4EBtf2Jg/QXMvoC9HzQgC/8kEplb1pOXpNmUMPiLCI4t+4gWnBoHUSIX7MK7vcBMMKPNUn1p3oDiNVWKo2PDTvdPI4l9OwbuX6yrQ7JN93kmCnWH3lPaNjQSKOAWIgqg6LowE6hSNrhPGzDPVmLL58aV7sprvgD001A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4Vev5tIFIpv8qPZeEc6oGRuaXlUWp5r3IF7pl1ytGdM=;
- b=PzDVX9NYA4jZIN3lxgfbd2uFp06opt/qAlWhpCUWam7LEV8G+SUFXEGTfDZPZJOlzi9zr89aB+P35fD6OwOHCQS1sxytJi2iJD9lteUDQbLG3cshC71IgbEqokIKngb5JYjQeEOFpWaDGrRCbuRggw/+zWXYlGnA4JSuhK2zd+c=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB6763.namprd04.prod.outlook.com (2603:10b6:5:22b::23) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7897.19; Sat, 24 Aug 2024 10:12:20 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f%3]) with mapi id 15.20.7897.014; Sat, 24 Aug 2024
- 10:12:20 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, Peter Wang
-	<peter.wang@mediatek.com>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>, Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>
-Subject: RE: [PATCH v2 3/9] ufs: core: Introduce ufshcd_post_device_init()
-Thread-Topic: [PATCH v2 3/9] ufs: core: Introduce ufshcd_post_device_init()
-Thread-Index: AQHa9NuBB7jG1GLYCEa0ue5T8WYHs7I2MlUA
-Date: Sat, 24 Aug 2024 10:12:20 +0000
-Message-ID:
- <DM6PR04MB6575B9E2A39172C13377E5FEFC892@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20240822213645.1125016-1-bvanassche@acm.org>
- <20240822213645.1125016-4-bvanassche@acm.org>
-In-Reply-To: <20240822213645.1125016-4-bvanassche@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|DM6PR04MB6763:EE_
-x-ms-office365-filtering-correlation-id: c60b7546-0d35-4f1d-a979-08dcc4253d5b
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?bgawnqJccjhAAtPtCYdot7Zz9Up+vYcFVesb+7b9/V9YotZE9xLPIWavhNGg?=
- =?us-ascii?Q?Lyvp7Y/8k0ka0cwlN5X9hA7d5AOh8T5a9bBH7ix5Z5r80KaK38M01NE31P+H?=
- =?us-ascii?Q?KwP7Sl97yAs1+TZM8XeXLJ9DbAckoanHqagvck18B00nnRpEeLv6Whs7rnyd?=
- =?us-ascii?Q?xPe1QSvkEecawk30eblXb+xpE/I7WoOsOKN4zDZkIdkr4ETviSNl/QcX/Gqg?=
- =?us-ascii?Q?ZjM2VSDqvgz9EcdJVUU/0c1Gu9MGdn2IFtU5ftDS4DV0KO8HxuitQwr0x59l?=
- =?us-ascii?Q?JUJ/0cOHzxySJGl3TQQZ0Hrj+O5Uf3DTaRGiYtwJ23uv0qrBLpHIpHIaOnmf?=
- =?us-ascii?Q?LO5tGj6z3279/AJDACyBIsfbTngAePh2/7Ev/qYhdysyGGM+dPl4WTLSQQB+?=
- =?us-ascii?Q?FVAdVEwhWNwXSz/HCrRK3AKXmImuvibpKYvZPhcLWCRT1l1wVn9aPlYTi0LM?=
- =?us-ascii?Q?DX3A7npmxe2BheHKUyUgUiSCW+if7wbU/HM5R2cLuoMXzru+Lav2AMpFI4At?=
- =?us-ascii?Q?CKZa9f5P1xkbxqsAueIptks6ecEjj3gfJk5mKbHX/uNYMXYOZDvO4S1fhqb+?=
- =?us-ascii?Q?E/6rZD3gr8b1tYzpJWwSz5z6/tKUEb4cj/3lUmaQgbqljDNYBxVkSmQLyixW?=
- =?us-ascii?Q?OAfm2S8q6XOd0W17x0HvkOvE4M8PG251cVzUyonh9Ctg0zmqQjKjvUr5nnEw?=
- =?us-ascii?Q?YM84matfTRt9kjCWxzWu1ov1hE4XH8E59AKmA0RDf1HfahoWrv8KlvXFop7r?=
- =?us-ascii?Q?sGIRfrynJLwm5ZRpz/iiPb0HKtY2CxuWhy8tieLTDxM3G9decaGeX3STLT4/?=
- =?us-ascii?Q?NsHnbFZipZrSrjmRM4QsTplWpAc3YfCRXCtC8iFFR2BcDOsMfbxmaZY2bvks?=
- =?us-ascii?Q?/4MFyZ3f/yvHUUMpwBGaUk/GOl5jq0xzk0N1fMKPOwhPlntpHtDYIFq5rmE/?=
- =?us-ascii?Q?2QO3IwqdUk9ZyEAY4Wx2YG2XjqO5Gx3CPS9tUCnkcH9YHv9hQXADB4VN+PPV?=
- =?us-ascii?Q?dSEcYMaX7mcMcOW1YMeUSyZ05LxJZUlD3ju2Bm/5Z1QTuwJ+IXRzirvy8l/z?=
- =?us-ascii?Q?ynAb7h/l4JIJ1mUb8VMRq1NRRLwI8AizQbHyYnXd70ZNu3qb6xPlTGKKdxj0?=
- =?us-ascii?Q?Z2IVJto2G9Q6Y6qtisCSc7Kxdrr3S2G9VqakvAxkn4AlxVveC0LF8nY8YbnJ?=
- =?us-ascii?Q?zVmTm34sd24dxnTvu3wFVdwUL6cj8nclFwFzRjeTT3S36XvVEgKS7/ejO/P9?=
- =?us-ascii?Q?QaqHdMzna54kfrgoONdUgfcNFYrkm6dkLub0jjWUAQqxpy+0ka7w1tvLluWP?=
- =?us-ascii?Q?BM+D7uZCFeaip/EOsDY9OmFuPCkeMeQQFR6mitwc6BB8oC/uKj40LaMKgb5r?=
- =?us-ascii?Q?vLvlPagG8LhE98M11blfOyhTTUBbIKzmrQHFrkZSInwvfXTzzw=3D=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?q9SywCYcZX5Bn+p+8taLS6ndBZkL9XxWHqx3rp9eTisdmm4fmOBL3nkafdjP?=
- =?us-ascii?Q?IqKDiy+fkyppuJF9q0NsZOMxFcr449AAc0QJixeG+ApvPIP0/s4f6UUJWKk2?=
- =?us-ascii?Q?CiKLTpi79euhoi809Gg408cX2YBMN6+zj2kzu0mtPQopw8083wn1ZjxafpiE?=
- =?us-ascii?Q?SScx/cvIxGgq75huyYxyBWa1I5hRuA6bLMEIac0i/3gU08egbTnwGVJqhiV3?=
- =?us-ascii?Q?UCm06IlTL14ayKib8IZTqIkdHbu/OUEWGKPsruQZAzG3P5cwAiPN8+86JZX2?=
- =?us-ascii?Q?VnGMSWC5b8M+d121NQ0+b5YQOXWXva2hekCvtg++tQXLiQEGJ8UTKDL3Ag3F?=
- =?us-ascii?Q?IWu8i1baTJGtu0WUqt+u2Z3nYTcYb6QoDBl7ctchqeE0J6Hh7pcIPackbpq0?=
- =?us-ascii?Q?WbjZ7Kb2IgNVKFLBtKqmLks0Br+Z7yx42R90nnzQqRvNNJkOJRyevNLSMyGa?=
- =?us-ascii?Q?+erntY5kvr3FcVz1Mqt/RHkmiok7Yv5D4kG8ZvLFCLVW/2uHH+TkTCRi6pg/?=
- =?us-ascii?Q?5OZNSVkTIBxyQjFDZjR2+M6fwaw6uagxcM0z4ToGwM3lIJTqUjJbcsj/UlOJ?=
- =?us-ascii?Q?QQyEahS8bcvAD1YI/bVnGe3MwaF5D3TZ5JBurg+6wkin7Pu1epKaSZjuo8BE?=
- =?us-ascii?Q?E2pXa7fJN0eJOQHHEWOZo94BmQiAL2xLrHSVlR9oO6p4n1vVFS8GyDkOWE6A?=
- =?us-ascii?Q?zABi6XuPYaH3iAzckoooPX3w/9BHG5Ozp5Fn16SjXkzQoBX3Z3ku8Xo7Bu8w?=
- =?us-ascii?Q?ndTG4bg/Ne9Crfdo6Jq+eH9zJwWW8ueS6RPnfxEXJNhGBhPVVMzB8xW7J3g4?=
- =?us-ascii?Q?5OQ0atQnSPkVkXrzYrOJId25Ze+/bswq2vXr9C2OjX7yaEVw8lp3c0nALxyc?=
- =?us-ascii?Q?Y2TfbuiiOThgnfX/y24SHa+wnae13tWH/Io4qdxahrMxmcXUBZikEUzFcuLp?=
- =?us-ascii?Q?i9nZVZ5wbbfF/gam7H/vul+KjUy+YZI5otPGNdWubqepWegSREBNDH4kIwmc?=
- =?us-ascii?Q?XhiG0vJI58uG7oROsAeJ/VzdpgX4uXk71r527WVchm87Nt3s7C9XaJIUc4dF?=
- =?us-ascii?Q?ggh9j/VdofnnLTp105w4kuVNrdLb5gn+hMSFNdMaYyAuLKcvdv1xR+4L2b3n?=
- =?us-ascii?Q?HgsZGDZm3PNFoE5ispFsrpXY/sEhOWH1z33bBUrhSj5QB56tZ2jHZF/W9wV2?=
- =?us-ascii?Q?ga04vvH5jx69qOfAzoU1u7i/ViIZKDwaF6YCWf5EW2PYUUkGp8lpBZkoq1aN?=
- =?us-ascii?Q?54UuQCbID3SC4SAK0Z5Ze9gL9azidKztNvGm0z6Dgg0y49UucrKlRGUs548f?=
- =?us-ascii?Q?dOwj7Sa26pKXgvH42iS8QMZ/wEuLxPn95vrhcI9JtXWnWi9jMJFLRQh9bSVG?=
- =?us-ascii?Q?iir6vPEXHI0L5wx/bB4Odr0K9ERg/k+pQLIyMQggm1jvds3UJf6VWi15F16g?=
- =?us-ascii?Q?/iH2fRHIF1lo/fC8Fl3lASk8cldD02sjrzQlmjC6dxhoZpk6dQOz9nuxgXuq?=
- =?us-ascii?Q?tN1r9ikGqhend6rDjM0ptAtOvTix2RbR7c+PTTjXX20o3hIBwEXvWnPrBREE?=
- =?us-ascii?Q?HT9liBq6CIUmoQQRFXXnigMhkxdSqTcYnJ93x+g7?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="AQac5zvA"
+Received: from fedora.home ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id hr6vsE2q1aZQfhr6vsx39B; Sat, 24 Aug 2024 15:47:23 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1724507243;
+	bh=VrJTdN+d9FOn7wLbxMX7FhFh6wourAJWHL5OBIY5qyw=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=AQac5zvAUw06SiL2gDL5rQBUQzYSIbh6IknnF7+y55uxiEzIlQuapT67rrpo3oJoz
+	 /ABktPMfiaDKYf5YeXRMB95hhl4ozTVAEJgIKtlT2aiOLxQeY4r3j/DsJeEv0R8W2O
+	 /azzfQjdXST+2JQ+UAk5q1xur6RKcNKrO02Szr7NCAIpuwIVLpC+TEKaJ4MipWPfJx
+	 iWxZN7zx+M1Y8gBMCeQrxs1yf8Iz68txBVgnUNQrz2QNTIxXsJL8H2gWgTpj9npJbB
+	 6waoLYdnD9M/RHwCWNlSpkvMW39kVARdfKzsAWWXadx7NEWJLBxZfYHNUENViwNdtK
+	 Qh0Ix69/XmM4A==
+X-ME-Helo: fedora.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sat, 24 Aug 2024 15:47:23 +0200
+X-ME-IP: 90.11.132.44
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Oliver Neukum <oneukum@suse.com>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] usb-storage: Constify struct usb_device_id and us_unusual_dev
+Date: Sat, 24 Aug 2024 15:47:07 +0200
+Message-ID: <b1b75a2a64b1f6cfad2a611f71393f281178fd3f.1724507157.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	UR2TxRGTavN3uJGJMK5Ubc6+64XLo65QihpO6hzU/nDPIVP3i6hNfuv6rvY/7TUt7JDnO6qg9WjBvQhE8XAIKcfy/20xPlZi5j+DKoBJJhA1U02WNH5k9sr94XR9HQVrNjqRnD6k8jDfYWHRxYkgovQJPDmXqZw1RbyY+I26kjcaeXcFu+qwcvaUhWEU4BSOcrm+48H5vbO/u9tN+gL/tDvsGrpO/kbHWD8nfII8UXNBpWCI4BOpVd3gcN/OSa1vUfmw45zObstCwq5EyGl1XsF6yG43TF84EnQ+tzYrIW+iD5aLbZ6htZhGu0qg8GbTu4vFsUH7RYj03/KWni24RQrwYdKn7C6HWCxW94UMpyoFBpJ49CHnWlu5DLhDHH/JWKPhee86NmsTJhU9wpXZr3jNc6FHLUQqfTjAJ80rWUoR5q4G8Fg0DwIT5EVmsQCsOmSdWEkDViJrsZQxKgwn3QLDJXUNcxuvdsRrlvugLYPbcfaO+eita5WscuVDH0mhzhfLeLIjKCJiPUuA4cJGjSxKbUbYCHgWtA2pKs2spi6XYOnOM+a8nEoV2LDoguRcZGuKJk9apSZf3X7jiw17aoX724nIwCE2MiFhgO6GUeAvVX1I86hFV3G0ODjeQEvr
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c60b7546-0d35-4f1d-a979-08dcc4253d5b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Aug 2024 10:12:20.1607
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: WEsfq8v8UqajmZTMERTzKZ6W7dR5jhoG9skaK6po4lgG1QDV9MXVypJlflAkYSKxITYxu6ncJWAY0W8FQRkUbA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6763
+Content-Transfer-Encoding: 8bit
 
-> Prepare for introducing a second caller by moving more code from
-> ufshcd_device_init() into a new function.
->=20
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+'struct usb_device_id' and 'struct us_unusual_dev' are not modified in
+these drivers.
+
+Constifying these structures moves some data to a read-only section, so
+increase overall security, especially when the structure holds some
+function pointers (which is the case for struct us_unusual_dev).
+
+On a x86_64, with allmodconfig, as an example:
+Before:
+======
+   text	   data	    bss	    dec	    hex	filename
+  25249	   4261	    896	  30406	   76c6	drivers/usb/storage/alauda.o
+   3969	    672	    360	   5001	   1389	drivers/usb/storage/cypress_atacb.o
+
+After:
+=====
+   text	   data	    bss	    dec	    hex	filename
+  25461	   4041	    896	  30398	   76be	drivers/usb/storage/alauda.o
+   4225	    400	    360	   4985	   1379	drivers/usb/storage/cypress_atacb.o
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Compile tested-only.
+
+I hope that a single patch for all drivers in drivers/usb/storage/ is fine.
+---
+ drivers/usb/storage/alauda.c        | 4 ++--
+ drivers/usb/storage/cypress_atacb.c | 4 ++--
+ drivers/usb/storage/datafab.c       | 4 ++--
+ drivers/usb/storage/ene_ub6250.c    | 4 ++--
+ drivers/usb/storage/freecom.c       | 4 ++--
+ drivers/usb/storage/isd200.c        | 4 ++--
+ drivers/usb/storage/jumpshot.c      | 4 ++--
+ drivers/usb/storage/karma.c         | 4 ++--
+ drivers/usb/storage/onetouch.c      | 4 ++--
+ drivers/usb/storage/sddr09.c        | 4 ++--
+ drivers/usb/storage/sddr55.c        | 4 ++--
+ drivers/usb/storage/shuttle_usbat.c | 4 ++--
+ drivers/usb/storage/uas.c           | 2 +-
+ 13 files changed, 25 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/usb/storage/alauda.c b/drivers/usb/storage/alauda.c
+index 40d34cc28344..a9d3c58ce7d9 100644
+--- a/drivers/usb/storage/alauda.c
++++ b/drivers/usb/storage/alauda.c
+@@ -132,7 +132,7 @@ static int init_alauda(struct us_data *us);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id alauda_usb_ids[] = {
++static const struct usb_device_id alauda_usb_ids[] = {
+ #	include "unusual_alauda.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -154,7 +154,7 @@ MODULE_DEVICE_TABLE(usb, alauda_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev alauda_unusual_dev_list[] = {
++static const struct us_unusual_dev alauda_unusual_dev_list[] = {
+ #	include "unusual_alauda.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/cypress_atacb.c b/drivers/usb/storage/cypress_atacb.c
+index 98b3ec352a13..30dfd0082474 100644
+--- a/drivers/usb/storage/cypress_atacb.c
++++ b/drivers/usb/storage/cypress_atacb.c
+@@ -33,7 +33,7 @@ MODULE_IMPORT_NS(USB_STORAGE);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id cypress_usb_ids[] = {
++static const struct usb_device_id cypress_usb_ids[] = {
+ #	include "unusual_cypress.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -55,7 +55,7 @@ MODULE_DEVICE_TABLE(usb, cypress_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev cypress_unusual_dev_list[] = {
++static const struct us_unusual_dev cypress_unusual_dev_list[] = {
+ #	include "unusual_cypress.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/datafab.c b/drivers/usb/storage/datafab.c
+index bcc4a2fad863..3ea5601d16b8 100644
+--- a/drivers/usb/storage/datafab.c
++++ b/drivers/usb/storage/datafab.c
+@@ -80,7 +80,7 @@ static int datafab_determine_lun(struct us_data *us,
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id datafab_usb_ids[] = {
++static const struct usb_device_id datafab_usb_ids[] = {
+ #	include "unusual_datafab.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -102,7 +102,7 @@ MODULE_DEVICE_TABLE(usb, datafab_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev datafab_unusual_dev_list[] = {
++static const struct us_unusual_dev datafab_unusual_dev_list[] = {
+ #	include "unusual_datafab.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/ene_ub6250.c b/drivers/usb/storage/ene_ub6250.c
+index 97c66c0d91f4..73dd276ce59c 100644
+--- a/drivers/usb/storage/ene_ub6250.c
++++ b/drivers/usb/storage/ene_ub6250.c
+@@ -43,7 +43,7 @@ MODULE_FIRMWARE(MS_RW_FIRMWARE);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+ 	.driver_info = (flags)}
+ 
+-static struct usb_device_id ene_ub6250_usb_ids[] = {
++static const struct usb_device_id ene_ub6250_usb_ids[] = {
+ #	include "unusual_ene_ub6250.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -65,7 +65,7 @@ MODULE_DEVICE_TABLE(usb, ene_ub6250_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev ene_ub6250_unusual_dev_list[] = {
++static const struct us_unusual_dev ene_ub6250_unusual_dev_list[] = {
+ #	include "unusual_ene_ub6250.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/freecom.c b/drivers/usb/storage/freecom.c
+index c3ce51c2dabd..cab27ba7a32a 100644
+--- a/drivers/usb/storage/freecom.c
++++ b/drivers/usb/storage/freecom.c
+@@ -119,7 +119,7 @@ static int init_freecom(struct us_data *us);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id freecom_usb_ids[] = {
++static const struct usb_device_id freecom_usb_ids[] = {
+ #	include "unusual_freecom.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -141,7 +141,7 @@ MODULE_DEVICE_TABLE(usb, freecom_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev freecom_unusual_dev_list[] = {
++static const struct us_unusual_dev freecom_unusual_dev_list[] = {
+ #	include "unusual_freecom.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
+index 300aeef160e7..f2254eb3c0d7 100644
+--- a/drivers/usb/storage/isd200.c
++++ b/drivers/usb/storage/isd200.c
+@@ -67,7 +67,7 @@ static int isd200_Initialization(struct us_data *us);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id isd200_usb_ids[] = {
++static const struct usb_device_id isd200_usb_ids[] = {
+ #	include "unusual_isd200.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -89,7 +89,7 @@ MODULE_DEVICE_TABLE(usb, isd200_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev isd200_unusual_dev_list[] = {
++static const struct us_unusual_dev isd200_unusual_dev_list[] = {
+ #	include "unusual_isd200.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/jumpshot.c b/drivers/usb/storage/jumpshot.c
+index 229bf0c1afc9..0e71a8f33c2b 100644
+--- a/drivers/usb/storage/jumpshot.c
++++ b/drivers/usb/storage/jumpshot.c
+@@ -62,7 +62,7 @@ MODULE_IMPORT_NS(USB_STORAGE);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id jumpshot_usb_ids[] = {
++static const struct usb_device_id jumpshot_usb_ids[] = {
+ #	include "unusual_jumpshot.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -84,7 +84,7 @@ MODULE_DEVICE_TABLE(usb, jumpshot_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev jumpshot_unusual_dev_list[] = {
++static const struct us_unusual_dev jumpshot_unusual_dev_list[] = {
+ #	include "unusual_jumpshot.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/karma.c b/drivers/usb/storage/karma.c
+index 38ddfedef629..d6a5e54f2ca8 100644
+--- a/drivers/usb/storage/karma.c
++++ b/drivers/usb/storage/karma.c
+@@ -51,7 +51,7 @@ static int rio_karma_init(struct us_data *us);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id karma_usb_ids[] = {
++static const struct usb_device_id karma_usb_ids[] = {
+ #	include "unusual_karma.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -73,7 +73,7 @@ MODULE_DEVICE_TABLE(usb, karma_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev karma_unusual_dev_list[] = {
++static const struct us_unusual_dev karma_unusual_dev_list[] = {
+ #	include "unusual_karma.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/onetouch.c b/drivers/usb/storage/onetouch.c
+index 01f3c2779ccf..f97cf6cadb8e 100644
+--- a/drivers/usb/storage/onetouch.c
++++ b/drivers/usb/storage/onetouch.c
+@@ -55,7 +55,7 @@ struct usb_onetouch {
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id onetouch_usb_ids[] = {
++static const struct usb_device_id onetouch_usb_ids[] = {
+ #	include "unusual_onetouch.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -77,7 +77,7 @@ MODULE_DEVICE_TABLE(usb, onetouch_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev onetouch_unusual_dev_list[] = {
++static const struct us_unusual_dev onetouch_unusual_dev_list[] = {
+ #	include "unusual_onetouch.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/sddr09.c b/drivers/usb/storage/sddr09.c
+index 51bcd4a43690..03d1b9c69ea1 100644
+--- a/drivers/usb/storage/sddr09.c
++++ b/drivers/usb/storage/sddr09.c
+@@ -63,7 +63,7 @@ static int usb_stor_sddr09_init(struct us_data *us);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id sddr09_usb_ids[] = {
++static const struct usb_device_id sddr09_usb_ids[] = {
+ #	include "unusual_sddr09.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -85,7 +85,7 @@ MODULE_DEVICE_TABLE(usb, sddr09_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev sddr09_unusual_dev_list[] = {
++static const struct us_unusual_dev sddr09_unusual_dev_list[] = {
+ #	include "unusual_sddr09.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/sddr55.c b/drivers/usb/storage/sddr55.c
+index 0aa079405d23..b8227478a7ad 100644
+--- a/drivers/usb/storage/sddr55.c
++++ b/drivers/usb/storage/sddr55.c
+@@ -40,7 +40,7 @@ MODULE_IMPORT_NS(USB_STORAGE);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id sddr55_usb_ids[] = {
++static const struct usb_device_id sddr55_usb_ids[] = {
+ #	include "unusual_sddr55.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -62,7 +62,7 @@ MODULE_DEVICE_TABLE(usb, sddr55_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev sddr55_unusual_dev_list[] = {
++static const struct us_unusual_dev sddr55_unusual_dev_list[] = {
+ #	include "unusual_sddr55.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/shuttle_usbat.c b/drivers/usb/storage/shuttle_usbat.c
+index f0d0ca37163d..e7c224b7c464 100644
+--- a/drivers/usb/storage/shuttle_usbat.c
++++ b/drivers/usb/storage/shuttle_usbat.c
+@@ -162,7 +162,7 @@ static int init_usbat_flash(struct us_data *us);
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+   .driver_info = (flags) }
+ 
+-static struct usb_device_id usbat_usb_ids[] = {
++static const struct usb_device_id usbat_usb_ids[] = {
+ #	include "unusual_usbat.h"
+ 	{ }		/* Terminating entry */
+ };
+@@ -184,7 +184,7 @@ MODULE_DEVICE_TABLE(usb, usbat_usb_ids);
+ 	.initFunction = init_function,	\
+ }
+ 
+-static struct us_unusual_dev usbat_unusual_dev_list[] = {
++static const struct us_unusual_dev usbat_unusual_dev_list[] = {
+ #	include "unusual_usbat.h"
+ 	{ }		/* Terminating entry */
+ };
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index c223b4dc1b19..03043d567fa1 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -927,7 +927,7 @@ static const struct scsi_host_template uas_host_template = {
+ { USB_DEVICE_VER(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax), \
+ 	.driver_info = (flags) }
+ 
+-static struct usb_device_id uas_usb_ids[] = {
++static const struct usb_device_id uas_usb_ids[] = {
+ #	include "unusual_uas.h"
+ 	{ USB_INTERFACE_INFO(USB_CLASS_MASS_STORAGE, USB_SC_SCSI, USB_PR_BULK) },
+ 	{ USB_INTERFACE_INFO(USB_CLASS_MASS_STORAGE, USB_SC_SCSI, USB_PR_UAS) },
+-- 
+2.46.0
 
