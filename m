@@ -1,222 +1,135 @@
-Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazolkn19011037.outbound.protection.outlook.com [52.103.13.37])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D99A1957E4;
-	Fri, 23 Aug 2024 20:42:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.13.37
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724445747; cv=fail; b=sE6DdC5gFQUUL2qB/GLkA1/C+WUmBflowPBMv4Qnqn7TfyWzGvqn3t+vxN2m5+8tWXsbFHFlpcZZu9zvmMm9VeBVQuGor4HE6nRG9aw271w5+t/GW71Ly6T7GDO0eGSL/sFFhRWCKYWhf4Z+ZuasMOm7UErDwWX00dwYM125jc0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724445747; c=relaxed/simple;
-	bh=NRWP+t9ThFWW/HJSLEc9xMiNTytDWdQnalcUM6z/Hes=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=kyhioT8O0FD3rMUhsWlhRCs+4En4tfUV/6Q0p1luuMI63LAP4SIG/w0kYIxgpU30D3GCNeNld7/KZKzRKiltY8oM8GPi4XxdmLlRPR3VBu9zr06wEymKgfXSdG2nWH0wknUk5c7YR+mmoS2JRwMfodQSOG8X+1rZ95Pq/tsbhu4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=lXsGzNMi; arc=fail smtp.client-ip=52.103.13.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C4D381B9
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 02:29:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724466588; cv=none; b=X6o2/xDaERm6ILASvdPu46JVayg0rQyN7iDSpRnuUO9G+37Wr0N+Sh5LMo/EPk6SaFcxbbZVScaEHGa+yCW+QeuHUEjYxSY+iw0OxxIBIk8sIyvX45FTaxUjULhiVUqo9WRL6zDmmPvzEzGmCHzr75OfgtxIKesKjk4iwWF4Tmg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724466588; c=relaxed/simple;
+	bh=HB8sOVmVq2SFOhyTL0BsBPc1nEGkXN0Wg6F7BI0Pcts=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MCrVrgM2Yopxbu2PCoK+jIffm+NfBqPkMhhZFCA4PhrGzFaDa/yxM7aJvEl4Edd31n4SAs2jfof2NNEKtJRuMyNzrsGhljdbL4pb6hq8AKcHJMbQDAA+2HCXsSjmvVt3NTdAt/Pl6S/Tlm3w3vhvOhCeFW8+k4l8kF5cKm7WO3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=QG4QjkzB; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="lXsGzNMi"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=urbIaEoPCihOwYFEcMqzSfEynmml3WvVyFnf+pqGAC5SRn7tlutAZcBOInj1eE/k6YHFkO3d6Ujog/i0jMgz7K1HSzb1iQ0DHH5JjvLLvnGee6M8Imp/2bZuNHEpnt+RfWKCwfXB/fkxzvWDq3OYxIQk5oCK6RK5MD9r5WNwTgfw59YpWlX3XvM2UdzFWJk9jjKF26QqNaHqaLQcYw1MlIqNm8D+14JTamGqdybzrOUvhkEfdXBYpuUa0NJAbJIQ4ZRD3PEhK95Bu2wyyKBeEY7btZq5DiruCdvvP0eJqdFeQBbokzFrzstQynzv1uqiEnv9xwlZfVFjU6pCkhVtbA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fFIX6pB3w/4OGDJNh/1Z6sD/CVs4htzkBA0YRKpRTZE=;
- b=dfx1CBTRIKsH4oFyJsNzCItZW8yBE+/TjwQw46Kp4wp4FsauddBHnyV4NdGlutx536BRPyGlL9uAChcnYA8QRUzuBkLzoisoDNWEgrPE5IUsVEZYt+QfxYTQyg0NyI341WrzeaS2DYe64NP5K7YteIUyWU6oeu7F85XSLQGIbLJt7v7+a32ewCb9ZPdlT/P2cglDEebV1VIh0PaoCn+jgDwcOqGelYyllHXCgQmIwNF3tSNkKIacB3o2P0CY+TgPQVBeVFSPVG6GOPrCenQU8DXTLCcI7/O5wmLvK2dFG5ldwO4bwfXZq2y05G3H3k1yBnipdSvuK5VxyrkrjUefQA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fFIX6pB3w/4OGDJNh/1Z6sD/CVs4htzkBA0YRKpRTZE=;
- b=lXsGzNMir3oewPYiuPgAOzSGILrUpHXPMLF5KQzVoqdPKvYkXaLJgrBbGI24ZtK2SH2SnB5/2b6rNxP5dlf8u0o3xTf8y01g1c0ySha2fOsQ2WIF08dYDOyJqt8DBXkmSI4bE7cRsbnDQtu9X6hG5F8i5Ky/OV1Q6gJhp9ratlndPp6k29HSldeCI+6S3DPhOZo7jr/PVG4bsfZrhdUhAC81dy57LorRGYVzvXQHWnKQgOazANVIGwi+pUhwZFwADIEOHBL/655MgJGjL3YPz1PzceCQSpskVDg0CAn1GA45R6qiP19YVe12sUmMlCtvnNwSXWy82jctUb4hg5njhw==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by BY5PR02MB6962.namprd02.prod.outlook.com (2603:10b6:a03:235::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7897.22; Fri, 23 Aug
- 2024 20:42:20 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::cedd:1e64:8f61:b9df]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::cedd:1e64:8f61:b9df%6]) with mapi id 15.20.7875.018; Fri, 23 Aug 2024
- 20:42:20 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: =?iso-8859-2?Q?Petr_Tesa=F8=EDk?= <petr@tesarici.cz>,
-	"mhkelley58@gmail.com" <mhkelley58@gmail.com>
-CC: "kbusch@kernel.org" <kbusch@kernel.org>, "axboe@kernel.dk"
-	<axboe@kernel.dk>, "sagi@grimberg.me" <sagi@grimberg.me>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "kys@microsoft.com" <kys@microsoft.com>,
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
-	<wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>, "hch@lst.de" <hch@lst.de>,
-	"m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>
-Subject: RE: [RFC 5/7] scsi: storvsc: Enable swiotlb throttling
-Thread-Topic: [RFC 5/7] scsi: storvsc: Enable swiotlb throttling
-Thread-Index: AQHa9MKd0/ezVkaXP0KX0eR0wB+/l7I0gPeAgAC/ZdA=
-Date: Fri, 23 Aug 2024 20:42:20 +0000
-Message-ID:
- <SN6PR02MB4157992C946E098413EA5D62D4882@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20240822183718.1234-1-mhklinux@outlook.com>
-	<20240822183718.1234-6-mhklinux@outlook.com>
- <20240823101959.1dfe251e@meshulam.tesarici.cz>
-In-Reply-To: <20240823101959.1dfe251e@meshulam.tesarici.cz>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-tmn: [fBKLKD3DKrg8us6rbyjEnIK/hdETv60G]
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|BY5PR02MB6962:EE_
-x-ms-office365-filtering-correlation-id: 5280e0d8-7987-4b27-1de4-08dcc3b415c2
-x-microsoft-antispam:
- BCL:0;ARA:14566002|8060799006|19110799003|15080799003|461199028|102099032|3412199025|440099028;
-x-microsoft-antispam-message-info:
- w9ZUV0jErhZRbd9CmF0VycLimMRkjE7j8HOtKphYkYB0/UHk93jOREyeKdPy8cyYj/nB8VPKARRdNu2s3ijiw09UbMhgNVZUz2MU7yhBpqY9oFAIUXKcK+Kv54oaZoQWBYFaM+4Ke2zlRJQISa+xUtE0Mf8Hk1kvU3Vro+iWbTBl4KUSKjqsDLZDfPOTTFIdQfg8mTscqMDADW9CaRh/cU5vdG+aasliHkwemrEKrgyyqvLe9CwAmJN1gtyXV7K0PdCcPpxSTgdAaQjp54MOk6Suavhz+K27lyAb1wwXfG75Dcbj5GPBEjej3lMYh09m/pOBLH0aBthNhixEyoIgEBkZcJQSv3wNEvav+F0zp5QkX4vh9aHgp4xd9DFsxy25BVvPuwU4ZAa0RqvDNEt8Y0nvDhmoNQ9cKJAvg0jqoKZ5vGIkjUj3sbEUTr8Qgj4xixinidCJcWsaGqssLFHEIFA29qZnC0g7sOpVBiQ3CulsAJkWvtBGNb9BhuEIs+mxCC3GrLQ6+pLCVEvgMAfxbkOeS2mUzvTGJoQIpgCQFMn/xCHKHzIhjVAM8i5Im494GZZEChD2hVZfNnvaYWWtElw6bFZQ0xQDw1omwrqSaGTORCO6ihj2TjX50OkEaZQcKS1EhGXcXDJOmEQdHnfXtgm2qsUFGwDsue8vB/kdyAzCFjJI9UpZBdiT5OHliV/2
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-2?Q?zvUzcD/FjVKF9W+Sp9dZO7C9cB7y88MV1OpWFq/25yDiFu+k9toTYJVuO8?=
- =?iso-8859-2?Q?aTlKxscZaxIRHrmeD5iV5kxaj8BiyP7PiJHlstfF0UDWUcKIYYjZ3NuVGP?=
- =?iso-8859-2?Q?8qM/tuEEwjV3b0pMVG8DzdQD9lKzjHmcD9Yvnkjcm0uNDYmZy9DIZAfb9T?=
- =?iso-8859-2?Q?Qjy1fXi44kG6YaJwawOTU9j0bM88z6YCGatbuLkYCMjkr8XdGHchrMB3yX?=
- =?iso-8859-2?Q?rsXozW2CLVWOnuJi2m1iCES3FKHplKbHTSojQwccBEykj69I+5Hhq6bk+m?=
- =?iso-8859-2?Q?oPTfL/V8XMr4Y80R/8VfLTuyzE8jIs8PA3nd0i1GzuIp3MMYH6nOhyp1bZ?=
- =?iso-8859-2?Q?e7QmwO+r1YEuTpTvYsiLipQv2VrVkOvaOCUQIs7qsGLR2tnDhSmz0u0cbH?=
- =?iso-8859-2?Q?ycSP/KqqOCu7wTn/dlY2RauHBdqB80toM28WA4Nt1UgucDwcURLE47EN7D?=
- =?iso-8859-2?Q?qWMRDomiBaBOvSypWbWlCj53W5/CWBraQIPB8wjbOW7wzBfNswoSWibQh7?=
- =?iso-8859-2?Q?Ra4UcYkJdiIgq9daW8G4CUiZ0PSvZD+FOcOwyvu0o32ydDwenFEb6Ac4bF?=
- =?iso-8859-2?Q?kHnl1UxZWuS8JO38Xw2xxaoMaT3I6bqKWbxlpEhQ3xmsRppcIc3LjWfHCt?=
- =?iso-8859-2?Q?BBZjh1R52QsxO+5XJ0h/v+UlxLob49kVlnhzU/KdHzf/KexUN64mPRyfvz?=
- =?iso-8859-2?Q?5q/kgVkqfxB/RyAitwG8klK+BxjBS77xWtiuVhYCtpUqdRCN+C2M+EaCYx?=
- =?iso-8859-2?Q?6UQxl7z0VxsDxqpbvrlToZU1WUOMSPepe6UaFrf2IEWQX5iCV54ZI3/mkq?=
- =?iso-8859-2?Q?Tb93SpUtJTlqMdNKwxiZEczBKk8eouXlOP87KU/dUWh3zpDilSrqqh8+rs?=
- =?iso-8859-2?Q?W1qmsfcRsz/sqgP+yGcsREGVB07OoUKBk03fGyf7UC3C0EXwL/p6bN9+qi?=
- =?iso-8859-2?Q?6raLVmyT216yVVke3Hy70vuYkyFShP+Jd2mvIV3yK+V5NsbBO5aauQgGlY?=
- =?iso-8859-2?Q?vsXuKdXXR8pK6lDWNJeRGMDVuCgixxfAiF8Bj2+WWp9Pn+3fHn219HBXhL?=
- =?iso-8859-2?Q?alJVMuuZP5DcdbwoInJkuqeMhuG+U0+gAr3mZmCWX5S4fRKcC+Dx+6B1Da?=
- =?iso-8859-2?Q?3aETfB/GOO7YiD1OeURG2f9PjfwxzBfweUmgMMdf65a1tM6RnX0KC6fHXS?=
- =?iso-8859-2?Q?FcM9c0s5LUVio5cz5XMjwiQRcVjy0gUIR6vbtZacJN5e7w/Qvu9BQ9qA07?=
- =?iso-8859-2?Q?HkzIhed780fz2QIVzzU6FgL+IpyIB03S5z1h5LVMM=3D?=
-Content-Type: text/plain; charset="iso-8859-2"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QG4QjkzB"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1fee6435a34so18883185ad.0
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2024 19:29:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1724466586; x=1725071386; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=1Y/+D85iiWw9j17ToU29/DDlQs8mVd/ieEio6xVmFjA=;
+        b=QG4QjkzBwdlLTkU17x5V4WiHYOPEc0urwHdv7AvS3c5Sh2jg2VjPnZfHgYKcR8clTn
+         Hnnrx8lH/y+OEMct5Nb5eVSg9plt5zcgSrKJzvMFQsbtA5ZK5mVvNW3Lw6uuxJspvidL
+         +8VsA8QOdoinQNmx/FvxWXj0CsTpTJKA8Lq0qLXdTLAgksGZjbCpSHOA/cDdiKcVgLnA
+         /sc8Wp7QMZtW/qARTO9Lipd+IZwCz8ojHo0MLq1f9VB1wd/duBfhlwBSZFIqLtA6KnFO
+         jQgR2pom6r3ebxLWefeq0EJ1/5EK/wfJ8OLVZb1JfEDLNdOgEXPqOdPUyVaY7bkX+pTy
+         +8lQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724466586; x=1725071386;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1Y/+D85iiWw9j17ToU29/DDlQs8mVd/ieEio6xVmFjA=;
+        b=nL7k+vUeBVxeTe/p0uLjCB0OZf3+JIR1tHRSjskU6a9d479u+1uzJGEFGThtelRBjh
+         bLhAwSrBpEdJhqklakX2Nko1bMzNzj5hAMN3P8BKew+/RBIONi9BFO8Y84mAmtZKUaRF
+         8YdfbrBC9HQEqITeqF36FyinqgPWqfmQOkavWLPjQhVTyOMmugWjUJ0wYTJV6ul9lSAk
+         r3iy+GyOUE788m3HbUve+IQ4/G87OsCviP19X3nTwmJGlIxk9sVyFtdqDir2RWrmI45+
+         jB0tQ+VWU5AUWKLJoufiZ7mz+1sxMxuhIM2LwqKa744U6gabkhnviYu04NtyLB8FN6Zc
+         wgZA==
+X-Forwarded-Encrypted: i=1; AJvYcCUG/aNHIhxysNpqAkGwNBq43YP2pHix8NLVw0ozDACOvCfp+wNK/OI/i6ovvSD9beY9xax3VO4VEMAC@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsCi1IesLrAuUGfwwWM3XzBlnxs6M0zYaH9VvS96HFPClffarH
+	XhWnGpppfEJb/qXS2tUxR2JRBRy9OYOPYX2XAp3B9JxPYfNnhskuYFlYWrg/3w==
+X-Google-Smtp-Source: AGHT+IEn81lUMvOaVUlLCSFD7ITJcagH8cK0XYUU7n/Xxb9zJ+EEhqSp9PqjLOVWcPSr791fhMNm3Q==
+X-Received: by 2002:a17:902:d2cc:b0:202:11ab:ccf4 with SMTP id d9443c01a7336-2039e442d21mr51531555ad.6.1724466586333;
+        Fri, 23 Aug 2024 19:29:46 -0700 (PDT)
+Received: from thinkpad ([120.60.50.97])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20385fc538bsm34396795ad.290.2024.08.23.19.29.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Aug 2024 19:29:45 -0700 (PDT)
+Date: Sat, 24 Aug 2024 07:59:29 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Eric Biggers <ebiggers@google.com>,
+	Minwoo Im <minwoo.im@samsung.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
+ hibernation
+Message-ID: <20240824022929.sxnh7sjl2tb6pmbm@thinkpad>
+References: <6fceba57-e1f6-e76b-94f3-1684c1fe6e98@quicinc.com>
+ <85481ed2-a911-41a4-8fd4-80e4d20dbf04@acm.org>
+ <3a455ddb-7dad-cb2c-7b80-ec355221fb0a@quicinc.com>
+ <7d5c2cf5-24a3-4a1c-810f-f80ba367237e@acm.org>
+ <20240823120104.siy54o6qja75lpwh@thinkpad>
+ <5b3057e7-0d0f-4601-bf96-5d2111af2362@acm.org>
+ <20240823145817.e24ka7mmbkn5purd@thinkpad>
+ <c5699d57-cd51-4bff-95f4-372a00b2a3dd@acm.org>
+ <20240823164822.fdkfswpyhlwnfgfl@thinkpad>
+ <4b7d6a81-a0ac-4f1e-9744-6fc1ed4c6c43@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5280e0d8-7987-4b27-1de4-08dcc3b415c2
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Aug 2024 20:42:20.5909
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR02MB6962
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4b7d6a81-a0ac-4f1e-9744-6fc1ed4c6c43@acm.org>
 
-From: Petr Tesa=F8=EDk <petr@tesarici.cz> Sent: Friday, August 23, 2024 1:2=
-0 AM
->=20
-> On Thu, 22 Aug 2024 11:37:16 -0700
-> mhkelley58@gmail.com wrote:
->=20
-> > From: Michael Kelley <mhklinux@outlook.com>
-> >
-> > In a CoCo VM, all DMA-based I/O must use swiotlb bounce buffers
-> > because DMA cannot be done to private (encrypted) portions of VM
-> > memory. The bounce buffer memory is marked shared (decrypted) at
-> > boot time, so I/O is done to/from the bounce buffer memory and then
-> > copied by the CPU to/from the final target memory (i.e, "bounced").
-> > Storage devices can be large consumers of bounce buffer memory because =
-it
-> > is possible to have large numbers of I/Os in flight across multiple
-> > devices. Bounce buffer memory must be pre-allocated at boot time, and
-> > it is difficult to know how much memory to allocate to handle peak
-> > storage I/O loads. Consequently, bounce buffer memory is typically
-> > over-provisioned, which wastes memory, and may still not avoid a peak
-> > that exhausts bounce buffer memory and cause storage I/O errors.
-> >
-> > To solve this problem for Coco VMs running on Hyper-V, update the
-> > storvsc driver to permit bounce buffer throttling. First, use
-> > scsi_dma_map_attrs() instead of scsi_dma_map(). Then gate the
-> > throttling behavior on a DMA layer check indicating that throttling is
-> > useful, so that no change occurs in a non-CoCo VM. If throttling is
-> > useful, pass the DMA_ATTR_MAY_BLOCK attribute, and set the block queue
-> > flag indicating that the I/O request submission path may sleep, which
-> > could happen when throttling. With these options in place, DMA map
-> > requests are pended when necessary to reduce the likelihood of usage
-> > peaks caused by storvsc that could exhaust bounce buffer memory and
-> > generate errors.
-> >
-> > Signed-off-by: Michael Kelley <mhklinux@outlook.com>
->=20
-> LGTM, but I'm not familiar with this driver or the SCSI layer. In
-> particular, I don't know if it's OK to change the value of
-> host->queuecommand_may_block after scsi_host_alloc() initialized it
-> from a scsi host template, although it seems to be fine.
->=20
-> Petr T
+On Fri, Aug 23, 2024 at 11:05:12AM -0700, Bart Van Assche wrote:
+> On 8/23/24 9:48 AM, Manivannan Sadhasivam wrote:
+> > On Fri, Aug 23, 2024 at 09:07:18AM -0700, Bart Van Assche wrote:
+> > > On 8/23/24 7:58 AM, Manivannan Sadhasivam wrote:
+> > > > Then why can't you send the change at that time?
+> > > 
+> > > We use the Android GKI kernel and any patches must be sent upstream
+> > > first before these can be considered for inclusion in the GKI kernel.
+> > 
+> > But that's the same requirement for other SoC vendors as well. Anyway, these
+> > don't justify the fact that the core code should be modified to workaround a
+> > controller defect. Please use quirks as like other vendors.
+> 
+> Let me repeat what I mentioned earlier:
+> * Introducing a new quirk without introducing a user for that quirk is
+>   not acceptable because that would involve introducing code that is
+>   dead code from the point of view of the upstream kernel.
 
-Yes, it's OK to change the value after scsi_host_alloc().
-The flag isn't consumed until scsi_add_host() is called
-later in storvsc_probe().
+As I pointed out earlier, you should just submit the quirk change when you are
+submitting your driver. But you said that for GKI requirement you are doing the
+change in core driver. But again, that is applicable for other vendors as well.
+What if other vendors start adding the workaround in the core driver citing GKI
+requirement (provided it also removes some code as you justified)? Will it be
+acceptable? NO.
 
-Note this maps to BLK_MQ_F_BLOCKING, which you can see in
-/sys/kernel/debug/block/<device>/hctx0/flags. Same for NVMe
-devices with my Patches 6 and 7. When debugging, I've been
-checking that /sys entry to make sure the behavior is as expected. :-)
+> * The UFS driver core is already complicated. If we don't need a new
+>   quirk we shouldn't introduce a new quirk.
+> 
 
-Michael
+Sorry, the quirk is a quirk. All the existing quirks can be worked around in the
+core driver in some way. But we have the quirk mechanisms to specifically not to
+do that to avoid polluting the core code which has to follow the spec.
 
->=20
-> > ---
-> >  drivers/scsi/storvsc_drv.c | 9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > index 7ceb982040a5..7bedd5502d07 100644
-> > --- a/drivers/scsi/storvsc_drv.c
-> > +++ b/drivers/scsi/storvsc_drv.c
-> > @@ -457,6 +457,7 @@ struct hv_host_device {
-> >  	struct workqueue_struct *handle_error_wq;
-> >  	struct work_struct host_scan_work;
-> >  	struct Scsi_Host *host;
-> > +	unsigned long dma_attrs;
-> >  };
-> >
-> >  struct storvsc_scan_work {
-> > @@ -1810,7 +1811,7 @@ static int storvsc_queuecommand(struct Scsi_Host =
-*host,
-> struct scsi_cmnd *scmnd)
-> >  		payload->range.len =3D length;
-> >  		payload->range.offset =3D offset_in_hvpg;
-> >
-> > -		sg_count =3D scsi_dma_map(scmnd);
-> > +		sg_count =3D scsi_dma_map_attrs(scmnd, host_dev->dma_attrs);
-> >  		if (sg_count < 0) {
-> >  			ret =3D SCSI_MLQUEUE_DEVICE_BUSY;
-> >  			goto err_free_payload;
-> > @@ -2030,6 +2031,12 @@ static int storvsc_probe(struct hv_device *devic=
-e,
-> >  	 *    have an offset that is a multiple of HV_HYP_PAGE_SIZE.
-> >  	 */
-> >  	host->sg_tablesize =3D (max_xfer_bytes >> HV_HYP_PAGE_SHIFT) + 1;
-> > +
-> > +	if (dma_recommend_may_block(&device->device)) {
-> > +		host->queuecommand_may_block =3D true;
-> > +		host_dev->dma_attrs =3D DMA_ATTR_MAY_BLOCK;
-> > +	}
-> > +
-> >  	/*
-> >  	 * For non-IDE disks, the host supports multiple channels.
-> >  	 * Set the number of HW queues we are supporting.
+Moreover, this workaround you are adding is not at all common for other
+controllers. So this definitely doesn't justify modifying the core code.
 
+IMO adding more code alone will not make a driver complicated, but changing the
+logic will.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
