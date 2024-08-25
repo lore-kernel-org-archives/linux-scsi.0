@@ -1,70 +1,70 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534EF2F3E
-	for <linux-scsi@vger.kernel.org>; Sun, 25 Aug 2024 05:10:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A9521D69E
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Aug 2024 05:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724562644; cv=none; b=sB8IyYv7ovwhWlNmumKH46sRzEnxgePc2lqVCyR+DaNlx+sP4zHVi/YkdC1SWWuceHqShZ/daFFV86ir2oodW3FPLX+eJBHAwraMsWH+Z97Yg7TfJVsKsLneAzEeRTd9+BHe9SIVFWFjgoiRqzGGtLuZk1WeTejDghM1HL/6TPw=
+	t=1724562717; cv=none; b=R2TnfZR3qOLwW3a3BUHQPcipLWJwFfMMNAsG2Tgb+RTf4jLZf6MHGbKGF94/VtOnlvzpW6gbP1pCH/XaUSeOeSI6gDk76HP7ns3T/yHCbElQnhNK55JTGcHSIUChA4cMyTf1KFYRsjdhKr2w5EUGNUeP6fBbhF2M1h0peAQFrTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724562644; c=relaxed/simple;
-	bh=Yt8qD5z1zrWX9jv9Jsj3yGbFqnR2sAhXTrAeHQiriBo=;
+	s=arc-20240116; t=1724562717; c=relaxed/simple;
+	bh=3ybSxGjj0fmhxIFkzfsL77NoVIMS9+oZKEE7UAwN1hE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ritIr2Wvahy8wPtVzsh5DDP+2QbTe1NedWWL6DOB4o5wbMnn/rt7/gIXf+jUW0p5Pl/fESLS3wauAnf/+yfnzpwahBQw7Z7v05I84rDrL692AZR4Dn+Zs0SV2wYGdKVuoekaUld8MPGpcQBEeOeJMyeA5xVUoY1/SEP69rUYTn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=O2Y7E2Zn; arc=none smtp.client-ip=209.85.210.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=t07ME7ShYuJGuQBhQSFVjIP67VyqDR4JtmwbKhXFyCKpDOOZArdtiV8SMpx0YLEyztdmfdZYV1eMEAWOIVHSA6cC9/tf8O5w7cFXHf+I33tiD6GF+mFE4A7WneYMq6XxMUZoFEoeHT6rCKdTwgAlVfwMvWYkvSMtMKYzqkxNdjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=vbq1TWih; arc=none smtp.client-ip=209.85.210.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="O2Y7E2Zn"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-7141feed424so2765612b3a.2
-        for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 22:10:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vbq1TWih"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7141d7b270dso2510604b3a.2
+        for <linux-scsi@vger.kernel.org>; Sat, 24 Aug 2024 22:11:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724562641; x=1725167441; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1724562715; x=1725167515; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=JTduRfDhbZPgX82G8kGlESryWqDJZ8ne4T7B0OtcVWE=;
-        b=O2Y7E2ZnD7GLbLJpbq/0s+hBpJ1BVVa3NxsPuuqw5/QjPZoZFXfR96McEsmwaZN1ZK
-         j3mTqd3WE2dG/P//2WILGufj/4w7KeACs8OmpxYAmOY5L4xiWxj2EZWap1XXU7pJkP4R
-         CZWIJyBqpVbnJtHI60D1qjjpQUj7SIkMq43b3e8aqDJPVw0gV6+p/KHtfKIVuI4NQ035
-         OZmcpQ/8sT4AMH/pS2viJj0NH7XljIOvGfCl5yp4dpkd1aoo5MVvu+kqRhCqtHb3GLtI
-         7gpOa313BKcsacg4vXIxrbbGfcZlBg0gxPIQM3hK3k3s4m7YEOW4kF8lRTsyKN+3EFtS
-         9bbQ==
+        bh=pIyrSXW20VcKjAczse6HC9yErr6kjes1IHWUKhPJRWw=;
+        b=vbq1TWih7fmXa/1OAzslg+yw2N4gIN9F5e3VDHJoDt63MJpiJAcup95qSJ9lgUsWX0
+         T3bKes6pY6iKiJLf6ZC2ogPvgPxidH/f6nEM7f1xvGtbHvUqn5bX7T07+/O7a8V120qD
+         xTDGx5ig9G8wMbdvbsUbxI6++fh/NetqgO5VAh6LJZ9vNHpm2hsNHMNurM0QNG4rGvG3
+         xkL+NSt3FEmh34DD66bUsKqsaWkMo5iMgFORX/WQMUmhzg/REB8damH+NiI0hzdcSgvn
+         UTyMh5WifZZBa9dXeAWOgfX2QSJbme4ThYMakOTrf6mTKdfrYl2BKF7XLAU/s0kNiotr
+         2sfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724562641; x=1725167441;
+        d=1e100.net; s=20230601; t=1724562715; x=1725167515;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JTduRfDhbZPgX82G8kGlESryWqDJZ8ne4T7B0OtcVWE=;
-        b=UvrdtVxjdnUAMnyUoPkiQsIxUVFBYmbglrnGFCPtJDnbrF/BeZRwvr4I4+qRHB+cHq
-         ZgmbV9if0aWe6eDsOvyjS5dvlanU0N8+bzulcMmjo0Tljoh+xZIHtC2pHDfc6IKdKiUV
-         cCAnQEwCR9fKpJi3EImubuLqu1pWvzn2dg+KpUD7h3O+xSeQutry1LcxWPikK2zCNAo7
-         m90HmCZsKO7YJwg9h7an9ifyrtXK02sfqOi3f6+MfBe+i7NAuJ1QTUW4R3BrK98WSqfN
-         Vcw2eRJwZc1ZUkCeTUUxD2XVeQ4IFkLHH/LnVvz6SE7d4SUObatwmcMLE/jFr4s0y+OL
-         3txg==
-X-Forwarded-Encrypted: i=1; AJvYcCWISoHjZ3uxZx70IYyp03fNRCPMdBo9lkhdn3RjmLKnBvVEMAdmdpT66HEVWsMKjnafQraI2jOlS1fb@vger.kernel.org
-X-Gm-Message-State: AOJu0YwGXMRL3c1uvkxK9Hg5t32e0nBdATzDLKEKtEHbV0xM5EL9ZsU1
-	0tlFcpqgYoWqonVVm7PVwoHo11VVBiUKNUkkY/f2UgeKEnZ28P0TPZunVoQClw==
-X-Google-Smtp-Source: AGHT+IFj6kKQnubZ4OzxPBxXJuuJRUMwXFKW0lNrhImD1e3CvgmR81Wz3la2D/3gAi3iGEi9wSlRPQ==
-X-Received: by 2002:a05:6a00:a17:b0:714:21cb:8486 with SMTP id d2e1a72fcca58-71445cd5eb7mr7256055b3a.3.1724562641543;
-        Sat, 24 Aug 2024 22:10:41 -0700 (PDT)
+        bh=pIyrSXW20VcKjAczse6HC9yErr6kjes1IHWUKhPJRWw=;
+        b=PcpuTUZgrhYsFYGQNa2PEGvMq7Nu4K62w1OMzZPVvgsHl3EIywcg/vC4jFLbPJlTvY
+         N+UcDoSNbjAWsjw0EFLNEUZ8mPR4yWedenvb5Ej9wGRPT+gc8p4DAQvZ695e/hrf70x9
+         kaKBTNCybVa/IdwPA7s24ABhTWrQZhhCcE/Gxs7fg6w5F39U06TRjsThEkkgvzZ7CWp/
+         anlnAI0RPhWW1qOVhPJB0Xt08Mju1PvC1c/JHvx5moirhekF/G0sPKEptjq5tTN6RtzV
+         XyhKben406b2hncE2YSZKgCAc8nXAglXiV1CB7cZnw8vEVuUD9HXDgvbph9MvXbpdhJI
+         UaZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUkEV7C/6rjNGTZ40G8tpn+BHGGxYnYOJfZDKIQvxSZoJoOIBMOK8eTJDmQWyQzvVIBMdB6ouPqntmd@vger.kernel.org
+X-Gm-Message-State: AOJu0YzgSxosITIR2SShSHUQGKbCLhitYcDM+EXYMFNEG/hUdBOaXzhK
+	DyFfQu6Od0aFZuktUFTcBUYdnJT5ApqpzlWDBOvRq2DC5qonjNj8QZrdUmKCbA==
+X-Google-Smtp-Source: AGHT+IELXzGKf10jvjSUEeMw3eqsfiT2m8XYkKYiMtvaE52EH77ysGep824ZJcJ74viov2FXZHjPhQ==
+X-Received: by 2002:a05:6a20:c998:b0:1ca:da81:a3ef with SMTP id adf61e73a8af0-1cc8b4245a0mr6965160637.3.1724562715455;
+        Sat, 24 Aug 2024 22:11:55 -0700 (PDT)
 Received: from thinkpad ([2406:7400:75:7df3:6806:4b18:6e64:a184])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71434339ad2sm5146244b3a.209.2024.08.24.22.10.38
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-203855677d0sm49327115ad.6.2024.08.24.22.11.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Aug 2024 22:10:41 -0700 (PDT)
-Date: Sun, 25 Aug 2024 10:40:37 +0530
+        Sat, 24 Aug 2024 22:11:55 -0700 (PDT)
+Date: Sun, 25 Aug 2024 10:41:49 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>
-Subject: Re: [PATCH v2 1/9] ufs: core: Introduce ufshcd_add_scsi_host()
-Message-ID: <20240825051037.ggp7sjiieksyiapp@thinkpad>
+	Avri Altman <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
+	Andrew Halaney <ahalaney@redhat.com>
+Subject: Re: [PATCH v2 2/9] ufs: core: Introduce ufshcd_activate_link()
+Message-ID: <20240825051149.w6vt3ltwfjehrdks@thinkpad>
 References: <20240822213645.1125016-1-bvanassche@acm.org>
- <20240822213645.1125016-2-bvanassche@acm.org>
+ <20240822213645.1125016-3-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,134 +74,58 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240822213645.1125016-2-bvanassche@acm.org>
+In-Reply-To: <20240822213645.1125016-3-bvanassche@acm.org>
 
-On Thu, Aug 22, 2024 at 02:36:02PM -0700, Bart Van Assche wrote:
-> Move the code for adding a SCSI host and also the code for managing
-> TMF tags from ufshcd_init() into a new function called
-> ufshcd_add_scsi_host(). No functionality has been changed.
+On Thu, Aug 22, 2024 at 02:36:03PM -0700, Bart Van Assche wrote:
+> Prepare for introducing a second caller by moving the code for
+> activating the link between UFS controller and device into a new
+> function. No functionality has been changed.
 > 
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/ufs/core/ufshcd.c | 84 ++++++++++++++++++++++++---------------
->  1 file changed, 53 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 0dd26059f5d7..d29e469c3873 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -10381,6 +10381,56 @@ static const struct blk_mq_ops ufshcd_tmf_ops = {
->  	.queue_rq = ufshcd_queue_tmf,
->  };
->  
-> +static int ufshcd_add_scsi_host(struct ufs_hba *hba)
-> +{
-> +	int err;
-> +
-> +	if (!is_mcq_supported(hba)) {
-> +		err = scsi_add_host(hba->host, hba->dev);
-> +		if (err) {
-> +			dev_err(hba->dev, "scsi_add_host failed\n");
-> +			return err;
-> +		}
-> +		hba->scsi_host_added = true;
-> +	}
-> +
-> +	hba->tmf_tag_set = (struct blk_mq_tag_set) {
-> +		.nr_hw_queues	= 1,
-> +		.queue_depth	= hba->nutmrs,
-> +		.ops		= &ufshcd_tmf_ops,
-> +		.flags		= BLK_MQ_F_NO_SCHED,
-> +	};
-> +	err = blk_mq_alloc_tag_set(&hba->tmf_tag_set);
-> +	if (err < 0)
-> +		goto remove_scsi_host;
-> +	hba->tmf_queue = blk_mq_alloc_queue(&hba->tmf_tag_set, NULL, NULL);
-> +	if (IS_ERR(hba->tmf_queue)) {
-> +		err = PTR_ERR(hba->tmf_queue);
-> +		goto free_tmf_tag_set;
-> +	}
-> +	hba->tmf_rqs = devm_kcalloc(hba->dev, hba->nutmrs,
-> +				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
-> +	if (!hba->tmf_rqs) {
-> +		err = -ENOMEM;
-> +		goto free_tmf_queue;
-> +	}
-> +
-> +	return 0;
-> +
-> +free_tmf_queue:
-> +	blk_mq_destroy_queue(hba->tmf_queue);
-> +	blk_put_queue(hba->tmf_queue);
-> +
-> +free_tmf_tag_set:
-> +	blk_mq_free_tag_set(&hba->tmf_tag_set);
-> +
-> +remove_scsi_host:
-> +	if (hba->scsi_host_added)
-> +		scsi_remove_host(hba->host);
-> +
-> +	return err;
-> +}
-> +
->  /**
->   * ufshcd_init - Driver initialization routine
->   * @hba: per-adapter instance
-> @@ -10514,35 +10564,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->  		hba->is_irq_enabled = true;
->  	}
->  
-> -	if (!is_mcq_supported(hba)) {
 
-I guess this series is based on v6.11-rc1, because starting from -rc2 we have
-lsdb check here.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
-> -		err = scsi_add_host(host, hba->dev);
-> -		if (err) {
-> -			dev_err(hba->dev, "scsi_add_host failed\n");
-> -			goto out_disable;
-> -		}
-> -		hba->scsi_host_added = true;
-> -	}
-> -
-> -	hba->tmf_tag_set = (struct blk_mq_tag_set) {
-> -		.nr_hw_queues	= 1,
-> -		.queue_depth	= hba->nutmrs,
-> -		.ops		= &ufshcd_tmf_ops,
-> -		.flags		= BLK_MQ_F_NO_SCHED,
-> -	};
-> -	err = blk_mq_alloc_tag_set(&hba->tmf_tag_set);
-> -	if (err < 0)
-> -		goto out_remove_scsi_host;
-> -	hba->tmf_queue = blk_mq_alloc_queue(&hba->tmf_tag_set, NULL, NULL);
-> -	if (IS_ERR(hba->tmf_queue)) {
-> -		err = PTR_ERR(hba->tmf_queue);
-> -		goto free_tmf_tag_set;
-> -	}
-> -	hba->tmf_rqs = devm_kcalloc(hba->dev, hba->nutmrs,
-> -				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
-> -	if (!hba->tmf_rqs) {
-> -		err = -ENOMEM;
-> -		goto free_tmf_queue;
-> -	}
-> +	err = ufshcd_add_scsi_host(hba);
-> +	if (err)
-> +		goto out_disable;
+> ---
+>  drivers/ufs/core/ufshcd.c | 15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index d29e469c3873..04d94bf5cc2d 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8733,10 +8733,9 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+>  		 hba->nutrs);
+>  }
 >  
->  	/* Reset the attached device */
->  	ufshcd_device_reset(hba);
-> @@ -10600,9 +10624,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->  free_tmf_queue:
->  	blk_mq_destroy_queue(hba->tmf_queue);
->  	blk_put_queue(hba->tmf_queue);
-> -free_tmf_tag_set:
->  	blk_mq_free_tag_set(&hba->tmf_tag_set);
-> -out_remove_scsi_host:
->  	if (hba->scsi_host_added)
->  		scsi_remove_host(hba->host);
->  out_disable:
+> -static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+> +static int ufshcd_activate_link(struct ufs_hba *hba)
+>  {
+>  	int ret;
+> -	struct Scsi_Host *host = hba->host;
+>  
+>  	hba->ufshcd_state = UFSHCD_STATE_RESET;
+>  
+> @@ -8753,6 +8752,18 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+>  	/* UniPro link is active now */
+>  	ufshcd_set_link_active(hba);
+>  
+> +	return 0;
+> +}
+> +
+> +static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+> +{
+> +	struct Scsi_Host *host = hba->host;
+> +	int ret;
+> +
+> +	ret = ufshcd_activate_link(hba);
+> +	if (ret)
+> +		return ret;
+> +
+>  	/* Reconfigure MCQ upon reset */
+>  	if (hba->mcq_enabled && !init_dev_params) {
+>  		ufshcd_config_mcq(hba);
 
 -- 
 மணிவண்ணன் சதாசிவம்
