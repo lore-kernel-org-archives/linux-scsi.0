@@ -1,123 +1,63 @@
-Received: from bee.tesarici.cz (bee.tesarici.cz [37.205.15.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA09C7404B;
-	Sat, 24 Aug 2024 20:05:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.205.15.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CC311877;
+	Sun, 25 Aug 2024 00:13:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724529961; cv=none; b=qZy6NDV8Sx/pRqiL5KqUIg9gwUqJc4tfHuUfhhbdGsR1B3i4lxAl4lFjSHxS1H58QL3/gFkGwuDH6Jn8rge1NsmA0qJMJZnccsk/boNflu6d6NwEOnmKaj6CHwn4mNRUX2uP05MaDf3cYPzMZhpPeD9/QFlB1OQpUAmGzhrt/fU=
+	t=1724544822; cv=none; b=L+EK9KuaetHf8Oo2E04ml0RESDeJs7TkCg9f/gEpe8JDTgsGkIbfKfpTOybWkbJ0SBq8K58EVnNeoDPPAfJVAPiGQL9TyUtPvx4hTDru866q3pAHZY0DQjeS49Z2DzM21idm8cdeJKIal6B6uVv7S3I9mSXfpaJd6NepXANkNlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724529961; c=relaxed/simple;
-	bh=lMTeCQzH6kMmHX/l9Jn3JQcO/hHSZcBoRk4fs+/yiD4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aDj6jfqDAOREqDdoZvChW0332suyzy0indJF/0EC6uWkJT39xbuGG+X9S8mys3QqkUA40mPSGCjvXxkrtpGwUvQcCR6Wy67qiGxrg34aQ1HtKItdO4lGo4NP+mPT3ZOgFmUqH/13tu24akXL5fGwA1Kr4ArcIUA8wkN7L1VUhJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz; spf=pass smtp.mailfrom=tesarici.cz; dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b=fR6UW6h8; arc=none smtp.client-ip=37.205.15.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tesarici.cz
+	s=arc-20240116; t=1724544822; c=relaxed/simple;
+	bh=yjitJj9TI/+s+Yri0Zf2whMB3g/XKNoNTFM1rG7/6jc=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=fLNJ2X1cdWSF1yZLLRoedRgE614TQA6n5z5iaNrBxxgeTdBbKhAhZBtbQJhxx4GIPhUJqBpg9IW74xMSRW8ojRx68qkPIj4OEO+9O4MrOco8gJf2XHv9I7MtXJQHWsBI6oXhLKIa/QX7MFrtlxXjRQJXGGbeejg0/F8rKSKtiHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PtMWr807; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b="fR6UW6h8"
-Received: from meshulam.tesarici.cz (dynamic-2a00-1028-83b8-1e7a-4427-cc85-6706-c595.ipv6.o2.cz [IPv6:2a00:1028:83b8:1e7a:4427:cc85:6706:c595])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by bee.tesarici.cz (Postfix) with ESMTPSA id B2CB31F36F1;
-	Sat, 24 Aug 2024 22:05:57 +0200 (CEST)
-Authentication-Results: mail.tesarici.cz; dmarc=fail (p=quarantine dis=none) header.from=tesarici.cz
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tesarici.cz; s=mail;
-	t=1724529958; bh=6q+DC9qEi4FRPHzOR4JhQ0nGEEP7YVA8G4HC6P+cUdg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=fR6UW6h84uQyCzzVZNSO0UWSzM5bGYLmY1G76UqvJUBOJXPzsISmYl/OWFY5HBXxV
-	 MDkPHxv+1rabIGBdc8lw/KrqFnp/+ThasVMTP9xmaTAKfphiA5FYFaRYqZryLtfndw
-	 4ovWnUZkv06IGKawoXxwJNia+R34Y4769D8oG3m/FOI55O0qbXjSJ/h67h7etOWn0M
-	 v31Al/bNYDgPvfI/md3dxAMfx+MVdGYmt+hR7GQqe/Md97Rrv4aCWfr0lt57YdbqhO
-	 RQdS3uf6P9OlV1AQFLcx67uZ9cQi+2nqE3iwduF6NypvU0JZ6jalCuhtKb0gsuCq6t
-	 ah3J7uG9R0cog==
-Date: Sat, 24 Aug 2024 22:05:56 +0200
-From: Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "kbusch@kernel.org" <kbusch@kernel.org>, "axboe@kernel.dk"
- <axboe@kernel.dk>, "sagi@grimberg.me" <sagi@grimberg.me>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
- <martin.petersen@oracle.com>, "kys@microsoft.com" <kys@microsoft.com>,
- "haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
- <wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>, "hch@lst.de" <hch@lst.de>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
- "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
- "linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>
-Subject: Re: [RFC 0/7] Introduce swiotlb throttling
-Message-ID: <20240824220556.0e2587d5@meshulam.tesarici.cz>
-In-Reply-To: <SN6PR02MB415758F12C59E6CA67227DCFD4882@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20240822183718.1234-1-mhklinux@outlook.com>
-	<20240823084458.4394b401@meshulam.tesarici.cz>
-	<SN6PR02MB415758F12C59E6CA67227DCFD4882@SN6PR02MB4157.namprd02.prod.outlook.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.43; x86_64-suse-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PtMWr807"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BA37C32781;
+	Sun, 25 Aug 2024 00:13:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724544822;
+	bh=yjitJj9TI/+s+Yri0Zf2whMB3g/XKNoNTFM1rG7/6jc=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=PtMWr8076SuUYlzIONkislt6Kwkj5cu7RerJKxxqWcaEHAl0GPayT1g27x8ylk6tB
+	 uVv7az/zMXgyYvbzekGbaFbuI9S/FVlXIe9TiPN8LFGfqwIcERtQwDbmjnDDl+fSZo
+	 Wx/DL87pHcn6CanDEAB7arrgOEjFOFCDm+0Yr+75cNL6qZH0PgDnzeSHZAMgcVLBOJ
+	 uZtgojZpTz9NrL/Hw4Mfv7N2waLZiv/FSVbtwQnjyrltXiCkbpcN6mizq2R5/BZnSR
+	 xd49i00/JFPVIW+3Eh8yIw/ISIohbz7Mztk631du+sJp4vtjjG7qzdtP6eWcIjfzr1
+	 i7lBSypAg0bsQ==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 33E8B3823327;
+	Sun, 25 Aug 2024 00:13:43 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.11-rc4
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <2e030c4ab1abd1a0d0b03bae6667be5ef0d9e817.camel@HansenPartnership.com>
+References: <2e030c4ab1abd1a0d0b03bae6667be5ef0d9e817.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <2e030c4ab1abd1a0d0b03bae6667be5ef0d9e817.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: cbaac68987b8699397df29413b33bd51f5255255
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 891e811ad604805b2c706f85480e38961b706a70
+Message-Id: <172454482178.3301129.1390880395746671047.pr-tracker-bot@kernel.org>
+Date: Sun, 25 Aug 2024 00:13:41 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 23 Aug 2024 20:40:16 +0000
-Michael Kelley <mhklinux@outlook.com> wrote:
+The pull request you sent on Sat, 24 Aug 2024 10:31:59 +0100:
 
-> From: Petr Tesa=C5=99=C3=ADk <petr@tesarici.cz> Sent: Thursday, August 22=
-, 2024 11:45 PM
->[...]
-> > > Discussion
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > * Since swiotlb isn't visible to device drivers, I've specifically
-> > > named the DMA attribute as MAY_BLOCK instead of MAY_THROTTLE or
-> > > something swiotlb specific. While this patch set consumes MAY_BLOCK
-> > > only on the DMA direct path to do throttling in the swiotlb code,
-> > > there might be other uses in the future outside of CoCo VMs, or
-> > > perhaps on the IOMMU path. =20
-> >=20
-> > I once introduced a similar flag and called it MAY_SLEEP. I chose
-> > MAY_SLEEP, because there is already a might_sleep() annotation, but I
-> > don't have a strong opinion unless your semantics is supposed to be
-> > different from might_sleep(). If it is, then I strongly prefer
-> > MAY_BLOCK to prevent confusing the two. =20
->=20
-> My intent is that the semantics are the same as might_sleep(). I
-> vacillated between MAY_SLEEP and MAY_BLOCK. The kernel seems
-> to treat "sleep" and "block" as equivalent, because blk-mq has
-> the BLK_MQ_F_BLOCKING flag, and SCSI has the=20
-> queuecommand_may_block flag that is translated to
-> BLK_MQ_F_BLOCKING. So I settled on MAY_BLOCK, but as you
-> point out, that's inconsistent with might_sleep(). Either way will
-> be inconsistent somewhere, and I don't have a preference.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Fair enough. Let's stay with MAY_BLOCK then, so you don't have to
-change it everywhere.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/891e811ad604805b2c706f85480e38961b706a70
 
->[...]
-> > > Open Topics
-> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > 1. swiotlb allocations from Xen and the IOMMU code don't make use
-> > > of throttling. This could be added if beneficial.
-> > >
-> > > 2. The throttling values are currently exposed and adjustable in
-> > > /sys/kernel/debug/swiotlb. Should any of this be moved so it is
-> > > visible even without CONFIG_DEBUG_FS? =20
-> >=20
-> > Yes. It should be possible to control the thresholds through
-> > sysctl. =20
->=20
-> Good point.  I was thinking about creating /sys/kernel/swiotlb, but
-> sysctl is better.
+Thank you!
 
-That still leaves the question where it should go.
-
-Under /proc/sys/kernel? Or should we make a /proc/sys/kernel/dma
-subdirectory to make room for more dma-related controls?
-
-Petr T
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
