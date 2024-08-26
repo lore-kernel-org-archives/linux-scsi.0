@@ -1,161 +1,322 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEEA04F215
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2024 06:48:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31D7515444D
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2024 11:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724654921; cv=none; b=jgZAoFtzFaoAQLd/Y8Mlu+duJ+ULD7bIQDlG0XAjMuICgqf0n+CQWiDIjvgW+v6F+8TekkJWON47fiF8wfVOtMCm7uM4tNvlILknS5c2MFLDPsnLN0sm4fLRgQ3ID5ub++eDhM6Htk0d91lt7UW1cSULd2yalGfKUbRLAln947Y=
+	t=1724672209; cv=none; b=DbiAKUeBcr3xRhCWR1s55mPqIPBGrPwWKMM18K79aqsj6PIZvFBa65IvLf/AQPTQ7T37bFlfh8FLhktb2SLWo62sZZhpNzGnC4361hhML2y8MQs0gnDqYlN0PRrstjWIMQ2WQiiOj1o7Ffshg4xVP0iSQElXKDvzgzT5b1GHewY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724654921; c=relaxed/simple;
-	bh=Vnzx9xl48Ole4+mKdz1/SYJ1W497+kIrgm3L5feFFCo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=HmPdRXtU/axuDOUdywh+ITGxzMc33Y5TArleOcTEoyzLiM1XDCNcml/9JCxvhKU8CEz5PSPBR4AZk/EFsAIQUKg/AdsyRXWz7IjWlfBzViMZK5MVA24U8cF4/3hHJO+o6hcJOlpFsMjALQ01IxAH6PKMQ4KPk/aPITLrm9ZUNUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ZGocdVPB; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1724672209; c=relaxed/simple;
+	bh=viPyuROUTeekllWPMisGYV8X++jFkeZ4J5mNBK4kLyU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HsFmKCycKFCHvztXti54XpY+LDlfgG2ItpUf3jCz95AS9OkNWTpB+8KDqj2+s+3Sp2JH0dIM8yeUuU2bZOhlntNbAR7lGdqtkgfd9CQD9rEgXuY7wE8jIEjHQod8NpZXHMm8Rr+f0EyGTjciEWHSJjOWM8Ub+44lgiteYrT2ZJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=BAXJr0Nn; arc=none smtp.client-ip=209.85.219.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ZGocdVPB"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47Q0fltP021104;
-	Mon, 26 Aug 2024 06:48:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ujRHBzeN7p9cFhDjMlBVuYyTS0d4HihktfnjipdgTLQ=; b=ZGocdVPBVMqJOai0
-	plX/r6sw+QpGXBdU/emv6x43RsJMSW+HNECU1cpLClz3ELGophD0jsIyLSW9ts+A
-	KjMA5B48JYIsFrwyDEu5KEQ6xk1C2DhrQt2s9t3br+N6OgEBmMaiEEtoAI1h3SwK
-	o3Lh+yiipGewGFvTvAVcuIbS/KkTGpC1asmWIMhmkepDh0JbAHNrJeCeObMa2lt2
-	HAiimYokw0J2qrbNHKDYMMConnJKF5ZywNKiAVmiuy8LZmMzml9c+64Zunq2aoiy
-	I3dyhMU4L2dst+NIxKltJuEIBZ83azBfMzweaTXYEUJnp0B4Wt6lwPvee6fSofv1
-	j0oqSA==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 417973jqm9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 26 Aug 2024 06:48:08 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47Q6m7Yd017747
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 26 Aug 2024 06:48:07 GMT
-Received: from [10.253.13.0] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 25 Aug
- 2024 23:48:04 -0700
-Message-ID: <cb8eabd6-7652-4ed8-a281-7af55f2b00f2@quicinc.com>
-Date: Mon, 26 Aug 2024 14:48:01 +0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BAXJr0Nn"
+Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-e115c8aa51fso4133307276.1
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2024 04:36:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1724672206; x=1725277006; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=3WuBkNkQq7ncBHhLfidrPpVIWONY2++qBbCcAKeFG0A=;
+        b=BAXJr0NnQt/nTG1VcshDZQi0Hq6UYXabOEZlYaIz4BmgmNdfocXBrVtcY8EzK8IxJ3
+         rjSaTGd+9sbOcIwJIDR/sijgLDcyXL59mThzEyVP/LFtlOkehYA7+FxNoHPAIcJSmsea
+         d1yrHnIBWvC3oU6QDaq8rc+cJFqpoZEKPCPSx79yX2cZsKR9ojsyXAuJhz149ekf8o7H
+         UL6xsDPwOCXT36HSWGowg16VT/TIsFBeub28Aw5I4eailpHYFyBDMtW1qsYeuQWv5iaj
+         5NqKXDRqU6vZU6ChIyG7r1POllhtJ6VtYqPSRMY7cJtwU4WI97e9pvh8HwWKAaDQ9wX4
+         ufNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724672206; x=1725277006;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3WuBkNkQq7ncBHhLfidrPpVIWONY2++qBbCcAKeFG0A=;
+        b=ngBUX/Ct9VnIr2+nZDKUGKpZvWrAkusQKeiFaKgDe12ia0+wRMX1XSQy3AmZACSgPJ
+         37zT89cVXdvTuSJqSys5Tu1gChj3Hr3W4DVqWRXcxCn+Lkzav1anzIsFnoAwNbjufkrm
+         38HNay0m6ZvQW8cyzCZU28cyWApsMnr+jyj8elJyd88zvaIIFPnuLWrZa4c1Rb0AYuqC
+         y4XP9YCflYWfWw/hOrlYRBuQCFVCDsktc1njsn82ko6vQnt373oF93RJUVXT/LfwUfoC
+         7dxCYgua+1AlICdVWCuKa0EfG73HhV10xTQ2zspwl0ATBicUCNXy8Z8t4bTHQihwIx3M
+         25zQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVH3ad/nWz5/1zX3PwHsTBHqEixvj0FrljUVezsgZtuUdOpkEZorj0o9/oDMcdLjQrnWquqRYoAmNfa@vger.kernel.org
+X-Gm-Message-State: AOJu0YzMSclgBndf3kTEWo+eS6svfjb4priDNXwHp3ni1iCz3bFBfEo5
+	c4ULAeRd5CyxwAdNxqGeVRcPTFDrNj8RHujdVmTJAG9rkaMGLxwOnWEJr069n6OuO1Iem4MoNRb
+	h7mruZ+if+CrHbXc5tp8HOIZx52e9dMgYK3fdfw==
+X-Google-Smtp-Source: AGHT+IFTmCOXbkWFVjFKxNQjfliOW8Z+x4s+zXNlqgxkRfvBAgPO0UAeheCBnSP89lF7epHbxvk3ur82nxWQLLc8Og4=
+X-Received: by 2002:a05:6902:1a46:b0:e0b:4045:ada0 with SMTP id
+ 3f1490d57ef6-e17a83d45d4mr9340283276.23.1724672206061; Mon, 26 Aug 2024
+ 04:36:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re:
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Bart Van Assche
-	<bvanassche@acm.org>
-CC: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        "Martin K . Petersen"
-	<martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>,
-        "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang
-	<peter.wang@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Andrew Halaney
-	<ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-        Alim Akhtar
-	<alim.akhtar@samsung.com>,
-        Eric Biggers <ebiggers@google.com>, Minwoo Im
-	<minwoo.im@samsung.com>,
-        Maramaina Naresh <quic_mnaresh@quicinc.com>
-References: <3a455ddb-7dad-cb2c-7b80-ec355221fb0a@quicinc.com>
- <7d5c2cf5-24a3-4a1c-810f-f80ba367237e@acm.org>
- <20240823120104.siy54o6qja75lpwh@thinkpad>
- <5b3057e7-0d0f-4601-bf96-5d2111af2362@acm.org>
- <20240823145817.e24ka7mmbkn5purd@thinkpad>
- <c5699d57-cd51-4bff-95f4-372a00b2a3dd@acm.org>
- <20240823164822.fdkfswpyhlwnfgfl@thinkpad>
- <4b7d6a81-a0ac-4f1e-9744-6fc1ed4c6c43@acm.org>
- <20240824022929.sxnh7sjl2tb6pmbm@thinkpad>
- <861b64b8-d0cc-42b3-bf57-375f84f4fe85@acm.org>
- <20240824030314.rhsfdhralfpcdjgt@thinkpad>
-Content-Language: en-US
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20240824030314.rhsfdhralfpcdjgt@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: FshG6yjfCvczPSBZUou-Qff3sAZHkRmi
-X-Proofpoint-GUID: FshG6yjfCvczPSBZUou-Qff3sAZHkRmi
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-26_03,2024-08-23_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 suspectscore=0
- impostorscore=0 mlxlogscore=999 adultscore=0 lowpriorityscore=0 mlxscore=0
- phishscore=0 malwarescore=0 bulkscore=0 spamscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2407110000
- definitions=main-2408260053
+References: <20240824034925.1163244-1-hch@lst.de> <20240824034925.1163244-5-hch@lst.de>
+In-Reply-To: <20240824034925.1163244-5-hch@lst.de>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 26 Aug 2024 13:36:09 +0200
+Message-ID: <CAPDyKFrnP5uZ8H3CL5P7bwjRnPwNPDF-U7amm1fwGeob63GYmw@mail.gmail.com>
+Subject: Re: [PATCH 4/4] dma-mapping: don't return errors from dma_set_max_seg_size
+To: Christoph Hellwig <hch@lst.de>
+Cc: iommu@lists.linux.dev, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Robin Murphy <robin.murphy@arm.com>, Marek Szyprowski <m.szyprowski@samsung.com>, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	dmaengine@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org, 
+	linux-mmc@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
+	linux-hyperv@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 1/1/1970 8:00 AM, wrote:
-> On Fri, Aug 23, 2024 at 07:48:50PM -0700, Bart Van Assche wrote:
->> On 8/23/24 7:29 PM, Manivannan Sadhasivam wrote:
->>> What if other vendors start adding the workaround in the core driver citing GKI
->>> requirement (provided it also removes some code as you justified)? Will it be
->>> acceptable? NO.
->> It's not up to you to define new rules for upstream kernel development.
-> I'm not framing new rules, but just pointing out the common practice.
+On Sat, 24 Aug 2024 at 05:51, Christoph Hellwig <hch@lst.de> wrote:
 >
->> Anyone is allowed to publish patches that rework kernel code, whether
->> or not the purpose of such a patch is to work around a SoC bug.
->>
-> Yes, at the same time if that code deviates from the norm, then anyone can
-> complain. We are all working towards making the code better.
+> A NULL dev->dma_parms indicates either a bus that is not DMA capable or
+> grave bug in the implementation of the bus code.
 >
->> Additionally, it has already happened that one of your colleagues
->> submitted a workaround for a SoC bug to the UFS core driver.
->>  From the description of commit 0f52fcb99ea2 ("scsi: ufs: Try to save
->> power mode change and UIC cmd completion timeout"): "This is to deal
->> with the scenario in which completion has been raised but the one
->> waiting for the completion cannot be awaken in time due to kernel
->> scheduling problem." That description makes zero sense to me. My
->> conclusion from commit 0f52fcb99ea2 is that it is a workaround for a
->> bug in a UFS host controller, namely that a particular UFS host
->> controller not always generates a UIC completion interrupt when it
->> should.
->>
-> 0f52fcb99ea2 was submitted in 2020 before I started contributing to UFS driver
-> seriously. But the description of that commit never mentioned any issue with the
-> controller. It vaguely mentions 'kernel scheduling problem' which I don't know
-> how to interpret. If I were looking into the code at that time, I would've
-> definitely asked for clarity during the review phase.
+> There isn't much the driver can do in terms of error handling for either
+> case, so just warn and continue as DMA operations will fail anyway.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+> ---
+>  drivers/accel/qaic/qaic_drv.c                         |  4 +---
+>  drivers/dma/idma64.c                                  |  4 +---
+>  drivers/dma/pl330.c                                   |  5 +----
+>  drivers/dma/qcom/bam_dma.c                            |  6 +-----
+>  drivers/dma/sh/rcar-dmac.c                            |  4 +---
+>  drivers/dma/ste_dma40.c                               |  6 +-----
+>  drivers/gpu/drm/mediatek/mtk_drm_drv.c                |  6 +-----
+>  drivers/media/common/videobuf2/videobuf2-dma-contig.c |  3 +--
+>  drivers/media/pci/intel/ipu6/ipu6.c                   |  4 +---
+>  drivers/mmc/host/mmci_stm32_sdmmc.c                   |  3 ++-
+>  drivers/net/ethernet/microsoft/mana/gdma_main.c       |  6 +-----
+>  drivers/scsi/lpfc/lpfc_init.c                         |  7 +------
+>  include/linux/dma-mapping.h                           | 10 ++++------
+>  13 files changed, 17 insertions(+), 51 deletions(-)
 
-0f52fcb99ea2 is my commit, apologize for the confusion due to poor commit msg.
-What we were trying to fix was not a SoC BUG. More background for this change:
-from our customer side, we used to hit corner cases where the UIC command is
-sent, UFS host controller generates the UIC command completion interrupt fine,
-then UIC completion IRQ handler fires and calls the complete(), however the
-completion timeout error still happens. In this case, UFS, UFS host and UFS
-driver are the victims. And whatever could cause this scheduling problem should
-be fixed properly by the right PoC, but we thought making UFS driver robust in
-this spot would be good for all of the users who may face the similar issue,
-hence the change.
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
 
-Thanks,
-Can Guo.
+Kind regards
+Uffe
 
 >
-> But there is no need to take it as an example. I can only assert the fact that
-> working around the controller defect in core code when we already have quirks
-> for the same purpose defeats the purpose of quirks. And it will encourage other
-> people to start changing the core code in the future thus bypassing the quirks.
+> diff --git a/drivers/accel/qaic/qaic_drv.c b/drivers/accel/qaic/qaic_drv.c
+> index 580b29ed190217..bf10156c334e71 100644
+> --- a/drivers/accel/qaic/qaic_drv.c
+> +++ b/drivers/accel/qaic/qaic_drv.c
+> @@ -447,9 +447,7 @@ static int init_pci(struct qaic_device *qdev, struct pci_dev *pdev)
+>         ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+>         if (ret)
+>                 return ret;
+> -       ret = dma_set_max_seg_size(&pdev->dev, UINT_MAX);
+> -       if (ret)
+> -               return ret;
+> +       dma_set_max_seg_size(&pdev->dev, UINT_MAX);
 >
-> But I'm not a maintainer of this part of the code. So I cannot definitely stop
-> you from getting this patch merged. I'll leave it up to Martin to decide.
+>         qdev->bar_0 = devm_ioremap_resource(&pdev->dev, &pdev->resource[0]);
+>         if (IS_ERR(qdev->bar_0))
+> diff --git a/drivers/dma/idma64.c b/drivers/dma/idma64.c
+> index e3505e56784b1a..1398814d8fbb63 100644
+> --- a/drivers/dma/idma64.c
+> +++ b/drivers/dma/idma64.c
+> @@ -598,9 +598,7 @@ static int idma64_probe(struct idma64_chip *chip)
 >
-> - Mani
+>         idma64->dma.dev = chip->sysdev;
+>
+> -       ret = dma_set_max_seg_size(idma64->dma.dev, IDMA64C_CTLH_BLOCK_TS_MASK);
+> -       if (ret)
+> -               return ret;
+> +       dma_set_max_seg_size(idma64->dma.dev, IDMA64C_CTLH_BLOCK_TS_MASK);
+>
+>         ret = dma_async_device_register(&idma64->dma);
+>         if (ret)
+> diff --git a/drivers/dma/pl330.c b/drivers/dma/pl330.c
+> index 60c4de8dac1d2a..82a9fe88ad54c9 100644
+> --- a/drivers/dma/pl330.c
+> +++ b/drivers/dma/pl330.c
+> @@ -3163,10 +3163,7 @@ pl330_probe(struct amba_device *adev, const struct amba_id *id)
+>          * This is the limit for transfers with a buswidth of 1, larger
+>          * buswidths will have larger limits.
+>          */
+> -       ret = dma_set_max_seg_size(&adev->dev, 1900800);
+> -       if (ret)
+> -               dev_err(&adev->dev, "unable to set the seg size\n");
+> -
+> +       dma_set_max_seg_size(&adev->dev, 1900800);
+>
+>         init_pl330_debugfs(pl330);
+>         dev_info(&adev->dev,
+> diff --git a/drivers/dma/qcom/bam_dma.c b/drivers/dma/qcom/bam_dma.c
+> index 5e7d332731e0c1..368ffaa4003789 100644
+> --- a/drivers/dma/qcom/bam_dma.c
+> +++ b/drivers/dma/qcom/bam_dma.c
+> @@ -1325,11 +1325,7 @@ static int bam_dma_probe(struct platform_device *pdev)
+>
+>         /* set max dma segment size */
+>         bdev->common.dev = bdev->dev;
+> -       ret = dma_set_max_seg_size(bdev->common.dev, BAM_FIFO_SIZE);
+> -       if (ret) {
+> -               dev_err(bdev->dev, "cannot set maximum segment size\n");
+> -               goto err_bam_channel_exit;
+> -       }
+> +       dma_set_max_seg_size(bdev->common.dev, BAM_FIFO_SIZE);
+>
+>         platform_set_drvdata(pdev, bdev);
+>
+> diff --git a/drivers/dma/sh/rcar-dmac.c b/drivers/dma/sh/rcar-dmac.c
+> index 40482cb73d798a..1094a2f821649c 100644
+> --- a/drivers/dma/sh/rcar-dmac.c
+> +++ b/drivers/dma/sh/rcar-dmac.c
+> @@ -1868,9 +1868,7 @@ static int rcar_dmac_probe(struct platform_device *pdev)
+>
+>         dmac->dev = &pdev->dev;
+>         platform_set_drvdata(pdev, dmac);
+> -       ret = dma_set_max_seg_size(dmac->dev, RCAR_DMATCR_MASK);
+> -       if (ret)
+> -               return ret;
+> +       dma_set_max_seg_size(dmac->dev, RCAR_DMATCR_MASK);
+>
+>         ret = dma_set_mask_and_coherent(dmac->dev, DMA_BIT_MASK(40));
+>         if (ret)
+> diff --git a/drivers/dma/ste_dma40.c b/drivers/dma/ste_dma40.c
+> index 2c489299148eee..d52e1685aed53f 100644
+> --- a/drivers/dma/ste_dma40.c
+> +++ b/drivers/dma/ste_dma40.c
+> @@ -3632,11 +3632,7 @@ static int __init d40_probe(struct platform_device *pdev)
+>         if (ret)
+>                 goto destroy_cache;
+>
+> -       ret = dma_set_max_seg_size(base->dev, STEDMA40_MAX_SEG_SIZE);
+> -       if (ret) {
+> -               d40_err(dev, "Failed to set dma max seg size\n");
+> -               goto destroy_cache;
+> -       }
+> +       dma_set_max_seg_size(base->dev, STEDMA40_MAX_SEG_SIZE);
+>
+>         d40_hw_init(base);
+>
+> diff --git a/drivers/gpu/drm/mediatek/mtk_drm_drv.c b/drivers/gpu/drm/mediatek/mtk_drm_drv.c
+> index 77b50c56c124ce..3e807195a0d03a 100644
+> --- a/drivers/gpu/drm/mediatek/mtk_drm_drv.c
+> +++ b/drivers/gpu/drm/mediatek/mtk_drm_drv.c
+> @@ -559,11 +559,7 @@ static int mtk_drm_kms_init(struct drm_device *drm)
+>          * Configure the DMA segment size to make sure we get contiguous IOVA
+>          * when importing PRIME buffers.
+>          */
+> -       ret = dma_set_max_seg_size(dma_dev, UINT_MAX);
+> -       if (ret) {
+> -               dev_err(dma_dev, "Failed to set DMA segment size\n");
+> -               goto err_component_unbind;
+> -       }
+> +       dma_set_max_seg_size(dma_dev, UINT_MAX);
+>
+>         ret = drm_vblank_init(drm, MAX_CRTC);
+>         if (ret < 0)
+> diff --git a/drivers/media/common/videobuf2/videobuf2-dma-contig.c b/drivers/media/common/videobuf2/videobuf2-dma-contig.c
+> index 3d4fd4ef53107c..bb0b7fa67b539a 100644
+> --- a/drivers/media/common/videobuf2/videobuf2-dma-contig.c
+> +++ b/drivers/media/common/videobuf2/videobuf2-dma-contig.c
+> @@ -854,8 +854,7 @@ int vb2_dma_contig_set_max_seg_size(struct device *dev, unsigned int size)
+>                 return -ENODEV;
+>         }
+>         if (dma_get_max_seg_size(dev) < size)
+> -               return dma_set_max_seg_size(dev, size);
+> -
+> +               dma_set_max_seg_size(dev, size);
+>         return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(vb2_dma_contig_set_max_seg_size);
+> diff --git a/drivers/media/pci/intel/ipu6/ipu6.c b/drivers/media/pci/intel/ipu6/ipu6.c
+> index bbd646378ab3ed..83e70c692d957f 100644
+> --- a/drivers/media/pci/intel/ipu6/ipu6.c
+> +++ b/drivers/media/pci/intel/ipu6/ipu6.c
+> @@ -576,9 +576,7 @@ static int ipu6_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>         if (ret)
+>                 return dev_err_probe(dev, ret, "Failed to set DMA mask\n");
+>
+> -       ret = dma_set_max_seg_size(dev, UINT_MAX);
+> -       if (ret)
+> -               return dev_err_probe(dev, ret, "Failed to set max_seg_size\n");
+> +       dma_set_max_seg_size(dev, UINT_MAX);
+>
+>         ret = ipu6_pci_config_setup(pdev, isp->hw_ver);
+>         if (ret)
+> diff --git a/drivers/mmc/host/mmci_stm32_sdmmc.c b/drivers/mmc/host/mmci_stm32_sdmmc.c
+> index f5da7f9baa52d4..9dc51859c2e51e 100644
+> --- a/drivers/mmc/host/mmci_stm32_sdmmc.c
+> +++ b/drivers/mmc/host/mmci_stm32_sdmmc.c
+> @@ -213,7 +213,8 @@ static int sdmmc_idma_setup(struct mmci_host *host)
+>                 host->mmc->max_seg_size = host->mmc->max_req_size;
+>         }
+>
+> -       return dma_set_max_seg_size(dev, host->mmc->max_seg_size);
+> +       dma_set_max_seg_size(dev, host->mmc->max_seg_size);
+> +       return 0;
+>  }
+>
+>  static int sdmmc_idma_start(struct mmci_host *host, unsigned int *datactrl)
+> diff --git a/drivers/net/ethernet/microsoft/mana/gdma_main.c b/drivers/net/ethernet/microsoft/mana/gdma_main.c
+> index ddb8f68d80a206..ca4ed58f1206dd 100644
+> --- a/drivers/net/ethernet/microsoft/mana/gdma_main.c
+> +++ b/drivers/net/ethernet/microsoft/mana/gdma_main.c
+> @@ -1496,11 +1496,7 @@ static int mana_gd_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>         if (err)
+>                 goto release_region;
+>
+> -       err = dma_set_max_seg_size(&pdev->dev, UINT_MAX);
+> -       if (err) {
+> -               dev_err(&pdev->dev, "Failed to set dma device segment size\n");
+> -               goto release_region;
+> -       }
+> +       dma_set_max_seg_size(&pdev->dev, UINT_MAX);
+>
+>         err = -ENOMEM;
+>         gc = vzalloc(sizeof(*gc));
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index e1dfa96c2a553a..50620918becd59 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -13861,12 +13861,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+>         if (sli4_params->sge_supp_len > LPFC_MAX_SGE_SIZE)
+>                 sli4_params->sge_supp_len = LPFC_MAX_SGE_SIZE;
+>
+> -       rc = dma_set_max_seg_size(&phba->pcidev->dev, sli4_params->sge_supp_len);
+> -       if (unlikely(rc)) {
+> -               lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+> -                               "6400 Can't set dma maximum segment size\n");
+> -               return rc;
+> -       }
+> +       dma_set_max_seg_size(&phba->pcidev->dev, sli4_params->sge_supp_len);
+>
+>         /*
+>          * Check whether the adapter supports an embedded copy of the
+> diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+> index 6bd1333dbacb9b..1524da363734af 100644
+> --- a/include/linux/dma-mapping.h
+> +++ b/include/linux/dma-mapping.h
+> @@ -524,13 +524,11 @@ static inline unsigned int dma_get_max_seg_size(struct device *dev)
+>         return SZ_64K;
+>  }
+>
+> -static inline int dma_set_max_seg_size(struct device *dev, unsigned int size)
+> +static inline void dma_set_max_seg_size(struct device *dev, unsigned int size)
+>  {
+> -       if (dev->dma_parms) {
+> -               dev->dma_parms->max_segment_size = size;
+> -               return 0;
+> -       }
+> -       return -EIO;
+> +       if (WARN_ON_ONCE(!dev->dma_parms))
+> +               return;
+> +       dev->dma_parms->max_segment_size = size;
+>  }
+>
+>  static inline unsigned long dma_get_seg_boundary(struct device *dev)
+> --
+> 2.43.0
+>
 >
