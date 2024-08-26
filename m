@@ -1,151 +1,99 @@
-Received: from bee.tesarici.cz (bee.tesarici.cz [37.205.15.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A1F65644E;
-	Mon, 26 Aug 2024 19:28:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.205.15.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7895219AD93
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2024 21:36:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724700496; cv=none; b=isaDPU3ZCFB78nU/hrJ9DPuJ2Q6jUUYKVpRUC1lTk8yCLX0oUrXnudWxioSNWHKzT+xHMZWl7sprFETj23gStZFC13YcvsUK48+QePpZBNP/a7XDQT7s2kAuLrYEsoyxBj5EF5HCtdYKGHRZIuQV9ZhuvHSE3oe7uw24EL8l77k=
+	t=1724708211; cv=none; b=cYoUrPCsKaB9ougGAu0waoxhd4HBxnAXHIvnYTLcNWJ2WLqaqC+FhP4Zq1EJOolqj2FtSyRuIiu9XsVXJ3PsnE3TlOmm6y4rVoSHqGQRM6uD8VLMtye/7RXC7mLx/1nXvnAVcd1pzKvBI9G8zimzDXF5195J3xI78c+pjy1qaBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724700496; c=relaxed/simple;
-	bh=FHyu0VU/PnPOXAQDCe1rt+BnsCDvW7gQcM+qKPcnMh0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ul1pvP2Kgg++kwh+lJXCXC9eFZOJz7fv+w842MqFoTB/HPDo0V3bg54IOEI6ze9jHSjVPMJqDkixMgIwPsrw1IGUrBLTk869EpabR5+Vf9NRdBGhr+WzhxiIjLpmlc7vDVhxFx4Gh2HhSPD9R44l8JnXceveZG5zXFP3nP0L9BU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz; spf=pass smtp.mailfrom=tesarici.cz; dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b=3OqICh2V; arc=none smtp.client-ip=37.205.15.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tesarici.cz
+	s=arc-20240116; t=1724708211; c=relaxed/simple;
+	bh=GYfQ2aJ6+j6KIn4wswZK8fwF1ipJKIXjPWzU4CXaGP0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UgXdNy0IK1RInD5FDNrTGYw2ML7hTQ/RXTcmtsA055Ltlx5Zi8gvuZDRnHKhQ0SPEtYO+O3tdPUyQAaKiAZNsTlihF00ZbPp68PMD990tzgHuie3mp3nQ8xJl9ocusO0wDqh6L2WMUk2J4zSoITiwwZaZEZZkNaAVjEinvYUpCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=B1/oPVTl; arc=none smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b="3OqICh2V"
-Received: from meshulam.tesarici.cz (dynamic-2a00-1028-83b8-1e7a-4427-cc85-6706-c595.ipv6.o2.cz [IPv6:2a00:1028:83b8:1e7a:4427:cc85:6706:c595])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by bee.tesarici.cz (Postfix) with ESMTPSA id 723761F5836;
-	Mon, 26 Aug 2024 21:28:04 +0200 (CEST)
-Authentication-Results: mail.tesarici.cz; dmarc=fail (p=quarantine dis=none) header.from=tesarici.cz
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tesarici.cz; s=mail;
-	t=1724700484; bh=++Bczk63eC2DOga6kXt5dxUEmHon4YZ3k2+0HLuXZag=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=3OqICh2V1e2GjJj6P5dajLB+vX9Z3X4Wa4bS1dWEwq8vhHUUIUosz3GCww2OJ1jUo
-	 CqePrcEgW60T6bgpx/94gfYqT1dbH0f52BXLCD7aO5mgnlEQ56zdJzVeBi5T92aXrZ
-	 bYl31QmnVAr35N2iFoW8vnmc/PLofHaSfrg7fu+X07020RnFGA4A+1DAJnskmB+YRa
-	 65chdJgFXnfe69EGSCgCIpI56BqhFMIP4TykSfuXnspbLBMXg6jcsBFPuCyLr4IZUA
-	 mwqWOH8sHchI9YbUutrw5p6muhKUc4L07fG7A66CM3S3dTzhRQgA5xMluFisAuzRfn
-	 xy5uztHZJzqjg==
-Date: Mon, 26 Aug 2024 21:28:03 +0200
-From: Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "kbusch@kernel.org" <kbusch@kernel.org>, "axboe@kernel.dk"
- <axboe@kernel.dk>, "sagi@grimberg.me" <sagi@grimberg.me>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
- <martin.petersen@oracle.com>, "kys@microsoft.com" <kys@microsoft.com>,
- "haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
- <wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>, "hch@lst.de" <hch@lst.de>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
- "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
- "linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>
-Subject: Re: [RFC 0/7] Introduce swiotlb throttling
-Message-ID: <20240826212803.3e11d2f9@meshulam.tesarici.cz>
-In-Reply-To: <SN6PR02MB41577933B499309EA3CE4DDBD48B2@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20240822183718.1234-1-mhklinux@outlook.com>
-	<20240823084458.4394b401@meshulam.tesarici.cz>
-	<SN6PR02MB415758F12C59E6CA67227DCFD4882@SN6PR02MB4157.namprd02.prod.outlook.com>
-	<20240824220556.0e2587d5@meshulam.tesarici.cz>
-	<SN6PR02MB41577933B499309EA3CE4DDBD48B2@SN6PR02MB4157.namprd02.prod.outlook.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.43; x86_64-suse-linux-gnu)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="B1/oPVTl"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-5bed83487aeso5079491a12.2
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2024 14:36:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1724708208; x=1725313008; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mrXFFnRr4yU7Etmc4wy+t+cJrIu15SH8enM9SvrbiKQ=;
+        b=B1/oPVTlX+yDzK4bvCS1Z1YFot/1P1vFlrMY0K1oYiiPqx1n9mdMYYdJCRXZIirRVT
+         wucPoqvTeGfHGZHpgmamx/Tw6oirfp+mik/E5BkIBhjZAm/CW3Awzbdj/nm+yPaxXblU
+         FSQXjapPE/191djxKDsT5rJiyheOPkROHNT7ku2QNyCltlRrbHs2o0tOTr82Qnh8r1zm
+         EHy09lz8VWtiNBI3seaQ6HsIiOJBn4T6oIMKYU7/6YKQCJmrUBJvYxbbZ94VknPiomj8
+         5N0s5S+xV5MoEq3QO8CxzVRlVdbsvQoaOC620Hn3seCJvND+/pZ+1OKe9/wJwePMbrii
+         On+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724708208; x=1725313008;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mrXFFnRr4yU7Etmc4wy+t+cJrIu15SH8enM9SvrbiKQ=;
+        b=tzJn6qc5iqZ/7dTOXsQcmn0twfT3s7PPobH4eb1KCANlgxV1CDQeSjpWMwO6LCETL0
+         7HG8mKoCrZnj4vhNzXyVpc4HpKdUYLhaSmG56h1Vkr+SGZueOsdvbP/dgOpdZLOnJefb
+         OhCl792g+e/I8GOy9QMCQ4sTb3bneN4q5ZJJK1GL8gDEx0Oun0bVrOUjydPN2xpZu+jY
+         xiVaxwOJN+1ayDqosqES05j8mVdfNTjgr732Lall2Bmq1KvH1kzPK4aHBuE/2EonMemT
+         Qv8cxG/hNaHVUfhKm+lOW4mEdfNAO3vSkMTKmXz3Gxz1uE9a6Nn2i6mOJnX8971DUz6B
+         KisA==
+X-Forwarded-Encrypted: i=1; AJvYcCU7Vy+e1rgSJYMdmxdhyUPEXsxKEuC+pDyRCQ07Vj6VbH/kZ2JzId1Rt60qsQ9XWAkRreh9+jfIjTKQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YzKa6R1vgz12QJbqnOSJAgxDVEzCLGpbxWavZZTQ70YyBhgSnnL
+	6y2Zr9sWWh1OutluIK8dLWepD2jWwNH+Rw0DDykgtjGqTa3Dp3PF1niZBthfUGM=
+X-Google-Smtp-Source: AGHT+IFDd3BFQ04/0ytE5hJOoHnNG49Q5+Iezc5rR48h02qI4ikRCEhCnfwG37487ZRj5/YBze6HTw==
+X-Received: by 2002:a05:6402:84b:b0:5be:f1a7:c2cd with SMTP id 4fb4d7f45d1cf-5c0ba312cc8mr388408a12.31.1724708207427;
+        Mon, 26 Aug 2024 14:36:47 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5c0bb48106dsm218224a12.79.2024.08.26.14.36.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Aug 2024 14:36:46 -0700 (PDT)
+Date: Tue, 27 Aug 2024 00:36:42 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: oe-kbuild@lists.linux.dev,
+	"Martin K . Petersen" <martin.petersen@oracle.com>, lkp@intel.com,
+	oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Avri Altman <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
+	Andrew Halaney <ahalaney@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier
+ to read
+Message-ID: <48a483e2-6a20-493a-80d8-7292c96aadcc@stanley.mountain>
+References: <2d3d17c7-c3f9-4596-aa50-3226163242eb@stanley.mountain>
+ <602421aa-d546-49c2-a08f-6779d3c0f9af@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <602421aa-d546-49c2-a08f-6779d3c0f9af@acm.org>
 
-On Mon, 26 Aug 2024 16:24:53 +0000
-Michael Kelley <mhklinux@outlook.com> wrote:
+On Mon, Aug 26, 2024 at 11:05:47AM -0700, Bart Van Assche wrote:
+> On 8/25/24 11:25 PM, Dan Carpenter wrote:
+> > New smatch warnings:
+> > drivers/ufs/core/ufshcd.c:5484 ufshcd_uic_cmd_compl() error: we previously assumed 'cmd' could be null (see line 5474)
+> 
+> This smatch warning is a false positive. There are multiple code blocks
+> in this functions that are guarded by if-statements. The two code blocks
+> this warning applies to are mutually exclusive. Hence, the 'cmd' check
+> from one block should not be used to draw conclusions about other code
+> blocks. I will consider to introduce the 'else' keyword to suppress this
+> false positive.
 
-> From: Petr Tesa=C5=99=C3=ADk <petr@tesarici.cz> Sent: Saturday, August 24=
-, 2024 1:06 PM
-> >=20
-> > On Fri, 23 Aug 2024 20:40:16 +0000
-> > Michael Kelley <mhklinux@outlook.com> wrote:
-> >  =20
-> > > From: Petr Tesa=C5=99=C3=ADk <petr@tesarici.cz> Sent: Thursday, Augus=
-t 22, 2024 11:45 PM
-> > >[...] =20
-> > > > > Discussion
-> > > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > > > * Since swiotlb isn't visible to device drivers, I've specifically
-> > > > > named the DMA attribute as MAY_BLOCK instead of MAY_THROTTLE or
-> > > > > something swiotlb specific. While this patch set consumes MAY_BLO=
-CK
-> > > > > only on the DMA direct path to do throttling in the swiotlb code,
-> > > > > there might be other uses in the future outside of CoCo VMs, or
-> > > > > perhaps on the IOMMU path. =20
-> > > >
-> > > > I once introduced a similar flag and called it MAY_SLEEP. I chose
-> > > > MAY_SLEEP, because there is already a might_sleep() annotation, but=
- I
-> > > > don't have a strong opinion unless your semantics is supposed to be
-> > > > different from might_sleep(). If it is, then I strongly prefer
-> > > > MAY_BLOCK to prevent confusing the two. =20
-> > >
-> > > My intent is that the semantics are the same as might_sleep(). I
-> > > vacillated between MAY_SLEEP and MAY_BLOCK. The kernel seems
-> > > to treat "sleep" and "block" as equivalent, because blk-mq has
-> > > the BLK_MQ_F_BLOCKING flag, and SCSI has the
-> > > queuecommand_may_block flag that is translated to
-> > > BLK_MQ_F_BLOCKING. So I settled on MAY_BLOCK, but as you
-> > > point out, that's inconsistent with might_sleep(). Either way will
-> > > be inconsistent somewhere, and I don't have a preference. =20
-> >=20
-> > Fair enough. Let's stay with MAY_BLOCK then, so you don't have to
-> > change it everywhere.
-> >  =20
-> > >[...] =20
-> > > > > Open Topics
-> > > > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > > > > 1. swiotlb allocations from Xen and the IOMMU code don't make use
-> > > > > of throttling. This could be added if beneficial.
-> > > > >
-> > > > > 2. The throttling values are currently exposed and adjustable in
-> > > > > /sys/kernel/debug/swiotlb. Should any of this be moved so it is
-> > > > > visible even without CONFIG_DEBUG_FS? =20
-> > > >
-> > > > Yes. It should be possible to control the thresholds through
-> > > > sysctl. =20
-> > >
-> > > Good point.  I was thinking about creating /sys/kernel/swiotlb, but
-> > > sysctl is better. =20
-> >=20
-> > That still leaves the question where it should go.
-> >=20
-> > Under /proc/sys/kernel? Or should we make a /proc/sys/kernel/dma
-> > subdirectory to make room for more dma-related controls? =20
->=20
-> I would be good with /proc/sys/kernel/swiotlb (or "dma"). There
-> are only two entries (high_throttle and low_throttle), but just
-> dumping everything directly in /proc/sys/kernel doesn't seem like
-> a good long-term approach.  Even though there are currently a lot
-> of direct entries in /proc/sys/kernel, that may be historical, and not
-> changeable due to backwards compatibility requirements.
+I thought that might be the case, but I wasn't sure.
 
-I think SWIOTLB is a bit too narrow. How many controls would we add
-under /proc/sys/kernel/swiotlb? The chances seem higher if we call it
-/proc/sys/kernel/dma/swiotlb_{low,high}_throttle, and it follows the
-paths in source code (which are subject to change any time, however).
-Anyway, I don't want to get into bikeshedding; I'm fine with whatever
-you send in the end. :-)
+If it's a false positive, then you can just ignore it.  All old warnings are
+false positives.  People can find this thread if they have questions.
 
-BTW those entries directly under /proc/sys/kernel are not all
-historical. The io_uring_* controls were added just last year, see
-commit 76d3ccecfa18.
+regards,
+dan carpenter
 
-Petr T
