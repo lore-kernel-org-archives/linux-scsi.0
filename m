@@ -1,70 +1,123 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B5CA17BEB4
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 21:52:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5F41CDA26
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 21:59:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724795532; cv=none; b=MB+SlOAhjqMdGfWYZ2LNXFfdr/8aXzZhw6YpiVNYADnhGVhhBCmRyMu2jgOT6Qc0d65a81aXCgqIzmPPbHrDZ0OQ2ia53KwStT/egG5XirGtf7u5uBPc4xiEnXawMczY6I8b9REKX4h6Gq+/W4sjtdHphiQfh3wistrSelCJRd4=
+	t=1724795988; cv=none; b=Sx9+LK7PSwegYeGCjg3vcNqetEPzDGNdFI8mxFtZ4ufPl2MIqL1yIXSulp8wlUhlRWeNwF8U0Tj38aYmRGRniP2a5vScVVoeB9jzcuJ7ptEjsWFtaH/M4gSqvD5t2jI8a5fEd0HG1tWvOzXjL5f+hptqfEAInbluL7gaWvj2u2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724795532; c=relaxed/simple;
-	bh=VbwPCdN6XbObSCiE3IjJNM/6fozNRRjTpPDqS7UBwRE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z+RatEjUZjJ+UxaP6uE9QXmjQxZx/ON22U0DPgo5A9Ot8CjDs5bfwU52DZdLbarfvp+6SoRXnLFkMGT9TC8VRD9WgFaFKV4cr+PdSUnA0CXWv8s6lN9+XkEz23JbAUQWZ6g5OQLaCoR+we3g0doDN1u3o4aL2STjHB8qfqkxzp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DMqfsHn0; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1724795988; c=relaxed/simple;
+	bh=X7SjHQr0dPlBZWFFfrXrJ+yJtdSc/k3GwcUrdmUWupw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=AEifz8bnL7xMke6XsCecWHxig7udWBGtJQo7+6b/JSPYAWdiH/FtFCuCLtljbdtaPHCwVfqw4Ip5FvGxXfGJvpSt8uRHK59anTuE0lr8o3GBQABcSliPv2/IlWF6IHdGsZv7HeMKwij5K7AuC5lmwTsmCVpmbyyw1swaDHKqf8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=n5rO46IX; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DMqfsHn0"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wth8p4KJ8zlgTWP;
-	Tue, 27 Aug 2024 21:52:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724795529; x=1727387530; bh=VbwPCdN6XbObSCiE3IjJNM/6
-	fozNRRjTpPDqS7UBwRE=; b=DMqfsHn0AgLGkJSSynWjP2ndwUj+t+I/8ihtodyp
-	jRpEcfohI0g4J78NhTbV7ZVF6gkirpernBNTf3LkdZAPJwyCI/arGVzdxKNFRQWl
-	AenWtxfaNEl/Vh2V5FZzWg+lxBHd9wouypfwrLV7XUQxNuur2CF9oAzTm78LNpyi
-	p3DpKH6eOUvKTq5TXZXcFPTkIVeNnRb2IJt2GWPg1UCnStN9w2lKYAIdPiAD1Z6b
-	l9Od92EOC0GjpwpjPOHbuT7d+kiTLIr9cWx593JTu0lFdf0+ZRjI+UKXt/FHdwLO
-	WtO1uKzrV+xrV5EJgW4QllsfujC+VkKEtjHBS0KfJPP9zw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id krHPnAKG_JMy; Tue, 27 Aug 2024 21:52:09 +0000 (UTC)
-Received: from [172.16.58.82] (modemcable170.180-37-24.static.videotron.ca [24.37.180.170])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wth8m26knzlgTWM;
-	Tue, 27 Aug 2024 21:52:07 +0000 (UTC)
-Message-ID: <41cb0805-d79c-477b-8e58-9bcdb83e7a9a@acm.org>
-Date: Tue, 27 Aug 2024 17:52:06 -0400
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="n5rO46IX"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47RLbJpA011942;
+	Tue, 27 Aug 2024 21:59:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	W55RQtptyvktXfXXmpMqsif6frPUQm6quXjHUa/PDns=; b=n5rO46IXfiIIPWxv
+	x1RXS6FD+617Fu62nPOIJq+Fu/Hzqy2ZWwONQYSOQ4Ti34ivxLr/20S04WGKTlBu
+	VmKpgoCKTg3GxBfbUhka1yP2QeySuTw98hbYOSSn6dJNg12dnr/f7aO0pvKxTF7Z
+	WwlItUtMPpQUr+5aCA+sftZcaha7Usb6COzEe25Lgt43M076yy3DkVT5cOHSpbeD
+	c3tAfmukmUni/NxEJsTWWurWlxiSkL8P7l9nnW9BT1k7XRuW31n7wLiHXlj05Fdc
+	UvH9z7QXKB/HLzW3GronAr4SPHMQj9Qv3ugZNuzAvdo2SPf/vJ11YxezsoWsi4Cs
+	X52uQg==
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 419puw00y4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Aug 2024 21:59:21 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47RLxJhJ019801
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Aug 2024 21:59:19 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 27 Aug
+ 2024 14:59:19 -0700
+Message-ID: <03bfe9e7-c2cb-d703-9d0b-7b322ea434a1@quicinc.com>
+Date: Tue, 27 Aug 2024 14:59:19 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next] scsi: core: Remove obsoleted declaration for
- scsi_driverbyte_string
-To: Gaosheng Cui <cuigaosheng1@huawei.com>,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
-References: <20240826032005.4007834-1-cuigaosheng1@huawei.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
+ hibernation
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240826032005.4007834-1-cuigaosheng1@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Bart Van Assche <bvanassche@acm.org>,
+        =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC: "ebiggers@google.com" <ebiggers@google.com>,
+        "ahalaney@redhat.com"
+	<ahalaney@redhat.com>,
+        "quic_mnaresh@quicinc.com" <quic_mnaresh@quicinc.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "avri.altman@wdc.com"
+	<avri.altman@wdc.com>,
+        "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>,
+        "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>,
+        "manivannan.sadhasivam@linaro.org"
+	<manivannan.sadhasivam@linaro.org>,
+        "minwoo.im@samsung.com"
+	<minwoo.im@samsung.com>,
+        "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>
+References: <20240821182923.145631-1-bvanassche@acm.org>
+ <20240821182923.145631-3-bvanassche@acm.org>
+ <ba9ae5a8-6021-f906-9ce1-d637534ac9cf@quicinc.com>
+ <20c1866f-9bb2-406f-a819-74ad936d92d5@acm.org>
+ <471e5a037f5fcc996e36b6112dc011731e75b66d.camel@mediatek.com>
+ <63b82e64-e968-4704-85b8-fad919994432@acm.org>
+ <b7b0395a59e275c5e43cb282b827b39416a5b4ad.camel@mediatek.com>
+ <082b7053-e7f4-4dd9-9d84-c8d9c7d75faf@acm.org>
+ <37fc6433d70483b7a889ff804e56023b1081b7b6.camel@mediatek.com>
+ <f7f0ca00-a8ce-4841-8483-5ad886da82ad@acm.org>
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <f7f0ca00-a8ce-4841-8483-5ad886da82ad@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: tubBAYvhLzdsjPMAE3PKuv4WAedHeG-o
+X-Proofpoint-GUID: tubBAYvhLzdsjPMAE3PKuv4WAedHeG-o
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-27_10,2024-08-27_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 malwarescore=0 bulkscore=0 mlxscore=0
+ lowpriorityscore=0 phishscore=0 mlxlogscore=797 suspectscore=0
+ adultscore=0 spamscore=0 impostorscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2407110000
+ definitions=main-2408270160
 
-On 8/25/24 11:20 PM, Gaosheng Cui wrote:
-> The scsi_driverbyte_string() have been removed since
-> commit 54c29086195f ("scsi: core: Drop the now obsolete driver_byte
-> definitions"), and now it is useless, so remove it.
+On 8/27/2024 8:42 AM, Bart Van Assche wrote:
+> On 8/26/24 6:39 PM, Peter Wang (王信友) wrote:
+>> It is not a new vendor hook, ufshcd_vops_hibern8_notify is exist
+>> in current kernel.
+> Hi Peter,
+> 
+> Is something like the untested patch below perhaps what you have in
+> mind?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hi Bart, IMHO even though the patch may work, it makes the existing code 
+more complicated with the disable_uic_compl_intr flag being sent to the 
+platform driver that has nothing to do with it. It seems the proposal 
+makes the code harder to read as well. A new person without any history 
+of this issue trying to understand the purpose of this flag would 
+probably need to spend some extra time digging the history.
+
+Thanks, Bao
