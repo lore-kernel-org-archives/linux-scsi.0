@@ -1,94 +1,174 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD9A576056
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 22:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB96F20328;
+	Tue, 27 Aug 2024 23:14:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724796302; cv=none; b=NfLhBowPpcT3mv0K7j0UJsd+E1aONsm6vQ6GjkEknjlIQvLxfsG2uewIHffz1sO63FzSCSCAH2B+G8WfPDn0FN878C2WeyBqVmE/Hcvx6yEtpWZzQDGOorTpdP0Xq4ZAsy39/VpfeqMR+J4ydbMTcUoiLY1C+FrH1lO81PlMkkI=
+	t=1724800489; cv=none; b=tJnEX4/ucS32SD4BM6YRe6a6eUA6Wx1r8twlb5qTOmHsCWvz+429776Uisozg7VqBRuuD1NUTlozk85BNCNTUwyWRyKuAS9AxM37KpjrMkF2+YCsCGbSlyfTrvUzIrRouReFqVx8oXKHynz3OmcJdVA43/9ZVTCtTgseq9Lt30c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724796302; c=relaxed/simple;
-	bh=RsSzkMk7eGXEwXRWXiymUtzm3QExu++3ZTLnCowkYXY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NghA0BBFr3HOeMocmIA6uYTOovxpE25l+T+jdiTnTzmMKizHlmFuZnYcqPFHWwEqh8DKsn2/YBvZj3PCcnaBT7Cdin7zApUQFMV9yVBRaJR7n9nEwLVVcYw6MbcoHQTQAFqrD6+YEudoadcAG49IFkIeWptb7FuftckQBG0xBBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mePogHzV; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1724800489; c=relaxed/simple;
+	bh=UWBjnG4XfM+5qMMM7Xy4uYDZNDy57ECVqZwYsqtaa7k=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NLOenPR14R+xKiR96ZOLkxbEEZAG4l8Vx8OdNV0mJDsh2PWgJYLPQYNAE46mSm/Cpbjru/AIXKbCBTheAa++GSN4nykBcvl/RAXw2brEBA+x3jpfg/F9B5dpWe2ELWqzwTeC8EaOCvs+KN5/fgthYAztTqCee44IWCRVyxvRaf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=KYeqVrfT; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mePogHzV"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WthRc0pzPzlgTWP;
-	Tue, 27 Aug 2024 22:05:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724796297; x=1727388298; bh=JvTmRJPuiCT8UMKvap8RQod7
-	olArKEVDKmBEUp04lNU=; b=mePogHzVrhDzdzbA4r86+CBmriQ9zLGo+u/jw78s
-	tvftmkRV01PZwy/pHnAy4ERABBis4h1cyd/SX6JZCA9nSNW3lCyzSxJVZ40l5KAL
-	x2u7rIhP7akOvSZdGEyrpBbEAA82bk1t1qyLFEgSVqSHbywJSwgqcbTfLXZMcz9E
-	oWJvd1RdDO/XwyZklVmUUdB0OORQ2qIDpUx6+p23ClgurYSyySeYyYYeVt89admD
-	dmLQ6sNM1+ZyLrky9ZSRj5oPp1aUApMe7+hYoH9th4J81Vq+KHEx1/8DVq70yCI8
-	O8jXFGIdSCLHERlpzS9SBQq9CxLqG0NwVzWBtpqwgatJIg==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Qbnu2FKwiYMf; Tue, 27 Aug 2024 22:04:57 +0000 (UTC)
-Received: from [172.16.58.82] (modemcable170.180-37-24.static.videotron.ca [24.37.180.170])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WthRW4bwmzlgTWM;
-	Tue, 27 Aug 2024 22:04:55 +0000 (UTC)
-Message-ID: <077fee36-725f-488d-ac05-5e61e211c4ac@acm.org>
-Date: Tue, 27 Aug 2024 18:04:54 -0400
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KYeqVrfT"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47RLelH6009010;
+	Tue, 27 Aug 2024 23:14:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=ndf8QZtW+qgyKz/FJGZ875Az4Ew53Z7g48j1N4SkQlo=; b=KY
+	eqVrfTK5rDUyYmbWGD0Qmma8Bb8HvGFX71uXe0wjLrpKkLKGPBtgDtr/lnH11WPy
+	Dw6EwuwWzQOu2Yv7aTMxvBTTRbOhaCYCoNzMqICllTpYI10EuFRCj5S+uNdq8kJv
+	O8XqzkXnHYhgycKMdpM1JenmMCE3XrZDWlKsiortUZbfybzTKcJcHkzs9HoZ8GHD
+	3DpgV5XEKjfQQzG3dnKA4N9HKGqSxi8hN8OUBc7TYNruc4W0MfCYJRS7wkc/pDXH
+	tOsUkys/A3uSgrZmT/7Z5sSWE4pKs14jX362p7Qf+hYoYAYRSkkfXT+5unA+gcAy
+	vprQ2vFbn06ZDO0X1QFQ==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 419px5g4dk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Aug 2024 23:14:31 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47RNEUsJ014459
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Aug 2024 23:14:30 GMT
+Received: from stor-berry.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Tue, 27 Aug 2024 16:14:30 -0700
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+To: <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <peter.wang@mediatek.com>,
+        <manivannan.sadhasivam@linaro.org>, <adrian.hunter@intel.com>,
+        <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley"
+	<jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, ChanWoo Lee
+	<cw9316.lee@samsung.com>,
+        Maramaina Naresh <quic_mnaresh@quicinc.com>,
+        "open
+ list" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v1 1/1] scsi: ufs: core: Remove ufshcd_urgent_bkops()
+Date: Tue, 27 Aug 2024 16:14:13 -0700
+Message-ID: <0c7f2c8d68408e39c28e3e81addce09cc0ee3969.1724800328.git.quic_nguyenb@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/9] ufs: core: Introduce ufshcd_add_scsi_host()
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@wdc.com>,
- Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>
-References: <20240822213645.1125016-1-bvanassche@acm.org>
- <20240822213645.1125016-2-bvanassche@acm.org>
- <20240825051037.ggp7sjiieksyiapp@thinkpad>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240825051037.ggp7sjiieksyiapp@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: tWbLZ-uLWet3gnzv3ywxUEq5ilTOlphc
+X-Proofpoint-GUID: tWbLZ-uLWet3gnzv3ywxUEq5ilTOlphc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-27_10,2024-08-27_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1011
+ adultscore=0 suspectscore=0 lowpriorityscore=0 mlxlogscore=999 spamscore=0
+ priorityscore=1501 bulkscore=0 mlxscore=0 malwarescore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2407110000
+ definitions=main-2408270170
 
-On 8/25/24 1:10 AM, Manivannan Sadhasivam wrote:
-> On Thu, Aug 22, 2024 at 02:36:02PM -0700, Bart Van Assche wrote:
->>   /**
->>    * ufshcd_init - Driver initialization routine
->>    * @hba: per-adapter instance
->> @@ -10514,35 +10564,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->>   		hba->is_irq_enabled = true;
->>   	}
->>   
->> -	if (!is_mcq_supported(hba)) {
-> 
-> I guess this series is based on v6.11-rc1, because starting from -rc2 we have
-> lsdb check here.
+The ufshcd_urgent_bkops() is a wrapper function.
+It only calls the ufshcd_bkops_ctrl(). Remove it to
+simplify the ufs core driver. Replace any references
+to ufshcd_urgent_bkops() with ufshcd_bkops_ctrl().
 
-Hi Manivannan,
+In addition, remove the second parameter in the
+ufshcd_bkops_ctrl() because the information can be
+retrieved from the first parameter.
 
-My patch series is based on Martin's for-next branch. The
-UFSHCD_QUIRK_BROKEN_LSDBS_CAP support has been queued on Martin's
-fixes branch. I think this is why the lsdb check is not visible
-above. I will analyze whether it is possible to rework this patch
-series such that Linus won't have to solve a complicated merge
-conflict during the next merge window.
+Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+---
+ drivers/ufs/core/ufshcd.c | 32 +++++++-------------------------
+ 1 file changed, 7 insertions(+), 25 deletions(-)
 
-Thanks,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 21429ee..a52c95b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5895,12 +5895,11 @@ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
+ /**
+  * ufshcd_bkops_ctrl - control the auto bkops based on current bkops status
+  * @hba: per-adapter instance
+- * @status: bkops_status value
+  *
+  * Read the bkops_status from the UFS device and Enable fBackgroundOpsEn
+  * flag in the device to permit background operations if the device
+- * bkops_status is greater than or equal to "status" argument passed to
+- * this function, disable otherwise.
++ * bkops_status is greater than or equal to the "hba->urgent_bkops_lvl",
++ * disable otherwise.
+  *
+  * Return: 0 for success, non-zero in case of failure.
+  *
+@@ -5908,11 +5907,11 @@ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
+  * to know whether auto bkops is enabled or disabled after this function
+  * returns control to it.
+  */
+-static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
+-			     enum bkops_status status)
++static int ufshcd_bkops_ctrl(struct ufs_hba *hba)
+ {
+-	int err;
++	enum bkops_status status = hba->urgent_bkops_lvl;
+ 	u32 curr_status = 0;
++	int err;
+ 
+ 	err = ufshcd_get_bkops_status(hba, &curr_status);
+ 	if (err) {
+@@ -5934,23 +5933,6 @@ static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
+ 	return err;
+ }
+ 
+-/**
+- * ufshcd_urgent_bkops - handle urgent bkops exception event
+- * @hba: per-adapter instance
+- *
+- * Enable fBackgroundOpsEn flag in the device to permit background
+- * operations.
+- *
+- * If BKOPs is enabled, this function returns 0, 1 if the bkops in not enabled
+- * and negative error value for any other failure.
+- *
+- * Return: 0 upon success; < 0 upon failure.
+- */
+-static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+-{
+-	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
+-}
+-
+ static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+ {
+ 	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+@@ -9801,7 +9783,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			 * allow background operations if bkops status shows
+ 			 * that performance might be impacted.
+ 			 */
+-			ret = ufshcd_urgent_bkops(hba);
++			ret = ufshcd_bkops_ctrl(hba);
+ 			if (ret) {
+ 				/*
+ 				 * If return err in suspend flow, IO will hang.
+@@ -9990,7 +9972,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		 * If BKOPs operations are urgently needed at this moment then
+ 		 * keep auto-bkops enabled or else disable it.
+ 		 */
+-		ufshcd_urgent_bkops(hba);
++		ufshcd_bkops_ctrl(hba);
+ 
+ 	if (hba->ee_usr_mask)
+ 		ufshcd_write_ee_control(hba);
+-- 
+2.7.4
 
-Bart.
