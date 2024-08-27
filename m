@@ -1,48 +1,48 @@
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBCEA1D2F40
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 18:55:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 799181D2F59
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 18:55:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724784933; cv=none; b=Gjb/WKXnRc4n4bQB2f9tIJQ9g2b97LKWI+PJ/oNJRVJQP/bU7KJ2VjiCtYUtVTOMSiobgPO/42wA61NihbPPTGAYIA69OjEzZYYb4KI/M75pNUXbTBK/CcBctD7YAC+rlAqPJi0Nt38SAW1YizREVAST5VejcrKQUeciduPNz08=
+	t=1724784933; cv=none; b=IWKc4D2li1S1fJPT649KzTowjpp8W2MPw60SraIM9qf/J10Mbuv/QnjhfNnfIdVksiS5YXPk6ZGbcuwCumhtoJHgktBAYYOGLDs0dNtrY8Cxfq43hqZt1c+yPvbeoHrRQ7/RUyYUtBGMgfacnFag8oU+Z8S6zn6asi2tySnbmyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1724784933; c=relaxed/simple;
-	bh=46MPHm0+LJXVG0Ty3jqVwZpfj8izPGBWiFpBgMNOgUs=;
+	bh=mLitTLVIEWTLpNkQOcauNdU3fXTzZ31DmzZ7crSfCYs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WA12sbAmSYPqTRXkgaC9NiWePyCdaN8zr8jLoA/NPJjBdqpxK1/LaThhLQ801G6G11JVv8OoDpeyxdrEnNWINzqpX7MauZAiSX5vqsWklZkLyhsLGEMFh9NdP6wbIZ3l4CDVO9aZuJduRsqFlHJh49bcBlZIocL1A2m/9L8mTLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=pp/N6kev; arc=none smtp.client-ip=68.232.154.123
+	 MIME-Version:Content-Type; b=ntrW/aGyG0LJBM+p85knMbd5Gi+1Z2eoicDqxjJL1+TLMKhgmJ6mMJhKpomHqVGDJyl9sUWQf1pSSJl8A4DjghR9ehRuQF7b2zD4eN2ZK9YqZPCAtoNqEm+bpofapIysxgVsg+Ov8UDIIiNrA8S8AjN9OFWt/MbnpU9ogV948BU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=yfBxUzXj; arc=none smtp.client-ip=68.232.154.123
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="pp/N6kev"
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="yfBxUzXj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1724784931; x=1756320931;
+  t=1724784932; x=1756320932;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=46MPHm0+LJXVG0Ty3jqVwZpfj8izPGBWiFpBgMNOgUs=;
-  b=pp/N6kevt1LA9RmaUJ3r2MxkNU94Q7T3DNTu5CXAgmc6Hl2zKQIDR+XQ
-   RzqM+9m7Ym+CBkt+cD9V5BzhKVEiAbOrlxmg21HTW3XKMpJa0orcmwBVP
-   T3jDJK/BXNSkhhEG4DA7DxTNME3moE1qdCxNWDAt8NBccKOdT4vpGzWRc
-   x37FJRzYSZKsis0GdKE7wWKUOSQhO/ff9Cb3hjGkE336RHS+PiHah9OlW
-   WYTNXlqjOsPeiF80zEfmyM199EC5aRWkLbrNtxhYSuyI40KkNXpE5ZFfW
-   N22kqxGLFISdfQdtPP4x9MNqBF/0bPGz8IBWLFtDPw+cqnd6o4j1OcReU
+  bh=mLitTLVIEWTLpNkQOcauNdU3fXTzZ31DmzZ7crSfCYs=;
+  b=yfBxUzXjXXlxvrO89PLx12rSzvkMymicWZk57bsNERl6WktTkw3ZPdTk
+   1h/29W5GbjOtKq5E8ZdWRIP4I+YORBwjZ35BhS8RWw5lefQXvFhnd3Cm+
+   qhRs/hYFK6Tay+TK9u48K5DoKi0T+5v/j0aErVpoMMc7vSkpTokUfYxfJ
+   Mi9+TRvxUvTICXhNTz07a774wAl8AnKnzxF12qZ9PyKqe7WgAAVS5U6iN
+   RzkuOFP9KkaNY0RzvMpwjvEnOTXbcQly9/zj4SF+1oPTR7KOlNcDt/Ykd
+   a7LVrdZvYiuMkogpLryVfQhYDC5e9DsyfkQsMGGaIj6cTsaqDgvnkbWIU
    Q==;
 X-CSE-ConnectionGUID: HXogS4E1Q5emAr2ic36fkw==
-X-CSE-MsgGUID: MUqvWWi3RQmUz3Wl8OGhrQ==
+X-CSE-MsgGUID: MENWVfU8Q9iZEXbUzludbg==
 X-IronPort-AV: E=Sophos;i="6.10,181,1719903600"; 
-   d="scan'208";a="198399615"
+   d="scan'208";a="198399618"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
   by esa6.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Aug 2024 11:55:27 -0700
 Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
  chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Tue, 27 Aug 2024 11:54:59 -0700
+ 15.1.2507.35; Tue, 27 Aug 2024 11:55:01 -0700
 Received: from brunhilda.pdev.net (10.10.85.11) by chn-vm-ex01.mchp-main.com
  (10.10.85.143) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
- Transport; Tue, 27 Aug 2024 11:55:04 -0700
+ Transport; Tue, 27 Aug 2024 11:55:06 -0700
 From: Don Brace <don.brace@microchip.com>
 To: <don.brace@microchip.com>, <scott.teel@microchip.com>,
 	<Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -53,9 +53,9 @@ To: <don.brace@microchip.com>, <scott.teel@microchip.com>,
 	<James.Bottomley@HansenPartnership.com>, Martin Petersen
 	<martin.petersen@oracle.com>, <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC: <linux-scsi@vger.kernel.org>
-Subject: [PATCH 4/7] smartpqi: add new controller PCI IDs
-Date: Tue, 27 Aug 2024 13:54:58 -0500
-Message-ID: <20240827185501.692804-5-don.brace@microchip.com>
+Subject: [PATCH 6/7] smartpqi: fix volume size updates
+Date: Tue, 27 Aug 2024 13:55:00 -0500
+Message-ID: <20240827185501.692804-7-don.brace@microchip.com>
 X-Mailer: git-send-email 2.46.0.421.g159f2d50e7
 In-Reply-To: <20240827185501.692804-1-don.brace@microchip.com>
 References: <20240827185501.692804-1-don.brace@microchip.com>
@@ -69,92 +69,50 @@ Organization: Microchip Technology Inc.
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: David Strahan <David.Strahan@microchip.com>
+Correct logical volume size changes by moving the check for
+a volume rescan outside of the check for a queue depth change.
 
-All PCI ID entries in Hex.
-
-Add new cisco pci ids:
-                                             VID  / DID  / SVID / SDID
-                                             ----   ----   ----   ----
-                                             9005   028f   1137   02fe
-                                             9005   028f   1137   02ff
-                                             9005   028f   1137   0300
-
-Add new h3c pci ids:
-                                             VID  / DID  / SVID / SDID
-                                             ----   ----   ----   ----
-                                             9005   028f   193d   0462
-                                             9005   028f   193d   8462
-
-Add new ieit pci ids:
-                                             VID  / DID  / SVID / SDID
-                                             ----   ----   ----   ----
-                                             9005   028f   1ff9   00a3
-
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: David Strahan <David.Strahan@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 6a941735c982..46bef2cf95c4 100644
+index d1d117d5d08d..0dab30753f0a 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9548,6 +9548,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x152d, 0x8a37)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x193d, 0x0462)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0x1104)
-@@ -9588,6 +9592,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0x8461)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x193d, 0x8462)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0xc460)
-@@ -10296,6 +10304,18 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1137, 0x02fa)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1137, 0x02fe)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1137, 0x02ff)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1137, 0x0300)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1ff9, 0x0045)
-@@ -10472,6 +10492,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1f51, 0x1045)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x00a3)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_ANY_ID, PCI_ANY_ID)
+@@ -2303,17 +2303,23 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 	 * queue depth, device size.
+ 	 */
+ 	list_for_each_entry(device, &ctrl_info->scsi_device_list, scsi_device_list_entry) {
++		/*
++		 * Check for queue depth change.
++		 */
+ 		if (device->sdev && device->queue_depth != device->advertised_queue_depth) {
+ 			device->advertised_queue_depth = device->queue_depth;
+ 			scsi_change_queue_depth(device->sdev, device->advertised_queue_depth);
+-			spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
+-			if (pqi_volume_rescan_needed(device)) {
+-				device->rescan = false;
+-				spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+-				scsi_rescan_device(device->sdev);
+-			} else {
+-				spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+-			}
++		}
++		spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
++		/*
++		 * Check for changes in the device, such as size.
++		 */
++		if (pqi_volume_rescan_needed(device)) {
++			device->rescan = false;
++			spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
++			scsi_rescan_device(device->sdev);
++		} else {
++			spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 		}
+ 	}
+ 
 -- 
 2.46.0.421.g159f2d50e7
 
