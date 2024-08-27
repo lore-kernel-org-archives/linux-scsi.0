@@ -1,142 +1,152 @@
 Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41099374CB
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 05:12:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 291E27A724
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 05:51:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724735578; cv=none; b=HzjDc/svSeVufGc/8sBrbstbnKMwWh/IMduIh5MnOxTz8HN7tlPybSxXSlWdhSrSqQLPDbbu043fvDgWnGE1bbCbcqtEvsyUCWOxdX01aGPfuteCxpm6GUoi64oDOy/jo/v89Z7hsFzxWjilw7phdtGAX+2yePxdamX/cLVFZe8=
+	t=1724737908; cv=none; b=ebzxxD5o4hFtsi1DXR7nKVyjaah1tOxU/3Yv2A08NqYl3q7Kewv2D0tIX3XJyGdPjK06rU75EwzLixROV6Cf4C4qFR1L9IXFuFQS8x8kK4FlyF6Fr6dC1Cea/2Pt++EpgP3nkL/0TYpAn/0OPNqMsLFNpeEnA4g9+bQ2ppZZBT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724735578; c=relaxed/simple;
-	bh=SSwLGfv2A1+FSxbRU8FrnhDpZHXDd95b+KwV0RpDEdM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=NMnhgmcKLliV/FM0Y1c6bmOrhUKAclZhRINNpJcjbIgALSMro6/bT6B8OThdKZ8kuUKI3Hw0Z6iNya8bADg3ZoTt7R+ynQY09sMuKLvGYDizNFA+vf/DcIcZu9wZhf9vHIhDMNIZpRhs8ifwtMtfnkSpZw8elIhdBQ1K1yiF36Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=rHrCv+P4; arc=none smtp.client-ip=203.254.224.25
+	s=arc-20240116; t=1724737908; c=relaxed/simple;
+	bh=H4SqrKxbbms/TKR6VFH2CjRPGaupZXMzHQXudJVoVnQ=;
+	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=a04K2HtPHh/oq57cbbYIl4KzFE1jf5FrsHhYaspI/P2BPRFi3v/YWNgsTw5IucST4mPuBNXZR6WH/qJo3YR1coWxsgaFY2EDNXUBIufWhuXYB33FBrYJx+IUmC8yB6JlkgLpudHDnW9d36d4odLDa9yomzsJgsh0vNVIBjqaCqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=VnbD3Ia5; arc=none smtp.client-ip=203.254.224.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rHrCv+P4"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240827051252epoutp0232f6137b18c5502cad0ce1734db8e06f~vfd2Wv6Hg2870028700epoutp026
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 05:12:52 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240827051252epoutp0232f6137b18c5502cad0ce1734db8e06f~vfd2Wv6Hg2870028700epoutp026
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VnbD3Ia5"
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240827055138epoutp02e72cf0f5c0189de647fede70788413f1~vf-sFjtP73271232712epoutp02R
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 05:51:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240827055138epoutp02e72cf0f5c0189de647fede70788413f1~vf-sFjtP73271232712epoutp02R
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1724735573;
-	bh=cCXqZUrSYsLJrkst+rIGuVs2OORkCo1hPStex7N5M18=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=rHrCv+P4ge3NEchuuPN4k7oaerZc//uJjViL+53bAeD63MRToYeBRC2KRhrsuutXg
-	 oKVqvLR0Fq74WhFFdGKWgOJ0PyiZr/TG88MYKCT8nG6x2JEh3JIJQuiuePow/LnlO3
-	 aBpGkgO+sm3lTlbNw5s/HTIgwHwj010cnsLOkDBI=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-	20240827051252epcas5p260600137502baffea787d2207b444333~vfd1tcJNa2626726267epcas5p27;
-	Tue, 27 Aug 2024 05:12:52 +0000 (GMT)
-Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.177]) by
-	epsnrtp3.localdomain (Postfix) with ESMTP id 4WtFzk37Szz4x9Pw; Tue, 27 Aug
-	2024 05:12:50 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	71.DD.19863.2506DC66; Tue, 27 Aug 2024 14:12:50 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20240827051249epcas5p4dd527b84dd1ee5911cf84ad60132ea6a~vfdzdXQka1975319753epcas5p4q;
-	Tue, 27 Aug 2024 05:12:49 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240827051249epsmtrp28959f7cbc47750675b06141c7b1eff23~vfdzccABd1630916309epsmtrp2v;
-	Tue, 27 Aug 2024 05:12:49 +0000 (GMT)
-X-AuditID: b6c32a50-ef5fe70000004d97-ac-66cd60521094
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	8D.CE.19367.1506DC66; Tue, 27 Aug 2024 14:12:49 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240827051246epsmtip20a7e5909dff1f6550d059cc6769d7e3a~vfdwCkoxU0710507105epsmtip2l;
-	Tue, 27 Aug 2024 05:12:46 +0000 (GMT)
-Message-ID: <3884220d-e553-a1c2-f636-0ff95500e8f5@samsung.com>
-Date: Tue, 27 Aug 2024 10:42:45 +0530
+	s=mail20170921; t=1724737898;
+	bh=aVZJQ6YVRI3NXzm7OS/VeDi/Eu2tzJcO0QF6xhHFQvA=;
+	h=From:To:In-Reply-To:Subject:Date:References:From;
+	b=VnbD3Ia5On3B6/eNQCPEIutxkpw9QEcMRRB5wqKWQlbl3YVsCeyPeyV9kUndC1OQr
+	 8G5+nCuzbbN2CkwNOKxNCeZQ8EheBcFaqYlPlzZe0x2F28fwYT9YbrLJcThsa8qipY
+	 bnkeJ1sVAuItpNCkgkrRoVheLUAogtfBdlvQn4VQ=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+	20240827055137epcas2p3d496bd4408f94f90c18d6e015f3530d8~vf-rjqJhu1622916229epcas2p39;
+	Tue, 27 Aug 2024 05:51:37 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.98]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4WtGrT0Hn4z4x9QB; Tue, 27 Aug
+	2024 05:51:37 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+	epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+	47.C3.10016.8696DC66; Tue, 27 Aug 2024 14:51:36 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+	20240827055136epcas2p39ea31d48a51c38e855440eb9c81a4302~vf-qPQT-i1622916229epcas2p35;
+	Tue, 27 Aug 2024 05:51:36 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240827055136epsmtrp1efc5518c066d0f427afef44ec6af3656~vf-qOQg7h0833508335epsmtrp1B;
+	Tue, 27 Aug 2024 05:51:36 +0000 (GMT)
+X-AuditID: b6c32a48-4b5ff70000002720-d0-66cd6968aab5
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	8A.03.07567.8696DC66; Tue, 27 Aug 2024 14:51:36 +0900 (KST)
+Received: from KORCO164647 (unknown [10.229.38.229]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20240827055136epsmtip1cb813a425e03e4b76a530d7b1c976134~vf-qAb3gC1617216172epsmtip1O;
+	Tue, 27 Aug 2024 05:51:36 +0000 (GMT)
+From: =?UTF-8?B?6rmA6riw7JuF?= <kwmad.kim@samsung.com>
+To: "'Bean Huo'" <huobean@gmail.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <beanhuo@micron.com>,
+	<adrian.hunter@intel.com>, <h10.kim@samsung.com>, <hy50.seo@samsung.com>,
+	<sh425.lee@samsung.com>, <kwangwon.min@samsung.com>,
+	<junwoo80.lee@samsung.com>, <wkon.kim@samsung.com>
+In-Reply-To: <04306da77d74e16edab1d682a8602f61b35025a3.camel@gmail.com>
+Subject: RE: [PATCH v2 0/2] scsi: ufs: introduce a callback to override OCS
+ value
+Date: Tue, 27 Aug 2024 14:51:35 +0900
+Message-ID: <011201daf845$2d7846e0$8868d4a0$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v4 1/5] fs, block: refactor enum rw_hint
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
-	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com, brauner@kernel.org, jack@suse.cz,
-	jaegeuk@kernel.org, jlayton@kernel.org, chuck.lever@oracle.com
-Cc: linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, gost.dev@samsung.com, vishak.g@samsung.com,
-	javier.gonz@samsung.com
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <d0e017ac-8367-4bb8-9b7f-d72dd068fdb1@acm.org>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01TaVBbZRT1Lbw8sKmvAYaP/MD4qghUKLEhPBBoHZj6nKIGS6czHUYayWOR
-	kIQshXacmiqliwoVbKgBB6ZDG020lKUsDThM6EIqFcZAS+hiK4lUKNQSl2ETEx6t/Dv3u+fc
-	89175+IIbx7j4wUKLaNWSOUkFoC290VGRr+793purMMQSFnuVGLUVN8sRBn+mEOo5TsTMOXs
-	7YKpby2XYaq25hOYcjUZEaq5EqfGb3s41NxZM4eqst2AqJ6xTdTPp9+gunvsKFV/1s2hPr3Z
-	iVGmq//C1LmpRyg1aKzjbAuiHcM76MG7zShtqLqG0Y7rOrrFfAyjWxs/oq0NHpi2OvUY/dg9
-	htIVbWaIHmi4xKE9LWGSdXsKk/IZqYxRCxhFjlJWoMhLJnfszE7NjhPHCqOFCVQ8KVBIi5hk
-	Mi1dEr29QO5tkhTsk8p13ieJVKMhN6ckqZU6LSPIV2q0ySSjkslVIlWMRlqk0SnyYhSMNlEY
-	G/tqnJe4tzC/95AVUV3ASn9pXob10Cm/45A/DggRKP/egxyHAnAe0Q0Bo60DY4NZCNQYBpCn
-	wd8jN5AnEuus249NdEFgpm1uJcEjpiEwdyjBh7lECqh72LbigRIvgQlHtR/7vgHYv3KhPhxM
-	vA/mR+ogHw4kkkDzgnmlDkKEgDFXPewzCCJOwqB3sQz1BYjPYMrY4GXhOEZEgqFqnU/gT7wG
-	ZsYHOKz4edAxXbfybUBU+4OlWg/q4wMiDQwsZ7EdBILJq20cFvOBZ6YHY3EhuPfrPZTFH4LO
-	1orVIW0F+sVRP18ZxGvbdHEza7UefL7ggtnqXHC0nMeyXwB3q9yryhBw/1TjKqaBY96EsnOb
-	gcBi2S3kBCQwrhmLcU37xjXdGP93boBQM8RnVJqiPCYnTiWMVjAlTzeeoyxqgVaOIErSCVnO
-	L8XYIBiHbBDAETKIG+aw5/K4Mun+A4xama3WyRmNDYrzLugLhB+co/RekUKbLRQlxIrEYrEo
-	YYtYSIZwpw5/LeMReVItU8gwKkb9RAfj/nw93JHWXJIYMa5/7s+/dq9vtU2038oOTbxYurui
-	n+nv7SkN59zvT0+f29h1JnzLmzt/u7zrSH1nFma/Pf3D+V2ueL9niyucrxz90oYfNMSrLGe+
-	ybAwg1GZS1bZZ8snQ8bdBeLMyQIyIuvjnEsdwwHGh6lN5ZUvLiA3u03FD7IM84qK9hJVSISk
-	UW/O2PPOY9EQ98oJU+iPFtNoQEdKT59A1qrrtr9+2O4uPhY2Luh/eeO6f/p/mjJl/l476Try
-	YOt3we9RBw6O8B8NhWuXVVbn4qzDEbr9Qr78rZL2a9vU+2rruiIrr2S4z6WWf7DJuSE1KQ6I
-	RsW5+99mTj8TyK8ZlQx7nGUkqsmXCqMQtUb6H/KSClGNBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrMIsWRmVeSWpSXmKPExsWy7bCSvG5gwtk0g+9P9SxW3+1ns3h9+BOj
-	xbQPP5kt/t99zmRx88BOJouVq48yWcye3sxk8WT9LGaLjf0cFo/vfGa3+LlsFbvFpEPXGC32
-	3tK2uLTI3WLP3pMsFvOXPWW36L6+g81i+fF/TBbrXr9nsTg/aw67g4jH5SveHufvbWTxmDbp
-	FJvH5bOlHptWdbJ5bF5S77F7wWcmj903G9g8Pj69xeLRt2UVo8eZBUfYPT5vkgvgieKySUnN
-	ySxLLdK3S+DKONC4m7lgK1vF/Y3/mRoYZ7B2MXJySAiYSOz+9BTI5uIQEtjOKNHceoYFIiEu
-	0XztBzuELSyx8t9zdoii14wS5/69YARJ8ArYScx5swVsEouAqsTzy5NZIeKCEidnPgEbJCqQ
-	JLHnfiMTiC0sYCOx8fcqZhCbGWjBrSfzmUCGighMZZJY+eIq2AZmgbeMEq0HjrBArHvHKPHg
-	1Awgh4ODTUBT4sLkUpBuTgFriXePz7BDTDKT6NraxQhhy0tsfzuHeQKj0Cwkh8xCsnAWkpZZ
-	SFoWMLKsYhRNLSjOTc9NLjDUK07MLS7NS9dLzs/dxAiOd62gHYzL1v/VO8TIxMF4iFGCg1lJ
-	hFfu8sk0Id6UxMqq1KL8+KLSnNTiQ4zSHCxK4rzKOZ0pQgLpiSWp2ampBalFMFkmDk6pBqYF
-	CyIWzAyWXHZs1Wsm65YE3izxZp5oPdUd+2YbP5SJX1x8XVr2dml0OH+vv6Nhc6PvTIWnP9/F
-	Xo/KttjDvGaJuIn706aOfWtX+IWGZjc9+eSt8qyG46F0kVGawy62g7xsN4V9Jh0/dSeR7Yby
-	w6zozxtOGPLJHzaZvX3N9+R9js7fe+JvuDs4KCgYWkzcqT+V936ko1yR8D+7hK6sB4qHFqXs
-	cp6Q6BsuPs1lWbjM7MLY3jmPrBKyP0cf7XkQfl5hrWpwyzYdkfZ6/ZX7f5u780k6B+vf1b/e
-	849PcsU8IeUNonENeZOZq8XXleVJqZ9MTlnUPv9puYTu41vPbPgeH3OuX63v3regXuGREktx
-	RqKhFnNRcSIAzdpe72YDAAA=
-X-CMS-MailID: 20240827051249epcas5p4dd527b84dd1ee5911cf84ad60132ea6a
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQMVAzAZ81RvDzfQ3MBmGZ181G9RyALYKPinAVEwIPSvpThKwA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrBJsWRmVeSWpSXmKPExsWy7bCmqW5G5tk0g38dZhYnn6xhs3gwbxub
+	xcufV9ksDj7sZLGY9uEns8Xf2xdZLeacbWCyWL34AYvFohvbmCx2/W1msth6YyeLxeVdc9gs
+	uq/vYLNYfvwfk8XSf29ZLDZf+sbiIOBx+Yq3x85Zd9k9Fu95yeQxYdEBRo/v6zvYPD4+vcXi
+	0bdlFaPH501yHu0HupkCOKOybTJSE1NSixRS85LzUzLz0m2VvIPjneNNzQwMdQ0tLcyVFPIS
+	c1NtlVx8AnTdMnOA3lBSKEvMKQUKBSQWFyvp29kU5ZeWpCpk5BeX2CqlFqTkFJgX6BUn5haX
+	5qXr5aWWWBkaGBiZAhUmZGfsX/+BrWAea0Xb8s2MDYzdLF2MnBwSAiYSGw9OZgaxhQR2MEr0
+	tuh1MXIB2Z8YJY73r2KDcL4xShz7NJUJpqP/6QVWiMReRokZxz6wQzgvGSVOXJ/FDlLFJmAm
+	8fzOX7CEiMBmZokTt96BtXMKuEusmdIHtlBYIFhi96LFYDaLgKpE+4TprCA2r4ClROfheywQ
+	tqDEyZlPwGxmAW2JZQtfM0OcoSDx8+kysHoRASeJZT3H2CFqRCRmd7YxgyyWEHjCIfHhyz82
+	iAYXiYPPvzNC2MISr45vYYewpSRe9rdB2cUSa3dcZYJobmCUWP3qNFTCWGLWs3agZg6gDZoS
+	63fpg5gSAsoSR25B3cYn0XEY5GGQMK9ER5sQRKOyxK9Jk6G2SkrMvHkHaqCHxOkTdxknMCrO
+	QvLlLCRfzkLyzSyEvQsYWVYxiqUWFOempxYbFZjAYzs5P3cTIziJa3nsYJz99oPeIUYmDsZD
+	jBIczEoivHKXT6YJ8aYkVlalFuXHF5XmpBYfYjQFhvtEZinR5HxgHskriTc0sTQwMTMzNDcy
+	NTBXEue91zo3RUggPbEkNTs1tSC1CKaPiYNTqoGJw+Qm82HJVTlOF8z1XHv2yVgf2VTr0P1b
+	L/ns0Stvmtc6eon+O5F6UPPUvRU78kS8V1ktTCpSeHrtDCPn1gqVpIvNbju1J57QFIudN6ds
+	p9rrppMXe/4cuThz94Wr3QtXulr4aT1+qpr2aMExgUc3il7cOiNZwOAikndn59Lty0/c85+V
+	lFVTF9vBFrnr97MeD+t6ZsP6yUbfs6Vm9mxb5H2otO3r9WmCDJO67F7+5pDfN7UztOe1jUST
+	3I7cHU6Ntz3M68vnc9y17tpf/vL/uxe1e+MrjtkXlJQyOfN/ddf7l7ZflulR5oFWQdd15zvM
+	FXyfhTB/4TmgNO3UNAPejDbvH/0H5rCbrZ3ozuWixFKckWioxVxUnAgA+41zgmsEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBIsWRmVeSWpSXmKPExsWy7bCSnG5G5tk0gx8fhS1OPlnDZvFg3jY2
+	i5c/r7JZHHzYyWIx7cNPZou/ty+yWsw528BksXrxAxaLRTe2MVns+tvMZLH1xk4Wi8u75rBZ
+	dF/fwWax/Pg/Joul/96yWGy+9I3FQcDj8hVvj52z7rJ7LN7zksljwqIDjB7f13eweXx8eovF
+	o2/LKkaPz5vkPNoPdDMFcEZx2aSk5mSWpRbp2yVwZTxePJe1YBZrxfRdm5gbGNtZuhg5OSQE
+	TCT6n15gBbGFBHYzSuy4Jw4Rl5Q4sfM5I4QtLHG/5QhQDRdQzXNGiZZlP5hBEmwCZhLP7/xl
+	B0mICBxlltjXsJcFouooo8S7L1PBxnIKuEusmdIH1iEsECixtv8T2FgWAVWJ9gnTwWp4BSwl
+	Og/fY4GwBSVOznwCZjMLaEv0PmxlhLGXLXzNDHGSgsTPp8vAekUEnCSW9Rxjh6gRkZjd2cY8
+	gVFoFpJRs5CMmoVk1CwkLQsYWVYxSqYWFOem5yYbFhjmpZbrFSfmFpfmpesl5+duYgRHrpbG
+	DsZ78//pHWJk4mA8xCjBwawkwit3+WSaEG9KYmVValF+fFFpTmrxIUZpDhYlcV7DGbNThATS
+	E0tSs1NTC1KLYLJMHJxSDUyCwca1ktIHGN5MPv3nhHmN3fkOt8zkOYlONwy0OM91nbHRfyI5
+	WfnCf+OgGs1rW3db6eZunx3fXsDydvYXrkclLb9q8pQXSBZ92NG26HLfNb9lmf3Vq2T65ZM1
+	e3fvNd85YVPbV3O9JBNX8ekak2J9zT9Y/nm/tv/Cw5kZfsWruR+KfznXeS3ZYvGbmBn9b+w9
+	7Bn/uF6KNr/ppFyTFHLxtdaihU7//SRn77+i7M8W+slj2+RpqwOY9iycETd1w2pTRqZ3vVlH
+	zXWtmjeqsbVmZ2TtPj5RPMGt27gkdiZjY/ITgWX/Zuyf+0F8c/aqyN+bjVw1r2YuZBRmXeof
+	XnOkReHG/vY9q9VCFzGsE1ViKc5INNRiLipOBAAafWlLSwMAAA==
+X-CMS-MailID: 20240827055136epcas2p39ea31d48a51c38e855440eb9c81a4302
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240826171413epcas5p3f62c2cc57b50d6df8fa66af5fe5996c5
-References: <20240826170606.255718-1-joshi.k@samsung.com>
-	<CGME20240826171413epcas5p3f62c2cc57b50d6df8fa66af5fe5996c5@epcas5p3.samsung.com>
-	<20240826170606.255718-2-joshi.k@samsung.com>
-	<d0e017ac-8367-4bb8-9b7f-d72dd068fdb1@acm.org>
+X-CMS-RootMailID: 20240822111247epcas2p2d3051255f42af05fd049b7247c395da4
+References: <CGME20240822111247epcas2p2d3051255f42af05fd049b7247c395da4@epcas2p2.samsung.com>
+	<cover.1724325280.git.kwmad.kim@samsung.com>
+	<04306da77d74e16edab1d682a8602f61b35025a3.camel@gmail.com>
 
-On 8/26/2024 11:14 PM, Bart Van Assche wrote:
-> On 8/26/24 10:06 AM, Kanchan Joshi wrote:
->> Change i_write_hint (in inode), bi_write_hint (in bio) and write_hint
->> (in request) to use u8 data-type rather than this enum.
-> 
-> That sounds fishy to me. Why to increase the size of this enum? Why to
-> reduce the ability of the compiler to perform type checking? I think
-> this needs to be motivated clearly in the patch description.
+> +static enum utp_ocs exynos_ufs_override_cqe_ocs(enum utp_ocs ocs) =7B
+> +	if (ocs =3D=3D OCS_ABORTED)
+> +		ocs =3D OCS_INVALID_COMMAND_STATUS;
+> +	return ocs;
+> +=7D
+>=20
+>=20
+> I wonder if you have considered the case where the command is aborted
+> by the host software or by the device itself?
 
-Since inode/bio/request stopped using this, the __packed annotation did 
-not seem to serve much purpose. But sure, I can retain the size/checks 
-on the renamed enum (rw_life_hint) too.
+I mean by the host software and Exynos host reports OCS_ABORTED only for th=
+e case when MCQ is enabled.
 
-Motivation for keeping u8 in inode/bio/request is to represent another 
-hint type. This is similar to ioprio where multiple io priority 
-classes/values are expressed within an int type.
+>=20
+> If you change OCS to OCS_INVALID_COMMAND_STATUS, there will report a
+> DID_REQUEUE to SCSI.
+
+Yes. That's what I meant, in order to process them properly after UFS initi=
+alization.
+
+>=20
+>=20
+> Kind regards,
+> Bean
+
+Thank you.
+
+
