@@ -1,81 +1,184 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C3C1DDF5;
-	Tue, 27 Aug 2024 17:53:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6679146590
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 18:55:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724781221; cv=none; b=bDEVZlL/sVylLkQMADFqZPbCYupznqrNSKAdA5hXuaTU5gIo4xD5Xc40NrzR4Dfe7k/pGmkpXPB1KBDk4XR5Iww+34DfXb/BmSNpuQKUG+PaZ7E3o3LG6Ncuc9HDF5oy23sSp7qTeIE8QcsDqHNqRooWx+Rp3xKc9/mPiw90+nM=
+	t=1724784929; cv=none; b=YLNp2zwc+SQ2uweF5B9bqDJWFTEm9UViV+3ct7hv9T6i85KfmlXDSx5xwhvDWoxYvkebofgWsEY0DJp++yaX8W/xCBAcVqL8p3lfclGZnproTZ9QyfPJWd6ZH2Xfvde0/YFxcEeb1cxV4eUvgEVwZFk2ABQKHh3k9JEWcw9lbMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724781221; c=relaxed/simple;
-	bh=U338rpc4wK7JK5dAvhU6nIhlrQaqgzG2x/Ra0BY7rL8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=RAdi+uSrSRO+Ui5366ndng6VBBgk/icrof4iSTouo5WIBSVeNPihm1YSsyvDP0jD8Kdl7quMmUvajtbd7eluQ8urh0CgJVzHJjkGKblM01hYOB255d712wV/9kwlMabS0BLj8P/V8FCYej6c7vR1IgTqj0n2f4E5VO+bhZN6bHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cwT00Gie; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724784929; c=relaxed/simple;
+	bh=rSQaHMO8f61xEzuYKf3U3E4m/6/+gudnCtIr4lvgRfw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qj7wDR4wb49fb99zvhMI645V9dWKre9oYmbpYa10jfnzKezMwf5WN739ri+4dyR3GIasdJBONqW2xWE6BSKENdERBOoP92uRO/e+E0UwLmwLHsz4vO/yeHMwAkMUWfn2w0PnBuBflggO9aWztMROBO1/D5ow3381of8Fw3CTmms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=fVMZC4Yq; arc=none smtp.client-ip=68.232.154.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cwT00Gie"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 387ADC55DE3;
-	Tue, 27 Aug 2024 17:53:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724781221;
-	bh=U338rpc4wK7JK5dAvhU6nIhlrQaqgzG2x/Ra0BY7rL8=;
-	h=Date:From:To:Cc:Subject:From;
-	b=cwT00Gie1Oyq4OONCZp5zq/DqEQx0cUlq52iyZ9sDIM5YI2q08BBKzxRvrCTo/B6U
-	 bCnafFhLtbe+wY5sE3eMqd7IzDPYueP3o0SCBMwCNpe0kh/1T97jgrjtNnS7/afAs3
-	 8amjxdnOrkFQOfl5aGvLq8MbcUqdrtVOVhsnqa2PeETvBY2M7Nw0moFZYJPkKslzdV
-	 68h4XduAL7Pro5Nogrw/En7WucNRUfF7+yimOr84FCPuGG1FQ+F3APTYhkPY9ppIDp
-	 m/CupkEFltSXp5hgP2F4Kf+SuQAzTNzRlrhh4U0U7cut7CmryIefA8pA5j/c/IWqEi
-	 BcHi2SY2wVUmg==
-Date: Tue, 27 Aug 2024 10:53:40 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-block <linux-block@vger.kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>,
-	John Garry <john.g.garry@oracle.com>
-Subject: [PATCH] block: fix detection of unsupported WRITE SAME in
- blkdev_issue_write_zeroes
-Message-ID: <20240827175340.GB1977952@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="fVMZC4Yq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1724784927; x=1756320927;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=rSQaHMO8f61xEzuYKf3U3E4m/6/+gudnCtIr4lvgRfw=;
+  b=fVMZC4Yq9pZmisth9GAiQFAxyZH7BwAb/FxSarD73AfWRc9yWeGaHSQp
+   qdDn5cx/imU+2m/jUL7N9xJ1HGkZfxvu/tshW2Lxdsuh0zA5l/sfVy2Or
+   oheuuMY6y+klldzbBUba+1UbQwrBldODHtAIwPE0erEmpN0DcRbKcwhZD
+   cK+xSTI43PGjAj3TPsqQO6Ki5bpQZv4hcZsbisDOhBQg3Te5WJYW6xig6
+   jDjphO0fHU3APRZy4OkDVXYbhgSISvXRY+Us7msxtEzGb4BcRlhhQEuqz
+   usHxXUkhM4F3ySOpWyK/3p7l+pnCKvvi/hsAxnwNYkAJdKxRY8jVi64EM
+   g==;
+X-CSE-ConnectionGUID: HXogS4E1Q5emAr2ic36fkw==
+X-CSE-MsgGUID: 8ln2jVHoSh21ZId82zBAlA==
+X-IronPort-AV: E=Sophos;i="6.10,181,1719903600"; 
+   d="scan'208";a="198399610"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa6.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Aug 2024 11:55:26 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Tue, 27 Aug 2024 11:54:56 -0700
+Received: from brunhilda.pdev.net (10.10.85.11) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
+ Transport; Tue, 27 Aug 2024 11:55:01 -0700
+From: Don Brace <don.brace@microchip.com>
+To: <don.brace@microchip.com>, <scott.teel@microchip.com>,
+	<Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+	<gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+	<mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
+	<kumar.meiyappan@microchip.com>, <jeremy.reeves@microchip.com>,
+	<david.strahan@microchip.com>, <hch@infradead.org>, James Bottomley
+	<James.Bottomley@HansenPartnership.com>, Martin Petersen
+	<martin.petersen@oracle.com>, <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
+CC: <linux-scsi@vger.kernel.org>
+Subject: [PATCH 0/7] smartpqi updates
+Date: Tue, 27 Aug 2024 13:54:54 -0500
+Message-ID: <20240827185501.692804-1-don.brace@microchip.com>
+X-Mailer: git-send-email 2.46.0.421.g159f2d50e7
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Organization: Microchip Technology Inc.
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-From: Darrick J. Wong <djwong@kernel.org>
+These patches are based on Martin Petersen's 6.12/scsi-queue tree
+  https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+  6.12/scsi-queue
 
-On error, blkdev_issue_write_zeroes used to recheck the block device's
-WRITE SAME queue limits after submitting WRITE SAME bios.  As stated in
-the comment, the purpose of this was to collapse all IO errors to
-EOPNOTSUPP if the effect of issuing bios was that WRITE SAME got turned
-off in the queue limits.  Therefore, it does not make sense to reuse the
-zeroes limit that was read earlier in the function because we only care
-about the queue limit *now*, not what it was at the start of the
-function.
+There are two functional changes:
+    smartpqi-add-fw-log-to-kdump
+    smartpqi-add-counter-for-parity-write-stream-requests
 
-Found by running generic/351 from fstests.
+There are three minor bug fixes:
+    smartpqi-fix-stream-detection
+    smartpqi-fix-rare-system-hang-during-LUN-reset
+    smartpqi-fix-volume-size-updates
 
-Fixes: 64b582ca88ca1 ("block: Read max write zeroes once for __blkdev_issue_write_zeroes()")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+The other two patches add PCI-IDs for new controllers and change the
+driver version.
+
+This set of changes consists of:
+* smartpqi-add-fw-log-to-kdump
+
+  During a kdump, the driver tells the controller to copy its logging information to some
+  pre-allocated buffers that can be analyzed later.
+
+  This is a "feature" driven capability and is backward compatible with existing controller FW.
+
+  This patch renames some prefixes for OFA (Online-Firmware Activation ofa_*) buffers
+  to host_memory_*. So, not a lot of actual functional changes to smartpqi_init.c,
+  mainly determining the memory size allocation.
+
+  We added a function to notify the controller to copy debug data into host memory before
+  continuing kdump.
+
+  Most of the functional changes are in smartpqi_sis.c where the actual handshaking is done.
+
+* smartpqi-fix-stream-detection
+
+  Correct some false write-stream detections. The data structure used to check for write-streams
+  was not initialized to all 0's causing some false write stream detections. The driver sends
+  down streamed requests to the raid engine instead of using AIO bypass for some extra performance.
+  (Potential full-stripe write verses Read Modify Write).
+
+  False detections have not caused any data corruption.
+  Found by internal testing. No known externally reported bugs.
+
+* smartpqi-add-counter-for-parity-write-stream-requests
+
+  Adding some counters for raid_bypass and write streams. These two counters are related
+  because write stream detection is only checked if an I/O request is eligible for bypass (AIO).
+
+  The bypass counter (raid_bypass_cnt) was moved into a common structure (pqi_raid_io_stats) and
+  changed to type __percpu. The write stream counter is (write_stream_cnt) has been added to
+  this same structure.
+
+  These counters are __percpu counters for performance. We added a sysfs entry to show the
+  write stream count. The raid bypass counter sysfs entry already exists.
+
+  Useful for checking streaming writes. The change in the sysfs entry write_stream_cnt can be
+  checked during AIO eligible write operations.
+
+* smartpqi-add-new-controller-PCI-IDs
+
+  Adding support for new controller HW.
+  No functional changes.
+
+* smartpqi-fix-rare-system-hang-during-LUN-reset
+
+  We found a rare race condition that can occur during a LUN reset. We were not emptying
+  our internal queue completely.
+
+  There have been some rare conditions where our internal request queue has requests for
+  multiple LUNs and a reset comes in for one of the LUNs. The driver waits for this internal
+  queue to empty. We were only clearing out the requests for the LUN being reset so the
+  request queue was never empty causing a hang.
+
+  The Fix:
+     For all requests in our internal request queue:
+        Complete requests with DID_RESET for queued requests for the device undergoing a reset.
+        Complete requests with DID_REQUEUE for all other queued requests.
+
+  Found by internal testing. No known externally reported bugs.
+
+* smartpqi-fix-volume-size-updates
+
+  The current code only checks for a size change if there is also a queue depth change.
+  We are separating the check for queue depth and the size changes.
+
+  Found by internal testing. No known bugs were filed.
+
+* smartpqi-update-version-to-2.1.30-031
+  No functional changes.
+
 ---
- block/blk-lib.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 83eb7761c2bfb..4c9f20a689f7b 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -174,7 +174,7 @@ static int blkdev_issue_write_zeroes(struct block_device *bdev, sector_t sector,
- 	 * on an I/O error, in which case we'll turn any error into
- 	 * "not supported" here.
- 	 */
--	if (ret && !limit)
-+	if (ret && !bdev_write_zeroes_sectors(bdev))
- 		return -EOPNOTSUPP;
- 	return ret;
- }
+David Strahan (1):
+  smartpqi: add new controller PCI IDs
+
+Don Brace (2):
+  smartpqi: fix volume size updates
+  smartpqi: update driver version to 2.1.30-031
+
+Mahesh Rajashekhara (2):
+  smartpqi: correct stream detection
+  smartpqi: add counter for parity write stream requests
+
+Murthy Bhat (2):
+  smartpqi: Add fw log to kdump
+  smartpqi: fix rare system hang during LUN reset
+
+ drivers/scsi/smartpqi/smartpqi.h      |  39 ++-
+ drivers/scsi/smartpqi/smartpqi_init.c | 352 +++++++++++++++++---------
+ drivers/scsi/smartpqi/smartpqi_sis.c  |  60 +++++
+ drivers/scsi/smartpqi/smartpqi_sis.h  |   3 +
+ 4 files changed, 322 insertions(+), 132 deletions(-)
+
+-- 
+2.46.0.421.g159f2d50e7
+
