@@ -1,97 +1,155 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from bee.tesarici.cz (bee.tesarici.cz [37.205.15.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602901A0711
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2024 15:55:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC0BA1C93B6;
+	Tue, 27 Aug 2024 15:55:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.205.15.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724774129; cv=none; b=h+tZ4GRIjouqujQA/Go14iwB6kbWzbmwAXfK4AKV9pOtwdFASSKin1vlAZtJsrlyXzZAYx+0GNBoLHd5MvjSrRxB8RSviQluEJlyVbfaLi+gxKtqIUxuxN2G4XzeP0v2YbwsKI3ejUvHhATjEGyd0cRT7LrjRmsbZFx8vwy1ntU=
+	t=1724774149; cv=none; b=K0hMV99yFzuo2GVH8J750K372+n6EedjcI2ABie2mPEFp7Pzg0E+z7iT2wYe9SXeoWTAojCil6162Hq0oT+TexOJI3W4ezaAhUZ3kx3xvy5NLQ28BJbXHz6/0hUU7r8JPjq5r5iU/qVHCjLwpPpFaEhIRDmnflgL28xswY8+IUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724774129; c=relaxed/simple;
-	bh=cyuNYYnVGusznZUHlWytb3IRr0Do1J7AXsF8KUsi2tw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Th0KXBrXgetRQf1q6EdvQv0MrxSW15pluy6UuHDmmvVepYCezvAzdx2QG+FdvB0JbcKA1ol81CLqziXIkUmzvxIDgBTAsxGR8Ti/izPXjbHn0P0OSRI8CuoaFsUcE5U+mfLIduVODeEXKqpJQQhMKzX10qwkECDziTD7rnWM+fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DeXcA7kc; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1724774149; c=relaxed/simple;
+	bh=cBO2FyArKD0hhv02lTcB1TMtG8oLlZwbkjkc6NN/N60=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YYjX67ChNJjIq4r8CpgdOavmCsUNXe/1fMCqJVft1564gU0o9pRRxjOuisXIFiulKaOfjvGfx6W1CyeWeEqPp738BN9sAg3MfAPvaCM0NOavUdOkKgmC/MaqV99wliihruHaxX4yHb/KTr+kSAOS1YyD3FsuXRfKaD/PsaApQsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz; spf=pass smtp.mailfrom=tesarici.cz; dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b=Yr2QCciq; arc=none smtp.client-ip=37.205.15.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tesarici.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tesarici.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DeXcA7kc"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WtXFC57zhzlgVnY;
-	Tue, 27 Aug 2024 15:55:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724774121; x=1727366122; bh=z/zE4MH8MBPQdqBJOSv2ZbjB
-	aJHehVZWIi7B/Klxpak=; b=DeXcA7kcD6cvQ1snzCipgyJ55Ws3L6MghCCGcp6o
-	dcTQtvA8rWFf1uc1J7YMde9Cq+BaMILbm50JMFD0SCIPjoHdGMfiPAjD0hNc2eSh
-	FV75BB7x4PtEeMwzDEooKzN7i4Qwe2ZxetQIt/NT7soMwwomA3p/YSVpn2j9CdGI
-	tZqByQaoJDx5rQxtzj394rlynKF6+2XrCfsNzQsZeqEW0Y4H3fBe0JoMhopxNTyY
-	XC+6WIQPiLeEZWmzdqbbWCO9ksUbL4GR8X6OfczF2WskOcz8/lajo+bV9eiqju3X
-	35DpNX8oOzZg6lcYf4/U5PfD/UxeAhyz8pwO9urqDMQWkA==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id LWJVzysLiIuy; Tue, 27 Aug 2024 15:55:21 +0000 (UTC)
-Received: from [172.16.58.82] (modemcable170.180-37-24.static.videotron.ca [24.37.180.170])
+	dkim=pass (2048-bit key) header.d=tesarici.cz header.i=@tesarici.cz header.b="Yr2QCciq"
+Received: from mordecai.tesarici.cz (unknown [213.235.133.103])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WtXF012mXzlgVnW;
-	Tue, 27 Aug 2024 15:55:15 +0000 (UTC)
-Message-ID: <6bf76097-bcd7-4021-936f-9ea3d6e2f4b0@acm.org>
-Date: Tue, 27 Aug 2024 11:55:14 -0400
+	by bee.tesarici.cz (Postfix) with ESMTPSA id BB8E91F64C8;
+	Tue, 27 Aug 2024 17:55:41 +0200 (CEST)
+Authentication-Results: mail.tesarici.cz; dmarc=fail (p=quarantine dis=none) header.from=tesarici.cz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tesarici.cz; s=mail;
+	t=1724774142; bh=Kgt1rDhB3tqHgknqxyoONMHMo+OxvdM/AzWNdimoAOE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=Yr2QCciqpjJLdknVeRsD7PsgDs/BjCz1fzFb54yBUI3dAxCIH/yC8BaQmC7/rIZta
+	 R4kjf3UbLQCx1HLrAE4H2MgHezkcmPDFZQZ9nmLAlnCgcG7tHoQyc+4tzcXxmxeGY7
+	 trJ1BuKWBR09O0Y0zhR9kjieTqui1PosnMmSEtljfZmWeWRlO47Ec6PMVNuitXt+Tm
+	 ZbHUJnds5/jNYa0TE/npvMr4Rh6uHf2OuRT36H8OkM3E45X4PNypdTIftik36Eqlf5
+	 UAsu0FwczQ62eO0gD/RQm/Whj1+48funVWiYx6oo8oGD4OY2icw65WKNjg03OqWYJY
+	 hzHJcftv+yBNQ==
+Date: Tue, 27 Aug 2024 17:55:36 +0200
+From: Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
+To: Michael Kelley <mhklinux@outlook.com>
+Cc: "mhkelley58@gmail.com" <mhkelley58@gmail.com>, "kbusch@kernel.org"
+ <kbusch@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>,
+ "sagi@grimberg.me" <sagi@grimberg.me>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+ <martin.petersen@oracle.com>, "kys@microsoft.com" <kys@microsoft.com>,
+ "haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
+ <wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>, "hch@lst.de" <hch@lst.de>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+ "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>
+Subject: Re: [RFC 1/7] swiotlb: Introduce swiotlb throttling
+Message-ID: <20240827175536.004785f3@mordecai.tesarici.cz>
+In-Reply-To: <SN6PR02MB4157AE3FA2E0D2227CC94CC0D4882@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20240822183718.1234-1-mhklinux@outlook.com>
+	<20240822183718.1234-2-mhklinux@outlook.com>
+	<20240823094101.07ba5e0f@meshulam.tesarici.cz>
+	<SN6PR02MB4157AE3FA2E0D2227CC94CC0D4882@SN6PR02MB4157.namprd02.prod.outlook.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.43; x86_64-suse-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] ufs: core: force reset after mcq abort all
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
- qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
- eddie.huang@mediatek.com, naomi.chu@mediatek.com, chu.stanley@gmail.com
-References: <20240826034509.17677-1-peter.wang@mediatek.com>
- <20240826034509.17677-3-peter.wang@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240826034509.17677-3-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On 8/25/24 8:45 PM, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
-> 
-> In mcq mode gerneal case, cq (head/tail) pointer is same as
+On Fri, 23 Aug 2024 20:41:15 +0000
+Michael Kelley <mhklinux@outlook.com> wrote:
 
-Please capitalize "MCQ" and please fix the spelling of "general".
+> From: Petr Tesa=C5=99=C3=ADk <petr@tesarici.cz> Sent: Friday, August 23, =
+2024 12:41 AM
+> >=20
+> > On Thu, 22 Aug 2024 11:37:12 -0700
+> > mhkelley58@gmail.com wrote:
+>[...]
+> > > @@ -71,12 +72,15 @@
+> > >   *		from each index.
+> > >   * @pad_slots:	Number of preceding padding slots. Valid only in the =
+first
+> > >   *		allocated non-padding slot.
+> > > + * @throttled:  Boolean indicating the slot is used by a request tha=
+t was
+> > > + *		throttled. Valid only in the first allocated non-padding slot.
+> > >   */
+> > >  struct io_tlb_slot {
+> > >  	phys_addr_t orig_addr;
+> > >  	size_t alloc_size;
+> > >  	unsigned short list;
+> > > -	unsigned short pad_slots;
+> > > +	u8 pad_slots;
+> > > +	u8 throttled; =20
+> >=20
+> > I'm not sure this flag is needed for each slot.
+> >=20
+> > SWIOTLB mappings should be throttled when the total SWIOTLB usage is
+> > above a threshold. Conversely, it can be unthrottled when the total
+> > usage goes below a threshold, and it should not matter if that happens
+> > due to an unmap of the exact buffer which previously pushed the usage
+> > over the edge, or due to an unmap of any other unrelated buffer. =20
+>=20
+> I think I understand what you are proposing. But I don't see a way
+> to make it work without adding global synchronization beyond
+> the current atomic counter for the number of uI'm sed slabs. At a minimum
+> we would need a global spin lock instead of the atomic counter. The spin
+> lock would protect the (non-atomic) slab count along with some other
+> accounting, and that's more global references. As described in the
+> cover letter, I was trying to avoid doing that.
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 4bcd4e5b62bd..d9ef8f0279da 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -6519,6 +6519,8 @@ static bool ufshcd_abort_all(struct ufs_hba *hba)
->   	/* Complete the requests that are cleared by s/w */
->   	ufshcd_complete_requests(hba, false);
->   
-> +	if (is_mcq_enabled(hba))
-> +		return true;
->   	return ret != 0;
->   }
+I have thought about this for a few days. And I'm still not convinced.
+You have made it clear in multiple places that the threshold is a soft
+limit, and there are many ways the SWIOTLB utilization may exceed the
+threshold. In fact I'm not even 100% sure that an atomic counter is
+needed, because the check is racy anyway. Another task may increase
+(or decrease) the counter between atomic_long_read(&mem->total_used)
+and a subsequent down(&mem->throttle_sem).
 
-Please add a comment above the new if-test that explains why that code
-is present otherwise it will be hard to understand why that statement
-has been introduced.
+I consider it a feature, not a flaw, because the real important checks
+happen later while searching for free slots, and those are protected
+with a spinlock.
 
-Thanks,
+> If you can see how to do what you propose with just the current
+> atomic counter, please describe.
 
-Bart.
+I think I'm certainly missing something obvious, but let me open the
+discussion to improve my understanding of the matter.
 
+Suppose we don't protect the slab count with anything. What is the
+worst possible outcome? IIUC the worst scenario is that multiple tasks
+unmap swiotlb buffers simultaneously and all of them believe that their
+action made the total usage go below the low threshold, so all of them
+try to release the semaphore.
+
+That's obviously not good, but AFAICS all that's needed is a
+test_and_clear_bit() on a per-io_tlb_mem throttled flag just before
+calling up(). Since up() would acquire the semaphore's spinlock, and
+there's only one semaphore per io_tlb_mem, adding an atomic flag doesn't
+look like too much overhead to me, especially if it ends up in the same
+cache line as the semaphore.
+
+Besides, this all happens only in the slow path, i.e. only after the
+current utilization has just dropped below the low threshold, not if
+the utilization was already below the threshold before freeing up some
+slots.
+
+I have briefly considered subtracting the low threshold as initial bias
+from mem->total_used and using atomic_long_add_negative() to avoid the
+need for an extra throttled flag, but at this point I'm not sure it can
+be implemented without any races. We can try to figure out the details
+if it sounds like a good idea.
+
+Petr T
