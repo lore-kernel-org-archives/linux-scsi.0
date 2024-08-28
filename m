@@ -1,172 +1,152 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E616E1A76DD
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 17:45:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B6EBE1ABEDA;
+	Wed, 28 Aug 2024 19:50:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724867146; cv=none; b=Smt591oueDSybB0sjtYr0pnnY2+nEDESO6EFzSmhFvXnTqIimKkNLrxKaymLxOgWpiSwZLZHg3cokCQFUSIIu0AWfNVlcHorSTydaSsgEHRq2wO2d+jJqZoGzmz89ELsp+MXGFmu9KT3xkS4N+2jjmHUOR33mkO8qRJtg03sODo=
+	t=1724874629; cv=none; b=YOdXC8fcWuAXeBBEUNJ4x10RhUhWfhnSNL99mSpU9N0P3qSzBg91sodtACZkDseUsuXpMXoJ1Cp2hIk5Hk2Ke6/tfYuVlFkALggSoDD9tDxAQoomq8p7nUnzoSuKKlE83KtObp7CrlsfLnNaOZLr4qBRalaC7WIPclR+v2QJAUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724867146; c=relaxed/simple;
-	bh=JDYyNmU8c0iOubICsxNNsOtAjdn2TfR4H5+dm7pVXWY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=d+NSQj2uAu9X8sDPnFredycU9pRyJg417ar3uByYTYAds3lb88oxFmthff+Ou52nKqBVM2p2LSWZ+ZpLKlmxIh4QfwVzujsJ58idjkwTP/xIarZZq4e1yAkJt6pxYELf0KWtwN8bCk4c2nCTW7+Y6pbqb92pzonHVe6bANvWvSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ghFK8dm+; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ghFK8dm+"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WvBf03Mn7zlgVXv;
-	Wed, 28 Aug 2024 17:45:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1724867139; x=1727459140; bh=sFlTR
-	OTiLIwTILzMA1TwDe91+GeAPCtNN+QFgSjLIeo=; b=ghFK8dm+eJpVPlIzeYoxg
-	WdJf0vptTEl4PiFFmlelC52vKQ/DaEL4IXsr1jyP/7ryKEyUm5/KzTXppe249rkm
-	Zz7G2ZXlhUZWI/kF/ZMPlSr3zFYjKLPDjg3LgD82YdILHzWz+qVaLhss4qgjvchJ
-	LFqdy2OS8PySn8U5fgk8/+s++LQ8BlBDJ93rnPCDn84IYd4IB5ul9vDpq3trF0Rb
-	mYYH7+fr+cK07vsjAIXKEsOU5fvPP0LXQqyRC+p05FGHJI+aPpZq+CAgKAe4ddlm
-	CEgf6tjziu5cNnXw2/qyD8BUfCQkJw7uzDajHXbBAImvQnmrQQtQgY6gIKysCrIU
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id XSMHT5QHopl3; Wed, 28 Aug 2024 17:45:39 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WvBdv1HCRzlgTGW;
-	Wed, 28 Aug 2024 17:45:39 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Andrew Halaney <ahalaney@redhat.com>
-Subject: [PATCH v3 9/9] ufs: core: Remove the second argument of ufshcd_device_init()
-Date: Wed, 28 Aug 2024 10:44:01 -0700
-Message-ID: <20240828174435.2469498-10-bvanassche@acm.org>
-X-Mailer: git-send-email 2.46.0.469.g59c65b2a67-goog
-In-Reply-To: <20240828174435.2469498-1-bvanassche@acm.org>
-References: <20240828174435.2469498-1-bvanassche@acm.org>
+	s=arc-20240116; t=1724874629; c=relaxed/simple;
+	bh=J5uLwfIH0C5JMzfyTNRjXZlVW+LbfOQyjRaqBUfyWGc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PJ+JqbJt4HbfXY5pypZqMqVdM+kbQG4MUjSf0/50wk45wOaje4a+wSDw988Lr9ydy91pF2N+bfhlO9Quz1Ta18CJ8pRaWxuXsrKtMpcnyQGXCwT6Ru5DBctnG5vzau3tF2gWAF5Rl4F85I4kTT8GzBCe0/YGeL3RbKwv6H8nG/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 18CDDDA7;
+	Wed, 28 Aug 2024 12:50:52 -0700 (PDT)
+Received: from [10.57.15.188] (unknown [10.57.15.188])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 269DF3F762;
+	Wed, 28 Aug 2024 12:50:23 -0700 (PDT)
+Message-ID: <bb7dd4ca-948f-4af7-b2ac-3ca02e82699f@arm.com>
+Date: Wed, 28 Aug 2024 20:50:21 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC 0/7] Introduce swiotlb throttling
+To: =?UTF-8?B?UGV0ciBUZXNhxZnDrWs=?= <petr@tesarici.cz>
+Cc: mhklinux@outlook.com, kbusch@kernel.org, axboe@kernel.dk,
+ sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
+ wei.liu@kernel.org, decui@microsoft.com, hch@lst.de,
+ m.szyprowski@samsung.com, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-coco@lists.linux.dev
+References: <20240822183718.1234-1-mhklinux@outlook.com>
+ <efc1eafc-dba4-4991-9f9a-58ceca1d9a35@arm.com>
+ <20240828150356.46d3d3dc@mordecai.tesarici.cz>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <20240828150356.46d3d3dc@mordecai.tesarici.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Both ufshcd_device_init() callers pass 'false' as second argument. Hence,
-remove that second argument.
+On 2024-08-28 2:03 pm, Petr Tesařík wrote:
+> On Wed, 28 Aug 2024 13:02:31 +0100
+> Robin Murphy <robin.murphy@arm.com> wrote:
+> 
+>> On 2024-08-22 7:37 pm, mhkelley58@gmail.com wrote:
+>>> From: Michael Kelley <mhklinux@outlook.com>
+>>>
+>>> Background
+>>> ==========
+>>> Linux device drivers may make DMA map/unmap calls in contexts that
+>>> cannot block, such as in an interrupt handler. Consequently, when a
+>>> DMA map call must use a bounce buffer, the allocation of swiotlb
+>>> memory must always succeed immediately. If swiotlb memory is
+>>> exhausted, the DMA map call cannot wait for memory to be released. The
+>>> call fails, which usually results in an I/O error.
+>>>
+>>> Bounce buffers are usually used infrequently for a few corner cases,
+>>> so the default swiotlb memory allocation of 64 MiB is more than
+>>> sufficient to avoid running out and causing errors. However, recently
+>>> introduced Confidential Computing (CoCo) VMs must use bounce buffers
+>>> for all DMA I/O because the VM's memory is encrypted. In CoCo VMs
+>>> a new heuristic allocates ~6% of the VM's memory, up to 1 GiB, for
+>>> swiotlb memory. This large allocation reduces the likelihood of a
+>>> spike in usage causing DMA map failures. Unfortunately for most
+>>> workloads, this insurance against spikes comes at the cost of
+>>> potentially "wasting" hundreds of MiB's of the VM's memory, as swiotlb
+>>> memory can't be used for other purposes.
+>>>
+>>> Approach
+>>> ========
+>>> The goal is to significantly reduce the amount of memory reserved as
+>>> swiotlb memory in CoCo VMs, while not unduly increasing the risk of
+>>> DMA map failures due to memory exhaustion.
+>>
+>> Isn't that fundamentally the same thing that SWIOTLB_DYNAMIC was already
+>> meant to address? Of course the implementation of that is still young
+>> and has plenty of scope to be made more effective, and some of the ideas
+>> here could very much help with that, but I'm struggling a little to see
+>> what's really beneficial about having a completely disjoint mechanism
+>> for sitting around doing nothing in the precise circumstances where it
+>> would seem most possible to allocate a transient buffer and get on with it.
+> 
+> This question can be probably best answered by Michael, but let me give
+> my understanding of the differences. First the similarity: Yes, one
+> of the key new concepts is that swiotlb allocation may block, and I
+> introduced a similar attribute in one of my dynamic SWIOTLB patches; it
+> was later dropped, but dynamic SWIOTLB would still benefit from it.
+> 
+> More importantly, dynamic SWIOTLB may deplete memory following an I/O
+> spike. I do have some ideas how memory could be returned back to the
+> allocator, but the code is not ready (unlike this patch series).
+> Moreover, it may still be a better idea to throttle the devices
+> instead, because returning DMA'able memory is not always cheap. In a
+> CoCo VM, this memory must be re-encrypted, and that requires a
+> hypercall that I'm told is expensive.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 44 +++++----------------------------------
- 1 file changed, 5 insertions(+), 39 deletions(-)
+Sure, making a hypercall in order to progress is expensive relative to 
+being able to progress without doing that, but waiting on a lock for an 
+unbounded time in the hope that other drivers might release their DMA 
+mappings soon represents a potentially unbounded expense, since it 
+doesn't even carry any promise of progress at all - oops userspace just 
+filled up SWIOTLB with a misguided dma-buf import and now the OS has 
+livelocked on stalled I/O threads fighting to retry :(
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 16638974b34f..5239caf3fc65 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -298,7 +298,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *h=
-ba);
- static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
- static void ufshcd_hba_exit(struct ufs_hba *hba);
--static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)=
-;
-+static int ufshcd_device_init(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
-@@ -7713,7 +7713,7 @@ static int ufshcd_host_reset_and_restore(struct ufs=
-_hba *hba)
-=20
- 	/* Establish the link again and restore the device */
- 	if (!err) {
--		err =3D ufshcd_device_init(hba, /*init_dev_params=3D*/false);
-+		err =3D ufshcd_device_init(hba);
- 		if (!err)
- 			err =3D ufshcd_probe_hba(hba);
- 	}
-@@ -8788,9 +8788,8 @@ static int ufshcd_post_device_init(struct ufs_hba *=
-hba)
- 	return 0;
- }
-=20
--static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
-+static int ufshcd_device_init(struct ufs_hba *hba)
- {
--	struct Scsi_Host *host =3D hba->host;
- 	int ret;
-=20
- 	ret =3D ufshcd_activate_link(hba);
-@@ -8798,7 +8797,7 @@ static int ufshcd_device_init(struct ufs_hba *hba, =
-bool init_dev_params)
- 		return ret;
-=20
- 	/* Reconfigure MCQ upon reset */
--	if (hba->mcq_enabled && !init_dev_params) {
-+	if (hba->mcq_enabled) {
- 		ufshcd_config_mcq(hba);
- 		ufshcd_mcq_enable(hba);
- 	}
-@@ -8813,39 +8812,6 @@ static int ufshcd_device_init(struct ufs_hba *hba,=
- bool init_dev_params)
- 	if (ret)
- 		return ret;
-=20
--	/*
--	 * Initialize UFS device parameters used by driver, these
--	 * parameters are associated with UFS descriptors.
--	 */
--	if (init_dev_params) {
--		ret =3D ufshcd_device_params_init(hba);
--		if (ret)
--			return ret;
--		if (is_mcq_supported(hba) && !hba->scsi_host_added) {
--			ufshcd_mcq_enable(hba);
--			ret =3D ufshcd_alloc_mcq(hba);
--			if (!ret) {
--				ufshcd_config_mcq(hba);
--			} else {
--				/* Continue with SDB mode */
--				ufshcd_mcq_disable(hba);
--				use_mcq_mode =3D false;
--				dev_err(hba->dev, "MCQ mode is disabled, err=3D%d\n",
--					 ret);
--			}
--			ret =3D scsi_add_host(host, hba->dev);
--			if (ret) {
--				dev_err(hba->dev, "scsi_add_host failed\n");
--				return ret;
--			}
--			hba->scsi_host_added =3D true;
--		} else if (is_mcq_supported(hba)) {
--			/* UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH is set */
--			ufshcd_config_mcq(hba);
--			ufshcd_mcq_enable(hba);
--		}
--	}
--
- 	return ufshcd_post_device_init(hba);
- }
-=20
-@@ -8879,7 +8845,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		}
-=20
- 		/* Reinit the device */
--		ret =3D ufshcd_device_init(hba, /*init_dev_params=3D*/false);
-+		ret =3D ufshcd_device_init(hba);
- 		if (ret)
- 			goto out;
- 	}
+As soon as we start tracking thresholds etc. then that should equally 
+put us in the position to be able to manage the lifecycle of both 
+dynamic and transient pools more effectively - larger allocations which 
+can be reused by multiple mappings until the I/O load drops again could 
+amortise that initial cost quite a bit.
+
+Furthermore I'm not entirely convinced that the rationale for throttling 
+being beneficial is even all that sound. Serialising requests doesn't 
+make them somehow use less memory, it just makes them use it... 
+serially. If a single CPU is capable of queueing enough requests at once 
+to fill the SWIOTLB, this is going to do absolutely nothing; if two CPUs 
+are capable of queueing enough requests together to fill the SWIOTLB, 
+making them take slightly longer to do so doesn't inherently mean 
+anything more than reaching the same outcome more slowly. At worst, if a 
+thread is blocked from polling for completion and releasing a bunch of 
+mappings of already-finished descriptors because it's stuck on an unfair 
+lock trying to get one last one submitted, then throttling has actively 
+harmed the situation.
+
+AFAICS this is dependent on rather particular assumptions of driver 
+behaviour in terms of DMA mapping patterns and interrupts, plus the 
+overall I/O workload shape, and it's not clear to me how well that 
+really generalises.
+
+> In short, IIUC it is faster in a CoCo VM to delay some requests a bit
+> than to grow the swiotlb.
+
+I'm not necessarily disputing that for the cases where the assumptions 
+do hold, it's still more a question of why those two things should be 
+separate and largely incompatible (I've only skimmed the patches here, 
+but my impression is that it doesn't look like they'd play all that 
+nicely together if both enabled). To me it would make far more sense for 
+this to be a tuneable policy of a more holistic SWIOTLB_DYNAMIC itself, 
+i.e. blockable calls can opportunistically wait for free space up to a 
+well-defined timeout, but then also fall back to synchronously 
+allocating a new pool in order to assure a definite outcome of success 
+or system-is-dying-level failure.
+
+Thanks,
+Robin.
