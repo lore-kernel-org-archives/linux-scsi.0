@@ -1,59 +1,59 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95D351A254F
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 17:45:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B47C149C53
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 17:45:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724867122; cv=none; b=Zz8jt7xtn0XlufDKduEw+Ry9C0gktZO2WWWln9I0go0knXer3QNf5iGonVPLed2uBXYZAkLaK2grqudOtg5QyHvijR8f7HDEgYD8qS+vM4dynSdUqx4nAhRAAHfH2kjwIbtJxIrMvtRO6iGC7tbCrWlgyleIf1yglbFS8dLjRzM=
+	t=1724867127; cv=none; b=ovhSVqSxbYSQcKNU0KXw8QCOx1aUPxbrtzKXVpwM83wg0tjKVmWBHkVlXm23aDUVHC/EfO3RLLGma9o6UdsCGphP8B9clngBQhGdA1BxKYw0uBr+4a+Y/gVSMuhOgFbeLUVbocm+Jh/ssUOo1upvFPwc3sTZHuQmJJXrnITVgUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724867122; c=relaxed/simple;
-	bh=xISFm7Swyov+VWmn5kO5OkMXBY69JoEFK3eIlzHNd1A=;
+	s=arc-20240116; t=1724867127; c=relaxed/simple;
+	bh=9/H3ngvvJ3LzJi039HZgCnl3JtdffiqVh5V7yM5qoSI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=b5q2L8pC34mSPdigTdinzQNUlMoWDxvaXY5ccVI+RKBRxsTHpKPFVAip3jMewmIx4g2Cbr4Uki8gk8j7Y9LAJvZqo/SENhrQjLW3iZqGqFNWSlXzvCgHGi0TQT9PzU0gjJ8STyyu5R6FI7LVTROJ5MZCpDccfBv21mnZfLTpxsg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=kP6UTLX8; arc=none smtp.client-ip=199.89.1.12
+	 MIME-Version; b=eYiI3Xa8MN07ZfF5pPv4dGHE+ICF0gdCaODuM216hDtXuT5a1CkZ+gcoKjcAyFkn/YxwkUGcGLS4BE+3UbwLd59+c/cAqQznrae+yT+t21oihb4S5XDNyATAgdFMvkxtkI/XYgbWagpiZjdd1kzLVSsGfgLd+x/RrRPGoD6E5uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=X+343Z/E; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="kP6UTLX8"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="X+343Z/E"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WvBdX0rRwzlgTGW;
-	Wed, 28 Aug 2024 17:45:20 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WvBdd64xwzlgVnN;
+	Wed, 28 Aug 2024 17:45:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1724867116; x=1727459117; bh=sCS5j
-	gvUBL2CiNcfPh57wQWHu2vQJ5PVvJPno3ObagY=; b=kP6UTLX8fyRFHvGag57Q6
-	4acj/wSqXqWBUHTAOGksq9qCAzfOlsY19krsbnRNd2UFmkPOxMKwuZfsnPEFwhHV
-	5y6tvQ3Z6fM2jpsSO6cu6K/G0tOLqyb8obMeS/cJhPS8yJEHBH4HZskU0Yd81fZ2
-	cUw0MfNPRtPzduIpHqgT4A2qpjb99JK9pkFQKKgHGzJFlZVafDAVbfJRGYBdgh+X
-	hGj9YusnDY19rZ7K2TZMXw0lvc/rU29NH/QEn/P1kOGCzpE0yTGw0eYcHMFMPYq4
-	3a0b2iUsmdYJGibXPbhhPPHsRcIx97HsFOkS++g8GXElNxJkNHeT91YWGSzAjPgh
-	g==
+	:received:received; s=mr01; t=1724867121; x=1727459122; bh=b8vZt
+	5oazZLWBAQIjbwsd+uatf5Y9nhoo9DTaXSBXM0=; b=X+343Z/E1V8IDedXCiFgO
+	qCh68nHuIHnudpCdLrLesH49o/QWq5mBO43SvrAV2VJF1voD19WXJEu6p9wOaN6/
+	2ReKIJpZrTBqTAZB8HMPKfG8P121NaiRBdt2sHNHVVIioBdVKMhI3Y/XJ0MoHf+J
+	ll4bDyPWbK39yfsbbhwwE5ismjLSA2ehd5BXhXdVIWtUVumT2LjWozDQrQ3VHTZM
+	yMz+CKBW7gCyei71/X4zSSb9CFjphplZc11YttlWgB1ey0Tdd0cZtKXN7LKyrmhe
+	nq5wbH2MPuBFU6xY/DgG7ZSMYwCvKzlhEE90+Xy/XIYhxwYk1A2KkwKU9C19BgID
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id uWoqCEr6kCaS; Wed, 28 Aug 2024 17:45:16 +0000 (UTC)
+ id Db6gjGPQkLb6; Wed, 28 Aug 2024 17:45:21 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WvBdR6dzjzlgVXv;
-	Wed, 28 Aug 2024 17:45:15 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WvBdX4GDDzlgVXv;
+	Wed, 28 Aug 2024 17:45:20 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Peter Wang <peter.wang@mediatek.com>,
 	Avri Altman <avri.altman@wdc.com>,
 	Bean Huo <beanhuo@micron.com>,
 	Andrew Halaney <ahalaney@redhat.com>
-Subject: [PATCH v3 4/9] ufs: core: Call ufshcd_add_scsi_host() later
-Date: Wed, 28 Aug 2024 10:43:56 -0700
-Message-ID: <20240828174435.2469498-5-bvanassche@acm.org>
+Subject: [PATCH v3 5/9] ufs: core: Move the ufshcd_device_init() call
+Date: Wed, 28 Aug 2024 10:43:57 -0700
+Message-ID: <20240828174435.2469498-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.46.0.469.g59c65b2a67-goog
 In-Reply-To: <20240828174435.2469498-1-bvanassche@acm.org>
 References: <20240828174435.2469498-1-bvanassche@acm.org>
@@ -65,65 +65,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Call ufshcd_add_scsi_host() after host controller initialization has
-completed. This is possible because no code between the old and new
-ufshcd_add_scsi_host() call site depends on the scsi_add_host() call.
+Move the ufshcd_device_init() call to the ufshcd_probe_hba() callers and
+remove the 'init_dev_params' argument of ufshcd_probe_hba(). This change
+refactors the code without modifying the behavior of the UFSHCI driver.
+This change prepares for moving one ufshcd_device_init() call into
+ufshcd_init().
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+ drivers/ufs/core/ufshcd.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1b69b370991d..20e00ec5fda8 100644
+index 20e00ec5fda8..f62fff878980 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -10576,10 +10576,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iome=
-m *mmio_base, unsigned int irq)
- 		hba->is_irq_enabled =3D true;
- 	}
+@@ -298,7 +298,8 @@ static int ufshcd_reset_and_restore(struct ufs_hba *h=
+ba);
+ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
+ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
+ static void ufshcd_hba_exit(struct ufs_hba *hba);
+-static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params);
++static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)=
+;
++static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+@@ -7711,8 +7712,11 @@ static int ufshcd_host_reset_and_restore(struct uf=
+s_hba *hba)
+ 	err =3D ufshcd_hba_enable(hba);
 =20
--	err =3D ufshcd_add_scsi_host(hba);
--	if (err)
--		goto out_disable;
+ 	/* Establish the link again and restore the device */
+-	if (!err)
+-		err =3D ufshcd_probe_hba(hba, false);
++	if (!err) {
++		err =3D ufshcd_device_init(hba, /*init_dev_params=3D*/false);
++		if (!err)
++			err =3D ufshcd_probe_hba(hba);
++	}
+=20
+ 	if (err)
+ 		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
+@@ -8848,21 +8852,16 @@ static int ufshcd_device_init(struct ufs_hba *hba=
+, bool init_dev_params)
+ /**
+  * ufshcd_probe_hba - probe hba to detect device and initialize it
+  * @hba: per-adapter instance
+- * @init_dev_params: whether or not to call ufshcd_device_params_init().
+  *
+  * Execute link-startup and verify device initialization
+  *
+  * Return: 0 upon success; < 0 upon failure.
+  */
+-static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
++static int ufshcd_probe_hba(struct ufs_hba *hba)
+ {
+ 	ktime_t start =3D ktime_get();
+ 	unsigned long flags;
+-	int ret;
 -
- 	/* Reset the attached device */
- 	ufshcd_device_reset(hba);
+-	ret =3D ufshcd_device_init(hba, init_dev_params);
+-	if (ret)
+-		goto out;
++	int ret =3D 0;
 =20
-@@ -10591,7 +10587,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
- *mmio_base, unsigned int irq)
- 		dev_err(hba->dev, "Host controller enable failed\n");
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_host_state(hba);
--		goto free_tmf_queue;
-+		goto out_disable;
+ 	if (!hba->pm_op_in_progress &&
+ 	    (hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH)) {
+@@ -8880,7 +8879,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bo=
+ol init_dev_params)
+ 		}
+=20
+ 		/* Reinit the device */
+-		ret =3D ufshcd_device_init(hba, init_dev_params);
++		ret =3D ufshcd_device_init(hba, /*init_dev_params=3D*/false);
+ 		if (ret)
+ 			goto out;
  	}
+@@ -8928,7 +8927,9 @@ static void ufshcd_async_scan(void *data, async_coo=
+kie_t cookie)
 =20
- 	/*
-@@ -10626,6 +10622,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iome=
-m *mmio_base, unsigned int irq)
- 	 */
- 	ufshcd_set_ufs_dev_active(hba);
-=20
-+	err =3D ufshcd_add_scsi_host(hba);
-+	if (err)
-+		goto out_disable;
-+
- 	async_schedule(ufshcd_async_scan, hba);
- 	ufs_sysfs_add_nodes(hba->dev);
-=20
-@@ -10633,12 +10633,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iome=
-m *mmio_base, unsigned int irq)
- 	ufshcd_pm_qos_init(hba);
- 	return 0;
-=20
--free_tmf_queue:
--	blk_mq_destroy_queue(hba->tmf_queue);
--	blk_put_queue(hba->tmf_queue);
--	blk_mq_free_tag_set(&hba->tmf_tag_set);
--	if (hba->scsi_host_added)
--		scsi_remove_host(hba->host);
- out_disable:
- 	hba->is_irq_enabled =3D false;
- 	ufshcd_hba_exit(hba);
+ 	down(&hba->host_sem);
+ 	/* Initialize hba, detect and initialize UFS device */
+-	ret =3D ufshcd_probe_hba(hba, true);
++	ret =3D ufshcd_device_init(hba, /*init_dev_params=3D*/true);
++	if (ret =3D=3D 0)
++		ret =3D ufshcd_probe_hba(hba);
+ 	up(&hba->host_sem);
+ 	if (ret)
+ 		goto out;
