@@ -1,152 +1,144 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B6EBE1ABEDA;
-	Wed, 28 Aug 2024 19:50:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from mx6.ucr.edu (mx6.ucr.edu [138.23.62.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3481314BF8D
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 22:58:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=138.23.62.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724874629; cv=none; b=YOdXC8fcWuAXeBBEUNJ4x10RhUhWfhnSNL99mSpU9N0P3qSzBg91sodtACZkDseUsuXpMXoJ1Cp2hIk5Hk2Ke6/tfYuVlFkALggSoDD9tDxAQoomq8p7nUnzoSuKKlE83KtObp7CrlsfLnNaOZLr4qBRalaC7WIPclR+v2QJAUU=
+	t=1724885884; cv=none; b=dwEacorFdhOJ18aeW9gZbboc3IDmBiHedQzCTMYkBDLapNH+mxoORtZ0PK11ujBl88dQagl/4m9N4JFTRAD0ud6IjV+Ag7wU9YEbNgdOsjXxNS961SCRmdqXGocrmRVJncUGeFwICIAMFZN3LOMmyCjc/cp56gXzxilAEYxnSEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724874629; c=relaxed/simple;
-	bh=J5uLwfIH0C5JMzfyTNRjXZlVW+LbfOQyjRaqBUfyWGc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PJ+JqbJt4HbfXY5pypZqMqVdM+kbQG4MUjSf0/50wk45wOaje4a+wSDw988Lr9ydy91pF2N+bfhlO9Quz1Ta18CJ8pRaWxuXsrKtMpcnyQGXCwT6Ru5DBctnG5vzau3tF2gWAF5Rl4F85I4kTT8GzBCe0/YGeL3RbKwv6H8nG/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 18CDDDA7;
-	Wed, 28 Aug 2024 12:50:52 -0700 (PDT)
-Received: from [10.57.15.188] (unknown [10.57.15.188])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 269DF3F762;
-	Wed, 28 Aug 2024 12:50:23 -0700 (PDT)
-Message-ID: <bb7dd4ca-948f-4af7-b2ac-3ca02e82699f@arm.com>
-Date: Wed, 28 Aug 2024 20:50:21 +0100
+	s=arc-20240116; t=1724885884; c=relaxed/simple;
+	bh=mH/g7ll4FI7BDdOfh5JOlytsoVZVoCZLbdj/TexsXbk=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=pBy/JYLYhs8ljji5883SGDe/E6vx48Agp68+ds2Z4S+/ThjKkgz4Zn1hmnBRmhCZw1SuwSb4rDAWs5cAUc42maDl54qPbJAnwmfEX3qIrQK2BdaPzzWEA8CTaGuX+jgIaYGRbUy3iN2BHVlZJ5I3lkSyB/3exX+M19N9WAlZXR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ucr.edu; spf=pass smtp.mailfrom=ucr.edu; dkim=pass (2048-bit key) header.d=ucr.edu header.i=@ucr.edu header.b=eq9W5waJ; dkim=pass (1024-bit key) header.d=ucr.edu header.i=@ucr.edu header.b=QLj7ubsU; arc=none smtp.client-ip=138.23.62.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ucr.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucr.edu
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ucr.edu header.i=@ucr.edu header.b="eq9W5waJ";
+	dkim=pass (1024-bit key) header.d=ucr.edu header.i=@ucr.edu header.b="QLj7ubsU"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=ucr.edu; i=@ucr.edu; q=dns/txt; s=selector3;
+  t=1724885884; x=1756421884;
+  h=dkim-signature:x-google-dkim-signature:
+   x-forwarded-encrypted:x-gm-message-state:
+   x-google-smtp-source:mime-version:from:date:message-id:
+   subject:to:cc:content-type:x-cse-connectionguid:
+   x-cse-msgguid;
+  bh=mH/g7ll4FI7BDdOfh5JOlytsoVZVoCZLbdj/TexsXbk=;
+  b=eq9W5waJ/BLwJZAuX6a2GfUUZR4kLXpKBqjvobD59FGEGePGAHegqJir
+   wbAcpuY0dzBHdA5/7w7mdax60D35beeZJUKmDhTzYcH3jNdVTqdK9abii
+   gaiYIjKDwSztVSIpWoqI3LlrUOmVUkTdS1QeuemAhzYqKjzbpomiK0lDr
+   tzxw3Ly3LHU8QTMkmsJmoPopB8JRrOou8OoTd3mXyu6r+gKEsPku36Lh2
+   nQ4ysUr3nPVliT8TnsdlYxSLr1hpoJ3/KHrN9dEDX1wj1oSI6YpVbY5GT
+   b8Ja+AniQ2xAePqgoCmYOhbHoKWDfWbXS10arGDVpgi7OhwI3vFC6lGin
+   g==;
+X-CSE-ConnectionGUID: 736aH5UxQ/GA0wuedkUAyw==
+X-CSE-MsgGUID: 1PY8APkSST6sjBKmsUKpWg==
+Received: from mail-pj1-f70.google.com ([209.85.216.70])
+  by smtpmx6.ucr.edu with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 28 Aug 2024 15:58:03 -0700
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-2d404dffd54so27671a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 15:58:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ucr.edu; s=rmail; t=1724885881; x=1725490681; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=yLxVY8X/T4f7fRZ6UyOP0yKGoxXEhzabMD9FibXb7GE=;
+        b=QLj7ubsUmvJh16E23vtf/wRgs4lrIV7HaFWPJ7cl5gp+x2Sm3FSJNZ9rbWDTAU4Ahp
+         bnFbhMFu623f1nfaLUvjyPheUh6p9IkWRtORKCOZeUuWKG23BwT6zN65Qp/BTBDBStim
+         DIw4Uw8N68gsJ9u6UZEmWPtI1T/cDnmkljg2E=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724885881; x=1725490681;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=yLxVY8X/T4f7fRZ6UyOP0yKGoxXEhzabMD9FibXb7GE=;
+        b=ehdA9KXs4HsSTIZyNoHVTQdUj6rClFMDzXxTKUb6KcKUXVy0cVnpP3/Di5aEH24gvT
+         ve0yKAo1QlQfWO7z3xWwaooX54QhpykpxRHxpP7oKg3xaIYPkvoNFrCtZ9uoxpq18+56
+         9elkW30nROi4+BlFxna7gkZkDhDIIJJEUEU66u0IFVluGga0/qc8pWNbfKu5ot4uZ51R
+         OJAAdNdpW9v5PMQy55wq/Km5hfi9SwEqdIjZkuwRR0WTZNS8DBVZl/2yZD4Ykf6HWH24
+         zSpHSOjiCqnuGHD1u+vdDe6QweFCzYn3GPiyqRECPCAXWk1P009+y/KcdARGgh8DLH3j
+         zSlg==
+X-Forwarded-Encrypted: i=1; AJvYcCUsPUKFed/vxzmrHvn/tIcDIcesOJTVopqq9rg/EpKZDC7O03Ko4OMocNlkMaUT7E4U32TFYlLdMqaY@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfV6lUqcUx9hdDHGugjG2QHwdDJbEcLH/t4LOwyEnfdqjze3ZC
+	PAbQfXpNKL+e5CUC/vL2/7V+tA7b5O1cb52t4I67b926u5ou4jkGFrHHKx2Cg5hfspd3VQYheZt
+	YoK0jxfTFCt6QgC/rjQ5fb05GRcrUKzZLHQJeakvWnpYDoSvlEn6BU9y5W61mzTPj4k1au1ZdHT
+	/WXyeWfmGk2qkB6Wiq/APSgGAhzh96KFD9ha0=
+X-Received: by 2002:a17:90b:17d2:b0:2c8:f3b7:ec45 with SMTP id 98e67ed59e1d1-2d8564af81cmr825623a91.36.1724885881539;
+        Wed, 28 Aug 2024 15:58:01 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHXEe6dhUHQh465WEYk7KUByrrAZDRSly0qwGGKpGNnIr+sgNfIemlPXdgVS5YvdQVvQxPGAJKRxkeedJF+AwU=
+X-Received: by 2002:a17:90b:17d2:b0:2c8:f3b7:ec45 with SMTP id
+ 98e67ed59e1d1-2d8564af81cmr825608a91.36.1724885881159; Wed, 28 Aug 2024
+ 15:58:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC 0/7] Introduce swiotlb throttling
-To: =?UTF-8?B?UGV0ciBUZXNhxZnDrWs=?= <petr@tesarici.cz>
-Cc: mhklinux@outlook.com, kbusch@kernel.org, axboe@kernel.dk,
- sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
- wei.liu@kernel.org, decui@microsoft.com, hch@lst.de,
- m.szyprowski@samsung.com, iommu@lists.linux.dev,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
- linux-coco@lists.linux.dev
-References: <20240822183718.1234-1-mhklinux@outlook.com>
- <efc1eafc-dba4-4991-9f9a-58ceca1d9a35@arm.com>
- <20240828150356.46d3d3dc@mordecai.tesarici.cz>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20240828150356.46d3d3dc@mordecai.tesarici.cz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Xingyu Li <xli399@ucr.edu>
+Date: Wed, 28 Aug 2024 15:57:50 -0700
+Message-ID: <CALAgD-718DVmcVHtgSFGKbgr0ePoUjN2ST=gBtdYtGX5GUqBQg@mail.gmail.com>
+Subject: BUG: kernel panic: corrupted stack end in sg_ioctl
+To: dgilbert@interlog.com, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Cc: Yu Hao <yhao016@ucr.edu>
+Content-Type: text/plain; charset="UTF-8"
 
-On 2024-08-28 2:03 pm, Petr Tesařík wrote:
-> On Wed, 28 Aug 2024 13:02:31 +0100
-> Robin Murphy <robin.murphy@arm.com> wrote:
-> 
->> On 2024-08-22 7:37 pm, mhkelley58@gmail.com wrote:
->>> From: Michael Kelley <mhklinux@outlook.com>
->>>
->>> Background
->>> ==========
->>> Linux device drivers may make DMA map/unmap calls in contexts that
->>> cannot block, such as in an interrupt handler. Consequently, when a
->>> DMA map call must use a bounce buffer, the allocation of swiotlb
->>> memory must always succeed immediately. If swiotlb memory is
->>> exhausted, the DMA map call cannot wait for memory to be released. The
->>> call fails, which usually results in an I/O error.
->>>
->>> Bounce buffers are usually used infrequently for a few corner cases,
->>> so the default swiotlb memory allocation of 64 MiB is more than
->>> sufficient to avoid running out and causing errors. However, recently
->>> introduced Confidential Computing (CoCo) VMs must use bounce buffers
->>> for all DMA I/O because the VM's memory is encrypted. In CoCo VMs
->>> a new heuristic allocates ~6% of the VM's memory, up to 1 GiB, for
->>> swiotlb memory. This large allocation reduces the likelihood of a
->>> spike in usage causing DMA map failures. Unfortunately for most
->>> workloads, this insurance against spikes comes at the cost of
->>> potentially "wasting" hundreds of MiB's of the VM's memory, as swiotlb
->>> memory can't be used for other purposes.
->>>
->>> Approach
->>> ========
->>> The goal is to significantly reduce the amount of memory reserved as
->>> swiotlb memory in CoCo VMs, while not unduly increasing the risk of
->>> DMA map failures due to memory exhaustion.
->>
->> Isn't that fundamentally the same thing that SWIOTLB_DYNAMIC was already
->> meant to address? Of course the implementation of that is still young
->> and has plenty of scope to be made more effective, and some of the ideas
->> here could very much help with that, but I'm struggling a little to see
->> what's really beneficial about having a completely disjoint mechanism
->> for sitting around doing nothing in the precise circumstances where it
->> would seem most possible to allocate a transient buffer and get on with it.
-> 
-> This question can be probably best answered by Michael, but let me give
-> my understanding of the differences. First the similarity: Yes, one
-> of the key new concepts is that swiotlb allocation may block, and I
-> introduced a similar attribute in one of my dynamic SWIOTLB patches; it
-> was later dropped, but dynamic SWIOTLB would still benefit from it.
-> 
-> More importantly, dynamic SWIOTLB may deplete memory following an I/O
-> spike. I do have some ideas how memory could be returned back to the
-> allocator, but the code is not ready (unlike this patch series).
-> Moreover, it may still be a better idea to throttle the devices
-> instead, because returning DMA'able memory is not always cheap. In a
-> CoCo VM, this memory must be re-encrypted, and that requires a
-> hypercall that I'm told is expensive.
+Hi,
 
-Sure, making a hypercall in order to progress is expensive relative to 
-being able to progress without doing that, but waiting on a lock for an 
-unbounded time in the hope that other drivers might release their DMA 
-mappings soon represents a potentially unbounded expense, since it 
-doesn't even carry any promise of progress at all - oops userspace just 
-filled up SWIOTLB with a misguided dma-buf import and now the OS has 
-livelocked on stalled I/O threads fighting to retry :(
+We found a bug in Linux 6.10 using syzkaller. It is possibly a
+corrupted stack  bug.
+The reprodcuer is
+https://gist.github.com/freexxxyyy/9025a217d3002b14deca0b14768c6f97
 
-As soon as we start tracking thresholds etc. then that should equally 
-put us in the position to be able to manage the lifecycle of both 
-dynamic and transient pools more effectively - larger allocations which 
-can be reused by multiple mappings until the I/O load drops again could 
-amortise that initial cost quite a bit.
+The bug report is:
 
-Furthermore I'm not entirely convinced that the rationale for throttling 
-being beneficial is even all that sound. Serialising requests doesn't 
-make them somehow use less memory, it just makes them use it... 
-serially. If a single CPU is capable of queueing enough requests at once 
-to fill the SWIOTLB, this is going to do absolutely nothing; if two CPUs 
-are capable of queueing enough requests together to fill the SWIOTLB, 
-making them take slightly longer to do so doesn't inherently mean 
-anything more than reaching the same outcome more slowly. At worst, if a 
-thread is blocked from polling for completion and releasing a bunch of 
-mappings of already-finished descriptors because it's stuck on an unfair 
-lock trying to get one last one submitted, then throttling has actively 
-harmed the situation.
+Syzkaller hit 'kernel panic: corrupted stack end in sg_ioctl' bug.
 
-AFAICS this is dependent on rather particular assumptions of driver 
-behaviour in terms of DMA mapping patterns and interrupts, plus the 
-overall I/O workload shape, and it's not clear to me how well that 
-really generalises.
+Kernel panic - not syncing: corrupted stack end detected inside scheduler
+CPU: 0 PID: 8135 Comm: syz-executor302 Not tainted 6.10.0 #13
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x23d/0x360 lib/dump_stack.c:114
+ panic+0x331/0x850 kernel/panic.c:347
+ schedule_debug+0x2a8/0x3f0 kernel/sched/core.c:5964
+ __schedule+0x12b/0x15e0 kernel/sched/core.c:6630
+ __schedule_loop kernel/sched/core.c:6825 [inline]
+ schedule+0x143/0x310 kernel/sched/core.c:6840
+ schedule_timeout+0x1b9/0x300 kernel/time/timer.c:2581
+ io_schedule_timeout+0x96/0x120 kernel/sched/core.c:9034
+ do_wait_for_common kernel/sched/completion.c:95 [inline]
+ __wait_for_common kernel/sched/completion.c:116 [inline]
+ wait_for_common_io+0x31c/0x620 kernel/sched/completion.c:133
+ blk_wait_io block/blk.h:82 [inline]
+ blk_execute_rq+0x369/0x4a0 block/blk-mq.c:1408
+ sg_scsi_ioctl drivers/scsi/scsi_ioctl.c:593 [inline]
+ scsi_ioctl+0x20fc/0x2c70 drivers/scsi/scsi_ioctl.c:901
+ sg_ioctl_common drivers/scsi/sg.c:1109 [inline]
+ sg_ioctl+0x16c3/0x2d50 drivers/scsi/sg.c:1163
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:907 [inline]
+ __se_sys_ioctl+0xfe/0x170 fs/ioctl.c:893
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0x7e/0x150 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x67/0x6f
+RIP: 0033:0x7f63634e0e0d
+Code: c3 e8 37 25 00 00 0f 1f 80 00 00 00 00 f3 0f 1e fa 48 89 f8 48
+89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
+01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f636347c1a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f636357d088 RCX: 00007f63634e0e0d
+RDX: 0000000020000080 RSI: 0000000000000001 RDI: 0000000000000003
+RBP: 00007f636357d080 R08: 00007f636347c640 R09: 00007f636347c640
+R10: 00007f636347c640 R11: 0000000000000246 R12: 00007f636357d08c
+R13: 00007f63635412b4 R14: 2367732f7665642f R15: 00007f636345c000
+ </TASK>
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
 
-> In short, IIUC it is faster in a CoCo VM to delay some requests a bit
-> than to grow the swiotlb.
 
-I'm not necessarily disputing that for the cases where the assumptions 
-do hold, it's still more a question of why those two things should be 
-separate and largely incompatible (I've only skimmed the patches here, 
-but my impression is that it doesn't look like they'd play all that 
-nicely together if both enabled). To me it would make far more sense for 
-this to be a tuneable policy of a more holistic SWIOTLB_DYNAMIC itself, 
-i.e. blockable calls can opportunistically wait for free space up to a 
-well-defined timeout, but then also fall back to synchronously 
-allocating a new pool in order to assure a definite outcome of success 
-or system-is-dying-level failure.
-
-Thanks,
-Robin.
+-- 
+Yours sincerely,
+Xingyu
