@@ -1,48 +1,25 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D005C4D108
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 11:18:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 56D4916CD2A;
+	Wed, 28 Aug 2024 12:02:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724843910; cv=none; b=IZfe9xsO7/KTpvJ/urjW9sxi5Wd0ktMGXsn+0RZRaKVoWyH6FZH+QEHW/hl2yS5rLQRewtfyEGZq0wM6I5a0IO1YbLcnHJHRBCx9oG/fFXxxzyzMTqVUS8Bl+2G5+Ts4ZMf2xdoeO0mSS6c/3prIx8Gpq1BA4uQIElSsyXOYMWM=
+	t=1724846574; cv=none; b=eOb0LJd7vY7M5U0lHR0Y8SecfNvfoG7XJ6QBSpRb6SSjzOWv+sJNXaoh3LxISL5+Prx5OdttZqHY4tcWZizLcl66fVf1ioB9lOyKYFas6TWCTbVGSosRJiaSjYKrpzMVC+Sa3iC19VhnRUekl5u+7+QRkXfDsP5TjLt3lsDzkww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724843910; c=relaxed/simple;
-	bh=awrB3FBOyBTZ4p+nAjMAmIqfDIIGN3nvevBtnYAAisI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BQnYergHbNvU5c4y1WMqGwFrD/i7p4cZb1dyLd+Hr6YfDsX4+HqGevvI6iMRYytsgSd185/7UzUxzD31b9He1iuVy1tSYD5hysQ8eGe1pmxt81ioi3/tXD6w/8NquDMwjf/f4YPKJMdWOpF8vF0UwhLsm1VkE1EsHTRWIbMzmtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JYagSAYw; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JYagSAYw"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Wv2323xf2z6CmM6N;
-	Wed, 28 Aug 2024 11:18:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724843897; x=1727435898; bh=OUBE34sMobsn4T9s6yl5UtbC
-	pcnOSH3aZadDdXwARac=; b=JYagSAYwDrHuhL8EMLS7k/AsoN/1XrU1Nzk3xS3N
-	Xi6N3PNTc9IzZO8N/XMpYmUuJ0V23Bud2ZwY2D2LFMKZGThoqolxEiJr8llRGlRx
-	QWq7Zk7qSSwjlz5D9EvlHPD7BN+rCMhJ4EoeRUXsEpktG8E3ZYhlWhXKOu5zwh+a
-	I3Y5CF/mVqBriq54n9IzVjD+DNK1RfmWcGkpiZ8y3pEjPKw9MHt0HJ52BkFXmvKB
-	55AvpgRC2NqxGqtL0vea2BdXCcXeRcdXB+WS9HkbITvkHF2jxgf/B9+TYAH8Mlf2
-	Tuqqx4v4qoAH6RNX3SIfEtA+IotS30UwdhKINigvKjG74Q==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id LbV6940oQHmw; Wed, 28 Aug 2024 11:18:17 +0000 (UTC)
-Received: from [172.16.58.82] (modemcable170.180-37-24.static.videotron.ca [24.37.180.170])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Wv22t5h4vz6ClY91;
-	Wed, 28 Aug 2024 11:18:14 +0000 (UTC)
-Message-ID: <71de72f4-2cb0-44ea-aac7-0f2a5c8fa492@acm.org>
-Date: Wed, 28 Aug 2024 07:18:13 -0400
+	s=arc-20240116; t=1724846574; c=relaxed/simple;
+	bh=GV+R85tycGY3Ozigrbe3J1zpTJoK33VMYMatOrJvs0E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=rGFwALrCQulbHcevgfiBlV1rabQfsC8CViDMgKXi4dKHp99CUQEcuoG5dicUn1iTZzhaN85qNA4Q+SjRaNK/mGoGnBe+0ww3VWyfsqnoos5ia+1GIauD6ujIIU1G0OldK8zvaw3yeKu72RQB49AQbzGluZt8RVv3TDsdD9nn0pQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B67AFDA7;
+	Wed, 28 Aug 2024 05:03:16 -0700 (PDT)
+Received: from [10.57.15.188] (unknown [10.57.15.188])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AD0133F762;
+	Wed, 28 Aug 2024 05:02:43 -0700 (PDT)
+Message-ID: <efc1eafc-dba4-4991-9f9a-58ceca1d9a35@arm.com>
+Date: Wed, 28 Aug 2024 13:02:31 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,63 +27,203 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
- hibernation
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "ebiggers@google.com" <ebiggers@google.com>,
- "ahalaney@redhat.com" <ahalaney@redhat.com>,
- "quic_mnaresh@quicinc.com" <quic_mnaresh@quicinc.com>,
- "beanhuo@micron.com" <beanhuo@micron.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
- "minwoo.im@samsung.com" <minwoo.im@samsung.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>
-References: <20240821182923.145631-1-bvanassche@acm.org>
- <20240821182923.145631-3-bvanassche@acm.org>
- <ba9ae5a8-6021-f906-9ce1-d637534ac9cf@quicinc.com>
- <20c1866f-9bb2-406f-a819-74ad936d92d5@acm.org>
- <471e5a037f5fcc996e36b6112dc011731e75b66d.camel@mediatek.com>
- <63b82e64-e968-4704-85b8-fad919994432@acm.org>
- <b7b0395a59e275c5e43cb282b827b39416a5b4ad.camel@mediatek.com>
- <082b7053-e7f4-4dd9-9d84-c8d9c7d75faf@acm.org>
- <37fc6433d70483b7a889ff804e56023b1081b7b6.camel@mediatek.com>
- <f7f0ca00-a8ce-4841-8483-5ad886da82ad@acm.org>
- <0476168b16b4ba6a2b52cad23714206c6e386d80.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <0476168b16b4ba6a2b52cad23714206c6e386d80.camel@mediatek.com>
+Subject: Re: [RFC 0/7] Introduce swiotlb throttling
+To: mhklinux@outlook.com, kbusch@kernel.org, axboe@kernel.dk,
+ sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, kys@microsoft.com, haiyangz@microsoft.com,
+ wei.liu@kernel.org, decui@microsoft.com, hch@lst.de,
+ m.szyprowski@samsung.com, petr@tesarici.cz, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-coco@lists.linux.dev
+References: <20240822183718.1234-1-mhklinux@outlook.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <20240822183718.1234-1-mhklinux@outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On 8/28/24 2:17 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> No, I means you can reference ufs-sprd.c driver. which may have the
-> same issue?
->=20
-> 			/*
-> 			 * Disable UIC COMPL INTR to prevent access to
-> UFSHCI after
-> 			 * checking HCS.UPMCRS
-> 			 */
-> 			ufs_sprd_ctrl_uic_compl(hba, false);
->=20
-> Then after enter hibernte, you can prevent access to UFSHCI.
-> After exit hibernate, enable uic complete interrupt again for
-> workaround.
-Hi Peter,
+On 2024-08-22 7:37 pm, mhkelley58@gmail.com wrote:
+> From: Michael Kelley <mhklinux@outlook.com>
+> 
+> Background
+> ==========
+> Linux device drivers may make DMA map/unmap calls in contexts that
+> cannot block, such as in an interrupt handler. Consequently, when a
+> DMA map call must use a bounce buffer, the allocation of swiotlb
+> memory must always succeed immediately. If swiotlb memory is
+> exhausted, the DMA map call cannot wait for memory to be released. The
+> call fails, which usually results in an I/O error.
+> 
+> Bounce buffers are usually used infrequently for a few corner cases,
+> so the default swiotlb memory allocation of 64 MiB is more than
+> sufficient to avoid running out and causing errors. However, recently
+> introduced Confidential Computing (CoCo) VMs must use bounce buffers
+> for all DMA I/O because the VM's memory is encrypted. In CoCo VMs
+> a new heuristic allocates ~6% of the VM's memory, up to 1 GiB, for
+> swiotlb memory. This large allocation reduces the likelihood of a
+> spike in usage causing DMA map failures. Unfortunately for most
+> workloads, this insurance against spikes comes at the cost of
+> potentially "wasting" hundreds of MiB's of the VM's memory, as swiotlb
+> memory can't be used for other purposes.
+> 
+> Approach
+> ========
+> The goal is to significantly reduce the amount of memory reserved as
+> swiotlb memory in CoCo VMs, while not unduly increasing the risk of
+> DMA map failures due to memory exhaustion.
 
-My opinion about this is as follows:
-* Host drivers should not disable or enable the UIC completion
-   interrupt. Only the UFS controller core driver should do this.
-* The behavior I'm observing is that modifying the REG_INTERRUPT_ENABLE
-   register is sufficient to cause the UniPro link to exit the
-   hibernation state. Avoiding this cannot be achieved in a clean way
-   without modifying the UFS controller core driver.
+Isn't that fundamentally the same thing that SWIOTLB_DYNAMIC was already 
+meant to address? Of course the implementation of that is still young 
+and has plenty of scope to be made more effective, and some of the ideas 
+here could very much help with that, but I'm struggling a little to see 
+what's really beneficial about having a completely disjoint mechanism 
+for sitting around doing nothing in the precise circumstances where it 
+would seem most possible to allocate a transient buffer and get on with it.
 
 Thanks,
+Robin.
 
-Bart.
+> To reach this goal, this patch set introduces the concept of swiotlb
+> throttling, which can delay swiotlb allocation requests when swiotlb
+> memory usage is high. This approach depends on the fact that some
+> DMA map requests are made from contexts where it's OK to block.
+> Throttling such requests is acceptable to spread out a spike in usage.
+> 
+> Because it's not possible to detect at runtime whether a DMA map call
+> is made in a context that can block, the calls in key device drivers
+> must be updated with a MAY_BLOCK attribute, if appropriate. When this
+> attribute is set and swiotlb memory usage is above a threshold, the
+> swiotlb allocation code can serialize swiotlb memory usage to help
+> ensure that it is not exhausted.
+> 
+> In general, storage device drivers can take advantage of the MAY_BLOCK
+> option, while network device drivers cannot. The Linux block layer
+> already allows storage requests to block when the BLK_MQ_F_BLOCKING
+> flag is present on the request queue. In a CoCo VM environment,
+> relatively few device types are used for storage devices, and updating
+> these drivers is feasible. This patch set updates the NVMe driver and
+> the Hyper-V storvsc synthetic storage driver. A few other drivers
+> might also need to be updated to handle the key CoCo VM storage
+> devices.
+> 
+> Because network drivers generally cannot use swiotlb throttling, it is
+> still possible for swiotlb memory to become exhausted. But blunting
+> the maximum swiotlb memory used by storage devices can significantly
+> reduce the peak usage, and a smaller amount of swiotlb memory can be
+> allocated in a CoCo VM. Also, usage by storage drivers is likely to
+> overall be larger than for network drivers, especially when large
+> numbers of disk devices are in use, each with many I/O requests in-
+> flight.
+> 
+> swiotlb throttling does not affect the context requirements of DMA
+> unmap calls. These always complete without blocking, even if the
+> corresponding DMA map call was throttled.
+> 
+> Patches
+> =======
+> Patches 1 and 2 implement the core of swiotlb throttling. They define
+> DMA attribute flag DMA_ATTR_MAY_BLOCK that device drivers use to
+> indicate that a DMA map call is allowed to block, and therefore can be
+> throttled. They update swiotlb_tbl_map_single() to detect this flag and
+> implement the throttling. Similarly, swiotlb_tbl_unmap_single() is
+> updated to handle a previously throttled request that has now freed
+> its swiotlb memory.
+> 
+> Patch 3 adds the dma_recommend_may_block() call that device drivers
+> can use to know if there's benefit in using the MAY_BLOCK option on
+> DMA map calls. If not in a CoCo VM, this call returns "false" because
+> swiotlb is not being used for all DMA I/O. This allows the driver to
+> set the BLK_MQ_F_BLOCKING flag on blk-mq request queues only when
+> there is benefit.
+> 
+> Patch 4 updates the SCSI-specific DMA map calls to add a "_attrs"
+> variant to allow passing the MAY_BLOCK attribute.
+> 
+> Patch 5 adds the MAY_BLOCK option to the Hyper-V storvsc driver, which
+> is used for storage in CoCo VMs in the Azure public cloud.
+> 
+> Patches 6 and 7 add the MAY_BLOCK option to the NVMe PCI host driver.
+> 
+> Discussion
+> ==========
+> * Since swiotlb isn't visible to device drivers, I've specifically
+> named the DMA attribute as MAY_BLOCK instead of MAY_THROTTLE or
+> something swiotlb specific. While this patch set consumes MAY_BLOCK
+> only on the DMA direct path to do throttling in the swiotlb code,
+> there might be other uses in the future outside of CoCo VMs, or
+> perhaps on the IOMMU path.
+> 
+> * The swiotlb throttling code in this patch set throttles by
+> serializing the use of swiotlb memory when usage is above a designated
+> threshold: i.e., only one new swiotlb request is allowed to proceed at
+> a time. When the corresponding unmap is done to release its swiotlb
+> memory, the next request is allowed to proceed. This serialization is
+> global and without knowledge of swiotlb areas. From a storage I/O
+> performance standpoint, the serialization is a bit restrictive, but
+> the code isn't trying to optimize for being above the threshold. If a
+> workload regularly runs above the threshold, the size of the swiotlb
+> memory should be increased.
+> 
+> * Except for knowing how much swiotlb memory is currently allocated,
+> throttle accounting is done without locking or atomic operations. For
+> example, multiple requests could proceed in parallel when usage is
+> just under the threshold, putting usage above the threshold by the
+> aggregate size of the parallel requests. The threshold must already be
+> set relatively conservatively because of drivers that can't enable
+> throttling, so this slop in the accounting shouldn't be a problem.
+> It's better than the potential bottleneck of a globally synchronized
+> reservation mechanism.
+> 
+> * In a CoCo VM, mapping a scatter/gather list makes an independent
+> swiotlb request for each entry. Throttling each independent request
+> wouldn't really work, so the code throttles only the first SGL entry.
+> Once that entry passes any throttle, subsequent entries in the SGL
+> proceed without throttling. When the SGL is unmapped, entries 1 thru
+> N-1 are unmapped first, then entry 0 is unmapped, allowing the next
+> serialized request to proceed.
+> 
+> Open Topics
+> ===========
+> 1. swiotlb allocations from Xen and the IOMMU code don't make use of
+> throttling. This could be added if beneficial.
+> 
+> 2. The throttling values are currently exposed and adjustable in
+> /sys/kernel/debug/swiotlb. Should any of this be moved so it is
+> visible even without CONFIG_DEBUG_FS?
+> 
+> 3. I have not changed the current heuristic for the swiotlb memory
+> size in CoCo VMs. It's not clear to me how to link this to whether the
+> key storage drivers have been updated to allow throttling. For now,
+> the benefit of reduced swiotlb memory size must be realized using the
+> swiotlb= kernel boot line option.
+> 
+> 4. I need to update the swiotlb documentation to describe throttling.
+> 
+> This patch set is built against linux-next-20240816.
+> 
+> Michael Kelley (7):
+>    swiotlb: Introduce swiotlb throttling
+>    dma: Handle swiotlb throttling for SGLs
+>    dma: Add function for drivers to know if allowing blocking is useful
+>    scsi_lib_dma: Add _attrs variant of scsi_dma_map()
+>    scsi: storvsc: Enable swiotlb throttling
+>    nvme: Move BLK_MQ_F_BLOCKING indicator to struct nvme_ctrl
+>    nvme: Enable swiotlb throttling for NVMe PCI devices
+> 
+>   drivers/nvme/host/core.c    |   4 +-
+>   drivers/nvme/host/nvme.h    |   2 +-
+>   drivers/nvme/host/pci.c     |  18 ++++--
+>   drivers/nvme/host/tcp.c     |   3 +-
+>   drivers/scsi/scsi_lib_dma.c |  13 ++--
+>   drivers/scsi/storvsc_drv.c  |   9 ++-
+>   include/linux/dma-mapping.h |  13 ++++
+>   include/linux/swiotlb.h     |  15 ++++-
+>   include/scsi/scsi_cmnd.h    |   7 ++-
+>   kernel/dma/Kconfig          |  13 ++++
+>   kernel/dma/direct.c         |  41 +++++++++++--
+>   kernel/dma/direct.h         |   1 +
+>   kernel/dma/mapping.c        |  10 ++++
+>   kernel/dma/swiotlb.c        | 114 ++++++++++++++++++++++++++++++++----
+>   14 files changed, 227 insertions(+), 36 deletions(-)
+> 
