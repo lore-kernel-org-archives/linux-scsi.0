@@ -1,71 +1,71 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37B6A16BE30
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 13:15:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA2818030
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 13:21:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724850936; cv=none; b=XeES3PuQ1mWpHtmmlz0kIRIiD2RTgIRfVBPNNqsHw1qR7h4s6+RtOd3BqY4F3W/qq8zQ/PmkH0rFKN6YqGR0dymjw+Z7PiAfa1zY089JVqzjo123/y4c4E3Ji34UsiDpGL5mRkPTeYGYYInj54gkF9LOtx3ygXVosnKHiHy7vP8=
+	t=1724851279; cv=none; b=sVv9lRx1h63OVItjR+bhIK/of3yqjycErQeCwRHfWE7z1V4gqVUkQlztYC9IuJdk1LwKb11ZD7Sipo/sk8DRZRT2dON3RvOiyCvgcCBg4PLS40CdrhMwXLRJuejKmhqIOiWt7u8wTHE0B4eZU2Kozr9Hs4zODml2Zx2J5T1ovHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724850936; c=relaxed/simple;
-	bh=ah+6jhI5ss5hooA/BlJlnvVa5DwEdtYu8H93JxWNPpc=;
+	s=arc-20240116; t=1724851279; c=relaxed/simple;
+	bh=D+7nUxeWxF7+imi13C+bI1JPqaQWgqJIK4NeOS4udow=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C9Fp2FrsTKvdHun/KlQ6r9sue5OSVMzTUzBcmIAXZqzmSZnjMwNuhPEn72GhXooF10JSNtIqA6cRuIKGeV/F7UpbyiSKFASVrM45TFEFxmOmxI8fRiHAkXmVEOPZgKRzdSsUMUzW9YZ/JZjlGz4ttlZhX0aGcJtdnXxPW0uDL04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=LhNAGa8S; arc=none smtp.client-ip=209.85.214.171
+	 Content-Type:Content-Disposition:In-Reply-To; b=IXs7X2QpPdSkBs5SxVmTTLog5T2nOeMgzhzGIkpSlpK58ZQZA+oniKmGQaUSOR/hMMY2k7ngsTT39Qf0byf6M2lM82YWk0bpCSVMZOI+T6udxDNA6oAaxED7ZJSCs28fZr9Dq5oZNKUvZ/638dSyiluBE4o0ZwBPW+wt7roGMLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=YQqwOhYc; arc=none smtp.client-ip=209.85.216.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="LhNAGa8S"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2025031eb60so58967795ad.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 06:15:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YQqwOhYc"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-2d3d7a1e45fso4766975a91.3
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 06:21:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724850933; x=1725455733; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1724851278; x=1725456078; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=Dmh04gzmPECoa4NnTe4KxPpKH8/gM2Cb6gM7BgiITIM=;
-        b=LhNAGa8Sl81ROok1eMZxRCtCncAxM33XS4TfNxnag/cO7MVzfVIpbzKWGzWYfl14H0
-         WRw0JGcfnf+c03+8cYP1rwySTBnismeN7bEA79vOZMCOR10H9hZAWHlK78P1wA2NoKiA
-         MOzdPRbTK0PyjGSXPCZkRyT1CuQ59AuWsbcogSdQkS1TH8g554K3qjq6+mcj+Gzy5N7H
-         b9gwyoLxVbdweOuMrDIdH4gz/rqBd9WjB/L5ayefv+NWyFvC3p5aIAsoKYagi0CKxIvw
-         m3uHqPG8iQ8WrLgAqxG05WouZFt1/u9UGci02W8JOQF8mp5duEgIg07nwhoFrWUTqKIk
-         muGw==
+        bh=rNG0tEOd8XWp2aVP4rYbOAd9YCHzqDwou1Nrb2RcN7E=;
+        b=YQqwOhYcYjuYap1U4wPLOw5YFsPv3HRlZ3JsuOULymLB9wxdVsu4OzIBNWgGGXo8Wk
+         BGD2oUY8R6bmIiKniV4Wc1BP+IMyqN2idDnsN1avPJbO+PFQUNWQKua9sO0ihAj2byCS
+         E8pozZKnAtZnp/iXr4G9dvQZ82sWyjGa6Ivp7QmqIF6U2YTcJuD8LAJMh+Szsx1hadwd
+         m31QcLZo2lhya8o7Y+OMTuKoilpuh6IN8+iMKtlyba4YWNtRB1dVJFPSG067iLcPjRT+
+         Y73Klok7rT+1lY6N4dDOsm6SsSGVdk2/wz2GfV7f1097Mtn4DZyyRRxKwuwYcBQUThKO
+         MA4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724850933; x=1725455733;
+        d=1e100.net; s=20230601; t=1724851278; x=1725456078;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dmh04gzmPECoa4NnTe4KxPpKH8/gM2Cb6gM7BgiITIM=;
-        b=Bg9neDcsBnoechlWZuDu5OgmEBtumD9jaeapbMftaWhf/jBR1TSARYIGtiJv6j1zlO
-         9pVsGGA6prpL77evbyHbNBF7KOPdef7KmV6ea6tcEVtqqMckZB3adLidTkO/Fo/CMqHD
-         n7AdUxmphHPp8IV5ZFUNfrGcj5j0FVLhLEkRBKPoZJxZM4yCwGqzH5F14CMA6KILzxhK
-         kxYmsq4JQIDw+P04rp2dOT3Hqs7IlTaAFDpFNLceXuRknkSqVhsYiTDPKhj4lJb5qROV
-         nCDe+3+Tl3RW1Hk2Ljh79jLFn/nxb3OXEWGjQdLzLteEZ/mCL9Q/yEZnxiYJRrOxDoVV
-         Xa5w==
-X-Forwarded-Encrypted: i=1; AJvYcCUtRijlPF3E0uHsKt6TKohCWDBWTOkReqKMXI3HHrx5/YxxCfgRCE0yzfqH1mV9STLIviBy2rZBIssF@vger.kernel.org
-X-Gm-Message-State: AOJu0YxlEcB20aXryJWBz/mbXcE4vcIN5A7oTd1ch6XGnR528Ev181Ak
-	LHNUOKwvL8ToCtzBqT2vtBDYngBk/v9FKzuUf2La0dSmLkWD7i297EjBcDhsG+FfUsOX+GFKYcg
-	=
-X-Google-Smtp-Source: AGHT+IGya5XNkj573WaCJk+Ci8cx/XSHPyf2d7LHItxiVozjc104SLB6/Mr3Y3MkCWrX75Br+5jYvw==
-X-Received: by 2002:a17:902:ccc9:b0:202:1033:8d25 with SMTP id d9443c01a7336-2039e4b4ae4mr214239825ad.35.1724850933411;
-        Wed, 28 Aug 2024 06:15:33 -0700 (PDT)
+        bh=rNG0tEOd8XWp2aVP4rYbOAd9YCHzqDwou1Nrb2RcN7E=;
+        b=qE3W+Bxj0Ms0lwMNm3sspD1rQ4VPtLxn8RMA86hRCXlpoEV7czn988Xsn0GRR1vRUv
+         PRVHv9L2CvdV2Fyjyb4Pe5q09uEYcjFa/737ED5ApISOv5UXxZBJxPjDF0fGiymiou2H
+         Jrz4hPoncp94ftOG1FH7Bhss09xoMV93Zk7ITidyz5MCz1Ct2hjfRaCcl96xa80zM1YY
+         8IxQBqVH/MpFgyAnUByl7n0tax5/ancsWQWHpwyjxPcSlwB5LM2mD0dgkTLsQB1vRWpc
+         xSCZYqTL7kLNSjkdMONYChmxfZ6D7VdhcGK2OzxW2ZJqLoto2Zpf7i+JXsgBvV7/+WQy
+         KJxA==
+X-Forwarded-Encrypted: i=1; AJvYcCUurQzUGShsw7e3Co59rfkc7Dc0Covbh+Ld4J8NsvxVVQ/q7wVt2dERnRGXf2UIj85DEk1Fs9jc6o/z@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfdtEUkL6B2vW8I1vC3EMPlZMpCNCOFnJ7TK20qpn5gsn+RFnK
+	YfNpGRvB/EToXqdRmt6eVeTj39k0r+J9deQOdQaopK36r87WrNxKR2LOQFNa2w==
+X-Google-Smtp-Source: AGHT+IFvrPYSygKDYA7zlYJkbVh54L0Xymzma+SssWfADUbWO6/UYuCjYq65WJaiPtjZxw0YTgMzIw==
+X-Received: by 2002:a17:90a:f48a:b0:2c9:67f5:3fae with SMTP id 98e67ed59e1d1-2d646cebc9fmr14810136a91.28.1724851277604;
+        Wed, 28 Aug 2024 06:21:17 -0700 (PDT)
 Received: from thinkpad ([120.56.198.191])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2038560a301sm98172485ad.217.2024.08.28.06.15.29
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d8446f3c86sm1761970a91.52.2024.08.28.06.21.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 06:15:33 -0700 (PDT)
-Date: Wed, 28 Aug 2024 18:45:27 +0530
+        Wed, 28 Aug 2024 06:21:17 -0700 (PDT)
+Date: Wed, 28 Aug 2024 18:51:11 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Manish Pandey <quic_mapa@quicinc.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
-	quic_bhaskarv@quicinc.com, quic_narepall@quicinc.com,
-	quic_rampraka@quicinc.com, quic_cang@quicinc.com,
-	quic_nguyenb@quicinc.com
-Subject: Re: [PATCH] scsi: ufs: qcom: update MODE_MAX cfg_bw value
-Message-ID: <20240828131527.su2bl5iyxdllfbkl@thinkpad>
-References: <20240828120502.1439-1-quic_mapa@quicinc.com>
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc: quic_cang@quicinc.com, quic_nitirawa@quicinc.com, bvanassche@acm.org,
+	avri.altman@wdc.com, peter.wang@mediatek.com,
+	adrian.hunter@intel.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Bean Huo <beanhuo@micron.com>, ChanWoo Lee <cw9316.lee@samsung.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] scsi: ufs: core: Remove ufshcd_urgent_bkops()
+Message-ID: <20240828132111.7yineo6u3ozumdvu@thinkpad>
+References: <0c7f2c8d68408e39c28e3e81addce09cc0ee3969.1724800328.git.quic_nguyenb@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,40 +75,109 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240828120502.1439-1-quic_mapa@quicinc.com>
+In-Reply-To: <0c7f2c8d68408e39c28e3e81addce09cc0ee3969.1724800328.git.quic_nguyenb@quicinc.com>
 
-On Wed, Aug 28, 2024 at 05:35:02PM +0530, Manish Pandey wrote:
-> update cfg_bw value for MODE_MAX for Qualcomm SoC.
+On Tue, Aug 27, 2024 at 04:14:13PM -0700, Bao D. Nguyen wrote:
+> The ufshcd_urgent_bkops() is a wrapper function.
+> It only calls the ufshcd_bkops_ctrl(). Remove it to
+> simplify the ufs core driver. Replace any references
+> to ufshcd_urgent_bkops() with ufshcd_bkops_ctrl().
+> 
+> In addition, remove the second parameter in the
+> ufshcd_bkops_ctrl() because the information can be
+> retrieved from the first parameter.
 > 
 
-As Bart said, please do not send patches with these vague descriptions. They
-provide no info whatsoever to the community on why this patch is needed. There
-should be a valid justification to convince the community to accept your patch.
+Maximum allowed columns in patch description is 75, please make use of it.
 
-If you are sending a series, this same comment applies to all the patches.
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
 > ---
->  drivers/ufs/host/ufs-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/ufs/core/ufshcd.c | 32 +++++++-------------------------
+>  1 file changed, 7 insertions(+), 25 deletions(-)
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index c87fdc849c62..ecdfff2456e3 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
->  	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
->  	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
->  	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
-> -	[MODE_MAX][0][0]		    = { 7643136,	307200 },
-> +	[MODE_MAX][0][0]		    = { 7643136,	819200 },
->  };
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 21429ee..a52c95b 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5895,12 +5895,11 @@ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
+>  /**
+>   * ufshcd_bkops_ctrl - control the auto bkops based on current bkops status
+>   * @hba: per-adapter instance
+> - * @status: bkops_status value
+>   *
+>   * Read the bkops_status from the UFS device and Enable fBackgroundOpsEn
+>   * flag in the device to permit background operations if the device
+> - * bkops_status is greater than or equal to "status" argument passed to
+> - * this function, disable otherwise.
+> + * bkops_status is greater than or equal to the "hba->urgent_bkops_lvl",
+> + * disable otherwise.
+>   *
+>   * Return: 0 for success, non-zero in case of failure.
+>   *
+> @@ -5908,11 +5907,11 @@ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
+>   * to know whether auto bkops is enabled or disabled after this function
+>   * returns control to it.
+>   */
+> -static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
+> -			     enum bkops_status status)
+> +static int ufshcd_bkops_ctrl(struct ufs_hba *hba)
+>  {
+> -	int err;
+> +	enum bkops_status status = hba->urgent_bkops_lvl;
+>  	u32 curr_status = 0;
+> +	int err;
 >  
->  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+>  	err = ufshcd_get_bkops_status(hba, &curr_status);
+>  	if (err) {
+> @@ -5934,23 +5933,6 @@ static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
+>  	return err;
+>  }
+>  
+> -/**
+> - * ufshcd_urgent_bkops - handle urgent bkops exception event
+> - * @hba: per-adapter instance
+> - *
+> - * Enable fBackgroundOpsEn flag in the device to permit background
+> - * operations.
+> - *
+> - * If BKOPs is enabled, this function returns 0, 1 if the bkops in not enabled
+> - * and negative error value for any other failure.
+> - *
+> - * Return: 0 upon success; < 0 upon failure.
+> - */
+> -static int ufshcd_urgent_bkops(struct ufs_hba *hba)
+> -{
+> -	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
+> -}
+> -
+>  static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
+>  {
+>  	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> @@ -9801,7 +9783,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  			 * allow background operations if bkops status shows
+>  			 * that performance might be impacted.
+>  			 */
+> -			ret = ufshcd_urgent_bkops(hba);
+> +			ret = ufshcd_bkops_ctrl(hba);
+>  			if (ret) {
+>  				/*
+>  				 * If return err in suspend flow, IO will hang.
+> @@ -9990,7 +9972,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  		 * If BKOPs operations are urgently needed at this moment then
+>  		 * keep auto-bkops enabled or else disable it.
+>  		 */
+> -		ufshcd_urgent_bkops(hba);
+> +		ufshcd_bkops_ctrl(hba);
+>  
+>  	if (hba->ee_usr_mask)
+>  		ufshcd_write_ee_control(hba);
 > -- 
-> 2.17.1
+> 2.7.4
 > 
 
 -- 
