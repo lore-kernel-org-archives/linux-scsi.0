@@ -1,154 +1,109 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54CA613BAC3
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 14:08:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D3518786F
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 14:10:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724854094; cv=none; b=JliEnJaQRL+RiAPgPiYGdVxRtiWJv/EDRF7eEgqf/Gl+kfmV9zQR1ALbiLNlvPyjPTqqdNLDBlbIKWnRnKpTfvFuyR4agpa18mfh/M3wEq+pOyuX9H2RvTDyCqzaBstn7QdWoFInrkY+ixjcYMHADMAuo8D0Kaiq+dlgW8eACcs=
+	t=1724854215; cv=none; b=YBzGmFzZciCyeM6DDBpIiG2rfzNcXC2LorHa2fjD0yJugttK3kKja0NbUq9OHSYccirWmFU9EBF8cUuUmPEJM3T8siBOaoLM0E7tjAJFytSGglc/EsDdBS9BavvBmoYTpU4pFqQ9t6abCTCtlPR4KepsIGBJiFEMIdPuOKDdo5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724854094; c=relaxed/simple;
-	bh=6i0DTl1y7zbuvBA51P56G8/7JFUWcfprfnnfq9ZDKXk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PTVbfbXI4HqDzWxyL/hb0rx7nQXgwBXQ6vHFFraKvKf72gXMFU/cO10LULY3TTIVKTxA26vdozudYMDKMffgsisBl3sVQJ6IGfu1KaFeSYPqyWCTxlvhypUsSRcDEcteNP736e2cQOFJ01WwgWnx3GP8ODitBPDrtsgxPYCE4ac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=cFOvHwHw; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1724854215; c=relaxed/simple;
+	bh=qTBoEZ4laCJiZjRig3Gj8qGoLfh2aP+qTu9RjgoXn1o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tGoGN6GBdR/+F4EGphUUO9Rgr6I0U1GYUEWpPDBx6ObdqVtLYKwpwz0G7SftamTaWQ7ysUGuL1lbn04v2SimcCZkoY5dcwA15qYqJExk4wkreax3Kw8fqYNHxKntwagv0KyFd/0d+6WOnbOfflw6Q/BvpHxYSHhL8N54JbQ/6hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=of4j0AgP; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cFOvHwHw"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-715cdc7a153so526070b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 07:08:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724854092; x=1725458892; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=5zUmIuVSMTrxDTnFMXgZkNU2N5FNce8+WlLOBteoNVY=;
-        b=cFOvHwHwfljHavta4YLmoKqZtwznKuQ0A6ixSn66OfnP39G8NwkGohfbft8hb0S15c
-         lgDxJmD/y6M7EgQpSTgPJTBghLDG8rlmmo03ZqfQb5d44HqkYSkscwexn8dzu2sFPGOm
-         oxlV7dP3TS3FkA97YFecoYuTD6tFQ+fXunQVVVf5DK6HAFtiQMe2y8VUtzuj+87DKc45
-         I35XgQiXmmRjtHMq30k0Y51QdvKNopel2Du5Vx2AnYPMW6VQuvDSoHiWpmpvkSwXBpPw
-         0iozOZGpQT90YB5vdpAiBirdgCaQuIw3imWCLoDA1QhkJhmYrFjfdg39xDRMQCsWPBQi
-         OOyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724854092; x=1725458892;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5zUmIuVSMTrxDTnFMXgZkNU2N5FNce8+WlLOBteoNVY=;
-        b=GP4t6wEiYfJo0jHqDMe9E8Z70lGThzRoyinumMcQAS4ccY24MaMh1n4jj6B5YKZZw/
-         OXSW29KijQwlZgHN8WMGAyUraftWuOJTCB8+tJJ/Xi919bHiPMPuOgAHauygV1K5paXu
-         OKaTK2zLsXAlmZfN9NT7Uv2DC5VqWGRw/7tdB7kwLDOxEqGnyLcgVGhkQpmwHgC2qoz0
-         WQPqRbQfW47OJpT5FzWLyIQGWkv9kxXCLHqlHL/iiKsRI9iwsDuWR4cdq5A9/UDaBMxC
-         FWssqHgfJeuPlXrkA8okBywiOpVxRqDvojgau3q8tMPbRYi57XuU+N4XtgQOaU9/zj8W
-         VM8g==
-X-Forwarded-Encrypted: i=1; AJvYcCUMAKhQe8ETawRsVEa22bAWeKvob1xQkPYk9CVNkjLiz57It5Race97Fuhz9Yat2dfxptDCJsJGbM+9@vger.kernel.org
-X-Gm-Message-State: AOJu0YybXckKxG7Vwo8rgYn0RcGhkruAxy58fbWUyvKCI5Q7t+O5uh7q
-	ismUVM0ienlDx613a5Hyrp+OMFtdXdhJzu4BZI0XYMIpX3Vrx+kgWPXTMri+qQ==
-X-Google-Smtp-Source: AGHT+IHSBNCosOUJ4UP07jnycwgnAwwiOp55OzQxxQNujnZSA4wzt+zHe/mbquDbKqudh7XMBpjfDQ==
-X-Received: by 2002:a05:6a00:23d2:b0:706:aa39:d5c1 with SMTP id d2e1a72fcca58-715d10fdc97mr3135046b3a.8.1724854092494;
-        Wed, 28 Aug 2024 07:08:12 -0700 (PDT)
-Received: from thinkpad ([120.56.198.191])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7143425527esm10147003b3a.57.2024.08.28.07.08.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 07:08:12 -0700 (PDT)
-Date: Wed, 28 Aug 2024 19:38:05 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Manish Pandey <quic_mapa@quicinc.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
-	quic_bhaskarv@quicinc.com, quic_narepall@quicinc.com,
-	quic_rampraka@quicinc.com, quic_cang@quicinc.com,
-	quic_nguyenb@quicinc.com
-Subject: Re: [PATCH V2] scsi: ufs: ufs-qcom: add fixup_dev_quirks vops
-Message-ID: <20240828140805.zhvand7q3wbdmfrt@thinkpad>
-References: <20240828134032.10663-1-quic_mapa@quicinc.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="of4j0AgP"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Wv5sK3Tgyz6ClY92;
+	Wed, 28 Aug 2024 14:10:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1724854212; x=1727446213; bh=5c6ksadIdgxd2CVvnEO0hdOm
+	6F2H7VE/6BUBd+7Us8I=; b=of4j0AgPLCq/vLUW1moPsb+uNccJSXYXn9C5sU65
+	5nkxADnotcjfQ52153s7MaT1dzIsVjHCBTHBFmR4qEplOkssPvZjJEmS/beyJThy
+	lIYIcOr4FeVJUVl3iRMFFrKB57uCVcePU9q61lUDeFllAuPD3Jo2LiS9zElKPxPL
+	1/SO2An+R94+Tno/VTx9B2FUm7q/dH08/FCcMGU4/nP1yWByionU4kOjrdWa2VWi
+	6+Dnu1rKkHbj8KtmzKAP9kXl17Cqe5sja0Eb6mnQQiGVT5ih9kf2aKzRQtolT/BF
+	nhbO1OVte4ZRR9q74VG5YgZGZgmF8HejbuE9DKHB7MPhDA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id bYE56Z7afyYZ; Wed, 28 Aug 2024 14:10:12 +0000 (UTC)
+Received: from [172.16.58.82] (modemcable170.180-37-24.static.videotron.ca [24.37.180.170])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Wv5sH4bQJz6ClY90;
+	Wed, 28 Aug 2024 14:10:11 +0000 (UTC)
+Message-ID: <62a5b419-930e-4e70-a4bd-affb29c2e95c@acm.org>
+Date: Wed, 28 Aug 2024 10:10:10 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240828134032.10663-1-quic_mapa@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
+ hibernation
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20240821182923.145631-1-bvanassche@acm.org>
+ <20240821182923.145631-3-bvanassche@acm.org>
+ <ba9ae5a8-6021-f906-9ce1-d637534ac9cf@quicinc.com>
+ <20c1866f-9bb2-406f-a819-74ad936d92d5@acm.org>
+ <471e5a037f5fcc996e36b6112dc011731e75b66d.camel@mediatek.com>
+ <63b82e64-e968-4704-85b8-fad919994432@acm.org>
+ <b7b0395a59e275c5e43cb282b827b39416a5b4ad.camel@mediatek.com>
+ <082b7053-e7f4-4dd9-9d84-c8d9c7d75faf@acm.org>
+ <37fc6433d70483b7a889ff804e56023b1081b7b6.camel@mediatek.com>
+ <f7f0ca00-a8ce-4841-8483-5ad886da82ad@acm.org>
+ <0476168b16b4ba6a2b52cad23714206c6e386d80.camel@mediatek.com>
+ <71de72f4-2cb0-44ea-aac7-0f2a5c8fa492@acm.org>
+ <1f0274b239c4a2484a65c28c5678aac4d4040a00.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1f0274b239c4a2484a65c28c5678aac4d4040a00.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Aug 28, 2024 at 07:10:32PM +0530, Manish Pandey wrote:
-> Add fixup_dev_quirk vops in QCOM UFS platforms and provide an initial
-> vendor-specific device quirk table to add UFS device specific quirks
-> which are enabled only for specified UFS devices.
-> 
+On 8/28/24 9:46 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> 1. If only UFS controller core driver should do this,
+>     What about registers that are not REG_INTERRUPT_ENABLE?
+>     Since ufshcd_writel has been exported, shouldn't the host
+>     driver have the authority to control all Host REGs?
 
-Why the quirks are enabled only for Qcom platforms? If these are required by the
-UFS device, then they should be added to ufs_fixups[] in ufshcd.c.
+It is not because host drivers can change any host controller register
+that host drivers should take the freedom to modify all host controller
+registers. Modifying host controller registers that are vendor
+specific from a host driver seems totally fine to me. I think that
+standardized host controller registers should only be modified from the
+UFS driver core. Otherwise the UFS core driver cannot be understood nor
+verified without deep understanding of all the host drivers.
 
-> Micron and Skhynix UFS device needs DELAY_BEFORE_LPM quirk to have a
-> delay before VCC is powered off.
-> 
+> 2. Set REG_INTERRUPT_ENABLE only when hibernate exit?
+>     If cause the UniPro link to exit, then it should still be correct,
+>     just exiting hibernate early?
 
-Micron fix is already part of ufs_fixups[].
+This approach has two disadvantages:
+- It requires that even more state information is tracked in struct
+   ufs_hba.
+- This approach is probably incompatible with the power management core.
+   I think that there is code in the power management core for disabling
+   interrupts during suspend and reenabling interrupts during resume.
+   Enabling an interrupt that is already enabled is not allowed.
 
-> Toshiba UFS devices require delay after VCC power rail is turned-off
-> in QCOM platforms. Hence add Toshiba vendor ID and DELAY_AFTER_LPM
-> quirk for Toshiba UFS devices in QCOM platforms.
-> 
+In general, disabling / reenabling interrupts is something that should
+be avoided because it is not compatible with multithreading. The reason
+why it works in the UFS driver for UIC commands is because these are
+serialized.
 
-This sounds like the issue is specific to Qcom platforms only.
+Thanks,
 
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> ---
-
-Where is the changelog?
-
-- Mani
-
->  drivers/ufs/host/ufs-qcom.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 810e637047d0..9dbfbe643e5e 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -834,6 +834,25 @@ static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
->  	return err;
->  }
->  
-> +/* UFS device-specific quirks */
-> +static struct ufs_dev_quirk ufs_qcom_dev_fixups[] = {
-> +	{ .wmanufacturerid = UFS_VENDOR_MICRON,
-> +	  .model = UFS_ANY_MODEL,
-> +	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
-> +	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
-> +	  .model = UFS_ANY_MODEL,
-> +	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
-> +	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
-> +	  .model = UFS_ANY_MODEL,
-> +	  .quirk = UFS_DEVICE_QUIRK_DELAY_AFTER_LPM },
-> +	{}
-> +};
-> +
-> +static void ufs_qcom_fixup_dev_quirks(struct ufs_hba *hba)
-> +{
-> +	ufshcd_fixup_dev_quirks(hba, ufs_qcom_dev_fixups);
-> +}
-> +
->  static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
->  {
->  	return ufshci_version(2, 0);
-> @@ -1798,6 +1817,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
->  	.link_startup_notify    = ufs_qcom_link_startup_notify,
->  	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
->  	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
-> +	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
->  	.suspend		= ufs_qcom_suspend,
->  	.resume			= ufs_qcom_resume,
->  	.dbg_register_dump	= ufs_qcom_dump_dbg_regs,
-> -- 
-> 2.17.1
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+Bart.
