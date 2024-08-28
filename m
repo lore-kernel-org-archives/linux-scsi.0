@@ -1,184 +1,102 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA2818030
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 13:21:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A177E16BE1B;
+	Wed, 28 Aug 2024 13:25:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724851279; cv=none; b=sVv9lRx1h63OVItjR+bhIK/of3yqjycErQeCwRHfWE7z1V4gqVUkQlztYC9IuJdk1LwKb11ZD7Sipo/sk8DRZRT2dON3RvOiyCvgcCBg4PLS40CdrhMwXLRJuejKmhqIOiWt7u8wTHE0B4eZU2Kozr9Hs4zODml2Zx2J5T1ovHc=
+	t=1724851555; cv=none; b=l3hsDVFQk64IE8J+lBmGuGjrKrF++ywzbxgV039we1sRrET0m68yrho/P3jkMput2wtWX0rM7LotIYNdI+T6zDbBL4wAdBRoPFlCIsZ0nQ8nOqsMJ7/ytZVoBgkjGXrSblOy1BtcXEXZzEd5Y96B4wPcrXffYTlTQlt6VejorpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724851279; c=relaxed/simple;
-	bh=D+7nUxeWxF7+imi13C+bI1JPqaQWgqJIK4NeOS4udow=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IXs7X2QpPdSkBs5SxVmTTLog5T2nOeMgzhzGIkpSlpK58ZQZA+oniKmGQaUSOR/hMMY2k7ngsTT39Qf0byf6M2lM82YWk0bpCSVMZOI+T6udxDNA6oAaxED7ZJSCs28fZr9Dq5oZNKUvZ/638dSyiluBE4o0ZwBPW+wt7roGMLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=YQqwOhYc; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1724851555; c=relaxed/simple;
+	bh=7vmjyYPgajUTxOHRDLU3EIyAUmIO9fgSOVbuTpFdPeQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cRhmaRkE8fvgx+T1yIEGFMfhyydUnH87Lsm4qLNgA7RwbzZAIY2TDHxpYLmJKfrWAWC0GGzjEDcFVXtsgwGrvcIs9yfxx/xdH7x2393u4lFjqvQPPl26D3PBoBxm9WW4M7iQbTHjHYGQqCc9+hziCJRXpysjqNwNvf1kvrPYRAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=CDi5kxjx; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YQqwOhYc"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-2d3d7a1e45fso4766975a91.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 06:21:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724851278; x=1725456078; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=rNG0tEOd8XWp2aVP4rYbOAd9YCHzqDwou1Nrb2RcN7E=;
-        b=YQqwOhYcYjuYap1U4wPLOw5YFsPv3HRlZ3JsuOULymLB9wxdVsu4OzIBNWgGGXo8Wk
-         BGD2oUY8R6bmIiKniV4Wc1BP+IMyqN2idDnsN1avPJbO+PFQUNWQKua9sO0ihAj2byCS
-         E8pozZKnAtZnp/iXr4G9dvQZ82sWyjGa6Ivp7QmqIF6U2YTcJuD8LAJMh+Szsx1hadwd
-         m31QcLZo2lhya8o7Y+OMTuKoilpuh6IN8+iMKtlyba4YWNtRB1dVJFPSG067iLcPjRT+
-         Y73Klok7rT+1lY6N4dDOsm6SsSGVdk2/wz2GfV7f1097Mtn4DZyyRRxKwuwYcBQUThKO
-         MA4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724851278; x=1725456078;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rNG0tEOd8XWp2aVP4rYbOAd9YCHzqDwou1Nrb2RcN7E=;
-        b=qE3W+Bxj0Ms0lwMNm3sspD1rQ4VPtLxn8RMA86hRCXlpoEV7czn988Xsn0GRR1vRUv
-         PRVHv9L2CvdV2Fyjyb4Pe5q09uEYcjFa/737ED5ApISOv5UXxZBJxPjDF0fGiymiou2H
-         Jrz4hPoncp94ftOG1FH7Bhss09xoMV93Zk7ITidyz5MCz1Ct2hjfRaCcl96xa80zM1YY
-         8IxQBqVH/MpFgyAnUByl7n0tax5/ancsWQWHpwyjxPcSlwB5LM2mD0dgkTLsQB1vRWpc
-         xSCZYqTL7kLNSjkdMONYChmxfZ6D7VdhcGK2OzxW2ZJqLoto2Zpf7i+JXsgBvV7/+WQy
-         KJxA==
-X-Forwarded-Encrypted: i=1; AJvYcCUurQzUGShsw7e3Co59rfkc7Dc0Covbh+Ld4J8NsvxVVQ/q7wVt2dERnRGXf2UIj85DEk1Fs9jc6o/z@vger.kernel.org
-X-Gm-Message-State: AOJu0YyfdtEUkL6B2vW8I1vC3EMPlZMpCNCOFnJ7TK20qpn5gsn+RFnK
-	YfNpGRvB/EToXqdRmt6eVeTj39k0r+J9deQOdQaopK36r87WrNxKR2LOQFNa2w==
-X-Google-Smtp-Source: AGHT+IFvrPYSygKDYA7zlYJkbVh54L0Xymzma+SssWfADUbWO6/UYuCjYq65WJaiPtjZxw0YTgMzIw==
-X-Received: by 2002:a17:90a:f48a:b0:2c9:67f5:3fae with SMTP id 98e67ed59e1d1-2d646cebc9fmr14810136a91.28.1724851277604;
-        Wed, 28 Aug 2024 06:21:17 -0700 (PDT)
-Received: from thinkpad ([120.56.198.191])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d8446f3c86sm1761970a91.52.2024.08.28.06.21.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 06:21:17 -0700 (PDT)
-Date: Wed, 28 Aug 2024 18:51:11 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Cc: quic_cang@quicinc.com, quic_nitirawa@quicinc.com, bvanassche@acm.org,
-	avri.altman@wdc.com, peter.wang@mediatek.com,
-	adrian.hunter@intel.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Bean Huo <beanhuo@micron.com>, ChanWoo Lee <cw9316.lee@samsung.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] scsi: ufs: core: Remove ufshcd_urgent_bkops()
-Message-ID: <20240828132111.7yineo6u3ozumdvu@thinkpad>
-References: <0c7f2c8d68408e39c28e3e81addce09cc0ee3969.1724800328.git.quic_nguyenb@quicinc.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="CDi5kxjx"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47SBWsdS021420;
+	Wed, 28 Aug 2024 13:25:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=jMopFolIudXZ46Gxtl89SWaz5SwBHrWJ8yg4XIQFGw4=; b=CD
+	i5kxjxJ51yfn7rsX+/HCgyTbsCHELcVk8zcqV6zRcd2nn5/r8pN20oiqI45rYVzm
+	zPmABzrMPdbEcQTNO7eBaicp1df5ruJpO1Z78THO0xhZ7iW+lMGC8WPF4JMX0ZRR
+	4gDWlVgq3TdejF1Y53W3IewkKiUYnhByUv37jXHRLvtTRKiINGDiGmkShAUGDL63
+	xs8oGMB5Lvo3jrFl2x9Y4PdGCccmVxIHq+oWhysGnll57226QYUdIqia5bbu6ONV
+	5MW7jlVATW4b2iQ8fGVmJv7nfz4f/oa23nWiK25wiNfkXfsAOono2q/vvgRzMT0x
+	KKYPcy0yTb00M4Nu3cmQ==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 419pv09uxj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 28 Aug 2024 13:25:48 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47SDPlWu017546
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 28 Aug 2024 13:25:47 GMT
+Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Wed, 28 Aug 2024 06:25:43 -0700
+From: Manish Pandey <quic_mapa@quicinc.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
+        <quic_bhaskarv@quicinc.com>, <quic_narepall@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_mapa@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
+Subject: [PATCH V2] scsi: ufs: qcom: update MODE_MAX cfg_bw value
+Date: Wed, 28 Aug 2024 18:55:26 +0530
+Message-ID: <20240828132526.25719-1-quic_mapa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <0c7f2c8d68408e39c28e3e81addce09cc0ee3969.1724800328.git.quic_nguyenb@quicinc.com>
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: veOwIliHAef5CjC675GRziJMnIDs_Olh
+X-Proofpoint-ORIG-GUID: veOwIliHAef5CjC675GRziJMnIDs_Olh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-28_05,2024-08-27_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1015
+ priorityscore=1501 impostorscore=0 suspectscore=0 lowpriorityscore=0
+ malwarescore=0 spamscore=0 mlxlogscore=967 mlxscore=0 bulkscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2408280096
 
-On Tue, Aug 27, 2024 at 04:14:13PM -0700, Bao D. Nguyen wrote:
-> The ufshcd_urgent_bkops() is a wrapper function.
-> It only calls the ufshcd_bkops_ctrl(). Remove it to
-> simplify the ufs core driver. Replace any references
-> to ufshcd_urgent_bkops() with ufshcd_bkops_ctrl().
-> 
-> In addition, remove the second parameter in the
-> ufshcd_bkops_ctrl() because the information can be
-> retrieved from the first parameter.
-> 
+The cfg_bw value for max mode was incorrect for the Qualcomm SoC.
+Update it to the correct value for cfg_bw max mode.
 
-Maximum allowed columns in patch description is 75, please make use of it.
+Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-- Mani
-
-> ---
->  drivers/ufs/core/ufshcd.c | 32 +++++++-------------------------
->  1 file changed, 7 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 21429ee..a52c95b 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5895,12 +5895,11 @@ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
->  /**
->   * ufshcd_bkops_ctrl - control the auto bkops based on current bkops status
->   * @hba: per-adapter instance
-> - * @status: bkops_status value
->   *
->   * Read the bkops_status from the UFS device and Enable fBackgroundOpsEn
->   * flag in the device to permit background operations if the device
-> - * bkops_status is greater than or equal to "status" argument passed to
-> - * this function, disable otherwise.
-> + * bkops_status is greater than or equal to the "hba->urgent_bkops_lvl",
-> + * disable otherwise.
->   *
->   * Return: 0 for success, non-zero in case of failure.
->   *
-> @@ -5908,11 +5907,11 @@ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
->   * to know whether auto bkops is enabled or disabled after this function
->   * returns control to it.
->   */
-> -static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
-> -			     enum bkops_status status)
-> +static int ufshcd_bkops_ctrl(struct ufs_hba *hba)
->  {
-> -	int err;
-> +	enum bkops_status status = hba->urgent_bkops_lvl;
->  	u32 curr_status = 0;
-> +	int err;
->  
->  	err = ufshcd_get_bkops_status(hba, &curr_status);
->  	if (err) {
-> @@ -5934,23 +5933,6 @@ static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
->  	return err;
->  }
->  
-> -/**
-> - * ufshcd_urgent_bkops - handle urgent bkops exception event
-> - * @hba: per-adapter instance
-> - *
-> - * Enable fBackgroundOpsEn flag in the device to permit background
-> - * operations.
-> - *
-> - * If BKOPs is enabled, this function returns 0, 1 if the bkops in not enabled
-> - * and negative error value for any other failure.
-> - *
-> - * Return: 0 upon success; < 0 upon failure.
-> - */
-> -static int ufshcd_urgent_bkops(struct ufs_hba *hba)
-> -{
-> -	return ufshcd_bkops_ctrl(hba, hba->urgent_bkops_lvl);
-> -}
-> -
->  static inline int ufshcd_get_ee_status(struct ufs_hba *hba, u32 *status)
->  {
->  	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> @@ -9801,7 +9783,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  			 * allow background operations if bkops status shows
->  			 * that performance might be impacted.
->  			 */
-> -			ret = ufshcd_urgent_bkops(hba);
-> +			ret = ufshcd_bkops_ctrl(hba);
->  			if (ret) {
->  				/*
->  				 * If return err in suspend flow, IO will hang.
-> @@ -9990,7 +9972,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  		 * If BKOPs operations are urgently needed at this moment then
->  		 * keep auto-bkops enabled or else disable it.
->  		 */
-> -		ufshcd_urgent_bkops(hba);
-> +		ufshcd_bkops_ctrl(hba);
->  
->  	if (hba->ee_usr_mask)
->  		ufshcd_write_ee_control(hba);
-> -- 
-> 2.7.4
-> 
-
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index c87fdc849c62..ecdfff2456e3 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
+ 	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
+ 	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
+ 	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
+-	[MODE_MAX][0][0]		    = { 7643136,	307200 },
++	[MODE_MAX][0][0]		    = { 7643136,	819200 },
+ };
+ 
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
 -- 
-மணிவண்ணன் சதாசிவம்
+2.17.1
+
