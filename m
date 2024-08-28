@@ -1,118 +1,135 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA7D173328
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 13:31:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94EAC156227;
+	Wed, 28 Aug 2024 13:40:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724851900; cv=none; b=QSBWxtEauPJp2T8VWbLq0w9ZeywkNam0MHx2kcIx3020NndSRqf2yXeiACO0D3WI93+x5vZ/EvPb3u3nHQi4UOIFSfTzi5593eIKORU88965cOZ+RASxik6q0lKwTkeRIpg/4/O6e80FN8Pnahd52GMyvcjbIGAZhQID1Gw9LFc=
+	t=1724852453; cv=none; b=p0V4YfuUvpJba+57G+D9KJYYjFyqx1/TyS7JQhyP7SN3dC1bq975zsagV9aadocoO8Ij/EeL4SG16fnLXistKhwaH9TZw6jrvLwlr0tOj9P7zYp0vnI2Y6SRdc41OK1lmQATFcKT5kcbIh5RVyj1lYvSAdZB7O77z6AxJTJnYb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724851900; c=relaxed/simple;
-	bh=aFunOdE2IWWGEtEGitXEh2j1fwzDFTJ8EAELatQZE60=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tTgw5volyMJofPO+419IxmgKyA5lJ7q0K2xZtAA8ACmzzNTiz7FbMU28+J857ffGwVLrJeGjjAq6yspAKyzpRq0xjnPPTOJRBFBIylpbfTctNUSK0noLg4MW/1JezMf649NMMc6PDVA+GD2tyFvjQTNL/eyuJDEZK2SC/o7eWUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=FhQyBlfB; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1724852453; c=relaxed/simple;
+	bh=9ia+hb2SvOmyL2sZbASgauPi6jBNO9sEdYsizUcHXEk=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=l3za3XGsbUNgL3oirLr1M6r73MKBgTMBFCTUEzraHIPkJuQBFbP/T1tl0lBxPMlBaq/AOkuC2zINZs6k6D6wPAI0EXDhRzFcjZLqG6r78GC4CbaiqccXSjbg2uV8+lo29lM1MwzZTvNblaFMc4s2sN/rtlv42FXsmadqOc3DS28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=F/tFvnh1; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FhQyBlfB"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-71430e7eaf8so5409094b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 06:31:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724851898; x=1725456698; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=ooxQLoKfDn6EQlD0rIDPMhXYCiCug8IilBfMsi5Lan0=;
-        b=FhQyBlfBWoSppDFD4YNSBTqpYsxopU57NUtDNrrc5MzqPoECOvN1Tjx6Yx0QKsEhma
-         Y39nhL9aLi76Tw44SV0mqUJpZ+GB0PM7lfxA90gGqz8V2L6+XbCYSlRJ5yw99PdYm+Rq
-         f7peM0Mtu0A8GMXHkRjDAgayUQsSZltK2AfPZ7daeedAz9rp36IeXSHdhpVZECpISX/A
-         OLW2PoXpOaoJbqsGyiqkEPEDOC0yPKjPNen88GU8LoZLYsLINOy9B0cOWHguqUmhJu10
-         aZTVkmgvKj0pezUIVFvpr2uKeyX8Co7+fID4YMW3HHZGj2SSz6LqpeWEequH2N/cSmc1
-         1IOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724851898; x=1725456698;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ooxQLoKfDn6EQlD0rIDPMhXYCiCug8IilBfMsi5Lan0=;
-        b=Sz6ZNOPuFroREleiODr6t17MLn8IoQCR6i2WF/OW4Rnyu4/58hUJO2cRplbABsRy9J
-         FUaVjq6NN2p+PDUO3a4iU6v161j9X6XJt3xUXoVFEthIU+WIf6SvpRjJOxgHu+ADevKD
-         xTF3MddbfYP8zPbIjmZtJCOcfXyAb4BZKQULxU74IIsqZ62chQApGHG8hp6RoP7a/fhc
-         GqaWqPaEIS5AoZDhnW90iox2CUvKk4jOqQ6OpWNV7w3kcXPUUi71MPzCu8Uab49Wpvcx
-         6f3uDK9ZhDET1IQyGAp4vAoE/TAB9NErnqZmQOU1SPvbuZsmWjxRYaPMht+hedWRkwjU
-         HnmQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW/KnA1lkkfj43p8I3cuJ9jQp77dfGnBQIyXcjvDnZolM9o3WNzPF9f1fkZV+akyPfx0Vys5ckHavH6@vger.kernel.org
-X-Gm-Message-State: AOJu0YwuR7THUBteozJFFNnz9L1Pb7N7B7/0Gg8JnPjeU9L4k/KeWHQ5
-	RBDpOQ/miyfGFh1GDJtIPcFs7DjndRRf9YiAU5psU+xwPaiBBH7Vl2CoAr63Tg==
-X-Google-Smtp-Source: AGHT+IEINpO4o8xwOCNrCh0RMflT1QvZim19vykwVlDpRWD2mxcSv4yYUaeulVY/t40l8zuo0u5EGg==
-X-Received: by 2002:a05:6a00:92a4:b0:710:7fd2:c91 with SMTP id d2e1a72fcca58-714458b4330mr18935675b3a.26.1724851898012;
-        Wed, 28 Aug 2024 06:31:38 -0700 (PDT)
-Received: from thinkpad ([120.56.198.191])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71434316405sm10101761b3a.162.2024.08.28.06.31.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2024 06:31:37 -0700 (PDT)
-Date: Wed, 28 Aug 2024 19:01:32 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Manish Pandey <quic_mapa@quicinc.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
-	quic_bhaskarv@quicinc.com, quic_narepall@quicinc.com,
-	quic_rampraka@quicinc.com, quic_cang@quicinc.com,
-	quic_nguyenb@quicinc.com
-Subject: Re: [PATCH V2] scsi: ufs: qcom: update MODE_MAX cfg_bw value
-Message-ID: <20240828133132.zqozjegmbnwa7byb@thinkpad>
-References: <20240828132526.25719-1-quic_mapa@quicinc.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="F/tFvnh1"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47SAiQMr007454;
+	Wed, 28 Aug 2024 13:40:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=/qD+CYxiwFKUSbRWOC9hCkJusOqv77aPFIoz8OaEOXw=; b=F/
+	tFvnh1esHibCL3DiXH1OpIGdSYasiAh8yP9c1j4xM37GIzO4vUO307RMNzqsox/M
+	PZ5bc61h6SLH5FKjNrSDzbRTcQopiqhpk5hr7ACjAgU+Au0fulcXabI9UHiOHMre
+	um8U8nPEnnuzsp7ZtNjx3kefNU4PhJ7/q96lP/9V+NOXQ1ZUb7redh19xo8mynjN
+	zx0A2YBK6lRp8wTYQgi8jYQIXvMlVCmbCwadGt7UkF9R71YcX6qu9m/mskcpxtEW
+	6OAVitGaKm+YGNHhY8KQeBEbLAW9BuSYUdZkos4MoiWBfpftK7xsJX5aVbtEOr+9
+	q8Dzc6byDcc1d80XCw7A==
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 419puv9wvu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 28 Aug 2024 13:40:48 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47SDelpI011701
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 28 Aug 2024 13:40:47 GMT
+Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Wed, 28 Aug 2024 06:40:43 -0700
+From: Manish Pandey <quic_mapa@quicinc.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
+        <quic_bhaskarv@quicinc.com>, <quic_narepall@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_mapa@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
+Subject: [PATCH V2] scsi: ufs: ufs-qcom: add fixup_dev_quirks vops
+Date: Wed, 28 Aug 2024 19:10:32 +0530
+Message-ID: <20240828134032.10663-1-quic_mapa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240828132526.25719-1-quic_mapa@quicinc.com>
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 30d14pmI4ZAXQHLU8_whrVRs3RQVGcht
+X-Proofpoint-GUID: 30d14pmI4ZAXQHLU8_whrVRs3RQVGcht
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-28_05,2024-08-27_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ mlxlogscore=946 priorityscore=1501 bulkscore=0 impostorscore=0
+ adultscore=0 malwarescore=0 phishscore=0 lowpriorityscore=0 mlxscore=0
+ spamscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2408280097
 
-On Wed, Aug 28, 2024 at 06:55:26PM +0530, Manish Pandey wrote:
-> The cfg_bw value for max mode was incorrect for the Qualcomm SoC.
+Add fixup_dev_quirk vops in QCOM UFS platforms and provide an initial
+vendor-specific device quirk table to add UFS device specific quirks
+which are enabled only for specified UFS devices.
 
-What do you mean by 'incorrect'? I extracted the value from downstream DTs. So
-it cannot be incorrect.
+Micron and Skhynix UFS device needs DELAY_BEFORE_LPM quirk to have a
+delay before VCC is powered off.
 
-If you want to update it, please clearly provide the reason.
+Toshiba UFS devices require delay after VCC power rail is turned-off
+in QCOM platforms. Hence add Toshiba vendor ID and DELAY_AFTER_LPM
+quirk for Toshiba UFS devices in QCOM platforms.
 
-And if this patch is addressing an issue, then a Fixes tag should be present. If
-you want to get it backported (if it is a critical fix), then stable list should
-be CCed.
+Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-- Mani
-
-> Update it to the correct value for cfg_bw max mode.
-> 
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index c87fdc849c62..ecdfff2456e3 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
->  	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
->  	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
->  	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
-> -	[MODE_MAX][0][0]		    = { 7643136,	307200 },
-> +	[MODE_MAX][0][0]		    = { 7643136,	819200 },
->  };
->  
->  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
-> -- 
-> 2.17.1
-> 
-
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 810e637047d0..9dbfbe643e5e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -834,6 +834,25 @@ static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
++/* UFS device-specific quirks */
++static struct ufs_dev_quirk ufs_qcom_dev_fixups[] = {
++	{ .wmanufacturerid = UFS_VENDOR_MICRON,
++	  .model = UFS_ANY_MODEL,
++	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
++	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
++	  .model = UFS_ANY_MODEL,
++	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
++	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
++	  .model = UFS_ANY_MODEL,
++	  .quirk = UFS_DEVICE_QUIRK_DELAY_AFTER_LPM },
++	{}
++};
++
++static void ufs_qcom_fixup_dev_quirks(struct ufs_hba *hba)
++{
++	ufshcd_fixup_dev_quirks(hba, ufs_qcom_dev_fixups);
++}
++
+ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
+ {
+ 	return ufshci_version(2, 0);
+@@ -1798,6 +1817,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.link_startup_notify    = ufs_qcom_link_startup_notify,
+ 	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
+ 	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
++	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
+ 	.suspend		= ufs_qcom_suspend,
+ 	.resume			= ufs_qcom_resume,
+ 	.dbg_register_dump	= ufs_qcom_dump_dbg_regs,
 -- 
-மணிவண்ணன் சதாசிவம்
+2.17.1
+
