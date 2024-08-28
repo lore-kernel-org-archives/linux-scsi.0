@@ -1,209 +1,228 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazolkn19011035.outbound.protection.outlook.com [52.103.13.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 641421A38CE
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 16:13:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724861627; cv=none; b=ejrH3u+XxhvJDLo2G8JZ3eivnfEgtVfmTshkuubo7ynmb2YegZRKv5u/kB+/lLMRUno+OFHcc5F8cIzoDp8cMRXWMp1rfDpcRS0W31WWewEzIM0pCyHuequF3XzkjKCLKlRO4BVg6+aci3MMa0s8q/AcVZHU0nwMxR9K+umMt8k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724861627; c=relaxed/simple;
-	bh=rUj4e7X9XFiwm6eArKv4Fq5QEX9Ryc8j4twis9QdIKk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
-	 Content-Type:References; b=Mrrsi2KQulouYUS++wUiyXRFpwNTYW8HS/F8QGLG7u0LHBtRv/HxNVgo2blXjPwWV3cwQpxpyhz3CDseiypfq9xmH6usXMdmzcRrYd3jbi0ecC8VsS9bR0hnXBn3aaOnq4OQUql/x1GYh0CyHo6ikdEdVTmJ4lq2wlOJ0NL2USU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=PS2jtbkX; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3EB1A257C;
+	Wed, 28 Aug 2024 16:30:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.13.35
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724862611; cv=fail; b=S3q0Xt9K5vRYdFhLDJp+VRsEjP8t9q//ZWVU6VrEcivV8t4rbVQq77V1xRKAwytJmi/FvIQnpp9Ffl445kkEnwhAd/G6vSs0Cu4sahwi+hUeTLDOCk0Ga4U0ITt9I4NqCzS+Jc5X6zOmROsOSTlxJN1Q3Kdg4+7dXcGfz5Bzk6Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724862611; c=relaxed/simple;
+	bh=AOgSYKIhH8oYHWArfVbW+nbSVHl6iHXacfMbPm+Fntw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=sGI4lrsWabXqsY6/Q8a7aUtCtKx/dO6mpqviio7PzXmL/jgXH3PPR1y0tznJvUeRyZCtvnBogyQAwJyGUOFdSuautEOFBg893gPcozoUGuf3hTxrQopGDkBjoB/EyPoPvy0u/sYz64Kw1jB+00axrYEzNJIqDhapdDLCS1FPTH4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=Ugx8USb2; arc=fail smtp.client-ip=52.103.13.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="PS2jtbkX"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240828161343epoutp029cf6938b7c05c0ec273447091e78629d~v8IHoSUVW2416624166epoutp02d
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2024 16:13:43 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240828161343epoutp029cf6938b7c05c0ec273447091e78629d~v8IHoSUVW2416624166epoutp02d
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1724861623;
-	bh=HnL33aP4E10mX6zcM/z2UMMF0nMT5SuYS3j5XhT324w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=PS2jtbkXa9B0rY5FO+5CpB3xxcVXNM79sh497IU45XvHDGlDUaVVHQP6W2xyVcEX2
-	 ebhmso/ZMUx/AOLnOTiFDBi1JAu2wy1M0tvn5vpt2aGbEKsHIFHcgWaJPl3txM4tHl
-	 K27bR1uPlvE+Ryw+y68gjkXrRJ3o1TVXGfImw24k=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-	20240828161342epcas5p2e27a44f3e80c49f9d0f999331dd9fdf0~v8IHCQ1nM2989929899epcas5p2T;
-	Wed, 28 Aug 2024 16:13:42 +0000 (GMT)
-Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.175]) by
-	epsnrtp2.localdomain (Postfix) with ESMTP id 4Wv8bm4Wpbz4x9Pt; Wed, 28 Aug
-	2024 16:13:40 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	F6.DD.08855.4BC4FC66; Thu, 29 Aug 2024 01:13:40 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20240828112543epcas5p1109ce4ce7237ea38e339111b5bf8c63a~v4MrEDHAK2402224022epcas5p1d;
-	Wed, 28 Aug 2024 11:25:43 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240828112543epsmtrp2d173a3e59b5ea6e24e83a65f3c737eb6~v4MrDSBPf1058610586epsmtrp2G;
-	Wed, 28 Aug 2024 11:25:43 +0000 (GMT)
-X-AuditID: b6c32a44-107ff70000002297-82-66cf4cb44878
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	35.F3.07567.7390FC66; Wed, 28 Aug 2024 20:25:43 +0900 (KST)
-Received: from green245 (unknown [107.99.41.245]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20240828112540epsmtip12cff0499d082d60701d087b37e368c0a~v4MoUcwNx2866928669epsmtip1N;
-	Wed, 28 Aug 2024 11:25:40 +0000 (GMT)
-Date: Wed, 28 Aug 2024 16:48:06 +0530
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, kbusch@kernel.org, martin.petersen@oracle.com,
-	asml.silence@gmail.com, krisman@suse.de, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v3 03/10] block: handle split correctly for user meta
- bounce buffer
-Message-ID: <20240828111806.GA3301@green245>
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="Ugx8USb2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=LCv7ind5zL9VYKqMPUSTyNOps9FQggylISULN2lH24Hv5Wm/LJjU8qXsnH0cTyu+DudanCp1EUjSHukqIGXCuzKrmA9tq2LbROG0VMG6ywZlI4foD66kUbuCwJJvQ4IzODOKbtXbgb2rx8BLKqQSgRnBv6bwzDdiqV2KxI70TrAm+3KU9yIrEMNXTohqsTX5QdrYDThgNZoW/wVsbDHFhqcx70B+PjkZDOY2m56tueNBih7VKkEMpzoiuQkOBrsZkicpG9tTmTDHKHRVkiqMomNfe+ua819SrOIcHbz0fpyseYx4c5RipIcjqI8goAB+T9adX/ITs6X49vjX2+VI7Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AOgSYKIhH8oYHWArfVbW+nbSVHl6iHXacfMbPm+Fntw=;
+ b=EUWAVf/x8vVhG+28dj488wmsQkmnJElIt2smT/1ORjY2cOfGgK5HZoCWk/P0j8os543cWc3Aa6Pys2WctLsCtXiWGLgKu2pC4K6aNtoV3fC50uo+nhMtnkQm0vWWe1YGngGMmPzDfh5EFbGcqlMOsBiBUmBF4+JV4XWE5rNF+x9S6Io/UDfQ3Y/6FXzm/lWzr5Lu3f7C6nVgiw+Qtp4HMRibl/2mnSjmKscSTpagIq+jpBA8wX+WGYzpwwhplAs2PU46pKclCC8oqwgkm0ebCupGzFJTlkk9yeX/ALI59ElxRnWqMkvdHXF6fz4oci1IkL0LZ1/IvuaTwZikkDM49A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AOgSYKIhH8oYHWArfVbW+nbSVHl6iHXacfMbPm+Fntw=;
+ b=Ugx8USb2B9WR8rQAYx7wN6qBBry9z9cS0PmBg38hy0LuJ4budxDlbkmUY4NpGKPVCnJQwvPWUg8GKzTxfoXn0CKIki9nF4SKf3gZnevcER+8nb51yJhosls3L3ULErhBHx06GXkpeQsg8yxFPbEkm3pOPuDoua8weEBAhtgDLWAH2pSy3JxLcc0dbpe82ajrIUJFMPMjlPivYMtrAW9sCbtuOnbtuODh+U0mZLn1ePtOXYfd5xj+oDM5U+Xx51Bi4F/7VJ+vbKycSwV2vtjAU5/tnJz2os09Ukpf32ylYdEcJH9Vs2Fx7kVpwbN7D6+zc7Ehr8ieavnfe6bGY12a6Q==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by SA1PR02MB8696.namprd02.prod.outlook.com (2603:10b6:806:1f3::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7897.26; Wed, 28 Aug
+ 2024 16:30:04 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df%6]) with mapi id 15.20.7875.018; Wed, 28 Aug 2024
+ 16:30:04 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: =?iso-8859-2?Q?Petr_Tesa=F8=EDk?= <petr@tesarici.cz>, Robin Murphy
+	<robin.murphy@arm.com>
+CC: "kbusch@kernel.org" <kbusch@kernel.org>, "axboe@kernel.dk"
+	<axboe@kernel.dk>, "sagi@grimberg.me" <sagi@grimberg.me>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "kys@microsoft.com" <kys@microsoft.com>,
+	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "wei.liu@kernel.org"
+	<wei.liu@kernel.org>, "decui@microsoft.com" <decui@microsoft.com>,
+	"hch@lst.de" <hch@lst.de>, "m.szyprowski@samsung.com"
+	<m.szyprowski@samsung.com>, "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>
+Subject: RE: [RFC 0/7] Introduce swiotlb throttling
+Thread-Topic: [RFC 0/7] Introduce swiotlb throttling
+Thread-Index: AQHa9MJuV8zHlUlbFEOu4P5Y/AqjALI8msyAgAARKQCAADFrgA==
+Date: Wed, 28 Aug 2024 16:30:04 +0000
+Message-ID:
+ <SN6PR02MB4157F23504BEB951BB19CE9BD4952@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20240822183718.1234-1-mhklinux@outlook.com>
+	<efc1eafc-dba4-4991-9f9a-58ceca1d9a35@arm.com>
+ <20240828150356.46d3d3dc@mordecai.tesarici.cz>
+In-Reply-To: <20240828150356.46d3d3dc@mordecai.tesarici.cz>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-tmn: [efJSXScSU6YLrnokPeb+gJCtn0x8Vq8h]
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|SA1PR02MB8696:EE_
+x-ms-office365-filtering-correlation-id: c43f2dba-419a-4c9b-9187-08dcc77eabd0
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|15080799006|461199028|8060799006|19110799003|440099028|102099032|3412199025;
+x-microsoft-antispam-message-info:
+ bo3YNMA7DUWFK6LONNCSUevtZeNEOdxRuTI40Sfibe7NacO4yiKd6K4/gH+isfmyAkj8gSvt1zeO8A823FCPDdLXyC6QN4VM2ytmfl51pSFCIYYehFwAwwqWBFJ7tH2S5TSBuFZV06+GHhtnxZu3j5Mifzybh8U9UYQm1NVulv97QUl9o+11Q2QOkhXvdJ0YHVKhMlNvcvuO28O0NfRNbwzllRlSf7XNl80wkWoHR/RrZBJps1kBTaCOXfgDqI9p/LGZJ09iPlw9GE+2ExXdMLVQSRq38LAltUG0X1cI3sh/rbyGplQY8YMsqQSQd24LYjaOSj50vP7f35Hf4rZWqzDFcxjobdfax6IUzVSj9iEVI1rDbjpDwoC/S8Pei4RA7faOgrYuB0VTpYPvv633Jbidis4uDbTGWYSWVbRzf9lALkLyw7YGgpyurizwvsfF/UDYHqB5Cis2SfcJb2XzWld3Vd561H/23c4jc8i78WtkcrWH1SFuCclV5qADIrV/SsAULcciyHunE1fV9OeRkGSDgU7bgSt0pH9QnBoj169at0lNtJQd+ExHembZD6gFwa6Czgc93skMfAVyQFtHzgaQQndhprzfj63evjYbgMZ/tAWFshchc+Bvc3QxUOGSIetXLZQ3U6l+dwVTbbZz5jQ95W3nGKO8k4Bl/ht3oYMrJKzGjG3Lm/2BsmhcEE/w
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?keWlc+cPxV1QX3VWYjxWB3KNfWrNzgU9s1QtnXRoJHASd+pm2EHEonRxQC?=
+ =?iso-8859-2?Q?+mVL3+DhoohxjcFeEZdfOXxrqNgXIqNbpiEsDqIAwnwxxjtttz17RRfDAc?=
+ =?iso-8859-2?Q?UpsRJjSxsVec3JPcpopog5SMmQw8VPCykcfn23Fr3pemBhH28TSsS5rlT9?=
+ =?iso-8859-2?Q?aekJ/LEEJ2os0S6WV4+sRq0f7SavwbhMmAIzXxbPhZVfMItvMsEKjE7L+f?=
+ =?iso-8859-2?Q?exbnsHAT3tu20jME7DpAv5nJ3pDb4CDFu+e3j43obba7xsDM2g1mLPI0xO?=
+ =?iso-8859-2?Q?aSSZArMu3CgQlMOO7qMN3tQkF/0h2G+zSVHKrnbtlQlk3ZqHih5l3+OXwi?=
+ =?iso-8859-2?Q?MUHn0vjTJXulx9n6Z4k4McZAksX8uAAE2AXKOh603nvUyBvjMSLI7cf7pv?=
+ =?iso-8859-2?Q?E93s+UjrHWw82ZE60iGebGtoUJNDxD6l17h84tEt5VkDNYbFHf+ueRs4mn?=
+ =?iso-8859-2?Q?54Mtgn9XsWWPtET0L8Y7ZUfY/RERiBV0erHfYF9IbYGc9oir+8Xrzr6ATS?=
+ =?iso-8859-2?Q?XGkLb7qtHDkzsfB6EuCKCvmzAyI1ljVrnvoVeJKW7EKgVqKYFh7Vo3g0RL?=
+ =?iso-8859-2?Q?JrnEwtJPapUWVcHB5G5fY8qpvByrYmpNBkemBC+t57d3xHn0FllWIbGinM?=
+ =?iso-8859-2?Q?tm/+qYuaLifq+vf0JFLS9ThGXa+d07nk5gEu/LDMin+ee07K/lp3+GLwIz?=
+ =?iso-8859-2?Q?JhAjBYl6UynvrHmHqJTw42ZpYXJ1ogc9Elew4k22Y6au7xMp1F4ROSzQ9E?=
+ =?iso-8859-2?Q?pk0Ybu5+1gsGiuyslqHi4ZZC+esa6zZxTyeKvM2zfTsL1wD13nqsf5T0BR?=
+ =?iso-8859-2?Q?dCFd/taXMozU+DQab/PfH2E2BNbFPE+S7zomIxN2ab6AW70GRUiTMbT2X5?=
+ =?iso-8859-2?Q?4khkCT7j3vrjakPJu7RwNqpcu5bxREjqCbKkrKN/6J2mq4UccvQsPwgiIK?=
+ =?iso-8859-2?Q?ZRHPNSAS9v9ZEjnhLo8tvFtJa6pS/2TzuazS9TFXFotb1Zd0lZQ8hDxrLB?=
+ =?iso-8859-2?Q?qWXf6XERKrlqctcP+f4ztqXfhga8AJjyJxzX2vbfeHjzzrmgvTR4IraOJN?=
+ =?iso-8859-2?Q?p6q/gKw5h+LJeusWZn944yYeFOLK6PDwIbrutpvIy5QcTbPUK0i6EM86zm?=
+ =?iso-8859-2?Q?Me74vCif+w+iYoo4l0N8QJEzXjbRKI5ptY2LMvj9Eb7b/M+n02DClYKMYr?=
+ =?iso-8859-2?Q?Lfp8AKm8XeO9RLJyoctFkiJ2hXRTNf5g1IWiEKXsufk/AA6vLM01DWhckG?=
+ =?iso-8859-2?Q?+RYLKUz2+G1/lkaar7LO857UWvY0ye7R4dfn4K+PE=3D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240824083116.GC8805@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAJsWRmVeSWpSXmKPExsWy7bCmuu4Wn/NpBoceSFvMWbWN0WL13X42
-	i5sHdjJZrFx9lMniXes5FotJh64xWmw/s5TZYu8tbYv5y56yW3Rf38Fmsfz4PyYHbo+ds+6y
-	e1w+W+qxaVUnm8fmJfUeu282sHl8fHqLxaNvyypGj82nqz0+b5IL4IzKtslITUxJLVJIzUvO
-	T8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1y8wBOlVJoSwxpxQoFJBYXKykb2dT
-	lF9akqqQkV9cYquUWpCSU2BSoFecmFtcmpeul5daYmVoYGBkClSYkJ1x4PNUpoL9khULWi+z
-	NDDOEO1i5OSQEDCR6D23jr2LkYtDSGA3o8TOiWtYQBJCAp8YJU5PUodIfGOUuLRtDxtcx7XT
-	TBCJvYwSbe9+MkM4zxglFk/fzwpSxSKgKnHt6FawDjYBdYkjz1sZQWwRASWJp6/OMoI0MAv8
-	YpRYNr2PGSQhLBApsbH5EJjNK6AjseXXMzYIW1Di5MwnYDdxCmhLzFl7EcwWFVCWOLDtONgZ
-	EgJbOCQ2LtnMDHGfi8SDeUehbhWWeHV8CzuELSXx+d1eqHi6xI/LT5kg7AKJ5mP7GCFse4nW
-	U/1gc5gFMiT+TpsOVS8rMfXUOiaIOJ9E7+8nUL28EjvmwdhKEu0r50DZEhJ7zzVA2R4Su/6t
-	Z4YE6i1GidVvoyYwys9C8tssJOsgbB2JBbs/AdkcQLa0xPJ/HBCmpsT6XfoLGFlXMUqmFhTn
-	pqcmmxYY5qWWw2M8OT93EyM4KWu57GC8Mf+f3iFGJg7GQ4wSHMxKIrwnjp9NE+JNSaysSi3K
-	jy8qzUktPsRoCoysicxSosn5wLyQVxJvaGJpYGJmZmZiaWxmqCTO+7p1boqQQHpiSWp2ampB
-	ahFMHxMHp1QDU0LP44sXIm6L18qnVhTVXOt4dCFqj++7L68LnnClP5muwaUesu8V31P+a/0V
-	F8+32ORfWndryp15Ny88toszPnKhWFFzstPxonrXnMijJ2Sc/RX32P9Z1P+9bOvBuiKGb3/u
-	f/2/qeaUhQMjE7PaW13tEKPVjs7pZpXKqZcf+z1hLpEUNb6+dxH/mnO+YSmm7HOaD1mc7Jy6
-	7YXx1QTZPhP3/x2Kk/4d49pwk3X7hJZJuYtTjy3VeKx5b9rFKxE7xf0nHL+fufnPq6Wpihwb
-	pbwfzGef9EC0K6yl+VPZY562Rz+MF2eE7jx7Tu9gpSN7rdmH1kULelZu4bt6eLq96cuDeZMe
-	TWfoWlS27NSa471KLMUZiYZazEXFiQAOGPp+UwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpikeLIzCtJLcpLzFFi42LZdlhJTtec83yaQf98dYs5q7YxWqy+289m
-	cfPATiaLlauPMlm8az3HYjHp0DVGi+1nljJb7L2lbTF/2VN2i+7rO9gslh//x+TA7bFz1l12
-	j8tnSz02repk89i8pN5j980GNo+PT2+xePRtWcXosfl0tcfnTXIBnFFcNimpOZllqUX6dglc
-	GZ9PT2Iv+C9W0TlDt4Hxo1AXIyeHhICJRO+100xdjFwcQgK7GSXurHjOBpGQkDj1chkjhC0s
-	sfLfc3aIoieMEqfOvmEBSbAIqEpcO7oVrIFNQF3iyPNWsAYRASWJp6/OMoI0MAv8YpRYNr2P
-	GSQhLBApsbH5EJjNK6AjseXXMzaIqXcYJdbcfMMKkRCUODnzCdgGZgEtiRv/XgLdxwFkS0ss
-	/8cBEuYU0JaYs/YiWImogLLEgW3HmSYwCs5C0j0LSfcshO4FjMyrGCVTC4pz03OTDQsM81LL
-	9YoTc4tL89L1kvNzNzGCo0lLYwfjvfn/9A4xMnEwHmKU4GBWEuE9cfxsmhBvSmJlVWpRfnxR
-	aU5q8SFGaQ4WJXFewxmzU4QE0hNLUrNTUwtSi2CyTBycUg1MVZ+dpFJXf3Xw+3SL/95T25u8
-	224c8Ul9KGd188W0Fx5666Z2Xku15/BcE3x7ja5cfXahT/PXkLjZCRvSpZViGo6+X2BuF1iy
-	0GlL6xH7M2aHtPn33w3ROZER+2Fp6M5dKm981+xa7vB9c5DblDavWwnnNblc25c9ZxTuSNi1
-	8Lf5hiknhG3WXuF9ar/bMkb5r697WIDw9v9buu5yCxq5S18JyTkSs/lHzJn5Fa+dTs8Jnra9
-	XvTXZHPl4wv0Xe8f3v3bMdRs2k8BFpPsO+sFcgXNhJ6faqk43RbVYBx3qUgzt2WbkVDpb7UA
-	1rbMLZMyM6sX2N5YkaX2dPJ79YO28f5TdlyxqJRiXOvS8t9DiaU4I9FQi7moOBEAZBB4DRUD
-	AAA=
-X-CMS-MailID: 20240828112543epcas5p1109ce4ce7237ea38e339111b5bf8c63a
-X-Msg-Generator: CA
-Content-Type: multipart/mixed;
-	boundary="----bx0Hnhhrn7x.JlxYXzjBkilvv7KFXT55p7POp3cMcMNV4hS0=_dd2c9_"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240823104620epcas5p2118c152963d6cadfbc9968790ac0e536
-References: <20240823103811.2421-1-anuj20.g@samsung.com>
-	<CGME20240823104620epcas5p2118c152963d6cadfbc9968790ac0e536@epcas5p2.samsung.com>
-	<20240823103811.2421-4-anuj20.g@samsung.com> <20240824083116.GC8805@lst.de>
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: c43f2dba-419a-4c9b-9187-08dcc77eabd0
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Aug 2024 16:30:04.1921
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR02MB8696
 
-------bx0Hnhhrn7x.JlxYXzjBkilvv7KFXT55p7POp3cMcMNV4hS0=_dd2c9_
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
+From: Petr Tesa=F8=EDk <petr@tesarici.cz> Sent: Wednesday, August 28, 2024 =
+6:04 AM
+>=20
+> On Wed, 28 Aug 2024 13:02:31 +0100
+> Robin Murphy <robin.murphy@arm.com> wrote:
+>=20
+> > On 2024-08-22 7:37 pm, mhkelley58@gmail.com wrote:
+> > > From: Michael Kelley <mhklinux@outlook.com>
+> > >
+> > > Background
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > Linux device drivers may make DMA map/unmap calls in contexts that
+> > > cannot block, such as in an interrupt handler. Consequently, when a
+> > > DMA map call must use a bounce buffer, the allocation of swiotlb
+> > > memory must always succeed immediately. If swiotlb memory is
+> > > exhausted, the DMA map call cannot wait for memory to be released. Th=
+e
+> > > call fails, which usually results in an I/O error.
+> > >
+> > > Bounce buffers are usually used infrequently for a few corner cases,
+> > > so the default swiotlb memory allocation of 64 MiB is more than
+> > > sufficient to avoid running out and causing errors. However, recently
+> > > introduced Confidential Computing (CoCo) VMs must use bounce buffers
+> > > for all DMA I/O because the VM's memory is encrypted. In CoCo VMs
+> > > a new heuristic allocates ~6% of the VM's memory, up to 1 GiB, for
+> > > swiotlb memory. This large allocation reduces the likelihood of a
+> > > spike in usage causing DMA map failures. Unfortunately for most
+> > > workloads, this insurance against spikes comes at the cost of
+> > > potentially "wasting" hundreds of MiB's of the VM's memory, as swiotl=
+b
+> > > memory can't be used for other purposes.
+> > >
+> > > Approach
+> > > =3D=3D=3D=3D=3D=3D=3D=3D
+> > > The goal is to significantly reduce the amount of memory reserved as
+> > > swiotlb memory in CoCo VMs, while not unduly increasing the risk of
+> > > DMA map failures due to memory exhaustion.
+> >
+> > Isn't that fundamentally the same thing that SWIOTLB_DYNAMIC was alread=
+y
+> > meant to address? Of course the implementation of that is still young
+> > and has plenty of scope to be made more effective, and some of the idea=
+s
+> > here could very much help with that, but I'm struggling a little to see
+> > what's really beneficial about having a completely disjoint mechanism
+> > for sitting around doing nothing in the precise circumstances where it
+> > would seem most possible to allocate a transient buffer and get on with=
+ it.
+>=20
+> This question can be probably best answered by Michael, but let me give
+> my understanding of the differences. First the similarity: Yes, one
+> of the key new concepts is that swiotlb allocation may block, and I
+> introduced a similar attribute in one of my dynamic SWIOTLB patches; it
+> was later dropped, but dynamic SWIOTLB would still benefit from it.
+>=20
+> More importantly, dynamic SWIOTLB may deplete memory following an I/O
+> spike. I do have some ideas how memory could be returned back to the
+> allocator, but the code is not ready (unlike this patch series).
+> Moreover, it may still be a better idea to throttle the devices
+> instead, because returning DMA'able memory is not always cheap. In a
+> CoCo VM, this memory must be re-encrypted, and that requires a
+> hypercall that I'm told is expensive.
+>=20
+> In short, IIUC it is faster in a CoCo VM to delay some requests a bit
+> than to grow the swiotlb.
+>=20
+> Michael, please add your insights.
+>=20
+> Petr T
+>=20
 
-On Sat, Aug 24, 2024 at 10:31:16AM +0200, Christoph Hellwig wrote:
-> On Fri, Aug 23, 2024 at 04:08:03PM +0530, Anuj Gupta wrote:
-> > Copy back the bounce buffer to user-space in entirety when the parent
-> > bio completes.
-> 
-> This looks odd to me.  The usual way to handle iterating the entire
-> submitter controlled data is to just iterate over the bvec array, as
-> done by bio_for_each_segment_all/bio_for_each_bvec_all for the bio
-> data.  I think you want to do the same here, probably with a
-> similar bip_for_each_bvec_all or similar helper.  That way you don't
-> need to stash away the iter.  Currently we have the field for that,
-> but I really want to split up struct bio_integrity_payload into
-> what is actually needed for the payload and stuff only needed for
-> the block layer autogenerated PI (bip_bio/bio_iter/bip_work).
- 
-I can add it [*], to iterate over the entire bvec array. But the original
-bio_iter still needs to be stored during submission, to calculate the
-number of bytes in the original integrity/metadata iter (as it could have
-gotten split, and I don't have original integrity iter stored anywhere).
-Do you have a different opinion?
+The other limitation of SWIOTLB_DYNAMIC is that growing swiotlb
+memory requires large chunks of physically contiguous memory,
+which may be impossible to get after a system has been running a
+while. With a major rework of swiotlb memory allocation code, it might
+be possible to get by with a piecewise assembly of smaller contiguous
+memory chunks, but getting many smaller chunks could also be
+challenging.
 
-[*]
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index ff7de4fe74c4..f1690c644e70 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -125,11 +125,23 @@ static void bio_integrity_uncopy_user(struct bio_integrity_payload *bip)
- 	struct bio_vec *copy = &bip->bip_vec[1];
- 	size_t bytes = bio_iter_integrity_bytes(bi, bip->bio_iter);
- 	struct iov_iter iter;
--	int ret;
-+	struct bio_vec *bvec;
-+	struct bvec_iter_all iter_all;
- 
- 	iov_iter_bvec(&iter, ITER_DEST, copy, nr_vecs, bytes);
--	ret = copy_to_iter(bvec_virt(bip->bip_vec), bytes, &iter);
--	WARN_ON_ONCE(ret != bytes);
-+	bip_for_each_segment_all(bvec, bip, iter_all) {
-+		ssize_t ret;
-+
-+		ret = copy_page_to_iter(bvec->bv_page,
-+					bvec->bv_offset,
-+					bvec->bv_len,
-+					&iter);
-+
-+		if (!iov_iter_count(&iter))
-+			break;
-+
-+		WARN_ON_ONCE(ret < bvec->bv_len);
-+	}
- 
- 	bio_integrity_unpin_bvec(copy, nr_vecs, true);
- }
-diff --git a/include/linux/bio-integrity.h b/include/linux/bio-integrity.h
-index 22ff2ae16444..3132ef6f27e0 100644
---- a/include/linux/bio-integrity.h
-+++ b/include/linux/bio-integrity.h
-@@ -46,6 +46,19 @@ struct uio_meta {
- 	struct		iov_iter iter;
- };
- 
-+static inline bool bip_next_segment(const struct bio_integrity_payload *bip,
-+				    struct bvec_iter_all *iter)
-+{
-+	if (iter->idx >= bip->bip_vcnt)
-+		return false;
-+
-+	bvec_advance(&bip->bip_vec[iter->idx], iter);
-+	return true;
-+}
-+
-+#define bip_for_each_segment_all(bvl, bip, iter) \
-+	for (bvl = bvec_init_iter_all(&iter); bip_next_segment((bip), &iter); )
-+
- #define BIP_CLONE_FLAGS (BIP_MAPPED_INTEGRITY | BIP_CTRL_NOCHECK | \
- 			 BIP_DISK_NOCHECK | BIP_IP_CHECKSUM | \
- 			 BIP_CHECK_GUARD | BIP_CHECK_REFTAG | \
--- 
-2.25.1
+Growing swiotlb memory also must be done as a background async
+operation if the DMA map operation can't block. So transient buffers
+are needed, which must be encrypted and decrypted on every round
+trip in a CoCo VM. The transient buffer memory comes from the
+atomic pool, which typically isn't that large and could itself become
+exhausted. So we're somewhat playing whack-a-mole on the memory
+allocation problem.
 
-------bx0Hnhhrn7x.JlxYXzjBkilvv7KFXT55p7POp3cMcMNV4hS0=_dd2c9_
-Content-Type: text/plain; charset="utf-8"
+We discussed the limitations of SWIOTLB_DYNAMIC in large CoCo VMs
+at the time SWIOTLB_DYNAMIC was being developed, and I think there
+was general agreement that throttling would be better for the CoCo
+VM scenario.
 
+Broadly, throttling DMA map requests seems like a fundamentally more
+robust approach than growing swiotlb memory. And starting down
+the path of allowing designated DMA map requests to block might have
+broader benefits as well, perhaps on the IOMMU path.
 
-------bx0Hnhhrn7x.JlxYXzjBkilvv7KFXT55p7POp3cMcMNV4hS0=_dd2c9_--
+These points are all arguable, and your point about having two somewhat
+overlapping mechanisms is valid. Between the two, my personal viewpoint
+is that throttling is the better approach, but I'm probably biased by my
+background in the CoCo VM world. Petr and others may see the tradeoffs
+differently.
+
+Michael
