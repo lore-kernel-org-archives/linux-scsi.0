@@ -1,44 +1,44 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89C9322097;
-	Thu, 29 Aug 2024 12:21:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D5F215E5C0;
+	Thu, 29 Aug 2024 12:40:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724934100; cv=none; b=Vj2SRrF+bkjspvLLqWKE//uXealbOnfMSQ+AdlwA7G5C6+m6+psgJOyEPAbX7jKDtd12CVvqx7EF77zA8zYrEk3hOF+3QQHNvGI8CLAhz3q3d6EKmOXCFF9vABPUarwdRoHjeBroENZdWQAWdZsJ9l9SJYIaC/hg+g+ie4rFkjk=
+	t=1724935204; cv=none; b=UQS5DS0jOD33PKaGmMrXQ73dn+PmUT3L5PupCnnHL6YNfhmKQwHh3T+HiH6+HlsHKEsgv3GGPgNE3TVTysWNVNM93Znm/4o6zkwLX6LimGnX2Cw0r/6MIL7A777cDD6R2/EQnd3X9LbGQtggKqISc+kQQBmvbqJy6VWLNIkcNU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724934100; c=relaxed/simple;
-	bh=ty0S3BL++BFJXjpmvq6y9P9yIxAyAFuhkEC/CaJ6i5s=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=P7N5FXrlQ4CaKxh/h2BBhwzGTx2/g5nZ4jcA9xF40h5ObjX1m5177Zz8nF3DlMk3hu3c/dDbhGUCBmjzP9DCGSCajxqEY4+sNdbYGa2Ebg4N46t2Fy95R+6g1PSW+ameoQUtbS/dWWNMsFgLqTvsbNwhN8K8M1g3lqtv5cndmPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=gAs8Ibjd; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1724935204; c=relaxed/simple;
+	bh=4ASecXjpzEeqXWcN2TAefrcEok5bTtUtvjCbrTFEKzc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=V+oojHDEirJbQ/U5MPQXM4BUPVf6UJZfY6nMM+IQTXSjWhDmpFwNuEoZmyajY79LhrcaYUT4gcApMzlIkkwcWdyjeyYOHA+jJOeztEgARfm2POws5kv8DftYgbYaKWbNJbshfEB04X8HxK7QhLQL8wH0mp/3DJwQXN7hHypCqpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=i/2sXLKK; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="gAs8Ibjd"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47TBejMM025817;
-	Thu, 29 Aug 2024 12:21:34 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="i/2sXLKK"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47T8HlDC031817;
+	Thu, 29 Aug 2024 12:39:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-type:date:from:message-id:mime-version:subject:to; s=
-	qcppdkim1; bh=V0HzpAgZ7a++jQ38biomcJKZ2aFqB0BN/LfQTOD9JSc=; b=gA
-	s8IbjdtNhbCM0pyydFq8LjHljrTOIEnOShMLcI5l890ORKegMq7uhl56ABO4X20H
-	9JLoW819TFea3pY7WVu9ucOG4STmh3DzTMkV7fWhDSFrC4imTz/cYq79jeLxTLnJ
-	wf5qE67pOoTC/TTwceWPI5AkdE+nH3oFAtUaq+YhTonSF2utJADzCArDU3aKLUo+
-	QTz2UbkZhivHA0qYAO62nw2sYV1do9mKY4z/ROevvTCBOiaV/JnCk8BTHSa3LzNy
-	FOwt6S7mnGZzoJRvqCcy3xkPIxuMyQHfGvk4B7xbGEHL63F09AXODEfdrgSeP9/M
-	ZrpPc4/oNyH9MpKBhnTw==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41arax03tf-1
+	qcppdkim1; bh=cxzpA+TRMCRty/jmiGez4Pv/kVmGV92FhineHDUaZgk=; b=i/
+	2sXLKKYbJhJiUOCTmzl+IrGYFRajK7oaxCxodvrJ58VuOxZ2h5r5YubB0zBCy50y
+	Wui/1SESr4Pd3ADWhMk+mVt4NB+lrIq3fzmDAHJeVIomt35WT0EQbEjl4LJ8RHdK
+	IfZddBLza9fs379ZmBHiT7XKEjf5gUKFeCYwDcO0ynn0VJ9IrdpN4dvB3Tj/hdQL
+	ve2EC4dbxmG3TaEg6TieJcwaS6Y067WXnk10O9PV0uG+LOZZFbN52DM3lmjzdGRq
+	zC/j2+1w/+tiaHaCYDIfFW3M5ELltFsQphgNuNT4ozmo/iBzLVD4b616ERlpRMVB
+	u0MRUcEj3I7en4d+x4Yg==
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 419puw594n-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 29 Aug 2024 12:21:34 +0000 (GMT)
+	Thu, 29 Aug 2024 12:39:58 +0000 (GMT)
 Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47TCLXI7008799
+	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47TCduCs027201
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 29 Aug 2024 12:21:33 GMT
+	Thu, 29 Aug 2024 12:39:56 GMT
 Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
  nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Thu, 29 Aug 2024 05:21:29 -0700
+ 15.2.1544.9; Thu, 29 Aug 2024 05:39:52 -0700
 From: Manish Pandey <quic_mapa@quicinc.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         "James E.J.
@@ -49,10 +49,11 @@ CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
         <quic_bhaskarv@quicinc.com>, <quic_narepall@quicinc.com>,
         <quic_rampraka@quicinc.com>, <quic_mapa@quicinc.com>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
-Subject: [PATCH V3] scsi: ufs: qcom: update MODE_MAX cfg_bw value
-Date: Thu, 29 Aug 2024 17:51:18 +0530
-Message-ID: <20240829122118.1745-1-quic_mapa@quicinc.com>
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
+        <stable@vger.kernel.org>
+Subject: [PATCH V4] scsi: ufs: qcom: update MODE_MAX cfg_bw value
+Date: Thu, 29 Aug 2024 18:09:38 +0530
+Message-ID: <20240829123938.31115-1-quic_mapa@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -61,27 +62,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01c.na.qualcomm.com (10.45.79.139)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: SegsddFN1HlLTp_XAsQUrEIcyvsSS_R9
-X-Proofpoint-GUID: SegsddFN1HlLTp_XAsQUrEIcyvsSS_R9
+X-Proofpoint-ORIG-GUID: V9Zjhcb5ngcbS3oXp97Lh_9Po_Rru5GN
+X-Proofpoint-GUID: V9Zjhcb5ngcbS3oXp97Lh_9Po_Rru5GN
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-29_02,2024-08-29_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
- lowpriorityscore=0 adultscore=0 mlxlogscore=993 malwarescore=0
- impostorscore=0 priorityscore=1501 spamscore=0 clxscore=1015 mlxscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408290086
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011
+ priorityscore=1501 malwarescore=0 bulkscore=0 mlxscore=0
+ lowpriorityscore=0 phishscore=0 mlxlogscore=967 suspectscore=0
+ adultscore=0 spamscore=0 impostorscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2407110000
+ definitions=main-2408290087
 
 The cfg_bw value for max mode is incorrect for the Qualcomm SoC.
 Update it to the correct value for cfg_bw max mode.
 
 Fixes: 03ce80a1bb86 ("scsi: ufs: qcom: Add support for scaling interconnects")
+Cc: stable@vger.kernel.org
 Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
 ---
+Changes from v3:
+- Cced stable@vger.kernel.org.
 
 Changes from v2:
 - Addressed Mani comment, added fixes tag.
