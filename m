@@ -1,113 +1,88 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED871B8E9D
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 20:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C33B18950B
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 20:48:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724963937; cv=none; b=kIPgwxdYBpxHrkX2fZ3g5Cf4LPOFiv7aYmA6G1UGAF6+Dmwioz7+baUmC4OvzROIcvndiUhI81wrEr1ba5Y7RXFZL1Hdt2wJIEgHgcJydxCpbiFD1b7CM8mf+n40AWKc+sgbppndjN0qpGGwAdNoMR1FRpNUNV5perl6eQcJNPU=
+	t=1724964520; cv=none; b=u3id5ouFYTotC5p8Eh6DR2PzP/X6ZN0N1FfNUAkfnum2ar/aUkkJ0yVpeYq0vHQnm1ik+2GFrh5DdG8cg1cVR1tEDQ4HQXUfZNMx4CWb8+pb6vMh8dd817T2YsplbTfTCyb5+PfWwNUAStSOa4Ij1Zib0lhuGotR+S9GC8IGNN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724963937; c=relaxed/simple;
-	bh=fgcOfTEE1Q4Fc7yKoXLU28UYvHPI7osOrSgNsxvCigw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aY8JEPDf9swHO+13od1jo1cqsU4gzkdmrHC6xzzGBvIsDj+83cMqR+t8DshJRyQt+yYC5rnqP2NZ/3cGdluUOajctfUs9H9uYEtOxGLmhlU2xUaIsrceoirKtNOl/TcG53APk1eLDWy3M3BJKSj8h3QEEC8YoBmeYGKjWFZENeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=38iVYzga; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1724964520; c=relaxed/simple;
+	bh=HeGUcpjdKTizRyMkJLVtkySi61Br0ZmnDQQ6LLUk7Ew=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=MHycBPOU0utVCaCPYCjKC6H/XlvRWK1TWMpZL32djArvHuDWYHIYwO7fqEH+Ugr/MN7ReGr/qfQJZGrZACMtfExxwPYQYB6Aw6FUwIi7V7g9KHdlbjNu1v5uQ+RNnfKqgIlfZ1xeumvNhZMNextZXqzbmpYWMqjwP4hKd+mPm6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hks+/E71; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="38iVYzga"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-201fed75b38so17555ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 13:38:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hks+/E71"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-371a6fcd863so735524f8f.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 13:48:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1724963935; x=1725568735; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fgcOfTEE1Q4Fc7yKoXLU28UYvHPI7osOrSgNsxvCigw=;
-        b=38iVYzgaQu9FNLnAcC1CmUv70cKRwyFTnna3JIE7q+6cUCzYaaAtsaXFqody0XPw2D
-         8wAbEANk+X+/U7TwtRrFamZiJwP7kfj/LkALb9WntUEno/8AIsPNUe+WBdkucypVkRM/
-         /vZAYpVOVUmUpq2WJaE4IsmB300Wo4cwa3B7BDrszBn2eWmRDiRwTNw28eKJgjiGgo5+
-         WUo7gXrRaI7VtOARkLExqZqfAR/OXtfnNRUSZqhk67MJxF9MIxy1GHuludoqtABtxI47
-         5PiyeoYletm8Nizv8AXCCNMUBHmQFLpMT83rQ130vT+iE5fD1XNOeqvp8VhRfp2MZLhz
-         PoaA==
+        d=gmail.com; s=20230601; t=1724964517; x=1725569317; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=HeGUcpjdKTizRyMkJLVtkySi61Br0ZmnDQQ6LLUk7Ew=;
+        b=hks+/E71aJfAkFZzAW9EvviaX0Aai8sy3mvlsgkHxi8LJ7byi7+EB48FYSlaUBXNXC
+         Dfd2VHsAEtm1UYpUjLHgdchaN1bEZoxEZYkT8sBQh2mngfPfjj+EsweZwfQPgzg8+V+p
+         82QoAN5PzfWQirYd0lN+Hj4tVtzs5wl8/tgAhN7ZYxbFy3HuvpefywCEBtN84rsHpXiW
+         mCw9EF/WBHsF0hS9Vkhu0mzUj6JqBRev/EYUvKZ1f+d9ePeXShdd8iWQ+kfV7F3ZGj5J
+         gBLm7tY3YTRN1/SDfrMZ/PQ6LAcLO5YptMOhilYunA8QYcYpjGWwj8yP4vK/KHbxEOL6
+         floQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724963935; x=1725568735;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fgcOfTEE1Q4Fc7yKoXLU28UYvHPI7osOrSgNsxvCigw=;
-        b=BzOVi4fBjs0NW6gxlt8W7tZF8guHPvPj6i0IkkpI6H6lLAp9T28kxSKDLqjLc2ZHr6
-         wrauTRMCkVr9p30212pDhx5GhudVu3jVivjH4qpBadfZ03n+nrWT2e5pcLWnidRRu099
-         UJ4stfpPGWtgsyqkRFUkqUt7nS0kfeM8by1DLvqMgSzZtBxKBz61oB0pxf1L0OfGnNTt
-         esfPTC2gD36A+1Si+bHYPW+VfMFW+Wp01FNWXaYjvO6ZdCL2IJ1RWJeo2GNQ6Y4vdNll
-         E79YJwCH7tR66vrcNGRdeCVIzNFUST1TfBcq4QEtprio+ymiZ2+6p0hXLLBtIiMPWeGh
-         RBlw==
-X-Forwarded-Encrypted: i=1; AJvYcCV5+iPhesxGMAjzPsyCyLq97yZq2ygaSQGD3ngTxxZ4GZUQwTTqOh8njFf3wNO2YN/ezlh8tnQdYEAH@vger.kernel.org
-X-Gm-Message-State: AOJu0YwckF/6fNtkQ/BpQAr5S9goi6MXNGtDQZo44KbOyb+8TCMcDAVa
-	F1tDISOb/aTgspzzLHow9okHoO0RnfktJvOZGH+XdhLpCz0A6UgBaf9MQbe4qNHZDKDZFum6P+J
-	n/xUZL/XPlcETxA/w2uYxg4SkjuU1zvV8TzIs
-X-Google-Smtp-Source: AGHT+IGLgIVQ+svp/WpM2KGiS4B6Z/kEf5/+zWxQfmCatTs/970Zp4ORDHg46mCC204OTUqD9R+C82hj2l7GZzW8YYA=
-X-Received: by 2002:a17:902:c94c:b0:201:e2db:7bd1 with SMTP id
- d9443c01a7336-205287d0c31mr11755ad.19.1724963934596; Thu, 29 Aug 2024
- 13:38:54 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1724964517; x=1725569317;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=HeGUcpjdKTizRyMkJLVtkySi61Br0ZmnDQQ6LLUk7Ew=;
+        b=SDnoWHJ/lPB9p8TNFWm2qebkL5EOp+2jVWs3KFt7QxL3unmndccsLNMycdnqF6adqa
+         YXRPFJhnZ6zGkvAIIHbEvj4gZaDRmDJqAl1LjeN63nRMst3Df0qM681IrYv6t2WGKZaV
+         qQWa6BbAgBnyUJRk8Ujy+0AxqAAK2Rok1QpR4m7jYdfFUH03SRSZM4Cmiv70G5hCFYmJ
+         edgO+bBSabZRkPrmuy3vPp/G8egbSsj4jAmNfr0b65g+9jeUeonIKzCnkPTjt+Gc56Ph
+         B/jGyCAEQ+rT1SB8f1TFxwlg4COWs+3A4XkMR+tfNLWz3R0PdZ3aWHXNKZZ0pRId4rZU
+         vX+g==
+X-Gm-Message-State: AOJu0Yy7lwa4C33YsTfuwmC+o9YM4RnPDu0QYApmlc+ddg/smBcOXmBF
+	Vd3QSYrxz5/WyDjSY9VsqUg9jqyUh7EJLl5pQJNO/0FGMWkVuHOC
+X-Google-Smtp-Source: AGHT+IH2JgO+r9iYghypPu4pqCMJtrMC++YtrfV/OszVHTQiDTeaIXA/obUjFk53XoYAW0BCh7ucDA==
+X-Received: by 2002:a5d:4a07:0:b0:36b:357a:bfee with SMTP id ffacd0b85a97d-3749b52e5d2mr2644698f8f.1.1724964516185;
+        Thu, 29 Aug 2024 13:48:36 -0700 (PDT)
+Received: from p200300c5873875912a1b625802803f97.dip0.t-ipconnect.de (p200300c5873875912a1b625802803f97.dip0.t-ipconnect.de. [2003:c5:8738:7591:2a1b:6258:280:3f97])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3749ee9bd9esm2235481f8f.57.2024.08.29.13.48.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Aug 2024 13:48:35 -0700 (PDT)
+Message-ID: <6fdda3470cd5b08274fc3f11ce7945acd30bd37e.camel@gmail.com>
+Subject: Re: [PATCH v3 1/9] ufs: core: Introduce ufshcd_add_scsi_host()
+From: Bean Huo <huobean@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>, "James
+ E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Manivannan
+ Sadhasivam <manivannan.sadhasivam@linaro.org>,  Peter Wang
+ <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>, Andrew Halaney
+ <ahalaney@redhat.com>
+Date: Thu, 29 Aug 2024 22:48:34 +0200
+In-Reply-To: <20240828174435.2469498-2-bvanassche@acm.org>
+References: <20240828174435.2469498-1-bvanassche@acm.org>
+	 <20240828174435.2469498-2-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CANikGpf0OmGMSkksH_ihW9_yXVAL25xKD4CBy8d1gpKj0inPjQ@mail.gmail.com>
- <CAG48ez3b-FCz7+4MH=CmhbhmSfTT4FTrDAJfbL5UvufRut7ixg@mail.gmail.com> <CANikGpcNj6P1jH8v0NjZJeQdn2=FbPr71CJ8W8GE+OeiCMgucA@mail.gmail.com>
-In-Reply-To: <CANikGpcNj6P1jH8v0NjZJeQdn2=FbPr71CJ8W8GE+OeiCMgucA@mail.gmail.com>
-From: Jann Horn <jannh@google.com>
-Date: Thu, 29 Aug 2024 22:38:14 +0200
-Message-ID: <CAG48ez3wzKpYtAtiAcv=QBrMhETfF8UhnnpyVGXa4jb9Py2Zvw@mail.gmail.com>
-Subject: Re: BUG: kernel panic: corrupted stack end in worker_thread
-To: Juefei Pu <juefei.pu@email.ucr.edu>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Yu Hao <yhao016@ucr.edu>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Wow, that's weird. I think that basically implies that you're hitting
-recursion that precisely goes deep enough to overwrite the lowest 8
-bytes on the stack, but doesn't access anything below those 8 bytes...
+On Wed, 2024-08-28 at 10:43 -0700, Bart Van Assche wrote:
+> Move the code for adding a SCSI host and also the code for managing
+> TMF tags from ufshcd_init() into a new function called
+> ufshcd_add_scsi_host(). This patch prepares for combining the two
+> scsi_add_host() calls into a single call. No functionality has been
+> changed.
+>=20
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Bean Huo <beanhuo@micron.com>
 
-On Thu, Aug 29, 2024 at 10:29=E2=80=AFPM Juefei Pu <juefei.pu@email.ucr.edu=
-> wrote:
->
-> Hi Jann,
->
-> I checked the kernel configuration we used and I found that we did
-> enable CONFIG_KASAN_VMALLOC and CONFIG_VMAP_STACK during fuzzing.
-> I've uploaded the full configuration to
-> https://gist.github.com/TomAPU/64f5db0fe976a3e94a6dd2b621887cdd
->
-> On Thu, Aug 29, 2024 at 1:23=E2=80=AFPM Jann Horn <jannh@google.com> wrot=
-e:
-> >
-> > On Wed, Aug 28, 2024 at 1:49=E2=80=AFAM Juefei Pu <juefei.pu@email.ucr.=
-edu> wrote:
-> > > Hello,
-> > > We found the following issue using syzkaller on Linux v6.10.
-> > > The PoC generated by Syzkaller can have the kernel panic.
-> > > The full report including the Syzkaller reproducer:
-> > > https://gist.github.com/TomAPU/a96f6ccff8be688eb2870a71ef4d035d
-> > >
-> > > The brief report is below:
-> > >
-> > > Syzkaller hit 'kernel panic: corrupted stack end in worker_thread' bu=
-g.
-> > >
-> > > Kernel panic - not syncing: corrupted stack end detected inside sched=
-uler
-> >
-> > I assume you're fuzzing without CONFIG_VMAP_STACK? Please make sure to
-> > set CONFIG_VMAP_STACK=3Dy in your kernel config, that will give much
-> > better diagnostics when you hit a stack overrun like this, instead of
-> > causing random corruption and running into the corrupted stack end
-> > detection.
-> >
-> > (Note that if you're using KASAN, you have to enable
-> > CONFIG_KASAN_VMALLOC in order for CONFIG_VMAP_STACK to work.)
