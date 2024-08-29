@@ -1,93 +1,164 @@
-Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx-lax3-1.ucr.edu (mx-lax3-1.ucr.edu [169.235.156.35])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 679BA1B143B;
-	Thu, 29 Aug 2024 13:29:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB031BA26F
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 19:31:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=169.235.156.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724938186; cv=none; b=h2SSiWWBVz2AiAOjODcSVnNmse+CK39+qaU6j5SMEYWdtRjSLVC5ve/v8HehCUJ8DzuAVEAIKuK83vE5rhp6b88RbKMCh8XztwlInGyQVCOAKIixJKnDRKisB06P047j/cD09qyNgSuVzIIpWGm/vdx0hHD0TLOVLiaLjy2MCWk=
+	t=1724959868; cv=none; b=mQuzGDWyy2CePYp+vo4fOJVNzqQ2paZ81iUXGq8pZwQ2ZWgB+RQCMvlrn/6bUWj6f9xhXlv1WHIwLw1HAYG7de2FWGQHzPXXJ3diM7cTfGUKq0W3g7SlHzJ+UG7m5VHzHpkr4DLcbv1ydc0MylG+tVnpLBrQvZ1Zx2YKdMvrkOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724938186; c=relaxed/simple;
-	bh=pZvP4akX1FNW4jsFlwLLkJZAHk1+SP6pnWAd6+58RhM=;
+	s=arc-20240116; t=1724959868; c=relaxed/simple;
+	bh=wl3uXxjsX6/WbbEdlvPAhMe7ckD5aMLXMMBdqeG2kXw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RgRwrvXnGbTKc1/pOpaY09hQ9QOBXnOJWJOUEylKZDpBQMq2hFow9tKiRIyBKdwoxEWdq+i1rdT+3INeGeqt7BKUYfvCDg0Mkx1an7BCQyJcl85mnvw4NMOgNG55uq7D8gu5QXzyeh+hF30gxQ5mi+X0j646v81c9Ti0sl3z+e8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yk2CnSiD; arc=none smtp.client-ip=209.85.160.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=VEvgo+vW8J+vsznK26oTzO9Kv8k22ZK9X0W32GjxLBqDdVhVY28d3TfAyqowj0z1BnpLBT8a7kj94lPxXEXuPNTYgu4JYFVRw+XGJvdwikyNy09E/GJiMrUkpLXQgLOv1JdBnVPte1YvMWXVgGX+hUc3mvzo7fs5/paD0BIWSks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=email.ucr.edu; spf=pass smtp.mailfrom=ucr.edu; dkim=pass (2048-bit key) header.d=ucr.edu header.i=@ucr.edu header.b=WRdXX1qm; dkim=pass (1024-bit key) header.d=ucr.edu header.i=@ucr.edu header.b=LSojUUH4; arc=none smtp.client-ip=169.235.156.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=email.ucr.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucr.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yk2CnSiD"
-Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-2702ed1056bso387007fac.3;
-        Thu, 29 Aug 2024 06:29:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ucr.edu header.i=@ucr.edu header.b="WRdXX1qm";
+	dkim=pass (1024-bit key) header.d=ucr.edu header.i=@ucr.edu header.b="LSojUUH4"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=ucr.edu; i=@ucr.edu; q=dns/txt; s=selector3;
+  t=1724959866; x=1756495866;
+  h=dkim-signature:x-google-dkim-signature:
+   x-forwarded-encrypted:x-gm-message-state:
+   x-google-smtp-source:mime-version:references:in-reply-to:
+   from:date:message-id:subject:to:cc:content-type:
+   content-transfer-encoding:x-cse-connectionguid:
+   x-cse-msgguid;
+  bh=wl3uXxjsX6/WbbEdlvPAhMe7ckD5aMLXMMBdqeG2kXw=;
+  b=WRdXX1qmNEAHEMP0zERZJvheNWtULxLZKUILKefzQdmfPU+ZQ+5r2n0+
+   oTYP64bKy2KiDZ0njNtB03V10CN7WzNgs50/AdvvG7Guj/Rwi9eROQYOp
+   rULiwymOv5h+Qw+W55jF9jNeb5Jlb6YvKJL4MTES4++4/Hf+MsHKkUqUK
+   OoIQro6SaTCdEhPqejEObdLnp7kwa0W110w0GEtTCTtN5X7ZjynPC6dpf
+   RMGSslLajaVjRL5RKIfCkBPXOnN8MUX+Lm/nrW5UvU0vcEMAUMbIvHDZL
+   mXBy1h6SJLxwhutcvO8bA7VaiP3ekNvZhQogf1QNdTOIhoke9FdvjgOZ9
+   w==;
+X-CSE-ConnectionGUID: QLngcpyFTfetHUXOkQg6SA==
+X-CSE-MsgGUID: I5htIAhhSXm6TT8IjmI/kA==
+Received: from mail-io1-f72.google.com ([209.85.166.72])
+  by smtp-lax3-1.ucr.edu with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 29 Aug 2024 12:31:05 -0700
+Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-8278114d3a5so123533639f.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 12:31:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724938184; x=1725542984; darn=vger.kernel.org;
+        d=ucr.edu; s=rmail; t=1724959865; x=1725564665; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pZvP4akX1FNW4jsFlwLLkJZAHk1+SP6pnWAd6+58RhM=;
-        b=Yk2CnSiDx0hjsvt6ozDIk8rcMkS2ZvpTGnCnKyUjOapyT1ISWAuvhBjoQj1dWHyLNR
-         vVZG+UsBVWRRHXj1tz+ihQhlH1UsPyLEilm6id2H4+F2PVXGyUR1Kiksh2XjmOEeG9TN
-         2mIuK+0jhiSzLDQZbO/McAa2F4Gjb5fNS5p6mVWWgkCu6+aTGT394zxAy2V9Q7OlrJCA
-         CZgFvvt7YIxRIJn3XmoHCy6KLeRvWlym1sEBiVap3mxAywX5fPyBLFklt4qEDnuut8hk
-         dG15CEISIweE2TGSqXoVrcFKtlxwMtCFsq+i4rl2wc02+vZVObQKX4OpW3AjmpgG5TaB
-         iouw==
+        bh=/B6eAyB0rutS0OFlsLM/NeX9TyquXOcwfRJFU97SaWQ=;
+        b=LSojUUH4aMH99HlVYVJ0LYg55CUfN2xfpC+DdR1K1pkKpBCXrA3cc1iEceYOkyXDs9
+         d7JbORCG9YL7SLbPDFBKE1n3AR7dhzcAqv1+XGG1l0O/8OgDDQoRWInlIDUYMIvNBtKI
+         EY3+NHC5iN76kkrKo4k9vVcLnyaBWt+8Th+Ys=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724938184; x=1725542984;
+        d=1e100.net; s=20230601; t=1724959865; x=1725564665;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pZvP4akX1FNW4jsFlwLLkJZAHk1+SP6pnWAd6+58RhM=;
-        b=Sb+wBcmrtLhvxNPPiE6CFpw+Ad06N7fwnLzH9E3vdTOhteGUd65iSmp6VTReABMgH8
-         cW8G2AVoutKK91YBcEQ43s/KkIZDv4M6MtbHKs9Ra9W5DwTHM7lWI6qFoMMoZWLn2QDc
-         SmIg0KwuclOdqj7Tey2Ckj5ke/OBYMT+bhfiT5kV9Vb3zgeXIouTKLG409MG3OCwlrS+
-         kjDKW/bbpT3rkRGVU/C2zT1WAuweR9F+fHgBuMc9IJquZFehLfxRALBNYC0R0QHdFA1g
-         H3uxe/5hc4Si0fEc20gD6FSIjszgjWJDabbP2XB0NphdR0jJWWuqSaZOCt9EUT3mN4Kw
-         9Yzg==
-X-Forwarded-Encrypted: i=1; AJvYcCVtspTdtv3bJLeSU623yUnjBTHxmc820bkSdU0Gz6D2DjxNMSShJgkzqT2AyVIvTHwayFbFQlbfUg==@vger.kernel.org, AJvYcCWEDsEn7mhwATRpmdtuUiCjmJGFn3ag+c3pP9VRswf0xKYiNbNB/f4YLNF++zZ98pKft8jh0IZ5eQGpcg==@vger.kernel.org, AJvYcCX4KDvsXE+42j3OcbXH9IStBnT+0yHcz3qVx/sA2WT+mQBq3vYzdyP0oYdIwFt5oy0FwgU4yZ1JhFWvCGk=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywh7ANsM31sFLh8wo8Iy0fDgAMLA4+Z1yilkOH6ojpmKJ17kzYO
-	pk7M1vmov4xXzsdz6Q4v0lfs+5B5Uiv2wrq1bw3ghcJNYXO67rFoH1CUEneUnKjTx7oMAk+XsTy
-	t+WsXpHJuwxnmpw5Aasxc63/2Bg==
-X-Google-Smtp-Source: AGHT+IEB9AghDWmQTaWbGpeIraxIQPqERplZzNtYk9DNetcO5Rt7NpJPuYrDDGDj8FK1DdGZ/2QbinPEhl0Lrhh+j2M=
-X-Received: by 2002:a05:6870:f153:b0:229:f022:ef83 with SMTP id
- 586e51a60fabf-2779035fabdmr3133038fac.43.1724938184280; Thu, 29 Aug 2024
- 06:29:44 -0700 (PDT)
+        bh=/B6eAyB0rutS0OFlsLM/NeX9TyquXOcwfRJFU97SaWQ=;
+        b=QBQrH8KaS73LVNbn2uBr78Gj70C/JcBD9L4irdgGVcFGwt0OVBWDF9V4vP7zx/8o14
+         N0hKm19z4hjIQ1LNqlCJ0pFUCkz1AoV0adLqFkFT48sDXGlM2g1xdUmSFA9M62dqEbXE
+         W9CRu1KQCDnE3TNB1eHep4KYwfAO5mktq/YGQZqo/RgcaEb43lrhuzf88IxtgNul9saI
+         BvieZ3dm97S+whrARjtMsgRjr7othuVVyvVfrzoyN5E6kecxWl6qtBd6jToa+mpJEuoP
+         usuDHY6bVe2rMJmbDJmvUpFkxcl7MNZIxrvDoSEZNeme5uTNvJalDdTzU1zO5UkGI9A6
+         AR/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUEj/2b8RcER/oXQmhj+ftZdBDGrQ6Y/HpbdjRHvnwm6rmeMzpJnBiZFU6bHSP6zDg0au2IOlKiKyoo@vger.kernel.org
+X-Gm-Message-State: AOJu0YwCxmBPrBs75eKIqls9BWOYS2ESKlByEsW8MAu+STheXBHzVjxH
+	Oregd1Hi3kiS2vIkT67OxMN3/T9lOoSZvTqn9Zltcjmi6ewr/hV1Zzdi3500tqTU0O3jEed3cah
+	ztOBKTldNivS1qRG15QW5TaJ6EwSSdGoPtsmH35UOYvvIgHNFKTfHl2HlLSVefWYgA7UFj91tbn
+	sGohFS8YGK8dSipYDcnYkDXzeabk0FtDXPQfA=
+X-Received: by 2002:a05:6602:619a:b0:804:1579:182c with SMTP id ca18e2360f4ac-82a11011423mr475823439f.5.1724959864559;
+        Thu, 29 Aug 2024 12:31:04 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFh3of6TBdUpZgFiAW8GS9N51uJ2RTZjk6GymkzanvNxcr0pHxLoC/LHxVq76fJThCvbRBXC6sCzPzKIo7e+gI=
+X-Received: by 2002:a05:6602:619a:b0:804:1579:182c with SMTP id
+ ca18e2360f4ac-82a11011423mr475821539f.5.1724959864181; Thu, 29 Aug 2024
+ 12:31:04 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240823103811.2421-1-anuj20.g@samsung.com> <CGME20240823104629epcas5p3fea0cb7e66b0446ddacf7648c08c3ba8@epcas5p3.samsung.com>
- <20240823103811.2421-8-anuj20.g@samsung.com> <20240824083553.GF8805@lst.de>
- <fe85a641-c974-3fa7-43f1-eacbb7834210@samsung.com> <yq1plpsauu5.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1plpsauu5.fsf@ca-mkp.ca.oracle.com>
-From: Anuj gupta <anuj1072538@gmail.com>
-Date: Thu, 29 Aug 2024 18:59:05 +0530
-Message-ID: <CACzX3AuX9FkxPoBRLmy_HEmu6Ex63jHLyz9Z8fhUd_Y5_MdJyw@mail.gmail.com>
-Subject: Re: [PATCH v3 07/10] block: introduce BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Kanchan Joshi <joshi.k@samsung.com>, Christoph Hellwig <hch@lst.de>, Anuj Gupta <anuj20.g@samsung.com>, 
-	axboe@kernel.dk, kbusch@kernel.org, asml.silence@gmail.com, krisman@suse.de, 
-	io-uring@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	linux-block@vger.kernel.org, gost.dev@samsung.com, linux-scsi@vger.kernel.org
+References: <CANikGpfDVGGA+gpRqik5NATXsXUqDa2JAFiVRGCLkPthtq4=Qw@mail.gmail.com>
+ <f1bab04f-6e7c-4213-a1ac-ecba95f26b23@acm.org> <CANikGperkKz4=rGrmU4748z8JCTLvURarhmVFN3g-vDzBkZ2Ng@mail.gmail.com>
+In-Reply-To: <CANikGperkKz4=rGrmU4748z8JCTLvURarhmVFN3g-vDzBkZ2Ng@mail.gmail.com>
+From: Juefei Pu <juefei.pu@email.ucr.edu>
+Date: Thu, 29 Aug 2024 12:30:52 -0700
+Message-ID: <CANikGpcm2ytALYjKG9n05Pe2LJJvoYNuMr-bCPFSB7V4twgYdg@mail.gmail.com>
+Subject: Re: BUG: corrupted list in dst_init
+To: Juefei Pu <juefei.pu@email.ucr.edu>
+Cc: Bart Van Assche <bvanassche@acm.org>, James.Bottomley@hansenpartnership.com, 
+	Yu Hao <yhao016@ucr.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 29, 2024 at 8:47=E2=80=AFAM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
+Syzkaller uses `syz-executor` to fuzz, but inside the call trace , the
+program that went wrong is  `swapper`.  After checking the reproducer,
+the `/dev/sg0` seems the most suspicious one since it provides users
+with direct access to hardware.
+
+My hypothesis is such access can somehow tamper the memory without
+being caught by KASAN, and it just so happen in this particular case,
+the victim is ` ip6_dst_alloc`.
+
+So I feel that maybe sending the mail to SCSI maintainers is the right choi=
+ce.
+
+On Thu, Aug 29, 2024 at 11:44=E2=80=AFAM Juefei Pu <juefei.pu@email.ucr.edu=
+> wrote:
+>
+> Syzkaller uses `syz-executor` to fuzz, but inside the call trace , the pr=
+ogram that went wrong is  `swapper`.  After checking the reproducer, the `/=
+dev/sg0` seems the most suspicious one since it provides user with direct a=
+ccess to hardware.
+>
+> My hypothesis is such access can somehow tamper the memory without being =
+caught by KASAN, and it just so happen in this particular case, the victim =
+is ` ip6_dst_alloc`.
+>
+> So I feel that maybe sending the mail to SCSI maintainers is the right ch=
+oice.
 >
 >
-> Kanchan,
->
-> > With Guard/Reftag/Apptag, we get 6 combinations. For NVMe, all can be
-> > valid. For SCSI, maximum 4 can be valid. And we factor the pi-type in
-> > while listing what all is valid. For example: 010 or 001 is not valid
-> > for SCSI and should not be shown by this.
->
-> I thought we had tentatively agreed to let the block layer integrity
-> flags only describe what the controller should do? And then let sd.c
-> decide what to do about RDPROTECT/WRPROTECT (since host-to-target is a
-> different protection envelope anyway). That is kind of how it works
-> already.
->
-Do you see that this patch (and this set of flags) are fine?
-If not, which specific flags do you suggest should be introduced?
+> On Thu, Aug 29, 2024 at 4:07=E2=80=AFAM Bart Van Assche <bvanassche@acm.o=
+rg> wrote:
+> >
+> > On 8/29/24 2:31 AM, Juefei Pu wrote:
+> > > Call Trace:
+> > >   <IRQ>
+> > >   __list_add_valid include/linux/list.h:88 [inline]
+> > >   __list_add include/linux/list.h:150 [inline]
+> > >   list_add include/linux/list.h:169 [inline]
+> > >   ref_tracker_alloc+0x1ef/0x480 lib/ref_tracker.c:213
+> > >   __netdev_tracker_alloc include/linux/netdevice.h:4038 [inline]
+> > >   netdev_hold include/linux/netdevice.h:4067 [inline]
+> > >   dst_init+0xea/0x480 net/core/dst.c:52
+> > >   dst_alloc+0x157/0x190 net/core/dst.c:93
+> > >   ip6_dst_alloc net/ipv6/route.c:344 [inline]
+> > >   icmp6_dst_alloc+0x73/0x410 net/ipv6/route.c:3277
+> > >   ndisc_send_skb+0x31b/0x11e0 net/ipv6/ndisc.c:489
+> > >   addrconf_rs_timer+0x3a3/0x650 net/ipv6/addrconf.c:4039
+> > >   call_timer_fn+0xff/0x240 kernel/time/timer.c:1792
+> > >   expire_timers kernel/time/timer.c:1843 [inline]
+> > >   __run_timers kernel/time/timer.c:2417 [inline]
+> > >   __run_timer_base+0x734/0x9a0 kernel/time/timer.c:2428
+> > >   run_timer_base kernel/time/timer.c:2437 [inline]
+> > >   run_timer_softirq+0xb3/0x160 kernel/time/timer.c:2447
+> > >   handle_softirqs+0x272/0x750 kernel/softirq.c:554
+> > >   __do_softirq kernel/softirq.c:588 [inline]
+> > >   invoke_softirq kernel/softirq.c:428 [inline]
+> > >   __irq_exit_rcu+0xf0/0x1b0 kernel/softirq.c:637
+> > >   irq_exit_rcu+0x5/0x20 kernel/softirq.c:649
+> > >   instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1043 =
+[inline]
+> > >   sysvec_apic_timer_interrupt+0xa0/0xc0 arch/x86/kernel/apic/apic.c:1=
+043
+> > >   </IRQ>
+> >
+> > I see networking functions in the above call stack. Why has this report
+> > been sent to the SCSI maintainers?
+> >
+> > Thanks,
+> >
+> > Bart.
+> >
