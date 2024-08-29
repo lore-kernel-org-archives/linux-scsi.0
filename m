@@ -1,164 +1,93 @@
-Received: from mx-lax3-1.ucr.edu (mx-lax3-1.ucr.edu [169.235.156.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB031BA26F
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 19:31:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=169.235.156.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2108C1B8EAE
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 20:23:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724959868; cv=none; b=mQuzGDWyy2CePYp+vo4fOJVNzqQ2paZ81iUXGq8pZwQ2ZWgB+RQCMvlrn/6bUWj6f9xhXlv1WHIwLw1HAYG7de2FWGQHzPXXJ3diM7cTfGUKq0W3g7SlHzJ+UG7m5VHzHpkr4DLcbv1ydc0MylG+tVnpLBrQvZ1Zx2YKdMvrkOI=
+	t=1724963009; cv=none; b=mXi+op/IoLmix931Z7Hae6ohxeAhYbRL4rVMhx+R9HS/XawrymyTQ75QEkEqxiq8ZurYluoIilvLSprf2IuErJHAHIOhfl3ig9BsfRxQT2IcCkjYNWIG/Ky6PE5ArugwfdjXLNR6lEsyVryhmyf0t2v0NhYvOBzj+7ntx07UJOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724959868; c=relaxed/simple;
-	bh=wl3uXxjsX6/WbbEdlvPAhMe7ckD5aMLXMMBdqeG2kXw=;
+	s=arc-20240116; t=1724963009; c=relaxed/simple;
+	bh=Iv0nram+hMde9A6+V/Nhy4IAnUZ/iQZXPvpsf4ATybU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VEvgo+vW8J+vsznK26oTzO9Kv8k22ZK9X0W32GjxLBqDdVhVY28d3TfAyqowj0z1BnpLBT8a7kj94lPxXEXuPNTYgu4JYFVRw+XGJvdwikyNy09E/GJiMrUkpLXQgLOv1JdBnVPte1YvMWXVgGX+hUc3mvzo7fs5/paD0BIWSks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=email.ucr.edu; spf=pass smtp.mailfrom=ucr.edu; dkim=pass (2048-bit key) header.d=ucr.edu header.i=@ucr.edu header.b=WRdXX1qm; dkim=pass (1024-bit key) header.d=ucr.edu header.i=@ucr.edu header.b=LSojUUH4; arc=none smtp.client-ip=169.235.156.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=email.ucr.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ucr.edu
+	 To:Cc:Content-Type; b=tigpnYquLaaOcsFNZZdgb3lbE0ceBNacjewosnT6vdwCaKD2jvZrzZSS5CCA/qBIGuclpnZC7MkVdXxVIGYSfZHwx0W3w5eDcqt8BUMa8gOPT1ehkrkis/PclgYUQ1mtwL7rP5YtKCRM+ghRwqJ+RaLQhYtMETsb7WKRFZ6UFwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=xpK0YSf0; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ucr.edu header.i=@ucr.edu header.b="WRdXX1qm";
-	dkim=pass (1024-bit key) header.d=ucr.edu header.i=@ucr.edu header.b="LSojUUH4"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=ucr.edu; i=@ucr.edu; q=dns/txt; s=selector3;
-  t=1724959866; x=1756495866;
-  h=dkim-signature:x-google-dkim-signature:
-   x-forwarded-encrypted:x-gm-message-state:
-   x-google-smtp-source:mime-version:references:in-reply-to:
-   from:date:message-id:subject:to:cc:content-type:
-   content-transfer-encoding:x-cse-connectionguid:
-   x-cse-msgguid;
-  bh=wl3uXxjsX6/WbbEdlvPAhMe7ckD5aMLXMMBdqeG2kXw=;
-  b=WRdXX1qmNEAHEMP0zERZJvheNWtULxLZKUILKefzQdmfPU+ZQ+5r2n0+
-   oTYP64bKy2KiDZ0njNtB03V10CN7WzNgs50/AdvvG7Guj/Rwi9eROQYOp
-   rULiwymOv5h+Qw+W55jF9jNeb5Jlb6YvKJL4MTES4++4/Hf+MsHKkUqUK
-   OoIQro6SaTCdEhPqejEObdLnp7kwa0W110w0GEtTCTtN5X7ZjynPC6dpf
-   RMGSslLajaVjRL5RKIfCkBPXOnN8MUX+Lm/nrW5UvU0vcEMAUMbIvHDZL
-   mXBy1h6SJLxwhutcvO8bA7VaiP3ekNvZhQogf1QNdTOIhoke9FdvjgOZ9
-   w==;
-X-CSE-ConnectionGUID: QLngcpyFTfetHUXOkQg6SA==
-X-CSE-MsgGUID: I5htIAhhSXm6TT8IjmI/kA==
-Received: from mail-io1-f72.google.com ([209.85.166.72])
-  by smtp-lax3-1.ucr.edu with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 29 Aug 2024 12:31:05 -0700
-Received: by mail-io1-f72.google.com with SMTP id ca18e2360f4ac-8278114d3a5so123533639f.1
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 12:31:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="xpK0YSf0"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-202018541afso13085ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2024 13:23:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ucr.edu; s=rmail; t=1724959865; x=1725564665; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1724963007; x=1725567807; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/B6eAyB0rutS0OFlsLM/NeX9TyquXOcwfRJFU97SaWQ=;
-        b=LSojUUH4aMH99HlVYVJ0LYg55CUfN2xfpC+DdR1K1pkKpBCXrA3cc1iEceYOkyXDs9
-         d7JbORCG9YL7SLbPDFBKE1n3AR7dhzcAqv1+XGG1l0O/8OgDDQoRWInlIDUYMIvNBtKI
-         EY3+NHC5iN76kkrKo4k9vVcLnyaBWt+8Th+Ys=
+        bh=Iv0nram+hMde9A6+V/Nhy4IAnUZ/iQZXPvpsf4ATybU=;
+        b=xpK0YSf06ZDts+8Lvjrzs6kse2zAs1odgSbF9n0R7MMxVK5iXnQ/1fEQiX4WWrLrme
+         keHJsRhLpXy8sBh2/0DtrYErfWSdFCZRERVpHYiQdKR1aHc+DTVnDVEahVDznJDJQUo6
+         c2+FN1h1YXFHJHhtiC0NRoYlMmJUYtkcS9ZHP4Q4ZnJ72mF/3I8MfVHrW6IBe8UAJlkX
+         t2RXSO3WAfb8X+dNnVImVk6HSMggS4+ZSpX4ryV93QIkVI0I2BW4CNl/jk1jkVVH6TgC
+         hP2orxkg63XkbMhofs5hudJaITMi5K/KtucGRiWqzryOJl3jTXt/DR1SmkA61aam+hVa
+         e4mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724959865; x=1725564665;
+        d=1e100.net; s=20230601; t=1724963007; x=1725567807;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=/B6eAyB0rutS0OFlsLM/NeX9TyquXOcwfRJFU97SaWQ=;
-        b=QBQrH8KaS73LVNbn2uBr78Gj70C/JcBD9L4irdgGVcFGwt0OVBWDF9V4vP7zx/8o14
-         N0hKm19z4hjIQ1LNqlCJ0pFUCkz1AoV0adLqFkFT48sDXGlM2g1xdUmSFA9M62dqEbXE
-         W9CRu1KQCDnE3TNB1eHep4KYwfAO5mktq/YGQZqo/RgcaEb43lrhuzf88IxtgNul9saI
-         BvieZ3dm97S+whrARjtMsgRjr7othuVVyvVfrzoyN5E6kecxWl6qtBd6jToa+mpJEuoP
-         usuDHY6bVe2rMJmbDJmvUpFkxcl7MNZIxrvDoSEZNeme5uTNvJalDdTzU1zO5UkGI9A6
-         AR/Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUEj/2b8RcER/oXQmhj+ftZdBDGrQ6Y/HpbdjRHvnwm6rmeMzpJnBiZFU6bHSP6zDg0au2IOlKiKyoo@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCxmBPrBs75eKIqls9BWOYS2ESKlByEsW8MAu+STheXBHzVjxH
-	Oregd1Hi3kiS2vIkT67OxMN3/T9lOoSZvTqn9Zltcjmi6ewr/hV1Zzdi3500tqTU0O3jEed3cah
-	ztOBKTldNivS1qRG15QW5TaJ6EwSSdGoPtsmH35UOYvvIgHNFKTfHl2HlLSVefWYgA7UFj91tbn
-	sGohFS8YGK8dSipYDcnYkDXzeabk0FtDXPQfA=
-X-Received: by 2002:a05:6602:619a:b0:804:1579:182c with SMTP id ca18e2360f4ac-82a11011423mr475823439f.5.1724959864559;
-        Thu, 29 Aug 2024 12:31:04 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFh3of6TBdUpZgFiAW8GS9N51uJ2RTZjk6GymkzanvNxcr0pHxLoC/LHxVq76fJThCvbRBXC6sCzPzKIo7e+gI=
-X-Received: by 2002:a05:6602:619a:b0:804:1579:182c with SMTP id
- ca18e2360f4ac-82a11011423mr475821539f.5.1724959864181; Thu, 29 Aug 2024
- 12:31:04 -0700 (PDT)
+        bh=Iv0nram+hMde9A6+V/Nhy4IAnUZ/iQZXPvpsf4ATybU=;
+        b=Ie6TXguGrEEv4ZmE3mJmDzW1+5B/UsiXWIEqRlbpoILTtV1ekvqgr2tY5X6iSgSym+
+         DJ0WGl3YFNTG44IkArdm1/Nt7dyCkyJA2v5GdgucGJ2wbjK0nsbTwlWv5QbO26PmjsNC
+         /c/VhwgGL4JfnAfPBfaCnDxU85Au4DF5/ucqUDWr26ceFCPSmGOeTqDqgEyBoJi1O0Ou
+         KCEZZGClEa7y0+CP0Cu57nvLSZiyDZ9c1USVjY62S2nofVxuw+/5UrN35079i8LvOdM2
+         JgKuzh+Mq14Ufov1U1CdnZgH2Jbv7tDzDjeeo6ekSPvcF5l1ZlqpYZmIOzxAyJLK131E
+         QXyg==
+X-Forwarded-Encrypted: i=1; AJvYcCUstFZG7Cp3QVdEaOVIKdaOejMdwGhWsgASvpyzwv9HO6lY9zd0p24KnLOYkzmXWjwHrIbx7r98x0/b@vger.kernel.org
+X-Gm-Message-State: AOJu0YwsWBAN2f4AWgd01jZomj0Z4e9ZxWj1JZrkzFExmbDLg9h2bpFx
+	bzsNZTaOswJXoqbh5PdpHwkCzouC71ok0jJoInAxeLrfJJ2xWDFthPfOzV0Pwy11GDnt6JiUBiX
+	k6C3mPCbJY0oSa5jkZsjCWGPSqcBzrcWWnPKp
+X-Google-Smtp-Source: AGHT+IGBH5Hs5IwU/+WhvREPe+6gjLlNZ0hPKyvj2VhSl+HfN9Vj0g5NCglCep91U8aw0jgzQy4XJ/V0IeT07QGzPvw=
+X-Received: by 2002:a17:902:e892:b0:201:dc7b:a882 with SMTP id
+ d9443c01a7336-20523b3ee98mr651105ad.26.1724963006843; Thu, 29 Aug 2024
+ 13:23:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CANikGpfDVGGA+gpRqik5NATXsXUqDa2JAFiVRGCLkPthtq4=Qw@mail.gmail.com>
- <f1bab04f-6e7c-4213-a1ac-ecba95f26b23@acm.org> <CANikGperkKz4=rGrmU4748z8JCTLvURarhmVFN3g-vDzBkZ2Ng@mail.gmail.com>
-In-Reply-To: <CANikGperkKz4=rGrmU4748z8JCTLvURarhmVFN3g-vDzBkZ2Ng@mail.gmail.com>
-From: Juefei Pu <juefei.pu@email.ucr.edu>
-Date: Thu, 29 Aug 2024 12:30:52 -0700
-Message-ID: <CANikGpcm2ytALYjKG9n05Pe2LJJvoYNuMr-bCPFSB7V4twgYdg@mail.gmail.com>
-Subject: Re: BUG: corrupted list in dst_init
+References: <CANikGpf0OmGMSkksH_ihW9_yXVAL25xKD4CBy8d1gpKj0inPjQ@mail.gmail.com>
+In-Reply-To: <CANikGpf0OmGMSkksH_ihW9_yXVAL25xKD4CBy8d1gpKj0inPjQ@mail.gmail.com>
+From: Jann Horn <jannh@google.com>
+Date: Thu, 29 Aug 2024 22:22:49 +0200
+Message-ID: <CAG48ez3b-FCz7+4MH=CmhbhmSfTT4FTrDAJfbL5UvufRut7ixg@mail.gmail.com>
+Subject: Re: BUG: kernel panic: corrupted stack end in worker_thread
 To: Juefei Pu <juefei.pu@email.ucr.edu>
-Cc: Bart Van Assche <bvanassche@acm.org>, James.Bottomley@hansenpartnership.com, 
-	Yu Hao <yhao016@ucr.edu>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	martin.petersen@oracle.com
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Yu Hao <yhao016@ucr.edu>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Syzkaller uses `syz-executor` to fuzz, but inside the call trace , the
-program that went wrong is  `swapper`.  After checking the reproducer,
-the `/dev/sg0` seems the most suspicious one since it provides users
-with direct access to hardware.
+On Wed, Aug 28, 2024 at 1:49=E2=80=AFAM Juefei Pu <juefei.pu@email.ucr.edu>=
+ wrote:
+> Hello,
+> We found the following issue using syzkaller on Linux v6.10.
+> The PoC generated by Syzkaller can have the kernel panic.
+> The full report including the Syzkaller reproducer:
+> https://gist.github.com/TomAPU/a96f6ccff8be688eb2870a71ef4d035d
+>
+> The brief report is below:
+>
+> Syzkaller hit 'kernel panic: corrupted stack end in worker_thread' bug.
+>
+> Kernel panic - not syncing: corrupted stack end detected inside scheduler
 
-My hypothesis is such access can somehow tamper the memory without
-being caught by KASAN, and it just so happen in this particular case,
-the victim is ` ip6_dst_alloc`.
+I assume you're fuzzing without CONFIG_VMAP_STACK? Please make sure to
+set CONFIG_VMAP_STACK=3Dy in your kernel config, that will give much
+better diagnostics when you hit a stack overrun like this, instead of
+causing random corruption and running into the corrupted stack end
+detection.
 
-So I feel that maybe sending the mail to SCSI maintainers is the right choi=
-ce.
-
-On Thu, Aug 29, 2024 at 11:44=E2=80=AFAM Juefei Pu <juefei.pu@email.ucr.edu=
-> wrote:
->
-> Syzkaller uses `syz-executor` to fuzz, but inside the call trace , the pr=
-ogram that went wrong is  `swapper`.  After checking the reproducer, the `/=
-dev/sg0` seems the most suspicious one since it provides user with direct a=
-ccess to hardware.
->
-> My hypothesis is such access can somehow tamper the memory without being =
-caught by KASAN, and it just so happen in this particular case, the victim =
-is ` ip6_dst_alloc`.
->
-> So I feel that maybe sending the mail to SCSI maintainers is the right ch=
-oice.
->
->
-> On Thu, Aug 29, 2024 at 4:07=E2=80=AFAM Bart Van Assche <bvanassche@acm.o=
-rg> wrote:
-> >
-> > On 8/29/24 2:31 AM, Juefei Pu wrote:
-> > > Call Trace:
-> > >   <IRQ>
-> > >   __list_add_valid include/linux/list.h:88 [inline]
-> > >   __list_add include/linux/list.h:150 [inline]
-> > >   list_add include/linux/list.h:169 [inline]
-> > >   ref_tracker_alloc+0x1ef/0x480 lib/ref_tracker.c:213
-> > >   __netdev_tracker_alloc include/linux/netdevice.h:4038 [inline]
-> > >   netdev_hold include/linux/netdevice.h:4067 [inline]
-> > >   dst_init+0xea/0x480 net/core/dst.c:52
-> > >   dst_alloc+0x157/0x190 net/core/dst.c:93
-> > >   ip6_dst_alloc net/ipv6/route.c:344 [inline]
-> > >   icmp6_dst_alloc+0x73/0x410 net/ipv6/route.c:3277
-> > >   ndisc_send_skb+0x31b/0x11e0 net/ipv6/ndisc.c:489
-> > >   addrconf_rs_timer+0x3a3/0x650 net/ipv6/addrconf.c:4039
-> > >   call_timer_fn+0xff/0x240 kernel/time/timer.c:1792
-> > >   expire_timers kernel/time/timer.c:1843 [inline]
-> > >   __run_timers kernel/time/timer.c:2417 [inline]
-> > >   __run_timer_base+0x734/0x9a0 kernel/time/timer.c:2428
-> > >   run_timer_base kernel/time/timer.c:2437 [inline]
-> > >   run_timer_softirq+0xb3/0x160 kernel/time/timer.c:2447
-> > >   handle_softirqs+0x272/0x750 kernel/softirq.c:554
-> > >   __do_softirq kernel/softirq.c:588 [inline]
-> > >   invoke_softirq kernel/softirq.c:428 [inline]
-> > >   __irq_exit_rcu+0xf0/0x1b0 kernel/softirq.c:637
-> > >   irq_exit_rcu+0x5/0x20 kernel/softirq.c:649
-> > >   instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1043 =
-[inline]
-> > >   sysvec_apic_timer_interrupt+0xa0/0xc0 arch/x86/kernel/apic/apic.c:1=
-043
-> > >   </IRQ>
-> >
-> > I see networking functions in the above call stack. Why has this report
-> > been sent to the SCSI maintainers?
-> >
-> > Thanks,
-> >
-> > Bart.
-> >
+(Note that if you're using KASAN, you have to enable
+CONFIG_KASAN_VMALLOC in order for CONFIG_VMAP_STACK to work.)
