@@ -1,48 +1,48 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3096E190676;
-	Thu, 29 Aug 2024 11:07:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5D218FC7E;
+	Thu, 29 Aug 2024 12:14:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724929648; cv=none; b=e1qgyvOiWjvQjxu2oHAGlEy8dz6vxr1oDH8PBZSgsMLYyuQJN08zJYZ66iK6XytRzU3/UoMGWutdrwczF3JzSMj8VhvbhJED4FrKelVD/ZN5N68A/neZbplIjXse+zCbz9bLflHkgrowapduHy/XzzCeTMbBBrS0+DRPTYHLobY=
+	t=1724933676; cv=none; b=R5VTpBdmXM48kp2Hv8TJNKYktbvl0J+yy1ksjwOBYe4l/FyyWqo/0EFjsnLXpVr70pAeJtSav3IujUvAVyUxdETLGEqurF/xnlK3OkASrZ01b4SgWRFH0y76RKLqNB3riZ+85Srp7eUXn6J0hkizCS6vAmCiOctZwhO2019R1cU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724929648; c=relaxed/simple;
-	bh=2HeHQnF7SElFuz7l+ywrYBx5xpVl/BSNeKxvVbqJnKQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=DQzVhSbh3R3t21KJZxIgWFoUPQWosm08gAVYKQwI+TPOcnT66iPBp8Lmabs2PdxnEfegRrmYPbz4y2aOY4mNGTw5Ct0AmzOcgIbgAVb+0tnJoqhyPnsKPeYgi3tTqqSnwnvdMoq1Ag0BbFuItg26SWthqrD+xSLmZhEfTG9G4ag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=UU3RmhNv; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1724933676; c=relaxed/simple;
+	bh=jPa/Do411f1dm8Duft5PmzkJ1D4bPLdqlEzRXwXvOsE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=rLAzMoIZxVTJINC9DltzQq4OdKnHcObqwsUsqH1X7/qV+Vj3VdUdvNRu6/RQimVdQl2Dxxd8ixyWDJ37WuJavKkTmhy8Mk3WYhY97rOfkhmzdpOBX9k+s9XVzrcnlHco5EiNWRgy1mVo0S/IiOTLTmU0KJsxdOBTJjxONvITCTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=g7hms1aU; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="UU3RmhNv"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wvdlr01LhzlgVXv;
-	Thu, 29 Aug 2024 11:07:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724929637; x=1727521638; bh=1cOV3qIKgGMZO+Ek677yhd7s
-	c4CK2leQAuNXorxpInY=; b=UU3RmhNvBml5Vun0dNnSqGVKICzTllUXm9YaeTcA
-	DG0TTkaCYAvL/DzY4EAqnQHFudkGvVnAunEhgtTC/pjg5+di+Uv4+t+4PUPXs6/B
-	yXVHqsYO/62R2a/63//pQsaTKPRvF6A12yHSv+ivuG7Hj68J/aS9XFN/tV6XLKJc
-	6sI8BdOQiVE45D6q4aotCkvA+lx2aKAtEG78A1/V9m2Ut5qJxXpS9ROi8Wqoxhj9
-	8WwPsklxmxaRG5HvfQiC/IaKbZIu+00MEsFpDKbFr0HMnynLPTGyxxvGHRvFZhtW
-	fKxeBSMN9dFNkmEbPDECuWlkva+aFY3q9mYURzCKNEamRA==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9FRKrkVUzr1b; Thu, 29 Aug 2024 11:07:17 +0000 (UTC)
-Received: from [172.16.58.82] (modemcable170.180-37-24.static.videotron.ca [24.37.180.170])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wvdlm0f1hzlgTWP;
-	Thu, 29 Aug 2024 11:07:15 +0000 (UTC)
-Message-ID: <f1bab04f-6e7c-4213-a1ac-ecba95f26b23@acm.org>
-Date: Thu, 29 Aug 2024 07:07:14 -0400
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="g7hms1aU"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47T8HlB7031817;
+	Thu, 29 Aug 2024 12:14:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ZCs/XIqluJ8ropdFPNCiOktm7PkEOs5nD4/Lq5NEpUs=; b=g7hms1aUTGijl+B9
+	jU5bpMLSsNiQk9eTgirTE6XnoW3q7VHYgTFiV3HSWPFyjWkiUXuAd5Qb++QxtSMn
+	jHZsdXnAULM61ZK9uP2cWfTDHN9jTUYnwk8+Y8zjeWeeyo46IBk/NgUBnYq0m2nf
+	Nh4fKBYyyLuifUtKjXunoo6hlHwSRQxO2r6nY5kLA4wHSAa6NNqe1rIaQlg4rkRY
+	CWrH52y8EnumHS0Kd6gvAZ7LyJ/ZqFcOnTOqNB1iVe35ASQ1AH9hsYfk4yMylucR
+	4aEadWKhDCjR3DMFqp4GeWfC9CM4qxA4MD7Qym+ZFrlz1HgEo4PJHYrm5onxpLXO
+	tj2fHg==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 419puw576s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 29 Aug 2024 12:14:28 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47TCERn7025457
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 29 Aug 2024 12:14:27 GMT
+Received: from [10.217.217.229] (10.80.80.8) by nasanex01c.na.qualcomm.com
+ (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 29 Aug
+ 2024 05:14:24 -0700
+Message-ID: <f0b62279-b4b6-4cb3-a808-fcd170a384eb@quicinc.com>
+Date: Thu, 29 Aug 2024 17:44:21 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,52 +50,100 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: BUG: corrupted list in dst_init
-To: Juefei Pu <juefei.pu@email.ucr.edu>,
- James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- Yu Hao <yhao016@ucr.edu>
-References: <CANikGpfDVGGA+gpRqik5NATXsXUqDa2JAFiVRGCLkPthtq4=Qw@mail.gmail.com>
+Subject: Re: [PATCH V2] scsi: ufs: qcom: update MODE_MAX cfg_bw value
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CANikGpfDVGGA+gpRqik5NATXsXUqDa2JAFiVRGCLkPthtq4=Qw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K.
+ Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_nitirawa@quicinc.com>, <quic_bhaskarv@quicinc.com>,
+        <quic_narepall@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
+References: <20240828132526.25719-1-quic_mapa@quicinc.com>
+ <20240828133132.zqozjegmbnwa7byb@thinkpad>
+From: MANISH PANDEY <quic_mapa@quicinc.com>
+In-Reply-To: <20240828133132.zqozjegmbnwa7byb@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: SSifZb7m3C43k-OdoAHsZE-SaccaD8rG
+X-Proofpoint-GUID: SSifZb7m3C43k-OdoAHsZE-SaccaD8rG
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-29_02,2024-08-29_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 malwarescore=0 bulkscore=0 mlxscore=0
+ lowpriorityscore=0 phishscore=0 mlxlogscore=999 suspectscore=0
+ adultscore=0 spamscore=0 impostorscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2407110000
+ definitions=main-2408290086
 
-On 8/29/24 2:31 AM, Juefei Pu wrote:
-> Call Trace:
->   <IRQ>
->   __list_add_valid include/linux/list.h:88 [inline]
->   __list_add include/linux/list.h:150 [inline]
->   list_add include/linux/list.h:169 [inline]
->   ref_tracker_alloc+0x1ef/0x480 lib/ref_tracker.c:213
->   __netdev_tracker_alloc include/linux/netdevice.h:4038 [inline]
->   netdev_hold include/linux/netdevice.h:4067 [inline]
->   dst_init+0xea/0x480 net/core/dst.c:52
->   dst_alloc+0x157/0x190 net/core/dst.c:93
->   ip6_dst_alloc net/ipv6/route.c:344 [inline]
->   icmp6_dst_alloc+0x73/0x410 net/ipv6/route.c:3277
->   ndisc_send_skb+0x31b/0x11e0 net/ipv6/ndisc.c:489
->   addrconf_rs_timer+0x3a3/0x650 net/ipv6/addrconf.c:4039
->   call_timer_fn+0xff/0x240 kernel/time/timer.c:1792
->   expire_timers kernel/time/timer.c:1843 [inline]
->   __run_timers kernel/time/timer.c:2417 [inline]
->   __run_timer_base+0x734/0x9a0 kernel/time/timer.c:2428
->   run_timer_base kernel/time/timer.c:2437 [inline]
->   run_timer_softirq+0xb3/0x160 kernel/time/timer.c:2447
->   handle_softirqs+0x272/0x750 kernel/softirq.c:554
->   __do_softirq kernel/softirq.c:588 [inline]
->   invoke_softirq kernel/softirq.c:428 [inline]
->   __irq_exit_rcu+0xf0/0x1b0 kernel/softirq.c:637
->   irq_exit_rcu+0x5/0x20 kernel/softirq.c:649
->   instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1043 [inline]
->   sysvec_apic_timer_interrupt+0xa0/0xc0 arch/x86/kernel/apic/apic.c:1043
->   </IRQ>
 
-I see networking functions in the above call stack. Why has this report
-been sent to the SCSI maintainers?
+On 8/28/2024 7:01 PM, Manivannan Sadhasivam wrote:
+> On Wed, Aug 28, 2024 at 06:55:26PM +0530, Manish Pandey wrote:
+>> The cfg_bw value for max mode was incorrect for the Qualcomm SoC.
+> 
+> What do you mean by 'incorrect'? I extracted the value from downstream DTs. So
+> it cannot be incorrect.
+> 
+> If you want to update it, please clearly provide the reason.
 
-Thanks,
+Hi Mani,
 
-Bart.
+ From the snip from commit message
+"The bandwidth values defined in ufs_qcom_bw_table struct are taken from
+Qcom downstream vendor devicetree source and are calculated as per the
+UFS3.1 Spec."
 
+we have UFS 4.x devices, and ufs_qcom_bw_table is already updated with 
+Gear 5 support (8db8f6ce556a - "scsi: ufs: qcom: Add missing 
+interconnect bandwidth values for Gear 5"). So the max cfg_bw is not 
+updated.
+
+Also for UFS 3.x devices,
+[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,        204800 },
+[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,        409600 },
+[MODE_MAX][0][0]                    = { 7643136,        307200 },
+
+Please have a look for current max mode value(307200), it is even less 
+than UFS_HS_G4 (409600). So it should be updated.
+
+
+> And if this patch is addressing an issue, then a Fixes tag should be present. If
+> you want to get it backported (if it is a critical fix), then stable list should
+> be CCed.
+> 
+> - Mani
+> 
+My bad.. will update the patch.
+also yes, we need it to be backported, i should cc add stable list.
+Thanks for guidance.
+
+>> Update it to the correct value for cfg_bw max mode.
+>>
+>> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index c87fdc849c62..ecdfff2456e3 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
+>>   	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
+>>   	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
+>>   	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
+>> -	[MODE_MAX][0][0]		    = { 7643136,	307200 },
+>> +	[MODE_MAX][0][0]		    = { 7643136,	819200 },
+>>   };
+>>   
+>>   static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+>> -- 
+>> 2.17.1
+>>
+> 
