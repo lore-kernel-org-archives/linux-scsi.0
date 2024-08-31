@@ -1,78 +1,95 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B89CCF9E8
-	for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2024 01:27:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC356171E69
+	for <linux-scsi@vger.kernel.org>; Sat, 31 Aug 2024 12:20:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.58.86.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725067641; cv=none; b=ny6MZXSFuMnrmhMuCg/VHfaLeIAEPtJYHMun5ifsCuyv3/1czU/XP24prsbKYYHvde9PnG1KDkGtFpEdbksubs3r2LyfcL/39UqUmhXL4lCvHpLPFvh6xmQpgUbB7gpaEYrclLgUDsUIbWqQwNCRhaf1whJWwH8o7Hn1npD0esU=
+	t=1725106855; cv=none; b=s+5mqVw33A/iiNaQf+jQjG0QJEJUgCAZ5F/ElBVmNTNIF6ik4c0xHjGa3qjNFkCh3yLkHN3eXtcjJyLs2QJ74lWGagXid7qFr4rGAWwBRPNb9yugfk3rjLZN0V5gTE1RQs8oWKe+H3YWwQTEXloprfZo8dJ7kqcYyMVxIBE6nCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725067641; c=relaxed/simple;
-	bh=g/OnUBPLxlpbF7OlSOUKWKXZ5idKQLDc8XY0snedp6Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Y5Xx9atrQeoxmeZriMxHvn8ugUx4or/v9PbNC0GAB1HbXpOZBjK6RiXFyyWwcdK1uOy7brcpL5f402mNSi9gFF8pCeXQO2EXE99gGOtRckSC78yLGfnM8WuPK3zmXe+EFCmwf2UtBE2U1/22RdRjMH2wLxGJgpRQZsFdmLm6JD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4WwcnJ47Y1z1j7sr;
-	Sat, 31 Aug 2024 09:27:00 +0800 (CST)
-Received: from dggpeml500022.china.huawei.com (unknown [7.185.36.66])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1924E140109;
-	Sat, 31 Aug 2024 09:27:15 +0800 (CST)
-Received: from [10.67.111.104] (10.67.111.104) by
- dggpeml500022.china.huawei.com (7.185.36.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Sat, 31 Aug 2024 09:27:14 +0800
-Message-ID: <d71bcac0-1adf-4375-9998-4bd1ad6f14f2@huawei.com>
-Date: Sat, 31 Aug 2024 09:27:14 +0800
+	s=arc-20240116; t=1725106855; c=relaxed/simple;
+	bh=CkWWS37IlEOEjjmY0J5uwLIvh7WFn7azN4Gid73fZGE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 MIME-Version:Content-Type; b=KVJWmKP0HD6c4b/tGmNpwUscq67hhNjSf+SuRmQWMmA0BfNVj6jACAzZsC1XyOUqo/mt/Kqf3XDlQ7b7zo5bvadt4bkEIa45TMqeo9N0B1u8Z+9y8aQ645rBjSmAC4Fq5jIAY4jsOYfLRTJyqUJc/TBZx4owwqPsWK3VCJL5AE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM; spf=pass smtp.mailfrom=aculab.com; arc=none smtp.client-ip=185.58.86.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aculab.com
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-245-CenmDodWPzGjVn3OQypgUA-1; Sat, 31 Aug 2024 13:20:42 +0100
+X-MC-Unique: CenmDodWPzGjVn3OQypgUA-1
+Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
+ (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Sat, 31 Aug
+ 2024 13:19:58 +0100
+Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
+ id 15.00.1497.048; Sat, 31 Aug 2024 13:19:58 +0100
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Yan Zhen' <yanzhen@vivo.com>, "sathya.prakash@broadcom.com"
+	<sathya.prakash@broadcom.com>, "sreekanth.reddy@broadcom.com"
+	<sreekanth.reddy@broadcom.com>, "suganath-prabu.subramani@broadcom.com"
+	<suganath-prabu.subramani@broadcom.com>
+CC: "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"opensource.kernel@vivo.vom" <opensource.kernel@vivo.vom>
+Subject: RE: [PATCH v1] fusion: mptctl: Use min macro
+Thread-Topic: [PATCH v1] fusion: mptctl: Use min macro
+Thread-Index: AQHa+HYKu7a4N74T3UW6jrHZO4NnXLJBTt4Q
+Date: Sat, 31 Aug 2024 12:19:57 +0000
+Message-ID: <27dfad1261db41988d31dbb62af13fc4@AcuMS.aculab.com>
+References: <20240827113922.3898849-1-yanzhen@vivo.com>
+In-Reply-To: <20240827113922.3898849-1-yanzhen@vivo.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next] scsi: qla2xxx: replace simple_strtoul to kstrtoul
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
 Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, <njavali@marvell.com>,
-	<GR-QLogic-Storage-Upstream@marvell.com>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>
-References: <20240830080505.3545641-1-lihongbo22@huawei.com>
- <bafcca6f-a23c-4c31-a982-b553a96c3dad@acm.org>
-From: Hongbo Li <lihongbo22@huawei.com>
-In-Reply-To: <bafcca6f-a23c-4c31-a982-b553a96c3dad@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpeml500022.china.huawei.com (7.185.36.66)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+From: Yan Zhen
+> Sent: 27 August 2024 12:39
+>=20
+> Using the real macro is usually more intuitive and readable,
+> When the original file is guaranteed to contain the minmax.h header file
+> and compile correctly.
+>=20
+> Signed-off-by: Yan Zhen <yanzhen@vivo.com>
+> ---
+>  drivers/message/fusion/mptctl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mpt=
+ctl.c
+> index 9f3999750..17798edf7 100644
+> --- a/drivers/message/fusion/mptctl.c
+> +++ b/drivers/message/fusion/mptctl.c
+> @@ -1609,7 +1609,7 @@ mptctl_eventreport (MPT_ADAPTER *ioc, unsigned long=
+ arg)
+>  =09maxEvents =3D numBytes/sizeof(MPT_IOCTL_EVENTS);
+>=20
+>=20
+> -=09max =3D MPTCTL_EVENT_LOG_SIZE < maxEvents ? MPTCTL_EVENT_LOG_SIZE : m=
+axEvents;
+> +=09max =3D min(MPTCTL_EVENT_LOG_SIZE, maxEvents);
 
+IMHO the arguments should be swapped.
+=09min(variable, CONSTANT);
+is better.
 
-On 2024/8/30 20:13, Bart Van Assche wrote:
-> On 8/30/24 4:05 AM, Hongbo Li wrote:
->> -    num_act_qp = simple_strtoul(buf, NULL, 0);
->> +    if (kstrtoul(buf, 0, &num_act_qp)) {
->> +        pr_err("host:%ld: fail to parse user buffer into number.",
->> +            vha->host_no);
->> +        rc = -EINVAL;
->> +        goto out_free;
->> +    }
-> 
-> The message "fail to parse user buffer into number" is a bit long.
-> "failed to parse" is probably sufficient.
-> 
-> Additionally, has it been considered to assign the kstrtoul() return
-> value to rc instead of discarding the returned value?
-kstrtoul can tell two error which are ERANGE and EINVAL. rc can keep 
-return value from kstrtoul, and it won't affect the original code. Can I 
-use rc to hold the return value from kstrtoul?
+=09David.
 
-Thanks,
-Hongbo
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1=
+PT, UK
+Registration No: 1397386 (Wales)
 
-> 
-> Thanks,
-> 
-> Bart.
