@@ -1,136 +1,78 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECED613BC3D;
-	Sat, 31 Aug 2024 19:49:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0A6433CB
+	for <linux-scsi@vger.kernel.org>; Sun,  1 Sep 2024 11:20:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725133765; cv=none; b=aEhEEG6ND9EKEGoYdL54f9Eri10KOFx/t5rLUHlNIAcl3sCs/dMIrcEzdQBvY54MouwdJ+JX/myetlyitdiLhYI/tcZ2uvF9Cmxtkq5mMxZp4J44WXFsyT5aG02VQf5dfLOVWR5zoEHvYwXsTKLYHV42HvXwyb/xbrZ9d7bPg1I=
+	t=1725189604; cv=none; b=j7d+j1CfCxXF+6VnyTP4ieortUedt54dW8wJeje8DLXA8jSLAuIk/KC/nQ1BAcmwBNAhudplcjtuK9WywAqXWyf7dRDYSDeoJU5YO5Wlr9M9YFXQKJcb+kCNKRTmfQDVnapOR2bWgUrysqVtcafz/KnLYzSqAEuMVAudLqE4IoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725133765; c=relaxed/simple;
-	bh=TjFqpOaghVpHu0OD8TVOsUrdkEB/DlbW93skVivqlMc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DdJKqZUB2aale6vC9TwA5PKB8qT4tgJMWd/f2t7LGDfr8zQNjFIoMwfQSro41dnGzC6LmozKiwbCiP7wFvXdo56e5ZqPlWaPv20P2A5NrEnTkO5xWlHbLSOdqbNQQWI1iWl8h/1RKsPXky8lniBSAwdOGzBydThbpWMq5hgskj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U0I4yqoW; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1725189604; c=relaxed/simple;
+	bh=WEaFixyg2xlfyYAifs4RCB7Qh9l/D2JRzFUrHg9HaXo=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=tihIVP/h0+CuenYpJ8KGCT9QhLqdiVEIlv/zrwnN781cetKH32+TVh7NnP/4PHndRvt3miZYLDHl1htdsIA1qahVGr3UgBJh11/B4kit8iKSJSuyTSJxJzu0BfGJjBF+qI7bQN1iwg5L/LGTL7n+pG3hi6aqYaRGwXyxyPVWM9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WdbHYAqG; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U0I4yqoW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725133763; x=1756669763;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=TjFqpOaghVpHu0OD8TVOsUrdkEB/DlbW93skVivqlMc=;
-  b=U0I4yqoWUF6LRxnc9YFEpTKManBo2nb1tYW0Twaz9Ayd1yvco+v8mq3A
-   K1+mzHFw7B6EbEVuuiwVCgtoBV+uh8Qk+SklGNCyrxJW0pAO/8EHFefDq
-   iWIV0delmoUTZ1lhOp82eYCWtV/8lDv89E/hefN28Xvv/yasXQv/hV2Dq
-   KWos1r1dWKc25E7JdqRTOaqGg5YbzOIFeAuCqpWfc8t5f6WGNR/k2FeaF
-   p8rpUCY0nt5HlE7xK5Z7iLAv6F/nh/tgSAXE3X8Wb98KcuoowJABAWb4f
-   CsGwOUCyZkZLBbtXdY1auwic4hHuWvMImeT6sXmFe3WB+XlpUvQM0zwb4
-   g==;
-X-CSE-ConnectionGUID: 3sIcwHddR0KYYrjt0iiUNg==
-X-CSE-MsgGUID: PHaJFGXlSyG7+c4xZMyUrA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11181"; a="23891612"
-X-IronPort-AV: E=Sophos;i="6.10,192,1719903600"; 
-   d="scan'208";a="23891612"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2024 12:49:22 -0700
-X-CSE-ConnectionGUID: rkMK3vv3TlWSwvqmE8pJsw==
-X-CSE-MsgGUID: 17sbqSKtTNqinfuAWjXqWA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,192,1719903600"; 
-   d="scan'208";a="64946347"
-Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 31 Aug 2024 12:49:18 -0700
-Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1skU5z-00033u-0v;
-	Sat, 31 Aug 2024 19:49:15 +0000
-Date: Sun, 1 Sep 2024 03:49:10 +0800
-From: kernel test robot <lkp@intel.com>
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com, avri.altman@wdc.com,
-	alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc: oe-kbuild-all@lists.linux.dev, wsd_upstream@mediatek.com,
-	linux-mediatek@lists.infradead.org, peter.wang@mediatek.com,
-	chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-	cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-	jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-	qilin.tan@mediatek.com, lin.gui@mediatek.com,
-	tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
-	naomi.chu@mediatek.com, ed.tsai@mediatek.com, bvanassche@acm.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v1 2/2] ufs: core: requeue MCQ abort request
-Message-ID: <202409010304.Ivj4eQN6-lkp@intel.com>
-References: <20240830074426.21968-3-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WdbHYAqG"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-5c24c8aab71so677970a12.1
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Sep 2024 04:20:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725189601; x=1725794401; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=WEaFixyg2xlfyYAifs4RCB7Qh9l/D2JRzFUrHg9HaXo=;
+        b=WdbHYAqGSJTOwgQmp7p7/iELC6GIRfl7uImD4M/3J/2UDwN7bWSZPAHYJge5nOwA9w
+         42h31D+UdPgzmuvXmOT56eDyILEF9YV0ELxd7DKhfaYkdrmWtkJWvMyJp5CC28p3T7nv
+         CUHtSEiF0kRlDhc+0OniQ7R8oBfzhhSwyGYq7RLUciV6Y/gyj/NuYHpqoq/bWISgNMbL
+         ZI5lDBZAWcmmFgtXKApNitpyyGpGhrO/RlVi0SNx1G9cyHw1+LKSIbkkCILqyjLHq+Yh
+         zv53d68yJEb4L4dH60qG/6XpXqGWDhl8X7hKhHZfRDeme1anUycNRZ7NPL7WYU4Hg2La
+         igMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725189601; x=1725794401;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=WEaFixyg2xlfyYAifs4RCB7Qh9l/D2JRzFUrHg9HaXo=;
+        b=PTU+id5gCo5dhLKk/Jb9HRSu995voXlv3ndIDJVZ12msJe8uAXHrleGj7PwJS+TLPq
+         acU0hEfrFbWbdBp/52RMR1tlzV1+widuP7itlO8fURX3DoR9rLkZ4eSv2pAZvZSbaVif
+         g8mOjPluJG1mfckb0parEmz7oaz9MemF81PDsmIJgURWJF1cf0GCTTh+KWWzZroxvxB5
+         Xdrrhp9rioCwyFrLsIaL/Z1R/U8CfeI+2Gblrj4Muj65gghB3NnTNfo9FrLk3WIMDTsj
+         OUYLDd+an2vewNa3h20ZcqkkY5dczpEVoO+852l1qxLGxnXYhujbU7kYOHYczEfok4mj
+         g3rw==
+X-Gm-Message-State: AOJu0YzZdBs8wxtmT0PiR4HJTR0myocc4H6QYbap7L/zmx5siYeIQhvl
+	uA1dnNL2FVA0Q3DPv/LlqbjfWeq//D5C++t+IbKUUKzQglEr9dhJ
+X-Google-Smtp-Source: AGHT+IFH2JdhZRZ4oRe73n8/ZGmIJEh2f9qTl6Am4sTo4aw1uGTrJAaHwdhbF5TBWCOosJAlX65Rvg==
+X-Received: by 2002:a05:6402:2753:b0:5c0:c223:48a1 with SMTP id 4fb4d7f45d1cf-5c243741935mr3453476a12.21.1725189599914;
+        Sun, 01 Sep 2024 04:19:59 -0700 (PDT)
+Received: from p200300c5873875735579a6543d78f9b3.dip0.t-ipconnect.de (p200300c5873875735579a6543d78f9b3.dip0.t-ipconnect.de. [2003:c5:8738:7573:5579:a654:3d78:f9b3])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5c226ce4fb9sm4187931a12.87.2024.09.01.04.19.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Sep 2024 04:19:59 -0700 (PDT)
+Message-ID: <9548c30e7906069184493ad60d5639781b0c47ba.camel@gmail.com>
+Subject: Re: [PATCH v3 2/9] ufs: core: Introduce ufshcd_activate_link()
+From: Bean Huo <huobean@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,  Peter Wang
+ <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>, Andrew Halaney
+ <ahalaney@redhat.com>
+Date: Sun, 01 Sep 2024 13:19:58 +0200
+In-Reply-To: <20240828174435.2469498-3-bvanassche@acm.org>
+References: <20240828174435.2469498-1-bvanassche@acm.org>
+	 <20240828174435.2469498-3-bvanassche@acm.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240830074426.21968-3-peter.wang@mediatek.com>
 
-Hi,
-
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.11-rc5 next-20240830]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/peter-wang-mediatek-com/ufs-core-fix-the-issue-of-ICU-failure/20240830-154808
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20240830074426.21968-3-peter.wang%40mediatek.com
-patch subject: [PATCH v1 2/2] ufs: core: requeue MCQ abort request
-config: arm64-randconfig-r132-20240831 (https://download.01.org/0day-ci/archive/20240901/202409010304.Ivj4eQN6-lkp@intel.com/config)
-compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-reproduce: (https://download.01.org/0day-ci/archive/20240901/202409010304.Ivj4eQN6-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202409010304.Ivj4eQN6-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/ufs/core/ufshcd.c:6505:6: error: implicit declaration of function 'is_mcq_enabled' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
-           if (is_mcq_enabled(hba) && (*ret == 0))
-               ^
-   1 error generated.
-
-
-vim +/is_mcq_enabled +6505 drivers/ufs/core/ufshcd.c
-
-  6488	
-  6489	static bool ufshcd_abort_one(struct request *rq, void *priv)
-  6490	{
-  6491		int *ret = priv;
-  6492		u32 tag = rq->tag;
-  6493		struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-  6494		struct scsi_device *sdev = cmd->device;
-  6495		struct Scsi_Host *shost = sdev->host;
-  6496		struct ufs_hba *hba = shost_priv(shost);
-  6497		struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-  6498	
-  6499		*ret = ufshcd_try_to_abort_task(hba, tag);
-  6500		dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
-  6501			hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
-  6502			*ret ? "failed" : "succeeded");
-  6503	
-  6504		/* Host will post to CQ with OCS_ABORTED after SQ clean up */
-> 6505		if (is_mcq_enabled(hba) && (*ret == 0))
-  6506			lrbp->host_initiate_abort = true;
-  6507	
-  6508		return *ret == 0;
-  6509	}
-  6510	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Reviewed-by: Bean Huo <beanhuo@micron.com>
