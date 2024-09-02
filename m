@@ -1,140 +1,118 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C819143889
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 05:18:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A22B382
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 05:20:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725254326; cv=none; b=UWEjc+i7u8Q7wVrtAnwhw79HzlsLTvdJqJnniBTvaEm9vawLju/3a47d6ed3vyn2zrKlEkrQ/9UsEC1SZgqpeZtkPlVw2Bz9itwio5cMXMlXMXHQUCFy/TNTvvjSF8FnKPKx4QDyBPKNEhBs08vu/QALpruo5dXds0YtD7hilEY=
+	t=1725254434; cv=none; b=eymIkL/0PMPRnjsatZSnz2iHj7CzxjvrgIypTLTOEFCHa3T85GTkwdlOGGNgCf+8lq5llt8FO7KXmAgqcT+8bueWK8cwTW3dVPl5Vg5Eb+oetCbqOqBcnYX7LU5QIMYvq+MaSPZRKcOh4+Nj/uXCnNLsoQvloqOJQWpfdBFNu6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725254326; c=relaxed/simple;
-	bh=BdjiREE7l/FNldSgz5AseM3MCJoVK1RmC4kNMgchFtQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=MP3zvyGFD1lN2U+dp7l7/DW19SfxRHDYUf0ODhSwSdobMpE2jD/ZLPpgd+OptSuaPodSYG7ndzJqrlCQ7FrE92nfVka/65ocxMplgJRr1GqaNydI1NSpU1seF3gx/qGAPMtgKcLVE0YSRnHMpnS9r5RIm+ykb8nYl3UgD4BsxSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=rCxTO0L7; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1725254434; c=relaxed/simple;
+	bh=KvKf4g0Bbhp3lZCttFyNHndJpiFd0u4cw7Jr+H2fsGI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sFMoMSGvj6wYrKaoqjLGfmqLY5TDQbVLkoS5b/vVt7/xitywQ34jiq2WxrjJnjpH310iBufdeR+jNSRkGW9RaLSKvnsflTkoW6tWZ0kWRO7Ni14pH3EOXivXC//9gE4wlgmmWUK2UgQa0h/5N7n6iVf4SndCjlrcJyFQZfjo4gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=a1PQyklq; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rCxTO0L7"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240902051839epoutp042a887137f889e63a8644a15f0e3a551a~xVampUQel1152811528epoutp04U
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 05:18:39 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240902051839epoutp042a887137f889e63a8644a15f0e3a551a~xVampUQel1152811528epoutp04U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1725254319;
-	bh=j48tXrfPFLQpQy7ehDudz1ll+W1pF1dhPhX8Mc3nQqc=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=rCxTO0L7UCcIFdxMmHf8dasIruE4sJkM+JTXoq/XbLrVESVOyEPP+7n3PKTNHm4WZ
-	 0713y22C6yeaHHrPuO8vWOATp40SD7nEf9uYWaqiMMbtQl6QPNzwnUAqVYVJ3l9FOx
-	 PM6QWs84fHlHYtYIYutJWszH4avkYyo/HMS1QNMs=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20240902051838epcas5p14c257efc542d4b9a274b9dc4c277d225~xVal_rM6o1678716787epcas5p1Q;
-	Mon,  2 Sep 2024 05:18:38 +0000 (GMT)
-Received: from epsmges5p2new.samsung.com (unknown [182.195.38.183]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4Wxxqc65zdz4x9Pq; Mon,  2 Sep
-	2024 05:18:36 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
-	epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	89.2C.09743.CAA45D66; Mon,  2 Sep 2024 14:18:36 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20240902051836epcas5p39b730254365bd2c759417178d2f6da95~xVajpRyl00854708547epcas5p3D;
-	Mon,  2 Sep 2024 05:18:36 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240902051836epsmtrp1da38afc11821c9b95fb4d33e235eb199~xVajoayr80087300873epsmtrp1j;
-	Mon,  2 Sep 2024 05:18:36 +0000 (GMT)
-X-AuditID: b6c32a4a-3b1fa7000000260f-46-66d54aacd6fd
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	DF.E4.07567.CAA45D66; Mon,  2 Sep 2024 14:18:36 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240902051833epsmtip1f4f6ade22e4a2ede413b18d72ce57cef~xVagrBjGC2920229202epsmtip1s;
-	Mon,  2 Sep 2024 05:18:32 +0000 (GMT)
-Message-ID: <3343ecc2-6c19-e509-5f17-ceaa4f88efae@samsung.com>
-Date: Mon, 2 Sep 2024 10:48:31 +0530
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="a1PQyklq"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2055a3f80a4so5780895ad.2
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Sep 2024 22:20:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1725254432; x=1725859232; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=svCd9cCmgi2dsrZIqz9Ry+NjpaYUU7HzIWIuLx9fASw=;
+        b=a1PQyklqoevg4Z8ysVpaRSgCO3JcBBte/f1+B3LrQu4IZQZ8R7CqKscbQbSWSbKjCj
+         aReR3EoF0TCsYFKhCcFSo5NhULAfJ/A2OM221KuphmdEwYsjxvuKaLhNzWnuYOinBMlU
+         1F2tzYcMUaKU9Bl8C+UA79QasDc14ApzFgMtwhobbdlC+jvkvYsqjH+B090FG1xq0erF
+         58XS8zxnx1wuPdJIs9K+F2JsM/pJjx6niIWIWYW9Egk/VrxVcCkYamYx/KXZZ0x0b5IZ
+         dKJUguJ1dOjvh1hY546bSycLCd2gouDqePNQjZzkWgV3xdEWS7oQ5eW6yS2+lL8z37LB
+         wC9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725254432; x=1725859232;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=svCd9cCmgi2dsrZIqz9Ry+NjpaYUU7HzIWIuLx9fASw=;
+        b=HI93wKtA0V+Labv72Jb3lWbdvmRwRwUT3Plp28wzNeGqx9JZWIQ+lS9CSjZrybaUZI
+         tducfJj3kDyxLrIe0yh6U65fU3IPS3fCw4pUCOpzxjZQPRjWBDJmRt1XSScI3rMNKvqF
+         vjbb3Fvo/9Cuak5OOr8qIfCaO5/NV7usiedU7iRkzDMVTEyJMk+4oZxcbAG04zNZ/dW4
+         NX9zeJLj3UTQD8mkBlvsd/MaX+A1NccNb9ftoPYht/1uwRO6dmwI3uanCG46vrX4HsRS
+         uPuSW7zzUTLdaiD2Fsc5QPKsxHpQecgYmAB2u1kYyYjebaSYFgzOUFD/C5Il8Bzc5Rjz
+         wRZw==
+X-Forwarded-Encrypted: i=1; AJvYcCXUO4oRU9c5M3U0Yke3PM0SMbSpOftOGB5EYX0T6aFYrEAmadMjvnxkfAWti3rYK3w4MSFiUcz+nEur@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhU9Hrbq3vIU0c6UHthG3wL9Bd0aON2rmKietns5MISZFU5frS
+	NK6Iyc/oQbC91TkIMFUVvJfNEzsyBF3Y+hnF3RXBZdXO6D0pBMQuBTuTXLp32w==
+X-Google-Smtp-Source: AGHT+IENo82OP7KUAchOYeqsGnHpgO27EwWWGu6yGd/8R1i+gvRUCCf9ONzPCabM/KVK3PRQdMypwg==
+X-Received: by 2002:a17:902:f688:b0:1fb:4194:5b78 with SMTP id d9443c01a7336-2054477bfbamr54625635ad.47.1725254432576;
+        Sun, 01 Sep 2024 22:20:32 -0700 (PDT)
+Received: from thinkpad ([120.60.58.247])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20538525f1fsm37636485ad.65.2024.09.01.22.20.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Sep 2024 22:20:31 -0700 (PDT)
+Date: Mon, 2 Sep 2024 10:50:22 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: MANISH PANDEY <quic_mapa@quicinc.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	quic_nitirawa@quicinc.com, quic_bhaskarv@quicinc.com,
+	quic_narepall@quicinc.com, quic_rampraka@quicinc.com,
+	quic_cang@quicinc.com, quic_nguyenb@quicinc.com
+Subject: Re: [PATCH V2] scsi: ufs: qcom: update MODE_MAX cfg_bw value
+Message-ID: <20240902052022.ye5a5g4aaiunhnyl@thinkpad>
+References: <20240828132526.25719-1-quic_mapa@quicinc.com>
+ <20240828133132.zqozjegmbnwa7byb@thinkpad>
+ <f0b62279-b4b6-4cb3-a808-fcd170a384eb@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v4 1/5] fs, block: refactor enum rw_hint
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
-	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com, brauner@kernel.org, jack@suse.cz,
-	jaegeuk@kernel.org, jlayton@kernel.org, chuck.lever@oracle.com
-Cc: linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, gost.dev@samsung.com, vishak.g@samsung.com,
-	javier.gonz@samsung.com
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <0cfd7841-ea11-48c6-93fb-7817236c81c8@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJJsWRmVeSWpSXmKPExsWy7bCmpu4ar6tpBnv6tS1W3+1ns3h9+BOj
-	xbQPP5kt/t99zmRx88BOJouVq48yWcye3sxk8WT9LGaLjf0cFo/vfGa3+LlsFbvFpEPXGC32
-	3tK2uLTI3WLP3pMsFvOXPWW36L6+g81i+fF/TBbrXr9nsTg/aw67g4jH5SveHufvbWTxmDbp
-	FJvH5bOlHptWdbJ5bF5S77F7wWcmj903G9g8Pj69xeLRt2UVo8eZBUfYPT5vkgvgicq2yUhN
-	TEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXLzAF6UkmhLDGnFCgU
-	kFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYFKgV5yYW1yal66Xl1piZWhgYGQKVJiQnfHl3yH2
-	gpksFWeu32JsYFzB3MXIySEhYCJx8sUC9i5GLg4hgd2MEv/W3GKCcD4xSnTPmMcG4XxjlPh4
-	ajUjTEvLn5ksEIm9jBLHV39gA0kICbxllPjfGwti8wrYSWz6shWogYODRUBF4uvVIIiwoMTJ
-	mU9YQGxRgSSJX1fngM0UFrCR2Ph7FdhJzALiEreezAe7QkRgKpPEgT8tYMuYQea/nrWAGWQo
-	m4CmxIXJpSANnALWEsdOvYJqlpdo3jqbGaReQmA6p8TPG90sEFe7SDxfuR/qaWGJV8e3sEPY
-	UhIv+9ug7GyJB48eQNXXSOzY3McKYdtLNPy5wQqylxlo7/pd+hC7+CR6fz9hAglLCPBKdLQJ
-	QVQrStyb9BSqU1zi4YwlULaHxOVfy6Hh9o5Rov3JTpYJjAqzkMJlFpL/ZyF5ZxbC5gWMLKsY
-	JVMLinPTU4tNC4zyUsvhEZ6cn7uJEZwHtLx2MD588EHvECMTB+MhRgkOZiUR3qV7LqYJ8aYk
-	VlalFuXHF5XmpBYfYjQFxs9EZinR5HxgJsoriTc0sTQwMTMzM7E0NjNUEud93To3RUggPbEk
-	NTs1tSC1CKaPiYNTqoEp6mTPe+2fi6JPnXmmNNljf2fPniXNGsF3aq47fS5suD9pN89n723b
-	f4Qcm/nK1G1TVAdv7Xf5QNeOjWJXmU7vj+qRdXc+0PK67ahJyl6R/20t/noT1eq829cKm6bs
-	Pyr4UGsbt96CwJ99kQ1BsycZ7XhSw7ND4RNrd3s7T9jGOfkJp55t/R7GtZstWkZHJfv/coMb
-	e7Qu8PGazFH88kn2xa+3ry+eLnK/Oc3+QLuOm0iO6/WCf75lfEv3dVyekvn2wmv+72+nWMjJ
-	6J7nNGIoDefh2a9usO+e2YbFAk96Mk+/5J3ReNUrY5rsnWzDAoH9q/aLcl33+DflvM06n4XG
-	adzqGywf5CzJaW/JNRdVYinOSDTUYi4qTgQAYNIahYwEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKIsWRmVeSWpSXmKPExsWy7bCSnO4ar6tpBtc3s1usvtvPZvH68CdG
-	i2kffjJb/L/7nMni5oGdTBYrVx9lspg9vZnJ4sn6WcwWG/s5LB7f+cxu8XPZKnaLSYeuMVrs
-	vaVtcWmRu8WevSdZLOYve8pu0X19B5vF8uP/mCzWvX7PYnF+1hx2BxGPy1e8Pc7f28jiMW3S
-	KTaPy2dLPTat6mTz2Lyk3mP3gs9MHrtvNrB5fHx6i8Wjb8sqRo8zC46we3zeJBfAE8Vlk5Ka
-	k1mWWqRvl8CV8eXfIfaCmSwVZ67fYmxgXMHcxcjJISFgItHyZyYLiC0ksJtRomu1GURcXKL5
-	2g92CFtYYuW/50A2F1DNa0aJxw3nmUASvAJ2Epu+bGXsYuTgYBFQkfh6NQgiLChxcuYTsJmi
-	AkkSe+43gpULC9hIbPy9CmwvM9D8W0/mM4HMFBGYyiSx8sVVsAXMAm8ZJVoPHGGB2PaOUeLy
-	wVvMIBvYBDQlLkwuBenmFLCWOHbqFdQkM4murV2MELa8RPPW2cwTGIVmITlkFpKFs5C0zELS
-	soCRZRWjZGpBcW56brJhgWFearlecWJucWleul5yfu4mRnDMa2nsYLw3/5/eIUYmDsZDjBIc
-	zEoivEv3XEwT4k1JrKxKLcqPLyrNSS0+xCjNwaIkzms4Y3aKkEB6YklqdmpqQWoRTJaJg1Oq
-	gSm31EDtqie79SJx27+567d0x+9nKnY855R8YEvz7Hseq70UJ0ml5ziZuu0SnpNrPfXgBOfY
-	LWxiR5buDf64VVOqaJfudYtyw3YRn0MvUrZdfd5QnqZoZKOx9tTO6jgRfrsTCoLc/30kC2Kj
-	GE6daZyyTjBaufXrlDJVLY87HXMvFaYs5rasuTztfn7XxYy6U9E584RnnY1l67h5eYve9G5L
-	ruZFPsHKPd+Pnjfbvia2VKvKxPzE7MINluWvvT5v235pwm+uHkd1C+GI18o37f4+UVln9se8
-	4Ne7L3G6lq/dJH8+feC7Kd1umvu2svO/YmZ2RpzheNdpGve5ZmHVht0r2/znrDgX767Bz/tx
-	hRJLcUaioRZzUXEiAMk9H9loAwAA
-X-CMS-MailID: 20240902051836epcas5p39b730254365bd2c759417178d2f6da95
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240826171413epcas5p3f62c2cc57b50d6df8fa66af5fe5996c5
-References: <20240826170606.255718-1-joshi.k@samsung.com>
-	<CGME20240826171413epcas5p3f62c2cc57b50d6df8fa66af5fe5996c5@epcas5p3.samsung.com>
-	<20240826170606.255718-2-joshi.k@samsung.com>
-	<0cfd7841-ea11-48c6-93fb-7817236c81c8@acm.org>
+In-Reply-To: <f0b62279-b4b6-4cb3-a808-fcd170a384eb@quicinc.com>
 
-On 8/30/2024 5:47 PM, Bart Van Assche wrote:
-> On 8/26/24 1:06 PM, Kanchan Joshi wrote:
->>   /* Block storage write lifetime hint values. */
->> -enum rw_hint {
->> +enum rw_life_hint {
+On Thu, Aug 29, 2024 at 05:44:21PM +0530, MANISH PANDEY wrote:
 > 
-> The name "rw_life_hint" seems confusing to me. I think that the
-> name "rw_lifetime_hint" would be a better name.
+> On 8/28/2024 7:01 PM, Manivannan Sadhasivam wrote:
+> > On Wed, Aug 28, 2024 at 06:55:26PM +0530, Manish Pandey wrote:
+> > > The cfg_bw value for max mode was incorrect for the Qualcomm SoC.
+> > 
+> > What do you mean by 'incorrect'? I extracted the value from downstream DTs. So
+> > it cannot be incorrect.
+> > 
+> > If you want to update it, please clearly provide the reason.
+> 
+> Hi Mani,
+> 
+> From the snip from commit message
+> "The bandwidth values defined in ufs_qcom_bw_table struct are taken from
+> Qcom downstream vendor devicetree source and are calculated as per the
+> UFS3.1 Spec."
+> 
+> we have UFS 4.x devices, and ufs_qcom_bw_table is already updated with Gear
+> 5 support (8db8f6ce556a - "scsi: ufs: qcom: Add missing interconnect
+> bandwidth values for Gear 5"). So the max cfg_bw is not updated.
+> 
+> Also for UFS 3.x devices,
+> [MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,        204800 },
+> [MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,        409600 },
+> [MODE_MAX][0][0]                    = { 7643136,        307200 },
+> 
+> Please have a look for current max mode value(307200), it is even less than
+> UFS_HS_G4 (409600). So it should be updated.
 > 
 
-I can change to that in next iteration.
-This change needs to be consistent in all the places. But more important 
-in patch #3 (as we expose TYPE_RW_LIFE_HINT to userspace). Do you have 
-comments on the other parts?
+Okay, then you should mention that the max value is updated for UFS 4.x devices
+and mention that commit 8db8f6ce556a missed adding them. Also add the fixes tag
+for 8db8f6ce556a.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
