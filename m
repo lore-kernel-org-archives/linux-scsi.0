@@ -1,233 +1,122 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83EEB186E58
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 09:52:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3C11D67A1;
+	Mon,  2 Sep 2024 11:48:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725270767; cv=none; b=Lc7NYx5iX1o/XrMolXD5laVOfzTyjPvUNyJiBgQjlYJcHupf0aw53wr/4k8pBcaSrErMWrZwx5mE1PsWvady7Hs6gBViSaPVylPsi5AXdaB1Pkw7J28B2fHR1v61osflSFZmR9HhwKJgTOGE2Ik0ut1qtcwWKWlLpPLnD/hWYg8=
+	t=1725277692; cv=none; b=GTzFwbqRajd7ZzAR6V4AzG4/qwNIlLEhb6hSPCHe0yAxdHI7zZyxeOUYToYcR+1uC1p+tVru15EmAYwx4CXUyiULcWXeHbrXgLnhekZGSTYfqlm6Ff37a0POplNNUkTIhpiXRH4jYJ+Zpax0UwnLa0T2uf2mqx+0Pewh+fSQNh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725270767; c=relaxed/simple;
-	bh=DGe3DNZ2PvKbpzqRHvrEkwp8p3Wz56eNFAxVTjZGLb0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=AzudpAgrzrZYMnmyceCIUQcZ5EewjR/apBXPxCt+O9dz+QVtlpWrRZob1UtwuOBXGpZvOKpJp2tAJ1nwVup7PIOlRxh6EbZwN9QoihOyLfmVHcEdKKzmtIF9tIlhESPUOIlnUve9FvYij4wnhN9P4d/bRdSCJWR0VLgqokxYNWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Majm3Gv/; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Majm3Gv/; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1725277692; c=relaxed/simple;
+	bh=xv9RTyrY2YdiOK26ifjwaZIOl9RR5ISuy6sY+L0GNEY=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mKkVsvZ9ubBIMXwXXuiQAVn6mIPMMGL/5S6fcME6i8CQsuV4hyXcHYl2t68K9ontTyIb0PT3hSlPjoURg776bMHS+dm7ejUMpxovPIZd38O0VBoVed0gAyvHB7EGpY9DWnUURcMjozVG/g4xczLkf+QGvwBg1Zbf6WLgIoI8ne8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=i7PgdnAd; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Majm3Gv/";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Majm3Gv/"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C864E218FD;
-	Mon,  2 Sep 2024 09:52:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1725270763; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=G9wqRwQjsuor/nOpNwZW2tZK6WUwiuSntU7Aa5WBmBo=;
-	b=Majm3Gv/rpnlkn2TVSrTecg3M6R/ddJnukF5nvmyjCCbL3CWR37bY37e4sgMwh8h3o0TTg
-	pyZ7m+ha+C6sRPgj7g59XLW7frM8WKcN8VbKAhLNfHh0Ol+AqIfXCS7PyNXUbwmnRGi30h
-	cI8KN1BCfisbOmqRkYkO7TsASTL4Nk8=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1725270763; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=G9wqRwQjsuor/nOpNwZW2tZK6WUwiuSntU7Aa5WBmBo=;
-	b=Majm3Gv/rpnlkn2TVSrTecg3M6R/ddJnukF5nvmyjCCbL3CWR37bY37e4sgMwh8h3o0TTg
-	pyZ7m+ha+C6sRPgj7g59XLW7frM8WKcN8VbKAhLNfHh0Ol+AqIfXCS7PyNXUbwmnRGi30h
-	cI8KN1BCfisbOmqRkYkO7TsASTL4Nk8=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 90BDB13A7C;
-	Mon,  2 Sep 2024 09:52:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 6mbMIeuK1WamWwAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Mon, 02 Sep 2024 09:52:43 +0000
-Message-ID: <6594529f81c043f25b74198958718c84be27be4a.camel@suse.com>
-Subject: Re: [PATCH v2] ibmvfc: Add max_sectors module parameter
-From: Martin Wilck <mwilck@suse.com>
-To: Brian King <brking@linux.ibm.com>, martin.petersen@oracle.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, 
-	tyreld@linux.ibm.com, brking@pobox.com
-Date: Mon, 02 Sep 2024 11:52:43 +0200
-In-Reply-To: <20240830204233.119305-2-brking@linux.ibm.com>
-References: <cd5c3b50-e928-4e2c-b4c4-d5fb03ae514d@linux.vnet.ibm.com>
-	 <20240830204233.119305-2-brking@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="i7PgdnAd"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 482B3fRW003309;
+	Mon, 2 Sep 2024 11:48:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=vg+Rw9NLwO5MqfbNuhjdC69lcjqK8RkT6HzrLJTrC3g=; b=i7
+	PgdnAdzfkgQ6MaD1nvpZcZb+1SjbL8EdtSWZGnddIB0GJlME2poYRZsWPzwTLd3F
+	JfECfs0v4hvX6hsAFhgdb58uq9XWZIWta2Dojd7CdWSTNXc/ipKL+mnERrl+Lkwh
+	GUy83YL2ppGUgC3VpoNnRwkUGMAnHAO3kwIcRNGzuMlPhZhzf1h5UY7BUGOODwZ0
+	dXm5lUAjFNoDhvJ/xDkzSYRaPWVjBi+4WM4AEH2mLbOUdJisJGWd7eiJ7vZjYMbU
+	LOuInRpOupgtw5YCcMhxbPr80xAj8ngvnGpIp/ZtZMnU9vk6U8KV4iYZ3lBrB+nN
+	9IewXFFOYTZdbfbhpkzw==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41bvf8vhud-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Sep 2024 11:48:03 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 482Bm2b6017858
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 2 Sep 2024 11:48:02 GMT
+Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Mon, 2 Sep 2024 04:47:58 -0700
+From: Manish Pandey <quic_mapa@quicinc.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
+        <quic_bhaskarv@quicinc.com>, <quic_narepall@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_mapa@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
+        <stable@vger.kernel.org>
+Subject: [PATCH V5] scsi: ufs: qcom: update MODE_MAX cfg_bw value
+Date: Mon, 2 Sep 2024 17:17:37 +0530
+Message-ID: <20240902114737.3740-1-quic_mapa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spam-Score: -4.30
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid]
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: v1VeKsK4V4clikGNS7R2Uf3p_BAD6N_y
+X-Proofpoint-ORIG-GUID: v1VeKsK4V4clikGNS7R2Uf3p_BAD6N_y
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-02_02,2024-09-02_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 mlxlogscore=999
+ suspectscore=0 clxscore=1015 priorityscore=1501 adultscore=0
+ malwarescore=0 phishscore=0 lowpriorityscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2409020095
 
-On Fri, 2024-08-30 at 15:42 -0500, Brian King wrote:
-> There are some scenarios that can occur, such as performing an
-> upgrade of the virtual I/O server, where the supported max transfer
-> of the backing device for an ibmvfc HBA can change. If the max
-> transfer of the backing device decreases, this can cause issues with
-> previously discovered LUNs. This patch accomplishes two things.
-> First, it changes the default ibmvfc max transfer value to 1MB.
-> This is generally supported by all backing devices, which should
-> mitigate this issue out of the box. Secondly, it adds a module
-> parameter, enabling a user to increase the max transfer value to
-> values that are larger than 1MB, as long as they have configured
-> these larger values on the virtual I/O server as well.
->=20
-> Signed-off-by: Brian King <brking@linux.ibm.com>
-> ---
-> =C2=A0drivers/scsi/ibmvscsi/ibmvfc.c | 17 ++++++++++++++---
-> =C2=A0drivers/scsi/ibmvscsi/ibmvfc.h |=C2=A0 2 +-
-> =C2=A02 files changed, 15 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c
-> b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index a3d1013c8307..3349d321aa07 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -37,6 +37,7 @@ static unsigned int default_timeout =3D
-> IBMVFC_DEFAULT_TIMEOUT;
-> =C2=A0static u64 max_lun =3D IBMVFC_MAX_LUN;
-> =C2=A0static unsigned int max_targets =3D IBMVFC_MAX_TARGETS;
-> =C2=A0static unsigned int max_requests =3D IBMVFC_MAX_REQUESTS_DEFAULT;
-> +static u16 max_sectors =3D IBMVFC_MAX_SECTORS;
+Commit 8db8f6ce556a ("scsi: ufs: qcom: Add missing interconnect
+bandwidth values for Gear 5") updates the ufs_qcom_bw_table for
+Gear 5. However, it misses updating the cfg_bw value for the max
+mode.
 
-Am I understanding correctly that the maximum supported value for
-max_sectors is USHRT_MAX, and you're ensuring that indirectly by using
-an u16 type?
+Hence update the cfg_bw value for the max mode for UFS 4.x devices.
 
-If yes, I think this would justify a comment in the code.
+Fixes: 8db8f6ce556a ("scsi: ufs: qcom: Add missing interconnect
+bandwidth values for Gear 5")
+Cc: stable@vger.kernel.org
+Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+---
+Changes from v4:
+- Updated commit message.
 
-Regards,
-Martin
+Changes from v3:
+- Cced stable@vger.kernel.org.
 
-> =C2=A0static u16 scsi_qdepth =3D IBMVFC_SCSI_QDEPTH;
-> =C2=A0static unsigned int disc_threads =3D IBMVFC_MAX_DISC_THREADS;
-> =C2=A0static unsigned int ibmvfc_debug =3D IBMVFC_DEBUG;
-> @@ -83,6 +84,9 @@ MODULE_PARM_DESC(default_timeout,
-> =C2=A0module_param_named(max_requests, max_requests, uint, S_IRUGO);
-> =C2=A0MODULE_PARM_DESC(max_requests, "Maximum requests for this adapter. =
-"
-> =C2=A0		 "[Default=3D"
-> __stringify(IBMVFC_MAX_REQUESTS_DEFAULT) "]");
-> +module_param_named(max_sectors, max_sectors, ushort, S_IRUGO);
-> +MODULE_PARM_DESC(max_sectors, "Maximum sectors for this adapter. "
-> +		 "[Default=3D" __stringify(IBMVFC_MAX_SECTORS) "]");
-> =C2=A0module_param_named(scsi_qdepth, scsi_qdepth, ushort, S_IRUGO);
-> =C2=A0MODULE_PARM_DESC(scsi_qdepth, "Maximum scsi command depth per
-> adapter queue. "
-> =C2=A0		 "[Default=3D" __stringify(IBMVFC_SCSI_QDEPTH) "]");
-> @@ -1494,7 +1498,7 @@ static void ibmvfc_set_login_info(struct
-> ibmvfc_host *vhost)
-> =C2=A0	memset(login_info, 0, sizeof(*login_info));
-> =C2=A0
-> =C2=A0	login_info->ostype =3D cpu_to_be32(IBMVFC_OS_LINUX);
-> -	login_info->max_dma_len =3D cpu_to_be64(IBMVFC_MAX_SECTORS <<
-> 9);
-> +	login_info->max_dma_len =3D cpu_to_be64(max_sectors << 9);
-> =C2=A0	login_info->max_payload =3D cpu_to_be32(sizeof(struct
-> ibmvfc_fcp_cmd_iu));
-> =C2=A0	login_info->max_response =3D cpu_to_be32(sizeof(struct
-> ibmvfc_fcp_rsp));
-> =C2=A0	login_info->partition_num =3D cpu_to_be32(vhost-
-> >partition_number);
-> @@ -5230,7 +5234,7 @@ static void ibmvfc_npiv_login_done(struct
-> ibmvfc_event *evt)
-> =C2=A0	}
-> =C2=A0
-> =C2=A0	vhost->logged_in =3D 1;
-> -	npiv_max_sectors =3D min((uint)(be64_to_cpu(rsp->max_dma_len)
-> >> 9), IBMVFC_MAX_SECTORS);
-> +	npiv_max_sectors =3D min((uint)(be64_to_cpu(rsp->max_dma_len)
-> >> 9), max_sectors);
-> =C2=A0	dev_info(vhost->dev, "Host partition: %s, device: %s %s %s
-> max sectors %u\n",
-> =C2=A0		 rsp->partition_name, rsp->device_name, rsp-
-> >port_loc_code,
-> =C2=A0		 rsp->drc_name, npiv_max_sectors);
-> @@ -6329,7 +6333,7 @@ static int ibmvfc_probe(struct vio_dev *vdev,
-> const struct vio_device_id *id)
-> =C2=A0	shost->can_queue =3D scsi_qdepth;
-> =C2=A0	shost->max_lun =3D max_lun;
-> =C2=A0	shost->max_id =3D max_targets;
-> -	shost->max_sectors =3D IBMVFC_MAX_SECTORS;
-> +	shost->max_sectors =3D max_sectors;
-> =C2=A0	shost->max_cmd_len =3D IBMVFC_MAX_CDB_LEN;
-> =C2=A0	shost->unique_id =3D shost->host_no;
-> =C2=A0	shost->nr_hw_queues =3D mq_enabled ? min(max_scsi_queues,
-> nr_scsi_hw_queues) : 1;
-> @@ -6556,6 +6560,7 @@ static struct fc_function_template
-> ibmvfc_transport_functions =3D {
-> =C2=A0 **/
-> =C2=A0static int __init ibmvfc_module_init(void)
-> =C2=A0{
-> +	int min_max_sectors =3D PAGE_SIZE >> 9;
-> =C2=A0	int rc;
-> =C2=A0
-> =C2=A0	if (!firmware_has_feature(FW_FEATURE_VIO))
-> @@ -6564,6 +6569,12 @@ static int __init ibmvfc_module_init(void)
-> =C2=A0	printk(KERN_INFO IBMVFC_NAME": IBM Virtual Fibre Channel
-> Driver version: %s %s\n",
-> =C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 IBMVFC_DRIVER_VERSION, IBMVFC=
-_DRIVER_DATE);
-> =C2=A0
-> +	if (max_sectors < min_max_sectors) {
-> +		printk(KERN_ERR IBMVFC_NAME": max_sectors must be at
-> least %d.\n",
-> +			min_max_sectors);
-> +		max_sectors =3D min_max_sectors;
-> +	}
-> +
-> =C2=A0	ibmvfc_transport_template =3D
-> fc_attach_transport(&ibmvfc_transport_functions);
-> =C2=A0	if (!ibmvfc_transport_template)
-> =C2=A0		return -ENOMEM;
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h
-> b/drivers/scsi/ibmvscsi/ibmvfc.h
-> index 745ad5ac7251..c73ed2314ad0 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-> @@ -32,7 +32,7 @@
-> =C2=A0#define IBMVFC_DEBUG			0
-> =C2=A0#define IBMVFC_MAX_TARGETS		1024
-> =C2=A0#define IBMVFC_MAX_LUN			0xffffffff
-> -#define IBMVFC_MAX_SECTORS		0xffffu
-> +#define IBMVFC_MAX_SECTORS		2048
-> =C2=A0#define IBMVFC_MAX_DISC_THREADS	4
-> =C2=A0#define IBMVFC_TGT_MEMPOOL_SZ		64
-> =C2=A0#define IBMVFC_MAX_CMDS_PER_LUN	64
+Changes from v2:
+- Addressed Mani comment, added fixes tag.
+
+Changes from v1:
+- Updated commit message.
+---
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index c87fdc849c62..ecdfff2456e3 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
+ 	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
+ 	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
+ 	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
+-	[MODE_MAX][0][0]		    = { 7643136,	307200 },
++	[MODE_MAX][0][0]		    = { 7643136,	819200 },
+ };
+ 
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+-- 
+2.17.1
 
