@@ -1,66 +1,69 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B96651CB513;
-	Mon,  2 Sep 2024 15:00:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4171183CBB;
+	Mon,  2 Sep 2024 17:27:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725289247; cv=none; b=IqhEe5DnEXYhR+wdiklP5SixfvL2uiUjGaKzQnwoaVbz11VTRL+UkrJgFu/8KYrKmvJG1CcL8dzGqkoTDLVhWKxYMsDubyT5szcvDsXKh3OK38vx+dtMEb3QXKJX3ym5qS8aQxJj7WGrN+YlCr06eWBrKgQxG+u5CUIurfSARMo=
+	t=1725298033; cv=none; b=ONYeRrVxh+1+i/Qv8zeQwEOFTJG1KsODrpU647xik4k6MOKF7SBdxFBYaCc3iZT+jLNjh2WWFxPqcJSejI3DrgM8FiHkRg3EwOdgcCYwkzsiojWF/c0mH2Sf+5nLztXGIMrfk/HguyLbSVAhWiThEL8l9uOFMSh4tQ1gXQS4cjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725289247; c=relaxed/simple;
-	bh=N4F0HYqE/JN2Frkasn/4po5xLM+VA605HwLPUuG5P3U=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=WvS9ba0PRp8/RMUd5eb4fEK4t6aonTHFStQuJKElKDD96/n4g+T4uzo1h1MH44FTZFPJ9Exv0ERZniDFGMUcGivMYRGtObWquruu53xcXbgCFK6C4LO/BIQi7qqJ+W5ZRvI1UePXqPP4tCQdsRhTTLh3Hepty8IRooN20PKp9us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aX7kcn+G; arc=none smtp.client-ip=209.85.128.47
+	s=arc-20240116; t=1725298033; c=relaxed/simple;
+	bh=bKwv7PTScplyThgl7fVwhkZHF0Z9uOyJYG3hZpnXuXY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=gXjOxrcJzBNeB19UVICfIcrDPzdDO22qTwBkz82BM2IDK8a5/Jsi7IYMb+UYpSaZD1eHbCdw7wpNO8MRiSlIAZr/JG5L2nsNCTrJTuzGZpSr9WUXrEqeWTqP7eDniznnnzv1scdQqlVjp7VC6qU4SkvMuiTsBi9k4rPU266HYVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KYXab5WC; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aX7kcn+G"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-42bbffe38e6so20707005e9.0;
-        Mon, 02 Sep 2024 08:00:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KYXab5WC"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-42bbffe38e6so21782825e9.0;
+        Mon, 02 Sep 2024 10:27:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725289244; x=1725894044; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1725298030; x=1725902830; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ck070XTt7LQ3loM5VyZWdtdily/aCMgDwKrMtiiMYlM=;
-        b=aX7kcn+Gmaq/TrJTvc8be2Y0IliI8/YJz7rTuGEGKOprt/fja4WzJ3RAkK1f/PdhWc
-         hT1hrecvIABrQcj+uTFE/FBMgr3onLQ/mcmwWKmead1XJGe4RuvzA/yQvSTP/RPIBkTo
-         Ahh/klcjxGFEdnOZJLVuPZAORU8EVM4GnFM2HhgAQUs8GIJxZyb8GeD/CFwWPc1MPYQN
-         JdP3q1AlKd/X9TSy16OzO4bizA/hOU520qhVAWPheEsdbXDPGI8QIrp6sC3wzJP0CPml
-         WBEOGS5ywWrcFtikCaAw5fIATUPmpMTMaR3Hp4C3TSpS3f3CW44NwVImcgQdS7eTfpD8
-         ESPA==
+        bh=L4Xue4TSRIddUTjFb4xLBuFSp8O+ZsGp4epKVCdznvY=;
+        b=KYXab5WCLQfm3w4u/hZrtupfTJF9EwcZDyL9RV/p5JQCm4v8PKujwNpY6E83A+PRAr
+         dPEUiBU6AM29qqJ1Wdhv40OrPq4oBwuCvegOWWtDp/41+MH6JWC/BHc/pzjeR/sZntbz
+         m404gGQ9jQCYgwu2MYoCOCiVo+QTSmNcRHzG6QvSh3O5GEJXC1JYCtnuZa1mkC+sarz3
+         rohtRUbP3Q5frtQINKmEiGW0pnijjUqGYJ17PUCRZK9vOyKqO4m+OoMWWffWZKwDO8LM
+         qLnZOrMvFCYnHEEIFJPq11Dr9PgwxGlQWwugwkQGWsEZjNKP14llfYzzGn7TY3yFFBeL
+         alZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725289244; x=1725894044;
+        d=1e100.net; s=20230601; t=1725298030; x=1725902830;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=ck070XTt7LQ3loM5VyZWdtdily/aCMgDwKrMtiiMYlM=;
-        b=s7kzH0K8Oh9N/8KsY2xvjZooYq0pR4Q/ztu54ioz2aEos0M3PnzHwlUZU1WcDF/rWc
-         9nEwSAlwf0p0seGnwJmDaTjMCDoS+798+jGBs0+VGU8A+sfOMpvs18lySW8TUZcNuVbz
-         Nrya79E/3xGh3rVEwgnCU82msZqWXTvHEgqFcb1CFMfHqcoZ6VeNaPqQ9BgyBkjl2QVr
-         NjFnbhCYghmHk5tzv2vnFLL4/HDvrmCz2YsB5QyIOr5A7A9gnQ9BPZk+1Gn6jNSzTKbM
-         VBgC2/ds++qSJlXbBnpWJQdP44AwagjZXrYa5AD0O17Jx6Odm/h8pSb5ezC+Vjomajl0
-         txJQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWCX/N+dnclM3+PxyUv7VE+gX8pDTHFPHgPgt13fb/2se70HwBXoQcCYWe5aEpbFOmVs51280arzQuLGQ==@vger.kernel.org, AJvYcCWfSTa5McfV9/jgSF2o3SlcoZ8vSgaSMvKAQGBwOi77u220bI9vJzgoczP+qgwrEybvD4MLjVrUoTbGVIY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvbmLyELu/UevRL9RMG9oYZCrjspm214EZ+fMI3cQyKFTxiEK5
-	z6qD4hmA2U0C19r8wqYX9Lb5n++tkVYzn4yvvKrvaYmKdaV7Q0/S
-X-Google-Smtp-Source: AGHT+IHhvCV25tMGVpsV0Sy3/5vt7zPeVL5CewGQnDFRUNWlJ+SgrfNl95ybs2Dhp7yRgSXrYwKgNw==
-X-Received: by 2002:adf:fa87:0:b0:374:bf97:ba10 with SMTP id ffacd0b85a97d-374bf97bc82mr4491458f8f.25.1725289243723;
-        Mon, 02 Sep 2024 08:00:43 -0700 (PDT)
+        bh=L4Xue4TSRIddUTjFb4xLBuFSp8O+ZsGp4epKVCdznvY=;
+        b=nyM4CS6pWSfbRR6S2qbPySbmftu+6XJKxFQ7MHF3vUdA7ffEv74JxbPeBtLhROZuUM
+         UFR55UFt0nMLKjwmTEXq5ZNZbNm3CvyGM1l7PkrbY5GfnPSTRkMAbeUpagfW/J3V8NuW
+         DNc2i+CdMjhWZ2Rbo6JAcqZ8QSVdjjX2NaE7IvKVkJqcduC9Nw5hdMtAIHP73CB0o5bV
+         cuxQfw06me6rCsEsKajbX2YUxL1EAh6C3Y12VF+bYHlCz+4LxP63JzkJJQ5ygwdYpIlp
+         9pC/BM7moOFVzVdnjDkFlzKv9bhWbiCcTwsBV9egQvSX0rrlj4qb2ZZaoQJDTRT4Atxw
+         c08g==
+X-Forwarded-Encrypted: i=1; AJvYcCUEFZWdzV/61wYuah/XD02nJsg4NGq7yicBzG6zbzyP9CX2cl6EjwcKn6Zvz9e3Yl+eeqbSclIVipOOMQ==@vger.kernel.org, AJvYcCVRF++Qe4F7nJmBnl2GhdGHhpE38HcsN1Xxd7XZkKDGO2Ikk6KAfcdqiBlZ/CxnS1c8KnHF5NKBggrCbIk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxw04DEbdPMa63nVHNvkQ2W+bco36Nr0PDiccxnxH/D/DRsBmkD
+	3ujO/yDKL3kP02/8TaUq3HZtKGgF02Esx+vANeiuu5TBGwZzLWEBbQP1npDW
+X-Google-Smtp-Source: AGHT+IE0Cq7vS54YOMDsAz35O1QxsQPrPpj+yty2reHAikKprAxZ3TI9wS5m0sg8FVR7g7OSULYFpA==
+X-Received: by 2002:a5d:4a46:0:b0:374:c481:3f6 with SMTP id ffacd0b85a97d-374c4810438mr3766464f8f.8.1725298029759;
+        Mon, 02 Sep 2024 10:27:09 -0700 (PDT)
 Received: from localhost (craw-09-b2-v4wan-169726-cust2117.vm24.cable.virginm.net. [92.238.24.70])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-374b6a3d27fsm8626278f8f.59.2024.09.02.08.00.43
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-374bd0ce240sm7653214f8f.70.2024.09.02.10.27.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Sep 2024 08:00:43 -0700 (PDT)
+        Mon, 02 Sep 2024 10:27:09 -0700 (PDT)
 From: Colin Ian King <colin.i.king@gmail.com>
-To: James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
 Cc: kernel-janitors@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH][next] scsi: lpfc: Remove trailing space after \n newline
-Date: Mon,  2 Sep 2024 16:00:42 +0100
-Message-Id: <20240902150042.311157-1-colin.i.king@gmail.com>
+	linux-kernel@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH][next][V2] scsi: mpt3sas: Remove trailing space after \n newline
+Date: Mon,  2 Sep 2024 18:27:08 +0100
+Message-Id: <20240902172708.369741-1-colin.i.king@gmail.com>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -71,36 +74,34 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-There is a extraneous space after a newline in two lpfc_printf_log
-messages. Remove the space.
+There is a extraneous space after a newline in an ioc_info message.
+Remove it and join to split literal strings into one.
 
 Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 332b8d2348e9..0e60eebe53b5 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -8818,7 +8818,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 	rc = lpfc_sli4_queue_setup(phba);
- 	if (unlikely(rc)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"0381 Error %d during queue setup.\n ", rc);
-+				"0381 Error %d during queue setup.\n", rc);
- 		goto out_stop_timers;
- 	}
- 	/* Initialize the driver internal SLI layer lists. */
-@@ -21149,7 +21149,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 		if (!piocbq) {
- 			spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"2823 txq empty and txq_cnt is %d\n ",
-+				"2823 txq empty and txq_cnt is %d\n",
- 				txq_cnt);
- 			break;
+V2: join split literal strings into one as noted by Christophe Jaillet
+
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 9a24f7776d64..ed5046593fda 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -8898,9 +8898,8 @@ _base_check_ioc_facts_changes(struct MPT3SAS_ADAPTER *ioc)
+ 		    ioc->device_remove_in_progress, pd_handles_sz, GFP_KERNEL);
+ 		if (!device_remove_in_progress) {
+ 			ioc_info(ioc,
+-			    "Unable to allocate the memory for "
+-			    "device_remove_in_progress of sz: %d\n "
+-			    , pd_handles_sz);
++			    "Unable to allocate the memory for device_remove_in_progress of sz: %d\n",
++			    pd_handles_sz);
+ 			return -ENOMEM;
  		}
+ 		memset(device_remove_in_progress +
 -- 
 2.39.2
 
