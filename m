@@ -1,178 +1,204 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25B6325745;
-	Mon,  2 Sep 2024 02:18:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEBEC1E50B
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 04:17:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725243504; cv=none; b=dKyQdTcONt9gXonIERmY6a5rP78U19Vlwq82wQTayim8kGxXozjDT1XSnsXIFjXjX86xoAoirqOahwCC4tS2JY1Ys0WvtThADMGxThZGlXAdxvGtJSc/QHU8uwp0OUGOzV98sy5fnPsITsVFZscFazJfY0FMxr4AwNh/NIbXQac=
+	t=1725250681; cv=none; b=kiRnUcDwhMkx0HBWzsrNnvafTFsrCcrZCmvchix1tRWzAWVt4rkM7bRnzoXLGjQ908JqDrl8lIfEIJ+Fqkt5/hxN6N0K0olzb+0mSVKyQaOfyNCJkRrwaeBTIcK+0QXafO781gnFyuIUjJtcH0CWlJQx97qC2MoYjZD24udV/pg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725243504; c=relaxed/simple;
-	bh=kJ3AMaM+e9fG9jfUAbqhbCCWvbvlhaHC3ClwL3oET1k=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oH49n+bCl8yvsbfnThkmihY9dEVyR3HOdGhRtVjAQWiXfXy9uRidH3Cl6qpQP9mZM77yWaI1Q4VISw15VlNWitR+Z5mqEorhnIJ5c0HUc0SPz5SrFhy+AqEIwFIQ7TteXzuwNrJxHVFmgbhJTAqksHRh7ldkPR3H24V1KdnGtDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=p1MMUXJb; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1725250681; c=relaxed/simple;
+	bh=rDcTxesVpUAKbdchB2UcayjYfjAZqcA53h9zG3W88Ic=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
+	 Content-Type:References; b=onJavpF15q7xIONKdIO/ls68wSztSjE6mLtMQzwyoeyxs3idyHkaPXKEyCXnjOCng4V2rp2ZAtr7z/njcgFNaZ6+cVe0+qH+gbI9BIFUzkBCou2JEJCtZjmvAhSFVDlXCEBMTfOddbDAgaeMmRTz06FMs4XNJ8cI0HXi/uAOwNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=SeslD/0U; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="p1MMUXJb"
-X-UUID: 97ce7dfa68d111ef8b96093e013ec31c-20240902
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=m+7o24UcYHbO9ScIGY1FXwY5gf0UVU7a4WhyWo1v+SQ=;
-	b=p1MMUXJbZEhsHVmH2kLmH9pbis3MKtYepzrB8qVhaZFVk3/+K+bKSiXnQXVo23vvRQrzMp5bxPOj9iDsjSXCWF40hl5zO0QljhYF8FA4o4DwxE6XslPNVQ+7J+WdzU2qsJRwPdtnO1xu9REXXt0JIgR49jN6g/TjZaGe6c+Kmb4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:64aec6b6-34a7-4c8d-bb9b-770dfb3a3b5f,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:6dc6a47,CLOUDID:d8ad48bf-d7af-4351-93aa-42531abf0c7b,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 97ce7dfa68d111ef8b96093e013ec31c-20240902
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 753281685; Mon, 02 Sep 2024 10:18:07 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Sun, 1 Sep 2024 19:18:07 -0700
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Mon, 2 Sep 2024 10:18:07 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<quic_nguyenb@quicinc.com>, <stable@vger.kernel.org>
-Subject: [PATCH v2 2/2] ufs: core: requeue MCQ abort request
-Date: Mon, 2 Sep 2024 10:18:05 +0800
-Message-ID: <20240902021805.1125-3-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20240902021805.1125-1-peter.wang@mediatek.com>
-References: <20240902021805.1125-1-peter.wang@mediatek.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="SeslD/0U"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240902041755epoutp04aa3f92f420f3546e8fc9d7d160f61e2a~xUllFa9Ja1816518165epoutp04S
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 04:17:55 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240902041755epoutp04aa3f92f420f3546e8fc9d7d160f61e2a~xUllFa9Ja1816518165epoutp04S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1725250675;
+	bh=Gm6bfVYo8q3tjpjBLXQfHM59etQejq246QIVY2XCsr4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=SeslD/0UCa3ZXSuVESgUammiUJWrLiXIP9zNeZzj4yOAJB+gHiTzLlf4yURE4hGK0
+	 nEHmFxWAQmDHO+HypkpnfzYsOKo50UmKq3hyWlKgRzX9G4jsOycWi6xq/PKDG+uH6v
+	 AJiM3N7xcMN0tXDonXQWIumb/5Poov5h8t+fIeU8=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+	20240902041755epcas2p32790dd6a8adcbb4b0997d1d36674a524~xUlkm5Qla2389523895epcas2p3E;
+	Mon,  2 Sep 2024 04:17:55 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.90]) by
+	epsnrtp3.localdomain (Postfix) with ESMTP id 4WxwTZ27w6z4x9Pp; Mon,  2 Sep
+	2024 04:17:54 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+	epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+	17.F3.10012.27C35D66; Mon,  2 Sep 2024 13:17:54 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240902041753epcas2p26511cc4d2badf0e866cec2f855380c67~xUljPIODt1585715857epcas2p2q;
+	Mon,  2 Sep 2024 04:17:53 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240902041753epsmtrp1cbe18b74a4ac6a6c646dfbb6936236dd~xUljOQsf43038530385epsmtrp1I;
+	Mon,  2 Sep 2024 04:17:53 +0000 (GMT)
+X-AuditID: b6c32a47-ea1fa7000000271c-e5-66d53c72617e
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	E6.1A.08456.17C35D66; Mon,  2 Sep 2024 13:17:53 +0900 (KST)
+Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20240902041753epsmtip2e650b1ba05ef0eb92c378c523e2d1b34~xUli8b9Kp0320303203epsmtip2N;
+	Mon,  2 Sep 2024 04:17:53 +0000 (GMT)
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	huobean@gmail.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+	bvanassche@acm.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	beanhuo@micron.com, adrian.hunter@intel.com, h10.kim@samsung.com,
+	hy50.seo@samsung.com, sh425.lee@samsung.com, kwangwon.min@samsung.com,
+	junwoo80.lee@samsung.com, wkon.kim@samsung.com
+Cc: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [RESEND PATCH v2 1/2] scsi: ufs: core: introduce override_cqe_ocs
+Date: Mon,  2 Sep 2024 13:26:45 +0900
+Message-Id: <90ea4709cf07d951aaad16e1e63f13842bb4608f.1725251103.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.26.0
+In-Reply-To: <cover.1725251103.git.kwmad.kim@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrEJsWRmVeSWpSXmKPExsWy7bCmmW6RzdU0g7OP2SxOPlnDZvFg3jY2
+	i5c/r7JZHHzYyWIx7cNPZou/ty+yWsw528BksXrxAxaLRTe2MVns+tvMZLH1xk4Wi5tbjrJY
+	XN41h82i+/oONovlx/8xWSz995bFYvOlbywOgh6Xr3h77Jx1l91j8Z6XTB4TFh1g9Pi+voPN
+	4+PTWywefVtWMXp83iTn0X6gmymAMyrbJiM1MSW1SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ19DS
+	wlxJIS8xN9VWycUnQNctMwfoFyWFssScUqBQQGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpOgXmB
+	XnFibnFpXrpeXmqJlaGBgZEpUGFCdsaHg9fZCv6LVpw5u4a9gfGXYBcjJ4eEgInEkUmPWbsY
+	uTiEBHYwSqzuW8IC4XxilHiwrIkJwvnGKDF1ciMzTMvX/5uZIRJ7GSUmvP0NVfWDUeLrxU+s
+	IFVsApoST29OBUuICLQwS1zY9IsNJMEsoC6xa8IJJhBbWMBL4sjhPWA2i4CqxO8tT8CaeQWi
+	Jeae6WOEWCcvsajhN1gNp4ClxN5rX6FqBCVOznzCAjFTXqJ562ywkyQEznBIfN55gAmi2UXi
+	4q3lbBC2sMSr41vYIWwpiZf9bVB2scTaHVeZIJobgEHw6jRUwlhi1rN2oCs4gDZoSqzfpQ9i
+	SggoSxy5BbWXT6Lj8F92iDCvREebEESjssSvSZOhzpeUmHnzDlSJh0THTWjw9jBK7Fs7mWUC
+	o8IsJN/MQvLNLIS9CxiZVzGKpRYU56anFhsVGMOjODk/dxMjOHFrue9gnPH2g94hRiYOxkOM
+	EhzMSiK8S/dcTBPiTUmsrEotyo8vKs1JLT7EaAoM64nMUqLJ+cDckVcSb2hiaWBiZmZobmRq
+	YK4kznuvdW6KkEB6YklqdmpqQWoRTB8TB6dUA9PKUpnj716uVL2yfcvDFMWCmhn8uxbZ3Zw3
+	x3Ky0O9tvKFJHyalZX3dMeXiuR1T+IRK/h4Mf9/wKcly47S9MzV0jNkv/N6VE7y7IvvtSueL
+	P5MiFT6k2t9V2GnDe2p5Mp/g+2UOx667RR5QfrtRZ7NZrpmbIWvaQ1nFFac/ylTfbhC81Poi
+	6lrKFpF/HwRn6eecqY9+MJPj7pfv/otzr/3juL3g06GiXv11x2O+/hN/J3gtXC0+MHMqz8Yt
+	pWemqN/++0JrW+1czflet+fH2wvdeLlC6tPBmpzX1hzPfKaYty2LXJlsvPzM96bEn8s8/Lg/
+	/2forOk4YxqrvSrqwK+SM+z+v/onOyR9Lo/VSc1/qsRSnJFoqMVcVJwIABHk1X9lBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFuphkeLIzCtJLcpLzFFi42LZdlhJXrfQ5mqawcOpMhYnn6xhs3gwbxub
+	xcufV9ksDj7sZLGY9uEns8Xf2xdZLeacbWCyWL34AYvFohvbmCx2/W1msth6YyeLxc0tR1ks
+	Lu+aw2bRfX0Hm8Xy4/+YLJb+e8tisfnSNxYHQY/LV7w9ds66y+6xeM9LJo8Jiw4wenxf38Hm
+	8fHpLRaPvi2rGD0+b5LzaD/QzRTAGcVlk5Kak1mWWqRvl8CV8eHgdbaC/6IVZ86uYW9g/CXY
+	xcjJISFgIvH1/2bmLkYuDiGB3YwSD+Z/YYVISEqc2PmcEcIWlrjfcgQsLiTwjVGi61giiM0m
+	oCnx9OZUJpBmEYEZzBINnVuZQRLMAuoSuyacYAKxhQW8JI4c3gNmswioSvze8gRsEK9AtMTc
+	M31QC+QlFjX8BqvhFLCU2HvtK9QyC4kTnd/ZIeoFJU7OfMICMV9eonnrbOYJjAKzkKRmIUkt
+	YGRaxSiZWlCcm55bbFhglJdarlecmFtcmpeul5yfu4kRHGFaWjsY96z6oHeIkYmD8RCjBAez
+	kgjv0j0X04R4UxIrq1KL8uOLSnNSiw8xSnOwKInzfnvdmyIkkJ5YkpqdmlqQWgSTZeLglGpg
+	Sr437fiKwNemvoYpOvpnc1gzozXVLT5w93NueuOWpVV6/OxuvZl5Dv28W5aeVVomKrnGtM0t
+	e8H9N/N8DF1mSVtzxcb/trHpLS5Vu8FXeeC120nHrV/mTXDP/vb5vF3amazzWxnDzP8tfzV7
+	2SJXib011aIn7+41n8t1nbH22QT3E2sW7L4rqLql+Kr8yg1PEsu/PJif73OE7eyalrM/M+71
+	7Q/e4u8UUXOx1fr3xD/55V8tp0lxtn9773Ay6O6TBtHMskm9paLCukd/frn/zbn8Qe8rBp7M
+	x9s38W4tULeMeLZ7sqBT8tZ2X5spgZVlu4plDbP5H81+KRKavO3x20cv3JpKf3CvP/pn+Q8b
+	WSWW4oxEQy3mouJEADVZJlofAwAA
+X-CMS-MailID: 20240902041753epcas2p26511cc4d2badf0e866cec2f855380c67
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240902041753epcas2p26511cc4d2badf0e866cec2f855380c67
+References: <cover.1725251103.git.kwmad.kim@samsung.com>
+	<CGME20240902041753epcas2p26511cc4d2badf0e866cec2f855380c67@epcas2p2.samsung.com>
 
-From: Peter Wang <peter.wang@mediatek.com>
+This patch is to declare override_cqe_ocs callback to
+override OCS value.
 
-MCQ aborts a command using two methods below:
-1. Nullified UTRD, Host controller skips this transfer request,
-   reply Completion Queue entry to Host SW with OCS=ABORTED
-2. SQ cleanup, The host controller will post to the Completion Queue
-   to update the OCS field with ABORTED.
-
-For these two cases, set a flag to notify SCSI to requeue the
-command after receiving OCS_ABORTED.
-
-Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
-Cc: stable@vger.kernel.org
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
- drivers/ufs/core/ufs-mcq.c |  1 +
- drivers/ufs/core/ufshcd.c  | 21 ++++++++-------------
- include/ufs/ufshcd.h       |  2 ++
- 3 files changed, 11 insertions(+), 13 deletions(-)
+ drivers/ufs/core/ufshcd-priv.h |  9 +++++++++
+ drivers/ufs/core/ufshcd.c      | 11 +++++++----
+ include/ufs/ufshcd.h           |  1 +
+ 3 files changed, 17 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index afd9541f4bd8..abdc55a8b960 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -642,6 +642,7 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- 		match = le64_to_cpu(utrd->command_desc_base_addr) & CQE_UCD_BA;
- 		if (addr == match) {
- 			ufshcd_mcq_nullify_sqe(utrd);
-+			lrbp->host_initiate_abort = true;
- 			ret = true;
- 			goto out;
- 		}
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a6f818cdef0e..fadea691d69d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3006,6 +3006,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	ufshcd_prepare_lrbp_crypto(scsi_cmd_to_rq(cmd), lrbp);
- 
- 	lrbp->req_abort_skip = false;
-+	lrbp->host_initiate_abort = false;
- 
- 	ufshcd_comp_scsi_upiu(hba, lrbp);
- 
-@@ -5404,7 +5405,10 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 		}
- 		break;
- 	case OCS_ABORTED:
--		result |= DID_ABORT << 16;
-+		if (lrbp->host_initiate_abort)
-+			result |= DID_REQUEUE << 16;
-+		else
-+			result |= DID_ABORT << 16;
- 		break;
- 	case OCS_INVALID_COMMAND_STATUS:
- 		result |= DID_REQUEUE << 16;
-@@ -6472,24 +6476,15 @@ static bool ufshcd_abort_one(struct request *rq, void *priv)
- 	struct Scsi_Host *shost = sdev->host;
- 	struct ufs_hba *hba = shost_priv(shost);
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
--	struct ufs_hw_queue *hwq;
--	unsigned long flags;
- 
- 	*ret = ufshcd_try_to_abort_task(hba, tag);
- 	dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
- 		hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
- 		*ret ? "failed" : "succeeded");
- 
--	/* Release cmd in MCQ mode if abort succeeds */
--	if (hba->mcq_enabled && (*ret == 0)) {
--		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
--		if (!hwq)
--			return 0;
--		spin_lock_irqsave(&hwq->cq_lock, flags);
--		if (ufshcd_cmd_inflight(lrbp->cmd))
--			ufshcd_release_scsi_cmd(hba, lrbp);
--		spin_unlock_irqrestore(&hwq->cq_lock, flags);
--	}
-+	/* Host will post to CQ with OCS_ABORTED after SQ cleanup */
-+	if (hba->mcq_enabled && (*ret == 0))
-+		lrbp->host_initiate_abort = true;
- 
- 	return *ret == 0;
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index ce36154ce963..6ebc83029e09 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -275,6 +275,15 @@ static inline int ufshcd_mcq_vops_config_esi(struct ufs_hba *hba)
+ 	return -EOPNOTSUPP;
  }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 0fd2aebac728..49dd5ca8a4e7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -173,6 +173,7 @@ struct ufs_pm_lvl_states {
-  * @crypto_key_slot: the key slot to use for inline crypto (-1 if none)
-  * @data_unit_num: the data unit number for the first block for inline crypto
-  * @req_abort_skip: skip request abort task flag
-+ * @host_initiate_abort: Abort flag initiated by host
-  */
- struct ufshcd_lrb {
- 	struct utp_transfer_req_desc *utr_descriptor_ptr;
-@@ -202,6 +203,7 @@ struct ufshcd_lrb {
- #endif
  
- 	bool req_abort_skip;
-+	bool host_initiate_abort;
- };
++static inline enum utp_ocs ufshcd_vops_override_cqe_ocs(struct ufs_hba *hba,
++							enum utp_ocs ocs)
++{
++	if (hba->vops && hba->vops->override_cqe_ocs)
++		return hba->vops->override_cqe_ocs(ocs);
++
++	return ocs;
++}
++
+ extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
  
  /**
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0dd26059f5d7..0615e372fe44 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -821,11 +821,14 @@ static inline bool ufshcd_is_device_present(struct ufs_hba *hba)
+  *
+  * Return: the OCS field in the UTRD.
+  */
+-static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp,
++static enum utp_ocs ufshcd_get_tr_ocs(struct ufs_hba *hba,
++				      struct ufshcd_lrb *lrbp,
+ 				      struct cq_entry *cqe)
+ {
+ 	if (cqe)
+-		return le32_to_cpu(cqe->status) & MASK_OCS;
++		return ufshcd_vops_override_cqe_ocs(hba,
++						    le32_to_cpu(cqe->status) &
++						    MASK_OCS);
+ 
+ 	return lrbp->utr_descriptor_ptr->header.ocs & MASK_OCS;
+ }
+@@ -3180,7 +3183,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+ 		 * not trigger any race conditions.
+ 		 */
+ 		hba->dev_cmd.complete = NULL;
+-		err = ufshcd_get_tr_ocs(lrbp, NULL);
++		err = ufshcd_get_tr_ocs(hba, lrbp, NULL);
+ 		if (!err)
+ 			err = ufshcd_dev_cmd_completion(hba, lrbp);
+ 	} else {
+@@ -5351,7 +5354,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 		scsi_set_resid(lrbp->cmd, resid);
+ 
+ 	/* overall command status of utrd */
+-	ocs = ufshcd_get_tr_ocs(lrbp, cqe);
++	ocs = ufshcd_get_tr_ocs(hba, lrbp, cqe);
+ 
+ 	if (hba->quirks & UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR) {
+ 		if (lrbp->ucd_rsp_ptr->header.response ||
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a43b14276bc3..3dbd3e41b022 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -382,6 +382,7 @@ struct ufs_hba_variant_ops {
+ 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
+ 				       unsigned long *ocqs);
+ 	int	(*config_esi)(struct ufs_hba *hba);
++	enum utp_ocs	(*override_cqe_ocs)(enum utp_ocs);
+ };
+ 
+ /* clock gating state  */
 -- 
-2.45.2
+2.26.0
 
