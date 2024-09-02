@@ -1,122 +1,136 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3C11D67A1;
-	Mon,  2 Sep 2024 11:48:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B326519C55D
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Sep 2024 12:47:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725277692; cv=none; b=GTzFwbqRajd7ZzAR6V4AzG4/qwNIlLEhb6hSPCHe0yAxdHI7zZyxeOUYToYcR+1uC1p+tVru15EmAYwx4CXUyiULcWXeHbrXgLnhekZGSTYfqlm6Ff37a0POplNNUkTIhpiXRH4jYJ+Zpax0UwnLa0T2uf2mqx+0Pewh+fSQNh0=
+	t=1725281251; cv=none; b=CerxYHP+dOGSaeI1Jho+brlXd9PHjkFRoe8mVq/AlFIDolCtH0pkrKnFafgAe3ndOZBbpcMEa+x6Bc4gjPEZoXAEyewmLIr9o7G9Bs+5As7vOilrqzmPoHsHQsq88cUGwwuHHQ9iJw0Jvo7anJugMHAp+cJz/s5GEmZlRNbXgYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725277692; c=relaxed/simple;
-	bh=xv9RTyrY2YdiOK26ifjwaZIOl9RR5ISuy6sY+L0GNEY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mKkVsvZ9ubBIMXwXXuiQAVn6mIPMMGL/5S6fcME6i8CQsuV4hyXcHYl2t68K9ontTyIb0PT3hSlPjoURg776bMHS+dm7ejUMpxovPIZd38O0VBoVed0gAyvHB7EGpY9DWnUURcMjozVG/g4xczLkf+QGvwBg1Zbf6WLgIoI8ne8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=i7PgdnAd; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1725281251; c=relaxed/simple;
+	bh=wF+TDzVSJ2YjjfA3NeGCW28IVmyODfLzxaDM+fl+FHc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lCYhylKuLrnqxH9bhPWhp64bODwsIFfWoxcbUHuhfoptoOhOKL1DZ0NBV+o50E4MgaOgaKOJ4pEKDiHW+q4u3BD8XLRz6TObGDeDot2OHIXtydP4TYvxyTGQFRKxeYcNG0gjWr+4nOJhNvaIO1JMEqGVl884kCC/WkTJH9tU6ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=D7y3iaBU; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="i7PgdnAd"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 482B3fRW003309;
-	Mon, 2 Sep 2024 11:48:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-type:date:from:message-id:mime-version:subject:to; s=
-	qcppdkim1; bh=vg+Rw9NLwO5MqfbNuhjdC69lcjqK8RkT6HzrLJTrC3g=; b=i7
-	PgdnAdzfkgQ6MaD1nvpZcZb+1SjbL8EdtSWZGnddIB0GJlME2poYRZsWPzwTLd3F
-	JfECfs0v4hvX6hsAFhgdb58uq9XWZIWta2Dojd7CdWSTNXc/ipKL+mnERrl+Lkwh
-	GUy83YL2ppGUgC3VpoNnRwkUGMAnHAO3kwIcRNGzuMlPhZhzf1h5UY7BUGOODwZ0
-	dXm5lUAjFNoDhvJ/xDkzSYRaPWVjBi+4WM4AEH2mLbOUdJisJGWd7eiJ7vZjYMbU
-	LOuInRpOupgtw5YCcMhxbPr80xAj8ngvnGpIp/ZtZMnU9vk6U8KV4iYZ3lBrB+nN
-	9IewXFFOYTZdbfbhpkzw==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41bvf8vhud-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 02 Sep 2024 11:48:03 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 482Bm2b6017858
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 2 Sep 2024 11:48:02 GMT
-Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
- nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 2 Sep 2024 04:47:58 -0700
-From: Manish Pandey <quic_mapa@quicinc.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
-        <quic_bhaskarv@quicinc.com>, <quic_narepall@quicinc.com>,
-        <quic_rampraka@quicinc.com>, <quic_mapa@quicinc.com>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
-        <stable@vger.kernel.org>
-Subject: [PATCH V5] scsi: ufs: qcom: update MODE_MAX cfg_bw value
-Date: Mon, 2 Sep 2024 17:17:37 +0530
-Message-ID: <20240902114737.3740-1-quic_mapa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="D7y3iaBU"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-7140ff4b1e9so3228729b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Sep 2024 05:47:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1725281248; x=1725886048; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=sw56HONjylV3zP4q+WSmMqj4D4zJNduIGjeb5jWNs/E=;
+        b=D7y3iaBUDV4W8AREiDBPtobdyHc0MbJbkyFnawRRq2UgD+LGkaBnWAPzZdWF6OSJgT
+         baX/8s2Tf3wMlXsBcC2lI1IUybFOBVmRLRXKf51vSVPW+RxYpBEjQl1SBG+Ilb6y8LHd
+         RcqOYVD2YRk9KCXogddYguzsJN+vjYhgcsoMbCCddFZfKLSIWu1cOckqSYhQJrYnRWYx
+         J5xFkybBuLo51BnqFjveVmWvJEG2hDEQhpLecYRG5LgVgaFgOn1wUs4SLusmkBFgdKU2
+         imKrnRTzCAwi7Zj6rVutx6ekbNsbdyWBf/yQUgyg2OwZk8h0A3GkibF//Vp+O/k2ZQfL
+         T0/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725281248; x=1725886048;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=sw56HONjylV3zP4q+WSmMqj4D4zJNduIGjeb5jWNs/E=;
+        b=gyQLwYRquFe20FzXJ3HRQoCCjUrto9ni3KoY54LZYCrYCgaAgTqvBfuAWK/eQGRkfP
+         8KVQPcY5PFE6+XAW3ERG1duLPVghoohM2QA7TAxK5Jq9yU1vmKim4fTOwHEQgMZWrbdq
+         CmybHv6yzMAAuDdmAes0j4NUAU5Ydzi7+SDhgOEI8jvmuu0TB8R0XMQ9ljy1ZtQSfqrM
+         UdIFuC6hiStpyLUnHrg9tFqJmkiahMh4LukjC3lBlj3BMhSI/lggtfhpE1ePvOof+RAS
+         EtxTCse+lv04vsDWWjMnJNah77YJfKq2dNt35QRc7SZBxYMpbIvGqz2r+dAzGhcQ0bWq
+         kSCA==
+X-Forwarded-Encrypted: i=1; AJvYcCXPDaPPg2ptT+CNTrn6dUZ5X4f41gEJL5ldQCTCVL7OXquVfq1+HEDZr/8N9oy3zQNhllwrZoWUPsXb@vger.kernel.org
+X-Gm-Message-State: AOJu0YyHMLH5vl3yOUpru45zzBuMPIZdQ9odxQNXvMW1A+YeyNa/2h7h
+	aMmbQjkdBAjYv2UXbpolt64cpj4Tc/ff8OMmXyNMkncaBPyDTIoFb68tGE5+VA==
+X-Google-Smtp-Source: AGHT+IFm74MUePoqdJK4/q3NgMhKFYLf6zUq00FAgFNFSomryCyuaX6pCUOEG8+oPT7dru6YDuaHVg==
+X-Received: by 2002:a05:6a20:b58b:b0:1c0:f2d9:a44a with SMTP id adf61e73a8af0-1ced0469115mr6570664637.22.1725281247917;
+        Mon, 02 Sep 2024 05:47:27 -0700 (PDT)
+Received: from thinkpad ([120.60.129.190])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7d22e9d77f2sm7438317a12.89.2024.09.02.05.47.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Sep 2024 05:47:27 -0700 (PDT)
+Date: Mon, 2 Sep 2024 18:17:20 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Manish Pandey <quic_mapa@quicinc.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
+	quic_bhaskarv@quicinc.com, quic_narepall@quicinc.com,
+	quic_rampraka@quicinc.com, quic_cang@quicinc.com,
+	quic_nguyenb@quicinc.com, stable@vger.kernel.org
+Subject: Re: [PATCH V5] scsi: ufs: qcom: update MODE_MAX cfg_bw value
+Message-ID: <20240902124720.coeidzis2xcmglzl@thinkpad>
+References: <20240902114737.3740-1-quic_mapa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: v1VeKsK4V4clikGNS7R2Uf3p_BAD6N_y
-X-Proofpoint-ORIG-GUID: v1VeKsK4V4clikGNS7R2Uf3p_BAD6N_y
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-02_02,2024-09-02_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 mlxlogscore=999
- suspectscore=0 clxscore=1015 priorityscore=1501 adultscore=0
- malwarescore=0 phishscore=0 lowpriorityscore=0 impostorscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2409020095
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240902114737.3740-1-quic_mapa@quicinc.com>
 
-Commit 8db8f6ce556a ("scsi: ufs: qcom: Add missing interconnect
-bandwidth values for Gear 5") updates the ufs_qcom_bw_table for
-Gear 5. However, it misses updating the cfg_bw value for the max
-mode.
+On Mon, Sep 02, 2024 at 05:17:37PM +0530, Manish Pandey wrote:
+> Commit 8db8f6ce556a ("scsi: ufs: qcom: Add missing interconnect
+> bandwidth values for Gear 5") updates the ufs_qcom_bw_table for
 
-Hence update the cfg_bw value for the max mode for UFS 4.x devices.
+s/updates/updated
 
-Fixes: 8db8f6ce556a ("scsi: ufs: qcom: Add missing interconnect
-bandwidth values for Gear 5")
-Cc: stable@vger.kernel.org
-Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
----
-Changes from v4:
-- Updated commit message.
+> Gear 5. However, it misses updating the cfg_bw value for the max
 
-Changes from v3:
-- Cced stable@vger.kernel.org.
+s/misses/missed
 
-Changes from v2:
-- Addressed Mani comment, added fixes tag.
+> mode.
+> 
+> Hence update the cfg_bw value for the max mode for UFS 4.x devices.
+> 
+> Fixes: 8db8f6ce556a ("scsi: ufs: qcom: Add missing interconnect
+> bandwidth values for Gear 5")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
 
-Changes from v1:
-- Updated commit message.
----
- drivers/ufs/host/ufs-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index c87fdc849c62..ecdfff2456e3 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
- 	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
- 	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
- 	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
--	[MODE_MAX][0][0]		    = { 7643136,	307200 },
-+	[MODE_MAX][0][0]		    = { 7643136,	819200 },
- };
- 
- static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+- Mani
+
+> ---
+> Changes from v4:
+> - Updated commit message.
+> 
+> Changes from v3:
+> - Cced stable@vger.kernel.org.
+> 
+> Changes from v2:
+> - Addressed Mani comment, added fixes tag.
+> 
+> Changes from v1:
+> - Updated commit message.
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index c87fdc849c62..ecdfff2456e3 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -93,7 +93,7 @@ static const struct __ufs_qcom_bw_table {
+>  	[MODE_HS_RB][UFS_HS_G3][UFS_LANE_2] = { 1492582,	204800 },
+>  	[MODE_HS_RB][UFS_HS_G4][UFS_LANE_2] = { 2915200,	409600 },
+>  	[MODE_HS_RB][UFS_HS_G5][UFS_LANE_2] = { 5836800,	819200 },
+> -	[MODE_MAX][0][0]		    = { 7643136,	307200 },
+> +	[MODE_MAX][0][0]		    = { 7643136,	819200 },
+>  };
+>  
+>  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+> -- 
+> 2.17.1
+> 
+
 -- 
-2.17.1
-
+மணிவண்ணன் சதாசிவம்
