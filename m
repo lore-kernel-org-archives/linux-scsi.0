@@ -1,109 +1,105 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68DF61DC744;
-	Tue,  3 Sep 2024 20:31:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5155C1D5CF6;
+	Tue,  3 Sep 2024 20:42:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725395499; cv=none; b=l1Q62efBWV++OE7tkVfzSlfHTXta4lJHfH77F+yLHvYy4OP/QXMWnhwhnGP9Lzf8dysEYfVMi+HjSB+2718dbi/f8trN1Qgch/zyd9IVG2wmT1Qj4Z2Xk/AW1cxGJDOdrY9wMIFihaCfZK32F2XrPTIvOzjFtKSvNytixQbZnDM=
+	t=1725396140; cv=none; b=NAQYtSwOWNrXE1ESPUbv9N7Q0glFLqgGdBSMdB/38/J0RpYyoM8Zpzc99Xty6rpgjLMs/ybiz9YiMT+Iri/VAQWky0mYVuzsJ+b1StbQG9DnKshYyrctX9rNA/y6wgN6VJDSGV1anYfbSWL01cZy7VKaVCS49B0gMe+RRo7sGC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725395499; c=relaxed/simple;
-	bh=xmuMa21+b+uKAHL09j61Qjrbj6fBlP0AYRtv0TAQngM=;
+	s=arc-20240116; t=1725396140; c=relaxed/simple;
+	bh=j45dtGe1JbA6NaHG0W7dRRtycTu/PakftatcafLRIr4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZUzvqMRkDFlwRMhxEGBbxd7HpcwX39QQEDgap7x4myeWP6uYVl3o51S6NdFLSWC41IlckneE72z+p2uB5fo/XQ2owmVG1djjPDaApb6THNQ74kPmoz2oadfdKiRu2ExGkG3ian1pqsApXL1yiZ03wiD/OUWg5sYlE3MS1zn53yU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JIFpzm+V; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version; b=bljRZNMs4NGyf199nN1A1IpGOG1DOifgJp3k9zmYe5LUqlDoeMq+wdi66n5TJTdXvaeJSjrY/oW0r6civA1/soFYUMs2tHZNAjucJvPV/2C57qKvv1yr4lYS010lqkqOZYvO61dMx1StF/0YD5e6jb9bAWk2v2sQb2nnyvNEL+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eD7r4+AN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JIFpzm+V"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-20551e2f1f8so28515125ad.2;
-        Tue, 03 Sep 2024 13:31:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725395498; x=1726000298; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VA+wMvCOU+Zn3Wu3Jx5nqZybutdhYyNoMSRcIzN85HA=;
-        b=JIFpzm+VCM/PLBK1p6ITKQf7Rjyu1M90pH8V3bpLubXx2UaXxppUqKdupY5ugWoOUT
-         w6OJZCykHDSqllgEQA+LEvDuaLQLfBWMVJRHLEXXjkBPxzM44C/bUOnlSd3Y3LwFHCfX
-         iNkH8AzLHVStZyEGEwk+2lkxnY7n6BW+iZ4S4wzHwqCd5YsLTytNOMAC0QDyOh8ltL7s
-         9QOzk30sSzZZRSJVPCr9Gn/A2sBcM7UXZMcf99zKZYbH0Ivqfh5Dlyc/bEP2wf/9O1i/
-         SXKLB1FsKtdfQRNaiqqOPCb7+FAftfQdsY1O64KKbuBLOL3DbzEkgajG0bvMJGeaDops
-         WWIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725395498; x=1726000298;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VA+wMvCOU+Zn3Wu3Jx5nqZybutdhYyNoMSRcIzN85HA=;
-        b=oYv6FL/4VaNshIXKcBOQME7bIIQEwn4hBMRHe/qfmi8ydVtHrNRXa/P7lOL7SIXPuv
-         Vum0zzPlu/Cvc5jQB1cJGaFdqbXxFjymE2Jk/1aRFtfVN1JRjeXxp+vrqRAOlY0aq3cf
-         ok/+o5SiKrCMY410wh+KHHVkbI080UZNP5kcLjZ73Jw4+3TnfIXHkYrF9fOi0qatucHP
-         2lbyb9gtLfuoTZBeoikLxGC/T9qqm42x6mMzB1zEP+lYDpWb0PEDnJqgg8/sijcElYKg
-         mgKO50wyZ2j9IXA8+3fukKsF2W/u3GwvBWmjwNjNrbWYPv0Sq6uiS/41s4B5Ix6gGr3p
-         tHIg==
-X-Forwarded-Encrypted: i=1; AJvYcCVgixODE3Z7x9f1hAfG9T1qUnAh7Zep9TO8GNTfGir+mSdoU8N0Exd2MXP5s89cJHl40UpScszKzx20XIM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyGW1L7pRZAwX/Z3cLXA1pZzLNqCDPZQV7YifZ1lxiuC0bLM3MI
-	cWqbWTCr+JWOAoU5bLBdbaCNoJ37dIt1WyjsfDNl9ZahKeuhMbMF
-X-Google-Smtp-Source: AGHT+IGPtwQehj8Qnq0KPAz3fls1ieIv0Uqe/xF3I6kGuKO+sr/5cUwhXjsoTCun39qQr52fTyFxkw==
-X-Received: by 2002:a17:903:188:b0:205:4e22:ccfc with SMTP id d9443c01a7336-20584222d0bmr87946995ad.50.1725395497288;
-        Tue, 03 Sep 2024 13:31:37 -0700 (PDT)
-Received: from fedora.. ([106.219.162.224])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206ae965b58sm2366355ad.118.2024.09.03.13.31.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Sep 2024 13:31:36 -0700 (PDT)
-From: Riyan Dhiman <riyandhiman14@gmail.com>
-To: bvanassche@acm.org,
-	aacraid@microsemi.com,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eD7r4+AN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 984F7C4CEC9;
+	Tue,  3 Sep 2024 20:42:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725396139;
+	bh=j45dtGe1JbA6NaHG0W7dRRtycTu/PakftatcafLRIr4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=eD7r4+AN5u90jhGBCVVVQ/VTL+Xs6xPjwKcb3fELICg+0+3myeBWh05MNXRT0Rccm
+	 rT00Ug/zxDZr112/iL+eo0EGItlrVo/xC09fQXu1PtH+yaAVfGMtvu4ywKXGEvgJbN
+	 62RNSpTbPmJgb6+P/cwstxLVmu4NaxvpH7/Qca4ktLHRvEv9GYsMlb9yF7RXygmZYS
+	 nhbT79gw5Hb2rfPW0pl1Hv3EM4TCqJqBMjVqH9eSRKBZvSivefqsC4CLr/chiBd5F3
+	 7B1OFEQ9C/XLGDVENVGZW4ROdH/DRSypjUmUu/UzGa1zdBmNPCKRqQuIqU48ypnB+X
+	 3irkR8HIqHezg==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Sherry Yang <sherry.yang@oracle.com>,
+	Justin Tee <justin.tee@broadcom.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aacraid: Fix memory leak in open_getadapter_fib function
-Date: Wed,  4 Sep 2024 02:00:13 +0530
-Message-ID: <20240903203121.5953-1-riyandhiman14@gmail.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <b7f0acf4-5e7d-4491-81be-71518197c58b@acm.org>
-References: <b7f0acf4-5e7d-4491-81be-71518197c58b@acm.org>
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.10 07/22] scsi: lpfc: Fix overflow build issue
+Date: Tue,  3 Sep 2024 15:21:54 -0400
+Message-ID: <20240903192243.1107016-7-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240903192243.1107016-1-sashal@kernel.org>
+References: <20240903192243.1107016-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.10.7
 Content-Transfer-Encoding: 8bit
 
->> This patch ensures that the allocated memory for fibctx is properly
->> freed if copy_to_user() fails, thereby preventing potential memory leaks.
->
-> What made you analyze the code modified by this patch?
+From: Sherry Yang <sherry.yang@oracle.com>
 
-If copy_to_user() fails and returns an -EFAULT error, the memory allocated 
-for fibctx was not being freed, which could lead to memory leaks.
+[ Upstream commit 3417c9574e368f0330637505f00d3814ca8854d2 ]
 
-> How has this patch been tested?
+Build failed while enabling "CONFIG_GCOV_KERNEL=y" and
+"CONFIG_GCOV_PROFILE_ALL=y" with following error:
 
-I have compiled tested the patch. I realize I should have specified "compile tested"
- in the commit message and written "preventing potential memory leaks" instead.  
+BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c: In function 'lpfc_get_cgnbuf_info':
+BUILDSTDERR: ./include/linux/fortify-string.h:114:33: error: '__builtin_memcpy' accessing 18446744073709551615 bytes at offsets 0 and 0 overlaps 9223372036854775807 bytes at offset -9223372036854775808 [-Werror=restrict]
+BUILDSTDERR:   114 | #define __underlying_memcpy     __builtin_memcpy
+BUILDSTDERR:       |                                 ^
+BUILDSTDERR: ./include/linux/fortify-string.h:637:9: note: in expansion of macro '__underlying_memcpy'
+BUILDSTDERR:   637 |         __underlying_##op(p, q, __fortify_size);                        \
+BUILDSTDERR:       |         ^~~~~~~~~~~~~
+BUILDSTDERR: ./include/linux/fortify-string.h:682:26: note: in expansion of macro '__fortify_memcpy_chk'
+BUILDSTDERR:   682 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
+BUILDSTDERR:       |                          ^~~~~~~~~~~~~~~~~~~~
+BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c:5468:9: note: in expansion of macro 'memcpy'
+BUILDSTDERR:  5468 |         memcpy(cgn_buff, cp, cinfosz);
+BUILDSTDERR:       |         ^~~~~~
 
->> Changes:
->> - Added kfree(fibctx); to release memory when copy_to_user() fails.
->
-> Changes compared to what? I don't see a version number in the email
-> subject.
+This happens from the commit 06bb7fc0feee ("kbuild: turn on -Wrestrict by
+default"). Address this issue by using size_t type.
 
-I included the "Changes" section to indicate what was modified in the patch. I will 
-remove this section in the updated message, as there is no version number to reference.
+Signed-off-by: Sherry Yang <sherry.yang@oracle.com>
+Link: https://lore.kernel.org/r/20240821065131.1180791-1-sherry.yang@oracle.com
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Just above the copy_to_user() call there is the following statement:
-> 
-> 	list_add_tail(&fibctx->next, &dev->fib_list);
->
-> Does that mean that the above kfree() will cause list corruption?
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 4156419c52c78..4756a3f825310 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -5410,7 +5410,7 @@ lpfc_get_cgnbuf_info(struct bsg_job *job)
+ 	struct get_cgnbuf_info_req *cgnbuf_req;
+ 	struct lpfc_cgn_info *cp;
+ 	uint8_t *cgn_buff;
+-	int size, cinfosz;
++	size_t size, cinfosz;
+ 	int  rc = 0;
+ 
+ 	if (job->request_len < sizeof(struct fc_bsg_request) +
+-- 
+2.43.0
 
-Yes, you are correct. I overlooked that fibctx is part of a list, and freeing the 
-memory without removing the list entry would corrupt the list. 
-The list entry should be deleted before freeing the memory if copy_to_user() fails.
-
-Regards,
-Riyan Dhiman
