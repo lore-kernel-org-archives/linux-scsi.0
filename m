@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5155C1D5CF6;
-	Tue,  3 Sep 2024 20:42:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE9F61E0B85;
+	Tue,  3 Sep 2024 20:44:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725396140; cv=none; b=NAQYtSwOWNrXE1ESPUbv9N7Q0glFLqgGdBSMdB/38/J0RpYyoM8Zpzc99Xty6rpgjLMs/ybiz9YiMT+Iri/VAQWky0mYVuzsJ+b1StbQG9DnKshYyrctX9rNA/y6wgN6VJDSGV1anYfbSWL01cZy7VKaVCS49B0gMe+RRo7sGC4=
+	t=1725396243; cv=none; b=Cf43NLhikVynldEDoPxrH3b6wpWqMb6ReF6lN9Tr1YXsKB4JDvnhn8JIBOmOwqRl75Eixr86+L7t946R8QS54xbhW2izBzeETfEWtfUVfT7e/XS4rlkvBmqFUnsJD9cP/iC7bGDjRSfW6/A5K8DU036EprxZ1q5tPi4UBE028/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725396140; c=relaxed/simple;
-	bh=j45dtGe1JbA6NaHG0W7dRRtycTu/PakftatcafLRIr4=;
+	s=arc-20240116; t=1725396243; c=relaxed/simple;
+	bh=4GHljhC8GdX/tdfTivG4DA0zYIZ8UTvqOdlDcNuI08Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bljRZNMs4NGyf199nN1A1IpGOG1DOifgJp3k9zmYe5LUqlDoeMq+wdi66n5TJTdXvaeJSjrY/oW0r6civA1/soFYUMs2tHZNAjucJvPV/2C57qKvv1yr4lYS010lqkqOZYvO61dMx1StF/0YD5e6jb9bAWk2v2sQb2nnyvNEL+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eD7r4+AN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=mg4YVmt935bDjczHFhVlu6gYXkXQAhROxWxcDQBqk7s92tcsE6mtU3qm0SySK2KrocVdLxNb16jIrJx6qgMdd22OGaQ9CZeMvct8a+OCPU0Wnjwbagqa/tmYRhT/rcpkRj2yQ7DxC3Vo9In5pZ2sRkUa8UGPU8PBShHdWWYPgnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EYX9arli; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eD7r4+AN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 984F7C4CEC9;
-	Tue,  3 Sep 2024 20:42:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EYX9arli"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15FBFC4CEC5;
+	Tue,  3 Sep 2024 20:44:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725396139;
-	bh=j45dtGe1JbA6NaHG0W7dRRtycTu/PakftatcafLRIr4=;
+	s=k20201202; t=1725396242;
+	bh=4GHljhC8GdX/tdfTivG4DA0zYIZ8UTvqOdlDcNuI08Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=eD7r4+AN5u90jhGBCVVVQ/VTL+Xs6xPjwKcb3fELICg+0+3myeBWh05MNXRT0Rccm
-	 rT00Ug/zxDZr112/iL+eo0EGItlrVo/xC09fQXu1PtH+yaAVfGMtvu4ywKXGEvgJbN
-	 62RNSpTbPmJgb6+P/cwstxLVmu4NaxvpH7/Qca4ktLHRvEv9GYsMlb9yF7RXygmZYS
-	 nhbT79gw5Hb2rfPW0pl1Hv3EM4TCqJqBMjVqH9eSRKBZvSivefqsC4CLr/chiBd5F3
-	 7B1OFEQ9C/XLGDVENVGZW4ROdH/DRSypjUmUu/UzGa1zdBmNPCKRqQuIqU48ypnB+X
-	 3irkR8HIqHezg==
+	b=EYX9arli1+GRD9t+Mx8emoo/BvXv/0ES+06BRGCOLoJY6eJPvwsjTG474L2F47OgD
+	 1YwS159fJZugmkcfLq35oWpgkY5xkdO8LttFbDMtJWFYW5Psdfw+5VQOfBaTasWOI6
+	 t9cNULhY/y+4Ps2C942X9qYAmOIGZcWo6sTdTdKO/LZe3wI6HawKi7hl3O67u3gN+C
+	 kLA+7u6uysj86+SInsDRq9GUSCmpa9RSNHrGiYGHLKPraw3KAmIfGhYc+nYnsQFuHt
+	 AvA8zhbwGjlQ25yYbYkOvUXIFRR3jp+ZOb/+4DiAYA13LFD+XG2spJ0OtWm7hokL+u
+	 /b0aUErUnXsgQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -37,12 +37,12 @@ Cc: Sherry Yang <sherry.yang@oracle.com>,
 	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.10 07/22] scsi: lpfc: Fix overflow build issue
-Date: Tue,  3 Sep 2024 15:21:54 -0400
-Message-ID: <20240903192243.1107016-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 07/20] scsi: lpfc: Fix overflow build issue
+Date: Tue,  3 Sep 2024 15:23:39 -0400
+Message-ID: <20240903192425.1107562-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240903192243.1107016-1-sashal@kernel.org>
-References: <20240903192243.1107016-1-sashal@kernel.org>
+In-Reply-To: <20240903192425.1107562-1-sashal@kernel.org>
+References: <20240903192425.1107562-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,7 +51,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.10.7
+X-stable-base: Linux 6.6.48
 Content-Transfer-Encoding: 8bit
 
 From: Sherry Yang <sherry.yang@oracle.com>
@@ -88,10 +88,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 4156419c52c78..4756a3f825310 100644
+index c305d16cfae9a..0166f86c7b71a 100644
 --- a/drivers/scsi/lpfc/lpfc_bsg.c
 +++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -5410,7 +5410,7 @@ lpfc_get_cgnbuf_info(struct bsg_job *job)
+@@ -5409,7 +5409,7 @@ lpfc_get_cgnbuf_info(struct bsg_job *job)
  	struct get_cgnbuf_info_req *cgnbuf_req;
  	struct lpfc_cgn_info *cp;
  	uint8_t *cgn_buff;
