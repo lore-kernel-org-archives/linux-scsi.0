@@ -1,77 +1,117 @@
-Received: from mail-yb1-f173.google.com (mail-yb1-f173.google.com [209.85.219.173])
+Received: from mail-oo1-f47.google.com (mail-oo1-f47.google.com [209.85.161.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F68B18B48B;
-	Tue,  3 Sep 2024 16:21:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F341B1C14;
+	Tue,  3 Sep 2024 17:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725380467; cv=none; b=cYIGg1jWTTRv5Ff0lFSuSTL+/nrj1y2e8tHqzHYnpai0eMR4M19cWDQB5jhzB2NLEpAHEtTIVlz240K3+nZ2DoLQG7ELYHExNJsc3aaGb4gj/tmbfCbsBV841YTMFUb5mnotDYqDfOHalnBK319yuB7qd21l88xaU6rOjq/6nzI=
+	t=1725383999; cv=none; b=byais/hTwqeORkShw1UQgGHr3QF51mSJHd9uPN5w9c1A1J8umTEklJH+ljQIJicbtFVtKtBBRjmSQgfKOAXCtV4MhvKEqtoFuvT1iK9oDQczaOSbHBHnu5RSQEVNaykbc0qoG7olOAogpMMh6LTuym7te3+VAl0jlWaK0jY+KMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725380467; c=relaxed/simple;
-	bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YTKzCxHAiaTBK/Bk6TDgJ3eY5sBGP10o7iUsfaEt6xUuIzmM6sacVyeLpPKfw3zM41HMFx7g5fSpU/jS8nLvleZ320kdaiAXTZlKf2PfXi5Z8/nBhtIL/FbB0/Wd/ce1Fod5fQa8yGwEQsWkGhdQF/wxhMmKNXou17/HDv9U5Eg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CyaJ8SvS; arc=none smtp.client-ip=209.85.219.173
+	s=arc-20240116; t=1725383999; c=relaxed/simple;
+	bh=nRZ2V36ig2VtSBPxHVYItft25PT2WEBXHd3mI9pDF2k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FeRN7SiHO30mCOwApwLj0C35pTUMLW8OdvnhadLe7LjamOIwg8v5ewEevJvPDDHsUeC3c3ejhbLEGgGARwgkskuT9yxIRtk0cg5yhdJjqHjp60xh6W/WKcMgwK8VQY0JTTgtuIhNbMEh9341XJHK12WYLhGpA5pon+v/v6sHrMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mJSiaHTo; arc=none smtp.client-ip=209.85.161.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CyaJ8SvS"
-Received: by mail-yb1-f173.google.com with SMTP id 3f1490d57ef6-e1a9dc3f0a3so3017148276.0;
-        Tue, 03 Sep 2024 09:21:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mJSiaHTo"
+Received: by mail-oo1-f47.google.com with SMTP id 006d021491bc7-5e172cc6d66so1221090eaf.2;
+        Tue, 03 Sep 2024 10:19:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725380465; x=1725985265; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
-        b=CyaJ8SvSLASfrEs4XyJUjG0CjEj71iVcdvp2GETOpAlv8/LrSZwZmQbr5ctsByqBSU
-         qFes4UoBDyN7X2XoA675yFQYzn9ct83W3rlym/+k7Lw0Kfh+xmAa8bPpURQakr5xa3Wt
-         FPiLw4NT4BMcsHbRbHLYlBb9uoIRALTPvHrLisfVd/ruR5FH2vS/zu3MyaUhRiLz4kh9
-         ycuOirISrNZ3fJ+sg1NbZMPLl75rP2o1TQtJ5FB5ZReNqd8fu3UDjhXmjVB59yqRESjt
-         PoWK0C9dWSvLYFuBuHHDOKDoW/upck+8LdQasLVnSCDk8itjjW5DUrIN8S/E57xswofl
-         Rhag==
+        d=gmail.com; s=20230601; t=1725383997; x=1725988797; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qtH9IPamoorP6Ga02exdlUhBBWCKetzwMLalE6WeBhU=;
+        b=mJSiaHToB8MZFOo3RhlSdwEUBDcDR6K2J2+kSXsr7tcbSCQYoRkxUjOU9bgOgTs16u
+         8CQ8LNwMuCjPx+bF6tQzNeBrauRQ1PO95S51q1gTfX+GiwRb/43qJwoRHXzFkj4UFmjX
+         Aivos+dAhL+g/zf1t6R0iGM3U7818QqFYYWCRF7F0fFoWr2eVcBN0i4eJnyvpNTzIxxf
+         oaaw7XLlnl8bHx+eH8bLE1eskBnwuTwnFeJwIIt9ckpWncrc6TXVgEx8uQcaM8KtGtN5
+         WHRQpFl5DbYy4bApJAovFGHHvFifzIvBdTSXdQU4sKwp+ZuMuNJXdfsYka0hqMyR1MyG
+         uU5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725380465; x=1725985265;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1725383997; x=1725988797;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
-        b=FyuU4ClCoeuj+fdzTmzCWvzNLcadIDai8pKm9Y8kUyktWpAL7Ol8DTQ8qhV/aCiiu4
-         0G4xqhXk7rgRd8B/XEqGMGEcFAzH7WtvLfFk6xjucbRm6y3j+hV4J5GDN+QeXgIOJvx0
-         9F3/pKxEjuJg7fOIm7NZrjKalg5bT3ZAzyCSbsswUbIKvCz1pbOq9lGgvrGMmRnWh9jC
-         AdppnIIBNYYX4EpN01dp6sYXBgyNOksUbXXYFlSN5JeKx5YoOLCkAaQlp95DdzP6la+K
-         i6N8rxT/DljtI0T/2zzXI19bx+Nce0dFGRYqd06y6gEBl6JGCUC8nY8pxg9ZFdShAlDR
-         SEkQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV03duOVYJemoMxp8VDJd24rIaejLSpaLRA5CRv4KEOzRJ8Rj3QBEFBQ7U2DloiWFDnQPmHSGvNLEMPcQ==@vger.kernel.org, AJvYcCWg+bmic62xmct1aM3UDiXcWbxbp/Ibm8kzk+v36SrTuCjDLc5TLRLAiRb9wFtVdiyNdp534WrPeA+hXiYa97o=@vger.kernel.org, AJvYcCXykL1pgER8JNncV/0EE+R5DIPX4UjxGJlEnGf32mC6w6jhE03/uK62uoOEnLvYzw8gYLJ5OvKf8buE42DN@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCYCYBaOsQVaYj5TerxgMTXsEpp0sCwTvb7zE5j0hPfLW2zAFk
-	m0TxifTBVBtGBx8p4jE4J2x481siI54qkbaAX248YMcgbUlae4qRk4bS5IUMM6mMLjt+1K/gxIJ
-	urFWedZhWo6jlVn/tYwhhCBedU50=
-X-Google-Smtp-Source: AGHT+IH3K7aSmGRNmayf7gOw2xBLQk9zrPEPAI7vtthdZhos8gwLrYdq9382zWTSKPzYt0jbOqdH73RGE3NAEsVE05w=
-X-Received: by 2002:a05:6902:240f:b0:e1a:4082:e8f2 with SMTP id
- 3f1490d57ef6-e1a79fb4f4dmr15711611276.4.1725380465248; Tue, 03 Sep 2024
- 09:21:05 -0700 (PDT)
+        bh=qtH9IPamoorP6Ga02exdlUhBBWCKetzwMLalE6WeBhU=;
+        b=L6+XMRXuYnLLp/IfEBrkpuW5gd8NpGDpK5raJ538YZ8V41O/jsDjj2lsI49o6gus1U
+         X3FefFHYiLTImrfi5MhjwaWqinFpLYSBWWReN6iLs8jOBqn2uFC/Cd1KbGJEiWlO2H+4
+         Fw7r7dnVFL4MmpR/3o9b0sIAnvnc3WqjsvNymu9M/D76LKTFs/ba/fMy7YWG1E1uIciM
+         UfsogJtFV/czmvfNH2dR6p2XVzVHLPVUnuca7jPfbHQTKghgV1uv5TdFwNhOXzYDTs/y
+         wvBUIGnwsmIiK8AjH+eSuAMVxfsEklb07wwYZo4YQsIe1oRvIE60rBaJ/BWct+ErwW+I
+         aCcQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUWVp0F0Yjuo/JUiAuh00EG+ZqFpqYyAPhAcWNjROUcYrFmlTXix2Khi8q7iyqeru/BAwBlFsOuX1tsBnc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxdY9lBZncervDuIMDUwCsYg2J0OWBR5BRszfbqC/nQIvg3Dif/
+	VQ2z/WW3D3aIN4suT6dBDTayEBxM6INIBebegeaHUVVgBa8KKgcq
+X-Google-Smtp-Source: AGHT+IHfFv81FL9CWSvPRuQ1Ag7YXMFuM3Q4pEddxacXVQIp8ZecgE/XViB7Vu+JuEFaKiPp/R58XA==
+X-Received: by 2002:a05:6358:783:b0:1b5:a34d:fea8 with SMTP id e5c5f4694b2df-1b7e35ecda7mr1904005155d.0.1725383996838;
+        Tue, 03 Sep 2024 10:19:56 -0700 (PDT)
+Received: from fedora.. ([106.219.162.224])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7d4fbd8aab2sm120044a12.20.2024.09.03.10.19.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Sep 2024 10:19:56 -0700 (PDT)
+From: Riyan Dhiman <riyandhiman14@gmail.com>
+To: aacraid@microsemi.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Riyan Dhiman <riyandhiman14@gmail.com>
+Subject: [PATCH] scsi: aacraid: Prevent premature freeing and improve memory allocation checks for fsa_dev
+Date: Tue,  3 Sep 2024 22:49:11 +0530
+Message-ID: <20240903171911.9197-1-riyandhiman14@gmail.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240902150042.311157-1-colin.i.king@gmail.com>
-In-Reply-To: <20240902150042.311157-1-colin.i.king@gmail.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Tue, 3 Sep 2024 09:20:53 -0700
-Message-ID: <CABPRKS8G52uD9rUVDo883NQ8KGm9zRMoDsJw_kX_Fb6C+zymaA@mail.gmail.com>
-Subject: Re: [PATCH][next] scsi: lpfc: Remove trailing space after \n newline
-To: Colin Ian King <colin.i.king@gmail.com>
-Cc: Justin Tee <justin.tee@broadcom.com>, James Smart <james.smart@broadcom.com>, 
-	Dick Kennedy <dick.kennedy@broadcom.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Refactor the allocation and freeing sequence of `fsa_dev` to ensure
+that memory is not prematurely freed, which could lead to use-after-free errors
+or undefined behavior.
 
-Thanks looks fine.
+Changes:
+- Modified the order of memory operations by allocating new memory for fsa_dev
+  first and checking for success before freeing the old fsa_dev pointer.
+- Updated the error handling to ensure -ENOMEM is returned if allocation fails,
+  preserving the existing valid memory.
 
-Regards,
-Justin
+Signed-off-by: Riyan Dhiman <riyandhiman14@gmail.com>
+---
+ drivers/scsi/aacraid/aachba.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index b22857c6f3f4..f3fc9b622aee 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -490,18 +490,14 @@ int aac_get_containers(struct aac_dev *dev)
+ 	if (dev->fsa_dev == NULL ||
+ 		dev->maximum_num_containers != maximum_num_containers) {
+ 
+-		fsa_dev_ptr = dev->fsa_dev;
+-
+-		dev->fsa_dev = kcalloc(maximum_num_containers,
++		fsa_dev_ptr = kcalloc(maximum_num_containers,
+ 					sizeof(*fsa_dev_ptr), GFP_KERNEL);
+-
+-		kfree(fsa_dev_ptr);
+-		fsa_dev_ptr = NULL;
+-
+-
+-		if (!dev->fsa_dev)
++		if(!fsa_dev_ptr)
+ 			return -ENOMEM;
+ 
++		kfree(dev->fsa_dev);
++		dev->fsa_dev = fsa_dev_ptr;
++
+ 		dev->maximum_num_containers = maximum_num_containers;
+ 	}
+ 	for (index = 0; index < dev->maximum_num_containers; index++) {
+-- 
+2.46.0
+
