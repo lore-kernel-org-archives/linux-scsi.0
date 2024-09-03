@@ -1,101 +1,98 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A03B418B46F;
-	Tue,  3 Sep 2024 18:54:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D0C71D5CC6;
+	Tue,  3 Sep 2024 19:19:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725389664; cv=none; b=dW0rbw0QUdKATJqkFhAVPPWQEw+V+KBgTA7/6LyrbZBknYdwQdzx/Ygxs/+XQqiKgE8Zr+42AXYwV4/ju9w8NsQvXqhGSzX06b6qYtHQg8vAYYeEjYUvzle+N/MOKA/W/qsSe5Bgx3M2HqQXoBSW/aReJEw91djQk7DpSxaI0Do=
+	t=1725391143; cv=none; b=rJQ0ruvkOBqGFFJxxMpJfYOIrDVuZl5l4iSt7jzbk41lH+qM32hTzhFvfHhd3e0nLsC+fMdtL/IgGFaoJhNrFrmlMe+NMdqNDOIKn4UkddqsXrW6PrK44VPyJpOLax2P7UD/WmMo+IFBLqZjDjVc5FWVuicyuiuCrdn6iuK1Khc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725389664; c=relaxed/simple;
-	bh=ZSIKP8T6oTjHe1+A8t78p5Km5ZD3WdsW+W79EHwNphs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aJNVTFUnu+nvRgUqvhj/ZLAm37qH1QT9t3/CPHw1rXlNJlwRgFjPq2CIcAXldSyWACEUAzmv1jwo+LwqnklIrIkvMnNjl4wNu3VDvJk4Ds9zNp4f5nX92Ut5UruOAxU58+UUYPbwdLcml8XuEsZ1iFhRsu5ElUJ+bVWbVct7H5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aiUzVGPt; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725391143; c=relaxed/simple;
+	bh=C6tyTlzrvQ744QWHSoF7W4UR1hVGzE0ndrYG0/hpzi0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CTyebVzMzjjMD8i+vSH+qqIIScZnyg4CP2JyfTvdAeb5H0WTcE+NZgqCM6pzG6JsTdRTLotzAJv1ISX9DNyPjXpdMQuwSUhFNFmtOZtPXgHYSmii3GFLls8Hjfruw/gZIk36PnLCmO6SZWEbLpESx/HdkTqNWMZZkZAtRVk6yYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nq+KH05I; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aiUzVGPt"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-7cd8d2731d1so3700140a12.3;
-        Tue, 03 Sep 2024 11:54:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725389663; x=1725994463; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=O2DzlqGgPdsSqrdHdEWfIeC+47Crs8VQxJBVB6/aP1s=;
-        b=aiUzVGPtSHlLMAX5jBcju2PU0QiaUBdGvWx/XcZgbPO4fs8Bbxc5kjcucL4KTC/PqT
-         Atmz+K7VmsUWgxPi2mPo6Yt6nit3GwmYpbzKjzQB45dvHu+gU1697MpJjQhCnyt/Ie/l
-         NvVML+74iD4QJW0zycRSv8kfNppc1aHJzm6JPQeapKlDZYUgyfvmez75mfMaC6AY6occ
-         JjJMKWQOHegwzAjk4jEpNSW7nGgjXmojrgQ2RigFnF65EIZXt2n0GyIU5pd3xA0TxsQt
-         YmeQ9X0+9rKkwxRpSTO8CW9dGQp2+TmN/mlP/Jelf7inDb6xPGx9Ryb+j3/8H87KitU+
-         /AyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725389663; x=1725994463;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=O2DzlqGgPdsSqrdHdEWfIeC+47Crs8VQxJBVB6/aP1s=;
-        b=qxdpb70jV0yxCaXa8LFSCipKyHpyXvFGpy/SkWRHB/0+yTp2JXZDowvfj5ysF4hLkq
-         YV6tP4xf4Iga7YhETzYr3SwKPLTZP39uFLpbx/bNLTBoPlNuQ7GXW91nIGpJkVuKXKsQ
-         SIA2CDoAjsRlAzfKECpfEl6uVBZSKXuXXu9/p/jz8gZ8aL9QXRxUxNBYHpk9DdnqunpT
-         cPMQs3NEo6BmJzGwXSPnogZ3a4wpkmn1y/TzTv9NPd14UprPhmZEiwxMMVmylEtzaNZy
-         MffIk++40coztqAnNscouGmJ6ZAN4BanYQGolnRwfveIyC4Pmk3Hvb6TJjTNfWSWU361
-         DEYA==
-X-Forwarded-Encrypted: i=1; AJvYcCWIm4wYvnMK3GZmtMDlGhGmqCgv/6SNr3D7sHfjIAUAxm2oRdf5bY5vL4SEGpH3i9OPplWcvZrrTxGdQxM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyENdlT6szlTb+m0KrqPka4V0xIG4vBwy6Bd26CVYTFIICrf/CY
-	dOhd1uOaoIntWGStTRu2qdgUfBIBBJNx+84vVGR04woeTwM9p6xCy3Pj7JjbW7c=
-X-Google-Smtp-Source: AGHT+IGzKXJurrgR3CSk4wcesK3azeP2MWGDgRWCB6mYCLJ1MBbSFO19SW8xX3L5nzUfcMII5Xtt8g==
-X-Received: by 2002:a05:6a21:e8c:b0:1c0:eba5:e192 with SMTP id adf61e73a8af0-1cece520bf7mr11418242637.27.1725389662630;
-        Tue, 03 Sep 2024 11:54:22 -0700 (PDT)
-Received: from fedora.. ([106.219.162.224])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71778533256sm204637b3a.50.2024.09.03.11.54.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Sep 2024 11:54:22 -0700 (PDT)
-From: Riyan Dhiman <riyandhiman14@gmail.com>
-To: aacraid@microsemi.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Riyan Dhiman <riyandhiman14@gmail.com>
-Subject: [PATCH] scsi: aacraid: Fix memory leak in open_getadapter_fib function
-Date: Wed,  4 Sep 2024 00:24:10 +0530
-Message-ID: <20240903185410.21144-1-riyandhiman14@gmail.com>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nq+KH05I"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WywQr4RVlzlgTWR;
+	Tue,  3 Sep 2024 19:19:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1725391138; x=1727983139; bh=coBZ9lyHTBRDqRpSWT44D/Qb
+	8lF4EuJZ+HhHtbYLR84=; b=nq+KH05ICOejEbF/Vx9An/ZPSCrbZ9al6t60YGnM
+	3+jcmjDwTpzIXxAkK8yP7ETk41ppy6mTmftCMkt774RTyHjswE3KB+tftKBfYnSZ
+	HMgckfje6oChlcucWYiR7YbDc6tuMAhPAp9Mg0okrfrKugfAcmtpHCpB6JJvlxM3
+	FpwfByf1NTuQ2tglPUEvyFryOmRIjfYNRstqkIRRSFmBYNwOj9hce30NthTMVdde
+	i/bOo9AUXgAW8kEWmBSKdJ4ekoq9QfG1za3cIxm1094ZwmQ84DFwvvTFOHPDVutd
+	WOTKz1vdWL4k3hkppWC3hA7oShOjaDJb8sZJySmiP9QZ6A==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id XDfrxYmerwhi; Tue,  3 Sep 2024 19:18:58 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WywQn6JmnzlgTWP;
+	Tue,  3 Sep 2024 19:18:57 +0000 (UTC)
+Message-ID: <b7f0acf4-5e7d-4491-81be-71518197c58b@acm.org>
+Date: Tue, 3 Sep 2024 12:18:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: aacraid: Fix memory leak in open_getadapter_fib
+ function
+To: Riyan Dhiman <riyandhiman14@gmail.com>, aacraid@microsemi.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240903185410.21144-1-riyandhiman14@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240903185410.21144-1-riyandhiman14@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-In the open_getadapter_fib() function, memory allocated for the fibctx structure
-was not freed when copy_to_user() failed. This can lead to memory leaks as the 
-allocated memory remains unreferenced and cannot be reclaimed.
+On 9/3/24 11:54 AM, Riyan Dhiman wrote:
+> In the open_getadapter_fib() function, memory allocated for the fibctx structure
+> was not freed when copy_to_user() failed. This can lead to memory leaks as the
+> allocated memory remains unreferenced and cannot be reclaimed.
+> 
+> This patch ensures that the allocated memory for fibctx is properly
+> freed if copy_to_user() fails, thereby preventing potential memory leaks.
 
-This patch ensures that the allocated memory for fibctx is properly
-freed if copy_to_user() fails, thereby preventing potential memory leaks.
+What made you analyze the code modified by this patch?
 
-Changes:
-- Added kfree(fibctx); to release memory when copy_to_user() fails.
+How has this patch been tested?
 
-Signed-off-by: Riyan Dhiman <riyandhiman14@gmail.com>
----
- drivers/scsi/aacraid/commctrl.c | 1 +
- 1 file changed, 1 insertion(+)
+> Changes:
+> - Added kfree(fibctx); to release memory when copy_to_user() fails.
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index e7cc927ed952..80838c84b444 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -220,6 +220,7 @@ static int open_getadapter_fib(struct aac_dev * dev, void __user *arg)
- 		if (copy_to_user(arg, &fibctx->unique,
- 						sizeof(fibctx->unique))) {
- 			status = -EFAULT;
-+			kfree(fibctx);
- 		} else {
- 			status = 0;
- 		}
--- 
-2.46.0
+Changes compared to what? I don't see a version number in the email
+subject.
 
+> @@ -220,6 +220,7 @@ static int open_getadapter_fib(struct aac_dev * dev, void __user *arg)
+>   		if (copy_to_user(arg, &fibctx->unique,
+>   						sizeof(fibctx->unique))) {
+>   			status = -EFAULT;
+> +			kfree(fibctx);
+>   		} else {
+>   			status = 0;
+>   		}
+
+Just above the copy_to_user() call there is the following statement:
+
+	list_add_tail(&fibctx->next, &dev->fib_list);
+
+Does that mean that the above kfree() will cause list corruption?
+
+Bart.
