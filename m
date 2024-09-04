@@ -1,95 +1,218 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 313C5286A6;
-	Wed,  4 Sep 2024 04:58:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A59381AB4;
+	Wed,  4 Sep 2024 08:34:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725425908; cv=none; b=fRat/3Bzxo7v6TvFVGdiJp8kV5G9BCk3WXEjDxoeJJBFbN8piX6AV5PI9sIOk0XpyL+Ajmp8qn9dNGB48jEizXq+VqI8xYnQ6rbildX8qe02/kjXazi5vCjEl/uFwwwUURezsSUuu4di1UhBXdUZ0la7tfIHVB0NkfLAP9J2y84=
+	t=1725438885; cv=none; b=sTP88fGR7eny/iL0lvrIZOSRUQAAAKPj/pDSor2bLoaJ/SyziqFMwWgZTp0DHoahZQMv7PrVibdk2ZJ+ILwh3y4HiI/9lF5XQbZtd84fmhaE2eujawCd7U1f9nNDGYa9fazBbSzWJ6X3uNlxkvhLwvTBe3q13IeQWAWZJlu4lVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725425908; c=relaxed/simple;
-	bh=LhI4B56slGs9YPgAwlbHmUKmiqFYCpgK6OupcKSiUJw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CtLy/iI1fxZfJTI6TzhbT9h7IFTGysZBPPU2dV9AvsmmOQes9oe6crOuVK0i1YcoC2Sort46xUHqky4+jT7WO4Tw16UgXr1pKYDFEPUNEFtWx8TUVC/NX9WC/QdGVrIOSxoHOeimx9qKTA8hxgYW6Kja8XhadxJhkS142ioCGJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RXCyRG7T; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725438885; c=relaxed/simple;
+	bh=TSbTlxmynJaa+3azrWecam5RAA/J2OsZiqLEu2rc0/A=;
+	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:CC; b=IXJnIWWaS7bvk1CIsis/NoVe4vA/yBnRhmfY6WJCscg+0EJ9LWG+sLMTN7PrcM19Q1CozgL3OVeklPSNQ8fwc3QdpEInkrRpRYWvyKn1K++mlsKrFzpNb+34ee7A98hKcrQT8eZsB53DfMJ267aCYXww4aIgEvKC17uCfAy1m9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Jsz897Z3; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RXCyRG7T"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2d8818337a5so247665a91.1;
-        Tue, 03 Sep 2024 21:58:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725425906; x=1726030706; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dc+SrEyI9sxhQZvqFrCZSaR00xZLH9W3lK7EOUusxxU=;
-        b=RXCyRG7T9HzO9qd2E+3wW9MaiwobllggYUo/UjNRt2gXFW78VdORjoQnGGtq+o3iQ3
-         wQvQRb3s9B3j+XE9ZbQCvRA1X7/aaxc9JUfQSU6tAOMBwsrzdZL7FKz8K1HVdq7iDNin
-         QLSTYVgwhe+ii6MlefHQLnjeNRrOc4u6U6qzRrrH6htst8o4g1129lmXC0Z92VWcpl+l
-         lgXAH7MzqGo9pl3IzgzazUdsQVASU2892BVbNEmMkQihYde3QC9Rmj/sge5BOWz/SrJk
-         5xGOQoc/nZni0XiWLgGUbyVkfrvYKLaa15BWlIuDiLp1V1J6R1sR8Bcevph7sWgqDP46
-         xD7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725425906; x=1726030706;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dc+SrEyI9sxhQZvqFrCZSaR00xZLH9W3lK7EOUusxxU=;
-        b=jllkOGite6JBMsLis72CROx6cFwWXtKdOFbQ688FQFvNbJbxYuFE1H0PUfTwy3QjQb
-         q7cXVeRkys4mF+/HrGqW4DXHoTfM2p2YdTbGauKApsi8zTddGZIp6urnI2c7Z/zKgKmg
-         1oXUHe3L6e9jioEHQSptsMhOHsINFw1sn0cOZVFHVjlivvf5+Lq3mgLDg5u5jU0JTlBz
-         6G7c3175CAVrCv/dp5jdEEBC8nYwoxpujzQRExJcSppaJcTlTUfU74rnJtjcBq5yH26+
-         Z7sEmgpuMhEQkDGvMOLgkLCqnOUXrv7gBmeF1nNQIkxV66ZgjxRhDGZjndpwCpv5aKeG
-         jdkQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXxvPlDvYvQRo9foH3Z9To2huQqBEUq/FpscwqnNIbZBnCiCXl5ZMqrndcIx+pBjE67l2VXBPj9HPAJpwM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy0F3lubZlILSnfVnZHxsgc1wFI5Me8gvZOT540P77wI0HzJHVE
-	BGeOf1oTywasdWJZp7/w9VxfbtP2u5iexBtRpgrCnRxnRcDv/cc8NRIm7chHETw=
-X-Google-Smtp-Source: AGHT+IHxcvPeN3R2FI7JuFZ+OXwq4fOXwwv1cilWhl0siVVpuZLiDTm3IlD0Mqd54DDDF8w7dKyvBA==
-X-Received: by 2002:a17:90b:4b07:b0:2da:6e46:ad48 with SMTP id 98e67ed59e1d1-2da8e9cf76dmr1491007a91.1.1725425906215;
-        Tue, 03 Sep 2024 21:58:26 -0700 (PDT)
-Received: from fedora.. ([106.219.164.163])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d85b0fe17bsm12378511a91.10.2024.09.03.21.58.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Sep 2024 21:58:25 -0700 (PDT)
-From: Riyan Dhiman <riyandhiman14@gmail.com>
-To: bvanassche@acm.org,
-	aacraid@microsemi.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aacraid: Fix memory leak in open_getadapter_fib function
-Date: Wed,  4 Sep 2024 10:28:18 +0530
-Message-ID: <20240904045820.5510-1-riyandhiman14@gmail.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <bf6746d0-d8cc-412e-ac7b-6f17c3e3de9d@acm.org>
-References: <bf6746d0-d8cc-412e-ac7b-6f17c3e3de9d@acm.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Jsz897Z3"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 483K82GG008946;
+	Wed, 4 Sep 2024 08:34:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=ZFB8Kbz1SyQHqfis6mv9oa
+	YLaY2wXicDsXVo/UQ/XXA=; b=Jsz897Z3U+4m/hf7K71SMJtBPibh2E//L6EZ2u
+	yUEQDyc164kEMMDCFqb+WNXMwiMiFqIdI17P14X4Av1K+//nINN3t2nrSO1Vltnh
+	tM9I/etgXSVtqglQ/6evAj7S8sKBFk+XFOm0K3LUXP5xkkfYO9U/KQ4R7pogM7Na
+	U4NbcnytewUy2QeqYGMUhpDxLUmIiQOC/GwqXjPNXZ0elHKXLLm/WvSZOe/R7FN8
+	4LG5hE5zXt8C4dbEEUb60THRF2oH+GTWLtpsP04spcYFhrOnNVn+XdcdmP9XKTEO
+	7GNyFGsM7V/2o4YHuUDDXUgNh8vIsEu0fQf8/0hPSkoIx28Q==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41bud2t4j6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 04 Sep 2024 08:34:11 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4848YAjL001656
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 4 Sep 2024 08:34:10 GMT
+Received: from jingyw-gv.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Wed, 4 Sep 2024 01:34:01 -0700
+From: Jingyi Wang <quic_jingyw@quicinc.com>
+Subject: [PATCH 00/19] Add initial support for QCS8300
+Date: Wed, 4 Sep 2024 16:33:41 +0800
+Message-ID: <20240904-qcs8300_initial_dtsi-v1-0-d0ea9afdc007@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAGYb2GYC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIxMDCyNL3cLkYgtjA4P4zLzMkszEnPiUkuJMXcNEYwuz1CRjQ/MUYyWg1oK
+ i1LTMCrCx0bG1tQBX97wSZgAAAA==
+To: Bjorn Andersson <andersson@kernel.org>,
+        Mathieu Poirier
+	<mathieu.poirier@linaro.org>,
+        Rob Herring <robh@kernel.org>,
+        "Krzysztof
+ Kozlowski" <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Bartosz
+ Golaszewski" <bartosz.golaszewski@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, "Andy Gross" <agross@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        "Thomas Gleixner" <tglx@linutronix.de>, Will Deacon <will@kernel.org>,
+        Robin
+ Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+        Konrad Dybcio
+	<konradybcio@kernel.org>,
+        Robert Marko <robimarko@gmail.com>,
+        Das Srinagesh
+	<quic_gurus@quicinc.com>,
+        Jassi Brar <jassisinghbrar@gmail.com>, Lee Jones
+	<lee@kernel.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Catalin Marinas <catalin.marinas@arm.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-remoteproc@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <iommu@lists.linux.dev>, Jingyi Wang <quic_jingyw@quicinc.com>,
+        Xin Liu
+	<quic_liuxin@quicinc.com>,
+        Shazad Hussain <quic_shazhuss@quicinc.com>,
+        Tingguo Cheng <quic_tingguoc@quicinc.com>,
+        Zhenhua Huang
+	<quic_zhenhuah@quicinc.com>,
+        Kyle Deng <quic_chunkaid@quicinc.com>,
+        "Raviteja
+ Laggyshetty" <quic_rlaggysh@quicinc.com>
+X-Mailer: b4 0.15-dev-99b12
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1725438840; l=4106;
+ i=quic_jingyw@quicinc.com; s=20240829; h=from:subject:message-id;
+ bh=TSbTlxmynJaa+3azrWecam5RAA/J2OsZiqLEu2rc0/A=;
+ b=pljMssqerWcs/iddcMjH4610nwwVlYPdgrso7lGrkJYZmSy9VyEegf+c9Qbq/0NUtpZoex7v0
+ rTLtTVzd7zoAMOuNoVgqH6ER65mNCiB25uwQyN3Wa5u0FPhje08Mamw
+X-Developer-Key: i=quic_jingyw@quicinc.com; a=ed25519;
+ pk=3tHAHZsIl3cClXtU9HGR1okpPOs9Xyy1M0jzHw6A/qs=
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: MZ_8Z4fjhEJalyL95xmfS_Ekm-0cBv1H
+X-Proofpoint-ORIG-GUID: MZ_8Z4fjhEJalyL95xmfS_Ekm-0cBv1H
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-04_05,2024-09-04_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
+ clxscore=1011 spamscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0
+ bulkscore=0 priorityscore=1501 phishscore=0 impostorscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2409040065
 
->>> Just above the copy_to_user() call there is the following statement:
->>>
->>> 	list_add_tail(&fibctx->next, &dev->fib_list);
->>>
->>> Does that mean that the above kfree() will cause list corruption?
->> 
->> Yes, you are correct. I overlooked that fibctx is part of a list, and freeing the
->> memory without removing the list entry would corrupt the list.
->> The list entry should be deleted before freeing the memory if copy_to_user() fails.
->
-> Are you sure that this is what the code should do?
+Add initial support for QCS8300 SoC and QCS8300 RIDE board.
 
-If copy_to_user function fails that means data was not copied to args successfully, which can leads to 
-issue as args might remain unchanged or in an uninteded state. Since we are returning an -EFAULT error, 
-we should free fibctx and remove the list entry in the case of an error. If there are any other methods, 
-additional checks, or potential issues with this approach that I should consider, 
-please let me know, and I'll make the necessary adjustments promptly.
+This revision brings support for:
+- CPUs with cpu idle
+- interrupt-controller with PDC wakeup support
+- gcc
+- TLMM
+- interconnect
+- qup with uart
+- smmu
+- pmic
+- ufs
+- ipcc
+- sram
+- remoteprocs including ADSP,CDSP and GPDSP
 
-Regards,
-Riyan Dhiman
+Signed-off-by: Jingyi Wang <quic_jingyw@quicinc.com>
+---
+patch series organized as:
+- 1-2: remoteproc binding and driver
+- 3-5: ufs binding and driver
+- 6-7: rpmhpd binding and driver
+- 8-15: bindings for other components found on the SoC
+- 16-19: changes to support the device tree
+
+dependencies:
+tlmm: https://lore.kernel.org/linux-arm-msm/20240819064933.1778204-1-quic_jingyw@quicinc.com/
+gcc: https://lore.kernel.org/all/20240820-qcs8300-gcc-v1-0-d81720517a82@quicinc.com/
+interconnect: https://lore.kernel.org/linux-arm-msm/20240827151622.305-1-quic_rlaggysh@quicinc.com/
+
+dtb check got following err:
+/local/mnt/workspace/jingyi/aim500/linux/arch/arm64/boot/dts/qcom/qcs8300-ride.dtb: interconnect@1680000: Unevaluated properties are not allowed ('reg' was unexpected)
+which is cause by "reg" compatible missing in dt binding, will be fixed in interconnect patch series.
+
+---
+Jingyi Wang (11):
+      dt-bindings: remoteproc: qcom,sa8775p-pas: Document QCS8300 remoteproc
+      remoteproc: qcom: pas: Add QCS8300 remoteproc support
+      dt-bindings: qcom,pdc: document QCS8300 Power Domain Controller
+      dt-bindings: soc: qcom: add qcom,qcs8300-imem compatible
+      dt-bindings: mailbox: qcom-ipcc: Document QCS8300 IPCC
+      dt-bindings: mfd: qcom,tcsr: Add compatible for QCS8300
+      dt-bindings: nvmem: qfprom: Add compatible for QCS8300
+      dt-bindings: arm: qcom: document QCS8275/QCS8300 SoC and reference board
+      arm64: defconfig: enable clock controller, interconnect and pinctrl for QCS8300
+      arm64: dts: qcom: add initial support for QCS8300 DTSI
+      arm64: dts: qcom: add base QCS8300 RIDE dts
+
+Kyle Deng (1):
+      dt-bindings: soc: qcom,aoss-qmp: Document the QCS8300 AOSS channel
+
+Shazad Hussain (1):
+      dt-bindings: power: rpmpd: Add QCS8300 power domains
+
+Tingguo Cheng (1):
+      pmdomain: qcom: rpmhpd: Add QCS8300 power domains
+
+Xin Liu (3):
+      dt-bindings: phy: Add QMP UFS PHY comptible for QCS8300
+      dt-bindings: ufs: qcom: Document the QCS8300 UFS Controller
+      phy: qcom-qmp-ufs: Add support for QCS8300
+
+Zhenhua Huang (2):
+      dt-bindings: arm-smmu: Add compatible for QCS8300 SoC
+      dt-bindings: firmware: qcom,scm: document SCM on QCS8300 SoCs
+
+ Documentation/devicetree/bindings/arm/qcom.yaml    |    8 +
+ .../devicetree/bindings/firmware/qcom,scm.yaml     |    1 +
+ .../bindings/interrupt-controller/qcom,pdc.yaml    |    1 +
+ .../devicetree/bindings/iommu/arm,smmu.yaml        |    2 +
+ .../devicetree/bindings/mailbox/qcom-ipcc.yaml     |    1 +
+ .../devicetree/bindings/mfd/qcom,tcsr.yaml         |    1 +
+ .../devicetree/bindings/nvmem/qcom,qfprom.yaml     |    1 +
+ .../bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml    |    2 +
+ .../devicetree/bindings/power/qcom,rpmpd.yaml      |    1 +
+ .../bindings/remoteproc/qcom,sa8775p-pas.yaml      |    6 +
+ .../bindings/soc/qcom/qcom,aoss-qmp.yaml           |    1 +
+ .../devicetree/bindings/sram/qcom,imem.yaml        |    1 +
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          |    2 +
+ arch/arm64/boot/dts/qcom/Makefile                  |    1 +
+ arch/arm64/boot/dts/qcom/qcs8300-ride.dts          |  246 ++++
+ arch/arm64/boot/dts/qcom/qcs8300.dtsi              | 1282 ++++++++++++++++++++
+ arch/arm64/configs/defconfig                       |    3 +
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            |    3 +
+ drivers/pmdomain/qcom/rpmhpd.c                     |   24 +
+ drivers/remoteproc/qcom_q6v5_pas.c                 |    3 +
+ include/dt-bindings/power/qcom-rpmpd.h             |   19 +
+ 21 files changed, 1609 insertions(+)
+---
+base-commit: eb8c5ca373cbb018a84eb4db25c863302c9b6314
+change-id: 20240829-qcs8300_initial_dtsi-1a386eb317d3
+
+Best regards,
+-- 
+Jingyi Wang <quic_jingyw@quicinc.com>
+
