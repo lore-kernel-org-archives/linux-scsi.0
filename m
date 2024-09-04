@@ -1,38 +1,70 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EDD98C11
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Sep 2024 01:27:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E3548248C;
+	Wed,  4 Sep 2024 04:44:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725413235; cv=none; b=prnF+PFNL1UDiKm961ucG4szWdoVwN/3TUOc1YtpJAwX5Bs/C/9odusqWXBWKHXyXPptBcO95rlKO7rp+BR5iBz12P0MB26QvpfRnOP+nvNfEeegf1VOXgCQly+R7YaJidyJ29MkCg/Z4h7FRWr0kCSf5LkKGDlRSNBrajiIOIA=
+	t=1725425058; cv=none; b=OYtKJTuUq1O/h1t5XSvhti/+4UyqbBo4fz3gwWywnrcBbiE4IQUiAQYpkXq9ICf1fe7NAXaayEZ0q49SHGRn4mdDgmcVYLpRTUsl+757AdtbiBmPpAIwesd1N+jmsOH++lTCVnYZbjz8op1xLBYdJfqkgm5PfV29pnn592b6Jxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725413235; c=relaxed/simple;
-	bh=2UunxuAygnw7dr72L07ui4hVjlo1tYKaDIfhUJ4wexU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=M0bk7eP05aI4ML4iokh9oOrhtHXhASeaCLNaG1NDa8M+9abUeSkVEuGkCzzk+nS63pl64EqHlAHbUFHT2g0iDdOT1MErpvIKW+dz7vMCBkLGDrRDlkLWnbt9SVLJd0HzdwyasifZDluVlFR2tFQjFQQAhW0tiEMw9IATkCmVZkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Wz4Ty1QXKz20nKr;
-	Wed,  4 Sep 2024 09:22:14 +0800 (CST)
-Received: from dggpeml500022.china.huawei.com (unknown [7.185.36.66])
-	by mail.maildlp.com (Postfix) with ESMTPS id D40F11A0188;
-	Wed,  4 Sep 2024 09:27:10 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by dggpeml500022.china.huawei.com
- (7.185.36.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 4 Sep
- 2024 09:27:10 +0800
-From: Hongbo Li <lihongbo22@huawei.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <lihongbo22@huawei.com>
-Subject: [PATCH -next 1/3] scsi: pmcraid: change snprintf() to sysfs_emit()
-Date: Wed, 4 Sep 2024 09:35:38 +0800
-Message-ID: <20240904013540.2026972-2-lihongbo22@huawei.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240904013540.2026972-1-lihongbo22@huawei.com>
-References: <20240904013540.2026972-1-lihongbo22@huawei.com>
+	s=arc-20240116; t=1725425058; c=relaxed/simple;
+	bh=HbSVeyGlyfMkVx1t2iiecleOFI2Uqsl59xQXLDO1UvI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mwLssDbG/Eu4U/Z/wpRJZYKN0iC7NKT5J4fOX/aniVoPiiREdIjXlNiXoz59I0Rp8zgpIF5yYbhoGYVV7/JATrXEEwsg2K6Yr1BimwDRgb98P4yiEjNULXhvbpwavMUnzf/m/bwOsTyalboAYNI/RS6aKvV1zfneUb9OGhQRmXQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IilesiwP; arc=none smtp.client-ip=209.85.216.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IilesiwP"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2d8b96c18f0so2320217a91.2;
+        Tue, 03 Sep 2024 21:44:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725425056; x=1726029856; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Mt+0N9jJxyAwx8NVNH01DHTvE6N0adpofG7Pe6wqFbI=;
+        b=IilesiwPz6yjQDduep8JL+BiiBtOgs37Z//cNJv89AY7c+nTtrJvHzmPMzrwvAnigK
+         s9Hkq96kUkb405lVfWV9yHxxKY57D9IaCGWVCCjIv7m8xJQeopCS5Yg19J8DvkJ7P43t
+         YzY6o0nlpT6f6A/TV1JsLb1O35RGFBzz3yBJ8vnBxj9Cnh9P9n3FdTLyShUmRhOymPM4
+         OW7zPKyW7T5WjDAe3DGRFfYMq1yoVwfV9/4bj2ybHJTHRnIsxF6rFrp0UrOPxGyC8rPK
+         Ns6JdLSIAV33bE6NUkEzL2EMagdF7tAyfcB0TwMWroP++IeCZdaLRuEwTGfTtU2eQZ6v
+         6/FA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725425056; x=1726029856;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Mt+0N9jJxyAwx8NVNH01DHTvE6N0adpofG7Pe6wqFbI=;
+        b=jjG+zMafuBiQBsRAtQCFcGZ9ubjKPFDuEOptH+FEqjLE/9iaRbEwKAxOSrcm2Ej/Xz
+         gnEDyZdIUCWn4xUx2dr6iEBwxxQjiL0A1BcpuduE1sl93FH7x1pmBUmj7OzqOA/fA3tY
+         APxMKpBUkvnriRT8gw7uuPZu5EzLkOiT4HCmjnXXs+ONWJxOECfZ+5R4bo3OZvNW4p/F
+         Hk61FH9IP0W7yxnqL5H9oW/Gx8gJoJ9GGlT0jfjcC3UKBUrjO7Zj9sYoCnq35KcIotul
+         qsIPXR8xse9ONmdv0jt0UqZqrAC1cumWRLANejxzge7apDNAohazJIahyi6cdFkAafYt
+         SJxw==
+X-Forwarded-Encrypted: i=1; AJvYcCUHeYw1BDaiUhkbeu4BlafcxXgBhB5i1XiIhgTZubbTwh9o6kfIb7b9l1LCRAf9DTvowEg0d1vxsQAHbOE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLnvK/vpd4uDZ3HBntX73kZ6De8YhWkEsWwwiOeJ6xPvr7XNR+
+	Y5Mstq+BczbwbOVDw2XTLqNfPTO5+38FZ/+UNM0moQUabUGrIwuL
+X-Google-Smtp-Source: AGHT+IHx6kCUCGOSn3HU1x4KmnxOS9mKsnI6/+/FFUeOV0Fwxo0ODUwWE/4KJzru+FUswH5QpG0rhA==
+X-Received: by 2002:a17:90a:c286:b0:2da:61e1:1597 with SMTP id 98e67ed59e1d1-2da74e5fdfamr3510188a91.36.1725425056062;
+        Tue, 03 Sep 2024 21:44:16 -0700 (PDT)
+Received: from fedora.. ([106.219.164.163])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d8ebdf56c0sm4792636a91.23.2024.09.03.21.44.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Sep 2024 21:44:15 -0700 (PDT)
+From: Riyan Dhiman <riyandhiman14@gmail.com>
+To: bvanassche@acm.org,
+	aacraid@microsemi.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: aacraid: Fix memory leak in open_getadapter_fib function
+Date: Wed,  4 Sep 2024 10:13:00 +0530
+Message-ID: <20240904044409.4783-1-riyandhiman14@gmail.com>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <bf6746d0-d8cc-412e-ac7b-6f17c3e3de9d@acm.org>
+References: <bf6746d0-d8cc-412e-ac7b-6f17c3e3de9d@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,54 +72,23 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpeml500022.china.huawei.com (7.185.36.66)
 
-As Documentation/filesystems/sysfs.rst suggested, show()
-should only use sysfs_emit() or sysfs_emit_at() when formatting
-the value to be returned to user space.
+>>> Just above the copy_to_user() call there is the following statement:
+>>>
+>>> 	list_add_tail(&fibctx->next, &dev->fib_list);
+>>>
+>>> Does that mean that the above kfree() will cause list corruption?
+>> 
+>> Yes, you are correct. I overlooked that fibctx is part of a list, and freeing the
+>> memory without removing the list entry would corrupt the list.
+>> The list entry should be deleted before freeing the memory if copy_to_user() fails.
+>
+> Are you sure that this is what the code should do?
 
-Signed-off-by: Hongbo Li <lihongbo22@huawei.com>
----
- drivers/scsi/pmcraid.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+Yes, removing the list entry before freeing the memory is necessary to maintain list 
+integrity and prevent corruption. If there are any other methods, additional checks, 
+or potential issues with this approach that I should consider, please let me know, 
+and I'll make the necessary adjustments promptly.
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index a2a084c8075e..22e53c4be894 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3541,7 +3541,7 @@ static ssize_t pmcraid_show_log_level(
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct pmcraid_instance *pinstance =
- 		(struct pmcraid_instance *)shost->hostdata;
--	return snprintf(buf, PAGE_SIZE, "%d\n", pinstance->current_log_level);
-+	return sysfs_emit(buf, "%d\n", pinstance->current_log_level);
- }
- 
- /**
-@@ -3602,8 +3602,7 @@ static ssize_t pmcraid_show_drv_version(
- 	char *buf
- )
- {
--	return snprintf(buf, PAGE_SIZE, "version: %s\n",
--			PMCRAID_DRIVER_VERSION);
-+	return sysfs_emit(buf, "version: %s\n", PMCRAID_DRIVER_VERSION);
- }
- 
- static struct device_attribute pmcraid_driver_version_attr = {
-@@ -3635,9 +3634,8 @@ static ssize_t pmcraid_show_adapter_id(
- 	u32 adapter_id = pci_dev_id(pinstance->pdev);
- 	u32 aen_group = pmcraid_event_family.id;
- 
--	return snprintf(buf, PAGE_SIZE,
--			"adapter id: %d\nminor: %d\naen group: %d\n",
--			adapter_id, MINOR(pinstance->cdev.dev), aen_group);
-+	return sysfs_emit(buf, "adapter id: %d\nminor: %d\naen group: %d\n",
-+			  adapter_id, MINOR(pinstance->cdev.dev), aen_group);
- }
- 
- static struct device_attribute pmcraid_adapter_id_attr = {
--- 
-2.34.1
-
+Regards,
+Riyan Dhiman
