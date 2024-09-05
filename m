@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A62E165F0E;
-	Thu,  5 Sep 2024 21:06:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C65F188583;
+	Thu,  5 Sep 2024 21:16:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725570420; cv=none; b=ISNln0kW5tU8ZiCFQAGsbvUA9Ppgk8XSPRSkPn1VMxNhnAMxTZugfj0L2YDGyNZlWqbBIOYI6Xcvwe/xk4t5jU27RbfHBMzHWjYjJnDc0jIiU9ksCAyPkP6uZTD2kj/XTPhf20vO+a2mHHy/06LJfPdGelFKYiHauHyx6kg6il8=
+	t=1725571013; cv=none; b=r0X5tW6E4msbaw+g/Dh0Ay+gmvwn5w9tw2p3FdHjKiYLo5t7ouy/g6c7WXYiETqa2Anjz7tWEpPhNU+mspCjNhgXNjFj85enQgnkarBE0ByUzzKgEjS1vDQ/ybMyuIMPHNBTcjIsOiMOAffpwUbG0jq+9T+CsUX5h2hs9uOnlIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725570420; c=relaxed/simple;
-	bh=0Lr4YqLk7DnP63YVFRDtANsb05n6cAkLN88Ax3sUs9Y=;
+	s=arc-20240116; t=1725571013; c=relaxed/simple;
+	bh=mkgaHAtecYvGuELnigUBtDygVelEKPQ8Kci4kOl7sRg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oIAQayFNJ5aCusYjqUYPXINTlx22xtAM6h3ALrwf3oEnnVqWIJXVa5s3cvSlefroJNrVez0ZUAWGNTg0SBQywBrrhRb52Pmd4PodaPuObgd7/vE1C4S4SASfOW4Jpw3k1l5zAuVkL1czhMlkKq71kEwz5axF8Y3fQWQ9cnZIxlc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WOP1uGqR; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=SLgnIGmpbIPWqrw4e/I9oUXi0RKhMexEM+FLV0oEcyCW0Q9JsNxdlMhMoJ9JsPF5ZrTlw6s3PMq3cD0zdjiUxFtoZwiGMefUAYFvzAaeepp3i3nFTkRD8x/9E41n/AnlUFW629E4OOhyxp0yr4HFHKlI4HK6p2CPad1ueswjXJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IEfSPC+n; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WOP1uGqR"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IEfSPC+n"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X0BkN38PDz6ClY8w;
-	Thu,  5 Sep 2024 21:06:52 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4X0Bxt6gV5zlgMVQ;
+	Thu,  5 Sep 2024 21:16:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1725570404; x=1728162405; bh=/ms+6UcbvTIwIRzvwY9hIW9x
-	1xlszuFEBvaySzIyYSw=; b=WOP1uGqRQIX8qFxmTDEkjFRgZWF5Muc7eSPjLalH
-	fCfwNBVqhLIvi96ab+YJ2BGdE/ZSIVS/9Wks/spCRrvZsg8k8LbIKmQX7yD+NdRC
-	/h6HtPTUSYApHzPN+t1nBQ+zNQjCNGHhT2OX8/dwnqQIUxNOI+HOFWq+Y15eqxAy
-	a4tHbcBlmyIEW60yNNT8mtqWCnWZbxa2OKevCujWvQKipO86y74fK9qkJ/iZnYVx
-	o4qb/YdVzoJSpkHvMMS0nD+ueWmyzd014O9Dw2vuWWToB2/XWeyel8/bTUXEtMHD
-	5RXUcI6Yj4Ue20cySLF2iSz3huveA7idDCEFKSptAk3odQ==
+	 s=mr01; t=1725571003; x=1728163004; bh=zRqrbLL/IkYQjEdfxlAqcVOg
+	FpFtctrQ9TMTQ5NK0Ac=; b=IEfSPC+njuqLZi/CcmLZbIT9BMmZ4yCAVYMVbcr3
+	AxR0cxhu3HxW4Q3wcFsTfznLZjYWs3oNx5Fgx08Qezq0ZR59Rg1Ki7zzByoqV6sp
+	buFoaLDo5fuIQuJpgqtJkpx7oNcUG2dHPg20NXd5FO+VXQ601FJ+sHKC0CfnsvxH
+	+8g6sxZj/dzKhcbkbBXTdnGIrVe4AYCfC/HtWHeq1MD/dpRq/+KvP4KN6s9OV79/
+	9E8eMDTmNWYCC9M0NE+Nf2OmMLtIefDuI5aKCy6sKeeRBQAvAR9iULGrJlhH3pYS
+	9lt2LHAgoJ0E567pvY4MZEb0me02GKTvo1OuES1IFqea2A==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id aKsyXEyfVD2T; Thu,  5 Sep 2024 21:06:44 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id MDlJSuh_GfjV; Thu,  5 Sep 2024 21:16:43 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X0BkB0DR9z6ClY8t;
-	Thu,  5 Sep 2024 21:06:41 +0000 (UTC)
-Message-ID: <f5274603-3687-4386-b785-129183d84f4c@acm.org>
-Date: Thu, 5 Sep 2024 14:06:41 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4X0Bxh55c2zlgMVL;
+	Thu,  5 Sep 2024 21:16:40 +0000 (UTC)
+Message-ID: <b31bf24f-588e-43e5-b71f-b4e9edd1b60a@acm.org>
+Date: Thu, 5 Sep 2024 14:16:40 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] ufs: core: fix the issue of ICU failure
+Subject: Re: [PATCH v2 2/2] ufs: core: requeue MCQ abort request
 To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
  martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
  jejb@linux.ibm.com
@@ -61,44 +61,56 @@ Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
  eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
  quic_nguyenb@quicinc.com, stable@vger.kernel.org
 References: <20240902021805.1125-1-peter.wang@mediatek.com>
- <20240902021805.1125-2-peter.wang@mediatek.com>
+ <20240902021805.1125-3-peter.wang@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240902021805.1125-2-peter.wang@mediatek.com>
+In-Reply-To: <20240902021805.1125-3-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 9/1/24 7:18 PM, peter.wang@mediatek.com wrote:
->   	/* SQRTCy.ICU = 1 */
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index afd9541f4bd8..abdc55a8b960 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -642,6 +642,7 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
+>   		match = le64_to_cpu(utrd->command_desc_base_addr) & CQE_UCD_BA;
+>   		if (addr == match) {
+>   			ufshcd_mcq_nullify_sqe(utrd);
+> +			lrbp->host_initiate_abort = true;
+>   			ret = true;
+>   			goto out;
+>   		}
 
-Feel free to leave out the above comment since it duplicates the code
-below this comment. A comment that explains that "ICU = Initiate
-Cleanup" probably would be appropriate.
+I think this is wrong. The above code is only executed if the SCSI core
+decides to abort a SCSI command. It is up to the SCSI core to decide
+whether or not to retry an aborted command.
 
-> -	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
-> +	writel(readl(opr_sqd_base + REG_SQRTC) | SQ_ICU,
-> +		opr_sqd_base + REG_SQRTC);
+> -	/* Release cmd in MCQ mode if abort succeeds */
+> -	if (hba->mcq_enabled && (*ret == 0)) {
+> -		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
+> -		if (!hwq)
+> -			return 0;
+> -		spin_lock_irqsave(&hwq->cq_lock, flags);
+> -		if (ufshcd_cmd_inflight(lrbp->cmd))
+> -			ufshcd_release_scsi_cmd(hba, lrbp);
+> -		spin_unlock_irqrestore(&hwq->cq_lock, flags);
+> -	}
+> +	/* Host will post to CQ with OCS_ABORTED after SQ cleanup */
+> +	if (hba->mcq_enabled && (*ret == 0))
+> +		lrbp->host_initiate_abort = true;
 
-Is this perhaps an open-coded version of ufshcd_rmwl()?
+I think this code is racy because the UFS host controller may have 
+posted a completion before the "lrbp->host_initiate_abort = true"
+assignment is executed.
 
->   
->   	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
->   	reg = opr_sqd_base + REG_SQRTS;
->   	err = read_poll_timeout(readl, val, val & SQ_CUS, 20,
->   				MCQ_POLL_US, false, reg);
-> -	if (err)
-> -		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%ld\n",
-> -			__func__, id, task_tag,
-> +	if (err || FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)))
-> +		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%d RTC=%ld\n",
-> +			__func__, id, task_tag, err,
->   			FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)));
+> + * @host_initiate_abort: Abort flag initiated by host
 
-In the above code the expression "FIELD_GET(SQ_ICU_ERR_CODE_MASK, 
-readl(reg))" occurs twice. Please consider storing that expression in
-a variable such that this expression only occurs once.
+What is "Abort flag"? Please consider renaming "host_initiate_abort"
+into "abort_initiated_by_err_handler" since I think that aborted
+commands should only be retried if these have been aborted by
+ufshcd_err_handler().
 
 Thanks,
 
 Bart.
-
