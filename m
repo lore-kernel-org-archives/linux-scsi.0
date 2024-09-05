@@ -1,69 +1,113 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CE9719D094;
-	Thu,  5 Sep 2024 12:20:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9B0419AD48;
+	Thu,  5 Sep 2024 12:41:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725538839; cv=none; b=LUYk3BUV/HDzTN/o4RLWUoXhzYJUc8GV1aoJREmZeJvpIA6YCEgCvWwM5vO56rbcp7MCAv1hfSA9lHHPkYb3d0k0lAaXEyYs6gscNFd0o0j/xhoy02EZmCsUkNm4JGGvuOoM/8ptb/OghljejtjYpXy8henjYNAaDTSvMgB/blI=
+	t=1725540074; cv=none; b=K/WgzY11Y7o2aCuVX8n2+Psvfz+aa15zvZXQvsrJzoH/XE42HFRmWUkURYrIQPpqAujp03ZZ4m3cHEWpnoJIAL0czS9ay9bTPOM5EvJ6SqLSWQph7W4BlQ3kT00rgJVi2KEsNrtTZ58zd7pjuGZ6Y1H/Ykv+oHafS1YnFuoswKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725538839; c=relaxed/simple;
-	bh=ZmeOlaaOh9kVk2+9NLmZUlpwkAalEB7RSAlNl4Z6j0M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YG9NRS+HFKsebtapgWuXuv9aq5iYVf3Av2uXtDPQY5UcRc0LEr+nyuFDUfrbQA5UP1FeelbNT2XJm1dNVD2cGWthOL7ccHzmAXG9UsqylSMQ7LktIUrwpMDZXNa8sEjgwc1nQS4w/gcx6mU02Dg8MEK8LPVUJJNmOsZBkb4A+V0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AxxJW/FQ; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725540074; c=relaxed/simple;
+	bh=Vmi+1f/dZY2VqSgcwNZ8hfyxCiVY3aGx6vrPWR7PizU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JInSTmaj2yyhiUQ9fHUdg0a/IaZBsxAnutcqbL+UIICzSRMRjd2TE6KdaViTzeeJ1bZ4Y3kLWvnKf0F77YwV9OJVaVQfZWBFSdWg1ad/uo3mSJlb1mc5gs1I/Nns0y6gQlnzGPB3pxZ6xxKNXl08Ap792ayEw8Uxz3YaeaO/il0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q/944Bw+; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AxxJW/FQ"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-42bb6d3e260so5863135e9.1;
-        Thu, 05 Sep 2024 05:20:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725538835; x=1726143635; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6RkF3c4SobrDXf1nxccj+xvHL2kkrQQbHITLvPNDFfQ=;
-        b=AxxJW/FQ3xSRcYP7jyaQFNogrhrhgMzTJwlna1aGTCy1Ue9IRMlyQ0w007r01GPK5J
-         szYbkCWw77EzHZeiz48DORqDQYibYL5tscmM1qYhzuG53k5JldNNc2CD02TMcb0tkk+p
-         NmNAsDR4g1qPK+I9yU/AW6kHJqOSfprJ/bWm5vb/wG+fl/xjNAI/usPd1xTQwHjrXm71
-         qVY1EKO4M0lAu5nAJl99fDzrjIBwurjxmjfUPehrRpQHYEF/sZoh29qr6/wMnuzXt67H
-         m3LHhHu5ROm8GSKlswEHpB4y128kDsn+qOB56htUdz0YZlQp8LgD5rIH8MkZQK0IgYIS
-         yq+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725538835; x=1726143635;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6RkF3c4SobrDXf1nxccj+xvHL2kkrQQbHITLvPNDFfQ=;
-        b=r8SYpWK/947OOTN2fk7Ph3YIqZ9apt2qKUsXCVPClC+Y6j5BQ1rupEOrKvuikx6M5h
-         miBmT6Epd5Zs2cYI/PRNDqkSoSuHwBgZZthYoEUcck9gpdqOOZByokXO0w+ZrIFB5m1t
-         O3ZPJdwjzL+4TiWBbH93BjQ2bZ4J4tWq/gPmaG7TADVYQkpdSq2YMzU+i8RsCJWysPnr
-         B3zqlIKr72QIyHjA0pLGfAd1T5QJBaI3ltn8YdfTUhTdanIdQ8+SGn1PilqWm2mFSG6z
-         JjCqapb1pCJfM8vDz6rELJkwLnIY/JRzcrfsSbeWdD6nA5mCq+/cjOCowKWwF7NRFMn1
-         +vGA==
-X-Forwarded-Encrypted: i=1; AJvYcCUuSvBmfmi/Gdq+T2AcHdtYA0XoEZZJFmRWJLWaWuIRL2XAH042spCOyKx4djjiS4cUERBi6PrUbbob@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxf1kRxb93+H40VEUNHtCg43RlOHJyIRCUksVIN+JoBCZvEg93k
-	EJ8UDTjgkzzPUZVE+Va4YPn8b13VhrJF794IEzWLEb6wpRr4MLB2ZwEpYiHL8sY=
-X-Google-Smtp-Source: AGHT+IFfk2dqKIN6EayJd/vA6vuOatOhuVXuNPc+l466cJU6az9aQ69jL+4z9WvuB+8TJW1bQNPqQQ==
-X-Received: by 2002:a05:600c:19c7:b0:428:1ce0:4dfd with SMTP id 5b1f17b1804b1-42be48faa20mr135102675e9.34.1725538834947;
-        Thu, 05 Sep 2024 05:20:34 -0700 (PDT)
-Received: from fedora.iskraemeco.si ([193.77.86.250])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42bb6e27364sm230390515e9.34.2024.09.05.05.20.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 05:20:33 -0700 (PDT)
-From: Uros Bizjak <ubizjak@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Uros Bizjak <ubizjak@gmail.com>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q/944Bw+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1725540073; x=1757076073;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Vmi+1f/dZY2VqSgcwNZ8hfyxCiVY3aGx6vrPWR7PizU=;
+  b=Q/944Bw+YX9pvELdh1odWY5fiJLev1bsMsr5+KujuThiTfibEWUO1GSu
+   LV11Co7chIiPv8x4f2duFXm7iNJ7O+gyfL44dahy2Tbrx0hAEhvYDJp6c
+   LXjUf1zvA+m+lcOaGdWSX/Ow59Qiblk09SdbydHhDAK1Wnm4s+om4HY19
+   z+D23z3IlL8x2iaBgq3//QLUreFe+ftcBBA3hIeqL4g1smdef8Jy95aJD
+   5vIXdnqRCPT33MQAjGRLwlS8IpOS1u7Oly6HkYsbCIuK8y5+DNKgsWcZa
+   w64MjqaUyX6vRJ6pJVRqTCVqYrhweNWG65bfJ7ILK8nIcbJCuCMcXFaqu
+   g==;
+X-CSE-ConnectionGUID: brb8ncNWSmWrH/VYb9ICPQ==
+X-CSE-MsgGUID: vzMt2iUoTqmC7gICVhdcXg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11185"; a="34919010"
+X-IronPort-AV: E=Sophos;i="6.10,204,1719903600"; 
+   d="scan'208";a="34919010"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2024 05:41:12 -0700
+X-CSE-ConnectionGUID: g0N9q6twQTC2A0FV6dSL6w==
+X-CSE-MsgGUID: kQc8pjfKTDeNleY3Fp7LKg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,204,1719903600"; 
+   d="scan'208";a="65301491"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmviesa007.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2024 05:40:57 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.98)
+	(envelope-from <andriy.shevchenko@linux.intel.com>)
+	id 1smBn9-00000005OYX-3K6o;
+	Thu, 05 Sep 2024 15:40:51 +0300
+Date: Thu, 5 Sep 2024 15:40:51 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Uros Bizjak <ubizjak@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Hans Verkuil <hverkuil@xs4all.nl>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Eric Biggers <ebiggers@kernel.org>,
+	"Theodore Y. Ts'o" <tytso@mit.edu>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	"Jason A. Donenfeld" <Jason@zx2c4.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	Hannes Reinecke <hare@suse.de>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH 07/18] scsi: libfcoe: Include <linux/prandom.h> instead of <linux/random.h>
-Date: Thu,  5 Sep 2024 14:17:15 +0200
-Message-ID: <20240905122020.872466-8-ubizjak@gmail.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20240905122020.872466-1-ubizjak@gmail.com>
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	John Fastabend <john.fastabend@gmail.com>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Eduard Zingerman <eddyz87@gmail.com>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@fomichev.me>,
+	Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Higgins <brendan.higgins@linux.dev>,
+	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Jiri Pirko <jiri@resnulli.us>, Petr Mladek <pmladek@suse.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Jamal Hadi Salim <jhs@mojatatu.com>,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
+	bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	kunit-dev@googlegroups.com
+Subject: Re: [PATCH 00/18] random: Include <linux/percpu.h> and resolve
+ circular include dependency
+Message-ID: <Ztmm00eLBQGtiwRM@smile.fi.intel.com>
 References: <20240905122020.872466-1-ubizjak@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -71,33 +115,64 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240905122020.872466-1-ubizjak@gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-Usage of pseudo-random functions requires inclusion of
-<linux/prandom.h> header instead of <linux/random.h>.
+On Thu, Sep 05, 2024 at 02:17:08PM +0200, Uros Bizjak wrote:
+> There were several attempts to resolve circular include dependency
+> after the addition of percpu.h: 1c9df907da83 ("random: fix circular
+> include dependency on arm64 after addition of percpu.h"), c0842fbc1b18
+> ("random32: move the pseudo-random 32-bit definitions to prandom.h") and
+> finally d9f29deb7fe8 ("prandom: Remove unused include") that completely
+> removes inclusion of <linux/percpu.h>.
+> 
+> Due to legacy reasons, <linux/random.h> includes <linux/prandom.h>, but
+> with the commit entry remark:
+> 
+> --quote--
+> A further cleanup step would be to remove this from <linux/random.h>
+> entirely, and make people who use the prandom infrastructure include
+> just the new header file.  That's a bit of a churn patch, but grepping
+> for "prandom_" and "next_pseudo_random32" "struct rnd_state" should
+> catch most users.
+> 
+> But it turns out that that nice cleanup step is fairly painful, because
+> a _lot_ of code currently seems to depend on the implicit include of
+> <linux/random.h>, which can currently come in a lot of ways, including
+> such fairly core headfers as <linux/net.h>.
+> 
+> So the "nice cleanup" part may or may never happen.
+> --/quote--
+> 
+> __percpu tag is currently defined in include/linux/compiler_types.h,
+> so there is no direct need for the inclusion of <linux/percpu.h>.
+> However, in [1] we would like to repurpose __percpu tag as a named
+> address space qualifier, where __percpu macro uses defines from
+> <linux/percpu.h>.
+> 
+> This patch series is the "nice cleanup" part, and allows us to finally
+> include <linux/percpu.h> in prandom.h.
+> 
+> The whole series was tested by compiling the kernel for x86_64 allconfig
+> and some popular architectures, namely arm64 defconfig, powerpc defconfig
+> and loongarch defconfig.
 
-Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
- include/scsi/libfcoe.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Obvious question(s) is(are):
+1) have you seen the Ingo's gigantic patch series towards resolving issues with
+the headers?
+2) if not, please look at the preliminary work and take something from there, I
+believe there are many useful changes already waiting for a couple of years to
+be applied.
 
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 3c5899290aed..6616348e59b9 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -15,7 +15,7 @@
- #include <linux/skbuff.h>
- #include <linux/workqueue.h>
- #include <linux/local_lock.h>
--#include <linux/random.h>
-+#include <linux/prandom.h>
- #include <scsi/fc/fc_fcoe.h>
- #include <scsi/libfc.h>
- #include <scsi/fcoe_sysfs.h>
+Because I haven't found any references nor mentions of that in the cover letter
+here and explanation why it was not taking into consideration.
+
+> [1] https://lore.kernel.org/lkml/20240812115945.484051-4-ubizjak@gmail.com/
+
 -- 
-2.46.0
+With Best Regards,
+Andy Shevchenko
+
 
