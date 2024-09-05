@@ -1,135 +1,104 @@
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03F0518890F;
-	Thu,  5 Sep 2024 19:40:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.79.88.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A62E165F0E;
+	Thu,  5 Sep 2024 21:06:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725565221; cv=none; b=UEwTyskL7FprcxzjN7aHcFczKhQsFGzqLRKr+eCKIiTyA4EFSPhWp4/73J8/l1x2Q4KmTp2DmmHmqaDz77VR5bJPcHJM5G5l8M8K2Zdk2vqbu8dXbG4Pn2+UnVkrf1E2Q+eQwd2pWJC2god80yF+R86wt3CF0fs4UEmxWFEOXWI=
+	t=1725570420; cv=none; b=ISNln0kW5tU8ZiCFQAGsbvUA9Ppgk8XSPRSkPn1VMxNhnAMxTZugfj0L2YDGyNZlWqbBIOYI6Xcvwe/xk4t5jU27RbfHBMzHWjYjJnDc0jIiU9ksCAyPkP6uZTD2kj/XTPhf20vO+a2mHHy/06LJfPdGelFKYiHauHyx6kg6il8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725565221; c=relaxed/simple;
-	bh=0njpqKLWluBDQGSUtohgju6AwFF6RyWPG2G9QwxX11E=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=l3ptDT4BJv0Q1jTupFwpoUj7R86+Z+3GlJEw2G8i+Yq7X/k2ABEYTwgtM3THGWhI1UXXI1LrLKQiN5cakqsfoV17r71ALo+URObzn57giA8YWf26sSsd4+ekcUaXGMaGFwMp3NWi4WT8f4U27zt+DgJKqq2AbADk+zloxTZscPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net; spf=pass smtp.mailfrom=lwn.net; dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b=qQrJHv8j; arc=none smtp.client-ip=45.79.88.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+	s=arc-20240116; t=1725570420; c=relaxed/simple;
+	bh=0Lr4YqLk7DnP63YVFRDtANsb05n6cAkLN88Ax3sUs9Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oIAQayFNJ5aCusYjqUYPXINTlx22xtAM6h3ALrwf3oEnnVqWIJXVa5s3cvSlefroJNrVez0ZUAWGNTg0SBQywBrrhRb52Pmd4PodaPuObgd7/vE1C4S4SASfOW4Jpw3k1l5zAuVkL1czhMlkKq71kEwz5axF8Y3fQWQ9cnZIxlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WOP1uGqR; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b="qQrJHv8j"
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 88C4142B25
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-	t=1725565218; bh=SnvYuQFqEXegO9CMT7NfIUI17BcZjbXywADJx++0xlk=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=qQrJHv8jJYXwnnNG96FjPs0wS9EbXRw4l5iA8mYHJmyllP6iLyoNaMv5vVMMiVwNJ
-	 /Qw7Y3bKI+Hr+mMVGQT0hEllXkDkIjRXxCv3i7LqWe6XhScGnb0c++SpAWdpCOP6S8
-	 zCBsukWUjHd1nK3cfxKy2IM387n2tGR/tVfW2SZeh+lEkqasTj/2OZgwSq2XgHh0FZ
-	 LUmXMEBm247jfwVHOxOSPa2Q+jgedXckqvmAxJ4A+8YlfxoylPviuNSJOso3yBlKwb
-	 /6sDf/N6NJQxCZcku9VBfYvcnP/Vj8lCMy2MO71i28Fkj8Hk31itQvdChAPb/4cfx/
-	 UNZdcqJKtOEXg==
-Received: from localhost (unknown [IPv6:2601:280:5e00:625::1fe])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WOP1uGqR"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X0BkN38PDz6ClY8w;
+	Thu,  5 Sep 2024 21:06:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1725570404; x=1728162405; bh=/ms+6UcbvTIwIRzvwY9hIW9x
+	1xlszuFEBvaySzIyYSw=; b=WOP1uGqRQIX8qFxmTDEkjFRgZWF5Muc7eSPjLalH
+	fCfwNBVqhLIvi96ab+YJ2BGdE/ZSIVS/9Wks/spCRrvZsg8k8LbIKmQX7yD+NdRC
+	/h6HtPTUSYApHzPN+t1nBQ+zNQjCNGHhT2OX8/dwnqQIUxNOI+HOFWq+Y15eqxAy
+	a4tHbcBlmyIEW60yNNT8mtqWCnWZbxa2OKevCujWvQKipO86y74fK9qkJ/iZnYVx
+	o4qb/YdVzoJSpkHvMMS0nD+ueWmyzd014O9Dw2vuWWToB2/XWeyel8/bTUXEtMHD
+	5RXUcI6Yj4Ue20cySLF2iSz3huveA7idDCEFKSptAk3odQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id aKsyXEyfVD2T; Thu,  5 Sep 2024 21:06:44 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by ms.lwn.net (Postfix) with ESMTPSA id 88C4142B25;
-	Thu,  5 Sep 2024 19:40:18 +0000 (UTC)
-From: Jonathan Corbet <corbet@lwn.net>
-To: Breno Leitao <leitao@debian.org>, Akinobu Mita <akinobu.mita@gmail.com>,
- Federico Vaga <federico.vaga@vaga.pv.it>, Akira Yokosawa
- <akiyks@gmail.com>, Carlos Bilbao <carlos.bilbao.osdev@gmail.com>, Avadhut
- Naik <avadhut.naik@amd.com>, Alex Shi <alexs@kernel.org>, Yanteng Si
- <siyanteng@loongson.cn>, Hu Haowen <2023002089@link.tyut.edu.cn>, Jens
- Axboe <axboe@kernel.dk>, Kees Cook <kees@kernel.org>, Arnd Bergmann
- <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alim
- Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart
- Van Assche <bvanassche@acm.org>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: leit@meta.com, "Paul E. McKenney" <paulmck@kernel.org>, Thomas Huth
- <thuth@redhat.com>, "Borislav Petkov (AMD)" <bp@alien8.de>, Thomas
- Gleixner <tglx@linutronix.de>, Xiongwei Song
- <xiongwei.song@windriver.com>, Ard Biesheuvel <ardb@kernel.org>, John Moon
- <john@jmoon.dev>, Vegard Nossum <vegard.nossum@oracle.com>, Miguel Ojeda
- <ojeda@kernel.org>, Wolfram Sang <wsa+renesas@sang-engineering.com>,
- SeongJae Park <sj@kernel.org>, "Ran.Park" <ranpark@foxmail.com>, Tiezhu
- Yang <yangtiezhu@loongson.cn>, Remington Brasga <rbrasga@uci.edu>, Damien
- Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>, Chaitanya
- Kulkarni <kch@nvidia.com>, Johannes Thumshirn
- <johannes.thumshirn@wdc.com>, Zhu Yanjun <yanjun.zhu@linux.dev>, John
- Garry <john.g.garry@oracle.com>, Chengming Zhou
- <zhouchengming@bytedance.com>, Yu Kuai <yukuai3@huawei.com>, Shin'ichiro
- Kawasaki <shinichiro.kawasaki@wdc.com>, Vlastimil Babka <vbabka@suse.cz>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, open list
- <linux-kernel@vger.kernel.org>, "open list:DOCUMENTATION PROCESS"
- <workflows@vger.kernel.org>, "open list:BLOCK LAYER"
- <linux-block@vger.kernel.org>, "open list:UNIVERSAL FLASH STORAGE HOST
- CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, "open list:GENERIC
- INCLUDE/ASM HEADER FILES" <linux-arch@vger.kernel.org>
-Subject: Re: [PATCH v2] docs: Move fault injection section to dev-tools
-In-Reply-To: <20240902125421.569668-1-leitao@debian.org>
-References: <20240902125421.569668-1-leitao@debian.org>
-Date: Thu, 05 Sep 2024 13:40:17 -0600
-Message-ID: <87ttethota.fsf@trenco.lwn.net>
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X0BkB0DR9z6ClY8t;
+	Thu,  5 Sep 2024 21:06:41 +0000 (UTC)
+Message-ID: <f5274603-3687-4386-b785-129183d84f4c@acm.org>
+Date: Thu, 5 Sep 2024 14:06:41 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] ufs: core: fix the issue of ICU failure
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
+ jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+ qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
+ eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
+ quic_nguyenb@quicinc.com, stable@vger.kernel.org
+References: <20240902021805.1125-1-peter.wang@mediatek.com>
+ <20240902021805.1125-2-peter.wang@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240902021805.1125-2-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Breno Leitao <leitao@debian.org> writes:
+On 9/1/24 7:18 PM, peter.wang@mediatek.com wrote:
+>   	/* SQRTCy.ICU = 1 */
 
-> Fault injection is a development tool, and should be under dev-tools
-> section.
->
-> Suggested-by: Jonathan Corbet <corbet@lwn.net>
-> Signed-off-by: Breno Leitao <leitao@debian.org>
-> ---
-> Changelog:
->
-> v2:
->   * Fixed a remaining file pointing to the wrong file, as reported by
->     kernel test robot:
-> 	* https://lore.kernel.org/all/202408312350.DEf53QzI-lkp@intel.com/ 
->
-> v1:
->   * https://lore.kernel.org/all/20240830174502.3732959-1-leitao@debian.org/
->
->  Documentation/admin-guide/kernel-parameters.txt              | 2 +-
->  .../{ => dev-tools}/fault-injection/fault-injection.rst      | 0
->  Documentation/{ => dev-tools}/fault-injection/index.rst      | 0
->  .../fault-injection/notifier-error-inject.rst                | 0
->  .../{ => dev-tools}/fault-injection/nvme-fault-injection.rst | 0
->  .../{ => dev-tools}/fault-injection/provoke-crashes.rst      | 0
->  Documentation/dev-tools/index.rst                            | 1 +
->  Documentation/index.rst                                      | 1 -
->  Documentation/process/4.Coding.rst                           | 2 +-
->  Documentation/process/submit-checklist.rst                   | 2 +-
->  Documentation/translations/it_IT/process/4.Coding.rst        | 2 +-
->  .../translations/it_IT/process/submit-checklist.rst          | 2 +-
->  Documentation/translations/ja_JP/SubmitChecklist             | 2 +-
->  .../translations/sp_SP/process/submit-checklist.rst          | 2 +-
->  Documentation/translations/zh_CN/index.rst                   | 2 +-
->  Documentation/translations/zh_CN/process/4.Coding.rst        | 2 +-
->  .../translations/zh_CN/process/submit-checklist.rst          | 2 +-
->  Documentation/translations/zh_TW/index.rst                   | 2 +-
->  Documentation/translations/zh_TW/process/4.Coding.rst        | 2 +-
->  .../translations/zh_TW/process/submit-checklist.rst          | 2 +-
->  MAINTAINERS                                                  | 2 +-
->  drivers/block/null_blk/main.c                                | 2 +-
->  drivers/misc/lkdtm/core.c                                    | 2 +-
->  drivers/ufs/core/ufs-fault-injection.c                       | 2 +-
->  include/asm-generic/error-injection.h                        | 5 +++--
->  include/linux/fault-inject.h                                 | 2 +-
->  lib/Kconfig.debug                                            | 4 ++--
->  tools/testing/fault-injection/failcmd.sh                     | 2 +-
->  28 files changed, 25 insertions(+), 24 deletions(-)
->  rename Documentation/{ => dev-tools}/fault-injection/fault-injection.rst (100%)
->  rename Documentation/{ => dev-tools}/fault-injection/index.rst (100%)
->  rename Documentation/{ => dev-tools}/fault-injection/notifier-error-inject.rst (100%)
->  rename Documentation/{ => dev-tools}/fault-injection/nvme-fault-injection.rst (100%)
->  rename Documentation/{ => dev-tools}/fault-injection/provoke-crashes.rst (100%)
+Feel free to leave out the above comment since it duplicates the code
+below this comment. A comment that explains that "ICU = Initiate
+Cleanup" probably would be appropriate.
 
-Applied, thanks.
+> -	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
+> +	writel(readl(opr_sqd_base + REG_SQRTC) | SQ_ICU,
+> +		opr_sqd_base + REG_SQRTC);
 
-jon
+Is this perhaps an open-coded version of ufshcd_rmwl()?
+
+>   
+>   	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
+>   	reg = opr_sqd_base + REG_SQRTS;
+>   	err = read_poll_timeout(readl, val, val & SQ_CUS, 20,
+>   				MCQ_POLL_US, false, reg);
+> -	if (err)
+> -		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%ld\n",
+> -			__func__, id, task_tag,
+> +	if (err || FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)))
+> +		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%d RTC=%ld\n",
+> +			__func__, id, task_tag, err,
+>   			FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)));
+
+In the above code the expression "FIELD_GET(SQ_ICU_ERR_CODE_MASK, 
+readl(reg))" occurs twice. Please consider storing that expression in
+a variable such that this expression only occurs once.
+
+Thanks,
+
+Bart.
+
