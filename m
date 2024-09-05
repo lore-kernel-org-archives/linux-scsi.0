@@ -1,99 +1,130 @@
-Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB512194090
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Sep 2024 10:31:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC827199E88;
+	Thu,  5 Sep 2024 11:31:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725532308; cv=none; b=rj5L/EcWZKjBZsBPMNc4ri/ZOGDl7heMTd7oYpiQHH31IASd0P8DoZ3MQHaVdl4wU7RCK/2XX+yuU/XCfgdQ+om+EKTsi8sOGemcZ/jVZ5gLQRfUS06DOwVwLR/pzj5LB50OReiwH0ds1TnlTEvB0LQCZWc9/JFRacH0drDzGoU=
+	t=1725535861; cv=none; b=P3iGQPd6weBtBghUi3vOJRrsovJaddphKTdrq6R+AibnbMafsA82ojtyQ+GBKPQUDjDzHYDyM0Gv3uph/sbIbi3g3Kq5SK5ZRE8hg5HGKZfE/Dj0bQKFbDVzsSCBfwwya6CviSF+Xg/LJs2rskaCCVxd8cZENfqiczMAegNYAg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725532308; c=relaxed/simple;
-	bh=itIIGZd+KvG2Bh9eLDqCdHxwDoyF+sOdyjwdth4ukUU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RJzGsJMy54EjWYlAPPCL8aDLHRguA328Wao55o+hs6gQnPGiULA8f9XsvVtk6mjaUYBDH64UZGo6YuxQrSk+Qv969kOLdv50BDmAle2+NFKe4yVOqIcsxBEgHsC/Qe7k2nGEPqvSaG/+DXdiDgreKFtSSJSNoXNf5aNHqQ/0QiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=K6GAKzoP; arc=none smtp.client-ip=209.85.161.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1725535861; c=relaxed/simple;
+	bh=aTcY6lnCeCXuN+hBR/lTjApexCcG5nl9Skw7Ca45bF0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NxM+GTcKCpfZZQRk46TPSy+x5CAnSQyk9C+mGLA7QzJQ1tmWAKVSDQEwah3IvS176UztJZ2qG2k29bCn6NpIBSaoz3KpAPpZz53vrLGyw/wL4QKkbWXsPOIpHVTW8Umm+FZDlfizfY8bDvAjqyLC+OgqbuG1qyzaGue6FJJYL4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X7GKr78v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="K6GAKzoP"
-Received: by mail-oo1-f46.google.com with SMTP id 006d021491bc7-5daa93677e1so341758eaf.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Sep 2024 03:31:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1725532305; x=1726137105; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SmI/7v8dAGJcvAoIs+PKF3uYtbsH1rDI4Dzop6dUNwo=;
-        b=K6GAKzoPvoECAyX4tjGGScJDUp4UZe3TGiilfTaM3HXMqlJ/Gn+ISYnFqQCjcY6K3y
-         M4An97P6MG1RBVE2xwj7NkRJvHgNGGk8vUcB1v7w3DzF+dBbpcGrjxQkB9+6rlNK8YJb
-         7f6pzdQSruz6skcB33W5jJUDUfwvQb8b58hXw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725532305; x=1726137105;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SmI/7v8dAGJcvAoIs+PKF3uYtbsH1rDI4Dzop6dUNwo=;
-        b=ft4+esKl3JnjgvLhs+vekWSHErUGOsclehF4cizBH2Urqaq4DxcKuComlWCHOAW7hc
-         qgfyzG710Nf4LjJrmLGII4pSZaptiBR0vA3Kuj3lzY+EbY1dN685xPhdN7iYWB4eUGVp
-         v7vuOnW/+njKaQS+GaL77nejZzL5gQnCI1t1If/Eflq8vLBUTmGPUKbLdcbrLGkxHdJN
-         1C55tuLxEUzaxLo+PTOce4Xz3ArNWfwk4RNgKBITP83M/jsjj65nVAmKZZ0EAXWBxsTA
-         VpfmNE40bgchJCCcNWUgmqKNM565EDq2tATCV/M5j/dq6B+V7P5Bxc+nmksRlhOxetsv
-         68TQ==
-X-Gm-Message-State: AOJu0Yz5VENY0BjlLwIeqTeO2TrqWM2Lpan4bjK8TGXTQe99LO/OQSVC
-	EKIO6Albf/bVI7aSff5fnhcPXFWuh9cshc0lwr96e1iUvqLG2iXv8+ocXa6KyOA1iSn+qj9CGG0
-	clcvbNe8HaisKCEdyaNAbZ10RDU/UYdT9Q0xjYa1tc0LhfE5PQddm5PA8Mh0nuL491fA0WxcWUr
-	yDzf+p0meruE4YZKjIFLggJfQ/Lncr3JvZZoGO7A8Ear+zpQ==
-X-Google-Smtp-Source: AGHT+IFYB99DgC8GWnEDIu7GASvyxLJwSWAsK7rKZxcr1r/hOMHuz0YBxJ2jsn8X2M4w9rYBRL1F9A==
-X-Received: by 2002:a05:6870:eca9:b0:278:c6bf:fd34 with SMTP id 586e51a60fabf-278c6bfff00mr6229367fac.27.1725532305072;
-        Thu, 05 Sep 2024 03:31:45 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-717785364f9sm2960177b3a.87.2024.09.05.03.31.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2024 03:31:44 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: rajsekhar.chundru@broadcom.com,
-	sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com,
-	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 5/5] mpi3mr: Update driver version to 8.12.0.0.50
-Date: Thu,  5 Sep 2024 15:57:53 +0530
-Message-Id: <20240905102753.105310-6-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20240905102753.105310-1-ranjan.kumar@broadcom.com>
-References: <20240905102753.105310-1-ranjan.kumar@broadcom.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7GKr78v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E207C4CEC3;
+	Thu,  5 Sep 2024 11:30:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725535860;
+	bh=aTcY6lnCeCXuN+hBR/lTjApexCcG5nl9Skw7Ca45bF0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=X7GKr78v0KZSNjtPief4MGOvOX4Z7dQlMmWRBIpTU1p13LSzit5Su1pTaielep1O7
+	 nFVcp3oxh6jjpSMAIINYxPiRmE+AKjLiCo1KluI7uRmpH8IM8bjm+5uOgWvRRrW34Q
+	 SEIl6tqmJE+99KgmZZBjoJXm5YYjbvB9/+xlkE6SVOSYibxY33HZlmGVFMhg/ePM25
+	 AqHzGdkKE2cumqW4AGDK7UMY1dK/zM/1MfbPQGBPXFfTi/LMxxRJ22WQ+u97zxcsUS
+	 PT/P9fsSxWW9VT8MvPSPcrSawtpyg+Eaqh7U5bZdYSpr5RcoMaiZaDa94gU6n0rCC2
+	 J4BIvJw8awzOQ==
+Message-ID: <d5e338fe-bd38-49f7-b69f-fc27f9f87495@kernel.org>
+Date: Thu, 5 Sep 2024 13:30:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 06/19] dt-bindings: power: rpmpd: Add QCS8300 power
+ domains
+To: Jingyi Wang <quic_jingyw@quicinc.com>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Mathieu Poirier <mathieu.poirier@linaro.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+ Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>,
+ Ulf Hansson <ulf.hansson@linaro.org>, Thomas Gleixner <tglx@linutronix.de>,
+ Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Joerg Roedel <joro@8bytes.org>, Konrad Dybcio <konradybcio@kernel.org>,
+ Robert Marko <robimarko@gmail.com>, Das Srinagesh <quic_gurus@quicinc.com>,
+ Jassi Brar <jassisinghbrar@gmail.com>, Lee Jones <lee@kernel.org>,
+ Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux.dev, Shazad Hussain <quic_shazhuss@quicinc.com>,
+ Tingguo Cheng <quic_tingguoc@quicinc.com>
+References: <20240904-qcs8300_initial_dtsi-v1-0-d0ea9afdc007@quicinc.com>
+ <20240904-qcs8300_initial_dtsi-v1-6-d0ea9afdc007@quicinc.com>
+Content-Language: en-US
+From: Konrad Dybcio <konradybcio@kernel.org>
+In-Reply-To: <20240904-qcs8300_initial_dtsi-v1-6-d0ea9afdc007@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Update driver version to 8.12.0.0.50
+On 4.09.2024 10:33 AM, Jingyi Wang wrote:
+> From: Shazad Hussain <quic_shazhuss@quicinc.com>
+> 
+> Add compatible and constants for the power domains exposed by the RPMH
+> in the Qualcomm QCS8300 platform.
+> 
+> Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+> Signed-off-by: Tingguo Cheng <quic_tingguoc@quicinc.com>
+> Signed-off-by: Jingyi Wang <quic_jingyw@quicinc.com>
+> ---
+>  .../devicetree/bindings/power/qcom,rpmpd.yaml         |  1 +
+>  include/dt-bindings/power/qcom-rpmpd.h                | 19 +++++++++++++++++++
+>  2 files changed, 20 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/power/qcom,rpmpd.yaml b/Documentation/devicetree/bindings/power/qcom,rpmpd.yaml
+> index 929b7ef9c1bc..be1a9cb71a9b 100644
+> --- a/Documentation/devicetree/bindings/power/qcom,rpmpd.yaml
+> +++ b/Documentation/devicetree/bindings/power/qcom,rpmpd.yaml
+> @@ -32,6 +32,7 @@ properties:
+>            - qcom,msm8998-rpmpd
+>            - qcom,qcm2290-rpmpd
+>            - qcom,qcs404-rpmpd
+> +          - qcom,qcs8300-rpmhpd
+>            - qcom,qdu1000-rpmhpd
+>            - qcom,qm215-rpmpd
+>            - qcom,sa8155p-rpmhpd
+> diff --git a/include/dt-bindings/power/qcom-rpmpd.h b/include/dt-bindings/power/qcom-rpmpd.h
+> index 608087fb9a3d..7dd7b9ebc480 100644
+> --- a/include/dt-bindings/power/qcom-rpmpd.h
+> +++ b/include/dt-bindings/power/qcom-rpmpd.h
+> @@ -4,6 +4,25 @@
+>  #ifndef _DT_BINDINGS_POWER_QCOM_RPMPD_H
+>  #define _DT_BINDINGS_POWER_QCOM_RPMPD_H
+>  
+> +/* QCS8300 Power Domain Indexes */
+> +#define QCS8300_CX	0
+> +#define QCS8300_CX_AO	1
+> +#define QCS8300_DDR	2
+> +#define QCS8300_EBI	3
+> +#define QCS8300_GFX	4
+> +#define QCS8300_LCX	5
+> +#define QCS8300_LMX	6
+> +#define QCS8300_MMCX	7
+> +#define QCS8300_MMCX_AO	8
+> +#define QCS8300_MSS	9
+> +#define QCS8300_MX	10
+> +#define QCS8300_MX_AO	11
+> +#define QCS8300_MXC	12
+> +#define QCS8300_MXC_AO	13
+> +#define QCS8300_NSP0	14
+> +#define QCS8300_NSP1	15
+> +#define QCS8300_XO	16
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Some time ago we moved RPM*h*pd to common defines.. we should
+definitely do the same here. Please reuse the RPMPD_xxx definitions
+from [1] and credit Rohit in the commit message, as he did some
+processing on that to make sure they're ordered based on usage
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 9c1d10ba24be..d937505d2691 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -57,8 +57,8 @@ extern struct list_head mrioc_list;
- extern int prot_mask;
- extern atomic64_t event_counter;
- 
--#define MPI3MR_DRIVER_VERSION	"8.10.0.5.50"
--#define MPI3MR_DRIVER_RELDATE	"08-Aug-2024"
-+#define MPI3MR_DRIVER_VERSION	"8.12.0.0.50"
-+#define MPI3MR_DRIVER_RELDATE	"05-Sept-2024"
- 
- #define MPI3MR_DRIVER_NAME	"mpi3mr"
- #define MPI3MR_DRIVER_LICENSE	"GPL"
--- 
-2.31.1
+Konrad
 
+[1] https://lore.kernel.org/all/1688647793-20950-2-git-send-email-quic_rohiagar@quicinc.com/
