@@ -1,172 +1,216 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03AF71925B3
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Sep 2024 22:03:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 866CA2628C;
+	Fri,  6 Sep 2024 05:40:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.204.34.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725573795; cv=none; b=hTaGzr/ENQvbycrcQKkKaZbIR1d0bG5Y2HnuhjR1NusSOfVjuO2T3OY6ENp2IsFsvlN0r2gEoWtnTvYTpn0KoDpNBGa6tz38x6ehDi6h+3GvU5J5SDGDi8RPFR7/JvdLKtz9v70CLpf0joTu0pr6cI4GFVP3FEWZZ2RAJ5syHiU=
+	t=1725601246; cv=none; b=aUgffcdqYMtDA946gIMPORXFiSU2Ze/H2TCScV/5jPHhes7/vmXq/kTHhDY32O5a6e4EkisHkUDo1DXvX2ynW2dq37tOYVEDEU16/vtKjm0NJtyOKmMXDDCcDCKwdEJ9heaA0KZS2X/qT1UwEBjPSCmW2sVbibUYg7GV07LMntw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725573795; c=relaxed/simple;
-	bh=bXelcrPT7VxI6TbKa94HGEIMVI/JlKNEwRQC3flsi1w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=edBTznuj3Vk/Hh22yJvEkaXzZfrjHm72ktPzIORI1NvsR3i65DuHPPcznlelW9K0MZA/jS2TDQO6SlzHWAt2WImgVk3l7DL9RKBG8wER9Fb5uIc0dE9/3EZkB1J5XkCg3n8SBuJ8E/G9whdVgh936MGcyl3BMgpeuQjwwBDJmsw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=hL0IjTEU; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1725601246; c=relaxed/simple;
+	bh=Cniav45urdpVNzapqVqrBdTz6uLrtoPLIOl7/GG06PM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YdNQcELLMjAVD+HOf2FTOvGhOkyKgkngZYlPE9GFaLfolbB8nG5cNt0ZWn9ZM1fUEx/8GN6Q3w3PM2fE580h4MULDwEC4UZP8LANsB4Hd0F73R1xvv2ztcdW/L8LDmdGyM/P7rCv6UM/x8su/BU0yT9x8WqYe9zqknS2yCV41i0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=VlptsF3J; arc=none smtp.client-ip=54.204.34.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="hL0IjTEU"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X0CzP5G6Pz6Cnk98;
-	Thu,  5 Sep 2024 22:03:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1725573788; x=1728165789; bh=hfxF5
-	/pbCNCifAV31cdhWFOh26GgCfcj81PXfUiKy7c=; b=hL0IjTEUYKypzeWzA76g0
-	xEHYq+AeeCZ/tayRAacyTooRulP6Zn9mmK/IcNvFdRBKVJ22mCBskiazUFgxFU49
-	6KpKKldnHAAAbUI7Ls7tP1LjaN+XmLSYAzFQ7Ll7orYAwMh1JJJ1GVdxM0Vhafbv
-	vukzdLr1Pm8hyccusI8wVTle/HPtUncN9jgUHsWUaLvEcIgL/3KQDyKqg2C7n3Hb
-	ahHdg+Z3BeI2h9nTSr0I223BLVvDuobXkcUdITpVTLVmxr7HvuNd2sOYpBT/7Xtw
-	RkM7Y0Mtl4SZ+Fmg2FPTj4Ity69FniUHvxptPqZZmD0Sv2fjV7+OV8q/EuahawjW
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id GnV8v6ML2VjW; Thu,  5 Sep 2024 22:03:08 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X0CzH2qBdz6ClY8w;
-	Thu,  5 Sep 2024 22:03:07 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v4 10/10] scsi: ufs: core: Remove the second argument of ufshcd_device_init()
-Date: Thu,  5 Sep 2024 15:01:36 -0700
-Message-ID: <20240905220214.738506-11-bvanassche@acm.org>
-X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
-In-Reply-To: <20240905220214.738506-1-bvanassche@acm.org>
-References: <20240905220214.738506-1-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="VlptsF3J"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1725601229;
+	bh=Um2fielNufiPq2gPF+cakRDGheYfuE60dnAlgqaba+4=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=VlptsF3JjbCh+zw7R23THL+asQr2yCm8+ot2y6+ZS41sf0P2y5MoAz8AjOwZzI33p
+	 Oes0w1cLqgls+dqB5AXMEEpxyQlxswec2/MrgknftN1iYKq04QdMcDUEgWGEq5G3TV
+	 5ev8/Um/EpQiThubn8bN15U11J6jygRMafgdv2k0=
+X-QQ-mid: bizesmtp89t1725601217t86fmi1u
+X-QQ-Originating-IP: pp2HEb8VFRV3OyePs+K/oTB0T0vJNpih3CUIsTHdOR4=
+Received: from localhost.localdomain ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Fri, 06 Sep 2024 13:40:11 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 3399184416924761505
+From: WangYuli <wangyuli@uniontech.com>
+To: aaro.koskinen@iki.fi,
+	andreas@kemnade.info,
+	khilman@baylibre.com,
+	rogerq@kernel.org,
+	tony@atomide.com,
+	linux@armlinux.org.uk,
+	jgg@ziepe.ca,
+	leon@kernel.org,
+	wangyuli@uniontech.com,
+	gustavoars@kernel.org,
+	mitr@volny.cz,
+	dmitry.torokhov@gmail.com,
+	miquel.raynal@bootlin.com,
+	richard@nod.at,
+	vigneshr@ti.com,
+	anil.gurumurthy@qlogic.com,
+	sudarsana.kalluru@qlogic.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	obdclark@gmail.com,
+	quic_abhinavk@quicinc.com,
+	dmitry.baryshkov@linaro.org,
+	sean@poorly.run,
+	marijn.suijten@somainline.org,
+	airlied@gmail.com,
+	daniel@ffwll.ch
+Cc: linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-mtd@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	abhinavk@codeaurora.org,
+	architt@codeaurora.org,
+	chandanu@codeaurora.org,
+	jsanka@codeaurora.org,
+	jcrouse@codeaurora.org,
+	ryadav@codeaurora.org,
+	skolluku@codeaurora.org,
+	seanpaul@chromium.org,
+	robdclark@gmail.com,
+	anil_ravindranath@pmc-sierra.com,
+	standby24x7@gmail.com,
+	jkosina@suse.cz,
+	don.hiatt@intel.com,
+	ira.weiny@intel.com,
+	dasaratharaman.chandramouli@intel.com,
+	dledford@redhat.com,
+	eric.piel@tremplin-utc.net,
+	akpm@linux-foundation.org,
+	dtor@mail.ru,
+	vijaykumar@bravegnu.org,
+	dwmw2@infradead.org,
+	kgudipat@brocade.com,
+	James.Bottomley@suse.de,
+	guanwentao@uniontech.com,
+	zhanjun@uniontech.com
+Subject: [PATCH] treewide: Correct the typo 'retun'
+Date: Fri,  6 Sep 2024 13:40:08 +0800
+Message-ID: <63D0F870EE8E87A0+20240906054008.390188-1-wangyuli@uniontech.com>
+X-Mailer: git-send-email 2.43.4
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:uniontech.com:qybglogicsvrgz:qybglogicsvrgz8a-1
 
-Both ufshcd_device_init() callers pass 'false' as second argument. Hence,
-remove that second argument.
+There are some spelling mistakes of 'retun' in comments which
+should be instead of 'return'.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: WangYuli <wangyuli@uniontech.com>
 ---
- drivers/ufs/core/ufshcd.c | 44 +++++----------------------------------
- 1 file changed, 5 insertions(+), 39 deletions(-)
+ arch/arm/mach-omap2/omap-mpuss-lowpower.c | 2 +-
+ drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.h  | 2 +-
+ drivers/infiniband/core/sa_query.c        | 2 +-
+ drivers/input/misc/wistron_btns.c         | 2 +-
+ drivers/mtd/nand/raw/nandsim.c            | 2 +-
+ drivers/scsi/bfa/bfa_fcs.c                | 2 +-
+ drivers/scsi/pmcraid.c                    | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 17615b56e83e..779a0c7559b2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -298,7 +298,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *h=
-ba);
- static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
- static void ufshcd_hba_exit(struct ufs_hba *hba);
--static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)=
-;
-+static int ufshcd_device_init(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
-@@ -7695,7 +7695,7 @@ static int ufshcd_host_reset_and_restore(struct ufs=
-_hba *hba)
-=20
- 	/* Establish the link again and restore the device */
- 	if (!err) {
--		err =3D ufshcd_device_init(hba, /*init_dev_params=3D*/false);
-+		err =3D ufshcd_device_init(hba);
- 		if (!err)
- 			err =3D ufshcd_probe_hba(hba);
+diff --git a/arch/arm/mach-omap2/omap-mpuss-lowpower.c b/arch/arm/mach-omap2/omap-mpuss-lowpower.c
+index 7ad74db951f6..f18ef45e2fe1 100644
+--- a/arch/arm/mach-omap2/omap-mpuss-lowpower.c
++++ b/arch/arm/mach-omap2/omap-mpuss-lowpower.c
+@@ -333,7 +333,7 @@ int omap4_hotplug_cpu(unsigned int cpu, unsigned int power_state)
+ 	omap_pm_ops.scu_prepare(cpu, power_state);
+ 
+ 	/*
+-	 * CPU never retuns back if targeted power state is OFF mode.
++	 * CPU never returns back if targeted power state is OFF mode.
+ 	 * CPU ONLINE follows normal CPU ONLINE ptah via
+ 	 * omap4_secondary_startup().
+ 	 */
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.h b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.h
+index b26d5fe40c72..febc3e764a63 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.h
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.h
+@@ -231,7 +231,7 @@ struct dpu_crtc_state {
+ 	container_of(x, struct dpu_crtc_state, base)
+ 
+ /**
+- * dpu_crtc_frame_pending - retun the number of pending frames
++ * dpu_crtc_frame_pending - return the number of pending frames
+  * @crtc: Pointer to drm crtc object
+  */
+ static inline int dpu_crtc_frame_pending(struct drm_crtc *crtc)
+diff --git a/drivers/infiniband/core/sa_query.c b/drivers/infiniband/core/sa_query.c
+index 8175dde60b0a..53571e6b3162 100644
+--- a/drivers/infiniband/core/sa_query.c
++++ b/drivers/infiniband/core/sa_query.c
+@@ -1420,7 +1420,7 @@ enum opa_pr_supported {
+ /*
+  * opa_pr_query_possible - Check if current PR query can be an OPA query.
+  *
+- * Retuns PR_NOT_SUPPORTED if a path record query is not
++ * Returns PR_NOT_SUPPORTED if a path record query is not
+  * possible, PR_OPA_SUPPORTED if an OPA path record query
+  * is possible and PR_IB_SUPPORTED if an IB path record
+  * query is possible.
+diff --git a/drivers/input/misc/wistron_btns.c b/drivers/input/misc/wistron_btns.c
+index 5c4956678cd0..39d6f642cd19 100644
+--- a/drivers/input/misc/wistron_btns.c
++++ b/drivers/input/misc/wistron_btns.c
+@@ -1075,7 +1075,7 @@ static void wistron_led_init(struct device *parent)
  	}
-@@ -8770,9 +8770,8 @@ static int ufshcd_post_device_init(struct ufs_hba *=
-hba)
- 	return 0;
+ 
+ 	if (leds_present & FE_MAIL_LED) {
+-		/* bios_get_default_setting(MAIL) always retuns 0, so just turn the led off */
++		/* bios_get_default_setting(MAIL) always returns 0, so just turn the led off */
+ 		wistron_mail_led.brightness = LED_OFF;
+ 		if (led_classdev_register(parent, &wistron_mail_led))
+ 			leds_present &= ~FE_MAIL_LED;
+diff --git a/drivers/mtd/nand/raw/nandsim.c b/drivers/mtd/nand/raw/nandsim.c
+index 179b28459b4b..df48b7d01d16 100644
+--- a/drivers/mtd/nand/raw/nandsim.c
++++ b/drivers/mtd/nand/raw/nandsim.c
+@@ -1381,7 +1381,7 @@ static inline union ns_mem *NS_GET_PAGE(struct nandsim *ns)
  }
-=20
--static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
-+static int ufshcd_device_init(struct ufs_hba *hba)
+ 
+ /*
+- * Retuns a pointer to the current byte, within the current page.
++ * Returns a pointer to the current byte, within the current page.
+  */
+ static inline u_char *NS_PAGE_BYTE_OFF(struct nandsim *ns)
  {
--	struct Scsi_Host *host =3D hba->host;
- 	int ret;
-=20
- 	ret =3D ufshcd_activate_link(hba);
-@@ -8780,7 +8779,7 @@ static int ufshcd_device_init(struct ufs_hba *hba, =
-bool init_dev_params)
- 		return ret;
-=20
- 	/* Reconfigure MCQ upon reset */
--	if (hba->mcq_enabled && !init_dev_params) {
-+	if (hba->mcq_enabled) {
- 		ufshcd_config_mcq(hba);
- 		ufshcd_mcq_enable(hba);
- 	}
-@@ -8795,39 +8794,6 @@ static int ufshcd_device_init(struct ufs_hba *hba,=
- bool init_dev_params)
- 	if (ret)
- 		return ret;
-=20
--	/*
--	 * Initialize UFS device parameters used by driver, these
--	 * parameters are associated with UFS descriptors.
--	 */
--	if (init_dev_params) {
--		ret =3D ufshcd_device_params_init(hba);
--		if (ret)
--			return ret;
--		if (is_mcq_supported(hba) && !hba->scsi_host_added) {
--			ufshcd_mcq_enable(hba);
--			ret =3D ufshcd_alloc_mcq(hba);
--			if (!ret) {
--				ufshcd_config_mcq(hba);
--			} else {
--				/* Continue with SDB mode */
--				ufshcd_mcq_disable(hba);
--				use_mcq_mode =3D false;
--				dev_err(hba->dev, "MCQ mode is disabled, err=3D%d\n",
--					 ret);
--			}
--			ret =3D scsi_add_host(host, hba->dev);
--			if (ret) {
--				dev_err(hba->dev, "scsi_add_host failed\n");
--				return ret;
--			}
--			hba->scsi_host_added =3D true;
--		} else if (is_mcq_supported(hba)) {
--			/* UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH is set */
--			ufshcd_config_mcq(hba);
--			ufshcd_mcq_enable(hba);
--		}
--	}
--
- 	return ufshcd_post_device_init(hba);
- }
-=20
-@@ -8861,7 +8827,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		}
-=20
- 		/* Reinit the device */
--		ret =3D ufshcd_device_init(hba, /*init_dev_params=3D*/false);
-+		ret =3D ufshcd_device_init(hba);
- 		if (ret)
- 			goto out;
- 	}
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 5023c0ab4277..e52ce9b01f49 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -1431,7 +1431,7 @@ bfa_cb_lps_flogo_comp(void *bfad, void *uarg)
+  *	param[in]	vf_id - VF_ID
+  *
+  *	return
+- *	If lookup succeeds, retuns fcs vf object, otherwise returns NULL
++ *	If lookup succeeds, returns fcs vf object, otherwise returns NULL
+  */
+ bfa_fcs_vf_t   *
+ bfa_fcs_vf_lookup(struct bfa_fcs_s *fcs, u16 vf_id)
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index a2a084c8075e..72a4c6e3d0c8 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4009,7 +4009,7 @@ static void pmcraid_tasklet_function(unsigned long instance)
+  * This routine un-registers registered interrupt handler and
+  * also frees irqs/vectors.
+  *
+- * Retun Value
++ * Return Value
+  *	None
+  */
+ static
+-- 
+2.43.4
+
