@@ -1,61 +1,61 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA2A1D9D88
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Sep 2024 18:07:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AB831EAB83
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Sep 2024 18:07:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725646071; cv=none; b=qHlAvYFvQMNc7vFsngQc2Y9q3j+Aq1jxtDRLNuZC79izlpppAkUQdckQfPMMNfygTTylCk/DKLGq4qipL3Canj8latb/Iq8p1gt4SDo7WmmW1MUZYZMCLArTfww3Ly6XH9PjA0H9qK+Pa9R4XOSiAVjCqvB4NIYeL/uDR+nT434=
+	t=1725646076; cv=none; b=dmrPlwzHKeU4G1ynW3OGE2UquD4bg5WZ2Pta1uFvBODl9Mnwm3l5k6F0qDQ6Y1Msy/tAX9DQB1jzrwiraY4HA+5lqfkaKPLQ2rMQZZxhADs9SpFo8P5vlqo/mstyCMjdP6oF/fNtH70ArJ7t+AykaKV8QuQ6vIn+cIY7phUCh84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725646071; c=relaxed/simple;
-	bh=+SzQWWDVMW86HWVDS60cROJ9/2CnUI2u/K5om4tgSpQ=;
+	s=arc-20240116; t=1725646076; c=relaxed/simple;
+	bh=rCoqdQ9B7Hn8xdsgALiUMx6hOr/x0MpVdqxz3Ze2hQA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=axfZjZhJWjoR8YKw4QRSHekWH1GRuqIIg4poM0NNiSSmsR9ilrQ1sUY605jJHgCaGzEjmi+oX3ncclzB5+xDxuZ9IcuxDS1q/vFGAIlamYoAuMDXOuuu+di8ST+p0/SnUvvFllN9r+dlwcKIOlKyuQZqJHhkKIbB37l6fzkBEYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=oxp0TMWN; arc=none smtp.client-ip=209.85.221.54
+	 In-Reply-To:To:Cc; b=t1bn1tPRuloTKBdLlsVhEia4HbEA4hIC2yzb2Oq8uJKuXtUojyixFWaMEGJEqLoqwD24hIl46Sdt39n98nYn8gVJ4dcQIZd/Et7B7QMAMid8hMgKYXrQ20M47ZVN7+MdcwbeTa0nKo2jlJG5auy5TyAfO2Xg+anZ6NON5Rs0ilI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=1YndgZ7S; arc=none smtp.client-ip=209.85.128.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="oxp0TMWN"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-374bd0da617so1336319f8f.3
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Sep 2024 11:07:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="1YndgZ7S"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-42bbc70caa4so18392265e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Sep 2024 11:07:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1725646064; x=1726250864; darn=vger.kernel.org;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1725646068; x=1726250868; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=D4Rp9n0BNwQ4895eIFb80hCcM78P9qUpcHMtLngVZmc=;
-        b=oxp0TMWNRrwONR0HULdAYV826Oxlj4QGDwM11RGlj0RTKGR1PIKNskKnELWs0otv+U
-         RYKJBf/ADwHO0hBreWARVLs14JO+lPEbXqnX3iIpaRKuCiEdWkHYIHBfFJ5C0Jrxu37D
-         eDEvPSQBWs/hff1gist8Mhrx163x4MqBJDQKTvRZ3JyJC5mXpG9vV4HHgmm5etrJpNdS
-         Y29jOh03sTkQfxoovAxMOyXaTop94EmMC7taN2kPuBB+D0sXFuTquGH5l1dg6M60jaO0
-         mCW1BIkiKe22MNqEQtKd8/1MulVgt7PqZkW0/2Fwl4Vv7OsB8NqOHqvpH9ho/pXeto1s
-         b7/w==
+        bh=bhatKWKJuxfltx1oNZ6oUaNqgboH9F2TpuTRwRw3JfI=;
+        b=1YndgZ7S3cnVvgP/jgQePXDZGAVREbDi/c7FyUCYi+qU9TS0IUt80vR34PYvZ1AYJF
+         Qjh15LcoBJbnfcs5S9PVyi3Kt1V2xO40B2whVyIUAacbhcjXRcMNN46bAvChYusiJUo5
+         CSW2BE1ZVsQ/wXWxHS6tV3N1TNbMLq25/iAfd8kZPFBkz8QzsyuHcSNkAaxWdPCKgV++
+         PX1BqAU8+RjDEuAXWzT96my6oPdme5K814SMLHcF4cuNsCK9aIht8vARbbAaXZ+QV4mp
+         ihRfKtlcUHtBLbytW54UJdzaublUhiMhmwATXyqhqVQ8svfc7rwLJR/Qqng/8nsHUmkL
+         G2Lg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725646064; x=1726250864;
+        d=1e100.net; s=20230601; t=1725646068; x=1726250868;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=D4Rp9n0BNwQ4895eIFb80hCcM78P9qUpcHMtLngVZmc=;
-        b=ehhVmwyWZUFfZY194uSZHE0DPD89rWSwOKvke3WB46yFOaj36FpM+snnEzbRkU/7+c
-         JZHSrY1ktubI1lDg++HTrx6ShVlE1BSRFtIL/p0rWI9Cq5qzVsZMUmPhDznY1NDSzhRs
-         GObihaPZPFZiBf5cdhJjbXLz1FQQt74ayAMTvrpZjx5187m8Nsb+ew33gPN3qKgws21v
-         6kkkvVdoeQyJZ4JP14CZ+5/ZvCtj9lKXWqWx5LGzQ/0rBRKoIKCRaN7e6Aow+n1qZkqp
-         pc3YZdMvUMDLwinryICKTsPq0NcSOmGFUCJN389RxwhbClysJX17zM05IoXjjNKEmzKd
-         3fWA==
-X-Forwarded-Encrypted: i=1; AJvYcCUGQeZ/EjUdZMho5BOwk15V2RGiSXR4omPTaSxE0//AIT+xI5nNHt/BYWhZJ2KsV8pdYY4fx2A6U6FY@vger.kernel.org
-X-Gm-Message-State: AOJu0YzXjsHqYdE+UcnyOuN9QM3TBn6D1++WBCPmoekgR/McMjKZV20D
-	UsC/RK9Lbrl3C2VDOp/OSVSEMu3m6V49ItfbHB/xrJRyoecSDYP2NaM9fYDz6Dw=
-X-Google-Smtp-Source: AGHT+IH2YsDkxwkPQZjiiu6/zQYpm6i9d+U7GH+VXs5MPyeRlUy7sq6o/p2Ik86FpQoSiu2NaBEYaA==
-X-Received: by 2002:a5d:60c1:0:b0:368:6f64:3072 with SMTP id ffacd0b85a97d-378895c5c4emr2286746f8f.7.1725646063377;
-        Fri, 06 Sep 2024 11:07:43 -0700 (PDT)
+        bh=bhatKWKJuxfltx1oNZ6oUaNqgboH9F2TpuTRwRw3JfI=;
+        b=VYtJsO6bGc+tv7dex6roF3ud+XsOasH7YgEmvFBNlHw4kt05BWRyG1Vh/wcEJ+po4R
+         mO9pp9iIiyvtHLJOTyvydyNDwaF5GXXVeYXXOb0ccc3QAHMJAp3TOt3g3ezUbm4lN8BI
+         LHB1PjDktwTWjAiytkM+Gioru6jh2CH2FU9kVpUG+O9vSgH/PL2cZM86kZ5jkuqiBifa
+         4LqYv5B6FkT3aZJsNLh9UgpuOM4QrGdk+5o5LOx/yaASDS6Rzp1VCLwKsIE5u7qC86uW
+         +5C8a/I6k9K8dBlFirYeEDahQIaVJmIOeTAFfjG2AoKyxu7/r2Ppz47dJqGEjnFMYvEZ
+         UrlQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUaFF+78SA1R2vKg8awfjY84ETuZJWwvyGAnhqUk+6htfQC07E8TdtB1GlGVyxIpO5rQ7ApFIibAuf+@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx3Y4XmfhE1QiPyRADGbJ4jhEtPBVYV3HBiyPJS5Jmggav2KXze
+	59+wJou9nnEBIsLqlqjdLSzWAF8h6tsN+FTVL0NKKMGziyuTRg31hFB2nU9glzM=
+X-Google-Smtp-Source: AGHT+IFOg0pepQs+VdsYBIWsjbQQjXUJeI6KG/cFUzINm+1c+XVO6jt8d37cZGTYUA+GQauE9dhMBA==
+X-Received: by 2002:a5d:4687:0:b0:374:c2e9:28bc with SMTP id ffacd0b85a97d-378895cb7admr2551376f8f.21.1725646068090;
+        Fri, 06 Sep 2024 11:07:48 -0700 (PDT)
 Received: from [127.0.1.1] ([2a01:cb1d:dc:7e00:b9fc:a1e7:588c:1e37])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42cac8543dbsm5880485e9.42.2024.09.06.11.07.41
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42cac8543dbsm5880485e9.42.2024.09.06.11.07.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Sep 2024 11:07:42 -0700 (PDT)
+        Fri, 06 Sep 2024 11:07:47 -0700 (PDT)
 From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Fri, 06 Sep 2024 20:07:14 +0200
-Subject: [PATCH v6 11/17] soc: qcom: ice: add support for generating,
- importing and preparing keys
+Date: Fri, 06 Sep 2024 20:07:17 +0200
+Subject: [PATCH v6 14/17] ufs: core: add support for generating, importing
+ and preparing keys
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -64,7 +64,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240906-wrapped-keys-v6-11-d59e61bc0cb4@linaro.org>
+Message-Id: <20240906-wrapped-keys-v6-14-d59e61bc0cb4@linaro.org>
 References: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
 In-Reply-To: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
 To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, 
@@ -91,157 +91,98 @@ Cc: linux-block@vger.kernel.org, linux-doc@vger.kernel.org,
  linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
  linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
  linux-arm-msm@vger.kernel.org, 
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ Om Prakash Singh <quic_omprsing@quicinc.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4886;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2542;
  i=bartosz.golaszewski@linaro.org; h=from:subject:message-id;
- bh=2lfyjj0BsRyGQ/zvpv6aD8VegLjKD1SDtsQ+KuI1v/M=;
- b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBm20TYENK22yvZLSPdxN1uaJiLlVnA4ApVgdQsk
- hDsjxprKB+JAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZttE2AAKCRARpy6gFHHX
- cljKEAC6IG/AdGK5MyYWfWqM5ZKaRmgU5LrtVRLWnyReguDrGu2oqDJ+Xk+Z8FSMpyWdBUkx1By
- xhM8thugAO2N4T2A8Q6uiUq7dWIoicSaGTw84mXVAuV31GTABr+XBgiqG3DppxszUQy43nNXnlU
- bu5yMJeTo6q1za17Bf8CCFnslrclWvGN5XDuGhG96a0JkGMWmOAlXyb+oXLQePuWfFJGqyLMapz
- U35/NUiwPA/YzG6rPVIffK9ezenDGQa5OcInlGDGUCeTmPnK2/2HN/tAYXIi5akDDaCHpRI+3rg
- oWecix9G5BQm7II4kVW3aXig4nga9mEfgPOQiwmMLiTBtVKnjwKn9bPgAKCyZmnwPQdBt+ZsFji
- ksov/Q+Y+X+dSf2Yh5LCiWrGPkmfUqLGcpkae69LO+RLvISQbDVm2X3fSoaKCCnkq8CN3WzkmqZ
- 50QT72s4TD7/Dd1IvO0j49oKbIscm46k0fyoNuiPeKcHNcB035C17vDMEg7wwwungwQ0CIg7uxR
- xrXP3S/h63ijIiCeww9FzmdAJokJ7/LuWbeFOjN+mlhFxah60wWDAxgVikCH63U5kxmZKw4A/CH
- rn5rQlEVh2AYrYkuFlyxskAxgbn88jeO6cI65INpFN/wnEZZv0D3DoJDM3I7067yvcD83sjwNLW
- nmIv5IkAUt8C+rA==
+ bh=+ALSGPhqSpFCx8VMqBEOHa6jvoZdtMRVH6U+tA0zR4E=;
+ b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBm20TZHG7mGdP2yFeDCgoTznf05+6dq0aY36CmD
+ ovuEoC17GGJAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZttE2QAKCRARpy6gFHHX
+ cvO+EACvuksLWfnKBrpniQe6Iv46e+yJoHo4yghwKDIwAlpdFhXkGYmt3z+Gp7mfW0cxBUxfka9
+ rbbHdcBUVhp0aToj3CBkm2cy7u1llGhn81wyzAAnD15+roJfk7DF/aVr/g5cD/9/VYeFDIbfOv+
+ DRx+YXZ35DpsSrmRTc78cbOrGqnmDrfhvuMS4K2fvH1UmSr64s7ZLu5mp6HEBi3L71dla+m43bV
+ VuaJYK8DX7rpHG7oKOa/fjD/DLlP04HbHg/QvuVQohrSPRFYsX6mtar7jpPB37vWz7VW7BGCEab
+ drRBSAcK/iGAXD5hCj02WE9aZmm8yUQSVGzAaY0TcvHkmv4J9xNCvgjy6XvFvZDAaJdnegxMQ+F
+ VyIfdTDqkCWAusDHI8eEJ4HWTVlj4jYiItMj5bDIqYiTTJ5pqjK7JMAw2I7Y2Ej9GtvGOx9M5gn
+ tLhLOxDydraJ86bvBW4Qq9rZuOQBdkZIFHUdi/EPIXZhYQuaWQBmwzBrfgCPEKe1WTAQbZDnI/L
+ uyWHZaubRrkuTJ91tvyPm5nzOwjl63ZmqvKG68cdMAts44qlQCptRNkt+qqozMqPNUyl+7eqr3v
+ 4J3pEiueN/55h6WuFK53jEUlbIIMSVxr4/xNMIUKVsTB0n45VAb4nd+FGuIASPsWqBrtg2AVKs3
+ nnleYxvy0CG/O4g==
 X-Developer-Key: i=bartosz.golaszewski@linaro.org; a=openpgp;
  fpr=169DEB6C0BC3C46013D2C79F11A72EA01471D772
 
 From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 
-With the new SCM calls that interface with TrustZone and allow us to use
-the Hardware Key Manager functionality, we can now add support for
-hardware wrapped keys to the Qualcomm ICE SoC driver.
-
-Upcoming patches will connect that layer with the block layer ioctls.
+The block layer now allows storage controllers to implement the
+operations for handling wrapped keys. We can now extend the UFS core to
+also support them by reaching into the block layer. Add hooks
+corresponding with the existing crypto operations lower on the stack.
 
 Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
 Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Co-developed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 ---
- drivers/soc/qcom/ice.c | 78 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/soc/qcom/ice.h |  8 ++++++
- 2 files changed, 86 insertions(+)
+ drivers/ufs/core/ufshcd-crypto.c | 41 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index 4ed64845455f..1f6d3566b9e4 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -22,6 +22,13 @@
- 
- #define AES_256_XTS_KEY_SIZE			64
- 
-+/*
-+ * Wrapped key sizes that HWKM expects and manages is different for different
-+ * versions of the hardware.
-+ */
-+#define QCOM_ICE_HWKM_WRAPPED_KEY_SIZE(v)	\
-+	((v) == 1 ? 68 : 100)
-+
- /* QCOM ICE registers */
- #define QCOM_ICE_REG_VERSION			0x0008
- #define QCOM_ICE_REG_FUSE_SETTING		0x0010
-@@ -448,6 +455,77 @@ int qcom_ice_derive_sw_secret(struct qcom_ice *ice, const u8 wkey[],
+diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
+index 2530239d42af..49c0784f2432 100644
+--- a/drivers/ufs/core/ufshcd-crypto.c
++++ b/drivers/ufs/core/ufshcd-crypto.c
+@@ -145,10 +145,51 @@ bool ufshcd_crypto_enable(struct ufs_hba *hba)
+ 	return true;
  }
- EXPORT_SYMBOL_GPL(qcom_ice_derive_sw_secret);
  
-+/**
-+ * qcom_ice_generate_key() - Generate a wrapped key for inline encryption
-+ * @lt_key: long-term wrapped key to be generated, which is
-+ *          BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE in size.
-+ *
-+ * Make a scm call into trustzone to generate a wrapped key for storage
-+ * encryption using hwkm.
-+ *
-+ * Returns: 0 on success, -errno on failure.
-+ */
-+int qcom_ice_generate_key(struct qcom_ice *ice,
-+			  u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
++static int ufshcd_crypto_generate_key(struct blk_crypto_profile *profile,
++				      u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
 +{
-+	size_t wk_size = QCOM_ICE_HWKM_WRAPPED_KEY_SIZE(ice->hwkm_version);
++	struct ufs_hba *hba =
++		container_of(profile, struct ufs_hba, crypto_profile);
 +
-+	if (!qcom_scm_generate_ice_key(lt_key, wk_size))
-+		return wk_size;
++	if (hba->vops && hba->vops->generate_key)
++		return hba->vops->generate_key(hba, lt_key);
 +
-+	return 0;
++	return -EOPNOTSUPP;
 +}
-+EXPORT_SYMBOL_GPL(qcom_ice_generate_key);
 +
-+/**
-+ * qcom_ice_prepare_key() - Prepare a long-term wrapped key for inline encryption
-+ * @lt_key: longterm wrapped key that was generated or imported.
-+ * @lt_key_size: size of the longterm wrapped_key
-+ * @eph_key: wrapped key returned which has been wrapped with a per-boot ephemeral key,
-+ *           size of which is BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE in size.
-+ *
-+ * Make a scm call into trustzone to prepare a wrapped key for storage
-+ * encryption by rewrapping the longterm wrapped key with a per boot ephemeral
-+ * key using hwkm.
-+ *
-+ * Return: 0 on success; -errno on failure.
-+ */
-+int qcom_ice_prepare_key(struct qcom_ice *ice, const u8 *lt_key, size_t lt_key_size,
-+			 u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
++static int ufshcd_crypto_prepare_key(struct blk_crypto_profile *profile,
++				     const u8 *lt_key, size_t lt_key_size,
++				     u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
 +{
-+	size_t wk_size = QCOM_ICE_HWKM_WRAPPED_KEY_SIZE(ice->hwkm_version);
++	struct ufs_hba *hba =
++		container_of(profile, struct ufs_hba, crypto_profile);
 +
-+	if (!qcom_scm_prepare_ice_key(lt_key, lt_key_size, eph_key, wk_size))
-+		return wk_size;
++	if (hba->vops && hba->vops->prepare_key)
++		return hba->vops->prepare_key(hba, lt_key, lt_key_size, eph_key);
 +
-+	return 0;
++	return -EOPNOTSUPP;
 +}
-+EXPORT_SYMBOL_GPL(qcom_ice_prepare_key);
 +
-+/**
-+ * qcom_ice_import_key() - Import a raw key for inline encryption
-+ * @imp_key: raw key that has to be imported
-+ * @imp_key_size: size of the imported key
-+ * @lt_key: longterm wrapped key that is imported, which is
-+ *          BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE in size.
-+ *
-+ * Make a scm call into trustzone to import a raw key for storage encryption
-+ * and generate a longterm wrapped key using hwkm.
-+ *
-+ * Return: 0 on success; -errno on failure.
-+ */
-+int qcom_ice_import_key(struct qcom_ice *ice, const u8 *imp_key, size_t imp_key_size,
-+			u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
++static int ufshcd_crypto_import_key(struct blk_crypto_profile *profile,
++				    const u8 *imp_key, size_t imp_key_size,
++				    u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
 +{
-+	size_t wk_size = QCOM_ICE_HWKM_WRAPPED_KEY_SIZE(ice->hwkm_version);
++	struct ufs_hba *hba =
++		container_of(profile, struct ufs_hba, crypto_profile);
 +
-+	if (!qcom_scm_import_ice_key(imp_key, imp_key_size, lt_key, wk_size))
-+		return wk_size;
++	if (hba->vops && hba->vops->import_key)
++		return hba->vops->import_key(hba, imp_key, imp_key_size, lt_key);
 +
-+	return 0;
++	return -EOPNOTSUPP;
 +}
-+EXPORT_SYMBOL_GPL(qcom_ice_import_key);
 +
- static struct qcom_ice *qcom_ice_create(struct device *dev,
- 					void __iomem *base)
- {
-diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-index dabe0d3a1fd0..dcf277d196ff 100644
---- a/include/soc/qcom/ice.h
-+++ b/include/soc/qcom/ice.h
-@@ -39,5 +39,13 @@ bool qcom_ice_hwkm_supported(struct qcom_ice *ice);
- int qcom_ice_derive_sw_secret(struct qcom_ice *ice, const u8 wkey[],
- 			      unsigned int wkey_size,
- 			      u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
-+int qcom_ice_generate_key(struct qcom_ice *ice,
-+			  u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+int qcom_ice_prepare_key(struct qcom_ice *ice,
-+			 const u8 *lt_key, size_t lt_key_size,
-+			 u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
-+int qcom_ice_import_key(struct qcom_ice *ice,
-+			const u8 *imp_key, size_t imp_key_size,
-+			u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
- struct qcom_ice *of_qcom_ice_get(struct device *dev);
- #endif /* __QCOM_ICE_H__ */
+ static const struct blk_crypto_ll_ops ufshcd_crypto_ops = {
+ 	.keyslot_program	= ufshcd_crypto_keyslot_program,
+ 	.keyslot_evict		= ufshcd_crypto_keyslot_evict,
+ 	.derive_sw_secret	= ufshcd_crypto_derive_sw_secret,
++	.generate_key		= ufshcd_crypto_generate_key,
++	.prepare_key		= ufshcd_crypto_prepare_key,
++	.import_key		= ufshcd_crypto_import_key,
+ };
+ 
+ static enum blk_crypto_mode_num
 
 -- 
 2.43.0
