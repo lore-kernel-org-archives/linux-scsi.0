@@ -1,61 +1,61 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 488981EABB6
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Sep 2024 18:07:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 367971EB256
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Sep 2024 18:07:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725646076; cv=none; b=rLx2sfOqWbx+jCTDePVVruXBAopSv0fZZ56UmAielG6OxmQPtMEpHadzIukX1wb4uSDD8wpEm2TkBGLcBrQiKQob3xL6fjRuhI8BVpHFE4Mfht+Os9i7VxfRjsSD2fvDvVG2gl+90bQhiDYIwLqdfkQgqIFZ/gEQTvw8gb/JFrI=
+	t=1725646080; cv=none; b=gFiVvr1IZfknitUJo/+NlqpGYma63j1WMAx4lr4/iuVPvPFwyEcinCoLdmbfelo6ten0Z8VlcfUo5ysc33KC+RuCHlea0LzQMsSxP2WOyFcJjEBaaoblx5NNwh5ErFHpcuCes5tJRBacGUOlIkP/QIzsgZ3eNldMTl9CE6fiTcY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725646076; c=relaxed/simple;
-	bh=Ke8dL87SoQga2X6uwSVl5aJs+yqrMe/gn621psUMM4Y=;
+	s=arc-20240116; t=1725646080; c=relaxed/simple;
+	bh=yN3UyiSFYgnUZ7NwiyFNFYXW8dahCqci8HzGdQLvfDU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ndYB4F/0WtrOiGVcqRYmfqPZQwnyJcfm36RdXsBpJ4COB0G4sqEVooIKtc4xZUrGmIvRqywEtAaTJ5sZO/zl+0Wx9QNZtPLjxZsRV/6lGpeCUahl86yEJ0aO7l3FiL6jbdtOeEV2D/4aFjni9cZjcjwYaIBPG7mXboWjkMX125M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=PWyAzTdE; arc=none smtp.client-ip=209.85.128.50
+	 In-Reply-To:To:Cc; b=AkIguPqjiwOmIYf6xQaxTignglO5G9hQe+YTQ6IgUS39AEptyx45wO4/E8O7DFRPBRvReAACE/Blejz/QxYlvWtg2bT+z6vQ8Sv9CqKYojDWNiNTKjcSxF42w+RqLrnS49C/Kd0jzHPD90Lud0rGEJ7PNvsT2ppW2SEZztYO23o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=iKGxZmgn; arc=none smtp.client-ip=209.85.221.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="PWyAzTdE"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-42c94eb9822so17970145e9.0
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Sep 2024 11:07:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="iKGxZmgn"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-374ba74e9b6so1742406f8f.0
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Sep 2024 11:07:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1725646069; x=1726250869; darn=vger.kernel.org;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1725646073; x=1726250873; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=i3Qc6a6yfPpcSLUHB6jxwWREt+1D13kZPgELOkHHTnU=;
-        b=PWyAzTdEHmn0KohlO+QwnUMr4le5SBCWwuUpqeNGnPa24e/Vz7Ez96jADnekMATy2m
-         zXV2YDxjcjS5XBZcVUoAVyzpNqTtm3jhr3yIql5ztW9qLbYK1/3gFAfzstTKO2bKhZkK
-         NoYPyISKOF6opC/HouC9hDYGnJjbzRDZv4gCJQjLlMhDuP+xD8MRYj/cki5ssOFhUK/M
-         ZyiGkPaAVZ40fStG2ln/gxKFGENBnuLhFkIEz+C0acKt5Ovyvy2u0GJesn3OxrI+JKs3
-         g30+Y4PP3YPttedwH+/EBWyHaGUb9fkZMeFmzMN0Hv+S57tHPg0fTUmoORmT9co3zYQf
-         XsjA==
+        bh=0F4M8TV9wbFiPgmY2At1z2Y50uIr5nXzL3lGpc2+c2g=;
+        b=iKGxZmgnr+Y4UG5MbVP0wL9J4HlbC6XQz1N0T2yut3bRpi5hFv219/BTISvk2AYXQx
+         vxoNxxjUcVcTWD+wQAPVgOQlirriUcIkbIf/lWQj/aPV85L/Oix58ZwbGL7Euk3x3IRY
+         bMszi5obo0REIqJli38Tu92a7EJlVfO7Y5QTsvmy8p4s0re1WFM0aKk4QhBmeVQ1DMxX
+         mZ29HqFuuoEpqe7aTwRT02zUW6PA2KnoXzWq+p5OvkFTLfTSoNvvigcsziX6nbyJYyZj
+         ATKGMLWjpQXYVe7OhG9c+WuBscbF4AjezNgCPHtxirDc50AGHBOIDhnI6RxK4Z41tenh
+         Kmrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725646069; x=1726250869;
+        d=1e100.net; s=20230601; t=1725646073; x=1726250873;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=i3Qc6a6yfPpcSLUHB6jxwWREt+1D13kZPgELOkHHTnU=;
-        b=Eng4TfL6B+IsI68sgEmZld/RjUg/6Ce8gTX8VCd1O0U5i5PYOE3hKDp7Oajdu49hMX
-         h6J9q0gPm+uJtTtOhol/CQDDgXj7/S33Js4cW1jh8h4i67NEQ4XadWf28qDuAYqMa7KU
-         sN6Hvc/H6BBOJwXqiZ9Yuq1h1nvgW1Yzu7/XyfKNGvkR1TEjl0d4WAUawhe6Azrx9xhq
-         +rYg9Sg2TYV6fnLQoiZfzlGW/S09fPLjs+eo9l8lbRAi5v+AEWaEXA6gnLuJk1Ga6MOx
-         ONqiT29j+g3k8rOz0ZEzw3FQphdNSPoKMRibESLlsJxxlx3xelTARCs0uj9E4Ib3b7tk
-         7CJA==
-X-Forwarded-Encrypted: i=1; AJvYcCV583++Q5jTxtuPcW59sCxkrdlGe/ffI1wny20O34bJlrIbM/Ha6NS/3OdPl5rPrsDv5vClECd4MHSh@vger.kernel.org
-X-Gm-Message-State: AOJu0YwnXDYF74oK5h/b87ffGdiXckojSNSdXrvjuP4oHO+jHUbFDgMt
-	kMn0DcPM3O8w1HJflAEv19KCjZQOvLXO350TeqT8VUZuRhgW3z8OxIj1AuaQPzo=
-X-Google-Smtp-Source: AGHT+IHgRW1dDAdY7k4cr6NNJiquQTX64Ku0dg+CwFId7m35sGNplTQSRD/ouEe6SnGIcdLsGvugaA==
-X-Received: by 2002:a05:600c:19c8:b0:428:ea8e:b4a0 with SMTP id 5b1f17b1804b1-42c9f97e290mr25247045e9.14.1725646069578;
-        Fri, 06 Sep 2024 11:07:49 -0700 (PDT)
+        bh=0F4M8TV9wbFiPgmY2At1z2Y50uIr5nXzL3lGpc2+c2g=;
+        b=iX37aG8lyyNyy2CyxNjGgXVmVIe64tcOd6Gx4DZTUAHsMZ1DSwQ2erNT/iBRjBpCNu
+         RB7dF0hfeXd2TC8AE4xqmwNQyFnK7t8YYbnZLCpjaqZ86x1WNni3Le7rTWQtFrzZkoUV
+         MdRUQKWwiZlNdWI+GAd9sNy9/eBA6D26fUd0V+3NhJlvSbB7vHNxFlHUsjWIcQPdZjOK
+         M0QjXHCOLpCjgHNVHsdbLnqgM8pREDjs2QW73KRbc1i1oJ9W4ZuqstRMheV++y/kqd6/
+         KHXec+LX0yuy4jYQl+EXCdLYWPwAt/ofLr8x8nKCtUpwOGD5/zp/8qUfUf25m7ykepAX
+         bbsQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV4QJxSJuhjjdowqnfF0bz+D0LuWloOMcsT22mUJocUyaKLG/WnHdENC7jB63Cp2MIWUJfQrgDnc4o1@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJzWtEKxmo+pppBH7sRmCrMEd+emj+Nq3BmmgLlVxSS4xub4mw
+	R5BQ7b3mdM3Ph50fsb6wA9Ft6H4z6vjIXiBsqfOt4yIgytfqNkuV7KZuI9LtT2I=
+X-Google-Smtp-Source: AGHT+IFzLgUC8XDV/1hmeSArnp6cG4xAw+z/Gpqq5CLLSznnGIQotYfc6wYotVA2fo3sOEb29ZstZQ==
+X-Received: by 2002:a5d:5cc5:0:b0:374:bcdc:6257 with SMTP id ffacd0b85a97d-37892466eecmr69710f8f.54.1725646073049;
+        Fri, 06 Sep 2024 11:07:53 -0700 (PDT)
 Received: from [127.0.1.1] ([2a01:cb1d:dc:7e00:b9fc:a1e7:588c:1e37])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42cac8543dbsm5880485e9.42.2024.09.06.11.07.48
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42cac8543dbsm5880485e9.42.2024.09.06.11.07.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Sep 2024 11:07:49 -0700 (PDT)
+        Fri, 06 Sep 2024 11:07:52 -0700 (PDT)
 From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Fri, 06 Sep 2024 20:07:18 +0200
-Subject: [PATCH v6 15/17] ufs: host: add support for wrapped keys in QCom
- UFS
+Date: Fri, 06 Sep 2024 20:07:20 +0200
+Subject: [PATCH v6 17/17] ufs: host: add support for generating, importing
+ and preparing wrapped keys
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -64,7 +64,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240906-wrapped-keys-v6-15-d59e61bc0cb4@linaro.org>
+Message-Id: <20240906-wrapped-keys-v6-17-d59e61bc0cb4@linaro.org>
 References: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
 In-Reply-To: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
 To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, 
@@ -94,67 +94,124 @@ Cc: linux-block@vger.kernel.org, linux-doc@vger.kernel.org,
  Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
  Om Prakash Singh <quic_omprsing@quicinc.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1574;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4227;
  i=bartosz.golaszewski@linaro.org; h=from:subject:message-id;
- bh=7XeLQBTLqSRLELujYdPFagEOBSA1g3e0jp8VcC7sT4M=;
- b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBm20TaxOfovewpS13ECe1kzE6x8LSUpZm6atLPL
- H0luCevms+JAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZttE2gAKCRARpy6gFHHX
- coKzD/4sWo0+WuhWpypP64fHAtwVevfl3J83/sWXt724EJc6iEVIuwj5jVSJ9R2Bjb5O1GKuLah
- 29AJTkCfiXmUrsCVkEIZFwYYKUJvCuqrazaMm9JZ9v2N9o09Lv6i6CiD7NrpCwsr73hr96rzKqY
- oqgRIpruPUrtSBbMZvgYqDqSjq7YFqpxGt3PkjSqWpd+VWj+0pIUfMHopwbYhybFhh7qn5aofle
- CJ9BW4tM+oyoiM3yUZLy4jGSCtR0OG5Q2sVD7cWQTSLI604OETKXcesZb2H6cyuuC3oX3nxU2mQ
- Jzmoqi6MdToG25x10PIJ5DZ1ZJffBTRcPqmdQEQN5zMpAaYPDpZZnzjFavNtfir6Z3XtbXmUPn+
- zoRaJMww2fwpGc9hl00kRNd/3ZRrO7arL6fywECU31BZGM6kVxY5XLJgnvkNiR4z3C2S2wBiV+8
- Ib0ZBkQe06GcJTp4BjDfFbNMNTldLWMyBzvmGETCOeSTrFZwBlJNZxh568RJMHTpYA4zaCS1l7m
- gHt6FDcCJm7mVp7M9TzTcScKB3PCV7fCR64mSyW9dSZgmYukeIZuSS/ktVTw0C8dtXFZ54k6zdf
- iR1BEvgpYshflVvlaA2bqNgsEasbHb8ezPz+o5CEVzvssv2S4yXAvJAWsTkmgzkYXCuEfmfd/xL
- qxL/ZTtoB4ba2lw==
+ bh=lAz64p9mYL3e8mxedYIAwwas8wL0VPUBWm79cF7quNM=;
+ b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBm20TbMJe/MV01X+lyorGFEGKGia63YS2Jy7eb9
+ ezOsWi8dIqJAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZttE2wAKCRARpy6gFHHX
+ cniYD/9kh0S4qtv/43wWiE+pb51WOIqUAF2VV1lMlkcDal89KQicHRAFEysMOaGZV3IB9LJovkl
+ zun/fHymbSr6EW7nt/jveOpN9bUjsDt+Nf/CTzIn9ETQnIl+LuY02w8BPJVT9GS4A+qNKLM7U8e
+ IQOKp8W8CN+q0MaibQB62vkLR69gkgft5gS84yPkhtl/0BIB8te0E67jWGOZbn/lTHGTClWb49W
+ ZLswNjG7DMpuMvK642zxWIfo4PCj1Vmqyfl/1/Fi5hIIRXtyTuCAwhW8gbagPDkdY1tWZlpEN7M
+ iEqOYZfZjZ7tNCNIG961mMTlUtfeG2arec4VjAZvSAh5FqFrYfQu6tV998bSnlCenTwefnhNu0R
+ g/qk/vll1+34iVAKSHy4woo/18eiQAu1/9XkS1pm/wlVUCq5Yx3jIFXaMoRDYRGDR1z0PqoWSOj
+ kI+exVmGTR/dFwuDqs0fuofn3Sy3RsV4Ls1kYWpOFPltnH4nfDQvRi13r6GaxWEAXfY9n+MG3wN
+ IHoBp/LJmtrgm/cr6+Qyy7JRd6QmDM3b6GGfzUfakN5WLoY+xpGRXINAUuteZH7uknccu7EDPEb
+ Z4x8mNDldMcoZ9ldM3R+omc4LduppLdJ5ppa9mD4k13l3mh4sWVpV1Iq9lncHmvIjGSj0Fu5BRU
+ 9wAF+McJ/TiP3xw==
 X-Developer-Key: i=bartosz.golaszewski@linaro.org; a=openpgp;
  fpr=169DEB6C0BC3C46013D2C79F11A72EA01471D772
 
 From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 
-Use the wrapped keys capability when HWKM is supported. Whether to use
-HWKM or not would be decided during an ICE probe, and based on this
-information, UFS can decide to use wrapped or raw keys.
+Extend the UFS core ops to include callbacks for generating, importing
+and prepating HW wrapped keys using the lower-level block crypto
+operations and implement them for QCom UFS.
 
-Also, propagate the appropriate key size to the ICE driver when wrapped
-keys are used.
-
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/ufs/host/ufs-qcom.c | 34 ++++++++++++++++++++++++++++++++++
+ include/ufs/ufshcd.h        | 11 +++++++++++
+ 2 files changed, 45 insertions(+)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 58018fc8999d..366fd62a951f 100644
+index 77fb5e66e4be..fd8952473f4b 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -129,6 +129,8 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 
- 	host->ice = ice;
- 	hba->caps |= UFSHCD_CAP_CRYPTO;
-+	if (qcom_ice_hwkm_supported(host->ice))
-+		hba->capabilities |= UFSHCD_CAP_WRAPPED_CRYPTO_KEYS;
- 
- 	return 0;
+@@ -195,10 +195,41 @@ static int ufs_qcom_ice_derive_sw_secret(struct ufs_hba *hba, const u8 wkey[],
+ 	return qcom_ice_derive_sw_secret(host->ice, wkey, wkey_size, sw_secret);
  }
-@@ -166,7 +168,11 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
- 	    cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
- 		return -EOPNOTSUPP;
  
--	ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
-+	if (bkey->crypto_cfg.key_type == BLK_CRYPTO_KEY_TYPE_HW_WRAPPED)
-+		ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_WRAPPED;
-+	else
-+		ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
++static int ufs_qcom_ice_generate_key(struct ufs_hba *hba,
++				     u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 +
- 	if (config_enable)
- 		return qcom_ice_program_key(host->ice,
- 					    QCOM_ICE_CRYPTO_ALG_AES_XTS,
++	return qcom_ice_generate_key(host->ice, lt_key);
++}
++
++static int ufs_qcom_ice_prepare_key(struct ufs_hba *hba,
++				    const u8 *lt_key, size_t lt_key_size,
++				    u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	return qcom_ice_prepare_key(host->ice, lt_key, lt_key_size,
++				    eph_key);
++}
++
++static int ufs_qcom_ice_import_key(struct ufs_hba *hba,
++				   const u8 *imp_key, size_t imp_key_size,
++				   u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	return qcom_ice_import_key(host->ice, imp_key, imp_key_size,
++				   lt_key);
++}
++
+ #else
+ 
+ #define ufs_qcom_ice_program_key NULL
+ #define ufs_qcom_ice_derive_sw_secret NULL
++#define ufs_qcom_ice_generate_key NULL
++#define ufs_qcom_ice_prepare_key NULL
++#define ufs_qcom_ice_import_key NULL
+ 
+ static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
+ {
+@@ -1830,6 +1861,9 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.config_scaling_param = ufs_qcom_config_scaling_param,
+ 	.program_key		= ufs_qcom_ice_program_key,
+ 	.derive_sw_secret	= ufs_qcom_ice_derive_sw_secret,
++	.generate_key		= ufs_qcom_ice_generate_key,
++	.prepare_key		= ufs_qcom_ice_prepare_key,
++	.import_key		= ufs_qcom_ice_import_key,
+ 	.reinit_notify		= ufs_qcom_reinit_notify,
+ 	.mcq_config_resource	= ufs_qcom_mcq_config_resource,
+ 	.get_hba_mac		= ufs_qcom_get_hba_mac,
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index b8b1763df022..a94b3d872bcc 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -324,6 +324,9 @@ struct ufs_pwr_mode_info {
+  * @config_scaling_param: called to configure clock scaling parameters
+  * @program_key: program or evict an inline encryption key
+  * @derive_sw_secret: derive sw secret from a wrapped key
++ * @generate_key: generate a storage key and return longterm wrapped key
++ * @prepare_key: unwrap longterm key and return ephemeral wrapped key
++ * @import_key: import sw storage key and return longterm wrapped key
+  * @fill_crypto_prdt: initialize crypto-related fields in the PRDT
+  * @event_notify: called to notify important events
+  * @reinit_notify: called to notify reinit of UFSHCD during max gear switch
+@@ -376,6 +379,14 @@ struct ufs_hba_variant_ops {
+ 	int	(*derive_sw_secret)(struct ufs_hba *hba, const u8 wkey[],
+ 				    unsigned int wkey_size,
+ 				    u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
++	int	(*generate_key)(struct ufs_hba *hba,
++				u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
++	int	(*prepare_key)(struct ufs_hba *hba,
++			       const u8 *lt_key, size_t lt_key_size,
++			       u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
++	int	(*import_key)(struct ufs_hba *hba,
++			      const u8 *imp_key, size_t imp_key_size,
++			      u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE]);
+ 	int	(*fill_crypto_prdt)(struct ufs_hba *hba,
+ 				    const struct bio_crypt_ctx *crypt_ctx,
+ 				    void *prdt, unsigned int num_segments);
 
 -- 
 2.43.0
