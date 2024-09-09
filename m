@@ -1,103 +1,127 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A98228EC;
-	Mon,  9 Sep 2024 14:52:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7096842AAB;
+	Mon,  9 Sep 2024 15:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725893523; cv=none; b=qQHIioKoTEeH0ZwcIb2Qg/Hy2/ezTl9WkPchv8qIkdBYjdOV3ftawlS6GP0uUqWx13OQKHhhE/RtR5rm4q+O2CmLsYZFNnH+vFyBFSvHWL8vtVu6yxRMq1iepKihPt8Mo5rX/7UUMEmzD/05/TlGtaigWMXtZPMve0UzzHyhWUU=
+	t=1725897461; cv=none; b=OIjnTCE1bOutrAMHPJyeVtEKXTD/JXHtLNjJCTAQRF67QuwgE9W9RCtQi4zldxQE1VOaKg8+AZZQ+k1TX4Bkk8G/mJH/6Qp7uRN5Qh77wC6dxuyvL0YSh36VoHCAcAYO8TG2jHncyEgxTtGoVAuTerjDlyt2X0hZcS2tRStlE2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725893523; c=relaxed/simple;
-	bh=pLZ5KfsWDtAOi+9pBh4TXhl1PKUKCxpwGHqM1/9+ReQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=UD29Jak6SSY+9zM6SZu7CVSg5c1VmcLK/ENc+ZUmN6yQdmRPSZkjp3By1nVJlqTur6eHDaVRj7At4CluNvsU6oANnKg/fP3+5bxLNsYvCeayXJpLnwMYv5zZTe0dirLFC/HP57qNv7F1icn4M2M2ZZcgCHgYIMslHeDsPVl3ykM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OuobNaCR; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1725897461; c=relaxed/simple;
+	bh=oacz5eggXwzY8M8S+vaeXmwUAnxLro5Rgw36NkVBL04=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Zc4FkrrnIem7KiF9FMh3Lna0eNetvNputn8S8CNHbMFDFlktRuM5nyG52MVwWYgPcBmfZat/vh+59CeCFeXYWfbgR38PF1C4f2YybP+6lGNPiczDPwkLf2Q0zFgtjPauOCOciZDq1aMnmHrddUhEt1FjGOxwbeii5yq0alNcBUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b=bOIXjvAE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OuobNaCR"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 489DRRU1018266;
-	Mon, 9 Sep 2024 14:51:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	oOjcXjUbwSgzNSp733a017RyzNlbU++LiGHcquc+GRM=; b=OuobNaCRXJPSD37/
-	h6GFvdKWgDwZ9E+aaDB0rDm8XV/Kxf71t+5iRBp+8a7P8wx5rEb+esby1oxOTcR9
-	eBXKjbWHa3sT6pvWcLOlGNj1Aq2FH46w/DviifBzn4RoeeYMiYUbR4BnjpoC6Ie/
-	ykhT2XwpGWEggk3nFb76qHOzr+ovF+sumy45M031XEDF4DMEgwllqYwvdu5V4HUS
-	O1O53chC9mWmp3ttzqTtg+Ea1A+blx6UWaYCTbLkL/nSDpgKspBm+RwPBKfV5uCu
-	g3Qn5VBh1OgCU6bY3zdreNRzY+a6nJZhrzXLJAYKxEqTvNjiSJ1U+l3gRBe4+Pxj
-	EJPhYA==
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41gy7fk3xt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 09 Sep 2024 14:51:36 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 489Epaw6007195
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 9 Sep 2024 14:51:36 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 9 Sep 2024
- 07:51:35 -0700
-Message-ID: <f133990e-548e-1d57-ccfd-b130a642fc58@quicinc.com>
-Date: Mon, 9 Sep 2024 07:51:35 -0700
+	dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="bOIXjvAE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA2F1C4CEC8;
+	Mon,  9 Sep 2024 15:57:33 +0000 (UTC)
+Authentication-Results: smtp.kernel.org;
+	dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="bOIXjvAE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
+	t=1725897452;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bbWr4vi9pa8+Cqp83onNnmk1v5W+k1MGPgiQ/1MwNSc=;
+	b=bOIXjvAESpiyWOLfxiXwIhAtPOG1y1+0opyH9Q87ZwFnbiPRA4b3wNogUcxJqtsfJjafy2
+	EIPyfn290ab/wumQZS8/Njm/fN604qRqGzCtPRB3Oi6XyRiwcddBL2PngABSxf1zQ6eimS
+	KerTR+BY/Q0Rag++udJH9dHwTPIZMJ8=
+Received: 
+	by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 242879eb (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Mon, 9 Sep 2024 15:57:32 +0000 (UTC)
+Date: Mon, 9 Sep 2024 17:57:31 +0200
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+To: Uros Bizjak <ubizjak@gmail.com>
+Cc: x86@kernel.org, linux-crypto@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
+	bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Hans Verkuil <hverkuil@xs4all.nl>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Eric Biggers <ebiggers@kernel.org>,
+	"Theodore Y. Ts'o" <tytso@mit.edu>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	John Fastabend <john.fastabend@gmail.com>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Eduard Zingerman <eddyz87@gmail.com>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@fomichev.me>,
+	Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Higgins <brendan.higgins@linux.dev>,
+	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Jiri Pirko <jiri@resnulli.us>, Petr Mladek <pmladek@suse.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Jamal Hadi Salim <jhs@mojatatu.com>,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Kent Overstreet <kent.overstreet@linux.dev>
+Subject: Re: [PATCH RESEND v2 00/19] random: Resolve circular include
+ dependency and include <linux/percpu.h>
+Message-ID: <Zt8a6_RwLG2pEnZ6@zx2c4.com>
+References: <20240909075641.258968-1-ubizjak@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v3 1/2] ufs: core: fix the issue of ICU failure
-Content-Language: en-US
-To: <peter.wang@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
-        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
-        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-        <tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-        <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-        <stable@vger.kernel.org>
-References: <20240909082100.24019-1-peter.wang@mediatek.com>
- <20240909082100.24019-2-peter.wang@mediatek.com>
-From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <20240909082100.24019-2-peter.wang@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: OERjaQ1dmJ05ckrU32UtKX53KSI__z5R
-X-Proofpoint-GUID: OERjaQ1dmJ05ckrU32UtKX53KSI__z5R
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 bulkscore=0
- priorityscore=1501 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- malwarescore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2408220000 definitions=main-2409090118
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240909075641.258968-1-ubizjak@gmail.com>
 
-On 9/9/2024 1:20 AM, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
-> 
-> When setting the ICU bit without using read-modify-write,
-> SQRTCy will restart SQ again and receive an RTC return
-> error code 2 (Failure - SQ not stopped).
-> 
-> Additionally, the error log has been modified so that
-> this type of error can be observed.
-> 
-> Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-> ---
+Hi Uros,
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+On Mon, Sep 09, 2024 at 09:53:43AM +0200, Uros Bizjak wrote:
+> a) Substitutes the inclusion of <linux/random.h> with the
+> inclusion of <linux/prandom.h> where needed (patches 1 - 17).
+> 
+> b) Removes legacy inclusion of <linux/prandom.h> from
+> <linux/random.h> (patch 18).
+> 
+> c) Includes <linux/percpu.h> in <linux/prandom.h> (patch 19).
+ 
+Thanks for doing this. That seems like a fine initiative to me. (I'm
+also curious about the future percpu changes you've got planned.)
+
+Tree-wise, were you expecting me to take this through random.git? And if
+so, what timeframe did you have in mind? For 6.12 next week (can you
+poke folks for acks in time?), or punt it for 6.13? Or did you have a
+different tree in mind for treewide changes (in which case, I'll send
+you an ack for the [p]random.h changes).
+
+Regards,
+Jason
