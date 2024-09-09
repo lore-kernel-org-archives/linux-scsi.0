@@ -1,57 +1,57 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009061B2507;
-	Mon,  9 Sep 2024 07:56:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1BA71B2EC1;
+	Mon,  9 Sep 2024 07:56:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725868616; cv=none; b=ECIBC0E/KpIpU44wANhLkBL3HStlVBMNtsifb0Sz7g8bSR7Wfyn53co1WE8VRqFaL+ynrO+J9mbWW3ISC+j64Yl8UaZ8h07/Gz0vw9+w7So9/4Qo9fEcfjuLPaZ7jDXdp4tF6ZXplKQoifrV3cSjEPHGpDeKRNuI8GHk4HRyol4=
+	t=1725868619; cv=none; b=F7XX0ULAfAUDqfw4pPtLPFS6twUfJWEAxiHlu4zokZxxeaBQV+IhIovDfSzxmYEQRhddCcG4c0Z5iPzZvSRO9IMQpO5HdY0M8N2ak4qATi9WGbQAikEEQLMAkHRb0jFtRZ5AwPVue7r1tBzkd1U/1jFBfV7Q6Gzn6j6E1YkKSZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725868616; c=relaxed/simple;
-	bh=dwpD06pHM6cKKxt34fstEUoMKuSyMqg9srk/BNxTwYI=;
+	s=arc-20240116; t=1725868619; c=relaxed/simple;
+	bh=puSvXGRn9f+RyH2i76LYyDVzzhSDb22SzRMEwHOezLg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hA6AHmukk11hF3BbNrClgeWE+xYa4cEF3D7Q1f9DAqaXvmITH/YbeXS74VN4cDqjglZlfPMWbzbvJxCbW4QHy+HIvYlYPbjZLboO+d0BSeyR305huQpIzTij0yg2WuayTczM91tzb8xiJqjZyvRpeID0AaBe/MhDZXuLdlvwwP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LjCJOmz4; arc=none smtp.client-ip=209.85.221.46
+	 MIME-Version; b=TlsL8NOwrUkW+ybQmaavM/n1rVuAykLYEddpk11mDvvRWeaLkSUFkmWL+Qt2uf03EdOsi+iDzzcD5iooRIbCttHs6PjDtbZkvhbcmGnKhPj9tfEnhR0AuSf/MmKLZX8Ep7nnk+jlo8q21mljNgVBCgcXOHJHkKQZqrmg895/n6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eyF7+HXj; arc=none smtp.client-ip=209.85.221.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LjCJOmz4"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-374d29ad870so2414949f8f.3;
-        Mon, 09 Sep 2024 00:56:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eyF7+HXj"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-374c5bab490so3083857f8f.1;
+        Mon, 09 Sep 2024 00:56:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725868613; x=1726473413; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1725868616; x=1726473416; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=uWDfXNbOPKK8OkK/H/srkd9h9NgocC7Imjlm69NJz1o=;
-        b=LjCJOmz48HPY3xB7nngT/pf93I+3lHV6S0UtAbfVRsG/zPethFBH8ASrLlHoovGmf9
-         AgNX8mjE6mpDXNdD4wcQah0FFdPeQW4c6O6SCwbZpo7uLo0AC22X4TXhXzlIPfSJ0DCC
-         1nlkmsihauz/V4kE1FZ1SYO1/9qSW8WSwAqsdPpD7ggT5UBI3E2WAPSVJK0c5fLuol6X
-         bKKxFoywI32eF00kkGEB4NprRAPUIgX0U8Uil9hnA/m/uYS/xqzdjvn2BKR9XEa14nyA
-         4NQYGCunljlarvyOfvglLOM1adndNLHMSjY8jnhlQiNiLMrTBEK2ynZuqC/CDV3vEaO6
-         HysA==
+        bh=tT07a8fYg2mX8zdZb0NUXYrNfwc3Lxt6djOa1kz4aGg=;
+        b=eyF7+HXjs9q1avATN2GWz0LNztyBVWzwDQvVs6z+qjT1qMN0Y5AT2yKjLvbjZhrisN
+         oUFG0WGVnPEIfyA2qKEW1hWdFv+SFnTYOjCPk8dGPJfbqyRNJ2dcDHtkp/o7pRWfXyEn
+         DNzxix+WbPqj7JsQhRzLyZ6dD7+a/6dyvsBsHFvwaNAVM7EK2zuBkXYzFMj/gawxYnxr
+         803WEq2fuv2AYOl1ywEaCKk31pRO+3RuS1lXdLcUGll3ZRCvUN6QPAKXc7gYskueojGz
+         TO5DPlptcD2PE4MxN+dKOWGsbP7aE2D7JvlwFwI2exL6jro2v62+arVm+5e64nW/4js8
+         ReyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725868613; x=1726473413;
+        d=1e100.net; s=20230601; t=1725868616; x=1726473416;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=uWDfXNbOPKK8OkK/H/srkd9h9NgocC7Imjlm69NJz1o=;
-        b=haaqkNHWZG+c4i+roQqmL+hZfoEH4SUnGbU+91UpCLFG6cIAc9AmDWvYpjXXRQvkyX
-         t+LKpd8dBePEd9J/i3YmWxOOqrnic1Y2IE3cxo7T1+r9eOCMU1oQVyLVvcKFE27zcLys
-         hEUvf/CEAYIRkKHzhnSprptrNxx50RKty2LritXMOU6doQLpXbUl67YQFf0f8CxGMj1a
-         2MIu7/Ninbvptr9lceZA2t0AWq92ynJcqr7ysTo+mMEbD7SR3pLRvPYaO8l1JsdYWsd7
-         u6uycGTRwcsbC/RmLMjsfwjHf5opa7gWOPm6wD0vFTxQtvMt0mURizX1pqzpjnIai4N9
-         nt9Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUuHag6LpRYU/QffMtQn0CcSnKjvdBUyEHAzkcJ2qJnmPTYlTDR9ApxZ6ERH/urTQlvP/w=@vger.kernel.org, AJvYcCV0vN9+pwY1yyO8MQ6vue2HhOA6TdU4cD94w/MvlHzGa3ZEo89dnNmET7sr4zx5di8KYAdYNpb1tfEHxEA=@vger.kernel.org, AJvYcCVQP0QmlAvJnc0wxEhoiARWRLugXYzgwUe7r1eAHIwRCCAU93kHcmrxjO6wVwmllqfgpMraWN+NvIzcRwx9@vger.kernel.org, AJvYcCVVrLqTc6vcgBiPIwnQv8x1Kva1/lHkAIseNFSXkAQItvh+RAw+rTa3Dzaw9FXrE+vCncz+aDGvEpCdog==@vger.kernel.org, AJvYcCW0QWl3FYO8CwB9pTT8SWmLc4LrzaCqki0ZVpeIEwCp7wpHG0xr95ltX5YMQ4w3IyHrlZfgcaitOnaMWBwR/g==@vger.kernel.org, AJvYcCWOf4WXGJMgEITDfjel9g5XSbmRPyg5wM66Ptl5YdEnHz88SFdyC4nFhI0G9RAHwK7lk4Fv2VAbXhYG/ErW@vger.kernel.org, AJvYcCX+lgLzDijSdsGxME1/fdZtZT73owAgfDDyFBoTFjvHCBEd+JqQRyi3YWm47DmxwB6Q+cBKetCYQ/st8Nme6oq5@vger.kernel.org
-X-Gm-Message-State: AOJu0YyAo8sxzeV/7CkrWLRMK4tjbVi/5S7Zsv30NO2yhT8bpLD1yIQQ
-	A4NU5waI8d3JUmoWCIgTXL+c3aHaRxWH6hy30WV/+MXv1kzDT6IK
-X-Google-Smtp-Source: AGHT+IEJwY2izSi9JvPnlSkxsbiABRBgLXcw/WN/9+VtYgXEpeqF7jtackiugNKAcXHsm6kUmrt+Ng==
-X-Received: by 2002:a05:6000:e07:b0:368:7fbc:4062 with SMTP id ffacd0b85a97d-378895e2f23mr6668484f8f.33.1725868613138;
-        Mon, 09 Sep 2024 00:56:53 -0700 (PDT)
+        bh=tT07a8fYg2mX8zdZb0NUXYrNfwc3Lxt6djOa1kz4aGg=;
+        b=uf56EsmLF8nyuSQ6O7DUqVtZPVATvub9QExCCY4A0J1diDSwi6BIAerFFFcokqABsb
+         G7m5FrcIQTdyX64MEZCfvq9wUZb9jQsUMK/qEz2YcIbP13Up7V7cuz+iaIEC3tUTd7ql
+         tphIEx/IVk5uYswMshK+ObfHJHZReBakPD5q4+snPYVx0Bwa7J5M+y4vFLVhwfkzsQgs
+         vUsD2dKf9xatL3HStH5IqsavL4GopHfR6bbQKk4+8t0Q/+tj+lgAiG0zTFRqCLjnhY70
+         At7hOjoEaOH1LS/I+KoiuLajJHFWeJEm2O1Xp6yrU3qmg5+wq9mp7t6dApQQnOFqC5Yr
+         ViCg==
+X-Forwarded-Encrypted: i=1; AJvYcCVBQVm8z9+2hqKhHBfCP59bYc45qF+jCo1FCg27Ag8MaKQMva7F17XouMJpzOT/gDwB1YIvTab7JNmGR1s=@vger.kernel.org, AJvYcCVbQSMirBOQCvdL2/Krj1489Dirpj8faptuu3blRqWfbcmg28Yu9pm+E31uBepLlhv7+Vmr9F/cFy/BE7Ni@vger.kernel.org, AJvYcCVp2Lb7ekPanHE6r9kL+lXVZur+QNvnhFguqhOkQuXlbh6bP3PqfJ7QkKJotQZuhdD/gN+05Nm0QzM8zA==@vger.kernel.org, AJvYcCWcIVGJT+xi0gUeMEw8YuxLnv7DrO1RG2CV9IGOiZ40FNlnGQyjzH3nTwgyaY6oPMK0obPp55WdNIbDhcFmbfWd@vger.kernel.org, AJvYcCWlDKAf3avU7cfD6QeSOsEaaS3LTz3o9ixXJrzTJZnOH+i5Foy99BQ5nDcjCKPj0nrutig=@vger.kernel.org, AJvYcCXLXU4+mR53TkTikdt/AOyJrqmIspNJ1tc0QbDwFBO88ZG4c5FLMh4dd6iRgdxgCADo+i9AjK4ctSaufx2DYQ==@vger.kernel.org, AJvYcCXs/rxCvzDjhCuCuXbeB+LQwkjunSctdVoVQYA/YoxOyjXblSOn+hKxEG2xdQ8KROGw2c4hNZoOVRcNCMZ3@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxe0dv3knmf33VX/OvhG92RcRBGFt6nP/n1NeMBrfEYtN21N4PS
+	JGmdPh9C5Rh3EvIuE/S09qQrwV/xFEb1T3NuExZ1qtDKRrO++reE
+X-Google-Smtp-Source: AGHT+IGmZsYZCmG7YYhzHupjmmuJRGqS/FOf75V/9MKd4VXHMgO9wuyXejXAu7fFGUQHBhuwF3txfA==
+X-Received: by 2002:a05:6000:a8c:b0:374:d006:ffae with SMTP id ffacd0b85a97d-378885c04ebmr6261181f8f.6.1725868615928;
+        Mon, 09 Sep 2024 00:56:55 -0700 (PDT)
 Received: from fedora.iskraemeco.si ([193.77.86.250])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37895675b7esm5303001f8f.50.2024.09.09.00.56.52
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37895675b7esm5303001f8f.50.2024.09.09.00.56.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Sep 2024 00:56:52 -0700 (PDT)
+        Mon, 09 Sep 2024 00:56:55 -0700 (PDT)
 From: Uros Bizjak <ubizjak@gmail.com>
 To: x86@kernel.org,
 	linux-crypto@vger.kernel.org,
@@ -66,14 +66,12 @@ To: x86@kernel.org,
 	kunit-dev@googlegroups.com,
 	linux-kernel@vger.kernel.org
 Cc: Uros Bizjak <ubizjak@gmail.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>
-Subject: [PATCH RESEND v2 04/19] drm/lib: Include <linux/prandom.h> instead of <linux/random.h>
-Date: Mon,  9 Sep 2024 09:53:47 +0200
-Message-ID: <20240909075641.258968-5-ubizjak@gmail.com>
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>
+Subject: [PATCH RESEND v2 06/19] mtd: tests: Include <linux/prandom.h> instead of <linux/random.h>
+Date: Mon,  9 Sep 2024 09:53:49 +0200
+Message-ID: <20240909075641.258968-7-ubizjak@gmail.com>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <20240909075641.258968-1-ubizjak@gmail.com>
 References: <20240909075641.258968-1-ubizjak@gmail.com>
@@ -90,28 +88,54 @@ Substitute the inclusion of <linux/random.h> header with
 of <linux/prandom.h> from <linux/random.h>.
 
 Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Cc: Maxime Ripard <mripard@kernel.org>
-Cc: Thomas Zimmermann <tzimmermann@suse.de>
-Cc: David Airlie <airlied@gmail.com>
-Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: Miquel Raynal <miquel.raynal@bootlin.com>
+Cc: Richard Weinberger <richard@nod.at>
+Cc: Vignesh Raghavendra <vigneshr@ti.com>
 ---
- drivers/gpu/drm/lib/drm_random.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/mtd/tests/oobtest.c     | 2 +-
+ drivers/mtd/tests/pagetest.c    | 2 +-
+ drivers/mtd/tests/subpagetest.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/gpu/drm/lib/drm_random.h b/drivers/gpu/drm/lib/drm_random.h
-index 5543bf0474bc..9f827260a89d 100644
---- a/drivers/gpu/drm/lib/drm_random.h
-+++ b/drivers/gpu/drm/lib/drm_random.h
-@@ -6,7 +6,7 @@
-  * be transposed to lib/ at the earliest convenience.
-  */
- 
+diff --git a/drivers/mtd/tests/oobtest.c b/drivers/mtd/tests/oobtest.c
+index 13fed398937e..e1ee68f8b8f8 100644
+--- a/drivers/mtd/tests/oobtest.c
++++ b/drivers/mtd/tests/oobtest.c
+@@ -17,7 +17,7 @@
+ #include <linux/mtd/mtd.h>
+ #include <linux/slab.h>
+ #include <linux/sched.h>
 -#include <linux/random.h>
 +#include <linux/prandom.h>
  
- #define DRM_RND_STATE_INITIALIZER(seed__) ({				\
- 	struct rnd_state state__;					\
+ #include "mtd_test.h"
+ 
+diff --git a/drivers/mtd/tests/pagetest.c b/drivers/mtd/tests/pagetest.c
+index 8eb40b6e6dfa..6878700d2fc0 100644
+--- a/drivers/mtd/tests/pagetest.c
++++ b/drivers/mtd/tests/pagetest.c
+@@ -17,7 +17,7 @@
+ #include <linux/mtd/mtd.h>
+ #include <linux/slab.h>
+ #include <linux/sched.h>
+-#include <linux/random.h>
++#include <linux/prandom.h>
+ 
+ #include "mtd_test.h"
+ 
+diff --git a/drivers/mtd/tests/subpagetest.c b/drivers/mtd/tests/subpagetest.c
+index 05250a080139..f34bbf033c4d 100644
+--- a/drivers/mtd/tests/subpagetest.c
++++ b/drivers/mtd/tests/subpagetest.c
+@@ -15,7 +15,7 @@
+ #include <linux/mtd/mtd.h>
+ #include <linux/slab.h>
+ #include <linux/sched.h>
+-#include <linux/random.h>
++#include <linux/prandom.h>
+ 
+ #include "mtd_test.h"
+ 
 -- 
 2.46.0
 
