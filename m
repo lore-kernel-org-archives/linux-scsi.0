@@ -1,77 +1,92 @@
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6778C1B373B;
-	Mon,  9 Sep 2024 09:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D3EB175D21;
+	Mon,  9 Sep 2024 09:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725875408; cv=none; b=B1Xj+Uxeb/tvEkF0dfUS3hvESCIkPJDWOzGa7Q7xmmhFS3mYYanxl2zQiu1pVjizOy5uGsMNdmxxpQzVO6TWy7xY0ZL8byIosu1y1BJU1McYmJ2CZ5LEMHAU3/A8AhVNpc9eyuOzgdXXdq705Y4e5rL4UCXPfZ9kzHoTYBIiraE=
+	t=1725875927; cv=none; b=aY+FBZKcFinkJeRKmMTVOg11fap44+Bs8xKfjiz3ZaUdNGCREuy2EJDTXd29iWBbkCjJabBF07HH9ApTArzI14LF0SXZvxXpx4XBWaomBtMU9bw3OBKNzdDBle7Caj0gQizFu4oI++ObI1POS6KRmJ68A1X73uPCcq3QBucQ4XQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725875408; c=relaxed/simple;
-	bh=YNEEoZK0F87nnuxlA8ZOVCpm884g6LkdLyjxpguwzQ8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z2ZJCYOmD6OfofwX5ZKOUw0rop0BtCpwmVR6KeoT3VsilpCCMUGU/rpPE3hulFEj8hJ9lSEW/WfJmdcbNErtXCc3UVPtsVrsdKD++aRdQPJsj7GbKOgfAo1OdqPVreprDYYzxINUCrhn12tQ9fjup73k/tV6Kx9J7LE8pIxTTTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=CDmhO7aB; arc=none smtp.client-ip=217.70.183.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1725875927; c=relaxed/simple;
+	bh=AoeX4cp4AZC6Uz9D1At8LlEzifxcucNkyBNyGvR7Ygo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=u3sTKOaOdA9BY2cpQQlPRvq/+emgVx840szQD6pXcUx5VB0V/7Yc8AirFPt1i/xJK2mZky3HokWGlfFfI4fGQrMeBRRWJ6XE+EFQLuyzhxq424LdErqiuK0UCI48H+YtSm7gf9VQWmL3yHi3fqQKk7z3QBmkE6adxO3nhDYGB28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=HIHnJRx5; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="CDmhO7aB"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id BC657E0009;
-	Mon,  9 Sep 2024 09:50:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1725875403;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+n6jIuUoupEYC9it7jynGsfYtTffkj9K1qGvau67Xdk=;
-	b=CDmhO7aBGHlWdZiCpFPQW01csa4AVN722IUzlJyMVnxEH6+cWYz86FQ8OxAiz2420sGBW8
-	n4mM+Xeiq3XWkr26A66LjKTVKEUcOwxxzuN8fGsnQz+MqezxXXmz8FbHupp2jM5wyNTII+
-	3/91pxDCRwhqKtCdAH7UM0lrmRZqVlt6K8TzvIooik6D1oYcZ1zX5et1JOwT+nQJm6Sr0O
-	ftBYMd31fOBewjDuxkkM8qGAf9Y06pe0J0ErzX7ejhx+ytUd7NOMW8PgcUl1M1pLMJnA/s
-	PTf2WOuAATZlWj1jXZgZy4p/5p8WR6R3Z9x84E9Svbgp4FU5N3qoihxdVLR7wQ==
-Date: Mon, 9 Sep 2024 11:50:01 +0200
-From: Miquel Raynal <miquel.raynal@bootlin.com>
-To: Uros Bizjak <ubizjak@gmail.com>
-Cc: x86@kernel.org, linux-crypto@vger.kernel.org,
- intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
- linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
- linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
- bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
- kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org, Richard
- Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>
-Subject: Re: [PATCH RESEND v2 06/19] mtd: tests: Include <linux/prandom.h>
- instead of <linux/random.h>
-Message-ID: <20240909115001.2b05a5ce@xps-13>
-In-Reply-To: <20240909075641.258968-7-ubizjak@gmail.com>
-References: <20240909075641.258968-1-ubizjak@gmail.com>
-	<20240909075641.258968-7-ubizjak@gmail.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HIHnJRx5"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1725875925; x=1757411925;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=AoeX4cp4AZC6Uz9D1At8LlEzifxcucNkyBNyGvR7Ygo=;
+  b=HIHnJRx5XTFLUPb6aRxHMY0xAxZWL+9J8TiHS7lOMxSLDy7D0SjtbQgc
+   SVoeA3z4aDEA0Zk5EzncR17BFY1tmJSmD+Oiy1ymCM+bOuuRfzZ5+IlFH
+   nbCPDiV6wj6mA8U4SIYd6pygKWdEBYzdWQQyTmw5kIxatF9vky8rBc4ND
+   IqEEY18zzSuWUZG+o5w5+Bc9hmZTD5XDeUDHwv4SjF3vUO9lNTb2nH1Wl
+   mbefZKC2Gg7D9+tVs6ZEFKgqliXvJk+Z3nrD8IwBg0HWo3m/t5eO27L7s
+   8kdJeoZpGqAg7r/J98t637NLIw4cyKIek6neYptgzGpzaHEUGwGSchzeu
+   g==;
+X-CSE-ConnectionGUID: pIU0beIhTMmOJChnPDBKBQ==
+X-CSE-MsgGUID: unLo4UDjSgCiGxT2cMO1Rw==
+X-IronPort-AV: E=Sophos;i="6.10,213,1719849600"; 
+   d="scan'208";a="26246093"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Sep 2024 17:58:37 +0800
+IronPort-SDR: 66deb9f1_grHJXNo5RhOqXY0LVRMS7P/PdFQhoBB9P2dAY6qjgKe/FbQ
+ 27MR7gn5FWvyhFLZvYCbNxeNa8EVqY2QO9fGOOQ==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Sep 2024 02:03:45 -0700
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Sep 2024 02:58:34 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs: Use pre-calculated offsets in ufshcd_init_lrb
+Date: Mon,  9 Sep 2024 12:56:46 +0300
+Message-Id: <20240909095646.3756308-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-GND-Sasl: miquel.raynal@bootlin.com
+Content-Transfer-Encoding: 8bit
 
-Hi Uros,
+Replace manual offset calculations for response_upiu and prd_table in
+ufshcd_init_lrb() with pre-calculated offsets already stored in the
+utp_transfer_req_desc structure. The pre-calculated offsets are set
+differently in ufshcd_host_memory_configure() based on the
+UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk, ensuring correct alignment and
+access.
 
-ubizjak@gmail.com wrote on Mon,  9 Sep 2024 09:53:49 +0200:
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/ufs/core/ufshcd.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> Substitute the inclusion of <linux/random.h> header with
-> <linux/prandom.h> to allow the removal of legacy inclusion
-> of <linux/prandom.h> from <linux/random.h>.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 8ea5a82503a9..e7ed3625710e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2919,9 +2919,8 @@ static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
+ 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
+ 	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
+ 		i * ufshcd_get_ucd_size(hba);
+-	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
+-				       response_upiu);
+-	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
++	u16 response_offset = utrdlp[i].response_upiu_offset;
++	u16 prdt_offset = utrdlp[i].prd_table_offset;
+ 
+ 	lrb->utr_descriptor_ptr = utrdlp + i;
+ 	lrb->utrd_dma_addr = hba->utrdl_dma_addr +
+-- 
+2.25.1
 
-Acked-by: Miquel Raynal <miquel.raynal@bootlin.com>
-
->=20
-> Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-> Cc: Miquel Raynal <miquel.raynal@bootlin.com>
-> Cc: Richard Weinberger <richard@nod.at>
-> Cc: Vignesh Raghavendra <vigneshr@ti.com>
-
-Miqu=C3=A8l
