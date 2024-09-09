@@ -1,52 +1,63 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB10818DF71
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2024 23:11:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 465C418D63B
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2024 23:11:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725923514; cv=none; b=A7VTrM5eBT9uNpnsHHKoZeqtDLpkTBRFwTj2+nNBMps23ypESg+WcBx5Mo3KtsqFACbsq07WRw9EC4hpZn0BveWjRgIqBygo9MQk/DAE4rGLPQs3BC2s5Wqh394jjHAyb1fZ51GFFNJXNQe/5L4fBqmGOxNHGNKvUjvV+YJ1tEk=
+	t=1725923520; cv=none; b=agrH4fmIC4C1Zg3fSL/seBfa9psaoSlqXmSz+mVwesFa4T4ThUnJZiWE0WcnXB1AXvsEsJdVDn+7/LYKND2zLXNYBxTg98n0fOck+WgYZc0WiDeMocARCa1hISaPsFHzbobYKeKfzA2XI1IZdkLjFcpbaTG1Hv+rpg3ZlQ/WFEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725923514; c=relaxed/simple;
-	bh=EXvkP8XuNAYBCPkM3FaNZQZiZshG/TJHBx/V4UIaS1k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=C1+tRYgyLR38JxUI+P49VgHanK/F76XAm7FnYT6MEc9CLJN+JRnwiFd7Gz9G7j79ps7Z0gffpnFr8/29qM07hAMNK9IAQk7KQlaJ38siI3mWjcKxU1Jen8iBEK+HSo/+g1jrjvHOaDLVx+NRGwA+1nO3Us1Rh0HsodKlEOUyuCY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=a3EjogEv; arc=none smtp.client-ip=199.89.1.11
+	s=arc-20240116; t=1725923520; c=relaxed/simple;
+	bh=FddhbQfTp8v88Lur8UiiaU/Y+zXnAsClXr2EXxSAQUs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=iqpS+sNMzZkTy6g3inCxoPNN0Aj7hjiIae7CV0vt5LVmHkMY3zq/GKY/VLV7cId3SJSe3SGcXcEhcXOxJ94aJ1dN6DsuJCn3ERYOl0VNiZAVxrgouy4M7E/5CQywYlh0t2o4/GS1+ZzN1whUdluQU34zYAm7vXM5IQZEjaw8ib0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=a1SKazNI; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="a3EjogEv"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="a1SKazNI"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X2jJl1fLDz6ClY8r;
-	Mon,  9 Sep 2024 23:11:51 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X2jJt55HDz6ClY8r;
+	Mon,  9 Sep 2024 23:11:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1725923509; x=1728515510; bh=E2F2/YYzJWOQBgdTV0Tvn1hD1ukuhri7E+q
-	+wPz4WcU=; b=a3EjogEvd0eM3blfzOwbaP9OafOrqDVJhnN2xeCVezGCmhQKXu0
-	6+r93qoqHR2VFAuKZ1A3wOOb47f1DBU4+Kyd/oyDRnT1Po/wvT9/TGfaz/Hc6xOi
-	rItWQWf9IzEcbxg4UHzI/E0y4/Lk/o6SY9O+Oi2+4/f/yPr3lg1jxvzKfI40pFCl
-	fDXrrWV0M+0EO2tlA3l882DiuIlakF8CqRcR9Z/QGZKF2bHtlzyq29co+iFAO+BD
-	BpiuWUaYFOjtVFVBAE7ghVljkyVJdZ8IEHop8ce2JWRC3s4Ri6zlUfFaxcNJq8hy
-	V5VquVAOzvXmlvowhEg7du8wWPrmU3bXAwA==
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1725923515; x=1728515516; bh=EeN/B
+	K4+bVHxC43DlnVycNpO9vP4PGo6gQmjRLawboY=; b=a1SKazNIMCF8r5S/B5NxF
+	U22ZRtTufSTJuacQU9iZf+anR++L94Y1oSQqkpibrc5pk/xjiOJJfKZ2+gBj/W9G
+	bH16w0toPrthMiIaKDrfperYgwI+gfn3ItCpYiNmzEnfD8tL9EhHybhH1nCvZqtU
+	RH3ulaoDduEsvoTdPOTv9/3cnpxyM/SwQjcq5BjVX1YUCEegpC/SzDKgVby/vq2L
+	qHrBSuCz27qVT8QvQlCZ+SUxsQhNMwDydywEjIGK6aVXTJEL4vuNz7rENMxI/QF+
+	oG7qYyhE/wM+kN9tLeCny+BhRo6gLE96MZ5Jg+fF0s9GLJgKp2m82nnh96fdS02d
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id YKeRB8iyMblo; Mon,  9 Sep 2024 23:11:49 +0000 (UTC)
+ id 3QdSdkZQqcno; Mon,  9 Sep 2024 23:11:55 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X2jJh57NZz6ClbFf;
-	Mon,  9 Sep 2024 23:11:48 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X2jJn0ZZWz6ClbFf;
+	Mon,  9 Sep 2024 23:11:52 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 0/4] Improve the UFS driver link hibernation code
-Date: Mon,  9 Sep 2024 16:11:18 -0700
-Message-ID: <20240909231139.2367576-1-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Eric Biggers <ebiggers@google.com>,
+	Minwoo Im <minwoo.im@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>
+Subject: [PATCH v2 1/4] scsi: ufs: core: Improve the struct ufs_hba documentation
+Date: Mon,  9 Sep 2024 16:11:19 -0700
+Message-ID: <20240909231139.2367576-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
+In-Reply-To: <20240909231139.2367576-1-bvanassche@acm.org>
+References: <20240909231139.2367576-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,49 +66,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Hi Martin,
+Make the role of the structure members related to UIC command processing
+more clear.
 
-UFS controllers can behave as follows with regard to link hibernation:
-(a) The UIC completion interrupt is not generated after having submitted =
-a power
-    management command.
-(b) The UIC completion interrupt is generated and reenabling the UIC comp=
-letion
-    interrupt does not affect the link hibernation state.
-(c) The UIC completion interrupt is generated and reenabling the UIC comp=
-letion
-    interrupt causes the link to exit the link hibernation state.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ include/ufs/ufshcd.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Support these cases as follows:
- * Support (a) by setting UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS in t=
-he
-   host controller driver and by disabling UIC completion interrupts befo=
-re
-   submitting a power management command.
- * Support (b) and (c) by leaving UIC completion interrupts enabled while
-   submitting a power management command.
-
-Please consider this patch series for the next merge window.
-
-Thanks,
-
-Bart.
-
-Changes compared to v1 of this patch series:
- - A patch that improves the struct ufs_hba documentation has been added.
- - Patch 2/2 has been split into two patches.
- - Instead of leaving the UIC completion interrupt enabled, disable it if
-   UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS has been set.
-
-Bart Van Assche (4):
-  scsi: ufs: core: Improve the struct ufs_hba documentation
-  scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier to read
-  scsi: ufs: core: Always initialize the UIC done completion
-  scsi: ufs: core: Change the approach for power change UIC commands
-
- drivers/ufs/core/ufshcd.c       | 47 ++++++++++++++++++++-------------
- drivers/ufs/host/ufs-mediatek.c |  1 +
- drivers/ufs/host/ufs-qcom.c     |  2 ++
- include/ufs/ufshcd.h            | 13 ++++++---
- 4 files changed, 41 insertions(+), 22 deletions(-)
-
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a43b14276bc3..85933775c9f3 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -868,9 +868,10 @@ enum ufshcd_mcq_opr {
+  * @tmf_tag_set: TMF tag set.
+  * @tmf_queue: Used to allocate TMF tags.
+  * @tmf_rqs: array with pointers to TMF requests while these are in prog=
+ress.
+- * @active_uic_cmd: handle of active UIC command
+- * @uic_cmd_mutex: mutex for UIC command
+- * @uic_async_done: completion used during UIC processing
++ * @active_uic_cmd: pointer to active UIC command.
++ * @uic_cmd_mutex: mutex used for serializing UIC command processing.
++ * @uic_async_done: completion used to wait for power mode or hibernatio=
+n state
++ *	changes.
+  * @ufshcd_state: UFSHCD state
+  * @eh_flags: Error handling flags
+  * @intr_mask: Interrupt Mask Bits
