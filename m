@@ -1,181 +1,103 @@
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 883DD3BB47;
-	Mon,  9 Sep 2024 19:30:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB10818DF71
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2024 23:11:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725910223; cv=none; b=sPJ1hIJ9RaZhtcTFTIND5wRN2FqIE0CMCnYtGo6+oSXO69VQiUO/3ivtLe9tK7BpkCv+RyR7EMUDnTHCJIVMhyimnxlK5moVnB/LogOlNDLqJxKOM9hrEuKwCEdOyR7eAeuMXvpmNCllQvxvFRMuK/EhvyaZ1pdU6gX2C1QUDxw=
+	t=1725923514; cv=none; b=A7VTrM5eBT9uNpnsHHKoZeqtDLpkTBRFwTj2+nNBMps23ypESg+WcBx5Mo3KtsqFACbsq07WRw9EC4hpZn0BveWjRgIqBygo9MQk/DAE4rGLPQs3BC2s5Wqh394jjHAyb1fZ51GFFNJXNQe/5L4fBqmGOxNHGNKvUjvV+YJ1tEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725910223; c=relaxed/simple;
-	bh=b6OUbZ3BeHYLYkH/EG1gwVc1JeKidM3XMH3k1TlcRSk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ctkY2VjS6VoRSA9p4PKvyFrfJafdyc6ZPioWVaE7miFDVDHqtOntdN06waPJx4BXDSai1Yvuey/TzxWC5xnjxokNxJLB4rYm7haE9w7B+gDXPkRLKWiUUX9rwOeJIN0ZsKi10x/LJycmaeTrv3iq2Nxa09YdEJuSFmpfdQqdMJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ULUkcW/T; arc=none smtp.client-ip=209.85.208.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1725923514; c=relaxed/simple;
+	bh=EXvkP8XuNAYBCPkM3FaNZQZiZshG/TJHBx/V4UIaS1k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=C1+tRYgyLR38JxUI+P49VgHanK/F76XAm7FnYT6MEc9CLJN+JRnwiFd7Gz9G7j79ps7Z0gffpnFr8/29qM07hAMNK9IAQk7KQlaJ38siI3mWjcKxU1Jen8iBEK+HSo/+g1jrjvHOaDLVx+NRGwA+1nO3Us1Rh0HsodKlEOUyuCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=a3EjogEv; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ULUkcW/T"
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2f7529203ddso32291041fa.0;
-        Mon, 09 Sep 2024 12:30:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1725910220; x=1726515020; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=woE07RMIM4YJ88QTc1ZNc52E+GbLSESAkfn/9qs5W1Y=;
-        b=ULUkcW/Tyq4KqCECB1ruZOR6QLr/CvsNjbWjzoxyCcU/WhgIWArNgD6Hrw1yhGPll4
-         BbZrZgIEZXqbrTyCz5p+C+9Tbi+X0PFqI41IrlA72G7t6jcMWBlXn1hl/BZg+SCsuh2c
-         oFKCu0rUDejsyES3ag6UhjvEcR2W1GTzr5kbg0wXWhMPvHEvpxtOwpBcXBjvHTzzGBbu
-         sqnxB1pvOEKsPJKaQzg3grdZ0/Uu8bags0D135h3don4qXSmUBQRCU3QRtzVQMfkooF1
-         HlLPFTAJvjpI6h/TMpxY4yeeRPn6kNraImImFM5Mm8KKJ4wPN/m+v6YW+2Qfak+UP1R/
-         BGAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725910220; x=1726515020;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=woE07RMIM4YJ88QTc1ZNc52E+GbLSESAkfn/9qs5W1Y=;
-        b=RuCISbepDlc2qBedARrKfy9NIxagwPi9nXmTanbwLrflCXWQRuuhhuWCjQakny5EQ6
-         dVVn4dHptaOm7sOC82F3tHTdP09ER5e3SmzGl5ZsrP6YG5scw8HWfaKD0b2EM3uZTBVb
-         zNDZ/FRSyRBl/NdqnyDsOVKriOmc3oSg8E0zyIeTs26kUabND98HVKFO4c8bvAy5MmSY
-         /2xrIABIyFHJhBCOpicOAc60XfsH0bzYbIbEzZArOYzZD4ZlOrDPYY+bpmUCULTgjo8A
-         +8ZspDKPaUIxdWTXnRLt+LcwKTXf1A9B9LG3W6t6t+qk4MMhhspHquyIsUy4pyFfRnSJ
-         ISzw==
-X-Forwarded-Encrypted: i=1; AJvYcCUWZUWg7h9uqj9H8UJt+bwPgqkz9ZgkEOsaRy9Xy/aV2qKsy+8XQnqzcGCWExklp6l99ypYNpXZjk7A/aY=@vger.kernel.org, AJvYcCVkJBaNvChDqj/ocGvutebX7/uNaojYcx+LCrAzQhZGySAJ5CPLHkLG6JhcOXl+Vqw4ljIl7p+ksTeulYhm@vger.kernel.org, AJvYcCVqSOkSR2NOsReuF7N46EAo+BkFxVNvQTb681abDP6RU50sup1uhTf8Ee9V+GUKaWVR+1s=@vger.kernel.org, AJvYcCW6RDHjvzcTnYUkHiG60PmsMlEL+1K0aIG96VywbwJj+PaH+/MplxHinXKs/VXnOE2RLgbIMHW6lmTayqbgcA==@vger.kernel.org, AJvYcCW7z4bLWIPfIUODOf27F4UUlvJqNNFr+ZCdIzE/r5h8c9z25IpLQMyTsmxQpVR+oJq/Bp60H/RMJQCeFA==@vger.kernel.org, AJvYcCX5yDF3sYA1ZtYht2kOSYOyf041BrFFM9nGnDK/pI8ASZzNgc2DLtVJIRC8fr37XuQplQIvQKnZxgodi9ra@vger.kernel.org, AJvYcCXxIBg5WFf32p7sF9babSrlC+lI60uayhIVZYEUGSYkcS+MLafgewbmBH08LKkYo7url+riZjAx/AQdBlRA0jzf@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxo6WQkItdOOzWO3D2oL6Li7uG1OEjihi2C2zNBMMOYUAliiV+W
-	zAM9ur2Hpy2RdE/NkwMHvKLS96g7Gqy7U6vBMVuM55hGKWLsCrvhjmlAgd9E0fFYyIeL0ZHI5/Z
-	6ffmXiWf2tXPkYBMHWvjEikHVEDs=
-X-Google-Smtp-Source: AGHT+IHGDlZWsmVxtU6Y46aEXfBA2sgXqI4naIhOyyLQHvnhEyR7+3HqFvBi8W+gcZkb/4A25yABw4d/bXms0qX89pY=
-X-Received: by 2002:a05:651c:549:b0:2f7:6277:f2be with SMTP id
- 38308e7fff4ca-2f7727190f4mr2037391fa.22.1725910218656; Mon, 09 Sep 2024
- 12:30:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="a3EjogEv"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X2jJl1fLDz6ClY8r;
+	Mon,  9 Sep 2024 23:11:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1725923509; x=1728515510; bh=E2F2/YYzJWOQBgdTV0Tvn1hD1ukuhri7E+q
+	+wPz4WcU=; b=a3EjogEvd0eM3blfzOwbaP9OafOrqDVJhnN2xeCVezGCmhQKXu0
+	6+r93qoqHR2VFAuKZ1A3wOOb47f1DBU4+Kyd/oyDRnT1Po/wvT9/TGfaz/Hc6xOi
+	rItWQWf9IzEcbxg4UHzI/E0y4/Lk/o6SY9O+Oi2+4/f/yPr3lg1jxvzKfI40pFCl
+	fDXrrWV0M+0EO2tlA3l882DiuIlakF8CqRcR9Z/QGZKF2bHtlzyq29co+iFAO+BD
+	BpiuWUaYFOjtVFVBAE7ghVljkyVJdZ8IEHop8ce2JWRC3s4Ri6zlUfFaxcNJq8hy
+	V5VquVAOzvXmlvowhEg7du8wWPrmU3bXAwA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id YKeRB8iyMblo; Mon,  9 Sep 2024 23:11:49 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X2jJh57NZz6ClbFf;
+	Mon,  9 Sep 2024 23:11:48 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/4] Improve the UFS driver link hibernation code
+Date: Mon,  9 Sep 2024 16:11:18 -0700
+Message-ID: <20240909231139.2367576-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240909075641.258968-1-ubizjak@gmail.com> <Zt8a6_RwLG2pEnZ6@zx2c4.com>
-In-Reply-To: <Zt8a6_RwLG2pEnZ6@zx2c4.com>
-From: Uros Bizjak <ubizjak@gmail.com>
-Date: Mon, 9 Sep 2024 21:30:06 +0200
-Message-ID: <CAFULd4ak3n1x0tGrqiNoxvDBRw6AWgchfBO_k4aKps34DomPvA@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 00/19] random: Resolve circular include
- dependency and include <linux/percpu.h>
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc: x86@kernel.org, linux-crypto@vger.kernel.org, 
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
-	linux-media@vger.kernel.org, linux-mtd@lists.infradead.org, 
-	linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org, 
-	Dave Hansen <dave.hansen@linux.intel.com>, Andy Lutomirski <luto@kernel.org>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@linutronix.de>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>, 
-	Jani Nikula <jani.nikula@linux.intel.com>, 
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
-	Daniel Vetter <daniel@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	Hans Verkuil <hverkuil@xs4all.nl>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
-	Vignesh Raghavendra <vigneshr@ti.com>, Eric Biggers <ebiggers@kernel.org>, 
-	"Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Alexei Starovoitov <ast@kernel.org>, 
-	Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, 
-	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, 
-	Eduard Zingerman <eddyz87@gmail.com>, Song Liu <song@kernel.org>, 
-	Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, 
-	Stanislav Fomichev <sdf@fomichev.me>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Brendan Higgins <brendan.higgins@linux.dev>, 
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Jiri Pirko <jiri@resnulli.us>, 
-	Petr Mladek <pmladek@suse.com>, Steven Rostedt <rostedt@goodmis.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>, Sergey Senozhatsky <senozhatsky@chromium.org>, 
-	Stephen Hemminger <stephen@networkplumber.org>, Jamal Hadi Salim <jhs@mojatatu.com>, 
-	Cong Wang <xiyou.wangcong@gmail.com>, Kent Overstreet <kent.overstreet@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Sep 9, 2024 at 5:57=E2=80=AFPM Jason A. Donenfeld <Jason@zx2c4.com>=
- wrote:
+Hi Martin,
 
-> On Mon, Sep 09, 2024 at 09:53:43AM +0200, Uros Bizjak wrote:
-> > a) Substitutes the inclusion of <linux/random.h> with the
-> > inclusion of <linux/prandom.h> where needed (patches 1 - 17).
-> >
-> > b) Removes legacy inclusion of <linux/prandom.h> from
-> > <linux/random.h> (patch 18).
-> >
-> > c) Includes <linux/percpu.h> in <linux/prandom.h> (patch 19).
->
-> Thanks for doing this. That seems like a fine initiative to me. (I'm
-> also curious about the future percpu changes you've got planned.)
+UFS controllers can behave as follows with regard to link hibernation:
+(a) The UIC completion interrupt is not generated after having submitted =
+a power
+    management command.
+(b) The UIC completion interrupt is generated and reenabling the UIC comp=
+letion
+    interrupt does not affect the link hibernation state.
+(c) The UIC completion interrupt is generated and reenabling the UIC comp=
+letion
+    interrupt causes the link to exit the link hibernation state.
 
-As explained in the cover letter, recent GCCs are able to track
-address space of variables in percpu address space from the
-declaration to its usage site. There are certain rules regarding casts
-of variables and their pointers (when this named address space is not
-considered a subspace of the generic address space), so it is possible
-to create much more effective checks for cast-from-as type casts than
-what sparse can achieve.
+Support these cases as follows:
+ * Support (a) by setting UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS in t=
+he
+   host controller driver and by disabling UIC completion interrupts befo=
+re
+   submitting a power management command.
+ * Support (b) and (c) by leaving UIC completion interrupts enabled while
+   submitting a power management command.
 
-Besides GCC, clang can define various named address space via
-address_space attribute:
+Please consider this patch series for the next merge window.
 
---cut here--
-#define __as(N) __attribute__((address_space(N)))
+Thanks,
 
-void *foo(void __as(1) *x) { return x; }         // error
+Bart.
 
-void *bar(void __as(1) *x) { return (void *)x; } // fine
---cut here--
+Changes compared to v1 of this patch series:
+ - A patch that improves the struct ufs_hba documentation has been added.
+ - Patch 2/2 has been split into two patches.
+ - Instead of leaving the UIC completion interrupt enabled, disable it if
+   UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS has been set.
 
-When compiling this, the compiler returns:
+Bart Van Assche (4):
+  scsi: ufs: core: Improve the struct ufs_hba documentation
+  scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier to read
+  scsi: ufs: core: Always initialize the UIC done completion
+  scsi: ufs: core: Change the approach for power change UIC commands
 
-clang-as.c:3:37: error: returning '__as(1) void *' from a function
-with result type 'void *' changes address space of pointer
+ drivers/ufs/core/ufshcd.c       | 47 ++++++++++++++++++++-------------
+ drivers/ufs/host/ufs-mediatek.c |  1 +
+ drivers/ufs/host/ufs-qcom.c     |  2 ++
+ include/ufs/ufshcd.h            | 13 ++++++---
+ 4 files changed, 41 insertions(+), 22 deletions(-)
 
-Although clang currently errors out when __seg_gs and __seg_fs named
-address space designators are used, we can explore its named address
-spaces functionality to implement percpu checks for all targets. The
-percpu address space checks patchset, referred to in the cover letter,
-also supports this functionality when per_cpu_qual is defined to
-__attribute__((address_space(N))).
-
-Perhaps we can use different address spaces to also handle __user,
-__iomem and __rcu address spaces. This way the compiler will be able
-to handle address space checks instead of sparse.
-
-> Tree-wise, were you expecting me to take this through random.git? And if
-> so, what timeframe did you have in mind? For 6.12 next week (can you
-> poke folks for acks in time?), or punt it for 6.13? Or did you have a
-> different tree in mind for treewide changes (in which case, I'll send
-> you an ack for the [p]random.h changes).
-
-I think that the best approach is to target this patchset for linux
-6.13 via random.git tree. I will prepare a v3 after 6.12rc1, so when
-committed to random.git, the patchset will be able to spend some time
-in linux-next. This way, there will be plenty of time for CI robots to
-do additional checks also for some less popular targets (although
-individual patches are dead simple, removing these kinds of "legacy"
-includes can be tricky), and I will also be able to collect Acked-by:s
-in the meantime.
-
-While the patchset is an improvement by itself, its inclusion is not
-time sensitive. The follow up percpu named address checking
-functionality requires a very recent feature (__typeof_unqual__
-keyword), which is only supported in recent compilers (gcc-14 and
-clang-20). Besides compiler support, sparse doesn't know about
-__typeof_unqual__, resulting in broken type tracing and hundreds of
-sparse errors with C=3D1 due to unknown keyword.
-
-So, I think we are not in a hurry and can take the slow and safe path.
-
-Thanks and best regards,
-Uros.
