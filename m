@@ -1,127 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7096842AAB;
-	Mon,  9 Sep 2024 15:57:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB2A813C68E;
+	Mon,  9 Sep 2024 16:24:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725897461; cv=none; b=OIjnTCE1bOutrAMHPJyeVtEKXTD/JXHtLNjJCTAQRF67QuwgE9W9RCtQi4zldxQE1VOaKg8+AZZQ+k1TX4Bkk8G/mJH/6Qp7uRN5Qh77wC6dxuyvL0YSh36VoHCAcAYO8TG2jHncyEgxTtGoVAuTerjDlyt2X0hZcS2tRStlE2g=
+	t=1725899068; cv=none; b=uqyHx5O+etrw+Pb94X1ayZ8YTFIWERnSC401vvS0zDz50Z2yWqCynPEm8l76aFrSihZAAf/+6tHY7HeKhRo5ehgrkk3WRVRxjDgAetL7MBabXOytK3huO6gau+StfUAbScpBnKMMVwkMC3LcoLNOi+mp3BTuUPMKlhJUaMVsyWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725897461; c=relaxed/simple;
-	bh=oacz5eggXwzY8M8S+vaeXmwUAnxLro5Rgw36NkVBL04=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Zc4FkrrnIem7KiF9FMh3Lna0eNetvNputn8S8CNHbMFDFlktRuM5nyG52MVwWYgPcBmfZat/vh+59CeCFeXYWfbgR38PF1C4f2YybP+6lGNPiczDPwkLf2Q0zFgtjPauOCOciZDq1aMnmHrddUhEt1FjGOxwbeii5yq0alNcBUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b=bOIXjvAE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725899068; c=relaxed/simple;
+	bh=pSLJJubqHBSfkQEqFFeyLAUGQucYkuyC1/6eCu7BKEE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QwmUt2ppx8nADIzjEvSXEAU3Cis88ccsopXO3J6+71f0Cz3oWQXQ0xX4sPLyUVxz7cDJA//Zj0hgXVFutKHcapKd+PWHQ+IBHWzwi6hmedtCGjoGryOPeh/YbWmZfGH92HuwpCKMA7uuzTbRNFpRaAVcTMIKHN9ONCYdEOFpHHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rR++cUl2; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="bOIXjvAE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA2F1C4CEC8;
-	Mon,  9 Sep 2024 15:57:33 +0000 (UTC)
-Authentication-Results: smtp.kernel.org;
-	dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="bOIXjvAE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
-	t=1725897452;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bbWr4vi9pa8+Cqp83onNnmk1v5W+k1MGPgiQ/1MwNSc=;
-	b=bOIXjvAESpiyWOLfxiXwIhAtPOG1y1+0opyH9Q87ZwFnbiPRA4b3wNogUcxJqtsfJjafy2
-	EIPyfn290ab/wumQZS8/Njm/fN604qRqGzCtPRB3Oi6XyRiwcddBL2PngABSxf1zQ6eimS
-	KerTR+BY/Q0Rag++udJH9dHwTPIZMJ8=
-Received: 
-	by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 242879eb (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-	Mon, 9 Sep 2024 15:57:32 +0000 (UTC)
-Date: Mon, 9 Sep 2024 17:57:31 +0200
-From: "Jason A. Donenfeld" <Jason@zx2c4.com>
-To: Uros Bizjak <ubizjak@gmail.com>
-Cc: x86@kernel.org, linux-crypto@vger.kernel.org,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
-	bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Andy Lutomirski <luto@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Hans Verkuil <hverkuil@xs4all.nl>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Eric Biggers <ebiggers@kernel.org>,
-	"Theodore Y. Ts'o" <tytso@mit.edu>,
-	Jaegeuk Kim <jaegeuk@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Hannes Reinecke <hare@suse.de>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	John Fastabend <john.fastabend@gmail.com>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Martin KaFai Lau <martin.lau@linux.dev>,
-	Eduard Zingerman <eddyz87@gmail.com>, Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@fomichev.me>,
-	Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Brendan Higgins <brendan.higgins@linux.dev>,
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Jiri Pirko <jiri@resnulli.us>, Petr Mladek <pmladek@suse.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Jamal Hadi Salim <jhs@mojatatu.com>,
-	Cong Wang <xiyou.wangcong@gmail.com>,
-	Kent Overstreet <kent.overstreet@linux.dev>
-Subject: Re: [PATCH RESEND v2 00/19] random: Resolve circular include
- dependency and include <linux/percpu.h>
-Message-ID: <Zt8a6_RwLG2pEnZ6@zx2c4.com>
-References: <20240909075641.258968-1-ubizjak@gmail.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rR++cUl2"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X2XGW6KRsz6ClbFf;
+	Mon,  9 Sep 2024 16:24:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1725899049; x=1728491050; bh=v/bF203iU7vUDeGns7N4RvzO
+	gpMdF7ZklfpBuMpeGbw=; b=rR++cUl2hcZr6HeuFF9vBBnPe1y41T6XsOWgcOwK
+	yGzrUUoil/PdVoDo7bgW/qpdkM8PYi3oZkMc6qtMS96c9hh61qEY0/A2Lssu4WtB
+	MJJa+XnjKDRHW0z2XBZy9UtWUPck5QcCBrVmMHXzo/zqPGseg27IZIMBpq9CI5uw
+	sHokbw/MbClnMEbiSWXnkYDWdSY2wjx6gP9AxIYYSU75a1Sei6i/qx/3HlPurTxV
+	0H3LvSmhd6Vw1DBkZyTIqSBO2/nxH+zXUcv8LEEmU9hS2LCWoJ7ftImR8PWGZ3hr
+	E+LvsB+dUuhP9BYuvKQ9N9Wcedw5/RIsqiZ8RbnpN7av9w==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id kQvfdU8MHhMJ; Mon,  9 Sep 2024 16:24:09 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X2XGD5F0tz6ClbFZ;
+	Mon,  9 Sep 2024 16:24:04 +0000 (UTC)
+Message-ID: <edbabf35-8111-4672-b14c-52d76ed46fd9@acm.org>
+Date: Mon, 9 Sep 2024 09:24:02 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20240909075641.258968-1-ubizjak@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] ufs: core: fix the issue of ICU failure
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
+ jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+ qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
+ eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
+ quic_nguyenb@quicinc.com, stable@vger.kernel.org
+References: <20240909082100.24019-1-peter.wang@mediatek.com>
+ <20240909082100.24019-2-peter.wang@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240909082100.24019-2-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Uros,
+On 9/9/24 1:20 AM, peter.wang@mediatek.com wrote:
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 5891cdacd0b3..3903947dbed1 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -539,7 +539,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
+>   	struct scsi_cmnd *cmd = lrbp->cmd;
+>   	struct ufs_hw_queue *hwq;
+>   	void __iomem *reg, *opr_sqd_base;
+> -	u32 nexus, id, val;
+> +	u32 nexus, id, val, rtc;
+>   	int err;
+>   
+>   	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
+> @@ -569,17 +569,18 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
+>   	opr_sqd_base = mcq_opr_base(hba, OPR_SQD, id);
+>   	writel(nexus, opr_sqd_base + REG_SQCTI);
+>   
+> -	/* SQRTCy.ICU = 1 */
+> -	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
+> +	/* Initiate Cleanup */
+> +	writel(readl(opr_sqd_base + REG_SQRTC) | SQ_ICU,
+> +		opr_sqd_base + REG_SQRTC);
+>   
+>   	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
+>   	reg = opr_sqd_base + REG_SQRTS;
+>   	err = read_poll_timeout(readl, val, val & SQ_CUS, 20,
+>   				MCQ_POLL_US, false, reg);
+> -	if (err)
+> -		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%ld\n",
+> -			__func__, id, task_tag,
+> -			FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)));
+> +	rtc = FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg));
+> +	if (err || rtc)
+> +		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%d RTC=%d\n",
+> +			__func__, id, task_tag, err, rtc);
+>   
+>   	if (ufshcd_mcq_sq_start(hba, hwq))
+>   		err = -ETIMEDOUT;
 
-On Mon, Sep 09, 2024 at 09:53:43AM +0200, Uros Bizjak wrote:
-> a) Substitutes the inclusion of <linux/random.h> with the
-> inclusion of <linux/prandom.h> where needed (patches 1 - 17).
-> 
-> b) Removes legacy inclusion of <linux/prandom.h> from
-> <linux/random.h> (patch 18).
-> 
-> c) Includes <linux/percpu.h> in <linux/prandom.h> (patch 19).
- 
-Thanks for doing this. That seems like a fine initiative to me. (I'm
-also curious about the future percpu changes you've got planned.)
-
-Tree-wise, were you expecting me to take this through random.git? And if
-so, what timeframe did you have in mind? For 6.12 next week (can you
-poke folks for acks in time?), or punt it for 6.13? Or did you have a
-different tree in mind for treewide changes (in which case, I'll send
-you an ack for the [p]random.h changes).
-
-Regards,
-Jason
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
