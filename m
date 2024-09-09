@@ -1,246 +1,121 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9A571B29D2
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2024 08:58:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B47CC1B29BE
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2024 09:07:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725872318; cv=none; b=MfTTNXffxswBZNoD+CvWRfL6f4cjoVaFcizNJAXKbqCQnHZ5h4Q0fQgX9fbDrx5Z0SfT5qV75nRIzqCab6me5R0fzWHcxnPceSn7yBOjP5h5jzJLGivUnp5Mbhz3qinJ2liOxtwPACeOdYj4kpjdKIeCgK1Qt34oheIWqYiUhbw=
+	t=1725872864; cv=none; b=KkXKnbPKwIXhqowY1dTjakVB8AO8bFbkoSQvZKBzA+m2+XqIZsIPznXqzMsCAbTmkvtKFtRUebOclQAJtVFTVF1UIpQDbeMR4gUuXp/QKM9IO46PRXbxixffT4EYiSzJ4D6DlFT1FOho3XchL6XlsFHGiPKz/aase4KOhlKefjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725872318; c=relaxed/simple;
-	bh=hMgy8bX6Ok+Sly2wQ3k/uCmFxdR1J21buj1Oj+8Tu2k=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=od2VB5ztjkqT3Yv11NjL98Hlzl/+A+6jzB3kLQU+NwUVlMyHPmveOjhAvqqoDHLm6JFAbBs9oYF/eIgbmAh0HhhGKWCRe/5RosEBECo9ldgEhSXPZtMdLP9dXqH224nsjiCBCHFqxL4DJSwinqB20s73R0vn30huwX6cwEjwpA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=d5MHBE/6; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1725872864; c=relaxed/simple;
+	bh=R/DtaFei5vnLId95YCvQ3f7Sx9Vl27D0kfTW37XO49Y=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=G0uKoDzEHk9MWa0mdWww0Obn9NZq19LqML9Am3jTl5qYK3rv5VBZ/7xaja5UES0e72WiUkQbsHlx0DVP8Cs2sj5x/9XYOn+TATeeO8i+83LUGvyTxSLB18aV21+xM7oRNRWxyX39qrpOPp6xPuurQ9KeIXCL57wx7O/IjZ5YPCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=nMGQlBb7; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=nMGQlBb7; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="d5MHBE/6"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-42ca6ba750eso14162605e9.0
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Sep 2024 01:58:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1725872314; x=1726477114; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PMvHs5Ab7mHAlvlrWenHe3/+itZxK87jYym+SorE/SA=;
-        b=d5MHBE/6nV+q3S16jwp9mTU0YKD+3PL9RxdDFilnfCN/sOL49WpQqSGFjp9mHijrqZ
-         tUJ6Bqi5A/qSqJMJ9rZAN89zezDJkGTapOpIWrbZekkWsUUEGcuV4lJ3yUmdfu5Nrn3A
-         OuPFDb1O/BCL8Fq09KwiIQXoYHCwWZCAL2Pu8yF1ypVLz8Nf7OgO6+MBiabzU4nTsC4r
-         IdGvmNbwl5Rswb88gxKHjUo+vwYYI/0n6jX9ErZqraaQ96ws/0MOlqybPi8ZWVXFjkiI
-         4HVO6B9QP4pnDVl91nPIk4v7HJwNqIF3qseXJg9mlimPEix/a8XejffrsL/nkMhiG4Ew
-         BMFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725872314; x=1726477114;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=PMvHs5Ab7mHAlvlrWenHe3/+itZxK87jYym+SorE/SA=;
-        b=hMzv1myg6eO39sWnufYVgITLsfazQx1DUE8if5//QAswPjK87J/Jt6Uu8jJbrAzcVf
-         peh7BbyTaHfXTcJROFF0FxoK3AlhyW7ojWSMOOOPHUNcPIu6G3vvczMKbbLB5HcuaBGO
-         8GSXcvrN4ewlZvYyr47+LvCZHENMIndIXScCujgiGuePoxOGUYsc/NbceDHFMi8YnqcJ
-         tsE746wG68oqySN91gBRGlitX+gfMAQyy4hfYIHBXWL5GCraRZ22D+mexrNJNeRO7VmA
-         SQRB35mroZK05ddL5LTilbzduMj8bOxwcuNaPKc2AzxvzqOIS6kTav5b+wgqz1UDbPKj
-         iFiA==
-X-Forwarded-Encrypted: i=1; AJvYcCXhaYN7Fntrvf1rhcwGGiF3aO6SPDrFvw9OiN/WbW2+oo0w+Ggq9B+Ps92YdTxFSZHlKLXUDD81IYyb@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9OWtCP3i7xm7D3PdI+Jj37RxSX0rNldp/S6ULnGSCqc1wd6R+
-	cleGyVOMKyoEQeiftRUq0i+ZweOYvmOrPlcS81Kmlb9OCC/4Vsa/xaTXKlpb3co=
-X-Google-Smtp-Source: AGHT+IG6v8/1xNArCrOhm5mi79N9gIxXGtQTCtPLSsLWPvDJATIAkCocS/kMp98RIRO0ro21ssL4Yw==
-X-Received: by 2002:a05:600c:468a:b0:428:b4a:7001 with SMTP id 5b1f17b1804b1-42c95be865emr103023695e9.15.1725872313704;
-        Mon, 09 Sep 2024 01:58:33 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:982:cbb0:63a3:6883:a358:b850? ([2a01:e0a:982:cbb0:63a3:6883:a358:b850])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-378956654f4sm5446815f8f.43.2024.09.09.01.58.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Sep 2024 01:58:33 -0700 (PDT)
-Message-ID: <66953e65-2468-43b8-9ccf-54671613c4ab@linaro.org>
-Date: Mon, 9 Sep 2024 10:58:30 +0200
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="nMGQlBb7";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="nMGQlBb7"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id C9F5D1F7A6;
+	Mon,  9 Sep 2024 09:07:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1725872860; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=R/DtaFei5vnLId95YCvQ3f7Sx9Vl27D0kfTW37XO49Y=;
+	b=nMGQlBb7eYiUShoPmMAyfept8/vuVkZjzVsgEF4of2bDsw9+zQWTKSEliHjkv+k8pY0N4z
+	TiYLJbcJ+zCKXo8a0vdvEnRPoJrqCw5ceYLO0pVBM29Vz6aoqM1a5zPyYqiLEZGbDJrds5
+	xuF27lKXeDLG1cXAyN0eboUUTD9zc0k=
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1725872860; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=R/DtaFei5vnLId95YCvQ3f7Sx9Vl27D0kfTW37XO49Y=;
+	b=nMGQlBb7eYiUShoPmMAyfept8/vuVkZjzVsgEF4of2bDsw9+zQWTKSEliHjkv+k8pY0N4z
+	TiYLJbcJ+zCKXo8a0vdvEnRPoJrqCw5ceYLO0pVBM29Vz6aoqM1a5zPyYqiLEZGbDJrds5
+	xuF27lKXeDLG1cXAyN0eboUUTD9zc0k=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8A04813A3A;
+	Mon,  9 Sep 2024 09:07:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id xnYgINy63mYhfAAAD6G6ig
+	(envelope-from <mwilck@suse.com>); Mon, 09 Sep 2024 09:07:40 +0000
+Message-ID: <d266c7827f3d95711d2237e070159c949d324d2f.camel@suse.com>
+Subject: Re: [PATCH v3] ibmvfc: Add max_sectors module parameter
+From: Martin Wilck <mwilck@suse.com>
+To: martin.petersen@oracle.com, Brian King <brking@linux.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, 
+	tyreld@linux.ibm.com, brking@pobox.com, Hannes Reinecke <hare@suse.com>
+Date: Mon, 09 Sep 2024 11:07:40 +0200
+In-Reply-To: <1be1baa5ee1c4dfca091fcaeb1fe5c237c76cc5a.camel@suse.com>
+References: <6594529f81c043f25b74198958718c84be27be4a.camel@suse.com>
+	 <20240903134708.139645-2-brking@linux.ibm.com>
+	 <1be1baa5ee1c4dfca091fcaeb1fe5c237c76cc5a.camel@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH v6 09/17] soc: qcom: ice: add HWKM support to the ICE
- driver
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
- Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>,
- Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- Adrian Hunter <adrian.hunter@intel.com>,
- Asutosh Das <quic_asutoshd@quicinc.com>,
- Ritesh Harjani <ritesh.list@gmail.com>, Ulf Hansson
- <ulf.hansson@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Eric Biggers <ebiggers@kernel.org>, "Theodore Y. Ts'o" <tytso@mit.edu>,
- Jaegeuk Kim <jaegeuk@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Gaurav Kashyap <quic_gaurkash@quicinc.com>, linux-block@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-mmc@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-References: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
- <20240906-wrapped-keys-v6-9-d59e61bc0cb4@linaro.org>
- <7uoq72bpiqmo2olwpnudpv3gtcowpnd6jrifff34ubmfpijgc6@k6rmnalu5z4o>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <7uoq72bpiqmo2olwpnudpv3gtcowpnd6jrifff34ubmfpijgc6@k6rmnalu5z4o>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-On 07/09/2024 00:07, Dmitry Baryshkov wrote:
-> On Fri, Sep 06, 2024 at 08:07:12PM GMT, Bartosz Golaszewski wrote:
->> From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
->>
->> Qualcomm's ICE (Inline Crypto Engine) contains a proprietary key
->> management hardware called Hardware Key Manager (HWKM). Add HWKM support
->> to the ICE driver if it is available on the platform. HWKM primarily
->> provides hardware wrapped key support where the ICE (storage) keys are
->> not available in software and instead protected in hardware.
->>
->> When HWKM software support is not fully available (from Trustzone), there
->> can be a scenario where the ICE hardware supports HWKM, but it cannot be
->> used for wrapped keys. In this case, raw keys have to be used without
->> using the HWKM. We query the TZ at run-time to find out whether wrapped
->> keys support is available.
->>
->> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
->> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
->> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
->> ---
->>   drivers/soc/qcom/ice.c | 152 +++++++++++++++++++++++++++++++++++++++++++++++--
->>   include/soc/qcom/ice.h |   1 +
->>   2 files changed, 149 insertions(+), 4 deletions(-)
->>
->>   int qcom_ice_enable(struct qcom_ice *ice)
->>   {
->> +	int err;
->> +
->>   	qcom_ice_low_power_mode_enable(ice);
->>   	qcom_ice_optimization_enable(ice);
->>   
->> -	return qcom_ice_wait_bist_status(ice);
->> +	if (ice->use_hwkm)
->> +		qcom_ice_enable_standard_mode(ice);
->> +
->> +	err = qcom_ice_wait_bist_status(ice);
->> +	if (err)
->> +		return err;
->> +
->> +	if (ice->use_hwkm)
->> +		qcom_ice_hwkm_init(ice);
->> +
->> +	return err;
->>   }
->>   EXPORT_SYMBOL_GPL(qcom_ice_enable);
->>   
->> @@ -150,6 +282,10 @@ int qcom_ice_resume(struct qcom_ice *ice)
->>   		return err;
->>   	}
->>   
->> +	if (ice->use_hwkm) {
->> +		qcom_ice_enable_standard_mode(ice);
->> +		qcom_ice_hwkm_init(ice);
->> +	}
->>   	return qcom_ice_wait_bist_status(ice);
->>   }
->>   EXPORT_SYMBOL_GPL(qcom_ice_resume);
->> @@ -157,6 +293,7 @@ EXPORT_SYMBOL_GPL(qcom_ice_resume);
->>   int qcom_ice_suspend(struct qcom_ice *ice)
->>   {
->>   	clk_disable_unprepare(ice->core_clk);
->> +	ice->hwkm_init_complete = false;
->>   
->>   	return 0;
->>   }
->> @@ -206,6 +343,12 @@ int qcom_ice_evict_key(struct qcom_ice *ice, int slot)
->>   }
->>   EXPORT_SYMBOL_GPL(qcom_ice_evict_key);
->>   
->> +bool qcom_ice_hwkm_supported(struct qcom_ice *ice)
->> +{
->> +	return ice->use_hwkm;
->> +}
->> +EXPORT_SYMBOL_GPL(qcom_ice_hwkm_supported);
->> +
->>   static struct qcom_ice *qcom_ice_create(struct device *dev,
->>   					void __iomem *base)
->>   {
->> @@ -240,6 +383,7 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
->>   		engine->core_clk = devm_clk_get_enabled(dev, NULL);
->>   	if (IS_ERR(engine->core_clk))
->>   		return ERR_CAST(engine->core_clk);
->> +	engine->use_hwkm = qcom_scm_has_wrapped_key_support();
-> 
-> This still makes the decision on whether to use HW-wrapped keys on
-> behalf of a user. I suppose this is incorrect. The user must be able to
-> use raw keys even if HW-wrapped keys are available on the platform. One
-> of the examples for such use-cases is if a user prefers to be able to
-> recover stored information in case of a device failure (such recovery
-> will be impossible if SoC is damaged and HW-wrapped keys are used).
+On Tue, 2024-09-03 at 16:42 +0200, Martin Wilck wrote:
+> On Tue, 2024-09-03 at 08:47 -0500, Brian King wrote:
+> > There are some scenarios that can occur, such as performing an
+> > upgrade of the virtual I/O server, where the supported max transfer
+> > of the backing device for an ibmvfc HBA can change. If the max
+> > transfer of the backing device decreases, this can cause issues
+> > with
+> > previously discovered LUNs. This patch accomplishes two things.
+> > First, it changes the default ibmvfc max transfer value to 1MB.
+> > This is generally supported by all backing devices, which should
+> > mitigate this issue out of the box. Secondly, it adds a module
+> > parameter, enabling a user to increase the max transfer value to
+> > values that are larger than 1MB, as long as they have configured
+> > these larger values on the virtual I/O server as well.
+> >=20
+> > Signed-off-by: Brian King <brking@linux.ibm.com>
+>=20
+> Reviewed-by: Martin Wilck <mwilck@suse.com>
 
-Isn't that already the case ? the BLK_CRYPTO_KEY_TYPE_HW_WRAPPED size is
-here to select HW-wrapped key, otherwise the ol' raw key is passed.
-Just look the next patch.
+Martin P., do you need another review to merge this patch?
 
-Or did I miss something ?
-
-Neil
-
-> 
->>   
->>   	if (!qcom_ice_check_supported(engine))
->>   		return ERR_PTR(-EOPNOTSUPP);
->> diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
->> index 9dd835dba2a7..1f52e82e3e1c 100644
->> --- a/include/soc/qcom/ice.h
->> +++ b/include/soc/qcom/ice.h
->> @@ -34,5 +34,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
->>   			 const struct blk_crypto_key *bkey,
->>   			 u8 data_unit_size, int slot);
->>   int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
->> +bool qcom_ice_hwkm_supported(struct qcom_ice *ice);
->>   struct qcom_ice *of_qcom_ice_get(struct device *dev);
->>   #endif /* __QCOM_ICE_H__ */
->>
->> -- 
->> 2.43.0
->>
-> 
+Martin W.
 
