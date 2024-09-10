@@ -1,48 +1,59 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f173.google.com (mail-il1-f173.google.com [209.85.166.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C798116DED5;
-	Tue, 10 Sep 2024 17:59:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 634601A38C1
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2024 18:48:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725991193; cv=none; b=lzCLyjQIG9qbC7j+sT8B0eqN0yB/UDyx+T5WWUFJdDG3Uv5/E1M+9FPs9O2ihhGlx/5kq/yq2uR8aL31Ol5aC1yhevlN+j43pUe65DbPDfxhNwzoJ0qbAYzEEki9QF1ILsi/ORmpE/tT0oALcneU/NjYKJKchfZcFZWczyzYpqo=
+	t=1725994097; cv=none; b=AS8snQYDrArCCZbINhGROhc5slYA3wSMmUhApBMAOsBBw22M/i9smIUD+GziRR3rB88oh8xBqJPKxQyU2fBq+QJAXjKZi3Gh44DN2opxxaFAMuit7z9ex46RV3R2GagswF2+Ta5x2m4posdz1LVAj8yEgxUSvOGovcSq7HdzBcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725991193; c=relaxed/simple;
-	bh=OwP3+I3acA6YRD1AxGoP9eoRcytom+/4gfnsPh7Ru/c=;
+	s=arc-20240116; t=1725994097; c=relaxed/simple;
+	bh=exfRCSbeGc10MpECC/7e0V7yMgHOMWsZWQLKlDrqrcE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NNCJ0stHfOqT+dJ/fvEC0pe94QWP9oCMCCWxOMX8R24l3RRgREeva9CHxF9jWGkq0a18XJqZZXY3gQ3+ArXDRpicZ0FZ9SE9W/JLCJNVCsUXh6VTz7eCyP/ShmXPrcbGGZ0TkswyL5oZ35TH4Rgoj4LG9pC+kS+A+UxvRBtUPfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=UD4IcbBk; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=hEKevKeDbvin9tXTK/bp7/5V4fkNqKYAdTv6Pg1a0tOyeyzidFTkdoJGsUgdSjmFOp8bkWY8Hlw7fpikRCVPU4ihScp/wqJ6gkLuOlE0XMyZaIba3gjFk6O4Rh/rbkvSsyOn2ZfTrf7XK1mT9dlAx9rrleECHDiYoeLf6z1aSII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=kUDQAkkP; arc=none smtp.client-ip=209.85.166.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="UD4IcbBk"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4X3BL967XNzlgVnf;
-	Tue, 10 Sep 2024 17:59:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1725991174; x=1728583175; bh=oRpBILn97hQlAgqu+BPpd8j0
-	wIORp8/sYsHHAPwOHwk=; b=UD4IcbBkrLSUorg1mwaLj3gCH9px3fa3/cCIWLau
-	Yi0TC9URYhFajnf5t4Xx6rkFrNoZk+jsnhvrC0du5Kr6oElQ/ecp8xvGr2gHc2RX
-	/h5Kc7V62EB2570/EGWCWP1muZwaPCVoczra9dhbTh11nOSNGTaqnE53/JK5bOUq
-	ErWn9eS9qqM/7YbqqjkQcsK43u4BJfvAMtsIv428kC4A3+wTUPlISJD5b+f14JYu
-	IZskNUv4U8YkBONQ7QN5aVWi719R+QpO6tMPcCItbqk6H8ncbs6xPLelstjujOdG
-	OJVevr8exVNRhq6KTBu5rwT8HR6I88x6sTQg1f26RFXwzw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id IFyM8jt2rizU; Tue, 10 Sep 2024 17:59:34 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4X3BKw4H3dzlgTWQ;
-	Tue, 10 Sep 2024 17:59:32 +0000 (UTC)
-Message-ID: <e42abf07-ba6b-4301-8717-8d5b01d56640@acm.org>
-Date: Tue, 10 Sep 2024 10:59:31 -0700
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="kUDQAkkP"
+Received: by mail-il1-f173.google.com with SMTP id e9e14a558f8ab-39d47a9ffb9so19048655ab.1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2024 11:48:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1725994094; x=1726598894; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=h4y68weuYe8VzZteJIbmlHGx6ZRCIwg+66SDRaOQ0Pk=;
+        b=kUDQAkkP9s45KUpgoGEAQfA3JED/wygrDeLXG765VwPj/PmD8mVn5kq+8hxFJo1Dmi
+         CbNKYNt87K3HhhRzDO3pTSMMGRb6+1pQxi/sLPkfABYefVaT3kHpR0SpnGEuk6/GzK0x
+         oNQ4pPlaEbLj5senKZ8qPsne0dQBqWvun9nkBzBSWnpvPHzu0u/ptXhE+VxfOI+lH7qh
+         VX1yMOdpgYP8TBEVk4XmBq99STKwDQ5a+JT21NcFMqmpg3CsDbh6KdcbaXJpAIQi0C1y
+         VyZ1cNYCLpUjM5uNhk2y9CYQv+saNLrKoGinYUEzp/wfH8zqp/cTQApAMTn9VFQv+4Uo
+         Dv3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725994094; x=1726598894;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=h4y68weuYe8VzZteJIbmlHGx6ZRCIwg+66SDRaOQ0Pk=;
+        b=rcElJNg5tbLflZaW3ZwP52liQJ2a9tmFZX6qUvMo4NJ+ewtDUoiOpSh02b/B8/fNeu
+         WBZfzjpzleuSYQZJrD9kTr3JszPcf9awBhrEGtYCAFL5bT/m24e7I5rB5kin96YmEaXX
+         E4PiArvH8McSV6mSlScosS0zxs+CJ1nqP2eGL0AOgetP8qF46H7YuWVOCSsBS48qTfj2
+         j4P1HxplZaipLnnFUGyG94dg0v4FdPbLhQVioVyWEWxGn8C7DqsaZqb+H8hfcTrAkIYO
+         SvDe41IfYumvN+VfWhOnhGbwqfXNIFjPX4h3Av1CbTkcws624BlXJqtKoTmXfKdcPGZb
+         xHQA==
+X-Forwarded-Encrypted: i=1; AJvYcCVBmcDOMpcL045Hg+L6jBnRzGwZIJxSloqPekbbR8woPv0pzqCKsiN/MUDNwCvdhgQzFKyAJlu8ojFZ@vger.kernel.org
+X-Gm-Message-State: AOJu0YzeAtUH1k6WDWKkLhS7yg1FoafpSa7ezXjdw1Fx/gO8jjfQBafY
+	vp0XDmhMGSjjmcM6ZCqNzU8hma9XeiOlC8+LHQsXYOF/9aBdJ7eLSr7LC1N95AA=
+X-Google-Smtp-Source: AGHT+IEbci4bFKk4qyfG7I+1DUOrdPWBQtYa+ssZc5w3NRdfD9WSHDse9oCgXPz7cY+ZMf7HVvKJ8w==
+X-Received: by 2002:a05:6e02:16cf:b0:39f:5d13:9491 with SMTP id e9e14a558f8ab-3a05745eb8fmr106220205ab.7.1725994094344;
+        Tue, 10 Sep 2024 11:48:14 -0700 (PDT)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3a058fd5c85sm21473895ab.23.2024.09.10.11.48.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Sep 2024 11:48:13 -0700 (PDT)
+Message-ID: <e6792bd5-1bd0-4a28-b0c9-7e49f74505f2@kernel.dk>
+Date: Tue, 10 Sep 2024 12:48:12 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,100 +61,58 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/2] ufs: core: requeue aborted request
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
- qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
- eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
- quic_nguyenb@quicinc.com, stable@vger.kernel.org
-References: <20240910073035.25974-1-peter.wang@mediatek.com>
- <20240910073035.25974-3-peter.wang@mediatek.com>
+Subject: Re: [PATCH v5 3/5] fcntl: add F_{SET/GET}_RW_HINT_EX
+To: Kanchan Joshi <joshi.k@samsung.com>, kbusch@kernel.org, hch@lst.de,
+ sagi@grimberg.me, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com, brauner@kernel.org,
+ viro@zeniv.linux.org.uk, jack@suse.cz, jaegeuk@kernel.org,
+ jlayton@kernel.org, chuck.lever@oracle.com, bvanassche@acm.org
+Cc: linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org, gost.dev@samsung.com, vishak.g@samsung.com,
+ javier.gonz@samsung.com, Nitesh Shetty <nj.shetty@samsung.com>
+References: <20240910150200.6589-1-joshi.k@samsung.com>
+ <CGME20240910151052epcas5p48b20962753b1e3171daf98f050d0b5af@epcas5p4.samsung.com>
+ <20240910150200.6589-4-joshi.k@samsung.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240910073035.25974-3-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20240910150200.6589-4-joshi.k@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9/10/24 12:30 AM, peter.wang@mediatek.com wrote:
-> ufshcd_abort_all froce abort all on-going command and the host
-                    ^^^^^ ^^^^^              ^^^^^^^         ^^^^
-                forcibly? aborts?            commands?   host controller?
-> will automatically fill in the OCS field of the corresponding
-> response with OCS_ABORTED based on different working modes.
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The host controller only sets the OCS field to OCS_ABORTED in MCQ mode
-if the host controller successfully aborted the command. If the
-abort TMF is submitted to the UFS device, the OCS field won't be changed
-into OCS_ABORTED. In SDB mode, the host controller does not modify the 
-OCS field either.
-
-> SDB mode: aborts a command using UTRLCLR. Task Management response
-> which means a Transfer Request was aborted.
-
-Hmm ... my understanding is that clearing a bit from UTRLCLR is only
-allowed *after* a command has been aborted and also that clearing a bit
-from this register does not abort a command but only frees the resources
-in the host controller associated with the command.
-
-> For these two cases, set a flag to notify SCSI to requeue the
-> command after receiving response with OCS_ABORTED.
-
-I think there is only one case when the SCSI core needs to be requested
-to requeue a command, namely when the UFS driver decided to initiate the
-abort (ufshcd_abort_all()).
-
-> @@ -7561,6 +7551,20 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
->   		goto out;
->   	}
->   
-> +	/*
-> +	 * When the host software receives a "FUNCTION COMPLETE", set flag
-> +	 * to requeue command after receive response with OCS_ABORTED
-> +	 * SDB mode: UTRLCLR Task Management response which means a Transfer
-> +	 *           Request was aborted.
-> +	 * MCQ mode: Host will post to CQ with OCS_ABORTED after SQ cleanup
-> +	 * This flag is set because ufshcd_abort_all forcibly aborts all
-> +	 * commands, and the host will automatically fill in the OCS field
-> +	 * of the corresponding response with OCS_ABORTED.
-> +	 * Therefore, upon receiving this response, it needs to be requeued.
-> +	 */
-> +	if (!err)
-> +		lrbp->abort_initiated_by_err = true;
+On 9/10/24 9:01 AM, Kanchan Joshi wrote:
+> +static inline bool rw_placement_hint_valid(u64 val)
+> +{
+> +	if (val <= MAX_PLACEMENT_HINT_VAL)
+> +		return true;
 > +
->   	err = ufshcd_clear_cmd(hba, tag);
->   	if (err)
->   		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
+> +	return false;
+> +}
 
-The above change is misplaced. ufshcd_try_to_abort_task() can be called
-when the SCSI core decides to abort a command while
-abort_initiated_by_err must not be set in that case. Please move the
-above code block into ufshcd_abort_one().
+Nit, why not just:
 
-Regarding the word "host" in the above comment block: the host is the 
-Android device. I think that in the above comment "host" should be
-changed into "host controller".
+static inline bool rw_placement_hint_valid(u64 val)
+{
+	return val <= MAX_PLACEMENT_HINT_VAL;
+}
 
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 0fd2aebac728..15b357672ca5 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -173,6 +173,8 @@ struct ufs_pm_lvl_states {
->    * @crypto_key_slot: the key slot to use for inline crypto (-1 if none)
->    * @data_unit_num: the data unit number for the first block for inline crypto
->    * @req_abort_skip: skip request abort task flag
-> + * @abort_initiated_by_err: The flag is specifically used to handle aborts
-> + *                          caused by errors due to host/device communication
+> +static long fcntl_set_rw_hint_ex(struct file *file, unsigned int cmd,
+> +			      unsigned long arg)
+> +{
+> +	struct rw_hint_ex __user *rw_hint_ex_p = (void __user *)arg;
+> +	struct rw_hint_ex rwh;
+> +	struct inode *inode = file_inode(file);
+> +	u64 hint;
+> +	int i;
+> +
+> +	if (copy_from_user(&rwh, rw_hint_ex_p, sizeof(rwh)))
+> +		return -EFAULT;
+> +	for (i = 0; i < ARRAY_SIZE(rwh.pad); i++)
+> +		if (rwh.pad[i])
+> +			return -EINVAL;
 
-The "abort_initiated_by_err" name still seems confusing to me. Please
-make it more clear that this flag is only set if the UFS error handler
-decides to abort a command. How about "abort_initiated_by_eh"?
+	if (memchr_inv(rwh.pad, 0, sizeof(rwh.pad)))
+		return -EINVAL;
 
-Please also make the description of this member variable more clear.
-
-Thanks,
-
-Bart.
+-- 
+Jens Axboe
