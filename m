@@ -1,158 +1,236 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1603D187555
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2024 13:25:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A3CB194C85
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2024 15:10:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725974751; cv=none; b=hAEZtzNmuBUBRssUOEx8jDJMTLoLxe26D3jPPeepTQT2tbYoM848GgwjbiXubjeOIBqcUScGD1flAH0723ZzdE8+ABH9+M8r7hjvUvdr2U1sXupfg/d9yE953de9DyBQWxkL4FFf9DD1g6wjGkUmwIJVM8WiW5UVMSDulRHHK7Y=
+	t=1725981046; cv=none; b=NVK34GciO4UE4sO/VQN9RNCJ8p5YIfNTqka5/eBt0zoBCzzMA5g1RSbhdHC945ZdTkKaOU7/THtVJ7fmb3GNMELpHcDTU8KDhtip6Y/trJVTBDBYzoU4g5hVBiuMeQwckZ1TvogZcdjzVpuCzxm4VpUsZFlwM885NKHNfaIw/a0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725974751; c=relaxed/simple;
-	bh=gHq1RlMcoXW1hM0HdLruEp/LeaSklcUQHsdtB0Ch7DM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LAuQzm9cfPxBAI9pLyE491KS+T1Kc5rDLkDEscPMSbIrJaeE45wu7U29r+FYZdd+1h39lvHaFtQfVhy+Z1X/tINvCQZKnpScytz5p1MOUxpwEGxnLJwuipNSD1XmOiqG6h6TfWr0C5CXVKxW83yobYs/tuOQn3PmGuIRGYJMNvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Gm1SjX7j; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qerpZvtU; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Gm1SjX7j; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qerpZvtU; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1725981046; c=relaxed/simple;
+	bh=osLje1hJxRZfzBYT0HU2DJKXrJtvBXnchFV+ChXUcl0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=u5OtLLLIGZc/NA3jNcVsQMIAAbyLuHUU/GkgzdWIHFTUeediTM0VJ7XtYcm9REgkbvzyqKLNgSZFSPvyTtItkzGUpVx8YjbzNYoa1kcWQFp1z0SjmCdhqubOyOfVF/w1vhekJZMiBm9GuGIFK8dObJK93ilV4k+79fxk5gTl97Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=pcvIAVn/; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Gm1SjX7j";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qerpZvtU";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Gm1SjX7j";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qerpZvtU"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 3D3D51F816;
-	Tue, 10 Sep 2024 13:25:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1725974748; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xdAoXXKK0HOxQQp9i46yTYPa1o3hAejrAElNqk+56nE=;
-	b=Gm1SjX7jlE2jGjpyLrC2eKFl/HDlPXpqBkpHAlHT3Cx6+2OLD8UgyMn9hETQMAt/a/Zq4n
-	XJ4XMmPsSmZJrH3wM4bzELT6U32AqisMGMxyiqsO1ab0gYrHKBb5yMIu6KnritLCSERa7i
-	fU4hrykWBW3likp3tBWv6vO3vUOEWsQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1725974748;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xdAoXXKK0HOxQQp9i46yTYPa1o3hAejrAElNqk+56nE=;
-	b=qerpZvtUrdjdZafUAJl8hYxL4J/Z6ZOgcR/NXgYrMWvDUIFjOrX2Iqgd2opl2fZFQINee4
-	/GUAZ6GEJ9d0yhBA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=Gm1SjX7j;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=qerpZvtU
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1725974748; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xdAoXXKK0HOxQQp9i46yTYPa1o3hAejrAElNqk+56nE=;
-	b=Gm1SjX7jlE2jGjpyLrC2eKFl/HDlPXpqBkpHAlHT3Cx6+2OLD8UgyMn9hETQMAt/a/Zq4n
-	XJ4XMmPsSmZJrH3wM4bzELT6U32AqisMGMxyiqsO1ab0gYrHKBb5yMIu6KnritLCSERa7i
-	fU4hrykWBW3likp3tBWv6vO3vUOEWsQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1725974748;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xdAoXXKK0HOxQQp9i46yTYPa1o3hAejrAElNqk+56nE=;
-	b=qerpZvtUrdjdZafUAJl8hYxL4J/Z6ZOgcR/NXgYrMWvDUIFjOrX2Iqgd2opl2fZFQINee4
-	/GUAZ6GEJ9d0yhBA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 05D5313A3A;
-	Tue, 10 Sep 2024 13:25:48 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id m3wBAdxI4GYOHQAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 10 Sep 2024 13:25:48 +0000
-Message-ID: <65366f3b-8f4d-49f0-9fdd-573f99d5b503@suse.de>
-Date: Tue, 10 Sep 2024 15:25:47 +0200
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="pcvIAVn/"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240910151042epoutp042bd29c0e8f200c2b589dda4757d6c573~z6p0KPRMn1896418964epoutp04V
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2024 15:10:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240910151042epoutp042bd29c0e8f200c2b589dda4757d6c573~z6p0KPRMn1896418964epoutp04V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1725981042;
+	bh=tMfHqVkUXqCWtSwhV1wBahjAVG+ZNtgPS/8uMug7K84=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=pcvIAVn/I1Bf/bXsOgx5w6iBRfwpdFuCQHqjJ4DMhUJK/RR+cse37Wq4k6ZFPCbfR
+	 IZauhR8TlenMhNGh9hap4go+nOlEsOaYnFkrbFuiqwDmrcXn/IBIWb4jlLyrvr7/gN
+	 xLM/cvd2dM6zhO6MnK7xomfDqpVsQ9lSRBLuFP9g=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+	20240910151041epcas5p2048e076adae63fd931eff0bf46cfc739~z6pzhpH2J0258802588epcas5p2E;
+	Tue, 10 Sep 2024 15:10:41 +0000 (GMT)
+Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.182]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4X36b43d18z4x9Pv; Tue, 10 Sep
+	2024 15:10:40 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	57.86.08855.07160E66; Wed, 11 Sep 2024 00:10:40 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20240910151040epcas5p3f47fa7ea37a35f8b44dd9174689e1bb9~z6px9arLJ1076710767epcas5p3j;
+	Tue, 10 Sep 2024 15:10:40 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240910151040epsmtrp2d8703cd5c3ed857f83a2ea796785047b~z6px8alcl0448904489epsmtrp2v;
+	Tue, 10 Sep 2024 15:10:40 +0000 (GMT)
+X-AuditID: b6c32a44-15fb870000002297-ea-66e061709026
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	87.DC.08964.F6160E66; Wed, 11 Sep 2024 00:10:39 +0900 (KST)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20240910151035epsmtip265e38c1653c6a529f3d6411c350e9604~z6puGi-2A1662516625epsmtip2j;
+	Tue, 10 Sep 2024 15:10:35 +0000 (GMT)
+From: Kanchan Joshi <joshi.k@samsung.com>
+To: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
+	brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
+	jaegeuk@kernel.org, jlayton@kernel.org, chuck.lever@oracle.com,
+	bvanassche@acm.org
+Cc: linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org, gost.dev@samsung.com, vishak.g@samsung.com,
+	javier.gonz@samsung.com, Kanchan Joshi <joshi.k@samsung.com>
+Subject: [PATCH v5 0/5] data placement hints and FDP
+Date: Tue, 10 Sep 2024 20:31:55 +0530
+Message-Id: <20240910150200.6589-1-joshi.k@samsung.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ibmvfc: Add max_sectors module parameter
-To: Brian King <brking@linux.ibm.com>, martin.petersen@oracle.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
- tyreld@linux.ibm.com, brking@pobox.com
-References: <20240730175118.27105-1-brking@linux.ibm.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240730175118.27105-1-brking@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 3D3D51F816
-X-Spam-Level: 
-X-Spamd-Result: default: False [-6.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -6.51
-X-Spam-Flag: NO
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xbVRzHPffe3ha05lIQjrAwrJvLmDCKUE4NDBMZuwuLIVkwmQr1hl4e
+	A9qujzmNZhWETIi85mAwXntkQkEIZZsoYhy1vCdYxoBOSHElJCMbj85NBMGWy3T/fc7398r3
+	d84R4CIH6S/IVOpYjZLJFpOexA3z3uAQNWNPCysY9kXN0yUkWjCvAFSxtIqjzel5DE39/D2G
+	mpotGLpQmYchR1s1jtpLBOje704+Wr1q5CPL5gMSlffcAajbtg9ZLx1CP3YPEKj+6hwfFU10
+	kuibvg0MtS4sEmjknz4eGqmu4b/lS4/dTqBHZtoJuqJ8kKTHbulpk/FLku64cpruanBidNeU
+	gaSX52wEXXzNCOjhhl/4tNMUSJscD7BE4XtZ0Rkso2A1QawyVaXIVKbHiBOOyt+WR0rDJCES
+	GYoSBymZHDZGHHckMSQ+M9vlWRx0ksnWu6RERqsV7z8QrVHpdWxQhkqrixGzakW2OkIdqmVy
+	tHpleqiS1b0pCQsLj3QlfpiVYe/qwdUDAafKBpsxA1j0LgQeAkhFwLOTFqIQeApEVBeATTYT
+	7g6IqBUAHfl+XOAxgPMtrdjTCsvtXzEu0A2gqaMWcAcngKPWKbIQCAQktReOntW7dR+qDoO9
+	o5atJJwqx+Cy/VvS3crb1arZ4ABuJqjd0Gy0brGQioKWR3cBN24nrLI+4XO6FxyochBuxl16
+	3vULuLsppJYE8OboXzhXEAeflN7lc+wN7/dd22Z/6HzYTXKcBe1/2AmOP4WdHcU8jmOhYX2S
+	53aAuxy0/bCfm/Ui/GrNgbllSAnhmQIRl/0KnCmf2670g7Pnr2wzDT+vGALcGpPh5mUjWQoC
+	q59xUP2Mg+r/hzUA3AheZtXanHQ2NVItUbIf/XeZqaocE9h67sFxnWCyfiO0B2AC0AOgABf7
+	CEsOzKSJhArm409YjUqu0Wez2h4Q6VprGe7/UqrK9V+UOrkkQhYWIZVKI2RvSCViP+FCfq1C
+	RKUzOjaLZdWs5mkdJvDwN2DyY51xsqO95ncla2W5XzwMTSvcN6b0uhd+mFAUjMjrTvYtHEua
+	vlj6Qd4gMAZtzK+U7krYE2u9/856sH6hiP3NmThUJj5ddN5n3D7Fm/1sObkxYeb4a3lR0c95
+	XYpN8x1WJRWEJxE7nD4/GauG1wZMf/Ia/QNaVClmlFJrT27LPdG0aPC0zTQUV/Bq+2v6R40y
+	Y3281lpjtAXUSXfgx2WvzjK+Zkv54cmvycaJ928EtntPXB9YzB8fyqisrBt8BHPvxEdf/K5y
+	NiTz77miMwlQvweIvAc7x0+97kFl9qoOvSCkbwX3t5pSb544t95e9/zmcnJKy84lm2o1+si5
+	x7sPigltBiMJxjVa5l8Au/SqdwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsWy7bCSvG5+4oM0g/vHTS1W3+1ns3h9+BOj
+	xbQPP5kt/t99zmRx88BOJouVq48yWcye3sxk8WT9LGaLjf0cFo/vfGa3+LlsFbvF0f9v2Swm
+	HbrGaLH3lrbFpUXuFnv2nmSxmL/sKbtF9/UdbBbLj/9jslj3+j2Lxfm/x1ktzs+aw+4g5nH5
+	irfH+XsbWTymTTrF5nH5bKnHplWdbB6bl9R77F7wmclj980GNo+PT2+xePRtWcXocWbBEXaP
+	z5vkPDY9ecsUwBvFZZOSmpNZllqkb5fAlfFg9yHmgpPSFRNPrWZqYHwv3MXIySEhYCJx9Mo5
+	JhBbSGA3o8SlDUYQcXGJ5ms/2CFsYYmV/54D2VxANR8ZJTp2bAdq4OBgE9CUuDC5FKRGRGAd
+	k8SKaT4gNcwCc5gklnduZwZJCAMtWN3whBHEZhFQlTi86hKYzStgLnH0y21GiAXyEjMvfWeH
+	iAtKnJz5hAXEZgaKN2+dzTyBkW8WktQsJKkFjEyrGCVTC4pz03OLDQsM81LL9YoTc4tL89L1
+	kvNzNzGC409Lcwfj9lUf9A4xMnEwHmKU4GBWEuHtt7uXJsSbklhZlVqUH19UmpNafIhRmoNF
+	SZxX/EVvipBAemJJanZqakFqEUyWiYNTqoHJ6gffEdYCi0epl/5uf3BZ6KJJdbhnS6lDXHzC
+	9flRAc6ZZrkGKc/cJ/BIM/Qu2KN11a5oadWu0MBS470l7gXTDr+o1Jt00mALr8yOjxuEUxNW
+	nGiZO6m029tSkb345wNdznlMUV8DRYtNznl+uzl/QavMk7h5n/eLd2xbeMJY6cesJRd80xpv
+	qwhvt5mnPNOW/7P6bu78hiLvxSVhbxS8jQLm/zBgu3ZO2WfbOaXcc/WLFfv2sV0/waeyc7FC
+	Jbf8us6/4Yenut9q/7FY97T+LFteU1vvrSeSK1OS8vN2cu08Mp15R9zZ9UYCFb6zVyxL+ilQ
+	deib3Mc1gQdn9XC8Mn3aMt3d5kvC/ykbuJWVWIozEg21mIuKEwHCFYnNLgMAAA==
+X-CMS-MailID: 20240910151040epcas5p3f47fa7ea37a35f8b44dd9174689e1bb9
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240910151040epcas5p3f47fa7ea37a35f8b44dd9174689e1bb9
+References: <CGME20240910151040epcas5p3f47fa7ea37a35f8b44dd9174689e1bb9@epcas5p3.samsung.com>
 
-On 7/30/24 19:51, Brian King wrote:
-> There are some scenarios that can occur, such as performing an
-> upgrade of the virtual I/O server, where the supported max transfer
-> of the backing device for an ibmvfc HBA can change. If the max
-> transfer of the backing device decreases, this can cause issues with
-> previously discovered LUNs. This patch accomplishes two things.
-> First, it changes the default ibmvfc max transfer value to 1MB.
-> This is generally supported by all backing devices, which should
-> mitigate this issue out of the box. Secondly, it adds a module
-> parameter, enabling a user to increase the max transfer value to
-> values that are larger than 1MB, as long as they have configured
-> these larger values on the virtual I/O server as well.
-> 
-> Signed-off-by: Brian King <brking@linux.ibm.com>
-> ---
->   drivers/scsi/ibmvscsi/ibmvfc.c | 10 +++++++---
->   drivers/scsi/ibmvscsi/ibmvfc.h |  2 +-
->   2 files changed, 8 insertions(+), 4 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Current write-hint infrastructure supports 6 temperature-based data
+lifetime hints.
+The series extends the infrastructure with a new temperature-agnostic
+placement-type hint. New fcntl codes F_{SET/GET}_RW_HINT_EX allow to
+send the hint type/value on file. See patch #3 commit description and
+interface example below [*].
 
-Cheers,
+Overall this creates 127 placement hint values that users can pass.
 
-Hannes
+Patch #5 adds the ability to map these new hint values to nvme-specific
+placement-identifiers.
+Patch #4 restricts SCSI to use only lifetime hint values.
+Patch #1 and #2 are simple prep patches.
+
+[*]
+#define _GNU_SOURCE
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <inttypes.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <linux/fcntl.h>
+
+int main(int argc, char *argv[])
+{
+        struct rw_hint_ex set_hint_ex={}, get_hint_ex={};
+        int fd, ret;
+
+        if (argc < 4) {
+                fprintf(stderr, "Usage: %s file <hint type> <hint value>\n",
+                        argv[0]);
+                return 1;
+        }
+
+        fd = open(argv[1], O_CREAT|O_RDWR|O_DIRECT, 0644);
+        if (fd < 0) {
+                perror("open");
+                return 1;
+        }
+
+        set_hint_ex.type = atoi(argv[2]);
+        set_hint_ex.val = atol(argv[3]);
+
+        ret = fcntl(fd, F_SET_RW_HINT_EX, &set_hint_ex);
+        if (ret < 0) {
+                perror("fcntl: Error, F_SET_RW_HINT_EX");
+                goto close_fd;
+        }
+        ret = fcntl(fd, F_GET_RW_HINT_EX, &get_hint_ex);
+        if (ret < 0) {
+                perror("fcntl: Error, F_GET_RW_HINT_EX");
+                goto close_fd;
+        }
+        printf("set_hint (%d,%llu)\nget_hint (%d,%llu)\n",
+               set_hint_ex.type, set_hint_ex.val,
+               get_hint_ex.type, get_hint_ex.val);
+
+close_fd:
+        close(fd);
+        return 0;
+}
+
+/* set placement hint (type 2) with value 126 */
+# ./a.out /dev/nvme0n1 2 126
+set_hint (2,126)
+get_hint (2,126)
+
+/* invalid placement hint value */
+# ./a.out /dev/nvme0n1 2 128
+fcntl: Error, F_SET_RW_HINT_EX: Invalid argument
+
+Changes since v4:
+- Retain the size/type checking on the enum (Bart)
+- Use the name "*_lifetime_hint" rather than "*_life_hint" (Bart)
+
+Changes since v3:
+- 4 new patches to introduce placement hints
+- Make nvme patch use the placement hints rather than lifetime hints
+
+Changes since v2:
+- Base it on nvme-6.11 and resolve a merge conflict
+
+Changes since v1:
+- Reduce the fetched plids from 128 to 6 (Keith)
+- Use struct_size for a calculation (Keith)
+- Handle robot/sparse warning
+
+Kanchan Joshi (4):
+  fs, block: refactor enum rw_hint
+  fcntl: rename rw_hint_* to rw_lifetime_hint_*
+  fcntl: add F_{SET/GET}_RW_HINT_EX
+  nvme: enable FDP support
+
+Nitesh Shetty (1):
+  sd: limit to use write life hints
+
+ drivers/nvme/host/core.c   | 81 ++++++++++++++++++++++++++++++++++++++
+ drivers/nvme/host/nvme.h   |  4 ++
+ drivers/scsi/sd.c          |  7 ++--
+ fs/buffer.c                |  4 +-
+ fs/f2fs/f2fs.h             |  5 ++-
+ fs/f2fs/segment.c          |  5 ++-
+ fs/fcntl.c                 | 79 ++++++++++++++++++++++++++++++++++---
+ include/linux/blk-mq.h     |  2 +-
+ include/linux/blk_types.h  |  2 +-
+ include/linux/fs.h         |  2 +-
+ include/linux/nvme.h       | 19 +++++++++
+ include/linux/rw_hint.h    | 17 +++++++-
+ include/uapi/linux/fcntl.h | 14 +++++++
+ 13 files changed, 221 insertions(+), 20 deletions(-)
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.25.1
 
