@@ -1,183 +1,152 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46A918C923
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2024 23:12:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B87DF4EB;
+	Tue, 10 Sep 2024 00:37:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725923553; cv=none; b=i94p8hZcyOyzMqbGooorW9Yo1IkD3do1xwMGSg9uQzTIaX8iPsKOAj8omG5fCNeNfvnwSMCGWLemVQERn6oviffpDi4bMxnul/2Cqisz/Zt6i8FM4MNckyxppsUaItyVdCd0A+7Xa4o95733upASGzOAZzqk6l5nhlZk4vtT32A=
+	t=1725928677; cv=none; b=roBtr6YVMxxBHugMO7V01Nj0qpD8GIGjcynrr7zTEnPomHlqCJawXU7+dFPxc+dWJa6MzNykBa9CAnjxlH0Hua4ZS/XKv4hCpGFV+rHT1Zh/zxpRL0Zy579gKQWxkL7Fdf1lasqRNA2RnfG0Abj54G7j/CMkbdCt3osTyV71WEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725923553; c=relaxed/simple;
-	bh=YuV+NBhRWZ0+Ju05pPKOKvV4OPwHU+oS4simsOP6uh0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AufBPYc2nQIso52j996ew3+FIu7VitBbbzz06ockDzpQbZSBk62UTEuRb/iVY2wd9InpIPSbSnJnm2Y7gUNZyhv5x3zOrCG43t6yzIWOfxl5/Y17H8BJ3km2a4iQMY4lg9L/e/FVrL46nAaqGb5Xf0xeju7+t07y9sYLlTd5h1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0YS1rubo; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1725928677; c=relaxed/simple;
+	bh=jr5zVGRGboL5XtozuVLN38ByT/dg4+14+mi3ttijOhM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IynONVi+VOwrI3/gTULrbtV3ITfxXPKwt8SH9fjxBcCU9wekCYDu8OFfhQdxn4sqzNTd6wnWuZcyKegnqQkwXm8wDG+IQhmVuqIgJzXiv2N0FFUD6Qo6RYjMARTMErkgADVWFpAys88AA4J3W+hHrlScP790oCFP2qgAx9Qnam0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b=ZKwT+fr4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0YS1rubo"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X2jKV37H9z6ClY8r;
-	Mon,  9 Sep 2024 23:12:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1725923539; x=1728515540; bh=xDxE2
-	jiqdBmZDnXQVLEd0lngtHNP+7y0ubPOaeXCuP8=; b=0YS1rubofzzybduVfVS3p
-	OEAOAe/RTUxgpyzLLGh3dkDGVQREruGNLndcm7U9P0kct7wJ5FYf3iAxGgfJI4UM
-	UM7ZXdwB5u0+BAGYX3nDdmbBuzAc/N+Ca6OkXWg0GBm1LINPkVobZJRg9OqLnJmQ
-	DGXD8QvcySs5/69wC9OWIp1WNI/URF4sA7NOu1orYjKTp2ruy0cUbLPLJiDkA3PD
-	01As9+fYUfnuUKNMQHzHDRgUmkTfaxxJkOfVaZtV1f8NsZfFycnG5QGwVZBApiPg
-	K3pXpCDpj1HIBE/kBnYbC0P1ecuJcEYOhjBNFitfoONxtct4uT8dAkaWxB0SWLll
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id EGicCzSQkOOi; Mon,  9 Sep 2024 23:12:19 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X2jKD1CsVz6ClbFf;
-	Mon,  9 Sep 2024 23:12:15 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Eric Biggers <ebiggers@google.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: [PATCH v2 4/4] scsi: ufs: core: Change the approach for power change UIC commands
-Date: Mon,  9 Sep 2024 16:11:22 -0700
-Message-ID: <20240909231139.2367576-5-bvanassche@acm.org>
-X-Mailer: git-send-email 2.46.0.598.g6f2099f65c-goog
-In-Reply-To: <20240909231139.2367576-1-bvanassche@acm.org>
-References: <20240909231139.2367576-1-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="ZKwT+fr4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51DC3C4CEC5;
+	Tue, 10 Sep 2024 00:37:50 +0000 (UTC)
+Authentication-Results: smtp.kernel.org;
+	dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="ZKwT+fr4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
+	t=1725928668;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OQLtanPdpI6IiO92yLD4QK+WpMduqZbfYjfvTA4Wjlg=;
+	b=ZKwT+fr48l6iq8LtejYrRYTAB9HVjSoYl2w9SIS8taTr8eJGaMN+UnDXFn2Y+3WPqB/R/F
+	rRaSffSolaALbBnXYJobLzN3VpV4Ezx51BMaa/1NhCLY3oqj42i7Mx1nH5OoYZ9G42zSuF
+	N4doRAUS+Xs6qZlnbpNizLgjSg5FNi8=
+Received: 
+	by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 9dac766c (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Tue, 10 Sep 2024 00:37:47 +0000 (UTC)
+Date: Tue, 10 Sep 2024 02:37:38 +0200
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+To: Uros Bizjak <ubizjak@gmail.com>
+Cc: x86@kernel.org, linux-crypto@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
+	bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Andy Lutomirski <luto@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Hans Verkuil <hverkuil@xs4all.nl>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Eric Biggers <ebiggers@kernel.org>,
+	"Theodore Y. Ts'o" <tytso@mit.edu>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	John Fastabend <john.fastabend@gmail.com>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Eduard Zingerman <eddyz87@gmail.com>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@fomichev.me>,
+	Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Higgins <brendan.higgins@linux.dev>,
+	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Jiri Pirko <jiri@resnulli.us>, Petr Mladek <pmladek@suse.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Jamal Hadi Salim <jhs@mojatatu.com>,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Kent Overstreet <kent.overstreet@linux.dev>
+Subject: Re: [PATCH RESEND v2 00/19] random: Resolve circular include
+ dependency and include <linux/percpu.h>
+Message-ID: <Zt-U0opo2EW8LSRJ@zx2c4.com>
+References: <20240909075641.258968-1-ubizjak@gmail.com>
+ <Zt8a6_RwLG2pEnZ6@zx2c4.com>
+ <CAFULd4ak3n1x0tGrqiNoxvDBRw6AWgchfBO_k4aKps34DomPvA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <CAFULd4ak3n1x0tGrqiNoxvDBRw6AWgchfBO_k4aKps34DomPvA@mail.gmail.com>
 
-For some host controllers it is required that UIC completion interrupts a=
-re
-disabled while a power control command is submitted while for other host
-controllers it is required that UIC completion interrupts remain enabled.
-Hence introduce a quirk for preserving the current behavior and leave UIC
-completion interrupts enabled if that quirk has not been set. Although it
-has not yet been observed that the UIC completion interrupt is reported
-after the power mode change interrupt, handle this case by adding a
-wait_for_completion_timeout() call on uic_cmd::done.
+Hi Uros,
 
-Note: the code for toggling the UIC completion interrupt was introduced
-by commit d75f7fe495cf ("scsi: ufs: reduce the interrupts for power mode
-change requests").
+On Mon, Sep 09, 2024 at 09:30:06PM +0200, Uros Bizjak wrote:
+> Besides GCC, clang can define various named address space via
+> address_space attribute:
+> 
+> --cut here--
+> #define __as(N) __attribute__((address_space(N)))
+> 
+> void *foo(void __as(1) *x) { return x; }         // error
+> 
+> void *bar(void __as(1) *x) { return (void *)x; } // fine
+> --cut here--
+> 
+> When compiling this, the compiler returns:
+> 
+> clang-as.c:3:37: error: returning '__as(1) void *' from a function
+> with result type 'void *' changes address space of pointer
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c       | 15 ++++++++++++++-
- drivers/ufs/host/ufs-mediatek.c |  1 +
- drivers/ufs/host/ufs-qcom.c     |  2 ++
- include/ufs/ufshcd.h            |  6 ++++++
- 4 files changed, 23 insertions(+), 1 deletion(-)
+Super cool. Looking forward to having it all wired up and the bugs we'll
+find with it. 
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 063fb66c6719..23cd6f4a6ca2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4257,7 +4257,8 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,=
- struct uic_command *cmd)
- 		goto out_unlock;
- 	}
- 	hba->uic_async_done =3D &uic_async_done;
--	if (ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
-+	if (hba->quirks & UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS &&
-+	    ufshcd_readl(hba, REG_INTERRUPT_ENABLE) & UIC_COMMAND_COMPL) {
- 		ufshcd_disable_intr(hba, UIC_COMMAND_COMPL);
- 		/*
- 		 * Make sure UIC command completion interrupt is disabled before
-@@ -4275,6 +4276,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,=
- struct uic_command *cmd)
- 		goto out;
- 	}
-=20
-+	/* Wait for power mode change interrupt. */
- 	if (!wait_for_completion_timeout(hba->uic_async_done,
- 					 msecs_to_jiffies(uic_cmd_timeout))) {
- 		dev_err(hba->dev,
-@@ -4291,6 +4293,17 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba=
-, struct uic_command *cmd)
- 		goto out;
- 	}
-=20
-+	if (!reenable_intr) {
-+		/* Wait for UIC completion interrupt. */
-+		ret =3D wait_for_completion_timeout(&cmd->done,
-+					  msecs_to_jiffies(uic_cmd_timeout));
-+		WARN_ON_ONCE(ret < 0);
-+		if (ret =3D=3D 0)
-+			dev_err(hba->dev, "UIC command %#x timed out\n",
-+				cmd->command);
-+		ret =3D 0;
-+	}
-+
- check_upmcrs:
- 	status =3D ufshcd_get_upmcrs(hba);
- 	if (status !=3D PWR_LOCAL) {
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-index 02c9064284e1..4e18ecc54f9f 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1021,6 +1021,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 	hba->quirks |=3D UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
- 	hba->quirks |=3D UFSHCD_QUIRK_MCQ_BROKEN_INTR;
- 	hba->quirks |=3D UFSHCD_QUIRK_MCQ_BROKEN_RTC;
-+	hba->quirks |=3D UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS;
- 	hba->vps->wb_flush_threshold =3D UFS_WB_BUF_REMAIN_PERCENT(80);
-=20
- 	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 810e637047d0..07a62de80d2e 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -852,6 +852,8 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba =
-*hba)
- {
- 	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
-=20
-+	hba->quirks |=3D UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS;
-+
- 	if (host->hw_ver.major =3D=3D 0x2)
- 		hba->quirks |=3D UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION;
-=20
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 85933775c9f3..787c44a341a7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -676,6 +676,12 @@ enum ufshcd_quirks {
- 	 * the standard best practice for managing keys).
- 	 */
- 	UFSHCD_QUIRK_KEYS_IN_PRDT			=3D 1 << 24,
-+
-+	/*
-+	 * Disable the UIC interrupt before submitting any power mode change
-+	 * commands.
-+	 */
-+	UFSHCD_QUIRK_DISABLE_UIC_INTR_FOR_PWR_CMDS	=3D 1 << 25,
- };
-=20
- enum ufshcd_caps {
+> I think that the best approach is to target this patchset for linux
+> 6.13 via random.git tree. I will prepare a v3 after 6.12rc1, so when
+> committed to random.git, the patchset will be able to spend some time
+> in linux-next. This way, there will be plenty of time for CI robots to
+> do additional checks also for some less popular targets (although
+> individual patches are dead simple, removing these kinds of "legacy"
+> includes can be tricky), and I will also be able to collect Acked-by:s
+> in the meantime.
+> 
+> While the patchset is an improvement by itself, its inclusion is not
+> time sensitive. The follow up percpu named address checking
+> functionality requires a very recent feature (__typeof_unqual__
+> keyword), which is only supported in recent compilers (gcc-14 and
+> clang-20). Besides compiler support, sparse doesn't know about
+> __typeof_unqual__, resulting in broken type tracing and hundreds of
+> sparse errors with C=1 due to unknown keyword.
+> 
+> So, I think we are not in a hurry and can take the slow and safe path.
+
+Okay, sure, that sounds good to me. I'll keep my eyes open for v3
+in a few weeks then.
+
+Jason
