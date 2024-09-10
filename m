@@ -1,289 +1,132 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 456696CDC8;
-	Tue, 10 Sep 2024 00:51:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02AB37165;
+	Tue, 10 Sep 2024 01:34:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725929510; cv=none; b=jJuSeK1w0jyJAdkU9N8TGF/8C+W9LiaTHNu79MSVmhW9dmy2v4xCgA3xI2rsKAa32DfCZV3GW6ReLOwmw8rm9m4EtbA02qPRGcHwWjAhnnh9vgOyKR1jhFdJdm7vD9QyDII+eoyEQKk2tMglYzgZ4fdpIRbEiQDr/sMieLPq5Ls=
+	t=1725932073; cv=none; b=jXc0cLTfaXZsbR/udru5Qy88KkjEy8fnl0cjjA6NHNCMZhYw6SWcT9toSLGwkjzcdP7gwRTAWfH0CTfijWg9sD0mDjF5lxnvYY5B85bR0Jlm/Ac+7oDFqsYgyjigIkUeqRPhvYsMxp9ac+zzfub8vi5aMVlcMNhW9rlEmi3VmsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725929510; c=relaxed/simple;
-	bh=Csud0RlnT8anqQHc+ZyO/EriLFaA42PrHHzw0yHBLTE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=GONtSH0YG2CwszQwm3u9+PvnG8M1fhE4BGEBxmBygpYDrIjY7WYgatq+O3LsB9LX99ok5hiAurN3nxAg7gelqluz9ByYlTEnVuTb/RhwY89vBUk1wvOFaRnGJXDNOpu+9rfUmqN3rRCjYUiEXHNW47h4ocimRaZusiMiypYuV1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ehxsuuz1; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1725932073; c=relaxed/simple;
+	bh=e1rVwTMNq7di54sGOAsuF2je2ceVH7dA0EPFlPu/fPU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jgw6xf6WC7uVbFtjCbhqMNkOGCR+2sT3yC0GleUuytkG3mv1PxxeoBOi0Ukr4OIvGBQuNSTMIk/jg9KJEWJNGt/F33SSUaIWywIpOaV20zT3vsPN93lqZ+z2u4ZptZD1pfrm2tyLNoAqBqS2dSyLQF189lJg/A7gaKw+5+c3buU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dICHMSqb; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ehxsuuz1"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 489DRRc4020315;
-	Tue, 10 Sep 2024 00:51:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	4oKJPKyj6ZvcvxK2qU5p0TjHabQ19gP7gUp081B6C18=; b=ehxsuuz1bDpMQpPF
-	zRBpvPc8/fYHOhEz2iEXiboyDzIOmSfCRQe265TkDmzZ458PjP0T8p4KJzSIzZ5e
-	Pt+X+CwKhskaGHVs7TUCZvsepOW7HNvpegUJjORRI7xlx8QYX2Zz3RPnZ4cbcQdW
-	qAfW3yEaSJ2rUPc7Dg6s1lx3MMm7XOSiniWUt/Pf79LMY6btPTM2cI/2q1AKlt1d
-	tepVi0hjlgsdFMRXDlC4HnrgHOUYFvBsNPu4rt1isv+wvyLh+ve6wxbmKv8RTHrP
-	CqCi8wTqU+WFPwoqtCnq8g9A+7YdWZd2LkYjNFa5anstKG541NYP71MUMrsS3Xhn
-	xlAXXg==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41he5duhdb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 10 Sep 2024 00:51:20 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 48A0pJGp011420
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 10 Sep 2024 00:51:19 GMT
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 9 Sep 2024 17:51:19 -0700
-Received: from nalasex01a.na.qualcomm.com ([fe80::d989:a8e3:9d0f:9869]) by
- nalasex01a.na.qualcomm.com ([fe80::d989:a8e3:9d0f:9869%4]) with mapi id
- 15.02.1544.009; Mon, 9 Sep 2024 17:51:19 -0700
-From: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
-To: "dmitry.baryshkov@linaro.org" <dmitry.baryshkov@linaro.org>,
-        "Neil
- Armstrong" <neil.armstrong@linaro.org>
-CC: Bartosz Golaszewski <brgl@bgdev.pl>, Jens Axboe <axboe@kernel.dk>,
-        Jonathan Corbet <corbet@lwn.net>, Alasdair Kergon <agk@redhat.com>,
-        "Mike
- Snitzer" <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        "Adrian
- Hunter" <adrian.hunter@intel.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        Ritesh Harjani <ritesh.list@gmail.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley"
-	<James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>,
-        Eric Biggers <ebiggers@kernel.org>,
-        "Theodore
- Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Alexander Viro
-	<viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>, Jan Kara
-	<jack@suse.cz>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio
-	<konradybcio@kernel.org>,
-        "manivannan.sadhasivam@linaro.org"
-	<manivannan.sadhasivam@linaro.org>,
-        "Gaurav Kashyap (QUIC)"
-	<quic_gaurkash@quicinc.com>,
-        "linux-block@vger.kernel.org"
-	<linux-block@vger.kernel.org>,
-        "linux-doc@vger.kernel.org"
-	<linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "dm-devel@lists.linux.dev"
-	<dm-devel@lists.linux.dev>,
-        "linux-mmc@vger.kernel.org"
-	<linux-mmc@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>,
-        "linux-fscrypt@vger.kernel.org"
-	<linux-fscrypt@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org"
-	<linux-fsdevel@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org"
-	<linux-arm-msm@vger.kernel.org>,
-        bartosz.golaszewski
-	<bartosz.golaszewski@linaro.org>
-Subject: RE: [PATCH v6 09/17] soc: qcom: ice: add HWKM support to the ICE
- driver
-Thread-Topic: [PATCH v6 09/17] soc: qcom: ice: add HWKM support to the ICE
- driver
-Thread-Index: AQHbAIeyLfp38xTz0EaUtiNODewOx7JLxo0AgAPangCAAAy4AIAA/Xzw
-Date: Tue, 10 Sep 2024 00:51:18 +0000
-Message-ID: <98cc8d71d5d9476297a54774c382030d@quicinc.com>
-References: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
- <20240906-wrapped-keys-v6-9-d59e61bc0cb4@linaro.org>
- <7uoq72bpiqmo2olwpnudpv3gtcowpnd6jrifff34ubmfpijgc6@k6rmnalu5z4o>
- <66953e65-2468-43b8-9ccf-54671613c4ab@linaro.org>
- <ivibs6qqxhbikaevys3iga7s73xq6dzq3u43gwjri3lozkrblx@jxlmwe5wiq7e>
-In-Reply-To: <ivibs6qqxhbikaevys3iga7s73xq6dzq3u43gwjri3lozkrblx@jxlmwe5wiq7e>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dICHMSqb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1725932072; x=1757468072;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=e1rVwTMNq7di54sGOAsuF2je2ceVH7dA0EPFlPu/fPU=;
+  b=dICHMSqb83SSaPdnmqqMykmCJ07QRKwxpFamc81LY2A2oyiwZob9voEs
+   Pu5Ev7HOUQ63fSqdhSq76EQt+IXlQv3FqX6thTQ8rHrdwU2XziGr5r32J
+   HKBA7Bcw5dXg/12LMc/HNN+05V8VvHCSRSwVVhq/tttbD54cPOubdRQ8b
+   uoh8aR/3kb1SCr2N0mB1xx52m/fY8mICmWs9cQ69EW7a/HlIBYqPIWIDg
+   f5Z5HImTyLW5PfyGM8iqZRHNt7EqzVzKyhT7RdX9dH63HA+JgpnUqI0Rj
+   Ff/SAsGZVPXXCAcDZvsa3Y53d/LYFyAxntEb1f08z2TiWC6sTihYLxxst
+   Q==;
+X-CSE-ConnectionGUID: HoaH4PFzRViKmfAF/4zTLA==
+X-CSE-MsgGUID: yF55tJ8LRaa8FFC6NeYeDg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11190"; a="24767202"
+X-IronPort-AV: E=Sophos;i="6.10,215,1719903600"; 
+   d="scan'208";a="24767202"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2024 18:34:31 -0700
+X-CSE-ConnectionGUID: YJEpADTRS9exfSCUvCWxzA==
+X-CSE-MsgGUID: JSwMfiM8Qe2M1xL8UpcOYQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,215,1719903600"; 
+   d="scan'208";a="71828488"
+Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
+  by orviesa004.jf.intel.com with ESMTP; 09 Sep 2024 18:34:26 -0700
+Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1snplv-000FSW-0o;
+	Tue, 10 Sep 2024 01:34:23 +0000
+Date: Tue, 10 Sep 2024 09:33:49 +0800
+From: kernel test robot <lkp@intel.com>
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com, avri.altman@wdc.com,
+	alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc: oe-kbuild-all@lists.linux.dev, wsd_upstream@mediatek.com,
+	linux-mediatek@lists.infradead.org, peter.wang@mediatek.com,
+	chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+	cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+	jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+	qilin.tan@mediatek.com, lin.gui@mediatek.com,
+	tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+	naomi.chu@mediatek.com, ed.tsai@mediatek.com, bvanassche@acm.org,
+	quic_nguyenb@quicinc.com, stable@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] ufs: core: requeue aborted request
+Message-ID: <202409100826.Iql38Ss9-lkp@intel.com>
+References: <20240909082100.24019-3-peter.wang@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: QH7Gmo-QPx85xU5L5kGW3w4npqSQk_1K
-X-Proofpoint-GUID: QH7Gmo-QPx85xU5L5kGW3w4npqSQk_1K
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 clxscore=1011
- priorityscore=1501 suspectscore=0 lowpriorityscore=0 impostorscore=0
- malwarescore=0 mlxscore=0 phishscore=0 bulkscore=0 adultscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2408220000 definitions=main-2409100004
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240909082100.24019-3-peter.wang@mediatek.com>
 
-Hello Dmitry and Neil
+Hi,
 
-On Monday, September 9, 2024 2:44 AM PDT, Dmitry Baryshkov wrote:
-> On Mon, Sep 09, 2024 at 10:58:30AM GMT, Neil Armstrong wrote:
-> > On 07/09/2024 00:07, Dmitry Baryshkov wrote:
-> > > On Fri, Sep 06, 2024 at 08:07:12PM GMT, Bartosz Golaszewski wrote:
-> > > > From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> > > >
-> > > > Qualcomm's ICE (Inline Crypto Engine) contains a proprietary key
-> > > > management hardware called Hardware Key Manager (HWKM). Add
-> HWKM
-> > > > support to the ICE driver if it is available on the platform. HWKM
-> > > > primarily provides hardware wrapped key support where the ICE
-> > > > (storage) keys are not available in software and instead protected =
-in
-> hardware.
-> > > >
-> > > > When HWKM software support is not fully available (from
-> > > > Trustzone), there can be a scenario where the ICE hardware
-> > > > supports HWKM, but it cannot be used for wrapped keys. In this
-> > > > case, raw keys have to be used without using the HWKM. We query
-> > > > the TZ at run-time to find out whether wrapped keys support is
-> available.
-> > > >
-> > > > Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
-> > > > Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> > > > Signed-off-by: Bartosz Golaszewski
-> > > > <bartosz.golaszewski@linaro.org>
-> > > > ---
-> > > >   drivers/soc/qcom/ice.c | 152
-> +++++++++++++++++++++++++++++++++++++++++++++++--
-> > > >   include/soc/qcom/ice.h |   1 +
-> > > >   2 files changed, 149 insertions(+), 4 deletions(-)
-> > > >
-> > > >   int qcom_ice_enable(struct qcom_ice *ice)
-> > > >   {
-> > > > + int err;
-> > > > +
-> > > >           qcom_ice_low_power_mode_enable(ice);
-> > > >           qcom_ice_optimization_enable(ice);
-> > > > - return qcom_ice_wait_bist_status(ice);
-> > > > + if (ice->use_hwkm)
-> > > > +         qcom_ice_enable_standard_mode(ice);
-> > > > +
-> > > > + err =3D qcom_ice_wait_bist_status(ice); if (err)
-> > > > +         return err;
-> > > > +
-> > > > + if (ice->use_hwkm)
-> > > > +         qcom_ice_hwkm_init(ice);
-> > > > +
-> > > > + return err;
-> > > >   }
-> > > >   EXPORT_SYMBOL_GPL(qcom_ice_enable);
-> > > > @@ -150,6 +282,10 @@ int qcom_ice_resume(struct qcom_ice *ice)
-> > > >                   return err;
-> > > >           }
-> > > > + if (ice->use_hwkm) {
-> > > > +         qcom_ice_enable_standard_mode(ice);
-> > > > +         qcom_ice_hwkm_init(ice); }
-> > > >           return qcom_ice_wait_bist_status(ice);
-> > > >   }
-> > > >   EXPORT_SYMBOL_GPL(qcom_ice_resume);
-> > > > @@ -157,6 +293,7 @@ EXPORT_SYMBOL_GPL(qcom_ice_resume);
-> > > >   int qcom_ice_suspend(struct qcom_ice *ice)
-> > > >   {
-> > > >           clk_disable_unprepare(ice->core_clk);
-> > > > + ice->hwkm_init_complete =3D false;
-> > > >           return 0;
-> > > >   }
-> > > > @@ -206,6 +343,12 @@ int qcom_ice_evict_key(struct qcom_ice *ice,
-> int slot)
-> > > >   }
-> > > >   EXPORT_SYMBOL_GPL(qcom_ice_evict_key);
-> > > > +bool qcom_ice_hwkm_supported(struct qcom_ice *ice) {  return
-> > > > +ice->use_hwkm; }
-> EXPORT_SYMBOL_GPL(qcom_ice_hwkm_supported);
-> > > > +
-> > > >   static struct qcom_ice *qcom_ice_create(struct device *dev,
-> > > >                                           void __iomem *base)
-> > > >   {
-> > > > @@ -240,6 +383,7 @@ static struct qcom_ice *qcom_ice_create(struct
-> device *dev,
-> > > >                   engine->core_clk =3D devm_clk_get_enabled(dev, NU=
-LL);
-> > > >           if (IS_ERR(engine->core_clk))
-> > > >                   return ERR_CAST(engine->core_clk);
-> > > > + engine->use_hwkm =3D qcom_scm_has_wrapped_key_support();
-> > >
-> > > This still makes the decision on whether to use HW-wrapped keys on
-> > > behalf of a user. I suppose this is incorrect. The user must be able
-> > > to use raw keys even if HW-wrapped keys are available on the
-> > > platform. One of the examples for such use-cases is if a user
-> > > prefers to be able to recover stored information in case of a device
-> > > failure (such recovery will be impossible if SoC is damaged and HW-
-> wrapped keys are used).
-> >
-> > Isn't that already the case ? the BLK_CRYPTO_KEY_TYPE_HW_WRAPPED
-> size
-> > is here to select HW-wrapped key, otherwise the ol' raw key is passed.
-> > Just look the next patch.
-> >
-> > Or did I miss something ?
->=20
-> That's a good question. If use_hwkm is set, ICE gets programmed to use
-> hwkm (see qcom_ice_hwkm_init() call above). I'm not sure if it is expecte=
-d
-> to work properly if after such a call we pass raw key.
->=20
+kernel test robot noticed the following build warnings:
 
-Once ICE has moved to a HWKM mode, the firmware key programming currently d=
-oes not support raw keys.
-This support is being added for the next Qualcomm chipset in Trustzone to s=
-upport both at he same time, but that will take another year or two to hit =
-the market.
-Until that time, due to TZ (firmware) limitations , the driver can only sup=
-port one or the other.
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.11-rc7 next-20240909]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-We also cannot keep moving ICE modes, due to the HWKM enablement being a on=
-e-time configurable value at boot.
+url:    https://github.com/intel-lab-lkp/linux/commits/peter-wang-mediatek-com/ufs-core-fix-the-issue-of-ICU-failure/20240909-163021
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20240909082100.24019-3-peter.wang%40mediatek.com
+patch subject: [PATCH v3 2/2] ufs: core: requeue aborted request
+config: i386-buildonly-randconfig-002-20240910 (https://download.01.org/0day-ci/archive/20240910/202409100826.Iql38Ss9-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240910/202409100826.Iql38Ss9-lkp@intel.com/reproduce)
 
-> >
-> > Neil
-> >
-> > >
-> > > >           if (!qcom_ice_check_supported(engine))
-> > > >                   return ERR_PTR(-EOPNOTSUPP); diff --git
-> > > > a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h index
-> > > > 9dd835dba2a7..1f52e82e3e1c 100644
-> > > > --- a/include/soc/qcom/ice.h
-> > > > +++ b/include/soc/qcom/ice.h
-> > > > @@ -34,5 +34,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
-> > > >                            const struct blk_crypto_key *bkey,
-> > > >                            u8 data_unit_size, int slot);
-> > > >   int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
-> > > > +bool qcom_ice_hwkm_supported(struct qcom_ice *ice);
-> > > >   struct qcom_ice *of_qcom_ice_get(struct device *dev);
-> > > >   #endif /* __QCOM_ICE_H__ */
-> > > >
-> > > > --
-> > > > 2.43.0
-> > > >
-> > >
-> >
->=20
-> --
-> With best wishes
-> Dmitry
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202409100826.Iql38Ss9-lkp@intel.com/
 
-Regards,
-Gaurav
+All warnings (new ones prefixed by >>):
+
+   drivers/ufs/core/ufshcd.c: In function 'ufshcd_abort_one':
+>> drivers/ufs/core/ufshcd.c:6491:28: warning: unused variable 'lrbp' [-Wunused-variable]
+    6491 |         struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+         |                            ^~~~
+
+
+vim +/lrbp +6491 drivers/ufs/core/ufshcd.c
+
+2355b66ed20ce4 drivers/scsi/ufs/ufshcd.c Can Guo         2020-08-24  6482  
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6483  static bool ufshcd_abort_one(struct request *rq, void *priv)
+b817e6ffbad7a1 drivers/ufs/core/ufshcd.c Bart Van Assche 2022-10-31  6484  {
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6485  	int *ret = priv;
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6486  	u32 tag = rq->tag;
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6487  	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6488  	struct scsi_device *sdev = cmd->device;
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6489  	struct Scsi_Host *shost = sdev->host;
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6490  	struct ufs_hba *hba = shost_priv(shost);
+93e6c0e19d5bb1 drivers/ufs/core/ufshcd.c Peter Wang      2023-11-15 @6491  	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+ab248643d3d68b drivers/ufs/core/ufshcd.c Bao D. Nguyen   2023-05-29  6492  
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6493  	*ret = ufshcd_try_to_abort_task(hba, tag);
+ab248643d3d68b drivers/ufs/core/ufshcd.c Bao D. Nguyen   2023-05-29  6494  	dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+ab248643d3d68b drivers/ufs/core/ufshcd.c Bao D. Nguyen   2023-05-29  6495  		hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6496  		*ret ? "failed" : "succeeded");
+93e6c0e19d5bb1 drivers/ufs/core/ufshcd.c Peter Wang      2023-11-15  6497  
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6498  	return *ret == 0;
+ab248643d3d68b drivers/ufs/core/ufshcd.c Bao D. Nguyen   2023-05-29  6499  }
+f9c028e7415a5b drivers/ufs/core/ufshcd.c Bart Van Assche 2023-07-27  6500  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
