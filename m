@@ -1,115 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1BEF26AF3;
-	Wed, 11 Sep 2024 07:06:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B25533987
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Sep 2024 07:36:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726038404; cv=none; b=sL7weaAEvQAwlH88M52P1siOfsIkkdAEoDbosJUKKg85qmwXGwzHz5HinffGhhJWlETrdXrxtQbbCPRIy6rdygCc3BQMLCjv9QzqC6AuHTGV6ZoQk6xqaCRid2XL+HIRYuMlTq+yWt0PsEBLMcWq+Dh5J/BGS1GU6ZTFH3XVXB8=
+	t=1726040202; cv=none; b=Jkwzrh6TbV5toejCVcHgInhxKuwXSI5Jab/0UZCLHnp8U7FFMqQ3P5F7xb5uCYC2SSZdY0F/uaDY3XF/tvG3GGbq5v93Djfxg8MY6jCiiPnjo7DhnUCbf2jEl10P6reJViL28FSiWO+wUc6DF5Af8NDqBcprk5eZeQrHN4iK0V4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726038404; c=relaxed/simple;
-	bh=my/oIh9R4rR+qWCXChouSd5jA+dynaf89UjKaHVenE4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=jVDJN/ntdn/qtXAiUbNTIH/zOi9FAq+cTuPbGY564iFJPJyLxSUGtfnq8kl9Bfcmj6pTh0Eno/0b61UxK6tkVe6WvicvMLoDWey0/QvcEeJoPNPKuHbJKkha/Q1h/22INLBBm66cPcyr7xj2TvaoO6s0zm4T76LKSAx4p+pg1D0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tmBsYPvF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1726040202; c=relaxed/simple;
+	bh=T2O3J9fUCB85/fzEMbhw580y+Y4n4CMpNscWkwwC6go=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OcTNdSIpGFeQJ3h7X9Lpa80R4UqBywSMkR/umynRXClZ3mTyN5Vr5CwLQVzApXRCHGiroUDKrIOn3QJqLrF38zKPy5UCtMw/TibLDeXUTtmSGB6Ow1miYpXcRQiEwrrwp6y8vFnoFuMavK4DrapGh0C0OGC5KLXokfOAd3I7Tn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=IxFKKllZ; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tmBsYPvF"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 55664C4CECD;
-	Wed, 11 Sep 2024 07:06:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726038403;
-	bh=my/oIh9R4rR+qWCXChouSd5jA+dynaf89UjKaHVenE4=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=tmBsYPvFA+PPJ75GStUAGTnGUEOCtxUNNcR7gZcrzZZuBuOHAu8rwREssrVwVgdXT
-	 gEI4tO5+WyHyuS68pYD73Gb3yeEM2k5aFdpMgEo4oUHNUVx+BczCxLXj4PUf80ccRZ
-	 Pee57tr864o868ttXYzgmGJC2s0MacaZBJ0bGd5VLxfmzOjwdiKs9HY/xq6qUXo1Fd
-	 yc6hkl7u95ioNf0OVwc56RpTh7q1aOrT4lgdMsCgGjv0uKlN+2guU1XC+wkvSfgiUt
-	 q3MvegfPapXz90D/dU4LGuZfj2G4ZVQH5LqcZtUHoDRuBWZuUtBl5k3kjKhr6Z0dlS
-	 xUQ3pOuaH++dg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B28CEDE998;
-	Wed, 11 Sep 2024 07:06:43 +0000 (UTC)
-From: Jingyi Wang via B4 Relay <devnull+quic_jingyw.quicinc.com@kernel.org>
-Date: Wed, 11 Sep 2024 15:06:36 +0800
-Subject: [PATCH v2] dt-bindings: ufs: qcom: Document the QCS8300 UFS
- Controller
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="IxFKKllZ"
+X-UUID: 9268737a701011efb66947d174671e26-20240911
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=o6Qkhr8Jgk+7BUP7pSeOIho3VJKsokqm72SmXuR0RjE=;
+	b=IxFKKllZxeW1eIsX4KdJYG9k4QcT4TH1uw62el/P9Qd0IPEOqeqx+ScCFQhPtYFQM7ghVpYMTZoAXaw/GK7clBBAmAD5hX2CgUPZJ+NTVBq+KamRirCYsqShwMezlNU452Q1fAIh7GnS7TRKCCJODw2PYmqkZvv8RfpcsO5+yOc=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:1cefb187-4c71-46d7-b72c-89847487c169,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6dc6a47,CLOUDID:397dc9bf-d7af-4351-93aa-42531abf0c7b,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: 9268737a701011efb66947d174671e26-20240911
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1201484565; Wed, 11 Sep 2024 15:36:34 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Wed, 11 Sep 2024 00:36:33 -0700
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Wed, 11 Sep 2024 15:36:33 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
+	<quic_nguyenb@quicinc.com>
+Subject: [PATCH v5 0/2] fix abort defect
+Date: Wed, 11 Sep 2024 15:36:29 +0800
+Message-ID: <20240911073631.32410-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240911-qcs8300_ufs_binding-v2-1-68bb66d48730@quicinc.com>
-X-B4-Tracking: v=1; b=H4sIAHxB4WYC/z2NWw6CMBQFt0LutzW3UEH8ch+GkNIH3ERbaYFoC
- Hu3EuPnTHLmrBBNIBPhkq0QzEKRvEuQHzJQg3S9YaQTQ465wJpzNqp4LhDb2ca2I6fJ9ayrCls
- Kw8v6JCAtn8FYeu3VW5N4oDj58N5PFv61vx6Kf48cTSTvrZ4isYUzZBqNrKXVCrG6jjMpcuqo/
- AOabds+JBLRLrkAAAA=
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
- Andy Gross <agross@kernel.org>
-Cc: quic_tengfan@quicinc.com, linux-arm-msm@vger.kernel.org, 
- linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Xin Liu <quic_liuxin@quicinc.com>, 
- Jingyi Wang <quic_jingyw@quicinc.com>
-X-Mailer: b4 0.15-dev-99b12
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1726038401; l=1428;
- i=quic_jingyw@quicinc.com; s=20240910; h=from:subject:message-id;
- bh=yZxiS3+OUN2g+UOsDxSlDTpZu7grXBO6hd13xebV2Vc=;
- b=tEpNIxFM4Fihx7NycxEykZz+/y/nbEG4sG+ePY1hbyHCUvvgUSjkOcaoLv8qb7gFudEn9aotG
- f6uP3PUBvpYDRwtjWNJvw2nO0FbmbYFrQoYyvwUMKH7MaBuOJnXN4hi
-X-Developer-Key: i=quic_jingyw@quicinc.com; a=ed25519;
- pk=ZRP1KgWMhlXXWlSYLoO7TSfwKgt6ke8hw5xWcSY+wLQ=
-X-Endpoint-Received: by B4 Relay for quic_jingyw@quicinc.com/20240910 with
- auth_id=207
-X-Original-From: Jingyi Wang <quic_jingyw@quicinc.com>
-Reply-To: quic_jingyw@quicinc.com
+Content-Type: text/plain
+X-MTK: N
 
-From: Xin Liu <quic_liuxin@quicinc.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-Document the Universal Flash Storage(UFS) Controller on the Qualcomm
-QCS8300 Platform.
+This series fixes MCQ and SDB abort defect.
 
-Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
-Signed-off-by: Jingyi Wang <quic_jingyw@quicinc.com>
----
-Changes in v2:
-- decoupled from the original series.
-- Link to v1: https://lore.kernel.org/r/20240904-qcs8300_initial_dtsi-v1-0-d0ea9afdc007@quicinc.com
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+V5:
+ - Change flag name.
+ - Add err handler check before set flag true.
+ - Amend comment and patch description.
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index 25a5edeea164..cde334e3206b 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -26,6 +26,7 @@ properties:
-           - qcom,msm8994-ufshc
-           - qcom,msm8996-ufshc
-           - qcom,msm8998-ufshc
-+          - qcom,qcs8300-ufshc
-           - qcom,sa8775p-ufshc
-           - qcom,sc7180-ufshc
-           - qcom,sc7280-ufshc
-@@ -146,6 +147,7 @@ allOf:
-           contains:
-             enum:
-               - qcom,msm8998-ufshc
-+              - qcom,qcs8300-ufshc
-               - qcom,sa8775p-ufshc
-               - qcom,sc7280-ufshc
-               - qcom,sc8180x-ufshc
+V4:
+ - Remove nullify SQ entry abort requeue.
+ - Add more comment for flag usage and set description.
+ - Fix build warning.
 
----
-base-commit: 100cc857359b5d731407d1038f7e76cd0e871d94
-change-id: 20240911-qcs8300_ufs_binding-b73f64e16954
+V3:
+ - Change comment and use variable(rtc) for error print
+ - Change flag name and move flag set before ufshcd_clear_cmd
+ - Add SDB mode clear UTRLCLR tag receive OCS_ABORTED requeue
 
-Best regards,
+V2:
+ - Fix mcq_enabled build error.
+
+Peter Wang (2):
+  ufs: core: fix the issue of ICU failure
+  ufs: core: requeue aborted request
+
+ drivers/ufs/core/ufs-mcq.c | 15 ++++++++-------
+ drivers/ufs/core/ufshcd.c  | 35 ++++++++++++++++++++---------------
+ include/ufs/ufshcd.h       |  3 +++
+ 3 files changed, 31 insertions(+), 22 deletions(-)
+
 -- 
-Jingyi Wang <quic_jingyw@quicinc.com>
-
+2.45.2
 
