@@ -1,130 +1,76 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B580E153820;
-	Wed, 11 Sep 2024 09:56:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DBEA1AB6C1;
+	Wed, 11 Sep 2024 15:18:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726048599; cv=none; b=dE3e5V5CtnLS5kggnzsKznOdYS4YhLcwFWxCCFMrS1+QminCwKZYu4MyYcusIvfDHgfeHn4VbDLxpUco80PXbsfy3nl6CnSREJmd16RiVpCelrx0Xf6/KFRUR9mQAPFlHpFTVr+2onBKO16g7rvPcfiarn5s+1uGtOAckZpAVDQ=
+	t=1726067931; cv=none; b=cCDbylWD4NPtLb3DXfF8n/oTbcwOTLZ/JYtHTpt09jrTYCjfyDGotdh+I9QjEl3lUr+WUERpEwNr1KbCMd9B5Z0toHC5OZkEJmMlW+qiREU1Oi6+TOMs5+XPMRwsFMVRDXTPQOB4L1H9fy3DwMJNmZ3mnuAWKgUz+TFtXhZuJbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726048599; c=relaxed/simple;
-	bh=9g6mH65weF44bLQevwU1JtpQ/d+yi8uM5z152woSbYc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=igjL79HrN3gBssKYbk/tDGs3ynUwbz2IySYUsk6eW+ZnSILEk74q53PoZ0sdDwoVaAM9nCBfGPNSqnCyAIYF95yhMwXT1b5SvGgDkpaZzTdttZsT6ni/QpiERfsYhxnG4W/xN9pUcSxrKAjzRb81lM1kFZ34dIU72hD2vZBo0Rg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=tvMjilFS; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1726067931; c=relaxed/simple;
+	bh=ccPusGui9l+4uHYSFKd64E0OMOr0AoqgldLtmLoEqYI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EwmQtWus3ojPjlWXY1gB7JVUSO/j4yw8G/w/EiMJO5gUETr0mE7dHoQOQFS7Ads2gRU5PuIDbHjjCJ661PfzdBZLNQv7SyQ8nRCkvVu515rmsKt8r7zZit8eo4PfMVd1pZMExyaVmh8ERhySoLTkumkJQmtZCzkRMol4LeIAbTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fqDcy7TJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="tvMjilFS"
-X-UUID: 1b1a0342702411ef8b96093e013ec31c-20240911
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=LQLPSb8ldyG1OVVh0BB+yFOhjzNrq/gu6sGXkPkLj9A=;
-	b=tvMjilFSsCFHVjEkQod7g1/COSBWFp2ujfF5Hp7Dv5be89ZI66BwbL9298fUddNlQYdWTlz4tHZa48tisrW8rDskgDfRtCITqhkJCowhqcwmz7g/ipfhVzyPRL2YptdtA6HP6v9UZKZRykRWn3EVWUW1VauJw7QNbQSfPIvHr8M=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:708e37be-0cea-4c54-a128-8ef0b1bbaf22,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:6dc6a47,CLOUDID:b1480ad0-7921-4900-88a1-3aef019a55ce,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 1b1a0342702411ef8b96093e013ec31c-20240911
-Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1299984284; Wed, 11 Sep 2024 17:56:24 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 11 Sep 2024 17:56:24 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 11 Sep 2024 17:56:24 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<quic_nguyenb@quicinc.com>, <stable@vger.kernel.org>
-Subject: [PATCH v6 1/2] ufs: core: fix the issue of ICU failure
-Date: Wed, 11 Sep 2024 17:56:21 +0800
-Message-ID: <20240911095622.19225-2-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20240911095622.19225-1-peter.wang@mediatek.com>
-References: <20240911095622.19225-1-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fqDcy7TJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 584A3C4CEC5;
+	Wed, 11 Sep 2024 15:18:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726067930;
+	bh=ccPusGui9l+4uHYSFKd64E0OMOr0AoqgldLtmLoEqYI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fqDcy7TJbQkf745PlXaAf/KeypPhhV5acD0o717aenLvheqSeXY3kLogzRjx6H5+9
+	 TKZdRjlLyo/SF4rG5N4gr/KJGpVqIxTZRa7nkUrLXjIsolhy+vn9cNSOf7FW0vSTe5
+	 mfgafYzdtGx6WjkZCJ1GWJ4DWZ7O9/HTPy6QRiwfVC2qYPDHnnWfa4SubT0DbFXLRi
+	 ocuF8+/TLMd+jfSrxvgQiJhk1jyBLdymctdkPFpyAjeeDDiN9GWS5KS89VValAwfaG
+	 ohskAH93ZjMc2eqdJ0lNbQI9EV5J4j1e6fU9DuJ4gUTJmN8vab9wRcgVuOpTdOUJdG
+	 IdveCmvioaA9A==
+Date: Wed, 11 Sep 2024 09:18:48 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@meta.com>, axboe@kernel.dk,
+	martin.petersen@oracle.com, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	sagi@grimberg.me
+Subject: Re: [PATCHv3 08/10] blk-integrity: remove inappropriate limit checks
+Message-ID: <ZuG02LcaQwo9cK2a@kbusch-mbp.dhcp.thefacebook.com>
+References: <20240904152605.4055570-1-kbusch@meta.com>
+ <20240904152605.4055570-9-kbusch@meta.com>
+ <20240910154526.GH23805@lst.de>
+ <ZuBx9blCTUvsS6yq@kbusch-mbp>
+ <20240911081846.GB7372@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240911081846.GB7372@lst.de>
 
-From: Peter Wang <peter.wang@mediatek.com>
+On Wed, Sep 11, 2024 at 10:18:46AM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 10, 2024 at 10:21:09AM -0600, Keith Busch wrote:
+> > I was hoping to not introduce another queue limit for the metadata
+> > virt_boundary_mask. We could remove the virt_boundary from the NVMe PCI
+> > driver if it supports SGL's and then we're fine. But we're commiting to
+> > that data format for all IO even if PRP might have been more efficient.
+> > That might be alright, though.
+> 
+> The real question is if we actually want that.  If we want to take
+> fully advantage of the new dma mapping API that Leon is proposing we'd
+> need to impose a similar limit.  And a lot of these super tiny SGL
+> segments probably aren't very efficient to start with.  Something that
+> bounce buffers a page worth of PI tuples might end up beeing more
+> efficient in the end.
 
-When setting the ICU bit without using read-modify-write,
-SQRTCy will restart SQ again and receive an RTC return
-error code 2 (Failure - SQ not stopped).
+Yes, a bounce buffer is more efficient for the device side of the
+transaction. We have the infrastructure for it when the integrity data
+comes from user space addresses, so I suppose we could introduce a "kern"
+equivalent.
 
-Additionally, the error log has been modified so that
-this type of error can be observed.
-
-Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
-Cc: stable@vger.kernel.org
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-mcq.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 5891cdacd0b3..3903947dbed1 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -539,7 +539,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct ufs_hw_queue *hwq;
- 	void __iomem *reg, *opr_sqd_base;
--	u32 nexus, id, val;
-+	u32 nexus, id, val, rtc;
- 	int err;
- 
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
-@@ -569,17 +569,18 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- 	opr_sqd_base = mcq_opr_base(hba, OPR_SQD, id);
- 	writel(nexus, opr_sqd_base + REG_SQCTI);
- 
--	/* SQRTCy.ICU = 1 */
--	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
-+	/* Initiate Cleanup */
-+	writel(readl(opr_sqd_base + REG_SQRTC) | SQ_ICU,
-+		opr_sqd_base + REG_SQRTC);
- 
- 	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
- 	reg = opr_sqd_base + REG_SQRTS;
- 	err = read_poll_timeout(readl, val, val & SQ_CUS, 20,
- 				MCQ_POLL_US, false, reg);
--	if (err)
--		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%ld\n",
--			__func__, id, task_tag,
--			FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)));
-+	rtc = FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg));
-+	if (err || rtc)
-+		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%d RTC=%d\n",
-+			__func__, id, task_tag, err, rtc);
- 
- 	if (ufshcd_mcq_sq_start(hba, hwq))
- 		err = -ETIMEDOUT;
--- 
-2.45.2
-
+But currently, instead of many small SGL's stiched together in a single
+command, we have the same small SGLs in their own commands. I think this
+patch set is a step in the right direction, and doesn't preclude bounce
+optimizations.
