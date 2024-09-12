@@ -1,132 +1,106 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f49.google.com (mail-qv1-f49.google.com [209.85.219.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D44FE1C32F6
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 22:30:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 823E61C245A
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 23:09:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726180260; cv=none; b=Zb6TUJUcA8ddhTI4q94Rnlq6ckGIxbO5+ASLsQQzxqSkrIgJCP4HaGZB7RV1eQonppXFmRytj2Ij+7OzEVEsmwy+5wvl1KvpSZblrZHCLzupT+GjEbmoQo66Y35xbrSv94sZ+QGNjnAQbfqFWDIb/dXddGfc+K6ekGf+FQqtyIE=
+	t=1726182586; cv=none; b=m6w6JkbibtaQixkO97eetXrQfjx9aCTWR5jVQ36Zn/SPp/OEC2e7geldwlK+L8kYTnY0NuNVHNNBVv1NnyhFbmq4tGgWk8+b1/oRuM/PBo6dZH3fM6lS1Tl8Ar/KgOvYdSnAx9jRi8dhvwv1cCLPIZmP5RFWDN9QYk+VUZNY1EY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726180260; c=relaxed/simple;
-	bh=w0F/ftf3Jy9Gs018n15688G9I3Ojz0lu5reFJjUG+Vk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NieSNwCuk5f/kiptkZ6E6im85dyvnt3j6npAELnQ74wi13afTTMBJZoOt7lWnUW7cqPcUQeLE1JUEVadG1hVC6Vh6EESNvpGw8idnnaRswEexBetNvayjCKGkUuv2E9Ge635FYSEKtbD/dgWNwVudjJUHvMdtmZVtBlc9F6e9Ow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ANy5ssWo; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1726182586; c=relaxed/simple;
+	bh=uHwMzOdA8pP6nzd9weXCbBym5dDYZ5WWddA+63PXnc8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=acGgX66KrMR4jkaN767Ij1AsmgJ5ETYh6V0ZCiTwrnE6l/l8U3uWUAxbbhCcQ9/GAFAkCK9ZFhExD3avDbHd5WYrEtDVm7BSQP02sQVLLyVz4CogU3YfX9kMOp2ZN7stbYT8E7h5TAA4OjBremzTypYP43zb5bwTrYLriS2oqlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lla3NdaS; arc=none smtp.client-ip=209.85.219.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ANy5ssWo"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X4XGB427yz6ClY9R;
-	Thu, 12 Sep 2024 22:30:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1726180252; x=1728772253; bh=dUcVo
-	4cb2xd/osncIq37Cm+daGKwijYh3GhGVQSwEAg=; b=ANy5ssWoROyNcBE+YVdt8
-	oPkYPzulCPjcTeU5FcfWu1bGYWRRbyc9Lwq6ctWGcym0A6d2JvM3l0rT1HkKsAWp
-	pOBg2ec458z3Qqe00efZex287JS3bQ1/I8lo2grxmfTwYSUhqORBUUbJQB7YSywy
-	R9kzpa+e94F4HhPwxnC+vNsWDxqM0TCdET/HS/bktA2M+oBsqiQDw8BJMIstMK32
-	YaRJZ3i6bv9ulm0PldJUapAf2TC7OgtyfrslPNFV6M8zIkNLS4WfmhwKYROlNB19
-	FYYoxKSpxa9fsxRwqFhVCSpknAOZI9WpZyMIFp1mA+zTHNbYFlp0B7xBHt0WeIgB
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id tw4K8Ldns7vM; Thu, 12 Sep 2024 22:30:52 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X4XG32VgSz6ClY9d;
-	Thu, 12 Sep 2024 22:30:51 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: [PATCH v4 4/4] scsi: ufs: core: Always initialize the UIC done completion
-Date: Thu, 12 Sep 2024 15:30:05 -0700
-Message-ID: <20240912223019.3510966-5-bvanassche@acm.org>
-X-Mailer: git-send-email 2.46.0.662.g92d0881bb0-goog
-In-Reply-To: <20240912223019.3510966-1-bvanassche@acm.org>
-References: <20240912223019.3510966-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lla3NdaS"
+Received: by mail-qv1-f49.google.com with SMTP id 6a1803df08f44-6c34c2a7dc7so8527086d6.3
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 16:09:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1726182583; x=1726787383; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=M91GQ5oFigHVLJ8GRTSz8CVNEJCAXqYSjMJPGZzxHZA=;
+        b=lla3NdaSdw8CuaI6rvgdNV3T02w2CLTLc+Fp4GukXOB+HkxPruCDt1+Fwv/VCSfWYF
+         COPPJnP20gKsSBuPCRO4gKfiR/0skw+odYbT0/lZyj1IiHCt9xD1cbsTGWbff0Nsplxg
+         CXi9ccyCSYYiD2+C2DCy8zl0+9clwruJGfjwZIndyYOPflRKaOfhKDq2bptqFGuYzsoV
+         oaBIOtMHclDeKMTaXNsZWM/8QzSgPouj0UhQQqlQ6l8PZSrOUe2T0THvj/F6fSz9VBvR
+         5TZhs9ECQvBhd1wJKOoOk9yEqAD9yAxD0VEHOAqb4jGy0Tkm/EADEhAaTeyAFw5sQ/jz
+         aYlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726182583; x=1726787383;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=M91GQ5oFigHVLJ8GRTSz8CVNEJCAXqYSjMJPGZzxHZA=;
+        b=DI3opoxx2xs808OTEfMS5JBCPa0jczWMhGbzsfZiaJ954n+Tqezb5BaSosM7cXa/qV
+         L1umlJKGvJAy0kQlwADVci9hnHHzsxrgS8FjBz+cYsJjGy8031ZRLp5FIri7+zNXw6F2
+         TxOTMe/xIXWMzewMUFjhi3Cv6FE5laiKXqb9AKR0KsSOydsSEXtKhGEGTayhvaWzrhzn
+         7aOQ3eZvx7ArPqMmGWRVNqZxlPucZTUbr2BpPcG1dpTsEUrxfxLMYiueU+y0QaZWD21O
+         dUduAIJV16q4udlMYhEoEuhGAqT+I0Sa7q910awh4rU4nuheKP6O64PGPpCSgOSM3owt
+         fzTw==
+X-Gm-Message-State: AOJu0Ywj1uIHFekG+bYl7IvVykCMSPBT+GNI2jfN1GOJWiRmXxI45iOs
+	DJEUuFBUFeKCFXVXFWoy252QR+DpIpGub2EMHmPDTKjBoqvLiCKhwr98LQ==
+X-Google-Smtp-Source: AGHT+IHpWprjHEb/5idJFx0z/HhRzLIwRFV1hZK2V+AYcX6ZWfRNgTUbTZzGv/B7z/ofxlL1S48v6w==
+X-Received: by 2002:a05:6214:4498:b0:6c3:6cf5:d567 with SMTP id 6a1803df08f44-6c57350e755mr72998116d6.7.1726182583255;
+        Thu, 12 Sep 2024 16:09:43 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6c534339a88sm59363136d6.50.2024.09.12.16.09.42
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 12 Sep 2024 16:09:42 -0700 (PDT)
+From: Justin Tee <justintee8345@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: jsmart2021@gmail.com,
+	justin.tee@broadcom.com,
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 0/8] Update lpfc to revision 14.4.0.5
+Date: Thu, 12 Sep 2024 16:24:39 -0700
+Message-Id: <20240912232447.45607-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Simplify __ufshcd_send_uic_cmd() by always initializing the
-uic_cmd::done completion. This is fine since the time required to
-initialize a completion is small compared to the time required to
-process an UIC command.
+Update lpfc to revision 14.4.0.5
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+This patch set contains bug fixes related to HBA state clean ups, FCP
+discovery on older adapters, kref imbalances, log message improvements,
+and support for a new diagnostic loopback testing mode.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d047ccba8b84..c881d1fea968 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2537,13 +2537,11 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, stru=
-ct uic_command *uic_cmd)
-  * __ufshcd_send_uic_cmd - Send UIC commands and retrieve the result
-  * @hba: per adapter instance
-  * @uic_cmd: UIC command
-- * @completion: initialize the completion only if this is set to true
-  *
-  * Return: 0 only if success.
-  */
- static int
--__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
--		      bool completion)
-+__ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
- {
- 	lockdep_assert_held(&hba->uic_cmd_mutex);
-=20
-@@ -2553,8 +2551,7 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct u=
-ic_command *uic_cmd,
- 		return -EIO;
- 	}
-=20
--	if (completion)
--		init_completion(&uic_cmd->done);
-+	init_completion(&uic_cmd->done);
-=20
- 	uic_cmd->cmd_active =3D 1;
- 	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
-@@ -2580,7 +2577,7 @@ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct=
- uic_command *uic_cmd)
- 	mutex_lock(&hba->uic_cmd_mutex);
- 	ufshcd_add_delay_before_dme_cmd(hba);
-=20
--	ret =3D __ufshcd_send_uic_cmd(hba, uic_cmd, true);
-+	ret =3D __ufshcd_send_uic_cmd(hba, uic_cmd);
- 	if (!ret)
- 		ret =3D ufshcd_wait_for_uic_cmd(hba, uic_cmd);
-=20
-@@ -4270,7 +4267,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,=
- struct uic_command *cmd)
- 		reenable_intr =3D true;
- 	}
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	ret =3D __ufshcd_send_uic_cmd(hba, cmd, false);
-+	ret =3D __ufshcd_send_uic_cmd(hba, cmd);
- 	if (ret) {
- 		dev_err(hba->dev,
- 			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
+The patches were cut against Martin's 6.12/scsi-queue tree.
+
+Justin Tee (8):
+  lpfc: Add ELS_RSP cmd to the list of WQEs to flush in
+    lpfc_els_flush_cmd
+  lpfc: Update phba link state conditional before sending CMF_SYNC_WQE
+  lpfc: Restrict support for 32 byte CDBs to specific HBAs
+  lpfc: Fix kref imbalance on fabric ndlps from dev_loss_tmo handler
+  lpfc: Ensure DA_ID handling completion before deleting an NPIV
+    instance
+  lpfc: Revise TRACE_EVENT log flag severities from KERN_ERR to
+    KERN_WARNING
+  lpfc: Support loopback tests with VMID enabled
+  lpfc: Update lpfc version to 14.4.0.5
+
+ drivers/scsi/lpfc/lpfc_bsg.c     |   3 +
+ drivers/scsi/lpfc/lpfc_ct.c      |  22 ++++--
+ drivers/scsi/lpfc/lpfc_disc.h    |   7 ++
+ drivers/scsi/lpfc/lpfc_els.c     | 132 +++++++++++++++----------------
+ drivers/scsi/lpfc/lpfc_hbadisc.c |  10 +--
+ drivers/scsi/lpfc/lpfc_hw.h      |  21 +++++
+ drivers/scsi/lpfc/lpfc_hw4.h     |   3 +
+ drivers/scsi/lpfc/lpfc_init.c    |  32 ++++++--
+ drivers/scsi/lpfc/lpfc_scsi.c    |   2 +-
+ drivers/scsi/lpfc/lpfc_sli.c     |  48 +++++++++--
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c   |  43 ++++++++--
+ 12 files changed, 226 insertions(+), 99 deletions(-)
+
+-- 
+2.38.0
+
