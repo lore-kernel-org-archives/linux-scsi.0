@@ -1,102 +1,111 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B6765684;
-	Thu, 12 Sep 2024 01:32:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEFC07DA9C;
+	Thu, 12 Sep 2024 02:58:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726104730; cv=none; b=eOzJpxT3UQDuPZ9GcgXgN3RwhbUAv4N3KTWEJVhDISUBKPiOsBFOVihbVL4VXlKpXXaN0F/vyQsKUdQxe/sBZz1NDj9ydqOtBf1/ZCDflvwifYzjUzSHiwdIJjBHhFOMe4wjQ+qSoIzz65VbjJ7Wgu/alnge4zqNAHb+PAnsRMc=
+	t=1726109913; cv=none; b=WVh9/TIKZ/6hOiO/+JLiUx/77zj/UVH8My7gAQ/PJGv2H2RJKGs8U841JciYQvPyBMnT3i12UjWyJjVsxWYo8bBzqdFXiX5bn6bXx7Q2gDD+Rcwh2sYTd9gvMZEPRoXH2SjVVGqu5YNwi8e2TPctu1pDU4IEgCYMLRtkyIdtqYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726104730; c=relaxed/simple;
-	bh=02RKLivhx3YcJ+Yytua9aGRaixYRj/aHQu3H0kMrXYg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QGpKbWY9prJQq3PVxf+Osg85+cgW8nwwkq/E8IheKb9hGMkCGCtBNsVNoR+6amOuiheeaOpkZsRA3tqxM3x7wyjcL87IckCKcykBfvdMesMph7Y10yxydcQmGnRhtUrPQJfipJT6GO1uF4oEqUSONF4nUPCnH6zblqktA3MyamY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eOQtrzZC; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1726109913; c=relaxed/simple;
+	bh=4pKmHcSPb4q0CgxjlBXTua6+JlNlQQEApnOkulyQNEQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MhiGOsox7YrDve2Nky7qOD5M7pWRp0Xfri8K02vpeOFBPR4pLt5CY6ZtcM/iYRsDZrr6FpjVh21RBBqy5FENs/bQLbFTc3oV9z9lf3OtBukICNyNtbJdlwjzRBBrx07bsTi1BJxoeCNuIs+vzEjgEKgeuDyxclrdFNUznwg79Lw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Iokk/ozQ; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eOQtrzZC"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X40Kh3VJqz6ClY94;
-	Thu, 12 Sep 2024 01:32:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1726104726; x=1728696727; bh=A4IFHD2bgumyn15Psby8zd33
-	93rJ5zZZP0BtK+yAFl4=; b=eOQtrzZCgZgE+gEp4Q3jhwMPGDGPOHghNseQml/g
-	VowTdiCt2iVJQY+SVdIYFUBZMjlg7pxpNHpc1kzmb+lvJzmk4P8ndFYq9DLFUsUB
-	aRcOv7z2OfZVRpNWnqUWHX/NweH/0drATHyfUX0i10oMwEOXoVAZbmZhOJi3UPP9
-	PZhFU8n5LLoL8WKVQBxVRJkEYr/6aE4nbqATXjtaFtxe6ZCTEqIcrT7UBwlv7DAy
-	+WrBas9LUckQk9q6He54+IasnJb/jFM6+U98pJnursbBtWHj8Qb2w1MQgEpqBezH
-	6Ah0xvfdikXvyrtAWeRcIltYMUQ6/9d+fvfjW+Uxzss66w==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id DfU3nvbYkfes; Thu, 12 Sep 2024 01:32:06 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X40Kd3bQSz6ClY93;
-	Thu, 12 Sep 2024 01:32:05 +0000 (UTC)
-Message-ID: <e19fc109-9711-4a3d-9aaf-4a7159946a2b@acm.org>
-Date: Wed, 11 Sep 2024 18:32:03 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Iokk/ozQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1726109910; x=1757645910;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=4pKmHcSPb4q0CgxjlBXTua6+JlNlQQEApnOkulyQNEQ=;
+  b=Iokk/ozQBe0sYH8XKepIoNzECjPw/KCqgdhg7lU845ApNZrvZZ4K4J4v
+   enVSPJo6I+R9IOUcftU5MYEe5iDu3FHk5x0TNqFSE10ZvE999PFeBxwy+
+   qFzZjsi3vOteLmm6mL7rfzQhCyGSesBQ939S6z1AFwmFvRhOfsV8zkT0C
+   RqG5IQ+m8wEtx9FR4cW5lbdkcvCfGuvV+mFSzPg7Yekgtfp0KStxiNLi5
+   qgYg+1/7o8cBHgq9+TpqHB8mXPtueenbnp4wQtLqLrIKBBdp54TyFiVgP
+   NOV1L4/xya3JSrxBDcxB4FEGcSK8ICUebbMHLlK0srPZIYZS3QW+8G7m9
+   Q==;
+X-CSE-ConnectionGUID: XnewuDC3ROCb14H9LmML3A==
+X-CSE-MsgGUID: i/TvcZaARXKTCTbeX6xD2Q==
+X-IronPort-AV: E=McAfee;i="6700,10204,11192"; a="27860136"
+X-IronPort-AV: E=Sophos;i="6.10,221,1719903600"; 
+   d="scan'208";a="27860136"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2024 19:58:28 -0700
+X-CSE-ConnectionGUID: t6CqJGmhQxO0E1RqdC+Dlg==
+X-CSE-MsgGUID: 80MknMOrR1CvdDD1np4JQg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,221,1719903600"; 
+   d="scan'208";a="67554007"
+Received: from lkp-server01.sh.intel.com (HELO 53e96f405c61) ([10.239.97.150])
+  by fmviesa009.fm.intel.com with ESMTP; 11 Sep 2024 19:58:27 -0700
+Received: from kbuild by 53e96f405c61 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1soa2L-0004QA-0m;
+	Thu, 12 Sep 2024 02:58:25 +0000
+Date: Thu, 12 Sep 2024 10:58:17 +0800
+From: kernel test robot <lkp@intel.com>
+To: Avri Altman <avri.altman@wdc.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: Re: [PATCH] scsi: ufs: Zero utp_upiu_req at the beginning of each
+ command
+Message-ID: <202409121041.ZoEfIT5S-lkp@intel.com>
+References: <20240911053951.4032533-1-avri.altman@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: Zero utp_upiu_req at the beginning of each
- command
-To: Avri Altman <avri.altman@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240911053951.4032533-1-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20240911053951.4032533-1-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 9/10/24 10:39 PM, Avri Altman wrote:
-> +static void zero_utp_upiu(struct utp_upiu_req *req)
-> +{
-> +	memset(&req->utp_upiu, 0, sizeof(req->utp_upiu));
-> +}
+Hi Avri,
 
-Introducing a function that only calls memset() seems like overkill to
-me. Please call memset() directly.
+kernel test robot noticed the following build errors:
 
-> diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-> index 8c29e498ef98..b0d60d54d6c9 100644
-> --- a/include/uapi/scsi/scsi_bsg_ufs.h
-> +++ b/include/uapi/scsi/scsi_bsg_ufs.h
-> @@ -162,11 +162,13 @@ struct utp_upiu_cmd {
->    */
->   struct utp_upiu_req {
->   	struct utp_upiu_header header;
-> -	union {
-> -		struct utp_upiu_cmd		sc;
-> -		struct utp_upiu_query		qr;
-> -		struct utp_upiu_query		uc;
-> -	};
-> +	struct_group(utp_upiu,
-> +		union {
-> +			struct utp_upiu_cmd	sc;
-> +			struct utp_upiu_query	qr;
-> +			struct utp_upiu_query	uc;
-> +		};
-> +	);
->   };
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next linus/master v6.11-rc7 next-20240911]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Is the above change perhaps independent of the rest of this patch? I
-think that this change can be left out.
+url:    https://github.com/intel-lab-lkp/linux/commits/Avri-Altman/scsi-ufs-Zero-utp_upiu_req-at-the-beginning-of-each-command/20240911-134349
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20240911053951.4032533-1-avri.altman%40wdc.com
+patch subject: [PATCH] scsi: ufs: Zero utp_upiu_req at the beginning of each command
+config: x86_64-buildonly-randconfig-004-20240912 (https://download.01.org/0day-ci/archive/20240912/202409121041.ZoEfIT5S-lkp@intel.com/config)
+compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240912/202409121041.ZoEfIT5S-lkp@intel.com/reproduce)
 
-Thanks,
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202409121041.ZoEfIT5S-lkp@intel.com/
 
-Bart.
+All errors (new ones prefixed by >>):
 
+   In file included from <built-in>:1:
+>> ./usr/include/scsi/scsi_bsg_ufs.h:165:2: error: type name requires a specifier or qualifier
+     165 |         struct_group(utp_upiu,
+         |         ^
+>> ./usr/include/scsi/scsi_bsg_ufs.h:166:3: error: expected identifier
+     166 |                 union {
+         |                 ^
+>> ./usr/include/scsi/scsi_bsg_ufs.h:170:4: error: unexpected ';' before ')'
+     170 |                 };
+         |                  ^
+   3 errors generated.
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
