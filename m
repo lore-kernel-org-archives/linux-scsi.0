@@ -1,94 +1,96 @@
-Received: from mail.nearlyone.de (mail.nearlyone.de [49.12.199.46])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CDCC1A28D;
-	Thu, 12 Sep 2024 09:08:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.12.199.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4BF18BC07
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 10:54:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726132120; cv=none; b=kKcF4DPuNyaEBSXbk75P2o123hQXxZF0DYN9XFYxONmHmMcH9DvkAzrvYjATiqYut5a7KnqNJNPKFOlSj4jiPRj9FYwEtOQtCjxVyJksuirU7YswqT7FPh7Tt+B5dNj4KrYS8Ff7Z/AzE0URFfQwfu9XxG1T3uK3Jo2/DEt99F4=
+	t=1726138442; cv=none; b=BalssY4qACkYSPgxL5Ap6yw4ATxZuDeyDmX7IDCZRWDvXyL6v5I4AOP58BzH6JzqlGQ6ZkSlRkmo5akTXVY6eBiw1cRDz2I+3E+PWhBYqx6jWuB/PefS6NyRqCivBJWP1b8fWw/ClK7J9dDebgS0N301xJCMU+Oz8QXtgJS1e50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726132120; c=relaxed/simple;
-	bh=eDwqi0a8JHRp1tOSNI4fimvjD8vE5846U2/abAnguoI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Smqy/rIA4ikFTrOH2DcpHNM/QCfAKZxTeaEtHbIxOj6GouFaRzU0KoA+oT3hAT/XqPfBoQFMGf/icLMVPF7NdZOjx9qjgCt+WRtP6TigTRmS17O5vnuF4cDZZg9NV+V3qsbTlKbjNlDY02jJSColBKDBuZWuHnoXsADPDWIIucg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=monom.org; dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b=Fa4w+GiF; arc=none smtp.client-ip=49.12.199.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=monom.org
+	s=arc-20240116; t=1726138442; c=relaxed/simple;
+	bh=BFn2SQNiM0kPcAYXA4oidawO+m3oteE/WJFl4pUaaFE=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=DzgZHazKbJofXNaG9d543Z0D9X4LvfPGWswLBRGmAM3ZDU0/S3neyKPMkctdjtSvn65eEjGAhfZjUoK1LwEzwoERuqWW4xn6DcLkAoRvUslsh+Y0AbaTbl0ncjEzVj4aKVeKd3kQNYm6FzTO08HuMxEq+uiHNbhOlsGh35e+ASw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/rVLxS1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b="Fa4w+GiF"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 1A1B3DAF58;
-	Thu, 12 Sep 2024 10:58:44 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=monom.org; s=dkim;
-	t=1726131526; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding; bh=NuLXFrCZijz9V8ltrIadE9R4BQOOOSNnOlutqu2BrD8=;
-	b=Fa4w+GiFP8sEeXlbU3p117YIYzYaLNhVeWv0MjwSdHasHImsod0NajrB/rAlSaDD0PEH+w
-	tPAxXEbmk3kUxI9EkdGvmTddNMf7ZmJGPGS70AnCv9b+UdoYGjCrfW22TSx+yVRwL8u9gP
-	zv/yciH1gSQ5ogZdFxu1P8lLKaOJ/RJt7cD1qgi23IMe4TLIxzfVM3bW0yTGNpSwRAfx2j
-	W5xO1yarvyWwmrYnIwDK56fhGpU52gBu2BwY+uTdqYkmcs4oqxlCK1vj+K4gqNQTU0z5tv
-	CSJwLms1wbmBHOVStjy6wnMNDGAqoNFnPAr6rwz1Ja5GdQcSfq5n4QaC1n19dg==
-From: Daniel Wagner <dwagner@suse.de>
-Date: Thu, 12 Sep 2024 10:58:28 +0200
-Subject: [PATCH] scsi: pm8001: do not overwrite PCI queue mapping
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/rVLxS1"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A809BC4CED0
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 10:54:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726138441;
+	bh=BFn2SQNiM0kPcAYXA4oidawO+m3oteE/WJFl4pUaaFE=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=J/rVLxS1NzZbuR6mczzsoMzVg0bwjw8hQ4GBy5ZgX3HeKYK406x5yKlbfANFuB6xl
+	 1mpX9RV+7A3C+zYmdXEvEPQFjBtkB9maSVUU6W7KxcVE9SqT2yasWByhiMkW/Fp2JG
+	 SHDKmFqo7NEJavlvfueNY9hOUz0/cU771uyHf679m2r8kX5mT8dfKzFdQd+exxfSHd
+	 o5YO2xNXV6ps0PyI+4fbNT2wuaarJlrfckXIQu8lLW19v9twPTW5gycjBVn43SNWo8
+	 WyxdFX9Fw9x0AyI1+Ulg+EfvDfEsA2XdJYaQAZGxi/hxqOKmKhbC2E/onZu5NT/jS2
+	 xY7webPscyovw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 9D361C53BC3; Thu, 12 Sep 2024 10:54:01 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 209177] mpt2sas_cm0: failure at
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
+Date: Thu, 12 Sep 2024 10:54:01 +0000
+X-Bugzilla-Reason: CC
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: kennethjoyce549@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: drivers_other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-209177-11613-jrjaNnGmwr@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-209177-11613@https.bugzilla.kernel.org/>
+References: <bug-209177-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240912-do-not-overwrite-pci-mapping-v1-1-85724b6cec49@suse.de>
-X-B4-Tracking: v=1; b=H4sIADOt4mYC/x3MOwqAMAwA0KtIZgOmCn6uIg7FRs1gW1JRQby7x
- fEt74HEKpxgKB5QPiVJ8BlUFjBv1q+M4rLBVKapejLoAvpwYDhZL5WDMc6Cu41R/Io9OWqJutr
- UDLmIyovcfz9O7/sBrFDsj24AAAA=
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
- John Garry <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Christoph Hellwig <hch@lst.de>, Daniel Wagner <dwagner@suse.de>
-X-Mailer: b4 0.14.0
-X-Last-TLS-Session-Version: TLSv1.3
 
-blk_mq_pci_map_queues maps all queues but right after this, we
-overwrite these mappings by calling blk_mq_map_queues. Just use one
-helper but not both.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D209177
 
-Fixes: 42f22fe36d51 ("scsi: pm8001: Expose hardware queues for pm80xx")
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
-I've factored this fix out from the 'honor isolcpus configuration' [1]
-series. No need to hold the fix off.
+Lonnie Colon (kennethjoyce549@gmail.com) changed:
 
-[1] https://lore.kernel.org/all/20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de
----
- drivers/scsi/pm8001/pm8001_init.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |kennethjoyce549@gmail.com
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 1e63cb6cd8e3..33e1eba62ca1 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -100,10 +100,12 @@ static void pm8001_map_queues(struct Scsi_Host *shost)
- 	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
- 	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
- 
--	if (pm8001_ha->number_of_intr > 1)
-+	if (pm8001_ha->number_of_intr > 1) {
- 		blk_mq_pci_map_queues(qmap, pm8001_ha->pdev, 1);
-+		return;
-+	}
- 
--	return blk_mq_map_queues(qmap);
-+	blk_mq_map_queues(qmap);
- }
- 
- /*
+--- Comment #13 from Lonnie Colon (kennethjoyce549@gmail.com) ---
+Although I haven't been able to confirm if this is a known Debian bug, I did
+discover it while upgrading from Debian Buster to Bullseye, using the follo=
+wing
+configuration:
 
----
-base-commit: 70302fc7adcd29c4c744489cd89e2d3ed08ecd8d
-change-id: 20240912-do-not-overwrite-pci-mapping-91d17118323e
+I observed the bug when upgrading from Debian Buster to Bullseye, running
+5.10.84, however I need to confirm if there is a Debian bug for it yet or n=
+ot:
 
-Best regards,
--- 
-Daniel Wagner <dwagner@suse.de>
+    System Management Platform Debian 5.10.84-1 (x86_64) 5.10.0-10-amd64
+(2021-12-08) Linux kernel
 
+I can confirm that the "mpt3sas.max_queue_depth=3D10000" option was success=
+ful
+there; nevertheless, there were some strange (source:
+https://geometry-dashonline.com) and maybe cosmetic mistakes that I will
+transcribe once I obtain the text.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are on the CC list for the bug.=
