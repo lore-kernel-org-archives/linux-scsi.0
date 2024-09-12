@@ -1,64 +1,64 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ACA318891D
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 23:10:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF39318891D
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 23:10:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726182609; cv=none; b=e/POuSUtoLtWMmRPL8pL48dkK00hvA9GzANN3T0Zr8AKf81BdksuGIc7ZqilYe14ZvNBMAjig2I+zeXr5eErpzDmiFhlhPq2bmdqwTG9boWc8H8q+Hv7f9oHVpKuinE34mNiIyqEo+uIC/5wuxRSVaPB+TWmzVtR/knPu3smM1E=
+	t=1726182612; cv=none; b=PRr5agEUcVQPSR2fBaio6EqDEkSRFJ+ov+eQVyYMytGQ9OgtsMkuEE9URime+L8DIPXhvfQz5FjyLmiZmkM+QYUbwO5bvDKT5qA3VCGpwuGlqMwqJ219fp7loSfKcZ8FFYZscGuEkJEwnx+7RWrWyTFEeYFCdfv8t/lnNNaZvdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726182609; c=relaxed/simple;
-	bh=wMpDmxBHytG7Jf1csBBM0ji4ieB0FL303AnK2i9amQg=;
+	s=arc-20240116; t=1726182612; c=relaxed/simple;
+	bh=nE4k60CmuQyDPVZ3PtNsJ1THBUyCGg7Y2PlYLX8EG7Y=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=S6W+LLuX9p6lovO9qhWEr66Mxz6U4aQsKfZB5hUjsjcx/Ws56NZJ5kAwAUYfXFTdK6Wkl0ORZmXW34KdQWUeEIFiDphDvwJ/W0voUZ3LNsVZlNdsHbwwJkC+lI0IsxkW7E3TcRElEWvQVajiYiTmNOBlkmLU9REZD19CHek3AdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k0ZhgEGG; arc=none smtp.client-ip=209.85.219.54
+	 MIME-Version; b=gsqcdFYz18JvRRCES6Dy4pwure+Qlei7/e/772sf9xMQcOONtQUgfruk63DiKOVYaeY54zFBgjEVM6alka/MgeLyLSsMTBHe6xvAWbi7e3Ai62PwBggR/0dhmMsmo3RajbHxCwC7s9YnqQCvJGJzNgiJcVMQsRoPTZ/WQLl2Uno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l0IBf+2a; arc=none smtp.client-ip=209.85.219.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k0ZhgEGG"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-6c54a5fbceeso2407916d6.2
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 16:10:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l0IBf+2a"
+Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-6c54a5fbceeso2408106d6.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2024 16:10:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1726182607; x=1726787407; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1726182608; x=1726787408; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hYyNrz+TlE5htw9JW3j3Ef1zlHJX86IWpVATX9R7INE=;
-        b=k0ZhgEGGd6dUqYdUCPIwDIELtp/x4pIEpj/FXsvvBz+6D00cMOvu8Jd3yMR5mxC2ul
-         J6ZU6HfAzRWYEW62WFzIMGvRkr9tKDHMzKVex+E5Fg4Sluxetp7r5qo/OXUWY1/w5fH2
-         wVoik9mo+CXsKy+6zGnBALSXb7IMgnRR2E2YG+hW0JzbynWhg0S2Ajf8oQKk8uRYZmvz
-         48wpTfbIS0prm5mnRy/qWOcnp0oKx57I9ueMmm8miWnAxg993b6e7dnzg7yoU60UpOWk
-         nnHt1eGVaEC33FGi/juRpFv41A/BjmXd6gzCW4pjh3PoonoxUMcl8aQQkxHtqnwtyVl8
-         69jA==
+        bh=YeSPXDPCK8PcJNpcvq5gGn4zSb8CWor6gd7+J/tuRIE=;
+        b=l0IBf+2a5Ba6UdaX73zLOcbn2+U7vVs35Kp8dIPCt/BJdSkIqyphdkoXLoCM+wMb37
+         PxmE3SPco/sdmMECRrF3RogejKiodvJevVq0yXUgjh9RptgB6+ZAuriuEPdZ1K97m+Qb
+         3zfeUY1ZcaN6qXMYKAokW7nArCesKIFSadIQTZ2xfoC212LA2IWNSD0HZsdxhbnnLEmE
+         jwvkt70fOU5sqD/77BSD5xODtXyzjhCuDRLSzMV633s9pjyRxfztl8x3EmQ6H+9pPTyk
+         urfxySz3c2R1+UN+K3o9CwxsEt6OYXuTNidgACpPW+ledCALQf4hVT5/LxWlZtoKwYYc
+         spHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726182607; x=1726787407;
+        d=1e100.net; s=20230601; t=1726182608; x=1726787408;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hYyNrz+TlE5htw9JW3j3Ef1zlHJX86IWpVATX9R7INE=;
-        b=KJSU0kBoJvkt+VyeysdOwWUPpcBjvd00E4tMal4E9/BGFXK89CaI3w+naWsWdVRGif
-         CZ4eYiNVL5j1mNy3AIpvKhK92SJQ+TKNw0vPDcHMnN6eICOPZ8fKxkqN4KycNTTYTwz/
-         EapXVBVfvY6IBUiLRQY05I0Wid6JMbY7kP3MiY4GYiyiKd5VPF4UQXnJFRNkCP2qrAYi
-         2o8DYMSnrE916gZEY2QqAffHypxrBoaeMUw8gGgDTbdEdjHqeLv3uoxdOBgTRV8dnIts
-         JK64c8xF9S/OLlQUcJowg2dCKU+gqg8ypEVZM03xFuJhilmmx6rneizZS7azr6Yvr/AH
-         KqbQ==
-X-Gm-Message-State: AOJu0YxMX/3Ylaw+GIedetCfFPrXzfGfzz/NlMLdg+ptq0xhSGzewwst
-	7YIfw4011ArE89WOorZCHYxeqR/pvhZbJKgNxF7Tp2sc5POLHhLpQY5Lmw==
-X-Google-Smtp-Source: AGHT+IGOsnW8AIDMV05qjSFQPOnnLxV1EPBKmnkbmVo88+GFPLgDlm6J5EOtdLWhtVomnKV93bwMSg==
-X-Received: by 2002:a05:6214:3d8c:b0:6c5:2a13:b8e1 with SMTP id 6a1803df08f44-6c57e132c4emr18052306d6.43.1726182606796;
-        Thu, 12 Sep 2024 16:10:06 -0700 (PDT)
+        bh=YeSPXDPCK8PcJNpcvq5gGn4zSb8CWor6gd7+J/tuRIE=;
+        b=OZdJrzpAsay/QGrVS7NiiyFSqT2Di8r9OqJSZUe4NeMU6140Awq6JA+QNaHoj9dPtI
+         8U6jWrevM+QnJRH9C/jNSNXPbPzSJVEMFX29iktFNszD8tUjbozHQjs6My1nyjgV+IGr
+         az3EWFndQMR0WHeSfqYvwg+D7JlJay1MSjafhQvVBNgEcwWTdHQ1Q+z1IMxRwM+7Xx3q
+         B4etKaXVyqgwYecDBNI8XMd1X1F5O3UYHxNA+pI5b1IP3FVl0pco02fbI02nhSuu+Uf3
+         qIcy6ox5CWW9IBNHjRpQ+cLHsb6hBzwAOqmkFdfvaV0W+Mkk0pBfVIxcmMvhhtpmrr4v
+         ehPQ==
+X-Gm-Message-State: AOJu0YzENzAH6M88fPwexcdx+eHvViLnBgA+ySdDtJZfnMBjP9C0yULC
+	SPZOADDlfIbKI090PFekyeuW/BDo2ExrKUeLf4znDlAOhaLFSRDoouuFjw==
+X-Google-Smtp-Source: AGHT+IFwfHdfqWKOKPvLL0nWEmJF5Qxpz7ZTaDiYrECW19DIhT89hKTvj3eR0/ZQEQaA4q8N++Dgkg==
+X-Received: by 2002:a05:6214:2f0f:b0:6c5:55bc:2705 with SMTP id 6a1803df08f44-6c57df773a1mr15394756d6.6.1726182608549;
+        Thu, 12 Sep 2024 16:10:08 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6c534339a88sm59363136d6.50.2024.09.12.16.10.05
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6c534339a88sm59363136d6.50.2024.09.12.16.10.07
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Sep 2024 16:10:06 -0700 (PDT)
+        Thu, 12 Sep 2024 16:10:08 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 6/8] lpfc: Revise TRACE_EVENT log flag severities from KERN_ERR to KERN_WARNING
-Date: Thu, 12 Sep 2024 16:24:45 -0700
-Message-Id: <20240912232447.45607-7-justintee8345@gmail.com>
+Subject: [PATCH 7/8] lpfc: Support loopback tests with VMID enabled
+Date: Thu, 12 Sep 2024 16:24:46 -0700
+Message-Id: <20240912232447.45607-8-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240912232447.45607-1-justintee8345@gmail.com>
 References: <20240912232447.45607-1-justintee8345@gmail.com>
@@ -70,302 +70,164 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Revise certain log messages marked as KERN_ERR LOG_TRACE_EVENT to
-KERN_WARNING and use the lpfc_vlog_msg macro to still log the event.  The
-benefit is that events of interest are still logged and the entire trace
-buffer is not dumped with extraneous logging information when using default
-lpfc_log_verbose driver parameter settings.
+The VMID feature adds an extra application services header to each frame.
+As such, the loopback test path is updated to accommodate the extra
+application header.
 
-Also, delete the keyword "fail" from such log messages as they aren't
-really causes for concern.  The log messages are more for warnings to a SAN
-admin about SAN activity.
+Changes include filling in APPID and WQES bit fields for XMIT_SEQUENCE64
+commands, a special loopback source APPID for verifying received loopback
+data matches what is sent, and increasing ELS WQ size to accommodate the
+APPID field in loopback test mode.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c  |  10 +--
- drivers/scsi/lpfc/lpfc_els.c | 125 +++++++++++++++++------------------
- 2 files changed, 64 insertions(+), 71 deletions(-)
+ drivers/scsi/lpfc/lpfc_bsg.c  |  3 +++
+ drivers/scsi/lpfc/lpfc_hw.h   | 21 +++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c | 11 ++++++++--
+ drivers/scsi/lpfc/lpfc_sli.c  | 39 +++++++++++++++++++++++++++++++++--
+ 4 files changed, 70 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 1e5db489a00c..134bc96dd134 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1572,8 +1572,8 @@ lpfc_cmpl_ct_cmd_gft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			}
- 		}
- 	} else
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "3065 GFT_ID failed x%08x\n", ulp_status);
-+		lpfc_vlog_msg(vport, KERN_WARNING, LOG_DISCOVERY,
-+			      "3065 GFT_ID status x%08x\n", ulp_status);
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 4156419c52c7..8738c1b0e388 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -3208,6 +3208,9 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
+ 	cmdiocbq->num_bdes = num_bde;
+ 	cmdiocbq->cmd_flag |= LPFC_IO_LIBDFC;
+ 	cmdiocbq->cmd_flag |= LPFC_IO_LOOPBACK;
++	if (phba->cfg_vmid_app_header)
++		cmdiocbq->cmd_flag |= LPFC_IO_VMID;
++
+ 	cmdiocbq->vport = phba->pport;
+ 	cmdiocbq->cmd_cmpl = NULL;
+ 	cmdiocbq->bpl_dmabuf = txbmp;
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index 2108b4cb7815..d5c15742f7f2 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -561,6 +561,27 @@ struct fc_vft_header {
  
- out:
- 	lpfc_ct_free_iocb(phba, cmdiocb);
-@@ -2258,7 +2258,7 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		}
+ #include <uapi/scsi/fc/fc_els.h>
  
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
--				 "0229 FDMI cmd %04x failed, latt = %d "
-+				 "0229 FDMI cmd %04x latt = %d "
- 				 "ulp_status: x%x, rid x%x\n",
- 				 be16_to_cpu(fdmi_cmd), latt, ulp_status,
- 				 ulp_word4);
-@@ -2275,9 +2275,9 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	/* Check for a CT LS_RJT response */
- 	cmd =  be16_to_cpu(fdmi_cmd);
- 	if (be16_to_cpu(fdmi_rsp) == SLI_CT_RESPONSE_FS_RJT) {
--		/* FDMI rsp failed */
-+		/* Log FDMI reject */
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY | LOG_ELS,
--				 "0220 FDMI cmd failed FS_RJT Data: x%x", cmd);
-+				 "0220 FDMI cmd FS_RJT Data: x%x", cmd);
++/*
++ * Application Header
++ */
++struct fc_app_header {
++	uint32_t dst_app_id;
++	uint32_t src_app_id;
++#define LOOPBACK_SRC_APPID	0x4321
++	uint32_t word2;
++	uint32_t word3;
++};
++
++/*
++ * dfctl optional header definition
++ */
++enum lpfc_fc_dfctl {
++	LPFC_FC_NO_DEVICE_HEADER,
++	LPFC_FC_16B_DEVICE_HEADER,
++	LPFC_FC_32B_DEVICE_HEADER,
++	LPFC_FC_64B_DEVICE_HEADER,
++};
++
+ /*
+  *  Extended Link Service LS_COMMAND codes (Payload Word 0)
+  */
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0c1404dc5f3b..48a3dfdd51d3 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -10451,6 +10451,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 	struct lpfc_vector_map_info *cpup;
+ 	struct lpfc_vector_map_info *eqcpup;
+ 	struct lpfc_eq_intr_info *eqi;
++	u32 wqesize;
  
- 		/* Should we fallback to FDMI-2 / FDMI-1 ? */
- 		switch (cmd) {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 7219b1ada1ea..d737b897ddd8 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -979,7 +979,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				phba->fcoe_cvl_eventtag_attn =
- 					phba->fcoe_cvl_eventtag;
- 			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP | LOG_ELS,
--					"2611 FLOGI failed on FCF (x%x), "
-+					"2611 FLOGI FCF (x%x), "
- 					"status:x%x/x%x, tmo:x%x, perform "
- 					"roundrobin FCF failover\n",
- 					phba->fcf.current_rec.fcf_indx,
-@@ -997,11 +997,11 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		if (!(ulp_status == IOSTAT_LOCAL_REJECT &&
- 		      ((ulp_word4 & IOERR_PARAM_MASK) ==
- 					IOERR_LOOP_OPEN_FAILURE)))
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--					 "2858 FLOGI failure Status:x%x/x%x TMO"
--					 ":x%x Data x%lx x%x\n",
--					 ulp_status, ulp_word4, tmo,
--					 phba->hba_flag, phba->fcf.fcf_flag);
-+			lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+				      "2858 FLOGI Status:x%x/x%x TMO"
-+				      ":x%x Data x%lx x%x\n",
-+				      ulp_status, ulp_word4, tmo,
-+				      phba->hba_flag, phba->fcf.fcf_flag);
- 
- 		/* Check for retry */
- 		if (lpfc_els_retry(phba, cmdiocb, rspiocb)) {
-@@ -1023,7 +1023,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			lpfc_nlp_put(ndlp);
- 
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS,
--				 "0150 FLOGI failure Status:x%x/x%x "
-+				 "0150 FLOGI Status:x%x/x%x "
- 				 "xri x%x TMO:x%x refcnt %d\n",
- 				 ulp_status, ulp_word4, cmdiocb->sli4_xritag,
- 				 tmo, kref_read(&ndlp->kref));
-@@ -1032,11 +1032,11 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		if (!(ulp_status == IOSTAT_LOCAL_REJECT &&
- 		      ((ulp_word4 & IOERR_PARAM_MASK) ==
- 					IOERR_LOOP_OPEN_FAILURE))) {
--			/* FLOGI failure */
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--					 "0100 FLOGI failure Status:x%x/x%x "
--					 "TMO:x%x\n",
--					 ulp_status, ulp_word4, tmo);
-+			/* Warn FLOGI status */
-+			lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+				      "0100 FLOGI Status:x%x/x%x "
-+				      "TMO:x%x\n",
-+				      ulp_status, ulp_word4, tmo);
- 			goto flogifail;
- 		}
- 
-@@ -1964,16 +1964,16 @@ lpfc_cmpl_els_rrq(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 
- 	if (ulp_status) {
- 		/* Check for retry */
--		/* RRQ failed Don't print the vport to vport rjts */
-+		/* Warn RRQ status Don't print the vport to vport rjts */
- 		if (ulp_status != IOSTAT_LS_RJT ||
- 		    (((ulp_word4) >> 16 != LSRJT_INVALID_CMD) &&
- 		     ((ulp_word4) >> 16 != LSRJT_UNABLE_TPC)) ||
- 		    (phba)->pport->cfg_log_verbose & LOG_ELS)
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--					 "2881 RRQ failure DID:%06X Status:"
--					 "x%x/x%x\n",
--					 ndlp->nlp_DID, ulp_status,
--					 ulp_word4);
-+			lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+				      "2881 RRQ DID:%06X Status:"
-+				      "x%x/x%x\n",
-+				      ndlp->nlp_DID, ulp_status,
-+				      ulp_word4);
- 	}
- 
- 	lpfc_clr_rrq_active(phba, rrq->xritag, rrq);
-@@ -2077,16 +2077,16 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			}
- 			goto out;
- 		}
--		/* PLOGI failed Don't print the vport to vport rjts */
-+		/* Warn PLOGI status Don't print the vport to vport rjts */
- 		if (ulp_status != IOSTAT_LS_RJT ||
- 		    (((ulp_word4) >> 16 != LSRJT_INVALID_CMD) &&
- 		     ((ulp_word4) >> 16 != LSRJT_UNABLE_TPC)) ||
- 		    (phba)->pport->cfg_log_verbose & LOG_ELS)
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--					 "2753 PLOGI failure DID:%06X "
--					 "Status:x%x/x%x\n",
--					 ndlp->nlp_DID, ulp_status,
--					 ulp_word4);
-+			lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+				      "2753 PLOGI DID:%06X "
-+				      "Status:x%x/x%x\n",
-+				      ndlp->nlp_DID, ulp_status,
-+				      ulp_word4);
- 
- 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
- 		if (!lpfc_error_lost_link(vport, ulp_status, ulp_word4))
-@@ -2323,7 +2323,6 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	struct lpfc_vport *vport = cmdiocb->vport;
- 	struct lpfc_nodelist *ndlp;
- 	char *mode;
--	u32 loglevel;
- 	u32 ulp_status;
- 	u32 ulp_word4;
- 	bool release_node = false;
-@@ -2372,17 +2371,14 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		 * could be expected.
- 		 */
- 		if (test_bit(FC_FABRIC, &vport->fc_flag) ||
--		    vport->cfg_enable_fc4_type != LPFC_ENABLE_BOTH) {
--			mode = KERN_ERR;
--			loglevel =  LOG_TRACE_EVENT;
--		} else {
-+		    vport->cfg_enable_fc4_type != LPFC_ENABLE_BOTH)
-+			mode = KERN_WARNING;
-+		else
- 			mode = KERN_INFO;
--			loglevel =  LOG_ELS;
--		}
- 
--		/* PRLI failed */
--		lpfc_printf_vlog(vport, mode, loglevel,
--				 "2754 PRLI failure DID:%06X Status:x%x/x%x, "
-+		/* Warn PRLI status */
-+		lpfc_printf_vlog(vport, mode, LOG_ELS,
-+				 "2754 PRLI DID:%06X Status:x%x/x%x, "
- 				 "data: x%x x%x x%x\n",
- 				 ndlp->nlp_DID, ulp_status,
- 				 ulp_word4, ndlp->nlp_state,
-@@ -2854,11 +2850,11 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			}
- 			goto out;
- 		}
--		/* ADISC failed */
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "2755 ADISC failure DID:%06X Status:x%x/x%x\n",
--				 ndlp->nlp_DID, ulp_status,
--				 ulp_word4);
-+		/* Warn ADISC status */
-+		lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+			      "2755 ADISC DID:%06X Status:x%x/x%x\n",
-+			      ndlp->nlp_DID, ulp_status,
-+			      ulp_word4);
- 		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
- 					NLP_EVT_CMPL_ADISC);
- 
-@@ -3045,12 +3041,12 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	 * discovery.  The PLOGI will retry.
+ 	/*
+ 	 * Create HBA Record arrays.
+@@ -10670,9 +10671,15 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 	 * Create ELS Work Queues
  	 */
- 	if (ulp_status) {
--		/* LOGO failed */
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "2756 LOGO failure, No Retry DID:%06X "
--				 "Status:x%x/x%x\n",
--				 ndlp->nlp_DID, ulp_status,
--				 ulp_word4);
-+		/* Warn LOGO status */
-+		lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+			      "2756 LOGO, No Retry DID:%06X "
-+			      "Status:x%x/x%x\n",
-+			      ndlp->nlp_DID, ulp_status,
-+			      ulp_word4);
  
- 		if (lpfc_error_lost_link(vport, ulp_status, ulp_word4))
- 			skip_recovery = 1;
-@@ -4837,11 +4833,10 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			if ((phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) &&
- 			  (cmd == ELS_CMD_FDISC) &&
- 			  (stat.un.b.lsRjtRsnCodeExp == LSEXP_OUT_OF_RESOURCE)){
--				lpfc_printf_vlog(vport, KERN_ERR,
--						 LOG_TRACE_EVENT,
--						 "0125 FDISC Failed (x%x). "
--						 "Fabric out of resources\n",
--						 stat.un.lsRjtError);
-+				lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+					      "0125 FDISC (x%x). "
-+					      "Fabric out of resources\n",
-+					      stat.un.lsRjtError);
- 				lpfc_vport_set_state(vport,
- 						     FC_VPORT_NO_FABRIC_RSCS);
- 			}
-@@ -4877,11 +4872,10 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 						LSEXP_NOTHING_MORE) {
- 				vport->fc_sparam.cmn.bbRcvSizeMsb &= 0xf;
- 				retry = 1;
--				lpfc_printf_vlog(vport, KERN_ERR,
--						 LOG_TRACE_EVENT,
--						 "0820 FLOGI Failed (x%x). "
--						 "BBCredit Not Supported\n",
--						 stat.un.lsRjtError);
-+				lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+					      "0820 FLOGI (x%x). "
-+					      "BBCredit Not Supported\n",
-+					      stat.un.lsRjtError);
- 			}
- 			break;
+-	/* Create slow-path ELS Work Queue */
++	/*
++	 * Create slow-path ELS Work Queue.
++	 * Increase the ELS WQ size when WQEs contain an embedded cdb
++	 */
++	wqesize = (phba->fcp_embed_io) ?
++			LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
++
+ 	qdesc = lpfc_sli4_queue_alloc(phba, LPFC_DEFAULT_PAGE_SIZE,
+-				      phba->sli4_hba.wq_esize,
++				      wqesize,
+ 				      phba->sli4_hba.wq_ecount, cpu);
+ 	if (!qdesc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index bb5fd3322273..a44afb84cd3d 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -11093,9 +11093,17 @@ __lpfc_sli_prep_xmit_seq64_s4(struct lpfc_iocbq *cmdiocbq,
+ 	/* Word 9 */
+ 	bf_set(wqe_rcvoxid, &wqe->xmit_sequence.wqe_com, ox_id);
  
-@@ -4891,11 +4885,10 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			  ((stat.un.b.lsRjtRsnCodeExp == LSEXP_INVALID_PNAME) ||
- 			  (stat.un.b.lsRjtRsnCodeExp == LSEXP_INVALID_NPORT_ID))
- 			  ) {
--				lpfc_printf_vlog(vport, KERN_ERR,
--						 LOG_TRACE_EVENT,
--						 "0122 FDISC Failed (x%x). "
--						 "Fabric Detected Bad WWN\n",
--						 stat.un.lsRjtError);
-+				lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+					      "0122 FDISC (x%x). "
-+					      "Fabric Detected Bad WWN\n",
-+					      stat.un.lsRjtError);
- 				lpfc_vport_set_state(vport,
- 						     FC_VPORT_FABRIC_REJ_WWN);
- 			}
-@@ -5355,8 +5348,8 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	u32 ulp_status, ulp_word4, tmo, did, iotag;
+-	/* Word 12 */
+-	if (cmdiocbq->cmd_flag & (LPFC_IO_LIBDFC | LPFC_IO_LOOPBACK))
++	if (cmdiocbq->cmd_flag & (LPFC_IO_LIBDFC | LPFC_IO_LOOPBACK)) {
++		/* Word 10 */
++		if (cmdiocbq->cmd_flag & LPFC_IO_VMID) {
++			bf_set(wqe_appid, &wqe->xmit_sequence.wqe_com, 1);
++			bf_set(wqe_wqes, &wqe->xmit_sequence.wqe_com, 1);
++			wqe->words[31] = LOOPBACK_SRC_APPID;
++		}
++
++		/* Word 12 */
+ 		wqe->xmit_sequence.xmit_len = full_size;
++	}
+ 	else
+ 		wqe->xmit_sequence.xmit_len =
+ 			wqe->xmit_sequence.bde.tus.f.bdeSize;
+@@ -18434,6 +18442,7 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ {
+ 	/*  make rctl_names static to save stack space */
+ 	struct fc_vft_header *fc_vft_hdr;
++	struct fc_app_header *fc_app_hdr;
+ 	uint32_t *header = (uint32_t *) fc_hdr;
  
- 	if (!vport) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"3177 ELS response failed\n");
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_ELS,
-+				"3177 null vport in ELS rsp\n");
- 		goto out;
- 	}
- 	if (cmdiocb->context_un.mbox)
-@@ -11328,10 +11321,10 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		/* Check for retry */
- 		if (lpfc_els_retry(phba, cmdiocb, rspiocb))
- 			goto out;
--		/* FDISC failed */
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "0126 FDISC failed. (x%x/x%x)\n",
--				 ulp_status, ulp_word4);
-+		/* Warn FDISC status */
-+		lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+			      "0126 FDISC cmpl status: x%x/x%x)\n",
-+			      ulp_status, ulp_word4);
- 		goto fdisc_failed;
+ #define FC_RCTL_MDS_DIAGS	0xF4
+@@ -18489,6 +18498,32 @@ lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+ 		goto drop;
  	}
  
++	if (unlikely(phba->link_flag == LS_LOOPBACK_MODE &&
++				phba->cfg_vmid_app_header)) {
++		/* Application header is 16B device header */
++		if (fc_hdr->fh_df_ctl & LPFC_FC_16B_DEVICE_HEADER) {
++			fc_app_hdr = (struct fc_app_header *) (fc_hdr + 1);
++			if (be32_to_cpu(fc_app_hdr->src_app_id) !=
++					LOOPBACK_SRC_APPID) {
++				lpfc_printf_log(phba, KERN_WARNING,
++						LOG_ELS | LOG_LIBDFC,
++						"1932 Loopback src app id "
++						"not matched, app_id:x%x\n",
++						be32_to_cpu(fc_app_hdr->src_app_id));
++
++				goto drop;
++			}
++		} else {
++			lpfc_printf_log(phba, KERN_WARNING,
++					LOG_ELS | LOG_LIBDFC,
++					"1933 Loopback df_ctl bit not set, "
++					"df_ctl:x%x\n",
++					fc_hdr->fh_df_ctl);
++
++			goto drop;
++		}
++	}
++
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
+ 			"2538 Received frame rctl:x%x, type:x%x, "
+ 			"frame Data:%08x %08x %08x %08x %08x %08x %08x\n",
 -- 
 2.38.0
 
