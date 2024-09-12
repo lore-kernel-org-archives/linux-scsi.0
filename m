@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 771781E49F;
-	Thu, 12 Sep 2024 12:54:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DDC11D52B;
+	Thu, 12 Sep 2024 13:01:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726145684; cv=none; b=Jo+aGY7Tb1QzGXmiU9NworR08IvtlqTVQ/86T/Q6tB5JmvbgaeJC1cv/WS6HgQPc6Qi3CuvWbwCC/cENJ1yIiSTbzCqbQD/PKTPhblLbrGcyi3BdfKHNt7wlCQvvafWAK6/UYJ4DRzeTY6jmCBvCw32fUBiQ08VqjNcobZ9Oi30=
+	t=1726146115; cv=none; b=FOsR8ssRH/bvnA6zEdBfwN57PfFSZ2SvVF3DtywI/yXwlb9nHleRbFRB2YDkf7Lo9shScvFAF5IQLgmRuXctjorHXaAc6PJrTVZv0cQjPeYRwjzPDpFqhUcvgORHfKyNetzVWko3wYFDQzcu3IKxcghpXbPsqPINIyvK1/w7mkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726145684; c=relaxed/simple;
-	bh=8APp/Yy2G604WqM1PE3PGOMTxoqh/mu66mcme6NivDw=;
+	s=arc-20240116; t=1726146115; c=relaxed/simple;
+	bh=kH79LqiIuTLWjSww/u+3I1mSIoVtmHevHvgBlcg3G7U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OigZ2M9j/URkHtw842Jh5CrNeUXyIgixREj8v4ic0c+QnY2UqTWHwLKlW99PKHKl91FQHe+UAJDb4sDhVoYoW21Sr9rKvNba9IU1/2zOC5qYj0uxpQjtTAuYiAj1vWXqc9dG1yhBD3PGf29vTZtF8NkaTxGNrxUD8DZ9QUg51VM=
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fkpf9q68iIRoW3HWnfbdyyXEMiAdI+g4W1B8d3iGUGLpsGIaDdtR4aNbMaR6ttvblXUfCc/HEWvcM9ytDf3+fiiBdAi1TcHczeERT3RRiMFt0r468yUbZOZKjRl9tMNQtXaCFDc8cMc37Yc67/q/APeByUjSLRFi31kBHB06aJg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id B2EFE227AB5; Thu, 12 Sep 2024 14:54:38 +0200 (CEST)
-Date: Thu, 12 Sep 2024 14:54:38 +0200
+	id 944E4227AB6; Thu, 12 Sep 2024 15:01:46 +0200 (CEST)
+Date: Thu, 12 Sep 2024 15:01:46 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Kanchan Joshi <joshi.k@samsung.com>
 Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
@@ -27,10 +27,11 @@ Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
 	linux-fsdevel@vger.kernel.org,
 	linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
 	linux-scsi@vger.kernel.org, gost.dev@samsung.com,
-	vishak.g@samsung.com, javier.gonz@samsung.com
-Subject: Re: [PATCH v5 2/5] fcntl: rename rw_hint_* to rw_lifetime_hint_*
-Message-ID: <20240912125438.GB28068@lst.de>
-References: <20240910150200.6589-1-joshi.k@samsung.com> <CGME20240910151048epcas5p3c610d63022362ec5fcc6fc362ad2fb9f@epcas5p3.samsung.com> <20240910150200.6589-3-joshi.k@samsung.com>
+	vishak.g@samsung.com, javier.gonz@samsung.com,
+	Nitesh Shetty <nj.shetty@samsung.com>
+Subject: Re: [PATCH v5 3/5] fcntl: add F_{SET/GET}_RW_HINT_EX
+Message-ID: <20240912130146.GA28535@lst.de>
+References: <20240910150200.6589-1-joshi.k@samsung.com> <CGME20240910151052epcas5p48b20962753b1e3171daf98f050d0b5af@epcas5p4.samsung.com> <20240910150200.6589-4-joshi.k@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,18 +40,62 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240910150200.6589-3-joshi.k@samsung.com>
+In-Reply-To: <20240910150200.6589-4-joshi.k@samsung.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Sep 10, 2024 at 08:31:57PM +0530, Kanchan Joshi wrote:
-> F_GET/SET_RW_HINT fcntl handlers query/set write life hints.
-> Rename the handlers/helpers to be explicit that write life hints are
-> being handled.
+On Tue, Sep 10, 2024 at 08:31:58PM +0530, Kanchan Joshi wrote:
+> This is similar to existing F_{SET/GET}_RW_HINT but more
+> generic/extensible.
 > 
-> This is in preparation to introduce a new interface that supports more
-> than one type of write hint.
+> F_SET/GET_RW_HINT_EX take a pointer to a struct rw_hint_ex as argument:
+> 
+> struct rw_hint_ex {
+>         __u8    type;
+>         __u8    pad[7];
+>         __u64   val;
+> };
+> 
+> With F_SET_RW_HINT_EX, the user passes the hint type and its value.
+> Hint type can be either lifetime hint (TYPE_RW_LIFETIME_HINT) or
+> placement hint (TYPE_RW_PLACEMENT_HINT). The interface allows to add
+> more hint add more hint types in future.
 
-Wouldn't it make more sense to stick with the name as exposed in the
-uapi?  The same minda applies to the previous patch - in fact IFF we
-decide to do the rename I'd probably expect both parts to go together.
+What is the point of multiplexing these into a single call vs having
+one fcntl for each?  It's not like the code points are a super
+limited resource.
+
+And the _EX name isn't exactly descriptive either and screams of horrible
+Windows APIs :)
+
+> +	WRITE_ONCE(inode->i_write_hint, hint);
+> +	if (file->f_mapping->host != inode)
+> +		WRITE_ONCE(file->f_mapping->host->i_write_hint, hint);
+
+This doesn't work.  You need a file system method for this so that
+the file system can intercept it, instead of storing it in completely
+arbitrary inodes without any kind of checking for support or intercetion
+point.
+
+> --- a/include/linux/rw_hint.h
+> +++ b/include/linux/rw_hint.h
+> @@ -21,4 +21,17 @@ enum rw_lifetime_hint {
+>  static_assert(sizeof(enum rw_lifetime_hint) == 1);
+>  #endif
+>  
+> +#define WRITE_HINT_TYPE_BIT	BIT(7)
+> +#define WRITE_HINT_VAL_MASK	(WRITE_HINT_TYPE_BIT - 1)
+> +#define WRITE_HINT_TYPE(h)	(((h) & WRITE_HINT_TYPE_BIT) ? \
+> +				TYPE_RW_PLACEMENT_HINT : TYPE_RW_LIFETIME_HINT)
+> +#define WRITE_HINT_VAL(h)	((h) & WRITE_HINT_VAL_MASK)
+> +
+> +#define WRITE_PLACEMENT_HINT(h)	(((h) & WRITE_HINT_TYPE_BIT) ? \
+> +				 WRITE_HINT_VAL(h) : 0)
+> +#define WRITE_LIFETIME_HINT(h)	(((h) & WRITE_HINT_TYPE_BIT) ? \
+> +				 0 : WRITE_HINT_VAL(h))
+> +
+> +#define PLACEMENT_HINT_TYPE	WRITE_HINT_TYPE_BIT
+> +#define MAX_PLACEMENT_HINT_VAL	(WRITE_HINT_VAL_MASK - 1)
+
+That's a whole lot of undocumented macros.  Please turn these into proper
+inline functions and write documentation for them.
 
