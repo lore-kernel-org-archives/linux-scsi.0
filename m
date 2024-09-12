@@ -1,31 +1,31 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B898C18FDCE;
-	Thu, 12 Sep 2024 07:44:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A34615C3;
+	Thu, 12 Sep 2024 07:46:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726127052; cv=none; b=kPwCI2mL4TR+aeCDblpmHZvD3lgdDWADi8NRhwEkpHc7jNfmX8nefopjloj1lVKc5h7pXmIF5Ru4H+HeoGlrmp/RYX2JIu7iDiuGczgA9wq+yK08pgeInKv08qKiLL9qihdT9yXONImRKwuZSgm2hTso3A2PSEk0b7EFsaZJn8Q=
+	t=1726127179; cv=none; b=fMdxCnG1UQLpZVUhCVowvIEUqr8o+w2+GeCErhrjnTyycy9nmt4MYQDqflbx9tJDRajJtFGqOqabGyQj28RdJXcKqYAO9mg40TFBa+hmhZGwOmZmt0LgdD3kzPoR0CHb/F3gbmNNyT0FHR1KPlY+Rs5RNUxY1zmFZvvl1B3/tLY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726127052; c=relaxed/simple;
-	bh=8TTTrmbUCsbV78XKKVkeNxEBWVMJxaaYdxaMDZVnPp4=;
+	s=arc-20240116; t=1726127179; c=relaxed/simple;
+	bh=b+LbfcSP3fwjQ9A009127xkFp3fLiZ6F2Jz11T2JlJY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aL0usxfi/hsQn7O6J4OzHb8/qBg4pK+oNOxhk5wBQqBtpGs5geh8/IOsTN2xdm6wTt9wrzoKIFcwzoO1L0Smq7R9v6gt1I4PnPYKzVl1gEWklMxuAf9FC4M2XS5H9GNen35hGzsGHUL4Fj2oOw7vV3ze3nfhPJE+lUqxhVTiX6Q=
+	 Content-Type:Content-Disposition:In-Reply-To; b=t7DzeIDkBycURnqDo5ACLX8HbAPKy1Tohg+t66xcdseLS2Q9zzocBi29v7K+l4/n6KqwiY8arQXxCcgBvHNPJ6U5MwFPNr93bnWzv3UmlarE6lHg4PuE0mXwWNNdtWQmCXIv7k00KLQHzecb+0Tl0LausT0ZqXgKc33cpwlXWhY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8694D68AFE; Thu, 12 Sep 2024 09:44:07 +0200 (CEST)
-Date: Thu, 12 Sep 2024 09:44:07 +0200
+	id EC0C468AFE; Thu, 12 Sep 2024 09:46:13 +0200 (CEST)
+Date: Thu, 12 Sep 2024 09:46:13 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@meta.com>
-Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, sagi@grimberg.me,
-	Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCHv4 06/10] block: provide helper for nr_integrity_segments
-Message-ID: <20240912074407.GB8375@lst.de>
-References: <20240911201240.3982856-1-kbusch@meta.com> <20240911201240.3982856-7-kbusch@meta.com>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Keith Busch <kbusch@meta.com>, axboe@kernel.dk, hch@lst.de,
+	martin.petersen@oracle.com, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	sagi@grimberg.me
+Subject: Re: [PATCHv4 10/10] blk-integrity: improved sg segment mapping
+Message-ID: <20240912074613.GA8409@lst.de>
+References: <20240911201240.3982856-1-kbusch@meta.com> <20240911201240.3982856-11-kbusch@meta.com> <ZuImbgYqqZzLZkho@kbusch-mbp.dhcp.thefacebook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,15 +34,23 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240911201240.3982856-7-kbusch@meta.com>
+In-Reply-To: <ZuImbgYqqZzLZkho@kbusch-mbp.dhcp.thefacebook.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Sep 11, 2024 at 01:12:36PM -0700, Keith Busch wrote:
-> From: Keith Busch <kbusch@kernel.org>
+On Wed, Sep 11, 2024 at 05:23:26PM -0600, Keith Busch wrote:
+> On Wed, Sep 11, 2024 at 01:12:40PM -0700, Keith Busch wrote:
+> > @@ -102,6 +103,12 @@ int blk_rq_map_integrity_sg(struct request_queue *q, struct bio *bio,
+> > +	 */
+> > +	BUG_ON(segments > blk_rq_nr_phys_segments(rq));
 > 
-> Provide an integrity equivalent to blk_rq_nr_phys_segments().
+> Doh, this was mixed up with the copy from blk_rq_map_sg. It should say:
+> 
+> 	BUG_ON(segments > blk_rq_nr_integrity_segments(rq));
+> 
+> Question though, blk_rq_map_sg uses WARN and scsi used BUG for this
+> check. But if the condition is true, a buffer overrun occured. So BUG,
+> right?
 
-Now that the field is unconditional the helper seems a bit pointless.
-blk_rq_nr_phys_segments is mostly need for the special payload magic
-for discard.
-
+That would be my preference, unless we manage to add a error return
+condition.  Note that Linus seems to be on his weird anti-BUG crusade
+again, though.
