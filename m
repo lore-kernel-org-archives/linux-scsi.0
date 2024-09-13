@@ -1,103 +1,157 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5529C19F41A;
-	Fri, 13 Sep 2024 08:07:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 751691D5CC4;
+	Fri, 13 Sep 2024 08:36:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726214834; cv=none; b=j92zjUpkl2F35E1rH4tGo18chDYfPVZwCbaDmtwIO+3JFhiMTnAYdYySwXwrZsXpdsZ0f6yUqfEotMA5k90/L7meck7KnwKHU1zn9Pp5WbdW4pwgFlvjofaUY7fW/eAvNqPfNS7lLEcseQAqW8Ontr6hkL2do1hHaDxJMxlyXR4=
+	t=1726216600; cv=none; b=lzfnlJVKXI2Elay7tDZjSAqYPoMvRP3C5/01RLeU3ePCoMlynCgRou3kyXS3qCtCJ8iQLnf8MRijiVU80PknuLryhl4Qj1O/FcoTNiwyQ+FOv3p4gnbvb/wiNe8SecpGmifjO8XkCHZv/P5AvoeIO1k/Cyfr6edsjhRnWIp8ZEY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726214834; c=relaxed/simple;
-	bh=OoeooWScYrdT/7Ye2MT+bee9p/3N1jp3nqcoiu34Ji8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HtlVxidlP4mp5ZEThGSMLb8GtnL8tR5vk+bJH4Wcm7w9IioPPbMcWoFDrmf+7frGtPDmuz0VGCIful2jA60fssXu0KhsZCyfaymDbVHu05Wyg87aN0YZ/OrpstsMGRG7M/LR9ilqC/fG48GEwZMRiOHlsIoji4ycBB0MXMjN+GU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3DAE2227ABD; Fri, 13 Sep 2024 10:07:00 +0200 (CEST)
-Date: Fri, 13 Sep 2024 10:06:59 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Kanchan Joshi <joshi.k@samsung.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
-	sagi@grimberg.me, martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com, brauner@kernel.org,
-	viro@zeniv.linux.org.uk, jack@suse.cz, jaegeuk@kernel.org,
-	jlayton@kernel.org, chuck.lever@oracle.com, bvanassche@acm.org,
-	linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, gost.dev@samsung.com,
-	vishak.g@samsung.com, javier.gonz@samsung.com,
-	Nitesh Shetty <nj.shetty@samsung.com>
-Subject: Re: [PATCH v5 4/5] sd: limit to use write life hints
-Message-ID: <20240913080659.GA30525@lst.de>
-References: <20240910150200.6589-1-joshi.k@samsung.com> <CGME20240910151057epcas5p3369c6257a6f169b4caa6dd59548b538c@epcas5p3.samsung.com> <20240910150200.6589-5-joshi.k@samsung.com> <20240912130235.GB28535@lst.de> <e6ae5391-ae84-bae4-78ea-4983d04af69f@samsung.com>
+	s=arc-20240116; t=1726216600; c=relaxed/simple;
+	bh=R58ELqG4dQhTb9hcZYONkquL3m27pEzO2iUo+HZctVk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YDhyhh5r7cZYwgv8vj/BsXXl7IyjaRF8PzFz2U8ACmJLOZ2V3gvL5eeA1speuu/hEmA+F4+oHrRGUlYTKpdrmD5tcxeq2i2Ah929A3MA5eLdgGYneDDKV7VAamAGH8BWqm5xKS6jJVICm4IPYdhPvTbEPCPBHMpahh5Www79cHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LsSWGwtY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zIYQwGmY; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LsSWGwtY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zIYQwGmY; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LsSWGwtY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zIYQwGmY";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LsSWGwtY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zIYQwGmY"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 4D11E1F7C3;
+	Fri, 13 Sep 2024 08:36:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1726216591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3vhSCZiL+9anxD5usYK8fOJ72G/jRJ53A6YdH+smGiw=;
+	b=LsSWGwtYxo7+sz0WTHBK7eeeM4yTUS7dRR+4vIwtsm+nSiMueTbZwopUwo7kxs/HSs1eFZ
+	v4Bb1SldhY0ca5nRj6GY5gA0u69WZjjJ4OlOfirjYPEdqnY3zISpf8UzFEnitOw5hg8TMR
+	qc2GmR4fQu26DQ+VS5T/CcUobxxosFc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1726216591;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3vhSCZiL+9anxD5usYK8fOJ72G/jRJ53A6YdH+smGiw=;
+	b=zIYQwGmYxNmqktGQ9Qnb0RfDvdJAfzxXPoXQZ1fD4rZj33+82yT17vrB8h4ujxZJq1GrIa
+	PyXxglbYxYVQiDDw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1726216591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3vhSCZiL+9anxD5usYK8fOJ72G/jRJ53A6YdH+smGiw=;
+	b=LsSWGwtYxo7+sz0WTHBK7eeeM4yTUS7dRR+4vIwtsm+nSiMueTbZwopUwo7kxs/HSs1eFZ
+	v4Bb1SldhY0ca5nRj6GY5gA0u69WZjjJ4OlOfirjYPEdqnY3zISpf8UzFEnitOw5hg8TMR
+	qc2GmR4fQu26DQ+VS5T/CcUobxxosFc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1726216591;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3vhSCZiL+9anxD5usYK8fOJ72G/jRJ53A6YdH+smGiw=;
+	b=zIYQwGmYxNmqktGQ9Qnb0RfDvdJAfzxXPoXQZ1fD4rZj33+82yT17vrB8h4ujxZJq1GrIa
+	PyXxglbYxYVQiDDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0417213A73;
+	Fri, 13 Sep 2024 08:36:30 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id CLoWO47542adQQAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 13 Sep 2024 08:36:30 +0000
+Message-ID: <a8e47dd4-26f4-49da-9ba8-aad2e8fcf9b1@suse.de>
+Date: Fri, 13 Sep 2024 10:36:30 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e6ae5391-ae84-bae4-78ea-4983d04af69f@samsung.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 1/4] block: Make bdev_can_atomic_write() robust
+ against mis-aligned bdev size
+To: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, song@kernel.org, yukuai3@huawei.com, kbusch@kernel.org,
+ sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+References: <20240903150748.2179966-1-john.g.garry@oracle.com>
+ <20240903150748.2179966-2-john.g.garry@oracle.com>
+ <20240912131506.GA29641@lst.de>
+ <0f2652ce-63e1-4399-8414-0bd150521e1b@oracle.com>
+ <20240912150736.GA5534@lst.de>
+ <4a015015-ae7f-4eb5-ad00-420db5961d96@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <4a015015-ae7f-4eb5-ad00-420db5961d96@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[14];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On Thu, Sep 12, 2024 at 10:01:00PM +0530, Kanchan Joshi wrote:
-> Please see the response in patch #1. My worries were:
-> (a) adding a new field and propagating it across the stack will cause 
-> code duplication.
-> (b) to add a new field we need to carve space within inode, bio and 
-> request.
-> We had a hole in request, but it is set to vanish after ongoing 
-> integrity refactoring patch of Keith [1]. For inode also, there is no 
-> liberty at this point [2].
+On 9/12/24 17:22, John Garry wrote:
+> On 12/09/2024 16:07, Christoph Hellwig wrote:
+>>> We should do be able to, but with this patch we cannot. However, a
+>>> misaligned partition would be very much unexpected.
+>> Yes, misaligned partitions is very unexpected, but with large and
+>> potentially unlimited atomic boundaries I would not expect the size
+>> to always be aligned.  But then again at least in NVMe atomic writes
+>> don't need to match the max size anyway, so I'm not entirely sure
+>> what the problem actually is.
 > 
-> I think current multiplexing approach is similar to ioprio where 
-> multiple io priority classes/values are expressed within an int type. 
-> And few kernel components choose to interpret certain ioprio values at will.
+> Actually it's not an alignment issue, but a size issue.
 > 
-> And all this is still in-kernel details. Which can be changed if/when 
-> other factors start helping.
+> Consider a 3.5MB partition and atomic write max is 1MB. If we tried to 
+> atomic write 1MB at offset 3MB, then it would be truncated to a 0.5MB 
+> write.
+> 
+> So maybe it is an application bug.
+> 
+Hmm. Why don't we reject such an I/O? We cannot guarantee an atomic 
+write, so I think we should be perfectly fine to return an error to
+userspace.
 
-Maybe part of the problem is that the API is very confusing.  A smal
-part of that is of course that the existing temperature hints already
-have some issues, but this seems to be taking them make it significantly
-worse.
+Cheers,
 
-Note: this tries to include highlevel comments from the discussion of
-the previous patches instead of splitting them over multiple threads.
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
-F_{S,G}ET_RW_HINT works on arbitrary file descriptors with absolutely no
-check for support by the device or file system and not check for the
-file type.  That's not exactly good API design, but not really a major
-because they are clearly designed as hints with a fixed number of
-values, allowing the implementation to map them if not enough are
-supported.
-
-But if we increase this to a variable number of hints that don't have
-any meaning (and even if that is just the rough order of the temperature
-hints assigned to them), that doesn't really work.  We'll need an API
-to check if these stream hints are supported and how many of them,
-otherwise the applications can't make any sensible use of them.
-
-If these aren't just stream hints of the file system but you actually
-want them as an abstract API for FDP you'll also need to actually
-expose even more information like the reclaim unit size, but let's
-ignore that for this part of the discssion.
-
-Back the the API: the existing lifetime hints have basically three
-layers:
-
- 1) syscall ABI
- 2) the hint stored in the inode
- 3) the hint passed in the bio
-
-1) is very much fixed for the temperature API, we just need to think if
-   we want to support it at the same time as a more general hints API.
-   Or if we can map one into another.  Or if we can't support them at
-   the same time how that is communicated.
-
-For 2) and 3) we can use an actual union if we decide to not support
-both at the same time, keyed off a flag outside the field, but if not
-we simply need space for both.
