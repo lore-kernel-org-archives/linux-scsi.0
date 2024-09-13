@@ -1,203 +1,278 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBDEC1514CE
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Sep 2024 04:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2A413A87C;
+	Fri, 13 Sep 2024 04:57:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726202337; cv=none; b=F+TXGhTljIjt/AEW3lQYPD/c1ZPo0f0gjLETYYjOzBdMhAqjYWOALx86kN3oW6BSopLWplJeGRoyMQD1j3o9oSbqAxi4amxFKaWPOrgn9dUy1qm573/BIa76PonkZK90vSALzSjxzlgEJh1Z7acIOc8ut2g+757wqhh7AQBpypQ=
+	t=1726203439; cv=none; b=O6/u734e016lYwFnsB6UkEuhC8Mydl9y9rGAwTThBnKpsn+mpiWLVaXhv54R7gWFkV0pxEl89Lk1vYTISJl9pHu+asYfBoQ+mdofTVdacPK6PzGURJLpS7mmjn4UHzwmHEau3cUl1FTrNtbFeXcdsPL6/GspZDkR1Fr9VN+biyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726202337; c=relaxed/simple;
-	bh=6jtcXUtI2ZekWtLVOsfSGikt2RRkucnSwZ4m38Gil7k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=dc9epLvGAgonkD/Nd4WF4B3LGSdol9TLCrnWPm2yJAFXy2cp+KxdSsL6kIL7YqL2MxUeqCp4LYUuiV0b2j2jdKt/NG8usid4lvVy3qit+d2ZHfQjJva8QFZ/uzgv9hrRCNOM9FYZiEoF0Xt7pGBODqfHRVjGJBORCUCCrxBnltY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=D03m0xEW; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1726203439; c=relaxed/simple;
+	bh=um3Mn+EkFIJt96fC+wAnweUqzaADBeYTVtNV6fDcqYE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iHydPOJySnvjr1JCoWtuP/MwG+JxiJY/Gsqt5i4NypszPrIM+nAPxYZOMSkWk9R2FH0GvrOT6pUTJp3CxkxaDjvIaBngOZVRPQvc2mYCCfwee5DBJ1pCz1INaxNhtbsfhoTjHUEFJGXgtf/6psSH9rdpqoP4CSXTc3Xt9prla78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G8wG10cc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="D03m0xEW"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48CMB56G016900;
-	Fri, 13 Sep 2024 04:38:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	NZYlRciUnLmnlDsW76prX6cMTMhtzryFB11ZiavAbcc=; b=D03m0xEWHhiMwhr6
-	JS8xIgzhDM4/7PZAg0cVrWVyWAWzJjwdey2XD57IEoQdypWN+4QOnC2fgywL+xhf
-	OovBn9NNWiUjsocEJzIKGqfoxVAvvxCnoGeEOBj+0br+UI2dlrC5ChwyhwAZVOO8
-	YZcqlFdqchc1tt58iCUlR+inwtjLJaqFC70A96jBtbiHOWZLvy9SO5dpAJiy4bRD
-	nX7AUjtxZHb0vT4bAtklEZFQ87SK0C4fQ3G3TqUoONWCz/lyOJRMokxptq6qUe1u
-	qMpXhgXB6TvxYh09qYJCYH/iFcS2+rPGOUcmF4L7sMZ75LWcdysAf/1XC9V6BzEL
-	qoCgSA==
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41gy5rqey7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Sep 2024 04:38:43 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 48D4cfrC024211
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Sep 2024 04:38:41 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 12 Sep
- 2024 21:38:41 -0700
-Message-ID: <63cd4607-b65b-57ce-493e-ae5da8c54ff9@quicinc.com>
-Date: Thu, 12 Sep 2024 21:38:41 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G8wG10cc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAFDFC4CEC0;
+	Fri, 13 Sep 2024 04:57:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726203438;
+	bh=um3Mn+EkFIJt96fC+wAnweUqzaADBeYTVtNV6fDcqYE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=G8wG10ccIcy28NQh3A63Y8hzlknFxVp2sTHYcviLVe/nQu17xaLGkNMpm2QU2Xlte
+	 d71YZ/rlGHofEv3+0v7BGlUa0VQRugG0GnDKksVY689/4cph1bsFZaRHO8Q/cn7c7C
+	 BpOrzGfuifqkV45E2Xb2TgTk8/kEPrWxIzp8arOP5bz2FJ/6sCSk2+jNfIPF6JtEC3
+	 3Lmlm9OK9GXCxmdEIUx/Q8jAgy82ebTlfQxR68zQefUES2nKEVqNGnODMvBkTZlThK
+	 /sAY6qinPLIos4uJJLOQaKE2s4ev0RCqwAlOcE6HiNBL5ZK5fb63FUZFl7zU6pZ/9x
+	 xMsJa/UOBlN/g==
+Date: Fri, 13 Sep 2024 04:57:16 +0000
+From: Eric Biggers <ebiggers@kernel.org>
+To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>, Jens Axboe <axboe@kernel.dk>,
+	Jonathan Corbet <corbet@lwn.net>, Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Asutosh Das <quic_asutoshd@quicinc.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"Theodore Y. Ts'o" <tytso@mit.edu>,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+	"bartosz.golaszewski" <bartosz.golaszewski@linaro.org>
+Subject: Re: [PATCH v6 09/17] soc: qcom: ice: add HWKM support to the ICE
+ driver
+Message-ID: <20240913045716.GA2292625@google.com>
+References: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
+ <20240906-wrapped-keys-v6-9-d59e61bc0cb4@linaro.org>
+ <7uoq72bpiqmo2olwpnudpv3gtcowpnd6jrifff34ubmfpijgc6@k6rmnalu5z4o>
+ <66953e65-2468-43b8-9ccf-54671613c4ab@linaro.org>
+ <ivibs6qqxhbikaevys3iga7s73xq6dzq3u43gwjri3lozkrblx@jxlmwe5wiq7e>
+ <98cc8d71d5d9476297a54774c382030d@quicinc.com>
+ <CAA8EJpp_HY+YmMCRwdteeAHnSHtjuHb=nFar60O_PwLwjk0mNA@mail.gmail.com>
+ <9bd0c9356e2b471385bcb2780ff2425b@quicinc.com>
+ <20240912231735.GA2211970@google.com>
+ <CAA8EJpq3sjfB0BsJTs3_r_ZFzhrrpy-A=9Dx9ks2KrDNYCntdg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v5 05/10] scsi: ufs: core: Move the ufshcd_device_init()
- call
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>,
-        "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Andrew Halaney <ahalaney@redhat.com>, Bean
- Huo <beanhuo@micron.com>
-References: <20240910215139.3352387-1-bvanassche@acm.org>
- <20240910215139.3352387-6-bvanassche@acm.org>
-From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <20240910215139.3352387-6-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: eAmr7LB6HoHspm5qrEvnD8wIWqBBe_Wp
-X-Proofpoint-ORIG-GUID: eAmr7LB6HoHspm5qrEvnD8wIWqBBe_Wp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- clxscore=1015 malwarescore=0 bulkscore=0 lowpriorityscore=0 adultscore=0
- mlxscore=0 impostorscore=0 priorityscore=1501 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2408220000
- definitions=main-2409130030
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAA8EJpq3sjfB0BsJTs3_r_ZFzhrrpy-A=9Dx9ks2KrDNYCntdg@mail.gmail.com>
 
-On 9/10/2024 2:50 PM, Bart Van Assche wrote:
-> Move the ufshcd_device_init() and ufshcd_process_device_init_result() calls
-> to the ufshcd_probe_hba() callers. This change refactors the code without
-> modifying the behavior of the UFSHCI driver. This change prepares for
-> moving one ufshcd_device_init() call into ufshcd_init().
+On Fri, Sep 13, 2024 at 07:28:33AM +0300, Dmitry Baryshkov wrote:
+> On Fri, 13 Sept 2024 at 02:17, Eric Biggers <ebiggers@kernel.org> wrote:
+> >
+> > On Thu, Sep 12, 2024 at 10:17:03PM +0000, Gaurav Kashyap (QUIC) wrote:
+> > >
+> > > On Monday, September 9, 2024 11:29 PM PDT, Dmitry Baryshkov wrote:
+> > > > On Tue, 10 Sept 2024 at 03:51, Gaurav Kashyap (QUIC)
+> > > > <quic_gaurkash@quicinc.com> wrote:
+> > > > >
+> > > > > Hello Dmitry and Neil
+> > > > >
+> > > > > On Monday, September 9, 2024 2:44 AM PDT, Dmitry Baryshkov wrote:
+> > > > > > On Mon, Sep 09, 2024 at 10:58:30AM GMT, Neil Armstrong wrote:
+> > > > > > > On 07/09/2024 00:07, Dmitry Baryshkov wrote:
+> > > > > > > > On Fri, Sep 06, 2024 at 08:07:12PM GMT, Bartosz Golaszewski wrote:
+> > > > > > > > > From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+> > > > > > > > >
+> > > > > > > > > Qualcomm's ICE (Inline Crypto Engine) contains a proprietary
+> > > > > > > > > key management hardware called Hardware Key Manager (HWKM).
+> > > > > > > > > Add
+> > > > > > HWKM
+> > > > > > > > > support to the ICE driver if it is available on the platform.
+> > > > > > > > > HWKM primarily provides hardware wrapped key support where
+> > > > the
+> > > > > > > > > ICE
+> > > > > > > > > (storage) keys are not available in software and instead
+> > > > > > > > > protected in
+> > > > > > hardware.
+> > > > > > > > >
+> > > > > > > > > When HWKM software support is not fully available (from
+> > > > > > > > > Trustzone), there can be a scenario where the ICE hardware
+> > > > > > > > > supports HWKM, but it cannot be used for wrapped keys. In this
+> > > > > > > > > case, raw keys have to be used without using the HWKM. We
+> > > > > > > > > query the TZ at run-time to find out whether wrapped keys
+> > > > > > > > > support is
+> > > > > > available.
+> > > > > > > > >
+> > > > > > > > > Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+> > > > > > > > > Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+> > > > > > > > > Signed-off-by: Bartosz Golaszewski
+> > > > > > > > > <bartosz.golaszewski@linaro.org>
+> > > > > > > > > ---
+> > > > > > > > >   drivers/soc/qcom/ice.c | 152
+> > > > > > +++++++++++++++++++++++++++++++++++++++++++++++--
+> > > > > > > > >   include/soc/qcom/ice.h |   1 +
+> > > > > > > > >   2 files changed, 149 insertions(+), 4 deletions(-)
+> > > > > > > > >
+> > > > > > > > >   int qcom_ice_enable(struct qcom_ice *ice)
+> > > > > > > > >   {
+> > > > > > > > > + int err;
+> > > > > > > > > +
+> > > > > > > > >           qcom_ice_low_power_mode_enable(ice);
+> > > > > > > > >           qcom_ice_optimization_enable(ice);
+> > > > > > > > > - return qcom_ice_wait_bist_status(ice);
+> > > > > > > > > + if (ice->use_hwkm)
+> > > > > > > > > +         qcom_ice_enable_standard_mode(ice);
+> > > > > > > > > +
+> > > > > > > > > + err = qcom_ice_wait_bist_status(ice); if (err)
+> > > > > > > > > +         return err;
+> > > > > > > > > +
+> > > > > > > > > + if (ice->use_hwkm)
+> > > > > > > > > +         qcom_ice_hwkm_init(ice);
+> > > > > > > > > +
+> > > > > > > > > + return err;
+> > > > > > > > >   }
+> > > > > > > > >   EXPORT_SYMBOL_GPL(qcom_ice_enable);
+> > > > > > > > > @@ -150,6 +282,10 @@ int qcom_ice_resume(struct qcom_ice
+> > > > *ice)
+> > > > > > > > >                   return err;
+> > > > > > > > >           }
+> > > > > > > > > + if (ice->use_hwkm) {
+> > > > > > > > > +         qcom_ice_enable_standard_mode(ice);
+> > > > > > > > > +         qcom_ice_hwkm_init(ice); }
+> > > > > > > > >           return qcom_ice_wait_bist_status(ice);
+> > > > > > > > >   }
+> > > > > > > > >   EXPORT_SYMBOL_GPL(qcom_ice_resume);
+> > > > > > > > > @@ -157,6 +293,7 @@ EXPORT_SYMBOL_GPL(qcom_ice_resume);
+> > > > > > > > >   int qcom_ice_suspend(struct qcom_ice *ice)
+> > > > > > > > >   {
+> > > > > > > > >           clk_disable_unprepare(ice->core_clk);
+> > > > > > > > > + ice->hwkm_init_complete = false;
+> > > > > > > > >           return 0;
+> > > > > > > > >   }
+> > > > > > > > > @@ -206,6 +343,12 @@ int qcom_ice_evict_key(struct qcom_ice
+> > > > > > > > > *ice,
+> > > > > > int slot)
+> > > > > > > > >   }
+> > > > > > > > >   EXPORT_SYMBOL_GPL(qcom_ice_evict_key);
+> > > > > > > > > +bool qcom_ice_hwkm_supported(struct qcom_ice *ice) {  return
+> > > > > > > > > +ice->use_hwkm; }
+> > > > > > EXPORT_SYMBOL_GPL(qcom_ice_hwkm_supported);
+> > > > > > > > > +
+> > > > > > > > >   static struct qcom_ice *qcom_ice_create(struct device *dev,
+> > > > > > > > >                                           void __iomem *base)
+> > > > > > > > >   {
+> > > > > > > > > @@ -240,6 +383,7 @@ static struct qcom_ice
+> > > > > > > > > *qcom_ice_create(struct
+> > > > > > device *dev,
+> > > > > > > > >                   engine->core_clk = devm_clk_get_enabled(dev, NULL);
+> > > > > > > > >           if (IS_ERR(engine->core_clk))
+> > > > > > > > >                   return ERR_CAST(engine->core_clk);
+> > > > > > > > > + engine->use_hwkm = qcom_scm_has_wrapped_key_support();
+> > > > > > > >
+> > > > > > > > This still makes the decision on whether to use HW-wrapped keys
+> > > > > > > > on behalf of a user. I suppose this is incorrect. The user must
+> > > > > > > > be able to use raw keys even if HW-wrapped keys are available on
+> > > > > > > > the platform. One of the examples for such use-cases is if a
+> > > > > > > > user prefers to be able to recover stored information in case of
+> > > > > > > > a device failure (such recovery will be impossible if SoC is
+> > > > > > > > damaged and HW-
+> > > > > > wrapped keys are used).
+> > > > > > >
+> > > > > > > Isn't that already the case ? the
+> > > > BLK_CRYPTO_KEY_TYPE_HW_WRAPPED
+> > > > > > size
+> > > > > > > is here to select HW-wrapped key, otherwise the ol' raw key is passed.
+> > > > > > > Just look the next patch.
+> > > > > > >
+> > > > > > > Or did I miss something ?
+> > > > > >
+> > > > > > That's a good question. If use_hwkm is set, ICE gets programmed to
+> > > > > > use hwkm (see qcom_ice_hwkm_init() call above). I'm not sure if it
+> > > > > > is expected to work properly if after such a call we pass raw key.
+> > > > > >
+> > > > >
+> > > > > Once ICE has moved to a HWKM mode, the firmware key programming
+> > > > currently does not support raw keys.
+> > > > > This support is being added for the next Qualcomm chipset in Trustzone to
+> > > > support both at he same time, but that will take another year or two to hit
+> > > > the market.
+> > > > > Until that time, due to TZ (firmware) limitations , the driver can only
+> > > > support one or the other.
+> > > > >
+> > > > > We also cannot keep moving ICE modes, due to the HWKM enablement
+> > > > being a one-time configurable value at boot.
+> > > >
+> > > > So the init of HWKM should be delayed until the point where the user tells if
+> > > > HWKM or raw keys should be used.
+> > >
+> > > Ack.
+> > > I'll work with Bartosz to look into moving to HWKM mode only during the first key program request
+> > >
+> >
+> > That would mean the driver would have to initially advertise support for both
+> > HW-wrapped keys and raw keys, and then it would revoke the support for one of
+> > them later (due to the other one being used).  However, runtime revocation of
+> > crypto capabilities is not supported by the blk-crypto framework
+> > (Documentation/block/inline-encryption.rst), and there is no clear path to
+> > adding such support.  Upper layers may have already checked the crypto
+> > capabilities and decided to use them.  It's too late to find out that the
+> > support was revoked in the middle of an I/O request.  Upper layer code
+> > (blk-crypto, fscrypt, etc.) is not prepared for this.  And even if it was, the
+> > best it could do is cleanly fail the I/O, which is too late as e.g. it may
+> > happen during background writeback and cause user data to be thrown away.
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/ufs/core/ufshcd.c | 31 ++++++++++++++++++-------------
->   1 file changed, 18 insertions(+), 13 deletions(-)
+> Can we check crypto capabilities when the user sets the key?
+
+I think you mean when a key is programmed into a keyslot?  That happens during
+I/O, which is too late as I've explained above.
+
+> Compare this to the actual HSM used to secure communication or
+> storage. It has certain capabilities, which can be enumerated, etc.
+> But then at the time the user sets the key it is perfectly normal to
+> return an error because HSM is out of resources. It might even have
+> spare key slots, but it might be not enough to be able to program the
+> required key (as a really crazy example, consider the HSM having at
+> this time a single spare DES key slot, while the user wants to program
+> 3DES key).
+
+That isn't how the kernel handles inline encryption keyslots.  They are only
+programmed as needed for I/O.  If they are all in-use by pending I/O requests,
+then the kernel waits for an I/O request to finish and reprograms the keyslot it
+was using.  There is never an error reported due to lack of keyslots.
+
+If I/O requests could randomly fail at any time when using inline encryption,
+then no one would use inline encryption because it would not be reliable.
+
+> > So, the choice of support for HW-wrapped vs. raw will need to be made ahead of
+> > time, rather than being implicitly set by the first use.  That is most easily
+> > done using a module parameter like qcom_ice.hw_wrapped_keys=1.  Yes, it's a bit
+> > inconvenient, but there's no realistic way around this currently.
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 1094c1ba2212..f62d257a92da 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -298,6 +298,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
->   static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
->   static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
->   static void ufshcd_hba_exit(struct ufs_hba *hba);
-> +static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params);
->   static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params);
->   static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
->   static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
-> @@ -7716,8 +7717,14 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
->   	err = ufshcd_hba_enable(hba);
->   
->   	/* Establish the link again and restore the device */
-> -	if (!err)
-> -		err = ufshcd_probe_hba(hba, false);
-> +	if (!err) {
-> +		ktime_t device_init_start = ktime_get();
-> +
-> +		err = ufshcd_device_init(hba, /*init_dev_params=*/false);
-> +		if (!err)
-> +			err = ufshcd_probe_hba(hba, false);
-> +		ufshcd_process_device_init_result(hba, device_init_start, err);
+> This doesn't work for Android usecase. The user isn't able to setup modparams.
 
+It does work for Android.  The encryption setting that Android uses is
+configured in the build of Android for the device (by the OEM, or by whoever
+made the build in the case of a custom build).  Refer to
+https://source.android.com/docs/security/features/encryption/file-based#enabling-file-based-encryption
 
-Hi Bart, IMO the function name ufshcd_process_device_init_result() is 
-not correctly describing the original code. As you can see, the "ret" 
-passed into the function here is from the result of the 
-ufshcd_probe_hba(), not the result of the ufshcd_device_init().
-Same comment for the name device_init_start. Originally, it is the time 
-spent in the ufshcd_probe_hba().
+Anyone who can change that can also change the kernel command line.
 
-> +	}
->   
->   	if (err)
->   		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
-> @@ -8849,13 +8856,8 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
->    */
->   static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
->   {
-> -	ktime_t start = ktime_get();
->   	int ret;
->   
-> -	ret = ufshcd_device_init(hba, init_dev_params);
-> -	if (ret)
-> -		goto out;
-> -
->   	if (!hba->pm_op_in_progress &&
->   	    (hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH)) {
->   		/* Reset the device and controller before doing reinit */
-> @@ -8868,13 +8870,13 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
->   			dev_err(hba->dev, "Host controller enable failed\n");
->   			ufshcd_print_evt_hist(hba);
->   			ufshcd_print_host_state(hba);
-> -			goto out;
-> +			return ret;
->   		}
->   
->   		/* Reinit the device */
->   		ret = ufshcd_device_init(hba, init_dev_params);
->   		if (ret)
-> -			goto out;
-> +			return ret;
->   	}
->   
->   	ufshcd_print_pwr_info(hba);
-> @@ -8894,9 +8896,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
->   		ufshcd_write_ee_control(hba);
->   	ufshcd_configure_auto_hibern8(hba);
->   
-> -out:
-> -	ufshcd_process_device_init_result(hba, start, ret);
-> -	return ret;
-> +	return 0;
->   }
->   
->   /**
-> @@ -8907,11 +8907,16 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
->   static void ufshcd_async_scan(void *data, async_cookie_t cookie)
->   {
->   	struct ufs_hba *hba = (struct ufs_hba *)data;
-> +	ktime_t device_init_start;
->   	int ret;
->   
->   	down(&hba->host_sem);
->   	/* Initialize hba, detect and initialize UFS device */
-> -	ret = ufshcd_probe_hba(hba, true);
-> +	device_init_start = ktime_get();
-> +	ret = ufshcd_device_init(hba, /*init_dev_params=*/true);
-> +	if (ret == 0)
-> +		ret = ufshcd_probe_hba(hba, true);
-> +	ufshcd_process_device_init_result(hba, device_init_start, ret);
-
-Same comment about the function name. The "ret" here is the result of 
-ufshcd_probe_hba().
-
->   	up(&hba->host_sem);
->   	if (ret)
->   		goto out;
-> 
-
+- Eric
