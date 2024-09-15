@@ -1,34 +1,34 @@
 Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 989661CF93;
-	Sun, 15 Sep 2024 12:56:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E9EA1C57AA;
+	Sun, 15 Sep 2024 12:56:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726405012; cv=none; b=nm3LvU9IcxfFlPDens1X2iTLX9lZlBB6GBDnqJP/9duudPeS80AMa/u4PK1KGPapfa5BHAB80VyBDmz2DNwC8LUfFAsvaj8nLmANGiuH7LDDBmMI0EsMQnKdWNnMgeFdFiHn64+xN5ylPdwZ6dsawwOoFpx50MpzGH+ivWtMXoc=
+	t=1726405012; cv=none; b=P444VFlVtiJqd4sqoSrWigKb/iQH8SZ79dSsbPWHMB7qWcoeQXsvfTPLmpcxnFJ2p+REC7fsTRqEDerWqAG/D8LrJgySJ1JnhFar1XvOYipSVBs5xS9m3VUTp67HiUKcZPmzOGPK2YhG784eGCr8FubDK4AWJ11XQn0J37ir/nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1726405012; c=relaxed/simple;
-	bh=NMWDb3XblC6zTta47blxYZ4COB1rS+nAcwpZwwZsYH8=;
+	bh=3n1IVgmxGMQkViHP5PCXZyubveKoIWkHxuRN3qubPYg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WBVY2cbmzmmXvPxO1OWUTgnx8twqxFkv0pvgvWDYVuxvYUts4nzfzsODWPzBDeUeSarFp5avetxon1zY2QKzNkZqUNvv0v4LYRmxStBGvhLyu6sYG7jW1qjzFn+XMGSmUYoqV1SMkoyS9l8gEduCfhHdg0b0HpulnG7V6ED8fnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=auB5Efjk; arc=none smtp.client-ip=46.235.229.95
+	 MIME-Version; b=cyWL8KBNMxeCxj6lNx9upmUaIDFJ0VXj270cLmXcW040pGSXycw7VmY3AWrbX45xRDzncvDvl90AC9OJnsPEWmHt8fAl+QGGZPHrbARcDR/sxhdBauSB2Qm9kQ8F35OvEQbRe2txONAo2YOQSq1Is+TBWluWr6BO5zIsUjC2/JU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=aPpwK6WS; arc=none smtp.client-ip=46.235.229.95
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="auB5Efjk"
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="aPpwK6WS"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
 	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=kxmBdvtcdtZPJkbPCzOmFPqfCK3K6y8Z41XrFg3oUv8=; b=auB5EfjktrIwyuNd
-	nHlMPDWHFjo1HrQUoWPYi0w2pHHPJL39isuhvMKEitD5iuDSKwzDEiax/yriPFUFW7uZvyLmmKt3U
-	rLF6S4yY89OQL5NPTgybWNf/pORgYjJwq4QL0NdL2Ze9WgGA17oIDBuXjV5XaU0lCWt2YSf201l0s
-	DCPvbe4UwFRr7QltNB+aF+bhieNBGZNDN0yoeq753LUe1FS6QTz7p9k282Wyf/KadykIGYrEYC0Vq
-	HAa9bHPSkHFXY1fZBVFyi6PERvyipJ1A0WOEkrJHP4QyCGKrPSvG9RkZQfk0nTYkGiVasmR6dTozW
-	lcadHx3JKGER+yAJqw==;
+	:Subject; bh=OtC65taCBTGyOUicH7IEu9spCIW7iGdBJR8h6TIx1v8=; b=aPpwK6WSnnC6CLhF
+	aoPIMIr/j0X/vTG1vl+2dpM9D6oE8bwYoh3X8GuWXoKR+APMxxPe+oA0PJrNEOVvLvqJkhWcnOfxW
+	ZaVI9gl7gRmHR11cm7AEXjH9szUwp9ZPwMvu71kwnHzucEf7jWJNpeMPmdi5sQY432AhPY7HtDEZx
+	JXhnFETcIe82DAefzEcG0GpvtdzJGc8D72L22/FybElIW4x0NoLPqfQMH8c1q/Gg51uuvWgxYRxTN
+	O4ugf3AcYtSl1mKNPL+GjdWkdYHW9OtKAJ7D3qlLtTGq0fSKkWd5GbuF8YvjV5Z8A1RqWzsiuyEdt
+	/76QwuAYQUHUiIvLDQ==;
 Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
 	by mx.treblig.org with esmtp (Exim 4.96)
 	(envelope-from <linux@treblig.org>)
-	id 1sponz-005pGt-28;
-	Sun, 15 Sep 2024 12:56:43 +0000
+	id 1spoo2-005pGt-14;
+	Sun, 15 Sep 2024 12:56:46 +0000
 From: linux@treblig.org
 To: anil.gurumurthy@qlogic.com,
 	sudarsana.kalluru@qlogic.com,
@@ -37,9 +37,9 @@ To: anil.gurumurthy@qlogic.com,
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH 1/5] scsi: bfa: Remove unused bfa_core code
-Date: Sun, 15 Sep 2024 13:56:29 +0100
-Message-ID: <20240915125633.25036-2-linux@treblig.org>
+Subject: [PATCH 4/5] scsi: bfa: Remove unused bfa_fcs code
+Date: Sun, 15 Sep 2024 13:56:32 +0100
+Message-ID: <20240915125633.25036-5-linux@treblig.org>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <20240915125633.25036-1-linux@treblig.org>
 References: <20240915125633.25036-1-linux@treblig.org>
@@ -53,96 +53,349 @@ Content-Transfer-Encoding: 8bit
 
 From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-bfa_get_pciids and bfa_cfg_get_min aren't called anywhere;
-remove them together with the bfa_pciid_s used by bfa_get_pciids.
+These functions aren't called anywhere, remove them.
 
-(Build tested, I don't have the card)
+Build tested only.
 
 Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 ---
- drivers/scsi/bfa/bfa.h      | 10 ----------
- drivers/scsi/bfa/bfa_core.c | 35 -----------------------------------
- 2 files changed, 45 deletions(-)
+ drivers/scsi/bfa/bfa_defs_fcs.h  |  22 -----
+ drivers/scsi/bfa/bfa_fcs.h       |  12 ---
+ drivers/scsi/bfa/bfa_fcs_lport.c | 142 -------------------------------
+ drivers/scsi/bfa/bfa_fcs_rport.c |  36 --------
+ 4 files changed, 212 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
-index 4cb9249e583c..a6b8c4ddea19 100644
---- a/drivers/scsi/bfa/bfa.h
-+++ b/drivers/scsi/bfa/bfa.h
-@@ -138,14 +138,6 @@ bfa_reqq_winit(struct bfa_reqq_wait_s *wqe, void (*qresume) (void *cbarg),
- 	} while (0)
- 
+diff --git a/drivers/scsi/bfa/bfa_defs_fcs.h b/drivers/scsi/bfa/bfa_defs_fcs.h
+index 5e36620425ac..760606062c66 100644
+--- a/drivers/scsi/bfa/bfa_defs_fcs.h
++++ b/drivers/scsi/bfa/bfa_defs_fcs.h
+@@ -124,28 +124,6 @@ enum bfa_lport_offline_reason {
+ 	BFA_LPORT_OFFLINE_FAB_LOGOUT,
+ };
  
 -/*
-- * PCI devices supported by the current BFA
+- * FCS lport info.
 - */
--struct bfa_pciid_s {
--	u16	device_id;
--	u16	vendor_id;
+-struct bfa_lport_info_s {
+-	u8	 port_type;	/* bfa_lport_type_t : physical or
+-	 * virtual */
+-	u8	 port_state;	/* one of bfa_lport_state values */
+-	u8	 offline_reason;	/* one of bfa_lport_offline_reason_t
+-	 * values */
+-	wwn_t	   port_wwn;
+-	wwn_t	   node_wwn;
+-
+-	/*
+-	 * following 4 feilds are valid for Physical Ports only
+-	 */
+-	u32	max_vports_supp;	/* Max supported vports */
+-	u32	num_vports_inuse;	/* Num of in use vports */
+-	u32	max_rports_supp;	/* Max supported rports */
+-	u32	num_rports_inuse;	/* Num of doscovered rports */
+-
 -};
 -
- extern char     bfa_version[];
+ /*
+  * FCS port statistics
+  */
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 9788354b90da..19903539a08d 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -373,15 +373,11 @@ bfa_boolean_t   bfa_fcs_lport_is_online(struct bfa_fcs_lport_s *port);
+ struct bfa_fcs_lport_s *bfa_fcs_get_base_port(struct bfa_fcs_s *fcs);
+ void bfa_fcs_lport_get_rport_quals(struct bfa_fcs_lport_s *port,
+ 			struct bfa_rport_qualifier_s rport[], int *nrports);
+-wwn_t bfa_fcs_lport_get_rport(struct bfa_fcs_lport_s *port, wwn_t wwn,
+-			      int index, int nrports, bfa_boolean_t bwwn);
  
- struct bfa_iocfc_regs_s {
-@@ -408,9 +400,7 @@ int bfa_iocfc_get_pbc_vports(struct bfa_s *bfa,
- 	(((&(_bfa)->modules.dconf_mod)->min_cfg)		\
- 	 ? BFA_LUNMASK_MINCFG : ((bfa_get_lun_mask(_bfa))->status))
+ struct bfa_fcs_lport_s *bfa_fcs_lookup_port(struct bfa_fcs_s *fcs,
+ 					    u16 vf_id, wwn_t lpwwn);
  
--void bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids);
- void bfa_cfg_get_default(struct bfa_iocfc_cfg_s *cfg);
--void bfa_cfg_get_min(struct bfa_iocfc_cfg_s *cfg);
- void bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg,
- 			struct bfa_meminfo_s *meminfo,
- 			struct bfa_s *bfa);
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 3438d0b8ba06..a99a101b95ef 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -1933,24 +1933,6 @@ bfa_comp_free(struct bfa_s *bfa, struct list_head *comp_q)
- 	}
+ void bfa_fcs_lport_set_symname(struct bfa_fcs_lport_s *port, char *symname);
+-void bfa_fcs_lport_get_info(struct bfa_fcs_lport_s *port,
+-			    struct bfa_lport_info_s *port_info);
+ void bfa_fcs_lport_get_attr(struct bfa_fcs_lport_s *port,
+ 			    struct bfa_lport_attr_s *port_attr);
+ void bfa_fcs_lport_get_stats(struct bfa_fcs_lport_s *fcs_port,
+@@ -416,8 +412,6 @@ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_old_pid(
+ 		struct bfa_fcs_lport_s *port, u32 pid);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_pwwn(
+ 		struct bfa_fcs_lport_s *port, wwn_t pwwn);
+-struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_nwwn(
+-		struct bfa_fcs_lport_s *port, wwn_t nwwn);
+ struct bfa_fcs_rport_s *bfa_fcs_lport_get_rport_by_qualifier(
+ 		struct bfa_fcs_lport_s *port, wwn_t pwwn, u32 pid);
+ void            bfa_fcs_lport_add_rport(struct bfa_fcs_lport_s *port,
+@@ -486,7 +480,6 @@ bfa_status_t bfa_fcs_pbc_vport_create(struct bfa_fcs_vport_s *vport,
+ 				      struct bfa_fcs_s *fcs, u16 vf_id,
+ 				      struct bfa_lport_cfg_s *port_cfg,
+ 				      struct bfad_vport_s *vport_drv);
+-bfa_boolean_t bfa_fcs_is_pbc_vport(struct bfa_fcs_vport_s *vport);
+ bfa_status_t bfa_fcs_vport_delete(struct bfa_fcs_vport_s *vport);
+ bfa_status_t bfa_fcs_vport_start(struct bfa_fcs_vport_s *vport);
+ bfa_status_t bfa_fcs_vport_stop(struct bfa_fcs_vport_s *vport);
+@@ -494,7 +487,6 @@ void bfa_fcs_vport_get_attr(struct bfa_fcs_vport_s *vport,
+ 			    struct bfa_vport_attr_s *vport_attr);
+ struct bfa_fcs_vport_s *bfa_fcs_vport_lookup(struct bfa_fcs_s *fcs,
+ 					     u16 vf_id, wwn_t vpwwn);
+-void bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_online(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport);
+@@ -623,8 +615,6 @@ void bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
+ 			struct bfa_rport_attr_s *attr);
+ struct bfa_fcs_rport_s *bfa_fcs_rport_lookup(struct bfa_fcs_lport_s *port,
+ 					     wwn_t rpwwn);
+-struct bfa_fcs_rport_s *bfa_fcs_rport_lookup_by_nwwn(
+-	struct bfa_fcs_lport_s *port, wwn_t rnwwn);
+ void bfa_fcs_rport_set_del_timeout(u8 rport_tmo);
+ void bfa_fcs_rport_set_max_logins(u32 max_logins);
+ void bfa_fcs_rport_uf_recv(struct bfa_fcs_rport_s *rport,
+@@ -633,8 +623,6 @@ void bfa_fcs_rport_scn(struct bfa_fcs_rport_s *rport);
+ 
+ struct bfa_fcs_rport_s *bfa_fcs_rport_create(struct bfa_fcs_lport_s *port,
+ 	 u32 pid);
+-void bfa_fcs_rport_start(struct bfa_fcs_lport_s *port, struct fchs_s *rx_fchs,
+-			 struct fc_logi_s *plogi_rsp);
+ void bfa_fcs_rport_plogi_create(struct bfa_fcs_lport_s *port,
+ 				struct fchs_s *rx_fchs,
+ 				struct fc_logi_s *plogi);
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 966bf6cc6dd9..9a85f417018f 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -937,25 +937,6 @@ bfa_fcs_lport_get_rport_by_pwwn(struct bfa_fcs_lport_s *port, wwn_t pwwn)
+ 	return NULL;
  }
  
 -/*
-- * Return the list of PCI vendor/device id lists supported by this
-- * BFA instance.
+- *   NWWN based Lookup for a R-Port in the Port R-Port Queue
 - */
--void
--bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids)
+-struct bfa_fcs_rport_s *
+-bfa_fcs_lport_get_rport_by_nwwn(struct bfa_fcs_lport_s *port, wwn_t nwwn)
 -{
--	static struct bfa_pciid_s __pciids[] = {
--		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_FC_8G2P},
--		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_FC_8G1P},
--		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT},
--		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT_FC},
--	};
+-	struct bfa_fcs_rport_s *rport;
+-	struct list_head	*qe;
 -
--	*npciids = ARRAY_SIZE(__pciids);
--	*pciids = __pciids;
+-	list_for_each(qe, &port->rport_q) {
+-		rport = (struct bfa_fcs_rport_s *) qe;
+-		if (wwn_is_equal(rport->nwwn, nwwn))
+-			return rport;
+-	}
+-
+-	bfa_trc(port->fcs, nwwn);
+-	return NULL;
 -}
 -
  /*
-  * Use this function query the default struct bfa_iocfc_cfg_s value (compiled
-  * into BFA layer). The OS driver can then turn back and overwrite entries that
-@@ -1987,20 +1969,3 @@ bfa_cfg_get_default(struct bfa_iocfc_cfg_s *cfg)
- 	cfg->drvcfg.delay_comp = BFA_FALSE;
- 
+  * PWWN & PID based Lookup for a R-Port in the Port R-Port Queue
+  */
+@@ -5645,54 +5626,6 @@ bfa_fcs_get_base_port(struct bfa_fcs_s *fcs)
+ 	return &fcs->fabric.bport;
  }
--
--void
--bfa_cfg_get_min(struct bfa_iocfc_cfg_s *cfg)
+ 
+-wwn_t
+-bfa_fcs_lport_get_rport(struct bfa_fcs_lport_s *port, wwn_t wwn, int index,
+-		int nrports, bfa_boolean_t bwwn)
 -{
--	bfa_cfg_get_default(cfg);
--	cfg->fwcfg.num_ioim_reqs   = BFA_IOIM_MIN;
--	cfg->fwcfg.num_tskim_reqs  = BFA_TSKIM_MIN;
--	cfg->fwcfg.num_fcxp_reqs   = BFA_FCXP_MIN;
--	cfg->fwcfg.num_uf_bufs     = BFA_UF_MIN;
--	cfg->fwcfg.num_rports      = BFA_RPORT_MIN;
--	cfg->fwcfg.num_fwtio_reqs = 0;
+-	struct list_head	*qh, *qe;
+-	struct bfa_fcs_rport_s *rport = NULL;
+-	int	i;
+-	struct bfa_fcs_s	*fcs;
 -
--	cfg->drvcfg.num_sgpgs      = BFA_SGPG_MIN;
--	cfg->drvcfg.num_reqq_elems = BFA_REQQ_NELEMS_MIN;
--	cfg->drvcfg.num_rspq_elems = BFA_RSPQ_NELEMS_MIN;
--	cfg->drvcfg.min_cfg	   = BFA_TRUE;
+-	if (port == NULL || nrports == 0)
+-		return (wwn_t) 0;
+-
+-	fcs = port->fcs;
+-	bfa_trc(fcs, (u32) nrports);
+-
+-	i = 0;
+-	qh = &port->rport_q;
+-	qe = bfa_q_first(qh);
+-
+-	while ((qe != qh) && (i < nrports)) {
+-		rport = (struct bfa_fcs_rport_s *) qe;
+-		if (bfa_ntoh3b(rport->pid) > 0xFFF000) {
+-			qe = bfa_q_next(qe);
+-			bfa_trc(fcs, (u32) rport->pwwn);
+-			bfa_trc(fcs, rport->pid);
+-			bfa_trc(fcs, i);
+-			continue;
+-		}
+-
+-		if (bwwn) {
+-			if (!memcmp(&wwn, &rport->pwwn, 8))
+-				break;
+-		} else {
+-			if (i == index)
+-				break;
+-		}
+-
+-		i++;
+-		qe = bfa_q_next(qe);
+-	}
+-
+-	bfa_trc(fcs, i);
+-	if (rport)
+-		return rport->pwwn;
+-	else
+-		return (wwn_t) 0;
 -}
+-
+ void
+ bfa_fcs_lport_get_rport_quals(struct bfa_fcs_lport_s *port,
+ 		struct bfa_rport_qualifier_s rports[], int *nrports)
+@@ -5823,54 +5756,6 @@ bfa_fcs_lookup_port(struct bfa_fcs_s *fcs, u16 vf_id, wwn_t lpwwn)
+ 	return NULL;
+ }
+ 
+-/*
+- *  API corresponding to NPIV_VPORT_GETINFO.
+- */
+-void
+-bfa_fcs_lport_get_info(struct bfa_fcs_lport_s *port,
+-	 struct bfa_lport_info_s *port_info)
+-{
+-
+-	bfa_trc(port->fcs, port->fabric->fabric_name);
+-
+-	if (port->vport == NULL) {
+-		/*
+-		 * This is a Physical port
+-		 */
+-		port_info->port_type = BFA_LPORT_TYPE_PHYSICAL;
+-
+-		/*
+-		 * @todo : need to fix the state & reason
+-		 */
+-		port_info->port_state = 0;
+-		port_info->offline_reason = 0;
+-
+-		port_info->port_wwn = bfa_fcs_lport_get_pwwn(port);
+-		port_info->node_wwn = bfa_fcs_lport_get_nwwn(port);
+-
+-		port_info->max_vports_supp =
+-			bfa_lps_get_max_vport(port->fcs->bfa);
+-		port_info->num_vports_inuse =
+-			port->fabric->num_vports;
+-		port_info->max_rports_supp = BFA_FCS_MAX_RPORTS_SUPP;
+-		port_info->num_rports_inuse = port->num_rports;
+-	} else {
+-		/*
+-		 * This is a virtual port
+-		 */
+-		port_info->port_type = BFA_LPORT_TYPE_VIRTUAL;
+-
+-		/*
+-		 * @todo : need to fix the state & reason
+-		 */
+-		port_info->port_state = 0;
+-		port_info->offline_reason = 0;
+-
+-		port_info->port_wwn = bfa_fcs_lport_get_pwwn(port);
+-		port_info->node_wwn = bfa_fcs_lport_get_nwwn(port);
+-	}
+-}
+-
+ void
+ bfa_fcs_lport_get_stats(struct bfa_fcs_lport_s *fcs_port,
+ 	 struct bfa_lport_stats_s *port_stats)
+@@ -6567,15 +6452,6 @@ bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport)
+ 	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_OFFLINE);
+ }
+ 
+-/*
+- * Cleanup notification from fabric SM on link timer expiry.
+- */
+-void
+-bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport)
+-{
+-	vport->vport_stats.fab_cleanup++;
+-}
+-
+ /*
+  * Stop notification from fabric SM. To be invoked from within FCS.
+  */
+@@ -6698,24 +6574,6 @@ bfa_fcs_pbc_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
+ 	return rc;
+ }
+ 
+-/*
+- *	Use this function to findout if this is a pbc vport or not.
+- *
+- * @param[in] vport - pointer to bfa_fcs_vport_t.
+- *
+- * @returns None
+- */
+-bfa_boolean_t
+-bfa_fcs_is_pbc_vport(struct bfa_fcs_vport_s *vport)
+-{
+-
+-	if (vport && (vport->lport.port_cfg.preboot_vp == BFA_TRUE))
+-		return BFA_TRUE;
+-	else
+-		return BFA_FALSE;
+-
+-}
+-
+ /*
+  * Use this function initialize the vport.
+  *
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index ce52a9c88ae6..d4bde9bbe75b 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -2646,27 +2646,6 @@ bfa_fcs_rport_create_by_wwn(struct bfa_fcs_lport_s *port, wwn_t rpwwn)
+ 	bfa_sm_send_event(rport, RPSM_EVENT_ADDRESS_DISC);
+ 	return rport;
+ }
+-/*
+- * Called by bport in private loop topology to indicate that a
+- * rport has been discovered and plogi has been completed.
+- *
+- * @param[in] port	- base port or vport
+- * @param[in] rpid	- remote port ID
+- */
+-void
+-bfa_fcs_rport_start(struct bfa_fcs_lport_s *port, struct fchs_s *fchs,
+-	 struct fc_logi_s *plogi)
+-{
+-	struct bfa_fcs_rport_s *rport;
+-
+-	rport = bfa_fcs_rport_alloc(port, WWN_NULL, fchs->s_id);
+-	if (!rport)
+-		return;
+-
+-	bfa_fcs_rport_update(rport, plogi);
+-
+-	bfa_sm_send_event(rport, RPSM_EVENT_PLOGI_COMP);
+-}
+ 
+ /*
+  *	Called by bport/vport to handle PLOGI received from a new remote port.
+@@ -3089,21 +3068,6 @@ bfa_fcs_rport_lookup(struct bfa_fcs_lport_s *port, wwn_t rpwwn)
+ 	return rport;
+ }
+ 
+-struct bfa_fcs_rport_s *
+-bfa_fcs_rport_lookup_by_nwwn(struct bfa_fcs_lport_s *port, wwn_t rnwwn)
+-{
+-	struct bfa_fcs_rport_s *rport;
+-
+-	rport = bfa_fcs_lport_get_rport_by_nwwn(port, rnwwn);
+-	if (rport == NULL) {
+-		/*
+-		 * TBD Error handling
+-		 */
+-	}
+-
+-	return rport;
+-}
+-
+ /*
+  * Remote port features (RPF) implementation.
+  */
 -- 
 2.46.0
 
