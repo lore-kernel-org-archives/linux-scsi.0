@@ -1,87 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95C017BEB4;
-	Mon, 16 Sep 2024 22:49:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93E225D8F0;
+	Tue, 17 Sep 2024 06:20:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726526990; cv=none; b=BodaQG3Z/Niwh69uOQyog/EMAPtKVW+gY9UMkdM/xhGeuKVYrlGicenTRz+WTiKm0BU/P3dDDM1tLV63LEe5wOP3dgHokPyUfuoLdsXUdTp3DEutPxr/t2n2rgxuKoV2jFEdpy9w15nEE5vYMd7Ixj1hapRagp5rBj37oCn2SJg=
+	t=1726554014; cv=none; b=g6m2AXPyuskgyBO0tzQi+ABt/mDG8m04IeKKipgXujERGjUVOonL9x70Wu+nqstOxFVesp51nxqT3B48Z/Kp2utz58XUhCnKWFqGBvBdumneNPwgFSidzu+i4BHe68INFtl5PAF9JbDLPtPWYmLEpr3F060TfR4OqUKy+ZlnkIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726526990; c=relaxed/simple;
-	bh=0D4ZBeW2hHDtitqEqj91MoEj//vAjJvVBf06g/Chc4c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X0BvzCQ05UKM86fYuDhKvpf6iifDUZrGEpar0mKO94s7PYlF7OfsYFMNAA3tICC86w6Y75V8TwB677ANQsqXwlFbST8ArrHcGdthRk76YR0rKGxPFOn+5Qmsp3MUONfeXwECQyNbSYgI8EEOkj9/xDqxDZvUYRO7EW8+FC+RqZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aVngEs9m; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aVngEs9m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9E92C4CECF;
-	Mon, 16 Sep 2024 22:49:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726526990;
-	bh=0D4ZBeW2hHDtitqEqj91MoEj//vAjJvVBf06g/Chc4c=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aVngEs9mjRSKnKxtAVgyhhxICPhb5CAkw2hWHpwKNmdU8bVj8bK9Jcu20lJ+MItuG
-	 VuxTcl4p3wiFpCijxYql2y4+zq+QFXieYxVYUHDhxsrknoLekqQN7Pf4PYO8+7enQP
-	 dcAXEECTj01n6fzSGWm0bRWbzBUQ2SwDYrTdMdWjDTuHytyD6Rl30KO6RCzcFns2lf
-	 eFtrgfI3Q5G6jBps5ObVKYA1gZyRLFoelq+mv5akYi6NoK5RaPd6I7bzktqocIQCh4
-	 jESMZu9xwAcz1eZLnFJLT7EV8z/uW2I6h7Dta5MY+u5JjAuDNK02ENPhSum/m/t9bD
-	 vOR4J0iF/LVJg==
-From: Frederic Weisbecker <frederic@kernel.org>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Frederic Weisbecker <frederic@kernel.org>,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 06/19] scsi: qedi: Use kthread_create_on_cpu()
-Date: Tue, 17 Sep 2024 00:49:10 +0200
-Message-ID: <20240916224925.20540-7-frederic@kernel.org>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20240916224925.20540-1-frederic@kernel.org>
-References: <20240916224925.20540-1-frederic@kernel.org>
+	s=arc-20240116; t=1726554014; c=relaxed/simple;
+	bh=pFzT2ZqtUjl23iIZuzObb5iVFXkufhUazQnZ99FVJjU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=R2yXDxU0UhCo5c+q0MCA8lZ+uw2XQwn4Gw1wvfYG7ISLMUrzA+/VyleIVJQak1Ojzg6exyrl4naEOGOuo+LlNYdEXivjhvwgaGcStjsTiEEIZE3x0pygsNJZuVUJvYvidnHigtS/TyMgqC7b+SyZQ8e294bwnWF1GN8Pq9tkLss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id C391B227ACB; Tue, 17 Sep 2024 08:20:07 +0200 (CEST)
+Date: Tue, 17 Sep 2024 08:20:07 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Kanchan Joshi <joshi.k@samsung.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
+	sagi@grimberg.me, martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com, brauner@kernel.org,
+	viro@zeniv.linux.org.uk, jack@suse.cz, jaegeuk@kernel.org,
+	jlayton@kernel.org, chuck.lever@oracle.com, bvanassche@acm.org,
+	linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org, gost.dev@samsung.com,
+	vishak.g@samsung.com, javier.gonz@samsung.com,
+	Nitesh Shetty <nj.shetty@samsung.com>
+Subject: Re: [PATCH v5 4/5] sd: limit to use write life hints
+Message-ID: <20240917062007.GA4170@lst.de>
+References: <20240910150200.6589-1-joshi.k@samsung.com> <CGME20240910151057epcas5p3369c6257a6f169b4caa6dd59548b538c@epcas5p3.samsung.com> <20240910150200.6589-5-joshi.k@samsung.com> <20240912130235.GB28535@lst.de> <e6ae5391-ae84-bae4-78ea-4983d04af69f@samsung.com> <20240913080659.GA30525@lst.de> <4a39215a-1b0e-3832-93bd-61e422705f8b@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4a39215a-1b0e-3832-93bd-61e422705f8b@samsung.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Use the proper API instead of open coding it.
+On Mon, Sep 16, 2024 at 07:19:21PM +0530, Kanchan Joshi wrote:
+> > Maybe part of the problem is that the API is very confusing.  A smal
+> > part of that is of course that the existing temperature hints already
+> > have some issues, but this seems to be taking them make it significantly
+> > worse.
+> 
+> Can you explain what part is confusing. This is a simple API that takes 
+> type/value pair. Two types (and respective values) are clearly defined 
+> currently, and more can be added in future.
 
-However it looks like qedi_percpu_io_thread() kthread could be
-replaced by the use of a high prio workqueue instead.
+I though I outlined that below.
 
-Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
----
- drivers/scsi/qedi/qedi_main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> > But if we increase this to a variable number of hints that don't have
+> > any meaning (and even if that is just the rough order of the temperature
+> > hints assigned to them), that doesn't really work.  We'll need an API
+> > to check if these stream hints are supported and how many of them,
+> > otherwise the applications can't make any sensible use of them.
+> 
+> - Since writes are backward compatible, nothing bad happens if the 
+> passed placement-hint value is not supported. Maybe desired outcome (in 
+> terms of WAF reduction) may not come but that's not a kernel problem 
+> anyway. It's rather about how well application is segregating and how 
+> well device is doing its job.
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index cd0180b1f5b9..f30e27bb2233 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1960,13 +1960,11 @@ static int qedi_cpu_online(unsigned int cpu)
- 	struct qedi_percpu_s *p = this_cpu_ptr(&qedi_percpu);
- 	struct task_struct *thread;
- 
--	thread = kthread_create_on_node(qedi_percpu_io_thread, (void *)p,
--					cpu_to_node(cpu),
--					"qedi_thread/%d", cpu);
-+	thread = kthread_create_on_cpu(qedi_percpu_io_thread, (void *)p,
-+				       cpu, "qedi_thread/%d");
- 	if (IS_ERR(thread))
- 		return PTR_ERR(thread);
- 
--	kthread_bind(thread, cpu);
- 	p->iothread = thread;
- 	wake_up_process(thread);
- 	return 0;
--- 
-2.46.0
+What do you mean with "writes are backward compatible" ?
+
+> - Device is perfectly happy to work with numbers (0 to 256 in current 
+> spec) to produce some value (i.e., WAF reduction). Any extra 
+> semantics/abstraction on these numbers only adds to the work without 
+> increasing that value. If any application needs that, it's free to 
+> attach any meaning/semantics to these numbers.
+
+If the device (or file system, which really needs to be in control
+for actual files vs just block devices) does not support all 256
+we need to reduce them to less than that.  The kernel can help with
+that a bit if the streams have meanings (collapsing temperature levels
+that are close), but not at all if they don't have meanings.  The
+application can and thus needs to know the number of separate
+streams available.
 
