@@ -1,118 +1,100 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 915AF13BAFA;
-	Tue, 17 Sep 2024 18:21:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D89B3AC36
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Sep 2024 23:06:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726597307; cv=none; b=lwyufLlaIQz26Ir21aJkDJfuitij+XzOc8mN7A5lDrK3qPkXAtTSZmesXLya4p3242t/WVYBbWma90QzoilXEJVtXjWlmiu5Whj3+NFbqIh9EdCHRCG++ZtDad65O/yc2eqTtjHPADihFBevpYEGFHntm/gzaRchB0Ze1BrFUpA=
+	t=1726614415; cv=none; b=VNie50QtkNDCLHnurfkL2bjOFwjZQLxjw/IbCSlqE0M8nEkHMlnyR18nC4MDsQF0N0Uc4FoNr+HIDBlp2MXsa7Lp6/DaeYFr20aquvm9K1jRzaMze36MXV39OAUf0dl64KtU2+Yv1XO4tEs3TyCTBjvqaNWrpVfvRdYOTmdojMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726597307; c=relaxed/simple;
-	bh=d/FGdE5p3l5KSKe+3EQ85x/v/U3i1kvogPNYEAMP1MM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r7eFrFs1xVUMZA29xzE9U6kjP1OPX92h2Bs//dPrh4nOCgCZIr4sMJ7lSGSj7+jbKfExuTZuIxh+TFO4tRNn44tiy0TsbUqoqvy33SNiKGd5foY05lgARGFo9O14s7sM1maMulKXVVwuJotuprhL8FVCpL5admg50FYle5lIPns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FaUNlyrj; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1726614415; c=relaxed/simple;
+	bh=vrEjoBfgEjdl3ySPEO6x5FWOtVxbiJ7GYzpqVwX0nXk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iEESPAbWYef90zgnMGhuuCyd9xOlYrzgRlhvHkdj8N7+mQojWlbKmZ2iTuJiLVM//rV/oCTP03VKvUKw8KR6jjfemXu/7D1X2ECkc4hymKPK3cADjp9Mj7Zb2I555mjSFxi1XDPESVccGFneDKabmKY30nq+aG/1Ofh4AYIHiQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HATBcsz+; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FaUNlyrj"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4X7VVK07RgzlgMVT;
-	Tue, 17 Sep 2024 18:21:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1726597302; x=1729189303; bh=AWzpBz0NXcHkJr5RdTZqdjJ7
-	Yk9gXxkmI8DiKLOd/lg=; b=FaUNlyrjWYKMUYXE7ISIpvvs8EyF+cw/Ti4a3w7G
-	WK7bpk4cz/zYSBOkk9iebUZwADxY6xmY+cyhnD/UPibAu7iEqrXFkN/jgnyFJnpt
-	Hs1QhcxXuNJfha/WbOEyOg5UvORsE1spOjxxny+It3XBllso4u5yqTU5aA08dcY/
-	EJMOdi1AJvNQl3lwonPpUCzNn1PmR2e/PWi7vpRuk4tYT89BXpoxtbyp/tz4LSj3
-	E+6cN+dDaWoAbxV8pAXrvoikh+7Lemp1nRjx82hD1l9oO3MzCyvGpB8v+laFqq9u
-	CC+q8A0hawDfoChSDiQplULvTjikYnzp4yObs7Z5wdPdxg==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZZpasyyRYEDL; Tue, 17 Sep 2024 18:21:42 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HATBcsz+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1726614412;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=/NmHWjOhYOH+hisI5wLu32UQGw9pEJkrcdZxtm5xFR0=;
+	b=HATBcsz+vnSj2AUabeey5O9uDYfeyg7WTaEqmoplx3xc0JGVRp5FbmPeOoPH32MFPetZm3
+	NyabYXJf/3KLk1z6fZnHCLOq/an9PhZ7DzjQhhR6f/AmvHc68OQjbvMWYfD1mpsmwu9cZ+
+	EZzA4ZcJlpXuF7Tiscyg8cAqg9ae5h4=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-328-Z1D1bjSNM2CvHhgTqMQM3w-1; Tue,
+ 17 Sep 2024 19:06:48 -0400
+X-MC-Unique: Z1D1bjSNM2CvHhgTqMQM3w-1
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4X7VVD6KwhzlgMVP;
-	Tue, 17 Sep 2024 18:21:40 +0000 (UTC)
-Message-ID: <5c15b6c8-b47b-40fc-ba05-e71ef6681ad2@acm.org>
-Date: Tue, 17 Sep 2024 11:21:39 -0700
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9E33119560B7;
+	Tue, 17 Sep 2024 23:06:46 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CD19019560AF;
+	Tue, 17 Sep 2024 23:06:45 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.1) with ESMTPS id 48HN6iPA966777
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 17 Sep 2024 19:06:44 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.17.2/8.17.2/Submit) id 48HN6h8F966776;
+	Tue, 17 Sep 2024 19:06:43 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Muneendra Kumar <muneendra.kumar@broadcom.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: scsi_transport_fc: allow setting rport state to current state
+Date: Tue, 17 Sep 2024 19:06:43 -0400
+Message-ID: <20240917230643.966768-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: ufs: Use pre-calculated offsets in
- ufshcd_init_lrb
-To: Avri Altman <avri.altman@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>
-References: <20240910044543.3812642-1-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240910044543.3812642-1-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 9/9/24 9:45 PM, Avri Altman wrote:
-> Replace manual offset calculations for response_upiu and prd_table in
-> ufshcd_init_lrb() with pre-calculated offsets already stored in the
-> utp_transfer_req_desc structure. The pre-calculated offsets are set
-> differently in ufshcd_host_memory_configure() based on the
-> UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk, ensuring correct alignment and
-> access.
-> 
-> Fixes: 26f968d7de82 ("scsi: ufs: Introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-> 
-> ---
-> Changes in v2:
->   - add Fixes: and Cc: stable tags
->   - fix kernel test robot warning about type mismatch by using le16_to_cpu
-> ---
->   drivers/ufs/core/ufshcd.c | 5 ++---
->   1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 8ea5a82503a9..85251c176ef7 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2919,9 +2919,8 @@ static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
->   	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
->   	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
->   		i * ufshcd_get_ucd_size(hba);
-> -	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
-> -				       response_upiu);
-> -	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
-> +	u16 response_offset = le16_to_cpu(utrdlp[i].response_upiu_offset);
-> +	u16 prdt_offset = le16_to_cpu(utrdlp[i].prd_table_offset);
->   
->   	lrb->utr_descriptor_ptr = utrdlp + i;
->   	lrb->utrd_dma_addr = hba->utrdl_dma_addr +
+The only input fc_rport_set_marginal_state() currently accepts is
+"Marginal" when port_state is "Online", and "Online" when the port_state
+is "Marginal". It should also allow setting port_state to its current
+state, either "Marginal or "Online".
 
-Please always Cc the author of the original patch when posting a
-candidate fix.
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Alim, since the upstream kernel code seems to work fine with Exynos UFS
-host controllers, is the description of UFSHCD_QUIRK_PRDT_BYTE_GRAN
-perhaps wrong? I'm referring to the following description:
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 7d088b8da075..2270732b353c 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1255,7 +1255,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
+ 		 */
+ 		if (rport->port_state == FC_PORTSTATE_ONLINE)
+ 			rport->port_state = port_state;
+-		else
++		else if (port_state != rport->port_state)
+ 			return -EINVAL;
+ 	} else if (port_state == FC_PORTSTATE_ONLINE) {
+ 		/*
+@@ -1265,7 +1265,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
+ 		 */
+ 		if (rport->port_state == FC_PORTSTATE_MARGINAL)
+ 			rport->port_state = port_state;
+-		else
++		else if (port_state != rport->port_state)
+ 			return -EINVAL;
+ 	} else
+ 		return -EINVAL;
+-- 
+2.45.0
 
-	/*
-	 * This quirk needs to be enabled if the host controller regards
-	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
-	 */
-	UFSHCD_QUIRK_PRDT_BYTE_GRAN			= 1 << 9,
-
-Thanks,
-
-Bart.
