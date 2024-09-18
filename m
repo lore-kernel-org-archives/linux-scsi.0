@@ -1,162 +1,114 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from mx1.t-argos.ru (mx1.t-argos.ru [109.73.34.58])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB9C189BA7
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2024 08:13:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07E251304BA;
+	Wed, 18 Sep 2024 08:28:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.73.34.58
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726647183; cv=none; b=QQQLruK3vhJ6jbOfCTspx/JlmFpnG8pLAt3QFDAUQ0VDCgyRzhtne5LU5VTHi3/kB7LtNJX6WPPFVPOoQthndkY/LTMopvwFXrnzRrFVsdhtiH86aOeEw+F/9ryYBo0z/M7c9gnT00et/qXdt3WUoR/Sz2FzwrSfwxopvCEZt0c=
+	t=1726648097; cv=none; b=S8hw9kanHmGnw2Da2fuq5OXCy+Q36NVCoDfw1Gh5HjzBL4rPtvVkTKL+Epz7Yi+cROFrFTQpOePd903Ld2akSoY13nOYosxJuqf/YtqLQXi9zxLWmIHr6epDlgPiqqqFt/P+M8wR1FuZKFrqid8ALcky/RoFwmgFLMtid+CCBA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726647183; c=relaxed/simple;
-	bh=hVS5/dLEpOOKYrRO9sHjVFV8c2Fp1IrgklMi3vZotYg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=E+PaLohjvFkA3WHamveqr9MTytQofh50n7wzXLZ9JZMHzK6sA6lbBdVzf3jj1LfMFK8jq0Kzd0ACKSWqF803iid5nxerhHEzKxJeSir8AgBMIkudffYCLw+cjLuxLTKBRVN9TSDo35kivNyyuB4UcUpv7DV87gXZGLQ/QAdf30c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=W3aO/XXY; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1726648097; c=relaxed/simple;
+	bh=hZwlQTwJtdlp1N573YzYJf9gsSLaxWPPduzGsP/A5JI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=IM0pD9EfsZD/KVBZoWr7dKcfXTsbIBSzrci9ac7tYIyz5blKCDJkWVUVoF2br6Dz9Ar4d89p4lf/4xyANk7YZNI6lTp+qo8NG+IM/+BjjeW2mGdoW7DuZbsyzZFiiANg109MOC4ZXeHyEaC1goKzALCW4MNuH8bSn6kX39vd96s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=t-argos.ru; spf=pass smtp.mailfrom=t-argos.ru; dkim=pass (2048-bit key) header.d=t-argos.ru header.i=@t-argos.ru header.b=pedOXE0U; arc=none smtp.client-ip=109.73.34.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=t-argos.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=t-argos.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="W3aO/XXY"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20240918081259epoutp01ef79a5b6abc5038e34df04188e7144aa~2SHYURNM71753117531epoutp01f
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2024 08:12:59 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20240918081259epoutp01ef79a5b6abc5038e34df04188e7144aa~2SHYURNM71753117531epoutp01f
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1726647179;
-	bh=FoClbYiaISSy4tE9A/eMkUtSrOUByd+2+OMRpBKthhQ=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=W3aO/XXY8kdv50riW7NNgh22FeVNbrsdEJK5EOR2GxPimr+vhWpzIvGHoMljFTNUo
-	 aDvSqSeyn8++P4WKaSD2qPPbxI/CZepf5fnBXeRHL+1l0e1Z0l7AGxOmvg9bUd91A3
-	 JbwUZfi5chpTViM/uhMO0dTai/T/Jut9Fx12IO9o=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20240918081258epcas5p1823dac2b9a9e6de8274eb13f917c7f68~2SHXsXn9c2910929109epcas5p1C;
-	Wed, 18 Sep 2024 08:12:58 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.178]) by
-	epsnrtp3.localdomain (Postfix) with ESMTP id 4X7rxN46Jdz4x9Pw; Wed, 18 Sep
-	2024 08:12:56 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	17.5C.09642.88B8AE66; Wed, 18 Sep 2024 17:12:56 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240918081255epcas5p274303a976333fd9a6c74ae0ff2147342~2SHUxomyX0868808688epcas5p21;
-	Wed, 18 Sep 2024 08:12:55 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240918081255epsmtrp26af4e1a22d02d7d933be6f1d3f42a37c~2SHUwqAVe0537805378epsmtrp29;
-	Wed, 18 Sep 2024 08:12:55 +0000 (GMT)
-X-AuditID: b6c32a4b-879fa700000025aa-94-66ea8b886ab7
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	71.6F.19367.78B8AE66; Wed, 18 Sep 2024 17:12:55 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240918081252epsmtip18dd83ba1309566b2e110c9a05d3ffe5d~2SHR36ysF1791217912epsmtip1_;
-	Wed, 18 Sep 2024 08:12:52 +0000 (GMT)
-Message-ID: <197b2c1a-66d2-5f5a-c258-7e2f35eff8e4@samsung.com>
-Date: Wed, 18 Sep 2024 13:42:51 +0530
+	dkim=pass (2048-bit key) header.d=t-argos.ru header.i=@t-argos.ru header.b="pedOXE0U"
+Received: from mx1.t-argos.ru (localhost [127.0.0.1])
+	by mx1.t-argos.ru (Postfix) with ESMTP id 4F70E100002;
+	Wed, 18 Sep 2024 11:27:54 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=t-argos.ru; s=mail;
+	t=1726648074; bh=0sPboU8IYRBlIY1XmA9cL2CH1HZBlyyxQXxh+ilOe/Y=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	b=pedOXE0UIoZo8HrV7G5utGFTvy0vXSWuc5+n24Y5sypF1g3Fvzt8tj1wY7AwwMdDa
+	 je1Oi5zZVljR8RRJIy0sIsgr2Tec0lX1PLya7I0zvwvU5Ndkn8Xiwm6l/IymMQQFcN
+	 Co1KooNhe6HxWGJ9BcKqti2XS2w1eGkfFyCqWwVZXcU7epn9qIJuu1mYMgpWodcpUf
+	 UuCpFZoagZxfIT6zPdESq+QP3rmT3/dSqCFE9VaenM95nJUAiPdEB8impY/nX7slcT
+	 /Uk4QvQckqnWt7rht91TTggpYktijGGefIE+EXmLd4/HWeoPTjBYF3Np/hurHeTAur
+	 UhnsCxP7DEDeQ==
+Received: from mx1.t-argos.ru.ru (mail.t-argos.ru [172.17.13.212])
+	by mx1.t-argos.ru (Postfix) with ESMTP;
+	Wed, 18 Sep 2024 11:26:53 +0300 (MSK)
+Received: from Comp.ta.t-argos.ru (172.17.44.124) by ta-mail-02
+ (172.17.13.212) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Wed, 18 Sep
+ 2024 11:26:33 +0300
+From: Aleksandr Mishin <amishin@t-argos.ru>
+To: Eric Moore <eric.moore@lsil.com>
+CC: Aleksandr Mishin <amishin@t-argos.ru>, Sathya Prakash
+	<sathya.prakash@broadcom.com>, Sreekanth Reddy
+	<sreekanth.reddy@broadcom.com>, Suganath Prabu Subramani
+	<suganath-prabu.subramani@broadcom.com>, James Bottomley
+	<James.Bottomley@SteelEye.com>, <MPT-FusionLinux.pdl@broadcom.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<lvc-project@linuxtesting.org>
+Subject: [PATCH] scsi: message: fusion: mptsas: Adjust bitmask calculation in mptsas_setup_wide_ports()
+Date: Wed, 18 Sep 2024 11:26:19 +0300
+Message-ID: <20240918082619.13369-1-amishin@t-argos.ru>
+X-Mailer: git-send-email 2.30.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v5 4/5] sd: limit to use write life hints
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
-	martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
-	brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
-	jaegeuk@kernel.org, jlayton@kernel.org, chuck.lever@oracle.com,
-	bvanassche@acm.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-	gost.dev@samsung.com, vishak.g@samsung.com, javier.gonz@samsung.com, Nitesh
-	Shetty <nj.shetty@samsung.com>
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20240918064258.GA32627@lst.de>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Te1BUdRSe3713X4wLlxXiByNCl8oweawu9MMBskHzjlSD08OJmYINLo8W
-	dnf2QUaOgQ6o0IJiAa0UZAjDQhKPlOeUEBIKw2NBZAWGxzICOxiPqMzCdvei8d93znzfOd85
-	Zw4fF2XxPPjJcg2jkktTKK4Dca3Td5ff2dzFhMB7tyGqnsjnIkvnKkCFyw9x9HjiPobGfm7G
-	UFV1F4YuFZ3GkLlWj6O6fD6aHV/joYcVBh4q6LgDULvpJTR0+TBqa+8hUGnFHA/ljjZxUWX3
-	BoauPSrF0VXLbwTq/7ebg/r1JbwDz9DG4Ui6f7KOoAsLbnFpY5+Wrjec49IN5Z/RrWVrGN06
-	lsGlV+ZMBJ3XaAB0b9kvPHqtfiddb17CooTRstAkRhrPqLwZeZwiPlmeGEZFvhUTERMUHCj2
-	E4eglylvuTSVCaMOvh7l91pyinVmyjtNmqK1pqKkajUVEB6qUmg1jHeSQq0JoxhlfIpSovRX
-	S1PVWnmiv5zR7BcHBu4NshJjZUmfDw5wlNcdjj+utYAM0MDPAQI+JCVwuLgXzwEOfBHZCmDj
-	jSYuG6wCOJRVjT8NFn7P5D2RfDNfRdiwiGwG8NSQgsVLAFb1ptqwkAyHv07m2PkE+TxcqPmO
-	x+adYc9XZrvWlfwQ/j1SAmx4OxkGc3Wj9jxOukGTuRSzYReSgnOLfcBmAicrCHhlpd9qj8/n
-	kr5w4KLWxhGQe2Cd7jKP1XrB60sldtOQrBTAm/Umjo0PyYOwrS+C9b8dLnY3bs7iAdcetHNZ
-	LINTM1MEi0/ApoY8DotfgRn/3LWXwa1ta1sC2FaOUPfIjLHVhfBstohlPwsnC+Y2lW5wurh8
-	0wANuzLd2W1O4NBiMPLOA2/9lqXotwyv3zKM/v/GZYAwAHdGqU5NZNRByn1y5uOn145TpNYD
-	+z/sjmwCM1PL/h0A44MOAPk45SJ0W15IEAnjpZ+kMypFjEqbwqg7QJD1OhdwD9c4hfWh5JoY
-	sSQkUBIcHCwJ2RcsptyElqyv40VkolTDyBhGyaie6DC+wCMDa+vb8ULV6R/y704fvXXMvfe9
-	FaVO5i6oLs/D4978oDLHs0szfiTnfcvoqFC/d6yiPFOOe01/75jsEuN8ONx5ZjXgAPBZ93Eu
-	bPG4GXvIOO7+9kbRydmWvFNpsaGjdETBxfOHRiTvOKzmmiLGa350ZH7aP1PXqJB9aijNPhYN
-	3cadPjqhKPpSt61wCKu8Gu6aftSpMyFWULto7DPtrLnhy9lBLomcj6Q7tFfNEsPpJx+sc0e+
-	9do10a1xjV7OOXNpz/35jXc3BoSv3uEgT6QxXwh/UWI8LhyUXfmi47n5cz1U7BtTqvV7s91n
-	PNuW/mgu99ElVBQPDv/lhJtuT61mj6Rt+5Mi1ElS8W5cpZb+B0mzXdSYBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0xSYRzGe885co401pE032WzIq1RaNnF3nX/0NZZrVZtWatlUp7IKegO
-	YYq5rFwlFF1nkywdGYW2DKywhV0085KmaVNy0WVBF5kVUZmVmcDa/Pbb8+x5/s+HP4ULXxPj
-	qRTFbpZTSNNEPD5xq04UGXNY27tzlsE2GlU4jvOQu+4rQIVfBnA05HiPoef3b2PIVFGPoXNn
-	D2LIWanHkfk4hd6+8JJowFhOolO1XQDV9MxAHYYVyFbTRKASo4tE2u5qHrrc8BdDt36X4Oia
-	+zOB2gYbglCbvphcNo7pfLaKaXtpJpjCU808prNVxVjKC3hMVdk+5k6pF2PuPM/jMR5XD8Ho
-	bpQDpqX0Icl4LZGMxdmHrRVs5i9KZtNSMllu5pIk/q6jT9uDMqz8rKFKN8gDVZQGBFOQngsv
-	fDARGsCnhLQVwP5ObVDACIcHu36SAR4LTX/f+1lIuwG0GeN8LKCXwMaXGr9O0NHw49WLZEAP
-	gU1FTsLHYfR2aHu1H/PxWHox1B7r9uv4cH+Ps8Svh9Ii6OptBb4ROG0k4IMzfVhgkQOH7/44
-	hxdRFI8Ww/bTKl8gmJZA8zEDGSiKh5qbGhDgidDaV4yfAEL9iB36Eff0IyL6EZFSQJSDMDZD
-	KZfJd2TExSqlcqVKIYvdkS63AP8TTF9fDYyVg7G1AKNALYAULgoVhH/5uFMoSJZmq1kufRun
-	SmOVtSCCIkThgilpBclCWibdzaaybAbL/XcxKnh8HlaRvdQiGVKIPwzUGa5MjioLCsmLmOC5
-	aq1yL9R52iOrtZ9WRqoULR6r6lJLIp4Yn33v5ALdr4Jp0ed/mFB0uupNroT6OmrO4/6obml+
-	yJ4962aoc3TXWsMatZy2CJZcT/085ltWgiL3gHrl5B+DOtMRA9cFKvd6vQydk7P8Ebaow47P
-	T1xQH5WUVUyKtq45i3lWV9dH1HfaJ9ibWvuLUprncfn7xF0bzKXBktDmu9pMdVRFzbtDWzY5
-	XDaz2iWWm97EfLe0NxZvrbkbo39gP8/MnirWC2+Eo8aGTLFsf+8TicPUcs4qm7vxSrw9blnf
-	7/SkwwlrxuUy2KQV150iQrlLGjcd55TSfwfhi8FzAwAA
-X-CMS-MailID: 20240918081255epcas5p274303a976333fd9a6c74ae0ff2147342
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240910151057epcas5p3369c6257a6f169b4caa6dd59548b538c
-References: <20240910150200.6589-1-joshi.k@samsung.com>
-	<CGME20240910151057epcas5p3369c6257a6f169b4caa6dd59548b538c@epcas5p3.samsung.com>
-	<20240910150200.6589-5-joshi.k@samsung.com> <20240912130235.GB28535@lst.de>
-	<e6ae5391-ae84-bae4-78ea-4983d04af69f@samsung.com>
-	<20240913080659.GA30525@lst.de>
-	<4a39215a-1b0e-3832-93bd-61e422705f8b@samsung.com>
-	<20240917062007.GA4170@lst.de>
-	<b438dddd-f940-dd2b-2a6c-a2dbbc4ee67f@samsung.com>
-	<20240918064258.GA32627@lst.de>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: ta-mail-02.ta.t-argos.ru (172.17.13.212) To ta-mail-02
+ (172.17.13.212)
+X-KSMG-Rule-ID: 1
+X-KSMG-Message-Action: clean
+X-KSMG-AntiSpam-Lua-Profiles: 187815 [Sep 18 2024]
+X-KSMG-AntiSpam-Version: 6.1.1.5
+X-KSMG-AntiSpam-Envelope-From: amishin@t-argos.ru
+X-KSMG-AntiSpam-Rate: 0
+X-KSMG-AntiSpam-Status: not_detected
+X-KSMG-AntiSpam-Method: none
+X-KSMG-AntiSpam-Auth: dkim=none
+X-KSMG-AntiSpam-Info: LuaCore: 34 0.3.34 8a1fac695d5606478feba790382a59668a4f0039, {Tracking_from_domain_doesnt_match_to}, d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;mx1.t-argos.ru.ru:7.1.1;t-argos.ru:7.1.1, FromAlignment: s
+X-MS-Exchange-Organization-SCL: -1
+X-KSMG-AntiSpam-Interceptor-Info: scan successful
+X-KSMG-AntiPhishing: Clean, bases: 2024/09/18 08:11:00
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 1.1.2.30, bases: 2024/09/18 06:30:00 #26614577
+X-KSMG-AntiVirus-Status: Clean, skipped
 
-On 9/18/2024 12:12 PM, Christoph Hellwig wrote:
->>> If the device (or file system, which really needs to be in control
->>> for actual files vs just block devices) does not support all 256
->>> we need to reduce them to less than that.  The kernel can help with
->>> that a bit if the streams have meanings (collapsing temperature levels
->>> that are close), but not at all if they don't have meanings.
->> Current patch (nvme) does what you mentioned above.
->> Pasting the fragment that maps potentially large placement-hints to the
->> last valid placement-id.
->>
->> +static inline void nvme_assign_placement_id(struct nvme_ns *ns,
->> +					struct request *req,
->> +					struct nvme_command *cmd)
->> +{
->> +	u8 h = umin(ns->head->nr_plids - 1,
->> +				WRITE_PLACEMENT_HINT(req->write_hint));
->> +
->> +	cmd->rw.control |= cpu_to_le16(NVME_RW_DTYPE_DPLCMT);
->> +	cmd->rw.dsmgmt |= cpu_to_le32(ns->head->plids[h] << 16);
->> +}
->>
->> But this was just an implementation choice (and not a failure avoidance
->> fallback).
-> And it completely fucks thing up as I said.  If I have an application
-> that wants to separate streams I need to know how many stream I
-> have available, and not fold all higher numbers into the last one
-> available.
+In mptsas_setup_wide_ports() bitmask is a subject to overflow in case of
+phy index is greater than 30 because shifted value is not cast to larger
+data type before performing arithmetic.
 
-Would you prefer a new queue attribute (say nr_streams) that tells that?
+Cast shifted value to u64 to prevent overflow.
+
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Fixes: 547f9a218436 ("[SCSI] mptsas: wide port support")
+Signed-off-by: Aleksandr Mishin <amishin@t-argos.ru>
+---
+ drivers/message/fusion/mptsas.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index a0bcb0864ecd..6641e305e888 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -915,7 +915,7 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc, struct mptsas_portinfo *port_info)
+ 			port_details->port_info = port_info;
+ 			if (phy_info->phy_id < 64 )
+ 				port_details->phy_bitmask |=
+-				    (1 << phy_info->phy_id);
++				    ((u64)1 << phy_info->phy_id);
+ 			phy_info->sas_port_add_phy=1;
+ 			dsaswideprintk(ioc, printk(MYIOC_s_DEBUG_FMT "\t\tForming port\n\t\t"
+ 			    "phy_id=%d sas_address=0x%018llX\n",
+@@ -957,7 +957,7 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc, struct mptsas_portinfo *port_info)
+ 			phy_info_cmp->port_details = port_details;
+ 			if (phy_info_cmp->phy_id < 64 )
+ 				port_details->phy_bitmask |=
+-				(1 << phy_info_cmp->phy_id);
++				((u64)1 << phy_info_cmp->phy_id);
+ 			port_details->num_phys++;
+ 		}
+ 	}
+-- 
+2.30.2
+
