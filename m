@@ -1,63 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6785319DF5F;
-	Thu, 19 Sep 2024 09:40:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3668A19995D;
+	Thu, 19 Sep 2024 11:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726738821; cv=none; b=QXEKT7h0TV2SfCLXDF5kdpcKfGN6eCZ/kjWf50mGz1VpeTMfcLnY3vNb8RYcJ0shNt4mH1fRfOsjb5Vt8AlO66xbdLSbz3j/VieojbjtUg8jAiDL6se7KjCr72U6zVBaZRA14uo+BRX9zHKjClJj7ZG/WkrTfCUD09Gkxx/Ng0k=
+	t=1726745267; cv=none; b=LJ0Ery2E+5nw0dHqJsO5psT/Rur3dXfAiPsRLPA4J5yApx8NjCJP1nw1YGLJKag3wMRrbMnRqPB534gwfSMpJ6EfJ3WwaWY+tBSFNRuM/dzxaW60XdhLw4lpKKxfblmxdeL6026/oIHaAWhJRmxbg0b8GXMk2ydue7Nwv0OvrnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726738821; c=relaxed/simple;
-	bh=kSQOTvMzCvsQpN3i14D/pitO7vfFpeYBoBzTnYCdv1o=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=EzXJm4bJaUiKragyGJ1mmNf+MCF0+UctWywraJmQkm4lfDjtQeDgkPRFnvSQCAJ5vp5RxHsUDT3YYq3tPCxcHsrfvt1pvXoKE5R43sdhKTJfgSGutxvsK3vWjTDbm4XwL1faKpdYvbrdNnGsMH1Mqoi01lvzoOwWzf8W9CX/XzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pVHPphmK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1726745267; c=relaxed/simple;
+	bh=DDH/DI2Jt9ccazDdm9IeMlRwDdSX7Mww3EN7pjQqztw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=LQIrSLATGVzD0huV9XNzP2qzKT0kwUhFfBW18cAdYTwPRga4C2+TveKgeZZKZ4ODpQB//4XuaUgMvPayIFvg3UtTRxmZu/T6yqf0+JBXcs67Am4xl93KyS+Yefbcgg3NijWBJD3B1VXyg5BKGE+mxN53G5Od5nz7aSOxIlzttoc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=parP+bag; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pVHPphmK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42309C4CECD;
-	Thu, 19 Sep 2024 09:40:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726738821;
-	bh=kSQOTvMzCvsQpN3i14D/pitO7vfFpeYBoBzTnYCdv1o=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=pVHPphmKJDXrd2sdSw7HMQxX09dzQAsTEd42hcp30szufAHkajNIT2EIIrzav85gz
-	 lZ4qKbucXtmBj7D4VxTivf8zR82T+lnfhHMmw004ay0uVFhSMD5RvQjSNb6avUpgV6
-	 ZpZ5SbW1LAVQFuCAUKkR6vaxL4A5S71YePTneFMq6kZoaJ3VCHnnvQrHmAQheN44ip
-	 SZ2Vx12fwzkwF4kwOU2ap8yMOpaJqit87nbOLeSQw+K4uCz0y70P2ZJQIl5Pcf6nWI
-	 tUJOQrJEc1/OUQ/8LhXZmg5LtldT+ODzhfpu02kzQioxj/n9vCB8D5QFpbk1TPVPsT
-	 lbul8miZw5nHg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 5D4003809A81;
-	Thu, 19 Sep 2024 09:40:24 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI updates for the 6.11+ merge window
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <99f009993832aed11f0f05c669eb25d7678a9a19.camel@HansenPartnership.com>
-References: <99f009993832aed11f0f05c669eb25d7678a9a19.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <99f009993832aed11f0f05c669eb25d7678a9a19.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: cff06a799dbe81f3a697ae7c805eaf88d30c2308
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: a1d1eb2f57501b2e7e2076ce89b3f3a666ddbfdd
-Message-Id: <172673882323.1462306.15604445574720103672.pr-tracker-bot@kernel.org>
-Date: Thu, 19 Sep 2024 09:40:23 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="parP+bag"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1726745265; x=1758281265;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=DDH/DI2Jt9ccazDdm9IeMlRwDdSX7Mww3EN7pjQqztw=;
+  b=parP+bagyokKQ1pfghCwKa9O3lBPe6IaTmTGn+aHE/a5EAVGi7IwQOQV
+   UKI6U7XMmzXVX4n5guafjhox8XBAzZ2OF2VCs5pzs59SXroBNdFT8H8YG
+   YT8keWIWjGeJFVRx1IxSFXOj47HhVoGR/gcDxdwQveQUpmm9SmTywnHXT
+   DMNbltiJQXnix4dhnJ0bLdok9/9TeVGomPNnDQVZ7nymrz4u0AIlLnjc+
+   j8s1yzLMjIDIs94bXS2V0MbliKFkCvwmhR4DukYiOikuMbuVg+k0/l6Wa
+   j0cAYa0S/VltqLOFL89vGzpRQMjYeeyRP1aXHsftM746zufjcoze3+QIx
+   g==;
+X-CSE-ConnectionGUID: xm+01op2SLiQ/Oa5/DTylg==
+X-CSE-MsgGUID: HRYGNOdgTd2PsrNGONqphQ==
+X-IronPort-AV: E=Sophos;i="6.10,241,1719849600"; 
+   d="scan'208";a="27917707"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Sep 2024 19:26:42 +0800
+IronPort-SDR: 66ebfc43_Mvjnij0wQp/Cv611QBdtx42VKY7PEyFVGOnYkSW/1Z6mAy3
+ KNTbO037SgVzSLCbzMCQUbrmq4BOPtRNlCvQbmA==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2024 03:26:12 -0700
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2024 04:26:41 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs: Do not open code read_poll_timeout
+Date: Thu, 19 Sep 2024 14:24:42 +0300
+Message-Id: <20240919112442.48491-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Thu, 19 Sep 2024 10:18:28 +0200:
+ufshcd_wait_for_register practically does just that - replace with
+read_poll_timeout.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/ufs/core/ufshcd.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/a1d1eb2f57501b2e7e2076ce89b3f3a666ddbfdd
-
-Thank you!
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 8ea5a82503a9..e9d06fab5f45 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -739,25 +739,15 @@ EXPORT_SYMBOL_GPL(ufshcd_delay_us);
+  * Return: -ETIMEDOUT on error, zero on success.
+  */
+ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+-				u32 val, unsigned long interval_us,
+-				unsigned long timeout_ms)
++				    u32 val, unsigned long interval_us,
++				    unsigned long timeout_ms)
+ {
+-	int err = 0;
+-	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+-
+-	/* ignore bits that we don't intend to wait on */
+-	val = val & mask;
++	u32 v;
+ 
+-	while ((ufshcd_readl(hba, reg) & mask) != val) {
+-		usleep_range(interval_us, interval_us + 50);
+-		if (time_after(jiffies, timeout)) {
+-			if ((ufshcd_readl(hba, reg) & mask) != val)
+-				err = -ETIMEDOUT;
+-			break;
+-		}
+-	}
++	val &= mask; /* ignore bits that we don't intend to wait on */
+ 
+-	return err;
++	return read_poll_timeout(ufshcd_readl, v, (v & mask) == val,
++				 interval_us, timeout_ms * 1000, false, hba, reg);
+ }
+ 
+ /**
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.25.1
+
