@@ -1,76 +1,211 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 616A544C81;
-	Fri, 20 Sep 2024 19:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49FB2EAD0;
+	Fri, 20 Sep 2024 20:23:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726861136; cv=none; b=SGBpvIY8R/hTcKwLYwi1w2Soh/+oDbalfoAnz9F649D+5XL5/9l3GnntKZHtScSTS3jtE6HnvPFbMGKKJKckZkT1Dk+k7n16gOd5X7DpcMkUpvFbDG2cnCDAKi+oMC1qgCHeq6hkTG+d3Jl+xAqe+PGn0L7puyHuL+r1dgWiRq8=
+	t=1726863794; cv=none; b=G0elUyQAhYMaFcXC5/pzbTdvfSeZ7eUyHMMVX86z4i1JAFaTKzTXkFNgK7ccLibh2Ge86HyuSujNoCd1O7yEEqsAnYSWyb9frwipNKF3Wr/JgcrRv6MDyyeuMTYT+h/pUkVf9LHoXpCU2jwXrf9cJ3T/Ay8mY/4ZcxzsHyy36zU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726861136; c=relaxed/simple;
-	bh=rE1ASxi+2T/GdyeBbaU50PKBL5Rqz1OVfkmDm8DtfkI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TtrJeEqCIk2mI+9hQBuQ9aZKTQ2fnPtITePBU7X16MyXy2i/RkxOi5hy62qXUpdGtw8q0fKgkcBIwtRURcofO48Xg/tc35a9nU+IxnEqkquMZzxEqqV6t5G62kMkUEDg3dpX3tx7Kc2f1y7zAqxakxG3aU+kNGLuNOIVkiR2O0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HpMrHry3; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1726863794; c=relaxed/simple;
+	bh=ib+A9S5I9CMvHt4v2Ct35wVZBQs6+SYKbHCDlgeiVaI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZJWSv/7hbU8SVE8esFw7Mk7pexulNUBUGn50QDNs1h6bu26ONqZ8U520uOT3vKbtYpQfS8eIDFcqiIcZazHzZG4GdUFl12i5yJHZiAfTMu4fH2CI7wfvedPOHZQ/1P0JTNndzYkBRZVG2S28iVTeKT/7fwviQrbcsZZQbT6xQkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=BQ5Ar9o5; arc=none smtp.client-ip=46.235.229.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HpMrHry3"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4X9N3y55dMz6ClY9H;
-	Fri, 20 Sep 2024 19:38:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1726861133; x=1729453134; bh=rE1ASxi+2T/GdyeBbaU50PKB
-	L5Rqz1OVfkmDm8DtfkI=; b=HpMrHry37gur552xwHYM/V2kqpHgjufuOYqLnLcO
-	RY2mKX8vvVJKgZMg+HdDXp+f3ZSc80XWP3zZ2DMURKidbM5NnAUHuU849gB9zwrJ
-	JEn3Jt2DdqAPcZ1t9+NN9TcmL+zfyrcYkIRvc/HrlD2NmLFhtIKoGqelkIu8rol6
-	mEuOeGJZnjmI46Z5WFdbMdNtyQzonkPbccNl3yMlPwfICnyX/v6TOrz30wtkO3g7
-	fH/WVZB+dsXpJzm+jts1F0TQYnvc6uo/QlT5ONKfKTdhoXBPNE+BJXQ7zSnd7JmQ
-	BttYlX4GOxBcQhJY958cMThHCNuRLzQrA4wNO2fORx9B9w==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id NjR24LrHcaeX; Fri, 20 Sep 2024 19:38:53 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4X9N3w68KJz6ClY9F;
-	Fri, 20 Sep 2024 19:38:52 +0000 (UTC)
-Message-ID: <92cbd8d3-5d16-4c7f-9e82-d1b6139b0994@acm.org>
-Date: Fri, 20 Sep 2024 12:38:52 -0700
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="BQ5Ar9o5"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
+	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
+	:Subject; bh=Sf/FAwdE+OOEoqBoch5OH47McASgFoKuaA8Cys6NfL4=; b=BQ5Ar9o5IHpvMkSQ
+	UU9L5RA1z1um4I1Sd46C+HioIQgggopUPJpPFyZnGSBT0qT8l9cc9zVzmBomeUs8XXuE9gPd/Ciib
+	MoN5hU3wVkf9jcJ4pbyZ8149sNytglrML9nYufO7mIUitvdDRyJa2un/6pmuGRR0e0JXoj/nFdvsh
+	9sHHldIVgEdehX/+BUVW0EIq0pyhhvmfzHRXsEGy1sbiyRSZ820kKiSXE2F9skg2gRDsDQUXc5eK8
+	iEEuMAhuA32xORZiJrNcUbWj8KBtfnWe1cjtW91uszw+i9j62Vo19BVQd580IM+HJeilOLERSIqco
+	nyn+To2ZxIoG5OuBOA==;
+Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
+	by mx.treblig.org with esmtp (Exim 4.96)
+	(envelope-from <linux@treblig.org>)
+	id 1srk9h-006b9Z-18;
+	Fri, 20 Sep 2024 20:23:05 +0000
+From: linux@treblig.org
+To: aacraid@microsemi.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Dr. David Alan Gilbert" <linux@treblig.org>
+Subject: [PATCH] scsi: aacraid: Remove unused aac_check_health
+Date: Fri, 20 Sep 2024 21:23:04 +0100
+Message-ID: <20240920202304.333108-1-linux@treblig.org>
+X-Mailer: git-send-email 2.46.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: Do not open code read_poll_timeout
-To: Avri Altman <Avri.Altman@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20240919112442.48491-1-avri.altman@wdc.com>
- <ff33de4f-d111-4499-afff-231baaccf61c@acm.org>
- <DM6PR04MB657543C148391E6F60921083FC6C2@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB657543C148391E6F60921083FC6C2@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/20/24 12:00 PM, Avri Altman wrote:
-> I think that the wait_for_register makes it much clearer what the function actually does,
-> And for that reason, only, it worth keeping the function name.
+From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-That makes sense to me.
+aac_check_health has been unused since commit
+  9473ddb2b037 ("scsi: aacraid: Use correct function to get ctrl health")
 
-Thanks,
+Remove it.
 
-Bart.
+(I don't have the hardware to test this, build and booted only)
+
+Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+---
+ drivers/scsi/aacraid/aacraid.h |   1 -
+ drivers/scsi/aacraid/commsup.c | 121 ---------------------------------
+ 2 files changed, 122 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 1d09d3ac6aa4..8c384c25dca1 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2736,7 +2736,6 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 Index,
+ 			int isAif, int isFastResponse,
+ 			struct hw_fib *aif_fib);
+ int aac_reset_adapter(struct aac_dev *dev, int forced, u8 reset_type);
+-int aac_check_health(struct aac_dev * dev);
+ int aac_command_thread(void *data);
+ int aac_close_fib_context(struct aac_dev * dev, struct aac_fib_context *fibctx);
+ int aac_fib_adapter_complete(struct fib * fibptr, unsigned short size);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 47287559c768..ffef61c4aa01 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1698,127 +1698,6 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	return retval;
+ }
+ 
+-int aac_check_health(struct aac_dev * aac)
+-{
+-	int BlinkLED;
+-	unsigned long time_now, flagv = 0;
+-	struct list_head * entry;
+-
+-	/* Extending the scope of fib_lock slightly to protect aac->in_reset */
+-	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
+-		return 0;
+-
+-	if (aac->in_reset || !(BlinkLED = aac_adapter_check_health(aac))) {
+-		spin_unlock_irqrestore(&aac->fib_lock, flagv);
+-		return 0; /* OK */
+-	}
+-
+-	aac->in_reset = 1;
+-
+-	/* Fake up an AIF:
+-	 *	aac_aifcmd.command = AifCmdEventNotify = 1
+-	 *	aac_aifcmd.seqnum = 0xFFFFFFFF
+-	 *	aac_aifcmd.data[0] = AifEnExpEvent = 23
+-	 *	aac_aifcmd.data[1] = AifExeFirmwarePanic = 3
+-	 *	aac.aifcmd.data[2] = AifHighPriority = 3
+-	 *	aac.aifcmd.data[3] = BlinkLED
+-	 */
+-
+-	time_now = jiffies/HZ;
+-	entry = aac->fib_list.next;
+-
+-	/*
+-	 * For each Context that is on the
+-	 * fibctxList, make a copy of the
+-	 * fib, and then set the event to wake up the
+-	 * thread that is waiting for it.
+-	 */
+-	while (entry != &aac->fib_list) {
+-		/*
+-		 * Extract the fibctx
+-		 */
+-		struct aac_fib_context *fibctx = list_entry(entry, struct aac_fib_context, next);
+-		struct hw_fib * hw_fib;
+-		struct fib * fib;
+-		/*
+-		 * Check if the queue is getting
+-		 * backlogged
+-		 */
+-		if (fibctx->count > 20) {
+-			/*
+-			 * It's *not* jiffies folks,
+-			 * but jiffies / HZ, so do not
+-			 * panic ...
+-			 */
+-			u32 time_last = fibctx->jiffies;
+-			/*
+-			 * Has it been > 2 minutes
+-			 * since the last read off
+-			 * the queue?
+-			 */
+-			if ((time_now - time_last) > aif_timeout) {
+-				entry = entry->next;
+-				aac_close_fib_context(aac, fibctx);
+-				continue;
+-			}
+-		}
+-		/*
+-		 * Warning: no sleep allowed while
+-		 * holding spinlock
+-		 */
+-		hw_fib = kzalloc(sizeof(struct hw_fib), GFP_ATOMIC);
+-		fib = kzalloc(sizeof(struct fib), GFP_ATOMIC);
+-		if (fib && hw_fib) {
+-			struct aac_aifcmd * aif;
+-
+-			fib->hw_fib_va = hw_fib;
+-			fib->dev = aac;
+-			aac_fib_init(fib);
+-			fib->type = FSAFS_NTC_FIB_CONTEXT;
+-			fib->size = sizeof (struct fib);
+-			fib->data = hw_fib->data;
+-			aif = (struct aac_aifcmd *)hw_fib->data;
+-			aif->command = cpu_to_le32(AifCmdEventNotify);
+-			aif->seqnum = cpu_to_le32(0xFFFFFFFF);
+-			((__le32 *)aif->data)[0] = cpu_to_le32(AifEnExpEvent);
+-			((__le32 *)aif->data)[1] = cpu_to_le32(AifExeFirmwarePanic);
+-			((__le32 *)aif->data)[2] = cpu_to_le32(AifHighPriority);
+-			((__le32 *)aif->data)[3] = cpu_to_le32(BlinkLED);
+-
+-			/*
+-			 * Put the FIB onto the
+-			 * fibctx's fibs
+-			 */
+-			list_add_tail(&fib->fiblink, &fibctx->fib_list);
+-			fibctx->count++;
+-			/*
+-			 * Set the event to wake up the
+-			 * thread that will waiting.
+-			 */
+-			complete(&fibctx->completion);
+-		} else {
+-			printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
+-			kfree(fib);
+-			kfree(hw_fib);
+-		}
+-		entry = entry->next;
+-	}
+-
+-	spin_unlock_irqrestore(&aac->fib_lock, flagv);
+-
+-	if (BlinkLED < 0) {
+-		printk(KERN_ERR "%s: Host adapter is dead (or got a PCI error) %d\n",
+-				aac->name, BlinkLED);
+-		goto out;
+-	}
+-
+-	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
+-
+-out:
+-	aac->in_reset = 0;
+-	return BlinkLED;
+-}
+-
+ static inline int is_safw_raid_volume(struct aac_dev *aac, int bus, int target)
+ {
+ 	return bus == CONTAINER_CHANNEL && target < aac->maximum_num_containers;
+-- 
+2.46.1
 
