@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EA3A17C61
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2024 08:45:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FD5D1EA87
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2024 08:46:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726908341; cv=none; b=N7WovsxfULg0QEXihUdHQqJGkCqHV2/tR0K09tQuKWXGkXtMg1kdAgUVHLpT4xyCH9HUnHh22cnp5LM5IBoS6J+m+JCOxxYZVIfR7AYHh8DTRduprFZDrobayU/y1j72lPnOkRxW+1jR+HmqA2vP22mflEoOPmirBuCfKNqeHt8=
+	t=1726908418; cv=none; b=j3//t6PT6GeV0SzmlNMQwsuM6DeFEJlYg7/1mQjGessAb+n2TAQjBQLTcWENKuoVb7gvCjTQZLAtreDG1fx/Kzcp4LH7VV1BZQ2LyN0KteledKp+C/+LfCs/4ofRZJKJu1sWIZzG6xQy/Xw/DYOCxm3OmfhAWOfkwzTHo/xMJb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726908341; c=relaxed/simple;
-	bh=k5zLRomjYn8sa6ULecAuhf+r2saZFVe4VOWFC0VfM3I=;
+	s=arc-20240116; t=1726908418; c=relaxed/simple;
+	bh=7wO0iYdkPAH3SBs2ZEe4M/+mOmfrdJCdVKrf8kEobak=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LdMmOAAfn+jx6P6APYCNWcGA6ekxbvWHADFw8t5d3APx/sRgXCXZ4tVvVDED4yJ+SGwDR+WiUWY3tnYLBJ9U72uKNVS6UXR3DJml+6yiO008HXCWjQIja1jaoczfjuboB5T1Z0teoGtvzyDOl47AZEo9hQkpuv8rDEXYjXuhZm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SZ01kR0q; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=c1UZUE6TJ/0V0JoTHUIDhML2boZuVkXl4NY9mks/QsGQ+C/D0dLq9qzBozzY4wpbghmZoqLFxDziVFP6pHvFnRBm0fey6alvHjk9YgzqKA5Wyn8ORbH0L4S335PH90uhuVE80oK+9h9D+mqGm6i0IWr0LQ4ZxMQJ/BgNQ8C0sj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZVlBIx+J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SZ01kR0q"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4344AC4CECF
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2024 08:45:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZVlBIx+J"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 27C72C4CECF
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2024 08:46:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726908341;
-	bh=k5zLRomjYn8sa6ULecAuhf+r2saZFVe4VOWFC0VfM3I=;
+	s=k20201202; t=1726908418;
+	bh=7wO0iYdkPAH3SBs2ZEe4M/+mOmfrdJCdVKrf8kEobak=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=SZ01kR0q9SV0fLRl5FVjj1dYb5g+ox1csl49UexFRW6+xSWBwzCVv6tjggHCTQOut
-	 nco5ZAgsJJXmrK8syh1mcjUl3G5miCvklHY3F157wmYRVkrWQQbwzaTcGrDfBJdnPE
-	 jUA4oSEpAoqMj7N0jrsdb+rS6qyD6KNBEZNZ35Vuo1Iu+IASZHsFgLn7s1hlcIdMq4
-	 tvBuj6NHcAwialJbzsJYhZRA8tahEcs7sQnWcufAnjU+DuoY3X+I2VB8zo5mpeQ+PT
-	 2FDnrPz4OUntcJgPxZ72D8HMGYxPsETogz5/eghwfky9o3XjGa5GbnVncDNSGVHp7L
-	 nHo7P0fDvWGnA==
+	b=ZVlBIx+JX9okgCbPEdKvukVjYM/r/T2vG74Iv11OZzl46UD3vT7nX1xQkiJBDNaF9
+	 ueWmAHKyr7hNcj0pbNU+nFbm4UOpufKgQy/FV4hiMidiKsNe+akHngf87+9OlyZ9d5
+	 eCfQ4jeMoCl0y0e6oHZi8nNucKJ/po3HyjnxLNodhEDCHKjfV0w2L8R14HcD+HNRnR
+	 kb181ySZRUOrQd/Wr4l4HdRwbP/lc65df60ZQqAgNq/xEdILJnuIQQqLTq/xwgbS+p
+	 2UxpPVCvFB3KK0s6N5fGM+jS0yl+TFT6KYfY88fcfwtr/0BdORXPBSrsVBAmQB7jOJ
+	 46rhnMfqCnxrw==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 3DADAC53BC5; Sat, 21 Sep 2024 08:45:41 +0000 (UTC)
+	id 23EA3C53BC8; Sat, 21 Sep 2024 08:46:58 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 219296] libahci driver and power switching HDD on newer kernels
-Date: Sat, 21 Sep 2024 08:45:40 +0000
+Date: Sat, 21 Sep 2024 08:46:57 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -46,8 +46,8 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cf_kernel_version
-Message-ID: <bug-219296-11613-kcU05Bwcuj@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-219296-11613-KHbnpx0Ypv@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-219296-11613@https.bugzilla.kernel.org/>
 References: <bug-219296-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -67,7 +67,13 @@ Artem S. Tashkinov (aros@gmx.com) changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-     Kernel Version|6.11                        |6.6.0-rc3+
+                 CC|                            |aros@gmx.com
+
+--- Comment #5 from Artem S. Tashkinov (aros@gmx.com) ---
+Bug 218038 was solved ages ago.
+
+Could you try something more recent, e.g. Linux 6.10.11 or 6.11? Or even
+6.6.52?
 
 --=20
 You may reply to this email to add a comment.
