@@ -1,98 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D751C693;
-	Fri, 20 Sep 2024 23:13:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F333874BF8;
+	Sat, 21 Sep 2024 06:24:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726873991; cv=none; b=SvwB7bl9bMX0mSNMfo4vvSgrZMQtDNID0MKQE2B1BLYj/r5tpa2bFlwY8Jmdy7f+UpTi5I/AxbCWji5nwSeTtlv12DJRwiF3yOsQSDLs1NcJh/WLO8F7TCBnOEHdKrFA7rxrG8gxl1gZMWN+ymSqoOYXMzLFwhLgvwnK/azH28g=
+	t=1726899898; cv=none; b=kJopWH7P3on+1XGSMFvEbkBvIpdLmClSGjhL+2O1YdOfEdNrH4mbegi7QiEyWeaS+4pI22KiCkyRFBNYwr9JDnW0u6psFMWvIJ1GvoQiNRZ3NOUnOXjjhNbI0ohtv8Sp0gno5zr4GsKbuJolnPda/Ka26NAcyxGJy15Ct0dVDwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726873991; c=relaxed/simple;
-	bh=+CbtnYI/5ORGbbRU1OhnMdiA6deltgQ52qYdl/OS+Ok=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=tXOty0ZfUUeuE0dJxuNqWS0ppQY0IV4tzWdIPD10nVZtr3h4f/JxgpOVZUkph6CKRRJ3dkeNjUiqGbjthDQrvu9T1dYYU+x7WxQpRgZi476E+jcvqa447fQ2JgZkY6QrYrTtSYaD7BSCPEvXCbHwNl62c8FH9K5ft5Vn1pvfJp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kiVeK4hj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1726899898; c=relaxed/simple;
+	bh=5mH7mMTVTr3FhqnocQwFbpDBgHlshX4tmQnu+pFtNeg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nNbsoADrbW53LlrcK0Iiy2ypHkMQeMTsVeBzMcC17MHrJB7/DFaGQXY0uV5aDjWBEmeG3GIwctJDQG974SRUXUNpb2fCyokrKGrXyiC74XstBZ8B4FojHdlffMwTg0nlMk1NTb8BQN3Sz3EbdATX9JHLxARiV2+OXil2JWN+u5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=PjtdbXOd; arc=none smtp.client-ip=216.71.153.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kiVeK4hj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02F1DC4CEC3;
-	Fri, 20 Sep 2024 23:13:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726873989;
-	bh=+CbtnYI/5ORGbbRU1OhnMdiA6deltgQ52qYdl/OS+Ok=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=kiVeK4hjoJc9Eu0ncckqydFSpzyBITFhQViNa96hU8zj303xNGFlP5l/AVb7YUrW/
-	 MMYZmViZSBnoL8LJf9qET6QugL0EZ06S1Q362GvIhgI+Ztf0HBFwagdh6B2697zFfC
-	 JH7vqgUw6v8Ym+KYOpW+8mXSPj5ee6M87jdDVRQaFxr+kce6dCfRxRdmBJdhIKFtiX
-	 vAMBJdm9mMoWusz0drX9SKUtl3+xqeAuDZY5oWKan0anGqC4fLVvk6rnAOLSXB7p1Q
-	 Ev+LIz5XEw7DoW2dMADqySR+8NJ6uRPDzC9l8+P/mBUoz/J5Do3KZ6ZXUwPWoSLUGm
-	 /XPnIUTB6M2gw==
-Date: Fri, 20 Sep 2024 18:13:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: mhklinux@outlook.com
-Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-	decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
-	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
-	hpa@zytor.com, lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-	bhelgaas@google.com, James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com, arnd@arndb.de,
-	linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-arch@vger.kernel.org, maz@kernel.org, den@valinux.co.jp,
-	jgowans@amazon.com, dawei.li@shingroup.cn
-Subject: Re: [RFC 04/12] PCI: hv: Annotate the VMBus channel IRQ name
-Message-ID: <20240920231307.GA1073064@bhelgaas>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="PjtdbXOd"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1726899895; x=1758435895;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5mH7mMTVTr3FhqnocQwFbpDBgHlshX4tmQnu+pFtNeg=;
+  b=PjtdbXOdHq6WslT53E1xD0fW9IDBqPoW9cAYnzz+iAT178+eCZ551Xsl
+   bo03xYW3uW0u0GqsY3z4Pm9TphorQbxHEq0LRtPpdOwCf7BlHx+nD7DMh
+   7a9pMbCNfv/Pml2aBKzXAWcMGlbnjedADeu1AwkoH+MSKBZj3HRh5Bxul
+   EU4fj7yLUDqDZhZJ5YZUWABGZxz3kyQH9mD6QSpwgB+3jeg1vYX4T1dXc
+   MJOxIXk79VKAKjDbgDW27Cv58wF1VimHHwGKSe+gFQOGYwrxnbFfETeG9
+   FaspC2fkZpRQBhunCwaNMzdWujdi5uYwGDoZvWIKmu2OmmIwVfTRzCywG
+   A==;
+X-CSE-ConnectionGUID: jI2AIvWBRJSV86V50oa9JQ==
+X-CSE-MsgGUID: KPN99nuQQSWDd2TJnyjcYw==
+X-IronPort-AV: E=Sophos;i="6.10,246,1719849600"; 
+   d="scan'208";a="28226048"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Sep 2024 14:24:54 +0800
+IronPort-SDR: 66ee5885_OR5yk4Ajn5bE8ZwbPgxAlxJWPJJ6Ot9cOKbeCoAScoOaDCi
+ dNp8p5jImZ0Ir7uQvo5ozLPV7p2IbBTGQBLkXeQ==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2024 22:24:21 -0700
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Sep 2024 23:24:53 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v4] scsi: ufs: Zero utp_upiu_req at the beginning of each command
+Date: Sat, 21 Sep 2024 09:23:06 +0300
+Message-Id: <20240921062306.56019-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240604050940.859909-5-mhklinux@outlook.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jun 03, 2024 at 10:09:32PM -0700, mhkelley58@gmail.com wrote:
-> From: Michael Kelley <mhklinux@outlook.com>
-> 
-> In preparation for assigning Linux IRQs to VMBus channels, annotate
-> the IRQ name in the single VMBus channel used for setup and teardown
-> of a virtual PCI device in a Hyper-V guest. The annotation adds the
-> 16-bit PCI domain ID that the Hyper-V vPCI driver assigns to the
-> virtual PCI bus for the device.
-> 
-> Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+This patch introduces a previously missing step: zeroing the
+`utp_upiu_req` structure at the beginning of each upiu transaction. This
+ensures that the upiu request fields are properly initialized,
+preventing potential issues caused by residual data from previous
+commands.
 
-Seems fine to me.
+While at it, re-use some of the common initializations for query and
+command upiu.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
-> ---
->  drivers/pci/controller/pci-hyperv.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index 5992280e8110..4f70cddb61dc 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -3705,6 +3705,9 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	hdev->channel->request_addr_callback = vmbus_request_addr;
->  	hdev->channel->rqstor_size = HV_PCI_RQSTOR_SIZE;
->  
-> +	snprintf(hdev->channel->irq_name, VMBUS_CHAN_IRQ_NAME_MAX,
-> +				"vpci:%04x", dom);
-> +
->  	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
->  			 hv_pci_onchannelcallback, hbus);
->  	if (ret)
-> @@ -4018,6 +4021,8 @@ static int hv_pci_resume(struct hv_device *hdev)
->  	hdev->channel->next_request_id_callback = vmbus_next_request_id;
->  	hdev->channel->request_addr_callback = vmbus_request_addr;
->  	hdev->channel->rqstor_size = HV_PCI_RQSTOR_SIZE;
-> +	snprintf(hdev->channel->irq_name, VMBUS_CHAN_IRQ_NAME_MAX,
-> +				"vpci:%04x", hbus->bridge->domain_nr);
->  
->  	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
->  			 hv_pci_onchannelcallback, hbus);
-> -- 
-> 2.25.1
-> 
+---
+Changes in v4:
+ - Remove a redundant argument (Bart)
+
+Changes in v3:
+ - initialize *ucd_req_ptr once (Bart)
+
+Changes in v2:
+ - Simplify things (Bart)
+---
+ drivers/ufs/core/ufshcd.c | 36 ++++++++++++++++++++++--------------
+ 1 file changed, 22 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 8ea5a82503a9..9187cf5c949c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2761,7 +2761,6 @@ void ufshcd_prepare_utp_scsi_cmd_upiu(struct ufshcd_lrb *lrbp, u8 upiu_flags)
+ 	ucd_req_ptr->sc.exp_data_transfer_len = cpu_to_be32(cmd->sdb.length);
+ 
+ 	cdb_len = min_t(unsigned short, cmd->cmd_len, UFS_CDB_SIZE);
+-	memset(ucd_req_ptr->sc.cdb, 0, UFS_CDB_SIZE);
+ 	memcpy(ucd_req_ptr->sc.cdb, cmd->cmnd, cdb_len);
+ 
+ 	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+@@ -2864,6 +2863,26 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
+ }
+ 
++static void __ufshcd_setup_cmd(struct ufshcd_lrb *lrbp, struct scsi_cmnd *cmd, u8 lun, int tag)
++{
++	memset(lrbp->ucd_req_ptr, 0, sizeof(*lrbp->ucd_req_ptr));
++
++	lrbp->cmd = cmd;
++	lrbp->task_tag = tag;
++	lrbp->lun = lun;
++	ufshcd_prepare_lrbp_crypto(cmd ? scsi_cmd_to_rq(cmd) : NULL, lrbp);
++}
++
++static void ufshcd_setup_scsi_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
++				  struct scsi_cmnd *cmd, u8 lun, int tag)
++{
++	__ufshcd_setup_cmd(lrbp, cmd, lun, tag);
++	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba);
++	lrbp->req_abort_skip = false;
++
++	ufshcd_comp_scsi_upiu(hba, lrbp);
++}
++
+ /**
+  * ufshcd_upiu_wlun_to_scsi_wlun - maps UPIU W-LUN id to SCSI W-LUN ID
+  * @upiu_wlun_id: UPIU W-LUN id
+@@ -2997,16 +3016,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	ufshcd_hold(hba);
+ 
+ 	lrbp = &hba->lrb[tag];
+-	lrbp->cmd = cmd;
+-	lrbp->task_tag = tag;
+-	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+-	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba);
+ 
+-	ufshcd_prepare_lrbp_crypto(scsi_cmd_to_rq(cmd), lrbp);
+-
+-	lrbp->req_abort_skip = false;
+-
+-	ufshcd_comp_scsi_upiu(hba, lrbp);
++	ufshcd_setup_scsi_cmd(hba, lrbp, cmd, ufshcd_scsi_to_upiu_lun(cmd->device->lun), tag);
+ 
+ 	err = ufshcd_map_sg(hba, lrbp);
+ 	if (err) {
+@@ -3034,11 +3045,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 			     enum dev_cmd_type cmd_type, u8 lun, int tag)
+ {
+-	lrbp->cmd = NULL;
+-	lrbp->task_tag = tag;
+-	lrbp->lun = lun;
++	__ufshcd_setup_cmd(lrbp, NULL, lun, tag);
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
+-	ufshcd_prepare_lrbp_crypto(NULL, lrbp);
+ 	hba->dev_cmd.type = cmd_type;
+ }
+ 
+-- 
+2.25.1
+
