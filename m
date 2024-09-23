@@ -1,132 +1,79 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB244F215
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2024 08:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88F0A15D1;
+	Mon, 23 Sep 2024 17:31:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727078636; cv=none; b=n2HMYlkRXNcZqiFbsRBIozcyr9UQTRuvhJn4KDhtDVI9UuQrCVIRsy3p4IlBUHxNRmPwOyTILr1dtkif0h/19VFyPTk8Gz+w0j+sBwU8HM5NT8I+d330wjlqyzjTQJ/O5u5nzHK6+5AIDB/1IadgaebTr5FnkXqOjzaUH+62VTs=
+	t=1727112712; cv=none; b=NfbO3MJbGAci3Af8RUrTanSRlGKzMJ3QfDE0ieD7QLbZN+/gwp1Pxo7516jKe2Y9io20lsaMJn0yZS1MHRI8n23o2TtOI7HLjlQSAJXEIORCtknu4wuQw6ZlOF94DH5TfuQFyAu01A3RJkp76lyaD1JfaxsGCTBMEMvUbRyQ/jk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727078636; c=relaxed/simple;
-	bh=sA6TcIn5YaEF6+ZZR8wlpUDIJnWk15nqa2ADGPNbNTo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bddhojWdQiJcsz8e8zpgQgNJ9QysCLs1SxxXdX8cIEJD0GEIKwkG/Pt/Yulpkfv/qbdhoDgVS+HoBejpou+IxC/W2FGOG82nPZUE4jeRA8d+KCBBPIenCpX2b5qSljFQ+ESssbnC+1nBxEhDWOPE3i0T7il+C4OOZxdcUxR/5uI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=QOpNPpNR; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1727112712; c=relaxed/simple;
+	bh=40rs9ZJYvUrK7g9KIL5niqwlLMK8H1EN1ciEegYswQk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ob+sEn/KIJMvrrh4sMdP0xu5U5GFfYsl3TPJPvcy79rXLU3pztOdv5efNGtV4Wm4XFEb7SECNdxXlP899Xw3wKA5QDOjHZf8ubdHv8Cv4KNT2X1N54GH0IQi47yy+BNEF50d7N/b2ltr/husNTS7FQFSqog2YJzdixxMjQTWzGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=23BeIyal; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QOpNPpNR"
-X-UUID: 5c1cdace798211ef8b96093e013ec31c-20240923
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=YXMhltoMgmQLzO3ZdYxVrwS8dLFOJK+GrAHZ492TEhs=;
-	b=QOpNPpNRFw0mxdhNOYOd6iJq+L5shnPn915X/LSbiOrcKJ6smyuBwsPn1s8tYwTLIwNBd047wK7IXSGroaWoxhO2nRTpqZc5EWfhaIsxdev4WWogkwj6msy8ls4Ri0/E0g51wjlMNspa5JXjpg9PSu07KqpuDw3hGK/XJjyjxDc=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:437d59dd-efeb-4414-9cc9-0d592dd69172,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:6dc6a47,CLOUDID:e6639dd0-7921-4900-88a1-3aef019a55ce,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 5c1cdace798211ef8b96093e013ec31c-20240923
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 950116144; Mon, 23 Sep 2024 16:03:46 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Mon, 23 Sep 2024 01:03:46 -0700
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Mon, 23 Sep 2024 16:03:45 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<quic_nguyenb@quicinc.com>
-Subject: [PATCH v8 3/3] ufs: core: add a quirk for MediaTek SDB mode aborted
-Date: Mon, 23 Sep 2024 16:03:44 +0800
-Message-ID: <20240923080344.19084-4-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20240923080344.19084-1-peter.wang@mediatek.com>
-References: <20240923080344.19084-1-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="23BeIyal"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XC95r3WX2z6ClY9d;
+	Mon, 23 Sep 2024 17:31:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1727112699; x=1729704700; bh=40rs9ZJYvUrK7g9KIL5niqwl
+	LMK8H1EN1ciEegYswQk=; b=23BeIyalq1fR/PvyX95ggjGDsAdQjaxCjrdU8d1h
+	qrrEl2uFIhAxwIA8pL+2eWFloktyI9ZtjcE/1d/PefNYD+T6VgxbKSAIEVgJHqp5
+	f2xq0Bd/5wush+iZCjCvoJ/wMP8jR+cZFDoX8FD+kyJYKPOiTAA5dBKeblQcMZHu
+	8ngi9XQvoS8kkPxyuRB418JloYe5wprpDECWhkoAe6eDJy7yCh+wnCNSxFfNZbjx
+	Yv0S4VyN+ns3sOVWMcdr/lV0sJfBeL0m+SDNYApj8openSmiteuoI/jclvRpMQNK
+	Iy67fUv0seEFkcsT7Kzyew+CjAxznbMRyRToBDQG+GZZNw==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8YFiwgf2yGLY; Mon, 23 Sep 2024 17:31:39 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XC95g5fgbz6ClY9c;
+	Mon, 23 Sep 2024 17:31:35 +0000 (UTC)
+Message-ID: <a6cf0ed9-5a0d-4b63-96cf-8ac9da1cbbdd@acm.org>
+Date: Mon, 23 Sep 2024 10:31:33 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 1/1] ufs: core: set SDEV_OFFLINE when ufs shutdown.
+To: Seunghwan Baek <sh8267.baek@samsung.com>, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com, avri.altman@wdc.com,
+ alim.akhtar@samsung.com
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
+ dh0421.hwang@samsung.com, jangsub.yi@samsung.com, sh043.lee@samsung.com,
+ cw9316.lee@samsung.com, wkon.kim@samsung.com, stable@vger.kernel.org
+References: <20240829093913.6282-1-sh8267.baek@samsung.com>
+ <CGME20240829093921epcas1p35d28696b0f79e2ae39d8e3690f088e64@epcas1p3.samsung.com>
+ <20240829093913.6282-2-sh8267.baek@samsung.com>
+ <015101db0d8d$daacd030$90067090$@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <015101db0d8d$daacd030$90067090$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 9/23/24 12:54 AM, Seunghwan Baek wrote:
+> Could you please review this patch? It's been almost a month.
+> If you have any opinions about this patch, share and comment it.
 
-Because the MediaTek UFS controller uses UTRLCLR to clear commands
-and fills the OCS with ABORTED, this patch introduces a quirk to
-treat ABORTED as INVALID_OCS_VALUE.
+Thanks for the reminder. I'm not sure why this patch got overlooked but
+I will take a look.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c       | 5 ++++-
- drivers/ufs/host/ufs-mediatek.c | 1 +
- include/ufs/ufshcd.h            | 6 ++++++
- 3 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b5c7bc50a27e..b42079c3d634 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5404,7 +5404,10 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 		}
- 		break;
- 	case OCS_ABORTED:
--		result |= DID_ABORT << 16;
-+		if (hba->quirks & UFSHCD_QUIRK_OCS_ABORTED)
-+			result |= DID_REQUEUE << 16;
-+		else
-+			result |= DID_ABORT << 16;
- 		dev_warn(hba->dev,
- 				"OCS aborted from controller = %x for tag %d\n",
- 				ocs, lrbp->task_tag);
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 02c9064284e1..8a4c1b8f5a26 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1021,6 +1021,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
- 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
- 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
-+	hba->quirks |= UFSHCD_QUIRK_OCS_ABORTED;
- 	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
- 
- 	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 0fd2aebac728..8f156803d703 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -684,6 +684,12 @@ enum ufshcd_quirks {
- 	 * single doorbell mode.
- 	 */
- 	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
-+
-+	/*
-+	 * Some host controllers set OCS_ABORTED after UTRLCLR (SDB mode),
-+	 * this quirk is set to treat OCS: ABORTED as INVALID_OCS_VALUE
-+	 */
-+	UFSHCD_QUIRK_OCS_ABORTED			= 1 << 26,
- };
- 
- enum ufshcd_caps {
--- 
-2.45.2
+Bart.
 
