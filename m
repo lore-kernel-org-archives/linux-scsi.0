@@ -1,136 +1,85 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7D81A7AFD
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2024 14:22:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BD3111CA0;
+	Tue, 24 Sep 2024 18:25:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727187773; cv=none; b=fE1GdOcLLpuAHDtBc3qCqZD0h7SCaBLUJ9xpUNHioS5p2/pZsgHp2o47l7wz9Vz9K3U1llCinGbI4FgWWQVS63dVCp9C05OXo6+RXkymbJppJ41ok/Sh6oJ2XgJyOEn3hGRSFHU6EuhTmTvH0++jeq2jCHjaOYOsaouGd9HBkI0=
+	t=1727202306; cv=none; b=AMi8LKluqaaY0x+4Rz47guW+yf7feGcpxcMtJaLkzOkhuIvI4KxSFS+bb+bAizkrecSgMcjpBmdOoBu2xHu7OYSZDo4i3diw4yDnLA+JNbVrnbabv+IwLZSxz2Z8MRD1uuWtN5s0lteaBc1mCWT/e1awxeRzCaFeCqTE6pn0LVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727187773; c=relaxed/simple;
-	bh=Hs8CScpBEfYE4rCg0iZxpO4Br8KFrmFfugQINQ+4bY8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lo57x3G1LmmX2uJvVyOYW6QMPWgfUYFYhiMRVNoweDNW7N5/+cXmgTxK/0+QNpoKfQFX72oBcUxTnv7h/jxkMSwwn+BMiKFkcPTtkX8h+mLDW9IOG3X+W6cjO+C4FMoQy7kxEvDRYZQblLsRQnykEt1JWsUqki8f8inBDqKniGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WK/EJH4Y; arc=none smtp.client-ip=209.85.221.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1727202306; c=relaxed/simple;
+	bh=rgLearlYjzMnQfkJz/s3WeZnp9Ywf6QnlUcddXy54bE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=c6Ym6a4idUYPzLVqDI/UnQqYC7gY7ThuWEKgduKlwr9kgZbtXc53qtRQ23Ht34wTijIoCOQr6IgMlvhuWx+uQVzHhn4I+0UX3QEZHrxgg0Sm+8K9rekKGF2wCouLZz/kBzkkaNvr5EXr+KQuVwgicYQn151WVc4dKiu320uybds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xIjA5nAE; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WK/EJH4Y"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-374bfc395a5so3624699f8f.0
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2024 07:22:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1727187770; x=1727792570; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=v7kppg7Q0WopvTHm3mYvO0b0XAFSW9Be8XsW5zt9bbw=;
-        b=WK/EJH4YKuY25S80Y3pBEHKX9QZZg56tDdD/kVrF2eOU6lM5rXtzE2jEChu5JNmgg1
-         G5D38RHxkSHW5Kf6MK7pQ7pVXmfJfqSRiQLuy6vwgaD0bs9e8aYDgqtmrHLWULU0FYU7
-         hEI14lNEUQ/hWj3nXcfhNWSkIcT1hrB4Jrojm1/sURFBjh+UINQY063y04PkXxeY3kwC
-         JhZAg7k1ChKz6wrffd8LGbFMyuGjuW43IMv4d4Axg6bXxMIwZnVoHGp944JEPvDD1acx
-         DhUWsnfcDUV4c1EYCai28m9Bqe47Ac3qQxl8mf8n6DLlJZLAZP5p9z2fQNNQ0LMdelDh
-         KtNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727187770; x=1727792570;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=v7kppg7Q0WopvTHm3mYvO0b0XAFSW9Be8XsW5zt9bbw=;
-        b=K0gI7IEswO7CzMC7uGov2VcbhS1BoF5uUhT7/0alzfN3do2qZdMHweFRenwMF+vJkF
-         TIRFt+aZyL/ciZgSMJTRsyO7834XBQbUAx6uA8m47gZ/bny24FOI33AVIzUpreOfZXQ6
-         0Z+0aAiqvtm2m4qKZLokyu4uDWnwirdWhs9IuPtwVR0/iA6IKoUs/zLhFiI8rkW6/Edd
-         BGDLth+ShgsNrTyCbZN3FWqR07U3GOoaOY7tqNPXm25o64Y/7WMkGB8zkHTpY2n52xve
-         I5nTMaxQnAWCEBUPhW82z8PZtpl9z5Q+uKFbU+6OzBjVALIAD2dIaILvyVua9WWek/Xi
-         /q6w==
-X-Forwarded-Encrypted: i=1; AJvYcCWhIK48rIWDzLJdFrRq7L9DMx6iQ7Tobgy6YvydpNhosp0HB+UynZ499YzjRxxNLjpju7gZjTlMp5Ly@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxp1rcCd7W06m2Lyn6NblYBF6SKQe3oD83sF/E5T183zAD0cK8h
-	iCxzv1NxKcY7FWrINGO/pXMoUbGiuRlqLidqNV5ozIHX9F4q89PunFUbW7QDVg==
-X-Google-Smtp-Source: AGHT+IFRuDPewf36+EfX0flbkUrVtgaUGcAMED8IIOZ6mewqhDzvTH0iRhAd5jrDA6W6XVQQSwqvNA==
-X-Received: by 2002:a5d:484f:0:b0:374:c57e:1ea9 with SMTP id ffacd0b85a97d-37c84e3ec85mr2074333f8f.18.1727187770262;
-        Tue, 24 Sep 2024 07:22:50 -0700 (PDT)
-Received: from thinkpad ([80.66.138.17])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42e754a619dsm162094525e9.30.2024.09.24.07.22.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2024 07:22:49 -0700 (PDT)
-Date: Tue, 24 Sep 2024 16:22:48 +0200
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: quic_jingyw@quicinc.com
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Andy Gross <agross@kernel.org>, quic_tengfan@quicinc.com,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xin Liu <quic_liuxin@quicinc.com>
-Subject: Re: [PATCH v2] dt-bindings: ufs: qcom: Document the QCS8300 UFS
- Controller
-Message-ID: <20240924142248.a5bjev6wqmkwrbar@thinkpad>
-References: <20240911-qcs8300_ufs_binding-v2-1-68bb66d48730@quicinc.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xIjA5nAE"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XCpDp2nrmz6ClY9X;
+	Tue, 24 Sep 2024 18:24:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1727202293; x=1729794294; bh=ka1L/rTl/2S2yfrGC6e0Apm9
+	4DZy23YfTKQUPFek9FQ=; b=xIjA5nAEchXHvqDuOAhcmxGDXr2wBmjI+90m8hbL
+	ac678sRb1E5freXs3xcnYO6+5z9n2e9PKH1imyuMy1mvr7G28w4vMv6QjlYfUoHV
+	GV68dTiOG9okWzwD8/dmWXgRub2SRdZdFjdgduGVkChMTebJwggY5Oxul3ZpeIpo
+	uqacwWeG0g7ngfJX6/diyLAJPw03gPDEOTyapxOuxfNVwA0aNLrpAjYli1lSmqiY
+	pmgWSYQGnOkKAUG2clTtdBF3mxQAZGIpMBwY88zCCQFtsf0I3gFmZvy5Kvz1r4ky
+	WfQgi8bKiNUxp8dWGEs2VFFTyuVy5RS5rQxvhUIjDDLKRg==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id lHziY71Vt7vE; Tue, 24 Sep 2024 18:24:53 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XCpDg5X6zz6ClY9W;
+	Tue, 24 Sep 2024 18:24:51 +0000 (UTC)
+Message-ID: <1845f326-e9eb-4351-9ed1-fce373c82cb0@acm.org>
+Date: Tue, 24 Sep 2024 11:24:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240911-qcs8300_ufs_binding-v2-1-68bb66d48730@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 1/1] ufs: core: set SDEV_OFFLINE when ufs shutdown.
+To: Seunghwan Baek <sh8267.baek@samsung.com>, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com, avri.altman@wdc.com,
+ alim.akhtar@samsung.com
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
+ dh0421.hwang@samsung.com, jangsub.yi@samsung.com, sh043.lee@samsung.com,
+ cw9316.lee@samsung.com, wkon.kim@samsung.com, stable@vger.kernel.org
+References: <20240829093913.6282-1-sh8267.baek@samsung.com>
+ <CGME20240829093921epcas1p35d28696b0f79e2ae39d8e3690f088e64@epcas1p3.samsung.com>
+ <20240829093913.6282-2-sh8267.baek@samsung.com>
+ <fa8a4c1a-e583-496b-a0a2-bd86f86af508@acm.org>
+ <003201db0e27$df93f250$9ebbd6f0$@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <003201db0e27$df93f250$9ebbd6f0$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 11, 2024 at 03:06:36PM +0800, Jingyi Wang via B4 Relay wrote:
-> From: Xin Liu <quic_liuxin@quicinc.com>
-> 
-> Document the Universal Flash Storage(UFS) Controller on the Qualcomm
-> QCS8300 Platform.
-> 
-> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
-> Signed-off-by: Jingyi Wang <quic_jingyw@quicinc.com>
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+On 9/23/24 7:17 PM, Seunghwan Baek wrote:> That's because SSU (Start 
+Stop Unit) command must be sent during
+> shutdown process. If SDEV_OFFLINE is set for wlun, SSU command cannot
+> be sent because it is rejected by the scsi layer. Therefore, we
+> consider to set SDEV_QUIESCE for wlun, and set SDEV_OFFLINE for other
+> lus.
+Right. Since ufshcd_wl_shutdown() is expected to stop all DMA related to
+the UFS host, shouldn't there be a scsi_device_quiesce(sdev) call after
+the __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM) call?
 
-- Mani
+Thanks,
 
-> ---
-> Changes in v2:
-> - decoupled from the original series.
-> - Link to v1: https://lore.kernel.org/r/20240904-qcs8300_initial_dtsi-v1-0-d0ea9afdc007@quicinc.com
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 25a5edeea164..cde334e3206b 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -26,6 +26,7 @@ properties:
->            - qcom,msm8994-ufshc
->            - qcom,msm8996-ufshc
->            - qcom,msm8998-ufshc
-> +          - qcom,qcs8300-ufshc
->            - qcom,sa8775p-ufshc
->            - qcom,sc7180-ufshc
->            - qcom,sc7280-ufshc
-> @@ -146,6 +147,7 @@ allOf:
->            contains:
->              enum:
->                - qcom,msm8998-ufshc
-> +              - qcom,qcs8300-ufshc
->                - qcom,sa8775p-ufshc
->                - qcom,sc7280-ufshc
->                - qcom,sc8180x-ufshc
-> 
-> ---
-> base-commit: 100cc857359b5d731407d1038f7e76cd0e871d94
-> change-id: 20240911-qcs8300_ufs_binding-b73f64e16954
-> 
-> Best regards,
-> -- 
-> Jingyi Wang <quic_jingyw@quicinc.com>
-> 
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+Bart.
