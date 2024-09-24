@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2D51B85D2;
-	Tue, 24 Sep 2024 19:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFFD8282F4
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2024 19:36:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727204700; cv=none; b=JILBefOeKROOy6gFJOEBDHWEWYhfAS0a5AJB0y1y8e5g8C2ub5YmnYSWAohkAW4U/CrGCLX0RFOv8+BuSH67oz8l6eRARjJzxHeZIP8HCV1vPvW16as7URM1XtyIhtk5bM9G55Ml5svJY8Y7Om/mde/wUVM8xfvx8LTqY8np79g=
+	t=1727206618; cv=none; b=UbGgpT2Hr4cwOMx/kqYMmDFKmQE49A0JhivFdtUMchK00K2A/k3gKbPi8FPfBURIjDxkxwXUzWXicAHsMNfU/ddmKiLONMtkEpht6t9GBOZ7RODh8vGul+4OSE/d3exp2ZKEP/2+cahgdsnlMd5HrZ4ED7z5eQ8jxxuz1LPbHaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727204700; c=relaxed/simple;
-	bh=jazYlHF5VNrTC4j4teI5VVneJOTOSITRqk8L9ktqQVM=;
+	s=arc-20240116; t=1727206618; c=relaxed/simple;
+	bh=p3Fn0DiLqZBZx/Wn08nGpoiQ7ur/I7xHuyP6dZ9gpLs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n/CJTwvtMEMMsQkIeLFjAO6DGTafdx98zVFA1YjXq1CXOGJsLmLu9wjJWVDuizW0gwSfuKVTkk7gdvZZk1Re5qp4XmY/0IeO+Mp2g8lJkVPQ8jGH8RWKw0JL5ZCFPi5rCmuymF+tSYXJVDhpeqHHuyySzpXH5Y565LSv2UJ8fss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=seOdaJze; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=It3zJZTkzLJA9DtVYBFJumn1fZcuslWJC/mEma1/birFcfZWWyvmcOo995nzTHXpfYIkQ7Bpnjf37qcLNWHx/WLsmoKB7Dl5AJgh4vYf6+YpTnU3f0/P3Nh82zs7AAjHw9PaS3AXtMh2d+WpC4dpMYARGv8aa+ja3U/YAkOO6XM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rLtHIAxF; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="seOdaJze"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BC61C4CEC4;
-	Tue, 24 Sep 2024 19:04:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727204700;
-	bh=jazYlHF5VNrTC4j4teI5VVneJOTOSITRqk8L9ktqQVM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=seOdaJzeGlnwmQNRGIGsLGgVz4+gUKAC5Q5kzIi34TlxK9DHzr4pY89JghzzzeOR+
-	 v9g4bfdbFG486ASDNuDBxEfG2PZOjZfPT+BGP0PHCsXrmfiIveXbAzy7zF9mRTUy8j
-	 66mD31LjuZTDzUnaEg5M+WpfYwl9h2+ql2vxO3FBX+IBLt0nEpfSMuQftNGkxIDyT7
-	 TuYV/NRFQditwyYi/UFdFHjZbiev6Z8HUwo2irmlVqWNEWEGBKIwsO4gC56tITR1oQ
-	 fG6wfiqRmDGYHrqertsRqIu6gPZcHnPIfk2ys8Ieuj2eRmOBm9zAt98LeLOT1Z6p5E
-	 etwwRatsSSeIg==
-Message-ID: <670f4ac8-a024-4027-9b5b-7cb8a357ef13@kernel.org>
-Date: Tue, 24 Sep 2024 21:04:52 +0200
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rLtHIAxF"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XCqqr1Nkcz6ClY9Z;
+	Tue, 24 Sep 2024 19:36:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1727206609; x=1729798610; bh=p3Fn0DiLqZBZx/Wn08nGpoiQ
+	7ur/I7xHuyP6dZ9gpLs=; b=rLtHIAxFCGzBjKo8BT2UXNsRETVOHjwlxXV6xB5C
+	q64VDh3WbaYokkl3MprmQFWqYCJseVu5PQV91zKDg+SWMp3XtGX66jOpdnltDDMg
+	DNuaWPtCph6OypkL4H8sPgT05MdgkPK/cylLjFFtOCb4vMqHRPHcQc4HaPlP69kc
+	mOSOrRnZ7W7bW2ZNjGwAiSHMrORoCWRHP/N7/Py5bOsckWO5VA+duDUsUpeq6a3R
+	vaNdovK/FtIKjqwVM5pgiWB/FfSoAghIUDAMXiu+iH981JQ+OViMigN7JpXzgC2n
+	o5ghBQpNpHZ6IeHyB2FmGJd0Qa60eA8KR8d0Fq7+7pvqyQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Dr4ojz5uoCJp; Tue, 24 Sep 2024 19:36:49 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XCqqf1LcPz6ClY9X;
+	Tue, 24 Sep 2024 19:36:45 +0000 (UTC)
+Message-ID: <fb02d4c2-bb0b-4d26-8d6c-f76f309679a1@acm.org>
+Date: Tue, 24 Sep 2024 12:36:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,86 +50,53 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] dt-bindings: ufs: qcom: Document the QCS8300 UFS
- Controller
-To: quic_jingyw@quicinc.com,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Andy Gross <agross@kernel.org>
-Cc: quic_tengfan@quicinc.com, linux-arm-msm@vger.kernel.org,
- linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, Xin Liu <quic_liuxin@quicinc.com>
-References: <20240911-qcs8300_ufs_binding-v2-1-68bb66d48730@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
+Subject: Re: [PATCH v8 3/3] ufs: core: add a quirk for MediaTek SDB mode
+ aborted
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-mediatek@lists.infradead.org"
+ <linux-mediatek@lists.infradead.org>,
+ =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= <jiajie.hao@mediatek.com>,
+ =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+ =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
+ =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
+ =?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
+ wsd_upstream <wsd_upstream@mediatek.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
+ =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
+ =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
+ =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
+ <Chaotian.Jing@mediatek.com>, =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?=
+ <Powen.Kao@mediatek.com>, =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
+ <Naomi.Chu@mediatek.com>, =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?=
+ <Qilin.Tan@mediatek.com>
+References: <20240923080344.19084-1-peter.wang@mediatek.com>
+ <20240923080344.19084-4-peter.wang@mediatek.com>
+ <ce42d310-2a23-453f-bd14-71eeaf9f5664@acm.org>
+ <e0cb5defb8894ea8fb058c617e9de3d3cfa9763f.camel@mediatek.com>
 Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <20240911-qcs8300_ufs_binding-v2-1-68bb66d48730@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <e0cb5defb8894ea8fb058c617e9de3d3cfa9763f.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On 11/09/2024 09:06, Jingyi Wang via B4 Relay wrote:
-> From: Xin Liu <quic_liuxin@quicinc.com>
-> 
-> Document the Universal Flash Storage(UFS) Controller on the Qualcomm
-> QCS8300 Platform.
-> 
-> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
-> Signed-off-by: Jingyi Wang <quic_jingyw@quicinc.com>
-> ---
-> Changes in v2:
-> - decoupled from the original series.
-> - Link to v1: https://lore.kernel.org/r/20240904-qcs8300_initial_dtsi-v1-0-d0ea9afdc007@quicinc.com
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+On 9/24/24 1:51 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> Is there any corner case that I might have overlooked?
 
+Maybe I misunderstood how MediaTek controllers work. Anyway, if a
+MediaTek controller reports the completion status OCS_ABORTED, is
+there any chance that this status will be reported after
+ufshcd_release_scsi_cmd() has been called? Is there any chance that
+the controller writing OCS_ABORTED into the status field will race
+with the host software overwriting that status field while submitting
+a new command?
 
-Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
+Thanks,
 
-Best regards,
-Krzysztof
+Bart.
 
