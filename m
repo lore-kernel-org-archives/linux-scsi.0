@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA58F1D442C;
-	Wed, 25 Sep 2024 12:17:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF4D3227F84;
+	Wed, 25 Sep 2024 12:17:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727266632; cv=none; b=U34/oV0zJ/fBXQMDH/1kyQSbTYFbMirMlY6BnWuPd/CALP9sgFgvIOhD1pBgobFvteEFK5JMY/3RBlUWn9B4Bu2BQO6sHT2ElSYTSeX4XGUctsMRx+ApSc5vvHu5vpjmJGWSh6R+2LYHdOf14/bNY5BYv8wMG8Bcs0pVccEwWh8=
+	t=1727266633; cv=none; b=PVAe1gs5rBShIiQm7YSE2fDJ+IDWOPEVjAFjD+3d7OwTZrTnEvycUVzB/uGqwcBnGVs5/A/XPcHqqDPOyHmtUV1dpMa+WBr1areT5HbPE0jQD0skVRwPG+L19QQmHuoommUCkIiGHOhWdxCkSb08yw7fRaLRZSsTtWqOX3R/NNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727266632; c=relaxed/simple;
-	bh=wdK8y6bGYpKJjysnbbSwWhxoTi3D5LCnlnLcIxyaXyE=;
+	s=arc-20240116; t=1727266633; c=relaxed/simple;
+	bh=5DoGp52IJUiE0n2fp/tbrPCAtK58gCvc9+GEYhKX6Ug=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=S7XJ4v0srXHdVuuI79RZ6d8jO76vNpmI/1ivvy6dOYRhOlyPvyR+c7/mav8/yW1KoFhN+S2sG71Sia4dgLsMMG2PHccESN0ZVd4s8v4DQ1goRn6OLpsDd1jRo97+EZo/5vE7YPvh3xWoa3OGMhfBLS5V2+XbRQYtO8zyHjfuZMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EaXeVjRG; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=UDzFrw359GqNHwD/gUkBOmISs0zAnxjndau9hb6gPmMiBa55tTTVLvY+UygvKyhpzuuoEjw+NCZZAZDqtq4b5Xk7mMQ43zezWqsPNOwH7PGw5EW2Gy2cw9eB1r7qahCqXxcXVbsSTPYOGZDTevezB/QxvtNsX8Kuj4Er+F41l4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ob8jdves; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EaXeVjRG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C182AC4CEC3;
-	Wed, 25 Sep 2024 12:17:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ob8jdves"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 678B2C4CEC3;
+	Wed, 25 Sep 2024 12:17:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727266631;
-	bh=wdK8y6bGYpKJjysnbbSwWhxoTi3D5LCnlnLcIxyaXyE=;
+	s=k20201202; t=1727266633;
+	bh=5DoGp52IJUiE0n2fp/tbrPCAtK58gCvc9+GEYhKX6Ug=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EaXeVjRGXxJnc6pgq7v2gW8lFYTL2uJROLjO4xqMmNAdKWKPdY2tK2wdOk5H72c0R
-	 sFZutF5GxR2JEomw1YwpCsB/b0zEhwDLpxSdmqXfRuflIXemH1tdS2R2tfio87t1+w
-	 SkehJmTS76HqDL/Vbsp0U8eV/STl7psw93m0E3BTktBjfs/Mt/UCTjKI98pjNgz7CO
-	 NBOnSkD97IIC3hEEF/7q/XmFHLuRXcNL/r1YqnPIAH5nLurZ6rsUhAKtDtd75oyFmo
-	 nH0Q8jfarIcegunspjFanMYzPC4NPjv5nudyzOITFKK5drVShurSCt2tk8v4+frVzt
-	 ZwArL6k23+GqQ==
+	b=Ob8jdvesuKgqOz4LFVJVFLGLM3mwmF/heIto3QVTf7BEHKBXnc/8ivTyZ0LeFcscf
+	 k5fTvQzFZ3Y0VTMUG//hCeXagutPCMMn4OYpwopGIIbS2kiszqnYbKnY1CB/8us/XP
+	 iK0GY2dgI6rG8iGVvw6MA+TjgsDlse/8oIJjw8w2LP4lsrfr1IQscQ9hKtShbs6Xua
+	 p326fbT5eZg35g5Rh+7v/ldYGn9Zqv6N4h//cyXP9jbcFQWquh4AOyXJzoLUeL7zgu
+	 OqoSJriDaw37cHy/x1U2BK5KdtNMMVjF8jEEaqa99FCL1cpsNSVvtJT++BD3XyJMaU
+	 g56SPu7WkGp/w==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Kees Cook <kees@kernel.org>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	aacraid@microsemi.com,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 116/139] scsi: aacraid: Rearrange order of struct aac_srb_unit
-Date: Wed, 25 Sep 2024 08:08:56 -0400
-Message-ID: <20240925121137.1307574-116-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 117/139] scsi: lpfc: Update PRLO handling in direct attached topology
+Date: Wed, 25 Sep 2024 08:08:57 -0400
+Message-ID: <20240925121137.1307574-117-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240925121137.1307574-1-sashal@kernel.org>
 References: <20240925121137.1307574-1-sashal@kernel.org>
@@ -52,110 +53,111 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.52
 Content-Transfer-Encoding: 8bit
 
-From: Kees Cook <kees@kernel.org>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 6e5860b0ad4934baee8c7a202c02033b2631bb44 ]
+[ Upstream commit 1f0f7679ad8942f810b0f19ee9cf098c3502d66a ]
 
-struct aac_srb_unit contains struct aac_srb, which contains struct sgmap,
-which ends in a (currently) "fake" (1-element) flexible array.  Converting
-this to a flexible array is needed so that runtime bounds checking won't
-think the array is fixed size (i.e. under CONFIG_FORTIFY_SOURCE=y and/or
-CONFIG_UBSAN_BOUNDS=y), as other parts of aacraid use struct sgmap as a
-flexible array.
+A kref imbalance occurs when handling an unsolicited PRLO in direct
+attached topology.
 
-It is not legal to have a flexible array in the middle of a structure, so
-it either needs to be split up or rearranged so that it is at the end of
-the structure. Luckily, struct aac_srb_unit, which is exclusively
-consumed/updated by aac_send_safw_bmic_cmd(), does not depend on member
-ordering.
+Rework PRLO rcv handling when in MAPPED state.  Save the state that we were
+handling a PRLO by setting nlp_last_elscmd to ELS_CMD_PRLO.  Then in the
+lpfc_cmpl_els_logo_acc() completion routine, manually restart discovery.
+By issuing the PLOGI, which nlp_gets, before nlp_put at the end of the
+lpfc_cmpl_els_logo_acc() routine, we are saving us from a final nlp_put.
+And, we are still allowing the unreg_rpi to happen.
 
-The values set in the on-stack struct aac_srb_unit instance "srbu" by the
-only two callers, aac_issue_safw_bmic_identify() and
-aac_get_safw_ciss_luns(), do not contain anything in srbu.srb.sgmap.sg, and
-they both implicitly initialize srbu.srb.sgmap.count to 0 during
-memset(). For example:
-
-        memset(&srbu, 0, sizeof(struct aac_srb_unit));
-
-        srbcmd = &srbu.srb;
-        srbcmd->flags   = cpu_to_le32(SRB_DataIn);
-        srbcmd->cdb[0]  = CISS_REPORT_PHYSICAL_LUNS;
-        srbcmd->cdb[1]  = 2; /* extended reporting */
-        srbcmd->cdb[8]  = (u8)(datasize >> 8);
-        srbcmd->cdb[9]  = (u8)(datasize);
-
-        rcode = aac_send_safw_bmic_cmd(dev, &srbu, phys_luns, datasize);
-
-During aac_send_safw_bmic_cmd(), a separate srb is mapped into DMA, and has
-srbu.srb copied into it:
-
-        srb = fib_data(fibptr);
-        memcpy(srb, &srbu->srb, sizeof(struct aac_srb));
-
-Only then is srb.sgmap.count written and srb->sg populated:
-
-        srb->count              = cpu_to_le32(xfer_len);
-
-        sg64 = (struct sgmap64 *)&srb->sg;
-        sg64->count             = cpu_to_le32(1);
-        sg64->sg[0].addr[1]     = cpu_to_le32(upper_32_bits(addr));
-        sg64->sg[0].addr[0]     = cpu_to_le32(lower_32_bits(addr));
-        sg64->sg[0].count       = cpu_to_le32(xfer_len);
-
-But this is happening in the DMA memory, not in srbu.srb. An attempt to
-copy the changes back to srbu does happen:
-
-        /*
-         * Copy the updated data for other dumping or other usage if
-         * needed
-         */
-        memcpy(&srbu->srb, srb, sizeof(struct aac_srb));
-
-But this was never correct: the sg64 (3 u32s) overlap of srb.sg (2 u32s)
-always meant that srbu.srb would have held truncated information and any
-attempt to walk srbu.srb.sg.sg based on the value of srbu.srb.sg.count
-would result in attempting to parse past the end of srbu.srb.sg.sg[0] into
-srbu.srb_reply.
-
-After getting a reply from hardware, the reply is copied into
-srbu.srb_reply:
-
-        srb_reply = (struct aac_srb_reply *)fib_data(fibptr);
-        memcpy(&srbu->srb_reply, srb_reply, sizeof(struct aac_srb_reply));
-
-This has always been fixed-size, so there's no issue here. It is worth
-noting that the two callers _never check_ srbu contents -- neither
-srbu.srb nor srbu.srb_reply is examined. (They depend on the mapped
-xfer_buf instead.)
-
-Therefore, the ordering of members in struct aac_srb_unit does not matter,
-and the flexible array member can moved to the end.
-
-(Additionally, the two memcpy()s that update srbu could be entirely
-removed as they are never consumed, but I left that as-is.)
-
-Signed-off-by: Kees Cook <kees@kernel.org>
-Link: https://lore.kernel.org/r/20240711215739.208776-1-kees@kernel.org
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20240726231512.92867-7-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aacraid/aacraid.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c       | 27 ++++++++++++++++-----------
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 22 ++++++++++++++++++++--
+ 2 files changed, 36 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 7d5a155073c62..9b66fa29fb05c 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2029,8 +2029,8 @@ struct aac_srb_reply
- };
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 44d3ada9fbbcb..f67d72160d36e 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5228,9 +5228,10 @@ lpfc_cmpl_els_logo_acc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* ACC to LOGO completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0109 ACC to LOGO completes to NPort x%x refcnt %d "
+-			 "Data: x%x x%x x%x\n",
+-			 ndlp->nlp_DID, kref_read(&ndlp->kref), ndlp->nlp_flag,
+-			 ndlp->nlp_state, ndlp->nlp_rpi);
++			 "last els x%x Data: x%x x%x x%x\n",
++			 ndlp->nlp_DID, kref_read(&ndlp->kref),
++			 ndlp->nlp_last_elscmd, ndlp->nlp_flag, ndlp->nlp_state,
++			 ndlp->nlp_rpi);
  
- struct aac_srb_unit {
--	struct aac_srb		srb;
- 	struct aac_srb_reply	srb_reply;
-+	struct aac_srb		srb;
- };
+ 	/* This clause allows the LOGO ACC to complete and free resources
+ 	 * for the Fabric Domain Controller.  It does deliberately skip
+@@ -5242,18 +5243,22 @@ lpfc_cmpl_els_logo_acc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		goto out;
  
- /*
+ 	if (ndlp->nlp_state == NLP_STE_NPR_NODE) {
+-		/* If PLOGI is being retried, PLOGI completion will cleanup the
+-		 * node. The NLP_NPR_2B_DISC flag needs to be retained to make
+-		 * progress on nodes discovered from last RSCN.
+-		 */
+-		if ((ndlp->nlp_flag & NLP_DELAY_TMO) &&
+-		    (ndlp->nlp_last_elscmd == ELS_CMD_PLOGI))
+-			goto out;
+-
+ 		if (ndlp->nlp_flag & NLP_RPI_REGISTERED)
+ 			lpfc_unreg_rpi(vport, ndlp);
+ 
++		/* If came from PRLO, then PRLO_ACC is done.
++		 * Start rediscovery now.
++		 */
++		if (ndlp->nlp_last_elscmd == ELS_CMD_PRLO) {
++			spin_lock_irq(&ndlp->lock);
++			ndlp->nlp_flag |= NLP_NPR_2B_DISC;
++			spin_unlock_irq(&ndlp->lock);
++			ndlp->nlp_prev_state = ndlp->nlp_state;
++			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
++			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
++		}
+ 	}
++
+  out:
+ 	/*
+ 	 * The driver received a LOGO from the rport and has ACK'd it.
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 3ed211d093dd1..fe174062e4946 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -2635,8 +2635,26 @@ lpfc_rcv_prlo_mapped_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	/* flush the target */
+ 	lpfc_sli_abort_iocb(vport, ndlp->nlp_sid, 0, LPFC_CTX_TGT);
+ 
+-	/* Treat like rcv logo */
+-	lpfc_rcv_logo(vport, ndlp, cmdiocb, ELS_CMD_PRLO);
++	/* Send PRLO_ACC */
++	spin_lock_irq(&ndlp->lock);
++	ndlp->nlp_flag |= NLP_LOGO_ACC;
++	spin_unlock_irq(&ndlp->lock);
++	lpfc_els_rsp_acc(vport, ELS_CMD_PRLO, cmdiocb, ndlp, NULL);
++
++	/* Save ELS_CMD_PRLO as the last elscmd and then set to NPR.
++	 * lpfc_cmpl_els_logo_acc is expected to restart discovery.
++	 */
++	ndlp->nlp_last_elscmd = ELS_CMD_PRLO;
++	ndlp->nlp_prev_state = ndlp->nlp_state;
++
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE | LOG_ELS | LOG_DISCOVERY,
++			 "3422 DID x%06x nflag x%x lastels x%x ref cnt %u\n",
++			 ndlp->nlp_DID, ndlp->nlp_flag,
++			 ndlp->nlp_last_elscmd,
++			 kref_read(&ndlp->kref));
++
++	lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
++
+ 	return ndlp->nlp_state;
+ }
+ 
 -- 
 2.43.0
 
