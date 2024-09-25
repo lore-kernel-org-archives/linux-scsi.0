@@ -1,145 +1,246 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6776A158557
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Sep 2024 10:11:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C30E188CA8;
+	Wed, 25 Sep 2024 11:46:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727259119; cv=none; b=t+/nCEBlAozwHX2/NRE3kXFz4D3QBU/QlYZBXRWI4dhwXnRgvA45amf31SjSADfpq+fsKe0VIjD2aoyHZdM6mzBRqtjrx9YgZpha/nxXX58EqiWp8x+z1EFpdU5wZC1tevzfOoYOfDbgA0ptEeKC7wCxI14koB+q/JpQ/WYWl5k=
+	t=1727264760; cv=none; b=EpTNZUBCotl11oF/scYsCl+8CKrDgvTMumfoMy2CYCDulw8uzjW2H/xnforjcBWVeFmEC6alHT0g/NUUc5Ahc7MGcWWSX+Hrd1ZFp04Q+mW8XS8dUtfye2fiNOVoT+y5/8MtazZ7W+rpniqI9las93U8DEvhQ9a/VQS2OT8uxss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727259119; c=relaxed/simple;
-	bh=2tS85xO8NlwJO7HA7gzbDEun9PIIt97c8yfc0lMNgRk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QeKi5HW1JxJEhEEEY08GhY6esNUQCTvjx2jLkKwtBEcGjqLtNwRGM/0VXuL4Mc98LGNqvyDtpMwo8t0s+8W6KGwovC57/4Dk5G5KdN6MNkb7/RIFYytMnMxvvG5lxNvYYRtAeo5Y6VM5te9ibPbCC55W2Pr/ZbtMC71VsSwhQaU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=f7iP6xL+; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1727264760; c=relaxed/simple;
+	bh=DIgccXoM7l0r0k5D5IXzP36HlpO+6jZM1+Rqh+3F1xk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PjsE4nlpdmV+JMuAWejGShGrcFr0tX/J8QTtkcpOFaJI1NbU6e3PM2d8uvR7GzdipMZYZWDA9TZ0uGZGEeOPF7Jjrut4da/5qC6cv62EECMnBzuWnvb75NPf07mc7o7V/Kz3diqsv12oJbllGtFrxjTFI3ZYMiFskD1ZJBowsW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mXyPvy7v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="f7iP6xL+"
-X-UUID: 93e063227b2611efb66947d174671e26-20240925
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Fm8E4wlpRggBTCT5LOsARIN/XWw2DmG3o9deh+e7oDQ=;
-	b=f7iP6xL+USbYojvJpF69kre6j8VsVQVHVK8DQ0jJWpf1hJ1g6BOdG1I6tVPXOtjZu7NtbKDCNlOt2FL8ihuAc/qfa1D9LF9NCWgnQQctaWmyQ4eK1otlCr7ZQP6jSUiUYL5wWSwJsPJSz3bURTqUnVXtIhAixqVekXHrTj28YxM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:7c3c37df-d913-42cb-bfeb-599eebcdd071,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:6dc6a47,CLOUDID:a5913b18-b42d-49a6-94d2-a75fa0df01d2,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 93e063227b2611efb66947d174671e26-20240925
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 2041453358; Wed, 25 Sep 2024 18:11:49 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 25 Sep 2024 03:11:47 -0700
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 25 Sep 2024 18:11:47 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<quic_nguyenb@quicinc.com>
-Subject: [PATCH v9 2/3] ufs: core: fix error handler process for MCQ abort
-Date: Wed, 25 Sep 2024 17:55:45 +0800
-Message-ID: <20240925095546.19492-3-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20240925095546.19492-1-peter.wang@mediatek.com>
-References: <20240925095546.19492-1-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mXyPvy7v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8462C4CEC7;
+	Wed, 25 Sep 2024 11:45:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727264760;
+	bh=DIgccXoM7l0r0k5D5IXzP36HlpO+6jZM1+Rqh+3F1xk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=mXyPvy7vLnUdlZVJryoU3J6TIIcoVLQG3wgKWeEjjTb14IHMkHTfzDE8S07t5jJXC
+	 cLiDkBqaQ4QR+T2nUviEqWB3BGeNrqbfKyvC+nhgfKceAOEd6zqHtYatZoBLbZgpWD
+	 QINRNdGIqI20w6ouP5I+r1T+0T+OFbxJb7PVtIzzZ3x9/PRxZMfZjoZmYxSvtFwgvA
+	 t7hdXw29o7RXQoPyVNeRo8vtqAC8P0MifZ1b0777AHM5c8Hwai6pEnUTFP3c9hMaJt
+	 UlpafglVDplpCx2/tF3oWEZAnLHWEd91Zr2gsHJJCdNyiPdyXIFdHMbTIw3RrxJtS4
+	 yHnP0DQlV88wQ==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: David Strahan <David.Strahan@microchip.com>,
+	Scott Benesh <scott.benesh@microchip.com>,
+	Scott Teel <scott.teel@microchip.com>,
+	Mike McGowen <mike.mcgowen@microchip.com>,
+	Don Brace <don.brace@microchip.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	James.Bottomley@HansenPartnership.com,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.11 148/244] scsi: smartpqi: Add new controller PCI IDs
+Date: Wed, 25 Sep 2024 07:26:09 -0400
+Message-ID: <20240925113641.1297102-148-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240925113641.1297102-1-sashal@kernel.org>
+References: <20240925113641.1297102-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.11
+Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+From: David Strahan <David.Strahan@microchip.com>
 
-When the error handler successfully aborts a MCQ request,
-it only releases the command and does not notify the SCSI layer.
-This may cause another abort after 30 seconds timeout.
-This patch notifies the SCSI layer to requeue the request.
+[ Upstream commit 0e21e73384d324f75ea16f3d622cfc433fa6209b ]
 
-Additionally, ignore the OCS: ABORTED CQ slot after MCQ mode
-SQ cleanup. This makes the behavior of MCQ mode consistent with
-that of legacy SDB mode.
+All PCI ID entries in hex.
 
-Also, print logs for OCS: ABORTED and OCS_INVALID_COMMAND_STATUS
-for debugging purposes.
+Add new inagile PCI IDs:
+                                             VID  / DID  / SVID / SDID
+                                             ----   ----   ----   ----
+            SMART-HBA 8242-24i               9005 / 028f / 1ff9 / 0045
+            RAID 8236-16i                    9005 / 028f / 1ff9 / 0046
+            RAID 8240-24i                    9005 / 028f / 1ff9 / 0047
+            SMART-HBA 8238-16i               9005 / 028f / 1ff9 / 0048
+            PM8222-SHBA                      9005 / 028f / 1ff9 / 004a
+            RAID PM8204-2GB                  9005 / 028f / 1ff9 / 004b
+            RAID PM8204-4GB                  9005 / 028f / 1ff9 / 004c
+            PM8222-HBA                       9005 / 028f / 1ff9 / 004f
+            MT0804M6R                        9005 / 028f / 1ff9 / 0051
+            MT0801M6E                        9005 / 028f / 1ff9 / 0052
+            MT0808M6R                        9005 / 028f / 1ff9 / 0053
+            MT0800M6H                        9005 / 028f / 1ff9 / 0054
+            RS0800M5H24i                     9005 / 028f / 1ff9 / 006b
+            RS0800M5E8i                      9005 / 028f / 1ff9 / 006c
+            RS0800M5H8i                      9005 / 028f / 1ff9 / 006d
+            RS0804M5R16i                     9005 / 028f / 1ff9 / 006f
+            RS0800M5E24i                     9005 / 028f / 1ff9 / 0070
+            RS0800M5H16i                     9005 / 028f / 1ff9 / 0071
+            RS0800M5E16i                     9005 / 028f / 1ff9 / 0072
+            RT0800M7E                        9005 / 028f / 1ff9 / 0086
+            RT0800M7H                        9005 / 028f / 1ff9 / 0087
+            RT0804M7R                        9005 / 028f / 1ff9 / 0088
+            RT0808M7R                        9005 / 028f / 1ff9 / 0089
+            RT1608M6R16i                     9005 / 028f / 1ff9 / 00a1
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Add new h3c pci_id:
+                                             VID  / DID  / SVID / SDID
+                                             ----   ----   ----   ----
+            UN RAID P4408-Mr-2               9005 / 028f / 193d / 1110
+
+Add new powerleader pci ids:
+                                             VID  / DID  / SVID / SDID
+                                             ----   ----   ----   ----
+            PL SmartROC PM8204               9005 / 028f / 1f3a / 0104
+
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: David Strahan <David.Strahan@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/20240711194704.982400-2-don.brace@microchip.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 104 ++++++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a6f818cdef0e..4fff929b70d6 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5405,9 +5405,15 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 		break;
- 	case OCS_ABORTED:
- 		result |= DID_ABORT << 16;
-+		dev_warn(hba->dev,
-+				"OCS aborted from controller for tag %d\n",
-+				lrbp->task_tag);
- 		break;
- 	case OCS_INVALID_COMMAND_STATUS:
- 		result |= DID_REQUEUE << 16;
-+		dev_warn(hba->dev,
-+				"OCS invaild from controller for tag %d\n",
-+				lrbp->task_tag);
- 		break;
- 	case OCS_INVALID_CMD_TABLE_ATTR:
- 	case OCS_INVALID_PRDT_ATTR:
-@@ -5526,6 +5532,18 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 			ufshcd_update_monitor(hba, lrbp);
- 		ufshcd_add_command_trace(hba, task_tag, UFS_CMD_COMP);
- 		cmd->result = ufshcd_transfer_rsp_status(hba, lrbp, cqe);
-+
-+		/*
-+		 * Ignore MCQ OCS: ABORTED posted by the host controller.
-+		 * This makes the behavior of MCQ mode consistent with that
-+		 * of legacy SDB mode.
-+		 */
-+		if (hba->mcq_enabled) {
-+			ocs = ufshcd_get_tr_ocs(lrbp, cqe);
-+			if (ocs == OCS_ABORTED)
-+				return;
-+		}
-+
- 		ufshcd_release_scsi_cmd(hba, lrbp);
- 		/* Do not touch lrbp after scsi done */
- 		scsi_done(cmd);
-@@ -6486,8 +6504,11 @@ static bool ufshcd_abort_one(struct request *rq, void *priv)
- 		if (!hwq)
- 			return 0;
- 		spin_lock_irqsave(&hwq->cq_lock, flags);
--		if (ufshcd_cmd_inflight(lrbp->cmd))
-+		if (ufshcd_cmd_inflight(lrbp->cmd)) {
-+			set_host_byte(lrbp->cmd, DID_REQUEUE);
- 			ufshcd_release_scsi_cmd(hba, lrbp);
-+			scsi_done(lrbp->cmd);
-+		}
- 		spin_unlock_irqrestore(&hwq->cq_lock, flags);
- 	}
- 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 24c7cb285dca0..9166dfa1fedc3 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -9472,6 +9472,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x193d, 0x110b)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x193d, 0x1110)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x193d, 0x8460)
+@@ -9588,6 +9592,14 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x1bd4, 0x0089)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x00a1)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1f3a, 0x0104)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x19e5, 0xd227)
+@@ -10180,6 +10192,98 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x1137, 0x02fa)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0045)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0046)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0047)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0048)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x004a)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x004b)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x004c)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x004f)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0051)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0052)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0053)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0054)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x006b)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x006c)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x006d)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x006f)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0070)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0071)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0072)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0086)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0087)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0088)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1ff9, 0x0089)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 				0x1e93, 0x1000)
 -- 
-2.45.2
+2.43.0
 
