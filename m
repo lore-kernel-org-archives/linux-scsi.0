@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF04D481CE
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Sep 2024 16:49:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8062A134BD
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Sep 2024 16:56:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727282993; cv=none; b=cMX++QH/MzJkhFx5DoG4q6ZaP3aZ85WnwZ0r7+lUfyrgLUNGIvL1nyGrg4i7vflQmRXWvrLxJTxhT65Ektt08wRnbQZM7Zn1L4w14VjXe4BCgE9zpBBI+im3H4lNJxYmb+RSuZMNogkGFfcY5Bj+uzVNiM9MwYQPUSdGgRUOHr0=
+	t=1727283392; cv=none; b=MkL5/RuMRR+UV9r+WAxSArnO9ZPCR/hT70SziZj4VTDZhNl0Mmt5Qc6A2MjY/D2D8WCIkUpIc0VKk553TQzq51QU2EkqI5d98n034PHBYFCriOYGWuzHGUQjXf+Bo9cE7ri/cmERBp7fSRcAVFz7ObBGbPHqxjeQEukIwTiKNBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727282993; c=relaxed/simple;
-	bh=pW5mJRmQP7O665lo2fzBE0RZzSzmb+ucTVjHjKX321c=;
+	s=arc-20240116; t=1727283392; c=relaxed/simple;
+	bh=8LfVU+3vKBBRvTpUQYOHOe6v/yO7i4HkllNTLYLxIOY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=THB9TYGNiNcVEgeXSshMHnXYOstfbDz4dM1NLjyYJvLvp8x1WpIJYEj6u/fhgk6jzPev+lMBNHV3UuEeAsTxHntj0mL7SAcrSOK9cRph3aUHik4waHhxYcov7YkqId7h+khbTx62B6/IEQltrvAAWSc+TaIIdKz8BVseioJpWqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3Bkq9HbX; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=ryGhtRdvgo9ZzIxY/xaG73UWxED5hPFILp4A2O+Gt7cldL24kBr1U7hp0NtoDMxF6Q5QvktIa0kU+ai0jYDsvzD6Gcrw2lKT8xQp66ghPCp3CXT4RWWYbf441CXbs/5xWAjI1J9zDDlz/ZcrepVaYMkT6pXpXXsK1/YhF04RHBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=knUhiyHL; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3Bkq9HbX"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="knUhiyHL"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XDN4Z4lRpz6ClY9Q;
-	Wed, 25 Sep 2024 16:49:50 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XDNDF5ffhzlgTWQ;
+	Wed, 25 Sep 2024 16:56:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1727282984; x=1729874985; bh=aoIJQ5MhiObxL7pikGsoI1ZJ
-	dDV3AuLGWymzLJx4lOo=; b=3Bkq9HbX1dTOLg49btZVqXOEt7AQTA0ac89ZsCyp
-	7YR1eRoLBc31JQejisIixFL4mWWHs+ec4OCQRu1Si8Ek+1fjlkx8cwqevtSoUbvl
-	zzfzJw03HdAlnTyovvbjPMNqFHV0Amfn50IJlnYtIQ99m+aGZHWHSO7oTH1QHLkG
-	WVIV7Lo8cQaTX7DuWGtyvNIhttR7RNNOPSHm8mzlnxCnnqlAkFSA9llyA88VcDCy
-	aXcRlEEX5ObYb4zohkJNRB+aIhmcA9uFDj1YTwg8j3fbifndCwN8FFl/TcRJV1EI
-	nSBm3/ryYFNcbFTciaBiMBXR4Du5LciY1MxNQlvFIkXmfA==
+	 s=mr01; t=1727283380; x=1729875381; bh=W1uARAEtCZ8e6OEALGT3Y0Ul
+	/ZUS/KuncBTF6dONDlI=; b=knUhiyHLVbFzyYlAwrAT6d8/3aeP5MhmDlNCPNdn
+	h7qhOz8b9M9+Ye7ofQa/bSObAG79D/TtWhmP4u/cJxB97P4F9qbo51VBx7x2v2I/
+	7O/jXpIYAiGYl80StA3EIxUEHP7Udjg3mR5jCcVN9ds1OtludtxRkJKH+/wDVT8m
+	9WKXqKbc1ri4qIdHUlW/Oklfa9082LMGeUfYxg5h0mqmxGEl0G16WLVqqRB5A91D
+	IhnLZvpSmu7v0jmKFRYFTq4iQgi1EywILGwQA6D9Gv++orCFNwnton1674/vXDz+
+	JFTYvX74BTUt8o5Ac1NVMyBJeVjFW4qg9ad5RSscDqFR+A==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id gA5KYz7Ednql; Wed, 25 Sep 2024 16:49:44 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id CGrYvXZT-pvp; Wed, 25 Sep 2024 16:56:20 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XDN4M3CHcz6ClY9N;
-	Wed, 25 Sep 2024 16:49:39 +0000 (UTC)
-Message-ID: <949fb86d-6b61-4a1a-bc04-c05bb30522b9@acm.org>
-Date: Wed, 25 Sep 2024 09:49:36 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XDNCz56jPzlgTWK;
+	Wed, 25 Sep 2024 16:56:15 +0000 (UTC)
+Message-ID: <03b34628-d70b-4ce6-ad87-3c2070105bfa@acm.org>
+Date: Wed, 25 Sep 2024 09:56:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 2/3] ufs: core: fix error handler process for MCQ abort
+Subject: Re: [PATCH v9 3/3] ufs: core: add a quirk for MediaTek SDB mode
+ aborted
 To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
  martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
  jejb@linux.ibm.com
@@ -61,21 +62,79 @@ Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
  eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
  quic_nguyenb@quicinc.com
 References: <20240925095546.19492-1-peter.wang@mediatek.com>
- <20240925095546.19492-3-peter.wang@mediatek.com>
+ <20240925095546.19492-4-peter.wang@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240925095546.19492-3-peter.wang@mediatek.com>
+In-Reply-To: <20240925095546.19492-4-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 9/25/24 2:55 AM, peter.wang@mediatek.com wrote:
->   	case OCS_INVALID_COMMAND_STATUS:
->   		result |= DID_REQUEUE << 16;
-> +		dev_warn(hba->dev,
-> +				"OCS invaild from controller for tag %d\n",
-> +				lrbp->task_tag);
+> From: Peter Wang <peter.wang@mediatek.com>
+> 
+> Because the MediaTek UFS controller uses UTRLCLR to clear commands
+> and fills the OCS with ABORTED, this patch introduces a quirk to
+> treat ABORTED as INVALID_OCS_VALUE.
+> 
+> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+> ---
+>   drivers/ufs/core/ufshcd.c       | 5 ++++-
+>   drivers/ufs/host/ufs-mediatek.c | 1 +
+>   include/ufs/ufshcd.h            | 6 ++++++
+>   3 files changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 4fff929b70d6..d429817fca94 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5404,7 +5404,10 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+>   		}
+>   		break;
+>   	case OCS_ABORTED:
+> -		result |= DID_ABORT << 16;
+> +		if (hba->quirks & UFSHCD_QUIRK_OCS_ABORTED)
+> +			result |= DID_REQUEUE << 16;
+> +		else
+> +			result |= DID_ABORT << 16;
+>   		dev_warn(hba->dev,
+>   				"OCS aborted from controller for tag %d\n",
+>   				lrbp->task_tag);
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+> index 02c9064284e1..8a4c1b8f5a26 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -1021,6 +1021,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+>   	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
+>   	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
+>   	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
+> +	hba->quirks |= UFSHCD_QUIRK_OCS_ABORTED;
+>   	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
+>   
+>   	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 0fd2aebac728..8f156803d703 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -684,6 +684,12 @@ enum ufshcd_quirks {
+>   	 * single doorbell mode.
+>   	 */
+>   	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
+> +
+> +	/*
+> +	 * Some host controllers set OCS_ABORTED after UTRLCLR (SDB mode),
+> +	 * this quirk is set to treat OCS: ABORTED as INVALID_OCS_VALUE
+> +	 */
+> +	UFSHCD_QUIRK_OCS_ABORTED			= 1 << 26,
+>   };
+>   
+>   enum ufshcd_caps {
 
-Please change "invaild" into "invalid". Once that change has been made,
-feel free to add:
+ufshcd_transfer_rsp_status() only has one caller, namely 
+ufshcd_compl_one_cqe(). The previous patch makes sure that that 
+ufshcd_compl_one_cqe() is not called if a SCSI command is aborted. So
+why does this patch modify how OCS_ABORTED is processed? Is this patch
+necessary or can it perhaps be dropped?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks,
+
+Bart.
