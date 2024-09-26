@@ -1,104 +1,169 @@
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8BBC82D91
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2024 14:45:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3C0133C9
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2024 18:26:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727361917; cv=none; b=Crn8822lYsaC7Fxpcvd5Gt2afmh3+pgmgpgeCHhCBJlTeJI+vMaVoXFfJWDqrwdwO5Co1WhKx3XmpKKOl6iGGXb2lnLNv30PkfCMObEgIiQt8AVl5g+Rpn+waCAjtNt/Q9CODdASMRukCm8YEBlusClhbw5X85iMbAOb11+IFX4=
+	t=1727375207; cv=none; b=DO7FwWk6EUzQ+mV503waPG2DzVJgo/TpSuUXJ2HOjZT1jbnTZbHhdkPnMxEv+resDUGsRW3ARoeS+3L1ufMr9kQ5a3+OEXkE6QRt6zYa3AUb9OEwh6RZU8am2mMcJj9Tbuwko2Bv4oi1BxdRjAfXgK1jI7euMtFhpJERZMsZ8sA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727361917; c=relaxed/simple;
-	bh=dsumOzFDfuh/PYFlQ5fBlwa0itLqF681cpqOcUvtv+0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hnWIMIqK6Y39+ZODhU1QeVKd6+1vB9iN3/RRap0yek2eSU/kgCQm5LooPACN9HBmMX3DCANJ4SDClshtPgQbT/SXJ+rz6WtKNNOEA529MSWP7R6QH8uqwKLJdNpE3hnigEM9avgiWLwyEhFjd4VDAKjYWywOadxTcFJPmjEzggM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=VeyTd9R8; arc=none smtp.client-ip=209.85.208.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
+	s=arc-20240116; t=1727375207; c=relaxed/simple;
+	bh=lSVjMSM3vzbu8AlMBHl7m6Hreu1xW5P//e3ZxicIWh0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RXTpTwMQvv1Sewy35UCufZ3j2HYcvYosRkFd0ElPuM3kpS1pWQhMnQzd/MJtrgzWUiYwOoNUzNMOmFAveLG9j+p8Ordmw00P4QEs1tnU1iLZWLY8cmF2xcDDQ5SK9ZjlpCLYOh6dqUdjYUlaWHxXv9K6HfSjeuLLMC0U7yv8JCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dsLzhYiM; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="VeyTd9R8"
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2f74e613a10so17719681fa.1
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2024 07:45:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1727361914; x=1727966714; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UUk5GqFsvnt8aibuoucXH3mgAlXQnT7Fu6sM4Odfi8U=;
-        b=VeyTd9R8+cruMSRIYlvO1L1twVFDeN8tss4OomfqAArVdxqGg5rlNP6/dJTdyfu6V3
-         hBKl0fkg0OuRoNnW63/VeLvk9B7em36Cbcnf2Gqp0/4BJBn67uvQv+ry8hFi5yDSjsIc
-         a8GEHDLtx83lBr4KcH8WHijTHKP8MtiCRHURjyDSGurE/OL6/lpPk1QxqVf8EiHx0yZz
-         TNVzZ3pDHrxw7mhaAX45p5GVd9rTkNk/1N3FlqBl5y1AreZfVYwwT+srqanbuS6g/v0f
-         fU5CB0OLI9I9lxOKOEvBd+ntYRVtMlLO8Iq/FKzmdsk+ivGluF7Kent+Kwap0IKHHHBN
-         HYWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727361914; x=1727966714;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UUk5GqFsvnt8aibuoucXH3mgAlXQnT7Fu6sM4Odfi8U=;
-        b=l/W2Xxh8WOze7WfYyRmBAYaBBfc7N5cFX7ITpeTTXAeeKwd2jA1qL/BjhpPLVnxQ7i
-         doeEbe2Ji184IRcFRLhngyol2D6JmXodwfx9+ksHsDrsAQXqxtFqkvpSWQOrUOy4i/sh
-         KqyyUo+UOsorOMg4jd8VWLcoIkxm5DUDx+MKCqBbt3Bsuddkj4GN+X1e2ycx/u2ZpQeT
-         Kca/f6BMltRnJCmhSrSK+qowWGxIvRQFPXU6lx3hSmpjk/9yHQgv2NRkXZW4yOuRFyok
-         1Ehjf/Kl1lwZFMgv7LQFseI0Qvv3i4pCr4YC2svwXr/56hoUz+U6EnvoRxHkYL6CBy7F
-         afvA==
-X-Forwarded-Encrypted: i=1; AJvYcCXTnXC8MtYDf1Rxhu+seVWFcy6F8RMWBsmSKtsLQo9gK6c4sfO1XGdVy8ZFxuGB9rHECorqmDu/LYyI@vger.kernel.org
-X-Gm-Message-State: AOJu0YyKAsaBZnAPNZzvQqndy2UdvWiD5xZ7OVpfBMKl7jrneEVTfK6K
-	uRr+o6DkAtjgSDMTk2X+bSt3kJUt2rINZ3UifzhrthrnR6UtmXOGXwNf3hjKyxpYNhpwNZaECdA
-	Z9q0wYwem82hiO0MPhzUTxJrnNzR1B62tLAF37g==
-X-Google-Smtp-Source: AGHT+IFBiLue3QFOk1WR26MRKOBV5299+r2MgZ52axZ/Ki/sFLcqtDTCw32+oxmnpnFn89KL/PCW6zIy0IG54nMMM54=
-X-Received: by 2002:a2e:4a0a:0:b0:2f7:6869:3b55 with SMTP id
- 38308e7fff4ca-2f9cd40052emr9790031fa.21.1727361913927; Thu, 26 Sep 2024
- 07:45:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dsLzhYiM"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XF29q24MZzlgVnN;
+	Thu, 26 Sep 2024 18:26:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1727375189; x=1729967190; bh=OYklb0bp4yN/e2qRJsDEQnLw
+	8TXWnh2IpfNp7uNz9UE=; b=dsLzhYiMFmO7Ml6KbEKtZHDG5NeuFJIrsZI2ZeBT
+	NWHdEsw5IcgfaHaMc6tRxMDzUIAWZsuWPemp5D4wdMrgYZC7SM7dx418aGB20A2E
+	B7LUPIHbDzcxkBWAzruU3Qf2GknQHVO1eLnNIScS/+TG5lVC1Ig9jwC56Wq143X2
+	UYPfmNreeKpmVidOs41M8I8KgpO6Nhl9dvmPORKLJq7eS9AtnYkS+4YkPLf1kd2r
+	yvNoDaKwDBQffEWhBDju91W1FLdQbyaYbHcUp7mNDnCkm0A+Ke80AqML2B+h6mEU
+	grbYoSh1dv85/ifPFDcPghlgwidn8HkMbrjsQwh+iOLzNg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id TtPzkeKFogIk; Thu, 26 Sep 2024 18:26:29 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XF29X579FzlgVXv;
+	Thu, 26 Sep 2024 18:26:24 +0000 (UTC)
+Message-ID: <108a707e-1118-42f4-8cc9-c1bda9fab451@acm.org>
+Date: Thu, 26 Sep 2024 11:26:22 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org>
- <20240906-wrapped-keys-v6-6-d59e61bc0cb4@linaro.org> <fc780dc2-5a69-48d8-8caa-ca2ee97d10ef@kernel.org>
-In-Reply-To: <fc780dc2-5a69-48d8-8caa-ca2ee97d10ef@kernel.org>
-From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Thu, 26 Sep 2024 16:45:01 +0200
-Message-ID: <CAMRc=Md3itY5N1gErL-VDAz0qW6DrHPKpXzT6kNwc2HVfvchpA@mail.gmail.com>
-Subject: Re: [PATCH v6 06/17] firmware: qcom: scm: add a call for deriving the
- software secret
-To: Konrad Dybcio <konradybcio@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Alasdair Kergon <agk@redhat.com>, 
-	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, 
-	Adrian Hunter <adrian.hunter@intel.com>, Asutosh Das <quic_asutoshd@quicinc.com>, 
-	Ritesh Harjani <ritesh.list@gmail.com>, Ulf Hansson <ulf.hansson@linaro.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Eric Biggers <ebiggers@kernel.org>, 
-	"Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Bjorn Andersson <andersson@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, Gaurav Kashyap <quic_gaurkash@quicinc.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, linux-block@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dm-devel@lists.linux.dev, linux-mmc@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 2/3] ufs: core: fix error handler process for MCQ abort
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-mediatek@lists.infradead.org"
+ <linux-mediatek@lists.infradead.org>,
+ =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= <jiajie.hao@mediatek.com>,
+ =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+ =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
+ =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
+ =?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
+ wsd_upstream <wsd_upstream@mediatek.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
+ =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
+ =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
+ =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
+ <Chaotian.Jing@mediatek.com>, =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?=
+ <Powen.Kao@mediatek.com>, =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
+ <Naomi.Chu@mediatek.com>, =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?=
+ <Qilin.Tan@mediatek.com>
+References: <20240925095546.19492-1-peter.wang@mediatek.com>
+ <20240925095546.19492-3-peter.wang@mediatek.com>
+ <949fb86d-6b61-4a1a-bc04-c05bb30522b9@acm.org>
+ <4bc08986190aecb394f07997b2ad31e301567496.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <4bc08986190aecb394f07997b2ad31e301567496.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Sep 9, 2024 at 1:23=E2=80=AFPM Konrad Dybcio <konradybcio@kernel.or=
-g> wrote:
-> > +
-> > +     memzero_explicit(secret_buf, sw_secret_size);
-> > +
-> > +out_free_wrapped:
->
-> Is there a reason to zero out the buffer that's being zero-allocated?
->
+On 9/25/24 8:45 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 24a32e2fd75e..06aa4ed1a9e6 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5417,10 +5417,12 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba,
+> struct ufshcd_lrb *lrbp,
+>   		}
+>   		break;
+>   	case OCS_ABORTED:
+> -		result |=3D DID_ABORT << 16;
+> -		break;
+>   	case OCS_INVALID_COMMAND_STATUS:
+>   		result |=3D DID_REQUEUE << 16;
+> +		dev_warn(hba->dev,
+> +				"OCS %s from controller for tag %d\n",
+> +				(ocs =3D=3D OCS_ABORTED? "aborted" :
+> "invalid"),
+> +				lrbp->task_tag);
+>   		break;
+>   	case OCS_INVALID_CMD_TABLE_ATTR:
+>   	case OCS_INVALID_PRDT_ATTR:
+> @@ -6466,26 +6468,12 @@ static bool ufshcd_abort_one(struct request
+> *rq, void *priv)
+>   	struct scsi_device *sdev =3D cmd->device;
+>   	struct Scsi_Host *shost =3D sdev->host;
+>   	struct ufs_hba *hba =3D shost_priv(shost);
+> -	struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
+> -	struct ufs_hw_queue *hwq;
+> -	unsigned long flags;
+>  =20
+>   	*ret =3D ufshcd_try_to_abort_task(hba, tag);
+>   	dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+>   		hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
+>   		*ret ? "failed" : "succeeded");
+>  =20
+> -	/* Release cmd in MCQ mode if abort succeeds */
+> -	if (hba->mcq_enabled && (*ret =3D=3D 0)) {
+> -		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp-
+>> cmd));
+> -		if (!hwq)
+> -			return 0;
+> -		spin_lock_irqsave(&hwq->cq_lock, flags);
+> -		if (ufshcd_cmd_inflight(lrbp->cmd))
+> -			ufshcd_release_scsi_cmd(hba, lrbp);
+> -		spin_unlock_irqrestore(&hwq->cq_lock, flags);
+> -	}
+> -
+>   	return *ret =3D=3D 0;
+>   }
+>  =20
+> ---------------------------------------------------------------------
+>=20
+>=20
+> This patch has several advantages:
+>=20
+> 1. It makes the patch 'ufs: core: fix the issue of ICU failure'
+>     seem valuable.
+> 2. The patch is more concise.
+> 3. There is no need to fetch OCS to determine OCS: ABORTED
+>     on every CQ completion, which increases ISR time.
+> 4. The err_handler flow for SDB and MCQ would be consistent.
+> 5. There is no need for the MediaTek SDB quirk.
+>=20
+>=20
+> What do you think?"
 
-It's my understanding that it is a good practice in crypto routines to
-immediately and explicitly zero out the memory used for storing
-secrets.
+Hi Peter,
 
-Bart
+Is the above patch sufficient? In MCQ mode, aborting a command happens
+as follows (simplified):
+(1) Send the ABORT TASK TMF. If this TMF succeeds, no SQE will be
+     generated. If this TMF succeeds it means that the SCSI command has
+     reached the UFS device and hence is no longer present in any
+     submission queue (SQ).
+(2) If the command is still in a submission queue, nullify the SQE. In
+     this case a CQE will be generated with status ABORTED.
+
+It seems to me that the above patch handles (2) but not (1)?
+
+Thanks,
+
+Bart.
