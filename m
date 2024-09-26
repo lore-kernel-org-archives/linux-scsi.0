@@ -1,60 +1,60 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5502E14F9FD
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2024 12:20:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 147194C7C
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2024 12:31:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727353217; cv=none; b=SR4rKFp3wsE1Lu0knamuLkjFGjP9psvK3INUZsSdKEfULPqGTESGPOiiLpGBO9Gc10Tu9JGKk6LDKqUgtZzw2+p5j+v7Dz7XJ9cN2XzhWrxg8SFJNPuF2MYntXz1eOzyH99kW8fi4flAg5lnLpGZLm72cMYDpfw70N0Qad+G7Ww=
+	t=1727353877; cv=none; b=eDEamC8wH5n1Ps8g+niRPY8vuRihVz/740X+BnLbV+CxRfNXf46+1DJb5sb1zruEZSvXyRx6186c65MSSIXHAm8mz3m5Jk3fubBI1LSGm12mj0ZHqWfkQR/0xu4CSj9fZfMSRqyDda5slGx8AW8Zd/VaiTIJVWfbCbDfheAlL6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727353217; c=relaxed/simple;
-	bh=0bm08rnlpQUdJLBhVe19UC9wUEJEMqrFdy9mt3I0tCE=;
+	s=arc-20240116; t=1727353877; c=relaxed/simple;
+	bh=oG4pL+u8FHsj9tWlEkCvhlIBX/0g7ixy4oeBD3opOVM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HlmjkmzyA8Xd+1n/tqqD5VwsgDv58iTJmw1ir9bmXzBei3z99c2txeCpDVQEe5LKOGe/rXD9Wy+Q4rs/SyiG0UCJUS7Bzcac81oltZbmalf9WcMNlsTj3Zo3ukOosFp5LhWR1cnQTAboD/MMruAsBp3H4qe7LBY33F/YdmfziG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=djeEtTfd; arc=none smtp.client-ip=198.175.65.21
+	 Content-Type:Content-Disposition:In-Reply-To; b=hzP4ZVFWT1fjwHAOTqXT74NvnnyGwMH7RGj6/TUN3hDwzsN5SEgXGdu/MdTwxvs+xX9nHtFH4eN0ou8gS4o5m3KiMnnfDJ/Z+uWTDT8A1XSlJdemOV5BXgxuL9oO35M8WHM8iRbOVC3D+q0F64v+LdNaeDEddYAPseko8kB/m+E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cXEf/Bar; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="djeEtTfd"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cXEf/Bar"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1727353216; x=1758889216;
+  t=1727353876; x=1758889876;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=0bm08rnlpQUdJLBhVe19UC9wUEJEMqrFdy9mt3I0tCE=;
-  b=djeEtTfdvF/WIcPdCk/GEUGbpNwzmMH0kJ56j3JJzAl/M480K778uMNw
-   tMLEakX7DxbuiPhlInFpd+c0pTQ5gUbvuBIxFqZ7lIV/UemnOSYYD5Dui
-   nOJjvu8EIjMmewFCgArukXVqpVs5OCzuIo5f8yaKU5sfvWrgviclDQOoj
-   1RC7iknjSBqT2GD1DZaO/Qks2injvjOmljbI4TrHT+3BDVSeaz1jEVCb+
-   j0+BR1bkP13CbG4md95eu7K7FDFfRDP55HOOUmLjYPOSq21PwPr+5xCU0
-   9fp0u16MiLoIVxqF+OPhSbHmI8H/OZecX4HMX4IzEFO8UroaGFBJyrDLk
+  bh=oG4pL+u8FHsj9tWlEkCvhlIBX/0g7ixy4oeBD3opOVM=;
+  b=cXEf/BarLNPxPOZwv679pAIR5devbLkcyifZTgb8qqbhTXj14p0n/Kk8
+   PImUDS9CzJxml2j0Sx1U1Dz6GHWxRKtbO6q2jvjIlgoAW17Ic2oHS1ZVx
+   JMXn9v/5yIfrG+1c5VHsQrdXAG+LPlfvGmiAJ7455dIsp20lbe4dfnWeH
+   s37g7D8SHncmEbZb6DtNvw6iSnqADM+4U+IXx85JqxmdfQO5ZJwcpqiul
+   Nj2CbjlP0p5B+P65dM01scL5Z9N3a+qlZvt3EpWqKK+o+0J0lcdsQFsJC
+   xQV7vouOqnB/P8aZDMtFSATh/uEbr8XXgbe9H2QcNz25UEREmbzhp3iiO
    Q==;
-X-CSE-ConnectionGUID: 6o/bXalHTM+kwCzdp6H+lw==
-X-CSE-MsgGUID: RWkrjb0zRMqLTq9Fjnsihg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11206"; a="26391288"
+X-CSE-ConnectionGUID: wW509srEQmacviTdCAjTPg==
+X-CSE-MsgGUID: IHVlFJGuQ4yYLNwgvWzw4Q==
+X-IronPort-AV: E=McAfee;i="6700,10204,11207"; a="37112842"
 X-IronPort-AV: E=Sophos;i="6.11,155,1725346800"; 
-   d="scan'208";a="26391288"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2024 05:20:15 -0700
-X-CSE-ConnectionGUID: eAB3u7mjSnuE5bKtJ2uyUQ==
-X-CSE-MsgGUID: oaD71DsqSgSrqbuYUBDJMw==
+   d="scan'208";a="37112842"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2024 05:31:15 -0700
+X-CSE-ConnectionGUID: 2ZDv/psfRKOJMHZ2aeH2Xw==
+X-CSE-MsgGUID: GIy8E0oFQnegUxU8mxoCTg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,155,1725346800"; 
-   d="scan'208";a="95476029"
+   d="scan'208";a="72023775"
 Received: from lkp-server01.sh.intel.com (HELO 53e96f405c61) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 26 Sep 2024 05:20:13 -0700
+  by orviesa010.jf.intel.com with ESMTP; 26 Sep 2024 05:31:14 -0700
 Received: from kbuild by 53e96f405c61 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1stnTe-000Kht-2n;
-	Thu, 26 Sep 2024 12:20:10 +0000
-Date: Thu, 26 Sep 2024 20:20:07 +0800
+	id 1stneI-000Ki3-32;
+	Thu, 26 Sep 2024 12:31:10 +0000
+Date: Thu, 26 Sep 2024 20:30:30 +0800
 From: kernel test robot <lkp@intel.com>
 To: Yihang Li <liyihang9@huawei.com>, James.Bottomley@hansenpartnership.com,
 	martin.petersen@oracle.com
 Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
 	linuxarm@huawei.com, liyihang9@huawei.com
 Subject: Re: [PATCH 03/13] scsi: hisi_sas: Add firmware information check
-Message-ID: <202409262042.MIMB8blU-lkp@intel.com>
+Message-ID: <202409262056.WfCiaJnA-lkp@intel.com>
 References: <20240926014332.3905399-4-liyihang9@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -68,10 +68,10 @@ In-Reply-To: <20240926014332.3905399-4-liyihang9@huawei.com>
 
 Hi Yihang,
 
-kernel test robot noticed the following build errors:
+kernel test robot noticed the following build warnings:
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.11 next-20240926]
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.11 next-20240926]
 [If your patch is applied to the wrong git tree, kindly drop us a note.
 And when submitting patch, we suggest to use '--base' as documented in
 https://git-scm.com/docs/git-format-patch#_base_tree_information]
@@ -80,19 +80,19 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Yihang-Li/scsi-hisi_sas-A
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/20240926014332.3905399-4-liyihang9%40huawei.com
 patch subject: [PATCH 03/13] scsi: hisi_sas: Add firmware information check
-config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20240926/202409262042.MIMB8blU-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240926/202409262042.MIMB8blU-lkp@intel.com/reproduce)
+config: i386-buildonly-randconfig-001-20240926 (https://download.01.org/0day-ci/archive/20240926/202409262056.WfCiaJnA-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240926/202409262056.WfCiaJnA-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202409262042.MIMB8blU-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202409262056.WfCiaJnA-lkp@intel.com/
 
-All errors (new ones prefixed by >>):
+All warnings (new ones prefixed by >>):
 
    drivers/scsi/hisi_sas/hisi_sas_main.c: In function 'hisi_sas_shost_alloc':
->> drivers/scsi/hisi_sas/hisi_sas_main.c:2457:32: error: returning 'int' from a function with return type 'struct Scsi_Host *' makes pointer from integer without a cast [-Wint-conversion]
+>> drivers/scsi/hisi_sas/hisi_sas_main.c:2457:32: warning: returning 'int' from a function with return type 'struct Scsi_Host *' makes pointer from integer without a cast [-Wint-conversion]
     2457 |                         return error;
          |                                ^~~~~
 
