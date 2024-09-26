@@ -1,36 +1,36 @@
 Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61CD81741D0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C7A3172BD3
 	for <linux-scsi@vger.kernel.org>; Thu, 26 Sep 2024 01:43:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727315018; cv=none; b=WApvQkG6k6PVugZj1i3zhESHbydTmBgjsRMYwVAmFOLOhp1XyEw7BWV/9dew3RvnlzbW+kKe+XQ4R4SNBnuT/xvbaPbHtKDJ8mvDafC9UvXpT1flsRfr41LYtSQREOD05pr82tNZpzaEHRcJReg+wMAzHWKRwzpcLCeAwyHP52E=
+	t=1727315018; cv=none; b=clpgvDa7QIvCAAn3wYKZcIVn4so7HgbdR/SPQlcvDPCxYaEpKXxz4WgnmnLND6PrTCkt3/p1NgHsezmRgGE2f1wAFHZ7RbFCXMT8LbbdrvTy0it/2JKEVEyozSzOwv7W1TZLejfy4XIE+O1D1iB/dXXbExmES+CQbgBlZxQEe50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1727315018; c=relaxed/simple;
-	bh=eU2WqnIsb/EEbHicjb2/cREkFZe6p5u80LuoycDCmQY=;
+	bh=4WpKlLgpqRqpKuuDkg/DMLuyfrvi5SrfALUcu4Nwhuo=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kVzAiGleYw3JViYlVABl7/UDCqsOEbcq5RXc6ofB6PyCNHcDB3gTelaiYT+ifZ9m/rKNWCJhBYqkiYBxBLQDZzjvmp0SLO8SfumZzX+PViPgvdR6ZnfX/UiAgFF3kzmZegDJSGtHNGBhx18t83KqFIvLtbeDCBo3vj5NzDToRVk=
+	 MIME-Version:Content-Type; b=RpCWq/ltu/nb5pc9bOfaebID0cg/N1E0upnmzw2HQl4DifKrDt74xrjVNCXBaExFwNFvNePSiOurRQKGCVf7K7dozqLVl52zmZIAgZrYhjMNHPwjKzXXGDwdjGcime2/lYSfFI483LluQc5MaVVYMUF7pT1rLseUtoY/So/5r6U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4XDbvS5qFlz1SBr8;
-	Thu, 26 Sep 2024 09:42:44 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4XDbvT3ybJz1SBbN;
+	Thu, 26 Sep 2024 09:42:45 +0800 (CST)
 Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8AEA5140336;
-	Thu, 26 Sep 2024 09:43:33 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 4CA241A016C;
+	Thu, 26 Sep 2024 09:43:34 +0800 (CST)
 Received: from localhost.huawei.com (10.50.165.33) by
  dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 26 Sep 2024 09:43:33 +0800
+ 15.2.1544.11; Thu, 26 Sep 2024 09:43:34 +0800
 From: Yihang Li <liyihang9@huawei.com>
 To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
 	<liyihang9@huawei.com>
-Subject: [PATCH 03/13] scsi: hisi_sas: Add firmware information check
-Date: Thu, 26 Sep 2024 09:43:22 +0800
-Message-ID: <20240926014332.3905399-4-liyihang9@huawei.com>
+Subject: [PATCH 08/13] scsi: hisi_sas: Default enable interrupt coalescing
+Date: Thu, 26 Sep 2024 09:43:27 +0800
+Message-ID: <20240926014332.3905399-9-liyihang9@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20240926014332.3905399-1-liyihang9@huawei.com>
 References: <20240926014332.3905399-1-liyihang9@huawei.com>
@@ -45,165 +45,117 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  dggpemf100013.china.huawei.com (7.185.36.179)
 
-For security purposes, after information is obtained through the FW,
-check information to ensure data correctness.
+In the current interrupt reporting mode, each CQ entry reports an
+interrupt. However, when there are a large number of I/O hardware
+completion interrupts, the following issue may occur:
 
-In v1 and v2 hw, the maximum number of PHYs is 9, while in v3 it is 8.
-In v2 and v3 hw, the maximum number of hardware queues is 16, while in v1
-it is 32.
+[ 4682.678657][  C129] irq 134: nobody cared (try booting with the "irqpoll" option)
+[ 4682.708455][  C129] Call trace:
+[ 4682.711589][  C129]  dump_backtrace+0x0/0x1e4
+[ 4682.715934][  C129]  show_stack+0x20/0x2c
+[ 4682.719933][  C129]  dump_stack+0xd8/0x140
+[ 4682.724017][  C129]  __report_bad_irq+0x54/0x180
+[ 4682.728625][  C129]  note_interrupt+0x1ec/0x2f0
+[ 4682.733143][  C129]  handle_irq_event+0x118/0x1ac
+[ 4682.737834][  C129]  handle_fasteoi_irq+0xc8/0x200
+[ 4682.742613][  C129]  __handle_domain_irq+0x84/0xf0
+[ 4682.747391][  C129]  gic_handle_irq+0x88/0x2c0
+[ 4682.751822][  C129]  el1_irq+0xbc/0x140
+[ 4682.755648][  C129]  _find_next_bit.constprop.0+0x20/0x94
+[ 4682.761036][  C129]  cpumask_next+0x24/0x30
+[ 4682.765208][  C129]  gic_ipi_send_mask+0x48/0x170
+[ 4682.769900][  C129]  __ipi_send_mask+0x34/0x110
+[ 4682.775720][  C129]  smp_cross_call+0x3c/0xcc
+[ 4682.780064][  C129]  arch_send_call_function_single_ipi+0x38/0x44
+[ 4682.786146][  C129]  send_call_function_single_ipi+0xd0/0xe0
+[ 4682.791794][  C129]  generic_exec_single+0xb4/0x170
+[ 4682.796659][  C129]  smp_call_function_single_async+0x2c/0x40
+[ 4682.802395][  C129]  blk_mq_complete_request_remote.part.0+0xec/0x100
+[ 4682.808822][  C129]  blk_mq_complete_request+0x30/0x70
+[ 4682.813950][  C129]  scsi_mq_done+0x48/0xac
+[ 4682.818128][  C129]  sas_scsi_task_done+0xb0/0x150 [libsas]
+[ 4682.823692][  C129]  slot_complete_v3_hw+0x230/0x710 [hisi_sas_v3_hw]
+[ 4682.830120][  C129]  cq_thread_v3_hw+0xbc/0x190 [hisi_sas_v3_hw]
+[ 4682.836114][  C129]  irq_thread_fn+0x34/0xa4
+[ 4682.840371][  C129]  irq_thread+0xc4/0x130
+[ 4682.844455][  C129]  kthread+0x108/0x13c
+[ 4682.848365][  C129]  ret_from_fork+0x10/0x18
+[ 4682.852621][  C129] handlers:
+[ 4682.855577][  C129] [<00000000949e52bf>] cq_interrupt_v3_hw [hisi_sas_v3_hw] threaded [<000000005d8e3b68>] cq_thread_v3_hw [hisi_sas_v3_hw]
+[ 4682.868084][  C129] Disabling IRQ #134
 
-Also add some debug logs for failure.
+When the IRQ management layer processes each hardware interrupt, if the
+return value of the interrupt handler is IRQ_WAKE_THREAD, it will wake up
+the handler thread for this interrupt action and set IRQTF_RUNTHREAD flag,
+wait for the interrupt handling thread to clear the IRQTF_RUNTHREAD flag
+after execution. Later in note_interrupt(), use irq_count to count
+hardware interrupts and irqs_unhandled to count interrupts for which no
+thread handler is responsible. When irq_count reaches 100000 and
+irqs_unhandled reaches 99000, irq will be disabled.
+
+In the performance test scenario, I/O completion hardware interrupts are
+continuously and quickly generated. As a result, the interrupt processing
+thread is cyclically called in irq_thread() and does not exit, this
+affects the response of the interrupt thread to the hardware interrupt and
+causes irqs_unhandled to grow to 99000. Finally, the irq is disabled.
+
+Therefore, default enable interrupt coalescing to reduce the generation of
+hardware interrupts, this helps interrupt processing threads to stop
+calling in irq_thread().
+
+For interrupt coalescing, according to the actual performance test, set
+the count of CQ entries to 10 and the interrupt coalescing timeout period
+to 10us based on the actual performance test.
+
+Before and after interrupt coalescing is enabled, the 4K read/write
+performance is improved by about 3%, and the 256K read/write performance
+is basically the same.
 
 Signed-off-by: Yihang Li <liyihang9@huawei.com>
 Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  7 +++++++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 18 ++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 ++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 20 ++++++++++++++++++++
- 5 files changed, 64 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index d223f482488f..a44768bceb9a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -307,6 +307,7 @@ enum {
- 
- struct hisi_sas_hw {
- 	int (*hw_init)(struct hisi_hba *hisi_hba);
-+	int (*fw_info_check)(struct hisi_hba *hisi_hba);
- 	int (*interrupt_preinit)(struct hisi_hba *hisi_hba);
- 	void (*setup_itct)(struct hisi_hba *hisi_hba,
- 			   struct hisi_sas_device *device);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index d3dcc4918444..e15926c40983 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -2450,6 +2450,13 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	if (hisi_sas_get_fw_info(hisi_hba) < 0)
- 		goto err_out;
- 
-+	if (hisi_hba->hw->fw_info_check) {
-+		error = hisi_hba->hw->fw_info_check(hisi_hba);
-+
-+		if (error)
-+			return error;
-+	}
-+
- 	error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
- 	if (error) {
- 		dev_err(dev, "No usable DMA addressing method\n");
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 71b5008c3552..70bba55bc5d0 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1734,6 +1734,23 @@ static struct attribute *host_v1_hw_attrs[] = {
- 
- ATTRIBUTE_GROUPS(host_v1_hw);
- 
-+static int check_fw_info_v1_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+
-+	if (hisi_hba->n_phy < 0 || hisi_hba->n_phy > 9) {
-+		dev_err(dev, "invalid phy number from FW\n");
-+		return -EINVAL;
-+	}
-+
-+	if (hisi_hba->queue_count < 0 || hisi_hba->queue_count > 32) {
-+		dev_err(dev, "invalid queue count from FW\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static const struct scsi_host_template sht_v1_hw = {
- 	LIBSAS_SHT_BASE_NO_SLAVE_INIT
- 	.device_configure	= hisi_sas_device_configure,
-@@ -1747,6 +1764,7 @@ static const struct scsi_host_template sht_v1_hw = {
- 
- static const struct hisi_sas_hw hisi_sas_v1_hw = {
- 	.hw_init = hisi_sas_v1_init,
-+	.fw_info_check = check_fw_info_v1_hw,
- 	.setup_itct = setup_itct_v1_hw,
- 	.sl_notify_ssp = sl_notify_ssp_v1_hw,
- 	.clear_itct = clear_itct_v1_hw,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 342d75f12051..ab6668dc5b77 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3566,6 +3566,23 @@ static void map_queues_v2_hw(struct Scsi_Host *shost)
- 	}
- }
- 
-+static int check_fw_info_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+
-+	if (hisi_hba->n_phy < 0 || hisi_hba->n_phy > 9) {
-+		dev_err(dev, "invalid phy number from FW\n");
-+		return -EINVAL;
-+	}
-+
-+	if (hisi_hba->queue_count < 0 || hisi_hba->queue_count > 16) {
-+		dev_err(dev, "invalid queue count from FW\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static const struct scsi_host_template sht_v2_hw = {
- 	LIBSAS_SHT_BASE_NO_SLAVE_INIT
- 	.device_configure	= hisi_sas_device_configure,
-@@ -3582,6 +3599,7 @@ static const struct scsi_host_template sht_v2_hw = {
- 
- static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.hw_init = hisi_sas_v2_init,
-+	.fw_info_check = check_fw_info_v2_hw,
- 	.interrupt_preinit = hisi_sas_v2_interrupt_preinit,
- 	.setup_itct = setup_itct_v2_hw,
- 	.slot_index_alloc = slot_index_alloc_quirk_v2_hw,
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 980f28d7b87f..d48777fc4bd9 100644
+index e6fbbefe9959..310c782b4926 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3371,6 +3371,23 @@ static const struct hisi_sas_hw hisi_sas_v3_hw = {
- 	.debugfs_snapshot_regs = debugfs_snapshot_regs_v3_hw,
- };
- 
-+static int check_fw_info_v3_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+
-+	if (hisi_hba->n_phy < 0 || hisi_hba->n_phy > 8) {
-+		dev_err(dev, "invalid phy number from FW\n");
-+		return -EINVAL;
-+	}
-+
-+	if (hisi_hba->queue_count < 0 || hisi_hba->queue_count > 16) {
-+		dev_err(dev, "invalid queue count from FW\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static struct Scsi_Host *
- hisi_sas_shost_alloc_pci(struct pci_dev *pdev)
+@@ -638,9 +638,11 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_sas_write32(hisi_hba, TRANS_LOCK_ICT_TIME, 0x4A817C80);
+ 	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
+ 	hisi_sas_write32(hisi_hba, CFG_AGING_TIME, 0x1);
+-	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
+-	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
+-	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
++	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x3);
++	/* configure the interrupt coalescing timeout period 10us */
++	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0xa);
++	/* configure the count of CQ entries 10 */
++	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0xa);
+ 	hisi_sas_write32(hisi_hba, CQ_INT_CONVERGE_EN,
+ 			 hisi_sas_intr_conv);
+ 	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0xffff);
+@@ -2797,14 +2799,15 @@ static void config_intr_coal_v3_hw(struct hisi_hba *hisi_hba)
  {
-@@ -3401,6 +3418,9 @@ hisi_sas_shost_alloc_pci(struct pci_dev *pdev)
- 	if (hisi_sas_get_fw_info(hisi_hba) < 0)
- 		goto err_out;
+ 	/* config those registers between enable and disable PHYs */
+ 	hisi_sas_stop_phys(hisi_hba);
++	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x3);
  
-+	if (check_fw_info_v3_hw(hisi_hba) < 0)
-+		goto err_out;
-+
- 	if (experimental_iopoll_q_cnt < 0 ||
- 		experimental_iopoll_q_cnt >= hisi_hba->queue_count)
- 		dev_err(dev, "iopoll queue count %d cannot exceed or equal 16, using default 0\n",
+ 	if (hisi_hba->intr_coal_ticks == 0 ||
+ 	    hisi_hba->intr_coal_count == 0) {
+-		hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
+-		hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
+-		hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
++		/* configure the interrupt coalescing timeout period 10us */
++		hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0xa);
++		/* configure the count of CQ entries 10 */
++		hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0xa);
+ 	} else {
+-		hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x3);
+ 		hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME,
+ 				 hisi_hba->intr_coal_ticks);
+ 		hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT,
 -- 
 2.33.0
 
