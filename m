@@ -1,63 +1,66 @@
-Received: from HK3PR03CU002.outbound.protection.outlook.com (mail-eastasiaazon11011018.outbound.protection.outlook.com [52.101.129.18])
+Received: from HK2PR02CU002.outbound.protection.outlook.com (mail-eastasiaazon11010051.outbound.protection.outlook.com [52.101.128.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DC572572;
-	Fri, 27 Sep 2024 02:15:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.129.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AB1415D5C1;
+	Fri, 27 Sep 2024 06:25:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.128.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727403349; cv=fail; b=JuvDDO0H9TggBuDlxbysVU/CBAJE+JYyCwPR7MNLRzYggTMDrcXwR+T24Cadx4kDVbRTeYZo/Eve2FTgZnuHUizPD7A0oSDgLbe9R/m6xaZDeM0dRYf52nll0SwLRQcdhGstOqdKDnAPkU1+DRa7prQ5AYjRcXtz0l2JBBf89gI=
+	t=1727418321; cv=fail; b=AWIz8SYGUM0YX/v9YWnPnOJdvuqlbJCFtT3hqFbLekgqL1iqIah8f0E7qhRxE8tYlyf1yGYgj+H9B8fmAVMKljvRzj5qo4k66LFGwn+MH3tU25BB9+byFLOnLOypTuudzyZejPrsOlikz/xQ3qoNwJrxumTlY0+B70WHMKcuEJQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727403349; c=relaxed/simple;
-	bh=BjOuuCyKMoDoXUMQ0nSl7GyTwqB+RX/oy4OeI6kb0Po=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=q/Dv5Z1ApP623PBVpUwUAFmMIkigzHR9htUhTcUuiXqHrJhX2WUQbDftyBU+BDPDQllw0COiI2Kv92+JdZM2Mfc4suS+zWwO0QOsoPyBdPV8N5MJpNdGSp3KwPyhIND6d9Wiafkd4lja4ISU4b4t/BgobclgBNZjWgQod0z7lDY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oppo.com; spf=pass smtp.mailfrom=oppo.com; dkim=pass (1024-bit key) header.d=oppo.com header.i=@oppo.com header.b=nBn/WLYC; arc=fail smtp.client-ip=52.101.129.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oppo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oppo.com
+	s=arc-20240116; t=1727418321; c=relaxed/simple;
+	bh=ejonOMdnpEiO4rF6mJ1OplDO07IknpHrJ7UbOGUD2y8=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=EwA5gzF6LT6CPkRRdlKHdNTvEvmlOFdMest5Ozw1YyYVowL9YwxflmRVRsmWvkbcbZx5YmS0sKyK0ZqNAY2X4xcJiKSlQG4cw5g+ZlljhdJEbRTdzW+ANXhg04Nh65J+eRI1HJ/qURNgi/Dnr3hun8iPOlxqdAVHm8DFeeUZo4o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=SYSVYC5k; arc=fail smtp.client-ip=52.101.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=oppo.com header.i=@oppo.com header.b="nBn/WLYC"
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="SYSVYC5k"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cR3pfEfwUvJobqDssoJr0tGUvu5QK/D+Eopleu1L2B/8wa73rrcoW7aCVhfUfqrxyD+T8nwl3fJuAnTteCksyhRV88psAkUTnN+1DEioXKqraAT2AB6Aaht0YN1GffAS7mWp+eZ9aYJpJHmUDlezK8e3odydKo4HKKtaDyblbMN/mWkvVyIFKKkS60+k2QrRlyFi4XTcwktT8u7b4tsr2PDF1REtJt1trnUKRSbN3oSwotU/WrVWtDMKQi2JJl4s3Rpglj7FfX+LWso1F1SDSwxMkjxSxuo2oXyh1kATskA8ELRor8egy5Wm/xCz0Zxf6kOw+9y6clYLjM99B0PEFQ==
+ b=jh6eYgfO8ffZAptUeZmMBC8x1KFWAA/NASU1bZnMxjUc/gKoHo6zmuJveGX12IwvZnFDiMC6xHnq/GoX+jTMGEjWaiE7ixwNTJAbv+mJ61XjT0dVjaNggxdCIV5emFfQYOIBEQJN8HbO3ps8lktJmGKQF2oFca8HixbfzjUVKOYbgcJNV4PQWyrQrkeV9WOzwj4NQXvj/3/kLoMQ0bgCSTHiHHOSjMFnbVYBiMSNpRG51VJRmVYR9esepqrJq8OrSee4XfxRqitJVPcSCo5SZ1k4RqzMMLeLkBlq+tIU6bpU/JVPPqQsSaDwlz8iAPmXkB9nBXrp389YtASgMF68dA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CSiCF1jYzw9xLlcvZ7nPR+VfsEBu2ejCrx1XRY7luGs=;
- b=QMJkdKthJL+SAFG68UKBlddGxLCbWbzNYmm6ryQDUYhulFjhj0AOwohQ6GtyUSaeCjAzpWUpAC0YTfsEM9cgGnJ7ue4ryBTaTGbMFvtAyFGNvRcrzZN+DY5CQbXRBh4Aw+XAfFlxA6w75jlSQnK0a4dFyeckAFYKdVsKydjxaFcYHPEbDMORJO/Vn2U1xaD0LTPM8sxxMh0ObQ9mZFYIOAMIgsU/RzugpLGa8p9Tfxt5J81f7c0lTiUfdQjehva/+gF0ZR46YB9GNqM9QJ0qfHCL+FKKm0SrblpBqSOfoi1ZeJpL5eRrJM16CzP2gSFQamG/uMxaYeZXcTbtS9xMvg==
+ bh=w9b/eZ3lq19txGrorJHN1TOVDVl47hbdZ7SP/F99VGM=;
+ b=xgaeQcBAUoQisBCuf2SpSZQ8x016ZtSS4Ux3gnszkMywyQVphHHWW0ec1A2N89Y2fUEPgNFxojjrhWyDrf60X/aITmmxJ+jDQr7TSuog5bswdQvzf1ubKq/nJzbyDbHd4W1cogfaJFOZ3TKpsusWrmpp8NB9xu1qeDIIrSkpAyMWDk99bUEtqcKLiv1UifzPBEP4gv+tuB7WVRB3GKSsSWlrYCcFonmdspP/cSObdmhoCCm3ijfOLOAzoE4+wN/jXdQOVaZpo0DRGiU+FtThErKAmRH7Ka2KyIo7O/SlvEhJXDWt3jUA+DSRRO4bFLBjz20GO4eJuARLLUVdMedyDQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oppo.com; dmarc=pass action=none header.from=oppo.com;
- dkim=pass header.d=oppo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oppo.com; s=selector1;
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CSiCF1jYzw9xLlcvZ7nPR+VfsEBu2ejCrx1XRY7luGs=;
- b=nBn/WLYCJE14nJ6cD8uOvma+PiimTaWbav/ZhFLHTg7oi60HAncNAYobJRiMInLumD9p079pJHN5lxbvvqOAaHsE47FpQqOHwZyUpNZov3fU5YXzWXyBu/JRj5PBo0VNzv5TFnOEQj9+DchkLAwP42/RWnRi4fhJ9KXi5JQgKJc=
+ bh=w9b/eZ3lq19txGrorJHN1TOVDVl47hbdZ7SP/F99VGM=;
+ b=SYSVYC5kUew3v0ynZCVhOgduVhKACGgcVy30cC3K3vlO913K0Eaz8rVX1iyuSDy49XxpVArYxrBVmnkPBouUAMsdeyPNwPfDv2V/09Z+gojcYCyKk6xfYMFg1rOWOL+L7Ce0zJEU1lXIIql6q3Yc2XVLNjPrFZz/gTSVGl8XbXNXg7IyLNmttyJPG8UiEBZoynHYEhDyNaWxEF196WUafox5VAdeJM/EmfOJp2VLB7ppjGsOD2z0vpYdx5eJ5V9A6Rjl+dWCWxBesnRBVwPFmhRtjM+7nDwdaCGWcZ1sFFUJLJGmZbxH8rWkquWU/gS4Ijx+JNZHws9emTpb7VAwog==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oppo.com;
-Received: from KL1PR02MB6662.apcprd02.prod.outlook.com (2603:1096:820:105::10)
- by SEYPR02MB5511.apcprd02.prod.outlook.com (2603:1096:101:50::13) with
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from TYZPR06MB4461.apcprd06.prod.outlook.com (2603:1096:400:82::8)
+ by TYZPR06MB5148.apcprd06.prod.outlook.com (2603:1096:400:1c0::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7982.31; Fri, 27 Sep
- 2024 02:15:43 +0000
-Received: from KL1PR02MB6662.apcprd02.prod.outlook.com
- ([fe80::6e0b:23b9:808d:ccf5]) by KL1PR02MB6662.apcprd02.prod.outlook.com
- ([fe80::6e0b:23b9:808d:ccf5%5]) with mapi id 15.20.7982.022; Fri, 27 Sep 2024
- 02:15:43 +0000
-Message-ID: <da300eb6-7a97-438a-8831-5564c8a36e0a@oppo.com>
-Date: Fri, 27 Sep 2024 10:15:31 +0800
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi:ufs:core: Add trace READ(16)/WRITE(16) commands
-To: Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
- avri.altman@wdc.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- Jaegeuk Kim <jaegeuk@kernel.org>
-References: <1727232523-188866-1-git-send-email-liuderong@oppo.com>
- <7c760b76-aba1-4e30-8966-17ae81a7e223@acm.org>
-From: liuderong <liuderong@oppo.com>
-In-Reply-To: <7c760b76-aba1-4e30-8966-17ae81a7e223@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7982.25; Fri, 27 Sep
+ 2024 06:25:12 +0000
+Received: from TYZPR06MB4461.apcprd06.prod.outlook.com
+ ([fe80::9c62:d1f5:ede3:1b70]) by TYZPR06MB4461.apcprd06.prod.outlook.com
+ ([fe80::9c62:d1f5:ede3:1b70%5]) with mapi id 15.20.7982.022; Fri, 27 Sep 2024
+ 06:25:12 +0000
+From: Yu Jiaoliang <yujiaoliang@vivo.com>
+To: Adam Radford <aradford@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Khalid Aziz <khalid@gonehiking.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Hannes Reinecke <hare@suse.com>,
+	Oliver Neukum <oliver@neukum.org>,
+	Ali Akcaagac <aliakc@web.de>,
+	Jamie Lenehan <lenehan@twibble.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: opensource.kernel@vivo.com
+Subject: [PATCH v1] scsi: Fix tpos in comments across various files
+Date: Fri, 27 Sep 2024 14:24:56 +0800
+Message-Id: <20240927062457.223066-1-yujiaoliang@vivo.com>
+X-Mailer: git-send-email 2.34.1
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SI2PR01CA0032.apcprd01.prod.exchangelabs.com
- (2603:1096:4:192::18) To KL1PR02MB6662.apcprd02.prod.outlook.com
- (2603:1096:820:105::10)
+Content-Type: text/plain
+X-ClientProxiedBy: SGXP274CA0003.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b8::15)
+ To TYZPR06MB4461.apcprd06.prod.outlook.com (2603:1096:400:82::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -65,157 +68,216 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: KL1PR02MB6662:EE_|SEYPR02MB5511:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5c12280c-bd11-4865-0b10-08dcde9a4a0d
+X-MS-TrafficTypeDiagnostic: TYZPR06MB4461:EE_|TYZPR06MB5148:EE_
+X-MS-Office365-Filtering-Correlation-Id: 14f44516-c284-447b-9753-08dcdebd2420
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|7416014|52116014|376014|921020|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Q3I1RmlZL3BvOE1EQ2dUNnJDVWp0d3JYTEo3SGo5bDQ1ejR6ZnkvUmhRMEtv?=
- =?utf-8?B?aTNWaitKNy9JS1FBYnJFK3B2RmowM0JpUUlQMnZjZ3BEcXhITk1BZGlBYmZw?=
- =?utf-8?B?Wk1vaUhuRkhTL2FNditoSW5abDJXazdUdGFZanZnYkZKeGxyRkdpN2M5Q2pn?=
- =?utf-8?B?bFFobkhQWUk5WDh1VldHK0ZMR2ZFWDhubXJEcW9WOTJNNzZwTFk4bGFrdTBU?=
- =?utf-8?B?eWgzY2l2Q1NtZ1pNNDB4YmNrTGc0QVZLbFpTcDdJQUdwK0FVVjhjeStlaXlu?=
- =?utf-8?B?YzhwWUVTT1ZCMUJmZGpxMCt4V05QK3IzaGNLS0xYRzVSdGR0Wi81MlR3eUFs?=
- =?utf-8?B?Z2pGcWtTaUpIK002NWVueFVRRDR6WDVuMG9CQWI0M1RBaE5NMzJzK0tLc2xn?=
- =?utf-8?B?YWc2K3VHcUhOcVMzUlJZbm5yNUFyS2VyY3BiWUhUNXlmbUpUSnRaMHVydDJF?=
- =?utf-8?B?VHQrSXhPbjdlRHZ3V29CalErcnNlTCtMRFY2cG5aQ2xEK01HdzR2S1pwTmZP?=
- =?utf-8?B?T2taa3ZoaVcvNGNWSXhuOFlYUkFQWkZ4aHhjRGdBTmpKN0p0Z1Vramp1VmJo?=
- =?utf-8?B?UEN2QVA2b3g2UFJ4cWJEMXZIT09vN0NJRmUyZExiMmFXbzlkM3lkL3VrZnRY?=
- =?utf-8?B?aDk2Q29RNmJDQU0xWmE1UCtGVTRsNEkwVm8vdjFaTHFrTVZOZnllOGFaVVVZ?=
- =?utf-8?B?eWZ3QnFUWFZvTERtUWhlekpNSkdSeFlyNitTa0VTY1lpWnprMjFZL1M2SjRK?=
- =?utf-8?B?d0RNMktyS3V1OHlXaEpFOFBDb1FGMlpmMzhBa3k5RUptcFVqQWlrYzJqczdO?=
- =?utf-8?B?d0VtQkxnQ0Q5ZGNIZHorNW9BQm8wUnhCeUZxeVZJa3NjWXVZUEV0SjRlMllj?=
- =?utf-8?B?UlA4RVBOcWY2Rk9GY3NZN3RQQzlDQ3h2MitSTWhBdjhmdk1nbGdKTHNkdEw5?=
- =?utf-8?B?TjlDNXdUSk1OYTd6TkFacy9oVUk2N2dwdFVPQVhJcGFUNXJuRWMveDdwOWlQ?=
- =?utf-8?B?SkloWCtZbmdseFBjenpUdlpsYnlscUVKeW45YUQzdG92VWlWSkhYV2RLUjR6?=
- =?utf-8?B?QTBCTHozbVhTSTZqMzk5eVVQUWlEZWc3U1hHR0dRSUFGS3BFeWlVSXVEMU5r?=
- =?utf-8?B?b0EyR2tRTndTV1JWRlA1dGZxT0xRbXJHSG9TcHU3dXBJcmwxdFlFQnpRUXJF?=
- =?utf-8?B?RE8vMWRLWWJLbk9rOE81eHNYSFh1R0pkMW96MFo3T3QwN2tMUEhwc0FUUWNa?=
- =?utf-8?B?TUlPS2ovbjhWN0hmaDl1VWJkSmg2eU5FRytaTWsrUGZ6NDFpT3ZiaW9VdFZy?=
- =?utf-8?B?TEV5S28yYm5WWklJR2swKzFCQzdqQnIvbk1qakg0eGhKYXFHWU8zbTlxTXNt?=
- =?utf-8?B?M3lUVExWejgweW0zZHRLSDROT3F2azRMc1dZbmhSOHYrR1FoMHRtWDArRkh1?=
- =?utf-8?B?TVI0RGVSQm9OdDBlL1c3MWhTc1pNajJkbUVzbHZQREVTcHZoRXE5NElaTFEr?=
- =?utf-8?B?OFVSYWtrZmhVQXNhbCtRT1d1WjhLUEpqTlAzek9yOEsyTzVKclViSzUxaDJK?=
- =?utf-8?B?LzBCbzVqWitlYWRWVk9QV2d0RlorbUR3SHp2WlYzWUNra2VqckFtdGFpKzNp?=
- =?utf-8?B?amhveHo5K0VjS0hOUWQrcTRpL3pOU2NlQkJGSzlKRk4zZnhUbVBSR1J5dFBa?=
- =?utf-8?B?SmF0NHk3b2JzbVlzeFRpL3NtbWdmNnN6YU1iTDQ4Vm53Y1BFeFlZQXpRPT0=?=
+	=?us-ascii?Q?Q3N4IsA6ub+2+kvMWFPE2iQFH1mQ+lSzCxmIyIyzHg4s3E3av2ZQ1p+v+FlJ?=
+ =?us-ascii?Q?sRJ7XP4z0GD7IXn86yecOEq0nZYZUNzRwa7FkOyxFVNyiLRpXiLhux5Nenma?=
+ =?us-ascii?Q?kyYg3sjYri6wxp1Tire3RzldnAyVJQ7QbVSpF9Ccbg2A93xgSHarLj8f5lor?=
+ =?us-ascii?Q?6GN7x3kwQ03M8vH73VOm7m3i2iStalBEEshpH4QjvRIENo0OPe4W4dw6saj9?=
+ =?us-ascii?Q?470kGyzFV49eExv/XNmjRVXtZNSmCDgcetZe3jR6RUqNLQWdog8oiQXxNlaW?=
+ =?us-ascii?Q?igfiioKt0hy6hI6YZ49yAL/4eeq2ycb1CcmAsTrfmhqBBWM72GzQCF2NRMX5?=
+ =?us-ascii?Q?UZeetcRriz/vW7JEg9+4TgOatRTtZZ9PaBmrcjFlkn4v+c3ChuP99NCMB9ZA?=
+ =?us-ascii?Q?PSI97LgcbpF29MGmDzHkgb1MN0ixm2S+OTv6dFPWCd5cs87ckBFefh+3lAzR?=
+ =?us-ascii?Q?zu5bL+Y2vZzQFFMYNm+RLF7YH0LzB50pJjOQyhwerjRJqpqNvaYPU5fYe3O/?=
+ =?us-ascii?Q?k6YL2DFG3gcxPZsfIBr3VH/EhMDZypu5QH3YVhm9k1R+3K9xuIhdwdog0Z3/?=
+ =?us-ascii?Q?TDeuMBYGDtTVK/jNnp1OdLq2psAKNmXsaPl1a+DE9mcPRazqsEu57tapqare?=
+ =?us-ascii?Q?EGl4TLdK3dHrDyrpb7k3tvA2Idc+n8Vns7P1EtAapfNHw3xqLzw/Vrm89dDf?=
+ =?us-ascii?Q?9+4OiZV3brWuKRHMmSnaZjkKF25Zy++LhvsOmerqbcxQPGI6Rvo+zKZofqnk?=
+ =?us-ascii?Q?SBV0sKKh9jjaRKDnXS98A0h+uYHNH6qwzdBA+g5mE1pWCC6znqAt9Ekj4GF7?=
+ =?us-ascii?Q?siniFhQ/lhpJTvl4G8pIiklHwwDDMW/tuWwitEH97TJTXZgdAvZjms90tKwn?=
+ =?us-ascii?Q?IF86dUghHPgAM33hHOk8LaVpITdiYaZzn+298OnzAkx4QdvF0mfWQk5efKNa?=
+ =?us-ascii?Q?9jo/ICdgU0uEJ6g12+/paUYKz7rAfEn3OkzhRwFXFko/YinxwrEO928mzFYz?=
+ =?us-ascii?Q?r4pz1WuShGkNs0ydrJW7kXbhZpEEc2GP7XVZ57D3tgiSHQTxiY4hwFVJLVMd?=
+ =?us-ascii?Q?npRt+mBOUUaf5lK3jDAjUET7Hsq987JNspuqOfC29bYtYNTiM/PuAE79W96h?=
+ =?us-ascii?Q?BlW8BfGRIQOqmTite3cqy7avI3u4TmA+wDRI9WIo/27O63m9wuIu3/QiLs+F?=
+ =?us-ascii?Q?1enK2ZAYWS4f4VsarL9/vbr4GfKqXd1C+2gfcgtjcfYZdILeifmhmIQkkY5U?=
+ =?us-ascii?Q?cSUjH1sld9l7e/ibeePrMfd7zl5JuRHglZ8MI/p4/MIh9jgGgCoE0VxanqJs?=
+ =?us-ascii?Q?gr9GUGjFp/s+V58zdpcfXYRpmAS6/oe6fJWfzYBz8BuhjmiP+b2YxNbBY58v?=
+ =?us-ascii?Q?EOGcuwDegoIokYDlKpXdNblA9YmOeNL81ZWuG1E4ujT0VHgGXRtXPfz7FZs1?=
+ =?us-ascii?Q?gV1059j8urs=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR02MB6662.apcprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB4461.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(52116014)(376014)(921020)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cTRxOVdrL1Z1MjFKRTlZMGRhL0VJcnVQRWtTOGUva21xeG9vVDZSZytRVlZM?=
- =?utf-8?B?Mm1kWUx2OEJadlUvTW5DREFrSnMrc1VWUUdKKytCZE4yYVNTOS9VUGdVUExQ?=
- =?utf-8?B?Nm5jcWdiR05RZmxPOFlYcWVod3BwMFRiUUdTeEJoVkpVUkFKZ1FzRHR5ZnNC?=
- =?utf-8?B?L2ZlT3VFUUN3SUE4VFpRSnV3NjlzcWVaVkxEeTBTY05JZjNyZDlPa2hrTHpT?=
- =?utf-8?B?TVRaekREUXdDS0lSbjNaTE9CQmlRd1FPV0hFOW56bXNNblpvbVZLR0JuQ29O?=
- =?utf-8?B?dWZCbXpxekhWUHhpUU9IRVJWTVRydktjcmdnMWNoRGJlemcrOHBTRmdyMmlk?=
- =?utf-8?B?eTUxdmlIb2ttMnVMMUpWWTI1MXpUa21BekFIbHdhblZTTFBkZGo1enRnMGFq?=
- =?utf-8?B?YUZ2RXVUcUlZdjhjdWRnNWU0Zlc3ZHNmSkZZV3ZWeWhxUUJWUEgzcUNMeHRs?=
- =?utf-8?B?ZzFxdXNzTjBkRjhmNjR0UllYbWQvTy9tMFVlNFZ0L0tQZGxtTmF3WWhUQ293?=
- =?utf-8?B?bU9aa1hjVWhZZmVQajQwblhENnQ5aHlZQWhFRlFsanlTWnlFazg1VW5LeTRV?=
- =?utf-8?B?MUhlYWNtSDN0SUFlazIreFlJN3dUd1dBWnRBWE1rL05XRTltMmRpZ1l2dVNh?=
- =?utf-8?B?UjQzSFBwTUMwWHJBY1BVaUNYb0tJZWZDcWxSblM4SE5yZFlZQVhreG55M1ZI?=
- =?utf-8?B?ZzZRVlRXQjVYNmRXV3hOVEttVkdGc2lRZ1QrY1RHU255dXd2YUhJMFlKMnJB?=
- =?utf-8?B?VEZjQlljT0RpNzRwSDBQQkc4QUV3dmhEQkVKMFZOODJkbmlpTSsxNEpGNGUz?=
- =?utf-8?B?elhSZFhXQnZ3Qlowc21UK2hmQlpORjVvbkdTNi9Wb3pwei83TFpPWGVPNEFl?=
- =?utf-8?B?UHMyZlc5TUxzT3hyeHMyVU8rN1RjU3RtWEZQUEhzdy8wUThaVzg2MGR6U09H?=
- =?utf-8?B?cEgzV2hQcW5KaDEwRlBnTy9paUEwVVFYcEdRaElIT0JHamNLSGQ0QXFxRi9B?=
- =?utf-8?B?cDdhZ1dBQXVvUCt1cC9WNTFkMjkxQ05TWTUvSUR4Unl3R0MxSVJaWVJNNExo?=
- =?utf-8?B?WE5iQmRjTFFtalkzMkNRSkxHMmh1MDI3dWo0aUlURTBUejZLd2pTbHVNbFJ0?=
- =?utf-8?B?UmFITHZSNVpxb2llKy9XRDQ3UnZZMitQcVRrZUJrZkRqYndlR1pjWWVwTW4w?=
- =?utf-8?B?RVZXMGE2d3NjKy9PT0tsWFJqcllYd0NSR2toWXBjalJ0SFRBMHJXei9WcW1x?=
- =?utf-8?B?YWFCaFdOdmptcEdIYU94ZDkyRGJBZ05mNzFDeW9sT2k0dFp5NGsweXVvcXdu?=
- =?utf-8?B?WXJ3Wjk0dmZmSGtiVHc3eFE2UnVaQ1JsZEZUeGoyVTU4V2xHSmpwQXU1eGNs?=
- =?utf-8?B?VnZhTU9OQ0t4b29FUStwWld2czRUbWR3ODgvSXNER0dQMlhKemZLbUdDQnVk?=
- =?utf-8?B?bjJiVGYySFpiZEErSFQyQ2FMWFZTTHlMY2ZsZWtiVUZkU0ZET29HMlEzTU5P?=
- =?utf-8?B?aFFZazRrVlhlM3hpVS83QWVOc3NwUFhKR3RJMmlKbmlhV1hpV28rdzNlZVIw?=
- =?utf-8?B?RWFQV2VYWG1RYm5hY1RyMDZYdWt4UVZtQlhCRUh0ZU5HNzVaeXZidXdvOWYr?=
- =?utf-8?B?cGI3Q2lKSDExUzRuRjFrWDBrYUhZTEpubkcyWENjMUNkdDRST2RCQzhBeU53?=
- =?utf-8?B?QUp2MWxHaEF3NVVXLzJoNzV2MEJFbG9vKzBsL0hmbVJXMEVrendoeWZ6Nk5I?=
- =?utf-8?B?ZUZlM240MnY1Q1lCNXVVT05paUpFZ3YrVU5GUmFKdk9rdFdPNUkzN0I5bDla?=
- =?utf-8?B?Ym5FbE1VbEdmbEdKL0VXb292Umt4ZHdIYkFGOUpmenZaSnd5MWd4emNJdG1y?=
- =?utf-8?B?NXB5OXgwZ095ZEJyWkdKOUJzTEdML2t4aEZSMnNobXFnWDArUEhXRGNzUFV5?=
- =?utf-8?B?R3hxdjNXbXZNQkhQRGJXbHlWTjlSUXhQdnRYRkdRREd0TzVRREw0MGk4aXV0?=
- =?utf-8?B?eHJKQmZ5VVJuWTR6d2tkSlUxWnlYdDBBVDNOMHFJK01iQ2xCN1ZpQXV5c1M1?=
- =?utf-8?B?OGZFMktObE5LQVBFYmZYN0dScVB3Y1FZWVl0QnRjM2pRTU0yck1TRlZoNUZZ?=
- =?utf-8?Q?TDwt44O6eQIXM13HObeAm2Kcv?=
-X-OriginatorOrg: oppo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c12280c-bd11-4865-0b10-08dcde9a4a0d
-X-MS-Exchange-CrossTenant-AuthSource: KL1PR02MB6662.apcprd02.prod.outlook.com
+	=?us-ascii?Q?3g3qpg5g5OCosUvhr7pV61UfJap8JWeHEfgQYCIDTeFMmx7yFP1TJStoav2J?=
+ =?us-ascii?Q?bATtAHWN+8y/8Hg04eUYBvlZF0HXhY9bSmKwItArsOjd93GiO0Vh52dij0np?=
+ =?us-ascii?Q?fjM8HkL8MM1gZnRCmt4Z8Evd1+3iyuCMkp0peHSiMaSyDhEzHyU8iO0RYxp0?=
+ =?us-ascii?Q?w0UoG6DYC6q5wg5uYtC7GUWcvoSxWk6HG6k3x2PEqzAq9ffXvkO1YAe5QqIf?=
+ =?us-ascii?Q?TSwKggLOv6nhqRS3dP0r8DvdUWquY6IC652AAlyjhDz+UZmUpV3jlJ8a1F2s?=
+ =?us-ascii?Q?S5IP33fWu70XoMRhRIZQIuRvQ4nrn5hLp5jLgIscp7P5PGbMe2Vz4dtDsS7M?=
+ =?us-ascii?Q?fXlvqE/DLcvcXT6nMHsnV7kN6Rev7oQE1waAWtS1vUTvv7XZwTkcJBRQeywT?=
+ =?us-ascii?Q?/FqsFvsCIW3eWB5PihHz/E73XoYHuipfzxnrdtvYqON5g1QppJ4sFvXr6vyA?=
+ =?us-ascii?Q?2bZcj60lyjMTY7MsM+kPGW8NpyfN6mc8aROJTyzU+NcB5Q4rAFWxNoj43iT6?=
+ =?us-ascii?Q?V+QabyvGYi0MdB+yndtUtDEYOqFGLXfn2LQSRLgIiFxfB4Ns05q9XF4ORpoK?=
+ =?us-ascii?Q?EhQLy8E+t6UxE1eJcehRtCTi3Sag5vlV7dXOfaLlFgz9EPltmxCKkJQaIvBz?=
+ =?us-ascii?Q?k+MK2q8JNd3McwJRYPXiNMDLlHcd7vG2w5RdX1FrVh75XOBEjvKH70UtVDrd?=
+ =?us-ascii?Q?HMS/y+qlAYM94gncI6JBi8HLW13pqlJ/I7kn6Uihg9f58wSrJ9wgl3NaaQ5H?=
+ =?us-ascii?Q?KrNOwZKiwdTzTI25xvLAyGkL0pBZj+SKJGhxHYWXhaBYVWD6K27jz0+5DRSb?=
+ =?us-ascii?Q?CNKw1vcsO44SWxKC03evzkjyP+7PnCzABhJ9mP24SWm76wZss36sdZJtXfcH?=
+ =?us-ascii?Q?lt+vKGJ7Kud2XmY1IGDyU7sRlKGVdwAaNAkp/KVRbk/GraUW37QM9DezNeAu?=
+ =?us-ascii?Q?+0m1fVyjBKqMsEOuijmuFi8sLf0CEDNGesGhq7eDLAhmNc5wu0nI9pjxWPqh?=
+ =?us-ascii?Q?2GtwRF2Bk/xAQCHmVqdJDWk9ZeOF7ai8GZ/OVDszVFBZeh3jmgK9lVarTIYw?=
+ =?us-ascii?Q?lybW+Kk/mhit+rqUjuCe0+jijz22qeKUUrlRJg634uszr7Pw5sYCdgupRvNt?=
+ =?us-ascii?Q?j1hWizF4hjRo9mdIKWjSZISN2zf6raJYsv4jXSj3hhcsV0MJ1ET1MeaFSyI9?=
+ =?us-ascii?Q?zS/cbDiaCsCTkj5u/AbyoxZNgVLG/7tpf/VY23+2OvTFI+Y2d3RT8O1XSrCk?=
+ =?us-ascii?Q?Rr0MNmKkDUUJoFUCEWxL24RZEFoQRBFuT19ZmNWAo3q9NY1BDl6Ee0jVkPN6?=
+ =?us-ascii?Q?h7TGz82lUmFPuCefeqAutJhCW1huAeTo57NQT2GPZ0pedsZPgWVF/SD3zMhY?=
+ =?us-ascii?Q?FaeWkcqTjidtWvmjXv6noYkCUoUDc5Hs1fJyLgybUdGWO6cv/TWPyiB1qJl1?=
+ =?us-ascii?Q?N1B6LolOZhsp0SpKSuLbpymjonSPWG5Vpt64OySQEPqh2g+QvYVUYmjROm18?=
+ =?us-ascii?Q?0CsASalL5euUe1yq/kWsCPSUuUttlfsAZIHa4pEBMChEjMCb3DNLG1hEzDjI?=
+ =?us-ascii?Q?6ORLXZ2qi+Jq0GvkVKwwNg9IQwIYQqTin7L52S+G?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 14f44516-c284-447b-9753-08dcdebd2420
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB4461.apcprd06.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Sep 2024 02:15:42.9554
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Sep 2024 06:25:11.7700
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f1905eb1-c353-41c5-9516-62b4a54b5ee6
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FHfxJx/fBAnQIcnvMm5sIjnJVl6SBhVQffQ/7VfuLr+A+WQe6iwMz/wwAlhv7B0Q5A4WCrJhzSHkRbUCkVorhg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR02MB5511
+X-MS-Exchange-CrossTenant-UserPrincipalName: G5Mz97lD5iBFZPQ9uVH53dod92QZbCq/8Vc2ReFjyM/yau5vC+bp9ZvB5+46K2lV/3o9ROKRUJDSB3IDLhENug==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB5148
 
+This patch fixes several typos found in the comments within the driver/scsi
+directory. The changes are purely cosmetic and do not affect functionality.
 
+Signed-off-by: Yu Jiaoliang <yujiaoliang@vivo.com>
+---
+ drivers/scsi/3w-9xxx.c    |  2 +-
+ drivers/scsi/3w-sas.c     |  2 +-
+ drivers/scsi/FlashPoint.c |  2 +-
+ drivers/scsi/advansys.c   |  2 +-
+ drivers/scsi/dc395x.c     | 16 ++++++++--------
+ 5 files changed, 12 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 6fb61c88ea11..895eb17ff402 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1694,7 +1694,7 @@ static int twa_reset_sequence(TW_Device_Extension *tw_dev, int soft_reset)
+ 	return retval;
+ } /* End twa_reset_sequence() */
+ 
+-/* This funciton returns unit geometry in cylinders/heads/sectors */
++/* This function returns unit geometry in cylinders/heads/sectors */
+ static int twa_scsi_biosparam(struct scsi_device *sdev, struct block_device *bdev, sector_t capacity, int geom[])
+ {
+ 	int heads, sectors, cylinders;
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index caa6713a62a4..c7e242aa7e20 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -1403,7 +1403,7 @@ static int twl_reset_device_extension(TW_Device_Extension *tw_dev, int ioctl_res
+ 	return retval;
+ } /* End twl_reset_device_extension() */
+ 
+-/* This funciton returns unit geometry in cylinders/heads/sectors */
++/* This function returns unit geometry in cylinders/heads/sectors */
+ static int twl_scsi_biosparam(struct scsi_device *sdev, struct block_device *bdev, sector_t capacity, int geom[])
+ {
+ 	int heads, sectors;
+diff --git a/drivers/scsi/FlashPoint.c b/drivers/scsi/FlashPoint.c
+index 9e77b8e1ea7c..e62653ac497b 100644
+--- a/drivers/scsi/FlashPoint.c
++++ b/drivers/scsi/FlashPoint.c
+@@ -6472,7 +6472,7 @@ static void FPT_BusMasterInit(u32 p_port)
+  *
+  * Function: FPT_DiagEEPROM
+  *
+- * Description: Verfiy checksum and 'Key' and initialize the EEPROM if
++ * Description: Verify checksum and 'Key' and initialize the EEPROM if
+  *              necessary.
+  *
+  *---------------------------------------------------------------------*/
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index fd4fcb37863d..3e7755a3d020 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -5575,7 +5575,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
+ 	/*
+ 	 * Each ASC-38C1600 function has two connectors. Only an HVD device
+ 	 * can not be connected to either connector. An LVD device or SE device
+-	 * may be connected to either connecor. If an SE device is connected,
++	 * may be connected to either connector. If an SE device is connected,
+ 	 * then at most Ultra speed (20 Mhz) can be used on both connectors.
+ 	 *
+ 	 * If an HVD device is attached, return an error.
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index d108a86e196e..a8651669ead5 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -106,7 +106,7 @@
+ 
+ 
+ /*
+- * Output a kernel mesage at the specified level and append the
++ * Output a kernel message at the specified level and append the
+  * driver name and a ": " to the start of the message
+  */
+ #define dprintkl(level, format, arg...)  \
+@@ -115,10 +115,10 @@
+ 
+ #ifdef DEBUG_MASK
+ /*
+- * print a debug message - this is formated with KERN_DEBUG, then the
++ * print a debug message - this is formatted with KERN_DEBUG, then the
+  * driver name followed by a ": " and then the message is output. 
+  * This also checks that the specified debug level is enabled before
+- * outputing the message
++ * outputting the message
+  */
+ #define dprintkdbg(type, format, arg...) \
+ 	do { \
+@@ -788,7 +788,7 @@ static void waiting_process_next(struct AdapterCtlBlk *acb)
+ 
+ 	/*
+ 	 * Loop over the dcb, but we start somewhere (potentially) in
+-	 * the middle of the loop so we need to manully do this.
++	 * the middle of the loop so we need to manually do this.
+ 	 */
+ 	pos = start;
+ 	do {
+@@ -1027,7 +1027,7 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd)
+ 	/*
+ 	 * Complete the command immediatey, and then return 0 to
+ 	 * indicate that we have handled the command. This is usually
+-	 * done when the commad is for things like non existent
++	 * done when the command is for things like non existent
+ 	 * devices.
+ 	 */
+ 	done(cmd);
+@@ -1940,7 +1940,7 @@ static void data_out_phase0(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb,
+ 				DC395x_read32(acb, TRM_S1040_DMA_CXCNT));
+ 		}
+ 		/*
+-		 * calculate all the residue data that not yet tranfered
++		 * calculate all the residue data that not yet transferred
+ 		 * SCSI transfer counter + left in SCSI FIFO data
+ 		 *
+ 		 * .....TRM_S1040_SCSI_COUNTER (24bits)
+@@ -3429,7 +3429,7 @@ static void set_basic_config(struct AdapterCtlBlk *acb)
+ 	DC395x_write8(acb, TRM_S1040_SCSI_CONFIG1, 0x03);	/* was 0x13: default */
+ 	/* program Host ID                  */
+ 	DC395x_write8(acb, TRM_S1040_SCSI_HOSTID, acb->scsi_host->this_id);
+-	/* set ansynchronous transfer       */
++	/* set asynchronous transfer       */
+ 	DC395x_write8(acb, TRM_S1040_SCSI_OFFSET, 0x00);
+ 	/* Turn LED control off */
+ 	wval = DC395x_read16(acb, TRM_S1040_GEN_CONTROL) & 0x7F;
+@@ -3530,7 +3530,7 @@ static void request_sense(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ /**
+  * device_alloc - Allocate a new device instance. This create the
+  * devices instance and sets up all the data items. The adapter
+- * instance is required to obtain confiuration information for this
++ * instance is required to obtain configuration information for this
+  * device. This does *not* add this device to the adapters device
+  * list.
+  *
+-- 
+2.34.1
 
-
-> On 9/24/24 7:48 PM, liuderong@oppo.com wrote:
->> From: liuderong <liuderong@oppo.com>
->>
->> For sd_zbc_read_zones, READ(16)/WRITE(16) are mandatory for ZBC disks.
->> Currently, when printing the trace:ufshcd_command on zone UFS devices,
->> the LBA and SIZE fields appear invalid,
->> making it difficult to trace commands.
->> So add trace READ(16)/WRITE(16) commands for zone ufs device.
->>
->> Trace sample:
->> ufshcd_command: send_req: 1d84000.ufshc: tag: 31, DB: 0x0,
->> size: -1, IS: 0, LBA: 0, opcode: 0x8a (WRITE_16), group_id: 0x0, 
->> hwq_id: 7
->> ufshcd_command: complete_rsp: 1d84000.ufshc: tag: 31, DB: 0x0,
->> size: -1, IS: 0, LBA: 0, opcode: 0x8a (WRITE_16), group_id: 0x0, 
->> hwq_id: 7
->>
->> Signed-off-by: liuderong <liuderong@oppo.com>
->> ---
->>   drivers/ufs/core/ufshcd.c | 8 ++++++--
->>   1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 5e3c67e..9e5e903 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -434,15 +434,19 @@ static void ufshcd_add_command_trace(struct 
->> ufs_hba *hba, unsigned int tag,
->>         opcode = cmd->cmnd[0];
->>   -    if (opcode == READ_10 || opcode == WRITE_10) {
->> +    if (opcode == READ_10 || opcode == READ_16 ||
->> +        opcode == WRITE_10 || opcode == WRITE_16) {
->>           /*
->> -         * Currently we only fully trace read(10) and write(10) 
->> commands
->> +         * Currently we only fully trace the following commands,
->> +         * read(10),read(16),write(10), and write(16)
->>            */
->>           transfer_len =
->> be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
->>           lba = scsi_get_lba(cmd);
->>           if (opcode == WRITE_10)
->>               group_id = lrbp->cmd->cmnd[6];
->> +        if (opcode == WRITE_16)
->> +            group_id = lrbp->cmd->cmnd[14];
->>       } else if (opcode == UNMAP) {
->>           /*
->>            * The number of Bytes to be unmapped beginning with the lba.
->
-> To me the above patch looks like a subset of this patch from 1.5y ago:
-> https://lore.kernel.org/linux-scsi/20230215190448.1687786-1-jaegeuk@kernel.org/ 
->
->
-> Bart.
-Hi Bart，
-
-OK, do we have plan to remove the trace: ufshcd_command?
-I think if we want to observe info closest to the ufs device(such as ufs 
-io latency), the ufshcd trace is more appropriate.
-What do you think?
-
-Thanks，
-Derong
