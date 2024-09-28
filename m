@@ -1,361 +1,117 @@
-Received: from rcdn-iport-8.cisco.com (rcdn-iport-8.cisco.com [173.37.86.79])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53161C231B;
-	Fri, 27 Sep 2024 18:56:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85E4416132A;
+	Sat, 28 Sep 2024 21:17:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727463385; cv=none; b=tZZgwtmRWIbya0+Tjr4WpiU5Awdz+/PVsKrGAq07iTxAz6+OvkanABi0Yn0TMjj3LX/C9yn/q8yv26e8nwXqTlqp7pMNNayS6BV/g5kr8Rpq3zdY/lnRSlXO5Har+hAZKxWl2gIRBy1jIgF0md1722cXQmyZ+JaiYwfKZ9sH9hY=
+	t=1727558276; cv=none; b=nYJtomKTnCjQahrdluMVE0+Kp2qJWlmRGQtuZgEMZO9nkWux/TGD8AUDYk9VsGjXstfmlKNDidO0iU3oAyKfcdVQQn2uohpF/WMpmVF6MWul3etQZsxMcebxizNs8g1Zq2T1LoLqjAZg+2R8ns8iO+LvJztq1IZQfrIcNpAdx+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727463385; c=relaxed/simple;
-	bh=NmqTBS2M114EHPAipTamt0kG8fUPzQBtoVqUb2vTBKc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BGgjAr62tZejRLqPGWnJHwdpOF7MTzT4QZ7SxwUY1O8o/3mTnH01eSSd/oI3wBN+VBhKc6LGLgGQT9WWXibac7wrwQMq2osniZUmYjcGRBhFPLFX2hyH5lKyd9LAzwrbDB/sJwtPT8bcVqmRbAX5cvB2+hOS/iO0xjeUv/ynPxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=QafpCPRG; arc=none smtp.client-ip=173.37.86.79
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	s=arc-20240116; t=1727558276; c=relaxed/simple;
+	bh=GwRvUgdYRx+FPpFLOv0ZnuF0mEdbcNAZNxe7CmAoNhw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=ovrztC0WYypp0P1IDD5HzmZD61AowZ0b8lDYk4bZQooT1isK7SKb/SZFCBGA6Zb+6n8I6K+xweRtqNeTdiGZ0vRfZs+xO3Qa8/J4sGFZv8diizJ7lMaFXMIogbnqzgsrTntQ4CHOXHgbrnf7MLZmNTbUst6Q/uAMFQxL92BsRdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ewrcaQYT; arc=none smtp.client-ip=209.85.222.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="QafpCPRG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ewrcaQYT"
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-7a9af813f6cso290908285a.3;
+        Sat, 28 Sep 2024 14:17:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=11044; q=dns/txt;
-  s=iport; t=1727463384; x=1728672984;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Jzemj4JBh02dXKpfx/uKNeyANrVOknIJwK2dcRAp1/o=;
-  b=QafpCPRGfUt13lG1jqyMd6PrHp7lp8vy+oOaiP2J2idt+CkPeHRMYUTJ
-   jWUfbC6rnIZGvH1bj/OgaaHTzlIdKVxbjSuKoyau23iJE3dfL6Oo7I5lD
-   EkZxusY8EroALwICT1DWFa/VN3L8i07NVth9GFv/lzRHMKy2mJgQIVmyQ
-   8=;
-X-CSE-ConnectionGUID: zZZwcscLR32BkEpw9orfqQ==
-X-CSE-MsgGUID: YR3XGh2dT9CsgB/4PKFBsg==
-X-IronPort-AV: E=Sophos;i="6.11,159,1725321600"; 
-   d="scan'208";a="258699879"
-Received: from rcdn-core-5.cisco.com ([173.37.93.156])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2024 18:55:15 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-	(authenticated bits=0)
-	by rcdn-core-5.cisco.com (8.15.2/8.15.2) with ESMTPSA id 48RIkQau022754
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Fri, 27 Sep 2024 18:55:14 GMT
-From: Karan Tilak Kumar <kartilak@cisco.com>
-To: sebaddel@cisco.com
-Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
-        satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v3 13/14] scsi: fnic: Add support to handle port channel RSCN
-Date: Fri, 27 Sep 2024 11:46:12 -0700
-Message-Id: <20240927184613.52172-14-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20240927184613.52172-1-kartilak@cisco.com>
-References: <20240927184613.52172-1-kartilak@cisco.com>
+        d=gmail.com; s=20230601; t=1727558273; x=1728163073; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=f+Ut8sm7zAb/iu6ZI8xkj9vcj2xlrsZA9C/mM3pTsjY=;
+        b=ewrcaQYTULer47vbf4aYbEyAcfCJZhvacBMbLUseFmi+UJLP+LUaqfiidIgRgxAAE8
+         BqnT4YlJL+LVS+poSgaHz3yIk7t10In2uBtIWotOwOdN4TLcf19cuWM8H3nm6OyE3FjF
+         06mkInh17km6FjllTa+MbOJKfVX3UgZjUbmKGnYgqQqhcqc+fsA61BQZaUa9Ksre0F5t
+         g6ViW+UsXAqCSgrhaTtlJD5iqziwBM4nSkiwBTMYYrsBCtN098AX97jSPEf36qV5I4LA
+         jLtXCcmwsxn0GEFRn8C9llFixQHfAlYMoUSbHR7nQkm4xF7ZVEd14/DZC4WUszhTNzea
+         y9eA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727558273; x=1728163073;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=f+Ut8sm7zAb/iu6ZI8xkj9vcj2xlrsZA9C/mM3pTsjY=;
+        b=mQK6RiohlnhzRbTcbt28XVTPGCCclkDUkJypHBeR8cF4ga+Mp12sW3zeW70Lf8+DZr
+         cdch40WQh8KtwYsucXP/NPFu32EGOLj08E3+aM5sBNHok5Ma3dpwIkHKZxKjqNnbgAZH
+         K2Ggdf0+zLmciy4Xy2XlwNkEXGP13qktsp5fIMx7rtaLundbL5aG8GuabmRkArdwCvcO
+         1ZPD+BROAWJMkC6hi0YW94qIYP3GsHFg6M9xjY+rANg9P42oD0vt639J0BO5tb0Hi0Mn
+         nAW4xbFKEf+d6mnoMK1quLYpW2qN8Ji7f7lleyq+ZVhAMXdCSmo0X9LO3a9CLrI5a2nR
+         IKNQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVhAftFFoBl+/nTT2L/h8sv8i4yeYyuKuRYRGbEdrglk7QSHEuneHQzhA9IQXoq2qUpLnceJxK0oOvE8/4=@vger.kernel.org, AJvYcCXW4tsJSCMgI8I6jmAGAhoqfoo5t2OCG1y3j7F+H3/3ZtmlEm5xdK5ESFAabnCwS8uDve83cMeGPzQx/A==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz8diaH+wI6Vtv77tdmEEbzkOfVA+uDrijoIidaoxaL2eKsipka
+	JJDgbJXq4xZC67BRNv5xjASsM/kHav3eEUj2jCm/MdEm1HDpvvhV
+X-Google-Smtp-Source: AGHT+IHdO3WFKcTqHk9kDvCLH+LJuxTQhUV1lKezoEvnJtlfPfSTZpOOU3tFw0Sq23YzwV+r5+MLgQ==
+X-Received: by 2002:a05:620a:4413:b0:7a9:9ed7:b49f with SMTP id af79cd13be357-7ae3785632emr1175650785a.38.1727558273594;
+        Sat, 28 Sep 2024 14:17:53 -0700 (PDT)
+Received: from [127.0.1.1] ([2607:fea8:bad7:5400:c768:2b64:e844:1a23])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7ae3782cd54sm239349585a.94.2024.09.28.14.17.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 28 Sep 2024 14:17:52 -0700 (PDT)
+From: Abdulrasaq Lawani <abdulrasaqolawani@gmail.com>
+Date: Sat, 28 Sep 2024 17:17:40 -0400
+Subject: [PATCH next] scsi: mpi3mr: fix uninitialized variables in
+ mpi3mr_bring_ioc_ready
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-5.cisco.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240928-driver-fixes-for-mpi3mr_fw-v1-1-fc340a71e19a@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAHNy+GYC/x2MQQqAIBAAvxJ7bsGsQ/aViLBcaw9ZrFFB+Pek4
+ 8DMvBBJmCJ0xQtCF0feQ4aqLGBebVgI2WUGrXSjjG7RCV8k6PmhiH4X3A6uNxn9jdrbubJmclb
+ VkAeH0K/lvodAzwlDSh9dttPFcgAAAA==
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, 
+ Kashyap Desai <kashyap.desai@broadcom.com>, 
+ Sumit Saxena <sumit.saxena@broadcom.com>, 
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, 
+ Abdulrasaq Lawani <abdulrasaqolawani@gmail.com>
+X-Mailer: b4 0.14-dev-0bd45
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1727558271; l=943;
+ i=abdulrasaqolawani@gmail.com; s=20240928; h=from:subject:message-id;
+ bh=GwRvUgdYRx+FPpFLOv0ZnuF0mEdbcNAZNxe7CmAoNhw=;
+ b=MmUaVN+oAAUZxlTCuGrZApOIhzqfVs1Zh9cfiWibALFXifiAcZix6RxBM1IXLWFOEZrYqUcoa
+ bFa62ty+E0IC3lZK/p/27ZEXMYMZEB55GEVzD3xA/jshH7YmaYn46uz
+X-Developer-Key: i=abdulrasaqolawani@gmail.com; a=ed25519;
+ pk=985cWqQZSGcRygcjLs+fi8mACOgCIBexboD/qtf1VY4=
 
-Add support to handle port channel RSCN.
+Initialize the `start_time` & `elapsed_time_sec` variable
+to prevent errors when calculating elapsed_time_sec.
 
-Port channel RSCN is a Cisco vendor specific RSCN
-event. It is applicable only to Cisco UCS fabrics.
-If there's a change in the port channel configuration,
-an RCSN is sent to fnic. This is used to serially
-reset the scsi initiator fnics so that there's no
-all paths down scenario. The affected fnics are added
-to a list that are reset with a small time gap
-between them.
-
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+Signed-off-by: Abdulrasaq Lawani <abdulrasaqolawani@gmail.com>
 ---
-Changes between v2 and v3:
-    Incorporate review comments from Hannes from other patches:
-	Replace redundant definitions with standard definitions.
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes between v1 and v2:
-    Replace pr_err with printk.
-    Incorporate review comments from Hannes from other patches:
-	Replace pr_err with dev_err.
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index f1ab76351bd8..f93968b76883 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1363,7 +1363,8 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 	enum mpi3mr_iocstate ioc_state;
+ 	u64 base_info;
+ 	u8 retry = 0;
+-	u64 start_time, elapsed_time_sec;
++	u64 start_time = 0;
++	u64 elapsed_time_sec = 0;
+ 
+ retry_bring_ioc_ready:
+ 
+
 ---
- drivers/scsi/fnic/fdls_disc.c | 64 ++++++++++++++++++++++++++++-------
- drivers/scsi/fnic/fnic.h      | 25 ++++++++++++++
- drivers/scsi/fnic/fnic_fcs.c  | 35 +++++++++++++++++++
- drivers/scsi/fnic/fnic_main.c | 30 ++++++++++++++++
- 4 files changed, 141 insertions(+), 13 deletions(-)
+base-commit: 40e0c9d414f57d450e3ad03c12765e797fc3fede
+change-id: 20240928-driver-fixes-for-mpi3mr_fw-2fac1a9bda03
 
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index 5701583ea7a4..6aa19f2a0a39 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -3904,6 +3904,9 @@ fdls_process_rscn(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
- 	int newports = 0;
- 	struct fnic_fdls_fabric_s *fdls = &iport->fabric;
- 	struct fnic *fnic = iport->fnic;
-+	int rscn_type = NOT_PC_RSCN;
-+	uint32_t sid = ntoh24(fchdr->fh_s_id);
-+	unsigned long reset_fnic_list_lock_flags = 0;
- 	uint16_t rscn_payload_len;
- 
- 	atomic64_inc(&iport->iport_stats.num_rscns);
-@@ -3926,16 +3929,24 @@ fdls_process_rscn(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
- 	    || (rscn_payload_len > 1024)
- 	    || (rscn->els.rscn_page_len != 4)) {
- 		num_ports = 0;
--		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
--					 "RSCN payload_len: 0x%x page_len: 0x%x",
--				     rscn_payload_len, rscn->els.rscn_page_len);
--		/* if this happens then we need to send ADISC to all the tports. */
--		list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
--			if (tport->state == FDLS_TGT_STATE_READY)
--				tport->flags |= FNIC_FDLS_TPORT_SEND_ADISC;
-+		if ((rscn_payload_len == 0xFFFF)
-+		    && (sid == FC_FABRIC_CONTROLLER)) {
-+			rscn_type = PC_RSCN;
- 			FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
--						 "RSCN for port id: 0x%x", tport->fcid);
--		}
-+				     "pcrscn: PCRSCN received. sid: 0x%x payload len: 0x%x",
-+				     sid, rscn_payload_len);
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-+						 "RSCN payload_len: 0x%x page_len: 0x%x",
-+				     rscn_payload_len, rscn->els.rscn_page_len);
-+			/* if this happens then we need to send ADISC to all the tports. */
-+			list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-+				if (tport->state == FDLS_TGT_STATE_READY)
-+					tport->flags |= FNIC_FDLS_TPORT_SEND_ADISC;
-+				FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-+							 "RSCN for port id: 0x%x", tport->fcid);
-+			}
-+		} /* end else */
- 	} else {
- 		num_ports = (rscn_payload_len - 4) / rscn->els.rscn_page_len;
- 		rscn_port = (struct fc_els_rscn_page *)(rscn + 1);
-@@ -3982,10 +3993,37 @@ fdls_process_rscn(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
- 			tport->flags |= FNIC_FDLS_TPORT_SEND_ADISC;
- 	}
- 
--	FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
--				 "FDLS process RSCN sending GPN_FT %p", iport);
--	fdls_send_gpn_ft(iport, FDLS_STATE_RSCN_GPN_FT);
--	fdls_send_rscn_resp(iport, fchdr);
-+	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON &&
-+		rscn_type == PC_RSCN && fnic->role == FNIC_ROLE_FCP_INITIATOR) {
-+
-+		if (fnic->pc_rscn_handling_status == PC_RSCN_HANDLING_IN_PROGRESS) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-+				 "PCRSCN handling already in progress. Skip host reset: %d",
-+				 iport->fnic->fnic_num);
-+			return;
-+		}
-+
-+		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-+			 "Processing PCRSCN. Queuing fnic for host reset: %d",
-+			 iport->fnic->fnic_num);
-+		fnic->pc_rscn_handling_status = PC_RSCN_HANDLING_IN_PROGRESS;
-+
-+		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-+
-+		spin_lock_irqsave(&reset_fnic_list_lock,
-+						  reset_fnic_list_lock_flags);
-+		list_add_tail(&fnic->links, &reset_fnic_list);
-+		spin_unlock_irqrestore(&reset_fnic_list_lock,
-+							   reset_fnic_list_lock_flags);
-+
-+		queue_work(reset_fnic_work_queue, &reset_fnic_work);
-+		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-+	} else {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-+					 "FDLS process RSCN sending GPN_FT %p", iport);
-+		fdls_send_gpn_ft(iport, FDLS_STATE_RSCN_GPN_FT);
-+		fdls_send_rscn_resp(iport, fchdr);
-+	}
- }
- 
- void fnic_fdls_disc_start(struct fnic_iport_s *iport)
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 5ad9d6df92a8..5fd506fcea35 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -211,11 +211,33 @@ enum reset_states {
- 	RESET_ERROR
- };
- 
-+enum rscn_type {
-+	NOT_PC_RSCN = 0,
-+	PC_RSCN
-+};
-+
-+enum pc_rscn_handling_status {
-+	PC_RSCN_HANDLING_NOT_IN_PROGRESS = 0,
-+	PC_RSCN_HANDLING_IN_PROGRESS
-+};
-+
-+enum pc_rscn_handling_feature {
-+	PC_RSCN_HANDLING_FEATURE_OFF = 0,
-+	PC_RSCN_HANDLING_FEATURE_ON
-+};
-+
- extern unsigned int fnic_fdmi_support;
- extern unsigned int fnic_log_level;
- extern unsigned int io_completions;
- extern struct workqueue_struct *fnic_event_queue;
- 
-+extern unsigned int pc_rscn_handling_feature_flag;
-+extern spinlock_t reset_fnic_list_lock;
-+extern struct list_head reset_fnic_list;
-+extern struct workqueue_struct *reset_fnic_work_queue;
-+extern struct work_struct reset_fnic_work;
-+
-+
- #define FNIC_MAIN_LOGGING 0x01
- #define FNIC_FCS_LOGGING 0x02
- #define FNIC_SCSI_LOGGING 0x04
-@@ -396,6 +418,7 @@ struct fnic {
- 	int link_status;
- 
- 	struct list_head list;
-+	struct list_head links;
- 	struct pci_dev *pdev;
- 	struct vnic_fc_config config;
- 	struct vnic_dev *vdev;
-@@ -422,6 +445,7 @@ struct fnic {
- 
- 	char subsys_desc[14];
- 	int subsys_desc_len;
-+	int pc_rscn_handling_status;
- 
- 	/*** FIP related data members  -- start ***/
- 	void (*set_vlan)(struct fnic *, u16 vlan);
-@@ -503,6 +527,7 @@ void fnic_stats_debugfs_remove(struct fnic *fnic);
- int fnic_is_abts_pending(struct fnic *, struct scsi_cmnd *);
- 
- void fnic_handle_fip_frame(struct work_struct *work);
-+void fnic_reset_work_handler(struct work_struct *work);
- void fnic_handle_fip_event(struct fnic *fnic);
- void fnic_fcoe_reset_vlans(struct fnic *fnic);
- extern void fnic_handle_fip_timer(struct timer_list *t);
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 3e82d64483e2..f55ebbc1bc1c 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -1109,4 +1109,39 @@ void fnic_flush_tport_event_list(struct fnic *fnic)
- 	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- }
- 
-+void fnic_reset_work_handler(struct work_struct *work)
-+{
-+	struct fnic *cur_fnic, *next_fnic;
-+	unsigned long reset_fnic_list_lock_flags;
-+	int host_reset_ret_code;
-+
-+	/*
-+	 * This is a single thread. It is per fnic module, not per fnic
-+	 * All the fnics that need to be reset
-+	 * have been serialized via the reset fnic list.
-+	 */
-+	spin_lock_irqsave(&reset_fnic_list_lock, reset_fnic_list_lock_flags);
-+	list_for_each_entry_safe(cur_fnic, next_fnic, &reset_fnic_list, links) {
-+		list_del(&cur_fnic->links);
-+		spin_unlock_irqrestore(&reset_fnic_list_lock,
-+							   reset_fnic_list_lock_flags);
-+
-+		dev_err(&cur_fnic->pdev->dev, "fnic: <%d>: issuing a host reset\n",
-+			   cur_fnic->fnic_num);
-+		host_reset_ret_code = fnic_host_reset(cur_fnic->host);
-+		dev_err(&cur_fnic->pdev->dev,
-+		   "fnic: <%d>: returned from host reset with status: %d\n",
-+		   cur_fnic->fnic_num, host_reset_ret_code);
-+
-+		spin_lock_irqsave(&cur_fnic->fnic_lock, cur_fnic->lock_flags);
-+		cur_fnic->pc_rscn_handling_status =
-+			PC_RSCN_HANDLING_NOT_IN_PROGRESS;
-+		spin_unlock_irqrestore(&cur_fnic->fnic_lock, cur_fnic->lock_flags);
-+
-+		spin_lock_irqsave(&reset_fnic_list_lock,
-+						  reset_fnic_list_lock_flags);
-+	}
-+	spin_unlock_irqrestore(&reset_fnic_list_lock,
-+						   reset_fnic_list_lock_flags);
-+}
- 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 69be3eed0a50..c1d06abe86b1 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -44,6 +44,10 @@ static LIST_HEAD(fnic_list);
- static DEFINE_SPINLOCK(fnic_list_lock);
- static DEFINE_IDA(fnic_ida);
- 
-+struct work_struct reset_fnic_work;
-+LIST_HEAD(reset_fnic_list);
-+DEFINE_SPINLOCK(reset_fnic_list_lock);
-+
- /* Supported devices by fnic module */
- static struct pci_device_id fnic_id_table[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_CISCO, PCI_DEVICE_ID_CISCO_FNIC) },
-@@ -88,6 +92,12 @@ static unsigned int fnic_max_qdepth = FNIC_DFLT_QUEUE_DEPTH;
- module_param(fnic_max_qdepth, uint, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(fnic_max_qdepth, "Queue depth to report for each LUN");
- 
-+unsigned int pc_rscn_handling_feature_flag = PC_RSCN_HANDLING_FEATURE_ON;
-+module_param(pc_rscn_handling_feature_flag, uint, 0644);
-+MODULE_PARM_DESC(pc_rscn_handling_feature_flag,
-+		 "PCRSCN handling (0 for none. 1 to handle PCRSCN (default))");
-+
-+struct workqueue_struct *reset_fnic_work_queue;
- struct workqueue_struct *fnic_fip_queue;
- 
- static int fnic_slave_alloc(struct scsi_device *sdev)
-@@ -1221,6 +1231,19 @@ static int __init fnic_init_module(void)
- 		goto err_create_fip_workq;
- 	}
- 
-+	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON) {
-+		reset_fnic_work_queue =
-+			create_singlethread_workqueue("reset_fnic_work_queue");
-+		if (!reset_fnic_work_queue) {
-+			pr_err("reset fnic work queue create failed\n");
-+			err = -ENOMEM;
-+			goto err_create_reset_fnic_workq;
-+		}
-+		spin_lock_init(&reset_fnic_list_lock);
-+		INIT_LIST_HEAD(&reset_fnic_list);
-+		INIT_WORK(&reset_fnic_work, fnic_reset_work_handler);
-+	}
-+
- 	fnic_fc_transport = fc_attach_transport(&fnic_fc_functions);
- 	if (!fnic_fc_transport) {
- 		printk(KERN_ERR PFX "fc_attach_transport error\n");
-@@ -1241,6 +1264,9 @@ static int __init fnic_init_module(void)
- err_fc_transport:
- 	destroy_workqueue(fnic_fip_queue);
- err_create_fip_workq:
-+	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON)
-+		destroy_workqueue(reset_fnic_work_queue);
-+err_create_reset_fnic_workq:
- 	destroy_workqueue(fnic_event_queue);
- err_create_fnic_workq:
- 	kmem_cache_destroy(fnic_io_req_cache);
-@@ -1259,6 +1285,10 @@ static void __exit fnic_cleanup_module(void)
- {
- 	pci_unregister_driver(&fnic_driver);
- 	destroy_workqueue(fnic_event_queue);
-+
-+	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON)
-+		destroy_workqueue(reset_fnic_work_queue);
-+
- 	if (fnic_fip_queue) {
- 		flush_workqueue(fnic_fip_queue);
- 		destroy_workqueue(fnic_fip_queue);
+Best regards,
 -- 
-2.31.1
+Abdulrasaq Lawani <abdulrasaqolawani@gmail.com>
 
