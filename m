@@ -1,65 +1,61 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 492AC1E868;
-	Sun, 29 Sep 2024 13:13:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3AFC178396
+	for <linux-scsi@vger.kernel.org>; Sun, 29 Sep 2024 17:03:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727615617; cv=none; b=Fm4R3K407QXxaIc6WwzROSgtLzWdttmb9MqiGqNZZi2zFEFzLp7djvbGXEvQH0/4foHlm7/WLvtwBWOvfTU3dEvG6N6nFMwnDkOyv76d4A2JTj/CWM8FdiFNGSCbBCrJn1a2UJtGravhLpjJj1tUwYDKRIE0aZHtsracXaRuGfY=
+	t=1727629423; cv=none; b=PnW0SEOEYkpyZSnzw+iHrrLOXy392Mm4Bh9/iEjNIszolFl4KOTYwdRMfStBiEE8RIQV9f6rcFIpow5Qk1lV9PSzTnXaoECJ8m3Z4SYW53NsplA+BHzTWosfa4Shs610BqxN+lUxkGzrDJ0Hh2AhtJ+btyn5Z60iqy+JT/e44jM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727615617; c=relaxed/simple;
-	bh=3F7xFSUGK/sZ4Xmlcg3e1EhoVv0SD/q3Pk0km8pPHFg=;
+	s=arc-20240116; t=1727629423; c=relaxed/simple;
+	bh=id7c42YZjq91jQ25bwcP27nUkMaC82AMHSYmc/Fl9LA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V4M1lOa2sTVSmCWHQs4m2pCyJ18zBOqZD21Lcn501xHRXuPAZwe/t3wiGGjL+CyTELbqIP/UdyeSWXEI9da/aZ4kyOf7eiRolr6JBGxS8UyFpeh1Q6AfdqFES8Kgux8UIcOr1Xw5sQnEHV0azZtZIoh+cuscAf3xW1u1iZwsr9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mA6OjPds; arc=none smtp.client-ip=192.198.163.13
+	 Content-Type:Content-Disposition:In-Reply-To; b=q4GuJB4xyn187fjG/1Z33M5kB8/lwJIJAgzE20gx6pqu71CCGpZMQsKCquHTVYmWFo31VLKKVZexoH1q0RBYyxXee+xpaoiIS//Sj1bIJJ2IAhY3BWOJo1rNviCaSZ76pf6/vGFsMGZA2TkqTlO0LR5U1p2Qwfj8gZ2Isx1/Enc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=d4+RoR5p; arc=none smtp.client-ip=198.175.65.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mA6OjPds"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="d4+RoR5p"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1727615614; x=1759151614;
+  t=1727629422; x=1759165422;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=3F7xFSUGK/sZ4Xmlcg3e1EhoVv0SD/q3Pk0km8pPHFg=;
-  b=mA6OjPdsBjs8Qpo8Ve7Ec6REkMrnmZHEestwkAbQ2Jvszu6rM2LMyK9C
-   rOrTnXpID/X7Au2KTt9bit4JJFWRIPZ+RctfYSpGTMyFY7F6X7vpSydiJ
-   rxuYt44Z1KFSOPyC5nDX8g8OUERA5H2MkEMFvyN2/2cbcziy6b8GECIqb
-   849eaD2DPlFIDfeWCJglUliqI5cvStrWNX7xMCLTM/wvYZZN4VI2J97TB
-   V226IA5NQZVCq6kkOOEJJjlYJt48nj8fr51hEV1roVjsylda5S1uSpwY8
-   C8P26O17iR6f3dFC0XLQ4iD3/aPs+vNaLmxSP2zRaZTMQYT7cvR2Ji3Qm
-   A==;
-X-CSE-ConnectionGUID: tzGBevkXThCl88h3swmvgQ==
-X-CSE-MsgGUID: 4Zagzan4TZiLmaTyKIU8dw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11209"; a="29588741"
+  bh=id7c42YZjq91jQ25bwcP27nUkMaC82AMHSYmc/Fl9LA=;
+  b=d4+RoR5pc7HyGPivxLxJUT2ANj21+dROuiW/hH2Hj12kkaGUJFf5OfVp
+   i8XPfdBg0s8CnuZDmsbWru9KGsQ4TyVMhp1NNYrtqVhAO9eTJg2zwAOEt
+   V7xkIJcPE1y05+wCXWrKHm9e6Qv3REUE0exyzRV80N23LUzSZAgUHXJdL
+   5t2IdHZV5Srkqs6Bx+izLBUxwaJ2NHfQ6GiJ8OpNvjSVlfUQUA7AZyCK1
+   ZHyzDoV/Z8QpQt5XYkTkFviXGePrWmiuWjGClbaeGRN5bYZIxYs0UVNBR
+   4fj6EdFR+nx63VvrfltSTC9GuMGAKQjFjXeO3bV1gEN7pStTlb9+7nom9
+   w==;
+X-CSE-ConnectionGUID: D9Y5nBSyRXScIAtNNPy2EA==
+X-CSE-MsgGUID: j0KAYwdSTRiDxcli6JoKlg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11210"; a="44178711"
 X-IronPort-AV: E=Sophos;i="6.11,163,1725346800"; 
-   d="scan'208";a="29588741"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2024 06:13:33 -0700
-X-CSE-ConnectionGUID: uiNVnPNkRKW0RuUvboYcfQ==
-X-CSE-MsgGUID: ObDZashbSnqzIpS9YNS0xA==
+   d="scan'208";a="44178711"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2024 10:03:42 -0700
+X-CSE-ConnectionGUID: jqO9y6JsSkq0ODBm8A7lag==
+X-CSE-MsgGUID: cZEKvLy1ROy8ucvrZVgzVw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,163,1725346800"; 
-   d="scan'208";a="72892994"
+   d="scan'208";a="110545331"
 Received: from lkp-server01.sh.intel.com (HELO 53e96f405c61) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 29 Sep 2024 06:13:30 -0700
+  by orviesa001.jf.intel.com with ESMTP; 29 Sep 2024 10:03:39 -0700
 Received: from kbuild by 53e96f405c61 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1sutjr-000OIv-2Q;
-	Sun, 29 Sep 2024 13:13:27 +0000
-Date: Sun, 29 Sep 2024 21:13:19 +0800
+	id 1suxKb-000OTw-1f;
+	Sun, 29 Sep 2024 17:03:37 +0000
+Date: Mon, 30 Sep 2024 01:03:26 +0800
 From: kernel test robot <lkp@intel.com>
-To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, arulponn@cisco.com,
-	djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
-	satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: Re: [PATCH v3 08/14] scsi: fnic: Add functionality in fnic to
- support FDLS
-Message-ID: <202409292037.ZYWZwIK6-lkp@intel.com>
-References: <20240927184613.52172-9-kartilak@cisco.com>
+To: Yihang Li <liyihang9@huawei.com>, James.Bottomley@hansenpartnership.com,
+	martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	linuxarm@huawei.com, liyihang9@huawei.com
+Subject: Re: [PATCH 03/13] scsi: hisi_sas: Add firmware information check
+Message-ID: <202409300042.USclhodY-lkp@intel.com>
+References: <20240926014332.3905399-4-liyihang9@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,125 +64,104 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240927184613.52172-9-kartilak@cisco.com>
+In-Reply-To: <20240926014332.3905399-4-liyihang9@huawei.com>
 
-Hi Karan,
+Hi Yihang,
 
 kernel test robot noticed the following build warnings:
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v6.11 next-20240927]
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.11 next-20240927]
 [If your patch is applied to the wrong git tree, kindly drop us a note.
 And when submitting patch, we suggest to use '--base' as documented in
 https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Replace-shost_printk-with-dev_info-dev_err/20240928-025906
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20240927184613.52172-9-kartilak%40cisco.com
-patch subject: [PATCH v3 08/14] scsi: fnic: Add functionality in fnic to support FDLS
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20240929/202409292037.ZYWZwIK6-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240929/202409292037.ZYWZwIK6-lkp@intel.com/reproduce)
+url:    https://github.com/intel-lab-lkp/linux/commits/Yihang-Li/scsi-hisi_sas-Adjust-priority-of-registering-and-exiting-debugfs-for-security/20240926-094506
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20240926014332.3905399-4-liyihang9%40huawei.com
+patch subject: [PATCH 03/13] scsi: hisi_sas: Add firmware information check
+config: alpha-randconfig-r133-20240929 (https://download.01.org/0day-ci/archive/20240930/202409300042.USclhodY-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 13.3.0
+reproduce: (https://download.01.org/0day-ci/archive/20240930/202409300042.USclhodY-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202409292037.ZYWZwIK6-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202409300042.USclhodY-lkp@intel.com/
 
-All warnings (new ones prefixed by >>):
+sparse warnings: (new ones prefixed by >>)
+>> drivers/scsi/hisi_sas/hisi_sas_main.c:2457:32: sparse: sparse: incorrect type in return expression (different base types) @@     expected struct Scsi_Host * @@     got int [assigned] error @@
+   drivers/scsi/hisi_sas/hisi_sas_main.c:2457:32: sparse:     expected struct Scsi_Host *
+   drivers/scsi/hisi_sas/hisi_sas_main.c:2457:32: sparse:     got int [assigned] error
+>> drivers/scsi/hisi_sas/hisi_sas_main.c:2457:32: sparse: sparse: non size-preserving integer to pointer cast
 
->> drivers/scsi/fnic/fnic_scsi.c:2618:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-    2618 |         if (fnic->link_status) {
-         |             ^~~~~~~~~~~~~~~~~
-   drivers/scsi/fnic/fnic_scsi.c:2637:9: note: uninitialized use occurs here
-    2637 |         return ret;
-         |                ^~~
-   drivers/scsi/fnic/fnic_scsi.c:2618:2: note: remove the 'if' if its condition is always true
-    2618 |         if (fnic->link_status) {
-         |         ^~~~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/fnic/fnic_scsi.c:2580:9: note: initialize the variable 'ret' to silence this warning
-    2580 |         int ret;
-         |                ^
-         |                 = 0
-   1 warning generated.
---
->> drivers/scsi/fnic/fnic_fcs.c:1031: warning: expecting prototype for fnic_tport_work(). Prototype was for fnic_tport_event_handler() instead
+vim +2457 drivers/scsi/hisi_sas/hisi_sas_main.c
 
-
-vim +2618 drivers/scsi/fnic/fnic_scsi.c
-
-  2568	
-  2569	/*
-  2570	 * SCSI Error handling calls driver's eh_host_reset if all prior
-  2571	 * error handling levels return FAILED. If host reset completes
-  2572	 * successfully, and if link is up, then Fabric login begins.
-  2573	 *
-  2574	 * Host Reset is the highest level of error recovery. If this fails, then
-  2575	 * host is offlined by SCSI.
-  2576	 *
-  2577	 */
-  2578	int fnic_host_reset(struct Scsi_Host *shost)
-  2579	{
-  2580		int ret;
-  2581		unsigned long wait_host_tmo;
-  2582		struct fnic *fnic = *((struct fnic **) shost_priv(shost));
-  2583		unsigned long flags;
-  2584		struct fnic_iport_s *iport = &fnic->iport;
-  2585	
-  2586		spin_lock_irqsave(&fnic->fnic_lock, flags);
-  2587		if (fnic->reset_in_progress == NOT_IN_PROGRESS) {
-  2588			fnic->reset_in_progress = IN_PROGRESS;
-  2589		} else {
-  2590			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-  2591			wait_for_completion_timeout(&fnic->reset_completion_wait,
-  2592										msecs_to_jiffies(10000));
-  2593	
-  2594			spin_lock_irqsave(&fnic->fnic_lock, flags);
-  2595			if (fnic->reset_in_progress == IN_PROGRESS) {
-  2596				spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-  2597				FNIC_SCSI_DBG(KERN_WARNING, fnic->lport->host, fnic->fnic_num,
-  2598				  "Firmware reset in progress. Skipping another host reset\n");
-  2599				return SUCCESS;
-  2600			}
-  2601			fnic->reset_in_progress = IN_PROGRESS;
-  2602		}
-  2603		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-  2604	
-  2605		/*
-  2606		 * If fnic_reset is successful, wait for fabric login to complete
-  2607		 * scsi-ml tries to send a TUR to every device if host reset is
-  2608		 * successful, so before returning to scsi, fabric should be up
-  2609		 */
-  2610		fnic_reset(shost);
-  2611	
-  2612		spin_lock_irqsave(&fnic->fnic_lock, flags);
-  2613		fnic->reset_in_progress = NOT_IN_PROGRESS;
-  2614		complete(&fnic->reset_completion_wait);
-  2615		fnic->soft_reset_count++;
-  2616	
-  2617		/* wait till the link is up */
-> 2618		if (fnic->link_status) {
-  2619			wait_host_tmo = jiffies + FNIC_HOST_RESET_SETTLE_TIME * HZ;
-  2620			ret = FAILED;
-  2621			while (time_before(jiffies, wait_host_tmo)) {
-  2622				if (iport->state != FNIC_IPORT_STATE_READY
-  2623					&& fnic->link_status) {
-  2624					spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-  2625					ssleep(1);
-  2626					spin_lock_irqsave(&fnic->fnic_lock, flags);
-  2627				} else {
-  2628					ret = SUCCESS;
-  2629					break;
-  2630				}
-  2631			}
-  2632		}
-  2633		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-  2634	
-  2635		FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-  2636					  "host reset return status: %d\n", ret);
-  2637		return ret;
-  2638	}
-  2639	
+  2424	
+  2425	static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+  2426						      const struct hisi_sas_hw *hw)
+  2427	{
+  2428		struct resource *res;
+  2429		struct Scsi_Host *shost;
+  2430		struct hisi_hba *hisi_hba;
+  2431		struct device *dev = &pdev->dev;
+  2432		int error;
+  2433	
+  2434		shost = scsi_host_alloc(hw->sht, sizeof(*hisi_hba));
+  2435		if (!shost) {
+  2436			dev_err(dev, "scsi host alloc failed\n");
+  2437			return NULL;
+  2438		}
+  2439		hisi_hba = shost_priv(shost);
+  2440	
+  2441		INIT_WORK(&hisi_hba->rst_work, hisi_sas_rst_work_handler);
+  2442		hisi_hba->hw = hw;
+  2443		hisi_hba->dev = dev;
+  2444		hisi_hba->platform_dev = pdev;
+  2445		hisi_hba->shost = shost;
+  2446		SHOST_TO_SAS_HA(shost) = &hisi_hba->sha;
+  2447	
+  2448		timer_setup(&hisi_hba->timer, NULL, 0);
+  2449	
+  2450		if (hisi_sas_get_fw_info(hisi_hba) < 0)
+  2451			goto err_out;
+  2452	
+  2453		if (hisi_hba->hw->fw_info_check) {
+  2454			error = hisi_hba->hw->fw_info_check(hisi_hba);
+  2455	
+  2456			if (error)
+> 2457				return error;
+  2458		}
+  2459	
+  2460		error = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
+  2461		if (error) {
+  2462			dev_err(dev, "No usable DMA addressing method\n");
+  2463			goto err_out;
+  2464		}
+  2465	
+  2466		hisi_hba->regs = devm_platform_ioremap_resource(pdev, 0);
+  2467		if (IS_ERR(hisi_hba->regs))
+  2468			goto err_out;
+  2469	
+  2470		res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+  2471		if (res) {
+  2472			hisi_hba->sgpio_regs = devm_ioremap_resource(dev, res);
+  2473			if (IS_ERR(hisi_hba->sgpio_regs))
+  2474				goto err_out;
+  2475		}
+  2476	
+  2477		if (hisi_sas_alloc(hisi_hba)) {
+  2478			hisi_sas_free(hisi_hba);
+  2479			goto err_out;
+  2480		}
+  2481	
+  2482		return shost;
+  2483	err_out:
+  2484		scsi_host_put(shost);
+  2485		dev_err(dev, "shost alloc failed\n");
+  2486		return NULL;
+  2487	}
+  2488	
 
 -- 
 0-DAY CI Kernel Test Service
