@@ -1,101 +1,162 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1581B193428
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2024 15:40:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2F8A197A98
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2024 15:43:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727710850; cv=none; b=VtNUeBb8/VPtNB+1I1laH66C9zBZJBWT2tDWa+nM+0gBZFoGf5NGC4gQNTYc4QuDnjN49tYP4McTQ3vdZNlH2Q8707R2Y8sY52gkGIn7AdEV+U5zxLDMwHsUR+x5vj76gtDzn2gdfX+HU6KxYgn2KUjahHda3IJWwDhA6M/Y1xA=
+	t=1727711028; cv=none; b=IOTDnc+AyziKYpPZ3bAZApx41CMC+262lEsBfCxWlbCBLq8spHnPOMOxROW67Mx5Z3ojykPkOXB6nTDWiVGvC0m+whG4FMNhzUHVCuefpwT7o0vH7GCSk2WeKpD0/y7KGGoK2k81lJsN9ZMRNafVUAmIQxag88gtgKt7U3zS798=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727710850; c=relaxed/simple;
-	bh=fDFumAK9igYZ+CxTHR9gCbxjlAoTzynxL/GKvBjAzsU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KklpC32fPRN6HJevCw2ieAO1v8nDtJHlp+WGYWqfoh+ue+7Y8KTSx1/7zVuzqMdU3YYH1laHCTaiuz5NZc1qdoKvGJetPkr+B/rBEYzLAaO1Pi2Lnm6xYdYTgBH4/aYMNUKBzdESWY/7L0ejKHlfEBj11f4QdXHNkFafcOp4uZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=networkplumber.org; spf=pass smtp.mailfrom=networkplumber.org; dkim=pass (2048-bit key) header.d=networkplumber-org.20230601.gappssmtp.com header.i=@networkplumber-org.20230601.gappssmtp.com header.b=csafDKve; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=networkplumber.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=networkplumber.org
+	s=arc-20240116; t=1727711028; c=relaxed/simple;
+	bh=cAsqa3qYXqhnj1agKTZPtloe67eD9YBRbldk75Q8XdU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=C988AemPoP03vpTLXPmJyfm59d6aAUvDsgtXXQs8cf2WeCFSigjxPABLZyV5WuNQhaPfA0czG0GOQWGIrggbejOZTco5VnPsghJ5fPLcQZ3UgwGsKTIHLEbwLvyZdaq/tZZB8p58HcE2pYB9+B28iLN3tjbrokxwRIG32Db5ioA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ZeARaNrO; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=networkplumber-org.20230601.gappssmtp.com header.i=@networkplumber-org.20230601.gappssmtp.com header.b="csafDKve"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20b9b35c7c3so7361675ad.3
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2024 08:40:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ZeARaNrO"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-7db238d07b3so3824318a12.2
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2024 08:43:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=networkplumber-org.20230601.gappssmtp.com; s=20230601; t=1727710848; x=1728315648; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Gk4IT+ziW7GSilMgu7AJgpoE41t4jq/Ls2rSzqW+beE=;
-        b=csafDKvefF/P8ZewMQZITH2n/3TirhLRyV+fyujN8sG/8QTfABFbl7uLHCVd3xJp8o
-         i45ZC5vAhS3FncRjCQg9sznJVAa/MzMr+8+NRoWXbcd3zT6QOVULcrStd3Rl3Rakgnsb
-         lbNgj9YssLf7SKWOxuz2exxKwC/990ZbmOz7KpSNQDosnOPDfjtqUuWKcJYsZg2LTTH8
-         2a9MHrQfG8BLSbJ0nm83tK11XHl2SLd4vXbn/KTk5e7XmrRwT9aAPk+0f2JqFSk7n6P6
-         WpmPzQdRktvTnOG8m+pn3jDkfSE3OlgQgBJhnuzuJEwjNcTj9E0Hgmm9AnfaxRJVU1Kl
-         7zYQ==
+        d=linaro.org; s=google; t=1727711025; x=1728315825; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=fNZ4BRKI4heUuNuygwTDPDgSoVqXEGdj+M0ZAo01Wgw=;
+        b=ZeARaNrOSp1o2mVfxWfRRBjHRE0mi+k8ASAskTBtp7s1WMBfucukn7nGWvYzTKDDzI
+         CaPuFq5TO0zznh4sIU+ytGY+wvnkWU8Fbvs6/XSaqaXgDGNWSGdGG9DEBbh1BXTB0zs0
+         LbQAaepT5e3QIgGNnR1xbI9TStHijRecWQkeudtjzIaF6R4OwyrsUDq/RV2whyiUIHaD
+         fCHNUaw+TmajciAgHm4CfuUkBx99gFeljipdtm69Zn6jgGKOmfXe2bU4YE1HC8A82S5u
+         va/1D2oShAOIW0XBO0wMcpISmD2G9lGByBTMUffV2B77LwvP/b1xsgO0F95Vs1Y2/RKC
+         gH+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727710848; x=1728315648;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Gk4IT+ziW7GSilMgu7AJgpoE41t4jq/Ls2rSzqW+beE=;
-        b=I29wgnr1iaTkEFEvMt1Ctkd6fMDRSoFX7spdkIvBfQA2vHw9PUy8UG0aBmrWUSLdaH
-         0h6tserp0F96wj9/gPO45xR3CSqzt4nt7ukr/nmj777/EpPck7gNzQrI8asTTdEjeX5Y
-         RL3q+eu5uGVmAAYXODbAC/SPkiXiiJcURrgtVMC3SX7ugegbuaXwWaov16taiXbM5lwN
-         t4BTZwxyDdtJkrDkAIMUK0qqD95dQvWvrkQrbX3IGjB3um4bcB6FO8y39HyUH9BbyBKC
-         dU8J2mZUpPR6wzAjwbXE8h5SX4jLywqf8YVH5cUWYdZWsHkevN+NbbrGesEGlEAwD01+
-         qCIg==
-X-Forwarded-Encrypted: i=1; AJvYcCW2PPeHYvJali5Fa7XXwc2rOYg5Z1jF6MgeE1Psf7QsuM0B2SRS3JFpch2m5RqznSewO/nC+uvOH96h@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3VDAT5KMEuU3DGw4P3P/K/NEIn9isYMIAD9kwdAsaHnMplf7N
-	Ii6rF/0MhfCiIe7vozIEhlTP2HIwl2fRSDCfWGrc7krtzZYucKAlt/lZazmtMec=
-X-Google-Smtp-Source: AGHT+IEBTYKGJiVF/hvLtnqHSF6GUD7YmyDMyv0oyolLcyv9IFVLXr8V4Z3pE6cLuKRIJT4zroumAw==
-X-Received: by 2002:a17:902:f54f:b0:20b:5c94:da02 with SMTP id d9443c01a7336-20b5c94de48mr112201815ad.33.1727710848215;
-        Mon, 30 Sep 2024 08:40:48 -0700 (PDT)
-Received: from hermes.local (204-195-96-226.wavecable.com. [204.195.96.226])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20b37e6c997sm55788515ad.307.2024.09.30.08.40.47
+        d=1e100.net; s=20230601; t=1727711025; x=1728315825;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fNZ4BRKI4heUuNuygwTDPDgSoVqXEGdj+M0ZAo01Wgw=;
+        b=nK3pXHcyhVu8MOvpnVlxYLslmSjzBXvqRq6+xCgica/kllNsLpv4ERGzEZ4w1W5h4u
+         XlaVTueLwIJTyEfms+ZQddNwoSvFc10FBBU0B6oEejTeavYF+9GuAI/G69JlfSvoH0Uc
+         9bUHvMdNsuip/mt28hpapXN2csvqVdZEXsJqaxHRIvkQKgSf9SH3BGOFmAe1NBsgzJ6h
+         T2cvhfY4OfhbIUfs6KKb1WHWKS6OZ2MZisHzp5ZHJ6A7pFw5LRut27cHl17EYSuDLbH5
+         rg/LDKOREOuOyBaTVPApVTBQNDKNm28au1TtdL4rRRaS5WXfAu+IWJamYhf4LzaEVA27
+         bC5w==
+X-Forwarded-Encrypted: i=1; AJvYcCVZ+hgvpkOZ1B0e2abfaEx8dJPiboCt7gZkIoIlE6EIAPBZOzpMavYTsmqWPhuxV1tSJYOOgZVddxIO@vger.kernel.org
+X-Gm-Message-State: AOJu0YxFKtcmq70x4KPpPuaRoHDKlAUHOxOrg5enqMdjxZPeT/irReF5
+	hT3C63xj95yxzxYSFjg7+o0erTsx/I9o2HiqrqZ7SDgpew/AeOMNEy/1Y0GMTw==
+X-Google-Smtp-Source: AGHT+IHHaRFu3mDRiM3/orLs2TA6CzeY6SJU7xXYhg2AH/bZOv0apPv2H6UgsN+fwa3K1V3zM5MW1A==
+X-Received: by 2002:a05:6a21:3414:b0:1d2:e504:52ba with SMTP id adf61e73a8af0-1d4fa78b7a0mr20068809637.38.1727711024765;
+        Mon, 30 Sep 2024 08:43:44 -0700 (PDT)
+Received: from thinkpad ([36.255.17.150])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71b2649ca2dsm6369843b3a.41.2024.09.30.08.43.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Sep 2024 08:40:47 -0700 (PDT)
-Date: Mon, 30 Sep 2024 08:40:45 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Uros Bizjak <ubizjak@gmail.com>
-Cc: x86@kernel.org, linux-crypto@vger.kernel.org,
- intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
- linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
- linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
- bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
- kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org, Jamal Hadi Salim
- <jhs@mojatatu.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jiri Pirko
- <jiri@resnulli.us>, "David S. Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
- <pabeni@redhat.com>
-Subject: Re: [PATCH v3 17/19] netem: Include <linux/prandom.h> in
- sch_netem.c
-Message-ID: <20240930084045.7c0e913e@hermes.local>
-In-Reply-To: <20240930123702.803617-18-ubizjak@gmail.com>
-References: <20240930123702.803617-1-ubizjak@gmail.com>
-	<20240930123702.803617-18-ubizjak@gmail.com>
+        Mon, 30 Sep 2024 08:43:44 -0700 (PDT)
+Date: Mon, 30 Sep 2024 21:13:37 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Manish Pandey <quic_mapa@quicinc.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
+	quic_bhaskarv@quicinc.com, quic_narepall@quicinc.com,
+	quic_rampraka@quicinc.com, quic_cang@quicinc.com,
+	quic_nguyenb@quicinc.com
+Subject: Re: [PATCH V3] scsi: ufs: ufs-qcom: add fixup_dev_quirks vops
+Message-ID: <20240930154337.r65qk2bps5jsgbnm@thinkpad>
+References: <20240903131546.1141-1-quic_mapa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240903131546.1141-1-quic_mapa@quicinc.com>
 
-On Mon, 30 Sep 2024 14:33:28 +0200
-Uros Bizjak <ubizjak@gmail.com> wrote:
-
-> Include <linux/prandom.h> header to allow the removal of legacy
-> inclusion of <linux/prandom.h> from <linux/random.h>.
+On Tue, Sep 03, 2024 at 06:45:46PM +0530, Manish Pandey wrote:
+> Add fixup_dev_quirk vops in QCOM UFS platforms and provide an initial
+> vendor-specific device quirk table to add UFS device specific quirks
+> which are enabled only for specified UFS devices.
 > 
-> Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
-> Cc: Stephen Hemminger <stephen@networkplumber.org>
-> Cc: Jamal Hadi Salim <jhs@mojatatu.com>
-> Cc: Cong Wang <xiyou.wangcong@gmail.com>
-> Cc: Jiri Pirko <jiri@resnulli.us>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Eric Dumazet <edumazet@google.com>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Paolo Abeni <pabeni@redhat.com>
+> - Add DELAY_BEFORE_LPM quirk for Skhynix UFS devices to introduce a
+>   delay before VCC is powered off in QCOM platforms.
+> - Add DELAY_AFTER_LPM quirk for Toshiba UFS devices to introduce a
+>   delay after the VCC power rail is turned off in QCOM platforms.
+> - Move UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE quirk from
+>   ufs_qcom_apply_dev_quirks to ufs_qcom_dev_fixups.
+> 
+> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
 
-Makes sense
+I'd still like to have these quirks in the core driver if they apply to other
+platforms as well. But I'll leave it up to you to check with respective device
+manufacturers.
 
-Acked-by: Stephen Hemminger <stephen@networkplumber.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+- Mani
+
+> ---
+> 
+> Changes from v2:
+> - Addressed Mani's comments.
+> - Moved quirk for WDC to ufs_qcom_dev_fixups.
+> 
+> Changes from v2:
+> - Integrated Bart’s feedback and consolidated the patches into one.
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index c87fdc849c62..6a715373d81c 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -828,12 +828,28 @@ static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
+>  	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME)
+>  		err = ufs_qcom_quirk_host_pa_saveconfigtime(hba);
+>  
+> -	if (hba->dev_info.wmanufacturerid == UFS_VENDOR_WDC)
+> -		hba->dev_quirks |= UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE;
+> -
+>  	return err;
+>  }
+>  
+> +/* UFS device-specific quirks */
+> +static struct ufs_dev_quirk ufs_qcom_dev_fixups[] = {
+> +	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
+> +	  .model = UFS_ANY_MODEL,
+> +	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
+> +	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+> +	  .model = UFS_ANY_MODEL,
+> +	  .quirk = UFS_DEVICE_QUIRK_DELAY_AFTER_LPM },
+> +	{ .wmanufacturerid = UFS_VENDOR_WDC,
+> +	  .model = UFS_ANY_MODEL,
+> +	  .quirk = UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE },
+> +	{}
+> +};
+> +
+> +static void ufs_qcom_fixup_dev_quirks(struct ufs_hba *hba)
+> +{
+> +	ufshcd_fixup_dev_quirks(hba, ufs_qcom_dev_fixups);
+> +}
+> +
+>  static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
+>  {
+>  	return ufshci_version(2, 0);
+> @@ -1801,6 +1817,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+>  	.link_startup_notify    = ufs_qcom_link_startup_notify,
+>  	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
+>  	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
+> +	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
+>  	.suspend		= ufs_qcom_suspend,
+>  	.resume			= ufs_qcom_resume,
+>  	.dbg_register_dump	= ufs_qcom_dump_dbg_regs,
+> -- 
+> 2.17.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
