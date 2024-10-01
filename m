@@ -1,165 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from abb.hmeau.com (abb.hmeau.com [144.6.53.87])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834E717FD
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Oct 2024 00:11:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608794A15;
+	Tue,  1 Oct 2024 00:37:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.6.53.87
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727741470; cv=none; b=P8bMzYg492l4V5tpiI82hKQ7yGnCY9YkvAUcc/AA85jSIPXIGnwDIxS+P0bBcLcDINmJO+Q9VjLfnTOxsNqnd70W/LAvZ1wiYX8XZzp/S+pu8GNbe9Q5x+DQ39oJ/pzxVAzdPYUW1gxEAdCXI3VHVJzVKWit/aYsNCfLF02uX+k=
+	t=1727743056; cv=none; b=tiXQwa/mg+URRk0wDWvAccI9umC7Qwu21I5J5muwEMiNATEYf/Ky7Qzmsw11u423jkmmh1Vv4SoS6C/uIE8EsijLfC4xqXhbDvH91P9AA6P98b252vRA7Eyh6fbjmJfOT12mhMB5bG8BQPKMmk5P1tIxOBRrXyl8y5NnaKHpKFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727741470; c=relaxed/simple;
-	bh=JAuaznC/KB1UrxWouBuAG3kkqalJKY1tFG/g61ek48Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I3iQHgNXzFW2wrkGtnyC+ykth+JpskTXlBj/dgGX9u/UMBFWRWOrjwCMvBERB1lP3J6VQM8/+H732qU2DaDL80w1J/R95zh+7ZfO+WfUlZd+YMlhYq4TslyJ8VJ12QsEgyHyM3yCfRlBLjJFPorFJF5wY0rtvjowWfWBcvQlf3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FS5RLqQe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727743056; c=relaxed/simple;
+	bh=PbrXzqLTbWY5KJDaeFj/n546b+9WTDMtsUAaXDexFTI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VYh/ht/LbDQ4gOK5POqXJG+ZrfTwL8kyCGMJA/DUkqYqQLs6WxYIEtzIXu2gshCq+xQybORdPuR++vZTJxbzsWvRr9Snli4xpdRPdKOvcsYvWCvDZqXqHzOOrx0p5A6gcMNTJQpJlwADp4BdZZaQYi6+7xyfwSNNHKkCRB8Aw+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au; spf=pass smtp.mailfrom=gondor.apana.org.au; dkim=pass (2048-bit key) header.d=hmeau.com header.i=@hmeau.com header.b=Ziv2p46J; arc=none smtp.client-ip=144.6.53.87
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gondor.apana.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FS5RLqQe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D16AC4CEC7;
-	Tue,  1 Oct 2024 00:10:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727741469;
-	bh=JAuaznC/KB1UrxWouBuAG3kkqalJKY1tFG/g61ek48Y=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=FS5RLqQeTC2f5D8NURiWkyVXkgCu/EmnC9nfvtdSKZ6oZDk+AqQheMZk3nxeh7eKI
-	 WjNdM23nctsAsY7CjKBoIqVSZXsP19sjqf1fWLkjRwekDIhN2kfuHsjeR/jJHhY8eZ
-	 GuFa3lJKQlSjHZ7FSUVh9DvnOGZi0dwbCwSVx8thiYWbQJ87cYshfk6n87276tzNHY
-	 Aq0M4SLJ+6B2mNPvmM/NT/10JJ6mdZ/doYgqTbQLG231ba7fI4g0ljm1InzYp6S3hU
-	 AvIHH7ulDHhKlLYVjOClABNFJvFnDWK9IkLm/Cq2Shg4QExKUW1jR8BMsYsNYk/4Bh
-	 f6/HZwFaFfs/A==
-Message-ID: <5b3e96da-9fe9-4eb5-ad0e-0377622df5c2@kernel.org>
-Date: Tue, 1 Oct 2024 09:10:57 +0900
+	dkim=pass (2048-bit key) header.d=hmeau.com header.i=@hmeau.com header.b="Ziv2p46J"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=hmeau.com;
+	s=formenos; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=RhzDv+P0yHp7rVJxU5AwpoZg82v6v7rn8wwhs8V4CzU=; b=Ziv2p46JOi78oP1BjYuks6Yetm
+	BYPTN68OFOVw1HnELeFXkbO+CispyjNFaIgie9zjIcPeToUwY1gXEvHij8YwFbkPrtpVP0VnXmmtw
+	VnGzMvZEKtdrK0eJNwgWNhxjCkPGD4DVdnytageTWJ1xxr5W4MC1SjZD+FvLeh2n4A78cCfxtb6EI
+	4ZKEewG8FMFGs0sQZAr6APUrd2ChcGqXi6si6ANRO7/NzuuSm7B+0uKIKQH+Z7x891CLgZedYi+Y8
+	YalKRylc2TGiuiVfB4ROgOclg797c9AMK8bzg0PuYBF6v7QXrqncCDHwjpBxo11LKF60LkOBLSSlP
+	Jt8FBu3A==;
+Received: from loth.rohan.me.apana.org.au ([192.168.167.2])
+	by formenos.hmeau.com with smtp (Exim 4.96 #2 (Debian))
+	id 1svQj9-005w9M-38;
+	Tue, 01 Oct 2024 08:37:10 +0800
+Received: by loth.rohan.me.apana.org.au (sSMTP sendmail emulation); Tue, 01 Oct 2024 08:37:09 +0800
+Date: Tue, 1 Oct 2024 08:37:09 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Uros Bizjak <ubizjak@gmail.com>
+Cc: x86@kernel.org, linux-crypto@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
+	bpf@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	kunit-dev@googlegroups.com, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v3 02/19] crypto: testmgr: Include <linux/prandom.h>
+ instead of <linux/random.h>
+Message-ID: <ZvtENQJvp8h1uvdU@gondor.apana.org.au>
+References: <20240930123702.803617-1-ubizjak@gmail.com>
+ <20240930123702.803617-3-ubizjak@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/4] scsi: Rename .slave_alloc() and .slave_destroy()
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
- Niklas Cassel <cassel@kernel.org>, Takashi Sakamoto
- <o-takashi@sakamocchi.jp>, Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- Tariq Toukan <tariqt@nvidia.com>, "David S. Miller" <davem@davemloft.net>,
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>, Steffen Maier <maier@linux.ibm.com>,
- Benjamin Block <bblock@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
- Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev
- <agordeev@linux.ibm.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Hannes Reinecke <hare@suse.com>, Anil Gurumurthy
- <anil.gurumurthy@qlogic.com>,
- Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
- Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com, Oliver Neukum <oliver@neukum.org>,
- Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>,
- Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>,
- Karan Tilak Kumar <kartilak@cisco.com>, Yihang Li <liyihang9@huawei.com>,
- Don Brace <don.brace@microchip.com>, Tyrel Datwyler <tyreld@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Brian King <brking@us.ibm.com>,
- James Smart <james.smart@broadcom.com>,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Nilesh Javali <njavali@marvell.com>,
- Manish Rangankar <mrangankar@marvell.com>,
- "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- Dexuan Cui <decui@microsoft.com>, Matthew Wilcox <willy@infradead.org>,
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
- Juergen Gross <jgross@suse.com>, Stefano Stabellini
- <sstabellini@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alan Stern <stern@rowland.harvard.edu>, Randy Dunlap
- <rdunlap@infradead.org>, John Garry <john.g.garry@oracle.com>,
- Soumya Negi <soumya.negi97@gmail.com>,
- Johannes Thumshirn <johannes.thumshirn@wdc.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Avri Altman <avri.altman@wdc.com>, Andrew Halaney <ahalaney@redhat.com>,
- Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-References: <20240930201937.2020129-1-bvanassche@acm.org>
- <20240930201937.2020129-2-bvanassche@acm.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20240930201937.2020129-2-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240930123702.803617-3-ubizjak@gmail.com>
 
-On 10/1/24 05:18, Bart Van Assche wrote:
-> There is agreement that the word "slave" should not be used in Linux
-> kernel source code. Hence this patch that renames .slave_alloc() into
-> .device_alloc() and .slave_destroy() into .device_destroy() in the SCSI
-> core, SCSI drivers, ATA drivers and also in the SCSI documentation.
-> Do not modify Documentation/scsi/ChangeLog.lpfc. No functionality has
-> been changed.
+On Mon, Sep 30, 2024 at 02:33:13PM +0200, Uros Bizjak wrote:
+> Substitute the inclusion of <linux/random.h> header with
+> <linux/prandom.h> to allow the removal of legacy inclusion
+> of <linux/prandom.h> from <linux/random.h>.
 > 
-> This patch has been created as follows:
-> * Change the text "slave_alloc" into "device_alloc" in all source files
->   except in the LPFC driver changelog.
+> Signed-off-by: Uros Bizjak <ubizjak@gmail.com>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> ---
+>  crypto/testmgr.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looks good, but like Matthew, I think sdev_xxx may be better names as they make
-it clear that the operations take a struct scsi_device. But I will not hold this
-series for that though.
+Acked-by: Herbert Xu <herbert@gondor.apana.org.au>
 
-The patch is really big too, so maybe move the documentation changes together
-with patch 4 ?
-
-Also, please send the cover letter to everyone. Having to look at all patch
-titles to try to figure out what your patches do overall is not fun.
-
-> * Change the text "slave_destroy" into "device_destroy" in all source
->   files except in the LPFC driver changelog.
-> * Rename lpfc_no_slave() into lpfc_no_device().
-> * Manually adjust whitespace where necessary to restore vertical
->   alignment (dc395x driver and include/linux/libata.h).
-> 
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-[...]
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 9b4a6ff03235..e04184b6d79b 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1201,10 +1201,10 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
->  			      struct block_device *bdev,
->  			      sector_t capacity, int geom[]);
->  extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
-> -extern int ata_scsi_slave_alloc(struct scsi_device *sdev);
-> +extern int ata_scsi_device_alloc(struct scsi_device *sdev);
-
-While at it, drop the extern.
-
->  int ata_scsi_device_configure(struct scsi_device *sdev,
->  		struct queue_limits *lim);
-> -extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
-> +extern void ata_scsi_device_destroy(struct scsi_device *sdev);
-
-Here too.
-
->  extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
->  				       int queue_depth);
->  extern int ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
-> @@ -1460,8 +1460,8 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->  	.this_id		= ATA_SHT_THIS_ID,		\
->  	.emulated		= ATA_SHT_EMULATED,		\
->  	.proc_name		= drv_name,			\
-> -	.slave_alloc		= ata_scsi_slave_alloc,		\
-> -	.slave_destroy		= ata_scsi_slave_destroy,	\
-> +	.device_alloc		= ata_scsi_device_alloc,	\
-> +	.device_destroy		= ata_scsi_device_destroy,	\
->  	.bios_param		= ata_std_bios_param,		\
->  	.unlock_native_capacity	= ata_scsi_unlock_native_capacity,\
->  	.max_sectors		= ATA_MAX_SECTORS_LBA48
-
-
+Thanks,
 -- 
-Damien Le Moal
-Western Digital Research
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
