@@ -1,55 +1,56 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3AE11D278D
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 20:37:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC859217311
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 20:37:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727901452; cv=none; b=r5PIB4/J7UbVIVeOvRwtKYyLdQmSeQJ4F+DKscaAbr7FFVgYmih+IOPdVt/KKmm3cGdMV8rG9LL5WpQEYxDYM5dUQXMuV+bY+FStFOHMfUd03N/NqDB7I4oHYJOBxS7QDkbxT0IxmHcgDT4JhB0GC5OsSSAQeFBfqvhlSZjlCRg=
+	t=1727901454; cv=none; b=asHeTxt6pQZlHfZEJ8Fplbggi0/g3HHK+pokTdQsEOcqdc7VKVeCdD97WOdKS/jfhfyH5ecB/efoK42WPSpYWOKw8eUBQJYf131gvd762W7SwadRRIwlVAAayzEFBHM35ZLD8wCbcxnOH6CY3mwQyEPzZi+Sh/7hov+dhghCuOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727901452; c=relaxed/simple;
-	bh=y6jjVP7TrtRvCc+U/dePHx2wih/VoCjT/BPGuleR0/A=;
+	s=arc-20240116; t=1727901454; c=relaxed/simple;
+	bh=nQDyX/T4WoLjTuuuecubjQFu1zobeceqGNCVJpNPsXs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FrwRbm52h5pOjZTDnBmjZZBaW4o0Mvid9N2bKmzvpgocSd9UX3ztP7PITN5PeTZW7yTNMTlQzYQ4GLB+d9lMw2gRgJez/hyG5esQAuA43ZrXOBXBqeNrWt5R0N1bBMe6eDcytHP5B9MEb1KDrZXKUufWcMSfMX9pS6Vrg4Mhd/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DYrX8CFW; arc=none smtp.client-ip=199.89.1.12
+	 MIME-Version; b=BIiVwPTh5KGKe2+ACAbwD9H3jnzhnZRRzihm+a/3GfW9nBCPP73lfj8MJzOA2i4knDh72+QVkXua0VZOn/9UekrensA9BzJpsazHrSPzYpZKTmQqu7K9+WZGb0jYeCJH9IiNYxVqsuqfAWEleGJuxyH9i8iGvxUFT7SxLfpU/jw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=c+8jNPK+; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DYrX8CFW"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="c+8jNPK+"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XJmp24jpvzlgMWM;
-	Wed,  2 Oct 2024 20:37:30 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XJmp447Z7zlgMW9;
+	Wed,  2 Oct 2024 20:37:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1727901447; x=1730493448; bh=BDId8
-	7jkV6zV8oO7rSAdA0yfvEac4/UWcnIZz449qB8=; b=DYrX8CFWvW/MH0GngyZCQ
-	leOLr18Wh1IVY9bxABxMZRkfu+XkbOkK46qukeVe9sH/ORw8xHGztQl7OsCGOhl6
-	lKqkDG05pEKOi7Ac1zBSWokzKwFOrkN/97qTdqV6rI5btEzzGIpsCDvcD8QFklQK
-	Tb/KnnOqhU5MEyeWO2Rtfwd1UrMolkl42RnWGlMqzoZkIS29+sAPG+8PsP66YRp9
-	Ahg6o7aeV5aAoa+s3TOz6in4YR7JwfgnRthEkFphkVp2M8vTf6zoDR6W2D23XtUT
-	riUREJ+ZNG+17ECTy+xgaNg8EBKTf1BRb9k/vPlAIUe/GV0T4aQ7qAr7DB2bW8zD
-	A==
+	:received:received; s=mr01; t=1727901447; x=1730493448; bh=DxPZv
+	BsOKAmZV+18q53mmDtkfHqrUNijWaCEwXHAcuY=; b=c+8jNPK+Q1X+MWLW67GnI
+	jvh7Q69TNoUmBkum4Ix1X+NxFwju/gTAvnYP4KG9DFSULkPXiumRBX4C5QQIKwPj
+	2KOYMvVdRtMnaSe9mg7qbmdYaYxQYTOLdK7bY518B0JId1ukyD357s+WTmlsg4N+
+	uxI5g/phsYtYtpDhqJKI5VAHNUC16netK0ImmyCId29mubGuCGF9P1KFEHi2u5+6
+	SVlRuKRaQyqK0ftgbJB+f+vwokql4zGn8LBckFJI/ubD4xvz2OZV/s4ew8OSagNT
+	g95hrtX9aFJyeQdH9MWQBdZtT8b88wCP2VSJl7rvDrntsEg9C7RqabN4Jy64kckN
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6neKpal9KACe; Wed,  2 Oct 2024 20:37:27 +0000 (UTC)
+ id qVMMuP603WBX; Wed,  2 Oct 2024 20:37:27 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XJmnf0Ml8zlgMWN;
-	Wed,  2 Oct 2024 20:37:09 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XJmnk0cRQzlgMWQ;
+	Wed,  2 Oct 2024 20:37:13 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 10/11] scsi: core: Remove the .slave_configure() method
-Date: Wed,  2 Oct 2024 13:34:02 -0700
-Message-ID: <20241002203528.4104996-11-bvanassche@acm.org>
+	Jonathan Corbet <corbet@lwn.net>,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH v2 11/11] scsi: core: Update .slave_configure() references in the documentation
+Date: Wed,  2 Oct 2024 13:34:03 -0700
+Message-ID: <20241002203528.4104996-12-bvanassche@acm.org>
 X-Mailer: git-send-email 2.46.1.824.gd892dcdcdd-goog
 In-Reply-To: <20241002203528.4104996-1-bvanassche@acm.org>
 References: <20241002203528.4104996-1-bvanassche@acm.org>
@@ -61,77 +62,167 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Now that all SCSI drivers have been converted from .slave_configure() to
-.sdev_configure(), remove support for .slave_configure() from the SCSI
-core.
+Now that .slave_configure() support has been removed, change all referenc=
+es
+to .slave_configure() into .device_configure() in the SCSI documentation.
 
 Cc: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_scan.c |  4 +---
- include/scsi/scsi_host.h | 10 +++-------
- 2 files changed, 4 insertions(+), 10 deletions(-)
+ Documentation/scsi/scsi_mid_low_api.rst | 30 ++++++++++++-------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 8eae48b0b821..f1830401b9c1 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1076,8 +1076,6 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
-nsigned char *inq_result,
+diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi=
+/scsi_mid_low_api.rst
+index aba832d590eb..9addae8caf0f 100644
+--- a/Documentation/scsi/scsi_mid_low_api.rst
++++ b/Documentation/scsi/scsi_mid_low_api.rst
+@@ -150,10 +150,10 @@ scsi devices of which only the first 2 respond::
+     scsi_scan_host()  -------+
+ 			    |
+ 			sdev_prep()
+-			slave_configure() -->  scsi_change_queue_depth()
++			sdev_configure() -->  scsi_change_queue_depth()
+ 			    |
+ 			sdev_prep()
+-			slave_configure()
++			sdev_configure()
+ 			    |
+ 			sdev_prep()   ***
+ 			sdev_destroy() ***
+@@ -163,7 +163,7 @@ scsi devices of which only the first 2 respond::
+ 	respond, a sdev_prep(), sdev_destroy() pair is called.
 =20
- 	if (hostt->sdev_configure)
- 		ret =3D hostt->sdev_configure(sdev, &lim);
--	else if (hostt->slave_configure)
--		ret =3D hostt->slave_configure(sdev);
- 	if (ret) {
- 		queue_limits_cancel_update(sdev->request_queue);
- 		/*
-@@ -1102,7 +1100,7 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
-nsigned char *inq_result,
- 	 * Set up budget map again since memory consumption of the map depends
- 	 * on actual queue depth.
- 	 */
--	if (hostt->sdev_configure || hostt->slave_configure)
-+	if (hostt->sdev_configure)
- 		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
+ If the LLD wants to adjust the default queue settings, it can invoke
+-scsi_change_queue_depth() in its slave_configure() routine.
++scsi_change_queue_depth() in its sdev_configure() routine.
 =20
- 	if (sdev->scsi_level >=3D SCSI_3)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index abf203544d47..7ae99c6d26cb 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -169,11 +169,11 @@ struct scsi_host_template {
- 	 *
- 	 * Deallocation:  If we didn't find any devices at this ID, you will
- 	 * get an immediate call to sdev_destroy().  If we find something
--	 * here then you will get a call to slave_configure(), then the
-+	 * here then you will get a call to sdev_configure(), then the
- 	 * device will be used for however long it is kept around, then when
- 	 * the device is removed from the system (or * possibly at reboot
- 	 * time), you will then get a call to sdev_destroy().  This is
--	 * assuming you implement slave_configure and sdev_destroy.
-+	 * assuming you implement sdev_configure and sdev_destroy.
- 	 * However, if you allocate memory and hang it off the device struct,
- 	 * then you must implement the sdev_destroy() routine at a minimum
- 	 * in order to avoid leaking memory
-@@ -211,19 +211,15 @@ struct scsi_host_template {
- 	 *     up after yourself before returning non-0
- 	 *
- 	 * Status: OPTIONAL
--	 *
--	 * Note: slave_configure is the legacy version, use sdev_configure for
--	 * all new code.  A driver must never define both.
- 	 */
- 	int (* sdev_configure)(struct scsi_device *, struct queue_limits *lim);
--	int (* slave_configure)(struct scsi_device *);
+ When an HBA is being removed it could be as part of an orderly shutdown
+ associated with the LLD module being unloaded (e.g. with the "rmmod"
+@@ -203,7 +203,7 @@ An LLD can use this sequence to make the mid level aw=
+are of a SCSI device::
+     scsi_add_device()  ------+
+ 			    |
+ 			sdev_prep()
+-			slave_configure()   [--> scsi_change_queue_depth()]
++			sdev_configure()   [--> scsi_change_queue_depth()]
 =20
- 	/*
- 	 * Immediately prior to deallocating the device and after all activity
- 	 * has ceased the mid layer calls this point so that the low level
- 	 * driver may completely detach itself from the scsi device and vice
- 	 * versa.  The low level driver is responsible for freeing any memory
--	 * it allocated in the sdev_prep or slave_configure calls.=20
-+	 * it allocated in the sdev_prep or sdev_configure calls.
- 	 *
- 	 * Status: OPTIONAL
- 	 */
+ In a similar fashion, an LLD may become aware that a SCSI device has bee=
+n
+ removed (unplugged) or the connection to it has been interrupted. Some
+@@ -222,7 +222,7 @@ upper layers with this sequence::
+=20
+ It may be useful for an LLD to keep track of struct scsi_device instance=
+s
+ (a pointer is passed as the parameter to sdev_prep() and
+-slave_configure() callbacks). Such instances are "owned" by the mid-leve=
+l.
++sdev_configure() callbacks). Such instances are "owned" by the mid-level=
+.
+ struct scsi_device instances are freed after sdev_destroy().
+=20
+=20
+@@ -331,7 +331,7 @@ Details::
+     *      bus scan when an HBA is added (i.e. scsi_scan_host()). So it
+     *      should only be called if the HBA becomes aware of a new scsi
+     *      device (lu) after scsi_scan_host() has completed. If successf=
+ul
+-    *      this call can lead to sdev_prep() and slave_configure() callb=
+acks
++    *      this call can lead to sdev_prep() and sdev_configure() callba=
+cks
+     *      into the LLD.
+     *
+     *      Defined in: drivers/scsi/scsi_scan.c
+@@ -374,7 +374,7 @@ Details::
+     *      Might block: no
+     *
+     *      Notes: Can be invoked any time on a SCSI device controlled by=
+ this
+-    *      LLD. [Specifically during and after slave_configure() and pri=
+or to
++    *      LLD. [Specifically during and after sdev_configure() and prio=
+r to
+     *      sdev_destroy().] Can safely be invoked from interrupt code.
+     *
+     *      Defined in: drivers/scsi/scsi.c [see source code for more not=
+es]
+@@ -627,14 +627,14 @@ Interface functions are supplied (defined) by LLDs =
+and their function
+ pointers are placed in an instance of struct scsi_host_template which
+ is passed to scsi_host_alloc() [or scsi_register() / init_this_scsi_driv=
+er()].
+ Some are mandatory. Interface functions should be declared static. The
+-accepted convention is that driver "xyz" will declare its slave_configur=
+e()
++accepted convention is that driver "xyz" will declare its sdev_configure=
+()
+ function as::
+=20
+-    static int xyz_slave_configure(struct scsi_device * sdev);
++    static int xyz_sdev_configure(struct scsi_device * sdev);
+=20
+ and so forth for all interface functions listed below.
+=20
+-A pointer to this function should be placed in the 'slave_configure' mem=
+ber
++A pointer to this function should be placed in the 'sdev_configure' memb=
+er
+ of a "struct scsi_host_template" instance. A pointer to such an instance
+ should be passed to the mid level's scsi_host_alloc() [or scsi_register(=
+) /
+ init_this_scsi_driver()].
+@@ -658,7 +658,7 @@ Summary:
+   - proc_info - supports /proc/scsi/{driver_name}/{host_no}
+   - queuecommand - queue scsi command, invoke 'done' on completion
+   - sdev_prep - prior to any commands being sent to a new device
+-  - slave_configure - driver fine tuning for given device after attach
++  - sdev_configure - driver fine tuning for given device after attach
+   - sdev_destroy - given device is about to be shut down
+=20
+=20
+@@ -975,7 +975,7 @@ Details::
+     *      prior to its initial scan. The corresponding scsi device may =
+not
+     *      exist but the mid level is just about to scan for it (i.e. se=
+nd
+     *      and INQUIRY command plus ...). If a device is found then
+-    *      slave_configure() will be called while if a device is not fou=
+nd
++    *      sdev_configure() will be called while if a device is not foun=
+d
+     *      sdev_destroy() is called.
+     *      For more details see the include/scsi/scsi_host.h file.
+     *
+@@ -985,7 +985,7 @@ Details::
+=20
+=20
+     /**
+-    *      slave_configure - driver fine tuning for given device just af=
+ter it
++    *      sdev_configure - driver fine tuning for given device just aft=
+er it
+     *                     has been first scanned (i.e. it responded to a=
+n
+     *                     INQUIRY)
+     *      @sdp: device that has just been attached
+@@ -1004,7 +1004,7 @@ Details::
+     *
+     *      Optionally defined in: LLD
+     **/
+-	int slave_configure(struct scsi_device *sdp)
++	int sdev_configure(struct scsi_device *sdp)
+=20
+=20
+     /**
+@@ -1024,7 +1024,7 @@ Details::
+     *      commands will be sent for this sdp instance. [However the dev=
+ice
+     *      could be re-attached in the future in which case a new instan=
+ce
+     *      of struct scsi_device would be supplied by future sdev_prep()
+-    *      and slave_configure() calls.]
++    *      and sdev_configure() calls.]
+     *
+     *      Optionally defined in: LLD
+     **/
