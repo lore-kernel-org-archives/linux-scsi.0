@@ -1,89 +1,99 @@
-Received: from rcdn-iport-8.cisco.com (rcdn-iport-8.cisco.com [173.37.86.79])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 165DB1D14EE;
-	Wed,  2 Oct 2024 18:32:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC97215F7D
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 20:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727893948; cv=none; b=Rwz5tE+vYai0iLpym/N6HdWuiIUlPB6XfEufcPSzB8I9HqBjlhad+DZeK85OuZLfBLzMiJW85olX063CfCbqDikcGsy9ZG9cYLpL4+EjtL/jt9PWDj3LC8mlmG5c8apdc8BodPqNb1MnMCQhbqa/vgbX7AQV3iu6Q5ajjiC1B2w=
+	t=1727900598; cv=none; b=qg6+6hdjxGn7uSpyH5IbuPxPdr+jppKIxLCPWmYe6loJoPjVlwqFf+oAEglWtlEpHuN9q8aZK6ABKkq0J03zwQEcg/7Rq3/sZ+xpBxneANOuLNWxT78tMHqfN5snwcEXtlCTFoEwGXl3l2LBj1aCGYtAqYJZXhWJTs9HGMUXjkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727893948; c=relaxed/simple;
-	bh=5qfWodULDLVsekB+OCOLWzJk/ZdiqaiLkSFAzUFicmI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=c+LSve6ls4qxKxMRPyqwXbqsZjruGszLcrBvdcYQP6OBiCeNPtHJYM2Te3UMMf2fU9wBr1WD0OD/jHc96FLjxDKfniAtdeqimO7PPVh0/HqVDwRVkhUlk71H51ctnCeHcngdd3RVknS9e4PLmTmeIl+Tk9xYeZKBdTDLitN8AHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=YRuYv6ok; arc=none smtp.client-ip=173.37.86.79
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	s=arc-20240116; t=1727900598; c=relaxed/simple;
+	bh=90LPflDD0fTVLaOgMOhKclOmQmbJf8IpmhXQnNhrIJ0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ir+Ldla4c7mktcR4qvibBeRtgzzLABIzI+2Ys0PlghUhwnU6G3kzDr96/0GTCJVKf9kK7cf4PcbQUQYDujfMPbXNdwo+BJkAvOsYw8p2caRj63zmYqS7au1RfTjHuYrVlFKJA9XaIFIovTbQHJiBz22nyOU6oq/57YezaZlPF7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=P1xmTZUV; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="YRuYv6ok"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=797; q=dns/txt; s=iport;
-  t=1727893947; x=1729103547;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=h+NDOGTVmsXxT1gPQhPkHFEQFR9jHtVt7H8Q2NXM1ZE=;
-  b=YRuYv6ok3KLG08OTsZIdaXqfz2TVipglb5fqPnzgUbEPm8jqnVBkEGfX
-   OHjaNVd+JIiwjsGiOFbYCWrwEd40QQp9k212y9PrQroEsOd6dJSezxEXe
-   3TGywJM92BJdSs3EQ5MXdIuo23V4gKw76CPtUx0K0Yj+oJt0Gv5KMmlsZ
-   U=;
-X-CSE-ConnectionGUID: Ismq2lGmRG6GEkTBpCE5AQ==
-X-CSE-MsgGUID: hTPsOwKIST6OOfvOhlYoOw==
-X-IronPort-AV: E=Sophos;i="6.11,172,1725321600"; 
-   d="scan'208";a="260383806"
-Received: from rcdn-core-8.cisco.com ([173.37.93.144])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2024 18:32:26 +0000
-Received: from localhost.cisco.com ([10.193.101.253])
-	(authenticated bits=0)
-	by rcdn-core-8.cisco.com (8.15.2/8.15.2) with ESMTPSA id 492IOHQx009807
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Wed, 2 Oct 2024 18:32:25 GMT
-From: Karan Tilak Kumar <kartilak@cisco.com>
-To: sebaddel@cisco.com
-Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
-        satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v4 14/14] scsi: fnic: Increment driver version
-Date: Wed,  2 Oct 2024 11:24:10 -0700
-Message-Id: <20241002182410.68093-15-kartilak@cisco.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20241002182410.68093-1-kartilak@cisco.com>
-References: <20241002182410.68093-1-kartilak@cisco.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="P1xmTZUV"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XJmTV2vkLzlgMW9;
+	Wed,  2 Oct 2024 20:23:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1727900588; x=1730492589; bh=evHlMaA5vdM3lXU/ux7+SjFT
+	yNIeF46Kver6AiHsFtg=; b=P1xmTZUVO6+U3YEMMAAMVP63raeS6vMPrhdfh6KZ
+	mWNyCaQGLss0G0mLBVi6g7Dyu1SBaeRRtNFHWsS+tkSWs2mAA9EV8/T39tU1G/mw
+	othoKA9HtBvg2jfQiEpOLmf73rnW57SHpCIlh+eE8J9hSmwjqOgcfcaF/kkkOEq+
+	XyYrDDAb8pGpdUTqOuWU7vdtgZjkDW8zOobRwIioBcotOjNqpfqGsilwImirvUdW
+	dfh3BrcnsX9mxGifua500FIvKAHeJEJyJyX7NlGVhysVyo2EKCltUBp6X7UZm+Kw
+	QftBFcGytEmqOyAoAnMdCSCnwwIfBP4UbFtQ/U505QuaLA==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id TNyiyqS3fTCG; Wed,  2 Oct 2024 20:23:08 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XJmTS2BZyzlgMVy;
+	Wed,  2 Oct 2024 20:23:08 +0000 (UTC)
+Message-ID: <376dfcb4-a25d-457d-acdd-4af77290b05b@acm.org>
+Date: Wed, 2 Oct 2024 13:23:07 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
-X-Outbound-Node: rcdn-core-8.cisco.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/4] scsi: Rename .slave_alloc() and .slave_destroy()
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+References: <20240930201937.2020129-1-bvanassche@acm.org>
+ <20240930201937.2020129-2-bvanassche@acm.org>
+ <5b3e96da-9fe9-4eb5-ad0e-0377622df5c2@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <5b3e96da-9fe9-4eb5-ad0e-0377622df5c2@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Increment driver version to 1.8.0.0
+On 9/30/24 5:10 PM, Damien Le Moal wrote:
+> On 10/1/24 05:18, Bart Van Assche wrote:
+>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>> index 9b4a6ff03235..e04184b6d79b 100644
+>> --- a/include/linux/libata.h
+>> +++ b/include/linux/libata.h
+>> @@ -1201,10 +1201,10 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
+>>   			      struct block_device *bdev,
+>>   			      sector_t capacity, int geom[]);
+>>   extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
+>> -extern int ata_scsi_slave_alloc(struct scsi_device *sdev);
+>> +extern int ata_scsi_device_alloc(struct scsi_device *sdev);
+> 
+> While at it, drop the extern.
+> 
+>>   int ata_scsi_device_configure(struct scsi_device *sdev,
+>>   		struct queue_limits *lim);
+>> -extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>> +extern void ata_scsi_device_destroy(struct scsi_device *sdev);
+> 
+> Here too.
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- drivers/scsi/fnic/fnic.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Damien,
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 5fd506fcea35..e98e665801d1 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -30,7 +30,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.7.0.0"
-+#define DRV_VERSION		"1.8.0.0"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
--- 
-2.31.1
+Can I declare removing superfluous "extern" keywords as out-of-scope for
+this patch series? There are plenty of superfluous "extern" keywords in
+many Linux .h files. Removing the superfluous "extern" keyword for the
+functions renamed by this patch series only probably won't make much of
+a difference.
+
+Thanks,
+
+Bart.
 
