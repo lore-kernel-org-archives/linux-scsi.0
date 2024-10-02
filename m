@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEBEB19C578
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 22:36:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA19219C55B
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 22:37:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727908561; cv=none; b=SP016d8TdSP/1BpYCOzxQtFxNXqVBpe7yNs83oJ54CDd57R//C644FrUYgBPExY6apSF6OtwqnwUTZzhVv6dMCqvE/dovXcPqJcC5eaNzyk8y4yX1/bCwh34OVzoRHYGQ00AIO2zuwuzRBcILyfT//lR11myDv4LAfLg3ThvcKs=
+	t=1727908631; cv=none; b=Jl9pLDhIbc4uqYR/IBJfL+MXNd9+4YjaIjuYfvOykvTYhPjMRfyuSkI9wXVVBckSU8P9fq4jjANiBlWA0bbr0fhomgFg7lgXEdMaldhml4Ihj52ExO8DHX+9S2cLLUnckQr6vzI5Z23I38blLd9Qj2/H/9xuQpkgzEEdZepsHOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727908561; c=relaxed/simple;
-	bh=N7c2ccrT3xIU4LhPSJKYlI0XNhQw/buHcuuWAEgsXMc=;
+	s=arc-20240116; t=1727908631; c=relaxed/simple;
+	bh=cKkrQddCrk2qI/AHiqd0pNeZ13L42DdPBzzHZtWLgMU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AfkukjEc4eqN4hVVHVHdLzcCC3HzXgUh9k9pOvatsDaw4Say4yA71aPX2aT+3t2szWkVmwaIqA9us74xVvzw7K/Z5thZQIA8zVC/mtSLqDSdOu270p2p5Iyjp0pgqBNWzfXx1ljiYLkOXVzVAciTg5yIcG2vOtqqlWJeDKzo/Mk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=og3UZhT+; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=iXBIfDwgDH4V78kqtDIYcqP9V6xpjP6pzT8ejwtct5H84hGaBD8ifrHKL6TXMVqg8f+yIvwSkevdec4lqAyul49dzAKXmp4/uCaUDW6M2vUPuUzmeoiLvkE9MB6dT6uIpVPg9mu7N9tTBRa5OdR6V+EalkoFAgiAcLFrTL2Lnw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BAkoME5e; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="og3UZhT+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7DEBC4CEC5;
-	Wed,  2 Oct 2024 22:35:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BAkoME5e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91DECC4CEC2;
+	Wed,  2 Oct 2024 22:37:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727908561;
-	bh=N7c2ccrT3xIU4LhPSJKYlI0XNhQw/buHcuuWAEgsXMc=;
+	s=k20201202; t=1727908631;
+	bh=cKkrQddCrk2qI/AHiqd0pNeZ13L42DdPBzzHZtWLgMU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=og3UZhT+nQY5u3FrmDfFm9VKo4PinH/wiHwHB0XWo8a5Mr928R8GVSdS8veFGFmVI
-	 Cs3eCLTmNJVKhNy4PzQ+f5IIhzcc9WQnGBhCJIvKDX9a5E9mlPi9x7WwVnvhiFclTH
-	 QR2OKMN3t0C9Rf3Yq5ClrPyV533rokxd9iABXHGw5O2rJAoTR8V6mcWGR5+t5xiYhh
-	 4FGeXgBJdICg6UTqLOecHn1QU/lh7Eq5Mcy/LmWlk/adsqtaTuTSOV1lmBd4rrN9Lj
-	 7606ZgR7pRjCgh78SwgR5CcdPmmwNevnx5INPVck3sMY3dSRw70IRttZp+QiczrYd8
-	 OpS9eR89+Bz4A==
-Message-ID: <4bacb773-bf8b-4275-8411-a31b8796d779@kernel.org>
-Date: Thu, 3 Oct 2024 07:35:56 +0900
+	b=BAkoME5ejyI7tcsNBILBrT1WpuaF07HFeIeX4N+ch9y7o3RzuVsTKOCu8KO8/6BT0
+	 HbdjnJgnG91cAxzjsTsIKwIZ/pF7SDOULw1eSDXicmuS89bGL/tkoca2p1tkx7Shv9
+	 JirSzVt/hFUvBYeVqNhjzscBZ+Akbd/lsvIzCFpOEv75kqGYgB1230+ymwOkCHz7QU
+	 lUuKcXEkdIjxwIrSTaQUqwUb/1eLdJCslxt+owPVxau7snW5ZW/X1q5nfL0FQSyvxc
+	 RAL+aFLhEMTxaMA2JAmrXexAFzGl1VnaNprhZwawmCVIrfMmjIE3uAbyar2fE6K6lJ
+	 DfEBQeVXwWcWA==
+Message-ID: <760414b2-3fec-473a-bb1a-56619c18ecdc@kernel.org>
+Date: Thu, 3 Oct 2024 07:37:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,53 +35,61 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 08/11] scsi: Rename .device_configure() into
- .sdev_configure()
+Subject: Re: [PATCH v2 09/11] scsi: Convert SCSI drivers to .sdev_configure()
 To: Bart Van Assche <bvanassche@acm.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
- Niklas Cassel <cassel@kernel.org>, Takashi Sakamoto
- <o-takashi@sakamocchi.jp>, Yihang Li <liyihang9@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- HighPoint Linux Team <linux@highpoint-tech.com>,
- Brian King <brking@us.ibm.com>, Lee Duncan <lduncan@suse.com>,
- Chris Leech <cleech@redhat.com>, Mike Christie
- <michael.christie@oracle.com>, Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+Cc: linux-scsi@vger.kernel.org, Geoff Levand <geoff@infradead.org>,
+ Khalid Aziz <khalid@gonehiking.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Leon Romanovsky <leon@kernel.org>,
+ Sathya Prakash <sathya.prakash@broadcom.com>,
  Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
  Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Oliver Neukum <oneukum@suse.com>, John Garry <john.g.garry@oracle.com>,
- Hannes Reinecke <hare@suse.de>, Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Avri Altman <avri.altman@wdc.com>, Andrew Halaney <ahalaney@redhat.com>,
- Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+ Steffen Maier <maier@linux.ibm.com>, Benjamin Block <bblock@linux.ibm.com>,
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+ Alexander Gordeev <agordeev@linux.ibm.com>, Adam Radford
+ <aradford@gmail.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+ Matthew Wilcox <willy@infradead.org>, Hannes Reinecke <hare@suse.com>,
+ Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+ Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+ Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com, Don Brace <don.brace@microchip.com>,
+ Tyrel Datwyler <tyreld@linux.ibm.com>, Michael Ellerman
+ <mpe@ellerman.id.au>, James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>, Nilesh Javali
+ <njavali@marvell.com>, Karan Tilak Kumar <kartilak@cisco.com>,
+ Sesidhar Baddela <sebaddel@cisco.com>, "K. Y. Srinivasan"
+ <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
+ Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+ Juergen Gross <jgross@suse.com>, Stefano Stabellini
+ <sstabellini@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ ching Huang <ching2048@areca.com.tw>, Bjorn Helgaas <bhelgaas@google.com>,
+ Soumya Negi <soumya.negi97@gmail.com>
 References: <20241002203528.4104996-1-bvanassche@acm.org>
- <20241002203528.4104996-9-bvanassche@acm.org>
+ <20241002203528.4104996-10-bvanassche@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20241002203528.4104996-9-bvanassche@acm.org>
+In-Reply-To: <20241002203528.4104996-10-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/3/24 05:34, Bart Van Assche wrote:
-> Improve naming consistency with the .sdev_prep() and .sdev_destroy()
-> methods by renaming .device_configure() into .sdev_configure().
+> The only difference between the .sdev_configure() and .slave_configure()
+> methods is that the former accepts an additional 'limits' argument.
+> Convert all SCSI drivers that define a .slave_configure() method to
+> .sdev_configure(). This patch prepares for removing the
+> .slave_configure() method. No functionality has been changed.
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
+> Acked-by: Geoff Levand <geoff@infradead.org> # for ps3rom
+> Acked-by: Khalid Aziz <khalid@gonehiking.org> # for the BusLogic driver
 > Cc: Damien Le Moal <dlemoal@kernel.org>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
 Looks good to me.
 
-For the ATA bits:
-
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
