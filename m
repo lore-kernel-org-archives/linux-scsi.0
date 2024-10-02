@@ -1,57 +1,57 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B9A1CFEA3
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 15:10:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C27F1D096E
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 15:19:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727881832; cv=none; b=DWF6jtTmI5gwo7RD44O6KyXttMWGunarleWZYNxe4ChHOdsTQsGlBGh9wSJLB/NsO8KwzjK872dB3NOMZTdRqSuc4F14oc1NZPpq9TPsdx/pXIIAm2QEgf8Q4SFjLlncePTi6+64yCx1mIK7hvFEU3P7kGiM8w4Gfmkn/hIVjJ4=
+	t=1727882395; cv=none; b=riQfRR1dHcbN9pgn4IoCVpFlvysX5ro55ih99dWa4OOJXLABhNVkTJ4OrLkXSICWN0Sp9GN99TCyXhN4MOHtFZXW13GDPKVeEXGYrZnSgtijckb/mw1vwrnTtf+6Ub/wvBWh2hF2MBCpGQaq8WSBeBGVqgxEyxo+81d72+GpGpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727881832; c=relaxed/simple;
-	bh=Jv3BSoSXayHjJO9mpfCrUpTwrBajht6DBRvNIgM8Cgk=;
+	s=arc-20240116; t=1727882395; c=relaxed/simple;
+	bh=tJmRXtMgoH7V2C0AIUlx3S4U+jhYAOFQkLhoTK3Ch0Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Tuwe9l8zVkjge/krqUQAsbBzIRTt29C//NALQt6/0JPV817oX1o95p6jbHdUiScOR+isf5GEtf8SIhPUgVtaojVCU95ew7fGTa2Y1Cc7MsqRo4zD71Mg344kFzPe5hFeQnL0UYStTYMaRA9vgJBh76hg+GtYPcw4XmW43w+BH/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=cQgW+PWD; arc=none smtp.client-ip=209.85.128.49
+	 Content-Type:Content-Disposition:In-Reply-To; b=GRreZaQ8cKeFOBIxvmoQs3Lxyv3lg1g4kQQXo/5gL3cavGdX7bfjExYM6ElvgQKX3jGSoUkKsL6bqkdFCFm649Zlt0x3uy6vfiv4gVlM5GVi7dXKsirYtOTmh9yFYmpmVhHjF9bUDrPDu3Tup8ZHKpihD7npSuUq0WV30WpPjMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XZ26PI5u; arc=none smtp.client-ip=209.85.221.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cQgW+PWD"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-42cbc38a997so6445235e9.1
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Oct 2024 08:10:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XZ26PI5u"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-37ccf0c0376so4046477f8f.3
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Oct 2024 08:19:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1727881829; x=1728486629; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1727882392; x=1728487192; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ytY+ar77BVBH0wQTJr3+McPNOBDHSfuoaIXrHTvJfgk=;
-        b=cQgW+PWDm/QWe33Nu3WbgBXc56bwvAbqWzHKm35UVEseqPzLKnA3P34NDW++EmBelq
-         GTGz9xCQsodpNlgXWeXYwKPR/4kECH0dT3gWlv648XvExP67OQzSoaBrLiHmFmhZ58mO
-         IbkOEwqA78Dn9wpsrbcRmX+clzn+BnH3dRWgOlQ1IRuthdGX+Yo0vFmaOzsFNOkqbgFP
-         zDqBQhAkaUOZXj886gUAhiejWcsZ27Uo3t5ZBm4aCnqTQi3CdVhxPqVrOPMVJ4k9Nwxn
-         e6VHg53vmE62/L9W1abyEFqzJ76q+LCohUs9PW2c45GO26np1ArfG31Wx8EfYQo6i35z
-         4AVw==
+        bh=4iYwuA9hgfep/Dvx4lTAEoXQ/WVu6bHINdS/o14C5a8=;
+        b=XZ26PI5uKkIL+27LT4Bp5H67FdWDHPO3EsbnrBvwg5RxAHMdBxwJTz2simg5rP4DSQ
+         dNVB4CYg2vS8UetiT3RDPqne1DbAhr7SbZWw2XRyXG7+Gto5vrRDf4bClGk/240qYKAf
+         tqc9/xUiqRY2Tf1W3JD5KEO0xaPcYZ4pzm46dSWbKwzX/Gpoc0XAu1M/qJ0F6+58wu/N
+         u1+HJlj/STH3xv4Bq0sKyZ7a7c1jbEQsAEupApLSWIFP29c7QPJTY+rYp/Hwl1DA0X8w
+         DOwLoysBb2eshEYazk5JTTm25gfFpDTsYLnmmJiksTN/JdCB3nas0jzrDn7y0EZouzCy
+         YgrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727881829; x=1728486629;
+        d=1e100.net; s=20230601; t=1727882392; x=1728487192;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ytY+ar77BVBH0wQTJr3+McPNOBDHSfuoaIXrHTvJfgk=;
-        b=eYUUlXcJHFmRgzRd0jN9tAaL489b0ahKeWTw2+AxqWyCr7LRebQ0oiSNz6diYSZE7I
-         NZ6NnRrrjAvIBQ0B2/B/DsdEHy+aBfakNlWeAseXAHkxNTcA6VpzhZgebUvHZF4pniaI
-         Psyy2McKalywFYgbpK2oYjpfttvuyNU0Xt6T2COigjSBR36nw5ElCX64rkY42TdVFl4M
-         BUKyoKfLqD8zwYSRqJwA07DdlHxsOQRp9QRB2itM/+9FLjYH+bP3ck8XjoUpNjSbrf7O
-         X1ixqYlyQ7hi9YEfS4esCXX90/ZUvenBZKWusfQ8EBsDIFqpB+lqZ0jp4X6AqGYcuCOG
-         AncA==
-X-Forwarded-Encrypted: i=1; AJvYcCU/EfF6BgviF9YrU3ZcFP8P9QXB4mSBsTySNggTPLU3xdfoTW7WZLgw+WA3k+7BLVZMQQkkeKtUSkS9@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFX1dzCMj3knfkxEZXfqc9fQVbejaHaDRXUoL4EhabTAVoB4/A
-	/KEjhlQ2O6N4st6PXxJau1jbD/eIAh9Qf9JT2TfHdU4KGCfF1EeeVQZExo5s324=
-X-Google-Smtp-Source: AGHT+IHF7zqlEp9IeuwLJShnugMExSE1H16YmOR5aR1iwh0hK9YSmm+5poKeibk26oOuuEuWUsBUkg==
-X-Received: by 2002:a05:600c:3b9a:b0:42c:b377:3f55 with SMTP id 5b1f17b1804b1-42f71306ff6mr43518465e9.3.1727881828851;
-        Wed, 02 Oct 2024 08:10:28 -0700 (PDT)
+        bh=4iYwuA9hgfep/Dvx4lTAEoXQ/WVu6bHINdS/o14C5a8=;
+        b=bhv39SXtLHDq6ZxjasOBhc72BTOj1/e9sWMUOqDTyJ+xIhC42ElAagScd8M0CXzthj
+         2giTiET9ONTxF/HoOfO7In/tth7cnkEG17naGIh5Gbn2mHdxa4eFMevBx/DlianIm/WG
+         orSLAhVBbT0HMtSC/y4sr2HTIu6DxKIVyEeHo/o7nPWiHtm24YSwHc1wWbb3xcj8/vWi
+         un6V+Ui4xtHv8xvsIembP/HaOvR1aamZLJ3wqrWADwCoMMSeEJfTkhoiPmmNkcunG4sP
+         KF7nWI4rHzJVccKVQcBjbchKoUu4gxHC722O05z0XhoQYJzzk8iCWrcyq/HnrAUE5OzH
+         PiJQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVFB4GVnmWU0f/4cTwNns5Jawsn0jsiWWcxeTYdht5/qrMLbBHJ7RgZ+Ax9ff0PjFuEYxfemCGJlLA7@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5wf8wkziaLrtKXyeCKi9OV/8EWvwVp1IECkbKk7VzX2h33Kzb
+	wUfscZzRblloZMcmWOnuIX8KP7gcNOBk5hRs1egjIfcFQO2hWyRdbIPlYwVoj6k=
+X-Google-Smtp-Source: AGHT+IGfDh7hi7fY1zeOwnwALRl6OclWNsLoaGzrpxiZg049EwIgrP4BhhtRWzKKp4bXmAMgnlyfEA==
+X-Received: by 2002:adf:f34b:0:b0:374:bd93:9bd4 with SMTP id ffacd0b85a97d-37cfba12317mr2003007f8f.56.1727882391798;
+        Wed, 02 Oct 2024 08:19:51 -0700 (PDT)
 Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42f79ff6857sm20844225e9.36.2024.10.02.08.10.27
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42f7a02eadbsm21230925e9.39.2024.10.02.08.19.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Oct 2024 08:10:28 -0700 (PDT)
-Date: Wed, 2 Oct 2024 18:10:24 +0300
+        Wed, 02 Oct 2024 08:19:50 -0700 (PDT)
+Date: Wed, 2 Oct 2024 18:19:45 +0300
 From: Dan Carpenter <dan.carpenter@linaro.org>
 To: Colin Ian King <colin.i.king@gmail.com>
 Cc: "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
@@ -60,8 +60,9 @@ Cc: "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
 	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH][next] scsi: scsi_debug: remove a redundant assignment to
  variable ret
-Message-ID: <2be706cc-0944-4413-b1b0-52d34fbdadf8@stanley.mountain>
+Message-ID: <191de70f-b019-4329-8e93-ea142aefdc7a@stanley.mountain>
 References: <20241002135043.942327-1-colin.i.king@gmail.com>
+ <2be706cc-0944-4413-b1b0-52d34fbdadf8@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,60 +71,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241002135043.942327-1-colin.i.king@gmail.com>
+In-Reply-To: <2be706cc-0944-4413-b1b0-52d34fbdadf8@stanley.mountain>
 
-On Wed, Oct 02, 2024 at 02:50:43PM +0100, Colin Ian King wrote:
-> The variable ret is being assigned a value that is never read, the
-> following break statement exits the loop where ret is being re-assigned
-> a new value. Remove the redundant assignment.
-> 
-> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
-> ---
->  drivers/scsi/scsi_debug.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index d95f417e24c0..7c60f5acc4a3 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -3686,14 +3686,12 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
->  		sdeb_data_sector_lock(sip, do_write);
->  		ret = sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
+Generally, functions which report the number of bytes copied are an anti-pattern.
 
-You would think there would be a:
+	bytes = copied();
+	if (bytes < 0)
+		return bytes;  <-- forgot to handle partial copies
 
-	total += ret;
+	bytes = copied();
+	if (bytes < 0 || bytes != total)
+		return bytes;  <-- forgot the error code for partial copies
 
-here.
+	bytes = copied();
+	if (bytes < sizeof())  <-- negative error codes type promoted to positive
+		return -EIO;
 
->  		   fsp + (block * sdebug_sector_size),
->  		   sdebug_sector_size, sg_skip, do_write);
->  		sdeb_data_sector_unlock(sip, do_write);
-> -		if (ret != sdebug_sector_size) {
-> -			ret += (i * sdebug_sector_size);
-> +		if (ret != sdebug_sector_size)
->  			break;
-> -		}
->  		sg_skip += sdebug_sector_size;
->  		if (++block >= sdebug_store_sectors)
->  			block = 0;
->  	}
->  	ret = num * sdebug_sector_size;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-And that this would be a "return total;"
-
-The comment at the start of the function says that it's supposed to return the
-actual number of bytes that were copied.  And you can see how that was the
-intention.
-
-But what it actually does is it always reports that it copied the complete
-number of bytes.  #Success #Woohoo
-
-I wouldn't feel comfortable changing it to report partial copies without testing
-it.  Someone needs to look at it more carefully to figure out what the correct
-fix is.
+We've seen subsystems move away from this.  Other subsystems are like "Ugh.
+Updating all the callers is a headache.  Let's either report that everything
+copied or a negative error code, but not the partial bytes."  Now the first
+two examples above magically work.
 
 regards,
 dan carpenter
-
 
