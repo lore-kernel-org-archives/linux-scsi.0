@@ -1,52 +1,57 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F304781720
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 20:35:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F056A81720
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 20:35:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727901337; cv=none; b=GDTN9ScdjZAVvz3fL4LHw+01faUgwavfdSmveHtZurWnPua1/WD9sdnGujx4iW8bcvFEjgyOk/TdaoYhVsISD5IfaQ2rkr0bQigbZefnBVwuQjQs51ZmHx5FGwWTPzGomps8lpe+c8WX/ZDrlRgiy8cieSZL2nHmYEjSSK1nfv8=
+	t=1727901345; cv=none; b=iCzzyZ2bTiTFAyO/TW1xvkblFgCSSh17g9/ropfYQ/QvKc8iGov+jo7RNx7NztM1cK7rWE+YjGtrOtmxpZYb0BIB2Vgca/g078Gdxapv2dyTkY9MUVrtPshwGJRQNrpDWiFIdXAW7+qzI0+VOI3tV6YJac9YUTFVoIqIZ4Mk2NU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727901337; c=relaxed/simple;
-	bh=5nWwdX8q9dzqx0TNZyyC/qwJ2yK47vwUNpkCUVI0arw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o/o5/N9WP6tzW3pPmRO8/YijcMnZaum6UrNIsVNnvz/7qZwWPji6sIEyjul/LMYiCB2W9B+N2JoQH6IKWESAcdVOL/JvgT3uMXN7U7lPUMwYdb5KRB165lIosHZz5rwQvrGPBfQHoX4UW8MSQLmNWtgi4IBv+dmHJzozQ3C8Jp0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=uDwhsx3C; arc=none smtp.client-ip=199.89.1.12
+	s=arc-20240116; t=1727901345; c=relaxed/simple;
+	bh=Ue1Ne6GOaGmZVRlNhOyVn9zz+iQQknK7UyO8+kzXQyo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YkY2m+2CcAVTzpmi1ormBZJGetj++YOR6X6nLdCDJaVOqp5prezChgP4R4yWEGB1lRNU/TDfis1d/zbSiRYUJ3+Wl/5jZIokcoAjgiofVCYbofIiVGP1Ctft/s19Ud1qxG9RCXAxKeCvaHK70Jv673h/ZHOGmN7cKO0lVk9wDi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=T4FtacfH; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="uDwhsx3C"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="T4FtacfH"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XJmlq30FmzlgMWB;
-	Wed,  2 Oct 2024 20:35:35 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XJmlz4zl6zlgMWB;
+	Wed,  2 Oct 2024 20:35:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1727901333; x=1730493334; bh=v4SGfWqevfFYq9omU+GAx/23iJXXEOAA+XC
-	BJw9FUM4=; b=uDwhsx3C0/OCvhdIQOKt/DNBSiPq2JQon0sOd48RJyToV7kJtOw
-	dtF0LYZKENDCKzziQpf9ZlolBfExKg/J+Bkfmdbd4bGrN5XaRxqCmyJdaYFkSPb1
-	sq+UEqO8pUHSIjH22gYZk8aXRxB6u7MNJDBmFsmln1R8NpNGqHgn/5G5Fdi6qPB0
-	UnqOlhEs9oQp5tz8uuoR9jFfqzMXya+zk+iLZkb5HZX9PJeJEsFIbw3mmyIT4taU
-	uXUrxks88Rwdv8BR7LbvkooDg61LQYwcLrgAN0dCVrXD+j7M8Mqfu/7Wc96ms4zq
-	UugDBxWTmBdY9dlG0EiFPvkLItWi86ueSOA==
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1727901340; x=1730493341; bh=Dy6A0
+	G3Y2ZEBHTZNXV+Hc18RRQiSqlb2jsITLR/He+0=; b=T4FtacfH+IrbBkqd4bz6h
+	gX2UFCFLrx9NrX7akAKtXISmxUw/csxtOPuuymGo9R54ypmyC292s3FPpbYWeC/P
+	k40kIlyyYO/dcObcUP0Ytm/hEn7l99F36fbyh8PRITiBFvhiMMDD0R44FNUrOUEA
+	qGqEsLggjLdLcjpFUBQeu5VnphRRnIGTupdN5B/lbRoU26nxSUY6fKQX6vv3mTeE
+	n4oCIFVqdRty0kKtK436e2LTlD2f+hZt2po7nGs99TYzI3wiMg9AcVCYrdy6/5Ng
+	iktGHt6hXzusf/5JY5NO/kTCkNoYw7Zelk0H/pskqDbK3wFDhVPTK9Of9/rwllaU
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id fK3rl3RxjBa9; Wed,  2 Oct 2024 20:35:33 +0000 (UTC)
+ id XqHjONH6pVLV; Wed,  2 Oct 2024 20:35:40 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XJmlm6VdwzlgMVy;
-	Wed,  2 Oct 2024 20:35:32 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XJmlv6MNpzlgMW9;
+	Wed,  2 Oct 2024 20:35:39 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 00/11] Improve the "slave" function names
-Date: Wed,  2 Oct 2024 13:33:52 -0700
-Message-ID: <20241002203528.4104996-1-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>,
+	Jonathan Corbet <corbet@lwn.net>
+Subject: [PATCH v2 01/11] scsi: arcmsr: Remove the changelog
+Date: Wed,  2 Oct 2024 13:33:53 -0700
+Message-ID: <20241002203528.4104996-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.46.1.824.gd892dcdcdd-goog
+In-Reply-To: <20241002203528.4104996-1-bvanassche@acm.org>
+References: <20241002203528.4104996-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,138 +60,162 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Hi Martin,
+Since we typically do not maintain changelogs as text files in the kernel=
+,
+and since the arcmsr changelog has not been updated since 2008, remove it=
+.
 
-The text "slave_" in multiple function names does not make it clear what
-the purpose of these functions is. Hence this patch series that renames a=
-ll
-SCSI functions that have the word "slave" in their function name. Please
-consider this patch series for the next merge window.
-
-Thanks,
-
-Bart.
-
-Changes compared to v1:
- - Switch to the names proposed by Matthew Wilcox.
- - Included a patch that renames .device_configure() into .sdev_configure=
-().
- - Split off the documentation changes into a separate patch as requested=
- by
-   Damien.
- - Added 5 patches that remove obsolete SCSI LLD changelog files.
-
-Bart Van Assche (11):
-  scsi: arcmsr: Remove the changelog
-  scsi: ips: Remove the changelog
-  scsi: lpfc: Remove the changelog
-  scsi: ncr53c8xx: Remove the changelog
-  scsi: sym53c8xx: Remove the changelog
-  scsi: Rename .slave_alloc() and .slave_destroy()
-  scsi: core: Rename .slave_alloc() and .slave_destroy() in the
-    documentation
-  scsi: Rename .device_configure() into .sdev_configure()
-  scsi: Convert SCSI drivers to .sdev_configure()
-  scsi: core: Remove the .slave_configure() method
-  scsi: core: Update .slave_configure() references in the documentation
-
- Documentation/scsi/ChangeLog.arcmsr       |  118 --
- Documentation/scsi/ChangeLog.ips          |  122 --
- Documentation/scsi/ChangeLog.lpfc         | 1865 ---------------------
- Documentation/scsi/ChangeLog.ncr53c8xx    |  495 ------
- Documentation/scsi/ChangeLog.sym53c8xx    |  593 -------
- Documentation/scsi/ChangeLog.sym53c8xx_2  |  144 --
- Documentation/scsi/scsi_mid_low_api.rst   |   78 +-
- drivers/ata/ahci.h                        |    2 +-
- drivers/ata/libata-sata.c                 |    8 +-
- drivers/ata/libata-scsi.c                 |   19 +-
- drivers/ata/pata_macio.c                  |    8 +-
- drivers/ata/sata_mv.c                     |    2 +-
- drivers/ata/sata_nv.c                     |   24 +-
- drivers/ata/sata_sil24.c                  |    2 +-
- drivers/firewire/sbp2.c                   |   10 +-
- drivers/infiniband/ulp/srp/ib_srp.c       |    5 +-
- drivers/message/fusion/mptfc.c            |   14 +-
- drivers/message/fusion/mptsas.c           |   14 +-
- drivers/message/fusion/mptscsih.c         |   10 +-
- drivers/message/fusion/mptscsih.h         |    5 +-
- drivers/message/fusion/mptspi.c           |   19 +-
- drivers/s390/scsi/zfcp_scsi.c             |   15 +-
- drivers/s390/scsi/zfcp_sysfs.c            |    2 +-
- drivers/s390/scsi/zfcp_unit.c             |    2 +-
- drivers/scsi/3w-9xxx.c                    |    7 +-
- drivers/scsi/3w-sas.c                     |    7 +-
- drivers/scsi/3w-xxxx.c                    |    8 +-
- drivers/scsi/53c700.c                     |   19 +-
- drivers/scsi/BusLogic.c                   |    7 +-
- drivers/scsi/BusLogic.h                   |    3 +-
- drivers/scsi/aacraid/linit.c              |    8 +-
- drivers/scsi/advansys.c                   |   23 +-
- drivers/scsi/aic7xxx/aic79xx_osm.c        |    8 +-
- drivers/scsi/aic7xxx/aic7xxx_osm.c        |    8 +-
- drivers/scsi/arcmsr/arcmsr_hba.c          |    8 +-
- drivers/scsi/bfa/bfad_im.c                |   26 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c         |    7 +-
- drivers/scsi/csiostor/csio_scsi.c         |   18 +-
- drivers/scsi/dc395x.c                     |   12 +-
- drivers/scsi/esp_scsi.c                   |   14 +-
- drivers/scsi/fcoe/fcoe.c                  |    2 +-
- drivers/scsi/fnic/fnic_main.c             |    4 +-
- drivers/scsi/hisi_sas/hisi_sas.h          |    5 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c     |   13 +-
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c    |    4 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    |    4 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |   10 +-
- drivers/scsi/hpsa.c                       |   20 +-
- drivers/scsi/hptiop.c                     |    6 +-
- drivers/scsi/ibmvscsi/ibmvfc.c            |   13 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c          |    8 +-
- drivers/scsi/ipr.c                        |   20 +-
- drivers/scsi/ips.c                        |    6 +-
- drivers/scsi/ips.h                        |    3 +-
- drivers/scsi/iscsi_tcp.c                  |    6 +-
- drivers/scsi/libfc/fc_fcp.c               |    6 +-
- drivers/scsi/libsas/sas_scsi_host.c       |   11 +-
- drivers/scsi/lpfc/lpfc_scsi.c             |   37 +-
- drivers/scsi/megaraid/megaraid_sas_base.c |   14 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c           |   20 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c      |   24 +-
- drivers/scsi/mvumi.c                      |    5 +-
- drivers/scsi/myrb.c                       |   21 +-
- drivers/scsi/myrs.c                       |   13 +-
- drivers/scsi/ncr53c8xx.c                  |    9 +-
- drivers/scsi/pmcraid.c                    |   22 +-
- drivers/scsi/ps3rom.c                     |    5 +-
- drivers/scsi/qedf/qedf_main.c             |    5 +-
- drivers/scsi/qla1280.c                    |    6 +-
- drivers/scsi/qla2xxx/qla_os.c             |   12 +-
- drivers/scsi/qla4xxx/ql4_os.c             |    6 +-
- drivers/scsi/qlogicpti.c                  |    5 +-
- drivers/scsi/scsi_debug.c                 |   19 +-
- drivers/scsi/scsi_scan.c                  |   22 +-
- drivers/scsi/scsi_sysfs.c                 |    4 +-
- drivers/scsi/smartpqi/smartpqi_init.c     |   13 +-
- drivers/scsi/snic/snic_main.c             |   12 +-
- drivers/scsi/stex.c                       |    4 +-
- drivers/scsi/storvsc_drv.c                |    7 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c       |   15 +-
- drivers/scsi/virtio_scsi.c                |    2 +-
- drivers/scsi/xen-scsifront.c              |   11 +-
- drivers/staging/rts5208/rtsx.c            |    8 +-
- drivers/ufs/core/ufshcd.c                 |   20 +-
- drivers/usb/image/microtek.c              |    4 +-
- drivers/usb/storage/scsiglue.c            |   10 +-
- drivers/usb/storage/uas.c                 |   10 +-
- include/linux/libata.h                    |   19 +-
- include/scsi/libfc.h                      |    2 +-
- include/scsi/libsas.h                     |    9 +-
- include/scsi/scsi_device.h                |    4 +-
- include/scsi/scsi_host.h                  |   24 +-
- 92 files changed, 507 insertions(+), 3816 deletions(-)
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ Documentation/scsi/ChangeLog.arcmsr | 118 ----------------------------
+ 1 file changed, 118 deletions(-)
  delete mode 100644 Documentation/scsi/ChangeLog.arcmsr
- delete mode 100644 Documentation/scsi/ChangeLog.ips
- delete mode 100644 Documentation/scsi/ChangeLog.lpfc
- delete mode 100644 Documentation/scsi/ChangeLog.ncr53c8xx
- delete mode 100644 Documentation/scsi/ChangeLog.sym53c8xx
- delete mode 100644 Documentation/scsi/ChangeLog.sym53c8xx_2
 
+diff --git a/Documentation/scsi/ChangeLog.arcmsr b/Documentation/scsi/Cha=
+ngeLog.arcmsr
+deleted file mode 100644
+index 038a3e6ecaa4..000000000000
+--- a/Documentation/scsi/ChangeLog.arcmsr
++++ /dev/null
+@@ -1,118 +0,0 @@
+-************************************************************************=
+**
+-** History
+-**
+-**   REV#         DATE             NAME         DESCRIPTION
+-** 1.00.00.00    3/31/2004       Erich Chen     First release
+-** 1.10.00.04    7/28/2004       Erich Chen     modify for ioctl
+-** 1.10.00.06    8/28/2004       Erich Chen     modify for 2.6.x
+-** 1.10.00.08    9/28/2004       Erich Chen     modify for x86_64
+-** 1.10.00.10   10/10/2004       Erich Chen     bug fix for SMP & ioctl
+-** 1.20.00.00   11/29/2004       Erich Chen     bug fix with arcmsr_bus_=
+reset when PHY error
+-** 1.20.00.02   12/09/2004       Erich Chen     bug fix with over 2T byt=
+es RAID Volume
+-** 1.20.00.04    1/09/2005       Erich Chen     fits for Debian linux ke=
+rnel version 2.2.xx
+-** 1.20.00.05    2/20/2005       Erich Chen     cleanly as look like a L=
+inux driver at 2.6.x
+-**                                              thanks for peoples kindn=
+ess comment
+-**						Kornel Wieliczek
+-**						Christoph Hellwig
+-**						Adrian Bunk
+-**						Andrew Morton
+-**						Christoph Hellwig
+-**						James Bottomley
+-**						Arjan van de Ven
+-** 1.20.00.06    3/12/2005       Erich Chen     fix with arcmsr_pci_unma=
+p_dma "unsigned long" cast,
+-**						modify PCCB POOL allocated by "dma_alloc_coherent"
+-**						(Kornel Wieliczek's comment)
+-** 1.20.00.07    3/23/2005       Erich Chen     bug fix with arcmsr_scsi=
+_host_template_init
+-**						occur segmentation fault,
+-**						if RAID adapter does not on PCI slot
+-**						and modprobe/rmmod this driver twice.
+-**						bug fix enormous stack usage (Adrian Bunk's comment)
+-** 1.20.00.08    6/23/2005       Erich Chen     bug fix with abort comma=
+nd,
+-**						in case of heavy loading when sata cable
+-**						working on low quality connection
+-** 1.20.00.09    9/12/2005       Erich Chen     bug fix with abort comma=
+nd handling, firmware version check
+-**						and firmware update notify for hardware bug fix
+-** 1.20.00.10    9/23/2005       Erich Chen     enhance sysfs function f=
+or change driver's max tag Q number.
+-**						add DMA_64BIT_MASK for backward compatible with all 2.6.x
+-**						add some useful message for abort command
+-**						add ioctl code 'ARCMSR_IOCTL_FLUSH_ADAPTER_CACHE'
+-**						customer can send this command for sync raid volume data
+-** 1.20.00.11    9/29/2005       Erich Chen     by comment of Arjan van =
+de Ven fix incorrect msleep redefine
+-**						cast off sizeof(dma_addr_t) condition for 64bit pci_set_dma_mask
+-** 1.20.00.12    9/30/2005       Erich Chen     bug fix with 64bit platf=
+orm's ccbs using if over 4G system memory
+-**						change 64bit pci_set_consistent_dma_mask into 32bit
+-**						increcct adapter count if adapter initialize fail.
+-**						miss edit at arcmsr_build_ccb....
+-**						psge +=3D sizeof(struct _SG64ENTRY *) =3D>
+-**						psge +=3D sizeof(struct _SG64ENTRY)
+-**						64 bits sg entry would be incorrectly calculated
+-**						thanks Kornel Wieliczek give me kindly notify
+-**						and detail description
+-** 1.20.00.13   11/15/2005       Erich Chen     scheduling pending ccb w=
+ith FIFO
+-**						change the architecture of arcmsr command queue list
+-**						for linux standard list
+-**						enable usage of pci message signal interrupt
+-**						follow Randy.Danlup kindness suggestion cleanup this code
+-** 1.20.00.14   05/02/2007	 Erich Chen & Nick Cheng
+-**						1.implement PCI-Express error recovery function and AER capabili=
+ty
+-**						2.implement the selection of ARCMSR_MAX_XFER_SECTORS_B=3D4096
+-**				 		if firmware version is newer than 1.42
+-**						3.modify arcmsr_iop_reset to improve the ability
+-**						4.modify the ISR, arcmsr_interrupt routine,to prevent the
+-**						inconsistency with sg_mod driver if application	directly calls
+-**						the arcmsr driver w/o passing through scsi mid layer
+-**						specially thanks to Yanmin Zhang's openhanded help about AER
+-** 1.20.00.15   08/30/2007	 Erich Chen & Nick Cheng
+-**						1. support ARC1200/1201/1202 SATA RAID adapter, which is named
+-**						ACB_ADAPTER_TYPE_B
+-**						2. modify the arcmsr_pci_slot_reset function
+-**						3. modify the arcmsr_pci_ers_disconnect_forepart function
+-**						4. modify the arcmsr_pci_ers_need_reset_forepart function
+-** 1.20.00.15   09/27/2007	 Erich Chen & Nick Cheng
+-**						1. add arcmsr_enable_eoi_mode() on adapter Type B
+-** 						2. add readl(reg->iop2drv_doorbell_reg) in arcmsr_handle_hbb_is=
+r()
+-**						in case of the doorbell interrupt clearance is cached
+-** 1.20.00.15   10/01/2007	 Erich Chen & Nick Cheng
+-**						1. modify acb->devstate[i][j]
+-**						as ARECA_RAID_GOOD instead of
+-**						ARECA_RAID_GONE in arcmsr_alloc_ccb_pool
+-** 1.20.00.15   11/06/2007       Erich Chen & Nick Cheng
+-**						1. add conditional declaration for
+-** 						arcmsr_pci_error_detected() and
+-**						arcmsr_pci_slot_reset
+-** 1.20.00.15	11/23/2007       Erich Chen & Nick Cheng
+-**						1.check if the sg list member number
+-**						exceeds arcmsr default limit in arcmsr_build_ccb()
+-**						2.change the returned value type of arcmsr_build_ccb()
+-**						from "void" to "int"
+-**						3.add the conditional check if arcmsr_build_ccb()
+-**						returns FAILED
+-** 1.20.00.15	12/04/2007	 Erich Chen & Nick Cheng
+-**						1. modify arcmsr_drain_donequeue() to ignore unknown
+-**						command and let kernel process command timeout.
+-**						This could handle IO request violating max. segments
+-**						while Linux XFS over DM-CRYPT.
+-**						Thanks to Milan Broz's comments <mbroz@redhat.com>
+-** 1.20.00.15	12/24/2007	 Erich Chen & Nick Cheng
+-**						1.fix the portability problems
+-**						2.fix type B where we should _not_ iounmap() acb->pmu;
+-**						it's not ioremapped.
+-**						3.add return -ENOMEM if ioremap() fails
+-**						4.transfer IS_SG64_ADDR w/ cpu_to_le32()
+-**						in arcmsr_build_ccb
+-**						5. modify acb->devstate[i][j] as ARECA_RAID_GONE instead of
+-**						ARECA_RAID_GOOD in arcmsr_alloc_ccb_pool()
+-**						6.fix arcmsr_cdb->Context as (unsigned long)arcmsr_cdb
+-**						7.add the checking state of
+-**						(outbound_intstatus & ARCMSR_MU_OUTBOUND_HANDLE_INT) =3D=3D 0
+-**						in arcmsr_handle_hba_isr
+-**						8.replace pci_alloc_consistent()/pci_free_consistent() with kmal=
+loc()/kfree() in arcmsr_iop_message_xfer()
+-**						9. fix the release of dma memory for type B in arcmsr_free_ccb_p=
+ool()
+-**						10.fix the arcmsr_polling_hbb_ccbdone()
+-** 1.20.00.15	02/27/2008	Erich Chen & Nick Cheng
+-**						1.arcmsr_iop_message_xfer() is called from atomic context under =
+the
+-**						queuecommand scsi_host_template handler. James Bottomley pointed=
+ out
+-**						that the current GFP_KERNEL|GFP_DMA flags are wrong: firstly we =
+are in
+-**						atomic context, secondly this memory is not used for DMA.
+-**						Also removed some unneeded casts. Thanks to Daniel Drake <dsd@ge=
+ntoo.org>
+-************************************************************************=
+**
