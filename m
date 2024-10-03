@@ -1,87 +1,113 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from fout-a3-smtp.messagingengine.com (fout-a3-smtp.messagingengine.com [103.168.172.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28EEA1A01B0
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Oct 2024 23:47:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A19993B1A4;
+	Thu,  3 Oct 2024 03:32:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727912826; cv=none; b=R3Do4XfN5abN4jlFqS4/Ic8AJwwBywzIwlqjLzJ3LE+F9NwPr9ZglUsRjoh8eYkTGjb+XhjRhalUV4BccZHBNYDEBwdODxpkrcwsn+MaEhsUnm3C/F0UTyW+MoKtaCXK6Y8z2wZHVLpJbjj1PHHlwTm6t7BSrGm3W1UnfvuLuPg=
+	t=1727926334; cv=none; b=tBCAyU7WS9ZUxbOsszOS/Q4wK9TqZ/kqlrHi13k6486Avs5GY85bOikDSQKrbLvSMRvG89b4YHvAokDnUMowwQityVnuSCFLLvzTnhPGQEHrNSzi2Z4/GAS4i1m1lbSrhZw2C7rVU3gp6Oun+uQp5pyXw+o3wkulxygVxWOJHmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727912826; c=relaxed/simple;
-	bh=orsD4QUPWeVpyu7yNLnjAhXHyStdn6MJBuL6EyNqvvs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h0EzYmdecPc3pGBKYT7jTeH0RBKjfVl8oEpZEhG//4rz7QYBmi/F5/8oyQceLs2nb5OOWMQZPFGP+GBqmqHlvCk46D8IH2a3omRR914pKbknhCDIio5rmitoSJaRv2y0kyLgsSuK4nXqH4SCRT2OEqPu7MSUjgL9yFZctGn4cuM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1aVDw+fC; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1727926334; c=relaxed/simple;
+	bh=O6n4NsHyPQfXtZWMch4uSDm3io15hVHMMOVd1ReBV3k=;
+	h=To:Cc:Message-Id:From:Subject:Date; b=LP+QhWHIzPqk6bVX6uigXOBTmWA5GbbKhTHuHiV9mq2IcIFk2p54SbPjViH04GC6idtYb3KNfRTuO4s8IyooGQ1HiVPjTUC/bEYTpfc7rP634bAGVvjArZ3T47EI/EMMrWQT79dom6GyBoXON+SNCNkYUiQRCRWZquWRoR43to0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=JcC2gzZk; arc=none smtp.client-ip=103.168.172.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1aVDw+fC"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XJs0m4T3KzlgMWH;
-	Wed,  2 Oct 2024 23:47:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1727912823; x=1730504824; bh=J28NJ9B3pNki9pXMsXrj5FTj
-	7I1yHbikJOzIUEFKBuc=; b=1aVDw+fC8HYZjKXYysUr6Kzymn7lBm6KLwiwbMj1
-	mveFHRNgxvgSTFONa6TCuYcltYeL4+0yieEuufqcB36VOU/8H+p97SxgBR0ZExCf
-	nxJHrvjvCnaqcE4EXxzL3fovdkLLS9Xxew6oXaTq9+5UW9wQy8neTv+WS6om/yUT
-	hx0rbHJFEH10e+1vYLKGJ+wOyiw+7j9dQlBDPfY4RXu7QZjHW4qm/SLx9ENqPPIC
-	PvjCN0zzWLCKPpkrqIAbkWGgdoa85BTN2ialGRVdtqyZV49hTHYJLdKjLiA7E/3i
-	cA2rUAC0y6PDBakFmd9W2XrSSdWljVGbF7ey2n8d50Y8ug==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id m80MTowPNrPy; Wed,  2 Oct 2024 23:47:03 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XJs0k0ZnhzlgMWG;
-	Wed,  2 Oct 2024 23:47:01 +0000 (UTC)
-Message-ID: <be346e1f-eb50-4561-9319-7554d7793785@acm.org>
-Date: Wed, 2 Oct 2024 16:47:00 -0700
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="JcC2gzZk"
+Received: from phl-compute-11.internal (phl-compute-11.phl.internal [10.202.2.51])
+	by mailfout.phl.internal (Postfix) with ESMTP id C5076138045A;
+	Wed,  2 Oct 2024 23:32:11 -0400 (EDT)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-11.internal (MEProxy); Wed, 02 Oct 2024 23:32:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+	:feedback-id:from:from:in-reply-to:message-id:reply-to:subject
+	:subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+	:x-sasl-enc; s=fm2; t=1727926331; x=1728012731; bh=OyW+gAZ6TAVsu
+	pReIbSn1i1eWUwWnwLcod9OA3LP83M=; b=JcC2gzZkVJt/iq5boJ/WctrbrX/lt
+	xAKnpDl42fbFLW4FW3RP7+lER0lEbGnOvF8CL9x70v1LA973B4Cofe2NK+0UYQ6d
+	p2img1mrBWW58bnwB4Ozd3fKGe9Wjetqdv99o7rzKWCNsiJn3pMUZH/eXMB8MXuw
+	pg0Lne32DbeauoMcNxg+PoGxTs8MQZa3t1pfYskNm65aJ/8LCre7MPbZMQtFCce2
+	GCegpi10BoAj2wuyjTLP7KUtqgUB2E/hD7/Lc4iOcosfjquBPpsuSZrTgzYZ2RVz
+	zimASGtRJPC8pcmUk2UJPKqKN0lXOhkJPcHkE5BFgIv3BtwZSBbw0ct6g==
+X-ME-Sender: <xms:OxD-ZhO9DNaAohNebc8GjD79mNvjJUtWvIqu7GC3clBCZJN1Cmd_Aw>
+    <xme:OxD-Zj-vxaS4Ypy7A8s7ygf1jUiYToYRN8--m7kqOI7XuLGF1-1DAIQQT0IJv7O_d
+    AFvYVNwppkcN4y9UGM>
+X-ME-Received: <xmr:OxD-ZgSQEuunoKgu9XiS6GURJWVK1nnhzRSqLjy9x4ELhDIZ5c_iUFPufKT9p0OsLZ0QAGJTrXFs5EQ3lDLnL8bKVEGbF1sRkuY>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrvddvtddgjeefucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
+    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnh
+    htshculddquddttddmnecujfgurhepvfevkffhufffsedttdertddttddtnecuhfhrohhm
+    pefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqe
+    enucggtffrrghtthgvrhhnpeehfffggeefveegvedtiefffeevuedtgefhueehieetffej
+    fefggeevfeeuvdduleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrih
+    hlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgpdhnsggprhgtphht
+    thhopeejpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehjrghmvghsrdgsohhtth
+    homhhlvgihsehhrghnshgvnhhprghrthhnvghrshhhihhprdgtohhmpdhrtghpthhtohep
+    mhgrrhhtihhnrdhpvghtvghrshgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtohepug
+    grnhhivghlsedtgidtfhdrtghomhdprhgtphhtthhopehstghhmhhithiimhhitgesghhm
+    rghilhdrtghomhdprhgtphhtthhopehsthgrsghlvgeskhgvrhhnvghlrdhorhhgpdhrtg
+    hpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghp
+    thhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:OxD-ZttV3kQrOccry644dSLZpnVOJBpbI6cmFUHon1_vCAu_B84W4Q>
+    <xmx:OxD-ZpcU9V9SsXA8V8mhL7gnYEdA34_-x71Fe9ea5uBTGSLTF0B-9w>
+    <xmx:OxD-Zp0K9HlFrbf2p2BAkG-wLFecM8ch_qvko_mTDBNrCzOPN-ziAA>
+    <xmx:OxD-Zl8ky4_R0swFzO36pBns_5Va3clu7H2RCVyhalc-J3spEGP8Fw>
+    <xmx:OxD-ZhSNv-q2Y58ENepU3oADfeYFXuGSubcgJjlDBAxysg7mybqdmpNm>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 2 Oct 2024 23:32:09 -0400 (EDT)
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+    "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Daniel Palmer" <daniel@0x0f.com>,
+    "Michael Schmitz" <schmitzmic@gmail.com>,
+    stable@kernel.org,
+    linux-scsi@vger.kernel.org,
+    linux-kernel@vger.kernel.org
+Message-Id: <09e11a0a54e6aa2a88bd214526d305aaf018f523.1727926187.git.fthain@linux-m68k.org>
+From: Finn Thain <fthain@linux-m68k.org>
+Subject: [PATCH] scsi: wd33c93: Don't use stale scsi_pointer value
+Date: Thu, 03 Oct 2024 13:29:47 +1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 01/11] scsi: arcmsr: Remove the changelog
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
-References: <20241002203528.4104996-1-bvanassche@acm.org>
- <20241002203528.4104996-2-bvanassche@acm.org>
- <a81e712d44ddfcdb87897d3b988632df11797801.camel@HansenPartnership.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <a81e712d44ddfcdb87897d3b988632df11797801.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 10/2/24 3:39 PM, James Bottomley wrote:
-> On Wed, 2024-10-02 at 13:33 -0700, Bart Van Assche wrote:
->> Since we typically do not maintain changelogs as text files in the
->> kernel, and since the arcmsr changelog has not been updated since
->> 2008, remove it.
-> 
-> This is legally problematic.  Under the terms of the GPL, the
-> copyrights and change log are required to be kept intact (section 1
-> since they're notices).  We sometimes fudge around this if there's an
-> equivalent in the source control system (so the git history substitutes
-> for the requirement to add change notices and can sometimes be used to
-> remove change notices if they can also be seen in git).  There isn't an
-> equivalent in this case since the change log pre-dates the driver
-> addition.
+From: Daniel Palmer <daniel@0x0f.com>
 
-Hi James,
+A regression was introduced with commit dbb2da557a6a ("scsi: wd33c93: Move
+the SCSI pointer to private command data") which results in an oops in
+wd33c93_intr(). That commit added the scsi_pointer variable and
+initialized it from hostdata->connected. However, during selection,
+hostdata->connected is not yet valid. Fix this by getting the current
+scsi_pointer from hostdata->selecting.
 
-Thanks for the feedback. I will drop the patches that remove change
-logs.
+Cc: Daniel Palmer <daniel@0x0f.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: stable@kernel.org
+Fixes: dbb2da557a6a ("scsi: wd33c93: Move the SCSI pointer to private command data")
+Signed-off-by: Daniel Palmer <daniel@0x0f.com>
+Co-developed-by: Finn Thain <fthain@linux-m68k.org>
+Signed-off-by: Finn Thain <fthain@linux-m68k.org>
+---
+ drivers/scsi/wd33c93.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bart.
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index a44b60c9004a..dd1fef9226f2 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -831,7 +831,7 @@ wd33c93_intr(struct Scsi_Host *instance)
+ 		/* construct an IDENTIFY message with correct disconnect bit */
+ 
+ 		hostdata->outgoing_msg[0] = IDENTIFY(0, cmd->device->lun);
+-		if (scsi_pointer->phase)
++		if (WD33C93_scsi_pointer(cmd)->phase)
+ 			hostdata->outgoing_msg[0] |= 0x40;
+ 
+ 		if (hostdata->sync_stat[cmd->device->id] == SS_FIRST) {
+-- 
+2.39.5
 
