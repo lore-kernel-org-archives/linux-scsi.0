@@ -1,66 +1,64 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F435241E7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F71E15AC4;
 	Fri,  4 Oct 2024 02:08:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728007739; cv=none; b=NyfNqN/A8WIml4I1lEkw9NIcm5DnL6KXzGLlCsd0zDLJjuC/YaF4peCP9GqGSZTxP+2cA+/clnGNjv0rSnEFX9RzkVv7rDFjGYxmGUmg9l1Dq5LKmYB1/ndqcoYNfP0VVxGwyUuCnIDTzvH256okBKJXGJwICGCvoG9nnsTigfY=
+	t=1728007739; cv=none; b=Djcjlq3ZB0q85Dn2ZcwRHerbDREJrfrqq+/gy01uoGtbZ6ykzyXdyC6TcUUUz+3xmy4GIiHBFbIpNXeu/FAZY7nGmK03SBuqWWOUFIiGCUDDftvgNAqsyOc8UdgcLMp4vQnzk3CCBfoxwA1hZLwb6SUKDiZl1PB+XIqEXv4QjEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1728007739; c=relaxed/simple;
-	bh=Pa7h51ZuIAZ85G0lqTJND6ua+oBMQex+ghL0S3JOBMQ=;
+	bh=GQCsl0nTEYZuigMSMFbAP/YbO4W0axtA3iaJ7Myeh6k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lan0hQc9xTKXVH76IOzWvUyTP+HCWmgTVvnFAAgL/hPOK5j4GZy7joJBoFmjs4nJzO2e5DKgcj1EqbzVc7BZlQxEgu91Fn5Txr75ePfYlMX0RRbVNJlwr+Ik+A3BmL4dG87wtTpmzr0tqtcC652V8HAsrMyjRgbh7BQEfMdocD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=krIQcdki; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=gstwb6eS/mVePh6yHf2wmeKuu8h3oQCTgerVqU6KuCOC7NG5GHq6FuEW0yLvjE+f3TYWrvFIe1Z033lPmDbGZ2vuvbHijj5+gjJM+mD4EeHvjZzj3BIZ786LNIypvDucOnwfh8JF8fdr5Zr0DN34DCJ1u4u2A7vhzaTyoJo9j+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Aj1LHVAD; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="krIQcdki"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4940te4H007648;
-	Fri, 4 Oct 2024 02:08:51 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Aj1LHVAD"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4940tddj017997;
+	Fri, 4 Oct 2024 02:08:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=TSYp3uNp/5P9hOjRNQSyP5XupqoeJyPR79IIIZQyRBg=; b=
-	krIQcdkinhku7IuQBT23pu0CO1fqCIZQDlDd34hFbNKNnnlCbfCrAdDPR2QzTXEP
-	EsFUd0+llMXR4GIG800p9zHlg1YUBoeZ3ySfVyUdQ27fv5wgAFfOb3FLeKSSHKPv
-	vlJEdP7C+JwH0WWlLpZm+HoJX1vbitNHpnxlzPdOAV63D++da0yainWhz7WDnjN1
-	+K/Zb8eG7LCmuVz2aR6PYHCrAiJcioEed8pRmZ+N+/dNQIK7Ig3Yl3mcnKPMq2zr
-	+QQar26dRfWbT+ezvVpMphErzR/kxa9OqZphFkGJ8OnlXOjxPB6zcKWkiZGvsy/2
-	WKgRwyfmsBSbr+LBSPN74g==
+	corp-2023-11-20; bh=D/3T4Cb8+YCqJiH4Uc+jzBs9VxSHqKLx4XNq+9wYumg=; b=
+	Aj1LHVADPryGohL8Wkd4iKMDT5Zj84KEF80KN7iBqrtEd0/Tyu3IqK1DKBAphS0J
+	ahXeslZoCEQirr014/EvpkOO0oGrdqMmy5dXa7rcTsMAltSh+v9Yye/AWhBPiP41
+	7J9YE8vCBrwNfhdCNziYwPUyra/3uf9seYU38SKDNYDvOl6I7m9IRSobMAXogADp
+	07CKPAXACDCUJzzXxtfbyfqLPKN+hzwTQVtIGmvrpxjMjVHgUThnFN/nymtNoguI
+	3Ya4i8yPW7Qdkf+CaSt4Lcx2fEW6PXWqTavQtczYOSCKeMfp3Li375QDR9oE62xQ
+	VWfnw97Tlb6j4HEVViND6w==
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4220498p44-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42204erp0f-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 04 Oct 2024 02:08:51 +0000 (GMT)
+	Fri, 04 Oct 2024 02:08:49 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4940NUSB038380;
-	Fri, 4 Oct 2024 02:08:50 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 422054pb2m-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 04 Oct 2024 02:08:50 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49427bli036075;
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4940F83W038423;
 	Fri, 4 Oct 2024 02:08:49 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 422054pb11-4;
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 422054pb29-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Fri, 04 Oct 2024 02:08:49 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49427blg036075;
+	Fri, 4 Oct 2024 02:08:48 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 422054pb11-3;
+	Fri, 04 Oct 2024 02:08:48 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Martin Wilck <martin.wilck@suse.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Finn Thain <fthain@linux-m68k.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.de>,
-        Martin Wilck <mwilck@suse.com>, Petr Mladek <pmladek@suse.com>,
-        linux-scsi@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: fnic: move flush_work initialization out of if block
-Date: Thu,  3 Oct 2024 22:08:09 -0400
-Message-ID: <172800766873.2547528.18433845515105510650.b4-ty@oracle.com>
+        Daniel Palmer <daniel@0x0f.com>,
+        Michael Schmitz <schmitzmic@gmail.com>, stable@kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: wd33c93: Don't use stale scsi_pointer value
+Date: Thu,  3 Oct 2024 22:08:08 -0400
+Message-ID: <172800766876.2547528.10321922145414314849.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.46.1
-In-Reply-To: <20240930133014.71615-1-mwilck@suse.com>
-References: <20240930133014.71615-1-mwilck@suse.com>
+In-Reply-To: <09e11a0a54e6aa2a88bd214526d305aaf018f523.1727926187.git.fthain@linux-m68k.org>
+References: <09e11a0a54e6aa2a88bd214526d305aaf018f523.1727926187.git.fthain@linux-m68k.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,28 +70,28 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
  definitions=2024-10-04_01,2024-10-03_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=777 adultscore=0
  bulkscore=0 spamscore=0 mlxscore=0 phishscore=0 suspectscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2409260000 definitions=main-2410040014
-X-Proofpoint-ORIG-GUID: Lo_UB6J59lPBgPtQsrsSXKeviUAMkUPJ
-X-Proofpoint-GUID: Lo_UB6J59lPBgPtQsrsSXKeviUAMkUPJ
+X-Proofpoint-GUID: _eldDH_LTWwIby8pLy4ZPTCan4nju_tX
+X-Proofpoint-ORIG-GUID: _eldDH_LTWwIby8pLy4ZPTCan4nju_tX
 
-On Mon, 30 Sep 2024 15:30:14 +0200, Martin Wilck wrote:
+On Thu, 03 Oct 2024 13:29:47 +1000, Finn Thain wrote:
 
-> (resending, sorry - I'd forgotten to add the mailing list)
-> 
-> After commit 379a58caa199 ("scsi: fnic: Move fnic_fnic_flush_tx() to a work
-> queue"), it can happen that a work item is sent to an uninitialized work
-> queue.  This may has the effect that the item being queued is never
-> actually queued, and any further actions depending on it will not proceed.
+> A regression was introduced with commit dbb2da557a6a ("scsi: wd33c93: Move
+> the SCSI pointer to private command data") which results in an oops in
+> wd33c93_intr(). That commit added the scsi_pointer variable and
+> initialized it from hostdata->connected. However, during selection,
+> hostdata->connected is not yet valid. Fix this by getting the current
+> scsi_pointer from hostdata->selecting.
 > 
 > [...]
 
 Applied to 6.12/scsi-fixes, thanks!
 
-[1/1] scsi: fnic: move flush_work initialization out of if block
-      https://git.kernel.org/mkp/scsi/c/f30e5f77d2f2
+[1/1] scsi: wd33c93: Don't use stale scsi_pointer value
+      https://git.kernel.org/mkp/scsi/c/9023ed8d91eb
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
