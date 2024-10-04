@@ -1,97 +1,129 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from out-184.mta1.migadu.com (out-184.mta1.migadu.com [95.215.58.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F71E15AC4;
-	Fri,  4 Oct 2024 02:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4ED1CAAF
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Oct 2024 02:35:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728007739; cv=none; b=Djcjlq3ZB0q85Dn2ZcwRHerbDREJrfrqq+/gy01uoGtbZ6ykzyXdyC6TcUUUz+3xmy4GIiHBFbIpNXeu/FAZY7nGmK03SBuqWWOUFIiGCUDDftvgNAqsyOc8UdgcLMp4vQnzk3CCBfoxwA1hZLwb6SUKDiZl1PB+XIqEXv4QjEo=
+	t=1728009358; cv=none; b=FLGKWzaHvyD+GhDT58jbdXP2mFmME8+PMPXdams4WP80jth//JyZ119HWtRFhnuIV1oPtvTx2LkoYdaW7nOZ2baR0pdpWETSBVL7PP7v7PIINQbqkktyrTqsMSeknhmgg+wmFSJ1ZOUZihzOCjrWUxlLv8yiqvOlmCPlkcjx34g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728007739; c=relaxed/simple;
-	bh=GQCsl0nTEYZuigMSMFbAP/YbO4W0axtA3iaJ7Myeh6k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gstwb6eS/mVePh6yHf2wmeKuu8h3oQCTgerVqU6KuCOC7NG5GHq6FuEW0yLvjE+f3TYWrvFIe1Z033lPmDbGZ2vuvbHijj5+gjJM+mD4EeHvjZzj3BIZ786LNIypvDucOnwfh8JF8fdr5Zr0DN34DCJ1u4u2A7vhzaTyoJo9j+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Aj1LHVAD; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1728009358; c=relaxed/simple;
+	bh=Q+/mUUWKiNG2+IsDs3j9++TToCvr4rKhVypFi77aAjA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=o9fbronuEvQ2vCUoeYJqyR/m3N+c62caXnydqH7132SlNpjEZiO7x+p8nuDK19acoWwrg4CyW/iGJHpfqsJaoOwBh2lAuYQ2lWIYa2N0cOpCOW/e3LM4MEoPyIhMg2vHLdanpujQ049RiNzThKTMV+e2Ky+J3a+xHSwZkK8Ap3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iApDyG15; arc=none smtp.client-ip=95.215.58.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Aj1LHVAD"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4940tddj017997;
-	Fri, 4 Oct 2024 02:08:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=D/3T4Cb8+YCqJiH4Uc+jzBs9VxSHqKLx4XNq+9wYumg=; b=
-	Aj1LHVADPryGohL8Wkd4iKMDT5Zj84KEF80KN7iBqrtEd0/Tyu3IqK1DKBAphS0J
-	ahXeslZoCEQirr014/EvpkOO0oGrdqMmy5dXa7rcTsMAltSh+v9Yye/AWhBPiP41
-	7J9YE8vCBrwNfhdCNziYwPUyra/3uf9seYU38SKDNYDvOl6I7m9IRSobMAXogADp
-	07CKPAXACDCUJzzXxtfbyfqLPKN+hzwTQVtIGmvrpxjMjVHgUThnFN/nymtNoguI
-	3Ya4i8yPW7Qdkf+CaSt4Lcx2fEW6PXWqTavQtczYOSCKeMfp3Li375QDR9oE62xQ
-	VWfnw97Tlb6j4HEVViND6w==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42204erp0f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 04 Oct 2024 02:08:49 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4940F83W038423;
-	Fri, 4 Oct 2024 02:08:49 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 422054pb29-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 04 Oct 2024 02:08:49 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49427blg036075;
-	Fri, 4 Oct 2024 02:08:48 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 422054pb11-3;
-	Fri, 04 Oct 2024 02:08:48 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Finn Thain <fthain@linux-m68k.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Daniel Palmer <daniel@0x0f.com>,
-        Michael Schmitz <schmitzmic@gmail.com>, stable@kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: wd33c93: Don't use stale scsi_pointer value
-Date: Thu,  3 Oct 2024 22:08:08 -0400
-Message-ID: <172800766876.2547528.10321922145414314849.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.46.1
-In-Reply-To: <09e11a0a54e6aa2a88bd214526d305aaf018f523.1727926187.git.fthain@linux-m68k.org>
-References: <09e11a0a54e6aa2a88bd214526d305aaf018f523.1727926187.git.fthain@linux-m68k.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iApDyG15"
+Message-ID: <734623a7-c8c3-46f9-a564-c2265fb79ff1@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1728009352;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ymFwru73XfTHz1sVaFBcyx39mulsMFBjrH0H1o5NdvA=;
+	b=iApDyG15i7FbLMDIaZ0ZF8bgQoeL5WtU9qypE2SWWluHBERlWAX1PAeLeixqM3x2/vlLXz
+	JmdkYvjWUHZ52QioGrHtACKhxMKA09aiMLw/gFN8fLM7S39gAXE/20uuPsb7b7dBYnauqq
+	p/ll/LjrmZPnOGg1ZkIWU4d3hlYja9k=
+Date: Fri, 4 Oct 2024 10:35:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: Re: blktests failures with v6.12-rc1 kernel
+To: Bart Van Assche <bvanassche@acm.org>,
+ Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "nbd@other.debian.org" <nbd@other.debian.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+References: <xpe6bea7rakpyoyfvspvin2dsozjmjtjktpph7rep3h25tv7fb@ooz4cu5z6bq6>
+ <e6e6f77b-f5c6-4b1e-8ab2-b492755857f0@acm.org>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Zhu Yanjun <yanjun.zhu@linux.dev>
+In-Reply-To: <e6e6f77b-f5c6-4b1e-8ab2-b492755857f0@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-04_01,2024-10-03_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=777 adultscore=0
- bulkscore=0 spamscore=0 mlxscore=0 phishscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2409260000 definitions=main-2410040014
-X-Proofpoint-GUID: _eldDH_LTWwIby8pLy4ZPTCan4nju_tX
-X-Proofpoint-ORIG-GUID: _eldDH_LTWwIby8pLy4ZPTCan4nju_tX
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, 03 Oct 2024 13:29:47 +1000, Finn Thain wrote:
-
-> A regression was introduced with commit dbb2da557a6a ("scsi: wd33c93: Move
-> the SCSI pointer to private command data") which results in an oops in
-> wd33c93_intr(). That commit added the scsi_pointer variable and
-> initialized it from hostdata->connected. However, during selection,
-> hostdata->connected is not yet valid. Fix this by getting the current
-> scsi_pointer from hostdata->selecting.
+在 2024/10/4 4:56, Bart Van Assche 写道:
+> On 10/3/24 1:02 AM, Shinichiro Kawasaki wrote:
+>> #3: srp/001,002,011,012,013,014,016
+>>
+>>     The seven test cases in srp test group failed due to the WARN
+>>     "kmem_cache of name 'srpt-rsp-buf' already exists" [4]. The 
+>> failures are
+>>     recreated in stable manner. They need further debug effort.
 > 
-> [...]
+> Does the patch below help?
 
-Applied to 6.12/scsi-fixes, thanks!
+Hi, Bart
 
-[1/1] scsi: wd33c93: Don't use stale scsi_pointer value
-      https://git.kernel.org/mkp/scsi/c/9023ed8d91eb
+What is the root cause of this problem?
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+The following patch just allocates a new memory with a unique name. Can 
+we make sure that the allocated memory is freed?
+
+Does this will cause memory leak?
+
+Thanks,
+Zhu Yanjun
+
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> Subject: [PATCH] RDMA/srpt: Make kmem cache names unique
+> 
+> Make sure that the "srpt-rsp-buf" cache names are unique. An example of
+> a unique name generated by this patch:
+> 
+> srpt-rsp-buf-fe80:0000:0000:0000:5054:00ff:fe5e:4708-enp1s0_siw-1
+> 
+> Reported-by: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Fixes: 5dabcd0456d7 ("RDMA/srpt: Add support for immediate data")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/infiniband/ulp/srpt/ib_srpt.c | 8 +++++++-
+>   1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ 
+> ulp/srpt/ib_srpt.c
+> index 9632afbd727b..c4feb39b3106 100644
+> --- a/drivers/infiniband/ulp/srpt/ib_srpt.c
+> +++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+> @@ -2164,6 +2164,7 @@ static int srpt_cm_req_recv(struct srpt_device 
+> *const sdev,
+>       u32 it_iu_len;
+>       int i, tag_num, tag_size, ret;
+>       struct srpt_tpg *stpg;
+> +    char *cache_name;
+> 
+>       WARN_ON_ONCE(irqs_disabled());
+> 
+> @@ -2245,8 +2246,13 @@ static int srpt_cm_req_recv(struct srpt_device 
+> *const sdev,
+>       INIT_LIST_HEAD(&ch->cmd_wait_list);
+>       ch->max_rsp_size = ch->sport->port_attrib.srp_max_rsp_size;
+> 
+> -    ch->rsp_buf_cache = kmem_cache_create("srpt-rsp-buf", ch- 
+>  >max_rsp_size,
+> +    cache_name = kasprintf(GFP_KERNEL, "srpt-rsp-buf-%s-%s-%d", src_addr,
+> +                   dev_name(&sport->sdev->device->dev), port_num);
+> +    if (!cache_name)
+> +        goto free_ch;
+> +    ch->rsp_buf_cache = kmem_cache_create(cache_name, ch->max_rsp_size,
+>                             512, 0, NULL);
+> +    kfree(cache_name);
+>       if (!ch->rsp_buf_cache)
+>           goto free_ch;
+> 
+> 
+
