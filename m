@@ -1,195 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ED8D217D55;
-	Fri,  4 Oct 2024 18:28:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14476155336;
+	Fri,  4 Oct 2024 23:20:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728066509; cv=none; b=fC2BAG07Zqb7RhCd12VITnY0ljXB1xTg6DuZ7qvkZV1RPWCrgQxkkhIcbUBWPeEcdO/S2Nrt53EP1c1PyF2ojcDhJEsfZYwYrC7U1Fj4roFIMorlw1yxfrV2roo5Q2qoIpw2YV7IE99/Ha6AoRbYgTeuooLRifqPKcE8qD/brX8=
+	t=1728084037; cv=none; b=Y8ViPQp+qsIgSGuyD8PbvsW5WhZ+xDTRgD2Aa9cT1wMX8I48eaeg7qLpFYmZWKMZMk/AJbnQ3gFQt5nVX4woL9S8V3FWo54kmylP74DTcEdvIfIDyJEyFkGTCeQcT2SaqT5zoyjsuYfw0irJISFUUhSNdqE8Z41EJQopPjXl2d0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728066509; c=relaxed/simple;
-	bh=1DLbYg6Pt8yxHZdjJjMvsZE7DspODsUAC01qRMr0rvk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VQ9aXh4+Zm/Spdv4SlgB2BQVrXICka2Axo7EINQdaJbn0LcopFEEnl8zMWOqV7wGtSmAh4p1h3wstCSTmbJde+WyAKW3UkAR4uOinwMGSwak/PLk3qR3CHLDTiiTcYcWLZpafsd39Lod0zXquw0i8EaMc0RGGKe+yCCItoEBy5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I2zvhq6a; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728084037; c=relaxed/simple;
+	bh=tUSjkrEkMrf5s8z6akQfZLUkZn95MYz8cS63A/wVL0A=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=A31gtJygddX8mH/rFNyCtmd0EUq8PLdEjloe2yRTRh97dkbo7WJg6korTZK3JXTHeJ9oTywSBqT5DgwLorzwr4IFLe1E01077Gyg8gHXZitFeBcXF24PIaJZW/9hnkQCTzJV+aBUsfCpKzrSlKzpWX5vxrvvQ1o1dFwfVzAC1M8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hTv44E1A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I2zvhq6a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07C8DC4CECC;
-	Fri,  4 Oct 2024 18:28:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hTv44E1A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96FEDC4CED0;
+	Fri,  4 Oct 2024 23:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728066509;
-	bh=1DLbYg6Pt8yxHZdjJjMvsZE7DspODsUAC01qRMr0rvk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=I2zvhq6aNvbNF1XWGjJ3A4SZRSq30v0U8BzObH7vbM8x3lkb1atcNSbu6bF576/HX
-	 xFVuDt/UZ7SEmGfR+njvglP/2bx8jpqO/6vicM5Iqce596J+egDv9rCbHLAgPOaDXT
-	 cdEFcHvKmYAWlQ1xByC+gsL5He+hmyA6j+nYc2r/NY73Svbz/tChb9AVR1nOWQdkB3
-	 RAr4pwPQqXmp13UKF7b9m7+3DbQr1G13xvH1/vHa3n6H/IfapD5TWzSFbAfE6X+OZj
-	 XUWxM9dgRyBdFfULsHjY5PPbglN1T6YQwcWV1gjHbGWsUlZIDp2VP9Yal7glw/ec9b
-	 ThqPGk8ZsAP3A==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 39/42] scsi: lpfc: Ensure DA_ID handling completion before deleting an NPIV instance
-Date: Fri,  4 Oct 2024 14:26:50 -0400
-Message-ID: <20241004182718.3673735-39-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241004182718.3673735-1-sashal@kernel.org>
-References: <20241004182718.3673735-1-sashal@kernel.org>
+	s=k20201202; t=1728084036;
+	bh=tUSjkrEkMrf5s8z6akQfZLUkZn95MYz8cS63A/wVL0A=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=hTv44E1ApOhjo14ODIMYqzRrpN4wyAY2id5SJpD4nZhfGrI5Z1VTGod+jC3yYAWOf
+	 FkDYSI76ve0LSMKBuDbCnfbGE+BmG+zZeH99ULB8z0lGyCJ9D3kQVyGETo2/y8QWGa
+	 DveDy6J2XV/wf37fsljxF6Fhh5T36/rch94p1BuztBKsW1Qua+LFXNEXj3yA0zaOdv
+	 WI7RSVaDFpTXXr6+cp2oQZfrJRzX3ztM2qpB2dknyncc+qqkGEsru3DyQN89omGhwv
+	 0QRnHhmXbiwm3rbd3XEneypjY+K9n2Zq7b/mo6bJ4dD30u0IzTCXT4nsDzOLlHkyq6
+	 RoAGsUAKYdJrA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 70BCD39F76FF;
+	Fri,  4 Oct 2024 23:20:41 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.112
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 0/5] hyper-v: Don't assume cpu_possible_mask is dense
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <172808404024.2772330.2975585273609596688.git-patchwork-notify@kernel.org>
+Date: Fri, 04 Oct 2024 23:20:40 +0000
+References: <20241003035333.49261-1-mhklinux@outlook.com>
+In-Reply-To: <20241003035333.49261-1-mhklinux@outlook.com>
+To: Michael Kelley <mhkelley58@gmail.com>
+Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+ decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+ dave.hansen@linux.intel.com, x86@kernel.org, hpa@zytor.com, joro@8bytes.org,
+ will@kernel.org, robin.murphy@arm.com, davem@davemloft.net,
+ edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ iommu@lists.linux.dev, netdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Justin Tee <justin.tee@broadcom.com>
+Hello:
 
-[ Upstream commit 0a3c84f71680684c1d41abb92db05f95c09111e8 ]
+This series was applied to netdev/net-next.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
 
-Deleting an NPIV instance requires all fabric ndlps to be released before
-an NPIV's resources can be torn down.  Failure to release fabric ndlps
-beforehand opens kref imbalance race conditions.  Fix by forcing the DA_ID
-to complete synchronously with usage of wait_queue.
+On Wed,  2 Oct 2024 20:53:28 -0700 you wrote:
+> From: Michael Kelley <mhklinux@outlook.com>
+> 
+> Code specific to Hyper-V guests currently assumes the cpu_possible_mask
+> is "dense" -- i.e., all bit positions 0 thru (nr_cpu_ids - 1) are set,
+> with no "holes". Therefore, num_possible_cpus() is assumed to be equal
+> to nr_cpu_ids.
+> 
+> [...]
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20240912232447.45607-6-justintee8345@gmail.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_ct.c    | 12 ++++++++++
- drivers/scsi/lpfc/lpfc_disc.h  |  7 ++++++
- drivers/scsi/lpfc/lpfc_vport.c | 43 ++++++++++++++++++++++++++++------
- 3 files changed, 55 insertions(+), 7 deletions(-)
+Here is the summary with links:
+  - [1/5] x86/hyperv: Don't assume cpu_possible_mask is dense
+    (no matching commit)
+  - [2/5] Drivers: hv: Don't assume cpu_possible_mask is dense
+    (no matching commit)
+  - [3/5] iommu/hyper-v: Don't assume cpu_possible_mask is dense
+    (no matching commit)
+  - [4/5] scsi: storvsc: Don't assume cpu_possible_mask is dense
+    (no matching commit)
+  - [net-next,5/5] hv_netvsc: Don't assume cpu_possible_mask is dense
+    https://git.kernel.org/netdev/net-next/c/c86ab60b92d1
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index e941a99aa9659..8006b0eea3fbd 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1663,6 +1663,18 @@ lpfc_cmpl_ct(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	}
- 
- out:
-+	/* If the caller wanted a synchronous DA_ID completion, signal the
-+	 * wait obj and clear flag to reset the vport.
-+	 */
-+	if (ndlp->save_flags & NLP_WAIT_FOR_DA_ID) {
-+		if (ndlp->da_id_waitq)
-+			wake_up(ndlp->da_id_waitq);
-+	}
-+
-+	spin_lock_irq(&ndlp->lock);
-+	ndlp->save_flags &= ~NLP_WAIT_FOR_DA_ID;
-+	spin_unlock_irq(&ndlp->lock);
-+
- 	lpfc_ct_free_iocb(phba, cmdiocb);
- 	lpfc_nlp_put(ndlp);
- 	return;
-diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-index f82615d87c4bb..f5ae8cc158205 100644
---- a/drivers/scsi/lpfc/lpfc_disc.h
-+++ b/drivers/scsi/lpfc/lpfc_disc.h
-@@ -90,6 +90,8 @@ enum lpfc_nlp_save_flags {
- 	NLP_IN_RECOV_POST_DEV_LOSS	= 0x1,
- 	/* wait for outstanding LOGO to cmpl */
- 	NLP_WAIT_FOR_LOGO		= 0x2,
-+	/* wait for outstanding DA_ID to finish */
-+	NLP_WAIT_FOR_DA_ID              = 0x4
- };
- 
- struct lpfc_nodelist {
-@@ -159,7 +161,12 @@ struct lpfc_nodelist {
- 	uint32_t nvme_fb_size; /* NVME target's supported byte cnt */
- #define NVME_FB_BIT_SHIFT 9    /* PRLI Rsp first burst in 512B units. */
- 	uint32_t nlp_defer_did;
-+
-+	/* These wait objects are NPIV specific.  These IOs must complete
-+	 * synchronously.
-+	 */
- 	wait_queue_head_t *logo_waitq;
-+	wait_queue_head_t *da_id_waitq;
- };
- 
- struct lpfc_node_rrq {
-diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-index 6b4259894584f..fe7c3064c097a 100644
---- a/drivers/scsi/lpfc/lpfc_vport.c
-+++ b/drivers/scsi/lpfc/lpfc_vport.c
-@@ -643,6 +643,7 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 	struct lpfc_hba  *phba = vport->phba;
- 	int rc;
-+	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
- 
- 	if (vport->port_type == LPFC_PHYSICAL_PORT) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
-@@ -698,21 +699,49 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 	if (!ndlp)
- 		goto skip_logo;
- 
-+	/* Send the DA_ID and Fabric LOGO to cleanup the NPIV fabric entries. */
- 	if (ndlp && ndlp->nlp_state == NLP_STE_UNMAPPED_NODE &&
- 	    phba->link_state >= LPFC_LINK_UP &&
- 	    phba->fc_topology != LPFC_TOPOLOGY_LOOP) {
- 		if (vport->cfg_enable_da_id) {
--			/* Send DA_ID and wait for a completion. */
-+			/* Send DA_ID and wait for a completion.  This is best
-+			 * effort.  If the DA_ID fails, likely the fabric will
-+			 * "leak" NportIDs but at least the driver issued the
-+			 * command.
-+			 */
-+			ndlp = lpfc_findnode_did(vport, NameServer_DID);
-+			if (!ndlp)
-+				goto issue_logo;
-+
-+			spin_lock_irq(&ndlp->lock);
-+			ndlp->da_id_waitq = &waitq;
-+			ndlp->save_flags |= NLP_WAIT_FOR_DA_ID;
-+			spin_unlock_irq(&ndlp->lock);
-+
- 			rc = lpfc_ns_cmd(vport, SLI_CTNS_DA_ID, 0, 0);
--			if (rc) {
--				lpfc_printf_log(vport->phba, KERN_WARNING,
--						LOG_VPORT,
--						"1829 CT command failed to "
--						"delete objects on fabric, "
--						"rc %d\n", rc);
-+			if (!rc) {
-+				wait_event_timeout(waitq,
-+				   !(ndlp->save_flags & NLP_WAIT_FOR_DA_ID),
-+				   msecs_to_jiffies(phba->fc_ratov * 2000));
- 			}
-+
-+			lpfc_printf_vlog(vport, KERN_INFO, LOG_VPORT | LOG_ELS,
-+					 "1829 DA_ID issue status %d. "
-+					 "SFlag x%x NState x%x, NFlag x%x "
-+					 "Rpi x%x\n",
-+					 rc, ndlp->save_flags, ndlp->nlp_state,
-+					 ndlp->nlp_flag, ndlp->nlp_rpi);
-+
-+			/* Remove the waitq and save_flags.  It no
-+			 * longer matters if the wake happened.
-+			 */
-+			spin_lock_irq(&ndlp->lock);
-+			ndlp->da_id_waitq = NULL;
-+			ndlp->save_flags &= ~NLP_WAIT_FOR_DA_ID;
-+			spin_unlock_irq(&ndlp->lock);
- 		}
- 
-+issue_logo:
- 		/*
- 		 * If the vpi is not registered, then a valid FDISC doesn't
- 		 * exist and there is no need for a ELS LOGO.  Just cleanup
+You are awesome, thank you!
 -- 
-2.43.0
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
