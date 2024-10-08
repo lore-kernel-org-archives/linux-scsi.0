@@ -1,58 +1,58 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202991DDD1;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202691DA5A;
 	Tue,  8 Oct 2024 02:04:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728353098; cv=none; b=sOXKEF+DviCCgyJVibbgIKZKEfi6RHY8jZUPEtVmr45itsRpu3+oFgHs0lTzsoB3pmIeS6X8Un7JeduMndlQCHPnU1Hywo4RETB+Tbz9ppLQWXCkqJHNlyTMhn7N0rY9N6bmpQXGABiSLjaeagPN0NTwoP6jn6bE9wQNaopOJ2Y=
+	t=1728353099; cv=none; b=GY1MlY7SlqnLxCf6nSofXH5tTuUy6nSz0d7kdf/ZA8shsxVgCa6upVpYl6NPqt4QdaTqtYzW81RY6mM6luUd9YFCscXx8hHp3jTMRlO70AckmJWzqAWEQJ8JNzi0WX6vILPzckX+PJ+hd0AP4mAvOcg5akw2qp9yjtiUeYg0X0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728353098; c=relaxed/simple;
-	bh=BxRgNUiypZpJ7+6rGgPPgax/nVWnfmxXRJ9dk5djXMM=;
+	s=arc-20240116; t=1728353099; c=relaxed/simple;
+	bh=pRd4x/iiLKO4ozHcbOB10zammKjZUYsajkFl83dF/74=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JS4DbVyEMuYZzAKqhUbGhjuxupRcHY1WNjXvvuRrlZL2pxpHzLApimqLSdeujhSswUc5Case7sJlmZJlrUrOoex92GCfoMPlUmQTrmEZkel2tWkwXL7As8h2V+n+GR2RTW5T092nqH+FNxtBgJG9kYwEXr10octNbcrKFf7YqXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IH+ODx00; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version; b=ezaq6GvNUHMutuhEAXt4N8SIYmPyIy8KHLzp8fwOVaR6E5exebzg2sMbsGf7Q+qoE4aqlLrzc7yIj2vt8jF1cG3HyvyKjTZH8cztGXXUHxxiIHr9sh+SoFAinV8LMuOgG3kbogHkP/HqRR1iQZ97Dk9z7PPvAsEjHVHKEc+9fKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nNRB8iNK; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IH+ODx00"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nNRB8iNK"
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4981Ngd0026309;
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4981MbNJ024471;
 	Tue, 8 Oct 2024 02:04:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=corp-2023-11-20; bh=i9ulD
-	3t0spaBDdQPsDWCMGrwActQMyKHzQztlGyTsaM=; b=IH+ODx00EYf+PyrY45Pki
-	BWTzvhPwGt80m3xjZ5UBB32VL4G5Jwcuv/1isDVQX4VCy34URJ9Wr0hdsbCm6ZHA
-	59zcmZeLxYjYZPp+aFzqF9KcTTf+ugCFCLVMGUuj4xqH4yCPcFkn/SGlxa1hJYAX
-	cIjW00s359l++B/kzpz3SMOdV045OYUASQcfEETuPBFfCYP7D8Phw86m1SluXLYo
-	uPGkDzM5x28pA+C0iSmKewxWLQExHm9KytEs+hoEaIkazoPVxrOan2kNolAvmtwe
-	5N3tIRPj9RBnbnb27vF1gNoPOS1bdy19DKjpK5dIMGOeHc18Lf0g8FMBnSpNY3du
-	Q==
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=JdixH
+	91jVgOtkOuZkAeuHfqVuD6rnwniLViElyE+938=; b=nNRB8iNKBzQmh2R1XRq7a
+	U8C0inkdK4DAd3V32K+2z3D4T39gQBtiNutLzFXehn89YsbLjpvTNn8MGc93NxbU
+	Vb+sChRYBEeCgQ/itEjxSOCCCc3mrMhCYlSxt6VoLLuh+PI/f2HqMcESn1PVLD9l
+	EyfnmpUzivbJ6ZPy7ABd3cUxRCU0QXmyxJPNDdRAzADzqpBU4At36jgW0iijsizY
+	YO2Vqxjnu3AHVOmRBB0+gHcE0etC/hgMt86D0WM3+Zrot4cSWhgtxz+fsvpqRV9P
+	w1NZTj8dUud30A709ZkHhHiD/gFCpraSDG7asEm/8i1o/XIi5GCNsn3A50m4xy1n
+	A==
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42300dvsjh-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42300dvsjg-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Tue, 08 Oct 2024 02:04:55 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 497N7Fp2004673;
-	Tue, 8 Oct 2024 02:04:42 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 422uw6k89j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 08 Oct 2024 02:04:42 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49824dIx004476;
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 497NUTdL004626;
 	Tue, 8 Oct 2024 02:04:41 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 422uw6k88u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 08 Oct 2024 02:04:40 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49824dIt004476;
+	Tue, 8 Oct 2024 02:04:40 GMT
 Received: from mnc-mac.us.oracle.com (dhcp-10-39-198-64.vpn.oracle.com [10.39.198.64])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 422uw6k87u-5;
-	Tue, 08 Oct 2024 02:04:41 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 422uw6k87u-3;
+	Tue, 08 Oct 2024 02:04:40 +0000
 From: Mike Christie <michael.christie@oracle.com>
 To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 4/7] scsi: target: Add WRITE_ATOMIC_16 handler
-Date: Mon,  7 Oct 2024 21:03:13 -0500
-Message-ID: <20241008020437.78788-5-michael.christie@oracle.com>
+Subject: [PATCH 2/7] scsi: target: Add atomic se_device fields
+Date: Mon,  7 Oct 2024 21:03:11 -0500
+Message-ID: <20241008020437.78788-3-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20241008020437.78788-1-michael.christie@oracle.com>
 References: <20241008020437.78788-1-michael.christie@oracle.com>
@@ -70,102 +70,119 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwa
  suspectscore=0 mlxscore=0 phishscore=0 adultscore=0 spamscore=0
  mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2409260000 definitions=main-2410080011
-X-Proofpoint-GUID: JSVeox7xXELl4SsJGddg482rjPjQQL5y
-X-Proofpoint-ORIG-GUID: JSVeox7xXELl4SsJGddg482rjPjQQL5y
+X-Proofpoint-GUID: KMU05S5Cek2K_u6N8gs5OG1WB922ZnX_
+X-Proofpoint-ORIG-GUID: KMU05S5Cek2K_u6N8gs5OG1WB922ZnX_
 
-This adds the core LIO code to process the WRITE_ATOMIC_16 command.
+This adds atomic fields to the se_device and exports them in configfs.
+
+Initially only target_core_iblock will be supported and we will inherit
+all the settings from the block layer except the alignment which userspace
+will set.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/target/target_core_sbc.c  | 48 +++++++++++++++++++++++++++++++
- include/target/target_core_base.h |  1 +
- 2 files changed, 49 insertions(+)
+ drivers/target/target_core_configfs.c | 42 +++++++++++++++++++++++++++
+ include/target/target_core_base.h     |  6 ++++
+ 2 files changed, 48 insertions(+)
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index fe8beb7dbab1..0ae0d4ec0ac3 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -764,6 +764,46 @@ sbc_check_dpofua(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
- 	return 0;
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index c40217f44b1b..f3c7da650f65 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -578,6 +578,12 @@ DEF_CONFIGFS_ATTRIB_SHOW(unmap_zeroes_data);
+ DEF_CONFIGFS_ATTRIB_SHOW(max_write_same_len);
+ DEF_CONFIGFS_ATTRIB_SHOW(emulate_rsoc);
+ DEF_CONFIGFS_ATTRIB_SHOW(submit_type);
++DEF_CONFIGFS_ATTRIB_SHOW(atomic_supported);
++DEF_CONFIGFS_ATTRIB_SHOW(atomic_alignment);
++DEF_CONFIGFS_ATTRIB_SHOW(atomic_max_len);
++DEF_CONFIGFS_ATTRIB_SHOW(atomic_granularity);
++DEF_CONFIGFS_ATTRIB_SHOW(atomic_max_with_boundary);
++DEF_CONFIGFS_ATTRIB_SHOW(atomic_max_boundary);
+ 
+ #define DEF_CONFIGFS_ATTRIB_STORE_U32(_name)				\
+ static ssize_t _name##_store(struct config_item *item, const char *page,\
+@@ -1266,6 +1272,30 @@ static ssize_t submit_type_store(struct config_item *item, const char *page,
+ 	return count;
  }
  
-+static int
-+sbc_check_atomic(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
++static ssize_t atomic_alignment_store(struct config_item *item,
++				      const char *page, size_t count)
 +{
-+	struct se_dev_attrib *attrib = &dev->dev_attrib;
-+	u16 boundary, transfer_len;
-+	u32 lba;
++	struct se_dev_attrib *da = to_attrib(item);
++	u32 val;
++	int ret;
 +
-+	if (!attrib->atomic_supported)
-+		return TCM_UNSUPPORTED_SCSI_OPCODE;
++	ret = kstrtou32(page, 0, &val);
++	if (ret < 0)
++		return ret;
 +
-+	lba = transport_lba_32(cdb);
-+	boundary = get_unaligned_be16(&cdb[10]);
-+	transfer_len = get_unaligned_be16(&cdb[12]);
-+
-+	if (!boundary) {
-+		if (transfer_len > attrib->atomic_max_len)
-+			return TCM_INVALID_CDB_FIELD;
-+	} else {
-+		if (transfer_len > attrib->atomic_max_with_boundary)
-+			return TCM_INVALID_CDB_FIELD;
-+
-+		if (boundary > attrib->atomic_max_boundary)
-+			return TCM_INVALID_CDB_FIELD;
++	if (da->da_dev->export_count) {
++		pr_err("dev[%p]: Unable to change SE Device atomic_alignment while export_count is %d\n",
++		       da->da_dev, da->da_dev->export_count);
++		return -EINVAL;
 +	}
 +
-+	if (attrib->atomic_granularity) {
-+		if (transfer_len % attrib->atomic_granularity)
-+			return TCM_INVALID_CDB_FIELD;
++	da->atomic_alignment = val;
 +
-+		if (boundary && boundary % attrib->atomic_granularity)
-+			return TCM_INVALID_CDB_FIELD;
-+	}
-+
-+	if (dev->dev_attrib.atomic_alignment &&
-+	    lba % dev->dev_attrib.atomic_alignment)
-+		return TCM_INVALID_CDB_FIELD;
-+
-+	return 0;
++	pr_debug("dev[%p]: SE Device atomic_alignment changed to %u\n",
++		 da->da_dev, val);
++	return count;
 +}
 +
- sense_reason_t
- sbc_parse_cdb(struct se_cmd *cmd, struct exec_cmd_ops *ops)
- {
-@@ -861,6 +901,7 @@ sbc_parse_cdb(struct se_cmd *cmd, struct exec_cmd_ops *ops)
- 		break;
- 	case WRITE_16:
- 	case WRITE_VERIFY_16:
-+	case WRITE_ATOMIC_16:
- 		sectors = transport_get_sectors_16(cdb);
- 		cmd->t_task_lba = transport_lba_64(cdb);
- 
-@@ -872,6 +913,13 @@ sbc_parse_cdb(struct se_cmd *cmd, struct exec_cmd_ops *ops)
- 			return ret;
- 
- 		cmd->se_cmd_flags |= SCF_SCSI_DATA_CDB;
-+		if (cdb[0] == WRITE_ATOMIC_16) {
-+			cmd->se_cmd_flags |= SCF_ATOMIC;
-+
-+			ret = sbc_check_atomic(dev, cmd, cdb);
-+			if (ret)
-+				return ret;
-+		}
- 		cmd->execute_cmd = sbc_execute_rw;
- 		break;
- 	case VARIABLE_LENGTH_CMD:
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 6c87bd018983..7b8ed21bea03 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -157,6 +157,7 @@ enum se_cmd_flags_table {
- 	SCF_USE_CPUID				= (1 << 16),
- 	SCF_TASK_ATTR_SET			= (1 << 17),
- 	SCF_TREAT_READ_AS_NORMAL		= (1 << 18),
-+	SCF_ATOMIC				= (1 << 19),
- };
+ CONFIGFS_ATTR(, emulate_model_alias);
+ CONFIGFS_ATTR(, emulate_dpo);
+ CONFIGFS_ATTR(, emulate_fua_write);
+@@ -1302,6 +1332,12 @@ CONFIGFS_ATTR(, max_write_same_len);
+ CONFIGFS_ATTR(, alua_support);
+ CONFIGFS_ATTR(, pgr_support);
+ CONFIGFS_ATTR(, submit_type);
++CONFIGFS_ATTR(, atomic_alignment);
++CONFIGFS_ATTR_RO(, atomic_supported);
++CONFIGFS_ATTR_RO(, atomic_max_len);
++CONFIGFS_ATTR_RO(, atomic_granularity);
++CONFIGFS_ATTR_RO(, atomic_max_with_boundary);
++CONFIGFS_ATTR_RO(, atomic_max_boundary);
  
  /*
+  * dev_attrib attributes for devices using the target core SBC/SPC
+@@ -1345,6 +1381,12 @@ struct configfs_attribute *sbc_attrib_attrs[] = {
+ 	&attr_pgr_support,
+ 	&attr_emulate_rsoc,
+ 	&attr_submit_type,
++	&attr_atomic_supported,
++	&attr_atomic_alignment,
++	&attr_atomic_max_len,
++	&attr_atomic_granularity,
++	&attr_atomic_max_with_boundary,
++	&attr_atomic_max_boundary,
+ 	NULL,
+ };
+ EXPORT_SYMBOL(sbc_attrib_attrs);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 97099a5e3f6c..6c87bd018983 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -715,6 +715,7 @@ struct se_dev_attrib {
+ 	bool		is_nonrot;
+ 	bool		emulate_rest_reord;
+ 	bool		unmap_zeroes_data;
++	bool		atomic_supported;
+ 	u32		hw_block_size;
+ 	u32		block_size;
+ 	u32		hw_max_sectors;
+@@ -726,6 +727,11 @@ struct se_dev_attrib {
+ 	u32		unmap_granularity;
+ 	u32		unmap_granularity_alignment;
+ 	u32		max_write_same_len;
++	u32		atomic_max_len;
++	u32		atomic_alignment;
++	u32		atomic_granularity;
++	u32		atomic_max_with_boundary;
++	u32		atomic_max_boundary;
+ 	u8		submit_type;
+ 	struct se_device *da_dev;
+ 	struct config_group da_group;
 -- 
 2.34.1
 
