@@ -1,139 +1,253 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f177.google.com (mail-oi1-f177.google.com [209.85.167.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35B511F473D;
-	Tue,  8 Oct 2024 07:00:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2708813A40D
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 07:47:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728370826; cv=none; b=B60AD67Mqa/lnSfdGK6+0pLMXrF0JuYsVQxmfKRKg3kamCUwPcREK9nF/HcBE0ZX47+qiHp7NrTOXVjVylSyUmt6uJ3/8VcCN/5vPF+kZbg0aufllD0HDdNZB0TjMSl/YyUA9elL/vT3hiCdNbJH/JmGDXzXfH2rGXsua/cv/9o=
+	t=1728373669; cv=none; b=jMDvH8hhHHg/OKvz2n2pVzqD30XCWiYcEGJlMOvu2+mbtYBdhozZJ5o9GimNgqCFglwVH5ZFbJUnPQM6iOGxqYCGEzm1xGXYk0Il+ELpQPcw6U2zKs/tc8u3mmEAuvjNZHgH98ZXeGCjlKoE141Ay1GyD/iLYd5u85Eoaq1q06M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728370826; c=relaxed/simple;
-	bh=W4tykjp2eDEO+vZ8YCljrLQrkWpyuOMO79w9eOs/sgE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=vB3u+W6OPXO8uV6qYlFcURWeNPtbizV/yAr7bcqyfjt2yfyRCMsl9GPnMYjedTtt9XPgHmQ0YCqD4QhRUGl71S7GRw1HGGGqCVgmWpxi3c1KhWd+qnhkp3lR6mrDyCYqh/2a1Y8GfRvHot3f1UIA52qedF+h2rpiwkPxw7akk1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=teXj2pPe; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1728373669; c=relaxed/simple;
+	bh=tCv/7mhipd7WQOFWDu5wytCySq5oguUqWbVzOY5daOM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ULyxRBBC4OAfhkiYl6Si6vNXuKXefh4mGQhnbgVHE7O+tmFzx/8wFx4hfT+JJDg7HIJBLdBhkcZXeYhBmXGiWgtAi3EVLe8VBBaeTW1x17+DhaPLHkgH2Xmfzn0SfUIpDTrd64i8qhJEvDRKqt0ozEyq2JdiUI8SatWD28Fn6vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=aLkENXaI; arc=none smtp.client-ip=209.85.167.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="teXj2pPe"
-X-UUID: f693f3d2854211ef88ecadb115cee93b-20241008
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=HQsDDSAPiB4jU3Vg6ZWxiUW1nADLbDYixnAUJAhUVUw=;
-	b=teXj2pPeTbdRJk8/WBpyHTF3mkAVfY1ltU584RUbOShBT+wd/XIbCJ0YGMPPyXi2eI3NUk2v7fPr0W0d/Weeylg7S70cEmE4ABcbX/kChhdAyl4rv0hpjqMN2AUDqqV8CdtqduOfcIXAyHeLsHvk0srozxrVDTsiBCsQKSjtHHc=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:d09fd8d1-a0ce-47d3-b518-1de75430cc60,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:6dc6a47,CLOUDID:b928ea64-444a-4b47-a99a-591ade3b04b2,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
-	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: f693f3d2854211ef88ecadb115cee93b-20241008
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
-	(envelope-from <ed.tsai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1330358881; Tue, 08 Oct 2024 15:00:12 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Tue, 8 Oct 2024 00:00:10 -0700
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Tue, 8 Oct 2024 15:00:10 +0800
-From: <ed.tsai@mediatek.com>
-To: <peter.wang@mediatek.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri
- Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "James
- E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Stanley Jhu <chu.stanley@gmail.com>, Matthias
- Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>
-CC: <wsd_upstream@mediatek.com>, <chun-hung.wu@mediatek.com>, Ed Tsai
-	<ed.tsai@mediatek.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH] scsi: ufs: ufs-mediatek: configure individual LU queue flags
-Date: Tue, 8 Oct 2024 14:59:42 +0800
-Message-ID: <20241008065950.23431-1-ed.tsai@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aLkENXaI"
+Received: by mail-oi1-f177.google.com with SMTP id 5614622812f47-3e033e66a31so2664061b6e.0
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Oct 2024 00:47:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1728373665; x=1728978465; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Es5a3SaOdE2aGjaLKoPJpJw7Ue4TmpSKGBflwGeF01U=;
+        b=aLkENXaID4WyYDu1/Lj2gVfordfIsjcpbppkiE7u7msN+DWqVPc6rNz9ouoj5ANHFD
+         U2nQjNZB0qkOuDJu2wom53s7kKhA4uNV5X/gC5jB5d6uup55HHifpIZUO2tMer1bzfSb
+         RNhmiVmCdG9Yxl/7Q8jiKw3dKJbnm1JkcYsxY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728373665; x=1728978465;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Es5a3SaOdE2aGjaLKoPJpJw7Ue4TmpSKGBflwGeF01U=;
+        b=UizuTjoZL7K6sKW+HH2tZVkC6dZFlfUjnmsLMh2bV/XfFY0qsHdZRUAuZcikHZmRN4
+         oDfh9IawoBRzr9o5qgC3P8KVJYMbz/3oGOwYXa19F/ChnX9iMeGmAKt5Hxbcy8fCqkv2
+         2smlQzzzqvP8ycQ2ncolg4EsgBL0VE3sBY3xMdO7FDIVzpzr5i9zxG2eRnKa4T52IW8o
+         GXWH2+9GjaYqCsZfry+ptfeVqU8W8Qpizv077f9ZYwEDarcYKNBNpLyP8UVfOdqou4Bb
+         Rk+UjS72Vhkg3z5homeXZIizbv9SPKQrA9sHcOOvni6VCkd4RThhbbSrOOqgQlxWmprC
+         pA4g==
+X-Gm-Message-State: AOJu0YxTImXGJ7/xInQ6u0A6BeHKAhsCuWKrm50MsG5CiVXvGkKrQIru
+	8oNg46V/brvdRM8ofLQK7AA+0VFA6PtZs64/MW9B/1ALe6jyaB1VDwrmecCsWW5a1gsNFDB1tnU
+	301OuB/BdZLbLAhgJcus4+X17rpkOiegBBRIHDJFUhZpxMSvys9flV9c0f45VmP5g7CGiJiINEH
+	rbul8kfIkn2K2TpwNXNnvxiP3vOA8oyBuy6LhqwfCXGd7aqA==
+X-Google-Smtp-Source: AGHT+IHcU90bO2mwisFuDqHClHaBqkqjJ5WQ3QaW2yhyT6648XzcBDWFAijqjwcFcv9VNXNf+TZGeg==
+X-Received: by 2002:a05:6808:23c9:b0:3e0:6809:ab18 with SMTP id 5614622812f47-3e3c1326016mr10038627b6e.13.1728373665150;
+        Tue, 08 Oct 2024 00:47:45 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71df0d452b7sm5596039b3a.108.2024.10.08.00.47.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Oct 2024 00:47:44 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	thenzl@redhat.com,
+	mav@ixsystems.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	stable@vger.kernel.org,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH v2] mpi3mr: Validating SAS port assignments
+Date: Tue,  8 Oct 2024 13:13:53 +0530
+Message-Id: <20241008074353.200379-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 8bit
 
-From: Ed Tsai <ed.tsai@mediatek.com>
+Sanity on phy_mask was added by Tomas through [1].
+It causes warning messages when >64 phys are
+detected (expander can have >64 phys) and devices
+connected to phys greater than 64 are dropped.
+phy_mask bitmap is only needed for controller
+phys(not required for expander phys).Controller phys
+can go maximum up to 64 and u64 is good enough to contain phy_mask bitmap.
 
-Previously, ufs vops config_scsi_dev was removed because there were no
-users. ufs-mediatek needs it to configure the queue flags for each LU
-individually. Therefore, bring it back and customize the queue flag as
-we required.
+To suppress those warnings and allow devices to be discovered as
+before the [1], restrict the phy_mask setting and lowest phy
+setting only to the controller phys.
 
-Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
+[1]:https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/
+drivers/scsi/mpi3mr?h=6.12/
+scsi-queue&id=3668651def2c1622904e58b0280ee93121f2b10b
+
+Fixes: 3668651def2c ("mpi3mr: Sanitise num_phys")
+Cc: stable@vger.kernel.org
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202410051943.Mp9o5DlF-lkp@intel.com/
+Reported-by: Alexander Motin <mav@ixsystems.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/ufs/core/ufshcd.c       |  3 +++
- drivers/ufs/host/ufs-mediatek.c | 10 ++++++++++
- include/ufs/ufshcd.h            |  1 +
- 3 files changed, 14 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h           |  4 +--
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 42 +++++++++++++++++---------
+ 2 files changed, 29 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7cab103112e1..be50b86269bf 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5253,6 +5253,9 @@ static int ufshcd_device_configure(struct scsi_device *sdev,
- 	 */
- 	sdev->silence_suspend = 1;
- 
-+	if (hba->vops && hba->vops->config_scsi_dev)
-+		hba->vops->config_scsi_dev(sdev);
-+
- 	ufshcd_crypto_register(hba, q);
- 
- 	return 0;
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 9a5919434c4e..0b57623edca5 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1780,6 +1780,15 @@ static int ufs_mtk_config_esi(struct ufs_hba *hba)
- 	return ufs_mtk_config_mcq(hba, true);
- }
- 
-+static void ufs_mtk_config_scsi_dev(struct scsi_device *sdev)
-+{
-+	struct ufs_hba *hba = shost_priv(sdev->host);
-+
-+	dev_dbg(hba->dev, "lu %llu scsi device configured", sdev->lun);
-+	if (sdev->lun == 2)
-+		blk_queue_flag_set(QUEUE_FLAG_SAME_FORCE, sdev->reqeust_queue);
-+}
-+
- /*
-  * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index dc2cdd5f0311..3822efe349e1 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -541,8 +541,8 @@ struct mpi3mr_hba_port {
+  * @port_list: List of ports belonging to a SAS node
+  * @num_phys: Number of phys associated with port
+  * @marked_responding: used while refresing the sas ports
+- * @lowest_phy: lowest phy ID of current sas port
+- * @phy_mask: phy_mask of current sas port
++ * @lowest_phy: lowest phy ID of current sas port, valid for controller port
++ * @phy_mask: phy_mask of current sas port, valid for controller port
+  * @hba_port: HBA port entry
+  * @remote_identify: Attached device identification
+  * @rphy: SAS transport layer rphy object
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index ccd23def2e0c..0ba9e6a6a13c 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -590,12 +590,13 @@ static enum sas_linkrate mpi3mr_convert_phy_link_rate(u8 link_rate)
+  * @mrioc: Adapter instance reference
+  * @mr_sas_port: Internal Port object
+  * @mr_sas_phy: Internal Phy object
++ * @host_node: Flag to indicate this is a host_node
   *
-@@ -1809,6 +1818,7 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.op_runtime_config   = ufs_mtk_op_runtime_config,
- 	.mcq_config_resource = ufs_mtk_mcq_config_resource,
- 	.config_esi          = ufs_mtk_config_esi,
-+	.config_scsi_dev     = ufs_mtk_config_scsi_dev,
- };
+  * Return: None.
+  */
+ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_sas_port *mr_sas_port,
+-	struct mpi3mr_sas_phy *mr_sas_phy)
++	struct mpi3mr_sas_phy *mr_sas_phy, u8 host_node)
+ {
+ 	u64 sas_address = mr_sas_port->remote_identify.sas_address;
  
+@@ -605,9 +606,13 @@ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
+ 
+ 	list_del(&mr_sas_phy->port_siblings);
+ 	mr_sas_port->num_phys--;
+-	mr_sas_port->phy_mask &= ~(1 << mr_sas_phy->phy_id);
+-	if (mr_sas_port->lowest_phy == mr_sas_phy->phy_id)
+-		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
++
++	if (host_node) {
++		mr_sas_port->phy_mask &= ~(1 << mr_sas_phy->phy_id);
++
++		if (mr_sas_port->lowest_phy == mr_sas_phy->phy_id)
++			mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
++	}
+ 	sas_port_delete_phy(mr_sas_port->port, mr_sas_phy->phy);
+ 	mr_sas_phy->phy_belongs_to_port = 0;
+ }
+@@ -617,12 +622,13 @@ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
+  * @mrioc: Adapter instance reference
+  * @mr_sas_port: Internal Port object
+  * @mr_sas_phy: Internal Phy object
++ * @host_node: Flag to indicate this is a host_node
+  *
+  * Return: None.
+  */
+ static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_sas_port *mr_sas_port,
+-	struct mpi3mr_sas_phy *mr_sas_phy)
++	struct mpi3mr_sas_phy *mr_sas_phy, u8 host_node)
+ {
+ 	u64 sas_address = mr_sas_port->remote_identify.sas_address;
+ 
+@@ -632,9 +638,12 @@ static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
+ 
+ 	list_add_tail(&mr_sas_phy->port_siblings, &mr_sas_port->phy_list);
+ 	mr_sas_port->num_phys++;
+-	mr_sas_port->phy_mask |= (1 << mr_sas_phy->phy_id);
+-	if (mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
+-		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
++	if (host_node) {
++		mr_sas_port->phy_mask |= (1 << mr_sas_phy->phy_id);
++
++		if (mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
++			mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
++	}
+ 	sas_port_add_phy(mr_sas_port->port, mr_sas_phy->phy);
+ 	mr_sas_phy->phy_belongs_to_port = 1;
+ }
+@@ -675,7 +684,7 @@ static void mpi3mr_add_phy_to_an_existing_port(struct mpi3mr_ioc *mrioc,
+ 			if (srch_phy == mr_sas_phy)
+ 				return;
+ 		}
+-		mpi3mr_add_sas_phy(mrioc, mr_sas_port, mr_sas_phy);
++		mpi3mr_add_sas_phy(mrioc, mr_sas_port, mr_sas_phy, mr_sas_node->host_node);
+ 		return;
+ 	}
+ }
+@@ -736,7 +745,7 @@ static void mpi3mr_del_phy_from_an_existing_port(struct mpi3mr_ioc *mrioc,
+ 				mpi3mr_delete_sas_port(mrioc, mr_sas_port);
+ 			else
+ 				mpi3mr_delete_sas_phy(mrioc, mr_sas_port,
+-				    mr_sas_phy);
++				    mr_sas_phy, mr_sas_node->host_node);
+ 			return;
+ 		}
+ 	}
+@@ -1028,7 +1037,7 @@ mpi3mr_alloc_hba_port(struct mpi3mr_ioc *mrioc, u16 port_id)
  /**
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a95282b9f743..800d79dc91fc 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -383,6 +383,7 @@ struct ufs_hba_variant_ops {
- 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
- 				       unsigned long *ocqs);
- 	int	(*config_esi)(struct ufs_hba *hba);
-+	void	(*config_scsi_dev)(struct scsi_device *sdev);
- };
+  * mpi3mr_get_hba_port_by_id - find hba port by id
+  * @mrioc: Adapter instance reference
+- * @port_id - Port ID to search
++ * @port_id: Port ID to search
+  *
+  * Return: mpi3mr_hba_port reference for the matched port
+  */
+@@ -1367,7 +1376,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_sas_port_sanity_check(mrioc, mr_sas_node,
+ 	    mr_sas_port->remote_identify.sas_address, hba_port);
  
- /* clock gating state  */
+-	if (mr_sas_node->num_phys >= sizeof(mr_sas_port->phy_mask) * 8)
++	if (mr_sas_node->host_node && mr_sas_node->num_phys >=
++			sizeof(mr_sas_port->phy_mask) * 8)
+ 		ioc_info(mrioc, "max port count %u could be too high\n",
+ 		    mr_sas_node->num_phys);
+ 
+@@ -1377,7 +1387,7 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 		    (mr_sas_node->phy[i].hba_port != hba_port))
+ 			continue;
+ 
+-		if (i >= sizeof(mr_sas_port->phy_mask) * 8) {
++		if (mr_sas_node->host_node && (i >= sizeof(mr_sas_port->phy_mask) * 8)) {
+ 			ioc_warn(mrioc, "skipping port %u, max allowed value is %zu\n",
+ 			    i, sizeof(mr_sas_port->phy_mask) * 8);
+ 			goto out_fail;
+@@ -1385,7 +1395,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 		list_add_tail(&mr_sas_node->phy[i].port_siblings,
+ 		    &mr_sas_port->phy_list);
+ 		mr_sas_port->num_phys++;
+-		mr_sas_port->phy_mask |= (1 << i);
++		if (mr_sas_node->host_node)
++			mr_sas_port->phy_mask |= (1 << i);
+ 	}
+ 
+ 	if (!mr_sas_port->num_phys) {
+@@ -1394,7 +1405,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 		goto out_fail;
+ 	}
+ 
+-	mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
++	if (mr_sas_node->host_node)
++		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
+ 
+ 	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
+ 		tgtdev = mpi3mr_get_tgtdev_by_addr(mrioc,
 -- 
-2.45.2
+2.31.1
 
