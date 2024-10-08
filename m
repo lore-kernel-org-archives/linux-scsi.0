@@ -1,58 +1,58 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE8201E521;
-	Tue,  8 Oct 2024 02:04:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647D41E535;
+	Tue,  8 Oct 2024 02:04:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728353086; cv=none; b=WslkpdOe/yAts5xwztCL6a6jaPm64L0PCn9SJmjAsmfpeMJB53L+/KByEG1lWpF6AgAKQSqGvjbwCW1mCveBndFt9xkD7xOdj5a0bVn7owxaArlp78KnOakDcAfgCIR9nMz9tTkAAeTPBLlXv5RgVQepreEl5S/C11QqFLioLbQ=
+	t=1728353087; cv=none; b=Co+VDQfeFh7IrlYKkgXdP7OzDcvlpEEfBZhGdRxLxLA++ms6+dYpkwt2ula0/90OZggD+lUGJWVNkQDHus4Ioc1qxhiu4i8nbTl8c+wAtJ4IELVXf9q+M+yEG+IaPKBWJ+Tit8bNGEYldtp0Jp5zOoQSblk4q+GC+U/O5gyjsRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728353086; c=relaxed/simple;
-	bh=Qo2bBHz6o0RWSFxOXBuxks1PCu1IoFznnowEk7qC9Tw=;
+	s=arc-20240116; t=1728353087; c=relaxed/simple;
+	bh=240Fjp5I/hgUap1+AA+uwubZn0ov7SSs7o8LorTQ8NI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JrYTLuolOKFL6AD/Se/fqA8deVFXoU0NDanrQnj+O3yoJDc+y/QCqgEPc5QJCVChU932LGSdKMuz1rVRN8+AuJvi54dcN42PkYWPx1htbqjGCR0kq5/qEAK6qjsUGPbWYnvg3gv1b3YpV6F1lIQo6yfWD6F6+qAco2/q9D6V21I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=NcmxiaHT; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version; b=Gn9YcPMG552pY8v9qJZ+lA6mFqMrYGmNwgCDAXJMLH1OCWJzLpg3J1QAmoErvan7r5CY4ARX8Uev+s9hXlu2DTmJJe33qb/waP5OpzHxS0IXSfQ1fZb3mX5cqTtI68lpSUm0sFMbacpF3/CWVJz//czMDJYTdWZYYFZeH9LB5p8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=QlQOEulq; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NcmxiaHT"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4981NRCF017174;
-	Tue, 8 Oct 2024 02:04:43 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QlQOEulq"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4981NPqf029078;
+	Tue, 8 Oct 2024 02:04:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=corp-2023-11-20; bh=sGres
-	LzoD2uP6/wO1wXeMUqH11/coc1Pc/HHk6IJdVI=; b=NcmxiaHTy8vA6HdhZRxMU
-	dPK4bhUjiSV3D/Yc0a2mepwO5Gjq4TMEplbrHdoRqU5T6RcDH2Y7M+Ixc/XjNj9/
-	WaBFXZffARJUe8LA3i7C1PyvsaLPhqSzoxx9wyfHE9IxmquDwzxPu46NhaFpDyqq
-	/0UqUQk2WAVHKMeunSvz6UqqKqgzZZWmma2oKEt4MU7wjqbe2L5fwaGxFS7g0IjE
-	Lih9MvaTieYei3vZxZqP73VLgsChzwdJu1oKkHwEHgeFd159h4NYb9NiM951wm2z
-	JSdf/YN24xzp3Lzb6S1rjPlyozeMTnf+kbBUYG1FXtW4qqic7t88KX/ri+8The/s
-	Q==
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=cD00d
+	o1qDxGmCw7I1jk21vOZvcxUiOYRtq0zTqZPsPs=; b=QlQOEulq58XhWt/TQE4OK
+	I2qncNirio4Q9tI7UalCsg8CAyo8ZDK4vmwk3rt/3ZxQT1saEzm8P8RQchBr5pua
+	a6QlGVnyljikpwa3GPxmZB4d1wcwqqYUEvPcY5aYA9DQQelRpmbLyAyOH5nItf9U
+	TRRTjQnPOVGv88XbKhpCMS/B0pf4L37gDdd6fSybZ3Ydqfo2XEwwKiL50+RuWRwu
+	eQzn0JG1UBdeJ56D6PuTnAh0QxcZVZC28O2ZXK6qhFhGw3rTBKE3pCBzf1G/53mo
+	PxxVynDlFrFHpJ1dmNJoYQkyWWlRXZSBsWE5Xn3mXp8zhSV/z9h5A/NeyUNvruw2
+	g==
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 422yyv4sde-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 423034mwjc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 08 Oct 2024 02:04:43 +0000 (GMT)
+	Tue, 08 Oct 2024 02:04:44 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49820vbZ004624;
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 497N7Fp4004673;
 	Tue, 8 Oct 2024 02:04:43 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 422uw6k89u-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 422uw6k8aa-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 08 Oct 2024 02:04:42 +0000
+	Tue, 08 Oct 2024 02:04:43 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49824dJ1004476;
-	Tue, 8 Oct 2024 02:04:42 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49824dJ3004476;
+	Tue, 8 Oct 2024 02:04:43 GMT
 Received: from mnc-mac.us.oracle.com (dhcp-10-39-198-64.vpn.oracle.com [10.39.198.64])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 422uw6k87u-6;
-	Tue, 08 Oct 2024 02:04:42 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 422uw6k87u-7;
+	Tue, 08 Oct 2024 02:04:43 +0000
 From: Mike Christie <michael.christie@oracle.com>
 To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 5/7] scsi: target: Report atomic values in INQUIRY
-Date: Mon,  7 Oct 2024 21:03:14 -0500
-Message-ID: <20241008020437.78788-6-michael.christie@oracle.com>
+Subject: [PATCH 6/7] scsi: target: Add WRITE_ATOMIC_16 support to RSOC
+Date: Mon,  7 Oct 2024 21:03:15 -0500
+Message-ID: <20241008020437.78788-7-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20241008020437.78788-1-michael.christie@oracle.com>
 References: <20241008020437.78788-1-michael.christie@oracle.com>
@@ -70,74 +70,54 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwa
  suspectscore=0 mlxscore=0 phishscore=0 adultscore=0 spamscore=0
  mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2409260000 definitions=main-2410080011
-X-Proofpoint-GUID: x3GvuTW_Czb4w-fqKRoSGdJQdeRdGr6Q
-X-Proofpoint-ORIG-GUID: x3GvuTW_Czb4w-fqKRoSGdJQdeRdGr6Q
+X-Proofpoint-GUID: _XVsRFTuZud2TDsqajHNNI03RkHFfLZS
+X-Proofpoint-ORIG-GUID: _XVsRFTuZud2TDsqajHNNI03RkHFfLZS
 
-This reports the atomic values in the Block Limits VPD page.
+This has us report if the device supports WRITE_ATOMIC_16 in the
+REPORT_SUPPORTED_OPERATION_CODES command.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/target/target_core_spc.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
+ drivers/target/target_core_spc.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index ea14a3835681..ce5eec5c8b8a 100644
+index ce5eec5c8b8a..3c28b0ec5daf 100644
 --- a/drivers/target/target_core_spc.c
 +++ b/drivers/target/target_core_spc.c
-@@ -521,7 +521,6 @@ spc_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
- 		have_tp = 1;
+@@ -1470,6 +1470,24 @@ static struct target_opcode_descriptor tcm_opcode_write_same32 = {
+ 	.update_usage_bits = set_dpofua_usage_bits32,
+ };
  
- 	buf[0] = dev->transport->get_device_type(dev);
--	buf[3] = have_tp ? 0x3c : 0x10;
- 
- 	/* Set WSNZ to 1 */
- 	buf[4] = 0x01;
-@@ -562,11 +561,10 @@ spc_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
- 	else
- 		put_unaligned_be32(dev->dev_attrib.optimal_sectors, &buf[12]);
- 
--	/*
--	 * Exit now if we don't support TP.
--	 */
-+	put_unaligned_be16(12, &buf[2]);
++static bool tcm_is_atomic_enabled(struct target_opcode_descriptor *descr,
++				  struct se_cmd *cmd)
++{
++	return cmd->se_dev->dev_attrib.atomic_supported;
++}
 +
- 	if (!have_tp)
--		goto max_write_same;
-+		goto try_atomic;
- 
- 	/*
- 	 * Set MAXIMUM UNMAP LBA COUNT
-@@ -595,9 +593,29 @@ spc_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
- 	/*
- 	 * MAXIMUM WRITE SAME LENGTH
- 	 */
--max_write_same:
- 	put_unaligned_be64(dev->dev_attrib.max_write_same_len, &buf[36]);
- 
-+	put_unaligned_be16(40, &buf[2]);
++static struct target_opcode_descriptor tcm_opcode_write_atomic16 = {
++	.support = SCSI_SUPPORT_FULL,
++	.opcode = WRITE_ATOMIC_16,
++	.cdb_size = 16,
++	.usage_bits = {WRITE_ATOMIC_16, 0xf8, 0xff, 0xff,
++		       0xff, 0xff, 0xff, 0xff,
++		       0xff, 0xff, 0xff, 0xff,
++		       0xff, 0xff, SCSI_GROUP_NUMBER_MASK, SCSI_CONTROL_MASK},
++	.enabled = tcm_is_atomic_enabled,
++	.update_usage_bits = set_dpofua_usage_bits,
++};
 +
-+try_atomic:
-+	/*
-+	 * ATOMIC
-+	 */
-+	if (!dev->dev_attrib.atomic_supported)
-+		goto done;
-+
-+	if (dev->dev_attrib.atomic_max_len < io_max_blocks)
-+		put_unaligned_be32(dev->dev_attrib.atomic_max_len, &buf[44]);
-+	else
-+		put_unaligned_be32(io_max_blocks, &buf[44]);
-+
-+	put_unaligned_be32(dev->dev_attrib.atomic_alignment, &buf[48]);
-+	put_unaligned_be32(dev->dev_attrib.atomic_granularity, &buf[52]);
-+	put_unaligned_be32(dev->dev_attrib.atomic_max_with_boundary, &buf[56]);
-+	put_unaligned_be32(dev->dev_attrib.atomic_max_boundary, &buf[60]);
-+
-+	put_unaligned_be16(60, &buf[2]);
-+done:
- 	return 0;
- }
- 
+ static bool tcm_is_caw_enabled(struct target_opcode_descriptor *descr,
+ 			       struct se_cmd *cmd)
+ {
+@@ -2026,6 +2044,7 @@ static struct target_opcode_descriptor *tcm_supported_opcodes[] = {
+ 	&tcm_opcode_write16,
+ 	&tcm_opcode_write_verify16,
+ 	&tcm_opcode_write_same32,
++	&tcm_opcode_write_atomic16,
+ 	&tcm_opcode_compare_write,
+ 	&tcm_opcode_read_capacity,
+ 	&tcm_opcode_read_capacity16,
 -- 
 2.34.1
 
