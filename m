@@ -1,101 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m2418.xmail.ntesmail.com (mail-m2418.xmail.ntesmail.com [45.195.24.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB081DF24B;
-	Tue,  8 Oct 2024 13:32:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FA6C1D31A0;
+	Tue,  8 Oct 2024 16:21:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.195.24.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728394337; cv=none; b=skEAmqL0sARiXI86jTbYX6MLWQKFBgBsSCeEoh4Ix/MKkOo+tbDw3z6wVe7mmi3TaKbOitTZAvHax4pQAkXAzDe0TfMxRY6LkONZrvv69k6sQsfckC2SygGJzEy0jvYbxY2jDxxE1YhQaAcKThAv0NWFQyOHYmr2nGuYSqC+jus=
+	t=1728404510; cv=none; b=PFFVdVBPRSzGQ/KmcZ+BW0lPmtGgRBhh4Lo4Z43HA5e54GNJpYzMZSesv8t2LlPnSTxMRSL2fEqn6vtxEDFidwDKmidkm1FCL9LGcoxJm3/J356RB0reDuIyj1ZWRmxQnKZVhavPuh1SlqoVdJJAPb8KvFP/Qqe08WrM5jdWDVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728394337; c=relaxed/simple;
-	bh=m3Dqaue9iMHe36I/93iGbTtg5g0XsNP1DjGguFYsNxE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pTXGE8l/m7z+hjo1jPHVcvcnwRZ4K89LQBSkbDKqOAPclQGen4lxYsXdE/Axzz+f2O3v2z1lZYlBW39Ggj1sb4vp88NyUBpo+FTmieVyzO6St2tn4CHEIDW94lqxlA8iJ22jOyf9EBTYlWz/w6qZmiWuBknacFRlDPXjDq/NO7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n3ffvz4M; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728404510; c=relaxed/simple;
+	bh=yl4dISq0YVEakYYH4ZI4/QRARPq5MlVOrJ85VNE9HGQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=KozsBG4NQshCjg2j+dhRFD7CiJ9ORTjkkF5nkBSrKTRc0pLPyYheMe1H+Khlv4AFmW+6oksVwgTsfuCRTOo2LV5Qs9jkffSoZY4+hjj0VvjAMcJBrvWhR2/VPfbCk3WHSfXcKht0WjsdxTtPQBwj1srmi9/AYZbgTYh+2Vr1WJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=gE3Col35; arc=none smtp.client-ip=45.195.24.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n3ffvz4M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65D6CC4CEC7;
-	Tue,  8 Oct 2024 13:32:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728394337;
-	bh=m3Dqaue9iMHe36I/93iGbTtg5g0XsNP1DjGguFYsNxE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=n3ffvz4MdASGCADyFqcOUDV3RAoKJ0UC0IMNe+xmXbpkLs55+uR3st3mH2w+0QqAC
-	 hUHLQrtNj2qlRYMakBl95BmzI+lL6m2y40hXK8ucPYmaJzgyaA1Yc/mpIFWZKBjp20
-	 WyqPeVRSvEDKZkyu2TskwsveLVsVNmo0VqrB0cNRngMIFX0fKMp7p0k16vCWzLNWor
-	 /PuXmwHHSDUdUGzMKvUJnEfA2BGYLvCbHn9ksdJ/dWY0C/0ZQskX39pusYBGtrIXzl
-	 cLegrKJm+fmX/OVgHwztKx+d7ukPh+ZLN8NomG57k10SZcEm74PevVZVu8UXc1k+eF
-	 iQRzPmLKmuNsg==
-Date: Tue, 8 Oct 2024 15:32:14 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Rob Herring <robh+dt@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Ulf Hansson <ulf.hansson@linaro.org>, Heiko Stuebner <heiko@sntech.de>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org, 
-	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH v3 2/5] dt-bindings: ufs: Document Rockchip UFS host
- controller
-Message-ID: <pthhldiu7mus3ehk2yndro5npyqaqdenru53daz34gx7vrizlp@ub7lgvoyiq6a>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="gE3Col35"
+DKIM-Signature: a=rsa-sha256;
+	b=gE3Col35CqUoFKgMiIJEIyITc9DndpI+HTvrNvd8zfyrYhKjcV6+pk9WbIvKoVwieeZ4GHcW6lV0tKtvOvbZztpU7nMT8rkSdF20DiAW12Im8BhL+n+Osh/U6J5Zt23Av17hPIqQ55zwetvxRiX22larxJmTF+NsgtVDdqMjjVg=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=X2RVKuuepMJ71UkowB4el7fjeh2DFavVJ1nWfvVkGV4=;
+	h=date:mime-version:subject:message-id:from;
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTPA id 7081F520718;
+	Tue,  8 Oct 2024 14:16:33 +0800 (CST)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 3/5] soc: rockchip: add header for suspend mode SIP interface
+Date: Tue,  8 Oct 2024 14:15:28 +0800
+Message-Id: <1728368130-37213-4-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
 References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
- <1728368130-37213-3-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkJPTVZOGhlCThpCT0hMSkxWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
+	NVSktLVUpCS0tZBg++
+X-HM-Tid: 0a926ac5b36903afkunm7081f520718
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MRg6GBw5GjIvNhYOTi1MNw1W
+	Ex8aCQpVSlVKTElDSE1DSkJOS0pJVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhKQ0o3Bg++
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <1728368130-37213-3-git-send-email-shawn.lin@rock-chips.com>
 
-On Tue, Oct 08, 2024 at 02:15:27PM +0800, Shawn Lin wrote:
-> Document Rockchip UFS host controller for RK3576 SoC.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v3:
-> - rename the file to rockchip,rk3576-ufshc.yaml
-> - add description for reset-gpios
-> - use rockchip,rk3576-ufshc as compatible
+Add ROCKCHIP_SIP_SUSPEND_MODE to pass down parameters to Trusted Firmware
+in order to decide suspend mode. Currently only add ROCKCHIP_SLEEP_PD_CONFIG
+which teaches firmware to power down controllers or not.
 
-... 
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> +  power-domains:
-> +    maxItems: 1
-> +
-> +  resets:
-> +    maxItems: 4
-> +
-> +  reset-names:
-> +    items:
-> +      - const: biu
-> +      - const: sys
-> +      - const: ufs
-> +      - const: grf
-> +
-> +  reset-gpios:
-> +    maxItems: 1
-> +    description: |
-> +      GPIO specifiers for host to reset the device.
+Changes in v3: None
+Changes in v2: None
 
-Redundant description. I don't get why did you add it.... maybe we were
-confused by duplicating resets and GPIO, but then say here something
-useful not what the property name is already saying.
+ include/soc/rockchip/rockchip_sip.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-E.g. Which pin is this? Active low/high? Resets which device - phy?
-memory?
-
-With proper description:
-
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-Best regards,
-Krzysztof
+diff --git a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip_sip.h
+index c46a9ae..501ad1f 100644
+--- a/include/soc/rockchip/rockchip_sip.h
++++ b/include/soc/rockchip/rockchip_sip.h
+@@ -6,6 +6,9 @@
+ #ifndef __SOC_ROCKCHIP_SIP_H
+ #define __SOC_ROCKCHIP_SIP_H
+ 
++#define ROCKCHIP_SIP_SUSPEND_MODE		0x82000003
++#define ROCKCHIP_SLEEP_PD_CONFIG		0xff
++
+ #define ROCKCHIP_SIP_DRAM_FREQ			0x82000008
+ #define ROCKCHIP_SIP_CONFIG_DRAM_INIT		0x00
+ #define ROCKCHIP_SIP_CONFIG_DRAM_SET_RATE	0x01
+-- 
+2.7.4
 
