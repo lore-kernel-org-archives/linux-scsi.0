@@ -1,81 +1,94 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9C881E0DC1
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 20:54:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04C9058222
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 20:55:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728420866; cv=none; b=nJbr4mAG7+xt9WzFfFPFX0Ttbs82zEltQ36+12kl03k9J7bcRUyFcRchbvg7MmgEUUD8XzG4PhXdEPG+8oBxFuPlhCYwS4bUqC+6PKJ47UQJtEZzCt0EChNxIt3KZFsOZL7FzcblY2wdeVHpz5PtIlk8OHe4bKrl8AH0Fqv6mN0=
+	t=1728420964; cv=none; b=XWF90UUrUtq2TYWCaRpMcSZVA6ut1IKNgRtI948X4gzFyxj4UEfIOGDaFnCUncp1c2SRuuwyVtUxDh4U3DYR2K+j93e0PZ3Ujks/pNckjsetNiQntW60PrP8oQjuWZU6M0Cnvt58y66zG+U3gWCS3MlFY+D+8bspsCS+UenCQY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728420866; c=relaxed/simple;
-	bh=USgdKQRo0/UaUAfT1IVB/c6rnueIzcx8CHsdNHIUFgY=;
+	s=arc-20240116; t=1728420964; c=relaxed/simple;
+	bh=t9QZyjZ7Iz9+9g5wOn619fcHce/hlUDvP0dDYklL6LQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ti3IJfS9/bYemhw7B5F7TEEcw7FiPRv/H8GlAaWvJS019Iwu/D1elQihvX/xDi1XrBFt64tACr6VMczyipr4xc+GYLIZmzjXyqRXyxbJN1gtC1kPH9f1vkT2ilBol17YdUynCPRSTiOiE5W5631C2sdD2xahm7BDqtuSE0RWqVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sfjknS0I; arc=none smtp.client-ip=199.89.1.12
+	 MIME-Version; b=qvJrscdSjAkEFOehQbr8apogO1ruRlTJzJ/r9S6ev8VCpMCtt/XgLLEPWFMdAwkK5lOgw+puZxh0WtYrC6aXqOpXy20BkR/2Gsq9H8P5pWmxM25INylV26Ed07kAdLPy/ADQAgR/t7tLlIaqaCLNIFnxnu6w3dmQq1v0kgp6GoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=oSEQS4mx; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sfjknS0I"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="oSEQS4mx"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XNStl0mVwzlgTWP;
-	Tue,  8 Oct 2024 20:54:23 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XNSwb4L5czlgTWK;
+	Tue,  8 Oct 2024 20:55:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1728420775; x=1731012776; bh=h6iEk
-	T2p8cmlunP/zlY2+aXjzZsw9cFrraJDZHxxtVs=; b=sfjknS0IodecvcT7JOvUo
-	fJKtgGnkSVUkFr9IJn4GIG4OKdJu/+ceijeLnWAzlSP6fkGdIyAOdWr87pi8fj4z
-	6AX0bV8rq/vHL0f0ibKVXhGbovjMnU/OAcXuyPObvYn5kzPqu+Sct1o/qrprtDHb
-	O9gN+3emSW0eRB8YkBUjtXZiLK4up40xjavjId65btdCaDAEBjuz/FVwEsGAOVRV
-	3OUe+mbz1312TygPqYUM8Tr5ilpnz7Zevspqx/lUyvfWjLL3+aF5MkDxQa03Q9sZ
-	3HFYKck0HS7zLEE0hqJO5y3fNzw5Uznt6dF/cZPXvVZILIehmbAkV4IOMJf3zB/W
-	Q==
+	:received:received; s=mr01; t=1728420780; x=1731012781; bh=vlwqK
+	r1ExGWL8DkCAU0nXW4TTec0nizeeXkqq5PWrWA=; b=oSEQS4mxu4nS89/MDuUhO
+	+TSbXS1f9DEpZ3/KZzDTx4XgTU1myXR/uTWnLpqmWFn/mC2WbxIwi15hFgfanLy1
+	7ic6NNtiYRtl6JxCkfFW6RGJO6SySVr/9I9ynDCOo37xxXKc1o9ssEkEEVt93xxM
+	BOxlbrUW9u+aH0nuzP4M9ltp4BCL3OPJDc5uwrsVdQOP2o7onlCtDqMRWFXXqbd2
+	Lici94TwL7gHSPrZdbH0253nj2yrRQC3H6Kgk+orHE5h1SY/hBRlQWWXg/vRW/b0
+	oViCVqoUHrdK5foWrFMP3EPbiVXBNIITT6GGqMGX13X+tl6rIxJq0KzMqWSg/pY0
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id UZo2pC7nIIOk; Tue,  8 Oct 2024 20:52:55 +0000 (UTC)
+ id teJ1xjZWtUuJ; Tue,  8 Oct 2024 20:53:00 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XNSrQ1JJRzlgVXv;
-	Tue,  8 Oct 2024 20:52:22 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XNSrl0VS4zlgVnY;
+	Tue,  8 Oct 2024 20:52:38 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Christoph Hellwig <hch@lst.de>,
+	Geoff Levand <geoff@infradead.org>,
+	Khalid Aziz <khalid@gonehiking.org>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
-	Yihang Li <liyihang9@huawei.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	HighPoint Linux Team <linux@highpoint-tech.com>,
-	Brian King <brking@us.ibm.com>,
-	Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Leon Romanovsky <leon@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
 	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
+	Steffen Maier <maier@linux.ibm.com>,
+	Benjamin Block <bblock@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Adam Radford <aradford@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Hannes Reinecke <hare@suse.com>,
+	Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Don Brace <don.brace@microchip.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Oliver Neukum <oneukum@suse.com>,
-	Hannes Reinecke <hare@suse.de>,
-	John Garry <john.g.garry@oracle.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v3 3/6] scsi: Rename .device_configure() into .sdev_configure()
-Date: Tue,  8 Oct 2024 13:50:49 -0700
-Message-ID: <20241008205139.3743722-4-bvanassche@acm.org>
+	ching Huang <ching2048@areca.com.tw>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Soumya Negi <soumya.negi97@gmail.com>
+Subject: [PATCH v3 4/6] scsi: Convert SCSI drivers to .sdev_configure()
+Date: Tue,  8 Oct 2024 13:50:50 -0700
+Message-ID: <20241008205139.3743722-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.47.0.rc0.187.ge670bccf7e-goog
 In-Reply-To: <20241008205139.3743722-1-bvanassche@acm.org>
 References: <20241008205139.3743722-1-bvanassche@acm.org>
@@ -87,900 +100,1486 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Improve naming consistency with the .sdev_prep() and .sdev_destroy()
-methods by renaming .device_configure() into .sdev_configure().
+The only difference between the .sdev_configure() and .slave_configure()
+methods is that the former accepts an additional 'limits' argument.
+Convert all SCSI drivers that define a .slave_configure() method to
+.sdev_configure(). This patch prepares for removing the
+.slave_configure() method. No functionality has been changed.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org> # for the ATA changes
+Acked-by: Geoff Levand <geoff@infradead.org> # for ps3rom
+Acked-by: Khalid Aziz <khalid@gonehiking.org> # for the BusLogic driver
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ata/ahci.h                        |  2 +-
- drivers/ata/libata-sata.c                 |  8 ++++----
- drivers/ata/libata-scsi.c                 |  7 +++----
- drivers/ata/pata_macio.c                  |  8 ++++----
- drivers/ata/sata_mv.c                     |  2 +-
- drivers/ata/sata_nv.c                     | 24 +++++++++++------------
- drivers/ata/sata_sil24.c                  |  2 +-
- drivers/firewire/sbp2.c                   |  6 +++---
- drivers/scsi/hisi_sas/hisi_sas.h          |  3 +--
- drivers/scsi/hisi_sas/hisi_sas_main.c     |  7 +++----
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c    |  2 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    |  2 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  8 ++++----
- drivers/scsi/hptiop.c                     |  6 +++---
- drivers/scsi/ipr.c                        |  8 ++++----
- drivers/scsi/iscsi_tcp.c                  |  6 +++---
- drivers/scsi/libsas/sas_scsi_host.c       |  7 +++----
- drivers/scsi/megaraid/megaraid_sas_base.c |  6 +++---
- drivers/scsi/mpi3mr/mpi3mr_os.c           |  8 ++++----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  8 ++++----
- drivers/scsi/pmcraid.c                    |  8 ++++----
- drivers/scsi/scsi_scan.c                  | 10 +++++-----
- drivers/ufs/core/ufshcd.c                 |  8 ++++----
- drivers/usb/storage/scsiglue.c            |  4 ++--
- drivers/usb/storage/uas.c                 |  6 +++---
- include/linux/libata.h                    | 11 +++++------
- include/scsi/libsas.h                     |  5 ++---
- include/scsi/scsi_host.h                  |  4 ++--
- 28 files changed, 90 insertions(+), 96 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c   |  5 +++--
+ drivers/message/fusion/mptfc.c        |  2 +-
+ drivers/message/fusion/mptsas.c       |  6 +++---
+ drivers/message/fusion/mptscsih.c     |  4 ++--
+ drivers/message/fusion/mptscsih.h     |  3 ++-
+ drivers/message/fusion/mptspi.c       |  7 ++++---
+ drivers/s390/scsi/zfcp_scsi.c         |  5 +++--
+ drivers/scsi/3w-9xxx.c                |  7 ++++---
+ drivers/scsi/3w-sas.c                 |  7 ++++---
+ drivers/scsi/3w-xxxx.c                |  8 ++++----
+ drivers/scsi/53c700.c                 |  7 ++++---
+ drivers/scsi/BusLogic.c               |  7 ++++---
+ drivers/scsi/BusLogic.h               |  3 ++-
+ drivers/scsi/aacraid/linit.c          |  8 +++++---
+ drivers/scsi/advansys.c               | 23 ++++++++++++-----------
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |  4 ++--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |  4 ++--
+ drivers/scsi/arcmsr/arcmsr_hba.c      |  8 +++++---
+ drivers/scsi/bfa/bfad_im.c            |  6 +++---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c     |  5 +++--
+ drivers/scsi/csiostor/csio_scsi.c     |  6 +++---
+ drivers/scsi/esp_scsi.c               |  6 +++---
+ drivers/scsi/hpsa.c                   |  8 +++++---
+ drivers/scsi/ibmvscsi/ibmvfc.c        |  8 +++++---
+ drivers/scsi/ibmvscsi/ibmvscsi.c      |  8 +++++---
+ drivers/scsi/ips.c                    |  6 +++---
+ drivers/scsi/ips.h                    |  3 ++-
+ drivers/scsi/lpfc/lpfc_scsi.c         | 21 ++++++++++++++-------
+ drivers/scsi/mvumi.c                  |  5 +++--
+ drivers/scsi/myrb.c                   |  5 +++--
+ drivers/scsi/myrs.c                   |  5 +++--
+ drivers/scsi/ncr53c8xx.c              |  5 +++--
+ drivers/scsi/ps3rom.c                 |  5 +++--
+ drivers/scsi/qedf/qedf_main.c         |  5 +++--
+ drivers/scsi/qla1280.c                |  6 +++---
+ drivers/scsi/qla2xxx/qla_os.c         |  4 ++--
+ drivers/scsi/qlogicpti.c              |  5 +++--
+ drivers/scsi/scsi_debug.c             |  9 +++++----
+ drivers/scsi/scsi_scan.c              |  2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c |  5 +++--
+ drivers/scsi/snic/snic_main.c         |  6 +++---
+ drivers/scsi/stex.c                   |  4 ++--
+ drivers/scsi/storvsc_drv.c            |  5 +++--
+ drivers/scsi/sym53c8xx_2/sym_glue.c   |  5 +++--
+ drivers/scsi/xen-scsifront.c          |  7 ++++---
+ drivers/staging/rts5208/rtsx.c        |  4 ++--
+ 46 files changed, 164 insertions(+), 123 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 8f40f75ba08c..75cdf51a7f74 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -397,7 +397,7 @@ extern const struct attribute_group *ahci_sdev_groups=
-[];
- 	.sdev_groups		=3D ahci_sdev_groups,			\
- 	.change_queue_depth     =3D ata_scsi_change_queue_depth,		\
- 	.tag_alloc_policy       =3D BLK_TAG_ALLOC_RR,             	\
--	.device_configure	=3D ata_scsi_device_configure
-+	.sdev_configure		=3D ata_scsi_sdev_configure
-=20
- extern struct ata_port_operations ahci_ops;
- extern struct ata_port_operations ahci_platform_ops;
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index c8b119a06bb2..36fd0499cdfb 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1313,7 +1313,7 @@ int ata_scsi_change_queue_depth(struct scsi_device =
-*sdev, int queue_depth)
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
-=20
- /**
-- *	ata_sas_device_configure - Default device_configure routine for libat=
-a
-+ *	ata_sas_sdev_configure - Default sdev_configure routine for libata
-  *				   devices
-  *	@sdev: SCSI device to configure
-  *	@lim: queue limits
-@@ -1323,14 +1323,14 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
-  *	Zero.
-  */
-=20
--int ata_sas_device_configure(struct scsi_device *sdev, struct queue_limi=
-ts *lim,
--		struct ata_port *ap)
-+int ata_sas_sdev_configure(struct scsi_device *sdev, struct queue_limits=
- *lim,
-+			   struct ata_port *ap)
- {
- 	ata_scsi_sdev_config(sdev);
-=20
- 	return ata_scsi_dev_config(sdev, lim, ap->link.device);
- }
--EXPORT_SYMBOL_GPL(ata_sas_device_configure);
-+EXPORT_SYMBOL_GPL(ata_sas_sdev_configure);
-=20
- /**
-  *	ata_sas_queuecmd - Issue SCSI cdb to libata-managed device
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 27cde1759011..80b6ec577233 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1169,7 +1169,7 @@ int ata_scsi_sdev_init(struct scsi_device *sdev)
- EXPORT_SYMBOL_GPL(ata_scsi_sdev_init);
-=20
- /**
-- *	ata_scsi_device_configure - Set SCSI device attributes
-+ *	ata_scsi_sdev_configure - Set SCSI device attributes
-  *	@sdev: SCSI device to examine
-  *	@lim: queue limits
-  *
-@@ -1181,8 +1181,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_sdev_init);
-  *	Defined by SCSI layer.  We don't really care.
-  */
-=20
--int ata_scsi_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+int ata_scsi_sdev_configure(struct scsi_device *sdev, struct queue_limit=
-s *lim)
- {
- 	struct ata_port *ap =3D ata_shost_to_port(sdev->host);
- 	struct ata_device *dev =3D __ata_scsi_find_dev(ap, sdev);
-@@ -1192,7 +1191,7 @@ int ata_scsi_device_configure(struct scsi_device *s=
-dev,
-=20
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp=
+/srp/ib_srp.c
+index 2916e77f589b..d17289803b99 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -2844,7 +2844,8 @@ static int srp_target_alloc(struct scsi_target *sta=
+rget)
  	return 0;
  }
--EXPORT_SYMBOL_GPL(ata_scsi_device_configure);
-+EXPORT_SYMBOL_GPL(ata_scsi_sdev_configure);
 =20
- /**
-  *	ata_scsi_sdev_destroy - SCSI device is about to be destroyed
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index f2f36e55a1f4..a8e2989d0469 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -812,8 +812,8 @@ static void pata_macio_reset_hw(struct pata_macio_pri=
-v *priv, int resume)
- /* Hook the standard slave config to fixup some HW related alignment
-  * restrictions
-  */
--static int pata_macio_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int pata_macio_sdev_configure(struct scsi_device *sdev,
-+				     struct queue_limits *lim)
+-static int srp_slave_configure(struct scsi_device *sdev)
++static int srp_sdev_configure(struct scsi_device *sdev,
++			      struct queue_limits *lim)
  {
- 	struct ata_port *ap =3D ata_shost_to_port(sdev->host);
- 	struct pata_macio_priv *priv =3D ap->private_data;
-@@ -822,7 +822,7 @@ static int pata_macio_device_configure(struct scsi_de=
-vice *sdev,
- 	int rc;
-=20
- 	/* First call original */
--	rc =3D ata_scsi_device_configure(sdev, lim);
-+	rc =3D ata_scsi_sdev_configure(sdev, lim);
- 	if (rc)
- 		return rc;
-=20
-@@ -932,7 +932,7 @@ static const struct scsi_host_template pata_macio_sht=
+ 	struct Scsi_Host *shost =3D sdev->host;
+ 	struct srp_target_port *target =3D host_to_target(shost);
+@@ -3067,7 +3068,7 @@ static const struct scsi_host_template srp_template=
  =3D {
- 	/* We may not need that strict one */
- 	.dma_boundary		=3D ATA_DMA_BOUNDARY,
- 	.max_segment_size	=3D PATA_MACIO_MAX_SEGMENT_SIZE,
--	.device_configure	=3D pata_macio_device_configure,
-+	.sdev_configure		=3D pata_macio_sdev_configure,
- 	.sdev_groups		=3D ata_common_sdev_groups,
- 	.can_queue		=3D ATA_DEF_QUEUE,
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 05c905827dc5..705f9bae2175 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -673,7 +673,7 @@ static const struct scsi_host_template mv6_sht =3D {
- 	.sdev_groups		=3D ata_ncq_sdev_groups,
- 	.change_queue_depth	=3D ata_scsi_change_queue_depth,
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,
--	.device_configure	=3D ata_scsi_device_configure
-+	.sdev_configure		=3D ata_scsi_sdev_configure
- };
+ 	.name				=3D "InfiniBand SRP initiator",
+ 	.proc_name			=3D DRV_NAME,
+ 	.target_alloc			=3D srp_target_alloc,
+-	.slave_configure		=3D srp_slave_configure,
++	.sdev_configure			=3D srp_sdev_configure,
+ 	.info				=3D srp_target_info,
+ 	.init_cmd_priv			=3D srp_init_cmd_priv,
+ 	.exit_cmd_priv			=3D srp_exit_cmd_priv,
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptf=
+c.c
+index f034ebacf974..0933b5f7fd29 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -114,7 +114,7 @@ static const struct scsi_host_template mptfc_driver_t=
+emplate =3D {
+ 	.queuecommand			=3D mptfc_qcmd,
+ 	.target_alloc			=3D mptfc_target_alloc,
+ 	.sdev_init			=3D mptfc_sdev_init,
+-	.slave_configure		=3D mptscsih_slave_configure,
++	.sdev_configure			=3D mptscsih_sdev_configure,
+ 	.target_destroy			=3D mptfc_target_destroy,
+ 	.sdev_destroy			=3D mptscsih_sdev_destroy,
+ 	.change_queue_depth 		=3D mptscsih_change_queue_depth,
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mpt=
+sas.c
+index ea9d0e6e7f08..9d4984adc705 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1710,7 +1710,7 @@ mptsas_firmware_event_work(struct work_struct *work=
+)
 =20
- static struct ata_port_operations mv5_ops =3D {
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 36d99043ef50..b62b8ebdd89f 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -296,8 +296,8 @@ static void nv_nf2_freeze(struct ata_port *ap);
- static void nv_nf2_thaw(struct ata_port *ap);
- static void nv_ck804_freeze(struct ata_port *ap);
- static void nv_ck804_thaw(struct ata_port *ap);
--static int nv_adma_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim);
-+static int nv_adma_sdev_configure(struct scsi_device *sdev,
-+				  struct queue_limits *lim);
- static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
- static enum ata_completion_errors nv_adma_qc_prep(struct ata_queued_cmd =
-*qc);
- static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc);
-@@ -319,8 +319,8 @@ static void nv_adma_tf_read(struct ata_port *ap, stru=
-ct ata_taskfile *tf);
- static void nv_mcp55_thaw(struct ata_port *ap);
- static void nv_mcp55_freeze(struct ata_port *ap);
- static void nv_swncq_error_handler(struct ata_port *ap);
--static int nv_swncq_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim);
-+static int nv_swncq_sdev_configure(struct scsi_device *sdev,
+=20
+ static int
+-mptsas_slave_configure(struct scsi_device *sdev)
++mptsas_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim=
+)
+ {
+ 	struct Scsi_Host	*host =3D sdev->host;
+ 	MPT_SCSI_HOST	*hd =3D shost_priv(host);
+@@ -1736,7 +1736,7 @@ mptsas_slave_configure(struct scsi_device *sdev)
+ 	mptsas_add_device_component_starget(ioc, scsi_target(sdev));
+=20
+  out:
+-	return mptscsih_slave_configure(sdev);
++	return mptscsih_sdev_configure(sdev, lim);
+ }
+=20
+ static int
+@@ -2006,7 +2006,7 @@ static const struct scsi_host_template mptsas_drive=
+r_template =3D {
+ 	.queuecommand			=3D mptsas_qcmd,
+ 	.target_alloc			=3D mptsas_target_alloc,
+ 	.sdev_init			=3D mptsas_sdev_init,
+-	.slave_configure		=3D mptsas_slave_configure,
++	.sdev_configure			=3D mptsas_sdev_configure,
+ 	.target_destroy			=3D mptsas_target_destroy,
+ 	.sdev_destroy			=3D mptscsih_sdev_destroy,
+ 	.change_queue_depth 		=3D mptscsih_change_queue_depth,
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/m=
+ptscsih.c
+index 50ea4ee65d5c..a9604ba3c805 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -2399,7 +2399,7 @@ mptscsih_change_queue_depth(struct scsi_device *sde=
+v, int qdepth)
+  *	Return non-zero if fails.
+  */
+ int
+-mptscsih_slave_configure(struct scsi_device *sdev)
++mptscsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *l=
+im)
+ {
+ 	struct Scsi_Host	*sh =3D sdev->host;
+ 	VirtTarget		*vtarget;
+@@ -3303,7 +3303,7 @@ EXPORT_SYMBOL(mptscsih_show_info);
+ EXPORT_SYMBOL(mptscsih_info);
+ EXPORT_SYMBOL(mptscsih_qcmd);
+ EXPORT_SYMBOL(mptscsih_sdev_destroy);
+-EXPORT_SYMBOL(mptscsih_slave_configure);
++EXPORT_SYMBOL(mptscsih_sdev_configure);
+ EXPORT_SYMBOL(mptscsih_abort);
+ EXPORT_SYMBOL(mptscsih_dev_reset);
+ EXPORT_SYMBOL(mptscsih_target_reset);
+diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/m=
+ptscsih.h
+index 9f1cde8e76a8..ece451c575e1 100644
+--- a/drivers/message/fusion/mptscsih.h
++++ b/drivers/message/fusion/mptscsih.h
+@@ -117,7 +117,8 @@ extern int mptscsih_qcmd(struct scsi_cmnd *SCpnt);
+ extern int mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel=
+,
+ 	u8 id, u64 lun, int ctx2abort, ulong timeout);
+ extern void mptscsih_sdev_destroy(struct scsi_device *device);
+-extern int mptscsih_slave_configure(struct scsi_device *device);
++extern int mptscsih_sdev_configure(struct scsi_device *device,
 +				   struct queue_limits *lim);
- static int nv_swncq_port_start(struct ata_port *ap);
- static enum ata_completion_errors nv_swncq_qc_prep(struct ata_queued_cmd=
- *qc);
- static void nv_swncq_fill_sg(struct ata_queued_cmd *qc);
-@@ -382,7 +382,7 @@ static const struct scsi_host_template nv_adma_sht =3D=
- {
- 	.can_queue		=3D NV_ADMA_MAX_CPBS,
- 	.sg_tablesize		=3D NV_ADMA_SGTBL_TOTAL_LEN,
- 	.dma_boundary		=3D NV_ADMA_DMA_BOUNDARY,
--	.device_configure	=3D nv_adma_device_configure,
-+	.sdev_configure		=3D nv_adma_sdev_configure,
- 	.sdev_groups		=3D ata_ncq_sdev_groups,
- 	.change_queue_depth     =3D ata_scsi_change_queue_depth,
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,
-@@ -393,7 +393,7 @@ static const struct scsi_host_template nv_swncq_sht =3D=
- {
- 	.can_queue		=3D ATA_MAX_QUEUE - 1,
- 	.sg_tablesize		=3D LIBATA_MAX_PRD,
- 	.dma_boundary		=3D ATA_DMA_BOUNDARY,
--	.device_configure	=3D nv_swncq_device_configure,
-+	.sdev_configure		=3D nv_swncq_sdev_configure,
- 	.sdev_groups		=3D ata_ncq_sdev_groups,
- 	.change_queue_depth     =3D ata_scsi_change_queue_depth,
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,
-@@ -663,8 +663,8 @@ static void nv_adma_mode(struct ata_port *ap)
- 	pp->flags &=3D ~NV_ADMA_PORT_REGISTER_MODE;
- }
-=20
--static int nv_adma_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int nv_adma_sdev_configure(struct scsi_device *sdev,
-+				  struct queue_limits *lim)
- {
- 	struct ata_port *ap =3D ata_shost_to_port(sdev->host);
- 	struct nv_adma_port_priv *pp =3D ap->private_data;
-@@ -676,7 +676,7 @@ static int nv_adma_device_configure(struct scsi_devic=
-e *sdev,
- 	int adma_enable;
- 	u32 current_reg, new_reg, config_mask;
-=20
--	rc =3D ata_scsi_device_configure(sdev, lim);
-+	rc =3D ata_scsi_sdev_configure(sdev, lim);
-=20
- 	if (sdev->id >=3D ATA_MAX_DEVICES || sdev->channel || sdev->lun)
- 		/* Not a proper libata device, ignore */
-@@ -1871,8 +1871,8 @@ static void nv_swncq_host_init(struct ata_host *hos=
-t)
- 	writel(~0x0, mmio + NV_INT_STATUS_MCP55);
- }
-=20
--static int nv_swncq_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int nv_swncq_sdev_configure(struct scsi_device *sdev,
-+				   struct queue_limits *lim)
- {
- 	struct ata_port *ap =3D ata_shost_to_port(sdev->host);
- 	struct pci_dev *pdev =3D to_pci_dev(ap->host->dev);
-@@ -1882,7 +1882,7 @@ static int nv_swncq_device_configure(struct scsi_de=
-vice *sdev,
- 	u8 check_maxtor =3D 0;
- 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
-=20
--	rc =3D ata_scsi_device_configure(sdev, lim);
-+	rc =3D ata_scsi_sdev_configure(sdev, lim);
- 	if (sdev->id >=3D ATA_MAX_DEVICES || sdev->channel || sdev->lun)
- 		/* Not a proper libata device, ignore */
- 		return rc;
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 72c03cbdaff4..3e0be0399619 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -381,7 +381,7 @@ static const struct scsi_host_template sil24_sht =3D =
-{
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_FIFO,
- 	.sdev_groups		=3D ata_ncq_sdev_groups,
- 	.change_queue_depth	=3D ata_scsi_change_queue_depth,
--	.device_configure	=3D ata_scsi_device_configure
-+	.sdev_configure		=3D ata_scsi_sdev_configure
- };
-=20
- static struct ata_port_operations sil24_ops =3D {
-diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
-index 4937df12c3fb..1a19828114cf 100644
---- a/drivers/firewire/sbp2.c
-+++ b/drivers/firewire/sbp2.c
-@@ -1506,8 +1506,8 @@ static int sbp2_scsi_sdev_init(struct scsi_device *=
-sdev)
+ extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
+ extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
+ extern int mptscsih_target_reset(struct scsi_cmnd * SCpnt);
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mpt=
+spi.c
+index 09828c34f8fb..6833013a6ba2 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -746,7 +746,8 @@ static int mptspi_sdev_init(struct scsi_device *sdev)
  	return 0;
  }
 =20
--static int sbp2_scsi_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int sbp2_scsi_sdev_configure(struct scsi_device *sdev,
-+				    struct queue_limits *lim)
+-static int mptspi_slave_configure(struct scsi_device *sdev)
++static int mptspi_sdev_configure(struct scsi_device *sdev,
++				 struct queue_limits *lim)
  {
- 	struct sbp2_logical_unit *lu =3D sdev->hostdata;
+ 	struct _MPT_SCSI_HOST *hd =3D shost_priv(sdev->host);
+ 	VirtTarget *vtarget =3D scsi_target(sdev)->hostdata;
+@@ -754,7 +755,7 @@ static int mptspi_slave_configure(struct scsi_device =
+*sdev)
 =20
-@@ -1591,7 +1591,7 @@ static const struct scsi_host_template scsi_driver_=
-template =3D {
- 	.proc_name		=3D "sbp2",
- 	.queuecommand		=3D sbp2_scsi_queuecommand,
- 	.sdev_init		=3D sbp2_scsi_sdev_init,
--	.device_configure	=3D sbp2_scsi_device_configure,
-+	.sdev_configure		=3D sbp2_scsi_sdev_configure,
- 	.eh_abort_handler	=3D sbp2_scsi_abort,
- 	.this_id		=3D -1,
- 	.sg_tablesize		=3D SG_ALL,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/his=
-i_sas.h
-index 734256b03620..e3cfe6bd6c29 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -643,8 +643,7 @@ extern int hisi_sas_probe(struct platform_device *pde=
-v,
- 			  const struct hisi_sas_hw *ops);
- extern void hisi_sas_remove(struct platform_device *pdev);
+ 	mptspi_initTarget(hd, vtarget, sdev);
 =20
--int hisi_sas_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim);
-+int hisi_sas_sdev_configure(struct scsi_device *sdev, struct queue_limit=
-s *lim);
- extern int hisi_sas_sdev_init(struct scsi_device *sdev);
- extern int hisi_sas_scan_finished(struct Scsi_Host *shost, unsigned long=
- time);
- extern void hisi_sas_scan_start(struct Scsi_Host *shost);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
-s/hisi_sas_main.c
-index 2e7090e33970..56db7f78c34d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -868,11 +868,10 @@ static int hisi_sas_dev_found(struct domain_device =
-*device)
- 	return rc;
- }
-=20
--int hisi_sas_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+int hisi_sas_sdev_configure(struct scsi_device *sdev, struct queue_limit=
-s *lim)
- {
- 	struct domain_device *dev =3D sdev_to_domain_dev(sdev);
--	int ret =3D sas_device_configure(sdev, lim);
-+	int ret =3D sas_sdev_configure(sdev, lim);
+-	ret =3D mptscsih_slave_configure(sdev);
++	ret =3D mptscsih_sdev_configure(sdev, lim);
 =20
  	if (ret)
  		return ret;
-@@ -881,7 +880,7 @@ int hisi_sas_device_configure(struct scsi_device *sde=
-v,
-=20
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(hisi_sas_device_configure);
-+EXPORT_SYMBOL_GPL(hisi_sas_sdev_configure);
-=20
- void hisi_sas_scan_start(struct Scsi_Host *shost)
- {
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v1_hw.c
-index 2bbb223fe415..42e4b8cee8f1 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1736,7 +1736,7 @@ ATTRIBUTE_GROUPS(host_v1_hw);
-=20
- static const struct scsi_host_template sht_v1_hw =3D {
- 	LIBSAS_SHT_BASE_NO_SLAVE_INIT
--	.device_configure	=3D hisi_sas_device_configure,
-+	.sdev_configure		=3D hisi_sas_sdev_configure,
- 	.scan_finished		=3D hisi_sas_scan_finished,
- 	.scan_start		=3D hisi_sas_scan_start,
- 	.sg_tablesize		=3D HISI_SAS_SGE_PAGE_CNT,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v2_hw.c
-index 26c8dd165e8f..81f9e12272d5 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3568,7 +3568,7 @@ static void map_queues_v2_hw(struct Scsi_Host *shos=
-t)
-=20
- static const struct scsi_host_template sht_v2_hw =3D {
- 	LIBSAS_SHT_BASE_NO_SLAVE_INIT
--	.device_configure	=3D hisi_sas_device_configure,
-+	.sdev_configure		=3D hisi_sas_sdev_configure,
- 	.scan_finished		=3D hisi_sas_scan_finished,
- 	.scan_start		=3D hisi_sas_scan_start,
- 	.sg_tablesize		=3D HISI_SAS_SGE_PAGE_CNT,
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v3_hw.c
-index 145e30b8621e..25fdb04c6dff 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2902,12 +2902,12 @@ static ssize_t iopoll_q_cnt_v3_hw_show(struct dev=
-ice *dev,
- }
- static DEVICE_ATTR_RO(iopoll_q_cnt_v3_hw);
-=20
--static int device_configure_v3_hw(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int sdev_configure_v3_hw(struct scsi_device *sdev,
-+				struct queue_limits *lim)
- {
- 	struct Scsi_Host *shost =3D dev_to_shost(&sdev->sdev_gendev);
- 	struct hisi_hba *hisi_hba =3D shost_priv(shost);
--	int ret =3D hisi_sas_device_configure(sdev, lim);
-+	int ret =3D hisi_sas_sdev_configure(sdev, lim);
- 	struct device *dev =3D hisi_hba->dev;
-=20
- 	if (ret)
-@@ -3330,7 +3330,7 @@ static void hisi_sas_map_queues(struct Scsi_Host *s=
-host)
-=20
- static const struct scsi_host_template sht_v3_hw =3D {
- 	LIBSAS_SHT_BASE_NO_SLAVE_INIT
--	.device_configure	=3D device_configure_v3_hw,
-+	.sdev_configure		=3D sdev_configure_v3_hw,
- 	.scan_finished		=3D hisi_sas_scan_finished,
- 	.scan_start		=3D hisi_sas_scan_start,
- 	.map_queues		=3D hisi_sas_map_queues,
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index e889f268601b..55eee5b0f0d7 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1151,8 +1151,8 @@ static struct attribute *hptiop_host_attrs[] =3D {
-=20
- ATTRIBUTE_GROUPS(hptiop_host);
-=20
--static int hptiop_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int hptiop_sdev_configure(struct scsi_device *sdev,
-+				 struct queue_limits *lim)
- {
- 	if (sdev->type =3D=3D TYPE_TAPE)
- 		lim->max_hw_sectors =3D 8192;
-@@ -1168,7 +1168,7 @@ static const struct scsi_host_template driver_templ=
-ate =3D {
- 	.emulated                   =3D 0,
- 	.proc_name                  =3D driver_name,
- 	.shost_groups		    =3D hptiop_host_groups,
--	.device_configure	    =3D hptiop_device_configure,
-+	.sdev_configure		    =3D hptiop_sdev_configure,
- 	.this_id                    =3D -1,
- 	.change_queue_depth         =3D hptiop_adjust_disk_queue_depth,
- 	.cmd_size		    =3D sizeof(struct hpt_cmd_priv),
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 41bc54e27896..f0444faf776a 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4769,7 +4769,7 @@ static void ipr_sdev_destroy(struct scsi_device *sd=
-ev)
+@@ -829,7 +830,7 @@ static const struct scsi_host_template mptspi_driver_=
+template =3D {
+ 	.queuecommand			=3D mptspi_qcmd,
+ 	.target_alloc			=3D mptspi_target_alloc,
+ 	.sdev_init			=3D mptspi_sdev_init,
+-	.slave_configure		=3D mptspi_slave_configure,
++	.sdev_configure			=3D mptspi_sdev_configure,
+ 	.target_destroy			=3D mptspi_target_destroy,
+ 	.sdev_destroy			=3D mptspi_sdev_destroy,
+ 	.change_queue_depth 		=3D mptscsih_change_queue_depth,
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.=
+c
+index c9cb9db8c2ee..b31f860af47b 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -49,7 +49,8 @@ static void zfcp_scsi_sdev_destroy(struct scsi_device *=
+sdev)
+ 	put_device(&zfcp_sdev->port->dev);
  }
 =20
- /**
-- * ipr_device_configure - Configure a SCSI device
-+ * ipr_sdev_configure - Configure a SCSI device
-  * @sdev:	scsi device struct
-  * @lim:	queue limits
-  *
-@@ -4778,8 +4778,8 @@ static void ipr_sdev_destroy(struct scsi_device *sd=
-ev)
-  * Return value:
-  * 	0 on success
-  **/
--static int ipr_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int ipr_sdev_configure(struct scsi_device *sdev,
+-static int zfcp_scsi_slave_configure(struct scsi_device *sdp)
++static int zfcp_scsi_sdev_configure(struct scsi_device *sdp,
++				    struct queue_limits *lim)
+ {
+ 	if (sdp->tagged_supported)
+ 		scsi_change_queue_depth(sdp, default_depth);
+@@ -428,7 +429,7 @@ static const struct scsi_host_template zfcp_scsi_host=
+_template =3D {
+ 	.eh_target_reset_handler =3D zfcp_scsi_eh_target_reset_handler,
+ 	.eh_host_reset_handler	 =3D zfcp_scsi_eh_host_reset_handler,
+ 	.sdev_init		 =3D zfcp_scsi_sdev_init,
+-	.slave_configure	 =3D zfcp_scsi_slave_configure,
++	.sdev_configure		 =3D zfcp_scsi_sdev_configure,
+ 	.sdev_destroy		 =3D zfcp_scsi_sdev_destroy,
+ 	.change_queue_depth	 =3D scsi_change_queue_depth,
+ 	.host_reset		 =3D zfcp_scsi_sysfs_host_reset,
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 6fb61c88ea11..97bcdf84386d 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1968,13 +1968,14 @@ static char *twa_string_lookup(twa_message_type *=
+table, unsigned int code)
+ } /* End twa_string_lookup() */
+=20
+ /* This function gets called when a disk is coming on-line */
+-static int twa_slave_configure(struct scsi_device *sdev)
++static int twa_sdev_configure(struct scsi_device *sdev,
 +			      struct queue_limits *lim)
  {
- 	struct ipr_ioa_cfg *ioa_cfg =3D (struct ipr_ioa_cfg *) sdev->host->host=
-data;
- 	struct ipr_resource_entry *res;
-@@ -6399,7 +6399,7 @@ static const struct scsi_host_template driver_templ=
+ 	/* Force 60 second timeout */
+ 	blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
+=20
+ 	return 0;
+-} /* End twa_slave_configure() */
++} /* End twa_sdev_configure() */
+=20
+ static const struct scsi_host_template driver_template =3D {
+ 	.module			=3D THIS_MODULE,
+@@ -1984,7 +1985,7 @@ static const struct scsi_host_template driver_templ=
 ate =3D {
- 	.eh_device_reset_handler =3D ipr_eh_dev_reset,
- 	.eh_host_reset_handler =3D ipr_eh_host_reset,
- 	.sdev_init =3D ipr_sdev_init,
--	.device_configure =3D ipr_device_configure,
-+	.sdev_configure =3D ipr_sdev_configure,
- 	.sdev_destroy =3D ipr_sdev_destroy,
- 	.scan_finished =3D ipr_scan_finished,
- 	.target_destroy =3D ipr_target_destroy,
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index c708e1059638..e81f60985193 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1057,8 +1057,8 @@ static umode_t iscsi_sw_tcp_attr_is_visible(int par=
-am_type, int param)
- 	return 0;
- }
-=20
--static int iscsi_sw_tcp_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int iscsi_sw_tcp_sdev_configure(struct scsi_device *sdev,
-+				       struct queue_limits *lim)
- {
- 	struct iscsi_sw_tcp_host *tcp_sw_host =3D iscsi_host_priv(sdev->host);
- 	struct iscsi_session *session =3D tcp_sw_host->session;
-@@ -1083,7 +1083,7 @@ static const struct scsi_host_template iscsi_sw_tcp=
-_sht =3D {
- 	.eh_device_reset_handler=3D iscsi_eh_device_reset,
- 	.eh_target_reset_handler =3D iscsi_eh_recover_target,
- 	.dma_boundary		=3D PAGE_SIZE - 1,
--	.device_configure	=3D iscsi_sw_tcp_device_configure,
-+	.sdev_configure		=3D iscsi_sw_tcp_sdev_configure,
- 	.proc_name		=3D "iscsi_tcp",
+ 	.bios_param		=3D twa_scsi_biosparam,
+ 	.change_queue_depth	=3D scsi_change_queue_depth,
+ 	.can_queue		=3D TW_Q_LENGTH-2,
+-	.slave_configure	=3D twa_slave_configure,
++	.sdev_configure		=3D twa_sdev_configure,
  	.this_id		=3D -1,
- 	.track_queue_depth	=3D 1,
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sa=
-s_scsi_host.c
-index e7d5093f7c5d..55ce7892f217 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -804,15 +804,14 @@ EXPORT_SYMBOL_GPL(sas_target_alloc);
+ 	.sg_tablesize		=3D TW_APACHE_MAX_SGL_LENGTH,
+ 	.max_sectors		=3D TW_MAX_SECTORS,
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index caa6713a62a4..8ed7126d82bb 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -1523,13 +1523,14 @@ static void twl_shutdown(struct pci_dev *pdev)
+ } /* End twl_shutdown() */
 =20
- #define SAS_DEF_QD 256
-=20
--int sas_device_configure(struct scsi_device *scsi_dev,
--		struct queue_limits *lim)
-+int sas_sdev_configure(struct scsi_device *scsi_dev, struct queue_limits=
- *lim)
+ /* This function configures unit settings when a unit is coming on-line =
+*/
+-static int twl_slave_configure(struct scsi_device *sdev)
++static int twl_sdev_configure(struct scsi_device *sdev,
++			      struct queue_limits *lim)
  {
- 	struct domain_device *dev =3D sdev_to_domain_dev(scsi_dev);
-=20
- 	BUG_ON(dev->rphy->identify.device_type !=3D SAS_END_DEVICE);
-=20
- 	if (dev_is_sata(dev)) {
--		ata_sas_device_configure(scsi_dev, lim, dev->sata_dev.ap);
-+		ata_sas_sdev_configure(scsi_dev, lim, dev->sata_dev.ap);
- 		return 0;
- 	}
-=20
-@@ -830,7 +829,7 @@ int sas_device_configure(struct scsi_device *scsi_dev=
-,
+ 	/* Force 60 second timeout */
+ 	blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
 =20
  	return 0;
- }
--EXPORT_SYMBOL_GPL(sas_device_configure);
-+EXPORT_SYMBOL_GPL(sas_sdev_configure);
+-} /* End twl_slave_configure() */
++} /* End twl_sdev_configure() */
 =20
- int sas_change_queue_depth(struct scsi_device *sdev, int depth)
+ static const struct scsi_host_template driver_template =3D {
+ 	.module			=3D THIS_MODULE,
+@@ -1539,7 +1540,7 @@ static const struct scsi_host_template driver_templ=
+ate =3D {
+ 	.bios_param		=3D twl_scsi_biosparam,
+ 	.change_queue_depth	=3D scsi_change_queue_depth,
+ 	.can_queue		=3D TW_Q_LENGTH-2,
+-	.slave_configure	=3D twl_slave_configure,
++	.sdev_configure		=3D twl_sdev_configure,
+ 	.this_id		=3D -1,
+ 	.sg_tablesize		=3D TW_LIBERATOR_MAX_SGL_LENGTH,
+ 	.max_sectors		=3D TW_MAX_SECTORS,
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 2c0fb6da0e60..82fb9dc8dac9 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -172,7 +172,7 @@
+                  Initialize queues correctly when loading with no valid =
+units.
+    1.02.00.034 - Fix tw_decode_bits() to handle multiple errors.
+                  Add support for user configurable cmd_per_lun.
+-                 Add support for sht->slave_configure().
++                 Add support for sht->sdev_configure().
+    1.02.00.035 - Improve tw_allocate_memory() memory allocation.
+                  Fix tw_chrdev_ioctl() to sleep correctly.
+    1.02.00.036 - Increase character ioctl timeout to 60 seconds.
+@@ -2221,13 +2221,13 @@ static void tw_shutdown(struct pci_dev *pdev)
+ } /* End tw_shutdown() */
+=20
+ /* This function gets called when a disk is coming online */
+-static int tw_slave_configure(struct scsi_device *sdev)
++static int tw_sdev_configure(struct scsi_device *sdev, struct queue_limi=
+ts *lim)
  {
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-index 56cb240d9631..d7b0fbce88fa 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2068,8 +2068,8 @@ static void megasas_set_static_target_properties(st=
-ruct scsi_device *sdev,
+ 	/* Force 60 second timeout */
+ 	blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
+=20
+ 	return 0;
+-} /* End tw_slave_configure() */
++} /* End tw_sdev_configure() */
+=20
+ static const struct scsi_host_template driver_template =3D {
+ 	.module			=3D THIS_MODULE,
+@@ -2237,7 +2237,7 @@ static const struct scsi_host_template driver_templ=
+ate =3D {
+ 	.bios_param		=3D tw_scsi_biosparam,
+ 	.change_queue_depth	=3D scsi_change_queue_depth,
+ 	.can_queue		=3D TW_Q_LENGTH-2,
+-	.slave_configure	=3D tw_slave_configure,
++	.sdev_configure		=3D tw_sdev_configure,
+ 	.this_id		=3D -1,
+ 	.sg_tablesize		=3D TW_MAX_SGL_LENGTH,
+ 	.max_sectors		=3D TW_MAX_SECTORS,
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 71c1d25f93b1..71b7ac027f48 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -159,7 +159,8 @@ STATIC int NCR_700_host_reset(struct scsi_cmnd * SCpn=
+t);
+ STATIC void NCR_700_chip_setup(struct Scsi_Host *host);
+ STATIC void NCR_700_chip_reset(struct Scsi_Host *host);
+ STATIC int NCR_700_sdev_init(struct scsi_device *SDpnt);
+-STATIC int NCR_700_slave_configure(struct scsi_device *SDpnt);
++STATIC int NCR_700_sdev_configure(struct scsi_device *SDpnt,
++				  struct queue_limits *lim);
+ STATIC void NCR_700_sdev_destroy(struct scsi_device *SDpnt);
+ static int NCR_700_change_queue_depth(struct scsi_device *SDpnt, int dep=
+th);
+=20
+@@ -330,7 +331,7 @@ NCR_700_detect(struct scsi_host_template *tpnt,
+ 	tpnt->can_queue =3D NCR_700_COMMAND_SLOTS_PER_HOST;
+ 	tpnt->sg_tablesize =3D NCR_700_SG_SEGMENTS;
+ 	tpnt->cmd_per_lun =3D NCR_700_CMD_PER_LUN;
+-	tpnt->slave_configure =3D NCR_700_slave_configure;
++	tpnt->sdev_configure =3D NCR_700_sdev_configure;
+ 	tpnt->sdev_destroy =3D NCR_700_sdev_destroy;
+ 	tpnt->sdev_init =3D NCR_700_sdev_init;
+ 	tpnt->change_queue_depth =3D NCR_700_change_queue_depth;
+@@ -2029,7 +2030,7 @@ NCR_700_sdev_init(struct scsi_device *SDp)
  }
 =20
-=20
--static int megasas_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int megasas_sdev_configure(struct scsi_device *sdev,
-+				  struct queue_limits *lim)
+ STATIC int
+-NCR_700_slave_configure(struct scsi_device *SDp)
++NCR_700_sdev_configure(struct scsi_device *SDp, struct queue_limits *lim=
+)
  {
- 	u16 pd_index =3D 0;
- 	struct megasas_instance *instance;
-@@ -3510,7 +3510,7 @@ static const struct scsi_host_template megasas_temp=
-late =3D {
- 	.module =3D THIS_MODULE,
- 	.name =3D "Avago SAS based MegaRAID driver",
- 	.proc_name =3D "megaraid_sas",
--	.device_configure =3D megasas_device_configure,
-+	.sdev_configure =3D megasas_sdev_configure,
- 	.sdev_init =3D megasas_sdev_init,
- 	.sdev_destroy =3D megasas_sdev_destroy,
- 	.queuecommand =3D megasas_queue_command,
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-index 6b9f453565f2..f84bdce8c65c 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4552,7 +4552,7 @@ static void mpi3mr_target_destroy(struct scsi_targe=
-t *starget)
+ 	struct NCR_700_Host_Parameters *hostdata =3D=20
+ 		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 2135a2b3e2d0..d04b5feec2eb 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2153,14 +2153,15 @@ static void __init blogic_inithoststruct(struct b=
+logic_adapter *adapter,
  }
 =20
- /**
-- * mpi3mr_device_configure - Slave configure callback handler
-+ * mpi3mr_sdev_configure - Slave configure callback handler
-  * @sdev: SCSI device reference
-  * @lim: queue limits
-  *
-@@ -4561,8 +4561,8 @@ static void mpi3mr_target_destroy(struct scsi_targe=
-t *starget)
-  *
-  * Return: 0 always.
-  */
--static int mpi3mr_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int mpi3mr_sdev_configure(struct scsi_device *sdev,
+ /*
+-  blogic_slaveconfig will actually set the queue depth on individual
++  blogic_sdev_configure will actually set the queue depth on individual
+   scsi devices as they are permanently added to the device chain.  We
+   shamelessly rip off the SelectQueueDepths code to make this work mostl=
+y
+   like it used to.  Since we don't get called once at the end of the sca=
+n
+   but instead get called for each device, we have to do things a bit
+   differently.
+ */
+-static int blogic_slaveconfig(struct scsi_device *dev)
++static int blogic_sdev_configure(struct scsi_device *dev,
 +				 struct queue_limits *lim)
  {
- 	struct scsi_target *starget;
- 	struct Scsi_Host *shost;
-@@ -5063,7 +5063,7 @@ static const struct scsi_host_template mpi3mr_drive=
-r_template =3D {
- 	.queuecommand			=3D mpi3mr_qcmd,
- 	.target_alloc			=3D mpi3mr_target_alloc,
- 	.sdev_init			=3D mpi3mr_sdev_init,
--	.device_configure		=3D mpi3mr_device_configure,
-+	.sdev_configure			=3D mpi3mr_sdev_configure,
- 	.target_destroy			=3D mpi3mr_target_destroy,
- 	.sdev_destroy			=3D mpi3mr_sdev_destroy,
- 	.scan_finished			=3D mpi3mr_scan_finished,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-index f113fba81f02..38cb83793f9d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2497,7 +2497,7 @@ _scsih_enable_tlr(struct MPT3SAS_ADAPTER *ioc, stru=
-ct scsi_device *sdev)
+ 	struct blogic_adapter *adapter =3D
+ 		(struct blogic_adapter *) dev->host->hostdata;
+@@ -3672,7 +3673,7 @@ static const struct scsi_host_template blogic_templ=
+ate =3D {
+ 	.name =3D "BusLogic",
+ 	.info =3D blogic_drvr_info,
+ 	.queuecommand =3D blogic_qcmd,
+-	.slave_configure =3D blogic_slaveconfig,
++	.sdev_configure =3D blogic_sdev_configure,
+ 	.bios_param =3D blogic_diskparam,
+ 	.eh_host_reset_handler =3D blogic_hostreset,
+ #if 0
+diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+index 7d1ec10f2430..61bf26d4fc10 100644
+--- a/drivers/scsi/BusLogic.h
++++ b/drivers/scsi/BusLogic.h
+@@ -1274,7 +1274,8 @@ static inline void blogic_incszbucket(unsigned int =
+*cmdsz_buckets,
+ static const char *blogic_drvr_info(struct Scsi_Host *);
+ static int blogic_qcmd(struct Scsi_Host *h, struct scsi_cmnd *);
+ static int blogic_diskparam(struct scsi_device *, struct block_device *,=
+ sector_t, int *);
+-static int blogic_slaveconfig(struct scsi_device *);
++static int blogic_sdev_configure(struct scsi_device *,
++				 struct queue_limits *lim);
+ static void blogic_qcompleted_ccb(struct blogic_ccb *);
+ static irqreturn_t blogic_inthandler(int, void *);
+ static int blogic_resetadapter(struct blogic_adapter *, bool hard_reset)=
+;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 68f4dbcfff49..91170a67cc91 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -377,15 +377,17 @@ static int aac_biosparm(struct scsi_device *sdev, s=
+truct block_device *bdev,
  }
 =20
  /**
-- * scsih_device_configure - device configure routine.
-+ * scsih_sdev_configure - device configure routine.
-  * @sdev: scsi device struct
-  * @lim: queue limits
+- *	aac_slave_configure		-	compute queue depths
++ *	aac_sdev_configure		-	compute queue depths
+  *	@sdev:	SCSI device we are considering
++ *	@lim:	Request queue limits
   *
-@@ -2505,7 +2505,7 @@ _scsih_enable_tlr(struct MPT3SAS_ADAPTER *ioc, stru=
-ct scsi_device *sdev)
-  * the device is ignored.
+  *	Selects queue depths for each target device based on the host adapter=
+'s
+  *	total capacity and the queue depth supported by the target device.
+  *	A queue depth of one automatically disables tagged queueing.
+  */
+=20
+-static int aac_slave_configure(struct scsi_device *sdev)
++static int aac_sdev_configure(struct scsi_device *sdev,
++			      struct queue_limits *lim)
+ {
+ 	struct aac_dev *aac =3D (struct aac_dev *)sdev->host->hostdata;
+ 	int chn, tid;
+@@ -1487,7 +1489,7 @@ static const struct scsi_host_template aac_driver_t=
+emplate =3D {
+ 	.queuecommand			=3D aac_queuecommand,
+ 	.bios_param			=3D aac_biosparm,
+ 	.shost_groups			=3D aac_host_groups,
+-	.slave_configure		=3D aac_slave_configure,
++	.sdev_configure			=3D aac_sdev_configure,
+ 	.change_queue_depth		=3D aac_change_queue_depth,
+ 	.sdev_groups			=3D aac_dev_groups,
+ 	.eh_abort_handler		=3D aac_eh_abort,
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index fd4fcb37863d..8fededa1a751 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -4496,7 +4496,7 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dv=
+c)
+=20
+ 	/*
+ 	 * Microcode operating variables for WDTR, SDTR, and command tag
+-	 * queuing will be set in slave_configure() based on what a
++	 * queuing will be set in sdev_configure() based on what a
+ 	 * device reports it is capable of in Inquiry byte 7.
+ 	 *
+ 	 * If SCSI Bus Resets have been disabled, then directly set
+@@ -5013,7 +5013,7 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc=
+_dvc)
+=20
+ 	/*
+ 	 * Microcode operating variables for WDTR, SDTR, and command tag
+-	 * queuing will be set in slave_configure() based on what a
++	 * queuing will be set in sdev_configure() based on what a
+ 	 * device reports it is capable of in Inquiry byte 7.
+ 	 *
+ 	 * If SCSI Bus Resets have been disabled, then directly set
+@@ -5508,7 +5508,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc=
+_dvc)
+=20
+ 	/*
+ 	 * Microcode operating variables for WDTR, SDTR, and command tag
+-	 * queuing will be set in slave_configure() based on what a
++	 * queuing will be set in sdev_configure() based on what a
+ 	 * device reports it is capable of in Inquiry byte 7.
+ 	 *
+ 	 * If SCSI Bus Resets have been disabled, then directly set
+@@ -7219,7 +7219,7 @@ static void AscAsyncFix(ASC_DVC_VAR *asc_dvc, struc=
+t scsi_device *sdev)
+ }
+=20
+ static void
+-advansys_narrow_slave_configure(struct scsi_device *sdev, ASC_DVC_VAR *a=
+sc_dvc)
++advansys_narrow_sdev_configure(struct scsi_device *sdev, ASC_DVC_VAR *as=
+c_dvc)
+ {
+ 	ASC_SCSI_BIT_ID_TYPE tid_bit =3D 1 << sdev->id;
+ 	ASC_SCSI_BIT_ID_TYPE orig_use_tagged_qng =3D asc_dvc->use_tagged_qng;
+@@ -7345,7 +7345,7 @@ static void advansys_wide_enable_ppr(ADV_DVC_VAR *a=
+dv_dvc,
+ }
+=20
+ static void
+-advansys_wide_slave_configure(struct scsi_device *sdev, ADV_DVC_VAR *adv=
+_dvc)
++advansys_wide_sdev_configure(struct scsi_device *sdev, ADV_DVC_VAR *adv_=
+dvc)
+ {
+ 	AdvPortAddr iop_base =3D adv_dvc->iop_base;
+ 	unsigned short tidmask =3D 1 << sdev->id;
+@@ -7391,16 +7391,17 @@ advansys_wide_slave_configure(struct scsi_device =
+*sdev, ADV_DVC_VAR *adv_dvc)
+  * Set the number of commands to queue per device for the
+  * specified host adapter.
+  */
+-static int advansys_slave_configure(struct scsi_device *sdev)
++static int advansys_sdev_configure(struct scsi_device *sdev,
++				   struct queue_limits *lim)
+ {
+ 	struct asc_board *boardp =3D shost_priv(sdev->host);
+=20
+ 	if (ASC_NARROW_BOARD(boardp))
+-		advansys_narrow_slave_configure(sdev,
+-						&boardp->dvc_var.asc_dvc_var);
++		advansys_narrow_sdev_configure(sdev,
++					       &boardp->dvc_var.asc_dvc_var);
+ 	else
+-		advansys_wide_slave_configure(sdev,
+-						&boardp->dvc_var.adv_dvc_var);
++		advansys_wide_sdev_configure(sdev,
++					     &boardp->dvc_var.adv_dvc_var);
+=20
+ 	return 0;
+ }
+@@ -10612,7 +10613,7 @@ static const struct scsi_host_template advansys_t=
+emplate =3D {
+ 	.queuecommand =3D advansys_queuecommand,
+ 	.eh_host_reset_handler =3D advansys_reset,
+ 	.bios_param =3D advansys_biosparam,
+-	.slave_configure =3D advansys_slave_configure,
++	.sdev_configure =3D advansys_sdev_configure,
+ 	.cmd_size =3D sizeof(struct advansys_cmd),
+ };
+=20
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/ai=
+c79xx_osm.c
+index 2a137629e48d..17dfc3c72110 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -701,7 +701,7 @@ ahd_linux_sdev_init(struct scsi_device *sdev)
+ }
+=20
+ static int
+-ahd_linux_slave_configure(struct scsi_device *sdev)
++ahd_linux_sdev_configure(struct scsi_device *sdev, struct queue_limits *=
+lim)
+ {
+ 	if (bootverbose)
+ 		sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+@@ -907,7 +907,7 @@ struct scsi_host_template aic79xx_driver_template =3D=
+ {
+ 	.max_sectors		=3D 8192,
+ 	.cmd_per_lun		=3D 2,
+ 	.sdev_init		=3D ahd_linux_sdev_init,
+-	.slave_configure	=3D ahd_linux_slave_configure,
++	.sdev_configure		=3D ahd_linux_sdev_configure,
+ 	.target_alloc		=3D ahd_linux_target_alloc,
+ 	.target_destroy		=3D ahd_linux_target_destroy,
+ };
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/ai=
+c7xxx_osm.c
+index 9066ab2ef6e3..cebf8c5d0caf 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -664,7 +664,7 @@ ahc_linux_sdev_init(struct scsi_device *sdev)
+ }
+=20
+ static int
+-ahc_linux_slave_configure(struct scsi_device *sdev)
++ahc_linux_sdev_configure(struct scsi_device *sdev, struct queue_limits *=
+lim)
+ {
+ 	if (bootverbose)
+ 		sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+@@ -792,7 +792,7 @@ struct scsi_host_template aic7xxx_driver_template =3D=
+ {
+ 	.max_sectors		=3D 8192,
+ 	.cmd_per_lun		=3D 2,
+ 	.sdev_init		=3D ahc_linux_sdev_init,
+-	.slave_configure	=3D ahc_linux_slave_configure,
++	.sdev_configure		=3D ahc_linux_sdev_configure,
+ 	.target_alloc		=3D ahc_linux_target_alloc,
+ 	.target_destroy		=3D ahc_linux_target_destroy,
+ };
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
+r_hba.c
+index 35860c61468b..6a32e3e0d516 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -143,7 +143,8 @@ static irqreturn_t arcmsr_interrupt(struct AdapterCon=
+trolBlock *acb);
+ static void arcmsr_free_irq(struct pci_dev *, struct AdapterControlBlock=
+ *);
+ static void arcmsr_wait_firmware_ready(struct AdapterControlBlock *acb);
+ static void arcmsr_set_iop_datetime(struct timer_list *);
+-static int arcmsr_slave_config(struct scsi_device *sdev);
++static int arcmsr_sdev_configure(struct scsi_device *sdev,
++				 struct queue_limits *lim);
+ static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev, int =
+queue_depth)
+ {
+ 	if (queue_depth > ARCMSR_MAX_CMD_PERLUN)
+@@ -160,7 +161,7 @@ static const struct scsi_host_template arcmsr_scsi_ho=
+st_template =3D {
+ 	.eh_abort_handler	=3D arcmsr_abort,
+ 	.eh_bus_reset_handler	=3D arcmsr_bus_reset,
+ 	.bios_param		=3D arcmsr_bios_param,
+-	.slave_configure	=3D arcmsr_slave_config,
++	.sdev_configure		=3D arcmsr_sdev_configure,
+ 	.change_queue_depth	=3D arcmsr_adjust_disk_queue_depth,
+ 	.can_queue		=3D ARCMSR_DEFAULT_OUTSTANDING_CMD,
+ 	.this_id		=3D ARCMSR_SCSI_INITIATOR_ID,
+@@ -3344,7 +3345,8 @@ static int arcmsr_queue_command_lck(struct scsi_cmn=
+d *cmd)
+=20
+ static DEF_SCSI_QCMD(arcmsr_queue_command)
+=20
+-static int arcmsr_slave_config(struct scsi_device *sdev)
++static int arcmsr_sdev_configure(struct scsi_device *sdev,
++				 struct queue_limits *lim)
+ {
+ 	unsigned int	dev_timeout;
+=20
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 5729f429ed8b..a719a18f0fbc 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -783,7 +783,7 @@ bfad_thread_workq(struct bfad_s *bfad)
+  * Return non-zero if fails.
   */
  static int
--scsih_device_configure(struct scsi_device *sdev, struct queue_limits *li=
+-bfad_im_slave_configure(struct scsi_device *sdev)
++bfad_im_sdev_configure(struct scsi_device *sdev, struct queue_limits *li=
 m)
-+scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
  {
- 	struct Scsi_Host *shost =3D sdev->host;
- 	struct MPT3SAS_ADAPTER *ioc =3D shost_priv(shost);
-@@ -11906,7 +11906,7 @@ static const struct scsi_host_template mpt2sas_dr=
-iver_template =3D {
- 	.queuecommand			=3D scsih_qcmd,
- 	.target_alloc			=3D scsih_target_alloc,
- 	.sdev_init			=3D scsih_sdev_init,
--	.device_configure		=3D scsih_device_configure,
-+	.sdev_configure			=3D scsih_sdev_configure,
- 	.target_destroy			=3D scsih_target_destroy,
- 	.sdev_destroy			=3D scsih_sdev_destroy,
- 	.scan_finished			=3D scsih_scan_finished,
-@@ -11944,7 +11944,7 @@ static const struct scsi_host_template mpt3sas_dr=
-iver_template =3D {
- 	.queuecommand			=3D scsih_qcmd,
- 	.target_alloc			=3D scsih_target_alloc,
- 	.sdev_init			=3D scsih_sdev_init,
--	.device_configure		=3D scsih_device_configure,
-+	.sdev_configure			=3D scsih_sdev_configure,
- 	.target_destroy			=3D scsih_target_destroy,
- 	.sdev_destroy			=3D scsih_sdev_destroy,
- 	.scan_finished			=3D scsih_scan_finished,
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index d9e6e75e801c..2342ded7ee78 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -197,7 +197,7 @@ static int pmcraid_sdev_init(struct scsi_device *scsi=
-_dev)
- }
+ 	scsi_change_queue_depth(sdev, bfa_lun_queue_depth);
+ 	return 0;
+@@ -801,7 +801,7 @@ struct scsi_host_template bfad_im_scsi_host_template =
+=3D {
+ 	.eh_target_reset_handler =3D bfad_im_reset_target_handler,
 =20
- /**
-- * pmcraid_device_configure - Configures a SCSI device
-+ * pmcraid_sdev_configure - Configures a SCSI device
-  * @scsi_dev: scsi device struct
-  * @lim: queue limits
-  *
-@@ -210,8 +210,8 @@ static int pmcraid_sdev_init(struct scsi_device *scsi=
-_dev)
-  * Return value:
-  *	  0 on success
-  */
--static int pmcraid_device_configure(struct scsi_device *scsi_dev,
--		struct queue_limits *lim)
-+static int pmcraid_sdev_configure(struct scsi_device *scsi_dev,
-+				  struct queue_limits *lim)
- {
- 	struct pmcraid_resource_entry *res =3D scsi_dev->hostdata;
+ 	.sdev_init =3D bfad_im_sdev_init,
+-	.slave_configure =3D bfad_im_slave_configure,
++	.sdev_configure =3D bfad_im_sdev_configure,
+ 	.sdev_destroy =3D bfad_im_sdev_destroy,
 =20
-@@ -3669,7 +3669,7 @@ static const struct scsi_host_template pmcraid_host=
-_template =3D {
- 	.eh_host_reset_handler =3D pmcraid_eh_host_reset_handler,
+ 	.this_id =3D -1,
+@@ -824,7 +824,7 @@ struct scsi_host_template bfad_im_vport_template =3D =
+{
+ 	.eh_target_reset_handler =3D bfad_im_reset_target_handler,
 =20
- 	.sdev_init =3D pmcraid_sdev_init,
--	.device_configure =3D pmcraid_device_configure,
-+	.sdev_configure =3D pmcraid_sdev_configure,
- 	.sdev_destroy =3D pmcraid_sdev_destroy,
- 	.change_queue_depth =3D pmcraid_change_queue_depth,
- 	.can_queue =3D PMCRAID_MAX_IO_CMD,
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index da8aecc9d304..b60c218dc0d0 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -227,7 +227,7 @@ static int scsi_realloc_sdev_budget_map(struct scsi_d=
-evice *sdev,
+ 	.sdev_init =3D bfad_im_sdev_init,
+-	.slave_configure =3D bfad_im_slave_configure,
++	.sdev_configure =3D bfad_im_sdev_configure,
+ 	.sdev_destroy =3D bfad_im_sdev_destroy,
 =20
- 	/*
- 	 * realloc if new shift is calculated, which is caused by setting
--	 * up one new default queue depth after calling ->device_configure
-+	 * up one new default queue depth after calling ->sdev_configure
- 	 */
- 	if (!need_alloc && new_shift !=3D sdev->budget_map.shift)
- 		need_alloc =3D need_free =3D true;
-@@ -1074,8 +1074,8 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
-nsigned char *inq_result,
- 	else if (*bflags & BLIST_MAX_1024)
- 		lim.max_hw_sectors =3D 1024;
-=20
--	if (hostt->device_configure)
--		ret =3D hostt->device_configure(sdev, &lim);
-+	if (hostt->sdev_configure)
-+		ret =3D hostt->sdev_configure(sdev, &lim);
- 	else if (hostt->slave_configure)
- 		ret =3D hostt->slave_configure(sdev);
- 	if (ret) {
-@@ -1097,12 +1097,12 @@ static int scsi_add_lun(struct scsi_device *sdev,=
- unsigned char *inq_result,
- 	}
-=20
- 	/*
--	 * The queue_depth is often changed in ->device_configure.
-+	 * The queue_depth is often changed in ->sdev_configure.
- 	 *
- 	 * Set up budget map again since memory consumption of the map depends
- 	 * on actual queue depth.
- 	 */
--	if (hostt->device_configure || hostt->slave_configure)
-+	if (hostt->sdev_configure || hostt->slave_configure)
- 		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
-=20
- 	if (sdev->scsi_level >=3D SCSI_3)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 36410c2e1ee4..d6b4e9404087 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5225,14 +5225,14 @@ static int ufshcd_change_queue_depth(struct scsi_=
-device *sdev, int depth)
- }
-=20
- /**
-- * ufshcd_device_configure - adjust SCSI device configurations
-+ * ufshcd_sdev_configure - adjust SCSI device configurations
-  * @sdev: pointer to SCSI device
-  * @lim: queue limits
-  *
-  * Return: 0 (success).
-  */
--static int ufshcd_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int ufshcd_sdev_configure(struct scsi_device *sdev,
-+				 struct queue_limits *lim)
- {
- 	struct ufs_hba *hba =3D shost_priv(sdev->host);
- 	struct request_queue *q =3D sdev->request_queue;
-@@ -8974,7 +8974,7 @@ static const struct scsi_host_template ufshcd_drive=
-r_template =3D {
- 	.queuecommand		=3D ufshcd_queuecommand,
- 	.mq_poll		=3D ufshcd_poll,
- 	.sdev_init		=3D ufshcd_sdev_init,
--	.device_configure	=3D ufshcd_device_configure,
-+	.sdev_configure		=3D ufshcd_sdev_configure,
- 	.sdev_destroy		=3D ufshcd_sdev_destroy,
- 	.change_queue_depth	=3D ufshcd_change_queue_depth,
- 	.eh_abort_handler	=3D ufshcd_abort,
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglu=
-e.c
-index a64ce2aca9ec..7e2ee926200d 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -88,7 +88,7 @@ static int sdev_init (struct scsi_device *sdev)
+ 	.this_id =3D -1,
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2=
+fc_fcoe.c
+index 938e38a01326..d75472622337 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2652,7 +2652,8 @@ static int bnx2fc_cpu_offline(unsigned int cpu)
  	return 0;
  }
 =20
--static int device_configure(struct scsi_device *sdev, struct queue_limit=
-s *lim)
+-static int bnx2fc_slave_configure(struct scsi_device *sdev)
++static int bnx2fc_sdev_configure(struct scsi_device *sdev,
++				 struct queue_limits *lim)
+ {
+ 	if (!bnx2fc_queue_depth)
+ 		return 0;
+@@ -2959,7 +2960,7 @@ static struct scsi_host_template bnx2fc_shost_templ=
+ate =3D {
+ 	.dma_boundary           =3D 0x7fff,
+ 	.max_sectors		=3D 0x3fbf,
+ 	.track_queue_depth	=3D 1,
+-	.slave_configure	=3D bnx2fc_slave_configure,
++	.sdev_configure		=3D bnx2fc_sdev_configure,
+ 	.shost_groups		=3D bnx2fc_host_groups,
+ 	.cmd_size		=3D sizeof(struct bnx2fc_priv),
+ };
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/cs=
+io_scsi.c
+index fb6b0c8e22e0..36d31c31c8e4 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -2237,7 +2237,7 @@ csio_sdev_init(struct scsi_device *sdev)
+ }
+=20
+ static int
+-csio_slave_configure(struct scsi_device *sdev)
++csio_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+ {
+ 	scsi_change_queue_depth(sdev, csio_lun_qdepth);
+ 	return 0;
+@@ -2277,7 +2277,7 @@ struct scsi_host_template csio_fcoe_shost_template =
+=3D {
+ 	.eh_abort_handler	=3D csio_eh_abort_handler,
+ 	.eh_device_reset_handler =3D csio_eh_lun_reset_handler,
+ 	.sdev_init		=3D csio_sdev_init,
+-	.slave_configure	=3D csio_slave_configure,
++	.sdev_configure		=3D csio_sdev_configure,
+ 	.sdev_destroy		=3D csio_sdev_destroy,
+ 	.scan_finished		=3D csio_scan_finished,
+ 	.this_id		=3D -1,
+@@ -2296,7 +2296,7 @@ struct scsi_host_template csio_fcoe_shost_vport_tem=
+plate =3D {
+ 	.eh_abort_handler	=3D csio_eh_abort_handler,
+ 	.eh_device_reset_handler =3D csio_eh_lun_reset_handler,
+ 	.sdev_init		=3D csio_sdev_init,
+-	.slave_configure	=3D csio_slave_configure,
++	.sdev_configure		=3D csio_sdev_configure,
+ 	.sdev_destroy		=3D csio_sdev_destroy,
+ 	.scan_finished		=3D csio_scan_finished,
+ 	.this_id		=3D -1,
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index d14a3383abb0..802718ffad84 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2261,7 +2261,7 @@ static void esp_init_swstate(struct esp *esp)
+ 	INIT_LIST_HEAD(&esp->active_cmds);
+ 	INIT_LIST_HEAD(&esp->esp_cmd_pool);
+=20
+-	/* Start with a clear state, domain validation (via ->slave_configure,
++	/* Start with a clear state, domain validation (via ->sdev_configure,
+ 	 * spi_dv_device()) will attempt to enable SYNC, WIDE, and tagged
+ 	 * commands.
+ 	 */
+@@ -2463,7 +2463,7 @@ static int esp_sdev_init(struct scsi_device *dev)
+ 	return 0;
+ }
+=20
+-static int esp_slave_configure(struct scsi_device *dev)
++static int esp_sdev_configure(struct scsi_device *dev, struct queue_limi=
+ts *lim)
+ {
+ 	struct esp *esp =3D shost_priv(dev->host);
+ 	struct esp_target_data *tp =3D &esp->target[dev->id];
+@@ -2668,7 +2668,7 @@ const struct scsi_host_template scsi_esp_template =3D=
+ {
+ 	.target_alloc		=3D esp_target_alloc,
+ 	.target_destroy		=3D esp_target_destroy,
+ 	.sdev_init		=3D esp_sdev_init,
+-	.slave_configure	=3D esp_slave_configure,
++	.sdev_configure		=3D esp_sdev_configure,
+ 	.sdev_destroy		=3D esp_sdev_destroy,
+ 	.eh_abort_handler	=3D esp_eh_abort_handler,
+ 	.eh_bus_reset_handler	=3D esp_eh_bus_reset_handler,
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index eccdec143ad8..56b122cda86c 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -284,7 +284,8 @@ static int hpsa_change_queue_depth(struct scsi_device=
+ *sdev, int qdepth);
+=20
+ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd);
+ static int hpsa_sdev_init(struct scsi_device *sdev);
+-static int hpsa_slave_configure(struct scsi_device *sdev);
++static int hpsa_sdev_configure(struct scsi_device *sdev,
++			       struct queue_limits *lim);
+ static void hpsa_sdev_destroy(struct scsi_device *sdev);
+=20
+ static void hpsa_update_scsi_devices(struct ctlr_info *h);
+@@ -979,7 +980,7 @@ static const struct scsi_host_template hpsa_driver_te=
+mplate =3D {
+ 	.eh_device_reset_handler =3D hpsa_eh_device_reset_handler,
+ 	.ioctl			=3D hpsa_ioctl,
+ 	.sdev_init		=3D hpsa_sdev_init,
+-	.slave_configure	=3D hpsa_slave_configure,
++	.sdev_configure		=3D hpsa_sdev_configure,
+ 	.sdev_destroy		=3D hpsa_sdev_destroy,
+ #ifdef CONFIG_COMPAT
+ 	.compat_ioctl		=3D hpsa_compat_ioctl,
+@@ -2142,7 +2143,8 @@ static int hpsa_sdev_init(struct scsi_device *sdev)
+=20
+ /* configure scsi device based on internal per-device structure */
+ #define CTLR_TIMEOUT (120 * HZ)
+-static int hpsa_slave_configure(struct scsi_device *sdev)
++static int hpsa_sdev_configure(struct scsi_device *sdev,
++			       struct queue_limits *lim)
+ {
+ 	struct hpsa_scsi_dev_t *sd;
+ 	int queue_depth;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
+c.c
+index 48417615bffe..ee606db81874 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -3441,8 +3441,9 @@ static int ibmvfc_target_alloc(struct scsi_target *=
+starget)
+ }
+=20
+ /**
+- * ibmvfc_slave_configure - Configure the device
++ * ibmvfc_sdev_configure - Configure the device
+  * @sdev:	struct scsi_device device to configure
++ * @lim:	Request queue limits
+  *
+  * Enable allow_restart for a device if it is a disk. Adjust the
+  * queue_depth here also.
+@@ -3450,7 +3451,8 @@ static int ibmvfc_target_alloc(struct scsi_target *=
+starget)
+  * Returns:
+  *	0
+  **/
+-static int ibmvfc_slave_configure(struct scsi_device *sdev)
++static int ibmvfc_sdev_configure(struct scsi_device *sdev,
++				 struct queue_limits *lim)
+ {
+ 	struct Scsi_Host *shost =3D sdev->host;
+ 	unsigned long flags =3D 0;
+@@ -3697,7 +3699,7 @@ static const struct scsi_host_template driver_templ=
+ate =3D {
+ 	.eh_target_reset_handler =3D ibmvfc_eh_target_reset_handler,
+ 	.eh_host_reset_handler =3D ibmvfc_eh_host_reset_handler,
+ 	.sdev_init =3D ibmvfc_sdev_init,
+-	.slave_configure =3D ibmvfc_slave_configure,
++	.sdev_configure =3D ibmvfc_sdev_configure,
+ 	.target_alloc =3D ibmvfc_target_alloc,
+ 	.scan_finished =3D ibmvfc_scan_finished,
+ 	.change_queue_depth =3D ibmvfc_change_queue_depth,
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibm=
+vscsi.c
+index 71f3e9563520..16a1aac11911 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -1860,14 +1860,16 @@ static void ibmvscsi_handle_crq(struct viosrp_crq=
+ *crq,
+ }
+=20
+ /**
+- * ibmvscsi_slave_configure: Set the "allow_restart" flag for each disk.
++ * ibmvscsi_sdev_configure: Set the "allow_restart" flag for each disk.
+  * @sdev:	struct scsi_device device to configure
++ * @lim:	Request queue limits
+  *
+  * Enable allow_restart for a device if it is a disk.  Adjust the
+  * queue_depth here also as is required by the documentation for
+  * struct scsi_host_template.
+  */
+-static int ibmvscsi_slave_configure(struct scsi_device *sdev)
++static int ibmvscsi_sdev_configure(struct scsi_device *sdev,
++				   struct queue_limits *lim)
+ {
+ 	struct Scsi_Host *shost =3D sdev->host;
+ 	unsigned long lock_flags =3D 0;
+@@ -2091,7 +2093,7 @@ static struct scsi_host_template driver_template =3D=
+ {
+ 	.eh_abort_handler =3D ibmvscsi_eh_abort_handler,
+ 	.eh_device_reset_handler =3D ibmvscsi_eh_device_reset_handler,
+ 	.eh_host_reset_handler =3D ibmvscsi_eh_host_reset_handler,
+-	.slave_configure =3D ibmvscsi_slave_configure,
++	.sdev_configure =3D ibmvscsi_sdev_configure,
+ 	.change_queue_depth =3D ibmvscsi_change_queue_depth,
+ 	.host_reset =3D ibmvscsi_host_reset,
+ 	.cmd_per_lun =3D IBMVSCSI_CMDS_PER_LUN_DEFAULT,
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 10cf5775a939..cce6c6b409ad 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -364,7 +364,7 @@ static struct scsi_host_template ips_driver_template =
+=3D {
+ 	.proc_name		=3D "ips",
+ 	.show_info		=3D ips_show_info,
+ 	.write_info		=3D ips_write_info,
+-	.slave_configure	=3D ips_slave_configure,
++	.sdev_configure		=3D ips_sdev_configure,
+ 	.bios_param		=3D ips_biosparam,
+ 	.this_id		=3D -1,
+ 	.sg_tablesize		=3D IPS_MAX_SG,
+@@ -1166,7 +1166,7 @@ static int ips_biosparam(struct scsi_device *sdev, =
+struct block_device *bdev,
+=20
+ /***********************************************************************=
+*****/
+ /*                                                                      =
+    */
+-/* Routine Name: ips_slave_configure                                    =
+    */
++/* Routine Name: ips_sdev_configure                                     =
+    */
+ /*                                                                      =
+    */
+ /* Routine Description:                                                 =
+    */
+ /*                                                                      =
+    */
+@@ -1174,7 +1174,7 @@ static int ips_biosparam(struct scsi_device *sdev, =
+struct block_device *bdev,
+ /*                                                                      =
+    */
+ /***********************************************************************=
+*****/
+ static int
+-ips_slave_configure(struct scsi_device * SDptr)
++ips_sdev_configure(struct scsi_device *SDptr, struct queue_limits *lim)
+ {
+ 	ips_ha_t *ha;
+ 	int min;
+diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
+index 65edf000e447..8ac932ec4444 100644
+--- a/drivers/scsi/ips.h
++++ b/drivers/scsi/ips.h
+@@ -400,7 +400,8 @@
+     */
+    static int ips_biosparam(struct scsi_device *sdev, struct block_devic=
+e *bdev,
+ 		sector_t capacity, int geom[]);
+-   static int ips_slave_configure(struct scsi_device *SDptr);
++   static int ips_sdev_configure(struct scsi_device *SDptr,
++				 struct queue_limits *lim);
+=20
+ /*
+  * Raid Command Formats
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.=
+c
+index 3f408a47a36c..f3a48d722e69 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -6342,8 +6342,9 @@ lpfc_sdev_init(struct scsi_device *sdev)
+ }
+=20
+ /**
+- * lpfc_slave_configure - scsi_host_template slave_configure entry point
++ * lpfc_sdev_configure - scsi_host_template sdev_configure entry point
+  * @sdev: Pointer to scsi_device.
++ * @lim: Request queue limits.
+  *
+  * This routine configures following items
+  *   - Tag command queuing support for @sdev if supported.
+@@ -6353,7 +6354,7 @@ lpfc_sdev_init(struct scsi_device *sdev)
+  *   0 - Success
+  **/
+ static int
+-lpfc_slave_configure(struct scsi_device *sdev)
++lpfc_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+ {
+ 	struct lpfc_vport *vport =3D (struct lpfc_vport *) sdev->host->hostdata=
+;
+ 	struct lpfc_hba   *phba =3D vport->phba;
+@@ -6737,7 +6738,13 @@ lpfc_no_command(struct Scsi_Host *shost, struct sc=
+si_cmnd *cmnd)
+ }
+=20
+ static int
+-lpfc_no_sdev(struct scsi_device *sdev)
++lpfc_init_no_sdev(struct scsi_device *sdev)
++{
++	return -ENODEV;
++}
++
++static int
++lpfc_config_no_sdev(struct scsi_device *sdev, struct queue_limits *lim)
+ {
+ 	return -ENODEV;
+ }
+@@ -6748,8 +6755,8 @@ struct scsi_host_template lpfc_template_nvme =3D {
+ 	.proc_name		=3D LPFC_DRIVER_NAME,
+ 	.info			=3D lpfc_info,
+ 	.queuecommand		=3D lpfc_no_command,
+-	.sdev_init		=3D lpfc_no_sdev,
+-	.slave_configure	=3D lpfc_no_sdev,
++	.sdev_init		=3D lpfc_init_no_sdev,
++	.sdev_configure		=3D lpfc_config_no_sdev,
+ 	.scan_finished		=3D lpfc_scan_finished,
+ 	.this_id		=3D -1,
+ 	.sg_tablesize		=3D 1,
+@@ -6773,7 +6780,7 @@ struct scsi_host_template lpfc_template =3D {
+ 	.eh_target_reset_handler =3D lpfc_target_reset_handler,
+ 	.eh_host_reset_handler  =3D lpfc_host_reset_handler,
+ 	.sdev_init		=3D lpfc_sdev_init,
+-	.slave_configure	=3D lpfc_slave_configure,
++	.sdev_configure		=3D lpfc_sdev_configure,
+ 	.sdev_destroy		=3D lpfc_sdev_destroy,
+ 	.scan_finished		=3D lpfc_scan_finished,
+ 	.this_id		=3D -1,
+@@ -6800,7 +6807,7 @@ struct scsi_host_template lpfc_vport_template =3D {
+ 	.eh_bus_reset_handler	=3D NULL,
+ 	.eh_host_reset_handler	=3D NULL,
+ 	.sdev_init		=3D lpfc_sdev_init,
+-	.slave_configure	=3D lpfc_slave_configure,
++	.sdev_configure		=3D lpfc_sdev_configure,
+ 	.sdev_destroy		=3D lpfc_sdev_destroy,
+ 	.scan_finished		=3D lpfc_scan_finished,
+ 	.this_id		=3D -1,
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index d9d366ec17dc..96549e7f5705 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2000,7 +2000,8 @@ static struct mvumi_instance_template mvumi_instanc=
+e_9580 =3D {
+ 	.reset_host =3D mvumi_reset_host_9580,
+ };
+=20
+-static int mvumi_slave_configure(struct scsi_device *sdev)
++static int mvumi_sdev_configure(struct scsi_device *sdev,
++				struct queue_limits *lim)
+ {
+ 	struct mvumi_hba *mhba;
+ 	unsigned char bitcount =3D sizeof(unsigned char) * 8;
+@@ -2172,7 +2173,7 @@ static const struct scsi_host_template mvumi_templa=
+te =3D {
+=20
+ 	.module =3D THIS_MODULE,
+ 	.name =3D "Marvell Storage Controller",
+-	.slave_configure =3D mvumi_slave_configure,
++	.sdev_configure =3D mvumi_sdev_configure,
+ 	.queuecommand =3D mvumi_queue_command,
+ 	.eh_timed_out =3D mvumi_timed_out,
+ 	.eh_host_reset_handler =3D mvumi_host_reset,
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index 3586830c392c..762b718fd82f 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1715,7 +1715,8 @@ static int myrb_sdev_init(struct scsi_device *sdev)
+ 	return myrb_pdev_sdev_init(sdev);
+ }
+=20
+-static int myrb_slave_configure(struct scsi_device *sdev)
++static int myrb_sdev_configure(struct scsi_device *sdev,
++			       struct queue_limits *lim)
+ {
+ 	struct myrb_ldev_info *ldev_info;
+=20
+@@ -2209,7 +2210,7 @@ static const struct scsi_host_template myrb_templat=
+e =3D {
+ 	.queuecommand		=3D myrb_queuecommand,
+ 	.eh_host_reset_handler	=3D myrb_host_reset,
+ 	.sdev_init		=3D myrb_sdev_init,
+-	.slave_configure	=3D myrb_slave_configure,
++	.sdev_configure		=3D myrb_sdev_configure,
+ 	.sdev_destroy		=3D myrb_sdev_destroy,
+ 	.bios_param		=3D myrb_biosparam,
+ 	.cmd_size		=3D sizeof(struct myrb_cmdblk),
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index 2d276e654c27..53e54f413c5c 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -1882,7 +1882,8 @@ static int myrs_sdev_init(struct scsi_device *sdev)
+ 	return 0;
+ }
+=20
+-static int myrs_slave_configure(struct scsi_device *sdev)
++static int myrs_sdev_configure(struct scsi_device *sdev,
++			       struct queue_limits *lim)
+ {
+ 	struct myrs_hba *cs =3D shost_priv(sdev->host);
+ 	struct myrs_ldev_info *ldev_info;
+@@ -1922,7 +1923,7 @@ static const struct scsi_host_template myrs_templat=
+e =3D {
+ 	.queuecommand		=3D myrs_queuecommand,
+ 	.eh_host_reset_handler	=3D myrs_host_reset,
+ 	.sdev_init		=3D myrs_sdev_init,
+-	.slave_configure	=3D myrs_slave_configure,
++	.sdev_configure		=3D myrs_sdev_configure,
+ 	.sdev_destroy		=3D myrs_sdev_destroy,
+ 	.cmd_size		=3D sizeof(struct myrs_cmdblk),
+ 	.shost_groups		=3D myrs_shost_groups,
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index 526411dff48f..a06b7d7ae96b 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -7796,7 +7796,8 @@ static int ncr53c8xx_sdev_init(struct scsi_device *=
+device)
+ 	return 0;
+ }
+=20
+-static int ncr53c8xx_slave_configure(struct scsi_device *device)
++static int ncr53c8xx_sdev_configure(struct scsi_device *device,
++				    struct queue_limits *lim)
+ {
+ 	struct Scsi_Host *host =3D device->host;
+ 	struct ncb *np =3D ((struct host_data *) host->hostdata)->ncb;
+@@ -8093,7 +8094,7 @@ struct Scsi_Host * __init ncr_attach(struct scsi_ho=
+st_template *tpnt,
+ 		tpnt->shost_groups =3D ncr53c8xx_host_groups;
+=20
+ 	tpnt->queuecommand	=3D ncr53c8xx_queue_command;
+-	tpnt->slave_configure	=3D ncr53c8xx_slave_configure;
++	tpnt->sdev_configure	=3D ncr53c8xx_sdev_configure;
+ 	tpnt->sdev_init	=3D ncr53c8xx_sdev_init;
+ 	tpnt->eh_bus_reset_handler =3D ncr53c8xx_bus_reset;
+ 	tpnt->can_queue		=3D SCSI_NCR_CAN_QUEUE;
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index 90495a832f34..92fe5c5c5bb0 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -61,7 +61,8 @@ enum lv1_atapi_in_out {
+ };
+=20
+=20
+-static int ps3rom_slave_configure(struct scsi_device *scsi_dev)
++static int ps3rom_sdev_configure(struct scsi_device *scsi_dev,
++				 struct queue_limits *lim)
+ {
+ 	struct ps3rom_private *priv =3D shost_priv(scsi_dev->host);
+ 	struct ps3_storage_device *dev =3D priv->dev;
+@@ -325,7 +326,7 @@ static irqreturn_t ps3rom_interrupt(int irq, void *da=
+ta)
+=20
+ static const struct scsi_host_template ps3rom_host_template =3D {
+ 	.name =3D			DEVICE_NAME,
+-	.slave_configure =3D	ps3rom_slave_configure,
++	.sdev_configure =3D	ps3rom_sdev_configure,
+ 	.queuecommand =3D		ps3rom_queuecommand,
+ 	.can_queue =3D		1,
+ 	.this_id =3D		7,
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.=
+c
+index df756f3eef3e..41bce7a7d6c2 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -982,7 +982,8 @@ static int qedf_eh_host_reset(struct scsi_cmnd *sc_cm=
+d)
+ 	return SUCCESS;
+ }
+=20
+-static int qedf_slave_configure(struct scsi_device *sdev)
++static int qedf_sdev_configure(struct scsi_device *sdev,
++			       struct queue_limits *lim)
+ {
+ 	if (qedf_queue_depth) {
+ 		scsi_change_queue_depth(sdev, qedf_queue_depth);
+@@ -1003,7 +1004,7 @@ static const struct scsi_host_template qedf_host_te=
+mplate =3D {
+ 	.eh_device_reset_handler =3D qedf_eh_device_reset, /* lun reset */
+ 	.eh_target_reset_handler =3D qedf_eh_target_reset, /* target reset */
+ 	.eh_host_reset_handler  =3D qedf_eh_host_reset,
+-	.slave_configure	=3D qedf_slave_configure,
++	.sdev_configure	=3D qedf_sdev_configure,
+ 	.dma_boundary =3D QED_HW_DMA_BOUNDARY,
+ 	.sg_tablesize =3D QEDF_MAX_BDS_PER_CMD,
+ 	.can_queue =3D FCOE_PARAMS_NUM_TASKS,
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 8958547ac111..360867838abd 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -1159,7 +1159,7 @@ qla1280_set_target_parameters(struct scsi_qla_host =
+*ha, int bus, int target)
+=20
+=20
+ /***********************************************************************=
+***
+- *   qla1280_slave_configure
++ *   qla1280_sdev_configure
+  *
+  * Description:
+  *   Determines the queue depth for a given device.  There are two ways
+@@ -1170,7 +1170,7 @@ qla1280_set_target_parameters(struct scsi_qla_host =
+*ha, int bus, int target)
+  *   default queue depth (dependent on the number of hardware SCBs).
+  ***********************************************************************=
+***/
+ static int
+-qla1280_slave_configure(struct scsi_device *device)
++qla1280_sdev_configure(struct scsi_device *device, struct queue_limits *=
+lim)
+ {
+ 	struct scsi_qla_host *ha;
+ 	int default_depth =3D 3;
+@@ -4121,7 +4121,7 @@ static const struct scsi_host_template qla1280_driv=
+er_template =3D {
+ 	.proc_name		=3D "qla1280",
+ 	.name			=3D "Qlogic ISP 1280/12160",
+ 	.info			=3D qla1280_info,
+-	.slave_configure	=3D qla1280_slave_configure,
++	.sdev_configure		=3D qla1280_sdev_configure,
+ 	.queuecommand		=3D qla1280_queuecommand,
+ 	.eh_abort_handler	=3D qla1280_eh_abort,
+ 	.eh_device_reset_handler=3D qla1280_eh_device_reset,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.=
+c
+index 686e69d3ec98..6b7388cfc55e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1947,7 +1947,7 @@ qla2xxx_sdev_init(struct scsi_device *sdev)
+ }
+=20
+ static int
+-qla2xxx_slave_configure(struct scsi_device *sdev)
++qla2xxx_sdev_configure(struct scsi_device *sdev, struct queue_limits *li=
+m)
+ {
+ 	scsi_qla_host_t *vha =3D shost_priv(sdev->host);
+ 	struct req_que *req =3D vha->req;
+@@ -8086,7 +8086,7 @@ struct scsi_host_template qla2xxx_driver_template =3D=
+ {
+ 	.eh_bus_reset_handler	=3D qla2xxx_eh_bus_reset,
+ 	.eh_host_reset_handler	=3D qla2xxx_eh_host_reset,
+=20
+-	.slave_configure	=3D qla2xxx_slave_configure,
++	.sdev_configure		=3D qla2xxx_sdev_configure,
+=20
+ 	.sdev_init		=3D qla2xxx_sdev_init,
+ 	.sdev_destroy		=3D qla2xxx_sdev_destroy,
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 6177f4798f3a..cc632c6b603a 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -975,7 +975,8 @@ static inline void update_can_queue(struct Scsi_Host =
+*host, u_int in_ptr, u_int
+ 	host->sg_tablesize =3D QLOGICPTI_MAX_SG(num_free);
+ }
+=20
+-static int qlogicpti_slave_configure(struct scsi_device *sdev)
++static int qlogicpti_sdev_configure(struct scsi_device *sdev,
++				    struct queue_limits *lim)
+ {
+ 	struct qlogicpti *qpti =3D shost_priv(sdev->host);
+ 	int tgt =3D sdev->id;
+@@ -1292,7 +1293,7 @@ static const struct scsi_host_template qpti_templat=
+e =3D {
+ 	.name			=3D "qlogicpti",
+ 	.info			=3D qlogicpti_info,
+ 	.queuecommand		=3D qlogicpti_queuecommand,
+-	.slave_configure	=3D qlogicpti_slave_configure,
++	.sdev_configure		=3D qlogicpti_sdev_configure,
+ 	.eh_abort_handler	=3D qlogicpti_abort,
+ 	.eh_host_reset_handler	=3D qlogicpti_reset,
+ 	.can_queue		=3D QLOGICPTI_REQ_QUEUE_LEN,
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 8a0951245a94..36f34597b5e8 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5890,14 +5890,15 @@ static int scsi_debug_sdev_init(struct scsi_devic=
+e *sdp)
+ 	return 0;
+ }
+=20
+-static int scsi_debug_slave_configure(struct scsi_device *sdp)
++static int scsi_debug_sdev_configure(struct scsi_device *sdp,
++				     struct queue_limits *lim)
+ {
+ 	struct sdebug_dev_info *devip =3D
+ 			(struct sdebug_dev_info *)sdp->hostdata;
+ 	struct dentry *dentry;
+=20
+ 	if (sdebug_verbose)
+-		pr_info("slave_configure <%u %u %u %llu>\n",
++		pr_info("sdev_configure <%u %u %u %llu>\n",
+ 		       sdp->host->host_no, sdp->channel, sdp->id, sdp->lun);
+ 	if (sdp->host->max_cmd_len !=3D SDEBUG_MAX_CMD_LEN)
+ 		sdp->host->max_cmd_len =3D SDEBUG_MAX_CMD_LEN;
+@@ -8715,8 +8716,8 @@ static struct scsi_host_template sdebug_driver_temp=
+late =3D {
+ 	.name =3D			"SCSI DEBUG",
+ 	.info =3D			scsi_debug_info,
+ 	.sdev_init =3D		scsi_debug_sdev_init,
+-	.slave_configure =3D	scsi_debug_slave_configure,
+-	.sdev_destroy =3D	scsi_debug_sdev_destroy,
++	.sdev_configure =3D	scsi_debug_sdev_configure,
++	.sdev_destroy =3D		scsi_debug_sdev_destroy,
+ 	.ioctl =3D		scsi_debug_ioctl,
+ 	.queuecommand =3D		scsi_debug_queuecommand,
+ 	.change_queue_depth =3D	sdebug_change_qdepth,
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index b60c218dc0d0..abd2da3ef45f 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -316,7 +316,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scs=
+i_target *starget,
+ 	sdev->hostdata =3D hostdata;
+=20
+ 	/* if the device needs this changing, it may do so in the
+-	 * slave_configure function */
++	 * sdev_configure function */
+ 	sdev->max_device_blocked =3D SCSI_DEFAULT_DEVICE_BLOCKED;
+=20
+ 	/*
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
+i/smartpqi_init.c
+index c51f760306c7..f93e55f5acf3 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6558,7 +6558,8 @@ static inline bool pqi_is_tape_changer_device(struc=
+t pqi_scsi_dev *device)
+ 	return device->devtype =3D=3D TYPE_TAPE || device->devtype =3D=3D TYPE_=
+MEDIUM_CHANGER;
+ }
+=20
+-static int pqi_slave_configure(struct scsi_device *sdev)
++static int pqi_sdev_configure(struct scsi_device *sdev,
++			      struct queue_limits *lim)
+ {
+ 	int rc =3D 0;
+ 	struct pqi_scsi_dev *device;
+@@ -7550,7 +7551,7 @@ static const struct scsi_host_template pqi_driver_t=
+emplate =3D {
+ 	.eh_abort_handler =3D pqi_eh_abort_handler,
+ 	.ioctl =3D pqi_ioctl,
+ 	.sdev_init =3D pqi_sdev_init,
+-	.slave_configure =3D pqi_slave_configure,
++	.sdev_configure =3D pqi_sdev_configure,
+ 	.sdev_destroy =3D pqi_sdev_destroy,
+ 	.map_queues =3D pqi_map_queues,
+ 	.sdev_groups =3D pqi_sdev_groups,
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.=
+c
+index 14830b6ab94b..d3cf50088a37 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -57,11 +57,11 @@ snic_sdev_init(struct scsi_device *sdev)
+ }
+=20
+ /*
+- * snic_slave_configure : callback function to SCSI Mid Layer, called on
++ * snic_sdev_configure : callback function to SCSI Mid Layer, called on
+  * scsi device initialization.
+  */
+ static int
+-snic_slave_configure(struct scsi_device *sdev)
++snic_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+ {
+ 	struct snic *snic =3D shost_priv(sdev->host);
+ 	u32 qdepth =3D 0, max_ios =3D 0;
+@@ -108,7 +108,7 @@ static const struct scsi_host_template snic_host_temp=
+late =3D {
+ 	.eh_device_reset_handler =3D snic_device_reset,
+ 	.eh_host_reset_handler =3D snic_host_reset,
+ 	.sdev_init =3D snic_sdev_init,
+-	.slave_configure =3D snic_slave_configure,
++	.sdev_configure =3D snic_sdev_configure,
+ 	.change_queue_depth =3D snic_change_queue_depth,
+ 	.this_id =3D -1,
+ 	.cmd_per_lun =3D SNIC_DFLT_QUEUE_DEPTH,
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 0e81125df8c7..0e5c7609dcc4 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -584,7 +584,7 @@ static void return_abnormal_state(struct st_hba *hba,=
+ int status)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ }
+ static int
+-stex_slave_config(struct scsi_device *sdev)
++stex_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+ {
+ 	sdev->use_10_for_rw =3D 1;
+ 	sdev->use_10_for_ms =3D 1;
+@@ -1481,7 +1481,7 @@ static const struct scsi_host_template driver_templ=
+ate =3D {
+ 	.proc_name			=3D DRV_NAME,
+ 	.bios_param			=3D stex_biosparam,
+ 	.queuecommand			=3D stex_queuecommand,
+-	.slave_configure		=3D stex_slave_config,
++	.sdev_configure			=3D stex_sdev_configure,
+ 	.eh_abort_handler		=3D stex_abort,
+ 	.eh_host_reset_handler		=3D stex_reset,
+ 	.this_id			=3D -1,
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 0f18591539e7..eab32abf1f49 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1574,7 +1574,8 @@ static int storvsc_device_alloc(struct scsi_device =
+*sdevice)
+ 	return 0;
+ }
+=20
+-static int storvsc_device_configure(struct scsi_device *sdevice)
++static int storvsc_sdev_configure(struct scsi_device *sdevice,
++				  struct queue_limits *lim)
+ {
+ 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
+=20
+@@ -1876,7 +1877,7 @@ static struct scsi_host_template scsi_driver =3D {
+ 	.proc_name =3D		"storvsc_host",
+ 	.eh_timed_out =3D		storvsc_eh_timed_out,
+ 	.sdev_init =3D		storvsc_device_alloc,
+-	.slave_configure =3D	storvsc_device_configure,
++	.sdev_configure =3D	storvsc_sdev_configure,
+ 	.cmd_per_lun =3D		2048,
+ 	.this_id =3D		-1,
+ 	/* Ensure there are no gaps in presented sgls */
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx=
+_2/sym_glue.c
+index e7a17f87027d..9b8cb7319370 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -825,7 +825,8 @@ static int sym53c8xx_sdev_init(struct scsi_device *sd=
+ev)
+ /*
+  * Linux entry point for device queue sizing.
+  */
+-static int sym53c8xx_slave_configure(struct scsi_device *sdev)
++static int sym53c8xx_sdev_configure(struct scsi_device *sdev,
++				    struct queue_limits *lim)
+ {
+ 	struct sym_hcb *np =3D sym_get_hcb(sdev->host);
+ 	struct sym_tcb *tp =3D &np->target[sdev->id];
+@@ -1685,7 +1686,7 @@ static const struct scsi_host_template sym2_templat=
+e =3D {
+ 	.cmd_size		=3D sizeof(struct sym_ucmd),
+ 	.queuecommand		=3D sym53c8xx_queue_command,
+ 	.sdev_init		=3D sym53c8xx_sdev_init,
+-	.slave_configure	=3D sym53c8xx_slave_configure,
++	.sdev_configure		=3D sym53c8xx_sdev_configure,
+ 	.sdev_destroy		=3D sym53c8xx_sdev_destroy,
+ 	.eh_abort_handler	=3D sym53c8xx_eh_abort_handler,
+ 	.eh_target_reset_handler =3D sym53c8xx_eh_target_reset_handler,
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index 8ac3b284c2ef..924025305753 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -735,7 +735,8 @@ static int scsifront_dev_reset_handler(struct scsi_cm=
+nd *sc)
+ 	return scsifront_action_handler(sc, VSCSIIF_ACT_SCSI_RESET);
+ }
+=20
+-static int scsifront_sdev_configure(struct scsi_device *sdev)
++static int scsifront_sdev_configure(struct scsi_device *sdev,
++				    struct queue_limits *lim)
+ {
+ 	struct vscsifrnt_info *info =3D shost_priv(sdev->host);
+ 	int err;
+@@ -776,7 +777,7 @@ static const struct scsi_host_template scsifront_sht =
+=3D {
+ 	.queuecommand		=3D scsifront_queuecommand,
+ 	.eh_abort_handler	=3D scsifront_eh_abort_handler,
+ 	.eh_device_reset_handler =3D scsifront_dev_reset_handler,
+-	.slave_configure	=3D scsifront_sdev_configure,
++	.sdev_configure		=3D scsifront_sdev_configure,
+ 	.sdev_destroy		=3D scsifront_sdev_destroy,
+ 	.cmd_per_lun		=3D VSCSIIF_DEFAULT_CMD_PER_LUN,
+ 	.can_queue		=3D VSCSIIF_MAX_REQS,
+@@ -1074,7 +1075,7 @@ static void scsifront_do_lun_hotplug(struct vscsifr=
+nt_info *info, int op)
+ 			continue;
+=20
+ 		/*
+-		 * Front device state path, used in slave_configure called
++		 * Front device state path, used in sdev_configure called
+ 		 * on successfull scsi_add_device, and in sdev_destroy called
+ 		 * on remove of a device.
+ 		 */
+diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rts=
+x.c
+index 6851a28f5ec6..2ee5d6341b53 100644
+--- a/drivers/staging/rts5208/rtsx.c
++++ b/drivers/staging/rts5208/rtsx.c
+@@ -68,7 +68,7 @@ static int sdev_init(struct scsi_device *sdev)
+ 	return 0;
+ }
+=20
+-static int slave_configure(struct scsi_device *sdev)
 +static int sdev_configure(struct scsi_device *sdev, struct queue_limits =
 *lim)
  {
- 	struct us_data *us =3D host_to_us(sdev->host);
- 	struct device *dev =3D us->pusb_dev->bus->sysdev;
-@@ -638,7 +638,7 @@ static const struct scsi_host_template usb_stor_host_=
-template =3D {
+ 	/* Set the SCSI level to at least 2.  We'll leave it at 3 if that's
+ 	 * what is originally reported.  We need this to avoid confusing
+@@ -199,7 +199,7 @@ static const struct scsi_host_template rtsx_host_temp=
+late =3D {
  	.this_id =3D			-1,
 =20
  	.sdev_init =3D			sdev_init,
--	.device_configure =3D		device_configure,
+-	.slave_configure =3D		slave_configure,
 +	.sdev_configure =3D		sdev_configure,
- 	.target_alloc =3D			target_alloc,
 =20
  	/* lots of sg segments can be handled */
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 7bd2a314b329..0bb9ea875843 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -832,8 +832,8 @@ static int uas_sdev_init(struct scsi_device *sdev)
- 	return 0;
- }
-=20
--static int uas_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim)
-+static int uas_sdev_configure(struct scsi_device *sdev,
-+			      struct queue_limits *lim)
- {
- 	struct uas_dev_info *devinfo =3D sdev->hostdata;
-=20
-@@ -906,7 +906,7 @@ static const struct scsi_host_template uas_host_templ=
-ate =3D {
- 	.queuecommand =3D uas_queuecommand,
- 	.target_alloc =3D uas_target_alloc,
- 	.sdev_init =3D uas_sdev_init,
--	.device_configure =3D uas_device_configure,
-+	.sdev_configure =3D uas_sdev_configure,
- 	.eh_abort_handler =3D uas_eh_abort_handler,
- 	.eh_device_reset_handler =3D uas_eh_device_reset_handler,
- 	.this_id =3D -1,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3318004a1b18..59d6d17955fb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1202,8 +1202,7 @@ extern int ata_std_bios_param(struct scsi_device *s=
-dev,
- 			      sector_t capacity, int geom[]);
- extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
- extern int ata_scsi_sdev_init(struct scsi_device *sdev);
--int ata_scsi_device_configure(struct scsi_device *sdev,
--		struct queue_limits *lim);
-+int ata_scsi_sdev_configure(struct scsi_device *sdev, struct queue_limit=
-s *lim);
- extern void ata_scsi_sdev_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
- 				       int queue_depth);
-@@ -1303,8 +1302,8 @@ extern struct ata_port *ata_port_alloc(struct ata_h=
-ost *host);
- extern void ata_port_free(struct ata_port *ap);
- extern int ata_tport_add(struct device *parent, struct ata_port *ap);
- extern void ata_tport_delete(struct ata_port *ap);
--int ata_sas_device_configure(struct scsi_device *sdev, struct queue_limi=
-ts *lim,
--		struct ata_port *ap);
-+int ata_sas_sdev_configure(struct scsi_device *sdev, struct queue_limits=
- *lim,
-+			   struct ata_port *ap);
- extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf,
- 			  u8 pmp, int is_cmd, u8 *fis);
-@@ -1470,13 +1469,13 @@ extern const struct attribute_group *ata_common_s=
-dev_groups[];
- 	__ATA_BASE_SHT(drv_name),				\
- 	.can_queue		=3D ATA_DEF_QUEUE,		\
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,		\
--	.device_configure	=3D ata_scsi_device_configure
-+	.sdev_configure		=3D ata_scsi_sdev_configure
-=20
- #define ATA_SUBBASE_SHT_QD(drv_name, drv_qd)			\
- 	__ATA_BASE_SHT(drv_name),				\
- 	.can_queue		=3D drv_qd,			\
- 	.tag_alloc_policy	=3D BLK_TAG_ALLOC_RR,		\
--	.device_configure	=3D ata_scsi_device_configure
-+	.sdev_configure		=3D ata_scsi_sdev_configure
-=20
- #define ATA_BASE_SHT(drv_name)					\
- 	ATA_SUBBASE_SHT(drv_name),				\
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index f30f716ba045..ba460b6c0374 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -683,8 +683,7 @@ int sas_phy_reset(struct sas_phy *phy, int hard_reset=
-);
- int sas_phy_enable(struct sas_phy *phy, int enable);
- extern int sas_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- extern int sas_target_alloc(struct scsi_target *);
--int sas_device_configure(struct scsi_device *dev,
--		struct queue_limits *lim);
-+int sas_sdev_configure(struct scsi_device *dev, struct queue_limits *lim=
-);
- extern int sas_change_queue_depth(struct scsi_device *, int new_depth);
- extern int sas_bios_param(struct scsi_device *, struct block_device *,
- 			  sector_t capacity, int *hsc);
-@@ -750,7 +749,7 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, en=
-um phy_event event,
- #endif
-=20
- #define LIBSAS_SHT_BASE			_LIBSAS_SHT_BASE		\
--	.device_configure		=3D sas_device_configure,		\
-+	.sdev_configure			=3D sas_sdev_configure,		\
- 	.sdev_init			=3D sas_sdev_init,		\
-=20
- #define LIBSAS_SHT_BASE_NO_SLAVE_INIT	_LIBSAS_SHT_BASE
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 58b29cc6de09..7e1b1a54e46a 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -212,10 +212,10 @@ struct scsi_host_template {
- 	 *
- 	 * Status: OPTIONAL
- 	 *
--	 * Note: slave_configure is the legacy version, use device_configure fo=
-r
-+	 * Note: slave_configure is the legacy version, use sdev_configure for
- 	 * all new code.  A driver must never define both.
- 	 */
--	int (* device_configure)(struct scsi_device *, struct queue_limits *lim=
-);
-+	int (* sdev_configure)(struct scsi_device *, struct queue_limits *lim);
- 	int (* slave_configure)(struct scsi_device *);
-=20
- 	/*
+ 	.sg_tablesize =3D			SG_ALL,
