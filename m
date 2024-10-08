@@ -1,36 +1,36 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B4FC1F95E
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 02:18:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1103B182C5
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 02:18:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728353914; cv=none; b=qnDo+GveikisVWlaqsxlT8xJu47am68byWytbZuMMc+0TSagIlb8FZgrNwBTmZxwkejUdN6KfK/7tTWgzi0AOODtohFa7CjynWrDDtMZ9zg2AE4VdJ/WLPSe0PpAkpNnG2ZsMCEzQrdVh96fAMC9Mg1qYygTPDzESzSchRBqblg=
+	t=1728353917; cv=none; b=UXFRFQC4Ieb0WP/tHKBair5g/Vuaa6QvxSrI/fC4+OsT6IH+KPCe3sY7zXhFpguvPNrCb1mm0nOOCm/dbTqJ7jnkBY3PN5QaINaAX30p4x2vhuCb3vlZA0goM1rQhtXIHdDsaTAL0MRJirjjK5zT1UqbkPZISukfz2H/KHdztQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728353914; c=relaxed/simple;
-	bh=BLl+1LQCXTCeMlsN9UCInpisKwT9FJpbLvyHpJ7Kv6s=;
+	s=arc-20240116; t=1728353917; c=relaxed/simple;
+	bh=56gz1DnxyZSPJndfDIZ0eZ8Y+0fGkcxO+C93+ZxCaNs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZhYqrF8zqnEfdCi9t6PFYfPdPgNVXcnRiT72Zn+OuFhefchxOKA80UFXcZOx9gT2Jj9945wpWmwEGzvTlSOIqd0HSNdZCaT3SSAmcsTVkSAoqsabt6DOn70UaRbEWE6mJZNaH7dkGmbEwatAyHDUIOUBROQP9ykrvfVjpE84nRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+	 MIME-Version:Content-Type; b=lNF273KPMhxK8wXNwjKuVlf15lpATjH8k8FYKTUSaZPmvupMhxThMEv/LrOpVHuI3tW6jPtmcqnKbNU3TgzAwwYqxWOSIzJ5FqnX8+Sx0jh+IrsOcRXWlXhp2ASNbvGP88RLbr5xNDU+WP8QWYqamwLWsYrBsKuY8XseP2K5cH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4XN02T208Rz1HKL1;
-	Tue,  8 Oct 2024 10:14:25 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4XN05B5VC0z1T8HN;
+	Tue,  8 Oct 2024 10:16:46 +0800 (CST)
 Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8917614013B;
-	Tue,  8 Oct 2024 10:18:29 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 54014180106;
+	Tue,  8 Oct 2024 10:18:28 +0800 (CST)
 Received: from localhost.huawei.com (10.50.165.33) by
  dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 8 Oct 2024 10:18:29 +0800
+ 15.2.1544.11; Tue, 8 Oct 2024 10:18:28 +0800
 From: Yihang Li <liyihang9@huawei.com>
 To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
 	<liyihang9@huawei.com>
-Subject: [PATCH v2 13/13] scsi: hisi_sas: Add latest_dump for the debugfs dump
-Date: Tue, 8 Oct 2024 10:18:22 +0800
-Message-ID: <20241008021822.2617339-14-liyihang9@huawei.com>
+Subject: [PATCH v2 05/13] scsi: hisi_sas: Reset PHY again if phyup timeout
+Date: Tue, 8 Oct 2024 10:18:14 +0800
+Message-ID: <20241008021822.2617339-6-liyihang9@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20241008021822.2617339-1-liyihang9@huawei.com>
 References: <20241008021822.2617339-1-liyihang9@huawei.com>
@@ -45,55 +45,57 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  dggpemf100013.china.huawei.com (7.185.36.179)
 
-Before that, after the user triggers the dump, the latest dump information
-can be viewed in the directory with the maximum number in the dump
-directory.
-
-After this series patch, the driver creates all debugfs directories and
-files during initialization. Therefore, users cannot know the directory
-where the latest dump information is stored. So, add latest_dump file to
-notify users where the latest dump information is stored.
+In commit 89954f024c3a ("scsi: hisi_sas: Ensure all enabled PHYs up during
+controller reset"), we enable PHYs in parallel through async operations
+and wait for PHYs come up. However, for some directly attached SATA disks,
+the PHY not come up after a timeout period and the hardware is not ready.
+At this time, we should get the latest PHY hardware state, if the new PHY
+state is not ready but the old PHY state is ready, call work
+HISI_PHYE_LINK_RESET to give it another chance to phyup.
 
 Signed-off-by: Yihang Li <liyihang9@huawei.com>
-Reviewed-by: Xingui Yang <yangxingui@huawei.com>
+Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 8250d44f0b3e..5db931663ae4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -4814,6 +4814,19 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_hba->debugfs_bist_linkrate = SAS_LINK_RATE_1_5_GBPS;
- }
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index f3b0042ab67c..93f9f13084fd 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1384,6 +1384,7 @@ static void hisi_sas_refresh_port_id(struct hisi_hba *hisi_hba)
  
-+static int debugfs_dump_index_v3_hw_show(struct seq_file *s, void *p)
-+{
-+	int *debugfs_dump_index = s->private;
-+
-+	if (*debugfs_dump_index > 0)
-+		seq_printf(s, "%d\n", *debugfs_dump_index - 1);
-+	else
-+		seq_puts(s, "dump not triggered\n");
-+
-+	return 0;
-+}
-+DEFINE_SHOW_ATTRIBUTE(debugfs_dump_index_v3_hw);
-+
- static void debugfs_dump_init_v3_hw(struct hisi_hba *hisi_hba)
+ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 state)
  {
- 	int i;
-@@ -4821,6 +4834,10 @@ static void debugfs_dump_init_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_hba->debugfs_dump_dentry =
- 			debugfs_create_dir("dump", hisi_hba->debugfs_dir);
++	u32 new_state = hisi_hba->hw->get_phys_state(hisi_hba);
+ 	struct asd_sas_port *_sas_port = NULL;
+ 	int phy_no;
  
-+	debugfs_create_file("latest_dump", 0400, hisi_hba->debugfs_dump_dentry,
-+			    &hisi_hba->debugfs_dump_index,
-+			    &debugfs_dump_index_v3_hw_fops);
+@@ -1397,7 +1398,7 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 state)
+ 			continue;
+ 
+ 		/* Report PHY state change to libsas */
+-		if (state & BIT(phy_no)) {
++		if (new_state & BIT(phy_no)) {
+ 			if (do_port_check && sas_port && sas_port->port_dev) {
+ 				struct domain_device *dev = sas_port->port_dev;
+ 
+@@ -1410,6 +1411,16 @@ static void hisi_sas_rescan_topology(struct hisi_hba *hisi_hba, u32 state)
+ 			}
+ 		} else {
+ 			hisi_sas_phy_down(hisi_hba, phy_no, 0, GFP_KERNEL);
 +
- 	for (i = 0; i < hisi_sas_debugfs_dump_count; i++)
- 		debugfs_create_files_v3_hw(hisi_hba, i);
++			/*
++			 * The new_state is not ready but old_state is ready,
++			 * the two possible causes:
++			 * 1. The connected device is removed
++			 * 2. Device exists but phyup timed out
++			 */
++			if (state & BIT(phy_no))
++				hisi_sas_notify_phy_event(phy,
++							  HISI_PHYE_LINK_RESET);
+ 		}
+ 	}
  }
 -- 
 2.33.0
