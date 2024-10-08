@@ -1,58 +1,58 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202691DA5A;
-	Tue,  8 Oct 2024 02:04:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFF6224CC;
+	Tue,  8 Oct 2024 02:05:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728353099; cv=none; b=GY1MlY7SlqnLxCf6nSofXH5tTuUy6nSz0d7kdf/ZA8shsxVgCa6upVpYl6NPqt4QdaTqtYzW81RY6mM6luUd9YFCscXx8hHp3jTMRlO70AckmJWzqAWEQJ8JNzi0WX6vILPzckX+PJ+hd0AP4mAvOcg5akw2qp9yjtiUeYg0X0o=
+	t=1728353103; cv=none; b=YzK+JyB7M5jd/Avpu3CD7W9iJhphLgpm8GAB0fJjtwfAsAeM9x/2k++7gP63XchHiYll2qVabdl+hb2UziJUMo4D7PWIEX9cE0ZulVfc5iq09qqUYH0hY4dRIBLwIC29ylh8ByMkR+OsD9HDpD9I/yRcjFkZ/0h94aWiTiaFIWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728353099; c=relaxed/simple;
-	bh=pRd4x/iiLKO4ozHcbOB10zammKjZUYsajkFl83dF/74=;
+	s=arc-20240116; t=1728353103; c=relaxed/simple;
+	bh=mMCxSq4EQQadsTzskF7bLTw2eUbERwgl89Pn6rwHKmk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ezaq6GvNUHMutuhEAXt4N8SIYmPyIy8KHLzp8fwOVaR6E5exebzg2sMbsGf7Q+qoE4aqlLrzc7yIj2vt8jF1cG3HyvyKjTZH8cztGXXUHxxiIHr9sh+SoFAinV8LMuOgG3kbogHkP/HqRR1iQZ97Dk9z7PPvAsEjHVHKEc+9fKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nNRB8iNK; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version; b=Br+FSJ4x5DxOx57HFqTf5lNI72/LizYklVnGFC65wbr258h+Et04spoHvES3Qeh/xndur11Mocgcg1RCagJBGW0gS/ou733I8JmFFhOiLfX7crWzwTnnfILg9IwQsjDcfnbbH2uYuh/ggItjhPa0YMIZkbXb5bWmXdZoi+t/H/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GJwTIkI5; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nNRB8iNK"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4981MbNJ024471;
-	Tue, 8 Oct 2024 02:04:56 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GJwTIkI5"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4981NXxw028752;
+	Tue, 8 Oct 2024 02:05:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=corp-2023-11-20; bh=JdixH
-	91jVgOtkOuZkAeuHfqVuD6rnwniLViElyE+938=; b=nNRB8iNKBzQmh2R1XRq7a
-	U8C0inkdK4DAd3V32K+2z3D4T39gQBtiNutLzFXehn89YsbLjpvTNn8MGc93NxbU
-	Vb+sChRYBEeCgQ/itEjxSOCCCc3mrMhCYlSxt6VoLLuh+PI/f2HqMcESn1PVLD9l
-	EyfnmpUzivbJ6ZPy7ABd3cUxRCU0QXmyxJPNDdRAzADzqpBU4At36jgW0iijsizY
-	YO2Vqxjnu3AHVOmRBB0+gHcE0etC/hgMt86D0WM3+Zrot4cSWhgtxz+fsvpqRV9P
-	w1NZTj8dUud30A709ZkHhHiD/gFCpraSDG7asEm/8i1o/XIi5GCNsn3A50m4xy1n
-	A==
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=ZtZre
+	JKu/rmW6f77/GCc2ShZ8Fpl2MJMTfBA9s99mF8=; b=GJwTIkI5PUSlTsxpLQFpZ
+	4nOjUv8hDjn5Sf8EZYhTSy1uBrdCSxGkyP/eFXxua6Wqk7KrspH6NnPWS2VQtLil
+	NtUCfdh8lHi6sBx2Li8PVL07gLZXRgIFkgNZ0oueabgLJvoyBOPgqtWx3og9gSZB
+	4Y8aQPlNBibMCi9bg2zdk1WLXV5XYuKjvbgbuPBeiLpQIXguTYL86x+QIBz2quQ2
+	EUri/L4XVpHFXo4TMnSRm8/597Rcn2b74BseodmmYFKc3f307KCFTLNqpI4IIluK
+	Mrf2CrEkMDcjRltsSs/9Casta05yUCOnpGWMaMMNnh/g6oySnWR40Cl2sniKQoaQ
+	w==
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42300dvsjg-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 423063mqk1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 08 Oct 2024 02:04:55 +0000 (GMT)
+	Tue, 08 Oct 2024 02:05:00 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 497NUTdL004626;
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 497N7Fp1004673;
 	Tue, 8 Oct 2024 02:04:41 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 422uw6k88u-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 422uw6k89a-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 08 Oct 2024 02:04:40 +0000
+	Tue, 08 Oct 2024 02:04:41 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49824dIt004476;
-	Tue, 8 Oct 2024 02:04:40 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49824dIv004476;
+	Tue, 8 Oct 2024 02:04:41 GMT
 Received: from mnc-mac.us.oracle.com (dhcp-10-39-198-64.vpn.oracle.com [10.39.198.64])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 422uw6k87u-3;
-	Tue, 08 Oct 2024 02:04:40 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 422uw6k87u-4;
+	Tue, 08 Oct 2024 02:04:41 +0000
 From: Mike Christie <michael.christie@oracle.com>
 To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 2/7] scsi: target: Add atomic se_device fields
-Date: Mon,  7 Oct 2024 21:03:11 -0500
-Message-ID: <20241008020437.78788-3-michael.christie@oracle.com>
+Subject: [PATCH 3/7] scsi: target: Add helper to setup atomic values from block_device
+Date: Mon,  7 Oct 2024 21:03:12 -0500
+Message-ID: <20241008020437.78788-4-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20241008020437.78788-1-michael.christie@oracle.com>
 References: <20241008020437.78788-1-michael.christie@oracle.com>
@@ -70,119 +70,60 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwa
  suspectscore=0 mlxscore=0 phishscore=0 adultscore=0 spamscore=0
  mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2409260000 definitions=main-2410080011
-X-Proofpoint-GUID: KMU05S5Cek2K_u6N8gs5OG1WB922ZnX_
-X-Proofpoint-ORIG-GUID: KMU05S5Cek2K_u6N8gs5OG1WB922ZnX_
+X-Proofpoint-ORIG-GUID: iOPSVtSQTBpvxPGq2lvGOH8MRvwc1i4o
+X-Proofpoint-GUID: iOPSVtSQTBpvxPGq2lvGOH8MRvwc1i4o
 
-This adds atomic fields to the se_device and exports them in configfs.
-
-Initially only target_core_iblock will be supported and we will inherit
-all the settings from the block layer except the alignment which userspace
-will set.
+This adds a helper function that sets up the atomic value based on a
+block_device similar to what we do for unmap.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/target/target_core_configfs.c | 42 +++++++++++++++++++++++++++
- include/target/target_core_base.h     |  6 ++++
- 2 files changed, 48 insertions(+)
+ drivers/target/target_core_device.c  | 18 ++++++++++++++++++
+ include/target/target_core_backend.h |  2 ++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index c40217f44b1b..f3c7da650f65 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -578,6 +578,12 @@ DEF_CONFIGFS_ATTRIB_SHOW(unmap_zeroes_data);
- DEF_CONFIGFS_ATTRIB_SHOW(max_write_same_len);
- DEF_CONFIGFS_ATTRIB_SHOW(emulate_rsoc);
- DEF_CONFIGFS_ATTRIB_SHOW(submit_type);
-+DEF_CONFIGFS_ATTRIB_SHOW(atomic_supported);
-+DEF_CONFIGFS_ATTRIB_SHOW(atomic_alignment);
-+DEF_CONFIGFS_ATTRIB_SHOW(atomic_max_len);
-+DEF_CONFIGFS_ATTRIB_SHOW(atomic_granularity);
-+DEF_CONFIGFS_ATTRIB_SHOW(atomic_max_with_boundary);
-+DEF_CONFIGFS_ATTRIB_SHOW(atomic_max_boundary);
- 
- #define DEF_CONFIGFS_ATTRIB_STORE_U32(_name)				\
- static ssize_t _name##_store(struct config_item *item, const char *page,\
-@@ -1266,6 +1272,30 @@ static ssize_t submit_type_store(struct config_item *item, const char *page,
- 	return count;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index b709a64c0ff3..4741de3d1061 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -793,6 +793,24 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ 	return dev;
  }
  
-+static ssize_t atomic_alignment_store(struct config_item *item,
-+				      const char *page, size_t count)
++void target_configure_write_atomic_from_bdev(struct se_dev_attrib *attrib,
++					     struct block_device *bdev)
 +{
-+	struct se_dev_attrib *da = to_attrib(item);
-+	u32 val;
-+	int ret;
++	struct request_queue *q = bdev_get_queue(bdev);
++	int block_size = bdev_logical_block_size(bdev);
 +
-+	ret = kstrtou32(page, 0, &val);
-+	if (ret < 0)
-+		return ret;
++	if (!bdev_can_atomic_write(bdev))
++		return;
 +
-+	if (da->da_dev->export_count) {
-+		pr_err("dev[%p]: Unable to change SE Device atomic_alignment while export_count is %d\n",
-+		       da->da_dev, da->da_dev->export_count);
-+		return -EINVAL;
-+	}
-+
-+	da->atomic_alignment = val;
-+
-+	pr_debug("dev[%p]: SE Device atomic_alignment changed to %u\n",
-+		 da->da_dev, val);
-+	return count;
++	attrib->atomic_supported = true;
++	attrib->atomic_max_len = queue_atomic_write_max_bytes(q) / block_size;
++	attrib->atomic_granularity = queue_atomic_write_unit_min_bytes(q) /
++								block_size;
++	attrib->atomic_max_with_boundary = 0;
++	attrib->atomic_max_boundary = 0;
 +}
++EXPORT_SYMBOL_GPL(target_configure_write_atomic_from_bdev);
 +
- CONFIGFS_ATTR(, emulate_model_alias);
- CONFIGFS_ATTR(, emulate_dpo);
- CONFIGFS_ATTR(, emulate_fua_write);
-@@ -1302,6 +1332,12 @@ CONFIGFS_ATTR(, max_write_same_len);
- CONFIGFS_ATTR(, alua_support);
- CONFIGFS_ATTR(, pgr_support);
- CONFIGFS_ATTR(, submit_type);
-+CONFIGFS_ATTR(, atomic_alignment);
-+CONFIGFS_ATTR_RO(, atomic_supported);
-+CONFIGFS_ATTR_RO(, atomic_max_len);
-+CONFIGFS_ATTR_RO(, atomic_granularity);
-+CONFIGFS_ATTR_RO(, atomic_max_with_boundary);
-+CONFIGFS_ATTR_RO(, atomic_max_boundary);
- 
  /*
-  * dev_attrib attributes for devices using the target core SBC/SPC
-@@ -1345,6 +1381,12 @@ struct configfs_attribute *sbc_attrib_attrs[] = {
- 	&attr_pgr_support,
- 	&attr_emulate_rsoc,
- 	&attr_submit_type,
-+	&attr_atomic_supported,
-+	&attr_atomic_alignment,
-+	&attr_atomic_max_len,
-+	&attr_atomic_granularity,
-+	&attr_atomic_max_with_boundary,
-+	&attr_atomic_max_boundary,
- 	NULL,
- };
- EXPORT_SYMBOL(sbc_attrib_attrs);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 97099a5e3f6c..6c87bd018983 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -715,6 +715,7 @@ struct se_dev_attrib {
- 	bool		is_nonrot;
- 	bool		emulate_rest_reord;
- 	bool		unmap_zeroes_data;
-+	bool		atomic_supported;
- 	u32		hw_block_size;
- 	u32		block_size;
- 	u32		hw_max_sectors;
-@@ -726,6 +727,11 @@ struct se_dev_attrib {
- 	u32		unmap_granularity;
- 	u32		unmap_granularity_alignment;
- 	u32		max_write_same_len;
-+	u32		atomic_max_len;
-+	u32		atomic_alignment;
-+	u32		atomic_granularity;
-+	u32		atomic_max_with_boundary;
-+	u32		atomic_max_boundary;
- 	u8		submit_type;
- 	struct se_device *da_dev;
- 	struct config_group da_group;
+  * Check if the underlying struct block_device supports discard and if yes
+  * configure the UNMAP parameters.
+diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
+index d394306f8f49..e32de80854b6 100644
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -123,6 +123,8 @@ bool target_sense_desc_format(struct se_device *dev);
+ sector_t target_to_linux_sector(struct se_device *dev, sector_t lb);
+ bool target_configure_unmap_from_bdev(struct se_dev_attrib *attrib,
+ 				      struct block_device *bdev);
++void target_configure_write_atomic_from_bdev(struct se_dev_attrib *attrib,
++					     struct block_device *bdev);
+ 
+ static inline bool target_dev_configured(struct se_device *se_dev)
+ {
 -- 
 2.34.1
 
