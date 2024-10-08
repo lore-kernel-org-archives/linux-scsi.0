@@ -1,113 +1,130 @@
-Received: from out-182.mta1.migadu.com (out-182.mta1.migadu.com [95.215.58.182])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D939139CEC
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 11:02:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0C8018BC3B
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 11:21:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728385338; cv=none; b=LBM3SOBLY+ylyuIn3GkLf6zEnw1TBL7hq6SFHdCpmA1HCsqZi4KzKTWC0HWlwcxpeMjXqcqpsZTfJf7FVoXluCCdJrlsCaTvcQ6TFifd/ZSVunTpLxNuH6oSdESTo7mR2kiXUEbgmV19KwIEGPQURWDH3MTyyVjzNV2og57BFl4=
+	t=1728386473; cv=none; b=da1F3/m2gPI/D0mDXqGHdXAsgi/kGE3Y+ZToV/4maVr7rQp6pleW4oiYg8a0d13Zz+RZNyiZrsNIBXoiFrZO6ov2DIvyiYDdEPZOiqLHbt5kxks5Ly3KbLtK8HUI/3/4H1ItqyY7E5ZP98e3UcUaZWGmQb0tz6CPqc8HqI+brlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728385338; c=relaxed/simple;
-	bh=9MxQ225oguJtsavv+etB/Z6eXIUd0XesGeecYxJ8FbI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=WbCzjlkzAuYLhx2gu8cuKwAZdDh0M77Gguty/dkuEWbG9DeNZXfXyGgFjbMYUmreEs6gJ4VmLsCShGofZndnbM+1PB+hF2HQY4BD35+BJJynXgQXMiVc0deJtUOG8E2lx6BjNubudengny39RKtYNAnKSGjd4izrNbtbxjZJ90w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FeR81S44; arc=none smtp.client-ip=95.215.58.182
+	s=arc-20240116; t=1728386473; c=relaxed/simple;
+	bh=3Ct1mGZN8YLbso2pvrthDD0bQGWLsW98R7kRII4+TaQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cdFAwWhrp4Yj5g0JiNZZK/jegLk6xLf/j3HAPfHlrmoJ2LAMF2YIGD2x5AWC4nvhbvlohdF7bS9rTnLABOLCdaNDiJnIPp4k9+iktKHQE3v9QsfAaxTNr2UOWxZ5eEt95WsMF/YTdNt2W73mBxvJAQQ/2XkZ2ASfZWQn9Kmti0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QPpo/rdI; arc=none smtp.client-ip=91.218.175.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FeR81S44"
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QPpo/rdI"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1728385334;
+	t=1728386467;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2yF7irZ6YJEKS7gOO+JHbJiJfvjGEpJhpY5c39nJXI8=;
-	b=FeR81S4402La3HRpJyZgmMzp+AnjpCUpoLmeKlOxBX1ps5Hi6fnJxZxbWK+3KKDho8m0aH
-	h3Lurjm88idrTt/YRj4w8F0q3/406ZJKmzbMK/J0w7FC6QFIwgyr9VvuHQZXyFZJojY29D
-	Sl95MQxWb53XcVqyqGsFX4NrCaUA6OY=
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=+++WwySE+xnyLVuZgiEzgYGzVYTI3PWElgcf31N76YY=;
+	b=QPpo/rdIXsQ6skAszfc2rWkXn0BuLPW2zvIh19DiynFW7J6eELwfc76RSmHL2BzOXfAIYm
+	UpxB22OQJEorBLcRTkqNT1FB/lS28FRZZFsApnWD+B0GIPljGY0Sir+YlQObwH0A7ZhrO8
+	ncdePiNU2DZEoMJ/45sNuOU9QU4VPb8=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3] scsi: fnic: Use vcalloc() instead of vmalloc() and memset(0)
+Date: Tue,  8 Oct 2024 13:19:28 +0200
+Message-ID: <20241008111928.49004-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
-Subject: Re: [PATCH v2] scsi: fnic: Use vzalloc() instead of vmalloc() and
- memset(0)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Thorsten Blum <thorsten.blum@linux.dev>
-In-Reply-To: <596a6bd4-88b3-4836-94ec-b2930c9b0062@wdc.com>
-Date: Tue, 8 Oct 2024 13:02:01 +0200
-Cc: Satish Kharat <satishkh@cisco.com>,
- Sesidhar Baddela <sebaddel@cisco.com>,
- Karan Tilak Kumar <kartilak@cisco.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <2D16B4A0-DC8F-4448-93B1-508FD9F92774@linux.dev>
-References: <20241008095152.1831-2-thorsten.blum@linux.dev>
- <596a6bd4-88b3-4836-94ec-b2930c9b0062@wdc.com>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-On 8. Oct 2024, at 12:25, Johannes Thumshirn wrote:
-> On 08.10.24 11:53, Thorsten Blum wrote:
->> Use vzalloc() instead of vmalloc() followed by memset(0) to simplify =
-the
->> functions fnic_trace_buf_init() and fnic_fc_trace_init().
->>=20
->> Remove unnecessary unsigned long cast.
->>=20
->> Compile-tested only.
->>=20
->> Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
->> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
->> ---
->> Changes in v2:
->> - Remove unsigned long cast as suggested by Johannes Thumshirn
->> - Link to v1: =
-https://lore.kernel.org/linux-kernel/20241007115840.2239-6-thorsten.blum@l=
-inux.dev/
->> ---
->>  drivers/scsi/fnic/fnic_trace.c | 14 +++-----------
->>  1 file changed, 3 insertions(+), 11 deletions(-)
->>=20
->> diff --git a/drivers/scsi/fnic/fnic_trace.c =
-b/drivers/scsi/fnic/fnic_trace.c
->> index aaa4ea02fb7c..c2413e0e4eaa 100644
->> --- a/drivers/scsi/fnic/fnic_trace.c
->> +++ b/drivers/scsi/fnic/fnic_trace.c
->> @@ -485,7 +485,7 @@ int fnic_trace_buf_init(void)
->>   }
->>=20
->>   fnic_trace_entries.page_offset =3D
->> - vmalloc(array_size(fnic_max_trace_entries,
->> + vzalloc(array_size(fnic_max_trace_entries,
->>     sizeof(unsigned long)));
->=20
-> Sorry for not having spotted it earlier, but all those=20
-> vzalloc(array_size(foo, bar)); calls can be turned into vcalloc(foo, =
-bar);
+Use vcalloc() instead of vmalloc() followed by memset(0) to simplify the
+functions fnic_trace_buf_init() and fnic_fc_trace_init().
 
-No worries, but removing the unsigned long casts actually doesn't work:
+Compile-tested only.
 
-drivers/scsi/fnic/fnic_trace.c:559:27: error: incompatible pointer to =
-integer conversion assigning to 'unsigned long' from 'typeof =
-(vzalloc_noprof(size_mul(((1UL) << 12), fnic_fc_trace_max_pages)))' (aka =
-'void *') [-Wint-conversion]
-  559 |         fnic_fc_ctlr_trace_buf_p =3D
-      |                                  ^
-  560 |                 vzalloc(array_size(PAGE_SIZE, =
-fnic_fc_trace_max_pages));
-      |                 =
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1 error generated.
+Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+Changes in v2:
+- Remove unsigned long cast as suggested by Johannes Thumshirn
+- Link to v1: https://lore.kernel.org/linux-kernel/20241007115840.2239-6-thorsten.blum@linux.dev/
 
-I'll submit a v3.
+Changes in v3:
+- Keep the unsigned long cast removed in v2
+- Use vcalloc() instead of vzalloc() as suggested by Johannes Thumshirn
+- Compile-tested again
+- Link to v2: https://lore.kernel.org/linux-kernel/20241008095152.1831-2-thorsten.blum@linux.dev/
+---
+ drivers/scsi/fnic/fnic_trace.c | 16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
-Thanks,
-Thorsten=
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index aaa4ea02fb7c..e5e0c0492f23 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -485,8 +485,7 @@ int fnic_trace_buf_init(void)
+ 	}
+ 
+ 	fnic_trace_entries.page_offset =
+-		vmalloc(array_size(fnic_max_trace_entries,
+-				   sizeof(unsigned long)));
++		vcalloc(fnic_max_trace_entries, sizeof(unsigned long));
+ 	if (!fnic_trace_entries.page_offset) {
+ 		printk(KERN_ERR PFX "Failed to allocate memory for"
+ 				  " page_offset\n");
+@@ -497,8 +496,6 @@ int fnic_trace_buf_init(void)
+ 		err = -ENOMEM;
+ 		goto err_fnic_trace_buf_init;
+ 	}
+-	memset((void *)fnic_trace_entries.page_offset, 0,
+-		  (fnic_max_trace_entries * sizeof(unsigned long)));
+ 	fnic_trace_entries.wr_idx = fnic_trace_entries.rd_idx = 0;
+ 	fnic_buf_head = fnic_trace_buf_p;
+ 
+@@ -559,8 +556,7 @@ int fnic_fc_trace_init(void)
+ 	fc_trace_max_entries = (fnic_fc_trace_max_pages * PAGE_SIZE)/
+ 				FC_TRC_SIZE_BYTES;
+ 	fnic_fc_ctlr_trace_buf_p =
+-		(unsigned long)vmalloc(array_size(PAGE_SIZE,
+-						  fnic_fc_trace_max_pages));
++		(unsigned long)vcalloc(fnic_fc_trace_max_pages, PAGE_SIZE);
+ 	if (!fnic_fc_ctlr_trace_buf_p) {
+ 		pr_err("fnic: Failed to allocate memory for "
+ 		       "FC Control Trace Buf\n");
+@@ -568,13 +564,9 @@ int fnic_fc_trace_init(void)
+ 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	}
+ 
+-	memset((void *)fnic_fc_ctlr_trace_buf_p, 0,
+-			fnic_fc_trace_max_pages * PAGE_SIZE);
+-
+ 	/* Allocate memory for page offset */
+ 	fc_trace_entries.page_offset =
+-		vmalloc(array_size(fc_trace_max_entries,
+-				   sizeof(unsigned long)));
++		vcalloc(fc_trace_max_entries, sizeof(unsigned long));
+ 	if (!fc_trace_entries.page_offset) {
+ 		pr_err("fnic:Failed to allocate memory for page_offset\n");
+ 		if (fnic_fc_ctlr_trace_buf_p) {
+@@ -585,8 +577,6 @@ int fnic_fc_trace_init(void)
+ 		err = -ENOMEM;
+ 		goto err_fnic_fc_ctlr_trace_buf_init;
+ 	}
+-	memset((void *)fc_trace_entries.page_offset, 0,
+-	       (fc_trace_max_entries * sizeof(unsigned long)));
+ 
+ 	fc_trace_entries.rd_idx = fc_trace_entries.wr_idx = 0;
+ 	fc_trace_buf_head = fnic_fc_ctlr_trace_buf_p;
+-- 
+2.46.2
+
