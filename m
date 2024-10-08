@@ -1,130 +1,137 @@
-Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+Received: from mail-m92248.xmail.ntesmail.com (mail-m92248.xmail.ntesmail.com [103.126.92.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0C8018BC3B
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 11:21:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41511D4141;
+	Tue,  8 Oct 2024 11:41:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.126.92.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728386473; cv=none; b=da1F3/m2gPI/D0mDXqGHdXAsgi/kGE3Y+ZToV/4maVr7rQp6pleW4oiYg8a0d13Zz+RZNyiZrsNIBXoiFrZO6ov2DIvyiYDdEPZOiqLHbt5kxks5Ly3KbLtK8HUI/3/4H1ItqyY7E5ZP98e3UcUaZWGmQb0tz6CPqc8HqI+brlw=
+	t=1728387715; cv=none; b=gNRqOsnq3fK5AUDilR6xnvcBg8QKaXmjcAigTgwtS4J2hFLlotFMGq4N0uAo0FDtD3hW+AJcgXk0ty+m5IGdc8w+pqDXApdu1/lLVxdtcZscIGU9enXJMGDvmSGvZNGXg1c2SFOHBx2k2Z6Mxn4y1CLxnW3o5B7nB4SJYmOuTl0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728386473; c=relaxed/simple;
-	bh=3Ct1mGZN8YLbso2pvrthDD0bQGWLsW98R7kRII4+TaQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cdFAwWhrp4Yj5g0JiNZZK/jegLk6xLf/j3HAPfHlrmoJ2LAMF2YIGD2x5AWC4nvhbvlohdF7bS9rTnLABOLCdaNDiJnIPp4k9+iktKHQE3v9QsfAaxTNr2UOWxZ5eEt95WsMF/YTdNt2W73mBxvJAQQ/2XkZ2ASfZWQn9Kmti0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QPpo/rdI; arc=none smtp.client-ip=91.218.175.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1728387715; c=relaxed/simple;
+	bh=S6XkNkmuedD1pQiaxwUmsamoq7LhM5melxm3Vc1eKDQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=MHs0HvDaKGlb2Djz3wqmSGvc4gN9vomFE6rhU3RD3QnqEIVv4bNel3GUNjHBSC+7TD50n5HnDyVje9UTgywW5ovexflM/kghupoPDurpkRVvibHaOZNd4d7MutiQR1U4vh12YQEL90QoTEZlp8SrP6YZJQfkcGIbJE8kZwQng6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=HRYrF1OG; arc=none smtp.client-ip=103.126.92.248
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QPpo/rdI"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1728386467;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=+++WwySE+xnyLVuZgiEzgYGzVYTI3PWElgcf31N76YY=;
-	b=QPpo/rdIXsQ6skAszfc2rWkXn0BuLPW2zvIh19DiynFW7J6eELwfc76RSmHL2BzOXfAIYm
-	UpxB22OQJEorBLcRTkqNT1FB/lS28FRZZFsApnWD+B0GIPljGY0Sir+YlQObwH0A7ZhrO8
-	ncdePiNU2DZEoMJ/45sNuOU9QU4VPb8=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="HRYrF1OG"
+DKIM-Signature: a=rsa-sha256;
+	b=HRYrF1OGMwGO2XCvcjO7vadF6OFvDsh/Ue7CpxudlEzsKrt1kuwoGsQw/zm3nrOPRuIITH7Rns0atrp3Q9tJ0LF2jEPXelDJLPv8jlOg/jTgSm5UCe3KE4qOicBCwB9l4D2An2mdIbI7hp0lK3YRTi/MZhG3S8E2bv10ej/Ua+M=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=nOR0BMICsxKcbiEHiB0O1t4LWarRiz326TLSWeKN3ho=;
+	h=date:mime-version:subject:message-id:from;
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTPA id 83B8052075A;
+	Tue,  8 Oct 2024 14:16:07 +0800 (CST)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3] scsi: fnic: Use vcalloc() instead of vmalloc() and memset(0)
-Date: Tue,  8 Oct 2024 13:19:28 +0200
-Message-ID: <20241008111928.49004-2-thorsten.blum@linux.dev>
+	linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 1/5] scsi: ufs: core: Add UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE
+Date: Tue,  8 Oct 2024 14:15:26 +0800
+Message-Id: <1728368130-37213-2-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQhhCS1ZDTE9LS01MHx8dSkNWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a926ac54e3703afkunm83b8052075a
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Nkk6TRw4MzIZFBYwNzYCDTga
+	AjMwChdVSlVKTElDSE1DSk1CS01JVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQU9IQkk3Bg++
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
-Use vcalloc() instead of vmalloc() followed by memset(0) to simplify the
-functions fnic_trace_buf_init() and fnic_fc_trace_init().
+HCE on Rockchip SoC is different from both of ufshcd_hba_execute_hce()
+and UFSHCI_QUIRK_BROKEN_HCE case. It need to do dme_reset and dme_enable
+after enabling HCE. So in order not to abuse UFSHCI_QUIRK_BROKEN_HCE, add
+a new quirk UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE, to deal with that
+limitation.
 
-Compile-tested only.
-
-Cc: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
-Changes in v2:
-- Remove unsigned long cast as suggested by Johannes Thumshirn
-- Link to v1: https://lore.kernel.org/linux-kernel/20241007115840.2239-6-thorsten.blum@linux.dev/
 
-Changes in v3:
-- Keep the unsigned long cast removed in v2
-- Use vcalloc() instead of vzalloc() as suggested by Johannes Thumshirn
-- Compile-tested again
-- Link to v2: https://lore.kernel.org/linux-kernel/20241008095152.1831-2-thorsten.blum@linux.dev/
----
- drivers/scsi/fnic/fnic_trace.c | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
+Changes in v3: None
+Changes in v2: None
 
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index aaa4ea02fb7c..e5e0c0492f23 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -485,8 +485,7 @@ int fnic_trace_buf_init(void)
- 	}
+ drivers/ufs/core/ufshcd.c | 17 +++++++++++++++++
+ include/ufs/ufshcd.h      |  6 ++++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7cab1031..4868099 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4819,6 +4819,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+ {
+ 	int retry_outer = 3;
+ 	int retry_inner;
++	int ret;
  
- 	fnic_trace_entries.page_offset =
--		vmalloc(array_size(fnic_max_trace_entries,
--				   sizeof(unsigned long)));
-+		vcalloc(fnic_max_trace_entries, sizeof(unsigned long));
- 	if (!fnic_trace_entries.page_offset) {
- 		printk(KERN_ERR PFX "Failed to allocate memory for"
- 				  " page_offset\n");
-@@ -497,8 +496,6 @@ int fnic_trace_buf_init(void)
- 		err = -ENOMEM;
- 		goto err_fnic_trace_buf_init;
- 	}
--	memset((void *)fnic_trace_entries.page_offset, 0,
--		  (fnic_max_trace_entries * sizeof(unsigned long)));
- 	fnic_trace_entries.wr_idx = fnic_trace_entries.rd_idx = 0;
- 	fnic_buf_head = fnic_trace_buf_p;
+ start:
+ 	if (ufshcd_is_hba_active(hba))
+@@ -4865,6 +4866,22 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+ 	/* enable UIC related interrupts */
+ 	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
  
-@@ -559,8 +556,7 @@ int fnic_fc_trace_init(void)
- 	fc_trace_max_entries = (fnic_fc_trace_max_pages * PAGE_SIZE)/
- 				FC_TRC_SIZE_BYTES;
- 	fnic_fc_ctlr_trace_buf_p =
--		(unsigned long)vmalloc(array_size(PAGE_SIZE,
--						  fnic_fc_trace_max_pages));
-+		(unsigned long)vcalloc(fnic_fc_trace_max_pages, PAGE_SIZE);
- 	if (!fnic_fc_ctlr_trace_buf_p) {
- 		pr_err("fnic: Failed to allocate memory for "
- 		       "FC Control Trace Buf\n");
-@@ -568,13 +564,9 @@ int fnic_fc_trace_init(void)
- 		goto err_fnic_fc_ctlr_trace_buf_init;
- 	}
++	/*
++	 * Do dme_reset and dme_enable if a UFS host controller need
++	 * this procedure to actually finish HCE.
++	 */
++	if (hba->quirks & UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE) {
++		ret = ufshcd_dme_reset(hba);
++		if (!ret) {
++			ret = ufshcd_dme_enable(hba);
++			if (ret)
++				dev_err(hba->dev,
++					"Failed to do dme_enable after HCE.\n");
++		} else {
++			dev_err(hba->dev, "Failed to do dme_reset after HCE.\n");
++		}
++	}
++
+ 	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
  
--	memset((void *)fnic_fc_ctlr_trace_buf_p, 0,
--			fnic_fc_trace_max_pages * PAGE_SIZE);
--
- 	/* Allocate memory for page offset */
- 	fc_trace_entries.page_offset =
--		vmalloc(array_size(fc_trace_max_entries,
--				   sizeof(unsigned long)));
-+		vcalloc(fc_trace_max_entries, sizeof(unsigned long));
- 	if (!fc_trace_entries.page_offset) {
- 		pr_err("fnic:Failed to allocate memory for page_offset\n");
- 		if (fnic_fc_ctlr_trace_buf_p) {
-@@ -585,8 +577,6 @@ int fnic_fc_trace_init(void)
- 		err = -ENOMEM;
- 		goto err_fnic_fc_ctlr_trace_buf_init;
- 	}
--	memset((void *)fc_trace_entries.page_offset, 0,
--	       (fc_trace_max_entries * sizeof(unsigned long)));
+ 	return 0;
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a95282b..73b888f 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -685,6 +685,12 @@ enum ufshcd_quirks {
+ 	 * single doorbell mode.
+ 	 */
+ 	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
++
++	/*
++	 * This quirks needs to be enabled if host controller need to
++	 * do dme_reset and dme_enable after hce.
++	 */
++	UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE		= 1 << 26,
+ };
  
- 	fc_trace_entries.rd_idx = fc_trace_entries.wr_idx = 0;
- 	fc_trace_buf_head = fnic_fc_ctlr_trace_buf_p;
+ enum ufshcd_caps {
 -- 
-2.46.2
+2.7.4
 
