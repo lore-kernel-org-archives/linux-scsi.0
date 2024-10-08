@@ -1,39 +1,69 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79604249EB
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 02:18:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96FC524B4A
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 02:58:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728353918; cv=none; b=qn8uB+A/W6VIlvtk9E5udwCGCYXZ7xYeEp2O1h/7RKi01E5Ys7mdWj2XI4q9uPKRDqwY6tYKZwq0l4/gFzVdTcDauNaKSvLyDa21hA22iMDfF9b8JM9SvwbOyCXEftCZ+LFUyQ/Sj9WzG2LclXe6wtPpTQ+x3R12XXZ0rvs9nnA=
+	t=1728356328; cv=none; b=X3J45WuGH+DmwmlnT7f8c4y07oEnnMOfgvEAeHb3McfgtxRX3giTD8lJssl8JWgqiJhySJXma2blI18ch1bv0iieNbrV5Go11gwwtiqDX2HzHp4OH/aEq6zDQlL3wg3BTDLD15WQNbLEa11ti/0J4ZoFIk484Xg5Wa4RUi/q2Fw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728353918; c=relaxed/simple;
-	bh=4WpKlLgpqRqpKuuDkg/DMLuyfrvi5SrfALUcu4Nwhuo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XF/ntbild4ZrnR5YulmquYW8cRmOTPolKpQAgV6rOboYv/5pph4eAJA2nwjEKk/iqzfWRpLhl4pQCPqyWnab4gXjPg3c3NE59HPC4fK0ztmi2oYyVlM1KSbMsxypwYwI3xEvjrLKJpaMZKce8Mu8CmIJQJN8wEvkZ1/h2suH6hg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4XN05C1YQ9z1T84N;
-	Tue,  8 Oct 2024 10:16:47 +0800 (CST)
-Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id C070B180106;
-	Tue,  8 Oct 2024 10:18:28 +0800 (CST)
-Received: from localhost.huawei.com (10.50.165.33) by
- dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 8 Oct 2024 10:18:28 +0800
-From: Yihang Li <liyihang9@huawei.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-	<liyihang9@huawei.com>
-Subject: [PATCH v2 08/13] scsi: hisi_sas: Default enable interrupt coalescing
-Date: Tue, 8 Oct 2024 10:18:17 +0800
-Message-ID: <20241008021822.2617339-9-liyihang9@huawei.com>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20241008021822.2617339-1-liyihang9@huawei.com>
-References: <20241008021822.2617339-1-liyihang9@huawei.com>
+	s=arc-20240116; t=1728356328; c=relaxed/simple;
+	bh=WTtjtG47vymHfMOTZHiAGXAiV8ozOqMHl1YVg0JFja8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=BsrgRYs6F0bHwQlQKXEZVKDNpCz4Q9kiqIrcTxzlAMEk2xN3kq/tKa4DUmWGqiDSoHmYRPbbIEmptwQxmeUj+jV5sttEPlZ8gYLHbLUCRZjxSUwc209hRh3ibQvhtk+XO/Jc/MWlje3ATf72UcJNrebfaGrKko/iOwffbi0d4E4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=BpD+gNBH; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BpD+gNBH"
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20241008025842epoutp019584e770ed8ff28499c350d7a6f8ac4a~8WusL7RAB1899918999epoutp01Q
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Oct 2024 02:58:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20241008025842epoutp019584e770ed8ff28499c350d7a6f8ac4a~8WusL7RAB1899918999epoutp01Q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1728356322;
+	bh=RUnIJ9K+YQ0p0ZcKfT070l16YRpaY6+jaXV37dAh/TY=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=BpD+gNBHJNJBh9toqRWlyMYnPk6pSPTjfh5HjE+zSNHClSHuNzQLMYpxP/vbq3SRe
+	 d4uPGIdzRIYiickZY6E0ODrZhVTMhOMbPMsrXUvFl8UqjEuR9r52KnN9BktfA4JawR
+	 9S9aFHSQQAUGOi6CdlBiKn0/WxjWdzxGIg8KByYA=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+	20241008025841epcas2p1b2c394df55e270124fd5053b542e7c59~8WurgRqCR1455114551epcas2p1N;
+	Tue,  8 Oct 2024 02:58:41 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.68]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4XN11Y0Sw8z4x9Pw; Tue,  8 Oct
+	2024 02:58:41 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+	epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+	8E.A8.09776.0EF94076; Tue,  8 Oct 2024 11:58:40 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+	20241008025840epcas2p4834ac38412a5cd41d32f85d118febc24~8Wup-12ac3266632666epcas2p4I;
+	Tue,  8 Oct 2024 02:58:40 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20241008025840epsmtrp2dd05d5b875a3222f985201cf7f171ff3~8Wup_-DY10860708607epsmtrp2O;
+	Tue,  8 Oct 2024 02:58:40 +0000 (GMT)
+X-AuditID: b6c32a47-d53fa70000002630-3c-67049fe089bf
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	47.31.08227.0EF94076; Tue,  8 Oct 2024 11:58:40 +0900 (KST)
+Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20241008025839epsmtip1150057a7a3b72671167a1f2dee3d2b13~8WupsaKDp0573505735epsmtip1e;
+	Tue,  8 Oct 2024 02:58:39 +0000 (GMT)
+From: SEO HOYOUNG <hy50.seo@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+	kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
+	quic_nguyenb@quicinc.com, cpgs@samsung.com, h10.kim@samsung.com
+Cc: SEO HOYOUNG <hy50.seo@samsung.com>
+Subject: [PATCH v1] scsi: ufs: core: check asymmetric connected lanes
+Date: Tue,  8 Oct 2024 12:08:45 +0900
+Message-Id: <20241008030845.25997-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.26.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,121 +71,79 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemf100013.china.huawei.com (7.185.36.179)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrLJsWRmVeSWpSXmKPExsWy7bCmme6D+SzpBndvWlk8mLeNzeLlz6ts
+	FgcfdrJYTPvwk9ni5SFNi7+3L7JarF78gMVi0Y1tTBZbb+xksbi55SiLxeVdc9gsuq/vYLNY
+	fvwfk8XUF8fZLZb+e8viwO9x+Yq3x4RFBxg9vq/vYPP4+PQWi8fEPXUefVtWMXp83iTn0X6g
+	mymAIyrbJiM1MSW1SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNctMwfo
+	dCWFssScUqBQQGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpOgXmBXnFibnFpXrpeXmqJlaGBgZEp
+	UGFCdsaqOQeZCn6yV/xveMLawLiDrYuRk0NCwETixOY1jCC2kMAORolVR9S7GLmA7E+MEref
+	/mCEcL4xSiy/uZMVpuPB9VssEIm9jBKTtixjhXB+MEr86PvIAlLFJqAhsebYISYQW0TgMpPE
+	n2VmIDazgJrE57vLwGqEBVwllqy/BLabRUBVYt2eW2AbeAUsJW7M28YCsU1eYlHDbyaIuKDE
+	yZlPWCDmyEs0b53NDLJYQmAuh0TXr3tQD7lIdD7dAGULS7w6voUdwpaS+PxuL1CcA8gulpi1
+	sBqit4FR4tDsWVA1xhKznrUzgtQwC2hKrN+lD1GuLHHkFtRaPomOw3+hqnklGjb+Zoco4ZXo
+	aBOCCCtJnJl7GyosIXFwdg5E2EPi6de5zJCAjpX4fu8N2wRGhVlI/pqF5K9ZCCcsYGRexSiW
+	WlCcm55abFRgDI/e5PzcTYzgdKzlvoNxxtsPeocYmTgYDzFKcDArifBGrGFMF+JNSaysSi3K
+	jy8qzUktPsRoCgzpicxSosn5wIyQVxJvaGJpYGJmZmhuZGpgriTOe691boqQQHpiSWp2ampB
+	ahFMHxMHp1QD06Fpj4utX9w5KuXIYtqVN/lVwbV9luuPyEluEe6ZfHPyxPMLVi3PsDcz+9e6
+	PvLbmeezJzY7mjO1G3LNV5Z5c2fx2VL7eapKPeo30jss3m/wV3vDpsT2e78vV+QHoS1zj7/z
+	y9/xoMcsTfr9U4HqznK7mmeKfZn+U0yjjwm75/z76yS374tZfa31vd3ioe+7zhnPPt9wb9b3
+	S7PvJcwLOevreoalNZp1q8ntReFvLR4veZ5+wP4Bw5l7ry9ZW7R/YT94cnUoz4XLRxn9eR7v
+	X/hq8edNWvwKk6svau5aliV0o6eSedfS0k16V+qOLHStE3S0YL/77tjK57Ze0vNWv1JqX8kS
+	fEpmfQn3w21MKx8qsRRnJBpqMRcVJwIANpxsr1AEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCLMWRmVeSWpSXmKPExsWy7bCSnO6D+SzpBh9fMFs8mLeNzeLlz6ts
+	FgcfdrJYTPvwk9ni5SFNi7+3L7JarF78gMVi0Y1tTBZbb+xksbi55SiLxeVdc9gsuq/vYLNY
+	fvwfk8XUF8fZLZb+e8viwO9x+Yq3x4RFBxg9vq/vYPP4+PQWi8fEPXUefVtWMXp83iTn0X6g
+	mymAI4rLJiU1J7MstUjfLoErY9Wcg0wFP9kr/jc8YW1g3MHWxcjJISFgIvHg+i2WLkYuDiGB
+	3YwSa1Y/YYRISEj8X9zEBGELS9xvOcIKUfSNUeLozRNgRWwCGhJrjh1iAkmICDxlkjhxqIsZ
+	JMEsoCbx+e4yFhBbWMBVYsn6S2ANLAKqEuv23GIFsXkFLCVuzNvGArFBXmJRw28miLigxMmZ
+	T1gg5shLNG+dzTyBkW8WktQsJKkFjEyrGCVTC4pz03OLDQuM8lLL9YoTc4tL89L1kvNzNzGC
+	I0JLawfjnlUf9A4xMnEwHmKU4GBWEuGNWMOYLsSbklhZlVqUH19UmpNafIhRmoNFSZz32+ve
+	FCGB9MSS1OzU1ILUIpgsEwenVANTv4HUzy1HmPN7ojgmbXxWtnvmw536+Ztvv679uP7al8zU
+	b3NOn4zy+Rnhf2zTqsYwMY5b4TenMx+0faC9dm1tp9r/Wa3z3V9zTbyitvX85+MaRwSvGJ1l
+	1lOUuhTU+3p/qmWNs7ffXLOzffEPzIwX1DxQf5v5SVswh13keazKufk75mdfNxM/OIdz57Kz
+	P9zqdl52Z9x/WHp1mJWo/5lTHx6VFzroTL8a/bj1GJ+e/q6CwqM3b+4vvzFVmJPrB5+roLJ1
+	1nLTp2yxCcEzHDksNpY9nHsmYd9mViX5iS/tivxfh2xmTvHck7jhroRAjfW1dw8+ne+Pimnx
+	36kmKKUqUBFoH6sam33aRZ6PtXyOEktxRqKhFnNRcSIA0iao5/cCAAA=
+X-CMS-MailID: 20241008025840epcas2p4834ac38412a5cd41d32f85d118febc24
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20241008025840epcas2p4834ac38412a5cd41d32f85d118febc24
+References: <CGME20241008025840epcas2p4834ac38412a5cd41d32f85d118febc24@epcas2p4.samsung.com>
 
-In the current interrupt reporting mode, each CQ entry reports an
-interrupt. However, when there are a large number of I/O hardware
-completion interrupts, the following issue may occur:
+Performance problems may occur if there is a problem with the
+asymmetric connected lane such as h/w failure.
+Currently, only check connected lane for rx/tx is checked if it is not 0.
+But it should also be checked if it is asymmetrically connected.
 
-[ 4682.678657][  C129] irq 134: nobody cared (try booting with the "irqpoll" option)
-[ 4682.708455][  C129] Call trace:
-[ 4682.711589][  C129]  dump_backtrace+0x0/0x1e4
-[ 4682.715934][  C129]  show_stack+0x20/0x2c
-[ 4682.719933][  C129]  dump_stack+0xd8/0x140
-[ 4682.724017][  C129]  __report_bad_irq+0x54/0x180
-[ 4682.728625][  C129]  note_interrupt+0x1ec/0x2f0
-[ 4682.733143][  C129]  handle_irq_event+0x118/0x1ac
-[ 4682.737834][  C129]  handle_fasteoi_irq+0xc8/0x200
-[ 4682.742613][  C129]  __handle_domain_irq+0x84/0xf0
-[ 4682.747391][  C129]  gic_handle_irq+0x88/0x2c0
-[ 4682.751822][  C129]  el1_irq+0xbc/0x140
-[ 4682.755648][  C129]  _find_next_bit.constprop.0+0x20/0x94
-[ 4682.761036][  C129]  cpumask_next+0x24/0x30
-[ 4682.765208][  C129]  gic_ipi_send_mask+0x48/0x170
-[ 4682.769900][  C129]  __ipi_send_mask+0x34/0x110
-[ 4682.775720][  C129]  smp_cross_call+0x3c/0xcc
-[ 4682.780064][  C129]  arch_send_call_function_single_ipi+0x38/0x44
-[ 4682.786146][  C129]  send_call_function_single_ipi+0xd0/0xe0
-[ 4682.791794][  C129]  generic_exec_single+0xb4/0x170
-[ 4682.796659][  C129]  smp_call_function_single_async+0x2c/0x40
-[ 4682.802395][  C129]  blk_mq_complete_request_remote.part.0+0xec/0x100
-[ 4682.808822][  C129]  blk_mq_complete_request+0x30/0x70
-[ 4682.813950][  C129]  scsi_mq_done+0x48/0xac
-[ 4682.818128][  C129]  sas_scsi_task_done+0xb0/0x150 [libsas]
-[ 4682.823692][  C129]  slot_complete_v3_hw+0x230/0x710 [hisi_sas_v3_hw]
-[ 4682.830120][  C129]  cq_thread_v3_hw+0xbc/0x190 [hisi_sas_v3_hw]
-[ 4682.836114][  C129]  irq_thread_fn+0x34/0xa4
-[ 4682.840371][  C129]  irq_thread+0xc4/0x130
-[ 4682.844455][  C129]  kthread+0x108/0x13c
-[ 4682.848365][  C129]  ret_from_fork+0x10/0x18
-[ 4682.852621][  C129] handlers:
-[ 4682.855577][  C129] [<00000000949e52bf>] cq_interrupt_v3_hw [hisi_sas_v3_hw] threaded [<000000005d8e3b68>] cq_thread_v3_hw [hisi_sas_v3_hw]
-[ 4682.868084][  C129] Disabling IRQ #134
-
-When the IRQ management layer processes each hardware interrupt, if the
-return value of the interrupt handler is IRQ_WAKE_THREAD, it will wake up
-the handler thread for this interrupt action and set IRQTF_RUNTHREAD flag,
-wait for the interrupt handling thread to clear the IRQTF_RUNTHREAD flag
-after execution. Later in note_interrupt(), use irq_count to count
-hardware interrupts and irqs_unhandled to count interrupts for which no
-thread handler is responsible. When irq_count reaches 100000 and
-irqs_unhandled reaches 99000, irq will be disabled.
-
-In the performance test scenario, I/O completion hardware interrupts are
-continuously and quickly generated. As a result, the interrupt processing
-thread is cyclically called in irq_thread() and does not exit, this
-affects the response of the interrupt thread to the hardware interrupt and
-causes irqs_unhandled to grow to 99000. Finally, the irq is disabled.
-
-Therefore, default enable interrupt coalescing to reduce the generation of
-hardware interrupts, this helps interrupt processing threads to stop
-calling in irq_thread().
-
-For interrupt coalescing, according to the actual performance test, set
-the count of CQ entries to 10 and the interrupt coalescing timeout period
-to 10us based on the actual performance test.
-
-Before and after interrupt coalescing is enabled, the 4K read/write
-performance is improved by about 3%, and the 256K read/write performance
-is basically the same.
-
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
-Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ drivers/ufs/core/ufshcd.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index e6fbbefe9959..310c782b4926 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -638,9 +638,11 @@ static void init_reg_v3_hw(struct hisi_hba *hisi_hba)
- 	hisi_sas_write32(hisi_hba, TRANS_LOCK_ICT_TIME, 0x4A817C80);
- 	hisi_sas_write32(hisi_hba, HGC_SAS_TXFAIL_RETRY_CTRL, 0x108);
- 	hisi_sas_write32(hisi_hba, CFG_AGING_TIME, 0x1);
--	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
--	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
--	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
-+	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x3);
-+	/* configure the interrupt coalescing timeout period 10us */
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0xa);
-+	/* configure the count of CQ entries 10 */
-+	hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0xa);
- 	hisi_sas_write32(hisi_hba, CQ_INT_CONVERGE_EN,
- 			 hisi_sas_intr_conv);
- 	hisi_sas_write32(hisi_hba, OQ_INT_SRC, 0xffff);
-@@ -2797,14 +2799,15 @@ static void config_intr_coal_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	/* config those registers between enable and disable PHYs */
- 	hisi_sas_stop_phys(hisi_hba);
-+	hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x3);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 24a32e2fd75e..387eec6f19ef 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4540,6 +4540,14 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
+ 		return -EINVAL;
+ 	}
  
- 	if (hisi_hba->intr_coal_ticks == 0 ||
- 	    hisi_hba->intr_coal_count == 0) {
--		hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x1);
--		hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0x1);
--		hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0x1);
-+		/* configure the interrupt coalescing timeout period 10us */
-+		hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME, 0xa);
-+		/* configure the count of CQ entries 10 */
-+		hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT, 0xa);
- 	} else {
--		hisi_sas_write32(hisi_hba, INT_COAL_EN, 0x3);
- 		hisi_sas_write32(hisi_hba, OQ_INT_COAL_TIME,
- 				 hisi_hba->intr_coal_ticks);
- 		hisi_sas_write32(hisi_hba, OQ_INT_COAL_CNT,
++	if (pwr_info->lane_rx != pwr_info->lane_tx) {
++		dev_err(hba->dev, "%s: asymmetric connected lanes. rx=%d, tx=%d\n",
++			__func__,
++				pwr_info->lane_rx,
++				pwr_info->lane_tx);
++		return -EINVAL;
++	}
++
+ 	/*
+ 	 * First, get the maximum gears of HS speed.
+ 	 * If a zero value, it means there is no HSGEAR capability.
 -- 
-2.33.0
+2.26.0
 
