@@ -1,133 +1,146 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E195D14D280;
-	Wed,  9 Oct 2024 05:09:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB41B1547DE;
+	Wed,  9 Oct 2024 05:39:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728450575; cv=none; b=uH7YL2qf2FJI021hYGmYWOYl5vOqGuWYjtMdlb1XwNe2YxnKraIiMthzNJcycviSq6Nxl7M/BRhlfXBIurjDTme+7x1Lq87HR7VWIQKLT+SLGtsM25uU0moBm+Hq3VC8+Cjffa2SABnETLwQkLJMdsH2GNM2pzJSmNVSJWR/dUw=
+	t=1728452376; cv=none; b=ScVw6l8AtJdNEwRX+ZYHMD8B+lOplQ091BYSkZ9lTehTbr2x9zj5+d0CJ1Th/wkjFA3+vB3xdqgZqX06sFqSVKavUAixynxs4tGr2E1gB/nesugHgr7vC3rIBsjHMj4NbsMD7lILfCJ1yDystkuZq+iW/0hFseohg9Y1HEtaCdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728450575; c=relaxed/simple;
-	bh=+/lG6d/2yiL1coqVhRfclbMCgDsoHozt5HlulUhP8jQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kxFTkHs77FVQ3e34M1uGdNuG5ovC9grgq8BfJGTyw/jd8xjhD3Cu4q9ak0CRIm+oWEfZZ1OhDAVe3ZvvU2h88GMvr3sf8DqZaRjsHeFY7w5DREaqsUNZ9dauNjLO0scwiRaFCMoZzuwZPq+59bGnzjfvTUPrRuuFnzzIrzoD3uQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KXXjcqWW; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1728452376; c=relaxed/simple;
+	bh=+CLsbmfZs/12mfP7CeP+jAK+LtDxN/YXFdeTn8cwWi4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=PxaDAagY02+4k1k4+N8qXPJsgC+iMjEBLSfN9rgh7xW2pgkOoscLIITEgpife+922IeoAQfnABCbir8Tq9QPqNTewKBNqNXBdPnU9TpfSfC8t3Up+tT/jpfdIC4HxvyXCpQij7n3EtfcYgPmt1PM09T56XGNT8cZtpFT6gZxtxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=T6ODwcsS; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KXXjcqWW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1728450573; x=1759986573;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=+/lG6d/2yiL1coqVhRfclbMCgDsoHozt5HlulUhP8jQ=;
-  b=KXXjcqWWeEt06Pxu1tm4y7kB03Vpay/Q8CydyCkh6wVAW6OUvs03AoEu
-   lyhNCcA65vrhe+i8Nr8YXZW/TjroYa4/E4BBhojNweIibnggddwg/sBAo
-   9szFVm/FvsHCt4839nXsupemXWcgzIEd9CARv44/laOhtvllqXxxYdZmK
-   RfDoPJeSXJCLzcZPsX4PC5KSM9m7K7JAWFVzrwRRjS94D4i0p72K27I6y
-   rb0o0M6hvYv1OBp2lLASobZo/jYSnkwCg7x1MP7QTL7nplbaTlhr68SXJ
-   Tb7SbjGLcFKfwjifDmg0qB769hdoUqiHj2VkYufHz7W/yvTfe2VjBEf+h
-   g==;
-X-CSE-ConnectionGUID: PzfHB7rURk2E+TPWxU7eCQ==
-X-CSE-MsgGUID: 1yPT0X9kSSmZDmK1ZOttVQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11219"; a="31425379"
-X-IronPort-AV: E=Sophos;i="6.11,189,1725346800"; 
-   d="scan'208";a="31425379"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2024 22:09:32 -0700
-X-CSE-ConnectionGUID: HgE7S8OtTvum40XWD/P7BQ==
-X-CSE-MsgGUID: YcVLafYwToq0mu9eCJWT4w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,189,1725346800"; 
-   d="scan'208";a="75995876"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 08 Oct 2024 22:09:28 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1syOww-0008lM-0w;
-	Wed, 09 Oct 2024 05:09:26 +0000
-Date: Wed, 9 Oct 2024 13:09:17 +0800
-From: kernel test robot <lkp@intel.com>
-To: ed.tsai@mediatek.com, peter.wang@mediatek.com,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="T6ODwcsS"
+X-UUID: d544b1a8860011ef88ecadb115cee93b-20241009
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=I3QlM+wHwYxdZQsYINnxa9RWbc46mBL74mYp99QPueo=;
+	b=T6ODwcsSUZKhBSZE2QScEcqJAmAasR9rh1cZYk74EIJfVMK70TMceXkJURI/48+8LXk/n3N3e7hECuMfR7RjNE325x48yHeOfTJY++OSny8jRqpFT3PhSV7KsmlriZhiutTASf1Kotg29FUER3cDluWTj0jnbkZy+4tBJ7T/t9M=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:6a5e692d-b50a-4c3f-b2e6-11bc4d97459f,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:6dc6a47,CLOUDID:28f3f864-444a-4b47-a99a-591ade3b04b2,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
+	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: d544b1a8860011ef88ecadb115cee93b-20241009
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+	(envelope-from <ed.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 263593157; Wed, 09 Oct 2024 13:39:20 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Tue, 8 Oct 2024 22:39:19 -0700
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Wed, 9 Oct 2024 13:39:19 +0800
+From: <ed.tsai@mediatek.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, Stanley
+ Jhu <chu.stanley@gmail.com>, Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: oe-kbuild-all@lists.linux.dev, wsd_upstream@mediatek.com,
-	chun-hung.wu@mediatek.com, Ed Tsai <ed.tsai@mediatek.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: configure individual LU queue
- flags
-Message-ID: <202410091257.SE04cckD-lkp@intel.com>
-References: <20241008065950.23431-1-ed.tsai@mediatek.com>
+CC: <wsd_upstream@mediatek.com>, <chun-hung.wu@mediatek.com>, Ed Tsai
+	<ed.tsai@mediatek.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2] scsi: ufs: ufs-mediatek: configure individual LU queue flags
+Date: Wed, 9 Oct 2024 13:38:47 +0800
+Message-ID: <20241009053854.15353-1-ed.tsai@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241008065950.23431-1-ed.tsai@mediatek.com>
+Content-Type: text/plain
+X-MTK: N
 
-Hi,
+From: Ed Tsai <ed.tsai@mediatek.com>
 
-kernel test robot noticed the following build errors:
+Previously, ufs vops config_scsi_dev was removed because there were no
+users. ufs-mediatek needs it to configure the queue flags for each LU
+individually. Therefore, bring it back and customize the queue flag as
+we required.
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on jejb-scsi/for-next linus/master v6.12-rc2 next-20241008]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+In addition, because the SCSI probe_type = PROBE_PREFFER_ASYNCHRONOUS,
+sd_probe() is completed by another thread, causing the sd index to be
+obtained asynchronously. Directly setting the queue through sysfs is
+cumbersome. We do not need to change the queue settings at runtime, so
+a simpler and more intuitive approach is to set its flag once the SCSI
+device is confirmed to be ready.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/ed-tsai-mediatek-com/scsi-ufs-ufs-mediatek-configure-individual-LU-queue-flags/20241008-153700
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20241008065950.23431-1-ed.tsai%40mediatek.com
-patch subject: [PATCH] scsi: ufs: ufs-mediatek: configure individual LU queue flags
-config: arm-allyesconfig (https://download.01.org/0day-ci/archive/20241009/202410091257.SE04cckD-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241009/202410091257.SE04cckD-lkp@intel.com/reproduce)
+Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c       |  3 +++
+ drivers/ufs/host/ufs-mediatek.c | 10 ++++++++++
+ include/ufs/ufshcd.h            |  1 +
+ 3 files changed, 14 insertions(+)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410091257.SE04cckD-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/ufs/host/ufs-mediatek.c: In function 'ufs_mtk_config_scsi_dev':
->> drivers/ufs/host/ufs-mediatek.c:1789:65: error: 'struct scsi_device' has no member named 'reqeust_queue'; did you mean 'request_queue'?
-    1789 |                 blk_queue_flag_set(QUEUE_FLAG_SAME_FORCE, sdev->reqeust_queue);
-         |                                                                 ^~~~~~~~~~~~~
-         |                                                                 request_queue
-
-Kconfig warnings: (for reference only)
-   WARNING: unmet direct dependencies detected for GET_FREE_REGION
-   Depends on [n]: SPARSEMEM [=n]
-   Selected by [y]:
-   - RESOURCE_KUNIT_TEST [=y] && RUNTIME_TESTING_MENU [=y] && KUNIT [=y]
-
-
-vim +1789 drivers/ufs/host/ufs-mediatek.c
-
-  1782	
-  1783	static void ufs_mtk_config_scsi_dev(struct scsi_device *sdev)
-  1784	{
-  1785		struct ufs_hba *hba = shost_priv(sdev->host);
-  1786	
-  1787		dev_dbg(hba->dev, "lu %llu scsi device configured", sdev->lun);
-  1788		if (sdev->lun == 2)
-> 1789			blk_queue_flag_set(QUEUE_FLAG_SAME_FORCE, sdev->reqeust_queue);
-  1790	}
-  1791	
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7cab103112e1..be50b86269bf 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5253,6 +5253,9 @@ static int ufshcd_device_configure(struct scsi_device *sdev,
+ 	 */
+ 	sdev->silence_suspend = 1;
+ 
++	if (hba->vops && hba->vops->config_scsi_dev)
++		hba->vops->config_scsi_dev(sdev);
++
+ 	ufshcd_crypto_register(hba, q);
+ 
+ 	return 0;
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 9a5919434c4e..0b57623edca5 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1780,6 +1780,15 @@ static int ufs_mtk_config_esi(struct ufs_hba *hba)
+ 	return ufs_mtk_config_mcq(hba, true);
+ }
+ 
++static void ufs_mtk_config_scsi_dev(struct scsi_device *sdev)
++{
++	struct ufs_hba *hba = shost_priv(sdev->host);
++
++	dev_dbg(hba->dev, "lu %llu scsi device configured", sdev->lun);
++	if (sdev->lun == 2)
++		blk_queue_flag_set(QUEUE_FLAG_SAME_FORCE, sdev->request_queue);
++}
++
+ /*
+  * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
+  *
+@@ -1809,6 +1818,7 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
+ 	.op_runtime_config   = ufs_mtk_op_runtime_config,
+ 	.mcq_config_resource = ufs_mtk_mcq_config_resource,
+ 	.config_esi          = ufs_mtk_config_esi,
++	.config_scsi_dev     = ufs_mtk_config_scsi_dev,
+ };
+ 
+ /**
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a95282b9f743..800d79dc91fc 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -383,6 +383,7 @@ struct ufs_hba_variant_ops {
+ 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
+ 				       unsigned long *ocqs);
+ 	int	(*config_esi)(struct ufs_hba *hba);
++	void	(*config_scsi_dev)(struct scsi_device *sdev);
+ };
+ 
+ /* clock gating state  */
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.45.2
+
