@@ -1,57 +1,57 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2892191F7F
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Oct 2024 11:21:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78CDE1922DF
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Oct 2024 11:21:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728472914; cv=none; b=pxlOqGuGEM6jq/WBevRlFVntUJ8rlUXTAVydizlA/Vkj9f8JltxofnNmKmo+OUWoFa1X/LEbyFZVmS5ZphpGnPV9P1+LhVmeKgcyA5y/cgpEaUScWeHFaOuvEdru17qxHKfWDy7bBoGQ+CPyjiArC28Ffu4J6pIR1ZULpj2PYpI=
+	t=1728472916; cv=none; b=Ekfb1lNuwx7COTevDC5A6snpeOH7bNxcS7d6mSxAJdVr9PrvaFDVVd/miINKqCJMUPTKJZByXBztJdoe7+0ME8iRLKigVxxv8L9DPC2LSz0aBh7TdFgd7qMtvhszfa+AIRlM+vNLIMI6VXorotkLfSSkI/DSJewwauSGSCwnWKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728472914; c=relaxed/simple;
-	bh=hDzFSe1lRi4yyuPHSIaucwMqr2mLXU7tOlTPgv8XUzo=;
+	s=arc-20240116; t=1728472916; c=relaxed/simple;
+	bh=U2N6z2wH72kLC/ElVe24RfJtkaCecDBL0/+mf8cDWuw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rxfvVs5yMtkeowiNsDK5VxLfREygfnJlXj6TVRSjDtHyASUeq4693IqLeZMzMKoKIvQ2GcyCo20G+qJrVH201sW23qOh3+0lfT/WPy0BUSqCzhFG4b0RSaWmWAjaVS19sWQGnsrfV5pv+nFJJ3lyXG14+kyu+svp+KCEhweldQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bNnL24xU; arc=none smtp.client-ip=209.85.128.41
+	 MIME-Version; b=lav3d0nIa0c6EJQC4QE3w5EzVHR2LzJcdLA0O5q8o1vYD8oDOuZje/1eSxt7gfI8QS7mRvbSdwtblnVs05Wg4NzQ6nLdc/DROW6FYeyZL42qdAnVmiWJuJzbZQ5kDEXTWWHR2pgw/7nOG/Z30bh6I4kh9YoEFuxhk+ZofPpuNFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=t3pys5/1; arc=none smtp.client-ip=209.85.128.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bNnL24xU"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-43111cff9d3so4343665e9.1
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2024 04:21:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="t3pys5/1"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-43111cff9d3so4343865e9.1
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2024 04:21:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1728472911; x=1729077711; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1728472913; x=1729077713; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ghtUYLBlSjf3IggEwHExig2CKcpoS8dsJVFld1RzVuU=;
-        b=bNnL24xUF+gpLihMlmHw7IUZziKucfwCEJ1OvruipQ+p+WQ0tCe5xMA6UP3zi0ptx5
-         XTlw6h7d0HQBGFcJ5qqIryMpDt7WleHdfQ8YaN3mGy7+UEcqcfJPCNM8oDEtUOU1sNt/
-         fmS+NxZkOkKsIgQJZDsYJBkg+a8mnQFQfhxMA/tzdGt1yggopRmy1KOeIYSgp+9ZH+zx
-         PzjmYoFGaTTVEVrrIFy1Ghkm4t1aM02WVZYwOXzs0Sve5fXFCoTJB/9nXRt03FbaT2wz
-         Gaicrk5LbZOoiDdGzY+5n59zPtqwhkXDYN57wRTTZJHpMMQqcxro03nfl2ObAdNmtCku
-         bUyQ==
+        bh=0G5+DGHRH9uKXySVvDG2zjq1MsEuwXbycCIn4qhJYMw=;
+        b=t3pys5/1uuPu+UHCRAG07KCBO/jn9j6LPcd8CbXD3xjJx7sLX1ExVvewkFHZYPy7oo
+         lz8XoUqjo+RQSScLvZSLsCWYcjlIas7ax7Jz6u/0slG5nggd5fK/GLEF1rAfIT/+Pxnz
+         9EKcg/bOb+KqxJJRsWZZKqh8vywMxVA5AcV+cOP27XXlXfVnHx06ZPIeir986zyU0gBI
+         kw0/hi/ZOqLNORwT0k6GVEE2SYhkt69tdLYJa7MqCX6tPX49mUOtXelPZLj6hu8P5uHN
+         RCUgYtj2qCmrPyAYe4CSUjeUPXvd6OXFrZQogv2YSRqMTmY1DEmQeLHNmO/6cfu2wKpZ
+         dELA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728472911; x=1729077711;
+        d=1e100.net; s=20230601; t=1728472913; x=1729077713;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ghtUYLBlSjf3IggEwHExig2CKcpoS8dsJVFld1RzVuU=;
-        b=A/+EtFopVq34Rg2ekC/W2tKyc2egAQ8R2uBZfaeW16GXqLXnBPlKBOwILhb7pYj8Af
-         IYYa4M5tVPleCus95eQmti88Vx/lJJ1gpsdcL++unHpV/eMOG+uWne9ISVKtuovmpSMQ
-         m+b2FRtwHOgpM6Bv4HcSooPXS9c7EnRxLyNm+lg2A5DkcIjHe7jL780VqHnCpjDt+0ga
-         ZaUvS+nqMZbjlnUj7L+skYibFhzFoYf8yQAWIHUf1+2LY+CSDkyFq0vTKIPrX3sfeHcG
-         hsoW7WO5Y6nxNZ7o5TqQJbWWfGobS/FHb4FtM1HRCvZFvsuClruS8kmODQyqPZYfdQxV
-         ZI6A==
-X-Forwarded-Encrypted: i=1; AJvYcCVJkalTKMxvBaFcpU9TvMP8I519muali4f0KZofwesgX4evrgi5WFKVRqE+/UZRl/+lePJlUT1DRA1G@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLWWjgD9wDkG+iMTyLl+QrFjmc6Gp3cCDakURz6ZH7cUbigCRn
-	tOReTDfpPvUwO6yfiiVXZmHQAcPxg79pT/zeOcGG8fN/GCjVYvxq9kdS1xxFhyQ=
-X-Google-Smtp-Source: AGHT+IEJX2RjpFeLUHsr4Qx7o7zdf3TWL+5xxAUSFTySxWEYnSA6UXjwYDBXPN59NyQNksavaCy8pQ==
-X-Received: by 2002:a05:600c:3544:b0:42f:7c9e:1f96 with SMTP id 5b1f17b1804b1-430ccf091a7mr14596575e9.1.1728472911183;
-        Wed, 09 Oct 2024 04:21:51 -0700 (PDT)
+        bh=0G5+DGHRH9uKXySVvDG2zjq1MsEuwXbycCIn4qhJYMw=;
+        b=QesltSWuGzrcoB7H5WvCTvFwfLlt4rGzBSLSKex7/DTPIyiZTI5HVAV/ujhuMcWuvb
+         ly/bIh6Jm5zGEk5ywWXTZ5okF5S6wolLbulnYIEteBty7iV54ZcXhfycMv/8oYvmv8Sl
+         4I2p2ZkzYS4cFncqcrf9F/CfrSwDoj5V3UOxaMNC8X8ZyBPKtW3/CXl7tFr699aMa6FO
+         YGvViu1ov72CLebD4R8kf5FIQ4BGgBkEfyi725dJlS2gUB2OD445Mk4U1BmlIFOylD5Y
+         Y2ikEHUW9GGBsoyVL0lPjoLmVeEBZrP1XANG7Qz4IaCS1jR9CpiOJwgoyIhU6MmPu5TI
+         4qRQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU+Z2xLl7TabiCzvwDEvFgNh9S7rJqdHoyWAXIXFJ/l0/P080WiTKI4kGSwOSkdq5geALKqXYqTe051@vger.kernel.org
+X-Gm-Message-State: AOJu0YxRm+DXN3+hgVXKsEDCO0SdKj6UC8pw31MSyYMHsdAlSQ3Msggj
+	qv35pF/x0cUcyH+ckogvy2R1aXn3uBgwAZ11RPuK5CYv8GZ/U0/zEHeWzF8BSGM=
+X-Google-Smtp-Source: AGHT+IGDUkReqvpDILvzLlsGK2Z3Cg76lYE/cf1NIlvq1mdgxLrmdCkneJKzCCHIFSebONF2UDAWJQ==
+X-Received: by 2002:a05:600c:1ca7:b0:42c:de2f:da27 with SMTP id 5b1f17b1804b1-430ccf0859fmr13666665e9.2.1728472912789;
+        Wed, 09 Oct 2024 04:21:52 -0700 (PDT)
 Received: from gpeter-l.lan ([145.224.65.7])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4310c3dcdcbsm12331445e9.0.2024.10.09.04.21.48
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4310c3dcdcbsm12331445e9.0.2024.10.09.04.21.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Oct 2024 04:21:49 -0700 (PDT)
+        Wed, 09 Oct 2024 04:21:52 -0700 (PDT)
 From: Peter Griffin <peter.griffin@linaro.org>
 To: alim.akhtar@samsung.com,
 	James.Bottomley@HansenPartnership.com,
@@ -69,9 +69,9 @@ Cc: tudor.ambarus@linaro.org,
 	linux-samsung-soc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH 1/7] scsi: ufs: exynos: Allow UFS Gear 4
-Date: Wed,  9 Oct 2024 12:21:35 +0100
-Message-ID: <20241009112141.1771087-2-peter.griffin@linaro.org>
+Subject: [PATCH 2/7] scsi: ufs: exynos: add check inside exynos_ufs_config_smu()
+Date: Wed,  9 Oct 2024 12:21:36 +0100
+Message-ID: <20241009112141.1771087-3-peter.griffin@linaro.org>
 X-Mailer: git-send-email 2.47.0.rc0.187.ge670bccf7e-goog
 In-Reply-To: <20241009112141.1771087-1-peter.griffin@linaro.org>
 References: <20241009112141.1771087-1-peter.griffin@linaro.org>
@@ -83,60 +83,43 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-UFS Gear 4 offers faster speeds, and better power usage so lets
-enable it.
+Move the EXYNOS_UFS_OPT_UFSPR_SECURE check inside exynos_ufs_config_smu().
 
-Currently ufshcd_init_host_params() sets UFS_HS_G3 as a default,
-so even if the device supports G4 we end up negotiating down to
-G3.
+This way all call sites will benefit from the check. This fixes a bug
+currently in the exynos_ufs_resume() path on gs101 which will cause
+a serror.
 
-For SoCs like gs101 which have a UFS major controller version
-of 3 or above advertise Gear 4. This then allows a Gear 4 link
-on Pixel 6.
-
-For earlier controller versions keep the current default behaviour
-of reporting G3.
-
+Fixes: d11e0a318df8 ("scsi: ufs: exynos: Add support for Tensor gs101 SoC")
 Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 ---
- drivers/ufs/host/ufs-exynos.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/ufs/host/ufs-exynos.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 9ec318ef52bf..e25de4b86ac0 100644
+index e25de4b86ac0..939d08bce545 100644
 --- a/drivers/ufs/host/ufs-exynos.c
 +++ b/drivers/ufs/host/ufs-exynos.c
-@@ -771,6 +771,21 @@ static void exynos_ufs_config_sync_pattern_mask(struct exynos_ufs *ufs,
- 	exynos_ufs_disable_ov_tm(hba);
- }
+@@ -724,6 +724,9 @@ static void exynos_ufs_config_smu(struct exynos_ufs *ufs)
+ {
+ 	u32 reg, val;
  
-+#define UFS_HW_VER_MAJOR_MASK   GENMASK(15, 8)
++	if (ufs->opts & EXYNOS_UFS_OPT_UFSPR_SECURE)
++		return;
 +
-+static u32 exynos_ufs_get_hs_gear(struct ufs_hba *hba)
-+{
-+	u8 major;
-+
-+	major = FIELD_GET(UFS_HW_VER_MAJOR_MASK, hba->ufs_version);
-+
-+	if (major >= 3)
-+		return UFS_HS_G4;
-+
-+	/* Default is HS-G3 */
-+	return UFS_HS_G3;
-+}
-+
- static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
- 				struct ufs_pa_layer_attr *dev_max_params,
- 				struct ufs_pa_layer_attr *dev_req_params)
-@@ -787,6 +802,8 @@ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
- 	}
+ 	exynos_ufs_disable_auto_ctrl_hcc_save(ufs, &val);
  
- 	ufshcd_init_host_params(&host_params);
-+	/* This driver only support symmetric gear setting e.g. hs_tx_gear == hs_rx_gear */
-+	host_params.hs_tx_gear = host_params.hs_rx_gear = exynos_ufs_get_hs_gear(hba);
+ 	/* make encryption disabled by default */
+@@ -1457,8 +1460,8 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
+ 	exynos_ufs_specify_phy_time_attr(ufs);
+-	if (!(ufs->opts & EXYNOS_UFS_OPT_UFSPR_SECURE))
+-		exynos_ufs_config_smu(ufs);
++
++	exynos_ufs_config_smu(ufs);
  
- 	ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
- 	if (ret) {
+ 	hba->host->dma_alignment = DATA_UNIT_SIZE - 1;
+ 	return 0;
 -- 
 2.47.0.rc0.187.ge670bccf7e-goog
 
