@@ -1,66 +1,67 @@
-Received: from mail-yb1-f178.google.com (mail-yb1-f178.google.com [209.85.219.178])
+Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89ABD1EA91
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Oct 2024 13:15:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7972D197543
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Oct 2024 13:23:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728479741; cv=none; b=TkZAb04CqIZQohnxTARrMR9tamcfQtq5yBDSAzpyegMZIkyZQtdoD5DS3pisuuz+Fzq2Wdywu0x8wdYQdAth9MNjHyva+eqPkFmrI+AOzZAZWwROTw5k8xpOpRCdbNnCkGMqdNykuWceCOR9y9RkhOQ3WRgmNMLLwMjy3F1xRV8=
+	t=1728480239; cv=none; b=cPvPpN6uAYbOeJtI8qfzWIUaOZtBKT94+03Nx15oVV/YRBSCBOnfVEiGJk9DdejWmFuBBq2fcAsdLeOYXF2CdjV/KD1cfzxAEnGw6hgwbt1WEEeH6LISkigb8l41mw2Jo9rsyZWd/rmLtrIoCJiez7JhXyTksho1SDJ3XRkEHzA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728479741; c=relaxed/simple;
-	bh=a/g/KSMW6CmKID3bt4x5A8ciB/In9mNPhttKBVqxwd8=;
+	s=arc-20240116; t=1728480239; c=relaxed/simple;
+	bh=hCS7BTVujCtp4m6ljZNLdynbztIjz790mAoDFaqAogs=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QZUwpz1AJa9Vu4zIggKWyWRjU4PcMIZhnpMwb0y+Xp+Qll38OhU1gD7Jr6izRuYWtsWMBZ/Zhg4fQj8ox4J1RfakMlyiyltRF18zj8q7T7BpNCsxRAoTUWAhXe0Gtdzs0yLiCthrfjcjjpIqsSiScP/3xpCzGlgk60ByVnl78t8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=vTRAmYFh; arc=none smtp.client-ip=209.85.219.178
+	 To:Cc:Content-Type; b=d+GMLOYdA3Q4snJoV9RvYDJ933Ad9i6wTey1QQBUWyAPhtli+icYZ9sw/EUn3RfckNMQLxkuGrMn+CQCVfH3yRjPoAu0RE5KZW71bU6lWsOos9YVxev90tVTu1A13HmKE8ctrhzuAyaxphoHXNWMJ9BG5UXlfXe5vd5uHNnfd8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=jd9GIFDH; arc=none smtp.client-ip=209.85.219.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vTRAmYFh"
-Received: by mail-yb1-f178.google.com with SMTP id 3f1490d57ef6-e28ea358f65so780481276.0
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2024 06:15:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="jd9GIFDH"
+Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-e28fc33fd8eso905484276.1
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2024 06:23:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1728479738; x=1729084538; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1728480236; x=1729085036; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=X/BVh51Wei3dZ71+FMVXs9o7VKFoyrGm7h9GIR6kEtE=;
-        b=vTRAmYFht/6gtE3EfOPePLxI7aJqqRSor3wPT3b9v9SPIfsSaDHxeBqnFCw77sTj1j
-         vPk9a4fdpd+n/k3ICHYOKVrl18e2yhXregPVwLiTN7xpvkzVXOiSJh7K7iNBYp9Oh3cp
-         zZuZ3NgiBNyPDY2cL5sJajnZiTMySkl70b8TAibMV1B4Ur8vrKzOScMZejcwAMzFlzUP
-         VSr22scPyCzKIpkkiu3Xdl799I02aywApVnZdTqUe2zUNs90+TNoh3BwuSokcfu52HWA
-         nTCFaXfh74V5uMs54ed5c2WgWZvSBDVUDm8cajaEqp+RzLiYMfkdaPL4qEuKy5OiuqUB
-         8+PQ==
+        bh=eKg7bGv/gDwJ8Dj8f1rz2qShUBIy5wA6pg80JRqhvBw=;
+        b=jd9GIFDHrIh9UNCbtZ6Hyz7OhPAYjdrg5W+G5SnJbMCud9AyjG9RQPm/WkWVNYcKZu
+         91La/RRVirAMuFoReGdRujb7qLKZqcUZbfxukcOHXh7mnFg1neAeJJ2xmAv8KFg5tn7c
+         JuuiPqaqCyPUMm6xzW2f7C1Bed5Ws+PeE8knEhuVxCXJ/QrcXCA2fwtzqbkAu8V1farB
+         qU1k9TKvzS6Y8cnaTImDebEnFfgmbVYW08xoE7UUNyRRz9fD3pZ/+N70KtYAlr1CUxZy
+         3S12fkRXlgQ2D7EwZBf1Xhw9GSixYf2JIdoiqK5R2ChEI+3Ds+7Vr6bxHSklH/16CyE8
+         7Iyw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728479738; x=1729084538;
+        d=1e100.net; s=20230601; t=1728480236; x=1729085036;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=X/BVh51Wei3dZ71+FMVXs9o7VKFoyrGm7h9GIR6kEtE=;
-        b=xFTLJ0svLIrQd226RcpnaaS0aqCo7mePNOs+dHllgM9b0gpiv9o6DBz0lMuDgBUcKe
-         rGyOYW/lT22suGsi3XYwmpgRn+93RDEmXxVO6d+OZ+6rfp0TZVoT6vom7nICJuKLau/9
-         WmBsKkipqvxxB6RbqAPh3ftsfzKo8T1LMZ1HzuiiHARSR/PbMvHrCrmspjefBOz7Ytjf
-         oCP3+60Mawj7gycImccHSxoS9VOdxx/iWnJ7LIAYhjzuJwQPCpJCWmhKpvtHedigoAVU
-         EtaJqXnzT+tFUlj9uSuvEd9xr+yUhDqr30zKaEJ8phtcrH0OSACKyz1Fa9Sl04ol5It5
-         MdAQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX3WYQJlXouyxBJWBChbThxzDmLLw59DSpBHK4yu53peSPVmBrDzvsAQ2uol83uTFXrnigOjkjFVXM4@vger.kernel.org
-X-Gm-Message-State: AOJu0YxJrELAnIU5QAGit+1kwJAvaUk8UJZ3c51a9BjvbbcNPmcmb6c4
-	InkRb66JnEXufBjkb/wsflXdnwFwB8hiclpMGl1GK0c4YxfGmhhwQ2dpSoDy5l67RvXaGKGAvBE
-	tow+fpjO9EltgNHv8H9Xmxw/AyaT0cyEoBmw2IRvDR2XMEeIF
-X-Google-Smtp-Source: AGHT+IHp9MRWyf8+0EngQ/HGstXTs67OY8NhmDANMfWbtr8KbjZARvSO50M8FTVHd6rQq5UIIfOKejL4W5ObG6+T/7A=
-X-Received: by 2002:a05:6902:18d3:b0:e0b:4cb6:ec53 with SMTP id
- 3f1490d57ef6-e28fe348682mr1747706276.3.1728479738519; Wed, 09 Oct 2024
- 06:15:38 -0700 (PDT)
+        bh=eKg7bGv/gDwJ8Dj8f1rz2qShUBIy5wA6pg80JRqhvBw=;
+        b=ozMyP8WAjyST9WqdnkYZTUp8l0YVG+QhSFLGVca5R76bFwL45HL47sDohPBrICxfSM
+         nIhJDTs5PKjzmgjztzBHMPj3MtnytRTJKTdxphKUkMOIXiq1K1V+OStTdfIX7PztzaF1
+         XP8WA4zM3jyYk/FNUVUc6mwVGPdOkxSOh9y2x2V9GAoZuht3HZ5a69dCCMtQMJls4DwF
+         n/WNcVZfwYaWsaZ6PcM1pQvwfldGzB9G8C/JCFCJKq4sb4nNKT7h6YcbDay9hyq07HCF
+         RMAMPt9Pin5CzZMfWKAbtKnf1X6kDwWac+3B7wjiRzAHE20AWcB19vrCfVieminn4MuG
+         +Z8A==
+X-Forwarded-Encrypted: i=1; AJvYcCVH9URrvFVYYcBG0y2xuO9vER8wX0chQFN/HZB4zgt1JXNGRHzDxvjaCYocVuV8SuC6bx3bXSnDMg5S@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxey8QGNsweNYAr9iRbK4foHFFh1J+TdovbDJsOcGjTEGEyz7df
+	gaL3g8V4jpH3I1DPebEOkiQiK1R1kCoMZ8Vga9F1W+fdeCZVahScvC6IKCCLA9x6+W3PNrdnRDd
+	MIlrBdAIEfT4Zru2/Vz2tJS6XKBVsU5cd/FX7IQ==
+X-Google-Smtp-Source: AGHT+IHdjIJEGNBc42+O7+FXjnfNDEy5mnh1GgAZbWvtts8h8pDmYrsy1bp7WIFON/JsxIYQBTwc7aUIRRTMf2jauEU=
+X-Received: by 2002:a05:6902:2b8d:b0:e28:f7c9:49e6 with SMTP id
+ 3f1490d57ef6-e28fe41eae1mr2537348276.8.1728480236424; Wed, 09 Oct 2024
+ 06:23:56 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com> <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
+References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com> <1728368130-37213-5-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1728368130-37213-5-git-send-email-shawn.lin@rock-chips.com>
 From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Wed, 9 Oct 2024 15:15:02 +0200
-Message-ID: <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
-Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
+Date: Wed, 9 Oct 2024 15:23:20 +0200
+Message-ID: <CAPDyKFprgKOBGnnvJUvVxXUTPEHGJMXXQa_HssXxEt01aBRoVA@mail.gmail.com>
+Subject: Re: [PATCH v3 4/5] soc: rockchip: power-domain: Add
+ GENPD_FLAG_RPM_ALWAYS_ON support
 To: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: Rob Herring <robh+dt@kernel.org>, 
 	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
@@ -73,103 +74,47 @@ Cc: Rob Herring <robh+dt@kernel.org>,
 	devicetree@vger.kernel.org, linux-pm@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-[...]
+On Tue, 8 Oct 2024 at 08:16, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>
+> If low level driver claims to keep its own power domain always on,
+> let pd driver respect the flag of GENPD_FLAG_RPM_ALWAYS_ON.
+>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+>
+> Changes in v3: None
+> Changes in v2: None
+>
+>  drivers/pmdomain/rockchip/pm-domains.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/pmdomain/rockchip/pm-domains.c b/drivers/pmdomain/rockchip/pm-domains.c
+> index cb0f938..b2bb458 100644
+> --- a/drivers/pmdomain/rockchip/pm-domains.c
+> +++ b/drivers/pmdomain/rockchip/pm-domains.c
+> @@ -621,6 +621,9 @@ static int rockchip_pd_power_off(struct generic_pm_domain *domain)
+>  {
+>         struct rockchip_pm_domain *pd = to_rockchip_pd(domain);
+>
+> +       if (pd->genpd.flags & GENPD_FLAG_RPM_ALWAYS_ON)
+> +               return 0;
+
+During system suspend, genpd may try to power off the PM domains that
+have the GENPD_FLAG_RPM_ALWAYS_ON being set.
+
+It seems like you need to prevent the PM domains from being power off
+during system suspend too, right? In that case, why not use
+GENPD_FLAG_ALWAYS_ON instead?
+
+Or maybe the use case is different, let's continue to discuss patch5 first.
 
 > +
-> +static int ufs_rockchip_runtime_suspend(struct device *dev)
-> +{
-> +       struct ufs_hba *hba = dev_get_drvdata(dev);
-> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
-> +       struct generic_pm_domain *genpd = pd_to_genpd(dev->pm_domain);
-
-pd_to_genpd() isn't safe to use like this. It's solely to be used by
-genpd provider drivers.
-
-> +
-> +       clk_disable_unprepare(host->ref_out_clk);
-> +
-> +       /*
-> +        * Shouldn't power down if rpm_lvl is less than level 5.
-
-Can you elaborate on why we must not power-off the power-domain when
-level is less than 5?
-
-What happens if we power-off anyway when the level is less than 5?
-
-> +        * This flag will be passed down to platform power-domain driver
-> +        * which has the final decision.
-> +        */
-> +       if (hba->rpm_lvl < UFS_PM_LVL_5)
-> +               genpd->flags |= GENPD_FLAG_RPM_ALWAYS_ON;
-> +       else
-> +               genpd->flags &= ~GENPD_FLAG_RPM_ALWAYS_ON;
-
-The genpd->flags is not supposed to be changed like this - and
-especially not from a genpd consumer driver.
-
-I am trying to understand a bit more of the use case here. Let's see
-if that helps me to potentially suggest an alternative approach.
-
-> +
-> +       return ufshcd_runtime_suspend(dev);
-> +}
-> +
-> +static int ufs_rockchip_runtime_resume(struct device *dev)
-> +{
-> +       struct ufs_hba *hba = dev_get_drvdata(dev);
-> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
-> +       int err;
-> +
-> +       err = clk_prepare_enable(host->ref_out_clk);
-> +       if (err) {
-> +               dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
-> +               return err;
-> +       }
-> +
-> +       reset_control_assert(host->rst);
-> +       usleep_range(1, 2);
-> +       reset_control_deassert(host->rst);
-> +
-> +       return ufshcd_runtime_resume(dev);
-> +}
-> +
-> +static int ufs_rockchip_system_suspend(struct device *dev)
-> +{
-> +       struct ufs_hba *hba = dev_get_drvdata(dev);
-> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
-> +
-> +       /* Pass down desired spm_lvl to Firmware */
-> +       arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
-> +                       host->pd_id, hba->spm_lvl < 5 ? 1 : 0, 0, 0, 0, 0, NULL);
-
-Can you please elaborate on what goes on here? Is this turning off the
-power-domain that the dev is attached to - or what is actually
-happening?
-
-> +
-> +       return ufshcd_system_suspend(dev);
-> +}
-> +
-> +static const struct dev_pm_ops ufs_rockchip_pm_ops = {
-> +       SET_SYSTEM_SLEEP_PM_OPS(ufs_rockchip_system_suspend, ufshcd_system_resume)
-> +       SET_RUNTIME_PM_OPS(ufs_rockchip_runtime_suspend, ufs_rockchip_runtime_resume, NULL)
-> +       .prepare         = ufshcd_suspend_prepare,
-> +       .complete        = ufshcd_resume_complete,
-> +};
-> +
-> +static struct platform_driver ufs_rockchip_pltform = {
-> +       .probe = ufs_rockchip_probe,
-> +       .remove = ufs_rockchip_remove,
-> +       .driver = {
-> +               .name = "ufshcd-rockchip",
-> +               .pm = &ufs_rockchip_pm_ops,
-> +               .of_match_table = ufs_rockchip_of_match,
-> +       },
-> +};
-> +module_platform_driver(ufs_rockchip_pltform);
-> +
-
-[...]
+>         return rockchip_pd_power(pd, false);
+>  }
+>
+> --
+> 2.7.4
+>
 
 Kind regards
 Uffe
