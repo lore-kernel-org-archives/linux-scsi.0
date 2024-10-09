@@ -1,120 +1,124 @@
-Received: from mta-03.yadro.com (mta-03.yadro.com [89.207.88.253])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FF19192D6C;
-	Wed,  9 Oct 2024 11:17:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.253
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B2E1917C2
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Oct 2024 11:21:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728472671; cv=none; b=VcqNi03Nv7KY3U3f68ZXVqxj+q5axAx1i79HQkt8GL/u0riC9TgLrDsOYRi4H/vPQ6DfYlmimfho6P8sNcLKU8HqRZYVtlOcx297bl/5uGS5P+NGcWoSdWAaRFnzrdJXMeUQ218UEJqxFsHtM6c+thyea8ScvXyk4WYuJr1dGdA=
+	t=1728472912; cv=none; b=WlpDOkGYhJs+mp+B3+uA3pskyk2C8iylgDKz2exxMwUcMLYTJPD0+vumDre7Mb4W4i0brJuG2AYO40qMFa+Iy3DLBLp52oLQAJ4Dhu2LeZpz/k0+Mn762iD8O6U1B45BZhQ8Y5eSROXQj11AUQlPUQWu5/uW2A6370LQRJMDIvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728472671; c=relaxed/simple;
-	bh=L3xl7Y45JnJJvfxHv9fI4yzTm9K8ZaJXo9/cApROCTo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eJuq9Eow7ZtrcqNbMKGmQx3b/OBQS2JhUZyVMj5UUc91yugDy7rSIBfp5XXnTb5BL2x9YCYsRSG/rxfy481VNSknqzOXaSjqhMF/nOLtF8HsntJnW/2Rak8qkEpY0ja4HjzHV8NHSjHhnwbraqKMpCfi92rti8RnPNBygbKOIhk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=nxht8hmS; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=EUWTp1Jr; arc=none smtp.client-ip=89.207.88.253
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
+	s=arc-20240116; t=1728472912; c=relaxed/simple;
+	bh=8Ta2irAJVrZFbYoIJnnVMRr5FuTvKb6h0nr7nS2ZqFM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ftr4iSz69AlKiWUppi/FGjutJfx3HO/uKD4beJLNl9rWoZ0hg2T9LlLYfelNKZ1ggCi/hcDz8ySLx+Znml/Cq+6ZgKo0/wDdBRdzp/9UVCfPdrFV4jxjRYQFfxLpkpfFOuLMkkXiTqiL3qwb9Y4MM3A2wy5n6gIekU3b7QeWKu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=BbffMFq8; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="nxht8hmS";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="EUWTp1Jr"
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-03.yadro.com 74B68E0015
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1728472667; bh=cWg6uv3EM0obnieXASGAm1ATa7D8mOki8svgc34Ic6c=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=nxht8hmSBW3UmeW9u5Kw7fwlr8wUT02Z5lm+Lm8gIdAmYC29+2MUhPZjvltOQm0qt
-	 T3Fowhe6OYmXB5kgHK2Br/wrGEeTHohDV0UVItLCyHPjyL879Jmp/kJvptRhyDziwT
-	 QVI9DcrfzVfG08J0PqqDmVVn0JMj82wnFoqDuTNigCyt4TYIgOb1BaUCRbPVH4NRVl
-	 h5vAAh1eRANSr9aZk6SP9mHc90K0ZSPSsKfzXUlgrfJAYpZsoH90F2Mocba0GtuyOl
-	 MXmKuUVzVdheiCca7+ej7A9SYV0Y6TtptffRAZwNARXtykV3kTJiSBkcm2AYN7UkkP
-	 7IqJI7C60pFOA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1728472667; bh=cWg6uv3EM0obnieXASGAm1ATa7D8mOki8svgc34Ic6c=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=EUWTp1Jrndwijvbu06GzBtfcaG6sthgKuIGVhdXfMvMdt8tzyfmd6J/6KdAjlfrzZ
-	 6jF1Ew6edOmn7nu5FNZcNd3J8U9OhUVtTaOET7H35XST2Rnvkithg6GQ3OanozlFmQ
-	 BCRVviZzYtKnSFQGlsCgpk1GFcWRg0Kg/rSKAllnTiFqmmAvsQ9dzXVoRmYUqiviXl
-	 E6pD8Gqq3h80Aau2z3z6QqwVuUaQCzp1aCXmvtuIHZFR3nJc1QsxZT+pPMKKOQ4mjz
-	 iP4OyYYSamF2POWDeI3ylBYbGw9xALHNMwSIteLd6OgBS8yQwvcdyeWHkF8b4Jsi22
-	 3sbSePMc0amhA==
-From: Anastasia Kovaleva <a.kovaleva@yadro.com>
-To: <target-devel@vger.kernel.org>
-CC: <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<bvanassche@acm.org>, <quinn.tran@cavium.com>, <himanshu.madhani@cavium.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux@yadro.com>, <hare@suse.de>, <stable@vger.kernel.org>
-Subject: [PATCH v2 2/3] scsi: qla2xxx: Make target send correct LOGO
-Date: Wed, 9 Oct 2024 14:16:53 +0300
-Message-ID: <20241009111654.4697-3-a.kovaleva@yadro.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20241009111654.4697-1-a.kovaleva@yadro.com>
-References: <20241009111654.4697-1-a.kovaleva@yadro.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BbffMFq8"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-42cb6f3a5bcso89501555e9.2
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2024 04:21:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1728472908; x=1729077708; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=w8bEMX39HCQ7oypxWwVa6yTzZiCgPg5rGUasi0elpSc=;
+        b=BbffMFq800NiTAFBtMnXJz5xwy/BkiVTbbexynvvhl2p2jwSrSBFN9xEFW1VylLr33
+         8GarsTABEQZF7FYlCBYd8tor4RMnVmdZknXPwvsD35E3xb04a/d8xkQKfH27x3cZbBM5
+         KPJiiLYlC7JO/Z4oS4xqpViIUI8S86AXeYf3R2XVV6LDZBWghhV9dJcWr/O9EA4t0jFl
+         ok23zZi7pVUAqi/5ZKO5lsdQpQxzDMJr4ouwU6Xm3NV4MuiVdGRCjulU8S6uWjUTz974
+         tDnMVbPKKKSQ0N7qD9Tb8N4058b+hbh+x5IcLkgv7oyui6mx4QLBb4XKsOqlnsrSi5Vh
+         h+Zw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728472908; x=1729077708;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=w8bEMX39HCQ7oypxWwVa6yTzZiCgPg5rGUasi0elpSc=;
+        b=UeWUOqDkYKKC4CyaQ3ltqjtUxDE+FX+l4hmz+wUehvnnHKyWjkbtUBEnrQz5oYDIRA
+         QEYU61shigW/gkN0ZHG9N4XY8C3opdx8VnWNZBApIBMMpMZwmp20lyTcyJmYziW363IP
+         uVKeozVsFRKG8rjO1OLzRZXFirSVYPdL/5U22Yw6FhaG9UfILEGraX+b6PjwQsThle5e
+         LJO4fycSAC8YBBFEYrZmRdFZ7wlU6MWGV4Ye2P3d5rBEdD6uWTSZIohDNky3VROKShMW
+         D1AW1vwksFnjTkX25BPZcJEzhVFk8Qm/i+fytcBI2tySY9/+FqURmcvEBW/JRaVQwARV
+         iYIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWWECcIm0p1qx6Bc+hL/02vx3UPlMGLBTFdupYWHfL0kcGwj1vYvolr4WvvYtruCpP1L3stQ1le1XAl@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfUoXvfcHvosagO5l4z6xlBhIWMHSX5PtR/Q2Iu9ZXI7mXvl+9
+	h/Rv44AA4xh5epT2UI7KKrcZG/dcTBLQLEsa0XOY/CBWk4lS6viMLg4Trhm7mwE=
+X-Google-Smtp-Source: AGHT+IFlsSsUBahib/8ngPAeagyTEBcN/biFoRNJET9VKN3gwYg6BtDzYVe/x/rkxByCtgvcRZdRrg==
+X-Received: by 2002:a05:600c:3551:b0:430:570b:4554 with SMTP id 5b1f17b1804b1-430ccf04213mr20828715e9.3.1728472908472;
+        Wed, 09 Oct 2024 04:21:48 -0700 (PDT)
+Received: from gpeter-l.lan ([145.224.65.7])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4310c3dcdcbsm12331445e9.0.2024.10.09.04.21.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Oct 2024 04:21:47 -0700 (PDT)
+From: Peter Griffin <peter.griffin@linaro.org>
+To: alim.akhtar@samsung.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	krzk@kernel.org
+Cc: tudor.ambarus@linaro.org,
+	andre.draszik@linaro.org,
+	kernel-team@android.com,
+	willmcvicker@google.com,
+	linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Peter Griffin <peter.griffin@linaro.org>
+Subject: [PATCH 0/7] UFS cleanups and enhancements to ufs-exynos for gs101
+Date: Wed,  9 Oct 2024 12:21:34 +0100
+Message-ID: <20241009112141.1771087-1-peter.griffin@linaro.org>
+X-Mailer: git-send-email 2.47.0.rc0.187.ge670bccf7e-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain
-X-ClientProxiedBy: T-EXCH-06.corp.yadro.com (172.17.10.110) To
- T-EXCH-09.corp.yadro.com (172.17.11.59)
+Content-Transfer-Encoding: 8bit
 
-Upon removing the ACL from the target, it sends a LOGO command to the
-initiator to break the connection. But HBA fills port_name and port_id
-of the LOGO command with all zeroes, which is not valid. The initiator
-sends a reject for this command, but it is not being processed on the
-target, since it assumes LOGO can never fail. This leaves a system in a
-state where the initiator thinks it is still logged in to the target and
-can send commands to it, but the target ignores all incoming commands
-from this initiator.
+Hi folks,
 
-If, in such a situation, the initiator sends some command (e.g. during a
-scan), after not receiving a response for a timeout duration, it sends
-ABORT for the command. After a timeout on receiving an ABORT response,
-the initiator sends LOGO to the target. Only after that, the initiator
-can successfully relogin to the target and restore the connection. In
-the end, this whole situation hangs the system for approximately a
-minute.
+This series provides a few cleanups, bug fixes and feature enhancements for
+the ufs-exynos driver, particularly for gs101 SoC.
 
-By default, the driver sends a LOGO command to HBA filling only port_id,
-expecting HBA to match port_id with the correct port_name from it's
-internal table. HBA doesn't do that, instead filling these fields with
-all zeroes.
+Regarding cleanup we remove some unused phy attribute data that isn't
+required when EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR is not set.
 
-This patch makes the driver send a LOGO command to HBA with port_name
-and port_id in the I/O PARMETER fields. HBA then copies these values to
-corresponding fields in the LOGO command frame.
+Regarding bug fixes the check for EXYNOS_UFS_OPT_UFSPR_SECURE is moved
+inside exynos_ufs_config_smu() which fixes a serror in the resume path
+for gs101.
 
-Signed-off-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
-Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/qla2xxx/qla_iocb.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Regarding feature enhancements:
+* Gear 4 is enabled which has higher speeds and better power management
+* WriteBooster capability is enabled for gs101 which increases write
+  performance
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 0b41e8a06602..90026fca14dc 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2486,6 +2486,17 @@ qla24xx_logout_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 	logio->port_id[1] = sp->fcport->d_id.b.area;
- 	logio->port_id[2] = sp->fcport->d_id.b.domain;
- 	logio->vp_index = sp->vha->vp_idx;
-+	logio->io_parameter[0] = cpu_to_le32(sp->vha->d_id.b.al_pa |
-+				 sp->vha->d_id.b.area << 8 |
-+				 sp->vha->d_id.b.domain << 16);
-+	logio->io_parameter[1] = cpu_to_le32(sp->vha->port_name[3] |
-+				 sp->vha->port_name[2] << 8 |
-+				 sp->vha->port_name[1] << 16 |
-+				 sp->vha->port_name[0] << 24);
-+	logio->io_parameter[2] = cpu_to_le32(sp->vha->port_name[7] |
-+				 sp->vha->port_name[6] << 8 |
-+				 sp->vha->port_name[5] << 16 |
-+				 sp->vha->port_name[4] << 24);
- }
- 
- static void
+Note further patches in a separate series will follow to enable
+UFSHCD_CAP_HIBERN8_WITH_CLK_GATING once the phy hibern8 interface is
+settled over in [1]
+
+[1] https://lore.kernel.org/linux-arm-kernel/20241002201555.3332138-3-peter.griffin@linaro.org/T/
+
+regards,
+
+Peter
+
+Peter Griffin (7):
+  scsi: ufs: exynos: Allow UFS Gear 4
+  scsi: ufs: exynos: add check inside exynos_ufs_config_smu()
+  scsi: ufs: exynos: gs101: remove EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL
+  scsi: ufs: exynos: Add EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR check
+  scsi: ufs: exynos: gs101: remove unused phy attribute fields
+  scsi: ufs: exynos: remove tx_dif_p_nsec from exynosauto_ufs_drv_init()
+  scsi: ufs: exynos: add gs101_ufs_drv_init() hook and enable
+    WriteBooster
+
+ drivers/ufs/host/ufs-exynos.c | 73 +++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 30 deletions(-)
+
 -- 
-2.40.1
+2.47.0.rc0.187.ge670bccf7e-goog
 
