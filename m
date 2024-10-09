@@ -1,125 +1,79 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mta-03.yadro.com (mta-03.yadro.com [89.207.88.253])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8FD1DA5F
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Oct 2024 06:33:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C0C191F6D;
+	Wed,  9 Oct 2024 11:17:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.253
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728455594; cv=none; b=CN7gQMi7cisYh5gnusnscsl0mtrq1o1djrIGIBRjpj5U8z3+T2ayyvM8aJwz0p7FqMiRB7C1gITheExla15AVyU0c1rQn1+8jqTCE2USjCpeeePb/H6bGJzBlG4LNi2kOr2dOrd8ZfIIKcCv6PhBkpjIbB8ORPEBViaDMMxjADk=
+	t=1728472668; cv=none; b=tgYtzyAgp8s7kuYiccMRLL9vT9ByhKVyMM0ta37sGs6shrQ86ZJOnGc2XlW/DsKNSEIcwZBR31zPImbTpu7++9CIQWJhYAI4DYkZ1XlS7BmlgCdPSLNve9O7TwI7zd9AB0ggXI0KBfBoO21EwcDh2XKmEIRnFa88EXQ3A1hPGNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728455594; c=relaxed/simple;
-	bh=zcso0n1fwQJ5K7SukIQ0M/KIuZ/VXnLQVd7mx4EGyYo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=b14524L8YJvrOvJx4NvJ1KX+ZC4Y7ch/qIxUtoXtmcbUlU8ZIsaXr1DKeqbgnhc571XOhw+/5Fmvks3uKpbHaAEPTJhv/I4E76akoyfWPEoPzrB4li3zLGUPgSgyC4OCLlsYsO5vt9ickKaEJ3UoFe/Sa4d00KHBmTza6Xrb5EA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eYkYx/JU; arc=none smtp.client-ip=209.85.218.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1728472668; c=relaxed/simple;
+	bh=Lz0ftFsXhb5jJOCxFoVtj6wvWCrPk1YnXLs9cvkNDWU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fS1ZdpugckLVVO0VbaNVaf1OzjwmLZ0kMEKEnNTePglltuJup/5Gj9qEN1gZvwdYrGsfmz1hyvgwFniT211Jo2wRmywE0BWfmyQlgLAt6Fh98DVHA+A0uqktYilVykeSnwk+Y9FG9H5O+HA9zJKKNdLEmG568SDo9oJ+AHSfswE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=IH4HZife; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=gyNJZSQu; arc=none smtp.client-ip=89.207.88.253
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eYkYx/JU"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a9977360f9fso185601466b.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Oct 2024 23:33:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1728455589; x=1729060389; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qCAQRg3HcpyXhOpZxeffQqKdGs7ZmGM3kOVNHjlGOXw=;
-        b=eYkYx/JUwkNEs/oTV6YEOcbQlgTG14JMXZdXkBI+yJtdrb+0wEn2nOROeOd3VFzi6a
-         pf/rDY1IBBYFOnQZ5sG1BcQDtFwhwvw+FOYFTaM/6im+CzafZl/B3PbSLH2XVbjbJvhT
-         Tz7T8IC+KyB8tN2TB8STtnCmBJDQ/SOlD/Xvatfw57O8R4FB3K55Zl4a08kQmOif7M11
-         2vI4rWU3d3maa290V1jrJ3TYFcR16os30A4Tn4CfUbUU9VRFDosX+M3F4bxIJ0d1rx3x
-         vgcMAdD6EaMeD2BSpg6QyobDuCkdmd3x6jX1f4qm9xXt+bQ7bS4089HqUlU9poVh7yZ8
-         hXFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728455589; x=1729060389;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qCAQRg3HcpyXhOpZxeffQqKdGs7ZmGM3kOVNHjlGOXw=;
-        b=tz3exxmqhfP3xkTGHkTWFQeUX+KvbuLwjXlfHT5wXGIyMVLcyYjglag/SgNERCjvhn
-         nUw+zg16LHj57HhLtwhsF9jYP+Ow69CHPprktqcUaXPPJa5rE9X7bHHRwdBEUe6G6+AV
-         XPyEvBPoYvJsm1tWFBgJ2cLsS8RtfCd97rAE6lUqeL8Rr6WtQjm8v4x4bx1FMryKwnre
-         gSl6jUcva2KUdOB8aFaXSHlPHb7tfMzgFDWtE/duCdKodIhoG/TJCPllT7mzTt6L46lJ
-         7ExvKM9VHWkkEhxc+ofCQUCLh/HxNivBC9KlgwluG71Oyei5lSeKfYebdjUBS6HLLXF2
-         ssGQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWvI4RLr0rn5kxgNVbNtVnd/6yrmAQOyOyq4VxOmoyHQvbqnbqi4wDAS611Qa4Yjlm+1bRZawqcfmZt@vger.kernel.org
-X-Gm-Message-State: AOJu0YwUu8Dfpy/HM4rNkem8WIT8w39gNVMZzH8PSUMoKwLSJOJ1Fi23
-	jAdLqNkfbZYI7YC68cqU29hW82d23irnAR8hkGfAArsFixh3gjwJa9Fcl88f2O4=
-X-Google-Smtp-Source: AGHT+IGalhqCt7/kvjBSresOH2qgGqV6br8sm3eXxXn4MIHs0ivbgXYD8BYNan9BTjwOWFHb2irzDg==
-X-Received: by 2002:a17:906:f582:b0:a99:3fa4:a683 with SMTP id a640c23a62f3a-a998d37617cmr85298666b.63.1728455589137;
-        Tue, 08 Oct 2024 23:33:09 -0700 (PDT)
-Received: from ?IPV6:2001:a61:2a51:d701:2d49:fdc9:7cfb:5cc8? ([2001:a61:2a51:d701:2d49:fdc9:7cfb:5cc8])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a993a7cfcfcsm564290566b.143.2024.10.08.23.33.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Oct 2024 23:33:08 -0700 (PDT)
-Message-ID: <0bd644dd-d7c6-4dbf-b408-60b844443456@suse.com>
-Date: Wed, 9 Oct 2024 08:33:07 +0200
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="IH4HZife";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="gyNJZSQu"
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-03.yadro.com 4CA9FE0010
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
+	t=1728472661; bh=R907DmC1jjYrPDTem5g7CEoM/mYg6Iq8YV9QdrYYCxA=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
+	b=IH4HZifep8H4+j9cDgUH2BkZOPX88XMOo36HQwsK0O7H2YvsDIdzFQM+1kDLqokXT
+	 xt7HI+M5HZcTHX1aCC4JKD8mkkLhowAKGxeng+R6/vec5LmNwvcemtD/QPwu45Ad2Y
+	 B3vRhtQs7gJNHbmiKqYbPzpBTjSA3bpNhROHqXicH9Jak8YGkyHtOVH7YbkxDptzNu
+	 40rJsrWUKCCtGrgtmXJdr7naO9oUa2s8jcxf/BgZc0O3+TZ5+7c3HNDu6iIqruZBbd
+	 YpenyJ/xpJueTJBX2z+8N32KJQPgKdctU6Bx5hMXKK1itFqf/qvV/GBVBz/6RWTlPf
+	 DRfnJJu60sO7Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1728472661; bh=R907DmC1jjYrPDTem5g7CEoM/mYg6Iq8YV9QdrYYCxA=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
+	b=gyNJZSQuhBr70Weh/OrKM+p68zZOrbVuOWo6eKyDaHe1AxcXiJ7LF3PA4szSEthhD
+	 XFTt4S062VbjioJ7tt7k/UifJiq+u19FJcBxXgLfj2iOIzAquyBaoxH9a1pO0Jlk0t
+	 QBkpm9phNSjNu0eNvWqC0y0U9uDRbGi/UFdTY2Si0KK6oJKeYNcCzDjhAmhYbD++WZ
+	 lJYwPF1AC4dGienLhrgg0P7FTptxHxCsIRFza/390EMCSYjJwiXeuuQxkMBuofpJwR
+	 rMfcUCZv/15TEEyAHJy0eE4sZ+6YPRsuQB4ctKgWmofgMcdRDZHZ8PhbcvQIF+6MHg
+	 mgDszipZCe0rw==
+From: Anastasia Kovaleva <a.kovaleva@yadro.com>
+To: <target-devel@vger.kernel.org>
+CC: <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<bvanassche@acm.org>, <quinn.tran@cavium.com>, <himanshu.madhani@cavium.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux@yadro.com>, <hare@suse.de>, <stable@vger.kernel.org>
+Subject: [PATCH v2 0/3] Fix bugs in qla2xxx driver
+Date: Wed, 9 Oct 2024 14:16:51 +0300
+Message-ID: <20241009111654.4697-1-a.kovaleva@yadro.com>
+X-Mailer: git-send-email 2.40.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] scsi: qla2xxx: Remove incorrect trap
-To: Anastasia Kovaleva <a.kovaleva@yadro.com>, target-devel@vger.kernel.org
-Cc: njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- bvanassche@acm.org, quinn.tran@cavium.com, nab@linux-iscsi.org,
- himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux@yadro.com
-References: <20241008132402.26164-1-a.kovaleva@yadro.com>
- <20241008132402.26164-4-a.kovaleva@yadro.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20241008132402.26164-4-a.kovaleva@yadro.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
+ T-EXCH-09.corp.yadro.com (172.17.11.59)
 
-On 10/8/24 15:24, Anastasia Kovaleva wrote:
-> This BUG_ON() is triggered when there is no fc_port with a certain
-> loop ID in the scsi host vp_fcports list, but there is one in
-> lport_loopid_map. As these two data structures do not change
-> simultaneously and atomically, such a trap is invalid.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
-> Signed-off-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
-> Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-> ---
->   drivers/scsi/qla2xxx/qla_target.c | 10 +---------
->   1 file changed, 1 insertion(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index bc7feef6ee79..9a5dbd00de01 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -5190,15 +5190,7 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
->   		ql_dbg(ql_dbg_disc, vha, 0x20fc,
->   		    "%s: logo %llx res %d sess %p ",
->   		    __func__, wwn, res, sess);
-> -		if (res == 0) {
-> -			/*
-> -			 * cmd went upper layer, look for qlt_xmit_tm_rsp()
-> -			 * for LOGO_ACK & sess delete
-> -			 */
-> -			BUG_ON(!sess);
-> -			res = 0;
-> -		} else {
-> -			/* cmd did not go to upper layer. */
-> +		if (res) {
->   			if (sess) {
->   				qlt_schedule_sess_for_deletion(sess);
->   				res = 0;
+This series of patches contains 3 separate changes that fix some bugs in
+the qla2xxx driver.
+---
+v2:
+- Change a spinlock wrap to a WRITE_ONCE() in patch 1
+- Add Reviewed-by tags on patches 2 and 3
+---
+Anastasia Kovaleva (3):
+  scsi: qla2xxx: Drop starvation counter on success
+  scsi: qla2xxx: Make target send correct LOGO
+  scsi: qla2xxx: Remove incorrect trap
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+ drivers/scsi/qla2xxx/qla_iocb.c   | 11 +++++++++++
+ drivers/scsi/qla2xxx/qla_isr.c    |  4 ++++
+ drivers/scsi/qla2xxx/qla_target.c | 16 +++++++---------
+ 3 files changed, 22 insertions(+), 9 deletions(-)
 
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.com                               +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.40.1
 
