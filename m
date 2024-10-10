@@ -1,190 +1,175 @@
-Received: from mail-m92233.xmail.ntesmail.com (mail-m92233.xmail.ntesmail.com [103.126.92.233])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5DC19C549;
-	Thu, 10 Oct 2024 04:26:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.126.92.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 022691925AF
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Oct 2024 05:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728534419; cv=none; b=a54UXNQTyYa9WMxhJ5+3E6qcn1czWwGpZHbVaR9OZ80ehCmt4otnIJfbbaIl8RSw97kQRptqBNJ4Gsm/JIxmxaoeFZ5pyf1c9RXCD2N303nbKp2itfy6gJVFVt8c8kNozuibA2todr49gy1oldH0GYLcxPTv9jTts9GQ8xO7tYY=
+	t=1728539233; cv=none; b=IMRDORwOgXoVx1lo2+NmfptEYWJRTWuzrUDfh/yOtZuI/K/fCp20Xc0+kD62plsfqrVLCcJXOxVRgkT+JHf1UpZxIq/sMF6AGk97bYnHMdQNKQltxqPw2Jk+KBYLEPJEgyvNtOJm61RQCdNKLBRXG+LnKC7NuCbcT/9/JPj0u+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728534419; c=relaxed/simple;
-	bh=6//KWScm9mX9fW3ydl5GhjP8SzMNCQwOOC0JNpGmk/4=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=j7ZPNAK9ZKpa9XahOa9VYXY1saFihGH4M+jBYbVBuvdANevWojIeMfDb03QZo7K29X4DnnUbzFYBl1ZMZtDy1jnNvrVQKYTVEAlZ4ORQLe5PAY3zwnk/jz8Z8iVRXeqTW9Q53K6BS68PVPxcpHarA78I2DV2HAIYHCvrOu9tWek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=JUEgjjWs; arc=none smtp.client-ip=103.126.92.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1728539233; c=relaxed/simple;
+	bh=jGL8zKvOyMlgML4JIbc28fpjZwAaH9lvIYLew7E/IQ4=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=r0keI+F27TOhAHD/QQt8S7OXPlDg/NKA/DsV2NN+c+dbaV1/0m0TEtSzN1Vw/HXLj3qRyHce1kXNvvLxs4Yqi3ddUSDSpCyB22DZLddlsFDOIos+dzhL1NZcdktcIY8SDFpkCM1sspqcXTnJzZv50l7nXPsjVDwXbOaxnCaKu3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=CJdmmHDN; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="JUEgjjWs"
-DKIM-Signature: a=rsa-sha256;
-	b=JUEgjjWsw8WkgYb+mcECVsI9IkmmXko4RB2udUoVTr19YR+jrI2EiCkwocKdrB85u2ooGalZr4zn1fVqmOtcGX/SUp90/dS2xkk0galBmo+k5nbZW6RqSLhusQYNH/rZ1r4xyCOArDJMFmu40t95UgPPWeBGiwNqZlyEss0tugs=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=aKBu267PcSvUBWDRFu4xvYcquBPnRNKWPIvfJjrnkG4=;
-	h=date:mime-version:subject:message-id:from;
-Received: from [172.16.12.45] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTPA id 114E95203C3;
-	Thu, 10 Oct 2024 09:21:08 +0800 (CST)
-Message-ID: <3969bae0-eeb8-447a-86a5-dfdac0b136cd@rock-chips.com>
-Date: Thu, 10 Oct 2024 09:21:08 +0800
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="CJdmmHDN"
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20241010054708epoutp02a98264415846e47a0cf73e05e74b0a2e~9AUVCttSi2862428624epoutp02Y
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Oct 2024 05:47:08 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20241010054708epoutp02a98264415846e47a0cf73e05e74b0a2e~9AUVCttSi2862428624epoutp02Y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1728539229;
+	bh=BDhSr3UtrCq/7jL5Gp0c6QINts7kQkiI/80OXlIgyXE=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=CJdmmHDNhBR5OF/cMLCfz7HgHAvQVRk5ZyBlweFWhOkINde32vhJw8IVPWIRAsuV7
+	 e1SGjG3wRlsjpWV8mVlk3HuwykTVTBpluQ4jjTNJIH2dQ03EcIui5/FbZT5EG9Lo0V
+	 To4PaucX/lzvOU5QCZrQIodZcGJpsCSHj4wDy21Y=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+	20241010054708epcas2p3dac062372939aaa9fc5575670896b2c8~9AUUkzhy00500205002epcas2p3t;
+	Thu, 10 Oct 2024 05:47:08 +0000 (GMT)
+Received: from epsmgec2p1.samsung.com (unknown [182.195.36.90]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4XPJfz4Twhz4x9Q1; Thu, 10 Oct
+	2024 05:47:07 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+	epsmgec2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	05.A5.08559.B5A67076; Thu, 10 Oct 2024 14:47:07 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+	20241010054707epcas2p28601eafc8da3c666f94058b1055e5943~9AUTQ4AqZ1367913679epcas2p2m;
+	Thu, 10 Oct 2024 05:47:07 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20241010054707epsmtrp1afba8ed9435a421b1a6af69886c5a18a~9AUTPqZCS3061030610epsmtrp17;
+	Thu, 10 Oct 2024 05:47:07 +0000 (GMT)
+X-AuditID: b6c32a43-ff266a800000216f-f2-67076a5b87a0
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	D7.E3.18937.A5A67076; Thu, 10 Oct 2024 14:47:06 +0900 (KST)
+Received: from KORCO164647 (unknown [10.229.38.229]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20241010054706epsmtip1111541d3ef4530e02089ff31f02e3b39~9AUS5z_Yd0549805498epsmtip1e;
+	Thu, 10 Oct 2024 05:47:06 +0000 (GMT)
+From: "Kiwoong Kim" <kwmad.kim@samsung.com>
+To: "'Seunghwan Baek'" <sh8267.baek@samsung.com>, "'Bart Van Assche'"
+	<bvanassche@acm.org>, <linux-kernel@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<James.Bottomley@HansenPartnership.com>, <avri.altman@wdc.com>,
+	<alim.akhtar@samsung.com>
+Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
+	<junwoo80.lee@samsung.com>, <dh0421.hwang@samsung.com>,
+	<jangsub.yi@samsung.com>, <sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
+	<wkon.kim@samsung.com>, <stable@vger.kernel.org>, <sh425.lee@samsung.com>,
+	<hy50.seo@samsung.com>, <kwangwon.min@samsung.com>, <h10.kim@samsung.com>
+In-Reply-To: <017801db1942$ba6a5bb0$2f3f1310$@samsung.com>
+Subject: RE: [PATCH v1 1/1] ufs: core: set SDEV_OFFLINE when ufs shutdown.
+Date: Thu, 10 Oct 2024 14:47:06 +0900
+Message-ID: <032101db1ad7$d7039a70$850acf50$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Rob Herring <robh+dt@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
- Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
-To: Ulf Hansson <ulf.hansson@linaro.org>
-References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
- <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
- <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
-Content-Language: en-GB
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkJCTFYdSUNMTh5LS0lPTR9WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a927403f43303afkunm114e95203c3
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MT46Shw6SjIpFA9LHw89NxcJ
-	Pz9PCgtVSlVKTElDTklISU1CTExNVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQU1CTEg3Bg++
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: ko
+Thread-Index: AQITd6wvsWq6bg+5ypABxh1kBxxfMwHy7pIVAtyJc3gCDAIdKwI4d05OAHuLQEsCcDBpNrGuwlgA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrAJsWRmVeSWpSXmKPExsWy7bCmmW50Fnu6weO1ShYP5m1js3j58yqb
+	xbQPP5ktZpxqY7XYd+0ku8Wvv+vZLf7evshqsXrxAxaLjf0cFh1bJzNZ7Hh+ht1i199mJout
+	N3ayWFzeNYfNovv6DjaL5cf/MVk0/dnHYrH031sWi2tnTrBaLNj4iNFi86VvLA6iHpeveHtM
+	m3SKzePj01ssHn1bVjF6fN4k59F+oJspgC0q2yYjNTEltUghNS85PyUzL91WyTs43jne1MzA
+	UNfQ0sJcSSEvMTfVVsnFJ0DXLTMH6B8lhbLEnFKgUEBicbGSvp1NUX5pSapCRn5xia1SakFK
+	ToF5gV5xYm5xaV66Xl5qiZWhgYGRKVBhQnZG86fEgvvcFW9mb2FrYJzJ2cXIySEhYCLRtuQQ
+	axcjF4eQwA5GiR/rnjJBOJ8YJc403maGcz7eecfYxcgB1tJ7JgYivpNR4vffy1DtLxkl9nU8
+	ZQSZyyagLTHt4W6whIjATCaJ/c3dLCAOs8ANJonZD1YwgVRxClhJ3LvSyQ5iCwt4SfzYdgIs
+	ziKgKnHy2lJmEJtXwFLi7PQ/TBC2oMTJmU9YQGxmAXmJ7W/nMEN8oSDx8+kyVoi4iMTszjaw
+	uIhAlETP3vVgiyUE/nNILPn0gBXiBxeJLzM9IXqFJV4d38IOYUtJvOxvg7KLJdbuuMoE0dvA
+	KLH61WmohLHErGft4LBgFtCUWL9LH2KkssSRW1Cn8Ul0HP7LDhHmlehoE4JoVJb4NWkyI4Qt
+	KTHz5h32CYxKs5A8NgvJY7OQPDMLYdcCRpZVjGKpBcW56anJRgWG8MhOzs/dxAhO6lrOOxiv
+	zP+nd4iRiYPxEKMEB7OSCK/uQtZ0Id6UxMqq1KL8+KLSnNTiQ4ymwKCeyCwlmpwPzCt5JfGG
+	JpYGJmZmhuZGpgbmSuK891rnpggJpCeWpGanphakFsH0MXFwSjUwNQn2Tn+9Zsu+93NvFlX+
+	2x7yxN5qclHm9e06gnxX7zCXSHFXxS+bmBNQ+3NyfY+yqNTbSwbt647V+zvq1+wV0Q1mj+hq
+	n7XzX+LPWaeE9M/9yy3X87j/JmE6d9w+jeuXHJgcEg7qzl/3cP3URdn/2s+LaEt9n708M194
+	84Ll/veOm7b02gUu3VPz9ZFMvZ29x6uOUE4F0fOvo8RsP4iyNC6WYDnkMnne0+aWHQsFSjZt
+	8VbrSpjL6rilZ2m9f+CjXZu05/yXXskX1LbmVOuNn3Jdz4TCvy/ZwSA3TcgvMYQz4ARnVHT8
+	jSiv9FtzFl251Z3SOlty4b7uTJ7qCf2z7RZ8YXofe+L22TirCXvmK7EUZyQaajEXFScCAMzE
+	ZgtzBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRmVeSWpSXmKPExsWy7bCSnG5UFnu6wdlpphYP5m1js3j58yqb
+	xbQPP5ktZpxqY7XYd+0ku8Wvv+vZLf7evshqsXrxAxaLjf0cFh1bJzNZ7Hh+ht1i199mJout
+	N3ayWFzeNYfNovv6DjaL5cf/MVk0/dnHYrH031sWi2tnTrBaLNj4iNFi86VvLA6iHpeveHtM
+	m3SKzePj01ssHn1bVjF6fN4k59F+oJspgC2KyyYlNSezLLVI3y6BK6P5U2LBfe6KN7O3sDUw
+	zuTsYuTgkBAwkeg9E9PFyMkhJLCdUeLVZnMQW0JAUuLEzueMELawxP2WI6xdjFxANc8ZJWY3
+	LmMHSbAJaEtMe7gbLCEiMJ9J4sjZw+wgDrPACyaJvkufWSBafjBJNOzZA9bCKWAlce9KJ5gt
+	LOAl8WPbCSYQm0VAVeLktaXMIDavgKXE2el/mCBsQYmTM5+wgNjMQOt6H7YyQtjyEtvfzmGG
+	uE9B4ufTZawQcRGJ2Z1tYHERgSiJnr3rWSYwCs9CMmoWklGzkIyahaR9ASPLKkbR1ILi3PTc
+	5AJDveLE3OLSvHS95PzcTYzgyNYK2sG4bP1fvUOMTByMhxglOJiVRHh1F7KmC/GmJFZWpRbl
+	xxeV5qQWH2KU5mBREudVzulMERJITyxJzU5NLUgtgskycXBKNTD5rufMSMjVuyGQKN7XvCQn
+	1XD5p/yG0EqjqNkZNsufy3/wZXoWpD9jkoBCibG/SO/18wnxMgf2i6x/uzNwfnuDa8M0Y5Hr
+	/dFvuV+ktCydLNZ2//NZw6h7S6V4/n9hP3nAP5X9JJOVkMbjbAn3oPnn6k7c/+6udtv3Y2xl
+	4JqAc1z79VXWpnRY3Xm+aOfvDg79ea6CMjmH/G/sFHZ4/NW9R8uoecbz72LJKzbn3Uz7y7xh
+	+b/H0iF7xS75xIfM9++9sKha6N+eHyccba66GmQKJs3m0zT/4yv4Z+HtQ44dMlycDzZ/nsxl
+	mP4+LW7F04Z3Wc/f39sRztjLwsbA/ZLf441P/meZGX456gUP1ZVYijMSDbWYi4oTAU431Bdb
+	AwAA
+X-CMS-MailID: 20241010054707epcas2p28601eafc8da3c666f94058b1055e5943
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240829093921epcas1p35d28696b0f79e2ae39d8e3690f088e64
+References: <20240829093913.6282-1-sh8267.baek@samsung.com>
+	<CGME20240829093921epcas1p35d28696b0f79e2ae39d8e3690f088e64@epcas1p3.samsung.com>
+	<20240829093913.6282-2-sh8267.baek@samsung.com>
+	<fa8a4c1a-e583-496b-a0a2-bd86f86af508@acm.org>
+	<003201db0e27$df93f250$9ebbd6f0$@samsung.com>
+	<1845f326-e9eb-4351-9ed1-fce373c82cb0@acm.org> 
+	<017801db1942$ba6a5bb0$2f3f1310$@samsung.com>
 
-Hi Ulf
+> > > On 9/23/24 7:17 PM, Seunghwan Baek wrote:> That's because SSU (Start
+> > > Stop
+> > > Unit) command must be sent during
+> > > > shutdown process. If SDEV_OFFLINE is set for wlun, SSU command
+> > > > cannot be sent because it is rejected by the scsi layer.
+> > > > Therefore, we consider to set SDEV_QUIESCE for wlun, and set
+> > > > SDEV_OFFLINE for other lus.
+> > > Right. Since ufshcd_wl_shutdown() is expected to stop all DMA
+> > > related to the UFS host, shouldn't there be a
+> > > scsi_device_quiesce(sdev) call after the __ufshcd_wl_suspend(hba,
+> UFS_SHUTDOWN_PM) call?
+> > >
+> > > Thanks,
+> > >
+> > > Bart.
+> >
+> > Yes. __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM) should be called after
+> > scsi_device_quiesce(sdev). Generally, the SSU command is the last
+> > command before UFS power off. Therefore, if __ufshcd_wl_suspend is
+> > performed before scsi_device_quiesce, other commands may be performed
+> > after the SSU command and UFS may not guarantee the operation of the
+> > SSU command, which may cause other problems. This order must be
+> guaranteed.
+> >
+> > And with SDEV_QUIESCE, deadlock issue cannot be avoided due to requeue.
+> > We need to return the i/o error with SDEV_OFFLINE to avoid the
+> > mentioned deadlock problem.
+> 
+> (+ more CC added.)
+> Dear All.
+> 
+> Could you please update for this patch?
+> If you have any opinions about this patch, share and comment it.
+> 
+> Thanks.
+> BRs.
 
-在 2024/10/9 21:15, Ulf Hansson 写道:
-> [...]
-> 
->> +
->> +static int ufs_rockchip_runtime_suspend(struct device *dev)
->> +{
->> +       struct ufs_hba *hba = dev_get_drvdata(dev);
->> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
->> +       struct generic_pm_domain *genpd = pd_to_genpd(dev->pm_domain);
-> 
-> pd_to_genpd() isn't safe to use like this. It's solely to be used by
-> genpd provider drivers.
-> 
->> +
->> +       clk_disable_unprepare(host->ref_out_clk);
->> +
->> +       /*
->> +        * Shouldn't power down if rpm_lvl is less than level 5.
-> 
-> Can you elaborate on why we must not power-off the power-domain when
-> level is less than 5?
-> 
+Looks good to me.
 
-Because ufshcd driver assume the controller is active and the link is on
-if level is less than 5. So the default resume policy will not try to
-recover the registers until the first error happened. Otherwise if the
-level is >=5, it assumes the controller is off and the link is down,
-then it will restore the registers and link.
+Thanks.
+Kiwoong Kim.
 
-And the level is changeable via sysfs.
 
-> What happens if we power-off anyway when the level is less than 5?
-> 
->> +        * This flag will be passed down to platform power-domain driver
->> +        * which has the final decision.
->> +        */
->> +       if (hba->rpm_lvl < UFS_PM_LVL_5)
->> +               genpd->flags |= GENPD_FLAG_RPM_ALWAYS_ON;
->> +       else
->> +               genpd->flags &= ~GENPD_FLAG_RPM_ALWAYS_ON;
-> 
-> The genpd->flags is not supposed to be changed like this - and
-> especially not from a genpd consumer driver.
-> 
-> I am trying to understand a bit more of the use case here. Let's see
-> if that helps me to potentially suggest an alternative approach.
-> 
-
-I was not familiar with the genpd part, so I haven't come up with 
-another solution. It would be great if you can guide me to the right
-way.
-
->> +
->> +       return ufshcd_runtime_suspend(dev);
->> +}
->> +
->> +static int ufs_rockchip_runtime_resume(struct device *dev)
->> +{
->> +       struct ufs_hba *hba = dev_get_drvdata(dev);
->> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
->> +       int err;
->> +
->> +       err = clk_prepare_enable(host->ref_out_clk);
->> +       if (err) {
->> +               dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
->> +               return err;
->> +       }
->> +
->> +       reset_control_assert(host->rst);
->> +       usleep_range(1, 2);
->> +       reset_control_deassert(host->rst);
->> +
->> +       return ufshcd_runtime_resume(dev);
->> +}
->> +
->> +static int ufs_rockchip_system_suspend(struct device *dev)
->> +{
->> +       struct ufs_hba *hba = dev_get_drvdata(dev);
->> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
->> +
->> +       /* Pass down desired spm_lvl to Firmware */
->> +       arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
->> +                       host->pd_id, hba->spm_lvl < 5 ? 1 : 0, 0, 0, 0, 0, NULL);
-> 
-> Can you please elaborate on what goes on here? Is this turning off the
-> power-domain that the dev is attached to - or what is actually
-> happening?
-> 
-
-This smc call is trying to ask firmware not to turn off the power-domian
-that the UFS is attached to and also not to turn off the power of UFS
-conntroller.
-
-Per your comment at patch 4, should I use GENPD_FLAG_ALWAYS_ON +
-arm_smccc_smc here in system suspend?
-
->> +
->> +       return ufshcd_system_suspend(dev);
->> +}
->> +
->> +static const struct dev_pm_ops ufs_rockchip_pm_ops = {
->> +       SET_SYSTEM_SLEEP_PM_OPS(ufs_rockchip_system_suspend, ufshcd_system_resume)
->> +       SET_RUNTIME_PM_OPS(ufs_rockchip_runtime_suspend, ufs_rockchip_runtime_resume, NULL)
->> +       .prepare         = ufshcd_suspend_prepare,
->> +       .complete        = ufshcd_resume_complete,
->> +};
->> +
->> +static struct platform_driver ufs_rockchip_pltform = {
->> +       .probe = ufs_rockchip_probe,
->> +       .remove = ufs_rockchip_remove,
->> +       .driver = {
->> +               .name = "ufshcd-rockchip",
->> +               .pm = &ufs_rockchip_pm_ops,
->> +               .of_match_table = ufs_rockchip_of_match,
->> +       },
->> +};
->> +module_platform_driver(ufs_rockchip_pltform);
->> +
-> 
-> [...]
-> 
-> Kind regards
-> Uffe
