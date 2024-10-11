@@ -1,251 +1,249 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100221C6B8;
-	Fri, 11 Oct 2024 14:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728658147; cv=fail; b=FsGl77y/vItv47x/cEDrLqMPTL8iX8DDeyR/wY+nJ7j+TfksGxAw/I900gZR22gwoyzmyP3ULq5/0ZUEN/VbueB8SS24jj35de/M43JoSkmJlmko8mLBWgvX/JaWr2EfpqhCi2Mhu7dQI6rp5RTXA9WaI/y983XTJGT0WYlZTp4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728658147; c=relaxed/simple;
-	bh=x/Zv48denf7dEqsxsUA6Vd76S3rlnrDI4ueMwAD/5K0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=tY7Zjor0BuwIASavmfeXBMEVk2TkmWNpFUzTjBaW+R+dmZdIaGAWfGzzofUsy7jQJ+MOx2huz7/p/agCUZM/Esj3cFqGHkF+ul2UsMMSyyDC0Q8Amh0MUzDBkTHrmvD8azHHazc5TVsDaIrWWn1u3TJR7ESJjUPtOdiHOdClsT8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Mr9M28Ln; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=wNuzo9dZ; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 774931D016E
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Oct 2024 18:54:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1728672873; cv=none; b=EpDggzHJwYfeXtwTuUYdTT6d5Wo9J2AjIdnERUVwJp3AilhKHT2G3hTvUrawgOTuWKZkYFVjcpwlUhFDPfrHXARf4NcltGBAuhURtPfSgSSLFq59U4q8lQdEo0Ulb1dNGvXMORBDHuaoPO/leOIczR0jhlxonkbbi7zSnWQeHFc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1728672873; c=relaxed/simple;
+	bh=V+W549yZR4YXE4o9ySJ5Sa4Yc/1frqei+R9VTkOnjww=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=IUmSIj54arEHqhLV2JVVeQVB4MW6vh0sq+5YwfTkCliR/pTG+AQ1ewQhszo+yOF+1IXRoAXN7t1paE5YOrQLxMKXbCBZIpaUyvJZ97oc6BTxf2VQYjj+x9o5G7wrgR3Qn5tC55MFk8ij17zS5TCcjiexqnpNK4zT0My2ASHI0zA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=WlQavfb2; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Mr9M28Ln";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="wNuzo9dZ"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49BCpWp3020226;
-	Fri, 11 Oct 2024 14:48:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=KzKhx4k+gncUVqciIZUrDoUn0fOhlqjxMf+77FvDmjs=; b=
-	Mr9M28LnJxvOt2geNlfl4W7p/0oKC9RlKaVvMojFIXwQQSy+IcfQ4zNP0u8zGNHR
-	OBAl/4trgPe1JGJpYmrQKP8Ac4AUftcZtebGMdkusdcTIvva8H9E7HgTB1SP43W6
-	pzj7Mp9UGh1Q3zJqXTv0M/OMgs40v0SZhEDR2Krq0LiFmXgrTp90rmJzOxSxq+eT
-	C9Du/HTyt1pDh82ZYfcuO6uVEX4Zx6H2NmboRHsZKDuw063MIAI2Mh8KZilNafdv
-	SOUbwB9oHq7XTYVRopumXlTVF/neq+Ek8cWMUOVMPlR8NTl2UKn9tjZD8SsAp4SM
-	DVozBIHnIqilTJtvbG7AZQ==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42306en1dj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 11 Oct 2024 14:48:55 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49BDxh6d033347;
-	Fri, 11 Oct 2024 14:48:54 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2174.outbound.protection.outlook.com [104.47.57.174])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 422uwbcc86-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 11 Oct 2024 14:48:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=IFpJmyTIzeKuVB7HOkyYZZYg7JKCi9YSpY0MalsTjsidBNQN5yqS5jXgNdl9cR/q0Byvx8aU/ArjPRyMEhs/nKn+PBplW4A7JbJlS6klqAgIGVJ8oOyKqflFvVVnyiLDOLf0hkJSUIMqJqrUHOjZV+jD/vuvm8dF7V0LtKpH0W+5BIVwU3VV8KE79NzVeKzcZgPb35NbufC3h5K1DAcZRDhFQV8ARlKoD2PjJD8Npf3yHvBaxIQ/tz7zWijP756TKwm3YPtPvHVLXtnrMwmqhLNrkKi+GviSf3+w4ls9AMSRyeXUAIwwRlZVdUjCk/IzykApI/zhDBeuaQ5Wo6dRxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KzKhx4k+gncUVqciIZUrDoUn0fOhlqjxMf+77FvDmjs=;
- b=UVm5bvivwfxlxXMP7Yvju+Df2ndwuHGEHYuMrM9YH4vU9SD26JQ8r82ScWBdcr7jICdVv4AUNn281Cp+cLvBhZypKuo3mh038fJxGIRmv5nZasLaF74hRT6updCAEN496i5X9CXvvPO00xbEd5zfl6hefPRa69WdTI4BLs4ccVSfzOZO5zlFnpZ6grIdCVUaz6Rn5WWqNGmHWZzOJPnN5PxkOK41Hctr1bB61Oh8PfpajWqg7zQggS2psGc9DOlYePAsm9FBirPhAOGtK+l6194b0S1jDCdEYfAOeM8CZTs2sTVpealOwSzGHdaaoU20+DLBDImWZlzNTMUVLNNbCA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="WlQavfb2"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-43056d99a5aso21879495e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Oct 2024 11:54:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KzKhx4k+gncUVqciIZUrDoUn0fOhlqjxMf+77FvDmjs=;
- b=wNuzo9dZNOv1gun6usd5Wt8VX7QfhGybQ63rQE7CbE3QOfAWc4HQcDFbCPl8Q1xHlPjsndG+YpzVPqdHjhbNkzfDBnC8/p4k3vC0AXK9OXwSEhF5rCydHnGPBnRpPGKmxyDyaaW2jIRAXG59LwnAbO6oQix1WeA8GfaMmIXLkts=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by SA1PR10MB7709.namprd10.prod.outlook.com (2603:10b6:806:3a9::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8048.20; Fri, 11 Oct
- 2024 14:48:52 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0%6]) with mapi id 15.20.8048.018; Fri, 11 Oct 2024
- 14:48:52 +0000
-Message-ID: <ead203fc-abf5-49b1-b34c-64b97d3fecd6@oracle.com>
-Date: Fri, 11 Oct 2024 09:48:45 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: libiscsi: Set expecting_cc_ua flag when stop_conn
-To: Xiang Zhang <hawkxiang.cpp@gmail.com>, lduncan@suse.com, cleech@redhat.com,
-        ames.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        james.smart@broadcom.com, ram.vegesna@broadcom.com,
-        njavali@marvell.com
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20241011081807.65027-1-hawkxiang.cpp@gmail.com>
-Content-Language: en-US
-From: michael.christie@oracle.com
-In-Reply-To: <20241011081807.65027-1-hawkxiang.cpp@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LNXP265CA0028.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:5c::16) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1728672868; x=1729277668; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=CMw51FgUh2hUVjZgjRJM4Ju1tWp7eQweTumzW/cQKyE=;
+        b=WlQavfb2Sv0zMF4RRsI23bY6LL8JpqJxdS6hIswSj0jf02fWUK9CwsjJqNzW2sTnrp
+         Tfhq08jxZVrtF6asdgJ20XE+hygjiTV/JOJUqclfjC6oulx3+T+l7v7RPSVmgvilO7lo
+         ZMseE2zdc+RMkAMjK+KTL79TE4ZHX1Lh3bP/ZjLM6w37KyojtdSvjuOYmy1Ry2at4xKH
+         Frf3xCDRrzdXyeliuKJsokcpLU/EgzoD1oqJJsi3L5ZEMZliLzDshVpnlGTv9zt29Vf4
+         ZAccbhaZAkvyOJCxP25XxS6UUbnnzEWroZgE8hCrnTJwtTfpYtwTAaV4Xvl5cjEtr54Z
+         RVGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728672868; x=1729277668;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CMw51FgUh2hUVjZgjRJM4Ju1tWp7eQweTumzW/cQKyE=;
+        b=lrvKt4ibXcckZsx9stZq15O4VgsS1r27kQAFQluKgixcGcC+0MUFshxBRHAlhrbkHr
+         8fIJAf4HHYt/jWkeQqlcWCynC8v1JCmiDm7fcf+ffDYpzbB8UxkbPiEw3yMmPtVZX3Kb
+         +wUQC0BZZuUXj5hvbsn6A7fJkanzPna9b2Zn+mzlcPRicSCnvVevW7JwkybgxeYdTErv
+         sE91/pxZCB+AlPe+YLYb264i6NK1WTdgKHaHhLpUBXH/SQg0iekhHE18XG2a97izXhnN
+         Jc76RnHsDWvTJgByC3m9lBGgVaUEUvitlf6Scmw7C2tRkHOcgjT0ZfaRBKl8R+Z+DqyJ
+         6uGQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV+TQtXufgLLMDTxldlz3PQmF6Vq09LCLz5RoJIGE/7On7VdlKxtwGLiQyaYugsLXHhwQLlPRtyu5ne@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCgPk0jW3plqjApAZhbHtJyyBJWyJEp9/YOL70onfncUXuuKYY
+	UXCkCW/G+OnRx5iOznVvhazsJ1KHV6DtnSXm80aSk3nXnZioqkPDP2eAQu1fgEM=
+X-Google-Smtp-Source: AGHT+IHlglhANRvpdTESP3LsM2lgJBYup01gWvrpmxLiylK//L7bzFq3mNfdN8XOV1pwMyWsj+dc6w==
+X-Received: by 2002:a5d:44c5:0:b0:37d:3141:5b6 with SMTP id ffacd0b85a97d-37d551d6533mr3343204f8f.12.1728672867357;
+        Fri, 11 Oct 2024 11:54:27 -0700 (PDT)
+Received: from [127.0.1.1] ([2a01:cb1d:dc:7e00:68b8:bef:b7eb:538f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d4b79fe7csm4559161f8f.70.2024.10.11.11.54.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Oct 2024 11:54:27 -0700 (PDT)
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Subject: [PATCH v7 00/17] Hardware wrapped key support for QCom ICE and UFS
+ core
+Date: Fri, 11 Oct 2024 20:53:59 +0200
+Message-Id: <20241011-wrapped-keys-v7-0-e3f7a752059b@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|SA1PR10MB7709:EE_
-X-MS-Office365-Filtering-Correlation-Id: 381741de-28ca-40fc-6ac0-08dcea03d29c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?a0VnN1JOOVJzNmpRV2xWTzRrZ0RubjNSa1pKQ2ZHTWFYZlRvUHdkMnFuQk5j?=
- =?utf-8?B?S1BLL0VlZFg0QTZuOUFBc2U2RVc3TXpaSjNyY3NvYVhKbW5RbndRcDNGWnNZ?=
- =?utf-8?B?dGJ5QTlHV3hmMGkydGNzMUVsNGw2QnR2M05wT2hFS21RVnV1bmhFSnRlanRH?=
- =?utf-8?B?V0RYOFpjdURweVV2VElpVGZBZmYrbm1oRHZzaUxjdlZ0aUdENE5DNThWdEho?=
- =?utf-8?B?cCtpZSthYWZSMjRmOFdQTlVUKy9QSjBZZGRjN2k3QXlvT2o0ZXJFT3J0dUQ3?=
- =?utf-8?B?SDRtNndYb1JwTmszZG5pb3FweisrMEFIdUp1bG5RNmRkbXF1Um5LK0RCVE9o?=
- =?utf-8?B?dGw5STg2VmY0QWlpRnZ2bHlpU0UxbzZSUTFEZ3NuN1RKSEdVZ1JpbnhzQlJ4?=
- =?utf-8?B?UHA1dmRjN0VPbVhDcDkwdFhxZk1IK05iRFkzL0xLMkhZZElndzdKZ0ZsOTBV?=
- =?utf-8?B?RCtaKzZVYzRDa1A1QnNkNjNIKzk2RHhOTC9oYWNLVWwwQnZmc1pRd3BubitB?=
- =?utf-8?B?bzJ0VTl5enFpMVlRZDBIQzZIUm5yaHlBY2tVRzhobjBXV3REckRQN1oxZDBY?=
- =?utf-8?B?OTZhUTg4VVUrTzFUMFk5Qk0zem5lYVdiVHRidm02NEhlQzl1dU5EWktQMW9u?=
- =?utf-8?B?cHdWZjQ3dFp0cmJzc2R0Y1lwdDUvMGkwcEN0eGVyZXYxRmdlVFlrcXp0bkRK?=
- =?utf-8?B?UDliS0NVcXp6Yk5TUU9OVGpodFdBUi90Y0VlVmRZT3d6M3JnR1AwYU5ERkdV?=
- =?utf-8?B?bExmbTJaUm9lQUo1RjVjaWI5a1hUZG1RSG8rRmtVYmpib2lpbW9DMUxNMEc2?=
- =?utf-8?B?b3RHcTNRZVFYV29nTGc2QWlLcW1oZWUrekUwcDErcDhQVGxOTU5Fc0lTTE5Y?=
- =?utf-8?B?Q2pOdlpaYjJubUZTSGs2SVNORUIza2FoNjhHRGpJOCsydlJXeTFnTm9adkdI?=
- =?utf-8?B?VXJBWjR4Y1NjcmM0UFJ5UnpNdGZHT2oraXRhQUc4RWRmTG5aV2s4T3A4bVJT?=
- =?utf-8?B?d3B6aisvbEIycVc2UEtSSk5pd3hwTGxaVmNCWXNsMjMzQjhYZEg1NnhYUS9X?=
- =?utf-8?B?a2pqS1g3cExLdS92UU5vMElFMWJrMWlpMkx4anVWeDhSVnFOOFJUbzIxRUxT?=
- =?utf-8?B?Y0VXVlJLQ2FyTDJjc0paVG93Z2Q3RjdMcDZaWmxJU2NwaFhSQjJjMkZVSUs3?=
- =?utf-8?B?ejJNZ3BQUjZJQUU5RU9LZ09STEExb0VBMytiVWFrd0VKTGZZTzU1Z3V1dkFM?=
- =?utf-8?B?eldsMGVHRmtpQ1FvczZHRDRqNWtYR0NnNTI2ckFwU1NERlRQbHk5NnNKKzM0?=
- =?utf-8?B?TGxCMlEwNlBMZTZab2hjZHE2aXd2dUtwcUkxdHl6aFpKanlGaGw1M3BxU0hr?=
- =?utf-8?B?cml6VjJhYlpORlNkM2kxeTl1MzRZbkJCUkRHcU42M09zTXJpVExXZ0VIWmpS?=
- =?utf-8?B?aFNrajBVNUZrdzB1QklDR0ZmZGt3M0MyNFRiME1rUnQ0aG9BK2ZNTXpWSjk3?=
- =?utf-8?B?STB6L09hamRDL1ByWitrUE96NXJ4em9ScFdhZGQ4UytHYkFaWlBNNmh3OE5n?=
- =?utf-8?B?V0wxa3pkUytlM3B6SG1YV3JsZ3VvVFVFdUNnYzdZUzkwQ3RmQmhBaS9yQU8v?=
- =?utf-8?B?Q0pFVU5mMDE3MngrUHdoVDBCT2xZZTRVZzlQWlVYZUd0bVhRNlkydkN4cE1V?=
- =?utf-8?B?UW4rZUNzOVNXakNHT1h0QmZaZTAxRG5KS3BWUG4yYlptNHV6dEVSamZ3PT0=?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YVVscERISFVtbTJZYnViRVFMbXZNZ1hwMUlEdG5mOHV4cmt0TlRYL0FTOC83?=
- =?utf-8?B?bGw4bkpkWDdUYk5uV2FmdXJQR043eStCSWFsVWN0eTJhV3BsUW9hZmpRcXhr?=
- =?utf-8?B?Sjhxbmp5MWNGZzBLdUNiSm0vVENmVzg5R2Roenk1TWdjOW5TdXNBSUVEc1lF?=
- =?utf-8?B?L1ViR013d3YzSEJ5WDgvd0tVek1CL0V2ekpzZG1jcHZENEtkV015eEtqR28w?=
- =?utf-8?B?YXRZVXZGVmZQTFAxT1dZSjhTZmx3ZnNHWjZkSUpsanpVV3hNNnkxY1lwRUVj?=
- =?utf-8?B?YWZsY09TVWd4c3pDbmR0UVBGTURWSHJ6SFlZM1JPeHdQRHM0TU1Dd2NPbmxV?=
- =?utf-8?B?V044NlNXYmdFRitXanZrd2hvdmxML0E2eUxIY1NoeUVSdmhkZlpoMnZUZm15?=
- =?utf-8?B?MzdwVkR6d2VyNDdqbmIxSWlvLzdCR1NvMTlETC93aVhlOGNWMHNPWThiaFNR?=
- =?utf-8?B?YmVJNXc3UHpBMCsxWE5wQ0ptQjlOTmNoTCswWkNGZ0lCMFlTYTNGZEVwYnQz?=
- =?utf-8?B?U2NkVm5vLzVuOUJWdmd3VCtjVVhpMDByUXBOUkxVcVpDbDlpNGtSeDRLQStk?=
- =?utf-8?B?WGo0WUpIQ0lhWk84TVZYRzJreUZsUC8rTWZDRUZQK01MMWZPczc0RzlmTDNl?=
- =?utf-8?B?ZktNMUx1Q3dpUTJrRG1PQ1FnWmk4dVBuSERqb1JqT2dESy9tSnpzdmhvaXR4?=
- =?utf-8?B?M3hRNnRBS1AxZzdUOTZIOUYzdHRpdEtlUUR4UzhyRDJzdDZsUUxhZHJJek5u?=
- =?utf-8?B?OGFRUWxGcVp2QlUyU0cxT054Z1ZnNExQdHdrdVpWMS9MZUpjbnNjZUtESkgv?=
- =?utf-8?B?TTBMWWlXZk1MV25mTFdBTytXYkM3MC9vc2J1bWNkWllIY1l1dUU0NVJDNG4w?=
- =?utf-8?B?ZEdoR1lkUm1ZaFRraGVwVlZpTlpIYTFFUUpKZkE2ZEVRU3dNOC9zRk5GUlhn?=
- =?utf-8?B?VGFSMzVXdmJDUFlHQmdJN3cza2NTRjZyNTJ4MDQwZXV0R2VDOUU1ejVnV0J1?=
- =?utf-8?B?MlRDb2UzeGVlQ0ZBeFhmNHVKMHJPaEhCSlJwdkRLRVhzc1l5M1ZqMVkwcXli?=
- =?utf-8?B?M1JxOUI0dWZVcUREcEovdkk5VzdYNGl5QmY1VFpFRVROdmV0ZVRXVTJJUHBs?=
- =?utf-8?B?Qlk2RGFFTzJWYjVCVGluRnljTTBOaTAreVp0aFNJTkxLU05qd3dUaGxBQlYx?=
- =?utf-8?B?SGtIeUc3OWVsbmxaME9lNDNSYnR2a2RGM3RnWlAxMFIyeTFsbTNpdzd2VTJp?=
- =?utf-8?B?bTBMRWh6anpuek51S0FSVHZLTWtJRG05eTYyMkxCZU5EMEhtV3ZhWHcxOW8y?=
- =?utf-8?B?RnFKNFRLRDBBdktFMk9iRFpVdFhsbXJicFZjdEt1azkxY0NyakEydHc5cU93?=
- =?utf-8?B?S2owL0l0VlI1TTdubkNsdisvaTJTZ2U0M3BaTnV1ellCc0o0V0FzLzAvYmsz?=
- =?utf-8?B?MVhWMHlYbGlxV3hxeUtxdS9pTXZ5N3RMa1YvQ3RudlEwWWlVdS9ERTR0ZGFM?=
- =?utf-8?B?YS80bW0xZXhpQktTY1BvdjhEWWw0MENFYVZYa2FLMjdxUU9sSWlSYXZEcGdk?=
- =?utf-8?B?dFkyb2ZkelFxRmlOKzVwU0gwUTl3UDFVYWc2UDdqaHdJTHRlWU9PN3BxbzB5?=
- =?utf-8?B?NitQYmx4WVZKS2dUQnBVVGFObG1vL2ViNzZXWTgxUFo1YW5WanBrZ0h6by9r?=
- =?utf-8?B?aW1XT0Z4V2s0ZVg1QWdxT2EwSHdxWEIxTFVYZ0pobHY3VzBIWHBiSjYxdWp2?=
- =?utf-8?B?cVhkMVoxVE9MRmNwSk1FdkxZNlZJQVhEcG1kdnBHdVJXZVhHUWZrSkEzU1JN?=
- =?utf-8?B?elBKbjlvK2NQaFQyVERNTUw4bjhpeG9Ca0dONFhKbU1seTBWNFJwbzJMRzBZ?=
- =?utf-8?B?YU9yaGdTdmhKb2xWSmY5RVBxYjhCMGtkbzF6N3A0Yyt5QStmbDdUT2c0akFJ?=
- =?utf-8?B?cUwyc1ZCUkRpZWNTYTJrcWF2STUvU1lJbUptZFM1NkNsWDc5YnNWdlZqTnJR?=
- =?utf-8?B?MVpnWmxzM0RmUExSdTNnYU9wbFpvQVRvaXo3U1R6WGJzd0k3NGZmdWFXSmor?=
- =?utf-8?B?V2F4NlZoMEVYVVNlMEJzMVVXNWlZVXNCTTJCTU0xSVN6UTFLM0w2SEQ3aW9Q?=
- =?utf-8?B?aXVQTHJvdnMrWmdHZGxrT3FRUEhoc0NqcHpZQWt0akt4VHkrQnlMc1V5QkJS?=
- =?utf-8?B?cUE9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	C0eumE9zfakBC129ScoW7YLwLjIcEKusDD5VvbQnndyC+3zmqnPO4H6aeUKyw3CcgA/cyMCjyDAQNHINqXdpQJltHyojwj/+vr9D1WtcntLEi7wsJH+j1jo8uaelXCtfn42yrh62TsEqRMP2ro1/DAQOK8HcfUYH9+69aTcLDjvQrDL/yboijzWTep8yIefPBslx98Jp9uB7bqzEkxTeUfyTndY5brTVyZ+Yl5ofEFhLvzXn266q9A8wZi+5LtVfhVlkEHRZnqvc07zNkrwstbd6rLDXgE2zdMVIEreg0HmwjZSoKRqiRb3cyWu6OWwoVNjIscgwAT5cOnexumoDezs5UAEhJb2YE6ZhkysmM/wz47Y3Ooe28duB+dD2LP5TpbUkjoxUk0OWFNjBAd7j40ujeQppypqPcH8g1DN5IKIRdjGB0oq1UKgJ5KkaeL208LZrfeBmEwJlIxW5gfktDmDsHr6b4a/n7EosmrJxWaf4T2xTbI0pLsQDUCIA0fzOYdaJMOPfjNuLOpyLsiNh4PFkR83QJZ7INLTlBeYTXVRvXIm58rJTR9/LjpV54qE07qi3i97yBk5pN+Ap2074d9oys2eSchBl6TUUDDIPRik=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 381741de-28ca-40fc-6ac0-08dcea03d29c
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Oct 2024 14:48:52.1350
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6hLmx31TYYnxSSKZ+UmxUUJ+LfgE4OKYVjnOzos4Lfl/F4RcuiJofNIwf4iPTCHfCqlehC9xbp2q7qqZpa9l06I2ioBTLAJ+uEdcyh1T2Sw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB7709
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-11_12,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- phishscore=0 mlxscore=0 suspectscore=0 bulkscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2409260000 definitions=main-2410110102
-X-Proofpoint-GUID: 8qHbSomLArFSIZGAnvgZpsnnPNlTc6gc
-X-Proofpoint-ORIG-GUID: 8qHbSomLArFSIZGAnvgZpsnnPNlTc6gc
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAEd0CWcC/1XMQQ6CMBCF4auQWVszVqzCynsYFi0dYKKhZGqqh
+ HB3K65c/i953wKRhClCXSwglDhyGHOcdwW0gx17Uuxzg0Zd4gW1eomdJvLqTnNURBbxqDvXkYd
+ 8mYQ6fm/crck9cHwGmTc9me/6gyo0/1AyCpU/VWQOrsXWldcHj1bCPkgPzbquH6oQeNSpAAAA
+To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, 
+ Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
+ Mikulas Patocka <mpatocka@redhat.com>, 
+ Adrian Hunter <adrian.hunter@intel.com>, 
+ Asutosh Das <quic_asutoshd@quicinc.com>, 
+ Ritesh Harjani <ritesh.list@gmail.com>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Eric Biggers <ebiggers@kernel.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, 
+ Jaegeuk Kim <jaegeuk@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, 
+ Gaurav Kashyap <quic_gaurkash@quicinc.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>
+Cc: linux-block@vger.kernel.org, linux-doc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, dm-devel@lists.linux.dev, 
+ linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, 
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ Eric Biggers <ebiggers@google.com>, 
+ Om Prakash Singh <quic_omprsing@quicinc.com>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6675;
+ i=bartosz.golaszewski@linaro.org; h=from:subject:message-id;
+ bh=V+W549yZR4YXE4o9ySJ5Sa4Yc/1frqei+R9VTkOnjww=;
+ b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBnCXRXheFkvmAfCwx0Kc8rJKoU5BpA3kyWjxAV/
+ 35LTWYZNfmJAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZwl0VwAKCRARpy6gFHHX
+ cgA0D/4p3Bi0fXlOemSeU2xvKKK25ZEN3/EmT9KnIyEvzW9pkACbc3kmA+hczDu+fEwMdi4SpF5
+ wHgSASml14w4srJR/lEyN8QjLuq4WJB5aMwzRR/uLmxIkqI5oONlowHYqbrYs3fL2pUaiEmc9Xf
+ z2jBXeZl7d1yLJMHyDke9WIB1jsEVzqsKBYbLnK1APKctF9NBkIOpsEmMEA1TKwlh8W9W9QJ1UM
+ JwnX7CINZdXBI4gA2W3uUcF6lcovxO2QZRkViLGcgMQZfJlsFWP0sI0bOuPXejQMp3T71S2/Arm
+ SlCRJ2mrhY6Gj0ycUjt8bH57j14pS8Q05CvGuwFDfcCZl+uF1GAjhw21G/dxCOaS7WglRuOq55x
+ ZTQT1UsptQVVfQTCvY2OKUWPSrdBKCw60tXAYC1KDkbRWkTDurZnoLbls3SoS2c6IBJsMKeDa40
+ GdDpfPRU8AWr3oXYwo34OoYMI1aR7zKd6dCxJwuYX2EqT5fTDhgGm61Fz3OqxMPYkIU6wxbZopK
+ sBpaN3p5QYVq+HcVlblb1TJE2rnT/J3nekeHAO1Nd3G0y6VFoE3P8Z7Wet05HOSJzH8hKjDHIgX
+ ekggBI63eC4hPHcK9Ayb21XHlt2yzjO0Hd/6aeS7v8sLL960tlGQ0ElhucsvwZiyE2IFqQD1MaD
+ ph2BvhVDuk9LM6A==
+X-Developer-Key: i=bartosz.golaszewski@linaro.org; a=openpgp;
+ fpr=169DEB6C0BC3C46013D2C79F11A72EA01471D772
 
-CC'ing the fibre channel experts because they might have the same issue.
+The preferred solution to the HWKM configuration issue seems to be
+using a module param so this is what I did in this iteration.
 
-On 10/11/24 3:18 AM, Xiang Zhang wrote:
-> Initiator need to recover session and reconnect to target, after calling stop_conn. And target will rebuild new session info, and mark ASC_POWERON_RESET ua sense for scsi devices belong to the target(device reset). After recovery, first scsi command(scmd) request to target will get ASC_POWERON_RESET(ua sense) + SAM_STAT_CHECK_CONDITION(status) in response.
-> According to scsi code: "scsi_done --> scsi_complete --> scsi_decide_disposition --> scsi_check_sense", if expecting_cc_ua = 0, scmd response with ASC_POWERON_RESET(ua sense) will ignore "cmd->retries <= cmd->allowed", fail directly. It will cause SCSI return io_error to upper layer without retry.
+Hardware-wrapped keys are encrypted keys that can only be unwrapped
+(decrypted) and used by hardware - either by the inline encryption
+hardware itself, or by a dedicated hardware block that can directly
+provision keys to the inline encryption hardware. For more details,
+please see patches 1-3 in this series which extend the inline encryption
+docs with more information.
 
-Just want to make sure I understand the problem.
+This series adds support for wrapped keys to the block layer, fscrypt
+and then build upwards from there by implementing relevant callbacks in
+QCom SCM driver, then the ICE driver and finally in UFS core and QCom
+layer.
 
-Does the failure only happen with tape or passthrough or if removable is
-set?
+Tested on sm8650-qrd.
 
-For commands coming from sd, then scsi_io_completion will end up calling
-scsi_io_completion_action and seeing the UNIT_ATTENTION and will retry.
-I'm not saying we shouldn't do a fix like you did below. Just want to
-make sure I understand the case you describe above.
+How to test:
 
+Use the wip-wrapped-keys branch from https://github.com/ebiggers/fscryptctl
+to build a custom fscryptctl that supports generating wrapped keys.
 
-> If we set expecting_cc_ua=1 in fail_scsi_tasks, SISC will retry the scmd which is response with ASC_POWERON_RESET. The scmd second request to target can successful, because target will clear ASC_POWERON_RESET in device pending ua_sense_list after first scmd request.
+Enable the following config options:
+CONFIG_BLK_INLINE_ENCRYPTION=y
+CONFIG_QCOM_INLINE_CRYPTO_ENGINE=m
+CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
+CONFIG_SCSI_UFS_CRYPTO=y
 
+$ mkfs.ext4 -F -O encrypt,stable_inodes /dev/disk/by-partlabel/userdata
+$ mount /dev/disk/by-partlabel/userdata -o inlinecrypt /mnt
+$ fscryptctl generate_hw_wrapped_key /dev/disk/by-partlabel/userdata > /mnt/key.longterm
+$ fscryptctl prepare_hw_wrapped_key /dev/disk/by-partlabel/userdata < /mnt/key.longterm > /tmp/key.ephemeral
+$ KEYID=$(fscryptctl add_key --hw-wrapped-key < /tmp/key.ephemeral /mnt)
+$ rm -rf /mnt/dir
+$ mkdir /mnt/dir
+$ fscryptctl set_policy --hw-wrapped-key --iv-ino-lblk-64 "$KEYID" /mnt/dir
+$ dmesg > /mnt/dir/test.txt
+$ sync
 
-What does "SISC" stand for?
+Reboot the board
 
-> 
-> Signed-off-by: Xiang Zhang <hawkxiang.cpp@gmail.com>
-> ---
->  drivers/scsi/libiscsi.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 0fda8905eabd..317e57be32b3 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -629,9 +629,10 @@ static void __fail_scsi_task(struct iscsi_task *task, int err)
->  		conn->session->queued_cmdsn--;
->  		/* it was never sent so just complete like normal */
->  		state = ISCSI_TASK_COMPLETED;
-> -	} else if (err == DID_TRANSPORT_DISRUPTED)
-> +	} else if (err == DID_TRANSPORT_DISRUPTED) {
->  		state = ISCSI_TASK_ABRT_SESS_RECOV;
-> -	else
-> +		sc->device->expecting_cc_ua = 1;
+$ mount /dev/disk/by-partlabel/userdata -o inlinecrypt /mnt
+$ ls /mnt/dir
+$ fscryptctl prepare_hw_wrapped_key /dev/disk/by-partlabel/userdata < /mnt/key.longterm > /tmp/key.ephemeral
+$ KEYID=$(fscryptctl add_key --hw-wrapped-key < /tmp/key.ephemeral /mnt)
+$ fscryptctl set_policy --hw-wrapped-key --iv-ino-lblk-64 "$KEYID" /mnt/dir
+$ cat /mnt/dir/test.txt # File should now be decrypted
 
+Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+---
+Changes in v7:
+- use a module param in conjunction with checking the platform support
+  at run-time to determine whether to use wrapped keys in the ICE driver
+- various minor refactorings, replacing magic numbers with defines etc.
+- fix kernel doc issues raised by autobuilders
+- Link to v6: https://lore.kernel.org/r/20240906-wrapped-keys-v6-0-d59e61bc0cb4@linaro.org
 
-The failure case can happen with other transports like fibre channel
-right? If it's common I think we want this in the core scsi code.
+Changes in v6:
+- add the wrapped key support from Eric Biggers to the series
+- remove the new DT property from the series and instead query the
+  at run-time rustZone to find out if wrapped keys are supported
+- make the wrapped key support into a UFS capability, not a quirk
+- improve kerneldocs
+- improve and rework coding style in most patches
+- improve and reformat commit messages
+- simplify the offset calculation for CRYPTOCFG
+- split out the DTS changes into a separate series
 
-For iscsi, we want to set expecting_cc_ua whenever we call
-scsi_block_targets() or whenever we return DID_TRANSPORT_DISRUPTED or
-DID_TRANSPORT_FAILFAST.
+---
+Bartosz Golaszewski (1):
+      firmware: qcom: scm: add a call for checking wrapped key support
 
-FC developers, I'm not sure if that's the case for you. For example if
-your driver called fc_remote_port_delete -> scsi_block_targets but then
-the issue is resolved quickly, like for a quick cable pull, and you
-called fc_remote_port_add, could there be cases where you did not get a
-I_T Nexus loss/reset type of issue?
+Eric Biggers (4):
+      blk-crypto: add basic hardware-wrapped key support
+      blk-crypto: show supported key types in sysfs
+      blk-crypto: add ioctls to create and prepare hardware-wrapped keys
+      fscrypt: add support for hardware-wrapped keys
 
-Or is it the case where anytime a fc driver calls fc_remote_port_delete
-then you will expect a UA after calling fc_remote_port_add again?
+Gaurav Kashyap (12):
+      ice, ufs, mmc: use the blk_crypto_key struct when programming the key
+      firmware: qcom: scm: add a call for deriving the software secret
+      firmware: qcom: scm: add calls for creating, preparing and importing keys
+      soc: qcom: ice: add HWKM support to the ICE driver
+      soc: qcom: ice: add support for hardware wrapped keys
+      soc: qcom: ice: add support for generating, importing and preparing keys
+      ufs: core: add support for wrapped keys to UFS core
+      ufs: core: add support for deriving the software secret
+      ufs: core: add support for generating, importing and preparing keys
+      ufs: host: add support for wrapped keys in QCom UFS
+      ufs: host: add a callback for deriving software secrets and use it
+      ufs: host: add support for generating, importing and preparing wrapped keys
+
+ Documentation/ABI/stable/sysfs-block               |  18 +
+ Documentation/block/inline-encryption.rst          | 245 +++++++++++++-
+ Documentation/filesystems/fscrypt.rst              | 154 ++++++++-
+ Documentation/userspace-api/ioctl/ioctl-number.rst |   2 +
+ block/blk-crypto-fallback.c                        |   5 +-
+ block/blk-crypto-internal.h                        |  10 +
+ block/blk-crypto-profile.c                         | 103 ++++++
+ block/blk-crypto-sysfs.c                           |  35 ++
+ block/blk-crypto.c                                 | 194 ++++++++++-
+ block/ioctl.c                                      |   5 +
+ drivers/firmware/qcom/qcom_scm.c                   | 233 +++++++++++++
+ drivers/firmware/qcom/qcom_scm.h                   |   4 +
+ drivers/md/dm-table.c                              |   1 +
+ drivers/mmc/host/cqhci-crypto.c                    |   9 +-
+ drivers/mmc/host/cqhci.h                           |   2 +
+ drivers/mmc/host/sdhci-msm.c                       |   6 +-
+ drivers/soc/qcom/ice.c                             | 365 ++++++++++++++++++++-
+ drivers/ufs/core/ufshcd-crypto.c                   |  86 ++++-
+ drivers/ufs/host/ufs-qcom.c                        |  61 +++-
+ fs/crypto/fscrypt_private.h                        |  71 +++-
+ fs/crypto/hkdf.c                                   |   4 +-
+ fs/crypto/inline_crypt.c                           |  44 ++-
+ fs/crypto/keyring.c                                | 124 +++++--
+ fs/crypto/keysetup.c                               |  54 ++-
+ fs/crypto/keysetup_v1.c                            |   5 +-
+ fs/crypto/policy.c                                 |  11 +-
+ include/linux/blk-crypto-profile.h                 |  73 +++++
+ include/linux/blk-crypto.h                         |  75 ++++-
+ include/linux/firmware/qcom/qcom_scm.h             |   8 +
+ include/soc/qcom/ice.h                             |  18 +-
+ include/uapi/linux/blk-crypto.h                    |  44 +++
+ include/uapi/linux/fs.h                            |   6 +-
+ include/uapi/linux/fscrypt.h                       |   7 +-
+ include/ufs/ufshcd.h                               |  21 ++
+ 34 files changed, 1968 insertions(+), 135 deletions(-)
+---
+base-commit: eae80d86fb04e37032e5bdaec64e0b70316d11ae
+change-id: 20240802-wrapped-keys-eea0032fbfed
+
+Best regards,
+-- 
+Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+
