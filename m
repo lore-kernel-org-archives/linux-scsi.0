@@ -1,170 +1,145 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50301799F;
-	Sat, 12 Oct 2024 03:27:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C86381953A9;
+	Sat, 12 Oct 2024 14:42:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728703627; cv=none; b=oQbVPqnrM/vRaGeQARVNd73mBCPctaJWSTpWILYPkKbEdlTi1ZW7qlT22j68IrUTUlAEwd6exQPeL24PRAWPkKnT+OJmO12v8VLkO+B9t9ujmj1ApJBbl9R0wmjlaytPBTlhKVNVpAm92XD/qO7CVyw4RJOjguWpQi5f4Gps/Lw=
+	t=1728744131; cv=none; b=H7vS4PmjZlub5hW6R2tLWDA5N9LbtR05ykhz3Ao5lwwpWEQK85WukeffYjuon0vEWTtJ26gOuqK4gmeq3TxROxTTjlFPlVAju0lEEE9mPESafwZ2mfxxKN56dMjt1oGKnDQaClb6hZu6yio+pp+IPt1TWiQ4knkvvP+q0lorPcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728703627; c=relaxed/simple;
-	bh=yXK1u5PItF4Ot2af8coMY40M905Rki8UymkHhymTln8=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=gLRGXFN4X9Ev/s1TZnNLUVK2v83ZMdGtt5ZnFC0tkb47Hh3useLsN/SPAZxEyO8zMUUpsDJ7oYNaaR8xMVIMDYCYnv9LoloFBh2UrI7FyBuhnM12k7qYv+f/pk5mIHgDgnR97Udot2T81Yqb0ZpzRE1IgwH2lFZEUT1reRk0YMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=sY5V+3NV; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=sY5V+3NV; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1728744131; c=relaxed/simple;
+	bh=pDESQmis9pDtjBkHLgvrCUWa+t7Ogkq9kZFlr/2sfKc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DMPccaGdz1dOJUEclGU3fyO1YZ0NvgcM/fxEhv2HZgOBOb7nJHoOOIN0UIyfCqH/otZaeWEgLVSqEwqkFutth5A110L6XpuMgyhkaGe12EbX4H6yZbVnQ3VO9GKrwcrlD8drEIZ8vhp9Wq3X4NH4OaY5yGaX84ZNpBUkK8Y9NBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Puohi0Vo; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="sY5V+3NV";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="sY5V+3NV"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Puohi0Vo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1728703623;
-	bh=yXK1u5PItF4Ot2af8coMY40M905Rki8UymkHhymTln8=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=sY5V+3NVaRCtWkAhcfIxi/iNb9ZTL5F5Yg8YDVALTcQIHTpLjcyPE5orsWjSIQbOQ
-	 qIbdpzTUmJEKJSVOS2rp8QpLgAl8hUmVMLeMlQ2icRcCPIaEikJDLmUl6QoEsLglJV
-	 qCn8txz857NUcJc6YbIcor0gySTVtTnxgrdoxxvw=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id DCC781287451;
-	Fri, 11 Oct 2024 23:27:03 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id hxWRwQPyqFxc; Fri, 11 Oct 2024 23:27:03 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1728703623;
-	bh=yXK1u5PItF4Ot2af8coMY40M905Rki8UymkHhymTln8=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=sY5V+3NVaRCtWkAhcfIxi/iNb9ZTL5F5Yg8YDVALTcQIHTpLjcyPE5orsWjSIQbOQ
-	 qIbdpzTUmJEKJSVOS2rp8QpLgAl8hUmVMLeMlQ2icRcCPIaEikJDLmUl6QoEsLglJV
-	 qCn8txz857NUcJc6YbIcor0gySTVtTnxgrdoxxvw=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::db7])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4444F12873D4;
-	Fri, 11 Oct 2024 23:27:03 -0400 (EDT)
-Message-ID: <edf88708320d05c4b2f654a06a7fdbba9f9a868c.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.12-rc2
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Date: Fri, 11 Oct 2024 23:27:01 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1728744128; x=1760280128;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=pDESQmis9pDtjBkHLgvrCUWa+t7Ogkq9kZFlr/2sfKc=;
+  b=Puohi0Vo/LH4r67Kck0kvLMesPsPEEfcXLSsN+jWu6CuW+5l6DsRb84f
+   yGPMEAcBInu9t7yB/HO6R9CDIMb44FOIAmfpgciiklmeBCc/3Z/f7mLEb
+   lcN0NqfFh6YiZ+mTNWrT9K9OxOy10g3V5SEFhuPZuK5+K7yavPeqZ/GVk
+   Glfk7+kJzmCy6gk3eee9PumTACEN2F2B74GvfAgKDAyBqL1ewuDww/lU4
+   PXdmzkd2QRpYyC8+/yhuQB+u5zabxQgMRAfX/4n+KVxT0AQixQSxYA4gP
+   W/1/LxoKuE9uWTRh9CSMdZfM7zfubrgYcQmGyhV6WWxiZvT3OsvlU+BNa
+   A==;
+X-CSE-ConnectionGUID: D01BhkqXR9etEoWW80/UdQ==
+X-CSE-MsgGUID: LA/2qdbcQ46syihdar7fTw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="38701956"
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="38701956"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Oct 2024 07:42:08 -0700
+X-CSE-ConnectionGUID: utdfJkvhQ2yDhvLcqKNbSA==
+X-CSE-MsgGUID: fYXBx54oTSedr960HhydTA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="77043030"
+Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 12 Oct 2024 07:42:06 -0700
+Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1szdJj-000DQT-29;
+	Sat, 12 Oct 2024 14:42:03 +0000
+Date: Sat, 12 Oct 2024 22:41:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: Xiang Zhang <hawkxiang.cpp@gmail.com>, lduncan@suse.com,
+	cleech@redhat.com, michael.christie@oracle.com,
+	ames.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Xiang Zhang <hawkxiang.cpp@gmail.com>
+Subject: Re: [PATCH] scsi: libiscsi: Set expecting_cc_ua flag when stop_conn
+Message-ID: <202410122213.bq19EI34-lkp@intel.com>
+References: <20241011081807.65027-1-hawkxiang.cpp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241011081807.65027-1-hawkxiang.cpp@gmail.com>
 
-four small fixes, three in drivers and one in the FC transport class to
-add idempotence to state setting.
+Hi Xiang,
 
-The patch is available here:
+kernel test robot noticed the following build warnings:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v6.12-rc2 next-20241011]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-The short changelog is:
+url:    https://github.com/intel-lab-lkp/linux/commits/Xiang-Zhang/scsi-libiscsi-Set-expecting_cc_ua-flag-when-stop_conn/20241011-161915
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20241011081807.65027-1-hawkxiang.cpp%40gmail.com
+patch subject: [PATCH] scsi: libiscsi: Set expecting_cc_ua flag when stop_conn
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20241012/202410122213.bq19EI34-lkp@intel.com/config)
+compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241012/202410122213.bq19EI34-lkp@intel.com/reproduce)
 
-Avri Altman (1):
-      scsi: ufs: Use pre-calculated offsets in ufshcd_init_lrb()
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202410122213.bq19EI34-lkp@intel.com/
 
-Benjamin Marzinski (1):
-      scsi: scsi_transport_fc: Allow setting rport state to current state
+All warnings (new ones prefixed by >>):
 
-Daniel Palmer (1):
-      scsi: wd33c93: Don't use stale scsi_pointer value
+>> drivers/scsi/libiscsi.c:634:3: warning: variable 'sc' is uninitialized when used here [-Wuninitialized]
+     634 |                 sc->device->expecting_cc_ua = 1;
+         |                 ^~
+   drivers/scsi/libiscsi.c:618:22: note: initialize the variable 'sc' to silence this warning
+     618 |         struct scsi_cmnd *sc;
+         |                             ^
+         |                              = NULL
+   1 warning generated.
 
-Martin Wilck (1):
-      scsi: fnic: Move flush_work initialization out of if block
 
+vim +/sc +634 drivers/scsi/libiscsi.c
 
-And the diffstat:
+   610	
+   611	/*
+   612	 * session back and frwd lock must be held and if not called for a task that
+   613	 * is still pending or from the xmit thread, then xmit thread must be suspended
+   614	 */
+   615	static void __fail_scsi_task(struct iscsi_task *task, int err)
+   616	{
+   617		struct iscsi_conn *conn = task->conn;
+   618		struct scsi_cmnd *sc;
+   619		int state;
+   620	
+   621		if (cleanup_queued_task(task))
+   622			return;
+   623	
+   624		if (task->state == ISCSI_TASK_PENDING) {
+   625			/*
+   626			 * cmd never made it to the xmit thread, so we should not count
+   627			 * the cmd in the sequencing
+   628			 */
+   629			conn->session->queued_cmdsn--;
+   630			/* it was never sent so just complete like normal */
+   631			state = ISCSI_TASK_COMPLETED;
+   632		} else if (err == DID_TRANSPORT_DISRUPTED) {
+   633			state = ISCSI_TASK_ABRT_SESS_RECOV;
+ > 634			sc->device->expecting_cc_ua = 1;
+   635		} else
+   636			state = ISCSI_TASK_ABRT_TMF;
+   637	
+   638		sc = task->sc;
+   639		sc->result = err << 16;
+   640		scsi_set_resid(sc, scsi_bufflen(sc));
+   641		iscsi_complete_task(task, state);
+   642	}
+   643	
 
- drivers/scsi/fnic/fnic_main.c    | 2 +-
- drivers/scsi/scsi_transport_fc.c | 4 ++--
- drivers/scsi/wd33c93.c           | 2 +-
- drivers/ufs/core/ufshcd.c        | 5 ++---
- 4 files changed, 6 insertions(+), 7 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 0044717d4486..adec0df24bc4 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -830,7 +830,6 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		spin_lock_init(&fnic->vlans_lock);
- 		INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
- 		INIT_WORK(&fnic->event_work, fnic_handle_event);
--		INIT_WORK(&fnic->flush_work, fnic_flush_tx);
- 		skb_queue_head_init(&fnic->fip_frame_queue);
- 		INIT_LIST_HEAD(&fnic->evlist);
- 		INIT_LIST_HEAD(&fnic->vlans);
-@@ -948,6 +947,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	INIT_WORK(&fnic->link_work, fnic_handle_link);
- 	INIT_WORK(&fnic->frame_work, fnic_handle_frame);
-+	INIT_WORK(&fnic->flush_work, fnic_flush_tx);
- 	skb_queue_head_init(&fnic->frame_queue);
- 	skb_queue_head_init(&fnic->tx_queue);
- 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 62ea7e44460e..082f76e76721 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1250,7 +1250,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
- 		 */
- 		if (rport->port_state == FC_PORTSTATE_ONLINE)
- 			rport->port_state = port_state;
--		else
-+		else if (port_state != rport->port_state)
- 			return -EINVAL;
- 	} else if (port_state == FC_PORTSTATE_ONLINE) {
- 		/*
-@@ -1260,7 +1260,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
- 		 */
- 		if (rport->port_state == FC_PORTSTATE_MARGINAL)
- 			rport->port_state = port_state;
--		else
-+		else if (port_state != rport->port_state)
- 			return -EINVAL;
- 	} else
- 		return -EINVAL;
-diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-index a44b60c9004a..dd1fef9226f2 100644
---- a/drivers/scsi/wd33c93.c
-+++ b/drivers/scsi/wd33c93.c
-@@ -831,7 +831,7 @@ wd33c93_intr(struct Scsi_Host *instance)
- 		/* construct an IDENTIFY message with correct disconnect bit */
- 
- 		hostdata->outgoing_msg[0] = IDENTIFY(0, cmd->device->lun);
--		if (scsi_pointer->phase)
-+		if (WD33C93_scsi_pointer(cmd)->phase)
- 			hostdata->outgoing_msg[0] |= 0x40;
- 
- 		if (hostdata->sync_stat[cmd->device->id] == SS_FIRST) {
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 24a32e2fd75e..6a71ebf953e2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2933,9 +2933,8 @@ static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
- 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
- 	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
- 		i * ufshcd_get_ucd_size(hba);
--	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
--				       response_upiu);
--	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
-+	u16 response_offset = le16_to_cpu(utrdlp[i].response_upiu_offset);
-+	u16 prdt_offset = le16_to_cpu(utrdlp[i].prd_table_offset);
- 
- 	lrb->utr_descriptor_ptr = utrdlp + i;
- 	lrb->utrd_dma_addr = hba->utrdl_dma_addr +
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
