@@ -1,145 +1,142 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C86381953A9;
-	Sat, 12 Oct 2024 14:42:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA0536B
+	for <linux-scsi@vger.kernel.org>; Sun, 13 Oct 2024 00:52:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728744131; cv=none; b=H7vS4PmjZlub5hW6R2tLWDA5N9LbtR05ykhz3Ao5lwwpWEQK85WukeffYjuon0vEWTtJ26gOuqK4gmeq3TxROxTTjlFPlVAju0lEEE9mPESafwZ2mfxxKN56dMjt1oGKnDQaClb6hZu6yio+pp+IPt1TWiQ4knkvvP+q0lorPcA=
+	t=1728780745; cv=none; b=FL+ycu/ZXJZe3xYf/2BJ63+zL9nRy2l8JNelMrazZe/kkgsMKm/ntduH40NIlZkKufZKQqCTNPYPFxYBLN6st4xPR08iidOqJTGgec12CGpCj6xW9nZ3KAA+mwAFPZ/3AFCii2p4zwiEjNmRImBwKy2csQeQP8vy3aEFonjpiK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728744131; c=relaxed/simple;
-	bh=pDESQmis9pDtjBkHLgvrCUWa+t7Ogkq9kZFlr/2sfKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DMPccaGdz1dOJUEclGU3fyO1YZ0NvgcM/fxEhv2HZgOBOb7nJHoOOIN0UIyfCqH/otZaeWEgLVSqEwqkFutth5A110L6XpuMgyhkaGe12EbX4H6yZbVnQ3VO9GKrwcrlD8drEIZ8vhp9Wq3X4NH4OaY5yGaX84ZNpBUkK8Y9NBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Puohi0Vo; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1728780745; c=relaxed/simple;
+	bh=SnTS/SO6HOkgbKsQlEr2Qiq/il94kfd/Ec/kr5Js2PU=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=CNqxZK+XlEXsHvu6abiKk2sxctNIYI2RAn7CKolQl7XJG551XgJ+g8C08JuMZZeVxoPScBHfQmHgxx1XcnGZ7LEAr9sIFVcMcTKSFDrwv1II+HDi0AlPj2OCfMh1fSnqZQrgl6Y14xFgi7vqI3+dtZtDO7YA+qOme8/bGGEOp9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XSbZhWa0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Puohi0Vo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1728744128; x=1760280128;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=pDESQmis9pDtjBkHLgvrCUWa+t7Ogkq9kZFlr/2sfKc=;
-  b=Puohi0Vo/LH4r67Kck0kvLMesPsPEEfcXLSsN+jWu6CuW+5l6DsRb84f
-   yGPMEAcBInu9t7yB/HO6R9CDIMb44FOIAmfpgciiklmeBCc/3Z/f7mLEb
-   lcN0NqfFh6YiZ+mTNWrT9K9OxOy10g3V5SEFhuPZuK5+K7yavPeqZ/GVk
-   Glfk7+kJzmCy6gk3eee9PumTACEN2F2B74GvfAgKDAyBqL1ewuDww/lU4
-   PXdmzkd2QRpYyC8+/yhuQB+u5zabxQgMRAfX/4n+KVxT0AQixQSxYA4gP
-   W/1/LxoKuE9uWTRh9CSMdZfM7zfubrgYcQmGyhV6WWxiZvT3OsvlU+BNa
-   A==;
-X-CSE-ConnectionGUID: D01BhkqXR9etEoWW80/UdQ==
-X-CSE-MsgGUID: LA/2qdbcQ46syihdar7fTw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="38701956"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="38701956"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Oct 2024 07:42:08 -0700
-X-CSE-ConnectionGUID: utdfJkvhQ2yDhvLcqKNbSA==
-X-CSE-MsgGUID: fYXBx54oTSedr960HhydTA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="77043030"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 12 Oct 2024 07:42:06 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1szdJj-000DQT-29;
-	Sat, 12 Oct 2024 14:42:03 +0000
-Date: Sat, 12 Oct 2024 22:41:36 +0800
-From: kernel test robot <lkp@intel.com>
-To: Xiang Zhang <hawkxiang.cpp@gmail.com>, lduncan@suse.com,
-	cleech@redhat.com, michael.christie@oracle.com,
-	ames.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xiang Zhang <hawkxiang.cpp@gmail.com>
-Subject: Re: [PATCH] scsi: libiscsi: Set expecting_cc_ua flag when stop_conn
-Message-ID: <202410122213.bq19EI34-lkp@intel.com>
-References: <20241011081807.65027-1-hawkxiang.cpp@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XSbZhWa0"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 97A66C4CEDA
+	for <linux-scsi@vger.kernel.org>; Sun, 13 Oct 2024 00:52:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728780744;
+	bh=SnTS/SO6HOkgbKsQlEr2Qiq/il94kfd/Ec/kr5Js2PU=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=XSbZhWa03dgZpHmoSatlEecw0N1Zjj/UYCrYEIo8i0teJFJcYKV4Fou63BlMXrz3t
+	 wQeu7u37XvgIwAWox9ZqtgpgxI7dAGWL6oDlCLJ3jY4F4Ie6L0aN7MHyJT0tBZRYQ8
+	 OpJuK5MRS0MMq1eUAvt4mTRWmB9kjinbzy1UePHJdJYIkNdzzLp6UyLJgm28c4uOpR
+	 pks1g206VIuSDlrovCJi5rhpWG1upbvqBwecUxAVaypr1shq/yqbEbTD+9eaAjHkce
+	 sivcqotFDpf8N4IxghsyGVx6/zQlPD00MoGTlho+/5UqSnpLEcgICUwmuSK/ttRCW3
+	 J54j5Dh3sy8ow==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 902DEC53BCA; Sun, 13 Oct 2024 00:52:24 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Sun, 13 Oct 2024 00:52:23 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: leyyyyy@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-4JNWf59Fky@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241011081807.65027-1-hawkxiang.cpp@gmail.com>
 
-Hi Xiang,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-kernel test robot noticed the following build warnings:
+--- Comment #64 from Maxim (leyyyyy@gmail.com) ---
+I am still encountering issues with the aacraid driver.
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v6.12-rc2 next-20241011]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+While the reverted version has shown significant improvement in terms of
+stability and consistency, and I no longer face issues after the system has
+successfully booted, there is still one persistent problem: the system hangs
+for 120 seconds during the boot process. It is related to NetApp disk shelf
+(0000:03:00.0) connected to ASR-78165.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Xiang-Zhang/scsi-libiscsi-Set-expecting_cc_ua-flag-when-stop_conn/20241011-161915
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20241011081807.65027-1-hawkxiang.cpp%40gmail.com
-patch subject: [PATCH] scsi: libiscsi: Set expecting_cc_ua flag when stop_conn
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20241012/202410122213.bq19EI34-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241012/202410122213.bq19EI34-lkp@intel.com/reproduce)
+For example Ubuntu Server 24.04 (live ISO):
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410122213.bq19EI34-lkp@intel.com/
+$ cat dmesg | grep aacraid
 
-All warnings (new ones prefixed by >>):
+[    0.915806] kernel: Adaptec aacraid driver 1.2.1[50983]-custom
+[    0.916680] kernel: aacraid 0000:03:00.0: can't disable ASPM; OS doesn't
+have ASPM control
+[    0.928906] kernel: aacraid: Comm Interface type2 enabled
+[    0.958831] kernel: aacraid 0000:03:00.0: 64 Bit DAC enabled
+[    0.975916] kernel: scsi host0: aacraid
+[    1.275877] kernel: aacraid: Host bus reset request. SCSI hang ?
+[    1.277602] kernel: aacraid 0000:03:00.0: outstanding cmd: midlevel-1
+[    1.279315] kernel: aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
+[    1.280986] kernel: aacraid 0000:03:00.0: outstanding cmd: error handler=
+-0
+[    1.282672] kernel: aacraid 0000:03:00.0: outstanding cmd: firmware-0
+[    1.284357] kernel: aacraid 0000:03:00.0: outstanding cmd: kernel-0
+[    1.292931] kernel: aacraid 0000:03:00.0: Controller reset type is 3
+[    1.294620] kernel: aacraid 0000:03:00.0: Issuing IOP reset
+[   34.039710] kernel: aacraid 0000:03:00.0: IOP reset succeeded
+[   34.045955] kernel: aacraid: Comm Interface type2 enabled
+[   49.015695] kernel: aacraid 0000:03:00.0: Scheduling bus rescan
+[   59.522832] kernel: aacraid: Host bus reset request. SCSI hang ?
+[   59.525823] kernel: aacraid 0000:03:00.0: outstanding cmd: midlevel-1
+[   59.528323] kernel: aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
+[   59.529023] kernel: aacraid 0000:03:00.0: outstanding cmd: error handler=
+-0
+[   59.529707] kernel: aacraid 0000:03:00.0: outstanding cmd: firmware-0
+[   59.530372] kernel: aacraid 0000:03:00.0: outstanding cmd: kernel-0
+[   59.537907] kernel: aacraid 0000:03:00.0: Controller reset type is 3
+[   59.538609] kernel: aacraid 0000:03:00.0: Issuing IOP reset
+[   91.184486] kernel: aacraid 0000:03:00.0: IOP reset succeeded
+[   91.191966] kernel: aacraid: Comm Interface type2 enabled
+[  106.042633] kernel: aacraid 0000:03:00.0: Scheduling bus rescan
+[  116.351867] kernel: aacraid: Host bus reset request. SCSI hang ?
+[  116.354649] kernel: aacraid 0000:03:00.0: outstanding cmd: midlevel-1
+[  116.357268] kernel: aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
+[  116.357904] kernel: aacraid 0000:03:00.0: outstanding cmd: error handler=
+-0
+[  116.358523] kernel: aacraid 0000:03:00.0: outstanding cmd: firmware-0
+[  116.359113] kernel: aacraid 0000:03:00.0: outstanding cmd: kernel-0
+[  116.366903] kernel: aacraid 0000:03:00.0: Controller reset type is 3
+[  116.367580] kernel: aacraid 0000:03:00.0: Issuing IOP reset
+[  147.979313] kernel: aacraid 0000:03:00.0: IOP reset succeeded
+[  147.981970] kernel: aacraid: Comm Interface type2 enabled
+[  162.916919] kernel: aacraid 0000:03:00.0: Scheduling bus rescan
 
->> drivers/scsi/libiscsi.c:634:3: warning: variable 'sc' is uninitialized when used here [-Wuninitialized]
-     634 |                 sc->device->expecting_cc_ua = 1;
-         |                 ^~
-   drivers/scsi/libiscsi.c:618:22: note: initialize the variable 'sc' to silence this warning
-     618 |         struct scsi_cmnd *sc;
-         |                             ^
-         |                              = NULL
-   1 warning generated.
 
+As I mentioned previously, the 5.15 kernel version is fully functional and
+performs consistently well. The same boot issue occurs even with RHEL8 fork=
+s,
+such as Rocky 8.10, likely because the driver has been backported.
 
-vim +/sc +634 drivers/scsi/libiscsi.c
+On the other hand, Ubuntu 22.04, which relies on the 5.15 kernel, works
+exceptionally well. This is the reason I can't use OpenSUSE Leap 15.6 and m=
+ust
+stick with Ubuntu.
 
-   610	
-   611	/*
-   612	 * session back and frwd lock must be held and if not called for a task that
-   613	 * is still pending or from the xmit thread, then xmit thread must be suspended
-   614	 */
-   615	static void __fail_scsi_task(struct iscsi_task *task, int err)
-   616	{
-   617		struct iscsi_conn *conn = task->conn;
-   618		struct scsi_cmnd *sc;
-   619		int state;
-   620	
-   621		if (cleanup_queued_task(task))
-   622			return;
-   623	
-   624		if (task->state == ISCSI_TASK_PENDING) {
-   625			/*
-   626			 * cmd never made it to the xmit thread, so we should not count
-   627			 * the cmd in the sequencing
-   628			 */
-   629			conn->session->queued_cmdsn--;
-   630			/* it was never sent so just complete like normal */
-   631			state = ISCSI_TASK_COMPLETED;
-   632		} else if (err == DID_TRANSPORT_DISRUPTED) {
-   633			state = ISCSI_TASK_ABRT_SESS_RECOV;
- > 634			sc->device->expecting_cc_ua = 1;
-   635		} else
-   636			state = ISCSI_TASK_ABRT_TMF;
-   637	
-   638		sc = task->sc;
-   639		sc->result = err << 16;
-   640		scsi_set_resid(sc, scsi_bufflen(sc));
-   641		iscsi_complete_task(task, state);
-   642	}
-   643	
+In other words, some errors still exist in the driver=E2=80=99s source code=
+, and a
+bisect starting from 5.15 is needed to resolve them.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
