@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1192B1A7062;
-	Mon, 14 Oct 2024 03:58:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D961AC447;
+	Mon, 14 Oct 2024 03:59:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728878338; cv=none; b=i6mMaaXQrMkJd6jerzx0mZag9R18PnTSbvOTU9T/DfYcQyomdl+LCGbuouBowJxKWzsZCnKNQ0ZLR26Us7Fj0DPRxd13WywOx++9pHDbMj8yggvBIhK6NAnneQXoRwEVKRjHP1Z9NaJKRElOI+7dqxTIGa2vGu3xS9V5HHkIMVM=
+	t=1728878376; cv=none; b=uef3re3O6hHvKZpXlReJf8/ntLmwUxdy1oQUqw+WATjnHzXDbLF6GCeypINquuNV/FzUsjBIQcuznriC9XfI9FhpBEQYNVhq8zIRX2yqZpuveF+4UmvF3U40WssB1tEQLkA+30xN+cS90N9GrKYKecdMD9p+KXOa05EBlaIUSzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728878338; c=relaxed/simple;
-	bh=EEwQJM6UjH6LfciOUNPLG6CzjG0L+/ES9mq8B59X8bQ=;
+	s=arc-20240116; t=1728878376; c=relaxed/simple;
+	bh=g8AetLH79B5fPkJJF4pxvsjmYZo9Ky8r2/DSJdac7MY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cPBf3jQwm5DUFuny7fG8BmI8bjDFCIlAe9xBBLOg6cvLHH/P2VXEvo86umiMrUJuc07yhrA0sFeYzV8K6QoUM253Lz+va1G21gvRikg8v8A3cW830WZVTB8CSQqO9iX7e9XwQUNuvkv7pcs66vXJc6tC5BuGtbC/tc2Cq0+o/OI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ADpDTbrf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=h+5b/cnaGeum7jx9f1EwXS3OJZHPp8Br7TVnVGwJg5Tuirq//uo0ddKhN00XXT10p6p/XcUtxRJ1g6bLvhzK0JihKypU7ZLdkQZsR223SPrbnbndn53um7hcim78wgMdEeVfLl2BWuXl4d3+z8yWQwrv7p3d/dFswt1jSmerYjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dgSfikMl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ADpDTbrf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87D19C4CEC3;
-	Mon, 14 Oct 2024 03:58:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dgSfikMl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD0C5C4CECF;
+	Mon, 14 Oct 2024 03:59:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728878337;
-	bh=EEwQJM6UjH6LfciOUNPLG6CzjG0L+/ES9mq8B59X8bQ=;
+	s=k20201202; t=1728878376;
+	bh=g8AetLH79B5fPkJJF4pxvsjmYZo9Ky8r2/DSJdac7MY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ADpDTbrf4AS2zDz1GwvqnfFCEn//A3GvUZ8BUdZMxmApnIov9St2dYiMw/XFpP+yV
-	 LSaR/sMYTNY/IKIpJ2LcEoZFOE3J99vg8PAiwpU7J7RyUVdwmJO0rD7sj85UthWN1y
-	 y0FTxX6HLctFMVKifGj/QCZUyR/oJewxdthNDpHzmIjLvE28dJ+k46kRphQJrRbxqK
-	 kCn8vYpuiom49NttpJoKx8GoMNESGVJVmARMRPjQZ0Z3Z3Go4g7Yc6QJfnSW5OXnLj
-	 U2uOqkPKIYstoc3Ydwg9uLvsqDRD5UTcNsvrkZQKDg9CpZ6PXyLV9m1TDsVyO8Id93
-	 9kj4EvL0pPubA==
+	b=dgSfikMlXmjTYFPxrjXY2D3opT+sVK5TXw6Rz0/nWNpgtTzIR11ofCcQGnFK/pVeZ
+	 JFlxZP9UDjL/TDdHKYqQqb75MtluYwB9kTs8jyXPgaEvH5doIXdZRvtFzYkO+IzHw1
+	 DrOe/xjmjdLCU+4XiupT6Mz153L/z1p9sDRtL7xIbd4xSsF+bse18DHcZKA0TZllok
+	 OCqs/IwLmKCpQfwJxEO1aT6JXAdDUTZsysM+MxgE41xejCcjFcsck1OAnV6RtVviDv
+	 Iygbw6ZtHOvEuLotvR3of9LmN9RSqsjQZ6wj8G30dJwXs2no4sEH84VsAYSBBNsQaS
+	 HJTUbnO7XgwVQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -35,12 +35,12 @@ Cc: Benjamin Marzinski <bmarzins@redhat.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 06/10] scsi: scsi_transport_fc: Allow setting rport state to current state
-Date: Sun, 13 Oct 2024 23:58:41 -0400
-Message-ID: <20241014035848.2247549-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 5/8] scsi: scsi_transport_fc: Allow setting rport state to current state
+Date: Sun, 13 Oct 2024 23:59:20 -0400
+Message-ID: <20241014035929.2251266-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241014035848.2247549-1-sashal@kernel.org>
-References: <20241014035848.2247549-1-sashal@kernel.org>
+In-Reply-To: <20241014035929.2251266-1-sashal@kernel.org>
+References: <20241014035929.2251266-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,7 +49,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.112
+X-stable-base: Linux 5.15.167
 Content-Transfer-Encoding: 8bit
 
 From: Benjamin Marzinski <bmarzins@redhat.com>
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 8934160c4a33b..1aaeb0ead7a71 100644
+index a2524106206db..fbe2036ca6196 100644
 --- a/drivers/scsi/scsi_transport_fc.c
 +++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1252,7 +1252,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
+@@ -1250,7 +1250,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
  		 */
  		if (rport->port_state == FC_PORTSTATE_ONLINE)
  			rport->port_state = port_state;
@@ -83,7 +83,7 @@ index 8934160c4a33b..1aaeb0ead7a71 100644
  			return -EINVAL;
  	} else if (port_state == FC_PORTSTATE_ONLINE) {
  		/*
-@@ -1262,7 +1262,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
+@@ -1260,7 +1260,7 @@ static ssize_t fc_rport_set_marginal_state(struct device *dev,
  		 */
  		if (rport->port_state == FC_PORTSTATE_MARGINAL)
  			rport->port_state = port_state;
