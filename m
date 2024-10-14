@@ -1,115 +1,85 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55CCD13A25B
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Oct 2024 05:37:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FC63147C9B
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Oct 2024 07:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728884225; cv=none; b=EKzdtcMPdERMRWRIdbfaTHY+TQl+3ceAmef/mJmYywH1v3dLr546T7h9Jo5kRyGbS+PsJb5M43DWQ3Wb6tLuiHbhie44c2pmzrdme4SSBpma60iugEP6JvFNx3xgnjNWehOK1/9SYS2S3hirORrHLcNoteq7IUo00NmuuQL+270=
+	t=1728890988; cv=none; b=O5kYtlVuZ9vsX34JXVMOgZaZsCVpL4uNq8VKFH7ul93Mn8L8PY7p7SpsInvR23Mvt7EYCQChtWGsQIu+mvDaoKNxTW7PTPeIaGj3+riiazBPyiGqoOgDId7rY3Ix37sNYgbacIZq6jgPLiMCIBcx313VwmUbs41zAh3oxn6S/Ak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728884225; c=relaxed/simple;
-	bh=vowF12unhwaqH2Uhzh4TMLo1NmToPN+zrLa6q4Tvye4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MpDFNbmIAyU8wvtsrxvdgsxqgWVeONT6BF31d3Nc8YrgYUIvUikecinOsxl5VkHZfvGpulq4atJq3CLWJoRwIMIc5aOTPrehFIrINycVcO3NBu2mi+gfi4KJzfd+VauBhSsVp0sZ9YKQKs5pGndG8yUj3uzBjJLCvCD+869Aboc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jLUzhemW; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728890988; c=relaxed/simple;
+	bh=ebHA/DQfDX7ySeuPpeVQBN5CQw7JV3jBmo90rHS5X+4=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=c1o+hsMAslWCT59igriuQR5WlPa/iV78VDgnr6jpiFamKpjJrv1ry1JEtEYmL1qeSrPU7Bs24bHyGZa7bMZ+NR2csJAJMhvjTRoIZ9Q9RzsHITg1B/8uuJ2OScqdfuNlgm7Ng2g/BhdsADurPTbJ7wW6lOg48np8LkANmI8UVzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oEsfhfnG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jLUzhemW"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-71e4c2e36daso990724b3a.0
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Oct 2024 22:37:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728884223; x=1729489023; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=BF37USWtm+h5np031/ok68lrYUFohiyeM1z19S1LTYQ=;
-        b=jLUzhemWsVUCikWr6BsipSLuzeaIXI7KwIIva1L0c+0ia2FzEG1gZxXDG6CCT3NY0Y
-         O5jPDH695zgRvhMVUUNyKnip+fq5fE6aU77lO7qTmNG9j6/PJ39aZGyTEH7kG4RIlYfJ
-         Uuxc/5h5tmltThUdwPV2x1/Q0cKrCGsMzTwXeKM7CYbr/tfz0teUKuwThDB9pzFRlun7
-         uZ1M8t3rKP3uZdWOLMSIDEzRWCdeBLlHcMdrf72Ucb2N0rtFdldw60ZzmsEiwtNUTseb
-         2zWjHNMe5JyOMdsr3TVIsho4QzGnNd66b/pF+b/86p+6zjeSAiYKh3pH0ldtrP/Xblg7
-         wbkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728884223; x=1729489023;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BF37USWtm+h5np031/ok68lrYUFohiyeM1z19S1LTYQ=;
-        b=DcYohW/P5H8MfDdP1mL9N+10Oh8JyQ0B/bCb+LqDbi7r85d+hs/o3EqQ/ztUVvzAJy
-         +fETAll9i6tLwXhxbAP1sTh/10hgZhF8CxA3lQImvknuVqWQjcE+wIUrhWZvI81ToW3Q
-         6XW9Gn259hYO/8ziq5tSVvUE0sl4Km1r//TA4pe6v5bhYIDXH5xzvZl5FhE3gN/sXoTH
-         0l/08KslFlCWBYZuUJ3slHcs0BT+v+Is7hsZQKRVwJL1uoYJ3sRUP5RiFepdKmzjMHbJ
-         Yqt+FvaD197xjy5ZO4w/GQvu73iOGr3hvKRm74N6dMVmFiBXsz660U8WW/mQRVQTPpVn
-         c+Tg==
-X-Forwarded-Encrypted: i=1; AJvYcCXk5LdFqurIezLmDIDwgoZ7sHAH+WjaWKALl2NNfwozuyeZZmjwkfu7daSOY67iNiVDz+y24j3Ewqxs@vger.kernel.org
-X-Gm-Message-State: AOJu0YwDTErFCMqbZnaGz96iqQaMU+Jec6ci0pUtG9sSoNQAJuGYz7oG
-	MHi4pLa8CDJ04VTb/emJNvaXJ5Qu1KPJSUkTakwQcMWNkZsrJ69p
-X-Google-Smtp-Source: AGHT+IGoDJaXSiQrpIspY+1y57QSzV/xHgIeH/LIMAVee40rvm+VbMb7WBWMxWmnYYLP3UN+jsZ8yA==
-X-Received: by 2002:a05:6a21:e86:b0:1d7:e62:ea94 with SMTP id adf61e73a8af0-1d8bc85d4e3mr14450196637.14.1728884223502;
-        Sun, 13 Oct 2024 22:37:03 -0700 (PDT)
-Received: from localhost.localdomain ([103.150.184.35])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71e52f62b26sm3222104b3a.204.2024.10.13.22.37.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 13 Oct 2024 22:37:03 -0700 (PDT)
-From: Xiang Zhang <hawkxiang.cpp@gmail.com>
-To: lduncan@suse.com,
-	cleech@redhat.com,
-	michael.christie@oracle.com,
-	ames.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	Xiang Zhang <hawkxiang.cpp@gmail.com>
-Subject: [PATCH v2] scsi: libiscsi: Set expecting_cc_ua flag when stop_conn
-Date: Mon, 14 Oct 2024 13:36:45 +0800
-Message-ID: <20241014053645.17619-1-hawkxiang.cpp@gmail.com>
-X-Mailer: git-send-email 2.44.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oEsfhfnG"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A53F3C4CED0
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Oct 2024 07:29:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728890987;
+	bh=ebHA/DQfDX7ySeuPpeVQBN5CQw7JV3jBmo90rHS5X+4=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=oEsfhfnGriE12/6cjit9MvJy6zSprSMZ5S+D15AGOHEMSUVhDO1eEwC/E/hNHfRfW
+	 JWrG4d5aF79pk46ejn+axRmaEIrqmbku3SHY/UdJ4pjsvAJdDp3csGoIfP7grbGnwA
+	 TJtIfNFOFgcNqN9Zz/ea+GI97/4d03NbmgfWr6wMHM8KuKhmJxBE9OThrHrJWnBJQm
+	 4TpHSEQWkrQVLGt1KxI04VL111qbrnADmeOFlE2BTpuVCTRtFUBkfBcoMilCxCv/XK
+	 C5x5MR9vKdsP8PRMFSXIimUpzuoCbr/I6CdYDcLPeiSQCAv+FKevBF8I/yhPQjDjrt
+	 CQX1pvj3hXbIA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 9D3D1C53BC9; Mon, 14 Oct 2024 07:29:47 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Mon, 14 Oct 2024 07:29:46 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: regressions@leemhuis.info
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-BGjwUSC80J@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Initiator need to recover session and reconnect to target, after calling stop_conn. And target will rebuild new session info, and mark ASC_POWERON_RESET ua sense for scsi devices belong to the target(device reset). After recovery, first scsi command(scmd) request to target will get ASC_POWERON_RESET(ua sense) + SAM_STAT_CHECK_CONDITION(status) in response.
-For command's response coming, according to scsi function calling: "scsi_done --> scsi_complete --> scsi_decide_disposition --> scsi_check_sense", if expecting_cc_ua = 0, scmd response with ASC_POWERON_RESET(ua sense) will make scsi_complete ignore "cmd->retries <= cmd->allowed", fail directly. It will cause SCSI return io_error to upper layer without retry.
-If we set expecting_cc_ua=1 in fail_scsi_tasks, scsi_complete will retry scmd which is response with ASC_POWERON_RESET. The scmd second request to target can successful, because target will clear ASC_POWERON_RESET in device pending ua_sense_list after first scmd request.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Signed-off-by: Xiang Zhang <hawkxiang.cpp@gmail.com>
----
-V1 -> V2: Fix build variable 'sc' is uninitialized warning(Reported-by: kernel test robot <lkp@intel.com>).
----
- drivers/scsi/libiscsi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+--- Comment #65 from The Linux kernel's regression tracker (Thorsten Leemhu=
+is) (regressions@leemhuis.info) ---
+(In reply to Maxim from comment #64)
+>
+> In other words, some errors still exist in the driver=E2=80=99s source co=
+de, and a
+> bisect starting from 5.15 is needed to resolve them.
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 0fda8905eabd..f6bfe0c4f8a4 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -621,6 +621,7 @@ static void __fail_scsi_task(struct iscsi_task *task, int err)
- 	if (cleanup_queued_task(task))
- 		return;
- 
-+	sc = task->sc;
- 	if (task->state == ISCSI_TASK_PENDING) {
- 		/*
- 		 * cmd never made it to the xmit thread, so we should not count
-@@ -629,12 +630,12 @@ static void __fail_scsi_task(struct iscsi_task *task, int err)
- 		conn->session->queued_cmdsn--;
- 		/* it was never sent so just complete like normal */
- 		state = ISCSI_TASK_COMPLETED;
--	} else if (err == DID_TRANSPORT_DISRUPTED)
-+	} else if (err == DID_TRANSPORT_DISRUPTED) {
- 		state = ISCSI_TASK_ABRT_SESS_RECOV;
--	else
-+		sc->device->expecting_cc_ua = 1;
-+	} else
- 		state = ISCSI_TASK_ABRT_TMF;
- 
--	sc = task->sc;
- 	sc->result = err << 16;
- 	scsi_set_resid(sc, scsi_bufflen(sc));
- 	iscsi_complete_task(task, state);
--- 
-2.44.0
+That's a pity, but best discussed in a new ticket, as things otherwise get
+highly confusing. Could you file one and then drop a link to it here? And I
+guess we really need a bisection to make progress here. When performing one,
+apply the revert with "git cherry-pick --no-commit c5becf57dd56" at each
+bisection step while in the range containing 9dc704dcc09ea)
 
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
