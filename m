@@ -1,142 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA0536B
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Oct 2024 00:52:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61974231C98;
+	Mon, 14 Oct 2024 02:39:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728780745; cv=none; b=FL+ycu/ZXJZe3xYf/2BJ63+zL9nRy2l8JNelMrazZe/kkgsMKm/ntduH40NIlZkKufZKQqCTNPYPFxYBLN6st4xPR08iidOqJTGgec12CGpCj6xW9nZ3KAA+mwAFPZ/3AFCii2p4zwiEjNmRImBwKy2csQeQP8vy3aEFonjpiK4=
+	t=1728873556; cv=none; b=AOlGwQFmp8NEHRd2QjfKcp4Ltt/Kj21P2aE3VrlBwAi9GpoOa4Clrynrgdt4mZgc/fsSPxiahnaXVPXO1uSl/Yad7O6kFPm+RSHVmPJIHloazGa23DDGTdtDysEZZpXSEep0wrxKSF3KvE5XwS8hCmQbcGZcGe4Oh7Zinvnzgw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728780745; c=relaxed/simple;
-	bh=SnTS/SO6HOkgbKsQlEr2Qiq/il94kfd/Ec/kr5Js2PU=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=CNqxZK+XlEXsHvu6abiKk2sxctNIYI2RAn7CKolQl7XJG551XgJ+g8C08JuMZZeVxoPScBHfQmHgxx1XcnGZ7LEAr9sIFVcMcTKSFDrwv1II+HDi0AlPj2OCfMh1fSnqZQrgl6Y14xFgi7vqI3+dtZtDO7YA+qOme8/bGGEOp9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XSbZhWa0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728873556; c=relaxed/simple;
+	bh=2zgIKtYHy3eWfWs6gdLR4RArVjmZ1NbnYcTl0diSuLc=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=CLwGZXg9EXs0yfXKlrkSb/Gy1SYP7JV9yFZaP7vIUxBu31kD8V5QZLomWCSCt8dq50kzu3m8keK/z4JdHLzjpRj3MR+J1kF86OUgs9W212d3LWwf6oUJ4BDokW0hIZ7MnsJ9qMV66RIrAHAuM314MGpJvpPzZbHkYlC0JgxKYHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lcaiqGin; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XSbZhWa0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 97A66C4CEDA
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Oct 2024 00:52:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lcaiqGin"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41E59C4CEC5;
+	Mon, 14 Oct 2024 02:39:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728780744;
-	bh=SnTS/SO6HOkgbKsQlEr2Qiq/il94kfd/Ec/kr5Js2PU=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=XSbZhWa03dgZpHmoSatlEecw0N1Zjj/UYCrYEIo8i0teJFJcYKV4Fou63BlMXrz3t
-	 wQeu7u37XvgIwAWox9ZqtgpgxI7dAGWL6oDlCLJ3jY4F4Ie6L0aN7MHyJT0tBZRYQ8
-	 OpJuK5MRS0MMq1eUAvt4mTRWmB9kjinbzy1UePHJdJYIkNdzzLp6UyLJgm28c4uOpR
-	 pks1g206VIuSDlrovCJi5rhpWG1upbvqBwecUxAVaypr1shq/yqbEbTD+9eaAjHkce
-	 sivcqotFDpf8N4IxghsyGVx6/zQlPD00MoGTlho+/5UqSnpLEcgICUwmuSK/ttRCW3
-	 J54j5Dh3sy8ow==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 902DEC53BCA; Sun, 13 Oct 2024 00:52:24 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Sun, 13 Oct 2024 00:52:23 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: leyyyyy@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-4JNWf59Fky@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1728873556;
+	bh=2zgIKtYHy3eWfWs6gdLR4RArVjmZ1NbnYcTl0diSuLc=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=lcaiqGin5iSbqVkilPIbvt7NCKTW4lt+AxL+9d3CjTxpUEZ0ea8k1+Ygw7aK+WFXq
+	 H16jjJh+vty+229l4jta3Fza+xjoZZc9Zj/qo4Dq8T2LdZP6Z03RwgL77D5arRGw2u
+	 gPRCwnC7Yip1fcgvpaVB9mnF4iXoSqnIuk5QVUv8J6xrOsdE732OC4Y1wTyDPPPsSx
+	 ra85RzeL5dCK9op3yJ+2SfRW2grJnYOwqyj5b3gmtFlhQCzeDgCK4Ktlp+unJS4/df
+	 W3z7Urpo4zmLBy34dBOh3LQDgXCB70H66MbFpv7YrfsMOny/FHS7qC+cKKDk3ryazO
+	 50BaEr2hRsYsg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 71AF638363CB;
+	Mon, 14 Oct 2024 02:39:22 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.12-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <edf88708320d05c4b2f654a06a7fdbba9f9a868c.camel@HansenPartnership.com>
+References: <edf88708320d05c4b2f654a06a7fdbba9f9a868c.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <edf88708320d05c4b2f654a06a7fdbba9f9a868c.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: d539a871ae47a1f27a609a62e06093fa69d7ce99
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 7234e2ea0edd00bfb6bb2159e55878c19885ce68
+Message-Id: <172887356099.3903120.8940751306665937010.pr-tracker-bot@kernel.org>
+Date: Mon, 14 Oct 2024 02:39:20 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+The pull request you sent on Fri, 11 Oct 2024 23:27:01 -0400:
 
---- Comment #64 from Maxim (leyyyyy@gmail.com) ---
-I am still encountering issues with the aacraid driver.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-While the reverted version has shown significant improvement in terms of
-stability and consistency, and I no longer face issues after the system has
-successfully booted, there is still one persistent problem: the system hangs
-for 120 seconds during the boot process. It is related to NetApp disk shelf
-(0000:03:00.0) connected to ASR-78165.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/7234e2ea0edd00bfb6bb2159e55878c19885ce68
 
-For example Ubuntu Server 24.04 (live ISO):
+Thank you!
 
-$ cat dmesg | grep aacraid
-
-[    0.915806] kernel: Adaptec aacraid driver 1.2.1[50983]-custom
-[    0.916680] kernel: aacraid 0000:03:00.0: can't disable ASPM; OS doesn't
-have ASPM control
-[    0.928906] kernel: aacraid: Comm Interface type2 enabled
-[    0.958831] kernel: aacraid 0000:03:00.0: 64 Bit DAC enabled
-[    0.975916] kernel: scsi host0: aacraid
-[    1.275877] kernel: aacraid: Host bus reset request. SCSI hang ?
-[    1.277602] kernel: aacraid 0000:03:00.0: outstanding cmd: midlevel-1
-[    1.279315] kernel: aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
-[    1.280986] kernel: aacraid 0000:03:00.0: outstanding cmd: error handler=
--0
-[    1.282672] kernel: aacraid 0000:03:00.0: outstanding cmd: firmware-0
-[    1.284357] kernel: aacraid 0000:03:00.0: outstanding cmd: kernel-0
-[    1.292931] kernel: aacraid 0000:03:00.0: Controller reset type is 3
-[    1.294620] kernel: aacraid 0000:03:00.0: Issuing IOP reset
-[   34.039710] kernel: aacraid 0000:03:00.0: IOP reset succeeded
-[   34.045955] kernel: aacraid: Comm Interface type2 enabled
-[   49.015695] kernel: aacraid 0000:03:00.0: Scheduling bus rescan
-[   59.522832] kernel: aacraid: Host bus reset request. SCSI hang ?
-[   59.525823] kernel: aacraid 0000:03:00.0: outstanding cmd: midlevel-1
-[   59.528323] kernel: aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
-[   59.529023] kernel: aacraid 0000:03:00.0: outstanding cmd: error handler=
--0
-[   59.529707] kernel: aacraid 0000:03:00.0: outstanding cmd: firmware-0
-[   59.530372] kernel: aacraid 0000:03:00.0: outstanding cmd: kernel-0
-[   59.537907] kernel: aacraid 0000:03:00.0: Controller reset type is 3
-[   59.538609] kernel: aacraid 0000:03:00.0: Issuing IOP reset
-[   91.184486] kernel: aacraid 0000:03:00.0: IOP reset succeeded
-[   91.191966] kernel: aacraid: Comm Interface type2 enabled
-[  106.042633] kernel: aacraid 0000:03:00.0: Scheduling bus rescan
-[  116.351867] kernel: aacraid: Host bus reset request. SCSI hang ?
-[  116.354649] kernel: aacraid 0000:03:00.0: outstanding cmd: midlevel-1
-[  116.357268] kernel: aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
-[  116.357904] kernel: aacraid 0000:03:00.0: outstanding cmd: error handler=
--0
-[  116.358523] kernel: aacraid 0000:03:00.0: outstanding cmd: firmware-0
-[  116.359113] kernel: aacraid 0000:03:00.0: outstanding cmd: kernel-0
-[  116.366903] kernel: aacraid 0000:03:00.0: Controller reset type is 3
-[  116.367580] kernel: aacraid 0000:03:00.0: Issuing IOP reset
-[  147.979313] kernel: aacraid 0000:03:00.0: IOP reset succeeded
-[  147.981970] kernel: aacraid: Comm Interface type2 enabled
-[  162.916919] kernel: aacraid 0000:03:00.0: Scheduling bus rescan
-
-
-As I mentioned previously, the 5.15 kernel version is fully functional and
-performs consistently well. The same boot issue occurs even with RHEL8 fork=
-s,
-such as Rocky 8.10, likely because the driver has been backported.
-
-On the other hand, Ubuntu 22.04, which relies on the 5.15 kernel, works
-exceptionally well. This is the reason I can't use OpenSUSE Leap 15.6 and m=
-ust
-stick with Ubuntu.
-
-In other words, some errors still exist in the driver=E2=80=99s source code=
-, and a
-bisect starting from 5.15 is needed to resolve them.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
