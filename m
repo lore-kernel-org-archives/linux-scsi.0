@@ -1,177 +1,125 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3026E1D2F42
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 21:13:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F79125B9
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 22:10:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729113190; cv=none; b=cpFICl0QA2BcY5C73+6iDY9czJeGXtWb33PCJeTEzKDtauzo0grnFTbwmeNusVuJBmhtZf3Ays+7JnrY8bjxG9Re0AJveUacdpzNvs9gL5vIppXBkZ0DDVfuJ9UCGy1J2Jt517j2mjMXtF5aZcGsh2Ogbs9JJ2Eff7LolnZ126M=
+	t=1729116628; cv=none; b=O8zfoiRIQeobSs7k0PWBd5J0WQCRx0NiY1grySIdK0HMUl56A0EmSzpVuEaQ2ErOgn2E+ShDjQXqXNjDTwEtYphu5IrUnA76xIyIsEVdAqRYWKut7ZLM/pKWmcv24jFAHGMCZepOZDfqnJP9ocXp3fgQejOXiKBn0rUSQIAlZVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729113190; c=relaxed/simple;
-	bh=UCL7HwpmMrkOWCYTpoYSw3v+dXq2S/1324SQeV4xfUg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Pn8qMm4TWdSep5uXcyFRCaWRp4CpVMFRLYW4YKoCzu628+NUQl9AJqWhwmtOa+vyPEYNG1fou7wx82YbfohjZPZ4W18hP67sF7DZ8F7o4xJ8Dxw2fSwld6Y2UWjF6agdT1uHbctTD5VOVSSA4laE8cmGm3PYy/+YYrq2gF++9xU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=CtlA4nsK; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1729116628; c=relaxed/simple;
+	bh=CK4VWdudhelvUqm7tQcSDksX8X/WQLaJJkyq5R5klkc=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=DWOxMuT9mOl0vRVLJHP0UxpptRBy/IOm75jENyc0vBo1lgidW+/76onl+jNnBRMbCVwN0LHFQdq56n7ui8h9BDHvGKC65jIbiI1VGH0+4f0rcSGfe5bab4AUqS2iXmifWV4RXUz7K3DT/ZixTo+viUEOXiKvK1m1Ei3FNAM6RIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=RtWID5IZ; arc=none smtp.client-ip=209.85.128.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="CtlA4nsK"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XTNwh6n9hzlgMVr;
-	Wed, 16 Oct 2024 21:13:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1729113182; x=1731705183; bh=nBOJM
-	e0B8AN1VXAmXtfYXEEKaQTpcbxJMNXSKJd0Kx8=; b=CtlA4nsKHJ3K/M0k2TCAe
-	N827HRSaeqQgEFs299Y9fHHJhvLQDaG7GTLmt1RbK1h+RxGmJj/OaNr5vAIl8Wv/
-	TTvASgenC0t+70rzcyyrg4q5GyHIWWi5hv+WR/v6hnCYywj66guCRodobrv9GJk9
-	1Tjln+AhLJ02squZC1fJruV3UDqCyPSdwflJIGCBwHs0C9s5U/hp/rmKGx2xyXam
-	vgaSlmxrzKQITeHHEfM7azIQ5ktTIpD+SBUDTVKm+lJZK7mEWMwlD2H8aJZbilcn
-	HAVVlPWUSBT67RolXC+0CEutNRLwcPlIbYBXkawBGZvxr0gEDJjUphjnj47ewA6w
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id z6LGICovOHu4; Wed, 16 Oct 2024 21:13:02 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XTNwW0htWzlgTWP;
-	Wed, 16 Oct 2024 21:12:58 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Eric Biggers <ebiggers@google.com>,
-	Minwoo Im <minwoo.im@samsung.com>
-Subject: [PATCH 7/7] scsi: ufs: core: Make DMA mask configuration more flexible
-Date: Wed, 16 Oct 2024 14:11:18 -0700
-Message-ID: <20241016211154.2425403-8-bvanassche@acm.org>
-X-Mailer: git-send-email 2.47.0.rc1.288.g06298d1525-goog
-In-Reply-To: <20241016211154.2425403-1-bvanassche@acm.org>
-References: <20241016211154.2425403-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RtWID5IZ"
+Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-6e35199eb2bso7655717b3.3
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 15:10:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1729116626; x=1729721426; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=lZiu62o/7045anfstaI8NvPpSySBajpQRHA6+l9nLho=;
+        b=RtWID5IZ0DlE9TOfCCYB2GkhIn9GQmYf2Rl/qcLA/4amtTOpY0cTpHMqOU1jzHJ19v
+         jtoot63ktb5wUKGzmrd2APnNLAkZnfm4n5SmJh8VqY65YlS96S6ByOtDzNT4iHJY+67Z
+         CyzfNsJM2qIcrxaKPwb0f3Nbb/JxK/MGuF9uhfZOemTBH5creDmjppZQH5gZ2C3itUF2
+         xCCulvoQg6aTU0n/ggY1e2Gp0Ch5TOgYjUCGOKLALorhYh/93chkYJ8o5AGKeG3ow4v9
+         AM5widd+bSjlDgAE7xP0KzIB23bcZDkYgvLP9kS/Ul0Eo8cDo5n47H6S5mnzhorECzrZ
+         6xdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729116626; x=1729721426;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lZiu62o/7045anfstaI8NvPpSySBajpQRHA6+l9nLho=;
+        b=SEkBLV9aexvG4Vqamkq67nfNizVDPzFDs1LJNcexrtc7499yLwL7WELIJgX4MEFWUD
+         HUk4RRHcMtFF7K4P1ykcJjIDUwyeLKX4/JsFsgw0xNPxmAH/jqPbuFgPypxYGpSmhur9
+         fwYeXccxzHtWiUvoexOPdEioutM8kbHiZGz+BDgpF5DY5DnqwB1fG9MkjeXJjKz1JHs+
+         XQTr+PtP8pxkAXV492hGgy5F0QZJPqO7E2S/aDDq3O21R0daI6wtIdIbMDzkIv2rJov4
+         GeNPGP2F0amlBveoVd3a9Xes/KoIYtc6PsAHj60T8Ggw+sb9lgvEldeTOhP2C8aYCFfT
+         cQbw==
+X-Gm-Message-State: AOJu0YzGjp3UMo4yicf5zxmmxN5f7/w1C3PnYAGPsbK4WEUWOadPb3yW
+	UomX3kRLsN2ECeBll7UR57JiyNMNdOnho9A6ft2QXQyfv9gIRCFGEXQ7fJ9ibItWDn83QFllwUO
+	w1AQXDz25TZ85/iiD/J8rVQ==
+X-Google-Smtp-Source: AGHT+IGg/WZICZ+4ereZN6UT2TjwtFXb6guAfrgRgmN/R8YLtp3gH1JMOCC01mgll8Igly/h9R5xKnWFqdXL9T4K6Q==
+X-Received: from salomondush.c.googlers.com ([fda3:e722:ac3:cc00:20:ed76:c0a8:3cf9])
+ (user=salomondush job=sendgmr) by 2002:a05:690c:7207:b0:6db:afa4:75d3 with
+ SMTP id 00721157ae682-6e3d41df5a9mr1412277b3.3.1729116626059; Wed, 16 Oct
+ 2024 15:10:26 -0700 (PDT)
+Date: Wed, 16 Oct 2024 22:09:44 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.47.0.rc1.288.g06298d1525-goog
+Message-ID: <20241016220944.370539-1-salomondush@google.com>
+Subject: [PATCH] scsi: pm80xx: Use module param to set pcs event log severity
+From: Salomon Dushimirimana <salomondush@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Salomon Dushimirimana <salomondush@google.com>, Bhavesh Jashnani <bjashnani@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Replace UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS with
-ufs_hba_variant_ops::set_dma_mask. Update the Renesas driver accordingly.
-This patch prepares for adding 36-bit DMA support. No functionality has
-been changed.
+The pm8006 driver sets pcs event log threshold very high which causes
+most of the FW logs to not be captured. This adds a module parameter to
+configure pcs event log severity with 3 (medium severity) as the
+default.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Bhavesh Jashnani <bjashnani@google.com>
+Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
 ---
- drivers/ufs/core/ufshcd.c      | 4 ++--
- drivers/ufs/host/ufs-renesas.c | 9 +++++++--
- include/ufs/ufshcd.h           | 9 +++------
- 3 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 4 ++++
+ drivers/scsi/pm8001/pm8001_sas.h  | 2 ++
+ drivers/scsi/pm8001/pm80xx_hwi.c  | 3 ++-
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 75e00e5b3f79..c1d4a9c8480f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2389,8 +2389,6 @@ static inline int ufshcd_hba_capabilities(struct uf=
-s_hba *hba)
- 	int err;
-=20
- 	hba->capabilities =3D ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
--	if (hba->quirks & UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS)
--		hba->capabilities &=3D ~MASK_64_ADDRESSING_SUPPORT;
-=20
- 	/* nutrs and nutmrs are 0 based values */
- 	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) +=
- 1;
-@@ -10280,6 +10278,8 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-  */
- static int ufshcd_set_dma_mask(struct ufs_hba *hba)
- {
-+	if (hba->vops && hba->vops->set_dma_mask)
-+		return hba->vops->set_dma_mask(hba);
- 	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
- 		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
- 			return 0;
-diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesa=
-s.c
-index 8711e5cbc968..8b0aebf127b6 100644
---- a/drivers/ufs/host/ufs-renesas.c
-+++ b/drivers/ufs/host/ufs-renesas.c
-@@ -7,6 +7,7 @@
-=20
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/dma-mapping.h>
- #include <linux/err.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
-@@ -364,14 +365,18 @@ static int ufs_renesas_init(struct ufs_hba *hba)
- 		return -ENOMEM;
- 	ufshcd_set_variant(hba, priv);
-=20
--	hba->quirks |=3D UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS | UFSHCD_QUIRK_HIBER=
-N_FASTAUTO;
--
- 	return 0;
- }
-=20
-+static int ufs_renesas_set_dma_mask(struct ufs_hba *hba)
-+{
-+	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
-+}
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 1e63cb6cd8e3..355aab0c982a 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -68,6 +68,10 @@ static bool pm8001_read_wwn = true;
+ module_param_named(read_wwn, pm8001_read_wwn, bool, 0444);
+ MODULE_PARM_DESC(zoned, "Get WWN from the controller. Default: true");
+ 
++uint pcs_event_log_severity = 0x03;
++module_param(pcs_event_log_severity, int, 0644);
++MODULE_PARM_DESC(pcs_event_log_severity, "PCS event log severity level");
 +
- static const struct ufs_hba_variant_ops ufs_renesas_vops =3D {
- 	.name		=3D "renesas",
- 	.init		=3D ufs_renesas_init,
-+	.set_dma_mask	=3D ufs_renesas_set_dma_mask,
- 	.setup_clocks	=3D ufs_renesas_setup_clocks,
- 	.hce_enable_notify =3D ufs_renesas_hce_enable_notify,
- 	.dbg_register_dump =3D ufs_renesas_dbg_register_dump,
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 36bd91ff3593..9ea2a7411bb5 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -299,6 +299,8 @@ struct ufs_pwr_mode_info {
-  * @max_num_rtt: maximum RTT supported by the host
-  * @init: called when the driver is initialized
-  * @exit: called to cleanup everything done in init
-+ * @set_dma_mask: For setting another DMA mask than indicated by the 64A=
-S
-+ *	capability bit.
-  * @get_ufs_hci_version: called to get UFS HCI version
-  * @clk_scale_notify: notifies that clks are scaled up/down
-  * @setup_clocks: called before touching any of the controller registers
-@@ -341,6 +343,7 @@ struct ufs_hba_variant_ops {
- 	int	(*init)(struct ufs_hba *);
- 	void    (*exit)(struct ufs_hba *);
- 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
-+	int	(*set_dma_mask)(struct ufs_hba *);
- 	int	(*clk_scale_notify)(struct ufs_hba *, bool,
- 				    enum ufs_notify_change_status);
- 	int	(*setup_clocks)(struct ufs_hba *, bool,
-@@ -623,12 +626,6 @@ enum ufshcd_quirks {
- 	 */
- 	UFSHCD_QUIRK_SKIP_PH_CONFIGURATION		=3D 1 << 16,
-=20
--	/*
--	 * This quirk needs to be enabled if the host controller has
--	 * 64-bit addressing supported capability but it doesn't work.
--	 */
--	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		=3D 1 << 17,
--
- 	/*
- 	 * This quirk needs to be enabled if the host controller has
- 	 * auto-hibernate capability but it's FASTAUTO only.
+ static struct scsi_transport_template *pm8001_stt;
+ static int pm8001_init_ccb_tag(struct pm8001_hba_info *);
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index ced6721380a8..42c7b3f7afbf 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -96,6 +96,8 @@ extern struct list_head hba_list;
+ extern const struct pm8001_dispatch pm8001_8001_dispatch;
+ extern const struct pm8001_dispatch pm8001_80xx_dispatch;
+ 
++extern uint pcs_event_log_severity;
++
+ struct pm8001_hba_info;
+ struct pm8001_ccb_info;
+ struct pm8001_device;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 8fe886dc5e47..9b237a764d0b 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -763,7 +763,8 @@ static void init_default_table_values(struct pm8001_hba_info *pm8001_ha)
+ 		pm8001_ha->memoryMap.region[IOP].phys_addr_lo;
+ 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_size		=
+ 							PM8001_EVENT_LOG_SIZE;
+-	pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity	= 0x01;
++	pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity	=
++		pcs_event_log_severity;
+ 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt		= 0x01;
+ 
+ 	/* Enable higher IQs and OQs, 32 to 63, bit 16 */
+-- 
+2.47.0.rc1.288.g06298d1525-goog
+
