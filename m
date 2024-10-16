@@ -1,61 +1,61 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 541DA12E4A
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 20:13:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF2912E4A
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 20:13:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729109594; cv=none; b=IXvS6ZjUuyPMHVlqalS+LLk9yw7wFBJ/JiWh5+pEB56KmeTpXAcHcGY2RLvPK22LVa+/82c5Golrx54mIaFXC/yF3zuiQWTnIhmh7iyBEtrcsLf2qbJsi0iL/dnWlHmj/7UqHwfNBqgiYFFifRqR9hNbGwf2rHa9jKVrnhfWDbo=
+	t=1729109597; cv=none; b=hXUxEX+lJKugR33SB2NPpWQzKO6zzXWJovOItursjQrUnZW/wHhycb+i/feWvnbVzcO3lU4Lvf04CWTJLbxB8dFx/+DretW4a9wKiQOXG16a3q2NzWE4ht1qGehOHkQBNbZT84Rmhd5IIh2jOJHQ16AC/Jt+Q2DpARhdVwloWko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729109594; c=relaxed/simple;
-	bh=bpMReAwJswMYvGeC7UoXFo4kmL9Jddce1tjz4YVsCEQ=;
+	s=arc-20240116; t=1729109597; c=relaxed/simple;
+	bh=wXRP63UqwTiWOhTtBpP2JaKHGS6kVr2G7L9rhqX80Xs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bxc9OyCvyky0Ma+Bb2dvzS9gTiyoI9cZWviaJ5H2yng7t5wX3S9R037s2YeW7lZEp9eMSd1gEjO/5ZljRcSddJgEGkid40caF8EVkejA6+8L4YCk0nhNCj/SpJM8VOuZMaYmkmWO39Y60n9WJIthKeBypjmrMF1RdcWFA2cb9Fg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=u3HiBNEM; arc=none smtp.client-ip=199.89.1.11
+	 MIME-Version; b=hUU1bHIp3xrDr1aDcO5tq+KIqTFfxXLC8PI10wUurQXnEyvympoSbGftUK0xi5mX7czZgQ3N8OYtemUMIUj+fr9sLWphGzm855eMeMDwaAMshxuFfA3N7KdEo1N8ldTOi7IOvYwr1yxv5Fco9loSEZXejmnWLSwHsal5S2pgY/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fffyvqjk; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="u3HiBNEM"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fffyvqjk"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XTMbX4qBJz6ClY9l;
-	Wed, 16 Oct 2024 20:13:12 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XTMbb5dM8z6ClY9l;
+	Wed, 16 Oct 2024 20:13:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1729109583; x=1731701584; bh=8B4U8
-	k/O/uJHBPZe7ncHwFShjwIJYlJwBtC/aQZKr6Y=; b=u3HiBNEMRchziUDSeokZk
-	3NL+fiPzcfVOKlHLto0jyrmaGVih8bAWZl2eZ8p/qbEr6zhUdVmSJFpAzSO9D9ko
-	Xx0qJGdNelQHBEvtPXlH0HBReR9znOWlCRIfQR/OmLm7eZPd3htzT9MCUfnaytNt
-	VC0Wu4nYHxuCIDWU8/jDmvHpQY4S4lRQOOCrCc+bdRyctSKONG724nfZOk9P1iTH
-	7Sjcd6G8UjmWPlOQl/0/Uw/6kxsbQvduVIG5z7RthyglfbnQ1iw1YDl+osnnlVAG
-	c1shf6MXD9oRoIf/wuh8uuc3UczAsRfRl30vqRbCRIPvpl+2L23EN/fUo8XqUYhw
+	:received:received; s=mr01; t=1729109589; x=1731701590; bh=pquFk
+	9TI0O7CiEdHrqHuxbcIDkqw6Lygfnrgo1oOLCs=; b=fffyvqjkz1Rz59G7/e/al
+	2kPe8w65GLHtYTMtG3Iu2JGwCBG0HMJGLk8s1Xjco9kuaweaXcjN31nJxqPvGg/x
+	Ti0g73/gcXZ1NqIWIgovXaOEfQIOuxUHIuVHibZQ+pB+PQEqPqjqz0Cef6jRCocn
+	V0UfQWTNhDxWcVw6scwCtFyvUgsxkbbpQUFMd7VUqK+0eC2IVHNNnx7CVJfN1o3F
+	4io8gEpAH4r5TcWZr3suAOBa7VefgDVxNxO/4iHN6AazYtln/03jljaxRqUT3ctT
+	Bn5NuHUBBuLAUDEMLsz/CnqcHJPUgFPVpNzPzCam7G/Cn1MvvPcmAL2Yst3f3wJp
 	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7aLnhjcA6_i2; Wed, 16 Oct 2024 20:13:03 +0000 (UTC)
+ id vHk8GNzeukTe; Wed, 16 Oct 2024 20:13:09 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XTMbK4D33z6Cnk9T;
-	Wed, 16 Oct 2024 20:13:01 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XTMbR5Xhgz6ClY9d;
+	Wed, 16 Oct 2024 20:13:07 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Avri Altman <avri.altman@wdc.com>,
-	Bean Huo <beanhuo@micron.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Peter Wang <peter.wang@mediatek.com>,
 	Andrew Halaney <ahalaney@redhat.com>,
+	Bean Huo <beanhuo@micron.com>,
 	Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: [PATCH v6 01/11] scsi: ufs: core: Introduce ufshcd_add_scsi_host()
-Date: Wed, 16 Oct 2024 13:11:57 -0700
-Message-ID: <20241016201249.2256266-2-bvanassche@acm.org>
+Subject: [PATCH v6 02/11] scsi: ufs: core: Introduce ufshcd_post_device_init()
+Date: Wed, 16 Oct 2024 13:11:58 -0700
+Message-ID: <20241016201249.2256266-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.47.0.rc1.288.g06298d1525-goog
 In-Reply-To: <20241016201249.2256266-1-bvanassche@acm.org>
 References: <20241016201249.2256266-1-bvanassche@acm.org>
@@ -67,143 +67,95 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Move the code for adding a SCSI host and also the code for managing
-TMF tags from ufshcd_init() into a new function called
-ufshcd_add_scsi_host(). This patch prepares for combining the two
-scsi_add_host() calls into a single call. No functionality has been
-changed.
+Prepare for inlining one ufshcd_device_init() call by introducing the new
+function ufshcd_post_device_init(). No functionality has been changed.
 
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 96 ++++++++++++++++++++++++---------------
- 1 file changed, 59 insertions(+), 37 deletions(-)
+ drivers/ufs/core/ufshcd.c | 62 ++++++++++++++++++++++-----------------
+ 1 file changed, 35 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9e6d008f4ea4..959509d9445e 100644
+index 959509d9445e..17c22e880cef 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -10377,6 +10377,62 @@ static const struct blk_mq_ops ufshcd_tmf_ops =3D=
- {
- 	.queue_rq =3D ufshcd_queue_tmf,
- };
+@@ -8732,6 +8732,40 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+ 		 hba->nutrs);
+ }
 =20
-+static int ufshcd_add_scsi_host(struct ufs_hba *hba)
++static int ufshcd_post_device_init(struct ufs_hba *hba)
 +{
-+	int err;
++	int ret;
 +
-+	if (!is_mcq_supported(hba)) {
-+		if (!hba->lsdb_sup) {
-+			dev_err(hba->dev,
-+				"%s: failed to initialize (legacy doorbell mode not supported)\n",
-+				__func__);
-+			return -EINVAL;
-+		}
-+		err =3D scsi_add_host(hba->host, hba->dev);
-+		if (err) {
-+			dev_err(hba->dev, "scsi_add_host failed\n");
-+			return err;
-+		}
-+		hba->scsi_host_added =3D true;
-+	}
++	ufshcd_tune_unipro_params(hba);
 +
-+	hba->tmf_tag_set =3D (struct blk_mq_tag_set) {
-+		.nr_hw_queues	=3D 1,
-+		.queue_depth	=3D hba->nutmrs,
-+		.ops		=3D &ufshcd_tmf_ops,
-+		.flags		=3D BLK_MQ_F_NO_SCHED,
-+	};
-+	err =3D blk_mq_alloc_tag_set(&hba->tmf_tag_set);
-+	if (err < 0)
-+		goto remove_scsi_host;
-+	hba->tmf_queue =3D blk_mq_alloc_queue(&hba->tmf_tag_set, NULL, NULL);
-+	if (IS_ERR(hba->tmf_queue)) {
-+		err =3D PTR_ERR(hba->tmf_queue);
-+		goto free_tmf_tag_set;
-+	}
-+	hba->tmf_rqs =3D devm_kcalloc(hba->dev, hba->nutmrs,
-+				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
-+	if (!hba->tmf_rqs) {
-+		err =3D -ENOMEM;
-+		goto free_tmf_queue;
++	/* UFS device is also active now */
++	ufshcd_set_ufs_dev_active(hba);
++	ufshcd_force_reset_auto_bkops(hba);
++
++	ufshcd_set_timestamp_attr(hba);
++	schedule_delayed_work(&hba->ufs_rtc_update_work,
++			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
++
++	if (!hba->max_pwr_info.is_valid)
++		return 0;
++
++	/*
++	 * Set the right value to bRefClkFreq before attempting to
++	 * switch to HS gears.
++	 */
++	if (hba->dev_ref_clk_freq !=3D REF_CLK_FREQ_INVAL)
++		ufshcd_set_dev_ref_clk(hba);
++	/* Gear up to HS gear. */
++	ret =3D ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
++	if (ret) {
++		dev_err(hba->dev, "%s: Failed setting power mode, err =3D %d\n",
++			__func__, ret);
++		return ret;
 +	}
 +
 +	return 0;
-+
-+free_tmf_queue:
-+	blk_mq_destroy_queue(hba->tmf_queue);
-+	blk_put_queue(hba->tmf_queue);
-+
-+free_tmf_tag_set:
-+	blk_mq_free_tag_set(&hba->tmf_tag_set);
-+
-+remove_scsi_host:
-+	if (hba->scsi_host_added)
-+		scsi_remove_host(hba->host);
-+
-+	return err;
 +}
 +
- /**
-  * ufshcd_init - Driver initialization routine
-  * @hba: per-adapter instance
-@@ -10508,41 +10564,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iome=
-m *mmio_base, unsigned int irq)
- 		hba->is_irq_enabled =3D true;
+ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+ {
+ 	int ret;
+@@ -8801,33 +8835,7 @@ static int ufshcd_device_init(struct ufs_hba *hba,=
+ bool init_dev_params)
+ 		}
  	}
 =20
--	if (!is_mcq_supported(hba)) {
--		if (!hba->lsdb_sup) {
--			dev_err(hba->dev, "%s: failed to initialize (legacy doorbell mode not=
- supported)\n",
--				__func__);
--			err =3D -EINVAL;
--			goto out_disable;
+-	ufshcd_tune_unipro_params(hba);
+-
+-	/* UFS device is also active now */
+-	ufshcd_set_ufs_dev_active(hba);
+-	ufshcd_force_reset_auto_bkops(hba);
+-
+-	ufshcd_set_timestamp_attr(hba);
+-	schedule_delayed_work(&hba->ufs_rtc_update_work,
+-			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+-
+-	/* Gear up to HS gear if supported */
+-	if (hba->max_pwr_info.is_valid) {
+-		/*
+-		 * Set the right value to bRefClkFreq before attempting to
+-		 * switch to HS gears.
+-		 */
+-		if (hba->dev_ref_clk_freq !=3D REF_CLK_FREQ_INVAL)
+-			ufshcd_set_dev_ref_clk(hba);
+-		ret =3D ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
+-		if (ret) {
+-			dev_err(hba->dev, "%s: Failed setting power mode, err =3D %d\n",
+-					__func__, ret);
+-			return ret;
 -		}
--		err =3D scsi_add_host(host, hba->dev);
--		if (err) {
--			dev_err(hba->dev, "scsi_add_host failed\n");
--			goto out_disable;
--		}
--		hba->scsi_host_added =3D true;
 -	}
 -
--	hba->tmf_tag_set =3D (struct blk_mq_tag_set) {
--		.nr_hw_queues	=3D 1,
--		.queue_depth	=3D hba->nutmrs,
--		.ops		=3D &ufshcd_tmf_ops,
--		.flags		=3D BLK_MQ_F_NO_SCHED,
--	};
--	err =3D blk_mq_alloc_tag_set(&hba->tmf_tag_set);
--	if (err < 0)
--		goto out_remove_scsi_host;
--	hba->tmf_queue =3D blk_mq_alloc_queue(&hba->tmf_tag_set, NULL, NULL);
--	if (IS_ERR(hba->tmf_queue)) {
--		err =3D PTR_ERR(hba->tmf_queue);
--		goto free_tmf_tag_set;
--	}
--	hba->tmf_rqs =3D devm_kcalloc(hba->dev, hba->nutmrs,
--				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
--	if (!hba->tmf_rqs) {
--		err =3D -ENOMEM;
--		goto free_tmf_queue;
--	}
-+	err =3D ufshcd_add_scsi_host(hba);
-+	if (err)
-+		goto out_disable;
+-	return 0;
++	return ufshcd_post_device_init(hba);
+ }
 =20
- 	/* Reset the attached device */
- 	ufshcd_device_reset(hba);
-@@ -10600,9 +10624,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
- *mmio_base, unsigned int irq)
- free_tmf_queue:
- 	blk_mq_destroy_queue(hba->tmf_queue);
- 	blk_put_queue(hba->tmf_queue);
--free_tmf_tag_set:
- 	blk_mq_free_tag_set(&hba->tmf_tag_set);
--out_remove_scsi_host:
- 	if (hba->scsi_host_added)
- 		scsi_remove_host(hba->host);
- out_disable:
+ /**
