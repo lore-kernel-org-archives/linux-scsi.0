@@ -1,64 +1,52 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A6A216A2C
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 20:14:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4EF75478E
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 21:12:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729109645; cv=none; b=bPE3B4A2ymUN9ZmvqD0J+kCVRW3mK42shPb3SWQ4UAd4lGMLYvU8ufWafFIegODcxrJQR8nZRs6X7QnDjdAd6KSBWVW3IATdIs2IcVoGFgtmR74Uj5emwAKQ0zopOX9pqKdGyC4l5OOGWBTupSPBO+3Vt/PoI7MvheQIeWFJQUE=
+	t=1729113133; cv=none; b=YKU3h/hTLbv+X8AAhH537dWyDW+FicQ7behIJr2QNKPjqk60GQGfwozs8J80LQjClVP0v2Dsua9pJuZiBaMqQR41BlNPdku64y33Z6qip7iVDwf69bjY27LJ56RwFThaqMzeNf5Jwi/sJ54lEdllUAHODoVZu18p6xHIaWZdiv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729109645; c=relaxed/simple;
-	bh=cYV42VxVhY5kL8e2T5dqcRDubzKO90rYMF9KTubK/pQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DMXpPXJg5Wbt97hT4uNhPeBhzv11mWJpZF8lCMQqqhUsMRQ2qoEm9rw6LVKG8r8+Hnvj02dHGIYb4mAO90y/FBOric9zBD6mQyXoddUL9r5mSOHasoVMaYOIkmGfr7MgaXQfgI/h/6RC90Qa1GV1azZJUpFtRA1o9de+qmE7yG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JEvW8UlW; arc=none smtp.client-ip=199.89.1.11
+	s=arc-20240116; t=1729113133; c=relaxed/simple;
+	bh=XKPXu8UuKC3o5TfAxlTok7328/3RXVTfG6qZlzsgsDY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fsrg9ybc9sLLMrZwj5zZvYxkXaAGhYdViNGKLOjVlwva67XtBRiapdjjWNBzm6K329VgzX7JX251W8TVe+sSUEdh9+VJS5NFsqxXKFyF/nd6PbdFbieFxulRqEVfvClR/PVvYt0vuVMquCH9KfvjDRyDv7HoFcEZAIJ9hEsaGas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=yJj4ylEX; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JEvW8UlW"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="yJj4ylEX"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XTMcW33Pnz6Cnk9T;
-	Wed, 16 Oct 2024 20:14:03 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XTNvT38G0zlgMVr;
+	Wed, 16 Oct 2024 21:12:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1729109638; x=1731701639; bh=me3Sb
-	bjeBlWKgZJa41qIV0pALnmHH9ZVDS9G/r1+FTU=; b=JEvW8UlWbKXuWG2bfCmi/
-	n5S14cN8j9SX+h6qCrtSH4m/tAaphLBHg6p5p2mGgLCfC9CmwOFusbp0vnLOWlh6
-	Y2wSDeCGVfPV1wrd4O0UOuUhLhar8EObVoy6u5qTdInbK4w2pzaLRzFtQkNXlmKR
-	70E3YF4uHNwVsnjb2C1A/CVt1LQiVt6wL0QN/Mu5qFT+ioZW1lJqGM2WexsIwsG9
-	mVg4Th223QYAUTW+0XmwfZjtgEgA78xmXxxfx52ItpLfaX1hN91kII3eaNIQw9it
-	NHzVZmst3r/ys23NH47bS54NyXFTEhYGAlaCwbmH4CYcWzi/Siwtntq36rltsA6q
-	g==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1729113124; x=1731705125; bh=hGIbPOgHBlNhmu6D7IKW2iYlcWS9niPZnuH
+	4wfnpaf0=; b=yJj4ylEXYGV59oWcG7VoVZ2l8QwRc+Jn7LOEIMh1hcpqP61aOuy
+	jnX1THjGl6dWHxtD61V+LFfxQJAmPHzAGDwIkmrarhPirr/o2ooWlmkPWv3z0p5/
+	7NF98fKASX7yLRZG0N/6vE+BiqIMNZajEAosBBXh180Sh7P9hj5xTpjrAhHHYiPP
+	rS/HFUAq/I2VJrhbwiWbtBaZh6GNsApg+7mW6xH2Wy8gmc9pDcBVoFlNTsIq5H6F
+	hrH/rhznmbOYMq8kD82pXLbRYj8Eczeym3x/3ztgI8KgtjL7T09LGkxhh9ZEZ81r
+	X1QwlmIQJulPC3GqicOs6JYy1tt48GH2nlw==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id L6hiy44is_jp; Wed, 16 Oct 2024 20:13:58 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id WSuX6tUwalj3; Wed, 16 Oct 2024 21:12:04 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XTMcP2sGqz6ClY9d;
-	Wed, 16 Oct 2024 20:13:57 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XTNvR3GfmzlgTWP;
+	Wed, 16 Oct 2024 21:12:03 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: [PATCH v6 11/11] scsi: ufs: core: Move code out of an if-statement
-Date: Wed, 16 Oct 2024 13:12:07 -0700
-Message-ID: <20241016201249.2256266-12-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/7] UFS driver fixes and cleanups
+Date: Wed, 16 Oct 2024 14:11:11 -0700
+Message-ID: <20241016211154.2425403-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.47.0.rc1.288.g06298d1525-goog
-In-Reply-To: <20241016201249.2256266-1-bvanassche@acm.org>
-References: <20241016201249.2256266-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,57 +55,29 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-The previous patch in this series introduced identical code in both
-branches of an if-statement. Move that code outside the if-statement.
+Hi Martin,
 
-Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 32 +++++++++++++-------------------
- 1 file changed, 13 insertions(+), 19 deletions(-)
+This patch series includes several fixes and cleanup patches for the UFS =
+driver.
+Please consider this patch series for the next merge window.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f34563e3a51d..70d89e154c4f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10400,26 +10400,20 @@ static int ufshcd_add_scsi_host(struct ufs_hba =
-*hba)
- 			dev_err(hba->dev, "MCQ mode is disabled, err=3D%d\n",
- 				err);
- 		}
--		err =3D scsi_add_host(hba->host, hba->dev);
--		if (err) {
--			dev_err(hba->dev, "scsi_add_host failed\n");
--			return err;
--		}
--		hba->scsi_host_added =3D true;
--	} else {
--		if (!hba->lsdb_sup) {
--			dev_err(hba->dev,
--				"%s: failed to initialize (legacy doorbell mode not supported)\n",
--				__func__);
--			return -EINVAL;
--		}
--		err =3D scsi_add_host(hba->host, hba->dev);
--		if (err) {
--			dev_err(hba->dev, "scsi_add_host failed\n");
--			return err;
--		}
--		hba->scsi_host_added =3D true;
- 	}
-+	if (!is_mcq_supported(hba) && !hba->lsdb_sup) {
-+		dev_err(hba->dev,
-+			"%s: failed to initialize (legacy doorbell mode not supported)\n",
-+			__func__);
-+		return -EINVAL;
-+	}
-+
-+	err =3D scsi_add_host(hba->host, hba->dev);
-+	if (err) {
-+		dev_err(hba->dev, "scsi_add_host failed\n");
-+		return err;
-+	}
-+	hba->scsi_host_added =3D true;
-=20
- 	hba->tmf_tag_set =3D (struct blk_mq_tag_set) {
- 		.nr_hw_queues	=3D 1,
+Thanks,
+
+Bart.
+
+Bart Van Assche (7):
+  scsi: ufs: core: Move the ufshcd_mcq_enable_esi() definition
+  scsi: ufs: core: Remove goto statements from
+    ufshcd_try_to_abort_task()
+  scsi: ufs: core: Simplify ufshcd_try_to_abort_task()
+  scsi: ufs: core: Fix ufshcd_exception_event_handler()
+  scsi: ufs: core: Simplify ufshcd_err_handling_prepare()
+  scsi: ufs: core: Fix ufshcd_mcq_sq_cleanup()
+  scsi: ufs: core: Make DMA mask configuration more flexible
+
+ drivers/ufs/core/ufs-mcq.c     | 28 ++++++-------
+ drivers/ufs/core/ufshcd.c      | 76 ++++++++++------------------------
+ drivers/ufs/host/ufs-renesas.c |  9 +++-
+ include/ufs/ufshcd.h           | 13 ++----
+ 4 files changed, 45 insertions(+), 81 deletions(-)
+
