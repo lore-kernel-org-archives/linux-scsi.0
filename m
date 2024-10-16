@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC45914A09E;
-	Wed, 16 Oct 2024 18:04:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFCB2216A13;
+	Wed, 16 Oct 2024 19:35:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729101849; cv=none; b=HbDedVBNlEDLrXtda8RbPj6Qtvw7+DqybHbkRI3W2xjZ4w6+bxV+nU+LM/PDyylTUqQV7bvHo7yjCj7hiMMNi+sMlkXB14fBiKc92s5XfknwwZbES9LqiqoijNBEnLBHtkiu6Kd99IlNCxK8s64YDWOqtpLrq2Lq1X8lKFXtk6g=
+	t=1729107352; cv=none; b=fPgoYgeUTFd379ub0nove2X8trh85R1sHGVzt2E+2iCsbT7lzv0Cs5cAx7sDaqs4FQeWgohO7vr/jdIl8ijUTWLgvZTds9r9zpXD9QY21e++nCFR0zPGyn9Q2T7Uu8Ys+mvu+ZXJYxNDq2vVUi3ldniy8R0qWTtQ7XxWPAkmlUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729101849; c=relaxed/simple;
-	bh=HzzmijPoH2mtXPKps8Y0il4uE+cACVfKq2wS0Ezsuf0=;
+	s=arc-20240116; t=1729107352; c=relaxed/simple;
+	bh=zQBkoRKgsffe6sm8fQRMZvpdlOGY9+zXwYUi6ybAbV8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UfotoAr7DppuanbprAHbbB3GbD8bbp5KS2/WmZfsrBiGeB6QRxW617h+Z3kXxb0Ju6daDjLZV1VjXidyrehKass47aeNUCH8+F8UNkM0/9IlIH6Vt7WMheqks5gswrACDVpWELwwbpiWwRQQjf4D6P1zjxMAhrSsMV1DEEmkL2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kZ1dy0Jg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=q8B6cH3M5nCp26NZ7TwmCkDsUHzXeMjsJ36ozZMe7OzE8y4HpInDCrAcKcVAiCpHE5uuQqXCKXET/yCZDHvUXx4YKImAPtN2ML1LZjJJt/WL/3J1bd3G8O4BYPrlvGHfd6xZmsXt33P422x0A7RWb4e+Ce9ang36fEaYUYS7vWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JHob37zr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kZ1dy0Jg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77E3AC4CEC5;
-	Wed, 16 Oct 2024 18:04:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JHob37zr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51B8EC4CED1;
+	Wed, 16 Oct 2024 19:35:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729101849;
-	bh=HzzmijPoH2mtXPKps8Y0il4uE+cACVfKq2wS0Ezsuf0=;
+	s=k20201202; t=1729107352;
+	bh=zQBkoRKgsffe6sm8fQRMZvpdlOGY9+zXwYUi6ybAbV8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kZ1dy0JgHxNeobOvzLSy5ftVhhY1QSE3SF3ksFod3MtCVn2w3jJzGNtgWDjYWUP5L
-	 LvZBXl7bnuTnvtj7JgjPfD2ftk1YDHfC4QINDHlz+TLaC4tFJEBWbTIVvbWtDQz1jK
-	 7bxdu4l9KFVnMpNVOVhSHW6M7tTWmdVCq0G0kKhNiCGdu/3ZElIS38qMslcr0extm8
-	 hP/tHOAO5HoFPYYE+anpFHY79BTyBqQCcUle5fVGiJKHsG5bxMvRzrKsOhMEg+ltgx
-	 QT6ZFR6nzZgEkfh0Qvz95GV6x7+0iooI3XkebrslYZAgVrEvFppGgCIlF/g2XWnMG5
-	 QYOdwszwvc0WA==
-Date: Wed, 16 Oct 2024 12:04:06 -0600
+	b=JHob37zr2eyddutbScP40veOlgjdzzewqg0C3Kydv5hPYn+i+i7JgcqyJ3F2rEask
+	 xw2wJ46bITMY+zwuljeoC7DTqEj/8p0HmEdgc9uV5WfQw39S61S2RaW0vnkUxQxPXB
+	 IWVaKuHdnMW7XEkdLEpSHekVGCuGzYA3GL3YChGO/J4VW9ZSfXne3DqdeaTvA8zFYV
+	 KB7jW/vnTx4Z8NYGECMdHJ2tRGxLsfyr0fAOwEBBwyIVkgoLOjpatskNDtRNGcc4UO
+	 TK4eoQGss5ZUENN6R1GFcyLP8dsntpKJwf16zLHO9mOSiN0BR7pK9pERmQM5bFhIbn
+	 fRvow2mNKcnbA==
+Date: Wed, 16 Oct 2024 13:35:48 -0600
 From: Keith Busch <kbusch@kernel.org>
 To: Anuj Gupta <anuj20.g@samsung.com>
 Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
 	asml.silence@gmail.com, anuj1072538@gmail.com, krisman@suse.de,
 	io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
 	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	linux-scsi@vger.kernel.org, vishak.g@samsung.com
-Subject: Re: [PATCH v4 02/11] block: copy back bounce buffer to user-space
- correctly in case of split
-Message-ID: <ZxAAFnC_Y6qpU-UK@kbusch-mbp.dhcp.thefacebook.com>
+	linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v4 04/11] block: define meta io descriptor
+Message-ID: <ZxAVlFfF-gjzFLwr@kbusch-mbp.dhcp.thefacebook.com>
 References: <20241016112912.63542-1-anuj20.g@samsung.com>
- <CGME20241016113736epcas5p3a03665bf0674e68a8f95bbd5f3607357@epcas5p3.samsung.com>
- <20241016112912.63542-3-anuj20.g@samsung.com>
+ <CGME20241016113741epcas5p3b90adb3b43b6b443ffd00df29d63d289@epcas5p3.samsung.com>
+ <20241016112912.63542-5-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,12 +48,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241016112912.63542-3-anuj20.g@samsung.com>
+In-Reply-To: <20241016112912.63542-5-anuj20.g@samsung.com>
 
-On Wed, Oct 16, 2024 at 04:59:03PM +0530, Anuj Gupta wrote:
-> Copy back the bounce buffer to user-space in entirety when the parent
-> bio completes.
+On Wed, Oct 16, 2024 at 04:59:05PM +0530, Anuj Gupta wrote:
+> +struct uio_meta {
+> +	meta_flags_t	flags;
+> +	u16		app_tag;
+> +	u32		seed;
+> +	struct iov_iter iter;
+> +};
 
-Looks good.
+Is the seed used for anything other than the kernel's t10 generation and
+verification? It looks like that's all it is for today, and that part is
+skipped for userspace metadata, so I'm not sure we need it.
 
-Reviewed-by: Keith Busch <kbusch@kernel.org>
+I know it's been used for passthrough commands since nvme started
+supporitng it, but I don't see why the driver ever bothered. I think it
+wasn't necessary and we've been carrying it forward ever since.
