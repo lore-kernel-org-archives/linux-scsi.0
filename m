@@ -1,57 +1,76 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8B491DE4D7;
-	Thu, 17 Oct 2024 14:39:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19601D47AC;
+	Thu, 17 Oct 2024 15:35:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729175964; cv=none; b=N+GaUnTWUaaie5VQMbZOZ2uLlaSRS3djNMTep0YiVXo0kFzKwGZKpwRKMfMuPY28y1X0rnrRIQw/9uJfwYnq7TxY6IX4r0mlwHhfi5vnOhJuoHbVS9k5yxsdLh9RuP5+a4fcMX8/jyzCsK4QR4ur8axbw/1SlSw1CPe1uoMP/rI=
+	t=1729179328; cv=none; b=oZ39Wn2D8BTLI8p/e0GuBsPQrTDYXs51QsMZXbSdZqMFwMopBJ6xOFnOJDDGdpzvF4SYFeK8bDKhAjECmrshXJRoM9xuG2I9UE7hCk/0vq/TB0Fu09p+K5qtTZQryX1rb5ecogPUOS8l6P4mSB+wZwoak/QtalHNfkBMIjY+DJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729175964; c=relaxed/simple;
-	bh=CuYz17cIJdcuLShxlbX3UoKc1gUQDy/HPYX63KQn8IA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XCGlSau56hrhE/pvjjEjnSXp3KKAnNJapP1yDAbdEY1N8MKx1Lsr1/kfr65Kj1Xu2RKbCS2RPM66bN2u6eDbcfv6WRh0NlHCLBEvxeLN7GQoiOFS1FbG8Gsb+BlPOqOicTPsmnERJmxUnYUdsfEqCWmsuqB2DIWNJLIr9YD+YXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9C6B5227A8E; Thu, 17 Oct 2024 16:39:18 +0200 (CEST)
-Date: Thu, 17 Oct 2024 16:39:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
-	martin.petersen@oracle.com, asml.silence@gmail.com,
-	anuj1072538@gmail.com, krisman@suse.de, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com
-Subject: Re: [PATCH v4 11/11] scsi: add support for user-meta interface
-Message-ID: <20241017143918.GC21905@lst.de>
-References: <20241016112912.63542-1-anuj20.g@samsung.com> <CGME20241016113757epcas5p42b95123c857e5d92d9cdec55e190ce4e@epcas5p4.samsung.com> <20241016112912.63542-12-anuj20.g@samsung.com> <20241017113923.GC1885@green245>
+	s=arc-20240116; t=1729179328; c=relaxed/simple;
+	bh=29C4R99idAS+9fjDuZxCEpSiqsa1ZkROAapiNJBI0K8=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=skH++nJywn+Snh2l8nZg8zCzJn6zbWWGk0kd07AObi15XCTjLy2/f2mKgjNbhSGqME2hCNlMiIfeTpIaWYuCvAy6Kf0O8jCqOGGKJqPgMzlgL6BqJ8aX0dyb5hJmcuFcA/N4rbt3DAiifdJkEnTxpcHksxMumKLpgySBqqYF7J0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AH4t8oE5; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AH4t8oE5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DF4EC4CEC3;
+	Thu, 17 Oct 2024 15:35:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729179327;
+	bh=29C4R99idAS+9fjDuZxCEpSiqsa1ZkROAapiNJBI0K8=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=AH4t8oE50oilu20L51yoRxl7nbn6SldUjiTaCcXf57QuMK2pTEXaLPOAtYsDCXXuX
+	 XBWA/mdkeO3HxmpieRLRuWfZM6iJ5cJvnAnNjUr80JDwRbQRqrgNYllKnizEa/vmDe
+	 CcNxaYctg+m0AYuqWSoCbaCOi0znCKWAnNMzPfTb+H2lzgS65mKmzp6jS9qROgLeGb
+	 iGoi0w9jPl1h6Z+ZAM2BqMQ7gdyBphBg5Di2EQTxVqCuXlDjwE8ION/oNYvmwIBCU2
+	 m8d2fH+EqUDuKYI+Hcc9Wcg05J1yeumBa+hwEaFYTnREEFyl5thNflcDtugH+AHL8S
+	 VgAsOEi9FwokA==
+From: Vinod Koul <vkoul@kernel.org>
+To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, Xin Liu <quic_liuxin@quicinc.com>
+Cc: Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+ Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
+ linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, quic_jiegan@quicinc.com, 
+ quic_aiquny@quicinc.com, quic_tingweiz@quicinc.com, 
+ quic_sayalil@quicinc.com
+In-Reply-To: <20241017042300.872963-1-quic_liuxin@quicinc.com>
+References: <20241017042300.872963-1-quic_liuxin@quicinc.com>
+Subject: Re: (subset) [PATCH v1 0/4] Enable UFS on QCS615
+Message-Id: <172917932189.288841.5463892176207403335.b4-ty@kernel.org>
+Date: Thu, 17 Oct 2024 21:05:21 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241017113923.GC1885@green245>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Thu, Oct 17, 2024 at 05:09:23PM +0530, Anuj Gupta wrote:
-> This snippet prevents a scenario where a apptag check is specified without
-> a reftag check and vice-versa, which is not possible for scsi[1].
-> But for
-> block layer generated integrity apptag check (BIP_CHECK_APPTAG) is not
-> specified. When scsi drive is formatted with type1/2 PI, block layer would
-> specify refcheck but not appcheck. Hence, these I/O's would fail. Do you
-> see how we can handle this?
 
-Well, this is also related to difference in capability checking.
+On Thu, 17 Oct 2024 12:22:56 +0800, Xin Liu wrote:
+> Add UFS support to the QCS615 Ride platform. The UFS host controller and
+> QMP UFS PHY hardware of QCS615 are derived from SM6115. Include the
+> relevant binding documents accordingly. Additionally, configure UFS-related
+> clock, power, and interconnect settings in the device tree.
+> 
+> 
 
-Just curious, do you have any user of the more fine grained checking
-in NVMe?  If not we could support the SCSI semantics only and emulate
-them using the fine grained NVMe semantics and have no portability
-problems.
+Applied, thanks!
+
+[1/4] dt-bindings: phy: Add QMP UFS PHY comptible for QCS615
+      commit: 6a612c86c8a5805c85fde359aa9c8aac6d5cba7a
+
+Best regards,
+-- 
+~Vinod
+
 
