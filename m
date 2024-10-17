@@ -1,33 +1,34 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE7791DE881;
-	Thu, 17 Oct 2024 14:35:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C851DDC0C;
+	Thu, 17 Oct 2024 14:37:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729175705; cv=none; b=PUb+HgNjO9PIMpSDK8c4HOG9s8cHSGA9zPOKOFQjtdm98PqiuhzHoLPViauXyJUdBVirdv+RNY/2hNFZW4nrJGHFGetKAbdQdZcfBZO5hANFp6r+1N1uCfrRmvAeL0IV+09obFRkp4GqKXVzqhO6lBz7xazCdDdkCLKkk0Nx50k=
+	t=1729175828; cv=none; b=frJmUt8MIANwLgWDzBE91TOhBvDpPeu+hCeDtJHYHpXseEueHLpwOhycOQydI8NQTJotfTXaj2iJ8md/kM5qrRzPmTQsefNkCS6YFZwFC3u2YtUKwBFxKni2v0UpXon3WthcLQ9JxFM9bJJzjVwW6FEQhT2VsAjduIrIMUqTfL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729175705; c=relaxed/simple;
-	bh=9zaYnG8LBfw3AFTBnKZAJnThYnyZyHG9WIVT4s9S7mA=;
+	s=arc-20240116; t=1729175828; c=relaxed/simple;
+	bh=oAD6jcl5h5s72DdkijnT1cyHuGb1B6GX3PJBfs6ht+Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ItU2pm89xMrEmUNzCDAO1efDEddzDDOLxEy12NzqlGVx1Cj+C+FHoBxVvTNFnAdnrtfTs3BEQZf78QZhUvDDjz35n7c4Wlq7JbeFEVf9xHTbRtrsIJ3aiK9XQKgaFczvFZ8YIENUQvh+MUAfUPZYc51f9ldszm03fsTfcL1O0IA=
+	 Content-Type:Content-Disposition:In-Reply-To; b=YqIlTVHUwQiJIXo5c1rB7fQdSxGb8pR7WPU0nedc0EHwOvTMTcudSRMm9a4Dxc2rTiriNtuwHWnafAcziCGCfUElMMqOWbf38qTNIV5L5pMcLqtmd0rUXwOy+bwVqsK5eOuqKDCsLCwRL/lUvduepW76azWmw2/92GmgAEhrYY8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 041FC227A8E; Thu, 17 Oct 2024 16:34:58 +0200 (CEST)
-Date: Thu, 17 Oct 2024 16:34:57 +0200
+	id 1E4BB227AAA; Thu, 17 Oct 2024 16:37:02 +0200 (CEST)
+Date: Thu, 17 Oct 2024 16:37:01 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Anuj gupta <anuj1072538@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Anuj Gupta <anuj20.g@samsung.com>,
-	axboe@kernel.dk, kbusch@kernel.org, martin.petersen@oracle.com,
-	asml.silence@gmail.com, krisman@suse.de, io-uring@vger.kernel.org,
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
+	martin.petersen@oracle.com, asml.silence@gmail.com,
+	anuj1072538@gmail.com, krisman@suse.de, io-uring@vger.kernel.org,
 	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
 	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com
-Subject: Re: [PATCH v4 06/11] block: add flags for integrity meta
-Message-ID: <20241017143457.GA21905@lst.de>
-References: <20241016112912.63542-1-anuj20.g@samsung.com> <CGME20241016113745epcas5p1723d91b979fd0e597495fef377ad0f62@epcas5p1.samsung.com> <20241016112912.63542-7-anuj20.g@samsung.com> <20241017080015.GD25343@lst.de> <20241017104502.GA1885@green245> <20241017120102.GA10883@lst.de> <CACzX3AtdmWgEggmQsfqHU-GjdbQHTq9DwCzW07VG9zaoXaWfgA@mail.gmail.com>
+	vishak.g@samsung.com, Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v4 08/11] block: introduce
+ BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
+Message-ID: <20241017143701.GB21905@lst.de>
+References: <20241016112912.63542-1-anuj20.g@samsung.com> <CGME20241016113750epcas5p2089e395ca764de023be64519da9b0982@epcas5p2.samsung.com> <20241016112912.63542-9-anuj20.g@samsung.com> <20241017081223.GB27241@lst.de> <20241017104613.GB1885@green245>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,17 +37,25 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACzX3AtdmWgEggmQsfqHU-GjdbQHTq9DwCzW07VG9zaoXaWfgA@mail.gmail.com>
+In-Reply-To: <20241017104613.GB1885@green245>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Oct 17, 2024 at 06:29:32PM +0530, Anuj gupta wrote:
-> The last iteration of this series added these flags as io-uring flags [1].
-> Based on feedback received [2], I moved it here in this version.
-> Should I move them back to io-uring?
+On Thu, Oct 17, 2024 at 04:16:13PM +0530, Anuj Gupta wrote:
+> On Thu, Oct 17, 2024 at 10:12:23AM +0200, Christoph Hellwig wrote:
+> > On Wed, Oct 16, 2024 at 04:59:09PM +0530, Anuj Gupta wrote:
+> > > This patch introduces BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags which
+> > > indicate how the hardware should check the integrity payload. The
+> > > driver can now just rely on block layer flags, and doesn't need to
+> > > know the integrity source. Submitter of PI decides which tags to check.
+> > > This would also give us a unified interface for user and kernel
+> > > generated integrity.
+> > 
+> > The conversion of the existing logic looks good, but the BIP_CHECK_APPTAG
+> > flag is completely unreferenced.
+> 
+> It's being used by the nvme and scsi patch later. Should I introduce this
+> flag later in either nvme or scsi patch where we actually use it.
 
-Maybe I misread the patch back then, but IIRC at that point the flag
-was also used on the bio and not just in the uapi?
+Maybe a separate one?  Or at least very clearly state that the other two
+are conversion of the existing semantics, while this one is new.
 
-As of this series it is used in the uapi, and in the block layer.
-
-Based on that uapi/linux/fs.h might be the best place.
