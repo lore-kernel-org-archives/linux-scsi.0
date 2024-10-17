@@ -1,34 +1,33 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59C851DDC0C;
-	Thu, 17 Oct 2024 14:37:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8B491DE4D7;
+	Thu, 17 Oct 2024 14:39:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729175828; cv=none; b=frJmUt8MIANwLgWDzBE91TOhBvDpPeu+hCeDtJHYHpXseEueHLpwOhycOQydI8NQTJotfTXaj2iJ8md/kM5qrRzPmTQsefNkCS6YFZwFC3u2YtUKwBFxKni2v0UpXon3WthcLQ9JxFM9bJJzjVwW6FEQhT2VsAjduIrIMUqTfL0=
+	t=1729175964; cv=none; b=N+GaUnTWUaaie5VQMbZOZ2uLlaSRS3djNMTep0YiVXo0kFzKwGZKpwRKMfMuPY28y1X0rnrRIQw/9uJfwYnq7TxY6IX4r0mlwHhfi5vnOhJuoHbVS9k5yxsdLh9RuP5+a4fcMX8/jyzCsK4QR4ur8axbw/1SlSw1CPe1uoMP/rI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729175828; c=relaxed/simple;
-	bh=oAD6jcl5h5s72DdkijnT1cyHuGb1B6GX3PJBfs6ht+Q=;
+	s=arc-20240116; t=1729175964; c=relaxed/simple;
+	bh=CuYz17cIJdcuLShxlbX3UoKc1gUQDy/HPYX63KQn8IA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YqIlTVHUwQiJIXo5c1rB7fQdSxGb8pR7WPU0nedc0EHwOvTMTcudSRMm9a4Dxc2rTiriNtuwHWnafAcziCGCfUElMMqOWbf38qTNIV5L5pMcLqtmd0rUXwOy+bwVqsK5eOuqKDCsLCwRL/lUvduepW76azWmw2/92GmgAEhrYY8=
+	 Content-Type:Content-Disposition:In-Reply-To; b=XCGlSau56hrhE/pvjjEjnSXp3KKAnNJapP1yDAbdEY1N8MKx1Lsr1/kfr65Kj1Xu2RKbCS2RPM66bN2u6eDbcfv6WRh0NlHCLBEvxeLN7GQoiOFS1FbG8Gsb+BlPOqOicTPsmnERJmxUnYUdsfEqCWmsuqB2DIWNJLIr9YD+YXk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1E4BB227AAA; Thu, 17 Oct 2024 16:37:02 +0200 (CEST)
-Date: Thu, 17 Oct 2024 16:37:01 +0200
+	id 9C6B5227A8E; Thu, 17 Oct 2024 16:39:18 +0200 (CEST)
+Date: Thu, 17 Oct 2024 16:39:18 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
+Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
 	martin.petersen@oracle.com, asml.silence@gmail.com,
 	anuj1072538@gmail.com, krisman@suse.de, io-uring@vger.kernel.org,
 	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
 	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com, Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH v4 08/11] block: introduce
- BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
-Message-ID: <20241017143701.GB21905@lst.de>
-References: <20241016112912.63542-1-anuj20.g@samsung.com> <CGME20241016113750epcas5p2089e395ca764de023be64519da9b0982@epcas5p2.samsung.com> <20241016112912.63542-9-anuj20.g@samsung.com> <20241017081223.GB27241@lst.de> <20241017104613.GB1885@green245>
+	vishak.g@samsung.com
+Subject: Re: [PATCH v4 11/11] scsi: add support for user-meta interface
+Message-ID: <20241017143918.GC21905@lst.de>
+References: <20241016112912.63542-1-anuj20.g@samsung.com> <CGME20241016113757epcas5p42b95123c857e5d92d9cdec55e190ce4e@epcas5p4.samsung.com> <20241016112912.63542-12-anuj20.g@samsung.com> <20241017113923.GC1885@green245>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,25 +36,22 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241017104613.GB1885@green245>
+In-Reply-To: <20241017113923.GC1885@green245>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Oct 17, 2024 at 04:16:13PM +0530, Anuj Gupta wrote:
-> On Thu, Oct 17, 2024 at 10:12:23AM +0200, Christoph Hellwig wrote:
-> > On Wed, Oct 16, 2024 at 04:59:09PM +0530, Anuj Gupta wrote:
-> > > This patch introduces BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags which
-> > > indicate how the hardware should check the integrity payload. The
-> > > driver can now just rely on block layer flags, and doesn't need to
-> > > know the integrity source. Submitter of PI decides which tags to check.
-> > > This would also give us a unified interface for user and kernel
-> > > generated integrity.
-> > 
-> > The conversion of the existing logic looks good, but the BIP_CHECK_APPTAG
-> > flag is completely unreferenced.
-> 
-> It's being used by the nvme and scsi patch later. Should I introduce this
-> flag later in either nvme or scsi patch where we actually use it.
+On Thu, Oct 17, 2024 at 05:09:23PM +0530, Anuj Gupta wrote:
+> This snippet prevents a scenario where a apptag check is specified without
+> a reftag check and vice-versa, which is not possible for scsi[1].
+> But for
+> block layer generated integrity apptag check (BIP_CHECK_APPTAG) is not
+> specified. When scsi drive is formatted with type1/2 PI, block layer would
+> specify refcheck but not appcheck. Hence, these I/O's would fail. Do you
+> see how we can handle this?
 
-Maybe a separate one?  Or at least very clearly state that the other two
-are conversion of the existing semantics, while this one is new.
+Well, this is also related to difference in capability checking.
+
+Just curious, do you have any user of the more fine grained checking
+in NVMe?  If not we could support the SCSI semantics only and emulate
+them using the fine grained NVMe semantics and have no portability
+problems.
 
