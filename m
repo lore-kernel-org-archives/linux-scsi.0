@@ -1,186 +1,149 @@
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADBC8770FE
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Oct 2024 06:31:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729146719; cv=fail; b=J2XnqHxoge1+fTULY1mNypkdzQfqwWcUAfpiNej2YipB9hwAZwFMAPXWxvb4AYHNuiKVQINvsqtTDU2GV5/Dx1WxjNJEqriw3f/JXJhZ89tKuNB+YS+AkmGIqKbHdxP7hehrf+Oi4cbm2VyRt+Vcj6aTgJiFlzfZPm2iNebxJs4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729146719; c=relaxed/simple;
-	bh=bzwiv+H6jT367y/YJv00zq1rQWnfrNlAg/W/qppLmCM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KIljktSL9K1/qjiEEZL880kamPU263cKDtnrrb3UW1BSP0QrQLygXECq9M9ttPxRacgM7sjmGEapCt25Q/dEfv0qDfN5wy6Kf5tcVIoxSQ8IpRZn+Yr8LRPVkRhOK3EsrIMaTFPtwD9EXK9Yn3LplMFdCmYL2KByddTZXcv8VLc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=BI15uPKQ; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=Psuztng9; arc=fail smtp.client-ip=68.232.143.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B82C71779B8
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Oct 2024 06:45:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729147559; cv=none; b=jV5XBnme0MG2GuDUNAqY+r9/taEZxt4mEr6EEpzpxVWI6FHPFKSIjAZ4tzFdxxOZBf7eT+7wMyCxa7ONV6BrCiiANCJSJNrdUh53ZYmMWImuz/dpTEAiFRUZJiDmZBqqmGW1hqaW2oMpw0f/XGzEcgkkbc036JHN/29pluIQf2E=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729147559; c=relaxed/simple;
+	bh=WvEl9DacNb0/BST0J+DTdTUbgLuLI3VskPgh+pfr+R4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SayN881dRA6zARv1jMaoNpD7HyBsbrR0qu2h3YR8ytUXFgdXc2bebdPOI3I/mLKfSIL+brfJWj6bp9t+nLUAQ5Fc9sNFXHsyf83KlQ8vNxsQpLkht261/+cLtXgMbKWIrEcWMkWB2OrKEbuGZTu3xH+bWD+VOG2IYvI222fohKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=Rq8iqK+D; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BI15uPKQ";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Psuztng9"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1729146717; x=1760682717;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=bzwiv+H6jT367y/YJv00zq1rQWnfrNlAg/W/qppLmCM=;
-  b=BI15uPKQqd/vN6TJ7Huunv1jVd8fifd4pfo18z0csOEhu+dKZ3V8vn08
-   cqS3rwgEioQVkYFTW8A4gzgaWRMMArgaLvkBBhSfFKNNkY2EvMjzPfIt1
-   aD4U7xYilFdJlWLi/pORgGzh2Bm92ABGxfL5VF6FZfX+blLXLG2c7dYMX
-   UIYK1e+S1gPYNCyn5Sl4Qvl3cqV7fDSMbTthooQCd82TXn5w1uWcJHbAu
-   5qLXn2bNUScQcM5wjiInPPyT+X7x/7nxDUT70jj3OO/cyAnYgo0PwH7v9
-   LkfwyWTE/4MA4zkaNCKzUoxBNu5LrKgDHBSfMJd22OWXUG3CXM+9a3qPf
-   Q==;
-X-CSE-ConnectionGUID: krY+Ol8hQ/CSOLzRJFz1FQ==
-X-CSE-MsgGUID: Z+UIr9jGSRmdZb+pLWDexg==
-X-IronPort-AV: E=Sophos;i="6.11,210,1725292800"; 
-   d="scan'208";a="29611499"
-Received: from mail-bn1nam02lp2040.outbound.protection.outlook.com (HELO NAM02-BN1-obe.outbound.protection.outlook.com) ([104.47.51.40])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Oct 2024 14:31:54 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GaIn568Lgg0BTPrIqnlEkJ52Tj7Ac4fv+5usxqXNtH0zxGWOdvTTTXhQxgOclWykYVrQ1uK3VBud2/UCwpAWr061n8+7CFZB0ZgrcEiP8YMmEEFrP/OFezULY7p+G40vkIMBvBXW8K++ZKGp9MmGlIqndhGbAFHyArrCEH9fXSI+tUSMwglJvlynnYEB5nmDqKfyCbdvN5KIaSI/72b5arOw0kJqBlJX6orZUyJer1Wky2IT0fbYRG3cSDYrcJRgXFf6tlARJBuc49yVxqUg0F+X124FXlIZcl0OR8ws6LGGsJYJxMg9R7MVVs4KLfKImrD+iT40nmgNlatniWMVmw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Oy1Ha0zAFvy/S30RkmcwwjlNxtPMGMndJgG6ptip27s=;
- b=hAi7Rco3X/eBI8hMhwYXqXCLh7qW4sDaWKJW9Yumpfp+vEKq6e4QqCN9N/mQi831W4m5nqCAkLkROlZeJ1QKE/QuF7G6JF3eynfZqsByXLidc1T9IPgf0/BlcG627x9BZsvaBqoMJtLxg+f+wm87ff84UasIoHvirT+uzUqsVWggq0WJPWp3zDQrb8SWGA/Si3yxJLOMid4vaBvQJOKEzIwrD1wgQlXc6zQ4BAoR2brPCxF3s3L8KdUm54FupS75fUt+g+HQ7UDSDUyNMvppn+Ma8uZY1iSgESpWPtqzcaLi1uYf7RluhmRpVhc1seWyxxXG8ZAo4xopqb4UsbcbxQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="Rq8iqK+D"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5c939e5a0f6so88602a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Oct 2024 23:45:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Oy1Ha0zAFvy/S30RkmcwwjlNxtPMGMndJgG6ptip27s=;
- b=Psuztng93Q3SKM4Jg74VGEtiQkW9YGd0OXUVn1w1EFta9CU5W4+TWU9f0iCS7/x51Tf1WVeiBHa8beTMyIETmsM3vzS41wjve4B9F8UKQ6jCDv/YzYW2CNPIUiY18o/wv7xQ2FTTC7typKLKWWMy4U4uUr3lNvjjyplKaa0VAcY=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- BY1PR04MB9529.namprd04.prod.outlook.com (2603:10b6:a03:5b1::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8069.18; Thu, 17 Oct 2024 06:31:52 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f%7]) with mapi id 15.20.8069.019; Thu, 17 Oct 2024
- 06:31:52 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>, Peter Wang <peter.wang@mediatek.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: RE: [PATCH 3/7] scsi: ufs: core: Simplify ufshcd_try_to_abort_task()
-Thread-Topic: [PATCH 3/7] scsi: ufs: core: Simplify ufshcd_try_to_abort_task()
-Thread-Index: AQHbIBAh08I1UAJq90+JH9BKaZqXRrKKetJQ
-Date: Thu, 17 Oct 2024 06:31:52 +0000
-Message-ID:
- <DM6PR04MB6575200F7AC6B1590BBEA8DCFC472@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20241016211154.2425403-1-bvanassche@acm.org>
- <20241016211154.2425403-4-bvanassche@acm.org>
-In-Reply-To: <20241016211154.2425403-4-bvanassche@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|BY1PR04MB9529:EE_
-x-ms-office365-filtering-correlation-id: ba707691-7852-4c30-5f79-08dcee75634c
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|10070799003|376014|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?S/mRnuZu9W5CjbvkDXqvtfM6lI4Dvd9ZMcHjodAD2pRsPC98EAIXeqdh/kGH?=
- =?us-ascii?Q?14avKyH5jVgF0AMLixrNn0geMIlX9sIlVlUbyMe/htM7u+Mpe18s/4GMoxQY?=
- =?us-ascii?Q?bGJa5zvihScYjxKOiKt+KOpEWAVO2rDJEimHOIH0yF0aBhZ/ZWKcH1aCPQsV?=
- =?us-ascii?Q?6BDHMJvX5D6k68Fi3HCwH/T3auPyuLDrQHdi0WkpSRPtQsY70CC8IzxGNGjr?=
- =?us-ascii?Q?/L3h8C/EXktzr+GTTmWwbWTheW+W14PWgRiH3aIt0bw/a5NCDPczYY9uWfaJ?=
- =?us-ascii?Q?OZUJcrUnIGnh668wqfz7ky1TXhqGO74LL5Bnj3y/yvA62f6vaPEfRypDkv4h?=
- =?us-ascii?Q?sA0F5BU5e3WnMsIk+hhws6Q8UqBPqzZQ6YvFS/QVfTfh7spgACjCKuhBVFEJ?=
- =?us-ascii?Q?66236IiPm5ipPJnfv27VmL8+oolHTSwXkyBqZKk/7u90bG/6o9TPV+dq9htm?=
- =?us-ascii?Q?EbeHGxZytJpTATakBpMNbGV+hlL9Y0rFzVW4m0q2PvOawHc5ecs9xBTXJSV4?=
- =?us-ascii?Q?2ggG7wrl26IfBIzVTu5+MNu9HMf4QLNBfGrxpgZzjz1OGifsL++/y96aLd9/?=
- =?us-ascii?Q?wtz+9XFOsPYZ3iiVNGLh2BJnKmOJ0zkjXxeYkn32dWYpYIMH/FR5jNST6ZtT?=
- =?us-ascii?Q?E37BDG0sobvCXzjD0sOju/kHfzwEhYOSdqtlN8z0CpTqgWiKlxOq6+zlOB/B?=
- =?us-ascii?Q?RjRWbIepIe4BSV6VZonBBd1nbD27oSbT5TJokxZxT3Vk/8ehv2qiKa/h+jDw?=
- =?us-ascii?Q?pzz9ZXNT1Y8gcd+5t1O/YixhgSCgS4zPQqBYFIwruIzAdPyWIkCKxO5KfjbI?=
- =?us-ascii?Q?UezFl4t5BlrsivCIq4LWcSBt5vI52wjZyqworeIIJDtDf9gUN72N4Go5NDHD?=
- =?us-ascii?Q?x9nPRVsIt9/4CoH3S3UFSBRuN5zyIR1qxQOSQqn6jyHtWcrLs9/UfMGYh+4H?=
- =?us-ascii?Q?N9jRoUpQX234kHNTmrC2zBL+Z9yRsUVJNAs0aWs0uTWRrvUQs+KxyPjbUH7c?=
- =?us-ascii?Q?WRXrLAXJLfH1o//tgEGT/9SwhblXRy4de28XkPZhZmmaikzJrsBAHi8zDyaR?=
- =?us-ascii?Q?a5bTaYTP6nsqMUKm9oLdqbmdE2fCPN3jxflyFLZSU3VtNeAuDtTGOtwn97aU?=
- =?us-ascii?Q?oGi5zafUehmdLRpee0s2dqdzc1aRoQRVOOmMlJMlqJ2jhYxdU7hKoNOdRsSG?=
- =?us-ascii?Q?PLL73NoXrZGuOp0AXqC37EbdSnUqUF5XxyzuDaqbh6YBQsl+Rs1RIi9sdChs?=
- =?us-ascii?Q?LGWPrm2h9b5OFZCNCQb+85XCzo28QWI6oNwJ9ZlJMcXlYTDMbxL5NriJLya+?=
- =?us-ascii?Q?7x7fG0y4eZczyY8Cq79X7FXNMoypHI3gf2iA+T/8GZdxfKIy1hxozRjwDLps?=
- =?us-ascii?Q?3wQoNCI=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(10070799003)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?rowzrhWKcSi+ZkXaC9VWweux7P5LVCY8UXf6SXOlGrVwipps56RhZSl/IelE?=
- =?us-ascii?Q?ktkqVgwFnt3ATZth+euBuJc6zuSVs09tnQWTynMa2ycaCGkaAa4BJuUcYrOx?=
- =?us-ascii?Q?v4XNN4a7g0pkadUqBS3ST+PxkhyeLEn0b636AH7LeK0WDiatZ6ZtKm3NCyhb?=
- =?us-ascii?Q?OoJG4Sm2woQpYMUSyROz0kGQZjLK37G1BAOw20zd0F86L0yhmsmlYma2mOzz?=
- =?us-ascii?Q?fkFpNp+ioZf3wQ2hjhrMOSZEcIYtgOYZFkchAygu7NYfW5w/2N0QtyaOy92c?=
- =?us-ascii?Q?9bMfTTWolSpiJCD0GSyxmOgYSZZTLcWd/EpJI5u1YdB/Rcrhkh+U2677XNnw?=
- =?us-ascii?Q?UJv4v9sIHIhxdiozq6f3s0ieij3BBYJ0mqev97zVZmPt79v4BVepFic4I/9a?=
- =?us-ascii?Q?DXcyDwbai+p0LuBxvgutUeUH4lnXBwxYAM60QNxVMHzakp0E3pUp35b2lbPG?=
- =?us-ascii?Q?nD0ERATWmOka+1ArpV5jSF2WFbzV/hpFSOmhRRemlA9DGjsSanwgLqdkx8wm?=
- =?us-ascii?Q?qdkqI5Uz1hLiTIdoV+eTKA9tb7kJ5VcvPdA9EZty+dIxhh6BV+lmU6Yu0xBY?=
- =?us-ascii?Q?sDquci+Jz7LIM4p9KGY12BEpZu8ftWdokRNZefsjKKmET39g6nMfjvMi0CpF?=
- =?us-ascii?Q?rf28wkTyZQIi6rvn3AeiwsCtNwJT/gm62nQ6Wod5/6iZhxA+UsrdbN5j1HWq?=
- =?us-ascii?Q?/Mp8W8HqolL1toeMmpwP+1DAmmomtDvw2/GUmU09IT7IyyywhFkKOJYvHHKQ?=
- =?us-ascii?Q?76O74WmssCOj7KJ0Z0fupvClkhO1BnwTx378zBUEc5o4xy6/uVncUfddI2BY?=
- =?us-ascii?Q?9wDJnaMECSvQNGbnC2AyWAaIkexAnznZC52dz6HXPEtuoVkYLNx91k8piuEQ?=
- =?us-ascii?Q?gygoc42krjZYdORgzUQ8jHGPzFZ19THgr0tvbXPUpUVXRQ67xhPZ3HDks0mC?=
- =?us-ascii?Q?N8xdn/eE8q9YpyZZPLuRxIQS2/phwi/G9uy8fwjIIm5yYaXnx+uTESDRFzhk?=
- =?us-ascii?Q?pfVRVJ4Wf1jMQaNnUPN+CpBsCcV6y3ZkMErKKEKfZpp+sVAcPFO/Vduo3M1X?=
- =?us-ascii?Q?/XT3UBNavILiRRSk9qQWG+fo9Hqu6GDYeaiGFVK8tddB6fIEXfCd18kyfkH5?=
- =?us-ascii?Q?TLgUdGaidQ2ncRHQiLi7Ad+m7xGnhGpE22pZHFLkajQ6r4Zqd9DfCXiygZzX?=
- =?us-ascii?Q?HkEXgsoU+uSkcjcXsRnhuUWIPAhfHOPqTmal0T+P9xQoC6j0zkON60fTKbIo?=
- =?us-ascii?Q?JQP7OPIH+umXITUeYajCaaxJxBHYOPZa1GkbkThQQykgN8TLs8KIT8IWYxoE?=
- =?us-ascii?Q?YK+xdyJUHxRQRqKPJvneGxmkU4uCFnE7e6Na4NNGvVBfHjzkz6ksKuivPOji?=
- =?us-ascii?Q?uOGMilNik/qagM8/0tEVSktLhf3pgSnhOchZHJCKVXS1VlEJeRvOzGWAv7Zq?=
- =?us-ascii?Q?xAgaimHXrlOnIgNuHnl7r+y97NKgGG4smj0+YBBZPAljcqb1SxORG81yr7RK?=
- =?us-ascii?Q?9xy77w7SJNuH2Qf+U+KKy8SqSEI56KHrgD7XZY8yU6smaKze1mitbVdFZflk?=
- =?us-ascii?Q?hodIIhlmjAzin04w6CGktQ0epBGH2FLSLQI0FISwXkm340zuDMksY2HcT5Bm?=
- =?us-ascii?Q?aFfRrwTxwLBrZ4/t7hGAbEHAcL3KB/1f1IgErX5Uk34Q?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=ionos.com; s=google; t=1729147555; x=1729752355; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hA7C/VJ2ogxqQJtDshb/T2bDSZIF624vqyDyYkZ46Hs=;
+        b=Rq8iqK+DHGJe61XdAHe1xXAjZqR3ZxF6dss5Q7gFqY97/UcD6r2+n68DJpGQzltekz
+         Mp+vffsuKaT4H9pU0b74Yx8RcRXybxiCc6kv1EeJ6flhqF2kpDkrDCrmOrR3ACiMDO4W
+         u3pF52x09h9+MKfleqyDnz9UzFm/I2wO6iZc0fxcXPKB7/m2PFcBFqCGz0vc2L0SmW1N
+         H6WkCZXbKfS2sBKuueFYrNCLcIWMaR49vJ+XMQTVRvMTWjfTbZHwtBMN0+EXDDU+h2ow
+         TCxz+g4oEZFDeDNyk2/JjAHb7qyIiwW3cVn4cUvXBlpEVN/Qn7PjgKGt3eEUv5nXcD1F
+         kg/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729147555; x=1729752355;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=hA7C/VJ2ogxqQJtDshb/T2bDSZIF624vqyDyYkZ46Hs=;
+        b=t5V7bDir5xCXqle83ka1M2ZBITBV03eyNS0oMCHTWwAs6GLAbeMVepdYCy9c5jK7v3
+         rCmjPVvv9OblgYlzomdBet2hPJDHPjdz/JMNCefuy5ouKDks0RZM0giDEt9OMgnv343h
+         Osf+LmCHG8i8g6g5/53HowSO86JEZ4uKwWdY386WbehDBBvssnu82f0jXxzz4XUp/Xai
+         ukaXGFBc0sFN4lzKHbsPhtMoaUmqlI5cq+5bO5bPtOeXVtHEgPKUdeEXyfHC9Mr8GN9R
+         YE+uy/BzcljZp+Lc/TnIifOsTqMQ7n6v2ZlozYLy8ldCjI30pK6I/gaQgt1ZCP4566Ik
+         aqLA==
+X-Forwarded-Encrypted: i=1; AJvYcCVbdOxRpDD7k906s7kspSyKPxC8heigT0flJo6cqadlstDMZOx/jzZkrRs8HWKWf8g0PJ24wwBzPLJY@vger.kernel.org
+X-Gm-Message-State: AOJu0YyKyVj7sIbBg02NTJZdP8DvyQpI3csNFwnSaUmWStwR5a/sXnas
+	HwQJciocYJQYQLyJJIx2vAOwqDy23Y/iM8Xgl1IfOFtttWLIutaKaUrnRZW06Z0PiHNKWDyMIx2
+	WpJWV9nrN5Jj0NJHXLjo45atxP4MQzHuyYg852A==
+X-Google-Smtp-Source: AGHT+IGvpu0H/wkCYjOHR1j1gd+ny9Zce6kSu5Qi/Zi4b3sW7Fe8QJ3fF6w/Nr24bNVxZt2SRBfk1slaPwZVfl8Y6hs=
+X-Received: by 2002:a05:6402:2741:b0:5c9:4499:2810 with SMTP id
+ 4fb4d7f45d1cf-5c99979830dmr1687144a12.5.1729147554947; Wed, 16 Oct 2024
+ 23:45:54 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	Hlqa5daNyAlWL4nauv9oFyS+ZOphsBUGdJyZIRbaQS7mMTQVVwrTX1yWFcRV0zZv0GVkY7cAt/iBts1tcJhBqgBpbpMkyNn9Gfm0IUfU1Wu03hSC5Csi+6Zj9bgy+3G+4g+b9BiTB1JxNgyGZx6iD9Fsqvt8jcw4FLBQD1RmHSAvOAPLawO+RvisYtTmJwFXcLJqyMS4TUggHN39mRfguW+h0UMNQmpxDRkKspDJAYiUEjRKUCtC8AouqZxh/6rOfjW90u/7rVLUthx8yK/Nl3LdL9WCrMcEhRPfPbkbdAKtqr4th5X9UUlUiyuJHgd5iElMICfv8hT/ZogrNR3ZRTU5LVQyBPRp5eTO/Oi00cCX/Sest96PSvQidXGUiDNuPwE/5b02lUQBS51XDHIdPTHfpD6oxYoFU1Jsss4HaHZ2qx173egUJg+vUCJDNG7OPEjOKWKw62L5/IMblkHbh3betRn7VVPeWSV+1OLeajZu9whNwVTD9PBNsrUKhvRS0OQLPLp5NM+DW50+e8WJOwmW07GAun7LoK+EXM72sKqXOCzSM8JAXPeQ4EcEK5C/P/ldL5AzUF4EcmOWdi+3xhCzxI80yIxKL+9S4SkSQb1CAzP792zz2hVh2hwv7x95
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ba707691-7852-4c30-5f79-08dcee75634c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Oct 2024 06:31:52.3692
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7rrVvXAGl/QO51CeylnfZR42OukCITFG2LpfPB4U26x5xgF1w4Uqz6fwyd4TzeFiBxiQ+j5Gmx/iX54niHE9yg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY1PR04MB9529
+References: <20241016220944.370539-1-salomondush@google.com>
+In-Reply-To: <20241016220944.370539-1-salomondush@google.com>
+From: Jinpu Wang <jinpu.wang@ionos.com>
+Date: Thu, 17 Oct 2024 08:45:43 +0200
+Message-ID: <CAMGffEmEJp_oVAsbCVV9PKs7vOKWLrUhRGcBGoUSx7+t4ZtsQA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm80xx: Use module param to set pcs event log severity
+To: Salomon Dushimirimana <salomondush@google.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Bhavesh Jashnani <bjashnani@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> -                       /* Single Doorbell Mode */
-> -                       reg =3D ufshcd_readl(hba,
-> REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> -                       if (reg & (1 << tag)) {
-> -                               /* sleep for max. 200us to stabilize */
-> -                               usleep_range(100, 200);
-> -                               continue;
-> -                       }
-If we no longer use the doorbell to determine the inflight requests,
-I think this should be your patch title, or at least a clear indication in =
-your commit log.
+Hi,
 
-Thanks,
-Avri
+On Thu, Oct 17, 2024 at 12:10=E2=80=AFAM Salomon Dushimirimana
+<salomondush@google.com> wrote:
+>
+> The pm8006 driver sets pcs event log threshold very high which causes
+> most of the FW logs to not be captured. This adds a module parameter to
+> configure pcs event log severity with 3 (medium severity) as the
+> default.
+upstream does not like more module parameters, can we just change the
+default to 3, any harm?
+
+Thx!
+>
+> Signed-off-by: Bhavesh Jashnani <bjashnani@google.com>
+> Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 4 ++++
+>  drivers/scsi/pm8001/pm8001_sas.h  | 2 ++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  | 3 ++-
+>  3 files changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
+01_init.c
+> index 1e63cb6cd8e3..355aab0c982a 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -68,6 +68,10 @@ static bool pm8001_read_wwn =3D true;
+>  module_param_named(read_wwn, pm8001_read_wwn, bool, 0444);
+>  MODULE_PARM_DESC(zoned, "Get WWN from the controller. Default: true");
+>
+> +uint pcs_event_log_severity =3D 0x03;
+> +module_param(pcs_event_log_severity, int, 0644);
+> +MODULE_PARM_DESC(pcs_event_log_severity, "PCS event log severity level")=
+;
+> +
+>  static struct scsi_transport_template *pm8001_stt;
+>  static int pm8001_init_ccb_tag(struct pm8001_hba_info *);
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm800=
+1_sas.h
+> index ced6721380a8..42c7b3f7afbf 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -96,6 +96,8 @@ extern struct list_head hba_list;
+>  extern const struct pm8001_dispatch pm8001_8001_dispatch;
+>  extern const struct pm8001_dispatch pm8001_80xx_dispatch;
+>
+> +extern uint pcs_event_log_severity;
+> +
+>  struct pm8001_hba_info;
+>  struct pm8001_ccb_info;
+>  struct pm8001_device;
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
+x_hwi.c
+> index 8fe886dc5e47..9b237a764d0b 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -763,7 +763,8 @@ static void init_default_table_values(struct pm8001_h=
+ba_info *pm8001_ha)
+>                 pm8001_ha->memoryMap.region[IOP].phys_addr_lo;
+>         pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_size           =
+=3D
+>                                                         PM8001_EVENT_LOG_=
+SIZE;
+> -       pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity       =
+=3D 0x01;
+> +       pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity       =
+=3D
+> +               pcs_event_log_severity;
+>         pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt          =
+=3D 0x01;
+>
+>         /* Enable higher IQs and OQs, 32 to 63, bit 16 */
+> --
+> 2.47.0.rc1.288.g06298d1525-goog
+>
