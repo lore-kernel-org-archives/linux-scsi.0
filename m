@@ -1,345 +1,225 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EDA384E18
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2024 01:21:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729214468; cv=none; b=hhuh8bQyU0J/sBsii2nFS0BkrxXtR+fiKCItme1NUNzOyA2bPv24/lwpNi0EgHLU24yX5hFxw4j8g6MVLrbHctzWH8sTU4WO+V/oifBmLV+60pElyHau5Ui5XNpm6xvBpKidkuFkNyuLoRvADnjvqkhhJGqNfff4/NDdK6ZBmtg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729214468; c=relaxed/simple;
-	bh=22tC3XS96w9ArKwQohnqAqZqdqDzf6qGokP9ZmXIJ3Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=RW4Xu0CAgz/oOuIlAv3EOEszWd63dXVDAv3btI/FE+mX9n0pJW7dUSh3/L2ko9APXP2wqtqfERtmEsqYoNdAPIJYuGW+JTIXQes7y9W4YojG8LABUOzyOfuhacWBwODAZLgH9Nvo5odBZ1lMl1DIrlW98NiCSl0Og7RUW43nDaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XxO8nf8L; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A6A20E30D
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2024 05:22:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729228974; cv=fail; b=r+jDHC4xYbOtYUnfPit1dg8+eSt+0npSeDZXMiqMmpm8kkQagW+bDab6Jii9wlpJaGwibmyZClysGPjWhGuF1g70+WfEuyCmyhbg6DsT9arybaVpuguFY3mJS5Nz7ZA9wSZweKWJVGb4XuYEbSULg7zDJnJ/jMEwE5Qi2HyXYkk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729228974; c=relaxed/simple;
+	bh=sSydoS9YnmapNNl6HHVA5/c5tkWeRsG5xvp+sVfk9/I=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=HueeJ9yE4xB1ZvMTkf6kuQGocifsk6DxNLdMqjAMHiV9ZwRpW58DSPfYDhfHNRxA9aEIwHT+fdaXD1OMB1zh1cSa9XnW4simEK8wL9tTSaJVyRtLbaZsJsP6bLFPfrBcc7uXm9mJeqDGn8ly8I5ln4iK8nUJmJ7+63RMQxIN318=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=jqg5bueU; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=Uiu7lv3D; arc=fail smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XxO8nf8L"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1729214464;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=22tC3XS96w9ArKwQohnqAqZqdqDzf6qGokP9ZmXIJ3Q=;
-	b=XxO8nf8LoM9mXWgSjCN9Fbc385KVv3xGnPzhN+fd6h7M8kWYD61J8iRjS54eQUGSYF4ig0
-	bZrhwGVvrIEvLmjV7fF/WAzi20tgGfPmLQeSipdxUCt7C8q2nSMJ2sEoAXahdVeoSKyVkD
-	OXMXx2STCAV+lmIZt/xAOV5h86lkFrU=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-107-2uBipMplMPGNLQJPO7t_bw-1; Thu,
- 17 Oct 2024 21:21:01 -0400
-X-MC-Unique: 2uBipMplMPGNLQJPO7t_bw-1
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B3DF419560BF;
-	Fri, 18 Oct 2024 01:20:59 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.56])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2856119560A2;
-	Fri, 18 Oct 2024 01:20:54 +0000 (UTC)
-Date: Fri, 18 Oct 2024 09:20:48 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Jens Axboe <axboe@kernel.dk>
-Cc: ming.lei@redhat.com, linux-scsi@vger.kernel.org,
-	Guangwu Zhang <guazhang@redhat.com>
-Subject: [Report] queue_freeze & queue_enter deadlock in scsi
-Message-ID: <ZxG38G9BuFdBpBHZ@fedora>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="jqg5bueU";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Uiu7lv3D"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1729228972; x=1760764972;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=sSydoS9YnmapNNl6HHVA5/c5tkWeRsG5xvp+sVfk9/I=;
+  b=jqg5bueUSeRT+f6izt9KOxrF0Uo67llLiZndLMsZV4ZQmNEmgLi0hNSw
+   /kuAC4pCXZAsYYEJgmV1T2kNedfvHJN2l1j7KItZVJKMctOLRCOoMyABs
+   HQ0DxIEAHldr0S4Xj387FglyE9aMwygl5jq5xVPUMTZgy3R2e/IW2tPuQ
+   YYSXE9RRrqXA/VNh4vm1brE9Mk/VyJRTYAiu9PxjAHQ0zyQf9H7Zro4Og
+   bIVbNoBTFh9wPPbRa0eotfDSv+8ndMjEUH035CiZiedvTzunhEqcf5EOX
+   9Sa7rcLsch1glVMr0TsQg4R7k0pxuCt7WKrz7MZQ1acmEwWro1r3uq6Xp
+   Q==;
+X-CSE-ConnectionGUID: nWreR9A9RiibUHeEPjYBTg==
+X-CSE-MsgGUID: UdwlIvOxRo6HwmsGLCcZKQ==
+X-IronPort-AV: E=Sophos;i="6.11,212,1725292800"; 
+   d="scan'208";a="29245252"
+Received: from mail-sn1nam02lp2040.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.57.40])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Oct 2024 13:22:50 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=EM73qgfD0R+kg0dBQkart+faP7b5U8AYkAl0GATHbJ539IJeGFUUqiSvBACD2YqTL54neqyFkCU6CblPIM9OuzFdyb8yxuH4riApika5wj8+MbElxsYmpVu/gGyLYy6rXYmUEsA1S5q/ECIG6K0W1y83W7SlDeqsnIlubYlj0YQfPebb7CW4u4l6Pl25XbnTcrQ87L1LgxRcvZ/BpTHXDRbOTwAJb1kDXFeo+wBgIJFQhMPVtW9kXbEY5B7FXFJWhOblOTKfY/y4cF6D0tKooxloKk/Ba1XHpZUz9mZueqx6Ns2PjzNC/yQoL+V/IhQzuFFw2Owzmf/IiZu/F4L7xA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sSydoS9YnmapNNl6HHVA5/c5tkWeRsG5xvp+sVfk9/I=;
+ b=nEbmAVN8zPtE+ADHWfhq8DJZz1ttnKdT4UslASoeZOmd6GaWDYgalkiSr7nmSPCt9kHQbPOmQEFPSsqXpwgfey0751v8Ghbpuil3K4we/7MsI+E6qQj2VtSeGeijlUNtXo7UtTyfKjKflgmdogaLHhRqMyis7q3a3IoDGE+fBKLUFSwSJz0pfqDeQnJEYxm8c3+kCKT0OGQP5M/aB5mWAeeeCNR1Y0m7gDpIHDcp2nh+qaEG89lD2BTv39YciruM27KIzygEDLGWoApxPlvAFP/GQzA5tjchA+taViZLAcp6auZ7Sm6fbS4REjRfQIrF0uWIP3YYh913BkvpP11vAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sSydoS9YnmapNNl6HHVA5/c5tkWeRsG5xvp+sVfk9/I=;
+ b=Uiu7lv3DH4nhwweQ8goqXIyKaVetgOFBqM7TOwWezlPdF95FODTKRTxkFt8JKEPS3EZ8o3isEvSTnqkbh5zOf5C0W9GK41d+2rQhZSu9ValgxS1Y5eS4nEn9sbnZQocX5s0qow3WA4zcFHqT5FrPjaXCZYj+hpP5K7rlCR/vhy4=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ IA0PR04MB8836.namprd04.prod.outlook.com (2603:10b6:208:486::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8048.26; Fri, 18 Oct
+ 2024 05:22:49 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::bf16:5bed:e63:588f]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::bf16:5bed:e63:588f%7]) with mapi id 15.20.8069.020; Fri, 18 Oct 2024
+ 05:22:48 +0000
+From: Avri Altman <Avri.Altman@wdc.com>
+To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Bao D. Nguyen"
+	<quic_nguyenb@quicinc.com>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, Peter Wang
+	<peter.wang@mediatek.com>, Minwoo Im <minwoo.im@samsung.com>, Manivannan
+ Sadhasivam <manivannan.sadhasivam@linaro.org>, Chanwoo Lee
+	<cw9316.lee@samsung.com>, Rohit Ner <rohitner@google.com>, Stanley Jhu
+	<chu.stanley@gmail.com>, Can Guo <quic_cang@quicinc.com>
+Subject: RE: [PATCH 6/7] scsi: ufs: core: Fix ufshcd_mcq_sq_cleanup()
+Thread-Topic: [PATCH 6/7] scsi: ufs: core: Fix ufshcd_mcq_sq_cleanup()
+Thread-Index: AQHbIBBBWZ/scSktVkqDqxLsXwv7OrKKgX/wgACy3wCAAAcykIAAO5cAgACD57A=
+Date: Fri, 18 Oct 2024 05:22:48 +0000
+Message-ID:
+ <DM6PR04MB657598AA1F5522FBD7B529A1FC402@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20241016211154.2425403-1-bvanassche@acm.org>
+ <20241016211154.2425403-7-bvanassche@acm.org>
+ <DM6PR04MB65756D0B96314EF126162948FC472@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <d97543f4-f394-423d-9ea0-819ddaeb7749@acm.org>
+ <DM6PR04MB657523DB92B671DD8F06723EFC472@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <879075a8-998c-4e17-b368-6023ec960d9b@acm.org>
+In-Reply-To: <879075a8-998c-4e17-b368-6023ec960d9b@acm.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|IA0PR04MB8836:EE_
+x-ms-office365-filtering-correlation-id: f186c547-31d7-40bc-6c0b-08dcef34e7fe
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|376014|10070799003|7416014|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?eEwzZXdwc2xNdGNWSEVMRDl3Rkd1MlhyOS8yVTh1VVpiUEZwU2M0dDJZT2Zl?=
+ =?utf-8?B?Rlh3OXVhU0VhYVBFMzk2MXdhZmlsY3pzamF3bDJYWnhLZittNUx5SEk2SlZ2?=
+ =?utf-8?B?eVcrOS9RSXlMSG9wVXhqWFBXZU1HQkxjRkFRT0h2ZTVmNUhmbkgyVEhtNEZu?=
+ =?utf-8?B?bW9RcVBsSWQvbVlDT2EvbTRTeFBFbHVJdE5KRW1pZzRQTUVGdmtJM3dBRHNy?=
+ =?utf-8?B?MTAzVDZzczhBdi9aR04waS8rT2pBcXpGWGE5bTlBcHZqeExYMFJrZnJCRFpt?=
+ =?utf-8?B?c1pvQStuY0xBcmlXRW5NblpKN2JicGpZbFRZS0VBYWthbHNtUjVQaDJPVXV1?=
+ =?utf-8?B?bmFkM3lZV1ljWWRrTXNXcHV6V085Z04wcFJ4dTBtdUhGODZrQXBxam1GdjdM?=
+ =?utf-8?B?VXdqOW5rMVhNKytRR0RTYzBMWnptamhIRzdBL25VYXdjUzEwQ0tGSkFjcjVo?=
+ =?utf-8?B?M2dSbVJtQlhCajhTNWR1a0R6ekdFeUxGVjdPOUZvc0JhbmxvV3lMMzIyVzNX?=
+ =?utf-8?B?RGl4cTVJT2JIczZDdjRveWlwZHgyQzJRY0QxWW01TnZOaDYvdlU0TmtHZGFu?=
+ =?utf-8?B?MStxVjBjdkNwdG9VdzQ2VDFmZDI5ZkNPNTIxNkN2a3lTS0pDM3RuK1I4MnpM?=
+ =?utf-8?B?MVlCREpxNEJ3STNyelMrTHhUajRCOEdJWkl4dmdmcy9ubkRSOEo2TVJFTnJY?=
+ =?utf-8?B?S1I0MHpaTERkQ1BSRENldlROVEg4M0E3UU90clpPWEptUC9ITXFaQzdzMEFw?=
+ =?utf-8?B?WC80RFpwRnByYzNmaDdLUVpHNkhXMEhkbVRyNlJXTmUzQVducUNOaWUyM3lw?=
+ =?utf-8?B?R3hwVjdGUFlxOCs5RnBwcW8rN2R5VDZ0VWpjanVmbHZWTk1RVzBQWjA1aVhF?=
+ =?utf-8?B?b2djRVMzR0ZCb2xjUkRDcXBtYXVzMjVuOUFLVFdHenY5NVpjMjRvaDRKclRz?=
+ =?utf-8?B?Vk1BSUlXRDBkZmUvMDhuemQ5ZEhrZVYzTENIT3JqQ0M1Z3pzU01XM2RVS2dI?=
+ =?utf-8?B?ZnlwZ3RMTjFIeVZYNloyWmoweVdCNTNrZVFsV3FDS292VERUWEZFYWVaYlBy?=
+ =?utf-8?B?L3VxMzBqaEl1WW5DRldYQjgxbWI2RVBIMW1HV1pYT3lBazQvNGZsWitsK0pM?=
+ =?utf-8?B?Vm16MDcxOW9XY0ZKU2dtUnBhMHkxa2x0UDFhYXBRNm8xZ0JOejdMMnk5Smxx?=
+ =?utf-8?B?bEF2U0xjUitGQTFRU09BTmRNWEF3YVloeEpRZ1d2SEIyQkhSb3laNE9jejhO?=
+ =?utf-8?B?REt1em1NbkxQaVhCZllubmFHbmE0UWU4bTU4anYycVFzQzluaTRncFl4ZllR?=
+ =?utf-8?B?YXJOWTZBSjkreHVSUjc0L3NKdVRyLzlNWnFkT2sveFByNkhGOG1WSVhOdm9i?=
+ =?utf-8?B?ZW5QMGpyWjFFRkZXakRhaFpxc1pCVzNQUmFSMys3N3RIVTg4OW5wOVBJMWV0?=
+ =?utf-8?B?cHJMb21tTlkyWTd5Y3hTZDl3NzR1SDc2Y0RKQUY2N0orbFBQZWpVdHNzNzRn?=
+ =?utf-8?B?MVZPYnlwT05uZm9aMmJGSG04cnJnanYvNVVIdjJHdWFXN3lIMExEeVZ1UFdl?=
+ =?utf-8?B?MU0yajN0VnZUVFdYNTdBWVRGU2RsQjl0bGRKM0pzWi9RbDlHWWxRYm55SE5I?=
+ =?utf-8?B?YnhWeHdMVENEVTg2Q3p5eXFlTHlEdlV6cUU5NW5rZHFVZDhEakxDSDlzZnJu?=
+ =?utf-8?B?Qmk5ZU1DMHpYMXFiUnJSMysxTmRjRkduTlhvaXM2ditHeHM2ZiszdWc2R3VT?=
+ =?utf-8?B?Q0U1S25odmRISmdFMWtTOUVEcjV0N1pmZUJ2SlhzRFBhczczZmw0ZEJzQUEv?=
+ =?utf-8?Q?rQVTAhk/nXxyOZJUB87pyK6UDqI449+o34w8s=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(10070799003)(7416014)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?WUVDUkIxNUZPS0Evck00M3V1S2kvc1VreCtDTE1FMGdYakVEQzNjcHJBNGFL?=
+ =?utf-8?B?T1V0Y2RoczNnbStUL2huY2NPOUtQaUVWTTJ2NHRPcUhrL3lWWTZvV2JiWkIr?=
+ =?utf-8?B?bVNxOWh3Ykk5VFRUQmdIenJzM3ZFZDFVMG1Kang5ZHRDeGZwc29tUjN5S2V5?=
+ =?utf-8?B?QWxmT3dzZEk4SFQxeFowQk1xS0l3UWQ5dG12djJraVZPYkpaSDk0a2FEM2R6?=
+ =?utf-8?B?cFE4VmdGZU9FYVNkWnA3eFJ5WFFFWis1d0FxcVd3OFFxRUY3TUMxOTNlWnZU?=
+ =?utf-8?B?a2NMNk00THgrQVVZbTFvbzAzejkyZHFzeWVhY3IycUlGVCtnZkdYeXpSS0NP?=
+ =?utf-8?B?c1JtdEV0ZlFZc0R2ZUtEc3haYUNwaS95c28vbS9mZ1JqRWQ0VkRqTUtiUWJC?=
+ =?utf-8?B?Ni9HRFI2bDRvSGthTVVWMlZkUGI2SjdJdkJmUVVPNG5FWjZCOUNJekh3elJr?=
+ =?utf-8?B?NVloVzdhU0Y3OGQvQWFIMitrSkpEQnFvUGpMcTROakNFOUw5N2hHTERzWUds?=
+ =?utf-8?B?c25YN0xTU2htV0NlbkE1WTNqd2FZM0xMUDEvQUJ4Q01KN2NQamQwOG1GUDRP?=
+ =?utf-8?B?MzhBOGcrMkd2cmhWU3hKOW41S0d1TEFtN0dqNGRlcm80cmppUndrazVNSjZN?=
+ =?utf-8?B?b1ZEcE5wWGp0RFRNZDhUMHZ3Z20xTWc0WnNlenlRcFdFd2Z4MFhGT0JEQzFt?=
+ =?utf-8?B?NDEwak5YbENrVkVLKzllZFJCOTloNFJBYlZNUm43dFZWRE5RdEpkWWF3QVNm?=
+ =?utf-8?B?Vk5UenhjZWVrUU5iZEZlZDBGTmtrc1hNSWR3czVPb3VvUy9NZlNZdnI4Q2lT?=
+ =?utf-8?B?VWtKVnd3V1BsMDRXRXhKN2pKM2xXckpyY1lIdVpXR0g1d3AyUkNYVzdBbml6?=
+ =?utf-8?B?UXFnNkFPcGYyVTVadjhkZm84VEQvT1RlWEhuUWNpUnpGUU1hcE1DdWtMUE4x?=
+ =?utf-8?B?d0FpbTQrSFdIakY1RlBlYVovSzNjeElkRDl5dmgwYjFwblM0RUd4OGNhNENr?=
+ =?utf-8?B?dWNTcTRaZXF6YTl3TTZpZ0FVcE9UL2Y5NzMxdUFtMWUvekZwb3U4amF4My93?=
+ =?utf-8?B?VVd5S2V2QVVrcU5QWUtKdkdYd1lzUlJnaGJ1WXpkVzNMWjg1aXk3Mld1WW1z?=
+ =?utf-8?B?Rjh6L3ZlcHVpWllkUGxEZmIzOEdmNDQrN0o5WWl0WjZYbGJWRUtMeStUeDZh?=
+ =?utf-8?B?YVVuWUJPU0lvOXVwZ3FldGVLQWVIZDV5dkYrYUdDNWQ3c1ZFYVB2Z1FBdjRu?=
+ =?utf-8?B?K2k4aUUzWXhrQ1hxMllIUUk5WmkvVUswV1JvU2JVeXJtcWFZanZock5OeC9x?=
+ =?utf-8?B?Q3dZb1d1dWRvczF3L2xTc0VYd1lySms3T24wR0JTcE1WUVhtR2pRRVdaK1NC?=
+ =?utf-8?B?UXlCdHFUN05uVkxOWUc1bEhUcFowd2VjZDNxSHIzeVErRjFQeGJXemtVUFRm?=
+ =?utf-8?B?VTJ6MU5GRS9pR0lYS2tteFpBRDZkcm1xK3RFQUxGdDBwU3FlOVM2RC9EK096?=
+ =?utf-8?B?L3l5R052MDM2NGQ2ajhpVmpuYkV0R1BzY1QrbGNoTWllNFNRM2ttc29wMDg0?=
+ =?utf-8?B?MTF4SjR1WkpJS2FtSTJreUplb0dla0F5LzNzdktPcWxFR3NiYm9VUlhyLyto?=
+ =?utf-8?B?MExuVDZLa0lSQmluYkVKNDhQaTJ1K1I3dVduMzJjM0lZUnZwVUtvL0RiaHoz?=
+ =?utf-8?B?VXJaTW5ZV0JxSkNHbmpFKzhpOEVValdIOVl2SGxSYWZBL080Tm8rck90a2Rw?=
+ =?utf-8?B?YnZld2lUanQwUm54SEMrNFFqWEJDN0pHUkcrcUNuT0V6cGZtWFZDWFY3MVBu?=
+ =?utf-8?B?bWVxUTVSOEZRTzN2SzdlMjFKZEFIOC9OV1BSVWFDdE5Hb2VNNmhGdVhkdkph?=
+ =?utf-8?B?Ym1QcEwzVUJTaWtPeDAzcnp0MzVpR0ZpV1NqYWRGaGVDM2VlOFk2MGJqamhC?=
+ =?utf-8?B?SHJ4czZZaVIwRDZ5ZE1EbTR5MVFXK2lVSWs1bStKTVFBRk5wUHc0MkFoYkN1?=
+ =?utf-8?B?eTQvYldsTkJxcnh4bS9jcmx6Y0ZlQUx1OFluSFJDRGpWMElIOVNWbER2ekxo?=
+ =?utf-8?B?T0sxSEdnbmRwRVBNRHB4WnJLSEw0Y3VOWUNCbXpWYjlCTUhEWmgxb2RhTjVw?=
+ =?utf-8?B?cjI0cXNHSTFZWkxuK2JnZitKWXUwL0Q4T01SSzVtQk40RGNuUlpxVFUzSHB1?=
+ =?utf-8?Q?IPwlDuIDA7oyKRtteTwGq43rSMz7rO9A9JIr/zSYWIG5?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	keHx5tQ0Eeln27FEIMh5J5Wmiv8EOWsFJpTZs5jxp+R1rsl+JJaih0XwwxsQfS0EN3HMN7I+h4kqkkMTitALwJW2Uvoa7xDqNwBJd6LujdVwfVWPshTASf+XZHGN06DQHoZ+lqRd4Hwaiu+1aZl902s+lD5U/oQGaSvQGEC/HuA2+7mMtqNSqLaCYIlwP0uxwQKs/V2hbqYLISbSpuXIba34ufXJmFwPKlWKPnPaBsuEj5Wn9BaBPT18gyp1CPiIrEiiwc1De40qdnjyBcDKLOyr0LkHKS3iy9O66R44rbuD4/orWwIVU7b9X9vIRx0IyIxLQmxDGWyPLmEbuNNEWcAqMIdRc89SjMhIWHNh+urJzj7hU+1qp3t39WHkZKKpQg0JA7YgGY3/pAQoG0EiWmYlV8qaIA8bnD/SwZty0f+v3KLuqNy770bbIWfjUfHF9g3I4hn3FlOEoAZNWybrbl8E8HZvqFENIsTl/eYnBJa5HSvEm/SR9dKemISy619jOnoX6BCT9/S3qWhfrAzVg9y7RNwnox3dhlaaUF0Ig8Qpo1/RqbPAaUAhKdMhdn7DsnIFmL3Esf4dQzTV+fOqdKioW1zw2VU84q2PqyiHJRzXY8sH7cX+DNGWUtU76zNk
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f186c547-31d7-40bc-6c0b-08dcef34e7fe
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Oct 2024 05:22:48.8850
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: L0YGJBbjWSGs3rASK3BL91HU5Rvtw6ja0Yo76jatPfl42GYwJ3YZSNLr7ix0cNqk0TY6vRf9/Gl4IjhCg33VsA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR04MB8836
 
-Hello,
-
-In our RH internal test done by Guangwu, the following warning is reported when
-setting `write_cache` sysfs attribute, and turns out it is one race between
-freezing queue and entering queue.
-
-Oct 15 22:27:59 storageqe-105 kernel: task:systemd-udevd state stack:0 pid:924 tgid:924 ppid:1 flags:0x00004006
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: blk_queue_enter+0x164/0x220
-Oct 15 22:27:59 storageqe-105 kernel: ? __pfx_autoremove_wake_function+0x10/0x10
-Oct 15 22:27:59 storageqe-105 kernel: blk_mq_alloc_request+0x130/0x2c0
-Oct 15 22:27:59 storageqe-105 kernel: scsi_execute_cmd+0xd1/0x330
-Oct 15 22:27:59 storageqe-105 kernel: read_capacity_16+0x111/0x410 [sd_mod]
-Oct 15 22:27:59 storageqe-105 kernel: sd_read_capacity+0x7e/0x340 [sd_mod]
-Oct 15 22:27:59 storageqe-105 kernel: sd_revalidate_disk.isra.0+0x374/0xbd0 [sd_mod]
-Oct 15 22:27:59 storageqe-105 kernel: ? scsi_block_when_processing_errors+0x25/0x100
-Oct 15 22:27:59 storageqe-105 kernel: sd_open+0x13d/0x1b0 [sd_mod]
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_get_whole+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_open+0x208/0x3b0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_file_open_by_dev+0xc6/0x120
-Oct 15 22:27:59 storageqe-105 kernel: disk_scan_partitions+0x6c/0xe0
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_ioctl+0xc4/0x270
-Oct 15 22:27:59 storageqe-105 kernel: __x64_sys_ioctl+0x94/0xd0
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? blkdev_common_ioctl+0x4f3/0x9e0
-Oct 15 22:27:59 storageqe-105 kernel: ? mutex_lock+0x12/0x30
-Oct 15 22:27:59 storageqe-105 kernel: ? __seccomp_filter+0x303/0x520
-Oct 15 22:27:59 storageqe-105 kernel: ? blkdev_ioctl+0xc4/0x270
-Oct 15 22:27:59 storageqe-105 kernel: ? kmem_cache_alloc_noprof+0x105/0x2f0
-Oct 15 22:27:59 storageqe-105 kernel: ? locks_insert_lock_ctx+0x52/0x90
-Oct 15 22:27:59 storageqe-105 kernel: ? flock_lock_inode+0x20c/0x3c0
-Oct 15 22:27:59 storageqe-105 kernel: ? locks_lock_inode_wait+0xee/0x1d0
-Oct 15 22:27:59 storageqe-105 kernel: ? __x64_sys_getrandom+0xcc/0x150
-Oct 15 22:27:59 storageqe-105 kernel: ? __do_sys_flock+0x125/0x1d0
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x10/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7effe5128e7f
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffd87f0d550 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 0000000000000012 RCX: 00007effe5128e7f
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000000 RSI: 000000000000125f RDI: 0000000000000012
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 0000000000000012 R08: 0000000000000069 R09: 00000000fffffffe
-Oct 15 22:27:59 storageqe-105 kernel: R10: 0000000000000000 R11: 0000000000000246 R12: 00007ffd87f0d620
-Oct 15 22:27:59 storageqe-105 kernel: R13: 00007ffd87f0d5f0 R14: 000055c870bd8e30 R15: 0000000000000000
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-Oct 15 22:27:59 storageqe-105 kernel: task:smartd state stack:0 pid:1170 tgid:1170 ppid:1 flags:0x00000002
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: schedule_preempt_disabled+0x15/0x30
-Oct 15 22:27:59 storageqe-105 kernel: __mutex_lock.constprop.0+0x3d0/0x6d0
-Oct 15 22:27:59 storageqe-105 kernel: ? find_inode_fast+0xa7/0xd0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_open+0x2ae/0x3b0
-Oct 15 22:27:59 storageqe-105 kernel: ? __pfx_blkdev_open+0x10/0x10
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_open+0xc7/0x100
-Oct 15 22:27:59 storageqe-105 kernel: ? bpf_lsm_file_open+0x9/0x10
-Oct 15 22:27:59 storageqe-105 kernel: do_dentry_open+0x257/0x490
-Oct 15 22:27:59 storageqe-105 kernel: vfs_open+0x34/0xf0
-Oct 15 22:27:59 storageqe-105 kernel: do_open+0x165/0x3d0
-Oct 15 22:27:59 storageqe-105 kernel: path_openat+0x124/0x2d0
-Oct 15 22:27:59 storageqe-105 kernel: ? pick_next_task+0x9a7/0xb10
-Oct 15 22:27:59 storageqe-105 kernel: do_filp_open+0xc4/0x170
-Oct 15 22:27:59 storageqe-105 kernel: do_sys_openat2+0xae/0xe0
-Oct 15 22:27:59 storageqe-105 kernel: __x64_sys_openat+0x55/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? _copy_to_user+0x24/0x40
-Oct 15 22:27:59 storageqe-105 kernel: ? put_sg_io_hdr+0x3c/0xf0
-Oct 15 22:27:59 storageqe-105 kernel: ? sg_io+0x83/0x330
-Oct 15 22:27:59 storageqe-105 kernel: ? scsi_ioctl+0x333/0x560
-Oct 15 22:27:59 storageqe-105 kernel: ? rseq_get_rseq_cs+0x1d/0x220
-Oct 15 22:27:59 storageqe-105 kernel: ? rseq_ip_fixup+0x8d/0x1d0
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x151/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? rseq_ip_fixup+0x8d/0x1d0
-Oct 15 22:27:59 storageqe-105 kernel: ? page_counter_uncharge+0x33/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? drain_stock+0x68/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: ? __refill_stock+0x81/0x90
-Oct 15 22:27:59 storageqe-105 kernel: ? __memcg_slab_free_hook+0x100/0x150
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_work+0xf3/0x120
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x10/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_work+0xf3/0x120
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x10/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7ffa60320210
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffcee5b88f0 EFLAGS: 00000202 ORIG_RAX: 0000000000000101
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 0000000000000800 RCX: 00007ffa60320210
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000800 RSI: 000055f3efdf1e50 RDI: 00000000ffffff9c
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 000055f3efdf1e50 R08: 0000000000000001 R09: 0000000000000001
-Oct 15 22:27:59 storageqe-105 kernel: R10: 0000000000000000 R11: 0000000000000202 R12: 000055f3efed4950
-Oct 15 22:27:59 storageqe-105 kernel: R13: 000055f3efea2668 R14: 000055f3ea13be69 R15: 000055f3efed4968
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-Oct 15 22:27:59 storageqe-105 kernel: task:fio state stack:0 pid:13487 tgid:13487 ppid:13423 flags:0x00000002
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: schedule_preempt_disabled+0x15/0x30
-Oct 15 22:27:59 storageqe-105 kernel: __mutex_lock.constprop.0+0x3d0/0x6d0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_release+0x66/0x160
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_release+0x11/0x20
-Oct 15 22:27:59 storageqe-105 kernel: __fput+0xee/0x2c0
-Oct 15 22:27:59 storageqe-105 kernel: __x64_sys_close+0x3c/0x80
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? update_load_avg+0x7e/0x7c0
-Oct 15 22:27:59 storageqe-105 kernel: ? set_next_entity+0xd3/0x1c0
-Oct 15 22:27:59 storageqe-105 kernel: ? pick_next_task_fair+0x15c/0x5b0
-Oct 15 22:27:59 storageqe-105 kernel: ? __pte_offset_map+0x1b/0x130
-Oct 15 22:27:59 storageqe-105 kernel: ? next_uptodate_folio+0x89/0x2a0
-Oct 15 22:27:59 storageqe-105 kernel: ? filemap_map_pages+0x50b/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_read_fault+0xfa/0x1e0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_fault+0x12f/0x340
-Oct 15 22:27:59 storageqe-105 kernel: ? __handle_mm_fault+0x2e8/0x720
-Oct 15 22:27:59 storageqe-105 kernel: ? __count_memcg_events+0x58/0xf0
-Oct 15 22:27:59 storageqe-105 kernel: ? handle_mm_fault+0x234/0x350
-Oct 15 22:27:59 storageqe-105 kernel: ? do_user_addr_fault+0x347/0x640
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffdcfda29d0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 00007f6d6c5364d0 RCX: 00007f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000006
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-Oct 15 22:27:59 storageqe-105 kernel: R10: 00007ffdcfda2a60 R11: 0000000000000293 R12: 00007f6d64648000
-Oct 15 22:27:59 storageqe-105 kernel: R13: 00007f6d6c536c50 R14: 0000000000000001 R15: 00007f6d64648000
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-Oct 15 22:27:59 storageqe-105 kernel: task:fio state stack:0 pid:13488 tgid:13488 ppid:13423 flags:0x00000002
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: schedule_preempt_disabled+0x15/0x30
-Oct 15 22:27:59 storageqe-105 kernel: __mutex_lock.constprop.0+0x3d0/0x6d0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_release+0x66/0x160
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_release+0x11/0x20
-Oct 15 22:27:59 storageqe-105 kernel: __fput+0xee/0x2c0
-Oct 15 22:27:59 storageqe-105 kernel: __x64_sys_close+0x3c/0x80
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? do_read_fault+0xfa/0x1e0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_fault+0x12f/0x340
-Oct 15 22:27:59 storageqe-105 kernel: ? __handle_mm_fault+0x2e8/0x720
-Oct 15 22:27:59 storageqe-105 kernel: ? __count_memcg_events+0x58/0xf0
-Oct 15 22:27:59 storageqe-105 kernel: ? handle_mm_fault+0x234/0x350
-Oct 15 22:27:59 storageqe-105 kernel: ? do_user_addr_fault+0x347/0x640
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffdcfda29d0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 00007f6d6c536690 RCX: 00007f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000007
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-Oct 15 22:27:59 storageqe-105 kernel: R10: 00007ffdcfda2a60 R11: 0000000000000293 R12: 00007f6d64676c00
-Oct 15 22:27:59 storageqe-105 kernel: R13: 00007f6d6c536c50 R14: 0000000000000001 R15: 00007f6d64676c00
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-Oct 15 22:27:59 storageqe-105 kernel: task:fio state stack:0 pid:13489 tgid:13489 ppid:13423 flags:0x00000002
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: schedule_preempt_disabled+0x15/0x30
-Oct 15 22:27:59 storageqe-105 kernel: __mutex_lock.constprop.0+0x3d0/0x6d0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_release+0x66/0x160
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_release+0x11/0x20
-Oct 15 22:27:59 storageqe-105 kernel: __fput+0xee/0x2c0
-Oct 15 22:27:59 storageqe-105 kernel: __x64_sys_close+0x3c/0x80
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x151/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x10/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? __pte_offset_map+0x1b/0x130
-Oct 15 22:27:59 storageqe-105 kernel: ? next_uptodate_folio+0x89/0x2a0
-Oct 15 22:27:59 storageqe-105 kernel: ? filemap_map_pages+0x50b/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: ? cputime_adjust+0x29/0xc0
-Oct 15 22:27:59 storageqe-105 kernel: ? task_cputime_adjusted+0x70/0xb0
-Oct 15 22:27:59 storageqe-105 kernel: ? get_task_mm+0x42/0x50
-Oct 15 22:27:59 storageqe-105 kernel: ? mmput+0x12/0x30
-Oct 15 22:27:59 storageqe-105 kernel: ? getrusage+0x225/0x490
-Oct 15 22:27:59 storageqe-105 kernel: ? _copy_to_user+0x24/0x40
-Oct 15 22:27:59 storageqe-105 kernel: ? __do_sys_getrusage+0x6b/0xb0
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_work+0xf3/0x120
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x10/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? do_syscall_64+0x89/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? handle_mm_fault+0x234/0x350
-Oct 15 22:27:59 storageqe-105 kernel: ? do_user_addr_fault+0x347/0x640
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffdcfda29d0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 00007f6d6c536850 RCX: 00007f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000006
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-Oct 15 22:27:59 storageqe-105 kernel: R10: 00007ffdcfda2a60 R11: 0000000000000293 R12: 00007f6d646a5800
-Oct 15 22:27:59 storageqe-105 kernel: R13: 00007f6d6c536c50 R14: 0000000000000001 R15: 00007f6d646a5800
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-Oct 15 22:27:59 storageqe-105 kernel: task:fio state stack:0 pid:13490 tgid:13490 ppid:13423 flags:0x00000002
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: schedule_preempt_disabled+0x15/0x30
-Oct 15 22:27:59 storageqe-105 kernel: __mutex_lock.constprop.0+0x3d0/0x6d0
-Oct 15 22:27:59 storageqe-105 kernel: bdev_release+0x66/0x160
-Oct 15 22:27:59 storageqe-105 kernel: blkdev_release+0x11/0x20
-Oct 15 22:27:59 storageqe-105 kernel: __fput+0xee/0x2c0
-Oct 15 22:27:59 storageqe-105 kernel: __x64_sys_close+0x3c/0x80
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? _copy_to_user+0x24/0x40
-Oct 15 22:27:59 storageqe-105 kernel: ? __do_sys_getrusage+0x6b/0xb0
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_work+0xf3/0x120
-Oct 15 22:27:59 storageqe-105 kernel: ? syscall_exit_to_user_mode+0x10/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffdcfda29d0 EFLAGS: 00000293 ORIG_RAX: 0000000000000003
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 00007f6d6c536a10 RCX: 00007f6d6d614f3a
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000007
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-Oct 15 22:27:59 storageqe-105 kernel: R10: 00007ffdcfda2a60 R11: 0000000000000293 R12: 00007f6d646d4400
-Oct 15 22:27:59 storageqe-105 kernel: R13: 00007f6d6c536c50 R14: 0000000000000001 R15: 00007f6d646d4400
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-Oct 15 22:27:59 storageqe-105 kernel: task:sh state stack:0 pid:13870 tgid:13870 ppid:1524 flags:0x00004006
-Oct 15 22:27:59 storageqe-105 kernel: Call Trace:
-Oct 15 22:27:59 storageqe-105 kernel: <TASK>
-Oct 15 22:27:59 storageqe-105 kernel: __schedule+0x239/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: schedule+0x27/0xa0
-Oct 15 22:27:59 storageqe-105 kernel: schedule_preempt_disabled+0x15/0x30
-Oct 15 22:27:59 storageqe-105 kernel: __mutex_lock.constprop.0+0x3d0/0x6d0
-Oct 15 22:27:59 storageqe-105 kernel: ? sched_balance_newidle+0x2c8/0x460
-Oct 15 22:27:59 storageqe-105 kernel: queue_wc_store+0x12f/0x170
-Oct 15 22:27:59 storageqe-105 kernel: ? __schedule+0x241/0x5f0
-Oct 15 22:27:59 storageqe-105 kernel: ? prepare_to_wait_event+0x56/0x190
-Oct 15 22:27:59 storageqe-105 kernel: ? finish_wait+0x44/0x90
-Oct 15 22:27:59 storageqe-105 kernel: ? blk_mq_freeze_queue_wait+0xc6/0xd0
-Oct 15 22:27:59 storageqe-105 kernel: ? __pfx_autoremove_wake_function+0x10/0x10
-Oct 15 22:27:59 storageqe-105 kernel: queue_attr_store+0x82/0xc0
-Oct 15 22:27:59 storageqe-105 kernel: kernfs_fop_write_iter+0x13e/0x1f0
-Oct 15 22:27:59 storageqe-105 kernel: vfs_write+0x291/0x460
-Oct 15 22:27:59 storageqe-105 kernel: ksys_write+0x6d/0xf0
-Oct 15 22:27:59 storageqe-105 kernel: do_syscall_64+0x7d/0x160
-Oct 15 22:27:59 storageqe-105 kernel: ? memcg1_check_events+0x17/0x30
-Oct 15 22:27:59 storageqe-105 kernel: ? __mod_memcg_lruvec_state+0xa0/0x150
-Oct 15 22:27:59 storageqe-105 kernel: ? __lruvec_stat_mod_folio+0x86/0xd0
-Oct 15 22:27:59 storageqe-105 kernel: ? __folio_mod_stat+0x26/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? do_anonymous_page+0x3e4/0x550
-Oct 15 22:27:59 storageqe-105 kernel: ? __handle_mm_fault+0x2e8/0x720
-Oct 15 22:27:59 storageqe-105 kernel: ? __count_memcg_events+0x58/0xf0
-Oct 15 22:27:59 storageqe-105 kernel: ? handle_mm_fault+0x234/0x350
-Oct 15 22:27:59 storageqe-105 kernel: ? do_user_addr_fault+0x347/0x640
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: ? clear_bhb_loop+0x25/0x80
-Oct 15 22:27:59 storageqe-105 kernel: entry_SYSCALL_64_after_hwframe+0x76/0x7e
-Oct 15 22:27:59 storageqe-105 kernel: RIP: 0033:0x7fc7f7c8d6a4
-Oct 15 22:27:59 storageqe-105 kernel: RSP: 002b:00007ffdcddda428 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
-Oct 15 22:27:59 storageqe-105 kernel: RAX: ffffffffffffffda RBX: 0000000000000010 RCX: 00007fc7f7c8d6a4
-Oct 15 22:27:59 storageqe-105 kernel: RDX: 0000000000000010 RSI: 0000557f6ce97900 RDI: 0000000000000001
-Oct 15 22:27:59 storageqe-105 kernel: RBP: 0000557f6ce97900 R08: 0000000000000073 R09: 00000000ffffffff
-Oct 15 22:27:59 storageqe-105 kernel: R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000010
-Oct 15 22:27:59 storageqe-105 kernel: R13: 00007fc7f7d635c0 R14: 0000000000000010 R15: 00007fc7f7d60f00
-Oct 15 22:27:59 storageqe-105 kernel: </TASK>
-
-
-
-Thanks,
-Ming
-
+PiANCj4gT24gMTAvMTcvMjQgMTE6MDcgQU0sIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiA+IEkgd2Fz
+IGp1c3QgcG9pbnRpbmcgb3V0IHRoYXQgYWZ0ZXIgeW91ciBjaGFuZ2UsIHRoZSBleHRyYSBpbmZv
+IG9mIFJUQw0KPiA+IHdpbGwgbm8gbG9uZ2VyIGJlIGF2YWlsYWJsZSwgQW5kIHByb3Bvc2VkIGEg
+d2F5IGluIHdoaWNoIHdlIGNhbiBzdGlsbCByZXRhaW4NCj4gaXQuDQo+IA0KPiBTb21ldGhpbmcg
+bGlrZSB0aGlzIGNoYW5nZT8NCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Vmcy9jb3JlL3Vm
+cy1tY3EuYyBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzLW1jcS5jIGluZGV4DQo+IDU3Y2VkMTcyOWI3
+My4uOTg4NDAwNTAwNTYwIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmcy1tY3Eu
+Yw0KPiArKysgYi9kcml2ZXJzL3Vmcy9jb3JlL3Vmcy1tY3EuYw0KPiBAQCAtNTcyLDE0ICs1NzIs
+MTggQEAgaW50IHVmc2hjZF9tY3Ffc3FfY2xlYW51cChzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiBp
+bnQNCj4gdGFza190YWcpDQo+ICAgICAgICAgLyogU1FSVEN5LklDVSA9IDEgKi8NCj4gICAgICAg
+ICB3cml0ZWwoU1FfSUNVLCBvcHJfc3FkX2Jhc2UgKyBSRUdfU1FSVEMpOw0KPiANCj4gLSAgICAg
+ICAvKiBQb2xsIFNRUlRTeS5DVVMgPSAxLiBSZXR1cm4gcmVzdWx0IGZyb20gU1FSVFN5LlJUQyAq
+Lw0KPiArICAgICAgIC8qIFdhaXQgdW50aWwgU1FSVFN5LkNVUyA9IDEuIFJlcG9ydCBTUVJUU3ku
+UlRDLiAqLw0KPiAgICAgICAgIHJlZyA9IG9wcl9zcWRfYmFzZSArIFJFR19TUVJUUzsNCj4gICAg
+ICAgICBlcnIgPSByZWFkX3BvbGxfdGltZW91dChyZWFkbCwgdmFsLCB2YWwgJiBTUV9DVVMsIDIw
+LA0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1DUV9QT0xMX1VTLCBmYWxzZSwg
+cmVnKTsNCj4gICAgICAgICBpZiAoZXJyKQ0KPiAtICAgICAgICAgICAgICAgZGV2X2VycihoYmEt
+PmRldiwgIiVzOiBmYWlsZWQuIGh3cT0lZCwgdGFnPSVkIGVycj0lbGRcbiIsDQo+IC0gICAgICAg
+ICAgICAgICAgICAgICAgIF9fZnVuY19fLCBpZCwgdGFza190YWcsDQo+IC0gICAgICAgICAgICAg
+ICAgICAgICAgIEZJRUxEX0dFVChTUV9JQ1VfRVJSX0NPREVfTUFTSywgcmVhZGwocmVnKSkpOw0K
+PiArICAgICAgICAgICAgICAgZGV2X2VycihoYmEtPmRldiwgIiVzOiBmYWlsZWQuIGh3cT0lZCwg
+dGFnPSVkIGVycj0lZFxuIiwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgX19mdW5jX18sIGlk
+LCB0YXNrX3RhZywgZXJyKTsNCj4gKyAgICAgICBlbHNlDQo+ICsgICAgICAgICAgICAgICBkZXZf
+aW5mbyhoYmEtPmRldiwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICIlcywgaHdxICVkOiBj
+bGVhbnVwIHJldHVybiBjb2RlIChSVEMpICVsZFxuIiwNCj4gKyAgICAgICAgICAgICAgICAgICAg
+ICAgIF9fZnVuY19fLCBpZCwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgIEZJRUxEX0dFVChT
+UV9JQ1VfRVJSX0NPREVfTUFTSywgcmVhZGwocmVnKSkpOw0KWWVzLg0KDQpUaGFua3MsDQpBdnJp
+DQoNCj4gDQo+ICAgICAgICAgaWYgKHVmc2hjZF9tY3Ffc3Ffc3RhcnQoaGJhLCBod3EpKQ0KPiAg
+ICAgICAgICAgICAgICAgZXJyID0gLUVUSU1FRE9VVDsNCj4gDQo+IFRoYW5rcywNCj4gDQo+IEJh
+cnQuDQo=
