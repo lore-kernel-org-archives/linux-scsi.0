@@ -1,354 +1,112 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f194.google.com (mail-qk1-f194.google.com [209.85.222.194])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D7F8137E;
-	Sat, 19 Oct 2024 19:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F40A191F62;
+	Sat, 19 Oct 2024 21:18:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729366212; cv=none; b=t+j8QPm+ReM96T4p5wGHlZzDFoXPetHjXumvY2Hq4greBuzpThmYqsEzVbVng8r1DuCg3aZiqKem/Y9S0PXCxlDtktiDioYdNe+wT7S0c78ZcG0YUvYDnOP2N1dPd1PIgU8gPjMNPgtCxlRFmJSB28CVO8lWH8toSoB80K0Z1NQ=
+	t=1729372684; cv=none; b=tHBxeYFj0XxmtHkKd+5tPb2X6Vl2yhm4kNV9j49XOGmkSVvTnN/E9E/qjsUpoGB8NKWNAdQATnaVyZ/yYK692Kyluvr0rzA/D52uxFPuay+RhZvR1kSuphuwhLPq9mTkRgq4ywFUFGNm0YqW+YxoS5tjUbf0poXrbqy7Kg/rQoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729366212; c=relaxed/simple;
-	bh=188qYg7NVCCRHJ+5vPdup5xNtXzGiYtOPcwl4Gmtj1I=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=irvDQ7i/jpiAO4w3kW7JZI8XBzJ1fdwUItfoqx1dZyySNjWOSYu4GTqpyHpO5Anem4UDNZK2AL3eBUpwRAwVC5W0mZn4B5SNNSLNkYnlyMFegAe+J9E5ks9veNV5JoZJZhHvE4WHYA5qe97ILFGfRnL4XkxjlgWwSa4hrsS5F1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=qCorFeeb; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=qCorFeeb; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1729372684; c=relaxed/simple;
+	bh=dTdREiTC3lSMXuTuhpGwejQ68yQ2Oe9QosYNulNZI4w=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VdysUoe3bTThUGfD6loM7pL+92p/Ov+ONR5E3JyfBqli5glh1rMs70msFTfgEr7a9/nmVi4vtZcoec7wPP8AjGPX1CzRFKsKjHvbgKD72fFmffSuGpwrD7ASkCzOuo9s2nF+foJs+DVvVeiDIa49KWzxsrbJz5uMmBGJSf3tVus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PVk+hH3T; arc=none smtp.client-ip=209.85.222.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="qCorFeeb";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="qCorFeeb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1729366209;
-	bh=188qYg7NVCCRHJ+5vPdup5xNtXzGiYtOPcwl4Gmtj1I=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=qCorFeebjYBwvXPiOJeny+FKG6IwklX6nYuJEUCc5Uuk0Ur40vfvBF7Q8F+3YIY4A
-	 +GctpUaTLlJoB9sWLPH7qbVum6LfgZGb1RyThrLSLqyiyjyDR80xOBIqFbvexrbhTy
-	 DLRGxP+uwqQ6xAXU3TdRCVEOIHOt7bWvaJHYXx6I=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 96ED81287A51;
-	Sat, 19 Oct 2024 15:30:09 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id ynrh6TpGchWf; Sat, 19 Oct 2024 15:30:09 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1729366209;
-	bh=188qYg7NVCCRHJ+5vPdup5xNtXzGiYtOPcwl4Gmtj1I=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=qCorFeebjYBwvXPiOJeny+FKG6IwklX6nYuJEUCc5Uuk0Ur40vfvBF7Q8F+3YIY4A
-	 +GctpUaTLlJoB9sWLPH7qbVum6LfgZGb1RyThrLSLqyiyjyDR80xOBIqFbvexrbhTy
-	 DLRGxP+uwqQ6xAXU3TdRCVEOIHOt7bWvaJHYXx6I=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id F07451287A3B;
-	Sat, 19 Oct 2024 15:30:08 -0400 (EDT)
-Message-ID: <902b72f033da4e706b0e622c6241df90ee88a4ec.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.12-rc3
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Date: Sat, 19 Oct 2024 15:30:07 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PVk+hH3T"
+Received: by mail-qk1-f194.google.com with SMTP id af79cd13be357-7b14554468fso262127385a.1;
+        Sat, 19 Oct 2024 14:18:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1729372681; x=1729977481; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=cREe+0t46PCd+30ohydq9s8xqKcE0qk+msu4UHvCf98=;
+        b=PVk+hH3Tgw9YEtAUsIf5DbZnm1Avec84nsmlDbFCIuIzh9ms1V1LigP0hfoZVmYXIF
+         LFAnxdJMBkAvJn8/OIm4u0hPvKpkg5PFQb1F9t5YIZNwCogsanBY48IOQlD1EL6n5PzS
+         IYS4VG86jdP/PDtDDlV52ayd92cajXMGTV84GA7Ar+5zky1uNf1xPPGJAeT0kjlcmqUS
+         jYUemiqvdThx4/OB3BQ9yRHgudFU+gScp915SXTGlB41nA8IXJm7F2tunRnz6F2TQ8hO
+         I3td/QFBNrxTOCVID8ZtrzreaXd4/S2qm4oMuersBf/5B1xaV/hhvjbT52YZXbRgsk3z
+         pMzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729372681; x=1729977481;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cREe+0t46PCd+30ohydq9s8xqKcE0qk+msu4UHvCf98=;
+        b=WMQLpW6sTIbHMYBeuXtprqRiXKvFE+W3EYRAOFDnDVmam6amwx5cmS/lWh/4nNpxDh
+         BIXxV/HrxlmmHzxS8evbONhMQqPZQyBO2mbIZ2mytc48gqF87AcIEHoccwd4NUdLA9MZ
+         T2XTyC2efi+iQX4LrRrWuimTbxP9gn6bYPQhkfCTV1uH3bUUYYA57RxM0LJViVc60k7R
+         kdcUR0Upwo9sKJe6dHnofF9TUqT0bhTF9W1f5uVswD+3T/+Czo0pE8ehjxYZkqbMyZ7w
+         BUwvj3UPivglko8mhz0rkET0jsXjC7224R1xfsdkNQV4LhLiEBl8LKsc8Ke9Hc6tFkHX
+         gcqQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXK1RBsV2fqp8QMdDhWAubPBq4W4YArRHumn4kHCKCh9ZU8Y3rY5LLaiAriq3Fle7aS22J11MLD3N1o0WA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzemo6rD9czWohLWdDrFsUYofNpQeBYC7Lc2tMqyjD5VKqe8na5
+	u1LXUL/5aDjeCz5FYVmprN5iqVje0PQMP5p0QofAQNmSHfjAdR1p
+X-Google-Smtp-Source: AGHT+IGTyEVz8aI3jODN1tJE9vSC9Oy1azzEoFDBCx+AQpQ1VkvvuFtZiIPPtvvgieKMaHKoDMvIlQ==
+X-Received: by 2002:a05:620a:45a2:b0:7ae:64a2:be61 with SMTP id af79cd13be357-7b157b7ee40mr1037834485a.36.1729372680963;
+        Sat, 19 Oct 2024 14:18:00 -0700 (PDT)
+Received: from localhost.localdomain (mobile-130-126-255-54.near.illinois.edu. [130.126.255.54])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7b1659fd65fsm15510985a.53.2024.10.19.14.17.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 19 Oct 2024 14:18:00 -0700 (PDT)
+From: Gax-c <zichenxie0106@gmail.com>
+To: james.smart@broadcom.com,
+	ram.vegesna@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	fthain@linux-m68k.org,
+	quic_jjohnson@quicinc.com,
+	dwagner@suse.de,
+	hare@suse.de
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	zzjas98@gmail.com,
+	chenyuan0y@gmail.com,
+	Zichen Xie <zichenxie0106@gmail.com>
+Subject: [PATCH] scsi: elx: efct: Prevent potential integer overflow in efct_efclib_config()
+Date: Sat, 19 Oct 2024 16:16:38 -0500
+Message-Id: <20241019211637.5533-1-zichenxie0106@gmail.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Fixes all in drivers. The largest is the mpi3mr which corrects a phy
-count limit that should only apply to the controller but was being
-incorrectly applied to expander phys.
+From: Zichen Xie <zichenxie0106@gmail.com>
 
-The patch is available here:
+This was found by a static analyzer.
+There may be a potential integer overflow issue in
+efct_efclib_config(). efc->max_xfer_size is defined
+as "efc->max_xfer_size" while sli->sge_supported_length
+and sli_get_max_sgl(&efct->hw.sli) are all "u32".
+The result of the calculation will be limited to
+"u32" without correct casting.
+We recommend adding an extra cast to prevent
+potential integer overflow.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+Signed-off-by: Zichen Xie <zichenxie0106@gmail.com>
+---
+ drivers/scsi/elx/efct/efct_driver.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The short changelog is:
-
-Peter Wang (2):
-      scsi: ufs: core: Requeue aborted request
-      scsi: ufs: core: Fix the issue of ICU failure
-
-Ranjan Kumar (1):
-      scsi: mpi3mr: Validate SAS port assignments
-
-Seunghwan Baek (1):
-      scsi: ufs: core: Set SDEV_OFFLINE when UFS is shut down
-
-Wang Hai (1):
-      scsi: target: core: Fix null-ptr-deref in target_alloc_device()
-
-And the diffstat:
-
- drivers/scsi/mpi3mr/mpi3mr.h           |  4 ++--
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 42 ++++++++++++++++++++++------------
- drivers/target/target_core_device.c    |  2 +-
- drivers/ufs/core/ufs-mcq.c             | 15 ++++++------
- drivers/ufs/core/ufshcd.c              | 24 ++++++-------------
- 5 files changed, 45 insertions(+), 42 deletions(-)
-
-With full diff below
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index fcb0fa31536b..16e0baeb8799 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -542,8 +542,8 @@ struct mpi3mr_hba_port {
-  * @port_list: List of ports belonging to a SAS node
-  * @num_phys: Number of phys associated with port
-  * @marked_responding: used while refresing the sas ports
-- * @lowest_phy: lowest phy ID of current sas port
-- * @phy_mask: phy_mask of current sas port
-+ * @lowest_phy: lowest phy ID of current sas port, valid for controller port
-+ * @phy_mask: phy_mask of current sas port, valid for controller port
-  * @hba_port: HBA port entry
-  * @remote_identify: Attached device identification
-  * @rphy: SAS transport layer rphy object
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index ccd23def2e0c..0ba9e6a6a13c 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -590,12 +590,13 @@ static enum sas_linkrate mpi3mr_convert_phy_link_rate(u8 link_rate)
-  * @mrioc: Adapter instance reference
-  * @mr_sas_port: Internal Port object
-  * @mr_sas_phy: Internal Phy object
-+ * @host_node: Flag to indicate this is a host_node
-  *
-  * Return: None.
-  */
- static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_sas_port *mr_sas_port,
--	struct mpi3mr_sas_phy *mr_sas_phy)
-+	struct mpi3mr_sas_phy *mr_sas_phy, u8 host_node)
- {
- 	u64 sas_address = mr_sas_port->remote_identify.sas_address;
+diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
+index 55d2301bfd7d..7fe180037c2d 100644
+--- a/drivers/scsi/elx/efct/efct_driver.c
++++ b/drivers/scsi/elx/efct/efct_driver.c
+@@ -109,7 +109,7 @@ efct_efclib_config(struct efct *efct, struct libefc_function_template *tt)
+ 	efc->log_level = EFC_LOG_LIB;
  
-@@ -605,9 +606,13 @@ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
- 
- 	list_del(&mr_sas_phy->port_siblings);
- 	mr_sas_port->num_phys--;
--	mr_sas_port->phy_mask &= ~(1 << mr_sas_phy->phy_id);
--	if (mr_sas_port->lowest_phy == mr_sas_phy->phy_id)
--		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+
-+	if (host_node) {
-+		mr_sas_port->phy_mask &= ~(1 << mr_sas_phy->phy_id);
-+
-+		if (mr_sas_port->lowest_phy == mr_sas_phy->phy_id)
-+			mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+	}
- 	sas_port_delete_phy(mr_sas_port->port, mr_sas_phy->phy);
- 	mr_sas_phy->phy_belongs_to_port = 0;
- }
-@@ -617,12 +622,13 @@ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
-  * @mrioc: Adapter instance reference
-  * @mr_sas_port: Internal Port object
-  * @mr_sas_phy: Internal Phy object
-+ * @host_node: Flag to indicate this is a host_node
-  *
-  * Return: None.
-  */
- static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_sas_port *mr_sas_port,
--	struct mpi3mr_sas_phy *mr_sas_phy)
-+	struct mpi3mr_sas_phy *mr_sas_phy, u8 host_node)
- {
- 	u64 sas_address = mr_sas_port->remote_identify.sas_address;
- 
-@@ -632,9 +638,12 @@ static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
- 
- 	list_add_tail(&mr_sas_phy->port_siblings, &mr_sas_port->phy_list);
- 	mr_sas_port->num_phys++;
--	mr_sas_port->phy_mask |= (1 << mr_sas_phy->phy_id);
--	if (mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
--		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+	if (host_node) {
-+		mr_sas_port->phy_mask |= (1 << mr_sas_phy->phy_id);
-+
-+		if (mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
-+			mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+	}
- 	sas_port_add_phy(mr_sas_port->port, mr_sas_phy->phy);
- 	mr_sas_phy->phy_belongs_to_port = 1;
- }
-@@ -675,7 +684,7 @@ static void mpi3mr_add_phy_to_an_existing_port(struct mpi3mr_ioc *mrioc,
- 			if (srch_phy == mr_sas_phy)
- 				return;
- 		}
--		mpi3mr_add_sas_phy(mrioc, mr_sas_port, mr_sas_phy);
-+		mpi3mr_add_sas_phy(mrioc, mr_sas_port, mr_sas_phy, mr_sas_node->host_node);
- 		return;
- 	}
- }
-@@ -736,7 +745,7 @@ static void mpi3mr_del_phy_from_an_existing_port(struct mpi3mr_ioc *mrioc,
- 				mpi3mr_delete_sas_port(mrioc, mr_sas_port);
- 			else
- 				mpi3mr_delete_sas_phy(mrioc, mr_sas_port,
--				    mr_sas_phy);
-+				    mr_sas_phy, mr_sas_node->host_node);
- 			return;
- 		}
- 	}
-@@ -1028,7 +1037,7 @@ mpi3mr_alloc_hba_port(struct mpi3mr_ioc *mrioc, u16 port_id)
- /**
-  * mpi3mr_get_hba_port_by_id - find hba port by id
-  * @mrioc: Adapter instance reference
-- * @port_id - Port ID to search
-+ * @port_id: Port ID to search
-  *
-  * Return: mpi3mr_hba_port reference for the matched port
-  */
-@@ -1367,7 +1376,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_sas_port_sanity_check(mrioc, mr_sas_node,
- 	    mr_sas_port->remote_identify.sas_address, hba_port);
- 
--	if (mr_sas_node->num_phys >= sizeof(mr_sas_port->phy_mask) * 8)
-+	if (mr_sas_node->host_node && mr_sas_node->num_phys >=
-+			sizeof(mr_sas_port->phy_mask) * 8)
- 		ioc_info(mrioc, "max port count %u could be too high\n",
- 		    mr_sas_node->num_phys);
- 
-@@ -1377,7 +1387,7 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		    (mr_sas_node->phy[i].hba_port != hba_port))
- 			continue;
- 
--		if (i >= sizeof(mr_sas_port->phy_mask) * 8) {
-+		if (mr_sas_node->host_node && (i >= sizeof(mr_sas_port->phy_mask) * 8)) {
- 			ioc_warn(mrioc, "skipping port %u, max allowed value is %zu\n",
- 			    i, sizeof(mr_sas_port->phy_mask) * 8);
- 			goto out_fail;
-@@ -1385,7 +1395,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		list_add_tail(&mr_sas_node->phy[i].port_siblings,
- 		    &mr_sas_port->phy_list);
- 		mr_sas_port->num_phys++;
--		mr_sas_port->phy_mask |= (1 << i);
-+		if (mr_sas_node->host_node)
-+			mr_sas_port->phy_mask |= (1 << i);
- 	}
- 
- 	if (!mr_sas_port->num_phys) {
-@@ -1394,7 +1405,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		goto out_fail;
- 	}
- 
--	mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+	if (mr_sas_node->host_node)
-+		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
- 
- 	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
- 		tgtdev = mpi3mr_get_tgtdev_by_addr(mrioc,
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index bf4892544cfd..bb84d304b07e 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -691,7 +691,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 
- 	dev->queues = kcalloc(nr_cpu_ids, sizeof(*dev->queues), GFP_KERNEL);
- 	if (!dev->queues) {
--		dev->transport->free_device(dev);
-+		hba->backend->ops->free_device(dev);
- 		return NULL;
- 	}
- 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 5891cdacd0b3..3903947dbed1 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -539,7 +539,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct ufs_hw_queue *hwq;
- 	void __iomem *reg, *opr_sqd_base;
--	u32 nexus, id, val;
-+	u32 nexus, id, val, rtc;
- 	int err;
- 
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
-@@ -569,17 +569,18 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- 	opr_sqd_base = mcq_opr_base(hba, OPR_SQD, id);
- 	writel(nexus, opr_sqd_base + REG_SQCTI);
- 
--	/* SQRTCy.ICU = 1 */
--	writel(SQ_ICU, opr_sqd_base + REG_SQRTC);
-+	/* Initiate Cleanup */
-+	writel(readl(opr_sqd_base + REG_SQRTC) | SQ_ICU,
-+		opr_sqd_base + REG_SQRTC);
- 
- 	/* Poll SQRTSy.CUS = 1. Return result from SQRTSy.RTC */
- 	reg = opr_sqd_base + REG_SQRTS;
- 	err = read_poll_timeout(readl, val, val & SQ_CUS, 20,
- 				MCQ_POLL_US, false, reg);
--	if (err)
--		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%ld\n",
--			__func__, id, task_tag,
--			FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)));
-+	rtc = FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg));
-+	if (err || rtc)
-+		dev_err(hba->dev, "%s: failed. hwq=%d, tag=%d err=%d RTC=%d\n",
-+			__func__, id, task_tag, err, rtc);
- 
- 	if (ufshcd_mcq_sq_start(hba, hwq))
- 		err = -ETIMEDOUT;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 6a71ebf953e2..706dc81eb924 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5416,10 +5416,12 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 		}
- 		break;
- 	case OCS_ABORTED:
--		result |= DID_ABORT << 16;
--		break;
- 	case OCS_INVALID_COMMAND_STATUS:
- 		result |= DID_REQUEUE << 16;
-+		dev_warn(hba->dev,
-+				"OCS %s from controller for tag %d\n",
-+				(ocs == OCS_ABORTED ? "aborted" : "invalid"),
-+				lrbp->task_tag);
- 		break;
- 	case OCS_INVALID_CMD_TABLE_ATTR:
- 	case OCS_INVALID_PRDT_ATTR:
-@@ -6465,26 +6467,12 @@ static bool ufshcd_abort_one(struct request *rq, void *priv)
- 	struct scsi_device *sdev = cmd->device;
- 	struct Scsi_Host *shost = sdev->host;
- 	struct ufs_hba *hba = shost_priv(shost);
--	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
--	struct ufs_hw_queue *hwq;
--	unsigned long flags;
- 
- 	*ret = ufshcd_try_to_abort_task(hba, tag);
- 	dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
- 		hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1,
- 		*ret ? "failed" : "succeeded");
- 
--	/* Release cmd in MCQ mode if abort succeeds */
--	if (hba->mcq_enabled && (*ret == 0)) {
--		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
--		if (!hwq)
--			return 0;
--		spin_lock_irqsave(&hwq->cq_lock, flags);
--		if (ufshcd_cmd_inflight(lrbp->cmd))
--			ufshcd_release_scsi_cmd(hba, lrbp);
--		spin_unlock_irqrestore(&hwq->cq_lock, flags);
--	}
--
- 	return *ret == 0;
- }
- 
-@@ -10209,7 +10197,9 @@ static void ufshcd_wl_shutdown(struct device *dev)
- 	shost_for_each_device(sdev, hba->host) {
- 		if (sdev == hba->ufs_device_wlun)
- 			continue;
--		scsi_device_quiesce(sdev);
-+		mutex_lock(&sdev->state_mutex);
-+		scsi_device_set_state(sdev, SDEV_OFFLINE);
-+		mutex_unlock(&sdev->state_mutex);
- 	}
- 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
- 
-
+ 	sli = &efct->hw.sli;
+-	efc->max_xfer_size = sli->sge_supported_length *
++	efc->max_xfer_size = (u64)sli->sge_supported_length *
+ 			     sli_get_max_sgl(&efct->hw.sli);
+ 	efc->sli = sli;
+ 	efc->fcfi = efct->hw.fcf_indicator;
+-- 
+2.34.1
 
