@@ -1,81 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 982151E04AB
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2024 22:56:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B93170A3D
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2024 23:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729551384; cv=none; b=eaUHDPDrBiSMZtM6hnLi2xagHFLXFM9C4J6tde5nTQemXWy5JD4git2fbd2xnBKhZjewgKRUoQDZ3GATJJAN68LNmenTUl1XK29k3wq6vI40kwqes43xsRU2MGW5N4I8n5ICph6iPXBGpeTwuiW+V9Vj0rO3R+PmaHalBEhNg4c=
+	t=1729553086; cv=none; b=Hg/7ZeMALWXx1MlN/Qv1pU0dD5UG6aYdvbeqqm2WArfAFR2eHAb4kdMzq7GAMAy7HmPxNTx1z8XWHlMfbsnaxkYSN8Flt1TtMqKEp9jZNZutiorKHGOwEJcMhrNz4dlxlM1jzzg1wCdKacg27u+8/faG4RuPpmQqDz5hFPt7boE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729551384; c=relaxed/simple;
-	bh=1fIseu5js0ZKnyssQEspCpBNzNZXVtSQ5ri1tlpsErU=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LG1zL1BkAO4MOidNysAdUDlM8TD0Kj+x+HglOBpPlFj5mu24pDcYs7ZZWxu1vNuON8sh/2rnjoWbXnfjONj6yQEWArGJ4W+a9uoI+svtyvBB37WJfgFLf77CHpLXt7kK1BQylZXtJsq5VAdKmTABXExrJKYxhXKvGWfXjhZvFBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JoVT3yjs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729553086; c=relaxed/simple;
+	bh=vfEzaUod3yocc/rxCeVII8TTLjwTbC+/GM58oNeIHWM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IfZeFagVQoK3L4FkNEM2dDEd07ubt81/18QFoL5JUXXih3YCGn3JwNC2hRWbk+Y692+4pYBtt07TBPh+dEGYVPNJMpEUU/MXJZtSLFaLTd35tqjeDmki/iTNzGgGwr962WgWGK0JRUiOc3QgDDl2n2ML+PfqKnexWB+BDtnZH3Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WX+ixKod; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JoVT3yjs"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 1EB44C4CEEF
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2024 22:56:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729551384;
-	bh=1fIseu5js0ZKnyssQEspCpBNzNZXVtSQ5ri1tlpsErU=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=JoVT3yjskjl5o4BBKMxR+8CBqmhl53cRL7iueNzmVy5poBtwmmLZ78m1jLjyFD4f+
-	 vLtqezfZaqZVd37LxOcJtEXmLOd/rqdgRQuXPEzFyy4v5G4MrqZZgkYfvfU7U+6Hqw
-	 3u7Em4l7GYjb+mBkAQCjGuc8fRF9KNfPqEGXO4lqLFS1Ty9vH0JMnelG07B91/XcN1
-	 02ZjoRYQgAd4drDqggXk6XNlU2WIPpdMPOtkzvYvXLyA0o3WmLtSk8As7xNePddfkf
-	 d7i4VSZiMf3OLlwikHOHGw12thKnXsSdlEepbxESWIX/9WxTzAWzM6R90hSqm6y3RJ
-	 VBrJ4xDVrPA4A==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 1A688C53BC5; Mon, 21 Oct 2024 22:56:24 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Mon, 21 Oct 2024 22:56:23 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: sagar.biradar@microchip.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-aefaJsKIZy@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WX+ixKod"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XXWcC2m5WzlgMVX;
+	Mon, 21 Oct 2024 23:24:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1729553082; x=1732145083; bh=vfEzaUod3yocc/rxCeVII8TT
+	LjwTbC+/GM58oNeIHWM=; b=WX+ixKodhyer4PXplqeh9PBESB7FueHGYXRaqwiY
+	/1mdhpVde3FHs1TOMc31OOE2vCUAge5N0Wvmu1SKaLNZKlwLg8cS8wrLW4UTAVd0
+	5fnu5zbo2d4hOELKK9D5O2hyRrZQGa9Fqd1IzIUWXCxDIe8KY+FzO4+fn2PNw6Q6
+	hyb8ZJIPNzY/jaldt2nKXjnwyNzC0srT7I+WZJquhwGLyxOna5Orz9X1YeNX4qkk
+	WN4RebBUvwgWFMRFfaBMiU+T68coZH8kjanqUijqoJ+UK+Ndg0374jDtgY84Kah1
+	iNfTDOLdiAqWWT25sgetn77pU8VJwgoCLuULr5TXT5Ykog==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id EyuCeDjoHkvU; Mon, 21 Oct 2024 23:24:42 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XXWc93BfxzlgMVW;
+	Mon, 21 Oct 2024 23:24:40 +0000 (UTC)
+Message-ID: <b385c84b-1755-49d7-9125-20e3b482e6d2@acm.org>
+Date: Mon, 21 Oct 2024 16:24:39 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: ufs: core: Make DMA mask configuration more
+ flexible
+To: Avri Altman <Avri.Altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20241018194753.775074-1-bvanassche@acm.org>
+ <DM6PR04MB657551A72CB90ADDEFC49F48FC412@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <DM6PR04MB657551A72CB90ADDEFC49F48FC412@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On 10/18/24 11:24 PM, Avri Altman wrote:
+> This patch allows to ignore bit 24 (64AS) in the host controller capabilities register.
 
---- Comment #66 from Sagar (sagar.biradar@microchip.com) ---
-Hi Maxim, Thorsten,
+That's correct. It is unfortunate that the DMA information reported by
+the controller is not more detailed.
 
-Currently I am investigating this issue.
-I do not have a definite timeline on the fix, but I will post an update here
-once I am certain of the solution and the testing timeline.
+> Personally, I am not religious about quirks, not sure however that this is what vop is made for.
+> Also, there is another host-specific option, e.g. the opts member of struct exynos_ufs.
 
-Thanks
-Sagar
+I need this patch for another controller than an Exynos host controller.
 
---=20
-You may reply to this email to add a comment.
+> Looks good to me.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Does this count as a Reviewed-by ?
+
+Thanks,
+
+Bart.
+
