@@ -1,127 +1,114 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f194.google.com (mail-yw1-f194.google.com [209.85.128.194])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D421FDD;
-	Mon, 21 Oct 2024 00:26:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B785173;
+	Mon, 21 Oct 2024 05:17:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729470405; cv=none; b=MfVn6EwosBlZ2cjWODUTkT5p2m4MPe4EDkq968vPwIt/KNb7C+O8kpCsEeOwwh5Q+VcjO40+U0/E9wSKYZXa591IVgWOyDJQPOiXkDMUOrL3hBbXlrisrSEdmDwLpA+yp6rVzg0xTOReTfOYY+TAwjm6KejDeA3/ggGhiodTrA8=
+	t=1729487875; cv=none; b=KwDSRbJQZMoh+L0ggKF6ww9KQOai1ynfNbyXFLLrSr4X8k5A/rAU88Ua2bisEQcMu2T61SDlUrAPnUbV1CetIVdo0XjNJTXpocVPSwxh4qrRKso39TOpuQQlMxrHD9avTVo5NwB4S0bGBEIwwshnDNDNAw2DWf2MjLynC6mR/Do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729470405; c=relaxed/simple;
-	bh=YnnxuuCfNu4P8m+6Ygxevm2LbIGYcL5A0C/bjDwuUyU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=F4JfKkL+KnKKy7aSSYgpTL8xbCL9qobk4BL3oSd01pJ6zbbdfajbU11krsz3d4amFcWCSFAAk/My0me18nrjRGtRtmi1p8ThqvH/Zt6YfZRxzhAaQL70eMQX7eA6mAlpyrS/4dVRliHCOcZ21kD++zh2qyhpmweqVGbkWG38gQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EMBhqF0d; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1729487875; c=relaxed/simple;
+	bh=0XwMeNMJ5ODPtkbESnU3FltvFhNY7bbCcFY+I+hg+mk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=HQHPn949v5hQptD6i6Gay9o6diuPsHrSj7KB4F00UW7Tv+1qrRI6qJBayuXFbK4qeOKjcgR8n7T1DeNML9Y8Bqu2OYjoadMsxqjzutHxQpZ9bcgr2AQMyal+W+ThfGvnL+IGODMEjoLMqv3O258CIY7/8d9NQj75J78O5NxnEh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b74Blz9G; arc=none smtp.client-ip=209.85.128.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EMBhqF0d"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49KNgclc010476;
-	Mon, 21 Oct 2024 00:26:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	r1bxPaN/ll6s1s/ED37SgN/1iaUXiyBIFDtqTWYVPRQ=; b=EMBhqF0d7AVCipoy
-	li5t2NK/ygvQLJgMBDijzTnoRSJrnoxY/EwE+DiETVeA3F0liv8OgPEo99/TC6FR
-	dgAEVpioeOlrPshRRLnaPiBDWNq7IJGlNrID+E5YW3eMfk+yKyDzA1x0Wr+mF1sH
-	f5xwawfSp1hvDkJDtyjJhWbEphOGGI+XTOHIANsZG6eafNN0lRbsR2VqS3TXhH/c
-	Zrph3GGVuimzJGPnG+qFM4WDPyDAP3+xn9ZpV+9tqkqLn1dypOPyFuQWdANhxUCI
-	wqpPQNmt/JkZYPFYmgtV49uaOmCa9WR6eqx7XRVpZEkJEy9DjDLbVW9N/Hpcoc6d
-	m+Ug0g==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42c6w1jrgw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 21 Oct 2024 00:26:25 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49L0QPQ0012217
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 21 Oct 2024 00:26:25 GMT
-Received: from [10.48.241.209] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 20 Oct
- 2024 17:26:24 -0700
-Message-ID: <0c0bb52b-06a2-4f55-845f-014acd299b78@quicinc.com>
-Date: Sun, 20 Oct 2024 17:26:23 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b74Blz9G"
+Received: by mail-yw1-f194.google.com with SMTP id 00721157ae682-6e5cec98cceso18215257b3.2;
+        Sun, 20 Oct 2024 22:17:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1729487873; x=1730092673; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=w2mbf2/3v5HCvkk0Y3A4O4H8UPw7wHC2/3QXIZ4AZiM=;
+        b=b74Blz9GupJb/XHi/p42jswVdewl8uH96GxK0eyyZ5N2QFiejXjhGjzfr/p+V9a8wW
+         uHMj34WlLM1BDLJgrB0fNJtzn4+FoCqDKuex6hfCIqauEUB0YTRKPaji2rVTmD4u66LS
+         SHY3OTrmzb7zbT2eDCt+STQMlDLfSWHNtpvQQGzBXyeVACe1X8zZWcmeRwySrZD+orXH
+         l2XLrZzmVLiSsen/mcXaHf4S/MndIuNyqVNnVcAFdCWj9MUl2HSJkwKiPgPUzksq79ZC
+         J4JD0kaCWewmakY5kMx7QOB0eKJia1V5CsD1lwk1ssq6d7cYH8MJWNsDgP0TA0d+YSge
+         DCPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729487873; x=1730092673;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=w2mbf2/3v5HCvkk0Y3A4O4H8UPw7wHC2/3QXIZ4AZiM=;
+        b=Ec7Di4CM+olKjPYHGyjCAA8wDJJiEpnst8BoQ5ewnfagjlMm3hl/okWG/YMqDAy/Ps
+         bgr845gdEU/Mx10elAD72UE5+5t7D4l1c7hI+RQlJCNStV/ui1S4pWXBCRMRhttcVeiI
+         amEsU1hlZG5aQoZe1LkhHYpNwsECKnEYFbfvz4hNUW7YrGgs12+xYSGftsg6id279j5w
+         uyQHEFOKIaMZ/Xu2u/7Ygy7qBVUSIg3C9I08TSA+I0gbQJo9csE8ZQz7/nreCHiQ4QFl
+         48o2ju8PoIDpBIygWfn//gWIVY3c6foUy++herauPkPgxJZKKl7KrYd+D6UdPxRLeSse
+         NFvQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV8Hx+LUYCyUYOVw+pu7KRzUFn3BShCjjLXbtGvDlbQJCyrsOBdCVyxv8HDZ3D071CdmZoeWtfTvao5PKI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyunM5IoEyN21p+obHjzQPCPzEB3hvjhoYTC2FzETzlkfJKr4EO
+	cjbz7rj1GO7rspV10wMJSk/2oYPRlY18B32W0FJrqJs6oQv7oKIX
+X-Google-Smtp-Source: AGHT+IFhB+2BMCRwmpZuXSYzYXPtRXRCzq1BvxkBqoJvQ5usuZV8BHo1l6lEyRMaJ+Zddgllue0B8A==
+X-Received: by 2002:a05:690c:dc4:b0:6e5:e714:3be0 with SMTP id 00721157ae682-6e5e7143bf9mr40581647b3.1.1729487872798;
+        Sun, 20 Oct 2024 22:17:52 -0700 (PDT)
+Received: from localhost.localdomain (host-36-27.ilcul54.champaign.il.us.clients.pavlovmedia.net. [68.180.36.27])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-6e5f5d6f9dbsm5510267b3.141.2024.10.20.22.17.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 20 Oct 2024 22:17:51 -0700 (PDT)
+From: Gax-c <zichenxie0106@gmail.com>
+To: james.smart@broadcom.com,
+	ram.vegesna@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	fthain@linux-m68k.org,
+	quic_jjohnson@quicinc.com,
+	hare@suse.de,
+	dwagner@suse.de
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	zzjas98@gmail.com,
+	chenyuan0y@gmail.com,
+	Zichen Xie <zichenxie0106@gmail.com>
+Subject: [PATCH v2] scsi: elx: efct: Cast an operand to u64 to prevent potential u32 overflow in efct_efclib_config()
+Date: Mon, 21 Oct 2024 00:17:39 -0500
+Message-Id: <20241021051738.17667-1-zichenxie0106@gmail.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: elx: efct: Prevent potential integer overflow in
- efct_efclib_config()
-To: Gax-c <zichenxie0106@gmail.com>, <james.smart@broadcom.com>,
-        <ram.vegesna@broadcom.com>, <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>, <fthain@linux-m68k.org>,
-        <dwagner@suse.de>, <hare@suse.de>
-CC: <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
-        <zzjas98@gmail.com>, <chenyuan0y@gmail.com>
-References: <20241019211637.5533-1-zichenxie0106@gmail.com>
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-Content-Language: en-US
-In-Reply-To: <20241019211637.5533-1-zichenxie0106@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ocaIyC4IwIJm1qfSmdFP_hwbpLAuSYZs
-X-Proofpoint-ORIG-GUID: ocaIyC4IwIJm1qfSmdFP_hwbpLAuSYZs
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0
- clxscore=1011 bulkscore=0 mlxlogscore=999 suspectscore=0 mlxscore=0
- phishscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410210002
 
-On 10/19/2024 2:16 PM, Gax-c wrote:
-> From: Zichen Xie <zichenxie0106@gmail.com>
-> 
-> This was found by a static analyzer.
-> There may be a potential integer overflow issue in
-> efct_efclib_config(). efc->max_xfer_size is defined
-> as "efc->max_xfer_size" while sli->sge_supported_length
+From: Zichen Xie <zichenxie0106@gmail.com>
 
-I think you wanted to say: as "u64" while...
+This was found by a static analyzer.
+There may be a potential integer overflow issue in
+efct_efclib_config(). efc->max_xfer_size is defined
+as "u64" while sli->sge_supported_length and
+sli_get_max_sgl(&efct->hw.sli) are all "u32".
+The result of the calculation will be limited to
+"u32" without correct casting.
+We recommend adding an extra cast to prevent
+potential integer overflow.
 
-> and sli_get_max_sgl(&efct->hw.sli) are all "u32".
-> The result of the calculation will be limited to
-> "u32" without correct casting.
-> We recommend adding an extra cast to prevent
-> potential integer overflow.
+Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+Signed-off-by: Zichen Xie <zichenxie0106@gmail.com>
+---
+v2: adjust subject title.
+---
+ drivers/scsi/elx/efct/efct_driver.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
-Describe your changes in imperative mood, e.g. “make xyzzy do frotz” instead
-of “[This patch] makes xyzzy do frotz” or “[I] changed xyzzy to do frotz”, as
-if you are giving orders to the codebase to change its behaviour.
-
-So suggest something like:
-Cast an operand to u64 to prevent potential u32 overflow.
-
-
-> 
-> Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
-> Signed-off-by: Zichen Xie <zichenxie0106@gmail.com>
-> ---
->  drivers/scsi/elx/efct/efct_driver.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
-> index 55d2301bfd7d..7fe180037c2d 100644
-> --- a/drivers/scsi/elx/efct/efct_driver.c
-> +++ b/drivers/scsi/elx/efct/efct_driver.c
-> @@ -109,7 +109,7 @@ efct_efclib_config(struct efct *efct, struct libefc_function_template *tt)
->  	efc->log_level = EFC_LOG_LIB;
->  
->  	sli = &efct->hw.sli;
-> -	efc->max_xfer_size = sli->sge_supported_length *
-> +	efc->max_xfer_size = (u64)sli->sge_supported_length *
->  			     sli_get_max_sgl(&efct->hw.sli);
->  	efc->sli = sli;
->  	efc->fcfi = efct->hw.fcf_indicator;
+diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
+index 55d2301bfd7d..7fe180037c2d 100644
+--- a/drivers/scsi/elx/efct/efct_driver.c
++++ b/drivers/scsi/elx/efct/efct_driver.c
+@@ -109,7 +109,7 @@ efct_efclib_config(struct efct *efct, struct libefc_function_template *tt)
+ 	efc->log_level = EFC_LOG_LIB;
+ 
+ 	sli = &efct->hw.sli;
+-	efc->max_xfer_size = sli->sge_supported_length *
++	efc->max_xfer_size = (u64)sli->sge_supported_length *
+ 			     sli_get_max_sgl(&efct->hw.sli);
+ 	efc->sli = sli;
+ 	efc->fcfi = efct->hw.fcf_indicator;
+-- 
+2.25.1
 
