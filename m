@@ -1,167 +1,127 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B397464;
-	Sun, 20 Oct 2024 17:28:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D421FDD;
+	Mon, 21 Oct 2024 00:26:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729445342; cv=none; b=lY/qAFcLeJvnSk+EaweHKA1ENKkoYdgWGi7cwOiOdlXfpvp50fajl2+sGyYPRgNppPZfv9atnjDvvTQLO27591Ky+kkVU1ZEuRPi10QgW/q0I8LsjicZKDAGNGvfIWym/RAIYyon+D1XjD+a657UWPvkbj0xoaKFes6rO6rgzG4=
+	t=1729470405; cv=none; b=MfVn6EwosBlZ2cjWODUTkT5p2m4MPe4EDkq968vPwIt/KNb7C+O8kpCsEeOwwh5Q+VcjO40+U0/E9wSKYZXa591IVgWOyDJQPOiXkDMUOrL3hBbXlrisrSEdmDwLpA+yp6rVzg0xTOReTfOYY+TAwjm6KejDeA3/ggGhiodTrA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729445342; c=relaxed/simple;
-	bh=ZFpeJTW6o3nZXfFtsddiGs4QMrRHL9LEcDKDRj7coeo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NRf2cghoX1GpzkagXbV7DiMp2XQvfu7aJj0PfYC6L/I/kSzuUdF9NxQpGTt6JRgmhqR2uNOM6cc2qnh7tchjailJx99XDQIQKf0DpjxXhVV6/oLLhR0wPXrl7S5yA7AFWRmF5p5lKc2LTn2sYzR7a7De8l9xrQHRbwGmT53MSa4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hZvrpdsD; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1729470405; c=relaxed/simple;
+	bh=YnnxuuCfNu4P8m+6Ygxevm2LbIGYcL5A0C/bjDwuUyU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=F4JfKkL+KnKKy7aSSYgpTL8xbCL9qobk4BL3oSd01pJ6zbbdfajbU11krsz3d4amFcWCSFAAk/My0me18nrjRGtRtmi1p8ThqvH/Zt6YfZRxzhAaQL70eMQX7eA6mAlpyrS/4dVRliHCOcZ21kD++zh2qyhpmweqVGbkWG38gQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EMBhqF0d; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hZvrpdsD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729445340; x=1760981340;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ZFpeJTW6o3nZXfFtsddiGs4QMrRHL9LEcDKDRj7coeo=;
-  b=hZvrpdsDJoeVPsLk1QMUpbPsp7Umv6pfkyt+GfT0E3oY8wN1neDDcGr7
-   r5i578KrBrMlaHYt0uVxV1pW909/w76rszR/HZncLD+opMNhk2OxoqXVe
-   N4A8Z7UCNpu96Vq0vAFnu78UI0BLU67S/2FXp+HEVB0nwx1Cvg+LIDAII
-   fdgmq8lmPbEFTIpKQ7J/EAtXh7WWjtJOIFYkl6Oh/yfr8spv0VCDntq7w
-   wb89KEM7x2tGhlv8uTYjHUF/7MpQgteSjCOVvrpUgOiY21GeUetRbqr+s
-   uzG78e2TlDzjvSFfFgQjEeKc9i7/0jQFUCbydd9Hb7Dq5TRilv4MQ+dJ0
-   Q==;
-X-CSE-ConnectionGUID: dK/2QCcqSk+a8XjsT8Zv5w==
-X-CSE-MsgGUID: et/DhYNoRNCRTQ2GRC+mIA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11231"; a="40289816"
-X-IronPort-AV: E=Sophos;i="6.11,218,1725346800"; 
-   d="scan'208";a="40289816"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2024 10:28:59 -0700
-X-CSE-ConnectionGUID: Q9W9Bg7yR4iC1TdO2P1XuA==
-X-CSE-MsgGUID: s4K+UJV7QiuWedauub2Ubg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,219,1725346800"; 
-   d="scan'208";a="80131036"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 20 Oct 2024 10:28:56 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t2ZjZ-000QXJ-1q;
-	Sun, 20 Oct 2024 17:28:53 +0000
-Date: Mon, 21 Oct 2024 01:28:20 +0800
-From: kernel test robot <lkp@intel.com>
-To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, arulponn@cisco.com,
-	djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
-	satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: Re: [PATCH v5 09/14] scsi: fnic: Modify IO path to use FDLS
-Message-ID: <202410210147.fQp7tYeb-lkp@intel.com>
-References: <20241018161409.4442-10-kartilak@cisco.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EMBhqF0d"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49KNgclc010476;
+	Mon, 21 Oct 2024 00:26:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	r1bxPaN/ll6s1s/ED37SgN/1iaUXiyBIFDtqTWYVPRQ=; b=EMBhqF0d7AVCipoy
+	li5t2NK/ygvQLJgMBDijzTnoRSJrnoxY/EwE+DiETVeA3F0liv8OgPEo99/TC6FR
+	dgAEVpioeOlrPshRRLnaPiBDWNq7IJGlNrID+E5YW3eMfk+yKyDzA1x0Wr+mF1sH
+	f5xwawfSp1hvDkJDtyjJhWbEphOGGI+XTOHIANsZG6eafNN0lRbsR2VqS3TXhH/c
+	Zrph3GGVuimzJGPnG+qFM4WDPyDAP3+xn9ZpV+9tqkqLn1dypOPyFuQWdANhxUCI
+	wqpPQNmt/JkZYPFYmgtV49uaOmCa9WR6eqx7XRVpZEkJEy9DjDLbVW9N/Hpcoc6d
+	m+Ug0g==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42c6w1jrgw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 21 Oct 2024 00:26:25 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49L0QPQ0012217
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 21 Oct 2024 00:26:25 GMT
+Received: from [10.48.241.209] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 20 Oct
+ 2024 17:26:24 -0700
+Message-ID: <0c0bb52b-06a2-4f55-845f-014acd299b78@quicinc.com>
+Date: Sun, 20 Oct 2024 17:26:23 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241018161409.4442-10-kartilak@cisco.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: elx: efct: Prevent potential integer overflow in
+ efct_efclib_config()
+To: Gax-c <zichenxie0106@gmail.com>, <james.smart@broadcom.com>,
+        <ram.vegesna@broadcom.com>, <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>, <fthain@linux-m68k.org>,
+        <dwagner@suse.de>, <hare@suse.de>
+CC: <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
+        <zzjas98@gmail.com>, <chenyuan0y@gmail.com>
+References: <20241019211637.5533-1-zichenxie0106@gmail.com>
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Content-Language: en-US
+In-Reply-To: <20241019211637.5533-1-zichenxie0106@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ocaIyC4IwIJm1qfSmdFP_hwbpLAuSYZs
+X-Proofpoint-ORIG-GUID: ocaIyC4IwIJm1qfSmdFP_hwbpLAuSYZs
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0
+ clxscore=1011 bulkscore=0 mlxlogscore=999 suspectscore=0 mlxscore=0
+ phishscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410210002
 
-Hi Karan,
+On 10/19/2024 2:16 PM, Gax-c wrote:
+> From: Zichen Xie <zichenxie0106@gmail.com>
+> 
+> This was found by a static analyzer.
+> There may be a potential integer overflow issue in
+> efct_efclib_config(). efc->max_xfer_size is defined
+> as "efc->max_xfer_size" while sli->sge_supported_length
 
-kernel test robot noticed the following build warnings:
+I think you wanted to say: as "u64" while...
 
-[auto build test WARNING on mkp-scsi/for-next]
-[cannot apply to jejb-scsi/for-next linus/master v6.12-rc3 next-20241018]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> and sli_get_max_sgl(&efct->hw.sli) are all "u32".
+> The result of the calculation will be limited to
+> "u32" without correct casting.
+> We recommend adding an extra cast to prevent
+> potential integer overflow.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Replace-shost_printk-with-dev_info-dev_err/20241019-002800
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20241018161409.4442-10-kartilak%40cisco.com
-patch subject: [PATCH v5 09/14] scsi: fnic: Modify IO path to use FDLS
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20241021/202410210147.fQp7tYeb-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241021/202410210147.fQp7tYeb-lkp@intel.com/reproduce)
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+Describe your changes in imperative mood, e.g. “make xyzzy do frotz” instead
+of “[This patch] makes xyzzy do frotz” or “[I] changed xyzzy to do frotz”, as
+if you are giving orders to the codebase to change its behaviour.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410210147.fQp7tYeb-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/fnic/fnic_scsi.c:269:15: warning: variable 'ioreq_count' set but not used [-Wunused-but-set-variable]
-     269 |         unsigned int ioreq_count;
-         |                      ^
-   drivers/scsi/fnic/fnic_scsi.c:928:6: warning: variable 'xfer_len' set but not used [-Wunused-but-set-variable]
-     928 |         u64 xfer_len = 0;
-         |             ^
-   drivers/scsi/fnic/fnic_scsi.c:2506:21: warning: variable 'fnic_stats' set but not used [-Wunused-but-set-variable]
-    2506 |         struct fnic_stats *fnic_stats;
-         |                            ^
-   3 warnings generated.
+So suggest something like:
+Cast an operand to u64 to prevent potential u32 overflow.
 
 
-vim +/ioreq_count +269 drivers/scsi/fnic/fnic_scsi.c
+> 
+> Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+> Signed-off-by: Zichen Xie <zichenxie0106@gmail.com>
+> ---
+>  drivers/scsi/elx/efct/efct_driver.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
+> index 55d2301bfd7d..7fe180037c2d 100644
+> --- a/drivers/scsi/elx/efct/efct_driver.c
+> +++ b/drivers/scsi/elx/efct/efct_driver.c
+> @@ -109,7 +109,7 @@ efct_efclib_config(struct efct *efct, struct libefc_function_template *tt)
+>  	efc->log_level = EFC_LOG_LIB;
+>  
+>  	sli = &efct->hw.sli;
+> -	efc->max_xfer_size = sli->sge_supported_length *
+> +	efc->max_xfer_size = (u64)sli->sge_supported_length *
+>  			     sli_get_max_sgl(&efct->hw.sli);
+>  	efc->sli = sli;
+>  	efc->fcfi = efct->hw.fcf_indicator;
 
-   258	
-   259	
-   260	/*
-   261	 * fnic_fw_reset_handler
-   262	 * Routine to send reset msg to fw
-   263	 */
-   264	int fnic_fw_reset_handler(struct fnic *fnic)
-   265	{
-   266		struct vnic_wq_copy *wq = &fnic->hw_copy_wq[0];
-   267		int ret = 0;
-   268		unsigned long flags;
- > 269		unsigned int ioreq_count;
-   270	
-   271		/* indicate fwreset to io path */
-   272		fnic_set_state_flags(fnic, FNIC_FLAGS_FWRESET);
-   273		ioreq_count = fnic_count_all_ioreqs(fnic);
-   274	
-   275		/* wait for io cmpl */
-   276		while (atomic_read(&fnic->in_flight))
-   277			schedule_timeout(msecs_to_jiffies(1));
-   278	
-   279		spin_lock_irqsave(&fnic->wq_copy_lock[0], flags);
-   280	
-   281		if (vnic_wq_copy_desc_avail(wq) <= fnic->wq_copy_desc_low[0])
-   282			free_wq_copy_descs(fnic, wq, 0);
-   283	
-   284		if (!vnic_wq_copy_desc_avail(wq))
-   285			ret = -EAGAIN;
-   286		else {
-   287			fnic_queue_wq_copy_desc_fw_reset(wq, SCSI_NO_TAG);
-   288			atomic64_inc(&fnic->fnic_stats.fw_stats.active_fw_reqs);
-   289			if (atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs) >
-   290				  atomic64_read(&fnic->fnic_stats.fw_stats.max_fw_reqs))
-   291				atomic64_set(&fnic->fnic_stats.fw_stats.max_fw_reqs,
-   292					atomic64_read(
-   293					  &fnic->fnic_stats.fw_stats.active_fw_reqs));
-   294		}
-   295	
-   296		spin_unlock_irqrestore(&fnic->wq_copy_lock[0], flags);
-   297	
-   298		if (!ret) {
-   299			atomic64_inc(&fnic->fnic_stats.reset_stats.fw_resets);
-   300			FNIC_SCSI_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-   301					"Issued fw reset\n");
-   302		} else {
-   303			fnic_clear_state_flags(fnic, FNIC_FLAGS_FWRESET);
-   304			FNIC_SCSI_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-   305					"Failed to issue fw reset\n");
-   306		}
-   307	
-   308		return ret;
-   309	}
-   310	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
