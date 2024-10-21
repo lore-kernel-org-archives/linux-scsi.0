@@ -1,138 +1,81 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DABC450FE
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2024 20:41:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 982151E04AB
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2024 22:56:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729543290; cv=none; b=r/qKdueCMODtbzG/r15w42tm+dWPxrJBl8lCIO8fMmwH4knh//Z3kwhzXy2PS9Z3ZoPNv6pjqfrdfG2t4BRCF7bBxwhCTSYgOWLd0dyMM2uPCIiepmEaF0NE2NGhfH/RLOFiZWU0K6jMT7vEOUfpSRA9+Nxc6fM1c+VZyLWmS+s=
+	t=1729551384; cv=none; b=eaUHDPDrBiSMZtM6hnLi2xagHFLXFM9C4J6tde5nTQemXWy5JD4git2fbd2xnBKhZjewgKRUoQDZ3GATJJAN68LNmenTUl1XK29k3wq6vI40kwqes43xsRU2MGW5N4I8n5ICph6iPXBGpeTwuiW+V9Vj0rO3R+PmaHalBEhNg4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729543290; c=relaxed/simple;
-	bh=y8tAc2+uGWL+1iHWQpPHIofsXYRWVWqH4/By3bwXsbI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qnB024LnK+UNaJ8K+1RBu8s0HMee2KWH/SH5cZeVNawNl4Szz384jPt6mEWkDc7P6N2EYKZT2I1WmOkH+/EtbgGefNVS5KsrHq//35lAqIObt0HvQney8ijhcdUpgS2Leu4rjPkjKIFz5zfT/CPujxkc5JFx4+bKEhg9GBDSG8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FqcImlic; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1729551384; c=relaxed/simple;
+	bh=1fIseu5js0ZKnyssQEspCpBNzNZXVtSQ5ri1tlpsErU=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=LG1zL1BkAO4MOidNysAdUDlM8TD0Kj+x+HglOBpPlFj5mu24pDcYs7ZZWxu1vNuON8sh/2rnjoWbXnfjONj6yQEWArGJ4W+a9uoI+svtyvBB37WJfgFLf77CHpLXt7kK1BQylZXtJsq5VAdKmTABXExrJKYxhXKvGWfXjhZvFBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JoVT3yjs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FqcImlic"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XXRzn5pCzz6ClY9Z;
-	Mon, 21 Oct 2024 20:41:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1729543283; x=1732135284; bh=DmoYXxwcI+pCUT0SM6tvDwew
-	tvBGyMwxK8LpdMQG+y4=; b=FqcImlicTKJH5X1qFFqH1ZNpoV3Gj7ThKiaI+Wk4
-	KzA0aeVv38c0KfqsIsLJ64+a41IjVwwPSrbyJZYoIwws/CcCUQo8JzS6Bnil+UZw
-	B//kL/HST867xwWkC0YlEULiGnzCIaHrh4vAQ/yUdYoQGIN0o2x97luHSpDY6rcC
-	rFQ++F59tjErVDfHBY1INeYM1EDKq19GL1cylh7cISwhg6Nk0XaX4CSn3FjHcXgU
-	gu/J8i98BDEJJGHg1Fmi9+g0lUdPACfYYnft7pKMn+l1iyqfSslrPU5nFJXvVEkB
-	HSqFiQM0/6GwhtkBZLW0sb2cxGbd3jwpM6gs+ITRwexMLw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id pJzZS0aU8G14; Mon, 21 Oct 2024 20:41:23 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XXRzl0clMz6ClY9C;
-	Mon, 21 Oct 2024 20:41:22 +0000 (UTC)
-Message-ID: <dbd8fd89-57ca-403f-b47a-a3fce383d75f@acm.org>
-Date: Mon, 21 Oct 2024 13:41:21 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JoVT3yjs"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1EB44C4CEEF
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2024 22:56:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729551384;
+	bh=1fIseu5js0ZKnyssQEspCpBNzNZXVtSQ5ri1tlpsErU=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=JoVT3yjskjl5o4BBKMxR+8CBqmhl53cRL7iueNzmVy5poBtwmmLZ78m1jLjyFD4f+
+	 vLtqezfZaqZVd37LxOcJtEXmLOd/rqdgRQuXPEzFyy4v5G4MrqZZgkYfvfU7U+6Hqw
+	 3u7Em4l7GYjb+mBkAQCjGuc8fRF9KNfPqEGXO4lqLFS1Ty9vH0JMnelG07B91/XcN1
+	 02ZjoRYQgAd4drDqggXk6XNlU2WIPpdMPOtkzvYvXLyA0o3WmLtSk8As7xNePddfkf
+	 d7i4VSZiMf3OLlwikHOHGw12thKnXsSdlEepbxESWIX/9WxTzAWzM6R90hSqm6y3RJ
+	 VBrJ4xDVrPA4A==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 1A688C53BC5; Mon, 21 Oct 2024 22:56:24 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Mon, 21 Oct 2024 22:56:23 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: sagar.biradar@microchip.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-aefaJsKIZy@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/7] scsi: ufs: core: Simplify
- ufshcd_err_handling_prepare()
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20241016211154.2425403-1-bvanassche@acm.org>
- <20241016211154.2425403-6-bvanassche@acm.org>
- <37f935a047e05f001e1fa38f58d98abac4543ab0.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <37f935a047e05f001e1fa38f58d98abac4543ab0.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
 
-On 10/21/24 2:43 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> Using blk_mq_quiesce_tagset instead of ufshcd_scsi_block_requests
-> could cause issues. After the patch below was merged, Mediatek
-> received three cases of IO hang.
-> 77691af484e2 ("scsi: ufs: core: Quiesce request queues before checking
-> pending cmds")
-> I think this patch might need to be reverted first.
->=20
-> Here is backtrace of IO hang.
-> ppid=3D3952 pid=3D3952 D cpu=3D6 prio=3D120 wait=3D188s kworker/u16:0
-> 	vmlinux __synchronize_srcu() + 216
-> </proc/self/cwd/common/kernel/rcu/srcutree.c:1386>
-> 	vmlinux synchronize_srcu() + 276
-> </proc/self/cwd/common/kernel/rcu/srcutree.c:0>
-> 	vmlinux blk_mq_wait_quiesce_done() + 20
-> </proc/self/cwd/common/block/blk-mq.c:226>
-> 	vmlinux blk_mq_quiesce_tagset() + 156
-> </proc/self/cwd/common/block/blk-mq.c:286>
-> 	vmlinux ufshcd_clock_scaling_prepare(timeout_us=3D1000000) + 16
-> </proc/self/cwd/common/drivers/ufs/core/ufshcd.c:1276>
-> 	vmlinux ufshcd_devfreq_scale() + 52
-> </proc/self/cwd/common/drivers/ufs/core/ufshcd.c:1322>
-> 	vmlinux ufshcd_devfreq_target() + 384
-> </proc/self/cwd/common/drivers/ufs/core/ufshcd.c:1440>
-> 	vmlinux devfreq_set_target(flags=3D0) + 184
-> </proc/self/cwd/common/drivers/devfreq/devfreq.c:363>
-> 	vmlinux devfreq_update_target(freq=3D0) + 296
-> </proc/self/cwd/common/drivers/devfreq/devfreq.c:429>
-> 	vmlinux update_devfreq() + 8
-> </proc/self/cwd/common/drivers/devfreq/devfreq.c:444>
-> 	vmlinux devfreq_monitor() + 48
-> </proc/self/cwd/common/drivers/devfreq/devfreq.c:460>
-> 	vmlinux process_one_work() + 476
-> </proc/self/cwd/common/kernel/workqueue.c:2643>
-> 	vmlinux process_scheduled_works() + 580
-> </proc/self/cwd/common/kernel/workqueue.c:2717>
-> 	vmlinux worker_thread() + 576
-> </proc/self/cwd/common/kernel/workqueue.c:2798>
-> 	vmlinux kthread() + 272
-> </proc/self/cwd/common/kernel/kthread.c:388>
-> 	vmlinux 0xFFFFFFE239A164EC()
-> </proc/self/cwd/common/arch/arm64/kernel/entry.S:846>
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Hi Peter,
+--- Comment #66 from Sagar (sagar.biradar@microchip.com) ---
+Hi Maxim, Thorsten,
 
-Thank you very much for having reported this hang early. Would it be
-possible for you to test the patch below on top of this patch series?
-I think the root cause of the hang that you reported is in the block
-layer.
+Currently I am investigating this issue.
+I do not have a definite timeline on the fix, but I will post an update here
+once I am certain of the solution and the testing timeline.
 
-Thanks,
+Thanks
+Sagar
 
-Bart.
+--=20
+You may reply to this email to add a comment.
 
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 7b02188feed5..7482e682deca 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -283,8 +283,9 @@ void blk_mq_quiesce_tagset(struct blk_mq_tag_set *set=
-)
-  		if (!blk_queue_skip_tagset_quiesce(q))
-  			blk_mq_quiesce_queue_nowait(q);
-  	}
--	blk_mq_wait_quiesce_done(set);
-  	mutex_unlock(&set->tag_list_lock);
-+
-+	blk_mq_wait_quiesce_done(set);
-  }
-  EXPORT_SYMBOL_GPL(blk_mq_quiesce_tagset);
-
-
+You are receiving this mail because:
+You are watching the assignee of the bug.=
