@@ -1,56 +1,59 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1499414A4F0;
-	Tue, 22 Oct 2024 07:45:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D374936124;
+	Tue, 22 Oct 2024 07:45:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729583129; cv=none; b=BTZr/bn3Vj4u5iTdD5HZvrdr/DxrcCusCNsgXotQZHaK0CiaC1yHJmZbgKSJyHFNFcrrVv5pfDVt5W2wazJuIVDAPxp1WIzhTjtEfysx0F5N7v65QG7huTmQId/aHE8ocVJBOQ53T7uVX1yqohHSIseCqm/DXRPNY+ZaLH6QQ44=
+	t=1729583142; cv=none; b=L6dOGN9PxKtzqykdxEfAjlv6BP7kO/E9D6bTYiOksXtKvvCU75jAPzCU/9Yc+2dT3IaAIXdqTcz2p1JAR6KQzPwPbGQeK0tWqZxe1Vg6JH086jgTEl3ytwBOr2FfN/ZIQ1imR2QpRn00lnUXytoWZ0AzlXTJg8T1evvoUpa37U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729583129; c=relaxed/simple;
-	bh=P+sigj3NdXbec5NDcpWfBeJ9hag3FsGgKYoz1DFkHtw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=eEgRKwrRGfpVBfmTM2PH8tsK/t90B5enthCfkcexoX5dUsrfA0JL+D+r4i7QNDEQ/32Hx8RlFLk7eL/LgdC2VHjNbayW+ZDYVybXnKxi66NyUj2sSVRs0dciiynxYxkjD8UWD75/iQgrTwnq1OemH9gbR7UHzXXY3t5VWJq5Tko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=n68CvutR; arc=none smtp.client-ip=68.232.141.245
+	s=arc-20240116; t=1729583142; c=relaxed/simple;
+	bh=cIh3TOoCr8Vpu8u8J5nmz829eCRHULPA3N2J4cliIr8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=XAo3sjT/qaN4tkREAwHxPUP76YoukZSHGseT2tz5qyyVj++EvcLqPKvp6Zg9DgARm/wQvW6ImicH7myRccanWuDnWYs066XzX9yvObYbeoLhIz7/kd/mTwemAhxk7jD9tXssyjIFVZAuxFJ7FlQznf5kQqMpq0dtFCg3D4CcNdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=BeYIQMeI; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="n68CvutR"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BeYIQMeI"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1729583127; x=1761119127;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=P+sigj3NdXbec5NDcpWfBeJ9hag3FsGgKYoz1DFkHtw=;
-  b=n68CvutRB9K5VDpT5jp9RNJgOAMJ1ukc54Pg8NrMrXaI4Tpha75qyure
-   eGrz1BZVOYxQJv4v705vV+pcbLH065loLWhI9E5OKDhE6JW6Lz6fZptV1
-   Hj/2eIgRibeH0oz9GcwFTfRJciLlpDRvoNvxejAMahYdszl13HzzZKohv
-   4Msljthz4clRPiNlTZGaee3ZkmPbvzznmSno/IejSu2LkuiMQ3y/sTAEH
-   CLNGnnKZBtVebsRwv0BxJ6mbXupxhMdiWa8+nCOzR+Qu7hYkFSUao/K/o
-   BhbVi7ACJZAIBL694FaF/lTtdiyy8T6hrnzZfP5TMMos/quY7Vo+X2xnW
+  t=1729583140; x=1761119140;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=cIh3TOoCr8Vpu8u8J5nmz829eCRHULPA3N2J4cliIr8=;
+  b=BeYIQMeI8433NN8grR3HRof6zHaecJsS99VDbC1giQTEl6HgVcXkfhVk
+   qcEOEnMJFXuaYUZ6iJNKfMcb+DtRZq57xoEYsC2Fh/ElgTJaRNRVqkVJc
+   KZK3T4TvEgxsFuqCdW2ePRWoYRE9y737unZ7Iey8xgXFuXLgbA8obHh8Y
+   wyMLvqpkePN4m32CL3TPNiBJN/Eha0kEM4OX7cz1meTUCaDEhZx9vJ2mz
+   9Xn3uPigDsKj9TRt1rmDvytH2bqisonoivnfgLL6kTn7PSnBzgkYiqCkQ
+   w97yAu9bF/3sPP/owZ0XIgivdxBcrSX4dQmwa/qDrvwTfqKKRzyFu+bke
    Q==;
-X-CSE-ConnectionGUID: 3zbmKEDRS6ebS4td2hEx2A==
-X-CSE-MsgGUID: NxY1sKxRS06oQh/uDMpd1g==
+X-CSE-ConnectionGUID: ZSE40qeLQi270E1pKv7jDw==
+X-CSE-MsgGUID: 18Uw2Yk8TIu2zOMacxOEHQ==
 X-IronPort-AV: E=Sophos;i="6.11,222,1725292800"; 
-   d="scan'208";a="30533951"
+   d="scan'208";a="29564290"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2024 15:45:27 +0800
-IronPort-SDR: 671749a7_If94Cuvg/ILrXCfjOUoEf8xqOCIcyTOjN/7T3KIfYNfi62C
- mIlkSs/6DXEzlFFRU7VHjXrZpvpe9BOQeD3XVGw==
+  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2024 15:45:33 +0800
+IronPort-SDR: 671749ae_2vr7/pFedV+1IJuPCvFNkeB7OJFluhHSOuyFRF+TFB14DBr
+ K7GgQTDaJ7rqcTyoXYuPK8THGi0oiyAxdNKU93w==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Oct 2024 23:43:52 -0700
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Oct 2024 23:43:59 -0700
 WDCIronportException: Internal
 Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Oct 2024 00:45:25 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Oct 2024 00:45:32 -0700
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v2 0/3] Untie the host lock entanglement - part 1
-Date: Tue, 22 Oct 2024 10:43:16 +0300
-Message-Id: <20241022074319.512127-1-avri.altman@wdc.com>
+Subject: [PATCH v2 1/3] scsi: ufs: core: Remove redundant host_lock calls around UTMRLDBR.
+Date: Tue, 22 Oct 2024 10:43:17 +0300
+Message-Id: <20241022074319.512127-2-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241022074319.512127-1-avri.altman@wdc.com>
+References: <20241022074319.512127-1-avri.altman@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -59,32 +62,107 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-While trying to simplify the ufs core driver with the guard() macro [1],
-Bart made note of the abuse of the scsi host lock in the ufs driver.
-Indeed, the host lock is deeply entangled in various flows across the
-driver, as if it was some occasional default synchronization mean.
+There is no need to serialize single read/write calls to the host
+controller registers. Remove the redundant host_lock calls that protect
+access to the task management doorbell register: UTMRLDBR.
 
-Here is the first part of defusing it, remove some of those calls around
-host registers accesses, which needs no protection.
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/ufs/core/ufshcd.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-Doing this in phases seems like a reasonable approach, given the myriad
-use of the host lock.
-
-
-Changes compared to v1:
- - get rid of redundant locking (Bart)
- - leave out the HCE register
-
-[1] https://lore.kernel.org/linux-scsi/0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org/
-
-Avri Altman (3):
-  scsi: ufs: core: Remove redundant host_lock calls around UTMRLDBR.
-  scsi: ufs: core: Remove redundant host_lock calls around UTMRLCLR
-  scsi: ufs: core: Remove redundant host_lock calls around UTRLCLR.
-
- drivers/ufs/core/ufshcd.c | 26 +++++++++-----------------
- 1 file changed, 9 insertions(+), 17 deletions(-)
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9e6d008f4ea4..29f1cd3375bd 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1245,11 +1245,13 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
+ {
+ 	const struct scsi_device *sdev;
++	unsigned long flags;
+ 	u32 pending = 0;
+ 
+-	lockdep_assert_held(hba->host->host_lock);
++	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	__shost_for_each_device(sdev, hba->host)
+ 		pending += sbitmap_weight(&sdev->budget_map);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	return pending;
+ }
+@@ -1263,7 +1265,6 @@ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
+ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 					u64 wait_timeout_us)
+ {
+-	unsigned long flags;
+ 	int ret = 0;
+ 	u32 tm_doorbell;
+ 	u32 tr_pending;
+@@ -1271,7 +1272,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 	ktime_t start;
+ 
+ 	ufshcd_hold(hba);
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	/*
+ 	 * Wait for all the outstanding tasks/transfer requests.
+ 	 * Verify by checking the doorbell registers are clear.
+@@ -1292,7 +1292,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 			break;
+ 		}
+ 
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 		io_schedule_timeout(msecs_to_jiffies(20));
+ 		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
+ 		    wait_timeout_us) {
+@@ -1304,7 +1303,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 			 */
+ 			do_last_check = true;
+ 		}
+-		spin_lock_irqsave(hba->host->host_lock, flags);
+ 	} while (tm_doorbell || tr_pending);
+ 
+ 	if (timeout) {
+@@ -1314,7 +1312,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+ 		ret = -EBUSY;
+ 	}
+ out:
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_release(hba);
+ 	return ret;
+ }
+@@ -6877,13 +6874,13 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba, u32 intr_status)
+  */
+ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
+ {
+-	unsigned long flags, pending, issued;
++	unsigned long flags;
++	unsigned long pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
++	unsigned long issued = hba->outstanding_tasks & ~pending;
+ 	irqreturn_t ret = IRQ_NONE;
+ 	int tag;
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-	issued = hba->outstanding_tasks & ~pending;
+ 	for_each_set_bit(tag, &issued, hba->nutmrs) {
+ 		struct request *req = hba->tmf_rqs[tag];
+ 		struct completion *c = req->end_io_data;
+@@ -7065,12 +7062,13 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	memcpy(hba->utmrdl_base_addr + task_tag, treq, sizeof(*treq));
+ 	ufshcd_vops_setup_task_mgmt(hba, task_tag, tm_function);
+ 
+-	/* send command to the controller */
+ 	__set_bit(task_tag, &hba->outstanding_tasks);
+-	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
+ 
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
++	/* send command to the controller */
++	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
++
+ 	ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_SEND);
+ 
+ 	/* wait until the task management command is completed */
 -- 
 2.25.1
 
