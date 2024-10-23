@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB37E15574E;
-	Wed, 23 Oct 2024 19:34:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85DB01CDFD1;
+	Wed, 23 Oct 2024 19:44:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729712070; cv=none; b=HGafBLnODTPPkXzl1eIcLbofO/3sL90ZlzwGX4eD5JwqsJszP++33pyCjgt8ZhWU5Yv39MW+4psiezcY5ACiQFpYOnF9r4/B/vJTtrDTRW41ncrxk1airtmaVIcvzFJqCXb36d7EKngqrc5+3vpcZ4f2EIpQbgzP34oXHCWSBJE=
+	t=1729712673; cv=none; b=e6na9nCFIjn0rh1jMHSS74rtOi1pcETvh1+HkIE+U7SQvOQs2+Y5nxNFTmFk/Z9XMu4bupPCdPox/6mVWxUgaMG3oo/3eeKEsC7rX0qXNg/tLnK85x8Ab+E377l0FaVAb217I0kP9emQSb8RLdnICn3qUoOapAGp6wsGhNyzWl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729712070; c=relaxed/simple;
-	bh=/8D3WOgwZvNkLo5HSlS3lC/gZ1W4ruG1/qLQOlw0EO4=;
+	s=arc-20240116; t=1729712673; c=relaxed/simple;
+	bh=i0lI73iil8ai/SCafkzDPzPhpUu6N0PKolJNRG/Z0FA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CQOql/jF5HW3kkpKrIh/3mzoJqIH6+kC+OT5Y+2RpeKwjzyfMdSY5fEWguKggQuFOqHn8tW33RE4vy1WsXZx42qlip0dhcVlwNpO+/ixDmXZfFn4Os1vWxrw0jiaJBjnv2JGWO+EjW+8p2YXGqW4CmXOXXkIH81VCUv0wtM3F3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nGEVIbuC; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=ORveRAgLacy/mI1S8nylL+0xMPZz2H6LmMKYZYZVb4TsEVcJOPgwuP1boL7JQPIlzZu8hZ5E9XdWhZanx88VSozV2SnRQ2qmcuLgnDL02+Qzgq5bjZUzlIj343enjy+R6RDZL1XQ1kWNO+qIX+IPViRmtrqv9hFIx7GBS+zeQeY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eptLBLIn; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nGEVIbuC"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eptLBLIn"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XYfPT0CMDz6ClY8x;
-	Wed, 23 Oct 2024 19:34:21 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XYfd519PyzlgMVS;
+	Wed, 23 Oct 2024 19:44:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1729712052; x=1732304053; bh=UGZNZ2BEBqO2PQX0Ox1H5dzx
-	ZcADvb4w3SzhgMbYpks=; b=nGEVIbuC1gcaUni7Fn93l2J36pDTnraKOmMNXw18
-	bGY7GBjekfxniPcbjAeC4fFzlMBaoNcmplRA/LgN72zZM8R208C/Xr+B23UV5zVV
-	S5BcnJXLg1beukAiT3JdMgnDe7VmKkEhBbFiGGXqWfAX25MoeMLuoveLZ7PS9Ivq
-	q5JXmw4mt4p0EBXMsJi5+PipZd6Fyfd0WY6G+ijJh3F07zkORnLypI4IpXLeT3Kt
-	Ad4Hl+l0ahKvI5A5l9C+voDUh+Fi6O/fczbJDUqPszKYP7HJnagtJkncWCsSChnB
-	vlysbViqf2bgBcU1sbPKagtu/v7fWJW3U7/8++m1fRqc2Q==
+	 s=mr01; t=1729712663; x=1732304664; bh=96ePSPWif+56Vmt2ETfS76GZ
+	7t4oDpkBU2CMla5nUaM=; b=eptLBLIn3cvG7l4UZYDzytI/hw0Ovn2gNGbPSvEC
+	dZDiHH9wcEC+pPM9hgeBW4Xa75aP5pF3iQ/fMxJw90+aOMGpD7Lmiw1HObbGgudZ
+	bor0K3D6lLuzGputK2dtP8C4M0pOY69ZHHk7ERHj+yzbBnsfyiqDvCI4brU1Mq+w
+	oxr0C6PbcDjyKsi+nKwd8AGcrK1vuppbHe7jf4MYoBUaKdlR3z5IdWwb0MId58JJ
+	+xb+fESD5CBw14JGsVPB7qNyBdq4sFFfHMyEGuN6e3ajEQh0JVvKKKGhV5y1qzX+
+	bc2KtmCXqwFxZWuZ0Y9I9pCUGbGSsTrf5FebjejI0ytE5A==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9ptD4NLkaz8m; Wed, 23 Oct 2024 19:34:12 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id EVPabAS382gS; Wed, 23 Oct 2024 19:44:23 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XYfPG4mn0z6ClY9V;
-	Wed, 23 Oct 2024 19:34:10 +0000 (UTC)
-Message-ID: <9805c64f-70ab-4693-aa49-b3659ebb38be@acm.org>
-Date: Wed, 23 Oct 2024 12:34:10 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XYfd33DBPzlgT1K;
+	Wed, 23 Oct 2024 19:44:23 +0000 (UTC)
+Message-ID: <b43d5e01-cafe-4133-9873-68897439bf5f@acm.org>
+Date: Wed, 23 Oct 2024 12:44:22 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,41 +50,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] ufs: core: fix another deadlock when rtc update
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com, beanhuo@micron.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
- yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
- tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
- ed.tsai@mediatek.com, stable@vger.kernel.org
-References: <20241023131904.9749-1-peter.wang@mediatek.com>
+Subject: Re: [PATCH v2 1/3] scsi: ufs: core: Remove redundant host_lock calls
+ around UTMRLDBR.
+To: Avri Altman <Avri.Altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20241022074319.512127-1-avri.altman@wdc.com>
+ <20241022074319.512127-2-avri.altman@wdc.com>
+ <8e1ec6a0-38db-414e-90da-4d04ea8d6be2@acm.org>
+ <DM6PR04MB65750DBFE520C0DDE075146EFC4D2@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20241023131904.9749-1-peter.wang@mediatek.com>
+In-Reply-To: <DM6PR04MB65750DBFE520C0DDE075146EFC4D2@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
+On 10/22/24 11:47 PM, Avri Altman wrote:
+>> On 10/22/24 12:43 AM, Avri Altman wrote:
+>>>        for_each_set_bit(tag, &issued, hba->nutmrs) {
+>>>                struct request *req = hba->tmf_rqs[tag];
+>>>                struct completion *c = req->end_io_data;
+>>
+>> Would it be sufficient to hold the SCSI host lock around the
+>> hba->outstanding_tasks read only? I don't think that the
+>> for_each_set_bit() loop needs to be protected with the SCSI host lock.
+ >
+> That may cause concurrent access to tmf_rqs?
 
-On 10/23/24 6:19 AM, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
-> 
-> When ufshcd_rtc_work calls ufshcd_rpm_put_sync and the pm's
-> usage_count is 0, it will enter the runtime suspend callback.
-> However, the runtime suspend callback will wait to flush
-> ufshcd_rtc_work, causing a deadlock.
-> Replacing ufshcd_rpm_put_sync with ufshcd_rpm_put can avoid
-> the deadlock.
-> 
-> Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
-> Cc: <stable@vger.kernel.org> 6.11.x
-> 
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Right, the host_lock serializes hba->tmf_rqs[] accesses. Without having
+analyzed whether or not removing locking from around the hba->tmf_rqs[]
+accesses, let's keep this locking.
 
-No blank lines in the tags section please. Additionally, a hash sign
-(#) is missing between "<stable@vger.kernel.org>" and "6.11.x".
-Otherwise this patch looks good to me. Hence:
+> So better withdraw from changing ufshcd_tmc_handler() and just leave
+> the whole function as it is?
+That sounds good to me.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks,
+
+Bart.
