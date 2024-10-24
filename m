@@ -1,79 +1,73 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072F36F305;
-	Thu, 24 Oct 2024 08:30:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC9081EC008;
+	Thu, 24 Oct 2024 14:59:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729758643; cv=none; b=MuCAZSOWTELOr0coYI6AkoA396bGguFi7LK7eQDiGbOXitO+MMo5D02RB3HjuBR4YHJNfNUGo9VbYIErZRW5Trk43UjQnV42+VvsZJ98rCljIT/LXaFatt+x3xnqLSq3bOyIiyyUS5ROkbnMadydelUtqgTY7P67XIo58AgXYfQ=
+	t=1729781982; cv=none; b=FgNLTyjgW8XRFVD12MvvhOGefYgleapXXPn1DWUXf79M8XmnR7KQCER9vqmYx4hF9TqdPPrR58jFgkLWpZiSHfK9r+fbzW34ueABDD27h/LrBi4pKkS3SI8vs3pC6QRylztHbXbzXP4p4bv1D3GnSMpa8dKacsNSOcDoFkHyOLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729758643; c=relaxed/simple;
-	bh=zGfFzfZwqOhvRxHgI9aHvx9qkxsbHu5dqH8puYXq5Ig=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bS79IspigKES4PVyzY0U3FcGkfyTO219ESDwBBDgyyZVf5ZTxf6GmNRF4SiPQNGXDuoOiIlFHGg8WylbNgdVQf5mQX3IQcdhGa7/5+FxOu4nxkO633Pz1QjwzFHTrwzMi8dAKiz0ZXAVmHLaa/p0xozQjExl/fsIFB+kGzJ3bQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4XYzZm4f7Cz10Nxt;
-	Thu, 24 Oct 2024 16:28:32 +0800 (CST)
-Received: from kwepemf100008.china.huawei.com (unknown [7.202.181.222])
-	by mail.maildlp.com (Postfix) with ESMTPS id BF715140135;
-	Thu, 24 Oct 2024 16:30:35 +0800 (CST)
-Received: from huawei.com (10.175.103.91) by kwepemf100008.china.huawei.com
- (7.202.181.222) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 24 Oct
- 2024 16:30:34 +0800
-From: Zeng Heng <zengheng4@huawei.com>
-To: <sreekanth.reddy@broadcom.com>, <sathya.prakash@broadcom.com>,
-	<James.Bottomley@SteelEye.com>, <eric.moore@lsil.com>,
-	<suganath-prabu.subramani@broadcom.com>
-CC: <bobo.shaobowang@huawei.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <MPT-FusionLinux.pdl@broadcom.com>
-Subject: [PATCH] scsi: fusion: Fix not used variable 'rc'
-Date: Thu, 24 Oct 2024 16:44:17 +0800
-Message-ID: <20241024084417.154655-1-zengheng4@huawei.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1729781982; c=relaxed/simple;
+	bh=WfDxMdQAYpgsUsc4zuSTaWQ+cXGHvDgPZwLH3R7eKMM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JtYJCr0wk18YXKKe6YIedn/6JTtu/UYzFO0cdpAyYmz1ir76vlSys7KcH492grlbGsCGbBxcXOBJXijYEL/rA9QHAb6CD+hu5SATYhjMEnB9zwrXGnoRfB/46mqNslH6LCyTStgOwXJ4PAW3lBNKdsZwbwH446lafQKyrxd5YOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XpdTgi+u; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XpdTgi+u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8E6DC4CEE5;
+	Thu, 24 Oct 2024 14:59:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729781981;
+	bh=WfDxMdQAYpgsUsc4zuSTaWQ+cXGHvDgPZwLH3R7eKMM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=XpdTgi+uxs1vEQ5eCCQPc1RBWT2crHhp4NDurH9RjjL0yfLC5+TiMhresH5UKL7OT
+	 ZF71V5zBiN6xwbehexR70rU2au3hq+H2VleMYpT6crLnvQfIES66dHC2hQt9WvbXIK
+	 wuLHem5laQuRm7Lsq/lpNxQpL6XTZpm1iId8Xvr0s//V6emxb677jGqKx4pcH7LU7L
+	 bu2GpCd8+SYAJslWIrdLwzydy+5gfc7UvR/HNOs5+AAp7diRYTWLgngrDK2wUO4BEa
+	 9QrzJHjsGNh5ULScnhYnsdrq+sbRGdU7K0X1EU0q5GVho/z6Gk6R0bxRyOHncfS1yw
+	 3Zt2pzWPVozZQ==
+From: Bjorn Andersson <andersson@kernel.org>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Andy Gross <agross@kernel.org>,
+	cros-qcom-dts-watchers@chromium.org,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: (subset) [PATCH 0/2] arm64: dts: qcom: Use 'ufshc' as the node name for UFS controller nodes
+Date: Thu, 24 Oct 2024 09:59:30 -0500
+Message-ID: <172978197050.296432.17420111339243991222.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240514-ufs-nodename-fix-v1-0-4c55483ac401@linaro.org>
+References: <20240514-ufs-nodename-fix-v1-0-4c55483ac401@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemf100008.china.huawei.com (7.202.181.222)
 
-Fixing exposed the fact that improperly ignore the return value of
-scsi_device_reprobe() in _scsih_reprobe_lun(). Fixing the calling code to
-deal with the potential error is non-trivial, so for now just WARN_ON().
 
-The handling of scsi_device_reprobe()'s return value refers to
-_scsih_reprobe_lun() and the following link:
-https://lore.kernel.org/all/094fdbf57487af4f395238c0525b2a560c8f68f0.1469766027.git.calvinowens@fb.com/
+On Tue, 14 May 2024 15:08:39 +0200, Manivannan Sadhasivam wrote:
+> Devicetree binding has documented the node name for UFS controllers as
+> 'ufshc'. So let's use it instead of 'ufs' which is for the UFS devices.
+> 
+> 
 
-Fixes: f99be43b3024 ("[SCSI] fusion: power pc and miscellaneous bug fixs")
-Signed-off-by: Zeng Heng <zengheng4@huawei.com>
----
- drivers/message/fusion/mptsas.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index a0bcb0864ecd..a798e26c6402 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -4231,10 +4231,8 @@ mptsas_find_phyinfo_by_phys_disk_num(MPT_ADAPTER *ioc, u8 phys_disk_num,
- static void
- mptsas_reprobe_lun(struct scsi_device *sdev, void *data)
- {
--	int rc;
--
- 	sdev->no_uld_attach = data ? 1 : 0;
--	rc = scsi_device_reprobe(sdev);
-+	WARN_ON(scsi_device_reprobe(sdev));
- }
- 
- static void
+[2/2] arm64: dts: qcom: Use 'ufshc' as the node name for UFS controller nodes
+      commit: 15288649e4c037540fa8e8323d44337fc4316df5
+
+Best regards,
 -- 
-2.25.1
-
+Bjorn Andersson <andersson@kernel.org>
