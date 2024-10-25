@@ -1,141 +1,144 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A285D1F9EA1;
-	Fri, 25 Oct 2024 10:58:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 886531632E9
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 13:14:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729853883; cv=none; b=eLG5EALffGeCmeJjAnY10XWJXegx/8Z0WgOziYAB2mcyPM0TXM33HE3Mt3B2x5wKKidujX3hkkhSMvZ0prk8yEaztjWXwrWxsO9Fw1LPgxQrSakfXJDlZE0tP5anHq+7FSv4ioLYxyQ2mr8Ep9LdSgN78zMNZJi4GXqB0Whq/ao=
+	t=1729862092; cv=none; b=CDQncSvgtcGIZdzQ1YWJZupc04d5bpfJBh5vWYfc2dVel6jwJ+midTe0xrnBRlHNxGs4KZYtxkQn7stg0kbEHxNPBfZHDkx/dXeV5+cVC3oACQ+pJzX6H5kYXXH6ReTdWSQr+83sz0KIApm7OFGevCro9onJOpQhXjXtAtiWHaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729853883; c=relaxed/simple;
-	bh=xTif9zXtj8kg3yrLdzPkrKtdNWdx3OH4AUggyPOXCPg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M0bKFlofVx2f2CGjTfiIwxN0MxpleNcG5yqHfx3xhymnl1sx/H7pr5ggU0bCcHJsYAErKEPKoKM+AeAOTbnH1gCPvuonaHQq1dOvfqIlx8dRF9coets0HimfxAL/sLjeKSBJt1JjoDcF5KaWKLTJr9oALgNRKEBb/y2mYO3FqXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SxDyj2U7; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1729862092; c=relaxed/simple;
+	bh=ZwDNgPLe3JseppPOXSDpV9E+7gvgETuHHerjXax3kFk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mvFixRtvFuWuE0EwmOqApnvGtUrAJoGbTcyUNug8KJGPBqbA5P8vCnbqh+fQXblOUvWwA5PGPLVHikpvuwgOCgNj5Y5oZGzIlS3J11ED3R4me8myJCedjO7QPSvXf16XEqPFbYnl7pbOj+5ckTudSlGvBfNJfEDmjXLYFfiEB5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=R4EYUh8R; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SxDyj2U7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729853881; x=1761389881;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=xTif9zXtj8kg3yrLdzPkrKtdNWdx3OH4AUggyPOXCPg=;
-  b=SxDyj2U72fhyYOKef7llNvQzVLGIPgdJYm1l8+LtpGDVMPUeta14FATW
-   6wIl/Kf/ZDx+Lr8cpA9Dep1tMbIXIxReeAOrQJEM/O5d6rLorhf6t/79Y
-   ISuZWkdoCmA1j0SoVraa4DmHv4pLRO53AuI6CqlcA4uTp+WniEbA9F+hm
-   tnuaGqwPPR23FpycbKlrs4xzVOxz/yV9DwtdA5odg+uAPRUukPA1zsO5p
-   GQKmn9sCkeUEvd+4GQZNks8evSNq9N7A33VG/vV6dinDHkr7NL15bkCil
-   pPLC6dg341QisW+VsZjs+ZRROS9VXl754alSRIe3FjKNXJpKpo9DJPN53
-   g==;
-X-CSE-ConnectionGUID: CYBPRE5FTEOIhkf5/xIpCA==
-X-CSE-MsgGUID: mvBmlHLRREi2EdmXQ5tZug==
-X-IronPort-AV: E=McAfee;i="6700,10204,11235"; a="17150163"
-X-IronPort-AV: E=Sophos;i="6.11,231,1725346800"; 
-   d="scan'208";a="17150163"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 03:58:00 -0700
-X-CSE-ConnectionGUID: bZSMsShPRSiqtrdmRk1ajw==
-X-CSE-MsgGUID: bSO0aXD0SeypwIp4stBfkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,231,1725346800"; 
-   d="scan'208";a="80805006"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 25 Oct 2024 03:57:57 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t4I0x-000Y4q-1M;
-	Fri, 25 Oct 2024 10:57:55 +0000
-Date: Fri, 25 Oct 2024 18:57:19 +0800
-From: kernel test robot <lkp@intel.com>
-To: Mirsad Todorovac <mtodorovac69@gmail.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v1 1/1] scsi: gla2xxx: use flexible array member at the
- end of structures
-Message-ID: <202410251849.4PlXq31z-lkp@intel.com>
-References: <20241023221700.220063-2-mtodorovac69@gmail.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="R4EYUh8R"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43161c0068bso19984175e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 06:14:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1729862088; x=1730466888; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6vAbSDgK0b1SDTMA/GPAVlnGTwcx5lchK0srsbvvoMo=;
+        b=R4EYUh8RCBfXSUxtsxryBMFdYrhAU17tE4Updv8CoV1AUxZCr9d1yQWTLLlXHiCkq5
+         nxtPoGwgn0Z96BcVhgY399Kfh9arN3SCtW5wVBtL5BUPaRWXvZ6vMdFc3vzi+D3ZTEeu
+         cttF/q5WM8S/57x+cXg6WOz9x1rsb30IWZSx2s58EZ8T90Ht8v1D2CkIq/pVcsG77YyU
+         dTDiUpbDpOyQb/wu0QftoJVZQs4NwNY9JoVGBG9bOIijiCnzfAuJg/Ux66McgBH+NUkV
+         N24759cQA/q9tmFJ5qn6C38/vg2JWuoKjjA1ncvKMY1H0f4iDR6CX2b6rm8deLhODN0i
+         2brA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729862088; x=1730466888;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6vAbSDgK0b1SDTMA/GPAVlnGTwcx5lchK0srsbvvoMo=;
+        b=i3iZytVSFYXQ+LbcXBBBJdoqrTWO6Jq7s7PBvRwrJqKjrWBwsapRlGBZ9teHt9v+cs
+         CicJWQmWZPugWNo7YuXicWEufXtNgLdFAhDtqCC33b6vr4BCRMpID/sLR5gcoWRIEboF
+         52nJi9aPW+Otkb3xfJIUdg1ArvkkTGHTDB5xUNSC8kZBqmiijz56Ifo/EXtbNlNf0R+B
+         yn1OfmayBXVHM8+Yu73Ibt14XFq8+Fk/vGzpVvif7ibOr44IVgk2XMNiI9S7Y2wJffgo
+         u3vHjqLEbWRgkzflHE3Uxa9QtetFeRg6kH0Y4UjV2edyqzzeLZNX+pfPT3O8cVxICGvp
+         2/+A==
+X-Forwarded-Encrypted: i=1; AJvYcCWk4Q5yB+2TrV2LLSirczYjkGHevDNWeLWYoXeP4AtPbE9Nj4kDbzobPeg5mIfaA0Ja6ry/SgWtlwFN@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkbEl4154obFlw7iJRSr+Im5PYLAsA8zdI+4KE3AgQoeK6V/zU
+	e7Igt3CDJFAezpTFTmnF6GThX3KIIfYr3mL4v8yziYEQ5idyOTgQG2i6Xw9WthuwHTJIzgTaend
+	HIbU=
+X-Google-Smtp-Source: AGHT+IFHcTwJLU6dRFhjx0/7uuUyXfb0Sw0nQJJsfub37C8aAlLQ3WhmzctGx6Mxs5zTAXbGyd3rng==
+X-Received: by 2002:a05:600c:3b90:b0:431:5ba1:a513 with SMTP id 5b1f17b1804b1-431841fdca7mr89863325e9.10.1729862087824;
+        Fri, 25 Oct 2024 06:14:47 -0700 (PDT)
+Received: from gpeter-l.lan ([145.224.67.228])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4318b58b6bdsm47616685e9.45.2024.10.25.06.14.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Oct 2024 06:14:46 -0700 (PDT)
+From: Peter Griffin <peter.griffin@linaro.org>
+To: alim.akhtar@samsung.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	krzk@kernel.org
+Cc: tudor.ambarus@linaro.org,
+	andre.draszik@linaro.org,
+	kernel-team@android.com,
+	willmcvicker@google.com,
+	linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	ebiggers@kernel.org,
+	Peter Griffin <peter.griffin@linaro.org>
+Subject: [PATCH v2 00/11] UFS cleanups and enhancements to ufs-exynos for gs101
+Date: Fri, 25 Oct 2024 14:14:31 +0100
+Message-ID: <20241025131442.112862-1-peter.griffin@linaro.org>
+X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241023221700.220063-2-mtodorovac69@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Mirsad,
+Hi folks,
 
-kernel test robot noticed the following build errors:
+This series provides a few cleanups, bug fixes and feature enhancements for
+the ufs-exynos driver, particularly for gs101 SoC.
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.12-rc4 next-20241025]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Regarding cleanup we remove some unused phy attribute data that isn't
+required when EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR is not set.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mirsad-Todorovac/scsi-gla2xxx-use-flexible-array-member-at-the-end-of-structures/20241024-062120
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20241023221700.220063-2-mtodorovac69%40gmail.com
-patch subject: [PATCH v1 1/1] scsi: gla2xxx: use flexible array member at the end of structures
-config: loongarch-allmodconfig (https://download.01.org/0day-ci/archive/20241025/202410251849.4PlXq31z-lkp@intel.com/config)
-compiler: loongarch64-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241025/202410251849.4PlXq31z-lkp@intel.com/reproduce)
+Regarding bug fixes the check for EXYNOS_UFS_OPT_UFSPR_SECURE is moved
+inside exynos_ufs_config_smu() which fixes a Serror in the resume path
+for gs101.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410251849.4PlXq31z-lkp@intel.com/
+Regarding feature enhancements:
+* Gear 4 is enabled which has higher speeds and better power management.
+* WriteBooster capability is enabled for gs101 which increases write
+  performance.
 
-All errors (new ones prefixed by >>):
+In v2 of this series additionally I've added following patches 8-11 which
+add
 
-   In file included from <command-line>:
-   drivers/scsi/qla2xxx/qla_os.c: In function 'qla2x00_module_init':
->> include/linux/compiler_types.h:517:45: error: call to '__compiletime_assert_833' declared with attribute error: BUILD_BUG_ON failed: sizeof(struct qla2300_fw_dump) != 136100
-     517 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |                                             ^
-   include/linux/compiler_types.h:498:25: note: in definition of macro '__compiletime_assert'
-     498 |                         prefix ## suffix();                             \
-         |                         ^~~~~~
-   include/linux/compiler_types.h:517:9: note: in expansion of macro '_compiletime_assert'
-     517 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |         ^~~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:39:37: note: in expansion of macro 'compiletime_assert'
-      39 | #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-         |                                     ^~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:50:9: note: in expansion of macro 'BUILD_BUG_ON_MSG'
-      50 |         BUILD_BUG_ON_MSG(condition, "BUILD_BUG_ON failed: " #condition)
-         |         ^~~~~~~~~~~~~~~~
-   drivers/scsi/qla2xxx/qla_os.c:8220:9: note: in expansion of macro 'BUILD_BUG_ON'
-    8220 |         BUILD_BUG_ON(sizeof(struct qla2300_fw_dump) != 136100);
-         |         ^~~~~~~~~~~~
+* Clock gating and hibern8 capabilities are enabled for gs101. This leads
+  to a significantly cooler phone when running the upstream kernel on
+  Pixel 6.
+  Approximately 10 degrees cooler after 20 minutes at a shell prompt.
+* AXI bus on gs101 is correctly configured for write line unique transactions
+* ACG is set to be controlled by UFS_ACG_DISABLE for gs101
 
+In v1 I mentioned the phy hibern8 series in [1] that is still under discussion
+however further testing reveals hibern8 feature still works without the additional
+UFS phy register writes done in [1]. So this series can be merged as is.
 
-vim +/__compiletime_assert_833 +517 include/linux/compiler_types.h
+[1] https://lore.kernel.org/linux-arm-kernel/20241002201555.3332138-3-peter.griffin@linaro.org/T/
 
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  503  
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  504  #define _compiletime_assert(condition, msg, prefix, suffix) \
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  505  	__compiletime_assert(condition, msg, prefix, suffix)
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  506  
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  507  /**
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  508   * compiletime_assert - break build and emit msg if condition is false
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  509   * @condition: a compile-time constant condition to check
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  510   * @msg:       a message to emit if condition is false
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  511   *
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  512   * In tradition of POSIX assert, this macro will break the build if the
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  513   * supplied condition is *false*, emitting the supplied error message if the
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  514   * compiler has support to do so.
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  515   */
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  516  #define compiletime_assert(condition, msg) \
-eb5c2d4b45e3d2 Will Deacon 2020-07-21 @517  	_compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  518  
+regards,
+
+Peter
+
+Changes since v1:
+ - Remove superfluous struct device parameter to exynos_ufs_shareability() (Peter)
+ - Add patches 8-11 (hibern8 fixes, WLU support etc)
+
+Peter Griffin (11):
+  scsi: ufs: exynos: Allow UFS Gear 4
+  scsi: ufs: exynos: add check inside exynos_ufs_config_smu()
+  scsi: ufs: exynos: gs101: remove EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL
+  scsi: ufs: exynos: Add EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR check
+  scsi: ufs: exynos: gs101: remove unused phy attribute fields
+  scsi: ufs: exynos: remove tx_dif_p_nsec from exynosauto_ufs_drv_init()
+  scsi: ufs: exynos: add gs101_ufs_drv_init() hook and enable
+    WriteBooster
+  scsi: ufs: exynos: enable write line unique transactions on gs101
+  scsi: ufs: exynos: set ACG to be controlled by UFS_ACG_DISABLE
+  scsi: ufs: exynos: fix hibern8 notify callbacks
+  scsi: ufs: exynos: gs101: enable clock gating with hibern8
+
+ drivers/ufs/host/ufs-exynos.c | 126 +++++++++++++++++++---------------
+ 1 file changed, 70 insertions(+), 56 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.47.0.163.g1226f6d8fa-goog
+
