@@ -1,170 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3236216208;
-	Fri, 25 Oct 2024 20:47:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B1F216E1E
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 20:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729889249; cv=none; b=BSmgGm6S4qZiuO8CmWRRcvt1HNpHQHmvwSfxvtXFurHEDqRBMdhzM51FoMhvxqImJAih+MFdkHYw0dHuvp93jQwlBwBM3OQ3NDizhESjXcirDXq2ntmalkYskjLysIE7GtiRxbajfNkiB41E9OL4GmdK8dJPFug2YO8p11Vse+c=
+	t=1729889335; cv=none; b=jJGQmBzbT1BGFgkILLVVrTy8SxxPdtzNByL/COMIOrIKgWK3Jw27+CEWvj9bdMY4V1CEq4/wMBmQgLnsPQfxCVwJmbWqMjqP17BXcxeIfqathK7QrRG6TsIs8hL+lPxJ1cnLvA6KZ49aKLJyHOL5owGoPx6v0/QvXI0lPrjWpI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729889249; c=relaxed/simple;
-	bh=Tfo5X6uc3w/hrU+iP8PZcK2t41JlU/D+FAY3HHNYJHM=;
+	s=arc-20240116; t=1729889335; c=relaxed/simple;
+	bh=hvjxjB0Wgsn+OMIL93Srt04pQCqu/D45Tj4OFOfsyBk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uz0idFK0+FDYC1vKPUppdQdbUMKry4c59RLJq18PXK/28fNrA5SF2kJEN90R8i5ksZe6+4Av3NQ3p4qubcLzI8Bf1OOlZD9ghuCAoda05W0qX2akM2Ot+78jP9MydsxK1FrMpkuJgEDT8ZmYOSwiB1QS48LObS2nb+gRZGIV+RI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gekfskCv; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=Oy+6ygWhfMdfDebZgq3HPNOCp6nP8lXojSuhInHojnW1X7PxVmnQ5wYkanbYs0NixogSsxy9/TdgPqlw9vFeZRr1eVLfpYDXHA7JVwHEGFYhPKZDQgDxCjjmM1ntgVbd6k2xGGEe0YY7awBt8/i3gqYB3p0xC8C6S0mICAXsFKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=N33dN7Mm; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gekfskCv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F185C4CECC;
-	Fri, 25 Oct 2024 20:47:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729889248;
-	bh=Tfo5X6uc3w/hrU+iP8PZcK2t41JlU/D+FAY3HHNYJHM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=gekfskCvWOfIqlAZ/aSuuXFxlPUBLAq/1J8u7BRk+K9IG78a6VWhRP79Fdow15YPf
-	 44uCMphVFXEm62CFfo0bnfd3n1CW10JYtALJafsVUKuPU3z4maXZ5sT1Bb2UV9pycN
-	 TGG3d8+d3WVZMhgB/k7H5BucarzeptU7ro6s0+7jd2rjHTv2j/nmLH6oV/WpNORUDA
-	 xnh/zY6v5NxPpq11QA6EDyZllc/Y/OnW+6atxbqNYXt6wo/B0emCq9krojm4qbnglg
-	 hOSv/XbGNEBeJM/x1STwgIFbH8+hKzyAcfr+T2d5ym7TYHf4gr/dfs1497Uiengm5Q
-	 UWHjgLfRLSMlw==
-Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2fb58980711so23975541fa.0;
-        Fri, 25 Oct 2024 13:47:28 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCV6+l7GF7hItrAUm2cgRn4knvPHZQvmh/rkMP8oCJkMNuO9xTm7Jq6XWqyrMubbiQ8FA+tdAgpS2dXfcQ==@vger.kernel.org, AJvYcCVSDjca1u8kA7A9ToqBJnM0IW8t/OKYuS7gcWTuLSI0BYiv6Mu7tgpdVBW/0xsNqn+1YJG7qaxKFezcCA==@vger.kernel.org, AJvYcCVwTglbP3ldzWMbP0E80XR1MGUwM22ER4isD3QSy5kdYAuUtVXKG8aixmRw0XMEDH2xgozPFWwzFggvNoq1@vger.kernel.org, AJvYcCW7dBrsHeYXNRIYN2pE39fmGoQea/3SAsnclBoJ0IfWGcLxV4rrO7ICMlhnqY2POecFPGFziLVMfdiO+w==@vger.kernel.org, AJvYcCWYC6gy3RhqMNUb08o8lE8/WJYdYfksaAadR+uincIvHtcE4worwqo55EGhhJi/br1DYcZI/qZUBnyiqw==@vger.kernel.org, AJvYcCWs776YWy7xtL4/Pidoo+1r5PLZ4Jq793bYNrEQO4tYeO4MZoQaNaLti166phnMRbLWTRi6c24mzQivTw==@vger.kernel.org, AJvYcCWy3D5vgZWWZSQ9KnQ59NFi94gpOPDGvaNBUKO4aRyHG95oWfjCwIazrxas/0RI/BEeUhpXcbh/C0ME@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzk6KcwbOQBrEPpAn9gf1pzTS00wkFrAnhnJRJfY/lE9C3lN3em
-	F5lPK1c1O5/VeqSuOn7YvhazBPinNbs0GDnQwd13Ovk5ZijqffxFSLV3tcS2PulMBKbD+FKFekh
-	KZSXd94sGyf2Wo8vYjPIKmlyaVZA=
-X-Google-Smtp-Source: AGHT+IEp6Dx2HlT+U0iGzL8ulgjfv3Yq0fFTV7/qQsnbI5MKZCd6PlYP7CAgGzk4GX/wuTuxR8r9WXnoQ2sPlcjTw1A=
-X-Received: by 2002:a05:651c:2123:b0:2fb:45cf:5eef with SMTP id
- 38308e7fff4ca-2fcbe04dc90mr3314601fa.30.1729889246941; Fri, 25 Oct 2024
- 13:47:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N33dN7Mm"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-5c9850ae22eso3237571a12.3
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 13:48:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1729889331; x=1730494131; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zhMP/ZzRrnbSaB6bN9mPeZk4MVhgEafQLBJFxj1tGE8=;
+        b=N33dN7MmMMIVN5UiBidEzecDDwvKVkZIUlcxleMsv9wLZmKNWpayLwc5i+kLUdOcdU
+         ExXYSQfcV54hV74pmdEn+9Kz190YXQBmSeFpLq0Z1r/jOE6uryczaB5Oer139LwmL9rL
+         41iRDksOMSUGyRt0zlqJ9aJNFK+8L4Wn6QX7TPgEAEeWRU9fCSBFRgk7VYVmfoZKNcAU
+         EPBOPc2TmBHamBCElWMhn6k28kxBfXs/j/7MBpxT98o5mFlAhCD5lETi6kbsyzJpS0V6
+         0ERSQAwJFUT9g5mDTZMuA0YnBuzxOnvlc6twl2dvwebHzwXBYdwFKtimnJieU6HgPG1M
+         u3kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729889331; x=1730494131;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=zhMP/ZzRrnbSaB6bN9mPeZk4MVhgEafQLBJFxj1tGE8=;
+        b=YvknRpTfk0jCHyLZm8FqTgBXAs2Iug8N8iZifucH6TRnoQX1tLXRVuD0f0286878Db
+         7LWFtd0AJsmLOg7R6t9lGYwT309tAQ+HeMO5RwkualGiyfLFLFbt5fpSCJwVnUEXkoGw
+         NpYdg1FLw/4zMQJsN6xwftZZtOO2mw4p8AuEoNCMLjhVmyHjx3e8305W5oeBhTjP+QcA
+         wU7cKt92VDtD2AQpmz9cFANxnc7eIpAvhBx29yhNX2A1ndBSVKsrXezYVcgpxDzYDPNi
+         mkzsq0WE9QN+7C7HyHklhSTIh92RGTr5higgZqh/C5rEe0JwWtDuNKKp+EHWFj1uV154
+         NLDg==
+X-Gm-Message-State: AOJu0YyIu02ouad8n/KYj7E43lMPOqijylLimCfaR0LhLG8CnGNe6r4w
+	f9lV2eOOdhDf+FNiEbpB+5sZGCSG+l72E2mBgzIpqnMEQ4CN/c2/5ZuIIsKpDPykLRtuLd+VdOm
+	6eN4vq9d8SZ9U4hGpNclVXfuXthx99POX
+X-Google-Smtp-Source: AGHT+IFLoL3x14eBJX5E1UCw70pKuczxy7+NVsrGPd2XoIVyJLLiTqAQUUY51UZDCjJ/5EPvjNthVbRRg2sE4Ogz7jg=
+X-Received: by 2002:a05:6402:520c:b0:5c8:8416:cda7 with SMTP id
+ 4fb4d7f45d1cf-5cbbf8b11e8mr355103a12.15.1729889330712; Fri, 25 Oct 2024
+ 13:48:50 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241025191454.72616-1-ebiggers@kernel.org> <20241025191454.72616-5-ebiggers@kernel.org>
-In-Reply-To: <20241025191454.72616-5-ebiggers@kernel.org>
-From: Ard Biesheuvel <ardb@kernel.org>
-Date: Fri, 25 Oct 2024 22:47:15 +0200
-X-Gmail-Original-Message-ID: <CAMj1kXEsq7iJThqZ7WA00ei4m59vpC23wPM+Mrj9W+HXfk-aSg@mail.gmail.com>
-Message-ID: <CAMj1kXEsq7iJThqZ7WA00ei4m59vpC23wPM+Mrj9W+HXfk-aSg@mail.gmail.com>
-Subject: Re: [PATCH v2 04/18] crypto: crc32 - don't unnecessarily register
- arch algorithms
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
-	linux-mips@vger.kernel.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, loongarch@lists.linux.dev, 
-	sparclinux@vger.kernel.org, x86@kernel.org
+References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
+ <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Fri, 25 Oct 2024 22:48:39 +0200
+Message-ID: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 25 Oct 2024 at 21:15, Eric Biggers <ebiggers@kernel.org> wrote:
->
-> From: Eric Biggers <ebiggers@google.com>
->
-> Instead of registering the crc32-$arch and crc32c-$arch algorithms if
-> the arch-specific code was built, only register them when that code was
-> built *and* is not falling back to the base implementation at runtime.
->
-> This avoids confusing users like btrfs which checks the shash driver
-> name to determine whether it is crc32c-generic.
->
-
-I think we agree that 'generic' specifically means a C implementation
-that is identical across all architectures, which is why I updated my
-patch to export -arch instead of wrapping the C code in yet another
-driver just for the fuzzing tests.
-
-So why is this a problem? If no optimizations are available at
-runtime, crc32-arch and crc32-generic are interchangeable, and so it
-shouldn't matter whether you use one or the other.
-
-You can infer from the driver name whether the C code is being used,
-not whether or not the implementation is 'fast', and the btrfs hack is
-already broken on arm64.
-
-> (It would also make sense to change btrfs to test the crc32_optimization
-> flags itself, so that it doesn't have to use the weird hack of parsing
-> the driver name.  This change still makes sense either way though.)
->
-
-Indeed. That hack is very dubious and I'd be inclined just to ignore
-this. On x86 and arm64, it shouldn't make a difference, given that
-crc32-arch will be 'fast' in the vast majority of cases. On other
-architectures, btrfs may use the C implementation while assuming it is
-something faster, and if anyone actually notices the difference, we
-can work with the btrfs devs to do something more sensible here.
+Hi,
 
 
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-> ---
->  crypto/crc32_generic.c  | 8 ++++++--
->  crypto/crc32c_generic.c | 8 ++++++--
->  2 files changed, 12 insertions(+), 4 deletions(-)
+As you can see below, the driver  says "enable 64bit addressing=3D0"
+when dumping nvram settings. The qlogic-1040 card is only a 32-bit
+card plugged into a 64-bit slot. I guess the card is not original to
+the ES40, I have other cards that I can use, i.e a  53c8xx is also
+present in the system. Would it make sense to have the driver honor
+the nvram flag for 64-bit addressing, at least for the 1040 cards? I'm
+thinking I should give it a go... btw. the card runs fine even when
+the driver is compiled in 64bit mode, just as long as I stay below 2GB
+ram or when explicitly setting the DMA_BIT_MASK when building the
+driver. (I guess most systems around when the qla1040 was hot stuff
+had less than 2GB ram).
+
+This is the output I get from running the driver with debug enabled:
+
+[   19.109365] qla1280: QLA1040 found on PCI bus 2, dev 4
+[   19.110341] scsi(0): 64 Bit PCI Addressing Enabled
+[   19.110341] Configure PCI space for adapter...
+[   19.111318] scsi(2): Verifying chip
+[   19.111318] qla1280_chip_diag: Checking mailboxes of chip
+[   19.111318] Loading firmware: qlogic/1040.bin
+[   19.749013] qla1280_start_firmware: Verifying checksum of loaded RISC co=
+de.
+[   19.757802] qla1280_start_firmware: start firmware running.
+[   19.760732] scsi(2): Configure NVRAM parameters
+[   19.760732] Using defaults for NVRAM:
+[   19.760732] qla1280 : initiator scsi id bus[0]=3D7
+[   19.760732] qla1280 : initiator scsi id bus[1]=3D7
+[   19.760732] qla1280 : bus reset delay[0]=3D3
+[   19.760732] qla1280 : bus reset delay[1]=3D3
+[   19.760732] qla1280 : retry count[0]=3D0
+[   19.760732] qla1280 : retry delay[0]=3D1
+[   19.760732] qla1280 : retry count[1]=3D0
+[   19.760732] qla1280 : retry delay[1]=3D1
+[   19.760732] qla1280 : async data setup time[0]=3D6
+[   19.760732] qla1280 : async data setup time[1]=3D6
+[   19.760732] qla1280 : req/ack active negation[0]=3D1
+[   19.760732] qla1280 : req/ack active negation[1]=3D1
+[   19.760732] qla1280 : data line active negation[0]=3D1
+[   19.760732] qla1280 : data line active negation[1]=3D1
+[   19.760732] qla1280 : disable loading risc code=3D0
+[   19.760732] qla1280 : enable 64bit addressing=3D0
+[   19.760732] qla1280 : selection timeout limit[0]=3D250
+[   19.760732] qla1280 : selection timeout limit[1]=3D250
+[   19.760732] qla1280 : max queue depth[0]=3D32
+[   19.760732] qla1280 : max queue depth[1]=3D32
+[   19.772450] scsi(2:0): Resetting SCSI BUS
+[   22.812488] scsi host2: QLogic QLA1040 PCI to SCSI Host Adapter
+                      Firmware version:  7.65.06, Driver version 3.27.2
+
+
+On Fri, Oct 25, 2024 at 10:00=E2=80=AFPM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
 >
-> diff --git a/crypto/crc32_generic.c b/crypto/crc32_generic.c
-> index cc064ea8240e..cecd01e4d6e6 100644
-> --- a/crypto/crc32_generic.c
-> +++ b/crypto/crc32_generic.c
-> @@ -155,19 +155,23 @@ static struct shash_alg algs[] = {{
->         .base.cra_ctxsize       = sizeof(u32),
->         .base.cra_module        = THIS_MODULE,
->         .base.cra_init          = crc32_cra_init,
->  }};
 >
-> +static int num_algs;
-> +
->  static int __init crc32_mod_init(void)
->  {
->         /* register the arch flavor only if it differs from the generic one */
-> -       return crypto_register_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       num_algs = 1 + ((crc32_optimizations & CRC32_LE_OPTIMIZATION) != 0);
-> +
-> +       return crypto_register_shashes(algs, num_algs);
->  }
+> Hi Magnus!
 >
->  static void __exit crc32_mod_fini(void)
->  {
-> -       crypto_unregister_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       crypto_unregister_shashes(algs, num_algs);
->  }
+> > I've been running linux on alpha (alphaserver es40) for a while, using
+> > a qlogic-1040 scsi controller. A few weeks ago I added more RAM to the
+> > es40, but as soon as I got above 2GB RAM I started seeing file system
+> > corruptions on the drive attached to the qlogic controller.
 >
->  subsys_initcall(crc32_mod_init);
->  module_exit(crc32_mod_fini);
+> The qla1280 driver has been used extensively on 64-bit platforms.
 >
-> diff --git a/crypto/crc32c_generic.c b/crypto/crc32c_generic.c
-> index 04b03d825cf4..47d694da9d4a 100644
-> --- a/crypto/crc32c_generic.c
-> +++ b/crypto/crc32c_generic.c
-> @@ -195,19 +195,23 @@ static struct shash_alg algs[] = {{
->         .base.cra_ctxsize       = sizeof(struct chksum_ctx),
->         .base.cra_module        = THIS_MODULE,
->         .base.cra_init          = crc32c_cra_init,
->  }};
+> Is your isp1040 original to the ES40? My Alphas used 53c8xx series
+> controllers if I remember correctly. And with the ES40 being fairly
+> recent (21264), I would have thought it would have used a slightly more
+> modern controller than a 1040.
 >
-> +static int num_algs;
-> +
->  static int __init crc32c_mod_init(void)
->  {
->         /* register the arch flavor only if it differs from the generic one */
-> -       return crypto_register_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       num_algs = 1 + ((crc32_optimizations & CRC32C_OPTIMIZATION) != 0);
-> +
-> +       return crypto_register_shashes(algs, num_algs);
->  }
+> > The nvram flag "enable_64bit_addressing" on the qlogic board is not
+> > checked nor set by the driver.
 >
->  static void __exit crc32c_mod_fini(void)
->  {
-> -       crypto_unregister_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       crypto_unregister_shashes(algs, num_algs);
->  }
+> That would be a good place to start. Maybe if you could dump the NVRAM
+> contents and validate if that is set by the 1040 firmware? I'm afraid I
+> don't have a databook. But the 1040 was current right around the time
+> the industry transitioned from 32 to 64-bit so it could very well be
+> broken.
 >
->  subsys_initcall(crc32c_mod_init);
->  module_exit(crc32c_mod_fini);
+> If you can establish whether that flag is unset on your controller,
+> we could use that as a heuristic for configuring DMA.
 >
 > --
-> 2.47.0
->
->
+> Martin K. Petersen      Oracle Linux Engineering
