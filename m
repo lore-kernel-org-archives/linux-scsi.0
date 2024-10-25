@@ -1,196 +1,119 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D25018BBBB;
-	Fri, 25 Oct 2024 18:45:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729881952; cv=fail; b=tQr6yNpoP/HG+C09RTv/Iw/y6azjf7ah81IaQ14aJ2IasPrJo9wzVvShb0cH0B1TJouaezM9JoCr6mv4Xd0EHm4usqD55af5XdVlX7YDlOZi7x1dgVHFFuwSbBraAyqquwL6mCcalV6WVZfOuNO/LPG9Q372Ru+/fCero3DwoNM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729881952; c=relaxed/simple;
-	bh=FF5IQL/E//U0UaGvXEvfkaoGZayzBCE9MCJd67yBcpk=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=Etu7ofbUlMHFKynBuo0iDvja1Kh4ASDd0XxMmaQu/WZ74BI3CFNzimjvC5tEE8hT97i//d7l3Aru0wWn2t9xBIkBSmfefdOkvpgWTkCiQkvOk4E1b+85GedlRxoqYkIJb2qNwKW7qNypfULvu8+gfvfHpT2lj+QajGdCxjV14a4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=npluQWIB; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=fHHCs2xy; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 080971FF04A
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 18:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729882216; cv=none; b=Set5gaNJbPJsxzz2Vbsxsq5nOmCRHDjjuVDcTeJRMJjer7dWeuaTLsSy+qdqaZtsAPAZpUwuUnMG9lEzv4R1wriM/UW613SYRuMR9YMcx2ZV2lisirDvYLF7d7CwdDE0oyLNUppjqJPNFCdy1jVO73uKeOifmHYwMx+1x6/0eCk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729882216; c=relaxed/simple;
+	bh=CGB6LxmT0WXhEjsf6xrepgUWVuXW/Zv1jXqqTyC2SJo=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Z4t1XKdp2R051YSMl0usjo6TU4IB6A9Xo8e+/WhHPkhC0DQwd59UMvUrvN7JrGDgpzM16Khj5/+oh6Ov5GnDT5Pbv7uuuZUr35q/HrXK0bbAqdHQ/TYFDaqRjHNzjKUAgQK9cO7B3F8BHytHjnHbofSv/nDsUJ3IRGkhT/+s3/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ttkvU98y; arc=none smtp.client-ip=209.85.214.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="npluQWIB";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="fHHCs2xy"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49PG0ZFh029551;
-	Fri, 25 Oct 2024 18:45:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2023-11-20; bh=cXbJHjTS6Dza/THUbM
-	yfGBJrOM3ma6iQ+VOYNHMzOxE=; b=npluQWIBkP2mNYtCfG+I/pB+ZURfHDSmvf
-	m7O1AIbWX1whX+enICCbs9tFTnNay3ZtZ+TVL3uvCgsnB6EDzqkuXjtfTOqQ5LPw
-	UfQTg+fnn8y2YeF7i4CJ6b3TAANk9z2DVuFW8dEvgUf6jf1pfr1hzUEeUltaKN5m
-	bfKvivAFF0A2eWz5FeIyS5o8otQe3xFLlHFMmlCiHcZpab97Zx30CWG6fbPVE/Ed
-	/l6lCZuWW4Y59AWOjxA4LgOF7/YiGE+nBdMRANUcDBOFBhTz9zaPw7BrdhQJZMF7
-	RCIcnJDHrVIO2KA8QHc88LBa0m+PydnW3tuac011ozGBA1T1olog==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42c53uwnjv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 25 Oct 2024 18:45:42 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 49PHakMJ039116;
-	Fri, 25 Oct 2024 18:45:40 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2049.outbound.protection.outlook.com [104.47.74.49])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 42emh63v36-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 25 Oct 2024 18:45:40 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=V3Cj28MAeR4NQRphF+26PccQqgfNHtZfe8SSrLX/ZuugKiWB0Ijr7xTcmw2mnp3BS1326lPeCLgAK66FsGNW9HglZ++ic2nxsBQaqDZZoLhInjANhjVQmd/1FMSFYfcsBkdyAuDh17C6CfYkUTKAAv94PElaLthUJcaXqfMPYQbLq/Dcb0+1N7g5XluUcBghn3k5HSKCzltSwi6of3S6X00uvK4WX4tyEkPh4fopUIj5X83+CmRIf7W9szxiCjTFKW3CP/qE00w60cbaG9yd3LvrmXSM4hLzevkZ4ziljSmSHK7q6a9NH7Y77hbbqFS4C4jIDeOpdpg2WfL/x3+4dg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cXbJHjTS6Dza/THUbMyfGBJrOM3ma6iQ+VOYNHMzOxE=;
- b=t6LGeW/lTTUzdJofLTwu5s6Xxa/1ODOXbE9RnXYV9Q2xOIhlcjGiOxVSO7eK9Y12+NSjbjCJ2inqaAnMSjYqPHR2KDm71FDdlWqiFuP/XiuqXA7ubKoCii4LfHo7BclCcu8JXHAmzuBwSlZwNUx+iz/xaAA2VHC0j4Ynahotl5zxPPGCkZy1EPvXAXGOl9ndyaV503uQqLfcmcLRG5ur4OaA25C3NVCqtOJMsFuaJ8K7TtR5PyoD+R3ab9WJzfuhmqSEtKKDAxLeJnCBPVtnT69d+Sz09nyZDXAN0kcfmVoNGJMR5rbccQYqsFVvATZPXDdWAYUFVeRkr3bkSp8d/g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ttkvU98y"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-20e67b82aa6so26898965ad.0
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 11:50:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cXbJHjTS6Dza/THUbMyfGBJrOM3ma6iQ+VOYNHMzOxE=;
- b=fHHCs2xyrELP3RReDfjL9tul4WOHiooEyCVdJzKM+UGtkB5WdYpj2Q366QbWh4T9WPZoeUXEhmmz8LieCds0K9/bAq5zp3h1UhkDveLGDp5gXZuo7hWBhkfCN6hahdF1835G6Pf4MQD1RMJ5ry84+7AyyMUc4PG6AKc+ct0hZIQ=
-Received: from SN6PR10MB2957.namprd10.prod.outlook.com (2603:10b6:805:cb::19)
- by CO1PR10MB4548.namprd10.prod.outlook.com (2603:10b6:303:97::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8093.16; Fri, 25 Oct
- 2024 18:45:38 +0000
-Received: from SN6PR10MB2957.namprd10.prod.outlook.com
- ([fe80::72ff:b8f4:e34b:18c]) by SN6PR10MB2957.namprd10.prod.outlook.com
- ([fe80::72ff:b8f4:e34b:18c%5]) with mapi id 15.20.8069.018; Fri, 25 Oct 2024
- 18:45:38 +0000
-To: Salomon Dushimirimana <salomondush@google.com>
-Cc: Jinpu Wang <jinpu.wang@ionos.com>, Jack Wang
- <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley"
- <James.Bottomley@hansenpartnership.com>,
-        "Martin K . Petersen"
- <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bhavesh Jashnani <bjashnani@google.com>
-Subject: Re: [PATCH] scsi: pm80xx: Use module param to set pcs event log
- severity
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <CAPE3x15ryZw4s=qA=7HSDyZZXf3FUz2Ms7cxXHjc_R+UbPZTwA@mail.gmail.com>
-	(Salomon Dushimirimana's message of "Thu, 17 Oct 2024 12:58:10 -0400")
-Organization: Oracle Corporation
-Message-ID: <yq1frokf2ii.fsf@ca-mkp.ca.oracle.com>
-References: <20241016220944.370539-1-salomondush@google.com>
-	<CAMGffEmEJp_oVAsbCVV9PKs7vOKWLrUhRGcBGoUSx7+t4ZtsQA@mail.gmail.com>
-	<CAPE3x15ryZw4s=qA=7HSDyZZXf3FUz2Ms7cxXHjc_R+UbPZTwA@mail.gmail.com>
-Date: Fri, 25 Oct 2024 14:45:36 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: BN8PR03CA0023.namprd03.prod.outlook.com
- (2603:10b6:408:94::36) To SN6PR10MB2957.namprd10.prod.outlook.com
- (2603:10b6:805:cb::19)
+        d=google.com; s=20230601; t=1729882214; x=1730487014; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=e0+NHsCuboH95g4yQb8qYWh0zFmSJiQuZvvpd/g2KQA=;
+        b=ttkvU98yL+mcy3GYGZhq0+Z/f+Lsk2pqb6Njgzjmbvg9mKgNdx6YfHN+ccj+rhSVsV
+         LxswnyskcCjxkksMDhHY2iDX6OIIxHlizrckEBmu2KPr9KVztq8emRMwkuX/7dim7jju
+         XDw5+aY0PKBJkXBkQb2poLt0DizYYvVmqH5hTH7dyr2D9lAf+19n8e2Pir8IKBUngkUO
+         QjYOBGcZSM4uCGtBFH2tIfbv+iNCtdC5aLtRo84qnl5mjzbCuvtWFg07dWjTnPFFQq4W
+         h5/FqAcRhNxiCwFmS5IUVN+LtOX5oO8YU6srMEKPMGrVAjBK9Xi9YmoWMCPIkBQY8dwr
+         oljg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729882214; x=1730487014;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=e0+NHsCuboH95g4yQb8qYWh0zFmSJiQuZvvpd/g2KQA=;
+        b=Knj3Civm4cWxe/+hHRDFzHPLEZzq2ZTmbiiQABJdaQ2UdPDBGa2b6hR2y1Eh8ld8IZ
+         ZtJoU0FWtXuaUDS++kH/8rp1WkJ/fME3oNqNvQlcVtBXfpV7Yb1qSUldcTCJ2TcvEP40
+         VePAap26YbRiC4rWaHk1yx6jFzJ74Fgvufdc4Vz18OcULKBqT7E3dW36uiWgcDnk/NGd
+         YwrJvlm2fRMsmSb/SsdQxy7yWTBb23o8Bx8/Kf6NM1+Q+n1UDeWCujLcbM1EOFlkSxRi
+         AkDTL+00AJlN4bR8pG4LLACpncQVx34Tqy/9XmfpGexiyya1DXeEzYZ/caBmW32FgTW9
+         77vg==
+X-Gm-Message-State: AOJu0YwNPs3BawgedjEkGUYkmPT8XNBIgmSxtL+HkTP1EYfdphWOEp3t
+	aisbB4IQGSLNZNrwesCGAmlSmge3K9tahjbvHPgj/PVjwRH2pI/wuG+MGSCaLgow3SXrArP8L8d
+	YbLP4tvPFvQ==
+X-Google-Smtp-Source: AGHT+IHm7qoXaMzwNAnNJmodVt+UDTG1/KMKRAhan8DuhRdo0c3Sn8G90KEAwU47YeMs5XVE86rIcoyZHC9Vww==
+X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:ef:85c8:ac13:4138])
+ (user=ipylypiv job=sendgmr) by 2002:a17:902:f544:b0:20c:ee32:75a6 with SMTP
+ id d9443c01a7336-210c6731cdcmr2755ad.0.1729882213968; Fri, 25 Oct 2024
+ 11:50:13 -0700 (PDT)
+Date: Fri, 25 Oct 2024 18:50:09 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN6PR10MB2957:EE_|CO1PR10MB4548:EE_
-X-MS-Office365-Filtering-Correlation-Id: f9be4388-80bb-4bd9-7dc2-08dcf52537d9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?YZD+BS2EHSBHOVXBMR2ngMnBvAaYBk+n88D3mI7JLHWKdeliFYaWO8+l4+tT?=
- =?us-ascii?Q?71Ix76bFk8sfAX0FyrUBIs8XFPsg/O1Fb0AoAzvj2DkPEUy2A83i0qCx8T+R?=
- =?us-ascii?Q?jj7gy0jDa0uTqiRUqxQFFvaiV5NzS+9C1w2KwtFIzhIygi8sEPgG3be7Oiqk?=
- =?us-ascii?Q?clmy8TIWVDvixxMv0lT0SQwPpInLWq4Uw6rcwysPv92YSNODkdEAznQVvZL6?=
- =?us-ascii?Q?WXxNGw3jQymRcm8B1yIaVtdGlTnLMaQ1Rltg93F2VlP5661zOp/BhGXnkDlh?=
- =?us-ascii?Q?qcw5oAM7QVIZhqZKHPnYOrf2bylipc+bZNb7hoZsprRXbFhaaEjNKV2Wb6Ab?=
- =?us-ascii?Q?Ig8pIzWjR/VHxDnMmm0EKkHemcIkmJEPowhMh73FKJ9kjbIA8sNyWJ4sufar?=
- =?us-ascii?Q?al3W4d4ClSel+ZAK80x8NrFSOuE5NR85jFYx0UJ8J6owW1VDE7xZ6k1LWAP1?=
- =?us-ascii?Q?He2rNlAtctBMweGQp9UcSkzOirGTLWj1jY4fHZiuqqe5h8xNiB3JTZe+V49a?=
- =?us-ascii?Q?MF9QABY9ZG1cKAJejCANoUL8nLoPVsDPw0/D2qM7m9sENcNSD1QnMMSB2es1?=
- =?us-ascii?Q?VydfpvbSpjTEwuHBPp4lOVqdm+ec0KH7HjXvue06sMW82imX+HlZYdzGbGia?=
- =?us-ascii?Q?RBq3w9u+iTyi9CXvAPV2Ar+GVQFqT2h/RufjLvpux2nCDUVtgRsPAjQTXe5h?=
- =?us-ascii?Q?gPpf5htpB/dI1Zg1EjEtREUSAHfSgz9RPxqVJL3DejSPKo7NwwJsSYK5EbAp?=
- =?us-ascii?Q?gVAaDGw0maVKybQ4SMBwRvmuvV98jlQ7gQU4z/IE0fhi5dgcYiM51EIBSyK4?=
- =?us-ascii?Q?lFeAtLyR0e3vhgH13gqhIfvCxobllkooMqSzAjZuaqadHG+dZmRvVw6ecAUd?=
- =?us-ascii?Q?O9uq6O0f53XzTSEwqff9i+DzoJKc+2iFxoZN4V1GlETLYl7cK3bkTGKBj0zy?=
- =?us-ascii?Q?Tl4XW6Ken/5leZe4LyxgdfKZWdgrQKJwb/vxp6D6uv6jyu2DOdVSxOPf0BsL?=
- =?us-ascii?Q?jeUPiLW/RkWSTgBa/M4HQvxFIVDliGYXVocH4J7ayERZx2ZQ9hrTdjxLMKwU?=
- =?us-ascii?Q?Xe8UlnrNywGDngIGT/NzX9GU/QGf4KmdgFy4gR56Y1KEa3teDUDSi1xGVfVU?=
- =?us-ascii?Q?+o2CypUco33L+5DOSGnCiCCV8p9Mtw0voZuIyWIzyZh+q16BfrXvXwavtTgF?=
- =?us-ascii?Q?kUmcuoPFSLwkAPAQf6l09mP7OYXgLUEyPGo04Uf0dxnq3fh82DrsCncW9dBf?=
- =?us-ascii?Q?KiOY+74PR71dyD3mIdtYGnOS2vrh5gkHHg+bYA2wU4B8tN1Jjl8KKWKsSVhh?=
- =?us-ascii?Q?96eIt4Uwn7BcE30wVwc1zJql?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2957.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?f15nuLwUcxTpH7EkBDB8RuSgh41BgB08oViU95Mp+YvFR9PHAwgyXWQZJh93?=
- =?us-ascii?Q?fi47WRUZRQiogqdyfEaTr7PxVPby+riO8XydDWTKaWDSP5yAMU1dxqH01EmJ?=
- =?us-ascii?Q?ybgWq+ZgV/GG30wI11Fw7bpNJftCThK6BF//7zKniz8RC8TnT19ac3viUL7u?=
- =?us-ascii?Q?IEizKJDmLT/Lqf//Lozospwi20vgX1glHzJg8R9PGRnqV9ojChHv84cYAPTQ?=
- =?us-ascii?Q?waSDHioXrUAGIe2cxOykI3PJfhZTia3GG+9j9C75bmY5rB1hHZHBQBd5EddF?=
- =?us-ascii?Q?zUpj6VVT9ZWCQJptAJkF2jouy7zmJtVAm0bkZnf9b0D+0fO3qGcVveNRC+X4?=
- =?us-ascii?Q?f7fXN1oDNL/w/8Zp2KnfYu2Jls+rxR/wZPk39Y+UFyKf6uoEVwqlZ9q+Y26J?=
- =?us-ascii?Q?nW4TUb/Bbvlby/Ba2Siy6niGcKJ8a+DxQmEcRVJ0c1r1J/vU4llTQvtm8hDw?=
- =?us-ascii?Q?EhS3y7pK7sF47cZNY+lcsMjZR6N0n7h3x/nkFOjUUmEQg/uBPnijb+RjfTFS?=
- =?us-ascii?Q?Q8PhjIIl0J4CV5HQsP6XW1zRtZ5+/DNitW1tBwFrlq42JjzSjXSXRdX0swkM?=
- =?us-ascii?Q?LWa4yaa03lRu6XdyYGpmf4FZzrFPAtoy/IBB4Y4u9yED4yCtX4HNc75qFKjz?=
- =?us-ascii?Q?jfeGoURJtu/HMuE2nTM0z9opFlwbp4cvgPKxIIe6aDS9371YnsRy2KELOaDb?=
- =?us-ascii?Q?Ev8fUcCSYG+HxPawxJmPxSIoW3U9UTxVPF+KYnPZbto13ZRZe2F19gHVgjoK?=
- =?us-ascii?Q?+qTpAls6g3oDT66ZNM2iNEtZea9duHzSwrJS1vWFPJn4dLdjJlQcOzOEcDok?=
- =?us-ascii?Q?tvOoHPFr2cUG8b3M+o1RUddhcRObm8OuLEUfi/YK1RtkZDwgUCiL7PJD/pQr?=
- =?us-ascii?Q?mjBu371ebss5N7Ph+p1BTnvClNTEM6gyheVDbDiyptbxRwNSbRLb19Wp4i6z?=
- =?us-ascii?Q?EriKGH8wI3cf1YfK6Re0aMyjFYr8+KrtbOUMcxnPu3fRdAn6qaDUT+HUhToQ?=
- =?us-ascii?Q?cws4+D1ii+2nceqRPOmFwzdr0Ag/U+UsvQwAzXJo4WxUbKVGe+f0TX4bFckm?=
- =?us-ascii?Q?rpsHweutQZmCXooyYV7HDfuY4FaM5xYGtHIA7CndhE0Yi76NgBPOK89PfLRQ?=
- =?us-ascii?Q?wvI+N4Iq1oM1mjCtwDNK7yOJCcuoJRaAFlEXYcnc0tNH6+8GP1juq6JRTu+X?=
- =?us-ascii?Q?qjSqSc3KdxycnyPsY3fmwJ2sEDH917cRRIw27znMAgdNWP458ZkjkMzfuwpP?=
- =?us-ascii?Q?6uXTIXNn3Aiz2fsU+Iv5hkQioy0ueChxjbpNJF2vIkR6WfdBgXpCb5B8VQQD?=
- =?us-ascii?Q?3TVtlnsW/TSrpOY6dTtHCpMloQJYtpT3lUjCBE7nlUrNiVZfhxD5dw3lZHet?=
- =?us-ascii?Q?PdRTBQwvanXqmsk3BJthsNcRanc/lCXXgamlN+Vku7j2U1RS7nd+DbyckRoP?=
- =?us-ascii?Q?Y2zY5nY86GH4cndplteuv1SMtfoBOUjfcn1RxNqQFZbx03muabX91WneMHgi?=
- =?us-ascii?Q?tFzXx25fTksjmB+yGpUr3OkBv8yox3txxKxfLNeXEyCA4emN2eZIMhupeHeX?=
- =?us-ascii?Q?Y4PnLo/fxz+pkmfjFLwkz6ChEZ3TLu0ICcuPLAt5ndfnYLpY7mA8FsT6TaKE?=
- =?us-ascii?Q?VA=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	aneTcYTU6wtuvGxFrNI+2FWIluOMfEGn+nY6BmA0ITPercXop/0h1y4qqGSC/NBnG87VGASmnlGKvhf0mO9urytwrGiWXOnc0HdhRns3PnFi9T+Z0Cvx9kn4Vsu1SrYR9CfKdiifnUOIK4I9JjAl1rYQvy3u3Wz53KzjmuaqVGQlNm15xWPe/GbzsedIw0QPAQMEr45/+P6uOp+n6exHZZUxa1hbM9Fnlkeri7IjmZyIUW6aHRkX43FhjJGUUAHoDjv26jJhi3lJ4cIPo0voZFpqfcV4tKVpX6vQYTHebXAUiz5fA7u7gB0WBljrbeInqgcYVL74D8kzPsLtm4/cH6Z430PbucyxpqOnFfQuEKZQTdycZrNYQehE01D4LlHedKDSQidi+kvIRokXh2xRsjvfK/TChtTUoDUFcSbAFZiFkrWgPTHXnLDyghsK4AvypO2F32QvR9HIQdKs9wMJNZDDE4DFLFpF/j5N/3lHKMAFl07fkBqP6IdM+pNtWvMCs17ZmqIfZqVB4QA7dXyjuuEdPr8tXhSvqIfN79r/udfjijzGMpBYaZdXi88bzAHdOtYiq/hM6buK/2milmOMhNK/9QqCuxR5AMroQgxlE44=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f9be4388-80bb-4bd9-7dc2-08dcf52537d9
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2957.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Oct 2024 18:45:38.0334
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: bM0U8w23MVBqyP32QOVhMsVkHmVsz0vrXFGMPqX8Y1QgXzxNcoJcA1lcTZgOfQojcNiA4xlxblMLpoMyyNY7JeHpZNFsQ6NhGMHxi700LSw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4548
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-25_14,2024-10-25_02,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- malwarescore=0 adultscore=0 mlxscore=0 mlxlogscore=999 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2409260000 definitions=main-2410250143
-X-Proofpoint-GUID: GACOp0AhXUbSXNbBIMCQOsofIvUIwLB1
-X-Proofpoint-ORIG-GUID: GACOp0AhXUbSXNbBIMCQOsofIvUIwLB1
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
+Message-ID: <20241025185009.3278297-1-ipylypiv@google.com>
+Subject: [PATCH v2] scsi: pm8001: Increase request sg length to support 4MiB requests
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
+Increasing the per-request size maximum to 4MiB (8192 sectors x 512 bytes)
+runs into the per-device DMA scatter gather list limit (max_segments) for
+users of the io vector system calls (e.g. readv and writev).
 
-Salomon,
+This change increases the max scatter gather list length to 1024 to enable
+kernel to send 4MiB (1024 * 4KiB page size) requests.
 
-> 3 works well for Google, but a different value might be better for
-> others. Having a module parameter would allow users to customize the
-> level of logging based on their specific needs. If that is not a
-> concern, I can change the default to just 3.
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
 
-How verbose will a value of 3 be during normal operation? I don't object
-to capturing more information during failure scenarios as long as we're
-not flooding the logs with noise when things are nominal.
+Changes since v1:
+- Added .max_sectors = 8192 to pm8001 scsi host template.
+- Defined page size, sector size, and max I/O size to calculate max_sectors
+  and sg_tablesize values.
 
+ drivers/scsi/pm8001/pm8001_defs.h | 7 +++++--
+ drivers/scsi/pm8001/pm8001_init.c | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+index 501b574239e8..7871e29a820a 100644
+--- a/drivers/scsi/pm8001/pm8001_defs.h
++++ b/drivers/scsi/pm8001/pm8001_defs.h
+@@ -92,8 +92,11 @@ enum port_type {
+ #define	PM8001_MAX_MSIX_VEC	 64	/* max msi-x int for spcv/ve */
+ #define	PM8001_RESERVE_SLOT	 8
+ 
+-#define	CONFIG_SCSI_PM8001_MAX_DMA_SG	528
+-#define PM8001_MAX_DMA_SG	CONFIG_SCSI_PM8001_MAX_DMA_SG
++#define PM8001_SECTOR_SIZE	512
++#define PM8001_PAGE_SIZE_4K	4096
++#define PM8001_MAX_IO_SIZE	(4 * 1024 * 1024)
++#define PM8001_MAX_DMA_SG	(PM8001_MAX_IO_SIZE / PM8001_PAGE_SIZE_4K)
++#define PM8001_MAX_SECTORS	(PM8001_MAX_IO_SIZE / PM8001_SECTOR_SIZE)
+ 
+ enum memory_region_num {
+ 	AAP1 = 0x0, /* application acceleration processor */
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 33e1eba62ca1..c87443b14ff7 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -117,6 +117,7 @@ static const struct scsi_host_template pm8001_sht = {
+ 	.scan_start		= pm8001_scan_start,
+ 	.can_queue		= 1,
+ 	.sg_tablesize		= PM8001_MAX_DMA_SG,
++	.max_sectors		= PM8001_MAX_SECTORS,
+ 	.shost_groups		= pm8001_host_groups,
+ 	.sdev_groups		= pm8001_sdev_groups,
+ 	.track_queue_depth	= 1,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.47.0.163.g1226f6d8fa-goog
+
