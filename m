@@ -1,126 +1,135 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945B0217F4C
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 21:37:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F9541C07FD;
+	Fri, 25 Oct 2024 21:37:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729892246; cv=none; b=cV+wpuED4BNlh0jv921NzxgOYWW1+yTLSNhL0cFUmN6b8BT2nzm5iPdrFk9dC9cbpEzkO4L0oj+YCZo+taGhYlgm/9nFqKobJKANhxmcrhl3ytvNZ4QauPtZivdKzRBU/PJp4R2apx6/K1AUOjokl6KrtkqOZ1keZryY1b+P5fI=
+	t=1729892279; cv=none; b=L7gizU9jL/J2G9/iOUbs9S+oAu4px967+LiCBVEwzDDEWJ5KTWThYMrfm/qvFEM/lQJZNCc/CEaVUJQoh+vQKquGz9t9vJw/Px8N0bumtD6EpPMdJRUVaKliXpghaqbvdj8AbWio8xFmeFquQrm5ybzk9N1nemu9B0TGEcyk/04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729892246; c=relaxed/simple;
-	bh=YOZ58UBNTMsnhcYtd0gZ1ZqymIVjFUr/1L3J9cjAsaQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=djJAfI7cXQeGqwo1727nADsE5aSoH9aeWRv73d8LWTuOx/ckVVE07Q8vHJCZ/C00CPURTbMgWCkK7wle9bfUGY2p567EyWpzdPzBYdVc5abXju0njwAXqT1xGkJR7e39MXcpnDZXJI7L67OrbJ9WFi9p5XVQ8A7ND6r6ovn8yto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=b4Ljz4jb; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1729892279; c=relaxed/simple;
+	bh=Q8vC22irZ2uA8WYYvmBwW1+2Pm2qVwYkLgdZ6/sItmw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dEtLEwbMa7yi3jQQt9+OkeHh0ACmNhkoFRyYqzomtyUibx9hdR+6DRU/jK3KRSGsRwca+Kjk3xS+iUkk8KJd2rqEvy5H18ide7LZEnC9mYmhH32SeUmi6iZev7v6/J92/+m4UdRQ8jaVUiGyTrI7ud9q+HlmW9KB0yPu6XMxWWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X9TEdB8N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="b4Ljz4jb"
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49PKcxm3024276
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 14:37:24 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2021-q4; bh=/GQfP/1bQVo+MIHxlX
-	/7bWekCbFNLz0QJfbEivfPyp8=; b=b4Ljz4jbiYYgNE6E7pJJS61xYVIOwWwnIZ
-	8bWHNKURSQBglgrN/fF3PasxbhGqOVFlXIsJfllFNojf/KldUjUn0wuC+D4+0UIT
-	a4o8JMppCG2/qzxtExf4OVSc/LThDiDDZ0rmxndnrSKSCR6tj1fxi+t59JmGgij8
-	sSfIQUQSa5K3BACjIatE7kw5hsU2voOHUwSuHcQnsRJL7FSU3jkN8+eGWfMH5L1h
-	86ud3IUzEsKDFlfkdAu0/4TXulZpJ3WiYvMltx6DKAtEfXEiQGJx3eXKwprjPs6n
-	8cMg4ICj0P3BGD3yfveg8MCUR86wCsUyEhmbtuDULGTKvvLMOP/A==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 42gjhxrbx8-7
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 14:37:23 -0700 (PDT)
-Received: from twshared13976.17.frc2.facebook.com (2620:10d:c085:208::7cb7) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.1544.11; Fri, 25 Oct 2024 21:37:20 +0000
-Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
-	id 6023F1476D735; Fri, 25 Oct 2024 14:37:06 -0700 (PDT)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-block@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-        <linux-scsi@vger.kernel.org>, <io-uring@vger.kernel.org>
-CC: <linux-fsdevel@vger.kernel.org>, <hch@lst.de>, <joshi.k@samsung.com>,
-        <javier.gonz@samsung.com>, <bvanassche@acm.org>,
-        Keith Busch
-	<kbusch@kernel.org>
-Subject: [PATCHv9 0/7] write hints with nvme fdp, scsi streams
-Date: Fri, 25 Oct 2024 14:36:38 -0700
-Message-ID: <20241025213645.3464331-1-kbusch@meta.com>
-X-Mailer: git-send-email 2.43.5
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X9TEdB8N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCB84C4CEE4;
+	Fri, 25 Oct 2024 21:37:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729892278;
+	bh=Q8vC22irZ2uA8WYYvmBwW1+2Pm2qVwYkLgdZ6/sItmw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=X9TEdB8NtoLsaY6w4tD051jPTNAuoCaCbQQHkiIzKo7oiJT9AWcwt+FyzmJhovWAp
+	 2pb0msYmVONirDKwQIfh5V3wPV0dcbDz2pSpVcpHIdMk9tXuPDZ5e6Az8xORI991cm
+	 xqLA6sL3m9DoZGlSNnVohRg6luGL7923xAU3nr5tH7OjWBmXsAW7KgEF+MDVfsK2ne
+	 duqlO61GagzVxkZD2Axh5Nb172IRQrUPy3AWEhn1+6vZ+0EOpP8QflDhFwNd3ZyyP/
+	 h1jEpYwivxBADQX2gGh2Yha+akgPxJ0n7Q8ruu2ds379qCqEjs553wHkorArIKfS4N
+	 Vw2SZPUxwQngA==
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2fb4af0b6beso39466531fa.3;
+        Fri, 25 Oct 2024 14:37:58 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVNjKMlQgmP4BV+V3hXGWCojMJHZWXCzx/WDQ6Av06XsPkHdIy3YKmFSz9LkpYk0qo9GUDCeM/PEv3Xiw==@vger.kernel.org, AJvYcCVQW8pN2aHUJDffRuvtweZfYqFCcOmkPLGagkbyBruuUEWVM42QgMBpSK08z6unAJFNKxqKYboT3JliaA==@vger.kernel.org, AJvYcCVUKJ5el0SYjYCxtkJej8QD3wXAgWMoyQcPyvtNdU6hhmhfT+pAtP08IjAbHFt1ne94s6728GiTrgStbQ==@vger.kernel.org, AJvYcCWv5T9ChvwhklECYlAzxky+smW4WHhpCJk9y4UwFX3VoMQDClDiSCGa8FZeaNT/y2yClGoJIhbr9Pntbw==@vger.kernel.org, AJvYcCXHCEB5nggl8hOtUnZPYDDrvV9lNmMOOonIHGaLrd+tA0qLvqNOPlnKTbzaercx1MwCE1+n0uHF9dqKAyW3@vger.kernel.org, AJvYcCXNA52hl+L3JToiT8IP4JdeG7FAprX8GLLvz+P33El8mGgj5XSCkJwlcy85Sn6sg2ozhHbsAkBo4O2T@vger.kernel.org, AJvYcCXwx1RqcH3WfLMoLQIlAcq5kkHA4UAbk+9/yEEjNpluccJRmf/wFEtLbTyuJBugMQV9vqRXzVrSCNitFw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwXY4eq5RIx/1lMyjRA0as3JM/zhr6JXE36rdXOhErnk/VE9CJq
+	KG1qOARRTiWtXsiFNfyR4k0/F6uNazqF47NjlDKedRlXdQF9KxM2RhVjU0vKsg9mQOzXPmT019Z
+	rtCsUv5/3xho+Daz2e1JnnaOombk=
+X-Google-Smtp-Source: AGHT+IEQWINSviRss911g3zsmM49RILDHJN+Ssrcrwx15J0k6BAeeRwcNFxqZbNLbvjIoCqISV0e2QKpM5PEk7ZnG3k=
+X-Received: by 2002:a05:651c:b0d:b0:2fa:d604:e519 with SMTP id
+ 38308e7fff4ca-2fcbdf7db48mr5607491fa.11.1729892277115; Fri, 25 Oct 2024
+ 14:37:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-GUID: BxsHVNsYm4MTCpND_cHUjbXNoz2eFvvM
-X-Proofpoint-ORIG-GUID: BxsHVNsYm4MTCpND_cHUjbXNoz2eFvvM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-05_03,2024-10-04_01,2024-09-30_01
+References: <20241025191454.72616-1-ebiggers@kernel.org> <20241025191454.72616-4-ebiggers@kernel.org>
+ <CAMj1kXFoer+_yZJWtqBVYfYnzqL9X9bbBRomCL3LDqRcYJ6njQ@mail.gmail.com> <20241025213243.GA2637569@google.com>
+In-Reply-To: <20241025213243.GA2637569@google.com>
+From: Ard Biesheuvel <ardb@kernel.org>
+Date: Fri, 25 Oct 2024 23:37:45 +0200
+X-Gmail-Original-Message-ID: <CAMj1kXHZy3yPvonS5ZVof0qa0V_Lxhv5Q7i1UVf5P6D3d+=KRw@mail.gmail.com>
+Message-ID: <CAMj1kXHZy3yPvonS5ZVof0qa0V_Lxhv5Q7i1UVf5P6D3d+=KRw@mail.gmail.com>
+Subject: Re: [PATCH v2 03/18] lib/crc32: expose whether the lib is really
+ optimized at runtime
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
+	linux-mips@vger.kernel.org, linux-riscv@lists.infradead.org, 
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, loongarch@lists.linux.dev, 
+	sparclinux@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-From: Keith Busch <kbusch@kernel.org>
+On Fri, 25 Oct 2024 at 23:32, Eric Biggers <ebiggers@kernel.org> wrote:
+>
+> On Fri, Oct 25, 2024 at 10:32:14PM +0200, Ard Biesheuvel wrote:
+> > On Fri, 25 Oct 2024 at 21:15, Eric Biggers <ebiggers@kernel.org> wrote:
+> > >
+> > > From: Eric Biggers <ebiggers@google.com>
+> > >
+> > > Make the CRC32 library export some flags that indicate which CRC32
+> > > functions are actually executing optimized code at runtime.  Set these
+> > > correctly from the architectures that implement the CRC32 functions.
+> > >
+> > > This will be used to determine whether the crc32[c]-$arch shash
+> > > algorithms should be registered in the crypto API.  btrfs could also
+> > > start using these flags instead of the hack that it currently uses where
+> > > it parses the crypto_shash_driver_name.
+> > >
+> > > Signed-off-by: Eric Biggers <ebiggers@google.com>
+> > > ---
+> > >  arch/arm64/lib/crc32-glue.c  | 15 +++++++++++++++
+> > >  arch/riscv/lib/crc32-riscv.c | 15 +++++++++++++++
+> > >  include/linux/crc32.h        | 15 +++++++++++++++
+> > >  lib/crc32.c                  |  5 +++++
+> > >  4 files changed, 50 insertions(+)
+> > >
+> > ...
+> > > diff --git a/include/linux/crc32.h b/include/linux/crc32.h
+> > > index 58c632533b08..bf26d454b60d 100644
+> > > --- a/include/linux/crc32.h
+> > > +++ b/include/linux/crc32.h
+> > > @@ -35,10 +35,25 @@ static inline u32 __pure __crc32c_le(u32 crc, const u8 *p, size_t len)
+> > >         if (IS_ENABLED(CONFIG_CRC32_ARCH))
+> > >                 return crc32c_le_arch(crc, p, len);
+> > >         return crc32c_le_base(crc, p, len);
+> > >  }
+> > >
+> > > +/*
+> > > + * crc32_optimizations contains flags that indicate which CRC32 library
+> > > + * functions are using architecture-specific optimizations.  Unlike
+> > > + * IS_ENABLED(CONFIG_CRC32_ARCH) it takes into account the different CRC32
+> > > + * variants and also whether any needed CPU features are available at runtime.
+> > > + */
+> > > +#define CRC32_LE_OPTIMIZATION  BIT(0) /* crc32_le() is optimized */
+> > > +#define CRC32_BE_OPTIMIZATION  BIT(1) /* crc32_be() is optimized */
+> > > +#define CRC32C_OPTIMIZATION    BIT(2) /* __crc32c_le() is optimized */
+> > > +#if IS_ENABLED(CONFIG_CRC32_ARCH)
+> > > +extern u32 crc32_optimizations;
+> > > +#else
+> > > +#define crc32_optimizations 0
+> > > +#endif
+> > > +
+> >
+> > Wouldn't it be cleaner to add a new library function for this, instead
+> > of using a global variable?
+>
+> The architecture crc32 modules need to be able to write to this.  There could be
+> a setter function and a getter function, but just using a variable is simpler.
+>
 
-A little something for everyone here.
+If we just add 'u32 crc32_optimizations()', there is no need for those
+modules to have init/exit hooks, the only thing they need to export is
+this routine.
 
-Upfront, I really didn't get the feedback about setting different flags
-for stream vs. temperature support. Who wants to use it, and where and
-how is that information used?
+Or perhaps it could even be a static inline, with the right plumbing
+of header files. At least on arm64,
 
-Changes from v8:
+static inline u32 crc32_optimizations() {
+  if (!alternative_have_const_cap_likely(ARM64_HAS_CRC32))
+    return 0;
+  return CRC32_LE_OPTIMIZATION | CRC32_BE_OPTIMIZATION | CRC32C_OPTIMIZATION;
+}
 
-  Added reviews.
-
-  Removed an unused header.
-
-  Changed "hint" to "streams" in the commit logs.
-
-  Ability to split available hints that a partition can use.
-
-  Dropped all the generic filesystem changes that were defaulting to the
-  kiocb write_hint. They are unchanged, which having no functional
-  change was really the intention anyway, so let's just not change them.
-
-  The above means we don't need a special fop flag to indicate support
-  for the kiocb write_hint. Those filesystems that don't support it
-  simply don't read it.
-
-  Added the SCSI support since I had to read the spec anyway, and it is
-  just a one-line change.
-
-Kanchan Joshi (2):
-  io_uring: enable per-io hinting capability
-  nvme: enable FDP support
-
-Keith Busch (5):
-  block: use generic u16 for write hints
-  block: introduce max_write_hints queue limit
-  block: allow ability to limit partition write hints
-  block, fs: add write hint to kiocb
-  scsi: set permanent stream count in block limits
-
- Documentation/ABI/stable/sysfs-block |  7 +++
- block/bdev.c                         | 15 +++++
- block/blk-settings.c                 |  3 +
- block/blk-sysfs.c                    |  3 +
- block/fops.c                         | 26 ++++++++-
- block/partitions/core.c              | 46 +++++++++++++++-
- drivers/nvme/host/core.c             | 82 ++++++++++++++++++++++++++++
- drivers/nvme/host/nvme.h             |  5 ++
- drivers/scsi/sd.c                    |  2 +
- include/linux/blk-mq.h               |  3 +-
- include/linux/blk_types.h            |  4 +-
- include/linux/blkdev.h               | 12 ++++
- include/linux/fs.h                   |  1 +
- include/linux/nvme.h                 | 19 +++++++
- include/uapi/linux/io_uring.h        |  4 ++
- io_uring/rw.c                        |  3 +-
- 16 files changed, 225 insertions(+), 10 deletions(-)
-
---=20
-2.43.5
-
+should be all we need.
