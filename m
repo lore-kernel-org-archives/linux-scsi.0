@@ -1,148 +1,110 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC999231CA4
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 13:15:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08532185E50
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 18:22:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729862108; cv=none; b=O5rZ58WWDNJFWOfjGDpSpZiZYLiowGXmCz6gdPT4kfUIcn81weaMfep+ko1AnUfm6wYv2WlTrOtETMJe2K05vB1DdcEACkOq+31bIPvBKisYiXBJdkSOUedxtBvo4ihSoXeqhxvZg6Z+KhhXytQs7RqjlcbtBrm+9wt6+3jk4Fw=
+	t=1729880538; cv=none; b=VYNLzKbhCpUV1JcbgCJr7CAZfJVGlR3aH+bf9vtHH3PJnoValRaJpcFeCp06hb2cBJFkfeqXe4pA0L9bNJ0LNQqPsh6mhVb6qOuNfLwtwsOc5hXI8um6rLT8kJH1k8C6Xqm2CiqKBK9zLCsedbLo+wBJW6DeH2PFoSshTYOgAmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729862108; c=relaxed/simple;
-	bh=k9VgnamHeRSjv5GGKdOvAnnQA43iGAwv8ANgyYMaoCs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jMCfsfLG4F9RcxN4up1XOX2GfN2OIjamBFV3ngFoH/ZoxYPq9kKLWrJr6fxOglkD8g8bkfEaoGfu+mEmLFFYmvTsIoM5EFE9LsrKlPbkhFBFFU4aypeFtRT9o6CRFXUO+X2REpsHMAL0PBTC0jZL0MQMVnCjo/a+kYvDls0IkPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=YLTpqkIN; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1729880538; c=relaxed/simple;
+	bh=DHS5zXjUNPH+dVkf20tdFK6y/eM9x9Zr/Z0mkBsFMdA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IEpKbDnqlQ7F9vgEFELYZXAmft1MMYQlvlZcFkQQ/lCtMTleBYB/YjMk6VWxnnTt64y7gCWncyydK3p0TkVacvpzQVap+dfLNQgoYxxw1jYgTafkvtPWEyPdKdwbqeWx34WTV2n0ecN9Ny7kh7qbN1rmjlHNsrgPALocinClYRU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mYcD8bjp; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YLTpqkIN"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-43168d9c6c9so20727305e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 06:15:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mYcD8bjp"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-20ca4877690so17565ad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2024 11:22:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1729862104; x=1730466904; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0aTUxFFuuS7q4apCNsR9KGVB+f/W8Symh/UfMC9/XY8=;
-        b=YLTpqkINQl/k0Dmo/dHnkTCtWaDaxrXXf9ErowBdR4zfWFuU/nl86wGe5bfu2QG4IJ
-         dqy2IH85DJxdqO3vp5e/k9NJ+p4TWsKi00I4KManBdi8rg3eqMZ2c+VefxvNoZUWoScR
-         TYNWo/RYe7rRBeVlbqJ3s0tRpFiRh56rvE5RPGDOsaSxBRVV9lIaMVrPTqYbwpZ3S/Z8
-         ZL0d3he39HeE1rexS6w+jI/YyQq42kNu0SOhoSl0/HtV7oEuEn2dIi2XfA1m7PcC/z/S
-         23Tb48sCIxLM2mS4s5dyONyaGvIPq6horZas85YREmlEespKBvcgd2mKfBxDY1KwV858
-         +KQQ==
+        d=google.com; s=20230601; t=1729880536; x=1730485336; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=rhT9Vb5Ao1JDCqWhsti2yWZ8ERmFLONpg/V9kcYEdg8=;
+        b=mYcD8bjpIVT3gilFS8DFEnVdXbSC0AmV9hB30XAhtihc+F78+EUIA2yTazLgJMpoEF
+         JwiTLwcpeTqIMrRl5USx7fbzlhboxqkDsFKga/TyVlPMUcGFPaiBjxe5Mvq8ibLbQb/T
+         s7DzF4TAPecUH5+Cm5FeJX6majOc7UMRnausILNWxzfO2Uhxihi7xQL4fGxWxxS2cXBj
+         8yR1fVIR44H76CJpZvWaKMomhdKbNAgGg8itAsdc/Ig97+sFhbonyf0ezMBmTGRp/uNv
+         b52Cba4TplnyfwrCOmh4i7MbzEfdDkFYSKaCBqgRlULOr7R16hrjXZSxdSTssvrAy+TY
+         aTgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729862104; x=1730466904;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0aTUxFFuuS7q4apCNsR9KGVB+f/W8Symh/UfMC9/XY8=;
-        b=N043FX6lrDwUb0EHoBCG1YR4e9+IsBHK1c3ock8+FsVD25UZ0JTYycRE6L51iLecyc
-         Kp5wZlP/7UZMnQPFn4HcbFIRnW7MJkIn75H867v2sSiUvu5wBQAY+yr//kedTkBzmBss
-         kITZeSN8X+tWE4nt6L+YfYY2Aosz74Oc6rw2s7ERoTpI9fD4dVflvKVgD9Ahzz4Q0kWC
-         Et+BcyP3Fum4waBH8Wm4o371hgvLNJ0cXF1wHvMI5+q7WVf/oGAV9Hf/2fKACKEwNkBc
-         7WEu3qZ6Ziiz3/wn/nYJRQLSFfadYNz+BDbseVUfi/ps3dWBmLUQbYYxQOvJiZO4+WDh
-         3AoQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUdSe0m5GlT7SpRYC/j3qCWM1US2ZGkg6iKKcrWAbwiF8KNypCjva4ZqtQ0CGWl6f9UBpACg/SdF7U+@vger.kernel.org
-X-Gm-Message-State: AOJu0Yywdul8Rg4VD49jXyO6k5jMxfym0sATfhwsXCob2/rNAQ2A7hdr
-	1NzhiLdQ0pVPigtqL4QehaBvQ2SFLnnpCN7MF+ePOCqEC5CAJuFkrTlkhghZhPU=
-X-Google-Smtp-Source: AGHT+IFn4umTFqPxopB2GAJY2aOrR7RfiFspVJ8SdEfcnoO13PLJi0jzfHRWD2Ee5O6gR0xA2R/rxA==
-X-Received: by 2002:a05:600c:3b2a:b0:42c:af2a:dcf4 with SMTP id 5b1f17b1804b1-4318c754f00mr39202585e9.27.1729862104292;
-        Fri, 25 Oct 2024 06:15:04 -0700 (PDT)
-Received: from gpeter-l.lan ([145.224.67.228])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4318b58b6bdsm47616685e9.45.2024.10.25.06.15.03
+        d=1e100.net; s=20230601; t=1729880536; x=1730485336;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rhT9Vb5Ao1JDCqWhsti2yWZ8ERmFLONpg/V9kcYEdg8=;
+        b=PVCXtCW4hyHtaswjTsuqAMvwrL+oLcyrcwOTSZhFatf2CHYgxR9zE3pHay0NjXuw70
+         bVo7iYuy61Futn5A9r2Leaf9ZOjEwYsnFHQ5p9PVksJob5njtaZ7ay02yQ6A4Kp8RpxR
+         hZf/cMDvQtw7QKgdzDUNzW1msM0Okm5l6VE2Dqqv+CodxWqG5WqMhvrNy2KXvXESfzoZ
+         NAi1kq0A8lggSoRoIxztZmDyLBnCukngMj7i7eQI6RYJ6v49YfGL8H+CCdZoF5MO2Ujp
+         sQPs3VAGYhWJ00ZAxELvB8Knsi7j/Xr76KpVjlhU6Qnsd4uTrkG2Zwep4OXpJC8drYGa
+         X+0g==
+X-Gm-Message-State: AOJu0YwLsnfqe1w4k2fSeBRzTuhf7EEgr98zQPxBVtPh1DeYa8oKFfh8
+	arg2hF+8fAPwGoe7KN1UURjhmGaM2OMhNdCwDje1NXsk4qZMT4YvIQqOQ5omqWM8/VH+ZpCZF0Y
+	VhA==
+X-Google-Smtp-Source: AGHT+IGvK99AmFcJnYA/RNYkqX6v8MuFvZAAvR8VA1jOooNPBLTsJ3PVC5ESxe6rr7S9PbqoGaqj9Q==
+X-Received: by 2002:a17:902:f9c3:b0:20c:a659:deba with SMTP id d9443c01a7336-210c6470f4bmr227865ad.4.1729880536032;
+        Fri, 25 Oct 2024 11:22:16 -0700 (PDT)
+Received: from google.com (98.144.168.34.bc.googleusercontent.com. [34.168.144.98])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72057a3c018sm1366625b3a.189.2024.10.25.11.22.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Oct 2024 06:15:03 -0700 (PDT)
-From: Peter Griffin <peter.griffin@linaro.org>
-To: alim.akhtar@samsung.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	krzk@kernel.org
-Cc: tudor.ambarus@linaro.org,
-	andre.draszik@linaro.org,
-	kernel-team@android.com,
-	willmcvicker@google.com,
-	linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	ebiggers@kernel.org,
-	Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH v2 11/11] scsi: ufs: exynos: gs101: enable clock gating with hibern8
-Date: Fri, 25 Oct 2024 14:14:42 +0100
-Message-ID: <20241025131442.112862-12-peter.griffin@linaro.org>
-X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
-In-Reply-To: <20241025131442.112862-1-peter.griffin@linaro.org>
-References: <20241025131442.112862-1-peter.griffin@linaro.org>
+        Fri, 25 Oct 2024 11:22:15 -0700 (PDT)
+Date: Fri, 25 Oct 2024 18:22:11 +0000
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: pm8001: Increase request sg length to support 4MiB
+ requests
+Message-ID: <Zxvh0xvI4gPOalzL@google.com>
+References: <20241024001026.1842458-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241024001026.1842458-1-ipylypiv@google.com>
 
-Enable clock gating and hibern8 capabilities for gs101. This
-leads to a significantly cooler phone when running the upstream
-kernel.
+On Thu, Oct 24, 2024 at 12:10:26AM +0000, Igor Pylypiv wrote:
+> Increasing the per-request size maximum (max_sectors_kb) to 4096 KiB
+> runs into the per-device DMA scatter gather list limit (max_segments)
+> for users of the io vector system calls (e.g. readv and writev).
+> 
+> This change increases the max scatter gather list length to 1024 to
+> enable kernel to send 4MiB (1024 * 4KiB page size) requests.
+> 
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_defs.h | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+> index 501b574239e8..f6e6fe3f4cd6 100644
+> --- a/drivers/scsi/pm8001/pm8001_defs.h
+> +++ b/drivers/scsi/pm8001/pm8001_defs.h
+> @@ -92,8 +92,7 @@ enum port_type {
+>  #define	PM8001_MAX_MSIX_VEC	 64	/* max msi-x int for spcv/ve */
+>  #define	PM8001_RESERVE_SLOT	 8
+>  
+> -#define	CONFIG_SCSI_PM8001_MAX_DMA_SG	528
+> -#define PM8001_MAX_DMA_SG	CONFIG_SCSI_PM8001_MAX_DMA_SG
+> +#define PM8001_MAX_DMA_SG	1024
 
-The exynos_ufs_post_hibern8() hook is also updated to remove the
-UIC_CMD_DME_HIBER_EXIT code path as this causes a hang on gs101.
+Just realized that I forgot to include setting .max_sectors to 8192
+in pm8001_sht. I'll fix that in v2.
 
-The code path is removed rather than re-factored as no other SoC
-in ufs-exynos driver sets UFSHCD_CAP_HIBERN8_WITH_CLK_GATING
-capability. Additionally until the previous commit the hibern8
-callbacks were broken anyway as they expected a bool.
+Thanks,
+Igor
 
-Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
----
- drivers/ufs/host/ufs-exynos.c | 24 ++++--------------------
- 1 file changed, 4 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 3bbb71f7bae7..7c8195f27bb6 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -229,6 +229,9 @@ static int gs101_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
- 	/* Enable WriteBooster */
- 	hba->caps |= UFSHCD_CAP_WB_EN;
- 
-+	/* Enable clock gating and hibern8 */
-+	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
-+
- 	/* set ACG to be controlled by UFS_ACG_DISABLE */
- 	reg = hci_readl(ufs, HCI_IOP_ACG_DISABLE);
- 	hci_writel(ufs, reg & (~HCI_IOP_ACG_DISABLE_EN), HCI_IOP_ACG_DISABLE);
-@@ -1566,26 +1569,7 @@ static void exynos_ufs_post_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
- {
- 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
- 
--	if (cmd == UIC_CMD_DME_HIBER_EXIT) {
--		u32 cur_mode = 0;
--		u32 pwrmode;
--
--		if (ufshcd_is_hs_mode(&ufs->dev_req_params))
--			pwrmode = FAST_MODE;
--		else
--			pwrmode = SLOW_MODE;
--
--		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &cur_mode);
--		if (cur_mode != (pwrmode << 4 | pwrmode)) {
--			dev_warn(hba->dev, "%s: power mode change\n", __func__);
--			hba->pwr_info.pwr_rx = (cur_mode >> 4) & 0xf;
--			hba->pwr_info.pwr_tx = cur_mode & 0xf;
--			ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
--		}
--
--		if (!(ufs->opts & EXYNOS_UFS_OPT_SKIP_CONNECTION_ESTAB))
--			exynos_ufs_establish_connt(ufs);
--	} else if (cmd == UIC_CMD_DME_HIBER_ENTER) {
-+	if (cmd == UIC_CMD_DME_HIBER_ENTER) {
- 		ufs->entry_hibern8_t = ktime_get();
- 		exynos_ufs_gate_clks(ufs);
- 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
--- 
-2.47.0.163.g1226f6d8fa-goog
-
+>  
+>  enum memory_region_num {
+>  	AAP1 = 0x0, /* application acceleration processor */
+> -- 
+> 2.47.0.105.g07ac214952-goog
+> 
