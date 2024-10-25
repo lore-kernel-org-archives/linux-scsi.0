@@ -1,72 +1,91 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1062178E3;
-	Thu, 24 Oct 2024 22:08:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C191197521;
+	Fri, 25 Oct 2024 05:51:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729807722; cv=none; b=V2wFh4MOIiwNq/bbvulxlJx63haaKPVHOHiUARIQwJNFFV+J+hQ3dh/jlkhmVBAY3ni5BN0tCwcEuIRzQ317GoouDTlEEWSWKsgYjKRibpIzMwU2s8tTL6FaMB5OVvxzAkVdJ1dLDO3HzxMMGtsg2qFVFZd40SX7kmYimbOCX30=
+	t=1729835487; cv=none; b=E6A382LA4Lg0wcQqawS6y0qWw6Oar3ROThYv4o2MDYfhjHXziR7Sl8VoX/ICjOZY12ch1W4rJlS1cNYHuPS1RMRA8Xxxj3gAjxOGIq3uoR8wZ3fqurvtfvyDPeacsgHWP8snFwti7HK+T2tyvc8m185sQQGuXv5LJPbUStLeoGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729807722; c=relaxed/simple;
-	bh=wPCC8waIpNR0bDaRcVMGppxjJm0tLHhBTl6JzRvq7xs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NZrcAinhdpd0FaD0HQN8qHKc6s5ZYdNn/zDvxcS75/KpcHyhH2uyJvzm6LXo0mFMVXcywoaesZuOVpEcCCpWPvP99V0LTHOJnY2/SQXS48/FBZHmEfLiIj4MvzULpdFJvum3VXsxU5ZDK7bJa0Wd26Jot1EeFEuK73od+lOgkX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=R0npGY60; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1729835487; c=relaxed/simple;
+	bh=Lw25vTu0qqfYwP9s9rInpUV6KpQ9I9LvWUE5ZeFOKB0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mpHvyy8RWZjWhtwjn3EgF01AZbofDatxHZ6kd94tFTLav4GsjYIiN6D0M4wTZjVqMkFYNx/+yHnpCvhujQlPH+D43dFSMpG+TB60MxKnUGwW4my1E2Dv6c5JVMw7B20jnrgclC5eLR+JfwwFLvOV2TwF822oyEkpSUUT2EquXlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=CfBD6ovG; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="R0npGY60"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XZKmy1h22z6ClY8q;
-	Thu, 24 Oct 2024 22:08:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1729807712; x=1732399713; bh=wPCC8waIpNR0bDaRcVMGppxj
-	Jm0tLHhBTl6JzRvq7xs=; b=R0npGY60lGw1gv8I45g56BEeYfgDbuXyO6lMfgcK
-	GopU48sN70vdlQGNJOMxlxXyrB3eCUBNeDtlK7ULcdUnYjUCdYKA24hYsvlKsPjs
-	yag8psXPa08DuJTH+vavTSq8SqNrSogCprq3gztY86UqKvkYhJn7pO/3Bm0JQyPi
-	QYKwJiu/LUBal9PgvKchPqZN/Cn5yf3TAJzpZtcotp9wsfbL6MScsHVjNxLaDVAh
-	sq3nPEVyr0I8OWhpE2Kfs5DdE+/b3zdXjhsjoU6ypDpjWv2qAwaEIAQg79xqHoRe
-	UrsK3gn9HTmmbsLq+7gBAe2GVb9fajr/bITIPpMjA7tX0A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id FL7kds6d3v1o; Thu, 24 Oct 2024 22:08:32 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XZKmw3qB7z6ClY8p;
-	Thu, 24 Oct 2024 22:08:32 +0000 (UTC)
-Message-ID: <823ae610-3858-47c4-b658-5c1a3df2d4d5@acm.org>
-Date: Thu, 24 Oct 2024 15:08:31 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="CfBD6ovG"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49OLApGU020289;
+	Fri, 25 Oct 2024 05:51:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=j4dI9icppoAur5lquUafDkT8o7p6W+wZqvtjOOgcQ30=; b=Cf
+	BD6ovGHhI7N6zcgNOw0VvDallgp5DGmUKgFeayzBEBGjpRza8QL3LBj9CmVqAnFY
+	b7FJ7xwkMxB9G4i23rwxSFx3LeOv3DJVelTiQTzFHp1VnHEoeXHeC1gTS1oj0oR2
+	xf/KHNWXNlLJsp3wZje9oyvKIMNUHUQ1p1s5Y7o9Sbsd+/uN7jOF6kIBPpNVTgBE
+	6prnt1aJxpe0mhNzNdyK7A4326YIqITanuX1HfljuejoUeUANkthQm7TodHA/lrU
+	Ax8eET3tcn+4HhhP8p0sP1IG1nHsaUzYVj6/bGKxO7zpg0tQeoQHgSw8uWMzW8im
+	rDQC8Njvb5HlUXZU6sSg==
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42em66fxav-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 25 Oct 2024 05:51:13 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49P5pDop006264
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 25 Oct 2024 05:51:13 GMT
+Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 24 Oct 2024 22:51:10 -0700
+From: Manish Pandey <quic_mapa@quicinc.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>
+Subject: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and Testbus Registers
+Date: Fri, 25 Oct 2024 11:20:51 +0530
+Message-ID: <20241025055054.23170-1-quic_mapa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/3] scsi: ufs: core: Remove redundant host_lock calls
- around UTMRLDBR.
-To: Avri Altman <avri.altman@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20241024075033.562562-1-avri.altman@wdc.com>
- <20241024075033.562562-2-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20241024075033.562562-2-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: BCl8ggYjt51EBZNYw3jJr3J0YNPG-W3w
+X-Proofpoint-GUID: BCl8ggYjt51EBZNYw3jJr3J0YNPG-W3w
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=22
+ adultscore=0 phishscore=0 impostorscore=0 malwarescore=0 mlxlogscore=383
+ suspectscore=0 clxscore=1011 mlxscore=0 bulkscore=22 priorityscore=1501
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410250043
 
-On 10/24/24 12:50 AM, Avri Altman wrote:
-> There is no need to serialize single read/write calls to the host
-> controller registers. Remove the redundant host_lock calls that protect
-> access to the task management doorbell register: UTMRLDBR.
+Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
+of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
+aid in diagnosing and resolving issues related to hardware and software operations.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Manish Pandey (3):
+  scsi: ufs-qcom: Add support for dumping HW and SW hibern8 count
+  scsi: ufs-qcom: Add support for dumping MCQ registers
+  scsi: ufs-qcom: Add support for testbus registers
+
+ drivers/ufs/host/ufs-qcom.c | 141 ++++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h |  11 +++
+ 2 files changed, 152 insertions(+)
+
+-- 
+2.17.1
 
