@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C0E13B286;
-	Sat, 26 Oct 2024 17:04:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25D183FB9F;
+	Sat, 26 Oct 2024 17:45:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729962262; cv=none; b=SGTmWtA0Kbw3F5SbGMZ4YaqhGYxDeNoQ/uPp2lnP4wCZ6cnxrnq0N3pwiHqlvXKQN/qITEkz6cSoFBXu9grqF2Rp5jhw4rhB2GIBIDNIp6KNGhUKp2LmUXvoB3PMCTXSrLRW4Cf8mtj3Q5lvjOfKucMyLRbVMk7s3lKH9uOQ+co=
+	t=1729964723; cv=none; b=CAOcnLROLpzOb+dVEsglq+6i3pAYKkASBo/B0RBCGAkJPheXi24y5aBsnwLyRCwTrlOpfQfT6lWrXSWziL53erw8L/I4Onlcu9Q4JQlcL3xtmrmC6oA8cwXQ3lioyh4RldgFwvvPgyZnMXB2sBhubTuefwMzLBdGVJjtEYy30Hw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729962262; c=relaxed/simple;
-	bh=wnSkEhmUEgW3X1vsBPM9gY4j2B1BaolcQuzXoGqR2B4=;
+	s=arc-20240116; t=1729964723; c=relaxed/simple;
+	bh=+xOr9a7QBmgzvXt4K8ogW7y/X97Fm+JIp1HzB4NWPHM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VAYz9u3JU+0R3hSBn//T5LSHY5j4XUoFc7xk+Skq3UtHKPRiicOi4aYeAV6fifrc+BrjIvangnm0U//wMtZGgTA+qq1Abyv4mnS5M4wuCW8dHacgeFXklU8/xHvl2w5rRsvwwxslRAjCF7tHsdbIynnvgGa6U9Dtm6y2u4LvGms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MNXbCJ/8; arc=none smtp.client-ip=198.175.65.17
+	 Content-Type:Content-Disposition:In-Reply-To; b=bMFpb7B+xKScjkzkaTgBSpg6sdFp8HUnseodvvuWbpj7XSQI9GzwNnb2ihI/wl/40/siYmKCLWhuz7sJwHc6z+2hrXxV7ZmfnFvqM1k8BeGQPKPVU3pc0UmOdq14g+SXSXkVHfTh1wsI6gFYhQ7glaDC6n28MUv+ugbetsniFEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jLRIoxno; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MNXbCJ/8"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jLRIoxno"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729962260; x=1761498260;
+  t=1729964721; x=1761500721;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=wnSkEhmUEgW3X1vsBPM9gY4j2B1BaolcQuzXoGqR2B4=;
-  b=MNXbCJ/8xxDaRobf+SN1LzAna7pp0RmuDGIE9SQQPxwcWjBsGwB/zhzX
-   vDGt9qbOLKQHK30PcJCAxnIfUdepu5reD+w294Eccm/k0fz+l6re/dDp+
-   0kYJ+ZjU6m4DAUSnJPM9JilNIm205ks0MoZbnLjzrAfy4AK1hbH6omQ0S
-   Bn1OCnv73yPtuZROP4lnuTFMP+WmuXVIQfaVQynYuMsDvOoE2CtrCo8NA
-   jqYr4V1OhrM+/15E5QDA7DA9VFU/i9hEZhGdmlMW1DKhdOr1Ril6hawRQ
-   u49HuW/AxzX7vAbfpsmeAs84jh54HLaSNMawtCR8uUIoYlMLaJYYo3GnZ
-   w==;
-X-CSE-ConnectionGUID: J4TDE6y7SHiarcYTWsX67Q==
-X-CSE-MsgGUID: wkuMxyvRQpi//Q7ojtPKXA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11237"; a="29717500"
+  bh=+xOr9a7QBmgzvXt4K8ogW7y/X97Fm+JIp1HzB4NWPHM=;
+  b=jLRIoxnomumwx3vNugVLyedLWTuV0pXCO0daKtIQY8tkewVAeWkUbBS0
+   gDbgoSWuBDiH67sUwhD/ALHSCYZg5YYBKG4u6xfJ/SUxWZx7k1nDHpbYi
+   bEFiDf+sGsjucu0rWwTtgJtoE2nhVqSMhAt72YA2kIVu+rAGAxxbEg71B
+   0LHxTSXdlkskjvgU9hEx7dSEKE5enBbZ1qUdCfM1OVkXM6VE+4YVVewVc
+   vAlqlY7XRLQmxJuwgS4rfjYILOC1iVxk9NaFlWwCPiCHQHub5RBIJhN+E
+   PZtvuN3hiE3bwdlpwsxqvtesuC/Krd4CmTkHxq7YD7LdmikryPlnxPBj2
+   A==;
+X-CSE-ConnectionGUID: hLSFfTcIRliMxHvpi+WMsg==
+X-CSE-MsgGUID: ottWsg4aTUa0fpCiaL/kbQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11237"; a="33524846"
 X-IronPort-AV: E=Sophos;i="6.11,235,1725346800"; 
-   d="scan'208";a="29717500"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2024 10:04:20 -0700
-X-CSE-ConnectionGUID: v2KZdODNSbaxkJyy4S/XOA==
-X-CSE-MsgGUID: hB856hY6RmSThGOH82GxXA==
+   d="scan'208";a="33524846"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2024 10:45:20 -0700
+X-CSE-ConnectionGUID: ta/ZbhOLQbufXi2FTdmBvg==
+X-CSE-MsgGUID: RgVkr9u8Ty6IAyzF3hBiyQ==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,235,1725346800"; 
-   d="scan'208";a="81369676"
+X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
+   d="scan'208";a="85974141"
 Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 26 Oct 2024 10:04:14 -0700
+  by orviesa003.jf.intel.com with ESMTP; 26 Oct 2024 10:45:15 -0700
 Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1t4kCx-000ZsF-2D;
-	Sat, 26 Oct 2024 17:04:11 +0000
-Date: Sun, 27 Oct 2024 01:03:20 +0800
+	id 1t4kqe-000Ztk-2L;
+	Sat, 26 Oct 2024 17:45:12 +0000
+Date: Sun, 27 Oct 2024 01:44:55 +0800
 From: kernel test robot <lkp@intel.com>
 To: Huan Tang <tanghuan@vivo.com>, alim.akhtar@samsung.com,
 	avri.altman@wdc.com, bvanassche@acm.org,
@@ -59,10 +59,10 @@ To: Huan Tang <tanghuan@vivo.com>, alim.akhtar@samsung.com,
 	quic_nguyenb@quicinc.com, linux@weissschuh.net, ebiggers@google.com,
 	minwoo.im@samsung.com, linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, opensource.kernel@vivo.com,
-	Huan Tang <tanghuan@vivo.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	opensource.kernel@vivo.com, Huan Tang <tanghuan@vivo.com>
 Subject: Re: [PATCH v2] ufs: core: Add WB buffer resize support
-Message-ID: <202410270024.rwb7xAgC-lkp@intel.com>
+Message-ID: <202410270108.zrM5GjRx-lkp@intel.com>
 References: <20241026004423.135-1-tanghuan@vivo.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -88,28 +88,41 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Huan-Tang/ufs-core-Add-WB
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/20241026004423.135-1-tanghuan%40vivo.com
 patch subject: [PATCH v2] ufs: core: Add WB buffer resize support
-config: i386-randconfig-141-20241026 (https://download.01.org/0day-ci/archive/20241027/202410270024.rwb7xAgC-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241027/202410270024.rwb7xAgC-lkp@intel.com/reproduce)
+config: i386-buildonly-randconfig-001-20241026 (https://download.01.org/0day-ci/archive/20241027/202410270108.zrM5GjRx-lkp@intel.com/config)
+compiler: clang version 19.1.2 (https://github.com/llvm/llvm-project 7ba7d8e2f7b6445b60679da826210cdde29eaf8b)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241027/202410270108.zrM5GjRx-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410270024.rwb7xAgC-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202410270108.zrM5GjRx-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   drivers/ufs/core/ufs-sysfs.c: In function 'wb_toggle_buf_resize_store':
->> drivers/ufs/core/ufs-sysfs.c:441:9: error: 'index' undeclared (first use in this function)
+   In file included from drivers/ufs/core/ufs-sysfs.c:12:
+   In file included from drivers/ufs/core/ufshcd-priv.h:7:
+   In file included from include/ufs/ufshcd.h:16:
+   In file included from include/linux/blk-crypto-profile.h:9:
+   In file included from include/linux/bio.h:10:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:8:
+   In file included from include/linux/cacheflush.h:5:
+   In file included from arch/x86/include/asm/cacheflush.h:5:
+   In file included from include/linux/mm.h:2213:
+   include/linux/vmstat.h:518:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
+     518 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
+         |                               ~~~~~~~~~~~ ^ ~~~
+>> drivers/ufs/core/ufs-sysfs.c:441:2: error: use of undeclared identifier 'index'
      441 |         index = ufshcd_wb_get_query_index(hba);
-         |         ^~~~~
-   drivers/ufs/core/ufs-sysfs.c:441:9: note: each undeclared identifier is reported only once for each function it appears in
+         |         ^
+   1 warning and 1 error generated.
 
 Kconfig warnings: (for reference only)
    WARNING: unmet direct dependencies detected for GET_FREE_REGION
    Depends on [n]: SPARSEMEM [=n]
-   Selected by [m]:
-   - RESOURCE_KUNIT_TEST [=m] && RUNTIME_TESTING_MENU [=y] && KUNIT [=y]
+   Selected by [y]:
+   - RESOURCE_KUNIT_TEST [=y] && RUNTIME_TESTING_MENU [=y] && KUNIT [=y]
 
 
 vim +/index +441 drivers/ufs/core/ufs-sysfs.c
