@@ -1,261 +1,170 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8202E3D0C5;
-	Sun, 27 Oct 2024 08:27:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7E013D297
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2024 23:06:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730017664; cv=none; b=VAAA8A1LVGp9CARC3Ikq5SGhRncMvNxsUy2SkRCLknaeX7V78/QcCdYgfp94Zv0Onsn/5cuDFPE/MKPLvZx9wx8AH3D9XYq60++r73BDRQB/LT0vLA6Lwaj5xchGwbjKV5iaffuN5tvtWOzX6EC+1zAyeLerqAXE0UrCoH2Jdxw=
+	t=1730070365; cv=none; b=RN7UOjJaXCu5X6RspKelEvadfqLw9pYweeoiV4wP5txsMZCxGshEEp0EipjsdlzBgUO+FXclPDPKgLWurAirdbe9qGhgS5d2sk+HCEnnP2+tVTc5XwN1lwXX56gVhIx6KqYWWqPmQfHE/wV5vvU0BPNguQX4Kg9e/bgC1C80GTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730017664; c=relaxed/simple;
-	bh=wRbpG4cnISp2xmDEJr7oJJLS2I8E5ZPQNVDTKD22sxQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=lR/BD3QPQKtVEWf4jma4wV28vTiXGxfXJT0VM7yuSZbrPZxaouSz3omXQBz2kBZHAIe9MkqSsQrrFTP/o1QYh4C3X+MvFO+ZuG0yxCUpqs6dCdEJcVu8MfFeaaHFxGikWmTOhpdJvNdRxOCON10nxsDg589It3+ysNb6zpO6IhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=QkVr7o9F; arc=none smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1730070365; c=relaxed/simple;
+	bh=sqjROUCMVUaxG/lfM+Lhm4C3+Swn13zspPmwhdAbcTo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=At7PtQ20htSRklcquEYRucEr/KKfu2M79SzcMJr4AQ04ISZZ4SazxSLUGZJNCYsd7HpLJdhAMJ0lKohv1ofjVQknQ2k9ccHwDZP/LeCCnV8VRGYaFqoJOZq1X7rctrhGGYJPIg7/HOkXXeRYjJazadwAzxOVkQibTSrXj9QbkRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WeMJ5c9A; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QkVr7o9F"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1730017662; x=1761553662;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=wRbpG4cnISp2xmDEJr7oJJLS2I8E5ZPQNVDTKD22sxQ=;
-  b=QkVr7o9FNphHl4lYRywhm48jASF/7/KnL/cLN1Bgo3zAlgSvO9nKPJmC
-   qWJuBdm+7I4Q6Baj1GbU1YNgElyPgtcivzMgT1j0zYxKWB7lycEVAIWfL
-   KDRfPWzwwJE7lPSrBsPEnMSs9QQbwkFar+k1gzzns67iNup+Kk3Y2puE0
-   /fe2xtWg7QjVGll1cX5HLApDyWD5lRWE6aksmB2mduBZNOLHY88KmrMOF
-   6WvDuQkivCvD/b1HkP4vVqBvuGRYm9ArZJngpekyNyGU5F05T9EHT1OnF
-   p1IQTQw/F8r9iJJJ7n9xbOywEC4njkLZa0VVcTvdu0ckMnVEGmGpMnCnw
-   g==;
-X-CSE-ConnectionGUID: b40aNuKRTT+KvvQb16DMtQ==
-X-CSE-MsgGUID: D+dF3GcHSbiIIB3mK9luPQ==
-X-IronPort-AV: E=Sophos;i="6.11,236,1725292800"; 
-   d="scan'208";a="29954872"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2024 16:27:35 +0800
-IronPort-SDR: 671deb02_a3VVkHLCy0furoYSlfslss8r33obvI3LhdQ0FzMZBtaf7LL
- Ch9GsV9m9O67MkrgHexEHRoc8IssPVlqwz+Z2lg==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2024 00:25:54 -0700
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2024 01:27:34 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 1/2] scsi: ufs: core: Introduce a new clock_gating lock
-Date: Sun, 27 Oct 2024 10:25:18 +0200
-Message-Id: <20241027082519.576869-2-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20241027082519.576869-1-avri.altman@wdc.com>
-References: <20241027082519.576869-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WeMJ5c9A"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5c903f5bd0eso7178849a12.3
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2024 16:06:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730070362; x=1730675162; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vymhzfpbqekA30QGQJaVebc8i/rFKSx7W34a7J77vBY=;
+        b=WeMJ5c9Ac520iqPGX2YAm8s4WHbK0NiCArnyySyk9J+G+ax14kCZuNoTuU8J7FsTvI
+         S5ZGocLA5x/FY/nttbaDtOXaYaE9KdYpY5G0IRVwL66G5X23Ik90joRagg/iII09aRjv
+         P+iE5DnTD2nw9JAaVVU6JQ5XemIBWoeJWx2z65BiQSUCzlaO4z3f7SrJ6AZQho6WewSd
+         vqTywiju3phmKvRAnijpMntYaZLjmAzcAzIxtTXOreGUpkmcE36Ob3fiFIzhDErpS+mX
+         28kh2oN+GOXeS/Cd7LjRLGqer+TelGTMevw4bFPBhVbdVykbvhBu+V4QGEABklX41kN7
+         sh4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730070362; x=1730675162;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=vymhzfpbqekA30QGQJaVebc8i/rFKSx7W34a7J77vBY=;
+        b=bOXnbnz3ivaI6D4wHlek3ggkjx3/0cQeWmTJxPs8g1XNHidyqbV1/HMoWbFrQWOm3e
+         exTheCod4oYVWwU4tC0XNISRrC/NfZIizp4lsROUa+2894RXj4sbaFlaN1eU9zoMswgD
+         UhE/DnfKRpCdo7Ofw6Bll55yeYcM4NYEBtElAwNjmurszcRihzPlgJvTdXecQF8r2YF2
+         9Lrm//OwpXxbRwPC9RWffrVvyRIu22zxNShg/QXxDOmQOzm0Xu6xjRMOtrY9QrbuU8kF
+         Ujqyai6AMRTHZvAYv8SM57DFF3wpW8VS8v35Vq773bj+eckB9xmQrjyBAqpwViTDGnoI
+         6MBg==
+X-Gm-Message-State: AOJu0YxC1PXxHab++RMUwJhybErJIRTlEl+teNFi4BS1nIIXyWFYG3SR
+	w96mr7TV0EEBH2+PcoRpK21HU7uILGKYxwWqwoOabjpdmjUlJ9FBDoIGglANJ6yxFt3vM10dBnV
+	7RofF0mJhlI62GlLXu7MVEeF6H45Z8A==
+X-Google-Smtp-Source: AGHT+IGsjQBvZg//o6zkAgHtiyf2+CZUv7hxIZ6hacwee7YgF0LbyGycGQJ1A1apy1odJ9pIGjdcAhVhlFtb8pP7hzM=
+X-Received: by 2002:a17:907:94cc:b0:a9a:bbcc:5092 with SMTP id
+ a640c23a62f3a-a9de5ee23e6mr616892766b.39.1730070361735; Sun, 27 Oct 2024
+ 16:06:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
+ <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+In-Reply-To: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Mon, 28 Oct 2024 00:05:50 +0100
+Message-ID: <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Introduce a new clock gating lock to seriliaze access to the clock
-gating members instead of the host_lock.
+Hi,
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufshcd.c | 44 ++++++++++++++++++++-------------------
- include/ufs/ufshcd.h      |  2 ++
- 2 files changed, 25 insertions(+), 21 deletions(-)
+I've made some changes to the qla1280 driver, the changes include
+things like checking if the card is in a 64-bit slot and setting
+DMA_BIT_MASK and enable_64bit_addressing accordingly. Also in the
+driver information string, it now shows hardware revision on 1040
+chips as well as printing info on its PCI slot (32 or 64 bit). I've
+tested it with a ISP1040B card and a ISP1080 and it seems to work
+fine. This may be of interest to others still running legacy qlogic
+SCSI-controllers?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 099373a25017..b7c7a7dd327f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1817,13 +1817,13 @@ static void ufshcd_ungate_work(struct work_struct *work)
- 
- 	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	if (hba->clk_gating.state == CLKS_ON) {
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 		return;
- 	}
- 
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 	ufshcd_hba_vreg_set_hpm(hba);
- 	ufshcd_setup_clocks(hba, true);
- 
-@@ -1858,7 +1858,7 @@ void ufshcd_hold(struct ufs_hba *hba)
- 	if (!ufshcd_is_clkgating_allowed(hba) ||
- 	    !hba->clk_gating.is_initialized)
- 		return;
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	hba->clk_gating.active_reqs++;
- 
- start:
-@@ -1874,11 +1874,11 @@ void ufshcd_hold(struct ufs_hba *hba)
- 		 */
- 		if (ufshcd_can_hibern8_during_gating(hba) &&
- 		    ufshcd_is_link_hibern8(hba)) {
--			spin_unlock_irqrestore(hba->host->host_lock, flags);
-+			spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 			flush_result = flush_work(&hba->clk_gating.ungate_work);
- 			if (hba->clk_gating.is_suspended && !flush_result)
- 				return;
--			spin_lock_irqsave(hba->host->host_lock, flags);
-+			spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 			goto start;
- 		}
- 		break;
-@@ -1907,17 +1907,17 @@ void ufshcd_hold(struct ufs_hba *hba)
- 		 */
- 		fallthrough;
- 	case REQ_CLKS_ON:
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 		flush_work(&hba->clk_gating.ungate_work);
- 		/* Make sure state is CLKS_ON before returning */
--		spin_lock_irqsave(hba->host->host_lock, flags);
-+		spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 		goto start;
- 	default:
- 		dev_err(hba->dev, "%s: clk gating is in invalid state %d\n",
- 				__func__, hba->clk_gating.state);
- 		break;
- 	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- }
- EXPORT_SYMBOL_GPL(ufshcd_hold);
- 
-@@ -1928,7 +1928,7 @@ static void ufshcd_gate_work(struct work_struct *work)
- 	unsigned long flags;
- 	int ret;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	/*
- 	 * In case you are here to cancel this work the gating state
- 	 * would be marked as REQ_CLKS_ON. In this case save time by
-@@ -1946,7 +1946,7 @@ static void ufshcd_gate_work(struct work_struct *work)
- 	if (ufshcd_is_ufs_dev_busy(hba) || hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
- 		goto rel_lock;
- 
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 
- 	/* put the link into hibern8 mode before turning off clocks */
- 	if (ufshcd_can_hibern8_during_gating(hba)) {
-@@ -1977,14 +1977,14 @@ static void ufshcd_gate_work(struct work_struct *work)
- 	 * prevent from doing cancel work multiple times when there are
- 	 * new requests arriving before the current cancel work is done.
- 	 */
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	if (hba->clk_gating.state == REQ_CLKS_OFF) {
- 		hba->clk_gating.state = CLKS_OFF;
- 		trace_ufshcd_clk_gating(dev_name(hba->dev),
- 					hba->clk_gating.state);
- 	}
- rel_lock:
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- out:
- 	return;
- }
-@@ -2015,9 +2015,9 @@ void ufshcd_release(struct ufs_hba *hba)
- {
- 	unsigned long flags;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	__ufshcd_release(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- }
- EXPORT_SYMBOL_GPL(ufshcd_release);
- 
-@@ -2034,9 +2034,9 @@ void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value)
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 	unsigned long flags;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	hba->clk_gating.delay_ms = value;
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- }
- EXPORT_SYMBOL_GPL(ufshcd_clkgate_delay_set);
- 
-@@ -2072,7 +2072,7 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
- 
- 	value = !!value;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 	if (value == hba->clk_gating.is_enabled)
- 		goto out;
- 
-@@ -2083,7 +2083,7 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
- 
- 	hba->clk_gating.is_enabled = value;
- out:
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 	return count;
- }
- 
-@@ -2125,6 +2125,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
- 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
- 
-+	spin_lock_init(&hba->clk_gating.lock);
-+
- 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(
- 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
- 		hba->host->host_no);
-@@ -9173,11 +9175,11 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
- 				clk_disable_unprepare(clki->clk);
- 		}
- 	} else if (!ret && on) {
--		spin_lock_irqsave(hba->host->host_lock, flags);
-+		spin_lock_irqsave(&hba->clk_gating.lock, flags);
- 		hba->clk_gating.state = CLKS_ON;
- 		trace_ufshcd_clk_gating(dev_name(hba->dev),
- 					hba->clk_gating.state);
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
- 	}
- 
- 	if (clk_state_changed)
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9ea2a7411bb5..52c822fe2944 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -413,6 +413,7 @@ enum clk_gating_state {
-  * @active_reqs: number of requests that are pending and should be waited for
-  * completion before gating clocks.
-  * @clk_gating_workq: workqueue for clock gating work.
-+ * @lock: serielize access to the clk_gating members
-  */
- struct ufs_clk_gating {
- 	struct delayed_work gate_work;
-@@ -426,6 +427,7 @@ struct ufs_clk_gating {
- 	bool is_initialized;
- 	int active_reqs;
- 	struct workqueue_struct *clk_gating_workq;
-+	spinlock_t lock;
- };
- 
- /**
--- 
-2.25.1
-
+On Fri, Oct 25, 2024 at 10:48=E2=80=AFPM Magnus Lindholm <linmag7@gmail.com=
+> wrote:
+>
+> Hi,
+>
+>
+> As you can see below, the driver  says "enable 64bit addressing=3D0"
+> when dumping nvram settings. The qlogic-1040 card is only a 32-bit
+> card plugged into a 64-bit slot. I guess the card is not original to
+> the ES40, I have other cards that I can use, i.e a  53c8xx is also
+> present in the system. Would it make sense to have the driver honor
+> the nvram flag for 64-bit addressing, at least for the 1040 cards? I'm
+> thinking I should give it a go... btw. the card runs fine even when
+> the driver is compiled in 64bit mode, just as long as I stay below 2GB
+> ram or when explicitly setting the DMA_BIT_MASK when building the
+> driver. (I guess most systems around when the qla1040 was hot stuff
+> had less than 2GB ram).
+>
+> This is the output I get from running the driver with debug enabled:
+>
+> [   19.109365] qla1280: QLA1040 found on PCI bus 2, dev 4
+> [   19.110341] scsi(0): 64 Bit PCI Addressing Enabled
+> [   19.110341] Configure PCI space for adapter...
+> [   19.111318] scsi(2): Verifying chip
+> [   19.111318] qla1280_chip_diag: Checking mailboxes of chip
+> [   19.111318] Loading firmware: qlogic/1040.bin
+> [   19.749013] qla1280_start_firmware: Verifying checksum of loaded RISC =
+code.
+> [   19.757802] qla1280_start_firmware: start firmware running.
+> [   19.760732] scsi(2): Configure NVRAM parameters
+> [   19.760732] Using defaults for NVRAM:
+> [   19.760732] qla1280 : initiator scsi id bus[0]=3D7
+> [   19.760732] qla1280 : initiator scsi id bus[1]=3D7
+> [   19.760732] qla1280 : bus reset delay[0]=3D3
+> [   19.760732] qla1280 : bus reset delay[1]=3D3
+> [   19.760732] qla1280 : retry count[0]=3D0
+> [   19.760732] qla1280 : retry delay[0]=3D1
+> [   19.760732] qla1280 : retry count[1]=3D0
+> [   19.760732] qla1280 : retry delay[1]=3D1
+> [   19.760732] qla1280 : async data setup time[0]=3D6
+> [   19.760732] qla1280 : async data setup time[1]=3D6
+> [   19.760732] qla1280 : req/ack active negation[0]=3D1
+> [   19.760732] qla1280 : req/ack active negation[1]=3D1
+> [   19.760732] qla1280 : data line active negation[0]=3D1
+> [   19.760732] qla1280 : data line active negation[1]=3D1
+> [   19.760732] qla1280 : disable loading risc code=3D0
+> [   19.760732] qla1280 : enable 64bit addressing=3D0
+> [   19.760732] qla1280 : selection timeout limit[0]=3D250
+> [   19.760732] qla1280 : selection timeout limit[1]=3D250
+> [   19.760732] qla1280 : max queue depth[0]=3D32
+> [   19.760732] qla1280 : max queue depth[1]=3D32
+> [   19.772450] scsi(2:0): Resetting SCSI BUS
+> [   22.812488] scsi host2: QLogic QLA1040 PCI to SCSI Host Adapter
+>                       Firmware version:  7.65.06, Driver version 3.27.2
+>
+>
+> On Fri, Oct 25, 2024 at 10:00=E2=80=AFPM Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+> >
+> >
+> > Hi Magnus!
+> >
+> > > I've been running linux on alpha (alphaserver es40) for a while, usin=
+g
+> > > a qlogic-1040 scsi controller. A few weeks ago I added more RAM to th=
+e
+> > > es40, but as soon as I got above 2GB RAM I started seeing file system
+> > > corruptions on the drive attached to the qlogic controller.
+> >
+> > The qla1280 driver has been used extensively on 64-bit platforms.
+> >
+> > Is your isp1040 original to the ES40? My Alphas used 53c8xx series
+> > controllers if I remember correctly. And with the ES40 being fairly
+> > recent (21264), I would have thought it would have used a slightly more
+> > modern controller than a 1040.
+> >
+> > > The nvram flag "enable_64bit_addressing" on the qlogic board is not
+> > > checked nor set by the driver.
+> >
+> > That would be a good place to start. Maybe if you could dump the NVRAM
+> > contents and validate if that is set by the 1040 firmware? I'm afraid I
+> > don't have a databook. But the 1040 was current right around the time
+> > the industry transitioned from 32 to 64-bit so it could very well be
+> > broken.
+> >
+> > If you can establish whether that flag is unset on your controller,
+> > we could use that as a heuristic for configuring DMA.
+> >
+> > --
+> > Martin K. Petersen      Oracle Linux Engineering
