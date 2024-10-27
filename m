@@ -1,56 +1,56 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7AA833993;
-	Sun, 27 Oct 2024 08:27:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8202E3D0C5;
+	Sun, 27 Oct 2024 08:27:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730017664; cv=none; b=De+ZyNB81VUtOyshKmCTXHnA76BZVynOZeUsNkWTXj4KIfVrp3M5n7WjaEifgbpplKXci7WetqPq7+CWhImYv1zYrTN7seC/iOOEN1ISenh/6TYBnshwl0OFQDDx7cK9oAg4vwc9sdLpRh0jh7Vv90T88PFkRezpxnjRFU1lYRo=
+	t=1730017664; cv=none; b=VAAA8A1LVGp9CARC3Ikq5SGhRncMvNxsUy2SkRCLknaeX7V78/QcCdYgfp94Zv0Onsn/5cuDFPE/MKPLvZx9wx8AH3D9XYq60++r73BDRQB/LT0vLA6Lwaj5xchGwbjKV5iaffuN5tvtWOzX6EC+1zAyeLerqAXE0UrCoH2Jdxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730017664; c=relaxed/simple;
-	bh=l9hhujw59rfeda7wtIGqeZACyi1A6uOoHmQ6L1d/reE=;
+	bh=wRbpG4cnISp2xmDEJr7oJJLS2I8E5ZPQNVDTKD22sxQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dVIko0a06e1qbVW8io00d/NLug9kR25nxtvhmgNveemI1gYrvTsLK3s9Jo+ubDkKaCLFjhqj+34h2G3w630vps45YM93QN8HJ0rwVnnJN0sg8xMZPVcbPjGOqQiwp3rtDxHr5SlvJ0V7awSUiCAfACukBoULYiyFMWPVtOWtS34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ltJVkXWM; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=lR/BD3QPQKtVEWf4jma4wV28vTiXGxfXJT0VM7yuSZbrPZxaouSz3omXQBz2kBZHAIe9MkqSsQrrFTP/o1QYh4C3X+MvFO+ZuG0yxCUpqs6dCdEJcVu8MfFeaaHFxGikWmTOhpdJvNdRxOCON10nxsDg589It3+ysNb6zpO6IhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=QkVr7o9F; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ltJVkXWM"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QkVr7o9F"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1730017661; x=1761553661;
+  t=1730017662; x=1761553662;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=l9hhujw59rfeda7wtIGqeZACyi1A6uOoHmQ6L1d/reE=;
-  b=ltJVkXWMDqvSxrXsg78taDLkp56BeOoZAWv3iTBSpTbhp6y947erGrBV
-   fQAmB/diygnFgpNLEvxP7Rzr1DYjJEDl2NWisqEKAtqi9MQYSvI6hLpv0
-   mnNKk+RpV0B7F5V5VZyU24pF5bYw1TQt2TyRyZd+jrx6drzdkax1GqyvC
-   mTWgykzGQnlVcMY2dHpCOv3lrNuy5K7UkiU+IHkPQqa5Xq29tZbi/dlZO
-   JDvSXJCfDX8MZKTxKRSoKhwE2eHw6wNiL6X/uif3bVCvsby1biege5tfv
-   CBHvWZakQ+J4zsA6RSQv/si6WB0wUCnFUA7soqh0lb2EmJFNcIA1LsSPQ
-   Q==;
-X-CSE-ConnectionGUID: +GjJ7cfeSFqZlVNoCgnfSA==
-X-CSE-MsgGUID: vxKlmPKZRayqqv01FXSdHA==
+  bh=wRbpG4cnISp2xmDEJr7oJJLS2I8E5ZPQNVDTKD22sxQ=;
+  b=QkVr7o9FNphHl4lYRywhm48jASF/7/KnL/cLN1Bgo3zAlgSvO9nKPJmC
+   qWJuBdm+7I4Q6Baj1GbU1YNgElyPgtcivzMgT1j0zYxKWB7lycEVAIWfL
+   KDRfPWzwwJE7lPSrBsPEnMSs9QQbwkFar+k1gzzns67iNup+Kk3Y2puE0
+   /fe2xtWg7QjVGll1cX5HLApDyWD5lRWE6aksmB2mduBZNOLHY88KmrMOF
+   6WvDuQkivCvD/b1HkP4vVqBvuGRYm9ArZJngpekyNyGU5F05T9EHT1OnF
+   p1IQTQw/F8r9iJJJ7n9xbOywEC4njkLZa0VVcTvdu0ckMnVEGmGpMnCnw
+   g==;
+X-CSE-ConnectionGUID: b40aNuKRTT+KvvQb16DMtQ==
+X-CSE-MsgGUID: D+dF3GcHSbiIIB3mK9luPQ==
 X-IronPort-AV: E=Sophos;i="6.11,236,1725292800"; 
-   d="scan'208";a="30942560"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2024 16:27:41 +0800
-IronPort-SDR: 671deb08_WY5pAi0AdM0+2Ihmk90GDmv0ZGTBvz+6xNulBmYGajCZAFB
- cOGDtBvpld1yQExeIRBJIdqXJLTKzV51mP3qTVw==
+   d="scan'208";a="29954872"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2024 16:27:35 +0800
+IronPort-SDR: 671deb02_a3VVkHLCy0furoYSlfslss8r33obvI3LhdQ0FzMZBtaf7LL
+ Ch9GsV9m9O67MkrgHexEHRoc8IssPVlqwz+Z2lg==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2024 00:26:00 -0700
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2024 00:25:54 -0700
 WDCIronportException: Internal
 Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2024 01:27:40 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2024 01:27:34 -0700
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 2/2] scsi: ufs: core: Introduce a new clock_scaling lock
-Date: Sun, 27 Oct 2024 10:25:19 +0200
-Message-Id: <20241027082519.576869-3-avri.altman@wdc.com>
+Subject: [PATCH 1/2] scsi: ufs: core: Introduce a new clock_gating lock
+Date: Sun, 27 Oct 2024 10:25:18 +0200
+Message-Id: <20241027082519.576869-2-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20241027082519.576869-1-avri.altman@wdc.com>
 References: <20241027082519.576869-1-avri.altman@wdc.com>
@@ -63,215 +63,199 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 Introduce a new clock gating lock to seriliaze access to the clock
-scaling members instead of the host_lock.
+gating members instead of the host_lock.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/ufs/core/ufshcd.c | 48 ++++++++++++++++++++-------------------
+ drivers/ufs/core/ufshcd.c | 44 ++++++++++++++++++++-------------------
  include/ufs/ufshcd.h      |  2 ++
- 2 files changed, 27 insertions(+), 23 deletions(-)
+ 2 files changed, 25 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b7c7a7dd327f..fbaee68064c9 100644
+index 099373a25017..b7c7a7dd327f 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -1449,14 +1449,14 @@ static void ufshcd_clk_scaling_suspend_work(struct work_struct *work)
- 					   clk_scaling.suspend_work);
- 	unsigned long irq_flags;
+@@ -1817,13 +1817,13 @@ static void ufshcd_ungate_work(struct work_struct *work)
  
--	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, irq_flags);
- 	if (hba->clk_scaling.active_reqs || hba->clk_scaling.is_suspended) {
--		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 		return;
- 	}
- 	hba->clk_scaling.is_suspended = true;
- 	hba->clk_scaling.window_start_t = 0;
--	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 
- 	devfreq_suspend_device(hba->devfreq);
- }
-@@ -1467,13 +1467,13 @@ static void ufshcd_clk_scaling_resume_work(struct work_struct *work)
- 					   clk_scaling.resume_work);
- 	unsigned long irq_flags;
- 
--	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, irq_flags);
- 	if (!hba->clk_scaling.is_suspended) {
--		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 		return;
- 	}
- 	hba->clk_scaling.is_suspended = false;
--	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 
- 	devfreq_resume_device(hba->devfreq);
- }
-@@ -1508,15 +1508,15 @@ static int ufshcd_devfreq_target(struct device *dev,
- 		*freq =	(unsigned long) clk_round_rate(clki->clk, *freq);
- 	}
- 
--	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, irq_flags);
- 	if (ufshcd_eh_in_progress(hba)) {
--		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 		return 0;
- 	}
- 
- 	/* Skip scaling clock when clock scaling is suspended */
- 	if (hba->clk_scaling.is_suspended) {
--		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 		dev_warn(hba->dev, "clock scaling is suspended, skip");
- 		return 0;
- 	}
-@@ -1525,7 +1525,7 @@ static int ufshcd_devfreq_target(struct device *dev,
- 		sched_clk_scaling_suspend_work = true;
- 
- 	if (list_empty(clk_list)) {
--		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 		goto out;
- 	}
- 
-@@ -1540,11 +1540,11 @@ static int ufshcd_devfreq_target(struct device *dev,
- 
- 	/* Update the frequency */
- 	if (!ufshcd_is_devfreq_scaling_required(hba, *freq, scale_up)) {
--		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 		ret = 0;
- 		goto out; /* no state change required */
- 	}
--	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, irq_flags);
- 
- 	start = ktime_get();
- 	ret = ufshcd_devfreq_scale(hba, *freq, scale_up);
-@@ -1577,7 +1577,7 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
- 
- 	memset(stat, 0, sizeof(*stat));
+ 	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
  
 -	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&scaling->lock, flags);
- 	curr_t = ktime_get();
- 	if (!scaling->window_start_t)
- 		goto start_window;
-@@ -1613,7 +1613,7 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
- 		scaling->busy_start_t = 0;
- 		scaling->is_busy_started = false;
- 	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&scaling->lock, flags);
- 	return 0;
- }
- 
-@@ -1683,13 +1683,13 @@ static void ufshcd_suspend_clkscaling(struct ufs_hba *hba)
- 	cancel_work_sync(&hba->clk_scaling.suspend_work);
- 	cancel_work_sync(&hba->clk_scaling.resume_work);
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, flags);
- 	if (!hba->clk_scaling.is_suspended) {
- 		suspend = true;
- 		hba->clk_scaling.is_suspended = true;
- 		hba->clk_scaling.window_start_t = 0;
- 	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, flags);
- 
- 	if (suspend)
- 		devfreq_suspend_device(hba->devfreq);
-@@ -1700,12 +1700,12 @@ static void ufshcd_resume_clkscaling(struct ufs_hba *hba)
- 	unsigned long flags;
- 	bool resume = false;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, flags);
- 	if (hba->clk_scaling.is_suspended) {
- 		resume = true;
- 		hba->clk_scaling.is_suspended = false;
- 	}
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, flags);
- 
- 	if (resume)
- 		devfreq_resume_device(hba->devfreq);
-@@ -1791,6 +1791,8 @@ static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
- 	INIT_WORK(&hba->clk_scaling.resume_work,
- 		  ufshcd_clk_scaling_resume_work);
- 
-+	spin_lock_init(&hba->clk_scaling.lock);
-+
- 	hba->clk_scaling.workq = alloc_ordered_workqueue(
- 		"ufs_clkscaling_%d", WQ_MEM_RECLAIM, hba->host->host_no);
- 
-@@ -2161,12 +2163,12 @@ static void ufshcd_clk_scaling_start_busy(struct ufs_hba *hba)
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return;
- 
--	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, flags);
- 	if (!hba->clk_scaling.active_reqs++)
- 		queue_resume_work = true;
- 
- 	if (!hba->clk_scaling.is_enabled || hba->pm_op_in_progress) {
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	if (hba->clk_gating.state == CLKS_ON) {
 -		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		spin_unlock_irqrestore(&hba->clk_scaling.lock, flags);
++		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
  		return;
  	}
  
-@@ -2184,7 +2186,7 @@ static void ufshcd_clk_scaling_start_busy(struct ufs_hba *hba)
- 		hba->clk_scaling.busy_start_t = curr_t;
- 		hba->clk_scaling.is_busy_started = true;
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ 	ufshcd_hba_vreg_set_hpm(hba);
+ 	ufshcd_setup_clocks(hba, true);
+ 
+@@ -1858,7 +1858,7 @@ void ufshcd_hold(struct ufs_hba *hba)
+ 	if (!ufshcd_is_clkgating_allowed(hba) ||
+ 	    !hba->clk_gating.is_initialized)
+ 		return;
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	hba->clk_gating.active_reqs++;
+ 
+ start:
+@@ -1874,11 +1874,11 @@ void ufshcd_hold(struct ufs_hba *hba)
+ 		 */
+ 		if (ufshcd_can_hibern8_during_gating(hba) &&
+ 		    ufshcd_is_link_hibern8(hba)) {
+-			spin_unlock_irqrestore(hba->host->host_lock, flags);
++			spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ 			flush_result = flush_work(&hba->clk_gating.ungate_work);
+ 			if (hba->clk_gating.is_suspended && !flush_result)
+ 				return;
+-			spin_lock_irqsave(hba->host->host_lock, flags);
++			spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 			goto start;
+ 		}
+ 		break;
+@@ -1907,17 +1907,17 @@ void ufshcd_hold(struct ufs_hba *hba)
+ 		 */
+ 		fallthrough;
+ 	case REQ_CLKS_ON:
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ 		flush_work(&hba->clk_gating.ungate_work);
+ 		/* Make sure state is CLKS_ON before returning */
+-		spin_lock_irqsave(hba->host->host_lock, flags);
++		spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 		goto start;
+ 	default:
+ 		dev_err(hba->dev, "%s: clk gating is in invalid state %d\n",
+ 				__func__, hba->clk_gating.state);
+ 		break;
  	}
 -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
  }
+ EXPORT_SYMBOL_GPL(ufshcd_hold);
  
- static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
-@@ -2195,7 +2197,7 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return;
+@@ -1928,7 +1928,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	unsigned long flags;
+ 	int ret;
  
 -	spin_lock_irqsave(hba->host->host_lock, flags);
-+	spin_lock_irqsave(&hba->clk_scaling.lock, flags);
- 	hba->clk_scaling.active_reqs--;
- 	if (!scaling->active_reqs && scaling->is_busy_started) {
- 		scaling->tot_busy_t += ktime_to_us(ktime_sub(ktime_get(),
-@@ -2203,7 +2205,7 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
- 		scaling->busy_start_t = 0;
- 		scaling->is_busy_started = false;
- 	}
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	/*
+ 	 * In case you are here to cancel this work the gating state
+ 	 * would be marked as REQ_CLKS_ON. In this case save time by
+@@ -1946,7 +1946,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	if (ufshcd_is_ufs_dev_busy(hba) || hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
+ 		goto rel_lock;
+ 
 -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	spin_unlock_irqrestore(&hba->clk_scaling.lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ 
+ 	/* put the link into hibern8 mode before turning off clocks */
+ 	if (ufshcd_can_hibern8_during_gating(hba)) {
+@@ -1977,14 +1977,14 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	 * prevent from doing cancel work multiple times when there are
+ 	 * new requests arriving before the current cancel work is done.
+ 	 */
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	if (hba->clk_gating.state == REQ_CLKS_OFF) {
+ 		hba->clk_gating.state = CLKS_OFF;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+ 	}
+ rel_lock:
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ out:
+ 	return;
+ }
+@@ -2015,9 +2015,9 @@ void ufshcd_release(struct ufs_hba *hba)
+ {
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	__ufshcd_release(hba);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_release);
+ 
+@@ -2034,9 +2034,9 @@ void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value)
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	hba->clk_gating.delay_ms = value;
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_clkgate_delay_set);
+ 
+@@ -2072,7 +2072,7 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
+ 
+ 	value = !!value;
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
++	spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 	if (value == hba->clk_gating.is_enabled)
+ 		goto out;
+ 
+@@ -2083,7 +2083,7 @@ static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
+ 
+ 	hba->clk_gating.is_enabled = value;
+ out:
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ 	return count;
  }
  
- static inline int ufshcd_monitor_opcode2dir(u8 opcode)
+@@ -2125,6 +2125,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
+ 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
+ 
++	spin_lock_init(&hba->clk_gating.lock);
++
+ 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(
+ 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
+ 		hba->host->host_no);
+@@ -9173,11 +9175,11 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
+ 				clk_disable_unprepare(clki->clk);
+ 		}
+ 	} else if (!ret && on) {
+-		spin_lock_irqsave(hba->host->host_lock, flags);
++		spin_lock_irqsave(&hba->clk_gating.lock, flags);
+ 		hba->clk_gating.state = CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
+ 	}
+ 
+ 	if (clk_state_changed)
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 52c822fe2944..058d27bc1e86 100644
+index 9ea2a7411bb5..52c822fe2944 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -453,6 +453,7 @@ struct ufs_clk_gating {
-  * @is_initialized: Indicates whether clock scaling is initialized or not
-  * @is_busy_started: tracks if busy period has started or not
-  * @is_suspended: tracks if devfreq is suspended or not
-+ * @lock: seriliaze access to the clock_scaling members
+@@ -413,6 +413,7 @@ enum clk_gating_state {
+  * @active_reqs: number of requests that are pending and should be waited for
+  * completion before gating clocks.
+  * @clk_gating_workq: workqueue for clock gating work.
++ * @lock: serielize access to the clk_gating members
   */
- struct ufs_clk_scaling {
+ struct ufs_clk_gating {
+ 	struct delayed_work gate_work;
+@@ -426,6 +427,7 @@ struct ufs_clk_gating {
+ 	bool is_initialized;
  	int active_reqs;
-@@ -472,6 +473,7 @@ struct ufs_clk_scaling {
- 	bool is_busy_started;
- 	bool is_suspended;
- 	bool suspend_on_no_request;
+ 	struct workqueue_struct *clk_gating_workq;
 +	spinlock_t lock;
  };
  
- #define UFS_EVENT_HIST_LENGTH 8
+ /**
 -- 
 2.25.1
 
