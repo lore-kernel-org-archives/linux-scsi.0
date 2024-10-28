@@ -1,68 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8B3F524C;
-	Mon, 28 Oct 2024 19:46:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B45B63A1DB;
+	Mon, 28 Oct 2024 19:50:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730144800; cv=none; b=VCcPLHK3kWrAAuKiCW0tg5HT0b3/MgLQb6W6unK8EVgo+DqiwX0gVM9jOLd0WzXvGgluhDDD0Qu7l8K2Psa1RzbgagiXvJ3Suf6lfCYJYEbDD/FaOi6NTFIqWYZWuYtFBVM9xcLUcyIwvrw3nfO04C5V7bFvWcxrsZickbcD8ME=
+	t=1730145060; cv=none; b=EOC3oKRNzN6tlapuY8qejONMxi9L9giVcvO2/F3pS3QoUdB+1eRRkT6ndhrZiHumsyVyFrWp3IF6ISN4qi9RdWteRRbgi9fPe7x2z6STnNhkH2eBsrrfL6645xmcppP/dO3mf7sBytKB1/oOuUV/h7sNuiClH65xGOYgkeXTbHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730144800; c=relaxed/simple;
-	bh=qZt8mJEDRl+Yth1e6zFjf+4BIU5q5r0ncS6SezGz7b8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=In/AA7WwQVKwBJ1zEXcPtPSIERw3ZU8s5sa7QTHSE+Rx+R+QFRLdMagGey4Oz/uM6P4f4XOBkffwYrk+5BOFdkTguCfj+1WPVrRCLplvCmb7DG4LT9ggHgrBZvUWY+3RB4utP7Yz/I3SwzwqU1ZNgXmrrtTgLU77wb89OPz/Ytg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bx5NAOQS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730145060; c=relaxed/simple;
+	bh=/59UInKs1jPdhye+ywI9zjMLf0geE/n+JAGYfww/9ss=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=A3f1Xy8q0FtHZH4k3j0MD50ULgS27ffWboedOv6hmlu9lNxVrNVpalI7UsNtMsR6ddzn0kT30yCZak4a2OGUbvHr1w/lST5fkNqQrV9XGYQttIDddTfjf2KMYIdxyrs21n2DzSz6o2VpQl8iYN+RoPksFMN51mQ9XQP0LngLal4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1Y/Ijz61; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bx5NAOQS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F33C4CEC3;
-	Mon, 28 Oct 2024 19:46:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730144799;
-	bh=qZt8mJEDRl+Yth1e6zFjf+4BIU5q5r0ncS6SezGz7b8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=bx5NAOQS/qZimCwhu4Tm3bsAGYBRGjZwoqtP1zKvpbF3pT9s4gfzbc2zgrfenOZxM
-	 zdZx6V1GKJeeI3+fls+Mx6UJfo4cVmLb0T/WZETo/fTXodQMVaxzL4KpJJbIT5dKVG
-	 3svJm0EpMXZmnG8eoR6/0xvc8BLpglaWX9OTudu69TonjzK73RHXZimXm/5AEVQsVD
-	 yLbjvDq27Hnr1p/9R5hfXS1hrxbPWwjmulI+itn7PHPZc/qB8v6lT54MVddl9Umfzu
-	 nTuuhsKPauBDPxabGkrHj1EVc35BnyDJthVXBlOVp4WTHiSQNw6coamAekfchPx/fS
-	 QksMEwbvoRQaw==
-Date: Mon, 28 Oct 2024 13:46:36 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de,
-	joshi.k@samsung.com, javier.gonz@samsung.com
-Subject: Re: [PATCHv9 3/7] block: allow ability to limit partition write hints
-Message-ID: <Zx_qHAqoFpl7Ivj7@kbusch-mbp>
-References: <20241025213645.3464331-1-kbusch@meta.com>
- <20241025213645.3464331-4-kbusch@meta.com>
- <626bd35e-7216-4379-967d-5f6ebb4a5272@acm.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1Y/Ijz61"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XckXL0h1Vz6Cnk9N;
+	Mon, 28 Oct 2024 19:50:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730145045; x=1732737046; bh=tI4AfILStzPbfhtZq0bCJPMf
+	8+hLePNOOBQdMQ26eP0=; b=1Y/Ijz61vzLVRdeH2inV1Fb829PnUgbXolM5dJd/
+	grOg/3w/e8frnP6asQKOV8AHyDAlf/IE47Dow5djxaz/wXTn2XuTlE9GEfPuTcnQ
+	z6jEybHCqAxcss9lT4z+ZLKfy5SqF5BZjYpPmbomttv4Kcnk7RQzwdMoYW61a89H
+	8DPP5v5J11dGTiMD6f3bSva3VkbNqHpo6tmmUiLSvY8VZdTRWSBzgAvOlNnCqPqH
+	JiZzt7KNqwouBfSzuKA88m6uMdMLhOBEY3oFiL2TqIIfLdAc2v40SiyS+C6HE/+p
+	zVQIMNI/3fh7XG3LICDkBo7uBhsKB3quffL28Ez4aOqQIQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 9H1p7XdS2C7h; Mon, 28 Oct 2024 19:50:45 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XckX36P72z6Cnk9M;
+	Mon, 28 Oct 2024 19:50:43 +0000 (UTC)
+Message-ID: <13aff452-0ce8-4ebf-986c-dd3bb7c322de@acm.org>
+Date: Mon, 28 Oct 2024 12:50:43 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <626bd35e-7216-4379-967d-5f6ebb4a5272@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] ufs: core: Add WB buffer resize support
+To: Huan Tang <tanghuan@vivo.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, beanhuo@micron.com, luhongfei@vivo.com,
+ quic_cang@quicinc.com, keosung.park@samsung.com, viro@zeniv.linux.org.uk,
+ quic_mnaresh@quicinc.com, peter.wang@mediatek.com,
+ manivannan.sadhasivam@linaro.org, ahalaney@redhat.com,
+ quic_nguyenb@quicinc.com, linux@weissschuh.net, ebiggers@google.com,
+ minwoo.im@samsung.com, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: opensource.kernel@vivo.com
+References: <20241028135205.188-1-tanghuan@vivo.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241028135205.188-1-tanghuan@vivo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Oct 28, 2024 at 11:27:33AM -0700, Bart Van Assche wrote:
-> On 10/25/24 2:36 PM, Keith Busch wrote:
-> > When multiple partitions are used, you may want to enforce different
-> > subsets of the available write hints for each partition. Provide a
-> > bitmap attribute of the available write hints, and allow an admin to
-> > write a different mask to set the partition's allowed write hints.
-> 
-> After /proc/irq/*/smp_affinity was introduced (a bitmask),
-> /proc/irq/*/smp_affinity_list (set of ranges) was introduced as a more
-> user-friendly alternative. Is the same expected to happen with the
-> write_hint_mask? If so, shouldn't we skip the bitmask user space
-> interface and directly introduce the more user friendly interface (set
-> of ranges)?
+On 10/28/24 6:52 AM, Huan Tang wrote:
+> +What:		/sys/bus/platform/drivers/ufshcd/*/wb_toggle_buf_resize
+> +What:		/sys/bus/platform/devices/*.ufs/wb_toggle_buf_resize
+> +Date:		Qct 2024
+> +Contact:	Huan Tang <tanghuan@vivo.com>
+> +Description:
+> +		The host can decrease or increase the WriteBooster Buffer size by setting
+> +		this file.
+> +
+> +		======  ======================================
+> +		00h  Idle (There is no resize operation)
+> +		01h  Decrease WriteBooster Buffer Size
+> +		02h  Increase WriteBooster Buffer Size
+> +		Others  Reserved
+> +		======  ======================================
+> +
+> +		The file is write only.
 
-I don't much of have an opinion either way. One thing I like for the
-bitmask representation is you write 0 to turn it off vs. the list type
-writes a null string. Writing 0 to disable just feels more natural to
-me, but not a big deal.
+The name "wb_toggle_buf_resize" is not clear and will make users guess
+what the purpose of this sysfs attribute is. Please choose a name that
+is more clear, e.g. "wb_resize_action".
+
+Additionally, please change the word "file" into "attribute" to maintain
+consistency with the rest of the sysfs documentation.
+
+Please also make sure that the documentation is consistent with the
+code. The above documentation mentions the value 0 while the code
+doesn't allow writing the value zero.
+
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_buf_resize_status
+> +What:		/sys/bus/platform/devices/*.ufs/attributes/wb_buf_resize_status
+> +Date:		Qct 2024
+> +Contact:	Huan Tang <tanghuan@vivo.com>
+> +Description:
+> +		The host can check the Resize operation status of the WriteBooster Buffer
+> +		by reading this file.
+> +
+> +		======  ========================================
+> +		00h  Idle (resize operation is not issued)
+> +		01h  Resize operation in progress
+> +		02h  Resize operation completed successfully
+> +		03h  Resize operation general failure
+> +		Others  Reserved
+> +		======  ========================================
+
+For the three new attributes: please use words in sysfs instead of 
+numbers. Using numbers is not user-friendly.
+
+> +static ssize_t wb_toggle_buf_resize_store(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	unsigned int wb_buf_resize_op;
+
+Please introduce an enumeration type instead of using 'unsigned int'. 
+Please also choose a more descriptive variable name than 'op'.
+
+> +int ufshcd_wb_toggle_buf_resize(struct ufs_hba *hba, u32 op)
+> +{
+> +	int ret;
+> +	u8 index;
+> +
+> +	index = ufshcd_wb_get_query_index(hba);
+> +	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +				   QUERY_ATTR_IDN_WB_BUF_RESIZE_EN, index, 0, &op);
+> +	if (ret)
+> +		dev_err(hba->dev, "%s: Enable WB buf resize operation failed %d\n",
+> +			__func__, ret);
+> +
+> +	return ret;
+> +}
+
+This function doesn't toggle anything - it sets the value of the
+bWriteBoosterBufferResizeEn attribute. Please reflect this in the
+function name, e.g. by renaming this function into
+ufshcd_wb_set_resize_en(). Additionally, the name of the 'op' argument
+doesn't reflect the purpose of that argument. How about renaming it into
+'enum wb_resize_en' where the wb_resize_en type support the three values
+idle = 0, decrease = 1 and increase = 2?
+
+Thanks,
+
+Bart.
