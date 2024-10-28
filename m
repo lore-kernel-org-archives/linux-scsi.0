@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E9E1DF962;
-	Mon, 28 Oct 2024 18:38:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8B3F524C;
+	Mon, 28 Oct 2024 19:46:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730140738; cv=none; b=QWOwP81BVUqe89IxU60wLlwSipXzuG8Z4PRRXgSBLgwtucVXSE5vXNITPr0PYpnqzc2Yw9U8+7xXZsHapSa4SXopxoz+rrg17LSG7qN08VGiuDR+NHjceAAlg1cHFbuNLvqiqZDxu4qigc8uIjng3UQ4gMM4izoaNMSTHI5KyvE=
+	t=1730144800; cv=none; b=VCcPLHK3kWrAAuKiCW0tg5HT0b3/MgLQb6W6unK8EVgo+DqiwX0gVM9jOLd0WzXvGgluhDDD0Qu7l8K2Psa1RzbgagiXvJ3Suf6lfCYJYEbDD/FaOi6NTFIqWYZWuYtFBVM9xcLUcyIwvrw3nfO04C5V7bFvWcxrsZickbcD8ME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730140738; c=relaxed/simple;
-	bh=yXvl5ucMYrCRugDnDUgPtXONHx76D+ygufgs+U8P30E=;
+	s=arc-20240116; t=1730144800; c=relaxed/simple;
+	bh=qZt8mJEDRl+Yth1e6zFjf+4BIU5q5r0ncS6SezGz7b8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=repPq09L9p6ePnGikJ2EH8WYod79rLfoKuC3gPU79W0vQjv2OEs4VPoEHfkebFAT7p9PBZ9OuEXqoL1jWSpBMpyhvdbGvac9yYuxn0Df3Qq1OvcEtjNr+qXsoGpbt8ZClT096GeMRuYF5i96TsNlx8Z1tGSBv+7k847Yx222kDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r7JA3pW8; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=In/AA7WwQVKwBJ1zEXcPtPSIERw3ZU8s5sa7QTHSE+Rx+R+QFRLdMagGey4Oz/uM6P4f4XOBkffwYrk+5BOFdkTguCfj+1WPVrRCLplvCmb7DG4LT9ggHgrBZvUWY+3RB4utP7Yz/I3SwzwqU1ZNgXmrrtTgLU77wb89OPz/Ytg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bx5NAOQS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r7JA3pW8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FFDEC4CEC3;
-	Mon, 28 Oct 2024 18:38:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bx5NAOQS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F33C4CEC3;
+	Mon, 28 Oct 2024 19:46:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730140738;
-	bh=yXvl5ucMYrCRugDnDUgPtXONHx76D+ygufgs+U8P30E=;
+	s=k20201202; t=1730144799;
+	bh=qZt8mJEDRl+Yth1e6zFjf+4BIU5q5r0ncS6SezGz7b8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=r7JA3pW8g1hX5xPQMspeIhKV4yWSsMsg0b7U6TyGSNAuYS7nOhJZX+XjwSmAgbg8t
-	 KfPEFiaSWvMKtDyhWgSObDlgGsupjIiHxfxRIzB2CHH1te2cgfYTZKB4bCJ5VWpJbA
-	 jIygKCoa/Ggcpi0VyeQAfng4XZ5bggHOjHtaYGspnZlyt37k2krRH019x2gxp2dd28
-	 jSQU0gXQyVQUY6lZ0P+JcU3f2y5JuWOF8Betv4q1ee8QdDQIQhpa22GpU9KdTfQpni
-	 ZIcCOU1gdd6/yaOvhlct/ZVUksMJovqWEoaFxmXonb7bR3so0r1obwKwCQi5TxPX+8
-	 LoWpWTUlvnQvw==
-Date: Mon, 28 Oct 2024 12:38:54 -0600
+	b=bx5NAOQS/qZimCwhu4Tm3bsAGYBRGjZwoqtP1zKvpbF3pT9s4gfzbc2zgrfenOZxM
+	 zdZx6V1GKJeeI3+fls+Mx6UJfo4cVmLb0T/WZETo/fTXodQMVaxzL4KpJJbIT5dKVG
+	 3svJm0EpMXZmnG8eoR6/0xvc8BLpglaWX9OTudu69TonjzK73RHXZimXm/5AEVQsVD
+	 yLbjvDq27Hnr1p/9R5hfXS1hrxbPWwjmulI+itn7PHPZc/qB8v6lT54MVddl9Umfzu
+	 nTuuhsKPauBDPxabGkrHj1EVc35BnyDJthVXBlOVp4WTHiSQNw6coamAekfchPx/fS
+	 QksMEwbvoRQaw==
+Date: Mon, 28 Oct 2024 13:46:36 -0600
 From: Keith Busch <kbusch@kernel.org>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
 	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de,
-	joshi.k@samsung.com, javier.gonz@samsung.com,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv9 1/7] block: use generic u16 for write hints
-Message-ID: <Zx_aPg7Pjq-7lU-T@kbusch-mbp>
+	joshi.k@samsung.com, javier.gonz@samsung.com
+Subject: Re: [PATCHv9 3/7] block: allow ability to limit partition write hints
+Message-ID: <Zx_qHAqoFpl7Ivj7@kbusch-mbp>
 References: <20241025213645.3464331-1-kbusch@meta.com>
- <20241025213645.3464331-2-kbusch@meta.com>
- <a86cfa72-426b-46f4-83b0-b60920286223@acm.org>
+ <20241025213645.3464331-4-kbusch@meta.com>
+ <626bd35e-7216-4379-967d-5f6ebb4a5272@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,16 +46,23 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a86cfa72-426b-46f4-83b0-b60920286223@acm.org>
+In-Reply-To: <626bd35e-7216-4379-967d-5f6ebb4a5272@acm.org>
 
-On Mon, Oct 28, 2024 at 11:19:33AM -0700, Bart Van Assche wrote:
+On Mon, Oct 28, 2024 at 11:27:33AM -0700, Bart Van Assche wrote:
 > On 10/25/24 2:36 PM, Keith Busch wrote:
-> > This is still backwards compatible with lifetime hints. It just doesn't
-> > constrain the hints to that definition.
+> > When multiple partitions are used, you may want to enforce different
+> > subsets of the available write hints for each partition. Provide a
+> > bitmap attribute of the available write hints, and allow an admin to
+> > write a different mask to set the partition's allowed write hints.
 > 
-> Since struct bio is modified, and since it is important not to increase
-> the size of struct bio, some comments about whether or not the size of
-> struct bio is affected would be welcome.
+> After /proc/irq/*/smp_affinity was introduced (a bitmask),
+> /proc/irq/*/smp_affinity_list (set of ranges) was introduced as a more
+> user-friendly alternative. Is the same expected to happen with the
+> write_hint_mask? If so, shouldn't we skip the bitmask user space
+> interface and directly introduce the more user friendly interface (set
+> of ranges)?
 
-Sure. The type just shrinks a hole from 2 bytes to 1. Total size remains
-the same.
+I don't much of have an opinion either way. One thing I like for the
+bitmask representation is you write 0 to turn it off vs. the list type
+writes a null string. Writing 0 to disable just feels more natural to
+me, but not a big deal.
