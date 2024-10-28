@@ -1,43 +1,32 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63EE518E778;
-	Mon, 28 Oct 2024 14:49:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71C2B15C13A;
+	Mon, 28 Oct 2024 16:08:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730126993; cv=none; b=OurQUBaBo/nIJslbl0l81wTpCwJRwFvMj7O7HE3kYCVRo9N4BtXlheyCu2CqN0GmjJK76Z8tDZ3fw1SxzMGlh5i5IMa7nbhusowQyW4ViTLt/dzUCG5jsiMgAZahAUk9zT8H08Rwr8+ZVc/HiPKh/bwj5XDq1b2DDIMnf2/IDTs=
+	t=1730131695; cv=none; b=D1GQazZ50Yz/4uTCJrTyEpj1YwCED/wIjXrNtmDTFmwIlYAOfxRYScfjctiPUSLlSKJ93olkgbSSxGK9XUsPb4czbbAaqmjtrm0xkqSajrH9bH4ksnnxhdkkVxm7PUtWhg/a7fs7QQn/K5iDMGQUDbdFS1cTUjjcbeVwDkireC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730126993; c=relaxed/simple;
-	bh=ul4FrUoyTM3eKMpUlfF3PIljQyXaWGzKT1GGKNK0tak=;
+	s=arc-20240116; t=1730131695; c=relaxed/simple;
+	bh=cD+tVOPgBP2aUOkOS5fVCdYhB3T4AyVqCU57n9MzTM4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i/2jf2Rxd/p9AI+A9i2wT8uIqa+xlNRzaFCelqPVyl5O5Gg0fB5K+hOQ8nxSX6s0yZwpbmQtdjH4ElGjFinICkCxRt5B6HA2pvdOvgrW4BmZ0uJqTgoc7PaHwCYqUEwC42PGr3QTd0y8L9XMNU+hto3O4s/NLQZnsrG9SZ/gH1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aKPg/yRG; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aKPg/yRG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68628C4CEC3;
-	Mon, 28 Oct 2024 14:49:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730126992;
-	bh=ul4FrUoyTM3eKMpUlfF3PIljQyXaWGzKT1GGKNK0tak=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aKPg/yRGtLNyL4aEfn9s0bwut8kYW1Njtk9aiQdYWsGOXQF1xoShKYeG1bzNcaHJD
-	 qsix6/5YGv7/9a039tLdMy/YksesxdLpd91QpE6LTiqJagUqEpImTPBdF6onUFXuDO
-	 mbkYYlJa7tp9aXZzL/lG8DsNf0aFZmN4fCMiM6pNLHO5+gf4iPmL5c2wRHwANn0aWm
-	 hAy6DnWgLB04DyMd/D+NxRLts2h3jjVTJbYUKMEKgcE6nMq+3Tii2u+liHZf9+3scA
-	 5N/KxtluvFUb5fZWEMnsmPEkxx6Np7SM/nzmHZR3oKSYbJnI7vigo1qYOgEX5rRvLJ
-	 eu9slgJHd77bg==
-Date: Mon, 28 Oct 2024 08:49:50 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	joshi.k@samsung.com, javier.gonz@samsung.com, bvanassche@acm.org
-Subject: Re: [PATCHv9 3/7] block: allow ability to limit partition write hints
-Message-ID: <Zx-kjh8VOYHmQCyH@kbusch-mbp>
-References: <20241025213645.3464331-1-kbusch@meta.com>
- <20241025213645.3464331-4-kbusch@meta.com>
- <20241028115805.GD8517@lst.de>
+	 Content-Type:Content-Disposition:In-Reply-To; b=bH+2ivsLj3EQvh+FCxIzZ7U8/mrRpt/A/L737KS5l4qLhPHIY8EViDfyvpcXJ/wpc9Ud4akohe7qDPN6Z/FBCpf4Z/U+lQGhgCxW5/QvE3O3gMgH6eaVEXkrAlz3MFKsh2lliVRGaoHTpiohqQZ47qFMYr5FpINSnE841HXKM6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 7922068BEB; Mon, 28 Oct 2024 17:08:08 +0100 (CET)
+Date: Mon, 28 Oct 2024 17:08:08 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
+	javier.gonz@samsung.com, bvanassche@acm.org
+Subject: Re: [PATCHv9 4/7] block, fs: add write hint to kiocb
+Message-ID: <20241028160808.GA28077@lst.de>
+References: <20241025213645.3464331-1-kbusch@meta.com> <20241025213645.3464331-5-kbusch@meta.com> <20241028115932.GE8517@lst.de> <Zx-hzSwkkUMeuA5C@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,22 +35,29 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241028115805.GD8517@lst.de>
+In-Reply-To: <Zx-hzSwkkUMeuA5C@kbusch-mbp>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Oct 28, 2024 at 12:58:05PM +0100, Christoph Hellwig wrote:
-> On Fri, Oct 25, 2024 at 02:36:41PM -0700, Keith Busch wrote:
-> > From: Keith Busch <kbusch@kernel.org>
+On Mon, Oct 28, 2024 at 08:38:05AM -0600, Keith Busch wrote:
+> > > +	if (bdev_is_partition(bdev) &&
+> > > +	    !test_bit(hint - 1, bdev->write_hint_mask))
+> > > +		return file_inode(iocb->ki_filp)->i_write_hint;
 > > 
-> > When multiple partitions are used, you may want to enforce different
-> > subsets of the available write hints for each partition. Provide a
-> > bitmap attribute of the available write hints, and allow an admin to
-> > write a different mask to set the partition's allowed write hints.
+> > I would have expected an error when using an invalid stream identifier.
 > 
-> Trying my best Greg impersonator voice: This needs to be documented
-> in Documentation/ABI/stable/sysfs-block.
-> 
-> That would have also helped me understanding it.  AFAIK the split here
-> is an opt-in, which means the use case I explained in the previous
-> case would still not work out of the box, right?
+> It's a hint. fcntl doesn't error if you give an unusable hint, so
+> neither should this. You get sane default behavior.
 
-Right.
+Well, why does it have to be a hint?
+
+If I have a data placement aware application I really want to know
+into how many buckets I can sort and adjust my algorithm for it.
+And I'd rather have an error checked interface to pass that down
+as far as I can.
+
+Same for my file system use case.  I guess you have a use case where
+a hint would be enough, at least with good enough knowledge of the
+underlying implementation.  But would there be an actual downside
+in not having a hint?  Because historically speaking everything we've
+done as a not error checked vaguely defined hint has not been all
+the useful, but it in hardware or software interfaces.
