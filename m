@@ -1,170 +1,143 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7E013D297
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2024 23:06:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B81AAA47
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2024 03:55:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730070365; cv=none; b=RN7UOjJaXCu5X6RspKelEvadfqLw9pYweeoiV4wP5txsMZCxGshEEp0EipjsdlzBgUO+FXclPDPKgLWurAirdbe9qGhgS5d2sk+HCEnnP2+tVTc5XwN1lwXX56gVhIx6KqYWWqPmQfHE/wV5vvU0BPNguQX4Kg9e/bgC1C80GTY=
+	t=1730087722; cv=none; b=e3G+pHRfPoS+gy9nKM0kj2hARUJIQuXfWFTUKvVQ9jnEB6QP96ZcIsY9dvyLNMgA40XJQxcVfSFUdGNTdjLxZkmvdWnKHUAMkfhToDknOettHe/VwMeEgm3cFVJh5CigpXcleTTJnvGjmtSumI6cj/oOglqy9uLxxSUWA6NAshA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730070365; c=relaxed/simple;
-	bh=sqjROUCMVUaxG/lfM+Lhm4C3+Swn13zspPmwhdAbcTo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=At7PtQ20htSRklcquEYRucEr/KKfu2M79SzcMJr4AQ04ISZZ4SazxSLUGZJNCYsd7HpLJdhAMJ0lKohv1ofjVQknQ2k9ccHwDZP/LeCCnV8VRGYaFqoJOZq1X7rctrhGGYJPIg7/HOkXXeRYjJazadwAzxOVkQibTSrXj9QbkRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WeMJ5c9A; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730087722; c=relaxed/simple;
+	bh=wKdq2ojcsvjFSKLtbJ43rf1uG8MA5N83T36nu1dsqMs=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:In-Reply-To:
+	 Content-Type:References; b=T+ler2JFk8zCkAo7aWPzg/a/dLmXHykFwCWWZ/8qcs6cSp/am4bRJuehOUXCdM+rVBY2Wo114G2WfMefE+iYZQuaub1istbPlTZvBRR6Tzsw1R+zdcOn6M69zUZIMb5SPv1FFtGFFRyEb+EnwTHaku1H2ecuA4bKJJXbjV3wQFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=cuWgeGAA; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WeMJ5c9A"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5c903f5bd0eso7178849a12.3
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2024 16:06:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730070362; x=1730675162; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vymhzfpbqekA30QGQJaVebc8i/rFKSx7W34a7J77vBY=;
-        b=WeMJ5c9Ac520iqPGX2YAm8s4WHbK0NiCArnyySyk9J+G+ax14kCZuNoTuU8J7FsTvI
-         S5ZGocLA5x/FY/nttbaDtOXaYaE9KdYpY5G0IRVwL66G5X23Ik90joRagg/iII09aRjv
-         P+iE5DnTD2nw9JAaVVU6JQ5XemIBWoeJWx2z65BiQSUCzlaO4z3f7SrJ6AZQho6WewSd
-         vqTywiju3phmKvRAnijpMntYaZLjmAzcAzIxtTXOreGUpkmcE36Ob3fiFIzhDErpS+mX
-         28kh2oN+GOXeS/Cd7LjRLGqer+TelGTMevw4bFPBhVbdVykbvhBu+V4QGEABklX41kN7
-         sh4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730070362; x=1730675162;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vymhzfpbqekA30QGQJaVebc8i/rFKSx7W34a7J77vBY=;
-        b=bOXnbnz3ivaI6D4wHlek3ggkjx3/0cQeWmTJxPs8g1XNHidyqbV1/HMoWbFrQWOm3e
-         exTheCod4oYVWwU4tC0XNISRrC/NfZIizp4lsROUa+2894RXj4sbaFlaN1eU9zoMswgD
-         UhE/DnfKRpCdo7Ofw6Bll55yeYcM4NYEBtElAwNjmurszcRihzPlgJvTdXecQF8r2YF2
-         9Lrm//OwpXxbRwPC9RWffrVvyRIu22zxNShg/QXxDOmQOzm0Xu6xjRMOtrY9QrbuU8kF
-         Ujqyai6AMRTHZvAYv8SM57DFF3wpW8VS8v35Vq773bj+eckB9xmQrjyBAqpwViTDGnoI
-         6MBg==
-X-Gm-Message-State: AOJu0YxC1PXxHab++RMUwJhybErJIRTlEl+teNFi4BS1nIIXyWFYG3SR
-	w96mr7TV0EEBH2+PcoRpK21HU7uILGKYxwWqwoOabjpdmjUlJ9FBDoIGglANJ6yxFt3vM10dBnV
-	7RofF0mJhlI62GlLXu7MVEeF6H45Z8A==
-X-Google-Smtp-Source: AGHT+IGsjQBvZg//o6zkAgHtiyf2+CZUv7hxIZ6hacwee7YgF0LbyGycGQJ1A1apy1odJ9pIGjdcAhVhlFtb8pP7hzM=
-X-Received: by 2002:a17:907:94cc:b0:a9a:bbcc:5092 with SMTP id
- a640c23a62f3a-a9de5ee23e6mr616892766b.39.1730070361735; Sun, 27 Oct 2024
- 16:06:01 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="cuWgeGAA"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20241028035511epoutp045e35b8dec365dfc35bb3a1e4ab60f4f8~CgZt3ZAVL2194521945epoutp04I
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2024 03:55:11 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20241028035511epoutp045e35b8dec365dfc35bb3a1e4ab60f4f8~CgZt3ZAVL2194521945epoutp04I
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1730087711;
+	bh=bo6Ea5i0R6emGG7nj9+WppTEgZq02wQoJLP9S61V1so=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=cuWgeGAAxiRPYto8Vna81W6OItruMIz3jjDQB6H+MCaRHXO6PkfHOQZNTCZRajkVb
+	 CGGuM6JRagmkzQTN5OT43pqHs67vE2iwQqT64BHiwsoZRz0zF+ba8qNulbJk4vyF/P
+	 LLa4m1HHm6PYkAetkSIuadaCKSpaF0x7/zmEIG6k=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+	20241028035510epcas5p2656031a5840a38aca3e05b9581123591~CgZtMYkcw2900229002epcas5p2k;
+	Mon, 28 Oct 2024 03:55:10 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.179]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4XcKKS43Vpz4x9Q5; Mon, 28 Oct
+	2024 03:55:08 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+	epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	F1.A6.09420.C1B0F176; Mon, 28 Oct 2024 12:55:08 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20241028035435epcas5p4dbd78e5f7bacde9fc302fcfde86453b9~CgZLzQgVv1472514725epcas5p4c;
+	Mon, 28 Oct 2024 03:54:35 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20241028035434epsmtrp2eb03ec25eb9f71578219fd904e79a04d~CgZLyUu_81877218772epsmtrp2k;
+	Mon, 28 Oct 2024 03:54:34 +0000 (GMT)
+X-AuditID: b6c32a49-33dfa700000024cc-a9-671f0b1cde6c
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	02.26.08227.AFA0F176; Mon, 28 Oct 2024 12:54:34 +0900 (KST)
+Received: from green245 (unknown [107.99.41.245]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20241028035432epsmtip2358aad8e30b6e4241266bb0a578e7b49~CgZJ1ATw50427304273epsmtip2a;
+	Mon, 28 Oct 2024 03:54:32 +0000 (GMT)
+Date: Mon, 28 Oct 2024 09:16:48 +0530
+From: Anuj Gupta <anuj20.g@samsung.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org, asml.silence@gmail.com,
+	anuj1072538@gmail.com, krisman@suse.de, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v4 04/11] block: define meta io descriptor
+Message-ID: <20241028034648.GA18956@green245>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
- <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
-In-Reply-To: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Mon, 28 Oct 2024 00:05:50 +0100
-Message-ID: <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <yq1h694lwnm.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrPJsWRmVeSWpSXmKPExsWy7bCmhq4Mt3y6wfVbUhYfv/5msZizahuj
+	xeq7/WwWNw/sZLJYufook8W71nMsFkf/v2WzmHToGqPF9jNLmS323tK2mL/sKbtF9/UdbBbL
+	j/9jsjg/aw67A5/Hzll32T0uny312LSqk81j85J6j903G9g8Pj69xeLRt2UVo8fm09UenzfJ
+	BXBGZdtkpCampBYppOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAF2u
+	pFCWmFMKFApILC5W0rezKcovLUlVyMgvLrFVSi1IySkwKdArTswtLs1L18tLLbEyNDAwMgUq
+	TMjOuP/as2ADW0XvuW+sDYwrWLsYOTkkBEwkrv3oYuxi5OIQEtjNKLHlcjuU84lRYsnaVijn
+	G6PE/Ddv2GBavq66yAKR2MsoMWvJRSYI5xmjxMnLp8GqWARUJQ5/uMMOYrMJqEsceQ4yipND
+	RMBUYvKnrWwgDcwC+5gkjl2awwySEBawk+g5sg+sgVdAV+L32otsELagxMmZT4DWcXBwChhL
+	LJ4rABIWFVCWOLDtONhiCYETHBLPbzRAfeQiceg5SD2ILSzx6vgWdghbSuLzu71QL6RL/Lj8
+	lAnCLpBoPraPEcK2l2g91Q92D7NAhsTa/Z+h5shKTD21jgkizifR+/sJVC+vxI55MLaSRPvK
+	OVC2hMTecw1QtodE04EWNngIdTxdwDyBUX4Wkt9mIdkHYetILNj9iW0W0M/MAtISy/9xQJia
+	Eut36S9gZF3FKJlaUJybnlpsWmCYl1oOj/Hk/NxNjOCUreW5g/Hugw96hxiZOBgPMUpwMCuJ
+	8K6OlU0X4k1JrKxKLcqPLyrNSS0+xGgKjKyJzFKiyfnArJFXEm9oYmlgYmZmZmJpbGaoJM77
+	unVuipBAemJJanZqakFqEUwfEwenVANTduR9QT9BM7/J6V6us3/2a3nWzpR8yf/1h7TZfXNN
+	T57NR3bc1o2yOKrLuDz97GVtqWWlml2JJk6c+9YH/jNRFS1Z+2aKwBqmJrOel499NoQs2hLo
+	uvBdxqtXod6yuiH1XW11qQmddoY+V07NzY7anx21pGHOycPBDP/q3/tNqam980Ba72iHn7mW
+	z2F36Xm3LdcLsq+OrNG9crNN8n/QfTsHwanLRQ34v9syXtilFb7i7/UZDd5BaZxlXRNnbbjO
+	lNx+9atRWSP3bNP64LVz3bS/L5uekNu2s3jK28rSjx9dHDUnbkr6ZWOeujiH343NaKV6+u/z
+	nVfP/X9gfb6Wca7bqTe2c+u31orM71ViKc5INNRiLipOBAB9ZzhnYgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprAIsWRmVeSWpSXmKPExsWy7bCSvO4vLvl0g039xhYfv/5msZizahuj
+	xeq7/WwWNw/sZLJYufook8W71nMsFkf/v2WzmHToGqPF9jNLmS323tK2mL/sKbtF9/UdbBbL
+	j/9jsjg/aw67A5/Hzll32T0uny312LSqk81j85J6j903G9g8Pj69xeLRt2UVo8fm09UenzfJ
+	BXBGcdmkpOZklqUW6dslcGVsPfaTveADc8WKpjbmBsZG5i5GTg4JAROJr6susoDYQgK7GSVu
+	fuSBiEtInHq5jBHCFpZY+e85excjF1DNE0aJk32z2UESLAKqEoc/3AGz2QTUJY48bwVrEBEw
+	lZj8aSsbSAOzwD4miRW9b8ESwgJ2Ej1H9oE18AroSvxee5ENYuozRolV7x+wQCQEJU7OfAJm
+	MwtoSdz495Kpi5EDyJaWWP6PA8TkFDCWWDxXAKRCVEBZ4sC240wTGAVnIWmehaR5FkLzAkbm
+	VYySqQXFuem5xYYFRnmp5XrFibnFpXnpesn5uZsYwZGmpbWDcc+qD3qHGJk4GA8xSnAwK4nw
+	ro6VTRfiTUmsrEotyo8vKs1JLT7EKM3BoiTO++11b4qQQHpiSWp2ampBahFMlomDU6qBKdRx
+	2YKrJ9ZGXFO98FgyYc+9b44aIpl2vvstei93an5MeixVZai7hENA1tO0eH/Bdj1/07tJx61P
+	RrG5LF/r5TJzw6kuJW7H3b8EXLguBF1/aJ29T8H7adrPN7bLdr1XEvAXjk86deoyZ87nR37n
+	ZvB25cpG1731ct9wQ/64bvzz1e2erXn8t2aXtm1mevhATCBjges7wx/5FWzuOhNPr/SfeaAm
+	7ajyRrV/Aq8FzExkcpdoTJyu1BYjrHZ20Y/HuiumXD7UoDRNv3xjzN5lfnUvk2bP5xB0XWT9
+	bf0nJ+nfHUz+mWEuNzjCWe+wfGgp7RM9fstiWVnnxZjTFc8NPl2JNZbIPxFyIqOxVLFUiaU4
+	I9FQi7moOBEAaLCvJyMDAAA=
+X-CMS-MailID: 20241028035435epcas5p4dbd78e5f7bacde9fc302fcfde86453b9
+X-Msg-Generator: CA
+Content-Type: multipart/mixed;
+	boundary="----w5-2f3KIOrSunQhSxAIo7Dy_B_SBAQB3Xz8aCSUoiMSFB8w5=_7d6d3_"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20241016113741epcas5p3b90adb3b43b6b443ffd00df29d63d289
+References: <20241016112912.63542-1-anuj20.g@samsung.com>
+	<CGME20241016113741epcas5p3b90adb3b43b6b443ffd00df29d63d289@epcas5p3.samsung.com>
+	<20241016112912.63542-5-anuj20.g@samsung.com>
+	<yq1h694lwnm.fsf@ca-mkp.ca.oracle.com>
 
-Hi,
+------w5-2f3KIOrSunQhSxAIo7Dy_B_SBAQB3Xz8aCSUoiMSFB8w5=_7d6d3_
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
 
-I've made some changes to the qla1280 driver, the changes include
-things like checking if the card is in a 64-bit slot and setting
-DMA_BIT_MASK and enable_64bit_addressing accordingly. Also in the
-driver information string, it now shows hardware revision on 1040
-chips as well as printing info on its PCI slot (32 or 64 bit). I've
-tested it with a ISP1040B card and a ISP1080 and it seems to work
-fine. This may be of interest to others still running legacy qlogic
-SCSI-controllers?
+> Not sure what to do about the storage tag. For Linux that would probably
+> be owned by the filesystem (as opposed to the application). But I guess
+> one could envision a userland application acting as a storage target and
+> in that case the tag would need to be passed to the kernel.
 
-On Fri, Oct 25, 2024 at 10:48=E2=80=AFPM Magnus Lindholm <linmag7@gmail.com=
-> wrote:
->
-> Hi,
->
->
-> As you can see below, the driver  says "enable 64bit addressing=3D0"
-> when dumping nvram settings. The qlogic-1040 card is only a 32-bit
-> card plugged into a 64-bit slot. I guess the card is not original to
-> the ES40, I have other cards that I can use, i.e a  53c8xx is also
-> present in the system. Would it make sense to have the driver honor
-> the nvram flag for 64-bit addressing, at least for the 1040 cards? I'm
-> thinking I should give it a go... btw. the card runs fine even when
-> the driver is compiled in 64bit mode, just as long as I stay below 2GB
-> ram or when explicitly setting the DMA_BIT_MASK when building the
-> driver. (I guess most systems around when the qla1040 was hot stuff
-> had less than 2GB ram).
->
-> This is the output I get from running the driver with debug enabled:
->
-> [   19.109365] qla1280: QLA1040 found on PCI bus 2, dev 4
-> [   19.110341] scsi(0): 64 Bit PCI Addressing Enabled
-> [   19.110341] Configure PCI space for adapter...
-> [   19.111318] scsi(2): Verifying chip
-> [   19.111318] qla1280_chip_diag: Checking mailboxes of chip
-> [   19.111318] Loading firmware: qlogic/1040.bin
-> [   19.749013] qla1280_start_firmware: Verifying checksum of loaded RISC =
-code.
-> [   19.757802] qla1280_start_firmware: start firmware running.
-> [   19.760732] scsi(2): Configure NVRAM parameters
-> [   19.760732] Using defaults for NVRAM:
-> [   19.760732] qla1280 : initiator scsi id bus[0]=3D7
-> [   19.760732] qla1280 : initiator scsi id bus[1]=3D7
-> [   19.760732] qla1280 : bus reset delay[0]=3D3
-> [   19.760732] qla1280 : bus reset delay[1]=3D3
-> [   19.760732] qla1280 : retry count[0]=3D0
-> [   19.760732] qla1280 : retry delay[0]=3D1
-> [   19.760732] qla1280 : retry count[1]=3D0
-> [   19.760732] qla1280 : retry delay[1]=3D1
-> [   19.760732] qla1280 : async data setup time[0]=3D6
-> [   19.760732] qla1280 : async data setup time[1]=3D6
-> [   19.760732] qla1280 : req/ack active negation[0]=3D1
-> [   19.760732] qla1280 : req/ack active negation[1]=3D1
-> [   19.760732] qla1280 : data line active negation[0]=3D1
-> [   19.760732] qla1280 : data line active negation[1]=3D1
-> [   19.760732] qla1280 : disable loading risc code=3D0
-> [   19.760732] qla1280 : enable 64bit addressing=3D0
-> [   19.760732] qla1280 : selection timeout limit[0]=3D250
-> [   19.760732] qla1280 : selection timeout limit[1]=3D250
-> [   19.760732] qla1280 : max queue depth[0]=3D32
-> [   19.760732] qla1280 : max queue depth[1]=3D32
-> [   19.772450] scsi(2:0): Resetting SCSI BUS
-> [   22.812488] scsi host2: QLogic QLA1040 PCI to SCSI Host Adapter
->                       Firmware version:  7.65.06, Driver version 3.27.2
->
->
-> On Fri, Oct 25, 2024 at 10:00=E2=80=AFPM Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
-> >
-> >
-> > Hi Magnus!
-> >
-> > > I've been running linux on alpha (alphaserver es40) for a while, usin=
-g
-> > > a qlogic-1040 scsi controller. A few weeks ago I added more RAM to th=
-e
-> > > es40, but as soon as I got above 2GB RAM I started seeing file system
-> > > corruptions on the drive attached to the qlogic controller.
-> >
-> > The qla1280 driver has been used extensively on 64-bit platforms.
-> >
-> > Is your isp1040 original to the ES40? My Alphas used 53c8xx series
-> > controllers if I remember correctly. And with the ES40 being fairly
-> > recent (21264), I would have thought it would have used a slightly more
-> > modern controller than a 1040.
-> >
-> > > The nvram flag "enable_64bit_addressing" on the qlogic board is not
-> > > checked nor set by the driver.
-> >
-> > That would be a good place to start. Maybe if you could dump the NVRAM
-> > contents and validate if that is set by the 1040 firmware? I'm afraid I
-> > don't have a databook. But the 1040 was current right around the time
-> > the industry transitioned from 32 to 64-bit so it could very well be
-> > broken.
-> >
-> > If you can establish whether that flag is unset on your controller,
-> > we could use that as a heuristic for configuring DMA.
-> >
-> > --
-> > Martin K. Petersen      Oracle Linux Engineering
+I will reserve space for storage tag in the user interface for now.
+That way, we can introduce and use it later when it is actually used.
+
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+> 
+
+------w5-2f3KIOrSunQhSxAIo7Dy_B_SBAQB3Xz8aCSUoiMSFB8w5=_7d6d3_
+Content-Type: text/plain; charset="utf-8"
+
+
+------w5-2f3KIOrSunQhSxAIo7Dy_B_SBAQB3Xz8aCSUoiMSFB8w5=_7d6d3_--
