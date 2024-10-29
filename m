@@ -1,111 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5C0E20494C;
-	Tue, 29 Oct 2024 12:14:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD961E2301;
+	Tue, 29 Oct 2024 12:47:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730204078; cv=none; b=aO8eWupB+yKmopBjc4ix1natHdWFyGOHeVef1I/sxqHYZK7FLVc97rVKRHbb3ImdQ+LrctuOEllfbvscnrFR/PxrFFIzCEa9IlpzWjHcbSUXOfsLXZhFsM8NVwl7O07poBHZjIBmeAURWblB/NStAh6ZQZPVYbFwAD/pyTwdJ8c=
+	t=1730206032; cv=none; b=Htw3mRRiISuXSwg7V7NCduCp+1HC9riiJU4jO7Ao7nUs9AVPF/rVgtsU16+0yGqx2rQLJriz8SfCeH6cQoX7iDlJaAAUudCtZx1N5EhreyOQXDqaPmuaSjHga8YyDQjlpv4cndb9jajmhU3uO7EU4Sg9qR+lPgzc6A29Dg9kbW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730204078; c=relaxed/simple;
-	bh=BR6i45E+fltdAgPQmx0HjigX2OYslpqbQUeO9gekmFk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Q9c7tsewY9IKaevgM0gtVvfDTMvR77mjzBx8blch7LuNrKHckoJeHYyHzUIYYpe8+5RbIN9ygBPDvGkm4vJbchHXBdnbQSht14TSUl0fwEyLtDiB80erUsytN4lW7c3gx0pBd3d7UME9hVQlQ9GONDUmSHS28491JzIFlwyO130=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mbHqvpWa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730206032; c=relaxed/simple;
+	bh=PKIGvIkqahKGpUaSw28+IKqMSUuUV0Hhi1F1HBqO43A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ViWHb2sVD8TAsOvIovL1SwzGc39okDvQ8ZtjOD2OOia+lQthWNq5rqn/E+DuUxSeJo+QsVbAblwE+M+qlUGXr5Y+USaTqAAE5VjzPSqTizbQvvlhyAVGyFZc4l1HaXArjqqI3zOoKgztw/lv9yDGuN/6RT7HDXjr0uj7tBpxFbQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k2fJjsQ9; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mbHqvpWa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03D13C4CECD;
-	Tue, 29 Oct 2024 12:14:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730204078;
-	bh=BR6i45E+fltdAgPQmx0HjigX2OYslpqbQUeO9gekmFk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=mbHqvpWaokzNnIcGyB7eTQi1eTPARCmoS4sQgQ0vmHDg8c8yBYQq9WMsoyZULeimG
-	 rO910Q7ozZrv4gdYk+yS4xPnjqSEWP++HFv4kjSezBZJAv8js8g3Qoksl69Nme/vCZ
-	 fShAOhrfFk1VkCM0rmcuuGe1XaC6+gqojPmvQsPNM6l01w/XfdZygQEXt3thEXUq6f
-	 sZXMn/x0ZWtokWABUg9wzRlAQevLwmgHb0P3XL6EFpLJ8qVJV9aHDl0/PyCNsi56zF
-	 T8LUe00ckPaXiP9NY4LqqCiS9BW2hA9I2Elj6lUENt9HyN71FwwGF/yiQZ1ojIrKD/
-	 /Q0a/2ATdXMwQ==
-Message-ID: <4b87e933-123f-4a98-955c-d92c4bd9e3de@kernel.org>
-Date: Tue, 29 Oct 2024 13:14:31 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k2fJjsQ9"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-a99fa009adcso366944966b.0;
+        Tue, 29 Oct 2024 05:47:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730206028; x=1730810828; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UXEU0K+HVbTbvp27dG/5AsENh9x1wq4XCrDbezUDB6I=;
+        b=k2fJjsQ9L4LWoM4PL7yZwKPUFTf4+W2wupzWIb/ZoMnu5UZ6K74DWIitK8BZtN2aP8
+         DDNTJXha54bcGgTf340F5t8zZubgVRbn9YoT7w8QP9S2wLJ2Im4uzFvlFbKMzUe1xWar
+         Od+glT5qcwGsZT/tiOHoFiADygKJuHeKrGUgSgtC4DJBocXoUy3U+depaBXSJzny7DG7
+         zmZEv/gGlnemfZ/MsuP+6rOMWGdAkOXEHnbeFzJDk3XMT68oEwa4j7qr7JepNdgFyeNH
+         pHm/8j8W+pvMUY7y4Kmop6F43R72fSEzQTnxZJxpKxWd/RXtdao/Hup6PLEjolxQMTmL
+         lBag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730206028; x=1730810828;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UXEU0K+HVbTbvp27dG/5AsENh9x1wq4XCrDbezUDB6I=;
+        b=rviQQKppHH/q6D3rsJ3vD8Np+vgz2bCrdLwnEQl/LlIR9/bPdWRCbtA9ZDGL2IK0t2
+         tiSZYGJdhOSYXY5vQUw9rIYdxMZLkxn+XN/PZyyTsqkY9sF1rL33Oiq1LTuPqkTdX3BY
+         Hqe/blm+SZOwZXLH0+fg4Vz2HJZo5sGw4VJZlABXaLuKqEZU1ZA23X6cdclIsGPVWmsk
+         ORZ4tdccfDENZ+zKdw4yRxOKyKv6SpoKF5C8JTBhQt3DyIPY+x2HM3gxYpfR2thEE7dc
+         BVVyYlZxx6rea6kFiX4Av5Q0l7+QKXYYPN5mz/ZVykw1culcXXu7hdxYeOPM+4Dj1VcQ
+         OttQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU4T+teNhJA7m3FeIWpz+R+WpzLRD8r34EjoVvYaLT38vjjGLnkYCJrGrHB+v5ePOoRxVW5P96WBQ==@vger.kernel.org, AJvYcCWGvH0a9OXs+3uIB+qHp3gHBZVvMoN8AAUwblU8SP5uyZT/S1n5ExT9rKMGbR/MT4BvHbmVKKpsi0kOxQ==@vger.kernel.org, AJvYcCWm/VatUyQD8aFm4dJhDhJa/M8GQFyebKNBVJiK0NUqGhN6jp9r21AwNSfDQ63zDvyb7p6hSWEP605agAhPfw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwlId72CxpIhoabaIILcShUBBsqAxjoS56fAdZ+7761LjCDgq9v
+	ZQjnscx/nC8fQ5Ex40lgY/iEISaSVeCcgfhnMCFdM6E9629d1t8RSqP+vr7kORiMw0eyjFqueDx
+	5nOdcHWiUTJ76rJOEXoZ77Y41tQ==
+X-Google-Smtp-Source: AGHT+IH24jDXrN1/rLUODZ7dXWnQNAXgArrAqn9CD/XkQZPaaSbgd3HS6kL07anh4QVcaAdjYqc8XepfsP8tIRg++xU=
+X-Received: by 2002:a05:6402:348f:b0:5c9:34b4:69a8 with SMTP id
+ 4fb4d7f45d1cf-5cbbf889850mr13754716a12.6.1730206028117; Tue, 29 Oct 2024
+ 05:47:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 2/3] arm64: dts: qcom: sm8650: Add ICE allocator
- entries
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
- manivannan.sadhasivam@linaro.org, alim.akhtar@samsung.com,
- avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, andersson@kernel.org,
- konrad.dybcio@linaro.org, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, agross@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- quic_narepall@quicinc.com, quic_nitirawa@quicinc.com
-References: <20241029113003.18820-1-quic_rdwivedi@quicinc.com>
- <20241029113003.18820-3-quic_rdwivedi@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <20241029113003.18820-3-quic_rdwivedi@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20241025213645.3464331-1-kbusch@meta.com> <20241025213645.3464331-6-kbusch@meta.com>
+In-Reply-To: <20241025213645.3464331-6-kbusch@meta.com>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Tue, 29 Oct 2024 18:16:29 +0530
+Message-ID: <CACzX3AvZ=+cBaoZ9oKW3osA1WiWm5H5b7+wWAouLryK4-ymYfA@mail.gmail.com>
+Subject: Re: [PATCHv9 5/7] io_uring: enable per-io hinting capability
+To: Keith Busch <kbusch@meta.com>
+Cc: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, hch@lst.de, joshi.k@samsung.com, 
+	javier.gonz@samsung.com, bvanassche@acm.org, Hannes Reinecke <hare@suse.de>, 
+	Nitesh Shetty <nj.shetty@samsung.com>, Keith Busch <kbusch@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 29/10/2024 12:30, Ram Kumar Dwivedi wrote:
-> +
-> +				instantaneous {
-> +					ice-allocator-name = "instantaneous";
-> +					num-core = <28 28 15 13>;
-> +					status = "okay";
+On Sat, Oct 26, 2024 at 3:13=E2=80=AFAM Keith Busch <kbusch@meta.com> wrote=
+:
+>
+> From: Kanchan Joshi <joshi.k@samsung.com>
+>
+> With F_SET_RW_HINT fcntl, user can set a hint on the file inode, and
+> all the subsequent writes on the file pass that hint value down. This
+> can be limiting for block device as all the writes will be tagged with
+> only one lifetime hint value. Concurrent writes (with different hint
+> values) are hard to manage. Per-IO hinting solves that problem.
+>
+> Allow userspace to pass additional metadata in the SQE.
+>
+>         __u16 write_hint;
+>
+> If the hint is provided, filesystems may optionally use it. A filesytem
+> may ignore this field if it does not support per-io hints, or if the
+> value is invalid for its backing storage. Just like the inode hints,
+> requesting values that are not supported by the hardware are not an
+> error.
+>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> Signed-off-by: Keith Busch <kbusch@kernel.org>
+> ---
+>  include/uapi/linux/io_uring.h | 4 ++++
+>  io_uring/rw.c                 | 3 ++-
+>  2 files changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.=
+h
+> index 60b9c98595faf..8cdcc461d464c 100644
+> --- a/include/uapi/linux/io_uring.h
+> +++ b/include/uapi/linux/io_uring.h
+> @@ -92,6 +92,10 @@ struct io_uring_sqe {
+>                         __u16   addr_len;
+>                         __u16   __pad3[1];
+>                 };
+> +               struct {
+> +                       __u16   write_hint;
+> +                       __u16   __pad4[1];
+> +               };
+>         };
+>         union {
+>                 struct {
+> diff --git a/io_uring/rw.c b/io_uring/rw.c
+> index 8080ffd6d5712..5a1231bfecc3a 100644
+> --- a/io_uring/rw.c
+> +++ b/io_uring/rw.c
+> @@ -279,7 +279,8 @@ static int io_prep_rw(struct io_kiocb *req, const str=
+uct io_uring_sqe *sqe,
+>                 rw->kiocb.ki_ioprio =3D get_current_ioprio();
+>         }
+>         rw->kiocb.dio_complete =3D NULL;
+> -
+> +       if (ddir =3D=3D ITER_SOURCE)
+> +               rw->kiocb.ki_write_hint =3D READ_ONCE(sqe->write_hint);
+>         rw->addr =3D READ_ONCE(sqe->addr);
+>         rw->len =3D READ_ONCE(sqe->len);
+>         rw->flags =3D READ_ONCE(sqe->rw_flags);
+> --
+> 2.43.5
+>
 
-NAK, not much improved... and you ignored my response.
-
-Best regards,
-Krzysztof
-
+Since this patch adds a couple of new fields, it makes sense to add
+BUILD_BUG_ON() checks in io_uring_init for these fields to assert the
+layout of struct io_uring_sqe. And probably a zero check for pad4 in
+io_prep_rw.
+--
+Anuj Gupta
