@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B341A1422AB;
-	Tue, 29 Oct 2024 21:52:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2903F20ADFB;
+	Tue, 29 Oct 2024 23:24:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730238766; cv=none; b=hL+lenHuTghEf05ZH/Yv6EFdWqqAIkXqgVtDipwLWvn5zc1hT1GiJ/jGuDQJ2gWAppjRFEw7v7JchLHRhB/Dd5Yl63gc/jBlUIlDUWtZLZWjZgG2VRbpnWUGmgVLfxMgMcH1Szr+ajMzfnIFvklwgrBdEeCjqOE+FtyZvoX/4Pw=
+	t=1730244298; cv=none; b=Gcye4iLfJeBqvSY3Yc5LCXbJD1VfL3D20JNsuOjQSBoqn3lei2OCMPBV9jokW6yGH0beHz9DsjfMK5naBkaI9d149jQqHhHL2JRYQbXX4yV3EoXYk83btqCT7WCcwr1W8OfuaZol91t88Snk9oAh7HSJ21YQWVB7JZGINeHy9bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730238766; c=relaxed/simple;
-	bh=aQ4snfpqU8/cP5h4360AM/aNhQUoNlVkuZ5R6R5m2QU=;
+	s=arc-20240116; t=1730244298; c=relaxed/simple;
+	bh=5ITHqbWzAxBN2O3CfNPZlYSbccUPmxNcsdv/k1wZngY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ad/A83hAuYSkG7rmaDBudphtdAZkJI5d5nvAo7+K3UaX4JfBER1SMCRJ78fXwuEhoBJpW4/tBUYIQIBUXM0Ic/fv5uI30aIEpwFAanBZHu0uHp6toj6+WnNR6/hmHWjOORTa3QhcNznURUmoQc+fZ5Im8iA0zXGVxqPlCBDtdkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jd9mHMte; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=P8F0QHNdkyhnGQbubfVMOSuQ2oCcOME5Nme+292ELKVkiVKVDISdxBcRmqE6+yA0BWdj/2eHyMNETenIpRo8ANucXNud9J7KBc8N89VcQp6KFN4LLhpRjCLgZEDxzRjRy0SoAmA84Yw9R565xd5YsU4mFZEFe59Vn3gS2g6r1xQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PcEIzXp+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jd9mHMte"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22FE7C4CECD;
-	Tue, 29 Oct 2024 21:52:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PcEIzXp+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FF91C4CEE3;
+	Tue, 29 Oct 2024 23:24:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730238766;
-	bh=aQ4snfpqU8/cP5h4360AM/aNhQUoNlVkuZ5R6R5m2QU=;
+	s=k20201202; t=1730244297;
+	bh=5ITHqbWzAxBN2O3CfNPZlYSbccUPmxNcsdv/k1wZngY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Jd9mHMteIVmcMbTaE3uwEugAGddfJddGcYP16SY3RjAJbJTHVVyuEpJoA8haaDdeV
-	 MbpBDStbLtcbFjfL+MfXyB4/Wyb8YVufy6WdIfNab2QLmbU1tL3LJSOs2qc6rNkqVt
-	 3NnEe9/aLQ9mOc0zUcM6jmP3Yw+nLMsDtFELguWmSjqBZZhbCicBnV6i7tbgdZ3bMW
-	 uGbGq64Z02SpC76xDyfd8h36MIz7LoAinxHMf06p91m/K5FdUvuT9S27GwXg5rsHke
-	 L73fnEIM2MuntOef2uFX5WwjmlpJFgbIo8kfAtEf61LFPxGux4oAaCTkyGa9ty1zm0
-	 uYl6HV1LYpUiw==
-Date: Tue, 29 Oct 2024 15:52:42 -0600
+	b=PcEIzXp+tfvVvUNURdk2SUgAXMb9xMsyCuJw8u1I/7arTS9xFYlFasZEZy2LB+AaU
+	 cYy34kbm5DQ0q2D8xLdWEvHBgRtA5aDrv23CMY0dwpFYVPQ2x39rZ5l9zLR0360zEh
+	 hdUfh3aRzAtgu2YHzgJJdHOgn7Ga/Fkd9BhXDvKDAxtm1mGYIi8I/t4aMio4AsL2j+
+	 TS/wiKYUfmCGx44aN4IfJ3l3MFjFTzWwnMphpbUpZD94mz8MKh+YJ7ELGT3Gnb2gJe
+	 d/yMn58h3JsAiYfxTD7pRBe0Ig9ax163xsoAiFzXO/BGuZ3V/eqrrTzmGl5a8znzBR
+	 AoEXBnKGHIU1w==
+Date: Tue, 29 Oct 2024 17:24:53 -0600
 From: Keith Busch <kbusch@kernel.org>
 To: Anuj Gupta <anuj20.g@samsung.com>
 Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
@@ -36,11 +36,12 @@ Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
 	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
 	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
 	Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH v5 10/10] block: add support to pass user meta buffer
-Message-ID: <ZyFZKmM5ALFaFGRd@kbusch-mbp.dhcp.thefacebook.com>
+Subject: Re: [PATCH v5 06/10] io_uring/rw: add support to send metadata along
+ with read/write
+Message-ID: <ZyFuxfiRqH8YB-46@kbusch-mbp.dhcp.thefacebook.com>
 References: <20241029162402.21400-1-anuj20.g@samsung.com>
- <CGME20241029163235epcas5p340ce6d131cc7bf220db978a2d4dc24c2@epcas5p3.samsung.com>
- <20241029162402.21400-11-anuj20.g@samsung.com>
+ <CGME20241029163225epcas5p24ec51c7a9b6b115757ed99cadcc3690c@epcas5p2.samsung.com>
+ <20241029162402.21400-7-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,15 +50,28 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241029162402.21400-11-anuj20.g@samsung.com>
+In-Reply-To: <20241029162402.21400-7-anuj20.g@samsung.com>
 
-On Tue, Oct 29, 2024 at 09:54:02PM +0530, Anuj Gupta wrote:
-> From: Kanchan Joshi <joshi.k@samsung.com>
+On Tue, Oct 29, 2024 at 09:53:58PM +0530, Anuj Gupta wrote:
+> This patch adds the capability of sending metadata along with read/write.
+> A new meta_type field is introduced in SQE which indicates the type of
+> metadata being passed. This meta is represented by a newly introduced
+> 'struct io_uring_meta_pi' which specifies information such as flags,buffer
+> length,seed and apptag. Application sets up a SQE128 ring, prepares
+> io_uring_meta_pi within the second SQE.
+> The patch processes the user-passed information to prepare uio_meta
+> descriptor and passes it down using kiocb->private.
 > 
-> If an iocb contains metadata, extract that and prepare the bip.
-> Based on flags specified by the user, set corresponding guard/app/ref
-> tags to be checked in bip.
+> Meta exchange is supported only for direct IO.
+> Also vectored read/write operations with meta are not supported
+> currently.
 
-Looks good.
+It looks like it is reasonable to add support for fixed buffers too.
+There would be implications for subsequent patches, mostly patch 10, but
+it looks like we can do that.
 
-Reviewed-by: Keith Busch <kbusch@kernel.org>
+Anyway, this patch mostly looks okay to me. I don't know about the whole
+"meta_type" thing. My understanding from Pavel was wanting a way to
+chain command specific extra options. For example, userspace metadata
+and write hints, and this doesn't look like it can be extended to do
+that.
