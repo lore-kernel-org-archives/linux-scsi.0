@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F47120494C;
-	Tue, 29 Oct 2024 12:13:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5C0E20494C;
+	Tue, 29 Oct 2024 12:14:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730204019; cv=none; b=pp6VLVh1KPI+IDgjNu2V588gLVk78PAmnYIBHfbSg6OMjmGZ6BwKHioTmTwtIF0KNpMNJG/Je8cyelL7zkVNdu2JK0I2hU+GJJOcylPOptlT2L2gcfxYfGNruDgiOtdpNkM69sNva+krX5mi2JNxXZyK0sjRhvPLej3i23CEhW4=
+	t=1730204078; cv=none; b=aO8eWupB+yKmopBjc4ix1natHdWFyGOHeVef1I/sxqHYZK7FLVc97rVKRHbb3ImdQ+LrctuOEllfbvscnrFR/PxrFFIzCEa9IlpzWjHcbSUXOfsLXZhFsM8NVwl7O07poBHZjIBmeAURWblB/NStAh6ZQZPVYbFwAD/pyTwdJ8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730204019; c=relaxed/simple;
-	bh=dsiuFxJLzxNN03bre+aMjd50pBF0Tv47v7XGt7Opgk8=;
+	s=arc-20240116; t=1730204078; c=relaxed/simple;
+	bh=BR6i45E+fltdAgPQmx0HjigX2OYslpqbQUeO9gekmFk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L6qRA47WQ4JeV5EoljVTktCFyBB3dmP4OFiCBwK4UAE13rE3kUkoVLdJWvPFxf9r+f1vte6VfHogqcw4hcVPc2B/V9AnXQKcLhIvfXe5LRX0eY+n+K4scnmu0Z74ltYgW3P2r2zpCcYJt1rGjGJ4c4lmsVCn5zPsfhlkm81hdTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uMbZe4jM; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Q9c7tsewY9IKaevgM0gtVvfDTMvR77mjzBx8blch7LuNrKHckoJeHYyHzUIYYpe8+5RbIN9ygBPDvGkm4vJbchHXBdnbQSht14TSUl0fwEyLtDiB80erUsytN4lW7c3gx0pBd3d7UME9hVQlQ9GONDUmSHS28491JzIFlwyO130=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mbHqvpWa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uMbZe4jM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB5B4C4CECD;
-	Tue, 29 Oct 2024 12:13:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mbHqvpWa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03D13C4CECD;
+	Tue, 29 Oct 2024 12:14:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730204019;
-	bh=dsiuFxJLzxNN03bre+aMjd50pBF0Tv47v7XGt7Opgk8=;
+	s=k20201202; t=1730204078;
+	bh=BR6i45E+fltdAgPQmx0HjigX2OYslpqbQUeO9gekmFk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=uMbZe4jMwzDas8Sww2AWlrJGYUGh3QdJB8QJfWHdjXupOvWXsYv/a6/+j3qjTKIrO
-	 b9wQN2t1R8P+iu60n8w/sK9tX1P2rS6kj9qaho9dZVzXgQkaaZ3Nv9jHhkRc7HQ/p4
-	 eeuxdkvVAMPYZNqcFlSE6YmTUc9+yUCJmwIukNxGKphxRB3RrEKyJkQjTKjFocpG0m
-	 NIgp5iDlAvKxNNQ52gUl6usdTfEIiLlPxqYzqNduikq5DWhJq8rc/cd72NyirXFApl
-	 DqlziLUfSGHyPRI/uQVfEfqurlH6qKzUWALxGRQup9b5sBdQ/mn5IWM2Sd4M9RJVUZ
-	 JOcwyRgsOjFug==
-Message-ID: <70a1599e-67a2-4f39-acac-f4fe83b96b86@kernel.org>
-Date: Tue, 29 Oct 2024 13:13:31 +0100
+	b=mbHqvpWaokzNnIcGyB7eTQi1eTPARCmoS4sQgQ0vmHDg8c8yBYQq9WMsoyZULeimG
+	 rO910Q7ozZrv4gdYk+yS4xPnjqSEWP++HFv4kjSezBZJAv8js8g3Qoksl69Nme/vCZ
+	 fShAOhrfFk1VkCM0rmcuuGe1XaC6+gqojPmvQsPNM6l01w/XfdZygQEXt3thEXUq6f
+	 sZXMn/x0ZWtokWABUg9wzRlAQevLwmgHb0P3XL6EFpLJ8qVJV9aHDl0/PyCNsi56zF
+	 T8LUe00ckPaXiP9NY4LqqCiS9BW2hA9I2Elj6lUENt9HyN71FwwGF/yiQZ1ojIrKD/
+	 /Q0a/2ATdXMwQ==
+Message-ID: <4b87e933-123f-4a98-955c-d92c4bd9e3de@kernel.org>
+Date: Tue, 29 Oct 2024 13:14:31 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 1/3] dt-bindings: ufs: qcom: Document ice configuration
- table
+Subject: Re: [PATCH V2 2/3] arm64: dts: qcom: sm8650: Add ICE allocator
+ entries
 To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
  manivannan.sadhasivam@linaro.org, alim.akhtar@samsung.com,
  avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
@@ -47,7 +47,7 @@ Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
  quic_narepall@quicinc.com, quic_nitirawa@quicinc.com
 References: <20241029113003.18820-1-quic_rdwivedi@quicinc.com>
- <20241029113003.18820-2-quic_rdwivedi@quicinc.com>
+ <20241029113003.18820-3-quic_rdwivedi@quicinc.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -93,66 +93,18 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <20241029113003.18820-2-quic_rdwivedi@quicinc.com>
+In-Reply-To: <20241029113003.18820-3-quic_rdwivedi@quicinc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 29/10/2024 12:30, Ram Kumar Dwivedi wrote:
-> There are three allocators supported for inline crypto engine:
-> Floor based, Static and Instantaneous allocator.
-> 
-> Document the compatible used for the allocator configurations
-> for inline crypto engine found.
-> 
-> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> ---
->  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 24 +++++++++++++++++++
->  1 file changed, 24 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 25a5edeea164..069bd87d3404 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -108,6 +108,11 @@ properties:
->      description:
->        GPIO connected to the RESET pin of the UFS memory device.
->  
-> +  ice-config:
-> +    type: object
-> +    description:
-> +      ICE configuration table for Qualcom SOC
-
-Not much improved, still not constrained, this can be literally
-anything, right? No explanation what this is.
-
-This does not look even like hardware property, although with such
-explanation tricky to judge.
-
-NAK, please reach internally to qcom folks so they will guide you how
-bindings should look like. You are *not supposed* to send downstream
-stuff to us.
-
 > +
->  required:
->    - compatible
->    - reg
-> @@ -350,5 +355,24 @@ examples:
->                              <0 0>,
->                              <0 0>;
->              qcom,ice = <&ice>;
-> +
-> +            ice_cfg: ice-config {
-> +                static-alloc {
-> +                     ice-allocator-name = "static-alloc";
-> +                     rx-alloc-percent = <60>;
-> +                     status = "okay";
+> +				instantaneous {
+> +					ice-allocator-name = "instantaneous";
+> +					num-core = <28 28 15 13>;
+> +					status = "okay";
 
-Drop. Same everywhere else.
-
+NAK, not much improved... and you ignored my response.
 
 Best regards,
 Krzysztof
