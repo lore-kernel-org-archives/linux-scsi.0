@@ -1,111 +1,115 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A11278C6D
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 07:32:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590E7204032
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 10:17:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730187169; cv=none; b=bEStx9QBDyxT+oSLViXdYceDoadiq89oUZhh6RXWrS2sPvkeqQH/g/yHLbIjjxTkdiIEFgIddAjQB3oT21u0cndEBxhbsOvYfGOkV/vpwRLKGPYPUP9DUSHbnYwUY3TwqcjOOcUylQyYAKyrU+vNTbMyMaD12Kya6jqDyiufP5I=
+	t=1730197043; cv=none; b=rN/Nc+vXQI5kfVV/oyWNqDIiGIJOX+N1QLz1gkt3/RFqhasC2veFQBsZ7FABK4XfjPHrNnsZ+zSmL5+Kgb+kUfFPuMLqZip7dRaUOe2fNkkm8K7XSX9HYfya1Wh49JGlpdXf3Z8RvNRcsLJzweU3ma6L2KFYUzuanaHC4bQ93II=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730187169; c=relaxed/simple;
-	bh=8gFlYmg8aJbjsI5TPhu8ofR/6Ycm6FhkjEru9IJq8Vk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V33AE4udBg2A4mT7XhqL2aX4c+Q+kNnyV6MMzgdou9yCj3HbIrC57wyQn2hGUxnqS+fLk+LINKEqTi91YYteJierIuCXzclZGdzODAfKe/T6r878fNOJLo7ZsVwhW4JzM2XXy6DXxCZb0lnw6SGhbsjvWgIHJKK/zqoK8N/wiaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=y6/f6CRC; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1730197043; c=relaxed/simple;
+	bh=xXSJ8OOCn9HBEI+kXuJP/EAgN8qA9tljHKVnW45efnk=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=l+8zD/C7+pv7B0C6rTRkgvo9reat1cvLSixluSwabkZR3a/BDY9Mkc5PD0nqI2CT4j1Htaf8jKonMFkxUZw8YrTm2b54ntBmkyG1GS4U5ntzPKdVd+MJxvUKU/vJJT8Iek0x1BooZGfo7GK5zxchvsWCo8mwJbu74TRGAGVglSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VMgvfzKk; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="y6/f6CRC"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4314f38d274so67828505e9.1
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 00:32:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VMgvfzKk"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5c941623a5aso10040527a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 03:17:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1730187163; x=1730791963; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8Vr2OoCNpwv4fo9q6sakU7X6ulwsoIZxioYPDru737U=;
-        b=y6/f6CRColYkrc1s4S7C7m7Hu6RbDlcNLlttyC/F6EByUk0LfAKDaK8jOL64Oobivl
-         dfeuFOIkBM5SoIuow5e36TXP19FXvTvYFXC4/1tT0tzTbPW6e/CgEXx44Iy3PN7NFO3y
-         wwBhuPCCuLs0XL3aVA2W+F0zEgOqCQSXjVj7jALpdEf3O0zoKj5KdvLkdZdqxpnobBU6
-         2txHK8um/kokvuwzmhg+vTAEjyh1bO5wLlmrnNw/mmkOzyvXEmIAPQFsvOk9vRElFSRE
-         Vze1X0b+6tWsUcikdLyqzckI7AxBZre4uFXl1HGQ8ax0qMj8JGjuNLqYzo+YBh2oaZRp
-         NTqQ==
+        d=gmail.com; s=20230601; t=1730197039; x=1730801839; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=xXSJ8OOCn9HBEI+kXuJP/EAgN8qA9tljHKVnW45efnk=;
+        b=VMgvfzKkY581wpQt5fIekTzRBHCvhTqgdvZHbkKziDbGSmVxs2vaPBNaFXuAjrXj9J
+         SBLpUpgg7KjQ6GsqdTyVXfR7oop0eeZv2vZmO2DzVGsYE0MQbMQWkv8U2VIKNH64HCpe
+         Fdam0rJ5SQP6ChhuwMAnJOjprYe1apqMuG3BAFND1BoK3EHko8mJ5+w4OFfkcBoTdVPu
+         IwEDOGYXnNmICcPwJdaSCK2TThZFyeuxyMldNmoPaVqth6tF0voSSfc3gQ9YFCaXW67/
+         wuX6lTxUdK/DAX3rK4deLNMRvG0o7meZMgrDy6fHt25P701BbDcrxCMBYKzKPUNMd93X
+         9bAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730187163; x=1730791963;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8Vr2OoCNpwv4fo9q6sakU7X6ulwsoIZxioYPDru737U=;
-        b=cYFR+csTigx4wyXGJEX3RxzZ8fSyfxfOnuYaHE5B3ixGSQYhQiKDv0MPMNfdX2Ibwf
-         g8q+GB5t3kWHyZYsNOyMQZZcHJQxZHlOr4AQls++rTp9eN0pmyyL9OWke+La0tXPJ57K
-         Gg2cpn5NAuEBZ1Q/FCFgltJ3WRiu/RYB/mC20kIJlb70yOFt/zGSCIPW8bQtmPDR28GD
-         F1Tri8b7ToCHiDskStPReY3/iRdRBxJzEalUXPcg0+mszOLGa2fB78X/km3LrhxYnJAk
-         Pd9IlgYP7AoS7233n9nbYwU1f+lw7NTuEYHYY2Hcl5/2PFdR/D7l1R8wn3we+rw1cRrk
-         h4nA==
-X-Gm-Message-State: AOJu0YzUMhbOKBRRw4kpG0j504s8CrDdiQv/cPwyFbCQa+wRv6Cb2lsX
-	IrVf5Mnw3N0YY5r2hC/2u8T3dy4gVRTUPaE0HQ3gR4m4ap4e2u9xg2qm2lu0pkA=
-X-Google-Smtp-Source: AGHT+IEDwgh0ZQgkdux4I6hbX2te0nM/FTIAXGz8NCaNaZSweAMf00VscBOP2XSKllCmH+GtbfgSDg==
-X-Received: by 2002:a05:600c:a085:b0:431:54f3:11ab with SMTP id 5b1f17b1804b1-4319ad2a791mr101496495e9.33.1730187162931;
-        Tue, 29 Oct 2024 00:32:42 -0700 (PDT)
-Received: from localhost (p50915d2d.dip0.t-ipconnect.de. [80.145.93.45])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4318b567838sm167754795e9.23.2024.10.29.00.32.41
+        d=1e100.net; s=20230601; t=1730197039; x=1730801839;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xXSJ8OOCn9HBEI+kXuJP/EAgN8qA9tljHKVnW45efnk=;
+        b=woxaqlGeQpZhDWycGHBnXAVU5Q9+CO0jnaM45Gyj64qO0XcjPuIxZNGihyTKdbXizc
+         xmcSFsBJI9NxHikyvnFMEW7OksxwktyEy1rYDVlfIeSwcV6bXDLOJoauRIfwSs4/N2dX
+         wc1xUPl2G703F6/V1kG4GDXWguRZhXwN27WxJRMKd6dYNrTOJSC1NXDJRJ1G7DFes4dQ
+         ZQZxRFobbt+Pl5I/UEpQvSWX4/YEILq0OSSMV9ZvJDRlWEdYJQ1Z9nBqdBCNyvjIBQIw
+         3O+wyByHHAhg6YJtmxcgbC2H0nu6dY2d6jLuKH0bCWSFVpz54Dw2Ae+c7M8LIW+BsF9W
+         MBDg==
+X-Forwarded-Encrypted: i=1; AJvYcCUnqIs+SkLYr9TEynq/BFCfNA851y5417Hy56Hikdsj1ul56AHNGoKZPze8EDYxItTM361z7YWTHDQz@vger.kernel.org
+X-Gm-Message-State: AOJu0YzMBk6o/kcnRCycaUpjw6lFIrO3MxLb7URE18XRX/OFMLbjMOGW
+	ah+SBd2WuU/sggRKY5k40hvaTC3pEKpks6k4mCSjbXKu+2YLswNuzHmTjy6Pg/w=
+X-Google-Smtp-Source: AGHT+IFfLKrpgiZkQbhfbTdMfsVbPWc7M46gK4NvJB/DlLy9tiRBfr1PGk+s8DOb6uJO1V03kWzeCw==
+X-Received: by 2002:a05:6402:51c9:b0:5c5:c2a7:d535 with SMTP id 4fb4d7f45d1cf-5cd2e3543f1mr1177392a12.16.1730197039306;
+        Tue, 29 Oct 2024 03:17:19 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cbb6255e20sm3835458a12.12.2024.10.29.03.17.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Oct 2024 00:32:42 -0700 (PDT)
-Date: Tue, 29 Oct 2024 08:32:40 +0100
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: Switch back to struct platform_driver::remove()
-Message-ID: <cfhae7lnnna7difhdurabtysh3ddivl5veb7aof7u4cippurlh@gyojgwbx4iut>
-References: <20241028080754.429191-2-u.kleine-koenig@baylibre.com>
+        Tue, 29 Oct 2024 03:17:17 -0700 (PDT)
+Message-ID: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
+Subject: Re: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
+From: Bean Huo <huobean@gmail.com>
+To: Huan Tang <tanghuan@vivo.com>, beanhuo@micron.com, bvanassche@acm.org
+Cc: cang@qti.qualcomm.com, linux-scsi@vger.kernel.org, 
+	opensource.kernel@vivo.com, richardp@quicinc.com
+Date: Tue, 29 Oct 2024 11:17:15 +0100
+In-Reply-To: <20241029031114.517-1-tanghuan@vivo.com>
+References: 
+	<SA6PR08MB10163D9B8FE4BE9DF5A47D9E1DB4A2@SA6PR08MB10163.namprd08.prod.outlook.com>
+	 <20241029031114.517-1-tanghuan@vivo.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="7kbjgzofywrlliaa"
-Content-Disposition: inline
-In-Reply-To: <20241028080754.429191-2-u.kleine-koenig@baylibre.com>
 
-
---7kbjgzofywrlliaa
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH] scsi: Switch back to struct platform_driver::remove()
-MIME-Version: 1.0
-
-Hello,
-
-On Mon, Oct 28, 2024 at 09:07:55AM +0100, Uwe Kleine-K=F6nig wrote:
-> After commit 0edb555a65d1 ("platform: Make platform_driver::remove()
-> return void") .remove() is (again) the right callback to implement for
-> platform drivers.
+On Tue, 2024-10-29 at 11:11 +0800, Huan Tang wrote:
+> > On 10/28/24 1:04 PM, Bean Huo wrote:
+> > > Even though I don't think it's necessary to enable a Sysfs node
+> > > entry
+> > > for this configuration.
+> >=20
+> > Right, a motivation of why this functionality should be available
+> > in sysfs is
+> > missing. An explanation should be added in the patch description.
+> >=20
+> > Thanks,
+> >=20
+> > Bart.
 >=20
-> Convert all platform drivers below drivers/scsito use .remove(), with
-                                                ^^
-I missed to restore the space here -------------'' while adapting my
-template to this patch. Can you please fixup during application? Or
-should I resend?
+> Hi Bean & Bart,
+>=20
+> Motivation: Through the sysfs upper layer code, the WB resize
+> function can be used in some scenarios, or related information can be
+> obtained indirectly to implement different strategies;
+> What is your suggestion? sysfs? exception event? or?
+>=20
+> Thanks
+> Huan
 
-Best regards
-Uwe
+hey Huan,
 
---7kbjgzofywrlliaa
-Content-Type: application/pgp-signature; name="signature.asc"
+What specific scenarios would require enabling a sysfs node to control
+this function? Dynamically adjusting the WriteBooster (WB) size on the
+fly doesn=E2=80=99t seem ideal to me. From my perspective, the main case fo=
+r
+this feature is if the OEM didn=E2=80=99t correctly define or set the
+WriteBooster Buffer size during manufacturing. Even then, adjusting the
+WB buffer size wouldn=E2=80=99t be a frequent need. If JEDEC has found a re=
+ason
+for this feature to be accepted, isn=E2=80=99t there already an interface
+available to configure it? Why would we need a duplicate interface for
+the same purpose?
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmcgj5YACgkQj4D7WH0S
-/k4JfAgAk0ilD2VEwpxPZ6t8Xw0vaeBX3ngCt2/gxhe3BPzzNZrjjZWzY7VrTXxg
-57G/WT6BEaohKt/VJFIv7H8TS7vOefoOsBNGxXzBLMw8xhwPZxxn1NSNRAzqP0ub
-ExIJVQA2eNsbmVeLeB6BcoW816LGMnKE6Y4SNssWiL+TOFEJhajkOD4fLsq05DNV
-aQd3pTmsSE2rIK635sUeIPVjxUda7D0kqQcGfRzP4Q///QE03KqHim1qTXUMzACf
-Rg1ars/UWnE6yWQvB943QWi0zmsalwwk++RgO+hFL8ihbt+mKWgSZApxDKqy0EOT
-dA2K5zE3EqheQRv1e30aLP1MRitIUw==
-=nFP8
------END PGP SIGNATURE-----
-
---7kbjgzofywrlliaa--
+Kind regards,
+Bean
