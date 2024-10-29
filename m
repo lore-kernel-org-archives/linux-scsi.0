@@ -1,115 +1,88 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590E7204032
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 10:17:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7796A17A58F;
+	Tue, 29 Oct 2024 10:31:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730197043; cv=none; b=rN/Nc+vXQI5kfVV/oyWNqDIiGIJOX+N1QLz1gkt3/RFqhasC2veFQBsZ7FABK4XfjPHrNnsZ+zSmL5+Kgb+kUfFPuMLqZip7dRaUOe2fNkkm8K7XSX9HYfya1Wh49JGlpdXf3Z8RvNRcsLJzweU3ma6L2KFYUzuanaHC4bQ93II=
+	t=1730197917; cv=none; b=IcqBzYd7B+GPiQspQh830LpCx5j4arTmUkmmFxhmLEZwWpIqmFWRci3s5Ww/2FajtCXmQlEEB1xXNKNcxsvPQCNIt0rrA2So8mGBGksLyrDoJmk3W1y5hwFwwYojp6iav5f58lYC4uaATJovMUakUgcNB6MEXKdvJup9w7tglQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730197043; c=relaxed/simple;
-	bh=xXSJ8OOCn9HBEI+kXuJP/EAgN8qA9tljHKVnW45efnk=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=l+8zD/C7+pv7B0C6rTRkgvo9reat1cvLSixluSwabkZR3a/BDY9Mkc5PD0nqI2CT4j1Htaf8jKonMFkxUZw8YrTm2b54ntBmkyG1GS4U5ntzPKdVd+MJxvUKU/vJJT8Iek0x1BooZGfo7GK5zxchvsWCo8mwJbu74TRGAGVglSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VMgvfzKk; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730197917; c=relaxed/simple;
+	bh=3UjJEYi6H5qPBF8XI60QT6eZz7o/rqYEXUjuPkN9PJA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gMZts322bVBP0TAK0DYKSB8sOYne34es7nWxMgKdMG1neu5PUoD2DN5a2vEf2v1astLSdjFFmCsk0SZKZxFXly15VrycLjzY9ypD6kz2krG9aqD5xzyP9VsjULsSKTwg2PvuAnVQXX/NtwpJSxKCTJq7zOKCfGpYAy706A9B0d0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=E+67RvXJ; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VMgvfzKk"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5c941623a5aso10040527a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 03:17:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730197039; x=1730801839; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=xXSJ8OOCn9HBEI+kXuJP/EAgN8qA9tljHKVnW45efnk=;
-        b=VMgvfzKkY581wpQt5fIekTzRBHCvhTqgdvZHbkKziDbGSmVxs2vaPBNaFXuAjrXj9J
-         SBLpUpgg7KjQ6GsqdTyVXfR7oop0eeZv2vZmO2DzVGsYE0MQbMQWkv8U2VIKNH64HCpe
-         Fdam0rJ5SQP6ChhuwMAnJOjprYe1apqMuG3BAFND1BoK3EHko8mJ5+w4OFfkcBoTdVPu
-         IwEDOGYXnNmICcPwJdaSCK2TThZFyeuxyMldNmoPaVqth6tF0voSSfc3gQ9YFCaXW67/
-         wuX6lTxUdK/DAX3rK4deLNMRvG0o7meZMgrDy6fHt25P701BbDcrxCMBYKzKPUNMd93X
-         9bAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730197039; x=1730801839;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=xXSJ8OOCn9HBEI+kXuJP/EAgN8qA9tljHKVnW45efnk=;
-        b=woxaqlGeQpZhDWycGHBnXAVU5Q9+CO0jnaM45Gyj64qO0XcjPuIxZNGihyTKdbXizc
-         xmcSFsBJI9NxHikyvnFMEW7OksxwktyEy1rYDVlfIeSwcV6bXDLOJoauRIfwSs4/N2dX
-         wc1xUPl2G703F6/V1kG4GDXWguRZhXwN27WxJRMKd6dYNrTOJSC1NXDJRJ1G7DFes4dQ
-         ZQZxRFobbt+Pl5I/UEpQvSWX4/YEILq0OSSMV9ZvJDRlWEdYJQ1Z9nBqdBCNyvjIBQIw
-         3O+wyByHHAhg6YJtmxcgbC2H0nu6dY2d6jLuKH0bCWSFVpz54Dw2Ae+c7M8LIW+BsF9W
-         MBDg==
-X-Forwarded-Encrypted: i=1; AJvYcCUnqIs+SkLYr9TEynq/BFCfNA851y5417Hy56Hikdsj1ul56AHNGoKZPze8EDYxItTM361z7YWTHDQz@vger.kernel.org
-X-Gm-Message-State: AOJu0YzMBk6o/kcnRCycaUpjw6lFIrO3MxLb7URE18XRX/OFMLbjMOGW
-	ah+SBd2WuU/sggRKY5k40hvaTC3pEKpks6k4mCSjbXKu+2YLswNuzHmTjy6Pg/w=
-X-Google-Smtp-Source: AGHT+IFfLKrpgiZkQbhfbTdMfsVbPWc7M46gK4NvJB/DlLy9tiRBfr1PGk+s8DOb6uJO1V03kWzeCw==
-X-Received: by 2002:a05:6402:51c9:b0:5c5:c2a7:d535 with SMTP id 4fb4d7f45d1cf-5cd2e3543f1mr1177392a12.16.1730197039306;
-        Tue, 29 Oct 2024 03:17:19 -0700 (PDT)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cbb6255e20sm3835458a12.12.2024.10.29.03.17.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Oct 2024 03:17:17 -0700 (PDT)
-Message-ID: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
-Subject: Re: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
-From: Bean Huo <huobean@gmail.com>
-To: Huan Tang <tanghuan@vivo.com>, beanhuo@micron.com, bvanassche@acm.org
-Cc: cang@qti.qualcomm.com, linux-scsi@vger.kernel.org, 
-	opensource.kernel@vivo.com, richardp@quicinc.com
-Date: Tue, 29 Oct 2024 11:17:15 +0100
-In-Reply-To: <20241029031114.517-1-tanghuan@vivo.com>
-References: 
-	<SA6PR08MB10163D9B8FE4BE9DF5A47D9E1DB4A2@SA6PR08MB10163.namprd08.prod.outlook.com>
-	 <20241029031114.517-1-tanghuan@vivo.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="E+67RvXJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1730197915; x=1761733915;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=3UjJEYi6H5qPBF8XI60QT6eZz7o/rqYEXUjuPkN9PJA=;
+  b=E+67RvXJGzcSaAPSTDZ9cz6dxgEdT518B1PHTTam/swvR+FBCvpN79YB
+   ja+uRhUldFw9h0eY3yIyTe8qOHboW3d4bxeMthX7przhTPuVvSA6eLdbN
+   bi61yFGk3nXmsL+XO3IpdHdExu+biDT4RlyeLyAGjuPiLJN14aO7CuF7m
+   1PpA9hODvkSS76iTn86t16TPjZKH/oMpHegXOYwRflQlZGZ7vP7QJid0E
+   CWTiMrE6A/479rMqWw/3d8/qcke2m+CI86hOkHpkQN1lnxErQPhtahlQp
+   EZ9r6+oxfV1CeO0p640UG7MkMj2FZeMcLfHJullLDBUhcRVKb2vBm8dNe
+   w==;
+X-CSE-ConnectionGUID: ML55fWCPSG2Akozq/wAg/Q==
+X-CSE-MsgGUID: wh9CAcHPQkSLQvLU14LryA==
+X-IronPort-AV: E=Sophos;i="6.11,241,1725292800"; 
+   d="scan'208";a="31111241"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Oct 2024 18:31:48 +0800
+IronPort-SDR: 6720ac67_lfILeSyPsENHf04teJUez5TmOEOvxecFty9bt5s2F8D7WZC
+ oUCP36jgcPxRgbCTyV9PxlZpUSCULJ2rwj9780A==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Oct 2024 02:35:35 -0700
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Oct 2024 03:31:47 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v2 0/2] Untie the host lock entanglement - part 2
+Date: Tue, 29 Oct 2024 12:29:36 +0200
+Message-Id: <20241029102938.685835-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2024-10-29 at 11:11 +0800, Huan Tang wrote:
-> > On 10/28/24 1:04 PM, Bean Huo wrote:
-> > > Even though I don't think it's necessary to enable a Sysfs node
-> > > entry
-> > > for this configuration.
-> >=20
-> > Right, a motivation of why this functionality should be available
-> > in sysfs is
-> > missing. An explanation should be added in the patch description.
-> >=20
-> > Thanks,
-> >=20
-> > Bart.
->=20
-> Hi Bean & Bart,
->=20
-> Motivation: Through the sysfs upper layer code, the WB resize
-> function can be used in some scenarios, or related information can be
-> obtained indirectly to implement different strategies;
-> What is your suggestion? sysfs? exception event? or?
->=20
-> Thanks
-> Huan
+Here is the 2nd part in the sequel, watering down the scsi host lock
+usage in the ufs driver. This work is motivated by a comment made by
+Bart [1], of the abuse of the scsi host lock in the ufs driver.  Its
+Precursor [2] removed the host lock around some of the host register
+accesses.
 
-hey Huan,
+This part replaces the scsi host lock by dedicated locks serializing
+access to the clock gating and clock scaling members.
 
-What specific scenarios would require enabling a sysfs node to control
-this function? Dynamically adjusting the WriteBooster (WB) size on the
-fly doesn=E2=80=99t seem ideal to me. From my perspective, the main case fo=
-r
-this feature is if the OEM didn=E2=80=99t correctly define or set the
-WriteBooster Buffer size during manufacturing. Even then, adjusting the
-WB buffer size wouldn=E2=80=99t be a frequent need. If JEDEC has found a re=
-ason
-for this feature to be accepted, isn=E2=80=99t there already an interface
-available to configure it? Why would we need a duplicate interface for
-the same purpose?
+Changes compared to v1:
+ - use the guard() & scoped_guard() macros (Bart)
+ - re-order struct ufs_clk_scaling and struct ufs_clk_gating (Bart)
 
-Kind regards,
-Bean
+[1] https://lore.kernel.org/linux-scsi/0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org/
+[2] https://lore.kernel.org/linux-scsi/20241024075033.562562-1-avri.altman@wdc.com/
+
+Avri Altman (2):
+  scsi: ufs: core: Introduce a new clock_gating lock
+  scsi: ufs: core: Introduce a new clock_scaling lock
+
+ drivers/ufs/core/ufshcd.c | 223 ++++++++++++++++----------------------
+ include/ufs/ufshcd.h      |  24 ++--
+ 2 files changed, 111 insertions(+), 136 deletions(-)
+
+-- 
+2.25.1
+
