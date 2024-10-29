@@ -1,44 +1,44 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B506194A68
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 15:19:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFE9E196D9A
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 15:19:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730215200; cv=none; b=jgyoPzVwBHicSl+vRWLH468zCVIrWPAq5vN1XwrNTRqbC4fFlXSDisQlaT4QgmDP7XfqfuqPjA8iAlnBD7jkPiFB4xtXE/YMMfzWpGSyIgMJmYBJx42FTHTMIQZfCE2BL9RFztiJILgOrICLhMpYNBfikseuhzVrCUJCaGfS8VA=
+	t=1730215201; cv=none; b=RL8DyUi9z1wgOkMUKeNGg4fHWkw1SFm4NNb48qcdEzgwA/sg3z61wfBSKE/0tRZ8gPDADVm3Na6DfoglsxOFESPqdHE6gdkdR4Qa9wBbyFtw706SczTAK1pjTBC50n/uGATXZxPwC/SkhtiSkstQYGLpkAwYFuXtvoqcQMg0ihI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730215200; c=relaxed/simple;
-	bh=RTkTfNmlAK9/4u2bWiR0BiAR3mMG6QfKEBlAYe5AaEU=;
+	s=arc-20240116; t=1730215201; c=relaxed/simple;
+	bh=bLVs+NUjXqkb64uW7DX9xzl2BkYI8JF3mYXsk/Fl4uY=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GmjBHg7gQjXhI3uZ0jdZabYpaQiFbMtFKk3ogLruyTGrXHN2DOXG84okQ4/KXq0mnLWQtUx3CmfvqaMABUdpYEAWFTyywhg+4+WPV9GPBFr8nPv9OQlZ6joZmXomMP0tQfNdSqAe3y6195bL338tv5pYaxOp9/PoQuyUO2z9lP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=GiVZVm5W; arc=none smtp.client-ip=67.231.145.42
+	 MIME-Version:Content-Type; b=eXLqmZd6kv0xMCWfrPbnRbotm0eS9VaeQQ+bvccPpH/SVRTIPS+Wv18akFcqtMDg+yF8Ji1Si6thICX5R0oRBroB97nSe59mH4Xapn87nSAP3pKsVyd0Vp0+GOMSRlIYruBuDcpffNk1DTNXMQ3i3xLi99qDTGYDoB+PMfvJvrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=ay2frHnQ; arc=none smtp.client-ip=67.231.153.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="GiVZVm5W"
-Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49T72Trl012612
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:57 -0700
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="ay2frHnQ"
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+	by m0001303.ppops.net (8.18.1.2/8.18.1.2) with ESMTP id 49TD7Fwn021662
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:58 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2021-q4;
-	 bh=KkMsdiy6+G613EM2iVNE1sWpzDf7A70uir1Q/qyFKn0=; b=GiVZVm5W+RXT
-	zyP06X7gCJqRTFYdNORXxwmh6xw7VUUpi0VQfY3gwYgE/BB4Vzw5jFbrIiirlIAr
-	+4VC7U26lB3w9WiUzypItJv0eIIUdYrwEhObziPttAgbNRDgVFXqR3xnWpNt4KZL
-	Xq1U3pXWtcvZJX9ekGOEFXC+0w3Vz5cY2j7Y0I7eNk7gMXcci8Z6guhm9L1S+dUE
-	Z8KwcmGKbQ6lIvKhEbc2IDrIgeCpY1PZTwIHNuqZNz6W2M+J+CDzvHG5U9vKsk01
-	edMipsrm4IT1qZzh56uphZTAEqfmTqaLLFvus43Czjkt/AzdjokeAby1x5BnGFNk
-	XSrm5Dan/A==
+	 bh=YaxUJJnRZ28AJAdK6cvper+b/ynFQDqHd29QjSNk8fc=; b=ay2frHnQBoz3
+	7Ne1TVmq/1c7UPH78vZxWhsnfpe1X2s/gMcA22+1LPYEbFzY6tEM0X8ziK5Ir6b5
+	vo0stBS0x8rZkyjK+2M0jb5KR/XCSleMALdE1FMBrWD6NPlS/Ps/4kThvfUoyBxp
+	JTKbdK3kkuvpHRTkoJv5QWmXRrMYA0CON8Xw0j3c/J1EOybmElLKPn838819Tebc
+	xPUryeS4nxIaC0fnkDpgff6K4b1FpFS8vpnl0qfBxdgLQ55www/LU9N8RecMUsQs
+	y7ZFPQDgmc+H6UldklgDliXIn73s6UnF39rhS+d3mXEx6ODhz3rVfkbiqgCcXZ+3
+	Hwq9r0shmg==
 Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 42jty7asby-9
+	by m0001303.ppops.net (PPS) with ESMTPS id 42k0af13y2-10
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:57 -0700 (PDT)
-Received: from twshared23455.15.frc2.facebook.com (2620:10d:c085:108::150d) by
- mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:58 -0700 (PDT)
+Received: from twshared23455.15.frc2.facebook.com (2620:10d:c085:208::7cb7) by
+ mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.1544.11; Tue, 29 Oct 2024 15:19:52 +0000
+ 15.2.1544.11; Tue, 29 Oct 2024 15:19:53 +0000
 Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
-	id DFE2C14920E9C; Tue, 29 Oct 2024 08:19:43 -0700 (PDT)
+	id 0228614920EA1; Tue, 29 Oct 2024 08:19:44 -0700 (PDT)
 From: Keith Busch <kbusch@meta.com>
 To: <linux-block@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
         <linux-scsi@vger.kernel.org>, <io-uring@vger.kernel.org>
@@ -46,9 +46,9 @@ CC: <linux-fsdevel@vger.kernel.org>, <hch@lst.de>, <joshi.k@samsung.com>,
         <javier.gonz@samsung.com>, <bvanassche@acm.org>,
         Keith Busch
 	<kbusch@kernel.org>
-Subject: [PATCHv10 1/9] block: use generic u16 for write hints
-Date: Tue, 29 Oct 2024 08:19:14 -0700
-Message-ID: <20241029151922.459139-2-kbusch@meta.com>
+Subject: [PATCHv10 3/9] statx: add write hint information
+Date: Tue, 29 Oct 2024 08:19:16 -0700
+Message-ID: <20241029151922.459139-4-kbusch@meta.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <20241029151922.459139-1-kbusch@meta.com>
 References: <20241029151922.459139-1-kbusch@meta.com>
@@ -61,65 +61,92 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: ZD99Q-A_B1dOSFobkrBvPTuxk5sUmAA6
-X-Proofpoint-GUID: ZD99Q-A_B1dOSFobkrBvPTuxk5sUmAA6
+X-Proofpoint-GUID: zDz5AWeovGVn6s6CspS8Vi_Rh6CzqwpH
+X-Proofpoint-ORIG-GUID: zDz5AWeovGVn6s6CspS8Vi_Rh6CzqwpH
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
  definitions=2024-10-05_03,2024-10-04_01,2024-09-30_01
 
 From: Keith Busch <kbusch@kernel.org>
 
-This is still backwards compatible with lifetime hints. It just doesn't
-constrain the hints to that definition. Using this type doesn't change
-the size of either bio or request.
+If requested on a raw block device, report the maximum write hint the
+block device supports.
 
 Signed-off-by: Keith Busch <kbusch@kernel.org>
 ---
- include/linux/blk-mq.h    | 3 +--
- include/linux/blk_types.h | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ block/bdev.c              | 5 +++++
+ fs/stat.c                 | 1 +
+ include/linux/stat.h      | 1 +
+ include/uapi/linux/stat.h | 3 ++-
+ 4 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 2035fad3131fb..08ed7b5c4dbbf 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -8,7 +8,6 @@
- #include <linux/scatterlist.h>
- #include <linux/prefetch.h>
- #include <linux/srcu.h>
--#include <linux/rw_hint.h>
+diff --git a/block/bdev.c b/block/bdev.c
+index 738e3c8457e7f..9a59f0c882170 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -1296,6 +1296,11 @@ void bdev_statx(struct path *path, struct kstat *s=
+tat,
+ 		stat->result_mask |=3D STATX_DIOALIGN;
+ 	}
 =20
- struct blk_mq_tags;
- struct blk_flush_queue;
-@@ -156,7 +155,7 @@ struct request {
- 	struct blk_crypto_keyslot *crypt_keyslot;
- #endif
++	if (request_mask & STATX_WRITE_HINT) {
++		stat->write_hint_max =3D bdev_max_write_hints(bdev);
++		stat->result_mask |=3D STATX_WRITE_HINT;
++	}
++
+ 	if (request_mask & STATX_WRITE_ATOMIC && bdev_can_atomic_write(bdev)) {
+ 		struct request_queue *bd_queue =3D bdev->bd_queue;
 =20
--	enum rw_hint write_hint;
-+	unsigned short write_hint;
- 	unsigned short ioprio;
+diff --git a/fs/stat.c b/fs/stat.c
+index 41e598376d7e3..60bcd5c2e2a1d 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -704,6 +704,7 @@ cp_statx(const struct kstat *stat, struct statx __use=
+r *buffer)
+ 	tmp.stx_atomic_write_unit_min =3D stat->atomic_write_unit_min;
+ 	tmp.stx_atomic_write_unit_max =3D stat->atomic_write_unit_max;
+ 	tmp.stx_atomic_write_segments_max =3D stat->atomic_write_segments_max;
++	tmp.stx_write_hint_max =3D stat->write_hint_max;
 =20
- 	enum mq_rq_state state;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index dce7615c35e7e..6737795220e18 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -10,7 +10,6 @@
- #include <linux/bvec.h>
- #include <linux/device.h>
- #include <linux/ktime.h>
--#include <linux/rw_hint.h>
+ 	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
+ }
+diff --git a/include/linux/stat.h b/include/linux/stat.h
+index 3d900c86981c5..48f0f64846a02 100644
+--- a/include/linux/stat.h
++++ b/include/linux/stat.h
+@@ -57,6 +57,7 @@ struct kstat {
+ 	u32		atomic_write_unit_min;
+ 	u32		atomic_write_unit_max;
+ 	u32		atomic_write_segments_max;
++	u32		write_hint_max;
+ };
 =20
- struct bio_set;
- struct bio;
-@@ -219,7 +218,7 @@ struct bio {
- 						 */
- 	unsigned short		bi_flags;	/* BIO_* below */
- 	unsigned short		bi_ioprio;
--	enum rw_hint		bi_write_hint;
-+	unsigned short		bi_write_hint;
- 	blk_status_t		bi_status;
- 	atomic_t		__bi_remaining;
+ /* These definitions are internal to the kernel for now. Mainly used by =
+nfsd. */
+diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+index 887a252864416..10f5622c21113 100644
+--- a/include/uapi/linux/stat.h
++++ b/include/uapi/linux/stat.h
+@@ -132,7 +132,7 @@ struct statx {
+ 	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
+ 	/* 0xb0 */
+ 	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment coun=
+t */
+-	__u32   __spare1[1];
++	__u32   stx_write_hint_max;
+ 	/* 0xb8 */
+ 	__u64	__spare3[9];	/* Spare space for future expansion */
+ 	/* 0x100 */
+@@ -164,6 +164,7 @@ struct statx {
+ #define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_i=
+d */
+ #define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
+ #define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields=
+ */
++#define STATX_WRITE_HINT	0x00020000U	/* Want/got write_hint_max */
+=20
+ #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx=
+ expansion */
 =20
 --=20
 2.43.5
