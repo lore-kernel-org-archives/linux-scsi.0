@@ -1,447 +1,221 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2074.outbound.protection.outlook.com [40.107.117.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57177205E14;
-	Tue, 29 Oct 2024 11:30:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730201459; cv=none; b=cZI9fF5jwE5n5o8vQ2WkWEStAJZ6MC6qa2pArzRWobtZk3Rx5OlgpX0rcki/6JG81JVe8n4MzUjIp5PkjBdNgZseYtl9gUt273tJ7m3mMLXnqREwB8WdoPy+in/v5BdcaJxWWPX+d0x8R6j/lWyFNFJ6qx8HSGILjEHlafMI124=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730201459; c=relaxed/simple;
-	bh=6YG5Qc7BALHom98XDwbF4Z+IBIixgdbWaaLtifLrNVw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kcmAhX68TYccJvuK8FHTt3ATa6rTLhyWGgqyQVK1pD86ISqnmYLfAS59Ch8S41zIh4fOw5Cpa/D373jQIHXCTp/4IVu/55qQVUGEdoRaI9UpeF4y8854G2u/oF7o/3p5UQ0Mz3hQqS7PIDdjB69904WHXEoUc6CYhQuxkqRw8xQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=YpVdRw8D; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5AF205E22
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 12:03:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.117.74
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1730203438; cv=fail; b=pNXXqfuQJVRpll3RC1WiGXpCNS/MJZ5qt9UoeW7llrEfYoFbekGo3RoeMIGN0oXSb8uLXphHZ5fBp0T2z0jYe3zTAwT2ljgzJFpHbF7smTvNTVzmLz82MFQ6zgUrQ/tFPFhFbYQ6dFyx1T+bP93MAjtX6PqTUbs882sunyurGwI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1730203438; c=relaxed/simple;
+	bh=4/XbrRF7OLwzEj8YD3xqqO/ooIVozpJ9rjwDGu7qt6k=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=m3Asy24TSCyEY5eRTOn2uLnnXg1NtZy2lsSom0GMx3+PjJNty4WcyjuBj5V17u2wm4sNI0dDX30l1kIofJzVPS/VuJfi1hQ7mWzo4qomJGqQuCg4CxFMmQKqnVJfW0y7EaCAJiY0xHFzGfT/a/wR2xA+ICrmC5SN9CqjI4kEpBE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=XKkG7ovG; arc=fail smtp.client-ip=40.107.117.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="YpVdRw8D"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49T8gmWF017964;
-	Tue, 29 Oct 2024 11:30:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	mh9y55DnmCN3ZEYZSzJvG0OweooWa5rf9o860xxdZk8=; b=YpVdRw8Du8OTez3g
-	79+s0I53w59Jz9xH2gcqMJObbl0duaWESH7ed/vgkjz71Rvzn4C8juTa55dCIJnn
-	lnAkeSTdk/pqhwl763Piqdk3QdYhsR2b0fohd09IElpAsHhSIV317WzfFzjeo/w7
-	SFlAkuQD0j96Fbpp8jyyJIfNRqFDT89LoxIRlq0P7QSOw7L1MwzzUA48s5BKi+SW
-	xDq8N+v0pum1rRj30cWh7YGA52ypTDoCebod9WkFVRYxkxv3ukMdMmbEQe+Nkw/v
-	ridopWlwxaHT7URpdlHvwGvcA2TN2N94ewj/zv/wZhBLOL0ft7mDbSdaN4nEF7+a
-	QrMi2Q==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42grn50aac-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Oct 2024 11:30:45 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49TBUijM012197
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Oct 2024 11:30:44 GMT
-Received: from hu-rdwivedi-hyd.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 29 Oct 2024 04:30:39 -0700
-From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-To: <manivannan.sadhasivam@linaro.org>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <bvanassche@acm.org>, <robh@kernel.org>,
-        <krzk+dt@kernel.org>, <conor+dt@kernel.org>, <andersson@kernel.org>,
-        <konrad.dybcio@linaro.org>, <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>, <agross@kernel.org>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <quic_narepall@quicinc.com>, <quic_nitirawa@quicinc.com>,
-        Can Guo
-	<quic_cang@quicinc.com>
-Subject: [PATCH V2 3/3] scsi: ufs: qcom: Add support for multiple ICE allocators
-Date: Tue, 29 Oct 2024 17:00:03 +0530
-Message-ID: <20241029113003.18820-4-quic_rdwivedi@quicinc.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20241029113003.18820-1-quic_rdwivedi@quicinc.com>
-References: <20241029113003.18820-1-quic_rdwivedi@quicinc.com>
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="XKkG7ovG"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ZTbz61AdHmEs5D+s0iSnNvaAod3Gd6BVWHsSe3nZtcGBVDi4Wg/RIGxcwlT8OJBOtwatvQ19U6eGSStlPaCzUC18QgycwU4oFtiL65U+X6uTAdXzCkPGCw+rgQ8D92Fq2BirwLYYvnUzviz1F7K7zS+pA/g+l79PsP/nemhym+ivf7Df7O3Z8+lS5Hf3TD+2D+A1UT22BGGMqGMoI/6Qy6K3YW6ZIwCg03aA+Znt0OPsFAMKV5MK7xuNRSzEW/o0/YAZyF0hua0cBjloG9xTF8NwUErFUtf9Pxl/U9ONinDikMENFh/YESPnvgKVWs5QE9fjMIP7Isg0y6l3qRPrXw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4/XbrRF7OLwzEj8YD3xqqO/ooIVozpJ9rjwDGu7qt6k=;
+ b=I8ABriop+4asmqVnhQ200gysaWZ3M5MXIGW7DjkUo2i7IdXzMBVYgv07VOFkFeWahg8gGxL9PI/aRVYEkwy7RdUqv1aSUZ2DVgZaCyEi9mA3KxMNPOM6RKf1eqezfrXtFH3/bdt2nAnVBLMror8bGKBWqKsGxDXuHsMsxRPJs7V2jZQZ9Yh7cOSFdX06yNQ2KT6S+CtxiWpeQyRNMLyUPS+wtpGdUZU9Fs1a0T3KEREeUtCga1EEIzkG7zWOyEgi1IvqjbINOU3XHJUh4jbRBT8sYFMM+HMQx1ltcRDKShxEozIfNoOvulNQtZMzKkQPimysw1p/zO2TFIjqHZtnVw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4/XbrRF7OLwzEj8YD3xqqO/ooIVozpJ9rjwDGu7qt6k=;
+ b=XKkG7ovGHERI7Y6sJN+4KDpu8YXzGhm+ip8B09+cSK4WKebaf8fswZx0M6bufIV2Zxw02WNxZuo4nYTu5tU+83t78eTd7kEL4G3mliqFVSwgtTnj4GZ4cnt8z+HqznZQeSVkW8FcSNM1nMeBxxJjKMrnsvXR9NOOqOBYi2mi2zoKrYojgnsIDAHKNCZxIQorJ2ycWqknE2iZCexnWNRngAWnD3m1Vb7r7A6/fNwTtBRAFrCLRRmQH+xngqg/iirMfOyEQE+PqtZD6iBfGO0X+9ljtaJLvl6dOdUooWJZURvAYyKGeYsaDKhkuQQvN0Hl4viBVAbvvoeSXtvE3JFgNw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from KL1PR06MB6273.apcprd06.prod.outlook.com (2603:1096:820:ec::10)
+ by KL1PR06MB6369.apcprd06.prod.outlook.com (2603:1096:820:e4::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8114.20; Tue, 29 Oct
+ 2024 12:03:52 +0000
+Received: from KL1PR06MB6273.apcprd06.prod.outlook.com
+ ([fe80::9d21:d819:94e4:d09]) by KL1PR06MB6273.apcprd06.prod.outlook.com
+ ([fe80::9d21:d819:94e4:d09%4]) with mapi id 15.20.8114.011; Tue, 29 Oct 2024
+ 12:03:52 +0000
+From: Huan Tang <tanghuan@vivo.com>
+To: huobean@gmail.com
+Cc: beanhuo@micron.com,
+	bvanassche@acm.org,
+	cang@qti.qualcomm.com,
+	linux-scsi@vger.kernel.org,
+	opensource.kernel@vivo.com,
+	richardp@quicinc.com,
+	tanghuan@vivo.com,
+	luhongfei@vivo.com
+Subject: RE: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
+Date: Tue, 29 Oct 2024 20:03:46 +0800
+Message-Id: <20241029120346.591-1-tanghuan@vivo.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
+References: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR06CA0184.apcprd06.prod.outlook.com (2603:1096:4:1::16)
+ To KL1PR06MB6273.apcprd06.prod.outlook.com (2603:1096:820:ec::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: mowCTvR1e9b1K8gvKI-QQdkd4bQvPHuL
-X-Proofpoint-ORIG-GUID: mowCTvR1e9b1K8gvKI-QQdkd4bQvPHuL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
- impostorscore=0 lowpriorityscore=0 priorityscore=1501 mlxlogscore=999
- malwarescore=0 clxscore=1015 bulkscore=0 suspectscore=0 adultscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410290089
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: KL1PR06MB6273:EE_|KL1PR06MB6369:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1b8993bd-34da-42d0-4c65-08dcf811c14f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|52116014|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?IiJrTcAuV/p8bcCxhsmIaIy89az2LAGO+II8HA4uQZHoU0kWHoGfQIYzV5Yk?=
+ =?us-ascii?Q?nbfEhY0WfK96zV4pHlTZ+EIfF8DPw/2Qg1RQKL5y7X6zMhhSML+7wUN8sE4N?=
+ =?us-ascii?Q?Zx2xnAVQTIsOeAXerdKowL7OVxmEhs/sIwDpoQp8t47E+xVepW2p/PKxijqi?=
+ =?us-ascii?Q?0wy7T/lyUHN8zNLo9oBBQOyOQZXujCjG9dyjuuTqET5iLVZIVFWJ1SXxDOb6?=
+ =?us-ascii?Q?4ckAZMIeZQmlhvjR1mGSj6pa3pAQ89KpkKqbjFJ3Vvw5tdA+IU7R5VHDpdzV?=
+ =?us-ascii?Q?BzgPpQvz3IiPpd3zzdkR4WrKaSQU70BJHwUuTvLtmrpBN5EBU95BNyHUceeQ?=
+ =?us-ascii?Q?tmzMWXebAEbCdqIZK73b5i/OVf1/QTSTahAd3VgPJirvHSVFLoAd0an3QzuC?=
+ =?us-ascii?Q?EWcbgCx+y71n+LcxcYMAtcAdM2bKGGo51pa/9QcLUJ8meOH3R2qO7PCiEHyD?=
+ =?us-ascii?Q?TLIu1NLQAxwlI4MCXrIcSgyQKPmbSIOi4pk6Uo1Q5xrklx7W8va5FAi9mFQs?=
+ =?us-ascii?Q?RpmfXbLIa/+z2DSJ5XKADVXiLxTtFnpyajcimYdqHUGaiLOMi7wE673O4lyQ?=
+ =?us-ascii?Q?ZNvWTLcMqt88vB9tNtnOAT+G3QDUN/FQSr5gX0s7/3NyAcJJFRTF7/S0g5TQ?=
+ =?us-ascii?Q?qB+TsN2zUaEkNe5WJ3NiI4EUvHnqak5MUqFqFrOqP3o38VKsvdFrbFAJxG7k?=
+ =?us-ascii?Q?2L7e540mqUaWlCmqIL8Gq/8FHx8Y8gjiNEmWsDoMesuasD817/rE5uFEBjXT?=
+ =?us-ascii?Q?95wCfyQe8+VN5TpSfjFp0J+HpSVF0jMJJDxNjiltEjg2V6sw/ew9pi/QMVik?=
+ =?us-ascii?Q?i3MOFUTjbeF1QrJRh+AgVp0K8bFTI4lEk/a4MhtsmrqCTsbbv9hdW9Wn1p16?=
+ =?us-ascii?Q?jLf+ymxW1NDKf23b8RbDNWI49qPBDZy5YgU/g1+BYCtFL5Vvk9o9BScBkZbx?=
+ =?us-ascii?Q?by0zhumyYPPy00DUHWa8Ih01UWEi3vM08M1zc5hY83/EXZbnIxp3KS/sG+lw?=
+ =?us-ascii?Q?f2+zM8wD4XVkbVuSB4K2sFuDxg/R5MUXW1rIuoQWrJY1B84tSq7q7PJ3db1a?=
+ =?us-ascii?Q?BUcOm1dcbKYO2fJzbw+oP6BVWTxaLYlwTU85W3akPYLzPQFYtKjEr1Dz3zuX?=
+ =?us-ascii?Q?cyYRL//WFbCPb9DFPMFz7Hzl3Sq4wLHSlv/3dE7DujAbcqHJEvUrAe4vOVze?=
+ =?us-ascii?Q?JEc0tF3574S79TUEjOBVwRHinEYNHPtDqeLM5JLkVtrD+PNT+N9S+uLiOCht?=
+ =?us-ascii?Q?vXH1z25/RGgHB8e4JfVMPznY5nJeqya8jMqLtHfoDyQrw8lNd+eiEUz3vNvB?=
+ =?us-ascii?Q?ZfWG/xAgp2vt2ZgrUngbBskgMFWHNLb2DK08Z1oV5zg0wzpZc1iT921UAjSr?=
+ =?us-ascii?Q?Qb6VbYo=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6273.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(52116014)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?evkT0Q6wK+xHApee3g56Cfpd3izrpOBaj0IBj2TgPpwcSUU3svkm9IVXKDtv?=
+ =?us-ascii?Q?cwWnR/fqfU5GozzyHJfzipu/CqcIMEu3vVoLtft3t4RQ/Z2/Eq6rT+4FEJpa?=
+ =?us-ascii?Q?jCzvn1bw1vkAmcp3z7S3+J96TkEkzdhOKINS2Re57poX3qlqdss3r9gG9bh+?=
+ =?us-ascii?Q?o2CFB4bl02BKn0jop/PBWngYC6hXTTkV0fGrL7EJnYmBmm75GsnQBBQSNRT8?=
+ =?us-ascii?Q?epuBxw97RlPbPyDeDdBOIweVI1jDKfJyp1Ci0j48nONhFv6+yDUSqYIrdt32?=
+ =?us-ascii?Q?TdcILI5juxRGas2eRwCaO7CHLQO0WqSC6u2aq/myH6c76iI0fI9gbWAGnZGH?=
+ =?us-ascii?Q?wraOLhjrxfW2RLmi3pyILMp5LSuI8aGQ4v4i9njxNaFdCVBxOqXhYL9FZZyC?=
+ =?us-ascii?Q?lUOL9FG77NlIULuYOKcuPja5MKtWFMRaFam84Vr6I71wMJLkJ6HDGzAgIPIo?=
+ =?us-ascii?Q?2WKV7m5qSpdJ78HvMOD9n4u4vkorZ13w9rP8i8nVlAkif8p/PtnfvMVtpjG1?=
+ =?us-ascii?Q?Or4vl59FvxBszORfHs16aPIYIdyPa8PRHzmDTTQFkqRkKPspMW2qHVUlDHEO?=
+ =?us-ascii?Q?X+Ub/ehuUrG8BYFdILaKzeHXx8yfWVzleqiZcEYYaNeBjHCVrzwmbHrZbx8H?=
+ =?us-ascii?Q?tTtzOOGhC7sqDduCDxA3eS7Y/AlG9oIHJHS0YwoN5T0KKj/eAvgFqh1vOctg?=
+ =?us-ascii?Q?6uCQ7rAuc8USepn/FE333v4WepeJwSzsr6FXWx+U3+QrtkBVEQKzAAi1YvE/?=
+ =?us-ascii?Q?k94DOY0utV6XPSaQD42DiXso2wYDjJ1Sl5b7YAW0ecxRx/2sNHJwOdnVMsBc?=
+ =?us-ascii?Q?KJ7iaqwYG9bpLWcGSTVoLVHyFPFwWcQB6UApn0Q8vYAgzFJnQ4F055LMCMxU?=
+ =?us-ascii?Q?fuBj0wr2m7fc9xt4FujBab6+F1ugKNfLpNkCDV1k6rrALPXHIUWDij7szzdz?=
+ =?us-ascii?Q?STNuxYGqU0eayzJeuXxkvCiYFClxAJ5n8ehCqZ/e+0YVi+/tqim4F3sr66N9?=
+ =?us-ascii?Q?4ggC3PLSaZYRV3QfOdJvJb2Tk2mgmRuW5YraX/ByZhQ0KDTwtmFAs67CJDiI?=
+ =?us-ascii?Q?PcgXyQSL9ArEoVcxjanzI3BhTD4zQit9ZHsmlEdDc0TVlf2Ma+osBrak2Mza?=
+ =?us-ascii?Q?0qyKV8doDCtJoZTFjW7EdR6ChzBqYTyO44Ei+uHxmXxPDDu3ToEaKPcjHvgi?=
+ =?us-ascii?Q?51V38g58crJqglcz3d9NtnOsseOZ5d2CKvBk3KXOYrOcTxPWPk95yjPfmmEj?=
+ =?us-ascii?Q?jz1GOIAw+UYj7kQUZrTsG7frJStBSdIn9V82aUNzyI0fbQStGHSY0fXmH8aB?=
+ =?us-ascii?Q?X0EcI30C1jxgAcVgvNCAjHucXbTkjRYcpgCICPNQGmVkdWiaTLPIPLpMiqGY?=
+ =?us-ascii?Q?mPGqXJi5wdpJ/WexxYR7oQEBcL9/H0WcCz6YCPoAGpBMuYZIfz2cS24rbRbf?=
+ =?us-ascii?Q?5rXvt77xlKWXWobhzqeyOUkPkcm6mOoFbATcnnREc9h5FOxQY69YzmZQlsJ4?=
+ =?us-ascii?Q?N7Le8GfV5Iw4FFMIaGAYB8SGbyTRoKmO3LoJCLHHrlq2MdCloLsYm1zYUWOg?=
+ =?us-ascii?Q?pzBoW0hsX7sJWDPM04CdgweSMfJ2iCZVufZQqx/t?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1b8993bd-34da-42d0-4c65-08dcf811c14f
+X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6273.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Oct 2024 12:03:52.2936
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: EyVe4vIDR5jyQuiH4afV0I5A2I+Wc2QwNXwpS/0HpL9V/3pKsAdxyYO5vY+JwHUNDQ4+27L0gu/kdCW0cAJmRQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR06MB6369
 
-Add support for ICE allocators for Qualcomm UFS V5.0 and above, which
-uses a pool of crypto cores for TX stream (UFS Write – Encryption)
-and RX stream (UFS Read – Decryption).
-
-Using these allocators, crypto cores can be dynamically allocated
-to either RX stream or TX stream based on allocator selected.
-Qualcomm UFS controller supports three ICE allocators:
-Floor based allocator, Static allocator and Instantaneous allocator
-to share crypto cores between TX and RX stream.
-
-Floor Based allocator is selected by default after power On or Reset.
-
-Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 228 ++++++++++++++++++++++++++++++++++++
- drivers/ufs/host/ufs-qcom.h |  38 +++++-
- 2 files changed, 265 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 810e637047d0..27e71f9ce31e 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -105,6 +105,213 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
- }
- 
- #ifdef CONFIG_SCSI_UFS_CRYPTO
-+/*
-+ * There're 10 sets of settings for floor-based allocations.
-+ */
-+static struct ufs_qcom_floor_based_config floor_based_config[] = {
-+	{"G0", {5, 12, 0, 0, 32, 0}},
-+	{"G1", {12, 5, 32, 0, 0, 0}},
-+	{"G2", {6, 11, 4, 1, 32, 1}},
-+	{"G3", {6, 11, 7, 1, 32, 1}},
-+	{"G4", {7, 10, 11, 1, 32, 1}},
-+	{"G5", {7, 10, 14, 1, 32, 1}},
-+	{"G6", {8, 9, 18, 1, 32, 1}},
-+	{"G7", {9, 8, 21, 1, 32, 1}},
-+	{"G8", {10, 7, 24, 1, 32, 1}},
-+	{"G9", {10, 7, 32, 1, 32, 1}},
-+};
-+
-+static inline void __get_floor_based_grp_params(unsigned int *val, int *c, int *t)
-+{
-+	*c = ((val[0] << 8) | val[1] | (1 << 31));
-+	*t = ((val[2] << 24) | (val[3] << 16) | (val[4] << 8) | val[5]);
-+}
-+
-+static inline void get_floor_based_grp_params(unsigned int group, int *core, int *task)
-+{
-+	struct ufs_qcom_floor_based_config *p = &floor_based_config[group];
-+
-+	 __get_floor_based_grp_params(p->val, core, task);
-+}
-+
-+/**
-+ * ufs_qcom_ice_config_static_alloc - Static ICE allocator
-+ *
-+ * @hba: host controller instance
-+ * Return: zero for success and non-zero in case of a failure.
-+ */
-+static int ufs_qcom_ice_config_static_alloc(struct ufs_hba *hba)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	unsigned int val, rx_aes;
-+	unsigned int num_aes_cores;
-+	int ret;
-+
-+	ret = of_property_read_u32(host->ice_conf, "rx-alloc-percent", &val);
-+	if (ret)
-+		return ret;
-+
-+	num_aes_cores = ufshcd_readl(hba, REG_UFS_MEM_ICE_NUM_AES_CORES);
-+	ufshcd_writel(hba, STATIC_ALLOC, REG_UFS_MEM_ICE_CONFIG);
-+
-+	/*
-+	 * DTS specifies the percent allocation to rx stream
-+	 * Calculation -
-+	 *  Num Tx stream = N_TOT - (N_TOT * percent of rx stream allocation)
-+	 */
-+	rx_aes = DIV_ROUND_CLOSEST(num_aes_cores * val, 100);
-+	val = rx_aes | ((num_aes_cores - rx_aes) << 8);
-+	ufshcd_writel(hba, val, REG_UFS_MEM_ICE_STATIC_ALLOC_NUM_CORE);
-+
-+	return 0;
-+}
-+
-+/**
-+ * ufs_qcom_ice_config_floor_based - Floor based ICE allocator
-+ *
-+ * @hba: host controller instance
-+ * Return: zero for success and non-zero in case of a failure.
-+ */
-+static int ufs_qcom_ice_config_floor_based(struct ufs_hba *hba)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	unsigned int reg = REG_UFS_MEM_ICE_FLOOR_BASED_NUM_CORE_0;
-+	/* 6 values for each group, refer struct ufs_qcom_floor_based_config */
-+	unsigned int override_val[ICE_FLOOR_BASED_NUM_PARAMS];
-+	char name[8] = {0};
-+	int i, ret;
-+
-+	ufshcd_writel(hba, FLOOR_BASED, REG_UFS_MEM_ICE_CONFIG);
-+	for (i = 0; i < ARRAY_SIZE(floor_based_config); i++) {
-+		int core = 0, task = 0;
-+
-+		if (host->ice_conf) {
-+			snprintf(name, sizeof(name), "g%d", i);
-+			ret = of_property_read_variable_u32_array(host->ice_conf,
-+								  name,
-+								  override_val,
-+								  ICE_FLOOR_BASED_NUM_PARAMS,
-+								  ICE_FLOOR_BASED_NUM_PARAMS);
-+			/* Some/All parameters may be overwritten */
-+			if (ret > 0)
-+				__get_floor_based_grp_params(override_val, &core,
-+						      &task);
-+			else
-+				get_floor_based_grp_params(i, &core, &task);
-+		} else {
-+			get_floor_based_grp_params(i, &core, &task);
-+		}
-+
-+		/* Num Core and Num task are contiguous & configured for a group together */
-+		ufshcd_writel(hba, core, reg);
-+		reg += 4;
-+		ufshcd_writel(hba, task, reg);
-+		reg += 4;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * ufs_qcom_ice_config_instantaneous - Instantaneous ICE allocator
-+ *
-+ * @hba: host controller instance
-+ * Return: zero for success and non-zero in case of a failure.
-+ */
-+static int ufs_qcom_ice_config_instantaneous(struct ufs_hba *hba)
-+{
-+	unsigned int val[4];
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	unsigned int config;
-+	int ret;
-+
-+	ret = of_property_read_variable_u32_array(host->ice_conf, "num-core", val,
-+						  4, 4);
-+	if (ret < 0)
-+		return ret;
-+
-+	config = val[0] | (val[1] << 8) | (val[2] << 16) | (val[3] << 24);
-+
-+	ufshcd_writel(hba, INSTANTANEOUS, REG_UFS_MEM_ICE_CONFIG);
-+	ufshcd_writel(hba, config, REG_UFS_MEM_ICE_INSTANTANEOUS_NUM_CORE);
-+
-+	return 0;
-+}
-+
-+static int ufs_qcom_parse_ice_allocator(struct ufs_hba *hba)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	struct device_node *np;
-+	struct device_node *ice_np;
-+	const char *allocator_name;
-+	int ret;
-+
-+	np = hba->dev->of_node;
-+	if (!np)
-+		return -ENOENT;
-+
-+	ice_np = of_get_next_available_child(np, NULL);
-+	if (!ice_np)
-+		return -ENOENT;
-+
-+	/* Only 1 config can be enabled, pick the first */
-+	host->ice_conf = of_get_next_available_child(ice_np, NULL);
-+	if (!host->ice_conf) {
-+		/* No overrides, use floor based as default */
-+		host->chosen_ice_allocator = FLOOR_BASED;
-+		dev_info(hba->dev, "Resort to default ice floor based ice config\n");
-+		return 0;
-+	}
-+
-+	ret = of_property_read_string(host->ice_conf, "ice-allocator-name", &allocator_name);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (!strcmp(allocator_name, "static-alloc"))
-+		host->chosen_ice_allocator = STATIC_ALLOC;
-+	else if (!strcmp(allocator_name, "floor-based"))
-+		host->chosen_ice_allocator = FLOOR_BASED;
-+	else if (!strcmp(allocator_name, "instantaneous"))
-+		host->chosen_ice_allocator = INSTANTANEOUS;
-+	else {
-+		dev_err(hba->dev, "Failed to find a valid ice allocator\n");
-+		ret = -ENODATA;
-+	}
-+
-+	return ret;
-+}
-+
-+static int ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
-+{
-+	if (!is_ice_config_supported(host))
-+		return 0;
-+
-+	switch (host->chosen_ice_allocator) {
-+	case STATIC_ALLOC:
-+		return ufs_qcom_ice_config_static_alloc(host->hba);
-+	case FLOOR_BASED:
-+		return ufs_qcom_ice_config_floor_based(host->hba);
-+	case INSTANTANEOUS:
-+		return ufs_qcom_ice_config_instantaneous(host->hba);
-+	}
-+
-+	return -EINVAL;
-+}
-+
-+static int ufs_qcom_ice_config_init(struct ufs_qcom_host *host)
-+{
-+	struct ufs_hba *hba = host->hba;
-+	int ret;
-+
-+	if (!is_ice_config_supported(host))
-+		return 0;
-+
-+	ret = ufs_qcom_parse_ice_allocator(hba);
-+	if (!ret)
-+		dev_dbg(hba->dev, "ICE allocator initialization success!!");
-+
-+	return ret;
-+}
- 
- static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
- {
-@@ -117,6 +324,7 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 	struct ufs_hba *hba = host->hba;
- 	struct device *dev = hba->dev;
- 	struct qcom_ice *ice;
-+	int ret;
- 
- 	ice = of_qcom_ice_get(dev);
- 	if (ice == ERR_PTR(-EOPNOTSUPP)) {
-@@ -130,6 +338,10 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 	host->ice = ice;
- 	hba->caps |= UFSHCD_CAP_CRYPTO;
- 
-+	ret = ufs_qcom_ice_config_init(host);
-+	if (ret)
-+		dev_info(dev, "Continue with default ice configuration\n");
-+
- 	return 0;
- }
- 
-@@ -196,6 +408,12 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
- {
- 	return 0;
- }
-+
-+static int ufs_qcom_config_ice(struct ufs_qcom_host *host)
-+{
-+	return 0;
-+}
-+
- #endif
- 
- static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
-@@ -435,6 +653,11 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
- 		err = ufs_qcom_enable_lane_clks(host);
- 		break;
- 	case POST_CHANGE:
-+		err = ufs_qcom_config_ice_allocator(host);
-+		if (err) {
-+			dev_err(hba->dev, "failed to configure ice, ret=%d\n", err);
-+			break;
-+		}
- 		/* check if UFS PHY moved from DISABLED to HIBERN8 */
- 		err = ufs_qcom_check_hibern8(hba);
- 		ufs_qcom_enable_hw_clk_gating(hba);
-@@ -914,12 +1137,17 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
- 
- static void ufs_qcom_set_caps(struct ufs_hba *hba)
- {
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
- 	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
- 	hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
- 	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
- 	hba->caps |= UFSHCD_CAP_WB_EN;
- 	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
- 	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-+
-+	if (host->hw_ver.major >= 0x5)
-+		host->caps |= UFS_QCOM_CAP_ICE_CONFIG;
- }
- 
- /**
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index b9de170983c9..7a462556b0c0 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -195,8 +195,11 @@ struct ufs_qcom_host {
- 
- #ifdef CONFIG_SCSI_UFS_CRYPTO
- 	struct qcom_ice *ice;
-+	struct device_node *ice_conf;
-+	int chosen_ice_allocator;
- #endif
--
-+	#define UFS_QCOM_CAP_ICE_CONFIG BIT(4)
-+	u32 caps;
- 	void __iomem *dev_ref_clk_ctrl_mmio;
- 	bool is_dev_ref_clk_enabled;
- 	struct ufs_hw_version hw_ver;
-@@ -226,6 +229,39 @@ ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
- 	return UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(reg);
- };
- 
-+#ifdef CONFIG_SCSI_UFS_CRYPTO
-+static inline bool is_ice_config_supported(struct ufs_qcom_host *host)
-+{
-+	return (host->caps & UFS_QCOM_CAP_ICE_CONFIG);
-+}
-+
-+/* Ice  Allocator Selection */
-+#define STATIC_ALLOC 0x0
-+#define FLOOR_BASED BIT(0)
-+#define INSTANTANEOUS BIT(1)
-+
-+enum {
-+	REG_UFS_MEM_ICE_NUM_AES_CORES = 0x2608,
-+	REG_UFS_MEM_ICE_CONFIG = 0x260C,
-+	REG_UFS_MEM_ICE_STATIC_ALLOC_NUM_CORE = 0x2610,
-+	REG_UFS_MEM_ICE_FLOOR_BASED_NUM_CORE_0 = 0x2614,
-+	REG_UFS_MEM_ICE_INSTANTANEOUS_NUM_CORE = 0x2664,
-+};
-+
-+#define ICE_FLOOR_BASED_NAME_LEN 3
-+#define ICE_FLOOR_BASED_NUM_PARAMS 6
-+
-+struct ufs_qcom_floor_based_config {
-+	/* group names */
-+	char name[ICE_FLOOR_BASED_NAME_LEN];
-+	/*
-+	 * num_core_tx_stream, num_core_rx_stream, num_wr_task_max,
-+	 * num_wr_task_min, num_rd_task_max, num_rd_task_min
-+	 */
-+	unsigned int val[ICE_FLOOR_BASED_NUM_PARAMS];
-+};
-+#endif
-+
- #define ufs_qcom_is_link_off(hba) ufshcd_is_link_off(hba)
- #define ufs_qcom_is_link_active(hba) ufshcd_is_link_active(hba)
- #define ufs_qcom_is_link_hibern8(hba) ufshcd_is_link_hibern8(hba)
--- 
-2.46.0
-
+> > > On 10/28/24 1:04 PM, Bean Huo wrote:=0D
+> > > > Even though I don't think it's necessary to enable a Sysfs node =0D
+> > > > entry for this configuration.=0D
+> > >=0D
+> > > Right, a motivation of why this functionality should be available in =
+=0D
+> > > sysfs is missing. An explanation should be added in the patch =0D
+> > > description.=0D
+> > >=0D
+> > > Thanks,=0D
+> > >=0D
+> > > Bart.=0D
+> >=0D
+> > Hi Bean & Bart,=0D
+> >=0D
+> > Motivation: Through the sysfs upper layer code, the WB resize function =
+=0D
+> > can be used in some scenarios, or related information can be obtained =
+=0D
+> > indirectly to implement different strategies; What is your suggestion? =
+=0D
+> > sysfs? exception event? or?=0D
+> >=0D
+> > Thanks=0D
+> > Huan=0D
+>=0D
+> hey Huan,=0D
+> =0D
+> What specific scenarios would require enabling a sysfs node to control th=
+is function? Dynamically=0D
+> adjusting the WriteBooster (WB) size on the fly doesn=E2=80=99t seem idea=
+l to me. From my perspective, the main=0D
+> case for this feature is if the OEM didn=E2=80=99t correctly define or se=
+t the WriteBooster Buffer size during=0D
+> manufacturing. Even then, adjusting the WB buffer size wouldn=E2=80=99t b=
+e a frequent need. If JEDEC has=0D
+> found a reason for this feature to be accepted, isn=E2=80=99t there alrea=
+dy an interface available to configure it?=0D
+> Why would we need a duplicate interface for the same purpose?=0D
+> =0D
+> Kind regards,=0D
+> Bean=0D
+=0D
+Hi Bean,=0D
+=0D
+Thanks for your reply=0D
+=0D
+The scenario I'm thinking of right now=EF=BC=9A when the old phone transfer=
+s a large=0D
+amount of data to the new phone's APP (vivo calls it easyshare APP), we can=
+ =0D
+explicitly resize the WB buffer.=0D
+=0D
+Could you please explain this sentence(If JEDEC has found a reason for this=
+ feature=0D
+to be accepted, isn=E2=80=99t there already an interface available to confi=
+gure it? Why=0D
+would we need a duplicate interface for the same purpose?) more simply so I=
+ =0D
+can understand it better?=0D
+=0D
+JEDEC draft comments:=0D
+The WriteBooster buffer size can be resized in preserve user space=0D
+configuration mode of WriteBooster by device implicitly. However, the=0D
+disadvantage of preserve user space mode of WriteBooster configuration is=0D
+that there could be performance degradation when the physical storage=0D
+used for the WriteBooster Buffer is returned to user space, since the devic=
+e=0D
+has to make internal data structure adjustments as well as flush the=0D
+WriteBooster Buffer data. To minimize this disadvantage, the WriteBooster=0D
+Resize command is provided. The device only provides hint information to=0D
+the host whether the WriteBooster Buffer needs to be resized or not, and=0D
+the host can execute the WriteBooster Resize command based on this hint=0D
+information when there is no user IOs=0D
+=0D
+Thanks=0D
+Huan=
