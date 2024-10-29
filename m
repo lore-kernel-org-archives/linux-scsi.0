@@ -1,144 +1,151 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD961E2301;
-	Tue, 29 Oct 2024 12:47:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E96C2022D6
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 13:18:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730206032; cv=none; b=Htw3mRRiISuXSwg7V7NCduCp+1HC9riiJU4jO7Ao7nUs9AVPF/rVgtsU16+0yGqx2rQLJriz8SfCeH6cQoX7iDlJaAAUudCtZx1N5EhreyOQXDqaPmuaSjHga8YyDQjlpv4cndb9jajmhU3uO7EU4Sg9qR+lPgzc6A29Dg9kbW4=
+	t=1730207939; cv=none; b=LwgO68dk72zJewF2rfvKu4vGOA5z9SAERsaGHaiGwLX3V5yXwxrEq+xwQaQNlaOUECVnpF2/hIDFa7iB08LqQUMdKheOIawAE0KLVsDpo0UmGm8Inwpj8YtKKp/baLsUnRb+2/K3FjmKmH0RDXP8mlHvph3I5YcTehFmW7V7NyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730206032; c=relaxed/simple;
-	bh=PKIGvIkqahKGpUaSw28+IKqMSUuUV0Hhi1F1HBqO43A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ViWHb2sVD8TAsOvIovL1SwzGc39okDvQ8ZtjOD2OOia+lQthWNq5rqn/E+DuUxSeJo+QsVbAblwE+M+qlUGXr5Y+USaTqAAE5VjzPSqTizbQvvlhyAVGyFZc4l1HaXArjqqI3zOoKgztw/lv9yDGuN/6RT7HDXjr0uj7tBpxFbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k2fJjsQ9; arc=none smtp.client-ip=209.85.218.47
+	s=arc-20240116; t=1730207939; c=relaxed/simple;
+	bh=W7nIJhe/lijpZ8Dh1LY8cz7gOpHnMfCWaziaEGpuacU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=BxuS9ipwhgVEV2fJ1sKrxG9w1ecJomwQ5Fdy4QvfS09po171Gwssp1wdUxX5eAqSIXTepoczO4Dvz6w7PRd3vEcYSq/Oi8XHprBtH2QqHf4uneFUpCcbhRSWSSl8aTPXaspF/K9ZDiBQMAnO5YIvv/K5uOetTj9q27kpuKP9h7Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mbeuTd2q; arc=none smtp.client-ip=209.85.218.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k2fJjsQ9"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-a99fa009adcso366944966b.0;
-        Tue, 29 Oct 2024 05:47:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mbeuTd2q"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a99f629a7aaso865766866b.1
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 06:18:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730206028; x=1730810828; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UXEU0K+HVbTbvp27dG/5AsENh9x1wq4XCrDbezUDB6I=;
-        b=k2fJjsQ9L4LWoM4PL7yZwKPUFTf4+W2wupzWIb/ZoMnu5UZ6K74DWIitK8BZtN2aP8
-         DDNTJXha54bcGgTf340F5t8zZubgVRbn9YoT7w8QP9S2wLJ2Im4uzFvlFbKMzUe1xWar
-         Od+glT5qcwGsZT/tiOHoFiADygKJuHeKrGUgSgtC4DJBocXoUy3U+depaBXSJzny7DG7
-         zmZEv/gGlnemfZ/MsuP+6rOMWGdAkOXEHnbeFzJDk3XMT68oEwa4j7qr7JepNdgFyeNH
-         pHm/8j8W+pvMUY7y4Kmop6F43R72fSEzQTnxZJxpKxWd/RXtdao/Hup6PLEjolxQMTmL
-         lBag==
+        d=gmail.com; s=20230601; t=1730207936; x=1730812736; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=W7nIJhe/lijpZ8Dh1LY8cz7gOpHnMfCWaziaEGpuacU=;
+        b=mbeuTd2qFNFQTs0xzZ/7NPgvOE1LZUkTgfgkE6L2ZMY2qCTc3l6GIJG6b8h243a+Ju
+         BocRxoZO3KwFaYnYVDcpsrSujOJbVzEM37B/IciZLq/ada3oGmSe/Fh1G7u8PWCSTU6Z
+         PMNek1JyAhFBLZwas7uUTEpq5gmRQvrpmC+Nx48aLrQy/WJcFWlnZOQfc6zG4cKdDiM8
+         UIdJ1RgTHn4EQ0qX2nMUwryq3oWhjxT6a51eGC+30IkFRnoK7xlH0L63xfIgjl2ctKQl
+         V+Rh7xsc6SFoCkxs/jqnyQlE9VWLUsuj78OGpC6UKW2moIqBndz+ubqOsVisJppunsoa
+         jqBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730206028; x=1730810828;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UXEU0K+HVbTbvp27dG/5AsENh9x1wq4XCrDbezUDB6I=;
-        b=rviQQKppHH/q6D3rsJ3vD8Np+vgz2bCrdLwnEQl/LlIR9/bPdWRCbtA9ZDGL2IK0t2
-         tiSZYGJdhOSYXY5vQUw9rIYdxMZLkxn+XN/PZyyTsqkY9sF1rL33Oiq1LTuPqkTdX3BY
-         Hqe/blm+SZOwZXLH0+fg4Vz2HJZo5sGw4VJZlABXaLuKqEZU1ZA23X6cdclIsGPVWmsk
-         ORZ4tdccfDENZ+zKdw4yRxOKyKv6SpoKF5C8JTBhQt3DyIPY+x2HM3gxYpfR2thEE7dc
-         BVVyYlZxx6rea6kFiX4Av5Q0l7+QKXYYPN5mz/ZVykw1culcXXu7hdxYeOPM+4Dj1VcQ
-         OttQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU4T+teNhJA7m3FeIWpz+R+WpzLRD8r34EjoVvYaLT38vjjGLnkYCJrGrHB+v5ePOoRxVW5P96WBQ==@vger.kernel.org, AJvYcCWGvH0a9OXs+3uIB+qHp3gHBZVvMoN8AAUwblU8SP5uyZT/S1n5ExT9rKMGbR/MT4BvHbmVKKpsi0kOxQ==@vger.kernel.org, AJvYcCWm/VatUyQD8aFm4dJhDhJa/M8GQFyebKNBVJiK0NUqGhN6jp9r21AwNSfDQ63zDvyb7p6hSWEP605agAhPfw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwlId72CxpIhoabaIILcShUBBsqAxjoS56fAdZ+7761LjCDgq9v
-	ZQjnscx/nC8fQ5Ex40lgY/iEISaSVeCcgfhnMCFdM6E9629d1t8RSqP+vr7kORiMw0eyjFqueDx
-	5nOdcHWiUTJ76rJOEXoZ77Y41tQ==
-X-Google-Smtp-Source: AGHT+IH24jDXrN1/rLUODZ7dXWnQNAXgArrAqn9CD/XkQZPaaSbgd3HS6kL07anh4QVcaAdjYqc8XepfsP8tIRg++xU=
-X-Received: by 2002:a05:6402:348f:b0:5c9:34b4:69a8 with SMTP id
- 4fb4d7f45d1cf-5cbbf889850mr13754716a12.6.1730206028117; Tue, 29 Oct 2024
- 05:47:08 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1730207936; x=1730812736;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=W7nIJhe/lijpZ8Dh1LY8cz7gOpHnMfCWaziaEGpuacU=;
+        b=DO5plZ1NpJstZriXWGNl4MfHy+Pjit/P482dzICd19EkfYvd583lENb9iaM4ZZKTHM
+         x0K//xnakOxDIl4a9WXKJ/wLTFqn8kpYCqRmX3yiAfvoXnhjT5fxxmCd40V6e9YVx4d0
+         8uKvqZVkLNZ+vdsDYoesGwkwYlsdrdTTJCKuK+Qcf0a4ZoIyO2G22OXd7/JbgqiBAPVc
+         aasycrHl/zUFLUlnMW/ZDVRhC13XTIuv51W8VLv9KINnUcvBRv3fbBAAVkKgzPyYNZ3q
+         knL3My3pKlqGg+kkPWziLYzhS3zFUL4+ug6aW1E6B3xLQonYBpV8MbJRuzFna35MRcR+
+         lT1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCV1saYU9mdD6f99d+iAwSVyije5zBZehfZPV4R7XT78ADSuQQs2SlrKowwZ3kjhbMgTqR97k743LG5c@vger.kernel.org
+X-Gm-Message-State: AOJu0YxGskp2qH3DyUkwkJr7hFPUv6zqZexKE68l49xabv9EzQw/9GDi
+	guYCC2oSy+g4HBU89EcI3toMUuh5wu6RnPZrmx0N1CdMSpZlzFWn
+X-Google-Smtp-Source: AGHT+IEhW68YHKzPbeB18Rp83w8YTAznVIggag6dAZ7MM3JbXc27MbvSbeEnUobvcd0X4fetv808Pg==
+X-Received: by 2002:a17:907:7f89:b0:a99:3db2:eb00 with SMTP id a640c23a62f3a-a9e2b0138bbmr206161166b.28.1730207935309;
+        Tue, 29 Oct 2024 06:18:55 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9b1f2982d4sm475158266b.120.2024.10.29.06.18.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Oct 2024 06:18:54 -0700 (PDT)
+Message-ID: <04ebe6420034ca3d791ea3cac10ebd61970a7093.camel@gmail.com>
+Subject: Re: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
+From: Bean Huo <huobean@gmail.com>
+To: Huan Tang <tanghuan@vivo.com>
+Cc: beanhuo@micron.com, bvanassche@acm.org, cang@qti.qualcomm.com, 
+ linux-scsi@vger.kernel.org, opensource.kernel@vivo.com,
+ richardp@quicinc.com,  luhongfei@vivo.com
+Date: Tue, 29 Oct 2024 14:18:53 +0100
+In-Reply-To: <20241029120346.591-1-tanghuan@vivo.com>
+References: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
+	 <20241029120346.591-1-tanghuan@vivo.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241025213645.3464331-1-kbusch@meta.com> <20241025213645.3464331-6-kbusch@meta.com>
-In-Reply-To: <20241025213645.3464331-6-kbusch@meta.com>
-From: Anuj gupta <anuj1072538@gmail.com>
-Date: Tue, 29 Oct 2024 18:16:29 +0530
-Message-ID: <CACzX3AvZ=+cBaoZ9oKW3osA1WiWm5H5b7+wWAouLryK4-ymYfA@mail.gmail.com>
-Subject: Re: [PATCHv9 5/7] io_uring: enable per-io hinting capability
-To: Keith Busch <kbusch@meta.com>
-Cc: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, hch@lst.de, joshi.k@samsung.com, 
-	javier.gonz@samsung.com, bvanassche@acm.org, Hannes Reinecke <hare@suse.de>, 
-	Nitesh Shetty <nj.shetty@samsung.com>, Keith Busch <kbusch@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, Oct 26, 2024 at 3:13=E2=80=AFAM Keith Busch <kbusch@meta.com> wrote=
-:
->
-> From: Kanchan Joshi <joshi.k@samsung.com>
->
-> With F_SET_RW_HINT fcntl, user can set a hint on the file inode, and
-> all the subsequent writes on the file pass that hint value down. This
-> can be limiting for block device as all the writes will be tagged with
-> only one lifetime hint value. Concurrent writes (with different hint
-> values) are hard to manage. Per-IO hinting solves that problem.
->
-> Allow userspace to pass additional metadata in the SQE.
->
->         __u16 write_hint;
->
-> If the hint is provided, filesystems may optionally use it. A filesytem
-> may ignore this field if it does not support per-io hints, or if the
-> value is invalid for its backing storage. Just like the inode hints,
-> requesting values that are not supported by the hardware are not an
-> error.
->
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
-> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-> Signed-off-by: Keith Busch <kbusch@kernel.org>
-> ---
->  include/uapi/linux/io_uring.h | 4 ++++
->  io_uring/rw.c                 | 3 ++-
->  2 files changed, 6 insertions(+), 1 deletion(-)
->
-> diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.=
-h
-> index 60b9c98595faf..8cdcc461d464c 100644
-> --- a/include/uapi/linux/io_uring.h
-> +++ b/include/uapi/linux/io_uring.h
-> @@ -92,6 +92,10 @@ struct io_uring_sqe {
->                         __u16   addr_len;
->                         __u16   __pad3[1];
->                 };
-> +               struct {
-> +                       __u16   write_hint;
-> +                       __u16   __pad4[1];
-> +               };
->         };
->         union {
->                 struct {
-> diff --git a/io_uring/rw.c b/io_uring/rw.c
-> index 8080ffd6d5712..5a1231bfecc3a 100644
-> --- a/io_uring/rw.c
-> +++ b/io_uring/rw.c
-> @@ -279,7 +279,8 @@ static int io_prep_rw(struct io_kiocb *req, const str=
-uct io_uring_sqe *sqe,
->                 rw->kiocb.ki_ioprio =3D get_current_ioprio();
->         }
->         rw->kiocb.dio_complete =3D NULL;
-> -
-> +       if (ddir =3D=3D ITER_SOURCE)
-> +               rw->kiocb.ki_write_hint =3D READ_ONCE(sqe->write_hint);
->         rw->addr =3D READ_ONCE(sqe->addr);
->         rw->len =3D READ_ONCE(sqe->len);
->         rw->flags =3D READ_ONCE(sqe->rw_flags);
-> --
-> 2.43.5
->
+On Tue, 2024-10-29 at 20:03 +0800, Huan Tang wrote:
+> > > > On 10/28/24 1:04 PM, Bean Huo wrote:
+> > > > > Even though I don't think it's necessary to enable a Sysfs
+> > > > > node=20
+> > > > > entry for this configuration.
+> > > >=20
+> > > > Right, a motivation of why this functionality should be
+> > > > available in=20
+> > > > sysfs is missing. An explanation should be added in the patch=20
+> > > > description.
+> > > >=20
+> > > > Thanks,
+> > > >=20
+> > > > Bart.
+> > >=20
+> > > Hi Bean & Bart,
+> > >=20
+> > > Motivation: Through the sysfs upper layer code, the WB resize
+> > > function=20
+> > > can be used in some scenarios, or related information can be
+> > > obtained=20
+> > > indirectly to implement different strategies; What is your
+> > > suggestion?=20
+> > > sysfs? exception event? or?
+> > >=20
+> > > Thanks
+> > > Huan
+> >=20
+> > hey Huan,
+> >=20
+> > What specific scenarios would require enabling a sysfs node to
+> > control this function? Dynamically
+> > adjusting the WriteBooster (WB) size on the fly doesn=E2=80=99t seem id=
+eal
+> > to me. From my perspective, the main
+> > case for this feature is if the OEM didn=E2=80=99t correctly define or =
+set
+> > the WriteBooster Buffer size during
+> > manufacturing. Even then, adjusting the WB buffer size wouldn=E2=80=99t=
+ be
+> > a frequent need. If JEDEC has
+> > found a reason for this feature to be accepted, isn=E2=80=99t there alr=
+eady
+> > an interface available to configure it?
+> > Why would we need a duplicate interface for the same purpose?
+> >=20
+> > Kind regards,
+> > Bean
+>=20
+> Hi Bean,
+>=20
+> Thanks for your reply
+>=20
+> The scenario I'm thinking of right now=EF=BC=9A when the old phone transf=
+ers
+> a large
+> amount of data to the new phone's APP (vivo calls it easyshare APP),
+> we can=20
+> explicitly resize the WB buffer.
+> Could you please explain this sentence(If JEDEC has found a reason
+> for this feature
+> to be accepted, isn=E2=80=99t there already an interface available to
+> configure it? Why
+> would we need a duplicate interface for the same purpose?) more
+> simply so I=20
+> can understand it better?
 
-Since this patch adds a couple of new fields, it makes sense to add
-BUILD_BUG_ON() checks in io_uring_init for these fields to assert the
-layout of struct io_uring_sqe. And probably a zero check for pad4 in
-io_prep_rw.
---
-Anuj Gupta
+
+I see, easyshare is a case, but we have interface which allows user to
+configure UFS attributes, such as ufs-bsg, you can use this interface
+to achieve this in your application easily, right?
+
+
+Kind regares,
+Bean
+
