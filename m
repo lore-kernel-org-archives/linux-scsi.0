@@ -1,111 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CDC9198A35;
-	Tue, 29 Oct 2024 16:23:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E595C96
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 16:56:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730218980; cv=none; b=JmcLlhBK+EzI8gCsYxV/L+Uk5dZyvnWJssz7dmJdOxcbNPDKPaWPHqUxlUlZYw3gKHu/fYayk54Iow+sJu9C3IU3oHmssxp0Dz5T8NLcYmo6JUjn2OjQ4UxiDR9ZgjhGVsiEZNoI9643txveW3NvYXPeP8lz55FHeoX8hOxNSOc=
+	t=1730221005; cv=none; b=V+N8M1rKAYy2O1TRChhhwEo95os5YVLR+llvUn7keFhSk6YHFO0GXupnydHhqFbOUzgNX3nTbVCvQyOWBFOniOujkCvHy4hAN5yY/SlKe0NWLw++5WKHTQxV+wlLcHV3b4IdJQBnKGpgR1i6f9rmDn2bF3M/EcRXI9alalQ2c2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730218980; c=relaxed/simple;
-	bh=rnqDaUxeAcqkIk/Vh8WJ9TxoWp2/b9FHNdxNoOJlIGE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZLf/06yalPaIlHnIKwIsW9RP7bXMfzuak5EuoUxtqNN0tfIdnWAV4pexnpEf0s2lbitlJN4/cwr8uwu4qreWF6/Reg4pwhnG4WZS1OIkQgkO0S1ZDVgof2UAMa9LpZnXTdPT8hbzhLA2Xcz1tYT49kYloUN67nE+73+AwmxBgwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tmO/oYVP; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730221005; c=relaxed/simple;
+	bh=r5ebSzNPq/AIMMFjWZGDXuMrsAy2j32AWEsn9JnzPsU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=b9BNRcwHTQ4YBozxuiXKTNRGJHJRQ2cClSK9Q4JG9VThM/N0sxT8NNckpJS7L3OoKbYrhElH2aGg5E2eq2S/qz8mfolDVap0wD3Z0GkWEyke22T8o9x3cqtc9wYLDUnqVlJW7cMazdAOsDIJClvWNnGSpyJ/OumOTSC2KXjNAZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=g92oUuVs; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tmO/oYVP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 504EFC4CECD;
-	Tue, 29 Oct 2024 16:22:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730218980;
-	bh=rnqDaUxeAcqkIk/Vh8WJ9TxoWp2/b9FHNdxNoOJlIGE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tmO/oYVPLqeC34LQRu1PYdnSvZd4ijfcozDJ/SywAmS8CCeUdPO4Fei0e+9PG7HGl
-	 vDX2HjNZVgs0J/AzgItViMJdpiiaKg8CzAexngMVRoxuFOCVWnE7RWrU2kpRi0lnGZ
-	 A4LNtMgy/AaERrSI2RzlS22JN6iLwo/Be9JAw1deT9ivdMKL9drQfgjaaIhceCP600
-	 /pPjlAohYl149PBupNLsUs5Mb0RhmWrwAFePvBX4VbuZjcJfFHM3vNn+DrE8lnOvuz
-	 bTWTe4ltpcTa4zF94DrK960V4pDkPfbP2q+pxxNotVMGXyc292q+8mPV1BVYUA3e2s
-	 OMYC/pMJ5z6+w==
-Date: Tue, 29 Oct 2024 10:22:56 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	joshi.k@samsung.com, javier.gonz@samsung.com, bvanassche@acm.org,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-Message-ID: <ZyEL4FOBMr4H8DGM@kbusch-mbp>
-References: <20241029151922.459139-1-kbusch@meta.com>
- <20241029151922.459139-10-kbusch@meta.com>
- <20241029152654.GC26431@lst.de>
- <ZyEAb-zgvBlzZiaQ@kbusch-mbp>
- <20241029153702.GA27545@lst.de>
- <ZyEBhOoDHKJs4EEY@kbusch-mbp>
- <20241029155330.GA27856@lst.de>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="g92oUuVs"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XdGcj1VxrzlgMVd;
+	Tue, 29 Oct 2024 16:56:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730220995; x=1732812996; bh=r5ebSzNPq/AIMMFjWZGDXuMr
+	sAy2j32AWEsn9JnzPsU=; b=g92oUuVs2DcmqhCuDpEc2x6u7fp/jf93ERbcu+Z3
+	kM9NdoCbZzGZ4/1X+6+x4IHb/cld0g6IrIPd6fsskAEv1b/kdsoaxIlRjKGxk902
+	agE+9M+QZUXPLRz9Brmdpx32AzgcLocuMKFTMag2ELEkT8jyV0svsnKiLc/qK7W3
+	YGFKWfjITLWFy6rjD5iwdTBHuz+GB5PvSkpiJ7JLvne+DzJ9FyRB56sUKtJJzyEQ
+	QB1ncHL5GMjPGIzj/GB9pmRb99VxAGtd57g4uRjqB2UViON2AGKDnarSlXufHOXX
+	v6Py83rXvI8eaXZAWFkE6JenGW8DJz4f8b4DOVQNv3wJKQ==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id V935U6FvE25J; Tue, 29 Oct 2024 16:56:35 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XdGcd1pbmzlgMVY;
+	Tue, 29 Oct 2024 16:56:32 +0000 (UTC)
+Message-ID: <ab068e04-ddf7-4fd5-ab0a-ecf8bc78ddfd@acm.org>
+Date: Tue, 29 Oct 2024 09:56:31 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241029155330.GA27856@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
+To: Bean Huo <huobean@gmail.com>, Huan Tang <tanghuan@vivo.com>
+Cc: beanhuo@micron.com, cang@qti.qualcomm.com, linux-scsi@vger.kernel.org,
+ opensource.kernel@vivo.com, richardp@quicinc.com, luhongfei@vivo.com
+References: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
+ <20241029120346.591-1-tanghuan@vivo.com>
+ <04ebe6420034ca3d791ea3cac10ebd61970a7093.camel@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <04ebe6420034ca3d791ea3cac10ebd61970a7093.camel@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Oct 29, 2024 at 04:53:30PM +0100, Christoph Hellwig wrote:
-> On Tue, Oct 29, 2024 at 09:38:44AM -0600, Keith Busch wrote:
-> > They're not exposed as write streams. Patch 7/9 sets the feature if it
-> > is a placement id or not, and only nvme sets it, so scsi's attributes
-> > are not claiming to be a write stream.
-> 
-> So it shows up in sysfs, but:
-> 
->  - queue_max_write_hints (which really should be queue_max_write_streams)
->    still picks it up, and from there the statx interface
-> 
->  - per-inode fcntl hint that encode a temperature still magically
->    get dumpted into the write streams if they are set.
-> 
-> In other words it's a really leaky half-backed abstraction.
+On 10/29/24 6:18 AM, Bean Huo wrote:
+> I see, easyshare is a case, but we have interface which allows user to
+> configure UFS attributes, such as ufs-bsg, you can use this interface
+> to achieve this in your application easily, right?
 
-Exactly why I asked last time: "who uses it and how do you want them to
-use it" :)
- 
-> Let's brainstorm how it could be done better:
-> 
->  - the max_write_streams values only set by block devices that actually
->    do support write streams, and not the fire and forget temperature
->    hints.  They way this is queried is by having a non-zero value
->    there, not need for an extra flag.
+ufs-bsg should not be suggested as an alternative for a sysfs interface
+since the bsg interface bypasses a significant amount of logic in the
+UFS core driver (clock scaling, clock gating, ...).
 
-So we need a completely different attribute for SCSI's permanent write
-streams? You'd mentioned earlier you were okay with having SCSI be able
-to utilized per-io raw block write hints. Having multiple things to
-check for what are all just write classifiers seems unnecessarily
-complicated.
+Thanks,
 
->  - but the struct file (or maybe inode) gets a supported flag, as stream
->    separation needs to be supported by the file system 
->  - a separate fcntl is used to set per-inode streams (if you care about
->    that, seem like the bdev use case focusses on per-I/O).  In that case
->    we'd probably also need a separate inode field for them, or a somewhat
->    complicated scheme to decide what is stored in the inode field if there
->    is only one.
-
-No need to create a new fcntl. The people already testing this are
-successfully using FDP with the existing fcntl hints. Their applications
-leverage FDP as way to separate files based on expected lifetime. It is
-how they want to use it and it is working above expectations. 
-
->  - for block devices bdev/fops.c maps the temperature hints into write
->    streams if write streams are supported, any user that mixes and
->    matches write streams and temperature hints gets what they deserve
-
-That's fine. This patch series pretty much accomplishes that part.
-
->  - this could also be a helper for file systems that want to do the
->    same.
-> 
-> Just a quick writeup while I'm on the run, there's probably a hole or
-> two that could be poked into it.
+Bart.
