@@ -1,151 +1,230 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E96C2022D6
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 13:18:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C9B1946B3
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 15:19:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730207939; cv=none; b=LwgO68dk72zJewF2rfvKu4vGOA5z9SAERsaGHaiGwLX3V5yXwxrEq+xwQaQNlaOUECVnpF2/hIDFa7iB08LqQUMdKheOIawAE0KLVsDpo0UmGm8Inwpj8YtKKp/baLsUnRb+2/K3FjmKmH0RDXP8mlHvph3I5YcTehFmW7V7NyI=
+	t=1730215194; cv=none; b=aRXlAA2KGwi3QO8jCNMpRj2gjA1nH1wCmx5rZaLA9zECu5Mfj3GOQ+jUI/bqGqnqC6X/tBM1oj8Vb+299cF68VJtvrKRCtZ2g8cev3n5FYzOxdYrKmJs86imWXf2MsJIMiVeQ4sZrhasIGHo/gIUVCF2xQL104/3r/ya2+SQZwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730207939; c=relaxed/simple;
-	bh=W7nIJhe/lijpZ8Dh1LY8cz7gOpHnMfCWaziaEGpuacU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=BxuS9ipwhgVEV2fJ1sKrxG9w1ecJomwQ5Fdy4QvfS09po171Gwssp1wdUxX5eAqSIXTepoczO4Dvz6w7PRd3vEcYSq/Oi8XHprBtH2QqHf4uneFUpCcbhRSWSSl8aTPXaspF/K9ZDiBQMAnO5YIvv/K5uOetTj9q27kpuKP9h7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mbeuTd2q; arc=none smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730215194; c=relaxed/simple;
+	bh=a0Zx2TAwQU9UnfwSEprzmsqOgGkuhE+n1rpG5e7hjv0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lzEL0DkxSQjdXx47TbLszuqZEI3BxX78XKah7zvz762RGvdLDBWhvh+tjLsC17NC2UCrwSzc2FDngsU2v5YRlRrUa4g8EOeAj24dx/CAVKZEk/cyxhawwvgTwdjbaaPvvbHYKNKIOLYZMZ3LMyE+gH5dTlOUe4W5miZI1QpGD0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=Iy4uN0Qe; arc=none smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mbeuTd2q"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a99f629a7aaso865766866b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 06:18:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730207936; x=1730812736; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=W7nIJhe/lijpZ8Dh1LY8cz7gOpHnMfCWaziaEGpuacU=;
-        b=mbeuTd2qFNFQTs0xzZ/7NPgvOE1LZUkTgfgkE6L2ZMY2qCTc3l6GIJG6b8h243a+Ju
-         BocRxoZO3KwFaYnYVDcpsrSujOJbVzEM37B/IciZLq/ada3oGmSe/Fh1G7u8PWCSTU6Z
-         PMNek1JyAhFBLZwas7uUTEpq5gmRQvrpmC+Nx48aLrQy/WJcFWlnZOQfc6zG4cKdDiM8
-         UIdJ1RgTHn4EQ0qX2nMUwryq3oWhjxT6a51eGC+30IkFRnoK7xlH0L63xfIgjl2ctKQl
-         V+Rh7xsc6SFoCkxs/jqnyQlE9VWLUsuj78OGpC6UKW2moIqBndz+ubqOsVisJppunsoa
-         jqBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730207936; x=1730812736;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=W7nIJhe/lijpZ8Dh1LY8cz7gOpHnMfCWaziaEGpuacU=;
-        b=DO5plZ1NpJstZriXWGNl4MfHy+Pjit/P482dzICd19EkfYvd583lENb9iaM4ZZKTHM
-         x0K//xnakOxDIl4a9WXKJ/wLTFqn8kpYCqRmX3yiAfvoXnhjT5fxxmCd40V6e9YVx4d0
-         8uKvqZVkLNZ+vdsDYoesGwkwYlsdrdTTJCKuK+Qcf0a4ZoIyO2G22OXd7/JbgqiBAPVc
-         aasycrHl/zUFLUlnMW/ZDVRhC13XTIuv51W8VLv9KINnUcvBRv3fbBAAVkKgzPyYNZ3q
-         knL3My3pKlqGg+kkPWziLYzhS3zFUL4+ug6aW1E6B3xLQonYBpV8MbJRuzFna35MRcR+
-         lT1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCV1saYU9mdD6f99d+iAwSVyije5zBZehfZPV4R7XT78ADSuQQs2SlrKowwZ3kjhbMgTqR97k743LG5c@vger.kernel.org
-X-Gm-Message-State: AOJu0YxGskp2qH3DyUkwkJr7hFPUv6zqZexKE68l49xabv9EzQw/9GDi
-	guYCC2oSy+g4HBU89EcI3toMUuh5wu6RnPZrmx0N1CdMSpZlzFWn
-X-Google-Smtp-Source: AGHT+IEhW68YHKzPbeB18Rp83w8YTAznVIggag6dAZ7MM3JbXc27MbvSbeEnUobvcd0X4fetv808Pg==
-X-Received: by 2002:a17:907:7f89:b0:a99:3db2:eb00 with SMTP id a640c23a62f3a-a9e2b0138bbmr206161166b.28.1730207935309;
-        Tue, 29 Oct 2024 06:18:55 -0700 (PDT)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9b1f2982d4sm475158266b.120.2024.10.29.06.18.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Oct 2024 06:18:54 -0700 (PDT)
-Message-ID: <04ebe6420034ca3d791ea3cac10ebd61970a7093.camel@gmail.com>
-Subject: Re: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
-From: Bean Huo <huobean@gmail.com>
-To: Huan Tang <tanghuan@vivo.com>
-Cc: beanhuo@micron.com, bvanassche@acm.org, cang@qti.qualcomm.com, 
- linux-scsi@vger.kernel.org, opensource.kernel@vivo.com,
- richardp@quicinc.com,  luhongfei@vivo.com
-Date: Tue, 29 Oct 2024 14:18:53 +0100
-In-Reply-To: <20241029120346.591-1-tanghuan@vivo.com>
-References: <330e0b7fce03b2970db80c4b73b611af220b6349.camel@gmail.com>
-	 <20241029120346.591-1-tanghuan@vivo.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="Iy4uN0Qe"
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+	by m0001303.ppops.net (8.18.1.2/8.18.1.2) with ESMTP id 49TD7AbW021211
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:51 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2021-q4;
+	 bh=qA+NGz+6KM5521lpDTzCtjJ24sEMb14jQTfwKkFiwJc=; b=Iy4uN0QeAnJo
+	fblju/KuxVMSg2VrDQlMo4Lu9MTYEXkSULblzcwPZ6jk8IUqfa4I8imCJXuJNs4P
+	xhxPIT8k6ybNErCpUNyU+xus9yJPN3rxpm7rmGhdAghKzbEfYXq2HdP7hNkJLhlu
+	IzFCkZckw8M0izhlhDxtBmhokwvTkilNq6KrCkw7oI9JgEtcTcQWuXeS3R/iJH2w
+	jBxdLnJJCPlw9rfMQ/uHC/Uir4th1yiTqe0D9+leiYUzr+CF82znP0ds5E/DAdu7
+	cpJhbBUjIC7jmvyrGmzN3W9jNN+RqTVN8MZ84xfqy4htzm6x2ShT0roiyr6rOSqF
+	gu/1cH/cmA==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by m0001303.ppops.net (PPS) with ESMTPS id 42k0af13x0-7
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:51 -0700 (PDT)
+Received: from twshared22321.07.ash9.facebook.com (2620:10d:c0a8:1c::1b) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.1544.11; Tue, 29 Oct 2024 15:19:47 +0000
+Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
+	id 1049714920EA3; Tue, 29 Oct 2024 08:19:44 -0700 (PDT)
+From: Keith Busch <kbusch@meta.com>
+To: <linux-block@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
+        <linux-scsi@vger.kernel.org>, <io-uring@vger.kernel.org>
+CC: <linux-fsdevel@vger.kernel.org>, <hch@lst.de>, <joshi.k@samsung.com>,
+        <javier.gonz@samsung.com>, <bvanassche@acm.org>,
+        Keith Busch
+	<kbusch@kernel.org>
+Subject: [PATCHv10 4/9] block: allow ability to limit partition write hints
+Date: Tue, 29 Oct 2024 08:19:17 -0700
+Message-ID: <20241029151922.459139-5-kbusch@meta.com>
+X-Mailer: git-send-email 2.43.5
+In-Reply-To: <20241029151922.459139-1-kbusch@meta.com>
+References: <20241029151922.459139-1-kbusch@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: OezDsXasoiTz7xT8u2JJlbBS9pIJPcOz
+X-Proofpoint-ORIG-GUID: OezDsXasoiTz7xT8u2JJlbBS9pIJPcOz
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-05_03,2024-10-04_01,2024-09-30_01
 
-On Tue, 2024-10-29 at 20:03 +0800, Huan Tang wrote:
-> > > > On 10/28/24 1:04 PM, Bean Huo wrote:
-> > > > > Even though I don't think it's necessary to enable a Sysfs
-> > > > > node=20
-> > > > > entry for this configuration.
-> > > >=20
-> > > > Right, a motivation of why this functionality should be
-> > > > available in=20
-> > > > sysfs is missing. An explanation should be added in the patch=20
-> > > > description.
-> > > >=20
-> > > > Thanks,
-> > > >=20
-> > > > Bart.
-> > >=20
-> > > Hi Bean & Bart,
-> > >=20
-> > > Motivation: Through the sysfs upper layer code, the WB resize
-> > > function=20
-> > > can be used in some scenarios, or related information can be
-> > > obtained=20
-> > > indirectly to implement different strategies; What is your
-> > > suggestion?=20
-> > > sysfs? exception event? or?
-> > >=20
-> > > Thanks
-> > > Huan
-> >=20
-> > hey Huan,
-> >=20
-> > What specific scenarios would require enabling a sysfs node to
-> > control this function? Dynamically
-> > adjusting the WriteBooster (WB) size on the fly doesn=E2=80=99t seem id=
-eal
-> > to me. From my perspective, the main
-> > case for this feature is if the OEM didn=E2=80=99t correctly define or =
-set
-> > the WriteBooster Buffer size during
-> > manufacturing. Even then, adjusting the WB buffer size wouldn=E2=80=99t=
- be
-> > a frequent need. If JEDEC has
-> > found a reason for this feature to be accepted, isn=E2=80=99t there alr=
-eady
-> > an interface available to configure it?
-> > Why would we need a duplicate interface for the same purpose?
-> >=20
-> > Kind regards,
-> > Bean
->=20
-> Hi Bean,
->=20
-> Thanks for your reply
->=20
-> The scenario I'm thinking of right now=EF=BC=9A when the old phone transf=
-ers
-> a large
-> amount of data to the new phone's APP (vivo calls it easyshare APP),
-> we can=20
-> explicitly resize the WB buffer.
-> Could you please explain this sentence(If JEDEC has found a reason
-> for this feature
-> to be accepted, isn=E2=80=99t there already an interface available to
-> configure it? Why
-> would we need a duplicate interface for the same purpose?) more
-> simply so I=20
-> can understand it better?
+From: Keith Busch <kbusch@kernel.org>
 
+When multiple partitions are used, you may want to enforce different
+subsets of the available write hints for each partition. Provide a
+bitmap attribute of the available write hints, and allow an admin to
+write a different mask to set the partition's allowed write hints.
 
-I see, easyshare is a case, but we have interface which allows user to
-configure UFS attributes, such as ufs-bsg, you can use this interface
-to achieve this in your application easily, right?
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+---
+ Documentation/ABI/stable/sysfs-block |  6 ++++
+ block/bdev.c                         | 13 ++++++++
+ block/partitions/core.c              | 44 ++++++++++++++++++++++++++--
+ include/linux/blk_types.h            |  1 +
+ 4 files changed, 62 insertions(+), 2 deletions(-)
 
-
-Kind regares,
-Bean
+diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/sta=
+ble/sysfs-block
+index f2db2cabb8e75..8ab9f030e61d1 100644
+--- a/Documentation/ABI/stable/sysfs-block
++++ b/Documentation/ABI/stable/sysfs-block
+@@ -187,6 +187,12 @@ Description:
+ 		partition is offset from the internal allocation unit's
+ 		natural alignment.
+=20
++What:		/sys/block/<disk>/<partition>/write_hint_mask
++Date:		October 2024
++Contact:	linux-block@vger.kernel.org
++Description:
++		The mask of allowed write hints. You can limit which hints the
++		block layer will use by writing a new mask.
+=20
+ What:		/sys/block/<disk>/<partition>/stat
+ Date:		February 2008
+diff --git a/block/bdev.c b/block/bdev.c
+index 9a59f0c882170..0c5e87b111aed 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -415,6 +415,7 @@ void __init bdev_cache_init(void)
+ struct block_device *bdev_alloc(struct gendisk *disk, u8 partno)
+ {
+ 	struct block_device *bdev;
++	unsigned short write_hint;
+ 	struct inode *inode;
+=20
+ 	inode =3D new_inode(blockdev_superblock);
+@@ -440,6 +441,18 @@ struct block_device *bdev_alloc(struct gendisk *disk=
+, u8 partno)
+ 		return NULL;
+ 	}
+ 	bdev->bd_disk =3D disk;
++
++	write_hint =3D bdev_max_write_hints(bdev);
++	if (write_hint) {
++		bdev->write_hint_mask =3D bitmap_alloc(write_hint, GFP_KERNEL);
++		if (!bdev->write_hint_mask) {
++			free_percpu(bdev->bd_stats);
++			iput(inode);
++			return NULL;
++		}
++		bitmap_set(bdev->write_hint_mask, 0, write_hint);
++	}
++
+ 	return bdev;
+ }
+=20
+diff --git a/block/partitions/core.c b/block/partitions/core.c
+index 815ed33caa1b8..24e1a79972f75 100644
+--- a/block/partitions/core.c
++++ b/block/partitions/core.c
+@@ -203,6 +203,40 @@ static ssize_t part_discard_alignment_show(struct de=
+vice *dev,
+ 	return sprintf(buf, "%u\n", bdev_discard_alignment(dev_to_bdev(dev)));
+ }
+=20
++static ssize_t part_write_hint_mask_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct block_device *bdev =3D dev_to_bdev(dev);
++	unsigned short max_write_hints =3D bdev_max_write_hints(bdev);
++
++	if (!max_write_hints)
++		return sprintf(buf, "0");
++	return sprintf(buf, "%*pb\n", max_write_hints, bdev->write_hint_mask);
++}
++
++static ssize_t part_write_hint_mask_store(struct device *dev,
++					  struct device_attribute *attr,
++					  const char *buf, size_t count)
++{
++	struct block_device *bdev =3D dev_to_bdev(dev);
++	unsigned short max_write_hints =3D bdev_max_write_hints(bdev);
++	unsigned long *new_mask;
++
++	if (!max_write_hints)
++		return count;
++
++	new_mask =3D bitmap_alloc(max_write_hints, GFP_KERNEL);
++	if (!new_mask)
++		return -ENOMEM;
++
++	bitmap_parse(buf, count, new_mask, max_write_hints);
++	bitmap_copy(bdev->write_hint_mask, new_mask, max_write_hints);
++	bitmap_free(new_mask);
++
++	return count;
++}
++
+ static DEVICE_ATTR(partition, 0444, part_partition_show, NULL);
+ static DEVICE_ATTR(start, 0444, part_start_show, NULL);
+ static DEVICE_ATTR(size, 0444, part_size_show, NULL);
+@@ -211,6 +245,8 @@ static DEVICE_ATTR(alignment_offset, 0444, part_align=
+ment_offset_show, NULL);
+ static DEVICE_ATTR(discard_alignment, 0444, part_discard_alignment_show,=
+ NULL);
+ static DEVICE_ATTR(stat, 0444, part_stat_show, NULL);
+ static DEVICE_ATTR(inflight, 0444, part_inflight_show, NULL);
++static DEVICE_ATTR(write_hint_mask, 0644, part_write_hint_mask_show,
++		   part_write_hint_mask_store);
+ #ifdef CONFIG_FAIL_MAKE_REQUEST
+ static struct device_attribute dev_attr_fail =3D
+ 	__ATTR(make-it-fail, 0644, part_fail_show, part_fail_store);
+@@ -225,6 +261,7 @@ static struct attribute *part_attrs[] =3D {
+ 	&dev_attr_discard_alignment.attr,
+ 	&dev_attr_stat.attr,
+ 	&dev_attr_inflight.attr,
++	&dev_attr_write_hint_mask.attr,
+ #ifdef CONFIG_FAIL_MAKE_REQUEST
+ 	&dev_attr_fail.attr,
+ #endif
+@@ -245,8 +282,11 @@ static const struct attribute_group *part_attr_group=
+s[] =3D {
+=20
+ static void part_release(struct device *dev)
+ {
+-	put_disk(dev_to_bdev(dev)->bd_disk);
+-	bdev_drop(dev_to_bdev(dev));
++	struct block_device *part =3D dev_to_bdev(dev);
++
++	bitmap_free(part->write_hint_mask);
++	put_disk(part->bd_disk);
++	bdev_drop(part);
+ }
+=20
+ static int part_uevent(const struct device *dev, struct kobj_uevent_env =
+*env)
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 6737795220e18..af430e543f7f7 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -73,6 +73,7 @@ struct block_device {
+ #ifdef CONFIG_SECURITY
+ 	void			*bd_security;
+ #endif
++	unsigned long		*write_hint_mask;
+ 	/*
+ 	 * keep this out-of-line as it's both big and not needed in the fast
+ 	 * path
+--=20
+2.43.5
 
