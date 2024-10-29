@@ -1,44 +1,44 @@
 Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5905B19341F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0D8196446
 	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 15:20:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730215202; cv=none; b=ZD7zMABPryH2HhKYTVXxf1OIZuxR33XfZDhD098NjI7ndh6D7qGHI/ilbQWUVn/MoEB1MLazrK67abHir3Wcg6smSkepj8jWTmHJ5/ym5CO4ym6VQ6JEuARstRyxYY14RIy7lKgpRZPiwOhxjCNnTjXKQWUu/8gp2w+0yi//e10=
+	t=1730215203; cv=none; b=jL4+fkYJSDT6MW6LsfTOwJyMeZmZIazLAQ7iSvdXV7BRlV4i57JwnTebzCV34/B9D5fM2BS69INufjauEHHAN+N8tqA8isd+s0e27b2i8WxFysj6qdlwYydVQ4eAiLv228VX2u7FyXPISoqgvLLuBB7WW7CUkBNveCFJPD4vxW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730215202; c=relaxed/simple;
-	bh=u823h6nUpL2mhd/bMO+hteVG/iDcIFJwd0H9jEPB4bs=;
+	s=arc-20240116; t=1730215203; c=relaxed/simple;
+	bh=I8/Qo8zmSvbDl9OhqTDCEq29os3x4jVXWXNHkXfOpYg=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fVfPkrdU4w8NYwRggE3ENraEI9Fk3Lqiupm3LbASVkFwtAYbIIvCASGVj2uVKquB1kDXJfg0PikJczlE9fgWEEe1ay/I22Z3uFPAUey+XpjPXxCimaEjcsAtGRqcFKcjz56f7c4ztUot8BnApFrot/yQ+UGm6y1McfYPDp/RHuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=hc2pQwqq; arc=none smtp.client-ip=67.231.145.42
+	 MIME-Version:Content-Type; b=Fvrbqzl9ipPdtJIyEjZ4W5uiEq58tWWCHpj06r6RgDOanI4qU6kMquqhqmm2uARWb4PvRBkXNBCscIUnELGCsh/VUjFXWVqv5C+xwo4swdE7X2MvPTU+jxRpCo2AiUbsPgehv5Ks+qIR3llsA+o/5m714Qd3d82E6y5i5lOkCH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=CCoMFHMV; arc=none smtp.client-ip=67.231.145.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="hc2pQwqq"
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="CCoMFHMV"
 Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49T71GKI000853
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:59 -0700
+	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49T71GKJ000853
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:20:00 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2021-q4;
-	 bh=YQ+ll8EUN2qkPqvUcVib+PjturAFUp8AJc6rGfz+mJI=; b=hc2pQwqqgkaQ
-	kJ8rI8tnoC80TP32qJjK4Gm9bvcOv/zJxfAbKVwVArxg8Rc4rlUQeUFoVntNai57
-	VDl7c6eiMPPZ6yn9TVSrKaGkX08v/8z5wqxYLf7mSCbGJZL6jgnZSlwkIxpJ65XQ
-	CKqKVVQU4QIokSPaJFKDsHL4KsT6UwT69ZC/db34NZnTaLp/+Wddw2lE/cjr2uS9
-	tE7udOCyfhb/7sUEdWedslIOaazN75oxTl/ZlyYZDVlM0+rMiWBfZzpzrrC+0/b0
-	147wP8zK5AsQ1zGkaghL+6SSh8LsCkMc+0nGzq9iK1vNwLP0KlY8AVtFYph3zwLJ
-	EmKBVHCP2Q==
+	 bh=aps8B5vbC0snCPQCS1odsvarjIZlBhTaPnTsg871jzs=; b=CCoMFHMVFLtC
+	8TG79XGavrREbxROokffs4StQPUxSVy942Ee4PC6TqUWrkPjxbQSb6or157j9YYm
+	JcN5DLuaeS3+ZJFrMrfU6cA+ApxUsUyAj4sq5YuztHEFJCc4cyYCyDx8jRckiSQc
+	fslDE+lhnqbUYSckOl+LcV5fdIERSbHFxa72jGQGYfb6DxlQQkx5mW6dVxs/Ayo5
+	LfubTbWLFic9jCmlfys5Jc86q+qqi/5nl8RhakEUWAn2AMZ15wlarplWAkIYMwYJ
+	zRtW/FhtrT37CA8LuHhRXNTltlYIzt4P35fQ3GsIvdMe1Bud38irtLmseQrSLSmO
+	yX1xEkwfUA==
 Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 42jtxwauub-1
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 42jtxwauub-2
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:19:59 -0700 (PDT)
-Received: from twshared19620.08.ash8.facebook.com (2620:10d:c0a8:1b::8e35) by
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 08:20:00 -0700 (PDT)
+Received: from twshared26373.08.ash9.facebook.com (2620:10d:c0a8:fe::f072) by
  mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.2.1544.11; Tue, 29 Oct 2024 15:19:47 +0000
 Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
-	id F015C14920E9E; Tue, 29 Oct 2024 08:19:43 -0700 (PDT)
+	id 2AD5E14920EAA; Tue, 29 Oct 2024 08:19:44 -0700 (PDT)
 From: Keith Busch <kbusch@meta.com>
 To: <linux-block@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
         <linux-scsi@vger.kernel.org>, <io-uring@vger.kernel.org>
@@ -46,9 +46,9 @@ CC: <linux-fsdevel@vger.kernel.org>, <hch@lst.de>, <joshi.k@samsung.com>,
         <javier.gonz@samsung.com>, <bvanassche@acm.org>,
         Keith Busch
 	<kbusch@kernel.org>
-Subject: [PATCHv10 2/9] block: introduce max_write_hints queue limit
-Date: Tue, 29 Oct 2024 08:19:15 -0700
-Message-ID: <20241029151922.459139-3-kbusch@meta.com>
+Subject: [PATCHv10 7/9] block: export placement hint feature
+Date: Tue, 29 Oct 2024 08:19:20 -0700
+Message-ID: <20241029151922.459139-8-kbusch@meta.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <20241029151922.459139-1-kbusch@meta.com>
 References: <20241029151922.459139-1-kbusch@meta.com>
@@ -61,138 +61,81 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: -cOQAsqE4bfmSQRr1orjtFaog8kkP7Lf
-X-Proofpoint-ORIG-GUID: -cOQAsqE4bfmSQRr1orjtFaog8kkP7Lf
+X-Proofpoint-GUID: z2afiJlSdMlMRKzjThAIy6vI9DmDPDEs
+X-Proofpoint-ORIG-GUID: z2afiJlSdMlMRKzjThAIy6vI9DmDPDEs
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
  definitions=2024-10-05_03,2024-10-04_01,2024-09-30_01
 
 From: Keith Busch <kbusch@kernel.org>
 
-Drivers with hardware that support write streams need a way to export how
-many are available so applications can generically query this.
+Add a feature flag for devices that support generic placement hints in
+write commands. This is in contrast to data lifetime hints.
 
 Signed-off-by: Keith Busch <kbusch@kernel.org>
 ---
- Documentation/ABI/stable/sysfs-block |  7 +++++++
- block/blk-settings.c                 |  3 +++
- block/blk-sysfs.c                    |  3 +++
- include/linux/blkdev.h               | 12 ++++++++++++
- 4 files changed, 25 insertions(+)
+ block/blk-settings.c   | 2 ++
+ block/blk-sysfs.c      | 3 +++
+ include/linux/blkdev.h | 3 +++
+ 3 files changed, 8 insertions(+)
 
-diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/sta=
-ble/sysfs-block
-index 8353611107154..f2db2cabb8e75 100644
---- a/Documentation/ABI/stable/sysfs-block
-+++ b/Documentation/ABI/stable/sysfs-block
-@@ -506,6 +506,13 @@ Description:
- 		[RO] Maximum size in bytes of a single element in a DMA
- 		scatter/gather list.
-=20
-+What:		/sys/block/<disk>/queue/max_write_hints
-+Date:		October 2024
-+Contact:	linux-block@vger.kernel.org
-+Description:
-+		[RO] Maximum number of write hints supported, 0 if not
-+		supported. If supported, valid values are 1 through
-+		max_write_hints, inclusive.
-=20
- What:		/sys/block/<disk>/queue/max_segments
- Date:		March 2010
 diff --git a/block/blk-settings.c b/block/blk-settings.c
-index a446654ddee5e..921fb4d334fa4 100644
+index 921fb4d334fa4..7e3bb3cec7032 100644
 --- a/block/blk-settings.c
 +++ b/block/blk-settings.c
-@@ -43,6 +43,7 @@ void blk_set_stacking_limits(struct queue_limits *lim)
- 	lim->seg_boundary_mask =3D BLK_SEG_BOUNDARY_MASK;
-=20
- 	/* Inherit limits from component devices */
-+	lim->max_write_hints =3D USHRT_MAX;
- 	lim->max_segments =3D USHRT_MAX;
- 	lim->max_discard_segments =3D USHRT_MAX;
- 	lim->max_hw_sectors =3D UINT_MAX;
-@@ -544,6 +545,8 @@ int blk_stack_limits(struct queue_limits *t, struct q=
+@@ -518,6 +518,8 @@ int blk_stack_limits(struct queue_limits *t, struct q=
 ueue_limits *b,
- 	t->max_segment_size =3D min_not_zero(t->max_segment_size,
- 					   b->max_segment_size);
+ 		t->features &=3D ~BLK_FEAT_NOWAIT;
+ 	if (!(b->features & BLK_FEAT_POLL))
+ 		t->features &=3D ~BLK_FEAT_POLL;
++	if (!(b->features & BLK_FEAT_PLACEMENT_HINTS))
++		t->features &=3D ~BLK_FEAT_PLACEMENT_HINTS;
 =20
-+	t->max_write_hints =3D min(t->max_write_hints, b->max_write_hints);
-+
- 	alignment =3D queue_limit_alignment_offset(b, start);
+ 	t->flags |=3D (b->flags & BLK_FLAG_MISALIGNED);
 =20
- 	/* Bottom device has different alignment.  Check that it is
 diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 741b95dfdbf6f..85f48ca461049 100644
+index 85f48ca461049..51e0b99c2210a 100644
 --- a/block/blk-sysfs.c
 +++ b/block/blk-sysfs.c
-@@ -104,6 +104,7 @@ QUEUE_SYSFS_LIMIT_SHOW(max_segments)
- QUEUE_SYSFS_LIMIT_SHOW(max_discard_segments)
- QUEUE_SYSFS_LIMIT_SHOW(max_integrity_segments)
- QUEUE_SYSFS_LIMIT_SHOW(max_segment_size)
-+QUEUE_SYSFS_LIMIT_SHOW(max_write_hints)
- QUEUE_SYSFS_LIMIT_SHOW(logical_block_size)
- QUEUE_SYSFS_LIMIT_SHOW(physical_block_size)
- QUEUE_SYSFS_LIMIT_SHOW(chunk_sectors)
-@@ -457,6 +458,7 @@ QUEUE_RO_ENTRY(queue_max_hw_sectors, "max_hw_sectors_=
-kb");
- QUEUE_RO_ENTRY(queue_max_segments, "max_segments");
- QUEUE_RO_ENTRY(queue_max_integrity_segments, "max_integrity_segments");
- QUEUE_RO_ENTRY(queue_max_segment_size, "max_segment_size");
-+QUEUE_RO_ENTRY(queue_max_write_hints, "max_write_hints");
- QUEUE_RW_LOAD_MODULE_ENTRY(elv_iosched, "scheduler");
+@@ -260,6 +260,7 @@ static ssize_t queue_##_name##_show(struct gendisk *d=
+isk, char *page)	\
+ QUEUE_SYSFS_FEATURE_SHOW(poll, BLK_FEAT_POLL);
+ QUEUE_SYSFS_FEATURE_SHOW(fua, BLK_FEAT_FUA);
+ QUEUE_SYSFS_FEATURE_SHOW(dax, BLK_FEAT_DAX);
++QUEUE_SYSFS_FEATURE_SHOW(placement_hints, BLK_FEAT_PLACEMENT_HINTS);
 =20
- QUEUE_RO_ENTRY(queue_logical_block_size, "logical_block_size");
-@@ -591,6 +593,7 @@ static struct attribute *queue_attrs[] =3D {
- 	&queue_max_discard_segments_entry.attr,
- 	&queue_max_integrity_segments_entry.attr,
- 	&queue_max_segment_size_entry.attr,
-+	&queue_max_write_hints_entry.attr,
- 	&queue_hw_sector_size_entry.attr,
- 	&queue_logical_block_size_entry.attr,
- 	&queue_physical_block_size_entry.attr,
+ static ssize_t queue_zoned_show(struct gendisk *disk, char *page)
+ {
+@@ -497,6 +498,7 @@ QUEUE_RW_ENTRY(queue_poll_delay, "io_poll_delay");
+ QUEUE_RW_ENTRY(queue_wc, "write_cache");
+ QUEUE_RO_ENTRY(queue_fua, "fua");
+ QUEUE_RO_ENTRY(queue_dax, "dax");
++QUEUE_RO_ENTRY(queue_placement_hints, "placement_hints");
+ QUEUE_RW_ENTRY(queue_io_timeout, "io_timeout");
+ QUEUE_RO_ENTRY(queue_virt_boundary_mask, "virt_boundary_mask");
+ QUEUE_RO_ENTRY(queue_dma_alignment, "dma_alignment");
+@@ -626,6 +628,7 @@ static struct attribute *queue_attrs[] =3D {
+ 	&queue_wc_entry.attr,
+ 	&queue_fua_entry.attr,
+ 	&queue_dax_entry.attr,
++	&queue_placement_hints_entry.attr,
+ 	&queue_poll_delay_entry.attr,
+ 	&queue_virt_boundary_mask_entry.attr,
+ 	&queue_dma_alignment_entry.attr,
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d0a52ed05e60c..90a19ea889276 100644
+index 90a19ea889276..c577a607591de 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -394,6 +394,8 @@ struct queue_limits {
- 	unsigned short		max_integrity_segments;
- 	unsigned short		max_discard_segments;
+@@ -333,6 +333,9 @@ typedef unsigned int __bitwise blk_features_t;
+ #define BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE \
+ 	((__force blk_features_t)(1u << 15))
 =20
-+	unsigned short		max_write_hints;
++/* supports generic write placement hints */
++#define BLK_FEAT_PLACEMENT_HINTS	((__force blk_features_t)(1u << 16))
 +
- 	unsigned int		max_open_zones;
- 	unsigned int		max_active_zones;
-=20
-@@ -1189,6 +1191,11 @@ static inline unsigned short queue_max_segments(co=
-nst struct request_queue *q)
- 	return q->limits.max_segments;
- }
-=20
-+static inline unsigned short queue_max_write_hints(struct request_queue =
-*q)
-+{
-+	return q->limits.max_write_hints;
-+}
-+
- static inline unsigned short queue_max_discard_segments(const struct req=
-uest_queue *q)
- {
- 	return q->limits.max_discard_segments;
-@@ -1236,6 +1243,11 @@ static inline unsigned int bdev_max_segments(struc=
-t block_device *bdev)
- 	return queue_max_segments(bdev_get_queue(bdev));
- }
-=20
-+static inline unsigned short bdev_max_write_hints(struct block_device *b=
-dev)
-+{
-+	return queue_max_write_hints(bdev_get_queue(bdev));
-+}
-+
- static inline unsigned queue_logical_block_size(const struct request_que=
-ue *q)
- {
- 	return q->limits.logical_block_size;
+ /*
+  * Flags automatically inherited when stacking limits.
+  */
 --=20
 2.43.5
 
