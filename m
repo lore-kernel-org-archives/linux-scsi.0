@@ -1,77 +1,75 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17DD2802;
-	Tue, 29 Oct 2024 15:53:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D723234
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 16:11:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730217217; cv=none; b=m4goh0j9ncjgMvmh7ECa/pLtAKx9NF79/m2sJvIhcSmExc03PpCdr2uTYA7/EbcUI17n9aAoJXYRHWwVG+a17ehzo8krxKTNlx4sqi6zsbXWSr5YEhGwNJOd1vqrYXZtD1OFFM/zS0CwZRVyTXSXqnrJZpyXLXooCE054bT6GkE=
+	t=1730218282; cv=none; b=U+SmOM178rVmo23vhqJwyAN5Ecm0cXkNcHyfbGx59NkyWXHvsltffq28snRC5PunM1JxSre6XuctdsTgW7YrB9/OnXDevw6RTemzodizwjZclVFoTL9hH9OU9u1bdbzY65Th6asTWS4u0lclp0P7FyuXoSZzg59UL3C2kuvBsYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730217217; c=relaxed/simple;
-	bh=8FIRpPA85+k3lgKoQFsLkwYtDaZxGtBkkiX5fT/tJNQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UkAub1GuUCHrLSJncQarUm7PCEoH7stqOqRf06eWVDwQjdMIeee4rLe8URY5ulFaWiZYUaUQpaUHSrHabARSTmEkA10KPogqrk75JiFpVCqTP262WTgrIX7HI/K/FOvL7uaL3SU9ogg6bk9234zuH7hAQSHZojhQogk6pab5wo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 6BB04227AAD; Tue, 29 Oct 2024 16:53:31 +0100 (CET)
-Date: Tue, 29 Oct 2024 16:53:30 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
-	javier.gonz@samsung.com, bvanassche@acm.org,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-Message-ID: <20241029155330.GA27856@lst.de>
-References: <20241029151922.459139-1-kbusch@meta.com> <20241029151922.459139-10-kbusch@meta.com> <20241029152654.GC26431@lst.de> <ZyEAb-zgvBlzZiaQ@kbusch-mbp> <20241029153702.GA27545@lst.de> <ZyEBhOoDHKJs4EEY@kbusch-mbp>
+	s=arc-20240116; t=1730218282; c=relaxed/simple;
+	bh=srjNy+TVZKAgFFLz9s1dBvaSr3T1Nyiwu6ZcjFX7ZFU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J6KQdcHxqXdIzSrvM5BwWehikUv6diCPUTdaODIUoHcNIdROldwGuUQttuBtuCQonEmL2xqD6huzz+QLM1k7aZ4DUhFiRXFO/ph7flS6bo+lSbdxZm4f3Go8euqr+zu6FRounSD3Wdr92B9qhl99y1ZsGfHPJt/bFbbBTAscEC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fTN4Bj88; arc=none smtp.client-ip=209.85.167.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fTN4Bj88"
+Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-539fe02c386so6065702e87.0
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2024 09:11:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730218278; x=1730823078; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=J22/KDQPC3YJgGycC6+5gOjxNCYYORK65McdetT5T74=;
+        b=fTN4Bj885Xv2IHXEddaRyLtU5aoE6dPIlQkvoT6vYnv3s1hXEisocxHNIs01W/CiE7
+         qVjZ0paac70gDgdPrASjzYw2aoT/vUAkk0WawO5AtUOCqLpuiJ/AH8UB4I04RgP4+dX1
+         BJic9eLc/Q0EAysGJeJ9PY9OuP9ydmps+rYzGZC8/nMq+ruNYa/3qqEG6BoyPiPqvJrC
+         hTCRhCXGN9UrfMrkbKaE3Rng1woWnkrn9C+NsC8xf1kP3yZVxy9euO30VxzlTIVk+xJQ
+         vg1SPUSI8ZYcSffVbof+Pi+BB9UGFDi2PzzIBVu9XrGpRBEkyEljiiL5eIKGPzT1DNfG
+         eYjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730218278; x=1730823078;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=J22/KDQPC3YJgGycC6+5gOjxNCYYORK65McdetT5T74=;
+        b=eqcAaDe89DkDL64he1VWSAp03koxvqQ2EBIyYVebNQabpycWRFBTMkJoAUY3L/Tv/9
+         PJOQzqSSPrdVhrPtbFspex/PFcEUTNx+uVNxPRwoSdAekkb8W0BuWUR4faMwFRPPosbZ
+         K+JJqGz0fyJMF0tTPbdn4qoWW8bL99RP72kEWVW0qZ3OL30UA/DMHxjVoshb0dl3YYVR
+         XQ+gjT9oVRbP/Kz4Y7pfqIRtyfAjt2w/u2zpN5KXX9Mj94nSAugZMzrWL9LKzzYF+/V5
+         8JBNk6Dt/qVnoJqVOzQFD5+Bs3WXmQpJ9XwrpIETJHWWL4FBHciuxZF0NMNLkYJSCQQZ
+         BH2A==
+X-Gm-Message-State: AOJu0YwhNQk3pVoLoYLKG1roN1Aycyl3DXKEkpgc+pYiyOjhLlNq3MEb
+	s9iSU1PW43edt3fhKP7qpdD3OITxC7Mc6ohT5TWc69lNR1rSzbDr/yHZ7g==
+X-Google-Smtp-Source: AGHT+IEu1gpE0FQ/wjP87yZ8Qbwukfd23WIJRcRUveODamm1KOMlKLTodmmGFFmkMA6ajtHEaDLMQw==
+X-Received: by 2002:a05:6512:a93:b0:539:eec0:20de with SMTP id 2adb3069b0e04-53b492168c3mr934229e87.10.1730218278388;
+        Tue, 29 Oct 2024 09:11:18 -0700 (PDT)
+Received: from es40.darklands.se (h-94-254-104-176.A469.priv.bahnhof.se. [94.254.104.176])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53b2e1272bdsm1391301e87.88.2024.10.29.09.11.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Oct 2024 09:11:18 -0700 (PDT)
+From: Magnus Lindholm <linmag7@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: linmag7@gmail.com
+Subject: [PATCH 0/1] scsi: qla1280.c
+Date: Tue, 29 Oct 2024 17:08:44 +0100
+Message-ID: <20241029161049.2133-1-linmag7@gmail.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZyEBhOoDHKJs4EEY@kbusch-mbp>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 29, 2024 at 09:38:44AM -0600, Keith Busch wrote:
-> They're not exposed as write streams. Patch 7/9 sets the feature if it
-> is a placement id or not, and only nvme sets it, so scsi's attributes
-> are not claiming to be a write stream.
+To prevent file system corruption on 32-bit ISP10x0 cards in 64-bit enabled systems
+while maintaing the possibility to run other qlogic cards in 64-bit mode:
 
-So it shows up in sysfs, but:
+ - Explicitly set enable_64bit_addressing flag if QLA_64BIT_PTR is
+   defined and card is in a 64-bit slot.
+ - Add information about chip hardware revision and pci-slot width to
+   driver information string
+ - For QLA1040, limit DMA_BIT_MASK to 32 bits for 32-bit cards
 
- - queue_max_write_hints (which really should be queue_max_write_streams)
-   still picks it up, and from there the statx interface
-
- - per-inode fcntl hint that encode a temperature still magically
-   get dumpted into the write streams if they are set.
-
-In other words it's a really leaky half-backed abstraction.
-
-Let's brainstorm how it could be done better:
-
- - the max_write_streams values only set by block devices that actually
-   do support write streams, and not the fire and forget temperature
-   hints.  They way this is queried is by having a non-zero value
-   there, not need for an extra flag.
- - but the struct file (or maybe inode) gets a supported flag, as stream
-   separation needs to be supported by the file system 
- - a separate fcntl is used to set per-inode streams (if you care about
-   that, seem like the bdev use case focusses on per-I/O).  In that case
-   we'd probably also need a separate inode field for them, or a somewhat
-   complicated scheme to decide what is stored in the inode field if there
-   is only one.
- - for block devices bdev/fops.c maps the temperature hints into write
-   streams if write streams are supported, any user that mixes and
-   matches write streams and temperature hints gets what they deserve
- - this could also be a helper for file systems that want to do the
-   same.
-
-Just a quick writeup while I'm on the run, there's probably a hole or
-two that could be poked into it.
