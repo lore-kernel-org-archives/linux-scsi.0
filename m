@@ -1,121 +1,88 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91D1E1991DF
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 22:03:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B089B1BD9EA;
+	Wed, 30 Oct 2024 22:33:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730325819; cv=none; b=GMVlgh008ZstFPp6jq+Fc5ivYq53c0e6fBnARqkM+Tlm8YPMngnonFW1swulpa7k+tgNt1aLS3hv30bipeb2GHlechr+Zf2h++Hv/xhPU6rIlquJcW5auve/TtOVNNFDoO7kJCiMV0PM0OV3zRhPpEvHCOpSyxM6Hx2B6RsQIUU=
+	t=1730327580; cv=none; b=QbioGjStXfMw2Le+7LPa5YtHCfhU8rNdvj6PhWHQCpbxWXRc/MLkd5H+lat5EZmluwglJZ1dLOOINvPnDHhYyIEgu/gRymMvdAZ6jJjE3r9r530pXVOLftv2YpZtu0zBp0FD3/K9xLtzxxtBqzNczl6s6qDht/LnOWiJJ1Vja1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730325819; c=relaxed/simple;
-	bh=IS7+NnAQDvnqe4jpVdXgZI25hBvGzY5cUHEkcJ1tImo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z48jVyDxHQqbwl/kYJ/bY17pNJVkclwpwRjcGXLK32mhK/4yqsnaSx+lorPkme6DFSnYHjb6LLeyQ8rP+H/6ccjOhqmsqoRHv5hqTfklQRE+67wm7qv7/O6ZpeslEByifyzaE+UEPq8EZvR+w5kkbmxMlmme/L/uaaSaBsvsZ1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=T49Nng5Z; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1730327580; c=relaxed/simple;
+	bh=pG2dV6wbFJ9/N3Eo79eG7sTCZARua6TPwKbzaZm5T8s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=djjvXDPZUa9jc1MQ/hCfjx9mn5mfoacgiGgMZEYoU+pVwOztOimZwBEMJLZPJPYza5OEnRHm1NUDEFjveiEeR6Mfh+LZnDk18YtOE4i57ySfomEPCalP6rrUuaGsyrwZ/+VeUmI68bKvMCDOdZY9tnAp8bCDnHBeqxNb/2tgWv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOLGBIAc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="T49Nng5Z"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Xf1NS6wCdzlgMW3;
-	Wed, 30 Oct 2024 22:03:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1730325813; x=1732917814; bh=HKNpsaRoB0Mq0U1sRMbUzma/WvNOP8AxD/P
-	QMMOAH+0=; b=T49Nng5Zg3b7f4YaELkN01s3bky6CSQ67PeNlXVIs+ShTyXekwj
-	kQwFht9kkBUnAI9IIrX4D3YP3pWqy3WHRlEHUi8xWnrjV0LJDAcdxPxiQq9A8WcK
-	z3cxtgNbyWuvLk9DlPr3P00erek0hvEKEqzY/NbtEDE8MwpxpKgNRoSyypl7z+rT
-	TCuJllYjGSU0gM8e52OP5cRw9k39mqAVNnH+KLMcC543nvASUUgOzTO3AORTpDhu
-	7F2x5/mADLSjVM2miMlDAd6TlQBJA1ylEAv7Stus6RVZcZ4Mfu1u6+BDuC83BLLm
-	g8Xbja0c6UitCSaaMH8n2XU0RqaMfPb9+XQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id TSUVaObl7R5I; Wed, 30 Oct 2024 22:03:33 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Xf1NL6YrSzlgMVx;
-	Wed, 30 Oct 2024 22:03:30 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Douglas Gilbert <dgilbert@interlog.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH] scsi: sg: Enable runtime power management
-Date: Wed, 30 Oct 2024 15:03:10 -0700
-Message-ID: <20241030220310.1373569-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOLGBIAc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E300C4CECE;
+	Wed, 30 Oct 2024 22:32:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730327580;
+	bh=pG2dV6wbFJ9/N3Eo79eG7sTCZARua6TPwKbzaZm5T8s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TOLGBIAcEYrCYSFurialDE1/dDbk0s5VsobxcNkWosTwMWsHUtEwV2Dp6K1Bt2xB/
+	 Fr9YO4uhhAZ+bYoWwuhY2pbaLrRSeZCZGIRh48gST8/NSWTSOpVy4vmedCkJGiHmok
+	 evunMKCuBVIHpmHm+FOgsiNNdCqGZnbXnl58AgDLjkC3DkO9NldpetChGi52nPYqxm
+	 O6ZwqatzbxIPcJW8GOiZeuM9otwid4W0Il7PCsaI1J094cFyXVVLrj2x3Yi1K/uHqf
+	 pK8aowBq29IKzesQio0R+lZ1Rty5SsD0ych9kGkC73wmjtsa6CtFfbObGwNhCGncFE
+	 CMtEjbWx7DpbA==
+Date: Wed, 30 Oct 2024 16:32:57 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	joshi.k@samsung.com, javier.gonz@samsung.com, bvanassche@acm.org,
+	Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
+Message-ID: <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
+References: <ZyEBhOoDHKJs4EEY@kbusch-mbp>
+ <20241029155330.GA27856@lst.de>
+ <ZyEL4FOBMr4H8DGM@kbusch-mbp>
+ <20241030045526.GA32385@lst.de>
+ <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030154556.GA4449@lst.de>
+ <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030155052.GA4984@lst.de>
+ <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030165708.GA11009@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241030165708.GA11009@lst.de>
 
-In 2010, runtime power management support was implemented in the SCSI cor=
-e.
-The description of patch "[SCSI] implement runtime Power Management"
-mentions that the sg driver is skipped but not why. This patch enables
-runtime power management even if an instance of the sg driver is held ope=
-n.
-Enabling runtime PM for the sg driver is safe because all interactions of
-the sg driver with the SCSI device pass through the block layer
-(blk_execute_rq_nowait()) and the block layer already supports runtime PM=
-.
+On Wed, Oct 30, 2024 at 05:57:08PM +0100, Christoph Hellwig wrote:
+> On Wed, Oct 30, 2024 at 10:42:59AM -0600, Keith Busch wrote:
+> > With FDP (with some minor rocksdb changes):
+> > 
+> > WAF:        1.67
+> > IOPS:       1547
+> > READ LAT:   1978us
+> > UPDATE LAT: 2267us
+> 
+> Compared to the Numbers Hans presented at Plumbers for the Zoned XFS code,
+> which should work just fine with FDP IFF we exposed real write streams,
+> which roughly double read nad wirte IOPS and reduce the WAF to almost
+> 1 this doesn't look too spectacular to be honest, but it sure it something.
 
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Fixes: bc4f24014de5 ("[SCSI] implement runtime Power Management")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/sg.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+Hold up... I absolutely appreciate the work Hans is and has done. But
+are you talking about this talk?
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index f86be197fedd..84334ab39c81 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -307,10 +307,6 @@ sg_open(struct inode *inode, struct file *filp)
- 	if (retval)
- 		goto sg_put;
-=20
--	retval =3D scsi_autopm_get_device(device);
--	if (retval)
--		goto sdp_put;
--
- 	/* scsi_block_when_processing_errors() may block so bypass
- 	 * check if O_NONBLOCK. Permits SCSI commands to be issued
- 	 * during error recovery. Tread carefully. */
-@@ -318,7 +314,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	      scsi_block_when_processing_errors(device))) {
- 		retval =3D -ENXIO;
- 		/* we are in error recovery for this device */
--		goto error_out;
-+		goto sdp_put;
- 	}
-=20
- 	mutex_lock(&sdp->open_rel_lock);
-@@ -371,8 +367,6 @@ sg_open(struct inode *inode, struct file *filp)
- 	}
- error_mutex_locked:
- 	mutex_unlock(&sdp->open_rel_lock);
--error_out:
--	scsi_autopm_put_device(device);
- sdp_put:
- 	kref_put(&sdp->d_ref, sg_device_destroy);
- 	scsi_device_put(device);
-@@ -392,7 +386,6 @@ sg_release(struct inode *inode, struct file *filp)
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
-=20
- 	mutex_lock(&sdp->open_rel_lock);
--	scsi_autopm_put_device(sdp->device);
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
- 	sdp->open_cnt--;
-=20
+https://lpc.events/event/18/contributions/1822/attachments/1464/3105/Zoned%20XFS%20LPC%20Zoned%20MC%202024%20V1.pdf
+
+That is very much apples-to-oranges. The B+ isn't on the same device
+being evaluated for WAF, where this has all that mixed in. I think the
+results are pretty good, all things considered.
+ 
+> I just wish we could get the real infraѕtructure instead of some band
+> aid, which makes it really hard to expose the real thing because now
+> it's been taken up and directly wired to a UAPI.
+> one
+
+I don't know what make of this. I think we're talking past each other.
