@@ -1,156 +1,77 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03715146D40;
-	Wed, 30 Oct 2024 01:41:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 59DE42E419;
+	Wed, 30 Oct 2024 02:18:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730252507; cv=none; b=G5ybXEQ4l+pQnb4DBPi+OI3A6UM+gGBVwNpFeAn8N02alhalzo3b/31EwVFgly59jxivS+YU/H47TqvY24OPXhaBPB/cEtOft0s3IiawJtGgWxm9yWfeq1qyH/3xK1nyxxhF+OKbXwgP+rht9q+MHYf6xls9BI7f36iKH6RizzY=
+	t=1730254695; cv=none; b=NMDuvmWTX22WbtVT/RB9u3afTfKz3/fwfDcFbcOqT2zxMnDxkSbCR/qI+L2rn/zu/R0mijTkbHJyXwlcqf1pL3rnbZWgSU3kM4z+1fd8nmyalqQLkXpiCeuwo1tzW7qgGzjWKE6Apd3AH2z/vem7FYXp5AFx6HiRyIKm0ef5ZeY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730252507; c=relaxed/simple;
-	bh=WcMfb/ZXzjJ5ndEdwQHbHhsDGnvuFA3OHZX79Q4P304=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mhH1J9Mut6BZYjerWmFJbPi0v4uZlUSwR6TTIFN4bYLZJHFQ/HED47VrdPgWmV3NUhX0Ehd944UPEfcP+ExSwxV+HhwJIPLH0fhMahLpvygYHqhR4Gr3ad+dVpbK2LduAIlwlcAJVWZjawpUMALYbzwyHCjq3xiDAOqBa3BjaIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J4YPlHoH; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1730254695; c=relaxed/simple;
+	bh=9eqQfdscBEjLtcrWq8qKVNz4RDrbIrtOF0WQ6IAd98E=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GQI0MRfSLF30T7lbUlgpa7UrcoCDPdiyePBKf2MxldF6arqAlT76usYkbFdIWMvG44yY5ItBQHcQ/rBkIlRKcKqq85CfOqvX+DNd+IGpTufCbm7/XDTv0pz77RKPKWg1Hw4Hc/E/JOwKkzx4VDVBtVqBmiGjU0lWW59w+bNSSkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=P/hSRdOe; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J4YPlHoH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730252505; x=1761788505;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=WcMfb/ZXzjJ5ndEdwQHbHhsDGnvuFA3OHZX79Q4P304=;
-  b=J4YPlHoHYBdnA5kpqNlIMavjWMJZQR5cIgFlTYeGmIjQ7pl3/aCdvEUu
-   BoQS2XSCFYk/w2wvY4ik1msErXTpyw7GEubJkyCE2RMtsOj9R5PvN/W60
-   sHSJEygCDEiLam4XWZI0GustDkreHfd7jzQt+8BdwiWDqOuYNasbhYTRp
-   n9I3xcz+9qus+ILKJupllqr0ZPHNBaCc6hFydfzxPo+407f22b3Im1GI1
-   4XX0t06iqfG7wfHrvrMoSVU9QkDA3JkHoHxgGkaG3n3HdppkwTU3ld05h
-   8YvLggcnXgRSrbI/fLs/glAoznqP75XgbMKGnFyjkddQMnuAgzGPJqOR3
-   Q==;
-X-CSE-ConnectionGUID: /KfYJmWuQI2S7hogsRUafA==
-X-CSE-MsgGUID: M6mQaQsWShai+no5HumT/w==
-X-IronPort-AV: E=McAfee;i="6700,10204,11240"; a="30043181"
-X-IronPort-AV: E=Sophos;i="6.11,243,1725346800"; 
-   d="scan'208";a="30043181"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2024 18:41:45 -0700
-X-CSE-ConnectionGUID: Cd5FePhgSs6Fqha/z81raQ==
-X-CSE-MsgGUID: e13lZlRITLa/bV3qpXk1EQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,243,1725346800"; 
-   d="scan'208";a="82086912"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 29 Oct 2024 18:41:40 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t5xiL-000eNw-23;
-	Wed, 30 Oct 2024 01:41:37 +0000
-Date: Wed, 30 Oct 2024 09:41:05 +0800
-From: kernel test robot <lkp@intel.com>
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
-	manivannan.sadhasivam@linaro.org, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, andersson@kernel.org,
-	konrad.dybcio@linaro.org, James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com, agross@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_narepall@quicinc.com,
-	quic_nitirawa@quicinc.com, Can Guo <quic_cang@quicinc.com>
-Subject: Re: [PATCH V2 3/3] scsi: ufs: qcom: Add support for multiple ICE
- allocators
-Message-ID: <202410300901.9B3oDYwL-lkp@intel.com>
-References: <20241029113003.18820-4-quic_rdwivedi@quicinc.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="P/hSRdOe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=+LaK4
+	I9+wihg0+jMQhuM6fhmJK0Ypaq2No83nxa1oWg=; b=P/hSRdOe3bu+dRTXrH/+a
+	iEIpgRMP7wXLjYl5ltIepFWr4OSDxM7VE7GL94S2HW+7l+7FIXB8wI2T2L+bJdJb
+	Ry9lsDMHg8yu7SgBAh8V/dwfdU9iaHs11s1+hr+j+tYQ/M/gIlIlFwAgHTPow/FO
+	l7l7B4uXITSdYwdLP4lvII=
+Received: from liubaolin-VMware-Virtual-Platform.localdomain (unknown [223.70.160.239])
+	by gzsmtp1 (Coremail) with SMTP id PCgvCgD3n_BZlyFngsUABw--.64607S2;
+	Wed, 30 Oct 2024 10:18:02 +0800 (CST)
+From: Baolin Liu <liubaolin12138@163.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	liubaolin12138@163.com,
+	Baolin Liu <liubaolin@kylinos.cn>
+Subject: [PATCH v1 v1] target: fix incorrect function name in pr_err
+Date: Wed, 30 Oct 2024 10:18:00 +0800
+Message-Id: <20241030021800.234980-1-liubaolin12138@163.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241029113003.18820-4-quic_rdwivedi@quicinc.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PCgvCgD3n_BZlyFngsUABw--.64607S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtF17ZryruF1DZF4rWw4kJFb_yoWDWrc_u3
+	4UArnrWr18ur1kW34fC3s7Zr90yrn7ZF4Iva1Fy39xta45W34Yy3sYgFn5ArWq9r40q3W5
+	C3saqF4DGFWfKjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRtkucJUUUUU==
+X-CM-SenderInfo: xolxutxrol0iasrtmqqrwthudrp/1tbiMRmIymchlCVYDAAAsJ
 
-Hi Ram,
+From: Baolin Liu <liubaolin@kylinos.cn>
 
-kernel test robot noticed the following build errors:
+in pr_err(),bdev_open_by_path() should be renamed to
+bdev_file_open_by_path()
 
-[auto build test ERROR on robh/for-next]
-[also build test ERROR on mkp-scsi/for-next jejb-scsi/for-next linus/master v6.12-rc5 next-20241029]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Fixes: 034f0cf8fdf9 ("target: port block device access to file")
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Ram-Kumar-Dwivedi/dt-bindings-ufs-qcom-Document-ice-configuration-table/20241029-193301
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-patch link:    https://lore.kernel.org/r/20241029113003.18820-4-quic_rdwivedi%40quicinc.com
-patch subject: [PATCH V2 3/3] scsi: ufs: qcom: Add support for multiple ICE allocators
-config: arm64-defconfig (https://download.01.org/0day-ci/archive/20241030/202410300901.9B3oDYwL-lkp@intel.com/config)
-compiler: aarch64-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241030/202410300901.9B3oDYwL-lkp@intel.com/reproduce)
+Signed-off-by: Baolin Liu <liubaolin@kylinos.cn>
+---
+ drivers/target/target_core_pscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410300901.9B3oDYwL-lkp@intel.com/
-
-All error/warnings (new ones prefixed by >>):
-
-   drivers/ufs/host/ufs-qcom.c: In function 'ufs_qcom_hce_enable_notify':
->> drivers/ufs/host/ufs-qcom.c:656:23: error: implicit declaration of function 'ufs_qcom_config_ice_allocator'; did you mean 'ufs_qcom_config_ice'? [-Wimplicit-function-declaration]
-     656 |                 err = ufs_qcom_config_ice_allocator(host);
-         |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         |                       ufs_qcom_config_ice
-   drivers/ufs/host/ufs-qcom.c: At top level:
->> drivers/ufs/host/ufs-qcom.c:412:12: warning: 'ufs_qcom_config_ice' defined but not used [-Wunused-function]
-     412 | static int ufs_qcom_config_ice(struct ufs_qcom_host *host)
-         |            ^~~~~~~~~~~~~~~~~~~
-
-
-vim +656 drivers/ufs/host/ufs-qcom.c
-
-   635	
-   636	static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
-   637					      enum ufs_notify_change_status status)
-   638	{
-   639		struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-   640		int err;
-   641	
-   642		switch (status) {
-   643		case PRE_CHANGE:
-   644			err = ufs_qcom_power_up_sequence(hba);
-   645			if (err)
-   646				return err;
-   647	
-   648			/*
-   649			 * The PHY PLL output is the source of tx/rx lane symbol
-   650			 * clocks, hence, enable the lane clocks only after PHY
-   651			 * is initialized.
-   652			 */
-   653			err = ufs_qcom_enable_lane_clks(host);
-   654			break;
-   655		case POST_CHANGE:
- > 656			err = ufs_qcom_config_ice_allocator(host);
-   657			if (err) {
-   658				dev_err(hba->dev, "failed to configure ice, ret=%d\n", err);
-   659				break;
-   660			}
-   661			/* check if UFS PHY moved from DISABLED to HIBERN8 */
-   662			err = ufs_qcom_check_hibern8(hba);
-   663			ufs_qcom_enable_hw_clk_gating(hba);
-   664			ufs_qcom_ice_enable(host);
-   665			break;
-   666		default:
-   667			dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
-   668			err = -EINVAL;
-   669			break;
-   670		}
-   671		return err;
-   672	}
-   673	
-
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 440e07b1d5cd..287ac5b0495f 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -369,7 +369,7 @@ static int pscsi_create_type_disk(struct se_device *dev, struct scsi_device *sd)
+ 	bdev_file = bdev_file_open_by_path(dev->udev_path,
+ 				BLK_OPEN_WRITE | BLK_OPEN_READ, pdv, NULL);
+ 	if (IS_ERR(bdev_file)) {
+-		pr_err("pSCSI: bdev_open_by_path() failed\n");
++		pr_err("pSCSI: bdev_file_open_by_path() failed\n");
+ 		scsi_device_put(sd);
+ 		return PTR_ERR(bdev_file);
+ 	}
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
