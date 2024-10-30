@@ -1,112 +1,76 @@
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC84216452
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 15:13:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2AE1213EC9;
+	Wed, 30 Oct 2024 15:41:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730301226; cv=none; b=ltneowp7xlU+ZLOQ22LoTyJmo4t0bSt4IrMH8xUyWRBRLGGPaXYpNrWrDsTAe+Bnlg9nEThVH4o4LYmscqfo7ZCIw0RPH027wVi+hyLnTxy40IyL36rDSlz1esA7/uWhfILivGDmdQi2VnXnLca9IcYHxAsOFgJ4Ykvf2xI3A3g=
+	t=1730302902; cv=none; b=ibZIRjocdzxqOC5vyvrOHvYolKpL+v9YAHKDFIqX/coVZ6e0u8b9pojXx+5seCrQnSKgijakerLsy8D6rODTVuq7fBh8xWQMsEzyj6e9ezVhSLNApD9Q7IPBuSNEfuDZbUHMb0/v6NKnBciL3f4tAi5YUQYbaHFRz1IZzXr47Js=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730301226; c=relaxed/simple;
-	bh=Kboc7NXdXo+3kfo1Ig38RlRwoliHzf/C12iYA5MLCak=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=bHIwCjSFmdrcanvhtv5f3qxcFAHYDbQVme/pgYjwNHE935ltzwEV65u0Kp4qWu2KckDv9wkUkDn9+zWgmglQasGvuv3b0nl2P5+kwpt+T3NckVF9gPoC34846qWRHrs0x1cfRSNl7kjm/adsT393y+OgEDoIpe33ybsuM7ZsLaQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kmbKivnK; arc=none smtp.client-ip=209.85.208.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730302902; c=relaxed/simple;
+	bh=utkGkIOuyAypc5KWyKHdZPW7ZaIs7bjNM3+PPMYDXx4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A6kV1AmCUSMif5wDSkZZB1XLmzJtRhzwnzmc9Nr06WemoZcj7E7ZMWuqKWqhvzxERVHHYhQRdDDr2pYN1z3uKYPh4nexF2S/P4TX0fh386Vx44YMAbUEUfIxAHsShPW/YL/KWpExhIt4XNIBmVsxIcq0mL/IrX+qkWdUXphBZEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E4+EK1i+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kmbKivnK"
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2fb5a9c7420so65375011fa.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 08:13:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730301222; x=1730906022; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Kboc7NXdXo+3kfo1Ig38RlRwoliHzf/C12iYA5MLCak=;
-        b=kmbKivnKMiwKaQNpv6xc2z3LYDFVM9utrLwjg3EVhoHU7hOedvAMOFigs5ll1fsJuz
-         vmu9vt8tPxVnIxIi/GFrK2+N/bZeagfFu1EPqdNFQLZyj9gl43y3Ni2ltqSWoIRLJX6D
-         JxFMAo0e+GqxThSgfn5NtyVGxJPzzRnbXInh43Uh+laS3GTyGhxYJDw24EyEP/G1Je1Y
-         qd2fAegwcfGtJQVXToFMhCuFLkUMgPZ1GDCyU7B2xUa4Tq/NqVCqBL4Affe332S0V1Fj
-         2MehdgbMuEIz+aZMTJAl7WcBYkY2p6qsC+/YmvtF87BDGMQbHEBB18xvcMhBWzCRxXiG
-         jrTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730301222; x=1730906022;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Kboc7NXdXo+3kfo1Ig38RlRwoliHzf/C12iYA5MLCak=;
-        b=ayXplP+8ppm9V1rK7htv+zHkJ38KRjNRcumlgMtrWdx9cblplkyjbzeHuqceRSWdJ9
-         VMx6oE3DIpxfqmwKtp05nq2mmHGgk+pdMYwqOLso+e99hGNZK6ozPc3NHab1BN0/c5Mb
-         3zbw1NDJb6/ExVCp3YGGf19BU4G/kZqSN9OIi2MhDJLXsJfuIsD1dkjlFPUhq3+bSBIw
-         DuylCoj6J5wqGbPqwzEfhUEe/O9em2QL6Pq8idWzwlR/xaTguzzYtT1rBHf3YQSFgqTC
-         +RwqnQnuka9xDEOJFyT+W0MnXZaa3MQjIXHXXoLUjJSDqqk+C73L29HDyrw8O8ZVXKi8
-         htKg==
-X-Forwarded-Encrypted: i=1; AJvYcCXXQKr5luDHy/YZzHsYl4YNODIEC9TzaVn/cs8asIzowDkIlZ2e4xkKpMqGb0MIOXwU0HEdzWv8tjeo@vger.kernel.org
-X-Gm-Message-State: AOJu0YwYwzOKAFmR4xHG/7xo5wH6C+5pFaLLJ8YGj6kndHaHnSoo1iE8
-	NB0UyqZJHqYO6I9e0xwPZ7tf6j/N5Eb8LapJ55Elwe3KLQ39/WF4
-X-Google-Smtp-Source: AGHT+IHjn/PaD/4x3EnL60x47uX6w7pNW7Gk+OqsWXT+59LHbF2GEIS+ANfH5Oy4HNJZ/mex2+2+1Q==
-X-Received: by 2002:a05:651c:19a1:b0:2fb:5138:a615 with SMTP id 38308e7fff4ca-2fcbddfcba6mr81762391fa.0.1730301221597;
-        Wed, 30 Oct 2024 08:13:41 -0700 (PDT)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cbb6348c93sm4753741a12.97.2024.10.30.08.13.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Oct 2024 08:13:41 -0700 (PDT)
-Message-ID: <580c23960612b82ae0278ad51d13df2b6c0a9fea.camel@gmail.com>
-Subject: Re: [EXT] Re: [PATCH v2] ufs: core: Add WB buffer resize support
-From: Bean Huo <huobean@gmail.com>
-To: Huan Tang <tanghuan@vivo.com>, beanhuo@micron.com
-Cc: bvanassche@acm.org, cang@qti.qualcomm.com, linux-scsi@vger.kernel.org, 
-	opensource.kernel@vivo.com, richardp@quicinc.com, luhongfei@vivo.com
-Date: Wed, 30 Oct 2024 16:13:38 +0100
-In-Reply-To: <20241030093743.659-1-tanghuan@vivo.com>
-References: 
-	<SA6PR08MB101639506856CD749E433360FDB4B2@SA6PR08MB10163.namprd08.prod.outlook.com>
-	 <20241030093743.659-1-tanghuan@vivo.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E4+EK1i+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 822B9C4CECE;
+	Wed, 30 Oct 2024 15:41:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730302902;
+	bh=utkGkIOuyAypc5KWyKHdZPW7ZaIs7bjNM3+PPMYDXx4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=E4+EK1i+uqMZAzhr3niOIOpMznn1nE/QRf8KI0TYOSRYmGtNNLZJHDw+1/IFQKmzH
+	 fgy1C9dnab1BHJjhU6RaRtvPJihIfcI+Y3ZYKP2yEkTxWOxnSl/MEVY6K/YBTxabxq
+	 8Rr8zXkHQo2RH64xzqPoNSbxTRUYZrmOBP7sPwsih5Rf3g+CA+GDtFwi8xAOTYPR5E
+	 pwegXoh3EznGFIrhbSzymoA49utLWxetwb51M93vhihKuFjmS4Iz9Ue/Xtvj7O/A/r
+	 kjTLnvRNLlgudf1AXgt46rnqb6N2AagNNV/2EFnS/IEDgSSSvdyK1gvfC7nLgk/wZm
+	 HreLOajjVKngw==
+Date: Wed, 30 Oct 2024 09:41:39 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	joshi.k@samsung.com, javier.gonz@samsung.com, bvanassche@acm.org,
+	Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
+Message-ID: <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com>
+References: <20241029151922.459139-1-kbusch@meta.com>
+ <20241029151922.459139-10-kbusch@meta.com>
+ <20241029152654.GC26431@lst.de>
+ <ZyEAb-zgvBlzZiaQ@kbusch-mbp>
+ <20241029153702.GA27545@lst.de>
+ <ZyEBhOoDHKJs4EEY@kbusch-mbp>
+ <20241029155330.GA27856@lst.de>
+ <ZyEL4FOBMr4H8DGM@kbusch-mbp>
+ <20241030045526.GA32385@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241030045526.GA32385@lst.de>
 
-On Wed, 2024-10-30 at 17:37 +0800, Huan Tang wrote:
-> > Hi Bart,
-> >=20
-> > Thank you for your feedback. That's good point. But I didn't
-> > observe the ufs-bsg path bypassing core logic such as clock scaling
-> > and clock gating. However, I might be mistaken.=20
-> >=20
-> > From my understanding, changing certain attributes can indeed
-> > bypass the UFS driver tracking. But in this particular patch, there
-> > is no parameter or flag associated that is tracked by the UFS
-> > driver.
-> >=20
-> > Best regards,
-> > Bean
->=20
-> Hi Bean,
->=20
-> Thank you for your reply!
->=20
-> Actually, there are some parameters related to UFS driver; for
-> example: b_presrv_uspc_en, host_sem, etc.
->=20
-> Thanks
-> Huan
+On Wed, Oct 30, 2024 at 05:55:26AM +0100, Christoph Hellwig wrote:
+> On Tue, Oct 29, 2024 at 10:22:56AM -0600, Keith Busch wrote:
+> 
+> > No need to create a new fcntl. The people already testing this are
+> > successfully using FDP with the existing fcntl hints. Their applications
+> > leverage FDP as way to separate files based on expected lifetime. It is
+> > how they want to use it and it is working above expectations. 
+> 
+> FYI, I think it's always fine and easy to map the temperature hits to
+> write streams if that's all the driver offers.  It loses a lot of the
+> capapilities, but as long as it doesn't enforce a lower level interface
+> that never exposes more that's fine.
 
+But that's just the v2 from this sequence:
 
-I meant there isn=E2=80=99t a UFS driver parameter tied to adjusting the WB=
- size.=C2=A0
-If you think there is issue on changing WB size over ufs-bsg, please
-make sure
-to emphasize the issue of this and the reason why you add this new
-interface in
-your patch.
+https://lore.kernel.org/linux-nvme/20240528150233.55562-1-joshi.k@samsung.com/
 
-
-Kind regards,
-Bean
+If you're okay with it now, then let's just go with that and I'm happy
+continue iterating on the rest separately. 
