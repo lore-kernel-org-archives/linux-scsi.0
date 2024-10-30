@@ -1,55 +1,57 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C11822315
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 13:26:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD7E1E47BC
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 13:26:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730294816; cv=none; b=Ar5ArVJddu5rlEAkx7C3bYlGhbfSmyI1Xzlq7a32IFluz8xUMXCK7bNXXrxVPh9VNwsreqs9SJMf5BI8U9I8o0MdS9Xq6lm5ib+J3KFJBbTrAQ/tLJrcQrJ3s+GN4fnOP5Va4q6THVti77eZmmt/v4Zj5mGSDeC2bO2PDMYKyy4=
+	t=1730294817; cv=none; b=i6faLHUnlhj+EZrWHwHcgH/zAXgde7IgxS7pHkAwspGDsxdc3wMJrWE6ihrrPUSdV6jwdavUpap3/x/agQTtqnCRCQ72jTO+fYf40t0LysotVZEsfSCtA0LzrpKH5zegxSmx/XAb1R9Ddnrdc4grgzOdBuRn40gPjWPd0pdkE+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730294816; c=relaxed/simple;
-	bh=AKIM1SvGVyzI+MQKD5g8HL9Q2VVl2NspIGwsd6hNljI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LIuZaZUEj/3UqR56VSuQXbdEHSvEmxt17AVzsQC5Gop4mPf3mB7T/g9kUsK/TmUaozRgPfeMPmhmOkkVSJKmstGmg8SDVheCn6T25uTCcQy26590kViSy6vvmcOmc0Gx215J0+TpAqVnbRniY/RfUadxOyOzZ3uuNkNTHbvh/po=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bja6eSGr; arc=none smtp.client-ip=209.85.221.47
+	s=arc-20240116; t=1730294817; c=relaxed/simple;
+	bh=ainmGEAe2nvxsKE3uvQszP5Qu9isSkOhSEr9wHzge2U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=a8IOA/QBxMIEhwxEXDAJQInaDeT5IbyVM4yvwg/SbZ/RmYwxG3vXQw1jH12YJUbJpmRhDpyMVWplKXnhSpP4xPHI1NxbvalMilfQ3KcHBdIBS/FAQ2gOPE7qcqX9pPXOAHTjk+jakfW1H5kY3wNnRtViL8g/FSH+db4PByIYU94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=IRuyzutJ; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bja6eSGr"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-37d49ffaba6so4668496f8f.0
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 06:26:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IRuyzutJ"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4314c4cb752so63389365e9.2
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 06:26:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730294812; x=1730899612; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=YUH2BZzthzEXo7hEUioBbWsSt3qoc+SC22xhMIafrmU=;
-        b=bja6eSGreaWxeDaw5B0/liSG8bTmaG1CFEHXlm6kgcNdIH1xrBTZJ+XYCOX7uh8P5P
-         e5y6wMmPXmNXjlN8mzz9APIDWFHhoKSXA0f7pvVPYhtk0ZylzTgVmqYXxQp9Wq1uct8H
-         zm/ENm5K8fKF7r+7ntbWITZZyvOcNtCRgcULff6yLgfafIyfJNdqj6W+rg10rAH+ybp3
-         yloizhviHDRDK6JsdfRUz1hvRlS7DAxsQtI7IQH5doOJxSrNqIGWAaJeV+vZhS2qNqmV
-         5+ibDSUx4/HbwOh2E6y1H8lDjr97FzOWULzd3Dh+j7eGkNixsPNRKyNS5jrnKzXH0OHS
-         zzMA==
+        d=linaro.org; s=google; t=1730294813; x=1730899613; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bzoMFJwewUJr88TLCzmafGB2re8jMyauaVwVQzw6WY0=;
+        b=IRuyzutJOpgHKPIc8F65+3Dzj4F6QsXdLYsnARRL74s8AtI6/2f6OYsLb9AymF/BZy
+         chd1ahZFl4PDtsH0S4UdOfe/5AEHkRpAYkpxKt8LTdUmT5I4jh1lw4daGdZgmgtzIJpH
+         uGLWH8Z9o7qsij9BHEgvVSy/T4pZ688MSz6/A4c4YaKXlJDqwoyl+Qo+t1ZTKyPc8cVe
+         TUxKCLfh2zWhE2qe33Kwul+vsUzFjd24STvHmi0r11hRc2IHqnAeZJio9WUQTN1qROJr
+         4PgUN1pyBQ50Iqg2MHUVQOnDBkXKqalZJsfr3uEm9/07ADLNKSlpfWa7enNGC5RzeRR7
+         5d5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730294812; x=1730899612;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=YUH2BZzthzEXo7hEUioBbWsSt3qoc+SC22xhMIafrmU=;
-        b=bTNfLRSPeGkIkn6RCuzkW3U6FxoXWQ/r/h2hhrfkTKgtBdklcYW1faMjfaS4Fevu5w
-         +dht+FzMH6Y65laC1WLY761x5SLWLLWo7AmKf4zDK6SzT6cb63z1PpPakpwGEn6ftdvL
-         wVTF8fHthyedJH7NfmYgf4jsiH8w4FUckr74sHeT9cAcBlq7zVGbnkD77tlSk5shv9iz
-         WSXHlLioKun7o/kFXxLLrSI4yq/zZbrwjO6691d+fLwHanuBERtReqfNA5rtNms2Q/8P
-         ByK8ld2hMqlVHaFnIawBq/9iRNs81cyAGRLZ4xEe7VJiiwoObYjSRClOy/77qrfEzMod
-         7QQg==
-X-Forwarded-Encrypted: i=1; AJvYcCWq6dfaBphYsVG5Ivfg0Qn/IScD/O3thMgAe4IvTkmPDIg2QiG/au10o2+4W75U5egIuYeNuSl2O1Yr@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3OPRNqzL2YOAkNz0Wo1/PdbkMQ9wuoyPJhjWPv0Z72rl0A6rs
-	gsGhjpk7MAYcfjtKLOYBjqjrOjRaP4oJpXK6tDxNgfcQg3UAj2eiWewMVPb3oU4=
-X-Google-Smtp-Source: AGHT+IHIMdJDEaCeqIXymbskBOdadZaANy4sAJ7qeopzQzAgJpTpoJyPxtp9v9pMK+6XU1FesTsuxQ==
-X-Received: by 2002:a5d:4602:0:b0:374:baeb:2ec with SMTP id ffacd0b85a97d-381b7076530mr2335207f8f.19.1730294812459;
-        Wed, 30 Oct 2024 06:26:52 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1730294813; x=1730899613;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=bzoMFJwewUJr88TLCzmafGB2re8jMyauaVwVQzw6WY0=;
+        b=WS2RgQVwQ2FeQGD4BH3GAPr9JBJtkiCDGsjBuPIcPMgljvx4xnJJXecoGFdZ5gQnir
+         GU2BcGPMoB/7Z/s7wUkvFxSJCOMJ2fyTOsEsLrECvXptnzAuWRsSoJYs66l++Y/j5Jk0
+         cl8ByUQdZLqkcVRWJWuMwczbgPhv+kVGIDCSIi2xulKgSyUZrRCWmDK3AUcXTjqg1o8/
+         iL6GoFIAyHlndXLxG3MkBfsC2PvGm37Cx0s/7+WW+JbdsEuwkwq0B5nSqwcjQQsnQpYS
+         0cq9DkgQwZnK+RkBkofisfMArFNuso8iHd8ffJIwujIXBh+aaAt9u9gpZEUtrBGR59Pp
+         7XGg==
+X-Forwarded-Encrypted: i=1; AJvYcCWOeX8/RKNso8Upcn5LCfB20jk/Cwi0T/ozQMD1NpMoS9pF2wa56JWX5YtLYZ4OQzDxVnDBsO9MFfuq@vger.kernel.org
+X-Gm-Message-State: AOJu0YzIpEivsaH+XqqmZO3EC5J7kfHqkEmE651ZdeJWvPF9WBqqDKG7
+	V7Clq2FpBS+bCLDyRIJDsK4kNDhKBQD+8sfxpm4M2KQ4raiZQwtf964gf6BuSsE=
+X-Google-Smtp-Source: AGHT+IHvCVDH97OPRIU78dk2sv1dUkZXYpRkqnVZcPXDtJpr/JmOXd9IkvC3KGa6t702TR8hj0iMNQ==
+X-Received: by 2002:a05:600c:4f06:b0:431:5021:32 with SMTP id 5b1f17b1804b1-4319ac74308mr110456545e9.6.1730294813080;
+        Wed, 30 Oct 2024 06:26:53 -0700 (PDT)
 Received: from ta2.c.googlers.com.com (32.134.38.34.bc.googleusercontent.com. [34.38.134.32])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38058b3bdafsm15356836f8f.30.2024.10.30.06.26.51
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38058b3bdafsm15356836f8f.30.2024.10.30.06.26.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Oct 2024 06:26:51 -0700 (PDT)
+        Wed, 30 Oct 2024 06:26:52 -0700 (PDT)
 From: Tudor Ambarus <tudor.ambarus@linaro.org>
 To: alim.akhtar@samsung.com,
 	James.Bottomley@HansenPartnership.com,
@@ -63,10 +65,12 @@ Cc: krzk@kernel.org,
 	kernel-team@android.com,
 	willmcvicker@google.com,
 	Tudor Ambarus <tudor.ambarus@linaro.org>
-Subject: [PATCH 1/2] scsi: ufs: exynos: remove unused tx_linereset_n/tx_dif_n_nsec fields
-Date: Wed, 30 Oct 2024 13:26:48 +0000
-Message-ID: <20241030132649.3575865-1-tudor.ambarus@linaro.org>
+Subject: [PATCH 2/2] scsi: ufs: exynos: remove unused rx_hibern8_wait(_nsec) fields
+Date: Wed, 30 Oct 2024 13:26:49 +0000
+Message-ID: <20241030132649.3575865-2-tudor.ambarus@linaro.org>
 X-Mailer: git-send-email 2.47.0.199.ga7371fff76-goog
+In-Reply-To: <20241030132649.3575865-1-tudor.ambarus@linaro.org>
+References: <20241030132649.3575865-1-tudor.ambarus@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,8 +79,8 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-tx_dif_n_nsec was used to compute tx_linereset_n, but the later is not
-used afterwards. Remove both.
+rx_hibern8_wait_nsec was used to compute rx_hibern8_wait, but the later
+is not used afterwards. Remove both.
 
 Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
 ---
@@ -85,62 +89,62 @@ Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
  2 files changed, 7 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 9ec318ef52bf..91c09309c1c1 100644
+index 91c09309c1c1..fd86252ab2ba 100644
 --- a/drivers/ufs/host/ufs-exynos.c
 +++ b/drivers/ufs/host/ufs-exynos.c
-@@ -548,8 +548,6 @@ static void exynos_ufs_specify_phy_time_attr(struct exynos_ufs *ufs)
+@@ -559,8 +559,6 @@ static void exynos_ufs_specify_phy_time_attr(struct exynos_ufs *ufs)
  
- 	t_cfg->tx_linereset_p =
- 		exynos_ufs_calc_time_cntr(ufs, attr->tx_dif_p_nsec);
--	t_cfg->tx_linereset_n =
--		exynos_ufs_calc_time_cntr(ufs, attr->tx_dif_n_nsec);
- 	t_cfg->tx_high_z_cnt =
- 		exynos_ufs_calc_time_cntr(ufs, attr->tx_high_z_cnt_nsec);
- 	t_cfg->tx_base_n_val =
-@@ -1970,7 +1968,6 @@ static void exynos_ufs_remove(struct platform_device *pdev)
- static struct exynos_ufs_uic_attr exynos7_uic_attr = {
- 	.tx_trailingclks		= 0x10,
- 	.tx_dif_p_nsec			= 3000000,	/* unit: ns */
--	.tx_dif_n_nsec			= 1000000,	/* unit: ns */
- 	.tx_high_z_cnt_nsec		= 20000,	/* unit: ns */
- 	.tx_base_unit_nsec		= 100000,	/* unit: ns */
- 	.tx_gran_unit_nsec		= 4000,		/* unit: ns */
-@@ -2046,7 +2043,6 @@ static const struct exynos_ufs_drv_data exynos_ufs_drvs = {
- static struct exynos_ufs_uic_attr gs101_uic_attr = {
- 	.tx_trailingclks		= 0xff,
- 	.tx_dif_p_nsec			= 3000000,	/* unit: ns */
--	.tx_dif_n_nsec			= 1000000,	/* unit: ns */
- 	.tx_high_z_cnt_nsec		= 20000,	/* unit: ns */
- 	.tx_base_unit_nsec		= 100000,	/* unit: ns */
- 	.tx_gran_unit_nsec		= 4000,		/* unit: ns */
-@@ -2074,7 +2070,6 @@ static struct exynos_ufs_uic_attr gs101_uic_attr = {
- static struct exynos_ufs_uic_attr fsd_uic_attr = {
- 	.tx_trailingclks		= 0x10,
- 	.tx_dif_p_nsec			= 3000000,	/* unit: ns */
--	.tx_dif_n_nsec			= 1000000,	/* unit: ns */
- 	.tx_high_z_cnt_nsec		= 20000,	/* unit: ns */
- 	.tx_base_unit_nsec		= 100000,	/* unit: ns */
- 	.tx_gran_unit_nsec		= 4000,		/* unit: ns */
+ 	t_cfg->rx_linereset =
+ 		exynos_ufs_calc_time_cntr(ufs, attr->rx_dif_p_nsec);
+-	t_cfg->rx_hibern8_wait =
+-		exynos_ufs_calc_time_cntr(ufs, attr->rx_hibern8_wait_nsec);
+ 	t_cfg->rx_base_n_val =
+ 		exynos_ufs_calc_time_cntr(ufs, attr->rx_base_unit_nsec);
+ 	t_cfg->rx_gran_n_val =
+@@ -1975,7 +1973,6 @@ static struct exynos_ufs_uic_attr exynos7_uic_attr = {
+ 	.tx_min_activatetime		= 0xa,
+ 	.rx_filler_enable		= 0x2,
+ 	.rx_dif_p_nsec			= 1000000,	/* unit: ns */
+-	.rx_hibern8_wait_nsec		= 4000000,	/* unit: ns */
+ 	.rx_base_unit_nsec		= 100000,	/* unit: ns */
+ 	.rx_gran_unit_nsec		= 4000,		/* unit: ns */
+ 	.rx_sleep_cnt			= 1280,		/* unit: ns */
+@@ -2050,7 +2047,6 @@ static struct exynos_ufs_uic_attr gs101_uic_attr = {
+ 	.tx_min_activatetime		= 0xa,
+ 	.rx_filler_enable		= 0x2,
+ 	.rx_dif_p_nsec			= 1000000,	/* unit: ns */
+-	.rx_hibern8_wait_nsec		= 4000000,	/* unit: ns */
+ 	.rx_base_unit_nsec		= 100000,	/* unit: ns */
+ 	.rx_gran_unit_nsec		= 4000,		/* unit: ns */
+ 	.rx_sleep_cnt			= 1280,		/* unit: ns */
+@@ -2077,7 +2073,6 @@ static struct exynos_ufs_uic_attr fsd_uic_attr = {
+ 	.tx_min_activatetime		= 0xa,
+ 	.rx_filler_enable		= 0x2,
+ 	.rx_dif_p_nsec			= 1000000,	/* unit: ns */
+-	.rx_hibern8_wait_nsec		= 4000000,	/* unit: ns */
+ 	.rx_base_unit_nsec		= 100000,	/* unit: ns */
+ 	.rx_gran_unit_nsec		= 4000,		/* unit: ns */
+ 	.rx_sleep_cnt			= 1280,		/* unit: ns */
 diff --git a/drivers/ufs/host/ufs-exynos.h b/drivers/ufs/host/ufs-exynos.h
-index 1646c4a9bb08..e64fe20d50c1 100644
+index e64fe20d50c1..b7fe725c7f8e 100644
 --- a/drivers/ufs/host/ufs-exynos.h
 +++ b/drivers/ufs/host/ufs-exynos.h
-@@ -136,7 +136,6 @@ struct exynos_ufs_uic_attr {
- 	/* TX Attributes */
- 	unsigned int tx_trailingclks;
- 	unsigned int tx_dif_p_nsec;
--	unsigned int tx_dif_n_nsec;
- 	unsigned int tx_high_z_cnt_nsec;
- 	unsigned int tx_base_unit_nsec;
- 	unsigned int tx_gran_unit_nsec;
-@@ -195,7 +194,6 @@ struct exynos_ufs_drv_data {
- 
- struct ufs_phy_time_cfg {
- 	u32 tx_linereset_p;
--	u32 tx_linereset_n;
- 	u32 tx_high_z_cnt;
- 	u32 tx_base_n_val;
+@@ -144,7 +144,6 @@ struct exynos_ufs_uic_attr {
+ 	/* RX Attributes */
+ 	unsigned int rx_filler_enable;
+ 	unsigned int rx_dif_p_nsec;
+-	unsigned int rx_hibern8_wait_nsec;
+ 	unsigned int rx_base_unit_nsec;
+ 	unsigned int rx_gran_unit_nsec;
+ 	unsigned int rx_sleep_cnt;
+@@ -199,7 +198,6 @@ struct ufs_phy_time_cfg {
  	u32 tx_gran_n_val;
+ 	u32 tx_sleep_cnt;
+ 	u32 rx_linereset;
+-	u32 rx_hibern8_wait;
+ 	u32 rx_base_n_val;
+ 	u32 rx_gran_n_val;
+ 	u32 rx_sleep_cnt;
 -- 
 2.47.0.199.ga7371fff76-goog
 
