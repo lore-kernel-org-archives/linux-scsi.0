@@ -1,58 +1,156 @@
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C799D3C14
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 01:02:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03715146D40;
+	Wed, 30 Oct 2024 01:41:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730250153; cv=none; b=DAWd/Dr39gUO4mASjzbHAeYtUxn7+2vvaqGLSkphaVj/TH2QUTKPQpBg8VVvWJr8G/vraFJImTfUxC36uZVrBfnevrLZdjaup8HdNIkCYA1c3S5YvyikOOxU/UT4X7DKDhp999HSX1Belk2jje+TRDQwQQhypTOQ8TRmerE+yiU=
+	t=1730252507; cv=none; b=G5ybXEQ4l+pQnb4DBPi+OI3A6UM+gGBVwNpFeAn8N02alhalzo3b/31EwVFgly59jxivS+YU/H47TqvY24OPXhaBPB/cEtOft0s3IiawJtGgWxm9yWfeq1qyH/3xK1nyxxhF+OKbXwgP+rht9q+MHYf6xls9BI7f36iKH6RizzY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730250153; c=relaxed/simple;
-	bh=XGinJIIeqaY5jbjYD3YskeA7t7qT3C3YAlEIQqCyEGM=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=WPb2tkGiSQUCAsaeF8TVObhcdYtGhjb22GsBOYrcVHgj9lLHKI7c6d5CqfdjO9V9iy0ikUATCsTmorxSxKCCfaCouO9srxDIs08bXnl8NyiSlBsBBycVeDrYzG6KpVt0YsUaFjg36qwSu1SohoypgxFFyMjVu15qTVUdUO1zjC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 4720E92009C; Wed, 30 Oct 2024 02:02:22 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 414AC92009B;
-	Wed, 30 Oct 2024 01:02:22 +0000 (GMT)
-Date: Wed, 30 Oct 2024 01:02:22 +0000 (GMT)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-cc: Magnus Lindholm <linmag7@gmail.com>, linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-In-Reply-To: <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
-References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com> <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	s=arc-20240116; t=1730252507; c=relaxed/simple;
+	bh=WcMfb/ZXzjJ5ndEdwQHbHhsDGnvuFA3OHZX79Q4P304=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mhH1J9Mut6BZYjerWmFJbPi0v4uZlUSwR6TTIFN4bYLZJHFQ/HED47VrdPgWmV3NUhX0Ehd944UPEfcP+ExSwxV+HhwJIPLH0fhMahLpvygYHqhR4Gr3ad+dVpbK2LduAIlwlcAJVWZjawpUMALYbzwyHCjq3xiDAOqBa3BjaIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=J4YPlHoH; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="J4YPlHoH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1730252505; x=1761788505;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=WcMfb/ZXzjJ5ndEdwQHbHhsDGnvuFA3OHZX79Q4P304=;
+  b=J4YPlHoHYBdnA5kpqNlIMavjWMJZQR5cIgFlTYeGmIjQ7pl3/aCdvEUu
+   BoQS2XSCFYk/w2wvY4ik1msErXTpyw7GEubJkyCE2RMtsOj9R5PvN/W60
+   sHSJEygCDEiLam4XWZI0GustDkreHfd7jzQt+8BdwiWDqOuYNasbhYTRp
+   n9I3xcz+9qus+ILKJupllqr0ZPHNBaCc6hFydfzxPo+407f22b3Im1GI1
+   4XX0t06iqfG7wfHrvrMoSVU9QkDA3JkHoHxgGkaG3n3HdppkwTU3ld05h
+   8YvLggcnXgRSrbI/fLs/glAoznqP75XgbMKGnFyjkddQMnuAgzGPJqOR3
+   Q==;
+X-CSE-ConnectionGUID: /KfYJmWuQI2S7hogsRUafA==
+X-CSE-MsgGUID: M6mQaQsWShai+no5HumT/w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11240"; a="30043181"
+X-IronPort-AV: E=Sophos;i="6.11,243,1725346800"; 
+   d="scan'208";a="30043181"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2024 18:41:45 -0700
+X-CSE-ConnectionGUID: Cd5FePhgSs6Fqha/z81raQ==
+X-CSE-MsgGUID: e13lZlRITLa/bV3qpXk1EQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,243,1725346800"; 
+   d="scan'208";a="82086912"
+Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 29 Oct 2024 18:41:40 -0700
+Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1t5xiL-000eNw-23;
+	Wed, 30 Oct 2024 01:41:37 +0000
+Date: Wed, 30 Oct 2024 09:41:05 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
+	manivannan.sadhasivam@linaro.org, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, andersson@kernel.org,
+	konrad.dybcio@linaro.org, James.Bottomley@hansenpartnership.com,
+	martin.petersen@oracle.com, agross@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, quic_narepall@quicinc.com,
+	quic_nitirawa@quicinc.com, Can Guo <quic_cang@quicinc.com>
+Subject: Re: [PATCH V2 3/3] scsi: ufs: qcom: Add support for multiple ICE
+ allocators
+Message-ID: <202410300901.9B3oDYwL-lkp@intel.com>
+References: <20241029113003.18820-4-quic_rdwivedi@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241029113003.18820-4-quic_rdwivedi@quicinc.com>
 
-On Mon, 28 Oct 2024, Martin K. Petersen wrote:
+Hi Ram,
 
-> > I've made some changes to the qla1280 driver, the changes include
-> > things like checking if the card is in a 64-bit slot and setting
-> > DMA_BIT_MASK and enable_64bit_addressing accordingly. Also in the
-> > driver information string, it now shows hardware revision on 1040
-> > chips as well as printing info on its PCI slot (32 or 64 bit). I've
-> > tested it with a ISP1040B card and a ISP1080 and it seems to work
-> > fine. This may be of interest to others still running legacy qlogic
-> > SCSI-controllers?
-> 
-> It would be great for the driver to have a solid heuristic for running
-> the older ISP cards in 32-bit mode.
+kernel test robot noticed the following build errors:
 
- The use of the 32-bit form factor does not preclude 64-bit addressing as 
-long as the PCI bus logic supports the DAC command, both in the system's 
-relevant host bridge and the device concerned.  Is there documentation 
-available for the ISP devices that would provide such information or is 
-that all we have is trial and error?
+[auto build test ERROR on robh/for-next]
+[also build test ERROR on mkp-scsi/for-next jejb-scsi/for-next linus/master v6.12-rc5 next-20241029]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-  Maciej
+url:    https://github.com/intel-lab-lkp/linux/commits/Ram-Kumar-Dwivedi/dt-bindings-ufs-qcom-Document-ice-configuration-table/20241029-193301
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
+patch link:    https://lore.kernel.org/r/20241029113003.18820-4-quic_rdwivedi%40quicinc.com
+patch subject: [PATCH V2 3/3] scsi: ufs: qcom: Add support for multiple ICE allocators
+config: arm64-defconfig (https://download.01.org/0day-ci/archive/20241030/202410300901.9B3oDYwL-lkp@intel.com/config)
+compiler: aarch64-linux-gcc (GCC) 14.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241030/202410300901.9B3oDYwL-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202410300901.9B3oDYwL-lkp@intel.com/
+
+All error/warnings (new ones prefixed by >>):
+
+   drivers/ufs/host/ufs-qcom.c: In function 'ufs_qcom_hce_enable_notify':
+>> drivers/ufs/host/ufs-qcom.c:656:23: error: implicit declaration of function 'ufs_qcom_config_ice_allocator'; did you mean 'ufs_qcom_config_ice'? [-Wimplicit-function-declaration]
+     656 |                 err = ufs_qcom_config_ice_allocator(host);
+         |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         |                       ufs_qcom_config_ice
+   drivers/ufs/host/ufs-qcom.c: At top level:
+>> drivers/ufs/host/ufs-qcom.c:412:12: warning: 'ufs_qcom_config_ice' defined but not used [-Wunused-function]
+     412 | static int ufs_qcom_config_ice(struct ufs_qcom_host *host)
+         |            ^~~~~~~~~~~~~~~~~~~
+
+
+vim +656 drivers/ufs/host/ufs-qcom.c
+
+   635	
+   636	static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+   637					      enum ufs_notify_change_status status)
+   638	{
+   639		struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+   640		int err;
+   641	
+   642		switch (status) {
+   643		case PRE_CHANGE:
+   644			err = ufs_qcom_power_up_sequence(hba);
+   645			if (err)
+   646				return err;
+   647	
+   648			/*
+   649			 * The PHY PLL output is the source of tx/rx lane symbol
+   650			 * clocks, hence, enable the lane clocks only after PHY
+   651			 * is initialized.
+   652			 */
+   653			err = ufs_qcom_enable_lane_clks(host);
+   654			break;
+   655		case POST_CHANGE:
+ > 656			err = ufs_qcom_config_ice_allocator(host);
+   657			if (err) {
+   658				dev_err(hba->dev, "failed to configure ice, ret=%d\n", err);
+   659				break;
+   660			}
+   661			/* check if UFS PHY moved from DISABLED to HIBERN8 */
+   662			err = ufs_qcom_check_hibern8(hba);
+   663			ufs_qcom_enable_hw_clk_gating(hba);
+   664			ufs_qcom_ice_enable(host);
+   665			break;
+   666		default:
+   667			dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
+   668			err = -EINVAL;
+   669			break;
+   670		}
+   671		return err;
+   672	}
+   673	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
