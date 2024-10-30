@@ -1,135 +1,103 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22D2F1E04B6
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 11:45:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29F471E3DF7
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 11:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730288721; cv=none; b=hw8HXcXwkfxGCms0WcUdtPHJhfAVZhtPYKPKiPeCwFqNckdqnoDyo6rIBjNNcBd5p22tLylxFUw2ScbeW3EVmxcA5lZPR9LnZa7sMKkzbWEY9+Hs2zPrr2QQ7IE1rYm8MsBRmcmwdSK3KGyxbUE7q5yLtWEPSci1gcRxxIdEHOE=
+	t=1730289047; cv=none; b=tIBESXReRYU8Uj8cVRtIV/iTkEMSHKRQ3Q0HHE0KpI/OUEY3XH+hoC8/6CeD0JDAO0y3DdoUMGK97cN/0iO4bOcdvYvWlao0+caUEoO63h+hhfPNInluBNhr7EWEPN+KbCKdF/NOaBoxLFxggpduzDiUkh9yhmDwI4zW4ReEv4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730288721; c=relaxed/simple;
-	bh=w0GYEg+LFxq3vLAYtJEuPA8L1iKjtUZHq5licyRLyaE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lTQxN8NA99eUixGaz0HILcDNjxXnQbtrmH88LY3FaNka8TMlv+gZKi6X5XOeYDabwAOtu3YQLWqGyDHW5vlea5A+ryOSM/WbbrOYHn7kRWEatalgr+5tszNib1EGqi2ns5hcRWnO9qz12jFqgwGqnZET4Agi544z3xU6r50DYEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XDJHrvzi; arc=none smtp.client-ip=209.85.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730289047; c=relaxed/simple;
+	bh=ZlOwAI7A0ERCqmyT1YMUpxUbRWKzixiIq6yaG8K4oW0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sLTKh6x7/WC1um4noYWTt7DVjhqPqtu+Voo8zaq87GfNqg29nlQSP4LPu2+sUhCwPoyrEj1y3X+y6Tmp4bAPj//5SyDWW0cJZi2AH4xsE5q3Kd4W6Gj7DgAna/rQyWqbvozepg7o3Z8vXTaLL3tNOOOELFnVXGcoLi3zib+Am2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LxlgGKA1; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XDJHrvzi"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4315abed18aso60245265e9.2
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 04:45:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LxlgGKA1"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5c97c7852e8so9194971a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 04:50:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730288717; x=1730893517; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=hRTlMMdulNS4t7Utn/teiYYlIAHmyGJd+rw2+dNOPT8=;
-        b=XDJHrvzin5IsYQWW5MfOooR+Y0/qc9/EolG5lON3y+o+STcTgsB6l9W0l/WFNEzkwK
-         jP5Gy3VXRPdQnM+0ZU4N2S8ylK6Cpx5oYt9yOwDY97wuG90fPgWkGwF0xyMbfbUdSbJI
-         sPDahCj7uv9Xa9LKsMmHnxkTGqhLNwghpGmbpUCGmRfLd2GWl7UsJjuCfSuqoS80SHxn
-         a1KheuvIX3Nxu9CEF8/0t9ZTrzaAEBETyk0s08Ekk80E4Xq/7HhlgMGTnhNfGDGfs0dL
-         oZ3YrCBoYhNeZLbjy3/1scdclWWAnbpcFNk16Nrs+c2EsKHoCsnT9rYEzP+Z7xYwhJge
-         eW0w==
+        d=gmail.com; s=20230601; t=1730289042; x=1730893842; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZlOwAI7A0ERCqmyT1YMUpxUbRWKzixiIq6yaG8K4oW0=;
+        b=LxlgGKA1OqS8uDeBv7txVVYsSXiXIBE/8Ghy7xHkPm1XrUNb+WKM0pXpz+2AYLaYfo
+         vCAbinWAawV7zZVOUZ6O8zG3ISbsdrpFXzhoLbIiDIPeK83YxwWLH/bvqAmUHomdA8Bm
+         U29vu2ztKos4qF0ouqanbqZc9FKkG6pr0/SgkgU4ZLWBYI5B+5RNX8iFyVKYML6KhoVd
+         8Tp5EXeFrppHOPDg39gGIB+q4GbkHmpVhugds3YAwy3bmxQNz8fpijr6OOzPKCwAOLZn
+         lTgaRWdqS2TIxsmahfHUvhZBGemF+lJt+d5bsugE58r6jocsVRh6vU/N27ayWR/OnOPl
+         hmHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730288717; x=1730893517;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hRTlMMdulNS4t7Utn/teiYYlIAHmyGJd+rw2+dNOPT8=;
-        b=MB/B5X8b4jyetM2LvkKNUY8Gor3Z/YKwg7z5aL/XcVLivNQMtUuG1mGJ1aq7mE1+Zj
-         kkDpRKtUksxcwVwtZhV1/OXcEokLMHwRhVfpGzQxjT5Eh9bySn4UVEk+GV92IF3iuAhi
-         gSefmFaLKAhlDUtSWGihD+FuRGXp/zrJmOiaZl9xSU6DbkKZnsUx/CksX4z7GsL9sW1r
-         yV+TpmNYGikhxFvxC/UrJEUhpL+NeDm/B5NHEEg/a0LyfoErCLhYngQpSX6G2HTrsZXJ
-         IgKY5/NnCPSoEdFP3UP/0G0EJ8+MfhymFZrgyJecqClO3f8KCVzH4Xq56eFm1KSSVd/s
-         3t7g==
-X-Forwarded-Encrypted: i=1; AJvYcCVKTIOgIWWbdbP1CLwsJQYD/ZjyUIfs67KsJT0Q+DeHmtR7XGqY/2OD7ulrqKWSmMf5+t5FcXpD1VbP@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4uXMYfhOq1IeawPpvR3v5al3n4WA+fNmmPsMgIXmXRbe3qRBJ
-	9o+rlnRyowzQZFGFuhwCd7YkcjfchP7Gd9kfPbv0w0I81H+QuP/NXg2gpmv+Mjo=
-X-Google-Smtp-Source: AGHT+IFhRIh+9dGeOayOm15oZMXod/rBU6ExE23pj44w94j9FntXD8S6utlDgPeArlr6epPz1dO7fQ==
-X-Received: by 2002:a05:600c:35d3:b0:42c:c401:6d8b with SMTP id 5b1f17b1804b1-4319ac7832dmr132578255e9.7.1730288717449;
-        Wed, 30 Oct 2024 04:45:17 -0700 (PDT)
-Received: from [192.168.0.157] ([79.115.63.43])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd97d5edsm19091545e9.26.2024.10.30.04.45.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Oct 2024 04:45:17 -0700 (PDT)
-Message-ID: <f9cb758d-28a5-44bd-9cb5-d7ac5108db1b@linaro.org>
-Date: Wed, 30 Oct 2024 11:45:15 +0000
+        d=1e100.net; s=20230601; t=1730289042; x=1730893842;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ZlOwAI7A0ERCqmyT1YMUpxUbRWKzixiIq6yaG8K4oW0=;
+        b=jKovq7M+s5JrdMsReX0YaB2x/F/U8GAC8OZ+fbHGRWzupAIBp+d0r3Gu0PM/vVVsys
+         LPNRjmwhF4VSbZZ7EkzRU9PNseruhuqSBRpO/XmijZDI0CiLuhF+9qKg5Bv1TdaUxAEh
+         YyjNA6VUfqVKBRcGIY9TJALwiawm1EC+Q5B540oRfALZvpCIRyVue+59u3raTyOo2lcC
+         JFlq8y/WtFraSWfgB5xxM1mmimtXDZ3FmG1Lei1o5fbc0GgNfsFH3bljgF//LiofAGI4
+         H7YPpmM87JB/GSBDeMLW0CZYlMwVGd1mJ5ByfnxRKxLWuRy63J+o0reLdQ243XSi0kti
+         QbFA==
+X-Forwarded-Encrypted: i=1; AJvYcCXXXrAg7FFVUFFWfq6aXbSnjikgbgyBRBGUZ0t+egF1V5lLXSU9dZfobmYNT3fgjUPr6hObw1u0a9hZ@vger.kernel.org
+X-Gm-Message-State: AOJu0YyEquoAiRelS6bhh3k2lAyWwq7gXjx1B4U4Ymb2mtIvhNNx4IfJ
+	JyUrcwU1y7ZGQ53K/3pSxtoskYgNTbKbs/8Xgj1lXY1/gMlOg+um90oi3e/sz/fNE1ieGjLlsP0
+	wL4CYE1ar0ZTpABNj3VV+fvFMVos=
+X-Google-Smtp-Source: AGHT+IFZUe1/UugYE4pFjQf6jH3htutUMhc9bzj4Ytg1eYHEcQAQA6TJS9KgXpm1OPrfB3Uza/Bcf84aupL9QgOobsY=
+X-Received: by 2002:a05:6402:3553:b0:5c8:9f3e:1419 with SMTP id
+ 4fb4d7f45d1cf-5cbbf88a1d7mr12553703a12.5.1730289042328; Wed, 30 Oct 2024
+ 04:50:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 09/11] scsi: ufs: exynos: set ACG to be controlled by
- UFS_ACG_DISABLE
-To: Peter Griffin <peter.griffin@linaro.org>, alim.akhtar@samsung.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- avri.altman@wdc.com, bvanassche@acm.org, krzk@kernel.org
-Cc: andre.draszik@linaro.org, kernel-team@android.com,
- willmcvicker@google.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- ebiggers@kernel.org
-References: <20241025131442.112862-1-peter.griffin@linaro.org>
- <20241025131442.112862-10-peter.griffin@linaro.org>
-Content-Language: en-US
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-In-Reply-To: <20241025131442.112862-10-peter.griffin@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
+ <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+ <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+ <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com> <20241030102549.572751ec@samweis>
+In-Reply-To: <20241030102549.572751ec@samweis>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Wed, 30 Oct 2024 12:50:30 +0100
+Message-ID: <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: Thomas Bogendoerfer <tbogendoerfer@suse.de>
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi,
 
+Thanks for your reply, I guess this suggests that this is an
+alpha-platform specific problem then? I can run the QL1040 card fine
+with the original qla1280.c driver ( in a 64-bit slot on the ES40 )
+just as long as I don't put more than 2GB ram in the system, this is
+when I start seeing the issues with file system corruption. As soon as
+S/G buffers are allocated on addresses above 32-bit, the QL1040 cannot
+deal with this, unless enforcing a DMA_BIT_MASK(32). The same card
+runs fine under Tru64 UNIX on the same system, however, I don't know
+how the Tru64 driver sets the DMA mask, if it enables full 64-bit
+addressing or not.
 
-On 10/25/24 2:14 PM, Peter Griffin wrote:
-> HCI_IOP_ACG_DISABLE is an undocumented register in the TRM but the
-> downstream driver sets this register so we follow suit here.
-> 
-> The register is already 0 presumed to be set by the bootloader as
-> the comment downstream implies the reset state is 1. So whilst this
-> is a nop currently, it should help with suspend/resume.
+Magnus
 
-It should help in case the bootloader changes I assume. I see
-gs101_ufs_drv_init() gets called only at probe time, via
-ufshcd_pltfrm_init().
-
-> 
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-
-Reviewed-by: Tudor Ambarus <tudor.ambarus@linaro.org>
-
-> ---
->  drivers/ufs/host/ufs-exynos.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> index b0cbb147c7a1..fa4e61f152c4 100644
-> --- a/drivers/ufs/host/ufs-exynos.c
-> +++ b/drivers/ufs/host/ufs-exynos.c
-> @@ -76,6 +76,10 @@
->  #define CLK_CTRL_EN_MASK	(REFCLK_CTRL_EN |\
->  				 UNIPRO_PCLK_CTRL_EN |\
->  				 UNIPRO_MCLK_CTRL_EN)
-> +
-> +#define HCI_IOP_ACG_DISABLE	0x100
-> +#define HCI_IOP_ACG_DISABLE_EN	BIT(0)
-> +
->  /* Device fatal error */
->  #define DFES_ERR_EN		BIT(31)
->  #define DFES_DEF_L2_ERRS	(UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF |\
-> @@ -220,10 +224,15 @@ static int exynos_ufs_shareability(struct exynos_ufs *ufs)
->  static int gs101_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
->  {
->  	struct ufs_hba *hba = ufs->hba;
-> +	u32 reg;
->  
->  	/* Enable WriteBooster */
->  	hba->caps |= UFSHCD_CAP_WB_EN;
->  
-> +	/* set ACG to be controlled by UFS_ACG_DISABLE */
-> +	reg = hci_readl(ufs, HCI_IOP_ACG_DISABLE);
-> +	hci_writel(ufs, reg & (~HCI_IOP_ACG_DISABLE_EN), HCI_IOP_ACG_DISABLE);
-> +
->  	return exynos_ufs_shareability(ufs);
->  }
->  
+> the datasheet is wrong. QL1040 supports 64bit addresses via DAC,
+> otherwise it wouldn't work on SGI Origin and SGI Octane systems.
+> Your patch breaks them (verified on a Octane).
+>
+> So your problem might not be in the scsi driver, but a PCI setup
+> problem for the bus of the 32bit PCI slot in your system. If this
+> bus doesn't support DAC it IMHO shoulnd't allow 64bit PCI addresses.
+>
+> Thomas.
+>
+> --
+> SUSE Software Solutions Germany GmbH
+> HRB 36809 (AG N=C3=BCrnberg)
+> Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, Andrew McDonald, Werner Knoblich
