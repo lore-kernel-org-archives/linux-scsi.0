@@ -1,146 +1,145 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0071D1E1A36
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 09:08:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCAC11E1C2B
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 09:26:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730279319; cv=none; b=XgZTzY+5P8fjZO0/J6tNvR0ojyM1pGqrmUb5xOUKFrYNcE0ZF/2PJBZ/oqBTu89322ahiahllc6yl1Rbc0tVgcUl2FH4ArWBFgxJlbIJOfPps7vNzXn/0puzPFRto4bzX8tzcogVykr/iLq3XkQxSJHZFOxWdJTMcxsKZkrTcS0=
+	t=1730280377; cv=none; b=D49K97SOMv35LILjZW/nfm+dSTpISp7r6xFxXMMvldyJmZrwFUGu+05E2vqY+BEzUjPJr6+Gs9hYX8/7QCg6UtN655LKb72DmwhYOqpqaniapRYhCwe9qt3Tc98pTDheVnlbYd1VCw3NZaRzbEImDAcLKjOXiPjJ62qSwOUJ4hg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730279319; c=relaxed/simple;
-	bh=Jk0UXxShi8z2/f18nwm1muRUeNcR5njK4N+6odlBPYs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z242FX+2lbOaVYYQs2LFvxbCwl0DoL4opZPFBBqnVISFRem0gTPwlbscmgsAj+XlpyXia3JWSLV3+glDMcehOz6Zd4xxRppV9O1OTyNDF0YVuyzZXEPtFmhLKCQlCtVMZoZQxqt+Bv5g2/n4Jb3MX8jD6ih0s4t20w39NzBVbqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=wOmAsvyC; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730280377; c=relaxed/simple;
+	bh=fJWLFvaKc7pPH8GF/Z9J3TgSeV/DOUTB51omZOYhLZY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fKE+GjGeyrhU9Zq5o6JQS8TdGG0+hZaBf1lCSEYYAH1JzyYI1kz+/l+jWsWgIQf6Jjf5X7x4/9XMcMQPnuVBFC2TIf2y1nBxzuYFLmdmReXacHr5RZQXHDQl6SyuMDfu2wFsjntRSzP6s2AFrYXhamGMEa8JLndcKw2rKeyhOz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1KBUuNBD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4axmEAl4; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1KBUuNBD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4axmEAl4; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wOmAsvyC"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4315baec69eso62017635e9.2
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 02:08:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730279315; x=1730884115; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=jfSruwmm+EhXu2+6CoTrjQzFc7XhuI6YW/TgDUPgZq0=;
-        b=wOmAsvyCUCdYJmAXE1B0LBiBJb/u4e4DKCLxZ5jYd5xzWQ5EBWXpcCBLVadIbxd6cU
-         hgcrHqP+kJ7b6LxfzXEgdt7o/2xywpWabEnxNvjei3QYnK4lBac6CdOGh5JeKzE0x8XG
-         6lr42H83wZZ+qBM5zlNdZMPtJWML6ooDfQPVs7tPkvekxQGdjP3OIyL5U57+OZaqJlW/
-         RZjg3FJOUNmtJaCekDX66e/+B2aLIqMCbhx+eql7xJQt4CWQlybT0/K47NUKthBDdwb3
-         AIRtFWlnraMW6ijmL48fPu+XK+o+GOXG3Gcby3H2eIfxod+uNwfwyWabD7t3HORoTsb7
-         a9DQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730279315; x=1730884115;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jfSruwmm+EhXu2+6CoTrjQzFc7XhuI6YW/TgDUPgZq0=;
-        b=CiGP6k5jxSlQrZhQ8wx8O2nXeX+s/hHqInp4LiL864jzitIO5hbd1a01UZ9qTx0HIb
-         1hKRPNIdbJofDgdf85SQcOtG+w7AAMbcxb3Nq34ScGU3wOs6UEh1a+IDl8W3zKqx1lce
-         o8TdlaiI7sf3+uwh2OqCbGsfTHlQ76aF2REWYHYhhegFRDb/n3OT44+vG4lxNvwTC3pn
-         sCOVwKdasWZC2ekZrDD7cbzrU6hSJ+eumuov3J1cwfhcQFCP2HmdUi6joM5bUsxHIVAA
-         P/DLISFieX5hdtF2+9QXFmEYA8lI1eKy9Rl1qugHGMpYxqWIMXHjk8XCertETr0SKURt
-         kzgw==
-X-Forwarded-Encrypted: i=1; AJvYcCWpxmhcjgys1J3RQF1nredOIRA4VeL6sNjLGX19yCkMVhWpHWY/XbXJQnUMz2UqiOPlVfFD6bPW6BYL@vger.kernel.org
-X-Gm-Message-State: AOJu0YzYQ5fNf/r386kqgJcVuFagqDZH/6Ch82rNH1tnIRp5/bPU5m7p
-	PRTf/fDhmFUd1gzM3scjDSkf7nn93UJRdvswut6vR/XjK9cbBv723dH6iXuCwCE=
-X-Google-Smtp-Source: AGHT+IGD4iPjU+Pkh0lZx916PTWhGIipRT1xfez/Mrkm0VvypRRrWcsZWadAIqR4bRvqK/U4Zm60wA==
-X-Received: by 2002:a05:600c:458f:b0:42b:a7c7:5667 with SMTP id 5b1f17b1804b1-4319ad02659mr126496625e9.25.1730279315276;
-        Wed, 30 Oct 2024 02:08:35 -0700 (PDT)
-Received: from [192.168.0.157] ([79.115.63.43])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38058b3b956sm14734821f8f.36.2024.10.30.02.08.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Oct 2024 02:08:34 -0700 (PDT)
-Message-ID: <3f758642-b319-4c00-bde2-2ac62936cf8f@linaro.org>
-Date: Wed, 30 Oct 2024 09:08:33 +0000
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1KBUuNBD";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4axmEAl4";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1KBUuNBD";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4axmEAl4"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id DE8681FD89;
+	Wed, 30 Oct 2024 09:26:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1730280373; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fJWLFvaKc7pPH8GF/Z9J3TgSeV/DOUTB51omZOYhLZY=;
+	b=1KBUuNBDVwpss5wp1CQ50NoXD7dM6QjQ+TEGOwAkf/5iXgmZtP48EoZZ0MmDOKxzfyOAgU
+	uFFIr3x8MyzR2+eQSnkSB3Mq6uy7rz1BPe8PnMulOOdJZ9b54i2EIulBn8MdqGQlEJUA01
+	t0cfK4zJYixB6hd5ipuIcUmcEgqZpj4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1730280373;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fJWLFvaKc7pPH8GF/Z9J3TgSeV/DOUTB51omZOYhLZY=;
+	b=4axmEAl4V1aawjx9q+9OLc2FS0u3ru1CRen6xdpssuddivjcuPUR5rFKKHsoUdr/r23OGL
+	WcuePBX+D1/2QIBw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1730280373; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fJWLFvaKc7pPH8GF/Z9J3TgSeV/DOUTB51omZOYhLZY=;
+	b=1KBUuNBDVwpss5wp1CQ50NoXD7dM6QjQ+TEGOwAkf/5iXgmZtP48EoZZ0MmDOKxzfyOAgU
+	uFFIr3x8MyzR2+eQSnkSB3Mq6uy7rz1BPe8PnMulOOdJZ9b54i2EIulBn8MdqGQlEJUA01
+	t0cfK4zJYixB6hd5ipuIcUmcEgqZpj4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1730280373;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fJWLFvaKc7pPH8GF/Z9J3TgSeV/DOUTB51omZOYhLZY=;
+	b=4axmEAl4V1aawjx9q+9OLc2FS0u3ru1CRen6xdpssuddivjcuPUR5rFKKHsoUdr/r23OGL
+	WcuePBX+D1/2QIBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BE11213AD9;
+	Wed, 30 Oct 2024 09:26:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ZOkqLbX7IWd3IwAAD6G6ig
+	(envelope-from <tbogendoerfer@suse.de>); Wed, 30 Oct 2024 09:26:13 +0000
+Date: Wed, 30 Oct 2024 10:25:49 +0100
+From: Thomas Bogendoerfer <tbogendoerfer@suse.de>
+To: Magnus Lindholm <linmag7@gmail.com>
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+Message-ID: <20241030102549.572751ec@samweis>
+In-Reply-To: <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
+	<yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com>
+	<CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+	<CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+	<yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com>
+	<alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+	<CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.34; x86_64-suse-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 05/11] scsi: ufs: exynos: gs101: remove unused phy
- attribute fields
-To: Peter Griffin <peter.griffin@linaro.org>, alim.akhtar@samsung.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- avri.altman@wdc.com, bvanassche@acm.org, krzk@kernel.org
-Cc: andre.draszik@linaro.org, kernel-team@android.com,
- willmcvicker@google.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- ebiggers@kernel.org
-References: <20241025131442.112862-1-peter.griffin@linaro.org>
- <20241025131442.112862-6-peter.griffin@linaro.org>
-Content-Language: en-US
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-In-Reply-To: <20241025131442.112862-6-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Spam-Score: -3.80
+X-Spamd-Result: default: False [-3.80 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_TO(0.00)[gmail.com];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[4];
+	RCVD_TLS_ALL(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
+On Wed, 30 Oct 2024 08:52:44 +0100
+Magnus Lindholm <linmag7@gmail.com> wrote:
 
+> I've found a few datasheets from qlogic, on ISP1040x, ISP1080 and
+> ISP10160. The ISP1040 doesn't mention any 64-bit capabilities in the
+> chip.
 
-On 10/25/24 2:14 PM, Peter Griffin wrote:
-> Now that exynos_ufs_specify_phy_time_attr() checks the appropriate
-> EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR flag. Remove the unused fields
-> in gs101_uic_attr.
-> 
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+the datasheet is wrong. QL1040 supports 64bit addresses via DAC,
+otherwise it wouldn't work on SGI Origin and SGI Octane systems.
+Your patch breaks them (verified on a Octane).
 
-Reviewed-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+So your problem might not be in the scsi driver, but a PCI setup
+problem for the bus of the 32bit PCI slot in your system. If this
+bus doesn't support DAC it IMHO shoulnd't allow 64bit PCI addresses.
 
-> ---
->  drivers/ufs/host/ufs-exynos.c | 20 --------------------
->  1 file changed, 20 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> index a1a2fdcb8a40..9d668d13fe94 100644
-> --- a/drivers/ufs/host/ufs-exynos.c
-> +++ b/drivers/ufs/host/ufs-exynos.c
-> @@ -2068,26 +2068,6 @@ static const struct exynos_ufs_drv_data exynos_ufs_drvs = {
->  
->  static struct exynos_ufs_uic_attr gs101_uic_attr = {
->  	.tx_trailingclks		= 0xff,
-> -	.tx_dif_p_nsec			= 3000000,	/* unit: ns */
-> -	.tx_dif_n_nsec			= 1000000,	/* unit: ns */
-> -	.tx_high_z_cnt_nsec		= 20000,	/* unit: ns */
-> -	.tx_base_unit_nsec		= 100000,	/* unit: ns */
-> -	.tx_gran_unit_nsec		= 4000,		/* unit: ns */
-> -	.tx_sleep_cnt			= 1000,		/* unit: ns */
+Thomas.
 
-Okay with the removal of the above. All are set in
-exynos_ufs_specify_phy_time_attr(), which returns early if
-EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR is set.
-
-> -	.tx_min_activatetime		= 0xa,
-> -	.rx_filler_enable		= 0x2,
-
-Okay with these. They are used just in exynos_ufs_config_phy_time_attr
-which is guarded by EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR.
-
-> -	.rx_dif_p_nsec			= 1000000,	/* unit: ns */
-> -	.rx_hibern8_wait_nsec		= 4000000,	/* unit: ns */
-> -	.rx_base_unit_nsec		= 100000,	/* unit: ns */
-> -	.rx_gran_unit_nsec		= 4000,		/* unit: ns */
-> -	.rx_sleep_cnt			= 1280,		/* unit: ns */
-> -	.rx_stall_cnt			= 320,		/* unit: ns */
-
-Okay with the removal of the above. All are set in
-exynos_ufs_specify_phy_time_attr(), which returns early if
-EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR is set.
-
-> -	.rx_hs_g1_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> -	.rx_hs_g2_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> -	.rx_hs_g3_sync_len_cap		= SYNC_LEN_COARSE(0xf),
-> -	.rx_hs_g1_prep_sync_len_cap	= PREP_LEN(0xf),
-> -	.rx_hs_g2_prep_sync_len_cap	= PREP_LEN(0xf),
-> -	.rx_hs_g3_prep_sync_len_cap	= PREP_LEN(0xf),
-
-Okay for these as well, all are set in exynos_ufs_config_phy_cap_attr()
-which is guarded by EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR.
-
-
->  	.pa_dbg_opt_suite1_val		= 0x90913C1C,
->  	.pa_dbg_opt_suite1_off		= PA_GS101_DBG_OPTION_SUITE1,
->  	.pa_dbg_opt_suite2_val		= 0xE01C115F,
+--=20
+SUSE Software Solutions Germany GmbH
+HRB 36809 (AG N=C3=BCrnberg)
+Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, Andrew McDonald, Werner Knoblich
