@@ -1,137 +1,114 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BDA1E22FF;
-	Wed, 30 Oct 2024 10:58:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DAA21E3DEC
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 11:03:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730285886; cv=none; b=EU7i660KB1+U9GcokaCm7EagaAHMD9+cgGOWD9qBWlAw6gHDMLYry2DSLZ/HxPSdVUVQ79603gGiJ7SboGsaXsL6qfAA7LVB93JY2LqW4ivBqs4o/i2FRH/kDGTZ8WhF6YsGvn9+4dPE68kv78JSuG+8XRftjiyAflLItLN/ylQ=
+	t=1730286198; cv=none; b=KpkpJ7Wl7sqh9bPyQpZ+aW5DpZg++9NbxYSmOHFEQqIvJWGmUnBmihn3/NP+dMUdcprr7e0eltePW+GEBNmalC1dVvLR5JixtaNl1+SlJ+p4KrR9N6CF7PubCpNXt7VoGjDQ493WOVkt0RqIIw7kOBn3MKMnONDbUwBE+FyRVFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730285886; c=relaxed/simple;
-	bh=LU89oiIC9/VWlU3cPF95wh6+bbcGtwdZ1Mg192tt/7M=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=j+IbwqcsIsMh30yhqtH0fxMoArpOlh+KV1JNjSyMuOBnor/EqLawDL+PFB5thbt5rPU495CbHiV3O3vsAxp0KJuAKFcUxKyItQOkh92sSwHK9B9ees538JQOp7J97Mt3isi+1mScBX1w3xagdY6b0M5Ak6pJupzfE5GQXSqSWI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=JoH7eWQm; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=XI0R4ZDp; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="JoH7eWQm";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="XI0R4ZDp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1730285883;
-	bh=LU89oiIC9/VWlU3cPF95wh6+bbcGtwdZ1Mg192tt/7M=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=JoH7eWQmloNFjJ4oYH3ea8cZl7eautQ6o5ns8wfF8+F3SRgpG7N/Mb2Zi5axrM/Qv
-	 WlrhOi0x0Eq2oI96h/bnoC1J/hGSzd+2RyY5bUEQesu7EhlcUrNAGW2joXnSdOqq0B
-	 L90bC9gaYFSaDE46g42yxyngn7kiGHTK/l107k+0=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0749812819B1;
-	Wed, 30 Oct 2024 06:58:03 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id MHCH1RQ-0XkO; Wed, 30 Oct 2024 06:58:02 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1730285882;
-	bh=LU89oiIC9/VWlU3cPF95wh6+bbcGtwdZ1Mg192tt/7M=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=XI0R4ZDpotmSSS3DcuBtn0+8hQBC0qz5aECa0qun3czMKT5nZXH0rA2GblZBE3J9B
-	 PYOOc5pfgOK+SGdsVF+TrF4ztlzARPlrcP1Op6P0ily8JlqtRaaDqIwHbEe0nzzLen
-	 Lt9HNjM84L+w3Ptny25EnCn9twF6h9gsy1PD7Tz8=
-Received: from [10.250.250.46] (122x212x32x58.ap122.ftth.ucom.ne.jp [122.212.32.58])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 17DC812811B1;
-	Wed, 30 Oct 2024 06:58:01 -0400 (EDT)
-Message-ID: <c82f3c57c5febcefdc95cf4a0b8eff0cdf4689a1.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.12-rc5
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Date: Wed, 30 Oct 2024 19:57:59 +0900
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	s=arc-20240116; t=1730286198; c=relaxed/simple;
+	bh=QXNmweAgC/jmsuKKLCRRIN/boDLh/CwGPO3yrJ+Qz8U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jqr9j8MnnjLJUDm3wXjjPi9YHR8YYLxUhOeLtnXMLLdzKWRe7nVYu6pZhNpEsAsR3/4bZUENAgr/A5bcfPfa8FthTLhdrKo6BJqbXjuId66XZJ+r+ORMVTJ+Q+HdUECYocXEv/LB2isZvV0WvijD3ivItkzW0q+Zg0D7pp77Xyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a99eb8b607aso819005866b.2
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 04:03:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730286195; x=1730890995;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Jdnv9b+E/RPfFcm/DuvJXftcWoJYt7LIqqXdQzKrd7Q=;
+        b=rclKbfCcJoPVn2Ke2HwKufeuCPcWr/yowXhUBJ+lEbyiJ7wVHZtxxWqwvVWFwH5ESH
+         oZK67p4MF1BswC81gZxW919DjR8+T0L7Z+E3tSRiBVVK6T4JfGSMIzvSx1Khilesu3Cr
+         ch7G1WnICh+jH6w3Z5zi4IwN3LsvPoOcqbP01yxtrT9ljmqZseBTdGqBG6IMKQaV9Jbo
+         wPL3TC5HG9rNteYHXEgDVUpwJ07elZQM4ZaINe6vLleb9fneMzrZReV31dkn+i0zhqb9
+         yXcipFQuVJ6bp5sCtgRXGYrJIdbH7yzVzad44vTV9sXwiHsXT76bFWaNK2WOPWDekPne
+         10kQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUfS/ekl6mhPCU9Nizw5k1kS5ctvDCPJugIBO548Igiuveu9tG9rR1JDQTQd+6RrusIdrKjEAz28eu0@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywf1JIi3LxWnHWygXJixiaWaScOvHmMCEI0sMIhjKvfXIUrWTUt
+	DUwJj3YZ5N0235jJSJoP8SayLqRaWubt1zbSSNBQrdxLAHUZlVRZ
+X-Google-Smtp-Source: AGHT+IEWrrTb5y7uMwCGikUWzEHzP4RjuPlrLpecJfAUkYGMedeZf6P8y6wX2A2Add8fVHGyiDrk2Q==
+X-Received: by 2002:a17:907:720b:b0:a9a:3459:6b63 with SMTP id a640c23a62f3a-a9de6331221mr1462126166b.56.1730286194617;
+        Wed, 30 Oct 2024 04:03:14 -0700 (PDT)
+Received: from nuc.fritz.box (p200300f6f71fdb00fa633ffffe02074c.dip0.t-ipconnect.de. [2003:f6:f71f:db00:fa63:3fff:fe02:74c])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9b1e75fe76sm577518966b.14.2024.10.30.04.03.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Oct 2024 04:03:14 -0700 (PDT)
+From: Johannes Thumshirn <jth@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	Qu Wenru <wqu@suse.com>,
+	Naohiro Aota <naohiro.aota@wdc.com>
+Subject: [PATCH] scsi: sd_zbc: use kvzalloc to allocate report zones buffer
+Date: Wed, 30 Oct 2024 12:02:53 +0100
+Message-ID: <20241030110253.11718-1-jth@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Two small fixes, both in drivers (ufs and scsi_debug).
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-The patch is available here:
+We have two reports of failed memory allocation in btrfs' code which is
+calling into report zones.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Both of these reports have the following signature coming from
+__vmalloc_area_node():
 
-The short changelog is:
+ kworker/u17:5: vmalloc error: size 0, failed to allocate pages, mode:0x10dc2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_NORETRY|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0
 
-John Garry (1):
-      scsi: scsi_debug: Fix do_device_access() handling of unexpected SG copy length
+Further debugging showed these where allocations of one sector (512 bytes)
+and at least one of the reporter's systems where low on memory, so going
+through the overhead of allocating a vm area failed.
 
-Peter Wang (1):
-      scsi: ufs: core: Fix another deadlock during RTC update
+Switching the allocation from __vmalloc() to kvzalloc() avoids the
+overhead of vmalloc() on small allocations and succeeds.
 
-And the diffstat:
+Note: the buffer is already freed using kvfree() so there's no need to
+adjust the free path.
 
- drivers/scsi/scsi_debug.c | 10 ++++------
- drivers/ufs/core/ufshcd.c |  2 +-
- 2 files changed, 5 insertions(+), 7 deletions(-)
-
-with full diff below.
-
-James
-
+Cc: Qu Wenru <wqu@suse.com>
+Cc: Naohiro Aota <naohiro.aota@wdc.com>
+Link: https://github.com/kdave/btrfs-progs/issues/779
+Link: https://github.com/kdave/btrfs-progs/issues/915
+Fixes: Fixes: 23a50861adda ("scsi: sd_zbc: Cleanup sd_zbc_alloc_report_buffer()")
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index d95f417e24c0..9be2a6a00530 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3651,7 +3651,7 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
- 	enum dma_data_direction dir;
- 	struct scsi_data_buffer *sdb = &scp->sdb;
- 	u8 *fsp;
--	int i;
-+	int i, total = 0;
+Note2: one of the reporters tested the patch with kvmalloc(... , ... |
+__GFP_ZERO) instead of kvzalloc(). This is an "optimization" I did after
+the successful testing.
+
+Note3: calling report zones every time we create a block group in btrfs is
+suboptimal as well and we're going to change this code path as well ASAP.
+
+---
+ drivers/scsi/sd_zbc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index ee2b74238758..6ab27f4f4878 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -188,8 +188,7 @@ static void *sd_zbc_alloc_report_buffer(struct scsi_disk *sdkp,
+ 	bufsize = min_t(size_t, bufsize, queue_max_segments(q) << PAGE_SHIFT);
  
- 	/*
- 	 * Even though reads are inherently atomic (in this driver), we expect
-@@ -3688,18 +3688,16 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
- 		   fsp + (block * sdebug_sector_size),
- 		   sdebug_sector_size, sg_skip, do_write);
- 		sdeb_data_sector_unlock(sip, do_write);
--		if (ret != sdebug_sector_size) {
--			ret += (i * sdebug_sector_size);
-+		total += ret;
-+		if (ret != sdebug_sector_size)
- 			break;
--		}
- 		sg_skip += sdebug_sector_size;
- 		if (++block >= sdebug_store_sectors)
- 			block = 0;
- 	}
--	ret = num * sdebug_sector_size;
- 	sdeb_data_unlock(sip, atomic);
- 
--	return ret;
-+	return total;
- }
- 
- /* Returns number of bytes copied or -1 if error. */
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 706dc81eb924..0e22bbb78239 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8219,7 +8219,7 @@ static void ufshcd_update_rtc(struct ufs_hba *hba)
- 
- 	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR, QUERY_ATTR_IDN_SECONDS_PASSED,
- 				0, 0, &val);
--	ufshcd_rpm_put_sync(hba);
-+	ufshcd_rpm_put(hba);
- 
- 	if (err)
- 		dev_err(hba->dev, "%s: Failed to update rtc %d\n", __func__, err);
+ 	while (bufsize >= SECTOR_SIZE) {
+-		buf = __vmalloc(bufsize,
+-				GFP_KERNEL | __GFP_ZERO | __GFP_NORETRY);
++		buf = kvzalloc(bufsize, GFP_KERNEL | __GFP_NORETRY);
+ 		if (buf) {
+ 			*buflen = bufsize;
+ 			return buf;
+-- 
+2.43.0
 
