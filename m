@@ -1,110 +1,137 @@
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B0F11E284E
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 10:32:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BDA1E22FF;
+	Wed, 30 Oct 2024 10:58:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730284333; cv=none; b=c2X6Xy+GcFldm+3g7CRXTi78HRR85TGi5mBAj8WqVfEi0xMVMsRTNG8ITGqulXn3DdYGnJE5Me66AEVMl4WJW6DN4EQNn/Az/crvBRXf96og53SsMf0A/Hoo0UxNr4y4qqS2dEIzUqBGHrFu/Ypj8PSCyHrmoo/mLgtYoUX9ntI=
+	t=1730285886; cv=none; b=EU7i660KB1+U9GcokaCm7EagaAHMD9+cgGOWD9qBWlAw6gHDMLYry2DSLZ/HxPSdVUVQ79603gGiJ7SboGsaXsL6qfAA7LVB93JY2LqW4ivBqs4o/i2FRH/kDGTZ8WhF6YsGvn9+4dPE68kv78JSuG+8XRftjiyAflLItLN/ylQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730284333; c=relaxed/simple;
-	bh=CU1cu24+i45K2ONyDBFElC17mZkV4BvGmiF2jOuAeeI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tsARPHT4S8mRnJjQVWPtwWD2NOk6v9PWg1rxd73sg7Gh9Bd1LS3gMB/jtIr020LLHxexow2Ggl56hTShV9fSh0HTooi5Ib6KVBcA2rJlt+ZRSkya3h3GG8NAPdgcoDy8hsU9FXrg9g+G3HbSWah8IjRQu0Nt+ni6T5D6wpWUKmA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mgzygzOJ; arc=none smtp.client-ip=209.85.208.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730285886; c=relaxed/simple;
+	bh=LU89oiIC9/VWlU3cPF95wh6+bbcGtwdZ1Mg192tt/7M=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=j+IbwqcsIsMh30yhqtH0fxMoArpOlh+KV1JNjSyMuOBnor/EqLawDL+PFB5thbt5rPU495CbHiV3O3vsAxp0KJuAKFcUxKyItQOkh92sSwHK9B9ees538JQOp7J97Mt3isi+1mScBX1w3xagdY6b0M5Ak6pJupzfE5GQXSqSWI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=JoH7eWQm; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=XI0R4ZDp; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mgzygzOJ"
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2fb561f273eso58357991fa.2
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 03:32:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730284329; x=1730889129; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6e62zABhJgu0xsmWlRUsEgJ/DIZADPy+MDY7G9xqvTM=;
-        b=mgzygzOJcIWje4b2Bs50E75/j68lD9kPzL+Pqb3r17f5wXtsuBzZIC1ROZEeFONqRU
-         39c30p1hqmGWer+wsufR0oQkX81CaEyUL5sEDXHp/WrhX33+T2XXm6EUfCzKq21WwJQb
-         P27/JjoQEBZ6r+5pdbf2bH2jj/15J2nP+4WsLXwO5hOpvvEaEmi1vD5zeRFQEVr3sqdb
-         CdF4PwQLuyAvBaLYH0Aqp4FBiO6SqWrtt6w6wg+k1lsP7p3uDjDR3JrT8fALD304kMOG
-         W9MFs80PC2bdPPH0i/NBZGzqrhVJK0fQ6oWGK5ykWFYopkTYwV0+aeuYoBZq7zisM233
-         NFQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730284329; x=1730889129;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6e62zABhJgu0xsmWlRUsEgJ/DIZADPy+MDY7G9xqvTM=;
-        b=NQeSNRwT2Gfnhyz7L47sXd4iZ1TjLaAhvAqZnKZ19h1n240LQ8vRvosA4hTdLVzdvF
-         etbkXpDGrWJQVLrWuAlCIDzqHSlA4WmGcmltFG1AB+ViTvFMOWzTTvBdg6pj/AyM1cP8
-         hrKftMoT5za/FjOUpre4KPZGaWRqfnfc8rYSz4jgB31fyo0XZM6pRisCSatAY24719rK
-         weERic/XUWhkv3MMR8U1rKbZgEQg2wl/bxFok+fMUD8fOhqoOUKNr+IGXXKTcbOvJWla
-         xQVBU3CnO/gyhgK/HQrzbVRZXK3Ab0vqGHs1Ajv8FWy8pAF3BMqpaYHyUBh5sR1u7ZSl
-         HGaw==
-X-Forwarded-Encrypted: i=1; AJvYcCUXVITBtboaIJCN8BJ8/edwo+rh1t7Xk6UdVE+xvGYvUJ9ENBwPx8h3tRcDe4HlPod5Fo1uLhINxmEB@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx7GdHn3ilMO5LWmjwpovL6b+8IKoesloJAJRMQLcPes0Unl7+G
-	MoLDKg20BzI6wHMCdiajSW4Gm+p96M3WPrnO9en9OC9e4kaVKD5qlhTMB6xowLs=
-X-Google-Smtp-Source: AGHT+IHN0Q+Mdq7fYa0Zn8cYYpDEzpyE0X1QlkitrR+30fjLy2hEruXPOPZRkaCk7IohqcOaFpkJEA==
-X-Received: by 2002:a2e:bea5:0:b0:2fa:dcb6:fa7a with SMTP id 38308e7fff4ca-2fd0590bdc8mr13523571fa.11.1730284327314;
-        Wed, 30 Oct 2024 03:32:07 -0700 (PDT)
-Received: from [192.168.0.157] ([79.115.63.43])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd9ca747sm17059915e9.45.2024.10.30.03.32.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Oct 2024 03:32:06 -0700 (PDT)
-Message-ID: <c553db69-6bb8-44f8-b571-21c631fcaee8@linaro.org>
-Date: Wed, 30 Oct 2024 10:32:05 +0000
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="JoH7eWQm";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="XI0R4ZDp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1730285883;
+	bh=LU89oiIC9/VWlU3cPF95wh6+bbcGtwdZ1Mg192tt/7M=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=JoH7eWQmloNFjJ4oYH3ea8cZl7eautQ6o5ns8wfF8+F3SRgpG7N/Mb2Zi5axrM/Qv
+	 WlrhOi0x0Eq2oI96h/bnoC1J/hGSzd+2RyY5bUEQesu7EhlcUrNAGW2joXnSdOqq0B
+	 L90bC9gaYFSaDE46g42yxyngn7kiGHTK/l107k+0=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0749812819B1;
+	Wed, 30 Oct 2024 06:58:03 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id MHCH1RQ-0XkO; Wed, 30 Oct 2024 06:58:02 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1730285882;
+	bh=LU89oiIC9/VWlU3cPF95wh6+bbcGtwdZ1Mg192tt/7M=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=XI0R4ZDpotmSSS3DcuBtn0+8hQBC0qz5aECa0qun3czMKT5nZXH0rA2GblZBE3J9B
+	 PYOOc5pfgOK+SGdsVF+TrF4ztlzARPlrcP1Op6P0ily8JlqtRaaDqIwHbEe0nzzLen
+	 Lt9HNjM84L+w3Ptny25EnCn9twF6h9gsy1PD7Tz8=
+Received: from [10.250.250.46] (122x212x32x58.ap122.ftth.ucom.ne.jp [122.212.32.58])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 17DC812811B1;
+	Wed, 30 Oct 2024 06:58:01 -0400 (EDT)
+Message-ID: <c82f3c57c5febcefdc95cf4a0b8eff0cdf4689a1.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.12-rc5
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Wed, 30 Oct 2024 19:57:59 +0900
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 07/11] scsi: ufs: exynos: add gs101_ufs_drv_init() hook
- and enable WriteBooster
-To: Peter Griffin <peter.griffin@linaro.org>, alim.akhtar@samsung.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- avri.altman@wdc.com, bvanassche@acm.org, krzk@kernel.org
-Cc: andre.draszik@linaro.org, kernel-team@android.com,
- willmcvicker@google.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- ebiggers@kernel.org
-References: <20241025131442.112862-1-peter.griffin@linaro.org>
- <20241025131442.112862-8-peter.griffin@linaro.org>
-Content-Language: en-US
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-In-Reply-To: <20241025131442.112862-8-peter.griffin@linaro.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
+Two small fixes, both in drivers (ufs and scsi_debug).
 
+The patch is available here:
 
-On 10/25/24 2:14 PM, Peter Griffin wrote:
-> Factor out the common code into a new exynos_ufs_shareability() function
-> and provide a dedicated gs101_drv_init() hook.
-> 
-> This allows us to enable WriteBooster capability (UFSHCD_CAP_WB_EN) in a
-> way that doesn't effect other SoCs supported in this driver.
-> 
-> WriteBooster improves write speeds by enabling a pseudo SLC cache. Using
-> the `fio seqwrite` test we can achieve speeds of 945MB/s with this feature
-> enabled (until the cache is exhausted) before dropping back to ~260MB/s
-> (which are the speeds we see without the WriteBooster feature enabled).
-> 
-> Assuming the UFSHCD_CAP_WB_EN capability is set by the host then
-> WriteBooster can also be enabled and disabled via sysfs so it is possible
-> for the system to only enable it when extra write performance is required.
-> 
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Reviewed-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+The short changelog is:
 
-While reviewing this patch I noticed few cleanups can be made. I sent
-them here:
-https://lore.kernel.org/linux-scsi/20241030102715.3312308-1-tudor.ambarus@linaro.org/
+John Garry (1):
+      scsi: scsi_debug: Fix do_device_access() handling of unexpected SG copy length
 
-Feel free to include them in your set if you're going to respin. Or not,
-if you don't want to tie your head with cleanup patches. I can respin
-them on top of yours later on.
+Peter Wang (1):
+      scsi: ufs: core: Fix another deadlock during RTC update
+
+And the diffstat:
+
+ drivers/scsi/scsi_debug.c | 10 ++++------
+ drivers/ufs/core/ufshcd.c |  2 +-
+ 2 files changed, 5 insertions(+), 7 deletions(-)
+
+with full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index d95f417e24c0..9be2a6a00530 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -3651,7 +3651,7 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
+ 	enum dma_data_direction dir;
+ 	struct scsi_data_buffer *sdb = &scp->sdb;
+ 	u8 *fsp;
+-	int i;
++	int i, total = 0;
+ 
+ 	/*
+ 	 * Even though reads are inherently atomic (in this driver), we expect
+@@ -3688,18 +3688,16 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
+ 		   fsp + (block * sdebug_sector_size),
+ 		   sdebug_sector_size, sg_skip, do_write);
+ 		sdeb_data_sector_unlock(sip, do_write);
+-		if (ret != sdebug_sector_size) {
+-			ret += (i * sdebug_sector_size);
++		total += ret;
++		if (ret != sdebug_sector_size)
+ 			break;
+-		}
+ 		sg_skip += sdebug_sector_size;
+ 		if (++block >= sdebug_store_sectors)
+ 			block = 0;
+ 	}
+-	ret = num * sdebug_sector_size;
+ 	sdeb_data_unlock(sip, atomic);
+ 
+-	return ret;
++	return total;
+ }
+ 
+ /* Returns number of bytes copied or -1 if error. */
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 706dc81eb924..0e22bbb78239 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8219,7 +8219,7 @@ static void ufshcd_update_rtc(struct ufs_hba *hba)
+ 
+ 	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR, QUERY_ATTR_IDN_SECONDS_PASSED,
+ 				0, 0, &val);
+-	ufshcd_rpm_put_sync(hba);
++	ufshcd_rpm_put(hba);
+ 
+ 	if (err)
+ 		dev_err(hba->dev, "%s: Failed to update rtc %d\n", __func__, err);
+
