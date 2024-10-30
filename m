@@ -1,97 +1,107 @@
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+Received: from mail-oo1-f51.google.com (mail-oo1-f51.google.com [209.85.161.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 137D0156F54
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 11:25:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C5F1E6DC1
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 11:32:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730287554; cv=none; b=jGZScxXwJNWFcQw6j3I2/FC0W63ah6Oe07dvNFFx/0FD9jhdk5RzZ6aNxj8pxwfi/Q4ilRaSvmEZ6qbJK3WHhF/GgtE/Z9hWFX78raFtBSl4QYazgHyQrKEGJLb+EAO1XBThfWsDjGtonj8dhuPjCTuClgKREHvXaQ/feyEbvpI=
+	t=1730287935; cv=none; b=vFsgWxEv8p5c3OY2ACTRyAPtvA5BMXPcec045Tj2iZH4qgBh6cgUfr+e1cE0bJcnT2tVti3OlrnMX275tSdPri+91C679hTcA/l3zqXGbiw2pzGOFDYGEU6jnUSDtwCIdFoOJOLaZQrp6ck3OLQrLIxeRQkAaa4jzeD3NNSUQiU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730287554; c=relaxed/simple;
-	bh=i/1lFAiCUmr8MozzsQANkNXi63EHwNpndZyFrvfM+q4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VFo+uI/3vVEi/gOk1zyZm2kQabLZo+J00XzjudWlr/wNINMh2m5ytfcmcsG3uNE24ItA7pgKXNAeRTets1yuEfbF2q1j4Xc2hQheGuxomgTD3jVhlFRdLE7PvSSnIQBM8COuJ1Rit5yVz4lsjeGxGcE7YSK7uy1/Kwia88J9djs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nSg/orIa; arc=none smtp.client-ip=209.85.208.175
+	s=arc-20240116; t=1730287935; c=relaxed/simple;
+	bh=k9O/VCkYKLFGLLz5VK9IVO5AXC7ZgN1iqzf8qQY9YxM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=H7/krcOm2p+9GEvxtkVkeUgP6C25MNQevcwFq3nkSnplr/KoG+Ayq7DCUa0zN4qVSOJLB3diBYnkzaeeIFe9vGAEXWPeq/sZFmfXSnExDak1JR6gHR97eXGiVuvZ8d+ySH1QqBw29TXpsXfyYCwxpNYss58NHzrGOVDOaVFiSrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=yhvrqPCo; arc=none smtp.client-ip=209.85.161.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nSg/orIa"
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2fb59652cb9so64364191fa.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 04:25:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yhvrqPCo"
+Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-5eb5be68c7dso3521597eaf.0
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 04:32:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730287550; x=1730892350; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bMES1QAhfgu7bIQDYk1EUlu+RGSHNt1/K65I4mR80e4=;
-        b=nSg/orIadb2AFsxHM/8a2bnuVpIJtpt1I/jLdUgXg0ikJ2Zb0/6vlOCt6wm3RwxvBd
-         qp6Y8NKmPvGa3Ecd2LaIsO+9hiuVcCvgyreLqivSq0BASgz1nhVgR+DTxNyGp+fLDCGE
-         oBWSaimrzi4dY04qOAjL91JsC6l79yiVc2g8sDy0VBDzcHCxp1H0krMx+++MW2zcT2Kw
-         F7RNKOle20XqbBP8YeZHblRDncG6VgqgjSjTlN3kEPMAwFXHkySUjA0Aftj1nFiqJYp9
-         NONH3uUgLzsXeJpm2Pf/hGsBwu770BsavmjDpF0L/9ecMmfwqZ8NiDRMXeTwYdwC6NUU
-         2D/A==
+        d=linaro.org; s=google; t=1730287932; x=1730892732; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=+ZnP8od1AoS68OxrD2EKkqTHcwqcNcZbwTyrj6OQuRU=;
+        b=yhvrqPCoaLTYq2FW9XD16KFOPPIuLIVtN0MOP2QSqU+IqzuEDIHXcUizOcYprjYKgc
+         HgK4Z9imwxuTyDJlngg0k9ErEMGE0k6GXLxEaAcdxQDkVndfisrhznZUr9S1YFrWtp0S
+         OmvYjSSUFQeaTYr0lfQgYI9W2pUV/K/D9/u69LnzMjcujIazmEhG8sf39ZD4GfR9Gypm
+         haezwr1fZZKCc2y1z9t9W6jtScyyQ65LxNNAC2aLWh2FaLC/cef+Pj03orqftzJOr309
+         VSyewk7igcIagIVOyC6gHGbXxuRL1u4IIaB33Lvx466h6iBp95ay4jDM92NU0hLP/Bn7
+         8hBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730287550; x=1730892350;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bMES1QAhfgu7bIQDYk1EUlu+RGSHNt1/K65I4mR80e4=;
-        b=oCRH4CCxDHWW+1pkyWxCIgwK2djg75/Hon8JF7om5CoB4IV/g08/+NkgT0hwFLDFum
-         CK7odnquWptAlYD0+cB0vKD9wliWu6iD3uAKzAENoojohUBHTa3JzpdL9O0gDhNrDNWd
-         UoOJLdnUNcRyfLfUUCOU3StqgT+2U0liCWPX+0XAZi2GBfWckkAXZo6A24oPLB3wntBw
-         g/kFImJjqISYNukhd2hrTFekZ1hGXsGOUnBqrw0Spo4fPeEUMe1vKsqhcIp/CPtm5/WY
-         O1NcQwsF5jvXqkWt2tquUvf9PM4nyuuSd0AF0DSXx0kw69D1qMduHGasMgxWzeiwePSB
-         Cf1g==
-X-Forwarded-Encrypted: i=1; AJvYcCU5BcynoDtGhN7+jiWQDCE9M06sBctKU1CM3sE3Q0D2J7wM3JPDvcsKgP6BozbOgkHICYLInPNLQIk9@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3AYyrqe1OEGECj2/z6CJ6t5BmQgFEJXwp9xagV+UXMp8CPTbA
-	Z04Azwviy2oulsYc/s3BrieN47zalTkhmO/kJWC7lZ6a3UrviZrKpaWBCTzGXAo=
-X-Google-Smtp-Source: AGHT+IGY4OdrV2g1gR/OZMrvjE/lAI6jJHYq/NY61VEtXYCuq6a/kfZIDfbwe86CLVK3+WjNbtSP5w==
-X-Received: by 2002:a05:651c:1508:b0:2fb:6465:3198 with SMTP id 38308e7fff4ca-2fcbdf60348mr75079871fa.5.1730287550241;
-        Wed, 30 Oct 2024 04:25:50 -0700 (PDT)
-Received: from [192.168.0.157] ([79.115.63.43])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd9207d4sm18412585e9.20.2024.10.30.04.25.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Oct 2024 04:25:49 -0700 (PDT)
-Message-ID: <436b02c6-a262-4015-92e3-454d444e877f@linaro.org>
-Date: Wed, 30 Oct 2024 11:25:48 +0000
+        d=1e100.net; s=20230601; t=1730287932; x=1730892732;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+ZnP8od1AoS68OxrD2EKkqTHcwqcNcZbwTyrj6OQuRU=;
+        b=sSsZATQ1pyVJZnEh1T0GRLQjPaBDrbBX8m5VU4vnRsoETuI0oy9JNmKEWsSUx6yjjg
+         VwGsRzmZIG+g21IO+F9+3Fyc7jpnsttTB5AtYc5mhC/du9kluzeP1yDOrGTvOcZXbo0A
+         VFlLWD4JHl7YiCkROioL7eTZgmQgeYKkNanEYsELS10Q7rFwubMy6e2kz1G1gmne39he
+         uD/pUyIpSJSgra5aYEexJy3HMbBXYRa1PpzYpNpfPtks07o0j/rD3cyOstFOc1vmUx0Q
+         nuOr33u4llV8KKnxh+Qt6K3w57IgegOWrlRQinT4E1rNmQH4mfhOGlfF3BgiuffXSO3q
+         GTGg==
+X-Forwarded-Encrypted: i=1; AJvYcCUTSC06d/yHSWVdTCx9Gmx06eXbvLRWMP+v0GUKjnvPSTzm2TwIYFQ4T86ncJOxmQaJOxUjcjFZk3e8@vger.kernel.org
+X-Gm-Message-State: AOJu0YydXHh9wiJ7KT9wzrlwzTi9psoF/vuw3Gouv8mncvgPGBEMknf+
+	Jvkdxy9TmTQkne1Z4tSbjz4+otY+qhUJ2QnEGe4nA9P2BwEYcWzjnV8dErV5NbIBByn/EZcvr9A
+	GRz7elNZWguzBRc/S+nWXKdgn0a4wQXWH1xCmIQ==
+X-Google-Smtp-Source: AGHT+IH5be5Mr1er2W4DdwEw1rjAXcGrKtgAvcc+9eVHVJEX4M1n7mMvnvbRCoX7iQbyEopTs/p0KKfykVLViPIPPBE=
+X-Received: by 2002:a05:6820:229c:b0:5eb:fc8c:46ad with SMTP id
+ 006d021491bc7-5ec23612f9amr11574862eaf.0.1730287931746; Wed, 30 Oct 2024
+ 04:32:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20241025131442.112862-1-peter.griffin@linaro.org>
+ <20241025131442.112862-9-peter.griffin@linaro.org> <436b02c6-a262-4015-92e3-454d444e877f@linaro.org>
+In-Reply-To: <436b02c6-a262-4015-92e3-454d444e877f@linaro.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Wed, 30 Oct 2024 11:32:00 +0000
+Message-ID: <CADrjBPoq2jbrMC7wBrjGxMwQ1ebTtBNRQzQ7NfE9=Gw9_4LQ6A@mail.gmail.com>
 Subject: Re: [PATCH v2 08/11] scsi: ufs: exynos: enable write line unique
  transactions on gs101
-To: Peter Griffin <peter.griffin@linaro.org>, alim.akhtar@samsung.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- avri.altman@wdc.com, bvanassche@acm.org, krzk@kernel.org
-Cc: andre.draszik@linaro.org, kernel-team@android.com,
- willmcvicker@google.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- ebiggers@kernel.org
-References: <20241025131442.112862-1-peter.griffin@linaro.org>
- <20241025131442.112862-9-peter.griffin@linaro.org>
-Content-Language: en-US
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-In-Reply-To: <20241025131442.112862-9-peter.griffin@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: alim.akhtar@samsung.com, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	krzk@kernel.org, andre.draszik@linaro.org, kernel-team@android.com, 
+	willmcvicker@google.com, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	ebiggers@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
+Hi Tudor,
 
+On Wed, 30 Oct 2024 at 11:25, Tudor Ambarus <tudor.ambarus@linaro.org> wrote:
+>
+>
+>
+> On 10/25/24 2:14 PM, Peter Griffin wrote:
+> > Previously just AXIDMA_RWDATA_BURST_LEN[3:0] field was set to 8.
+>
+> where was this set?
 
-On 10/25/24 2:14 PM, Peter Griffin wrote:
-> Previously just AXIDMA_RWDATA_BURST_LEN[3:0] field was set to 8.
+It is set to 0xf in exynos_ufs_post_link() function, see the following line
+hci_writel(ufs, 0xf, HCI_AXIDMA_RWDATA_BURST_LEN);
 
-where was this set?
+As all other SoCs expect the current value, I've left that assignment
+in the common function, and we update it in the  gs101_ufs_post_link()
+specific hook.
 
-> 
-> To enable WLU transaction additionally we need to set Write Line
-> Unique enable [31], Write Line Unique Burst Length [30:27] and
-> AXIDMA_RWDATA_BURST_LEN[3:0].
-> 
-> To support WLU transaction, both burth length fields need to be 0x3.
-> 
+>
+> >
+> > To enable WLU transaction additionally we need to set Write Line
+> > Unique enable [31], Write Line Unique Burst Length [30:27] and
+> > AXIDMA_RWDATA_BURST_LEN[3:0].
+> >
+> > To support WLU transaction, both burth length fields need to be 0x3.
+> >
+>
+> typo, s/burth/burst
 
-typo, s/burth/burst
+Will fix.
+
+Peter
