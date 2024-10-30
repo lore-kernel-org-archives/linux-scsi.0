@@ -1,88 +1,87 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B089B1BD9EA;
-	Wed, 30 Oct 2024 22:33:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A921E3DFE
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 23:49:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730327580; cv=none; b=QbioGjStXfMw2Le+7LPa5YtHCfhU8rNdvj6PhWHQCpbxWXRc/MLkd5H+lat5EZmluwglJZ1dLOOINvPnDHhYyIEgu/gRymMvdAZ6jJjE3r9r530pXVOLftv2YpZtu0zBp0FD3/K9xLtzxxtBqzNczl6s6qDht/LnOWiJJ1Vja1U=
+	t=1730332174; cv=none; b=JO1F891tik9GFBQHpe81UUz4yE8AIPPSkHVrTmjf3J4ReW3k+25lRWHN+nuzw2OkcmaV4NHdXeawv+UVRBDyJoi2gyHal/bdbxwOvfbMKPKl7MEnGorb1uBA1LrSVAhT6sCOKNivwrqJjl2TECOzamsn9IGkPsuBDR/ykwY8jVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730327580; c=relaxed/simple;
-	bh=pG2dV6wbFJ9/N3Eo79eG7sTCZARua6TPwKbzaZm5T8s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=djjvXDPZUa9jc1MQ/hCfjx9mn5mfoacgiGgMZEYoU+pVwOztOimZwBEMJLZPJPYza5OEnRHm1NUDEFjveiEeR6Mfh+LZnDk18YtOE4i57ySfomEPCalP6rrUuaGsyrwZ/+VeUmI68bKvMCDOdZY9tnAp8bCDnHBeqxNb/2tgWv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TOLGBIAc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730332174; c=relaxed/simple;
+	bh=SY0ubfJcx0hODdOnxGFbONlcxei990Gsp05TCpJkz44=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rdlanrZt5IfVk3jFa+G3RdtYGyxJLKPTNL7zGZRyQc32XQVw3YE8SVHkVlcPX8IY7L1/G0ez9UhM5Bwu4gO6Y33o8TIr9Rd2OezSF0WBW6Vj6v0IsGvJKYAHkjgj/qUovh1VEpIgkc5+sYGDxF/hEnEXpK4LdhdB+mwanX1UvGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SyDreDLO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TOLGBIAc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E300C4CECE;
-	Wed, 30 Oct 2024 22:32:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SyDreDLO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D30FC4AF65;
+	Wed, 30 Oct 2024 23:49:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730327580;
-	bh=pG2dV6wbFJ9/N3Eo79eG7sTCZARua6TPwKbzaZm5T8s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TOLGBIAcEYrCYSFurialDE1/dDbk0s5VsobxcNkWosTwMWsHUtEwV2Dp6K1Bt2xB/
-	 Fr9YO4uhhAZ+bYoWwuhY2pbaLrRSeZCZGIRh48gST8/NSWTSOpVy4vmedCkJGiHmok
-	 evunMKCuBVIHpmHm+FOgsiNNdCqGZnbXnl58AgDLjkC3DkO9NldpetChGi52nPYqxm
-	 O6ZwqatzbxIPcJW8GOiZeuM9otwid4W0Il7PCsaI1J094cFyXVVLrj2x3Yi1K/uHqf
-	 pK8aowBq29IKzesQio0R+lZ1Rty5SsD0ych9kGkC73wmjtsa6CtFfbObGwNhCGncFE
-	 CMtEjbWx7DpbA==
-Date: Wed, 30 Oct 2024 16:32:57 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	joshi.k@samsung.com, javier.gonz@samsung.com, bvanassche@acm.org,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-Message-ID: <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
-References: <ZyEBhOoDHKJs4EEY@kbusch-mbp>
- <20241029155330.GA27856@lst.de>
- <ZyEL4FOBMr4H8DGM@kbusch-mbp>
- <20241030045526.GA32385@lst.de>
- <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com>
- <20241030154556.GA4449@lst.de>
- <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com>
- <20241030155052.GA4984@lst.de>
- <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com>
- <20241030165708.GA11009@lst.de>
+	s=k20201202; t=1730332173;
+	bh=SY0ubfJcx0hODdOnxGFbONlcxei990Gsp05TCpJkz44=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=SyDreDLOgt6cKBsYKLmsA+Ihdqz4BlDMiO47O6HfVEsU2uY6czYd8mfVI1J8LRxIC
+	 iWgervXk0+liwtEeF5xxJ6mwl242sjllxMJPnhKbsKYgZnd17dvvc4WRys8FBZEPff
+	 MFprGEcKJzs/WPiIgowVfFO0fkaUNAMwpcQj0uquvH1k0Y82z5piGeqhXlDep6HuF/
+	 2c70Pwe2q0uEN2+S+CWX7/RZEdkNRN3CJ74N+S2ruMLAfYzaJ3JqqkTDUJbv7nktFP
+	 3s4XIDUxieXOS3HGfiXL/YXoIdK3+DhclbCYi5y1D4FAyakoUEteybuK2Uz7eeNqRL
+	 geh78g4HhFJsw==
+Message-ID: <6444d196-9194-4eac-b85c-f2fca006bf08@kernel.org>
+Date: Thu, 31 Oct 2024 08:49:31 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241030165708.GA11009@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sd_zbc: use kvzalloc to allocate report zones
+ buffer
+To: Johannes Thumshirn <jth@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ Johannes Thumshirn <johannes.thumshirn@wdc.com>, Qu Wenru <wqu@suse.com>,
+ Naohiro Aota <naohiro.aota@wdc.com>
+References: <20241030110253.11718-1-jth@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20241030110253.11718-1-jth@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 30, 2024 at 05:57:08PM +0100, Christoph Hellwig wrote:
-> On Wed, Oct 30, 2024 at 10:42:59AM -0600, Keith Busch wrote:
-> > With FDP (with some minor rocksdb changes):
-> > 
-> > WAF:        1.67
-> > IOPS:       1547
-> > READ LAT:   1978us
-> > UPDATE LAT: 2267us
+On 10/30/24 8:02 PM, Johannes Thumshirn wrote:
+> From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > 
-> Compared to the Numbers Hans presented at Plumbers for the Zoned XFS code,
-> which should work just fine with FDP IFF we exposed real write streams,
-> which roughly double read nad wirte IOPS and reduce the WAF to almost
-> 1 this doesn't look too spectacular to be honest, but it sure it something.
+> We have two reports of failed memory allocation in btrfs' code which is
+> calling into report zones.
+> 
+> Both of these reports have the following signature coming from
+> __vmalloc_area_node():
+> 
+>  kworker/u17:5: vmalloc error: size 0, failed to allocate pages, mode:0x10dc2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_NORETRY|__GFP_ZERO), nodemask=(null),cpuset=/,mems_allowed=0
+> 
+> Further debugging showed these where allocations of one sector (512 bytes)
+> and at least one of the reporter's systems where low on memory, so going
+> through the overhead of allocating a vm area failed.
+> 
+> Switching the allocation from __vmalloc() to kvzalloc() avoids the
+> overhead of vmalloc() on small allocations and succeeds.
+> 
+> Note: the buffer is already freed using kvfree() so there's no need to
+> adjust the free path.
+> 
+> Cc: Qu Wenru <wqu@suse.com>
+> Cc: Naohiro Aota <naohiro.aota@wdc.com>
+> Link: https://github.com/kdave/btrfs-progs/issues/779
+> Link: https://github.com/kdave/btrfs-progs/issues/915
+> Fixes: Fixes: 23a50861adda ("scsi: sd_zbc: Cleanup sd_zbc_alloc_report_buffer()")
+> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-Hold up... I absolutely appreciate the work Hans is and has done. But
-are you talking about this talk?
+Looks good.
 
-https://lpc.events/event/18/contributions/1822/attachments/1464/3105/Zoned%20XFS%20LPC%20Zoned%20MC%202024%20V1.pdf
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-That is very much apples-to-oranges. The B+ isn't on the same device
-being evaluated for WAF, where this has all that mixed in. I think the
-results are pretty good, all things considered.
- 
-> I just wish we could get the real infraѕtructure instead of some band
-> aid, which makes it really hard to expose the real thing because now
-> it's been taken up and directly wired to a UAPI.
-> one
-
-I don't know what make of this. I think we're talking past each other.
+-- 
+Damien Le Moal
+Western Digital Research
