@@ -1,77 +1,50 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 59DE42E419;
-	Wed, 30 Oct 2024 02:18:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3CA8374F1;
+	Wed, 30 Oct 2024 04:47:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730254695; cv=none; b=NMDuvmWTX22WbtVT/RB9u3afTfKz3/fwfDcFbcOqT2zxMnDxkSbCR/qI+L2rn/zu/R0mijTkbHJyXwlcqf1pL3rnbZWgSU3kM4z+1fd8nmyalqQLkXpiCeuwo1tzW7qgGzjWKE6Apd3AH2z/vem7FYXp5AFx6HiRyIKm0ef5ZeY=
+	t=1730263624; cv=none; b=YITGhr+ZgalHTvr+YXzMnO5cPhgbKRF5O63Q9Om0puT9NSdWUudB5XZ4R9fShjFgLW77vpTz6GPmiBtpYlBP1RkvM9YEnrqz7l5QcNyopJXjikALnBVxNqCD4x2KwCWXQdWOA5qBw7OgeHO0bANjY/na/TJdHFTsGSEx6FisAdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730254695; c=relaxed/simple;
-	bh=9eqQfdscBEjLtcrWq8qKVNz4RDrbIrtOF0WQ6IAd98E=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GQI0MRfSLF30T7lbUlgpa7UrcoCDPdiyePBKf2MxldF6arqAlT76usYkbFdIWMvG44yY5ItBQHcQ/rBkIlRKcKqq85CfOqvX+DNd+IGpTufCbm7/XDTv0pz77RKPKWg1Hw4Hc/E/JOwKkzx4VDVBtVqBmiGjU0lWW59w+bNSSkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=P/hSRdOe; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="P/hSRdOe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=+LaK4
-	I9+wihg0+jMQhuM6fhmJK0Ypaq2No83nxa1oWg=; b=P/hSRdOe3bu+dRTXrH/+a
-	iEIpgRMP7wXLjYl5ltIepFWr4OSDxM7VE7GL94S2HW+7l+7FIXB8wI2T2L+bJdJb
-	Ry9lsDMHg8yu7SgBAh8V/dwfdU9iaHs11s1+hr+j+tYQ/M/gIlIlFwAgHTPow/FO
-	l7l7B4uXITSdYwdLP4lvII=
-Received: from liubaolin-VMware-Virtual-Platform.localdomain (unknown [223.70.160.239])
-	by gzsmtp1 (Coremail) with SMTP id PCgvCgD3n_BZlyFngsUABw--.64607S2;
-	Wed, 30 Oct 2024 10:18:02 +0800 (CST)
-From: Baolin Liu <liubaolin12138@163.com>
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	liubaolin12138@163.com,
-	Baolin Liu <liubaolin@kylinos.cn>
-Subject: [PATCH v1 v1] target: fix incorrect function name in pr_err
-Date: Wed, 30 Oct 2024 10:18:00 +0800
-Message-Id: <20241030021800.234980-1-liubaolin12138@163.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1730263624; c=relaxed/simple;
+	bh=/x4L28ef0xId3iGF9gr2b+luueoJOe+xhZv26NmOfi4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gRcXc7xgFxvNjrFGIiBudYnE/OyeRaJEGZc3HF+eUUzcVtHcgY+12OAT25oIj0l+p5+8O5a5UYL1D3G4i4LVt/ypZIzXfMZRx/zdQHMt+2p5XMeAz56SVJ8ELZeaJYvDscpEbXv/VI8eWzWLDBIMTx56JPRVMRxr6RfgZXXPv/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DD0F5227A8E; Wed, 30 Oct 2024 05:46:58 +0100 (CET)
+Date: Wed, 30 Oct 2024 05:46:58 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de,
+	joshi.k@samsung.com, javier.gonz@samsung.com,
+	Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCHv10 4/9] block: allow ability to limit partition write
+ hints
+Message-ID: <20241030044658.GA32344@lst.de>
+References: <20241029151922.459139-1-kbusch@meta.com> <20241029151922.459139-5-kbusch@meta.com> <a1ff3560-4072-4ecf-8501-e353b1c98bf0@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PCgvCgD3n_BZlyFngsUABw--.64607S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtF17ZryruF1DZF4rWw4kJFb_yoWDWrc_u3
-	4UArnrWr18ur1kW34fC3s7Zr90yrn7ZF4Iva1Fy39xta45W34Yy3sYgFn5ArWq9r40q3W5
-	C3saqF4DGFWfKjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRtkucJUUUUU==
-X-CM-SenderInfo: xolxutxrol0iasrtmqqrwthudrp/1tbiMRmIymchlCVYDAAAsJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a1ff3560-4072-4ecf-8501-e353b1c98bf0@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Baolin Liu <liubaolin@kylinos.cn>
+On Tue, Oct 29, 2024 at 10:25:11AM -0700, Bart Van Assche wrote:
+>> +}
+>
+> bitmap_copy() is not atomic. Shouldn't the bitmap_copy() call be
+> serialized against the code that tests bits in bdev->write_hint_mask?
 
-in pr_err(),bdev_open_by_path() should be renamed to
-bdev_file_open_by_path()
-
-Fixes: 034f0cf8fdf9 ("target: port block device access to file")
-
-Signed-off-by: Baolin Liu <liubaolin@kylinos.cn>
----
- drivers/target/target_core_pscsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 440e07b1d5cd..287ac5b0495f 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -369,7 +369,7 @@ static int pscsi_create_type_disk(struct se_device *dev, struct scsi_device *sd)
- 	bdev_file = bdev_file_open_by_path(dev->udev_path,
- 				BLK_OPEN_WRITE | BLK_OPEN_READ, pdv, NULL);
- 	if (IS_ERR(bdev_file)) {
--		pr_err("pSCSI: bdev_open_by_path() failed\n");
-+		pr_err("pSCSI: bdev_file_open_by_path() failed\n");
- 		scsi_device_put(sd);
- 		return PTR_ERR(bdev_file);
- 	}
--- 
-2.39.2
+It needs something.  I actually pointed that out last round, but forgot
+about it again this time :)
 
