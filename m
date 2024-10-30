@@ -1,53 +1,106 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A225121FD96;
-	Wed, 30 Oct 2024 17:15:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D651BD9D1;
+	Wed, 30 Oct 2024 17:23:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730308546; cv=none; b=K8BiHQulna1McL1u469v0eMCVFzekqXRODdc8iiUlxdqK+R0SaMYd5L1BaFST5lU7cOXVzz7+cN5Zi0wUqMf4/US/IVBhzGicwakNPRelaOt15fGNO0AnxM+DXdhvqYhLbMvuiftdQlqdlgnOn8pEfpQmPph6cXhl13Yv8LJehM=
+	t=1730309008; cv=none; b=pkD+TaGXJgfMbalM/dgJw9l9luvgIv9VQoZjANYxFS5vPHPj3t4C6ty2/yHak6DcY+RHN/HoU8m+xeDOnwcbSaYMtkAsJraeioxf4mfR4P5nI8x/CB4qXEqPCDFN1Opu10+cuAFAVlz6EZGW4SBRb3vE88DBTLb+3LBwgxb240I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730308546; c=relaxed/simple;
-	bh=IJdnnD1uUE0ZHuFk2kqH8UbU4rUPWlzafuUOmtVe4PE=;
+	s=arc-20240116; t=1730309008; c=relaxed/simple;
+	bh=6IqeD9OR8grEFIquAlG+eKQrDyJFCloHUWc1o9RKuUs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nslbTf9kjDtXoKcRlHVfNvuDNoxFSFRJhCkh46OO1zeQVCTAB5rnU58nO22fmZIjoGL2nL1/o26q//U5ezLrWy5GT/vccpN9fSwVhtARWmPi8c0vsXQh6SBUfpu/15fFAJVXXNeFShTAHQ4PDeM+wNQfJBnnMnNqYWiaRIoErp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B10FB227A8E; Wed, 30 Oct 2024 18:15:41 +0100 (CET)
-Date: Wed, 30 Oct 2024 18:15:41 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
-	javier.gonz@samsung.com, bvanassche@acm.org,
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZOsP0TTgsRaGU+HNSm5VbeN5pr6qCuNSZUdXgHk8i6EleIQ4k2SnekL8sNqFGAwUBCaiGr92wH59I1dc99OlYIq8CFCDPA7B9oSEfJtLCq5iF1x00GkObPFPRirY2YBXmjPHWfm5gDKwL5LjwoB+UM3k7xZJQWiObsdDXZ5LfZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c8U1HDtU; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c8U1HDtU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A931AC4CECE;
+	Wed, 30 Oct 2024 17:23:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730309005;
+	bh=6IqeD9OR8grEFIquAlG+eKQrDyJFCloHUWc1o9RKuUs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=c8U1HDtUMehii0vbt7n5UMBQ7tiCAXpqPof9Ag1fL4SSGBjdfJSTa8XVyZgOGPSfY
+	 iEGhqZYO6CvAMk5G0h+p+fujQ67rChs5InFn5Q66g1yUcAdwc7oaHqHMCtx0OwtmS2
+	 hpIXJxfb1wDtJ2mGPcZ6RdsogLsJr2UvP4KG8vvzbkYS5i18RW1VysWRywVnMJ2ipW
+	 Xgj4zFUbb/K6aJOQeY5xkotMciWJO+Tzr1xjE1cC6J4COwk73lWqDekE5YWbT3K8hr
+	 EiUWD43kgEeTJrE6ihcrgPgKApivC0DytrXs5AHhe0gFKbe2drRlDQTo5t4Q+0ZBfh
+	 WHiU4fXH82brw==
+Date: Wed, 30 Oct 2024 11:23:22 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	joshi.k@samsung.com, javier.gonz@samsung.com, bvanassche@acm.org,
 	Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-Message-ID: <20241030171541.GB12580@lst.de>
-References: <20241029155330.GA27856@lst.de> <ZyEL4FOBMr4H8DGM@kbusch-mbp> <20241030045526.GA32385@lst.de> <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com> <20241030154556.GA4449@lst.de> <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com> <20241030155052.GA4984@lst.de> <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com> <20241030165708.GA11009@lst.de> <ZyJnPwqIufrcMkFg@kbusch-mbp.dhcp.thefacebook.com>
+Message-ID: <ZyJriq2jZ4ZG-UAC@kbusch-mbp.dhcp.thefacebook.com>
+References: <ZyEBhOoDHKJs4EEY@kbusch-mbp>
+ <20241029155330.GA27856@lst.de>
+ <ZyEL4FOBMr4H8DGM@kbusch-mbp>
+ <20241030045526.GA32385@lst.de>
+ <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030154556.GA4449@lst.de>
+ <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030155052.GA4984@lst.de>
+ <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030165708.GA11009@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZyJnPwqIufrcMkFg@kbusch-mbp.dhcp.thefacebook.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241030165708.GA11009@lst.de>
 
-On Wed, Oct 30, 2024 at 11:05:03AM -0600, Keith Busch wrote:
-> On Wed, Oct 30, 2024 at 05:57:08PM +0100, Christoph Hellwig wrote:
-> > And once it uses by default, taking it away will have someone scream
-> > regresion, because we're not taking it away form that super special
-> > use case.
+On Wed, Oct 30, 2024 at 05:57:08PM +0100, Christoph Hellwig wrote:
+> > On Wed, Oct 30, 2024 at 04:50:52PM +0100, Christoph Hellwig wrote:
 > 
-> Refusing to allow something because someone might find it useful has got
-> to be the worst reasoning I've heard. :)
+> > It sets temperature hints for different SST levels, which already
+> > happens today. The last data point made some minor changes with
+> > level-to-hint mapping.
+> 
+> Do you have a pointer to the changes?
 
-That's not that point.  The point is by locking us in we can't actually
-do the proper thing.  And that's what I'm really worried about.
-Especially with the not all that great numbers in the success story.
+The change moves levels 2 and 3 to "MEDIUM" (along with 0 and 1 already
+there), 4 to "LONG", and >= 5 remain "EXTREME".
+
+WAL continues to be "SHORT", as before.
+ 
+> > Without FDP:
+> > 
+> > WAF:        2.72
+> > IOPS:       1465
+> > READ LAT:   2681us
+> > UPDATE LAT: 3115us
+> > 
+> > With FDP (rocksdb unmodified):
+> > 
+> > WAF:        2.26
+> > IOPS:       1473
+> > READ LAT:   2415us
+> > UPDATE LAT: 2807us
+> > 
+> > With FDP (with some minor rocksdb changes):
+> > 
+> > WAF:        1.67
+> > IOPS:       1547
+> > READ LAT:   1978us
+> > UPDATE LAT: 2267us
+> 
+> Compared to the Numbers Hans presented at Plumbers for the Zoned XFS code,
+> which should work just fine with FDP IFF we exposed real write streams,
+> which roughly double read nad wirte IOPS and reduce the WAF to almost
+> 1 this doesn't look too spectacular to be honest, but it sure it something.
+> 
+> I just wish we could get the real infraѕtructure instead of some band
+> aid, which makes it really hard to expose the real thing because now
+> it's been taken up and directly wired to a UAPI.
+> one
+
+This doesn't have to be the end placement streams development. I
+fundamentally disagree that this locks anyone in to anything.
