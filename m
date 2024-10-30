@@ -1,59 +1,50 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2AF91E9092
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 13:29:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B9891E32D8;
+	Wed, 30 Oct 2024 13:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730294959; cv=none; b=K7MkUV3tfRi1pCOFNnf5VsYa0eyYnAnGKWI8J4XT8EteSlRrKxhzpd9XNoY5FXYeDC6T83hj7j9q6LwbnK2LLqxKFa/Ndd8tT58KGEYh8laL2iyUozXu8rjzZOdL18i7DFMOwgm3pskwT6KNMlKx1qW3u+1FjXN68oYOIEJDJlM=
+	t=1730295725; cv=none; b=fZbaPgLjUOYjj4p5UgktHlJkDenN6mS/DplrAcGqRsYQ42lebfvH3MAnRrYk5lHmiT/kYe4lyG5vvx45OPPHf8R4//fFnodCQ0qtF+IDNxJMrbb8uchasl0oKgq8nZDZ0EOv1WcHtK1z6ykjqxNOspVTH47I/gO9NN0MFzEBU5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730294959; c=relaxed/simple;
-	bh=rcLE83f8I5rl8ZtZIrZgOnTLuwTtp/g9tS9d1ZU8SuI=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=dwXnT9S4KDc9+0+7VZvuWPhdBAyFWfIAJJrjT2Ku6qQ2BArr4Dv0Uk1Gx0/u8VKIWEcjTAWepxCy57AcJC2WKvkfAbenvVaSeJdQ8R+J1Uqh3uxOvTEWU7s885XJQQniEYhWvFjLrN57CWLhp8nmdpA2xH85Ye6MYJ6vxyxrvHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=w8f6Nwe2; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730295725; c=relaxed/simple;
+	bh=QwcAFYePohivBRYb4Lo1h2IcU0/sN1w3jRL3R+xHKMQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=udcmjknUC11xzvNCgM9d1GX0fJ+CKQ8l5migNMMSVoNjNnTJ4fzHKRNZYvfkrdler0ybOVCP/mUXEkrh7A/q3TSM+4Y/eFGgqc3Kg3RN//FEA5ZDs2a3pW8JKjkkPQb5trDdck0VtljciFYu79ipibJWXTmxgUIVm1kDH/yejnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=becUY4MS; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="w8f6Nwe2"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-43168d9c6c9so64603735e9.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 06:29:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730294956; x=1730899756; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=rcLE83f8I5rl8ZtZIrZgOnTLuwTtp/g9tS9d1ZU8SuI=;
-        b=w8f6Nwe2Lvw6fY90d7sWFp6pWD0lWV9p0z6lJ5/eVjsaJiivlR9ajTQbRbZsF5dRr+
-         r5RBvcTJHlsmOazfq7+OyUOLsQUYQ1y7MxWAadXX4ZcTco1Mvf5QUvlV/IYTBFwc2WRf
-         vIhytAaZhAfNqemQytcQD/2CqpgSx99caBYvZRoIusFd9zfF5g4OuoPV7qGKNyqYKmU6
-         JfC9HpL4aeUF1qHs6eAm6CQqu9nHGEjuHij77tZ+DIq9BwA8bsAJfWTJpWgdeQVMOnk/
-         b44qw/RSR0rTNJcrf0atYEZzyg4Jbk7qTAOxtwqhv5F1/VXTLp/kxhmybcF6ifkfK9kp
-         97CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730294956; x=1730899756;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rcLE83f8I5rl8ZtZIrZgOnTLuwTtp/g9tS9d1ZU8SuI=;
-        b=rgFqF12fQ8U3bY0HdeHFm3MJiUXjI6shXkHGc7RBpXV8k88B72P0lHbP5eqhDpPIPu
-         zm2VMyLgy5Sw58Vp1VyYBpQFtdYG76vwJ7+rDpt3SZx8iY93bwa1ivEyuNYDjY+4bl/4
-         KE0EB5OL+Rkxc78zrXeEIE8W1tG0UAD4bZ82k7VlpzmEhr6hlzbonTWtp5uoOi/pIlXn
-         ImRUB9ZX8jBYXzfnRUKebQ8lnQ13jL3FJRQAbbAw8uBWRzxzQixSN/ruAo4monYSPI37
-         xZ6WVLk4Bs98fskCcGaeCfvQtCJNxX2eU/ui9Pfpov1SCYIy5QyUAqZvQc07tZYJVTMl
-         7wuw==
-X-Forwarded-Encrypted: i=1; AJvYcCXRIDitEZldTJTVHgfaVJAzVs+yfcPcyh3H2AL1iHYwSe/TFOjgEVtugs7G1mrCBzgHvRAXveww1zFG@vger.kernel.org
-X-Gm-Message-State: AOJu0YylGvyIMb3I4K+3ySdHBY6wefIXY60CJxCpWJTwCnm+taeTsc7v
-	dh9vDZU30wDdPK+ano/LKM+Ap/rf+bsNYtlSlk4QAzDrVEHe5dYw8GuTCD2ieSA=
-X-Google-Smtp-Source: AGHT+IHp5AbAqgjQIgwYYwcTFJhtpBHYbLWugEe1xzPeyU3dGtA9O/+opSkEXa/XOrO9WuCxMOGUqw==
-X-Received: by 2002:adf:ea43:0:b0:37d:633a:b361 with SMTP id ffacd0b85a97d-38061206c0cmr11906179f8f.51.1730294956053;
-        Wed, 30 Oct 2024 06:29:16 -0700 (PDT)
-Received: from [192.168.0.157] ([79.115.63.43])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd9a9a53sm21657955e9.30.2024.10.30.06.29.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Oct 2024 06:29:14 -0700 (PDT)
-Message-ID: <8e2a327a-5efc-4ba3-afa2-387099967468@linaro.org>
-Date: Wed, 30 Oct 2024 13:29:13 +0000
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="becUY4MS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1730295723; x=1761831723;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=QwcAFYePohivBRYb4Lo1h2IcU0/sN1w3jRL3R+xHKMQ=;
+  b=becUY4MSAWwiqnCkn6upPp0bZUd0TNILPgIqMq+W9pxAwRmO0+cXlWOT
+   bpZBVKgrj8Kqchel6UIEfUp5Kw1K8XkS/tUw+IDbxE2CKVE8T20bKjnjs
+   9TyjW7/nTnmSqGCzz8IxYCKeaNVfNKWJQqryEe5rAprCnCiLtrbw8vzLo
+   j03RQ4pdnBBNCOtWWADAZac8gekN5lS2p/32i4kD/lyL0ZlLT/dRTFg0g
+   yKg0fF5j5TxTFs8/NsCFz55wr7B/vOqaQo8a1A4VM5JqIdY0UFWXYL4Ji
+   5KBvvWDlIWsGGZ5nIq8cw+R0802shhAKCH/rMWzWuz8jHdgbBUy3dEQa7
+   g==;
+X-CSE-ConnectionGUID: Lvg5a3aeR02QVA+q7eQtmA==
+X-CSE-MsgGUID: U9X8rwkCRcStilWwAg/p+Q==
+X-IronPort-AV: E=McAfee;i="6700,10204,11241"; a="40568749"
+X-IronPort-AV: E=Sophos;i="6.11,245,1725346800"; 
+   d="scan'208";a="40568749"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2024 06:41:50 -0700
+X-CSE-ConnectionGUID: vAg+Jr+vTHmz9pTWNsX2Sg==
+X-CSE-MsgGUID: I6ZZi7D9RBy+a3Y7fyGW+g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,245,1725346800"; 
+   d="scan'208";a="82428341"
+Received: from ahunter6-mobl1.ger.corp.intel.com (HELO [10.0.2.15]) ([10.245.115.59])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2024 06:41:47 -0700
+Message-ID: <f1221990-8d89-4b60-b6f7-25540ad5ea55@intel.com>
+Date: Wed, 30 Oct 2024 15:41:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,31 +52,80 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 04/11] scsi: ufs: exynos: Add
- EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR check
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-To: Peter Griffin <peter.griffin@linaro.org>, alim.akhtar@samsung.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- avri.altman@wdc.com, bvanassche@acm.org, krzk@kernel.org
-Cc: andre.draszik@linaro.org, kernel-team@android.com,
- willmcvicker@google.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- ebiggers@kernel.org
-References: <20241025131442.112862-1-peter.griffin@linaro.org>
- <20241025131442.112862-5-peter.griffin@linaro.org>
- <f5ac07e3-3fde-4ac8-8cfc-fb7918ffb2a7@linaro.org>
+Subject: Re: [PATCH] scsi: ufs: Replace deprecated PCI functions
+To: Philipp Stanner <pstanner@redhat.com>,
+ Pedro Sousa <pedrom.sousa@synopsys.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Bart Van Assche <bvanassche@acm.org>, Minwoo Im <minwoo.im@samsung.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20241028102428.23118-2-pstanner@redhat.com>
 Content-Language: en-US
-In-Reply-To: <f5ac07e3-3fde-4ac8-8cfc-fb7918ffb2a7@linaro.org>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+In-Reply-To: <20241028102428.23118-2-pstanner@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
+On 28/10/24 12:24, Philipp Stanner wrote:
+> pcim_iomap_regions() and pcim_iomap_table() have been deprecated in
+> commit e354bb84a4c1 ("PCI: Deprecate pcim_iomap_table(),
+> pcim_iomap_regions_request_all()").
+> 
+> Replace these functions with pcim_iomap_region().
+> 
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
 
+Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-On 10/30/24 8:56 AM, Tudor Ambarus wrote:
-> tx_linereset_n, rx_hibern8_wait is set but not used anywhere. Can we
-> remove it? Not related to this patch though.
+> ---
+>  drivers/ufs/host/tc-dwc-g210-pci.c | 8 +++-----
+>  drivers/ufs/host/ufshcd-pci.c      | 8 +++-----
+>  2 files changed, 6 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/tc-dwc-g210-pci.c b/drivers/ufs/host/tc-dwc-g210-pci.c
+> index 876781fd6861..0167d8bef71a 100644
+> --- a/drivers/ufs/host/tc-dwc-g210-pci.c
+> +++ b/drivers/ufs/host/tc-dwc-g210-pci.c
+> @@ -80,14 +80,12 @@ tc_dwc_g210_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  
+>  	pci_set_master(pdev);
+>  
+> -	err = pcim_iomap_regions(pdev, 1 << 0, UFSHCD);
+> -	if (err < 0) {
+> +	mmio_base = pcim_iomap_region(pdev, 0, UFSHCD);
+> +	if (IS_ERR(mmio_base)) {
+>  		dev_err(&pdev->dev, "request and iomap failed\n");
+> -		return err;
+> +		return PTR_ERR(mmio_base);
+>  	}
+>  
+> -	mmio_base = pcim_iomap_table(pdev)[0];
+> -
+>  	err = ufshcd_alloc_host(&pdev->dev, &hba);
+>  	if (err) {
+>  		dev_err(&pdev->dev, "Allocation failed\n");
+> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+> index 54e0cc0653a2..ea39c5d5b8cf 100644
+> --- a/drivers/ufs/host/ufshcd-pci.c
+> +++ b/drivers/ufs/host/ufshcd-pci.c
+> @@ -588,14 +588,12 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  
+>  	pci_set_master(pdev);
+>  
+> -	err = pcim_iomap_regions(pdev, 1 << 0, UFSHCD);
+> -	if (err < 0) {
+> +	mmio_base = pcim_iomap_region(pdev, 0, UFSHCD);
+> +	if (IS_ERR(mmio_base)) {
+>  		dev_err(&pdev->dev, "request and iomap failed\n");
+> -		return err;
+> +		return PTR_ERR(mmio_base);
+>  	}
+>  
+> -	mmio_base = pcim_iomap_table(pdev)[0];
+> -
+>  	err = ufshcd_alloc_host(&pdev->dev, &hba);
+>  	if (err) {
+>  		dev_err(&pdev->dev, "Allocation failed\n");
 
-Sent patches to remove these fields at:
-
-https://lore.kernel.org/linux-scsi/20241030132649.3575865-1-tudor.ambarus@linaro.org/
