@@ -1,59 +1,59 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B1E21E0DFE
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 08:24:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6182315B0F7
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 08:56:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730276655; cv=none; b=b1EXMRQ8HkKGtZP5Yw0MDucmW7POEe9LCPRrJxCdStRC9/oEDBHGZnpV9PRoUaiqJ05fPjFxkiik6IXlSkknzBcMAoQnjBBN3Rar8r64k+9I/Kj8FlmqeYjDD6vceHhVvhmfJKIgRk64jgw+fjBhC3u0OXn2KD7mHhChviN2DDg=
+	t=1730278579; cv=none; b=PB7CZ6Q0ArjxMuWR+Cz98ujWU7klUDcuoYLmShzehnxnVbdXY8DGPy02abQmVHmausc5VkW/vRGJ/OyA3xGsoyJ1bwPRXzqiedqGgXIWa3egObxguGkrkJ1bYw4sw+zrzoKlDLKvZImTYa1GmCJBzpCA3BE99f0g4Z4MEwk/vQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730276655; c=relaxed/simple;
-	bh=Qhpkm4WTteAyftmrwtnK9R8dd+A2hUuNmx/G1bGXkYY=;
+	s=arc-20240116; t=1730278579; c=relaxed/simple;
+	bh=40rOiv7LbiYEvzP2QI3665SNXkeGbF02kc7yZ2+ubd0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=vFwRdVFljQ2+670t1dLnjDaMeBlqdUniuTF2EAz6y221Z4ziLk4jPozCCAFO1vCHZYegn0THOZxGRzGV+NjklBRwxgGoUGo/nHFBUzPlv/hwQeNWIhuR9EyxrqzD+pPYdEnUmYBpdrcX/vQP3xdnYnGpALnfvub6JqozCzjCTIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=dgQVSADj; arc=none smtp.client-ip=209.85.218.52
+	 In-Reply-To:Content-Type; b=EP528XorJCaMm4+QAYJI+ftt3lT+604hkR4ez0ei22OUawzZ6b3b2+PUMF4d+rHBaNdiL4EqSrLlpVZ25HgNKvZtl8LKG9nQNmBbTWcCg8Ld+98gHHLt98LJSWEmqeqkuKTCsJyTJwXiAAPameiz9HoldggHMuRmqiBzU99JdT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=oY4DCPSY; arc=none smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dgQVSADj"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a9a6acac4c3so994035366b.0
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 01:24:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="oY4DCPSY"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4315baec69eso61923355e9.2
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Oct 2024 01:56:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730276651; x=1730881451; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1730278576; x=1730883376; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=4IzTjonjvv4fhPKtE1bAMZ0z1TTpZMKWkER0B3kjnaU=;
-        b=dgQVSADjzU7mFlrNo7V7ohi1dVUSo9j0YZkEIVkrmbHwsmwCyoQyG+o1jRET2VBPw2
-         5icY86ol+yKWQLY57/M9HSKAuj2VrHvD7SAzohfYwM2WM62kH6McCpMsOXx+Ks9CliJs
-         hwY6M0hXkO6OiKm5mYmCPcv9KO7rGejkh5Vx5TLwd/FjuDA9DGdNMiWXW9BwQQvYM2YI
-         Byf3YzE+qiOn09q/wIAvxq5P/aousxtLIynAOuKAivoEWjA+6KSdn2pCB9KFoCw7dgA7
-         xQmU89ldGLqaS20MjX6wgLbaNNnoEx3ZYVkjFybNzyhhb+FKqzzVGHLD5kNfNA+3b98B
-         fM4A==
+        bh=vwQhJkDhRGyNYzUhzrUe8VLzlsZC7UDKp+wauW+M1cA=;
+        b=oY4DCPSYL2SO6Am/XkGp2hpTtq66+BkcZJCJqXW/03x3Djid/8bw+kf/7Izi3qp/g4
+         8Rw8G6nk1GdmQOsLTzn7VkdyqO3d3xOOoSVh+ocgQ76eHtMI3sJ3t/FVeu8osk2nlgUN
+         f/9gfMAKmGpjDLF7GVZ/A3gKrowY+Tg0OUWvUDgZ7q/MOBPSDhKlN8lgL34ccTCKya4v
+         hYmNep6BGP4K4dL+dVk36HdfHcuvprpO2PNs+u6koGmX5R/kl+mk1ntb1VjXSqMLf25s
+         UQkSbOu5VKlxxSd9nY5203W7WBqpzfFfmehrk6O4B++T2jQbivSXBPEyqG1yThwqOvHM
+         E4eQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730276651; x=1730881451;
+        d=1e100.net; s=20230601; t=1730278576; x=1730883376;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4IzTjonjvv4fhPKtE1bAMZ0z1TTpZMKWkER0B3kjnaU=;
-        b=LdA7jhG6B5kLvwhlLLNP7s6FaPVhJWtBes+/ap6YLqZtOToLMLYCTwcEtM/MqnP/2K
-         MrmNCKslI2utjEQPBRbqqiQiBxSOCq2IpYpGVE0xLNxl8Qk6lwHR43FF+YhDjiJYzquu
-         aIHHT0J7aJHIHaPWJRIQTpPUs2Pww1F9ab9twzwhHAIbuNAEp+O028p0t5H4IHdMksF9
-         LdGydh4qjQnjm1rlvmTiMmT3DgZkevpAEgD7TMv6nRSBiF9U2OLLQSlduQ8wTU2nLgIQ
-         +/t/QEKWKglJ9WqipBZMnSIDj3ck76Q/2SrgCfG5Rn41BtpgJ9NO/iStd8oyCon+zkkI
-         42Zw==
-X-Forwarded-Encrypted: i=1; AJvYcCVD96rzu+ZZgidyXyaZBZuNsa2uW37tjC/r/U+A9ocTuzh/FVe36DoEh/anuusGxt8UOlkIOTWvZpkS@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+76dPPwg+Ocf0VRGGZH9wH/MxFXaEg4pI5WEuOmp9BEb+ctaO
-	hlsIQlnLnnpr9Vs+TcwBYAWFaUGinAdC0ntlw5TzVAW2M7rwfvkevj/uo4C9i8Q=
-X-Google-Smtp-Source: AGHT+IH5x1e9E410/aCJcWrSKGwzP+rL5H/qoPDmLBUylFSzYy/PDgopa4w/bjGtxcjDtfhlYRn7IQ==
-X-Received: by 2002:a17:906:794c:b0:a99:e505:2089 with SMTP id a640c23a62f3a-a9de61ce120mr1423660466b.45.1730276651447;
-        Wed, 30 Oct 2024 01:24:11 -0700 (PDT)
+        bh=vwQhJkDhRGyNYzUhzrUe8VLzlsZC7UDKp+wauW+M1cA=;
+        b=C2KL3hNxjs/x14+91M23e4F4drh3CVeVw+VnXe4l8hjhjYRIJbLHpLLaZG00j+4DAj
+         JrnL8U/ikKYSYKVMmkxK3lFUFz85l8ciCMUF46YAbgJGmXRJdkNkhLcoxohLXWtNW9pm
+         9/tfHVJ1AzJnin8aNy6CgbjEhnzb3xlRbOXSA++rpU12Dovi5cVhuIm2wjcrRGUEUSmz
+         sqP8pPtKPf7su2Urlm6Jtgs7P9CqYx8/bjSsg7rnfFSOce3nT5OuhHltd7pKgA5rQxJk
+         iUpNgAHZfjwKcWnzS7jZapbjkb3ZArFC0otYWAAJaeYZrRlsTZfqTKT5DQhDSqjntvwM
+         2iyA==
+X-Forwarded-Encrypted: i=1; AJvYcCU4GgwcME7TmcMg3aUdynRVwEP9IUNmffRDTBPN1zMpINPjKoqF8jpONm3Ut//9nK9ZjxbIGAO44oy/@vger.kernel.org
+X-Gm-Message-State: AOJu0YzyCVv/saSQSRUZ1w6xJEhVwfxiP2bSh7VePxHOcmT5QvehCHQ+
+	2o40RrXEvmdY9MuDempUkfnH6KUu0cIlJydmSRUml4E/2qKTplgfiOcpJ2E7pyY=
+X-Google-Smtp-Source: AGHT+IHMAWPWqhusmSGEG8xKoTYKcseUAUiA+2AO0mWI+eaxCx/6d+Nl2JonxwY2qbCw2Xe3p7M++g==
+X-Received: by 2002:a05:600c:3d05:b0:42a:a6d2:3270 with SMTP id 5b1f17b1804b1-4319acb8f59mr131260055e9.21.1730278575803;
+        Wed, 30 Oct 2024 01:56:15 -0700 (PDT)
 Received: from [192.168.0.157] ([79.115.63.43])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38058b13309sm14733219f8f.3.2024.10.30.01.24.09
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38058b132fbsm14824903f8f.4.2024.10.30.01.56.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Oct 2024 01:24:11 -0700 (PDT)
-Message-ID: <039d4e57-30e7-40e8-9501-cc4b18c6bb30@linaro.org>
-Date: Wed, 30 Oct 2024 08:24:09 +0000
+        Wed, 30 Oct 2024 01:56:15 -0700 (PDT)
+Message-ID: <f5ac07e3-3fde-4ac8-8cfc-fb7918ffb2a7@linaro.org>
+Date: Wed, 30 Oct 2024 08:56:13 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,8 +61,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/11] scsi: ufs: exynos: gs101: remove
- EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL
+Subject: Re: [PATCH v2 04/11] scsi: ufs: exynos: Add
+ EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR check
 To: Peter Griffin <peter.griffin@linaro.org>, alim.akhtar@samsung.com,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
  avri.altman@wdc.com, bvanassche@acm.org, krzk@kernel.org
@@ -72,44 +72,49 @@ Cc: andre.draszik@linaro.org, kernel-team@android.com,
  linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
  ebiggers@kernel.org
 References: <20241025131442.112862-1-peter.griffin@linaro.org>
- <20241025131442.112862-4-peter.griffin@linaro.org>
+ <20241025131442.112862-5-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Tudor Ambarus <tudor.ambarus@linaro.org>
-In-Reply-To: <20241025131442.112862-4-peter.griffin@linaro.org>
+In-Reply-To: <20241025131442.112862-5-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
 
 On 10/25/24 2:14 PM, Peter Griffin wrote:
-> This flag is not required for gs101 SoC.
+> The values calculated in exynos_ufs_specify_phy_time_attr() are only used
+> in exynos_ufs_config_phy_time_attr() and exynos_ufs_config_phy_cap_attr()
+
+all values set in exynos_ufs_specify_phy_time_attr() are used *only* in
+exynos_ufs_config_phy_time_attr(). Or did I miss something?
+
+> if EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR flag is not set.
+
+yep, wonderful.
+
 > 
-
-nitpick, use imperative
-
-Auto clk control works fine for gs101, remove
-EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL flag.
-
-(or something along these lines)
-
-Reviewed-by: Tudor Ambarus <tudor.ambarus@linaro.org>
-
+> Add a check for this flag to exynos_ufs_specify_phy_time_attr() and
+> return for platforms that don't set it.
+> 
 > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 > ---
->  drivers/ufs/host/ufs-exynos.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+>  drivers/ufs/host/ufs-exynos.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
 > diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> index 939d08bce545..d685d3e93ea1 100644
+> index d685d3e93ea1..a1a2fdcb8a40 100644
 > --- a/drivers/ufs/host/ufs-exynos.c
 > +++ b/drivers/ufs/host/ufs-exynos.c
-> @@ -2142,8 +2142,7 @@ static const struct exynos_ufs_drv_data gs101_ufs_drvs = {
->  				  UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR |
->  				  UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL |
->  				  UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING,
-> -	.opts			= EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL |
-> -				  EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR |
-> +	.opts			= EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR |
->  				  EXYNOS_UFS_OPT_UFSPR_SECURE |
->  				  EXYNOS_UFS_OPT_TIMER_TICK_SELECT,
->  	.drv_init		= exynosauto_ufs_drv_init,
+> @@ -546,6 +546,9 @@ static void exynos_ufs_specify_phy_time_attr(struct exynos_ufs *ufs)
+>  	struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
+>  	struct ufs_phy_time_cfg *t_cfg = &ufs->t_cfg;
+>  
+> +	if (ufs->opts & EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR)
+> +		return;
+> +
+>  	t_cfg->tx_linereset_p =
+>  		exynos_ufs_calc_time_cntr(ufs, attr->tx_dif_p_nsec);
+>  	t_cfg->tx_linereset_n =
+
+tx_linereset_n, rx_hibern8_wait is set but not used anywhere. Can we
+remove it? Not related to this patch though.
