@@ -1,64 +1,64 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DB9B1CCB27
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 22:15:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D91471CCEE8
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 22:15:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730412938; cv=none; b=k7oVdl6P83MV314MM/fTFXNvQRIZ+04XI4lpamp2B85OEUWl7wgwiymuVYED5m+7+YTABTEljZPuZzw9P6xM5hNMcQ2e9sujdm7dodSwpvp7hZ+W+dE4i+dVArbyiuvbmtsmy+aXLbBnDpKQFyOGtI41Y7wiL6wHBNUDsvDOvLc=
+	t=1730412939; cv=none; b=jWoFeVkyeKQoQ7K+DV5EaZDogEXhKe38qKRf2h0eP2MUdhzrO4ykq+Txa6MG6r1nI/M6GIDpJNRUGrgB0gcCtJ37y/gBeJfasvayCgtBKcmqG3T2D2qxlDCW5Nlzshp4uVs33JTiD/nFJz09MRVtlkTquZq/VDQgkXjQdhNZbH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730412938; c=relaxed/simple;
-	bh=y+ZbQbBOV/tQ9hweDCB9emyt7ui6zT7Q6+cAZ0ntk8I=;
+	s=arc-20240116; t=1730412939; c=relaxed/simple;
+	bh=2AsZWRN4fljeMRtqn37iACDUWFHU8zkHZnzu/kDlIMI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ADkmEgATO6V4JKS7wL8QLE0cGCL2dkICSQfdQvr1JRwNys3JYvxOXiJr9anGFqRgUh+dgHX8V6JQBaVkj599+0ZkRyXgenplAf8KZucPdOjn8jox5NtKznOORkg/RTenPLeMWOXECBIva/VMx40hFz6iCv/iPSm48ujVwhS4MsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LIHt8rH0; arc=none smtp.client-ip=209.85.214.174
+	 MIME-Version; b=RM0o79dtpUT9ui8WhfHFUcPg83TRJVBY1yXbsVDVgPQlltf5gDkPPfw4a+ETb43bB8kgaHjqbpIy59mBvTGRCXU7IWhITCZ+dF5dkEyXDnpHYD42At7w1izl+poXdZF4Tiy344YzQGt6fMt67Go7JJjbgE0O5iSVc9i/sGfdvyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IfYA3udE; arc=none smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LIHt8rH0"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20cb47387ceso14296515ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 15:15:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IfYA3udE"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2e2bd347124so1118120a91.1
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 15:15:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730412931; x=1731017731; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1730412933; x=1731017733; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0Aj5S7yd3e77a4p/mMnfUPvsEG0zVaT6LiC7c1KiSB4=;
-        b=LIHt8rH0NFOHZNa5IIhATyeMCDMsXb16ryeC/dKr6j3s/XZCBCr/HJNNe67xbPKRzD
-         iA2RIotnkDNWbzd5oeCFAUlgpocsSyMwRMOtBs9ZEHHhWeR05dhcTx6mCnGI4uWYeAo+
-         TYic4xUPW5XKg78GnqMfmK6ZCWVJmgnOUmM+64ejmqZOTPzT6zL3KeYvLrCOFuJGU+Fv
-         b0hVvD6JWNoDxmp8oVpHfs3/IR8htynMll9ONYZs9/BnLxNJwGs4uATOAmxzTgjQZdFl
-         0ccQU47ktR5Pzj5kV7qvouAthe4FiQMATlsx5CzFlMIxlPD0tVIE477coy8Kfkg4fE9I
-         Fhow==
+        bh=lX7BLqOduonkmSUPWdoS/+gYMLqg5OQMqcC3w9RR55w=;
+        b=IfYA3udEZasHGym043wo+qEG6V2CSKwaBY1Wo0GspJU+jan4lL80qlojB1jm1d8tyJ
+         /fgIJ8cz5WGK11EVGekfgjg/rn1A1ITymJw0xOM1wM+vTcpcFwrKdYHWlzbKadduKDjy
+         VHkPUSPSbl8tTYQoB7L5lkaiEEbG9FrgDHFKyzpr/8jpwmZkZmvOQqqj103unSE75dba
+         5/rbnCAujv61V9JIVuaIZAwnyBtAj3f8J5k9KVIJM5rYRvgN36zEPONdcwUBuhSfY5hb
+         lMJrdTljj7Sd6CT5hfeAG3ft50Lfe8FjtOQ3+ESRDPZEwXLH+PMxFPA4oexi/KauZdXe
+         RFRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730412931; x=1731017731;
+        d=1e100.net; s=20230601; t=1730412933; x=1731017733;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0Aj5S7yd3e77a4p/mMnfUPvsEG0zVaT6LiC7c1KiSB4=;
-        b=HctVcxfLT+2euClUSgAc6zXIylevQTjzQq67M1XbR3SL2KhXrdK/ZqjqyKJR7ATbY5
-         Kit3HrqPnKdJHhjetcmeXoVMuonNip0G6dNYtOAbVWjuj+KPxrM2inyS1jqhl/96L1vV
-         RGYrUVo3/yCQv23URkkE6+dx/JiIruq4V2bnLApxaPfJRVuUKZ7jimi7kqfQfu9JoaKQ
-         liXJIxAXVj45EHmC4hD8DXpn4gkpVlU5Oh1f2xetnY5oIC/BHQHa7zkiwldjjaS/ovRk
-         AUzdJC8O8iQJoaOoHS84+NObxKFd7RzGKmisVYZL57k3faVH0BqlNifHQMgONpXRTDMA
-         mraA==
-X-Gm-Message-State: AOJu0YwnU7uSLVEx4pm3+FnMsefSb9nupCZS2aClRS1KR78Zn/0VrobB
-	bplhsgNt9pB7JIqAztLPgjknNRhOgA00HMR73vlYcIwOQ0V/xanzcXXrhg==
-X-Google-Smtp-Source: AGHT+IF3H+4hr+SjBcH/JsTXCKj3Gzt416r1QJSguQa48KhEDHUtLBoj4hAyTJLL8TNn2EQ/67Exww==
-X-Received: by 2002:a17:902:ccc8:b0:20c:c9f6:9636 with SMTP id d9443c01a7336-210c6ce56b9mr336488805ad.59.1730412931435;
-        Thu, 31 Oct 2024 15:15:31 -0700 (PDT)
+        bh=lX7BLqOduonkmSUPWdoS/+gYMLqg5OQMqcC3w9RR55w=;
+        b=guNK8+oofQt4TyfW0tnGd6BSdIWt/vNUALhms4yYrHtCZFPH2pUt0EXjVaBqB09pNZ
+         FiculLEabsfQjn+cwiF7RQQRCGU93lIXBcbUyfSXRsbgwR4vI3Wg9Ia/HENDec3l6jsk
+         UPHC8vkCF+fOr7nJUc34AVaG/0Ah1JQsQkML2+655EytIkeLJkauB6ZuXWWeq14LU3/g
+         AXqytPENLyTQnZwGonNKUAZsYYewuUjmFZ4MO7RiZ4jKxgAcM4358osYHva1cpjPIOx9
+         asPRCRXYmDsWkewnP5SeGDxU8Yh+8LegorsT+MX7Q0nMwooxJrdxzQmHxipOORjvHTiC
+         SCeQ==
+X-Gm-Message-State: AOJu0YxumCS8Tv0Sk7AUNOrjoObL4Bzfzgkgs40E42wD4L+4r+tgM2gG
+	yM3zsCJT5Rxh4hklGuaPN9QiIwNOu401xss6bDup5CLyECa9kY11bBArkg==
+X-Google-Smtp-Source: AGHT+IGNoDav0K3iC9cXXeh6kz9YXcJDeRvjrMhpViz80ZW4P/vaUcL56miZaImygvNv8pgDtvGwYw==
+X-Received: by 2002:a17:90a:f185:b0:2e1:682b:361a with SMTP id 98e67ed59e1d1-2e8f11bad82mr22351218a91.28.1730412932934;
+        Thu, 31 Oct 2024 15:15:32 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e92fa25742sm3916528a91.19.2024.10.31.15.15.30
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e92fa25742sm3916528a91.19.2024.10.31.15.15.32
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 31 Oct 2024 15:15:31 -0700 (PDT)
+        Thu, 31 Oct 2024 15:15:32 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 05/11] lpfc: Check SLI_ACTIVE flag in FDMI cmpl before submitting follow up FDMI
-Date: Thu, 31 Oct 2024 15:32:13 -0700
-Message-Id: <20241031223219.152342-6-justintee8345@gmail.com>
+Subject: [PATCH 06/11] lpfc: Add cleanup of nvmels_wq after HBA reset
+Date: Thu, 31 Oct 2024 15:32:14 -0700
+Message-Id: <20241031223219.152342-7-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20241031223219.152342-1-justintee8345@gmail.com>
 References: <20241031223219.152342-1-justintee8345@gmail.com>
@@ -70,66 +70,132 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The lpfc_cmpl_ct_disc_fdmi routine has incorrect logic that treats an FDMI
-completion with error LOCAL_REJECT/SLI_ABORTED as a success status.  Under
-the erroneous assumption of successful completion, the routine proceeds to
-issue follow up FDMI commands, which may never complete if the HBA is in
-an errata state as indicated by the errored completion status.  Fix by
-freeing FDMI cmd resources and early return when the LPFC_SLI_ACTIVE flag
-is not set and a LOCAL_REJECT/SLI_ABORTED or SLI_DOWN status is received.
+An HBA reset request that is executed when there are outstanding NVME-LS
+commands can cause delays for the reset process to complete.  Fix by
+introducing a new routine called lpfc_nvmels_flush_cmd that walks the
+phba->nvmels_wq list and cancels outstanding submitted NVME-LS requests
+speeding up the HBA reset process.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h |  1 +
+ drivers/scsi/lpfc/lpfc_init.c |  1 +
+ drivers/scsi/lpfc/lpfc_nvme.c | 51 +++++++++++++++++++++++++++++++++--
+ 3 files changed, 51 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 134bc96dd134..ce3a1f42713d 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -2226,6 +2226,11 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		ulp_status, ulp_word4, latt);
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index d4e46a08f94d..b1e26a5abe58 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -660,6 +660,7 @@ void lpfc_wqe_cmd_template(void);
+ void lpfc_nvmet_cmd_template(void);
+ void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 			   uint32_t stat, uint32_t param);
++void lpfc_nvmels_flush_cmd(struct lpfc_hba *phba);
+ extern int lpfc_enable_nvmet_cnt;
+ extern unsigned long long lpfc_enable_nvmet[];
+ extern int lpfc_no_hba_reset_cnt;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a3658ef1141b..c16a321404c5 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1943,6 +1943,7 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
  
- 	if (latt || ulp_status) {
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_DISCOVERY,
-+				 "0229 FDMI cmd %04x failed, latt = %d "
-+				 "ulp_status: (x%x/x%x), sli_flag x%x\n",
-+				 be16_to_cpu(fdmi_cmd), latt, ulp_status,
-+				 ulp_word4, phba->sli.sli_flag);
+ 	lpfc_offline_prep(phba, mbx_action);
+ 	lpfc_sli_flush_io_rings(phba);
++	lpfc_nvmels_flush_cmd(phba);
+ 	lpfc_offline(phba);
+ 	/* release interrupt for possible resource change */
+ 	lpfc_sli4_disable_intr(phba);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index d70da2736c94..4f628e00d1c1 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2231,6 +2231,7 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
+ 	struct lpfc_hba  *phba = vport->phba;
+ 	struct lpfc_sli4_hdw_queue *qp;
+ 	int abts_scsi, abts_nvme;
++	u16 nvmels_cnt;
  
- 		/* Look for a retryable error */
- 		if (ulp_status == IOSTAT_LOCAL_REJECT) {
-@@ -2234,8 +2239,16 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			case IOERR_SLI_DOWN:
- 				/* Driver aborted this IO.  No retry as error
- 				 * is likely Offline->Online or some adapter
--				 * error.  Recovery will try again.
-+				 * error.  Recovery will try again, but if port
-+				 * is not active there's no point to continue
-+				 * issuing follow up FDMI commands.
- 				 */
-+				if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE)) {
-+					free_ndlp = cmdiocb->ndlp;
-+					lpfc_ct_free_iocb(phba, cmdiocb);
-+					lpfc_nlp_put(free_ndlp);
-+					return;
-+				}
- 				break;
- 			case IOERR_ABORT_IN_PROGRESS:
- 			case IOERR_SEQUENCE_TIMEOUT:
-@@ -2256,12 +2269,6 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				break;
+ 	/* Host transport has to clean up and confirm requiring an indefinite
+ 	 * wait. Print a message if a 10 second wait expires and renew the
+@@ -2243,6 +2244,7 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
+ 			pending = 0;
+ 			abts_scsi = 0;
+ 			abts_nvme = 0;
++			nvmels_cnt = 0;
+ 			for (i = 0; i < phba->cfg_hdw_queue; i++) {
+ 				qp = &phba->sli4_hba.hdwq[i];
+ 				if (!vport->localport || !qp || !qp->io_wq)
+@@ -2255,6 +2257,11 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
+ 				abts_scsi += qp->abts_scsi_io_bufs;
+ 				abts_nvme += qp->abts_nvme_io_bufs;
  			}
- 		}
--
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
--				 "0229 FDMI cmd %04x latt = %d "
--				 "ulp_status: x%x, rid x%x\n",
--				 be16_to_cpu(fdmi_cmd), latt, ulp_status,
--				 ulp_word4);
- 	}
++			if (phba->sli4_hba.nvmels_wq) {
++				pring = phba->sli4_hba.nvmels_wq->pring;
++				if (pring)
++					nvmels_cnt = pring->txcmplq_cnt;
++			}
+ 			if (!vport->localport ||
+ 			    test_bit(HBA_PCI_ERR, &vport->phba->bit_flags) ||
+ 			    phba->link_state == LPFC_HBA_ERROR ||
+@@ -2263,10 +2270,10 @@ lpfc_nvme_lport_unreg_wait(struct lpfc_vport *vport,
  
- 	free_ndlp = cmdiocb->ndlp;
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
+ 					 "6176 Lport x%px Localport x%px wait "
+-					 "timed out. Pending %d [%d:%d]. "
++					 "timed out. Pending %d [%d:%d:%d]. "
+ 					 "Renewing.\n",
+ 					 lport, vport->localport, pending,
+-					 abts_scsi, abts_nvme);
++					 abts_scsi, abts_nvme, nvmels_cnt);
+ 			continue;
+ 		}
+ 		break;
+@@ -2841,3 +2848,43 @@ lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 	(pwqeIn->cmd_cmpl)(phba, pwqeIn, pwqeIn);
+ #endif
+ }
++
++/**
++ * lpfc_nvmels_flush_cmd - Clean up outstanding nvmels commands for a port
++ * @phba: Pointer to HBA context object.
++ *
++ **/
++void
++lpfc_nvmels_flush_cmd(struct lpfc_hba *phba)
++{
++#if (IS_ENABLED(CONFIG_NVME_FC))
++	LIST_HEAD(cancel_list);
++	struct lpfc_sli_ring *pring = NULL;
++	struct lpfc_iocbq *piocb, *tmp_iocb;
++	unsigned long iflags;
++
++	if (phba->sli4_hba.nvmels_wq)
++		pring = phba->sli4_hba.nvmels_wq->pring;
++
++	if (unlikely(!pring))
++		return;
++
++	spin_lock_irqsave(&phba->hbalock, iflags);
++	spin_lock(&pring->ring_lock);
++	list_splice_init(&pring->txq, &cancel_list);
++	pring->txq_cnt = 0;
++	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
++		if (piocb->cmd_flag & LPFC_IO_NVME_LS) {
++			list_move_tail(&piocb->list, &cancel_list);
++			pring->txcmplq_cnt--;
++			piocb->cmd_flag &= ~LPFC_IO_ON_TXCMPLQ;
++		}
++	}
++	spin_unlock(&pring->ring_lock);
++	spin_unlock_irqrestore(&phba->hbalock, iflags);
++
++	if (!list_empty(&cancel_list))
++		lpfc_sli_cancel_iocbs(phba, &cancel_list, IOSTAT_LOCAL_REJECT,
++				      IOERR_SLI_DOWN);
++#endif
++}
 -- 
 2.38.0
 
