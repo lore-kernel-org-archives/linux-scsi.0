@@ -1,109 +1,154 @@
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 47CA61C7B63
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 17:30:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34F2B12D1EA
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 17:51:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730395837; cv=none; b=hxUMCLbWMWx4QKMnvv9Lc9wHJjez72NGZA4TQQojtDaRidVLBXhiF4KQFbhwOlATchJdvYEPQfGg3ky6ju1qKRoqtZf+GPqvjUQvIFYCKVxNQtnxT4CgGhvVU02cvpXPzvL4DrW+zWtLGSsKP1q0ZnpFkt3fQ4o2wY3JXLhwjCI=
+	t=1730397078; cv=none; b=pJ25L2CKBfES+mYIpmBaARc1hHqANXpold0T/WyYN2gf0vENKTiYH7FrYBkf8SSxSF7Z+XsiRVCcYrYEhBA6H6j0eCKrkWS50ltY9Z6KGIVE7uNDCiVPnXaaG7Y8G9cTBR5wFBuHuNzsSueoUwGS+oPnyGo1/6YSPRmD7prl6S4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730395837; c=relaxed/simple;
-	bh=PeeC/E8gh5pFVS/oT6SE/Jg4w5ccFOO1+KRqKp/oUzw=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=Yqae+3YR785QaR30wXuwNFT/wjZbfledG7Pd0rG7qBcjwPQcpQlvaxX5Lwi4ynO/QxRa8+osAvj3PlIjSYxk5rKZUcFhdt9ihhSCQm8MN4wDHxLYj5p8mi5BXQEUcgfYpDGpmQqLYhLEHcXPF7Y++qVTHaBsk2kEAwntl/fEk34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 0A05992009C; Thu, 31 Oct 2024 18:30:32 +0100 (CET)
+	s=arc-20240116; t=1730397078; c=relaxed/simple;
+	bh=Ni1U9fho0Th+IMuZ/0qhiHmfcftjau0wpXzqemeDSqM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XGxqwhYlBUHhI6xt73Q0fClZI7E5c7Z0MOtijDqe18ckGLsv71cu0cDk+Jkea8POCISbMK9DLsP6t5STryL3wl0liNSXLVf4g5TpB7Y0UIF9fY+3c5vqYV1uJ7gwvIeZe6IZ5D/ORv9bzoZ9whfO38lmAvExnj7pHqkqrt/mm8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JlkluKwV; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JlkluKwV"
 Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 0443692009B;
-	Thu, 31 Oct 2024 17:30:31 +0000 (GMT)
-Date: Thu, 31 Oct 2024 17:30:31 +0000 (GMT)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Magnus Lindholm <linmag7@gmail.com>, 
-    Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-    Christoph Hellwig <hch@infradead.org>
-cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-In-Reply-To: <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk>
-References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com> <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com> <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
- <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XfWkq37K1zlgMVS;
+	Thu, 31 Oct 2024 17:51:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730397072; x=1732989073; bh=mcMtxgkYfstL28H76lbFBjyE
+	8qpLNUWiXaPuEM575W0=; b=JlkluKwV4S1/tH/FNHsZ87uDgIQQmul4BrZeat7a
+	r0ZyncxD5SpdrWA8mH6kTtpB9rYs2iGASfFA9xGAktLq5e1kmAAKTzm4i2qkiLhl
+	IlZH4/pcf5SPNX7ny9nuHIJuvDCgrcLnXq3IUr9q7/LH4vjsz+SbZJSO0wE73/Bh
+	36ZJm4CuHUcDuSlqC2qoyFPUWtXd1x8z6Q4poiyor++MhFG/PX0nBgppHA51KGJb
+	QIua2ZbF/J/4pj3QE57Hu8Eh5nliH51558AYEYcLGNfi0GyF8aOUCAwp0E3eAtgw
+	+E4vk9Gn6mYap8umR2znKkJufjw1PlCy2+i/xAuUBOjrOg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id j3T0tZbXzYKv; Thu, 31 Oct 2024 17:51:12 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XfWkl6sJwzlgTWK;
+	Thu, 31 Oct 2024 17:51:11 +0000 (UTC)
+Message-ID: <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
+Date: Thu, 31 Oct 2024 10:51:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 11/11] scsi: ufs: core: Move code out of an
+ if-statement
+To: neil.armstrong@linaro.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+References: <20241016201249.2256266-1-bvanassche@acm.org>
+ <20241016201249.2256266-12-bvanassche@acm.org>
+ <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 31 Oct 2024, Magnus Lindholm wrote:
+On 10/31/24 7:46 AM, Neil Armstrong wrote:
+> This change regresses the Qualcomm SM8650 Platforms, QRD and HDK boards=
+=20
+> fails to boot:
+> https://git.codelinaro.org/linaro/qcomlt/ci/staging/cdba-tester/-/jobs/=
+182758#L1200
+>=20
+> [=C2=A0=C2=A0=C2=A0 5.155432] ufshcd-qcom 1d84000.ufshc: Resource ufs_m=
+em not provided
+> [=C2=A0=C2=A0=C2=A0 5.155439] ufshcd-qcom 1d84000.ufshc: MCQ mode is di=
+sabled, err=3D-19
+> [=C2=A0=C2=A0=C2=A0 5.155443] ufshcd-qcom 1d84000.ufshc: ufshcd_add_scs=
+i_host: failed=20
+> to initialize (legacy doorbell mode not supported)
+> [=C2=A0=C2=A0=C2=A0 5.155874] ufshcd-qcom 1d84000.ufshc: error -EINVAL:=
+ Initialization=20
+> failed with error -22
+>=20
+> then causes system crash:
+> [=C2=A0=C2=A0 15.400948] Internal error: Oops: 0000000096000006 [#1] PR=
+EEMPT SMP
+> [=C2=A0=C2=A0 15.667218] Call trace:
+> [=C2=A0=C2=A0 15.669833]=C2=A0 _raw_spin_lock_irqsave+0x34/0x8c (P)
+> [=C2=A0=C2=A0 15.674829]=C2=A0 pm_runtime_get_if_active+0x24/0x9c (L)
+> [=C2=A0=C2=A0 15.679998]=C2=A0 pm_runtime_get_if_active+0x24/0x9c
+> [=C2=A0=C2=A0 15.684811]=C2=A0 ufshcd_rtc_work+0x138/0x1b4
+> [=C2=A0=C2=A0 15.688991]=C2=A0 process_one_work+0x148/0x288
+> [=C2=A0=C2=A0 15.693258]=C2=A0 worker_thread+0x2cc/0x3d4
+> [=C2=A0=C2=A0 15.697248]=C2=A0 kthread+0x110/0x114
+> [=C2=A0=C2=A0 15.700703]=C2=A0 ret_from_fork+0x10/0x20
+> [=C2=A0=C2=A0 15.704516] Code: b9000841 d503201f 52800001 52800022 (88e=
+17c02)
+> [=C2=A0=C2=A0 15.710956] ---[ end trace 0000000000000000 ]---
 
-> I don't have a QLA1040 revC to test with, but I've put together a much
-> smaller patch which just limits the DMA_BIT_MASK to 32-bit on
-> 1020/1040 cards this should at least not break anything while fixing
-> the most urgent problems with file system corruption on some
-> combination of hardware/memory. Thanks for the pointers to tsunami
-> chipsets though, I'll try to enable some debugging to see what's going
-> on when I hit this problem with the qlogic card.
+Hi Neil,
 
- I think Thomas will be unhappy about disabling DAC completely for the 
-1040: as I infer from his response it is indeed required for his Octane to 
-operate correctly, and which also presumably implies he does have revision 
-C of the chip to verify your fix with.  Thomas?
+Thank you for the very detailed report. I think that two bugs are being
+reported:
+* Support for non-MCQ UFSHCI 4.0 controllers is broken.
+* The RTC update code is activated too early.
 
-> I'll clean up the chip revision reporting code to see if I can improve
-> things there, this will be as a separate patch then.
+Is the patch below sufficient to fix both issues?
 
- Great!
+Thanks,
 
-> I have one question regarding the hardware revision on 1040 chips,
-> according to qla1280.h we have this:
-> 
-> #define ISP_CFG0_HWMSK   0x000f /* Hardware revision mask */
-> #define ISP_CFG0_1020    BIT_0  /* ISP1020 */
-> #define ISP_CFG0_1020A   BIT_1  /* ISP1020A */
-> #define ISP_CFG0_1040    BIT_2  /* ISP1040 */
-> #define ISP_CFG0_1040A   BIT_3  /* ISP1040A */
-> #define ISP_CFG0_1040B   BIT_4  /* ISP1040B */
-> #define ISP_CFG0_1040C   BIT_5  /* ISP1040C */
-> 
-> 
-> But when I examine the register it looks more like:
-> 
-> #define ISP_CFG0_HWMSK   0x000f /* Hardware revision mask */
-> #define ISP_CFG0_1020     1  /* ISP1020 *
-> #define ISP_CFG0_1020A   2  /* ISP1020A */
-> #define ISP_CFG0_1040     3  /* ISP1040 */
-> #define ISP_CFG0_1040A   4  /* ISP1040A */
-> #define ISP_CFG0_1040B   5  /* ISP1040B */
-> #define ISP_CFG0_1040C   6  /* ISP1040C */
-> 
-> Which is consistent with how NetBSD does things in their ISP driver.
-> Also, in this case the HWMSK actually works for filtering out the
-> hardware revision part of the CFG0 register, since it would actually
-> require a 6-bit mask to match the current definitions in qla1280.c,
-> right?
+Bart.
 
- Well spotted!  This predates kernel.org git history, but I was able to 
-track the origin down with a copy of the LMO git tree, and it has always 
-been like this since the introduction of these macros in 2.6.9 with 
-<https://lore.kernel.org/r/20040606125728.GB31063@lst.de/>.
 
- This also means that the ISP_CFG0_1040A check also added in 2.6.9 with 
-<https://lore.kernel.org/r/20040606125825.GE31063@lst.de/> will never 
-match, possibly meaning that this code wasn't actually ever verified with 
-affected 1040A hardware.  This might also explain why a later change made 
-with commit 0888f4c33128 ("[SCSI] qla1280: don't use bitfields for 
-hardware access in isp_config") went unnoticed that changed the semantics 
-of the workaround from keeping bursts unconditionally disabled with the 
-1040A to making them enabled in the absence of NVRAM.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0787387b7ce1..0b6b0cd4af33 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8620,6 +8620,13 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+  		ufshcd_init_clk_scaling_sysfs(hba);
+  	}
 
- NB comments for the FIFO threshold surely are suspicious too.
++	/*
++	 * The RTC update code accesses the hba->ufs_device_wlun->sdev_gendev
++	 * pointer.
++	 */
++	schedule_delayed_work(&hba->ufs_rtc_update_work,
++			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
++
+  	ufs_bsg_probe(hba);
+  	scsi_scan_host(hba->host);
 
- Christoph can you please have a look into it?  It seems like something 
-you ought to be quite familiar with if not for the passage of time.
+@@ -8714,8 +8721,6 @@ static int ufshcd_post_device_init(struct ufs_hba=20
+*hba)
+  	ufshcd_force_reset_auto_bkops(hba);
 
-  Maciej
+  	ufshcd_set_timestamp_attr(hba);
+-	schedule_delayed_work(&hba->ufs_rtc_update_work,
+-			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+
+  	if (!hba->max_pwr_info.is_valid)
+  		return 0;
+@@ -10345,8 +10350,7 @@ static int ufshcd_add_scsi_host(struct ufs_hba *h=
+ba)
+  			dev_err(hba->dev, "MCQ mode is disabled, err=3D%d\n",
+  				err);
+  		}
+-	}
+-	if (!is_mcq_supported(hba) && !hba->lsdb_sup) {
++	} else if (!hba->lsdb_sup) {
+  		dev_err(hba->dev,
+  			"%s: failed to initialize (legacy doorbell mode not supported)\n",
+  			__func__);
+
