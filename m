@@ -1,125 +1,111 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BC8D16DEBD;
-	Thu, 31 Oct 2024 21:26:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9213122097
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 22:15:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730410019; cv=none; b=DhH062EEitwUazK+DaWa+shuJj3N2/f3E9BoHy6u0m4okwAhicyQhag6Fm9l0bZUFq6lzU3UTlMZtN0TzjDlDOWcUu7XrAkDuwoSJcBF0tHznXH86iR7dLtUemRFoPFkW3Fe5ky7T847q369vpqBxSzgtbPJUkUpVlH31bi8RmQ=
+	t=1730412928; cv=none; b=Q+CA4MRgCfFGiNTn5TOM5oOEmwTuMjJi61vMBDCWDgp9vKXP8Fux+9F9PCus+NrSaFbMxdOq4RloiFJTjrPTdTfGrceNWuJwY4I3GUf+kSBReD6nOYWJmp4Kj1mZ+YnD/iorBj65un8TpqwT11NkplU1CgivfU+YFDFa5uCByNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730410019; c=relaxed/simple;
-	bh=30hcqGzrrk77o5w95MDwGEVoR3WI5uOAHeO3GmHCGfs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q8yl96GFBPatGcCtpKsfTzq4H9AW1RbIWkLF5kMQtnZ/Ttjv+zbG0zCTVx2vyWdRoE1451DcPz7TBQ1pftJonjsRg4xvCF4kTHFCJXNTKB5FIpJU3wobqyoBp2es4/mjXZGiLmnVgWKuwmimdzgVtcLvCfuMPv4c+J76Yq+gHOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ulB+gx/f; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1730412928; c=relaxed/simple;
+	bh=BNFvgmDJXMCM3fgJPesUV6WKJAyXZOTZj5VQoZvQYq4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=j+924RBw98GZSMTvqQvQ2tagq6+Om41PMJGg1DSw2W3dW90JlchxTTfhPmLUNdfmVECpUx9NuSNsvcwsOtzcpdBtrzw2xi6LxYOQNQK5SyNvHxdzdLzYPGmU28DuFWJxhc+kq6O2M02o4Kj3EB6vKBgL7kMuLxqghiFCMugoJew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bN98T1XX; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ulB+gx/f"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XfcWW19zlz6CkhTC;
-	Thu, 31 Oct 2024 21:26:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1730409999; x=1733002000; bh=kAg/7qpp3e0UzpDFIcI1WamXbWiQtAJ+3QM
-	JmcPaWKU=; b=ulB+gx/fAlGT1H6G+UgPSQ5LOePl0RceICcX4xHnrb/L50weijU
-	pHRb9WTTz0kT82YSsvFLwIqQHWt3QN+qRdf+xFw32kYQcdI9VY5DECv61tXtw0f5
-	C/12kdvDaqilY2THdvuOE5v6qflwGYf2ifPvxzwDWb/GnzP6aF0EEANU2/3cBr//
-	FZ3CRE5QSCwrrHnAJtzzdMEpQQuJNCtx3NDInRRO+c6OQH62kc+pDml9OlPCzJqd
-	2A8hfJTTNOy3D2iqgR33U9K00m1lGJ368Zbqqm3kUy6p6llWtXpq1NrJKt5KT5hN
-	q5x4p8VyBBAEscSBnrduQac/E29/22wvMFA==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ObravQO2OgSh; Thu, 31 Oct 2024 21:26:39 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XfcWJ2HBWz6Ckj6M;
-	Thu, 31 Oct 2024 21:26:36 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Bean Huo <beanhuo@micron.com>,
-	stable@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Mike Bi <mikebi@micron.com>,
-	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	Luca Porzio <lporzio@micron.com>
-Subject: [PATCH] scsi: ufs: Start the RTC update work later
-Date: Thu, 31 Oct 2024 14:26:24 -0700
-Message-ID: <20241031212632.2799127-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bN98T1XX"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-7ea8c4ce232so1232301a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 15:15:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730412922; x=1731017722; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=4HbRns5bjxF9rNRA7bRvKAVUX71FMcyZTuj4TptOT1w=;
+        b=bN98T1XXqam5N1CzY/9q4MoCgCdsU/U0cN+f0XmluP7J5WTdBDFUFM0kgJSphA+QrZ
+         sthvjkvRyZMijdUPv6UMpNZcPZolYhh6c21xnIwe7vX1XaG1hltbkjitpTrBfG9rSJWw
+         Jck2xJS9NuhdAoksJ1hA38RFnlm1pIrhN1Xvsa3OTiLnVacezdleQwrifoBzP0Rcew2F
+         PlXWhHibuKhv919CzKDRizvhsEaKULqOm499e3x2n+5eypfb4SZWcpdf/6eJwd/QI+CD
+         Xpe0YsVGKGilbN9IeBH/QuqN5QV8xlja9Bme2jbG2hXTf3C9OSPrZfmtP7sxSOUjNdVz
+         98Lg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730412922; x=1731017722;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=4HbRns5bjxF9rNRA7bRvKAVUX71FMcyZTuj4TptOT1w=;
+        b=dkgKqwxrtzTiQ2wI187FpiEMd9768hxPqlrwmTM5KU3XRUvHucjNUfqsYUb3U77+Oh
+         gId3CxyERO3ef+bpxm82Iaj7sArB71d0Q2TwskwWR/xitQyU2/FGFku8hwgLxygBzSNz
+         XQN+Yz9xvfvb6MG/0X0GnYdQSMs0jOJnLWllXmeTumm4DwdTNfULvQ0SAJ5cL2q2ccvv
+         BK3lQqy5aBIzaSK23PAfKGSXOKK3UYJWHcyAdxH6swpJgNWbanWFs1tkr8iOjSFLNb6w
+         2+/g0GoACbvRkXvOtIL1MeAWoo6YePIszwofIa4GyVEzHS99+BzoLhYVXuJWgJL3zYCr
+         +9Ow==
+X-Gm-Message-State: AOJu0YxhW0jKRNwto90N3t8enw2qBFf74AzdYC0j57uWNMliH7GtwzNA
+	snkv3EbzfW79YBfOtIaWXRdqxKV2JeKhLp0zDDF25AQvksbIsApfpdMWGQ==
+X-Google-Smtp-Source: AGHT+IFK6EG5D/RAsRZfFfJ+VwhW4jpeAcqavXIH17c1kxYxbeTa/9gjpw3iptaUbPzmWOJ6J+b8OA==
+X-Received: by 2002:a17:90b:38d0:b0:2e2:a029:3b4b with SMTP id 98e67ed59e1d1-2e94c51c364mr1958442a91.28.1730412921613;
+        Thu, 31 Oct 2024 15:15:21 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2e92fa25742sm3916528a91.19.2024.10.31.15.15.20
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 31 Oct 2024 15:15:21 -0700 (PDT)
+From: Justin Tee <justintee8345@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: jsmart2021@gmail.com,
+	justin.tee@broadcom.com,
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 00/11] Update lpfc to revision 14.4.0.6
+Date: Thu, 31 Oct 2024 15:32:08 -0700
+Message-Id: <20241031223219.152342-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-The RTC update work involves runtime resuming the UFS controller. Hence,
-only start the RTC update work after runtime power management in the UFS
-driver has been fully initialized. This patch fixes the following kernel
-crash:
+Update lpfc to revision 14.4.0.6
 
-Internal error: Oops: 0000000096000006 [#1] PREEMPT SMP
-Workqueue: events ufshcd_rtc_work
-Call trace:
- _raw_spin_lock_irqsave+0x34/0x8c (P)
- pm_runtime_get_if_active+0x24/0x9c (L)
- pm_runtime_get_if_active+0x24/0x9c
- ufshcd_rtc_work+0x138/0x1b4
- process_one_work+0x148/0x288
- worker_thread+0x2cc/0x3d4
- kthread+0x110/0x114
- ret_from_fork+0x10/0x20
+This patch set contains bug fixes related to congestion handling,
+accounting for internal remoteport objects, resource release during HBA
+unload and reset, and clean up regarding the abuse of a global spinlock.
 
-Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
-Closes: https://lore.kernel.org/linux-scsi/0c0bc528-fdc2-4106-bc99-f23ae3=
-77f6f5@linaro.org/
-Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
-Cc: Bean Huo <beanhuo@micron.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+The patches were cut against Martin's 6.13/scsi-queue tree.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 585557eaa9a2..ed82ff329314 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8633,6 +8633,14 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 		ufshcd_init_clk_scaling_sysfs(hba);
- 	}
-=20
-+	/*
-+	 * The RTC update code accesses the hba->ufs_device_wlun->sdev_gendev
-+	 * pointer and hence must only be started after the WLUN pointer has
-+	 * been initialized by ufshcd_scsi_add_wlus().
-+	 */
-+	schedule_delayed_work(&hba->ufs_rtc_update_work,
-+			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-+
- 	ufs_bsg_probe(hba);
- 	scsi_scan_host(hba->host);
-=20
-@@ -8727,8 +8735,6 @@ static int ufshcd_post_device_init(struct ufs_hba *=
-hba)
- 	ufshcd_force_reset_auto_bkops(hba);
-=20
- 	ufshcd_set_timestamp_attr(hba);
--	schedule_delayed_work(&hba->ufs_rtc_update_work,
--			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-=20
- 	if (!hba->max_pwr_info.is_valid)
- 		return 0;
+Justin Tee (11):
+  lpfc: Modify cgn warning signal calculation based on EDC response
+  lpfc: Check devloss callbk done flag for potential stale ndlp ptrs
+  lpfc: Call lpfc_sli4_queue_unset in restart and rmmod paths
+  lpfc: Update lpfc_els_flush_cmd to check for SLI_ACTIVE before BSG
+    flag
+  lpfc: Check SLI_ACTIVE flag in FDMI cmpl before submitting follow up
+    FDMI
+  lpfc: Add cleanup of nvmels_wq after HBA reset
+  lpfc: Prevent ndlp reference count underflow in dev_loss_tmo callback
+  lpfc: Remove NLP_RELEASE_RPI flag from nodelist structure
+  lpfc: Change lpfc_nodelist nlp_flag member into a bitmask
+  lpfc: Update lpfc version to 14.4.0.6
+  lpfc: Copyright updates for 14.4.0.6 patches
+
+ drivers/scsi/lpfc/lpfc_bsg.c       |   6 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   5 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |  39 +--
+ drivers/scsi/lpfc/lpfc_debugfs.c   |   4 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |  62 ++--
+ drivers/scsi/lpfc/lpfc_els.c       | 459 ++++++++++++-----------------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 311 ++++++++-----------
+ drivers/scsi/lpfc/lpfc_init.c      |  61 ++--
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 329 +++++++++------------
+ drivers/scsi/lpfc/lpfc_nvme.c      |  60 +++-
+ drivers/scsi/lpfc/lpfc_nvmet.c     |   2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   8 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 125 ++++----
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |   6 +-
+ 15 files changed, 665 insertions(+), 814 deletions(-)
+
+-- 
+2.38.0
+
