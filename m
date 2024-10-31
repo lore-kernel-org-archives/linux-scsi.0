@@ -1,59 +1,48 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABF9F1CC8AF
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 19:55:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34C6B1487E1
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 21:15:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730404550; cv=none; b=HPKJuSaV+D6bTBkAeczKwFSEIdQGCVY/MixPXti/5GvWMF/mgMo1817F6X44WlGxkmCefZhfNXY9mP5hRJpCCtSY2NOpS/4Z/aH9wu8AXl+uUng8DKAjCmWg0lJ053+mvZmqqXMk3H5PSIf/d5FiWcHW8pC8RljXOeyCVK2s2f0=
+	t=1730409334; cv=none; b=NvOEBBO1ZoY7aPQTD9jXfWcBqWw1xUzbKsqRPET8D/eFGuFKPQc+ZbeLzcV+R3pU/XZuYOvAf8qitU0Xsl3enCkBo4efLrmPN2lrSEsigs/qfy5WWHcH8bpjqAEcJBGlyDfosm/FtniYZgZ9nlvevJcqwzXBNA9k+M9p27ghdF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730404550; c=relaxed/simple;
-	bh=0WG8bypy/siOozKEbLWVs61iYcqdDJdH9U8j5hm3WPc=;
+	s=arc-20240116; t=1730409334; c=relaxed/simple;
+	bh=DN64ARs/8PxlNndpi/Ttx88SHCT0s0tyyTtal9IwXwI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mpJJqoOscrEgMgdN9AeQ/MLlLeSujHOB1Dd3thGUqOChNjRAfo2+WvPBay8KD7cgUc+/W+npAQ60ljEgMoVvHjE3Kv4vkp+OXO/aOUtyKVFK35rX1nnV28LXpV4BfprPWZRrTWFTEWgA8AH7lKlGpApEY06IeosjNLf3+SpnCSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=x/zRERAs; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	 In-Reply-To:Content-Type; b=sWFDt7sgoj3I+C08gsm6cSdx20iqn6qpKruPV5E+EPxLw0nPB66AZywaadkMpnWa3UH0wWpzGoPjx+xbRgQjOQ7D32/3u4TyKt9zs9nW/4m7PKIjiOkUwpD/UJdi5AjxAbJ8ORhSWus8ER3jpg8CU/ikfGFAw2y1aDORVdGp/UM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4lY+LPYL; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="x/zRERAs"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-37ed3bd6114so750963f8f.2
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 12:55:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730404546; x=1731009346; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2w6Yg9ybSu3v6Eq36/z6UNK6ROoy5lBMRV0qfsZYp4c=;
-        b=x/zRERAsGTU+b6/aPHevqUC+PZ99IGKsjGGVieSm6Lcj+pI3sLrWnHlO06kW+Ib+fa
-         8sO7xFLccgxFqdpvHvdIbeLiWJNDl4r30UdXEfQT+/774HcIy+CD9WPj3YXVfeVBOr15
-         T9oIWx+oH+oL9U1EmUkHuTwQbIA/lpwb1imxjNwBDlyugVAC9jFn1DAjl3UXG1bMsbqQ
-         aNH/Zab0CZGufDgPk9p2xzdh7PxJEmE0sgS1rcB/15lUluY+6lWG1fP3uJW9OXPDMcmx
-         3Dbzl380dyy7TCh7wBszj7wx/n9VrrRd936pjX7bSbIKal9Z1ZGxcQbqC7H6XiByy8+N
-         AkOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730404546; x=1731009346;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2w6Yg9ybSu3v6Eq36/z6UNK6ROoy5lBMRV0qfsZYp4c=;
-        b=J86U18AEMXa58PiOYwUbcWw2VLqJ9Ib73kr6W0kJU0iHJjEIrh7A9fIWfJQ61jyBOp
-         pzUiaYC6MSINhqGE/0aILotLUdCuSd1MMMbHgEHmur7Duiky7glquR3sSpomGuB1PF8l
-         ZJ7ojBStOekV+hvEeP09wyn/qBOXcxpb5ayuyVURdq6oVz4q4zqrsNBzVY+eq7FWubim
-         d582P5/m9IK2n/mjIuW8tIFZEoDKabSV9S0f4b77Tge+FuhSd8wEiVu0TMCh3y6jHLCu
-         h8/2twb7k/kjAL5LLy1ohndVTFTsyOHPzLOkyEJeXqVrnhDJTcEx9EY9iqx2sui8TU0j
-         Ft3A==
-X-Gm-Message-State: AOJu0Yxpu4Udn/c1IZZmtKiWCqaVzShnvfCWSAFdu86G6fZrukydJMYE
-	Gi1on4hizaSipzywSh0zttGaPodXmdGCull67XLineSdNNCYzwGtbJnxGiT1SYTA0PkG+3gxZMe
-	P
-X-Google-Smtp-Source: AGHT+IG5qxtlNOw3ZOAQrzPqekAVLAWmH9LIOz2/vyLookcAjTd+JPmNVxahKQD+xARy6JdA45qGxw==
-X-Received: by 2002:a05:6000:188b:b0:37d:4c8f:2e1 with SMTP id ffacd0b85a97d-381c7a4c76amr870570f8f.22.1730404545863;
-        Thu, 31 Oct 2024 12:55:45 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:982:cbb0:e984:9f27:9cbb:71ca? ([2a01:e0a:982:cbb0:e984:9f27:9cbb:71ca])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-381c0f9bbccsm3082343f8f.0.2024.10.31.12.55.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 31 Oct 2024 12:55:45 -0700 (PDT)
-Message-ID: <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
-Date: Thu, 31 Oct 2024 20:55:43 +0100
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4lY+LPYL"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XfcGR40rjzlgMVQ;
+	Thu, 31 Oct 2024 21:15:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730409325; x=1733001326; bh=/wPtIKpzevbMaO7jnwHAYrXc
+	PVvjgFpH77laAUFVpuA=; b=4lY+LPYL7LvQ0yln6SkLcURjYy8XV14qBaDenqFi
+	m97LAqoPqYNEM1/K6TtyeTCy7pdYrBqEVyaZdIffNpVVPhkcfmCRJwiHboT7lJja
+	PZ9iycoozGN1jSSOJ1M3MZOpWTo2p8A7k8qnCAzFfFGJFy4OSd9dHzwe5v5LjLJc
+	EVFILdacrEipu9Unkuwbn0WIj0nNHi+p4g1Ka4qnDz9I/Jrcj96eUCXwbmoYlhGD
+	vgGdfyJjPFs77aa3MQDf3QKrUEeEYKBVtYLJl+3CEY3OCtympQlkhe8g+BlzNsJa
+	VvkRo+4C5zoysYIsOehkjL+LvPvl3JQ5S/rHxmpLlwcVNA==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 9KpWWuIA6MsP; Thu, 31 Oct 2024 21:15:25 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XfcGM67zCzlgTWK;
+	Thu, 31 Oct 2024 21:15:23 +0000 (UTC)
+Message-ID: <6b20595d-c7f6-42aa-922e-3671abd7917c@acm.org>
+Date: Thu, 31 Oct 2024 14:15:20 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,102 +52,48 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v6 11/11] scsi: ufs: core: Move code out of an
  if-statement
-To: Bart Van Assche <bvanassche@acm.org>,
+To: Neil Armstrong <neil.armstrong@linaro.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 References: <20241016201249.2256266-1-bvanassche@acm.org>
  <20241016201249.2256266-12-bvanassche@acm.org>
  <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
  <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
-Content-Language: en-GB
-From: Neil Armstrong <neil.armstrong@linaro.org>
-In-Reply-To: <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
+ <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 
-Le 31/10/2024 à 18:51, Bart Van Assche a écrit :
-> On 10/31/24 7:46 AM, Neil Armstrong wrote:
->> This change regresses the Qualcomm SM8650 Platforms, QRD and HDK boards fails to boot:
->> https://git.codelinaro.org/linaro/qcomlt/ci/staging/cdba-tester/-/jobs/182758#L1200
->>
->> [    5.155432] ufshcd-qcom 1d84000.ufshc: Resource ufs_mem not provided
->> [    5.155439] ufshcd-qcom 1d84000.ufshc: MCQ mode is disabled, err=-19
->> [    5.155443] ufshcd-qcom 1d84000.ufshc: ufshcd_add_scsi_host: failed to initialize (legacy doorbell mode not supported)
->> [    5.155874] ufshcd-qcom 1d84000.ufshc: error -EINVAL: Initialization failed with error -22
->>
->> then causes system crash:
->> [   15.400948] Internal error: Oops: 0000000096000006 [#1] PREEMPT SMP
->> [   15.667218] Call trace:
->> [   15.669833]  _raw_spin_lock_irqsave+0x34/0x8c (P)
->> [   15.674829]  pm_runtime_get_if_active+0x24/0x9c (L)
->> [   15.679998]  pm_runtime_get_if_active+0x24/0x9c
->> [   15.684811]  ufshcd_rtc_work+0x138/0x1b4
->> [   15.688991]  process_one_work+0x148/0x288
->> [   15.693258]  worker_thread+0x2cc/0x3d4
->> [   15.697248]  kthread+0x110/0x114
->> [   15.700703]  ret_from_fork+0x10/0x20
->> [   15.704516] Code: b9000841 d503201f 52800001 52800022 (88e17c02)
->> [   15.710956] ---[ end trace 0000000000000000 ]---
-> 
-> Hi Neil,
-> 
-> Thank you for the very detailed report. I think that two bugs are being
-> reported:
-> * Support for non-MCQ UFSHCI 4.0 controllers is broken.
-> * The RTC update code is activated too early.
-> 
-> Is the patch below sufficient to fix both issues?
+On 10/31/24 12:55 PM, Neil Armstrong wrote:
+> Le 31/10/2024 =C3=A0 18:51, Bart Van Assche a =C3=A9crit=C2=A0:
+>> Is the patch below sufficient to fix both issues?
+>=20
+> Yes it does!
 
-Yes it does!
-
-Please add my:
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # SM8650-QRD
+Thank you for having tested this patch quickly. Would it be possible
+to test whether the patch below also fixes the reported boot failure?
+I think the patch below is a better fix.
 
 Thanks,
-Neil
 
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 0787387b7ce1..0b6b0cd4af33 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8620,6 +8620,13 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->           ufshcd_init_clk_scaling_sysfs(hba);
->       }
-> 
-> +    /*
-> +     * The RTC update code accesses the hba->ufs_device_wlun->sdev_gendev
-> +     * pointer.
-> +     */
-> +    schedule_delayed_work(&hba->ufs_rtc_update_work,
-> +                  msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-> +
->       ufs_bsg_probe(hba);
->       scsi_scan_host(hba->host);
-> 
-> @@ -8714,8 +8721,6 @@ static int ufshcd_post_device_init(struct ufs_hba *hba)
->       ufshcd_force_reset_auto_bkops(hba);
-> 
->       ufshcd_set_timestamp_attr(hba);
-> -    schedule_delayed_work(&hba->ufs_rtc_update_work,
-> -                  msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-> 
->       if (!hba->max_pwr_info.is_valid)
->           return 0;
-> @@ -10345,8 +10350,7 @@ static int ufshcd_add_scsi_host(struct ufs_hba *hba)
->               dev_err(hba->dev, "MCQ mode is disabled, err=%d\n",
->                   err);
->           }
-> -    }
-> -    if (!is_mcq_supported(hba) && !hba->lsdb_sup) {
-> +    } else if (!hba->lsdb_sup) {
->           dev_err(hba->dev,
->               "%s: failed to initialize (legacy doorbell mode not supported)\n",
->               __func__);
-> 
+Bart.
+
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index a5a0646bb80a..3b592492e152 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -874,7 +874,8 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba=20
+*hba)
+  	if (host->hw_ver.major > 0x3)
+  		hba->quirks |=3D UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+
+-	if (of_device_is_compatible(hba->dev->of_node, "qcom,sm8550-ufshc"))
++	if (of_device_is_compatible(hba->dev->of_node, "qcom,sm8550-ufshc") ||
++	    of_device_is_compatible(hba->dev->of_node, "qcom,sm8650-ufshc"))
+  		hba->quirks |=3D UFSHCD_QUIRK_BROKEN_LSDBS_CAP;
+  }
+
 
