@@ -1,160 +1,125 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2F61991CC
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 10:35:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F284B19AD8B
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 11:18:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730370953; cv=none; b=G5z4vo4m4URDYcq3iGGfaFr4T2UEhnH6aeWlo4x7/cxVFRXmtiqosjnciJN0h6VfQen9xmVQXYciNb2ypAPecmVD9/VTLsjbmO8uxoEqJM0XvC2AQ6dRTIGyct0uKgALHVnYEfITqZHc6Qp3l/P10MYq81kKo2u24Qg10r+LvYM=
+	t=1730373530; cv=none; b=dJ2tx9C7yHw6Key59pDtGgW9mC4L+LDwWY/whun7bDKw9I6CLAk0Giup2IaWNmmH2aCWrk0KSLVS74xqUWvthWNoAt/1/eUjB6/TSncQASSZaMi9LzYNch6M9RyW2v2e9AEhotwGSK4BZ3F762lAVVSjvn9CWxIWNz6X5An9mSA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730370953; c=relaxed/simple;
-	bh=apMxqqAahuyK8uAzmuPF1D1P6AcbOjt+x2EzaDvioBc=;
+	s=arc-20240116; t=1730373530; c=relaxed/simple;
+	bh=P1m23rwMnx54MjRVtY546V3j5gxJtS/n0bt5NNfdIIQ=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hOLYbdLXWpxAx3kbvkc3TkaR52WLRqD8euKJxM3sOm6f70GDumxV5Hs5Zx2q0Y4MS56XNFmPNHff8hLVmiANTULeqek1rPJyBKtHyltDu2+hBqcVhS/lb7phE6wg65IcLAT3hNQZo+RinyLgTorkjtCq1DPsJxLRi+EsBMYICaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ifHojgoN; arc=none smtp.client-ip=209.85.218.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=uG5coCtU4Z+/SOeRqlfzNLieANSWIAYKzju7WBro2XNc1usdMUM7QIRC3XzJqqEyakPLa8bBA2pHDxrGrKUmotiXaX3Jq+LEhnTSzx7PbjkkqZLPE3mHycaz+jxgoYsq3zYoXHP0p1dfYQ1iFrp7g0sJ/xC/xeD2Y894LWG/pBk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Uj8RLqMB; arc=none smtp.client-ip=209.85.161.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ifHojgoN"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a99f1fd20c4so98769666b.0
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 03:35:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Uj8RLqMB"
+Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-5ebc52deca0so415986eaf.3
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 04:18:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730370949; x=1730975749; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZVzJIUNphDU93nu41iWIe3iLQuX/p066gSAyV6EeDbA=;
-        b=ifHojgoN1EtAk+zYWtbvUU1DJyAs+XPBFsXq420OtTbN8jUNYLcuXx9aWDUYFxDIvG
-         gmhdKpYCR9EBr8YAIKxU0YTl9spM6Xxz17zBUiFUvlLL881a1QstHf/RxNUmwbufm3n7
-         dTkrqEupbgZllBXwjh2J4MNM+Bm3hPgSuwvgOjcf6V7wJONcwD4zq4FhM2fewqRRhxms
-         m0LfBPz7aHYy7cICF40VAtLKpbFPxqY+MQGnziMZ1O05oJGej6IDMJR6afdu7Zs7hB7/
-         2IFzKkPOUDDImpO2l1azw4wbPs31tjDsBMyfzB1XBT5POPxQxK6z5DoKNB+oEcr0zHLP
-         lcRQ==
+        d=linaro.org; s=google; t=1730373527; x=1730978327; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=6tOVqDGIVkJ6VSlfAnQKasdgXF9e/3uyEUG7DpZuXhY=;
+        b=Uj8RLqMBBtP4jTmovogATZJXH7b5FznTvEAuLO3kU03Pep561isNfkVkGWsp1oOqCQ
+         RC+4rMettWCIp0zUjeGEun4UqyEp1TYgBRIbfhHRkisHnbtxBWbMgu0vzdU7syJI1L6I
+         8EsfXgE8tmjK+IGKUhdrOhC6i0q/MaCJcCnxcD287E4gpCrs7/jSq1Bc+AU6Pl/8qDqB
+         ZrQr9Dg7JGsfN7UjhrFIbvPPOv4FKTE5IaW1iOmgh+4Gldc6mLA/R4DERltqIvhkMCD+
+         BIxhEr7QHnVZz72COQxW5e0bBtMVMidcTMwShm6mJWaxkZQgYLo9ADzbug5EamsezYNB
+         p5Eg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730370949; x=1730975749;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZVzJIUNphDU93nu41iWIe3iLQuX/p066gSAyV6EeDbA=;
-        b=L4xugIhXzIPjtFadsdR3OQjGS1U/6gD/kcwZRLjIyfllqcBc3io03D6loUyte2Ay+P
-         zqYS4adpS2cAZ6Pt8Uw0cwzpZpLHFCE2Pkha2HFXYGV+3V4klEUZE6ev3nRg9vnMZu+E
-         ZS97YXF8sz/7Kbdxl9KyrJEEGVzU/5IcgoM5ehjdAaIac1LEEIKSdG2Vxu5E7lhCW0nU
-         vDeLrUWbMFgXIjiy90rMP+uKutj7sxH8yK+VAjQsaoWi5ZPIlApKuQ4p2N1Pehhl7Ebd
-         4gX7EW0fLEQysv6GLrduOktQ9b4I4l5f4F9wjKGHrJlJmznTFgOuURoTMRfrQwQc5jZa
-         Lz1g==
-X-Forwarded-Encrypted: i=1; AJvYcCVDtyvOjc5JAcwR/m9QShmFU8b7/gOf0nAZvySM+NPTta+Ybo60SvdVzTD2l4MLXpAu7NdzlU7ZNJDg@vger.kernel.org
-X-Gm-Message-State: AOJu0YxsBB59tPAKJjoa9rKyWIcOZvKDQ2cieThfU+x4snUEGemd8vtZ
-	lxHH7or1pFuX8X/GiA5X+SgYJ1tZcXgXyP+OktU4dm6BDALDFQioktjE6OUZeVtMNO4Z6wsyXhv
-	bHQdoqmz/+uOUfwqLyYx094kfe/k=
-X-Google-Smtp-Source: AGHT+IFR3yFGCcHfuAJlyqDmBwJpdP3kCA4mJX8zSWK5jRlGUSF897/PqfSyM19OsscknTIGJKsQv8inYWta8zrsyF4=
-X-Received: by 2002:a17:907:3da1:b0:a9a:4e77:92f with SMTP id
- a640c23a62f3a-a9e50b9e343mr226339466b.56.1730370948817; Thu, 31 Oct 2024
- 03:35:48 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1730373527; x=1730978327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6tOVqDGIVkJ6VSlfAnQKasdgXF9e/3uyEUG7DpZuXhY=;
+        b=Dk+f0ib7aJ+m1VPKKYBd36sKS6Cdkxrn0W1XERjy81OvvHmKM3lj56wtaYVQyKxDfx
+         4rZ1iYYY1PxPp4CV052mmVtweMk2dXa396xZbkhy5iy9BOgL1pSqZ08PxDaDq/uUo8q4
+         0ihCYIlV1zD68YpWMLEITtYf7FxSvx/xjv340SLiToFgYLXY3e413qFwxtoKNgpygnxp
+         +35Kqt4ZiqYSca3aMjYdqjXF1pTyOm7vY/Ig4RC5PBrf0F0wqiJBauoe3Qc9/6VwTvjg
+         ldy1Xq2dN4lU21YO4Kns6bySgEBRANRsdw+xDZVI9Xwk41vDjacKDjAwnanFGirfJK2P
+         APoQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUuD50/76gLBfc7knX6J9Tlh+C7PQN/zFeADi0ZtVrtT8USDfqkOrPqB6ftjvAdO56MC4hxnXpIiPxI@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyt4gF3Cq/ON9BIiVYbSMZLupfP+LxKzPUptit1rIaueYMXmlVB
+	/C9r/bUefmRtN2BqXn8vOD8fsyMIqe+KGxSHvCi0qH7ULf8MUjyaJSoHsnxzn+tgPnX3blZYrWY
+	PK4GTetNNdTCAaKmnO6rsBHWUWeqzLiPnzi58XA==
+X-Google-Smtp-Source: AGHT+IFQY0jyd6E8l4ZVxaxh5x5SVk1SxFaa6tSUf7REkjjSQjNyJIZv7P8E7RYon6B3a5PLGcKeZNWF/nmdRTVbnGc=
+X-Received: by 2002:a4a:a701:0:b0:5ec:5922:ddb with SMTP id
+ 006d021491bc7-5ec592219f4mr4806888eaf.2.1730373527001; Thu, 31 Oct 2024
+ 04:18:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
- <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
- <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
- <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
- <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
- <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
-In-Reply-To: <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Thu, 31 Oct 2024 11:35:37 +0100
-Message-ID: <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+References: <20241025131442.112862-1-peter.griffin@linaro.org>
+ <20241025131442.112862-5-peter.griffin@linaro.org> <f5ac07e3-3fde-4ac8-8cfc-fb7918ffb2a7@linaro.org>
+In-Reply-To: <f5ac07e3-3fde-4ac8-8cfc-fb7918ffb2a7@linaro.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Thu, 31 Oct 2024 11:18:36 +0000
+Message-ID: <CADrjBPpYQQNdYya_95KXRYBrfSD91E-rfYcw6Q-ZNOgh5-4VJw@mail.gmail.com>
+Subject: Re: [PATCH v2 04/11] scsi: ufs: exynos: Add EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR
+ check
+To: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: alim.akhtar@samsung.com, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	krzk@kernel.org, andre.draszik@linaro.org, kernel-team@android.com, 
+	willmcvicker@google.com, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	ebiggers@kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-HI,
+Hi Tudor,
 
-I don't have a QLA1040 revC to test with, but I've put together a much
-smaller patch which just limits the DMA_BIT_MASK to 32-bit on
-1020/1040 cards this should at least not break anything while fixing
-the most urgent problems with file system corruption on some
-combination of hardware/memory. Thanks for the pointers to tsunami
-chipsets though, I'll try to enable some debugging to see what's going
-on when I hit this problem with the qlogic card.
-I'll clean up the chip revision reporting code to see if I can improve
-things there, this will be as a separate patch then.
-
-I have one question regarding the hardware revision on 1040 chips,
-according to qla1280.h we have this:
-
-#define ISP_CFG0_HWMSK   0x000f /* Hardware revision mask */
-#define ISP_CFG0_1020    BIT_0  /* ISP1020 */
-#define ISP_CFG0_1020A   BIT_1  /* ISP1020A */
-#define ISP_CFG0_1040    BIT_2  /* ISP1040 */
-#define ISP_CFG0_1040A   BIT_3  /* ISP1040A */
-#define ISP_CFG0_1040B   BIT_4  /* ISP1040B */
-#define ISP_CFG0_1040C   BIT_5  /* ISP1040C */
-
-
-But when I examine the register it looks more like:
-
-#define ISP_CFG0_HWMSK   0x000f /* Hardware revision mask */
-#define ISP_CFG0_1020     1  /* ISP1020 *
-#define ISP_CFG0_1020A   2  /* ISP1020A */
-#define ISP_CFG0_1040     3  /* ISP1040 */
-#define ISP_CFG0_1040A   4  /* ISP1040A */
-#define ISP_CFG0_1040B   5  /* ISP1040B */
-#define ISP_CFG0_1040C   6  /* ISP1040C */
-
-Which is consistent with how NetBSD does things in their ISP driver.
-Also, in this case the HWMSK actually works for filtering out the
-hardware revision part of the CFG0 register, since it would actually
-require a 6-bit mask to match the current definitions in qla1280.c,
-right?
-
-
-Magnus
-
-On Thu, Oct 31, 2024 at 8:37=E2=80=AFAM Maciej W. Rozycki <macro@orcam.me.u=
-k> wrote:
-
->  I find this interesting.  Documentation for the Tsunami chipset indicate=
-s
-> DAC support[1]:
+On Wed, 30 Oct 2024 at 08:56, Tudor Ambarus <tudor.ambarus@linaro.org> wrote:
 >
-> "In case of a PCI dual-address cycle command, the high-order PCI address
-> bits <63:40> are compared to the constant value 0x0000_01 (that is, bit
-> <40> =3D 1; all other bits =3D 0).  If these bits match, a monster window=
- hit
-> has occurred and the low-order PCI address bits <34:0> are used unchanged
-> as the system address bits <34:0>.  PCI address bits <39:35> are ignored.
-> The high-order 32 PCI address bits are available on b_ad<31:0> in the
-> second cycle of a DAC, and also on b_ad<63:32> in the first cycle of a DA=
-C
-> if b_req64_l is asserted."
 >
-> and I can see it handled in arch/alpha/kernel/pci_iommu.c; allocations ca=
-n
-> be handed out with the TSUNAMI_DAC_OFFSET bit set.  You might be able to
-> see if it triggers by defining DEBUG_ALLOC to 2 and checking messages fro=
-m
-> DMA mappings in the kernel log.
 >
->  I did a little research however and discovered that the DAC capability i=
-s
-> documented in the ISP1040C datasheet, but not in the ISP1040B one.  So it
-> seems to me like it's the matter of the chip revision.  I've skimmed over
-> the driver and as far as I can tell there's everything supplied there to
-> get this sorted now.
+> On 10/25/24 2:14 PM, Peter Griffin wrote:
+> > The values calculated in exynos_ufs_specify_phy_time_attr() are only used
+> > in exynos_ufs_config_phy_time_attr() and exynos_ufs_config_phy_cap_attr()
 >
-> References:
+> all values set in exynos_ufs_specify_phy_time_attr() are used *only* in
+> exynos_ufs_config_phy_time_attr(). Or did I miss something?
+
+Yes you're right, I'll update the commit message.
+
 >
-> [1] "Tsunami/Typhoon 21272 Chipset Hardware Reference Manual", Revision
->     4.0, Compaq Computer Corporation, Order Number: DS-0025A-TE, 21
->     October 1999, Section 10.1.4.4 "Monster Window DMA Address
->     Translation", p. 10-13
+> > if EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR flag is not set.
 >
->   Maciej
+> yep, wonderful.
 >
+> >
+> > Add a check for this flag to exynos_ufs_specify_phy_time_attr() and
+> > return for platforms that don't set it.
+> >
+> > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> > ---
+> >  drivers/ufs/host/ufs-exynos.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+> > index d685d3e93ea1..a1a2fdcb8a40 100644
+> > --- a/drivers/ufs/host/ufs-exynos.c
+> > +++ b/drivers/ufs/host/ufs-exynos.c
+> > @@ -546,6 +546,9 @@ static void exynos_ufs_specify_phy_time_attr(struct exynos_ufs *ufs)
+> >       struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
+> >       struct ufs_phy_time_cfg *t_cfg = &ufs->t_cfg;
+> >
+> > +     if (ufs->opts & EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR)
+> > +             return;
+> > +
+> >       t_cfg->tx_linereset_p =
+> >               exynos_ufs_calc_time_cntr(ufs, attr->tx_dif_p_nsec);
+> >       t_cfg->tx_linereset_n =
+>
+> tx_linereset_n, rx_hibern8_wait is set but not used anywhere. Can we
+> remove it? Not related to this patch though.
+
+Yes they can be removed if they are unused.
+
+Peter
