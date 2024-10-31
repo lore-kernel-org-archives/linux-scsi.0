@@ -1,114 +1,95 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79A541CB32A
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 15:00:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79F419D88D
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 15:25:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730386861; cv=none; b=gf0RSOtV7ix2YGHdeH4mwfaQ8IDnTSO8OIl5MhKAGJZ4sOIZHn+OHurcj1ywGAaPgZ697VS56Y4DmPpXfXf/ttBj1wnm0K33fzBEGS41XUCtVr5U4/zYzUDmA3oKvKRuwUbys8aTRoX1or/fTsErewMGqOpZtNRuYg7lHgYwMco=
+	t=1730388312; cv=none; b=BxMcix5oi0a2eEoAsThP9IWs6zgMUVM8k9RN6Yt5o0itQhC2gfbMmC0xXOp8NihrG0D2xnxqU8fpcep6lXdQEL2gFqgEGGKAHZtAxpHQ+hWjbCptbk5C96xkPpjGge7xay/czNLLDECZkoiSKjWVwWq4uEAuKh15mmrUGDfFgEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730386861; c=relaxed/simple;
-	bh=lZqtMnNH2Ydc3fFDJaYFEhDWQg9TQsu/RuCma6tdH5k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lekctVssY4gzb//GYpkF7ikhLZq8Q9j52zx9kd8/VGsvxOa00oz5oSUBhS+78YfXVcVj0j8Q21X/Wp3WQHvRPDncXWdyZhuwAGlDM3sEoCbBbwv1QRJqkdQJciSJJte1l4MH/6nlAVp1yyhLuAFN7KIaQ0S5cfANZQghQq3xkbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=USZ8nMKH; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730388312; c=relaxed/simple;
+	bh=IBz7iT0Zj8CMmdySiYxI98hOiO56Uyzyng5cuc3WVTU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NZC1wbCofSbd9FCJdgtQY2MC0KJQdcbWIv72hESTYZf5W2jPzFic4UfWf0Ef9DLCMvCcRMPPzQ6OlYR2WeyRePWnqbG7M9mLS4HRTztW8Kn42KYt6Mee3YguO5C7VxNPjzX8dz0J+16YhaWru00Y8uq6J/lfmCGZ3z51aB8w+V4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ehwvAgDN; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="USZ8nMKH"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-43163667f0eso8652515e9.0
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 08:00:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ehwvAgDN"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-5c9c28c1e63so1190625a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 08:25:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730386858; x=1730991658; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1730388309; x=1730993109; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5HsH55Dd4lXD8RaepfS+tYZBwCj18S0+Osi4b6XYRas=;
-        b=USZ8nMKHVPtSfzL17p8eo8AhcHkpC+mQckhufvHtRMAl44g079kND2uIQ7SShLLWqK
-         m1oaQGMQ+56CSCyeRJ86EFLvjOmnQ1zhiZUWy0N/B0p4SvF1+AtxetlTXsk6xzCsDcN6
-         JdfLaMenyuGDXoCSY+C5B1zimC6iQKp90MepbGR0o68QEYCzdzd8pMizq2IxnOszNCh4
-         qsn2BRyarpQvC5XNBcy+x7MabNjXl/GduErBTGBPwenmOV3Rmp2sUpdsUfqSbf0C9pDc
-         cCVFotih1rX4JBGgVyCnm1mqeOQBC6F1ISS2xjym5C3IknSnEnTCaVQDcmarb5ws+hez
-         cu0Q==
+        bh=IBz7iT0Zj8CMmdySiYxI98hOiO56Uyzyng5cuc3WVTU=;
+        b=ehwvAgDN0X2zoZArz1re4wfyhcto4l8DjbqXZnVDB+NI+l7a84F0CQyiOlc4CQYPKy
+         qYlU5QDXZsjYQjDS9r2i0Nj4rPnbyLtpmBuaq/HfhDQ+0Qja4iUvLmtjxNMcIlxBH1T7
+         AUnOEwyOv2BdV97fLoKfER0RiRdOUb9oEzWEL0urXRZhqZ6eIA/Vn+EZrGxHI6eL02Nx
+         hf5jawlc9UehHkrVIe7HBbF4Xd4mgb91Ki+v23gOp/NVcWkoQejOn6+SvoMvd9t72yJ0
+         VIm28dyaNIDT6xdMBO+S8t70DFfnDPNz1OEnpMnQvLbIjPCKBNh1qswAUawy5WsHaMGk
+         R+4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730386858; x=1730991658;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1730388309; x=1730993109;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=5HsH55Dd4lXD8RaepfS+tYZBwCj18S0+Osi4b6XYRas=;
-        b=ALsns0k5xwjp5qsmNCSMo7w/vkRiMMI7z1VhebIIAYcguXdh1KbllIxI8coqNGAmxv
-         JSIJ3iD9UP3fOIj0JRQBN+gNUNyliJe7x7WT2Q0TAC6N8r5aPAKIY+ru65UfZuq7/Tm5
-         drqTujCsZO79X/jZsKH5aYZuXIbzba/S5gBEs34pBGx3cIcG7hQCnIp05WauvRCFYWsr
-         yO2KgNar8QhGw6BFIBiitOayo9ge8hrYVfZ+ABpI51rDfAw3VihUmZRaPUQQ7XOel5nU
-         vCFzyMHwhirIOd7IlGxtnceSPGR9pSKIhgl2r84J9Zcp5oybUc55hTzEZcuDhOr0W/z1
-         GKIA==
-X-Forwarded-Encrypted: i=1; AJvYcCVx81i41jjEzLk8c0MlomSJLcTL8weIdgMPMB1oekiYMQxQexMeiL1e67fiCpnnLL96Ve2ZocfOTDt5@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy94DQHRBQTB5T7C4iM/SZLH2HHjE4FJeQV8zkWD6Sgd+Bbqrq6
-	K2cvipfzVquEiKRngxtAgoom/CQzKIvggydFzd8CXj32nYhORMmoi5aRE2OH1MU=
-X-Google-Smtp-Source: AGHT+IGnBCp8cTrb3nL5Yu4gI9ybHFIG3eHfaMc7SBxhRN7NF7+XLcEhVXV1Ky/UKTvujdddg7F7rg==
-X-Received: by 2002:a05:600c:1ca9:b0:431:50cb:2398 with SMTP id 5b1f17b1804b1-4328323f576mr1510895e9.2.1730386856237;
-        Thu, 31 Oct 2024 08:00:56 -0700 (PDT)
-Received: from gpeter-l.lan ([145.224.65.232])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd8e8524sm59163225e9.5.2024.10.31.08.00.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Oct 2024 08:00:55 -0700 (PDT)
-From: Peter Griffin <peter.griffin@linaro.org>
-To: alim.akhtar@samsung.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	krzk@kernel.org
-Cc: tudor.ambarus@linaro.org,
-	ebiggers@kernel.org,
-	andre.draszik@linaro.org,
-	kernel-team@android.com,
-	willmcvicker@google.com,
-	linux-scsi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH v3 14/14] MAINTAINERS: Update UFS Exynos entry
-Date: Thu, 31 Oct 2024 15:00:33 +0000
-Message-ID: <20241031150033.3440894-15-peter.griffin@linaro.org>
-X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
-In-Reply-To: <20241031150033.3440894-1-peter.griffin@linaro.org>
-References: <20241031150033.3440894-1-peter.griffin@linaro.org>
+        bh=IBz7iT0Zj8CMmdySiYxI98hOiO56Uyzyng5cuc3WVTU=;
+        b=PVs9dogixwq7mj3cS4ycJnER9CrCpPdiGYbWZYr5Gh0qFj/NsV3KCh5qo/yzbA8/MP
+         kl87J9gobc689uGtjbA4d1JpGHg9RknqVRimyIxYIlQbWXBmZQzJl14ItXuYvv55u5ZP
+         9aL3or1OQEWwWMwP8R66b7NpewpS7VcDSRsixsuFDII1DLfUMBQS0qRZRoG8EE0RQ2dD
+         mhYYcBQnHwcbQijcrBMCrr9B/oullp+4LEky902ufdol7obGm8Hnhl6BnrwCmKUdt+0y
+         dG3nAiOcN6qJDuSC/i/kXLIKTj8xFondl0CD44JIOjoPA441foTJKCvfCbNukf2CSqzf
+         kFoA==
+X-Gm-Message-State: AOJu0YyJP+eOIvELqaJxIevRzlYg/QeIDGZ6ZS8pkYqHn6iTpyMZ1VCw
+	KOIGgOl1g4NPxj7AcRQ0xl6DPgr4YcWakFZyi1pgT5QEtTpVz9OKVGw9f1LhoUoVV34OPrmU4aK
+	xqhDJcEGu3OqKUKQgjWZTuqsLQ84=
+X-Google-Smtp-Source: AGHT+IEjRmBdV5obQzUFRIu8PP05vEHXNNxnTwKOz9XUJQtOUc5ghZnNUgj0GP9OK257jMQcE4vUWGupTTidcvEvV3g=
+X-Received: by 2002:a05:6402:5109:b0:5cb:dd06:96d6 with SMTP id
+ 4fb4d7f45d1cf-5cea967ac5fmr3006921a12.11.1730388308771; Thu, 31 Oct 2024
+ 08:25:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20241031125506.20215-1-linmag7@gmail.com> <20241031153924.03e057d1@samweis>
+In-Reply-To: <20241031153924.03e057d1@samweis>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Thu, 31 Oct 2024 16:24:57 +0100
+Message-ID: <CA+=Fv5Txr4SvP_+aYcGWF4rD7fM27S9BGoJMN5pFZrwXuKuuvw@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: qla1280.c
+To: Thomas Bogendoerfer <tbogendoerfer@suse.de>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add myself as a reviewer for ufs-exynos as I'm doing various
-work in this driver currently for gs101 SoC and would like to
-help review relevant patches.
+Thanks so much for testing! I'll need to look more into why this fails
+on Alpha then.
 
-Additionally add the linux-samsung-soc@vger.kernel.org list
-as that is relevant to this driver.
+Magnus
 
-Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
----
- MAINTAINERS | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ea8a2227b822..0057faff6239 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -23826,7 +23826,9 @@ F:	drivers/ufs/host/*dwc*
- 
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER EXYNOS HOOKS
- M:	Alim Akhtar <alim.akhtar@samsung.com>
-+R:	Peter Griffin <peter.griffin@linaro.org>
- L:	linux-scsi@vger.kernel.org
-+L:	linux-samsung-soc@vger.kernel.org
- S:	Maintained
- F:	drivers/ufs/host/ufs-exynos*
- 
--- 
-2.47.0.163.g1226f6d8fa-goog
 
+> this breaks SGI Octane and SGI Origin systems:
+>
+> qla1280: QLA1040 found on PCI bus 0, dev 0
+> qla1280 0000:00:00.0: enabling device (0006 -> 0007)
+> qla1280: Failed to get request memory
+> qla1280 0000:00:00.0: probe with driver qla1280 failed with error -12
+> qla1280: QLA1040 found on PCI bus 0, dev 1
+> qla1280 0000:00:01.0: enabling device (0006 -> 0007)
+> qla1280: Failed to get request memory
+> qla1280 0000:00:01.0: probe with driver qla1280 failed with error -12
+>
+> They need 64bit DMA addresses.
+>
+> Thomas.
+>
+> --
+> SUSE Software Solutions Germany GmbH
+> HRB 36809 (AG N=C3=BCrnberg)
+> Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, Andrew McDonald, Werner Knoblich
