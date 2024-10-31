@@ -1,34 +1,30 @@
 Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 20CD91465B4
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 07:37:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E9806155333
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 07:46:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730360275; cv=none; b=ZmymjaPYQh4+5ncO7RqDBmANpi1yu5U2BGblYzttEuFpz+Ou5ffu+sP4SwIqPuZPVUiuNHSTtS210+o5++BSdpiVdiLtVJwPkXGKJ2Fb12wQ5YEtXhRsNdsGcV3ycJAybSLCGhS3KMIk4kJmRczjBe9Dpah49ve/Bqy5Im8Pq+4=
+	t=1730360777; cv=none; b=klzdhqCxfwRDaqsDsnt/S7ofYxF2QQ0FXR5YufFMuXL2ISiQ5wrRKDVpTxQB9RsGWokUlXNBUh5/2lIyG7dcHCqsk6DabRvG7eBh1xilYA9YlBSeG5la04EFUVtF+PMVYtZ3t7ivcOi0rp8Shc8ufzjGVLBDs38o4sJ6L8cC/g0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730360275; c=relaxed/simple;
-	bh=3YcGY47oMdcXy6eFnarEb6lvf2g8jA56WynzKjeEuas=;
+	s=arc-20240116; t=1730360777; c=relaxed/simple;
+	bh=sUtQVMqwuhsbex4oTGmNLr+pD8hCpgSQW+7M3d3Hk5k=;
 	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=QN9zYlgaEJa9D4F3tjc62Nb+ANx0JtF46nEhsvNd0WoSTO8W6XIMQ1yNMxcMm3cILoJ/BnUKO8hMp2rX373s6D99wyCv6wt9G8aCyW/anWsNQGdTCeRHwx6RASVYDLUAFjO8LswikbQPssXxnR4UgHbtlzAx18VDJsygjXXfzqM=
+	 MIME-Version:Content-Type; b=nKf/L7ohRhpdk9xrsPX5RveqN06/HqEibMOiW5+R8aDWqEItEtOBzSFuyajBkRu8ynD5pefRgp72TgUzdeZb0qmWeEylFNJPwlHCiiaEYj9P+M/U0j/DDBLeoMyydwuVjBkeYropC1rFjyZvSPpl84Ms1cUEbFZUeqxkKrdcB3Q=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 3A8A792009C; Thu, 31 Oct 2024 08:37:50 +0100 (CET)
+	id 325AF92009C; Thu, 31 Oct 2024 08:46:13 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 32FBF92009B;
-	Thu, 31 Oct 2024 07:37:50 +0000 (GMT)
-Date: Thu, 31 Oct 2024 07:37:50 +0000 (GMT)
+	by angie.orcam.me.uk (Postfix) with ESMTP id 2BC5792009B;
+	Thu, 31 Oct 2024 07:46:13 +0000 (GMT)
+Date: Thu, 31 Oct 2024 07:46:13 +0000 (GMT)
 From: "Maciej W. Rozycki" <macro@orcam.me.uk>
 To: Magnus Lindholm <linmag7@gmail.com>
-cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-In-Reply-To: <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
-References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com> <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com> <20241030102549.572751ec@samweis>
- <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+cc: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/1] qla1280.c set DMA_BIT_MASK from bus width
+In-Reply-To: <20241029161049.2133-2-linmag7@gmail.com>
+Message-ID: <alpine.DEB.2.21.2410310656020.40463@angie.orcam.me.uk>
+References: <20241029161049.2133-1-linmag7@gmail.com> <20241029161049.2133-2-linmag7@gmail.com>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -38,47 +34,98 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 
-On Wed, 30 Oct 2024, Magnus Lindholm wrote:
+On Tue, 29 Oct 2024, Magnus Lindholm wrote:
 
-> Thanks for your reply, I guess this suggests that this is an
-> alpha-platform specific problem then? I can run the QL1040 card fine
-> with the original qla1280.c driver ( in a 64-bit slot on the ES40 )
-> just as long as I don't put more than 2GB ram in the system, this is
-> when I start seeing the issues with file system corruption. As soon as
-> S/G buffers are allocated on addresses above 32-bit, the QL1040 cannot
-> deal with this, unless enforcing a DMA_BIT_MASK(32). The same card
-> runs fine under Tru64 UNIX on the same system, however, I don't know
-> how the Tru64 driver sets the DMA mask, if it enables full 64-bit
-> addressing or not.
+> Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
 
- I find this interesting.  Documentation for the Tsunami chipset indicates 
-DAC support[1]:
+ You'll need some text in your change description for your patch to be 
+accepted.
 
-"In case of a PCI dual-address cycle command, the high-order PCI address 
-bits <63:40> are compared to the constant value 0x0000_01 (that is, bit 
-<40> = 1; all other bits = 0).  If these bits match, a monster window hit 
-has occurred and the low-order PCI address bits <34:0> are used unchanged 
-as the system address bits <34:0>.  PCI address bits <39:35> are ignored. 
-The high-order 32 PCI address bits are available on b_ad<31:0> in the 
-second cycle of a DAC, and also on b_ad<63:32> in the first cycle of a DAC 
-if b_req64_l is asserted."
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index 8958547ac111..70409a140461 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -368,6 +374,7 @@
+>  
+>  #define	MEMORY_MAPPED_IO	1
+>  
+> +
 
-and I can see it handled in arch/alpha/kernel/pci_iommu.c; allocations can 
-be handed out with the TSUNAMI_DAC_OFFSET bit set.  You might be able to 
-see if it triggers by defining DEBUG_ALLOC to 2 and checking messages from 
-DMA mappings in the kernel log.
+ Please don't add an extra line.
 
- I did a little research however and discovered that the DAC capability is 
-documented in the ISP1040C datasheet, but not in the ISP1040B one.  So it 
-seems to me like it's the matter of the chip revision.  I've skimmed over 
-the driver and as far as I can tell there's everything supplied there to 
-get this sorted now.
+> @@ -655,18 +662,51 @@ qla1280_info(struct Scsi_Host *host)
+>  {
+>  	static char qla1280_scsi_name_buffer[125];
+>  	char *bp;
+> +	char hwrev = ' ';
+> +	int bits;
+>  	struct scsi_qla_host *ha;
+>  	struct qla_boards *bdp;
+> +	struct device_reg __iomem *reg;
+>  
+>  	bp = &qla1280_scsi_name_buffer[0];
+>  	ha = (struct scsi_qla_host *)host->hostdata;
+> +	reg = ha->iobase;
+>  	bdp = &ql1280_board_tbl[ha->devnum];
+>  	memset(bp, 0, sizeof(qla1280_scsi_name_buffer));
+>  
+> +
 
-References:
+ Likewise.
 
-[1] "Tsunami/Typhoon 21272 Chipset Hardware Reference Manual", Revision 
-    4.0, Compaq Computer Corporation, Order Number: DS-0025A-TE, 21 
-    October 1999, Section 10.1.4.4 "Monster Window DMA Address 
-    Translation", p. 10-13
+> +	if (IS_ISP1040(ha))
+> +		switch (ha->revision) {
+> +		case 1:
+> +			hwrev = ' ';
+> +			break;
+> +		case 2:
+> +			hwrev = 'A';
+> +			break;
+> +		case 3:
+> +			hwrev = ' ';
+> +			break;
+> +		case 4:
+> +			hwrev = 'A';
+> +			break;
+> +		case 5:
+> +			hwrev = 'B';
+> +			break;
+> +		case 6:
+> +			hwrev = 'C';
+> +			break;
+> +		default:
+> +			hwrev = '?';
+> +			break;
+> +	}
+
+ Currently QLA1040 is always printed even for ISP1020 devices, so I think 
+adding a revision to that will only be confusing.  Can this reporting be 
+improved by any chance?
+
+> @@ -2177,9 +2224,9 @@ qla1280_nvram_config(struct scsi_qla_host *ha)
+>  
+>  	if (IS_ISP1040(ha)) {
+>  		uint16_t hwrev, cfg1, cdma_conf;
+> -
+
+ Please don't remove the line.
+
+>  		hwrev = RD_REG_WORD(&reg->cfg_0) & ISP_CFG0_HWMSK;
+>  
+> +		ha->revision = hwrev;
+
+ Notice that masking with ISP_CFG0_HWMSK clobbers the revision.  It does 
+not matter for existing code, but it breaks your reporting improvement.
+
+ I'm leaving the rest for the time being as you'll need to change the DMA 
+mask selection logic as per the other thread.  Overall you'll have to 
+split your change into a patch series, with the DMA mask fix and reporting 
+improvements each as an individual self-contained update.  This is how we 
+do development in principle, but in this particular case the fix also asks 
+for being backported, as it addresses data corruption, so it has to be on 
+its own.
+
+ NB please run updated patches through scripts/get_maintainer.pl for the 
+complete list of recipients to send to.
 
   Maciej
