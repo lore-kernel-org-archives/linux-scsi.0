@@ -1,91 +1,92 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A59C4193417;
-	Thu, 31 Oct 2024 14:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6980981751
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 14:18:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730383588; cv=none; b=QFok1N9uEH63W8BOedWs48M0URNHZkg0g4XrCtulkFLBTUrbNiMMZVJ5AsIrFo3QJxIW7a/uYnMJMU0rOqJgdU5FHlM/X4RWV1Mcu7h2Lij1WrFrfsNTANUFH3jGupUsgcxKr1sqh3YdWargg93QmBOCx81zP75enYJF/E4q6L8=
+	t=1730384322; cv=none; b=ZpJ9QyTW8LuWqpOxIe6tzLCIUlwkpQ5MX8hzLqMmUCa9sXHfeSumngF55NgWd8SLBPYkFgkqkYIOOV+SL0yiz3kXbOYktGZE6QlPR9mHJGl0RtbTdIdGmM1ETdryc4JY9pm1tyze50zESsK85tiDNw3cPihkdvDFhgKO4wzDLt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730383588; c=relaxed/simple;
-	bh=Muuu1WqyPpcP/xIjgoC6z8E8xeJtiugg598fNvNyN/E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MV0JT534Z8tT/kKfSRwpll1urMPbU/GeWwjQ7sVtkB2kITQpEhqxOryUOVejsbDPpfJcdup5gjYxkaw5smn6xuxdcuF+vO4n+EM734wWyopJCQpDpUN3d8y1OeTG3CvClJDgIBMdzM3WlVJv7yDeWt16u4NFzRR9U4tWOrSAoFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yajt8S6A; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730384322; c=relaxed/simple;
+	bh=PPhXSxL1L/SGuMFwoOwJXkbPAiRZYP42jywtuTfVmT8=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=UAOix8bZeqOUraxYPeYjMvGP5XMCZAb6mdupT2uVQilPBSS4Z9fiKMyuWFLCgFtcJAaT6QuzQMH3QdKvUl/XAZAYx+oEDhK0xtk1lGE6vEalwpsjfwkOb+uRgqmh03hVJAXI2l/y4ttlLhsEndgk3ZlzFwbrM9+4N9QhDnBdIgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=greNBCaD; arc=none smtp.client-ip=62.142.5.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yajt8S6A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97E5CC4FF52;
-	Thu, 31 Oct 2024 14:06:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730383587;
-	bh=Muuu1WqyPpcP/xIjgoC6z8E8xeJtiugg598fNvNyN/E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Yajt8S6AC7lJXMJrgMLEU3WjiH6d4vU7KU0GM5nIxrxzkAw/O57yMJU7wWVVXTkNR
-	 rY7sX5J9AIFrLXPtjGtoazojQ9YMoRazK6YBgLm/ELf+L+vJloJIS1QHBNTvOQnyzK
-	 /l78HsUM4nNyzQrlqs8HL8HhaIy5TS1lfMc4hSDpq69PpZOzCBGlWoXYC+1wImnmbN
-	 1YmgKCBdtkdZ+PXXHKzy4NmGvZwLiLJ9w0WFhqCqoV1tjb6rO1Inv5xcZOPlxoYUIG
-	 SxWpP4CQAvW8UfWHyswYpaL0doLT2p3x8cHDslxjtZ6pL2ZtNVyfw6FDnII5RTIBDO
-	 OiNIopie+Riww==
-Date: Thu, 31 Oct 2024 08:06:24 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Hans Holmberg <hans@owltronix.com>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
-	javier.gonz@samsung.com, bvanassche@acm.org,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-Message-ID: <ZyOO4PojaVIdmlOA@kbusch-mbp.dhcp.thefacebook.com>
-References: <ZyEL4FOBMr4H8DGM@kbusch-mbp>
- <20241030045526.GA32385@lst.de>
- <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com>
- <20241030154556.GA4449@lst.de>
- <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com>
- <20241030155052.GA4984@lst.de>
- <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com>
- <20241030165708.GA11009@lst.de>
- <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
- <CANr-nt35zoSijRXYr+ommmWGfq0+Ye0tf3SfHfwi0cfpvwB0pg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="greNBCaD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=7tRpwrd+4LG+GrdwMekwaayKoafKY5xPgsypup/nk6k=;
+	b=greNBCaDQ073nkv1rZXvXjdiJw/W+tEJ+KAZJ5kvAOKzLMbVsU4b8G4hWCLk+S1cQFqSrvDJLzYeL
+	 r5yO5e72Dww59CXo9FMeZUfEt1UqKzLAZfp5r/f6sJ3zHqGgWX8ZA5G7+TrTY+T4N7u8esZvCICu8E
+	 wjct+M4rhYB8mG0+E1Yi2J9PZa0Bu9FqR34RoxsDM5kFRe3uRZF7ZqLsrh8Htvh2rE2BMj3pi4LgQa
+	 /GGCnoHR+bXdoziJq2BrNGzVBx3qoKwtaWfHaFeXuIkdrZwhinv8nuWV9Si1mteBvmxZRcvx56m59o
+	 TU7SVWGhChAF8T16w0jOO3IVVAO62bg==
+Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw21.mail.saunalahti.fi (Halon) with ESMTPSA
+	id da99d9d2-9792-11ef-8870-005056bdd08f;
+	Thu, 31 Oct 2024 16:17:26 +0200 (EET)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CANr-nt35zoSijRXYr+ommmWGfq0+Ye0tf3SfHfwi0cfpvwB0pg@mail.gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
+Subject: Re: [PATCH 3/3] scsi: st: clear pos_unknown when the por ua is
+ expected
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20241031010032.117296-4-jmeneghi@redhat.com>
+Date: Thu, 31 Oct 2024 16:17:15 +0200
+Cc: linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com,
+ "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
+ loberman@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <3BCF79DE-1CF8-436D-A611-24387F976F68@kolumbus.fi>
+References: <20241031010032.117296-1-jmeneghi@redhat.com>
+ <20241031010032.117296-4-jmeneghi@redhat.com>
+To: John Meneghini <jmeneghi@redhat.com>
+X-Mailer: Apple Mail (2.3826.200.121)
 
-On Thu, Oct 31, 2024 at 09:19:51AM +0100, Hans Holmberg wrote:
-> On Wed, Oct 30, 2024 at 11:33 PM Keith Busch <kbusch@kernel.org> wrote:
-> > That is very much apples-to-oranges. The B+ isn't on the same device
-> > being evaluated for WAF, where this has all that mixed in. I think the
-> > results are pretty good, all things considered.
-> 
-> No. The meta data IO is just 0.1% of all writes, so that we use a
-> separate device for that in the benchmark really does not matter.
+On 31. Oct 2024, at 3.00, John Meneghini <jmeneghi@redhat.com> wrote:
+>=20
+> From: Kai Makisara <kai.makisara@kolumbus.fi>
+>=20
 
-It's very little spatially, but they overwrite differently than other
-data, creating many small holes in large erase blocks.
- 
-> Since we can achieve a WAF of ~1 for RocksDB on flash, why should we
-> be content with another 67% of unwanted device side writes on top of
-> that?
-> 
-> It's of course impossible to compare your benchmark figures and mine
-> directly since we are using different devices, but hey, we definitely
-> have an opportunity here to make significant gains for FDP if we just
-> provide the right kernel interfaces.
-> 
-> Why shouldn't we expose the hardware in a way that enables the users
-> to make the most out of it?
+The patch in this message is a WIP patch discussed in Bugzilla. It is =
+not
+meant to be submitted as such. (In addition to changes, it contains a =
+bug
+fix not related to the changes.) Those interested in the progress can =
+look
+at the Bugzilla entry shown below.
 
-Because the people using this want this interface. Stalling for the last
-6 months hasn't produced anything better, appealing to non-existent
-vaporware to block something ready-to-go that satisfies a need right
-now is just wasting everyone's time.
+> Fixes: 3d882cca73be ("scsi: st: Fix input/output error on empty drive =
+reset")
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D219419
+> Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+I have NOT signed of this patch.
 
-Again, I absolutely disagree that this locks anyone in to anything.
-That's an overly dramatic excuse.
+> Tested-by: John Meneghini <jmeneghi@redhat.com>
+
+John has done extensive tests to see if the patch works.
+
+> ---
+> drivers/scsi/st.c | 31 ++++++++++++++++++++++---------
+> 1 file changed, 22 insertions(+), 9 deletions(-)
+>=20
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index e9d1cb6c8a86..0260361d19fa 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+...
+
