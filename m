@@ -1,48 +1,84 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD771494C2;
-	Thu, 31 Oct 2024 06:56:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 20CD91465B4
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 07:37:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730357763; cv=none; b=hA6BSFaKxugIks0Xa2akbshS4y8r8opeLS/xDA238Reu4ZkAR4Y7nPMNNmgAchr3P/mnMpGwUdGYgWUnMdGSABCIs43Em8Oh61M4PDjN2tkMRG3VFs3sw1+IbfIMI9iAPKdynjypZq8fFWp8oXT3MvmCFHf0t6jUYlFncvWJ27A=
+	t=1730360275; cv=none; b=ZmymjaPYQh4+5ncO7RqDBmANpi1yu5U2BGblYzttEuFpz+Ou5ffu+sP4SwIqPuZPVUiuNHSTtS210+o5++BSdpiVdiLtVJwPkXGKJ2Fb12wQ5YEtXhRsNdsGcV3ycJAybSLCGhS3KMIk4kJmRczjBe9Dpah49ve/Bqy5Im8Pq+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730357763; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Pyg8KaCvk0TRN973UVwwk5MOfKTpdQya+QfbDpL35e8l1YXzBIcfQTH1b2r0t/7wrKy3ZnfeN8+4NhDRPYeQcTOFB3Vg5xP/5vnygK4e/HDsNq1PE20jx4TLQTBZrqU+BVlMO+3gbI1iQ2lLr7+o/k2WMN3gkU/UnKYHNg/JPGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3664C227AAD; Thu, 31 Oct 2024 07:55:58 +0100 (CET)
-Date: Thu, 31 Oct 2024 07:55:57 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Kanchan Joshi <joshi.k@samsung.com>
-Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
-	martin.petersen@oracle.com, asml.silence@gmail.com,
-	brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
-	linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-	io-uring@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, gost.dev@samsung.com,
-	vishak.g@samsung.com, anuj1072538@gmail.com,
-	Anuj Gupta <anuj20.g@samsung.com>
-Subject: Re: [PATCH v6 06/10] io_uring/rw: add support to send metadata
- along with read/write
-Message-ID: <20241031065557.GB26299@lst.de>
-References: <20241030180112.4635-1-joshi.k@samsung.com> <CGME20241030181013epcas5p2762403c83e29c81ec34b2a7755154245@epcas5p2.samsung.com> <20241030180112.4635-7-joshi.k@samsung.com>
+	s=arc-20240116; t=1730360275; c=relaxed/simple;
+	bh=3YcGY47oMdcXy6eFnarEb6lvf2g8jA56WynzKjeEuas=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=QN9zYlgaEJa9D4F3tjc62Nb+ANx0JtF46nEhsvNd0WoSTO8W6XIMQ1yNMxcMm3cILoJ/BnUKO8hMp2rX373s6D99wyCv6wt9G8aCyW/anWsNQGdTCeRHwx6RASVYDLUAFjO8LswikbQPssXxnR4UgHbtlzAx18VDJsygjXXfzqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 3A8A792009C; Thu, 31 Oct 2024 08:37:50 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 32FBF92009B;
+	Thu, 31 Oct 2024 07:37:50 +0000 (GMT)
+Date: Thu, 31 Oct 2024 07:37:50 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Magnus Lindholm <linmag7@gmail.com>
+cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    linux-scsi@vger.kernel.org
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+In-Reply-To: <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
+References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com> <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+ <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com> <20241030102549.572751ec@samweis>
+ <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241030180112.4635-7-joshi.k@samsung.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset=US-ASCII
 
-Looks good:
+On Wed, 30 Oct 2024, Magnus Lindholm wrote:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Thanks for your reply, I guess this suggests that this is an
+> alpha-platform specific problem then? I can run the QL1040 card fine
+> with the original qla1280.c driver ( in a 64-bit slot on the ES40 )
+> just as long as I don't put more than 2GB ram in the system, this is
+> when I start seeing the issues with file system corruption. As soon as
+> S/G buffers are allocated on addresses above 32-bit, the QL1040 cannot
+> deal with this, unless enforcing a DMA_BIT_MASK(32). The same card
+> runs fine under Tru64 UNIX on the same system, however, I don't know
+> how the Tru64 driver sets the DMA mask, if it enables full 64-bit
+> addressing or not.
 
+ I find this interesting.  Documentation for the Tsunami chipset indicates 
+DAC support[1]:
+
+"In case of a PCI dual-address cycle command, the high-order PCI address 
+bits <63:40> are compared to the constant value 0x0000_01 (that is, bit 
+<40> = 1; all other bits = 0).  If these bits match, a monster window hit 
+has occurred and the low-order PCI address bits <34:0> are used unchanged 
+as the system address bits <34:0>.  PCI address bits <39:35> are ignored. 
+The high-order 32 PCI address bits are available on b_ad<31:0> in the 
+second cycle of a DAC, and also on b_ad<63:32> in the first cycle of a DAC 
+if b_req64_l is asserted."
+
+and I can see it handled in arch/alpha/kernel/pci_iommu.c; allocations can 
+be handed out with the TSUNAMI_DAC_OFFSET bit set.  You might be able to 
+see if it triggers by defining DEBUG_ALLOC to 2 and checking messages from 
+DMA mappings in the kernel log.
+
+ I did a little research however and discovered that the DAC capability is 
+documented in the ISP1040C datasheet, but not in the ISP1040B one.  So it 
+seems to me like it's the matter of the chip revision.  I've skimmed over 
+the driver and as far as I can tell there's everything supplied there to 
+get this sorted now.
+
+References:
+
+[1] "Tsunami/Typhoon 21272 Chipset Hardware Reference Manual", Revision 
+    4.0, Compaq Computer Corporation, Order Number: DS-0025A-TE, 21 
+    October 1999, Section 10.1.4.4 "Monster Window DMA Address 
+    Translation", p. 10-13
+
+  Maciej
