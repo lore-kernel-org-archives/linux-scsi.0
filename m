@@ -1,120 +1,160 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59A7F1531D2
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 08:20:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2F61991CC
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 10:35:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730362804; cv=none; b=Mg3r+eFo0/8HJ9nQrFM3lqWCxClL3gfl41yZlkdKHOkJrCBNRidhnlJUsKifdT+VRMfKtBt0fE0FsLhGidxZcZCW85XffMijDblEinWHMB+2NWn7bD3Yz3rYkTz0ZyLZcI457R2C9QhteIhiwheJgccUmo5EeHNHpTDI6qKWhpA=
+	t=1730370953; cv=none; b=G5z4vo4m4URDYcq3iGGfaFr4T2UEhnH6aeWlo4x7/cxVFRXmtiqosjnciJN0h6VfQen9xmVQXYciNb2ypAPecmVD9/VTLsjbmO8uxoEqJM0XvC2AQ6dRTIGyct0uKgALHVnYEfITqZHc6Qp3l/P10MYq81kKo2u24Qg10r+LvYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730362804; c=relaxed/simple;
-	bh=CX8S5Y9npSRGCV5zzlSrljLQ2sJgae3kpGxmZLzONUY=;
+	s=arc-20240116; t=1730370953; c=relaxed/simple;
+	bh=apMxqqAahuyK8uAzmuPF1D1P6AcbOjt+x2EzaDvioBc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GsecDgkWMEvmaHrncXAaTBxIKEgDycgLHUqJOgMtWgMr8xqopbpcW+KAFWeaaN11awAUc2apDd68qKaQN8tOdBwcqjTJtkW0R8VDlVatw/KBOk/Jzac77CC96rnX9xT+RgjGoPlzOPWlCjLrvzmbNhAFMfLhbvATSqC9KEbWmJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=owltronix.com; spf=none smtp.mailfrom=owltronix.com; dkim=pass (2048-bit key) header.d=owltronix-com.20230601.gappssmtp.com header.i=@owltronix-com.20230601.gappssmtp.com header.b=IvbfBnAp; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=owltronix.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=owltronix.com
+	 To:Cc:Content-Type; b=hOLYbdLXWpxAx3kbvkc3TkaR52WLRqD8euKJxM3sOm6f70GDumxV5Hs5Zx2q0Y4MS56XNFmPNHff8hLVmiANTULeqek1rPJyBKtHyltDu2+hBqcVhS/lb7phE6wg65IcLAT3hNQZo+RinyLgTorkjtCq1DPsJxLRi+EsBMYICaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ifHojgoN; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=owltronix-com.20230601.gappssmtp.com header.i=@owltronix-com.20230601.gappssmtp.com header.b="IvbfBnAp"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5c96b2a10e1so985956a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 01:20:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ifHojgoN"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a99f1fd20c4so98769666b.0
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2024 03:35:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=owltronix-com.20230601.gappssmtp.com; s=20230601; t=1730362800; x=1730967600; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1730370949; x=1730975749; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fHihNpINELIVjK3l3rTKLlYaMgvUEcgArJNIc8J5kNA=;
-        b=IvbfBnApArGei0oWtsKAVEQG7VN+j4k7cjcjTAljywxgnGUC21T9V6QusjJWA3dt6I
-         VrXhYiqpPum6wLLZDFVlf0zkIFU+v+pazOyV09JB6bgxo84wXzWapcahqdFZlKg93ogP
-         UiKP7hq6tcPL0cWefutUKOo6HddaoS1mlBmJPMziW6i+/NBk5FDKKnogYyw87CkPxjdH
-         0Si/EAGAQ5vjveNofRNgnsIqf1ZQBXTLGxau/Dh+9eRKVnC9wwN2mx8grS1P+Euy+7E5
-         H/fSDBOvpigv2t60Hvsbum6EqrOZt1lOUf0nW2IWLltzZmWydrOWrPquA3dvfSKnDnzK
-         q0pw==
+        bh=ZVzJIUNphDU93nu41iWIe3iLQuX/p066gSAyV6EeDbA=;
+        b=ifHojgoN1EtAk+zYWtbvUU1DJyAs+XPBFsXq420OtTbN8jUNYLcuXx9aWDUYFxDIvG
+         gmhdKpYCR9EBr8YAIKxU0YTl9spM6Xxz17zBUiFUvlLL881a1QstHf/RxNUmwbufm3n7
+         dTkrqEupbgZllBXwjh2J4MNM+Bm3hPgSuwvgOjcf6V7wJONcwD4zq4FhM2fewqRRhxms
+         m0LfBPz7aHYy7cICF40VAtLKpbFPxqY+MQGnziMZ1O05oJGej6IDMJR6afdu7Zs7hB7/
+         2IFzKkPOUDDImpO2l1azw4wbPs31tjDsBMyfzB1XBT5POPxQxK6z5DoKNB+oEcr0zHLP
+         lcRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730362800; x=1730967600;
+        d=1e100.net; s=20230601; t=1730370949; x=1730975749;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fHihNpINELIVjK3l3rTKLlYaMgvUEcgArJNIc8J5kNA=;
-        b=FUUAkA+KPl9kn+SdteDm8VKbqul+HFNBooBoWamik30ri9XKZYd20zeOvxUBuEWMsv
-         EV6S7x7hbhoHHzoAgxxHFTE2ZZftzOEezFavI3UGFC2BlVTE54uhdfQCNYOPqGMxmHiL
-         lRJzYmO/GnWSgb1zj4ZEfLCxpfb8EtqbBB6Ml04xAG0O1z0Q2YubRXyJ1bEG4o3DQ/bu
-         LW6UjKeoV86nHHI1VOUYslPq1+ff5D5AamDio1wzSutgIRs85GphQzv+vokdrmC0AVDh
-         rDw6we81Q5GEM9JG8COxQT5fc2JmVRbY5A++EzqnFQXXbF/6FPqW4SIv4Tax6ja3uhRA
-         3pUA==
-X-Forwarded-Encrypted: i=1; AJvYcCVIYuYEA6uB3KglJq5LyopyOjv/Bh3e62BfTCX+zbk6SnwfQY6+2vMy/dvocaXUTqFgL+iP+tsuLbv/@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy64hvnKltBz5lQtDc1XoJgYosvtenjaPZr31J/6tE8QTNojh/Q
-	VW7ZoCuZWr68HfWlWqZt43xWFaCKSJn7BEZI9u7zrnwanby2ZIWJ7Dqpx0+VFy8VQTn45YJoCKM
-	0S0b+wpOOo7fGiIgGvvlXWZvg9WfWajXg01ssgQ==
-X-Google-Smtp-Source: AGHT+IH8+r7Wg2Co4/bqHDcfHF1OtsjwdU/NhWvyCsNdTstwhoydYvHp6WgT8/ZbDKKPHXfyJqAdxDuKmLBM29l3xGo=
-X-Received: by 2002:a05:6402:13c7:b0:5c9:547d:99 with SMTP id
- 4fb4d7f45d1cf-5cbbf889742mr15743282a12.2.1730362800416; Thu, 31 Oct 2024
- 01:20:00 -0700 (PDT)
+        bh=ZVzJIUNphDU93nu41iWIe3iLQuX/p066gSAyV6EeDbA=;
+        b=L4xugIhXzIPjtFadsdR3OQjGS1U/6gD/kcwZRLjIyfllqcBc3io03D6loUyte2Ay+P
+         zqYS4adpS2cAZ6Pt8Uw0cwzpZpLHFCE2Pkha2HFXYGV+3V4klEUZE6ev3nRg9vnMZu+E
+         ZS97YXF8sz/7Kbdxl9KyrJEEGVzU/5IcgoM5ehjdAaIac1LEEIKSdG2Vxu5E7lhCW0nU
+         vDeLrUWbMFgXIjiy90rMP+uKutj7sxH8yK+VAjQsaoWi5ZPIlApKuQ4p2N1Pehhl7Ebd
+         4gX7EW0fLEQysv6GLrduOktQ9b4I4l5f4F9wjKGHrJlJmznTFgOuURoTMRfrQwQc5jZa
+         Lz1g==
+X-Forwarded-Encrypted: i=1; AJvYcCVDtyvOjc5JAcwR/m9QShmFU8b7/gOf0nAZvySM+NPTta+Ybo60SvdVzTD2l4MLXpAu7NdzlU7ZNJDg@vger.kernel.org
+X-Gm-Message-State: AOJu0YxsBB59tPAKJjoa9rKyWIcOZvKDQ2cieThfU+x4snUEGemd8vtZ
+	lxHH7or1pFuX8X/GiA5X+SgYJ1tZcXgXyP+OktU4dm6BDALDFQioktjE6OUZeVtMNO4Z6wsyXhv
+	bHQdoqmz/+uOUfwqLyYx094kfe/k=
+X-Google-Smtp-Source: AGHT+IFR3yFGCcHfuAJlyqDmBwJpdP3kCA4mJX8zSWK5jRlGUSF897/PqfSyM19OsscknTIGJKsQv8inYWta8zrsyF4=
+X-Received: by 2002:a17:907:3da1:b0:a9a:4e77:92f with SMTP id
+ a640c23a62f3a-a9e50b9e343mr226339466b.56.1730370948817; Thu, 31 Oct 2024
+ 03:35:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ZyEBhOoDHKJs4EEY@kbusch-mbp> <20241029155330.GA27856@lst.de>
- <ZyEL4FOBMr4H8DGM@kbusch-mbp> <20241030045526.GA32385@lst.de>
- <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com> <20241030154556.GA4449@lst.de>
- <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com> <20241030155052.GA4984@lst.de>
- <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com> <20241030165708.GA11009@lst.de>
- <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
-In-Reply-To: <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
-From: Hans Holmberg <hans@owltronix.com>
-Date: Thu, 31 Oct 2024 09:19:51 +0100
-Message-ID: <CANr-nt35zoSijRXYr+ommmWGfq0+Ye0tf3SfHfwi0cfpvwB0pg@mail.gmail.com>
-Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
-	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org, joshi.k@samsung.com, 
-	javier.gonz@samsung.com, bvanassche@acm.org, Hannes Reinecke <hare@suse.de>
+References: <CA+=Fv5QXiwWd+v9vHo89X_H94+P5OsT_0MEs_8dRAYJawWpy1w@mail.gmail.com>
+ <yq15xpgdl6j.fsf@ca-mkp.ca.oracle.com> <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+ <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+ <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+ <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
+In-Reply-To: <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Thu, 31 Oct 2024 11:35:37 +0100
+Message-ID: <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 30, 2024 at 11:33=E2=80=AFPM Keith Busch <kbusch@kernel.org> wr=
-ote:
->
-> On Wed, Oct 30, 2024 at 05:57:08PM +0100, Christoph Hellwig wrote:
-> > On Wed, Oct 30, 2024 at 10:42:59AM -0600, Keith Busch wrote:
-> > > With FDP (with some minor rocksdb changes):
-> > >
-> > > WAF:        1.67
-> > > IOPS:       1547
-> > > READ LAT:   1978us
-> > > UPDATE LAT: 2267us
-> >
-> > Compared to the Numbers Hans presented at Plumbers for the Zoned XFS co=
-de,
-> > which should work just fine with FDP IFF we exposed real write streams,
-> > which roughly double read nad wirte IOPS and reduce the WAF to almost
-> > 1 this doesn't look too spectacular to be honest, but it sure it someth=
-ing.
->
-> Hold up... I absolutely appreciate the work Hans is and has done. But
-> are you talking about this talk?
->
-> https://lpc.events/event/18/contributions/1822/attachments/1464/3105/Zone=
-d%20XFS%20LPC%20Zoned%20MC%202024%20V1.pdf
->
-> That is very much apples-to-oranges. The B+ isn't on the same device
-> being evaluated for WAF, where this has all that mixed in. I think the
-> results are pretty good, all things considered.
+HI,
 
-No. The meta data IO is just 0.1% of all writes, so that we use a
-separate device for that in the benchmark really does not matter.
+I don't have a QLA1040 revC to test with, but I've put together a much
+smaller patch which just limits the DMA_BIT_MASK to 32-bit on
+1020/1040 cards this should at least not break anything while fixing
+the most urgent problems with file system corruption on some
+combination of hardware/memory. Thanks for the pointers to tsunami
+chipsets though, I'll try to enable some debugging to see what's going
+on when I hit this problem with the qlogic card.
+I'll clean up the chip revision reporting code to see if I can improve
+things there, this will be as a separate patch then.
 
-Since we can achieve a WAF of ~1 for RocksDB on flash, why should we
-be content with another 67% of unwanted device side writes on top of
-that?
+I have one question regarding the hardware revision on 1040 chips,
+according to qla1280.h we have this:
 
-It's of course impossible to compare your benchmark figures and mine
-directly since we are using different devices, but hey, we definitely
-have an opportunity here to make significant gains for FDP if we just
-provide the right kernel interfaces.
+#define ISP_CFG0_HWMSK   0x000f /* Hardware revision mask */
+#define ISP_CFG0_1020    BIT_0  /* ISP1020 */
+#define ISP_CFG0_1020A   BIT_1  /* ISP1020A */
+#define ISP_CFG0_1040    BIT_2  /* ISP1040 */
+#define ISP_CFG0_1040A   BIT_3  /* ISP1040A */
+#define ISP_CFG0_1040B   BIT_4  /* ISP1040B */
+#define ISP_CFG0_1040C   BIT_5  /* ISP1040C */
 
-Why shouldn't we expose the hardware in a way that enables the users
-to make the most out of it?
+
+But when I examine the register it looks more like:
+
+#define ISP_CFG0_HWMSK   0x000f /* Hardware revision mask */
+#define ISP_CFG0_1020     1  /* ISP1020 *
+#define ISP_CFG0_1020A   2  /* ISP1020A */
+#define ISP_CFG0_1040     3  /* ISP1040 */
+#define ISP_CFG0_1040A   4  /* ISP1040A */
+#define ISP_CFG0_1040B   5  /* ISP1040B */
+#define ISP_CFG0_1040C   6  /* ISP1040C */
+
+Which is consistent with how NetBSD does things in their ISP driver.
+Also, in this case the HWMSK actually works for filtering out the
+hardware revision part of the CFG0 register, since it would actually
+require a 6-bit mask to match the current definitions in qla1280.c,
+right?
+
+
+Magnus
+
+On Thu, Oct 31, 2024 at 8:37=E2=80=AFAM Maciej W. Rozycki <macro@orcam.me.u=
+k> wrote:
+
+>  I find this interesting.  Documentation for the Tsunami chipset indicate=
+s
+> DAC support[1]:
+>
+> "In case of a PCI dual-address cycle command, the high-order PCI address
+> bits <63:40> are compared to the constant value 0x0000_01 (that is, bit
+> <40> =3D 1; all other bits =3D 0).  If these bits match, a monster window=
+ hit
+> has occurred and the low-order PCI address bits <34:0> are used unchanged
+> as the system address bits <34:0>.  PCI address bits <39:35> are ignored.
+> The high-order 32 PCI address bits are available on b_ad<31:0> in the
+> second cycle of a DAC, and also on b_ad<63:32> in the first cycle of a DA=
+C
+> if b_req64_l is asserted."
+>
+> and I can see it handled in arch/alpha/kernel/pci_iommu.c; allocations ca=
+n
+> be handed out with the TSUNAMI_DAC_OFFSET bit set.  You might be able to
+> see if it triggers by defining DEBUG_ALLOC to 2 and checking messages fro=
+m
+> DMA mappings in the kernel log.
+>
+>  I did a little research however and discovered that the DAC capability i=
+s
+> documented in the ISP1040C datasheet, but not in the ISP1040B one.  So it
+> seems to me like it's the matter of the chip revision.  I've skimmed over
+> the driver and as far as I can tell there's everything supplied there to
+> get this sorted now.
+>
+> References:
+>
+> [1] "Tsunami/Typhoon 21272 Chipset Hardware Reference Manual", Revision
+>     4.0, Compaq Computer Corporation, Order Number: DS-0025A-TE, 21
+>     October 1999, Section 10.1.4.4 "Monster Window DMA Address
+>     Translation", p. 10-13
+>
+>   Maciej
+>
