@@ -1,129 +1,158 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3658614A0BC
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2024 07:53:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 634011482E7
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2024 08:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730447598; cv=none; b=B69BlWwh1Ti0GkfcBtrnQenpsbPMGUwRArnu147ILn81BhP6tv8hcHCnYH+LSej1ulN7Di3nlPlKujnQ+ijRZZ7yanuepnO0/2O/dP0l4zkcFV74ldgj/X9bfGdPtKnHeaYBjMkIK3Fz4GdyznFf9o0zlsOi+Y46BLIXyr0IpnI=
+	t=1730449160; cv=none; b=NPHXKjPA68ESUb0VNDHimdt1KI+4GVwEKjlVGlkYKb6gDYn3QWS6uaihSXDs1YKHeemBvbxP3C+zd6FIc0QCpVjUptNO6InKDotMt1tblb46Kjc3gCCMdfBrNDkVAfjNedx3D04JB/5TjYVEmkd5BMdhoKI+q62GLgsxNPkx5/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730447598; c=relaxed/simple;
-	bh=OnxwKjBXcxw/5vZfONag4e67h9X3MmggKzbRjpYrwrQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X4opKvZ0WyzTaBnaAEStRqNAVXEmCqMlcexTJ/XFO0icd7LXWCUmuzOodq6ZDucesoEkzOVK45blQwgp62eL9Htkg+BIMXh4M1t32Ixc//gXFSBDVYjJJwbSR28fz5kF9gpBhJom2zTxECkYt/NA9HgmjzLqq1UroWF+exeCkgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=sIAC5t35; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730449160; c=relaxed/simple;
+	bh=IBxCMaTDMwMv7TecQhch3IN0C/Pthjqbj5pJgfI0Dyc=;
+	h=Date:From:To:CC:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:References; b=EdSNnyQ6ZdUFdyexQ6hNTq0ZVlAnO/7DwLOLRmO2JXboVJuFFoiHs242f5kWQc5IHolH619N/0GusKTGPKEjBphQpV0fugwZDZw1f9qZfZvYbEZh+ZffKWo73hHpMrKzQlXL5slzNSneO/neHkXCB5FjPdO5LQw01PEfOU7VX3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=nezja3Uy; arc=none smtp.client-ip=210.118.77.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="sIAC5t35"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-210e5369b7dso17671035ad.3
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Nov 2024 00:53:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730447595; x=1731052395; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=ztVxJEe/jOSJ9Ml4ROlvkUWalRiacha0D31LgOc8Uxw=;
-        b=sIAC5t357g3tx1fmHA+rNp2KJCXQL9Jeihd4jdb/htVNv2iWAQMHQ2O7HTDmttv4mf
-         L4nEErcsKayc3e+NQ9EooCRPEQWY2+J7i9QvG6dfFN5p7wsi5cTItU0Nvyrmb4rR8COX
-         QYxqN9cOataOouX2XYiDz23gvRawtzrcyXhCjG/9aOCKWODKq1aIMJrXRQWz2+ARldQG
-         bm2GAGDiG+Fziz1YWBD5O8IsCU+TVpJBFXT9DueCR57ZNsQ4yji6l2S6LEvEVB/oBeiy
-         iHWLSwiK52pOrIqM0BTrE+e6bvpVmoExIBeQzh/3DbGT/kVHoE5e/7MOC1E/HwLNqbKC
-         WieQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730447595; x=1731052395;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ztVxJEe/jOSJ9Ml4ROlvkUWalRiacha0D31LgOc8Uxw=;
-        b=nzDnxR55LltrsZVYmSwHe2DbCqXOMYSRULBdiZbHK7X3+pqFYblzIzyfNvAGdbsrrN
-         F0NsT7/gq3WIxKI8gVGSj7sxMkoIM67JbK8hJquJ6kzDaMAlFWTXsJdU1+/trZeiiFb3
-         ENv8NK+Wzpu0mCvRV/CbPKZPTcyZ3DYxkCmuGaQ3nEvwhHF7tQ12jiPjxiTm2KAWFadE
-         6adWLuhGRrIcUgd+Dld/S1s1u9E8ew2TgoVq4xR4Nm+csxKLhcbciH/rrdlG4JyUKM7T
-         H8KMRp1Bq1ao3zeI46RW0kTSOmW1wXas/loAazTJElUSHn46QkuxmUiHZ/nBcxe1tN6+
-         pq6w==
-X-Forwarded-Encrypted: i=1; AJvYcCV417di8ZQ3p1SKaa9kEEZNwYFEtM2DtKDolG2DYcRAalvpl0SB/wtrCaiFGFLbmb9+Div6Iv4Jsi2U@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZmUS8IvNpiIVjdBxKZ58OuoX9s8dEDME8h2dwzCn6Pz/0rx/L
-	joHDVCaVjB3W4hqM35xHvXcjg41scCcbvksooFYJzQ9+Fyi31eGKHb7zHuCnj9KIKOggRj0gl1I
-	=
-X-Google-Smtp-Source: AGHT+IEPnjTALvsjz+OVsD/g0Dvq9dRh2UFhREHvFbKpLbNZ/w7fN9nfPF1Pb8sLlfnqttEc4WO/+A==
-X-Received: by 2002:a17:902:e5cf:b0:20c:6392:1a7b with SMTP id d9443c01a7336-2111af16efcmr33190905ad.2.1730447595558;
-        Fri, 01 Nov 2024 00:53:15 -0700 (PDT)
-Received: from thinkpad ([120.60.51.213])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211057d472asm17551735ad.262.2024.11.01.00.53.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Nov 2024 00:53:15 -0700 (PDT)
-Date: Fri, 1 Nov 2024 13:23:09 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Bean Huo <beanhuo@micron.com>, stable@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Mike Bi <mikebi@micron.com>,
-	Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	Luca Porzio <lporzio@micron.com>
-Subject: Re: [PATCH] scsi: ufs: Start the RTC update work later
-Message-ID: <20241101075309.wvfv2fcjeuimcihj@thinkpad>
-References: <20241031212632.2799127-1-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="nezja3Uy"
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20241101081915euoutp028662187285562e433a64332dd85736d7~Dyla5nPnN1332313323euoutp02L
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2024 08:19:15 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20241101081915euoutp028662187285562e433a64332dd85736d7~Dyla5nPnN1332313323euoutp02L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1730449155;
+	bh=u0t4feekxOIswH/gya5PvM4rWukDuX0GEL28uYYRBHM=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=nezja3UyPadsbJdJFB1BbxfY/LoWbOzC3yTYYCVFi039jTrjHEOildnT6DXmFGDbD
+	 Nu03N73Hf3GUbuYoyYM4I5skLr/WSxhgAC6p59YfchgZhI3wbr8p1ZQ8wp9re0Yx3p
+	 QjbL6r38IvQP4B9ogJn2SxY4kqrcX/WyWXgacEbk=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+	20241101081915eucas1p2c8a05e9da2bb94096e29e2c99dc460cc~DylapO37t0479604796eucas1p2O;
+	Fri,  1 Nov 2024 08:19:15 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+	eusmges1new.samsung.com (EUCPMTA) with SMTP id 72.23.20821.30F84276; Fri,  1
+	Nov 2024 08:19:15 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20241101081914eucas1p269f6f4d515aa0db81f4fb03cd3ae64d7~DylZ8gtLF3182931829eucas1p2Y;
+	Fri,  1 Nov 2024 08:19:14 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+	eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20241101081914eusmtrp24265f317813388cfa225d1254c009a9b~DylZ73QdP2944729447eusmtrp2G;
+	Fri,  1 Nov 2024 08:19:14 +0000 (GMT)
+X-AuditID: cbfec7f2-b09c370000005155-7a-67248f038fa3
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+	eusmgms2.samsung.com (EUCPMTA) with SMTP id 47.C0.19654.20F84276; Fri,  1
+	Nov 2024 08:19:14 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+	eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20241101081914eusmtip2b586a3684238513b723c7a4ad1e26a71~DylZxysUn0659906599eusmtip2a;
+	Fri,  1 Nov 2024 08:19:14 +0000 (GMT)
+Received: from localhost (106.110.32.122) by CAMSVWEXC02.scsc.local
+	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+	Fri, 1 Nov 2024 08:19:13 +0000
+Date: Fri, 1 Nov 2024 09:19:12 +0100
+From: Javier =?utf-8?B?R29uesOhbGV6?= <javier.gonz@samsung.com>
+To: Hans Holmberg <hans@owltronix.com>
+CC: Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, "Keith
+ Busch" <kbusch@meta.com>, <linux-block@vger.kernel.org>,
+	<linux-nvme@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
+	<io-uring@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<joshi.k@samsung.com>, <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
+Message-ID: <20241101081912.kvixtd6mattjemxk@ArmHalley.local>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241031212632.2799127-1-bvanassche@acm.org>
+In-Reply-To: <CANr-nt30gQzFFsnJt9Tzs1kRDWSj=2w0iTC1qYfu+7JwpszwQQ@mail.gmail.com>
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPKsWRmVeSWpSXmKPExsWy7djPc7rM/SrpBrO2CVlM+/CT2WLu1NWs
+	FnsWTWKyWLn6KJPFu9ZzLBaTDl1jtDhzdSGLxd5b2hZ79p5ksZi/7Cm7Rff1HWwO3B6Xr3h7
+	bFrVyeaxeUm9x+6bDWwe5y5WeBzetIjVY/Ppao/Pm+QCOKK4bFJSczLLUov07RK4MjbO+c9W
+	cJar4sFCqwbGvRxdjJwcEgImEh3LXrJ0MXJxCAmsYJTYfe4zlPOFUaL9xGlGCOczo8TCz8dZ
+	YVr2XbvABpFYzihxaGoDC1zV/KvnoDKbGSWuv3zIDNLCIqAi0fdhPSOIzSZgL3Fp2S2wuIiA
+	msTZFx1MIDazwFUmifcPwOLCAj4S29d/YgOxeQVsJc7f7WKFsAUlTs58wgJRbyXR+aEJKM4B
+	ZEtLLP8H9hCnQKDE/6efmSEuVZJ4/OItI4RdK3Fqyy0mkNskBPo5JY4vPQtV5CLxoncRE4Qt
+	LPHq+BZ2CFtG4v/O+VDxaomGkyegmlsYJVo7toItlhCwlug7kwNR4yix+tgvZogwn8SNt4IQ
+	Z/JJTNo2HSrMK9HRJgRRrSax+t4blgmMyrOQPDYLyWOzEB5bwMi8ilE8tbQ4Nz212DAvtVyv
+	ODG3uDQvXS85P3cTIzBNnf53/NMOxrmvPuodYmTiYDzEKMHBrCTC+6FAOV2INyWxsiq1KD++
+	qDQntfgQozQHi5I4r2qKfKqQQHpiSWp2ampBahFMlomDU6qBKdZWWtn+1Ff+y2tmX3/axmx6
+	8Er3ir0Fv190l55NOOv8+VH5bwvPlIeuVYxLtsetSsrzyQ89U/3nSEbrdM09LQGqD/4Kveq0
+	+Pn6yStx6QfZtQ2ejpvZ9xgtUP21Yves18xP0o6pC+VLpOx9/7pFL/Nfm+6m8+E9k99Mszbh
+	lvRP3hn9WOtBwNObEc/Fp1uypVUITWdWkT800adP5NOX/2eaJKdsqSj/8W3V20n6O+0d/s1b
+	qHc3TqtS8IjyqclT+T7xnjeL4eCpsTF1qvjnZfuyc0e088HT76dM92DS9I5zii9LaL469YKc
+	J8fzDGO39e4xp5vWei64tOYLW3aO+Hc9aat9al0FAVMOcKYfUmIpzkg01GIuKk4EAP8jPTfC
+	AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLIsWRmVeSWpSXmKPExsVy+t/xe7pM/SrpBpvblS2mffjJbDF36mpW
+	iz2LJjFZrFx9lMniXes5FotJh64xWpy5upDFYu8tbYs9e0+yWMxf9pTdovv6DjYHbo/LV7w9
+	Nq3qZPPYvKTeY/fNBjaPcxcrPA5vWsTqsfl0tcfnTXIBHFF6NkX5pSWpChn5xSW2StGGFkZ6
+	hpYWekYmlnqGxuaxVkamSvp2NimpOZllqUX6dgl6GRvn/GcrOMtV8WChVQPjXo4uRk4OCQET
+	iX3XLrB1MXJxCAksZZSY/+koK0RCRmLjl6tQtrDEn2tdUEUfGSXWL7jMDOFsZpT4tmclE0gV
+	i4CKRN+H9YwgNpuAvcSlZbeYQWwRATWJsy86wGqYBa4ySbx/ABYXFvCR2L7+ExuIzStgK3H+
+	bhcrxNDFLBJvlm6GSghKnJz5hAWi2UJi5vzzQAs4gGxpieX/wF7gFAiU+P/0MzPEpUoSj1+8
+	ZYSwayU+/33GOIFReBaSSbOQTJqFMGkBI/MqRpHU0uLc9NxiI73ixNzi0rx0veT83E2MwHjd
+	duznlh2MK1991DvEyMTBeIhRgoNZSYT3Q4FyuhBvSmJlVWpRfnxRaU5q8SFGU2BQTGSWEk3O
+	ByaMvJJ4QzMDU0MTM0sDU0szYyVxXrYr59OEBNITS1KzU1MLUotg+pg4OKUamMzvPHHZ/mia
+	lfjvmkfnt3lxG99vKuJ4zOf9+UpJ+vbaOW++JV+Ycfu76/XcnWt9/zx1uf5WMfZpXWscy+2z
+	Dqy8xeFnut5siHeo469RTs4QOzc3m+HewQv8vb9PS63lmbD2wewZ1XsS/7OsX/Ob16t2me+k
+	4NWGQi8Ozducu2LtdNYIvVVrVJ49Eu9SmGJ7aMY+Zr0DDDvvpDKmmHp2Kz4tyF7Nlxm55uyX
+	Ncc8X3vZ2uZ5bPA8ryEQWOye/blNnnuPzE69BbznNiyZ3KGw9nA019PshVp2k+dwT37z8/RK
+	oys5Rt1eLgEnX03bUjOj4nKavmvSPJ2e3oiJRb5Zx+4Iz/moErPPsFu9M9Jt0jUlluKMREMt
+	5qLiRABodThwYAMAAA==
+X-CMS-MailID: 20241101081914eucas1p269f6f4d515aa0db81f4fb03cd3ae64d7
+X-Msg-Generator: CA
+X-RootMTR: 20241101071645eucas1p2a08b10cb2c9db427e809be6fa8809c9c
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20241101071645eucas1p2a08b10cb2c9db427e809be6fa8809c9c
+References: <20241030154556.GA4449@lst.de>
+	<ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com>
+	<20241030155052.GA4984@lst.de>
+	<ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com>
+	<20241030165708.GA11009@lst.de>
+	<ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
+	<CANr-nt35zoSijRXYr+ommmWGfq0+Ye0tf3SfHfwi0cfpvwB0pg@mail.gmail.com>
+	<ZyOO4PojaVIdmlOA@kbusch-mbp.dhcp.thefacebook.com>
+	<CGME20241101071645eucas1p2a08b10cb2c9db427e809be6fa8809c9c@eucas1p2.samsung.com>
+	<CANr-nt30gQzFFsnJt9Tzs1kRDWSj=2w0iTC1qYfu+7JwpszwQQ@mail.gmail.com>
 
-On Thu, Oct 31, 2024 at 02:26:24PM -0700, Bart Van Assche wrote:
-> The RTC update work involves runtime resuming the UFS controller. Hence,
-> only start the RTC update work after runtime power management in the UFS
-> driver has been fully initialized. This patch fixes the following kernel
-> crash:
-> 
-> Internal error: Oops: 0000000096000006 [#1] PREEMPT SMP
-> Workqueue: events ufshcd_rtc_work
-> Call trace:
->  _raw_spin_lock_irqsave+0x34/0x8c (P)
->  pm_runtime_get_if_active+0x24/0x9c (L)
->  pm_runtime_get_if_active+0x24/0x9c
->  ufshcd_rtc_work+0x138/0x1b4
->  process_one_work+0x148/0x288
->  worker_thread+0x2cc/0x3d4
->  kthread+0x110/0x114
->  ret_from_fork+0x10/0x20
-> 
-> Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
-> Closes: https://lore.kernel.org/linux-scsi/0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org/
-> Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
-> Cc: Bean Huo <beanhuo@micron.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 01.11.2024 08:16, Hans Holmberg wrote:
+>Locking in or not, to constructively move things forward (if we are
+>now stuck on how to wire up fs support) I believe it would be
+>worthwhile to prototype active fdp data placement in xfs and evaluate
+>it. Happy to help out with that.
 
-Bart, Thanks for the fix! While looking into this patch, I also found the
-weirdness of the ufshcd_rpm_*() helpers in ufshcd-priv.h. Their naming doesn't
-seem to indicate whether those helpers are for WLUN or for HBA. Also, I don't
-see the benefit of these helpers since they just wrap generic pm_runtime*
-calls. Then there are other open coding instances in the ufshcd.c. Like
+I appreciate you willingness to move things forward. I really mean it.
 
-pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)
-pm_runtime_set_active(&hba->ufs_device_wlun->sdev_gendev)
+I have talked several times in this thread about collaborating in the
+API that you have in mind. I would _very_ much like to have a common
+abstraction for ZNS, ZUFS, FDP, and whatever people build on other
+protocols. But without tangible patches showing this, we simply cannot
+block this anymore.
 
-Moreover, we do check for the presence of hba->ufs_device_wlun before calling
-ufshcd_rpm_get_sync() in ufshcd_remove(). This could be one other way to fix
-this null ptr dereference even though I wouldn't recommend doing so as calling
-rtc_work early is pointless.
+>
+>Fdp and zns are different beasts, so I don't expect the results in the
+>presentation to be directly translatable but we can see what we can
+>do.
+>
+>Is RocksDB the only file system user at the moment?
+>Is the benchmark setup/config something that could be shared?
 
-So I think we should remove these helpers to avoid having these discrepancies.
-WDYT?
+It is a YCSB workload. You have the scripts here:
 
-- Mani
+    https://github.com/brianfrankcooper/YCSB/blob/master/workloads/workloada
 
--- 
-மணிவண்ணன் சதாசிவம்
+If you have other standard workload you want us to run, let me know and
+we will post the results in the list too.
+
+We will post the changes to the L3 placement in RocksDB. I think we can
+make them available somewhere for you to test before that. Let me come
+back to you on this.
