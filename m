@@ -1,129 +1,129 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC2B146A68
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2024 07:16:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3658614A0BC
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Nov 2024 07:53:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730445403; cv=none; b=FlMrQ7HFP4yOIBLHKiNpTAwN5qek+tGgHOBkUMuj4uBYn+oQrdMKSw6esErlk7fc8LMwT+k3paitWkjK2P+5BlK11I/XNCWZ6SEGu0t3O5bEu4zjKF54JGZEuuDVyDl7E3HWu+nOJ4gs/T4+PBv/DoU6OaV8vLyYKG7hdhZjzX0=
+	t=1730447598; cv=none; b=B69BlWwh1Ti0GkfcBtrnQenpsbPMGUwRArnu147ILn81BhP6tv8hcHCnYH+LSej1ulN7Di3nlPlKujnQ+ijRZZ7yanuepnO0/2O/dP0l4zkcFV74ldgj/X9bfGdPtKnHeaYBjMkIK3Fz4GdyznFf9o0zlsOi+Y46BLIXyr0IpnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730445403; c=relaxed/simple;
-	bh=waUbj49118u4i7q+4ovU4pXPxCZS6UmbTpIEMIVVinY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KV4IZ2EG7RPOiy4nCRNrz3Ca80TaAnMEIYIWd9n0Fo3n7gBpdDxyapW4i5iTAyXno2uu7oTo2Si0JpPs0h0HzYrDuInQTRlx4T9+yZko108MNIZeVGZElwPLp3eXfY9IBVFegeXa/h6vm4iu+EwSEq8lTZ6hFHusZc+/ezPIGSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=owltronix.com; spf=none smtp.mailfrom=owltronix.com; dkim=pass (2048-bit key) header.d=owltronix-com.20230601.gappssmtp.com header.i=@owltronix-com.20230601.gappssmtp.com header.b=NZ5YhjI/; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=owltronix.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=owltronix.com
+	s=arc-20240116; t=1730447598; c=relaxed/simple;
+	bh=OnxwKjBXcxw/5vZfONag4e67h9X3MmggKzbRjpYrwrQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X4opKvZ0WyzTaBnaAEStRqNAVXEmCqMlcexTJ/XFO0icd7LXWCUmuzOodq6ZDucesoEkzOVK45blQwgp62eL9Htkg+BIMXh4M1t32Ixc//gXFSBDVYjJJwbSR28fz5kF9gpBhJom2zTxECkYt/NA9HgmjzLqq1UroWF+exeCkgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=sIAC5t35; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=owltronix-com.20230601.gappssmtp.com header.i=@owltronix-com.20230601.gappssmtp.com header.b="NZ5YhjI/"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-5c94c4ad9d8so2279281a12.2
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Nov 2024 00:16:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="sIAC5t35"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-210e5369b7dso17671035ad.3
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Nov 2024 00:53:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=owltronix-com.20230601.gappssmtp.com; s=20230601; t=1730445400; x=1731050200; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=waUbj49118u4i7q+4ovU4pXPxCZS6UmbTpIEMIVVinY=;
-        b=NZ5YhjI/QzbKbot9LZj/s/PnuoSwE7SDMqcPCeQYuJ+7n6IOBNv31yBBmLvlxktdGZ
-         qoIpyid9UUQAzj8HeAF+8TlnFPDDktY5LB165duPAA6hBrruOiSpUKatt4X643kgmito
-         HaY3ZSia8eZUDg0fmUMxZvay+k0NUx/S6n1p64fnyA+yW8K4MCtIZSunqrecam4i4keN
-         JptqsQK8zGvTOuWP8crEqnp6J4py8WNVVYN6mGLi2FQKkulx7YLI9cBybST+Wa1IKRmN
-         whtzItZno0fzo9tPiwsZkJOIZ2Orpt5yt6Dgw79bOo5KKZN3ShH5c8Kd+Fcq0g2qSh85
-         AR/Q==
+        d=linaro.org; s=google; t=1730447595; x=1731052395; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ztVxJEe/jOSJ9Ml4ROlvkUWalRiacha0D31LgOc8Uxw=;
+        b=sIAC5t357g3tx1fmHA+rNp2KJCXQL9Jeihd4jdb/htVNv2iWAQMHQ2O7HTDmttv4mf
+         L4nEErcsKayc3e+NQ9EooCRPEQWY2+J7i9QvG6dfFN5p7wsi5cTItU0Nvyrmb4rR8COX
+         QYxqN9cOataOouX2XYiDz23gvRawtzrcyXhCjG/9aOCKWODKq1aIMJrXRQWz2+ARldQG
+         bm2GAGDiG+Fziz1YWBD5O8IsCU+TVpJBFXT9DueCR57ZNsQ4yji6l2S6LEvEVB/oBeiy
+         iHWLSwiK52pOrIqM0BTrE+e6bvpVmoExIBeQzh/3DbGT/kVHoE5e/7MOC1E/HwLNqbKC
+         WieQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730445400; x=1731050200;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=waUbj49118u4i7q+4ovU4pXPxCZS6UmbTpIEMIVVinY=;
-        b=ubUK+H+hGtF6PTJ9CDYifELrYtWmzU3TnAEKw7ThkqQc53hspCn7C/bMyI6Byegu/a
-         5brTIA3ko0CP0ED/SJCRy8NzNXJbuhjJMg3uAZXcXdpH/npVorDSs2+41uapkrKNbhVl
-         cmzhgZ3T0qOuhI6QunO7L5fa5pmQsJr6gjwWtPm0T7yIEhweeu2VEfpAhHssuKXpm1rJ
-         NjDA6jFLAMt6nc3MykCHvYh52n+F1ekbqIfglIGzcqm90TrGt97bSPe5Ob9zUPNjJyMT
-         uLIiaGcH2K6Hu5A44SA2l80GdjninFPaZE8QYfNBkL5hKN7srlqSzh7dKtt/593ROZPi
-         WNoA==
-X-Forwarded-Encrypted: i=1; AJvYcCWVSIhGmQ3YNYn1IWYj2R8LYCug3FDVErS6uLqHjopcnFA3B9FSMgSEB0Pdj/QyGf0Rd81cXwEEbKKt@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy1svasXbujunYk878IGVpcBUHGJIdgj3EmHAdhaPFEIG1ej67W
-	pd1CMMt1/+C2loXc71g5/sPFShiMqfdSH2+oFtBrL7Pi38RazRO3S5Gfm7s2ymhe7dHYEB1s5km
-	y0PahRTdWRb/A/0748ymyp8bINAeczte86zVXiuMeXcSL/PUCchw=
-X-Google-Smtp-Source: AGHT+IGPuhXjQfdSyl9CCnBDb8kfQdLr1OP5WRts8Y+TKi58ZMd9VxEJGiFKfBDiAyZu0iCHQTVa3iEX7i7W0CHxx4g=
-X-Received: by 2002:a17:907:7e8f:b0:a99:dde6:9f42 with SMTP id
- a640c23a62f3a-a9e50b935bcmr454552666b.47.1730445399842; Fri, 01 Nov 2024
- 00:16:39 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1730447595; x=1731052395;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ztVxJEe/jOSJ9Ml4ROlvkUWalRiacha0D31LgOc8Uxw=;
+        b=nzDnxR55LltrsZVYmSwHe2DbCqXOMYSRULBdiZbHK7X3+pqFYblzIzyfNvAGdbsrrN
+         F0NsT7/gq3WIxKI8gVGSj7sxMkoIM67JbK8hJquJ6kzDaMAlFWTXsJdU1+/trZeiiFb3
+         ENv8NK+Wzpu0mCvRV/CbPKZPTcyZ3DYxkCmuGaQ3nEvwhHF7tQ12jiPjxiTm2KAWFadE
+         6adWLuhGRrIcUgd+Dld/S1s1u9E8ew2TgoVq4xR4Nm+csxKLhcbciH/rrdlG4JyUKM7T
+         H8KMRp1Bq1ao3zeI46RW0kTSOmW1wXas/loAazTJElUSHn46QkuxmUiHZ/nBcxe1tN6+
+         pq6w==
+X-Forwarded-Encrypted: i=1; AJvYcCV417di8ZQ3p1SKaa9kEEZNwYFEtM2DtKDolG2DYcRAalvpl0SB/wtrCaiFGFLbmb9+Div6Iv4Jsi2U@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZmUS8IvNpiIVjdBxKZ58OuoX9s8dEDME8h2dwzCn6Pz/0rx/L
+	joHDVCaVjB3W4hqM35xHvXcjg41scCcbvksooFYJzQ9+Fyi31eGKHb7zHuCnj9KIKOggRj0gl1I
+	=
+X-Google-Smtp-Source: AGHT+IEPnjTALvsjz+OVsD/g0Dvq9dRh2UFhREHvFbKpLbNZ/w7fN9nfPF1Pb8sLlfnqttEc4WO/+A==
+X-Received: by 2002:a17:902:e5cf:b0:20c:6392:1a7b with SMTP id d9443c01a7336-2111af16efcmr33190905ad.2.1730447595558;
+        Fri, 01 Nov 2024 00:53:15 -0700 (PDT)
+Received: from thinkpad ([120.60.51.213])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211057d472asm17551735ad.262.2024.11.01.00.53.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Nov 2024 00:53:15 -0700 (PDT)
+Date: Fri, 1 Nov 2024 13:23:09 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Bean Huo <beanhuo@micron.com>, stable@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>,
+	Mike Bi <mikebi@micron.com>,
+	Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	Luca Porzio <lporzio@micron.com>
+Subject: Re: [PATCH] scsi: ufs: Start the RTC update work later
+Message-ID: <20241101075309.wvfv2fcjeuimcihj@thinkpad>
+References: <20241031212632.2799127-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ZyEL4FOBMr4H8DGM@kbusch-mbp> <20241030045526.GA32385@lst.de>
- <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com> <20241030154556.GA4449@lst.de>
- <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com> <20241030155052.GA4984@lst.de>
- <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com> <20241030165708.GA11009@lst.de>
- <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com> <CANr-nt35zoSijRXYr+ommmWGfq0+Ye0tf3SfHfwi0cfpvwB0pg@mail.gmail.com>
- <ZyOO4PojaVIdmlOA@kbusch-mbp.dhcp.thefacebook.com>
-In-Reply-To: <ZyOO4PojaVIdmlOA@kbusch-mbp.dhcp.thefacebook.com>
-From: Hans Holmberg <hans@owltronix.com>
-Date: Fri, 1 Nov 2024 08:16:30 +0100
-Message-ID: <CANr-nt30gQzFFsnJt9Tzs1kRDWSj=2w0iTC1qYfu+7JwpszwQQ@mail.gmail.com>
-Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
-	io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org, joshi.k@samsung.com, 
-	javier.gonz@samsung.com, bvanassche@acm.org, Hannes Reinecke <hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241031212632.2799127-1-bvanassche@acm.org>
 
-On Thu, Oct 31, 2024 at 3:06=E2=80=AFPM Keith Busch <kbusch@kernel.org> wro=
-te:
->
-> On Thu, Oct 31, 2024 at 09:19:51AM +0100, Hans Holmberg wrote:
-> > On Wed, Oct 30, 2024 at 11:33=E2=80=AFPM Keith Busch <kbusch@kernel.org=
-> wrote:
-> > > That is very much apples-to-oranges. The B+ isn't on the same device
-> > > being evaluated for WAF, where this has all that mixed in. I think th=
-e
-> > > results are pretty good, all things considered.
-> >
-> > No. The meta data IO is just 0.1% of all writes, so that we use a
-> > separate device for that in the benchmark really does not matter.
->
-> It's very little spatially, but they overwrite differently than other
-> data, creating many small holes in large erase blocks.
+On Thu, Oct 31, 2024 at 02:26:24PM -0700, Bart Van Assche wrote:
+> The RTC update work involves runtime resuming the UFS controller. Hence,
+> only start the RTC update work after runtime power management in the UFS
+> driver has been fully initialized. This patch fixes the following kernel
+> crash:
+> 
+> Internal error: Oops: 0000000096000006 [#1] PREEMPT SMP
+> Workqueue: events ufshcd_rtc_work
+> Call trace:
+>  _raw_spin_lock_irqsave+0x34/0x8c (P)
+>  pm_runtime_get_if_active+0x24/0x9c (L)
+>  pm_runtime_get_if_active+0x24/0x9c
+>  ufshcd_rtc_work+0x138/0x1b4
+>  process_one_work+0x148/0x288
+>  worker_thread+0x2cc/0x3d4
+>  kthread+0x110/0x114
+>  ret_from_fork+0x10/0x20
+> 
+> Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
+> Closes: https://lore.kernel.org/linux-scsi/0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org/
+> Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-I don't really get how this could influence anything significantly.(If at a=
-ll).
+Bart, Thanks for the fix! While looking into this patch, I also found the
+weirdness of the ufshcd_rpm_*() helpers in ufshcd-priv.h. Their naming doesn't
+seem to indicate whether those helpers are for WLUN or for HBA. Also, I don't
+see the benefit of these helpers since they just wrap generic pm_runtime*
+calls. Then there are other open coding instances in the ufshcd.c. Like
 
->
-> > Since we can achieve a WAF of ~1 for RocksDB on flash, why should we
-> > be content with another 67% of unwanted device side writes on top of
-> > that?
-> >
-> > It's of course impossible to compare your benchmark figures and mine
-> > directly since we are using different devices, but hey, we definitely
-> > have an opportunity here to make significant gains for FDP if we just
-> > provide the right kernel interfaces.
-> >
-> > Why shouldn't we expose the hardware in a way that enables the users
-> > to make the most out of it?
->
-> Because the people using this want this interface. Stalling for the last
-> 6 months hasn't produced anything better, appealing to non-existent
-> vaporware to block something ready-to-go that satisfies a need right
-> now is just wasting everyone's time.
->
-> Again, I absolutely disagree that this locks anyone in to anything.
-> That's an overly dramatic excuse.
+pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)
+pm_runtime_set_active(&hba->ufs_device_wlun->sdev_gendev)
 
-Locking in or not, to constructively move things forward (if we are
-now stuck on how to wire up fs support) I believe it would be
-worthwhile to prototype active fdp data placement in xfs and evaluate
-it. Happy to help out with that.
+Moreover, we do check for the presence of hba->ufs_device_wlun before calling
+ufshcd_rpm_get_sync() in ufshcd_remove(). This could be one other way to fix
+this null ptr dereference even though I wouldn't recommend doing so as calling
+rtc_work early is pointless.
 
-Fdp and zns are different beasts, so I don't expect the results in the
-presentation to be directly translatable but we can see what we can
-do.
+So I think we should remove these helpers to avoid having these discrepancies.
+WDYT?
 
-Is RocksDB the only file system user at the moment?
-Is the benchmark setup/config something that could be shared?
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
