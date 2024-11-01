@@ -1,87 +1,104 @@
-Received: from mta-03.yadro.com (mta-03.yadro.com [89.207.88.253])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E017115AAB6;
-	Fri,  1 Nov 2024 09:38:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.253
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1FC41AA78E;
+	Fri,  1 Nov 2024 14:49:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730453917; cv=none; b=Euz30xZ1AQNV2JLw5Ms4HMEKiAHiFEZIcoIwnbSBOPyK29CwrIyxeVlGuDk2PhGPkk8e8ngJJm4AW/nxrwvZd7NChJVH+QcpayokvKIawjT+AFCbQbTCNSBhtKAQcrwyqI7Th41xGpx5yJCT+44+QgJnH8P/haPQnPyC/8NmtGA=
+	t=1730472556; cv=none; b=H3JCkb7LcwaT5IE5nE9uqGVVrqcZy0i4BeYfg6VDNjnHPfwvOvxobaOqIyn8Ctz7FcOzCxGIt/El0kvZWCk/tT3BPqNesCprz9fp4VsMUdVKGU704xKniv6ggUP46BA24EjPDNoTgZ7pdInmOpFlm+so4WhMqWd6JymBdVU/4+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730453917; c=relaxed/simple;
-	bh=5UH5ZYO1q7g1Z8k4/mlpRUHrS+F7qL+lbeCgu/TgPZk=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=jQmVBLzs3eE3AKBvoCK2gAVOBFa7Pnbd+yxFaMveGJnb9VH5koZ1T9Om7IKAYMSgXYicSuZE096U2uyMiTKke0ahE6+QTKT0BERLUekP2QujbKUmCf0ZkhBnT9DTyQYY/kLiNmT1TkkVcPQnDbTyM+tOxnaKyTOwy3eJsF0VYDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=WYKhduho; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=IpSDNkeo; arc=none smtp.client-ip=89.207.88.253
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
+	s=arc-20240116; t=1730472556; c=relaxed/simple;
+	bh=k7EVw74ih8Q0h2JSgjLP3Pfx29kLuoxz2HYyitmb5QY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hBfAeUimU6J0Dijnu2NtLhFu8Y8RbYYEvS+B1WQ1IQJdsGs6JohqgBi6sliykFg8BYzQH+QafelXMTd3OY4LTWEvp6e+dFEEgplewQibODi2GoVftqWs3/9KleIeENlLK8ev57y5v1zkUnVqY4rs6apRk9ZiGbWBoNgAufxQoIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qqviswlY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="WYKhduho";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="IpSDNkeo"
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-03.yadro.com 6DD92E0002
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1730453901; bh=5UH5ZYO1q7g1Z8k4/mlpRUHrS+F7qL+lbeCgu/TgPZk=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version:From;
-	b=WYKhduho3ag/SWd4IKqjFmP5Xen8eB8RGepp0pcrL7H+utEIRZQ74ly2LF5KeJ+sW
-	 880P9mLuBRoSI9ztW4JmJMYf+fR4lB/BgdAVpHJig2Ta3ud2lZSnnuBWRhS/+0YCWg
-	 c83/hlB2gpUtYuUdZe/LWQKs52G2nlavKo1YlCV/zBMpH7gzXvc7yqqAei++YW3CzM
-	 pQLVSLXS5Bf6r+ZiB7PleOmPsYunG008VBbcVVd0+DBd+tcF7uR/qUnzQMbaGmRKfN
-	 f8QkePiesdZt3MSRWJanzrrDMAkrzxS3jJ69yMfNQpGN0zXnJR6TdysjyqVdSAqT+u
-	 M6ho4E5NdmBHA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1730453901; bh=5UH5ZYO1q7g1Z8k4/mlpRUHrS+F7qL+lbeCgu/TgPZk=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version:From;
-	b=IpSDNkeoeYK2uEMJgfoSj8SIdfXHu5fi4gZP/j5YGdb1JNVTWj6zD2WmnJJu2Py6x
-	 tRnENn7aFHf2is4k5DYD501J74gtXaM1ktiTKYsEYbKUw4DYWrl9dMfJpxA7nrOfIx
-	 86+GnH8Eg5Y+EatVExHqYdUYC9H2vlog02D6LiThtZKgVZNvU4b26nAv1tYSyULSJ+
-	 RLWShKWl7ZKkwes1hZEgkM/nri9rJ40EXCKljvbVhNsA5dTWwMwMAgjjHE8LMJIXpu
-	 YRWBJ691MipvR80kgcpyeaO7le7VhRM/A6ytjBkH67qQk0OSrzrRD9ELLHWSTSeYdH
-	 pB52pYI+dHhkA==
-From: Anastasia Kovaleva <a.kovaleva@yadro.com>
-To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-CC: "njavali@marvell.com" <njavali@marvell.com>,
-	"GR-QLogic-Storage-Upstream@marvell.com"
-	<GR-QLogic-Storage-Upstream@marvell.com>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
-	"quinn.tran@cavium.com" <quinn.tran@cavium.com>,
-	"himanshu.madhani@oracle.com" <himanshu.madhani@oracle.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux@yadro.com" <linux@yadro.com>, "hare@suse.de" <hare@suse.de>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH v3 0/3] Fix bugs in qla2xxx driver
-Thread-Topic: [PATCH v3 0/3] Fix bugs in qla2xxx driver
-Thread-Index: AQHbGzIvZMV/oTAyUkWQTinjaU2zibKiTS4A
-Date: Fri, 1 Nov 2024 09:38:20 +0000
-Message-ID: <93FA6AD1-9959-4E4C-A447-9CF694A6A024@yadro.com>
-References: <20241010163236.27969-1-a.kovaleva@yadro.com>
-In-Reply-To: <20241010163236.27969-1-a.kovaleva@yadro.com>
-Accept-Language: ru-RU, en-US
-Content-Language: en-GB
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <90F19368F5ECAC4B88EE53A71DD7A831@yadro.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qqviswlY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AFBFC4CECD;
+	Fri,  1 Nov 2024 14:49:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730472555;
+	bh=k7EVw74ih8Q0h2JSgjLP3Pfx29kLuoxz2HYyitmb5QY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qqviswlYX1BHKuPR5ekMMzxSlcNtysICRu79OUByTD9UMQIsGrpVy/A721KYFuHMe
+	 TZgNQ9laCdOQKoOOdHw+RLLXTRMtPDyj+1aOdIvd/CmVB1QDlxAT1sXJW1ILqbhgQj
+	 r2chJflG1cLWi+WegmVeWDFEgaGMQ1D/J7Vs55mWI6YhP5xHJdg5e1ZqnThl3RcSmW
+	 A/t4EPA6eJxanq/Ag7wG+RZpB6Hdw1r++uL8XIiNJqWdiYaNtOJY5lcWERoBA2hDsR
+	 ustDb/50m8C5CtlUteDhkjp1SoqsrgvAqVnupo9cwHKs137vxOIFE7gwnytEzws0Ol
+	 0wDEgDRoQz2Pw==
+Date: Fri, 1 Nov 2024 08:49:12 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Hans Holmberg <hans@owltronix.com>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
+	javier.gonz@samsung.com, bvanassche@acm.org,
+	Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv10 9/9] scsi: set permanent stream count in block limits
+Message-ID: <ZyTqZ3UR39VTHSA2@kbusch-mbp.dhcp.thefacebook.com>
+References: <ZyJTsyDjn6ABVbV0@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030154556.GA4449@lst.de>
+ <ZyJVV6R5Ei0UEiVJ@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030155052.GA4984@lst.de>
+ <ZyJiEwZwjevelmW2@kbusch-mbp.dhcp.thefacebook.com>
+ <20241030165708.GA11009@lst.de>
+ <ZyK0GS33Qhkx3AW-@kbusch-mbp.dhcp.thefacebook.com>
+ <CANr-nt35zoSijRXYr+ommmWGfq0+Ye0tf3SfHfwi0cfpvwB0pg@mail.gmail.com>
+ <ZyOO4PojaVIdmlOA@kbusch-mbp.dhcp.thefacebook.com>
+ <CANr-nt30gQzFFsnJt9Tzs1kRDWSj=2w0iTC1qYfu+7JwpszwQQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANr-nt30gQzFFsnJt9Tzs1kRDWSj=2w0iTC1qYfu+7JwpszwQQ@mail.gmail.com>
 
-T24gVGh1LCAxMCBPY3QgMjAyNCAxOTozMjozMyArMDMwMCwgQW5hc3Rhc2lhIEtvdmFsZXZhIHdy
-b3RlOg0KPiBUaGlzIHNlcmllcyBvZiBwYXRjaGVzIGNvbnRhaW5zIDMgc2VwYXJhdGUgY2hhbmdl
-cyB0aGF0IGZpeCBzb21lIGJ1Z3MgaW4NCj4gdGhlIHFsYTJ4eHggZHJpdmVyLg0KPiAtLS0NCj4g
-djM6DQo+IC0gRml4IGJ1aWxkIGlzc3VlIGluIHBhdGNoIDENCj4gdjI6DQo+IC0gQ2hhbmdlIGEg
-c3BpbmxvY2sgd3JhcCB0byBhIFdSSVRFX09OQ0UoKSBpbiBwYXRjaCAxDQo+IC0gQWRkIFJldmll
-d2VkLWJ5IHRhZ3Mgb24gcGF0Y2hlcyAyIGFuZCAzDQo+IC0tLQ0KPiBBbmFzdGFzaWEgS292YWxl
-dmEgKDMpOg0KPiAgICBzY3NpOiBxbGEyeHh4OiBEcm9wIHN0YXJ2YXRpb24gY291bnRlciBvbiBz
-dWNjZXNzDQo+ICAgIHNjc2k6IHFsYTJ4eHg6IE1ha2UgdGFyZ2V0IHNlbmQgY29ycmVjdCBMT0dP
-DQo+ICAgIHNjc2k6IHFsYTJ4eHg6IFJlbW92ZSBpbmNvcnJlY3QgdHJhcA0KPg0KPiAgIGRyaXZl
-cnMvc2NzaS9xbGEyeHh4L3FsYV9pb2NiLmMgICB8IDExICsrKysrKysrKysrDQo+ICAgZHJpdmVy
-cy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jICAgIHwgIDQgKysrKw0KPiAgIGRyaXZlcnMvc2NzaS9x
-bGEyeHh4L3FsYV90YXJnZXQuYyB8IDE2ICsrKysrKystLS0tLS0tLS0NCj4gICAzIGZpbGVzIGNo
-YW5nZWQsIDIyIGluc2VydGlvbnMoKyksIDkgZGVsZXRpb25zKC0pDQo+DQoNCkdlbnRsZSBwaW5n
-DQoNCg==
+On Fri, Nov 01, 2024 at 08:16:30AM +0100, Hans Holmberg wrote:
+> On Thu, Oct 31, 2024 at 3:06 PM Keith Busch <kbusch@kernel.org> wrote:
+> > On Thu, Oct 31, 2024 at 09:19:51AM +0100, Hans Holmberg wrote:
+> > > No. The meta data IO is just 0.1% of all writes, so that we use a
+> > > separate device for that in the benchmark really does not matter.
+> >
+> > It's very little spatially, but they overwrite differently than other
+> > data, creating many small holes in large erase blocks.
+> 
+> I don't really get how this could influence anything significantly.(If at all).
+
+Fill your filesystem to near capacity, then continue using it for a few
+months. While the filesystem will report some available space, there
+may not be many good blocks available to erase. Maybe.
+ 
+> > Again, I absolutely disagree that this locks anyone in to anything.
+> > That's an overly dramatic excuse.
+> 
+> Locking in or not, to constructively move things forward (if we are
+> now stuck on how to wire up fs support) 
+
+But we're not stuck on how to wire up to fs. That part was settled and
+in kernel 10 years ago. We're stuck on wiring it down to the driver,
+which should have been the easiest part.
+
+> I believe it would be worthwhile to prototype active fdp data
+> placement in xfs and evaluate it. Happy to help out with that.
+
+When are we allowed to conclude evaluation? We have benefits my
+customers want on well tested kernels, and wish to proceed now.
+
+I'm not discouraing anyone from continuing further prototypes,
+innovations, and improvements. I'd like to spend more time doing that
+too, and merging something incrementally better doesn't prevent anyone
+from doing that.
+
+> Fdp and zns are different beasts, so I don't expect the results in the
+> presentation to be directly translatable but we can see what we can
+> do.
+> 
+> Is RocksDB the only file system user at the moment?
+
+Rocks is the only open source one I know about. There are propietary
+users, too.
