@@ -1,72 +1,112 @@
-Received: from bsmtp5.bon.at (bsmtp5.bon.at [195.3.86.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D69D416DED2;
-	Sat,  2 Nov 2024 12:26:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.3.86.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40A0B18A950;
+	Sat,  2 Nov 2024 16:36:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730550390; cv=none; b=H79C0M/iORRjrQSZMXXpbY+4iACeeSaUo4ENq1Gu0xM0T5Rc8shFp3Ix8ZnBhGALqtpVcmwFOSK3FzV5wiYGc1c+YcOKN3KQtTqXH9uHCK0ZsmXL/MFY74RR2lxWXiS3v7ux7lLMjfy67DGEvHrM/MfPR3zbaM2MB/5VmDOBNJE=
+	t=1730565368; cv=none; b=l2OXKLCa9yCRYOglaZpcdTqMTq2Pxqc3c40MK6Nnhk5VlFRgZbEM/kpuf2nlV9TLmZRU7siiUZ2uDu001tVnzQB0RFykd3X8RFFMCvownrkuxnKOVtezqU+8HCE+yKJUaF6vE4G/s3qJ0HbK52c0/n7B9AqdLlSkrGrmS2LU6pg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730550390; c=relaxed/simple;
-	bh=dSDT0vEz62CqVIjmyfx/Kg7MuHDy6wHEDFL4wdosaDM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=c5sUOr4PStp5aoMQ7JfAfC4Owmegw5Vy1r5D4sL/VpRaQiKuMogndgfb6wudRt5R1sZYhcEHNU9igpUTCV8i39jV4GgsSwETyc9Bys77qeBddhre+EaQ0vC4ReHFzxanWkI8DrXVZZ/Pv+I7upFWl1J5NsUAEdMG/oB99r7iLPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grossegger.com; spf=pass smtp.mailfrom=grossegger.com; arc=none smtp.client-ip=195.3.86.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grossegger.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=grossegger.com
-Received: from bsmtp.bon.at (unknown [192.168.181.102])
-	by bsmtp5.bon.at (Postfix) with ESMTPS id 4XgcQz105Mz5tsn;
-	Sat,  2 Nov 2024 13:26:19 +0100 (CET)
-Received: from [192.168.0.62] (unknown [80.122.193.150])
-	by bsmtp.bon.at (Postfix) with ESMTPSA id 4XgcQc0PLpzRnmR;
-	Sat,  2 Nov 2024 13:25:58 +0100 (CET)
-Message-ID: <ef82b344-dd7c-4b56-85d7-9f7dc361876f@grossegger.com>
-Date: Sat, 2 Nov 2024 13:25:58 +0100
+	s=arc-20240116; t=1730565368; c=relaxed/simple;
+	bh=efn4VpG7p6xFb/S4X3ANPIQCQKp6IXfEyCLH0VWZIIk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ev5J0oIUoSY/6WxsGUBHCvomg4cp0QA1zzOyF6f6HPcwDyby8XlyttwgcHVmF99XN3ghSnQF1rvyZfgn3xLMAZd2AVj4fMqQYxE2Z/Jo3DAfbGedL5YSMeOM/3vR7f/QoehSBaPfHlJ47Q5DHrx2TOx/fM4Unm6co0duft/zO1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KlpVtnzW; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KlpVtnzW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CFD1C4CEC3;
+	Sat,  2 Nov 2024 16:36:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730565367;
+	bh=efn4VpG7p6xFb/S4X3ANPIQCQKp6IXfEyCLH0VWZIIk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KlpVtnzWd/zB5XmFf980RxtRY6lt695NC4d5DAQWzdJq8P9d/vTpUIa9uhRZxXlNg
+	 V1d2QzYc2hobwbFxK4fWDOeUmxR84BXOCx0bbPmSs0eqzXhWKKg5gbNDPcqLKd+ItV
+	 0pXNaQHtN/eHmbiDg0Z7SgO8wxZv7vCv329kh8IFtCEPWR/9ZVZ4PS1sF2pFzadm7O
+	 KR046MH/33qcHZt/KH+f3V2nu048roFu5R/+fD2mNhDgdzzAq87Tul2/R4s/yR1t+w
+	 9f2q8hLJXw4bMrhpexvm+tOdexgGWME42h9ZVxDY348o62nZnpHwJGFG+M9IE+WQFR
+	 2wSFp9BrXYOKQ==
+Date: Sat, 2 Nov 2024 09:36:05 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Ard Biesheuvel <ardb@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-mips@vger.kernel.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	loongarch@lists.linux.dev, sparclinux@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH v2 04/18] crypto: crc32 - don't unnecessarily register
+ arch algorithms
+Message-ID: <20241102163605.GA28213@sol.localdomain>
+References: <20241026040958.GA34351@sol.localdomain>
+ <ZyX0uGHg4Cmsk2oz@gondor.apana.org.au>
+ <CAMj1kXFfPtO0vd1KqTa+QNSkRWNR7SUJ_A_zX6-Hz5HVLtLYtw@mail.gmail.com>
+ <ZyX8yEqnjXjJ5itO@gondor.apana.org.au>
+ <CAMj1kXHje-BwJVffAxN9G96Gy4Gom3Ca7dJ-_K7sgcrz7_k7Kw@mail.gmail.com>
+ <CAMj1kXG8Nqw_f8OsFTq_UKRbca6w58g4uyRAZXCoCr=OwC2sWA@mail.gmail.com>
+ <ZyYIO6RpjTFteaxH@gondor.apana.org.au>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly
- resets under high io load
-To: Dirk Tilger <dirk@systemication.com>, Sagar.Biradar@microchip.com
-Cc: james.hilliard1@gmail.com, martin.petersen@oracle.com,
- khorenko@virtuozzo.com, aacraid@microsemi.com, Don.Brace@microchip.com,
- Tom.White@microchip.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, Gilbert.Wu@microchip.com
-References: <106f384f-d9e2-905d-5ac5-fe4ffd962122@virtuozzo.com>
- <CADvTj4rd+Z8S8vwnsmn2a7BXDPBwx1iqWRmE+SbtWep=Lnr20g@mail.gmail.com>
- <BYAPR11MB36066925274C38555F20FB17FA339@BYAPR11MB3606.namprd11.prod.outlook.com>
- <CADvTj4qH5xuK9ecEPi3Pm9t962E=nnH0oTBqWv4UPmibeASqdQ@mail.gmail.com>
- <BYAPR11MB36065EE0321C0AE6A4A3ECC7FA049@BYAPR11MB3606.namprd11.prod.outlook.com>
- <CADvTj4oej_E3tHm6tzOAhA=n2WughvDfQsaxKbP5Sxb+CeZu=w@mail.gmail.com>
- <BYAPR11MB360625E5945D5D3B29571857FA099@BYAPR11MB3606.namprd11.prod.outlook.com>
- <CADvTj4oNCrwHBRu-rUZtnxoqVkvyxG_Cg07RTAuwpNsGfjWKcw@mail.gmail.com>
- <BYAPR11MB3606FB1E651EC9B51BD8A0B7FA1B9@BYAPR11MB3606.namprd11.prod.outlook.com>
- <BYAPR11MB3606E15393A4C11CCFAF9C53FAE69@BYAPR11MB3606.namprd11.prod.outlook.com>
- <ZyJKTug2AtqWs3BQ@mactool-usb>
-From: =?UTF-8?Q?Christian_Gro=C3=9Fegger?= <christian@grossegger.com>
-In-Reply-To: <ZyJKTug2AtqWs3BQ@mactool-usb>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZyYIO6RpjTFteaxH@gondor.apana.org.au>
 
-On October 30, 2024, at 16:01, Dirk Tilger wrote:
-> I had set "msi" to "2" and the problem persisted. I have not tested
-> msi=1 but as far as I understand it should have the same effect with
-> regards to the system hangs.
+On Sat, Nov 02, 2024 at 07:08:43PM +0800, Herbert Xu wrote:
+> On Sat, Nov 02, 2024 at 12:05:01PM +0100, Ard Biesheuvel wrote:
+> >
+> > The only issue resulting from *not* taking this patch is that btrfs
+> > may misidentify the CRC32 implementation as being 'slow' and take an
+> > alternative code path, which does not necessarily result in worse
+> > performance.
+> 
+> If we were removing crc32* (or at least crc32*-arch) from the Crypto
+> API then these patches would be redundant.  But if we're keeping them
+> because btrfs uses them then we should definitely make crc32*-arch
+> do the right thing.  IOW they should not be registered if they're
+> the same as crc32*-generic.
+> 
+> Thanks,
 
-Hi,
+I would like to eventually remove crc32 and crc32c from the crypto API, but it
+will take some time to get all the users converted.  If there are AF_ALG users
+it could even be impossible, though the usual culprit, iwd, doesn't appear to
+use any CRCs, so hopefully we are fine there.
 
-Yes, as far as I understand, setting msi is not enough, because when I 
-look at the code the host->can_queue variable is set to the wrong value 
-for the Series-6 Card since Commit 395e5df79a95 ("scsi: aacraid: Remove 
-reference to Series-9").
+I will plan to keep this patch, but change it to use a crc32_optimizations()
+function instead which was Ard's first suggestion.
 
-Before the patch the driver uses the lower 16 bits of status[3] as the 
-maximum number of outstanding FIBs allowed by the Series-6 controller. 
-After the patch is uses the upper 16 bits of status[3]. (comminit.c:581)
+I don't think Ard's static_call suggestion would work as-is, since considering
+the following:
 
-Kind regards,
-Christian
+    static inline u32 __pure crc32_le(u32 crc, const u8 *p, size_t len)
+    {
+            if (IS_ENABLED(CONFIG_CRC32_ARCH))
+                    return static_call(crc32_le_arch)(crc, p, len);
+            return crc32_le_base(crc, p, len);
+    }
+
+... the 'static_call(crc32_le_arch)(crc, p, len)' will be inlined into every
+user, which could be a loadable module which gets loaded after crc32-${arch}.ko.
+And AFAIK, static calls in that module won't be updated in that case.
+
+That could be avoided by making crc32_le() a non-inline function in lib/crc32.c,
+so the static call would only be in that one place.  That has the slight
+disadvantage that it would introduce an extra jump into the common case where
+the optimized function is enabled.  Considering that some users are passing
+small amounts of data into the CRC functions (e.g., 4 bytes), I would like to
+minimize the overhead as much as possible.
+
+It could also be avoided by making CRC32 and CRC32_ARCH bool rather than
+tristate.  I would prefer not to do that, since there can be situations where
+only loadable modules need these functions so they should not have to be built
+into the core kernel.
+
+So I plan to go with the crc32_optimizations() solution in v3.
+
+- Eric
