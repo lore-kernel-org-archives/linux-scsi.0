@@ -1,83 +1,72 @@
-Received: from abb.hmeau.com (abb.hmeau.com [144.6.53.87])
+Received: from bsmtp5.bon.at (bsmtp5.bon.at [195.3.86.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B7B012C54B;
-	Sat,  2 Nov 2024 11:09:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.6.53.87
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D69D416DED2;
+	Sat,  2 Nov 2024 12:26:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.3.86.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730545744; cv=none; b=aOqg8bwckBTUdI8RAOKOtAMcOqcDRDwtV/O/6TMZYalVLOJ5jsk61/Mez8jRGJsdicKSwo4JcuXTmda00Ygd+XLHHPQ+9kaXjWhFYweDfY+v/6vPDTjaEipQshFoY6miiRQ4AjMx7ANE7KfjW2V/58wAGJF3J++vEZglK2R7+iM=
+	t=1730550390; cv=none; b=H79C0M/iORRjrQSZMXXpbY+4iACeeSaUo4ENq1Gu0xM0T5Rc8shFp3Ix8ZnBhGALqtpVcmwFOSK3FzV5wiYGc1c+YcOKN3KQtTqXH9uHCK0ZsmXL/MFY74RR2lxWXiS3v7ux7lLMjfy67DGEvHrM/MfPR3zbaM2MB/5VmDOBNJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730545744; c=relaxed/simple;
-	bh=nclp+VCdHg8h8aYCzOEelCHk0hT48pCQRPeUZOubgD4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WFaj1HbEeGZ3O+s6PK/ZB1EHES5ZJ4hHgu+Ey/T1glfadREHytred3Y5+wfCMMqGqM98lcxuIdOhiD8CvKB6GkeydMBYpZZobS4lvpL39Ip4rXsHMUh5e8XqrV8STe2+HjtCfgtLLuZfSjcIGh8fWGCPhCE12qcMqen4LzdjWm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au; spf=pass smtp.mailfrom=gondor.apana.org.au; dkim=pass (2048-bit key) header.d=hmeau.com header.i=@hmeau.com header.b=ZL/lvV/0; arc=none smtp.client-ip=144.6.53.87
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gondor.apana.org.au
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hmeau.com header.i=@hmeau.com header.b="ZL/lvV/0"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=hmeau.com;
-	s=formenos; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=rJjP7GEhm9Yido8/2Yi7Kg/9NXfC12+1Hc68o0sqeZo=; b=ZL/lvV/0NG+jnrygJ/ulUipBlK
-	qP9nNwqVQWNXM6Mo4bBB3wTvXS6oRzgEKSHf55UXhXhzl6CQWDcLaKiJVFPLfJWGDYzgQucVtLoXu
-	EdgtwDpESedu90LNlQ/3ESKbF6ZllB13v5NTAUox4RYWGiwG0gPbhcB9nhH9k15mZ/+NFfBDzBZhT
-	ZXkVWdsMEUU+MuBkn0bvppo0elNwSfGET6JHSBcIK+uM55LY9FOpzK7dAKO7wfzB9TVAXeFIWaCKY
-	of25XbcMJoe7WP1/TZrB8M9THZkyGx/lpgRJ1Zogfa/NIqKJhYAzvuJg9eOUYUwS6oN1RCWC7zQ1Z
-	rIC9NpXA==;
-Received: from loth.rohan.me.apana.org.au ([192.168.167.2])
-	by formenos.hmeau.com with smtp (Exim 4.96 #2 (Debian))
-	id 1t7Bzn-00DyOZ-3A;
-	Sat, 02 Nov 2024 19:08:46 +0800
-Received: by loth.rohan.me.apana.org.au (sSMTP sendmail emulation); Sat, 02 Nov 2024 19:08:43 +0800
-Date: Sat, 2 Nov 2024 19:08:43 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Ard Biesheuvel <ardb@kernel.org>
-Cc: Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-crypto@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net, linux-mips@vger.kernel.org,
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	loongarch@lists.linux.dev, sparclinux@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [PATCH v2 04/18] crypto: crc32 - don't unnecessarily register
- arch algorithms
-Message-ID: <ZyYIO6RpjTFteaxH@gondor.apana.org.au>
-References: <20241026040958.GA34351@sol.localdomain>
- <ZyX0uGHg4Cmsk2oz@gondor.apana.org.au>
- <CAMj1kXFfPtO0vd1KqTa+QNSkRWNR7SUJ_A_zX6-Hz5HVLtLYtw@mail.gmail.com>
- <ZyX8yEqnjXjJ5itO@gondor.apana.org.au>
- <CAMj1kXHje-BwJVffAxN9G96Gy4Gom3Ca7dJ-_K7sgcrz7_k7Kw@mail.gmail.com>
- <CAMj1kXG8Nqw_f8OsFTq_UKRbca6w58g4uyRAZXCoCr=OwC2sWA@mail.gmail.com>
+	s=arc-20240116; t=1730550390; c=relaxed/simple;
+	bh=dSDT0vEz62CqVIjmyfx/Kg7MuHDy6wHEDFL4wdosaDM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=c5sUOr4PStp5aoMQ7JfAfC4Owmegw5Vy1r5D4sL/VpRaQiKuMogndgfb6wudRt5R1sZYhcEHNU9igpUTCV8i39jV4GgsSwETyc9Bys77qeBddhre+EaQ0vC4ReHFzxanWkI8DrXVZZ/Pv+I7upFWl1J5NsUAEdMG/oB99r7iLPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grossegger.com; spf=pass smtp.mailfrom=grossegger.com; arc=none smtp.client-ip=195.3.86.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grossegger.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=grossegger.com
+Received: from bsmtp.bon.at (unknown [192.168.181.102])
+	by bsmtp5.bon.at (Postfix) with ESMTPS id 4XgcQz105Mz5tsn;
+	Sat,  2 Nov 2024 13:26:19 +0100 (CET)
+Received: from [192.168.0.62] (unknown [80.122.193.150])
+	by bsmtp.bon.at (Postfix) with ESMTPSA id 4XgcQc0PLpzRnmR;
+	Sat,  2 Nov 2024 13:25:58 +0100 (CET)
+Message-ID: <ef82b344-dd7c-4b56-85d7-9f7dc361876f@grossegger.com>
+Date: Sat, 2 Nov 2024 13:25:58 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAMj1kXG8Nqw_f8OsFTq_UKRbca6w58g4uyRAZXCoCr=OwC2sWA@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 0/1] aacraid: Host adapter Adaptec 6405 constantly
+ resets under high io load
+To: Dirk Tilger <dirk@systemication.com>, Sagar.Biradar@microchip.com
+Cc: james.hilliard1@gmail.com, martin.petersen@oracle.com,
+ khorenko@virtuozzo.com, aacraid@microsemi.com, Don.Brace@microchip.com,
+ Tom.White@microchip.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Gilbert.Wu@microchip.com
+References: <106f384f-d9e2-905d-5ac5-fe4ffd962122@virtuozzo.com>
+ <CADvTj4rd+Z8S8vwnsmn2a7BXDPBwx1iqWRmE+SbtWep=Lnr20g@mail.gmail.com>
+ <BYAPR11MB36066925274C38555F20FB17FA339@BYAPR11MB3606.namprd11.prod.outlook.com>
+ <CADvTj4qH5xuK9ecEPi3Pm9t962E=nnH0oTBqWv4UPmibeASqdQ@mail.gmail.com>
+ <BYAPR11MB36065EE0321C0AE6A4A3ECC7FA049@BYAPR11MB3606.namprd11.prod.outlook.com>
+ <CADvTj4oej_E3tHm6tzOAhA=n2WughvDfQsaxKbP5Sxb+CeZu=w@mail.gmail.com>
+ <BYAPR11MB360625E5945D5D3B29571857FA099@BYAPR11MB3606.namprd11.prod.outlook.com>
+ <CADvTj4oNCrwHBRu-rUZtnxoqVkvyxG_Cg07RTAuwpNsGfjWKcw@mail.gmail.com>
+ <BYAPR11MB3606FB1E651EC9B51BD8A0B7FA1B9@BYAPR11MB3606.namprd11.prod.outlook.com>
+ <BYAPR11MB3606E15393A4C11CCFAF9C53FAE69@BYAPR11MB3606.namprd11.prod.outlook.com>
+ <ZyJKTug2AtqWs3BQ@mactool-usb>
+From: =?UTF-8?Q?Christian_Gro=C3=9Fegger?= <christian@grossegger.com>
+In-Reply-To: <ZyJKTug2AtqWs3BQ@mactool-usb>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sat, Nov 02, 2024 at 12:05:01PM +0100, Ard Biesheuvel wrote:
->
-> The only issue resulting from *not* taking this patch is that btrfs
-> may misidentify the CRC32 implementation as being 'slow' and take an
-> alternative code path, which does not necessarily result in worse
-> performance.
+On October 30, 2024, at 16:01, Dirk Tilger wrote:
+> I had set "msi" to "2" and the problem persisted. I have not tested
+> msi=1 but as far as I understand it should have the same effect with
+> regards to the system hangs.
 
-If we were removing crc32* (or at least crc32*-arch) from the Crypto
-API then these patches would be redundant.  But if we're keeping them
-because btrfs uses them then we should definitely make crc32*-arch
-do the right thing.  IOW they should not be registered if they're
-the same as crc32*-generic.
+Hi,
 
-Thanks,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Yes, as far as I understand, setting msi is not enough, because when I 
+look at the code the host->can_queue variable is set to the wrong value 
+for the Series-6 Card since Commit 395e5df79a95 ("scsi: aacraid: Remove 
+reference to Series-9").
+
+Before the patch the driver uses the lower 16 bits of status[3] as the 
+maximum number of outstanding FIBs allowed by the Series-6 controller. 
+After the patch is uses the upper 16 bits of status[3]. (comminit.c:581)
+
+Kind regards,
+Christian
