@@ -1,100 +1,225 @@
 Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE9ECB673;
-	Sun,  3 Nov 2024 07:02:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0502175D44
+	for <linux-scsi@vger.kernel.org>; Sun,  3 Nov 2024 12:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730617363; cv=none; b=Tofy5BRV0ZwQ/FOHpj7Z4AxpEH6gvp0hMjtY6gU1I5luXuZuM4vatAfAPktEFDjySF4fZILSXzQ9S2P0G261KM5voDg4jaojguj+1kYqvF7kMp5AchD6ScTGZwv01A6BIaRvWfcw/r0anYNR36WVh59YV632j5SQwuGsR+x7l3g=
+	t=1730635352; cv=none; b=ZqxoPgow2R8+/suc2z4Ev4HfMzQtwgjTxoczVneULWuoTTm98SOs9GD/YbaJRfaN3W27uJEz6vUNQBGvEVPkGQAvu6E87XrDjQadwbzfUwsWUsxlCbLjw+HTicTn14cWmWftTp81SV5iSiSQv+W7cDS2IF8qLT85WkFuyW/9MjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730617363; c=relaxed/simple;
-	bh=6o1Wagd0uUVsHIpGzUJpqU/Rw+/J5VBWI+It9NIq3S8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Wm43rvvDMBT0RRhTNr0WP70tEi9v/8Z2zT7HlkLZYBtjOj2jA0HGv1X3fmVal2qI2VenV3cWsry7dZ1Oqy7vwI0I28Pz4Vg5PVb7dIKGSlZI+LJWy8VYSZlOMfHJAmInaSt2y2Y6wJvzy9ZURV/66DKVO8NK4UcVD8Azke81wr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h4sAqlpI; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730635352; c=relaxed/simple;
+	bh=EkfjY6qc7ZZqItUKau0nuoSNvJIwoZnbsM2jci2CLJo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UepmhdsvlVamPMQ8aFUQ+r01v1VHv5p3ADbino5knkiHXRwTKu9s0bwMmlNn4QbO6KX6Np+IYUldWaTIV7SMl/YRjP/lpfilk13P0aq86dBlVih2NrsmWUFF33GA3aducOc40iaJc2O3Nhe475DK4nMxLkyILdWjECHYwNk8Ku4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hJVBPcwC; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h4sAqlpI"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-71e7086c231so2730658b3a.0;
-        Sun, 03 Nov 2024 00:02:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hJVBPcwC"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-720d01caa66so1699260b3a.2
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Nov 2024 04:02:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730617361; x=1731222161; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VBWbka6tcunvnkswMnINMIR9eUmPBlJrKkb4tiWy/N4=;
-        b=h4sAqlpISr81c2EHaVcg07CgeQ3nhN0z4kKb8y/x3kUhOQvC8RfMMgBKSRouzQaA1Q
-         sW2jqe9PXa9GumMxcJIChgXcW6D5w3LqjusUsn00Io/oCZJfCdQcAmnSyMWR9q8vfEFA
-         aoUcrxGyesxswSlO7ZrTV2+S+j64CXZJ/LASKYDN2i1Eu0s01YBf7OwGaADU9jO9fhZR
-         D3Bz85wyb3N0sc/1VPvqRd5/AMK4E30I9PYCL7b67N7SbltNihFdhp0Nxzo/+pC9XxBn
-         VJX+kEbadEolI+SmciEu5RMCZrF4MCEeSlxW2w6CG32i6/eNS//NDwektZreCUp74Mzo
-         WX5A==
+        d=linaro.org; s=google; t=1730635350; x=1731240150; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=FUkXMfCkR70Uh4iKdLC2cSNlr1iFRoDLX5iaBLAzooI=;
+        b=hJVBPcwCsw9LtJIDvKkvMshxn8/MJmw86JwpnKPSUfM/9it8j1U/IrfUjfVylwpqk8
+         xAUzTaT22wSdlTyqF87Lm3+eB2KkLp1j8Is3eSCN5PiIEJtI80cIAlf+mCgupZMkVSsK
+         8Hoiuq0OsbWyl5R0MtNf/w9GB++4FcP9ZX3b4Sqs5goxJk4rvyGfzheNXAc3aAYopmAe
+         RxkL3WhDU/u0M0EXCNwtXPGJk4Nj5f0wftuYcDIxEcJVNPMlCLuAbkOHZIhv6XxBLzOe
+         HjW1XUniGkBOHl1xGOSPmHywNh69vXjcrVbWN9g3Yc3ytCxEpgyXJQRkWjJksqTG6TQI
+         K50g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730617361; x=1731222161;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VBWbka6tcunvnkswMnINMIR9eUmPBlJrKkb4tiWy/N4=;
-        b=GKeQJImctGCvGlqu0B/s1jRkbvOEJjfRPlSftD3HBhK+oeQZUkpfueWdYVyMYP3JNt
-         rgy9Hmv942vNDauw2SxF4Rwk+IkgGLUrpWWoAT+pwRMnO4xOsSpiz7FCi91U8E/n0fWD
-         b93sbe9McKTf36eHi7LfTWK0V/ptipap3pmZj8lnX5dBpx8XNT3Bk/CP0CS8zNlCWCbn
-         28sBEo2GAd5nKMqSWuXk7YtFpe2Yy/iOaewfMoeS3WlD9CgbX0GZZoyqMwid43ON5aoL
-         YfM1G1lklxUmwuTFGyFeJzllx639zdSlZ1gEZPMMY0zUXb9f0dHeI7aqQSqKwS2Kywyx
-         O2Tw==
-X-Forwarded-Encrypted: i=1; AJvYcCVS3aHL4C8D4tX7cjVXh932EZiiIl+SUSgYKGjCLx8MV7U5JsWRoXYGhso7mjAlkyxJhrbJj4bC2HApRHw=@vger.kernel.org, AJvYcCX2MaCeMpLTkeXouJFE5x5NfMLX/b4kV4ucJBV1sZey9PleRT6HEa9fyY0YtV8LuJnDKjO7aUw7Tt35/Q==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyZ+oc/ssSoLtOe4EbD7RCVkrs4r/BXg+yM1VE0eiOzjMnZwK7F
-	+ixSc7Hscz1LagWkgBrQpArE6fnZFoXA6Ppo31lmN6aqNNcJz6rfBAmKkiHO
-X-Google-Smtp-Source: AGHT+IHU0vj4Pj3iMVr+/EJms2QQfuERXpC9vF1oOT/lUMi3mXG4gUxOOEoiQrRZikcZZ/281+Q+2A==
-X-Received: by 2002:a05:6a00:845:b0:71e:6e4a:507a with SMTP id d2e1a72fcca58-72062f4f6c2mr38185268b3a.3.1730617360801;
-        Sun, 03 Nov 2024 00:02:40 -0700 (PDT)
-Received: from localhost.localdomain ([103.150.184.35])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc2eb3bfsm5151965b3a.156.2024.11.03.00.02.38
+        d=1e100.net; s=20230601; t=1730635350; x=1731240150;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=FUkXMfCkR70Uh4iKdLC2cSNlr1iFRoDLX5iaBLAzooI=;
+        b=t4dnQSM8423kpvnZn4CtKIaXEAYzNDMHtyhXCE+Sk7Nx29gD46HZEepIoK+7Zhh/nA
+         Yj1RyZ3aschfSaYcoZjnHRg60xZWxQ59acAypxjE7SXLYTOuLm40TR6XSDE2wIo/nXmm
+         4tTvVhw35k8eHXGK6FqIrOtyd0RhYKzKg7YYzXw+IDpAd2i++VnO/TTXsCKepOTpsVjI
+         +Tn2fOChb7b+qqO9rMnsIYuLQPoc3NAH0at6g+QWo6llHPxGXHivWZKAAHVj2Uak+E5P
+         cGi09NFHPct6m+OIlbHfqExM53JJxUlA7MaauROn+J5NMjTCvmx0F6TnTrwlgYfToQcv
+         BSBw==
+X-Forwarded-Encrypted: i=1; AJvYcCXgGNewSZg6X8HXwk45LAg68yjbKgVeR3c5zDOcCicSEItEvSmc+Sb0ou82Hu7gk5ZixByvMYzHvn4z@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPzPKu+whPS8ku7+V+hglUEBWPNM3+1BIWIBnegbwMyzHE2RsT
+	bJsqoy7RaP2Vr7O8ZdQYZ2i1CZtAPdQv6wa7vkiD/g0f9F1spJedElmt+2p7xw==
+X-Google-Smtp-Source: AGHT+IG67vE3Hy81Qa1sXK1wXZ0XGN5eh5NVCE1J0d5f1x/U0tyMLbeT3PWIyJgXlJE+GgOJ+sNXFQ==
+X-Received: by 2002:a05:6a21:920b:b0:1d9:6ea3:9741 with SMTP id adf61e73a8af0-1db91d440eemr17725699637.4.1730635349968;
+        Sun, 03 Nov 2024 04:02:29 -0800 (PST)
+Received: from thinkpad ([220.158.156.209])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7ee459f8ee9sm5215196a12.72.2024.11.03.04.02.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Nov 2024 00:02:40 -0700 (PDT)
-From: Xiang Zhang <hawkxiang.cpp@gmail.com>
-To: lduncan@suse.com,
-	cleech@redhat.co,
-	michael.christie@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Xiang Zhang <hawkxiang.cpp@gmail.com>
-Subject: [PATCH] scsi: iscsi: special case for GET_HOST_STATS
-Date: Sun,  3 Nov 2024 15:02:20 +0800
-Message-ID: <20241103070220.6695-1-hawkxiang.cpp@gmail.com>
-X-Mailer: git-send-email 2.44.0
+        Sun, 03 Nov 2024 04:02:29 -0800 (PST)
+Date: Sun, 3 Nov 2024 17:32:23 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>, Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
+Message-ID: <20241103120223.abkwgej4svas4epr@thinkpad>
+References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
+ <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
+ <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
+ <3969bae0-eeb8-447a-86a5-dfdac0b136cd@rock-chips.com>
+ <CAPDyKFo=GcHG2sGQBrXJ7VWyp59QOmbLCAvHQ3krUympEkid_A@mail.gmail.com>
+ <98e0062c-aeb1-4bea-aa2b-4a99115c9da4@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <98e0062c-aeb1-4bea-aa2b-4a99115c9da4@rock-chips.com>
 
-Special case for ISCSI_UEVENT_GET_HOST_STATS:
-- On success: send reply and stats from iscsi_get_host_stats()
-  within if_recv_msg().
-- On error: fall through.
+On Fri, Oct 18, 2024 at 05:20:08PM +0800, Shawn Lin wrote:
+> Hi Ulf,
+> 
+> 在 2024/10/18 17:07, Ulf Hansson 写道:
+> > On Thu, 10 Oct 2024 at 03:21, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> > > 
+> > > Hi Ulf
+> > > 
+> > > 在 2024/10/9 21:15, Ulf Hansson 写道:
+> > > > [...]
+> > > > 
+> > > > > +
+> > > > > +static int ufs_rockchip_runtime_suspend(struct device *dev)
+> > > > > +{
+> > > > > +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> > > > > +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> > > > > +       struct generic_pm_domain *genpd = pd_to_genpd(dev->pm_domain);
+> > > > 
+> > > > pd_to_genpd() isn't safe to use like this. It's solely to be used by
+> > > > genpd provider drivers.
+> > > > 
+> > > > > +
+> > > > > +       clk_disable_unprepare(host->ref_out_clk);
+> > > > > +
+> > > > > +       /*
+> > > > > +        * Shouldn't power down if rpm_lvl is less than level 5.
+> > > > 
+> > > > Can you elaborate on why we must not power-off the power-domain when
+> > > > level is less than 5?
+> > > > 
+> > > 
+> > > Because ufshcd driver assume the controller is active and the link is on
+> > > if level is less than 5. So the default resume policy will not try to
+> > > recover the registers until the first error happened. Otherwise if the
+> > > level is >=5, it assumes the controller is off and the link is down,
+> > > then it will restore the registers and link.
+> > > 
+> > > And the level is changeable via sysfs.
+> > 
+> > Okay, thanks for clarifying.
+> > 
+> > > 
+> > > > What happens if we power-off anyway when the level is less than 5?
+> > > > 
+> > > > > +        * This flag will be passed down to platform power-domain driver
+> > > > > +        * which has the final decision.
+> > > > > +        */
+> > > > > +       if (hba->rpm_lvl < UFS_PM_LVL_5)
+> > > > > +               genpd->flags |= GENPD_FLAG_RPM_ALWAYS_ON;
+> > > > > +       else
+> > > > > +               genpd->flags &= ~GENPD_FLAG_RPM_ALWAYS_ON;
+> > > > 
+> > > > The genpd->flags is not supposed to be changed like this - and
+> > > > especially not from a genpd consumer driver.
+> > > > 
+> > > > I am trying to understand a bit more of the use case here. Let's see
+> > > > if that helps me to potentially suggest an alternative approach.
+> > > > 
+> > > 
+> > > I was not familiar with the genpd part, so I haven't come up with
+> > > another solution. It would be great if you can guide me to the right
+> > > way.
+> > 
+> > I have been playing with the existing infrastructure we have at hand
+> > to support this, but I need a few more days to be able to propose
+> > something for you.
+> > 
+> 
+> Much appreciate.
+> 
+> > > 
+> > > > > +
+> > > > > +       return ufshcd_runtime_suspend(dev);
+> > > > > +}
+> > > > > +
+> > > > > +static int ufs_rockchip_runtime_resume(struct device *dev)
+> > > > > +{
+> > > > > +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> > > > > +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> > > > > +       int err;
+> > > > > +
+> > > > > +       err = clk_prepare_enable(host->ref_out_clk);
+> > > > > +       if (err) {
+> > > > > +               dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
+> > > > > +               return err;
+> > > > > +       }
+> > > > > +
+> > > > > +       reset_control_assert(host->rst);
+> > > > > +       usleep_range(1, 2);
+> > > > > +       reset_control_deassert(host->rst);
+> > > > > +
+> > > > > +       return ufshcd_runtime_resume(dev);
+> > > > > +}
+> > > > > +
+> > > > > +static int ufs_rockchip_system_suspend(struct device *dev)
+> > > > > +{
+> > > > > +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> > > > > +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> > > > > +
+> > > > > +       /* Pass down desired spm_lvl to Firmware */
+> > > > > +       arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
+> > > > > +                       host->pd_id, hba->spm_lvl < 5 ? 1 : 0, 0, 0, 0, 0, NULL);
+> > > > 
+> > > > Can you please elaborate on what goes on here? Is this turning off the
+> > > > power-domain that the dev is attached to - or what is actually
+> > > > happening?
+> > > > 
+> > > 
+> > > This smc call is trying to ask firmware not to turn off the power-domian
+> > > that the UFS is attached to and also not to turn off the power of UFS
+> > > conntroller.
+> > 
+> > Okay, thanks for clarifying!
+> > 
+> > A follow up question, don't you need to make a corresponding smc call
+> > to inform the FW that it's okay to turn off the power-domain at some
+> > point?
+> > 
+> 
+> Yes. Each time entering sleep, we teach FW if it need to turn off or keep
+> power-domain, for instance "hba->spm_lvl < 5 ? 1 : 0" , 0 means
+> off and 1 means on.
+> 
 
-Signed-off-by: Xiang Zhang <hawkxiang.cpp@gmail.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+We had a requirement to notify the genpd provider from consumer to not turn off
+the power domain during system suspend. So Ulf came up with an API for
+consumers, device_set_wakeup_path() setting the 'dev->power.wakeup_path' which
+will be honored by the genpd core. Will that work for you?
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index fde7de3b1e55..ad4186da1cb4 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -4113,6 +4113,8 @@ iscsi_if_rx(struct sk_buff *skb)
- 				break;
- 			if (ev->type == ISCSI_UEVENT_GET_CHAP && !err)
- 				break;
-+			if (ev->type == ISCSI_UEVENT_GET_HOST_STATS && !err)
-+				break;
- 			err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
- 						  ev, sizeof(*ev));
- 			if (err == -EAGAIN && --retries < 0) {
+PS: The API naming suggests that the device will be used in wakeup path, which
+may not be true here but the end result will be the same.
+
+- Mani
+
 -- 
-2.44.0
-
+மணிவண்ணன் சதாசிவம்
