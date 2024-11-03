@@ -1,255 +1,82 @@
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
+Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88D019309A;
-	Sun,  3 Nov 2024 17:04:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8151A29A0
+	for <linux-scsi@vger.kernel.org>; Sun,  3 Nov 2024 18:33:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730653489; cv=none; b=c9fwD1hR8L8Wiin3nwpAF+TEAfdE99OoCA+f35LhtSkokC31d3phEcSQ6pw+rkijfgyyDWI/4zY8tBs1RZUmkmZQ1TkS67AbtlHrQaQCpHhIdJ7mKffMEhtjZlBgc7K/2Sp//vwYW0rHDdMSSZiN2cbuCN+q3thHYD/mXc10FGY=
+	t=1730658831; cv=none; b=RBdF7C9LVPQura2jvCzhYA0g8WqwkZAqssIN3kMGikJLmnbmOvQiNNPHQ9RMpOuH4T3Tim3YTHRmuD8krb72VNzSyHBG+YRYMNtwtedn63aCX3Q7OSjNl3ZuWlkHZqpV/93zbP9qFUZXntgUFdpDkn/0YNge0NQljgzDY9LO20I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730653489; c=relaxed/simple;
-	bh=8oN+tVBMjVju8UGiuvmEhTX5MjVK0/eJhQB1Q2KrGWg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Gz8rkwGsLofc//Llcn/5zU/XpiSjo8yqqPpN6UyaUZGGu5v7Vy8D+n6UacgUBCylaRBx9UkeqR67faWTJrsesA6cfwpca3fejB1CzK9jQSy8SZ8MpmjQ3ouUVqu7A8lDD+f4JsvkgttnFGG5XTtMFqUKsFBoG0zqBXAJpDCdRkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=IeBmBHEd; arc=none smtp.client-ip=159.69.126.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
+	s=arc-20240116; t=1730658831; c=relaxed/simple;
+	bh=eWGw6aXIt8c1+2fT4ZaQ6f4980KHhrjJP/TAGzyiU+o=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=usBv1iWYampT+4o1mmN4cSLytKdRvKpD/+nIrzpyOCVjTKO9TRdQaDWKbruBe/t7lUoKGhxuuwTeOgF8YlGIK9E3tj779WrhbpJ9xvIv5FU6h1PtaWgrSfDN9kbl2FRNgpCUhB670wiQcLvDJ6h9kbQwzxMK7mrGZAWItXZPv7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=BosoDlCr; arc=none smtp.client-ip=62.142.5.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="IeBmBHEd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1730653482;
-	bh=8oN+tVBMjVju8UGiuvmEhTX5MjVK0/eJhQB1Q2KrGWg=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=IeBmBHEdm9gDMl7zlTLB5XQEePKh4jrhWZs1DoZUiTbnreFHenKfHHQqkl5zOTOoW
-	 dLEUXhMBlK1UTDU+roropuIWBnjU2j+yA5NCW+USh6WWBAQOFHp36Nt2b/NuN3dGyy
-	 iRWUTmheFIvO2zg+zPHcr0L/2wBIrmvGzfEoQoP0=
-From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Sun, 03 Nov 2024 17:03:35 +0000
-Subject: [PATCH v2 06/10] sysfs: treewide: constify attribute callback of
- bin_attribute::mmap()
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="BosoDlCr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=Q9PjYQDLxI9MrVuAf/iosMqr8wo9Kw9Ot1QleNltFRY=;
+	b=BosoDlCrsAz5cbPjhLKX6QCoJbRxU3x20cjrfCgCeSooLjFeHoMzlhad6gg41kKVfppylLC9/k7fS
+	 FWA/uf/ql33MAS/YOAGWue8/ELuAuVvEPH8nzZpc0bnhRC42240OLSXG7kTOaiaw7MPT7HwPCZ1I7L
+	 ZYAGoCadt+YaxIOqgkzVXlgQHIkRQLI1bgtUwX/URDt7nrtqmmZ/LptrRhrZmeCHfbFKaXjBhqBr5a
+	 jURuXTOyq2n+47mS4vroZJ3gUaQ8+d0yLioQ9newCereLz+9pe5bIZF7/WD61sUG8MC4ax/Wqg3YOX
+	 ZwmXzZWGI6hFBgnSZZ3r0/WHDyLk//Q==
+Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
+	id 00542882-9a12-11ef-9aab-005056bd6ce9;
+	Sun, 03 Nov 2024 20:32:38 +0200 (EET)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20241103-sysfs-const-bin_attr-v2-6-71110628844c@weissschuh.net>
-References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
-In-Reply-To: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, 
- Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
- Davidlohr Bueso <dave@stgolabs.net>, 
- Jonathan Cameron <jonathan.cameron@huawei.com>, 
- Dave Jiang <dave.jiang@intel.com>, 
- Alison Schofield <alison.schofield@intel.com>, 
- Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
- Alex Deucher <alexander.deucher@amd.com>, 
- =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
- Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>, 
- Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
- Tudor Ambarus <tudor.ambarus@linaro.org>, 
- Pratyush Yadav <pratyush@kernel.org>, Michael Walle <mwalle@kernel.org>, 
- Miquel Raynal <miquel.raynal@bootlin.com>, 
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
- Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>, 
- Carlos Bilbao <carlos.bilbao.osdev@gmail.com>, 
- Hans de Goede <hdegoede@redhat.com>, 
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
- "David E. Box" <david.e.box@linux.intel.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Richard Henderson <richard.henderson@linaro.org>, 
- Matt Turner <mattst88@gmail.com>, Frederic Barrat <fbarrat@linux.ibm.com>, 
- Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>, 
- Logan Gunthorpe <logang@deltatee.com>, 
- "K. Y. Srinivasan" <kys@microsoft.com>, 
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
- Dexuan Cui <decui@microsoft.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, 
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
- linux-rdma@vger.kernel.org, linux-mtd@lists.infradead.org, 
- platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-usb@vger.kernel.org, linux-alpha@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1730653468; l=7091;
- i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=8oN+tVBMjVju8UGiuvmEhTX5MjVK0/eJhQB1Q2KrGWg=;
- b=R3n6q+Dv0Ia776qfgM6mO9COiJ/hbKbbIydIDRQ3XaMKG9aRvi7HhpKHS1X+wwbHJsRL7kye+
- ekmDB9xxV8TBGzZeTtNVftVmS4rbHM4mxGMeptcYkAQpdQnmMEfZR2L
-X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
- pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
+Subject: Re: [PATCH 2/3] scsi: st: clear was_reset when CHKRES_NEW_SESSION
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20241031010032.117296-3-jmeneghi@redhat.com>
+Date: Sun, 3 Nov 2024 20:32:27 +0200
+Cc: linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com,
+ "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
+ loberman@redhat.com
+Content-Transfer-Encoding: 7bit
+Message-Id: <5046E716-BB3D-45A6-B320-6810F5C792EC@kolumbus.fi>
+References: <20241031010032.117296-1-jmeneghi@redhat.com>
+ <20241031010032.117296-3-jmeneghi@redhat.com>
+To: John Meneghini <jmeneghi@redhat.com>
+X-Mailer: Apple Mail (2.3826.200.121)
 
-The mmap() callbacks should not modify the struct
-bin_attribute passed as argument.
-Enforce this by marking the argument as const.
 
-As there are not many callback implementers perform this change
-throughout the tree at once.
 
-Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
----
- arch/alpha/kernel/pci-sysfs.c          |  6 +++---
- drivers/misc/ocxl/sysfs.c              |  2 +-
- drivers/pci/p2pdma.c                   |  2 +-
- drivers/pci/pci-sysfs.c                | 10 +++++-----
- drivers/platform/x86/intel/pmt/class.c |  2 +-
- drivers/uio/uio_hv_generic.c           |  2 +-
- include/linux/sysfs.h                  |  2 +-
- 7 files changed, 13 insertions(+), 13 deletions(-)
+> On 31. Oct 2024, at 3.00, John Meneghini <jmeneghi@redhat.com> wrote:
+> 
+> Be sure to clear was_reset when ever we clear pos_unknown. If we don't
+> then the code in st_chk_result() will turn on pos_unknown again.
+> 
+>        STp->pos_unknown |= STp->device->was_reset;
+> 
+> This results in confusion as future commands fail unexpectedly.
 
-diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 5808a66e2a81f7eba9a245fd6a343406a1ade87d..3048758304b57afa01ddeb6558c39bdb48c9a3f6 100644
---- a/arch/alpha/kernel/pci-sysfs.c
-+++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -64,7 +64,7 @@ static int __pci_mmap_fits(struct pci_dev *pdev, int num,
-  * Return: %0 on success, negative error code otherwise
-  */
- static int pci_mmap_resource(struct kobject *kobj,
--			     struct bin_attribute *attr,
-+			     const struct bin_attribute *attr,
- 			     struct vm_area_struct *vma, int sparse)
- {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-@@ -93,14 +93,14 @@ static int pci_mmap_resource(struct kobject *kobj,
- }
- 
- static int pci_mmap_resource_sparse(struct file *filp, struct kobject *kobj,
--				    struct bin_attribute *attr,
-+				    const struct bin_attribute *attr,
- 				    struct vm_area_struct *vma)
- {
- 	return pci_mmap_resource(kobj, attr, vma, 1);
- }
- 
- static int pci_mmap_resource_dense(struct file *filp, struct kobject *kobj,
--				   struct bin_attribute *attr,
-+				   const struct bin_attribute *attr,
- 				   struct vm_area_struct *vma)
- {
- 	return pci_mmap_resource(kobj, attr, vma, 0);
-diff --git a/drivers/misc/ocxl/sysfs.c b/drivers/misc/ocxl/sysfs.c
-index 405180d47d9bff0aaa7a736bb3fecfbe318db961..07520d6e6dc55702696b8656440914c379e6e27a 100644
---- a/drivers/misc/ocxl/sysfs.c
-+++ b/drivers/misc/ocxl/sysfs.c
-@@ -125,7 +125,7 @@ static const struct vm_operations_struct global_mmio_vmops = {
- };
- 
- static int global_mmio_mmap(struct file *filp, struct kobject *kobj,
--			struct bin_attribute *bin_attr,
-+			const struct bin_attribute *bin_attr,
- 			struct vm_area_struct *vma)
- {
- 	struct ocxl_afu *afu = to_afu(kobj_to_dev(kobj));
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 4f47a13cb500ff5339cde426b6ccb020fcd74ae7..7abd4f546d3c071f31e622d881f5c5ac3e4de55e 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -90,7 +90,7 @@ static ssize_t published_show(struct device *dev, struct device_attribute *attr,
- static DEVICE_ATTR_RO(published);
- 
- static int p2pmem_alloc_mmap(struct file *filp, struct kobject *kobj,
--		struct bin_attribute *attr, struct vm_area_struct *vma)
-+		const struct bin_attribute *attr, struct vm_area_struct *vma)
- {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
- 	size_t len = vma->vm_end - vma->vm_start;
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 13912940ed2bb66c0086e5bea9a3cb6417ac14dd..0ad3427228b12aa95325c6fc00e9686740559238 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -910,7 +910,7 @@ static ssize_t pci_write_legacy_io(struct file *filp, struct kobject *kobj,
-  * memory space.
-  */
- static int pci_mmap_legacy_mem(struct file *filp, struct kobject *kobj,
--			       struct bin_attribute *attr,
-+			       const struct bin_attribute *attr,
- 			       struct vm_area_struct *vma)
- {
- 	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
-@@ -930,7 +930,7 @@ static int pci_mmap_legacy_mem(struct file *filp, struct kobject *kobj,
-  * memory space. Returns -ENOSYS if the operation isn't supported
-  */
- static int pci_mmap_legacy_io(struct file *filp, struct kobject *kobj,
--			      struct bin_attribute *attr,
-+			      const struct bin_attribute *attr,
- 			      struct vm_area_struct *vma)
- {
- 	struct pci_bus *bus = to_pci_bus(kobj_to_dev(kobj));
-@@ -1034,7 +1034,7 @@ void pci_remove_legacy_files(struct pci_bus *b)
-  *
-  * Use the regular PCI mapping routines to map a PCI resource into userspace.
-  */
--static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
-+static int pci_mmap_resource(struct kobject *kobj, const struct bin_attribute *attr,
- 			     struct vm_area_struct *vma, int write_combine)
- {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-@@ -1059,14 +1059,14 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- }
- 
- static int pci_mmap_resource_uc(struct file *filp, struct kobject *kobj,
--				struct bin_attribute *attr,
-+				const struct bin_attribute *attr,
- 				struct vm_area_struct *vma)
- {
- 	return pci_mmap_resource(kobj, attr, vma, 0);
- }
- 
- static int pci_mmap_resource_wc(struct file *filp, struct kobject *kobj,
--				struct bin_attribute *attr,
-+				const struct bin_attribute *attr,
- 				struct vm_area_struct *vma)
- {
- 	return pci_mmap_resource(kobj, attr, vma, 1);
-diff --git a/drivers/platform/x86/intel/pmt/class.c b/drivers/platform/x86/intel/pmt/class.c
-index c04bb7f97a4db13268fc5697887951cf8f0f5a25..f9afa23e754b8b68bd59b72d6a72d26503a21f31 100644
---- a/drivers/platform/x86/intel/pmt/class.c
-+++ b/drivers/platform/x86/intel/pmt/class.c
-@@ -103,7 +103,7 @@ intel_pmt_read(struct file *filp, struct kobject *kobj,
- 
- static int
- intel_pmt_mmap(struct file *filp, struct kobject *kobj,
--		struct bin_attribute *attr, struct vm_area_struct *vma)
-+		const struct bin_attribute *attr, struct vm_area_struct *vma)
- {
- 	struct intel_pmt_entry *entry = container_of(attr,
- 						     struct intel_pmt_entry,
-diff --git a/drivers/uio/uio_hv_generic.c b/drivers/uio/uio_hv_generic.c
-index 8704095994118c2660f345c504b5ea466d053efb..3976360d0096d6681faf88815cc6277fb76a1d9f 100644
---- a/drivers/uio/uio_hv_generic.c
-+++ b/drivers/uio/uio_hv_generic.c
-@@ -135,7 +135,7 @@ static void hv_uio_rescind(struct vmbus_channel *channel)
-  * The ring buffer is allocated as contiguous memory by vmbus_open
-  */
- static int hv_uio_ring_mmap(struct file *filp, struct kobject *kobj,
--			    struct bin_attribute *attr,
-+			    const struct bin_attribute *attr,
- 			    struct vm_area_struct *vma)
- {
- 	struct vmbus_channel *channel
-diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index d1b22d56198b55ee39fe4c4fc994f5b753641992..9fcdc8cd3118f359742bfd8b708d5c3eff511042 100644
---- a/include/linux/sysfs.h
-+++ b/include/linux/sysfs.h
-@@ -309,7 +309,7 @@ struct bin_attribute {
- 			 char *, loff_t, size_t);
- 	loff_t (*llseek)(struct file *, struct kobject *, struct bin_attribute *,
- 			 loff_t, int);
--	int (*mmap)(struct file *, struct kobject *, struct bin_attribute *attr,
-+	int (*mmap)(struct file *, struct kobject *, const struct bin_attribute *attr,
- 		    struct vm_area_struct *vma);
- };
- 
+This brings in my mind (again) the question: is the hack using was_reset set
+by scsi_error to detect device reset necessary any more? It was introduced
+as a temporary method somewhere between 1.3.20 and 1.3.30 (in 1995)
+when the POR (power on/reset) UAs (Unit Attention) were not passed to st.
+The worst problem with this hack is clearing was_reset. St should not clear
+something set by error handling (layering violation).
 
--- 
-2.47.0
+Your earlier patch added code to st to set pos_unknown when a POR UA
+was found. So, is this now alone enough to catch the resets?
+
+I now did some experiments with scsi_debug and in those experiments
+reset initiated using sg_reset did result in st getting POR UA.
+But this was just a simple and somewhat artificial test.
 
