@@ -1,32 +1,32 @@
 Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71051AD2D;
-	Sun,  3 Nov 2024 17:04:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F3AFAD2D;
+	Sun,  3 Nov 2024 17:04:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730653482; cv=none; b=XGoz222FxafVypl8u5eGe5KP+e4OfBnba8e+E4VUo8P0bFqAvyD3Oxg+DDQe1RDDtFGlOgarvEY2+uJyPFEKSrpDfNvc7lVibg0g+mbSW920140I/IjiEBS+8HIzO5yIWD+5on+rYo92TlFyzouiIrI6+/h8mua+/4cvT3KZVp0=
+	t=1730653485; cv=none; b=XavlXwDsczjXWjAhvzcJkhjXytFrdGWalD7K/LGDIwZ9zfkgefuz8B8nkT/x/sbPP1gNwqBcDhVvR4IqLD35OGt2YyicyKBxsz1v7qyuYfe7fxnt0N0J37Jbz3O7nlqTUUITlS5MXJPjtUCY+U+skyMBnEEgpXdRos+kvTIMe0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730653482; c=relaxed/simple;
-	bh=iCkq/n0ScNs19XGEBHP6SQ4H+TMRU4fkw8iLrhzrW/Q=;
+	s=arc-20240116; t=1730653485; c=relaxed/simple;
+	bh=GMdVqpFwoDETa/zGkV60zA/YyucohMN7ciiORB0dDFM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=g4oibU+1VeBBkpLHfCHnFTM3r5JjKJM+q5JBZRA09UeqsK/CFRJtVSryxKVfAkcWZ3+4Frq4hGENVLaL7x+A8nCcu52sJ4bV9UzuU6uJGqBDYEpgaOoah8RYqUWshjihaA2lsy6h/bwvkaQX/toJxlJNOJFgvvtRwwLXfy8pY4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=jCGf7P5s; arc=none smtp.client-ip=159.69.126.157
+	 In-Reply-To:To:Cc; b=kb89m/f+jlA2LCfxvbdAmLHIaorwCobkf8X+sbOHXbQWyJ9dJ+vZ4IFkQKkttBhhl9v9InIOH+aU1mCV2K1Tie0ZT5+6cd29+xHJrGZ6bAtWijoF36wOjiUWFr+g2mJ9P71PUe55P4vR0yMHgdkiMXMr/NED8XMFcN5xxp1tmQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=YsKAl8re; arc=none smtp.client-ip=159.69.126.157
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="jCGf7P5s"
+	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="YsKAl8re"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1730653474;
-	bh=iCkq/n0ScNs19XGEBHP6SQ4H+TMRU4fkw8iLrhzrW/Q=;
+	s=mail; t=1730653480;
+	bh=GMdVqpFwoDETa/zGkV60zA/YyucohMN7ciiORB0dDFM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=jCGf7P5s53Ta360TJbHbjEX0UBWW3nHAglDu578tyRJB0eZgE5NN8zYQ0kFtr1Svt
-	 pCp484/NqdkNGcCiZ9riHzuo/LXlzlPqaqdK9SPb5smzV52zn2yNPWdP3DIa10iyOa
-	 KeTiE8N08tCGK9uD6gJjB4S2MSPfd5jAPy1fJsj8=
+	b=YsKAl8reGy7MODy4xp/3ixKRAFkj0+xvK1kAYF9GFWBlnfgFPvEuG1Bqm8MGf/XGs
+	 2ChL4enIrXWS1uZdfU2ZeH2CET8CXiCx0SJDBJGsIU3+6TQOsP8p3k64cZTiOAxWRb
+	 /dnKOKZ07h9lNs3KGaFsM8ZONL5nRrjkmAvCVifE=
 From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Sun, 03 Nov 2024 17:03:30 +0000
-Subject: [PATCH v2 01/10] sysfs: explicitly pass size to
- sysfs_add_bin_file_mode_ns()
+Date: Sun, 03 Nov 2024 17:03:37 +0000
+Subject: [PATCH v2 08/10] sysfs: implement all BIN_ATTR_* macros in terms
+ of __BIN_ATTR()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20241103-sysfs-const-bin_attr-v2-1-71110628844c@weissschuh.net>
+Message-Id: <20241103-sysfs-const-bin_attr-v2-8-71110628844c@weissschuh.net>
 References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
 In-Reply-To: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -80,93 +80,77 @@ Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org,
  linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, 
  =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1730653468; l=3118;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1730653468; l=2547;
  i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=iCkq/n0ScNs19XGEBHP6SQ4H+TMRU4fkw8iLrhzrW/Q=;
- b=sZzl6wOvr0Sxq3DUY1GJqR+qhFx4JBDN7tgJGJz8989wTSFCjglU0coA3+lhHK8A4oBqQa8cP
- HbptlDNYnPABVHa2o+5ifoWR29tK6teGa/60gJsy0hPwKXqLXrvxd4C
+ bh=GMdVqpFwoDETa/zGkV60zA/YyucohMN7ciiORB0dDFM=;
+ b=G1PulaFbJ1PZH7AnZk220ddkyci6/SVWNb+Rtvwc4kmmjYqzz3Epr6UCHfWP8qbRyhd/TurKs
+ If4brtJxns8CxxC6suNmBgy57hhP6OtLmxJDPf6RSsE1N5AsLzcns6R
 X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
  pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 
-Upcoming changes to the sysfs core require the size of the created file
-to be overridable by the caller.
-Add a parameter to enable this.
-For now keep using attr->size in all cases.
+The preparations for the upcoming constification of struct bin_attribute
+requires some logic in the structure definition macros.
+To avoid duplication of that logic in multiple macros, reimplement all
+other macros in terms of __BIN_ATTR().
 
 Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
 ---
- fs/sysfs/file.c  | 8 ++++----
- fs/sysfs/group.c | 3 ++-
- fs/sysfs/sysfs.h | 2 +-
- 3 files changed, 7 insertions(+), 6 deletions(-)
+ include/linux/sysfs.h | 27 ++++++++-------------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
-index d1995e2d6c943a644ff9f34cf2488864d57daf81..6d39696b43069010b0ad0bdaadcf9002cb70c92c 100644
---- a/fs/sysfs/file.c
-+++ b/fs/sysfs/file.c
-@@ -315,7 +315,7 @@ int sysfs_add_file_mode_ns(struct kernfs_node *parent,
+diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+index cb2a5e277c2384f2e8add8fbf2907e8a819576ec..d17c473c1ef292875475bf3bdf62d07241c13882 100644
+--- a/include/linux/sysfs.h
++++ b/include/linux/sysfs.h
+@@ -333,17 +333,11 @@ struct bin_attribute {
+ 	.size	= _size,						\
  }
  
- int sysfs_add_bin_file_mode_ns(struct kernfs_node *parent,
--		const struct bin_attribute *battr, umode_t mode,
-+		const struct bin_attribute *battr, umode_t mode, size_t size,
- 		kuid_t uid, kgid_t gid, const void *ns)
- {
- 	const struct attribute *attr = &battr->attr;
-@@ -340,7 +340,7 @@ int sysfs_add_bin_file_mode_ns(struct kernfs_node *parent,
- #endif
+-#define __BIN_ATTR_RO(_name, _size) {					\
+-	.attr	= { .name = __stringify(_name), .mode = 0444 },		\
+-	.read	= _name##_read,						\
+-	.size	= _size,						\
+-}
++#define __BIN_ATTR_RO(_name, _size)					\
++	__BIN_ATTR(_name, 0444, _name##_read, NULL, _size)
  
- 	kn = __kernfs_create_file(parent, attr->name, mode & 0777, uid, gid,
--				  battr->size, ops, (void *)attr, ns, key);
-+				  size, ops, (void *)attr, ns, key);
- 	if (IS_ERR(kn)) {
- 		if (PTR_ERR(kn) == -EEXIST)
- 			sysfs_warn_dup(parent, attr->name);
-@@ -580,8 +580,8 @@ int sysfs_create_bin_file(struct kobject *kobj,
- 		return -EINVAL;
+-#define __BIN_ATTR_WO(_name, _size) {					\
+-	.attr	= { .name = __stringify(_name), .mode = 0200 },		\
+-	.write	= _name##_write,					\
+-	.size	= _size,						\
+-}
++#define __BIN_ATTR_WO(_name, _size)					\
++	__BIN_ATTR(_name, 0200, NULL, _name##_write, _size)
  
- 	kobject_get_ownership(kobj, &uid, &gid);
--	return sysfs_add_bin_file_mode_ns(kobj->sd, attr, attr->attr.mode, uid,
--					   gid, NULL);
-+	return sysfs_add_bin_file_mode_ns(kobj->sd, attr, attr->attr.mode,
-+					  attr->size, uid, gid, NULL);
- }
- EXPORT_SYMBOL_GPL(sysfs_create_bin_file);
+ #define __BIN_ATTR_RW(_name, _size)					\
+ 	__BIN_ATTR(_name, 0644, _name##_read, _name##_write, _size)
+@@ -364,11 +358,8 @@ struct bin_attribute bin_attr_##_name = __BIN_ATTR_WO(_name, _size)
+ struct bin_attribute bin_attr_##_name = __BIN_ATTR_RW(_name, _size)
  
-diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
-index d22ad67a0f3291f4702f494939528d5d13c31fae..45b2e92941da1f49dcc71af3781317c61480c956 100644
---- a/fs/sysfs/group.c
-+++ b/fs/sysfs/group.c
-@@ -87,6 +87,7 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
- 	if (grp->bin_attrs) {
- 		for (i = 0, bin_attr = grp->bin_attrs; *bin_attr; i++, bin_attr++) {
- 			umode_t mode = (*bin_attr)->attr.mode;
-+			size_t size = (*bin_attr)->size;
  
- 			if (update)
- 				kernfs_remove_by_name(parent,
-@@ -104,7 +105,7 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+-#define __BIN_ATTR_ADMIN_RO(_name, _size) {					\
+-	.attr	= { .name = __stringify(_name), .mode = 0400 },		\
+-	.read	= _name##_read,						\
+-	.size	= _size,						\
+-}
++#define __BIN_ATTR_ADMIN_RO(_name, _size)				\
++	__BIN_ATTR(_name, 0400, _name##_read, NULL, _size)
  
- 			mode &= SYSFS_PREALLOC | 0664;
- 			error = sysfs_add_bin_file_mode_ns(parent, *bin_attr,
--							   mode, uid, gid,
-+							   mode, size, uid, gid,
- 							   NULL);
- 			if (error)
- 				break;
-diff --git a/fs/sysfs/sysfs.h b/fs/sysfs/sysfs.h
-index 3f28c9af57562f61a00a47935579f0939cbfd4dc..8e012f25e1c06e802c3138cc2715b46c1f67fa48 100644
---- a/fs/sysfs/sysfs.h
-+++ b/fs/sysfs/sysfs.h
-@@ -31,7 +31,7 @@ int sysfs_add_file_mode_ns(struct kernfs_node *parent,
- 		const struct attribute *attr, umode_t amode, kuid_t uid,
- 		kgid_t gid, const void *ns);
- int sysfs_add_bin_file_mode_ns(struct kernfs_node *parent,
--		const struct bin_attribute *battr, umode_t mode,
-+		const struct bin_attribute *battr, umode_t mode, size_t size,
- 		kuid_t uid, kgid_t gid, const void *ns);
+ #define __BIN_ATTR_ADMIN_RW(_name, _size)					\
+ 	__BIN_ATTR(_name, 0600, _name##_read, _name##_write, _size)
+@@ -379,10 +370,8 @@ struct bin_attribute bin_attr_##_name = __BIN_ATTR_ADMIN_RO(_name, _size)
+ #define BIN_ATTR_ADMIN_RW(_name, _size)					\
+ struct bin_attribute bin_attr_##_name = __BIN_ATTR_ADMIN_RW(_name, _size)
  
- /*
+-#define __BIN_ATTR_SIMPLE_RO(_name, _mode) {				\
+-	.attr	= { .name = __stringify(_name), .mode = _mode },	\
+-	.read	= sysfs_bin_attr_simple_read,				\
+-}
++#define __BIN_ATTR_SIMPLE_RO(_name, _mode)				\
++	__BIN_ATTR(_name, _mode, sysfs_bin_attr_simple_read, NULL, 0)
+ 
+ #define BIN_ATTR_SIMPLE_RO(_name)					\
+ struct bin_attribute bin_attr_##_name = __BIN_ATTR_SIMPLE_RO(_name, 0444)
 
 -- 
 2.47.0
