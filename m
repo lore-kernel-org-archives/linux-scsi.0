@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 167771B3934;
-	Sun,  3 Nov 2024 22:32:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C0E1B395A;
+	Sun,  3 Nov 2024 22:32:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730673153; cv=none; b=Eoj0aZWs5+STa4yXHw1PHpAjr4pc8YdJJyO2XzBj3IT1359Ykbp8mYuaeCz5OsN1AumhGFm5aWTbFFLymQQY3OXvVP4A1lUmdTDb7+l0tfSUO7AuP9e6ZbYbJ3DKNVuYWcWPj5ieBmae43Atb3aXv4vC0d7J/YFQh5wrrAHR2LM=
+	t=1730673153; cv=none; b=NnI6gE4P3P7SpmTLVakLsmS+GTNqwRCrpqSowUoXvyjUEHbj2SySUlRlEFvYd4R+pmL0x3XwxMRoVz+E/pY5ZpKFNQzxGwYlJcsWq/+xFmjLsUb5VIaIdKzoBIgjkMPwsJjcwP3xC/Uc+wuxkW8uPeawIzZ5RJhmyL5J8GUDPOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730673153; c=relaxed/simple;
-	bh=ltl2dzTFUaa7H2aG4AJgeKEj/9DuYykUjD6SD30TiWA=;
+	bh=WfN2SwQ1SfAPzqKDOcxOjX9pk3UC1SwykLtsIrx3B8I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U/rgPxN5zpcYubMDFtYoGG12+m6i/lrdqlTJYkQqcvuLyBQGruTSlZ9Pkz3pUl4KKJDapaDibo/OBpmmN8alvVyCl8B4EjIitVZ+9JnK7XzF8Nn3i+RSgy8LjSnaMSlKqmqo5LwjK9250FlKfX4eZgLegdOJgE1+bqLUlX5PXtU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rD284UMd; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IPSuvzU6d30McIUt7YjVJ2w+35YKQRooonpVed6JMk9fF147XNQ608wtoQATnAzjQnK1pyepAfyMYGQNfZFCXhpkj97xKOnoc4oaWTjBK8j6aL9a196sP2XB6sBiBdQ/3xlh6VG8G2YBTImc25BtHjyDSYPcPxf/hrDfEJdIxLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ncJC7MH9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rD284UMd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AD84C4CED4;
-	Sun,  3 Nov 2024 22:32:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ncJC7MH9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23D20C4CECD;
+	Sun,  3 Nov 2024 22:32:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730673152;
-	bh=ltl2dzTFUaa7H2aG4AJgeKEj/9DuYykUjD6SD30TiWA=;
+	s=k20201202; t=1730673153;
+	bh=WfN2SwQ1SfAPzqKDOcxOjX9pk3UC1SwykLtsIrx3B8I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rD284UMdniBNvOArttrl83MnmXpyNh/nlcC9K5Mm8gjSj26HUT3Ffziql0jIddtV1
-	 xYPXQVBEULCOjAKWHI6hxZEby09LiQAqmJQOZ+2SeubZyJt2ePAgcqq22PnnkBfdLl
-	 iGO7KlATTICQP9q0iuNiW/jY9amA+V+pVQXLwF5M9Px9C/dR3p1nksEL0y3UncKxCw
-	 MWnsyaP5fCmbPQQeasYezXe0FndmKpf/9Xjv4kNUqGvlEda1E0lLqwdglMDaXbGiMz
-	 MBBh+epoSvd6NFLssQi/HYX1EI7ZgicEprfte/z93BzVdbXPatTcmXXYI1TbltQc5u
-	 2Gb3LHgTHi+YA==
+	b=ncJC7MH9f55fhT2iNp4ZGfgqP7KHuE7wemzzV22Z1RB/6rZX0YywjK4cWT6F4kgQu
+	 UCaCPlfmreev/pK63M1sZ7RvNNF5SmFtAQrjpr3KR1BHf9QS7SVy/pj4BVmX3P6VqQ
+	 FrGrQcXq1YnOmAmEQyHq9y4lzpkQKxUUcq9jtL67bjHifb7rexexd24s56L7e2ZMi7
+	 SSwDcJ6PFYFrIJdIhdSFsMB9XoaDWjJu+WTNUIolMnvVQZRQQQZO9jjVE99Tv11X3a
+	 kkYlUNWGwP5shTWE8Us+pJs0v8sX0+Bq3JRf+wpALI+UnuKai7iVjidTYXu362kAZz
+	 dA7qo5/0IeuCA==
 From: Eric Biggers <ebiggers@kernel.org>
 To: linux-kernel@vger.kernel.org
 Cc: linux-arch@vger.kernel.org,
@@ -42,9 +42,9 @@ Cc: linux-arch@vger.kernel.org,
 	sparclinux@vger.kernel.org,
 	x86@kernel.org,
 	Ard Biesheuvel <ardb@kernel.org>
-Subject: [PATCH v3 15/18] ext4: switch to using the crc32c library
-Date: Sun,  3 Nov 2024 14:31:51 -0800
-Message-ID: <20241103223154.136127-16-ebiggers@kernel.org>
+Subject: [PATCH v3 17/18] f2fs: switch to using the crc32 library
+Date: Sun,  3 Nov 2024 14:31:53 -0800
+Message-ID: <20241103223154.136127-18-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241103223154.136127-1-ebiggers@kernel.org>
 References: <20241103223154.136127-1-ebiggers@kernel.org>
@@ -58,170 +58,140 @@ Content-Transfer-Encoding: 8bit
 
 From: Eric Biggers <ebiggers@google.com>
 
-Now that the crc32c() library function directly takes advantage of
+Now that the crc32() library function takes advantage of
 architecture-specific optimizations, it is unnecessary to go through the
-crypto API.  Just use crc32c().  This is much simpler, and it improves
+crypto API.  Just use crc32().  This is much simpler, and it improves
 performance due to eliminating the crypto API overhead.
 
 Reviewed-by: Ard Biesheuvel <ardb@kernel.org>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/ext4/Kconfig |  3 +--
- fs/ext4/ext4.h  | 25 +++----------------------
- fs/ext4/super.c | 15 ---------------
- 3 files changed, 4 insertions(+), 39 deletions(-)
+ fs/f2fs/Kconfig |  3 +--
+ fs/f2fs/f2fs.h  | 19 +------------------
+ fs/f2fs/super.c | 15 ---------------
+ 3 files changed, 2 insertions(+), 35 deletions(-)
 
-diff --git a/fs/ext4/Kconfig b/fs/ext4/Kconfig
-index e20d59221fc0..c9ca41d91a6c 100644
---- a/fs/ext4/Kconfig
-+++ b/fs/ext4/Kconfig
-@@ -29,12 +29,11 @@ config EXT3_FS_SECURITY
- config EXT4_FS
- 	tristate "The Extended 4 (ext4) filesystem"
+diff --git a/fs/f2fs/Kconfig b/fs/f2fs/Kconfig
+index 68a1e23e1557..5916a02fb46d 100644
+--- a/fs/f2fs/Kconfig
++++ b/fs/f2fs/Kconfig
+@@ -2,12 +2,11 @@
+ config F2FS_FS
+ 	tristate "F2FS filesystem support"
+ 	depends on BLOCK
  	select BUFFER_HEAD
- 	select JBD2
- 	select CRC16
+ 	select NLS
 -	select CRYPTO
--	select CRYPTO_CRC32C
+-	select CRYPTO_CRC32
 +	select CRC32
- 	select FS_IOMAP
+ 	select F2FS_FS_XATTR if FS_ENCRYPTION
  	select FS_ENCRYPTION_ALGS if FS_ENCRYPTION
- 	help
- 	  This is the next generation of the ext3 filesystem.
+ 	select FS_IOMAP
+ 	select LZ4_COMPRESS if F2FS_FS_LZ4
+ 	select LZ4_DECOMPRESS if F2FS_FS_LZ4
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 33f5449dc22d..1fc5c2743c8d 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -1761,13 +1761,10 @@ struct f2fs_sb_info {
  
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 44b0d418143c..99aa512a7de1 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -31,11 +31,11 @@
- #include <linux/wait.h>
- #include <linux/sched/signal.h>
- #include <linux/blockgroup_lock.h>
- #include <linux/percpu_counter.h>
- #include <linux/ratelimit.h>
--#include <crypto/hash.h>
-+#include <linux/crc32c.h>
- #include <linux/falloc.h>
- #include <linux/percpu-rwsem.h>
- #include <linux/fiemap.h>
- #ifdef __KERNEL__
- #include <linux/compat.h>
-@@ -1660,13 +1660,10 @@ struct ext4_sb_info {
- 	struct task_struct *s_mmp_tsk;
- 
- 	/* record the last minlen when FITRIM is called. */
- 	unsigned long s_last_trim_minblks;
+ 	/* For write statistics */
+ 	u64 sectors_written_start;
+ 	u64 kbytes_written;
  
 -	/* Reference to checksum algorithm driver via cryptoapi */
 -	struct crypto_shash *s_chksum_driver;
 -
  	/* Precomputed FS UUID checksum for seeding other checksums */
- 	__u32 s_csum_seed;
+ 	__u32 s_chksum_seed;
  
- 	/* Reclaim extents from extent status tree */
- 	struct shrinker *s_es_shrinker;
-@@ -2465,23 +2462,11 @@ static inline __le16 ext4_rec_len_to_disk(unsigned len, unsigned blocksize)
- #define DX_HASH_LAST 			DX_HASH_SIPHASH
+ 	struct workqueue_struct *post_read_wq;	/* post read workqueue */
  
- static inline u32 ext4_chksum(struct ext4_sb_info *sbi, u32 crc,
+@@ -1941,25 +1938,11 @@ static inline unsigned int f2fs_time_to_wait(struct f2fs_sb_info *sbi,
+  * Inline functions
+  */
+ static inline u32 __f2fs_crc32(struct f2fs_sb_info *sbi, u32 crc,
  			      const void *address, unsigned int length)
  {
 -	struct {
 -		struct shash_desc shash;
 -		char ctx[4];
 -	} desc;
+-	int err;
 -
--	BUG_ON(crypto_shash_descsize(sbi->s_chksum_driver)!=sizeof(desc.ctx));
+-	BUG_ON(crypto_shash_descsize(sbi->s_chksum_driver) != sizeof(desc.ctx));
 -
 -	desc.shash.tfm = sbi->s_chksum_driver;
 -	*(u32 *)desc.ctx = crc;
 -
--	BUG_ON(crypto_shash_update(&desc.shash, address, length));
+-	err = crypto_shash_update(&desc.shash, address, length);
+-	BUG_ON(err);
 -
 -	return *(u32 *)desc.ctx;
-+	return crc32c(crc, address, length);
++	return crc32(crc, address, length);
  }
  
- #ifdef __KERNEL__
- 
- /* hash info structure used by the directory hash */
-@@ -3278,15 +3263,11 @@ extern void ext4_group_desc_csum_set(struct super_block *sb, __u32 group,
- extern int ext4_register_li_request(struct super_block *sb,
- 				    ext4_group_t first_not_zeroed);
- 
- static inline int ext4_has_metadata_csum(struct super_block *sb)
+ static inline u32 f2fs_crc32(struct f2fs_sb_info *sbi, const void *address,
+ 			   unsigned int length)
  {
--	WARN_ON_ONCE(ext4_has_feature_metadata_csum(sb) &&
--		     !EXT4_SB(sb)->s_chksum_driver);
--
--	return ext4_has_feature_metadata_csum(sb) &&
--	       (EXT4_SB(sb)->s_chksum_driver != NULL);
-+	return ext4_has_feature_metadata_csum(sb);
- }
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index 87ab5696bd48..003d3bcb0caa 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -1670,12 +1670,10 @@ static void f2fs_put_super(struct super_block *sb)
  
- static inline int ext4_has_group_desc_csum(struct super_block *sb)
- {
- 	return ext4_has_feature_gdt_csum(sb) || ext4_has_metadata_csum(sb);
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 16a4ce704460..1a821093cc0d 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1371,12 +1371,10 @@ static void ext4_put_super(struct super_block *sb)
- 	 * Now that we are completely done shutting down the
- 	 * superblock, we need to actually destroy the kobject.
- 	 */
- 	kobject_put(&sbi->s_kobj);
- 	wait_for_completion(&sbi->s_kobj_unregister);
+ 	f2fs_destroy_post_read_wq(sbi);
+ 
+ 	kvfree(sbi->ckpt);
+ 
 -	if (sbi->s_chksum_driver)
 -		crypto_free_shash(sbi->s_chksum_driver);
- 	kfree(sbi->s_blockgroup_lock);
- 	fs_put_dax(sbi->s_daxdev, NULL);
- 	fscrypt_free_dummy_policy(&sbi->s_dummy_enc_policy);
- #if IS_ENABLED(CONFIG_UNICODE)
- 	utf8_unload(sb->s_encoding);
-@@ -4586,19 +4584,10 @@ static int ext4_init_metadata_csum(struct super_block *sb, struct ext4_super_blo
- 		return -EINVAL;
+ 	kfree(sbi->raw_super);
+ 
+ 	f2fs_destroy_page_array_cache(sbi);
+ 	f2fs_destroy_xattr_caches(sbi);
+ #ifdef CONFIG_QUOTA
+@@ -4419,19 +4417,10 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
+ 		INIT_LIST_HEAD(&sbi->inode_list[i]);
+ 		spin_lock_init(&sbi->inode_lock[i]);
  	}
- 	ext4_setup_csum_trigger(sb, EXT4_JTR_ORPHAN_FILE,
- 				ext4_orphan_file_block_trigger);
+ 	mutex_init(&sbi->flush_lock);
  
 -	/* Load the checksum driver */
--	sbi->s_chksum_driver = crypto_alloc_shash("crc32c", 0, 0);
+-	sbi->s_chksum_driver = crypto_alloc_shash("crc32", 0, 0);
 -	if (IS_ERR(sbi->s_chksum_driver)) {
--		int ret = PTR_ERR(sbi->s_chksum_driver);
--		ext4_msg(sb, KERN_ERR, "Cannot load crc32c driver.");
+-		f2fs_err(sbi, "Cannot load crc32 driver.");
+-		err = PTR_ERR(sbi->s_chksum_driver);
 -		sbi->s_chksum_driver = NULL;
--		return ret;
+-		goto free_sbi;
 -	}
 -
- 	/* Check superblock checksum */
- 	if (!ext4_superblock_csum_verify(sb, es)) {
- 		ext4_msg(sb, KERN_ERR, "VFS: Found ext4 filesystem with "
- 			 "invalid superblock checksum.  Run e2fsck?");
- 		return -EFSBADCRC;
-@@ -5638,13 +5627,10 @@ failed_mount8: __maybe_unused
- 	flush_work(&sbi->s_sb_upd_work);
- 	ext4_stop_mmpd(sbi);
- 	del_timer_sync(&sbi->s_err_report);
- 	ext4_group_desc_free(sbi);
- failed_mount:
+ 	/* set a block size */
+ 	if (unlikely(!sb_set_blocksize(sb, F2FS_BLKSIZE))) {
+ 		f2fs_err(sbi, "unable to set blocksize");
+ 		goto free_sbi;
+ 	}
+@@ -4872,12 +4861,10 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
+ 	fscrypt_free_dummy_policy(&F2FS_OPTION(sbi).dummy_enc_policy);
+ 	kvfree(options);
+ free_sb_buf:
+ 	kfree(raw_super);
+ free_sbi:
 -	if (sbi->s_chksum_driver)
 -		crypto_free_shash(sbi->s_chksum_driver);
--
- #if IS_ENABLED(CONFIG_UNICODE)
- 	utf8_unload(sb->s_encoding);
- #endif
+ 	kfree(sbi);
+ 	sb->s_fs_info = NULL;
  
- #ifdef CONFIG_QUOTA
-@@ -7433,8 +7419,7 @@ static void __exit ext4_exit_fs(void)
- }
+ 	/* give only one another chance */
+ 	if (retry_cnt > 0 && skip_recovery) {
+@@ -5080,7 +5067,5 @@ module_init(init_f2fs_fs)
+ module_exit(exit_f2fs_fs)
  
- MODULE_AUTHOR("Remy Card, Stephen Tweedie, Andrew Morton, Andreas Dilger, Theodore Ts'o and others");
- MODULE_DESCRIPTION("Fourth Extended Filesystem");
+ MODULE_AUTHOR("Samsung Electronics's Praesto Team");
+ MODULE_DESCRIPTION("Flash Friendly File System");
  MODULE_LICENSE("GPL");
--MODULE_SOFTDEP("pre: crc32c");
- module_init(ext4_init_fs)
- module_exit(ext4_exit_fs)
+-MODULE_SOFTDEP("pre: crc32");
+-
 -- 
 2.47.0
 
