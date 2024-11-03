@@ -1,205 +1,95 @@
-Received: from smtp.smtpout.orange.fr (smtp-19.smtpout.orange.fr [80.12.242.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbg154.qq.com (smtpbg154.qq.com [15.184.224.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27F823774;
-	Sun,  3 Nov 2024 13:09:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B1ABA42;
+	Sun,  3 Nov 2024 13:37:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=15.184.224.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730639364; cv=none; b=UhMd1xh7NQD9vcgH3yMDb11wf02GVbdISaxWp/d68Gi0B+X0YB7kVZi2nTGXML8082y1NCRG5buUjQAq7brwd4YLw3PNgaTlURh07g0Rortenwte2+5H9z3jaI4yvmhDYOodJO2NzI0AKkiwFy0SOPohn9FB7jpyvgv/+mRdON8=
+	t=1730641042; cv=none; b=EuIFYB8XauCHhMeLtpHfMwAP23xSwT5dtmUQ/71YS43zeRabyUG9vW0C3Z1oWRlV9cwL3ZJlFH490gZF5/Hofte/8EjhsiicCbkzo0/oPFWB/AsMeUlg158Y8U6BjF5r2qlyuEmXyvUfLu+NMBy0flECPFUBJ+yD96d786kE+Q4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730639364; c=relaxed/simple;
-	bh=guXELeytpG22NADybLXxugiStFOd+DdhkkVWeTpYpvM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EiwtcaNoNqmxMoFJskMf0DwQwq+5qK9GXPI0ZNFA+zE628nAYbGBqymYciNmhnmIVe/CU7RXlaOsPeqQRFNwUU2N7XLuZNwq7VQyfQg52MIEA1lz3Nz+yOsL3XgL2xmzsLEmUnfojX3OWaUriOo7PUINhfXnHQCJL1xpxbgOWws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=luModrrd; arc=none smtp.client-ip=80.12.242.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+	s=arc-20240116; t=1730641042; c=relaxed/simple;
+	bh=0u2qY5VmW02QoZQQ8PVGB0RvEt+gYfighmeowfpBp9Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=akCh/hWE7sNeulbTWRNXrTD4fAyTA8PjhMOHh380Yhb3j0P1jsSibQDr1Hbj6zmQFpvF+3WwukBEwXkVsii5JkR/tSuif/+KGdAt518ZhDsgWTCXsmEFwu4qWKdmJS+eXIuNHpAofXFQIbi9zFiD6CLVHtdNEwEnHgS9fPpXv2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=KLF8HuA2; arc=none smtp.client-ip=15.184.224.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="luModrrd"
-Received: from [192.168.1.37] ([90.11.132.44])
-	by smtp.orange.fr with ESMTPA
-	id 7aLrtuVZGGfMn7aLrt2ZJd; Sun, 03 Nov 2024 14:09:13 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1730639353;
-	bh=pHCYMRyEhUD58GA3IYCTR1CfQUuJWA0GVifKU3o2xlA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From;
-	b=luModrrdwcGEIRjb4I/DgierMEI21v2l9+D4OLiHpFiQ/o5mxJZNY5ktBocmR2DxI
-	 HF53OlIc+M5352fldvfSHl04LKpI7WpYAq1qQ3HyETKnHfTj1fVvqR/44FRTvnhC43
-	 /cXUW4MEuF4/lUqHIs4npnWFJJGMHOg9/5EMw+orXtbbLHi0nA1dw+Uisv/OWT7KUS
-	 h6S4slSIV1G/0gMAl6/vfcyw4Kv1Y7uVupPr6ADHCcGP0mni5PY6Gxy+vZnp+pe8Mi
-	 4k5nr7vZgwmq+mt3mMSVwCq4OCbW7aMxNzW7PTqOksalYlmKCyhgChkKdMTiTgqi9o
-	 KB2RORauQAwyA==
-X-ME-Helo: [192.168.1.37]
-X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
-X-ME-Date: Sun, 03 Nov 2024 14:09:13 +0100
-X-ME-IP: 90.11.132.44
-Message-ID: <96938e54-70cf-4e81-9072-8af48883a769@wanadoo.fr>
-Date: Sun, 3 Nov 2024 14:09:05 +0100
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="KLF8HuA2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1730641022;
+	bh=0u2qY5VmW02QoZQQ8PVGB0RvEt+gYfighmeowfpBp9Q=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=KLF8HuA2XZZA8PyiFIvxZyWe/QyPFXt7v/I0izyxgFtQDYw727X9/PTsC+BZn74Y0
+	 mWRYJkxiA6zPS+DHh2CYqTkCl6rOZpFl9M65nsnUxXhTKvCMjUxLR4CJ4QUZsLa+Ci
+	 r1taA2f3NHlHgNNy0bmBr+6w+ezN9xazZzSxWx9w=
+X-QQ-mid: bizesmtpip2t1730641018t4vihmk
+X-QQ-Originating-IP: OJFfFUb+TagDtWAwy6uc0+sLCBe0njxsmdHE22f+THA=
+Received: from avenger-OMEN-by-HP-Gaming-Lapto ( [localhost])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Sun, 03 Nov 2024 21:36:56 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 16809586154877906677
+From: WangYuli <wangyuli@uniontech.com>
+To: ebiggers@kernel.org
+Cc: ardb@kernel.org,
+	linux-arch@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-kernel@vger.kernel.org,
+	linux-mips@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	loongarch@lists.linux.dev,
+	kernel@xen0n.name,
+	chenhuacai@kernel.org,
+	xry111@xry111.site,
+	sparclinux@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH v2 06/18] loongarch/crc32: expose CRC32 functions through lib
+Date: Sun,  3 Nov 2024 21:36:55 +0800
+Message-ID: <DA8BCDFFEACDA1C6+20241103133655.217375-1-wangyuli@uniontech.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20241025191454.72616-7-ebiggers@kernel.org>
+References: <20241025191454.72616-7-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
-To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
- Heiko Stuebner <heiko@sntech.de>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
- Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org, linux-pm@vger.kernel.org
-References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
- <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
-Content-Language: en-US, fr-FR
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtpip:uniontech.com:qybglogicsvrgz:qybglogicsvrgz8a-1
+X-QQ-XMAILINFO: MAXRuxnbzssegXhSBUmiIE6Ni8PjKv5CHWWsGTJU0o95Ea/t2pd6wnqu
+	av3bthBKz45tsWOf6m/LRZbQSWTt7BcsFHtEyxKQKiMG/UONhlRAE+jREH3dkz5J2RCrn3L
+	EbNOGompESEmaKd/JRKrIWo8YjKuybwCcZoQbJlwZLKdyOeketSff2EOXVVi197Q11ABGJj
+	zCDVLr5RahkoLwstEJ+vqFDa14JyI0DM16D2s1izf/JZoWOsYMuhDx5NAlzWweFxdxW8iJN
+	VOIhEiUl/8dvJ/QXdQCUu2f5le0cqfUepm11FxRrjAo1Habnb4GSCzeWanGtE76dDAIzK89
+	OY8bTcZrACgJJyaasaaeXrLkuWqajEX5KrRt8689iMb4z0Qty1MYQEUokgx/tVBRJYO7ePL
+	dF2C2KFfnT1ZNm2JWJNccTgd/07en/sJl8LazlcZen1MBts3mA8V0YNF1Rdpkb4o/Y54qc3
+	j8jDPxQhsdG9y72GOs4QMaPR1/fVv59RW+Xm+4sfr1yn2ZoFUme8u5u3kez4CvZ8Bdh8sfJ
+	Y/dbxn8T25Lf8NWjJG2BvDKM8jSC7HAEJvGJKUItnpI8z7m5TEq2Y7PNear4vrh24uVr3dW
+	9YhZYMHCMT4Juxx8eaSJg7r5WfqgSqOg3ark4Q2lLXWELJ8XxcjmniURpSeuQL4xpMELCiJ
+	gDbVnykSObxsNor/pBnDXf3bK3KCNZFgxQNJtWkbgM5ScOyo73BbeExW6vzdv+8R9LELDiP
+	tpiVn3b02RS2f+C79pak5W9FN56GtXmwY0F1LA3+ewf2qDy53ROjE6xLkhVZmVsXzpW15YJ
+	9dPYVLJTZftDqtbbXCu4JW5OsrQUPJSiy8gE1wMdIolddx6iRYquGlS1V2EaWe6ofSQvdRu
+	R/ksWoSGNU/P1X87cIITRGob5HcXmjUmG5183YZTYAMUsBn4B9ub/nQ9dwH7swW9vZK4Pn6
+	sIAhRQ3rzG9Mxm+a6HLoaOYfkMD2LhuDprb8k4DagQ4WCLUiNRAJJjSPdh6CdSaZNOIda5s
+	B+fiPygXfSsV4idJTf
+X-QQ-XMRINFO: Mp0Kj//9VHAxr69bL5MkOOs=
+X-QQ-RECHKSPAM: 0
 
-Le 08/10/2024 à 08:15, Shawn Lin a écrit :
-> RK3576 SoC contains a UFS controller, add initial support fot it.
+Even though the narrower CRC instructions doesn't require GRLEN=64, they still *aren't* part of LA32 (LoongArch reference manual v1.10, Volume 1, Table 2-1).
+Link: https://lore.kernel.org/all/0a7d0a9e-c56e-4ee2-a83b-00164a450abe@xen0n.name/
 
-s/fot/for/
+Therefore, we could not directly add ARCH_HAS_CRC32 to config LOONGARCH.
 
-> The features are:
-> (1) support UFS 2.0 features
-> (2) High speed up to HS-G3
-> (3) 2RX-2TX lanes
-> (4) auto H8 entry and exit
-> 
-> Software limitation:
-> (1) HCE procedure: enbale controller->enbale intr->dme_reset->dme_enable
-
-s/enbale/enable/ 	x 2
-
-> (2) disable unipro timeout values before power mode change
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-
-No need for an extra empty line
-
-> ---
-
-...
-
-> +static int ufs_rockchip_common_init(struct ufs_hba *hba)
-> +{
-> +	struct device *dev = hba->dev;
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct ufs_rockchip_host *host;
-> +	int err;
-> +
-> +	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return -ENOMEM;
-> +
-> +	/* system control register for hci */
-> +	host->ufs_sys_ctrl = devm_platform_ioremap_resource_byname(pdev, "hci_grf");
-> +	if (IS_ERR(host->ufs_sys_ctrl))
-> +		return dev_err_probe(dev, PTR_ERR(host->ufs_sys_ctrl),
-> +					"cannot ioremap for hci system control register\n");
-> +
-> +	/* system control register for mphy */
-> +	host->ufs_phy_ctrl = devm_platform_ioremap_resource_byname(pdev, "mphy_grf");
-> +	if (IS_ERR(host->ufs_phy_ctrl))
-> +		return dev_err_probe(dev, PTR_ERR(host->ufs_phy_ctrl),
-> +				"cannot ioremap for mphy system control register\n");
-> +
-> +	/* mphy base register */
-> +	host->mphy_base = devm_platform_ioremap_resource_byname(pdev, "mphy");
-> +	if (IS_ERR(host->mphy_base))
-> +		return dev_err_probe(dev, PTR_ERR(host->mphy_base),
-> +				"cannot ioremap for mphy base register\n");
-> +
-> +	host->rst = devm_reset_control_array_get_exclusive(dev);
-> +	if (IS_ERR(host->rst))
-> +		return dev_err_probe(dev, PTR_ERR(host->rst),
-> +				"failed to get reset control\n");
-> +
-> +	reset_control_assert(host->rst);
-> +	usleep_range(1, 2);
-> +	reset_control_deassert(host->rst);
-> +
-> +	host->ref_out_clk = devm_clk_get_enabled(dev, "ref_out");
-> +	if (IS_ERR(host->ref_out_clk))
-> +		return dev_err_probe(dev, PTR_ERR(host->ref_out_clk),
-> +				"ref_out unavailable\n");
-> +
-> +	host->rst_gpio = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_LOW);
-> +	if (IS_ERR(host->rst_gpio))
-> +		return dev_err_probe(&pdev->dev, PTR_ERR(host->rst_gpio),
-> +				"invalid reset-gpios property in node\n");
-> +
-> +	host->clks[0].id = "core";
-> +	host->clks[1].id = "pclk";
-> +	host->clks[2].id = "pclk_mphy";
-> +	err = devm_clk_bulk_get_optional(dev, UFS_MAX_CLKS, host->clks);
-> +	if (err)
-> +		return dev_err_probe(dev, err, "failed to get clocks\n");
-> +
-> +	err = clk_bulk_prepare_enable(UFS_MAX_CLKS, host->clks);
-
-This has to be undone somewhere, likely at the end of ufs_rockchip_remove().
-
-> +	if (err)
-> +		return dev_err_probe(dev, err, "failed to enable clocks\n");
-> +
-> +	host->hba = hba;
-> +
-> +	ufshcd_set_variant(hba, host);
-> +
-> +	return 0;
-> +}
-
-...
-
-> +static const struct ufs_hba_variant_ops ufs_hba_rk3576_vops = {
-> +	.name = "rk3576",
-> +	.init = ufs_rockchip_rk3576_init,
-> +	.device_reset = ufs_rockchip_device_reset,
-> +	.hce_enable_notify = ufs_rockchip_hce_enable_notify,
-> +	.phy_initialization = ufs_rockchip_rk3576_phy_init,
-> +};
-> +
-> +static const struct of_device_id ufs_rockchip_of_match[] = {
-> +	{ .compatible = "rockchip,rk3576-ufshc", .data = &ufs_hba_rk3576_vops},
-
-Missing space before ending }
-
-> +	{},
-
-No need for an extra , here.
-
-> +};
-> +MODULE_DEVICE_TABLE(of, ufs_rockchip_of_match);
-
-...
-
-> +static void ufs_rockchip_remove(struct platform_device *pdev)
-> +{
-> +	struct ufs_hba *hba = platform_get_drvdata(pdev);
-> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
-> +
-> +	pm_runtime_forbid(&pdev->dev);
-> +	pm_runtime_get_noresume(&pdev->dev);
-> +	ufshcd_remove(hba);
-> +	ufshcd_dealloc_host(hba);
-> +	clk_disable_unprepare(host->ref_out_clk);
-
-No need for clk_disable_unprepare(), ref_out_clk comes from 
-devm_clk_get_enabled(), so the framework will already call 
-clk_disable_unprepare().
-
-> +}
-
-...
-
-CJ
+Thanks,
+--
+WangYuli
