@@ -1,32 +1,32 @@
 Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5505218BC05;
-	Sun,  3 Nov 2024 17:04:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5A7418BBAC;
+	Sun,  3 Nov 2024 17:04:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730653486; cv=none; b=Zz+WPkP96qVS3AaJZPnF+1gB8qjmO6WM+tdgsF6geIOZxT0H8LF4FMEZT90nNVH5S1XptV0r1MC9mjA5FNhxcjd4Q/3Nioh2M9meX+FwXnQ/IBpG6jtq00h5dmEmicKD0/OWwDlFkRxz+WfhRvpssT46d0rUadlh4YYwnJ9nww4=
+	t=1730653486; cv=none; b=jC/EuB0CKZhxLWC3wIYxfpwau9MLNclGGGQ+BrZmpkxta/Q++MYNoellbpAPiiIGP46bwWURs1wWbDejAf0swaJ647jqIg9fN+1QQYRtbgXC1Md9UsD6il9rE7EPh1UeyUgGDAP8ALOeHCYOa2bf47oBE2KF8W/uUY4KJFDZ7cU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730653486; c=relaxed/simple;
-	bh=vzqsMVfnVQ7g+xXQgYvHKh8WFOGMi08tymfd1lvAle8=;
+	bh=nl79rluqUz7qDqQxR9i496RKtXejrl6t02e4QH5qPJI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=tVs+qYp/nmA3OGaq9vd0mrAFPhuj89u6vrpQYzqzg2+S1z/OMLfW+z17ddvn/kTQkWGQXKtM46DZtnHZbRQAqo6Utl9bGOghgXDUGjzk/VLTXZJBe3vFXBXNpMsMaXN6H63WUy+B3sM4fxw61dHROMUCgNEvdqBmjL3nYKqaj38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=je9uI76l; arc=none smtp.client-ip=159.69.126.157
+	 In-Reply-To:To:Cc; b=QHBNxmoyNkUKkclaie3pM1T8HXskBIK8XdiNfYz1moMU7NtvkJL4nzI2/L1VRe3feCAr7wAHbcHbGb03F1GBwIDtaiGXZhgCiQU/t/AcmKLtHJmGc/LK9yVjl0bN6SZR0Qu1cHbrPsnfaOeyMeR8fyblplNRJiOSh9w47lowgi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=qQ9QCZZv; arc=none smtp.client-ip=159.69.126.157
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="je9uI76l"
+	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="qQ9QCZZv"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1730653482;
-	bh=vzqsMVfnVQ7g+xXQgYvHKh8WFOGMi08tymfd1lvAle8=;
+	s=mail; t=1730653481;
+	bh=nl79rluqUz7qDqQxR9i496RKtXejrl6t02e4QH5qPJI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=je9uI76lLR4y9OXxsJTuqI38lHi8HkhGJIFV6ZCs4146zr8UDcocsdPRPe5LeFYf8
-	 /nzEaxpdd3g714OGoLTEVmDBSxSym4/0fJdP/ILanUgGd1lsKi+YxvHlrL3KGnTUxy
-	 25OKvRhJ/iyvI2r1fL0kAV2rjeU/P1lDltJe/xCQ=
+	b=qQ9QCZZvR8TO/ALy/aqN56Gk2FdEtn1QCaCuuL9Aajo+S6EBMkvnP6/fwlUffS61S
+	 THIHE5+W1gT9ui14C2MeOpFzVEDkWGTYFfZEH84wro/wFRmgsYdwUSg5qw6ua8dquq
+	 18e6iusUedabPi89Se+5SMVpvwnipR6ibjygBzZg=
 From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Sun, 03 Nov 2024 17:03:31 +0000
-Subject: [PATCH v2 02/10] sysfs: introduce callback
- attribute_group::bin_size
+Date: Sun, 03 Nov 2024 17:03:38 +0000
+Subject: [PATCH v2 09/10] sysfs: bin_attribute: add const read/write
+ callback variants
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20241103-sysfs-const-bin_attr-v2-2-71110628844c@weissschuh.net>
+Message-Id: <20241103-sysfs-const-bin_attr-v2-9-71110628844c@weissschuh.net>
 References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
 In-Reply-To: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -80,72 +80,138 @@ Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org,
  linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org, 
  =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1730653468; l=2296;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1730653468; l=4652;
  i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=vzqsMVfnVQ7g+xXQgYvHKh8WFOGMi08tymfd1lvAle8=;
- b=+c8c3AK6YNFtR/f5MlFDxfac5E4AdcTfe/LYH8cKiLv+aN2C4MrR8vpsa2SsTXy5NHtfEpdBh
- t4Y6vgc31e8BINAGXwLU2VEDayYxRmKzGs5LRvtEfi4Ux875Z1qlOu8
+ bh=nl79rluqUz7qDqQxR9i496RKtXejrl6t02e4QH5qPJI=;
+ b=zRu/d/VZWP3doJBfzxqs7giw29YYNYi0iPXD2I6CuiN9W2SIlp8gheE3GiOLS245JLYo+Bia3
+ qTMMFVAORK0D7GC1EfyiEnv7178teL6JXj2G6JdQ8X2UySjLYA2oPsa
 X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
  pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 
-Several drivers need to dynamically calculate the size of an binary
-attribute. Currently this is done by assigning attr->size from the
-is_bin_visible() callback.
+To make it possible to put struct bin_attribute into read-only memory,
+the sysfs core has to stop passing mutable pointers to the read() and
+write() callbacks.
+As there are numerous implementors of these callbacks throughout the
+tree it's not possible to change all of them at once.
+To enable a step-by-step transition, add new variants of the read() and
+write() callbacks which differ only in the constness of the struct
+bin_attribute argument.
 
-This has drawbacks:
-* It is not documented.
-* A single attribute can be instantiated multiple times, overwriting the
-  shared size field.
-* It prevents the structure to be moved to read-only memory.
-
-Introduce a new dedicated callback to calculate the size of the
-attribute.
+As most binary attributes are defined through macros, extend these
+macros to transparently handle both variants of callbacks to minimize
+the churn during the transition.
+As soon as all handlers are switch to the const variant, the non-const
+one can be removed together with the transition machinery.
 
 Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
 ---
- fs/sysfs/group.c      | 2 ++
- include/linux/sysfs.h | 8 ++++++++
- 2 files changed, 10 insertions(+)
+ fs/sysfs/file.c       | 22 +++++++++++++++++-----
+ include/linux/sysfs.h | 25 +++++++++++++++++++++++--
+ 2 files changed, 40 insertions(+), 7 deletions(-)
 
-diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
-index 45b2e92941da1f49dcc71af3781317c61480c956..8b01a7eda5fb3239e138372417d01967c7a3f122 100644
---- a/fs/sysfs/group.c
-+++ b/fs/sysfs/group.c
-@@ -98,6 +98,8 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
- 				if (!mode)
- 					continue;
- 			}
-+			if (grp->bin_size)
-+				size = grp->bin_size(kobj, *bin_attr, i);
+diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+index 6d39696b43069010b0ad0bdaadcf9002cb70c92c..785408861c01c89fc84c787848243a13c1338367 100644
+--- a/fs/sysfs/file.c
++++ b/fs/sysfs/file.c
+@@ -91,9 +91,12 @@ static ssize_t sysfs_kf_bin_read(struct kernfs_open_file *of, char *buf,
+ 			count = size - pos;
+ 	}
  
- 			WARN(mode & ~(SYSFS_PREALLOC | 0664),
- 			     "Attribute %s: Invalid permissions 0%o\n",
+-	if (!battr->read)
++	if (!battr->read && !battr->read_new)
+ 		return -EIO;
+ 
++	if (battr->read_new)
++		return battr->read_new(of->file, kobj, battr, buf, pos, count);
++
+ 	return battr->read(of->file, kobj, battr, buf, pos, count);
+ }
+ 
+@@ -152,9 +155,12 @@ static ssize_t sysfs_kf_bin_write(struct kernfs_open_file *of, char *buf,
+ 	if (!count)
+ 		return 0;
+ 
+-	if (!battr->write)
++	if (!battr->write && !battr->write_new)
+ 		return -EIO;
+ 
++	if (battr->write_new)
++		return battr->write_new(of->file, kobj, battr, buf, pos, count);
++
+ 	return battr->write(of->file, kobj, battr, buf, pos, count);
+ }
+ 
+@@ -323,13 +329,19 @@ int sysfs_add_bin_file_mode_ns(struct kernfs_node *parent,
+ 	const struct kernfs_ops *ops;
+ 	struct kernfs_node *kn;
+ 
++	if (battr->read && battr->read_new)
++		return -EINVAL;
++
++	if (battr->write && battr->write_new)
++		return -EINVAL;
++
+ 	if (battr->mmap)
+ 		ops = &sysfs_bin_kfops_mmap;
+-	else if (battr->read && battr->write)
++	else if ((battr->read || battr->read_new) && (battr->write || battr->write_new))
+ 		ops = &sysfs_bin_kfops_rw;
+-	else if (battr->read)
++	else if (battr->read || battr->read_new)
+ 		ops = &sysfs_bin_kfops_ro;
+-	else if (battr->write)
++	else if (battr->write || battr->write_new)
+ 		ops = &sysfs_bin_kfops_wo;
+ 	else
+ 		ops = &sysfs_file_kfops_empty;
 diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index c4e64dc112063f7cb89bf66059d0338716089e87..4746cccb95898b24df6f53de9421ea7649b5568f 100644
+index d17c473c1ef292875475bf3bdf62d07241c13882..d713a6445a6267145a7014f308df3bb25b8c3287 100644
 --- a/include/linux/sysfs.h
 +++ b/include/linux/sysfs.h
-@@ -87,6 +87,11 @@ do {							\
-  *		SYSFS_GROUP_VISIBLE() when assigning this callback to
-  *		specify separate _group_visible() and _attr_visible()
-  *		handlers.
-+ * @bin_size:
-+ *		Optional: Function to return the size of a binary attribute
-+ *		of the group. Will be called repeatedly for each binary
-+ *		attribute in the group. Overwrites the size field embedded
-+ *		inside the attribute itself.
-  * @attrs:	Pointer to NULL terminated list of attributes.
-  * @bin_attrs:	Pointer to NULL terminated list of binary attributes.
-  *		Either attrs or bin_attrs or both must be provided.
-@@ -97,6 +102,9 @@ struct attribute_group {
- 					      struct attribute *, int);
- 	umode_t			(*is_bin_visible)(struct kobject *,
- 						  struct bin_attribute *, int);
-+	size_t			(*bin_size)(struct kobject *,
-+					    const struct bin_attribute *,
-+					    int);
- 	struct attribute	**attrs;
- 	struct bin_attribute	**bin_attrs;
- };
+@@ -305,8 +305,12 @@ struct bin_attribute {
+ 	struct address_space *(*f_mapping)(void);
+ 	ssize_t (*read)(struct file *, struct kobject *, struct bin_attribute *,
+ 			char *, loff_t, size_t);
++	ssize_t (*read_new)(struct file *, struct kobject *, const struct bin_attribute *,
++			    char *, loff_t, size_t);
+ 	ssize_t (*write)(struct file *, struct kobject *, struct bin_attribute *,
+ 			 char *, loff_t, size_t);
++	ssize_t (*write_new)(struct file *, struct kobject *,
++			     const struct bin_attribute *, char *, loff_t, size_t);
+ 	loff_t (*llseek)(struct file *, struct kobject *, const struct bin_attribute *,
+ 			 loff_t, int);
+ 	int (*mmap)(struct file *, struct kobject *, const struct bin_attribute *attr,
+@@ -325,11 +329,28 @@ struct bin_attribute {
+  */
+ #define sysfs_bin_attr_init(bin_attr) sysfs_attr_init(&(bin_attr)->attr)
+ 
++typedef ssize_t __sysfs_bin_rw_handler_new(struct file *, struct kobject *,
++					   const struct bin_attribute *, char *, loff_t, size_t);
++
+ /* macros to create static binary attributes easier */
+ #define __BIN_ATTR(_name, _mode, _read, _write, _size) {		\
+ 	.attr = { .name = __stringify(_name), .mode = _mode },		\
+-	.read	= _read,						\
+-	.write	= _write,						\
++	.read = _Generic(_read,						\
++		__sysfs_bin_rw_handler_new * : NULL,			\
++		default : _read						\
++	),								\
++	.read_new = _Generic(_read,					\
++		__sysfs_bin_rw_handler_new * : _read,			\
++		default : NULL						\
++	),								\
++	.write = _Generic(_write,					\
++		__sysfs_bin_rw_handler_new * : NULL,			\
++		default : _write					\
++	),								\
++	.write_new = _Generic(_write,					\
++		__sysfs_bin_rw_handler_new * : _write,			\
++		default : NULL						\
++	),								\
+ 	.size	= _size,						\
+ }
+ 
 
 -- 
 2.47.0
