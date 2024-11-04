@@ -1,31 +1,35 @@
 Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 372851AC435
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 21:52:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 44BD51D54C0
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 21:54:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730757160; cv=none; b=JAkTWCRvtup5Q+LCv9O4MMSKKgiICLpVEAABV++DJC2BA/NzIsngZDdRsPSM3ikDf2s2HzHBZmMbpPBY/2LfNN82HjR+dX2ByQtte9qzWODAGGLhp7Fvi3eZtf7uTuDqfXo5fVc7gQaXFRET1bal0hLGmuNfcwHm3kJqMH9mY98=
+	t=1730757250; cv=none; b=YFIuSTTq+q6IgGhv+X877eVDkNOCHX+VSWJ6XATSUnA1ljMvyxvGnYXiqrVUFj28SaiWpX6gYI2Ez4ojweJcczc8OybfQXMFijNRA3uwckwnZebYJmW595dExJr57mKFe/XgwynPgUgXEHaKtBgcYIv3dJIaHra037w69nFAGOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730757160; c=relaxed/simple;
-	bh=UR8a8rnFFRw8Ahu3TY2udljYZ8j28mKduj6qZ/U7hRw=;
+	s=arc-20240116; t=1730757250; c=relaxed/simple;
+	bh=1mOYgVEyCfwO9ol0OEz/kd26PA9/QH9r7EzubR4CuXc=;
 	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=jt1/SxFKcIq/NTMDqjlOPHiwa4QQ9JBI41M0BIikZR9mZtCJ7MtYACNMAgnh84y9JYtePORobLHQpKWxOTSWM9l/OfISJk4yrBUL7uXBsAcXUBHefMntmM3ooNX07fHZzvLMCNU8Rdz1k6wd69x6zWWp2v1xpJF5Y6U7HAqbDws=
+	 MIME-Version:Content-Type; b=RtkUKBWHq24nhoVa37VY+qDLshk4HO5BTPKfGbvst8Km1ayitK4sQwT97P+AI6umRLtSQnINdBG2P1F1iSx2Ew0zjCPOHEQhp3KFaDrBGKSO2Nqyab2pmvocz8B+yOiF7gdgGoCtZN4zIH2dR1e8u1t4mn688ESYT3YrT02KyZQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id A469492009C; Mon,  4 Nov 2024 22:52:36 +0100 (CET)
+	id A691992009E; Mon,  4 Nov 2024 22:54:06 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id A0DD792009B;
-	Mon,  4 Nov 2024 21:52:36 +0000 (GMT)
-Date: Mon, 4 Nov 2024 21:52:36 +0000 (GMT)
+	by angie.orcam.me.uk (Postfix) with ESMTP id 9F3A192009B;
+	Mon,  4 Nov 2024 21:54:06 +0000 (GMT)
+Date: Mon, 4 Nov 2024 21:54:06 +0000 (GMT)
 From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Magnus Lindholm <linmag7@gmail.com>
-cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, 
-    martin.petersen@oracle.com
-Subject: Re: [PATCH v3] scsi: qla1280.c 
-In-Reply-To: <20241104204845.1785-1-linmag7@gmail.com>
-Message-ID: <alpine.DEB.2.21.2411042134240.9262@angie.orcam.me.uk>
-References: <20241104204845.1785-1-linmag7@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
+cc: Magnus Lindholm <linmag7@gmail.com>, 
+    Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    linux-scsi@vger.kernel.org
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+In-Reply-To: <Zyh6tP-eWlABiBG7@infradead.org>
+Message-ID: <alpine.DEB.2.21.2411042152530.9262@angie.orcam.me.uk>
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com> <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+ <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com> <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com> <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
+ <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com> <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -35,16 +39,14 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 
-On Mon, 4 Nov 2024, Magnus Lindholm wrote:
+On Sun, 3 Nov 2024, Christoph Hellwig wrote:
 
->  Use dma_get_required_mask() to determine an acceptable DMA_BIT_MASK 
->  since on some platforms, qla1040 cards do not work with a 64-bit
->  mask. For example, on alpha systems with more than 2GB ram a 64-bit DMA mask
->  will result in filesystem corruption, but a 64-bit mask is required on
->  IP30/MIPS.
+> >  Christoph can you please have a look into it?  It seems like something 
+> > you ought to be quite familiar with if not for the passage of time.
+> 
+> Somewhat surprisingly I don't remember that details of a drive by
+> cleanup 20 years ago :)
 
- This is missing the point, you get filesystem corruption because *your 
-card* does not support 64-bit DMA addressing and not because your Alpha 
-system has an issue with it.
+ Oh dear!  It was worth asking anyway.  Thank you!
 
   Maciej
