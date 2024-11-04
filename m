@@ -1,150 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9447E1B4F24;
-	Mon,  4 Nov 2024 10:56:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675471B85C2
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 10:58:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730717819; cv=none; b=oRBgYkOkFYPZng/LqDIa1f+L5+0QV9wFMfMUiPBu0oR46kfqZxIPOLN6JOr8yOEG8pO3CYL7Rl4+/gXMfV57WDgob+aOtUY/vAsXGztVyYc90wp7xOu9PF76eqXywR8wbOiUvGPd9HjsSx3GZlZVShIWWvuXSVmbb1FfE07BmGQ=
+	t=1730717918; cv=none; b=Itp5IkegHtS/gqPIDq9StloTbPqPaABHr1tEfienf75luFbamZhChFtdTpKn9lwM/9UalZiChs/p/Z2fJMwj+N7Cwad0U5xPHiwd55Ln7m7Ec7MXzZtuQ3mqkuFJaik7h9F68z0M1PtSq9GyRzqK5+ToAKrojtoroWXfTF1csAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730717819; c=relaxed/simple;
-	bh=6qFxuwoqjmsBXA5afiRPckV6EYzE55EhM//TIyBTrQ4=;
+	s=arc-20240116; t=1730717918; c=relaxed/simple;
+	bh=HXRqLnDDtJW6cTQrcmKnH1WqFgEaTawJdcXZ4z9WS+0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RX/u69nqfzdjM28rBltoLSiqtM+WNhwFa1UaRXLk267VbKeAio3z4s/dGLdF+zqX1nmEGx1mMQxOmj3ha2Ofg7v+iLy17B7oVfX3mHEJfbuvg1+aAu0NxC+Hvw/u3OgglnMeiWcfEg615atuQYbCXIJaW+2AVK4X2++UsMzf5aI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EADOQrSt; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=DkXr7FuGFEe1lEfMMSxD1jJjWXQFVNBfBYFfYyRCEv/EU7vYfD29AYSBp1sddUrYZ6l2RLKGNoalEk5oAj9c7uWEqYrS8gIlXnq3qZb6FKuCkWJl8cnfYmSYyuAvLrcr8pT7BU7vjAdAtJO7WoC6/nKPx59LjGZWAeY+KzABXgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hznSesPa; arc=none smtp.client-ip=209.85.128.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EADOQrSt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21EEAC4AF0B;
-	Mon,  4 Nov 2024 10:56:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730717818;
-	bh=6qFxuwoqjmsBXA5afiRPckV6EYzE55EhM//TIyBTrQ4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=EADOQrSt03YURgotEa0RPC+Q+iLgiLTpyDunuCSyI8JrnJ8j4YEhKIdjW/X9XmfJY
-	 sTCnqIY+Z2AkNeyzcvIvr+dGT6FfLBfZvlbrdb8z2SiV9hm+elSOB97O2rE7ro9EXq
-	 0i/CQC7v2klAcuIyDxn2pg7/smSOsw0dT4Hhws9swr3/XRUtzPo+CxQGrrBX7df8D/
-	 5J0t2oN4EkGyZAZoiEf4JRfD6nAiE3emF0OuGcBGMMWHNR23yXfKnSbJVb11OHm5BV
-	 KUm+3gkbO7B14khPoblQ7uBvr3V7hMm9Omm80Fu2OU58gX+loUjMi/2DNHEoGYci8U
-	 QgiPNae8TP/uQ==
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2fb5014e2daso35066781fa.0;
-        Mon, 04 Nov 2024 02:56:58 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCU7xoBdSw7WBFogoDHrvE/HqzdjwEOMmImfj5rv727+uNW/nWwMxb3aiB7GFtwozVTPQXy86AO1OXkOnA==@vger.kernel.org, AJvYcCVTNBsOqHLkgtJGigBa/isJCHgbsiNKmrI5+kvbgDZcJMeFzwkEWE8ebTXv9KJOhRQuLTjesgqi70UBQw==@vger.kernel.org, AJvYcCWhDBFSu3muOSQSSs5FLIsmxVvCuKCon8MkpgER6rPwM10QDNjNEyRL4fy7UB6uE1jQSxbEmD5xrN1k1Q==@vger.kernel.org, AJvYcCWmhuBs1pzG9bt5+VLjZi5DL2AB1zkrHH/DB9jywzV8yx+aa4/gkdW/FLE+qWNExzJp4VElgRen2cxA3g==@vger.kernel.org, AJvYcCXGlD8wbx/QOszbqxlvihfhb/O3PE1S70sQ7efuGiglxTzoFONrTZEvN3S9PVnXA2m5TMzVC/M/BgrAIgZw@vger.kernel.org, AJvYcCXY3zmKZULtzD2Qr1zBSDOYio63vSwOslNKHj+27/utSV9rOR3qtlx3vUvQunPMQJzsmsyZ+7+XTmLwAw==@vger.kernel.org, AJvYcCXYoWKKilKSRHmfTlQo4SNi/uvKlFp3wszbHnscl+4A/hvKqyecntMb+onVXOjIloFhiiooKJqfzczT@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZv9/XWtQTI9Xl/GbxNVl6C/JDclJIDl6e10MIEY986QPphn4W
-	42vPreOs/bE68tplLb8Kx6uGt4UNZMTFJFzrF25lhdJXu53MTiejtzRWcsgi/hgiTtoaYuiP0zT
-	5igiVkkHpuBqsmNl8GzpBN9pUgZA=
-X-Google-Smtp-Source: AGHT+IGbnKnh4aAfaULtSCmiukLUpnKZU5MlHxJghtOAuKX/zIcXfbKXe/xSvudBsLa83HeLXpJgE1iAQVUbiw2PNrM=
-X-Received: by 2002:a05:651c:1508:b0:2fa:fc41:cf80 with SMTP id
- 38308e7fff4ca-2fedb7ecd4amr43930581fa.43.1730717816511; Mon, 04 Nov 2024
- 02:56:56 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hznSesPa"
+Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-6e9ba45d67fso36863447b3.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 02:58:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1730717914; x=1731322714; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=A8OEwwbndwQP7wHdh9ISRQA4yW5gd+UJ76JpEPhxfag=;
+        b=hznSesPaYJXF1pGvJjwrrVmxvphKVCUfNmrKb2iCfbiWWY5k3gS+xlD1zTSNmQZhj5
+         Pk9PA7sDOG/UE1Ou9ycYFMNrlsyfTz5oznWIQ3QspNTsKVf41Wn2ItSpo2Om9gaGAn0X
+         lgZWP3f/5M7FJs8hD2yo/MGEYG4HaPwOmmXe+2+R+uD1eg3a4ePmmPeV7f1DjrnylHyR
+         B/Spg3PXyEf5Ra53MRAPH/98LDyUQLEIUTkJXkCPrXVdRL6rTvFDsNDipxvHCVm87d5w
+         hvWnp7zqa0A5lyEfGjZrRTDc2dghK6Ef6s1Oj0dRDJskCmlW8+7QHk8MNZ1D+Iy1ZgT3
+         OYtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730717914; x=1731322714;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=A8OEwwbndwQP7wHdh9ISRQA4yW5gd+UJ76JpEPhxfag=;
+        b=kIhJ5O9fsSGkK64Wfq37dOVhmKlie1Qme5daVBoh/EEkw4SQ3dR67WozAZM7N+U6zR
+         AU26mbmnKxMzG0PM8eRaPUi53zr4xVUkhP8fPftUzD//wfZMjbZ+JdsR05IyLt7fjHT+
+         6S9Npo7ENLrYl3SB16NIcb6r/epgrx9P6so9EG2fPrC3ZSGgrBTNgZfn3G49o0iag+vs
+         p7qUt8IGVZpyvhV0EW6ISLdDJEOWdezYF82yO3rM6nnvfR0GjFeQLFbkJelsef5a+cQY
+         GkdiddtlP9b+zNjGGG8Cui6EK3zgEuQeiH0t31/+uq/qwRuc41SH9LOJUd51pI+qwX/y
+         rUtA==
+X-Forwarded-Encrypted: i=1; AJvYcCVoWdyW/XhK2JAsS6sZPZb3DPd59sz/FCab48fGsi4qbR9F0BHZyQfoFPHyot7rSbpnwhJ9gl02NSus@vger.kernel.org
+X-Gm-Message-State: AOJu0YxXVuLemYO0QAFvUtjPaLugX+KMFQPKsoIqq627EvW06I06kdNe
+	EXF9shsZT/atgt6Ba7+oZjCOmA88P2F7/WisnpdmtwGmgRznh3gP10jWB0ndpIl+fTmGP6LRhje
+	Oxut+hSAijecPGEeZ0YMSVDdhgXuRqPLMypYXEA==
+X-Google-Smtp-Source: AGHT+IHi7UAsQfjAiAGv3Fbp4VDCnNLJgrXpVXyVg0zWty3KS6vdc/17EwBBZWalLVopb7bNmLcxY/IvP/w/XllPp6g=
+X-Received: by 2002:a05:690c:3005:b0:6e7:e92d:6c0c with SMTP id
+ 00721157ae682-6ea3b8954cdmr141759517b3.10.1730717914161; Mon, 04 Nov 2024
+ 02:58:34 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241103223154.136127-1-ebiggers@kernel.org> <20241103223154.136127-5-ebiggers@kernel.org>
-In-Reply-To: <20241103223154.136127-5-ebiggers@kernel.org>
-From: Ard Biesheuvel <ardb@kernel.org>
-Date: Mon, 4 Nov 2024 11:56:45 +0100
-X-Gmail-Original-Message-ID: <CAMj1kXH3C1xP7865V-mJ+3=FDHTR-df909=7jift_Z6dmp58Gw@mail.gmail.com>
-Message-ID: <CAMj1kXH3C1xP7865V-mJ+3=FDHTR-df909=7jift_Z6dmp58Gw@mail.gmail.com>
-Subject: Re: [PATCH v3 04/18] crypto: crc32 - don't unnecessarily register
- arch algorithms
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
-	linux-mips@vger.kernel.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, loongarch@lists.linux.dev, 
-	sparclinux@vger.kernel.org, x86@kernel.org
+References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com> <1730705521-23081-8-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1730705521-23081-8-git-send-email-shawn.lin@rock-chips.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 4 Nov 2024 11:57:58 +0100
+Message-ID: <CAPDyKFrig236e5xTSeOHfNR5Z3840o6u_h7LnoAG2P8Ck348WQ@mail.gmail.com>
+Subject: Re: [PATCH v4 7/7] scsi: ufs: rockchip: initial support for UFS
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rob Herring <robh+dt@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org, 
+	linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-pm@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-On Sun, 3 Nov 2024 at 23:32, Eric Biggers <ebiggers@kernel.org> wrote:
+On Mon, 4 Nov 2024 at 08:34, Shawn Lin <shawn.lin@rock-chips.com> wrote:
 >
-> From: Eric Biggers <ebiggers@google.com>
+> RK3576 SoC contains a UFS controller, add initial support for it.
+> The features are:
+> (1) support UFS 2.0 features
+> (2) High speed up to HS-G3
+> (3) 2RX-2TX lanes
+> (4) auto H8 entry and exit
 >
-> Instead of registering the crc32-$arch and crc32c-$arch algorithms if
-> the arch-specific code was built, only register them when that code was
-> built *and* is not falling back to the base implementation at runtime.
+> Software limitation:
+> (1) HCE procedure: enable controller->enable intr->dme_reset->dme_enable
+> (2) disable unipro timeout values before power mode change
 >
-> This avoids confusing users like btrfs which checks the shash driver
-> name to determine whether it is crc32c-generic.
->
-> (It would also make sense to change btrfs to test the crc32_optimization
-> flags itself, so that it doesn't have to use the weird hack of parsing
-> the driver name.  This change still makes sense either way though.)
->
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-
-Reviewed-by: Ard Biesheuvel <ardb@kernel.org>
-
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > ---
->  crypto/crc32_generic.c  | 8 ++++++--
->  crypto/crc32c_generic.c | 8 ++++++--
->  2 files changed, 12 insertions(+), 4 deletions(-)
 >
-> diff --git a/crypto/crc32_generic.c b/crypto/crc32_generic.c
-> index cc064ea8240e..783a30b27398 100644
-> --- a/crypto/crc32_generic.c
-> +++ b/crypto/crc32_generic.c
-> @@ -155,19 +155,23 @@ static struct shash_alg algs[] = {{
->         .base.cra_ctxsize       = sizeof(u32),
->         .base.cra_module        = THIS_MODULE,
->         .base.cra_init          = crc32_cra_init,
->  }};
+> Changes in v4:
+> - deal with power domain of rpm and spm suggested by Ulf
+> - Fix typo and disable clks in ufs_rockchip_remove
+> - remove clk_disable_unprepare(host->ref_out_clk) from
+>   ufs_rockchip_remove
 >
-> +static int num_algs;
+
+[...]
+
+> +#ifdef CONFIG_PM
+> +static int ufs_rockchip_runtime_suspend(struct device *dev)
+> +{
+> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
 > +
->  static int __init crc32_mod_init(void)
->  {
->         /* register the arch flavor only if it differs from the generic one */
-> -       return crypto_register_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       num_algs = 1 + ((crc32_optimizations() & CRC32_LE_OPTIMIZATION) != 0);
+> +       clk_disable_unprepare(host->ref_out_clk);
 > +
-> +       return crypto_register_shashes(algs, num_algs);
->  }
->
->  static void __exit crc32_mod_fini(void)
->  {
-> -       crypto_unregister_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       crypto_unregister_shashes(algs, num_algs);
->  }
->
->  subsys_initcall(crc32_mod_init);
->  module_exit(crc32_mod_fini);
->
-> diff --git a/crypto/crc32c_generic.c b/crypto/crc32c_generic.c
-> index 04b03d825cf4..985da981d6e2 100644
-> --- a/crypto/crc32c_generic.c
-> +++ b/crypto/crc32c_generic.c
-> @@ -195,19 +195,23 @@ static struct shash_alg algs[] = {{
->         .base.cra_ctxsize       = sizeof(struct chksum_ctx),
->         .base.cra_module        = THIS_MODULE,
->         .base.cra_init          = crc32c_cra_init,
->  }};
->
-> +static int num_algs;
+> +       /* Shouldn't power down if rpm_lvl is less than level 5. */
+> +       dev_pm_genpd_rpm_always_on(dev, hba->rpm_lvl < UFS_PM_LVL_5 ? true : false);
 > +
->  static int __init crc32c_mod_init(void)
->  {
->         /* register the arch flavor only if it differs from the generic one */
-> -       return crypto_register_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       num_algs = 1 + ((crc32_optimizations() & CRC32C_OPTIMIZATION) != 0);
+> +       return ufshcd_runtime_suspend(dev);
+> +}
 > +
-> +       return crypto_register_shashes(algs, num_algs);
->  }
->
->  static void __exit crc32c_mod_fini(void)
->  {
-> -       crypto_unregister_shashes(algs, 1 + IS_ENABLED(CONFIG_CRC32_ARCH));
-> +       crypto_unregister_shashes(algs, num_algs);
->  }
->
->  subsys_initcall(crc32c_mod_init);
->  module_exit(crc32c_mod_fini);
->
-> --
-> 2.47.0
->
->
+> +static int ufs_rockchip_runtime_resume(struct device *dev)
+> +{
+> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +       int err;
+> +
+> +       err = clk_prepare_enable(host->ref_out_clk);
+> +       if (err) {
+> +               dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
+> +               return err;
+> +       }
+> +
+> +       reset_control_assert(host->rst);
+> +       usleep_range(1, 2);
+> +       reset_control_deassert(host->rst);
+> +
+> +       return ufshcd_runtime_resume(dev);
+> +}
+> +#endif
+> +
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ufs_rockchip_system_suspend(struct device *dev)
+> +{
+> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +       if (hba->spm_lvl < 5)
+> +               device_set_wakeup_path(dev);
+
+Please use device_set_awake_path() instead.
+
+Ideally all users of device_set_wakeup_path() should convert into
+device_set_awake_path(), it's just that we haven't been able to
+complete the conversion yet.
+
+> +       else
+> +               device_clr_wakeup_path(dev);
+
+This isn't needed. The flag is getting cleared in device_prepare().
+
+> +
+> +       return ufshcd_system_suspend(dev);
+
+Don't you want to disable the clock during system suspend too? If the
+device is runtime resumed at this point, the clock will be left
+enabled, no?
+
+> +}
+> +#endif
+> +
+> +static const struct dev_pm_ops ufs_rockchip_pm_ops = {
+> +       SET_SYSTEM_SLEEP_PM_OPS(ufs_rockchip_system_suspend, ufshcd_system_resume)
+> +       SET_RUNTIME_PM_OPS(ufs_rockchip_runtime_suspend, ufs_rockchip_runtime_resume, NULL)
+> +       .prepare         = ufshcd_suspend_prepare,
+> +       .complete        = ufshcd_resume_complete,
+> +};
+> +
+
+[...]
+
+Kind regards
+Uffe
