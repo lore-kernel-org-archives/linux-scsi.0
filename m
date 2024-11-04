@@ -1,106 +1,248 @@
-Received: from mail-m254101.xmail.ntesmail.com (mail-m254101.xmail.ntesmail.com [103.129.254.101])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B16918C038;
-	Mon,  4 Nov 2024 08:09:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.129.254.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2ABF1ABEDC
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 09:52:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730707763; cv=none; b=T9UDIlamTZ+gfJMgBjuSfe1vSNWwLItMwehXkGt2eCG1iziOiFcCNF7RbOG4YrQs6uqFfkvtXiMFL+W6TQ3FCT9a96s+/w4mdNhVVJerRz+Uq61jhAt7lU8cKanoFTV9SfojHeHkRM3pfom4RzpJJWElzGE0qmXcSIE32hMKT0s=
+	t=1730713943; cv=none; b=Ea3U5pFlEqOaS3Lf9edSoizLz5nGllGy3nKE2mWziNuMNHHXlxpYx+xGeQOyGJwHt4siE6uoOETF6OVTtUKHOcrxLqZ+YrnMei4AVY/IRPBjmGuZEn1Sev9q9qrh0wqy+grrS8v9jQszCVxPWTC9g7N6tDfgDQur7omPiuzOzAI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730707763; c=relaxed/simple;
-	bh=4j6Mjcq1lKQkcwIydEOgAZLeSymMQK6Xj+ogsucBgGo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=lCLkuc+xB/e/xreSFg+1zBv9kiemnsynhG2fDO+3bcUl8hDErT1V8VYbZkfiI+NBnGjba1ErmjtqcKRGWL25jYjjfL1TvFcSknAr84mlG7WG3jIHXauBSnOcaEefJW1aiQ4DF8zScsT5A1kEB8hGOV0BiqkqWkb9w1QkkLFh9xY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=XaaNKC6e; arc=none smtp.client-ip=103.129.254.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1730713943; c=relaxed/simple;
+	bh=htvv2ldxMzj1c0babXojfnz7M65rvSO62jWp9rRBuLE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=UyzSvD/eGVqnndxBnNbDzWYIRaTEstTMrGohsG4rWbsi7t2e5+H322aN/u+w6nXBPINqMN+M2e2f9Alv2xAPDOCr7MEuN/dcXgIitvh/QdS5XuJnPu1TxMH++62Uj9YwhH5Y3MdYc9m+Bx9IQ4Zs0mPzOPel1eLnOypxx8XtZcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=R0nlh7Jq; arc=none smtp.client-ip=209.85.128.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="XaaNKC6e"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 1b5f86df;
-	Mon, 4 Nov 2024 15:33:50 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 6/7] PM: wakeup: Add device_clr_wakeup_path()
-Date: Mon,  4 Nov 2024 15:32:00 +0800
-Message-Id: <1730705521-23081-7-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkhITVZJH05CTB0dH0lCQxhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a92f61826b509cckunm1b5f86df
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MTY6Syo4EjIuQzpKDiwaNUk5
-	IjEwFDBVSlVKTEhLTEtOTUhJTkhPVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUpJTks3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=XaaNKC6e9jeXqryncvNsBaCCLREY+vONROjoHez11dB18+jm+UL9dCm5gu9pODOQRIl0A8t23sXpeJ+FzyI9QzD6BGxmG/KAnDhEVmefnISft1PjWZBhxdSPXQG/ed9FGHJlLxhwwOBy3cy2im1j7JNJ8kMwyN5lx0ehTWW8MNs=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=WAt8KEoMkcRQkVhcAHLvz96VVs1tPx6HkdCub024pBU=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="R0nlh7Jq"
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-6e390d9ad1dso32185557b3.3
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 01:52:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1730713941; x=1731318741; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ybC/g10HAfyDHcrJc6E2zJthZS9rSbdAKDgt4jSd7Jg=;
+        b=R0nlh7JqQBSsbgUD9In+kgpwzEZ9Hs3v4dTkQjnhLHBxkbXCT8OdoSQ+M2iipfrxCs
+         kPKcD/ZFQOKef04LPIozz6Kh8N2O1e6yfgw1xK3q2jrzThuNyq3LCg/SKVPLOFMeb9Gm
+         yIWorjmo2Lylf84fSKeFPW8+wSCZP1pPsNPUmy5ufj+qbW67NvboK3v+6hGuTC/jGSUL
+         I6ckGS4g75M6Yq4MvHYR2TW4mMsgZur2ki2yeKbX6TNzxd9H8Do4wgQi4AVkKzu17ebT
+         HEWbhFYsQwNiJaYdROw0fJYElXK+l7AQJSSOTd8ryhPfFbMaot6GdnxeP1DdIXucdxLV
+         F7iQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730713941; x=1731318741;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ybC/g10HAfyDHcrJc6E2zJthZS9rSbdAKDgt4jSd7Jg=;
+        b=lwh84UTL0qmEw3E7mqbTTCvl3ZyHnFLc8lmz4H2vrfTj4q4o535e6APlbsMNMf7T1C
+         YZpuOHvM/Zo29nyPTnoxtaGoWnl6rSENPxnhejXgXonpiwK5Lhv94//y0rdqlBHtmsBR
+         mOokGrJmnxTI9/pxxOT3JKJo8gZdkohUuhBH4qV4FdwHAx3crQ0P0HbdUc7cPq9RuoOK
+         rTIVdGWlQ+0czmjmC3nyfYRf5muaXWw8/+VjZ/4YXLbLfT8zRvrfeTexGVYx8Ili3++L
+         V9iXtp0jIBCFqgi5ipWKlSK+41Si6rKhJ7zVDhO3ygtNB0uSVPK/BvdwPTRpSOhsYAeB
+         sgUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXhGTmyXE1ZcmULcnHEVUGFCxBnpuC0grpCfVP6HtEd4CD8+49/Q/r4JjZwRqPBig5eeXG6YoMIoDH+@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz3jlLBZDcre9D6evileLrghrTfXd5+ZNvhF3CcHsFj1WO2+1dR
+	gNqSziOyOCzMZgvnsa+jnXycPqFZdLgmLtdmOsdL7iU56CwHNeecjI2e5dDvkWRCQjE7REuiarJ
+	JLMrX1fexx02kJYfcPFZIQz2r9+J0EJTYGrI6rQ==
+X-Google-Smtp-Source: AGHT+IHSdMtnJp6l1SJWZqQt26XqnUQYugn+OdEkAPVBspbyRD2J5UPJxL4Tzt211JmThaoRmsKPftiBRc61oMrL7aQ=
+X-Received: by 2002:a0d:e341:0:b0:6ea:6e90:7e3e with SMTP id
+ 00721157ae682-6ea6e9085cemr56164317b3.14.1730713940978; Mon, 04 Nov 2024
+ 01:52:20 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
+ <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
+ <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
+ <3969bae0-eeb8-447a-86a5-dfdac0b136cd@rock-chips.com> <CAPDyKFo=GcHG2sGQBrXJ7VWyp59QOmbLCAvHQ3krUympEkid_A@mail.gmail.com>
+ <98e0062c-aeb1-4bea-aa2b-4a99115c9da4@rock-chips.com> <20241103120223.abkwgej4svas4epr@thinkpad>
+ <6f3f2d17-4ca2-44ad-b8df-72986d4b3174@rock-chips.com>
+In-Reply-To: <6f3f2d17-4ca2-44ad-b8df-72986d4b3174@rock-chips.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 4 Nov 2024 10:51:45 +0100
+Message-ID: <CAPDyKFqMuFMf0+2+mPZaGGtBRfavg0LTkhbrCeqh7kHeqq-yZQ@mail.gmail.com>
+Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Rob Herring <robh+dt@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, 
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-device_clr_wakeup_path() is used to disable wakeup path support
-which is symmetrical to device_set_wakeup_path().
+On Mon, 4 Nov 2024 at 07:38, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>
+> =E5=9C=A8 2024/11/3 20:02, Manivannan Sadhasivam =E5=86=99=E9=81=93:
+> > On Fri, Oct 18, 2024 at 05:20:08PM +0800, Shawn Lin wrote:
+> >> Hi Ulf,
+> >>
+> >> =E5=9C=A8 2024/10/18 17:07, Ulf Hansson =E5=86=99=E9=81=93:
+> >>> On Thu, 10 Oct 2024 at 03:21, Shawn Lin <shawn.lin@rock-chips.com> wr=
+ote:
+> >>>>
+> >>>> Hi Ulf
+> >>>>
+> >>>> =E5=9C=A8 2024/10/9 21:15, Ulf Hansson =E5=86=99=E9=81=93:
+> >>>>> [...]
+> >>>>>
+> >>>>>> +
+> >>>>>> +static int ufs_rockchip_runtime_suspend(struct device *dev)
+> >>>>>> +{
+> >>>>>> +       struct ufs_hba *hba =3D dev_get_drvdata(dev);
+> >>>>>> +       struct ufs_rockchip_host *host =3D ufshcd_get_variant(hba)=
+;
+> >>>>>> +       struct generic_pm_domain *genpd =3D pd_to_genpd(dev->pm_do=
+main);
+> >>>>>
+> >>>>> pd_to_genpd() isn't safe to use like this. It's solely to be used b=
+y
+> >>>>> genpd provider drivers.
+> >>>>>
+> >>>>>> +
+> >>>>>> +       clk_disable_unprepare(host->ref_out_clk);
+> >>>>>> +
+> >>>>>> +       /*
+> >>>>>> +        * Shouldn't power down if rpm_lvl is less than level 5.
+> >>>>>
+> >>>>> Can you elaborate on why we must not power-off the power-domain whe=
+n
+> >>>>> level is less than 5?
+> >>>>>
+> >>>>
+> >>>> Because ufshcd driver assume the controller is active and the link i=
+s on
+> >>>> if level is less than 5. So the default resume policy will not try t=
+o
+> >>>> recover the registers until the first error happened. Otherwise if t=
+he
+> >>>> level is >=3D5, it assumes the controller is off and the link is dow=
+n,
+> >>>> then it will restore the registers and link.
+> >>>>
+> >>>> And the level is changeable via sysfs.
+> >>>
+> >>> Okay, thanks for clarifying.
+> >>>
+> >>>>
+> >>>>> What happens if we power-off anyway when the level is less than 5?
+> >>>>>
+> >>>>>> +        * This flag will be passed down to platform power-domain =
+driver
+> >>>>>> +        * which has the final decision.
+> >>>>>> +        */
+> >>>>>> +       if (hba->rpm_lvl < UFS_PM_LVL_5)
+> >>>>>> +               genpd->flags |=3D GENPD_FLAG_RPM_ALWAYS_ON;
+> >>>>>> +       else
+> >>>>>> +               genpd->flags &=3D ~GENPD_FLAG_RPM_ALWAYS_ON;
+> >>>>>
+> >>>>> The genpd->flags is not supposed to be changed like this - and
+> >>>>> especially not from a genpd consumer driver.
+> >>>>>
+> >>>>> I am trying to understand a bit more of the use case here. Let's se=
+e
+> >>>>> if that helps me to potentially suggest an alternative approach.
+> >>>>>
+> >>>>
+> >>>> I was not familiar with the genpd part, so I haven't come up with
+> >>>> another solution. It would be great if you can guide me to the right
+> >>>> way.
+> >>>
+> >>> I have been playing with the existing infrastructure we have at hand
+> >>> to support this, but I need a few more days to be able to propose
+> >>> something for you.
+> >>>
+> >>
+> >> Much appreciate.
+> >>
+> >>>>
+> >>>>>> +
+> >>>>>> +       return ufshcd_runtime_suspend(dev);
+> >>>>>> +}
+> >>>>>> +
+> >>>>>> +static int ufs_rockchip_runtime_resume(struct device *dev)
+> >>>>>> +{
+> >>>>>> +       struct ufs_hba *hba =3D dev_get_drvdata(dev);
+> >>>>>> +       struct ufs_rockchip_host *host =3D ufshcd_get_variant(hba)=
+;
+> >>>>>> +       int err;
+> >>>>>> +
+> >>>>>> +       err =3D clk_prepare_enable(host->ref_out_clk);
+> >>>>>> +       if (err) {
+> >>>>>> +               dev_err(hba->dev, "failed to enable ref out clock =
+%d\n", err);
+> >>>>>> +               return err;
+> >>>>>> +       }
+> >>>>>> +
+> >>>>>> +       reset_control_assert(host->rst);
+> >>>>>> +       usleep_range(1, 2);
+> >>>>>> +       reset_control_deassert(host->rst);
+> >>>>>> +
+> >>>>>> +       return ufshcd_runtime_resume(dev);
+> >>>>>> +}
+> >>>>>> +
+> >>>>>> +static int ufs_rockchip_system_suspend(struct device *dev)
+> >>>>>> +{
+> >>>>>> +       struct ufs_hba *hba =3D dev_get_drvdata(dev);
+> >>>>>> +       struct ufs_rockchip_host *host =3D ufshcd_get_variant(hba)=
+;
+> >>>>>> +
+> >>>>>> +       /* Pass down desired spm_lvl to Firmware */
+> >>>>>> +       arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD=
+_CONFIG,
+> >>>>>> +                       host->pd_id, hba->spm_lvl < 5 ? 1 : 0, 0, =
+0, 0, 0, NULL);
+> >>>>>
+> >>>>> Can you please elaborate on what goes on here? Is this turning off =
+the
+> >>>>> power-domain that the dev is attached to - or what is actually
+> >>>>> happening?
+> >>>>>
+> >>>>
+> >>>> This smc call is trying to ask firmware not to turn off the power-do=
+mian
+> >>>> that the UFS is attached to and also not to turn off the power of UF=
+S
+> >>>> conntroller.
+> >>>
+> >>> Okay, thanks for clarifying!
+> >>>
+> >>> A follow up question, don't you need to make a corresponding smc call
+> >>> to inform the FW that it's okay to turn off the power-domain at some
+> >>> point?
+> >>>
+> >>
+> >> Yes. Each time entering sleep, we teach FW if it need to turn off or k=
+eep
+> >> power-domain, for instance "hba->spm_lvl < 5 ? 1 : 0" , 0 means
+> >> off and 1 means on.
+> >>
+> >
+> > We had a requirement to notify the genpd provider from consumer to not =
+turn off
+> > the power domain during system suspend. So Ulf came up with an API for
+> > consumers, device_set_wakeup_path() setting the 'dev->power.wakeup_path=
+' which
+> > will be honored by the genpd core. Will that work for you?
+>
+> Yes, that works. And we may need a symmetrical call, for instance,
+> device_clr_wakeup_path() to allow genpd provider to turn off the power
+> domain as well.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+The PM core clears the flag in device_prepare(). The flag is typically
+supposed to be set from a ->suspend() callback, so there should be no
+need for an additional function that clears the flag, I think.
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+[...]
 
- include/linux/pm_wakeup.h | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/include/linux/pm_wakeup.h b/include/linux/pm_wakeup.h
-index 76cd1f9..45405a3 100644
---- a/include/linux/pm_wakeup.h
-+++ b/include/linux/pm_wakeup.h
-@@ -94,6 +94,11 @@ static inline void device_set_wakeup_path(struct device *dev)
- 	dev->power.wakeup_path = true;
- }
- 
-+static inline void device_clr_wakeup_path(struct device *dev)
-+{
-+	dev->power.wakeup_path = false;
-+}
-+
- /* drivers/base/power/wakeup.c */
- extern struct wakeup_source *wakeup_source_create(const char *name);
- extern void wakeup_source_destroy(struct wakeup_source *ws);
-@@ -177,6 +182,8 @@ static inline bool device_wakeup_path(struct device *dev)
- 
- static inline void device_set_wakeup_path(struct device *dev) {}
- 
-+static inline void device_clr_wakeup_path(struct device *dev) {}
-+
- static inline void __pm_stay_awake(struct wakeup_source *ws) {}
- 
- static inline void pm_stay_awake(struct device *dev) {}
--- 
-2.7.4
-
+Kind regards
+Uffe
