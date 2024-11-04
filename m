@@ -1,132 +1,122 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29F551F708E
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 20:49:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363031E3DCF
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 20:49:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730753351; cv=none; b=DfwZ1RHof/td8nwUbF51qSsUPEIKal5XfelbYl1/d0SNn/zZwyJwzybz4SJsc7eje+ifWly2RUry9L17sVyipK7LY/3E9+LyOOq1lYgk8mcwStvqsZexomfvJd5hGxWiodZybJeuxXpkIcBT4UGSyf/Cth0T16Ro3c0sWS54ZOw=
+	t=1730753382; cv=none; b=hwNli9QdKgqTH1axTs4l8DR5i7SpxUXKt6Icw5V6yr09NAcnQ8CW1GFDp6pD6GgRl1kMNc377y5JYO3nGTjyleYBNytinobaVzcmyF2IuOk8SsGDyZPFqZFFIBTr2rR/+qepM6QtMkPFW32w3nAXrzS2CN4m+HJ7duzUWIzYQC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730753351; c=relaxed/simple;
-	bh=s7g+2WFyZXA72jYL2PshW+rlLqLNv+p5ym6dJP3Ft/M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ioJM/jE50cU92kEV2GJRGAaUY6typpuxF85RY5QsFrvYYm6naHdWElNq8iF9jzAlQaB1MqqLO2QC0t08MsI0ppzEBOU7eRO0ryI/wAb4tgOGkxXNXKBlRvbKjHYDzuQhJ0iayjvV4sIL2k+ZGc7qq3XH18aXxBEdDe4TMO6ZZtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aay6Orck; arc=none smtp.client-ip=209.85.167.46
+	s=arc-20240116; t=1730753382; c=relaxed/simple;
+	bh=wbGM84LdqtabiW8/wWt5P5US1xkvdioc8Zo/9Mwgvr4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=mqkcmxZmKn0KxB/fZ334H+7JZC35wV++HDuKLtMq/B94stByGGMpfdT7zv86A+25y/ya3/c9k7jcWELikPjmYwPPRU9Al5yAukPwrICoLoMbCwWG4ZipmkgxNA9UyJUveUPdaAVTng1Va0e4zdk+svYcphU9cloj9Wl7VJQx5Uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DLIhgwcS; arc=none smtp.client-ip=209.85.208.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aay6Orck"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-539f4d8ef66so5989477e87.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 12:49:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DLIhgwcS"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5c9362c26d8so8632266a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 12:49:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730753348; x=1731358148; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=WXedNd+XsWLIdiETHP93HM0+h9dapd2musrzw6znav4=;
-        b=aay6Orckw/WUjG7CFq88/dhsw7FkaPXjpMFMDkPjMBhXgRnJusUpKzT6rqSGZF7S61
-         ybGVCqrGLM2smzVy/p1zljTy9kDiAIW/UxQ5WNzblBlot4ZtkR6axsUbb1Fff0Bnes/m
-         c4Yhx6Z0P7jJ0NCIgvbP6oPX6sQhC0SDvENhVlVqIhmfeSPs4zOrzEvEkPte7eX2B3qs
-         Fgf6dNJ008L4bMnYvryGQhvHe57n+THjU1yZHkcGh53qIAi7rITn6MN/OU6pM+fLsBDz
-         s5mzmwnymuI79XUEmR9+Tuc6WXsc6KibjS8vSi0zJ3NWRJZvCph69ho1RfZl8S/3xQ7D
-         saTQ==
+        d=gmail.com; s=20230601; t=1730753379; x=1731358179; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sZjaHG8fwFu3j1sv6V9Mjt5M25a2LOqzbEklcG4xtuU=;
+        b=DLIhgwcS1jykanTUZ6tNw7d7UpwJ1GICZazfki3c57RxSF+2coF3ewFTVRESOihqV9
+         29/qvyL97zKCQRgSSFsKByakSutoNdyPNdm9NL40RMAjvup1oH+f+c13hHr78XXaCaAf
+         0j2krfOe2OCf1dv23SgQlYXsRceVROuLiQp8nI4em7f7KnYIFY7sGWm4QTH7cz+WtQq6
+         JbyoBIf7m6a9UKxJwI945JHXpQmWp9qOT9nqRpQ8nfJT4mIciwzBJy6IkyuoXTBGR59r
+         ONm+chdvW0iWNk2NWJVDLqZcLeU8wP2EISBFWeJgQLW7tATzmoeFquD6zz7RO10XtvHX
+         g+oQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730753348; x=1731358148;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=WXedNd+XsWLIdiETHP93HM0+h9dapd2musrzw6znav4=;
-        b=ICmO61yZlL7gV4AM+EEHhTYMghigr5ZZid2At35ToYabIWP2VGIIVhln9UxTSP34ib
-         1j/MzGbFfx/nI85xRVM4IxoDLLVtREhGLsEuDWTkfGlbN+PA0kVJla+V/QfpMIjrR4WK
-         AfbSStN/fLfBEVq1LPFUSoro0IOJJ8uVRX1MsuvDOWHWsNurD0630xd9VlmKzCi2TxHj
-         jQB2pMs4373Kxk8Vqltyb3eCPKVPT+2Iv0k/hXONBGHq3zl0qh0eSILpEhpX4szxg1nM
-         w//VEowzNW4XdbJMIW/HgMxX2KrEb6iqwyuGbL5OUaDsxGf9OJzRrz58CRF2n/KQ24Qv
-         qG0A==
-X-Gm-Message-State: AOJu0YzagI9U3kvhEwbkdMfuZF2/WO28pRaJqCy13sjw0C9UWb2CPRbf
-	ptZx4dXi2ieV+ln+KmvuEOzdFVCnAP2yxOyLhugwj6oF5Ja+rZmObjNV/g==
-X-Google-Smtp-Source: AGHT+IEEE4fVLw8xx1wySqwwFgSRAlQEybehQ9kBT7c/5g1oKivCvDxSEcdnZH9S2IaGNn0SxSS2WA==
-X-Received: by 2002:a05:651c:a0a:b0:2fb:6198:d230 with SMTP id 38308e7fff4ca-2fcbdfc65d6mr162519131fa.18.1730753347668;
-        Mon, 04 Nov 2024 12:49:07 -0800 (PST)
-Received: from es40.darklands.se (h-94-254-104-176.A469.priv.bahnhof.se. [94.254.104.176])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-2fdef616446sm18495281fa.56.2024.11.04.12.49.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Nov 2024 12:49:06 -0800 (PST)
-From: Magnus Lindholm <linmag7@gmail.com>
-To: linux-scsi@vger.kernel.org,
-	James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com
-Cc: linmag7@gmail.com
-Subject: [PATCH v3] scsi: qla1280.c 
-Date: Mon,  4 Nov 2024 21:46:00 +0100
-Message-ID: <20241104204845.1785-1-linmag7@gmail.com>
-X-Mailer: git-send-email 2.47.0
+        d=1e100.net; s=20230601; t=1730753379; x=1731358179;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sZjaHG8fwFu3j1sv6V9Mjt5M25a2LOqzbEklcG4xtuU=;
+        b=qc2TXkrG4QzaTFfotgKcfHmNKXSjEU7MgdwaL1IIUufRiLZqR7oFlH14HiWlLk6KH/
+         QFKPKGSbe24Iy85GAQ/dINfBo2FRhTZCBEZQSXnjisLLYAEpH/k5JyMZuyFsu+Qqr5QU
+         4YpTIWMRsASzQmFRbCWKkgWpJA0bWq2eqhDgfXuqmzDkwpZ2H4tFNqSk5drbgGd3ga3n
+         q74j73Cq2JerjJfAu66uE07K8O4LPBxL/A5XcHpZWivkZaYgekYcU8BuhL+6xDksTtFX
+         7Mu2q+PhyPGrr4zFuz5vdtiiEpqGwVKRIH6oDCH8dhrYECz1HmQwxKD8dBC2ApFLRyHO
+         3uPw==
+X-Gm-Message-State: AOJu0YzBWR68CHqyymROQvdW7TyrqlZ55rQj2jyPxv0gcdNGrz1rDox6
+	AjqA6UeKUtPI0eCJ3wqxYc0xAallrVfuVKInpMD5/v5k3wYW3gnKezbP2SGOKgB83+aiz6SzvkA
+	rt4JOROpELrfTKhI+8CZDE4H+BfQn4YBv
+X-Google-Smtp-Source: AGHT+IHOwPZi87zFuGLhBxbnvWCYYvUua7G4uq/JbQkgdwU7Dk3IOTvcs5Jl4hlEP7h1SrWLxNf57U0twWPOLCt464Y=
+X-Received: by 2002:a05:6402:440e:b0:5cb:6715:3498 with SMTP id
+ 4fb4d7f45d1cf-5ceabee80f2mr18258210a12.3.1730753378881; Mon, 04 Nov 2024
+ 12:49:38 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+ <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+ <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+ <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+ <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
+In-Reply-To: <Zyh6tP-eWlABiBG7@infradead.org>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Mon, 4 Nov 2024 21:49:27 +0100
+Message-ID: <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: linux-scsi@vger.kernel.org
+Cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, "Maciej W. Rozycki" <macro@orcam.me.uk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
- Use dma_get_required_mask() to determine an acceptable DMA_BIT_MASK 
- since on some platforms, qla1040 cards do not work with a 64-bit
- mask. For example, on alpha systems with more than 2GB ram a 64-bit DMA mask
- will result in filesystem corruption, but a 64-bit mask is required on
- IP30/MIPS.
+Hi
 
-Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
----
- drivers/scsi/qla1280.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+I'm making another attempt at fixing the qla1280.c driver for ISP1040x
+on Alpha, while trying not to break anything on other platforms, like
+IP-30/MIPS. This time I'm using dma_get_required_mask(). Is my
+understanding that this function should provide the minimum required
+mask for the platform, assuming this works it should return something
+greater than 32-bits on IP-30/MIPS. From what I can tell by looking at
+the kernel source it should return something like a 64-bit MASK for
+the sgi/octane but I'm not in the possession of such a system so I'm
+unable to verify this.
+Maybe Thomas can test the new patch? When I examine other scsi drivers
+it seems like most of them select bitmasks that are 32-bit on alpha
+systems. Any bitmask below 40-bits will avoid hitting the "monster
+window" which is when I see trouble on alpha. Still a much larger mask
+is required on SGI/Octane, my hopes are that dma_get_required_mask()
+can assist in sorting this out?
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 8958547ac111..4ba4084bf252 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -8,9 +8,11 @@
- * Copyright (C) 2003-2004 Christoph Hellwig
- *
- ******************************************************************************/
--#define QLA1280_VERSION      "3.27.1"
-+#define QLA1280_VERSION      "3.27.2"
- /*****************************************************************************
-     Revision History:
-+    Rev  3.27.2, November 3, 2024, Magnus Lindholm
-+	- Use dma_get_required_mask() to determine DMA_BIT_MASK if QLA_64BIT_PTR
-     Rev  3.27.1, February 8, 2010, Michael Reed
- 	- Retain firmware image for error recovery.
-     Rev  3.27, February 10, 2009, Michael Reed
-@@ -4143,6 +4145,8 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct Scsi_Host *host;
- 	struct scsi_qla_host *ha;
- 	int error = -ENODEV;
-+	/* use 32-bit mask as default in case driver is built for 32-only */
-+	u64 required_mask = DMA_BIT_MASK(32);
- 
- 	/* Bypass all AMI SUBSYS VENDOR IDs */
- 	if (pdev->subsystem_vendor == PCI_VENDOR_ID_AMI) {
-@@ -4177,7 +4181,8 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ha->devnum = devnum;	/* specifies microcode load address */
- 
- #ifdef QLA_64BIT_PTR
--	if (dma_set_mask_and_coherent(&ha->pdev->dev, DMA_BIT_MASK(64))) {
-+	required_mask = dma_get_required_mask(&ha->pdev->dev);
-+	if (dma_set_mask_and_coherent(&ha->pdev->dev, required_mask)) {
- 		if (dma_set_mask(&ha->pdev->dev, DMA_BIT_MASK(32))) {
- 			printk(KERN_WARNING "scsi(%li): Unable to set a "
- 			       "suitable DMA mask - aborting\n", ha->host_no);
-@@ -4185,10 +4190,10 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			goto error_put_host;
- 		}
- 	} else
--		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
--			ha->host_no);
-+		dprintk(2, "scsi(%li): %d-bit PCI Addressing Enabled\n",
-+			ha->host_no, fls64(required_mask));
- #else
--	if (dma_set_mask(&ha->pdev->dev, DMA_BIT_MASK(32))) {
-+	if (dma_set_mask(&ha->pdev->dev, required_mask)) {
- 		printk(KERN_WARNING "scsi(%li): Unable to set a "
- 		       "suitable DMA mask - aborting\n", ha->host_no);
- 		error = -ENODEV;
--- 
-2.47.0
 
+Magnus
+
+On Mon, Nov 4, 2024 at 8:41=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> On Thu, Oct 31, 2024 at 05:30:31PM +0000, Maciej W. Rozycki wrote:
+> >  This also means that the ISP_CFG0_1040A check also added in 2.6.9 with
+> > <https://lore.kernel.org/r/20040606125825.GE31063@lst.de/> will never
+> > match, possibly meaning that this code wasn't actually ever verified wi=
+th
+> > affected 1040A hardware.  This might also explain why a later change ma=
+de
+> > with commit 0888f4c33128 ("[SCSI] qla1280: don't use bitfields for
+> > hardware access in isp_config") went unnoticed that changed the semanti=
+cs
+> > of the workaround from keeping bursts unconditionally disabled with the
+> > 1040A to making them enabled in the absence of NVRAM.
+> >
+> >  NB comments for the FIFO threshold surely are suspicious too.
+> >
+> >  Christoph can you please have a look into it?  It seems like something
+> > you ought to be quite familiar with if not for the passage of time.
+>
+> Somewhat surprisingly I don't remember that details of a drive by
+> cleanup 20 years ago :)
+>
+> So whatever fixes you have based on other implementations are probably
+> correct.
+>
