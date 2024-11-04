@@ -1,252 +1,175 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B5C31B85C4;
-	Sun,  3 Nov 2024 22:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8110926AF6;
+	Mon,  4 Nov 2024 01:26:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730673155; cv=none; b=UNuLZcudnuVVD/Sra6dCC4Lnh3wDsM1N0W3/8ckv7tOC+FfFd5gsVLHX4twEZDYUhpJKBKyN9zMr1rkhQZIZBB55OGfO/juUZYrsYrw4qTF3WoqMKUJcsRZup+gMA+a9DPWhkOeH9k16v8KwDIQfm6aot9MRKNND4DZfXzUBNhk=
+	t=1730683584; cv=none; b=Yqo/1fMW3YqhYxCxYQYi9kCPOHiHzKN6x8mQUTTZV1fokqVNPxMI5EeW4Fhymn9OBtc3Mfokt+B0ei4dj1NZjT2E7sekpYMiufNA68XBIlX2LP0jon7WQuYflJ++XclEpYq7chAM7oYKa8UkVHLXlfcXqlZae1EAUiH8NQod+8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730673155; c=relaxed/simple;
-	bh=47ZGS4s0ykwzlSaIC0c2LdDMEVdoUJMfULJGERv2xGc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UMft4xeraaQNc4OhQI5/AGLBj71V2vBt7xpS0ar6DOd2UUlRkFy0RQ9sHVpSzmuMhb4ty4e43P2WAWcnzrNDRd4884yGrphWtPlhdFspp7W1K6Ol2qTLWB9vWWzAqVDSAw8Q7uZWXLZgJxo77XNGAVSQ4SzYh9D1OGjz9Mn8sdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q1ykIOa7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730683584; c=relaxed/simple;
+	bh=KB98Un7mQM2y6mVpx6JRHoz0b/BTC5JATt4FtI33v0U=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=J1qx4+o9RB1t+YwBEwDSBgE9rvEfx/fmKVaCex32XUaVnDNo0SUjGLqzQYaQMKq/P5P/U9JIpcR/xCvWIUMPj8BdzUPVzliDl99s/ZS+ahJbMbVkZPSCP9mkqd9oB2vayK2fFv0FvSVRjcyL+TLbbdauCaW8VracaZ6g4D7WP50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=mwumFI9E; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q1ykIOa7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90D6FC4CED5;
-	Sun,  3 Nov 2024 22:32:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730673153;
-	bh=47ZGS4s0ykwzlSaIC0c2LdDMEVdoUJMfULJGERv2xGc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=q1ykIOa7FhBo5TG7EEGuwlAX6JD+hfMRhamK4oMNyVrZDpMPqHTEGAsVbnERHXS8T
-	 +I2XrUziRIKheWu2BlQzXwfZ1l1bjNXguqDK6VXaR/wct879oJyJjpLfr0pqdPRjDc
-	 pgJpJHsZKjL5na6IEdo8DdvwhyfhSCkVyu7UUX9dnortqHNcN8xxIOrpJweL/Ycdzc
-	 TNs6Kild/tZIS7PV10QKFjAyOPbFF38dNBQncvaP5igKWCs7GauQI5N8BGs/n6dj5r
-	 PX3uI/nZ89HFy8Q/OKlj/f+oQiZJDSlGKwqNEM0h+hztwIegm5uD3SmzhUbQinAYA0
-	 pW57GbYyXw9gw==
-From: Eric Biggers <ebiggers@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-crypto@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-f2fs-devel@lists.sourceforge.net,
-	linux-mips@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	loongarch@lists.linux.dev,
-	sparclinux@vger.kernel.org,
-	x86@kernel.org,
-	Ard Biesheuvel <ardb@kernel.org>
-Subject: [PATCH v3 16/18] jbd2: switch to using the crc32c library
-Date: Sun,  3 Nov 2024 14:31:52 -0800
-Message-ID: <20241103223154.136127-17-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241103223154.136127-1-ebiggers@kernel.org>
-References: <20241103223154.136127-1-ebiggers@kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mwumFI9E"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A3Nehke026061;
+	Mon, 4 Nov 2024 01:25:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=iMh8eF
+	HecHacE2bhwoTpB2hk6AqM865un55dFnhq1os=; b=mwumFI9ENq4rcML09znikW
+	bSKfPSoLpGiPwIVPNb+PTU/Z9iu2uh9/7IsfcbZ2541kn+9Pa1KaH43261DTcInL
+	pJ3rcjIjJBQ6fzmxg8ns9KWzD3Uc3+devvxJHHrJ42w5VT1xxl9HouMu+BQwVlnS
+	K2EOVqA7F3PdpEO8mnuj2Rhej4k3uU44TrsNEMww2Kr5veoMrGZuLbZbKka3UhPP
+	mwbaM/NWU4zi15DYpX7ZFZ8FllhKhAH1hafqawYZz+WNlB3YXAWAHnoeUXpPgJZB
+	zuibf6jNbtRmEvDez5JdDKt6c/vHhZGRrKjxNUpwH+T/eFfpc6soYKoS+By8HCdA
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42pk2106hs-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 04 Nov 2024 01:25:30 +0000 (GMT)
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 4A41PT6m022592;
+	Mon, 4 Nov 2024 01:25:29 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 42pk2106hq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 04 Nov 2024 01:25:29 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4A3J0Iri019625;
+	Mon, 4 Nov 2024 01:25:28 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 42p0mj1840-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 04 Nov 2024 01:25:28 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4A41PQfB13566404
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 4 Nov 2024 01:25:26 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8B46020043;
+	Mon,  4 Nov 2024 01:25:26 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0C94C20040;
+	Mon,  4 Nov 2024 01:25:26 +0000 (GMT)
+Received: from ozlabs.au.ibm.com (unknown [9.63.197.14])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon,  4 Nov 2024 01:25:26 +0000 (GMT)
+Received: from jarvis.ozlabs.ibm.com (unknown [9.150.11.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 95503602B8;
+	Mon,  4 Nov 2024 12:25:07 +1100 (AEDT)
+Message-ID: <3b8312490c668a99b2a89667b7d1cbdf2019b885.camel@linux.ibm.com>
+Subject: Re: [PATCH v2 06/10] sysfs: treewide: constify attribute callback
+ of bin_attribute::mmap()
+From: Andrew Donnellan <ajd@linux.ibm.com>
+To: Thomas =?ISO-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
+        Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki"
+ <rafael@kernel.org>,
+        Bjorn Helgaas	 <bhelgaas@google.com>,
+        Srinivas
+ Kandagatla <srinivas.kandagatla@linaro.org>,
+        Davidlohr Bueso
+ <dave@stgolabs.net>,
+        Jonathan Cameron <jonathan.cameron@huawei.com>,
+        Dave
+ Jiang	 <dave.jiang@intel.com>,
+        Alison Schofield
+ <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Ira
+ Weiny <ira.weiny@intel.com>,
+        Alex Deucher	 <alexander.deucher@amd.com>,
+        Christian =?ISO-8859-1?Q?K=F6nig?=	 <christian.koenig@amd.com>,
+        Xinhui Pan
+ <Xinhui.Pan@amd.com>, David Airlie	 <airlied@gmail.com>,
+        Simona Vetter
+ <simona@ffwll.ch>,
+        Dennis Dalessandro	
+ <dennis.dalessandro@cornelisnetworks.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky	 <leon@kernel.org>,
+        Tudor Ambarus
+ <tudor.ambarus@linaro.org>,
+        Pratyush Yadav	 <pratyush@kernel.org>,
+        Michael
+ Walle <mwalle@kernel.org>,
+        Miquel Raynal	 <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
+        Carlos Bilbao	
+ <carlos.bilbao.osdev@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Ilpo
+ =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        "David E. Box"
+ <david.e.box@linux.intel.com>,
+        "James E.J. Bottomley"	
+ <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"	
+ <martin.petersen@oracle.com>,
+        Richard Henderson
+ <richard.henderson@linaro.org>,
+        Matt Turner <mattst88@gmail.com>,
+        Frederic
+ Barrat <fbarrat@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>, Logan
+ Gunthorpe <logang@deltatee.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang	 <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+        Dexuan Cui	 <decui@microsoft.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-rdma@vger.kernel.org, linux-mtd@lists.infradead.org,
+        platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org
+Date: Mon, 04 Nov 2024 12:24:55 +1100
+In-Reply-To: <20241103-sysfs-const-bin_attr-v2-6-71110628844c@weissschuh.net>
+References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
+	 <20241103-sysfs-const-bin_attr-v2-6-71110628844c@weissschuh.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.54.1 (3.54.1-1.fc41) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: IVwbyg3makWwSzhu8aJUQIgu4AbnB-xA
+X-Proofpoint-ORIG-GUID: b4TgSoTo26XoqfO5DuvsB1xx-Da_599i
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
+ clxscore=1011 suspectscore=0 impostorscore=0 bulkscore=0 malwarescore=0
+ priorityscore=1501 adultscore=0 lowpriorityscore=0 mlxlogscore=906
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2411040007
 
-From: Eric Biggers <ebiggers@google.com>
+On Sun, 2024-11-03 at 17:03 +0000, Thomas Wei=C3=9Fschuh wrote:
+> The mmap() callbacks should not modify the struct
+> bin_attribute passed as argument.
+> Enforce this by marking the argument as const.
+>=20
+> As there are not many callback implementers perform this change
+> throughout the tree at once.
+>=20
+> Signed-off-by: Thomas Wei=C3=9Fschuh <linux@weissschuh.net>
 
-Now that the crc32c() library function directly takes advantage of
-architecture-specific optimizations, it is unnecessary to go through the
-crypto API.  Just use crc32c().  This is much simpler, and it improves
-performance due to eliminating the crypto API overhead.
+Acked-by: Andrew Donnellan <ajd@linux.ibm.com> # ocxl
 
-Reviewed-by: Ard Biesheuvel <ardb@kernel.org>
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- fs/jbd2/Kconfig      |  2 --
- fs/jbd2/journal.c    | 25 ++-----------------------
- include/linux/jbd2.h | 31 +++----------------------------
- 3 files changed, 5 insertions(+), 53 deletions(-)
-
-diff --git a/fs/jbd2/Kconfig b/fs/jbd2/Kconfig
-index 4ad2c67f93f1..9c19e1512101 100644
---- a/fs/jbd2/Kconfig
-+++ b/fs/jbd2/Kconfig
-@@ -1,11 +1,9 @@
- # SPDX-License-Identifier: GPL-2.0-only
- config JBD2
- 	tristate
- 	select CRC32
--	select CRYPTO
--	select CRYPTO_CRC32C
- 	help
- 	  This is a generic journaling layer for block devices that support
- 	  both 32-bit and 64-bit block numbers.  It is currently used by
- 	  the ext4 and OCFS2 filesystems, but it could also be used to add
- 	  journal support to other file systems or block devices such
-diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
-index 97f487c3d8fc..56cea5a738a7 100644
---- a/fs/jbd2/journal.c
-+++ b/fs/jbd2/journal.c
-@@ -1373,24 +1373,16 @@ static int journal_check_superblock(journal_t *journal)
- 		printk(KERN_ERR "JBD2: Can't enable checksumming v1 and v2/3 "
- 		       "at the same time!\n");
- 		return err;
- 	}
- 
--	/* Load the checksum driver */
- 	if (jbd2_journal_has_csum_v2or3_feature(journal)) {
- 		if (sb->s_checksum_type != JBD2_CRC32C_CHKSUM) {
- 			printk(KERN_ERR "JBD2: Unknown checksum type\n");
- 			return err;
- 		}
- 
--		journal->j_chksum_driver = crypto_alloc_shash("crc32c", 0, 0);
--		if (IS_ERR(journal->j_chksum_driver)) {
--			printk(KERN_ERR "JBD2: Cannot load crc32c driver.\n");
--			err = PTR_ERR(journal->j_chksum_driver);
--			journal->j_chksum_driver = NULL;
--			return err;
--		}
- 		/* Check superblock checksum */
- 		if (sb->s_checksum != jbd2_superblock_csum(journal, sb)) {
- 			printk(KERN_ERR "JBD2: journal checksum error\n");
- 			err = -EFSBADCRC;
- 			return err;
-@@ -1611,12 +1603,10 @@ static journal_t *journal_init_common(struct block_device *bdev,
- 
- 	return journal;
- 
- err_cleanup:
- 	percpu_counter_destroy(&journal->j_checkpoint_jh_count);
--	if (journal->j_chksum_driver)
--		crypto_free_shash(journal->j_chksum_driver);
- 	kfree(journal->j_wbuf);
- 	jbd2_journal_destroy_revoke(journal);
- 	journal_fail_superblock(journal);
- 	kfree(journal);
- 	return ERR_PTR(err);
-@@ -2194,12 +2184,10 @@ int jbd2_journal_destroy(journal_t *journal)
- 	if (journal->j_proc_entry)
- 		jbd2_stats_proc_exit(journal);
- 	iput(journal->j_inode);
- 	if (journal->j_revoke)
- 		jbd2_journal_destroy_revoke(journal);
--	if (journal->j_chksum_driver)
--		crypto_free_shash(journal->j_chksum_driver);
- 	kfree(journal->j_fc_wbuf);
- 	kfree(journal->j_wbuf);
- 	kfree(journal);
- 
- 	return err;
-@@ -2340,23 +2328,14 @@ int jbd2_journal_set_features(journal_t *journal, unsigned long compat,
- 			pr_err("JBD2: Cannot enable fast commits.\n");
- 			return 0;
- 		}
- 	}
- 
--	/* Load the checksum driver if necessary */
--	if ((journal->j_chksum_driver == NULL) &&
--	    INCOMPAT_FEATURE_ON(JBD2_FEATURE_INCOMPAT_CSUM_V3)) {
--		journal->j_chksum_driver = crypto_alloc_shash("crc32c", 0, 0);
--		if (IS_ERR(journal->j_chksum_driver)) {
--			printk(KERN_ERR "JBD2: Cannot load crc32c driver.\n");
--			journal->j_chksum_driver = NULL;
--			return 0;
--		}
--		/* Precompute checksum seed for all metadata */
-+	/* Precompute checksum seed for all metadata */
-+	if (INCOMPAT_FEATURE_ON(JBD2_FEATURE_INCOMPAT_CSUM_V3))
- 		journal->j_csum_seed = jbd2_chksum(journal, ~0, sb->s_uuid,
- 						   sizeof(sb->s_uuid));
--	}
- 
- 	lock_buffer(journal->j_sb_buffer);
- 
- 	/* If enabling v3 checksums, update superblock */
- 	if (INCOMPAT_FEATURE_ON(JBD2_FEATURE_INCOMPAT_CSUM_V3)) {
-diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
-index 8aef9bb6ad57..33d25a3d15f1 100644
---- a/include/linux/jbd2.h
-+++ b/include/linux/jbd2.h
-@@ -26,11 +26,11 @@
- #include <linux/mutex.h>
- #include <linux/timer.h>
- #include <linux/slab.h>
- #include <linux/bit_spinlock.h>
- #include <linux/blkdev.h>
--#include <crypto/hash.h>
-+#include <linux/crc32c.h>
- #endif
- 
- #define journal_oom_retry 1
- 
- /*
-@@ -1239,17 +1239,10 @@ struct journal_s
- 	 * An opaque pointer to fs-private information.  ext3 puts its
- 	 * superblock pointer here.
- 	 */
- 	void *j_private;
- 
--	/**
--	 * @j_chksum_driver:
--	 *
--	 * Reference to checksum algorithm driver via cryptoapi.
--	 */
--	struct crypto_shash *j_chksum_driver;
--
- 	/**
- 	 * @j_csum_seed:
- 	 *
- 	 * Precomputed journal UUID checksum for seeding other checksums.
- 	 */
-@@ -1748,14 +1741,11 @@ static inline bool jbd2_journal_has_csum_v2or3_feature(journal_t *j)
- 	return jbd2_has_feature_csum2(j) || jbd2_has_feature_csum3(j);
- }
- 
- static inline int jbd2_journal_has_csum_v2or3(journal_t *journal)
- {
--	WARN_ON_ONCE(jbd2_journal_has_csum_v2or3_feature(journal) &&
--		     journal->j_chksum_driver == NULL);
--
--	return journal->j_chksum_driver != NULL;
-+	return jbd2_journal_has_csum_v2or3_feature(journal);
- }
- 
- static inline int jbd2_journal_get_num_fc_blks(journal_superblock_t *jsb)
- {
- 	int num_fc_blocks = be32_to_cpu(jsb->s_num_fc_blks);
-@@ -1794,26 +1784,11 @@ static inline unsigned long jbd2_log_space_left(journal_t *journal)
- #define JBD_MAX_CHECKSUM_SIZE 4
- 
- static inline u32 jbd2_chksum(journal_t *journal, u32 crc,
- 			      const void *address, unsigned int length)
- {
--	struct {
--		struct shash_desc shash;
--		char ctx[JBD_MAX_CHECKSUM_SIZE];
--	} desc;
--	int err;
--
--	BUG_ON(crypto_shash_descsize(journal->j_chksum_driver) >
--		JBD_MAX_CHECKSUM_SIZE);
--
--	desc.shash.tfm = journal->j_chksum_driver;
--	*(u32 *)desc.ctx = crc;
--
--	err = crypto_shash_update(&desc.shash, address, length);
--	BUG_ON(err);
--
--	return *(u32 *)desc.ctx;
-+	return crc32c(crc, address, length);
- }
- 
- /* Return most recent uncommitted transaction */
- static inline tid_t  jbd2_get_latest_transaction(journal_t *journal)
- {
--- 
-2.47.0
-
+--=20
+Andrew Donnellan    OzLabs, ADL Canberra
+ajd@linux.ibm.com   IBM Australia Limited
