@@ -1,177 +1,169 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B4D0111A8;
-	Mon,  4 Nov 2024 13:25:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04AA0C2FB
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 13:43:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730726738; cv=none; b=oyJTY1LRLkUKznARzWSc/xodL+lgQd3ogPyvJy4boX52eli9svNlbgZuG4Qim8A7b7wpKPZPEP8nHmyYcM519tqWeS+V+9gKTC7EolY3WulvkqkiuI9Z8hadKimzqig5IJyYl45igL2t0o/Q9ellCAyvr49JfMpPCu8MwLA8Nec=
+	t=1730727817; cv=none; b=sfnLfWR5jFURPTQkGREeSfbZwopJOiXye3sT3BAweWk4J3QYI7woNJnlX4jBuGxkCZ19LOx9sm4mbu8y+PVC2tcqfOLc/Y9+7pbFtV4zVBhtW2sA26fZkCprTmW9yoaDMJ239ke4LiLwiqnnQpxXsPsvx2gCyuaJMWQktt2V0ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730726738; c=relaxed/simple;
-	bh=oPBklUbvKL8bSKRIlaEBq6Ena9N6JHRIUOBA6mqrZ6c=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=Ms9sUT3HFzOAlu6wH76v4GIo5JPQx0XTjONKbQ47BlriN2pLIMwJAo5252ZIX2Ppql95twB+dvHHo0JbJtqCgjcyX2H3UlIYI1BKJrU7RHPRHEftWLATKG1jY16RiPjfo+n8+4AEr7sGFKHHVOmY3+hnC+TMt2bINuK6GPmhicI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V6M9zpgg; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1730727817; c=relaxed/simple;
+	bh=4nsxE0zJBnfMaOT5zdVUiPyRYA3ahACMLCgNgO/61dE=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=lgj3fYO66ifcIHRUhmtZ+a4E0DiY6Qnqm0XqJA3vvWNYfYvXVTgK345WrhxJf0i0OxPgNwVFXTPoJ2f8Nie/xSaIw+Sx7kCwqCpv1znQx1wM5QZVYdGJGNIawi38VGeQ0FsctOh3r8RbACxJUjszNilg7iO4Xavw3kXJk0+IA+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RZieaUKH; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V6M9zpgg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730726736; x=1762262736;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=oPBklUbvKL8bSKRIlaEBq6Ena9N6JHRIUOBA6mqrZ6c=;
-  b=V6M9zpgg7MJtwljFRnQo2x+DXoviRvspP0NVDmRyAtFeIj1U6uUBzGB6
-   q7dNJz0Mm05awQeWH8RA0JBJ3xtkyAbcFrqW9EEV304wTBZGFMtiITI3O
-   jwn4ciqJCJu3V5LPn0sWATTqONxaNJs3BWl/sJ6S/8fUL5bIcvGYGqivl
-   /uATz2ZiJN8IG4KzLVgHrDm3hJHXWeT+ZFOZK2sISMZ49yW53xM/tz2jb
-   UG2dFYBlKmezQ9IrfIzt6ks+mBSCGwhXg+5rLE8axKJ6g70k/yaZpkdB3
-   JgUxVFXUX+CYe0er6i/JI7A100P/ObQ3VrnZh2f0Ov104dcp7n3gAI7Qv
-   Q==;
-X-CSE-ConnectionGUID: r5aOVlEITJe0ReUEquHbsQ==
-X-CSE-MsgGUID: DbG8CzipQOGfdLFcg6HSdQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="30275394"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="30275394"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2024 05:25:32 -0800
-X-CSE-ConnectionGUID: v9JmlMoUQFaNhWF7H45gGQ==
-X-CSE-MsgGUID: 4K1oV5FuTuelLKT3nBONXg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,257,1725346800"; 
-   d="scan'208";a="83542204"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.33])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2024 05:25:17 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 4 Nov 2024 15:25:13 +0200 (EET)
-To: =?ISO-8859-15?Q?Thomas_Wei=DFschuh?= <linux@weissschuh.net>
-cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-    "Rafael J. Wysocki" <rafael@kernel.org>, 
-    Bjorn Helgaas <bhelgaas@google.com>, 
-    Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
-    Davidlohr Bueso <dave@stgolabs.net>, 
-    Jonathan Cameron <jonathan.cameron@huawei.com>, 
-    Dave Jiang <dave.jiang@intel.com>, 
-    Alison Schofield <alison.schofield@intel.com>, 
-    Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
-    Alex Deucher <alexander.deucher@amd.com>, 
-    =?ISO-8859-15?Q?Christian_K=F6nig?= <christian.koenig@amd.com>, 
-    Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>, 
-    Simona Vetter <simona@ffwll.ch>, 
-    Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-    Tudor Ambarus <tudor.ambarus@linaro.org>, 
-    Pratyush Yadav <pratyush@kernel.org>, Michael Walle <mwalle@kernel.org>, 
-    Miquel Raynal <miquel.raynal@bootlin.com>, 
-    Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
-    Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>, 
-    Carlos Bilbao <carlos.bilbao.osdev@gmail.com>, 
-    Hans de Goede <hdegoede@redhat.com>, 
-    =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-    "David E. Box" <david.e.box@linux.intel.com>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Richard Henderson <richard.henderson@linaro.org>, 
-    Matt Turner <mattst88@gmail.com>, Frederic Barrat <fbarrat@linux.ibm.com>, 
-    Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>, 
-    Logan Gunthorpe <logang@deltatee.com>, 
-    "K. Y. Srinivasan" <kys@microsoft.com>, 
-    Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
-    Dexuan Cui <decui@microsoft.com>, Dan Williams <dan.j.williams@intel.com>, 
-    LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org, 
-    linux-cxl@vger.kernel.org, amd-gfx@lists.freedesktop.org, 
-    dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, 
-    linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-    linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, 
-    linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-    linux-hyperv@vger.kernel.org
-Subject: Re: [PATCH v2 05/10] sysfs: treewide: constify attribute callback
- of bin_is_visible()
-In-Reply-To: <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
-Message-ID: <65f4dc4e-3b48-2baa-a13b-3cc34dd51ce1@linux.intel.com>
-References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net> <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RZieaUKH"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-431481433bdso37259685e9.3
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 05:43:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1730727814; x=1731332614; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=NNjkltu1YzUC3aRdfVm7mD8mGte+fZLAnIacrLlFn+g=;
+        b=RZieaUKHmlTHCycAIAm/G5fCEyemiczTkfDF23xsE8mrEzhh9yyrzuWwtdpz/LkVh8
+         W8DWyw8vGJI2mkXps4dXiiBcIDMCdmq3egj+FT1ga4HqgoASmq4GNs22CwfXVaNl+Fs6
+         LHd04fkv5SJ22itdSv3cm0kfUJrF2+sivwiFlEO85de3OO+ympEgZBiFRzwqqMF1dAhf
+         k9Z46dMe08ZP3caNg8NzHur8Oh2ObwWWg5DJ2p5h78E2vjoMcaMofxcsX/oF9tZDemds
+         tfKcyYsgwLTEnU0agrNcQU35yWh5d0FiBiuJGeZHgqRjLERAftqfYNpPPhTGemo6AZsZ
+         6IlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730727814; x=1731332614;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=NNjkltu1YzUC3aRdfVm7mD8mGte+fZLAnIacrLlFn+g=;
+        b=AQXPQS5jGzZSyzuE4vfeuhovWVSZLOo6cC7DGYUNn13rYY3x6xHoAtu5IHgoUfQaxG
+         2QTTRWN0x1FvNxWljL7YBjo5oclHKFdYqVWOP2z45BCskcMRGr87ygXcV+Ml59eQMKjg
+         sXAzBj0soLAQuKniVLKr9iYfalcEfA0CPK/r37w3bsjG5WyQBD1r6N1PSK4ONt1N8VQu
+         LuelOqefyhD+4PbQ+g8ZXzg+cn2bAXPad0JiDVzuQ3brhFZ6hzlu//8PB//QDV0SXe0L
+         OwkopaLhg9WtMV/FFSYPrT1Xp4un7fXykZ7mUdwjKMExhjeQYbIfpyWgy2HMb00hkKMK
+         milw==
+X-Gm-Message-State: AOJu0YwsnM/kGedHcfwC5n7Ty+aGIWUmlCsZCf8zLYeHc9JBuDNiM9EJ
+	l+dOUMKYqW9cmesat8KvtORQA3rSHL7xU3TjE7HzRpaAKlI0UfdQTnICOowRKeQ=
+X-Google-Smtp-Source: AGHT+IEed2JitaHA4d9lMoLwcdDd2R7X2lHOruaIu+gEcl2mSwdKfmp3De+9Vn93SoLYA8x9eAsCSw==
+X-Received: by 2002:a05:600c:4f8a:b0:431:51e5:2316 with SMTP id 5b1f17b1804b1-4327b822402mr132269895e9.34.1730727814373;
+        Mon, 04 Nov 2024 05:43:34 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:982:cbb0:5b00:c640:4c96:8a97? ([2a01:e0a:982:cbb0:5b00:c640:4c96:8a97])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4327d6848b5sm153584445e9.32.2024.11.04.05.43.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Nov 2024 05:43:33 -0800 (PST)
+Message-ID: <5a08460d-6907-41ad-b520-b191429a6eef@linaro.org>
+Date: Mon, 4 Nov 2024 14:43:31 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-559502379-1730726713=:989"
+User-Agent: Mozilla Thunderbird
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: neil.armstrong@linaro.org
+Subject: Re: [PATCH] scsi: ufs: Start the RTC update work later
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>,
+ stable@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@wdc.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Maramaina Naresh <quic_mnaresh@quicinc.com>, Mike Bi <mikebi@micron.com>,
+ =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+ Luca Porzio <lporzio@micron.com>
+References: <20241031212632.2799127-1-bvanassche@acm.org>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <20241031212632.2799127-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-559502379-1730726713=:989
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Sun, 3 Nov 2024, Thomas Wei=C3=9Fschuh wrote:
-
-> The is_bin_visible() callbacks should not modify the struct
-> bin_attribute passed as argument.
-> Enforce this by marking the argument as const.
->=20
-> As there are not many callback implementers perform this change
-> throughout the tree at once.
->=20
-> Signed-off-by: Thomas Wei=C3=9Fschuh <linux@weissschuh.net>
+On 31/10/2024 22:26, Bart Van Assche wrote:
+> The RTC update work involves runtime resuming the UFS controller. Hence,
+> only start the RTC update work after runtime power management in the UFS
+> driver has been fully initialized. This patch fixes the following kernel
+> crash:
+> 
+> Internal error: Oops: 0000000096000006 [#1] PREEMPT SMP
+> Workqueue: events ufshcd_rtc_work
+> Call trace:
+>   _raw_spin_lock_irqsave+0x34/0x8c (P)
+>   pm_runtime_get_if_active+0x24/0x9c (L)
+>   pm_runtime_get_if_active+0x24/0x9c
+>   ufshcd_rtc_work+0x138/0x1b4
+>   process_one_work+0x148/0x288
+>   worker_thread+0x2cc/0x3d4
+>   kthread+0x110/0x114
+>   ret_from_fork+0x10/0x20
+> 
+> Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
+> Closes: https://lore.kernel.org/linux-scsi/0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org/
+> Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/cxl/port.c                      |  2 +-
->  drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c |  2 +-
->  drivers/infiniband/hw/qib/qib_sysfs.c   |  2 +-
->  drivers/mtd/spi-nor/sysfs.c             |  2 +-
->  drivers/nvmem/core.c                    |  3 ++-
->  drivers/pci/pci-sysfs.c                 |  2 +-
->  drivers/pci/vpd.c                       |  2 +-
->  drivers/platform/x86/amd/hsmp.c         |  2 +-
->  drivers/platform/x86/intel/sdsi.c       |  2 +-
->  drivers/scsi/scsi_sysfs.c               |  2 +-
->  drivers/usb/core/sysfs.c                |  2 +-
->  include/linux/sysfs.h                   | 30 +++++++++++++++------------=
----
->  12 files changed, 27 insertions(+), 26 deletions(-)
+>   drivers/ufs/core/ufshcd.c | 10 ++++++++--
+>   1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 585557eaa9a2..ed82ff329314 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8633,6 +8633,14 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+>   		ufshcd_init_clk_scaling_sysfs(hba);
+>   	}
+>   
+> +	/*
+> +	 * The RTC update code accesses the hba->ufs_device_wlun->sdev_gendev
+> +	 * pointer and hence must only be started after the WLUN pointer has
+> +	 * been initialized by ufshcd_scsi_add_wlus().
+> +	 */
+> +	schedule_delayed_work(&hba->ufs_rtc_update_work,
+> +			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+> +
+>   	ufs_bsg_probe(hba);
+>   	scsi_scan_host(hba->host);
+>   
+> @@ -8727,8 +8735,6 @@ static int ufshcd_post_device_init(struct ufs_hba *hba)
+>   	ufshcd_force_reset_auto_bkops(hba);
+>   
+>   	ufshcd_set_timestamp_attr(hba);
+> -	schedule_delayed_work(&hba->ufs_rtc_update_work,
+> -			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+>   
+>   	if (!hba->max_pwr_info.is_valid)
+>   		return 0;
 
-> diff --git a/drivers/platform/x86/amd/hsmp.c b/drivers/platform/x86/amd/h=
-smp.c
-> index 8fcf38eed7f00ee01aade6e3e55e20402458d5aa..8f00850c139fa8d419bc1c140=
-c1832bf84b2c3bd 100644
-> --- a/drivers/platform/x86/amd/hsmp.c
-> +++ b/drivers/platform/x86/amd/hsmp.c
-> @@ -620,7 +620,7 @@ static int hsmp_get_tbl_dram_base(u16 sock_ind)
->  }
-> =20
->  static umode_t hsmp_is_sock_attr_visible(struct kobject *kobj,
-> -=09=09=09=09=09 struct bin_attribute *battr, int id)
-> +=09=09=09=09=09 const struct bin_attribute *battr, int id)
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-HDK
 
-Hi Thomas,
-
-This driver is reworked in pdx86/for-next.
-
---=20
- i.
-
-
->  {
->  =09if (plat_dev.proto_ver =3D=3D HSMP_PROTO_VER6)
->  =09=09return battr->attr.mode;
-> diff --git a/drivers/platform/x86/intel/sdsi.c b/drivers/platform/x86/int=
-el/sdsi.c
-> index 9d137621f0e6e7a23be0e0bbc6175c51c403169f..33f33b1070fdc949c1373251c=
-3bca4234d9da119 100644
-> --- a/drivers/platform/x86/intel/sdsi.c
-> +++ b/drivers/platform/x86/intel/sdsi.c
-> @@ -541,7 +541,7 @@ static struct bin_attribute *sdsi_bin_attrs[] =3D {
->  };
-> =20
->  static umode_t
-> -sdsi_battr_is_visible(struct kobject *kobj, struct bin_attribute *attr, =
-int n)
-> +sdsi_battr_is_visible(struct kobject *kobj, const struct bin_attribute *=
-attr, int n)
->  {
->  =09struct device *dev =3D kobj_to_dev(kobj);
->  =09struct sdsi_priv *priv =3D dev_get_drvdata(dev);
-
---8323328-559502379-1730726713=:989--
+Thanks!
+Neil
