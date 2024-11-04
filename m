@@ -1,96 +1,83 @@
-Received: from mail-m6092.netease.com (mail-m6092.netease.com [210.79.60.92])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA63193408;
-	Mon,  4 Nov 2024 07:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.79.60.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D37B18C91D
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 07:41:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730705600; cv=none; b=bMFr33BpthvyXES1YCnaRYnE7bc1eAgg0CKSgbYpmL+tTmJlXrmEmzCRmu64Y00aSdlkxlyX3ImjlY0a9Sf1jYPAq3T00jKZI9sH9ZYBEQ3Z+PLSeBCX4iueJZutW6SH5bvvVYJ4o09DjB2DFggIoj1LU1aeZmnNOpgBzJS5IGo=
+	t=1730706104; cv=none; b=oetUKs3waGp1jUqlEp6KZ36tThMAEbEOPrm1xDVjlZkeT969iEQbhpFAvLAlpIszJ9fDj6JqnXvufcNDCQBhaHWgUPLXIavvWF3Bk0LuldiDjH0Se+QFUCy7gEnSxhPoHYVs2Sf6po2CX1/M6iwVe9SSnx+NC8+UuDHVm5Qi7/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730705600; c=relaxed/simple;
-	bh=HcAtJ+KdWFjukkplQq/eUQ5X4sEL5W385xYCnFj8q2s=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=mythPPaZljFllmsQXilVcOvxz1chdDx0/UVF7buO8ChbcNjFDwuFQTRG8Tr+N7TgL1UtOstGgCq+NtO7iqz1OqxX0UI8Fwrc71+AZTVQrl24rWNoiVKXr9Korc+fWlH+Z09OxED6xKzSr5WKkROVDXojNBg2MZqq22wf6nYrybc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=BDoi8/1o; arc=none smtp.client-ip=210.79.60.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1730706104; c=relaxed/simple;
+	bh=0GzCvqovrsXgUYZjZI8n0l/Kwa/QPAh7TOXhuZU4MUU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KeO5NwDrddAuUF8W18FIYEfQx28mPiCjKXqxlEwBGXYe42qRK7CuNtxYIVfqQ+xFl7P40QwTIwkm4npLsRRctz18hWYoEm4I9UqVMH+yGBvvuh9r70JWWGRLskp6mrFffVwjnrksMC/31625Qdo1bV86t35YdApRerRoDMEY94k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fpuW3f6v; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="BDoi8/1o"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 1b5f85e2;
-	Mon, 4 Nov 2024 15:33:04 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 3/7] soc: rockchip: add header for suspend mode SIP interface
-Date: Mon,  4 Nov 2024 15:31:57 +0800
-Message-Id: <1730705521-23081-4-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGk8eGFZIHU5PQ08YSBlMHR5WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a92f61772c109cckunm1b5f85e2
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MiI6HDo6DjIvGjoqDjVKDy8D
-	IzkwCg1VSlVKTEhLTEtOTkNNT0NMVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUJOTzcG
-DKIM-Signature:a=rsa-sha256;
-	b=BDoi8/1o0y4qs1XCUwE1wY8O5Dwy5r8bBTrIJIljgXxpTVkvNOJH/smvoGA+cNjncWRMVQ+cdMOGGwv9YjDfL1I3aAPKzaWB4g2Z9NBlGbdaKX3oCHM5zgKGEy36ss1KQuARxkl0I89/cpCOzfu0PbCIRGn8ITAh+Advkikp1O8=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=Ty6mGnWBoIaPt2RyCxg02+KQlGxmCwE6/d4KhDj58FM=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fpuW3f6v"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=kEKm6zsRPpkyYoMdSoA44siZ2N6lt7pvDyTwQY4yBAA=; b=fpuW3f6vCGm9Mps0beyeSOoJJU
+	lkklFJfNkQvcdT9F2yTaGiA1H6Ho/H41aLMeMNVCy6dHrhHMvrd08B8/sl/GvgtoP7h/j7baCPrh3
+	8ZyAwBVDhX+ws3E41u5QvLk4T2NRFHdN06U+R/I3jdzBcbFrJXrN851EQggZv92xp8NWjb/kERw+K
+	VQBUUG2HJkDeibgoP7VMMg7dUlG3cEwjKWMz7t7ymfWL+TquD5zkdwFgoijqyVFDVvQbAfkoj3Enc
+	q6RP4lnS421WHypaoC1qBV8s8ZHZC1tD3RyPqUn2s1Qg30KZabcNgsq9REnmtz9QNJ2ioP3pf8A7W
+	d+cvwcDg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1t7riW-0000000CsPE-0Wko;
+	Mon, 04 Nov 2024 07:41:40 +0000
+Date: Sun, 3 Nov 2024 23:41:40 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc: Magnus Lindholm <linmag7@gmail.com>,
+	Thomas Bogendoerfer <tbogendoerfer@suse.de>,
+	Christoph Hellwig <hch@infradead.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+Message-ID: <Zyh6tP-eWlABiBG7@infradead.org>
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+ <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com>
+ <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+ <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis>
+ <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+ <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
+ <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+ <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add ROCKCHIP_SIP_SUSPEND_MODE to pass down parameters to Trusted Firmware
-in order to decide suspend mode. Currently only add ROCKCHIP_SLEEP_PD_CONFIG
-which teaches firmware to power down controllers or not.
+On Thu, Oct 31, 2024 at 05:30:31PM +0000, Maciej W. Rozycki wrote:
+>  This also means that the ISP_CFG0_1040A check also added in 2.6.9 with 
+> <https://lore.kernel.org/r/20040606125825.GE31063@lst.de/> will never 
+> match, possibly meaning that this code wasn't actually ever verified with 
+> affected 1040A hardware.  This might also explain why a later change made 
+> with commit 0888f4c33128 ("[SCSI] qla1280: don't use bitfields for 
+> hardware access in isp_config") went unnoticed that changed the semantics 
+> of the workaround from keeping bursts unconditionally disabled with the 
+> 1040A to making them enabled in the absence of NVRAM.
+> 
+>  NB comments for the FIFO threshold surely are suspicious too.
+> 
+>  Christoph can you please have a look into it?  It seems like something 
+> you ought to be quite familiar with if not for the passage of time.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Somewhat surprisingly I don't remember that details of a drive by
+cleanup 20 years ago :)
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- include/soc/rockchip/rockchip_sip.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip_sip.h
-index c46a9ae..501ad1f 100644
---- a/include/soc/rockchip/rockchip_sip.h
-+++ b/include/soc/rockchip/rockchip_sip.h
-@@ -6,6 +6,9 @@
- #ifndef __SOC_ROCKCHIP_SIP_H
- #define __SOC_ROCKCHIP_SIP_H
- 
-+#define ROCKCHIP_SIP_SUSPEND_MODE		0x82000003
-+#define ROCKCHIP_SLEEP_PD_CONFIG		0xff
-+
- #define ROCKCHIP_SIP_DRAM_FREQ			0x82000008
- #define ROCKCHIP_SIP_CONFIG_DRAM_INIT		0x00
- #define ROCKCHIP_SIP_CONFIG_DRAM_SET_RATE	0x01
--- 
-2.7.4
+So whatever fixes you have based on other implementations are probably
+correct.
 
