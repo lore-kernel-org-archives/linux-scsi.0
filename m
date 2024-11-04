@@ -1,73 +1,134 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73EA11C4A25
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 16:18:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C11217583
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 17:25:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730737111; cv=none; b=LOst4R7p80lTedlHZAWc6NObB5tssSirls/pqF/5K2cLhkhtZETjO73PS/e5IDh680Iej20sOgA80BVSaHDfsJBsPaB8vLlpnnV0PvSVtUQjiZuyvhk8VGtJD0R2Ga1AWG92GCORl64k43X2a5GAJvuP5crXy5akBW0b79KwxiI=
+	t=1730741131; cv=none; b=Oqg6msha17s2669zhPXhubssrWVOBpskgNpz+1120sFPgOChiQ/Kv8TiWc4x4T+qVGzdlW8OXdDDsTLd8etkP2XCLWRNy30y8zkbZjShzgFASVwLmZTyKgWerQu+GE6wbrSonO/Y7m3aOSTdAm3sLothk6Fp9LKVe+UzRZXohsw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730737111; c=relaxed/simple;
-	bh=7RBidEejKihYPniggV1wH+TUy6g35kOUF1F5omwB2xU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=su2xgO0z9Oz5Dpxf2ZYluG9Oe8Ft96cns2rPrkGoqpGAZLz9vQfc5RMgWZYkA+UGbKZW3D30iapxl/wv5RsHP+IZpuHe6urA56YRDKnbOoJ5oD5yt/4L5X0GBskygZzxKd8yYG8Tg66wQtgz2HvtaZoWskRhPLoSlf2B6ltPMUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=oVO65S6t; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	s=arc-20240116; t=1730741131; c=relaxed/simple;
+	bh=yv2MHXpswypp+8KA5V1ZkFW5LDaHfB5TD5cnsBUKVAI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=J+mp0T/TEjH/S2GiFHase0EfwMYSFxO6AJQFcnTbwy65kL4XVZzszmkZI7tOWJmGrT6YSuWNStV+vO0gtzgKWwvbbBgMPh+dp0Y5arDHfUuybKT8Tj4meqHRQiJ4HSaW9vyulJ6styuAHSrdVAArkcq/HBQyvDR3Gvxcv0n4VnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Nv3KX8II; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="oVO65S6t"
-Received: from cwcc.thunk.org (pool-173-48-115-131.bstnma.fios.verizon.net [173.48.115.131])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 4A4GHeVP005285
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 4 Nov 2024 11:17:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1730737064; bh=HCFNkOXlzIC4nbZOOGVRxV1kaQeAU/pJuUI7IWu3BR4=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=oVO65S6tk8aYtsUJW4abfDTpafWiCHqifmtgz7vEn58onu4uTUTySA+AmGo3UVJT9
-	 QQil4qEcdDh06BYYMnHWbMuOcivNKlwrUgqB3NyzeTmJfoUwy4xiEy1BNuCR4Eu++H
-	 cIgfVEOfg91zv6X1OPeh48Xjg38/IEAN1zbNQgixYZCOjHc+QpUcsq2Uv1oLfNcmQE
-	 Bf/CuM+o0H1XLCvkG4LX/WwoUy7Sg139hmyTTLYtv3UmNW9L59QBTLp6ud/keG4y3P
-	 7O1qTZ5ZEGpzgROh+vZIYKFyf+CwYk8FneIPHXrRsfY3x1J+g1SIrG2lehvgiPVbt9
-	 ijt7dTTvk4gpQ==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-	id CA48115C02FA; Mon, 04 Nov 2024 11:17:40 -0500 (EST)
-Date: Mon, 4 Nov 2024 11:17:40 -0500
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-mips@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, loongarch@lists.linux.dev,
-        sparclinux@vger.kernel.org, x86@kernel.org,
-        Ard Biesheuvel <ardb@kernel.org>
-Subject: Re: [PATCH v3 16/18] jbd2: switch to using the crc32c library
-Message-ID: <20241104161740.GB43869@mit.edu>
-References: <20241103223154.136127-1-ebiggers@kernel.org>
- <20241103223154.136127-17-ebiggers@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Nv3KX8II"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Xhyz71021zlgMVP;
+	Mon,  4 Nov 2024 17:25:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730741119; x=1733333120; bh=wv20iz3vfF9DsI0ZhwKI+RSC
+	6FBeDp1+UpCba9gg4bU=; b=Nv3KX8IIiinNcmMrQNzmdrMVsBCrcs9HTIOK8thQ
+	tDiJwyPI/F8Qk9BsNHKEUafc30zFJqEwIK5MfqCq78XuyxwALEiuJ7yjsH/rGoJv
+	9FjdXH40OZtcg1ftGQErhY6ox6dbS6WwAghMzUBd/7JEa81e/bozNFEXx+M88/7x
+	creLI9bLzU298xE26SdPTH7xhHWs4YCCk/Y2Eu6T80ceV3VsohaAPsDoMDI8mGW2
+	nBl1/EFs5BccMusoUcZaV7C5BvbzkLxwaTfTRi4i3WmGEMhf/VsEINrYtIVzRwCd
+	G93Vz+NsWn/IxpLvlIU+qxWmQONjYHOLxSWjQDEXGrYBQw==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id FWJXpexVGLGK; Mon,  4 Nov 2024 17:25:19 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Xhyz2714zzlgMVN;
+	Mon,  4 Nov 2024 17:25:18 +0000 (UTC)
+Message-ID: <40e8ff4e-9ffc-4658-ae1f-69ceee5593cb@acm.org>
+Date: Mon, 4 Nov 2024 09:25:17 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241103223154.136127-17-ebiggers@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sg: Enable runtime power management
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+ Douglas Gilbert <dgilbert@interlog.com>
+References: <20241030220310.1373569-1-bvanassche@acm.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241030220310.1373569-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sun, Nov 03, 2024 at 02:31:52PM -0800, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
+On 10/30/24 3:03 PM, Bart Van Assche wrote:
+> In 2010, runtime power management support was implemented in the SCSI core.
+> The description of patch "[SCSI] implement runtime Power Management"
+> mentions that the sg driver is skipped but not why. This patch enables
+> runtime power management even if an instance of the sg driver is held open.
+> Enabling runtime PM for the sg driver is safe because all interactions of
+> the sg driver with the SCSI device pass through the block layer
+> (blk_execute_rq_nowait()) and the block layer already supports runtime PM.
 > 
-> Now that the crc32c() library function directly takes advantage of
-> architecture-specific optimizations, it is unnecessary to go through the
-> crypto API.  Just use crc32c().  This is much simpler, and it improves
-> performance due to eliminating the crypto API overhead.
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Cc: Douglas Gilbert <dgilbert@interlog.com>
+> Fixes: bc4f24014de5 ("[SCSI] implement runtime Power Management")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/sg.c | 9 +--------
+>   1 file changed, 1 insertion(+), 8 deletions(-)
 > 
-> Reviewed-by: Ard Biesheuvel <ardb@kernel.org>
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index f86be197fedd..84334ab39c81 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -307,10 +307,6 @@ sg_open(struct inode *inode, struct file *filp)
+>   	if (retval)
+>   		goto sg_put;
+>   
+> -	retval = scsi_autopm_get_device(device);
+> -	if (retval)
+> -		goto sdp_put;
+> -
+>   	/* scsi_block_when_processing_errors() may block so bypass
+>   	 * check if O_NONBLOCK. Permits SCSI commands to be issued
+>   	 * during error recovery. Tread carefully. */
+> @@ -318,7 +314,7 @@ sg_open(struct inode *inode, struct file *filp)
+>   	      scsi_block_when_processing_errors(device))) {
+>   		retval = -ENXIO;
+>   		/* we are in error recovery for this device */
+> -		goto error_out;
+> +		goto sdp_put;
+>   	}
+>   
+>   	mutex_lock(&sdp->open_rel_lock);
+> @@ -371,8 +367,6 @@ sg_open(struct inode *inode, struct file *filp)
+>   	}
+>   error_mutex_locked:
+>   	mutex_unlock(&sdp->open_rel_lock);
+> -error_out:
+> -	scsi_autopm_put_device(device);
+>   sdp_put:
+>   	kref_put(&sdp->d_ref, sg_device_destroy);
+>   	scsi_device_put(device);
+> @@ -392,7 +386,6 @@ sg_release(struct inode *inode, struct file *filp)
+>   	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
+>   
+>   	mutex_lock(&sdp->open_rel_lock);
+> -	scsi_autopm_put_device(sdp->device);
+>   	kref_put(&sfp->f_ref, sg_remove_sfp);
+>   	sdp->open_cnt--;
 
-Acked-by: Theodore Ts'o <tytso@mit.edu>
+(replying to my own email)
+
+Can anyone please help with reviewing this patch? This patch is
+important for Android. The Android security software uses the sg driver
+to communicate with the UFS RPMB so this patch is required to enable
+run-time power management in Android devices with UFS storage. See also
+https://android.googlesource.com/platform/system/core/+/refs/heads/main/trusty/storage/proxy/rpmb.c
+
+Thanks,
+
+Bart.
+
 
