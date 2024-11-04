@@ -1,83 +1,173 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mail-m25490.xmail.ntesmail.com (mail-m25490.xmail.ntesmail.com [103.129.254.90])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D37B18C91D
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 07:41:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C50AB171E70;
+	Mon,  4 Nov 2024 07:48:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.129.254.90
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730706104; cv=none; b=oetUKs3waGp1jUqlEp6KZ36tThMAEbEOPrm1xDVjlZkeT969iEQbhpFAvLAlpIszJ9fDj6JqnXvufcNDCQBhaHWgUPLXIavvWF3Bk0LuldiDjH0Se+QFUCy7gEnSxhPoHYVs2Sf6po2CX1/M6iwVe9SSnx+NC8+UuDHVm5Qi7/Y=
+	t=1730706532; cv=none; b=NdgBaR4j1KKvHiPhboVSxp2qJk3jRQr0LL3FcYb3/zB6rbelk08QclMwljNqGHrRbsIIz/S9lwcNbJBNImziutsmaOOY0sChTz+lQhQkZfyl2tePNDAE1tfFCCPdLNeSjEv9Q6vLkH1Y+rrk2AMI4KIydYSyx4ZEYyJc13HeMK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730706104; c=relaxed/simple;
-	bh=0GzCvqovrsXgUYZjZI8n0l/Kwa/QPAh7TOXhuZU4MUU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KeO5NwDrddAuUF8W18FIYEfQx28mPiCjKXqxlEwBGXYe42qRK7CuNtxYIVfqQ+xFl7P40QwTIwkm4npLsRRctz18hWYoEm4I9UqVMH+yGBvvuh9r70JWWGRLskp6mrFffVwjnrksMC/31625Qdo1bV86t35YdApRerRoDMEY94k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fpuW3f6v; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1730706532; c=relaxed/simple;
+	bh=WgIipT40jl4pYds/OTrMhKqy5XuoM0fRrS/McLLqCTY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=o2Ot8dz1n4wnq0mvZ418bmfnKsvfEBEqZGHzO4O31rpYmy2n8yW8CtVnF4m0q5RPw8ZeZSjjhDQEBzgQ+FzXSyL5AyfCXDY9TjHjWvHxr32mXC9lSZ2Y3tNEdlNVZ8xUVM4GmCbPrMOvY25weJoHxAwwR1i1IfFIhdqSP7zjN8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=knON+5fj; arc=none smtp.client-ip=103.129.254.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fpuW3f6v"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=kEKm6zsRPpkyYoMdSoA44siZ2N6lt7pvDyTwQY4yBAA=; b=fpuW3f6vCGm9Mps0beyeSOoJJU
-	lkklFJfNkQvcdT9F2yTaGiA1H6Ho/H41aLMeMNVCy6dHrhHMvrd08B8/sl/GvgtoP7h/j7baCPrh3
-	8ZyAwBVDhX+ws3E41u5QvLk4T2NRFHdN06U+R/I3jdzBcbFrJXrN851EQggZv92xp8NWjb/kERw+K
-	VQBUUG2HJkDeibgoP7VMMg7dUlG3cEwjKWMz7t7ymfWL+TquD5zkdwFgoijqyVFDVvQbAfkoj3Enc
-	q6RP4lnS421WHypaoC1qBV8s8ZHZC1tD3RyPqUn2s1Qg30KZabcNgsq9REnmtz9QNJ2ioP3pf8A7W
-	d+cvwcDg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t7riW-0000000CsPE-0Wko;
-	Mon, 04 Nov 2024 07:41:40 +0000
-Date: Sun, 3 Nov 2024 23:41:40 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Magnus Lindholm <linmag7@gmail.com>,
-	Thomas Bogendoerfer <tbogendoerfer@suse.de>,
-	Christoph Hellwig <hch@infradead.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-Message-ID: <Zyh6tP-eWlABiBG7@infradead.org>
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
- <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com>
- <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
- <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
- <20241030102549.572751ec@samweis>
- <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
- <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
- <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
- <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="knON+5fj"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 1b5f864c;
+	Mon, 4 Nov 2024 15:33:23 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: [PATCH v4 4/7] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
+Date: Mon,  4 Nov 2024 15:31:58 +0800
+Message-Id: <1730705521-23081-5-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGklDQlZNSUlJQ0IdTBlJQ0lWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a92f617bc0309cckunm1b5f864c
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Kyo6Shw*SjIaQzoSQy0cNSET
+	DxgaCjpVSlVKTEhLTEtOTUtOS09OVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhMSUo3Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=knON+5fjAdt321L8ZYK83S/IHRfMBGfnppWO7IW1kNQsB2SXHHA35Li7L5Hw++Ec/GPNSpXbL9rkvZMlAkP3DMmbNGz9bUNhFUQqKZz1AHKri+fREBUp16I3kgcg+lPB3e08IMqCitqQ4c/p7MONNoi8hSGM3xqS3ozRPlyT0Go=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=0gxErG8feRCKrPWF5GLII5wJeK93Alo3YxFf9uFvuwk=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Oct 31, 2024 at 05:30:31PM +0000, Maciej W. Rozycki wrote:
->  This also means that the ISP_CFG0_1040A check also added in 2.6.9 with 
-> <https://lore.kernel.org/r/20040606125825.GE31063@lst.de/> will never 
-> match, possibly meaning that this code wasn't actually ever verified with 
-> affected 1040A hardware.  This might also explain why a later change made 
-> with commit 0888f4c33128 ("[SCSI] qla1280: don't use bitfields for 
-> hardware access in isp_config") went unnoticed that changed the semantics 
-> of the workaround from keeping bursts unconditionally disabled with the 
-> 1040A to making them enabled in the absence of NVRAM.
-> 
->  NB comments for the FIFO threshold surely are suspicious too.
-> 
->  Christoph can you please have a look into it?  It seems like something 
-> you ought to be quite familiar with if not for the passage of time.
+From: Ulf Hansson <ulf.hansson@linaro.org>
 
-Somewhat surprisingly I don't remember that details of a drive by
-cleanup 20 years ago :)
+For some usecases a consumer driver requires its device to remain power-on
+from the PM domain perspective during runtime. Using dev PM qos along with
+the genpd governors, doesn't work for this case as would potentially
+prevent the device from being runtime suspended too.
 
-So whatever fixes you have based on other implementations are probably
-correct.
+To support these usecases, let's introduce dev_pm_genpd_rpm_always_on() to
+allow consumers drivers to dynamically control the behaviour in genpd for a
+device that is attached to it.
+
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+---
+
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pmdomain/core.c   | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/pm_domain.h |  7 +++++++
+ 2 files changed, 41 insertions(+)
+
+diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
+index 5ede0f7..02bb5c8 100644
+--- a/drivers/pmdomain/core.c
++++ b/drivers/pmdomain/core.c
+@@ -692,6 +692,36 @@ bool dev_pm_genpd_get_hwmode(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(dev_pm_genpd_get_hwmode);
+ 
++/**
++ * dev_pm_genpd_rpm_always_on() - Control if the PM domain can be powered off.
++ *
++ * @dev: Device for which the PM domain may need to stay on for.
++ * @on: Value to set or unset for the condition.
++ *
++ * For some usecases a consumer driver requires its device to remain power-on
++ * from the PM domain perspective during runtime. This function allows the
++ * behaviour to be dynamically controlled for a device attached to a genpd.
++ *
++ * It is assumed that the users guarantee that the genpd wouldn't be detached
++ * while this routine is getting called.
++ *
++ * Return: Returns 0 on success and negative error values on failures.
++ */
++int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
++{
++	struct generic_pm_domain *genpd;
++
++	genpd = dev_to_genpd_safe(dev);
++	if (!genpd)
++		return -ENODEV;
++
++	genpd_lock(genpd);
++	dev_gpd_data(dev)->rpm_always_on = on;
++	genpd_unlock(genpd);
++
++	return 0;
++}
++
+ static int _genpd_power_on(struct generic_pm_domain *genpd, bool timed)
+ {
+ 	unsigned int state_idx = genpd->state_idx;
+@@ -863,6 +893,10 @@ static int genpd_power_off(struct generic_pm_domain *genpd, bool one_dev_on,
+ 		if (!pm_runtime_suspended(pdd->dev) ||
+ 			irq_safe_dev_in_sleep_domain(pdd->dev, genpd))
+ 			not_suspended++;
++
++			/* The device may need its PM domain to stay powered on. */
++			if (to_gpd_data(pdd)->rpm_always_on)
++				return -EBUSY;
+ 	}
+ 
+ 	if (not_suspended > 1 || (not_suspended == 1 && !one_dev_on))
+diff --git a/include/linux/pm_domain.h b/include/linux/pm_domain.h
+index b637ec1..30186ad 100644
+--- a/include/linux/pm_domain.h
++++ b/include/linux/pm_domain.h
+@@ -245,6 +245,7 @@ struct generic_pm_domain_data {
+ 	unsigned int default_pstate;
+ 	unsigned int rpm_pstate;
+ 	bool hw_mode;
++	bool rpm_always_on;
+ 	void *data;
+ };
+ 
+@@ -277,6 +278,7 @@ ktime_t dev_pm_genpd_get_next_hrtimer(struct device *dev);
+ void dev_pm_genpd_synced_poweroff(struct device *dev);
+ int dev_pm_genpd_set_hwmode(struct device *dev, bool enable);
+ bool dev_pm_genpd_get_hwmode(struct device *dev);
++int dev_pm_genpd_rpm_always_on(struct device *dev, bool on);
+ 
+ extern struct dev_power_governor simple_qos_governor;
+ extern struct dev_power_governor pm_domain_always_on_gov;
+@@ -360,6 +362,11 @@ static inline bool dev_pm_genpd_get_hwmode(struct device *dev)
+ 	return false;
+ }
+ 
++static inline int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
++{
++	return -EOPNOTSUPP;
++}
++
+ #define simple_qos_governor		(*(struct dev_power_governor *)(NULL))
+ #define pm_domain_always_on_gov		(*(struct dev_power_governor *)(NULL))
+ #endif
+-- 
+2.7.4
 
