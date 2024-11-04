@@ -1,153 +1,339 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mail-m1973175.qiye.163.com (mail-m1973175.qiye.163.com [220.197.31.75])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA861C3022
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 11:29:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38C21B81C1;
+	Mon,  4 Nov 2024 13:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.75
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730719760; cv=none; b=I4WZcCY+hp9/ct17L27JMgRp0LMRCm0q01F5/HB4xABM6M8eB0ZedApeo6wt2kZ4P3pjj8RmWYR6B+hYi/CDqtEOxDfILuKNEPdHxRTZr0Yuk54BoteB8QBCpm6vjQgf2HjOcEAKg9Rgag5gCI07hwUU7GpPjzr7QDG653BwXOg=
+	t=1730725900; cv=none; b=GeIy6vzU1L7KisKmCsbABqzzaoh77mHKjXoECPdYw+szv5QrvJ7JsMxxbxrB8MWGxY/ZvU7Qf+DcMjXndcbIIUyp+kq4jp8teFbvB2cl6tRQFfdKNV1oyMIWhZTH7LQZfHSzKGSziKy1yeaCHjEt9OwN5ZPPpGJb/2NJv19pRXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730719760; c=relaxed/simple;
-	bh=iDd8slF5N7csNOR+PtgVCK3+kkri3oqX/3EqKPO39PE=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=kFZ9RPWtRUd4wCP17ULfF+1814+hyr42JhUryQx++lC+08HDixcjCHQbI7eHY8fnGOaCAofISmiTpq5L7/dBWp9dEYjzmAWfCMu03lNtIQuIJOVuHA/q97PqHpCuYq2uv/sgVrrhJNizQe5W/VW0SeVKw1Mujw/CgEaECR0BXX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=dXzmDXyP; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1730725900; c=relaxed/simple;
+	bh=pymx5FbEA3OfOrxn/cViQ3L3clatLTb162PCEKy7YWw=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=rE3QGFks04cEHN+1ECHfofG9VNQxo/Si1O6m6rzHr2oBlqlQmY0lDaaYbYgI3dEtAK2lzskGNROp7d4svvXbpmeoavvuP3mxaAcVI7bP6FJ4yEJF7i/VhaRdXlH8IFyIwp6MbxkOsU/Rrz26zjGNFgZghMampfSVBMAj07k+pIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=LNwmbqLq; arc=none smtp.client-ip=220.197.31.75
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="dXzmDXyP"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20241104112915epoutp0449a8ed393149e5d0aeb18aa7c78d8f83~EwHKN8x0g2570125701epoutp04b
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 11:29:15 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20241104112915epoutp0449a8ed393149e5d0aeb18aa7c78d8f83~EwHKN8x0g2570125701epoutp04b
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1730719755;
-	bh=u8hCNjyV4KIImElR4gHHT0N9YbPGoDH0xwSkwumilPE=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=dXzmDXyP4D1IQKI+u+4p/W8hqDgs1aXri61NU55h9xLhYtt2ooPO+gkX7x2c8Nece
-	 wpuwnAs4XmXmurEXmsZ9c6ee7tq4bej4PltSiht7zAcgYNk/90bIZY29xQchP72O0T
-	 /1fxba+JnuT1XJ46lx5rsZ9MHz2bUfdNH6NN4YkE=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20241104112914epcas5p1a4de3251704b4186b1ed2cc025ac63ab~EwHJ1wrR-2778827788epcas5p15;
-	Mon,  4 Nov 2024 11:29:14 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.179]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4Xhq486rDBz4x9Pp; Mon,  4 Nov
-	2024 11:29:12 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	21.84.09800.800B8276; Mon,  4 Nov 2024 20:29:12 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20241104112912epcas5p21f80c9615e3ba9db23428fd524106d83~EwHH2ppKt2058320583epcas5p2v;
-	Mon,  4 Nov 2024 11:29:12 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20241104112912epsmtrp24cc6e92f40757ed4e60bcad5adebf9aa~EwHH05i_W2013320133epsmtrp2o;
-	Mon,  4 Nov 2024 11:29:12 +0000 (GMT)
-X-AuditID: b6c32a4b-4a7fa70000002648-dc-6728b008109c
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	77.82.18937.800B8276; Mon,  4 Nov 2024 20:29:12 +0900 (KST)
-Received: from INBRO002756 (unknown [107.122.12.5]) by epsmtip2.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20241104112910epsmtip27ee2183ec8fc729518a6bb0611aa65c5~EwHFuvfow2913929139epsmtip2s;
-	Mon,  4 Nov 2024 11:29:10 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Peter Griffin'" <peter.griffin@linaro.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>, <krzk@kernel.org>
-Cc: <tudor.ambarus@linaro.org>, <ebiggers@kernel.org>,
-	<andre.draszik@linaro.org>, <kernel-team@android.com>,
-	<willmcvicker@google.com>, <linux-scsi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-samsung-soc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-In-Reply-To: <20241031150033.3440894-15-peter.griffin@linaro.org>
-Subject: RE: [PATCH v3 14/14] MAINTAINERS: Update UFS Exynos entry
-Date: Mon, 4 Nov 2024 16:59:08 +0530
-Message-ID: <000801db2eac$c5867ea0$50937be0$@samsung.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="LNwmbqLq"
+Received: from [172.16.12.45] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 1b345651;
+	Mon, 4 Nov 2024 14:21:45 +0800 (GMT+08:00)
+Message-ID: <161ad092-4e7c-4ca1-ade7-d512a0b39799@rock-chips.com>
+Date: Mon, 4 Nov 2024 14:21:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQGpHNBxPlSoL7oKvevQtOJlaLn5RgKmbH/8AoOUSlyy4c80YA==
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrCJsWRmVeSWpSXmKPExsWy7bCmhi7HBo10g6uNRhZbXm1msXj58yqb
-	xbQPP5kt1u75w2yxsZ/DYsd2EYvz5zewW2x6fI3V4vKuOWwWM87vY7Lovr6DzWL58X9MFhtm
-	/GOx+HQrzmLVp/+MDvwel694e2zbvY3VY8GmUo9pk06xeWxa1cnmcefaHjaPzUvqPT4+vcXi
-	8XmTnEf7gW6mAK6obJuM1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUX
-	nwBdt8wcoA+UFMoSc0qBQgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQUmBXrFibnFpXnpenmp
-	JVaGBgZGpkCFCdkZ/18tYivYx1HRsPAKWwPjEvYuRk4OCQETiWcT3rF0MXJxCAnsZpRYea6J
-	DcL5xCix5OwPsCowZ8peL5iOjn8dUPGdjBKTzgdCNLxglLh6+zYjSIJNQFdix+I2sEkiIGNv
-	zXvNDuIwC8xiklj/bAFYFaeAo0THrSesILawgJPEw0XTgGwODhYBFYkt981AwrwClhLNl/vZ
-	IGxBiZMzn7CA2MwC8hLb385hhrhIQeLn02VgrSJAY5ZOzoUoEZd4efQI2FoJgSccEm++NLJC
-	1LtIrHp/CKpXWOLV8S3QsJCS+PxuLxuEnS1x/OIsKLtCorv1I1SNvcTORzdZQHYxC2hKrN+l
-	D7GLT6L39xMmkLCEAK9ER5sQRLWqRPO7qywQtrTExO5uqAs8JD48+sk4gVFxFpLHZiF5bBaS
-	D2YhLFvAyLKKUTK1oDg3PbXYtMA4L7UcHt3J+bmbGMHJW8t7B+OjBx/0DjEycTAeYpTgYFYS
-	4Z2Xqp4uxJuSWFmVWpQfX1Sak1p8iNEUGNgTmaVEk/OB+SOvJN7QxNLAxMzMzMTS2MxQSZz3
-	devcFCGB9MSS1OzU1ILUIpg+Jg5OqQamwL+PH0nP5J1x1uWXuvSG0O2xOeZz7072DjJdbfc6
-	IFSu8uWE2+fTZ2nlapV6Lhba6mi9sCfAolNijtUr5Ue6udO2X9mfMWvnwvY7dUzCipJHVltf
-	ChBKfyO6Ot/6XOss2ysFsZc/eax+O/PKRZ5wmc68wJvbl+2IWOx5LqvkxNLj/cpHJyzfoH7a
-	30mu9d19lwt8+UER/8zMNpk7yBxa33tcTvlsxBaGZ1/0H0jskd/569WJTfyr2VxMm+Yx7bCb
-	dsYo5IPuzYJdyVP/tXG0tugxZSzsN/pcyyfvavxp76HjOj8mbLYtFvYuV4j4O3Vjr1Jp373i
-	fT9EVnf/qt3BWbnIhk1Ibf6UrN7Zlz4xKbEUZyQaajEXFScCAB57Fm5nBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGIsWRmVeSWpSXmKPExsWy7bCSvC7HBo10g68LxCy2vNrMYvHy51U2
-	i2kffjJbrN3zh9liYz+HxY7tIhbnz29gt9j0+BqrxeVdc9gsZpzfx2TRfX0Hm8Xy4/+YLDbM
-	+Mdi8elWnMWqT/8ZHfg9Ll/x9ti2exurx4JNpR7TJp1i89i0qpPN4861PWwem5fUe3x8eovF
-	4/MmOY/2A91MAVxRXDYpqTmZZalF+nYJXBn/Xy1iK9jHUdGw8ApbA+MS9i5GTg4JAROJjn8d
-	QDYXh5DAdkaJDeceMkMkpCWub5wAVSQssfLfczBbSOAZo8TsM7wgNpuArsSOxW1sILaIwEFG
-	ifU3c0EGMQssYpLo6NrJCtFwjFGie5kSiM0p4CjRcesJWFxYwEni4aJpQDYHB4uAisSW+2Yg
-	YV4BS4nmy/1sELagxMmZT1hASpgF9CTaNjKChJkF5CW2v50DdaaCxM+ny8CmiABNXDo5F6JE
-	XOLl0SPsExiFZyEZNAth0Cwkg2Yh6VjAyLKKUTS1oDg3PTe5wFCvODG3uDQvXS85P3cTIzhq
-	tYJ2MC5b/1fvECMTB+MhRgkOZiUR3nmp6ulCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeZVzOlOE
-	BNITS1KzU1MLUotgskwcnFINTJGlHLPPXJwQIiLAqca5ln+ijO1ua22dGXMLpc6lzM/8Grrs
-	yT7lu9/lDd9aGf24c7FjjTP/bdecxY90mZ+VTqk9Nv9sLZdx50Nt6a7dwcw5KbezZyxysfSp
-	LJl69PzPcNP2c7ektF7zX9H8mXX2Qh9Labc+q/KhvdUdz4VPWJxdozGv9IxPaOb/S0KaUg61
-	gaWdOYcPxi77XHDhoSTn2htKqXxnuhZwW25beN6P1/FT0HmOqTFHP65+9NHQXd+Wv2Aa18ug
-	KZsezX2jfnGFo8ol4famvzE5AbU7BBrdSzvytUN6bq+R8b58QT1mU8OWOzO9lkXudZ9lPWn3
-	+fL5EzPZvjqcfbhhtrgIf8gODiWW4oxEQy3mouJEAMqOm4lJAwAA
-X-CMS-MailID: 20241104112912epcas5p21f80c9615e3ba9db23428fd524106d83
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20241031150102epcas5p2b485ea44b17629f3abd0a53fd8d172e7
-References: <20241031150033.3440894-1-peter.griffin@linaro.org>
-	<CGME20241031150102epcas5p2b485ea44b17629f3abd0a53fd8d172e7@epcas5p2.samsung.com>
-	<20241031150033.3440894-15-peter.griffin@linaro.org>
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Rob Herring <robh+dt@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
+ Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
+To: Ulf Hansson <ulf.hansson@linaro.org>
+References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
+ <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
+ <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
+ <3969bae0-eeb8-447a-86a5-dfdac0b136cd@rock-chips.com>
+ <CAPDyKFo=GcHG2sGQBrXJ7VWyp59QOmbLCAvHQ3krUympEkid_A@mail.gmail.com>
+ <98e0062c-aeb1-4bea-aa2b-4a99115c9da4@rock-chips.com>
+ <CAPDyKFogrPEEe1A3Kghjj3-SSJT2xEoKfo_hU7KZk+d9bZxEYQ@mail.gmail.com>
+ <90ff835d-f3b2-4b7c-aa1a-575e231a57e6@rock-chips.com>
+ <CAPDyKFouCV3hCcJ9VuS0App34YyBd6vVNSJr6JZbYGGpffwaWA@mail.gmail.com>
+Content-Language: en-GB
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <CAPDyKFouCV3hCcJ9VuS0App34YyBd6vVNSJr6JZbYGGpffwaWA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGk1JHlZDQ00aHh0eTEpMSE1WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
+	NVSktLVUpCS0tZBg++
+X-HM-Tid: 0a92f5d6271e09cckunm1b345651
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6KxA6KRw6TTIZHjo8I0lDCBE1
+	Ix5PFBdVSlVKTEhLTEtKSEtMT05DVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUpLTUhPNwY+
+DKIM-Signature:a=rsa-sha256;
+	b=LNwmbqLqy9e8OFiCIIw0xVOxN4oaruWyYfzIszHydWvOWsI3y6E2fWq2N/8R61Y+Z+EhNH7T5vu4Cn+nXJ+kfCIl5z65hxHY6eWGILGhT46afkViIqj1xy+VQuE/fkHeUhukWNFVTO8fl47EvrynMv0xIr1l9Bbmzd1j0x9i1AI=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=L4J/3IWG/HYqO2bLvK7VYapIuJWoSsnKEAmsrCf4H6Y=;
+	h=date:mime-version:subject:message-id:from;
 
-Hi Peter
+在 2024/11/1 23:12, Ulf Hansson 写道:
+> On Mon, 21 Oct 2024 at 02:43, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>>
+>> 在 2024/10/18 18:03, Ulf Hansson 写道:
+>>> On Fri, 18 Oct 2024 at 11:20, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>>>>
+>>>> Hi Ulf,
+>>>>
+>>>> 在 2024/10/18 17:07, Ulf Hansson 写道:
+>>>>> On Thu, 10 Oct 2024 at 03:21, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>>>>>>
+>>>>>> Hi Ulf
+>>>>>>
+>>>>>> 在 2024/10/9 21:15, Ulf Hansson 写道:
+>>>>>>> [...]
+>>>>>>>
+>>>>>>>> +
+>>>>>>>> +static int ufs_rockchip_runtime_suspend(struct device *dev)
+>>>>>>>> +{
+>>>>>>>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+>>>>>>>> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+>>>>>>>> +       struct generic_pm_domain *genpd = pd_to_genpd(dev->pm_domain);
+>>>>>>>
+>>>>>>> pd_to_genpd() isn't safe to use like this. It's solely to be used by
+>>>>>>> genpd provider drivers.
+>>>>>>>
+>>>>>>>> +
+>>>>>>>> +       clk_disable_unprepare(host->ref_out_clk);
+>>>>>>>> +
+>>>>>>>> +       /*
+>>>>>>>> +        * Shouldn't power down if rpm_lvl is less than level 5.
+>>>>>>>
+>>>>>>> Can you elaborate on why we must not power-off the power-domain when
+>>>>>>> level is less than 5?
+>>>>>>>
+>>>>>>
+>>>>>> Because ufshcd driver assume the controller is active and the link is on
+>>>>>> if level is less than 5. So the default resume policy will not try to
+>>>>>> recover the registers until the first error happened. Otherwise if the
+>>>>>> level is >=5, it assumes the controller is off and the link is down,
+>>>>>> then it will restore the registers and link.
+>>>>>>
+>>>>>> And the level is changeable via sysfs.
+>>>>>
+>>>>> Okay, thanks for clarifying.
+>>>>>
+>>>>>>
+>>>>>>> What happens if we power-off anyway when the level is less than 5?
+>>>>>>>
+>>>>>>>> +        * This flag will be passed down to platform power-domain driver
+>>>>>>>> +        * which has the final decision.
+>>>>>>>> +        */
+>>>>>>>> +       if (hba->rpm_lvl < UFS_PM_LVL_5)
+>>>>>>>> +               genpd->flags |= GENPD_FLAG_RPM_ALWAYS_ON;
+>>>>>>>> +       else
+>>>>>>>> +               genpd->flags &= ~GENPD_FLAG_RPM_ALWAYS_ON;
+>>>>>>>
+>>>>>>> The genpd->flags is not supposed to be changed like this - and
+>>>>>>> especially not from a genpd consumer driver.
+>>>>>>>
+>>>>>>> I am trying to understand a bit more of the use case here. Let's see
+>>>>>>> if that helps me to potentially suggest an alternative approach.
+>>>>>>>
+>>>>>>
+>>>>>> I was not familiar with the genpd part, so I haven't come up with
+>>>>>> another solution. It would be great if you can guide me to the right
+>>>>>> way.
+>>>>>
+>>>>> I have been playing with the existing infrastructure we have at hand
+>>>>> to support this, but I need a few more days to be able to propose
+>>>>> something for you.
+>>>>>
+>>>>
+>>>> Much appreciate.
+>>>>
+>>>>>>
+>>>>>>>> +
+>>>>>>>> +       return ufshcd_runtime_suspend(dev);
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +static int ufs_rockchip_runtime_resume(struct device *dev)
+>>>>>>>> +{
+>>>>>>>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+>>>>>>>> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+>>>>>>>> +       int err;
+>>>>>>>> +
+>>>>>>>> +       err = clk_prepare_enable(host->ref_out_clk);
+>>>>>>>> +       if (err) {
+>>>>>>>> +               dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
+>>>>>>>> +               return err;
+>>>>>>>> +       }
+>>>>>>>> +
+>>>>>>>> +       reset_control_assert(host->rst);
+>>>>>>>> +       usleep_range(1, 2);
+>>>>>>>> +       reset_control_deassert(host->rst);
+>>>>>>>> +
+>>>>>>>> +       return ufshcd_runtime_resume(dev);
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +static int ufs_rockchip_system_suspend(struct device *dev)
+>>>>>>>> +{
+>>>>>>>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+>>>>>>>> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+>>>>>>>> +
+>>>>>>>> +       /* Pass down desired spm_lvl to Firmware */
+>>>>>>>> +       arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
+>>>>>>>> +                       host->pd_id, hba->spm_lvl < 5 ? 1 : 0, 0, 0, 0, 0, NULL);
+>>>>>>>
+>>>>>>> Can you please elaborate on what goes on here? Is this turning off the
+>>>>>>> power-domain that the dev is attached to - or what is actually
+>>>>>>> happening?
+>>>>>>>
+>>>>>>
+>>>>>> This smc call is trying to ask firmware not to turn off the power-domian
+>>>>>> that the UFS is attached to and also not to turn off the power of UFS
+>>>>>> conntroller.
+>>>>>
+>>>>> Okay, thanks for clarifying!
+>>>>>
+>>>>> A follow up question, don't you need to make a corresponding smc call
+>>>>> to inform the FW that it's okay to turn off the power-domain at some
+>>>>> point?
+>>>>>
+>>>>
+>>>> Yes. Each time entering sleep, we teach FW if it need to turn off or
+>>>> keep power-domain, for instance "hba->spm_lvl < 5 ? 1 : 0" , 0 means
+>>>> off and 1 means on.
+>>>
+>>> I see. So you need to make the call each time when entering the system suspend?
+>>>
+>>> Or would it be okay to just make it once, when the spm_lvl is changed?
+>>
+>> Thers is no nofity when changing spm_lvl.
+>>
+>>>
+>>> Another way to deal with it, would be to make the smc call each time
+>>> the power-domain is turned-on, based on spm_lvl too of course.
+>>>
+>>> Would that work?
+>>
+>> Yes, that works. Another option is to cache power-domain states and
+>> check spm_lvl locally. If it doesn't change, we skip smc call.
+> 
+> Apologize for the delay! I needed to think a bit more carefully about
+> how to suggest moving this forward.
+> 
+> My conclusion is that we need to extend the PM domain infrastructure
+> (genpd in particular), to allow drivers to dynamically inform whether
+> it's okay to turn on/off the PM domain in runtime.
+> 
+> There is a similar thing already available, which is to use dev PM qos
+> along with the genpd governor, but that would not work in this case
+> because it may prevent runtime suspend for the device in question too.
+> I have therefore cooked a patch for genpd, see below. I think you can
+> fold it into your next version of the series. See also additional
+> suggestions below the patch.
 
-> -----Original Message-----
-> From: Peter Griffin <peter.griffin@linaro.org>
-> Sent: Thursday, October 31, 2024 8:31 PM
-> To: alim.akhtar@samsung.com; James.Bottomley@HansenPartnership.com;
-> martin.petersen@oracle.com; avri.altman@wdc.com; bvanassche@acm.org;
-> krzk@kernel.org
-> Cc: tudor.ambarus@linaro.org; ebiggers@kernel.org;
-> andre.draszik@linaro.org; kernel-team@android.com;
-> willmcvicker@google.com; linux-scsi@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linux-samsung-soc@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Peter Griffin <peter.griffin@linaro.org>
-> Subject: [PATCH v3 14/14] MAINTAINERS: Update UFS Exynos entry
+Thanks, Ulf.  I'll fold it into my v4 series and fix the code in UFS 
+driver and genpd provider according to your suggestions.
+
 > 
-> Add myself as a reviewer for ufs-exynos as I'm doing various work in this
-> driver currently for gs101 SoC and would like to help review relevant
-patches.
+> From: Ulf Hansson <ulf.hansson@linaro.org>
+> Date: Fri, 1 Nov 2024 15:55:56 +0100
+> Subject: [PATCH] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
 > 
-> Additionally add the linux-samsung-soc@vger.kernel.org list as that is
-> relevant to this driver.
+> For some usecases a consumer driver requires its device to remain power-on
+> from the PM domain perspective during runtime. Using dev PM qos along with
+> the genpd governors, doesn't work for this case as would potentially
+> prevent the device from being runtime suspended too.
 > 
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> To support these usecases, let's introduce dev_pm_genpd_rpm_always_on() to
+> allow consumers drivers to dynamically control the behaviour in genpd for a
+> device that is attached to it.
+> 
+> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
 > ---
-Thanks!
-
-Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
-
-
+>   drivers/pmdomain/core.c   | 34 ++++++++++++++++++++++++++++++++++
+>   include/linux/pm_domain.h |  7 +++++++
+>   2 files changed, 41 insertions(+)
+> 
+> diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
+> index a6c8b85dd024..e86e270b7eb9 100644
+> --- a/drivers/pmdomain/core.c
+> +++ b/drivers/pmdomain/core.c
+> @@ -697,6 +697,36 @@ bool dev_pm_genpd_get_hwmode(struct device *dev)
+>   }
+>   EXPORT_SYMBOL_GPL(dev_pm_genpd_get_hwmode);
+> 
+> +/**
+> + * dev_pm_genpd_rpm_always_on() - Control if the PM domain can be powered off.
+> + *
+> + * @dev: Device for which the PM domain may need to stay on for.
+> + * @on: Value to set or unset for the condition.
+> + *
+> + * For some usecases a consumer driver requires its device to remain power-on
+> + * from the PM domain perspective during runtime. This function allows the
+> + * behaviour to be dynamically controlled for a device attached to a genpd.
+> + *
+> + * It is assumed that the users guarantee that the genpd wouldn't be detached
+> + * while this routine is getting called.
+> + *
+> + * Return: Returns 0 on success and negative error values on failures.
+> + */
+> +int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
+> +{
+> +       struct generic_pm_domain *genpd;
+> +
+> +       genpd = dev_to_genpd_safe(dev);
+> +       if (!genpd)
+> +               return -ENODEV;
+> +
+> +       genpd_lock(genpd);
+> +       dev_gpd_data(dev)->rpm_always_on = on;
+> +       genpd_unlock(genpd);
+> +
+> +       return 0;
+> +}
+> +
+>   static int _genpd_power_on(struct generic_pm_domain *genpd, bool timed)
+>   {
+>          unsigned int state_idx = genpd->state_idx;
+> @@ -868,6 +898,10 @@ static int genpd_power_off(struct
+> generic_pm_domain *genpd, bool one_dev_on,
+>                  if (!pm_runtime_suspended(pdd->dev) ||
+>                          irq_safe_dev_in_sleep_domain(pdd->dev, genpd))
+>                          not_suspended++;
+> +
+> +               /* The device may need its PM domain to stay powered on. */
+> +               if (to_gpd_data(pdd)->rpm_always_on)
+> +                       return -EBUSY;
+>          }
+> 
+>          if (not_suspended > 1 || (not_suspended == 1 && !one_dev_on))
+> diff --git a/include/linux/pm_domain.h b/include/linux/pm_domain.h
+> index 45646bfcaf1a..d4c4a7cf34bd 100644
+> --- a/include/linux/pm_domain.h
+> +++ b/include/linux/pm_domain.h
+> @@ -260,6 +260,7 @@ struct generic_pm_domain_data {
+>          unsigned int rpm_pstate;
+>          unsigned int opp_token;
+>          bool hw_mode;
+> +       bool rpm_always_on;
+>          void *data;
+>   };
+> 
+> @@ -292,6 +293,7 @@ ktime_t dev_pm_genpd_get_next_hrtimer(struct device *dev);
+>   void dev_pm_genpd_synced_poweroff(struct device *dev);
+>   int dev_pm_genpd_set_hwmode(struct device *dev, bool enable);
+>   bool dev_pm_genpd_get_hwmode(struct device *dev);
+> +int dev_pm_genpd_rpm_always_on(struct device *dev, bool on);
+> 
+>   extern struct dev_power_governor simple_qos_governor;
+>   extern struct dev_power_governor pm_domain_always_on_gov;
+> @@ -375,6 +377,11 @@ static inline bool dev_pm_genpd_get_hwmode(struct
+> device *dev)
+>          return false;
+>   }
+> 
+> +static inline int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
+> +{
+> +       return -EOPNOTSUPP;
+> +}
+> +
+>   #define simple_qos_governor            (*(struct dev_power_governor *)(NULL))
+>   #define pm_domain_always_on_gov                (*(struct
+> dev_power_governor *)(NULL))
+>   #endif
 
