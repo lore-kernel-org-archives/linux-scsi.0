@@ -1,247 +1,240 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87AA61B85EB;
-	Mon,  4 Nov 2024 14:57:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.19
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730732248; cv=fail; b=EHhw49HzBIS/La9VLVzcZQSqg+7hEklgufXxbGYUw2+xynJUOdA8aRZq/pAbe96jAkiwj7WwboREzX6fsRhCxf6eDBGd7+jqmu7a0BTkuHJvQv1DZ9btkiMj7TMJ0oibw8isyvb16hxqTQuGzd+/nK/z0Vu94kuMlvyFV3tWvVE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730732248; c=relaxed/simple;
-	bh=O3dJir/KSdlul1WDSa0ZEXg0XB4G6gZesm0ZOB1r3M4=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=PvoQCx6FVj9ol5QIv1Wzgzp5N6LB3gPG71md/CB5ijhEhErDa4g4N2iaGYzVwKlZ+eXhdM0ie38ZG26JH+p+dPMCXT/1RIP4aGEWCP1swKz09YVqCPa7PNAvUhxbdJAsNXB2CWlvf+XDKCL4r9oxIuNXS4BvBdVeNwGrJ+h1ZQ8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KCQWT2lJ; arc=fail smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFE91BE86E
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 15:08:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1730732896; cv=none; b=oszFOky+EPgV7mn3HOIwJ+yjowZKJ/r0C08GS9xkE4BEdr+FpQiOwyfwtsZl82m1pDum5HRGlLTxJtzy9EJsi077KV4pz8ETvqDrPPaatXZgo1mHfPN0cCtIxgilWMCMmBQDTd2bZCY4Kntv+93fVE0u99686t9ksHrgeK3j9cs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1730732896; c=relaxed/simple;
+	bh=hI1wQ/fZNIAIQ/ZGwRLRxWBlSdPDkqRQnUGOX3vJ9To=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LPZ7u11gaPQBxEvxguoPmiSywgzvJnDxssHYtFCMtRkBVxdrYXk9yNa1RZpDZE5/+KRDko33EhBdVJSQEFXqRdpScbVEetYpei9udL3nZvA8nsLnNYArDXQIkCDHQ2HLug0BBCy7WoyshFL4/nMZ1Drnt/bIQNpjII0MsDz7KjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=kBrrHCBc; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KCQWT2lJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730732246; x=1762268246;
-  h=date:from:to:cc:subject:message-id:references:
-   content-transfer-encoding:in-reply-to:mime-version;
-  bh=O3dJir/KSdlul1WDSa0ZEXg0XB4G6gZesm0ZOB1r3M4=;
-  b=KCQWT2lJWYciTkrz21M6xzGsSB9MYLFf5EmTUrWV3WxN1gFSyTdeSONL
-   VhpDH/25FY0FlZx6RL8nAWECcF+apf6PtMl8U65eU1xZOyOiPIGv0RV0a
-   Kl0bmHkv/OWX5adws7aVJ+50+M+ayqgyFE/4siy4sTEJIwMwa2gjfXf21
-   aWfxYIIWbI6fGJ9y5pEU6eVe55/mTd0Z7v8gB6ilQECBqWUl26ntOGcYJ
-   E/7A9SLExqfeYuIds2zIfAifbNDv0g2fAJhXDk9uZipK/PebycagxbO74
-   cvj+PufMrdooSaJjpvtxt+6DoSRTAuwfZooJcElaIAtnnv7tjmAWwe+a/
-   g==;
-X-CSE-ConnectionGUID: NrtWv/Q3SPWrOmSaRU4tlw==
-X-CSE-MsgGUID: DOpP2eTPTJ2yNpegc4CgbQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="30284820"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="30284820"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2024 06:57:21 -0800
-X-CSE-ConnectionGUID: TrS2NTCrRIChl9Ysb0Bklg==
-X-CSE-MsgGUID: 0u7Un4bCTHW45Zjmg6pMzA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,257,1725346800"; 
-   d="scan'208";a="83198288"
-Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
-  by fmviesa006.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 04 Nov 2024 06:57:18 -0800
-Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
- ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39; Mon, 4 Nov 2024 06:57:09 -0800
-Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
- orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.39 via Frontend Transport; Mon, 4 Nov 2024 06:57:09 -0800
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (104.47.73.175)
- by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Mon, 4 Nov 2024 06:57:08 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aF9gHprkjrW931VLb7NYk4ztMX12dEcgrtJlL0d07if41jIAdJlEuhep6AszQjuHXMx1j502knXhi4cIbJYF4groqcBbc6YnUc/PpHuP/Db7bsxUcUbSP9uxp4GMcyMwmDPNPTE/NetOcOzN7gUJxgaTYdDmrPRfCLzlNlbPnepo3iqBj0i0+bRK7ESL3eTm7WDrOTPaY1eWJJHfsYdk3y5aO7g1+c+jOo9Mk8s8sNt3/uslno4cxu5XeCRvF43IwmVGIujGuo0C3BDDtIXiI23GORePxF4n9Kpbg8Lb6IE6KiGIehHsQN2uCpqdHwJVwOVD0gjdx92s7m0XvdGMew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5SsjHU4oKkp3cEqMwqLGTXX+kXj1c66K5N47hwN1nz4=;
- b=ygEZEWxmmqoTHztbcu9TWXJBhqOF93ZO1vF1u+665fJBs4i2n4uhU7COpFI4HBRP6ypoWhOi6F8Kh/50r2J1HDYFgmSVbBZTTyBvL/nqkY6+mNlTwdMaMEm4QkxqI5N9BG4DaYMZB+4RNSgM/SS/b5bCzWKJd9CT8b4fj11DjXi8WNF47W1340LMOvTV97PCj0iI4pyHw1OfA8hxGPQDOInck/DTG5bwVRZyHAJsYTcNHRcRdc5nj/xZgqXKGQWba3mSUHrddTG/6TPj0ARjd4yoKWSbcKS19YfazBiA0rMYktp/8cJM5ghOk3Oxywe0Jt9EesSPorPy2tEMcdMKIA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from SA1PR11MB6733.namprd11.prod.outlook.com (2603:10b6:806:25c::17)
- by BL3PR11MB6506.namprd11.prod.outlook.com (2603:10b6:208:38d::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8114.31; Mon, 4 Nov
- 2024 14:57:06 +0000
-Received: from SA1PR11MB6733.namprd11.prod.outlook.com
- ([fe80::cf7d:9363:38f4:8c57]) by SA1PR11MB6733.namprd11.prod.outlook.com
- ([fe80::cf7d:9363:38f4:8c57%3]) with mapi id 15.20.8114.028; Mon, 4 Nov 2024
- 14:57:06 +0000
-Date: Mon, 4 Nov 2024 08:56:56 -0600
-From: Ira Weiny <ira.weiny@intel.com>
-To: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
-	<rafael@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Srinivas Kandagatla
-	<srinivas.kandagatla@linaro.org>, Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang
-	<dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>,
-	"Vishal Verma" <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
-	"Alex Deucher" <alexander.deucher@amd.com>, Christian
- =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Xinhui Pan
-	<Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>, Simona Vetter
-	<simona@ffwll.ch>, Dennis Dalessandro
-	<dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Leon Romanovsky <leon@kernel.org>, Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Pratyush Yadav <pratyush@kernel.org>, Michael Walle <mwalle@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger
-	<richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, "Naveen Krishna
- Chatradhi" <naveenkrishna.chatradhi@amd.com>, Carlos Bilbao
-	<carlos.bilbao.osdev@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Ilpo
- =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, "David E. Box"
-	<david.e.box@linux.intel.com>, "James E.J. Bottomley"
-	<James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Richard Henderson
-	<richard.henderson@linaro.org>, Matt Turner <mattst88@gmail.com>, "Frederic
- Barrat" <fbarrat@linux.ibm.com>, Andrew Donnellan <ajd@linux.ibm.com>, "Arnd
- Bergmann" <arnd@arndb.de>, Logan Gunthorpe <logang@deltatee.com>, "K. Y.
- Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "Wei
- Liu" <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>
-CC: Dan Williams <dan.j.williams@intel.com>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
-	<amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-	<linux-rdma@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
-	<platform-driver-x86@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <linux-alpha@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-hyperv@vger.kernel.org>, Thomas
- =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>
-Subject: Re: [PATCH v2 05/10] sysfs: treewide: constify attribute callback of
- bin_is_visible()
-Message-ID: <6728e0b819e9_14084029463@iweiny-mobl.notmuch>
-References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
- <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
-X-ClientProxiedBy: MW4PR04CA0269.namprd04.prod.outlook.com
- (2603:10b6:303:88::34) To SA1PR11MB6733.namprd11.prod.outlook.com
- (2603:10b6:806:25c::17)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kBrrHCBc"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20caea61132so38313415ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 07:08:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1730732894; x=1731337694; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=fTaUplHrH7M+dnB2sEL6yj29zt9plqFajNCOZAfkhqU=;
+        b=kBrrHCBc8gUd+/hPU4mIMEi8/pxZn5tr1cR8J+h0ZBGbuI5tmjOUQ4zz/Wn3yNsDQ5
+         e2w7QYWd8Oen8cr3ZKbS95DeNGEKbYQKKj6jsiPawuW/4IZzxrz0qrUbdJI6HfjgBnQJ
+         jny4vL2Fo3Q1UflB2RidWdST/PlWSv7E7LnCuELjwgwYShlKyUDFsggP9Nhunn65GDD1
+         /37zwh0FZ4g9VpXwLcCQf+h3uF2vHcbPfxLEEnROa2w6tXtYd5IY1Uz70uV8xRpUmbtv
+         9y0oMFrx2ex23lT16/xykJ2AdJaRlQycw0KKuqd9Mg7/FdXsRCbRBAuCIT/4ZN6bWugz
+         IjuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730732894; x=1731337694;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fTaUplHrH7M+dnB2sEL6yj29zt9plqFajNCOZAfkhqU=;
+        b=VopmsmyhqdnIFnlQMQDwL87e5qSXQ1CTFZtNr9Iq8pVBgyt/E6uFXx02uqhYwmHM68
+         UXNKf0Q7D3F2ARlArpDLRg1QHXQUk8FPL5W/l5s2Rl03ZJ6269lFoUNlJVu5uRoh+ZPV
+         gLqc8sSwJQhreV0xKTfBKo97Ie1O0d5hVoJrcx2gbNc+aV8ewsg08WlJhZ6u1T4Cqf+7
+         JGbr/MrJ7mtKvxCHzVxHBalCq3IaOhoDx0EIDhxtS+/P4em7o+8SWh47XEuAtkg6L5Bg
+         OWHrZtoUop2n7Ms0uI1LcoyCPIuclAyJ9OxqbU6C89Kwz5PZqWAjSnM1H84MtGCmCwri
+         1EEg==
+X-Forwarded-Encrypted: i=1; AJvYcCUy2XKznHPOrVxBNu/SkM2afE4rR8QnJopCg+2jELwzHnIErLj1Giz6eZJC29yqBTfO5tgI5wpS+bTR@vger.kernel.org
+X-Gm-Message-State: AOJu0YwQa/P75hMbyG34PVKp0IPm8qPFw6IUdHtKXbwEqGDt0UES3CkD
+	RRvIFZe5wg0l/hiPu1w96L2ujdkxzeEqoYF6DgwrjbsOIAzSgpt1a7/UR4vs5w==
+X-Google-Smtp-Source: AGHT+IHOenWnujTBSBIpKLJWamkVwB46u9SIX/kMarM+ODiUVeqEfeHc6c4RexMW87XtzdjqQNduWA==
+X-Received: by 2002:a17:902:eccd:b0:20b:59be:77b with SMTP id d9443c01a7336-2111aec8329mr165149345ad.6.1730732893820;
+        Mon, 04 Nov 2024 07:08:13 -0800 (PST)
+Received: from thinkpad ([2409:40f4:3049:1cc7:217b:63a:40ce:2e01])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-211057a6815sm62677185ad.135.2024.11.04.07.08.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Nov 2024 07:08:13 -0800 (PST)
+Date: Mon, 4 Nov 2024 20:38:05 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH v3 5/5] scsi: ufs: rockchip: initial support for UFS
+Message-ID: <20241104150805.q7g3bfvbsdx3b6u4@thinkpad>
+References: <1728368130-37213-1-git-send-email-shawn.lin@rock-chips.com>
+ <1728368130-37213-6-git-send-email-shawn.lin@rock-chips.com>
+ <CAPDyKForpLcmkqruuTfD6kkJhp_4CKFABWRxFVYNskGL1tjO=w@mail.gmail.com>
+ <3969bae0-eeb8-447a-86a5-dfdac0b136cd@rock-chips.com>
+ <CAPDyKFo=GcHG2sGQBrXJ7VWyp59QOmbLCAvHQ3krUympEkid_A@mail.gmail.com>
+ <98e0062c-aeb1-4bea-aa2b-4a99115c9da4@rock-chips.com>
+ <20241103120223.abkwgej4svas4epr@thinkpad>
+ <6f3f2d17-4ca2-44ad-b8df-72986d4b3174@rock-chips.com>
+ <CAPDyKFqMuFMf0+2+mPZaGGtBRfavg0LTkhbrCeqh7kHeqq-yZQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR11MB6733:EE_|BL3PR11MB6506:EE_
-X-MS-Office365-Filtering-Correlation-Id: 394334bb-617c-406a-4a05-08dcfce0f2f6
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024|921020;
-X-Microsoft-Antispam-Message-Info: =?iso-8859-1?Q?vJKBUHqLzVwEAEzq733lKf0tp5JwYIBdn0zPoaIPb5prUy9Ut/DhlGgd1e?=
- =?iso-8859-1?Q?ojol/tDSApvJaNPVmBdxq0RoifhlZleKhKnT5adclLryOVD1C7aZcIV8Fz?=
- =?iso-8859-1?Q?GkWVSelyWa2nXLUenHYPPYyg72c3zm66Tq7sFNTf2zDHSicZE8+ZMoC1uP?=
- =?iso-8859-1?Q?tr7iYkaTXug76dxMXnWUevfPZwDZ6SgEvh8ujFUcJlxL4FYxHJTxXlINkd?=
- =?iso-8859-1?Q?W7uxw3WHfulGPuacTuHy82LGmhUHVcKPInMQQNcls1WzH1Q+Yz2j5dJ4Ra?=
- =?iso-8859-1?Q?f3KNxfzIJ5LI7u6KxqB4i7gL0WuzyqbJL0+u+Uy+62CtwlYX4cBlH35+bA?=
- =?iso-8859-1?Q?PV1TOc5t+1a63dHHk09S/Ey3vXvZC2rNS2ea8cdRFhyMTL0v6gy/iJ8N4C?=
- =?iso-8859-1?Q?azAWQ85pDDitoJa5PDKO/4ZoRMwV6llBTNG0SecOcN2XRL18f4d5EHZuNl?=
- =?iso-8859-1?Q?H9MgQubBw71XF0VrDDqfHDKpsuN2f7Obq18lVKod4fkghmIaD9cqEuiYJv?=
- =?iso-8859-1?Q?j033A+Kxpaz3NY+qCRErT+Rl76NjmccrSi93ZQ6Bn81N9uU5Amu6lmlP4k?=
- =?iso-8859-1?Q?QhqAdiGv9ofOYBocsd2nzSP4kAstMB3eSa0wl6ZIZywqJP1J/3S/EwGLsB?=
- =?iso-8859-1?Q?Z8YRBTlX3InZJ0okavTOSn5ZZttvM0i4BUPBjsf+6LS/PbmwUV7QOCeqpx?=
- =?iso-8859-1?Q?ps+FRQQLlYrX5r3t0Hl2ThfTAC0Od6wRgLMb8uHlUD7VHgWAjjpTmtw7Ik?=
- =?iso-8859-1?Q?eCMg8Yb6UA6e4rY2ecZyh191/giB8v85xm856PKX+8stZEbrkNmHM43Lk+?=
- =?iso-8859-1?Q?zwVjYuhVTJUQhvYz+ch0+k6dB6fnCf6ryCEHMwJcp4o3I2vQMC7meRjB4c?=
- =?iso-8859-1?Q?hc02ynucy2pbsLAukNQWhkceAnT4SUUSSWJO5Zr0xgvKocuCAKxcaYFiO8?=
- =?iso-8859-1?Q?EY1PaYi26o3q7Oy2GKCEC1g0TPktx/4BzljYs9cOjqbqt4GsagfeMUgbtw?=
- =?iso-8859-1?Q?j2lVq7YGSFccWvyWv5i7LykNLVQtC0A/m6W4dd5bP8tn9/VVzWbZnK2lFm?=
- =?iso-8859-1?Q?wW/1g6OSre3NLjQsNwgb9/AhusfJpDN0jnirMkjK6cBCSt/KUggKqE3EVt?=
- =?iso-8859-1?Q?nBJKJSnPfBi5KS3BWBis/UfGy00nzDgR1zIFXbyzi+tixBejf/kBDfEfgB?=
- =?iso-8859-1?Q?FHlzK+GmGm+VsR4AcpYhZrBPZOUPPugyiD+ZOhc+MvvOr9Ib4z75hIvhhb?=
- =?iso-8859-1?Q?ypyRIDv0Xy/HpBcQCDCUIWfY/s6TTV5AlW7/aowCCZFSIhmfTReDgtj25H?=
- =?iso-8859-1?Q?bgS0Zk7kTzcdkx15x+e820vAOdh/5baD7S+i5lsHp11JLJVqPUrQeNykQP?=
- =?iso-8859-1?Q?4Su3fUfYSFJrX+X5+wMJflvyUwMaInzyWHga35oBlUh9+T4Vc+0rY=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR11MB6733.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?iso-8859-1?Q?GARdDiJWX5sL1joXISNrkwxtLuwdL8g8wiIIyjdGRlZDwQC6AlSkvunnYB?=
- =?iso-8859-1?Q?qfQ/DE2dKXkItT/Tueu0VxJwRiicYRdxsgrEFtmuKZguIF8cTt99UQhblj?=
- =?iso-8859-1?Q?468ZCVrpADOJ/Zq4P147/4xS7L/jc6y8PLM4adpodgNVoyqNx2mOxnueAP?=
- =?iso-8859-1?Q?nb5FHRDJyBW74y1S4LcVehsIUIjBwyt57HPDTKcPSVgYwASzofggwHdfXr?=
- =?iso-8859-1?Q?wEDOdmyCyVfpE7ddTyu/YLNfUb3Vskd0b+1ShxuhvKqdzRW1atWjV9JcIB?=
- =?iso-8859-1?Q?7UhsttQeav9ujn+m+zrH/xNsHFALF3noifVararFVO9ULptYXkUvdjQKoA?=
- =?iso-8859-1?Q?B7pv/4IYWil7gBsw7GAUx821yTNFBxrvIBYHs8veqSEWZ3MjabdPzoM/df?=
- =?iso-8859-1?Q?Fp4jozEUKdFqddvdPbliGynZeLKOEINQQuoKNcxVJEXnk+jLE7/B0sFuX+?=
- =?iso-8859-1?Q?o9/PBAqt+kWRk44n4CLu58azUk/mTkEPXa7ZBqaY27xlcBNAF0l+OgxfdO?=
- =?iso-8859-1?Q?jUuzEQDiR1a/UdJejJFYoHUv33A4ExyOiFTCuLlrahAM9lwOjzZNoD6GSg?=
- =?iso-8859-1?Q?SE+JbPrDgiismuzjFjN+Mx3/rtwSbEdQDqtVN7g+w2/o6BOM18pFzGfyYF?=
- =?iso-8859-1?Q?uNsXSgSdlvitB4zej8pFraj5iL5NhFMPWo6jiXdULDdEb5UqJDboVNIhEJ?=
- =?iso-8859-1?Q?oeeVMNRyKxv0Va6vHZl2rzagzCW0lt4Ox4AE0+Pf/vFvdvfnM51CczptkS?=
- =?iso-8859-1?Q?nCifu1oMecL/+qglga8zNGsZA8/kGGQP5Duwj6kLcBp+FipZ6DTI7216rY?=
- =?iso-8859-1?Q?f5okT4PwD4co0Vt0qVLhpv9lHHEfB/b25axl0bipXV/k+GLzlpIfSGHSzS?=
- =?iso-8859-1?Q?vYZokP3ETM83bf5WFjeuAunPcxGDnbrV6fM0AKDZGVF9H3c6WtmHG1/Xw1?=
- =?iso-8859-1?Q?cPi9KWN7oiEJ46Q9gmUeVb6+bS3KHDunvVPCPeRdxv5wr0cFSfz0qmQMc9?=
- =?iso-8859-1?Q?zvKtOpou8wsD60F+TfLPCWeAtATSU4svUk8sSHTuV004qnI794piWie6Ky?=
- =?iso-8859-1?Q?QY5bIHXGVXM/9KU2eQJMEcjSePTHtnBdlcl7tdExkQxX4QlzM37NNQMkjE?=
- =?iso-8859-1?Q?NxIAI+WI02XQ7MiIFviqNrbu5a2f5uYb2TURz3n+a7stwyDKfrgiGvg9jc?=
- =?iso-8859-1?Q?9tccF2aTZLCzlRn876lNJGmgs7AahkV0tGCW5HXZ270scxzdlutZAvRvz+?=
- =?iso-8859-1?Q?/TWZhs3nP/dFSAMGJh6OjZn1u/GPNIo0zm6duwi6NQx7o4iVAlQpiIlJew?=
- =?iso-8859-1?Q?u2cDM+7DWOwT71fXysa5fVHErH0H2ZpXC0YMFSLQS+wXnzgT9TtIjmx92e?=
- =?iso-8859-1?Q?Xpsoqc3MTgc+blggAqjtup6rlxz0x1EjuVZZ7FA619YzD+lD5SnKcd8BzZ?=
- =?iso-8859-1?Q?Ua9NP3wVQaCX1M3nQ2invGtYKa7Z5olVSh3qKU+P/MH4wkuuCopIy+XCcC?=
- =?iso-8859-1?Q?lrPa8pYWDAy81twDg8oSmbVHw/2L5yF9ImN37/364/fnwEUzKF9XJ8l7N1?=
- =?iso-8859-1?Q?qnSKPx24dBn/fxB5ZepBmNrNt3/AAllvcs6HYVYthwnCIqb3ADNwvqBixR?=
- =?iso-8859-1?Q?t11PxE+OBNEsUvTgQ8k20eKRHWo9ucIcHm?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 394334bb-617c-406a-4a05-08dcfce0f2f6
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR11MB6733.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2024 14:57:06.1368
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fk1dpWhHGyReCgCtYvz28Nh10DH2ABl39CsVZtuijEtq6iDAADmiWcbYxY135NfbpszdLILdTdSQ7mlpu9RstQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR11MB6506
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPDyKFqMuFMf0+2+mPZaGGtBRfavg0LTkhbrCeqh7kHeqq-yZQ@mail.gmail.com>
 
-Thomas Wei�schuh wrote:
-> The is_bin_visible() callbacks should not modify the struct
-> bin_attribute passed as argument.
-> Enforce this by marking the argument as const.
+On Mon, Nov 04, 2024 at 10:51:45AM +0100, Ulf Hansson wrote:
+> On Mon, 4 Nov 2024 at 07:38, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> >
+> > 在 2024/11/3 20:02, Manivannan Sadhasivam 写道:
+> > > On Fri, Oct 18, 2024 at 05:20:08PM +0800, Shawn Lin wrote:
+> > >> Hi Ulf,
+> > >>
+> > >> 在 2024/10/18 17:07, Ulf Hansson 写道:
+> > >>> On Thu, 10 Oct 2024 at 03:21, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> > >>>>
+> > >>>> Hi Ulf
+> > >>>>
+> > >>>> 在 2024/10/9 21:15, Ulf Hansson 写道:
+> > >>>>> [...]
+> > >>>>>
+> > >>>>>> +
+> > >>>>>> +static int ufs_rockchip_runtime_suspend(struct device *dev)
+> > >>>>>> +{
+> > >>>>>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> > >>>>>> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> > >>>>>> +       struct generic_pm_domain *genpd = pd_to_genpd(dev->pm_domain);
+> > >>>>>
+> > >>>>> pd_to_genpd() isn't safe to use like this. It's solely to be used by
+> > >>>>> genpd provider drivers.
+> > >>>>>
+> > >>>>>> +
+> > >>>>>> +       clk_disable_unprepare(host->ref_out_clk);
+> > >>>>>> +
+> > >>>>>> +       /*
+> > >>>>>> +        * Shouldn't power down if rpm_lvl is less than level 5.
+> > >>>>>
+> > >>>>> Can you elaborate on why we must not power-off the power-domain when
+> > >>>>> level is less than 5?
+> > >>>>>
+> > >>>>
+> > >>>> Because ufshcd driver assume the controller is active and the link is on
+> > >>>> if level is less than 5. So the default resume policy will not try to
+> > >>>> recover the registers until the first error happened. Otherwise if the
+> > >>>> level is >=5, it assumes the controller is off and the link is down,
+> > >>>> then it will restore the registers and link.
+> > >>>>
+> > >>>> And the level is changeable via sysfs.
+> > >>>
+> > >>> Okay, thanks for clarifying.
+> > >>>
+> > >>>>
+> > >>>>> What happens if we power-off anyway when the level is less than 5?
+> > >>>>>
+> > >>>>>> +        * This flag will be passed down to platform power-domain driver
+> > >>>>>> +        * which has the final decision.
+> > >>>>>> +        */
+> > >>>>>> +       if (hba->rpm_lvl < UFS_PM_LVL_5)
+> > >>>>>> +               genpd->flags |= GENPD_FLAG_RPM_ALWAYS_ON;
+> > >>>>>> +       else
+> > >>>>>> +               genpd->flags &= ~GENPD_FLAG_RPM_ALWAYS_ON;
+> > >>>>>
+> > >>>>> The genpd->flags is not supposed to be changed like this - and
+> > >>>>> especially not from a genpd consumer driver.
+> > >>>>>
+> > >>>>> I am trying to understand a bit more of the use case here. Let's see
+> > >>>>> if that helps me to potentially suggest an alternative approach.
+> > >>>>>
+> > >>>>
+> > >>>> I was not familiar with the genpd part, so I haven't come up with
+> > >>>> another solution. It would be great if you can guide me to the right
+> > >>>> way.
+> > >>>
+> > >>> I have been playing with the existing infrastructure we have at hand
+> > >>> to support this, but I need a few more days to be able to propose
+> > >>> something for you.
+> > >>>
+> > >>
+> > >> Much appreciate.
+> > >>
+> > >>>>
+> > >>>>>> +
+> > >>>>>> +       return ufshcd_runtime_suspend(dev);
+> > >>>>>> +}
+> > >>>>>> +
+> > >>>>>> +static int ufs_rockchip_runtime_resume(struct device *dev)
+> > >>>>>> +{
+> > >>>>>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> > >>>>>> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> > >>>>>> +       int err;
+> > >>>>>> +
+> > >>>>>> +       err = clk_prepare_enable(host->ref_out_clk);
+> > >>>>>> +       if (err) {
+> > >>>>>> +               dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
+> > >>>>>> +               return err;
+> > >>>>>> +       }
+> > >>>>>> +
+> > >>>>>> +       reset_control_assert(host->rst);
+> > >>>>>> +       usleep_range(1, 2);
+> > >>>>>> +       reset_control_deassert(host->rst);
+> > >>>>>> +
+> > >>>>>> +       return ufshcd_runtime_resume(dev);
+> > >>>>>> +}
+> > >>>>>> +
+> > >>>>>> +static int ufs_rockchip_system_suspend(struct device *dev)
+> > >>>>>> +{
+> > >>>>>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+> > >>>>>> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> > >>>>>> +
+> > >>>>>> +       /* Pass down desired spm_lvl to Firmware */
+> > >>>>>> +       arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
+> > >>>>>> +                       host->pd_id, hba->spm_lvl < 5 ? 1 : 0, 0, 0, 0, 0, NULL);
+> > >>>>>
+> > >>>>> Can you please elaborate on what goes on here? Is this turning off the
+> > >>>>> power-domain that the dev is attached to - or what is actually
+> > >>>>> happening?
+> > >>>>>
+> > >>>>
+> > >>>> This smc call is trying to ask firmware not to turn off the power-domian
+> > >>>> that the UFS is attached to and also not to turn off the power of UFS
+> > >>>> conntroller.
+> > >>>
+> > >>> Okay, thanks for clarifying!
+> > >>>
+> > >>> A follow up question, don't you need to make a corresponding smc call
+> > >>> to inform the FW that it's okay to turn off the power-domain at some
+> > >>> point?
+> > >>>
+> > >>
+> > >> Yes. Each time entering sleep, we teach FW if it need to turn off or keep
+> > >> power-domain, for instance "hba->spm_lvl < 5 ? 1 : 0" , 0 means
+> > >> off and 1 means on.
+> > >>
+> > >
+> > > We had a requirement to notify the genpd provider from consumer to not turn off
+> > > the power domain during system suspend. So Ulf came up with an API for
+> > > consumers, device_set_wakeup_path() setting the 'dev->power.wakeup_path' which
+> > > will be honored by the genpd core. Will that work for you?
+> >
+> > Yes, that works. And we may need a symmetrical call, for instance,
+> > device_clr_wakeup_path() to allow genpd provider to turn off the power
+> > domain as well.
 > 
-> As there are not many callback implementers perform this change
-> throughout the tree at once.
+> The PM core clears the flag in device_prepare(). The flag is typically
+> supposed to be set from a ->suspend() callback, so there should be no
+> need for an additional function that clears the flag, I think.
 > 
-> Signed-off-by: Thomas Wei�schuh <linux@weissschuh.net>
-> ---
->  drivers/cxl/port.c                      |  2 +-
->  drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c |  2 +-
->  drivers/infiniband/hw/qib/qib_sysfs.c   |  2 +-
->  drivers/mtd/spi-nor/sysfs.c             |  2 +-
->  drivers/nvmem/core.c                    |  3 ++-
->  drivers/pci/pci-sysfs.c                 |  2 +-
->  drivers/pci/vpd.c                       |  2 +-
->  drivers/platform/x86/amd/hsmp.c         |  2 +-
->  drivers/platform/x86/intel/sdsi.c       |  2 +-
->  drivers/scsi/scsi_sysfs.c               |  2 +-
->  drivers/usb/core/sysfs.c                |  2 +-
->  include/linux/sysfs.h                   | 30 +++++++++++++++---------------
->  12 files changed, 27 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
-> index 9dc394295e1fcd1610813837b2f515b66995eb25..24041cf85cfbe6c54c467ac325e48c775562b938 100644
-> --- a/drivers/cxl/port.c
-> +++ b/drivers/cxl/port.c
-> @@ -173,7 +173,7 @@ static ssize_t CDAT_read(struct file *filp, struct kobject *kobj,
->  static BIN_ATTR_ADMIN_RO(CDAT, 0);
->  
->  static umode_t cxl_port_bin_attr_is_visible(struct kobject *kobj,
-> -					    struct bin_attribute *attr, int i)
-> +					    const struct bin_attribute *attr, int i)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
->  	struct cxl_port *port = to_cxl_port(dev);
 
-For CXL
+Yeah, that's my understanding as well though I didn't look into PM core deeply.
 
-Acked-by: Ira Weiny <ira.weiny@intel.com>
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
