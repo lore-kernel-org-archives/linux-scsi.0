@@ -1,231 +1,132 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8055970837;
-	Mon,  4 Nov 2024 20:17:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29F551F708E
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Nov 2024 20:49:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730751462; cv=none; b=aKaXqLuDM0lh2q6+8V7axyoCPuZp60Uaj7sNy+6vFJrhTD/c2c1J0ARN/puSQOrQOFfvi14ezGIIL/c3FTEFWc8hNDsm9uirz4jFv4dBtQhbfY+9uWS2G+8CJQ6WFLu/wRffB7Q3C2R6M9gJF+qOmaqLanC4rDg10YGdcda1Qg0=
+	t=1730753351; cv=none; b=DfwZ1RHof/td8nwUbF51qSsUPEIKal5XfelbYl1/d0SNn/zZwyJwzybz4SJsc7eje+ifWly2RUry9L17sVyipK7LY/3E9+LyOOq1lYgk8mcwStvqsZexomfvJd5hGxWiodZybJeuxXpkIcBT4UGSyf/Cth0T16Ro3c0sWS54ZOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730751462; c=relaxed/simple;
-	bh=5MWgbh4aOjwoJiLBWxpgay+wgAMi+P1rkEAd6ZT8gdE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ntQZqKPgMp/ZtFjkLRssRe+tar17hCzBi4lXBE59hfziQB+67/GD5mzDbXClLPRXqJ7aN3MSIgcRaKOU8DOkqSzPVHJWMqArvaTpccJ7iKmfOyq0COO0QwMC7y/WXGw3jVVK2e1G8vj8jLBigeKWPL/AyuSYwi1wyJ2QsoKpytc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I8Hkxr0m; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1730753351; c=relaxed/simple;
+	bh=s7g+2WFyZXA72jYL2PshW+rlLqLNv+p5ym6dJP3Ft/M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ioJM/jE50cU92kEV2GJRGAaUY6typpuxF85RY5QsFrvYYm6naHdWElNq8iF9jzAlQaB1MqqLO2QC0t08MsI0ppzEBOU7eRO0ryI/wAb4tgOGkxXNXKBlRvbKjHYDzuQhJ0iayjvV4sIL2k+ZGc7qq3XH18aXxBEdDe4TMO6ZZtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aay6Orck; arc=none smtp.client-ip=209.85.167.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I8Hkxr0m"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730751461; x=1762287461;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=5MWgbh4aOjwoJiLBWxpgay+wgAMi+P1rkEAd6ZT8gdE=;
-  b=I8Hkxr0mAsYglyYe+QacWMJmLhZ084uE5wTVlsO9tTg7ie3DqseUzDLq
-   q89yvyH4YNIwsGnRxv3cOJ5bAVRBtlBGMIA0ddQiwAXN+Ji9MO5xF98Fj
-   NpNrhWdcVjphR9HehYt2W3jwXzYrD0pOo4HEyVhUUzCfaiuX+/uQUgRyM
-   Obeb9/U9DG6I4KfqHntYALXwA2ulv2p7ElLO5MEkuQUV8dfTpOk9SyEF9
-   ZH18S4mGT2FDgGMly7xq4OpvElgwtsSXUzTDNDv89DhsstbrFD+6K9OKw
-   SUBa1G8aCYytZHDKJXygxWAAn+faDs6y/BV6U7lTlxqkrqncbzEbWpYAe
-   g==;
-X-CSE-ConnectionGUID: 9g0r+AqLSKa68qaBQHxFYQ==
-X-CSE-MsgGUID: f5bk+H3uQtOFPgkQxCciKA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11246"; a="41858047"
-X-IronPort-AV: E=Sophos;i="6.11,258,1725346800"; 
-   d="scan'208";a="41858047"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Nov 2024 12:17:40 -0800
-X-CSE-ConnectionGUID: DjDAKnVUQtS4/c7pKUkeQg==
-X-CSE-MsgGUID: a15UI2hBS9yREI5ghSgxJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,258,1725346800"; 
-   d="scan'208";a="83286325"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 04 Nov 2024 12:17:35 -0800
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t83W1-000lFV-1X;
-	Mon, 04 Nov 2024 20:17:33 +0000
-Date: Tue, 5 Nov 2024 04:17:30 +0800
-From: kernel test robot <lkp@intel.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v4 4/7] pmdomain: core: Introduce
- dev_pm_genpd_rpm_always_on()
-Message-ID: <202411050317.abJatSkD-lkp@intel.com>
-References: <1730705521-23081-5-git-send-email-shawn.lin@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aay6Orck"
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-539f4d8ef66so5989477e87.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 12:49:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730753348; x=1731358148; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=WXedNd+XsWLIdiETHP93HM0+h9dapd2musrzw6znav4=;
+        b=aay6Orckw/WUjG7CFq88/dhsw7FkaPXjpMFMDkPjMBhXgRnJusUpKzT6rqSGZF7S61
+         ybGVCqrGLM2smzVy/p1zljTy9kDiAIW/UxQ5WNzblBlot4ZtkR6axsUbb1Fff0Bnes/m
+         c4Yhx6Z0P7jJ0NCIgvbP6oPX6sQhC0SDvENhVlVqIhmfeSPs4zOrzEvEkPte7eX2B3qs
+         Fgf6dNJ008L4bMnYvryGQhvHe57n+THjU1yZHkcGh53qIAi7rITn6MN/OU6pM+fLsBDz
+         s5mzmwnymuI79XUEmR9+Tuc6WXsc6KibjS8vSi0zJ3NWRJZvCph69ho1RfZl8S/3xQ7D
+         saTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730753348; x=1731358148;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=WXedNd+XsWLIdiETHP93HM0+h9dapd2musrzw6znav4=;
+        b=ICmO61yZlL7gV4AM+EEHhTYMghigr5ZZid2At35ToYabIWP2VGIIVhln9UxTSP34ib
+         1j/MzGbFfx/nI85xRVM4IxoDLLVtREhGLsEuDWTkfGlbN+PA0kVJla+V/QfpMIjrR4WK
+         AfbSStN/fLfBEVq1LPFUSoro0IOJJ8uVRX1MsuvDOWHWsNurD0630xd9VlmKzCi2TxHj
+         jQB2pMs4373Kxk8Vqltyb3eCPKVPT+2Iv0k/hXONBGHq3zl0qh0eSILpEhpX4szxg1nM
+         w//VEowzNW4XdbJMIW/HgMxX2KrEb6iqwyuGbL5OUaDsxGf9OJzRrz58CRF2n/KQ24Qv
+         qG0A==
+X-Gm-Message-State: AOJu0YzagI9U3kvhEwbkdMfuZF2/WO28pRaJqCy13sjw0C9UWb2CPRbf
+	ptZx4dXi2ieV+ln+KmvuEOzdFVCnAP2yxOyLhugwj6oF5Ja+rZmObjNV/g==
+X-Google-Smtp-Source: AGHT+IEEE4fVLw8xx1wySqwwFgSRAlQEybehQ9kBT7c/5g1oKivCvDxSEcdnZH9S2IaGNn0SxSS2WA==
+X-Received: by 2002:a05:651c:a0a:b0:2fb:6198:d230 with SMTP id 38308e7fff4ca-2fcbdfc65d6mr162519131fa.18.1730753347668;
+        Mon, 04 Nov 2024 12:49:07 -0800 (PST)
+Received: from es40.darklands.se (h-94-254-104-176.A469.priv.bahnhof.se. [94.254.104.176])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-2fdef616446sm18495281fa.56.2024.11.04.12.49.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Nov 2024 12:49:06 -0800 (PST)
+From: Magnus Lindholm <linmag7@gmail.com>
+To: linux-scsi@vger.kernel.org,
+	James.Bottomley@hansenpartnership.com,
+	martin.petersen@oracle.com
+Cc: linmag7@gmail.com
+Subject: [PATCH v3] scsi: qla1280.c 
+Date: Mon,  4 Nov 2024 21:46:00 +0100
+Message-ID: <20241104204845.1785-1-linmag7@gmail.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1730705521-23081-5-git-send-email-shawn.lin@rock-chips.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Shawn,
+ Use dma_get_required_mask() to determine an acceptable DMA_BIT_MASK 
+ since on some platforms, qla1040 cards do not work with a 64-bit
+ mask. For example, on alpha systems with more than 2GB ram a 64-bit DMA mask
+ will result in filesystem corruption, but a 64-bit mask is required on
+ IP30/MIPS.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
+---
+ drivers/scsi/qla1280.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on robh/for-next linus/master v6.12-rc6]
-[cannot apply to mkp-scsi/for-next next-20241104]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Shawn-Lin/dt-bindings-ufs-Document-Rockchip-UFS-host-controller/20241104-191810
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/1730705521-23081-5-git-send-email-shawn.lin%40rock-chips.com
-patch subject: [PATCH v4 4/7] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
-config: x86_64-buildonly-randconfig-002-20241104 (https://download.01.org/0day-ci/archive/20241105/202411050317.abJatSkD-lkp@intel.com/config)
-compiler: clang version 19.1.3 (https://github.com/llvm/llvm-project ab51eccf88f5321e7c60591c5546b254b6afab99)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241105/202411050317.abJatSkD-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202411050317.abJatSkD-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/pmdomain/core.c:21:
-   In file included from include/linux/suspend.h:5:
-   In file included from include/linux/swap.h:9:
-   In file included from include/linux/memcontrol.h:21:
-   In file included from include/linux/mm.h:2213:
-   include/linux/vmstat.h:518:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
-     518 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
-         |                               ~~~~~~~~~~~ ^ ~~~
->> drivers/pmdomain/core.c:898:4: warning: misleading indentation; statement is not part of the previous 'if' [-Wmisleading-indentation]
-     898 |                         if (to_gpd_data(pdd)->rpm_always_on)
-         |                         ^
-   drivers/pmdomain/core.c:893:3: note: previous statement is here
-     893 |                 if (!pm_runtime_suspended(pdd->dev) ||
-         |                 ^
-   2 warnings generated.
-
-
-vim +/if +898 drivers/pmdomain/core.c
-
-   837	
-   838	/**
-   839	 * genpd_power_off - Remove power from a given PM domain.
-   840	 * @genpd: PM domain to power down.
-   841	 * @one_dev_on: If invoked from genpd's ->runtime_suspend|resume() callback, the
-   842	 * RPM status of the releated device is in an intermediate state, not yet turned
-   843	 * into RPM_SUSPENDED. This means genpd_power_off() must allow one device to not
-   844	 * be RPM_SUSPENDED, while it tries to power off the PM domain.
-   845	 * @depth: nesting count for lockdep.
-   846	 *
-   847	 * If all of the @genpd's devices have been suspended and all of its subdomains
-   848	 * have been powered down, remove power from @genpd.
-   849	 */
-   850	static int genpd_power_off(struct generic_pm_domain *genpd, bool one_dev_on,
-   851				   unsigned int depth)
-   852	{
-   853		struct pm_domain_data *pdd;
-   854		struct gpd_link *link;
-   855		unsigned int not_suspended = 0;
-   856		int ret;
-   857	
-   858		/*
-   859		 * Do not try to power off the domain in the following situations:
-   860		 * (1) The domain is already in the "power off" state.
-   861		 * (2) System suspend is in progress.
-   862		 */
-   863		if (!genpd_status_on(genpd) || genpd->prepared_count > 0)
-   864			return 0;
-   865	
-   866		/*
-   867		 * Abort power off for the PM domain in the following situations:
-   868		 * (1) The domain is configured as always on.
-   869		 * (2) When the domain has a subdomain being powered on.
-   870		 */
-   871		if (genpd_is_always_on(genpd) ||
-   872				genpd_is_rpm_always_on(genpd) ||
-   873				atomic_read(&genpd->sd_count) > 0)
-   874			return -EBUSY;
-   875	
-   876		/*
-   877		 * The children must be in their deepest (powered-off) states to allow
-   878		 * the parent to be powered off. Note that, there's no need for
-   879		 * additional locking, as powering on a child, requires the parent's
-   880		 * lock to be acquired first.
-   881		 */
-   882		list_for_each_entry(link, &genpd->parent_links, parent_node) {
-   883			struct generic_pm_domain *child = link->child;
-   884			if (child->state_idx < child->state_count - 1)
-   885				return -EBUSY;
-   886		}
-   887	
-   888		list_for_each_entry(pdd, &genpd->dev_list, list_node) {
-   889			/*
-   890			 * Do not allow PM domain to be powered off, when an IRQ safe
-   891			 * device is part of a non-IRQ safe domain.
-   892			 */
-   893			if (!pm_runtime_suspended(pdd->dev) ||
-   894				irq_safe_dev_in_sleep_domain(pdd->dev, genpd))
-   895				not_suspended++;
-   896	
-   897				/* The device may need its PM domain to stay powered on. */
- > 898				if (to_gpd_data(pdd)->rpm_always_on)
-   899					return -EBUSY;
-   900		}
-   901	
-   902		if (not_suspended > 1 || (not_suspended == 1 && !one_dev_on))
-   903			return -EBUSY;
-   904	
-   905		if (genpd->gov && genpd->gov->power_down_ok) {
-   906			if (!genpd->gov->power_down_ok(&genpd->domain))
-   907				return -EAGAIN;
-   908		}
-   909	
-   910		/* Default to shallowest state. */
-   911		if (!genpd->gov)
-   912			genpd->state_idx = 0;
-   913	
-   914		/* Don't power off, if a child domain is waiting to power on. */
-   915		if (atomic_read(&genpd->sd_count) > 0)
-   916			return -EBUSY;
-   917	
-   918		ret = _genpd_power_off(genpd, true);
-   919		if (ret) {
-   920			genpd->states[genpd->state_idx].rejected++;
-   921			return ret;
-   922		}
-   923	
-   924		genpd->status = GENPD_STATE_OFF;
-   925		genpd_update_accounting(genpd);
-   926		genpd->states[genpd->state_idx].usage++;
-   927	
-   928		list_for_each_entry(link, &genpd->child_links, child_node) {
-   929			genpd_sd_counter_dec(link->parent);
-   930			genpd_lock_nested(link->parent, depth + 1);
-   931			genpd_power_off(link->parent, false, depth + 1);
-   932			genpd_unlock(link->parent);
-   933		}
-   934	
-   935		return 0;
-   936	}
-   937	
-
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 8958547ac111..4ba4084bf252 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -8,9 +8,11 @@
+ * Copyright (C) 2003-2004 Christoph Hellwig
+ *
+ ******************************************************************************/
+-#define QLA1280_VERSION      "3.27.1"
++#define QLA1280_VERSION      "3.27.2"
+ /*****************************************************************************
+     Revision History:
++    Rev  3.27.2, November 3, 2024, Magnus Lindholm
++	- Use dma_get_required_mask() to determine DMA_BIT_MASK if QLA_64BIT_PTR
+     Rev  3.27.1, February 8, 2010, Michael Reed
+ 	- Retain firmware image for error recovery.
+     Rev  3.27, February 10, 2009, Michael Reed
+@@ -4143,6 +4145,8 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct Scsi_Host *host;
+ 	struct scsi_qla_host *ha;
+ 	int error = -ENODEV;
++	/* use 32-bit mask as default in case driver is built for 32-only */
++	u64 required_mask = DMA_BIT_MASK(32);
+ 
+ 	/* Bypass all AMI SUBSYS VENDOR IDs */
+ 	if (pdev->subsystem_vendor == PCI_VENDOR_ID_AMI) {
+@@ -4177,7 +4181,8 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ha->devnum = devnum;	/* specifies microcode load address */
+ 
+ #ifdef QLA_64BIT_PTR
+-	if (dma_set_mask_and_coherent(&ha->pdev->dev, DMA_BIT_MASK(64))) {
++	required_mask = dma_get_required_mask(&ha->pdev->dev);
++	if (dma_set_mask_and_coherent(&ha->pdev->dev, required_mask)) {
+ 		if (dma_set_mask(&ha->pdev->dev, DMA_BIT_MASK(32))) {
+ 			printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 			       "suitable DMA mask - aborting\n", ha->host_no);
+@@ -4185,10 +4190,10 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 			goto error_put_host;
+ 		}
+ 	} else
+-		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
+-			ha->host_no);
++		dprintk(2, "scsi(%li): %d-bit PCI Addressing Enabled\n",
++			ha->host_no, fls64(required_mask));
+ #else
+-	if (dma_set_mask(&ha->pdev->dev, DMA_BIT_MASK(32))) {
++	if (dma_set_mask(&ha->pdev->dev, required_mask)) {
+ 		printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 		       "suitable DMA mask - aborting\n", ha->host_no);
+ 		error = -ENODEV;
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.47.0
+
