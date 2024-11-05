@@ -1,129 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B02225D7;
-	Tue,  5 Nov 2024 16:23:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 203785674E
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 16:27:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730823803; cv=none; b=B8+9y4AmJ40HxC5KNN4q4iHJUEJXjB9oFiQV+Ub2Ki7+L7FXhe5X4rDIkkg5i5BkJAnmxcBnvN+UokxyIRbmhj0vsJ7rLK4mOlDKpGG0L9qjCbs0RSzZL3oKJiqQp21dQMpS2MP1lMo7+h3SofK2KDV9PjI25rwlXdoxV9r1Pw8=
+	t=1730824078; cv=none; b=C35eMGIM5DbQc8Xvj+vAmPzjSKV3wFVvwO6LnOu+j7xD4LcUizEGuu+kwiDOergN8snFGgsWAs/cDi0aIu3neX1w7M142ke2MwoYEiuPySx0tUXzvDf4dX3tWPumwJlHZACXz8OIPVTi456vsaJli4oq3lCPSGfrcTmWeb6m1UE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730823803; c=relaxed/simple;
-	bh=ZPfLD/2VaFCfV9JuHuS2PCs5o0Wj11DZmxWwPCOO9rk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HFkxmhI9o1FbnuX1DGygJxJHsrvK4fyFFL6P3sl3ADEAf5J1HgzKmafvd66HuGiAQEoQ+o9Rn5TEECS1Cp/kXr05eiWtx1f9Nay/+TPOrsaYY+zrVrqVTuTcvjsEJ6OrZBPUvFpSAwWBwF486T5v3UcxRJ2h11ugoDJu1wHvYyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u0lbXYQi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730824078; c=relaxed/simple;
+	bh=6lKEju4tzcGBBXoGLue1fy4v7SHvUr8Lq4qdFA89dvE=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=MZQMxV4TX3tqgdlofhCuwCSiKDGObIDmQ1C+xby+HS0XQFhxtTGoc8KDPetmQJd6UsMipUsIDcjfIBk8MS5qOjkkdmqH5WeDXKH9kXPjem6Id8SgcXiGBWdrdFmnZu5tQo0HCsEtrBIaNslGH0hJ9tmuUPYGUkaCdVFy2V5Xqdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ubstt37J; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u0lbXYQi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15341C4CECF;
-	Tue,  5 Nov 2024 16:23:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730823803;
-	bh=ZPfLD/2VaFCfV9JuHuS2PCs5o0Wj11DZmxWwPCOO9rk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=u0lbXYQi3mp8/ZT3f6YH5dPczmOpUk6qRa/r7FDwMDi9GoulBKrmRmyG3gjBp3tgW
-	 9x6KoahAWPbe/2+O8iKWUNowXkurRxeRNzpfJ6xBCVehAxuitPgAGcpQO+evpuXIwD
-	 hgNHpfb8cIjgYF8W9vYILFv66VQfs3JxCVlaNJFDCZHhRdgdXllf489zEhwq/5We/3
-	 umfOcclj+lsGAC5O4fwzIUcanhDD9DZYJVJOzVkGcgGEwWZrQmK+xozOddiKDk5NSm
-	 Y+JVz0yQiodH+25JJgkHK7oG+vhAt4X/JfM+SKVqmo4gt+5RnkCdYUoyKlo+e6NpW+
-	 kVCxHgrV/CiPA==
-Date: Tue, 5 Nov 2024 09:23:19 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kanchan Joshi <joshi.k@samsung.com>, Anuj gupta <anuj1072538@gmail.com>,
-	Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk,
-	martin.petersen@oracle.com, asml.silence@gmail.com,
-	brauner@kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk,
-	io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	linux-scsi@vger.kernel.org, vishak.g@samsung.com,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v7 06/10] io_uring/rw: add support to send metadata along
- with read/write
-Message-ID: <ZypGd_-HzEekrcMs@kbusch-mbp.dhcp.thefacebook.com>
-References: <20241104140601.12239-1-anuj20.g@samsung.com>
- <CGME20241104141459epcas5p27991e140158b1e7294b4d6c4e767373c@epcas5p2.samsung.com>
- <20241104140601.12239-7-anuj20.g@samsung.com>
- <20241105095621.GB597@lst.de>
- <CACzX3AuNFoE-EC_xpDPZkoiUk1uc0LXMNw-mLnhrKAG4dnJzQw@mail.gmail.com>
- <20241105135657.GA4775@lst.de>
- <b52ecf88-1786-4b6f-b8f3-86cccaa51917@samsung.com>
- <20241105160051.GA7599@lst.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ubstt37J"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1730824075;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XYowUcCUvYBTzf8yObVt54/LH6jljftk+yqZghhVZEo=;
+	b=Ubstt37J9U+S1qFajqFtYMXVlWvRmk25azXF+Te8fe0wmM+OedaK2vnqsSCp7w5nvb2UTH
+	ehiGH5nsp6aIwa/XH1d6KxcDEYxUP17ad+NmH6cOQSuX5cv8NTmM+c1lUKMURUdPdTR3bc
+	0lLDE3P9p85Wokxh9uuGF3OrTLXdjyU=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-577-SXc0HnViP-q4W8H3ZS2HSg-1; Tue, 05 Nov 2024 11:27:54 -0500
+X-MC-Unique: SXc0HnViP-q4W8H3ZS2HSg-1
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4315cefda02so41708725e9.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2024 08:27:54 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730824073; x=1731428873;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XYowUcCUvYBTzf8yObVt54/LH6jljftk+yqZghhVZEo=;
+        b=KGAvid+/MgKOcRgJoUEZwct/t067rSjexeIrHnJnlrtP4d9Rf9B/K4XHW+saTSx3fZ
+         T9MtqDKgUHzfnjAJlTXH7AJjcFo/YssYDJvNF0DAcA+6hVbgTVVZ1ugC8cHQ0vqpflVr
+         MU1HotCy5XquE9gv2lek/NrkOWyWVTS61wnO2QmRkU2ludihYP/KUzgAhFfn/rOgQuxS
+         CqO8F09HBlwS26fN2POW5iaB9biAe4EMLGhyZApCadmFJYPtC4tUbnyYRZ2RXFctvjak
+         PwQ5k4iJuK1xBEbIgFRg1rPT6qNKm+qHctsPT/kmlUhonff/XknYUS0YMDkcy2K1lI5m
+         pUhQ==
+X-Gm-Message-State: AOJu0YxHZ1epDeEXB70KoPPbrnCeJ1SW5JUu++yZrWDCRnp+nlFH57L/
+	9YMYxb94kqQhBCUOpM+Rv7zgL/MiTcBjEI02iiAtanug4wvGrFi8O/aO2UTWdefdI4U78AFZJZf
+	GD5W+OKUv/hfnpLwU/occIspdfJgXEwLmyNjIFxl/Pg7fft4mfJejRw1bM6QOyBPwGvPy47moSY
+	E1TN00RK8jOHBDXzmm329gNwEw3gtO27AmvO+xEJQXeyE=
+X-Received: by 2002:a05:600c:3ca8:b0:431:52b7:a499 with SMTP id 5b1f17b1804b1-4327b7019ddmr164329155e9.20.1730824072892;
+        Tue, 05 Nov 2024 08:27:52 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IF8qLZJHLIE/cUeUU8jtXMTkzAkfunIJGNZ3dFCsxvlEONkGNj3i3sAGZTJ8fETUGIFx2PBQA==
+X-Received: by 2002:a05:600c:3ca8:b0:431:52b7:a499 with SMTP id 5b1f17b1804b1-4327b7019ddmr164328795e9.20.1730824072142;
+        Tue, 05 Nov 2024 08:27:52 -0800 (PST)
+Received: from [192.168.0.111] (78-80-81-220.customers.tmcz.cz. [78.80.81.220])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd9479ebsm220822625e9.23.2024.11.05.08.27.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 05 Nov 2024 08:27:51 -0800 (PST)
+Message-ID: <026951b5-69ea-49c7-b48b-5d426ccd1ec5@redhat.com>
+Date: Tue, 5 Nov 2024 17:27:50 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241105160051.GA7599@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] megaraid_sas: fix for a potential deadlock
+From: Tomas Henzl <thenzl@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
+ sumit.saxena@broadcom.com, ranjan.kumar@broadcom.com
+References: <20240923174833.45345-1-thenzl@redhat.com>
+Content-Language: en-US
+In-Reply-To: <20240923174833.45345-1-thenzl@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 05, 2024 at 05:00:51PM +0100, Christoph Hellwig wrote:
-> On Tue, Nov 05, 2024 at 09:21:27PM +0530, Kanchan Joshi wrote:
-> > Can add the documentation (if this version is palatable for Jens/Pavel), 
-> > but this was discussed in previous iteration:
-> > 
-> > 1. Each meta type may have different space requirement in SQE.
-> > 
-> > Only for PI, we need so much space that we can't fit that in first SQE. 
-> > The SQE128 requirement is only for PI type.
-> > Another different meta type may just fit into the first SQE. For that we 
-> > don't have to mandate SQE128.
+On 9/23/24 19:48, Tomas Henzl wrote:
+> This fixes a 'possible circular locking dependency detected' warning
+>       CPU0                    CPU1 
+>       ----                    ---- 
+>  lock(&instance->reset_mutex); 
+>                               lock(&shost->scan_mutex); 
+>                               lock(&instance->reset_mutex); 
+>  lock(&shost->scan_mutex); 
+>  
 > 
-> Ok, I'm really confused now.  The way I understood Anuj was that this
-> is NOT about block level metadata, but about other uses of the big SQE.
+> Fix this but temporarily releasing the reset_mutex.
 > 
-> Which version is right?  Or did I just completely misunderstand Anuj?
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 6c79c350a4d5..253cc1159661 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -8907,8 +8907,11 @@ megasas_aen_polling(struct work_struct *work)
+>  						   (ld_target_id / MEGASAS_MAX_DEV_PER_CHANNEL),
+>  						   (ld_target_id % MEGASAS_MAX_DEV_PER_CHANNEL),
+>  						   0);
+> -			if (sdev1)
+> +			if (sdev1) {
+> +				mutex_unlock(&instance->reset_mutex);
+>  				megasas_remove_scsi_device(sdev1);
+> +				mutex_lock(&instance->reset_mutex);
+> +			}
+>  
+>  			event_type = SCAN_VD_CHANNEL;
+>  			break;
 
-Let's not call this "meta_type". Can we use something that has a less
-overloaded meaning, like "sqe_extended_capabilities", or "ecap", or
-something like that.
- 
-> > 2. If two meta types are known not to co-exist, they can be kept in the 
-> > same place within SQE. Since each meta-type is a flag, we can check what 
-> > combinations are valid within io_uring and throw the error in case of 
-> > incompatibility.
-> 
-> And this sounds like what you refer to is not actually block metadata
-> as in this patchset or nvme, (or weirdly enough integrity in the block
-> layer code).
-> 
-> > 3. Previous version was relying on SQE128 flag. If user set the ring 
-> > that way, it is assumed that PI information was sent.
-> > This is more explicitly conveyed now - if user passed META_TYPE_PI flag, 
-> > it has sent the PI. This comment in the code:
-> > 
-> > +       /* if sqe->meta_type is META_TYPE_PI, last 32 bytes are for PI */
-> > +       union {
-> > 
-> > If this flag is not passed, parsing of second SQE is skipped, which is 
-> > the current behavior as now also one can send regular (non pi) 
-> > read/write on SQE128 ring.
-> 
-> And while I don't understand how this threads in with the previous
-> statements, this makes sense.  If you only want to send a pointer (+len)
-> to metadata you can use the normal 64-byte SQE.  If you want to send
-> a PI tuple you need SEQ128.  Is that what the various above statements
-> try to express?  If so the right API to me would be to have two flags:
-> 
->  - a flag that a pointer to metadata is passed.  This can work with
->    a 64-bit SQE.
->  - another flag that a PI tuple is passed.  This requires a 128-byte
->    and also the previous flag.
+Hi Chandrakanth,
 
-I don't think anything done so far aligns with what Pavel had in mind.
-Let me try to lay out what I think he's going for. Just bare with me,
-this is just a hypothetical example.
+can you please review this patch?
 
-  This patch adds a PI extension.
-  Later, let's say write streams needs another extenion.
-  Then key per-IO wants another extention.
-  Then someone else adds wizbang-awesome-feature extention.
+Thanks, Tomas
 
-Let's say you have device that can do all 4, or any combination of them.
-Pavel wants a solution that is future proof to such a scenario. So not
-just a single new "meta_type" with its structure, but a list of types in
-no particular order, and their structures.
-
-That list can exist either in the extended SQE, or in some other user
-address that the kernel will need copy.
