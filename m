@@ -1,315 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF60C1D90B4;
-	Tue,  5 Nov 2024 15:26:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D237638DD6
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 15:47:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730820412; cv=none; b=qyj1t80dOmVeFMxN8Jx8HePNO6FdLUUet4rC6QqUDKLu2f9/2PLZX0XEoFKu7Pm7Iggl068WxQnrCNvquaG3aeYK5ZXj/DGUNCykZyzASTgfY1r0u8B6mlxdmx50Etmhp1FpG7K9BhtJp8lk8533SHkRnAeXIy7h47AbyYIvgYU=
+	t=1730821655; cv=none; b=iyWkVG0qeONsKO005jEjGevObLabojsVLRopRtlE0XlVxsovfNZWE4ktbaH8dhA909QfgqON1N0b/22pzVPF4y8z7r/99eF2b/riYhv5Z8JWEh8kM/a/f1EGvZPXGhUYYl7bXa06ILxWPLKOsiDqLvovkUXxf7NUfKdDqncBdh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730820412; c=relaxed/simple;
-	bh=OyFK8z5qd2PX1b2mFjzhp33XMWRNRnaVbtklFXmouuA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=blpYLj1d0isR+/P3b/MGLtTvLzmJvlnsW5w0OgZw4ydvca4mfRiI2epHTIWok48n/O7qH2aSdiwig3GFvJ661p3MissXHOL9pgSkICygtdWDRqTjyaS7HGXZk6NuYnzyjyyU1msHsDrQDws2H3W7megnXKNhNn3s2+sjuEp08Eo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S9Iq4Wg+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730821655; c=relaxed/simple;
+	bh=pMHS+BZcJvzC3eTRkGglggaSOrLpzfG/TWKOdJ2jVWM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WyUA07B9ZeNLSxty3IPBJyXiDXBv4yiDkCxOM0XgLv58KljrEju7ZfUu3dvNdvcHfWz/oWroQBhmcx5ON15wEWVLpqgyMiaTzXd4byWAcU1ZC8/zyTTEtJEADpJZ52ZIRLwUCEWnJhaogCqGikppgIHP71EcIz8PWk2CRPztVkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iAMrdA0c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S9Iq4Wg+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55F5CC4CECF;
-	Tue,  5 Nov 2024 15:26:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iAMrdA0c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27EF1C4CECF;
+	Tue,  5 Nov 2024 15:47:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730820411;
-	bh=OyFK8z5qd2PX1b2mFjzhp33XMWRNRnaVbtklFXmouuA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=S9Iq4Wg+y13VlLFXaCQFBHoEgqCWwKO3J18E6ea4A9GXtutCKimycjyX2UFxyAhoF
-	 V4zfgXb+m4cZ7L2DVprXpqm4toiyK4X3fHoT0bFJC1hfvM+d29JMkfSCUtDadGZ1mM
-	 gT0lycJy0BIpkCVswsVeI1OtIeIJ6mh/cAV5ueBJEksXiYYTLfI2txEbP+TVdv+InM
-	 k+R+IoMimw7bxRmY3j+VQL++psf2Y8wUojmN2FH2obDVCN3oClU+GQmcZHilH7wLQo
-	 Uq5K49ASfVd1DC1B9B9WpCVygRAayMBQMhrPc0fqW+EnQJzM392ryKWN7Ckjb77xSI
-	 s/iv9g17O3mZw==
-Date: Tue, 5 Nov 2024 09:26:50 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Michael Walle <mwalle@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
-	Carlos Bilbao <carlos.bilbao.osdev@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	"David E. Box" <david.e.box@linux.intel.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Frederic Barrat <fbarrat@linux.ibm.com>,
-	Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-hyperv@vger.kernel.org
-Subject: Re: [PATCH v2 05/10] sysfs: treewide: constify attribute callback of
- bin_is_visible()
-Message-ID: <20241105152650.GA1472729@bhelgaas>
+	s=k20201202; t=1730821655;
+	bh=pMHS+BZcJvzC3eTRkGglggaSOrLpzfG/TWKOdJ2jVWM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iAMrdA0cfLPmaowsqvK5YKsuHDfTQReSrFkWp17kPxUhscChSIXDTO3yrwEiSZhG6
+	 ggN8fq52t2on2jbANkYli4We9sbEahEgCCYWXW2Bk2wLP2jjj1MedNkJY4fUpWK3jE
+	 65B9CfaCqbX4GD+KSJ+5wLTi1beZP2eb408voZhX8JyfEywBvH18Tsi5lXl2Oi8sQK
+	 e+CX+/dIy8XojjYO/iDLUUwOKQBAPhnajATSHUX3m75zQNOJfWWPvSXX6z2FXjZ3bK
+	 i/lWxXUvFIE8pTYhz/B34QuVAMWHUYVMkVKqnwyEK9vOysl8jqHAKJuvDoFsYwsnKZ
+	 cXIVPQvehyZNQ==
+Date: Tue, 5 Nov 2024 16:47:31 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	James Bottomley <james.bottomley@hansenpartnership.com>,
+	linux-scsi@vger.kernel.org, Wenchao Hao <haowenchao22@gmail.com>,
+	Xingui Yang <yangxingui@huawei.com>
+Subject: Re: [PATCHv8 00/10] scsi: EH rework, main part
+Message-ID: <Zyo-E1PCvx_XULvg@ryzen>
+References: <20231023092837.33786-1-hare@suse.de>
+ <Zyng-RIx0XkeFLr-@ryzen>
+ <a6cc3085-fa5e-4b23-8847-3e238143e191@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
+In-Reply-To: <a6cc3085-fa5e-4b23-8847-3e238143e191@suse.de>
 
-On Sun, Nov 03, 2024 at 05:03:34PM +0000, Thomas Weißschuh wrote:
-> The is_bin_visible() callbacks should not modify the struct
-> bin_attribute passed as argument.
-> Enforce this by marking the argument as const.
-> 
-> As there are not many callback implementers perform this change
-> throughout the tree at once.
-> 
-> Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+Hello Hannes,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# drivers/pci
+On Tue, Nov 05, 2024 at 04:22:40PM +0100, Hannes Reinecke wrote:
+> On 11/5/24 10:10, Niklas Cassel wrote:
+> > Hello Hannes,
+> > 
+> > On Mon, Oct 23, 2023 at 11:28:27AM +0200, Hannes Reinecke wrote:
+> > > Hi all,
+> > > 
+> > > (taking up an old thread:)
+> > > here's now the main part of my EH rework.
+> > > It modifies the reset callbacks for SCSI EH such that
+> > > each callback (eh_host_reset_handler, eh_bus_reset_handler,
+> > > eh_target_reset_handler, eh_device_reset_handler) only
+> > > references the actual entity it needs to work on
+> > > (ie 'Scsi_Host', (scsi bus), 'scsi_target', 'scsi_device'),
+> > > and the 'struct scsi_cmnd' is dropped from the argument list.
+> > > This simplifies the handler themselves as they don't need to
+> > > exclude some 'magic' command, and we don't need to allocate
+> > > a mock 'struct scsi_cmnd' when issuing a reset via SCSI ioctl.
+> > > 
+> > > The entire patchset can be found at:
+> > > 
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
+> > > branch eh-rework.v8
+> > > 
+> > > As usual, comments and reviews are welcome.
+> > 
+> > This seems to be the latest version of your EH rework.
+> > 
+> > Do you have any plans to send a v9?
+> > 
+> Weelll ... I didn't really proceed with that, as that requires
+> for some LLDDs to set a side a command tag for TMF.
+> 
+> It was relatively easy pre-multiqueue times (where you could just
+> reduce max_commands by 1), but for blk-mq that now longer works.
+> 
+> We need to do some really cumbersome things (just look at fnic ...)
+> and I hoped I could get the 'reserved commands for TMF' patchset
+> in first, so then this one would be easy.
 
-> ---
->  drivers/cxl/port.c                      |  2 +-
->  drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c |  2 +-
->  drivers/infiniband/hw/qib/qib_sysfs.c   |  2 +-
->  drivers/mtd/spi-nor/sysfs.c             |  2 +-
->  drivers/nvmem/core.c                    |  3 ++-
->  drivers/pci/pci-sysfs.c                 |  2 +-
->  drivers/pci/vpd.c                       |  2 +-
->  drivers/platform/x86/amd/hsmp.c         |  2 +-
->  drivers/platform/x86/intel/sdsi.c       |  2 +-
->  drivers/scsi/scsi_sysfs.c               |  2 +-
->  drivers/usb/core/sysfs.c                |  2 +-
->  include/linux/sysfs.h                   | 30 +++++++++++++++---------------
->  12 files changed, 27 insertions(+), 26 deletions(-)
+I see, I didn't realize that the series had outstanding dependencies.
+
+
+For anyone else looking for the actual series in lore, here there are:
+
+EH rework prep patches, part 1:
+https://lore.kernel.org/linux-scsi/20231002154328.43718-1-hare@suse.de/
+- This series has been merged by Martin, and was included in v6.7.
+
+EH rework prep patches, part 2:
+https://lore.kernel.org/linux-scsi/20231023091507.120828-1-hare@suse.de/
+- This series has not been merged, and is most likely the
+  'reserved commands for TMF' series that Hannes is referring to.
+
+EH rework, main part (or part 3):
+https://lore.kernel.org/linux-scsi/20231023092837.33786-1-hare@suse.de/
+- Depends on part 2 (which has not been merged yet).
+
+
 > 
-> diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
-> index 9dc394295e1fcd1610813837b2f515b66995eb25..24041cf85cfbe6c54c467ac325e48c775562b938 100644
-> --- a/drivers/cxl/port.c
-> +++ b/drivers/cxl/port.c
-> @@ -173,7 +173,7 @@ static ssize_t CDAT_read(struct file *filp, struct kobject *kobj,
->  static BIN_ATTR_ADMIN_RO(CDAT, 0);
->  
->  static umode_t cxl_port_bin_attr_is_visible(struct kobject *kobj,
-> -					    struct bin_attribute *attr, int i)
-> +					    const struct bin_attribute *attr, int i)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
->  	struct cxl_port *port = to_cxl_port(dev);
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c
-> index 0b28b2cf1517d130da01989df70b9dff6433edc4..c1c329eb920b52af100a93bdf00df450e25608c4 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c
-> @@ -3999,7 +3999,7 @@ static umode_t amdgpu_flash_attr_is_visible(struct kobject *kobj, struct attribu
->  }
->  
->  static umode_t amdgpu_bin_flash_attr_is_visible(struct kobject *kobj,
-> -						struct bin_attribute *attr,
-> +						const struct bin_attribute *attr,
->  						int idx)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
-> diff --git a/drivers/infiniband/hw/qib/qib_sysfs.c b/drivers/infiniband/hw/qib/qib_sysfs.c
-> index 53ec7510e4ebfb144e79884ca7dd7d0c873bd8a7..ba2cd68b53e6c240f1afc65c64012c75ccf488e0 100644
-> --- a/drivers/infiniband/hw/qib/qib_sysfs.c
-> +++ b/drivers/infiniband/hw/qib/qib_sysfs.c
-> @@ -283,7 +283,7 @@ static struct bin_attribute *port_ccmgta_attributes[] = {
->  };
->  
->  static umode_t qib_ccmgta_is_bin_visible(struct kobject *kobj,
-> -				 struct bin_attribute *attr, int n)
-> +				 const struct bin_attribute *attr, int n)
->  {
->  	struct qib_pportdata *ppd = qib_get_pportdata_kobj(kobj);
->  
-> diff --git a/drivers/mtd/spi-nor/sysfs.c b/drivers/mtd/spi-nor/sysfs.c
-> index 96064e4babf01f6950c81586764386e7671cbf97..5e9eb268073d18e0a46089000f18a3200b4bf13d 100644
-> --- a/drivers/mtd/spi-nor/sysfs.c
-> +++ b/drivers/mtd/spi-nor/sysfs.c
-> @@ -87,7 +87,7 @@ static umode_t spi_nor_sysfs_is_visible(struct kobject *kobj,
->  }
->  
->  static umode_t spi_nor_sysfs_is_bin_visible(struct kobject *kobj,
-> -					    struct bin_attribute *attr, int n)
-> +					    const struct bin_attribute *attr, int n)
->  {
->  	struct spi_device *spi = to_spi_device(kobj_to_dev(kobj));
->  	struct spi_mem *spimem = spi_get_drvdata(spi);
-> diff --git a/drivers/nvmem/core.c b/drivers/nvmem/core.c
-> index 63370c76394ee9b8d514da074779617cef67c311..73e44d724f90f4cd8fe8cafb9fa0c0fb23078e61 100644
-> --- a/drivers/nvmem/core.c
-> +++ b/drivers/nvmem/core.c
-> @@ -298,7 +298,8 @@ static umode_t nvmem_bin_attr_get_umode(struct nvmem_device *nvmem)
->  }
->  
->  static umode_t nvmem_bin_attr_is_visible(struct kobject *kobj,
-> -					 struct bin_attribute *attr, int i)
-> +					 const struct bin_attribute *attr,
-> +					 int i)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
->  	struct nvmem_device *nvmem = to_nvmem_device(dev);
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 040f01b2b999175e8d98b05851edc078bbabbe0d..13912940ed2bb66c0086e5bea9a3cb6417ac14dd 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1326,7 +1326,7 @@ static struct bin_attribute *pci_dev_rom_attrs[] = {
->  };
->  
->  static umode_t pci_dev_rom_attr_is_visible(struct kobject *kobj,
-> -					   struct bin_attribute *a, int n)
-> +					   const struct bin_attribute *a, int n)
->  {
->  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
->  
-> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-> index e4300f5f304f3ca55a657fd25a1fa5ed919737a7..a469bcbc0da7f7677485c7f999f8dfb58b8ae8a3 100644
-> --- a/drivers/pci/vpd.c
-> +++ b/drivers/pci/vpd.c
-> @@ -325,7 +325,7 @@ static struct bin_attribute *vpd_attrs[] = {
->  };
->  
->  static umode_t vpd_attr_is_visible(struct kobject *kobj,
-> -				   struct bin_attribute *a, int n)
-> +				   const struct bin_attribute *a, int n)
->  {
->  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
->  
-> diff --git a/drivers/platform/x86/amd/hsmp.c b/drivers/platform/x86/amd/hsmp.c
-> index 8fcf38eed7f00ee01aade6e3e55e20402458d5aa..8f00850c139fa8d419bc1c140c1832bf84b2c3bd 100644
-> --- a/drivers/platform/x86/amd/hsmp.c
-> +++ b/drivers/platform/x86/amd/hsmp.c
-> @@ -620,7 +620,7 @@ static int hsmp_get_tbl_dram_base(u16 sock_ind)
->  }
->  
->  static umode_t hsmp_is_sock_attr_visible(struct kobject *kobj,
-> -					 struct bin_attribute *battr, int id)
-> +					 const struct bin_attribute *battr, int id)
->  {
->  	if (plat_dev.proto_ver == HSMP_PROTO_VER6)
->  		return battr->attr.mode;
-> diff --git a/drivers/platform/x86/intel/sdsi.c b/drivers/platform/x86/intel/sdsi.c
-> index 9d137621f0e6e7a23be0e0bbc6175c51c403169f..33f33b1070fdc949c1373251c3bca4234d9da119 100644
-> --- a/drivers/platform/x86/intel/sdsi.c
-> +++ b/drivers/platform/x86/intel/sdsi.c
-> @@ -541,7 +541,7 @@ static struct bin_attribute *sdsi_bin_attrs[] = {
->  };
->  
->  static umode_t
-> -sdsi_battr_is_visible(struct kobject *kobj, struct bin_attribute *attr, int n)
-> +sdsi_battr_is_visible(struct kobject *kobj, const struct bin_attribute *attr, int n)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
->  	struct sdsi_priv *priv = dev_get_drvdata(dev);
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 32f94db6d6bf5d2bd289c1a121da7ffc6a7cb2ff..f3a1ecb42128a2b221ca5c362e041eb59dba0f20 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1274,7 +1274,7 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
->  }
->  
->  static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
-> -					     struct bin_attribute *attr, int i)
-> +					     const struct bin_attribute *attr, int i)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
->  	struct scsi_device *sdev = to_scsi_device(dev);
-> diff --git a/drivers/usb/core/sysfs.c b/drivers/usb/core/sysfs.c
-> index 61b6d978892c799e213018bed22d9fb12a19d429..b4cba23831acd2d7d395b9f7683cd3ee3a8623c8 100644
-> --- a/drivers/usb/core/sysfs.c
-> +++ b/drivers/usb/core/sysfs.c
-> @@ -925,7 +925,7 @@ static struct bin_attribute *dev_bin_attrs[] = {
->  };
->  
->  static umode_t dev_bin_attrs_are_visible(struct kobject *kobj,
-> -		struct bin_attribute *a, int n)
-> +		const struct bin_attribute *a, int n)
->  {
->  	struct device *dev = kobj_to_dev(kobj);
->  	struct usb_device *udev = to_usb_device(dev);
-> diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-> index 4746cccb95898b24df6f53de9421ea7649b5568f..d1b22d56198b55ee39fe4c4fc994f5b753641992 100644
-> --- a/include/linux/sysfs.h
-> +++ b/include/linux/sysfs.h
-> @@ -101,7 +101,7 @@ struct attribute_group {
->  	umode_t			(*is_visible)(struct kobject *,
->  					      struct attribute *, int);
->  	umode_t			(*is_bin_visible)(struct kobject *,
-> -						  struct bin_attribute *, int);
-> +						  const struct bin_attribute *, int);
->  	size_t			(*bin_size)(struct kobject *,
->  					    const struct bin_attribute *,
->  					    int);
-> @@ -199,22 +199,22 @@ struct attribute_group {
->   * attributes, the group visibility is determined by the function
->   * specified to is_visible() not is_bin_visible()
->   */
-> -#define DEFINE_SYSFS_BIN_GROUP_VISIBLE(name)                             \
-> -	static inline umode_t sysfs_group_visible_##name(                \
-> -		struct kobject *kobj, struct bin_attribute *attr, int n) \
-> -	{                                                                \
-> -		if (n == 0 && !name##_group_visible(kobj))               \
-> -			return SYSFS_GROUP_INVISIBLE;                    \
-> -		return name##_attr_visible(kobj, attr, n);               \
-> +#define DEFINE_SYSFS_BIN_GROUP_VISIBLE(name)                                   \
-> +	static inline umode_t sysfs_group_visible_##name(                      \
-> +		struct kobject *kobj, const struct bin_attribute *attr, int n) \
-> +	{                                                                      \
-> +		if (n == 0 && !name##_group_visible(kobj))                     \
-> +			return SYSFS_GROUP_INVISIBLE;                          \
-> +		return name##_attr_visible(kobj, attr, n);                     \
->  	}
->  
-> -#define DEFINE_SIMPLE_SYSFS_BIN_GROUP_VISIBLE(name)                   \
-> -	static inline umode_t sysfs_group_visible_##name(             \
-> -		struct kobject *kobj, struct bin_attribute *a, int n) \
-> -	{                                                             \
-> -		if (n == 0 && !name##_group_visible(kobj))            \
-> -			return SYSFS_GROUP_INVISIBLE;                 \
-> -		return a->mode;                                       \
-> +#define DEFINE_SIMPLE_SYSFS_BIN_GROUP_VISIBLE(name)                         \
-> +	static inline umode_t sysfs_group_visible_##name(                   \
-> +		struct kobject *kobj, const struct bin_attribute *a, int n) \
-> +	{                                                                   \
-> +		if (n == 0 && !name##_group_visible(kobj))                  \
-> +			return SYSFS_GROUP_INVISIBLE;                       \
-> +		return a->mode;                                             \
->  	}
->  
->  #define SYSFS_GROUP_VISIBLE(fn) sysfs_group_visible_##fn
-> 
-> -- 
-> 2.47.0
-> 
+> Alas, this hasn't happened, and so I didn't continue on that work.
+> But I'll see if I can resurrect it.
