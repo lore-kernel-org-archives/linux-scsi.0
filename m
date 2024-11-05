@@ -1,99 +1,182 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3390D1552F6;
-	Tue,  5 Nov 2024 16:00:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ABF9165F1E;
+	Tue,  5 Nov 2024 16:12:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730822459; cv=none; b=mTO2J1fb0eteNY5iVQXrchzldrPq99dbW1A/a+x+MkLHhvVI/QWXenvKO4GK1uc1sUZXFH4qsq83TpSqNyZr4Sidxw2p7xGfC6E+ZaUTRqz44lOnKJxT8XCuK2de42FGapGTZIc5V1Dz7PQIq8P51gp/l6I+FLVgdBexDXussUQ=
+	t=1730823152; cv=none; b=DZBC4zWgPBXERhySxT0njdYJj94QIq2enXiRJShTLiZUmtqMnxtG10egV0jq8iXVF/2s0DMAXN9Qm+2TRc2Qod1nnlF57HnbDJ3b/1GP6KE68t+xL1BQgYZjaVIRPQ9qB8rfF4jrd8kCn2oIkvruQrWqufZIDdrodtQFBWndJdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730822459; c=relaxed/simple;
-	bh=0hFYpv05gf9VcHrx0UUx/n/00VxqWSThLGDwJAV0lm0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KDqHusfOyI5CrJClASLa0PTZGePFTuFyV2+KhaUGFPwvixJFbJiVJEw8Gse4HFTpHhxvjcJAy8KRvoPXHFzf7wpTg1+hszIQ4SAT/kVQL2ZJDZyS3hCH/sxpjm5Jhv1etDK4kzb1/LLPWP3m+mvUDfCUBjLM8U/n32fMFi3ndwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id DD1D5227AAC; Tue,  5 Nov 2024 17:00:51 +0100 (CET)
-Date: Tue, 5 Nov 2024 17:00:51 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Kanchan Joshi <joshi.k@samsung.com>
-Cc: Christoph Hellwig <hch@lst.de>, Anuj gupta <anuj1072538@gmail.com>,
-	Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk,
-	kbusch@kernel.org, martin.petersen@oracle.com,
-	asml.silence@gmail.com, brauner@kernel.org, jack@suse.cz,
-	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v7 06/10] io_uring/rw: add support to send metadata
- along with read/write
-Message-ID: <20241105160051.GA7599@lst.de>
-References: <20241104140601.12239-1-anuj20.g@samsung.com> <CGME20241104141459epcas5p27991e140158b1e7294b4d6c4e767373c@epcas5p2.samsung.com> <20241104140601.12239-7-anuj20.g@samsung.com> <20241105095621.GB597@lst.de> <CACzX3AuNFoE-EC_xpDPZkoiUk1uc0LXMNw-mLnhrKAG4dnJzQw@mail.gmail.com> <20241105135657.GA4775@lst.de> <b52ecf88-1786-4b6f-b8f3-86cccaa51917@samsung.com>
+	s=arc-20240116; t=1730823152; c=relaxed/simple;
+	bh=8/GSV8GjyuHHKyHHms4DjtgdqoFellDpxdUEvj3z83A=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=KjoA2FLozqDxGNVlGVrxzHKSJDi4EDD80Oq2Bf8w/Wz0DxqqIXBl9MnrcxIlpE+Ylj/zRxBQRsgmBsWZAp7cJsngz63bvbkO/yTrQ43blxDTpzYlOU/xrcuTt0i+fRsf+mmtBgv8Us0STAzfWHeSD4ZFh4JbnbJj787jo/6Hwio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=efs34y0V; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="efs34y0V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8613AC4CECF;
+	Tue,  5 Nov 2024 16:12:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730823151;
+	bh=8/GSV8GjyuHHKyHHms4DjtgdqoFellDpxdUEvj3z83A=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=efs34y0VYNy9NICKxDgpHWgWNpydYg8Tg/7PuvZuy2HdJlAJM2Wjn9AMK+WfyNfd+
+	 7abvMe9SP08cQSEfsedYIjbzbOK2HzqelNIN1eKQJb9dubjDgUeEe44eKLRszA/SBn
+	 nb9DNpWDqli9kXtJhYGlrQ+wcOJcWmGk+D6NJdtQ/BluOlyFP/kZ0k6ogG2Z8VfR3e
+	 TipHX84n4i9fBO5KBUgA0squnAzLiwW8/u6O0HLF/ocdo7anV/39ecQXgA1ti0hB1Y
+	 AZeDZrlMW5tONNXXXOITCRG5wfOpNUwxWenVlcsrkD1ZymopQmBpIRzF50+TKr03+b
+	 CkD8zUyzmxghw==
+Date: Tue, 5 Nov 2024 10:12:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Tudor Ambarus <tudor.ambarus@linaro.org>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Michael Walle <mwalle@kernel.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
+	Carlos Bilbao <carlos.bilbao.osdev@gmail.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	"David E. Box" <david.e.box@linux.intel.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Matt Turner <mattst88@gmail.com>,
+	Frederic Barrat <fbarrat@linux.ibm.com>,
+	Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-cxl@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-hyperv@vger.kernel.org
+Subject: Re: [PATCH v2 02/10] sysfs: introduce callback
+ attribute_group::bin_size
+Message-ID: <20241105161230.GA1473411@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <b52ecf88-1786-4b6f-b8f3-86cccaa51917@samsung.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241103-sysfs-const-bin_attr-v2-2-71110628844c@weissschuh.net>
 
-On Tue, Nov 05, 2024 at 09:21:27PM +0530, Kanchan Joshi wrote:
-> Can add the documentation (if this version is palatable for Jens/Pavel), 
-> but this was discussed in previous iteration:
+On Sun, Nov 03, 2024 at 05:03:31PM +0000, Thomas Weißschuh wrote:
+> Several drivers need to dynamically calculate the size of an binary
+> attribute. Currently this is done by assigning attr->size from the
+> is_bin_visible() callback.
+
+s/an binary/a binary/
+
+> This has drawbacks:
+> * It is not documented.
+> * A single attribute can be instantiated multiple times, overwriting the
+>   shared size field.
+> * It prevents the structure to be moved to read-only memory.
 > 
-> 1. Each meta type may have different space requirement in SQE.
+> Introduce a new dedicated callback to calculate the size of the
+> attribute.
 > 
-> Only for PI, we need so much space that we can't fit that in first SQE. 
-> The SQE128 requirement is only for PI type.
-> Another different meta type may just fit into the first SQE. For that we 
-> don't have to mandate SQE128.
-
-Ok, I'm really confused now.  The way I understood Anuj was that this
-is NOT about block level metadata, but about other uses of the big SQE.
-
-Which version is right?  Or did I just completely misunderstand Anuj?
-
-> 2. If two meta types are known not to co-exist, they can be kept in the 
-> same place within SQE. Since each meta-type is a flag, we can check what 
-> combinations are valid within io_uring and throw the error in case of 
-> incompatibility.
-
-And this sounds like what you refer to is not actually block metadata
-as in this patchset or nvme, (or weirdly enough integrity in the block
-layer code).
-
-> 3. Previous version was relying on SQE128 flag. If user set the ring 
-> that way, it is assumed that PI information was sent.
-> This is more explicitly conveyed now - if user passed META_TYPE_PI flag, 
-> it has sent the PI. This comment in the code:
+> Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+> ---
+>  fs/sysfs/group.c      | 2 ++
+>  include/linux/sysfs.h | 8 ++++++++
+>  2 files changed, 10 insertions(+)
 > 
-> +       /* if sqe->meta_type is META_TYPE_PI, last 32 bytes are for PI */
-> +       union {
-> 
-> If this flag is not passed, parsing of second SQE is skipped, which is 
-> the current behavior as now also one can send regular (non pi) 
-> read/write on SQE128 ring.
+> diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
+> index 45b2e92941da1f49dcc71af3781317c61480c956..8b01a7eda5fb3239e138372417d01967c7a3f122 100644
+> --- a/fs/sysfs/group.c
+> +++ b/fs/sysfs/group.c
+> @@ -98,6 +98,8 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+>  				if (!mode)
+>  					continue;
+>  			}
+> +			if (grp->bin_size)
+> +				size = grp->bin_size(kobj, *bin_attr, i);
+>  
+>  			WARN(mode & ~(SYSFS_PREALLOC | 0664),
+>  			     "Attribute %s: Invalid permissions 0%o\n",
+> diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+> index c4e64dc112063f7cb89bf66059d0338716089e87..4746cccb95898b24df6f53de9421ea7649b5568f 100644
+> --- a/include/linux/sysfs.h
+> +++ b/include/linux/sysfs.h
+> @@ -87,6 +87,11 @@ do {							\
+>   *		SYSFS_GROUP_VISIBLE() when assigning this callback to
+>   *		specify separate _group_visible() and _attr_visible()
+>   *		handlers.
+> + * @bin_size:
+> + *		Optional: Function to return the size of a binary attribute
+> + *		of the group. Will be called repeatedly for each binary
+> + *		attribute in the group. Overwrites the size field embedded
+> + *		inside the attribute itself.
 
-And while I don't understand how this threads in with the previous
-statements, this makes sense.  If you only want to send a pointer (+len)
-to metadata you can use the normal 64-byte SQE.  If you want to send
-a PI tuple you need SEQ128.  Is that what the various above statements
-try to express?  If so the right API to me would be to have two flags:
+"Overwrites" suggests that we write over the size field in the single
+shared attribute.  But that's not what create_files() does.
 
- - a flag that a pointer to metadata is passed.  This can work with
-   a 64-bit SQE.
- - another flag that a PI tuple is passed.  This requires a 128-byte
-   and also the previous flag.
+create_files() instantiates sysfs files from the attribute template.
+Previously each instance used the size from the shared attribute.
+With this patch, if ->bin_size() exists, its return value is the size
+of this particular instance, over*riding* the default size from the
+shared attribute.
 
+This description follows the language of other function pointers,
+which was the right approach.  But I think the existing language would
+be more helpful if it called out the difference between the attribute
+itself (a potentially read-only singleton structure shared by all
+kobjects with this attribute) and the instantiation of that attribute
+for each kobject.
 
+For example,
+
+  @bin_size:
+	      Optional: Function to return the size of this kobject's
+	      instantiation of a binary attribute.  If present, it is
+	      called for each bin_attribute in the group and overrides
+	      the default size from the bin_attribute template.
+
+This is nice work, thanks for doing it!
+
+>   * @attrs:	Pointer to NULL terminated list of attributes.
+>   * @bin_attrs:	Pointer to NULL terminated list of binary attributes.
+>   *		Either attrs or bin_attrs or both must be provided.
+> @@ -97,6 +102,9 @@ struct attribute_group {
+>  					      struct attribute *, int);
+>  	umode_t			(*is_bin_visible)(struct kobject *,
+>  						  struct bin_attribute *, int);
+> +	size_t			(*bin_size)(struct kobject *,
+> +					    const struct bin_attribute *,
+> +					    int);
+>  	struct attribute	**attrs;
+>  	struct bin_attribute	**bin_attrs;
+>  };
 > 
+> -- 
+> 2.47.0
 > 
-> 
-> 
-> 
----end quoted text---
