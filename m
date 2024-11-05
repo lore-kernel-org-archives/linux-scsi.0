@@ -1,43 +1,35 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22C531D040B;
-	Tue,  5 Nov 2024 09:33:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C4A1367;
+	Tue,  5 Nov 2024 09:55:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730799236; cv=none; b=kkwY5GmijFABe9DDC7tab3NoVqLqo/T3+1xX3O/LZcXBt6qMUEdMdlsLn169uw4v9UmGWY86sdONWPdHH9qzUiNLcot382HlyHqVyd1oTa4tzGN3er4PT2tOZUqgh4mnq23LNcPIT12TNSZCX0wia8osuumWUEae5QDxR47sUKY=
+	t=1730800551; cv=none; b=cIFMD2qmluSjZwpaQZKyjxvBF1lN5kV4VV0hExeUHdjTx0PK5aH4E39QI7ErOMdtEoMZ98zfQJP2nZrGsmkUaovmKUR6ezQnZ50q90mnAU0fOYnWeAs7TP0BrIGgM5yXgJu+JpV0hkrECeSMScN23KIBKQ0TCTN8j9MqzoBaoTA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730799236; c=relaxed/simple;
-	bh=22W9nzMcL25HgQOsdfOmLga073kenQrCF15JNenZNe4=;
+	s=arc-20240116; t=1730800551; c=relaxed/simple;
+	bh=3ebZI/gEFKmyBuM4555MQ3afYl+L4sNL1v8qnaoY3Ms=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Tvt6omm+saKeKowgAmapcl3KbmbHRVo88p1OutES/uksNeK+zwY3pg+so92QN8FGYAawnhal36IGZunrwmSE3SR8+KgY/wOj9b+lbyz7EDryi9eZNYOpQw5gTJ17w5uDOEJ2B7+x7lqBQ1euSwXny9eHbkIKSFCEzOoOFtOcnjA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fx/sZxCs; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fx/sZxCs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1368CC4CECF;
-	Tue,  5 Nov 2024 09:33:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730799235;
-	bh=22W9nzMcL25HgQOsdfOmLga073kenQrCF15JNenZNe4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fx/sZxCsKqej2maE4ErIgyI8Ra7siyvtDWtTPyRQf2Tb3WSt6pTS79eCb8YC4vtLx
-	 NcvYTaHa9s+9zAguh0SVptoG5FwU0/BfItH2HVk92Ha5JA4BLjB42zjcsBjACy1JT8
-	 jv1TcGbIVWrDnJC2Uv3m3X+8sRmbp5oiRV5JEp/Iq90jPJS+TngE9Iz0E7MP93bHe5
-	 TPue25thADX9R6qZ8WYRCjgGC+yJ/481t4SVvpn6w/Ypjhule7tCwnOtTlAHuT/xrH
-	 FM+eVh9OdXf9jr3CBkUpyg0r2Blf0XMCrzkjYizVw24q2xOu24Z9OFiaEZF0puKj9K
-	 xblct6aryzlZQ==
-Date: Tue, 5 Nov 2024 10:33:51 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: yangxingui <yangxingui@huawei.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	Yu Kuai <yukuai1@huaweicloud.com>, linux-ide@vger.kernel.org,
-	Wenchao Hao <haowenchao22@gmail.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/2] ata: libata: Issue non-NCQ command via EH when NCQ
- commands in-flight
-Message-ID: <ZynmfyDA9R-lrW71@ryzen>
-References: <20241031140731.224589-4-cassel@kernel.org>
- <20241031140731.224589-6-cassel@kernel.org>
- <baceec65-ad60-f8e5-f417-0316c19a0234@huawei.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=uABPB53//0yptp+GLtEpM5012v+eWhBZkpVySdmYV+UTMe36u3t0wmW1wveLZj0X8+SawWH2FeTcUV7vWJ3wzJRfABqdGJWEjM17Wj/d71r+/YyAx8ZEEnQJXEko6EUJIFkIkX5CJeuREVxDrY+PNHTFoEyj+ejkHfN8oddJDac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 6D5D568C4E; Tue,  5 Nov 2024 10:55:38 +0100 (CET)
+Date: Tue, 5 Nov 2024 10:55:38 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
+	martin.petersen@oracle.com, asml.silence@gmail.com,
+	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
+	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
+	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v7 04/10] fs, iov_iter: define meta io descriptor
+Message-ID: <20241105095538.GA597@lst.de>
+References: <20241104140601.12239-1-anuj20.g@samsung.com> <CGME20241104141453epcas5p201e4aabfa7aa1f4af1cdf07228f8d4e7@epcas5p2.samsung.com> <20241104140601.12239-5-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,63 +38,19 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <baceec65-ad60-f8e5-f417-0316c19a0234@huawei.com>
+In-Reply-To: <20241104140601.12239-5-anuj20.g@samsung.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Nov 04, 2024 at 12:01:19PM +0800, yangxingui wrote:
-
-(snip)
-
-> After testing, the issues we encountered were resolved.
-
-That is good news :)
-
-
+On Mon, Nov 04, 2024 at 07:35:55PM +0530, Anuj Gupta wrote:
+> Add flags to describe checks for integrity meta buffer. Also, introduce
+> a  new 'uio_meta' structure that upper layer can use to pass the
+> meta/integrity information.
 > 
-> But the kernel prints the following log:
-> 
-> [246993.392832] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-> [246993.392839] sas: ata5: end_device-4:0: cmd error handler
-> [246993.392855] sas: ata5: end_device-4:0: dev error handler
-> [246993.392860] sas: ata6: end_device-4:3: dev error handler
-> [246993.392863] sas: ata7: end_device-4:4: dev error handler
-> [246993.606491] sas: --- Exit sas_scsi_recover_host: busy: 0 failed:
-> 1 tries: 1
-> 
-> And because the current EH will set the host to the recovery state,
-> when we test and execute the smartctl command, it will affect the
-> performance of all other disks under the same host.
-> 
-> Perhaps we can continue to improve the EH mechanism that Wenchao
-> tried to do before, and implement EH for a single disk. After a
-> single disk enters EH, it may not affect other disks under the same
-> host.
-> 
-> https://lore.kernel.org/linux-scsi/20230901094127.2010873-1-haowenchao2@huawei.com/
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
 
-That is bad news :(
+I'm pretty sure I reviewed this already last time, but here we go
+again in case I'm misremembering:
 
-Considering that this series will currently stall all other disks under
-the same host, this series is currently not a viable solution to the
-problem that you have reported (NCQ commands can starve out non-NCQ
-commands).
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-
-Looking at:
-https://lore.kernel.org/linux-scsi/20230901094127.2010873-1-haowenchao2@huawei.com/
-
-It appears that a requirement for Wenchao's series to land,
-is that Hannes's EH rework series:
-https://lore.kernel.org/linux-scsi/20231023092837.33786-1-hare@suse.de/
-lands first.
-
-
-Unless these two SCSI series get merged first, it's illogical to carry this
-increased complexity in libata.
-
-If these two SCSI series ever get merged, then the series in $subject would
-be a viable solution to the problem, and the extra complexity would be
-justified.
-
-
-Kind regards,
-Niklas
