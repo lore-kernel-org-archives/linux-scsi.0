@@ -1,147 +1,230 @@
-Received: from mail-ua1-f44.google.com (mail-ua1-f44.google.com [209.85.222.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128E14A0A
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 02:47:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35CF3155758
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 03:09:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730774848; cv=none; b=AgeW+5B50Xfp6ydLNiHICftEXj5qZbHgqOiAfCZ7qMMEYbypvYVOG7kCx8Kdte/Im0v/NHqHv8dhr0zxxhTHimAT8yqnkhh+KGmM6SLcA5PHptZFPmgo2z7y1yyON8KCTR3GoPzjb6qrOPAKh1N2ez++HKxGR/ZGMaz/zhfWAOg=
+	t=1730776199; cv=none; b=Gw9+cpvplXoN7Cr5fMDyyKJCkcQFvBHRN5yXwk5uE9+jHoHAX44HQM5Ot3Rtxf/seCZHnM52UTr5ZvAgKKFDDXg9HpawnMS+yp6e1Eig8bSopQ5VVYKI9Y3nrVOr7SmNUkqOZvsN6N049x+cH425b//ZfPsZwJ2UAylr5eZFxes=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730774848; c=relaxed/simple;
-	bh=1yNgrwYPboQhRzRqDTN2FFObV+gJjTHmkMJ/NntUSAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YGmbGYaAygRzbhnMoVZloxLyX/YBErVLGRvFHEnxVIvd/rcHk+rPEdmrdhB00q8unWMeZrCUPU8e9RY+ijgu3BAe7uJ2+PFxMJjzOIxlm9+um6Yh0WuOUm8N8Ug0QjNpl78rHASE/hzO9Nb9mKDzIZTR/VNP/ZM7K9C6Pder7FA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu; spf=fail smtp.mailfrom=g.harvard.edu; dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b=PJ9nR4jF; arc=none smtp.client-ip=209.85.222.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	s=arc-20240116; t=1730776199; c=relaxed/simple;
+	bh=iJiqEI4jeiISFUYA5z9mrx3IXzLlVPZzv4h1oYlPJgI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SOvu9kqClGurNN/mZ+URWXrgpNdHxVQsAfMHe/UNIRLeWSSy5WkBJHNsLxNB8xbtMcvtiL1ASqvJUEeumvrhL8XqAx/WXmdlqsZfwBOUyRCkdfWpon6u0DyAJoPFlYhptTryzBu1SQsUZIlUiV3haViwJ1L5YsUXl8Ag7YYlbEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=itvJaTGM; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b="PJ9nR4jF"
-Received: by mail-ua1-f44.google.com with SMTP id a1e0cc1a2514c-84fc21ac668so1337247241.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 18:47:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1730774845; x=1731379645; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MTlg3WVtPOaNEtPAughUpTGXurHUbvsup5xya8HjuJ0=;
-        b=PJ9nR4jFxeZCAjEqCNf9X14hv/IO2iPPbnXuwTaIfi5YF8l7FgLO5TFnMGvj5z7Ew+
-         3vhQwrPX4I3u3nMtXLjzeaQ8jU8akdT/jXR5ZbnTIeL7SAK7VFHKIvNlHOk3I13P+0ky
-         OTvcMUNrgavEYGc/izAUr9lLmEfcBYeJC2nq3eU81/wtsstSJtbHU5EDdtL5tJSJ66u/
-         nesaCmGFJ6U/jJoLvcIV8EWfcFq/x+xlr7ClzQT89uysFb3PbvoHlA2FBDQHXb6OBkbR
-         mrvrqGph4177AydOx/JBm8Z29gYZK5pCwRs6Pnxkxv/rpHr8GODko39x2xUFHadndM27
-         d8BA==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="itvJaTGM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1730776196;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e798jqlARNKREu5f9NYLA+kZVVjz8QYT2h6TT0fZ7qY=;
+	b=itvJaTGMvq3pnNwJwXHX235F7FA/TuQiXyXlSYWmuaoHSJVjSrlQnOhXNma497nf6/IavG
+	eqYzJU2UH+BY6fAMGkIVsc1wGQb4kizJBQCSx9DmjuJY5DwS8COUMEMUKPSuI5UsKx9xGV
+	iy+4YvLROVopYnNDFOCFlCCThCLmmzs=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-82-rZhOPTAMNciT3eNrf0iwQA-1; Mon, 04 Nov 2024 22:09:55 -0500
+X-MC-Unique: rZhOPTAMNciT3eNrf0iwQA-1
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-7ea0069a8b0so4480610a12.0
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2024 19:09:55 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730774845; x=1731379645;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MTlg3WVtPOaNEtPAughUpTGXurHUbvsup5xya8HjuJ0=;
-        b=XLXUwYMT6duLYfDp+Nm9d6Ur0/NPmRtNzXVgnjbVectc+1kRh76vjGtYOF0efpuo6K
-         QZ/m6d0tYi4PlcD60auaMIjHBOcUjhb8KEMbR5hO+ayqtb73zwTh4xvZG2n2W0e98ylg
-         3fqPhubJIbUqWJx8Zzv8ioOsMhiMK/wN+cV3heY/7yBSfmzyK+FOxiBU2RvD4dY1R1DC
-         7Gnw/u5FTyeFI+jO/GnOqxcFFhazmAjzmGJigLwin92df1Ha/P/r5A+4KzBcddTSKoh1
-         maba5LRdnm1i5LFjRvQJj3IrF5KsJSE8kLixV+Zxu8C7xnKAcEVuHc+GT+PACehLfj0u
-         Fscg==
-X-Forwarded-Encrypted: i=1; AJvYcCVolYS3symER6EUgXX2/g41Gn2RxgVdD3OP9Erc81lYIP5UXrK++bgPanH9bGj/gjH6dIPwVRewb+/A@vger.kernel.org
-X-Gm-Message-State: AOJu0YzEoVF506wFdnj321OhaC4p++OIpTekccptYm2dC5dXENwk6cKV
-	g8Aw1nxS0812/hki470BhqdHvs92vOqd/BFg6xkem110qqjpQAQEDH7Pd0mndsVsgTisyUDrh14
-	=
-X-Google-Smtp-Source: AGHT+IEyb/wDyPUaQWdbUNiEg1rmeUbOrh4sZSC2BjpsaaGBYYt0e2XBd8iKJtXS1BeLQBr81PKvtQ==
-X-Received: by 2002:a05:6102:6cc:b0:4a5:6f41:211e with SMTP id ada2fe7eead31-4a8cfd598demr29966954137.24.1730774844864;
-        Mon, 04 Nov 2024 18:47:24 -0800 (PST)
-Received: from rowland.harvard.edu ([2601:19b:681:fd10::dc3c])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6d35415a653sm54998556d6.96.2024.11.04.18.47.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Nov 2024 18:47:23 -0800 (PST)
-Date: Mon, 4 Nov 2024 21:47:20 -0500
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi: sg: Enable runtime power management
-Message-ID: <43ee24de-8d54-4c41-85b3-b3961366b52e@rowland.harvard.edu>
-References: <20241030220310.1373569-1-bvanassche@acm.org>
- <40e8ff4e-9ffc-4658-ae1f-69ceee5593cb@acm.org>
+        d=1e100.net; s=20230601; t=1730776194; x=1731380994;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=e798jqlARNKREu5f9NYLA+kZVVjz8QYT2h6TT0fZ7qY=;
+        b=xB5BPysyyfJ8tdqIcfeADyww5FHAjJTj9s7NLS+aLMKP/+FY/rDQtAstNvyt8XXU/e
+         WDkMxP94kD/BzzGDwEHAzq/9YFvKy4BhWVYLXDq9rd2RPtnzCsPmzXa8aykfV66E87Kt
+         X06z/AF4/VdrlZ4qt1LEaqU+Nxb7P/IGEajtym3JGuG050FTtdYPAxJ/x+pH3RsJE++6
+         OJoldhYd7WjmadVP+ia4Rl5yBFpedTXpkZcy+3d9wZs60q37iNe7jKghTJWDenEoGBFH
+         Wbq3WzHP0o5srgpvvnopM+KCEKN86xUDJoWxLTkAKt/LeqrRbgU0Ge+wyJjuHUcsU2DR
+         U3YQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUcHG9Mg220gXIauo3a4N3MEhZNDus+2Cu85abM9R+gPCybikNYDCzkJKA51tULYzBM0dM8N8NAn00V@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLJVl1iemWGhCERIWNF7uimHK5Qxjm8ShzeZ90leyGTTeAhOdA
+	Q62O+6DVDE2hpzuVweCf4V1rrb9GInl1suslu4gQFTVarl80mGqktx0c+3rGECVYiE+WT5HeWPJ
+	05miyLgqngbHN4yoH66gksSn/YygKNIYc8VnJ/xekz4r37w7fM1rXpFTygoUXGHu+5Yrva7PlVF
+	RP2PIeHfzDDvkNcdcPB08XQ+3221P8k11QhA==
+X-Received: by 2002:a17:90a:bc87:b0:2d3:da6d:8330 with SMTP id 98e67ed59e1d1-2e92ce32e36mr24812056a91.4.1730776193974;
+        Mon, 04 Nov 2024 19:09:53 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGYJVUVsmrlOV42/z3JLwA/lW5WLQWpnOFROwOF4DJyTXxU3SnSQkWNTS+6YVqbPJsVSZBiin0tuQPsU4ebyy8=
+X-Received: by 2002:a17:90a:bc87:b0:2d3:da6d:8330 with SMTP id
+ 98e67ed59e1d1-2e92ce32e36mr24812003a91.4.1730776193416; Mon, 04 Nov 2024
+ 19:09:53 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <40e8ff4e-9ffc-4658-ae1f-69ceee5593cb@acm.org>
+References: <20241031030847.3253873-1-qiang4.zhang@linux.intel.com>
+ <20241101015101.98111-1-qiang4.zhang@linux.intel.com> <CACGkMEtvrBRd8BaeUiR6bm1xVX4KUGa83s03tPWPHB2U0mYfLA@mail.gmail.com>
+ <ZyRlC-5V_NTKgzXh@dev-qz>
+In-Reply-To: <ZyRlC-5V_NTKgzXh@dev-qz>
+From: Jason Wang <jasowang@redhat.com>
+Date: Tue, 5 Nov 2024 11:09:41 +0800
+Message-ID: <CACGkMEvc+eA7KdJJAtjNPwqve8CwLZYzAmMhf0RWwQ-GwonaUw@mail.gmail.com>
+Subject: Re: [PATCH v2] virtio: only reset device and restore status if needed
+ in device resume
+To: Qiang Zhang <qiang4.zhang@linux.intel.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+	Stefan Hajnoczi <stefanha@redhat.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Jens Axboe <axboe@kernel.dk>, 
+	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
+	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gonglei <arei.gonglei@huawei.com>, 
+	"David S. Miller" <davem@davemloft.net>, Viresh Kumar <viresh.kumar@linaro.org>, 
+	"Chen, Jian Jun" <jian.jun.chen@intel.com>, Andi Shyti <andi.shyti@kernel.org>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, David Hildenbrand <david@redhat.com>, 
+	Gerd Hoffmann <kraxel@redhat.com>, Anton Yakovlev <anton.yakovlev@opensynergy.com>, 
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Qiang Zhang <qiang4.zhang@intel.com>, 
+	virtualization@lists.linux.dev, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-sound@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 04, 2024 at 09:25:17AM -0800, Bart Van Assche wrote:
-> On 10/30/24 3:03 PM, Bart Van Assche wrote:
-> > In 2010, runtime power management support was implemented in the SCSI core.
-> > The description of patch "[SCSI] implement runtime Power Management"
-> > mentions that the sg driver is skipped but not why. This patch enables
-> > runtime power management even if an instance of the sg driver is held open.
-> > Enabling runtime PM for the sg driver is safe because all interactions of
-> > the sg driver with the SCSI device pass through the block layer
-> > (blk_execute_rq_nowait()) and the block layer already supports runtime PM.
-> > 
-> > Cc: Alan Stern <stern@rowland.harvard.edu>
-> > Cc: Douglas Gilbert <dgilbert@interlog.com>
-> > Fixes: bc4f24014de5 ("[SCSI] implement runtime Power Management")
-> > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> > ---
-> >   drivers/scsi/sg.c | 9 +--------
-> >   1 file changed, 1 insertion(+), 8 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> > index f86be197fedd..84334ab39c81 100644
-> > --- a/drivers/scsi/sg.c
-> > +++ b/drivers/scsi/sg.c
-> > @@ -307,10 +307,6 @@ sg_open(struct inode *inode, struct file *filp)
-> >   	if (retval)
-> >   		goto sg_put;
-> > -	retval = scsi_autopm_get_device(device);
-> > -	if (retval)
-> > -		goto sdp_put;
-> > -
-> >   	/* scsi_block_when_processing_errors() may block so bypass
-> >   	 * check if O_NONBLOCK. Permits SCSI commands to be issued
-> >   	 * during error recovery. Tread carefully. */
-> > @@ -318,7 +314,7 @@ sg_open(struct inode *inode, struct file *filp)
-> >   	      scsi_block_when_processing_errors(device))) {
-> >   		retval = -ENXIO;
-> >   		/* we are in error recovery for this device */
-> > -		goto error_out;
-> > +		goto sdp_put;
-> >   	}
-> >   	mutex_lock(&sdp->open_rel_lock);
-> > @@ -371,8 +367,6 @@ sg_open(struct inode *inode, struct file *filp)
-> >   	}
-> >   error_mutex_locked:
-> >   	mutex_unlock(&sdp->open_rel_lock);
-> > -error_out:
-> > -	scsi_autopm_put_device(device);
-> >   sdp_put:
-> >   	kref_put(&sdp->d_ref, sg_device_destroy);
-> >   	scsi_device_put(device);
-> > @@ -392,7 +386,6 @@ sg_release(struct inode *inode, struct file *filp)
-> >   	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
-> >   	mutex_lock(&sdp->open_rel_lock);
-> > -	scsi_autopm_put_device(sdp->device);
-> >   	kref_put(&sfp->f_ref, sg_remove_sfp);
-> >   	sdp->open_cnt--;
-> 
-> (replying to my own email)
-> 
-> Can anyone please help with reviewing this patch? This patch is
-> important for Android. The Android security software uses the sg driver
-> to communicate with the UFS RPMB so this patch is required to enable
-> run-time power management in Android devices with UFS storage. See also
-> https://android.googlesource.com/platform/system/core/+/refs/heads/main/trusty/storage/proxy/rpmb.c
+On Fri, Nov 1, 2024 at 1:23=E2=80=AFPM Qiang Zhang <qiang4.zhang@linux.inte=
+l.com> wrote:
+>
+> On Fri, Nov 01, 2024 at 10:11:11AM +0800, Jason Wang wrote:
+> > On Fri, Nov 1, 2024 at 9:54=E2=80=AFAM <qiang4.zhang@linux.intel.com> w=
+rote:
+> > >
+> > > From: Qiang Zhang <qiang4.zhang@intel.com>
+> > >
+> > > Virtio core unconditionally reset and restore status for all virtio
+> > > devices before calling restore method. This breaks some virtio driver=
+s
+> > > which don't need to do anything in suspend and resume because they
+> > > just want to keep device state retained.
+> >
+> > The challenge is how can driver know device doesn't need rest.
+>
+> Hi,
+>
+> Per my understanding to PM, in the suspend flow, device drivers need to
+> 1. First manage/stop accesses from upper level software and
+> 2. Store the volatile context into in-memory data structures.
+> 3. Put devices into some low power (suspended) state.
+> The resume process does the reverse.
+> If a device context won't loose after entering some low power state
+> (optional), it's OK to skip step 2.
+>
+> For virtio devices, spec doesn't define whether their states will lost
+> after platform entering suspended state.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+This is exactly what suspend patch tries to define.
 
-The patch itself is innocuous.  However, it does open up the possibility 
-of devices unexpectedly going into low-power mode between SG commands, 
-if those commands are spaced sufficiently far apart (more than a few 
-seconds).  Presumably the system default is to disallow runtime PM for 
-SCSI devices, so this shouldn't be a big issue.  But it might cause 
-trouble in a few cases.
+> So to work with different
+> hypervisors, virtio drivers typically trigger a reset in suspend/resume
+> flow. This works fine for virtio devices if following conditions are met:
+> - Device state can be totally recoverable.
+> - There isn't any working behaviour expected in suspended state, i.e. the
+>   suspended state should be sub-state of reset.
+> However, the first point may be hard to implement from driver side for so=
+me
+> devices. The second point may be unacceptable for some kind of devices.
+>
+> For your question, for devices whose suspended state is alike reset state=
+,
+> the hypervisor have the flexibility to retain its state or not, kernel
+> driver can unconditionally reset it with proper re-initialization to
+> accomplish better compatibility. For others, hypervisor *must* retain
+> device state and driver just keeps using it.
 
-Alan Stern
+Right, so my question is how did the driver know the behaviour of a
+device? We usually do that via a feature bit.
+
+Note that the thing that matters here is the migration compatibility.
+
+>
+> >
+> > For example, PCI has no_soft_reset which has been done in the commit
+> > "virtio: Add support for no-reset virtio PCI PM".
+> >
+> > And there's a ongoing long discussion of adding suspend support in the
+> > virtio spec, then driver know it's safe to suspend/resume without
+> > reset.
+>
+> That's great! Hopefully it can fill the gap.
+> Currently, I think we can safely move the reset to drivers' freeze method=
+s,
+> virtio core has no reason to take it as a common action required by all
+> devices. And the reset operation can be optional skipped if driver have
+> hints from device that it can retain state.
+
+The problem here is whether the device can be resumed without "soft
+reset" seems a general feature which could be either the knowledge of
+
+1) virtio core (a feature bit or not)
+
+or
+
+2) transport layer (like PCI)
+
+>
+> >
+> > >
+> > > Virtio GPIO is a typical example. GPIO states should be kept unchange=
+d
+> > > after suspend and resume (e.g. output pins keep driving the output) a=
+nd
+> > > Virtio GPIO driver does nothing in freeze and restore methods. But th=
+e
+> > > reset operation in virtio_device_restore breaks this.
+> >
+> > Is this mandated by GPIO or virtio spec? If yes, let's quote the revela=
+nt part.
+>
+> No. But in actual hardware design (e.g. Intel PCH GPIO), or from the
+> requirement perspective, GPIO pin state can be (should support) retained
+> in suspended state.
+> If Virtio GPIO is used to let VM operate such physical GPIO chip indirect=
+ly,
+> it can't be reset in suspend and resume. Meanwhile the hypervisor will
+> retain pin states after suspension.
+>
+> >
+> > >
+> > > Since some devices need reset in suspend and resume while some needn'=
+t,
+> > > create a new helper function for the original reset and status restor=
+e
+> > > logic so that virtio drivers can invoke it in their restore method
+> > > if necessary.
+> >
+> > How are those drivers classified?
+>
+> I think this depends whether hypervisor will keep devices state in platfo=
+rm
+> suspend process.
+
+So the problem is that the actual implementation (hypervisor, physical
+device or mediation) is transparent to the driver. Driver needs a
+general way to know whether it's safe (or not) to reset during the
+suspend/resume.
+
+> I think hypervisor should because suspend and reset are
+> conceptually two different things.
+
+Probably, but rest is and doing software state load/save is common
+practice for devices that will lose their state during PM.
+
+Thanks
+
+>
+>
+> Thanks
+> Qiang
+>
+
