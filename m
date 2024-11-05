@@ -1,77 +1,85 @@
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F18701E2610
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 18:16:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [195.130.132.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5FC1E8825
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 18:36:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.132.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730830576; cv=none; b=R9Cv/EncLbaHXB6oKf67I6/QEcLWqI/5k+erjUFHIezwKOvb8hxoovcWIcMWHFx1myxoCvnTchubLuQWAYmIqHTV03OP2YeyKKIySGZLZ8e8w6pZDsxxMDXGz20WIiK5NO2/lQ5/lzsxWeDlxaxf6TjaSNCs+GhKUqIsM8Pqt8A=
+	t=1730831806; cv=none; b=QoZNJIL1s67xRFTz19b6o4vcqwJkoNXCXAdQLcWuBAPlwTC3Y7APV7+URsCbTGR/EQcU3e5cHOoI0eGdpSQyIeOBVjle0fmkOmk8I/jmbBsc1qX12CHgyvGvl4NQOlk4SKwifB5vKnU5944/CM3R1QUqDtRX9HP8OqEMyb37TDE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730830576; c=relaxed/simple;
-	bh=ImvPmtjk0Rj0OePcMNaSSiVMRPI2T2iFjjkLBqRCJ/k=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=B06FChmekyJHJSJUa3ckH7DyzTNrtLn5md37H4tg/wW1fQsjYTIq307x/DdAe2hzJMpv+1sfF7dJI7TUdqQCTNW1rMLjiqLO8hg361doWZa4iIUdvXy73UHZnYQ08yu1u2uGx39fmL5MGTUjMPY/ifKJoCtbH6DdmqCi2qRVcpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 067AE92009C; Tue,  5 Nov 2024 19:16:12 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 038B292009B;
-	Tue,  5 Nov 2024 18:16:11 +0000 (GMT)
-Date: Tue, 5 Nov 2024 18:16:11 +0000 (GMT)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-    Magnus Lindholm <linmag7@gmail.com>
-cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-In-Reply-To: <20241105093416.773fb59e@samweis>
-Message-ID: <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com> <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
- <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com> <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com> <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
- <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com> <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org> <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com> <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk>
- <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com> <20241105093416.773fb59e@samweis>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	s=arc-20240116; t=1730831806; c=relaxed/simple;
+	bh=SNGgsZjvncAALUZ3SwuYQPe6vIKIexPik4mF1WjbGtk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kMH8OFcV4pU/Fsr+ToDRUrlS/ZO7F5fKpYJbbqZ93XkPeFz2oc5RmnJimJHA2dUT75NUZEM8P9uRC/wEP36PqlUxWo7js8qlC+zuqwqYOzYYgj9Mo6ULkfe0DjW9c8mO2MYukDVbNChn25rn+xEa+ybVJh80v5fssKC/KwXZLKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.132.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed80:aed7:437f:20a9:d72d])
+	by xavier.telenet-ops.be with cmsmtp
+	id Z6cb2D00f3NwldE016cbVi; Tue, 05 Nov 2024 19:36:36 +0100
+Received: from rox.of.borg ([192.168.97.57])
+	by ramsan.of.borg with esmtp (Exim 4.95)
+	(envelope-from <geert@linux-m68k.org>)
+	id 1t8OPX-006Jro-Ui;
+	Tue, 05 Nov 2024 19:36:35 +0100
+Received: from geert by rox.of.borg with local (Exim 4.95)
+	(envelope-from <geert@linux-m68k.org>)
+	id 1t8OPr-005bEX-Km;
+	Tue, 05 Nov 2024 19:36:35 +0100
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Finn Thain <fthain@linux-m68k.org>,
+	Michael Schmitz <schmitzmic@gmail.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sam Creasey <sammy@sammy.net>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	linux-m68k@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] scsi: sun3: Mark driver struct with __refdata to prevent section mismatch
+Date: Tue,  5 Nov 2024 19:36:31 +0100
+Message-Id: <b2c56fa3556505befe9b4cb9a830d9e2a962e72c.1730831769.git.geert@linux-m68k.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 
-On Tue, 5 Nov 2024, Thomas Bogendoerfer wrote:
+As described in the added code comment, a reference to .exit.text is ok
+for drivers registered via module_platform_driver_probe().  Make this
+explicit to prevent the following section mismatch warnings
 
-> > > force 32-bit DMA addressing for pre-ISP1040C hardware and let the
-> > > system determine whether 64-bit DMA addressing is available for
-> > > ISP1040C and later devices?  
-> > 
-> > Yep, that is the correct approach.
-> > 
-> > Thomas: Can you confirm that your SGI hardware has a C rev 1040 ISP?
-> 
-> they are ISP1040B, so IMHO the revision is not the point.
+    WARNING: modpost: drivers/scsi/sun3_scsi: section mismatch in reference: sun3_scsi_driver+0x4 (section: .data) -> sun3_scsi_remove (section: .exit.text)
+    WARNING: modpost: drivers/scsi/sun3_scsi_vme: section mismatch in reference: sun3_scsi_driver+0x4 (section: .data) -> sun3_scsi_remove (section: .exit.text)
 
- Yet there appears to be a difference somewhere between the two supposedly 
-identical chips that makes one work with 64-bit addressing while the other 
-does not.  Is it possible that the ISP1040B used in SGI systems has been 
-modified on request and not relabeled before QLogic chose to put it on the 
-general market?  I can see the spread is very narrow between the dates of 
-the ISP1040B and ISP1040C datasheets available: Feb 5th vs Jul 29th, 1997.
+that trigger on a Sun 3 allmodconfig build.
 
- Thomas, Magnus, can you please check what hardware revision is actually 
-reported by your devices?  Also a dump of the PCI configuration space 
-would be very useful, or at the very least the value of the PCI Revision 
-ID register, which is independent from the hardware revision reported via 
-the device I/O registers.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/scsi/sun3_scsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
- The firmware is loaded by us, so I presume it's the same version on both 
-systems (I can see 7.65.06 in Debian, the same as in the report upthread), 
-and that only leaves any variable to the PCI bus logic onchip.
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index fffc0fa525940cee..1bd1c3f87ff7dd42 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -656,7 +656,13 @@ static void __exit sun3_scsi_remove(struct platform_device *pdev)
+ 	iounmap(ioaddr);
+ }
+ 
+-static struct platform_driver sun3_scsi_driver = {
++/*
++ * sun3_scsi_remove() lives in .exit.text. For drivers registered via
++ * module_platform_driver_probe() this is ok because they cannot get unbound at
++ * runtime. So mark the driver struct with __refdata to prevent modpost
++ * triggering a section mismatch warning.
++ */
++static struct platform_driver sun3_scsi_driver __refdata = {
+ 	.remove_new = __exit_p(sun3_scsi_remove),
+ 	.driver = {
+ 		.name	= DRV_MODULE_NAME,
+-- 
+2.34.1
 
- If all else fails, I would still recommend to disable by default 32-bit 
-DMA addressing for pre-ISP1040C hardware, as that matches documentation, 
-and then have a platform quirk to enable it specifically for ISP1040B for 
-the relevant SGI configurations.  But I do hope there is a better approach 
-possible.
-
-  Maciej
