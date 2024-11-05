@@ -1,80 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0115C1D04A9
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 09:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44FAD186284;
+	Tue,  5 Nov 2024 09:22:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730797822; cv=none; b=YdcNdLeubqfuryaLciMDQgUKYaJeH+LfaDicJJz0Zz8ZgYmU5s22rXb14rJhfqkMvhQvlX8wMoX+iVvy76WOhrGMnJwReZxPxxP6XhsqHKpNxW2c+FJPRd2qSZNYE/93vkbnsG90pMX4+8ZO6rSMtVrL814CESjtoHGtjV8fgBc=
+	t=1730798579; cv=none; b=Uqbq0wQZ4Gyb/In50hJN6A0QdKLyZoFL5zMdrkBZkGFYuVATQMeeG2/cXuD8EBYUavp0TnZ3v7cs6ndBhvE8IjESHHsOI3YVeRMuQFV0Dd486J4pM/uPDm2UbPaizsSUCWAqP5tmTnHEZ23bRsTO8Y01sdqJ4ffGyU3dokDKmPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730797822; c=relaxed/simple;
-	bh=rRX7gRfmRH50GikGgGMdM8fD40I8pVDpalHORU68WlI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nZAfWQP/KPT5AhWbzHjiIZuXXSsR+fkQcTLfVfRJY1/IwkwPc+oqfrFLlNvm1Oo+3bjXEjPj+lvQKkw1wwCoMMAVWhEUh+Hen6L/Zd6nBudtTclmcJUDFGQTMmbz9JqNzPK7edV/OhClp59ZRdB/eEbxEA81rjewV6/3aVBWq6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DrAP4Kyc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730798579; c=relaxed/simple;
+	bh=0DJAaAp/sJ4GJO6GXcKD8xMWKOg86nk2Np9hVptfiZ0=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=mZ5fTc/Tj9RU8ttW4FYi8TnbQ5YSJQPjRiuFTuCIg3kiyxaBBfJFafFcXgSfXc2sGXHzV2ao4ER1D5ZQL+GAK/rZslg/eZLsj7hseYWrsqbpcGjLkC04vaN+Dk5CjWd0LYtgC7tX4IdOzz/bsgqNg48dl9xzswBCPvtRC9Mlzg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=abc102v8; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DrAP4Kyc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DEAEC4CECF;
-	Tue,  5 Nov 2024 09:10:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730797821;
-	bh=rRX7gRfmRH50GikGgGMdM8fD40I8pVDpalHORU68WlI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DrAP4Kyc67XXn3kzrJerD4RPG/kswNvRGzRsoXUssGIDaC+PrhLiUAnd8//cyOpF1
-	 JMgmng7UalwQyd3u8Kd+5zixD+OXzdLEBzVxXVe0Sh3+zxDDJrTPreZ3cIDl31fB71
-	 dS+4vKK4DApEWKQY97NCUhSWzlrDniSEmrxgr3bwObXn6d/rmXzBF7KqwOuzzrHuJA
-	 3ZTdTI3EMi8wqd7gwiebHeQp4rWc67+bmEX3nR1/QIsgjzP6m0HwN2z0f4aBs0hESl
-	 IbZN6ZeCtGRwx4IySwNmqflEi7hWiBnGIOuyfQhW5i1q4xUoa71f3rLkyv9JMK7WWQ
-	 FZ+nu7robnp7w==
-Date: Tue, 5 Nov 2024 10:10:17 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>,
-	James Bottomley <james.bottomley@hansenpartnership.com>,
-	linux-scsi@vger.kernel.org, Wenchao Hao <haowenchao2@huawei.com>,
-	Xingui Yang <yangxingui@huawei.com>
-Subject: Re: [PATCHv8 00/10] scsi: EH rework, main part
-Message-ID: <Zyng-RIx0XkeFLr-@ryzen>
-References: <20231023092837.33786-1-hare@suse.de>
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="abc102v8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+	s=201909; t=1730798571;
+	bh=xG1HQhXTKL81M9467zhA4KonLLpV3fuL2upt5lJSShY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=abc102v8sCEc4rZgo2gcKLbXmwgvq4GWFHOVFO2bCqlfFdeKKcRV4prB0lNuFM+1J
+	 +nLMWJEv9C6S0GLYT8NTq4cofEwz+d0GOszV9URcE2cm6ZF5AylDoN/Z59rll0g/Oq
+	 7WsqGbok2W4NpvuKkzkrDPAQmPNPSM6PFvziT+2hwmqDnVmGWCUcte8UycWZO0fqBM
+	 8/j6kLdVKhMd+2mHPE+WS4RXiOWy1ZCSKS371LN4mAvJuEGSKgRrakUz5kUENSDU9q
+	 PGCTVxGOMH7TPanX3MVM/rMyBsqI05mZE6yiJdVSS0qPm3mWfbV8Bv8MQn/EFJHce9
+	 0DvIPNJTjgI8A==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4XjNCv5y3Wz4wcl;
+	Tue,  5 Nov 2024 20:22:51 +1100 (AEDT)
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-crypto@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-f2fs-devel@lists.sourceforge.net, linux-mips@vger.kernel.org,
+ linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ loongarch@lists.linux.dev, sparclinux@vger.kernel.org, x86@kernel.org, Ard
+ Biesheuvel <ardb@kernel.org>
+Subject: Re: [PATCH v3 08/18] powerpc/crc32: expose CRC32 functions through lib
+In-Reply-To: <20241103223154.136127-9-ebiggers@kernel.org>
+References: <20241103223154.136127-1-ebiggers@kernel.org>
+ <20241103223154.136127-9-ebiggers@kernel.org>
+Date: Tue, 05 Nov 2024 20:22:53 +1100
+Message-ID: <87zfme826q.fsf@mpe.ellerman.id.au>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231023092837.33786-1-hare@suse.de>
+Content-Type: text/plain
 
-Hello Hannes,
+Eric Biggers <ebiggers@kernel.org> writes:
+> From: Eric Biggers <ebiggers@google.com>
+>
+> Move the powerpc CRC32C assembly code into the lib directory and wire it
+> up to the library interface.  This allows it to be used without going
+> through the crypto API.  It remains usable via the crypto API too via
+> the shash algorithms that use the library interface.  Thus all the
+> arch-specific "shash" code becomes unnecessary and is removed.
+>
+> Note: to see the diff from arch/powerpc/crypto/crc32c-vpmsum_glue.c to
+> arch/powerpc/lib/crc32-glue.c, view this commit with 'git show -M10'.
+>
+> Reviewed-by: Ard Biesheuvel <ardb@kernel.org>
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  arch/powerpc/Kconfig                          |   1 +
+>  arch/powerpc/configs/powernv_defconfig        |   1 -
+>  arch/powerpc/configs/ppc64_defconfig          |   1 -
+>  arch/powerpc/crypto/Kconfig                   |  15 +-
+>  arch/powerpc/crypto/Makefile                  |   2 -
+>  arch/powerpc/crypto/crc32c-vpmsum_glue.c      | 173 ------------------
+>  arch/powerpc/crypto/crct10dif-vpmsum_asm.S    |   2 +-
+>  arch/powerpc/lib/Makefile                     |   3 +
+>  arch/powerpc/lib/crc32-glue.c                 |  92 ++++++++++
+>  .../{crypto => lib}/crc32-vpmsum_core.S       |   0
+>  .../{crypto => lib}/crc32c-vpmsum_asm.S       |   0
+>  11 files changed, 98 insertions(+), 192 deletions(-)
+>  delete mode 100644 arch/powerpc/crypto/crc32c-vpmsum_glue.c
+>  create mode 100644 arch/powerpc/lib/crc32-glue.c
+>  rename arch/powerpc/{crypto => lib}/crc32-vpmsum_core.S (100%)
+>  rename arch/powerpc/{crypto => lib}/crc32c-vpmsum_asm.S (100%)
 
-On Mon, Oct 23, 2023 at 11:28:27AM +0200, Hannes Reinecke wrote:
-> Hi all,
-> 
-> (taking up an old thread:)
-> here's now the main part of my EH rework.
-> It modifies the reset callbacks for SCSI EH such that
-> each callback (eh_host_reset_handler, eh_bus_reset_handler,
-> eh_target_reset_handler, eh_device_reset_handler) only
-> references the actual entity it needs to work on
-> (ie 'Scsi_Host', (scsi bus), 'scsi_target', 'scsi_device'),
-> and the 'struct scsi_cmnd' is dropped from the argument list.
-> This simplifies the handler themselves as they don't need to
-> exclude some 'magic' command, and we don't need to allocate
-> a mock 'struct scsi_cmnd' when issuing a reset via SCSI ioctl.
-> 
-> The entire patchset can be found at:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
-> branch eh-rework.v8
-> 
-> As usual, comments and reviews are welcome.
+Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
 
-This seems to be the latest version of your EH rework.
+...
+> deleted file mode 100644
+> index 63760b7dbb76..000000000000
+> --- a/arch/powerpc/crypto/crc32c-vpmsum_glue.c
+> +++ /dev/null
+> @@ -1,173 +0,0 @@
+> -// SPDX-License-Identifier: GPL-2.0-only
+> -
+...
+> -static int __init crc32c_vpmsum_mod_init(void)
+> -{
+> -	if (!cpu_has_feature(CPU_FTR_ARCH_207S))
+> -		return -ENODEV;
+> -
+> -	return crypto_register_shash(&alg);
+> -}
+> -
+> -static void __exit crc32c_vpmsum_mod_fini(void)
+> -{
+> -	crypto_unregister_shash(&alg);
+> -}
+> -
+> -module_cpu_feature_match(PPC_MODULE_FEATURE_VEC_CRYPTO, crc32c_vpmsum_mod_init);
+> -module_exit(crc32c_vpmsum_mod_fini);
+> -
+> -MODULE_AUTHOR("Anton Blanchard <anton@samba.org>");
+> -MODULE_DESCRIPTION("CRC32C using vector polynomial multiply-sum instructions");
+> -MODULE_LICENSE("GPL");
+> -MODULE_ALIAS_CRYPTO("crc32c");
+> -MODULE_ALIAS_CRYPTO("crc32c-vpmsum");
+...
+> new file mode 100644
+> index 000000000000..e9730f028afb
+> --- /dev/null
+> +++ b/arch/powerpc/lib/crc32-glue.c
+> @@ -0,0 +1,92 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+...
+> +
+> +static int __init crc32_powerpc_init(void)
+> +{
+> +	if (cpu_has_feature(CPU_FTR_ARCH_207S) &&
+> +	    (cur_cpu_spec->cpu_user_features2 & PPC_FEATURE2_VEC_CRYPTO))
+> +		static_branch_enable(&have_vec_crypto);
 
-Do you have any plans to send a v9?
+For any other reviewers, this looks like a new cpu feature check, but
+it's not. In the old code there was a module feature check:
 
+  module_cpu_feature_match(PPC_MODULE_FEATURE_VEC_CRYPTO, crc32c_vpmsum_mod_init);
 
-Kind regards,
-Niklas
+And PPC_MODULE_FEATURE_VEC_CRYPTO maps to PPC_FEATURE2_VEC_CRYPTO, so
+the logic is equivalent.
+
+cheers
