@@ -1,132 +1,80 @@
-Received: from mail-pl1-f196.google.com (mail-pl1-f196.google.com [209.85.214.196])
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37F71D61BF;
-	Tue,  5 Nov 2024 13:09:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFBA62A1CA;
+	Tue,  5 Nov 2024 13:16:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730812156; cv=none; b=Y7GgHu2n3nN2SR9mqk39y3iuJ4/ygesahmrR1dgjGrFFNicI1W2+KkOmBVrFYExebhwpjhoN7YB0+zAfLOSqbfR6Vh2uUCj2gPUGqP9Co0ZheEyzfWsnIVXiQExN/sFFP7REWtTmcn/0L0RJrpYq5szNc8ETrLogReWTvr0K8Ew=
+	t=1730812586; cv=none; b=KjggCnEwSuq6zCFcfnmYoJNXREj0X0m4v21bZnXcno6wRp5UQi+ZN4eqK4HuMCUC6rOLy5OZfLjzXuvAjhuufHW+INKfBbT1IpgERzSbz7MQHtrQc3VjWuagt/sf7CVhJWpi4yefVzuGw6lfIeDSzWNPq85kOmZd54njti1BNU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730812156; c=relaxed/simple;
-	bh=DVPfp6KGwwMItlmqw72swXe0/qshydUKTIJ5gveB9rs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=PIrnfyCfj+zdzHzNiajTHKvX3l/KFw02u5QFABxAufVPF/ss0Js9MJjD3A9V0XejDsavajXDtwX8vaAuLpAn970OVYjUV5CJN2ofBJEVw4HA8GepziahjxRAgEBYqitLHrWs1R9d7WH80SgGXHDokO4wklgWgqBENmmuQCZpQhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZHX3yFMM; arc=none smtp.client-ip=209.85.214.196
+	s=arc-20240116; t=1730812586; c=relaxed/simple;
+	bh=Ocildf959I3y+8xzEL+bTqiyMCQY0iHryKg4dAdTZak=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=afzQUFYhLJ1ODSKTbBdMtal2Itf+AvRImbn/9xzMb8Cm5Zv4Jfxxu/kCyDnhBnDuMUpO8CUol7XTPbEhRsdlvEQQa94m9ZXIrpIGmqsTd4GHEenP/fvj3+zQeLOcokpWZgaUbfHHeEiOiP58pRcj3OBa5Dbu3KrRXDikQShKCWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g/AFfHpb; arc=none smtp.client-ip=209.85.218.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZHX3yFMM"
-Received: by mail-pl1-f196.google.com with SMTP id d9443c01a7336-20e576dbc42so56315075ad.0;
-        Tue, 05 Nov 2024 05:09:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g/AFfHpb"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a9a6b4ca29bso704072766b.3;
+        Tue, 05 Nov 2024 05:16:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730812154; x=1731416954; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pd+t2u3QvsPX1cIumIVDb+Kou2m+XAm5CTqIIKxI2Uw=;
-        b=ZHX3yFMMvGnn0Qxu+E83H/ml5e8lOl0dHcwPYu72dOjJeCcXY+riLExtWoxQNqFTpW
-         /mReuahSdou7O6tx+xi+FEXyQ4jM/lyv8V/6v6/EptiXSeWkENwulfOoIT4h9IIf3NoM
-         F5nUDgOHfavoflsQGemwvQmwR0TaFo433LRpJ2OgarDwqryP18CCE2MEsLx+DNaERgXx
-         HsW94t4MW1OW5LsZet9iMyNFe3p7BkL46qnAvfgHVhEidINQerzxoiFZyYFw0ErUvHj8
-         CJqB34D2Egv53s8mdN6OaJsWk1qhb1KdtjqiQE9Jh45Rk1P/wffHEB6EWYH3TiBfZ0qk
-         2OoQ==
+        d=gmail.com; s=20230601; t=1730812583; x=1731417383; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kUiqPF7eEk2d6y3IpY6xcJvHUXSzKbQ+vpPCoyVJt4U=;
+        b=g/AFfHpbI+t/sIp9mikBZ1q09NEtjFnZy+2Sc90+K/gNvMR+xcECnL/LkezaMO5G6L
+         1yD3BZXME7Frq3+BVjpU5Uz+Fwh5/uf0qQ9hz4IRHO+BsidUOfnD5jnQ2Whyufx5B6ql
+         RmZArN3dck6cdy9e4QlchjMHF9UBJ5jzNVabJJZRuyrf0YGfyALsCjqbjVd6flSaS9dN
+         fnxeXkrB7teNgcjzemcBIblYwwfmtctsFnodQnqKZmXN+ur+CB2B2ve3qqbnnTQRLN0E
+         1vMeGkHSq+bEo/Bz/LLGIlWUDJaP2lbGFExrMf1TNFQr3KYIvnj8GZZfxbIl0Q03DHAN
+         sBbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730812154; x=1731416954;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1730812583; x=1731417383;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Pd+t2u3QvsPX1cIumIVDb+Kou2m+XAm5CTqIIKxI2Uw=;
-        b=I7tJk4gtMhde0c4xgSg10IkBVez7RxUZKsh2s2NGu1LZncQhIasiyo6Aqfb1MguZgb
-         lakKYV4l3/OHGCHChclIX5goUBvVMhG2JLP+VAzwE1j8T+hudaX1V40T73r4rtxvRwX/
-         oJBsVlsRSgOBfOhmtVT7J+1RbWJRcrmoXAdYC0vhix9rIduQNbhCh9ykIJgQPOi00z8p
-         EimU2IHol3BVgpcPsVWtZojHcPLFLH5i5IRhxVDjfnYwWbAYPXc/sgKRHmS6WMB9gc6u
-         9cVzMVf8WGOMGVVc1I+KaiMUFnUe0seq0FHPL5LuxyiA+8Rp/CW7wvTHtsFiJ0BKktDI
-         joiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUVhhocJ7e7zaFG920r9VYCSu9PWBUpN1EO8nA7d7dPhLh4JWY2wT2uAu1m9OShQjm/vhsfMWKl+JaSmLE=@vger.kernel.org, AJvYcCViZxFSMDydt2IPn5vX/g54wYWFB12fk2GcUHfGVNGvI1Etn1jUdQ5RkSSzQvWQ3KtWOQ54t0IN@vger.kernel.org
-X-Gm-Message-State: AOJu0YwiKKbdZjgYdBPzaC8Rh5pynFRW7kkYZdGedcMMqRGjO1HoI8+T
-	uGnFU5A7dK7btBEkC9ivfhQ89+/EknsS1kL17tvu7obYyHVX82tY
-X-Google-Smtp-Source: AGHT+IFSld5Dtzy9w8oirg/pkVwIv0lEqyttvUVu9GEQ9my5sCZbENiAWf5cmUvcRIWeWc2bJ0HxVQ==
-X-Received: by 2002:a17:903:2443:b0:202:28b1:9f34 with SMTP id d9443c01a7336-21103caeba3mr290569015ad.56.1730812153849;
-        Tue, 05 Nov 2024 05:09:13 -0800 (PST)
-Received: from tom-QiTianM540-A739.. ([106.39.42.118])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2110570ae27sm77316175ad.101.2024.11.05.05.09.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Nov 2024 05:09:12 -0800 (PST)
-From: Qiu-ji Chen <chenqiuji666@gmail.com>
-To: james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	baijiaju1990@gmail.com,
-	Qiu-ji Chen <chenqiuji666@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Fix improper handling of refcount in lpfc_bsg_hba_get_event()
-Date: Tue,  5 Nov 2024 21:09:02 +0800
-Message-Id: <20241105130902.4603-1-chenqiuji666@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        bh=kUiqPF7eEk2d6y3IpY6xcJvHUXSzKbQ+vpPCoyVJt4U=;
+        b=T+FzHsk7E4OoUper6S+boiOYcyvFMv2quCHgm6Jh2a/ZoOvJ2viFqhcayVRTe0Ngvn
+         XlRWff1HvNXIYvvnyoZ/uQqYDUENBiqPs4pTtO4mxT2PHX70ENamfRHhsr62pbdRklt9
+         Js9otB0sQvyZVJy0gO751kCiy5mVij7VS3yjuw8S1/SA9GMzNgazVTeYS1cel5VIWPye
+         bjdawDkgMv9I8KjqhRoqNQG2LXOVME/1IJ7Zz5miS56aaOsvRbjH9ji7B/SWseYAS1M+
+         +b8/Walps1gI/U7IbgWIRWDi016xTsQ2cpYnUf9nVik3IxFTiB7AN1Gg4VgWiszHMmtV
+         AoVw==
+X-Forwarded-Encrypted: i=1; AJvYcCUAfiq1TnI89zWccICORPPlaKXd6YhBNrUBPIHwpr4mW2RBLkM03tMD0s90F+VC2i1WTumL7KDuzigTDaQtNg==@vger.kernel.org, AJvYcCUwZvZDc58g9MVDo5DEmnJBKYKkAYAlV9396z0ty+zyrjBiwBfW98PtSygSmGqpMK3205ggGA178CyrKmA=@vger.kernel.org, AJvYcCXk84Dp14dBmJKigOvvx9atEmREAIhY4hGl5OWE55YpVDkF/NHd5XAyVVJ0jyAox8PdGLi4DFvKZw==@vger.kernel.org, AJvYcCXmNSWiS3UdUkEncID1K/WvIcvuS+CZOXq1nzyZVlKIDAeTH9CQtmE3WYsjDPputd5QmysTlkbVcerACQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz8zFrKsD2yidYxJkypEONIPgkzbc5wl6exMMreLu1hep6xTWHO
+	FUlj89GACXoPNwBKhChPS8e6HJYf7hHjWt9UfstMmgC1XwE87xnvL2YUZFJLb38ZhRNjDtDODb+
+	c1gKBwdGRq0QpgBJEbdUnhrtiE6ZSOd4=
+X-Google-Smtp-Source: AGHT+IF3BGph15U/Zucx/r0do/TaPI1aR0aJxfp41AlvjNpG2PVZbfdERVwBWNmIyHG6C8jDgVR54P3npeWrufTwIpI=
+X-Received: by 2002:a17:907:72c4:b0:a9a:f82:7712 with SMTP id
+ a640c23a62f3a-a9e50b672abmr1982167566b.52.1730812582661; Tue, 05 Nov 2024
+ 05:16:22 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20241104140601.12239-1-anuj20.g@samsung.com> <CGME20241104141448epcas5p4179505e12f9cf45fd792dc6da6afce8e@epcas5p4.samsung.com>
+ <20241104140601.12239-3-anuj20.g@samsung.com> <20241105100307.GA650@lst.de>
+In-Reply-To: <20241105100307.GA650@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Tue, 5 Nov 2024 18:45:46 +0530
+Message-ID: <CACzX3AvrzJCdOntY3yCLomgo9jrUQBpG2_seRYPuXWk-xOpieA@mail.gmail.com>
+Subject: Re: [PATCH v7 02/10] block: copy back bounce buffer to user-space
+ correctly in case of split
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org, 
+	martin.petersen@oracle.com, asml.silence@gmail.com, brauner@kernel.org, 
+	jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, 
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com, 
+	linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-This patch addresses a reference count handling issue in the 
-lpfc_bsg_hba_get_event() function. In the branch 
-if (evt->reg_id == event_req->ev_reg_id), the function calls 
-lpfc_bsg_event_ref(), which increments the reference count of the relevant 
-resources. However, in the branch if (evt_dat == NULL), a goto statement 
-directly jumps to the function’s final goto block, skipping the release 
-operations at the end of the function. This means that, if the condition 
-if (evt_dat == NULL) is met, the function fails to correctly release the 
-resources acquired by lpfc_bsg_event_ref(), leading to a reference count 
-leak.
-
-To fix this issue, we added a new block job_error_unref before the 
-job_error block. When the condition if (evt_dat == NULL) is met, the 
-function will enter the job_error_unref block, ensuring that the previously
-allocated resources are properly released, thereby preventing the reference
-count leak.
-
-This bug was identified by an experimental static analysis tool developed
-by our team. The tool specializes in analyzing reference count operations
-and detecting potential issues where resources are not properly managed.
-In this case, the tool flagged the missing release operation as a
-potential problem, which led to the development of this patch.
-
-Fixes: 4cc0e56e977f ("[SCSI] lpfc 8.3.8: (BSG3) Modify BSG commands to operate asynchronously")
-Cc: stable@vger.kernel.org
-Signed-off-by: Qiu-ji Chen <chenqiuji666@gmail.com>
----
- drivers/scsi/lpfc/lpfc_bsg.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 85059b83ea6b..832a5a6dd85f 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -1294,7 +1294,7 @@ lpfc_bsg_hba_get_event(struct bsg_job *job)
- 	if (evt_dat == NULL) {
- 		bsg_reply->reply_payload_rcv_len = 0;
- 		rc = -ENOENT;
--		goto job_error;
-+		goto job_error_unref;
- 	}
- 
- 	if (evt_dat->len > job->request_payload.payload_len) {
-@@ -1329,6 +1329,10 @@ lpfc_bsg_hba_get_event(struct bsg_job *job)
- 		       bsg_reply->reply_payload_rcv_len);
- 	return 0;
- 
-+job_err_unref:
-+	spin_lock_irqsave(&phba->ct_ev_lock, flags);
-+	lpfc_bsg_event_unref(evt);
-+	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- job_error:
- 	job->dd_data = NULL;
- 	bsg_reply->result = rc;
--- 
-2.34.1
-
+> This shouldn't really have a from for me as it wasn't my patch
+> originally.  But if you insist to re-attribute it, my signoff should
+> be the first as signoffs are supposed to be a chain starting from
+> the original author to the submitter.
+>
+Will change the sign-off order if I have to iterate.
