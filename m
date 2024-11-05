@@ -1,166 +1,114 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C761FF7AF
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 21:33:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1798A13C918
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 22:01:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730842408; cv=none; b=WVY7aoqIxXL56KghxhMMVFfPm35+e0V1mcc19Y2EQ9iH8eXJiGeWPlNLnahhoB/Kef62EDtcnb6z9TlQb1MXA9357EmBfwkcm5EmR6Ph3LyJiuCxH7fZUd9xkWudOyaAgOj+gnjgsLfvqSRBMniGoMLxE467cAnlQ5NVH02tbN0=
+	t=1730844074; cv=none; b=Fd7dRJCtfeqyzd3Z2sp3kO1Ut5NqlqMM4jmOPIRwW/Zc50cF2WQwBbYzv6mucPsOTVwqagIrcs77py2IfgxdbYAcLhrxtNGHvHSracZPfbRw14CfonCXYveXfvA7GrS7Y/bX3Sx9bQeTYmlNPzweYm7hN9+BvLARXGuTzI3xv4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730842408; c=relaxed/simple;
-	bh=o21YOeHQkFJ0SNOIzTYqKFE50kbliz7aygmd9wFQn5c=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V261ttut5vNkQMzV+OohtaKb6K2TlK+sQFTuMIkvxFKvMMq3S3zDeXN8z4Z1pOiQy0h1+8Y+w00v736XzcOpHeqEx1q69+g8feYcvJinElX5aZk3kFKcmwzYSwgM4Qfp3xqihzHKRxVdJpVSjyPCeMV8/GHEkKPi1jgPBC38BQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TTifaGIZ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3ONvi4FJ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TTifaGIZ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3ONvi4FJ; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1730844074; c=relaxed/simple;
+	bh=d/A0HUFbj/lv+s0R+c95urSKGpZC0n/Ki6oIXbrOp2w=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=E6l8SMe7Kw6KiHfizrxObaNJ+bKR+pZTN0xP0oMMYGcHGZfQ7e9E2x+tvcrii2MMmBmcXqbTm+M1cIuqpRuKG/c7PBtBbsCotpYJFnSLJNTkhbfxNeC2fK0+9ZorkIVZtt3P7Kzb1fX0hefU+yJL2M6FPU5r6QpVSohBgQIIM5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tt2UBlfR; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TTifaGIZ";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3ONvi4FJ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TTifaGIZ";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3ONvi4FJ"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tt2UBlfR"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Xjj2w2S2mz6CmM5x;
+	Tue,  5 Nov 2024 22:01:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:content-language:references:from:from:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730844069; x=1733436070; bh=W7i07u2ItHQ2ZHx6Nml2o8L4
+	CEsceojq3/NMrP1/1Dg=; b=tt2UBlfRyu0u3eeki7/2Tsbhp81APvy3ciegTxBe
+	Tvdy3V72qBrQcmeVVwqcrJeU1FesHuWq0tlcrCCrKLvAPT1c/eeJBmXf2a0J3bUG
+	lrG+BMjlA+CGfaPrygKpCaLsVUJ+DJ3WT/SrrSznkQb5VYpI/bypTZLR/f+s8Np+
+	MlHrWWhWEZn730lZBJ30RHzJ4js1KyaRn/w/GHpuludVC15J/JABzn3Ju0gTXnZh
+	xNhb8EyWHbEJz7lc56poBI0JnsIsxUmdQWcnbEFe4AjGaTUBdkEai6lg/dUWG4k+
+	MtgEsahhwaoOQLLMyLVrpINfk24dyHx4WNFqe5zKj1Kt2Q==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id rMGfnYLNOJQe; Tue,  5 Nov 2024 22:01:09 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 221A621B4A;
-	Tue,  5 Nov 2024 21:33:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1730842405; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8iZKjyNvC929sEBW33CFPiuo/Zhj6CkSvB6Qzjuz6PM=;
-	b=TTifaGIZrcJuDe0ZvdsLw2bCVVoeKSadk3Hesh3VE5F8L3DZhuxVOmM4Zj/YR0kOgyVbM5
-	9p5tKQPegaWASMiznAK7mcU4UPL1mGm5bRc8Zsrc9Qyql/jtxt08Ic/5Jx737IBMQAwxmx
-	HfgEOY4IcUpCniJOCv7r+oop0lrwBfA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1730842405;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8iZKjyNvC929sEBW33CFPiuo/Zhj6CkSvB6Qzjuz6PM=;
-	b=3ONvi4FJpe+UgqGiV3NU1xcAkDqOVUlK8WfjRKytLniBoIL/MWR4FkBNMRLb31Bc9Kl1rs
-	q4WIobwO+gaH2LAA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=TTifaGIZ;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=3ONvi4FJ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1730842405; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8iZKjyNvC929sEBW33CFPiuo/Zhj6CkSvB6Qzjuz6PM=;
-	b=TTifaGIZrcJuDe0ZvdsLw2bCVVoeKSadk3Hesh3VE5F8L3DZhuxVOmM4Zj/YR0kOgyVbM5
-	9p5tKQPegaWASMiznAK7mcU4UPL1mGm5bRc8Zsrc9Qyql/jtxt08Ic/5Jx737IBMQAwxmx
-	HfgEOY4IcUpCniJOCv7r+oop0lrwBfA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1730842405;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8iZKjyNvC929sEBW33CFPiuo/Zhj6CkSvB6Qzjuz6PM=;
-	b=3ONvi4FJpe+UgqGiV3NU1xcAkDqOVUlK8WfjRKytLniBoIL/MWR4FkBNMRLb31Bc9Kl1rs
-	q4WIobwO+gaH2LAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F298613964;
-	Tue,  5 Nov 2024 21:33:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id L+XkOSSPKmdrHAAAD6G6ig
-	(envelope-from <tbogendoerfer@suse.de>); Tue, 05 Nov 2024 21:33:24 +0000
-Date: Tue, 5 Nov 2024 22:33:19 +0100
-From: Thomas Bogendoerfer <tbogendoerfer@suse.de>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, Magnus Lindholm
- <linmag7@gmail.com>, linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-Message-ID: <20241105223319.46c7563a@samweis>
-In-Reply-To: <yq15xp14fy7.fsf@ca-mkp.ca.oracle.com>
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
-	<CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
-	<yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com>
-	<alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
-	<CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
-	<20241030102549.572751ec@samweis>
-	<CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
-	<alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk>
-	<CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
-	<alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk>
-	<Zyh6tP-eWlABiBG7@infradead.org>
-	<CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
-	<alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk>
-	<yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
-	<20241105093416.773fb59e@samweis>
-	<alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
-	<yq15xp14fy7.fsf@ca-mkp.ca.oracle.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.34; x86_64-suse-linux-gnu)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Xjj2r0YC7z6CmQwP;
+	Tue,  5 Nov 2024 22:01:07 +0000 (UTC)
+Message-ID: <1c9acc01-7b1d-41ac-a0da-4e50dc8f0319@acm.org>
+Date: Tue, 5 Nov 2024 14:01:05 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 11/11] scsi: ufs: core: Move code out of an
+ if-statement
+From: Bart Van Assche <bvanassche@acm.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+References: <20241016201249.2256266-1-bvanassche@acm.org>
+ <20241016201249.2256266-12-bvanassche@acm.org>
+ <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
+ <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
+ <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
+ <6b20595d-c7f6-42aa-922e-3671abd7917c@acm.org>
+Content-Language: en-US
+In-Reply-To: <6b20595d-c7f6-42aa-922e-3671abd7917c@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
-X-Rspamd-Queue-Id: 221A621B4A
-X-Spam-Score: -4.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-0.997];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_CC(0.00)[orcam.me.uk,gmail.com,vger.kernel.org];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCPT_COUNT_THREE(0.00)[4];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
 
-On Tue, 05 Nov 2024 14:56:15 -0500
-"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
-
-> Maciej,
+On 10/31/24 2:15 PM, Bart Van Assche wrote:
+> On 10/31/24 12:55 PM, Neil Armstrong wrote:
+>> Le 31/10/2024 =C3=A0 18:51, Bart Van Assche a =C3=A9crit=C2=A0:
+>>> Is the patch below sufficient to fix both issues?
+>>
+>> Yes it does!
 >=20
-> >  Thomas, Magnus, can you please check what hardware revision is
-> > actually reported by your devices? Also a dump of the PCI
-> > configuration space would be very useful, or at the very least the
-> > value of the PCI Revision ID register, which is independent from the
-> > hardware revision reported via the device I/O registers. =20
+> Thank you for having tested this patch quickly. Would it be possible
+> to test whether the patch below also fixes the reported boot failure?
+> I think the patch below is a better fix.
 >=20
-> It would also be interesting to know what the 'enable 64-bit addressing'
-> NVRAM flag is set to on Thomas' system.
+> Thanks,
+>=20
+> Bart.
+>=20
+>=20
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index a5a0646bb80a..3b592492e152 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -874,7 +874,8 @@ static void ufs_qcom_advertise_quirks(struct ufs_hb=
+a=20
+> *hba)
+>  =C2=A0=C2=A0=C2=A0=C2=A0 if (host->hw_ver.major > 0x3)
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 hba->quirks |=3D UFSH=
+CD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+>=20
+> -=C2=A0=C2=A0=C2=A0 if (of_device_is_compatible(hba->dev->of_node, "qco=
+m,sm8550-ufshc"))
+> +=C2=A0=C2=A0=C2=A0 if (of_device_is_compatible(hba->dev->of_node, "qco=
+m,sm8550-ufshc") ||
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 of_device_is_compatible(hba=
+->dev->of_node, "qcom,sm8650-ufshc"))
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 hba->quirks |=3D UFSH=
+CD_QUIRK_BROKEN_LSDBS_CAP;
+>  =C2=A0}
 
-there is no NVRAM on the Octane
+(replying to my own email)
 
-Thomas.
+Can anyone who has access to a Qualcomm SM8650 Platform please help with
+testing the above patch on top of linux-next?
 
---=20
-SUSE Software Solutions Germany GmbH
-HRB 36809 (AG N=C3=BCrnberg)
-Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, Andrew McDonald, Werner Knoblich
+Thanks,
+
+Bart.
