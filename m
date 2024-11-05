@@ -1,105 +1,98 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19F411EF0A1
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 20:18:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A6D215C68
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 21:06:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730837899; cv=none; b=DZcca3qi01pS7aFP0QXkUrqk4CvFBNmFMynzuDtzVrfN8cQ3iKXlYNPAcCwtmms39VFMDCZDZWKArhhGhDZ8a6XalYKJsS+KCRBdiCE09/Cbii/E0vA6tz0ZindZpngd0cZwHWMo5DIQg+V400axj2f2EyYxex6eu6SWem6Ic7s=
+	t=1730840784; cv=none; b=FWeFtaxH+tKpYfALAR5rdlefDc3yH9RntsJNby4hSqPYY1EatET+EAKa7mW1i80E4hrixyfYPzZ9kbQqt02s+p76hqJxcK+d1f0MgGL2Iu5HaFpcpYjbkrVv298BM/Dwrjl6Ed2QLUO4In+26kN95JycX4U7VZwkwxjl2Ej1JCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730837899; c=relaxed/simple;
-	bh=3jieFVTCt0QTd8pdn0caoPDbZBF1dIo/2N6YGrgX1nI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g7k7iI9Jht8j4yG7oY8twsdMMwKDJnDXQ1jRnzhpGN+OyUA7SxNb5KP3nCdP9/6rDlMpjs11jY4N6XiOZvdt9tfVzVEbYbspvVVbY+JlQolmydBy0RuvYK6Oz+uQ+61Jxw5vMO25cyySKs+DwfJdzZ/srHBmkIKOJo4xlVDInM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gVclqSV6; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1730840784; c=relaxed/simple;
+	bh=aAG7RnIF74HMv2mc4mk3cQrhKyWpkR5O5UDjmBtNiQU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=s4DYU8efGpA6nhsGdlP1qLFsRi+phmNOCAVJHxaWHcV5W0J7+q+JzNknsLItY/VeDHyj/Rf+70vj/ofdTEP92uEJ5J3pUYgMj0AeGup71Yv31nO4Vd8BmonBrJv7BsOY31Bplf99UhZfP5Ek8gzUOhPWDg6bQ0Y3M0v6F3qkFnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OnnHtur+; arc=none smtp.client-ip=209.85.167.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gVclqSV6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730837895;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+lABxB7p4Ks38SXfCdjslLdYFXoQ5tl7YWXNgrh2A/s=;
-	b=gVclqSV6PN5xAkx7w34+HkHZQFKHiGRdhLdvma6t1x9tyh58qqg2/7Cfo18Dk6WngeBNpF
-	89MpoSYG712XDKv/KoKs3tzjDTkGRkf7422qiWvwjotZTwzFDcqN53VpPxMosMmrmfi9j3
-	wlRpdem8Jxkoi7oJJ4332iYo9r271rg=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-484-ur0TY7DPPOulMWJEddDDeQ-1; Tue,
- 05 Nov 2024 15:18:12 -0500
-X-MC-Unique: ur0TY7DPPOulMWJEddDDeQ-1
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4AC5B1955EE7;
-	Tue,  5 Nov 2024 20:18:11 +0000 (UTC)
-Received: from [10.22.88.108] (unknown [10.22.88.108])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 91B65300018D;
-	Tue,  5 Nov 2024 20:18:09 +0000 (UTC)
-Message-ID: <55016e46-e772-43b8-bc7b-c0f14eed44bd@redhat.com>
-Date: Tue, 5 Nov 2024 15:18:08 -0500
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OnnHtur+"
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-539f72c913aso9607813e87.1
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2024 13:06:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1730840781; x=1731445581; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8mxviS52uVSqjlDqErjZ+hAfIrjY3cTggkwkrpHMhho=;
+        b=OnnHtur+vQiuLesH3NiJqUu8cEV4hU8607kMBW2DrGm3m0klA0DCVizRj6/APyS4Nw
+         VuKylUZwWsWp3LpvMEEeYijS74v7vcRSm712YI6hKYyDHQShnX59f6Ab73faao6Wppfb
+         YOVJ5ONeZwP+6+5gcwHqY0QNdjY3mA7A2r4EqDQXuHsEQuvK8UWfKg33/FT9xITzMEI2
+         DHFrPGK+aE1OOtOCeR5isG9ulZEkazCssq3oxGiwj1oxgW6VnXf1UiBoB1BBfb+3gPZJ
+         J45tfw1FMDr/EQl+bOnzAZJgltyq79N0VwfFGIlCk80+oHPHOIbwH1N2xaMfGKkZxjQB
+         Vi+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730840781; x=1731445581;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8mxviS52uVSqjlDqErjZ+hAfIrjY3cTggkwkrpHMhho=;
+        b=ci+sIUxqOmGgkx5uYbMRV6mdYpP8ybXfCLT20eveIgivpqJWTOd1NivQLVfRIkbfQR
+         whjbtC1no0Ato/zicgVJ8Ce/XiRpGVD81kTAZSPQylHAH5mv7e01xlq5e2YWgfMIU275
+         Z7Jk71Zf2rMt81gPzR4NyneufBEsoRzmW3706zMhczuu7deaT4GktruHY0hxIqEZmj4M
+         LFlqXsaTtY17MFTafTJfoNnWxEcbQhASJu2ceEFU1PlaPEFuz/36lHVEWPK2BvoclqiC
+         uxU1CLMBeEbsyw/IQV4+5wz/norWKawFjBltVsZErZs4wCQ5xCNuakCKao6fM2yw5DZf
+         3dQQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVGO1fHZS3ZgbtToauVllmcN/A6PIKGVxzrwjF9aflzrRXIUeP7RG73hXG4e9ffLvpLVBBjLU3FyZR8@vger.kernel.org
+X-Gm-Message-State: AOJu0YxlJTIWKWOrMDo3OgbZxV9xPnOyEi8TUG/d5cFEi4ABMH45mJ1/
+	HG7ryzXKfJGctzjDyKvf3KDtctzTau8wqVSVr3WgU7u26bw9pL3A64+dyDBZX2lqvC4a8gl8dKT
+	XHeZ9V4aIqBLkyn0K00L6r8PHYkA=
+X-Google-Smtp-Source: AGHT+IFI4uhxBZbN0oF0CearAGd4jJ0WuZZuDe87D9j4jk+RgtffezOgW8L+pONFuTBovIZWbsLcgKRXbdW6+R+koqQ=
+X-Received: by 2002:a05:6512:a92:b0:539:fd10:f07b with SMTP id
+ 2adb3069b0e04-53b34b39774mr20970405e87.55.1730840780884; Tue, 05 Nov 2024
+ 13:06:20 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] scsi: st: Device reset patches
-To: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
- linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
- loberman@redhat.com
-References: <20241104112623.2675-1-Kai.Makisara@kolumbus.fi>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20241104112623.2675-1-Kai.Makisara@kolumbus.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
+ <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
+ <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+ <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+ <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
+ <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
+ <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
+ <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
+ <yq15xp14fy7.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq15xp14fy7.fsf@ca-mkp.ca.oracle.com>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Tue, 5 Nov 2024 22:06:09 +0100
+Message-ID: <CA+=Fv5QSUiUVvgD2zxQA-n7CoUZGO5_8oaZr0bC3fOg9ROKMRw@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, Thomas Bogendoerfer <tbogendoerfer@suse.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the fix Kai.
+On Tue, Nov 5, 2024 at 8:56=E2=80=AFPM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
 
-While testing these changes with a tape drive I came across one more issue.
+> It would also be interesting to know what the 'enable 64-bit addressing'
+> NVRAM flag is set to on Thomas' system.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=219419#c14
+This is an interesting note in the revision history of the driver:
 
-I'll send a follow on patch which I think might address that issue.
+    Rev. 3.14 Beta  August 16, 2000   BN  Qlogic
+        - Added setting of dma_mask to full 64 bit
+          if flags.enable_64bit_addressing is set in NVRAM
 
-Martin, please merge these patches... we have a number of customers waiting for this fix.
+This is no longer present in the code, must have been removed along
+the way somehow. On my (working full 64bit mask) ISP1080 this flag is
+not set (according to the driver). I've tried having it both set/unset
+with the ISP1040 but it seems to make no difference. If setting it
+through the driver even works?
 
-/John
-
-On 11/4/24 06:26, Kai Mäkisara wrote:
-> These two patches were developed in response to Bugzilla report
-> https://bugzilla.kernel.org/show_bug.cgi?id=219419
-> 
-> After device reset, the tape driver allows only operations tha don't
-> write or read anything from tape. The reason for this is that many
-> (most ?) drives rewind the tape after reset and the subsequent reads
-> or writes would not be at the tape location the user expects. Reading
-> and writing is allowed again when the user does something to position the
-> tape (e.g., rewind).
-> 
-> The Bugzilla report considers the case when a user, after reset, tries
-> to read the drive status with MTIOCGET ioctl, but it fails. MTIOCGET
-> does not return much useful data after reset, but it can be allowed.
-> MTLOAD positions the tape and it should be allowed. The second patch
-> adds these to the set of allowed operations after device reset.
-> 
-> The first patch fixes a bug seen when developing the second patch.
-> 
-> Kai Mäkisara (2):
->    scsi: st: Don't modify unknown block number in MTIOCGET
->    scsi: st: Add MTIOCGET and MTLOAD to ioctls allowed after device reset
-> 
->   drivers/scsi/st.c | 31 ++++++++++++++++++++++---------
->   1 file changed, 22 insertions(+), 9 deletions(-)
-> 
-
+Magnus
