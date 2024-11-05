@@ -1,145 +1,108 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44FAD186284;
-	Tue,  5 Nov 2024 09:22:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22C531D040B;
+	Tue,  5 Nov 2024 09:33:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730798579; cv=none; b=Uqbq0wQZ4Gyb/In50hJN6A0QdKLyZoFL5zMdrkBZkGFYuVATQMeeG2/cXuD8EBYUavp0TnZ3v7cs6ndBhvE8IjESHHsOI3YVeRMuQFV0Dd486J4pM/uPDm2UbPaizsSUCWAqP5tmTnHEZ23bRsTO8Y01sdqJ4ffGyU3dokDKmPI=
+	t=1730799236; cv=none; b=kkwY5GmijFABe9DDC7tab3NoVqLqo/T3+1xX3O/LZcXBt6qMUEdMdlsLn169uw4v9UmGWY86sdONWPdHH9qzUiNLcot382HlyHqVyd1oTa4tzGN3er4PT2tOZUqgh4mnq23LNcPIT12TNSZCX0wia8osuumWUEae5QDxR47sUKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730798579; c=relaxed/simple;
-	bh=0DJAaAp/sJ4GJO6GXcKD8xMWKOg86nk2Np9hVptfiZ0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=mZ5fTc/Tj9RU8ttW4FYi8TnbQ5YSJQPjRiuFTuCIg3kiyxaBBfJFafFcXgSfXc2sGXHzV2ao4ER1D5ZQL+GAK/rZslg/eZLsj7hseYWrsqbpcGjLkC04vaN+Dk5CjWd0LYtgC7tX4IdOzz/bsgqNg48dl9xzswBCPvtRC9Mlzg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=abc102v8; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1730799236; c=relaxed/simple;
+	bh=22W9nzMcL25HgQOsdfOmLga073kenQrCF15JNenZNe4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tvt6omm+saKeKowgAmapcl3KbmbHRVo88p1OutES/uksNeK+zwY3pg+so92QN8FGYAawnhal36IGZunrwmSE3SR8+KgY/wOj9b+lbyz7EDryi9eZNYOpQw5gTJ17w5uDOEJ2B7+x7lqBQ1euSwXny9eHbkIKSFCEzOoOFtOcnjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fx/sZxCs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="abc102v8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1730798571;
-	bh=xG1HQhXTKL81M9467zhA4KonLLpV3fuL2upt5lJSShY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=abc102v8sCEc4rZgo2gcKLbXmwgvq4GWFHOVFO2bCqlfFdeKKcRV4prB0lNuFM+1J
-	 +nLMWJEv9C6S0GLYT8NTq4cofEwz+d0GOszV9URcE2cm6ZF5AylDoN/Z59rll0g/Oq
-	 7WsqGbok2W4NpvuKkzkrDPAQmPNPSM6PFvziT+2hwmqDnVmGWCUcte8UycWZO0fqBM
-	 8/j6kLdVKhMd+2mHPE+WS4RXiOWy1ZCSKS371LN4mAvJuEGSKgRrakUz5kUENSDU9q
-	 PGCTVxGOMH7TPanX3MVM/rMyBsqI05mZE6yiJdVSS0qPm3mWfbV8Bv8MQn/EFJHce9
-	 0DvIPNJTjgI8A==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4XjNCv5y3Wz4wcl;
-	Tue,  5 Nov 2024 20:22:51 +1100 (AEDT)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-crypto@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net, linux-mips@vger.kernel.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- loongarch@lists.linux.dev, sparclinux@vger.kernel.org, x86@kernel.org, Ard
- Biesheuvel <ardb@kernel.org>
-Subject: Re: [PATCH v3 08/18] powerpc/crc32: expose CRC32 functions through lib
-In-Reply-To: <20241103223154.136127-9-ebiggers@kernel.org>
-References: <20241103223154.136127-1-ebiggers@kernel.org>
- <20241103223154.136127-9-ebiggers@kernel.org>
-Date: Tue, 05 Nov 2024 20:22:53 +1100
-Message-ID: <87zfme826q.fsf@mpe.ellerman.id.au>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fx/sZxCs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1368CC4CECF;
+	Tue,  5 Nov 2024 09:33:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730799235;
+	bh=22W9nzMcL25HgQOsdfOmLga073kenQrCF15JNenZNe4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fx/sZxCsKqej2maE4ErIgyI8Ra7siyvtDWtTPyRQf2Tb3WSt6pTS79eCb8YC4vtLx
+	 NcvYTaHa9s+9zAguh0SVptoG5FwU0/BfItH2HVk92Ha5JA4BLjB42zjcsBjACy1JT8
+	 jv1TcGbIVWrDnJC2Uv3m3X+8sRmbp5oiRV5JEp/Iq90jPJS+TngE9Iz0E7MP93bHe5
+	 TPue25thADX9R6qZ8WYRCjgGC+yJ/481t4SVvpn6w/Ypjhule7tCwnOtTlAHuT/xrH
+	 FM+eVh9OdXf9jr3CBkUpyg0r2Blf0XMCrzkjYizVw24q2xOu24Z9OFiaEZF0puKj9K
+	 xblct6aryzlZQ==
+Date: Tue, 5 Nov 2024 10:33:51 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: yangxingui <yangxingui@huawei.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	Yu Kuai <yukuai1@huaweicloud.com>, linux-ide@vger.kernel.org,
+	Wenchao Hao <haowenchao22@gmail.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 2/2] ata: libata: Issue non-NCQ command via EH when NCQ
+ commands in-flight
+Message-ID: <ZynmfyDA9R-lrW71@ryzen>
+References: <20241031140731.224589-4-cassel@kernel.org>
+ <20241031140731.224589-6-cassel@kernel.org>
+ <baceec65-ad60-f8e5-f417-0316c19a0234@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <baceec65-ad60-f8e5-f417-0316c19a0234@huawei.com>
 
-Eric Biggers <ebiggers@kernel.org> writes:
-> From: Eric Biggers <ebiggers@google.com>
->
-> Move the powerpc CRC32C assembly code into the lib directory and wire it
-> up to the library interface.  This allows it to be used without going
-> through the crypto API.  It remains usable via the crypto API too via
-> the shash algorithms that use the library interface.  Thus all the
-> arch-specific "shash" code becomes unnecessary and is removed.
->
-> Note: to see the diff from arch/powerpc/crypto/crc32c-vpmsum_glue.c to
-> arch/powerpc/lib/crc32-glue.c, view this commit with 'git show -M10'.
->
-> Reviewed-by: Ard Biesheuvel <ardb@kernel.org>
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-> ---
->  arch/powerpc/Kconfig                          |   1 +
->  arch/powerpc/configs/powernv_defconfig        |   1 -
->  arch/powerpc/configs/ppc64_defconfig          |   1 -
->  arch/powerpc/crypto/Kconfig                   |  15 +-
->  arch/powerpc/crypto/Makefile                  |   2 -
->  arch/powerpc/crypto/crc32c-vpmsum_glue.c      | 173 ------------------
->  arch/powerpc/crypto/crct10dif-vpmsum_asm.S    |   2 +-
->  arch/powerpc/lib/Makefile                     |   3 +
->  arch/powerpc/lib/crc32-glue.c                 |  92 ++++++++++
->  .../{crypto => lib}/crc32-vpmsum_core.S       |   0
->  .../{crypto => lib}/crc32c-vpmsum_asm.S       |   0
->  11 files changed, 98 insertions(+), 192 deletions(-)
->  delete mode 100644 arch/powerpc/crypto/crc32c-vpmsum_glue.c
->  create mode 100644 arch/powerpc/lib/crc32-glue.c
->  rename arch/powerpc/{crypto => lib}/crc32-vpmsum_core.S (100%)
->  rename arch/powerpc/{crypto => lib}/crc32c-vpmsum_asm.S (100%)
+On Mon, Nov 04, 2024 at 12:01:19PM +0800, yangxingui wrote:
 
-Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
+(snip)
 
-...
-> deleted file mode 100644
-> index 63760b7dbb76..000000000000
-> --- a/arch/powerpc/crypto/crc32c-vpmsum_glue.c
-> +++ /dev/null
-> @@ -1,173 +0,0 @@
-> -// SPDX-License-Identifier: GPL-2.0-only
-> -
-...
-> -static int __init crc32c_vpmsum_mod_init(void)
-> -{
-> -	if (!cpu_has_feature(CPU_FTR_ARCH_207S))
-> -		return -ENODEV;
-> -
-> -	return crypto_register_shash(&alg);
-> -}
-> -
-> -static void __exit crc32c_vpmsum_mod_fini(void)
-> -{
-> -	crypto_unregister_shash(&alg);
-> -}
-> -
-> -module_cpu_feature_match(PPC_MODULE_FEATURE_VEC_CRYPTO, crc32c_vpmsum_mod_init);
-> -module_exit(crc32c_vpmsum_mod_fini);
-> -
-> -MODULE_AUTHOR("Anton Blanchard <anton@samba.org>");
-> -MODULE_DESCRIPTION("CRC32C using vector polynomial multiply-sum instructions");
-> -MODULE_LICENSE("GPL");
-> -MODULE_ALIAS_CRYPTO("crc32c");
-> -MODULE_ALIAS_CRYPTO("crc32c-vpmsum");
-...
-> new file mode 100644
-> index 000000000000..e9730f028afb
-> --- /dev/null
-> +++ b/arch/powerpc/lib/crc32-glue.c
-> @@ -0,0 +1,92 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-...
-> +
-> +static int __init crc32_powerpc_init(void)
-> +{
-> +	if (cpu_has_feature(CPU_FTR_ARCH_207S) &&
-> +	    (cur_cpu_spec->cpu_user_features2 & PPC_FEATURE2_VEC_CRYPTO))
-> +		static_branch_enable(&have_vec_crypto);
+> After testing, the issues we encountered were resolved.
 
-For any other reviewers, this looks like a new cpu feature check, but
-it's not. In the old code there was a module feature check:
+That is good news :)
 
-  module_cpu_feature_match(PPC_MODULE_FEATURE_VEC_CRYPTO, crc32c_vpmsum_mod_init);
 
-And PPC_MODULE_FEATURE_VEC_CRYPTO maps to PPC_FEATURE2_VEC_CRYPTO, so
-the logic is equivalent.
+> 
+> But the kernel prints the following log:
+> 
+> [246993.392832] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+> [246993.392839] sas: ata5: end_device-4:0: cmd error handler
+> [246993.392855] sas: ata5: end_device-4:0: dev error handler
+> [246993.392860] sas: ata6: end_device-4:3: dev error handler
+> [246993.392863] sas: ata7: end_device-4:4: dev error handler
+> [246993.606491] sas: --- Exit sas_scsi_recover_host: busy: 0 failed:
+> 1 tries: 1
+> 
+> And because the current EH will set the host to the recovery state,
+> when we test and execute the smartctl command, it will affect the
+> performance of all other disks under the same host.
+> 
+> Perhaps we can continue to improve the EH mechanism that Wenchao
+> tried to do before, and implement EH for a single disk. After a
+> single disk enters EH, it may not affect other disks under the same
+> host.
+> 
+> https://lore.kernel.org/linux-scsi/20230901094127.2010873-1-haowenchao2@huawei.com/
 
-cheers
+That is bad news :(
+
+Considering that this series will currently stall all other disks under
+the same host, this series is currently not a viable solution to the
+problem that you have reported (NCQ commands can starve out non-NCQ
+commands).
+
+
+Looking at:
+https://lore.kernel.org/linux-scsi/20230901094127.2010873-1-haowenchao2@huawei.com/
+
+It appears that a requirement for Wenchao's series to land,
+is that Hannes's EH rework series:
+https://lore.kernel.org/linux-scsi/20231023092837.33786-1-hare@suse.de/
+lands first.
+
+
+Unless these two SCSI series get merged first, it's illogical to carry this
+increased complexity in libata.
+
+If these two SCSI series ever get merged, then the series in $subject would
+be a viable solution to the problem, and the extra complexity would be
+justified.
+
+
+Kind regards,
+Niklas
