@@ -1,65 +1,60 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 203785674E
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 16:27:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A2AB1D9A6F
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 16:39:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730824078; cv=none; b=C35eMGIM5DbQc8Xvj+vAmPzjSKV3wFVvwO6LnOu+j7xD4LcUizEGuu+kwiDOergN8snFGgsWAs/cDi0aIu3neX1w7M142ke2MwoYEiuPySx0tUXzvDf4dX3tWPumwJlHZACXz8OIPVTi456vsaJli4oq3lCPSGfrcTmWeb6m1UE=
+	t=1730824743; cv=none; b=VE4ETurjwWWrwPB25kfzgUNlc2OgB151adjhIr56J/PaRaC/fcDWSWgLf+B8EWpVBcQ1OnJ7qYdNsw0sDyP+bvQGfDiTqApqfpRWWlKYSmn8JQs6H+5kEAaSv1GwLyaaytdw8xJUk1qDFbcHEF7d6is432auZACqpB3pqNgmfOU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730824078; c=relaxed/simple;
-	bh=6lKEju4tzcGBBXoGLue1fy4v7SHvUr8Lq4qdFA89dvE=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=MZQMxV4TX3tqgdlofhCuwCSiKDGObIDmQ1C+xby+HS0XQFhxtTGoc8KDPetmQJd6UsMipUsIDcjfIBk8MS5qOjkkdmqH5WeDXKH9kXPjem6Id8SgcXiGBWdrdFmnZu5tQo0HCsEtrBIaNslGH0hJ9tmuUPYGUkaCdVFy2V5Xqdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ubstt37J; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1730824743; c=relaxed/simple;
+	bh=JZoeli1ekR1Ea3em7KTi06yOpUXiX1Nirv66M+wA1iA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=FKiquMw/6OrYsnm7C6iCGZyTxv5uFui33tEzaMVvT++wY0TJvXxWV7xLnjGN9371/dUa3Jm3vW507+Qp0I2Z2MmLYv7mqzZHcXz1Fgfyuk7oRtd0mTVlT1MVujo3MPh68rmw+SsolxZPkb3QZuyHRQJDbJym8hPIy3jwJwzXHxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=osPp7PHZ; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ubstt37J"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730824075;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XYowUcCUvYBTzf8yObVt54/LH6jljftk+yqZghhVZEo=;
-	b=Ubstt37J9U+S1qFajqFtYMXVlWvRmk25azXF+Te8fe0wmM+OedaK2vnqsSCp7w5nvb2UTH
-	ehiGH5nsp6aIwa/XH1d6KxcDEYxUP17ad+NmH6cOQSuX5cv8NTmM+c1lUKMURUdPdTR3bc
-	0lLDE3P9p85Wokxh9uuGF3OrTLXdjyU=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-577-SXc0HnViP-q4W8H3ZS2HSg-1; Tue, 05 Nov 2024 11:27:54 -0500
-X-MC-Unique: SXc0HnViP-q4W8H3ZS2HSg-1
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4315cefda02so41708725e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2024 08:27:54 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730824073; x=1731428873;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XYowUcCUvYBTzf8yObVt54/LH6jljftk+yqZghhVZEo=;
-        b=KGAvid+/MgKOcRgJoUEZwct/t067rSjexeIrHnJnlrtP4d9Rf9B/K4XHW+saTSx3fZ
-         T9MtqDKgUHzfnjAJlTXH7AJjcFo/YssYDJvNF0DAcA+6hVbgTVVZ1ugC8cHQ0vqpflVr
-         MU1HotCy5XquE9gv2lek/NrkOWyWVTS61wnO2QmRkU2ludihYP/KUzgAhFfn/rOgQuxS
-         CqO8F09HBlwS26fN2POW5iaB9biAe4EMLGhyZApCadmFJYPtC4tUbnyYRZ2RXFctvjak
-         PwQ5k4iJuK1xBEbIgFRg1rPT6qNKm+qHctsPT/kmlUhonff/XknYUS0YMDkcy2K1lI5m
-         pUhQ==
-X-Gm-Message-State: AOJu0YxHZ1epDeEXB70KoPPbrnCeJ1SW5JUu++yZrWDCRnp+nlFH57L/
-	9YMYxb94kqQhBCUOpM+Rv7zgL/MiTcBjEI02iiAtanug4wvGrFi8O/aO2UTWdefdI4U78AFZJZf
-	GD5W+OKUv/hfnpLwU/occIspdfJgXEwLmyNjIFxl/Pg7fft4mfJejRw1bM6QOyBPwGvPy47moSY
-	E1TN00RK8jOHBDXzmm329gNwEw3gtO27AmvO+xEJQXeyE=
-X-Received: by 2002:a05:600c:3ca8:b0:431:52b7:a499 with SMTP id 5b1f17b1804b1-4327b7019ddmr164329155e9.20.1730824072892;
-        Tue, 05 Nov 2024 08:27:52 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IF8qLZJHLIE/cUeUU8jtXMTkzAkfunIJGNZ3dFCsxvlEONkGNj3i3sAGZTJ8fETUGIFx2PBQA==
-X-Received: by 2002:a05:600c:3ca8:b0:431:52b7:a499 with SMTP id 5b1f17b1804b1-4327b7019ddmr164328795e9.20.1730824072142;
-        Tue, 05 Nov 2024 08:27:52 -0800 (PST)
-Received: from [192.168.0.111] (78-80-81-220.customers.tmcz.cz. [78.80.81.220])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-431bd9479ebsm220822625e9.23.2024.11.05.08.27.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Nov 2024 08:27:51 -0800 (PST)
-Message-ID: <026951b5-69ea-49c7-b48b-5d426ccd1ec5@redhat.com>
-Date: Tue, 5 Nov 2024 17:27:50 +0100
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="osPp7PHZ"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20241105163852epoutp0168925857a912d711a5639ca87540b65f~FH_yeTZAV1269812698epoutp01K
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 16:38:52 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20241105163852epoutp0168925857a912d711a5639ca87540b65f~FH_yeTZAV1269812698epoutp01K
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1730824732;
+	bh=018tCczGIWlDYFfcL/g7H7zKEzrYeq38C52P6ZKfViY=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=osPp7PHZUAtkBm1wiwTZw/gOj2xcLI3y0MN3ZlTpaCHtLrINvymiQRtaO70usE5qo
+	 vFbc30FAisaSI5QET7UdnXOTwLNjVBNDKI7hBYzHkuNgCfMEyzMIco5VvCvhV4XElH
+	 q1gqAe0DR6D7ZYNHWtJ2gapqBTltpN5qEwalY0ds=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+	20241105163852epcas5p478c4615e2673a5ae8b551bfaa82c5aa7~FH_x7KjzV2725427254epcas5p4c;
+	Tue,  5 Nov 2024 16:38:52 +0000 (GMT)
+Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.177]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4XjYty5FL4z4x9Pp; Tue,  5 Nov
+	2024 16:38:50 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	71.E2.08574.A1A4A276; Wed,  6 Nov 2024 01:38:50 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20241105163849epcas5p485baa527d07ca146440e9076ccb469fa~FH_vvB_mR2725427254epcas5p4Z;
+	Tue,  5 Nov 2024 16:38:49 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20241105163849epsmtrp232a800c9de2ecb017bee1d36bb0fcc95~FH_vuSlVD0962709627epsmtrp2h;
+	Tue,  5 Nov 2024 16:38:49 +0000 (GMT)
+X-AuditID: b6c32a44-6dbff7000000217e-19-672a4a1a7402
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	37.A9.18937.91A4A276; Wed,  6 Nov 2024 01:38:49 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20241105163847epsmtip1afd91732e6a51e9aa25417fdf00c3856~FH_tY5x5r2948929489epsmtip1j;
+	Tue,  5 Nov 2024 16:38:47 +0000 (GMT)
+Message-ID: <51b67939-cbd8-4213-967a-9c6b2ecd5813@samsung.com>
+Date: Tue, 5 Nov 2024 22:08:46 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,55 +62,131 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] megaraid_sas: fix for a potential deadlock
-From: Tomas Henzl <thenzl@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
- sumit.saxena@broadcom.com, ranjan.kumar@broadcom.com
-References: <20240923174833.45345-1-thenzl@redhat.com>
+Subject: Re: [PATCH v7 06/10] io_uring/rw: add support to send metadata
+ along with read/write
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anuj gupta <anuj1072538@gmail.com>, Anuj Gupta <anuj20.g@samsung.com>,
+	axboe@kernel.dk, kbusch@kernel.org, martin.petersen@oracle.com,
+	asml.silence@gmail.com, brauner@kernel.org, jack@suse.cz,
+	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+	linux-fsdevel@vger.kernel.org
 Content-Language: en-US
-In-Reply-To: <20240923174833.45345-1-thenzl@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20241105160051.GA7599@lst.de>
 Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCJsWRmVeSWpSXmKPExsWy7bCmpq6Ul1a6wemrqhYfv/5msWia8JfZ
+	Ys6qbYwWq+/2s1m8PvyJ0eLmgZ1MFitXH2WyeNd6jsVi9vRmJotJh64xWuy9pW2xZ+9JFov5
+	y56yW3Rf38Fmsfz4PyaL83+Ps1qcnzWH3UHQY+esu+wel8+Wemxa1cnmsXlJvcfumw1sHh+f
+	3mLx6NuyitHjzIIj7B6fN8l5bHrylimAKyrbJiM1MSW1SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ
+	19DSwlxJIS8xN9VWycUnQNctMwfoHSWFssScUqBQQGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpO
+	gUmBXnFibnFpXrpeXmqJlaGBgZEpUGFCdsbJr48YC65JVFyZu5u5gXG7cBcjJ4eEgInEld9v
+	mLsYuTiEBHYzSixo/gDlfGKU2Lp5KxOcc/r8fnaYlm3dj9khEjsZJd7/uAvV8pZR4lffA2aQ
+	Kl4BO4nTiz4xgdgsAioSzXPbmSDighInZz5hAbFFBeQl7t+aATZVWCBeYvnC42BxEQEliaev
+	zjKCDGUWWMYs0fNiE1iCWUBc4taT+UCDODjYBDQlLkwuBQlzCmhLtN58ygpRIi+x/e0csIMk
+	BD5wSBz6fAjqbBegTzuhbGGJV8e3QNlSEp/f7WWDsLMlHjx6wAJh10js2NzHCmHbSzT8ucEK
+	spcZaO/6XfoQu/gken8/ATtHQoBXoqNNCKJaUeLepKdQneISD2csgbI9JFZuWMoGCauZzBLX
+	L95jn8CoMAspWGYh+XIWkndmIWxewMiyilEytaA4Nz012bTAMC+1HB7jyfm5mxjByV3LZQfj
+	jfn/9A4xMnEwHmKU4GBWEuGdl6qeLsSbklhZlVqUH19UmpNafIjRFBg/E5mlRJPzgfklryTe
+	0MTSwMTMzMzE0tjMUEmc93Xr3BQhgfTEktTs1NSC1CKYPiYOTqkGpnm+/V+jZ3Xc2bXeZ/61
+	GSlzNfwdqrRntxe/Ofnszv3dSxZdiHc7Ixq5Yt8BmYspws8mhWz92SL2N0wi0v9NkPTdfW8s
+	NjVrh2xmmmgb6FnrEVLHfbWxwfG2hkkYd3qWYfw9I/4/ItOmPFH51vZSJUzDfVnQGsOFenJX
+	J0ldnv3+DjNz8/y+nQuOzIqp3nE++ujKaVd6NbI8J114P+3e1vOcp4U9zmSJbpRcYX9n4cZN
+	KpnB8VvXn5u1ofD/5J65GiduvsjuzbGXtFPe9m8yQ/nGjjZ9/TlWu+233/Xo/Lqo5Ob7bW9b
+	rU9czXkqvSb1+gbdu9P4LZWPzspba2Aulbj2yuJHD4tCHvBZOB+/eHqfEktxRqKhFnNRcSIA
+	qKLg+ncEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDIsWRmVeSWpSXmKPExsWy7bCSnK6kl1a6wf7nRhYfv/5msWia8JfZ
+	Ys6qbYwWq+/2s1m8PvyJ0eLmgZ1MFitXH2WyeNd6jsVi9vRmJotJh64xWuy9pW2xZ+9JFov5
+	y56yW3Rf38Fmsfz4PyaL83+Ps1qcnzWH3UHQY+esu+wel8+Wemxa1cnmsXlJvcfumw1sHh+f
+	3mLx6NuyitHjzIIj7B6fN8l5bHrylimAK4rLJiU1J7MstUjfLoEr4+TXR4wF1yQqrszdzdzA
+	uF24i5GTQ0LARGJb92P2LkYuDiGB7YwSW5uuskAkxCWar/1gh7CFJVb+ew5V9JpR4sejiWBF
+	vAJ2EqcXfWICsVkEVCSa57YzQcQFJU7OfAJWIyogL3H/1gywQcIC8RLNE5cwg9giAkoST1+d
+	ZQQZyiywjFli6oy7TBAbZjJLvL75lxWkihnojFtP5gMlODjYBDQlLkwuBQlzCmhLtN58ClVi
+	JtG1tYsRwpaX2P52DvMERqFZSO6YhWTSLCQts5C0LGBkWcUomlpQnJuem1xgqFecmFtcmpeu
+	l5yfu4kRHMFaQTsYl63/q3eIkYmD8RCjBAezkgjvvFT1dCHelMTKqtSi/Pii0pzU4kOM0hws
+	SuK8yjmdKUIC6YklqdmpqQWpRTBZJg5OqQamKWanM5je2Uwye9bk7qPXcNY6pDEzpuuCEm/K
+	3d/XRQS2sJhaGb7sFCgL39q4J+S/x+Ev004uyWlX9E6M5L6/81vj3rJ1W1YKbz2jKiaUMf8g
+	32fPrdHyp4wWf1XOSRKIluv9JHHkXfrL2za8DHkaD1pNhQ+KP/68vnoqp9b+1vubTp1+Wf34
+	WmhYw/Fvj3xOFeTkdilZfFOpe+x2d855717tHdkT/IWtF89V2Sy5vuH+nl2uTTJFqhXCyy7H
+	8Dy+35UTYeqwrL70gNLd470raxYGbuq6viqZadK98EM75y35HBAxMSt35td17AUtp8vSN0Yy
+	HpLiKNmtdr/ezu27WrDkrger/dS7rBfE/5qoxFKckWioxVxUnAgAbBP0eE8DAAA=
+X-CMS-MailID: 20241105163849epcas5p485baa527d07ca146440e9076ccb469fa
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20241104141459epcas5p27991e140158b1e7294b4d6c4e767373c
+References: <20241104140601.12239-1-anuj20.g@samsung.com>
+	<CGME20241104141459epcas5p27991e140158b1e7294b4d6c4e767373c@epcas5p2.samsung.com>
+	<20241104140601.12239-7-anuj20.g@samsung.com> <20241105095621.GB597@lst.de>
+	<CACzX3AuNFoE-EC_xpDPZkoiUk1uc0LXMNw-mLnhrKAG4dnJzQw@mail.gmail.com>
+	<20241105135657.GA4775@lst.de>
+	<b52ecf88-1786-4b6f-b8f3-86cccaa51917@samsung.com>
+	<20241105160051.GA7599@lst.de>
 
-On 9/23/24 19:48, Tomas Henzl wrote:
-> This fixes a 'possible circular locking dependency detected' warning
->       CPU0                    CPU1 
->       ----                    ---- 
->  lock(&instance->reset_mutex); 
->                               lock(&shost->scan_mutex); 
->                               lock(&instance->reset_mutex); 
->  lock(&shost->scan_mutex); 
->  
+On 11/5/2024 9:30 PM, Christoph Hellwig wrote:
+> On Tue, Nov 05, 2024 at 09:21:27PM +0530, Kanchan Joshi wrote:
+>> Can add the documentation (if this version is palatable for Jens/Pavel),
+>> but this was discussed in previous iteration:
+>>
+>> 1. Each meta type may have different space requirement in SQE.
+>>
+>> Only for PI, we need so much space that we can't fit that in first SQE.
+>> The SQE128 requirement is only for PI type.
+>> Another different meta type may just fit into the first SQE. For that we
+>> don't have to mandate SQE128.
 > 
-> Fix this but temporarily releasing the reset_mutex.
+> Ok, I'm really confused now.  The way I understood Anuj was that this
+> is NOT about block level metadata, but about other uses of the big SQE.
 > 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+> Which version is right?  Or did I just completely misunderstand Anuj?
+
+We both mean the same. Currently read/write don't [need to] use big SQE 
+as all the information is there in the first SQE.
+Down the line there may be users fighting for space in SQE. The flag 
+(meta_type) may help a bit when that happens.
+
+>> 2. If two meta types are known not to co-exist, they can be kept in the
+>> same place within SQE. Since each meta-type is a flag, we can check what
+>> combinations are valid within io_uring and throw the error in case of
+>> incompatibility.
 > 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 6c79c350a4d5..253cc1159661 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -8907,8 +8907,11 @@ megasas_aen_polling(struct work_struct *work)
->  						   (ld_target_id / MEGASAS_MAX_DEV_PER_CHANNEL),
->  						   (ld_target_id % MEGASAS_MAX_DEV_PER_CHANNEL),
->  						   0);
-> -			if (sdev1)
-> +			if (sdev1) {
-> +				mutex_unlock(&instance->reset_mutex);
->  				megasas_remove_scsi_device(sdev1);
-> +				mutex_lock(&instance->reset_mutex);
-> +			}
->  
->  			event_type = SCAN_VD_CHANNEL;
->  			break;
+> And this sounds like what you refer to is not actually block metadata
+> as in this patchset or nvme, (or weirdly enough integrity in the block
+> layer code).
 
-Hi Chandrakanth,
+Right, not about block metadata/pi. But some extra information 
+(different in size/semantics etc.) that user wants to pass into SQE 
+along with read/write.
 
-can you please review this patch?
+>> 3. Previous version was relying on SQE128 flag. If user set the ring
+>> that way, it is assumed that PI information was sent.
+>> This is more explicitly conveyed now - if user passed META_TYPE_PI flag,
+>> it has sent the PI. This comment in the code:
+>>
+>> +       /* if sqe->meta_type is META_TYPE_PI, last 32 bytes are for PI */
+>> +       union {
+>>
+>> If this flag is not passed, parsing of second SQE is skipped, which is
+>> the current behavior as now also one can send regular (non pi)
+>> read/write on SQE128 ring.
+> 
+> And while I don't understand how this threads in with the previous
+> statements, this makes sense.  If you only want to send a pointer (+len)
+> to metadata you can use the normal 64-byte SQE.  If you want to send
+> a PI tuple you need SEQ128.  Is that what the various above statements
+> try to express? 
 
-Thanks, Tomas
+Not exactly. You are talking about pi-type 0 (which only requires meta 
+buffer/len) versus !0 pi-type. We thought about it, but decided to keep 
+asking for SQE128 regardless of that (pi 0 or non-zero). In both cases 
+user will set meta-buffer/len, and other type-specific flags are taken 
+care by the low-level code. This keeps thing simple and at io_uring 
+level we don't have to distinguish that case.
 
+What I rather meant in this statement was - one can setup a ring with 
+SQE128 today and send IORING_OP_READ/IORING_OP_WRITE. That goes fine 
+without any processing/error as SQE128 is skipped completely. So relying 
+only on SQE128 flag to detect the presence of PI is a bit fragile.
