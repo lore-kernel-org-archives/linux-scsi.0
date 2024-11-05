@@ -1,128 +1,94 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF5ED1E7C27
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 19:25:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B3B32003AA;
+	Tue,  5 Nov 2024 19:30:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730834714; cv=none; b=H2ncXyVqoVvTP9Qt8iX3LVCD6nD0I/wpY4LCqHUeptrEz4t6QNu47Ho3YmZR6pEyrOwFF/zqMS7j+W0exAGpnH0sbvKev2bQHvlZ/hxBkSLDCXYrfJK1HZRB+5ymeOO6MpbfO4ndsCSfdCG/lwgh/by9LPCzvJuIXJNwV89sRRc=
+	t=1730835044; cv=none; b=k1XiPRSyoWnKaQp5TaUPUxewEhkpPJ5ZMco8En3sZVX7DrjpMZ3mXIEKqs78c3TnOE6LtFLPhF79Y5kIKbQf+oQqQR258zxGnCp2BNjU4JCKgOS92Y1AZS/6qAbAaIthiPckZHp4nIvnI1mGQA4X6D9sPweBRpm99C+uK/38sOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730834714; c=relaxed/simple;
-	bh=PkcHIbnbE8ebWADDPPm8HHRv567Wao4v6Zr2yKncmqI=;
+	s=arc-20240116; t=1730835044; c=relaxed/simple;
+	bh=F77iKaVuO5nNNAk/6vtbbfjGmlEkJUbjj4pE1aNyn0o=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AJWDAB6jQGqcINe5hCU20u3nUea+9tA99XT5UQXtygUYxvpOX0n00vYMgejnNBzZAaXO3LkjgDSfZeyEKBrxlXYi17WBV8gllqSPqFxaEmd3KE51/40kYi9mp18ZZxFIbglt7qTW9rK1xhhaZUhP91nxX8qFBYWlc3CTWRIKfvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eMqjUYla; arc=none smtp.client-ip=209.85.208.47
+	 To:Cc:Content-Type; b=V/aCK2HBHY9KYoEwrhpCut7LQqrqp0GOTHgfpEHjIaXr5xEfMP6x9kozv/RYpVapu2oR//6B2AITcaOOGHgCFcEOVofT5Ycd1on20QiP+mqBygLdcxmMOiB3UN2F/JQCB2TXGQhR9o/LIu6+lLAEXLWWDd+BCnEBZKEwkqL/chI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NK7tZEGx; arc=none smtp.client-ip=209.85.219.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eMqjUYla"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5cacb76e924so7896765a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2024 11:25:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NK7tZEGx"
+Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-e30eca40c44so5284086276.2;
+        Tue, 05 Nov 2024 11:30:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730834711; x=1731439511; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=o3tyxR2AQZGkPPlPpW7kTPulNX3WqlxLVprzNw5Lkyw=;
-        b=eMqjUYlaCH+iuRM4DC97s7Wjrszxe80jkeiiB4lW0mF0NAeDzpJCXRshyeEl1+x39h
-         ciKxzo9Ox1gyGXBnaAP36tEgPVUSaMZGAxVIGq/wXtZGLHbdXrnF0Vzsq57Mmn/zYYhh
-         8E12DdJZa2pV0ucToLFdR13lq/BlOUG2F342gJDcHiqOOoAuq4UvAPh8FCB371TvON55
-         9qh7snbyPOWf5WkgITXlBQz92z06aEE6n4LTPLSpXu4g2+Lp42RjM/0TZ7vAm+xW3h/p
-         B53WYLzhFdcgIgnZbDoQg96BjCidFhwF3k0JrnPYtgHUhzcl64nutBiL22Bw0qkWmjbB
-         Zpkw==
+        d=gmail.com; s=20230601; t=1730835042; x=1731439842; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KJuzFWUnz/k8ziEBqxWrk8940BKVfarTKUWT5e1s4Vs=;
+        b=NK7tZEGxUsU7bv02XZvhNxa7UAbvacb3+HCFlNX6SP9mZLtDmYOLWzaXsrmEbAtBdg
+         puTpUb3j7ND+3sIj3xK/nuRxgbPR+g+glvJGiuzyWvHEjkLXWzu/jJn7ZnBY1HBB5ntg
+         IbhXRITxEUZ86wp8mZ4PyEcjc3E8gNyUbOteofB2begXuxGvaZAS6R46kPIYL5UE5v9X
+         Q9xSlZobya7rDtU81tQIxJGzAHGx1iynQMHiU00edJN48e7RhD1xnQbq12VlUbRAjLuw
+         SiGf7hBFL7nsU7/SnyMUEXg4iw7smNQyznOTl5O6i/BoX3TNp+c9hYNKCMq0RomylPzd
+         OENA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730834711; x=1731439511;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=o3tyxR2AQZGkPPlPpW7kTPulNX3WqlxLVprzNw5Lkyw=;
-        b=FR4s0gMwC5MmINOUP+EN2lbiI1okV6Pd4DrfzT/oLUE3JYzx8K4On7J975tYhMwCpr
-         fexARBSa5UxxmHU7VJVJegwr+rL5pu0WN51c0XK5SjEHfAxtYa9U3souSBWhiG6aQpu0
-         ogZ9dPDRaJp4LLiVlO93iv2nALx+UjojlBHHFXa18ywQUNIQ5Z+It4R9K9yjg7pvAWCb
-         XTRzR+q77ZdjkYUK6ddhksa1CsX8UETzLvQqa+DhnGhhPJ3TrFApFRhyPIfd7nIB36bO
-         4QJarPYioYEXuDf1192mbssVJVYa2WCrXTypBPobe1m92H6mSVaLCKj90qoxqoSGm9x6
-         Carw==
-X-Forwarded-Encrypted: i=1; AJvYcCWimbF+CNjPigegvZZzrP5Th2XpBNk5HwTBtnnYwBLSf/DjjE9hxNPciBPkK4EtXdmXCZjeVrVgtuU4@vger.kernel.org
-X-Gm-Message-State: AOJu0YyiTfsW3eLvUbZoraAXUHNJY6PXAehinbJkEZWKgDX8KFxBKK8N
-	XhLX1cJEToMBA5zKm0nWAPPKY6BzIDVVOOr+1VV8IFptK8XlkQ30dz6iWNWNTkcgNAovMXndAH+
-	+TwsZyYjmwnAWuXHA4xiDYa+jikcIHffGO/4=
-X-Google-Smtp-Source: AGHT+IHYu2e+mP/CX2J6PGEhDsmlwGGmmDOjlvZEz6O2ykbqmE0VpTBn8jalQH+JnTtMiqfim7rbLATF+I+n7D+BQDQ=
-X-Received: by 2002:a05:6402:84f:b0:5ce:c7ca:70ca with SMTP id
- 4fb4d7f45d1cf-5cec7ca71a0mr9040781a12.34.1730834710751; Tue, 05 Nov 2024
- 11:25:10 -0800 (PST)
+        d=1e100.net; s=20230601; t=1730835042; x=1731439842;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KJuzFWUnz/k8ziEBqxWrk8940BKVfarTKUWT5e1s4Vs=;
+        b=dRXUXzwRjG9oDjLzRtnJjG6OeRkJtLvPcYTBrsVbRNbqwEjdds5nHXD9hpkhzzc+wr
+         qFmvoPCns5b8siGYISdVI4GbFj1iZtOZe2uHiSyml9gM/3paFKAf/HTddSLUOuxyIejc
+         ESdqRbgXHA/5qE77l9b4e55yBZRdsRxZFs3gtmPUJMZEQFF+1lJetCqGnXfbyg6cwY/r
+         2/r0aaQPTHrhGpRescFrPicIDChrHTt54Dae9Z4EpgGYxogNVGXWGf9/x99sjvclcAqV
+         HtMbFqSpGM79x0gYGwI+tkiVD91zHvXqYMOcb1vuKsg/74wHgYy3qMwsyTe5K1UVKNV2
+         Od6Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUD9EXgFSOONIC7s7toc0wHMDBv7LQIZXg7rieDAHgQ5JzU3xRe52+/bdFhJZEWvahZXdKjSDqy@vger.kernel.org, AJvYcCWzpkrAY/VjAWUti9TfPcgQHRgV6ZOWyS5UC2oEp2nskJd41OjcMURU9hxiw3B62rgoVWdzg2o88CGphQ==@vger.kernel.org, AJvYcCXlluCoguLIrXIwY9OX3lf4ULKYK0TAZJ7ucg63znmxYP0DeYSnWGICUofJKE/dZm5hURey36NHLrlX0s8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzL4rutCD/fjO7WzjNITjfPkNAa3dHmO66IZ+Csmiu+vvcJwAy7
+	MkppxY8KyEpwaWTsa05U5QpQDbrUO3Zf7txfplDaq8b58smCWMI20rx0uLn4+7v2/dQIlxU7cMY
+	iYEFtgSonEwTyNzTwfX6qZiwg700N8jlbYlw=
+X-Google-Smtp-Source: AGHT+IGRt9PgOs6K9THyHzaclLBzLxdT2/CqUGYDDBGtGkTOFWcuRTzs0pyzEmB42IH2+xVMWGqqG64zERi9yQsOHqQ=
+X-Received: by 2002:a05:690c:7207:b0:6ea:90b6:ab48 with SMTP id
+ 00721157ae682-6ea90b6ae95mr85072517b3.18.1730835042304; Tue, 05 Nov 2024
+ 11:30:42 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
- <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
- <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
- <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
- <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
- <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
- <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
- <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
- <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
-In-Reply-To: <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Tue, 5 Nov 2024 20:24:58 +0100
-Message-ID: <CA+=Fv5Q5Q1BUscm2Tua9y1b=2f33+3SkULNwe0gKQpJFL1PLig@mail.gmail.com>
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+References: <20241105130835.4447-1-chenqiuji666@gmail.com>
+In-Reply-To: <20241105130835.4447-1-chenqiuji666@gmail.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Tue, 5 Nov 2024 11:30:36 -0800
+Message-ID: <CABPRKS-UAnhSFB5z-LhrQqgXtenyLqVCByaME12LvMNmjVQ4ig@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix improper handling of refcount in lpfc_bsg_hba_set_event()
+To: Qiu-ji Chen <chenqiuji666@gmail.com>
+Cc: Justin Tee <justin.tee@broadcom.com>, james.smart@broadcom.com, 
+	dick.kennedy@broadcom.com, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, baijiaju1990@gmail.com, stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->  Thomas, Magnus, can you please check what hardware revision is actually
-> reported by your devices?  Also a dump of the PCI configuration space
-> would be very useful, or at the very least the value of the PCI Revision
-> ID register, which is independent from the hardware revision reported via
-> the device I/O registers.
+Hi Qiu-ji,
 
-Below is some info from my Alpha ES40 with an ISP1040. I've added a
-printout of hardware revision number to the driver, as previously
-pointed out the revision numbers in qla1280.h is wrong so I've used
-info from NetBSD
-rev5 is a "B" which matches what is actually printed on the chip as
-well. This seems to be consistent with PCI Revision ID register.
+This patch does not look logically correct.  if (&evt->node =3D=3D
+&phba->ct_ev_waiters) evaluates to true, then it is not possible that
+(evt->reg_id =3D=3D event_req->ev_reg_id) is also true.
 
-output from driver:
+Because if (evt->reg_id =3D=3D event_req->ev_reg_id) evaluates to true, it
+means we have found an lpfc_bsg_event of event_req specified interest
+and therefore (&evt->node !=3D &phba->ct_ev_waiters) must be true.
 
-qla1280: QLA1040 found on PCI bus 2, dev 4
-revision=5 <-- printout of cfg0 register 5 = rev B
-QLogic QLA1040 PCI to SCSI Host Adapter
-Firmware version:  7.65.06, Driver version 3.27.1
+Also, following this suggested patch=E2=80=99s logic, if after attempting t=
+o
+go through the phba->ct_ev_waiters list and the evt->node iterator is
+pointing at exactly the phba->ct_ev_waiters head, then this patch=E2=80=99s
+kref_put will be for the phba->ct_ev_waiters head which is not a
+preallocated lpfc_bsg_event object.  So, this patch would be calling
+kref_put on an uninitialized memory region.
 
-#lspci -s 0001:02:04.0 -vvv
-0001:02:04.0 SCSI storage controller: QLogic Corp. ISP1020/1040
-Fast-wide SCSI (rev 05)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 248, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 52
-        Region 0: I/O ports at 200008000 [size=256]
-        Region 1: Memory at 209050000 (32-bit, non-prefetchable) [size=4K]
-        Expansion ROM at 209040000 [disabled] [size=64K]
-        Kernel driver in use: qla1280
-        Kernel modules: qla1280
+Sorry, I cannot acknowledge this patch.
 
-
->If all else fails, I would still recommend to disable by default 32-bit
->DMA addressing for pre-ISP1040C hardware, as that matches documentation,
->and then have a platform quirk to enable it specifically for ISP1040B for
->the relevant SGI configurations.  But I do hope there is a better approach
->possible.
-
-I have put together a patch which if we have an ISP1040 chip with chip
-revision less than "C" it uses dma_get_required_mask() to se
-DMA_BIT_MASK otherwise it will set the full 64-bit mask. If
-dma_get_required_mask() works properly on IP30/MIPS it should return a
-64bit-something mask, right? Maybe this can be the quirk that makes
-this work on both Alpha and SGI/Octane? (Assuming we don't find a
-better approach)
-
-Magnus
+Regards,
+Justin
