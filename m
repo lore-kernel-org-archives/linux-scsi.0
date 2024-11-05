@@ -1,138 +1,93 @@
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3048D1D4325
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Nov 2024 11:17:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6FCC1D47BD;
+	Tue,  5 Nov 2024 11:27:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730805476; cv=none; b=UbLiikMjxGCR/4gixWR2ODbiXBs1bx/0jrOxA+uSZ4D+llPe6JuF6xAcOwDTZvwTlZiVgK1r89oSB3H18ZzRBWKyvyuLqvUcZDowQ1p7f2qKlQorXYanyo0iDV52clVUY7yF2HE2X3pLJrdOpiovaxK/d09fa2J2S+0QXZBYElI=
+	t=1730806042; cv=none; b=EOj2WeqEg0kVaSUmUOVHQJv0+u3eRMY1YBQXdt8DRItCK1v7+SPqIqHmFRmDT85VEpBUPgTF2BxmaOq0GLaK6R/l+cf+WizEsQSpz1ZqfEDHnlFH57CsBCsVkIt4gzYASQN1XbVKydqv3Ukn9Iwv4co13Oj8A0gZY6L2a/guA6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730805476; c=relaxed/simple;
-	bh=h2nzQHSvEmOQ0i7APXzljzV2efUHb7Wc9CJ3zzIFZjs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YenlX3u/1nXcpg9hzwtj268S5kOUoOAkh6IjuOMsMlMdmrIqeow3K8yKxpt5UWVSo+SWkF6WchEBVQo9tPOfTu3J7Qs0T5V94ty1rEYR0yXRwCjbcVZRcfQZKF7JAXZXlIe76Ilt+/AaNZPB75Y3q33DqfRHWucdh/LeKhWYkrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DmUphTHG; arc=none smtp.client-ip=209.85.167.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730806042; c=relaxed/simple;
+	bh=VWSBYO83zQJzZ6UaOvQdluf5OkKaoloZK3ZxtmVjY2Q=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oFWytHIUbYYgiqnNxmvIliw3ybLsE8dGBpkQLLwT7T2cPNNbKbI3Rtv73JKmKvSbn40mCo/8J8OAnDVrC9qU3GU5HzQ1hftFYrg4uUho6Fq8le5ZgidG+893zfqfXyjBCjDjZV+Vp9aqglpvjvO0pDlGbhQweKcuVJGDWBLGAjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=iy+iyzan; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DmUphTHG"
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-539d9fffea1so5501046e87.2
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2024 03:17:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730805473; x=1731410273; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=A0xsFr3ehhiA4xfERHzYgCVV2IYmm2FDZy/jkXL6kF4=;
-        b=DmUphTHG8stClAn5zbibCrlZoQQ0YAwFA9hFfkm9pFSnOLbTKzfRBiqS2V9gx81rBj
-         dbNGF8dwesVJ5FHyGK+UPNfZVa+eN3WTf6oN63zd6UJR8wvzdApGVu5qrwqCBXew28lO
-         GlOTYHvf67UHkSNwwCpqIN75cLLURQPEUeeDzuJdwpWMVQFoGx0Jzk6sGbqnDiTxzXdT
-         rUvj5ip/7os5Z7VX3TQjGhwR1IP6JKBo4N2QTeo3iwhz814laJIYTVu+gYoX0Mm84s7/
-         Eq0I8jrgAr/UQ67hDSO0EDZ43XEqn2CAOY7GdccuVeTW+m41CwBNrVihLCjpYtmOLWf9
-         qBAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730805473; x=1731410273;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=A0xsFr3ehhiA4xfERHzYgCVV2IYmm2FDZy/jkXL6kF4=;
-        b=n1eagO4nnwkUx4B7+dKz48SNwvxenKXrSmIC0n4O3ATZ901PP0fANhHnP3VxDNuIMX
-         OiZdgtM277guyycvnInW9/Ye4Z2WcjWdxngHwBMj1gIxGNesUDuNlYs1ieM+ptxdWoJ6
-         ZDVzO4W+VfrBe2qaehN3vpDQhOgt231jSYvYH5AvRkjsfP/CPpHSsCWh25HqIfXV09mZ
-         PzLBd7H4+TxqWLFbCBpidQZpOg5gsS/d942alpZh6jFu3g/7y6iRquw5zNjIjKRZ4yMi
-         6msuAKXIi4XOR5dnZ09J3jM6676Syr18ADpbNGWvYHlKniY0q6Q3JzYIdzfJd3kdHKmQ
-         ZjtQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUjKJneEsITMWnKpOwghENY98ZX2SnhwY0TunRWZiBmYbqNG2q0ij1ft5GoH0Ax1J+jVnH003ZrTh4d@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy0AbaUUF54r+vEDeDz5e7U3R1jNF8gLWqS+dHDGz/Ne4vv6uA8
-	+kNVaneunLUGZf2mn10lyhvS9jKZGI4utycWBE5onFVP4aPU3UAAYMubHxrgWtlfqnktdFVujcz
-	mZ8ppO5PB6Qq0hZmc2fabVowua30=
-X-Google-Smtp-Source: AGHT+IF/QnsUCs/PyqbZ6YWDRixQFjF1oM4EVTif6dscnAcW4KNzLPeg0H7zZmcCc6zqCuGi8U6s79gaYZdbTqc8At0=
-X-Received: by 2002:a2e:bc15:0:b0:2fb:6181:8ca1 with SMTP id
- 38308e7fff4ca-2fcbdf5f91emr192090251fa.6.1730805472367; Tue, 05 Nov 2024
- 03:17:52 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iy+iyzan"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1730806040; x=1762342040;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VWSBYO83zQJzZ6UaOvQdluf5OkKaoloZK3ZxtmVjY2Q=;
+  b=iy+iyzannve9sWcHNl6rnXN8PSlI6p0sXadVbzc4XMfZHEowAWsd5/1e
+   TZhrNXtheFpOVA2ej+nGe35niU6BI2oaL4R5t2ykOodQ332Oxx2yhcAb7
+   89p8BtEXWe79KniRjH8o2gb67wSBDEuC7SU7kNsGHF56XOXSb8id9PnG+
+   ZmbqOth8TjZBUXOzI8gtczesIe+zbFcicSOHX8Tws/xSa+arZ2naDd97V
+   KrgfUmFJw6IqEhltM5DRQ6ymDmz/LuJ+XMs/DIFClqylSEQG3q3EqcB7G
+   bI9du87OQ5pU5w1tboFEfnlAvlUcqVTHTxN+m4o70s2Da3kqbSF6U68YA
+   g==;
+X-CSE-ConnectionGUID: 5gZgIYMqTy6enetvfmx1nQ==
+X-CSE-MsgGUID: dp4firN+T/urUxQeV9+oGw==
+X-IronPort-AV: E=Sophos;i="6.11,260,1725292800"; 
+   d="scan'208";a="30658783"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Nov 2024 19:27:14 +0800
+IronPort-SDR: 6729f291_mXwyL4jxc+EKT/7JHefDv/fw4gZ6VKPPQR5RBZ7zekwyKeO
+ ACjCKrOJRM7egYMMA7Q6lehGwwyuZxATPIrHMug==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Nov 2024 02:25:22 -0800
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Nov 2024 03:27:14 -0800
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v3 0/2] Untie the host lock entanglement - part 2
+Date: Tue,  5 Nov 2024 13:25:00 +0200
+Message-Id: <20241105112502.710427-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
- <CA+=Fv5R1c+JCkFFUvY-9=x61FZnks9GOteKETpo2FJV5u3kFzg@mail.gmail.com>
- <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk>
- <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
- <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
- <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
- <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
- <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
- <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
- <20241105093416.773fb59e@samweis>
-In-Reply-To: <20241105093416.773fb59e@samweis>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Tue, 5 Nov 2024 12:17:41 +0100
-Message-ID: <CA+=Fv5R4S-3BQO3wHVG+WKhaO10MV6=yyc1F1qGcAFAShM6K8w@mail.gmail.com>
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-To: Thomas Bogendoerfer <tbogendoerfer@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>, 
-	linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi,
+Here is the 2nd part in the sequel, watering down the scsi host lock
+usage in the ufs driver. This work is motivated by a comment made by
+Bart [1], of the abuse of the scsi host lock in the ufs driver.  Its
+Precursor [2] removed the host lock around some of the host register
+accesses.
 
-If I look at how some of my other SCSI cards are handling this on
-Alpha I see that both sym875 and aic7xxx selects 32-bit masks. aic7xxx
-uses dma_get_required_mask() and sym has it configurable in kernel
-config but seems to default to 32-bit. I guess it's possible to use
-dma_get_required_mask() for chip revisions < ISP1040C . Seeing how
-other scsi drivers have similar solutions? I know, again this is
-missing the point. The ISP1080 does work with a full 64-bit mask.
+This part replaces the scsi host lock by dedicated locks serializing
+access to the clock gating and clock scaling members.
 
-From the Tsunami manual we have:
+Changes compared to v2:
+ - Use clang-format to fix formating (Bart)
+ - Use guard() in ufshcd_clkgate_enable_store (Bart)
+ - Elaborate commit log (Bart)
 
-"Table 10=E2=80=935 PCI DMA Address to System Address Via Direct Mapping
+Changes compared to v1:
+ - use the guard() & scoped_guard() macros (Bart)
+ - re-order struct ufs_clk_scaling and struct ufs_clk_gating (Bart)
 
-Window Size          WSMn<31:20>             Translated Address <34:2>
-....                            ....                                 .....
-2GB                        111.1111.1111TBA         <34:31>:ad<30:2>
-4GB                        N/A
-000:ad<34:2> (monster window only)"
+[1] https://lore.kernel.org/linux-scsi/0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org/
+[2] https://lore.kernel.org/linux-scsi/20241024075033.562562-1-avri.altman@wdc.com/
 
-"The DMA monster window is enabled by PCTL<MWIN>. If enabled, this
-window lies from 100.0000.0000 to 100.FFFF.FFFF, which requires a
-dual-address cycle (DAC) access from the PCI bus. This window maps to
-system memory as defined in Section 10.1.4. Because the Cchip=E2=80=99s
-interface to the CPU and the CAPbus protocol between the Pchip and
-Cchip only support 35 bits of addressing..."
+Avri Altman (2):
+  scsi: ufs: core: Introduce a new clock_gating lock
+  scsi: ufs: core: Introduce a new clock_scaling lock
 
-From this it seems like any access to the "monster windows" needs to
-use DAC, even if the card has full 64-bit addressing capability and is
-plugged in 64-bit slot. On Tsunami based alphas, this seems to happen
-when you go above 2GB memory according to table 10-5 (or 10-6 for
-S/G).
+ drivers/ufs/core/ufshcd.c | 219 +++++++++++++++++---------------------
+ include/ufs/ufshcd.h      |  24 +++--
+ 2 files changed, 111 insertions(+), 132 deletions(-)
 
-Magnus
+-- 
+2.25.1
 
-On Tue, Nov 5, 2024 at 9:34=E2=80=AFAM Thomas Bogendoerfer
-<tbogendoerfer@suse.de> wrote:
->
-> On Mon, 04 Nov 2024 20:40:40 -0500
-> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
->
-> > Maciej,
-> >
-> > > force 32-bit DMA addressing for pre-ISP1040C hardware and let the
-> > > system determine whether 64-bit DMA addressing is available for
-> > > ISP1040C and later devices?
-> >
-> > Yep, that is the correct approach.
-> >
-> > Thomas: Can you confirm that your SGI hardware has a C rev 1040 ISP?
->
-> they are ISP1040B, so IMHO the revision is not the point.
->
-> Thomas.
->
-> --
-> SUSE Software Solutions Germany GmbH
-> HRB 36809 (AG N=C3=BCrnberg)
-> Gesch=C3=A4ftsf=C3=BChrer: Ivo Totev, Andrew McDonald, Werner Knoblich
