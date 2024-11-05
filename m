@@ -1,55 +1,55 @@
-Received: from mail-pf1-f194.google.com (mail-pf1-f194.google.com [209.85.210.194])
+Received: from mail-pl1-f196.google.com (mail-pl1-f196.google.com [209.85.214.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE601D5CC1;
-	Tue,  5 Nov 2024 13:08:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37F71D61BF;
+	Tue,  5 Nov 2024 13:09:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730812127; cv=none; b=Z2QPZSuOsTsEGaif4Md1YavQFXwiVMyyafjEdh6dlGIy1+Xkbv7LaSRGgn8VkyaTvh5gXNGWnBDcC/zuWBOwTIhE9QRtbCekkAAu187E6esBS1ZqOLJbtz9x1GvV7WvRORNxK8Pp7ehwqvrxyX2uahajSPksBdgLNdSJHSXQSNs=
+	t=1730812156; cv=none; b=Y7GgHu2n3nN2SR9mqk39y3iuJ4/ygesahmrR1dgjGrFFNicI1W2+KkOmBVrFYExebhwpjhoN7YB0+zAfLOSqbfR6Vh2uUCj2gPUGqP9Co0ZheEyzfWsnIVXiQExN/sFFP7REWtTmcn/0L0RJrpYq5szNc8ETrLogReWTvr0K8Ew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730812127; c=relaxed/simple;
-	bh=6LHO+837xjndsP4UGLKUUF8gg1xB0/7CJewvnYkqhGk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=YVYQHjOnRujs561np8MltgmqatyGKtA9TRJ47WPgytpnw3P5Vcj4ePyuL7d47NtN8tzKqWYQEcdd7GA60PGGbydGspn8bu/nCLVwYWZ0OCAfxP9lT3+51YkCYRBCp7iz4onZKBIqqUovBB6Tm3aSWS1QNxDdM2xXIjr9MRyRh2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SE8aNa8E; arc=none smtp.client-ip=209.85.210.194
+	s=arc-20240116; t=1730812156; c=relaxed/simple;
+	bh=DVPfp6KGwwMItlmqw72swXe0/qshydUKTIJ5gveB9rs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=PIrnfyCfj+zdzHzNiajTHKvX3l/KFw02u5QFABxAufVPF/ss0Js9MJjD3A9V0XejDsavajXDtwX8vaAuLpAn970OVYjUV5CJN2ofBJEVw4HA8GepziahjxRAgEBYqitLHrWs1R9d7WH80SgGXHDokO4wklgWgqBENmmuQCZpQhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZHX3yFMM; arc=none smtp.client-ip=209.85.214.196
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SE8aNa8E"
-Received: by mail-pf1-f194.google.com with SMTP id d2e1a72fcca58-720be27db74so3632121b3a.1;
-        Tue, 05 Nov 2024 05:08:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZHX3yFMM"
+Received: by mail-pl1-f196.google.com with SMTP id d9443c01a7336-20e576dbc42so56315075ad.0;
+        Tue, 05 Nov 2024 05:09:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730812125; x=1731416925; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1730812154; x=1731416954; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=hCLSIGJHLP62LF77LpMB59zHKu9S2DYvdZVP+cXHd8I=;
-        b=SE8aNa8El3/Fl7TXal6VTCPiAXIvcAKNifeSUbbOYNc1HIy67OviyCbmo5JcFgMbOH
-         rlvo/4q4k3V0pRSTN/yk8Qs+zxTzfzd6GjsO6To2rUceGEitLr3iwnLzPwNYDBwXveyR
-         tjOxMRai7g6u7txqWlXIxNDHD/HK/fMJ9Iog9MroRFWVXUD3oDeBU4/1kbi6AD2z2kqi
-         O1BhDta/q5gV/kTfZhSdBHNH/TAtA3w89QSQRajg7sOLH2u9Zt5Drz9uWm/AQ6HtoY/x
-         wP5OyuOqinhniOsicJdg2RRmCwIHnZDC5RMGkIwWQ41ogTfraAbEeHW7DZuFa5Cw2bBh
-         Oy8A==
+        bh=Pd+t2u3QvsPX1cIumIVDb+Kou2m+XAm5CTqIIKxI2Uw=;
+        b=ZHX3yFMMvGnn0Qxu+E83H/ml5e8lOl0dHcwPYu72dOjJeCcXY+riLExtWoxQNqFTpW
+         /mReuahSdou7O6tx+xi+FEXyQ4jM/lyv8V/6v6/EptiXSeWkENwulfOoIT4h9IIf3NoM
+         F5nUDgOHfavoflsQGemwvQmwR0TaFo433LRpJ2OgarDwqryP18CCE2MEsLx+DNaERgXx
+         HsW94t4MW1OW5LsZet9iMyNFe3p7BkL46qnAvfgHVhEidINQerzxoiFZyYFw0ErUvHj8
+         CJqB34D2Egv53s8mdN6OaJsWk1qhb1KdtjqiQE9Jh45Rk1P/wffHEB6EWYH3TiBfZ0qk
+         2OoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730812125; x=1731416925;
+        d=1e100.net; s=20230601; t=1730812154; x=1731416954;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=hCLSIGJHLP62LF77LpMB59zHKu9S2DYvdZVP+cXHd8I=;
-        b=G9ffZakYF61NRz68SPcI9R+ps3xXV3WjN+1Wy262WqVmZr8etOojH94RV836IPircp
-         aaKS+LEzYIEZXghrD6QGrHOvV0H9sXYFGNeze1WGBEMJjMr0Bin7/6vQshZ1NUB6TRvw
-         81l+fzpHTl1VDf03ompUPapu8joY6CskjO2UjTYEzTwF05zzEbIqXcglUrOl12Je4Dhy
-         hAUcC3ggFz3WGUrnuKWe+kc8JlQhNNqIpyHfKTPTbtupV8y5q+V+Zg3iQNAKKq7fIo49
-         fVM/LwLhB/vnrM4pqid4ZbY5Yh6s+CUF8unArrMqAPXJwrRO5lLuTn3K7a7mFxP5xPXg
-         hBKA==
-X-Forwarded-Encrypted: i=1; AJvYcCXdIkFKVdXJXQ1jXCQLKeel/d55/kR3DQuC5BHZZNpckoeNHysokmiQHmZJf2FU31eEXgl7zjJF6yF2REQ=@vger.kernel.org, AJvYcCXndJ2zZpF9STtcoql/sg4kRusPeooH1rktiZzWG1qzRvZQBzu++DbXWD9B3qrmvZLNJUFzjk8Q@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz5PYkTHlV+Ko6BxHJNolYWEwSg6BzZkt72aYc4reDDm+Vp3gg1
-	8DYCC3379UfSyjHHhYah+8Aq8Z9zXYlB7cY/pc2U8WeGqTQYork0
-X-Google-Smtp-Source: AGHT+IFlQxCtqXO9063mjfqJQHWWf4u0598lodb03wzVhBBgA3v3zf1o8q2K1owL6eNNSkbh6oDF4A==
-X-Received: by 2002:a05:6a00:4b12:b0:71e:4dc5:259a with SMTP id d2e1a72fcca58-720bcd50aabmr28200763b3a.7.1730812124865;
-        Tue, 05 Nov 2024 05:08:44 -0800 (PST)
+        bh=Pd+t2u3QvsPX1cIumIVDb+Kou2m+XAm5CTqIIKxI2Uw=;
+        b=I7tJk4gtMhde0c4xgSg10IkBVez7RxUZKsh2s2NGu1LZncQhIasiyo6Aqfb1MguZgb
+         lakKYV4l3/OHGCHChclIX5goUBvVMhG2JLP+VAzwE1j8T+hudaX1V40T73r4rtxvRwX/
+         oJBsVlsRSgOBfOhmtVT7J+1RbWJRcrmoXAdYC0vhix9rIduQNbhCh9ykIJgQPOi00z8p
+         EimU2IHol3BVgpcPsVWtZojHcPLFLH5i5IRhxVDjfnYwWbAYPXc/sgKRHmS6WMB9gc6u
+         9cVzMVf8WGOMGVVc1I+KaiMUFnUe0seq0FHPL5LuxyiA+8Rp/CW7wvTHtsFiJ0BKktDI
+         joiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUVhhocJ7e7zaFG920r9VYCSu9PWBUpN1EO8nA7d7dPhLh4JWY2wT2uAu1m9OShQjm/vhsfMWKl+JaSmLE=@vger.kernel.org, AJvYcCViZxFSMDydt2IPn5vX/g54wYWFB12fk2GcUHfGVNGvI1Etn1jUdQ5RkSSzQvWQ3KtWOQ54t0IN@vger.kernel.org
+X-Gm-Message-State: AOJu0YwiKKbdZjgYdBPzaC8Rh5pynFRW7kkYZdGedcMMqRGjO1HoI8+T
+	uGnFU5A7dK7btBEkC9ivfhQ89+/EknsS1kL17tvu7obYyHVX82tY
+X-Google-Smtp-Source: AGHT+IFSld5Dtzy9w8oirg/pkVwIv0lEqyttvUVu9GEQ9my5sCZbENiAWf5cmUvcRIWeWc2bJ0HxVQ==
+X-Received: by 2002:a17:903:2443:b0:202:28b1:9f34 with SMTP id d9443c01a7336-21103caeba3mr290569015ad.56.1730812153849;
+        Tue, 05 Nov 2024 05:09:13 -0800 (PST)
 Received: from tom-QiTianM540-A739.. ([106.39.42.118])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-720bc1e6afasm9542773b3a.48.2024.11.05.05.08.41
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2110570ae27sm77316175ad.101.2024.11.05.05.09.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Nov 2024 05:08:44 -0800 (PST)
+        Tue, 05 Nov 2024 05:09:12 -0800 (PST)
 From: Qiu-ji Chen <chenqiuji666@gmail.com>
 To: james.smart@broadcom.com,
 	dick.kennedy@broadcom.com,
@@ -60,9 +60,9 @@ Cc: linux-scsi@vger.kernel.org,
 	baijiaju1990@gmail.com,
 	Qiu-ji Chen <chenqiuji666@gmail.com>,
 	stable@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Fix improper handling of refcount in lpfc_bsg_hba_set_event()
-Date: Tue,  5 Nov 2024 21:08:35 +0800
-Message-Id: <20241105130835.4447-1-chenqiuji666@gmail.com>
+Subject: [PATCH] scsi: lpfc: Fix improper handling of refcount in lpfc_bsg_hba_get_event()
+Date: Tue,  5 Nov 2024 21:09:02 +0800
+Message-Id: <20241105130902.4603-1-chenqiuji666@gmail.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -70,21 +70,25 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This patch fixes a reference count handling issue in the function 
-lpfc_bsg_hba_set_event(). In the branch 
+This patch addresses a reference count handling issue in the 
+lpfc_bsg_hba_get_event() function. In the branch 
 if (evt->reg_id == event_req->ev_reg_id), the function calls 
-lpfc_bsg_event_ref(), which increments the reference count of the 
-associated resource. However, in the subsequent branch 
-if (&evt->node == &phba->ct_ev_waiters), a new evt is allocated, but the 
-old evt should be released at this point. Failing to do so could lead to 
-issues.
+lpfc_bsg_event_ref(), which increments the reference count of the relevant 
+resources. However, in the branch if (evt_dat == NULL), a goto statement 
+directly jumps to the function’s final goto block, skipping the release 
+operations at the end of the function. This means that, if the condition 
+if (evt_dat == NULL) is met, the function fails to correctly release the 
+resources acquired by lpfc_bsg_event_ref(), leading to a reference count 
+leak.
 
-To resolve this issue, we added a release instruction at the beginning of 
-the next branch if (&evt->node == &phba->ct_ev_waiters), ensuring that the 
-resources allocated in the previous branch are properly released, thereby 
-preventing a reference count leak.
+To fix this issue, we added a new block job_error_unref before the 
+job_error block. When the condition if (evt_dat == NULL) is met, the 
+function will enter the job_error_unref block, ensuring that the previously
+allocated resources are properly released, thereby preventing the reference
+count leak.
 
 This bug was identified by an experimental static analysis tool developed
 by our team. The tool specializes in analyzing reference count operations
@@ -96,23 +100,33 @@ Fixes: 4cc0e56e977f ("[SCSI] lpfc 8.3.8: (BSG3) Modify BSG commands to operate a
 Cc: stable@vger.kernel.org
 Signed-off-by: Qiu-ji Chen <chenqiuji666@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/lpfc/lpfc_bsg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 85059b83ea6b..3a65270c5584 100644
+index 85059b83ea6b..832a5a6dd85f 100644
 --- a/drivers/scsi/lpfc/lpfc_bsg.c
 +++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -1200,6 +1200,9 @@ lpfc_bsg_hba_set_event(struct bsg_job *job)
- 	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+@@ -1294,7 +1294,7 @@ lpfc_bsg_hba_get_event(struct bsg_job *job)
+ 	if (evt_dat == NULL) {
+ 		bsg_reply->reply_payload_rcv_len = 0;
+ 		rc = -ENOENT;
+-		goto job_error;
++		goto job_error_unref;
+ 	}
  
- 	if (&evt->node == &phba->ct_ev_waiters) {
-+		spin_lock_irqsave(&phba->ct_ev_lock, flags);
-+		lpfc_bsg_event_unref(evt);
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 		/* no event waiting struct yet - first call */
- 		dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
- 		if (dd_data == NULL) {
+ 	if (evt_dat->len > job->request_payload.payload_len) {
+@@ -1329,6 +1329,10 @@ lpfc_bsg_hba_get_event(struct bsg_job *job)
+ 		       bsg_reply->reply_payload_rcv_len);
+ 	return 0;
+ 
++job_err_unref:
++	spin_lock_irqsave(&phba->ct_ev_lock, flags);
++	lpfc_bsg_event_unref(evt);
++	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ job_error:
+ 	job->dd_data = NULL;
+ 	bsg_reply->result = rc;
 -- 
 2.34.1
 
