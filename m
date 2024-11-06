@@ -1,49 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81ED51D5CD3
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 14:34:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49517207A0D
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 17:51:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730903685; cv=none; b=EkBzznNzCYgDc5ZytIzwVfUP0/B8Tm9J+tkNrWSQiWh6aZVm01dRLwDzlvQ2nhFR5+G0jtHY65yXQ8CT870ojeBlVxJq3kCQSblkMTNBDZTUkkDf+SR2D+k8ycT1CtnamYlCZJRh4ZGpcmTcM1R2LwgG1AgoOAYkrYqSIADJ5hQ=
+	t=1730915476; cv=none; b=Snpa7z2KZWNjWyjpM6zEROJuTlbNtIcaaoAkgWQ81EcrxwU55eu+GZ1wh4/EeIg/XCcn7uswLNra1ylkp4sgXj/6MM0v6dJf1dwCD+3g7alWDMcFkocCMQjw6jL6wSFHd7VFqPsZNTq2QrohpuMtgvMKECs632BIYvrPFrngukw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730903685; c=relaxed/simple;
-	bh=LqAITwUYo4n/xzHTAhLyVk+/VGxS8C4gNITrgwWX0vo=;
+	s=arc-20240116; t=1730915476; c=relaxed/simple;
+	bh=eU9CcdnZYLPOhHyiyLkC8SfWxWblgI3/coY3qkKqCvk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BeiDDD0e6Q1vgOnNngrgUe6U8tlwdRlC5ClDO7uG5CXwMxwbbY8kxkI87wlPZCJn9kG3X7zxZmfIuleeb+bUHoN6VDosidn05ilNvq2cc7sUpJ7zgK+Pb6ZskKStbV6TlyOzHrHo2uFOV2pu7ZFn2JgEW9Np35D+Cfp+bOBeKJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OkBNBAdg; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=oiOUFsBUgIyscekH3htJd40eqHPOMNgokddsJMJdQNu2rx8ZAcOZkUZ9TrHrpJ8HZ6cHPk6SNjepO9Fz0VxOz48MJnTuaSckWH47Fv4o855iToVtKUb4Y577WMFv3BUwSX2FqNl/aLe4+kSqK4jf2+t5QfUsVMp6FwrcYHFLqYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rFvPumZ0; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OkBNBAdg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730903682;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=c7bzXvSXOb2wPhJ2iqyu0t4v5icx5XrB1K23egfe8hg=;
-	b=OkBNBAdg6B3wtaQBasOi/wH9qHYAil1T3DBK7dM2zIXdq4J+mJRmjY+5Y+JAhpbesmZvxg
-	8rvxw7bdyKq6qPP9/n/zHwNYZ6FNo3UVASFv5aLWcwrTAPgFRqsQyh83r5aoYcaZISVO/G
-	ih9TFzAzfat+q8y5Nlfp/GIBG/jO7+Y=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-490-l3ev-BxpPyOujL5xejCubA-1; Wed,
- 06 Nov 2024 09:34:39 -0500
-X-MC-Unique: l3ev-BxpPyOujL5xejCubA-1
-X-Mimecast-MFC-AGG-ID: l3ev-BxpPyOujL5xejCubA
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rFvPumZ0"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XkCS14SGkz6CmM6N;
+	Wed,  6 Nov 2024 17:51:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1730915470; x=1733507471; bh=sG/VtnInJhA77R9bGSdZyqv5
+	W8A9NCkwWQogfWWnFIs=; b=rFvPumZ0rWgNne4xmS3Mx37+CJCvKOlwhg8+ArDo
+	qBcGQAfey0UDKhdcy1YmEYkTN+lIZIv0j0WGBCt4Zra10AuxBedRkB/dGIiRzc6u
+	a5AepbpkG8tVskUE63W5nkiXgQoA3dx9enW0mzep2jJGXHOz22hYQBDrXxGcOFEa
+	tkM0Vi1ldy0mt+DE72XvBhqHIZkqKntdszB8Vvsi/lglIQev4ck/4MvnRJWIV/Hn
+	KgqXAeYAq7Xn4UAF4Sv/tg9TC+4n3aBpn2yIv7HFM0BYr8x/zP7sTT/MTlWv3OnS
+	WgMMPH+teTY41ODoX4JTVv91Vt+DhCqKRcGhpmjRL4n0Kg==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id O8Fp9N36jAgL; Wed,  6 Nov 2024 17:51:10 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 53A13190C4CA;
-	Wed,  6 Nov 2024 14:34:31 +0000 (UTC)
-Received: from [10.22.88.108] (unknown [10.22.88.108])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id BF2931955BC7;
-	Wed,  6 Nov 2024 14:34:29 +0000 (UTC)
-Message-ID: <6ffe0589-d721-41d0-a523-60408747854e@redhat.com>
-Date: Wed, 6 Nov 2024 09:34:28 -0500
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XkCRw56s3z6CmM6M;
+	Wed,  6 Nov 2024 17:51:08 +0000 (UTC)
+Message-ID: <79516d73-7ca1-4af7-87cb-d8d87d4dc6ac@acm.org>
+Date: Wed, 6 Nov 2024 09:51:06 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,50 +50,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] scsi: st: New session only when Unit Attention for
- new tape
-To: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
- linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
- loberman@redhat.com
-References: <20241106095723.63254-4-Kai.Makisara@kolumbus.fi>
- <20241106102316.63462-1-Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH v6 11/11] scsi: ufs: core: Move code out of an
+ if-statement
+To: neil.armstrong@linaro.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: linux-scsi@vger.kernel.org, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+References: <20241016201249.2256266-1-bvanassche@acm.org>
+ <20241016201249.2256266-12-bvanassche@acm.org>
+ <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
+ <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
+ <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
+ <6b20595d-c7f6-42aa-922e-3671abd7917c@acm.org>
+ <1c9acc01-7b1d-41ac-a0da-4e50dc8f0319@acm.org>
+ <6b37ac2c-e3bd-48d0-bc50-4fa2e5789d3d@linaro.org>
 Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20241106102316.63462-1-Kai.Makisara@kolumbus.fi>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <6b37ac2c-e3bd-48d0-bc50-4fa2e5789d3d@linaro.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+Content-Transfer-Encoding: 7bit
 
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
-Tested-by: John Meneghini <jmeneghi@redhat.com>
+On 11/6/24 1:57 AM, Neil Armstrong wrote:
+> Thanks, it does fix the issue. But it won't scale since the next 
+> platforms will probably need the same tweak in the future.
+> 
+> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-HDK
+> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-QRD
 
-On 11/6/24 05:23, Kai Mäkisara wrote:
-> Currently the code starts new tape session when any Unit Attention
-> (UA) is seen when opening the device. This leads to incorrectly
-> clearing pos_unknown when the UA is for reset. Set new session only
-> when the UA is for a new tape.
-> 
-> Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-> ---
->   drivers/scsi/st.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index c9038284bc89..e8ef27d7ef61 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -991,7 +991,10 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
->   			scode = cmdstatp->sense_hdr.sense_key;
->   
->   			if (scode == UNIT_ATTENTION) { /* New media? */
-> -				new_session = 1;
-> +				if (cmdstatp->sense_hdr.asc == 0x28) { /* New media */
-> +					new_session = 1;
-> +					DEBC_printk(STp, "New tape session.");
-> +				}
->   				if (attentions < MAX_ATTENTIONS) {
->   					attentions++;
->   					continue;
+Hi Neil,
+
+Thanks for testing!
+
+The comment about future platforms is not clear to me. This patch fixes
+support for a non-standard controller (reports UFSHCI version 4 but
+supports UFSHCI 3 register set). Shouldn't all future platforms support
+the UFSHCI 4 register set?
+
+Thanks,
+
+Bart.
 
