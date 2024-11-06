@@ -1,62 +1,63 @@
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
+Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0BA21D363D
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 22:28:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D7F3645
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 22:55:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730932116; cv=none; b=ehEHlkX4m8JKCalNPog3Zwf6l8FjNfF0yjnKHePzg7yThx9AGNNAbB47XldMzzsgXx0+zYGfQ5yp59KD8nLdMDF81nqtqT/maqILKqEKhVq0n8DIFgs3AAoQEsYgAzUeqxVDySvdxfnHI4DFHvYekLoDS8N0Z8jqzu/4RsvI7Ls=
+	t=1730933709; cv=none; b=hGeuTgmbxUaQe85WSeN5467laeMQMDEHmbve8vy+xIxiI9hwEZJYO2v01/jkPC3JQ2eTm/NgNfs52ktqW6EbWv9tbW9saMlbEYWwm5D5cj7Pcs7ngAggxMPM0IVMgFW3ElQIN3IK5PO4UXr8D+FXULZ13fUlEIljw/rWa0OwhWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730932116; c=relaxed/simple;
-	bh=vmWCPMI1EnL8PwsbYAulKsByiZH52oyBgVnhBG+c1dk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IcjD+2moMvWKMKCKet1cdfH/kuRYVJm2wA1nsR0yL5QBqPccULdSik5ZA6w28cdHjfymZS8ywdtBQkcf6Ir/PoKQSvND+eXGytX/Wm9bZBoItQClaDRcCeEQwmR1qq5rzq+fpB3PdgyoJZw9Kb9bmEfJaVZjDNKySfyVovhexaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MLaR+w1N; arc=none smtp.client-ip=209.85.167.45
+	s=arc-20240116; t=1730933709; c=relaxed/simple;
+	bh=byln8NuRpa8HH18XhgOfSEmQy5Pxvmmv5bI7s1fyopA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CpZYEWc7Cn3rqr447k4ULXwL9Jpdr26UBpq7xldOfozsoGQeja/ujfS9zjwi7qTkYXXt4Odir1sSm8gatredi9ZhkANQ0UtKolNuOSteHvotjTfVWiFmdrsJpqEb4BWPr/ABqQQjykuzZ5vHvbr461hcd4b+1eIiBCMrh4sZCM4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f66ILdMi; arc=none smtp.client-ip=209.85.167.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MLaR+w1N"
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-539fe76e802so274913e87.1
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2024 14:28:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f66ILdMi"
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-539e13375d3so259204e87.3
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2024 14:55:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730932113; x=1731536913; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1730933705; x=1731538505; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=04l6SfDALYSbSxmf8EiFPEukJSYkKlEWzNWQVKLpkSs=;
-        b=MLaR+w1N94d5M16Xu4epHaZR9xPsi75+ZzwrHJE+gL549PoZKszlbSK2Lr13BX9BRm
-         LyRdreDcUQCgrowCEfiM/UOHSYdqBmfFZu2q/ApLe/PaofnD5bwXz76NoYin78KA2koG
-         jh0K26oaeYxi5UCtw2wEgtN8CyaFuI68+GOQ5CkQ0cWeoxXOji7IiaDQJWo1X2RltK08
-         BH8PheAwNZ1zbZv/Pu5hi0rPQ7BLbT0YkOLfkZKBFPAAmguSgVwJFCwt6BrPZyBSQMy1
-         XWBCJRbtm5XwcDs9WmQ1tK++C5pO+DUvipCj3wgYE7ltVdFg5wrxhX8j2rvnlb4nn8bZ
-         8NVg==
+        bh=R1cuA3Xb89yaJaPzCeZqODF7LPEeITxe8U51qkdDk2E=;
+        b=f66ILdMi1Z887tdkyvHDrHoEkjyYGX41x0ikZrkC8SpvMrOr8w3FrBe4nCGdO4cQyA
+         XNE0M85yDJFlHi9d224BJEUsnSa3pEbieKLtg0V6OuKV8sOItLgM/TNOSMwtVNNlj5/I
+         2p9ZV2GbEjjBAMHjIu/yGyIW/8Nk18qKnX+9yTs6SAacVCp4zIzUcAn1zYtxN0P/Uucj
+         l8Zq2p9YRBj2d4oXJVXwodVFa4ts1hf4RsPp+naShzoo/Qzjx/BG9QQqc+beQ9XZ0Qe2
+         UO23M/NGv8Q37iIOMenvmg4B0rGgLlHuqYsvaSWpM7+08vnh3EKhmVlVvPl5HHP2tbP8
+         +nXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730932113; x=1731536913;
+        d=1e100.net; s=20230601; t=1730933705; x=1731538505;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=04l6SfDALYSbSxmf8EiFPEukJSYkKlEWzNWQVKLpkSs=;
-        b=oQ1KjXMw3nZX0t8rUC1ydAnj3CKPpEoBkeCkN6OvkF8qFPwNThynfyAcugvit7qn8P
-         JMkp/f/bOBipchtKWkbG4v/jazDL2/LdHRcpMtPSgeJmCmUWtRb2JRRzgLEhSnbCopuY
-         AlqMyGSOWH0+2BNYvvsg+KD57u2e0xJkB/h1WaKAL/dxYky6+gML7ccQ3Qjhg2JRXvKC
-         g3yoh9gwEDVsgp+2FSp64MTvZLYy0XSUZ1sjp2gIQsnrxfNCgu4ur3UjcWLVdp6596dj
-         cUGrLdAtrOfj4bs3pwyzCy1emFv82JgL3GSks7+Gw2EZHhZBf3bhKrOvEb6808FSvq2Q
-         k7NQ==
-X-Gm-Message-State: AOJu0YyvridVooGl6FWigekVhwUPLvOR644U30xqtpRo0SDUlKrui+XK
-	ibL4MY8KFxBDn8HuwaBxj7XI45GiuGTFRiueA22CPwyLiZnmwGpP4VxqeA==
-X-Google-Smtp-Source: AGHT+IEb4OwNX0bWaPqailahpc2MXWEPg/M5ygYEqLVVbm9SWwxAynRtHNyuDkgZtyOq8X1ZKwq6DA==
-X-Received: by 2002:a05:6512:31c3:b0:539:8a9a:4e63 with SMTP id 2adb3069b0e04-53d65e11a80mr9278877e87.42.1730932112476;
-        Wed, 06 Nov 2024 14:28:32 -0800 (PST)
+        bh=R1cuA3Xb89yaJaPzCeZqODF7LPEeITxe8U51qkdDk2E=;
+        b=Xoz4XRbFMDRTNo1HNXTlv30W+ZDaE36DpLM8EfZU3X/Go5GxEq6yVHLxHMJvOAneHa
+         Va3jhSbyL8L7bjz4wV720NNm0tELXKdqLHpKfThTaM6IMzOlU93wnwzWEtNy0nH0ioRs
+         aH8Ch7ArQlgaCGdtuB+JKxC9v5BpzYZcYHhVEemhDD84JDm7pbEBOklqEs0sFeqc2UfG
+         LQD7BQ4cZsLsZNl8j91pUtGXGHt8dJutZmfSHvodj+UKDGaE0ujZeYIHRCQi5b+r+dJG
+         iQ75VWsA1lB3hpwT5ir565Il2d+tyHnzkZeNUYhYoJVDCgp049adMUmsYo+ll5rm8bcQ
+         SJZg==
+X-Gm-Message-State: AOJu0Yw4QTtX7vjXO9sfXn09j99yWYWXfx5aFGPHR4uq9kPRRsvwq6IO
+	t6OVZKR4vF15/29yM0Rz+X0K9MfJy+DTgQw+vuxcN76Xxxwm/lJKhVufF2Km
+X-Google-Smtp-Source: AGHT+IFX6xKMsvukGXowMvsXszChHffFRR068pp/1rmX2xajOUdQsviyP+o7bPFUPreg4Gq7qGCcVw==
+X-Received: by 2002:a05:6512:10c9:b0:539:f619:b458 with SMTP id 2adb3069b0e04-53c79e3253fmr12557293e87.22.1730933704996;
+        Wed, 06 Nov 2024 14:55:04 -0800 (PST)
 Received: from es40.darklands.se (h-94-254-104-176.A469.priv.bahnhof.se. [94.254.104.176])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53d826a77d9sm8050e87.165.2024.11.06.14.28.31
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53d82688c36sm15081e87.107.2024.11.06.14.55.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Nov 2024 14:28:31 -0800 (PST)
+        Wed, 06 Nov 2024 14:55:04 -0800 (PST)
 From: Magnus Lindholm <linmag7@gmail.com>
 To: linux-scsi@vger.kernel.org,
 	James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com
+	martin.petersen@oracle.com,
+	hch@infradead.org
 Cc: linmag7@gmail.com
-Subject: [PATCH] scsi: qla1280.c (bug/typo)
-Date: Wed,  6 Nov 2024 23:24:28 +0100
-Message-ID: <20241106222812.2496-1-linmag7@gmail.com>
+Subject: [PATCH] scsi: qla1280.h
+Date: Wed,  6 Nov 2024 23:49:57 +0100
+Message-ID: <20241106225455.2736-1-linmag7@gmail.com>
 X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -66,30 +67,40 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
- A null dereference or Oops exception will eventually occur
- when qla1280.c driver is compiled with DEBUG_QLA1280 enabled and
- ql_debug_level >= 3. I think its clear from the code that the 
- intention is sg_dma_len(s) not length of sg_next(s) when printing
- the debug info here.
+ Fix hardware revision numbering for ISP1020/1040. HWMASK
+ suggest that the revision number only needs four bits, this is consistent
+ with how NetBSD does things in their ISP driver. verified on a IPS1040B which
+ is seen as rev 5 not BIT_4. ISP_CFG0_1040A is referenced on line 2187 in qla1280.c
+ 
 
 Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
 ---
- drivers/scsi/qla1280.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla1280.h | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 8958547ac111..fed07b146070 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -2867,7 +2867,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 			dprintk(3, "S/G Segment phys_addr=%x %x, len=0x%x\n",
- 				cpu_to_le32(upper_32_bits(dma_handle)),
- 				cpu_to_le32(lower_32_bits(dma_handle)),
--				cpu_to_le32(sg_dma_len(sg_next(s))));
-+				cpu_to_le32(sg_dma_len(s)));
- 			remseg--;
- 		}
- 		dprintk(5, "qla1280_64bit_start_scsi: Scatter/gather "
+diff --git a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
+index d309e2ca14de..796cb493a4df 100644
+--- a/drivers/scsi/qla1280.h
++++ b/drivers/scsi/qla1280.h
+@@ -116,12 +116,12 @@ struct device_reg {
+ 	uint16_t id_h;		/* ID high */
+ 	uint16_t cfg_0;		/* Configuration 0 */
+ #define ISP_CFG0_HWMSK   0x000f	/* Hardware revision mask */
+-#define ISP_CFG0_1020    BIT_0	/* ISP1020 */
+-#define ISP_CFG0_1020A	 BIT_1	/* ISP1020A */
+-#define ISP_CFG0_1040	 BIT_2	/* ISP1040 */
+-#define ISP_CFG0_1040A	 BIT_3	/* ISP1040A */
+-#define ISP_CFG0_1040B	 BIT_4	/* ISP1040B */
+-#define ISP_CFG0_1040C	 BIT_5	/* ISP1040C */
++#define ISP_CFG0_1020    1	/* ISP1020 */
++#define ISP_CFG0_1020A	 2	/* ISP1020A */
++#define ISP_CFG0_1040	 3	/* ISP1040 */
++#define ISP_CFG0_1040A	 4	/* ISP1040A */
++#define ISP_CFG0_1040B	 5	/* ISP1040B */
++#define ISP_CFG0_1040C	 6	/* ISP1040C */
+ 	uint16_t cfg_1;		/* Configuration 1 */
+ #define ISP_CFG1_F128    BIT_6  /* 128-byte FIFO threshold */
+ #define ISP_CFG1_F64     BIT_4|BIT_5 /* 128-byte FIFO threshold */
 -- 
 2.47.0
 
