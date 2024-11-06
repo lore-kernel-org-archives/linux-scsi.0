@@ -1,130 +1,120 @@
-Received: from fgw22-4.mail.saunalahti.fi (fgw22-4.mail.saunalahti.fi [62.142.5.109])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997581DD0FF
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 09:59:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.109
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A591E1DA63D;
+	Wed,  6 Nov 2024 09:59:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730887163; cv=none; b=X4kHw92Vo777EIP9iBTT81yYABadg+hVUoqKhtmbS9Jgr1MMzTt0veKWHPMcIIzJh229XsGx6/G84vqV5Fn5yVgNsMKxlOrm13C0eZ2ur7tpwmihLndubBcyQ2kSPhwbrRKeoSAkX+OYw/UzMhONWfZf1ELAlMurM32N1nEK3To=
+	t=1730887185; cv=none; b=onWB42JejNY6D97hOuei2uzpnLfDsp+iur9rbFfW06cJSbaosusF5VOVUJSwmS3YTufNJiY+X7brrqPAcsAbA4lLUJam1IEEaoSCHViaVUSWDk5xBr3MozADSso4/CYsPksEHHrT3pT5mAyyJsPsf5+sT6HAgjCF6E646/zf5B0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730887163; c=relaxed/simple;
-	bh=nmHcOvT01GZAENA7MCHMQ4A2pRTqQAqR0679py1cyLA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F3JKaMIVugLwWJ3oT4q/4Tep8XbjVjLuOz+blLL25EX+wcYmlEI4/zCHyhwoPKFcy3ZzuUonO5oZ/AGsJY3bMgGNVAvnJ865afMrp5I8GS3L5vVD8ZzIR7RxjJMwdGmHEMx4bzR14n2PBohkSQ7b3oW5SO0eExwbpuITEvqPwfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=c8llg1/j; arc=none smtp.client-ip=62.142.5.109
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="c8llg1/j"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
-	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
-	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
-	 content-type:content-transfer-encoding:message-id;
-	bh=N11RRwHX+clsLwhnPodKuSOd7SrqM693Ulg6o6cTJEU=;
-	b=c8llg1/jCpnzA+vFwMi8Z74PPxFicBvCkrekn8ZYvtjMBO+vYyo0vDxqrZPBtS/NVWOqehJC6FfQz
-	 otlD/DUSHTZBc8gcHR3SYeSfesu8yLk7qvq5tfmVIWlRGBgG3Mvu/FCn8KcXhuuRl61xkp4XjmrlbR
-	 7zjoUiuVnCvdtHF5Xqh3OPlVUN/PmFHgjMJ15hCQ/nrzT6hopVy+4yrXEmTcGJoaCm1oJqygG5og8P
-	 rF0chzHJqXZN472TlVVbvo9YGDDJv2PPELD0RPrcWsXY1MJk1yisBus3Al26wzRbUYhQp8ACy+1UD0
-	 WErDr5OBYvYZBlD5qm9XBLzG6HeATrQ==
-Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 963cc97a-9c25-11ef-9ac8-005056bd6ce9;
-	Wed, 06 Nov 2024 11:57:52 +0200 (EET)
-From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-To: linux-scsi@vger.kernel.org,
-	jmeneghi@redhat.com
-Cc: martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	loberman@redhat.com,
-	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH v2 2/3] scsi: st: Add MTIOCGET and MTLOAD to ioctls allowed after device reset
-Date: Wed,  6 Nov 2024 11:57:22 +0200
-Message-ID: <20241106095723.63254-3-Kai.Makisara@kolumbus.fi>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241106095723.63254-1-Kai.Makisara@kolumbus.fi>
-References: <20241106095723.63254-1-Kai.Makisara@kolumbus.fi>
+	s=arc-20240116; t=1730887185; c=relaxed/simple;
+	bh=7l6K2Oe+7Ocw7CjKpQQAhOKiVxUpVshv33jRpchU9+0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=R4U6TNsDGRhGalg1a9MMcW3E+JcQy9L7a14SDHxZ1EkAYJvzTCrBH2vItE9n/BQ2T4W4I03b8DPHxtTj7cswB+scirV3VNi2nUrCaOy1oLLdIfD1Th43z0K8pjjA8FD438Bcvd7glSeSSfkrZUNVOFi99wW6a1ufdhelXRYezU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-6ea1407e978so60855247b3.1;
+        Wed, 06 Nov 2024 01:59:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730887182; x=1731491982;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rC39RasH+GE4mvzpE5BKxCeRZzvkxv3B98iDAPKyxhM=;
+        b=BCVS8wd0vRzgCvN9y4rju3gKKcwDESzC7HzdgowTz1wHtbymuzDFeYBJHCLjIWvcvi
+         YSfLSIK2eddsZukKbZ7ZCM5Px8kzYqZ/SXw4TiKG/Ptjh3HJz5k6l+qZkk5gds+tr5HO
+         PzdsFpaTPydjoYmHtDCXvKXlpWSZMwzjcOzhom4Tv0crWeCtnpLrdUtETc6Aw5Q2Gzuq
+         szqqw4gzd13gVUWDX4h4c5ieiLfGf6DzR6CoeBcM06JxYUIAesv4WtjJq6K1ApzB0Jfo
+         f80nWOvH9ayiqVhTpy3yIi5AqTnFOf9DglfUUG9tvC4yCnOrfOM7npxg7ROmygoZCDcx
+         QZ0g==
+X-Forwarded-Encrypted: i=1; AJvYcCVgS58J8YjnTMdpC66ZDbtiyQYi2C+pZlWaxUSsu44StkmNSjIxDoIKYduPND2s/gk2zBz8vlRUhoUe9A==@vger.kernel.org, AJvYcCVwIZJJV7OoNHmRfntCVD5F3V0tFFyOPTE93uQqfMXwxQ4xQW7ZEt9XCZL0KFwofk6ndWyZK/HN9Joh@vger.kernel.org
+X-Gm-Message-State: AOJu0YzmjTxtHhPMDmWFkegz/YAKS5vapsXnwk9vA7I3cYGBnc+IZyCk
+	xoA8ud5S3r1V1p5fZP0vzAThxpLHiY065GaqrVnA/dKTgVadUFvzSj7LL8Jd
+X-Google-Smtp-Source: AGHT+IGyJbXT1PJOhJsPdjlo6jsGfOHWMdFvqXWneXG6AUxmv5ynX/hDBViKftfjgDO+OF+sa+j0HA==
+X-Received: by 2002:a05:690c:4809:b0:6de:2ae:8138 with SMTP id 00721157ae682-6ea64a8cc02mr194814297b3.5.1730887182153;
+        Wed, 06 Nov 2024 01:59:42 -0800 (PST)
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com. [209.85.128.174])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-6ea55b10748sm26874227b3.32.2024.11.06.01.59.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 06 Nov 2024 01:59:41 -0800 (PST)
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6e38fc62b9fso55585377b3.2;
+        Wed, 06 Nov 2024 01:59:41 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUpd9vYDJNrnENQYRzJ/nn2gPriVW6BxN8iElsR1YhF3a77Y0GtLAq7FhXcnhEvpfO3MrkladKkgjsx0Q==@vger.kernel.org, AJvYcCWQUntKnziaLUUx77mTqwcV31EX2XotmLtrRr5TtiF1g0Ut/9stksaYE9VYCIzN5ql+tBclMzC8QzR5@vger.kernel.org
+X-Received: by 2002:a05:690c:9b10:b0:6db:e280:a3ae with SMTP id
+ 00721157ae682-6ea64b10af2mr200323037b3.23.1730887181333; Wed, 06 Nov 2024
+ 01:59:41 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <b2c56fa3556505befe9b4cb9a830d9e2a962e72c.1730831769.git.geert@linux-m68k.org>
+ <h7x2iksfw7vguvqvjg5axl67mpejodbimwhxluew6cfobotb4t@fewz7knes7au>
+In-Reply-To: <h7x2iksfw7vguvqvjg5axl67mpejodbimwhxluew6cfobotb4t@fewz7knes7au>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 6 Nov 2024 10:59:29 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdVemwQkmb-+SWQ2Rsr-E=gMQ5jUNMDX-QmZS+s5CY1zcQ@mail.gmail.com>
+Message-ID: <CAMuHMdVemwQkmb-+SWQ2Rsr-E=gMQ5jUNMDX-QmZS+s5CY1zcQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: sun3: Mark driver struct with __refdata to prevent
+ section mismatch
+To: =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+Cc: Finn Thain <fthain@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, 
+	linux-m68k@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Most drives rewind the tape when the device is reset. Reading
-and writing are not allowed until something is done to make
-the tape position match the user's expectation (e.g.,
-rewind the tape). Add MTIOCGET and MTLOAD to operations allowed
-after reset. MTIOCGET is modified to not touch the tape if
-pos_unknown is non-zero. The tape location is known after MTLOAD.
+Hi Uwe,
 
-Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
-Tested-by: John Meneghini <jmeneghi@redhat.com>
----
- drivers/scsi/st.c | 29 +++++++++++++++++++++--------
- 1 file changed, 21 insertions(+), 8 deletions(-)
+On Wed, Nov 6, 2024 at 9:50=E2=80=AFAM Uwe Kleine-K=C3=B6nig
+<u.kleine-koenig@baylibre.com> wrote:
+> On Tue, Nov 05, 2024 at 07:36:31PM +0100, Geert Uytterhoeven wrote:
+> > As described in the added code comment, a reference to .exit.text is ok
+> > for drivers registered via module_platform_driver_probe().  Make this
+> > explicit to prevent the following section mismatch warnings
+> >
+> >     WARNING: modpost: drivers/scsi/sun3_scsi: section mismatch in refer=
+ence: sun3_scsi_driver+0x4 (section: .data) -> sun3_scsi_remove (section: .=
+exit.text)
+> >     WARNING: modpost: drivers/scsi/sun3_scsi_vme: section mismatch in r=
+eference: sun3_scsi_driver+0x4 (section: .data) -> sun3_scsi_remove (sectio=
+n: .exit.text)
+> >
+> > that trigger on a Sun 3 allmodconfig build.
+> >
+> > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>
+> Reviewed-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@baylibre.com>
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 8d27e6caf027..c9038284bc89 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3506,6 +3506,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 	int i, cmd_nr, cmd_type, bt;
- 	int retval = 0;
- 	unsigned int blk;
-+	bool cmd_mtiocget;
- 	struct scsi_tape *STp = file->private_data;
- 	struct st_modedef *STm;
- 	struct st_partstat *STps;
-@@ -3619,6 +3620,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 			 */
- 			if (mtc.mt_op != MTREW &&
- 			    mtc.mt_op != MTOFFL &&
-+			    mtc.mt_op != MTLOAD &&
- 			    mtc.mt_op != MTRETEN &&
- 			    mtc.mt_op != MTERASE &&
- 			    mtc.mt_op != MTSEEK &&
-@@ -3732,17 +3734,28 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 		goto out;
- 	}
- 
-+	cmd_mtiocget = cmd_type == _IOC_TYPE(MTIOCGET) && cmd_nr == _IOC_NR(MTIOCGET);
-+
- 	if ((i = flush_buffer(STp, 0)) < 0) {
--		retval = i;
--		goto out;
--	}
--	if (STp->can_partitions &&
--	    (i = switch_partition(STp)) < 0) {
--		retval = i;
--		goto out;
-+		if (cmd_mtiocget && STp->pos_unknown) {
-+			/* flush fails -> modify status accordingly */
-+			reset_state(STp);
-+			STp->pos_unknown = 1;
-+		} else { /* return error */
-+			retval = i;
-+			goto out;
-+		}
-+	} else { /* flush_buffer succeeds */
-+		if (STp->can_partitions) {
-+			i = switch_partition(STp);
-+			if (i < 0) {
-+				retval = i;
-+				goto out;
-+			}
-+		}
- 	}
- 
--	if (cmd_type == _IOC_TYPE(MTIOCGET) && cmd_nr == _IOC_NR(MTIOCGET)) {
-+	if (cmd_mtiocget) {
- 		struct mtget mt_status;
- 
- 		if (_IOC_SIZE(cmd_in) != sizeof(struct mtget)) {
--- 
-2.43.0
+Thanks!
 
+> Seems I missed that one before posting 7308bf8a2c3d ("modpost: Enable
+> section warning from *driver to .exit.text"). My excuse is that this
+> driver isn't enabled for an ARCH=3Dm68k allmodconfig build.
+
+Understandable, as there are basically 5 classes of m68k kernels:
+  - Classic with MMU,
+  - Coldfire with MMU,
+  - Sun-3,
+  - Classic without MMU,
+  - Coldire without MMU.
+
+As the last two consist of multiple single-platform kernels, they're
+harder to do allmodconfig for.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
