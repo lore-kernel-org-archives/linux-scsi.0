@@ -1,156 +1,125 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FFC61922EF
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 08:48:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2CF1D271D
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 08:50:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730882918; cv=none; b=nJ0Ldd8Lgq/KejQ7+7MS5nXcW9kU1RZtP12CPIp967vv4uk9wvMsW7MdWziJ88WXWo8YiznZHHKOZw4tslc5S8S6T4Zr5KAlJoS3+rK4k+rL8O+/jzL63g3prPVs/zoaGQDMWFUHKTNf7yvA2s75+5PW0/EOJB6NiLoJIYywROc=
+	t=1730883029; cv=none; b=WJ+i/cC/ntHck0UHTKh8g+dGiQl/Hw8b0kGP0bQ/+CTsVbgTr6cQGPsD4SSha046ogtA7YLoulMWHUnO9epEPadvrAsjDhv7n+Kfxi84TJ7xkQh6Cpi7+yO7eli5BJ7DREAfvewpRHq2Oj3HYL7bCn710igF9itrwRVFTJcnYBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730882918; c=relaxed/simple;
-	bh=oXLeB7HBzhxzJfBeoFpJBTOlyzDf2LRJ/KSN7bUL4wY=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=haFpq+hp0OEAaYpuG6ksiTdvC6De5LUQut/DBJsmc+g3P9avAz/dAzRJ1HSV3FEPPgvcDBR6jB6FEpR+jZsDl/ssQ38pxuj+WcZzEMYDvVA7WzoflanL2t0z1qNh7ZLl7xBDUov6YyujfYgLqb/wcg3UEqMu1G14jZqDlnDq04A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=c4i+AwVV; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1730883029; c=relaxed/simple;
+	bh=Qw/O+ise3frqlKTZUnBXTla7mdjrxDVQvyMdAvWwzxw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dzU7sMcAgM9vpWhqmiCQ+hRRWXxDMMvDh82rM9X+L+2e/QgkLxC/9ZT0x46GxzRcu6mHWjc6VYCrulXJz0aVyR7XgC0psX+jJpfhfJdfX8IcaU0ROwM4Wocx3PG9NGI9U+vXfD28S8N9Us8fxdLpwNx1aLm2tSUlFlMLGpWT2Ws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=sRKC7qle; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="c4i+AwVV"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-539ee1acb86so6518080e87.0
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2024 00:48:35 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="sRKC7qle"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4314b316495so55210735e9.2
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2024 00:50:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1730882914; x=1731487714; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+DHea6qNka5zu5kUvVTVEMpfukRwKxo/tAWy5PjttvM=;
-        b=c4i+AwVVmcAyLNrqqa+mAc+gbIYq8TXO36CRvTDDEYcKmTx27n10QGEjFTdq4rWVpj
-         1mOCKEzN2y1PG2xAG1F2z5ECB/NkoVpsRpo+Dis60pUCFK5urjc4VbrHPZNMCkD+DEHc
-         V8TFi7mEs8oray09+r2fpK2X18hhtRpv+9HN0VEf0/BGL0c73n/D1zg5Gxyb741OsRab
-         vkcqPwGsN8strsfG0qZquvtbt4yniCJ7wIGzJOalVG2N/ar0K67KxBU+rOxHcqTEs4ED
-         inXBvbdWJlku2yk5p3RH40hALZGO9hWExsfTu5pkOzfL/fDWwvdc0HTevU+kwurlGUlU
-         I5sA==
+        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1730883025; x=1731487825; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2y5HxipShLescLFWcD8ARWRAPkNr3UxFiV+SpqkG9SE=;
+        b=sRKC7qle/sgz+AaqfA2ejKQSLcU7F4tmlDwwEq7b/Vm+PTNw1rFtLzGQg8p/JHgYxX
+         BU93jiXoUIryvgpsyJVNokfOYYCyPWao+cQoVUNuLziag/dKJ9Izdf7HX77gBayNsmXi
+         IPMgKcXGU+eaDc4D/WyW8k/Vg9KHlWpL9ax6tGO5yLEHWL5qvXwmmyEk4U6SaJHSyVJ2
+         J6opQU+bYPEgkLKTkew8eIYV+FDJ7pCnm3OwDLhX6JKQbxEJfZ5HKcdQVjarvHYgPGLj
+         YX6+BHwYiGcgSta9/A7y78CQJH41Pz4d19mMLqeDhMYIkQQwxfbFv7DPB+DyPDy4ApQM
+         EiPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730882914; x=1731487714;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=+DHea6qNka5zu5kUvVTVEMpfukRwKxo/tAWy5PjttvM=;
-        b=vpTTnsuhCZOfo8QjF+IfbHbiN0BrZpA4pLIP0S/Wb6xFr6wqvmX7jW5YwXBzYras2L
-         excpZzf93HKOO603dBBsUpdTxFzhaH2hVTkjAd66Z0nxppVmwpOTAVmGyK/WsCmbKPun
-         eEdijGizxY3vvDaOlAe+CmbdN5DSSsGQnlPevsYIIDXNrXqBIyiV7FQ819WWOXCzA5Ij
-         fhAQmq33ifjg4zk8KNSDprnfdb27MK8jaJ++FlGqmAo01pkb5/12Z36G7Ls+bi78U86g
-         +6RrRraMkFsAIoxL9SE/HHSs3frQcopMzy+6zZawo6OuWDz/Xbs5cFL3NPgbIcKl0uWb
-         Uzwg==
-X-Gm-Message-State: AOJu0YzI55+G8F1w1UxuzGTfnbAporwRwVMXMkWUk0ZToCfqHIfG2oHy
-	s3CPc95NgaE33JhRjM7XJuRXP1WZzbrmmKrVxeei2+gwfNyEvJmqTxNF+Jafm+aJ5DKjPy/27Q2
-	KEws=
-X-Google-Smtp-Source: AGHT+IEYKijIdYAqMBfmJ2ZA/aojqnqd2g/8XrU9iAq35/fePCQ5icXIlBSY2GfjaEW384vphmJK8w==
-X-Received: by 2002:a05:6512:3d2a:b0:536:54c2:fb83 with SMTP id 2adb3069b0e04-53d65df7681mr9357815e87.23.1730882914219;
-        Wed, 06 Nov 2024 00:48:34 -0800 (PST)
-Received: from [192.168.8.141] ([89.101.134.25])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432aa737c86sm14561945e9.38.2024.11.06.00.48.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 Nov 2024 00:48:33 -0800 (PST)
-Message-ID: <b9263930-4448-4f96-94e3-ee5241490f54@linaro.org>
-Date: Wed, 6 Nov 2024 09:48:33 +0100
+        d=1e100.net; s=20230601; t=1730883025; x=1731487825;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2y5HxipShLescLFWcD8ARWRAPkNr3UxFiV+SpqkG9SE=;
+        b=TCCbgEXhcPJSGWHc5sXyLA9QAWEQO6pZdMNuYz0edyQNNFpJhLjUmoRMSbJOt4vDUk
+         BtYgnuPd1FV3KSvUSb+5M1KNg4BFV1FT521mj+g42mn0GDl+frCOHD8cNviN2UWgv2z5
+         4wyxjJ6aegHXLzMd7SDc1F0inGPb4YdkFcDdLeKkDPXMOh53TlL5N8V4mZu5/BeItFW6
+         Ktsndr/tU+l7TyQybjQBCN03k863Vp9Ay60/xfyKy1ZI2HzRdc0qPF25OEx7Ok0LF6Ev
+         a0ZaCUPZWmdp7L+WvwOJu1qKs8Fel4HcQSf6Ck+PuPNrhPrdWb0Vz4WYAvIZOe1jR0wP
+         thrg==
+X-Forwarded-Encrypted: i=1; AJvYcCXf6CyiMmPP0uGHlC5mY1+jH8arQJ1OBLezEKf4H+mRW4tZGbV2zLQ1j8/Hr6CAbSq7QAxA0QIddkv8@vger.kernel.org
+X-Gm-Message-State: AOJu0YyF/+Qj599WNhs2tHhVhSdD/zcY5aG+0PLJhAfIS7zqKdvRVvPU
+	SKkm/8OYG5az4PlOgbk7ydjxl67zSQ4cAQXXvH1w22pzHUhLU0P5d4smehzwtdI=
+X-Google-Smtp-Source: AGHT+IHqUrdPcg/Yqkh+cAwPSW88HT6c3UnrMwecsenner/5sbGIznYrPuCUBPy436J+5v+BMebExA==
+X-Received: by 2002:a05:600c:1ca7:b0:42c:bb96:340e with SMTP id 5b1f17b1804b1-4327b8011aamr220555575e9.31.1730883025080;
+        Wed, 06 Nov 2024 00:50:25 -0800 (PST)
+Received: from localhost (p509159f1.dip0.t-ipconnect.de. [80.145.89.241])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-381c113dd8asm18618953f8f.73.2024.11.06.00.50.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Nov 2024 00:50:24 -0800 (PST)
+Date: Wed, 6 Nov 2024 09:50:22 +0100
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Finn Thain <fthain@linux-m68k.org>, 
+	Michael Schmitz <schmitzmic@gmail.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	Sam Creasey <sammy@sammy.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Subject: Re: [PATCH] scsi: sun3: Mark driver struct with __refdata to prevent
+ section mismatch
+Message-ID: <h7x2iksfw7vguvqvjg5axl67mpejodbimwhxluew6cfobotb4t@fewz7knes7au>
+References: <b2c56fa3556505befe9b4cb9a830d9e2a962e72c.1730831769.git.geert@linux-m68k.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH v6 11/11] scsi: ufs: core: Move code out of an
- if-statement
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-References: <20241016201249.2256266-1-bvanassche@acm.org>
- <20241016201249.2256266-12-bvanassche@acm.org>
- <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
- <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
- <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
- <6b20595d-c7f6-42aa-922e-3671abd7917c@acm.org>
- <1c9acc01-7b1d-41ac-a0da-4e50dc8f0319@acm.org>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <1c9acc01-7b1d-41ac-a0da-4e50dc8f0319@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ixj22fbotanodxri"
+Content-Disposition: inline
+In-Reply-To: <b2c56fa3556505befe9b4cb9a830d9e2a962e72c.1730831769.git.geert@linux-m68k.org>
 
-Hi,
 
-On 05/11/2024 23:01, Bart Van Assche wrote:
-> On 10/31/24 2:15 PM, Bart Van Assche wrote:
->> On 10/31/24 12:55 PM, Neil Armstrong wrote:
->>> Le 31/10/2024 à 18:51, Bart Van Assche a écrit :
->>>> Is the patch below sufficient to fix both issues?
->>>
->>> Yes it does!
->>
->> Thank you for having tested this patch quickly. Would it be possible
->> to test whether the patch below also fixes the reported boot failure?
->> I think the patch below is a better fix.
->>
->> Thanks,
->>
->> Bart.
->>
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index a5a0646bb80a..3b592492e152 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -874,7 +874,8 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
->>       if (host->hw_ver.major > 0x3)
->>           hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
->>
->> -    if (of_device_is_compatible(hba->dev->of_node, "qcom,sm8550-ufshc"))
->> +    if (of_device_is_compatible(hba->dev->of_node, "qcom,sm8550-ufshc") ||
->> +        of_device_is_compatible(hba->dev->of_node, "qcom,sm8650-ufshc"))
->>           hba->quirks |= UFSHCD_QUIRK_BROKEN_LSDBS_CAP;
->>   }
-> 
-> (replying to my own email)
-> 
-> Can anyone who has access to a Qualcomm SM8650 Platform please help with
-> testing the above patch on top of linux-next?
+--ixj22fbotanodxri
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] scsi: sun3: Mark driver struct with __refdata to prevent
+ section mismatch
+MIME-Version: 1.0
 
-Sorry I was traveling and I forgot about it, I'll try to test this today.
+On Tue, Nov 05, 2024 at 07:36:31PM +0100, Geert Uytterhoeven wrote:
+> As described in the added code comment, a reference to .exit.text is ok
+> for drivers registered via module_platform_driver_probe().  Make this
+> explicit to prevent the following section mismatch warnings
+>=20
+>     WARNING: modpost: drivers/scsi/sun3_scsi: section mismatch in referen=
+ce: sun3_scsi_driver+0x4 (section: .data) -> sun3_scsi_remove (section: .ex=
+it.text)
+>     WARNING: modpost: drivers/scsi/sun3_scsi_vme: section mismatch in ref=
+erence: sun3_scsi_driver+0x4 (section: .data) -> sun3_scsi_remove (section:=
+ .exit.text)
+>=20
+> that trigger on a Sun 3 allmodconfig build.
+>=20
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Neil
+Reviewed-by: Uwe Kleine-K=F6nig <u.kleine-koenig@baylibre.com>
 
-> 
-> Thanks,
-> 
-> Bart.
+Seems I missed that one before posting 7308bf8a2c3d ("modpost: Enable
+section warning from *driver to .exit.text"). My excuse is that this
+driver isn't enabled for an ARCH=3Dm68k allmodconfig build.
 
+Thanks
+Uwe
+
+--ixj22fbotanodxri
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmcrLcwACgkQj4D7WH0S
+/k7W4Af+ON8yyjSHOMZpG4vkGoh7a4mj83XDANNPRTDeLQFWUpDoB6wvjKQBUe22
+Mi3uHdZPUTdBfwNu6fLEJ+4BMOAlM0G+kPB+TKijQ81ngwQfAIi1scZz7UzCC2Ft
+HE+G4K+oK+Z/se3JmenLo5blTeMXH3JC0WtVQpaxkeXm5Gpb/59yLhRXha+R5O7g
+tGWKhCcjiZz3dkMLCp2pI9nVJi9ZZjtEACOYWsVeYGdsfd5N+DGiIag9GTWyyWuB
+wmhM+0t1W6GJfnUt7cUtiR6jbLc/xBWFHYJSQZVghudLf+kswWeavAk3sW37JdGe
+7+yRpUn5NrH1mmVn1mKbcDeMusFRGg==
+=MbOg
+-----END PGP SIGNATURE-----
+
+--ixj22fbotanodxri--
