@@ -1,106 +1,110 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D7F3645
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Nov 2024 22:55:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72FE4621
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 00:13:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730933709; cv=none; b=hGeuTgmbxUaQe85WSeN5467laeMQMDEHmbve8vy+xIxiI9hwEZJYO2v01/jkPC3JQ2eTm/NgNfs52ktqW6EbWv9tbW9saMlbEYWwm5D5cj7Pcs7ngAggxMPM0IVMgFW3ElQIN3IK5PO4UXr8D+FXULZ13fUlEIljw/rWa0OwhWw=
+	t=1730938409; cv=none; b=T1qcajN3FZzNguMjRsHMS8JFjszeEl+gfNgga75OyZfXIXGpLWY4mrxorIlMN/2a+A+maRIGApGjk5KLIuB9yh3qEGh/d+FVBrJPfjabczrJsI/WVTgt5idXn+J0iLypNnOqs8RcozQzmtBM2A2if3ycVkNjgTQtQS7ycdOqnhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730933709; c=relaxed/simple;
-	bh=byln8NuRpa8HH18XhgOfSEmQy5Pxvmmv5bI7s1fyopA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CpZYEWc7Cn3rqr447k4ULXwL9Jpdr26UBpq7xldOfozsoGQeja/ujfS9zjwi7qTkYXXt4Odir1sSm8gatredi9ZhkANQ0UtKolNuOSteHvotjTfVWiFmdrsJpqEb4BWPr/ABqQQjykuzZ5vHvbr461hcd4b+1eIiBCMrh4sZCM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f66ILdMi; arc=none smtp.client-ip=209.85.167.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1730938409; c=relaxed/simple;
+	bh=cakW1pJIEf5HeB+5aFvclvz8RXf8NL9Fy8LTNObcAS0=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type; b=OuOMu30E8o5bzkmAn6A0/XRtafXBuRtqMbPKWYStC47t6TLJX3Cp6xxPZchna9288dnM1WluQtK5IjXe0KgNVyE1/Wnr/fmrjXnl/buHkh6rh6HNoMnxEgnldpZ7VwJeMhKPdJ++TW3A8+/XwWpbVbh/wA0KNkZUd64vn18GSkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2iyfAwL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f66ILdMi"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-539e13375d3so259204e87.3
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2024 14:55:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730933705; x=1731538505; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=R1cuA3Xb89yaJaPzCeZqODF7LPEeITxe8U51qkdDk2E=;
-        b=f66ILdMi1Z887tdkyvHDrHoEkjyYGX41x0ikZrkC8SpvMrOr8w3FrBe4nCGdO4cQyA
-         XNE0M85yDJFlHi9d224BJEUsnSa3pEbieKLtg0V6OuKV8sOItLgM/TNOSMwtVNNlj5/I
-         2p9ZV2GbEjjBAMHjIu/yGyIW/8Nk18qKnX+9yTs6SAacVCp4zIzUcAn1zYtxN0P/Uucj
-         l8Zq2p9YRBj2d4oXJVXwodVFa4ts1hf4RsPp+naShzoo/Qzjx/BG9QQqc+beQ9XZ0Qe2
-         UO23M/NGv8Q37iIOMenvmg4B0rGgLlHuqYsvaSWpM7+08vnh3EKhmVlVvPl5HHP2tbP8
-         +nXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730933705; x=1731538505;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=R1cuA3Xb89yaJaPzCeZqODF7LPEeITxe8U51qkdDk2E=;
-        b=Xoz4XRbFMDRTNo1HNXTlv30W+ZDaE36DpLM8EfZU3X/Go5GxEq6yVHLxHMJvOAneHa
-         Va3jhSbyL8L7bjz4wV720NNm0tELXKdqLHpKfThTaM6IMzOlU93wnwzWEtNy0nH0ioRs
-         aH8Ch7ArQlgaCGdtuB+JKxC9v5BpzYZcYHhVEemhDD84JDm7pbEBOklqEs0sFeqc2UfG
-         LQD7BQ4cZsLsZNl8j91pUtGXGHt8dJutZmfSHvodj+UKDGaE0ujZeYIHRCQi5b+r+dJG
-         iQ75VWsA1lB3hpwT5ir565Il2d+tyHnzkZeNUYhYoJVDCgp049adMUmsYo+ll5rm8bcQ
-         SJZg==
-X-Gm-Message-State: AOJu0Yw4QTtX7vjXO9sfXn09j99yWYWXfx5aFGPHR4uq9kPRRsvwq6IO
-	t6OVZKR4vF15/29yM0Rz+X0K9MfJy+DTgQw+vuxcN76Xxxwm/lJKhVufF2Km
-X-Google-Smtp-Source: AGHT+IFX6xKMsvukGXowMvsXszChHffFRR068pp/1rmX2xajOUdQsviyP+o7bPFUPreg4Gq7qGCcVw==
-X-Received: by 2002:a05:6512:10c9:b0:539:f619:b458 with SMTP id 2adb3069b0e04-53c79e3253fmr12557293e87.22.1730933704996;
-        Wed, 06 Nov 2024 14:55:04 -0800 (PST)
-Received: from es40.darklands.se (h-94-254-104-176.A469.priv.bahnhof.se. [94.254.104.176])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53d82688c36sm15081e87.107.2024.11.06.14.55.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Nov 2024 14:55:04 -0800 (PST)
-From: Magnus Lindholm <linmag7@gmail.com>
-To: linux-scsi@vger.kernel.org,
-	James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com,
-	hch@infradead.org
-Cc: linmag7@gmail.com
-Subject: [PATCH] scsi: qla1280.h
-Date: Wed,  6 Nov 2024 23:49:57 +0100
-Message-ID: <20241106225455.2736-1-linmag7@gmail.com>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2iyfAwL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B1D8C4CEC6;
+	Thu,  7 Nov 2024 00:13:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730938409;
+	bh=cakW1pJIEf5HeB+5aFvclvz8RXf8NL9Fy8LTNObcAS0=;
+	h=Date:From:Subject:To:From;
+	b=F2iyfAwLTn6u/Q+m8yKsld7VSU9w637+qRxN69ohjEeNF3cSsuKtItqSiNyc3r8B9
+	 ARQGDEm/sdWlduBK/jDqbCkWTSWD1Eba2sh9KUJGAEOp13KjcLGHinvk3UGERHh689
+	 IheoXkHG1yN9unSlB+Dzis5vu94V+Q6tNgoh2yj4jErd/0T5qZ4wLfDdY50Tw0QOIB
+	 jQ8Idxkenvj6Zfx8/XVBGyh/9Z4vrz0lVWT4Oib33B7TFHrkTrAReG1KG6bUMtXOEk
+	 HdSPLuHgJtpVAwInZ6kPd5pUo84/Kxtklr2oPy320iRlesgiwQyTLls25L6RLyCTLg
+	 kkwHwOg9swjyg==
+Message-ID: <6d2cf555-26d8-4692-b6d6-5aeec61bbc07@kernel.org>
+Date: Thu, 7 Nov 2024 09:13:26 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Subject: mpi3mr UBSAN splats
+Organization: Western Digital Research
+To: "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ mpi3mr-linuxdrv.pdl@broadcom.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
- Fix hardware revision numbering for ISP1020/1040. HWMASK
- suggest that the revision number only needs four bits, this is consistent
- with how NetBSD does things in their ISP driver. verified on a IPS1040B which
- is seen as rev 5 not BIT_4. ISP_CFG0_1040A is referenced on line 2187 in qla1280.c
- 
+mpi3mr maintainers,
 
-Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
----
- drivers/scsi/qla1280.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+I am getting *a lot* of UBSAN splats with the mpi3mr driver whenever SAS
+topology changes happen, including on boot. E.g.:
 
-diff --git a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
-index d309e2ca14de..796cb493a4df 100644
---- a/drivers/scsi/qla1280.h
-+++ b/drivers/scsi/qla1280.h
-@@ -116,12 +116,12 @@ struct device_reg {
- 	uint16_t id_h;		/* ID high */
- 	uint16_t cfg_0;		/* Configuration 0 */
- #define ISP_CFG0_HWMSK   0x000f	/* Hardware revision mask */
--#define ISP_CFG0_1020    BIT_0	/* ISP1020 */
--#define ISP_CFG0_1020A	 BIT_1	/* ISP1020A */
--#define ISP_CFG0_1040	 BIT_2	/* ISP1040 */
--#define ISP_CFG0_1040A	 BIT_3	/* ISP1040A */
--#define ISP_CFG0_1040B	 BIT_4	/* ISP1040B */
--#define ISP_CFG0_1040C	 BIT_5	/* ISP1040C */
-+#define ISP_CFG0_1020    1	/* ISP1020 */
-+#define ISP_CFG0_1020A	 2	/* ISP1020A */
-+#define ISP_CFG0_1040	 3	/* ISP1040 */
-+#define ISP_CFG0_1040A	 4	/* ISP1040A */
-+#define ISP_CFG0_1040B	 5	/* ISP1040B */
-+#define ISP_CFG0_1040C	 6	/* ISP1040C */
- 	uint16_t cfg_1;		/* Configuration 1 */
- #define ISP_CFG1_F128    BIT_6  /* 128-byte FIFO threshold */
- #define ISP_CFG1_F64     BIT_4|BIT_5 /* 128-byte FIFO threshold */
+[17227.798414] UBSAN: array-index-out-of-bounds in
+drivers/scsi/mpi3mr/mpi3mr_os.c:2697:12
+[17227.808061] index 1 is out of range for type 'mpi3_event_sas_topo_phy_entry [1]'
+[17227.817057] CPU: 8 UID: 0 PID: 0 Comm: swapper/8 Not tainted
+6.11.4-201.fc40.x86_64 #1
+[17227.826546] Hardware name: Supermicro Super Server/H12SSL-NT, BIOS 2.8 02/27/2024
+[17227.835568] Call Trace:
+[17227.839514]  <IRQ>
+[17227.842986]  dump_stack_lvl+0x5d/0x80
+[17227.848123]  ubsan_epilogue+0x5/0x30
+[17227.853160]  __ubsan_handle_out_of_bounds.cold+0x46/0x4b
+[17227.859958]  mpi3mr_os_handle_events+0x987/0x9d0 [mpi3mr]
+[17227.866849]  mpi3mr_process_admin_reply_q+0x70e/0x7b0 [mpi3mr]
+[17227.874146]  mpi3mr_isr+0x86/0xa0 [mpi3mr]
+[17227.879649]  __handle_irq_event_percpu+0x4a/0x190
+[17227.885728]  handle_irq_event+0x38/0x90
+[17227.890921]  handle_edge_irq+0x8b/0x230
+[17227.896114]  __common_interrupt+0x4c/0xd0
+[17227.901476]  common_interrupt+0x80/0xa0
+[17227.906660]  </IRQ>
+[17227.910099]  <TASK>
+[17227.913538]  asm_common_interrupt+0x26/0x40
+[17227.919062] RIP: 0010:cpuidle_enter_state+0xd3/0x6a0
+[17227.925349] Code: 00 00 e8 e0 a3 fb fe e8 1b f0 ff ff 49 89 c6 0f 1f 44 00 00
+31 ff e8 dc 58 fa fe 45 84 ff 0f 85 48 02 00 00 fb 0f 1f 44 00 00 <45> 85 ed 0f
+88 e7 01 00 00 4d 63 e5 49 83 fc 0a 0f 83 04 05 00 00
+[17227.945488] RSP: 0018:ffffab620026fe68 EFLAGS: 00000246
+[17227.952106] RAX: ffff9a69ce400000 RBX: ffff9a4b0cdf2800 RCX: 0000000000000000
+[17227.960636] RDX: 00000fab2797d15e RSI: 000000002abf2f65 RDI: 0000000000000000
+[17227.969163] RBP: ffffffffa96f7ba0 R08: ffffab620026fdb8 R09: 000000006a5538d0
+[17227.977690] R10: 00000000000c3500 R11: 0000000000000003 R12: 0000000000000002
+[17227.986221] R13: 0000000000000002 R14: 00000fab2797d15e R15: 0000000000000000
+[17227.994768]  ? cpuidle_enter_state+0xc4/0x6a0
+[17228.000529]  cpuidle_enter+0x2d/0x40
+[17228.005503]  do_idle+0x1e5/0x240
+[17228.010120]  cpu_startup_entry+0x29/0x30
+[17228.015412]  start_secondary+0x12b/0x160
+[17228.020707]  common_startup_64+0x13e/0x141
+[17228.026178]  </TASK>
+
+And in many more places, essentially, wherever topo_evt->phy_entry[i] is used.
+I looked into it but cannot make sense of the code because topo_evt is a pointer
+coming from a cast of struct mpi3_event_notification_reply
+*event_reply->event_data, which is a __le32 value... But my machine is a 64-bits
+AMD Epyc... So I have no idea how this can work, nor any clue what is going on
+with the number of phy entries (num_entries field) and its flex-array.
+
+Can you please have a look ? This has been happening since 6.12-rc1 and is not
+fixed yet as of rc6.
+
+
 -- 
-2.47.0
+Damien Le Moal
+Western Digital Research
 
