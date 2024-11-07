@@ -1,130 +1,108 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF4401EF923
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 10:43:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C244C1EE01A
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 10:50:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730976232; cv=none; b=Es0JfHyRjaYppTs4SBNJVb8n9w8Xz0OmKS1kFcTzdGnTVoAt2Ua5ZQuzrc93GcAEmpYGouNz2zbvBvj3ETYakRsTCJL1mc7DIoy2HD8+GXtAIU6FBTYp1H8HFTDGjgt3dhYPWPEbMmzvkzMK6ZSSbHSTjrixuE1fv81IXGtzsxg=
+	t=1730976603; cv=none; b=E5OyiJUXtPzAu3rwu6skrgezaMeFvsVKI1stDOq2ha6znj767rJY0pxli9kYkJNYJuupmpzuONdoeEBLVMjej30M2K+X+uCjmBYW3n8wtVbVf0fT3tH+XDFUFXKIYxzH2YDq+iHlH1ea1nqTCTNn76/0xu/fu29YRnDOH90QhvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730976232; c=relaxed/simple;
-	bh=089FIH+q/iK6fZuPXSbvfkLNzsXJOfDvSzeXDonC9GQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oVXiRCWcIo5LsTVxExlBl94PoDCeG/NrXUUnmTuZsyWJD64np27bhOWzRupFGpMXKcFkrI0HvyvSVGXT63tCRktZBLBHfhpLMkAyyyxrCzTIpO0KbxBTF/ha0dPOjMMYli1CkkL7/fyHpfOtwE2FECLxnyc3qyzcWS+ph9lgT70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=D9JtShIv; arc=none smtp.client-ip=91.218.175.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1730976603; c=relaxed/simple;
+	bh=gMn8YDea/YRpuQGOaEGD+Otb5SAWn9i8yRRholZmtqw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ieNDBTrs77CG4369fmplgm9LUsvJBTTynZVYJj4FmRz4SyBcAC+TzkAeh9ceh4uGbyAbJjktFxj0VGQ30SkOPc9CX6/j95ClYEVj40B0gMTEd8OWts+xu0bxt200WDaKSnm+OjwGhoy/ILN+NDIUQZ9JViQcvotXLLGG4Hr9OE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=AhAw7AUG; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="D9JtShIv"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1730976227;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=vJrN5WQBoFc1qT+O7w7iQFTbxpNp9tNvO7YGMzJN5JU=;
-	b=D9JtShIvULaFzc3IrxuhrDo4OjExdmb9xvICA8dxJ/nI9PWouBwHcyS/x0n+2P8sR+cE12
-	ldZLxoZ4YQDFIf8FJ260ti6tdqjfbMzVsKe836i8/QLPO5yXL4XFp/H0aECH5WeGLjHQwN
-	kdDnjUC1nQCyk60O2wTz4W9gUaxwHMk=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AhAw7AUG"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-37d47b38336so552922f8f.3
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2024 02:50:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1730976600; x=1731581400; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=3rZTXCjOa5hTE5xeWoRiKizFddIJm9m7cEOdNlU7WYU=;
+        b=AhAw7AUGYPH4aVOxbHiRagM4+qPKnwpIMyriQ9sQ8R6uCc4vMPDHIPYX6qB8r2Ly8t
+         jWSenjFA7T5AcDR+hBpjUuKedIRr6f3z+DelzvKdYeWMMJS3eEzsoktY8G7RuenhlcNO
+         yEtqlJYalDzrrCSd2Uoes2bp5qhklnlVCztFACu0ghNqSQ+TCZjwqZ5nUQTmHpdlQLR+
+         KCA0AuZOn0S4W52Wd5AHTmrMxzp6XhYLfnto3y/KOq8MHoYr6YnQ17LQANO9jq8vrtYk
+         n7A1Ps2kYbXxAI3cjEgsSEmXZqIYhTyymtd1iXBZMhWz4vSVK7Wn3l86XhgGtkTGrGWK
+         6OLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730976600; x=1731581400;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3rZTXCjOa5hTE5xeWoRiKizFddIJm9m7cEOdNlU7WYU=;
+        b=bfw4Fj4m1hqPSwgss4mnfMNqNTUmWZOR2gWVhjCsVScURQiQze77mtg4BD0WtXfDo1
+         amhoPC9WVhVV0QL9kNXOX+kmsW10TeH8EkzxhjX8nW956kX+YpEkIMvzApMXuNc9PL/4
+         BVKKu2zzK+C72aZ6wWnggQbtmzIusJnTd57U1tih2j4ZPY2vI8oKeAo7wG4OaPQNBErk
+         mKk6ou/ZqXiaHT4uKvP45ZdOtHcfv+nR7sCYjdmzpNQrr6rUFpmNRdoLoMQNDZcpIIMF
+         FUPq9XJMlBgqlEv1h47LtzdtP7ehMBP/zmpG8XGS0UJEEeel9LlV4TE82yiYD5+mrlrL
+         qwlw==
+X-Forwarded-Encrypted: i=1; AJvYcCV+Gpnut/esPLX7i0+AqAptGaDEySNlfsQvM3d+THYn6v5neMPWwiH43m30UxjpPRpmT2mZptUjdoqm@vger.kernel.org
+X-Gm-Message-State: AOJu0YxnHxM0awk66tzM67Gdlv0q6NjDRtX4V7424T2noQpjrErjrvcp
+	VKqCcLViu3ZIf8sf+B7K0LSnhamFMBJbxwUASxpplqMeKUby7S/ZD2webt7j4w==
+X-Google-Smtp-Source: AGHT+IETxLU4h4BMJIqYUqiK9iZfGOl3umybZQ0qi4ff4C2lxoysb7JF8iMFcWg8xWmkaKaDZJwmSg==
+X-Received: by 2002:a5d:5711:0:b0:37d:47b0:6adc with SMTP id ffacd0b85a97d-380610f8251mr31259498f8f.4.1730976600141;
+        Thu, 07 Nov 2024 02:50:00 -0800 (PST)
+Received: from thinkpad ([89.101.134.25])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-381ed987d95sm1393241f8f.44.2024.11.07.02.49.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Nov 2024 02:49:59 -0800 (PST)
+Date: Thu, 7 Nov 2024 10:49:58 +0000
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: neil.armstrong@linaro.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RESEND PATCH v3] scsi: fnic: Use vcalloc() instead of vmalloc() and memset(0)
-Date: Thu,  7 Nov 2024 11:42:59 +0100
-Message-ID: <20241107104300.1252-1-thorsten.blum@linux.dev>
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: Re: [PATCH v6 11/11] scsi: ufs: core: Move code out of an
+ if-statement
+Message-ID: <20241107104958.ufanaxocws2dmdwq@thinkpad>
+References: <20241016201249.2256266-1-bvanassche@acm.org>
+ <20241016201249.2256266-12-bvanassche@acm.org>
+ <0c0bc528-fdc2-4106-bc99-f23ae377f6f5@linaro.org>
+ <afaca557-6b7f-4f48-a38a-19eca725282f@acm.org>
+ <19b75e1d-bc36-494d-a33a-d36a1646bcc7@linaro.org>
+ <6b20595d-c7f6-42aa-922e-3671abd7917c@acm.org>
+ <1c9acc01-7b1d-41ac-a0da-4e50dc8f0319@acm.org>
+ <6b37ac2c-e3bd-48d0-bc50-4fa2e5789d3d@linaro.org>
+ <79516d73-7ca1-4af7-87cb-d8d87d4dc6ac@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <79516d73-7ca1-4af7-87cb-d8d87d4dc6ac@acm.org>
 
-Use vcalloc() instead of vmalloc() followed by memset(0) to simplify the
-functions fnic_trace_buf_init() and fnic_fc_trace_init().
+On Wed, Nov 06, 2024 at 09:51:06AM -0800, Bart Van Assche wrote:
+> On 11/6/24 1:57 AM, Neil Armstrong wrote:
+> > Thanks, it does fix the issue. But it won't scale since the next
+> > platforms will probably need the same tweak in the future.
+> > 
+> > Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-HDK
+> > Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-QRD
+> 
+> Hi Neil,
+> 
+> Thanks for testing!
+> 
+> The comment about future platforms is not clear to me. This patch fixes
+> support for a non-standard controller (reports UFSHCI version 4 but
+> supports UFSHCI 3 register set). Shouldn't all future platforms support
+> the UFSHCI 4 register set?
+> 
 
-Compile-tested only.
+Yeah, the future platforms should (hopefully) no longer have this issue.
 
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
----
-Changes in v2:
-- Remove unsigned long cast as suggested by Johannes Thumshirn
-- Link to v1: https://lore.kernel.org/r/20241007115840.2239-6-thorsten.blum@linux.dev/
+- Mani
 
-Changes in v3:
-- Keep the unsigned long cast removed in v2
-- Use vcalloc() instead of vzalloc() as suggested by Johannes Thumshirn
-- Compile-tested again
-- Link to v2: https://lore.kernel.org/r/20241008095152.1831-2-thorsten.blum@linux.dev/
----
- drivers/scsi/fnic/fnic_trace.c | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-index aaa4ea02fb7c..e5e0c0492f23 100644
---- a/drivers/scsi/fnic/fnic_trace.c
-+++ b/drivers/scsi/fnic/fnic_trace.c
-@@ -485,8 +485,7 @@ int fnic_trace_buf_init(void)
- 	}
- 
- 	fnic_trace_entries.page_offset =
--		vmalloc(array_size(fnic_max_trace_entries,
--				   sizeof(unsigned long)));
-+		vcalloc(fnic_max_trace_entries, sizeof(unsigned long));
- 	if (!fnic_trace_entries.page_offset) {
- 		printk(KERN_ERR PFX "Failed to allocate memory for"
- 				  " page_offset\n");
-@@ -497,8 +496,6 @@ int fnic_trace_buf_init(void)
- 		err = -ENOMEM;
- 		goto err_fnic_trace_buf_init;
- 	}
--	memset((void *)fnic_trace_entries.page_offset, 0,
--		  (fnic_max_trace_entries * sizeof(unsigned long)));
- 	fnic_trace_entries.wr_idx = fnic_trace_entries.rd_idx = 0;
- 	fnic_buf_head = fnic_trace_buf_p;
- 
-@@ -559,8 +556,7 @@ int fnic_fc_trace_init(void)
- 	fc_trace_max_entries = (fnic_fc_trace_max_pages * PAGE_SIZE)/
- 				FC_TRC_SIZE_BYTES;
- 	fnic_fc_ctlr_trace_buf_p =
--		(unsigned long)vmalloc(array_size(PAGE_SIZE,
--						  fnic_fc_trace_max_pages));
-+		(unsigned long)vcalloc(fnic_fc_trace_max_pages, PAGE_SIZE);
- 	if (!fnic_fc_ctlr_trace_buf_p) {
- 		pr_err("fnic: Failed to allocate memory for "
- 		       "FC Control Trace Buf\n");
-@@ -568,13 +564,9 @@ int fnic_fc_trace_init(void)
- 		goto err_fnic_fc_ctlr_trace_buf_init;
- 	}
- 
--	memset((void *)fnic_fc_ctlr_trace_buf_p, 0,
--			fnic_fc_trace_max_pages * PAGE_SIZE);
--
- 	/* Allocate memory for page offset */
- 	fc_trace_entries.page_offset =
--		vmalloc(array_size(fc_trace_max_entries,
--				   sizeof(unsigned long)));
-+		vcalloc(fc_trace_max_entries, sizeof(unsigned long));
- 	if (!fc_trace_entries.page_offset) {
- 		pr_err("fnic:Failed to allocate memory for page_offset\n");
- 		if (fnic_fc_ctlr_trace_buf_p) {
-@@ -585,8 +577,6 @@ int fnic_fc_trace_init(void)
- 		err = -ENOMEM;
- 		goto err_fnic_fc_ctlr_trace_buf_init;
- 	}
--	memset((void *)fc_trace_entries.page_offset, 0,
--	       (fc_trace_max_entries * sizeof(unsigned long)));
- 
- 	fc_trace_entries.rd_idx = fc_trace_entries.wr_idx = 0;
- 	fc_trace_buf_head = fnic_fc_ctlr_trace_buf_p;
 -- 
-2.47.0
-
+மணிவண்ணன் சதாசிவம்
