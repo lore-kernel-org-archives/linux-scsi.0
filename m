@@ -1,125 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE777F9;
-	Thu,  7 Nov 2024 05:21:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB3BD53F;
+	Thu,  7 Nov 2024 05:55:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730956880; cv=none; b=LENYGg9hdEDWuy1wvheYJ/544oaV4tMKP//gXXHhWPoaYJXiJetWQSCWpALra8mXrI3i+rvGStRehiJqO8gjfJsV1/SzUPZtK5htckjmXYfYZZfrZInz2Le1fluze4xFCqKvSBFaV5wgUtvGKlavxwerC6XakolkLF5EkKf8k2g=
+	t=1730958948; cv=none; b=SSfkDAy1CTSRZXJ8mfXW5nsRdSrTsroj75dNjhSV/veFc2e4JED9UPbdf2CWubmJYltUzdFqY4CJfWus7TLpWjTJ+0o+FCPSduRp7WoZDtW8VIWWE8NHd5N8VQCbaohLwIPmM3PAd5loUDvKYq8WzTQe9NWtIkZqBY7gcBIe5hc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730956880; c=relaxed/simple;
-	bh=LcTJNuAS+0u64bln2s0a89deCwW+g5Nrojs1Slddt/Q=;
+	s=arc-20240116; t=1730958948; c=relaxed/simple;
+	bh=n2kx3mjZuJJX04wkDuItp7UhYkgwwWR9CR/57QaNm84=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LO99nVgrqp4dw8p7qVK2jfBGh9eIGIKpk+5etsZf8dDM4FuysxBcQqw9KiQ50cVPfbyh+tkJ0iWPxTiNl4jjq32Jd09oczcLL3oO5hJbTM4BO+AGpzvwEMvd2nIpBFFZkARR2Qc3MqlHhUGPsC0kbPNRCn7myndMAHw2yhsTfVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=LqZ6urMl; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="LqZ6urMl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 064BBC4CECC;
-	Thu,  7 Nov 2024 05:21:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1730956880;
-	bh=LcTJNuAS+0u64bln2s0a89deCwW+g5Nrojs1Slddt/Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LqZ6urMldxlvEBhdUM/g9ay6JBw8MxGPCgUReHarZ5Rrrup6qtaAMbkDd8Ut3yIvJ
-	 TB3aWEUF8ij6xyiKo01mFPXSemUmYSpWT2Gfca8HAeh7vk2NMp5wXiqsR3jTvujmXl
-	 Vml1yQf1y5lU0zvuowqmi415BENx3kOsFR8a5uB8=
-Date: Thu, 7 Nov 2024 06:21:00 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-Cc: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Michael Walle <mwalle@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
-	Carlos Bilbao <carlos.bilbao.osdev@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	"David E. Box" <david.e.box@linux.intel.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Frederic Barrat <fbarrat@linux.ibm.com>,
-	Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-hyperv@vger.kernel.org
-Subject: Re: [PATCH v2 02/10] sysfs: introduce callback
- attribute_group::bin_size
-Message-ID: <2024110726-hasty-obsolete-3780@gregkh>
-References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
- <20241103-sysfs-const-bin_attr-v2-2-71110628844c@weissschuh.net>
- <20241106200513.GB174958@rocinante>
+	 Content-Type:Content-Disposition:In-Reply-To; b=YPAI9k8zwI71bB0EbWPP0ITEZYb17MuK4X3420N21zPlT9HUWVrQi+UUPg3QqySinukSKUhlwPMvZe9ZFxuGmaMO7AuhCUzHbUHzbMJW+FLV/Q7giBHn7rP9C8ktFyeLI7FIAzM4Ab82h5gMXobFF5/1Ly+Ieb8MzjilRB10Y5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 677C5227A87; Thu,  7 Nov 2024 06:55:42 +0100 (CET)
+Date: Thu, 7 Nov 2024 06:55:42 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
+	martin.petersen@oracle.com, asml.silence@gmail.com,
+	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
+	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
+	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v8 06/10] io_uring/rw: add support to send metadata
+ along with read/write
+Message-ID: <20241107055542.GA2483@lst.de>
+References: <20241106121842.5004-1-anuj20.g@samsung.com> <CGME20241106122710epcas5p2b314c865f8333c890dd6f22cf2edbe2f@epcas5p2.samsung.com> <20241106121842.5004-7-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241106200513.GB174958@rocinante>
+In-Reply-To: <20241106121842.5004-7-anuj20.g@samsung.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Nov 07, 2024 at 05:05:13AM +0900, Krzysztof Wilczyński wrote:
-> Hello,
-> 
-> > Several drivers need to dynamically calculate the size of an binary
-> > attribute. Currently this is done by assigning attr->size from the
-> > is_bin_visible() callback.
-> > 
-> > This has drawbacks:
-> > * It is not documented.
-> > * A single attribute can be instantiated multiple times, overwriting the
-> >   shared size field.
-> > * It prevents the structure to be moved to read-only memory.
-> > 
-> > Introduce a new dedicated callback to calculate the size of the
-> > attribute.
-> 
-> Would it be possible to have a helper that when run against a specific
-> kobject reference, then it would refresh or re-run the size callbacks?
-> 
-> We have an use case where we resize BARs on demand via sysfs, and currently
-> the only way to update the size of each resource sysfs object is to remove
-> and added them again, which is a bit crude, and can also be unsafe.
+> +enum io_uring_sqe_ext_cap_bits {
+> +	EXT_CAP_PI_BIT,
+> +	/*
+> +	 * not a real extended capability; just to make sure that we don't
+> +	 * overflow
+> +	 */
+> +	EXT_CAP_LAST_BIT,
+> +};
+> +
+> +/* extended capability flags */
+> +#define EXT_CAP_PI	(1U << EXT_CAP_PI_BIT)
 
-How is it unsafe?
+This is getting into nitpicking, but is the a good reason to have that
+enum, which is never used as a type and the values or only defined to
+actually define the bit positions below?  That's a bit confusing to
+me.
 
-> Hence the question.
-> 
-> There exist the sysfs_update_groups(), but the BAR resource sysfs objects
-> are currently, at least not yet, added to any attribute group.
+Also please document the ABI for EXT_CAP_PI, right now this is again
+entirely undocumented.
 
-then maybe they should be added to one :)
+> +/* Second half of SQE128 for IORING_OP_READ/WRITE */
+> +struct io_uring_sqe_ext {
+> +	__u64	rsvd0[4];
+> +	/* if sqe->ext_cap is EXT_CAP_PI, last 32 bytes are for PI */
+> +	union {
+> +		__u64	rsvd1[4];
+> +		struct {
+> +			__u16	flags;
+> +			__u16	app_tag;
+> +			__u32	len;
+> +			__u64	addr;
+> +			__u64	seed;
+> +			__u64	rsvd;
+> +		} rw_pi;
+> +	};
 
-thanks,
+And this is not what I though we discussed before.  By having a
+union here you imply some kind of "type" again that is switched
+on a value, and not flags indication the presence of potential
+multiple optional and combinable features.  This is what I would
+have expected here based on the previous discussion:
 
-greg k-h
+struct io_uring_sqe_ext {
+	/*
+	 * Reservered for please tell me what and why it is in the beginning
+	 * and not the end:
+	 */
+	__u64	rsvd0[4];
+
+	/*
+	 * Only valid when EXT_CAP_PI is set:
+	 */
+	__u16	pi_flags; /* or make this generic flags, dunno? */
+	__u16	app_tag;
+	__u32	pi_len;
+	__u64	pi_addr;
+	__u64	pi_seed;
+
+	__u64	rsvd1;
+};
+
