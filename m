@@ -1,125 +1,119 @@
-Received: from mail-ua1-f41.google.com (mail-ua1-f41.google.com [209.85.222.41])
+Received: from mail-vk1-f170.google.com (mail-vk1-f170.google.com [209.85.221.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B89D1E0B7D
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 08:56:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19CF31DE3A3
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 08:57:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730969800; cv=none; b=Z63wwNF9V55O3kn5px/0JludQees9FC/H/i4IhwRfSbX3njTe0O79Sr9WcIYU+bjrtk+iU+nDNWm2UQIXUmvqViFDP7ZuvSQpWFo70fOKJP8qfoWvxwIDcpQtD48y3j9+3kYXOLdmvfQ8j6L794kPuUiOXfzjKLyJ5Rzl5H6jPg=
+	t=1730969851; cv=none; b=t71tYZwFhZMi4xepbzTpB4kQEtsjsrC5BlHzLFYTi7fazx+jJ5xUO/+QnoW9UyxRorRQ/+tldlrXqtb+1lwzu4Jj2xfCdDuZdJdgFq96Pbk5SGksihaccEY0tNv6FN+8Rjyu8pch++/GyybfriLFEJ5hTxeiGjNWknCisAtkcO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730969800; c=relaxed/simple;
-	bh=qu2S4s0SnCZhtAaFHz6asPaLoRBnKoJtNUmQzz3yyoo=;
+	s=arc-20240116; t=1730969851; c=relaxed/simple;
+	bh=d3s+RWisqE8aZ6sDim5SmmD4NGTK3DVKfa9FFQhqYVE=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=puGtm0Q9bvK25levLB1jtCA4OuhfONteA5KK0XUg5AyYPtPdAjXspIAdfxhoWHGfdlBF0TwU7qrQy5gq1D4zKNh6epeiqhWlwEjVG87tCJFYzvKVRCpyqhI+AflbOeloPoU3ns7Xp6JwM9T/SAZ3HKj+bUwxRVeI2TPwJIipmfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=JB6Tr1Dp; arc=none smtp.client-ip=209.85.222.41
+	 To:Cc:Content-Type; b=VIvutYVXtMKbzT+9fUCqH/PT9hcGryDhj75pFhkC06/1faaW1AVCvpNskDD633rl5GHQfP8Jl5+vlAh7NBe1fcG8hAGHIi6RkknzmN5LCfQlG3LbyrFQ11+4/Q0yT/Gf0lxyt4zyTRgiEo58XmpJQXcq96LLVsEyunmOfK9bPvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=MV7/0Reu; arc=none smtp.client-ip=209.85.221.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JB6Tr1Dp"
-Received: by mail-ua1-f41.google.com with SMTP id a1e0cc1a2514c-84fdb038aaaso271449241.3
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2024 00:56:38 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MV7/0Reu"
+Received: by mail-vk1-f170.google.com with SMTP id 71dfb90a1353d-50dc984bf5dso330398e0c.0
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2024 00:57:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1730969798; x=1731574598; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1730969849; x=1731574649; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=E/yGZZaMEVC4v1kS/VoIgUaTu4umRI+PaLTQ7ycTMeY=;
-        b=JB6Tr1Dp7ptcGwIEHfmxhuqskwc3MM6rbbZ0tBBEqPmqUWexa1hAeRyX1ay9kSONaO
-         ynKn5opRXHR+RkUFfI9dLKAGN5ATzmma40+d4u4J5oH7CeNZyKr67+Qz91uWZP2YmOgU
-         Irj0mT04+3pzDY2GJlILJpWf/m42OUhv6Ldyo=
+        bh=dJDILdHGH6h0+ueZ+0FyfoHclZa1sIHneqxRiL9xNsI=;
+        b=MV7/0ReuakXyILPOqC8vQnUoq6+IICZ3ZLDSNekVvktApam5Lm8R4xqor8blcjoir9
+         8HxPOKwNNAGwiiejPL7zrSU04xwb2vvaoQ+jH3iMNEjew4FGEoECjpsUjD+TiNKASiaK
+         lb003ma22JHHEA1fROpzjmzShp6HJZzahOHII=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730969798; x=1731574598;
+        d=1e100.net; s=20230601; t=1730969849; x=1731574649;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=E/yGZZaMEVC4v1kS/VoIgUaTu4umRI+PaLTQ7ycTMeY=;
-        b=tt2xaNWgcplTLudfUeoh7QzVoA3Mu5/noNIOgR0CF/JNBKtomglMylpROWdMFYufve
-         anwcLEZcJitbzktNAiZ2quHdXgZfj9BCusutBaSZcK1l/mkW/8TEL9E2HhsZzxWYN4sA
-         YlLpkC1O3DCUlaTc0pWEKDTXVtjWKstmdsVjkWUnXxBxTEO7yV7jVaFtLZiSy/YWMyrh
-         ppfNu5Pa2CeR5HvFKvl1FPzPGwf5Iti4RfRaWy/tTqFZ1Om6abl48I/Z6IX36AvvHM5D
-         GK+N2R8LhxbrV5VGsEP8Oztb6qtgHcXgDDQlsvzmfmEa36YXMNju0r/LaquoI9sb0b1u
-         CHEg==
-X-Gm-Message-State: AOJu0YyndJ9DIdaXjf9Yiec0cAGHH2xcyfLjbXRvjqURxt9oJdaAOzky
-	T3hmqEmSOizrutNBAqiIkiNzEf7eXmMStGM4aJC+YkO3g85UHwu23tYSkObeJD06wu6ITWBtQld
-	sMPPU+mcKUnMhdDrvexHwbqpODh/2pv4P2xX7LG1sEyUewEBErw==
-X-Google-Smtp-Source: AGHT+IH/25nz1xA83CGqJUyOWA5AbmEyc/CPZv0jCl6809kku0jk9mVBTzpmsGqvuqn72KO418iZR7Ln6h5uGUDPeB0=
-X-Received: by 2002:a05:6102:4190:b0:4a3:d4bd:257a with SMTP id
- ada2fe7eead31-4a962ef6bfamr22243726137.23.1730969797860; Thu, 07 Nov 2024
- 00:56:37 -0800 (PST)
+        bh=dJDILdHGH6h0+ueZ+0FyfoHclZa1sIHneqxRiL9xNsI=;
+        b=F/VudHnKrAPGbIuO+06t1Regfp2iF1rOtFYmcqWYVGawUZJ0a0pvj9/6LltpdhXNep
+         CcnvBHb6Jp75iz7cvklpebZ8JCw2crk88j9GlV1751cuIZlHMYnM1VxBkBpHeMT58YT+
+         2GxDkg8jJ3jZeGneHhGALRFNJNgwoS6cM1046/2CH8I3rkam1C88Lkb4rjRDNu6QyU6f
+         NiAJ6UZRFEdfUgeoznQaYUgWYoYH44BqbaN9EvozuGJRfXii9207pAcZVdZRuLQL5WmS
+         tUYThX2c3nVp834aE8sKP3hLUe6PZ8MsqPesrFvdQtsiXJynUnl5EWDVPHB3VW8lixs+
+         UL7A==
+X-Gm-Message-State: AOJu0Yx4/EqAZGy7LzTT4IN03tx3rONV1jiUGngZ2GUt1ENSWdLcWT+o
+	7OgEh9RLyUkXqJgGUHC4E4tfOzlNU93EW3pTj0XYhWtd2nWUieukdL8tmHlpoi4/8cOHzFfwWog
+	HkTuUvDK2vpZYBmwTuTMTHHCZTi8FN89fbETc
+X-Google-Smtp-Source: AGHT+IGkHAfFAYm+6lhaqG3tebZRrr5Z5Vmod+FHq+KEvGK25m5HVOFGiO2QnVRXkKVU3cAA4Oaj8SBBXtP9sUhvrnw=
+X-Received: by 2002:a05:6122:46a1:b0:50d:6a43:d525 with SMTP id
+ 71dfb90a1353d-513fa2eefdamr178495e0c.1.1730969848981; Thu, 07 Nov 2024
+ 00:57:28 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240923174833.45345-1-thenzl@redhat.com> <026951b5-69ea-49c7-b48b-5d426ccd1ec5@redhat.com>
-In-Reply-To: <026951b5-69ea-49c7-b48b-5d426ccd1ec5@redhat.com>
+References: <20240923174833.45345-1-thenzl@redhat.com>
+In-Reply-To: <20240923174833.45345-1-thenzl@redhat.com>
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Date: Thu, 7 Nov 2024 14:26:26 +0530
-Message-ID: <CABvwm=M5F8MSLx0RY4hC=m+hH9=fh+56Kk=iRknRos=HFwC+ug@mail.gmail.com>
+Date: Thu, 7 Nov 2024 14:27:17 +0530
+Message-ID: <CABvwm=NNbtLa1e7aqCCV8ebkDYfhES+jNurbZXK4eA+FcdtDCw@mail.gmail.com>
 Subject: Re: [PATCH] megaraid_sas: fix for a potential deadlock
 To: Tomas Henzl <thenzl@redhat.com>
 Cc: linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com, 
 	sumit.saxena@broadcom.com, ranjan.kumar@broadcom.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000ef449d06264ecfa9"
+	boundary="000000000000fc7f6006264ed2a9"
 
---000000000000ef449d06264ecfa9
+--000000000000fc7f6006264ed2a9
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 5, 2024 at 9:57=E2=80=AFPM Tomas Henzl <thenzl@redhat.com> wrot=
-e:
+On Mon, Sep 23, 2024 at 11:18=E2=80=AFPM Tomas Henzl <thenzl@redhat.com> wr=
+ote:
 >
-> On 9/23/24 19:48, Tomas Henzl wrote:
-> > This fixes a 'possible circular locking dependency detected' warning
-> >       CPU0                    CPU1
-> >       ----                    ----
-> >  lock(&instance->reset_mutex);
-> >                               lock(&shost->scan_mutex);
-> >                               lock(&instance->reset_mutex);
-> >  lock(&shost->scan_mutex);
-> >
-> >
-> > Fix this but temporarily releasing the reset_mutex.
-> >
-> > Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> > ---
-> >  drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/m=
-egaraid/megaraid_sas_base.c
-> > index 6c79c350a4d5..253cc1159661 100644
-> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > @@ -8907,8 +8907,11 @@ megasas_aen_polling(struct work_struct *work)
-> >                                                  (ld_target_id / MEGASA=
+> This fixes a 'possible circular locking dependency detected' warning
+>       CPU0                    CPU1
+>       ----                    ----
+>  lock(&instance->reset_mutex);
+>                               lock(&shost->scan_mutex);
+>                               lock(&instance->reset_mutex);
+>  lock(&shost->scan_mutex);
+>
+>
+> Fix this but temporarily releasing the reset_mutex.
+>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
+araid/megaraid_sas_base.c
+> index 6c79c350a4d5..253cc1159661 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -8907,8 +8907,11 @@ megasas_aen_polling(struct work_struct *work)
+>                                                    (ld_target_id / MEGASA=
 S_MAX_DEV_PER_CHANNEL),
-> >                                                  (ld_target_id % MEGASA=
+>                                                    (ld_target_id % MEGASA=
 S_MAX_DEV_PER_CHANNEL),
-> >                                                  0);
-> > -                     if (sdev1)
-> > +                     if (sdev1) {
-> > +                             mutex_unlock(&instance->reset_mutex);
-> >                               megasas_remove_scsi_device(sdev1);
-> > +                             mutex_lock(&instance->reset_mutex);
-> > +                     }
-> >
-> >                       event_type =3D SCAN_VD_CHANNEL;
-> >                       break;
+>                                                    0);
+> -                       if (sdev1)
+> +                       if (sdev1) {
+> +                               mutex_unlock(&instance->reset_mutex);
+>                                 megasas_remove_scsi_device(sdev1);
+> +                               mutex_lock(&instance->reset_mutex);
+> +                       }
 >
-> Hi Chandrakanth,
->
-> can you please review this patch?
->
-> Thanks, Tomas
+>                         event_type =3D SCAN_VD_CHANNEL;
+>                         break;
+> --
+> 2.46.0
 >
 
 Patch looks good to me.
-
 Acked-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
---000000000000ef449d06264ecfa9
+--000000000000fc7f6006264ed2a9
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -190,14 +184,14 @@ W2v5XKnfV6+4iODhAb65bwLbcNq6dxzr1Yy/fGnIBfoR2qrX9UBDDxjZRpxJGdt7i0CcvsX7p2ia
 SgP+hUBq9GTgLiFqCGyh/gCm2DTB/TyYel0QsIP29qWC1F5mG+GOoSjagi/2SxnNI6LzK+4xfgvc
 80IlL0UapzuyZFExggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIF2pSTqq
-LlAjf1IidHHobkqdTPwwXOobHHr2Ai09ZpgnMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTI0MTEwNzA4NTYzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxHbRA/WY+OVYGbn+cwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIC5b1bwM
+c0USmJMyTmECi+VRXlx5b07DV8bpEkzaDdKzMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTI0MTEwNzA4NTcyOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB5g/VKxPezWw7KvC5vqrqZLFZn
-GyCUwVKVkyb9A/pPLtL2uVbJ5s0Qp3YYcjkIwUGRS0RCavZGTq/1AEKs9ZdEw2seGNQDNWqoYiJ9
-uNMQqH5isiXcwAON77+JARc2UkuQX2LZjsjyCXtCnWPfuPXm3Z0riMxQH0D/C3SWMiZMaMkHCr9z
-LSTQlcHU/Ig2yGuL5N4TOL97oq0GGqBCVHPDAl1fERtwHQd1tUQB2pNE8qtckiBDdz8Io9ep4k9L
-RSZQvmbK5Xibe4vc66fGHM5JV9WyR8whaChfbmvjkd4AHz2bn7gyXj3WXnUKfmmXQIjkwyPCt29K
-EerItR+3rjns
---000000000000ef449d06264ecfa9--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBZW0bx931daArTeLJcXV2gSGcb
+rX35aFRWpBfkHPnMGqVFDWPsjndxjFirlV6sdKnnJfURqmnHqDqe8fZQheIYhFHTTNlEkXyg2WL1
+q8C988x5Vh9rltvwmPAUIJStjNFJTJLdCGfep19HGAAHMrWQGweW2q0y/4Uvv2ALdzoOB2HUQN7K
+Exjble4s2f/4QsBjxgRsljMKMFMEQh6MkY9qKaZsm/D6hWufH33onl5dNkqw/MjSeUEpqm8xUroI
+0i+mRrw4I/CFUeh3zGBMXIjMBdcVPjKsWiBG1AMj6yELCsg+audPzZnTJnuXe7zBcfNgsrXUE4hf
+uO5PHIznu11H
+--000000000000fc7f6006264ed2a9--
