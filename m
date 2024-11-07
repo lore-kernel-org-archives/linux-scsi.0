@@ -1,116 +1,172 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2E56215F58
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 16:05:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C832170BD;
+	Thu,  7 Nov 2024 16:27:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730995517; cv=none; b=QBP+vu3NUH1VLkRwWPYewEm65jlfRzajuhBYsV772skLnYxzxASfhs5ZLeVhcJRSGDefZSFLFxcpmonPd/8hZBgKe4IYaoXYPO6Ih509YCkujeo0DD5rz5jyo0t8FJsP38N7TnvT8Gm3h8EO2KujtWoKxkBDT+e/SOCml0W4LMw=
+	t=1730996830; cv=none; b=f+9Kxs+ilEXX4QvtaynQsB1mecl0VxRFh7WguluD6TbAkH2Nto3b9YLyQ9eQWTOzRzGY7XoGTugqQtrqwKUhKwU3VSu1l4BTNcnIAJGn2KsZEjeyW5xvr0+RfSSVg1UB9sMRAJSDewdVYyxLDYSD34Lcqm6j8PMxkNtKIhPq+gI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730995517; c=relaxed/simple;
-	bh=ib3VD+kz/UeLjXQQ3nPi127rk9Px3L6+fI+LsHtyYk0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rxq/kq2rmKuBJWU9lu2vRmEBsF5Yvndrr39QbjITdMvz/QCU+TkM74WdHiQlO4fxJ5lhd/2SNtz/mhxf3Vy5SdALTSnlW2ygI7pog4U65xpMzpM0ocm/YjPqVBSiYoZaPS5yItlhrrmzHMve09wEDUNP2spgk/9jpHFJGlyBC8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O2qOuk0i; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1730996830; c=relaxed/simple;
+	bh=RaF/yzDkwC/xI3JHS3wDYezLNgto4gJR15z4QCLcIec=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=SZxyKhBoI2WFa147IqtftwwHumxbvE8NGplrGaDPb4AsLbR8DH1dlLY8HZlcP94cAzUVWwTKLYIBd1c1CnBkRPmkKV8Xp/Ukt2E/PDCe0Y2mGXizcUc9dU/njwkDu/hu34a55bvUlxkpCyBQWpTZIrFcDCwpRgiEH2s4051cAGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sgq9DuN9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O2qOuk0i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730995512;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0GL7EY0Lj2wHCiysg6FdJa7+z5p54GgZ3DTXs60yVY0=;
-	b=O2qOuk0i8EV3BhwHT+Pv7GOlQNF0TlB9GSEhaquI13QD8hXLIN4cAtD4FkVGJGWzDjx3Up
-	yLyxHCrQKt+tpHn2D2l53YiF2eyOa9f10vE8su3dz2S/EAjEPMK2ccxZvdXVh+yV/qmpwY
-	QTsWgjDuGMDnAg7AbZcd5Il1uFlq7jM=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-73-NIPhwC1GNG6zmc97l2E9Kw-1; Thu,
- 07 Nov 2024 11:05:09 -0500
-X-MC-Unique: NIPhwC1GNG6zmc97l2E9Kw-1
-X-Mimecast-MFC-AGG-ID: NIPhwC1GNG6zmc97l2E9Kw
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F1A571954B1E;
-	Thu,  7 Nov 2024 16:05:05 +0000 (UTC)
-Received: from [10.22.88.108] (unknown [10.22.88.108])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9A4751955F3D;
-	Thu,  7 Nov 2024 16:05:04 +0000 (UTC)
-Message-ID: <67da1859-cfd2-45f0-951b-258ebdf6fd5f@redhat.com>
-Date: Thu, 7 Nov 2024 11:05:03 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sgq9DuN9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B3AFC4CECC;
+	Thu,  7 Nov 2024 16:27:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730996829;
+	bh=RaF/yzDkwC/xI3JHS3wDYezLNgto4gJR15z4QCLcIec=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=sgq9DuN999fo+gF31O1Sog3B6QwMV6OvcPe7VPqi8sJ1TCzU/W1Ez/tliuLSn6HZv
+	 H6WJr617Z9ho3vOtVhPzMb0TyqS+gb2SI7mq/C0wytQj+BYrK8SHegywRApVWEjefm
+	 VrP+Uq41/kYqyiwmALEKXPYG2sF+9dXoP558MEULT3X9CJ2qlfOgYo5XQQ/akQ/Li+
+	 8PC//m2NPppcQqPE5AwaE9VZUm8GEStHJrNdsbBXQj3zX2/Uw70Eqzdl18ZXk0ykpu
+	 Nv3hNeVLx2kThS8Iy5jvLz2TwdYaK/p8look0JzKdaIO94mqldL4oshBd2UJ53q8QV
+	 LBGXXQk7Ujmww==
+Date: Thu, 7 Nov 2024 10:27:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Tudor Ambarus <tudor.ambarus@linaro.org>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Michael Walle <mwalle@kernel.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
+	Carlos Bilbao <carlos.bilbao.osdev@gmail.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	"David E. Box" <david.e.box@linux.intel.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Matt Turner <mattst88@gmail.com>,
+	Frederic Barrat <fbarrat@linux.ibm.com>,
+	Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-cxl@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-hyperv@vger.kernel.org
+Subject: Re: [PATCH v2 03/10] PCI/sysfs: Calculate bin_attribute size through
+ bin_size()
+Message-ID: <20241107162707.GA1618544@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/3] scsi: st: clear was_reset when CHKRES_NEW_SESSION
-To: =?UTF-8?Q?Kai_M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
- "James.Bottomley@hansenpartnership.com"
- <James.Bottomley@HansenPartnership.com>, loberman@redhat.com
-References: <20241031010032.117296-1-jmeneghi@redhat.com>
- <20241031010032.117296-3-jmeneghi@redhat.com>
- <5046E716-BB3D-45A6-B320-6810F5C792EC@kolumbus.fi>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <5046E716-BB3D-45A6-B320-6810F5C792EC@kolumbus.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+In-Reply-To: <20241103-sysfs-const-bin_attr-v2-3-71110628844c@weissschuh.net>
 
-On 11/3/24 13:32, "Kai Mäkisara (Kolumbus)" wrote:
->> On 31. Oct 2024, at 3.00, John Meneghini <jmeneghi@redhat.com> wrote:
->>
->> Be sure to clear was_reset when ever we clear pos_unknown. If we don't
->> then the code in st_chk_result() will turn on pos_unknown again.
->>
->>         STp->pos_unknown |= STp->device->was_reset;
->>
->> This results in confusion as future commands fail unexpectedly.
+On Sun, Nov 03, 2024 at 05:03:32PM +0000, Thomas Weißschuh wrote:
+> Stop abusing the is_bin_visible() callback to calculate the attribute
+> size. Instead use the new, dedicated bin_size() one.
 > 
-> This brings in my mind (again) the question: is the hack using was_reset set
-> by scsi_error to detect device reset necessary any more? It was introduced
-> as a temporary method somewhere between 1.3.20 and 1.3.30 (in 1995)
-> when the POR (power on/reset) UAs (Unit Attention) were not passed to st.
-> The worst problem with this hack is clearing was_reset. St should not clear
-> something set by error handling (layering violation).
+> Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
 
-OK. I wasn't aware of the history here... but I agree we want to get rid of the layering violation.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> Your earlier patch added code to st to set pos_unknown when a POR UA
-> was found. So, is this now alone enough to catch the resets?
+Thanks for doing this!
 
-As long at the tape device actually sends a UA, no I don't think we need the was_reset code anymore.
-We should remove the device->was_reset code from st.c.
-
-> I now did some experiments with scsi_debug and in those experiments
-> reset initiated using sg_reset did result in st getting POR UA.
-> But this was just a simple and somewhat artificial test.
-
-Yes, I've noticed that not all of the different emulators out there like MHVTL and scsi_debug
-will reliably send a POR UA following sg_reset. Especially scsi_debug. The tape emulation in
-scsi_debug is inadequate when it comes to resets AFAIAC.
-
-I'll see if I can develop some further tests for MHVLT, but scsi_debug isn't worth the
-trouble (for me) and I've told our QE group here at Red Hat to stop testing the st driver
-with scsi_debug.  Doing this has led to too many false positives and passing tests. That's
-why I finally purchased a tape drive and started testing this myself.
-
-If you want to remove the device->was_reset from the st driver I can help by running
-the patch through my tests with the tape device.
-
--- 
-John A. Meneghini
-Senior Principal Platform Storage Engineer
-RHEL SST - Platform Storage Group
-jmeneghi@redhat.com
-
+> ---
+>  drivers/pci/pci-sysfs.c | 28 ++++++++++++++++------------
+>  1 file changed, 16 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 5d0f4db1cab78674c5e5906f321bf7a57b742983..040f01b2b999175e8d98b05851edc078bbabbe0d 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -818,21 +818,20 @@ static struct bin_attribute *pci_dev_config_attrs[] = {
+>  	NULL,
+>  };
+>  
+> -static umode_t pci_dev_config_attr_is_visible(struct kobject *kobj,
+> -					      struct bin_attribute *a, int n)
+> +static size_t pci_dev_config_attr_bin_size(struct kobject *kobj,
+> +					   const struct bin_attribute *a,
+> +					   int n)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+>  
+> -	a->size = PCI_CFG_SPACE_SIZE;
+>  	if (pdev->cfg_size > PCI_CFG_SPACE_SIZE)
+> -		a->size = PCI_CFG_SPACE_EXP_SIZE;
+> -
+> -	return a->attr.mode;
+> +		return PCI_CFG_SPACE_EXP_SIZE;
+> +	return PCI_CFG_SPACE_SIZE;
+>  }
+>  
+>  static const struct attribute_group pci_dev_config_attr_group = {
+>  	.bin_attrs = pci_dev_config_attrs,
+> -	.is_bin_visible = pci_dev_config_attr_is_visible,
+> +	.bin_size = pci_dev_config_attr_bin_size,
+>  };
+>  
+>  /*
+> @@ -1330,21 +1329,26 @@ static umode_t pci_dev_rom_attr_is_visible(struct kobject *kobj,
+>  					   struct bin_attribute *a, int n)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+> -	size_t rom_size;
+>  
+>  	/* If the device has a ROM, try to expose it in sysfs. */
+> -	rom_size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
+> -	if (!rom_size)
+> +	if (!pci_resource_end(pdev, PCI_ROM_RESOURCE))
+>  		return 0;
+>  
+> -	a->size = rom_size;
+> -
+>  	return a->attr.mode;
+>  }
+>  
+> +static size_t pci_dev_rom_attr_bin_size(struct kobject *kobj,
+> +					const struct bin_attribute *a, int n)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+> +
+> +	return pci_resource_len(pdev, PCI_ROM_RESOURCE);
+> +}
+> +
+>  static const struct attribute_group pci_dev_rom_attr_group = {
+>  	.bin_attrs = pci_dev_rom_attrs,
+>  	.is_bin_visible = pci_dev_rom_attr_is_visible,
+> +	.bin_size = pci_dev_rom_attr_bin_size,
+>  };
+>  
+>  static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+> 
+> -- 
+> 2.47.0
+> 
