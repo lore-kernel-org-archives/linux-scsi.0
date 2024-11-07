@@ -1,116 +1,177 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C126029CF4;
-	Thu,  7 Nov 2024 15:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6937F2144B8
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 15:51:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730994649; cv=none; b=Epy+ZvsWI79y3rBmaWsJu6OwssRqOzfLsz18WFruSPUfGg5JnP68PK51MCzh5mz7RHuq9bAA0TUwWCcaiFQLsqc08DGn3vt3lwH5O3x1G8IFPljvKwKba6Bx5MK1CgyhZ4ttU/5wcJ4JiEEVvr81wJ3xajW6A+6nzilYkhUjerQ=
+	t=1730994694; cv=none; b=alqQwHiJubbLixfof0rBLADr6AAxPOzDICMuXgIopnHYSBgDfRpIpfRMH9X3LDI6XSjek5rpi0Cjdsd3FSrtDkdB7FVsDxBg6plj9cUGeGAQjeyUS+GOSfJQT/Sbf7wdj2cBo/pUIJ0Pqzk+3FEDMTmhGKuX87Mk0B9JoQC/2Ec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730994649; c=relaxed/simple;
-	bh=o9oRCatZXqdJ9UeL2Tpm/oUaI9r2qvvElx6SkP3OLIw=;
+	s=arc-20240116; t=1730994694; c=relaxed/simple;
+	bh=3OIf/gX0ZDNOZhMPo00YXj5sJSXF/V2U3ogbTioMzBA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Jo5xILaE70s3Oh2ApR4Lc7kYsbDppBrR809ToO8KgXAitJJEs4sZpbI5anzBWRlQqHyuMqcLxYcL87PfkgngjI6ibcEQKREDBHQR7EpfuV5vT8OV+fE630NsXejDMiyssySeMqp4olEJGUSLjwKmNlmy4TuiJEycQjIjvwuHHCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-20c803787abso10192205ad.0;
-        Thu, 07 Nov 2024 07:50:47 -0800 (PST)
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cixgox7EizlaEZX+jw2f7dDXOoGzySi3FgoX3iJQ9lHv2xBapxEy8qmAghbx8KwZ3HmWv9pwfF/0mXOCAx42G1xior0NOc81/sBS4shX/fe0dMwbhG7aOqdJBDTh1DVnE/8GFXPzfjRsWZdShM/doyF9M4juN0sw88MmB874N48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RNHypDoW; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RNHypDoW"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-43193678216so10232225e9.0
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2024 07:51:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1730994691; x=1731599491; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=BR0AsIIvsAZoNbnhltKsghMop/uYVJqzbFLsrpgQQDQ=;
+        b=RNHypDoW7vDwNsAMZnKx3q5/Sc2TlNvKBj0MVde11xUXSvzHGC3wpMEZL4tpgEPXE+
+         QIZJn9Ms2RAPZka1UD02VxywD1ZDSvTeELDLyEcrWwj1KykU5WLsUT7Eqyl0f0Zxwt5r
+         GSr2RGnHMEL7QeJmGzvKZ20+leekQBt1/dpKWQ3PIH8hvVXHMSnas3IvtSjPbrlmxlvd
+         KibuFVmBSpJqbBnhI14QEoWlrNmwwoPPQpuAotOXHETUWvRSjVnwVtkl+ivtmOalR8QZ
+         5/ZVh1tKXCYpF5BGX6sQNI19F1ujHxvhXrXtkn52XfPXYsnBXVgoeFz198Pf63QytAqO
+         xmlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730994647; x=1731599447;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=y4g9pTMBWn8NYG8DJqu2aF9WChjDh3es1iM4dJmMreI=;
-        b=vKlWUQWv+b5vEqIfiQ8OpTfq5x3oThAEGeEL1qukxslGtyYq3fCzcb6CWDdYFLYM0S
-         OhhDKZxogOhtPj2TkY/RBa5VZW6QQR3OA4kPq0jfi1wWQ3WAGJq77QTLE2JLC61STzGB
-         Go2T2YNUE+mthY9fMygn+t+WPTpwTWa8/1kv4FxvAW53Ow5GroAg8bzx9DhuonPge/LY
-         PhvRFDBDVnRwAmNq5HvZQYYyhB9B7d14EGmqMouHYd3SdRdKuBHRBrTyvmOcLmGNe6Uz
-         wi0OZxuAgt59x5bX7ZoiI+TRjjUoGN01m8JDi9eBODAcEc0Q2jOuZoDG6pEG5M3yt3qK
-         HReQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU3QdtR1NkurVFSF2BRDd9KOHD27CCjrOPW42ixRhW2NcYsd4ZlykC6aT7CzyauA4GJoaGk1ydVTROF@vger.kernel.org, AJvYcCUZnLWZ3NCvgIY2zpg9pJyCbDHV7PXloeKgzPOukJIMTcZNlTt7l9+ftmbei1BOe1rABhzy5dgFM48J1SHa@vger.kernel.org, AJvYcCVNmD1x/+REE/wH4XKfV82FXys/ctC1wx7xesSbBaoI9CVTpxTx+tHFHSiC4YpMLqa4LBS1MPqfsCogGQ==@vger.kernel.org, AJvYcCVU/tAZDBZvmiShZuS/3oKZILjfPT0gyLggIKEmnclDoq9ALWXemwe/RMF5+DNsYS1aZBJT6LVg2VLChJ8r@vger.kernel.org, AJvYcCW/SFWlhvhxaHpvkeKDOch6IviefR/lnxz+ziMQnpvhC2Kzs2zE4GFSgdg5MHfx6cbFULullwXa1tEOJg==@vger.kernel.org, AJvYcCWxK4UXb0KL2zPMzrmmN9yRehERL664nvb+ytwIOOJxTau3Oz5un+Y8+r5smxm4ayIWnJ8uBaurs65t@vger.kernel.org, AJvYcCX33al0KNbbpoPWXzMcPfco5QsDU3nbsAf3EusbqiD92/PB4yah472R14qvM1V/qSHVl0DClPR1U+WMaw==@vger.kernel.org, AJvYcCXNSDoa7iERoi5xNkCp3wZ+EcPaD433RMHsGnB/uAQvbK77iWfcJsCk8PlmwUQIqkYGVjztH7kGrl0CC1ioUENpbtnmXg==@vger.kernel.org, AJvYcCXsR6YGjvb8fYUonymj3DN85JimVuO7AevrxdUl87HWCAzCdEQTDRGCQ4PwZqFlgWFgIMGTa+25tLuc@vger.kernel.org
-X-Gm-Message-State: AOJu0YyGpecljfOZn2VUX+afxn+Pd6nn0r2JKofJHORbXpkbpKDB7YKg
-	OVYzhBL38gEut0etLZm07llZTPGhixGcznTJS/HCfetPsW7kPF9U
-X-Google-Smtp-Source: AGHT+IEfW8mc6K7WMilatY4cRGrx/jJrVZ2Go8Ums63B2x6oVuXb+zNT4RZMBtIqDecZElfJ9fn+6w==
-X-Received: by 2002:a17:903:183:b0:210:e760:77e with SMTP id d9443c01a7336-21181184b51mr5235045ad.7.1730994647037;
-        Thu, 07 Nov 2024 07:50:47 -0800 (PST)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177e6c2ecsm13637145ad.252.2024.11.07.07.50.46
+        d=1e100.net; s=20230601; t=1730994691; x=1731599491;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=BR0AsIIvsAZoNbnhltKsghMop/uYVJqzbFLsrpgQQDQ=;
+        b=TlbmjrPOf3Q66giQKnv0KtWoU0tec3UdNUzQIQRViOfnydCb3Y5XhlwTeiBWNXLYa5
+         32YB8AggNd3H+cUKKmV+6B6zhw9bdYwR+NjoBh+3sqvU8w9kmlPxpFiIsdJyLdGtGUVb
+         kerZaAAbdAavXOWK9+wLLYDYF/sCC20imyPLZuBGM4AO03AH065L93bAM5p16FrBRBjW
+         qblYKgKs2QyhdpAmtgOY+IwqNv37NqvwgZy1SkwPXUvb74C58UejxTLT6CzSjSrU6jB/
+         SfOc4MGvpcFjpEBKzGQ9P8Iv6H9k9HUmoV74C33vcLJ9/VfgjeRkIN5lobRfgAIoEcRH
+         Q+6A==
+X-Forwarded-Encrypted: i=1; AJvYcCXvoA6VxuMSDpLl1D/vIrKnOWYHPkxh4R0KlBVksPoe57amu/M6VGh7stBz7ORlux8aAGHBJpjyeWg+@vger.kernel.org
+X-Gm-Message-State: AOJu0YymxoVSEYvd5XXytZdQRFZYh6IMUWR2LYb6k9OXjUKZtSAt/4qc
+	C5BwIscDdGIbKvjnzALnqV53kZ+tCJn0FuhOJEGbvpqmEtraNyXvcoHRXEMjxg==
+X-Google-Smtp-Source: AGHT+IEVBKlv9ftF8S0QzkPYuWh8G8yEuAdxmNVdUuhvUI45faLCdmmUAl+VK6pETw5Od9JRQmScxA==
+X-Received: by 2002:a05:600c:4a88:b0:431:9397:9ac9 with SMTP id 5b1f17b1804b1-431aa292eb4mr312298635e9.15.1730994690676;
+        Thu, 07 Nov 2024 07:51:30 -0800 (PST)
+Received: from thinkpad ([89.101.134.25])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432aa6c11f8sm64356935e9.25.2024.11.07.07.51.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Nov 2024 07:50:46 -0800 (PST)
-Date: Fri, 8 Nov 2024 00:50:44 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Michael Walle <mwalle@kernel.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
-	Carlos Bilbao <carlos.bilbao.osdev@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	"David E. Box" <david.e.box@linux.intel.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Richard Henderson <richard.henderson@linaro.org>,
-	Matt Turner <mattst88@gmail.com>,
-	Frederic Barrat <fbarrat@linux.ibm.com>,
-	Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-	linux-mtd@lists.infradead.org, platform-driver-x86@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-hyperv@vger.kernel.org
-Subject: Re: [PATCH v2 02/10] sysfs: introduce callback
- attribute_group::bin_size
-Message-ID: <20241107155044.GA1297107@rocinante>
-References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
- <20241103-sysfs-const-bin_attr-v2-2-71110628844c@weissschuh.net>
- <20241106200513.GB174958@rocinante>
- <2024110726-hasty-obsolete-3780@gregkh>
+        Thu, 07 Nov 2024 07:51:29 -0800 (PST)
+Date: Thu, 7 Nov 2024 15:51:28 +0000
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v4 1/7] scsi: ufs: core: Add
+ UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE
+Message-ID: <20241107155128.paqyo7een2ggzejs@thinkpad>
+References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1730705521-23081-2-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <2024110726-hasty-obsolete-3780@gregkh>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1730705521-23081-2-git-send-email-shawn.lin@rock-chips.com>
 
-Hello,
-
-[...]
-> > There exist the sysfs_update_groups(), but the BAR resource sysfs objects
-> > are currently, at least not yet, added to any attribute group.
+On Mon, Nov 04, 2024 at 03:31:55PM +0800, Shawn Lin wrote:
+> HCE on Rockchip SoC is different from both of ufshcd_hba_execute_hce()
+> and UFSHCI_QUIRK_BROKEN_HCE case. It need to do dme_reset and dme_enable
+> after enabling HCE. So in order not to abuse UFSHCI_QUIRK_BROKEN_HCE, add
+> a new quirk UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE, to deal with that
+> limitation.
 > 
-> then maybe they should be added to one :)
+> Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+> Changes in v4:
+> - fix typo
+> 
+> Changes in v3: None
+> Changes in v2: None
+> 
+>  drivers/ufs/core/ufshcd.c | 17 +++++++++++++++++
+>  include/ufs/ufshcd.h      |  6 ++++++
+>  2 files changed, 23 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 7cab1031..4084bf9 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4819,6 +4819,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+>  {
+>  	int retry_outer = 3;
+>  	int retry_inner;
+> +	int ret;
+>  
+>  start:
+>  	if (ufshcd_is_hba_active(hba))
+> @@ -4865,6 +4866,22 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+>  	/* enable UIC related interrupts */
+>  	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
+>  
+> +	/*
+> +	 * Do dme_reset and dme_enable if a UFS host controller needs
+> +	 * this procedure to actually finish HCE.
+> +	 */
+> +	if (hba->quirks & UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE) {
+> +		ret = ufshcd_dme_reset(hba);
+> +		if (!ret) {
+> +			ret = ufshcd_dme_enable(hba);
+> +			if (ret)
+> +				dev_err(hba->dev,
+> +					"Failed to do dme_enable after HCE.\n");
 
-Yeah. There is work in progress that will take care of some of this.
+Don't you need to return failure for this and below error paths? Probably you
+need to skip post change notification as well in the case of failure.
 
-	Krzysztof
+> +		} else {
+> +			dev_err(hba->dev, "Failed to do dme_reset after HCE.\n");
+> +		}
+> +	}
+> +
+>  	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
+
+Is it possible for you to carry out dme_reset() and dme_enable() in the post
+change notifier of the rockchip glue driver? I'm trying to see if we can avoid
+having the quirk which is only specific to Rockchip.
+
+- Mani
+
+>  
+>  	return 0;
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index a95282b..e939af8 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -685,6 +685,12 @@ enum ufshcd_quirks {
+>  	 * single doorbell mode.
+>  	 */
+>  	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
+> +
+> +	/*
+> +	 * This quirk needs to be enabled if host controller need to
+> +	 * do dme_reset and dme_enable after hce.
+> +	 */
+> +	UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE		= 1 << 26,
+>  };
+>  
+>  enum ufshcd_caps {
+> -- 
+> 2.7.4
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
