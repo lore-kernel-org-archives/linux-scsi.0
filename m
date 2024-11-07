@@ -1,119 +1,255 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F7A2216A3D;
-	Thu,  7 Nov 2024 17:20:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 653E4DDBE;
+	Thu,  7 Nov 2024 17:23:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731000046; cv=none; b=KL9YtFCH28bzxEf2osqHXgYgeJnEz0G7dL/+51SWnjahq9Sah9GLbHDLRPsB0AuMcGS3dOJL2Zjp5KlHTPSBjicy/PG3+4VTcvpqETK+Pp8Ep+vxIQq8juLvCTjPG2Ycdpctzo+EpJyJUC0kstoFKTraBcyXMLC6v8CJkGsng1s=
+	t=1731000216; cv=none; b=PM2GmhySn9ObzmZ9/VaebOexBTZ6Njvg9mg4tx/8wiitjH/Gy1c8XEhqlMMRqsQm8/LotKFbCNWK7LpNR1n/XuZDOBYoqt2ZOSCX8SeGzl12j+yZ4H+voh2vhShi3wOk3ljCuGUcWS5L/3NA/eNz4G1bH8f5vhEf/fxrvoAmJpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731000046; c=relaxed/simple;
-	bh=cADn4ARQkTOhflqlIHhNxtca9L54H5LHvOrTgQwQP8c=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=UT2Tkse7N2/fMJXyzMZIfnDM/7LJFyO7c7WniqZH1xaXzCEvDeIWJWld3fJitl5CFCJdLF70brs2TYA+H3VB8UNRSe8IRlXXUIXhdEBdE53bXbGCBvNpZRTHsyK7h91XXAxh6+mWNmWBGDe5B124QKO9/FcA0BIzjkj0SktJdWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uirXLcMy; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731000216; c=relaxed/simple;
+	bh=GiEBH3vCaFny3F9wCmysPBdsf2lj75atnrwXemAxTp4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EqzW7wq2YUhoAhpdMQqUHrphAS3pibqIiJZt34UFLxxOZx7qRdmlFHL8ArL1AsBKZSZIFWHUhMum1nCSSbuZYwkzHBFZTGo5izGkRwvAmOo/ScgUrUu5aSpVi5Ksqxx/O07/csRG+UT5t1ZxgPb+4YkVKgYWmd5HwQht70LcCKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Zykuer6S; arc=none smtp.client-ip=209.85.218.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uirXLcMy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8DA9C4CECC;
-	Thu,  7 Nov 2024 17:20:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731000045;
-	bh=cADn4ARQkTOhflqlIHhNxtca9L54H5LHvOrTgQwQP8c=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=uirXLcMy1Qn//p7lSBnbOlzSbCL5aIT0TqEnGpIZm6Rx23BQJKj1JIwJAP4R6CQ3Y
-	 BGW5ysKmLw5HxKe9TW2Kb0/MrhrtH+FEMuRdl+3jaHMQQkHCavjZQ9xWr31Ghy5ARf
-	 J2TiGOLT8c6IMr+E/gnELx0660oj7VCoNS9utcB0Gb41g2oymp/+1G/7KVgOzIPwxq
-	 q5/0lzC969ZrJFg9aKvlY1ckSKQVQp4pt0o8irIOJAq56q9MDR85uEDv3iCGEqltvk
-	 QeOfANjQFk8pt3o4hyDqn3DINTzEn9s+ZnpBLM2/xaYcEN2lpP63yM+3MX3zh3CiMr
-	 Amp7lQpjSOJ2g==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  "Rafael J. Wysocki"
- <rafael@kernel.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Srinivas
- Kandagatla <srinivas.kandagatla@linaro.org>,  Davidlohr Bueso
- <dave@stgolabs.net>,  Jonathan Cameron <jonathan.cameron@huawei.com>,
-  Dave Jiang <dave.jiang@intel.com>,  Alison Schofield
- <alison.schofield@intel.com>,  Vishal Verma <vishal.l.verma@intel.com>,
-  Ira Weiny <ira.weiny@intel.com>,  Alex Deucher
- <alexander.deucher@amd.com>,  Christian =?utf-8?Q?K=C3=B6nig?=
- <christian.koenig@amd.com>,
-  Xinhui Pan <Xinhui.Pan@amd.com>,  David Airlie <airlied@gmail.com>,
-  Simona Vetter <simona@ffwll.ch>,  Dennis Dalessandro
- <dennis.dalessandro@cornelisnetworks.com>,  Jason Gunthorpe
- <jgg@ziepe.ca>,  Leon Romanovsky <leon@kernel.org>,  Tudor Ambarus
- <tudor.ambarus@linaro.org>,  Pratyush Yadav <pratyush@kernel.org>,
-  Michael Walle <mwalle@kernel.org>,  Miquel Raynal
- <miquel.raynal@bootlin.com>,  Richard Weinberger <richard@nod.at>,
-  Vignesh Raghavendra <vigneshr@ti.com>,  Naveen Krishna Chatradhi
- <naveenkrishna.chatradhi@amd.com>,  Carlos Bilbao
- <carlos.bilbao.osdev@gmail.com>,  Hans de Goede <hdegoede@redhat.com>,
-  Ilpo =?utf-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,  "David E.
- Box"
- <david.e.box@linux.intel.com>,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <martin.petersen@oracle.com>,  Richard Henderson
- <richard.henderson@linaro.org>,  Matt Turner <mattst88@gmail.com>,
-  Frederic Barrat <fbarrat@linux.ibm.com>,  Andrew Donnellan
- <ajd@linux.ibm.com>,  Arnd Bergmann <arnd@arndb.de>,  Logan Gunthorpe
- <logang@deltatee.com>,  "K. Y. Srinivasan" <kys@microsoft.com>,  Haiyang
- Zhang <haiyangz@microsoft.com>,  Wei Liu <wei.liu@kernel.org>,  Dexuan Cui
- <decui@microsoft.com>,  Dan Williams <dan.j.williams@intel.com>,
-  linux-kernel@vger.kernel.org,  linux-pci@vger.kernel.org,
-  linux-cxl@vger.kernel.org,  amd-gfx@lists.freedesktop.org,
-  dri-devel@lists.freedesktop.org,  linux-rdma@vger.kernel.org,
-  linux-mtd@lists.infradead.org,  platform-driver-x86@vger.kernel.org,
-  linux-scsi@vger.kernel.org,  linux-usb@vger.kernel.org,
-  linux-alpha@vger.kernel.org,  linuxppc-dev@lists.ozlabs.org,
-  linux-hyperv@vger.kernel.org
-Subject: Re: [PATCH v2 05/10] sysfs: treewide: constify attribute callback
- of bin_is_visible()
-In-Reply-To: <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
-	("Thomas =?utf-8?Q?Wei=C3=9Fschuh=22's?= message of "Sun, 03 Nov 2024
- 17:03:34 +0000")
-References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
-	<20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
-Date: Thu, 07 Nov 2024 17:20:37 +0000
-Message-ID: <mafs08qtv7yfu.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zykuer6S"
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-a9a16b310f5so195511366b.0;
+        Thu, 07 Nov 2024 09:23:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731000212; x=1731605012; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9FOmBpO65NUUZbynSIJljWcZSxtJSzr/BEmXGDAexTM=;
+        b=Zykuer6S6yeP15AYrU1FHU5KLcR1LBtunF5SopQRn4gZvKgwoSTO+hCiYQ7qzL+SeE
+         YMS/c3Hq5Zu6GOhdbKHnBlXg3wdj/UIWX4u7ngBrXICa9/ZSx11iYqFt7wfrv8cEz5il
+         dyYY1V2N/hcJEWbXjjyN7InwL8C7otYyiYETWaKbdpjRGgkLu3lauQE6pJbx0TXXJgJU
+         1QiQyO7QxySfqvCc8RbVDlitO4om2MESy5Qsz1AFAQ9rEck+quzH67pXGY3U56quUUNA
+         KaoTXFWPkEvCkICzgtxdZiw6BzqOSt8Au65f5anpTJbQFxmKe2l3r3ltxxdctTYFVmZh
+         OIfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731000212; x=1731605012;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9FOmBpO65NUUZbynSIJljWcZSxtJSzr/BEmXGDAexTM=;
+        b=swsP+TUpTVxmeVr13oxfrvqwRLc8e1uIcBiyuAr4zm6CgKMgOgkk/wOWGNDwCtHUM+
+         D04Z9RbZHdVFiJ8RmTfoerZu6DKeMO7EiOchgmWd14fMPZ2scCgGS7QlOieZdaOg0E+2
+         fv+BLAw8s6UfR3EgcK6CYNIQpAb+W3hEFdLd6RI635BhV921djNIL1o5lubLS2c8+JZr
+         bvruR7AwEqMd6tgXf+IUf+KGtYmIR6G7zKD5GuZY7C7WThSbAGzRQsZOJtR8kB+vO4RU
+         D3d2WJciJ+Dh9rz+YuYNeSK2BBj3HkDYq7PAAuXkTKDWufPFr7sHWi3hjS1Q6PQYsg92
+         ovxg==
+X-Forwarded-Encrypted: i=1; AJvYcCV9YW/e+sgRVDYWTacfs6HJaJFAr+z6Z5NG+9SffD27+i7Kj4W2lsfJ+GQKrcREliRkjL+YUZoGPw==@vger.kernel.org, AJvYcCVt63zz0U1aUvPXkH5ClJ62LV5E6ZTJHt5+BAvqfzncp4yXxB7y40nZ4lnSAE0Y8XVFn5r17lTJv02Z7/8=@vger.kernel.org, AJvYcCWDRoqlgMxFrFPFeAaJ/275ygzvuF8ohCIgQVLSpIQ7yQXHwJP01AGOXBywPUFj6++rm5jKwSdOGJLKiQ==@vger.kernel.org, AJvYcCXQKsxlzOqpn9tSrRQhsBTEzsuvBr4EEey/zX0FXf0J+8avmyCyYa0tWgr4LKN2SBGMdivfy1iSjeSUMyku9w==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhMBow1XKz8E08JiuvwlQ+EFg0z8td6RgexZvxMXqMQEjDXTD4
+	NakwF7b7G8VOE4tL/5xk9IzcyHz7NT6WIoOcwvKu/vYonVZj3Am+
+X-Google-Smtp-Source: AGHT+IGjmKySyNTN/8QcAW8bxivaq94CNWApyrUQEWFwxsq+VaX7hSp+J5pWWeh6pYc6mWGzASLRLw==
+X-Received: by 2002:a17:907:6ea4:b0:a9a:dc3:c86e with SMTP id a640c23a62f3a-a9eeb36c852mr77812166b.11.1731000211235;
+        Thu, 07 Nov 2024 09:23:31 -0800 (PST)
+Received: from [192.168.42.11] (82-132-217-53.dab.02.net. [82.132.217.53])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0def54asm122435866b.157.2024.11.07.09.23.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 Nov 2024 09:23:30 -0800 (PST)
+Message-ID: <b11cc81d-08b7-437d-85b4-083b84389ff1@gmail.com>
+Date: Thu, 7 Nov 2024 17:23:29 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 06/10] io_uring/rw: add support to send metadata along
+ with read/write
+To: Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@kernel.org>
+Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
+ brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
+ linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+ io-uring@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org, gost.dev@samsung.com, vishak.g@samsung.com,
+ anuj1072538@gmail.com, Anuj Gupta <anuj20.g@samsung.com>
+References: <20241030180112.4635-1-joshi.k@samsung.com>
+ <CGME20241030181013epcas5p2762403c83e29c81ec34b2a7755154245@epcas5p2.samsung.com>
+ <20241030180112.4635-7-joshi.k@samsung.com>
+ <ZyKghoCwbOjAxXMz@kbusch-mbp.dhcp.thefacebook.com>
+ <914cd186-8d15-4989-ad4e-f7e268cd3266@gmail.com>
+ <ceb58d97-b2e3-4d36-898d-753ba69476be@samsung.com>
+Content-Language: en-US
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <ceb58d97-b2e3-4d36-898d-753ba69476be@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Sun, Nov 03 2024, Thomas Wei=C3=9Fschuh wrote:
+On 11/1/24 17:54, Kanchan Joshi wrote:
+> On 10/31/2024 8:09 PM, Pavel Begunkov wrote:
+>> On 10/30/24 21:09, Keith Busch wrote:
+>>> On Wed, Oct 30, 2024 at 11:31:08PM +0530, Kanchan Joshi wrote:
+>>>> diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/
+>>>> io_uring.h
+>>>> index 024745283783..48dcca125db3 100644
+>>>> --- a/include/uapi/linux/io_uring.h
+>>>> +++ b/include/uapi/linux/io_uring.h
+>>>> @@ -105,6 +105,22 @@ struct io_uring_sqe {
+>>>>             */
+>>>>            __u8    cmd[0];
+>>>>        };
+>>>> +    /*
+>>>> +     * If the ring is initialized with IORING_SETUP_SQE128, then
+>>>> +     * this field is starting offset for 64 bytes of data. For meta io
+>>>> +     * this contains 'struct io_uring_meta_pi'
+>>>> +     */
+>>>> +    __u8    big_sqe[0];
+>>>> +};
+>>
+>> I don't think zero sized arrays are good as a uapi regardless of
+>> cmd[0] above, let's just do
+>>
+>> sqe = get_sqe();
+>> big_sqe = (void *)(sqe + 1)
+>>
+>> with an appropriate helper.
+> 
+> In one of the internal version I did just that (i.e., sqe + 1), and
+> that's fine for kernel.
+> But afterwards added big_sqe so that userspace can directly access
+> access second-half of SQE_128. We have the similar big_cqe[] within
+> io_uring_cqe too.
+> 
+> Is this still an eyesore?
 
-> The is_bin_visible() callbacks should not modify the struct
-> bin_attribute passed as argument.
-> Enforce this by marking the argument as const.
->
-> As there are not many callback implementers perform this change
-> throughout the tree at once.
->
-> Signed-off-by: Thomas Wei=C3=9Fschuh <linux@weissschuh.net>
-> ---
-> diff --git a/drivers/mtd/spi-nor/sysfs.c b/drivers/mtd/spi-nor/sysfs.c
-> index 96064e4babf01f6950c81586764386e7671cbf97..5e9eb268073d18e0a46089000=
-f18a3200b4bf13d 100644
-> --- a/drivers/mtd/spi-nor/sysfs.c
-> +++ b/drivers/mtd/spi-nor/sysfs.c
-> @@ -87,7 +87,7 @@ static umode_t spi_nor_sysfs_is_visible(struct kobject =
-*kobj,
->  }
->=20=20
->  static umode_t spi_nor_sysfs_is_bin_visible(struct kobject *kobj,
-> -					    struct bin_attribute *attr, int n)
-> +					    const struct bin_attribute *attr, int n)
+Yes, let's kill it as well please, and I don't think the feature
+really cares about it, so should be easy to do if not already in
+later revisions.
 
-Acked-by: Pratyush Yadav <pratyush@kernel.org> # for spi-nor
+>>>> +
+>>>> +/* this is placed in SQE128 */
+>>>> +struct io_uring_meta_pi {
+>>>> +    __u16        pi_flags;
+>>>> +    __u16        app_tag;
+>>>> +    __u32        len;
+>>>> +    __u64        addr;
+>>>> +    __u64        seed;
+>>>> +    __u64        rsvd[2];
+>>>>    };
+>>>
+>>> On the previous version, I was more questioning if it aligns with what
+>>
+>> I missed that discussion, let me know if I need to look it up
+> 
+> Yes, please take a look at previous iteration (v5):
+> https://lore.kernel.org/io-uring/e7aae741-c139-48d1-bb22-dbcd69aa2f73@samsung.com/
 
->  {
->  	struct spi_device *spi =3D to_spi_device(kobj_to_dev(kobj));
->  	struct spi_mem *spimem =3D spi_get_drvdata(spi);
+"But in general, this is about seeing metadata as a generic term to
+encode extra information into io_uring SQE."
 
---=20
-Regards,
-Pratyush Yadav
+Yep, that's the idea, and it also sounds to me that stream hints
+is one potential user as well. To summarise, the end goal is to be
+able to add more meta types/attributes in the future, which can be
+file specific, e.g. pipes don't care about integrity data, and to
+be able to pass an arbitrary number of such attributes to a single
+request.
+
+We don't need to implement it here, but the uapi needs to be flexible
+enough to be able to accommodate that, or we should have an
+understanding how it can be extended without dirty hacks.
+
+> Also the corresponding code, since my other answers will use that.
+> 
+>>> Pavel was trying to do here. I didn't quite get it, so I was more
+>>> confused than saying it should be this way now.
+>>
+>> The point is, SQEs don't have nearly enough space to accommodate all
+>> such optional features, especially when it's taking so much space and
+>> not applicable to all reads but rather some specific  use cases and
+>> files. Consider that there might be more similar extensions and we might
+>> even want to use them together.
+>>
+>> 1. SQE128 makes it big for all requests, intermixing with requests that
+>> don't need additional space wastes space. SQE128 is fine to use but at
+>> the same time we should be mindful about it and try to avoid enabling it
+>> if feasible.
+> 
+> Right. And initial versions of this series did not use SQE128. But as we
+> moved towards passing more comprehensive PI information, first SQE was
+> not enough. And we thought to make use of SQE128 rather than taking
+> copy_from_user cost.
+
+Do we have any data how expensive it is? I don't think I've ever
+tried to profile it. And where the overhead comes from? speculation
+prevention?
+
+If it's indeed costly, we can add sth to io_uring like pre-mapping
+memory to optimise it, which would be useful in other places as
+well.
+  
+>   > 2. This API hard codes io_uring_meta_pi into the extended part of the
+>> SQE. If we want to add another feature it'd need to go after the meta
+>> struct. SQE256?
+> 
+> Not necessarily. It depends on how much extra space it needs for another
+> feature. To keep free space in first SQE, I chose to place PI in the
+> second one. Anyone requiring 20b (in v6) or 18b (in v5) space, does not
+> even have to ask for SQE128.
+> For more, they can use leftover space in second SQE (about half of
+> second sqe will still be free). In v5, they have entire second SQE if
+> they don't want to use PI.
+> If contiguity is a concern, we can move all PI bytes (about 32b) to the
+> end of second SQE.
+> 
+> 
+>   > And what if the user doesn't need PI but only the second
+>> feature?
+> 
+> Not this version, but v5 exposed meta_type as bit flags.
+
+There has to be a type, I assume it's being added back.
+
+> And with that, user will not pass the PI flag and that enables to use
+> all the PI bytes for something else. We will have union of PI with some
+> other info that is known not to co-exist.
+
+Let's say we have 3 different attributes META_TYPE{1,2,3}.
+
+How are they placed in an SQE?
+
+meta1 = (void *)get_big_sqe(sqe);
+meta2 = meta1 + sizeof(?); // sizeof(struct meta1_struct)
+meta3 = meta2 + sizeof(struct meta2_struct);
+
+Structures are likely not fixed size (?). At least the PI looks large
+enough to force everyone to be just aliased to it.
+
+And can the user pass first meta2 in the sqe and then meta1?
+
+meta2 = (void *)get_big_sqe(sqe);
+meta1 = meta2 + sizeof(?); // sizeof(struct meta2_struct)
+
+If yes, how parsing should look like? Does the kernel need to read each
+chunk's type and look up its size to iterate to the next one?
+
+If no, what happens if we want to pass meta2 and meta3, do they start
+from the big_sqe?
+
+How do we pass how many of such attributes is there for the request?
+
+It should support arbitrary number of attributes in the long run, which
+we can't pass in an SQE, bumping the SQE size is not scalable in
+general, so it'd need to support user pointers or sth similar at some
+point. Placing them in an SQE can serve as an optimisation, and a first
+step, though it might be easier to start with user pointer instead.
+
+Also, when we eventually come to user pointers, we want it to be
+performant as well and e.g. get by just one copy_from_user, and the
+api/struct layouts would need to be able to support it. And once it's
+copied we'll want it to be handled uniformly with the SQE variant, that
+requires a common format. For different formats there will be a question
+of perfomance, maintainability, duplicating kernel and userspace code.
+
+All that doesn't need to be implemented, but we need a clear direction
+for the API. Maybe we can get a simplified user space pseudo code
+showing how the end API is supposed to look like?
+
+-- 
+Pavel Begunkov
