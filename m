@@ -1,176 +1,339 @@
-Received: from mail-m6040.netease.com (mail-m6040.netease.com [210.79.60.40])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0031DED55;
-	Fri,  8 Nov 2024 09:19:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.79.60.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B8501E1C04
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Nov 2024 09:57:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731057600; cv=none; b=CRRINpBJHwjbp9DP9xrV41SQwJSKPPIuw4V/x2aGehdnCtWJJR6e5T8I9rxbtxrpahHjTMwZKqFhvz8sw31utqiX+N7y/7JfyjvnbI9N6XdtVMNQp2auzOEW5PPqWnocrbVJ+TK5ZLfc5/X8Oxha77eJ7yl6E4/O9u2Nxz0iomk=
+	t=1731059852; cv=none; b=pgdMcbkFws+8Zml01Vfmb/gA+GDm6fO0TKpGNffJ/fhz91yW6lN5HQZMSOjPBHuTafzhBhNZ6bPs1iqxHTRGd4k/fvDK3E+Y7ClEEgrW7yDhTGu3mhFMrh/ErmzXwc/uIc/Y0gqjG3IHg13AlIEgIj6afK0l/7EQUR8aJ5pC8do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731057600; c=relaxed/simple;
-	bh=JYBdXeeVNK4JjUuAsF5VqIkmK9DwELN9uJldWpJ/C0Q=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=m00rXJoEs6jwoixcKypL69GFL5+v2Aej5nACuwsve8Cf0p9yuiz4RVcZgzisXgS1Q8JQfR1EqmaLmdrJyzMesp8ZEd2+8WgcvcvrKiMwQb62KGSQCeFOw0uDnOHon2eksmpDT/WRU3SgIxCHEBjvnBlMKPUNOHnPmOLhrdKU53Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=B7wUVGp7; arc=none smtp.client-ip=210.79.60.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1731059852; c=relaxed/simple;
+	bh=8fI1kWvz6hGfQzWAO2sB4JOqTLhejAN4OfQdn+uncMU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=F3uRpGJSzwoiwYu24MYfwBeD/RVEYehEA/rwat44cyW6enmHW8vB77dGR4iT7bjXrxzd4pVod7D7CBtx2N1yiuD8sIlATdlT4GguigqtTdmdAXXzjEP2MAb82ETyHdn7csf8vXXi6w8vwWXp0M4Y6ThdVPB6McVXNBiejLCiIVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=r+EmRHg9; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="B7wUVGp7"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 22d55c35;
-	Fri, 8 Nov 2024 14:57:27 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 3/7] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
-Date: Fri,  8 Nov 2024 14:56:22 +0800
-Message-Id: <1731048987-229149-4-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkhMSlZLTEwZQk1JQxpPH0lWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a930a90463409cckunm22d55c35
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Mj46DSo4OTIdPCohEC83KxkW
-	DjYKCg5VSlVKTEhKS09CS09CSEpMVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhMQkk3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=B7wUVGp7e90MgA1gudqZ7jrjdoIhYluOXoBsB3uaNfDaPM6d/ZWAYxq5b8O153FHPUiKFtRNALinFiBQO4vvUL3l3SJyjNIC3/KqrpoHg481HQyvb67clH6A+nqGVeQDZHTAJc5+0JqY4Dx/QQiKQG4v8F4MBopWNUIEkFzlbvY=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=GwuUG+2RBYma2ywALVDh2T0ahj3jU4sSez7ZNlwgjq0=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="r+EmRHg9"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-43152b79d25so16196545e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Nov 2024 01:57:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1731059849; x=1731664649; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=1qvSjFgT9QigLmSV7E1Bd8DDsmjWl8PjqBY+cyP/Rbk=;
+        b=r+EmRHg9Wio3I2CXfbejiEK7TYa+vBhJNccbX2yRyz5L8tYR8b4YkVDkmJF2rSAGqf
+         yeKCEEXSR22yA+MxHXnIm78RcdKuowWxl4t3MjX+EfSlc20OZ64o39uogROjxOGr0Kmf
+         jS5vf2OYMNmBmP9hA8owbCs2/R+M4peff78zfaoDuX14zWwruWkV2SnjZlvB8nFSaiB8
+         W0S/B/LpgIsEEBgyNN5GHcRUMu92u2yNWaffZYnTezcfGPCbtgAJb5/f/Ziva4/vqOLc
+         7+wkQI+cpjUTjXb5Vvr9zSI+oVslva2iTYPsodGIuPguPl1jgEVbl8nj/NKy9PxjsSA+
+         qQew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731059849; x=1731664649;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1qvSjFgT9QigLmSV7E1Bd8DDsmjWl8PjqBY+cyP/Rbk=;
+        b=hUcI3xNamOJlL4SEidKhBKW+ijSxx8dLj+LHLPGkvckeGIwVgWeCkqbsKGW1kpRLwf
+         imDCpGrPD3muzl09a+3cr1uep6qZ2suNh4a+kDZD/2F0lEcrgc4wlz9W6plY6+DD3pxC
+         woJWVu4adfs3yXeCD7ao+qAK3n6pdgycdsJSY+794KkBrkNRCinhHIHhnXp84CEdEw4H
+         fvj73lqU+ma6y/u46BYj6TIhQKfoW5Sd63sKSRU+pinTUfp2J4heKud7KsRXVkq6XcnH
+         C0VENyVaeqKkYS5Y71IR/H4DuDwjQFQZvMuQzv2Kq5LSXEHqaLAGpw/EZL10aEJXQ/Ib
+         exEw==
+X-Forwarded-Encrypted: i=1; AJvYcCWEQccH4KN9TiqDSEgPNqWyLNootxuoviIb+tJ8qjch8ayx77uFB8ZyGph29hyt8QxWSIqOcJGf1Zm0@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZWoE1mYsUMgRYZBt12xu5iXAMrxaLMrCv/yhUJC/eE2BY2Gwx
+	tLRAQ2seGQtqVpPOnKC+1/24ko5cjg5EU8P2AOpIS5BM1WkSYMms+oRg0/2TD+I=
+X-Google-Smtp-Source: AGHT+IGSM0YIoIJwn4bQFLUSfQjkco2eSXc7cP/BCeCrt62cX0r5HN3g5uOpTFuxNeCM9lxmmGx4PQ==
+X-Received: by 2002:a05:600c:4448:b0:430:52ec:1e41 with SMTP id 5b1f17b1804b1-432b7509c5fmr17646005e9.17.1731059848755;
+        Fri, 08 Nov 2024 01:57:28 -0800 (PST)
+Received: from [172.20.143.194] ([89.101.134.25])
+        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-432aa70a234sm94913735e9.34.2024.11.08.01.57.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 Nov 2024 01:57:28 -0800 (PST)
+Message-ID: <5bd704c3-88c1-4b6f-82ec-25f9d7a6e92b@linaro.org>
+Date: Fri, 8 Nov 2024 09:57:23 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 05/10] sysfs: treewide: constify attribute callback of
+ bin_is_visible()
+To: =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Xinhui Pan <Xinhui.Pan@amd.com>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ Tudor Ambarus <tudor.ambarus@linaro.org>,
+ Pratyush Yadav <pratyush@kernel.org>, Michael Walle <mwalle@kernel.org>,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Naveen Krishna Chatradhi <naveenkrishna.chatradhi@amd.com>,
+ Carlos Bilbao <carlos.bilbao.osdev@gmail.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ "David E. Box" <david.e.box@linux.intel.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Richard Henderson <richard.henderson@linaro.org>,
+ Matt Turner <mattst88@gmail.com>, Frederic Barrat <fbarrat@linux.ibm.com>,
+ Andrew Donnellan <ajd@linux.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Logan Gunthorpe <logang@deltatee.com>, "K. Y. Srinivasan"
+ <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
+ Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org,
+ amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+ linux-rdma@vger.kernel.org, linux-mtd@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-usb@vger.kernel.org, linux-alpha@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-hyperv@vger.kernel.org
+References: <20241103-sysfs-const-bin_attr-v2-0-71110628844c@weissschuh.net>
+ <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
+Content-Language: en-US
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+In-Reply-To: <20241103-sysfs-const-bin_attr-v2-5-71110628844c@weissschuh.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-From: Ulf Hansson <ulf.hansson@linaro.org>
 
-For some usecases a consumer driver requires its device to remain power-on
-from the PM domain perspective during runtime. Using dev PM qos along with
-the genpd governors, doesn't work for this case as would potentially
-prevent the device from being runtime suspended too.
 
-To support these usecases, let's introduce dev_pm_genpd_rpm_always_on() to
-allow consumers drivers to dynamically control the behaviour in genpd for a
-device that is attached to it.
+On 03/11/2024 17:03, Thomas Weißschuh wrote:
+> The is_bin_visible() callbacks should not modify the struct
+> bin_attribute passed as argument.
+> Enforce this by marking the argument as const.
+> 
+> As there are not many callback implementers perform this change
+> throughout the tree at once.
+> 
+> Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+> ---
+>   drivers/cxl/port.c                      |  2 +-
+>   drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c |  2 +-
+>   drivers/infiniband/hw/qib/qib_sysfs.c   |  2 +-
+>   drivers/mtd/spi-nor/sysfs.c             |  2 +-
 
-Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+thanks for the patch.
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+Acked-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org> #nvmem
 
- drivers/pmdomain/core.c   | 34 ++++++++++++++++++++++++++++++++++
- include/linux/pm_domain.h |  7 +++++++
- 2 files changed, 41 insertions(+)
 
-diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
-index 5ede0f7..2ccfcb7 100644
---- a/drivers/pmdomain/core.c
-+++ b/drivers/pmdomain/core.c
-@@ -692,6 +692,36 @@ bool dev_pm_genpd_get_hwmode(struct device *dev)
- }
- EXPORT_SYMBOL_GPL(dev_pm_genpd_get_hwmode);
- 
-+/**
-+ * dev_pm_genpd_rpm_always_on() - Control if the PM domain can be powered off.
-+ *
-+ * @dev: Device for which the PM domain may need to stay on for.
-+ * @on: Value to set or unset for the condition.
-+ *
-+ * For some usecases a consumer driver requires its device to remain power-on
-+ * from the PM domain perspective during runtime. This function allows the
-+ * behaviour to be dynamically controlled for a device attached to a genpd.
-+ *
-+ * It is assumed that the users guarantee that the genpd wouldn't be detached
-+ * while this routine is getting called.
-+ *
-+ * Return: Returns 0 on success and negative error values on failures.
-+ */
-+int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
-+{
-+	struct generic_pm_domain *genpd;
-+
-+	genpd = dev_to_genpd_safe(dev);
-+	if (!genpd)
-+		return -ENODEV;
-+
-+	genpd_lock(genpd);
-+	dev_gpd_data(dev)->rpm_always_on = on;
-+	genpd_unlock(genpd);
-+
-+	return 0;
-+}
-+
- static int _genpd_power_on(struct generic_pm_domain *genpd, bool timed)
- {
- 	unsigned int state_idx = genpd->state_idx;
-@@ -863,6 +893,10 @@ static int genpd_power_off(struct generic_pm_domain *genpd, bool one_dev_on,
- 		if (!pm_runtime_suspended(pdd->dev) ||
- 			irq_safe_dev_in_sleep_domain(pdd->dev, genpd))
- 			not_suspended++;
-+
-+		/* The device may need its PM domain to stay powered on. */
-+		if (to_gpd_data(pdd)->rpm_always_on)
-+			return -EBUSY;
- 	}
- 
- 	if (not_suspended > 1 || (not_suspended == 1 && !one_dev_on))
-diff --git a/include/linux/pm_domain.h b/include/linux/pm_domain.h
-index b637ec1..30186ad 100644
---- a/include/linux/pm_domain.h
-+++ b/include/linux/pm_domain.h
-@@ -245,6 +245,7 @@ struct generic_pm_domain_data {
- 	unsigned int default_pstate;
- 	unsigned int rpm_pstate;
- 	bool hw_mode;
-+	bool rpm_always_on;
- 	void *data;
- };
- 
-@@ -277,6 +278,7 @@ ktime_t dev_pm_genpd_get_next_hrtimer(struct device *dev);
- void dev_pm_genpd_synced_poweroff(struct device *dev);
- int dev_pm_genpd_set_hwmode(struct device *dev, bool enable);
- bool dev_pm_genpd_get_hwmode(struct device *dev);
-+int dev_pm_genpd_rpm_always_on(struct device *dev, bool on);
- 
- extern struct dev_power_governor simple_qos_governor;
- extern struct dev_power_governor pm_domain_always_on_gov;
-@@ -360,6 +362,11 @@ static inline bool dev_pm_genpd_get_hwmode(struct device *dev)
- 	return false;
- }
- 
-+static inline int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
- #define simple_qos_governor		(*(struct dev_power_governor *)(NULL))
- #define pm_domain_always_on_gov		(*(struct dev_power_governor *)(NULL))
- #endif
--- 
-2.7.4
-
+--srini
+>   drivers/nvmem/core.c                    |  3 ++-
+>   drivers/pci/pci-sysfs.c                 |  2 +-
+>   drivers/pci/vpd.c                       |  2 +-
+>   drivers/platform/x86/amd/hsmp.c         |  2 +-
+>   drivers/platform/x86/intel/sdsi.c       |  2 +-
+>   drivers/scsi/scsi_sysfs.c               |  2 +-
+>   drivers/usb/core/sysfs.c                |  2 +-
+>   include/linux/sysfs.h                   | 30 +++++++++++++++---------------
+>   12 files changed, 27 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
+> index 9dc394295e1fcd1610813837b2f515b66995eb25..24041cf85cfbe6c54c467ac325e48c775562b938 100644
+> --- a/drivers/cxl/port.c
+> +++ b/drivers/cxl/port.c
+> @@ -173,7 +173,7 @@ static ssize_t CDAT_read(struct file *filp, struct kobject *kobj,
+>   static BIN_ATTR_ADMIN_RO(CDAT, 0);
+>   
+>   static umode_t cxl_port_bin_attr_is_visible(struct kobject *kobj,
+> -					    struct bin_attribute *attr, int i)
+> +					    const struct bin_attribute *attr, int i)
+>   {
+>   	struct device *dev = kobj_to_dev(kobj);
+>   	struct cxl_port *port = to_cxl_port(dev);
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c
+> index 0b28b2cf1517d130da01989df70b9dff6433edc4..c1c329eb920b52af100a93bdf00df450e25608c4 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_psp.c
+> @@ -3999,7 +3999,7 @@ static umode_t amdgpu_flash_attr_is_visible(struct kobject *kobj, struct attribu
+>   }
+>   
+>   static umode_t amdgpu_bin_flash_attr_is_visible(struct kobject *kobj,
+> -						struct bin_attribute *attr,
+> +						const struct bin_attribute *attr,
+>   						int idx)
+>   {
+>   	struct device *dev = kobj_to_dev(kobj);
+> diff --git a/drivers/infiniband/hw/qib/qib_sysfs.c b/drivers/infiniband/hw/qib/qib_sysfs.c
+> index 53ec7510e4ebfb144e79884ca7dd7d0c873bd8a7..ba2cd68b53e6c240f1afc65c64012c75ccf488e0 100644
+> --- a/drivers/infiniband/hw/qib/qib_sysfs.c
+> +++ b/drivers/infiniband/hw/qib/qib_sysfs.c
+> @@ -283,7 +283,7 @@ static struct bin_attribute *port_ccmgta_attributes[] = {
+>   };
+>   
+>   static umode_t qib_ccmgta_is_bin_visible(struct kobject *kobj,
+> -				 struct bin_attribute *attr, int n)
+> +				 const struct bin_attribute *attr, int n)
+>   {
+>   	struct qib_pportdata *ppd = qib_get_pportdata_kobj(kobj);
+>   
+> diff --git a/drivers/mtd/spi-nor/sysfs.c b/drivers/mtd/spi-nor/sysfs.c
+> index 96064e4babf01f6950c81586764386e7671cbf97..5e9eb268073d18e0a46089000f18a3200b4bf13d 100644
+> --- a/drivers/mtd/spi-nor/sysfs.c
+> +++ b/drivers/mtd/spi-nor/sysfs.c
+> @@ -87,7 +87,7 @@ static umode_t spi_nor_sysfs_is_visible(struct kobject *kobj,
+>   }
+>   
+>   static umode_t spi_nor_sysfs_is_bin_visible(struct kobject *kobj,
+> -					    struct bin_attribute *attr, int n)
+> +					    const struct bin_attribute *attr, int n)
+>   {
+>   	struct spi_device *spi = to_spi_device(kobj_to_dev(kobj));
+>   	struct spi_mem *spimem = spi_get_drvdata(spi);
+> diff --git a/drivers/nvmem/core.c b/drivers/nvmem/core.c
+> index 63370c76394ee9b8d514da074779617cef67c311..73e44d724f90f4cd8fe8cafb9fa0c0fb23078e61 100644
+> --- a/drivers/nvmem/core.c
+> +++ b/drivers/nvmem/core.c
+> @@ -298,7 +298,8 @@ static umode_t nvmem_bin_attr_get_umode(struct nvmem_device *nvmem)
+>   }
+>   
+>   static umode_t nvmem_bin_attr_is_visible(struct kobject *kobj,
+> -					 struct bin_attribute *attr, int i)
+> +					 const struct bin_attribute *attr,
+> +					 int i)
+>   {
+>   	struct device *dev = kobj_to_dev(kobj);
+>   	struct nvmem_device *nvmem = to_nvmem_device(dev);
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 040f01b2b999175e8d98b05851edc078bbabbe0d..13912940ed2bb66c0086e5bea9a3cb6417ac14dd 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1326,7 +1326,7 @@ static struct bin_attribute *pci_dev_rom_attrs[] = {
+>   };
+>   
+>   static umode_t pci_dev_rom_attr_is_visible(struct kobject *kobj,
+> -					   struct bin_attribute *a, int n)
+> +					   const struct bin_attribute *a, int n)
+>   {
+>   	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+>   
+> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+> index e4300f5f304f3ca55a657fd25a1fa5ed919737a7..a469bcbc0da7f7677485c7f999f8dfb58b8ae8a3 100644
+> --- a/drivers/pci/vpd.c
+> +++ b/drivers/pci/vpd.c
+> @@ -325,7 +325,7 @@ static struct bin_attribute *vpd_attrs[] = {
+>   };
+>   
+>   static umode_t vpd_attr_is_visible(struct kobject *kobj,
+> -				   struct bin_attribute *a, int n)
+> +				   const struct bin_attribute *a, int n)
+>   {
+>   	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+>   
+> diff --git a/drivers/platform/x86/amd/hsmp.c b/drivers/platform/x86/amd/hsmp.c
+> index 8fcf38eed7f00ee01aade6e3e55e20402458d5aa..8f00850c139fa8d419bc1c140c1832bf84b2c3bd 100644
+> --- a/drivers/platform/x86/amd/hsmp.c
+> +++ b/drivers/platform/x86/amd/hsmp.c
+> @@ -620,7 +620,7 @@ static int hsmp_get_tbl_dram_base(u16 sock_ind)
+>   }
+>   
+>   static umode_t hsmp_is_sock_attr_visible(struct kobject *kobj,
+> -					 struct bin_attribute *battr, int id)
+> +					 const struct bin_attribute *battr, int id)
+>   {
+>   	if (plat_dev.proto_ver == HSMP_PROTO_VER6)
+>   		return battr->attr.mode;
+> diff --git a/drivers/platform/x86/intel/sdsi.c b/drivers/platform/x86/intel/sdsi.c
+> index 9d137621f0e6e7a23be0e0bbc6175c51c403169f..33f33b1070fdc949c1373251c3bca4234d9da119 100644
+> --- a/drivers/platform/x86/intel/sdsi.c
+> +++ b/drivers/platform/x86/intel/sdsi.c
+> @@ -541,7 +541,7 @@ static struct bin_attribute *sdsi_bin_attrs[] = {
+>   };
+>   
+>   static umode_t
+> -sdsi_battr_is_visible(struct kobject *kobj, struct bin_attribute *attr, int n)
+> +sdsi_battr_is_visible(struct kobject *kobj, const struct bin_attribute *attr, int n)
+>   {
+>   	struct device *dev = kobj_to_dev(kobj);
+>   	struct sdsi_priv *priv = dev_get_drvdata(dev);
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 32f94db6d6bf5d2bd289c1a121da7ffc6a7cb2ff..f3a1ecb42128a2b221ca5c362e041eb59dba0f20 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1274,7 +1274,7 @@ static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
+>   }
+>   
+>   static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+> -					     struct bin_attribute *attr, int i)
+> +					     const struct bin_attribute *attr, int i)
+>   {
+>   	struct device *dev = kobj_to_dev(kobj);
+>   	struct scsi_device *sdev = to_scsi_device(dev);
+> diff --git a/drivers/usb/core/sysfs.c b/drivers/usb/core/sysfs.c
+> index 61b6d978892c799e213018bed22d9fb12a19d429..b4cba23831acd2d7d395b9f7683cd3ee3a8623c8 100644
+> --- a/drivers/usb/core/sysfs.c
+> +++ b/drivers/usb/core/sysfs.c
+> @@ -925,7 +925,7 @@ static struct bin_attribute *dev_bin_attrs[] = {
+>   };
+>   
+>   static umode_t dev_bin_attrs_are_visible(struct kobject *kobj,
+> -		struct bin_attribute *a, int n)
+> +		const struct bin_attribute *a, int n)
+>   {
+>   	struct device *dev = kobj_to_dev(kobj);
+>   	struct usb_device *udev = to_usb_device(dev);
+> diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+> index 4746cccb95898b24df6f53de9421ea7649b5568f..d1b22d56198b55ee39fe4c4fc994f5b753641992 100644
+> --- a/include/linux/sysfs.h
+> +++ b/include/linux/sysfs.h
+> @@ -101,7 +101,7 @@ struct attribute_group {
+>   	umode_t			(*is_visible)(struct kobject *,
+>   					      struct attribute *, int);
+>   	umode_t			(*is_bin_visible)(struct kobject *,
+> -						  struct bin_attribute *, int);
+> +						  const struct bin_attribute *, int);
+>   	size_t			(*bin_size)(struct kobject *,
+>   					    const struct bin_attribute *,
+>   					    int);
+> @@ -199,22 +199,22 @@ struct attribute_group {
+>    * attributes, the group visibility is determined by the function
+>    * specified to is_visible() not is_bin_visible()
+>    */
+> -#define DEFINE_SYSFS_BIN_GROUP_VISIBLE(name)                             \
+> -	static inline umode_t sysfs_group_visible_##name(                \
+> -		struct kobject *kobj, struct bin_attribute *attr, int n) \
+> -	{                                                                \
+> -		if (n == 0 && !name##_group_visible(kobj))               \
+> -			return SYSFS_GROUP_INVISIBLE;                    \
+> -		return name##_attr_visible(kobj, attr, n);               \
+> +#define DEFINE_SYSFS_BIN_GROUP_VISIBLE(name)                                   \
+> +	static inline umode_t sysfs_group_visible_##name(                      \
+> +		struct kobject *kobj, const struct bin_attribute *attr, int n) \
+> +	{                                                                      \
+> +		if (n == 0 && !name##_group_visible(kobj))                     \
+> +			return SYSFS_GROUP_INVISIBLE;                          \
+> +		return name##_attr_visible(kobj, attr, n);                     \
+>   	}
+>   
+> -#define DEFINE_SIMPLE_SYSFS_BIN_GROUP_VISIBLE(name)                   \
+> -	static inline umode_t sysfs_group_visible_##name(             \
+> -		struct kobject *kobj, struct bin_attribute *a, int n) \
+> -	{                                                             \
+> -		if (n == 0 && !name##_group_visible(kobj))            \
+> -			return SYSFS_GROUP_INVISIBLE;                 \
+> -		return a->mode;                                       \
+> +#define DEFINE_SIMPLE_SYSFS_BIN_GROUP_VISIBLE(name)                         \
+> +	static inline umode_t sysfs_group_visible_##name(                   \
+> +		struct kobject *kobj, const struct bin_attribute *a, int n) \
+> +	{                                                                   \
+> +		if (n == 0 && !name##_group_visible(kobj))                  \
+> +			return SYSFS_GROUP_INVISIBLE;                       \
+> +		return a->mode;                                             \
+>   	}
+>   
+>   #define SYSFS_GROUP_VISIBLE(fn) sysfs_group_visible_##fn
+> 
