@@ -1,193 +1,164 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mail-m607.netease.com (mail-m607.netease.com [210.79.60.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 649E6219CB1
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Nov 2024 21:01:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731013320; cv=fail; b=O92DPBiNhu1OIMAQNPaxLe8VN8NgB1e6G68xTIcMZ/ITY95gZ3/z0bKiTslHNNfsj+WO9ZQ4SDNjkNyd/9Er47Lc4HkiXNEZMR9JKLwmBIMCzQjyNkktwcoj12cYjoC/2D7pPcrmUrX5L74WrRhpPQf59y1jtOcwN3iIdboOx74=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731013320; c=relaxed/simple;
-	bh=pb6L6ooY9mHROOX1NM4256i+tTVWA9xyvFGG3/QY09s=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=c6lURmz9jWjyWXI/T4U/mKU1M2MsR5meW+kTdQ6bYg+gI+W5f6I9Ob23imtbKFfqEU8pZ64I9HwRATANd+CTrOFyEX1dxTAY6OPaYA09svtCucALcVQnOOSdqJU+VRn6ku7NdUDZ7giAjMEmy5ukTnjnU2xPirXdeqOjRwFnYW0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ghNaukqO; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=opuNGTrU; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773E7DDC3;
+	Fri,  8 Nov 2024 01:39:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.79.60.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731030001; cv=none; b=IAi8c0q42iZICWN2j5tTT1jVo0VL26ZFWsSBVspJ0fbpDQuWxNuZzfocoFvv97WpGJjG0OgYdr2ow9dyCGT0Dfzsulg6/YIpQladUhGRLcAFd5Uwe9lwDOspOJhpaVOwJB3PBttaJY+3rJr6NaEPP50zQqpnE7qQKO7dFgmH6eI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731030001; c=relaxed/simple;
+	bh=5EONU/ePBboZ737bsck6tYVlh4j/04wwwwK+5lNFwlE=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=d/897TqVFMq23bcqLrJbfzP3ckMth8B3TdS6Wt5eQ8PogxWW5oHMghCavSVpOxCBD1gM7rsGzv8r/pa3JpZc4f4MomlW9Py2fs0RqQZavXHSW+AkbbJNm/3H9pt/fXrBsezB+8jifQM0ROTE8o4IdR2T+rrdAQBi2EQYJkJV0hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=caDQOPOq; arc=none smtp.client-ip=210.79.60.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ghNaukqO";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="opuNGTrU"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A7KfeFF015577;
-	Thu, 7 Nov 2024 21:01:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2023-11-20; bh=bhnpz1vpKWheN6MuTp
-	iF5xXRVnINstf7BU5gXs/lRQ0=; b=ghNaukqOajhHKexvHZ//AUEZGeR7hRewj3
-	FPIzSbOxC49YD5U8deuDu7pnCB0FV50Jt4V1Ox/8XlOe2oCQJQse8tSX1INX/FkU
-	IPI2FJVP67Ectal3yt9698jbVEP4BbqBHsmpjdJFa2PL80zTg+Lg6Dk+p0Ez7c5n
-	SUbd4kkubwqEBPwA+SkWAOksQd/Oi1/iqaAfqL4lDeelvGwM0cgiN10PtXp3VzP/
-	mSnmQ5Mxy8b/qVdxKr4YSyV6gEdB80xrm2d/6eEx0AaRsIe3gxNivuSrR5RhVTIg
-	XLOY3Oxpl+ooHuFhGhwjVIwJEo9R+CwQZng9kmTpm8turgjUEyiQ==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42nagcbk88-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 07 Nov 2024 21:01:54 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4A7JSJto039067;
-	Thu, 7 Nov 2024 21:01:53 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2047.outbound.protection.outlook.com [104.47.70.47])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 42nahgxbbk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 07 Nov 2024 21:01:53 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Yabb5K8mLszEcdSwEovdxhLstaPzIE9rL7SBZGQErKhVTeh7P9IJR2vyuwXj/zI5d1y/1nhFrUaEchksGMr5ABtAcTPjMVqvaMyih8FmFnRnBAn+r0y2qy3gHbGhG6Yysve8TrXgSIPBeGAwXWswMs34KaDHKPItZTa68Cua7j+J0kw55Af1oBwn/RVS1t0SeHJ4wNdtmWTzV1KeYilIV49mhQlKXOJEOGNRks5p/gwsdN8w1c9Crun58USc3ZszuW5BbARt5C8ByWHROHnbF7X3/5iVbZTfzE+zfcz9gL1TEo2rq779Gf9fh7A6okG6v62muacbfI0qeyzt0oxcoA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bhnpz1vpKWheN6MuTpiF5xXRVnINstf7BU5gXs/lRQ0=;
- b=pumzeGEx2ILvjqFaPu6WDofzpcS/3aD01dQjMoDovN8MlusvTJ/LIuzMlED0L/buwg788N+JwUVpWLhEvrcNCFqiBQTxvFP734Rae4mWUDZpq+8XCIYWMaQ5Mm3rz4RE0M7bQE+ERKTDs8+Bp6dCi2xzi+q9YLmIDMsJGxZMphV1umA4ZkhMqfJbjEbbWynkZzCOO/2tzHSXs1JYps9svfp2enRT/Od6WcJQf/+G1idlTNeuJvXimW9CxlDQP5CbXB3cLvGcn3xP6vtEgweQjW9ESCfvPHPdzLiLh+Ff5C+vjMKEeM1MaeOjHLOXBkcXxjzsvru9hY+K37x07tQk5g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bhnpz1vpKWheN6MuTpiF5xXRVnINstf7BU5gXs/lRQ0=;
- b=opuNGTrU2CNtcD5WbRAnuu4aQyCRm2pRqCvsAe6HdL1IpydDpkjmIofwjGJvuB3SREuK+Hil0xOdfbtxs8K/KUYv81A7/cOB+xcZEUIQRWIv0/x0nmcoNdR4ZvABYl5JWKSyNi4mvm+dZlPoAujb+S/wG+yn+FwkjZxcKdD7iS0=
-Received: from SN6PR10MB2957.namprd10.prod.outlook.com (2603:10b6:805:cb::19)
- by BY5PR10MB4210.namprd10.prod.outlook.com (2603:10b6:a03:201::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.20; Thu, 7 Nov
- 2024 21:01:51 +0000
-Received: from SN6PR10MB2957.namprd10.prod.outlook.com
- ([fe80::72ff:b8f4:e34b:18c]) by SN6PR10MB2957.namprd10.prod.outlook.com
- ([fe80::72ff:b8f4:e34b:18c%5]) with mapi id 15.20.8137.018; Thu, 7 Nov 2024
- 21:01:51 +0000
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: Johannes Thumshirn <jth@kernel.org>,
-        "Martin K . Petersen"
- <martin.petersen@oracle.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        WenRuo Qu
- <wqu@suse.com>, Naohiro Aota <Naohiro.Aota@wdc.com>
-Subject: Re: [PATCH] scsi: sd_zbc: use kvzalloc to allocate report zones buffer
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <cfea0fb9-b361-4732-849f-baae9edeb920@wdc.com> (Johannes
-	Thumshirn's message of "Thu, 7 Nov 2024 08:46:00 +0000")
-Organization: Oracle Corporation
-Message-ID: <yq1ldxuydlv.fsf@ca-mkp.ca.oracle.com>
-References: <20241030110253.11718-1-jth@kernel.org>
-	<cfea0fb9-b361-4732-849f-baae9edeb920@wdc.com>
-Date: Thu, 07 Nov 2024 16:01:49 -0500
-Content-Type: text/plain
-X-ClientProxiedBy: BN0PR04CA0142.namprd04.prod.outlook.com
- (2603:10b6:408:ed::27) To SN6PR10MB2957.namprd10.prod.outlook.com
- (2603:10b6:805:cb::19)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="caDQOPOq"
+Received: from [172.16.12.45] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 222b801f;
+	Fri, 8 Nov 2024 09:04:18 +0800 (GMT+08:00)
+Message-ID: <a65a8ec4-9b75-493a-961c-7b570dd834b5@rock-chips.com>
+Date: Fri, 8 Nov 2024 09:04:19 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN6PR10MB2957:EE_|BY5PR10MB4210:EE_
-X-MS-Office365-Filtering-Correlation-Id: ca01f9dd-2bae-40c1-7af0-08dcff6f66d1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?LJ+dx9kzVo++Bbuj5yNpi1DdJw2b23seIRVToJCAfurQFUs63fh3m1KRthaB?=
- =?us-ascii?Q?aCXTFPYgu1CFoNOWPk9LdLwvzOQ65UbmuJMyP8YebmM9vARWJAWHB+fbtq4D?=
- =?us-ascii?Q?e9+LLop7eW5r56QhXvtQOgq+JOdII86yr3n9n0P+Hu5M4Bm8HAUw1ipHN3An?=
- =?us-ascii?Q?UXj7xy9oybzCuUn0mih7W3iFNsNeQ/4z5YOjo2IZU8EiG5OUIwD22VcQyQqH?=
- =?us-ascii?Q?l6/Tr/kerRwyo4yhTcXWS6FhX50xkSMi5o56ZY6neiTRXyXicW8c2M3B3UrK?=
- =?us-ascii?Q?h6bHQnKGbu6mHmMspfyqRqVPQ92LI8Nlpu1Nk+yyRRf4Znwkg3pa96702res?=
- =?us-ascii?Q?WgOuP5Bu0rb3cy3TSxu18cSM0sOtJ8ftuMCFDDcV+6jzM+aXQBdmMOFuDqJt?=
- =?us-ascii?Q?vxG+E4D4Gsx/yJPtWV555lBe4CsEODgNoMLL/+uROtINqTsZ8BODjUs724KE?=
- =?us-ascii?Q?F8CclHNpUenpcVphHMrzVAAKojBwq0HIzDzUYqd9hP1OBYkV2EUu0lUqh+Fi?=
- =?us-ascii?Q?ztZVQsd6ogZIlS/yO1X2l/EgNJvZHI0mLfB4sz098ta405klAAoz0YsHlP+R?=
- =?us-ascii?Q?6+nA3cT9HI6Pj4LTkneBJ9mV7fRG5Mm/hgtfKmhEQpkiLhfEKVQv+UCXzo2g?=
- =?us-ascii?Q?8SRjBFBHROTBUWUocxkECqJyUkhKLsI0sb1spJnKOlgHb8XSsJP3d7LRLzf7?=
- =?us-ascii?Q?qITOOkSx7vahe9/x2V6LfD7jgwNCk2OXYgQ20tHOWYyzMaYWIckKJ7Qhmpv0?=
- =?us-ascii?Q?RK6zNl8L2cVww7eKzDrDMLJ/A6h3hkjmaxxeWJSNzk0FQJV/85M6nAwX0oMQ?=
- =?us-ascii?Q?1QsAOlTa4aLlWjx64cnl0yMX+kmluIRsrQ89XcZu/DdVX/MCK5tkbJUVLoMP?=
- =?us-ascii?Q?Lhw4wA5U3YER+Cs81rV2hwUxycTqEuwGjimyDAfkqPZ7E6J/lK0nOhISUtje?=
- =?us-ascii?Q?8pHcO6e9dzKqnGhU2EyQXeCIZ02Tu8qTS4K0sITQkeMRnsSORme0LJoY+tdv?=
- =?us-ascii?Q?n8oySQJi+JVjWjgXWOcyruo5S9eUcRt+HNZPv9ExLtdaqcbwYKJKWIO8c8kg?=
- =?us-ascii?Q?JhgqGPbvsJsh7Jl65S7g0aDMbaex4OstXROkQh9jfXfZ+OhdZQY7VOm5Jaqb?=
- =?us-ascii?Q?9Oa2L30yrcpcIFzneI/1HC+n5BRdpvaJwTryWOC40jppb8GWXUuOOX27L973?=
- =?us-ascii?Q?rAEQK3kKGr23xC1OEtHEA2J2xCAllGOruvGg4HVow2DugKtrPRfRBiehEGjY?=
- =?us-ascii?Q?uMBy22TC3AD57v3Q3XbxWN5zWdGBfXm7CELKvC8KoXrLsCxo9vgNz3FeCxNV?=
- =?us-ascii?Q?kXP4PFgZzNMmr2mTPxx5PD0m?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2957.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?/C0SCHjWjD/WyVtWVMkABjmUivcDqXhmxiXGqPDuMjbyunRdqGx9lWXhyabn?=
- =?us-ascii?Q?VkUkT3vdR6nJcqq0f+ACiIWL0k2DW+tSfNKKLb5l2o4JkjKhX5QgQQBWMDAK?=
- =?us-ascii?Q?sOgYx8RuNkxN2p/l1lPeQof1fG00QHeawwqRb9RndBYXWRIeHYfvbXLCfAYX?=
- =?us-ascii?Q?7HGoszFrW7Lo58gKzzT9mJTt/yGb7d+VZoh9rlIlmHJuGH8SKyJGhSUlw595?=
- =?us-ascii?Q?91vrjcXHUqf96uOaZGl9jd1oD/tpX0PKGcreAr4cUMtnY/wFu2B69FNOm0sL?=
- =?us-ascii?Q?Dtta4aNZogejik/jNDEfvcR6EfFTkbGNQVnnVizJK6iU9WY41q1GgiFAplku?=
- =?us-ascii?Q?BNwKJXZEBvFvFGLK6YDP11FpYGv1gHbqArjOl6AAkIAp5QRXiL8vVdqx8go8?=
- =?us-ascii?Q?GJDQYD0Pr03ds/nxythaPqHzlPnReAKy8v0BzhxIhbAYujTSjhKjgi94zUrv?=
- =?us-ascii?Q?cvvJKKSbuccjWfV1Qdb4zFrQHp/GAncvas/JCMbGBs/T1MAaT07ek3vpWw3y?=
- =?us-ascii?Q?WUbJAtcMNBunmvzYVFzXo5O8mzAVnvjaLoZoIkkeSfyCnz9WtcjMShrlaJmg?=
- =?us-ascii?Q?jDhk513JIv5iviMNOky9qL3f6rRJPq3V5gU1ck1l9VLN7f/Vvq5GK64qgnIo?=
- =?us-ascii?Q?Iax+ciTc/NPChv9i8Dtk3RVV18qIaDjocfPUnIXFuXfdZ9BVC38oklIYbdHG?=
- =?us-ascii?Q?WBPfHTl+atZMclkP6UzOJjqV0E0E/NA7YTDN3G+oNeVmfzpRc3SOjArdb0Z4?=
- =?us-ascii?Q?2tmJl7V+/lxTbUdvdFBH9D6sf5OzfHMxUmEo2x5E7KAr+s3iv9zlheDWEBu5?=
- =?us-ascii?Q?m41CuY1Q/32wypMgBJOt9FtQVG4OnKLx18IQjosm+ZVS5Zzwl4lMIWMe3HQC?=
- =?us-ascii?Q?hibvVgUsfHuDHNFkvGqFPJ5lUIFrZ+RwCEDfujHiYpRySXtFWK9d3FjqteE8?=
- =?us-ascii?Q?kKvLFhKLIUGaFQiSPdO3GRW2zP3bCsWQ6aEqfQJkpKDajdGZH7/MLCNqOXbZ?=
- =?us-ascii?Q?ksUHTjJUgf6Qyn9uc60sEdaE3kJLmjfoysGiORyfgtP6rR9shr8V4WFx1ek5?=
- =?us-ascii?Q?XF7bkCBp9Rhbi2HXiKpiVr9tLlU6mqbfS3jUj+wmBUI2whTChYLgJvg6qQbl?=
- =?us-ascii?Q?ggcvxo9WW2E0MOww9Oz4uu122sI5LEaaht5BIrICFf2En9WgCmALhprZTK2V?=
- =?us-ascii?Q?fo/bvGdlR8mFmr45KsrYmZj5G66OdoxyoGs0bQQ+wqBLnIe3WSj/4JOsxSYS?=
- =?us-ascii?Q?sNy/+a7N4ulqHdWusxsJsKigY5sRElgy5Rix0rU/f0uGpTGZbHrZT5qpqX+Z?=
- =?us-ascii?Q?d8r5jnK8vNzNOdw6Il30wgxgcpbSUo7lF+oLgMUq7yXcu1niWMJQdeaX8uOz?=
- =?us-ascii?Q?iHDYw2XKoQdzWJshUJtrn5RkjSQ6qIz4YrlNxRUDVF4RwhnM7v9phGv5dDBD?=
- =?us-ascii?Q?DHUbq2vT5+nCoYCdwgZUR4FN64mLLvx2ly+A3A/tYtb4RAXHPU1TQEmEDe98?=
- =?us-ascii?Q?AWS90plVFHzAXdCqd5lALuD1G3wByFv6v/IO12dhwcnP1+Kp2E065W01YjkT?=
- =?us-ascii?Q?FZ4UGBqGf0oV8eCy/T7MlVo1xLDj999IF7O7tXd0D6cESBPvHjuKzWY8IdmP?=
- =?us-ascii?Q?UA=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	mEXuafnRQAXs3MUQp6ARQaZDNDkqpoWuQype+jUWifqGOtm9IiFJa5DUvSaBvA3PmgnvQ5V9mEsr+LFTORPHVkdZAYKudy6SwgK9y8Rdyc/bbitgnugM/0Gzc9MpxZBV6Bs3hI/XVOL6rjErJXTIGOnHDq1JoYbXH9PVBPtAUn6MeqHqmSOWq8Tgfb2DFSz5nMRo5Wh4TA0bAViUfph1y8JcqoEz1gHTj+CqYhcXiLkVCDtNe8Qqyq8GSUux8yKJE/qSwaK4uY9FDRMBBd7BYwY7GF3Mzx0CitCg0iPdBD32pJ32cm2XCXl4xlM+08k42SK7t9VCNsbELqkEK2Sd+UaOM5hvJ2mWqESguBijGHZrbi3vbrj1FEQ+23HYybcRPulZVXJJyGurEHrSaDR/Wm51RFTIZfjKLO7RPSZck/mdmIQqLXhu6qTBAbbE2zSFZo0qn9NQsJyW0PgeZ+ewf+yUDxiQu0jx9vEyFi/0hL+6w2nBE5IeB/i1mC9cF7pRqQSr3wTdOGi+02+t/QqHhJ4/nmkWNMYbqz90CnZUnenvY8rW9tBInPhSkzvEERYYLPbNQH76EVbWmgVNksoOw01PpGY5m20LRdmAaPr7ezA=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ca01f9dd-2bae-40c1-7af0-08dcff6f66d1
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2957.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Nov 2024 21:01:51.2109
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8zJnkxEReDUS4BVPKu+DJIHuSiI5Cqt9yJQRkrhjSwhFphEN5Sql28fr1ycQFzoLVrYMBntJUfw03NtAewLOzmk73z9clE5wZW0oL0ZXIcE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4210
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-11-07_10,2024-11-07_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- spamscore=0 mlxlogscore=497 mlxscore=0 phishscore=0 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2409260000 definitions=main-2411070164
-X-Proofpoint-ORIG-GUID: n_jJqAKLNQXNdJp1EdYjNoQ_VbPBLn6l
-X-Proofpoint-GUID: n_jJqAKLNQXNdJp1EdYjNoQ_VbPBLn6l
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, Rob Herring <robh+dt@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Heiko Stuebner <heiko@sntech.de>, "Rafael J . Wysocki" <rafael@kernel.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
+ Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-pm@vger.kernel.org
+Subject: Re: [PATCH v4 1/7] scsi: ufs: core: Add
+ UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1730705521-23081-2-git-send-email-shawn.lin@rock-chips.com>
+ <20241107155128.paqyo7een2ggzejs@thinkpad>
+Content-Language: en-GB
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20241107155128.paqyo7een2ggzejs@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ05CSVZDQ0hOS00dSx1KGEhWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a93094cf63309cckunm222b801f
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NRA6DSo*KjIiKDQfCgENPCoI
+	TggaFAhVSlVKTEhKS0lMQ01LTU9NVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhLS0I3Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=caDQOPOqYhwi2ZXxVysG81TPPpMKkpTk3KK6/IvlXq2IRkjMK6XSEEWzC9O7NJeY0qeV8EejJ0RnOa0FT3ycYpYPNbFQ2zzs+L+n/Qy49QWCJINP9ijli4ZtIVb4PgesulGI73aUSP8xyjPuSb8hkbwXyZn6T5vfKkBMEOxE7V4=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=Kza4I0HzRT2xsTR4YzkXyNx0h5y2MmaFHxdi3ivQ7So=;
+	h=date:mime-version:subject:message-id:from;
 
+Hi Mani,
 
-Hi Johannes!
+在 2024/11/7 23:51, Manivannan Sadhasivam 写道:
+> On Mon, Nov 04, 2024 at 03:31:55PM +0800, Shawn Lin wrote:
+>> HCE on Rockchip SoC is different from both of ufshcd_hba_execute_hce()
+>> and UFSHCI_QUIRK_BROKEN_HCE case. It need to do dme_reset and dme_enable
+>> after enabling HCE. So in order not to abuse UFSHCI_QUIRK_BROKEN_HCE, add
+>> a new quirk UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE, to deal with that
+>> limitation.
+>>
+>> Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> ---
+>>
+>> Changes in v4:
+>> - fix typo
+>>
+>> Changes in v3: None
+>> Changes in v2: None
+>>
+>>   drivers/ufs/core/ufshcd.c | 17 +++++++++++++++++
+>>   include/ufs/ufshcd.h      |  6 ++++++
+>>   2 files changed, 23 insertions(+)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 7cab1031..4084bf9 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -4819,6 +4819,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+>>   {
+>>   	int retry_outer = 3;
+>>   	int retry_inner;
+>> +	int ret;
+>>   
+>>   start:
+>>   	if (ufshcd_is_hba_active(hba))
+>> @@ -4865,6 +4866,22 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+>>   	/* enable UIC related interrupts */
+>>   	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
+>>   
+>> +	/*
+>> +	 * Do dme_reset and dme_enable if a UFS host controller needs
+>> +	 * this procedure to actually finish HCE.
+>> +	 */
+>> +	if (hba->quirks & UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE) {
+>> +		ret = ufshcd_dme_reset(hba);
+>> +		if (!ret) {
+>> +			ret = ufshcd_dme_enable(hba);
+>> +			if (ret)
+>> +				dev_err(hba->dev,
+>> +					"Failed to do dme_enable after HCE.\n");
+> 
+> Don't you need to return failure for this and below error paths? Probably you
+> need to skip post change notification as well in the case of failure.
 
-> ping?
+Oops, my bad.
 
-It's already in scsi-fixes:
+> 
+>> +		} else {
+>> +			dev_err(hba->dev, "Failed to do dme_reset after HCE.\n");
+>> +		}
+>> +	}
+>> +
+>>   	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
+> 
+> Is it possible for you to carry out dme_reset() and dme_enable() in the post
+> change notifier of the rockchip glue driver? I'm trying to see if we can avoid
+> having the quirk which is only specific to Rockchip.
+> 
 
-  https://git.kernel.org/mkp/scsi/c/7ce3e6107103
+I will check and test this approach. Thanks.
 
-I don't see a corresponding merge notification mail in lore but the
-patch is marked Accepted in patchwork. b4 gets confused sometimes...
+> - Mani
+> 
+>>   
+>>   	return 0;
+>> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+>> index a95282b..e939af8 100644
+>> --- a/include/ufs/ufshcd.h
+>> +++ b/include/ufs/ufshcd.h
+>> @@ -685,6 +685,12 @@ enum ufshcd_quirks {
+>>   	 * single doorbell mode.
+>>   	 */
+>>   	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
+>> +
+>> +	/*
+>> +	 * This quirk needs to be enabled if host controller need to
+>> +	 * do dme_reset and dme_enable after hce.
+>> +	 */
+>> +	UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE		= 1 << 26,
+>>   };
+>>   
+>>   enum ufshcd_caps {
+>> -- 
+>> 2.7.4
+>>
+> 
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
