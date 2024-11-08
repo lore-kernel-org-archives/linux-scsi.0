@@ -1,121 +1,124 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mail-m6093.netease.com (mail-m6093.netease.com [210.79.60.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBE483D96A
-	for <linux-scsi@vger.kernel.org>; Fri,  8 Nov 2024 02:54:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E88D21D0E30;
+	Fri,  8 Nov 2024 06:57:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.79.60.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731034446; cv=none; b=Ra1m70mgQRzQr0rIJYzRcqz/GaG6obYQkSXawXFFjNXU98xh8/M4j51RA5OVKJh1cgNY6dWQpaMzc5PZP+L4dhu/fJK44rpnY0dAVuCFzZ0Z+p5sEllrxLvMFRUtk0rEUW5MeUUNpOUe2Sc/xyejRH05Iua/YpX33rdAwa8vRZ4=
+	t=1731049081; cv=none; b=eGpO4EKwxy1YeJ1nhXjOt8WjAmMjUqYGOYSdls3pImVzm73EcHtmYqiPp6Y0zTu/a4WLiYn8gt252JsGJOtiVZLC9wdelfPW3gh5smvvF8vTbCpLDlrG9u/osB/7Up70sk+LYqPIAOD7Gy4YpD3v2CRHATXF+/PZvrjRcI9s8QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731034446; c=relaxed/simple;
-	bh=cwEqbnHj/TJxnIy+3o2VhKgoUs8GcxvB6wBbbqhMWAU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jx40KfGi1Jz9I/2Ahf8rvM+ZVOE4GxPNmZ5ec6neKIPawQGKOZ+tuPxKtMgzh+wn1j6qgfeYOOy0Jr0OlRBS82AQTq7zxTreV0gwFFgo3lNMtxbysgk00z64cuf9kWiIaQg07oAA7OGuogl1Xw/1kmDM1FdviXlDGi01RnOQAzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ujrubfna; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1731049081; c=relaxed/simple;
+	bh=UcJC9L9802eGFZM5sKRgW3Du9kKWPCcH1zwqSk3Tl2E=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=rbFlmG29wgO+A0QfHCUpdcLKDv/gvebj9AezKUVnu+Xg+m8xPvJZqVKNfVagRB203kCnrhqZXvThTvJ0Bf0h9PoDbt0d5obOko2N1OBGro4I6UO8ymC07dzt3sH+G8+lT9jmMLWUUiz36robMxATvVYKKCcmwo3o1uI5BU7FY3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=DSetdHpX; arc=none smtp.client-ip=210.79.60.93
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ujrubfna"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1731034444;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cwEqbnHj/TJxnIy+3o2VhKgoUs8GcxvB6wBbbqhMWAU=;
-	b=Ujrubfna44Raer7m0SiDuwhj/e0q1yzL/RkvOHEUQl33MV4WhVHbrpLnV0mQLBy4bPjXju
-	XmC2SQikTSzXZg7mS255WxB2h3JpWac1o8qj1wT1HGakDbt/QTzAlR942Qv9NYF1kmv6fR
-	Jj8Rbg8mDUwhL0qLeHlOLL3BjAFR6+s=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-163-8dMOe54yM12TPgJLOX8uaQ-1; Thu, 07 Nov 2024 21:54:02 -0500
-X-MC-Unique: 8dMOe54yM12TPgJLOX8uaQ-1
-X-Mimecast-MFC-AGG-ID: 8dMOe54yM12TPgJLOX8uaQ
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-2e2eb765285so1895774a91.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2024 18:54:01 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731034441; x=1731639241;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cwEqbnHj/TJxnIy+3o2VhKgoUs8GcxvB6wBbbqhMWAU=;
-        b=YLmG2AuhsoEIesavBPQQDtnagIwVObSDw+xeOIh1aLp9rW+MFyTCVLIHAmR4EW8QiY
-         ZVQT5NS1+jKYpY6tTOSMH5NlThVxqIn0WBom68D7590PC/JYxle3vBG7LWsYCbl1IVRr
-         TLCpfzmjDshOkP9loPjquUHwbzc10bk5JG1smqpT5Z5WFKlixmViyAJYiCUA8+7csuxl
-         JIHrYyXkqFtJ6qxk5EA1Qk6x2vhVpsY0ZYng8cxguamMIoAGxNYlG266WMuOjoDGXpSX
-         xAwAkVKNR9hfATLYzAY+KRGuu8jCI9rFjXxYOj4Dj9R2KXdOg39MgYgZx8vIguwPwZLK
-         WNiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWjA7Y6MFomElxLGhk63s7bClg+n3dxMWux8wVBfD24RXZIJzlCXZ1hDJitZryzJcZ8Re5b8dQOE+Sb@vger.kernel.org
-X-Gm-Message-State: AOJu0YwFMLAOjNojLnehpba3v4FZTJZSzR0c/E58nNocuG0jyOAxYUX1
-	Rv1bRhIgYyiFYkJB1xaRrVOgZPferS62iqc0FF2AOlsWZQkm36Zs28hsSFvm2f6dWhUr2sdSrC1
-	95URveASl/0N5uBuQkvd0S0GmH6rimpWKBzkcJa5sUxf2k/0hOU1uFxuyxrklNDxquBNFS2x91X
-	lcsfzuoaAShwzA/zsQE5zLszYO0xFyDajKRg==
-X-Received: by 2002:a17:90b:3d91:b0:2e2:a029:3b4b with SMTP id 98e67ed59e1d1-2e9b177632bmr1984112a91.28.1731034440900;
-        Thu, 07 Nov 2024 18:54:00 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHeAKu6FXOO8aouj3/WFxZQgxhtW8ocCUmDNXhuRcpuePvBO35pclspRsjXFn6dE+pdWYMrEjjMCT0rnXoNyZM=
-X-Received: by 2002:a17:90b:3d91:b0:2e2:a029:3b4b with SMTP id
- 98e67ed59e1d1-2e9b177632bmr1984080a91.28.1731034440508; Thu, 07 Nov 2024
- 18:54:00 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="DSetdHpX"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 22d55c8d;
+	Fri, 8 Nov 2024 14:57:47 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 4/7] pmdomain: rockchip: Add smc call to inform firmware
+Date: Fri,  8 Nov 2024 14:56:23 +0800
+Message-Id: <1731048987-229149-5-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0JCHlZPTUNCTUkaSUtMQxlWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
+	NVSktLVUpCS0tZBg++
+X-HM-Tid: 0a930a90928209cckunm22d55c8d
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PSo6HBw4MzIjNCoPUSpCKwhD
+	Ci0wCQtVSlVKTEhKS09CS01DTUJKVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUpDSk03Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=DSetdHpXNXDwak1GGqzp4RY5M6CqTgfsKoF9DlaDV4FxCJqDmR2qyDXKTRun4/bxHzCENUzzqK+fXjcCie4MTCGJG+DqEbJ3wF0TtJux01lW3e/GJoEkD/kgoIy1QtTaF1WSgLCRDC4CcOxUDPzxE9QLq+4mo/4ZmO/WhdobHH4=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=2NyPYvYg2Dghh9vSnqVVMEZ1p9KuX17hf7zqDWcgQNg=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20241031030847.3253873-1-qiang4.zhang@linux.intel.com>
- <20241101015101.98111-1-qiang4.zhang@linux.intel.com> <CACGkMEtvrBRd8BaeUiR6bm1xVX4KUGa83s03tPWPHB2U0mYfLA@mail.gmail.com>
- <20241106042828-mutt-send-email-mst@kernel.org>
-In-Reply-To: <20241106042828-mutt-send-email-mst@kernel.org>
-From: Jason Wang <jasowang@redhat.com>
-Date: Fri, 8 Nov 2024 10:53:49 +0800
-Message-ID: <CACGkMEv4eq9Ej2d2vKp0S8UdTgf4tjXJ_SAtfZmKxQ3iPxfEOg@mail.gmail.com>
-Subject: Re: [PATCH v2] virtio: only reset device and restore status if needed
- in device resume
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: qiang4.zhang@linux.intel.com, Paolo Bonzini <pbonzini@redhat.com>, 
-	Stefan Hajnoczi <stefanha@redhat.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Jens Axboe <axboe@kernel.dk>, 
-	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gonglei <arei.gonglei@huawei.com>, 
-	"David S. Miller" <davem@davemloft.net>, Viresh Kumar <viresh.kumar@linaro.org>, 
-	"Chen, Jian Jun" <jian.jun.chen@intel.com>, Andi Shyti <andi.shyti@kernel.org>, 
-	Andrew Lunn <andrew+netdev@lunn.ch>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, David Hildenbrand <david@redhat.com>, 
-	Gerd Hoffmann <kraxel@redhat.com>, Anton Yakovlev <anton.yakovlev@opensynergy.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Qiang Zhang <qiang4.zhang@intel.com>, 
-	virtualization@lists.linux.dev, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	linux-i2c@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-sound@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Nov 6, 2024 at 5:29=E2=80=AFPM Michael S. Tsirkin <mst@redhat.com> =
-wrote:
->
-> On Fri, Nov 01, 2024 at 10:11:11AM +0800, Jason Wang wrote:
-> > On Fri, Nov 1, 2024 at 9:54=E2=80=AFAM <qiang4.zhang@linux.intel.com> w=
-rote:
-> > >
-> > > From: Qiang Zhang <qiang4.zhang@intel.com>
-> > >
-> > > Virtio core unconditionally reset and restore status for all virtio
-> > > devices before calling restore method. This breaks some virtio driver=
-s
-> > > which don't need to do anything in suspend and resume because they
-> > > just want to keep device state retained.
-> >
-> > The challenge is how can driver know device doesn't need rest.
->
-> I actually don't remember why do we do reset on restore. Do you?
->
+Inform firmware to keep the power domain on or off.
 
-Because the driver doesn't know if the device can keep its state, so
-it chooses to start from that.
+Suggested-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Thanks
+Changes in v5:
+- fix a compile warning
+
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pmdomain/rockchip/pm-domains.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pmdomain/rockchip/pm-domains.c b/drivers/pmdomain/rockchip/pm-domains.c
+index cb0f938..49842f1 100644
+--- a/drivers/pmdomain/rockchip/pm-domains.c
++++ b/drivers/pmdomain/rockchip/pm-domains.c
+@@ -5,6 +5,7 @@
+  * Copyright (c) 2015 ROCKCHIP, Co. Ltd.
+  */
+ 
++#include <linux/arm-smccc.h>
+ #include <linux/io.h>
+ #include <linux/iopoll.h>
+ #include <linux/err.h>
+@@ -20,6 +21,7 @@
+ #include <linux/regmap.h>
+ #include <linux/mfd/syscon.h>
+ #include <soc/rockchip/pm_domains.h>
++#include <soc/rockchip/rockchip_sip.h>
+ #include <dt-bindings/power/px30-power.h>
+ #include <dt-bindings/power/rockchip,rv1126-power.h>
+ #include <dt-bindings/power/rk3036-power.h>
+@@ -540,6 +542,7 @@ static void rockchip_do_pmu_set_power_domain(struct rockchip_pm_domain *pd,
+ 	struct generic_pm_domain *genpd = &pd->genpd;
+ 	u32 pd_pwr_offset = pd->info->pwr_offset;
+ 	bool is_on, is_mem_on = false;
++	struct arm_smccc_res res;
+ 
+ 	if (pd->info->pwr_mask == 0)
+ 		return;
+@@ -567,6 +570,11 @@ static void rockchip_do_pmu_set_power_domain(struct rockchip_pm_domain *pd,
+ 			genpd->name, is_on);
+ 		return;
+ 	}
++
++	/* Inform firmware to keep this pd on or off */
++	arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
++			pmu->info->pwr_offset + pd_pwr_offset,
++			pd->info->pwr_mask, on, 0, 0, 0, &res);
+ }
+ 
+ static int rockchip_pd_power(struct rockchip_pm_domain *pd, bool power_on)
+-- 
+2.7.4
 
