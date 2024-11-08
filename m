@@ -1,78 +1,97 @@
-Received: from cmccmta3.chinamobile.com (cmccmta6.chinamobile.com [111.22.67.139])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EEF7CDDA8;
-	Fri,  8 Nov 2024 07:09:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=111.22.67.139
+Received: from mail-m1973170.qiye.163.com (mail-m1973170.qiye.163.com [220.197.31.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95DDEDDA8;
+	Fri,  8 Nov 2024 07:12:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731049783; cv=none; b=sefOSl2pboTWnSBUxucOM95Wepn8HXkNhZLNiZ6oPxo/SJpVwt0xOP5iSmWpwCRuZ4kx4M7u6QDrb2tq25Y65nw83QIbj0o5aBU7j5137C0i+N2uSjZBegZSydvTLWiM2t/PT/M0HZ17iUJ+/Gl14UTKIxanOuZ2hxYKugmITuY=
+	t=1731049964; cv=none; b=Gcfpekv0llfqhDvri//LUFiFE5eFBDN3HFvLENVqdCKUr+zPS0flKW/tt5A8wipOfZArg887MX7z2atc79xLbEoitJB7L1srueEiImMzUnop/CtTNdVXepMlhsqld7iDDOktvCNwphx/lLfyQtJbUYOUu3UXcvtbujlLYucx048=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731049783; c=relaxed/simple;
-	bh=NZfaUT3PuVJd7QSqbh3Iw5TQJNKJ6xXrsnc0CQcgPL0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IShLToe2IA+VIu7uz0HUvwGmJe1qrNmt0KS2kwcZA3NhVEdmzItmb6xtxYLcvCMvyXLD1884laVwHCx77/CPm680gZ0GKGpMXp8QPMh5i0y1SWrzElhhxqXh6uYDzKXyibL1IVN+P7o5TI+Bxvd0VJurKBP5+bv5umK+Ax6NKmk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cmss.chinamobile.com; spf=pass smtp.mailfrom=cmss.chinamobile.com; arc=none smtp.client-ip=111.22.67.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app09-12009 (RichMail) with SMTP id 2ee9672db930ed8-f5eec;
-	Fri, 08 Nov 2024 15:09:37 +0800 (CST)
-X-RM-TRANSID:2ee9672db930ed8-f5eec
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from localhost.localdomain (unknown[10.55.1.71])
-	by rmsmtp-syy-appsvr04-12004 (RichMail) with SMTP id 2ee4672db93004d-866ba;
-	Fri, 08 Nov 2024 15:09:37 +0800 (CST)
-X-RM-TRANSID:2ee4672db93004d-866ba
-From: liujing <liujing@cmss.chinamobile.com>
-To: james.smart@broadcom.com
-Cc: dick.kennedy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
+	s=arc-20240116; t=1731049964; c=relaxed/simple;
+	bh=BrnlGnnhDEsGBKrLrVaO+AkaSyBoaxe0H46xA1D5Kfs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=PoTGAQelvB2Q1G/CN8SX02UKHiUV611bZH8PRK9MtXgegTke5K0OGOOE12Z1xIpKp9QY/MIEv+8Dp+QYcbDQUrzpemj8jUPOiySYkVOwfFtEeMh9X0zbAUslHlVtVKCPzAwD8ADR1wrELanNMwhig90EKm+JOyi/wXrZWXYAAkU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=EvX9HFbg; arc=none smtp.client-ip=220.197.31.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="EvX9HFbg"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 22d55bed;
+	Fri, 8 Nov 2024 14:57:14 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	liujing <liujing@cmss.chinamobile.com>
-Subject: [PATCH] scsi: lpfc: Fix spelling errors asynchronously
-Date: Fri,  8 Nov 2024 15:09:35 +0800
-Message-Id: <20241108070935.10427-1-liujing@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.27.0
+	linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 2/7] soc: rockchip: add header for suspend mode SIP interface
+Date: Fri,  8 Nov 2024 14:56:21 +0800
+Message-Id: <1731048987-229149-3-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkseQlZCTk4dHk1NQk1NSh1WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a930a90140009cckunm22d55bed
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Pio6GAw5FjIZMCoREC8uKy4u
+	OgkKChxVSlVKTEhKS09CS0hNT05LVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUJMTjcG
+DKIM-Signature:a=rsa-sha256;
+	b=EvX9HFbgHRds46heWcpaAQbr9uqJzx+7S0XO0IghFwtnEsDuyv6Eijkyn1YZki04D3RVMzt1qtBdciCIU+xxye+ZunJH8Q5C+1NpnGRijZnKprcGPqod64KvcCIvbt4w87c6v2TZxG/YSH62Tts4abGktyWb5OMBVh01dEdFZLs=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=HExq89J04oe4XAe0XhWdyylqjS+SWwit6uhZCVLqyMI=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Signed-off-by: liujing<liujing@cmss.chinamobile.com>
+Add ROCKCHIP_SIP_SUSPEND_MODE to pass down parameters to Trusted Firmware
+in order to decide suspend mode. Currently only add ROCKCHIP_SLEEP_PD_CONFIG
+which teaches firmware to power down controllers or not.
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 49dd78ed8a9a..43dc1da4a156 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -242,7 +242,7 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
-  * @phba: pointer to lpfc hba data structure.
-  * @axchg: pointer to exchange context for the NVME LS request
-  *
-- * This routine is used for processing an asychronously received NVME LS
-+ * This routine is used for processing an asynchronously received NVME LS
-  * request. Any remaining validation is done and the LS is then forwarded
-  * to the nvme-fc transport via nvme_fc_rcv_ls_req().
-  *
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index e6c9112a8862..fba2e62027b7 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -2142,7 +2142,7 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  * @axchg: pointer to exchange context for the NVME LS request
-  *
-- * This routine is used for processing an asychronously received NVME LS
-+ * This routine is used for processing an asynchronously received NVME LS
-  * request. Any remaining validation is done and the LS is then forwarded
-  * to the nvmet-fc transport via nvmet_fc_rcv_ls_req().
-  *
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ include/soc/rockchip/rockchip_sip.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip_sip.h
+index c46a9ae..501ad1f 100644
+--- a/include/soc/rockchip/rockchip_sip.h
++++ b/include/soc/rockchip/rockchip_sip.h
+@@ -6,6 +6,9 @@
+ #ifndef __SOC_ROCKCHIP_SIP_H
+ #define __SOC_ROCKCHIP_SIP_H
+ 
++#define ROCKCHIP_SIP_SUSPEND_MODE		0x82000003
++#define ROCKCHIP_SLEEP_PD_CONFIG		0xff
++
+ #define ROCKCHIP_SIP_DRAM_FREQ			0x82000008
+ #define ROCKCHIP_SIP_CONFIG_DRAM_INIT		0x00
+ #define ROCKCHIP_SIP_CONFIG_DRAM_SET_RATE	0x01
 -- 
-2.27.0
-
-
+2.7.4
 
