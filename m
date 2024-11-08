@@ -1,101 +1,91 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3450C1E22F8
-	for <linux-scsi@vger.kernel.org>; Fri,  8 Nov 2024 10:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9041E0E10;
+	Fri,  8 Nov 2024 11:57:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731060820; cv=none; b=jUm3VfDpWWhf+VN0d+a9psuQ+t3UfrjOvuxqiGNsUY0mFrBnYoYGhY2Qpb75cq5yAhP/FoeHfY72MVXYC3ZRcbSU/7WA6xDdkk41SVdsVrGw+dooLQN498w7n0M2Oplta9Tf1aGpTMQ1pvR7GN5Qg9zdycXABVtWS6InLdZz1SM=
+	t=1731067027; cv=none; b=PXYbAmp6SGnmSzAySTLXUt1+eft3+BesE8kuelBv13VL9wJizKFo+y+Vq308iklIyIM6uHEjpJPZFwKxwEr1x2DRGYCuM1DFib5YxOWKIE2uLhDcaA68tgS5Y9xitv4xc7LvtMFr5rgd4F9b2/eDiHkcN+z1wd+1CX1SU87puJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731060820; c=relaxed/simple;
-	bh=ea4nlkwkzPB63YKMis8itWyLgLXMno9A2YwLA3UdNCs=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=DN8R5kDiT9ejlSf8ZogKLn1WTH+yyujH6nm+nFpY47RkmysQTab/AKV6YyC711WEl/v+kXT7TvpUtceZaOxJgOBvIkTH5OvmJho/P1+TVrFy7n2/lUm3oe6iJkuXOdVxjMqj5mS8XdqSexLf52z65ukAl0xvTo70K4dFWJABtGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lbr+DYAB; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731067027; c=relaxed/simple;
+	bh=QbmFVfadbo8uXdqtT81Hz2hqVSegNMI1xnbOcKgH/94=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=neDS3yDzIL/HEoP7Y9IjLCGEJsP0S0fjCgsxmgQSXuHCR6xeQ9mftAoySVAelg3sPIo0m//vNR7BK5GpBKXiWq2c1W0xBM9jQ98JetbdKspcvdpWqDgDGjm9UuGQrSZA0qq/XP71b24TtLQYIslKqZsll3Uvo+JLEw2cAzMGzlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kdAskxrU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lbr+DYAB"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a9ed49edd41so352133766b.0
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Nov 2024 02:13:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731060814; x=1731665614; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=ea4nlkwkzPB63YKMis8itWyLgLXMno9A2YwLA3UdNCs=;
-        b=lbr+DYAB82qDvt80zijrwV1ZTUJXpwd7MUbe/3/jRtbYLvnj8W/ffzT9ReIuA2TmGn
-         UCi/g2IkxMqYQXUgikE8t94ZF1l/m4bcfMZxK1DQHBH/6lA1SFQzatBHHa1HoJaVITVs
-         jtXvYqwxO6ttGsbKr++R998cvkTqdGUk6ennJ/TATySRWSx54CDJ8N8y1az3buh5rluD
-         MYU28FTDIlfVNvUuG+/9gS4OYTak74Q8bcu36TD00myPsPrcpSMNaug6QmFMb9TT6OQ/
-         1Rn3R1AeECKQnwmrIDEYop3EYwsBIBBbG/0MmzCNYmOMcWH1nanmnJ2aZziI3TBg3XT1
-         vy4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731060814; x=1731665614;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ea4nlkwkzPB63YKMis8itWyLgLXMno9A2YwLA3UdNCs=;
-        b=N959pVio6Q+LdU0+IIK5SzZbbB5mJTYvxUVNDqDSeSidisQtVyzGvJkH2op9CbOyu2
-         67ehk1RsmTRgqEvLIxIRZeVUwZKqS/PadlTMhMwHqMFM3i/VZDbRl7EECvL00EEmy4kd
-         Ty9Ab+0pYVPKMj3gzmv3R9xiObQXrqwarMLSC0sovdo/AWlI8G2SPb6KjIk7V9AahQdn
-         y+Ad4bCj4gVVQuM+hu3X3bzuEqKvJ5AFX5gurbjC3epN19j2gvlBG7TXNxbRoIQ8+A0w
-         w8Sik9e4bgvdM3cLblTLDAZeMuAB+6kZTqvjBrUoer/pVCS7urn80y1ZXdmKrOQOzaF0
-         XDow==
-X-Gm-Message-State: AOJu0YwYCpy9yuLm+k3PzVhBkTjB7zmiNZemYXoc5LHOnRtS05c+f9sa
-	N4EBf/XDslB9MCd5OymNldi29aBTz22seYMEb49bmRFxWI0OVLlX
-X-Google-Smtp-Source: AGHT+IE+Q7rWMt5oRj/WPYAIVL3BMQmZACcknXv5UlJySkkPAYHi24DWSINfU7/aSBJHfDydNzCA6Q==
-X-Received: by 2002:a17:907:1c11:b0:a9e:82d2:3168 with SMTP id a640c23a62f3a-a9eefff1525mr182741366b.46.1731060814311;
-        Fri, 08 Nov 2024 02:13:34 -0800 (PST)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9ee0a4a979sm213430966b.71.2024.11.08.02.13.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Nov 2024 02:13:33 -0800 (PST)
-Message-ID: <7bab2feedfdb6ea8038f0772f1a78d04a71f1dd7.camel@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Restore SM8650 support
-From: Bean Huo <huobean@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Neil Armstrong <neil.armstrong@linaro.org>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,  "Bao D. Nguyen"
- <quic_nguyenb@quicinc.com>
-Date: Fri, 08 Nov 2024 11:13:32 +0100
-In-Reply-To: <20241106181011.4132974-1-bvanassche@acm.org>
-References: <20241106181011.4132974-1-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kdAskxrU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC1EAC4CECD;
+	Fri,  8 Nov 2024 11:57:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731067026;
+	bh=QbmFVfadbo8uXdqtT81Hz2hqVSegNMI1xnbOcKgH/94=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kdAskxrUCnQqARtdBdT1Xjji1CjZcDU39CU3w1LtZyMuDCq8L7NJq1eNyy3OsErH6
+	 H7idgmY241VJ0qZbnoi/AdkHYqDllUAj8DILDvzKtmuX4T4HS86Hbs9+6gIsa+HKff
+	 +RYqGGLLSL8u4MAQnLM+QnJhzC3/VKIwZmlmzne0L7MeSoLEbB2NYaRqumbcLIWr7x
+	 gp3D8JQUAwIrCZuHORoMvmLdXzl+qxbw7LEqXvUQiSfWDN49Jb/qT8nmW5ymJK/6Vd
+	 ktQavmGa2pkSzJGp4dboY5qnjVVDtCWnOFv5hohswKtzE7NR9KHVbnGdPzHGLa8rWT
+	 in6s0lfz+w4Eg==
+Date: Fri, 8 Nov 2024 12:57:03 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rob Herring <robh+dt@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Ulf Hansson <ulf.hansson@linaro.org>, Heiko Stuebner <heiko@sntech.de>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, 
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/7] dt-bindings: ufs: Document Rockchip UFS host
+ controller
+Message-ID: <bpxlah7lewfhbpe6555d6pb6sfj6eziu2ski5iiazu7pwpwc5j@jrhvjyke5rzl>
+References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
+ <1731048987-229149-2-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <1731048987-229149-2-git-send-email-shawn.lin@rock-chips.com>
 
-On Wed, 2024-11-06 at 10:10 -0800, Bart Van Assche wrote:
-> Some early UFSHCI 4.0 controllers support the UFSHCI 3.0 register
-> set.
-> The UFSHCD_QUIRK_BROKEN_LSDBS_CAP quirk must be set for these
-> controllers.
-> Commit b92e5937e352 ("scsi: ufs: core: Move code out of an if-
-> statement")
-> changed the behavior for these controllers from working fine into
-> "ufshcd_add_scsi_host: failed to initialize (legacy doorbell mode not
-> supported)". Fix this by setting the "broken LSDBS" quirk for the
-> SM8650 development board.
->=20
-> Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
-> Closes:
-> https://lore.kernel.org/linux-scsi/0c0bc528-fdc2-4106-bc99-f23ae377f6f5@l=
-inaro.org/
-> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-HDK
-> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-QRD
-> Fixes: b92e5937e352 ("scsi: ufs: core: Move code out of an if-
-> statement")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On Fri, Nov 08, 2024 at 02:56:20PM +0800, Shawn Lin wrote:
+> +required:
+> +  - compatible
+> +  - reg
+> +  - reg-names
+> +  - clocks
+> +  - clock-names
+> +  - interrupts
+> +  - power-domains
+> +  - resets
+> +  - reset-names
+> +  - reset-gpios
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/rockchip,rk3576-cru.h>
+> +    #include <dt-bindings/reset/rockchip,rk3576-cru.h>
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/power/rockchip,rk3576-power.h>
+> +    #include <dt-bindings/pinctrl/rockchip.h>
+> +    #include <dt-bindings/gpio/gpio.h>
+> +
+> +    soc {
+> +        #address-cells = <2>;
+> +        #size-cells = <2>;
+> +
+> +        ufshc: ufshc@2a2d0000 {
+> +              compatible = "rockchip,rk3576-ufshc";
 
-Appreciate it!
+Odd alignment.
 
+Best regards,
+Krzysztof
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
