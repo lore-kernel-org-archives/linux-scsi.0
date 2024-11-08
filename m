@@ -1,164 +1,121 @@
-Received: from mail-m607.netease.com (mail-m607.netease.com [210.79.60.7])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773E7DDC3;
-	Fri,  8 Nov 2024 01:39:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.79.60.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBE483D96A
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Nov 2024 02:54:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731030001; cv=none; b=IAi8c0q42iZICWN2j5tTT1jVo0VL26ZFWsSBVspJ0fbpDQuWxNuZzfocoFvv97WpGJjG0OgYdr2ow9dyCGT0Dfzsulg6/YIpQladUhGRLcAFd5Uwe9lwDOspOJhpaVOwJB3PBttaJY+3rJr6NaEPP50zQqpnE7qQKO7dFgmH6eI=
+	t=1731034446; cv=none; b=Ra1m70mgQRzQr0rIJYzRcqz/GaG6obYQkSXawXFFjNXU98xh8/M4j51RA5OVKJh1cgNY6dWQpaMzc5PZP+L4dhu/fJK44rpnY0dAVuCFzZ0Z+p5sEllrxLvMFRUtk0rEUW5MeUUNpOUe2Sc/xyejRH05Iua/YpX33rdAwa8vRZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731030001; c=relaxed/simple;
-	bh=5EONU/ePBboZ737bsck6tYVlh4j/04wwwwK+5lNFwlE=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=d/897TqVFMq23bcqLrJbfzP3ckMth8B3TdS6Wt5eQ8PogxWW5oHMghCavSVpOxCBD1gM7rsGzv8r/pa3JpZc4f4MomlW9Py2fs0RqQZavXHSW+AkbbJNm/3H9pt/fXrBsezB+8jifQM0ROTE8o4IdR2T+rrdAQBi2EQYJkJV0hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=caDQOPOq; arc=none smtp.client-ip=210.79.60.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1731034446; c=relaxed/simple;
+	bh=cwEqbnHj/TJxnIy+3o2VhKgoUs8GcxvB6wBbbqhMWAU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jx40KfGi1Jz9I/2Ahf8rvM+ZVOE4GxPNmZ5ec6neKIPawQGKOZ+tuPxKtMgzh+wn1j6qgfeYOOy0Jr0OlRBS82AQTq7zxTreV0gwFFgo3lNMtxbysgk00z64cuf9kWiIaQg07oAA7OGuogl1Xw/1kmDM1FdviXlDGi01RnOQAzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ujrubfna; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="caDQOPOq"
-Received: from [172.16.12.45] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 222b801f;
-	Fri, 8 Nov 2024 09:04:18 +0800 (GMT+08:00)
-Message-ID: <a65a8ec4-9b75-493a-961c-7b570dd834b5@rock-chips.com>
-Date: Fri, 8 Nov 2024 09:04:19 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ujrubfna"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1731034444;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cwEqbnHj/TJxnIy+3o2VhKgoUs8GcxvB6wBbbqhMWAU=;
+	b=Ujrubfna44Raer7m0SiDuwhj/e0q1yzL/RkvOHEUQl33MV4WhVHbrpLnV0mQLBy4bPjXju
+	XmC2SQikTSzXZg7mS255WxB2h3JpWac1o8qj1wT1HGakDbt/QTzAlR942Qv9NYF1kmv6fR
+	Jj8Rbg8mDUwhL0qLeHlOLL3BjAFR6+s=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-163-8dMOe54yM12TPgJLOX8uaQ-1; Thu, 07 Nov 2024 21:54:02 -0500
+X-MC-Unique: 8dMOe54yM12TPgJLOX8uaQ-1
+X-Mimecast-MFC-AGG-ID: 8dMOe54yM12TPgJLOX8uaQ
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-2e2eb765285so1895774a91.1
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2024 18:54:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731034441; x=1731639241;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cwEqbnHj/TJxnIy+3o2VhKgoUs8GcxvB6wBbbqhMWAU=;
+        b=YLmG2AuhsoEIesavBPQQDtnagIwVObSDw+xeOIh1aLp9rW+MFyTCVLIHAmR4EW8QiY
+         ZVQT5NS1+jKYpY6tTOSMH5NlThVxqIn0WBom68D7590PC/JYxle3vBG7LWsYCbl1IVRr
+         TLCpfzmjDshOkP9loPjquUHwbzc10bk5JG1smqpT5Z5WFKlixmViyAJYiCUA8+7csuxl
+         JIHrYyXkqFtJ6qxk5EA1Qk6x2vhVpsY0ZYng8cxguamMIoAGxNYlG266WMuOjoDGXpSX
+         xAwAkVKNR9hfATLYzAY+KRGuu8jCI9rFjXxYOj4Dj9R2KXdOg39MgYgZx8vIguwPwZLK
+         WNiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWjA7Y6MFomElxLGhk63s7bClg+n3dxMWux8wVBfD24RXZIJzlCXZ1hDJitZryzJcZ8Re5b8dQOE+Sb@vger.kernel.org
+X-Gm-Message-State: AOJu0YwFMLAOjNojLnehpba3v4FZTJZSzR0c/E58nNocuG0jyOAxYUX1
+	Rv1bRhIgYyiFYkJB1xaRrVOgZPferS62iqc0FF2AOlsWZQkm36Zs28hsSFvm2f6dWhUr2sdSrC1
+	95URveASl/0N5uBuQkvd0S0GmH6rimpWKBzkcJa5sUxf2k/0hOU1uFxuyxrklNDxquBNFS2x91X
+	lcsfzuoaAShwzA/zsQE5zLszYO0xFyDajKRg==
+X-Received: by 2002:a17:90b:3d91:b0:2e2:a029:3b4b with SMTP id 98e67ed59e1d1-2e9b177632bmr1984112a91.28.1731034440900;
+        Thu, 07 Nov 2024 18:54:00 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHeAKu6FXOO8aouj3/WFxZQgxhtW8ocCUmDNXhuRcpuePvBO35pclspRsjXFn6dE+pdWYMrEjjMCT0rnXoNyZM=
+X-Received: by 2002:a17:90b:3d91:b0:2e2:a029:3b4b with SMTP id
+ 98e67ed59e1d1-2e9b177632bmr1984080a91.28.1731034440508; Thu, 07 Nov 2024
+ 18:54:00 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, Rob Herring <robh+dt@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
- Heiko Stuebner <heiko@sntech.de>, "Rafael J . Wysocki" <rafael@kernel.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
- Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
- linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
- linux-pm@vger.kernel.org
-Subject: Re: [PATCH v4 1/7] scsi: ufs: core: Add
- UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
- <1730705521-23081-2-git-send-email-shawn.lin@rock-chips.com>
- <20241107155128.paqyo7een2ggzejs@thinkpad>
-Content-Language: en-GB
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20241107155128.paqyo7een2ggzejs@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ05CSVZDQ0hOS00dSx1KGEhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a93094cf63309cckunm222b801f
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NRA6DSo*KjIiKDQfCgENPCoI
-	TggaFAhVSlVKTEhKS0lMQ01LTU9NVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhLS0I3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=caDQOPOqYhwi2ZXxVysG81TPPpMKkpTk3KK6/IvlXq2IRkjMK6XSEEWzC9O7NJeY0qeV8EejJ0RnOa0FT3ycYpYPNbFQ2zzs+L+n/Qy49QWCJINP9ijli4ZtIVb4PgesulGI73aUSP8xyjPuSb8hkbwXyZn6T5vfKkBMEOxE7V4=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=Kza4I0HzRT2xsTR4YzkXyNx0h5y2MmaFHxdi3ivQ7So=;
-	h=date:mime-version:subject:message-id:from;
+References: <20241031030847.3253873-1-qiang4.zhang@linux.intel.com>
+ <20241101015101.98111-1-qiang4.zhang@linux.intel.com> <CACGkMEtvrBRd8BaeUiR6bm1xVX4KUGa83s03tPWPHB2U0mYfLA@mail.gmail.com>
+ <20241106042828-mutt-send-email-mst@kernel.org>
+In-Reply-To: <20241106042828-mutt-send-email-mst@kernel.org>
+From: Jason Wang <jasowang@redhat.com>
+Date: Fri, 8 Nov 2024 10:53:49 +0800
+Message-ID: <CACGkMEv4eq9Ej2d2vKp0S8UdTgf4tjXJ_SAtfZmKxQ3iPxfEOg@mail.gmail.com>
+Subject: Re: [PATCH v2] virtio: only reset device and restore status if needed
+ in device resume
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: qiang4.zhang@linux.intel.com, Paolo Bonzini <pbonzini@redhat.com>, 
+	Stefan Hajnoczi <stefanha@redhat.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Jens Axboe <axboe@kernel.dk>, 
+	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
+	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gonglei <arei.gonglei@huawei.com>, 
+	"David S. Miller" <davem@davemloft.net>, Viresh Kumar <viresh.kumar@linaro.org>, 
+	"Chen, Jian Jun" <jian.jun.chen@intel.com>, Andi Shyti <andi.shyti@kernel.org>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, David Hildenbrand <david@redhat.com>, 
+	Gerd Hoffmann <kraxel@redhat.com>, Anton Yakovlev <anton.yakovlev@opensynergy.com>, 
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Qiang Zhang <qiang4.zhang@intel.com>, 
+	virtualization@lists.linux.dev, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-sound@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Mani,
+On Wed, Nov 6, 2024 at 5:29=E2=80=AFPM Michael S. Tsirkin <mst@redhat.com> =
+wrote:
+>
+> On Fri, Nov 01, 2024 at 10:11:11AM +0800, Jason Wang wrote:
+> > On Fri, Nov 1, 2024 at 9:54=E2=80=AFAM <qiang4.zhang@linux.intel.com> w=
+rote:
+> > >
+> > > From: Qiang Zhang <qiang4.zhang@intel.com>
+> > >
+> > > Virtio core unconditionally reset and restore status for all virtio
+> > > devices before calling restore method. This breaks some virtio driver=
+s
+> > > which don't need to do anything in suspend and resume because they
+> > > just want to keep device state retained.
+> >
+> > The challenge is how can driver know device doesn't need rest.
+>
+> I actually don't remember why do we do reset on restore. Do you?
+>
 
-在 2024/11/7 23:51, Manivannan Sadhasivam 写道:
-> On Mon, Nov 04, 2024 at 03:31:55PM +0800, Shawn Lin wrote:
->> HCE on Rockchip SoC is different from both of ufshcd_hba_execute_hce()
->> and UFSHCI_QUIRK_BROKEN_HCE case. It need to do dme_reset and dme_enable
->> after enabling HCE. So in order not to abuse UFSHCI_QUIRK_BROKEN_HCE, add
->> a new quirk UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE, to deal with that
->> limitation.
->>
->> Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->> Changes in v4:
->> - fix typo
->>
->> Changes in v3: None
->> Changes in v2: None
->>
->>   drivers/ufs/core/ufshcd.c | 17 +++++++++++++++++
->>   include/ufs/ufshcd.h      |  6 ++++++
->>   2 files changed, 23 insertions(+)
->>
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 7cab1031..4084bf9 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -4819,6 +4819,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
->>   {
->>   	int retry_outer = 3;
->>   	int retry_inner;
->> +	int ret;
->>   
->>   start:
->>   	if (ufshcd_is_hba_active(hba))
->> @@ -4865,6 +4866,22 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
->>   	/* enable UIC related interrupts */
->>   	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
->>   
->> +	/*
->> +	 * Do dme_reset and dme_enable if a UFS host controller needs
->> +	 * this procedure to actually finish HCE.
->> +	 */
->> +	if (hba->quirks & UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE) {
->> +		ret = ufshcd_dme_reset(hba);
->> +		if (!ret) {
->> +			ret = ufshcd_dme_enable(hba);
->> +			if (ret)
->> +				dev_err(hba->dev,
->> +					"Failed to do dme_enable after HCE.\n");
-> 
-> Don't you need to return failure for this and below error paths? Probably you
-> need to skip post change notification as well in the case of failure.
+Because the driver doesn't know if the device can keep its state, so
+it chooses to start from that.
 
-Oops, my bad.
-
-> 
->> +		} else {
->> +			dev_err(hba->dev, "Failed to do dme_reset after HCE.\n");
->> +		}
->> +	}
->> +
->>   	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
-> 
-> Is it possible for you to carry out dme_reset() and dme_enable() in the post
-> change notifier of the rockchip glue driver? I'm trying to see if we can avoid
-> having the quirk which is only specific to Rockchip.
-> 
-
-I will check and test this approach. Thanks.
-
-> - Mani
-> 
->>   
->>   	return 0;
->> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
->> index a95282b..e939af8 100644
->> --- a/include/ufs/ufshcd.h
->> +++ b/include/ufs/ufshcd.h
->> @@ -685,6 +685,12 @@ enum ufshcd_quirks {
->>   	 * single doorbell mode.
->>   	 */
->>   	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
->> +
->> +	/*
->> +	 * This quirk needs to be enabled if host controller need to
->> +	 * do dme_reset and dme_enable after hce.
->> +	 */
->> +	UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE		= 1 << 26,
->>   };
->>   
->>   enum ufshcd_caps {
->> -- 
->> 2.7.4
->>
-> 
+Thanks
 
