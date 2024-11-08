@@ -1,97 +1,53 @@
-Received: from mail-m1973170.qiye.163.com (mail-m1973170.qiye.163.com [220.197.31.70])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95DDEDDA8;
-	Fri,  8 Nov 2024 07:12:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DF6DDA8;
+	Fri,  8 Nov 2024 07:12:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731049964; cv=none; b=Gcfpekv0llfqhDvri//LUFiFE5eFBDN3HFvLENVqdCKUr+zPS0flKW/tt5A8wipOfZArg887MX7z2atc79xLbEoitJB7L1srueEiImMzUnop/CtTNdVXepMlhsqld7iDDOktvCNwphx/lLfyQtJbUYOUu3UXcvtbujlLYucx048=
+	t=1731049976; cv=none; b=O1wfdPASwDCSjMq2YWawTOjL8IPX/CXE2cXU/ucl+BvnuwVAhS0wDlBVCl1kUpOkrm3zsjLLiOTOf+UmWEJ//z6Vb+Gi0pRBptcp7m3S1MPAlxQAxCm7v75LFtPiSeHgps89CCxLksfmQCtN4B38I0qyz/A3lVaWayNjMs11yJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731049964; c=relaxed/simple;
-	bh=BrnlGnnhDEsGBKrLrVaO+AkaSyBoaxe0H46xA1D5Kfs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=PoTGAQelvB2Q1G/CN8SX02UKHiUV611bZH8PRK9MtXgegTke5K0OGOOE12Z1xIpKp9QY/MIEv+8Dp+QYcbDQUrzpemj8jUPOiySYkVOwfFtEeMh9X0zbAUslHlVtVKCPzAwD8ADR1wrELanNMwhig90EKm+JOyi/wXrZWXYAAkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=EvX9HFbg; arc=none smtp.client-ip=220.197.31.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="EvX9HFbg"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 22d55bed;
-	Fri, 8 Nov 2024 14:57:14 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 2/7] soc: rockchip: add header for suspend mode SIP interface
-Date: Fri,  8 Nov 2024 14:56:21 +0800
-Message-Id: <1731048987-229149-3-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkseQlZCTk4dHk1NQk1NSh1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a930a90140009cckunm22d55bed
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Pio6GAw5FjIZMCoREC8uKy4u
-	OgkKChxVSlVKTEhKS09CS0hNT05LVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUJMTjcG
-DKIM-Signature:a=rsa-sha256;
-	b=EvX9HFbgHRds46heWcpaAQbr9uqJzx+7S0XO0IghFwtnEsDuyv6Eijkyn1YZki04D3RVMzt1qtBdciCIU+xxye+ZunJH8Q5C+1NpnGRijZnKprcGPqod64KvcCIvbt4w87c6v2TZxG/YSH62Tts4abGktyWb5OMBVh01dEdFZLs=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=HExq89J04oe4XAe0XhWdyylqjS+SWwit6uhZCVLqyMI=;
-	h=date:mime-version:subject:message-id:from;
+	s=arc-20240116; t=1731049976; c=relaxed/simple;
+	bh=srBUBrMtrSwBkm97wqaSMupErLhKc8XzpEsRv7o0Te4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cg6zO4h0SKejLAPY31QJsXi2Xxq1mPPM/5mqPUABDdZemFy41MekonrluStBW0eouXRQXL84UVGx7kor3K7JySy5w+MEE5mHfublgO831qM338iR7i3At85oeHqELuDMEAH9pBrNebD6X5KwGQors+ei5ju/4LsJZSVvc1UJL6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 0640768B05; Fri,  8 Nov 2024 08:12:50 +0100 (CET)
+Date: Fri, 8 Nov 2024 08:12:49 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Pavel Begunkov <asml.silence@gmail.com>
+Cc: Keith Busch <kbusch@kernel.org>, Anuj Gupta <anuj20.g@samsung.com>,
+	axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
+	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
+	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
+	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v5 06/10] io_uring/rw: add support to send metadata
+ along with read/write
+Message-ID: <20241108071249.GA9374@lst.de>
+References: <20241029162402.21400-1-anuj20.g@samsung.com> <CGME20241029163225epcas5p24ec51c7a9b6b115757ed99cadcc3690c@epcas5p2.samsung.com> <20241029162402.21400-7-anuj20.g@samsung.com> <ZyFuxfiRqH8YB-46@kbusch-mbp.dhcp.thefacebook.com> <7995ffbd-7ec0-4f99-86a2-011bc3375228@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7995ffbd-7ec0-4f99-86a2-011bc3375228@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Add ROCKCHIP_SIP_SUSPEND_MODE to pass down parameters to Trusted Firmware
-in order to decide suspend mode. Currently only add ROCKCHIP_SLEEP_PD_CONFIG
-which teaches firmware to power down controllers or not.
+On Thu, Nov 07, 2024 at 05:30:36PM +0000, Pavel Begunkov wrote:
+> It makes sense to implement write hints as a meta/attribute type,
+> but depends on whether it's supposed to be widely supported by
+> different file types vs it being a block specific feature, and if
+> SQEs have space for it.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- include/soc/rockchip/rockchip_sip.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/include/soc/rockchip/rockchip_sip.h b/include/soc/rockchip/rockchip_sip.h
-index c46a9ae..501ad1f 100644
---- a/include/soc/rockchip/rockchip_sip.h
-+++ b/include/soc/rockchip/rockchip_sip.h
-@@ -6,6 +6,9 @@
- #ifndef __SOC_ROCKCHIP_SIP_H
- #define __SOC_ROCKCHIP_SIP_H
- 
-+#define ROCKCHIP_SIP_SUSPEND_MODE		0x82000003
-+#define ROCKCHIP_SLEEP_PD_CONFIG		0xff
-+
- #define ROCKCHIP_SIP_DRAM_FREQ			0x82000008
- #define ROCKCHIP_SIP_CONFIG_DRAM_INIT		0x00
- #define ROCKCHIP_SIP_CONFIG_DRAM_SET_RATE	0x01
--- 
-2.7.4
+It make sense everywhere.  Implementing it for direct I/O on regular
+files is mostly trivial and I'll do it once this series lands.
 
