@@ -1,494 +1,532 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9D8515D1;
-	Sat,  9 Nov 2024 06:05:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.141.245
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731132356; cv=fail; b=Am2ANQZdYNp1961KSN0okGvPu9i05Gcm8eqTt3lseROB0HaCbGBH8h7hG2ecy0jWNS/Yx8VTDrqf1Hg22w2WY5tZB9dU7gOLMdpoWOEqZU8XVoG8kB5gEN54Xt3vGWtzDkZJMPaFxAUONGg8ZODfMMVyCMP8M8PFKo9S8ofJsfY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731132356; c=relaxed/simple;
-	bh=NhyQqsiR9nFKLXVE7vow+AZHy77x9x8tuTqAkkDEHU8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZD5LlhXSGEvOaJuek4gXDGqbaXOJj3/l0eQ79vsAw/s5C67zC9ssSKCHiC0Rdcbq5e/KEyun9qrEg9kNqHh/xpE2DUKFmnuE7OhP3Ay+FZQ49TXcoPdLifNtZGOj+MZZDt78HrVKjKXD4MlCROV8ULa1tTDStdTl4Gxaljog/GQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ipcM95us; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=wBIqFuMg; arc=fail smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DE5C1494BF
+	for <linux-scsi@vger.kernel.org>; Sat,  9 Nov 2024 12:13:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1731154391; cv=none; b=uWMSKJ7OMfcTatFWNxdjOx+QaomBoBruj4f4VIpMYDAuY5KGkltXUDDbRyRVydHkVVM9OHcyzed0uY0RnMBgnUiTy4CZlr1NXbcKxFndWYA2hyFXb1d6fs3Zx1YOlf+zyxgf873O8AIawH7O7//7DByqSk4sYkgzO/LaWwzdJMc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1731154391; c=relaxed/simple;
+	bh=a3+wQeX2z4/aAAIcKnEa8AarYRmghGhmeiMxyGumkNI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nyq/D7hPEU+qzSWjth0aZBzeYnhFMuFX6qWbNm1r/u3NHs83udSTp+TGy/mOHJHbyo8RHjtOFjv1/hB8TEd9nY0g6hHP5DmeeduzWTE1BIkwL6ukfGx3I+5XbFbw9PDf7O2hwB2W4sXP3gseGxwxEpz/pilzY+0GqYsraAu3KbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=PDeo0/dr; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ipcM95us";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="wBIqFuMg"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1731132354; x=1762668354;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=NhyQqsiR9nFKLXVE7vow+AZHy77x9x8tuTqAkkDEHU8=;
-  b=ipcM95us8FXfWg5iqbPWB/uCj5Y1XjoOhYVpDToyQoHMp4K/q+JixZi9
-   SPQvYTNrfVtpX/L1J3e/awEoJYVgD3KjVpzAP0NzZotja6Y/9ZqqKAjGM
-   GqwuLLk21mJIkiin/tSefHy11FXZPoRYxRzRhvP44Y/7Z4LsJ6MX7bjQG
-   Rd4YAderWqNR3HSeJymg5YxWd1/hrDEJWYhvWV8tZ2IKL51956avq8pf9
-   liyyU7Y3uAoNl0L3KKAFzHhCU7XJVeSGbJuW1rDd4xAS+w8yI48LBQj/3
-   45RhSNPazhH8lk0qiuwXVYskDKxmEimwe2cvPxgs2xzRpDq4TKijE1jpM
-   A==;
-X-CSE-ConnectionGUID: f6SBIIGmSCe4YbOJ5N1KZQ==
-X-CSE-MsgGUID: OgvuyI+2RAGmUzhZCecT3A==
-X-IronPort-AV: E=Sophos;i="6.12,140,1728921600"; 
-   d="scan'208";a="32047742"
-Received: from mail-eastusazlp17010004.outbound.protection.outlook.com (HELO BL2PR02CU003.outbound.protection.outlook.com) ([40.93.11.4])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2024 14:05:47 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TQCxnZC3qIvq+POZOAKKMzZlqrTAUlw0WW9zRw1e7wCNZw1W4bJcP3I9ejZglvqkHPtuebk/HZtndKGDypVx9d3EUYYmSEwDhb0usZ2hcObGJ81fcazxAlkkSBzbNYqYl521BFb5VDMqibzYEW4+1MwLxXNq9kFV/CxX9piZbgG5JOxncAC7yoX3SqVIfbUAW7va7m7S5dWVqOIdsIgPkdSEKKQxNoZTlSFUpcoYy85+1jZcsnFrA3q5lvUc3OkFqXMSrlz5ZtU40ehB8ENeXY5m+k9vHyBwjB7Xpuvfa3jHuHNXGUx+ZGZ9JWOVycD9RejvDFE+FZQmfgE0hT98TA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pdBQhIv69I5AR6mgQiilaLCXpZ7TUc93goeWbS3FPqQ=;
- b=fKp7MnSK9zvQ7BrJ3QcYfhPehaTLdzHT5u5lFNW/D7v3OrWLYsl1QcNz3ULpnC4aj4yJQLBk4VLnRyYKVTNrMSNnvFNs0GSwD+ODBKEcaDaUe/X4jzyFn6fRQJQhyjxt9OW/2qOkMyAPeWyH7JpIwjqAUqIjRQZ9mFqlGI134jN5Avuy8/VRnmXQRBBtqa9PvP8INnTUNxWnw9Fv6xRt3l1vBwH5JVNVmV1UVavj8FyhTZuCKgMMKzm1adFeEyJghrB7+OmG+Zx/f+o+Vt4uhPZOO7/lRlvNc7xjqI1u9pMgYAGUM13qhoD6fmLKDt1gbzOiInA9GOe9YtZArHgZHg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PDeo0/dr"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4315abed18aso26302605e9.2
+        for <linux-scsi@vger.kernel.org>; Sat, 09 Nov 2024 04:13:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pdBQhIv69I5AR6mgQiilaLCXpZ7TUc93goeWbS3FPqQ=;
- b=wBIqFuMgS5oCFDDSfL/XCM+raU8a2jpVZAuqv6oTxJpOy64Jakx08nL3JyoRrY5B+ciymKIGuTBZwcuDGIyjOuK3NYUXCI93iOMScw9Hutw1sa20N3a/7zAU0h6o9CV1r6hwbBC+q1mGk9RTpLzygFG1T+rmSvNDNatvY0aX7Q4=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- CO6PR04MB7523.namprd04.prod.outlook.com (2603:10b6:303:a8::17) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8137.22; Sat, 9 Nov 2024 06:05:44 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f%7]) with mapi id 15.20.8137.021; Sat, 9 Nov 2024
- 06:05:44 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van
- Assche <bvanassche@acm.org>
-Subject: RE: [PATCH v3 1/2] scsi: ufs: core: Introduce a new clock_gating lock
-Thread-Topic: [PATCH v3 1/2] scsi: ufs: core: Introduce a new clock_gating
- lock
-Thread-Index: AQHbL3WvpQA/mYZcmUibUopLvxMna7Kue5EQ
-Date: Sat, 9 Nov 2024 06:05:44 +0000
-Message-ID:
- <DM6PR04MB6575F8FA15D71505DFE39FFDFC5E2@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20241105112502.710427-1-avri.altman@wdc.com>
- <20241105112502.710427-2-avri.altman@wdc.com>
-In-Reply-To: <20241105112502.710427-2-avri.altman@wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|CO6PR04MB7523:EE_
-x-ms-office365-filtering-correlation-id: edff3f0e-f099-47e2-3f56-08dd00848c17
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|366016|10070799003|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?6KLbTAQgxRLCJgWoVYtUkOq7QcFIPzr6JjUOZt2dIXTtoNrNoTU5/03HXCV1?=
- =?us-ascii?Q?Yj4dayN3HlA+PzSujX1mYD8dBpu5gmj3qqIYU9bAjs8WdbGmPXErqMP7ci6z?=
- =?us-ascii?Q?E4lBDhz8W52sFNLaVq5LwUXjeDjsaes3IbJGtCHAYqBdQJkQ5/OkrRqvpXDE?=
- =?us-ascii?Q?zytx+yGs4zLAuu1hgt+UhNQn9k/Y/x1iZ59/X2Gtj8yCkcUw4sqDzUdjFKco?=
- =?us-ascii?Q?tRSBn2jQOXzDp6yahsvj1/gkVPzwPoKD37uAs9C9J/7YN9fuOKQCwZq1ONvD?=
- =?us-ascii?Q?U6MD8Vo8CkCG8a9e4X60nONWtZBTniBWMwm54FEo80d/jjeNNvLCnpZ3yO0z?=
- =?us-ascii?Q?Wz4Xpkj+kyAHBTxNwiql/ATdtHPDj8xwxI61P6pswmkOWrCv9C0S0LpCutDT?=
- =?us-ascii?Q?y7rZMr29QP7CScuT2uCmwhVbstDLTrbbdKjLQ0T3s9ynvixcQG5Am6ocaMSp?=
- =?us-ascii?Q?JXRvCvuMHoQK1RRmyXJRZB+TPDpOo4HWk7OuyNAPzWDAH+Z35kZlGwaQhsgR?=
- =?us-ascii?Q?O06WF96xk4Ccg09usMWtJZgHU5uwr4vbbLJMwpf1By2gItrocvTw4GplHGPP?=
- =?us-ascii?Q?zHwFXEDLzBxxpy0of+xIQRIbpmyUGbrSZizlYBtOfbPPQuQHMtYyQQGvluYP?=
- =?us-ascii?Q?MU25P76v+EgLX+0h551dX8+43eVVWGN4vSc/bNhhEO7KyPywDd/pKOOi8S47?=
- =?us-ascii?Q?ml9n4G6bv2qX2OL0GSTa7RZ6CtTTNptQSbSl9/xHZriqLvkCiZSGeUAfG+WE?=
- =?us-ascii?Q?QSO7MpPyQyw8Ghwm1/z8Q0qGAg5xfYmka1kAJNlNlXdS2pgjDuZY1dvXYVk1?=
- =?us-ascii?Q?sdxqBvs5dite+6QamehFhfsw+UJpmnS6XqvEZnhcQv6plq3JSDuGrSL9RnvK?=
- =?us-ascii?Q?n6Go9+12/K6cbhV+/eh76Zh8T9DJYvEaJQ8lsrcnX+xCIMyBKhY8nrUVqXQr?=
- =?us-ascii?Q?jkLVHkc8y/r/2tdW4wC5Rbr3jx7E0vbCHBW5x8ZQJornH/IhrfFpWoCecU4K?=
- =?us-ascii?Q?g+UQIunDIVyJcwJlrFS+6VAM9jvmmo5tOfKcRG+t7xSJb70vHE3UbaDmZOp0?=
- =?us-ascii?Q?WHtwGKNNA4C+hbD23Lf/Fu8hb6LqXdMwdhbBcJzHMn3xW+rKhh8rsnVldYwe?=
- =?us-ascii?Q?qsAnI5gFYTjtn6ZbWNMVaiXltPyV/mBjSKNhzMzco74DZZSjOMv1OdB321E+?=
- =?us-ascii?Q?eu6bHhrF9mUGaZ8a1FF8ZXQSxk3HpDO5XXnc5PT7J7IEyPiUAz3DItRDoF9U?=
- =?us-ascii?Q?GMJerLB5pSiEHtp8St9Bne841KDjo+PhYcwVdjW51JVdbxJfFotjw5c0XGk2?=
- =?us-ascii?Q?GPa8aqGk8ccIrkUmJEr7tP1HdDwQoQOEjbrigNx4wJxe+FkSlapOWW2bbhQI?=
- =?us-ascii?Q?jb4nHX0=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(10070799003)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?KmNpD8yVXHRKTGxhn09ILllBhWS3HJUEOZ1RbTjUsHtugaiYEYk1ZA1MYsNN?=
- =?us-ascii?Q?1IGgMc43pCRq/Dvsdh/TiR2GbnygKIQ5iLoCDOtxW/4Qvvjdad061U1XNulx?=
- =?us-ascii?Q?Dqlj2FMbDUTsUAFjossZ+v//ErbW8RoNGyT8NyGeweLO6VGYAxKbEx6Tq9QK?=
- =?us-ascii?Q?UuaZtgRUF+bIUvKA07ZdD3wvDeDfHfQcSi2k+Yix1J9YrJO+mg6sp2NvjAPu?=
- =?us-ascii?Q?VN4TkpfVJK8Uw+NWuqLfvrdJzwt1SttlDHKPyQt4Wp+/UXLBNS0BOOxJEP5V?=
- =?us-ascii?Q?aVSFA67P+sscaX1a6I8d2HyLClpGw0A56maH9BpRr7z8XBZn8FRSW0wEUFTY?=
- =?us-ascii?Q?sbG8hzMDLXaY9Q59auENc4/xIkUUGBvCURJf3d8gSI0khpIZ4GsNJLFyvkZb?=
- =?us-ascii?Q?gRjXpUiv+c85zAQSYsknqgHs5Fy+S8rwf3rcZFYnL/NmFDgippV+yDXHZd7b?=
- =?us-ascii?Q?vLRPVNDjHSMjjQNq2ap1gSPOaJu2IvgD7uqx0NpjOwaJAngg2fHk5yjMJqmI?=
- =?us-ascii?Q?mkSKN2GrRjikG+CeB/rXhuqBH7bqI8zu4NfSnmu4y9LbRyCQ8OEVhH4tAaz3?=
- =?us-ascii?Q?mczy0NI6v4oqBaaUBpeBOWJNZJk/f8s79wDuFwsrm+G8YZvbGkyYyzmf/3IW?=
- =?us-ascii?Q?Xm6H3M2OBaWoBV0EwWM7NXHiP6yXKrGRf9shMnE3QXDyVFsnwuNmW9bpRPZE?=
- =?us-ascii?Q?wbNSbfD4U3rIENRKoKRy2chXJEa2JAVc7gwXsfKsksqrKTKGUvll8vFPyLbY?=
- =?us-ascii?Q?jlD5eqQ4g2YDs+1bLWQZU2+a5IVF+YXNXZzH3DRxg31AQHS9ZfrIz42FVD1B?=
- =?us-ascii?Q?tCeSk4FAeyiD1Jx58gxmbs6f86F0S/10FVDpCOXEs4lRMx0TGjyoeuQQQodf?=
- =?us-ascii?Q?AlIaoDJQQi9D5RRd8IEckce5EHjX8ShCAV4mTPzQcZol8TNTX/nZjohTBtul?=
- =?us-ascii?Q?03PZpF7MDT3t7YcKPAyVbrDPCKpG1EbtplPV7gYcMO7dImETJvw5qoFOf4oK?=
- =?us-ascii?Q?CneYHR0i8veRHRZ7B19XJH+w5pBc4kRcFWc6Z+EYJQo5CcWKne9nDY9cuFB0?=
- =?us-ascii?Q?PPsz9GbWCN5ixsiK0Y7+EyoA3byd0/9XmMOp7ieg2LVxhIenahXUAR1TBZkg?=
- =?us-ascii?Q?DDNq0JVm/z06IR7H/B/px4VxnSASSMxAMioLBqeQtGKGWbzSMhmd9/bdv/37?=
- =?us-ascii?Q?lawe1dmBT302+8le+Mj+ESyMh6cn2IRKGNsvhGwmehDCIZqkBnNQaTbrPaVh?=
- =?us-ascii?Q?w4ZlqMy/+2cCpq214qrTnQ31qGoGYX0S3T4U5qg2ZTVTSqCo1kDHpAimZBJs?=
- =?us-ascii?Q?IG8g1qo6FGH0lp1xYzGEh+iuAuyV8LQLMqW1HiAN5kA+53RClvuKwF3STUt+?=
- =?us-ascii?Q?BQXWHUnXXHZyT1viTOHs+ZvG2ATkWvFsW5+P3qzzWjdk0gCp3ukJ+kBZxA3t?=
- =?us-ascii?Q?8dKgD4/VNvaSAHi1sKRCTp0p8xTtOELEsTwRlt41icre+7PtXIYHVTOpwC+G?=
- =?us-ascii?Q?8gEdLjHTjpALQ+WqlRS1dHzdPUK/3M3uiyB2UmvGuHPUrarSRuU2Rg/uQwiw?=
- =?us-ascii?Q?+m2/Em1wh8H2C/SgknlHBIKOOkAtYZPtBj3NLLaFLpZFmBtniD6xbvqAuGi4?=
- =?us-ascii?Q?j/EUOTaIHJckumZTRN1NxYZh4aEv7hVriwSY88osaO5V?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=linaro.org; s=google; t=1731154388; x=1731759188; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=nPXLapcLBw9OcU1/SodqpK7NRv8o/+fcWQJKNtyZ7T0=;
+        b=PDeo0/drT24rcVnGt8WGw39D0XnKdxS0b7H0zfdVpG7B6y44Pv+uLkDS48tOk1HEHJ
+         iycg+bi3jV73xlYcBGvozOP9Yu8tMQpPTUWEy+A2HVK+ykpQkXLrgxX04ltNAoKjf4nr
+         ijTUiLyoD9326hGcprcic920F20i2X6TBk8PXa1153YxhPR1ONeUFHbo5uUI3DuNND6U
+         l1/A1icN1EgssQcObXH8xhF/36+ajtPV4ExR1xLncIiIlEQw2LfD+MWb6cyKIggedu8A
+         XHtaYyNdvQOaV9xTzuqzmv1TX4xlzoimILZ1UMsnRpV5W4yBqmGQCks+O7dRo0n43BR6
+         aV8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731154388; x=1731759188;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nPXLapcLBw9OcU1/SodqpK7NRv8o/+fcWQJKNtyZ7T0=;
+        b=lCjcKN4/1sDvWF0HCxNx2lVrxO0tpI6ViPzh8W2oJM5axgoWSbFHgv9pHWcMNslOj/
+         a6LEoUkmYQvc/bE9FgnICf2BGYzet/xUgo9la8YwQFWUbNKO+mdhfY5taOhWmWOQvE+f
+         66tBMHabN+CQEZYd4M3olwn6HD73LL+TV7W+PYlmYuS9mbS5lMsSP2HiG4dq7VeCECVQ
+         Z5Go/5McP758CblcXesasQDpE1CZrE86xDhztTuf8MOwm3hiBs6B/xCEVWzL/iIOCkXP
+         VX2AkpCP3dTymb9ErVXDMe2S7DkABij2vRGtwV4wpcSMHeq24f0YTg2IQmZMY3Seu23n
+         hnpw==
+X-Forwarded-Encrypted: i=1; AJvYcCX9OKRlPKdps5upga1Sv4S/QfMUHZwmC1ZugxOLGsxEsgcNCXvLrZBtncZIUZ5cmb9Wcl81nOutX0u1@vger.kernel.org
+X-Gm-Message-State: AOJu0YwEojU6OpkM69Vm+3gR38Dxnr1uFvbIQmZHB4dvqcsmlyhv2kP/
+	EOqIi2DxrjRT9p9aqJUKue0dHEX1TLflhyqcC8rZZ1K+UaOSGJt+erVVhIt8/w==
+X-Google-Smtp-Source: AGHT+IEj8Rne4KLewlSyxzNoclo5b2IeyOGfnaRJPvuep0Ul/HW9idoSxL1rJXH//JTbiET25tGRQA==
+X-Received: by 2002:a05:600c:4587:b0:431:52a3:d9ea with SMTP id 5b1f17b1804b1-432b74a0c04mr57807795e9.0.1731154387569;
+        Sat, 09 Nov 2024 04:13:07 -0800 (PST)
+Received: from thinkpad ([82.141.252.181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432b0566544sm101022995e9.24.2024.11.09.04.13.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 09 Nov 2024 04:13:06 -0800 (PST)
+Date: Sat, 9 Nov 2024 12:12:49 +0000
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v4 7/7] scsi: ufs: rockchip: initial support for UFS
+Message-ID: <20241109121249.vncqbacvpnpf6d34@thinkpad>
+References: <1730705521-23081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1730705521-23081-8-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	0LjLhPACixPv6geUI0cAz+iM6JEqJz4h+zI/M2UKfKES9Fywx3HSxF7Ff6/3qO6wGaeUe9vqd6EO+n2xnMCZIA4A6rnZKBWSOFctQLUnmJE9PqK6QToHn5rGXUaKE0rcgHQ4+suzq2onMEPks9Z6bYr/zpa99MsxrNTzQSydHw1fzECKpQ1oZSudeCm3yjq3hg1Oe8ScirEWJXskTpAzdp9Ff5N+tCaDtyHwSC+k2YyVMEfWXh03v6Y9v+hSiqQmExiB6J1lDazT3L9pYcjRfLJpivpx2kjvVLj6McFB+ZWghHbXQ1uwTlqquoRgFeVebunLBFpeOqbH+3H3BHcscIHcQ/13Ub67Z0Y0TOqH9V/Oukzu0TwK/W6rLz1X6GrlQwYhZo0TCCsdygFIUV8EUr07u/cnYe9812FlfIA3Up17jYtAMf7npKidhr8oeiqJwRYJeEv9px0VeFITrcdNB+7VBBHVgb6wJhD2m2huHzFIQES6HUwI63j3OaLPKMB8mnHaSg1u46ZlKx4+4MnwBaeeUzjKvzrsRYcxBib/jBO6gAMlHrNEur9nRIb7bxBMTo3DXKC8/orN/nbhTHnJFLwoU/X7TlqH/ztqSDn4+VjgvivHNZl5LPOCw+wbclND
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: edff3f0e-f099-47e2-3f56-08dd00848c17
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2024 06:05:44.2209
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 1UqLR1jSbFA1iHHibn7idLVGfhlBjqoLqfgQ9YSHKGeqZh4dsYy60S1XOV7ruF3WKQJGsz7JqKPg5jYqYbjC2A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR04MB7523
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1730705521-23081-8-git-send-email-shawn.lin@rock-chips.com>
 
-A gentle ping.
-
-Thanks,
-Avri
-
-> -----Original Message-----
-> From: Avri Altman <avri.altman@wdc.com>
-> Sent: Tuesday, November 5, 2024 1:25 PM
-> To: Martin K . Petersen <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Bart Van As=
-sche
-> <bvanassche@acm.org>; Avri Altman <Avri.Altman@wdc.com>
-> Subject: [PATCH v3 1/2] scsi: ufs: core: Introduce a new clock_gating loc=
-k
->=20
-> Introduce a new clock gating lock to serialize access to some of the cloc=
-k gating
-> members instead of the host_lock.
->=20
-> While at it, simplify the code with the guard() macro and co for automati=
-c
-> cleanup of the new lock. There are some explicit
-> spin_lock_irqsave/spin_unlock_irqrestore snaking instances I left behind
-> because I couldn't make heads or tails of it.
->=20
-> Additionally, move the trace_ufshcd_clk_gating() call from inside the reg=
-ion
-> protected by the lock as it doesn't needs protection.
->=20
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+On Mon, Nov 04, 2024 at 03:32:01PM +0800, Shawn Lin wrote:
+> RK3576 SoC contains a UFS controller, add initial support for it.
+> The features are:
+> (1) support UFS 2.0 features
+> (2) High speed up to HS-G3
+> (3) 2RX-2TX lanes
+> (4) auto H8 entry and exit
+> 
+> Software limitation:
+> (1) HCE procedure: enable controller->enable intr->dme_reset->dme_enable
+> (2) disable unipro timeout values before power mode change
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > ---
->  drivers/ufs/core/ufshcd.c | 93 +++++++++++++++++----------------------
->  include/ufs/ufshcd.h      |  8 +++-
->  2 files changed, 46 insertions(+), 55 deletions(-)
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
-> e338867bc96c..62c0e2323f50 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1811,19 +1811,17 @@ static void ufshcd_exit_clk_scaling(struct ufs_hb=
-a
-> *hba)  static void ufshcd_ungate_work(struct work_struct *work)  {
->  	int ret;
-> -	unsigned long flags;
->  	struct ufs_hba *hba =3D container_of(work, struct ufs_hba,
->  			clk_gating.ungate_work);
->=20
->  	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
->=20
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	if (hba->clk_gating.state =3D=3D CLKS_ON) {
-> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -		return;
-> +	scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
-> +	{
-> +		if (hba->clk_gating.state =3D=3D CLKS_ON)
-> +			return;
->  	}
->=20
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	ufshcd_hba_vreg_set_hpm(hba);
->  	ufshcd_setup_clocks(hba, true);
->=20
-> @@ -1858,7 +1856,7 @@ void ufshcd_hold(struct ufs_hba *hba)
->  	if (!ufshcd_is_clkgating_allowed(hba) ||
->  	    !hba->clk_gating.is_initialized)
->  		return;
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	spin_lock_irqsave(&hba->clk_gating.lock, flags);
->  	hba->clk_gating.active_reqs++;
->=20
->  start:
-> @@ -1874,11 +1872,11 @@ void ufshcd_hold(struct ufs_hba *hba)
->  		 */
->  		if (ufshcd_can_hibern8_during_gating(hba) &&
->  		    ufshcd_is_link_hibern8(hba)) {
-> -			spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +			spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
->  			flush_result =3D flush_work(&hba-
-> >clk_gating.ungate_work);
->  			if (hba->clk_gating.is_suspended && !flush_result)
->  				return;
-> -			spin_lock_irqsave(hba->host->host_lock, flags);
-> +			spin_lock_irqsave(&hba->clk_gating.lock, flags);
->  			goto start;
->  		}
->  		break;
-> @@ -1907,17 +1905,17 @@ void ufshcd_hold(struct ufs_hba *hba)
->  		 */
->  		fallthrough;
->  	case REQ_CLKS_ON:
-> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
->  		flush_work(&hba->clk_gating.ungate_work);
->  		/* Make sure state is CLKS_ON before returning */
-> -		spin_lock_irqsave(hba->host->host_lock, flags);
-> +		spin_lock_irqsave(&hba->clk_gating.lock, flags);
->  		goto start;
->  	default:
->  		dev_err(hba->dev, "%s: clk gating is in invalid state %d\n",
->  				__func__, hba->clk_gating.state);
->  		break;
->  	}
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +	spin_unlock_irqrestore(&hba->clk_gating.lock, flags);
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_hold);
->=20
-> @@ -1925,29 +1923,28 @@ static void ufshcd_gate_work(struct work_struct
-> *work)  {
->  	struct ufs_hba *hba =3D container_of(work, struct ufs_hba,
->  			clk_gating.gate_work.work);
-> -	unsigned long flags;
->  	int ret;
->=20
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	/*
-> -	 * In case you are here to cancel this work the gating state
-> -	 * would be marked as REQ_CLKS_ON. In this case save time by
-> -	 * skipping the gating work and exit after changing the clock
-> -	 * state to CLKS_ON.
-> -	 */
-> -	if (hba->clk_gating.is_suspended ||
-> -		(hba->clk_gating.state !=3D REQ_CLKS_OFF)) {
-> -		hba->clk_gating.state =3D CLKS_ON;
-> -		trace_ufshcd_clk_gating(dev_name(hba->dev),
-> -					hba->clk_gating.state);
-> -		goto rel_lock;
-> +	scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
-> +	{
-> +		/*
-> +		 * In case you are here to cancel this work the gating state
-> +		 * would be marked as REQ_CLKS_ON. In this case save time by
-> +		 * skipping the gating work and exit after changing the clock
-> +		 * state to CLKS_ON.
-> +		 */
-> +		if (hba->clk_gating.is_suspended ||
-> +		    hba->clk_gating.state !=3D REQ_CLKS_OFF) {
-> +			hba->clk_gating.state =3D CLKS_ON;
-> +			trace_ufshcd_clk_gating(dev_name(hba->dev),
-> +						hba->clk_gating.state);
-> +			return;
-> +		}
-> +		if (ufshcd_is_ufs_dev_busy(hba) ||
-> +		    hba->ufshcd_state !=3D UFSHCD_STATE_OPERATIONAL)
-> +			return;
->  	}
->=20
-> -	if (ufshcd_is_ufs_dev_busy(hba) || hba->ufshcd_state !=3D
-> UFSHCD_STATE_OPERATIONAL)
-> -		goto rel_lock;
-> -
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -
->  	/* put the link into hibern8 mode before turning off clocks */
->  	if (ufshcd_can_hibern8_during_gating(hba)) {
->  		ret =3D ufshcd_uic_hibern8_enter(hba);
-> @@ -1957,7 +1954,7 @@ static void ufshcd_gate_work(struct work_struct
-> *work)
->  					__func__, ret);
->  			trace_ufshcd_clk_gating(dev_name(hba->dev),
->  						hba->clk_gating.state);
-> -			goto out;
-> +			return;
->  		}
->  		ufshcd_set_link_hibern8(hba);
->  	}
-> @@ -1977,16 +1974,12 @@ static void ufshcd_gate_work(struct work_struct
-> *work)
->  	 * prevent from doing cancel work multiple times when there are
->  	 * new requests arriving before the current cancel work is done.
->  	 */
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	guard(spinlock_irqsave)(&hba->clk_gating.lock);
->  	if (hba->clk_gating.state =3D=3D REQ_CLKS_OFF) {
->  		hba->clk_gating.state =3D CLKS_OFF;
->  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->  					hba->clk_gating.state);
->  	}
-> -rel_lock:
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -out:
-> -	return;
->  }
->=20
->  /* host lock must be held before calling this variant */ @@ -2013,11 +20=
-06,8
-> @@ static void __ufshcd_release(struct ufs_hba *hba)
->=20
->  void ufshcd_release(struct ufs_hba *hba)  {
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	guard(spinlock_irqsave)(&hba->clk_gating.lock);
->  	__ufshcd_release(hba);
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_release);
->=20
-> @@ -2032,11 +2022,9 @@ static ssize_t ufshcd_clkgate_delay_show(struct
-> device *dev,  void ufshcd_clkgate_delay_set(struct device *dev, unsigned =
-long
-> value)  {
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	unsigned long flags;
->=20
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	guard(spinlock_irqsave)(&hba->clk_gating.lock);
->  	hba->clk_gating.delay_ms =3D value;
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_clkgate_delay_set);
->=20
-> @@ -2064,7 +2052,6 @@ static ssize_t ufshcd_clkgate_enable_store(struct
-> device *dev,
->  		struct device_attribute *attr, const char *buf, size_t count)  {
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	unsigned long flags;
->  	u32 value;
->=20
->  	if (kstrtou32(buf, 0, &value))
-> @@ -2072,9 +2059,10 @@ static ssize_t ufshcd_clkgate_enable_store(struct
-> device *dev,
->=20
->  	value =3D !!value;
->=20
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	guard(spinlock_irqsave)(&hba->clk_gating.lock);
+> 
+> Changes in v4:
+> - deal with power domain of rpm and spm suggested by Ulf
+> - Fix typo and disable clks in ufs_rockchip_remove
+> - remove clk_disable_unprepare(host->ref_out_clk) from
+>   ufs_rockchip_remove
+> 
+> Changes in v3:
+> - reword Kconfig description
+> - elaborate more about controller in commit msg
+> - use rockchip,rk3576-ufshc for compatible
+> - remove useless header file
+> - remove inline for ufshcd_is_device_present
+> - use usleep_range instead
+> - remove initialization, reverse Xmas order
+> - remove useless varibles
+> - check vops for null
+> - other small fixes for err path
+> - remove pm_runtime_set_active
+> - fix the active and inactive reset-gpios logic
+> - fix rpm_lvl and spm_lvl to 5 and move to end of probe path
+> - remove unnecessary system PM callbacks
+> - use UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE instead
+>   of UFSHCI_QUIRK_BROKEN_HCE
+> 
+> Changes in v2: None
+> 
+>  drivers/ufs/host/Kconfig        |  12 ++
+>  drivers/ufs/host/Makefile       |   1 +
+>  drivers/ufs/host/ufs-rockchip.c | 340 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-rockchip.h |  51 ++++++
+>  4 files changed, 404 insertions(+)
+>  create mode 100644 drivers/ufs/host/ufs-rockchip.c
+>  create mode 100644 drivers/ufs/host/ufs-rockchip.h
+> 
+> diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+> index 580c8d0..191fbd7 100644
+> --- a/drivers/ufs/host/Kconfig
+> +++ b/drivers/ufs/host/Kconfig
+> @@ -142,3 +142,15 @@ config SCSI_UFS_SPRD
+>  
+>  	  Select this if you have UFS controller on Unisoc chipset.
+>  	  If unsure, say N.
 > +
->  	if (value =3D=3D hba->clk_gating.is_enabled)
-> -		goto out;
-> +		return count;
->=20
->  	if (value)
->  		__ufshcd_release(hba);
-> @@ -2082,8 +2070,7 @@ static ssize_t ufshcd_clkgate_enable_store(struct
-> device *dev,
->  		hba->clk_gating.active_reqs++;
->=20
->  	hba->clk_gating.is_enabled =3D value;
-> -out:
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +config SCSI_UFS_ROCKCHIP
+> +	tristate "Rockchip UFS host controller driver"
+> +	depends on SCSI_UFSHCD_PLATFORM && (ARCH_ROCKCHIP || COMPILE_TEST)
+> +	help
+> +	  This selects the Rockchip specific additions to UFSHCD platform driver.
+> +	  UFS host on Rockchip needs some vendor specific configuration before
+> +	  accessing the hardware which includes PHY configuration and vendor
+> +	  specific registers.
 > +
->  	return count;
->  }
->=20
-> @@ -2125,6 +2112,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba
-> *hba)
->  	INIT_DELAYED_WORK(&hba->clk_gating.gate_work,
-> ufshcd_gate_work);
->  	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
->=20
-> +	spin_lock_init(&hba->clk_gating.lock);
+> +	  Select this if you have UFS controller on Rockchip chipset.
+> +	  If unsure, say N.
+> diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
+> index 4573aea..2f97feb 100644
+> --- a/drivers/ufs/host/Makefile
+> +++ b/drivers/ufs/host/Makefile
+> @@ -10,5 +10,6 @@ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>  obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
+>  obj-$(CONFIG_SCSI_UFS_RENESAS) += ufs-renesas.o
+> +obj-$(CONFIG_SCSI_UFS_ROCKCHIP) += ufs-rockchip.o
+>  obj-$(CONFIG_SCSI_UFS_SPRD) += ufs-sprd.o
+>  obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
+> diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
+> new file mode 100644
+> index 0000000..9c277bc
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-rockchip.c
+> @@ -0,0 +1,340 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Rockchip UFS Host Controller driver
+> + *
+> + * Copyright (C) 2024 Rockchip Electronics Co.Ltd.
+> + */
 > +
->  	hba->clk_gating.clk_gating_workq =3D alloc_ordered_workqueue(
->  		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
->  		hba->host->host_no);
-> @@ -9112,7 +9101,6 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba,
-> bool on)
->  	int ret =3D 0;
->  	struct ufs_clk_info *clki;
->  	struct list_head *head =3D &hba->clk_list_head;
-> -	unsigned long flags;
->  	ktime_t start =3D ktime_get();
->  	bool clk_state_changed =3D false;
->=20
-> @@ -9163,11 +9151,10 @@ static int ufshcd_setup_clocks(struct ufs_hba *hb=
-a,
-> bool on)
->  				clk_disable_unprepare(clki->clk);
->  		}
->  	} else if (!ret && on) {
-> -		spin_lock_irqsave(hba->host->host_lock, flags);
-> -		hba->clk_gating.state =3D CLKS_ON;
-> +		scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
-> +			hba->clk_gating.state =3D CLKS_ON;
->  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->  					hba->clk_gating.state);
-> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	}
->=20
->  	if (clk_state_changed)
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h index
-> d7aca9e61684..8f9997b0dbf9 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -403,6 +403,8 @@ enum clk_gating_state {
->   * delay_ms
->   * @ungate_work: worker to turn on clocks that will be used in case of
->   * interrupt context
-> + * @clk_gating_workq: workqueue for clock gating work.
-> + * @lock: serialize access to some struct ufs_clk_gating members
->   * @state: the current clocks state
->   * @delay_ms: gating delay in ms
->   * @is_suspended: clk gating is suspended when set to 1 which can be use=
-d
-> @@ -413,11 +415,14 @@ enum clk_gating_state {
->   * @is_initialized: Indicates whether clock gating is initialized or not
->   * @active_reqs: number of requests that are pending and should be waite=
-d for
->   * completion before gating clocks.
-> - * @clk_gating_workq: workqueue for clock gating work.
->   */
->  struct ufs_clk_gating {
->  	struct delayed_work gate_work;
->  	struct work_struct ungate_work;
-> +	struct workqueue_struct *clk_gating_workq;
+> +#include <linux/clk.h>
+> +#include <linux/gpio.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/of.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/pm_domain.h>
+> +#include <linux/pm_wakeup.h>
+> +#include <linux/regmap.h>
+> +#include <linux/reset.h>
 > +
-> +	spinlock_t lock;
+> +#include <ufs/ufshcd.h>
+> +#include <ufs/unipro.h>
+> +#include "ufshcd-pltfrm.h"
+> +#include "ufs-rockchip.h"
 > +
->  	enum clk_gating_state state;
->  	unsigned long delay_ms;
->  	bool is_suspended;
-> @@ -426,7 +431,6 @@ struct ufs_clk_gating {
->  	bool is_enabled;
->  	bool is_initialized;
->  	int active_reqs;
-> -	struct workqueue_struct *clk_gating_workq;
->  };
->=20
->  /**
-> --
-> 2.25.1
+> +static int ufs_rockchip_hce_enable_notify(struct ufs_hba *hba,
+> +					 enum ufs_notify_change_status status)
+> +{
+> +	int err = 0;
+> +
+> +	if (status == POST_CHANGE)
+> +		err = ufshcd_vops_phy_initialization(hba);
 
+return ufshcd_vops_phy_initialization()
+
+> +
+> +	return err;
+
+return 0
+
+> +}
+> +
+> +static void ufs_rockchip_set_pm_lvl(struct ufs_hba *hba)
+> +{
+> +	hba->rpm_lvl = UFS_PM_LVL_5;
+
+Are you sure that you want to power down both the device and link during runtime
+suspend?
+
+> +	hba->spm_lvl = UFS_PM_LVL_5;
+> +}
+> +
+> +static int ufs_rockchip_rk3576_phy_init(struct ufs_hba *hba)
+> +{
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(PA_LOCAL_TX_LCC_ENABLE, 0x0), 0x0);
+> +	/* enable the mphy DME_SET cfg */
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x200, 0x0), 0x40);
+> +	for (int i = 0; i < 2; i++) {
+> +		/* Configuration M-TX */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xaa, SEL_TX_LANE0 + i), 0x06);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xa9, SEL_TX_LANE0 + i), 0x02);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xad, SEL_TX_LANE0 + i), 0x44);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xac, SEL_TX_LANE0 + i), 0xe6);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xab, SEL_TX_LANE0 + i), 0x07);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x94, SEL_TX_LANE0 + i), 0x93);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x93, SEL_TX_LANE0 + i), 0xc9);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x7f, SEL_TX_LANE0 + i), 0x00);
+> +		/* Configuration M-RX */
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x12, SEL_RX_LANE0 + i), 0x06);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x11, SEL_RX_LANE0 + i), 0x00);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1d, SEL_RX_LANE0 + i), 0x58);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1c, SEL_RX_LANE0 + i), 0x8c);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1b, SEL_RX_LANE0 + i), 0x02);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x25, SEL_RX_LANE0 + i), 0xf6);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x2f, SEL_RX_LANE0 + i), 0x69);
+> +	}
+> +	/* disable the mphy DME_SET cfg */
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x200, 0x0), 0x00);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x80, 0x08C);
+> +	ufs_sys_writel(host->mphy_base, 0xB5, 0x110);
+> +	ufs_sys_writel(host->mphy_base, 0xB5, 0x250);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x134);
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x274);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x38, 0x0E0);
+> +	ufs_sys_writel(host->mphy_base, 0x38, 0x220);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x50, 0x164);
+> +	ufs_sys_writel(host->mphy_base, 0x50, 0x2A4);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x80, 0x178);
+> +	ufs_sys_writel(host->mphy_base, 0x80, 0x2B8);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x18, 0x1B0);
+> +	ufs_sys_writel(host->mphy_base, 0x18, 0x2F0);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x128);
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x268);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x20, 0x12C);
+> +	ufs_sys_writel(host->mphy_base, 0x20, 0x26C);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0xC0, 0x120);
+> +	ufs_sys_writel(host->mphy_base, 0xC0, 0x260);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x094);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x1B4);
+> +	ufs_sys_writel(host->mphy_base, 0x03, 0x2F4);
+> +
+> +	ufs_sys_writel(host->mphy_base, 0xC0, 0x08C);
+> +	usleep_range(1, 2);
+> +	ufs_sys_writel(host->mphy_base, 0x00, 0x08C);
+> +
+> +	usleep_range(200, 250);
+> +	/* start link up */
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(MIB_T_DBG_CPORT_TX_ENDIAN, 0), 0x0);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(MIB_T_DBG_CPORT_RX_ENDIAN, 0), 0x0);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(N_DEVICEID, 0), 0x0);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(N_DEVICEID_VALID, 0), 0x1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(T_PEERDEVICEID, 0), 0x1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(T_CONNECTIONSTATE, 0), 0x1);
+
+I assume that the PHY doesn't have any separate resources like clocks and you
+just need to write these registers.
+
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_rockchip_common_init(struct ufs_hba *hba)
+> +{
+> +	struct device *dev = hba->dev;
+> +	struct platform_device *pdev = to_platform_device(dev);
+> +	struct ufs_rockchip_host *host;
+> +	int err;
+
+Reverse Xmas tree please (but I don't insist).
+
+> +
+> +	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> +	if (!host)
+> +		return -ENOMEM;
+> +
+> +	/* system control register for hci */
+> +	host->ufs_sys_ctrl = devm_platform_ioremap_resource_byname(pdev, "hci_grf");
+> +	if (IS_ERR(host->ufs_sys_ctrl))
+> +		return dev_err_probe(dev, PTR_ERR(host->ufs_sys_ctrl),
+> +					"cannot ioremap for hci system control register\n");
+
+"Failed to map HCI system control registers"
+
+Similar for other messages below.
+
+> +
+> +	/* system control register for mphy */
+> +	host->ufs_phy_ctrl = devm_platform_ioremap_resource_byname(pdev, "mphy_grf");
+> +	if (IS_ERR(host->ufs_phy_ctrl))
+> +		return dev_err_probe(dev, PTR_ERR(host->ufs_phy_ctrl),
+> +				"cannot ioremap for mphy system control register\n");
+> +
+> +	/* mphy base register */
+> +	host->mphy_base = devm_platform_ioremap_resource_byname(pdev, "mphy");
+> +	if (IS_ERR(host->mphy_base))
+> +		return dev_err_probe(dev, PTR_ERR(host->mphy_base),
+> +				"cannot ioremap for mphy base register\n");
+> +
+> +	host->rst = devm_reset_control_array_get_exclusive(dev);
+> +	if (IS_ERR(host->rst))
+> +		return dev_err_probe(dev, PTR_ERR(host->rst),
+> +				"failed to get reset control\n");
+> +
+> +	reset_control_assert(host->rst);
+> +	usleep_range(1, 2);
+> +	reset_control_deassert(host->rst);
+> +
+> +	host->ref_out_clk = devm_clk_get_enabled(dev, "ref_out");
+> +	if (IS_ERR(host->ref_out_clk))
+> +		return dev_err_probe(dev, PTR_ERR(host->ref_out_clk),
+> +				"ref_out unavailable\n");
+> +
+> +	host->rst_gpio = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_LOW);
+> +	if (IS_ERR(host->rst_gpio))
+> +		return dev_err_probe(&pdev->dev, PTR_ERR(host->rst_gpio),
+> +				"invalid reset-gpios property in node\n");
+> +
+> +	host->clks[0].id = "core";
+> +	host->clks[1].id = "pclk";
+> +	host->clks[2].id = "pclk_mphy";
+
+No need to hardcode clocks in the driver. You can just use clk_bulk_get_all() to
+get the clocks from DT. DT binding should make sure that the clocks are present
+in DT.
+
+> +	err = devm_clk_bulk_get_optional(dev, UFS_MAX_CLKS, host->clks);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "failed to get clocks\n");
+> +
+> +	err = clk_bulk_prepare_enable(UFS_MAX_CLKS, host->clks);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "failed to enable clocks\n");
+> +
+> +	host->hba = hba;
+> +
+> +	ufshcd_set_variant(hba, host);
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_rockchip_rk3576_init(struct ufs_hba *hba)
+> +{
+> +	struct device *dev = hba->dev;
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +	int ret;
+> +
+> +	hba->quirks = UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING |
+> +		      UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE;
+> +
+> +	/* Enable BKOPS when suspend */
+> +	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+> +	/* Enable putting device into deep sleep */
+> +	hba->caps |= UFSHCD_CAP_DEEPSLEEP;
+> +	/* Enable devfreq of UFS */
+> +	hba->caps |= UFSHCD_CAP_CLK_SCALING;
+> +	/* Enable WriteBooster */
+> +	hba->caps |= UFSHCD_CAP_WB_EN;
+> +
+> +	host->pd_id = RK3576_PD_UFS;
+> +
+> +	ret = ufs_rockchip_common_init(hba);
+> +	if (ret)
+> +		return dev_err_probe(dev, ret, "ufs common init fail\n");
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_rockchip_device_reset(struct ufs_hba *hba)
+> +{
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	/* Active the reset-gpios */
+
+No need of this and below comment.
+
+> +	gpiod_set_value_cansleep(host->rst_gpio, 1);
+> +	usleep_range(20, 25);
+> +
+> +	/* Inactive the reset-gpios */
+> +	gpiod_set_value_cansleep(host->rst_gpio, 0);
+> +	usleep_range(20, 25);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct ufs_hba_variant_ops ufs_hba_rk3576_vops = {
+> +	.name = "rk3576",
+
+Unless you expect different variant ops for each chipset, you can just use
+"rockchip".
+
+> +	.init = ufs_rockchip_rk3576_init,
+> +	.device_reset = ufs_rockchip_device_reset,
+> +	.hce_enable_notify = ufs_rockchip_hce_enable_notify,
+> +	.phy_initialization = ufs_rockchip_rk3576_phy_init,
+> +};
+> +
+> +static const struct of_device_id ufs_rockchip_of_match[] = {
+> +	{ .compatible = "rockchip,rk3576-ufshc", .data = &ufs_hba_rk3576_vops },
+> +};
+> +MODULE_DEVICE_TABLE(of, ufs_rockchip_of_match);
+> +
+> +static int ufs_rockchip_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	const struct ufs_hba_variant_ops *vops;
+> +	struct ufs_hba *hba;
+> +	int err;
+> +
+> +	vops = device_get_match_data(dev);
+> +	if (!vops)
+> +		return dev_err_probe(dev, -EINVAL, "ufs_hba_variant_ops not defined.\n");
+> +
+> +	err = ufshcd_pltfrm_init(pdev, vops);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "ufshcd_pltfrm_init failed\n");
+> +
+> +	hba = platform_get_drvdata(pdev);
+> +	/* Set the default desired pm level in case no users set via sysfs */
+> +	ufs_rockchip_set_pm_lvl(hba);
+> +
+> +	return 0;
+> +}
+> +
+> +static void ufs_rockchip_remove(struct platform_device *pdev)
+> +{
+> +	struct ufs_hba *hba = platform_get_drvdata(pdev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	pm_runtime_forbid(&pdev->dev);
+> +	pm_runtime_get_noresume(&pdev->dev);
+
+Why do you need these? You are not incrementing the refcount in probe() and
+there is no auto PM involved.
+
+> +	ufshcd_remove(hba);
+> +	ufshcd_dealloc_host(hba);
+> +	clk_bulk_disable_unprepare(UFS_MAX_CLKS, host->clks);
+> +}
+> +
+> +#ifdef CONFIG_PM
+> +static int ufs_rockchip_runtime_suspend(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	clk_disable_unprepare(host->ref_out_clk);
+> +
+> +	/* Shouldn't power down if rpm_lvl is less than level 5. */
+> +	dev_pm_genpd_rpm_always_on(dev, hba->rpm_lvl < UFS_PM_LVL_5 ? true : false);
+> +
+> +	return ufshcd_runtime_suspend(dev);
+> +}
+> +
+> +static int ufs_rockchip_runtime_resume(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +	int err;
+> +
+> +	err = clk_prepare_enable(host->ref_out_clk);
+> +	if (err) {
+> +		dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
+> +		return err;
+> +	}
+> +
+> +	reset_control_assert(host->rst);
+> +	usleep_range(1, 2);
+> +	reset_control_deassert(host->rst);
+> +
+> +	return ufshcd_runtime_resume(dev);
+> +}
+> +#endif
+> +
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ufs_rockchip_system_suspend(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	if (hba->spm_lvl < 5)
+> +		device_set_wakeup_path(dev);
+> +	else
+> +		device_clr_wakeup_path(dev);
+
+This should be taken care by driver core.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
