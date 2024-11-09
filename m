@@ -1,56 +1,56 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A339D286A8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5EBD13B5AF
 	for <linux-scsi@vger.kernel.org>; Sat,  9 Nov 2024 04:45:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731127535; cv=none; b=B+kQ5EibVRxZ97qq+BKLA4mXD98ZoqT8MMDWZ2w/95BdaYCxATIpoWe0RcfjIogqbDoh8fSoWqOkIlPIMnmxf7TL60bn898zsUGNtXMxTIBwAK8bJtdhhRqu5NftgHCCcvpFKrEUgsFZ0A+GB/YS4H/YAixDZ7fzBAD1WoRZ5Pc=
+	t=1731127535; cv=none; b=SSabPuuN9dDl+KQoyiGVgjfrezRivQ2Y3QXS74lnQZIFaevXSWWavRuzYzzVbLApwPTbMUPqjG2izPUBALr1+7O2TSsrkgZrsQYonypjUs2EOTtNCuv65IpwmK/0gfUvfrV1GOUFeq/QILHKY3e3EakWylcNOmnJAm0Gr2WtulI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731127535; c=relaxed/simple;
-	bh=+wQGD7OhU+LITN3CSeh543W8Ng61OzHHq4tpiw8BvmA=;
+	bh=qOOW9nLFWUmYEQTA8ZNSEXIFIlJYoJPsUasv7zcSurM=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TVfp9zoAwMCIKM2uhoAoN/DeoQFMqblQUEz59lrQ5B7+c0nO/d5qAbfZyJvMRjjeYMN9vpc3Rlrc2duF6NEMa966G1Q4FdzDp7TWmTQEAcY8aY4tH+gMi1HuQdfhDDNzPoU2Ut065zfZCOs8QebUP70mx6YZ2Ivs5PMLq14ajug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=QSIXPEia; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version; b=YEm/XnPcV4gqsmtJnoHRqNGze0pAF6iQj1YtdEGEEze5H9kfGmdgY6piZCk8S9weVH8+NFQIw3nOh8wnTgWDkCe58H90FD40kYVGWzFt+qGlzDgfKB/4s4CfwTP6cztrEMGAag/L069zCGp9TShMrIDLYQCIUooU1vSauDIrrjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=HHuFh31Z; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QSIXPEia"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A94PdN3005286
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HHuFh31Z"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A94JLP7014056
 	for <linux-scsi@vger.kernel.org>; Sat, 9 Nov 2024 04:45:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=corp-2023-11-20; bh=ETtSE
-	CxwWca1iUuaTGAyoNHvHcywCYSkiw7Y9HP1yj8=; b=QSIXPEia7YWR64EfUJVhL
-	hdguaxoyYHIClmjJoygCex2VeIyBb97b7uvAD6qSsjv6zUx7BDK152yMft0cxHL9
-	RHMJw1EbJ46NqNsBhlmGe/6yQ3ofHcLM5Nj/j6PIaP0jtYoJch/QDx6nedRpuhrG
-	R/qvyOd/KqtHfc/tAN24FB8s0urPZC/trQlem2r2MqHU4nI5Cv4eloKqIKG+HNbV
-	KSELNXPzd3NYiiY/SDkDX0uR2gbKzBn4UdfGjyvSsoeAjQGGZA4G2ky2rfNrXK+1
-	uSGOCymUC4fXkXy2xKDuAuNbWNDq1KiD9OJLaRHpat1rSqU5OZbn1wxp/RMvJTgp
-	Q==
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=n5uA1
+	6y+/niKduHBsbFinbFKEhvTKbcKZTdT1a52Mrs=; b=HHuFh31ZxXz0STV4JDf/V
+	4RhPe+ges9aWJjFZfnBpyQ8RWs5qDIFKfFFucu5H46asa1L7qfl+dLmRUhWePSPu
+	RasgSdZbU0IHUofaw1vW9TXwzkzedffaDjYWJJ1JpEg9+GM/zHubsFpVZtbGc2qt
+	ZaggITEwvt0+AcJlW7+GC18jJH5PVkbZgyyCxvHFOgECXf7l/BABPrMwWHHJlIW9
+	+NCj3dIUI3XgEOI0zTT6web4M/eyt995umh1coGPCu82GfD7MxB9ef8U+NTvnDoC
+	+b6AOSW7vLiyiZeNR8VrrdiZivDYAn3gDQXMF/QVph9pLMMOHUneb/1jCNw3eB37
+	g==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42t0heg0bc-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42t0k580a0-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
 	for <linux-scsi@vger.kernel.org>; Sat, 09 Nov 2024 04:45:32 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4A91Y5d8034515
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4A91XYb7034280
 	for <linux-scsi@vger.kernel.org>; Sat, 9 Nov 2024 04:45:31 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 42sx65ajaj-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 42sx65ajam-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
 	for <linux-scsi@vger.kernel.org>; Sat, 09 Nov 2024 04:45:31 +0000
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4A94jTda001575
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4A94jTdc001575
 	for <linux-scsi@vger.kernel.org>; Sat, 9 Nov 2024 04:45:31 GMT
 Received: from hmadhani-upstream.osdevelopmeniad.oraclevcn.com (hmadhani-upstream.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.255.48])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 42sx65aj9h-8;
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 42sx65aj9h-9;
 	Sat, 09 Nov 2024 04:45:31 +0000
 From: himanshu.madhani@oracle.com
 To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Subject: [RFC v1 7/8] scsi: Add multipath disk init code for sd driver
-Date: Sat,  9 Nov 2024 04:45:28 +0000
-Message-ID: <20241109044529.992935-8-himanshu.madhani@oracle.com>
+Subject: [RFC v1 8/8] scsi_debug: Add module parameter for ALUA multipath
+Date: Sat,  9 Nov 2024 04:45:29 +0000
+Message-ID: <20241109044529.992935-9-himanshu.madhani@oracle.com>
 X-Mailer: git-send-email 2.41.0.rc2
 In-Reply-To: <20241109044529.992935-1-himanshu.madhani@oracle.com>
 References: <20241109044529.992935-1-himanshu.madhani@oracle.com>
@@ -68,168 +68,71 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 m
  adultscore=0 phishscore=0 bulkscore=0 suspectscore=0 spamscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2409260000 definitions=main-2411090036
-X-Proofpoint-ORIG-GUID: kJaq1VJ95Rt7FTBTZlVIPkRUh9FQ-yaw
-X-Proofpoint-GUID: kJaq1VJ95Rt7FTBTZlVIPkRUh9FQ-yaw
+X-Proofpoint-ORIG-GUID: LD_iM0lHVJdmqOOOpIsMOZ7Xc0TMmiN0
+X-Proofpoint-GUID: LD_iM0lHVJdmqOOOpIsMOZ7Xc0TMmiN0
 
 From: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-This patch adds allocation and initialization code to
-scsi disk driver.
-
 Signed-off-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 ---
- drivers/scsi/sd.c | 83 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 83 insertions(+)
+ drivers/scsi/scsi_debug.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 41e2dfa2d67d..b4727b599794 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1483,6 +1483,9 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 9be2a6a00530..811d3005c0a5 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -167,6 +167,7 @@ static const char *sdebug_version_date = "20210520";
+ #define DEF_TUR_MS_TO_READY 0
+ #define DEF_UUID_CTL 0
+ #define JDELAY_OVERRIDDEN -9999
++#define DEF_ALUA_MPATH	0
  
- static bool sd_need_revalidate(struct gendisk *disk, struct scsi_disk *sdkp)
- {
-+	if (scsi_is_sdev_multipath(sdkp->device))
-+		return true;
+ /* Default parameters for ZBC drives */
+ #define DEF_ZBC_ZONE_SIZE_MB	128
+@@ -884,6 +885,8 @@ static bool write_since_sync;
+ static bool sdebug_statistics = DEF_STATISTICS;
+ static bool sdebug_wp;
+ static bool sdebug_allow_restart;
++static unsigned int sdebug_alua_mpath = DEF_ALUA_MPATH;
 +
- 	if (sdkp->device->removable || sdkp->write_prot) {
- 		if (disk_check_media_change(disk))
- 			return true;
-@@ -1892,6 +1895,10 @@ static int sd_get_unique_id(struct gendisk *disk, u8 id[16],
- 		if (len == 16)
- 			break;
- 	}
-+
-+	if (scsi_mpath_enabled(sdev))
-+		ret = scsi_mpath_unique_id(sdev, id, type);
-+
- out_unlock:
- 	rcu_read_unlock();
- 	return ret;
-@@ -3817,6 +3824,33 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	if (sdkp->media_present && scsi_device_supports_vpd(sdp))
- 		sd_read_cpr(sdkp);
- 
-+	/* for multipath device, Adjust queue limits for MPATH disk */
-+	if (scsi_is_sdev_multipath(sdp)) {
-+		struct queue_limits *mpath_lim = &sdp->mpath_disk->queue->limits;
-+
-+		blk_mq_freeze_queue(sdp->mpath_disk->queue);
-+		lim = queue_limits_start_update(sdp->mpath_disk->queue);
-+		lim.logical_block_size = mpath_lim->logical_block_size;
-+		lim.physical_block_size = mpath_lim->physical_block_size;
-+		lim.io_min = mpath_lim->io_min;
-+		lim.io_opt = mpath_lim->io_opt;
-+		queue_limits_stack_bdev(&lim, sdp->mpath_disk->part0, 0,
-+		    sdp->mpath_disk->disk_name);
-+
-+		sdp->mpath_disk->flags |= GENHD_FL_HIDDEN;
-+
-+		set_capacity_and_notify(sdp->mpath_disk,
-+		    logical_to_sectors(sdp, sdkp->capacity));
-+
-+		err = queue_limits_commit_update(sdp->mpath_disk->queue, &lim);
-+
-+		scsi_mpath_revalidate_path(sdp->mpath_disk,
-+		    logical_to_sectors(sdp, sdkp->capacity));
-+
-+		blk_mq_unfreeze_queue(sdp->mpath_disk->queue);
-+		if (err)
-+			return err;
+ static enum {
+ 	BLK_ZONED_NONE	= 0,
+ 	BLK_ZONED_HA	= 1,
+@@ -2070,8 +2073,14 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	arr[3] = 2;    /* response_data_format==2 */
+ 	arr[4] = SDEBUG_LONG_INQ_SZ - 5;
+ 	arr[5] = (int)have_dif_prot;	/* PROTECT bit */
+-	if (sdebug_vpd_use_hostno == 0)
+-		arr[5] |= 0x10; /* claim: implicit TPGS */
++	if (sdebug_vpd_use_hostno == 0) {
++		 arr[5] |= 0x10;
++	} else {
++		if (sdebug_alua_mpath == 1)
++			arr[5] |= 0x11;
++		else
++			arr[5] |= 0x10;
 +	}
- 	/*
- 	 * For a zoned drive, revalidating the zones can be done only once
- 	 * the gendisk capacity is set. So if this fails, set back the gendisk
-@@ -3943,6 +3977,9 @@ static int sd_probe(struct device *dev)
- 	if (!sdkp)
- 		goto out;
+ 	arr[6] = 0x10; /* claim: MultiP */
+ 	/* arr[6] |= 0x40; ... claim: EncServ (enclosure services) */
+ 	arr[7] = 0xa; /* claim: LINKED + CMDQUE */
+@@ -6643,6 +6652,7 @@ module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
+ module_param_named(zone_nr_conv, sdeb_zbc_nr_conv, int, S_IRUGO);
+ module_param_named(zone_size_mb, sdeb_zbc_zone_size_mb, int, S_IRUGO);
+ module_param_named(allow_restart, sdebug_allow_restart, bool, S_IRUGO | S_IWUSR);
++module_param_named(alua_mpath, sdebug_alua_mpath, int, S_IRUGO | S_IWUSR);
  
-+	if (scsi_mpath_enabled(sdp) && sdp->is_shared)
-+		scsi_mpath_alloc_disk(sdp);
-+
- 	gd = blk_mq_alloc_disk_for_queue(sdp->request_queue,
- 					 &sd_bio_compl_lkclass);
- 	if (!gd)
-@@ -3960,6 +3997,10 @@ static int sd_probe(struct device *dev)
- 		goto out_free_index;
- 	}
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+@@ -6722,6 +6732,8 @@ MODULE_PARM_DESC(zone_max_open, "Maximum number of open zones; [0] for no limit
+ MODULE_PARM_DESC(zone_nr_conv, "Number of conventional zones (def=1)");
+ MODULE_PARM_DESC(zone_size_mb, "Zone size in MiB (def=auto)");
+ MODULE_PARM_DESC(allow_restart, "Set scsi_device's allow_restart flag(def=0)");
++MODULE_PARM_DESC(alua_mpath,
++	"\t 1 = implicit alua \n \t 2 = Explicit & Implicit ALUA, \n \t 0 = No ALUA Support (Default) \n");
  
-+	if (scsi_is_sdev_multipath(sdp))
-+		snprintf(sdp->mpath_disk->disk_name, DISK_NAME_LEN, "mpath%dsd%d",
-+		    sdp->host->host_no, index);
-+
- 	sdkp->device = sdp;
- 	sdkp->disk = gd;
- 	sdkp->index = index;
-@@ -4021,6 +4062,21 @@ static int sd_probe(struct device *dev)
- 			sdp->host->rpm_autosuspend_delay);
- 	}
- 
-+	if (scsi_is_sdev_multipath(sdp)) {
-+		sdp->mpath_disk->major = sd_major((index & 0xf0) >> 4);
-+		sdp->mpath_disk->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
-+		sdp->mpath_disk->minors = SD_MINORS;
-+
-+		scsi_mpath_add_disk(sdp);
-+
-+		if (!test_bit(SCSI_MPATH_DISK_LIVE, &sdp->mpath_flags)) {
-+			device_unregister(&sdkp->disk_dev);
-+			clear_bit(SCSI_MPATH_DISK_LIVE, &sdp->mpath_flags);
-+			put_disk(sdp->mpath_disk);
-+			goto out;
-+		}
-+	}
-+
- 	error = device_add_disk(dev, gd, NULL);
- 	if (error) {
- 		device_unregister(&sdkp->disk_dev);
-@@ -4074,12 +4130,20 @@ static int sd_remove(struct device *dev)
- 		sd_shutdown(dev);
- 
- 	put_disk(sdkp->disk);
-+
-+	if (scsi_is_sdev_multipath(sdkp->device))
-+		scsi_mpath_remove_disk(sdkp->device);
-+
- 	return 0;
- }
- 
- static void scsi_disk_release(struct device *dev)
- {
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+
-+	if (scsi_is_sdev_multipath(sdp))
-+		scsi_mpath_dev_release(sdp);
- 
- 	ida_free(&sd_index_ida, sdkp->index);
- 	put_device(&sdkp->device->sdev_gendev);
-@@ -4171,6 +4235,25 @@ static void sd_shutdown(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return;
- 
-+	if (scsi_is_sdev_multipath(sdkp->device)) {
-+		struct scsi_device *sdp = sdkp->device;
-+		bool last_path = false;
-+
-+		if (scsi_mpath_clear_current_path(sdp))
-+			synchronize_srcu(&sdp->host->mpath_dev->srcu);
-+
-+		mutex_lock(&sdp->host->mpath_dev->mpath_lock);
-+		list_del_rcu(&sdp->siblings);
-+		if (list_empty(&sdp->host->mpath_sdev)) {
-+			list_del_init(&sdp->mpath_entry);
-+			last_path = true;
-+		}
-+		mutex_unlock(&sdp->host->mpath_dev->mpath_lock);
-+
-+		if (last_path)
-+			scsi_mpath_shutdown_disk(sdp);
-+	}
-+
- 	if (sdkp->WCE && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		sd_sync_cache(sdkp);
+ #define SDEBUG_INFO_LEN 256
+ static char sdebug_info[SDEBUG_INFO_LEN];
 -- 
 2.41.0.rc2
 
