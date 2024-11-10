@@ -1,64 +1,64 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9538615A
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 17:37:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 076FB8615A
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 17:37:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731260266; cv=none; b=nrIbtSyMfa/RSp0KKsbK1c6xAzkPvqGJRWF9lPfwFhJQryGBpzePDCRheaGwFkwhXCNg0daGRg1Elf/sq3V062AC6UxJPeFLty0dA5yLc347wbS5aqSYf1fR1ZGqXu9Sh73l3QuEH3G5G9vAhHFxBWtw66QW+8dOWEgXXp7m8VA=
+	t=1731260269; cv=none; b=OzPcHy32oo3Jow320mFUg8x8qt7qh0SKKSW8yORk3BnJ7X6WzFdvMW9BljCv+B/fZ+WEtxY71t9ElAbaoxXLZpRNMzJJsztaIXoUTP3rph7EHtYd0PDdntK9MG1scfVVlOImHwuwXqNXpz5PdischMxqI+BTNbgj6cZUu26efNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731260266; c=relaxed/simple;
-	bh=/KNLFQ0v/OggHYH4OeCZo0xKTXMJkBkWrMV/DcFaIqM=;
+	s=arc-20240116; t=1731260269; c=relaxed/simple;
+	bh=90sUhsQvoF2GTKodkb8Xn8Uvo9/wCPYRkJzEl/H2+6Q=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=u9X2ln4FRoxs0g3qFqHlFROmGI/0kfm3a/FF/S5lufnvh13E5y0VpWodvj1O87qRkQjGv4Dw+xGNbB9TVqS5jZOZuTq5aVqCp7dfZZvc0f1hnnfvielz81nbB08gZmYs+GWMQZZbaxFyWaGu9hUnteSBQweY+uRLYOAHyK7s4YQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=fx3B9XoV; arc=none smtp.client-ip=209.85.214.171
+	 MIME-Version; b=asKkP8SoOAHt5ovxN/W6WsES+xzeCLy7AszEV82Ad03cni9QpL5pL3/8AbAn5ohOAvpyRflNgxoEV2xMFmhHk6w/0eRuvyEwEEtOSvtmYOKnZvGyekxTJ6a9qwZq6W/5/qEFzDkFrFeGznqOrzHokfqmciW7nT1dQGBRKsN+rR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=OUPOLtpJ; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fx3B9XoV"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-20cb7139d9dso34998125ad.1
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 09:37:45 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OUPOLtpJ"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-20c8c50fdd9so32654475ad.0
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 09:37:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1731260264; x=1731865064; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1731260267; x=1731865067; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=yy34YhL5dMnKlQqi8+UALprhgy3Fk1OzFpqI6Y743+4=;
-        b=fx3B9XoVC4KfZB8/Bu9K2IVKbXDxpK9rUozREuEGLro7f2WD8TsLbrNqdTB6YUjm7g
-         J6XEaWXzQ9CNWKRdm/BwG5B2CwhJB4dnwhnmvdptEcQ/8szjCSLztNweQioQ09HsboXI
-         vCQPyW8X6N6sdKzamDyI8lPmVCROo3EsXHO9E=
+        bh=ul5sJQvLKhfAHWeRn4NzJgwdS/Jt4hdE61XZYFeULrI=;
+        b=OUPOLtpJvZpMjjUgn6cYFXwo3VbvR+2ySRantcXf0JeLsOoUZ9Vyet4JqGXQUGpLhh
+         84KWFCpPmyTea03LPkRzCOkFHWsWDvTLNFlGtzc8I7W3cbnihE7Gbh1EdgvwJ0JT00+v
+         MiMHIQjFI8RiRRFJ3QSvowqKLDLb2exg3boRo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731260264; x=1731865064;
+        d=1e100.net; s=20230601; t=1731260267; x=1731865067;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=yy34YhL5dMnKlQqi8+UALprhgy3Fk1OzFpqI6Y743+4=;
-        b=i1ChO5zRTNBolMGPKEoPMsv6IeXTbqid+EuTYqrgh6uJ7VfKrAXJrr+cmTpdrC7v7H
-         6cB590AQvmzxjfCEcVcXGyu63M+3ZVH0cthB3isFUUZ0Nbor0GLG3fO3uRT4O/kBsPOd
-         eVWVAo6GomtnxoR8ByfKj05cI4ruaqinsBCgBZw/4l/XUSeDTfHDBXeBiv53Jufp35KY
-         WH3BMTQuHiQigXvTG3geEg2atIf+Cc3rsLXoeyFE6Mhr7KXchOP82fwpgFXdDSRbhj4p
-         7NDImoXCmRwAPWuwazZex4yLLCIQ7iEihWAuIXYs6r1uITrUvrqto+JtxgrNSdidQIij
-         qkgg==
-X-Gm-Message-State: AOJu0YzBtGtAboolT/inNpNrBG9DzRPTXkXXpKZ3R2YHaKSs3aqAWvYW
-	RkyFnv0fmVSmUc+zZFDkm4wiYdZc8pldW7zk8EypT3t4lPi5S8Eed9lOysPjcVNRDxVNryyexWP
-	0z/amHP0KB1Khx1x0uWQc2U4RqS6CSZPuLgmyh+L/qHob762bUez5HYc7+4ZeobsaD94jhBn9IZ
-	qg3n7rJK921lNH95q+9OImOMR2SGkfGlzxLE9st9dXmco1XA==
-X-Google-Smtp-Source: AGHT+IF68T/ljjgX5yRv+q3tDR4qk/nUkxmm6ULJLq1z/oIR2xWix4Qr7AU5jyG+GVmL008qLGjSCQ==
-X-Received: by 2002:a17:903:192:b0:20c:b3d9:f5bd with SMTP id d9443c01a7336-21183d1ec87mr135604645ad.18.1731260264249;
-        Sun, 10 Nov 2024 09:37:44 -0800 (PST)
+        bh=ul5sJQvLKhfAHWeRn4NzJgwdS/Jt4hdE61XZYFeULrI=;
+        b=Sav+ZUT+GS19OZ+Jt8YtUArjhj5sKeBhr5PAgFHMCH5nop/XLfBS3W20tbjfEMjtpZ
+         zcAsTErtmaE05vAIA6oGMbhB1N/HH1J13G9yI4YSZ6uCjECV6qTGP+Ajm2Aak46Elk2A
+         Z+sJEvnojEIaebOTOEGpDZEaeqA4AXLZjAKp8HonawRpoLoBlP/zPptgtf+AmGlAcMMo
+         FmyLDdRIAPNQAvuxM7QhjjF/YUjbX3+MQT5T+nkZy9uorP6FVlxfG9lYwDOE+LJDblNb
+         eE/oB/JjrjcuR1gVLj8I789tuWW6HJ72ebjRIgZxu9K31ElHnQWYLwkzWFQfTh4aHZEt
+         5t4w==
+X-Gm-Message-State: AOJu0YwglZoXgBJt2nSpXw0FzBDVBaFXl4ZAxinPzfJYQ8j8YvlisjT1
+	Z92SP/bl3BsipwNLxpbpGEd/CuxQgZ342I8ZOaw1xGogepZdfh6+e63qRUG1fr31hUzF4xsdaXm
+	IApkU2Le+VGJA6laSKJv4hAkEikvcJCuD4kfCsudHqOMVpqbFc16Zhs8lpsqjzzQZmsPgt5mBOR
+	hm9W2Gzq/HZ/dgfVLYNbghjCIHH+ML1LHJt6AyORoqQhTw4g==
+X-Google-Smtp-Source: AGHT+IFb55Hdulb3wGPSquhkn9F7pPet6dZ7wnPpRjCE92/+LIDgH/8+2HFYN6pgsVwbJZBjFvz1TQ==
+X-Received: by 2002:a17:902:ec88:b0:20b:4d50:e4c7 with SMTP id d9443c01a7336-21183554ad9mr157283765ad.0.1731260266732;
+        Sun, 10 Nov 2024 09:37:46 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177de0447sm62314465ad.109.2024.11.10.09.37.41
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177de0447sm62314465ad.109.2024.11.10.09.37.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Nov 2024 09:37:43 -0800 (PST)
+        Sun, 10 Nov 2024 09:37:46 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
 Cc: sathya.prakash@broadcom.com,
 	sumit.saxena@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 1/2] mpt3sas:  mpt3sas: Diag-Reset when Doorbell-In-Use bit is set during driver load time
-Date: Sun, 10 Nov 2024 23:03:40 +0530
-Message-Id: <20241110173341.11595-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 2/2] mpt3sas: Update driver version to 51.100.00.00
+Date: Sun, 10 Nov 2024 23:03:41 +0530
+Message-Id: <20241110173341.11595-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20241110173341.11595-1-ranjan.kumar@broadcom.com>
 References: <20241110173341.11595-1-ranjan.kumar@broadcom.com>
@@ -70,43 +70,33 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Issue a Diag-reset when the "Doorbell-In-Use" bit
-is set during the driver load/initialization.
+Update driver version to 51.100.00.00
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index ed5046593fda..16ac2267c71e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -7041,11 +7041,12 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 	int i;
- 	u8 failed;
- 	__le32 *mfp;
-+	int ret_val;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index eceb5eeb4651..d8d1a64b4764 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -77,11 +77,11 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"48.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		48
++#define MPT3SAS_DRIVER_VERSION		"51.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		51
+ #define MPT3SAS_MINOR_VERSION		100
+-#define MPT3SAS_BUILD_VERSION		0
+-#define MPT3SAS_RELEASE_VERSION	00
++#define MPT3SAS_BUILD_VERSION		00
++#define MPT3SAS_RELEASE_VERSION		00
  
- 	/* make sure doorbell is not in use */
- 	if ((ioc->base_readl_ext_retry(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
- 		ioc_err(ioc, "doorbell is in use (line=%d)\n", __LINE__);
--		return -EFAULT;
-+		goto doorbell_diag_reset;
- 	}
- 
- 	/* clear pending doorbell interrupts from previous state changes */
-@@ -7135,6 +7136,10 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 			    le32_to_cpu(mfp[i]));
- 	}
- 	return 0;
-+
-+doorbell_diag_reset:
-+	ret_val = _base_diag_reset(ioc);
-+	return ret_val;
- }
- 
- /**
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
 -- 
 2.31.1
 
