@@ -1,69 +1,82 @@
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B80214CDEC
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 15:59:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B69D11CA0
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 17:37:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731254372; cv=none; b=cNxAEKow2Yeb0dmHzcQl+CGcNyY+MGQzFSesiNCrJ4r8MBFuwJlNnBngmJ/X5pVTTAi85rWnWyVYDnXodr4BkCSi++rw9GNlVAGQ5qQXjqQxcnKsdSUI2S7hs0uALwLgRYH9FxadwRdyuvGyFR0rTwk9udBy0Tpt7xUTz3Q3x/g=
+	t=1731260264; cv=none; b=X0iomPeyfiu+ZuZOWJxaEsVG7DyXjs/Huo0ptdKF6f4Dw1GqDBx1lC+dXZR9A9PajTfugJ5Ae06OT8w4QM58pYE8M1GYg573rqFgx1F1Ueg+rKHwrtmNfROEP3x3okeOKgg+meSWoJbq29ud2jEcC/UDj02g3489rHNnVaN50fE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731254372; c=relaxed/simple;
-	bh=iQJNfQi44JTW3bEWuJFRmPHx8RfhW7j/u6TM92GTk8k=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=g3dKqrzQpqQaYJvPCFyVwX+p5TxWZcV41q6PxUcs76MgQwmTtL7pcaZTFb6d7OOdkGlTEvp9Wvs8qcVZsySESr5AFe8UWUL/A1QRzpvWu0sts3zoNk6dvAS/7QOt3vuU3DF/nP7HECopb8a+nHtwnP9Jjyf5hpVPy+2Vy2cnHlM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-	id 5A30392009C; Sun, 10 Nov 2024 16:59:22 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by angie.orcam.me.uk (Postfix) with ESMTP id 4FE8292009B;
-	Sun, 10 Nov 2024 15:59:22 +0000 (GMT)
-Date: Sun, 10 Nov 2024 15:59:22 +0000 (GMT)
-From: "Maciej W. Rozycki" <macro@orcam.me.uk>
-To: Magnus Lindholm <linmag7@gmail.com>
-cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    linux-scsi@vger.kernel.org
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-In-Reply-To: <CA+=Fv5St4uQC00KF9YtU6WCHnHDO-NeMJ6er5aB86wgq4ZDxWQ@mail.gmail.com>
-Message-ID: <alpine.DEB.2.21.2411091958520.9262@angie.orcam.me.uk>
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
- <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com> <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
- <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org> <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com> <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
- <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk> <yq15xp14fy7.fsf@ca-mkp.ca.oracle.com> <20241105223319.46c7563a@samweis> <CA+=Fv5St4uQC00KF9YtU6WCHnHDO-NeMJ6er5aB86wgq4ZDxWQ@mail.gmail.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+	s=arc-20240116; t=1731260264; c=relaxed/simple;
+	bh=cAZQsyVx0QKr0DoP7NYqnCm5eWAvmKKZ6Bclq7gdfNQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=PHmKHcc4ET44voqsTrc/FzIQSTvOQCk5tKs/MRjtNhQMJnu8uePF9ryvKmo1QqJimmOQuzJsELVWrIZqM+BHT+djm9QdyzNgnNANlV6+E4gI7Wq/LTji3f1nrAg71LEVGTT7ijGGIhNlC1+4tqUwt8BGT0ZFE1pFCzBu8bI3YYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=ZrKCEP+r; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZrKCEP+r"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-20c805a0753so36150765ad.0
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 09:37:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1731260262; x=1731865062; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GhkFurx0VWzHaVxLjL64/n5qUuokf7ebUOZVyZc9/zA=;
+        b=ZrKCEP+rBG9LxOtHVnpf3xtz+2lVKAysn0NRyzKBnTm4MofiCKfYBQIUUAG7AEtF+b
+         dUihVQX8zQszlIvnC+WTyimIh2sQjeq0mnSm9NEqbSGLs+NVMo16EqrviCenRfreXOKT
+         P6Qycu0sMo90x1zvVUwhMPKciz9BP9l4Stu1Q=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731260262; x=1731865062;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GhkFurx0VWzHaVxLjL64/n5qUuokf7ebUOZVyZc9/zA=;
+        b=fH9p8+k3mP8Wyb5++BwZSaYwfj6VILh1AXrrabHoDLCOj7muGjvyYPKX7rluai9vmK
+         RRQgpTZXGr7k8g0OjTyrqgsclkf2BuQgFkKvS5ue02BEnZGMusO9EAlaEdu1qgQKpgiw
+         mi4AmSLwr8u5Ifg3qCAsoRx7TXPEJBMeCT9oNVohaJlPuljTa3Xi4O885esNAHemnFSx
+         Tw3F29UAsjCFMsGJvU9yX2LNSsy3yUsbm/owacIpocHcpcUFmCs5hrQLFcICRrAOSF1W
+         VuU8oWVSzF9yMQLGTTeUp8ze67V0KzedyYCSD8h3d92oe5ULxaqKl5NWYUr0iwzTtyxi
+         9GDQ==
+X-Gm-Message-State: AOJu0YxMLIhpnyLbYEhb8b3bQRzHT49eGkizIJmcdbF6ge8YKL7ZcvCW
+	/sxGqjAuPTVMMYyIydCpiQGYmAspqR+57udK/thygY6dsSZD04CtHWzaiK7IPqMwQJ6JAzwOcQJ
+	LCLizG2w00YDc9pva89Znl1cRs+O1q8SUELOWPGrgbpB324L5gl3aoBS6f0qelU/D2apGO4WtDt
+	ezxRH8iMPj7Ts+KyLiHukidQ0HrPKycGczl1Vpyq+VZjd2eA==
+X-Google-Smtp-Source: AGHT+IGsMv7zADryD2hGZBGwYq0g/jODb+7151m8SYGveqRq/MLJ3P2vCL9ZTaOlgRviO5SJ3zfoIQ==
+X-Received: by 2002:a17:903:11c9:b0:20d:2804:bcde with SMTP id d9443c01a7336-21183e0ce16mr132601255ad.35.1731260261517;
+        Sun, 10 Nov 2024 09:37:41 -0800 (PST)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177de0447sm62314465ad.109.2024.11.10.09.37.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 10 Nov 2024 09:37:41 -0800 (PST)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 0/2] mpt3sas: Update driver version
+Date: Sun, 10 Nov 2024 23:03:39 +0530
+Message-Id: <20241110173341.11595-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 
-On Sat, 9 Nov 2024, Magnus Lindholm wrote:
+Update driver version along with minor Enhancement.
 
-> What's your thoughts on his approach:
-> 
-> if    (card is ISP1040 and revision less than C) then use
-> dma_get_required_mask()
-> else
->      do as before
-> 
-> Assuming dma_get_required_mask() works it should return a
-> 64-something-bit mask on IP30/MIPS but only 32-bits on Alpha.
+Ranjan Kumar (2):
+  mpt3sas:  mpt3sas: Diag-Reset when Doorbell-In-Use bit is set during
+    driver load time
+  mpt3sas: Update driver version to 51.100.00.00
 
- It's not required for the mask returned by dma_get_required_mask() to be 
-32-bit, so unless your card does support DAC (and everything so far shows 
-it does not), it will still fail on another platform where the function 
-does return a mask beyond 32 bits.
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 7 ++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 8 ++++----
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
- Are you able to verify your card with a non-Alpha system that has memory
-beyond the low 32-bit DMA space?  I guess not, or you'd have done that 
-already, wouldn't you?
+-- 
+2.31.1
 
- If you really wanted to double-check your Alpha correctly supports DAC, 
-you could try wiring your ISP1080 device temporarily via a 32-bit PCI 
-riser adapter (or an external 32-bit PCI enclosure) so as to force 64-bit 
-addressing via AD[31:0] lines only (assuming that ISP1080 got DAC support 
-right though).
-
-  Maciej
