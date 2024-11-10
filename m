@@ -1,75 +1,69 @@
-Received: from out-176.mta1.migadu.com (out-176.mta1.migadu.com [95.215.58.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56B2288B1
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 15:22:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.176
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B80214CDEC
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Nov 2024 15:59:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731252143; cv=none; b=s+TJCCQkfbIDfC6AI5xFODKmicda+FrOfEsJKgDBQh/aE2Ldw1pigGO8Ik0plxxvZeC0ejHwO5xzBD/EVx6U40StDnrvCi8jzRPfrwbQ20lFdTKWQ7N05Ev3li1pimFFeYU6fX28U6jR/qZfk0hnNw8Pa3M+4u486JxWNHgZceM=
+	t=1731254372; cv=none; b=cNxAEKow2Yeb0dmHzcQl+CGcNyY+MGQzFSesiNCrJ4r8MBFuwJlNnBngmJ/X5pVTTAi85rWnWyVYDnXodr4BkCSi++rw9GNlVAGQ5qQXjqQxcnKsdSUI2S7hs0uALwLgRYH9FxadwRdyuvGyFR0rTwk9udBy0Tpt7xUTz3Q3x/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731252143; c=relaxed/simple;
-	bh=XZveZfdfEe7GHPTaQ+DcTl1LvudeUki6avQSeQ+cQak=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iZYWwwfD7RXsR02gorXlE5mlJZgsVnUpPJy4XuTyXZSZcuOmSw9tOF7IasOWqRcEKZBIwESjvC944vQhfjYCSDopsWQzBR7Oq7V3dMb4q/pDoWu3ay31/p1zwElSHKmAoPQqIT50QpOCOBEnij7TQZBMj5RftYLeyx1yIMFfZv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wQl8MDRS; arc=none smtp.client-ip=95.215.58.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wQl8MDRS"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1731252139;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=FwUaqcMHBb2izLMC05xKkduvRf6O7Ag76Km51G1JrLE=;
-	b=wQl8MDRSzbIH8ND6WyNyqtTXdUzSfo+PUp4KdZDyxld8wDdFe1c83gKvO2b5sdrNaDDxUo
-	O9NXcnrCqRclt7deb13hioUDjEQQSMflvAmKB5Phk4eUtoHX+DYYsOc2CEiYMvK7KxcT7c
-	5SktcsKV9soCQL+I7ktPmw03ZXMGmEM=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-hardening@vger.kernel.org,
-	Thorsten Blum <thorsten.blum@linux.dev>,
-	open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: Replace zero-length array with flexible array member
-Date: Sun, 10 Nov 2024 16:17:49 +0100
-Message-ID: <20241110151749.3311-2-thorsten.blum@linux.dev>
+	s=arc-20240116; t=1731254372; c=relaxed/simple;
+	bh=iQJNfQi44JTW3bEWuJFRmPHx8RfhW7j/u6TM92GTk8k=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=g3dKqrzQpqQaYJvPCFyVwX+p5TxWZcV41q6PxUcs76MgQwmTtL7pcaZTFb6d7OOdkGlTEvp9Wvs8qcVZsySESr5AFe8UWUL/A1QRzpvWu0sts3zoNk6dvAS/7QOt3vuU3DF/nP7HECopb8a+nHtwnP9Jjyf5hpVPy+2Vy2cnHlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 5A30392009C; Sun, 10 Nov 2024 16:59:22 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 4FE8292009B;
+	Sun, 10 Nov 2024 15:59:22 +0000 (GMT)
+Date: Sun, 10 Nov 2024 15:59:22 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Magnus Lindholm <linmag7@gmail.com>
+cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    linux-scsi@vger.kernel.org
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+In-Reply-To: <CA+=Fv5St4uQC00KF9YtU6WCHnHDO-NeMJ6er5aB86wgq4ZDxWQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.21.2411091958520.9262@angie.orcam.me.uk>
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com> <yq18qu7d5jy.fsf@ca-mkp.ca.oracle.com> <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com> <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+ <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org> <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com> <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
+ <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk> <yq15xp14fy7.fsf@ca-mkp.ca.oracle.com> <20241105223319.46c7563a@samweis> <CA+=Fv5St4uQC00KF9YtU6WCHnHDO-NeMJ6er5aB86wgq4ZDxWQ@mail.gmail.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=US-ASCII
 
-Replace the deprecated zero-length array with a modern flexible array
-member in the struct iscsi_bsg_host_vendor_reply.
+On Sat, 9 Nov 2024, Magnus Lindholm wrote:
 
-Link: https://github.com/KSPP/linux/issues/78
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
----
- include/scsi/scsi_bsg_iscsi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> What's your thoughts on his approach:
+> 
+> if    (card is ISP1040 and revision less than C) then use
+> dma_get_required_mask()
+> else
+>      do as before
+> 
+> Assuming dma_get_required_mask() works it should return a
+> 64-something-bit mask on IP30/MIPS but only 32-bits on Alpha.
 
-diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
-index 9b1f0f424a79..df8083f12119 100644
---- a/include/scsi/scsi_bsg_iscsi.h
-+++ b/include/scsi/scsi_bsg_iscsi.h
-@@ -59,7 +59,7 @@ struct iscsi_bsg_host_vendor {
-  */
- struct iscsi_bsg_host_vendor_reply {
- 	/* start of vendor response area */
--	uint32_t vendor_rsp[0];
-+	uint32_t vendor_rsp[];
- };
- 
- 
--- 
-2.47.0
+ It's not required for the mask returned by dma_get_required_mask() to be 
+32-bit, so unless your card does support DAC (and everything so far shows 
+it does not), it will still fail on another platform where the function 
+does return a mask beyond 32 bits.
 
+ Are you able to verify your card with a non-Alpha system that has memory
+beyond the low 32-bit DMA space?  I guess not, or you'd have done that 
+already, wouldn't you?
+
+ If you really wanted to double-check your Alpha correctly supports DAC, 
+you could try wiring your ISP1080 device temporarily via a 32-bit PCI 
+riser adapter (or an external 32-bit PCI enclosure) so as to force 64-bit 
+addressing via AD[31:0] lines only (assuming that ISP1080 got DAC support 
+right though).
+
+  Maciej
