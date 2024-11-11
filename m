@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877501A0B15;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877A61A2567;
 	Mon, 11 Nov 2024 17:48:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731347318; cv=none; b=NOcqThDy5vuMM1wPQgWcXyDvX8m1UjGJ+88l7oYNcE8wJDGOSRUPKJ6pyl7XVfqVXtApE/dJG4DQ2AhyA6b29hlM2WvpqcdY/TGjMbindVV7y/Q56BUyx1/D1QZHuPalZPfAHzB59RN4c2lDEpvs1kuJfO/910kz1bdrJiZ5lZQ=
+	t=1731347318; cv=none; b=BSpZvyhmGi0RQCZDQw+HI2TG0Yd2T6Shw6graubM+gDQSYO8foL2pGIi8UfQ12E5hiXFQakTdaB832EGonNkfd17pWmLQG6Ym+R7vcqzvpxk+YuP2nGV+ZYj5ESOH9fDPBkkiS9mC5V3lXy9qOyjo7c8ns1WfIxbshPg9hkOy5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731347318; c=relaxed/simple;
-	bh=Y+khpFiawXKLU/+l8e747ZP6KaaIIh+gTXQA+EIkgkY=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=DPvJemRwQJoQxtD+/E94bhT9QN6+UU1LAdIPV6I7E1YQg/QNDiOQGtiBMWXP/AWvW8M62xESym5SXM1C6xUn12aYWRhLmWobeje5FRusJjdF4dS/5QWxWsJ5vmzUY6/cHF/Be5CAIcX5FpYOiv2aT0Bv2qJHAm6LcgAgFyG0JQE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gfD79ezb; arc=none smtp.client-ip=10.30.226.201
+	bh=fuQ00GAi9j38VTJ+Mk4loS5qcVMhkxws4U8+NkGhafM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ls76DaIBfIJGCLVPBddncNux+7yCykF/6C30CF1SmtZE3IOI8g+u1ZkGdRs1rygkzGyJ4RSbOkdvTU8DFaarGwVyJHG3mQPdJjyfHUQ+myl3xbrhUJYxnB/b8YNCHfOPG9aV3QT+GC42jsvCUi8DzjEkj6DVOEwwDo4PpyWIS4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IJKSMR23; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gfD79ezb"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 143CEC4CECF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IJKSMR23"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3BD31C4CED7;
 	Mon, 11 Nov 2024 17:48:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1731347318;
-	bh=Y+khpFiawXKLU/+l8e747ZP6KaaIIh+gTXQA+EIkgkY=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=gfD79ezbyqAT5rvKeu/bcNk+MqWjLhBgv82QIF/tIbz1tWRuHXO2hqhXMblEdVPjh
-	 uLWSskpTn0NmbCS8ovAvPJNwmOCD+sEvFuY5H39CXkmtdFWd5YC2nEieNxQRc/I99o
-	 U7IQ0t8lfGL6a9x7XtdAvZul3zH6DbCJ4SHk4BNHxN4qMgByWrPQNh+GNmgGwLVMFW
-	 5kFUqPoQTKfdsOEBglpmjDw8gP+n70gDwcBkSKANJClp4+04sSwRjT77we8vHjhqgq
-	 0YvS2zBf6EmIbdDpX54lBKmW1z/IT8syb8Ns1cZ4VY6Zjr0qNNt+7l5WToJMnaGMYb
-	 cYYNgkm1oOPEg==
+	bh=fuQ00GAi9j38VTJ+Mk4loS5qcVMhkxws4U8+NkGhafM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=IJKSMR23utkGbtJsEmrf3ChMvfo7qg1qtUzv5kPI1oEcHbSDuTrcSy+QB0oN3imyd
+	 6V2ZtWKHMYKU52mDsFWkLGTO2sHibSXgRRaEDO9UGrKkb7oK9dc2KIvvX8DO3F5jxC
+	 NFUGAluwBDdaE7X1nR1f7tjBBlGuPjUOF1nhPl7mFrQmGQEg0yQ/t7rOMQbt91iQNb
+	 ls2MeMG3f0vLOPoVlXcG/66lDtsAJK/2GRLPF5fCO/lXeelnGK3OqIu7Yim9+BUz7Q
+	 KQt9E1jg7uP/1EzUQmZrsmx9ml/ahUduvJs9IO+Celr7MBtm/KncaYRp0TPsB8d5gB
+	 KamMRcYIOokEQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3C7D3ABD9;
-	Mon, 11 Nov 2024 17:48:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C932D3ABDA;
+	Mon, 11 Nov 2024 17:48:38 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Subject: [PATCH 0/5] scsi: ufs: Bug fixes for ufs core and platform drivers
-Date: Mon, 11 Nov 2024 23:18:29 +0530
-Message-Id: <20241111-ufs_bug_fix-v1-0-45ad8b62f02e@linaro.org>
+Date: Mon, 11 Nov 2024 23:18:31 +0530
+Subject: [PATCH 2/5] scsi: ufs: qcom: Only free platform MSIs when ESI is
+ enabled
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,9 +41,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAG1DMmcC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIxNDINAtTSuOTypNj0/LrNA1SzE0TzO2TExLTDRRAuooKEoFCoNNi46trQU
- ADEBy810AAAA=
+Message-Id: <20241111-ufs_bug_fix-v1-2-45ad8b62f02e@linaro.org>
+References: <20241111-ufs_bug_fix-v1-0-45ad8b62f02e@linaro.org>
+In-Reply-To: <20241111-ufs_bug_fix-v1-0-45ad8b62f02e@linaro.org>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
  Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -67,16 +68,16 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
  stable@vger.kernel.org
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1532;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1761;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=Y+khpFiawXKLU/+l8e747ZP6KaaIIh+gTXQA+EIkgkY=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnMkNyVRymijja4WYsMTq3UufBBioidTEf49F/G
- g6j4UfgEmiJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZzJDcgAKCRBVnxHm/pHO
- 9d0jB/449IToaB9ZcYdJONBd23MdNRpN9XTjoQ3UaKzzkCrBwemdD8ACugH5wLUaPzsStvYYt3C
- 6oYkky5KzIlqwZMoQVr4rSs7t0C+05tD/fKah7PQkWE2sWw6qy5weu7aZdzMMLT4eewC1jVW+OJ
- 6sDx7OKs23eLysMs5PpefkS/XDYDkowgBvPz0f1E11UQDoA4Ra1Wd84CkcdyqTh0XDMC0EV4D0p
- fGBOBK0Tpegsz2LI686Q6vrLJQBtn6pZNWAx2GHhNxEGbg97Rg5kF/7FtcnvVdgcDc0CDrxeyOu
- HAIwSVg9lV19dgsYP/y7m/iTY4qce8LrwLtHgy5oTwjONKG5
+ bh=EbvyeMTjnnXzYsrb6hiWc8REw/zP3a1kZd0DUfTawxw=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnMkNzWH2qACCnRiu+0ZVgDwFBCU0StL7JZgEET
+ u7l9pbT9CSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZzJDcwAKCRBVnxHm/pHO
+ 9S7JB/90TEoS/+sDZO0X0MjP4rilFN/QiPGEBYP/qeEnMEreebOIEx2KZBTyGtPoSlH0U11whee
+ h/cQ4BaWi8qJs7uxTqoKKez1yUb2SynV7Xdd2KNrBAl1cdbbKsCE0Se33qic7aRVq7Nooh5mcAQ
+ hGW6jj2UyKiNeTsdwsaYTIMx2Jde6PpwKv90WjQXQxunrwVt/yv3+o0/CJObO4HXIBZy9n4f0Cv
+ OwaEBqBG3UdbwwewFV22V93QQ2gn5pS+WQnQiS3G6aM78r2N50xoSWOLQEN2Q4iIYH5bpMNR4TE
+ f1m2EtfA79wWzq2cuV/irM5AZmWRP3LqXGP9NZApfm7jXMzT
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -84,41 +85,58 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Reply-To: manivannan.sadhasivam@linaro.org
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-This series has several bug fixes that I encountered when the ufs-qcom driver
-was removed and inserted back. But the fixes are applicable to other platform
-glue drivers as well.
+Otherwise, it will result in a NULL pointer dereference as below:
 
-This series is tested on Qcom RB5 development board based on SM8250 SoC.
+Unable to handle kernel NULL pointer dereference at virtual address 0000000000000008
+Call trace:
+ mutex_lock+0xc/0x54
+ platform_device_msi_free_irqs_all+0x14/0x20
+ ufs_qcom_remove+0x34/0x48 [ufs_qcom]
+ platform_remove+0x28/0x44
+ device_remove+0x4c/0x80
+ device_release_driver_internal+0xd8/0x178
+ driver_detach+0x50/0x9c
+ bus_remove_driver+0x6c/0xbc
+ driver_unregister+0x30/0x60
+ platform_driver_unregister+0x14/0x20
+ ufs_qcom_pltform_exit+0x18/0xb94 [ufs_qcom]
+ __arm64_sys_delete_module+0x180/0x260
+ invoke_syscall+0x44/0x100
+ el0_svc_common.constprop.0+0xc0/0xe0
+ do_el0_svc+0x1c/0x28
+ el0_svc+0x34/0xdc
+ el0t_64_sync_handler+0xc0/0xc4
+ el0t_64_sync+0x190/0x194
 
+Cc: stable@vger.kernel.org # 6.3
+Fixes: 519b6274a777 ("scsi: ufs: qcom: Add MCQ ESI config vendor specific ops")
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
-Manivannan Sadhasivam (5):
-      scsi: ufs: core: Cancel RTC work during ufshcd_remove()
-      scsi: ufs: qcom: Only free platform MSIs when ESI is enabled
-      scsi: ufs: pltfrm: Disable runtime PM during removal of glue drivers
-      scsi: ufs: pltfrm: Drop PM runtime reference count after ufshcd_remove()
-      scsi: ufs: pltfrm: Dellocate HBA during ufshcd_pltfrm_remove()
+ drivers/ufs/host/ufs-qcom.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
- drivers/ufs/core/ufshcd.c             |  1 +
- drivers/ufs/host/cdns-pltfrm.c        |  4 +---
- drivers/ufs/host/tc-dwc-g210-pltfrm.c |  5 +----
- drivers/ufs/host/ufs-exynos.c         |  3 +--
- drivers/ufs/host/ufs-hisi.c           |  4 +---
- drivers/ufs/host/ufs-mediatek.c       |  5 +----
- drivers/ufs/host/ufs-qcom.c           |  7 ++++---
- drivers/ufs/host/ufs-renesas.c        |  4 +---
- drivers/ufs/host/ufs-sprd.c           |  5 +----
- drivers/ufs/host/ufshcd-pltfrm.c      | 16 ++++++++++++++++
- drivers/ufs/host/ufshcd-pltfrm.h      |  1 +
- 11 files changed, 29 insertions(+), 26 deletions(-)
----
-base-commit: 59b723cd2adbac2a34fc8e12c74ae26ae45bf230
-change-id: 20241111-ufs_bug_fix-6d17f39afaa4
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index ecdfff2456e3..1bcc538ef8af 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1843,10 +1843,12 @@ static int ufs_qcom_probe(struct platform_device *pdev)
+ static void ufs_qcom_remove(struct platform_device *pdev)
+ {
+ 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 
+ 	pm_runtime_get_sync(&(pdev)->dev);
+ 	ufshcd_remove(hba);
+-	platform_device_msi_free_irqs_all(hba->dev);
++	if (host->esi_enabled)
++		platform_device_msi_free_irqs_all(hba->dev);
+ }
+ 
+ static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
 
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+2.25.1
 
 
