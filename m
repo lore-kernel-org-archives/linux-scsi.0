@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877F31A42C4;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A20D1A4F0A;
 	Mon, 11 Nov 2024 17:48:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731347318; cv=none; b=djBO0gfW8UcUOZBLBpkTbzEGySxiYBrqGn1zkNqeDTWyIUTGp1gPAP87VZh1xnAqK0K+jv8iNE2KWIrWpDKkWKWj2CfLbJN9EecqER5eUCK1yxumz+enfsSk75SZXYtJziE6Aa+fo4B9AoL6fzlyIzDcZLgovJbFUmg2GtMrYk0=
+	t=1731347318; cv=none; b=RxoCU0KuIApcikqdjwN4Zjcs5bkAVXHYw/NRG7Rub7ni1L4fbpwDaqeVZfcPVbf8SgrKSZQMNAX96RDYMl178mGRwqIcGk/ywsTmn/ajtThYslmPqu2zyh811HaINIuMLYn0L9BmhQChYg7IMCX1PPYrc9WYlUtYl0s56bVDMb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731347318; c=relaxed/simple;
-	bh=G69FHYexPwpw/irD51I+oJah3BCb6iFaLGhHwlC23Sc=;
+	bh=SOb/svMnfBE70UmgHVHZ83yrAm9N4yanjEVLe7239+w=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=kYgBrTiAVMRd1S1Cr9K/4VBEWy5AL1e/L7FhxAB0qKCMlBB2UPMwbvqz/8ZjpZpcZ6GTFvUSOYBqD5u+y/ru5f/GxcHD9GyOpP+b//n5nQe0Clfs4CUNjDG8dHIYYo+dHrzbju8oUIdOx6ei81c+Wc6Mh7FbU2SlW21p7IAXOws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C0C9bmDU; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=GIV37gLJ4fNfRITCW2tPvSpxqMng8C2Kh6kL+hZ7TY962msmxWJKoJECORQYBqLlXkoSlemUSe9J9r2BzWhnBXJ6OQAH1sIwkj7YlpgTsssjbvFFO5FD5qp8y1vIN4omWPrnanFt84yuC9x6V8i4RMl6C2ZtJ/gOuMiYWphH+gY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M5CWUkTP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C0C9bmDU"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 28C54C4CED5;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M5CWUkTP"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4A457C4CED8;
 	Mon, 11 Nov 2024 17:48:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1731347318;
-	bh=G69FHYexPwpw/irD51I+oJah3BCb6iFaLGhHwlC23Sc=;
+	bh=SOb/svMnfBE70UmgHVHZ83yrAm9N4yanjEVLe7239+w=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=C0C9bmDUJRRt3wJShhZ/CieKiCh5u0nABPCkvnDz8pS8l+fmwfewTXgapxgC5xugY
-	 ZdOeu2hOBqVt/SQ57N8KR68elYetPbhdOvFDNOTlSVwXKPz+Z1TZiIM6BpINDMp3Sb
-	 6CTgY+7UkK2o7yYOpahHvnyPF7eUNuACqUStjDsnYCzLl+VxoySmVeOhv23/MzMgkL
-	 fHFL6VDhNIQGjbdARxv4//iGhgeTtJ2KiAQNVbZnY4/a7mWoxy4BlQamWmzJAO5+qb
-	 0QlXzFvU3ioPxVKSIrpJ/0Xp+uoJJLgxcpAwCgOzlfcdRLo0GlvV3en2rM5z4R1mvy
-	 sjcOmwxV41YUA==
+	b=M5CWUkTPz6OCGVKJrWrNKk807OEF7xTW55Hzjum0MoXapsNyhMtWBgyfaQAM9zbia
+	 Pc85xmSY+LdvIsx4joB7hU0G9CHWpjFrblQUw3B10SC2lKsuxjt3AgyMkgh+ZRa3I5
+	 ZRCXOfupZIW9ImxPU7fv+k2ILaZtquhUWx0RH3zzUbogxMq5qLtrvHZqr0KQg99HOp
+	 h8un79+lAFofx6e5DGK8p5XlNJCJL0AnIZsxegWSB4WR41cZUud+99s2UuH71DZMc9
+	 YFNhuYvtpnv2M8bWe07UCV9L9FhqbcaZuvadMykzp0Ygu+uhinSxok0VOQBHywANcq
+	 3x3//wvZfh2Jg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17CA0D3ABD8;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F521D3ABDC;
 	Mon, 11 Nov 2024 17:48:38 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Mon, 11 Nov 2024 23:18:30 +0530
-Subject: [PATCH 1/5] scsi: ufs: core: Cancel RTC work during
- ufshcd_remove()
+Date: Mon, 11 Nov 2024 23:18:32 +0530
+Subject: [PATCH 3/5] scsi: ufs: pltfrm: Disable runtime PM during removal
+ of glue drivers
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241111-ufs_bug_fix-v1-1-45ad8b62f02e@linaro.org>
+Message-Id: <20241111-ufs_bug_fix-v1-3-45ad8b62f02e@linaro.org>
 References: <20241111-ufs_bug_fix-v1-0-45ad8b62f02e@linaro.org>
 In-Reply-To: <20241111-ufs_bug_fix-v1-0-45ad8b62f02e@linaro.org>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
@@ -68,16 +68,16 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
  stable@vger.kernel.org
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1553;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6985;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=DVIcv3/NWxzqjqTgGie8L2Gx0Ep0Cnv9hngTv71tWI8=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnMkNyuWNNeuyqHW6wHJWBMDDSw07Unxl6usmOR
- ufHW4bxRbuJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZzJDcgAKCRBVnxHm/pHO
- 9T95CACMdtOCvpWHJK1lxW2m+V6GbLEuNbAD0lZ2wBw1SXofplwVCWGJdvi40XW/5/caHDa4p3V
- 8cl5LFsw29z6p0n6ZwMC4Fl2nQjs3S8M+frDwLyelMKBvzuuhqIKf1bp8oJZC8e8q7I3i/+hBbc
- g0a3GvGZaTFNACN7v88ROg0J9CvhylTTeAWC5gTWLOF/dIr+6AUP+8VTPa9v+zTeGaCibMJvN0e
- P632FxzWqbrUCP6X/NUCeptORHwrSlkmUtMK3pLku6vxzQRpDtM1l/S4o8ktUdVsglUmtXnzCNW
- Ix2pNkxM4jEkVNJqrZ9ceWl40kPLs2qa2Tg09M7wbBDHLane
+ bh=Sy95crq9tnc13krDmPxLc+XJOqVK0Wt1rbOYDput31Q=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnMkNzB9iz8QMXyNpVEgtQ5ZelZO076jLLXfkRg
+ asZo5G3GWeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZzJDcwAKCRBVnxHm/pHO
+ 9RINB/4kKYhPEGlh+z0oVskBAUcdG9Do5O49lzzdpQb16Q/tr4H5kvW/5giR5D8w2zt3YsvXW/x
+ p5impfVanaunnhCfFnIqm6yQJFWS0xmUbA67bZU7f60uMmSBnU8pRYH7w1gagJ7KygOGopeOrDL
+ JsCxxoWOy6rJWkYDOw0syS0hs/GhzQa3wptkQ6aarRLAfHwVNq7yzOt09V/GXcgBxCz3BXjE9mG
+ hI8H7Vsz3A3z6iqmNYp+H9Jngpy5EJUk7fccNVJqA1lUegiCAow+2pKXjCEjgKXv41S5pbHFUlT
+ wRSw+JWjdzoHJ2DETem066mlrMXITAspkAfuXdcDbcyF9JgO
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -87,45 +87,188 @@ Reply-To: manivannan.sadhasivam@linaro.org
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Currently, RTC work is only cancelled during __ufshcd_wl_suspend(). When
-ufshcd is removed in ufshcd_remove(), RTC work is not cancelled. Due to
-this, any further trigger of the RTC work after ufshcd_remove() would
-result in a NULL pointer dereference as below:
+When the UFSHCD platform glue drivers are removed, runtime PM should be
+disabled using pm_runtime_disable() to balance the enablement done in
+ufshcd_pltfrm_init(). This is also reported by PM core when the glue driver
+is removed and inserted again:
 
-Unable to handle kernel NULL pointer dereference at virtual address 00000000000002a4
-Workqueue: events ufshcd_rtc_work
-Call trace:
- _raw_spin_lock_irqsave+0x34/0x8c
- pm_runtime_get_if_active+0x24/0xb4
- ufshcd_rtc_work+0x124/0x19c
- process_scheduled_works+0x18c/0x2d8
- worker_thread+0x144/0x280
- kthread+0x11c/0x128
- ret_from_fork+0x10/0x20
+ufshcd-qcom 1d84000.ufshc: Unbalanced pm_runtime_enable!
 
-Since RTC work accesses the ufshcd internal structures, it should be cancelled
-when ufshcd is removed. So do that in ufshcd_remove(), as per the order in
-ufshcd_init().
+So disable runtime PM using a new helper API ufshcd_pltfrm_remove(), that
+also takes care of removing ufshcd. This helper should be called during the
+remove() stage of glue drivers.
 
-Cc: stable@vger.kernel.org # 6.8
-Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
+Cc: stable@vger.kernel.org # 3.12
+Fixes: 62694735ca95 ("[SCSI] ufs: Add runtime PM support for UFS host controller driver")
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/ufs/core/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/host/cdns-pltfrm.c        |  4 +---
+ drivers/ufs/host/tc-dwc-g210-pltfrm.c |  4 +---
+ drivers/ufs/host/ufs-exynos.c         |  2 +-
+ drivers/ufs/host/ufs-hisi.c           |  4 +---
+ drivers/ufs/host/ufs-mediatek.c       |  4 +---
+ drivers/ufs/host/ufs-qcom.c           |  2 +-
+ drivers/ufs/host/ufs-renesas.c        |  4 +---
+ drivers/ufs/host/ufs-sprd.c           |  4 +---
+ drivers/ufs/host/ufshcd-pltfrm.c      | 13 +++++++++++++
+ drivers/ufs/host/ufshcd-pltfrm.h      |  1 +
+ 10 files changed, 22 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f5846598d80e..cc2555333512 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10225,6 +10225,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufs_hwmon_remove(hba);
- 	ufs_bsg_remove(hba);
- 	ufs_sysfs_remove_nodes(hba->dev);
-+	cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
- 	blk_mq_destroy_queue(hba->tmf_queue);
- 	blk_put_queue(hba->tmf_queue);
- 	blk_mq_free_tag_set(&hba->tmf_tag_set);
+diff --git a/drivers/ufs/host/cdns-pltfrm.c b/drivers/ufs/host/cdns-pltfrm.c
+index 66811d8d1929..b31aa8411151 100644
+--- a/drivers/ufs/host/cdns-pltfrm.c
++++ b/drivers/ufs/host/cdns-pltfrm.c
+@@ -307,9 +307,7 @@ static int cdns_ufs_pltfrm_probe(struct platform_device *pdev)
+  */
+ static void cdns_ufs_pltfrm_remove(struct platform_device *pdev)
+ {
+-	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+-
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ }
+ 
+ static const struct dev_pm_ops cdns_ufs_dev_pm_ops = {
+diff --git a/drivers/ufs/host/tc-dwc-g210-pltfrm.c b/drivers/ufs/host/tc-dwc-g210-pltfrm.c
+index a3877592604d..113e0ef7b2cf 100644
+--- a/drivers/ufs/host/tc-dwc-g210-pltfrm.c
++++ b/drivers/ufs/host/tc-dwc-g210-pltfrm.c
+@@ -76,10 +76,8 @@ static int tc_dwc_g210_pltfm_probe(struct platform_device *pdev)
+  */
+ static void tc_dwc_g210_pltfm_remove(struct platform_device *pdev)
+ {
+-	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+-
+ 	pm_runtime_get_sync(&(pdev)->dev);
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ }
+ 
+ static const struct dev_pm_ops tc_dwc_g210_pltfm_pm_ops = {
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 5867e6338562..953103b69e2c 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1961,7 +1961,7 @@ static void exynos_ufs_remove(struct platform_device *pdev)
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 
+ 	pm_runtime_get_sync(&(pdev)->dev);
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ 
+ 	phy_power_off(ufs->phy);
+ 	phy_exit(ufs->phy);
+diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
+index 5ee73ff05251..501609521b26 100644
+--- a/drivers/ufs/host/ufs-hisi.c
++++ b/drivers/ufs/host/ufs-hisi.c
+@@ -576,9 +576,7 @@ static int ufs_hisi_probe(struct platform_device *pdev)
+ 
+ static void ufs_hisi_remove(struct platform_device *pdev)
+ {
+-	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+-
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ }
+ 
+ static const struct dev_pm_ops ufs_hisi_pm_ops = {
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 9a5919434c4e..512b4e43787c 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1869,10 +1869,8 @@ static int ufs_mtk_probe(struct platform_device *pdev)
+  */
+ static void ufs_mtk_remove(struct platform_device *pdev)
+ {
+-	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+-
+ 	pm_runtime_get_sync(&(pdev)->dev);
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 1bcc538ef8af..38732dd48331 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1846,7 +1846,7 @@ static void ufs_qcom_remove(struct platform_device *pdev)
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 
+ 	pm_runtime_get_sync(&(pdev)->dev);
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ 	if (host->esi_enabled)
+ 		platform_device_msi_free_irqs_all(hba->dev);
+ }
+diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
+index 8711e5cbc968..b3a5fc2d44e7 100644
+--- a/drivers/ufs/host/ufs-renesas.c
++++ b/drivers/ufs/host/ufs-renesas.c
+@@ -390,9 +390,7 @@ static int ufs_renesas_probe(struct platform_device *pdev)
+ 
+ static void ufs_renesas_remove(struct platform_device *pdev)
+ {
+-	struct ufs_hba *hba = platform_get_drvdata(pdev);
+-
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ }
+ 
+ static struct platform_driver ufs_renesas_platform = {
+diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
+index d8b165908809..e455890cf7d4 100644
+--- a/drivers/ufs/host/ufs-sprd.c
++++ b/drivers/ufs/host/ufs-sprd.c
+@@ -427,10 +427,8 @@ static int ufs_sprd_probe(struct platform_device *pdev)
+ 
+ static void ufs_sprd_remove(struct platform_device *pdev)
+ {
+-	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+-
+ 	pm_runtime_get_sync(&(pdev)->dev);
+-	ufshcd_remove(hba);
++	ufshcd_pltfrm_remove(pdev);
+ }
+ 
+ static const struct dev_pm_ops ufs_sprd_pm_ops = {
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index 1f4f30d6cb42..bad5b1303eb6 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -524,6 +524,19 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
+ 
++/**
++ * ufshcd_pltfrm_remove - Remove ufshcd platform
++ * @pdev: pointer to Platform device handle
++ */
++void ufshcd_pltfrm_remove(struct platform_device *pdev)
++{
++	struct ufs_hba *hba =  platform_get_drvdata(pdev);
++
++	ufshcd_remove(hba);
++	pm_runtime_disable(&pdev->dev);
++}
++EXPORT_SYMBOL_GPL(ufshcd_pltfrm_remove);
++
+ MODULE_AUTHOR("Santosh Yaragnavi <santosh.sy@samsung.com>");
+ MODULE_AUTHOR("Vinayak Holikatti <h.vinayak@samsung.com>");
+ MODULE_DESCRIPTION("UFS host controller Platform bus based glue driver");
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.h b/drivers/ufs/host/ufshcd-pltfrm.h
+index df387be5216b..3017f8e8f93c 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.h
++++ b/drivers/ufs/host/ufshcd-pltfrm.h
+@@ -31,6 +31,7 @@ int ufshcd_negotiate_pwr_params(const struct ufs_host_params *host_params,
+ void ufshcd_init_host_params(struct ufs_host_params *host_params);
+ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 		       const struct ufs_hba_variant_ops *vops);
++void ufshcd_pltfrm_remove(struct platform_device *pdev);
+ int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 			 struct ufs_vreg **out_vreg, bool skip_current);
+ 
 
 -- 
 2.25.1
