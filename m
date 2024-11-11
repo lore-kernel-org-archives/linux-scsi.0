@@ -1,104 +1,113 @@
-Received: from smtp.smtpout.orange.fr (smtp-21.smtpout.orange.fr [80.12.242.21])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D664E158558;
-	Mon, 11 Nov 2024 13:11:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDBFC13C80D;
+	Mon, 11 Nov 2024 16:27:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731330675; cv=none; b=cKdhfNqYwN+MaQ/yesD0vF5rZsp9v8L14Jb+q7JtYi6CQJS5ZjzO1vpi/naOMLg5RqMW+SGnaA/SQNfFQu7IzXNwe18titM5DkiRi6/iLGrHEh76ZnKvVrO651cqYrZz1s+dd2fsOnNpTd3eLhDvJJV2i1/lPkDYW7N7SsSonec=
+	t=1731342457; cv=none; b=iGkauuVESVmIqTZqAK8150+PC/HexAegDBLMKogttE/9ihZmuaLWv0cVBiWnzIsvX/APHRhGqltrPVRYUI3cFA8dTxLgf7lJvraUuQvO/xoI086w7BngIOJpadLvr0P3KlCzao7QZAkxN3Aur7+CkAht71SR9hLNltX/jHA2SrQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731330675; c=relaxed/simple;
-	bh=pcvUj6hiQws2lylwq5PlCi5h3lu5Ev1MrCrkJ29r3H8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XXQ9k26M4NBkl+dX8UEKZbKiMCjlQHkKOb0IKw0Zpe5i990f10RrQPigPFhAro02rXf258czkKjDonZyqn2NyQdCMzEBbKsa3ozNtjv47GajflrSdr0r2tJRSVHzCnD3Wjp2xt02SUDYrtrlKO3hmaxSvsrTfYRsTq+pAGeIpak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=KuO2EG7h; arc=none smtp.client-ip=80.12.242.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+	s=arc-20240116; t=1731342457; c=relaxed/simple;
+	bh=fJMQuYsECNO8SL8MoMztWuhXknHywKxO6bpFKaQ4/tk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fl27/5nMtgrN2AE1d8QkC7NJWUGPiOo3sVHJ1GFtm4+t2S2lA6B6GKIaOVLbS5DWBEppk6RZXFsTcAXewLx6+5Smw4vq55YaEidK0okb8/a6EDac+X0ZbdMMB6D+l6XIzZjDfucnK7SP55PwczSs14KqlIzgPaGM3+Mby6VFB0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rZQf0+4y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="KuO2EG7h"
-Received: from localhost.localdomain ([90.11.132.44])
-	by smtp.orange.fr with ESMTPA
-	id AUCBtWVCtj1r8AUCCtNM7Z; Mon, 11 Nov 2024 14:11:08 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1731330668;
-	bh=k6+U7vZ/tn1IEQn4DKT3rhNOeOOohqN78QfNcyAx/YQ=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=KuO2EG7hxR5vLmuSpVztvlr/EJ4dUoRAmCfUZ/KdlWxMyiPuzc0Pp2QtyOVGopIVj
-	 H75lqaf4Bx4Cu8dPOeZAVDDtKMB3MPC6btSQFd2Xn3EMeTNUCcbr/3/JOzjunAFoof
-	 cOyM6NBZ4g6qakikw2E26yXblZ8pm0OJw4fuuE5hTqQDEILhc3e2NfD8vADEq8ebqG
-	 B38T2AFtOYhGYD0uJflxSRHjLhhSvkrppeK1cBJ7Lg8ngRRDLk3f0/dVMBuQVyCCa8
-	 bWkUo8ZOqGpRGhg7lmDCBJvV33mTnTFZtC75qGbCMkP5FJPJfJS+LTJNQH18cYHu6j
-	 tUJyDvoXyrSeA==
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Mon, 11 Nov 2024 14:11:08 +0100
-X-ME-IP: 90.11.132.44
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: Bodo Stroesser <bostroesser@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Subject: [PATCH] scsi: target: tcmu: Constify some structures
-Date: Mon, 11 Nov 2024 14:10:56 +0100
-Message-ID: <f83cd8469cc17391178e1181e8c26c4c1fb6028f.1731330634.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rZQf0+4y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 555DAC4CECF;
+	Mon, 11 Nov 2024 16:27:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731342457;
+	bh=fJMQuYsECNO8SL8MoMztWuhXknHywKxO6bpFKaQ4/tk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rZQf0+4yfZt5LKsbrtjWZLo88wX1EU9zpd2YctRXKMVU2fN+CkFXHpbROUtJe9O15
+	 /kvN6WXl0rbXesHJ9B4wWSh8aCTrBBS3SIAtmhOFzGpuEEqWhzh0RaYs1XKEIUI4hX
+	 jTCd+eGz8qgqTgz2lTuCmRmo0/lsl6Rv3brNNr5Kyh94rFdbCbHMAoGyIe/5WSlVSS
+	 KDyUpkbgXIp5Isx+39PNn0sYUtTAIv/aoK10rcaNSI2qUKBKih0Gu5/UpFCwEycIoe
+	 rebe0foqrYFiPhXRxGui7NFwBduK/0JiigPipoP54RuVXtPlZ/JmOoVxRlVChkz9X8
+	 R2MQ0jI6pEHiQ==
+Date: Mon, 11 Nov 2024 09:27:33 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+	axboe@kernel.dk, martin.petersen@oracle.com, asml.silence@gmail.com,
+	javier.gonz@samsung.com, joshi.k@samsung.com
+Subject: Re: [PATCHv11 0/9] write hints with nvme fdp and scsi streams
+Message-ID: <ZzIwdW0-yn6uglDF@kbusch-mbp>
+References: <20241108193629.3817619-1-kbusch@meta.com>
+ <20241111102914.GA27870@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241111102914.GA27870@lst.de>
 
-'struct nla_policy' and 'struct match_table_t' are not modified in this
-driver.
+On Mon, Nov 11, 2024 at 11:29:14AM +0100, Christoph Hellwig wrote:
+> On Fri, Nov 08, 2024 at 11:36:20AM -0800, Keith Busch wrote:
+> >   Default partition split so partition one gets all the write hints
+> >   exclusively
+> 
+> I still don't think this actually works as expected, as the user
+> interface says the write streams are contigous, and with the bitmap
+> they aren't.
+> 
+> As I seem to have a really hard time to get my point across, I instead
+> spent this morning doing a POC of what I mean, and pushed it here:
+> 
+> http://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/block-write-streams
 
-Constifying these structures moves some data to a read-only section, so
-increase overall security, especially when the structure holds some
-function pointers, which is the case of struct nla_policy.
+Just purely for backward compatibility, I don't think you can have the
+nvme driver error out if a stream is too large. The fcntl lifetime hint
+never errored out before, which gets set unconditionally from the
+file_inode without considering the block device's max write stream.
 
-On a x86_64, with allmodconfig:
-Before:
-======
-   text	   data	    bss	    dec	    hex	filename
-  93188	   6933	    338	 100459	  1886b	drivers/target/target_core_user.o
+> The big differences are:
+> 
+>  - there is a separate write_stream value now instead of overloading
+>    the write hint.  For now it is an 8-bit field for the internal
+>    data structures so that we don't have to grow the bio, but all the
+>    user interfaces are kept at 16 bits (or in case of statx reduced to
+>    it).  If this becomes now enough because we need to support devices
+>    with multiple reclaim groups we'll have to find some space by using
+>    unions or growing structures
 
-After:
-=====
-   text	   data	    bss	    dec	    hex	filename
-  93508	   6581	    338	 100427	  1884b	drivers/target/target_core_user.o
+As far as I know, 255 possible streams exceeds any use case I know
+about.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-Compile tested only
----
- drivers/target/target_core_user.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>  - block/fops.c is the place to map the existing write hints into
+>    the write streams instead of the driver
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 717931267bda..0f5d820af119 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -361,7 +361,7 @@ static const struct genl_multicast_group tcmu_mcgrps[] = {
- 	[TCMU_MCGRP_CONFIG] = { .name = "config", },
- };
- 
--static struct nla_policy tcmu_attr_policy[TCMU_ATTR_MAX+1] = {
-+static const struct nla_policy tcmu_attr_policy[TCMU_ATTR_MAX + 1] = {
- 	[TCMU_ATTR_DEVICE]	= { .type = NLA_STRING },
- 	[TCMU_ATTR_MINOR]	= { .type = NLA_U32 },
- 	[TCMU_ATTR_CMD_STATUS]	= { .type = NLA_S32 },
-@@ -2430,7 +2430,7 @@ enum {
- 	Opt_cmd_ring_size_mb, Opt_err,
- };
- 
--static match_table_t tokens = {
-+static const match_table_t tokens = {
- 	{Opt_dev_config, "dev_config=%s"},
- 	{Opt_dev_size, "dev_size=%s"},
- 	{Opt_hw_block_size, "hw_block_size=%d"},
--- 
-2.47.0
+I might be something here, but that part sure looks the same as what's
+in this series.
 
+>  - the stream granularity is added, because adding it to statx at a
+>    later time would be nasty.  Getting it in nvme is actually amazingly
+>    cumbersome so I gave up on that and just fed a dummy value for
+>    testing, though
+
+Just regarding the documentation on the write_stream_granularity, you
+don't need to discard the entire RU in a single command. You can
+invalidate the RU simply by overwriting the LBAs without ever issuing
+any discard commands.
+
+If you really want to treat it this way, you need to ensure the first
+LBA written to an RU is always aligned to NPDA/NPDAL.
+
+If this is really what you require to move this forward, though, that's
+fine with me.
+
+>  - the partitions remapping is now done using an offset into the global
+>    write stream space so that the there is a contiguous number space.
+>    The interface for this is rather hacky, so only treat it as a start
+>    for interface and use case discussions.
+>  - the generic stack limits code stopped stacking the max write
+>    streams.  While it does the right thing for simple things like
+>    multipath and mirroring/striping is is wrong for anything non-trivial
+>    like parity raid.  I've left this as a separate fold patch for the
+>    discussion.
