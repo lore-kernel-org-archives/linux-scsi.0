@@ -1,99 +1,79 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B7C1EF1D;
-	Mon, 11 Nov 2024 06:22:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BBE017F7;
+	Mon, 11 Nov 2024 06:48:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731306133; cv=none; b=H9MTLpbtwZeZ407whOW3DPDRvCzEWda5Efv/TmuqICo29ikpUw3H3oPa8MFBXYPyuP7nxjxrLPZ95fCZB1APHXzUTPaA2kAgAsfuyN/lTh/DFx/BzurHmPkD0oaXdoDFC4t1D0C8sUGjNiq7Ipu/F1YwwFXKUukZN2joQntRf2Q=
+	t=1731307727; cv=none; b=Hgnjtkp1+pWkMXi5M0N0yQG/vD1jmgw5dsE/KPeTqnbNV4K6sjJ8d13Y0bvRfF+u72LgxKrg1guW05j7ypDFjblb8LrHA4zYwweGoE1lZ+e+BKgEi+UQc6F4yu+DSEcr5hNEXQdHPSe9kiWri0t7RGL0EX/OttPE0MHdCSFAbxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731306133; c=relaxed/simple;
-	bh=6o1Wagd0uUVsHIpGzUJpqU/Rw+/J5VBWI+It9NIq3S8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pK/b5iREWvZi7ctmyOgSQOrMc+xCAy52r1ekUTemevFi5F9H1YfPgG6TsNnt9NpBs8AyULKXgCqGEdbGKGqh6hYWJUUXKbAd5Y7V1w8utVmLb/6bkjvaAlETeYBLsntrmqJbBlH5v0LQZXuHHYBVlxTxpPblWiCI4GXZX2hLkwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kpgbYIFO; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kpgbYIFO"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-20cbca51687so41110705ad.1;
-        Sun, 10 Nov 2024 22:22:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731306131; x=1731910931; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VBWbka6tcunvnkswMnINMIR9eUmPBlJrKkb4tiWy/N4=;
-        b=kpgbYIFOzkV6dJog7O8OBrqApoP+5jPwkGHYpwnsTY1hQz1dPQiyBkZ2o+3iF3h8+q
-         g3/zxqEsMyzajjM0Oko6TjmIS1vD3rZ8gW18zGShfRt1Wt6qfl8PuP0llrW4+e/UK/8e
-         NDilwsDWBtved0GukQDVjfgD7cDVYdgCVf4BS8pAb9YxRfVX0vgJp+0oZGllwbjew2m9
-         8nutJ06A3V6Q9IXdQTR96b7ZKIK71oVu+Mq171jXmJ9bOgVHtWoA6XrVQiymItpsh2oq
-         QFbscNbBPw94/wIrN8RouIwkPR2z7qCCqVFg9HwNixPdiaTAAf+XhpXxRGnp8aAW3KFI
-         0b6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731306131; x=1731910931;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VBWbka6tcunvnkswMnINMIR9eUmPBlJrKkb4tiWy/N4=;
-        b=Egf0Y1j2ZF8YKNudKDzDlmujbmesE3sP1VsKnDWWJc8T2dDPBDMaxrjN57vW21sJgq
-         AtviZ+BsiKCXDPXHSCAWLmAuLGETQAksUz8zDH55mTX4gZDfqqavsVQSO27q/7NlR/gx
-         ybDIosqUts0NYOfIdLByfxI3cjM93h3XwVuPrqxRBmNCkr+PwgaCsPErajVHEcYfm520
-         v/PKKzzgM/hyODuom0tjdoPwzIYC/v2cuykwaePyvvvFqRfJj427zpT8M0/9Qi8Apv4v
-         GKum3ELi1EmSqReXY9h5wsIO38HwbryHOG93SqUlcWYRi0OWhKQV9/jOSNpRsH5FNhhh
-         o3tg==
-X-Forwarded-Encrypted: i=1; AJvYcCXzvvaivMAgeAPgskzjU8GqH09lFrCypXqElRfDAIUNzBkM2IueAgGThsRuscp5sAgY88OF46P7mNdoBl4=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyx1pYWvUpNfjk60snmL5K4sH0K6Ggqz/QhVf1wCO48LcXa4EAk
-	dLrhiJEblFgbM5uIsxpe/QqC4DCp5NtC4BGg0Ow9vBFo4qhEfjbA
-X-Google-Smtp-Source: AGHT+IHd1rVyG32K6mQRKSb5g8ZV+d4A7We4fZ1OI0UfFHjiqq+RNsFYAsV/vC0TZstA2Sqob/yLUA==
-X-Received: by 2002:a17:902:d2cb:b0:20b:a25e:16c5 with SMTP id d9443c01a7336-211835c0f65mr162005455ad.53.1731306131446;
-        Sun, 10 Nov 2024 22:22:11 -0800 (PST)
-Received: from localhost.localdomain ([103.150.184.35])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177e68960sm69051915ad.220.2024.11.10.22.22.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Nov 2024 22:22:11 -0800 (PST)
-From: Xiang Zhang <hawkxiang.cpp@gmail.com>
-To: lduncan@suse.com,
-	cleech@redhat.co,
-	michael.christie@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Xiang Zhang <hawkxiang.cpp@gmail.com>
-Subject: [PATCH] scsi: iscsi: special case for GET_HOST_STATS
-Date: Mon, 11 Nov 2024 14:21:50 +0800
-Message-ID: <20241111062150.86091-1-hawkxiang.cpp@gmail.com>
-X-Mailer: git-send-email 2.44.0
+	s=arc-20240116; t=1731307727; c=relaxed/simple;
+	bh=aXtd0QCRphRYeWp0UQGTZfRJTgzgJckEzQ4C4m8R9QM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=obTl2TcR3Xp1cMVxpe2bNfGUZdLH64miQyuBxvwOtHwJXsOOEp3MvpQASJwuggZCS4PiMgvPLZKFEvhJnRS07OKDEkPlNW9qhzEhrsB8VPl7bzyjCzSlYTdj2GwJ18q9L3VYtMrcM9g7jd7OUIVtVj2lijrlEcONCHbSmbBlElg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 8F32468C7B; Mon, 11 Nov 2024 07:48:41 +0100 (CET)
+Date: Mon, 11 Nov 2024 07:48:41 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, io-uring@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
+	javier.gonz@samsung.com, bvanassche@acm.org
+Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
+Message-ID: <20241111064841.GA24107@lst.de>
+References: <20241029151922.459139-1-kbusch@meta.com> <20241105155014.GA7310@lst.de> <Zy0k06wK0ymPm4BV@kbusch-mbp> <20241108141852.GA6578@lst.de> <Zy4zgwYKB1f6McTH@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zy4zgwYKB1f6McTH@kbusch-mbp>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Special case for ISCSI_UEVENT_GET_HOST_STATS:
-- On success: send reply and stats from iscsi_get_host_stats()
-  within if_recv_msg().
-- On error: fall through.
+On Fri, Nov 08, 2024 at 08:51:31AM -0700, Keith Busch wrote:
+> You're getting fragmentation anyway, which is why you had to implement
+> gc.
 
-Signed-off-by: Xiang Zhang <hawkxiang.cpp@gmail.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+A general purpose file system always has fragmentation of some kind,
+even it manages to avoid those for certain workloads with cooperative
+applications.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index fde7de3b1e55..ad4186da1cb4 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -4113,6 +4113,8 @@ iscsi_if_rx(struct sk_buff *skb)
- 				break;
- 			if (ev->type == ISCSI_UEVENT_GET_CHAP && !err)
- 				break;
-+			if (ev->type == ISCSI_UEVENT_GET_HOST_STATS && !err)
-+				break;
- 			err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
- 						  ev, sizeof(*ev));
- 			if (err == -EAGAIN && --retries < 0) {
--- 
-2.44.0
+If there was magic pixies dust to ensure freespace never fragments file
+system development would be solved problem :)
 
+> You're just shifting who gets to deal with it from the controller to
+> the host. The host is further from the media, so you're starting from a
+> disadvantage.
+
+And the controller is further from the application and misses a lot of
+information like say the file structure, so it inherently is at a
+disadvantage.
+
+> The host gc implementation would have to be quite a bit
+> better to justify the link and memory usage necessary for the copies
+
+That assumes you still have to device GC.  If you do align to the
+zone/erase (super)block/reclaim unit boundaries you don't.
+
+> This xfs implementation also has logic to recover from a power fail. The
+> device already does that if you use the LBA abstraction instead of
+> tracking sequential write pointers and free blocks.
+
+Every file system has logic to recover from a power fail.  I'm not sure
+what kind of discussion you're trying to kick off here.
+
+> I think you are underestimating the duplication of efforts going on
+> here.
+
+I'm still not sure what discussion you're trying to to start here.
+There is very little work in here, and it is work required to support
+SMR drives.  It turns out for a fair amount of workloads it actually
+works really well on SSDs as well beating everything else we've tried.
