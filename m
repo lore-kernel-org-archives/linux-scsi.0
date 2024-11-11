@@ -1,78 +1,87 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mta-03.yadro.com (mta-03.yadro.com [89.207.88.253])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53CB01850AF;
-	Mon, 11 Nov 2024 10:29:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646AD2B9A9;
+	Mon, 11 Nov 2024 10:37:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.253
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731320962; cv=none; b=EY8hoco10BKQrTEDBrz17eUI6jhdBsgb2MXERNL7caIdv0UBpPxxJvdRlznuOCH087/Sa9wY/pg5Q2ykS3J7mfHUS06n/AeOytZJFjlj2463ULDt9IST3wMxHM5oPkz6yY6bZfwfN5eyauk0IvpcE6rHwr1dLwcCV9mx7ZwLePQ=
+	t=1731321433; cv=none; b=IwQlhZax0JkrD1FWpUyzM+crOmjMNMwUN+6i41u3xKgAOr9uSRLd5GgryCQp8+m15BJNdtDyrlOCgDUcVbc2rKIttCTy6GpV1Prhy/M0Y/aTSeip0irfWTc9MVln1kR2+qC8zgZuGpaPzBantYmAAvAtEqgLx30TK9db4MbZKt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731320962; c=relaxed/simple;
-	bh=H8688IHkrAhzY0lMUPLf6jI8Dg7DkVuXAc0C7/5+aus=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GBzSdKpRxaWIEARV5sxJFtLDX9XYfHwPS2E6/5oe0XfxDU0w4lEj033LgD8LjudW4xvPET6TOb23mBfbjO3IYqLozRJjfZp798UaTUyVRsIy+1Qoi1MVCAJo47eXI6y43x/sCBWCGKg4lfHZBNyQVjmdIUyVRhXLnXV0smkQR4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3C96168D09; Mon, 11 Nov 2024 11:29:15 +0100 (CET)
-Date: Mon, 11 Nov 2024 11:29:14 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@meta.com>
-Cc: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	io-uring@vger.kernel.org, axboe@kernel.dk, hch@lst.de,
-	martin.petersen@oracle.com, asml.silence@gmail.com,
-	javier.gonz@samsung.com, joshi.k@samsung.com,
-	Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCHv11 0/9] write hints with nvme fdp and scsi streams
-Message-ID: <20241111102914.GA27870@lst.de>
-References: <20241108193629.3817619-1-kbusch@meta.com>
+	s=arc-20240116; t=1731321433; c=relaxed/simple;
+	bh=P4AaAvIbVWhclYykSBnt3aFnOH4jiTuUtEOJcfctRgM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=lKKOQXw4RXQavZ7w+47xT2ymNgmySX5SHYbeGQHNHOMpm8p7gKVMNiVSTMWO0KJ7i201FcMNuCl636mQJ0vrGwdusXzzx1HrfJmQC3yD4lla8/9PKlrT+ZlCKSW88tGT/BW8yM/PjSFS+FdLchChibxZaSNge8ABIH4sAZbt2sM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=GyegV+ae; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=VUr+ZHPB; arc=none smtp.client-ip=89.207.88.253
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="GyegV+ae";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="VUr+ZHPB"
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-03.yadro.com B58D3E0003
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
+	t=1731320893; bh=P4AaAvIbVWhclYykSBnt3aFnOH4jiTuUtEOJcfctRgM=;
+	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version:From;
+	b=GyegV+aee58DzkfNlXRFoF4adTSRQXWZ3ii6b0PfqTI8e3bn9qK8fnmS6SsyVz+pm
+	 x8FgYoPdue0+yiaDinbTvRFdItmT3idD/HbfVLKBSZW+Nd/40HQWw9oHCZWmsjFYeS
+	 68LSBe0kCBq80fji/QT9iCBSCNPqUy1CcyO5pqXIf4mhMwaVA/7Dh1v9/wsa1I/8G8
+	 p479qpaNpDv0/jIQdPeSNP4/2VkQp7DXW9jkjXjTuWboLdTwEc6f143GxQ79RoDtvc
+	 LG8r94N+Xm0sDUN+gju2AP5r8UdpuL+UCugDT5S4KEUW3bFfCe/UeuVm/sSpvCAGb7
+	 s7GMO0qoWeq0w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1731320893; bh=P4AaAvIbVWhclYykSBnt3aFnOH4jiTuUtEOJcfctRgM=;
+	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version:From;
+	b=VUr+ZHPBfcAaqAs/wtG98BsE2/rvkQjhwqZVNKFQJoJex+Nlj3DAZlrABkLMG9/zv
+	 ImfgEluhbllTijEtQeo070KVmMDM/CoFMaSgYccZ1vTyRR1K3BlrfYQZW7JRCgTeJi
+	 yvDCMogZMV1rzmIcvspOakBkhnAO9jRH7BZQeNfxexHrR5NdXnyrp4aSo14Lr5CS+b
+	 9q8tkSfV8BBFymvLHLmPS6ESvx5mb9hOLPs4d1Rs65DFzwm1VLoDJvU2MiTs6Siud8
+	 N9FQNwJzSGOUCyfJg/OS/az5wnWg+he4NOCcldfQ0IYXhn4FffyXoi8qErSKjOvsfH
+	 Et9KlKTjn3sWA==
+From: Anastasia Kovaleva <a.kovaleva@yadro.com>
+To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+	"njavali@marvell.com" <njavali@marvell.com>,
+	"GR-QLogic-Storage-Upstream@marvell.com"
+	<GR-QLogic-Storage-Upstream@marvell.com>
+CC: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
+	"quinn.tran@cavium.com" <quinn.tran@cavium.com>,
+	"himanshu.madhani@oracle.com" <himanshu.madhani@oracle.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux@yadro.com" <linux@yadro.com>, "hare@suse.de" <hare@suse.de>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v3 0/3] Fix bugs in qla2xxx driver
+Thread-Topic: [PATCH v3 0/3] Fix bugs in qla2xxx driver
+Thread-Index: AQHbGzIvZMV/oTAyUkWQTinjaU2zibKiTS4AgA/FPwA=
+Date: Mon, 11 Nov 2024 10:28:12 +0000
+Message-ID: <021F3B9D-6DD0-4DD8-BDF0-D7D1A633621D@yadro.com>
+References: <20241010163236.27969-1-a.kovaleva@yadro.com>
+ <93FA6AD1-9959-4E4C-A447-9CF694A6A024@yadro.com>
+In-Reply-To: <93FA6AD1-9959-4E4C-A447-9CF694A6A024@yadro.com>
+Accept-Language: ru-RU, en-US
+Content-Language: en-GB
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <359718AC88BC8847AB811981A58BCAAC@yadro.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241108193629.3817619-1-kbusch@meta.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Nov 08, 2024 at 11:36:20AM -0800, Keith Busch wrote:
->   Default partition split so partition one gets all the write hints
->   exclusively
-
-I still don't think this actually works as expected, as the user
-interface says the write streams are contigous, and with the bitmap
-they aren't.
-
-As I seem to have a really hard time to get my point across, I instead
-spent this morning doing a POC of what I mean, and pushed it here:
-
-http://git.infradead.org/?p=users/hch/misc.git;a=shortlog;h=refs/heads/block-write-streams
-
-The big differences are:
-
- - there is a separate write_stream value now instead of overloading
-   the write hint.  For now it is an 8-bit field for the internal
-   data structures so that we don't have to grow the bio, but all the
-   user interfaces are kept at 16 bits (or in case of statx reduced to
-   it).  If this becomes now enough because we need to support devices
-   with multiple reclaim groups we'll have to find some space by using
-   unions or growing structures
- - block/fops.c is the place to map the existing write hints into
-   the write streams instead of the driver
- - the stream granularity is added, because adding it to statx at a
-   later time would be nasty.  Getting it in nvme is actually amazingly
-   cumbersome so I gave up on that and just fed a dummy value for
-   testing, though
- - the partitions remapping is now done using an offset into the global
-   write stream space so that the there is a contiguous number space.
-   The interface for this is rather hacky, so only treat it as a start
-   for interface and use case discussions.
- - the generic stack limits code stopped stacking the max write
-   streams.  While it does the right thing for simple things like
-   multipath and mirroring/striping is is wrong for anything non-trivial
-   like parity raid.  I've left this as a separate fold patch for the
-   discussion.
+T24gVGh1LCAxMCBPY3QgMjAyNCAxOTozMjozMyArMDMwMCwgQW5hc3Rhc2lhIEtvdmFsZXZhIHdy
+b3RlOg0KPiBUaGlzIHNlcmllcyBvZiBwYXRjaGVzIGNvbnRhaW5zIDMgc2VwYXJhdGUgY2hhbmdl
+cyB0aGF0IGZpeCBzb21lIGJ1Z3MgaW4NCj4gdGhlIHFsYTJ4eHggZHJpdmVyLg0KPiAtLS0NCj4g
+djM6DQo+IC0gRml4IGJ1aWxkIGlzc3VlIGluIHBhdGNoIDENCj4gdjI6DQo+IC0gQ2hhbmdlIGEg
+c3BpbmxvY2sgd3JhcCB0byBhIFdSSVRFX09OQ0UoKSBpbiBwYXRjaCAxDQo+IC0gQWRkIFJldmll
+d2VkLWJ5IHRhZ3Mgb24gcGF0Y2hlcyAyIGFuZCAzDQo+IC0tLQ0KPiBBbmFzdGFzaWEgS292YWxl
+dmEgKDMpOg0KPiBzY3NpOiBxbGEyeHh4OiBEcm9wIHN0YXJ2YXRpb24gY291bnRlciBvbiBzdWNj
+ZXNzDQo+IHNjc2k6IHFsYTJ4eHg6IE1ha2UgdGFyZ2V0IHNlbmQgY29ycmVjdCBMT0dPDQo+IHNj
+c2k6IHFsYTJ4eHg6IFJlbW92ZSBpbmNvcnJlY3QgdHJhcA0KPg0KPiBkcml2ZXJzL3Njc2kvcWxh
+Mnh4eC9xbGFfaW9jYi5jIHwgMTEgKysrKysrKysrKysNCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgv
+cWxhX2lzci5jIHwgNCArKysrDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYyB8
+IDE2ICsrKysrKystLS0tLS0tLS0NCj4gMyBmaWxlcyBjaGFuZ2VkLCAyMiBpbnNlcnRpb25zKCsp
+LCA5IGRlbGV0aW9ucygtKQ0KPg0KDQoNCkdlbnRsZSBwaW5nDQoNCg0KDQoNCg0K
