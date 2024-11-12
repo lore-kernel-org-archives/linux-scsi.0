@@ -1,73 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77901FEFD1;
-	Tue, 12 Nov 2024 14:25:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35341FEFC7
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 14:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731421549; cv=none; b=CYRQvBEVzMAIfAZcljuCUeotflOQplXWh+kNpwvfVB9midSTlfQ1HrKUWKh5JKcoykt9MKf666BsiByv+IkE3PA3BMlyFz1PMV9QfOUDsHv8ima3WZxuBs4Zgh1Ejoare1dL3UVaEGIArFFyTRjsZ/7MPEShdb2EoOtiFLlBqU0=
+	t=1731422209; cv=none; b=kp9RH9CWrS7S9OrEow7PHJY80KdQpP74SV9xyb9aQ1+EF+YlrL00sJdh1cfJtOE3rvlJYc9Jf/4s+fZeahqOfl/2kPOpWqRPxokBGKSILjIOBGzuS0cbk86i95JSpxID2r4XVc8i86aDK0xu7vaz33PYpzdCgGH0tbzBEqjEYkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731421549; c=relaxed/simple;
-	bh=FqK6AvBbok3agYaXcwWnCFMmVIqq7T/f8WTFeYDo4R8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pAawZicFCVQXj8rIgLRzwIfHAUyJ74mdomKRw7rz2nRSZQfs/NYPw1YyLZhh3OQQjUsyMQIxx2ji8a9GMtr15/cpzseBAQlpSlhpCHvY66pmEKUgheWKZzRoqL1n3mkH73gWLX+LFMl8mdia0CdmKsgovljYKgrq1RClHH0qdp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ePHLU2/h; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731422209; c=relaxed/simple;
+	bh=nGSESZ6LNWlBpxc8EUBXwUNaqDZlgGKDnCYvlQF63Zg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=kBbLA4MEmmo5ZML6pbmoFicJwYJXwHM2I5Qa3dykPYDj6fFKTShBIUHg13CSpwm/bFxXf/N2rhzZTNmVZqJ8cAwqOlLQR8Anomr/4wo7XKD0Ca53hJabnUG7LOZsODFE+v+3c25bduA9VS9Md7r0vJdGsllE1pvo8f9WJODYeIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=lLYgBylq; arc=none smtp.client-ip=209.85.128.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ePHLU2/h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58F4AC4CECD;
-	Tue, 12 Nov 2024 14:25:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731421549;
-	bh=FqK6AvBbok3agYaXcwWnCFMmVIqq7T/f8WTFeYDo4R8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ePHLU2/hD6U7PnMMH7nbItnFIAQtapvtYXrLfgEyRh4w1ARIGASKPWGmKV1vKvybR
-	 1EKZvr1QfDBPgUlscNmxhahhmpFrR3vrFkx6aHUnAlH8kwxALSJmqUYcE+nu8SOmbI
-	 0iG1helEUWOdLRfC5PTBSCRxJyBvCiTLDIMgCSMjafxj4k9HZkfNZsC0Vv3ljeJ9bB
-	 WnjjK5n7Lf5wK1OKCGlRUM3O72GrzsH/kTenZhQlJRdHDLPKxdHKLVsR8CdDgENc8k
-	 1C8WcFReORB9mUGjtybP4t6kITOXEr2pwCHcyHlb11/JfLm4+za1LevRJd/DT/tMpN
-	 1I5gvWqlJLpBg==
-Date: Tue, 12 Nov 2024 07:25:45 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@meta.com>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	io-uring@vger.kernel.org, axboe@kernel.dk,
-	martin.petersen@oracle.com, asml.silence@gmail.com,
-	javier.gonz@samsung.com
-Subject: Re: [PATCHv11 0/9] write hints with nvme fdp and scsi streams
-Message-ID: <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com>
-References: <20241108193629.3817619-1-kbusch@meta.com>
- <CGME20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b@epcas5p3.samsung.com>
- <20241111102914.GA27870@lst.de>
- <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com>
- <20241112133439.GA4164@lst.de>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="lLYgBylq"
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-6ea0b25695dso47520497b3.2
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 06:36:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1731422206; x=1732027006; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=cgmhvMmvsAX1eZX0S9Wvwi35LFfEY0JKL1PQexUj2Y4=;
+        b=lLYgBylqf4JGYHIAG9Pej55FryJ3xC7hckui+u97hmGezb4Nyre1pd/c1tO55pFggh
+         Lj2UHnnJxPmYZkcpds7nqAfNwonKfPQe2KcNTa/pZ/bSoOnHEmHhNqIYsnJdeQ8+oFbq
+         Vd+2Dbce87vv2DotmBo23gj2G4zxvwh4Kw5Xkpl+4I9SEbS0GshUOAsFE0+INM6zseim
+         zHjdDNHwlYwjkkS3PS3Ktiyak9X0fv5GqExTAaEUIl94RK/EajtkhANtbt1tRGiyJGCs
+         lwhk5g3Zsd3F7+fDLpRxq3mGGxtaQ17bEt7LBgft9GtLoqg/3tc2HnGmTy4KY8kw2vTP
+         TTrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731422206; x=1732027006;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cgmhvMmvsAX1eZX0S9Wvwi35LFfEY0JKL1PQexUj2Y4=;
+        b=Zz5Wep8IENQe0TLlfxBbbocsKu8zIEw8u2Av1pOp0Mp4i98bikI6pMTNTTtv9mQTlM
+         Rb8eeLaweBWJJrmHLsWb8ppBABmOXYSbRgGXh9GJtxPIPFndWaE7eNz1DEfRaXcXthn5
+         2o+V10VAFYAexQug/WjBrJvHRGlEQbzH6+8xrITEY/CwVgaLmpF0sFsMwF66zSYjc1Rp
+         oCUvkyzrvwPUK6DgkzfWw4h4Y3NJpg2tFoQ9eaq+0OKIwIf3uNBPv0QFstqbIe0yJTWM
+         gWyEzyP4deZiENKICnzkB7fBTJnoTyWc4A5jZUMDBB3AhNA9BOOjEiZEs81vwac4ZPN5
+         hlCg==
+X-Forwarded-Encrypted: i=1; AJvYcCXIcJzpoC8TU3/Pmwer5Q5XoJz7mH+HUeJcuHGc1xxDhm/baqC03QdjWkepF9MCmYnyj2ErD8UU9NZc@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfxTZkazkXEBu8IBpuuK9r1UKeZn1CwN1mv6I0+GbLOXKuqKNT
+	DSI2220N8iBRlo6O57pXSOol9hRiTbfQx54ss3SW43vwildBuBht1llG8avp4kVrt76z1it+Lls
+	EA+w1QstKdPy9+AL5twignPoDh/UIRO8PRZWFRQ==
+X-Google-Smtp-Source: AGHT+IH9rSK+tLCTRixNouZv18mLFyvn8FHIuZnQADkcw+GhR4qfmbtPJ/eLDOrbx7U/Aj+xJlWgGqMHWo5EW1qAGx8=
+X-Received: by 2002:a05:690c:6885:b0:6ea:90b6:ab48 with SMTP id
+ 00721157ae682-6eaddd98875mr166222807b3.18.1731422206552; Tue, 12 Nov 2024
+ 06:36:46 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241112133439.GA4164@lst.de>
+References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com> <1731048987-229149-4-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1731048987-229149-4-git-send-email-shawn.lin@rock-chips.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 12 Nov 2024 15:36:09 +0100
+Message-ID: <CAPDyKFp0LKaqhdybGow7T72Vac52=bP3PjYL2920=SJzmYB06Q@mail.gmail.com>
+Subject: Re: [PATCH v5 3/7] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rob Herring <robh+dt@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org, 
+	linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Nov 12, 2024 at 02:34:39PM +0100, Christoph Hellwig wrote:
-> On Tue, Nov 12, 2024 at 06:56:25PM +0530, Kanchan Joshi wrote:
-> > IMO, passthrough propagation of hints/streams should continue to remain 
-> > the default behavior as it applies on multiple filesystems. And more 
-> > active placement by FS should rather be enabled by some opt in (e.g., 
-> > mount option). Such opt in will anyway be needed for other reasons (like 
-> > regression avoidance on a broken device).
-> 
-> I feel like banging my head against the wall.  No, passing through write
-> streams is simply not acceptable without the file system being in
-> control.  I've said and explained this in detail about a dozend times
-> and the file system actually needing to do data separation for it's own
-> purpose doesn't go away by ignoring it.
+On Fri, 8 Nov 2024 at 07:57, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>
+> From: Ulf Hansson <ulf.hansson@linaro.org>
+>
+> For some usecases a consumer driver requires its device to remain power-on
+> from the PM domain perspective during runtime. Using dev PM qos along with
+> the genpd governors, doesn't work for this case as would potentially
+> prevent the device from being runtime suspended too.
+>
+> To support these usecases, let's introduce dev_pm_genpd_rpm_always_on() to
+> allow consumers drivers to dynamically control the behaviour in genpd for a
+> device that is attached to it.
+>
+> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+>
+> Changes in v5: None
+> Changes in v4: None
+> Changes in v3: None
+> Changes in v2: None
+>
+>  drivers/pmdomain/core.c   | 34 ++++++++++++++++++++++++++++++++++
+>  include/linux/pm_domain.h |  7 +++++++
+>  2 files changed, 41 insertions(+)
+>
+> diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
+> index 5ede0f7..2ccfcb7 100644
+> --- a/drivers/pmdomain/core.c
+> +++ b/drivers/pmdomain/core.c
+> @@ -692,6 +692,36 @@ bool dev_pm_genpd_get_hwmode(struct device *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(dev_pm_genpd_get_hwmode);
+>
+> +/**
+> + * dev_pm_genpd_rpm_always_on() - Control if the PM domain can be powered off.
+> + *
+> + * @dev: Device for which the PM domain may need to stay on for.
+> + * @on: Value to set or unset for the condition.
+> + *
+> + * For some usecases a consumer driver requires its device to remain power-on
+> + * from the PM domain perspective during runtime. This function allows the
+> + * behaviour to be dynamically controlled for a device attached to a genpd.
+> + *
+> + * It is assumed that the users guarantee that the genpd wouldn't be detached
+> + * while this routine is getting called.
+> + *
+> + * Return: Returns 0 on success and negative error values on failures.
+> + */
+> +int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
+> +{
+> +       struct generic_pm_domain *genpd;
+> +
+> +       genpd = dev_to_genpd_safe(dev);
+> +       if (!genpd)
+> +               return -ENODEV;
+> +
+> +       genpd_lock(genpd);
+> +       dev_gpd_data(dev)->rpm_always_on = on;
+> +       genpd_unlock(genpd);
+> +
+> +       return 0;
+> +}
 
-But that's just an ideological decision that doesn't jive with how
-people use these. The applications know how they use their data better
-than the filesystem, so putting the filesystem in the way to force
-streams look like zones is just a unnecessary layer of indirection
-getting in the way.
+We need and EXPORT_SYMBOL_GPL() here too.
+
+[...]
+
+Kind regards
+Uffe
