@@ -1,71 +1,80 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12181209F4A;
-	Tue, 12 Nov 2024 07:53:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA695234;
+	Tue, 12 Nov 2024 07:56:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731398023; cv=none; b=CNszVTxCfuOI0eYsY/CZk1onVdXoHomV0dEfpE18hOqYMu97glFTIst3eDzvnWE3XLHW/J1zM0FZuCtiEg88zS6sKbWkQ07xxjOuGDxHHUxS/kd+XNWWJ+fG+FeslJV9CmemHJf4tyUrTdSthdqS8zGthGtLlkVffCpAYlGf8Ps=
+	t=1731398191; cv=none; b=XMuMnbuIs5QWlsVYFN1cpJylI1QUKPHw2DGlzZs7/oTWipzqHAfJkCoORn6FwhYSuJJa7eTIp9KVAY5P/CLaKizfcBNK04l8x8qWS2gwdMBHB0gyrTA90h47lXP+RJvU2dYTj59txrbx8t+u2rrlGEyLo+phpu73DsPEeieVq7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731398023; c=relaxed/simple;
-	bh=aNauZ/Ih/QkT/dVs7qqIjV3TANMpfFtHW7+Wmb08jek=;
+	s=arc-20240116; t=1731398191; c=relaxed/simple;
+	bh=25O1AxlRpWs+3gu/vbg8zcYP/wwTZeoTz8rYqGhb2PU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cR0ZTeuJliB+4KJTOEtT+gTxFxlmTApTq8qih/ZTYg66gburRexOlN1GIYnWkVaQovCkDHBUKDN4VgYs/x5xmLvl5JPZFsn3tGnoAz+wYkc5/yJ6406tXKlFglxAqO+d5Ber4ifbvFn2BKSNPlwEhbCI5K98fYgZUvAznrfY9Yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k5StVuah; arc=none smtp.client-ip=209.85.210.177
+	 Content-Type:Content-Disposition:In-Reply-To; b=lAK+B8FDlpwKZv0lW+iGyYLkHdVsn8kJmt8BFuFqk3scM9JKBNNw/YEvwvx3fdhMV/L0hx4A7a/Djo8MDAzktRrz4JW+Nu6YgdwESVpzL0OcO55Y+kKRDSD8PlQwkDWb6F4KBY8kVWK8WupM5oc9QUaMPHz9sdXgRbAD8fo/rUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LcAa/IQc; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k5StVuah"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-7242f559a9fso2506800b3a.1;
-        Mon, 11 Nov 2024 23:53:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LcAa/IQc"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-20cd76c513cso44816515ad.3;
+        Mon, 11 Nov 2024 23:56:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731398020; x=1732002820; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1731398190; x=1732002990; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=bUgoxxvXrdhSJUKoJyf/O9v+5uKNcqCPwgTAuJ4BG7s=;
-        b=k5StVuahyiiO7KN2syrqVzoiJQoNBGi4VDfp5PzeOIB6lETijR+QTD5k5yf/nVXNIX
-         U7B1y/koPL8VYtiQqWmec7lRSnBVnG5MlTG/R8zMdhzRAeRNtGEMxMhwKQSg3t2NcHJO
-         cjUCbctYZtVGDXGK89L9zWbZaaFYDYFbt2WbGoDWE6z/2aUuYJ1CyXNZSBxGk96VxHSw
-         +9UYtAMFJ8PSsvqv3VcywndHOxMooQdpdZ+yefYeCgYwJb00AZd0fZINvYqEqr3CEZys
-         6yVdu1ND7YxjuBTCkQW2Hn8+xkJokakL/Fvw0UeJsqRJXPwGizGl6bhsux4lmuosZgnG
-         ksMg==
+        bh=NefPRLN+h9TOgssrrobmBkWbrfPIcMnQcGv5XGBIdzk=;
+        b=LcAa/IQcF6s5r78Xa2x1ThRraghDkaRdIWLg0tlxJbsxuZnw7fq3LHOGVDMBDWII7k
+         ugOZ1caWr9yfKKosPOuw+Y6PRq3y13Vr/4uBbQKv6DCrd8oduk0+7zoWRvc8podWFrHR
+         6ZiyetQWHEZwR15FaF2fV4zSSOfpxvl9oyRRioO4RkL/qvpIrCVRsyehJGPVqiy0/qge
+         prL55ZPtGI2zvvtBBPHzmTCubOmxP4KFtscaE/ym0lM+/xeUuLAeW3/G5X/q6BSR+kL4
+         kUJc3PCbOYdG8barHwA2hSs95++2rMndWx10JF9PW6+ZIB7RVOmkC6Hv2p/C5DpJsZxq
+         LVYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731398020; x=1732002820;
+        d=1e100.net; s=20230601; t=1731398190; x=1732002990;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bUgoxxvXrdhSJUKoJyf/O9v+5uKNcqCPwgTAuJ4BG7s=;
-        b=sqth2KThKTm5bwSjy3YWsfIV9mVKN+1vNQqHWoTr7ONjBVM3Ng+LRmbpqsHkF390uB
-         jE2qe40F+J9uZRws8GNULOCd3ONJh/c2JUnVBPyDHnwTt3+aTo7Fu2/jUuwet6HTq8RG
-         NsPiHyvHaHeSvfZxIkfhiedwj9Xai/v1BmYC1rYJ8o5BzliiA8gDumZ0sQ8rvB27ZjIk
-         c9i9cIroCnPfAEVOklhjhVlu2oHfJboTMrKXesXnyk6d+e5qAZkiXxQ3FYkqu5MbR4QM
-         iJ2jkCVrmXG+xTsVCo5gJZxnxVKcOjdZBBjI6cZKdmCSHiz/6FYxpePKc5NvgqaTKtrS
-         2y3A==
-X-Forwarded-Encrypted: i=1; AJvYcCWNCf9seypxgpVWSBWEEFYHyRj4VNYDlLlNmx4/m8LXV3ToBrHlZjAmlP//92NqskFZGDHtcJavOosbg+E=@vger.kernel.org, AJvYcCX+azBmUDVftd3Ff6ZXG/fCYrhKSVJZgkbrN3QIIAqTxhYAIJzIGODfat+lbB5cvtVyMGD3DCs+jxOE4Cdgr/+M2ys=@vger.kernel.org, AJvYcCXxgnQBGFdJh5EfasuZvrWSUS7Tzc9r+vXglW5Xn6RkZ3InZWeRbK4uWaMevdNJs7fUqWqXSoezstka4g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzlym+J4AvRTn10gtV3GheKiS4z4TmwSlkiwzy8Kh04lPcZmwa0
-	WkmSK3M+B+lvrGTIswtn3VoeBbvZsKcFq2ECyd+VaKeL84mJJwV8
-X-Google-Smtp-Source: AGHT+IH4s7RgAlk5NeJXz45kGRRPxv9SbFPlQhFQl+z6UduWSSD31KYzEVYWdy1FjRFjXJxIydK7jg==
-X-Received: by 2002:a05:6a00:b56:b0:71e:5a1d:ecdc with SMTP id d2e1a72fcca58-7241334a09dmr21966921b3a.17.1731398020189;
-        Mon, 11 Nov 2024 23:53:40 -0800 (PST)
+        bh=NefPRLN+h9TOgssrrobmBkWbrfPIcMnQcGv5XGBIdzk=;
+        b=DW/2Um4wIPpAuqQCXfqXyNTRWoP5op3nNoD0dmNK5IYvbck+RlRyQXYjwGm3uXDJgY
+         zKSli6iFHfxlUrELjvZo7KRrZL9AdjhfBLrcFtlKKPDOPOob04Amqguq9+GtJ5G8AYNN
+         e6/XsZUuUghGRdA9501U0RVWOu7Q0/nxFz0pA0W+v44mCCCnv/BKXs6QADRAkJm5E0Q2
+         4QJT1BglIqxDEIgHUY7OdOASDwv9YIw+FOSb2ZdIjxK6sYzTWqJlRW3DBRWo9f1ztuIE
+         AyMK8AhEtTCCgOHQl4wsciqrd7cZBjXNrWhVJORc5M25LUs3oYKFzHs5wIVGfFDCLuVR
+         s0HA==
+X-Forwarded-Encrypted: i=1; AJvYcCVRAxJmZ0vs6EFuDlUGQnzMPStuteCzz29MLG1gF9mS528Iw2lFw8UHStf/BEDh6OMs3E6k3qMYjdKgM3luQg==@vger.kernel.org, AJvYcCVzIKTXzjN4aeVzX1alUXNh633P2L8NgngA6EaMj/VI9/C0yu4hIr00bS6JRKqWKeIvvgsEL2wSplvo/A==@vger.kernel.org, AJvYcCX3+q8wrwlsKApwocy7WXCNsZIQ/bTqNI+q2UrrXCrnVSpP6DNzDCW4H07E3JHwrffIJeI4W6eXrGGH@vger.kernel.org, AJvYcCXiGqg7flPVbjR5aab+7FSCCJ1zoJYs0J7VDntXp7TnEuGbj/njD+BaGYQFjB+FaNBgOmE9GS7zu5JnaLWu@vger.kernel.org
+X-Gm-Message-State: AOJu0YyA5d2fCGAPf3b5e5N+tHQVeW32WQzsJr34BYVYy81p+wTjZ5HP
+	M4x/9ICtG05hwPn8H+NTbaIeWCMEH01k/bQxhaPqfsJKZyXKwBpf
+X-Google-Smtp-Source: AGHT+IE0KS2NS7V7DN97gZCWihhMgbFp+BwZ71PDpPLPGgxlj/Wy496iueX09Dw83yU62q37vMBjQw==
+X-Received: by 2002:a17:902:ce91:b0:20c:da98:d752 with SMTP id d9443c01a7336-211ab929e3fmr18904925ad.16.1731398189634;
+        Mon, 11 Nov 2024 23:56:29 -0800 (PST)
 Received: from thinkpad ([117.213.103.248])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7240799bb78sm10424749b3a.95.2024.11.11.23.53.36
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21177e41717sm85733995ad.122.2024.11.11.23.56.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2024 23:53:39 -0800 (PST)
-Date: Tue, 12 Nov 2024 13:23:32 +0530
+        Mon, 11 Nov 2024 23:56:29 -0800 (PST)
+Date: Tue, 12 Nov 2024 13:26:19 +0530
 From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
-To: Tudor Ambarus <tudor.ambarus@linaro.org>
-Cc: alim.akhtar@samsung.com, James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com, krzk@kernel.org,
-	linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	andre.draszik@linaro.org, kernel-team@android.com,
-	willmcvicker@google.com
-Subject: Re: [PATCH 2/2] scsi: ufs: exynos: remove superfluous function
- parameter
-Message-ID: <20241112075332.lhssmh44a77uyvit@thinkpad>
-References: <20241030102715.3312308-1-tudor.ambarus@linaro.org>
- <20241030102715.3312308-2-tudor.ambarus@linaro.org>
+To: Xin Liu <quic_liuxin@quicinc.com>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Vinod Koul <vkoul@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org,
+	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	quic_jiegan@quicinc.com, quic_aiquny@quicinc.com,
+	quic_tingweiz@quicinc.com, quic_sayalil@quicinc.com
+Subject: Re: [PATCH v1 2/4] dt-bindings: ufs: qcom: Add UFS Host Controller
+ for QCS615
+Message-ID: <20241112075619.2ilsccnnk4leqmdy@thinkpad>
+References: <20241017042300.872963-1-quic_liuxin@quicinc.com>
+ <20241017042300.872963-3-quic_liuxin@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,60 +84,48 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241030102715.3312308-2-tudor.ambarus@linaro.org>
+In-Reply-To: <20241017042300.872963-3-quic_liuxin@quicinc.com>
 
-On Wed, Oct 30, 2024 at 10:27:15AM +0000, Tudor Ambarus wrote:
-> The pointer to device can be obtained from ufs->hba->dev,
-> remove superfluous function parameter.
+On Thu, Oct 17, 2024 at 12:22:58PM +0800, Xin Liu wrote:
+> From: Sayali Lokhande <quic_sayalil@quicinc.com>	
+> 	
+> Document the Universal Flash Storage(UFS) Host Controller on the Qualcomm
+> QCS615 Platform.
 > 
-> Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+> Signed-off-by: Sayali Lokhande <quic_sayalil@quicinc.com>
+> Co-developed-by: Xin Liu <quic_liuxin@quicinc.com>
+> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
 > ---
->  drivers/ufs/host/ufs-exynos.c | 4 ++--
->  drivers/ufs/host/ufs-exynos.h | 2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> index db89ebe48bcd..7e381ab1011d 100644
-> --- a/drivers/ufs/host/ufs-exynos.c
-> +++ b/drivers/ufs/host/ufs-exynos.c
-> @@ -198,7 +198,7 @@ static inline void exynos_ufs_ungate_clks(struct exynos_ufs *ufs)
->  	exynos_ufs_ctrl_clkstop(ufs, false);
->  }
->  
-> -static int exynosauto_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
-> +static int exynosauto_ufs_drv_init(struct exynos_ufs *ufs)
->  {
->  	struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
->  
-> @@ -1424,7 +1424,7 @@ static int exynos_ufs_init(struct ufs_hba *hba)
->  	exynos_ufs_fmp_init(hba, ufs);
->  
->  	if (ufs->drv_data->drv_init) {
-> -		ret = ufs->drv_data->drv_init(dev, ufs);
-> +		ret = ufs->drv_data->drv_init(ufs);
->  		if (ret) {
->  			dev_err(dev, "failed to init drv-data\n");
->  			goto out;
-> diff --git a/drivers/ufs/host/ufs-exynos.h b/drivers/ufs/host/ufs-exynos.h
-> index 1646c4a9bb08..9670dc138d1e 100644
-> --- a/drivers/ufs/host/ufs-exynos.h
-> +++ b/drivers/ufs/host/ufs-exynos.h
-> @@ -182,7 +182,7 @@ struct exynos_ufs_drv_data {
->  	unsigned int quirks;
->  	unsigned int opts;
->  	/* SoC's specific operations */
-> -	int (*drv_init)(struct device *dev, struct exynos_ufs *ufs);
-> +	int (*drv_init)(struct exynos_ufs *ufs);
->  	int (*pre_link)(struct exynos_ufs *ufs);
->  	int (*post_link)(struct exynos_ufs *ufs);
->  	int (*pre_pwr_change)(struct exynos_ufs *ufs,
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index cde334e3206b..a03fff5df5ef 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -26,6 +26,7 @@ properties:
+>            - qcom,msm8994-ufshc
+>            - qcom,msm8996-ufshc
+>            - qcom,msm8998-ufshc
+> +          - qcom,qcs615-ufshc
+>            - qcom,qcs8300-ufshc
+>            - qcom,sa8775p-ufshc
+>            - qcom,sc7180-ufshc
+> @@ -243,6 +244,7 @@ allOf:
+>          compatible:
+>            contains:
+>              enum:
+> +              - qcom,qcs615-ufshc
+>                - qcom,sm6115-ufshc
+>                - qcom,sm6125-ufshc
+>      then:
 > -- 
-> 2.47.0.199.ga7371fff76-goog
+> 2.34.1
 > 
 > 
 
