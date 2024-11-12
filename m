@@ -1,119 +1,106 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FA0F156F36;
-	Mon, 11 Nov 2024 23:17:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F37CA2010E0;
+	Tue, 12 Nov 2024 00:53:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731367024; cv=none; b=rf6SXIPphXlMqnIc1O19zCG9uaJ1pQLf7J0A3kG5GJvoS1aeJ4jCCw8lmP2huMOPSm5mMEgRq8CjGY2VDvw/OhkoCsSsKdv6n1rIIOBcC/8eDozwQEAFjbHamDn0BVNoZiR26AKc/B3IROyjN8h4OhVygbxASX31/EJoZ3XTDyY=
+	t=1731372823; cv=none; b=LvMcgff7ImLDepl9RIJv3NspUbgTJ5C1JkFB5oDlB8/gNPacwXVWSZ/kgkIZSBEFLmwGRekXjWK6Nuw5FBzMIpxkluYrOMfppKj0yoe+fKWhgp5lhrBzVjHmKCkxcoiqHj9CPtAwzUi7yUd7il/Jd8uQyOQS0e25Asv/551WTuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731367024; c=relaxed/simple;
-	bh=6ByKhrtnTdSeq5vYslz0IFBDSTan/9x2BpoAYQz8zD0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=KBJeMjEhCYkhmyLvUgrTBYLC3rJDsfz1Dte4Ptix58L7pD6Oj7loCiTHt86q85cftdWgmMZLtCvgIil8D8PIfFJty8FjZWFE3fLLZCoZzdsJAdCYUhfSoRTprrA3DD1A5EtPpa7xIUYiTuB6rz4g9WaChKIigXdtruVPkX6Iu8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LDup/3i2; arc=none smtp.client-ip=209.85.221.54
+	s=arc-20240116; t=1731372823; c=relaxed/simple;
+	bh=HQy4wUOHoxxFsVpvWmr+RW+R0IUULbvXjkQL4Ta0L8s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YjIiAgWEL3qjrPtGkbmNr/N5WfSKsnWMcglLJjH99ky+N76aYOWtRP3MI3NDCtNCyq7TS856aoWAsSxRapLqrm7SxY50M1C2kfwgMXbF7oZ9Y3CZLJlmFruSpKHLIp4bkVZw+rjwER38RNAV9Yn5iymqg0ecMDm592LOR3D1vfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UohowMi4; arc=none smtp.client-ip=209.85.128.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LDup/3i2"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-37d49ffaba6so3355071f8f.0;
-        Mon, 11 Nov 2024 15:17:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UohowMi4"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4315c1c7392so44822685e9.1;
+        Mon, 11 Nov 2024 16:53:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731367021; x=1731971821; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=6ByKhrtnTdSeq5vYslz0IFBDSTan/9x2BpoAYQz8zD0=;
-        b=LDup/3i21LdbUHDNUku9sWJUSaohVdpzsXD3z4DNQogpbYPNP+CSCbKMG6yFr/YDPp
-         PEy6wrOsQA3nvt8pZ6lOV+lq/l5L653vTuu3rghPUyXBEIKHG/E/mAmkFPcuKVxAWm7I
-         bu+GKF9R3cwEUQXTOZBa1jCdmaSCGgnBRy+42bZkh1ByXRAcrhUvXEJnc+cfCMsPqjFj
-         DjYYW030UBlJxajR0dIxLHheb0JfA2onEdJBBvBjcnynJp2W4QY0Ld97gw9pf5qyCJM4
-         y+TgYGCNgjWgcq7QO1ldKf2GwgYWVVljzS1aLyLn2/TQdKhfKzLkmbC15o2D4WhMa2Z2
-         a0iQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731367021; x=1731971821;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+        d=gmail.com; s=20230601; t=1731372820; x=1731977620; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=6ByKhrtnTdSeq5vYslz0IFBDSTan/9x2BpoAYQz8zD0=;
-        b=GrHhstKF/E5jF0Wbk+293wuiDrK8phQ8zaA9WD1talKSEHR8/gSdOBPMe4tC291Psu
-         uKxLPZUdndyd7cbKh6VdELuwpdahphkgrzD/7v3yMoDF6lIDSdbA3pKQzlZ7g6sBjOqd
-         rbjjRo2UFz2ijUnNMX+l3V+Au/SfT3sUcT6A3O3lklmUeKRzFKYMefiKaFxJHAn7Hfhq
-         pSwygnrWkKE9V2IObwg5/OLdVWYs2LEtIUMEwA1/omS8G6En+928r8bvOjujaOxS690k
-         CLLTzWcgEOWwk9uuo0qdzjQiSlSQkhQRZEf8HHLXcw1fd6xPYFDuPawcccFdYySMFhlM
-         jJNA==
-X-Forwarded-Encrypted: i=1; AJvYcCVBACEXRmatipdCUwQgADACAsxMsCjnLTBk8yQMXGVGYJYZaSujtnjNvGBC+NjwBs9TGpABLlp+k3E73FE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzABNLJ9MqPol2107r9L84wpvJl9jj78S1VCYwOiTCBAavguzVZ
-	IfLnpPwIgdmDpkkwIYaInUy24kiNIHuGuQgrm2DbUmzpMq0nmhSr
-X-Google-Smtp-Source: AGHT+IG5ti3h3me+DJUuyl1FQhWTw1PmIZ89CcgzTIS31zmkSMTfMmpkQDykkej6v1wyvZcbqouzKw==
-X-Received: by 2002:a5d:59a3:0:b0:37d:3999:7b4 with SMTP id ffacd0b85a97d-3820811097cmr227508f8f.17.1731367020461;
-        Mon, 11 Nov 2024 15:17:00 -0800 (PST)
-Received: from p200300c58705a887af351ac25877d5c0.dip0.t-ipconnect.de (p200300c58705a887af351ac25877d5c0.dip0.t-ipconnect.de. [2003:c5:8705:a887:af35:1ac2:5877:d5c0])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432b05c1a13sm189943475e9.29.2024.11.11.15.16.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2024 15:16:59 -0800 (PST)
-Message-ID: <2d9aa1f9ed2e63d29dc2a7745fdd4f6db45d8db0.camel@gmail.com>
-Subject: Re: [PATCH v3 1/2] scsi: ufs: core: Introduce a new clock_gating
- lock
-From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>, beanhuo@micron.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van
- Assche <bvanassche@acm.org>
-Date: Tue, 12 Nov 2024 00:16:58 +0100
-In-Reply-To: <20241105112502.710427-2-avri.altman@wdc.com>
-References: <20241105112502.710427-1-avri.altman@wdc.com>
-	 <20241105112502.710427-2-avri.altman@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.44.4-0ubuntu2 
+        bh=0aZxHehuFin5Xrs40VllxGZ7a3/ahEo9jXemQX9Fay0=;
+        b=UohowMi4xlNExOQIesJZWov3ir2jf5h0StZpwu0JR4G3XX7bSy6YrWUUMHsz2Wkn4b
+         T9/pC0UPPxzsSGos8kQ7FwPfR8v6ltelPvEWD9HGC9Ps9ipDZd6a7lWM0pB54Usna3qc
+         ez/Mn0/i/7s8KqmYX8JigE4FJJLfx+XnS9lWIiX0UZYHTGbJtr9nOLRoO2FoZbi8vlCD
+         0o8jO62REFpSl4SjuXBMclISmW+b60gYHvewTZKC5JNIe6Md63eQp6NmBeLSVgPrMh9U
+         V3Qr1v2WQ//UsSl/zfimgf1W6R/fj7bih9yTnGevgSIHkAzT04WZf2kQTBe7c+l1izGN
+         4B8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731372820; x=1731977620;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0aZxHehuFin5Xrs40VllxGZ7a3/ahEo9jXemQX9Fay0=;
+        b=HDhG2O5mOfkEsuL3JbeH7v7Khf6FGrzljcReUx2ZXXUUj+K37bVcw6U+JE4Upz6FFu
+         Nuvg9Uj5YKjY5h35of6Axp8OeXREegl1lrbMRQQMgUHfZyPucH7mE8AFRzxzfJ/Cv7qZ
+         3AA3LxREZJfF/eX8ti5CY6E1yPGhTeUed0MMHvmnnnclamU0sFRJnZqf25NdBPEctFFi
+         ad66kEyEN2LQwXtrwSN4AcEUhjUCGOMW31H/TI+3L1cxwGzLHr7Rqi4vPQ1mbPFE40Uz
+         LSO2R5neCcOaqMHlUg14+s6x3DZvGfrdv9+rKJGvKUkCt728NSCImanF1ZxtEm1clhxY
+         iZow==
+X-Forwarded-Encrypted: i=1; AJvYcCUfFu4eqQOEmGDxkRDIVDBSfPuJZ6YTtGz74VZj0g+2fbCLKKADu84ZVmpy6dbwsyTxs/viZg2l1jxhdQ==@vger.kernel.org, AJvYcCUoQSBodwd3oHlV1Q6jdRMQE9An+2W8VMJ9vfvb8RpKDYMlNT/TfIWuCy1YhHXAwcVYBxU1Cpm2ylztRSw=@vger.kernel.org, AJvYcCVhytddANT4bNV9Gf8MHqXX4FpfzBQR5vm4SHS0TtWgc/1+Se45S+q1XPKhCiOlMNtiQ94PBEiv+w==@vger.kernel.org, AJvYcCXOlr6cUqUQJQWPYp5cRT8P85ao+HrdPmfGwGB+r5w4DatojwbznjqjUAih8DEUCYXL6Ehgx7b5xx1wBcVJuQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzbcDgxP7GXZRFtLqf8TDhPagzRBftHCIhsPJp4uvWcaBqbZ+S8
+	VSh9gRroy896AkNsNXRnswOResE8qAdKuVxj6vfHQK1SmW8mamq6
+X-Google-Smtp-Source: AGHT+IGwHpsOMIYldPnZtYdi6bZCchFzKZKPBSbwlgWRj8qHSABPttz33F7Uj57ko9bJY5t4p4ocvw==
+X-Received: by 2002:a05:600c:1d98:b0:42f:8229:a0a1 with SMTP id 5b1f17b1804b1-432b751dcb8mr122259075e9.33.1731372820008;
+        Mon, 11 Nov 2024 16:53:40 -0800 (PST)
+Received: from [192.168.42.75] ([85.255.234.98])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-381eda137dbsm13779210f8f.110.2024.11.11.16.53.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Nov 2024 16:53:39 -0800 (PST)
+Message-ID: <72bb4c21-e597-497f-b54b-d09c6f753d13@gmail.com>
+Date: Tue, 12 Nov 2024 00:54:23 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 06/10] io_uring/rw: add support to send metadata along
+ with read/write
+To: Anuj gupta <anuj1072538@gmail.com>, Christoph Hellwig <hch@lst.de>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org,
+ martin.petersen@oracle.com, brauner@kernel.org, jack@suse.cz,
+ viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+ gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+ linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+References: <20241106121842.5004-1-anuj20.g@samsung.com>
+ <CGME20241106122710epcas5p2b314c865f8333c890dd6f22cf2edbe2f@epcas5p2.samsung.com>
+ <20241106121842.5004-7-anuj20.g@samsung.com> <20241107055542.GA2483@lst.de>
+ <CACzX3As284BTyaJXbDUYeKB96Hy+JhgDXs+7qqP6Rq6sGNtEsw@mail.gmail.com>
+Content-Language: en-US
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <CACzX3As284BTyaJXbDUYeKB96Hy+JhgDXs+7qqP6Rq6sGNtEsw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-T24gVHVlLCAyMDI0LTExLTA1IGF0IDEzOjI1ICswMjAwLCBBdnJpIEFsdG1hbiB3cm90ZToKPiAt
-wqDCoMKgwqDCoMKgwqBzcGluX2xvY2tfaXJxc2F2ZShoYmEtPmhvc3QtPmhvc3RfbG9jaywgZmxh
-Z3MpOwo+IC3CoMKgwqDCoMKgwqDCoC8qCj4gLcKgwqDCoMKgwqDCoMKgICogSW4gY2FzZSB5b3Ug
-YXJlIGhlcmUgdG8gY2FuY2VsIHRoaXMgd29yayB0aGUgZ2F0aW5nIHN0YXRlCj4gLcKgwqDCoMKg
-wqDCoMKgICogd291bGQgYmUgbWFya2VkIGFzIFJFUV9DTEtTX09OLiBJbiB0aGlzIGNhc2Ugc2F2
-ZSB0aW1lIGJ5Cj4gLcKgwqDCoMKgwqDCoMKgICogc2tpcHBpbmcgdGhlIGdhdGluZyB3b3JrIGFu
-ZCBleGl0IGFmdGVyIGNoYW5naW5nIHRoZSBjbG9jawo+IC3CoMKgwqDCoMKgwqDCoCAqIHN0YXRl
-IHRvIENMS1NfT04uCj4gLcKgwqDCoMKgwqDCoMKgICovCj4gLcKgwqDCoMKgwqDCoMKgaWYgKGhi
-YS0+Y2xrX2dhdGluZy5pc19zdXNwZW5kZWQgfHwKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgKGhiYS0+Y2xrX2dhdGluZy5zdGF0ZSAhPSBSRVFfQ0xLU19PRkYpKSB7Cj4gLcKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGhiYS0+Y2xrX2dhdGluZy5zdGF0ZSA9IENMS1NfT047
-Cj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHRyYWNlX3Vmc2hjZF9jbGtfZ2F0aW5n
-KGRldl9uYW1lKGhiYS0+ZGV2KSwKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaGJhLT5jbGtfZ2F0
-aW5nLnN0YXRlKTsKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZ290byByZWxfbG9j
-azsKPiArwqDCoMKgwqDCoMKgwqBzY29wZWRfZ3VhcmQoc3BpbmxvY2tfaXJxc2F2ZSwgJmhiYS0+
-Y2xrX2dhdGluZy5sb2NrKQo+ICvCoMKgwqDCoMKgwqDCoHsKPiArwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgLyoKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICogSW4gY2Fz
-ZSB5b3UgYXJlIGhlcmUgdG8gY2FuY2VsIHRoaXMgd29yayB0aGUKPiBnYXRpbmcgc3RhdGUKPiAr
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICogd291bGQgYmUgbWFya2VkIGFzIFJFUV9D
-TEtTX09OLiBJbiB0aGlzIGNhc2Ugc2F2ZQo+IHRpbWUgYnkKPiArwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgICogc2tpcHBpbmcgdGhlIGdhdGluZyB3b3JrIGFuZCBleGl0IGFmdGVyIGNo
-YW5naW5nCj4gdGhlIGNsb2NrCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAqIHN0
-YXRlIHRvIENMS1NfT04uCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAqLwo+ICvC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZiAoaGJhLT5jbGtfZ2F0aW5nLmlzX3N1c3Bl
-bmRlZCB8fAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaGJhLT5jbGtf
-Z2F0aW5nLnN0YXRlICE9IFJFUV9DTEtTX09GRikgewo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaGJhLT5jbGtfZ2F0aW5nLnN0YXRlID0gQ0xLU19PTjsK
-PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHRyYWNlX3Vm
-c2hjZF9jbGtfZ2F0aW5nKGRldl9uYW1lKGhiYS0+ZGV2KSwKPiArwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoGhiYS0KPiA+Y2xrX2dhdGluZy5zdGF0ZSk7Cj4gK8KgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1cm47Cj4gK8KgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoH0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-aWYgKHVmc2hjZF9pc191ZnNfZGV2X2J1c3koaGJhKSB8fAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqAgaGJhLT51ZnNoY2Rfc3RhdGUgIT0gVUZTSENEX1NUQVRFX09QRVJB
-VElPTkFMKQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-cmV0dXJuOwo+IMKgwqDCoMKgwqDCoMKgwqB9CgpJJ20gd29uZGVyaW5nIGlmIGl0IHdvdWxkIGJl
-IHNhZmUgdG8gcmVwbGFjZSBob3N0X2xvY2sgd2l0aCBnYXRpbmcubG9jawpvciBzY2FsaW5nLmxv
-Y2suIEZvciBpbnN0YW5jZSwgaW4gYWJvdmUgY29udGV4dCwgdWZzaGNkX3N0YXRlIG5lZWRzIHRv
-CmJlIGNoZWNrZWQsIGJ1dCBpdCdzIGN1cnJlbnRseSBzZXJpYWxpemVkIGJ5IGhvc3RfbG9jay4K
-CktpbmcgcmVnYXJkcywKQmVhbgo=
+On 11/7/24 07:26, Anuj gupta wrote:
+> On Thu, Nov 7, 2024 at 11:25 AM Christoph Hellwig <hch@lst.de> wrote:
+...
+>>
+>> struct io_uring_sqe_ext {
+>>          /*
+>>           * Reservered for please tell me what and why it is in the beginning
+>>           * and not the end:
+>>           */
+>>          __u64   rsvd0[4];
+> 
+> This space is reserved for extended capabilities that might be added down
+> the line. It was at the end in the earlier versions, but it is moved
+> to the beginning
+> now to maintain contiguity with the free space (18b) available in the first SQE,
+> based on previous discussions [1].
+> 
+> [1] https://lore.kernel.org/linux-block/ceb58d97-b2e3-4d36-898d-753ba69476be@samsung.com/
 
+I don't believe it helps much anything, placing a structure on the
+border between SQEs also feels a bit odd.
+
+-- 
+Pavel Begunkov
