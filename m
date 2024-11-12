@@ -1,69 +1,69 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF0A1534EC;
-	Tue, 12 Nov 2024 07:50:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 846FC1534EC;
+	Tue, 12 Nov 2024 07:53:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731397809; cv=none; b=OJHjj2cCGuvDgrcGN3JDZCBXU/bheZ2tMo1YxWGvvbsScfWfTtJnsqCbfKxa9RaKnlwQ6y7xotqZhfOUQPg+4I51FfiSKMuXECF0YOFramlFUbNX0ZHuV5HYCbLTUu2qWrEaODqxmmIUgA2JUaGzCVYpEgmcBTdDi6Y0eUS8tUo=
+	t=1731398002; cv=none; b=jzjVBEvjRnosN8KBahbHcaHd42rJC8vr8R3TKWi8u9tO8vHJAnaXMelhSyf9vi/udSs/0X4OIy1M2F3BU7W561ziEhSD50VtAU9GREwVCw47WPEQW4SunIHNdI8WvO2vC0wJluUKORhR6vpPvxW4m6DcswRc2vQmgFOemo92TZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731397809; c=relaxed/simple;
-	bh=KTjNL6Mlwilqba5V1gn5bkYFPoDYAjhd+CGB/chkZ9M=;
+	s=arc-20240116; t=1731398002; c=relaxed/simple;
+	bh=w//YaLtowwTiTj2jD3v4WbwaEv02Z59trMzH+54Y4kE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UBxN7VhSdVs/LZmLNPabeegFJ3fWAoplOU1cjbRW0DbZa2HpBDk/3Ig6BawngBqli4jb5EiEZSCSapgMlI8No+dArdmssu52Ef30MnCuCH84798//ocA2OtZPCNu3RoOMd5gjo9oHLvxqKoVBMhTL/pLNVY0/9gPPC1an5UNIZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JfSy6wFf; arc=none smtp.client-ip=209.85.210.176
+	 Content-Type:Content-Disposition:In-Reply-To; b=HOOYBGqFhrzNNWOLMNw9w0fpZ9F0OdlhV4KNTJYiJow/7oqOBiWhZbqw8/8aLaTgqOntmjos1m5vuQc2WaMUEeQnrehEvKs6iao+h6J/dAVS8o0euk0k3GpnVcnbnF77EN8YKCZvzqycF1huh8sIjZ0EZlvYQjU0/oP6iFOK0W0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZSl0hY7w; arc=none smtp.client-ip=209.85.210.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JfSy6wFf"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-71e592d7f6eso3971093b3a.3;
-        Mon, 11 Nov 2024 23:50:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZSl0hY7w"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-720c286bcd6so4664328b3a.3;
+        Mon, 11 Nov 2024 23:53:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731397807; x=1732002607; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1731398001; x=1732002801; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=tExBEVwLwwV3qvwCXok4hCaStQCdAlqHUzJglsGHEK0=;
-        b=JfSy6wFfs9ITwtDrKjvRDuInjPM+RVIiDhN0/N5++jTm7e9C1PyXpZMG+cOv7MJcb6
-         NmncLSzD5KU+anwiMyEOADPOmf3TtksCtFITQ6/DdMyGcTWii/yaWwQs3bpfq5lgpj7N
-         fDCz+qIQp635FH3WbjYYnjv7H/XcjXCEAuwz5JyhpgpWJOAIHTHfppcKSH1qr+aJZz0W
-         ustNVH2gGNRQkx8X5R/b/INgqvVjaT1nKguxEy32NgXiQ8pUqUNSSW5JsJpiyOmMEwz+
-         n5KY+MY05BaZOOiq6xp+wcLucaxEIFu/LPDoIedUucgWTYpCfVL/3ZVCQGEZzBgSwEYb
-         kJyw==
+        bh=FZdzgcIljMlUObBvcBKwGCR4bvqsV+cW+n+UDROLFU0=;
+        b=ZSl0hY7wUkEKkP4fRQw9qTQC7tj7P5TYaZ9NPNu4nVVsnRH2PLaGSPqPh2zdxm57w9
+         5Gu2D9HK7dUY07VsbJjEJ/UpmCiPDAhr0keYB0+bsBIKlNPEAq/Hzyc7Lcepia6sTjSF
+         GqrDfNIT3dsgh/YOkdC+es+9gePoZBSWwPXGIf1hdkTZo8zl/lIGEiURfwCZrcSd0OI/
+         8NEInmmEiS7S1ymjWgP2jUk6N1F9Keqs7Zr/36alOpjcMwuN59n64oSQj4OFjgvkooaJ
+         99hXMgB5F1haRDLE7BEKWT1PfskEJC6vZZ8U9rMs2TEzn30XF9pDFK3A9FKC5gtJtsQC
+         SmLg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731397807; x=1732002607;
+        d=1e100.net; s=20230601; t=1731398001; x=1732002801;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tExBEVwLwwV3qvwCXok4hCaStQCdAlqHUzJglsGHEK0=;
-        b=pyh4ZtnBLMFP9BaU9GGlE70p/uFMqwQc/y1r6xreQ44ONwMK/q6pmX7Fy4Na4iTx0t
-         Yozz0a7G63uN4cFpR4dQbymt6g6vBzDtBL6U6FNhCJ67eBYitZxO9pSCs5u9UWDrJNWM
-         li1Di42nwzVJkMNZVAQMPnJmQ1UTdYGC+vXjKAsmA2ciEcoobNklKsqv/qCgjjRsruN0
-         M8qNA18cQa1m23HKKojqk2VSubUDBktr+SwbQtXqLEkiiC0zAjMSjaxGdFJDzTDiT0eO
-         O73qVyyXW3dS4ZQpZgxlsElP/50lQX5aYNsK0r4d1LGNtRB35zuEFrQPVHC2R6m/+YY4
-         aRLA==
-X-Forwarded-Encrypted: i=1; AJvYcCUAf7EzVpC2ebTbu0syUPwl61tIH2CvxaVFXM+N3tn9xDvgp3LZd/2VSBDAOH2S4nlKrSYqQP4jM2mGIg==@vger.kernel.org, AJvYcCVdxIjKbb5tlVAepTfq3tp4Xl1cWl9vSiPXJ1zvc6sX7GQ0mmNANH6ItgJja+JMw8UUughEzfprzbmkNgT0@vger.kernel.org, AJvYcCXaTI0SOVVti989bcDD34vBJYc6uE0tlPEXAH8lhzl/AgVqOFfLpVFfdtBMKUx6+3SXq5Qfj+LbRKKHa22x@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywl3ggYqnRRh2hbk9uhSCGNNUnCNe+8rOhzbrXEZX1saLI8Fdbq
-	aw+Srx3aNf4XWb0XhdczAqS9U0a846kLsoCgDhl47nmr8vbw1dnG
-X-Google-Smtp-Source: AGHT+IGsjGIAC+EKfaG5Y0Te1Uwj8kqNbyd8cIEupZrS98ZAWi/K3a6EzNwJxHziLH6w1cJ30cNXIg==
-X-Received: by 2002:a05:6a00:3d55:b0:71d:f821:1981 with SMTP id d2e1a72fcca58-7241327b787mr21711887b3a.4.1731397807117;
-        Mon, 11 Nov 2024 23:50:07 -0800 (PST)
+        bh=FZdzgcIljMlUObBvcBKwGCR4bvqsV+cW+n+UDROLFU0=;
+        b=X0YTH0RjfXYKiQNL6b8mYXcksDWM8FQg+qAaywCBSrt6y98YwK2s7C8ELL18lbpQcf
+         EbbHXTim+7H3EyqkpP6LCVxaEGC21VfHcCDfeI4DB0n2Tmb6WKSHrZj+B3Okx8aYmtTu
+         PMK0lDNnGdLfGumHCb8nIdSKRjKl9HOfa4D3LWE7kbYhu/SCEBhUgQMv7e3egqTRqE5j
+         dXTuQUegcUzekCzfdtUtQhFptBMCZzXmOhx3KfsRC5i5lPnFFBTBPtKE1ANiW245VPrb
+         hEtNVfSXwH1XXAayIBi5wyUrwF+eWoXMGC2aKkWMVKAVhn+uEs6T+g/YkxVdsUCGVw+1
+         L3IA==
+X-Forwarded-Encrypted: i=1; AJvYcCVCfIgImAmbOowNiPMMoEGoW7Zm+T8fVwW1bOnMoUKHENLqVddf5ErtHDnZjA+UkPIdFJNlp/Az1wjU+G4=@vger.kernel.org, AJvYcCVddK8T3S5LfGIcY4cywiCOu3ril6rWQ5hjOXRepQutGpWxdeIOrtAG4RuSDneMcCLlux2v/FvBohmt741x8mVt5oU=@vger.kernel.org, AJvYcCW9UyAkenc38Ddnff2wKSFsqhMtF7ANDnYu53ug7VC0HEucD2uOVdSenZEO9sJYGth8IcrITFut1yM5PQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPzAy4eW1iyTgys2Jqse1Jid3tj3qC2K2mTLOloCbn/XRrqhb7
+	K8b1V5NcWtVzbS1rB/d8RzyadLwk9ZMBtgSYQn8xj2cuudBpt2QV
+X-Google-Smtp-Source: AGHT+IFOyHj/UkfZuck4267vweXr7tX25rTZjP9yXmcate30Q5rUAyasg/Lb0W80EKNNt7nBcNybgw==
+X-Received: by 2002:a05:6a00:23d1:b0:71e:573f:5673 with SMTP id d2e1a72fcca58-724132ce0bamr20411427b3a.15.1731398000772;
+        Mon, 11 Nov 2024 23:53:20 -0800 (PST)
 Received: from thinkpad ([117.213.103.248])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72407a1fd2bsm10450163b3a.167.2024.11.11.23.50.04
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72407a56a16sm10689026b3a.182.2024.11.11.23.53.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2024 23:50:06 -0800 (PST)
-Date: Tue, 12 Nov 2024 13:20:00 +0530
+        Mon, 11 Nov 2024 23:53:20 -0800 (PST)
+Date: Tue, 12 Nov 2024 13:23:12 +0530
 From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
-To: Manish Pandey <quic_mapa@quicinc.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
-Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
- Testbus Registers
-Message-ID: <20241112075000.vausf7ulr2t5svmg@thinkpad>
-References: <20241025055054.23170-1-quic_mapa@quicinc.com>
+To: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: alim.akhtar@samsung.com, James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com, krzk@kernel.org,
+	linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	andre.draszik@linaro.org, kernel-team@android.com,
+	willmcvicker@google.com
+Subject: Re: [PATCH 1/2] scsi: ufs: exynos: remove empty drv_init method
+Message-ID: <20241112075312.v3ir4ewg4kglckpf@thinkpad>
+References: <20241030102715.3312308-1-tudor.ambarus@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,32 +73,48 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241025055054.23170-1-quic_mapa@quicinc.com>
+In-Reply-To: <20241030102715.3312308-1-tudor.ambarus@linaro.org>
 
-On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
-> Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
-> of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
-> aid in diagnosing and resolving issues related to hardware and software operations.
+On Wed, Oct 30, 2024 at 10:27:14AM +0000, Tudor Ambarus wrote:
+> Remove empty method. When the method is not set, the call is not made,
+> saving a few cycles.
 > 
+> Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
 
-TBH, the current state of dumping UFSHC registers itself is just annoying as it
-pollutes the kernel ring buffer. I don't think any peripheral driver in the
-kernel does this. Please dump only relevant registers, not everything that you
-feel like dumping.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
-> Manish Pandey (3):
->   scsi: ufs-qcom: Add support for dumping HW and SW hibern8 count
->   scsi: ufs-qcom: Add support for dumping MCQ registers
->   scsi: ufs-qcom: Add support for testbus registers
+> ---
+>  drivers/ufs/host/ufs-exynos.c | 6 ------
+>  1 file changed, 6 deletions(-)
 > 
->  drivers/ufs/host/ufs-qcom.c | 141 ++++++++++++++++++++++++++++++++++++
->  drivers/ufs/host/ufs-qcom.h |  11 +++
->  2 files changed, 152 insertions(+)
-> 
+> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+> index 9ec318ef52bf..db89ebe48bcd 100644
+> --- a/drivers/ufs/host/ufs-exynos.c
+> +++ b/drivers/ufs/host/ufs-exynos.c
+> @@ -198,11 +198,6 @@ static inline void exynos_ufs_ungate_clks(struct exynos_ufs *ufs)
+>  	exynos_ufs_ctrl_clkstop(ufs, false);
+>  }
+>  
+> -static int exynos7_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
+> -{
+> -	return 0;
+> -}
+> -
+>  static int exynosauto_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
+>  {
+>  	struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
+> @@ -2036,7 +2031,6 @@ static const struct exynos_ufs_drv_data exynos_ufs_drvs = {
+>  				  EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX |
+>  				  EXYNOS_UFS_OPT_SKIP_CONNECTION_ESTAB |
+>  				  EXYNOS_UFS_OPT_USE_SW_HIBERN8_TIMER,
+> -	.drv_init		= exynos7_ufs_drv_init,
+>  	.pre_link		= exynos7_ufs_pre_link,
+>  	.post_link		= exynos7_ufs_post_link,
+>  	.pre_pwr_change		= exynos7_ufs_pre_pwr_change,
 > -- 
-> 2.17.1
+> 2.47.0.199.ga7371fff76-goog
 > 
 > 
 
