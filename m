@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AAE64C91;
-	Tue, 12 Nov 2024 04:48:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B62020495B;
+	Tue, 12 Nov 2024 04:48:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731386919; cv=none; b=hLcFdoIAPNpLm/bCbFTTL6FoTGDEA6wW97xtLOZ3KC9vN/pbgBmvC0R0irYMAa3SGuXGPOMoJYrdTRgHuFt7ZMhrnixeqUV5WTYBHZihViKNrLpL8R9x0qmdt+GaElDSBJIaWlUqlu/w30xtD7IU2NtTFp6ct47CAudlevFkSMY=
+	t=1731386933; cv=none; b=NxUKsnZnrzJs0oesJ8kRcG/GNoUVshwQLpU61aSSK7EGH+Wm1JQZ9w1idI37HJhAEhwhJcA3niLO7jYfjzjlYUlC8kB23EbpczLO/bh4Y7re+4FlPhzFqQnX4sTjOjA/QrmAUcpCy7r9Muga+1SC68D2IBzlnZAEro5XBTwfGAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731386919; c=relaxed/simple;
+	s=arc-20240116; t=1731386933; c=relaxed/simple;
 	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MIM7Ubm3YtJAk3DPdJCU2IlxntBxbltsKgggGetkdo2v38eXfDGzCtRvH8jkLJzDx4XcK93gDtAR9+RhMb0sHXp+5FXlEg1Qt/Vj9nVaK21NVz3Erqkj4udfoDswRuLO7hAZcnRKJF8IePb1TiF19xOAoOhYACM/rasY9HH4uJM=
+	 Content-Type:Content-Disposition:In-Reply-To; b=EWL7chMaN/zw3ySlw2tEGnpzpOjE4SNDoOY2dpJusb3juhzMHuFiPWnZr2U7ctqlV4uuNOB6H49QQxjJya8irO7qNHidL5w2PlCg9hChh95hsfiBsvvzmSt+vMBOk3SFv2a614IR674OlLbBUPr3QSWQWuWWNDnVYqcb1lGCwzY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 766C168D09; Tue, 12 Nov 2024 05:48:34 +0100 (CET)
-Date: Tue, 12 Nov 2024 05:48:34 +0100
+	id AF0CC68D09; Tue, 12 Nov 2024 05:48:49 +0100 (CET)
+Date: Tue, 12 Nov 2024 05:48:49 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Daniel Wagner <wagi@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>,
@@ -30,10 +30,9 @@ Cc: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>,
 	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
 	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
 	linux-nvme@lists.infradead.org, Daniel Wagner <dwagner@suse.de>
-Subject: Re: [PATCH v2 5/6] virtio: blk/scsi: replace
- blk_mq_virtio_map_queues with blk_mq_hctx_map_queues
-Message-ID: <20241112044834.GC8883@lst.de>
-References: <20241111-refactor-blk-affinity-helpers-v2-0-f360ddad231a@kernel.org> <20241111-refactor-blk-affinity-helpers-v2-5-f360ddad231a@kernel.org>
+Subject: Re: [PATCH v2 6/6] blk-mq: remove unused queue mapping helpers
+Message-ID: <20241112044849.GD8883@lst.de>
+References: <20241111-refactor-blk-affinity-helpers-v2-0-f360ddad231a@kernel.org> <20241111-refactor-blk-affinity-helpers-v2-6-f360ddad231a@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,7 +41,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241111-refactor-blk-affinity-helpers-v2-5-f360ddad231a@kernel.org>
+In-Reply-To: <20241111-refactor-blk-affinity-helpers-v2-6-f360ddad231a@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
 Looks good:
