@@ -1,103 +1,130 @@
-Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EB643AA1
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 21:43:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8A6D21A707;
+	Tue, 12 Nov 2024 22:08:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731447804; cv=none; b=R/hsKatwLmOHl29kwvgEiM/FmYKxewyRREORMTGriYlhFYEnyXB2Usvrpun+erjrqYkS5VwP2IPDMB9hX1RYhTDengnyCSiYdC22JKHr12SqGKZ3fp5DO6nWLFlMkoPao5t111RZxMWpjeeJJH9tEIu+MLzruRZ50E1k2scUZ5U=
+	t=1731449310; cv=none; b=jw8FDydMtMnTUoW5ec78dDd5qIlyhTj0frvzQiapI4RClMuTwRZNHNyuEehqvN9JlOFfWKGU8iZZ99ROc+Ot9Vj6pWAOU1dJ186cJTOB8xbevqcsQo8BFzI0t3UL6ra2Kx5EyKH/WeB1h382SFgJSbdVctLThmkA0n5CSZ4sqHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731447804; c=relaxed/simple;
-	bh=J+RldWsZqsESI2PuHeRabDXgnmVLtr2MD+8L5LtDxY8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=tCYdGTXhqYBJRpXmPSzPYQh3VTawzIAaB0+nkEVQdW4V09tHEZnBJh5tj+s2xceVQhOMkoGdJV52E0ARgI1OGnU8VbHpvFNm9qZeFs1qvp1sN+/kofQDwfhYUMMLB6urkjj4ZiwTCMH1kJ9BUvbrPAcCDoI1z4UuKxbC7s9OMM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=dUzpt4r8; arc=none smtp.client-ip=209.85.210.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1731449310; c=relaxed/simple;
+	bh=bwOLoyFxYfjUqtJNi/9ZCqz09dTnm3t/9bGtqoLlI8U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e0Y8I01wtlYn7nu2tmnvN7ktw+OPNB5VXtgstSmU0G9iz/6oei5kDNjkgzFIYmBlzUR0GYT9Jj4MbDMmA4EvLJSQCLcvYlBfIHfyFhmt2NeUrGd0haWlFcTA00CmwRpX58NlZCs+Bv+DXrocBzHGd4cKMiAP9beYidb/ErYqzdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IVwNhomQ; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="dUzpt4r8"
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-7180cc146d8so3571941a34.0
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 13:43:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731447798; x=1732052598; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YGtSC//+KuLVSTWwwIoXtxU4RZI/DGnC9v/9JMzPnU8=;
-        b=dUzpt4r81/uMZiH7uAneonK6a96UxOXwMNYG/4D2C7FmHhTjfhtxzseLMrhlJSafYC
-         6DcF2HJZqFwbGwRvsZJ9b4WGx42/H23nmsL+VMvrLLbaMa45b2770PFMO3kLlHF0cD9t
-         oBSl2g5p4XacL578cbKF3vAdr7n1CSOVa/zTsGAl82LCEQZjOVx+DjsKhO412/eXfZSA
-         TDK/wr38oHhmfWvj6QZiUIkNz+ehK/Xp7SFPZvZUFpIxHOC9zAUeJIE/QO6/TOPlihHg
-         EM7QDpe/JA2J/7o+PjmXYWmu799ncMOOO+qtd2oLe9jy/UjPwvhdXnxMOUzAXh+ftqv9
-         GVqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731447798; x=1732052598;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YGtSC//+KuLVSTWwwIoXtxU4RZI/DGnC9v/9JMzPnU8=;
-        b=qDnibNUxgLuKo4a2iXtwGAshe8lfF1R6W7a72Kab+GBs77gfRyp0ro3nTVidMaEQ32
-         tEFER3eMY3ELXkHy4phwtbFCU3eRzz4y+Lv1Iuf8XnSVBT9s7clxkWdhTQH0/NdjY60Y
-         cMVw6Wsh+hHjdh8brfmDxbG+iS/dxXbNs0RtHgA1ILxyykLN93VWshnM+HXQn1mfWs3t
-         Xg+WpYA65IUuJmKmwR2uLzc8xerGV2A6G2ixhrluDUlIPiwHm3jmqHj6+6fZ0jSkUe2Y
-         nAEOLWt0OcHvVT1KwVKFiJ+kquNJOdLzeNeuIfypRANI24dFfGceC66hTUaZ/rBSp4wa
-         umRQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVKp5twEnGz5IhmmFtw8J4NypQih5uz82SAM/NThElPwtZG8vK4M5tYPSUU0NzewPp7bniaf0bFO3DE@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywq5iodz2kN13wfJ6NAbkM5AxdcaBK/wmTZ9yiINSffJfLw+Yx5
-	BvIqAh/CLrOVDC27/fyehiwKOftfcD2QP7YBzfoOFK9mlLGVSlN6h8r/fUoWq5bpsCslYgbxygK
-	2fIk=
-X-Google-Smtp-Source: AGHT+IHdA1/BLcE+I0xAd42S/ugK3+MkiErPSWS8lopm+4vQfH1OaBpVpP2E7ccFbc0W+eDDTRko5w==
-X-Received: by 2002:a05:6830:b88:b0:70f:716c:7d4a with SMTP id 46e09a7af769-71a516f6a54mr4411368a34.27.1731447798267;
-        Tue, 12 Nov 2024 13:43:18 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-71a6009dfb9sm81837a34.61.2024.11.12.13.43.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2024 13:43:17 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20241112170050.1612998-1-hch@lst.de>
-References: <20241112170050.1612998-1-hch@lst.de>
-Subject: Re: remove two fields from struct request
-Message-Id: <173144779750.2202563.2182339299519835938.b4-ty@kernel.dk>
-Date: Tue, 12 Nov 2024 14:43:17 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IVwNhomQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1731449309; x=1762985309;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=bwOLoyFxYfjUqtJNi/9ZCqz09dTnm3t/9bGtqoLlI8U=;
+  b=IVwNhomQF4zWvejcrdwszuAZZGj5KqtQ/UmeU88Yw7IJ0RjbOHxFqm1v
+   49CTwAyzSKjw+vliZjwNP3L/nXX/cqTLnxz7bJfwUkPjPWfwy3gpchnTR
+   P/m2vH4I59QnoULZBzWDNBe5aQeGMW7T6BeGEuVwm0HgxrXE5oZqHq7BP
+   dsIqY4o1SkbxPbOXO2Wf0l+X2M/neD7xmC6mhtSaB8gyPBvSFSDBH9LUr
+   qukDURu/Vfum2vAV876J8t+lC97simAyWSK+sVOHcgCyMH19dVOr443Jx
+   2lNPmnPpMXcBGg5ePayPlBPeO/52hGqXMbj32RaInN7kSbGwfvrDQfYoV
+   g==;
+X-CSE-ConnectionGUID: 3l5wpoqITy2Um7ytbQkcpg==
+X-CSE-MsgGUID: 7DsUB2CqTSCk5Zrms4A9zQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11254"; a="42722540"
+X-IronPort-AV: E=Sophos;i="6.12,149,1728975600"; 
+   d="scan'208";a="42722540"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 14:08:27 -0800
+X-CSE-ConnectionGUID: QGh9vjHLSpKorf74bKXSXg==
+X-CSE-MsgGUID: sKP0TcqbSXmgHwe8OkVCnw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,149,1728975600"; 
+   d="scan'208";a="91712794"
+Received: from lkp-server01.sh.intel.com (HELO bcfed0da017c) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 12 Nov 2024 14:08:16 -0800
+Received: from kbuild by bcfed0da017c with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tAz3W-0001lf-1j;
+	Tue, 12 Nov 2024 22:08:14 +0000
+Date: Wed, 13 Nov 2024 06:07:51 +0800
+From: kernel test robot <lkp@intel.com>
+To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
+	linux-nvme@lists.infradead.org, Daniel Wagner <wagi@kernel.org>
+Subject: Re: [PATCH v3 3/8] virtio: hookup irq_get_affinity callback
+Message-ID: <202411130521.UOBdW8Rv-lkp@intel.com>
+References: <20241112-refactor-blk-affinity-helpers-v3-3-573bfca0cbd8@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241112-refactor-blk-affinity-helpers-v3-3-573bfca0cbd8@kernel.org>
+
+Hi Daniel,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on c9af98a7e8af266bae73e9d662b8341da1ec5824]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Daniel-Wagner/driver-core-bus-add-irq_get_affinity-callback-to-bus_type/20241112-213257
+base:   c9af98a7e8af266bae73e9d662b8341da1ec5824
+patch link:    https://lore.kernel.org/r/20241112-refactor-blk-affinity-helpers-v3-3-573bfca0cbd8%40kernel.org
+patch subject: [PATCH v3 3/8] virtio: hookup irq_get_affinity callback
+config: x86_64-rhel-8.3 (https://download.01.org/0day-ci/archive/20241113/202411130521.UOBdW8Rv-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241113/202411130521.UOBdW8Rv-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202411130521.UOBdW8Rv-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/virtio/virtio.c:389: warning: Function parameter or struct member 'irq_veq' not described in 'virtio_irq_get_affinity'
+>> drivers/virtio/virtio.c:389: warning: Excess function parameter 'irq_vec' description in 'virtio_irq_get_affinity'
 
 
-On Tue, 12 Nov 2024 18:00:37 +0100, Christoph Hellwig wrote:
-> this series removes two fields from struct request that just duplicate
-> information in the bios.  As-is it doesn't actually shrink the structure
-> size but instead just creates a 4 byte hole, but that will probably
-> become useful sooner or later.
-> 
-> Diffstat:
->  block/blk-merge.c            |   26 ++++++++++++++------------
->  block/blk-mq.c               |    5 +----
->  drivers/scsi/sd.c            |    6 +++---
->  include/linux/blk-mq.h       |    8 +++-----
->  include/trace/events/block.h |    6 +++---
->  5 files changed, 24 insertions(+), 27 deletions(-)
-> 
-> [...]
+vim +389 drivers/virtio/virtio.c
 
-Applied, thanks!
+   379	
+   380	/**
+   381	 * virtio_irq_get_affinity - get IRQ affinity mask for device
+   382	 * @_d: ptr to dev structure
+   383	 * @irq_vec: interrupt vector number
+   384	 *
+   385	 * Return the CPU affinity mask for @_d and @irq_vec.
+   386	 */
+   387	static const struct cpumask *virtio_irq_get_affinity(struct device *_d,
+   388							     unsigned int irq_veq)
+ > 389	{
+   390		struct virtio_device *dev = dev_to_virtio(_d);
+   391	
+   392		if (!dev->config->get_vq_affinity)
+   393			return NULL;
+   394	
+   395		return dev->config->get_vq_affinity(dev, irq_veq);
+   396	}
+   397	
 
-[1/2] block: remove the write_hint field from struct request
-      commit: 61952bb73486fff0f5550bccdf4062d9dd0fb163
-[2/2] block: remove the ioprio field from struct request
-      commit: 6975c1a486a40446b5bc77a89d9c520f8296fd08
-
-Best regards,
 -- 
-Jens Axboe
-
-
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
