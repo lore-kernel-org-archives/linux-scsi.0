@@ -1,109 +1,148 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAEA71FF61A
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 14:55:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D121E200CB9;
+	Tue, 12 Nov 2024 15:33:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731423316; cv=none; b=Xv/FqUa9YOFWV+LpjGuOGaZOdg1Mcmr9ENeb6+HvwQ7w+HfwsDjWT2U3BOn6tgCM1dV8U2fAnxjvwH+wqVJkifIQCkyIGRUYujE6sezGm/KyiC4H2x8VhJ5+Oe3KgeEKOWFYPDNQFkd6574tgwiuxFZK2pBHTHPJyzvRmxAGDSs=
+	t=1731425594; cv=none; b=UpVXNK4Qp1yinLS0FuOAIaBUY0G+A+hakdaAVEqxgJyz0CFjS9fVmTBRAbdosDhnL9C0JV8qFtagjk/L4rtBXeJLPxcYn9bumI4pbcU0ANIXmqoiX0v/bQihjRpqKXlBmfJyhqFRUBZuTu2v1/FESIk6/Wt91v1qDIDxANitn5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731423316; c=relaxed/simple;
-	bh=7CgPmKR+pBqeOwpF5GsLSoRZ2dGeu8Y6nrW55fGI7Yw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZcPAaFBAFNlDFp7158zPCiQg6EiQHECfRoHpuilhCLGWSRInZ/Ak8RNFlGlv07MMrOsHaYzte6fCdu2cXkaaWQw020yaUSvEyV6xATifnZjzI0/oUl6hqf8gyLPZePeR3rGzOfEMhqfNqFHhJCsoJyK3cltq3imbSh0PsDxYw1k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=G3R61XRm; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1731425594; c=relaxed/simple;
+	bh=Cx5/EBwhKNt/XPcsIVyrN/2gbpE0N9V8YptGSC04Bqg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DdP5Qy+9L+Z6BLGwG0qn5vS2DPqJDr/7sD7X8AZDnakg+KDj8p561499tIK0Vh2ZXvTwA2vMcgM1vU2Y+CbweVWzCQ2dF+zwmI91VhYyBAncxgUaMVIJ/nkDzD3cTi+WYjPMZJ5zk4K10NxwogJ6bPBdihzFpy16e7ExXawwLaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=f0NvnLrE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1JvtkDuT; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hpDFdJxD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BZoZbY2J; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="G3R61XRm"
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-5cec93719ccso7536673a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 06:55:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1731423313; x=1732028113; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=p7+ge7hJafVQtjpuuqP/E88xzOJBZSOXD8WkyCEkOXo=;
-        b=G3R61XRm5rYDD8As+RXwXivYnECFbBHJ+2lYJVBGqOMhLxGt1cwZ7wGknG0s43bZdB
-         SqOoJ0DFq1bqKUgQAveJJv57aLUDhOUnM7+NRuzwKBUmDFxABOZWh9RHA5uByfF/2NNk
-         CjYRea4wCOmJAtcUSlDwZWNV2rVjEdG6iRMslqrNLBRd7i3lxedJQjbN9hJ+QNGMxU9B
-         RdNy0mUyLHfqfgfpPA9DI4tLziB7zSTzsOof4Oh+l02QDACGs//4O5BwyAifAVNZR42F
-         cjoriRjH2i2l9bhAF4YSRpRxzmbyr6JPcviGXS7h3HeXj2UGnf5dlx8TvG+OvA/k83wZ
-         U89g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731423313; x=1732028113;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=p7+ge7hJafVQtjpuuqP/E88xzOJBZSOXD8WkyCEkOXo=;
-        b=vssZI9k5uEfpx0NqRRJexK8qb7Y4l1XQ13d50Czhgj2YACIfrFYOiQqWRw4Yuigmy5
-         95+xASD6fpV//EKdRI2dQJHrUKeyDWmgmOXzdfBAXTn4v2Tg74Ow152khmejVFMXmmnL
-         rBjLJnqsmX9EIazZDT5KwlavjNDdEYAUIrR1YL+yRsq5HV7gsbQOJzM2mF1EnRPASDlw
-         Q8g1DWKx6Z/WhU+5iceSYq8LtXqOWdX6cowtaLQCYulYTedq4Wh0M39uU4qqhlmRFjH6
-         QScAq23ub75tYyxjmpyq9vjv1G2zg2O60d7gkL1HvU4EYHiSLPK8zaopHaDYj1bo20rD
-         t71g==
-X-Forwarded-Encrypted: i=1; AJvYcCUi0BXMhUN5i8YuuF0qwVps89GGrR1fzG+3dWgf03EnTUlQQX41wyrm9BnCkciqxcXVzcln7Vz1r39I@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTx1sym08o+4i3sCgf0HBqqrjcQIkp2QcwdadaX9zF/rcO4617
-	epUty3JATgTGlcOusvUlnKx3uuJGlv28OeLK2Hyg0fIAM8tx31Rlp6L9j+hWEVflcyMgMxwtc4D
-	EHg79vJnaPMwyPwZRPIrbvecgXxb+ZoP95OE3JQ==
-X-Google-Smtp-Source: AGHT+IG5vgBt7SWz10m4bwHWl3WshDBGFWCRIXZLwIVJzAVLym8qK1LYVQnvPnJBn5988rv5zM1s0M0FA1lslSV8RBI=
-X-Received: by 2002:a05:6402:34cb:b0:5cf:a20:527b with SMTP id
- 4fb4d7f45d1cf-5cf4f3c018emr2916662a12.28.1731423313055; Tue, 12 Nov 2024
- 06:55:13 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="f0NvnLrE";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1JvtkDuT";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hpDFdJxD";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BZoZbY2J"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 00C0921264;
+	Tue, 12 Nov 2024 15:33:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731425591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DAkZqT3tNn4mcCgcObWd3Ub6xGiLu7hrctM4Rq1ElA0=;
+	b=f0NvnLrErEahw7ahsZfdQmC0GiVV6+LO6vqelxZ2ftKRu4seUqwwytgh+726l9TRHxawpT
+	eKIG/aWwB6ykIrTRAgGtlpPUwjqOhsNzwu4Qdj6+r8EWofdMiPUcSxmn8zBTf5r7hTNYLE
+	p1cmx8GdJrEvVHEKAdaaB6iPVNB0NQw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731425591;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DAkZqT3tNn4mcCgcObWd3Ub6xGiLu7hrctM4Rq1ElA0=;
+	b=1JvtkDuTeB8JxyYw5xAbPBD8guJ57YeS4OP4m7MaJlOzvDND3TKg6kkuRr59Kw1Xbkp/x8
+	Sbln7Dt7KyEdcPAw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=hpDFdJxD;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=BZoZbY2J
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731425590; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DAkZqT3tNn4mcCgcObWd3Ub6xGiLu7hrctM4Rq1ElA0=;
+	b=hpDFdJxDsY9GHAjOmLZ3Mh2dcdth54QmUx8ReB0Ae+cAqlwaeCXAt055ts540wFiRElTpR
+	Y4EljyxN4WfvzvedkyoH29w4QyNptZJvdzijQ5NoUFSuJoMCqBIuJFniui4bvOmkIltP6F
+	6FH5DBdmzhWZFxia44Ij/gzycUFJeQo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731425590;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DAkZqT3tNn4mcCgcObWd3Ub6xGiLu7hrctM4Rq1ElA0=;
+	b=BZoZbY2JFZQS5LyKsdVgHYuDFwbOupwlWTBgqTt3e5qtvOouK8CG6uCfjFtedZHe98aV73
+	nVu7m6+LWmkDt7Bg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D264813721;
+	Tue, 12 Nov 2024 15:33:09 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id uT4wMTV1M2ddEAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Tue, 12 Nov 2024 15:33:09 +0000
+Date: Tue, 12 Nov 2024 16:33:09 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Bjorn Helgaas <bhelgaas@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, 
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v3 4/8] blk-mp: introduce blk_mq_hctx_map_queues
+Message-ID: <c8c671c1-267a-4aa7-a64b-51a461176ad3@flourine.local>
+References: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org>
+ <20241112-refactor-blk-affinity-helpers-v3-4-573bfca0cbd8@kernel.org>
+ <2024111202-parish-prowess-78bc@gregkh>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com> <1731048987-229149-7-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1731048987-229149-7-git-send-email-shawn.lin@rock-chips.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 12 Nov 2024 15:54:36 +0100
-Message-ID: <CAPDyKFray463L3NcG3QF6Qi7q0cz15Z7sO0gEH1OgB7EK5GcmQ@mail.gmail.com>
-Subject: Re: [PATCH v5 6/7] scsi: ufs: rockchip: initial support for UFS
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Rob Herring <robh+dt@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
-	"Rafael J . Wysocki" <rafael@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org, 
-	linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2024111202-parish-prowess-78bc@gregkh>
+X-Rspamd-Queue-Id: 00C0921264
+X-Spam-Score: -4.51
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[22];
+	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
+	MISSING_XM_UA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-[...]
+On Tue, Nov 12, 2024 at 02:58:43PM +0100, Greg Kroah-Hartman wrote:
+> > +void blk_mq_hctx_map_queues(struct blk_mq_queue_map *qmap,
+> > +			    struct device *dev, unsigned int offset)
+> > +
+> > +{
+> > +	const struct cpumask *mask;
+> > +	unsigned int queue, cpu;
+> > +
+> > +	if (!dev->bus->irq_get_affinity)
+> > +		goto fallback;
+> 
+> I think this is better than hard-coding it, but are you sure that the
+> bus will always be bound to the device here so that you have a valid
+> bus-> pointer?
 
-> +
-> +#ifdef CONFIG_PM_SLEEP
-> +static int ufs_rockchip_system_suspend(struct device *dev)
-> +{
-> +       struct ufs_hba *hba = dev_get_drvdata(dev);
-> +       struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
-> +       int err;
-> +
-> +       if (hba->spm_lvl < UFS_PM_LVL_5)
-> +               device_set_awake_path(dev);
-> +
-> +       err = ufshcd_system_suspend(dev);
-> +       if (err) {
-> +               dev_err(hba->dev, "system susped failed %d\n", err);
-> +               return err;
-> +       }
-> +
-> +       clk_disable_unprepare(host->ref_out_clk);
+No, I just assumed the bus pointer is always valid. If it is possible to
+have a device without a bus, than I'll better extend the condition to
 
-I am not sure that the host is always runtime resumed at this point,
-or is there? If not, we need to call pm_runtime_get_sync() somewhere
-here and a corresponding pm_runtime_put* in the ->suspend() callback.
-
-Of course, if you could make use of pm_runtime_force_suspend|resume()
-that would be even better, but then probably need some additional
-re-work in the ufs-core layer first, to make this work, I think.
-
-[...]
-
-Kind regards
-Uffe
+	if (!dev->bus || !dev->bus->irq_get_affinity)
+        	goto fallback;
