@@ -1,117 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC051FBCB4;
-	Tue, 12 Nov 2024 13:58:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1BDE1FEFD1;
+	Tue, 12 Nov 2024 14:23:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731419927; cv=none; b=nGKQxcDwLhY7e8scpc7lv1FQYweY+jP45s65S5T7/vUhO9kZyb6VzxZNByRSSmv0Gl/THUd1yvmBNYUwMTITcizbfcjmr8y31XL1+qR6uG3RaL3KotL6pGKYTF4kPSahHunUDXN9fiK2WcKypX9HmoAFf8xEGwwDg0QEFdXGpK0=
+	t=1731421385; cv=none; b=Ksjlf/C3dbsBiEmMslr/a+T30yRHqH9uuSkuSUzb2Q4/fDIeIRbi/b0nLSVsZ3OW7m6NObZbcxt1033Fj445XhA6oA0+W0W/svyqFWuUgOn3OuHJbhW+di1A4MrxLNBxO5cYY4mmMvaM6/T8npxVbJs4UIUcxBO4rn5nmVsWO7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731419927; c=relaxed/simple;
-	bh=4pQscTrEU5vmK5o46Z8CwGup1txTZg9HfKzeFdSrbS8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EYVU88uyHi62isQ5CP1SEscHXoNC26YU2OjtubkkaWn5cPXUC24/T5qT0Uga8onY0pGegbNqi3VOEsYsPYJNazYnCoVFqQUiCVzDWIMPaoVr12ODvFCp1hM0MwRT3FgdKvTFs0FNRO8CTUDUa5XsveVkiCJLUCnLRnSjQjcmaxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AEVL3aiL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731421385; c=relaxed/simple;
+	bh=4yWGGyiLUE5LgminEo1+3BKAknZRJAj6SQQ4Ov4Yt6k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KZOd+fN0A0zvMu5Xsl84kF7M2VyVYFwTUZbHsJOKSeR5ba3jbekmkVC98PdjMi8VXwSefp4Jt8myMsjH10GIHUEFJOjCy+sDhHGq6xcmNv4O3//f8l2+OMxpho+0DOx5ijwNBM7wI5YuhBS51k7cR3bdcswiCMpkLSk70iD6YII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tSRqfcJf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AEVL3aiL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 341EAC4CECD;
-	Tue, 12 Nov 2024 13:58:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1731419926;
-	bh=4pQscTrEU5vmK5o46Z8CwGup1txTZg9HfKzeFdSrbS8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AEVL3aiL8wTkbdWnNSbzgcdNk3RQPWC313AxWLqPSQ8lsIHiJyIIQ+a1+0brKoEv7
-	 KUUta4ZAheLRxq/dXvj3W5IPp6XNi2jYXbYffK6aebTP7RStJ8pz1CsuOdvXtnlcum
-	 RimsoDVR8th5qGmtSlee4+rtTASaMD19tU6j829U=
-Date: Tue, 12 Nov 2024 14:58:43 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tSRqfcJf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F2D5C4CED0;
+	Tue, 12 Nov 2024 14:23:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731421385;
+	bh=4yWGGyiLUE5LgminEo1+3BKAknZRJAj6SQQ4Ov4Yt6k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=tSRqfcJfQPZnZELNwqlQA8czD2MCnkJ4WzSjBRCL6Nr71SLYem13aKP62AcWkPJcK
+	 325LwsL+VEqq09QNFvomoMmaXyfZ6sHPBtegz4wV/3KnVHQ8QcslvG1o3N+ofzExvQ
+	 LGT/v3MejRdM+h/iq7A1/WenNM78ZF/oZjt8PBnRnyUuES2fLF3I+sYft6bSpilvDr
+	 if0gyHdohNTO3Pgjk6MLk96m2fnO+Nz+DSk+BAb9FrTZb0gLM0/DNVHdDr7MZ5000G
+	 Uv/fwYF0scNbjZqmARmTbhM6+ktVgIphgtX9KOyqwkf2gOGAwYcvDPUpXdDuxQSlbi
+	 /eRe80f3XN5gQ==
+From: Frederic Weisbecker <frederic@kernel.org>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Frederic Weisbecker <frederic@kernel.org>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v3 4/8] blk-mp: introduce blk_mq_hctx_map_queues
-Message-ID: <2024111202-parish-prowess-78bc@gregkh>
-References: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org>
- <20241112-refactor-blk-affinity-helpers-v3-4-573bfca0cbd8@kernel.org>
+	linux-scsi@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH 04/21] scsi: bnx2fc: Use kthread_create_on_cpu()
+Date: Tue, 12 Nov 2024 15:22:28 +0100
+Message-ID: <20241112142248.20503-5-frederic@kernel.org>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <20241112142248.20503-1-frederic@kernel.org>
+References: <20241112142248.20503-1-frederic@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241112-refactor-blk-affinity-helpers-v3-4-573bfca0cbd8@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 12, 2024 at 02:26:19PM +0100, Daniel Wagner wrote:
-> blk_mq_pci_map_queues and blk_mq_virtio_map_queues will create a CPU to
-> hardware queue mapping based on affinity information. These two function
-> share common code and only differ on how the affinity information is
-> retrieved. Also, those functions are located in the block subsystem
-> where it doesn't really fit in. They are virtio and pci subsystem
-> specific.
-> 
-> Thus introduce provide a generic mapping function which uses the
-> irq_get_affinity callback from bus_type.
-> 
-> Originally idea from Ming Lei <ming.lei@redhat.com>
-> 
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> ---
->  block/blk-mq-cpumap.c  | 37 +++++++++++++++++++++++++++++++++++++
->  include/linux/blk-mq.h |  2 ++
->  2 files changed, 39 insertions(+)
-> 
-> diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-> index 9638b25fd52124f0173e968ebdca5f1fe0b42ad9..db22a7d523a2762b76398fdd768f55efd1d6d669 100644
-> --- a/block/blk-mq-cpumap.c
-> +++ b/block/blk-mq-cpumap.c
-> @@ -11,6 +11,7 @@
->  #include <linux/smp.h>
->  #include <linux/cpu.h>
->  #include <linux/group_cpus.h>
-> +#include <linux/device/bus.h>
->  
->  #include "blk.h"
->  #include "blk-mq.h"
-> @@ -54,3 +55,39 @@ int blk_mq_hw_queue_to_node(struct blk_mq_queue_map *qmap, unsigned int index)
->  
->  	return NUMA_NO_NODE;
->  }
-> +
-> +/**
-> + * blk_mq_hctx_map_queues - Create CPU to hardware queue mapping
-> + * @qmap:	CPU to hardware queue map.
-> + * @dev:	The device to map queues.
-> + * @offset:	Queue offset to use for the device.
-> + *
-> + * Create a CPU to hardware queue mapping in @qmap. The struct bus_type
-> + * irq_get_affinity callback will be used to retrieve the affinity.
-> + */
-> +void blk_mq_hctx_map_queues(struct blk_mq_queue_map *qmap,
-> +			    struct device *dev, unsigned int offset)
-> +
-> +{
-> +	const struct cpumask *mask;
-> +	unsigned int queue, cpu;
-> +
-> +	if (!dev->bus->irq_get_affinity)
-> +		goto fallback;
+Use the proper API instead of open coding it.
 
-I think this is better than hard-coding it, but are you sure that the
-bus will always be bound to the device here so that you have a valid
-bus-> pointer?
+However it looks like bnx2fc_percpu_io_thread() kthread could be
+replaced by the use of a high prio workqueue instead.
 
-thanks,
+Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-greg k-h
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index f49783b89d04..36126030e76d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2610,14 +2610,11 @@ static int bnx2fc_cpu_online(unsigned int cpu)
+ 
+ 	p = &per_cpu(bnx2fc_percpu, cpu);
+ 
+-	thread = kthread_create_on_node(bnx2fc_percpu_io_thread,
+-					(void *)p, cpu_to_node(cpu),
+-					"bnx2fc_thread/%d", cpu);
++	thread = kthread_create_on_cpu(bnx2fc_percpu_io_thread,
++				       (void *)p, cpu, "bnx2fc_thread/%d");
+ 	if (IS_ERR(thread))
+ 		return PTR_ERR(thread);
+ 
+-	/* bind thread to the cpu */
+-	kthread_bind(thread, cpu);
+ 	p->iothread = thread;
+ 	wake_up_process(thread);
+ 	return 0;
+-- 
+2.46.0
+
