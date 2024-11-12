@@ -1,58 +1,58 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 846FC1534EC;
-	Tue, 12 Nov 2024 07:53:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12181209F4A;
+	Tue, 12 Nov 2024 07:53:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731398002; cv=none; b=jzjVBEvjRnosN8KBahbHcaHd42rJC8vr8R3TKWi8u9tO8vHJAnaXMelhSyf9vi/udSs/0X4OIy1M2F3BU7W561ziEhSD50VtAU9GREwVCw47WPEQW4SunIHNdI8WvO2vC0wJluUKORhR6vpPvxW4m6DcswRc2vQmgFOemo92TZk=
+	t=1731398023; cv=none; b=CNszVTxCfuOI0eYsY/CZk1onVdXoHomV0dEfpE18hOqYMu97glFTIst3eDzvnWE3XLHW/J1zM0FZuCtiEg88zS6sKbWkQ07xxjOuGDxHHUxS/kd+XNWWJ+fG+FeslJV9CmemHJf4tyUrTdSthdqS8zGthGtLlkVffCpAYlGf8Ps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731398002; c=relaxed/simple;
-	bh=w//YaLtowwTiTj2jD3v4WbwaEv02Z59trMzH+54Y4kE=;
+	s=arc-20240116; t=1731398023; c=relaxed/simple;
+	bh=aNauZ/Ih/QkT/dVs7qqIjV3TANMpfFtHW7+Wmb08jek=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HOOYBGqFhrzNNWOLMNw9w0fpZ9F0OdlhV4KNTJYiJow/7oqOBiWhZbqw8/8aLaTgqOntmjos1m5vuQc2WaMUEeQnrehEvKs6iao+h6J/dAVS8o0euk0k3GpnVcnbnF77EN8YKCZvzqycF1huh8sIjZ0EZlvYQjU0/oP6iFOK0W0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZSl0hY7w; arc=none smtp.client-ip=209.85.210.181
+	 Content-Type:Content-Disposition:In-Reply-To; b=cR0ZTeuJliB+4KJTOEtT+gTxFxlmTApTq8qih/ZTYg66gburRexOlN1GIYnWkVaQovCkDHBUKDN4VgYs/x5xmLvl5JPZFsn3tGnoAz+wYkc5/yJ6406tXKlFglxAqO+d5Ber4ifbvFn2BKSNPlwEhbCI5K98fYgZUvAznrfY9Yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k5StVuah; arc=none smtp.client-ip=209.85.210.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZSl0hY7w"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-720c286bcd6so4664328b3a.3;
-        Mon, 11 Nov 2024 23:53:21 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k5StVuah"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-7242f559a9fso2506800b3a.1;
+        Mon, 11 Nov 2024 23:53:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731398001; x=1732002801; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1731398020; x=1732002820; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=FZdzgcIljMlUObBvcBKwGCR4bvqsV+cW+n+UDROLFU0=;
-        b=ZSl0hY7wUkEKkP4fRQw9qTQC7tj7P5TYaZ9NPNu4nVVsnRH2PLaGSPqPh2zdxm57w9
-         5Gu2D9HK7dUY07VsbJjEJ/UpmCiPDAhr0keYB0+bsBIKlNPEAq/Hzyc7Lcepia6sTjSF
-         GqrDfNIT3dsgh/YOkdC+es+9gePoZBSWwPXGIf1hdkTZo8zl/lIGEiURfwCZrcSd0OI/
-         8NEInmmEiS7S1ymjWgP2jUk6N1F9Keqs7Zr/36alOpjcMwuN59n64oSQj4OFjgvkooaJ
-         99hXMgB5F1haRDLE7BEKWT1PfskEJC6vZZ8U9rMs2TEzn30XF9pDFK3A9FKC5gtJtsQC
-         SmLg==
+        bh=bUgoxxvXrdhSJUKoJyf/O9v+5uKNcqCPwgTAuJ4BG7s=;
+        b=k5StVuahyiiO7KN2syrqVzoiJQoNBGi4VDfp5PzeOIB6lETijR+QTD5k5yf/nVXNIX
+         U7B1y/koPL8VYtiQqWmec7lRSnBVnG5MlTG/R8zMdhzRAeRNtGEMxMhwKQSg3t2NcHJO
+         cjUCbctYZtVGDXGK89L9zWbZaaFYDYFbt2WbGoDWE6z/2aUuYJ1CyXNZSBxGk96VxHSw
+         +9UYtAMFJ8PSsvqv3VcywndHOxMooQdpdZ+yefYeCgYwJb00AZd0fZINvYqEqr3CEZys
+         6yVdu1ND7YxjuBTCkQW2Hn8+xkJokakL/Fvw0UeJsqRJXPwGizGl6bhsux4lmuosZgnG
+         ksMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731398001; x=1732002801;
+        d=1e100.net; s=20230601; t=1731398020; x=1732002820;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FZdzgcIljMlUObBvcBKwGCR4bvqsV+cW+n+UDROLFU0=;
-        b=X0YTH0RjfXYKiQNL6b8mYXcksDWM8FQg+qAaywCBSrt6y98YwK2s7C8ELL18lbpQcf
-         EbbHXTim+7H3EyqkpP6LCVxaEGC21VfHcCDfeI4DB0n2Tmb6WKSHrZj+B3Okx8aYmtTu
-         PMK0lDNnGdLfGumHCb8nIdSKRjKl9HOfa4D3LWE7kbYhu/SCEBhUgQMv7e3egqTRqE5j
-         dXTuQUegcUzekCzfdtUtQhFptBMCZzXmOhx3KfsRC5i5lPnFFBTBPtKE1ANiW245VPrb
-         hEtNVfSXwH1XXAayIBi5wyUrwF+eWoXMGC2aKkWMVKAVhn+uEs6T+g/YkxVdsUCGVw+1
-         L3IA==
-X-Forwarded-Encrypted: i=1; AJvYcCVCfIgImAmbOowNiPMMoEGoW7Zm+T8fVwW1bOnMoUKHENLqVddf5ErtHDnZjA+UkPIdFJNlp/Az1wjU+G4=@vger.kernel.org, AJvYcCVddK8T3S5LfGIcY4cywiCOu3ril6rWQ5hjOXRepQutGpWxdeIOrtAG4RuSDneMcCLlux2v/FvBohmt741x8mVt5oU=@vger.kernel.org, AJvYcCW9UyAkenc38Ddnff2wKSFsqhMtF7ANDnYu53ug7VC0HEucD2uOVdSenZEO9sJYGth8IcrITFut1yM5PQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzPzAy4eW1iyTgys2Jqse1Jid3tj3qC2K2mTLOloCbn/XRrqhb7
-	K8b1V5NcWtVzbS1rB/d8RzyadLwk9ZMBtgSYQn8xj2cuudBpt2QV
-X-Google-Smtp-Source: AGHT+IFOyHj/UkfZuck4267vweXr7tX25rTZjP9yXmcate30Q5rUAyasg/Lb0W80EKNNt7nBcNybgw==
-X-Received: by 2002:a05:6a00:23d1:b0:71e:573f:5673 with SMTP id d2e1a72fcca58-724132ce0bamr20411427b3a.15.1731398000772;
-        Mon, 11 Nov 2024 23:53:20 -0800 (PST)
+        bh=bUgoxxvXrdhSJUKoJyf/O9v+5uKNcqCPwgTAuJ4BG7s=;
+        b=sqth2KThKTm5bwSjy3YWsfIV9mVKN+1vNQqHWoTr7ONjBVM3Ng+LRmbpqsHkF390uB
+         jE2qe40F+J9uZRws8GNULOCd3ONJh/c2JUnVBPyDHnwTt3+aTo7Fu2/jUuwet6HTq8RG
+         NsPiHyvHaHeSvfZxIkfhiedwj9Xai/v1BmYC1rYJ8o5BzliiA8gDumZ0sQ8rvB27ZjIk
+         c9i9cIroCnPfAEVOklhjhVlu2oHfJboTMrKXesXnyk6d+e5qAZkiXxQ3FYkqu5MbR4QM
+         iJ2jkCVrmXG+xTsVCo5gJZxnxVKcOjdZBBjI6cZKdmCSHiz/6FYxpePKc5NvgqaTKtrS
+         2y3A==
+X-Forwarded-Encrypted: i=1; AJvYcCWNCf9seypxgpVWSBWEEFYHyRj4VNYDlLlNmx4/m8LXV3ToBrHlZjAmlP//92NqskFZGDHtcJavOosbg+E=@vger.kernel.org, AJvYcCX+azBmUDVftd3Ff6ZXG/fCYrhKSVJZgkbrN3QIIAqTxhYAIJzIGODfat+lbB5cvtVyMGD3DCs+jxOE4Cdgr/+M2ys=@vger.kernel.org, AJvYcCXxgnQBGFdJh5EfasuZvrWSUS7Tzc9r+vXglW5Xn6RkZ3InZWeRbK4uWaMevdNJs7fUqWqXSoezstka4g==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzlym+J4AvRTn10gtV3GheKiS4z4TmwSlkiwzy8Kh04lPcZmwa0
+	WkmSK3M+B+lvrGTIswtn3VoeBbvZsKcFq2ECyd+VaKeL84mJJwV8
+X-Google-Smtp-Source: AGHT+IH4s7RgAlk5NeJXz45kGRRPxv9SbFPlQhFQl+z6UduWSSD31KYzEVYWdy1FjRFjXJxIydK7jg==
+X-Received: by 2002:a05:6a00:b56:b0:71e:5a1d:ecdc with SMTP id d2e1a72fcca58-7241334a09dmr21966921b3a.17.1731398020189;
+        Mon, 11 Nov 2024 23:53:40 -0800 (PST)
 Received: from thinkpad ([117.213.103.248])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72407a56a16sm10689026b3a.182.2024.11.11.23.53.16
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7240799bb78sm10424749b3a.95.2024.11.11.23.53.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2024 23:53:20 -0800 (PST)
-Date: Tue, 12 Nov 2024 13:23:12 +0530
+        Mon, 11 Nov 2024 23:53:39 -0800 (PST)
+Date: Tue, 12 Nov 2024 13:23:32 +0530
 From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
 To: Tudor Ambarus <tudor.ambarus@linaro.org>
 Cc: alim.akhtar@samsung.com, James.Bottomley@HansenPartnership.com,
@@ -61,9 +61,11 @@ Cc: alim.akhtar@samsung.com, James.Bottomley@HansenPartnership.com,
 	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
 	andre.draszik@linaro.org, kernel-team@android.com,
 	willmcvicker@google.com
-Subject: Re: [PATCH 1/2] scsi: ufs: exynos: remove empty drv_init method
-Message-ID: <20241112075312.v3ir4ewg4kglckpf@thinkpad>
+Subject: Re: [PATCH 2/2] scsi: ufs: exynos: remove superfluous function
+ parameter
+Message-ID: <20241112075332.lhssmh44a77uyvit@thinkpad>
 References: <20241030102715.3312308-1-tudor.ambarus@linaro.org>
+ <20241030102715.3312308-2-tudor.ambarus@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,11 +75,11 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241030102715.3312308-1-tudor.ambarus@linaro.org>
+In-Reply-To: <20241030102715.3312308-2-tudor.ambarus@linaro.org>
 
-On Wed, Oct 30, 2024 at 10:27:14AM +0000, Tudor Ambarus wrote:
-> Remove empty method. When the method is not set, the call is not made,
-> saving a few cycles.
+On Wed, Oct 30, 2024 at 10:27:15AM +0000, Tudor Ambarus wrote:
+> The pointer to device can be obtained from ufs->hba->dev,
+> remove superfluous function parameter.
 > 
 > Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
 
@@ -86,33 +88,45 @@ Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 - Mani
 
 > ---
->  drivers/ufs/host/ufs-exynos.c | 6 ------
->  1 file changed, 6 deletions(-)
+>  drivers/ufs/host/ufs-exynos.c | 4 ++--
+>  drivers/ufs/host/ufs-exynos.h | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
 > diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> index 9ec318ef52bf..db89ebe48bcd 100644
+> index db89ebe48bcd..7e381ab1011d 100644
 > --- a/drivers/ufs/host/ufs-exynos.c
 > +++ b/drivers/ufs/host/ufs-exynos.c
-> @@ -198,11 +198,6 @@ static inline void exynos_ufs_ungate_clks(struct exynos_ufs *ufs)
+> @@ -198,7 +198,7 @@ static inline void exynos_ufs_ungate_clks(struct exynos_ufs *ufs)
 >  	exynos_ufs_ctrl_clkstop(ufs, false);
 >  }
 >  
-> -static int exynos7_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
-> -{
-> -	return 0;
-> -}
-> -
->  static int exynosauto_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
+> -static int exynosauto_ufs_drv_init(struct device *dev, struct exynos_ufs *ufs)
+> +static int exynosauto_ufs_drv_init(struct exynos_ufs *ufs)
 >  {
 >  	struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
-> @@ -2036,7 +2031,6 @@ static const struct exynos_ufs_drv_data exynos_ufs_drvs = {
->  				  EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX |
->  				  EXYNOS_UFS_OPT_SKIP_CONNECTION_ESTAB |
->  				  EXYNOS_UFS_OPT_USE_SW_HIBERN8_TIMER,
-> -	.drv_init		= exynos7_ufs_drv_init,
->  	.pre_link		= exynos7_ufs_pre_link,
->  	.post_link		= exynos7_ufs_post_link,
->  	.pre_pwr_change		= exynos7_ufs_pre_pwr_change,
+>  
+> @@ -1424,7 +1424,7 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+>  	exynos_ufs_fmp_init(hba, ufs);
+>  
+>  	if (ufs->drv_data->drv_init) {
+> -		ret = ufs->drv_data->drv_init(dev, ufs);
+> +		ret = ufs->drv_data->drv_init(ufs);
+>  		if (ret) {
+>  			dev_err(dev, "failed to init drv-data\n");
+>  			goto out;
+> diff --git a/drivers/ufs/host/ufs-exynos.h b/drivers/ufs/host/ufs-exynos.h
+> index 1646c4a9bb08..9670dc138d1e 100644
+> --- a/drivers/ufs/host/ufs-exynos.h
+> +++ b/drivers/ufs/host/ufs-exynos.h
+> @@ -182,7 +182,7 @@ struct exynos_ufs_drv_data {
+>  	unsigned int quirks;
+>  	unsigned int opts;
+>  	/* SoC's specific operations */
+> -	int (*drv_init)(struct device *dev, struct exynos_ufs *ufs);
+> +	int (*drv_init)(struct exynos_ufs *ufs);
+>  	int (*pre_link)(struct exynos_ufs *ufs);
+>  	int (*post_link)(struct exynos_ufs *ufs);
+>  	int (*pre_pwr_change)(struct exynos_ufs *ufs,
 > -- 
 > 2.47.0.199.ga7371fff76-goog
 > 
