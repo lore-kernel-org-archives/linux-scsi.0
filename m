@@ -1,146 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75F9B143C4C;
-	Tue, 12 Nov 2024 13:26:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B47213C908
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 13:26:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731417994; cv=none; b=UN4t61BoNvIZ/Qr45uCq9jN05qcE6gzTurzhpWkSi4kn5/w4KsitjMkZZwN9l3K0ZmQgcV/wFWRRX9AdRzUlUtn6RMQNWez5n5rhJ2ZgIIbVQnvjthOQf9MIRW4qLLXXk5YvsfbzDuS0/WdU7SiHJ0t7eYBBv/9ktBmKX/6p+50=
+	t=1731417995; cv=none; b=o1GsMn5hILFcUem+PxgYJIfze3RxcrcQtv/3qhOEUjgQuPThq4C8kPODJixzKlbfG8fTrfv0B1Q3Q27JNXV+Vbhri1SiPT2w8zWBm1De3aWWHNaAwHYVzBaDwMNmkbbVMsWzAv3AhU5WX6GYNmWpGkPv9LfTJTYUtSnc/+W/RhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731417994; c=relaxed/simple;
-	bh=sqDWvlYnzmw5LmAND0lJq+irtLs9bjKycO9yQSXxH7o=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=n4sip+i9gmbqgSsJQ0tlsE6R6gE+fPDCU/R9sG79Xp/aBjx2AeIi22LP1SxmJuohJ6egYmiqtHdygMNvmfFu765cN0rjMQGt7lKWPeXPQ+ZLH2k0v7e8LHl/LC39JKRZKkh9Ye09dehPEaP2+PH8E/FZukw5XjPRBei08ggfgbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u2eY277K; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731417995; c=relaxed/simple;
+	bh=ECcn1Vt7kh7tx9LcDNSDDOJQmeTJi0LIibgBGaHsvXc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=kiSLcQweVyxG8mjsVSRa2Cuw7JTMoSNsAooBv7TBpv5fQpeKI2+9E3hGGB0uBn7sF+b8Ensa7sFkBRV4E3g3qmShZGo/VThDYh1dIqT3/ZWN0SXqiE08dkFmxQM08TSOEd1n/+KrLV4OpjOz1tJfWFtWlwKOHDE8zFa6rBCCw/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=dMUhLFCp; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u2eY277K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 778D0C4CED0;
-	Tue, 12 Nov 2024 13:26:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731417993;
-	bh=sqDWvlYnzmw5LmAND0lJq+irtLs9bjKycO9yQSXxH7o=;
-	h=From:Subject:Date:To:Cc:From;
-	b=u2eY277K1Z+ejda+K3q64uVaWGIanQ+OQOkOviyw8rNIM+nuh6K9X8/wOTsCX3IT5
-	 U4grL2kpat1CYVn+deagHXvhrq0Hw7tJ7XgdRSojsEs1R+jQR52KqWMt8wDhMYOCld
-	 OcVCuVF7k426B1dSXuhiLR/hHcRhOAo6T/iN8psTkF+SAVeQ6PNnNovv6VgT/v/KZR
-	 ERtvj4WPMENMTOfefcps47JoqqoGW0Nr6qiVzoM0F6mi2H4TDm9UDVQjE8NWtCceVv
-	 oKYcBw+C9Bou+L1IwAd8WRr5zeR1bm+Rxe0lsSAlOEfGZqp5dl6LDg+qqLTBYADLzY
-	 04JDH+5ZHtcMw==
-From: Daniel Wagner <wagi@kernel.org>
-Subject: [PATCH v3 0/8] blk: refactor queue affinity helpers
-Date: Tue, 12 Nov 2024 14:26:15 +0100
-Message-Id: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="dMUhLFCp"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20241112132631epoutp01bd0e3e7596224ba3f90372f5a5cc2f23~HO31TGIax1383213832epoutp01N
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 13:26:31 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20241112132631epoutp01bd0e3e7596224ba3f90372f5a5cc2f23~HO31TGIax1383213832epoutp01N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1731417991;
+	bh=n8xVEIDHv5I8gbDECdxLIBU/WpRStbeReffw7f4ORRs=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=dMUhLFCpnXcMHo8g8p5/1+iRhLWVJLPSWE8fCKTIWK+lbZIVB9UsBFg3jz98kd7R8
+	 uKSIcfX9xPDg6IVpPgr0SR/GIVji9xYrJiY9KKKk37IdY/YmrX/n3amm3FfPj908rn
+	 q5loYMXBY6kDsn6XF5h8em04vlWLL/vXaXxhRFSs=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+	20241112132630epcas5p47257cf43edeff21e5e6a23edd8609e51~HO3070SP90804408044epcas5p4v;
+	Tue, 12 Nov 2024 13:26:30 +0000 (GMT)
+Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.183]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4XnnHn3DKdz4x9Pw; Tue, 12 Nov
+	2024 13:26:29 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	B7.A3.08574.58753376; Tue, 12 Nov 2024 22:26:29 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20241112132628epcas5p33b0b5cbdbb64df77a4305802a3134aa0~HO3zD7y_W0215702157epcas5p30;
+	Tue, 12 Nov 2024 13:26:28 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20241112132628epsmtrp260cfa063989f3b867679801d56e9e8ad~HO3zDGNcA2083420834epsmtrp2g;
+	Tue, 12 Nov 2024 13:26:28 +0000 (GMT)
+X-AuditID: b6c32a44-6dbff7000000217e-8c-673357854e30
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	46.12.18937.48753376; Tue, 12 Nov 2024 22:26:28 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20241112132626epsmtip1359346d7bbae74d83a7a62ab10e697b9~HO3xXNPF10035500355epsmtip17;
+	Tue, 12 Nov 2024 13:26:26 +0000 (GMT)
+Message-ID: <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com>
+Date: Tue, 12 Nov 2024 18:56:25 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv11 0/9] write hints with nvme fdp and scsi streams
+To: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>
+Cc: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	io-uring@vger.kernel.org, axboe@kernel.dk, martin.petersen@oracle.com,
+	asml.silence@gmail.com, javier.gonz@samsung.com, Keith Busch
+	<kbusch@kernel.org>
+Content-Language: en-US
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20241111102914.GA27870@lst.de>
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHdXM2cC/4XOTQ6CMBAF4KuQri3pDwi44h6GRUun0EgAW2gkh
- LtbMOqS2b3J5HuzIgfWgEO3aEUWvHFm6EPglwjVregbwEaFjBhhCSkowxa0qKfBYtk9sNDa9GZ
- acAvdCNbhjOSFLFKZSEpQMMZwbl6Hf68+2cJzDjXTf9kaF8Dl+MHTffut4yd1nmKCcyBprrNMa
- MpKNzuIFaDd9exn0TBnFguW5leilFCMU1E+wPbQxYNtULVt2xsamRUELAEAAA==
-X-Change-ID: 20240912-refactor-blk-affinity-helpers-7089b95b4b10
-To: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>, 
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
- Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
- =?utf-8?q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, virtualization@lists.linux.dev, 
- linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
- mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, 
- storagedev@microchip.com, linux-nvme@lists.infradead.org, 
- Daniel Wagner <wagi@kernel.org>
-X-Mailer: b4 0.14.2
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAJsWRmVeSWpSXmKPExsWy7bCmhm5ruHG6QdscYYs5q7YxWqy+289m
+	sXL1USaLd63nWCwe3/nMbjHp0DVGizNXF7JY7L2lbbFn70kWi/nLnrJbdF/fwWax/Pg/Jgce
+	j52z7rJ7XD5b6rFpVSebx+Yl9R67bzaweZy7WOHx8ektFo++LasYPT5vkgvgjMq2yUhNTEkt
+	UkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXLzAG6V0mhLDGnFCgUkFhc
+	rKRvZ1OUX1qSqpCRX1xiq5RakJJTYFKgV5yYW1yal66Xl1piZWhgYGQKVJiQnXF/eVjBHJ6K
+	XbeXMDUw3uDsYuTkkBAwkZjS95IJxBYS2M0o0fjQq4uRC8j+xCixsO0wK5wz5c1Lli5GDrCO
+	6b3iEPGdjBL9MzczQThvGSXeH1/PAjKKV8BOYs+m+4wgNouAqsSsF49ZIeKCEidnPgGrERWQ
+	l7h/awY7iC0s4CbRcPUuWL2IgKPE1w1LwGxmgdlMEidW8kPY4hK3nsxnAjmCTUBT4sLkUpAw
+	p4COxLWuKcwQJfIS29/OYQa5R0LgBIfE6dVHWSHedJH4vm4pC4QtLPHq+BZ2CFtK4vO7vWwQ
+	drbEg0cPoGpqJHZs7oPqtZdo+HODFWQvM9De9bv0IXbxSfT+fsIECRNeiY42IYhqRYl7k55C
+	dYpLPJyxBMr2kJi1ew4jJKDXMEr03kmdwKgwCylQZiF5chaSb2YhLF7AyLKKUTK1oDg3PTXZ
+	tMAwL7UcHtnJ+bmbGMFJWctlB+ON+f/0DjEycTAeYpTgYFYS4T3lbJwuxJuSWFmVWpQfX1Sa
+	k1p8iNEUGDsTmaVEk/OBeSGvJN7QxNLAxMzMzMTS2MxQSZz3devcFCGB9MSS1OzU1ILUIpg+
+	Jg5OqQam+rPPp875si7367xZta07vqQ02/7gF79x1pJJ+NCCm6mqM7dbt551t7Nn+xjAutXs
+	ul2py5/M6wtKjpQmr1j0xrXeRUDjya6nX8tuKzRcWXy9TPfIA3nbU2kMRz4Xy/bN6mi89qNc
+	rC5472rJZ7M6MuZvzmFkMpHWuJQte93tZLjWQ/Mb23TSuT/7zdm/nPmeVrJQWtHa0zd5l1nu
+	tz4SczTnWWRVrNK3vCNRtzwTGGOTf+vpfnOeni7b+3gK29NX3Gf3pm5smXn4zoyVG79/vXaX
+	L5lJWf6yecisHWnH9n5ZnDQ/VdFSjOF28pGidK3VzdfOfuTyN1twwjZQrngZs+geW+nvDxb4
+	x/Jc1ql8q8RSnJFoqMVcVJwIAB1r+zJTBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsWy7bCSnG5LuHG6waRTOhZzVm1jtFh9t5/N
+	YuXqo0wW71rPsVg8vvOZ3WLSoWuMFmeuLmSx2HtL22LP3pMsFvOXPWW36L6+g81i+fF/TA48
+	Hjtn3WX3uHy21GPTqk42j81L6j1232xg8zh3scLj49NbLB59W1YxenzeJBfAGcVlk5Kak1mW
+	WqRvl8CVcX95WMEcnopdt5cwNTDe4Oxi5OCQEDCRmN4r3sXIxSEksJ1RoqdpFWsXIydQXFyi
+	+doPdghbWGLlv+fsEEWvGSW2vdkHluAVsJPYs+k+I4jNIqAqMevFY1aIuKDEyZlPWEBsUQF5
+	ifu3ZoDVCwu4STRcvQtWLyLgKPF1wxJGkKHMArOZJFp2N7JBbFjDKPFvwX6wScxAZ9x6Mp8J
+	5FQ2AU2JC5NLQcKcAjoS17qmMEOUmEl0be1ihLDlJba/ncM8gVFoFpI7ZiGZNAtJyywkLQsY
+	WVYxiqYWFOem5yYXGOoVJ+YWl+al6yXn525iBMefVtAOxmXr/+odYmTiYDzEKMHBrCTCe8rZ
+	OF2INyWxsiq1KD++qDQntfgQozQHi5I4r3JOZ4qQQHpiSWp2ampBahFMlomDU6qBabr/qsvM
+	V7Lv37w6s8WMi8st3clvwyK3dxHdYdO5J3XarzsgnTDVL+CowuGO3bL/yy3ln/09WCD77535
+	rlJWl50cMZskTeVenWF/tLhY+6aD6QYWA7/rN7nD872+FHfuXTZFzntK7wPduqu/W/K3ngja
+	XvHv89l7E39aMIp1My0Rvnol2fXkLR02Q+d4n4MfW2/M+n5NVeXFvn0K4jctJl2w6xFj3Fmk
+	FMrDe196/um3r4+Y3DvB+s3tW4Qqw7Yn6cyLivUPemj/rpplcs7g5sYpf2onBj5X3ZtR7T/n
+	ztz01zdrpWr32XNe0peQvhH68EaB5LOV8lJf3y89Gd1R/W5Nocni3uBli2dc6tp7qVKJpTgj
+	0VCLuag4EQCBFqrVLgMAAA==
+X-CMS-MailID: 20241112132628epcas5p33b0b5cbdbb64df77a4305802a3134aa0
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b
+References: <20241108193629.3817619-1-kbusch@meta.com>
+	<CGME20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b@epcas5p3.samsung.com>
+	<20241111102914.GA27870@lst.de>
 
-As suggested by Christoph I've dropped the special case for hisi_sas v2,
-so the open coded loop will stay. That means for the isolcpus patches, I
-just need to open code that thing there as well. But overall, this should
-be okay and it avoids adding a wierd interface to blk-mq APIs.
+On 11/11/2024 3:59 PM, Christoph Hellwig wrote:
+>   - there is a separate write_stream value now instead of overloading
+>     the write hint.  For now it is an 8-bit field for the internal
+>     data structures so that we don't have to grow the bio, but all the
+>     user interfaces are kept at 16 bits (or in case of statx reduced to
+>     it).  If this becomes now enough because we need to support devices
+>     with multiple reclaim groups we'll have to find some space by using
+>     unions or growing structures
 
-Original cover letter:
+>   - block/fops.c is the place to map the existing write hints into
+>     the write streams instead of the driver
 
-These patches were part of 'honor isolcpus configuration' [1] series. To
-simplify the review process I decided to send this as separate series
-because I think it's a nice cleanup independent of the isolcpus feature.
 
-Signed-off-by: Daniel Wagner <wagi@kernel.org>
----
-Changes in v3:
-- dropped the additinal argument in blk_mq_hctx_map_queues.
-  leave open coded version in hisi_sas_v2.
-- splitted "blk-mp: introduce blk_mq_hctx_map_queues" patch into
-  three patches.
-- dropped local variable in pci_device_irq_get_affinity
-- Link to v2: https://lore.kernel.org/r/20241111-refactor-blk-affinity-helpers-v2-0-f360ddad231a@kernel.org
+Last time when I attempted this separation between temperature and 
+placement hints, it required adding a new fcntl[*] too because 
+per-inode/file hints continues to be useful even when they are treated 
+as passthrough by FS.
 
-Changes in v2:
-- added new callback to struct bus_type and call directly the affinity
-  helpers from there.
-- Link to v1: https://lore.kernel.org/r/20240913-refactor-blk-affinity-helpers-v1-0-8e058f77af12@suse.de
+Applications are able to use temperature hints to group multiple files 
+on device regardless of the logical placement made by FS.
+The same ability is useful for write-streams/placement-hints too. But 
+these patches reduce the scope to only block device.
 
-Changes in v1:
-- renamed blk_mq_dev_map_queues to blk_mq_hctx_map_queues
-- squased 'virito: add APIs for retrieving vq affinity' into
-  'blk-mq: introduce blk_mq_hctx_map_queues'
-- moved hisi_sas changed into a new patch
-- hisi_sas use define instead of hard coded value
-- moved helpers into their matching subsystem, removed
-  blk-mq-pci and blk-mq-virtio files
-- fix spelling/typos
-- fixed long lines in docu (yep new lines in brief descriptions are
-  supported, tested ti)
-- based on the first part of
-  [1] https://lore.kernel.org/all/20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de
+IMO, passthrough propagation of hints/streams should continue to remain 
+the default behavior as it applies on multiple filesystems. And more 
+active placement by FS should rather be enabled by some opt in (e.g., 
+mount option). Such opt in will anyway be needed for other reasons (like 
+regression avoidance on a broken device).
 
----
-Daniel Wagner (8):
-      driver core: bus: add irq_get_affinity callback to bus_type
-      PCI: hookup irq_get_affinity callback
-      virtio: hookup irq_get_affinity callback
-      blk-mp: introduce blk_mq_hctx_map_queues
-      scsi: replace blk_mq_pci_map_queues with blk_mq_hctx_map_queues
-      nvme: replace blk_mq_pci_map_queues with blk_mq_hctx_map_queues
-      virtio: blk/scsi: replace blk_mq_virtio_map_queues with blk_mq_hctx_map_queues
-      blk-mq: remove unused queue mapping helpers
-
- block/Makefile                            |  2 --
- block/blk-mq-cpumap.c                     | 37 +++++++++++++++++++++++++
- block/blk-mq-pci.c                        | 46 -------------------------------
- block/blk-mq-virtio.c                     | 46 -------------------------------
- drivers/block/virtio_blk.c                |  4 +--
- drivers/nvme/host/fc.c                    |  1 -
- drivers/nvme/host/pci.c                   |  3 +-
- drivers/pci/pci-driver.c                  | 14 ++++++++++
- drivers/scsi/fnic/fnic_main.c             |  3 +-
- drivers/scsi/hisi_sas/hisi_sas.h          |  1 -
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  4 +--
- drivers/scsi/megaraid/megaraid_sas_base.c |  3 +-
- drivers/scsi/mpi3mr/mpi3mr.h              |  1 -
- drivers/scsi/mpi3mr/mpi3mr_os.c           |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  3 +-
- drivers/scsi/pm8001/pm8001_init.c         |  2 +-
- drivers/scsi/pm8001/pm8001_sas.h          |  1 -
- drivers/scsi/qla2xxx/qla_nvme.c           |  3 +-
- drivers/scsi/qla2xxx/qla_os.c             |  4 +--
- drivers/scsi/smartpqi/smartpqi_init.c     |  7 ++---
- drivers/scsi/virtio_scsi.c                |  3 +-
- drivers/virtio/virtio.c                   | 19 +++++++++++++
- include/linux/blk-mq-pci.h                | 11 --------
- include/linux/blk-mq-virtio.h             | 11 --------
- include/linux/blk-mq.h                    |  2 ++
- include/linux/device/bus.h                |  3 ++
- 26 files changed, 92 insertions(+), 144 deletions(-)
----
-base-commit: c9af98a7e8af266bae73e9d662b8341da1ec5824
-change-id: 20240912-refactor-blk-affinity-helpers-7089b95b4b10
-
-Best regards,
--- 
-Daniel Wagner <wagi@kernel.org>
-
+[*] 
+https://lore.kernel.org/linux-nvme/20240910150200.6589-4-joshi.k@samsung.com/
