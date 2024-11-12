@@ -1,38 +1,42 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B62020495B;
-	Tue, 12 Nov 2024 04:48:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E9794502F
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2024 05:48:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731386933; cv=none; b=NxUKsnZnrzJs0oesJ8kRcG/GNoUVshwQLpU61aSSK7EGH+Wm1JQZ9w1idI37HJhAEhwhJcA3niLO7jYfjzjlYUlC8kB23EbpczLO/bh4Y7re+4FlPhzFqQnX4sTjOjA/QrmAUcpCy7r9Muga+1SC68D2IBzlnZAEro5XBTwfGAU=
+	t=1731390504; cv=none; b=DFxAXOAOkUYpYaEnGDp/8H11JHzW+Y66pKCvr19zihKKHjGQ2LVtR8O3nlJMc+FZCBYrKwuLYwqOvyj/q+FvAFachZyH4fPCg8cVJ3ZcoEmNpbvd6adNGbV/PxWbPcamtzbYegWM8b1S0WFeMB1NWRQ2DedmGer9V0WkTdTrBp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731386933; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1731390504; c=relaxed/simple;
+	bh=Zdpp9pCE9wcVoiFZNqjd5BvD5edLdgaEsIxR6s8+4lQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EWL7chMaN/zw3ySlw2tEGnpzpOjE4SNDoOY2dpJusb3juhzMHuFiPWnZr2U7ctqlV4uuNOB6H49QQxjJya8irO7qNHidL5w2PlCg9hChh95hsfiBsvvzmSt+vMBOk3SFv2a614IR674OlLbBUPr3QSWQWuWWNDnVYqcb1lGCwzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AF0CC68D09; Tue, 12 Nov 2024 05:48:49 +0100 (CET)
-Date: Tue, 12 Nov 2024 05:48:49 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
-	linux-nvme@lists.infradead.org, Daniel Wagner <dwagner@suse.de>
-Subject: Re: [PATCH v2 6/6] blk-mq: remove unused queue mapping helpers
-Message-ID: <20241112044849.GD8883@lst.de>
-References: <20241111-refactor-blk-affinity-helpers-v2-0-f360ddad231a@kernel.org> <20241111-refactor-blk-affinity-helpers-v2-6-f360ddad231a@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=cNorqv30wgYPV7jQ6b0wDSmfqSmK0iGcTQDP0R1BK69p0KRzjJSOpXNcR1SOtWSprmCqULcMfkkuBVDBJ27P7vr8IJgmXcQaQslZdBN1m+SX9dgwpBSiSK1w0B6AGVhbwdb0eUpqnyE1cLuuRHML2IRRrRsiIoicWLZPhePh+lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=z/gf3kbT; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="z/gf3kbT"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=HqvxUB0Rg97AufQH3/BxaKuR+N7nxfBX1gplEIpgLoM=; b=z/gf3kbT9R7sZVS1N7pX7BaDCA
+	LvBcZvyjWCsrJL5IVGqd8veibvabujp0XjQUJLpn1PcFSJiREtoRglo09S4eqthR0IMp8p4l7WHzi
+	Mlu5yOg1shN/egONnmUWUYVKK5TIS/oHBg3eGAtI3GnhVeup8kDVun1cVtoQEezUCWfJ14eXCTcFH
+	LZQrIII9BxULyQEzsrvNQQslxOwAXtOnTU5HsNV5XI+me6eE7fwEpApBPEFyzwyOxMEUudjQDku/J
+	jIk/J2gOpSCqWSqXMV0yzaFQzdtvdq7P0bFjq5xR457bTWKEBuJMaXf48+Hd33eDtJG3lqT5EcuRj
+	h6u48S3A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tAjlG-00000002Hvw-2JIv;
+	Tue, 12 Nov 2024 05:48:22 +0000
+Date: Mon, 11 Nov 2024 21:48:22 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Magnus Lindholm <linmag7@gmail.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com,
+	martin.petersen@oracle.com, hch@infradead.org
+Subject: Re: [PATCH] scsi: qla1280.h
+Message-ID: <ZzLsJlfzCiJ1iEna@infradead.org>
+References: <20241106225455.2736-1-linmag7@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,10 +45,16 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241111-refactor-blk-affinity-helpers-v2-6-f360ddad231a@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20241106225455.2736-1-linmag7@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+Please write a useful Subject line, e.g.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+qla1280: fix hardware revision numbering for ISP1020/1040
+
+On Wed, Nov 06, 2024 at 11:49:57PM +0100, Magnus Lindholm wrote:
+>  Fix hardware revision numbering for ISP1020/1040. HWMASK
+
+and the commit log shold not be indented by whitespaces and wrapped
+after 73 characters.
 
