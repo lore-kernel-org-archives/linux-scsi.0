@@ -1,83 +1,106 @@
-Received: from mail-m25496.xmail.ntesmail.com (mail-m25496.xmail.ntesmail.com [103.129.254.96])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 282EE20C499;
-	Tue, 12 Nov 2024 07:42:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.129.254.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF0A1534EC;
+	Tue, 12 Nov 2024 07:50:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731397333; cv=none; b=HQrTFFhn4xA36d678vV1Y9d1DEhJmiCrz2FeHTOeDmi+IjFc91t4Od/Er9p/g55KA66l7JkRLMurfQ4EJeAUHMIuxjdg1JFvm7nq3f+tT3diTi9sxd5Wk5sI/tnghceWJnKZLaVXLP6rMb3PCwJOPIxldbmiqxW24j+yyrGialQ=
+	t=1731397809; cv=none; b=OJHjj2cCGuvDgrcGN3JDZCBXU/bheZ2tMo1YxWGvvbsScfWfTtJnsqCbfKxa9RaKnlwQ6y7xotqZhfOUQPg+4I51FfiSKMuXECF0YOFramlFUbNX0ZHuV5HYCbLTUu2qWrEaODqxmmIUgA2JUaGzCVYpEgmcBTdDi6Y0eUS8tUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731397333; c=relaxed/simple;
-	bh=dBnJYwwKIgzcIjgyx5ZbrWtctPqBJ+GRz95RV8x2jAo=;
-	h=Message-ID:Date:MIME-Version:Cc:To:From:Subject:Content-Type; b=b9l0nqwsqgG1wPDGSNsvF/ZoerwojXJYfPU74yCo/c25N2tjcQ31h5cgSBaOtRu7FFrVJEWCIhmtgCHwcvmpVclE1NYJ3945HIF0TdT+qcJQpeyADGJSDIGcryAVn4dhb+dLfChsGfC4BOW48wqBAOAi/LDgqHJ+B2EQodA5kY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=VaNcyP43; arc=none smtp.client-ip=103.129.254.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1731397809; c=relaxed/simple;
+	bh=KTjNL6Mlwilqba5V1gn5bkYFPoDYAjhd+CGB/chkZ9M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UBxN7VhSdVs/LZmLNPabeegFJ3fWAoplOU1cjbRW0DbZa2HpBDk/3Ig6BawngBqli4jb5EiEZSCSapgMlI8No+dArdmssu52Ef30MnCuCH84798//ocA2OtZPCNu3RoOMd5gjo9oHLvxqKoVBMhTL/pLNVY0/9gPPC1an5UNIZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JfSy6wFf; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="VaNcyP43"
-Received: from [172.16.12.45] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 28050541;
-	Tue, 12 Nov 2024 15:36:48 +0800 (GMT+08:00)
-Message-ID: <2276434c-8842-42ce-9cdb-929fc2c06b76@rock-chips.com>
-Date: Tue, 12 Nov 2024 15:36:48 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JfSy6wFf"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-71e592d7f6eso3971093b3a.3;
+        Mon, 11 Nov 2024 23:50:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731397807; x=1732002607; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=tExBEVwLwwV3qvwCXok4hCaStQCdAlqHUzJglsGHEK0=;
+        b=JfSy6wFfs9ITwtDrKjvRDuInjPM+RVIiDhN0/N5++jTm7e9C1PyXpZMG+cOv7MJcb6
+         NmncLSzD5KU+anwiMyEOADPOmf3TtksCtFITQ6/DdMyGcTWii/yaWwQs3bpfq5lgpj7N
+         fDCz+qIQp635FH3WbjYYnjv7H/XcjXCEAuwz5JyhpgpWJOAIHTHfppcKSH1qr+aJZz0W
+         ustNVH2gGNRQkx8X5R/b/INgqvVjaT1nKguxEy32NgXiQ8pUqUNSSW5JsJpiyOmMEwz+
+         n5KY+MY05BaZOOiq6xp+wcLucaxEIFu/LPDoIedUucgWTYpCfVL/3ZVCQGEZzBgSwEYb
+         kJyw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731397807; x=1732002607;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tExBEVwLwwV3qvwCXok4hCaStQCdAlqHUzJglsGHEK0=;
+        b=pyh4ZtnBLMFP9BaU9GGlE70p/uFMqwQc/y1r6xreQ44ONwMK/q6pmX7Fy4Na4iTx0t
+         Yozz0a7G63uN4cFpR4dQbymt6g6vBzDtBL6U6FNhCJ67eBYitZxO9pSCs5u9UWDrJNWM
+         li1Di42nwzVJkMNZVAQMPnJmQ1UTdYGC+vXjKAsmA2ciEcoobNklKsqv/qCgjjRsruN0
+         M8qNA18cQa1m23HKKojqk2VSubUDBktr+SwbQtXqLEkiiC0zAjMSjaxGdFJDzTDiT0eO
+         O73qVyyXW3dS4ZQpZgxlsElP/50lQX5aYNsK0r4d1LGNtRB35zuEFrQPVHC2R6m/+YY4
+         aRLA==
+X-Forwarded-Encrypted: i=1; AJvYcCUAf7EzVpC2ebTbu0syUPwl61tIH2CvxaVFXM+N3tn9xDvgp3LZd/2VSBDAOH2S4nlKrSYqQP4jM2mGIg==@vger.kernel.org, AJvYcCVdxIjKbb5tlVAepTfq3tp4Xl1cWl9vSiPXJ1zvc6sX7GQ0mmNANH6ItgJja+JMw8UUughEzfprzbmkNgT0@vger.kernel.org, AJvYcCXaTI0SOVVti989bcDD34vBJYc6uE0tlPEXAH8lhzl/AgVqOFfLpVFfdtBMKUx6+3SXq5Qfj+LbRKKHa22x@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywl3ggYqnRRh2hbk9uhSCGNNUnCNe+8rOhzbrXEZX1saLI8Fdbq
+	aw+Srx3aNf4XWb0XhdczAqS9U0a846kLsoCgDhl47nmr8vbw1dnG
+X-Google-Smtp-Source: AGHT+IGsjGIAC+EKfaG5Y0Te1Uwj8kqNbyd8cIEupZrS98ZAWi/K3a6EzNwJxHziLH6w1cJ30cNXIg==
+X-Received: by 2002:a05:6a00:3d55:b0:71d:f821:1981 with SMTP id d2e1a72fcca58-7241327b787mr21711887b3a.4.1731397807117;
+        Mon, 11 Nov 2024 23:50:07 -0800 (PST)
+Received: from thinkpad ([117.213.103.248])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72407a1fd2bsm10450163b3a.167.2024.11.11.23.50.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Nov 2024 23:50:06 -0800 (PST)
+Date: Tue, 12 Nov 2024 13:20:00 +0530
+From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
+To: Manish Pandey <quic_mapa@quicinc.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
+Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
+ Testbus Registers
+Message-ID: <20241112075000.vausf7ulr2t5svmg@thinkpad>
+References: <20241025055054.23170-1-quic_mapa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, Alim Akhtar
- <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanasscheartin.petersen@oracle.com>,
- Mike Bi <mikebi@micron.com>, Bean Huo <beanhuo@micron.com>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
- Luca Porzio <lporzio@micron.com>, Asutosh Das <quic_asutoshd@quicinc.com>,
- Can Guo <quic_cang@quicinc.com>, Pedro Sousa <pedrom.sousa@synopsys.com>,
- Krzysztof Kozlowski <krzk@kernel.org>, Peter Wang <peter.wang@mediatek.com>,
- Stanley Jhu <chu.stanley@gmail.com>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- Orson Zhai <orsonzhai@gmail.com>, Baolin Wang
- <baolin.wang@linux.alibaba.com>, Chunyan Zhang <zhang.lyra@gmail.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- "\"AngeloGioacchino Del Regno\"," <angelogioacchino.delregno@collabora.com>,
- Santosh Y <santoshsy@gmail.com>, Namjae Jeon <linkinjeon@gmail.com>
-Content-Language: en-GB
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH 0/5] scsi: ufs: Bug fixes for ufs core and platform
- drivers
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGklNTVZPTE9NGRlLQhpOTh1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a931f4dbe1609cckunm28050541
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MDI6MTo5CTIvGhlLTiFJOBQw
-	GjYKCwpVSlVKTEhKSEJMS0pKT01LVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQU9JSTcG
-DKIM-Signature:a=rsa-sha256;
-	b=VaNcyP43gs9wLB8ql74QChUl2E4KHbG97hymVTtaj1TJmMLA4m/SXWGvg3lfvdKXC0rhXppjbqjnQMJabET6k7SjGKauf3hC+zhmftoUopLZ5RhltoWgyI3DkukW7WsQpIicHNxfL3t0////UHSqWQ1RO66ufDDRyifnzGC7NC0=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=W8wIrOJrtWi9wR0/zvQJRVrLG+fDpqQvqOPRmkLlgVs=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241025055054.23170-1-quic_mapa@quicinc.com>
 
- > Hi,
- >
- > This series has several bug fixes that I encountered when the 
-ufs-qcom > driver was removed and inserted back. But the fixes are 
-applicable to
- > other platform glue drivers as well.
- >
- > This series is tested on Qcom RB5 development board based on SM8250
- > SoC.
- >
+On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
+> Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
+> of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
+> aid in diagnosing and resolving issues related to hardware and software operations.
+> 
 
-Test this series against the under-reviewed ufshc
-for Rockchip, it works:
+TBH, the current state of dumping UFSHC registers itself is just annoying as it
+pollutes the kernel ring buffer. I don't think any peripheral driver in the
+kernel does this. Please dump only relevant registers, not everything that you
+feel like dumping.
 
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+- Mani
+
+> Manish Pandey (3):
+>   scsi: ufs-qcom: Add support for dumping HW and SW hibern8 count
+>   scsi: ufs-qcom: Add support for dumping MCQ registers
+>   scsi: ufs-qcom: Add support for testbus registers
+> 
+>  drivers/ufs/host/ufs-qcom.c | 141 ++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.h |  11 +++
+>  2 files changed, 152 insertions(+)
+> 
+> -- 
+> 2.17.1
+> 
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
