@@ -1,67 +1,86 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3558720EA32;
-	Tue, 12 Nov 2024 17:19:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66FF5215C55;
+	Tue, 12 Nov 2024 18:10:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731431962; cv=none; b=AuJVgwo1YtlT8ixcSC7LvUEt1o61uBLgQSH/Aj2yEdWqV037C6qhsqD73UlT4mH3iIPRAHJKiXx2MBCI4uMu4WZsvHiCMlpy/6r+fCXd1ZfFEuOiQvDSJ+ekxJjyUIWKDI1H3GEcovK29EpXbHTmHHt4JqH2noHlZTZGZQlOI5k=
+	t=1731435017; cv=none; b=RzcZgmZWaXQd1NrdfpucCjBtFKepLphPmEzKxPkZhK/cPg/0jChVyeHXxzbai5sillE6UFzQ+Zbkscle2GL6TuPUQhjQJOoetgzzdu4rbgJ39avmnn/UKJLifOYQNvRqpIebQpYNvyGmYa5qwVRPn/TCST2YMrc8Uw3ByVEAo8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731431962; c=relaxed/simple;
-	bh=wQQ61YDQr0Kb5ytutidKepCCkqMHsv+oPhw+KzqWNpc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NILGBSWJpEePiiHXg3pLZezR/MBVO+DFer0hSoYaXxasG+TcYzlMiwQ9gf7xXaS/WdKBAhaQnug2yMi8uJqXQJWl3iJxtieZMryUtIdvKxeUdxX04eIpkihVaxVOa4NUxH5V2AnzApQ+ycrnxukivRyxGnZuy342Y0qPBfKCx58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8065268AFE; Tue, 12 Nov 2024 18:19:15 +0100 (CET)
-Date: Tue, 12 Nov 2024 18:19:14 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Kanchan Joshi <joshi.k@samsung.com>,
-	Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-	axboe@kernel.dk, martin.petersen@oracle.com, asml.silence@gmail.com,
-	javier.gonz@samsung.com
-Subject: Re: [PATCHv11 0/9] write hints with nvme fdp and scsi streams
-Message-ID: <20241112171914.GA21822@lst.de>
-References: <20241108193629.3817619-1-kbusch@meta.com> <CGME20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b@epcas5p3.samsung.com> <20241111102914.GA27870@lst.de> <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com> <20241112133439.GA4164@lst.de> <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com> <20241112165054.GA19355@lst.de>
+	s=arc-20240116; t=1731435017; c=relaxed/simple;
+	bh=cQNF8sqDey2exlLOHgSvw5x7MKZ5aOz8+xnxhyeYDy8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UPS41jeJYGtySirN+kIVNk57Zkj9ovonJsI0O/m3PQbLJWGpkSwhqejs1E4vXMKI6WvvpJCaNecM8fFQK4ETTHKdVNf/AS9fb9otxGqbu54PKI4O7/Fg6xSz+YI/XU8qq2b8vLeHRNYvyz9273dw0yqhzfyE8CnQrZ7sZNbUc88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0FVrwnpo; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0FVrwnpo"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XnvbB4NKPzlgMVh;
+	Tue, 12 Nov 2024 18:10:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1731435011; x=1734027012; bh=OnTouWYoGANIM6Er2wgBFd/G
+	9z2tKXnnqtxhxZfEEyU=; b=0FVrwnpo9hrNXKz9rXENeRTJMNxM6PcM/Y2pTbhn
+	NP9sdmBgnKjaZOl8Q6KCaBKKpqte8MAthVoz9QJoEmiDnL09fFnva/V7TWKjNvMz
+	JTcKlDWHZHd9D9yFrBnKj1pajYu+CcgWWhfGgOXtD6GWqYRhd6O1LO1XAYcUoqZY
+	cyeDwockPKPrpuBttC3kRACzR8rTdnHQG6AlMImVgnqHhh/2tRnsfie1FjyeJ/Hl
+	1qN/1qmqg9SE21+nhmf7kn1pJYmK9FQPis3vjuNeHediYUsA7N7bl5SH2fvTDntV
+	K1pe8OWcE26YAOQSzxXFECzJgNiTyWjQz623VluZrEYagA==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id gbdu87m0IOPq; Tue, 12 Nov 2024 18:10:11 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Xnvb16nBNzlgMVc;
+	Tue, 12 Nov 2024 18:10:05 +0000 (UTC)
+Message-ID: <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
+Date: Tue, 12 Nov 2024 10:10:02 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241112165054.GA19355@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
+ Testbus Registers
+To: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+ Manish Pandey <quic_mapa@quicinc.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
+References: <20241025055054.23170-1-quic_mapa@quicinc.com>
+ <20241112075000.vausf7ulr2t5svmg@thinkpad>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241112075000.vausf7ulr2t5svmg@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 12, 2024 at 05:50:54PM +0100, Christoph Hellwig wrote:
-> > so putting the filesystem in the way to force
-> > streams look like zones is just a unnecessary layer of indirection
-> > getting in the way.
+On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
+> On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
+>> Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
+>> of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
+>> aid in diagnosing and resolving issues related to hardware and software operations.
+>>
 > 
-> Can you please stop this BS?  Even if a file system doesn't treat
-> write streams like zones keeps LBA space and physical allocation units
-> entirely separate (for which I see no good reason, but others might
-> disagree) you still need the file system in control of the hardware
-> resources.
+> TBH, the current state of dumping UFSHC registers itself is just annoying as it
+> pollutes the kernel ring buffer. I don't think any peripheral driver in the
+> kernel does this. Please dump only relevant registers, not everything that you
+> feel like dumping.
 
-And in case this wasn't clear enough.  Let's assume you want to write
-a low write amp flash optimized file system similar to say the storage
-layers of the all flash arrays of the last 10-15 years.
+I wouldn't mind if the code for dumping  UFSHC registers would be removed.
 
-You really want to avoid device GC.  You'd better group your data to
-the reclaim unit / erase block / insert name here.  So you need file
-system control of the write streams, you need to know their size,
-you need to be able to query how much your wrote after a power faіl.
-Totally independent of how you organize your LBA space.  Mapping
-it linearly might be the easier options without major downside, but
-you could also allocate them randomly for that matter.
+Thanks,
 
-> 
----end quoted text---
+Bart.
