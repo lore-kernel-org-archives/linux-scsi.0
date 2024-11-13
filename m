@@ -1,191 +1,178 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5D61F81A0;
-	Wed, 13 Nov 2024 11:14:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99D174C81;
+	Wed, 13 Nov 2024 12:36:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731496484; cv=none; b=kadoXCGGNsGLyDzcsmcBx/mE6YLsWmtngU3ot5TOTGWd+W8Xf3yGjg+vVQLxObyomBgneP42WG/kDczaflMbpssJcyx6vLbujs7tJXR3kVOsmjJSrnO3RlNoKrfXzymEl2XJrHHpE7ukQmwxkPodafio3zpnpdccFQnG9WO0C9Q=
+	t=1731501421; cv=none; b=D4oo6O7h8Us3OgiFAspbSiRgs88zYfmTNNCGjKOAHPPNI38sLGq6SW55kAoC31BQ7Jor4wKYBCWjBK20vPcIVAcaVxOROrCvwLj3VThpXcQX7IBIOtSWKsFaV5hwK1eQMSJHQD2g4ksJyUUeyb0QqX0jD3nNWaAMXs2xIvF6BCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731496484; c=relaxed/simple;
-	bh=PygadtJ8XMmF3ltdrWRVPVNp5MWyjiYC2lFKvmwRmzw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b5vs7Va5kAcV8MfidFJxglx7oyEAgdy1b/+zlLED+S1h/QfdPhROtnJiSlaeJYaChjz2QDlC+gQ/tcyDIe8lHhaeN0kuah/ixpnrBv6y96F4BT3vDWL5uZnR2PKxKpulwlf6t7EBewE/sKnEZa56h+UiP+NA8xojGZgGtKK3m0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=G7sO5d9X; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1731501421; c=relaxed/simple;
+	bh=18H6NJme3tzBH2IZVv/wJF8kQRj5I/k5ony15utzEWk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rz5J0oN+jxeaOBnlYj60WqM7tp4P40kaCqbtONFNYoHJ6gc2qcfOUeRFrKmJUvePQ2mWq7HfHqA3kg8FZ2l9aF5eIncaoFmybKBiz8d6EkP4BZYfK3TLIgbDQ1y6LiLMqJNiZ0wVago8f5+JWPWuVEIiPXOOIQWM97d33xIl1os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x6Hpvg+b; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=H+jakr0R; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=x6Hpvg+b; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=H+jakr0R; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="G7sO5d9X"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AD9Ong2001153;
-	Wed, 13 Nov 2024 11:14:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=ZUyO+u8Z2jtYTkTlOHgInS32/R72W8NgA+0
-	qRwX6hbU=; b=G7sO5d9X+QVLLfF8jNV4E24NF2In+RZc4iZ1GNxN9DQ4NxTt8/j
-	H//geigs9E++KVMfBXqCpGL3V2NfbgOBB6zdGM1XuxDJ3XumxXSwFM1e4OXWTzHK
-	6frWg7HwI6UutKcvBviZx6RbisuoClhTVmMJMsuyhy4eyODWVL+YjjsKccmCbTWr
-	Jq4d9uLFAYjPDr3axIMHmM7X3kaI3PqL8alJKlf/HrM99S7lDBk/Kl3wp/br6bGH
-	CW33NmW/9DnLJH3qgf1qKwIc+1FALfXc6/+rVMptEXDa0Niwqv7AvqV6vaSIcsJ+
-	YryXsCogHWMTQK4MGL0RgM9LWI/MjMe15BQ==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42vsf309db-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 11:14:15 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4ADBEDm6001981;
-	Wed, 13 Nov 2024 11:14:13 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 42t0tkkj3b-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 11:14:13 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4ADBEDDD001974;
-	Wed, 13 Nov 2024 11:14:13 GMT
-Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4ADBECKO001973
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 11:14:13 +0000
-Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id BDAC740C0C; Wed, 13 Nov 2024 19:14:11 +0800 (CST)
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-To: quic_asutoshd@quicinc.com, quic_cang@quicinc.com, bvanassche@acm.org,
-        mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, martin.petersen@oracle.com,
-        quic_ziqichen@quicinc.com, quic_nguyenb@quicinc.com,
-        quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Andrew Halaney <ahalaney@redhat.com>,
-        Maramaina Naresh <quic_mnaresh@quicinc.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2] scsi: ufs: core: Add ufshcd_send_bsg_uic_cmd() for UFS BSG
-Date: Wed, 13 Nov 2024 19:14:00 +0800
-Message-Id: <20241113111409.935032-1-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x6Hpvg+b";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="H+jakr0R";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="x6Hpvg+b";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="H+jakr0R"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id C596E21133;
+	Wed, 13 Nov 2024 12:36:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731501416; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OwZyjST0MC2BE1Uhwog1+2weLgBQ8NK4rlxEdf5P7lU=;
+	b=x6Hpvg+bnpaEDcXzXshd05wx1g65KA0JAHTzWCKmfGtymmFhqrO8IbVOfmr8mtsZa7qs9R
+	FOHi2SSLS6XIfEgvSJr4L71aE2k13Ry6bqSbdTgR8X6XMsVeIumRyqy9GEhrlWjW46ul2a
+	cjVGBeyhOsJ+SBPxuBt6ydqkeqE1ynQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731501416;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OwZyjST0MC2BE1Uhwog1+2weLgBQ8NK4rlxEdf5P7lU=;
+	b=H+jakr0RcjllL8izGR9jTCON1XXq+u5x2wPmJHAmjtMb+r7Gyff6WddEB0fMF92Wh3NKTc
+	9OXiBDSeD2rJx/Dw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=x6Hpvg+b;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=H+jakr0R
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731501416; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OwZyjST0MC2BE1Uhwog1+2weLgBQ8NK4rlxEdf5P7lU=;
+	b=x6Hpvg+bnpaEDcXzXshd05wx1g65KA0JAHTzWCKmfGtymmFhqrO8IbVOfmr8mtsZa7qs9R
+	FOHi2SSLS6XIfEgvSJr4L71aE2k13Ry6bqSbdTgR8X6XMsVeIumRyqy9GEhrlWjW46ul2a
+	cjVGBeyhOsJ+SBPxuBt6ydqkeqE1ynQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731501416;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OwZyjST0MC2BE1Uhwog1+2weLgBQ8NK4rlxEdf5P7lU=;
+	b=H+jakr0RcjllL8izGR9jTCON1XXq+u5x2wPmJHAmjtMb+r7Gyff6WddEB0fMF92Wh3NKTc
+	9OXiBDSeD2rJx/Dw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A225813A6E;
+	Wed, 13 Nov 2024 12:36:56 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id cagvJWidNGdbLgAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Wed, 13 Nov 2024 12:36:56 +0000
+Date: Wed, 13 Nov 2024 13:36:55 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Bjorn Helgaas <bhelgaas@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v3 1/8] driver core: bus: add irq_get_affinity callback
+ to bus_type
+Message-ID: <2d85aa5e-037a-45c3-9f2d-e46b2159b697@flourine.local>
+References: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org>
+ <20241112-refactor-blk-affinity-helpers-v3-1-573bfca0cbd8@kernel.org>
+ <76da6c05-4f28-41cc-a48e-da2ae16c64c4@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: UamAJxEcB0CA94Cf4crBtsM3a1Q4YSc_
-X-Proofpoint-GUID: UamAJxEcB0CA94Cf4crBtsM3a1Q4YSc_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- bulkscore=0 phishscore=0 malwarescore=0 suspectscore=0 priorityscore=1501
- clxscore=1011 mlxscore=0 spamscore=0 lowpriorityscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
- definitions=main-2411130098
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <76da6c05-4f28-41cc-a48e-da2ae16c64c4@oracle.com>
+X-Rspamd-Queue-Id: C596E21133
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[23];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.51
+X-Spam-Flag: NO
 
-User layer applications can send UIC GET/SET commands via the BSG
-framework, and if the user layer application sends a UIC SET command
-to the PA_PWRMODE attribute, a power mode change shall be initiated
-in UniPro and two interrupts shall be triggered if the power mode is
-successfully changed, i.e., UIC Command Completion interrupt and UIC
-Power Mode interrupt.
+On Wed, Nov 13, 2024 at 10:16:32AM +0000, John Garry wrote:
+> On 12/11/2024 13:26, Daniel Wagner wrote:
+> > Introducing a callback in struct bus_type so that a subsystem
+> > can hook up the getters directly. This approach avoids exposing
+> > random getters in any subsystems APIs.
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> > ---
+> >   include/linux/device/bus.h | 3 +++
+> >   1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/include/linux/device/bus.h b/include/linux/device/bus.h
+> > index cdc4757217f9bb4b36b5c3b8a48bab45737e44c5..b18658bce2c3819fc1cbeb38fb98391d56ec3317 100644
+> > --- a/include/linux/device/bus.h
+> > +++ b/include/linux/device/bus.h
+> > @@ -48,6 +48,7 @@ struct fwnode_handle;
+> >    *		will never get called until they do.
+> >    * @remove:	Called when a device removed from this bus.
+> 
+> My impression is that this would be better suited to "struct device_driver",
+> but I assume that there is a good reason to add to "struct bus_type".
 
-The current UFS BSG code calls ufshcd_send_uic_cmd() directly, with
-which the second interrupt, i.e., UIC Power Mode interrupt, shall be
-treated as unhandled interrupt. In addition, after the UIC command is
-completed, user layer application has to poll UniPro and/or M-PHY state
-machine to confirm the power mode change is finished.
+I think the main reason to put it here is that most of the drivers are
+happy with the getter on bus level and don't need special treatment. We
+don't have to touch all the drivers to hookup a common getter, nor do we
+have to install a default handler when the driver doesn't specify one.
+Having the callback in struct bus_driver avoids this. Though Christoph
+suggested it, so I can only guess.
 
-Add a new wrapper function ufshcd_send_bsg_uic_cmd() and call it from
-ufs_bsg_request() so that if a UIC SET command is targeting the PA_PWRMODE
-attribute it can be redirected to ufshcd_uic_pwr_ctrl().
+But you bring up a good point, if we had also an irq_get_affinity
+callback in struct device_driver it would be possible for the
+hisi_sas v2 driver to provide a getter and blk_mq_hctx_map_queues could
+do:
 
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
----
-V1 -> V2: Rebased on Linux 6.13
----
- drivers/ufs/core/ufs_bsg.c     |  2 +-
- drivers/ufs/core/ufshcd-priv.h |  1 +
- drivers/ufs/core/ufshcd.c      | 36 ++++++++++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+), 1 deletion(-)
+	for (queue = 0; queue < qmap->nr_queues; queue++) {
+		if (dev->driver->irq_get_affinity)
+			mask = dev->driver->irq_get_affinity;
+		else if (dev->bus->irq_get_affinity)
+			mask = dev->bus->irq_get_affinity(dev, queue + offset);
+		if (!mask)
+			goto fallback;
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 433d0480391e..6c09d97ae006 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -170,7 +170,7 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		break;
- 	case UPIU_TRANSACTION_UIC_CMD:
- 		memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE);
--		ret = ufshcd_send_uic_cmd(hba, &uc);
-+		ret = ufshcd_send_bsg_uic_cmd(hba, &uc);
- 		if (ret)
- 			dev_err(hba->dev, "send uic cmd: error code %d\n", ret);
- 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 7aea8fbaeee8..9ffd94ddf8c7 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -84,6 +84,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
- 			    u8 **buf, bool ascii);
- 
- int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
-+int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
- 
- int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     struct utp_upiu_req *req_upiu,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e338867bc96c..c01f4b0c1b4f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4319,6 +4319,42 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	return ret;
- }
- 
-+/**
-+ * ufshcd_send_bsg_uic_cmd - Send UIC commands requested via BSG layer and retrieve the result
-+ * @hba: per adapter instance
-+ * @uic_cmd: UIC command
-+ *
-+ * Return: 0 only if success.
-+ */
-+int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-+{
-+	int ret;
-+
-+	if (hba->quirks & UFSHCD_QUIRK_BROKEN_UIC_CMD)
-+		return 0;
-+
-+	ufshcd_hold(hba);
-+
-+	if (uic_cmd->argument1 == UIC_ARG_MIB(PA_PWRMODE) &&
-+	    uic_cmd->command == UIC_CMD_DME_SET) {
-+		ret = ufshcd_uic_pwr_ctrl(hba, uic_cmd);
-+		goto out;
-+	}
-+
-+	mutex_lock(&hba->uic_cmd_mutex);
-+	ufshcd_add_delay_before_dme_cmd(hba);
-+
-+	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
-+	if (!ret)
-+		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
-+
-+	mutex_unlock(&hba->uic_cmd_mutex);
-+
-+out:
-+	ufshcd_release(hba);
-+	return ret;
-+}
-+
- /**
-  * ufshcd_uic_change_pwr_mode - Perform the UIC power mode chage
-  *				using DME_SET primitives.
--- 
-2.34.1
+		for_each_cpu(cpu, mask)
+			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+	}
 
+and with this in place the open coded version in hisi_sas v2 can also be
+replaced. If no one objects, I go ahead and add the callback to struct
+device_driver.
