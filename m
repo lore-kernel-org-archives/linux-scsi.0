@@ -1,52 +1,52 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C62E81FBF4D;
-	Wed, 13 Nov 2024 10:31:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5D61F81A0;
+	Wed, 13 Nov 2024 11:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731493911; cv=none; b=TriVu1R7tdMlT6hWfQjniBgNktRmTPOj9FZCMvIz5eDLSMUR2HRv5czhomZ/TmS4dmROcK6Wqtf7VA9uTRgSPvJjpaga0qAt2Fc9BBRAZ783CyW8CViR5A71sJ/tqUlAgjRv7TsJQwnm1EwokxouMeR7XDz1d+s/iSEGHDbnbNY=
+	t=1731496484; cv=none; b=kadoXCGGNsGLyDzcsmcBx/mE6YLsWmtngU3ot5TOTGWd+W8Xf3yGjg+vVQLxObyomBgneP42WG/kDczaflMbpssJcyx6vLbujs7tJXR3kVOsmjJSrnO3RlNoKrfXzymEl2XJrHHpE7ukQmwxkPodafio3zpnpdccFQnG9WO0C9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731493911; c=relaxed/simple;
-	bh=7rJsdgqKqSxqsu6KlaxSAg4QS9bi1EhAxsHHKmFrnPc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tfqoi69wLGyCzKKU4YtHgG9huA/dHIJ20iQ+IxvzTiaTJXMnGjg+ID8CIXPoADeQMXC5QwHKoYfKwsN/Sn0PM4Oszh9PjdUsBass7NHL9tol62pz2v7onUHexQ8zJqkF0/qp6QBXjp03yH4vY2psLFZnbDheMPJT+SQt4msB9ik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=coj3cswg; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1731496484; c=relaxed/simple;
+	bh=PygadtJ8XMmF3ltdrWRVPVNp5MWyjiYC2lFKvmwRmzw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b5vs7Va5kAcV8MfidFJxglx7oyEAgdy1b/+zlLED+S1h/QfdPhROtnJiSlaeJYaChjz2QDlC+gQ/tcyDIe8lHhaeN0kuah/ixpnrBv6y96F4BT3vDWL5uZnR2PKxKpulwlf6t7EBewE/sKnEZa56h+UiP+NA8xojGZgGtKK3m0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=G7sO5d9X; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="coj3cswg"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ADA1srs026688;
-	Wed, 13 Nov 2024 10:31:20 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="G7sO5d9X"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AD9Ong2001153;
+	Wed, 13 Nov 2024 11:14:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=ongJ0KnkbsuLXRH/6euurAAy/ESE9ymgD07
-	q0MLGCp8=; b=coj3cswgW93S8vyx/EbJUlsMBFcVLHgJjQdzKVoQPx++37vzmqn
-	e/yqzwW8M7O/mo162VFEGGFzkYiEOe/woeqcTZh5pCzymO40padDbK99Ny9Patje
-	hfkcXeCbpCF7IaRYyvEw0EIK4QPIaTJOdSc9PZSlCDg2305iEtmRNQ10OAeUa6d/
-	GHvpGIvxBRBwV6L6qb0f5+A9XIVHxmuF2MH0whf+b/BAPkfItIevijrrVUvp7yKx
-	fgvdVSy1d+0+O+Ci+8dHbCKvKe6t3GXwsoGRo9CuBE7cE8CDavfwvly4JVOp+gF8
-	6sE63cBmT92gYeMho1hIdk+MADVcldE+cww==
+	:subject:to; s=qcppdkim1; bh=ZUyO+u8Z2jtYTkTlOHgInS32/R72W8NgA+0
+	qRwX6hbU=; b=G7sO5d9X+QVLLfF8jNV4E24NF2In+RZc4iZ1GNxN9DQ4NxTt8/j
+	H//geigs9E++KVMfBXqCpGL3V2NfbgOBB6zdGM1XuxDJ3XumxXSwFM1e4OXWTzHK
+	6frWg7HwI6UutKcvBviZx6RbisuoClhTVmMJMsuyhy4eyODWVL+YjjsKccmCbTWr
+	Jq4d9uLFAYjPDr3axIMHmM7X3kaI3PqL8alJKlf/HrM99S7lDBk/Kl3wp/br6bGH
+	CW33NmW/9DnLJH3qgf1qKwIc+1FALfXc6/+rVMptEXDa0Niwqv7AvqV6vaSIcsJ+
+	YryXsCogHWMTQK4MGL0RgM9LWI/MjMe15BQ==
 Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42vgqqsgf7-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42vsf309db-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 10:31:19 +0000 (GMT)
+	Wed, 13 Nov 2024 11:14:15 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4ADAV3dF028612;
-	Wed, 13 Nov 2024 10:31:03 GMT
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4ADBEDm6001981;
+	Wed, 13 Nov 2024 11:14:13 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 42t0tkkdeh-1
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 42t0tkkj3b-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 10:31:03 +0000
+	Wed, 13 Nov 2024 11:14:13 +0000
 Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4ADAV3tw028607;
-	Wed, 13 Nov 2024 10:31:03 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4ADBEDDD001974;
+	Wed, 13 Nov 2024 11:14:13 GMT
 Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4ADAV2r9028606
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4ADBECKO001973
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 10:31:03 +0000
+	Wed, 13 Nov 2024 11:14:13 +0000
 Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id 4B6F340C0C; Wed, 13 Nov 2024 18:31:02 +0800 (CST)
+	id BDAC740C0C; Wed, 13 Nov 2024 19:14:11 +0800 (CST)
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
 To: quic_asutoshd@quicinc.com, quic_cang@quicinc.com, bvanassche@acm.org,
         mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
@@ -55,16 +55,15 @@ To: quic_asutoshd@quicinc.com, quic_cang@quicinc.com, bvanassche@acm.org,
         quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com
 Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
         Peter Wang <peter.wang@mediatek.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Andrew Halaney <ahalaney@redhat.com>,
         Maramaina Naresh <quic_mnaresh@quicinc.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: ufs: core: Add ufshcd_send_bsg_uic_cmd() for UFS BSG
-Date: Wed, 13 Nov 2024 18:30:46 +0800
-Message-Id: <20241113103057.714531-1-quic_ziqichen@quicinc.com>
+Subject: [PATCH v2] scsi: ufs: core: Add ufshcd_send_bsg_uic_cmd() for UFS BSG
+Date: Wed, 13 Nov 2024 19:14:00 +0800
+Message-Id: <20241113111409.935032-1-quic_ziqichen@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -77,16 +76,16 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 3vCQ5G1ZA2rxJJulB42VsGd9dZGKyC0a
-X-Proofpoint-GUID: 3vCQ5G1ZA2rxJJulB42VsGd9dZGKyC0a
+X-Proofpoint-ORIG-GUID: UamAJxEcB0CA94Cf4crBtsM3a1Q4YSc_
+X-Proofpoint-GUID: UamAJxEcB0CA94Cf4crBtsM3a1Q4YSc_
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1011
- impostorscore=0 lowpriorityscore=0 suspectscore=0 spamscore=0
- priorityscore=1501 phishscore=0 malwarescore=0 mlxlogscore=999
- adultscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411130092
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ bulkscore=0 phishscore=0 malwarescore=0 suspectscore=0 priorityscore=1501
+ clxscore=1011 mlxscore=0 spamscore=0 lowpriorityscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
+ definitions=main-2411130098
 
 User layer applications can send UIC GET/SET commands via the BSG
 framework, and if the user layer application sends a UIC SET command
@@ -107,6 +106,8 @@ attribute it can be redirected to ufshcd_uic_pwr_ctrl().
 
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+---
+V1 -> V2: Rebased on Linux 6.13
 ---
  drivers/ufs/core/ufs_bsg.c     |  2 +-
  drivers/ufs/core/ufshcd-priv.h |  1 +
@@ -139,7 +140,7 @@ index 7aea8fbaeee8..9ffd94ddf8c7 100644
  int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
  			     struct utp_upiu_req *req_upiu,
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e338867bc96c..d168dc36eebe 100644
+index e338867bc96c..c01f4b0c1b4f 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
 @@ -4319,6 +4319,42 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
@@ -171,7 +172,7 @@ index e338867bc96c..d168dc36eebe 100644
 +	mutex_lock(&hba->uic_cmd_mutex);
 +	ufshcd_add_delay_before_dme_cmd(hba);
 +
-+	ret = __ufshcd_send_uic_cmd(hba, uic_cmd, true);
++	ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
 +	if (!ret)
 +		ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
 +
