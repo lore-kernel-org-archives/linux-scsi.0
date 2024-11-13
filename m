@@ -1,60 +1,110 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1455381AA;
-	Wed, 13 Nov 2024 14:30:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E595174EFA;
+	Wed, 13 Nov 2024 18:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731508252; cv=none; b=SK1fw/cF/26VEtj/Tkgo9EmHscX6eC7DL62S+EJtdgUJeKVzXQhnf7+EPc6jfJk7loR4kj5pUxRE4e2c6ro3/MFkf7YNwkhZm4kbn4elGhgclwut8aKYpw/okmG4OiMRIYS5qDi73l/cwKYMrzRhJzIR96RHW9JF8taw9BMmQCc=
+	t=1731522089; cv=none; b=Da/hG+NeQB3q9r3RkJIzydxPoFDkQpwOmEf7eramhlsndZ4x/lXXuOYJA7rmkiLznc4WpuLKWwHl//Tca5lFt9Jv5JApWfDipw3QNbEWuWFBp7gxy4i/DX6pGxiSzbaQBSRitOnLMBLDJbwKgdYbP6OQzoHNMiVV+bazHUNsWtE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731508252; c=relaxed/simple;
-	bh=ZfjbghJSvVTLjJH8eDY6fgXNlZmBxkdlyNnBXN+eGSE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TttJB8gtmw/+k+qJ5fktE7hKPHDoFq+rJwVQz1p+TzM3AfuQH3I4xArGizaRLvixa9y/lp2MIfw54xIUoB7o3KojxLHFrcvOzuDn8spDe5F6cKOb6cds95Q+uwrr6KhmJ+fKIURNOGMVZS99cwS7by+NgsrC1k7v2npVnlUkBgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C525C68C4E; Wed, 13 Nov 2024 15:30:39 +0100 (CET)
-Date: Wed, 13 Nov 2024 15:30:39 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: John Garry <john.g.garry@oracle.com>, Daniel Wagner <dwagner@suse.de>,
-	Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v3 1/8] driver core: bus: add irq_get_affinity callback
- to bus_type
-Message-ID: <20241113143039.GA20331@lst.de>
-References: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org> <20241112-refactor-blk-affinity-helpers-v3-1-573bfca0cbd8@kernel.org> <76da6c05-4f28-41cc-a48e-da2ae16c64c4@oracle.com> <2d85aa5e-037a-45c3-9f2d-e46b2159b697@flourine.local> <bed15207-c3d8-4e0b-b356-4880f5a4fdff@oracle.com> <2024111323-darkening-sappy-23fa@gregkh>
+	s=arc-20240116; t=1731522089; c=relaxed/simple;
+	bh=maGF5e81gW08mtf8HZcBaMzW8FlzArn8IOkgdyFyoI8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=fq+yHeBwrFfhzpJbfziW5mYcYdMl4LagVAY5njEiqVuKvLnm1TcgO0H6N0scYPSkl+To4sKFZEWIz9GlDVmZ9zslRuxaeRHug9yuj4tAlXVKqboHwnsxLUMFAGo9bRNdwrXETa+tZqqAHRAhmWY3q+YFNjmq+XeBWKAlBVWwITg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TkHa+nAM; arc=none smtp.client-ip=209.85.167.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TkHa+nAM"
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-53d9ff8ef3aso1300661e87.1;
+        Wed, 13 Nov 2024 10:21:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731522086; x=1732126886; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=maGF5e81gW08mtf8HZcBaMzW8FlzArn8IOkgdyFyoI8=;
+        b=TkHa+nAMi6yQrzFzht5TkbemD/aNheW3myeUefrIZ0PoPV0BkDPbke8Q2dMr8oHTgx
+         O4M4P8lPAToCuGImgwrkvNO5/iNbxzWgq2xLoQkskRLfIoxGS4DvQ64ZLhm21i0JFuNH
+         SaeKo49i+xLurysjZlxmkPQZqUbFAdNfCFsKxsTSgH4XNQxda+6U4G4m3K/tMCYeZFY4
+         zoAdjkA3TXkts+QUy3L3HuAKGqpAbuPmzaBUCYJr4N4rGCh+nfvSoesSEEhsZ81t2ef7
+         nfYaD6Q7e54IMbsySqnd9KFrqL5D9QVDKzqe821XYgyzZxzdseihY8Q9pC4mL07URwms
+         nDyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731522086; x=1732126886;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=maGF5e81gW08mtf8HZcBaMzW8FlzArn8IOkgdyFyoI8=;
+        b=mMreBSvNdwPRbAmYkTwRPelo1DRBNgQgpmpxdzPhH/VbUgdNbqOp1NZy6fBshWVApE
+         grS485B5+m6v3R512XKhz63EruRo60fr9aPYEtv/QqmXaL2O16J0k029E+w1mA6/UmXQ
+         zDPhRn9AUhEiQsU1PTLpJDMHxWdsvsNLYDfEVGhbAsmMTAsEQF5PDB9JjriVZgz2oPqt
+         IHxlD5L2hjPqbzIqa6rhLD51sQtXE0UTEfKu6oCm2QFNnRwOVre1nYNxPEH3pGS8nnYG
+         I8+JJD4nVMykMLJDj+reY2YAlpljftJeAv5lhUEnCrkp7+MLLeCWoW+j58ASzIrFluxQ
+         OE0g==
+X-Forwarded-Encrypted: i=1; AJvYcCV+HIPIJ6s8SC+XnD0rgiEIyYCgyc2zqD7UbNjLa0Gy7LHpC50WpzJv3pdJa/kbpWLNnRrmbrh7ruG70QY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxa5Au9lujY8qvANm/aCTqajDiLKImwxJjqyNQoLH0pXVk2bqcO
+	SXhzDkrTybx0F7PiAyMbYdWEd71mC8vjFd317bHGdiXpYf5emQPw
+X-Google-Smtp-Source: AGHT+IH9Je3e3GglIUsXtHBNSX60GTLv0bYIQfSw6gtKL9hYYtIInDQzcAD1CpLef9b884I2u2Wa7g==
+X-Received: by 2002:a05:6512:687:b0:539:f696:777c with SMTP id 2adb3069b0e04-53d862cb2e1mr10778335e87.29.1731522085871;
+        Wed, 13 Nov 2024 10:21:25 -0800 (PST)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432d54e0fecsm34318395e9.4.2024.11.13.10.21.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Nov 2024 10:21:25 -0800 (PST)
+Message-ID: <03dc2e67df8a26d204b457808329ee388715b67a.camel@gmail.com>
+Subject: Re: [PATCH v2] scsi: ufs: core: Add ufshcd_send_bsg_uic_cmd() for
+ UFS BSG
+From: Bean Huo <huobean@gmail.com>
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_asutoshd@quicinc.com, 
+ quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+ beanhuo@micron.com,  avri.altman@wdc.com, junwoo80.lee@samsung.com,
+ martin.petersen@oracle.com,  quic_nguyenb@quicinc.com,
+ quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Damien Le
+ Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>, Peter Wang
+ <peter.wang@mediatek.com>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, Andrew Halaney <ahalaney@redhat.com>, 
+ Maramaina Naresh <quic_mnaresh@quicinc.com>, open list
+ <linux-kernel@vger.kernel.org>
+Date: Wed, 13 Nov 2024 19:21:23 +0100
+In-Reply-To: <20241113111409.935032-1-quic_ziqichen@quicinc.com>
+References: <20241113111409.935032-1-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2024111323-darkening-sappy-23fa@gregkh>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Nov 13, 2024 at 02:54:23PM +0100, Greg Kroah-Hartman wrote:
-> bus types are good to set it at a bus level so you don't have to
-> explicitly set it at each-and-every-driver.  Depends on what you want
-> this to be, if it is a "all drivers of this bus type will have the same
-> callback" then put it on the bus.  otherwise if you are going to
-> mix/match on a same bus, then put it in the driver structure.
+On Wed, 2024-11-13 at 19:14 +0800, Ziqi Chen wrote:
+> User layer applications can send UIC GET/SET commands via the BSG
+> framework, and if the user layer application sends a UIC SET command
+> to the PA_PWRMODE attribute, a power mode change shall be initiated
+> in UniPro and two interrupts shall be triggered if the power mode is
+> successfully changed, i.e., UIC Command Completion interrupt and UIC
+> Power Mode interrupt.
+>=20
+> The current UFS BSG code calls ufshcd_send_uic_cmd() directly, with
+> which the second interrupt, i.e., UIC Power Mode interrupt, shall be
+> treated as unhandled interrupt. In addition, after the UIC command is
+> completed, user layer application has to poll UniPro and/or M-PHY
+> state
+> machine to confirm the power mode change is finished.
+>=20
+> Add a new wrapper function ufshcd_send_bsg_uic_cmd() and call it from
+> ufs_bsg_request() so that if a UIC SET command is targeting the
+> PA_PWRMODE
+> attribute it can be redirected to ufshcd_uic_pwr_ctrl().
+>=20
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 
-... and that is exactly the case here.  The driver itself has no business
-being involved.
+Mabye this should be a bug fix.
+
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+
