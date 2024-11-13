@@ -1,105 +1,179 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D03318C932
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2024 22:57:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CEF618C021
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2024 23:51:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731538633; cv=none; b=XYdndLOBKUFkXN976emDC0RHFdTxUK0jaUraXb7COK03s6f9WKbPfWJGzHvpvVI+aomwH7u5eheZWA2bZ33T9nQUm00PQCFX5qmvBVxkAtAlc1hhzs1BH6VxTdSEeoJnvy8UkQcEoGcALNclwnTZ6fvodX72Cf4CyJ6gmeUnP6c=
+	t=1731541876; cv=none; b=IzNh6JvZJXdvetIcupJPx0gHclF7hnelydKQZJGJGs2S2u3qcxlvJo60bEZWxV2dCNHN1adpCrmoS+Wv0w554H8CFBq5ZLYtRVKOR2Dn9hXV37NuNWDox8tkOJfcrK37CBV2dZG0dnKJaa0a9j2ePgMywfW75lLT2JAvltmdntY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731538633; c=relaxed/simple;
-	bh=Qbbiql31Y+SbAT9SRfVv2pt21w87yo3p4rdeKwptQmo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nYtPa0jrWkw4HA99JN+/x7/WskM7uDRg3GXHP+sB14o5zBunPrRYAKPUmnhcfhvEnYIxmW52HPuHdkbutS64jqMHPXIGtODaODekqR5fBRx2zYXB8qnElYdE4g+h/Wgy1MM8ZwOg6V3JWpF+Kn+TAoBkMuC3woOgqFoLnwL7Eek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UPPkLw/m; arc=none smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731541876; c=relaxed/simple;
+	bh=iqbHEEkvtBJUUD2xvY1+B9NYMn7DnHXcWD0gw8D90/s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uIfmpSw18sKTuyJq8zwcOveiQOI7RwIpytYZba8qfwu2XlGC+VQp4uCydlG50q7q59TdfuvOfUR1rsGU6gEzr9+f+UCGSQVuh/QvryQvaWE21tXXE5zxkp6kG8etscKt4Wy0MOTu5AkMRR5W6ELXmYrqhhpT13DaXNlhs1u1KN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=kYJ/tV+b; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UPPkLw/m"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-53da4ff4d7fso163989e87.1
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2024 14:57:11 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="kYJ/tV+b"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-7e6d04f74faso1023872a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2024 15:51:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731538630; x=1732143430; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=EHT2AYJCUPZb/nes6FmWW0M4iSiWmMgxlx9jAFC1WdM=;
-        b=UPPkLw/mOPMbigXhfQsgYvsNYwyq17lU7EAU6twlltrIMS07jD8BZx9JDCkI0wEPua
-         y/gmT6G792lN0SCl5B2dZS16mgbs1PqW/HLWNN4mHWkqlIatqIhdKBlQbBw7g0t/zBzB
-         uX6ASPLU/mRW20V0r1sJZpq3cY53kVkNGHKilgEPVaDbSEblmMSZKGBVWmkuaVGgfybf
-         PxNnaKa8rJcsajQmbmFijH97DyMmu06RKlGz7tHhuVKCq3OlByrq4KNw4kfmBTz2Hdme
-         ZH9UN3zD7fFTxhPaMCJrqRLZmL9FjwtVyjvzIvhmKMoAlKEuZUSzXl+HZiRk2+fGdxzt
-         L82Q==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731541874; x=1732146674; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dR6gxZVOVPj2t9+Oku6JJyuYiTaMGP57Slvmc9QYLdI=;
+        b=kYJ/tV+bLpzvktreUGRYY8zED3aHQaYpWC7s6NK93e7ztXAoWJsGc1+qdS69GX8noX
+         TE4xWrzeA3IdxxbZR2FEyY0wkpG9Q51FnUwHHO/Q0MsGzdG+9jPY9MzXGGTVFIJ5xGlV
+         DDHo7vtiNYFsCXz6h9QoygWHddJnb5MeikoqaeR4J4fceKWpxU5f+WbqDVAbjaE1+fga
+         9aswDDxDcu64TvrBkH72g6hltrzjZe2dovW1mhKDQa6zjn+l3YeYddhY0Nmej7itdWhY
+         8mvKzX2+GrwoZ3cJWOckFXkdMUHXcvJ+2+mEm9BFEN2fFXSO+/OwDBf/GjgUPrVA9kFG
+         ajXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731538630; x=1732143430;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=EHT2AYJCUPZb/nes6FmWW0M4iSiWmMgxlx9jAFC1WdM=;
-        b=FO7hiFCSd2bbPbkP/h4f4viOImJmgqqTL0jFUbHl3t4QDtGjZx8u+IFZLm+bfVhz99
-         ZphtBovxoJGKCGP+VtASYYao8pjhV7DrsWQkojAu8yrgfkj30ND4i4/sER9rbYnqGah7
-         I0uRilKA5VZ7SWF37Q13mwD+KrfLWhrFXKKLYPd/GX4zzPeU0QZ64sBHTMk9MfK5S2t3
-         kCfrS+m24wBvyMuN/AK5zLByNFUR5v8NnefZZy4OxN9fOr8I1phB4DnF9hHxTIrWB6PV
-         C/HMSWsCnZKVkRC6lKb8y41JipqwoGft8SiP9BToyI1WBBYbSyCZbaNURBF+rEacB5oc
-         GnkQ==
-X-Gm-Message-State: AOJu0YxvZEulhiIlBdcoKZeAEbDqRQA5qLWZfDcoZq8H5FpMaXM5ao/T
-	xZIwV+T+igvWSOkFBQDI/1xWyJQLfolKSfoNwuz0VNeD9BPOrfDG2uh1X2KG
-X-Google-Smtp-Source: AGHT+IEiC4bhEjSOi/uhrDpl1XYbOJK5gFQ1QdbA/IJ3lJ8Q1TbYEUT6R2WM4sDsZ7Ls8/pLPpc4bw==
-X-Received: by 2002:a05:6512:b01:b0:53b:1fd1:df4e with SMTP id 2adb3069b0e04-53da47bd26fmr339480e87.19.1731538629610;
-        Wed, 13 Nov 2024 14:57:09 -0800 (PST)
-Received: from es40.darklands.se (h-94-254-104-176.A469.priv.bahnhof.se. [94.254.104.176])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53d826a9c42sm2329321e87.215.2024.11.13.14.57.08
+        d=1e100.net; s=20230601; t=1731541874; x=1732146674;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dR6gxZVOVPj2t9+Oku6JJyuYiTaMGP57Slvmc9QYLdI=;
+        b=iJreRbW0ky7BG1AjZGYYh1CXuMvPWkj32+TKRlkL9ki4cnWpqUeq6xU/gVFvt7zYAc
+         W5ICBF6HYXA5soOLsnPPPdRGG90pFgSWoPxQwukgqZDvvd3XJH92SXAgjD0a6EyajuR+
+         KMkwwWykEjf8jfTlDG42NWj4fWE5l8cdql4koSyjFNm7KOdKyhb33ETMVQHtDUkPCbwS
+         /7aJkq3qurloImUqfUmAqBP1gXnxo+Ao6jK+WcwachGHiB17J6GE93rThTmnrmGY2zWe
+         HURtiLjHvqk1imjlYlNwxZze5x/VB4UvLDt/b3mVKQixJj/N40REncJPlaIcsBiPQ25h
+         ox4A==
+X-Forwarded-Encrypted: i=1; AJvYcCXLwskDj0LJZ37Bxvtckd+3Q4vgkFqF/QkgYR6kh8A3ZGE5RW3ah/8H8y7/uCIY2BmkwX8oNRhv+Llh@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzq7c2YFH2g1lhWqvz1wEbHdRpsScMBKSVxONwQYZXhfRcAoJjy
+	uZVJLI2nK36MWvF+uzuDYzVVVr987HJ+9HetiBctuA6QneN3uMl1wcmTSH0+xZg=
+X-Google-Smtp-Source: AGHT+IGnJMdOUCMCs6jEMGK8slkeJs2lCzIM0b+P01P83BSSB16iV+QAJQtoT6rroZ1RFQlD0VyEEQ==
+X-Received: by 2002:a17:90b:1f89:b0:2e2:ada8:2986 with SMTP id 98e67ed59e1d1-2e9fe6640c3mr1819128a91.16.1731541873837;
+        Wed, 13 Nov 2024 15:51:13 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ea02481b8dsm134060a91.9.2024.11.13.15.51.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Nov 2024 14:57:08 -0800 (PST)
-From: Magnus Lindholm <linmag7@gmail.com>
-To: linux-scsi@vger.kernel.org,
-	James.Bottomley@hansenpartnership.com,
-	hch@infradead.org,
-	martin.petersen@oracle.com
-Cc: linmag7@gmail.com
-Subject: [PATCH v2] scsi: qla1280: Fix hw revision numbering for ISP1020/1040
-Date: Wed, 13 Nov 2024 23:51:49 +0100
-Message-ID: <20241113225636.2276-1-linmag7@gmail.com>
-X-Mailer: git-send-email 2.47.0
+        Wed, 13 Nov 2024 15:51:13 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1tBN8f-00EIWG-34;
+	Thu, 14 Nov 2024 10:51:09 +1100
+Date: Thu, 14 Nov 2024 10:51:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Pierre Labat <plabat@micron.com>, Keith Busch <kbusch@kernel.org>,
+	Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@meta.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+	"axboe@kernel.dk" <axboe@kernel.dk>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"asml.silence@gmail.com" <asml.silence@gmail.com>,
+	"javier.gonz@samsung.com" <javier.gonz@samsung.com>
+Subject: Re: [EXT] Re: [PATCHv11 0/9] write hints with nvme fdp and scsi
+ streams
+Message-ID: <ZzU7bZokkTN2s8qr@dread.disaster.area>
+References: <20241108193629.3817619-1-kbusch@meta.com>
+ <CGME20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b@epcas5p3.samsung.com>
+ <20241111102914.GA27870@lst.de>
+ <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com>
+ <20241112133439.GA4164@lst.de>
+ <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com>
+ <DS0PR08MB854131CDA4CDDF2451CEB71DAB592@DS0PR08MB8541.namprd08.prod.outlook.com>
+ <20241113044736.GA20212@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241113044736.GA20212@lst.de>
 
-Fix the hardware revision numbering for Qlogic ISP1020/1040 boards.
-HWMASK suggest that the revision number only needs four bits, this is
-consistent with how NetBSD does things in their ISP driver. verified on
-a IPS1040B which is seen as rev 5 not as BIT_4.
+On Wed, Nov 13, 2024 at 05:47:36AM +0100, Christoph Hellwig wrote:
+> On Tue, Nov 12, 2024 at 06:18:21PM +0000, Pierre Labat wrote:
+> > About 2)
+> > Provide a simple way to the user to decide which layer generate write hints.
+> > As an example, as some of you pointed out, what if the filesystem wants to generate write hints to optimize its [own] data handling by the storage, and at the same time the application using the FS understand the storage and also wants to optimize using write hints.
+> > Both use cases are legit, I think.
+> > To handle that in a simple way, why not have a filesystem mount parameter enabling/disabling the use of write hints by the FS?
+> 
+> The file system is, and always has been, the entity in charge of
+> resource allocation of the underlying device.  Bypassing it will get
+> you in trouble, and a simple mount option isn't really changing that
+> (it's also not exactly a scalable interface).
+> 
+> If an application wants to micro-manage placement decisions it should not
+> use a file system, or at least not a normal one with Posix semantics.
+> That being said we'd demonstrated that applications using proper grouping
+> of data by file and the simple temperature hints can get very good result
+> from file systems that can interpret them, without a lot of work in the
+> file system.  I suspect for most applications that actually want files
+> that is actually going to give better results than trying to do the
+> micro-management that tries to bypass the file system.
 
-Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
----
- drivers/scsi/qla1280.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+This.
 
-diff --git a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
-index d309e2ca14de..796cb493a4df 100644
---- a/drivers/scsi/qla1280.h
-+++ b/drivers/scsi/qla1280.h
-@@ -116,12 +116,12 @@ struct device_reg {
- 	uint16_t id_h;		/* ID high */
- 	uint16_t cfg_0;		/* Configuration 0 */
- #define ISP_CFG0_HWMSK   0x000f	/* Hardware revision mask */
--#define ISP_CFG0_1020    BIT_0	/* ISP1020 */
--#define ISP_CFG0_1020A	 BIT_1	/* ISP1020A */
--#define ISP_CFG0_1040	 BIT_2	/* ISP1040 */
--#define ISP_CFG0_1040A	 BIT_3	/* ISP1040A */
--#define ISP_CFG0_1040B	 BIT_4	/* ISP1040B */
--#define ISP_CFG0_1040C	 BIT_5	/* ISP1040C */
-+#define ISP_CFG0_1020    1	/* ISP1020 */
-+#define ISP_CFG0_1020A	 2	/* ISP1020A */
-+#define ISP_CFG0_1040	 3	/* ISP1040 */
-+#define ISP_CFG0_1040A	 4	/* ISP1040A */
-+#define ISP_CFG0_1040B	 5	/* ISP1040B */
-+#define ISP_CFG0_1040C	 6	/* ISP1040C */
- 	uint16_t cfg_1;		/* Configuration 1 */
- #define ISP_CFG1_F128    BIT_6  /* 128-byte FIFO threshold */
- #define ISP_CFG1_F64     BIT_4|BIT_5 /* 128-byte FIFO threshold */
+The most important thing that filesystems do behind the scenes is
+manage -data locality-. XFS has thousands of lines of code to manage
+and control data locality - the allocation policy API itself has a
+*dozens* control parameters. We have 2 separate allocation
+architectures (one btree based, one bitmap based) and multiple
+locality policy algorithms. These juggled physical alignment, size
+granularity, size limits, data type being allocated for, desired
+locality targets, different search algorithms (e.g. first fit, best
+fit, exact fit by size or location, etc), multiple fallback
+strategies when the initial target cannot be met, etc.
+
+Allocation policy management is the core of every block based
+filesystem that has ever been written.
+
+Specifically to this "stream hint" discussion: go look at the XFS
+filestreams allocator.
+
+SGI wrote an entirely new allocator for XFS whose only purpose in
+life is to automatically separate individual streams of user data
+into physically separate regions of LBA space.
+
+This was written to optimise realtime ingest and playback of
+multiple uncompressed 4k and 8k video data streams from big
+isochronous SAN storage arrays back in ~2005.  Each stream could be
+up to 1.2GB/s of data. If the data for each IO was not exactly
+placed in alignment with the storage array stripe cache granularity
+(2MB, IIRC), then a cache miss would occur and the IO latency would
+be too high and frames of data would be missed/dropped.
+
+IOWs, we have an allocator in XFS that specifically designed to
+separate indepedent streams of data to independent regions of the
+filesystem LBA space to effcient support data IO rates in the order
+of tens of GB/s.
+
+What are we talking about now? Storage hardware that might be able
+to do 10-15GB/s of IO that needs stream separation for efficient
+management of the internal storage resources.
+
+The fact we have previously solved this class of stream separation
+problem at the filesystem level *without needing a user-controlled
+API at all* is probably the most relevant fact missing from this
+discussion.
+
+As to the concern about stream/temp/hint translation consistency
+across different hardware: the filesystem is the perfect place to
+provide this abstraction to users. The block device can expose what
+it supports, the user API can be fixed, and the filesystem can
+provide the mapping between the two that won't change for the life
+of the filesystem...
+
+Long story short: Christoph is right.
+
+The OS hints/streams API needs to be aligned to the capabilities
+that filesystems already provide *as a primary design goal*. What
+the new hardware might support is a secondary concern. i.e. hardware
+driven software design is almost always a mistake: define the user
+API and abstractions first, then the OS can reduce it sanely down to
+what the specific hardware present is capable of supporting.
+
+-Dave.
 -- 
-2.47.0
-
+Dave Chinner
+david@fromorbit.com
