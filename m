@@ -1,85 +1,77 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CEF618C021
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2024 23:51:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F415AD39;
+	Thu, 14 Nov 2024 00:37:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731541876; cv=none; b=IzNh6JvZJXdvetIcupJPx0gHclF7hnelydKQZJGJGs2S2u3qcxlvJo60bEZWxV2dCNHN1adpCrmoS+Wv0w554H8CFBq5ZLYtRVKOR2Dn9hXV37NuNWDox8tkOJfcrK37CBV2dZG0dnKJaa0a9j2ePgMywfW75lLT2JAvltmdntY=
+	t=1731544626; cv=none; b=fMm2yzfEcZaQmToc5bSLmsCyJS23t1xXLMeXn3hRtFw/orvD+/Qqedxu8cW0APIFgSOIDNz/8F6MMPaoB8JGBtoUplcN0LPMMUn4pLEddNpqd+6t8mzf2idcfDz3urTTnYntSn0qy858OcG+Gi4BTjw4xLXPbktYjeCP8dvOZlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731541876; c=relaxed/simple;
-	bh=iqbHEEkvtBJUUD2xvY1+B9NYMn7DnHXcWD0gw8D90/s=;
+	s=arc-20240116; t=1731544626; c=relaxed/simple;
+	bh=wB+qdsF1zvcupnZAmiFUD2WPtTMEGPHMhe/Wu8Kaqzs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uIfmpSw18sKTuyJq8zwcOveiQOI7RwIpytYZba8qfwu2XlGC+VQp4uCydlG50q7q59TdfuvOfUR1rsGU6gEzr9+f+UCGSQVuh/QvryQvaWE21tXXE5zxkp6kG8etscKt4Wy0MOTu5AkMRR5W6ELXmYrqhhpT13DaXNlhs1u1KN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=kYJ/tV+b; arc=none smtp.client-ip=209.85.215.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=mE5D60fUG+G8dv5iszzdtUuUh7gzdoBZDNtUaMb5sNYeqAm5o5aMYZWVIF53mUzaZ4nSgXs8h6aWAuQAEE2na1eO8E0FVHSTtutMQu0A5jFKAjkDniuV9dL+hDVntKH6BCDMdgJNxN4SyQ1X6FzcJGdefDTYMGGXMUyj/Wys+nQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KiDYa6Lw; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="kYJ/tV+b"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-7e6d04f74faso1023872a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2024 15:51:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1731541874; x=1732146674; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dR6gxZVOVPj2t9+Oku6JJyuYiTaMGP57Slvmc9QYLdI=;
-        b=kYJ/tV+bLpzvktreUGRYY8zED3aHQaYpWC7s6NK93e7ztXAoWJsGc1+qdS69GX8noX
-         TE4xWrzeA3IdxxbZR2FEyY0wkpG9Q51FnUwHHO/Q0MsGzdG+9jPY9MzXGGTVFIJ5xGlV
-         DDHo7vtiNYFsCXz6h9QoygWHddJnb5MeikoqaeR4J4fceKWpxU5f+WbqDVAbjaE1+fga
-         9aswDDxDcu64TvrBkH72g6hltrzjZe2dovW1mhKDQa6zjn+l3YeYddhY0Nmej7itdWhY
-         8mvKzX2+GrwoZ3cJWOckFXkdMUHXcvJ+2+mEm9BFEN2fFXSO+/OwDBf/GjgUPrVA9kFG
-         ajXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731541874; x=1732146674;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dR6gxZVOVPj2t9+Oku6JJyuYiTaMGP57Slvmc9QYLdI=;
-        b=iJreRbW0ky7BG1AjZGYYh1CXuMvPWkj32+TKRlkL9ki4cnWpqUeq6xU/gVFvt7zYAc
-         W5ICBF6HYXA5soOLsnPPPdRGG90pFgSWoPxQwukgqZDvvd3XJH92SXAgjD0a6EyajuR+
-         KMkwwWykEjf8jfTlDG42NWj4fWE5l8cdql4koSyjFNm7KOdKyhb33ETMVQHtDUkPCbwS
-         /7aJkq3qurloImUqfUmAqBP1gXnxo+Ao6jK+WcwachGHiB17J6GE93rThTmnrmGY2zWe
-         HURtiLjHvqk1imjlYlNwxZze5x/VB4UvLDt/b3mVKQixJj/N40REncJPlaIcsBiPQ25h
-         ox4A==
-X-Forwarded-Encrypted: i=1; AJvYcCXLwskDj0LJZ37Bxvtckd+3Q4vgkFqF/QkgYR6kh8A3ZGE5RW3ah/8H8y7/uCIY2BmkwX8oNRhv+Llh@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzq7c2YFH2g1lhWqvz1wEbHdRpsScMBKSVxONwQYZXhfRcAoJjy
-	uZVJLI2nK36MWvF+uzuDYzVVVr987HJ+9HetiBctuA6QneN3uMl1wcmTSH0+xZg=
-X-Google-Smtp-Source: AGHT+IGnJMdOUCMCs6jEMGK8slkeJs2lCzIM0b+P01P83BSSB16iV+QAJQtoT6rroZ1RFQlD0VyEEQ==
-X-Received: by 2002:a17:90b:1f89:b0:2e2:ada8:2986 with SMTP id 98e67ed59e1d1-2e9fe6640c3mr1819128a91.16.1731541873837;
-        Wed, 13 Nov 2024 15:51:13 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-86-168.pa.vic.optusnet.com.au. [49.186.86.168])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ea02481b8dsm134060a91.9.2024.11.13.15.51.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Nov 2024 15:51:13 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1tBN8f-00EIWG-34;
-	Thu, 14 Nov 2024 10:51:09 +1100
-Date: Thu, 14 Nov 2024 10:51:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Pierre Labat <plabat@micron.com>, Keith Busch <kbusch@kernel.org>,
-	Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@meta.com>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-	"axboe@kernel.dk" <axboe@kernel.dk>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"asml.silence@gmail.com" <asml.silence@gmail.com>,
-	"javier.gonz@samsung.com" <javier.gonz@samsung.com>
-Subject: Re: [EXT] Re: [PATCHv11 0/9] write hints with nvme fdp and scsi
- streams
-Message-ID: <ZzU7bZokkTN2s8qr@dread.disaster.area>
-References: <20241108193629.3817619-1-kbusch@meta.com>
- <CGME20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b@epcas5p3.samsung.com>
- <20241111102914.GA27870@lst.de>
- <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com>
- <20241112133439.GA4164@lst.de>
- <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com>
- <DS0PR08MB854131CDA4CDDF2451CEB71DAB592@DS0PR08MB8541.namprd08.prod.outlook.com>
- <20241113044736.GA20212@lst.de>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KiDYa6Lw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1731544624; x=1763080624;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=wB+qdsF1zvcupnZAmiFUD2WPtTMEGPHMhe/Wu8Kaqzs=;
+  b=KiDYa6LwVrplojAgs+h90h1VSYiMt05Lvnzn2RDiwRVqMNMsgLtg2NSj
+   iyGyCgswkbih5zJRV3qFd2tSIpMuuDPUg4vCuqN7Pi0OSQb4s91JI0K8J
+   8jSVWtOiZQ+dFRn9WgLLXN8Ow/2oHWDk06dHfu4YQQLLDzEpm0YfijvAr
+   /+8woazjpl3B0zolaxRvQ6x1AU18xG1ZOSAPY2fdzA/6lrZdw4jNrKzmj
+   nU3bD9VGY6Q0B71GJ+CRrnEh3/p2KZRMAP4Qpjb9+knY1MMBr792X/dhL
+   EUqtQQVXbtSfjF3NtQMtlCjKGo1aZdy9pN15DwbaWYeZ25ckWPNXyAoJL
+   w==;
+X-CSE-ConnectionGUID: u1j9/LLZTgCAgwigXjhp/g==
+X-CSE-MsgGUID: cL4auaU9SCmEEvicfsJ6Lw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11255"; a="56854495"
+X-IronPort-AV: E=Sophos;i="6.12,152,1728975600"; 
+   d="scan'208";a="56854495"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2024 16:37:03 -0800
+X-CSE-ConnectionGUID: 81TFp5NzQkm+LjalFbFfOQ==
+X-CSE-MsgGUID: evH2ReHqT962TEV9Fkg/eg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,152,1728975600"; 
+   d="scan'208";a="87791094"
+Received: from lkp-server01.sh.intel.com (HELO 80bd855f15b3) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 13 Nov 2024 16:36:58 -0800
+Received: from kbuild by 80bd855f15b3 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tBNqy-0000yP-07;
+	Thu, 14 Nov 2024 00:36:56 +0000
+Date: Thu, 14 Nov 2024 08:36:35 +0800
+From: kernel test robot <lkp@intel.com>
+To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	John Garry <john.g.garry@oracle.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Hannes Reinecke <hare@suse.de>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, virtualization@lists.linux.dev,
+	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com,
+	storagedev@microchip.com, linux-nvme@lists.infradead.org,
+	Daniel Wagner <wagi@kernel.org>
+Subject: Re: [PATCH v4 07/10] scsi: hisi_sas: use blk_mq_hctx_map_queues to
+ map queues
+Message-ID: <202411140822.ZRutrwWP-lkp@intel.com>
+References: <20241113-refactor-blk-affinity-helpers-v4-7-dd3baa1e267f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -88,92 +80,121 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241113044736.GA20212@lst.de>
+In-Reply-To: <20241113-refactor-blk-affinity-helpers-v4-7-dd3baa1e267f@kernel.org>
 
-On Wed, Nov 13, 2024 at 05:47:36AM +0100, Christoph Hellwig wrote:
-> On Tue, Nov 12, 2024 at 06:18:21PM +0000, Pierre Labat wrote:
-> > About 2)
-> > Provide a simple way to the user to decide which layer generate write hints.
-> > As an example, as some of you pointed out, what if the filesystem wants to generate write hints to optimize its [own] data handling by the storage, and at the same time the application using the FS understand the storage and also wants to optimize using write hints.
-> > Both use cases are legit, I think.
-> > To handle that in a simple way, why not have a filesystem mount parameter enabling/disabling the use of write hints by the FS?
-> 
-> The file system is, and always has been, the entity in charge of
-> resource allocation of the underlying device.  Bypassing it will get
-> you in trouble, and a simple mount option isn't really changing that
-> (it's also not exactly a scalable interface).
-> 
-> If an application wants to micro-manage placement decisions it should not
-> use a file system, or at least not a normal one with Posix semantics.
-> That being said we'd demonstrated that applications using proper grouping
-> of data by file and the simple temperature hints can get very good result
-> from file systems that can interpret them, without a lot of work in the
-> file system.  I suspect for most applications that actually want files
-> that is actually going to give better results than trying to do the
-> micro-management that tries to bypass the file system.
+Hi Daniel,
 
-This.
+kernel test robot noticed the following build errors:
 
-The most important thing that filesystems do behind the scenes is
-manage -data locality-. XFS has thousands of lines of code to manage
-and control data locality - the allocation policy API itself has a
-*dozens* control parameters. We have 2 separate allocation
-architectures (one btree based, one bitmap based) and multiple
-locality policy algorithms. These juggled physical alignment, size
-granularity, size limits, data type being allocated for, desired
-locality targets, different search algorithms (e.g. first fit, best
-fit, exact fit by size or location, etc), multiple fallback
-strategies when the initial target cannot be met, etc.
+[auto build test ERROR on c9af98a7e8af266bae73e9d662b8341da1ec5824]
 
-Allocation policy management is the core of every block based
-filesystem that has ever been written.
+url:    https://github.com/intel-lab-lkp/linux/commits/Daniel-Wagner/driver-core-bus-add-irq_get_affinity-callback-to-bus_type/20241113-223232
+base:   c9af98a7e8af266bae73e9d662b8341da1ec5824
+patch link:    https://lore.kernel.org/r/20241113-refactor-blk-affinity-helpers-v4-7-dd3baa1e267f%40kernel.org
+patch subject: [PATCH v4 07/10] scsi: hisi_sas: use blk_mq_hctx_map_queues to map queues
+config: i386-buildonly-randconfig-006-20241114 (https://download.01.org/0day-ci/archive/20241114/202411140822.ZRutrwWP-lkp@intel.com/config)
+compiler: clang version 19.1.3 (https://github.com/llvm/llvm-project ab51eccf88f5321e7c60591c5546b254b6afab99)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241114/202411140822.ZRutrwWP-lkp@intel.com/reproduce)
 
-Specifically to this "stream hint" discussion: go look at the XFS
-filestreams allocator.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202411140822.ZRutrwWP-lkp@intel.com/
 
-SGI wrote an entirely new allocator for XFS whose only purpose in
-life is to automatically separate individual streams of user data
-into physically separate regions of LBA space.
+All errors (new ones prefixed by >>):
 
-This was written to optimise realtime ingest and playback of
-multiple uncompressed 4k and 8k video data streams from big
-isochronous SAN storage arrays back in ~2005.  Each stream could be
-up to 1.2GB/s of data. If the data for each IO was not exactly
-placed in alignment with the storage array stripe cache granularity
-(2MB, IIRC), then a cache miss would occur and the IO latency would
-be too high and frames of data would be missed/dropped.
+   In file included from drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:7:
+   In file included from drivers/scsi/hisi_sas/hisi_sas.h:11:
+   In file included from include/linux/blk-mq.h:5:
+   In file included from include/linux/blkdev.h:9:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:8:
+   In file included from include/linux/cacheflush.h:5:
+   In file included from arch/x86/include/asm/cacheflush.h:5:
+   In file included from include/linux/mm.h:2213:
+   include/linux/vmstat.h:518:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
+     518 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
+         |                               ~~~~~~~~~~~ ^ ~~~
+>> drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:3375:45: error: use of undeclared identifier 'COQ_IRQ_INDEX'
+    3375 |                 cq->irq_no = hisi_hba->irq_map[queue_no + COQ_IRQ_INDEX];
+         |                                                           ^
+   1 warning and 1 error generated.
 
-IOWs, we have an allocator in XFS that specifically designed to
-separate indepedent streams of data to independent regions of the
-filesystem LBA space to effcient support data IO rates in the order
-of tens of GB/s.
 
-What are we talking about now? Storage hardware that might be able
-to do 10-15GB/s of IO that needs stream separation for efficient
-management of the internal storage resources.
+vim +/COQ_IRQ_INDEX +3375 drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 
-The fact we have previously solved this class of stream separation
-problem at the filesystem level *without needing a user-controlled
-API at all* is probably the most relevant fact missing from this
-discussion.
+  3322	
+  3323	/*
+  3324	 * There is a limitation in the hip06 chipset that we need
+  3325	 * to map in all mbigen interrupts, even if they are not used.
+  3326	 */
+  3327	static int interrupt_init_v2_hw(struct hisi_hba *hisi_hba)
+  3328	{
+  3329		struct platform_device *pdev = hisi_hba->platform_dev;
+  3330		struct device *dev = &pdev->dev;
+  3331		int irq, rc = 0;
+  3332		int i, phy_no, fatal_no, queue_no;
+  3333	
+  3334		for (i = 0; i < HISI_SAS_PHY_INT_NR; i++) {
+  3335			irq = hisi_hba->irq_map[i + 1]; /* Phy up/down is irq1 */
+  3336			rc = devm_request_irq(dev, irq, phy_interrupts[i], 0,
+  3337					      DRV_NAME " phy", hisi_hba);
+  3338			if (rc) {
+  3339				dev_err(dev, "irq init: could not request phy interrupt %d, rc=%d\n",
+  3340					irq, rc);
+  3341				rc = -ENOENT;
+  3342				goto err_out;
+  3343			}
+  3344		}
+  3345	
+  3346		for (phy_no = 0; phy_no < hisi_hba->n_phy; phy_no++) {
+  3347			struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
+  3348	
+  3349			irq = hisi_hba->irq_map[phy_no + 72];
+  3350			rc = devm_request_irq(dev, irq, sata_int_v2_hw, 0,
+  3351					      DRV_NAME " sata", phy);
+  3352			if (rc) {
+  3353				dev_err(dev, "irq init: could not request sata interrupt %d, rc=%d\n",
+  3354					irq, rc);
+  3355				rc = -ENOENT;
+  3356				goto err_out;
+  3357			}
+  3358		}
+  3359	
+  3360		for (fatal_no = 0; fatal_no < HISI_SAS_FATAL_INT_NR; fatal_no++) {
+  3361			irq = hisi_hba->irq_map[fatal_no + 81];
+  3362			rc = devm_request_irq(dev, irq, fatal_interrupts[fatal_no], 0,
+  3363					      DRV_NAME " fatal", hisi_hba);
+  3364			if (rc) {
+  3365				dev_err(dev, "irq init: could not request fatal interrupt %d, rc=%d\n",
+  3366					irq, rc);
+  3367				rc = -ENOENT;
+  3368				goto err_out;
+  3369			}
+  3370		}
+  3371	
+  3372		for (queue_no = 0; queue_no < hisi_hba->cq_nvecs; queue_no++) {
+  3373			struct hisi_sas_cq *cq = &hisi_hba->cq[queue_no];
+  3374	
+> 3375			cq->irq_no = hisi_hba->irq_map[queue_no + COQ_IRQ_INDEX];
+  3376			rc = devm_request_threaded_irq(dev, cq->irq_no,
+  3377						       cq_interrupt_v2_hw,
+  3378						       cq_thread_v2_hw, IRQF_ONESHOT,
+  3379						       DRV_NAME " cq", cq);
+  3380			if (rc) {
+  3381				dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
+  3382						cq->irq_no, rc);
+  3383				rc = -ENOENT;
+  3384				goto err_out;
+  3385			}
+  3386			cq->irq_mask = irq_get_affinity_mask(cq->irq_no);
+  3387		}
+  3388	err_out:
+  3389		return rc;
+  3390	}
+  3391	
 
-As to the concern about stream/temp/hint translation consistency
-across different hardware: the filesystem is the perfect place to
-provide this abstraction to users. The block device can expose what
-it supports, the user API can be fixed, and the filesystem can
-provide the mapping between the two that won't change for the life
-of the filesystem...
-
-Long story short: Christoph is right.
-
-The OS hints/streams API needs to be aligned to the capabilities
-that filesystems already provide *as a primary design goal*. What
-the new hardware might support is a secondary concern. i.e. hardware
-driven software design is almost always a mistake: define the user
-API and abstractions first, then the OS can reduce it sanely down to
-what the specific hardware present is capable of supporting.
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
