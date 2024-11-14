@@ -1,136 +1,125 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F391EBFED;
-	Thu, 14 Nov 2024 07:08:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFC2C1EE037
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2024 07:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731568112; cv=none; b=EUoCyr8Rz9Wu4nwWfuTew+HyatK75KfcNIuuRmgBfQHIaBuQxb8Tou3sXKo5gSU7f+0yJmMg5i9j7ahN5+z6eGMxWPutPlsjUYta/+kk+G66LBfU9SHSfcWbf2IOMc4EZ0iLlpzRW4aanj9N0UBZeNjJ7PSNvj15Z7juUIPTkhY=
+	t=1731569389; cv=none; b=AViAza0pw1L504n0QgxgFobItkbUhIIJolATaacjLx3zAgNHrBLZQDnV07/D+nxbyWmhVkNqKTDhpZC5GCXLYK8pJR4+9T97ePg98yvIN1Q7BFqbF/lXqxhwP1oZ6lkThvQijisD1skTvmxCJkQJ6OimVSvQc+3QJ4FhAmFNqYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731568112; c=relaxed/simple;
-	bh=Xf9RPXk0+DeYNvG2CZ1zSCdTTHYqNthnfVeGrCcu568=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UB/Yluh9ZmUwjgK3CJwnRzRkOUcPwdWIAXkPmZt3Vp6hnPZJ/BooxT1eFyTmLgcGWdieb6OyW+kyKeXHpw1h/y8dieAuLk1MJcSEHSgaOrhjKBKkItL3lePJhoXmo951n16RAYGqs9GsadmIQ872xHv8uwF+LeQbbsTtk3gxa+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ai55etLO; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=MrEu63DX; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=nVVaLUcd; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BFHtJys6; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1731569389; c=relaxed/simple;
+	bh=5EbDZQM1JGCfpI96RJtsU6mqVgnQAECswhsphIx5hko=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UvD0uP2kfxx/CZaF93fpzaLAFAME0FnNmCT4M6N2f1A6AvNrOHONNbnQj+DYGb/ZPtz9anLvunCVhSVYC5qZVhlQABoRHzGLT/noOWvpoY5Q0gCmroLjBIfRJoUpsmcz20ywvYOMajPdXPTJx7j/j9evgwDGacUY6zqUlUfBt+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=j9FUCvj/; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ai55etLO";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="MrEu63DX";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="nVVaLUcd";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BFHtJys6"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id B5E6B21843;
-	Thu, 14 Nov 2024 07:08:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1731568109; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fH/J7W9xtRwFNQE/LUMlKXXmvZxw9o++gxI2KFMe4OE=;
-	b=ai55etLO0FKw5w7LyU52GCY+AHzLrBBtpPyfNh0CKsE2gih2w2w4BAX/3IoxLPy/uR8Tx3
-	C9oueBw3vAzYeYqDdntv138TjcYZHyfh+5peUFZDLpirlAThYiXzqiz4EYP7pN4OFebUMR
-	wEvDbC2q9iNxFZflhVQU2G3ZH87I3U0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1731568109;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fH/J7W9xtRwFNQE/LUMlKXXmvZxw9o++gxI2KFMe4OE=;
-	b=MrEu63DXOVGz4fm4cZa1w13ddQTMs02dpVVdhoDgzehPBvs3y9wIz4PeUa+kYjoAKfzEvy
-	3GGDt+u3Nil67mAg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=nVVaLUcd;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=BFHtJys6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1731568108; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fH/J7W9xtRwFNQE/LUMlKXXmvZxw9o++gxI2KFMe4OE=;
-	b=nVVaLUcdCP/xpYRdKAAcdXvEZYgw1pR1GqTz0o2UW+eaqcX+JrasaWh03IPdZclmOsasju
-	v2RlDIIgXCpiMTeot9OzMo+5niPevZQauTeNj1JwdOFxQVPNT8iu4tSRYA9nI2iuqnZW+T
-	NJEps6aDJVupwz88C67EYJLD98hxD6E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1731568108;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fH/J7W9xtRwFNQE/LUMlKXXmvZxw9o++gxI2KFMe4OE=;
-	b=BFHtJys6pFY7mSK1Ix781r9oc8LLrppSLNVx45P+hBpqpZWD71GMrgq9uZvg5TBtAibFNh
-	nCTfdZCepww54pCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8EF9413794;
-	Thu, 14 Nov 2024 07:08:28 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id T9eWIuyhNWdnXQAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Thu, 14 Nov 2024 07:08:28 +0000
-Date: Thu, 14 Nov 2024 08:08:27 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: kernel test robot <lkp@intel.com>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Bjorn Helgaas <helgaas@kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, 
-	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
-	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	John Garry <john.g.garry@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Hannes Reinecke <hare@suse.de>, llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, 
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v4 07/10] scsi: hisi_sas: use blk_mq_hctx_map_queues to
- map queues
-Message-ID: <395d3187-e87e-43b9-b590-635fde86b435@flourine.local>
-References: <20241113-refactor-blk-affinity-helpers-v4-7-dd3baa1e267f@kernel.org>
- <202411140822.ZRutrwWP-lkp@intel.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="j9FUCvj/"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE6JA2e001025;
+	Thu, 14 Nov 2024 07:29:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=DyIBLrz/XagdyJtls+gIMG8Uj4T7YE9khfE
+	LCV+PKmo=; b=j9FUCvj/hzWHuhLJ4sCkyvMNo3BwUtR+eGotr6q94Vky8AkL1Tb
+	cinBFDznbVKU6RiWCTpGshSaMVKE6nqMu1Dk4EDKH8CvkhgR5ErjpkTWeBzEJ0Km
+	KYH+VTukWfAVADrNBXOhxIf4Fjigz7h+Eo2TwMs0LIr5vpGoWHzxW5ONq/sE5Bgm
+	FpoBPt/gNAWNEZ08XaF+DlB4pilt2a+MQxbdeLIuNrkWVENDyjKFR72YRU7NbKNW
+	fZJhN/prNX/9L9c84z6OFQwzk5PA0fFPDQ2lOhZyxrhZ/5cr9tghJ3XlBnAwyAVN
+	ugmn44IT0FeCgRuwX1BFZS6IkTdQWQkkggg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42vqbm43tp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 14 Nov 2024 07:29:43 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE7TghH011343;
+	Thu, 14 Nov 2024 07:29:42 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 42w6fdu1af-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 14 Nov 2024 07:29:42 +0000
+Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4AE7TgS5011338;
+	Thu, 14 Nov 2024 07:29:42 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-xiaosenh-lv.qualcomm.com [10.81.27.218])
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4AE7TgRW011335
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 14 Nov 2024 07:29:42 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 4148646)
+	id 5DE8E5A3; Wed, 13 Nov 2024 23:29:42 -0800 (PST)
+From: Xiaosen He <quic_xiaosenh@quicinc.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Cc: quic_jianzhou@quicinc.com, quic_cang@quicinc.com,
+        quic_xiaosenh@quicinc.com
+Subject: [PATCH] scsi: use unsigned int variables to parse partition table
+Date: Wed, 13 Nov 2024 23:29:39 -0800
+Message-Id: <20241114072939.1832821-1-quic_xiaosenh@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202411140822.ZRutrwWP-lkp@intel.com>
-X-Rspamd-Queue-Id: B5E6B21843
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	MISSING_XM_UA(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[27];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_TLS_ALL(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLbomrtoisjzkgzhj6iko5ju7u)];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.51
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 9wf_NrDhrp1s2Jjwkji--6wtJqnhCLBw
+X-Proofpoint-GUID: 9wf_NrDhrp1s2Jjwkji--6wtJqnhCLBw
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ phishscore=0 impostorscore=0 priorityscore=1501 mlxlogscore=870
+ spamscore=0 bulkscore=0 suspectscore=0 malwarescore=0 adultscore=0
+ clxscore=1011 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2411140055
 
-On Thu, Nov 14, 2024 at 08:36:35AM +0800, kernel test robot wrote:
-> >> drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:3375:45: error: use of undeclared identifier 'COQ_IRQ_INDEX'
->     3375 |                 cq->irq_no = hisi_hba->irq_map[queue_no + COQ_IRQ_INDEX];
->          |                                                           ^
+signed integer overflow happened in the following multiplication,
+ext_cyl*(end_head+1)*end_sector = 0x41040*(0xff+1)*0x3f = 0xffffc000,
+the overflow was caught by UBSAN and caused crash to the system,
+use unsigned int instead of signed int to avoid integer overflow.
 
-Argh, I forgot to fold my fix in...
+Signed-off-by: Xiaosen He <quic_xiaosenh@quicinc.com>
+Signed-off-by: Jian Zhou <quic_jianzhou@quicinc.com>
+---
+ drivers/scsi/scsicam.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
+index 910f4a7a3924..544a008ea422 100644
+--- a/drivers/scsi/scsicam.c
++++ b/drivers/scsi/scsicam.c
+@@ -126,13 +126,14 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
+ 	       unsigned int *cyls, unsigned int *hds, unsigned int *secs)
+ {
+ 	struct partition *p = (struct partition *)buf, *largest = NULL;
+-	int i, largest_cyl;
+-	int cyl, ext_cyl, end_head, end_cyl, end_sector;
++	int i;
++	unsigned int largest_cyl = UINT_MAX;
++	unsigned int cyl, ext_cyl, end_head, end_cyl, end_sector;
+ 	unsigned int logical_end, physical_end, ext_physical_end;
+ 
+ 
+ 	if (*(unsigned short *) (buf + 64) == 0xAA55) {
+-		for (largest_cyl = -1, i = 0; i < 4; ++i, ++p) {
++		for (i = 0; i < 4; ++i, ++p) {
+ 			if (!p->sys_ind)
+ 				continue;
+ #ifdef DEBUG
+@@ -140,7 +141,7 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
+ 			       i);
+ #endif
+ 			cyl = p->cyl + ((p->sector & 0xc0) << 2);
+-			if (cyl > largest_cyl) {
++			if ((largest_cyl == UINT_MAX) || (cyl > largest_cyl)) {
+ 				largest_cyl = cyl;
+ 				largest = p;
+ 			}
+-- 
+2.34.1
+
