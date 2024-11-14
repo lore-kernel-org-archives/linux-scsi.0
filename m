@@ -1,125 +1,152 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFC2C1EE037
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2024 07:29:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C10441CAAC;
+	Thu, 14 Nov 2024 07:54:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731569389; cv=none; b=AViAza0pw1L504n0QgxgFobItkbUhIIJolATaacjLx3zAgNHrBLZQDnV07/D+nxbyWmhVkNqKTDhpZC5GCXLYK8pJR4+9T97ePg98yvIN1Q7BFqbF/lXqxhwP1oZ6lkThvQijisD1skTvmxCJkQJ6OimVSvQc+3QJ4FhAmFNqYA=
+	t=1731570890; cv=none; b=E1Ef8GLXFtIcEMS0J4MnV8G1X0gLxbmITMYT624aLOOHHnwrdOq41WPjUsEoAXjZCVnIgNCswDsuMjHTxRSFd09U1TSLofy0vuQmMCiv13Mbutm9flxrbEs5EKACqzkU1xkzZ/d8Q9jlDnJr095dCxdGdp5Msyk4e6XYOxkcjKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731569389; c=relaxed/simple;
-	bh=5EbDZQM1JGCfpI96RJtsU6mqVgnQAECswhsphIx5hko=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UvD0uP2kfxx/CZaF93fpzaLAFAME0FnNmCT4M6N2f1A6AvNrOHONNbnQj+DYGb/ZPtz9anLvunCVhSVYC5qZVhlQABoRHzGLT/noOWvpoY5Q0gCmroLjBIfRJoUpsmcz20ywvYOMajPdXPTJx7j/j9evgwDGacUY6zqUlUfBt+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=j9FUCvj/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1731570890; c=relaxed/simple;
+	bh=qpHPqvyCCYzqYEOCriYI3vUcZNTa6fXXadKZM0uAwWE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dgMyxhMdTkgXut0TUTsPC9tYGJYOme/Mgvde74unbHbbTwkMR4hThXxaZi43JhzEbxYA/g82KbNa1hzNY63CW0nDxLvTaQh02ztIkrgYm5W0lzoZrePPyZyagDAJpAfrrkHABVjgU/DxbcFezl9NpIQnfYQedcMBDadKY/eJlAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GiE9vj8x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kwNAhIDy; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GiE9vj8x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kwNAhIDy; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="j9FUCvj/"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE6JA2e001025;
-	Thu, 14 Nov 2024 07:29:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=DyIBLrz/XagdyJtls+gIMG8Uj4T7YE9khfE
-	LCV+PKmo=; b=j9FUCvj/hzWHuhLJ4sCkyvMNo3BwUtR+eGotr6q94Vky8AkL1Tb
-	cinBFDznbVKU6RiWCTpGshSaMVKE6nqMu1Dk4EDKH8CvkhgR5ErjpkTWeBzEJ0Km
-	KYH+VTukWfAVADrNBXOhxIf4Fjigz7h+Eo2TwMs0LIr5vpGoWHzxW5ONq/sE5Bgm
-	FpoBPt/gNAWNEZ08XaF+DlB4pilt2a+MQxbdeLIuNrkWVENDyjKFR72YRU7NbKNW
-	fZJhN/prNX/9L9c84z6OFQwzk5PA0fFPDQ2lOhZyxrhZ/5cr9tghJ3XlBnAwyAVN
-	ugmn44IT0FeCgRuwX1BFZS6IkTdQWQkkggg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42vqbm43tp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 14 Nov 2024 07:29:43 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE7TghH011343;
-	Thu, 14 Nov 2024 07:29:42 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 42w6fdu1af-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 14 Nov 2024 07:29:42 +0000
-Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4AE7TgS5011338;
-	Thu, 14 Nov 2024 07:29:42 GMT
-Received: from hu-devc-lv-u22-c.qualcomm.com (hu-xiaosenh-lv.qualcomm.com [10.81.27.218])
-	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4AE7TgRW011335
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 14 Nov 2024 07:29:42 +0000
-Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 4148646)
-	id 5DE8E5A3; Wed, 13 Nov 2024 23:29:42 -0800 (PST)
-From: Xiaosen He <quic_xiaosenh@quicinc.com>
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Cc: quic_jianzhou@quicinc.com, quic_cang@quicinc.com,
-        quic_xiaosenh@quicinc.com
-Subject: [PATCH] scsi: use unsigned int variables to parse partition table
-Date: Wed, 13 Nov 2024 23:29:39 -0800
-Message-Id: <20241114072939.1832821-1-quic_xiaosenh@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GiE9vj8x";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kwNAhIDy";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GiE9vj8x";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kwNAhIDy"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 184CF2195D;
+	Thu, 14 Nov 2024 07:54:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731570887; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=GiE9vj8x1O1N5ASVREAFOUMEMISoo31skDN+DgSWv9F2Fov+Dl7ZwEGzVuLgSeDUImvPzB
+	nD/flv8/De3SgoqQTqvBuesuFSaBX0SreRUJR/RgCtacsNzS7MJB35cynn5tyUxX/ZSsVn
+	srR7BEEzrPNRRZlmDxCKW2rW8chD8E0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731570887;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=kwNAhIDyRojzPQtx06qL5++OAHC3R3V5i01m97PIeo0DP0kPGjdHi3kKGaBh4sYavHIgvv
+	rVEHds2mLLEUvEBg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731570887; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=GiE9vj8x1O1N5ASVREAFOUMEMISoo31skDN+DgSWv9F2Fov+Dl7ZwEGzVuLgSeDUImvPzB
+	nD/flv8/De3SgoqQTqvBuesuFSaBX0SreRUJR/RgCtacsNzS7MJB35cynn5tyUxX/ZSsVn
+	srR7BEEzrPNRRZlmDxCKW2rW8chD8E0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731570887;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=kwNAhIDyRojzPQtx06qL5++OAHC3R3V5i01m97PIeo0DP0kPGjdHi3kKGaBh4sYavHIgvv
+	rVEHds2mLLEUvEBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E8BD513794;
+	Thu, 14 Nov 2024 07:54:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id o2HIOMasNWfVawAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Thu, 14 Nov 2024 07:54:46 +0000
+Date: Thu, 14 Nov 2024 08:54:46 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Bjorn Helgaas <bhelgaas@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	John Garry <john.g.garry@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v4 05/10] blk-mq: introduce blk_mq_hctx_map_queues
+Message-ID: <9fa26099-1922-4b99-883e-bd5f6c58162a@flourine.local>
+References: <20241113-refactor-blk-affinity-helpers-v4-0-dd3baa1e267f@kernel.org>
+ <20241113-refactor-blk-affinity-helpers-v4-5-dd3baa1e267f@kernel.org>
+ <ZzVZQbZOYhNF08LX@fedora>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 9wf_NrDhrp1s2Jjwkji--6wtJqnhCLBw
-X-Proofpoint-GUID: 9wf_NrDhrp1s2Jjwkji--6wtJqnhCLBw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- phishscore=0 impostorscore=0 priorityscore=1501 mlxlogscore=870
- spamscore=0 bulkscore=0 suspectscore=0 malwarescore=0 adultscore=0
- clxscore=1011 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411140055
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZzVZQbZOYhNF08LX@fedora>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[25];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_DN_SOME(0.00)[]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-signed integer overflow happened in the following multiplication,
-ext_cyl*(end_head+1)*end_sector = 0x41040*(0xff+1)*0x3f = 0xffffc000,
-the overflow was caught by UBSAN and caused crash to the system,
-use unsigned int instead of signed int to avoid integer overflow.
+On Thu, Nov 14, 2024 at 09:58:25AM +0800, Ming Lei wrote:
+> > +void blk_mq_hctx_map_queues(struct blk_mq_queue_map *qmap,
+> 
+> Some drivers may not know hctx at all, maybe blk_mq_map_hw_queues()?
 
-Signed-off-by: Xiaosen He <quic_xiaosenh@quicinc.com>
-Signed-off-by: Jian Zhou <quic_jianzhou@quicinc.com>
----
- drivers/scsi/scsicam.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+I am not really attach to the name, I am fine with renaming it to
+blk_mq_map_hw_queues.
 
-diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
-index 910f4a7a3924..544a008ea422 100644
---- a/drivers/scsi/scsicam.c
-+++ b/drivers/scsi/scsicam.c
-@@ -126,13 +126,14 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
- 	       unsigned int *cyls, unsigned int *hds, unsigned int *secs)
- {
- 	struct partition *p = (struct partition *)buf, *largest = NULL;
--	int i, largest_cyl;
--	int cyl, ext_cyl, end_head, end_cyl, end_sector;
-+	int i;
-+	unsigned int largest_cyl = UINT_MAX;
-+	unsigned int cyl, ext_cyl, end_head, end_cyl, end_sector;
- 	unsigned int logical_end, physical_end, ext_physical_end;
- 
- 
- 	if (*(unsigned short *) (buf + 64) == 0xAA55) {
--		for (largest_cyl = -1, i = 0; i < 4; ++i, ++p) {
-+		for (i = 0; i < 4; ++i, ++p) {
- 			if (!p->sys_ind)
- 				continue;
- #ifdef DEBUG
-@@ -140,7 +141,7 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
- 			       i);
- #endif
- 			cyl = p->cyl + ((p->sector & 0xc0) << 2);
--			if (cyl > largest_cyl) {
-+			if ((largest_cyl == UINT_MAX) || (cyl > largest_cyl)) {
- 				largest_cyl = cyl;
- 				largest = p;
- 			}
--- 
-2.34.1
+> > +	if (dev->driver->irq_get_affinity)
+> > +		irq_get_affinity = dev->driver->irq_get_affinity;
+> > +	else if (dev->bus->irq_get_affinity)
+> > +		irq_get_affinity = dev->bus->irq_get_affinity;
+> 
+> It is one generic API, I think both 'dev->driver' and
+> 'dev->bus' should be validated here.
 
+What do you have in mind here if we get two masks? What should the
+operation be: AND, OR?
+
+This brings up another topic I left out in this series.
+blk_mq_map_queues does almost the same thing except it starts with the
+mask returned by group_cpus_evenely. If we figure out how this could be
+combined in a sane way it's possible to cleanup even a bit more. A bunch
+of drivers do
+
+		if (i != HCTX_TYPE_POLL && offset)
+			blk_mq_hctx_map_queues(map, dev->dev, offset);
+		else
+			blk_mq_map_queues(map);
+
+IMO it would be nice just to have one blk_mq_map_queues() which handles
+this correctly for both cases.
