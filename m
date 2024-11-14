@@ -1,64 +1,66 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28C471E8850
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Nov 2024 02:51:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18DC1E9061;
+	Thu, 14 Nov 2024 02:51:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731552672; cv=none; b=kpdnyl+ImmMvQOvZ1ZZwvAwj8tW2N4FbaYVW4nrWb5fW6ynsRWeTDjYSsUWZJjwUJgPuse5YJnG0rBk2v1G20FV1t/CfBAKy09300HOrUCVLKDJLBNpbR9+x/qPB2M5/85V0qyElhNb2hvUIVrqeFRUEvyXK7vJAk/PdYyOPk8U=
+	t=1731552679; cv=none; b=oCkWq4p3SObXgMdJGwSOis7wqIrDRQaHjbiJItUFk3bNWiDu6uKdbrj2N2WASkn04Du+ea1s+AfvHNh6aRvwcR3CCBfqGLJ7HtSGxGcUTYIjdwF9kr9rY0GUJdkn3ZeOEoVD0VARlxRWwC7TD39y/zP8M7+KERU0/YmLM8l4lhM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731552672; c=relaxed/simple;
-	bh=il08Jrynykib5ULYHqWteBJG3U7vj+x2Y+S7sviduH0=;
+	s=arc-20240116; t=1731552679; c=relaxed/simple;
+	bh=H6DBNCPZGNERlsPtd3z0WPU3Z3iSUEj5bEcXV0m9LXE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LqOZRdw5VPmXmKjd/VAWMnJJHO7xEp+X3cWWeq+qR5zVCjisob7DfM39gmH0XsA5NhJxNZpDkqPZptqdobUncxLQobv7ffhtwmPYXGigDASwkPv59WjFn7ibYDhvOoP9P9Oo7jpu8hTCp5D9zoxeGx7BfwIB2tNK+Shi2pObgdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=I5OPAPri; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=HMQ7vZIu+z9iS4hNAg5JuT2/zGNnEkqa3+Iv8SE2cbRttpIiUNP9YN15GlAWVQnLC0MtPQMWu007jmmZ0g3/MAQqcHkbtC2KmdVACOF2/kHDg+o7fq56l3GbMYy4S2B67B7oyZdVsLtOm4L94jk4kWlYCyThWk36d6nCHIOXai4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Q3fVOdjM; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I5OPAPri"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE1gAnm002009;
-	Thu, 14 Nov 2024 02:50:47 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Q3fVOdjM"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE1fmb0001312;
+	Thu, 14 Nov 2024 02:50:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=6am5X1tdLjFU6NOoBtYKctM+Xp8FKnto9hqJlCTIX7Q=; b=
-	I5OPAPriidRaBFDx334jnNschCwy9rXSr48n++Ew4gzcEtwGJYk4NwhTKjA8rt3x
-	7Vsi8bfLsD1hkU/zFLyMHlJCLmVLpfUKJP3gbPvfPMOWIhlEt6DfjtnyDAAeq++N
-	3VtZF+fEIibdP/8idpGD/HZM06cuGJB8pEz89VljYTCx3RGCYKz4VWGeSb3VDlvK
-	XQFEfmDbhzD3eL8bUC40Wpk6xCE0za5GDsj5GfQdJcO0Y41oqOQ2jfJvdut022of
-	Pl05uIq/MvkfzOAVYXN1kf6HiDgi50QTosdTCHzFW/4XglW6fPXscvFop+r12Cxp
-	1Be6J7Ct+yNQP/Mqt03oAQ==
+	corp-2023-11-20; bh=eMWpl/7Zg3vVe/Ep++BPsCq2npXZ9GfGvkFWuhGIMzo=; b=
+	Q3fVOdjM7Brre7R/1uY55MJ/j2xRyOCo2fI/NvRaIg5UQqIErnYUj07hH8ypm+Yd
+	RNndOZAipro/JBS0ICh5F0VAqIreQg+9I8qJaSTsRH+EzQMv4OdiHO9cxzcQWtNU
+	sg4NDhUFgXK2vyhBcslUJZnhgJH+eUZ/ddZelyO3ssi2Bo+9NQ/N8TKdwap1Qn5K
+	otRNOfV2h71B91pp+NU0RDJv2nXDjiLeCko/mkjyJWTraV5qQdNAjYUgidZQ6nyH
+	9V9cJ67EppKETCYotgK177g7/cbKq5kgirn1dO15jjNWfWgqEaIdILi02mpkOqOD
+	LwYylgsZIpW/HKz1heWWCg==
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42t0k5g4ek-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 42vsp4hw3t-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Nov 2024 02:50:46 +0000 (GMT)
+	Thu, 14 Nov 2024 02:50:57 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE1FYSc022726;
-	Thu, 14 Nov 2024 02:50:46 GMT
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4AE1C6Tk023937;
+	Thu, 14 Nov 2024 02:50:56 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42vuw0p1w9-1
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 42vuw0p22f-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 14 Nov 2024 02:50:45 +0000
+	Thu, 14 Nov 2024 02:50:56 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4AE2ojYi003527;
-	Thu, 14 Nov 2024 02:50:45 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4AE2ojZ0003527;
+	Thu, 14 Nov 2024 02:50:55 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 42vuw0p1vg-1;
-	Thu, 14 Nov 2024 02:50:45 +0000
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 42vuw0p1vg-9;
+	Thu, 14 Nov 2024 02:50:55 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-        Douglas Gilbert <dgilbert@interlog.com>,
+To: Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] scsi: sg: Enable runtime power management
-Date: Wed, 13 Nov 2024 21:49:54 -0500
-Message-ID: <173155154791.970810.9973027424389333625.b4-ty@oracle.com>
+        Bart Van Assche <bvanassche@acm.org>,
+        Minwoo Im <minwoo.im@samsung.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Philipp Stanner <pstanner@redhat.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: Replace deprecated PCI functions
+Date: Wed, 13 Nov 2024 21:50:02 -0500
+Message-ID: <173155154789.970810.9790026959679246230.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241030220310.1373569-1-bvanassche@acm.org>
-References: <20241030220310.1373569-1-bvanassche@acm.org>
+In-Reply-To: <20241028102428.23118-2-pstanner@redhat.com>
+References: <20241028102428.23118-2-pstanner@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,28 +73,27 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.62.30
  definitions=2024-11-14_01,2024-11-13_01,2024-09-30_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 spamscore=0
- adultscore=0 phishscore=0 malwarescore=0 mlxlogscore=781 suspectscore=0
+ adultscore=0 phishscore=0 malwarescore=0 mlxlogscore=780 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2409260000
  definitions=main-2411140021
-X-Proofpoint-ORIG-GUID: SS5WIfmzSv9Sro0uW_bZ206-MTybGqLg
-X-Proofpoint-GUID: SS5WIfmzSv9Sro0uW_bZ206-MTybGqLg
+X-Proofpoint-ORIG-GUID: UFI0a4tInzIB9yJGqQhKhE3mF1sgg8Bp
+X-Proofpoint-GUID: UFI0a4tInzIB9yJGqQhKhE3mF1sgg8Bp
 
-On Wed, 30 Oct 2024 15:03:10 -0700, Bart Van Assche wrote:
+On Mon, 28 Oct 2024 11:24:29 +0100, Philipp Stanner wrote:
 
-> In 2010, runtime power management support was implemented in the SCSI core.
-> The description of patch "[SCSI] implement runtime Power Management"
-> mentions that the sg driver is skipped but not why. This patch enables
-> runtime power management even if an instance of the sg driver is held open.
-> Enabling runtime PM for the sg driver is safe because all interactions of
-> the sg driver with the SCSI device pass through the block layer
-> (blk_execute_rq_nowait()) and the block layer already supports runtime PM.
+> pcim_iomap_regions() and pcim_iomap_table() have been deprecated in
+> commit e354bb84a4c1 ("PCI: Deprecate pcim_iomap_table(),
+> pcim_iomap_regions_request_all()").
+> 
+> Replace these functions with pcim_iomap_region().
+> 
 > 
 > [...]
 
 Applied to 6.13/scsi-queue, thanks!
 
-[1/1] scsi: sg: Enable runtime power management
-      https://git.kernel.org/mkp/scsi/c/4045de893f69
+[1/1] scsi: ufs: Replace deprecated PCI functions
+      https://git.kernel.org/mkp/scsi/c/84c1e27e6c64
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
