@@ -1,100 +1,93 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6585F1B85D7
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 13:04:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62811C07C5;
+	Fri, 15 Nov 2024 13:29:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731675863; cv=none; b=E+jVPd8+Xmq+QrT+KXGOumVh2eykCbZ6kTOMBdQDcIiWpOh/r+jbYgvA3lNUvc1nyFeL/SckyJyv/s237XoJi20ZMSpjPXMj5dOdkPIjJ9dO4MEN9g1mHcZpV5bypb7cetE2o5PWHZsOLvz+Xbgb3/VHZCC2HlklyFQDK2PGVys=
+	t=1731677392; cv=none; b=S/ryoDxIE4tJL2uVQTctc5BOSZbPf6h6XLFnX/FO7bBxnGdZ4HuLVGwK9vKfSUa0M6l0XtbIc5jAQfgVLWIhlYrXQCRNya5BqTjCVDv43cqSyQ9vIDFJ8+i+PjmT99MGoadbXsgPsRyXNOcKkz6tIcfBEouvPk7qKXb7jRzXGPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731675863; c=relaxed/simple;
-	bh=SJWNeW96/OUcLB5RiNVKx+bCIbqf9O6RTxpq0bPmS3o=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=q4Br2v0Vo4DMNKXV0eEoKi7hpqtBBS5PWkxS79/2qaFpB/u0De1MrmTpRsnp2pM0wqpcdKvZGDsql2Cvt2lg9xpNPJK6bJq1K75qh209LWMMPMdrgw/KFKoZZ5fWDoJx3UadcR9zyf77wn8+7bRkGvz1b/Z0kt6RmEZMD2lbUfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=gXaIUDGK; arc=none smtp.client-ip=67.231.156.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	s=arc-20240116; t=1731677392; c=relaxed/simple;
+	bh=J/5ZDP8yvp5xJV8M6LlD9Na/ogk0y+HnBPjWwxvT0Uo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ISjGHHVFjWrPne++zMA1LiGcEquetTLJgs+YTlxRlLo8KT4VvlDi2GwEgazVX7d13g0IUZXNUqi/2QG2SUXejVgOiPJsP9xfY/0qgHBMMhmfdpukrAEJSx3SxjvfRxCT0LhG4TmTv4d5ndIZyjVJhk8Ao+2pUlL06hpc7b8D3Q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e10ZpYOG; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="gXaIUDGK"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AF7YIBF011764;
-	Fri, 15 Nov 2024 05:04:20 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=V
-	WVKT5KNW16dqg7KVLX/7XSqpRlQTg4xH9UgbeYk2qw=; b=gXaIUDGKQEGO9+Z7j
-	aNB8Vw9+GR4ELR4JZVj47v6ieeccudPNvHA65VLWWO3PSwnw+p6G/ZQ+c/oyXC90
-	dR8f7nhrCaUgZsVOv30FVJl4V72DHPLQOQsBHRUl0V38rEDjVEWoVG5cabwjGjrf
-	4lSu9ICmL2GVNzNI7cVDGxOV2ZC2Zta0Ra1fSceyVexU19i/c2Z3WVXQS1vB++7K
-	FUEsn17RqpUYZk3fFjlV84y5hCJ8qiqDZuG+HH+2Fxuo9xjNBzd/Vj0HqggVnUS9
-	2q+qoXLowq6j8wn/mMINqmbcnWg0edwjhPVekc2JICDN9IDg61csp4HCI0coL0Z0
-	GxmjQ==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 42x2128e95-4
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 Nov 2024 05:04:19 -0800 (PST)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Fri, 15 Nov 2024 05:03:45 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
- Transport; Fri, 15 Nov 2024 05:03:45 -0800
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
-	by maili.marvell.com (Postfix) with ESMTP id 9B1053F708A;
-	Fri, 15 Nov 2024 05:03:43 -0800 (PST)
-From: Nilesh Javali <njavali@marvell.com>
-To: <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
-        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
-        <jmeneghi@redhat.com>
-Subject: [PATCH 6/7] qla2xxx: Supported speed displayed incorrectly for VPorts
-Date: Fri, 15 Nov 2024 18:33:12 +0530
-Message-ID: <20241115130313.46826-7-njavali@marvell.com>
-X-Mailer: git-send-email 2.23.1
-In-Reply-To: <20241115130313.46826-1-njavali@marvell.com>
-References: <20241115130313.46826-1-njavali@marvell.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e10ZpYOG"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5cf9cd111ecso342156a12.3;
+        Fri, 15 Nov 2024 05:29:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731677389; x=1732282189; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PXyAxxnKLpgZmGT3ZHAoHzNaVqLioXGnV41IMIjl6Ac=;
+        b=e10ZpYOGXLB0I4FRAn2tWsYwb7Bl/E3d2XZofmgYyOgivasDX7iAEdr4geUjwdxv5/
+         1TGVJv2yTsBlx8qzAxNU0Dbc2UoNDX9bEPZS7olYRXmZ0qpIcgxzwzn7ICRI4XZYlVxi
+         O5wV15dbvXuKfXc5ec4NzgS4nM72ap8U/IhF1FX8H96cMOS+sKoiRGQYN9dnAy5NvB44
+         d37RwDO64ZI6wuu4H0VsqQkHcr7LYC06k5rCxnDeAQwOjHLgqvJ4cGVSQDQCBH+3FBj4
+         vqQ/FUsRm30Juaf81SmOUHe4KB/P862D4TeCI/Z5bboY8K2FXyEvmSdbeHVSM+uDznSq
+         nhdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731677389; x=1732282189;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PXyAxxnKLpgZmGT3ZHAoHzNaVqLioXGnV41IMIjl6Ac=;
+        b=DNzaJd/BYeiZFB/zEpsWjgYaHE9Ez1oRn4jaY9pUJxT8/7C39Btk04w5vdYZaRctlO
+         gJeG35v8lHGlPBne0gnqvkx247ah2bvtABIcxdzUeWL4hXTemnUSbrGAr3Lz1uSuFzpR
+         5x1pjSLEwFoYQt3Q3GV7Ijf3pRI+8cFJqKz7MRAeB80NP8nrh4YIdXxABFUpD9GKII8t
+         lHV7Li45u2Z0Ptb2M3fFsrXMVB7FWNkNnA3r46Ag3X6WN4yMw7Rc9l5O0k379MD0KUm9
+         mqFSeFml9dLvIWVXfkyQQpRyLxoQ/6KoAsSVQKKPTRVSCKS+lI9gNi3ZOs+Of6q0KUkG
+         nPAQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU3BLsG0sxonhnDmfrhQ+/wUpIf7DchKfC+wgLaaX18vC/ZT6lWmVcdqy51B6b9obs/5AWwh/a6eg==@vger.kernel.org, AJvYcCV8emCuU7QBUIu1SHldD5LpNsGNk83JPwacgOVMJBKMdaPFdVCcN0H/j82QjQEEjUIZvGFFXzQS1MSzC8U=@vger.kernel.org, AJvYcCVvrQ9zcBcRPmwqlojZMMhDTpl2LO2oNvi6qb97zW067lr2getIrzJK2v1I7Me2TA+I0S6yz4x/0yYB7g==@vger.kernel.org, AJvYcCXi1mHIFkxseSLCeJ1JYDLb0413TjtCt/tIltWQxnUIzUcqUz1SebKZ8GcPlB2RZ898FV5LVjvQPlnOAPShSQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfQR0PX6JIs2sD26y2rK/9MDbNk6Svz9J3+jozk/uSJ09FqFK6
+	jGLD7KDxOTsa40eCF2gbtvKiIUbIyOJGx+fh5KVM1MGR2pVAqjDd6fQXhX6FVfmmeqGuAg8QqxV
+	wzfgMkcJ5pkMj6zB0IzJgkvub+w==
+X-Google-Smtp-Source: AGHT+IGqWKTlmFq3/n12hP2Y2a/LRqzo/oZoAMzv7wmcNU8urPo976WbIba/QasmZjKbU6xrICmiEgAE4o4NmycRUDo=
+X-Received: by 2002:a17:907:3f25:b0:a9a:2afc:e4e4 with SMTP id
+ a640c23a62f3a-aa483557d9bmr200273066b.59.1731677388795; Fri, 15 Nov 2024
+ 05:29:48 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-GUID: eqWs2LBczhSqLFq9ij6wP10u0qfg3AP0
-X-Proofpoint-ORIG-GUID: eqWs2LBczhSqLFq9ij6wP10u0qfg3AP0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
- definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
+References: <20241114104517.51726-1-anuj20.g@samsung.com> <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
+ <20241114104517.51726-7-anuj20.g@samsung.com> <20241114121632.GA3382@lst.de>
+In-Reply-To: <20241114121632.GA3382@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Fri, 15 Nov 2024 18:59:11 +0530
+Message-ID: <CACzX3As0EzgC-Qgp=Kt67kjqwq8sqsEWDCpgjb3BFW2UzU=oGw@mail.gmail.com>
+Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
+ and PI support
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org, 
+	martin.petersen@oracle.com, asml.silence@gmail.com, brauner@kernel.org, 
+	jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, 
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com, 
+	linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Anil Gurumurthy <agurumurthy@marvell.com>
+On Thu, Nov 14, 2024 at 5:46=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
+e:
+>
+> On Thu, Nov 14, 2024 at 04:15:12PM +0530, Anuj Gupta wrote:
+> > PI attribute is supported only for direct IO. Also, vectored read/write
+> > operations are not supported with PI currently.
+>
+> Eww.  I know it's frustration for your if maintainers give contradicting
+> guidance, but this is really an awful interface.  Not only the pointless
+> indirection which make the interface hard to use, but limiting it to
+> not support vectored I/O makes it pretty useless.
+>
 
-The fc_function_template for vports was missing the
-.show_host_supported_speeds. The base port had the same.
-
-Add .show_host_supported_speeds to the vport template as well.
-
-Cc: stable@vger.kernel.org
-Fixes: 2c3dfe3f6ad8 ("[SCSI] qla2xxx: add support for NPIV")
-Signed-off-by: Anil Gurumurthy <agurumurthy@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_attr.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 2810608acd96..e6ece30c4348 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -3304,6 +3304,7 @@ struct fc_function_template qla2xxx_transport_vport_functions = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
- 	.show_host_supported_classes = 1,
-+	.show_host_supported_speeds = 1,
- 
- 	.get_host_port_id = qla2x00_get_host_port_id,
- 	.show_host_port_id = 1,
--- 
-2.23.1
-
+The check added in this patch returning failure for vectored-io is a
+mistake. The application can prepare protection information for vectored
+read/write and send. So vectored-io works with the current patchset.
+I just need to remove the check in this patch.
