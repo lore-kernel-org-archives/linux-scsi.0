@@ -1,59 +1,49 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FACC1D435C;
-	Fri, 15 Nov 2024 19:02:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF7C21E261D
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 20:25:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731697364; cv=none; b=ekRWIzxIRPXlHyDhbehgUuGjEgzw5tCbf3ih8czl8m3ddsw0+qG6146OeotsJFOi7lXWU4wtgf1FfChyGoXIE9v71KCs0/sYqp8lf01yPBu89PhAQmz4tO+qmjrgWDaoxcxRWt6o79LY7hqNs625GR004Vuu5nj6gnFNU0bIPjg=
+	t=1731702305; cv=none; b=g4/LfrIXpDoXXtZhtbhbvErn6QE6Ecn4UvfGv6ePQ4w8UzRGdP5avXPhNCcDt69F/gZT8bTzcgKMozI5GyuuEBA5CmidOaJuZ4BVwRRBl1QLHk+PklX1i2rphwr8d+kzIFggaK0umDuR8pD2iudA19bMdq/bKYEh1B/G0lwRFb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731697364; c=relaxed/simple;
-	bh=9vjLfiWYMSCyvWqNdv1hJFPdv5/hvv1FrIS5q3W2qeA=;
+	s=arc-20240116; t=1731702305; c=relaxed/simple;
+	bh=hvF03FhAh8ktG5z2TiMAbW6Ya7E4zrNk6yvwFV+EazI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sVQvCCNMS7oidg2Ujqq3NSq0i22gnM00C/4Dv5GBw+9ndrD0dgsZsxjGpSuOxZksBRf+w7Pe1+GAqYppe8E5TzB7vvmekIzk0GQeI3ZVedsx74bwkFC9NNT5nMNbXEZxFl/VK3JSdTvc469nCMajl1PA5ieVZ3sfPvqUty98WCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RnXL55pb; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=U6QFzanAp73FeaxWBgO4eeAFVsr8PtWwpN/kjm/7YKAcztGzFuoHDRzOKv1a8ruGULTPQJNTrKgzqgqOVS6/zjI/+rg+Nj40Ffpoa3uIQ+0saC9SAX+nQfgcPdDLd395e8k/v23H8dTUlkkgcVij3N3PuwVLeSJazCIdfdZAAzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CD2liQ+H; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RnXL55pb"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4314b316495so8525685e9.2;
-        Fri, 15 Nov 2024 11:02:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731697361; x=1732302161; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=OJeoXJwB9bUfd+K442tubIgDjv2gaR4dr6OV0PklIw8=;
-        b=RnXL55pbflDHLC5ICsWa8IiTE+Xo1XOc0q1WWBu3/EPsr93Zh0mlmOvtZzvGwxOqBG
-         +0e2ueisLkRuyd8z2YN6BCxLENBxTpNv6elEU5OWbQECHNBwGhDPvNVcRDksLPnw58nQ
-         xtKten84PhRqYZtGLpZfNlBqFTPe28yXNHvioRcooj+1wjAumSqOUqqcXyWLhD90u5f2
-         7TT5ABjP3h4x2rn4pXnt79ABHcKbZtpLgjkr22zKgzAms1V6bGgKlmuZz9ZeGQ3YzDfK
-         zZqYNCxxyrqCKZs0CP2xaS0Dyy5mOeWvDPbhCKYORZWHOvo4M4SbZlUJgnij/v6kir6a
-         NNRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731697361; x=1732302161;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OJeoXJwB9bUfd+K442tubIgDjv2gaR4dr6OV0PklIw8=;
-        b=EvabLHoaOZIPijhWFoPX1AISr9JFx0QPQHk/TAdWnOLJOEgBBzk14ZESkKPhwRU824
-         TrZq7rkpUmR9EzReCa35PN2f/7c0QlkCq/B0H+rqdtQ2y4h3WYIWeKyemrF2NBbu8Z9p
-         P2UVb+US0ZDNx2MuBQjpOkpwNI1Uu5IxXW0vIOf8fIbRUuwmWvn6Uv002bDt13FGNdzW
-         MTOFHtsuQWLxdOQ5IsnRm0EUkrNZX0hlztikcRHgLKenjdUksUmGerzI/X3miftLZ3MR
-         SQEmaeOJVUkpbl70FaDpkVFRfMx1PJntr2nJONs4lS+FNtCwAei9bh8Caqhq6N4JEvWg
-         yGyw==
-X-Forwarded-Encrypted: i=1; AJvYcCU8elI//Esjz7nlcHiFNS38mt8ygsV08ohuxg9wyxDT2yw9Jz7atIvVnDBDvcRQ+RzhmclF2OLAwA==@vger.kernel.org, AJvYcCUqWW6EcnHLCow3J11dAwDgmL+QObag4FwIKROxzn/d81kvdcpSSJZvy1CzaKfTEc8h2UVP7rxeImkO/RQ=@vger.kernel.org, AJvYcCWVoRiqdpRwrf9V+7xkbMsIqAdYFc+qL4aWf9swyQFYgthtzZRnK03B8Wigqc35iW7h2srMsxKb3kwtkg==@vger.kernel.org, AJvYcCWcslVwfHXxhoxTPIWh2NUfVSevMDpuuQ6yGk5i6Q4qxKIDsI5iXVIFA8wy3nIfJpiivxW2tLD7Ir4GMS43Bg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzIXKpTLMqp+wSiz1bJNXUbUtwb4Cz3FM3scol7iLvIg4A4C/x8
-	S/e/ZGkOkRid0ZKCadys2f6T4z0SFRmWVRBMK75JTTzLKqn5C4Wd
-X-Google-Smtp-Source: AGHT+IFoafFKHLVT0DJoHOrqKEmggso2/mCTHNRA/BSnSr63wSqW4R2fLvclLi+NGyR0Zkzfqsw8DA==
-X-Received: by 2002:a05:600c:1d9e:b0:431:5ce4:bcf0 with SMTP id 5b1f17b1804b1-432df74d88bmr35454675e9.15.1731697361154;
-        Fri, 15 Nov 2024 11:02:41 -0800 (PST)
-Received: from [192.168.42.191] ([148.252.132.111])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432dac0ae04sm61614265e9.33.2024.11.15.11.02.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 Nov 2024 11:02:40 -0800 (PST)
-Message-ID: <397bc8b7-b569-4726-984a-46054d6b5950@gmail.com>
-Date: Fri, 15 Nov 2024 19:03:28 +0000
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CD2liQ+H"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1731702302;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0KsHqtevqi94k/wuH1AavMKuBodzdw49pCdawJi5eRo=;
+	b=CD2liQ+Hz+ObqVg2JQxmUPdrzlvXoTfmgzLL0qu1spYznfQORT1B/FslMLp8Nsj6ltDpQ+
+	56aGhBUr4N9yT8QQWjv9AulhgRheiiY7LFhei1IISF4tcuYam0v0u8OS+UOX05IIvEyuht
+	iUscVfDuGqlkDIplc5jvqd76ThYLLxI=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-278-aEFVChi2OyCcVrsWQ4YEyg-1; Fri,
+ 15 Nov 2024 15:24:59 -0500
+X-MC-Unique: aEFVChi2OyCcVrsWQ4YEyg-1
+X-Mimecast-MFC-AGG-ID: aEFVChi2OyCcVrsWQ4YEyg
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 251F019560BE;
+	Fri, 15 Nov 2024 20:24:58 +0000 (UTC)
+Received: from [10.22.81.39] (unknown [10.22.81.39])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 18BE71956054;
+	Fri, 15 Nov 2024 20:24:54 +0000 (UTC)
+Message-ID: <5cc6e84b-9811-4a86-acc4-1cfec169c6b1@redhat.com>
+Date: Fri, 15 Nov 2024 15:24:54 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,82 +51,41 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
- and PI support
-To: Christoph Hellwig <hch@lst.de>
-Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org,
- martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
- jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
- gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-References: <20241114104517.51726-1-anuj20.g@samsung.com>
- <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
- <20241114104517.51726-7-anuj20.g@samsung.com> <20241114121632.GA3382@lst.de>
- <3fa101c9-1b38-426d-9d7c-8ed488035d4a@gmail.com>
- <20241114151921.GA28206@lst.de>
- <f945c1fc-2206-45fe-8e83-ebe332a84cb5@gmail.com>
- <20241115171205.GA23990@lst.de>
+Subject: Re: DMMP request-queue vs. BiO
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>,
+ Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+ snitzer@kernel.org, Ming Lei <minlei@redhat.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>,
+ Jonathan Brassow <jbrassow@redhat.com>, Ewan Milne <emilne@redhat.com>,
+ bmarson@redhat.com, Jeff Moyer <jmoyer@redhat.com>,
+ "spetrovi@redhat.com" <spetrovi@redhat.com>, Rob Evers <revers@redhat.com>
+References: <2d5fe016-2941-43a4-8b7c-850b8ee1d6ce@redhat.com>
+ <20241104073547.GA20614@lst.de>
+ <d9733713-eb7b-4efa-ad6b-e6b41d1df93b@suse.de> <20241105103307.GA1385@lst.de>
+ <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com>
+ <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
 Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <20241115171205.GA23990@lst.de>
+From: John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On 11/15/24 17:12, Christoph Hellwig wrote:
-> On Fri, Nov 15, 2024 at 04:40:58PM +0000, Pavel Begunkov wrote:
->>> So?  If we have a strong enough requirement for something else we
->>> can triviall add another opcode.  Maybe we should just add different
->>> opcodes for read/write with metadata so that folks don't freak out
->>> about this?
->>
->> IMHO, PI is not so special to have a special opcode for it unlike
->> some more generic read/write with meta / attributes, but that one
->> would have same questions.
+On 11/15/24 09:05, Mikulas Patocka wrote:
+> I suggest to use some real-world workload - you can use something that you
+> already use to verify the performance of RHEL.
 > 
-> Well, apparently is one the hand hand not general enough that you
-> don't want to give it SQE128 space, but you also don't want to give
-> it an opcode.
+> The problem with fio is that it generates I/O at random locations, so
+> there is no bio merging possible, so it will show just the IOPS value of
+> the underlying storage device.
 
-Not like there are no other options. It can be user pointers,
-and now we have infra to optimise it if copy_from_user is
-expensive.
+OK. That's the information was as looking for. So we'll be sure to run some real world workloads that hit the bio merging code 
+path.
 
-One thing that doesn't feel right is double indirection, i.e.
-a uptr into an array of pointers, at least if IIUC from a quick
-glance. I'll follow up on that.
+Thanks,
 
-> Maybe we just need make it uring_cmd to get out of these conflicting
-> requirements.
-> 
-> Just to make it clear: I'm not a huge fan of a separate opcode or
-> uring_cmd, but compared to the version in this patch it is much better.
-> 
->> PI as a special case. And that's more of a problem of the static
->> placing from previous version, e.g. it wouldn't be a problem if in the
->> long run it becomes sth like:
->>
->> struct attr attr, *p;
->>
->> if (flags & META_IN_USE_SQE128)
->> 	p = sqe + 1;
->> else {
->> 	copy_from_user(&attr);
->> 	p = &attr;
->> }
->>
->> but that shouldn't be PI specific.
-> 
-> Why would anyone not use the SQE128 version?
+/John
 
-!SQE128 with user pointer can easily be faster depending on the
-ratio of requests that use SQE128 and don't. E.g. one PI read
-following with a 100 of send/recv on average. copy_from_user
-is not _that_ expensive and we're talking about zeroing an
-extra never used afterwards cache line.
-
-Though the main reason would be when you pass 2+ different
-attributes and there is no space to put them in SQEs.
-
--- 
-Pavel Begunkov
