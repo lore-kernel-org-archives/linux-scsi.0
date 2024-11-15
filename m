@@ -1,38 +1,36 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54662136341;
-	Fri, 15 Nov 2024 17:09:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE9411D54D6;
+	Fri, 15 Nov 2024 17:12:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731690571; cv=none; b=GcuPEO+oWt+CaHVjxGug+cbpHfZYU8MNv+eRVB/S6GadZ784EL1gex3Gp7v/lxNQFIxegd+TIAD7wcFXSaKbV80JpDbFVYO1+WMrv9rEycSffljWek3HPOAv/msHoNx1gp6uQ4mLKAFykPdv0jCdivPlpoT6iGsVI5LdbpMbAsM=
+	t=1731690731; cv=none; b=p4QmbYXPVYWY2TMKAaQw/wt2flOBZ/hqW8VvKEw242NrTRgk8M4hDbiVTSKSV0Dz/ZDbZVqrQcX6snKJqmryB5MwdYD61tMbBeOPAng7Er0x/Q9YYMe22ezfHnH4QeIEfTLcAdC/nciHLBf1lUnriRMRlvVzMjgqEC1AAMZpWXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731690571; c=relaxed/simple;
-	bh=vrXlIM1xscozSL3RqPFyS8UPkhzcID1hKEXIpaO1Oe8=;
+	s=arc-20240116; t=1731690731; c=relaxed/simple;
+	bh=o0JniwdGM26ckI6rARVWzEW4E5UgWvCj7h4qvQEDMh4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dn2oVAYmyDnYZyeLhR6RXkWdRbwpSWAJiCJDK9vh4I/enU7krBstDAB64W0sqKZTeqM3iC8T/lI2kWV6Ar3UTbiNdYnvW4C+qRNykitGcuVBG4LIUcOb0LtN0d8G+F2Pr3msU7okkNmHlfgguWsxamlLSG/CooDuv9vSY1pbPIo=
+	 Content-Type:Content-Disposition:In-Reply-To; b=okUUthhkYM5ZYeZWgbgkgazrLlyQUzofqVgfLJ7Dxfqg/DOOq3WnEegVZN39/CrSu8yfrUl5NfXI+UWZmXHAdodUBt0uyyAMYQ06ZmRyClv6FlzdqBFKk4ylQOC6pNwxLSgOCDBM+3M37Q51tuwcYYQmfMCqoKgaaUNEHea5VwA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 278A768D0A; Fri, 15 Nov 2024 18:09:25 +0100 (CET)
-Date: Fri, 15 Nov 2024 18:09:24 +0100
+	id 644E668D12; Fri, 15 Nov 2024 18:12:05 +0100 (CET)
+Date: Fri, 15 Nov 2024 18:12:05 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: John Meneghini <jmeneghi@redhat.com>, linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-scsi@vger.kernel.org,
-	Chris Leech <cleech@redhat.com>, Hannes Reinecke <hare@suse.de>,
-	Christoph Hellwig <hch@lst.de>, snitzer@kernel.org,
-	Ming Lei <minlei@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Jonathan Brassow <jbrassow@redhat.com>,
-	Ewan Milne <emilne@redhat.com>, bmarson@redhat.com,
-	Jeff Moyer <jmoyer@redhat.com>,
-	"spetrovi@redhat.com" <spetrovi@redhat.com>,
-	Rob Evers <revers@redhat.com>
-Subject: Re: DMMP request-queue vs. BiO
-Message-ID: <20241115170924.GB23437@lst.de>
-References: <2d5fe016-2941-43a4-8b7c-850b8ee1d6ce@redhat.com> <20241104073547.GA20614@lst.de> <d9733713-eb7b-4efa-ad6b-e6b41d1df93b@suse.de> <20241105103307.GA1385@lst.de> <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com> <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
+To: Pavel Begunkov <asml.silence@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Anuj Gupta <anuj20.g@samsung.com>,
+	axboe@kernel.dk, kbusch@kernel.org, martin.petersen@oracle.com,
+	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
+	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
+	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
+ and PI support
+Message-ID: <20241115171205.GA23990@lst.de>
+References: <20241114104517.51726-1-anuj20.g@samsung.com> <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com> <20241114104517.51726-7-anuj20.g@samsung.com> <20241114121632.GA3382@lst.de> <3fa101c9-1b38-426d-9d7c-8ed488035d4a@gmail.com> <20241114151921.GA28206@lst.de> <f945c1fc-2206-45fe-8e83-ebe332a84cb5@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,25 +39,43 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
+In-Reply-To: <f945c1fc-2206-45fe-8e83-ebe332a84cb5@gmail.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Nov 15, 2024 at 03:05:21PM +0100, Mikulas Patocka wrote:
-> Note, that if a database uses buffered block device, performance will be 
-> suboptimal, because the buffering mechanism can't create large bios, it 
-> only sends page-sized bios. But that is expected to not be used - the 
-> database should either use a block device with direct I/O or a filesystem 
-> with or without direct I/O.
+On Fri, Nov 15, 2024 at 04:40:58PM +0000, Pavel Begunkov wrote:
+>> So?  If we have a strong enough requirement for something else we
+>> can triviall add another opcode.  Maybe we should just add different
+>> opcodes for read/write with metadata so that folks don't freak out
+>> about this?
+>
+> IMHO, PI is not so special to have a special opcode for it unlike
+> some more generic read/write with meta / attributes, but that one
+> would have same questions.
 
-And, as pointed out in the private mail that John forwarded to the list
-without my permission if we really have a workload that cares md could
-implement the plugging callback as done in md to operate on a batch
-of bios.
+Well, apparently is one the hand hand not general enough that you
+don't want to give it SQE128 space, but you also don't want to give
+it an opcode.
 
-Also not building large bios is not a fundamental property of block
-device writes but because it uses the legacy buffered head helpers.
-That means:
+Maybe we just need make it uring_cmd to get out of these conflicting
+requirements.
 
-  a) the same is applicable to file systems using them as well
-  b) can be fixed if someone cares enough, but apparently no one does
+Just to make it clear: I'm not a huge fan of a separate opcode or
+uring_cmd, but compared to the version in this patch it is much better.
+
+> PI as a special case. And that's more of a problem of the static
+> placing from previous version, e.g. it wouldn't be a problem if in the
+> long run it becomes sth like:
+>
+> struct attr attr, *p;
+>
+> if (flags & META_IN_USE_SQE128)
+> 	p = sqe + 1;
+> else {
+> 	copy_from_user(&attr);
+> 	p = &attr;
+> }
+>
+> but that shouldn't be PI specific.
+
+Why would anyone not use the SQE128 version?
 
