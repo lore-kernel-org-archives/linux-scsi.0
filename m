@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ED75CA5B
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 13:04:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6585F1B85D7
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 13:04:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731675862; cv=none; b=SBDneG3J2Sly+kSqFSe118KYN3cIBmMdCE6EirOLJL03vbKFuBDYpfEQngxSUHOCry967AwVI8J3FiwUsOfX7VS9XMYp7y6rwuxzrua9mTHgb80MIoMob74x8MxI6elc/pazLm7fiYpkDStE7tbPz7m8tt6Uq1q+fnnJhwq5Ndo=
+	t=1731675863; cv=none; b=E+jVPd8+Xmq+QrT+KXGOumVh2eykCbZ6kTOMBdQDcIiWpOh/r+jbYgvA3lNUvc1nyFeL/SckyJyv/s237XoJi20ZMSpjPXMj5dOdkPIjJ9dO4MEN9g1mHcZpV5bypb7cetE2o5PWHZsOLvz+Xbgb3/VHZCC2HlklyFQDK2PGVys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731675862; c=relaxed/simple;
-	bh=+1gzC6uZWQan/DnF0CabG9Qkq/CF0Ht96rvsQrF+XdM=;
+	s=arc-20240116; t=1731675863; c=relaxed/simple;
+	bh=SJWNeW96/OUcLB5RiNVKx+bCIbqf9O6RTxpq0bPmS3o=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pF4aEeJDxzYQj9xly+u1bBTUVsMnkcPUu3nrhpXW6vA484Cgq5ClU38FK02OkbMhq96wPdtXru4JKDtA3pv7KBd1d2O/3aZ0ZVAHNega8pzWfC6BHVZqBQz0XAj5xVW7/UqXjZENC9J0E76TzKVtBNMYeVB+xWAPBMs+Y0E2pYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=DQR4G8iB; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=q4Br2v0Vo4DMNKXV0eEoKi7hpqtBBS5PWkxS79/2qaFpB/u0De1MrmTpRsnp2pM0wqpcdKvZGDsql2Cvt2lg9xpNPJK6bJq1K75qh209LWMMPMdrgw/KFKoZZ5fWDoJx3UadcR9zyf77wn8+7bRkGvz1b/Z0kt6RmEZMD2lbUfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=gXaIUDGK; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="DQR4G8iB"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="gXaIUDGK"
 Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AF7YIBE011764;
-	Fri, 15 Nov 2024 05:04:19 -0800
+	by mx0b-0016f401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AF7YIBF011764;
+	Fri, 15 Nov 2024 05:04:20 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=Z
-	D/c2GCdicom9JNUhqK7dB6uGRKQXzt20Ft1PtiCJ5g=; b=DQR4G8iBmqCT9s0sn
-	SDPWgFiRm21yi6+XF/jZDedg/Hk0mA792klFv+LzudPpKffE56fxFswPwE4CNwQp
-	x5t1ZImpp+mbwbh2Zm72TirZtAfTVPemawI1VsShlrHOIDvHvChhjW92B3OzSk6F
-	KA78IfOhe7E0A0cIIRH6tU84jiGzcpwtXPKegFF2apc1/Ec3k8j7IjIlW5kKYCjm
-	5dURfH3/jEFGld7JcTdaRptArMULIonvn5ZPtXbLSyXhOtxkyk5fiNnGxNoJegkj
-	PN3s+MeF/GmTPRE+mfTqYDo9jqENfBys1Zj24seZXEXtK38gn1VgF33ZZ7vWowtI
-	27CjA==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=V
+	WVKT5KNW16dqg7KVLX/7XSqpRlQTg4xH9UgbeYk2qw=; b=gXaIUDGKQEGO9+Z7j
+	aNB8Vw9+GR4ELR4JZVj47v6ieeccudPNvHA65VLWWO3PSwnw+p6G/ZQ+c/oyXC90
+	dR8f7nhrCaUgZsVOv30FVJl4V72DHPLQOQsBHRUl0V38rEDjVEWoVG5cabwjGjrf
+	4lSu9ICmL2GVNzNI7cVDGxOV2ZC2Zta0Ra1fSceyVexU19i/c2Z3WVXQS1vB++7K
+	FUEsn17RqpUYZk3fFjlV84y5hCJ8qiqDZuG+HH+2Fxuo9xjNBzd/Vj0HqggVnUS9
+	2q+qoXLowq6j8wn/mMINqmbcnWg0edwjhPVekc2JICDN9IDg61csp4HCI0coL0Z0
+	GxmjQ==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 42x2128e95-3
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 42x2128e95-4
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Fri, 15 Nov 2024 05:04:19 -0800 (PST)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Fri, 15 Nov 2024 05:03:43 -0800
+ 15.2.1544.4; Fri, 15 Nov 2024 05:03:45 -0800
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
- Transport; Fri, 15 Nov 2024 05:03:43 -0800
+ Transport; Fri, 15 Nov 2024 05:03:45 -0800
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
-	by maili.marvell.com (Postfix) with ESMTP id F254D3F7075;
-	Fri, 15 Nov 2024 05:03:40 -0800 (PST)
+	by maili.marvell.com (Postfix) with ESMTP id 9B1053F708A;
+	Fri, 15 Nov 2024 05:03:43 -0800 (PST)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
         <jmeneghi@redhat.com>
-Subject: [PATCH 5/7] qla2xxx: Fix NVME and NPIV connect issue
-Date: Fri, 15 Nov 2024 18:33:11 +0530
-Message-ID: <20241115130313.46826-6-njavali@marvell.com>
+Subject: [PATCH 6/7] qla2xxx: Supported speed displayed incorrectly for VPorts
+Date: Fri, 15 Nov 2024 18:33:12 +0530
+Message-ID: <20241115130313.46826-7-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20241115130313.46826-1-njavali@marvell.com>
 References: <20241115130313.46826-1-njavali@marvell.com>
@@ -62,48 +62,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: frbKb_ViYtY_dOxtcykxJ9GPXpaNmH_z
-X-Proofpoint-ORIG-GUID: frbKb_ViYtY_dOxtcykxJ9GPXpaNmH_z
+X-Proofpoint-GUID: eqWs2LBczhSqLFq9ij6wP10u0qfg3AP0
+X-Proofpoint-ORIG-GUID: eqWs2LBczhSqLFq9ij6wP10u0qfg3AP0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
  definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
 
-From: Quinn Tran <qutran@marvell.com>
+From: Anil Gurumurthy <agurumurthy@marvell.com>
 
-NVME controller fails to send connect command due to failure to locate
-hw context buffer for NVME queue 0 (blk_mq_hw_ctx, hctx_idx=0). The cause
-of the issue is NPIV host did not initialize the vha->irq_offset field.
-This field is given to blk-mq (blk_mq_pci_map_queues) to help locate
-the beginning of IO Queues which in turn help locate NVME queue 0.
+The fc_function_template for vports was missing the
+.show_host_supported_speeds. The base port had the same.
 
-Initialize this field to allow NVME to work properly with NPIV host.
-
- kernel: nvme nvme5: Connect command failed, errno: -18
- kernel: nvme nvme5: qid 0: secure concatenation is not supported
- kernel: nvme nvme5: NVME-FC{5}: create_assoc failed, assoc_id 2e9100 ret 401
- kernel: nvme nvme5: NVME-FC{5}: reset: Reconnect attempt failed (401)
- kernel: nvme nvme5: NVME-FC{5}: Reconnect attempt in 2 seconds
+Add .show_host_supported_speeds to the vport template as well.
 
 Cc: stable@vger.kernel.org
-Fixes: f0783d43dde4 ("scsi: qla2xxx: Use correct number of vectors for online CPUs")
-Signed-off-by: Quinn Tran <qutran@marvell.com>
+Fixes: 2c3dfe3f6ad8 ("[SCSI] qla2xxx: add support for NPIV")
+Signed-off-by: Anil Gurumurthy <agurumurthy@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_mid.c | 1 +
+ drivers/scsi/qla2xxx/qla_attr.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 76703f2706b8..79879c4743e6 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -506,6 +506,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
- 		return(NULL);
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 2810608acd96..e6ece30c4348 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -3304,6 +3304,7 @@ struct fc_function_template qla2xxx_transport_vport_functions = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+ 	.show_host_supported_classes = 1,
++	.show_host_supported_speeds = 1,
  
-+	vha->irq_offset = QLA_BASE_VECTORS;
- 	host = vha->host;
- 	fc_vport->dd_data = vha;
- 	/* New host info */
+ 	.get_host_port_id = qla2x00_get_host_port_id,
+ 	.show_host_port_id = 1,
 -- 
 2.23.1
 
