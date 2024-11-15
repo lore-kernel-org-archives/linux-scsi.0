@@ -1,34 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 795E8213ED9;
-	Fri, 15 Nov 2024 21:26:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 198C1216A23;
+	Fri, 15 Nov 2024 21:26:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731706013; cv=none; b=EIzh7K0sit5MrJsI8E1Ziz1LgLSAK7GtAWGuFJd8tlPkTHZspVJKWJ0b4LEpBXZmBgW9mizM81D+UhS6i0b3XGXy8lu02zSK8evON9LJBlC3atJayhJ1E2hHYABw/JLw68FsxHU1PWZ/lJnLdeLTUylhdLEL8gqpM28CJX7V760=
+	t=1731706013; cv=none; b=RDIAUcV1Fie7Rf0SiXF0vv2fnf7FR6MvKHzOHbWkMWWJLRYjLPOivY1aQAsiySl8W9tqMMnUNWGxzc8VcNdrr3HK7aF6pUsH47u6XCpWLlQLU8fYVmQx8Pvr4Noyay+vUo9LbAMDcSglfZ1KvIKdE6kgeJzJA/jgDQBtm55lfLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731706013; c=relaxed/simple;
-	bh=rc9ZC19HIInirsSIXiQaedvTTkyvfoYETKmf3YmX0tI=;
+	bh=PGTKzE2OLedyrb1pEhlcviJeQ6l9AViRa7x8F6q0TSU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=c+7//HnSyFN0gET4oBOUIhALEdUYkiUXKw8ASXjjaYj71jQc7fDp0yTQCIZ1ARGJTNUC1DGMz+bxRZhJ6LH+p4BriqoPmcbRCRbMDesiVvHG0/CS4ikX5szIbmI8InYsfLMzJqAdVao467mwBhlqPNEDKvvXJ6g7/0F1JdyeqF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=eAVIrYLN; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=TbP+9UfhyqZLBDwsI64EnK2fdZC3IQ/YxdWn7TDmtJiC7r27RE3nRzbrCQ7I7BYqNVZ+0tBwXJ82RCVbvZrBoy1penNrfzCSlbjJxF1IammpGvB1mIccgBOq3HL/TFQgbctWaSURBFlh4+k+GFZgs5FIWg9wjN7kzNg9YF2TsiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=UMDCxiMF; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="eAVIrYLN"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="UMDCxiMF"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E651E23718AC;
-	Fri, 15 Nov 2024 13:26:43 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E651E23718AC
+	by linux.microsoft.com (Postfix) with ESMTPSA id 25F9B2064AE0;
+	Fri, 15 Nov 2024 13:26:45 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 25F9B2064AE0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1731706004;
-	bh=pCX0EpdqmyNkdZPLk4Z0q7m89NufhvHb1Y+2Mrmnnrk=;
+	s=default; t=1731706005;
+	bh=7RgevXzVOF2wd0QHaqg8sKSXBh3tNnxEZNLAJYHO4/0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=eAVIrYLNHkRW1opV+l10sI01k9fp5RPobV2nEm7OQtZTXvL1OZpViQrABNURt8i3R
-	 Lt5oz4EgCq0BgTDEpnRIgtHazGUHt44mhOWeQa6X66HXQwFE3odFdSj0nTsElRySJE
-	 uoqOVSbVkxhvj88d1jkAwyWIgOOXRrS//ir9JXro=
+	b=UMDCxiMFhqj3OlDob3LYx0iO5XeNyfLgAMK6ZmPOVPjyLP8LbvBk/4clux5a7IhZf
+	 SUaWunrnwv/PJO3csx5OWc8mNOgOiHWkD1xkNHfyawuJ/x53ffFQkcrJhZT2Q2aLBA
+	 ECLfhBVQizunL7YqKMclkNruWg4koe1sEVlXuTiY=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Fri, 15 Nov 2024 21:26:30 +0000
-Subject: [PATCH v2 13/21] xen/blkback: Convert timeouts to
- secs_to_jiffies()
+Date: Fri, 15 Nov 2024 21:26:35 +0000
+Subject: [PATCH v2 18/21] ceph: Convert timeouts to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +36,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241115-converge-secs-to-jiffies-v2-13-911fb7595e79@linux.microsoft.com>
+Message-Id: <20241115-converge-secs-to-jiffies-v2-18-911fb7595e79@linux.microsoft.com>
 References: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
 In-Reply-To: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -121,22 +120,22 @@ Changes made with the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/block/xen-blkback/blkback.c | 2 +-
+ fs/ceph/quota.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
-index 838064593f62b75f3d937c0c041ea78dedbbaf84..a7c2b04ab943de9cbd69b596aad177a0534f7762 100644
---- a/drivers/block/xen-blkback/blkback.c
-+++ b/drivers/block/xen-blkback/blkback.c
-@@ -544,7 +544,7 @@ static void print_stats(struct xen_blkif_ring *ring)
- 		 ring->st_rd_req, ring->st_wr_req,
- 		 ring->st_f_req, ring->st_ds_req,
- 		 ring->persistent_gnt_c, max_pgrants);
--	ring->st_print = jiffies + msecs_to_jiffies(10 * 1000);
-+	ring->st_print = jiffies + secs_to_jiffies(10);
- 	ring->st_rd_req = 0;
- 	ring->st_wr_req = 0;
- 	ring->st_oo_req = 0;
+diff --git a/fs/ceph/quota.c b/fs/ceph/quota.c
+index 06ee397e0c3a6172592e62dba95cd267cfff0db1..d90eda19bcc4618f98bfed833c10a6071cf2e2ac 100644
+--- a/fs/ceph/quota.c
++++ b/fs/ceph/quota.c
+@@ -166,7 +166,7 @@ static struct inode *lookup_quotarealm_inode(struct ceph_mds_client *mdsc,
+ 	if (IS_ERR(in)) {
+ 		doutc(cl, "Can't lookup inode %llx (err: %ld)\n", realm->ino,
+ 		      PTR_ERR(in));
+-		qri->timeout = jiffies + msecs_to_jiffies(60 * 1000); /* XXX */
++		qri->timeout = jiffies + secs_to_jiffies(60); /* XXX */
+ 	} else {
+ 		qri->timeout = 0;
+ 		qri->inode = in;
 
 -- 
 2.34.1
