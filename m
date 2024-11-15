@@ -1,40 +1,38 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5981BC069;
-	Fri, 15 Nov 2024 16:53:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54662136341;
+	Fri, 15 Nov 2024 17:09:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731689643; cv=none; b=TumnVHPonYDAE0yHFC6kw7//Yx2r7+UeOLDWfJTBS0x1kTGzZMpv+qDY8JdsfwxoxASHa4iy8/gejPSkD0dhG5+nneBQk+ESE022agxxvAxU+BR1izm+bYNFKVL53+XtKZwAUe83WgEKZEULVZuG7FSJ5pfyZlsodRNg44TkT9g=
+	t=1731690571; cv=none; b=GcuPEO+oWt+CaHVjxGug+cbpHfZYU8MNv+eRVB/S6GadZ784EL1gex3Gp7v/lxNQFIxegd+TIAD7wcFXSaKbV80JpDbFVYO1+WMrv9rEycSffljWek3HPOAv/msHoNx1gp6uQ4mLKAFykPdv0jCdivPlpoT6iGsVI5LdbpMbAsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731689643; c=relaxed/simple;
-	bh=yDXkpXU6/IAPVs2ZLps/GO7tZ5rNTL5loe+l0zKWTb0=;
+	s=arc-20240116; t=1731690571; c=relaxed/simple;
+	bh=vrXlIM1xscozSL3RqPFyS8UPkhzcID1hKEXIpaO1Oe8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y7Oo+wN38CVw/Mav1bXRmEaRGUA97Sy4vQcrv9NHtT+qdr3agJ1a+3Z50eM3M8AfJSXqsYWybjF4uGJX9B92KPPgCRdzENP82xthzplq2Gm/jHhDPowlGxmCjBl7mYvq+r7iRw5Q9uS645HKhrCl2t4IItDC9GXk1ay4FxybUwc=
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dn2oVAYmyDnYZyeLhR6RXkWdRbwpSWAJiCJDK9vh4I/enU7krBstDAB64W0sqKZTeqM3iC8T/lI2kWV6Ar3UTbiNdYnvW4C+qRNykitGcuVBG4LIUcOb0LtN0d8G+F2Pr3msU7okkNmHlfgguWsxamlLSG/CooDuv9vSY1pbPIo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8B41D67373; Fri, 15 Nov 2024 17:53:49 +0100 (CET)
-Date: Fri, 15 Nov 2024 17:53:48 +0100
+	id 278A768D0A; Fri, 15 Nov 2024 18:09:25 +0100 (CET)
+Date: Fri, 15 Nov 2024 18:09:24 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
-	Pierre Labat <plabat@micron.com>,
-	Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@meta.com>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-	"axboe@kernel.dk" <axboe@kernel.dk>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"asml.silence@gmail.com" <asml.silence@gmail.com>,
-	"javier.gonz@samsung.com" <javier.gonz@samsung.com>
-Subject: Re: [EXT] Re: [PATCHv11 0/9] write hints with nvme fdp and scsi
- streams
-Message-ID: <20241115165348.GA22628@lst.de>
-References: <CGME20241111103051epcas5p341a23ed677f2dfd6bc6d4e5c4826327b@epcas5p3.samsung.com> <20241111102914.GA27870@lst.de> <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com> <20241112133439.GA4164@lst.de> <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com> <DS0PR08MB854131CDA4CDDF2451CEB71DAB592@DS0PR08MB8541.namprd08.prod.outlook.com> <20241113044736.GA20212@lst.de> <ZzU7bZokkTN2s8qr@dread.disaster.area> <20241114060710.GA11169@lst.de> <Zzd2lfQURP70dAxu@kbusch-mbp>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: John Meneghini <jmeneghi@redhat.com>, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-scsi@vger.kernel.org,
+	Chris Leech <cleech@redhat.com>, Hannes Reinecke <hare@suse.de>,
+	Christoph Hellwig <hch@lst.de>, snitzer@kernel.org,
+	Ming Lei <minlei@redhat.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	Jonathan Brassow <jbrassow@redhat.com>,
+	Ewan Milne <emilne@redhat.com>, bmarson@redhat.com,
+	Jeff Moyer <jmoyer@redhat.com>,
+	"spetrovi@redhat.com" <spetrovi@redhat.com>,
+	Rob Evers <revers@redhat.com>
+Subject: Re: DMMP request-queue vs. BiO
+Message-ID: <20241115170924.GB23437@lst.de>
+References: <2d5fe016-2941-43a4-8b7c-850b8ee1d6ce@redhat.com> <20241104073547.GA20614@lst.de> <d9733713-eb7b-4efa-ad6b-e6b41d1df93b@suse.de> <20241105103307.GA1385@lst.de> <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com> <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -43,31 +41,25 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zzd2lfQURP70dAxu@kbusch-mbp>
+In-Reply-To: <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Nov 15, 2024 at 09:28:05AM -0700, Keith Busch wrote:
-> SSDs operates that way. FDP just reports more stuff because that's what
-> people kept asking for. But it doesn't require you fundamentally change
-> how you acces it. You've singled out FDP to force a sequential write
-> requirement that that requires unique support from every filesystem
-> despite the feature not needing that.
+On Fri, Nov 15, 2024 at 03:05:21PM +0100, Mikulas Patocka wrote:
+> Note, that if a database uses buffered block device, performance will be 
+> suboptimal, because the buffering mechanism can't create large bios, it 
+> only sends page-sized bios. But that is expected to not be used - the 
+> database should either use a block device with direct I/O or a filesystem 
+> with or without direct I/O.
 
-No I haven't.  If you think so you are fundamentally misunderstanding
-what I'm saying.
+And, as pointed out in the private mail that John forwarded to the list
+without my permission if we really have a workload that cares md could
+implement the plugging callback as done in md to operate on a batch
+of bios.
 
-> We have demonstrated 40% reduction in write amplifcation from doing the
-> most simplist possible thing that doesn't require any filesystem or
-> kernel-user ABI changes at all. You might think that's not significant
-> enough to let people realize those gains without more invasive block
-> stack changes, but you may not buying NAND in bulk if that's the case.
+Also not building large bios is not a fundamental property of block
+device writes but because it uses the legacy buffered head helpers.
+That means:
 
-And as iterared multiple times you are doing that by bypassing the
-file system layer in a forceful way that breaks all abstractions and
-makes your feature unavailabe for file systems.
+  a) the same is applicable to file systems using them as well
+  b) can be fixed if someone cares enough, but apparently no one does
 
-I've also thrown your a nugget by first explaining and then even writing
-protype code to show how you get what you want while using the proper
-abstractions.  But instead of a picking up on that you just whine like
-this.  Either spend a little bit of effort to actually get the interface
-right or just shut up.
