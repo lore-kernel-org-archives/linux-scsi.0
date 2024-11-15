@@ -1,144 +1,83 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36CB31CD210
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 14:05:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5051D45FB
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 14:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731679538; cv=none; b=Yh+j5R9MPT03mB3ySOtcW9blGVEx25ChuzsyfClIyOjvI3nOifn5NGNrmrkrgYyYf/VEeTsSwaFmHvrCyiNmrCfVP+g7/5C5F/+3VdcmI881OucoVO5rNqMSTsErLED48VbV2bI1caRUBeSc2msYGP9wiDWAxOLor+vOANOQcKw=
+	t=1731682727; cv=none; b=clTngfsduG/14NajVg56s/MsG7eiYxfXgiaiER+moMBbpEncFVAAbgfflfOGm/6iouTvwH8axfktJDMOpeP+dmKvOJzYzKS32cbwUyQ02MaFD3LjMdqf5rywIERgdj//7mBEo6TWOmvyIKs50a5xKvjz9xawQl3q9Pc7jT7+LUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731679538; c=relaxed/simple;
-	bh=K8vgzXowzXEa0GP4N0CidBWM7T8OysqQyHlH3YDyDp0=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=GzOEg+zO4mo0errOTPrOONkzdEP+SfDkD1T2cvKlnd+O4ApkwOvV9GSFkKk99kg27CAqNK3+/Qs6EgaJaJ7em0OgXSpjA639g4ZQ/Tjsw74+/UujiGisTkIc/02Goe24TBrLQ/zIWEU/6ANBFfwzGFpCeNpOYiTum7j7da5AkIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Wxl8xQ8Y; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1731682727; c=relaxed/simple;
+	bh=h6FPb6APcZinVuPfA9vqcx7VeGZpXNlSUGLGgaVY24c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=C+2qbQKnWIJa+exeqQ1qoF5qPy24W5bonrivcPyicV6ytXECyobcPCyF+PwD+mie3yhESXGhwoVKTOPdtMtbJVZF6SL6NYaqaUYHFU1UI5nrISkADdShKOLpqnkFKkuJjS6vG+3UIvBmjPzOiwsSCw/LJCBFWScadPVlThzi39s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QNwHAah9; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Wxl8xQ8Y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1731679536;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=j6HJrV9/5j/i/D0uhM8oJMZ+ivXjUPSmntpb+sO46M4=;
-	b=Wxl8xQ8YMwwGuXyaYDGN4X0VLK7HFHuRhXCz7Y85C+R96pTLBQasSfnL9qFLCuxm0TeVkw
-	k4N4WQjbav2zwfKleYNcKRLfmCRTwdmbpRnYcynqLkHkbChPAVr57rc1snTlg9Vs+nqj+H
-	sT/GuNX9+9cvcOjP9+URQHdSlGInfBM=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-685-nYk_OlM4MpK0DBFPOKVWXQ-1; Fri,
- 15 Nov 2024 09:05:33 -0500
-X-MC-Unique: nYk_OlM4MpK0DBFPOKVWXQ-1
-X-Mimecast-MFC-AGG-ID: nYk_OlM4MpK0DBFPOKVWXQ
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AED0419560BD;
-	Fri, 15 Nov 2024 14:05:31 +0000 (UTC)
-Received: from [10.45.225.96] (unknown [10.45.225.96])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7DEAC19560A3;
-	Fri, 15 Nov 2024 14:05:26 +0000 (UTC)
-Date: Fri, 15 Nov 2024 15:05:21 +0100 (CET)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: John Meneghini <jmeneghi@redhat.com>
-cc: linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
-    linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>, 
-    Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, 
-    snitzer@kernel.org, Ming Lei <minlei@redhat.com>, 
-    Benjamin Marzinski <bmarzins@redhat.com>, 
-    Jonathan Brassow <jbrassow@redhat.com>, Ewan Milne <emilne@redhat.com>, 
-    bmarson@redhat.com, Jeff Moyer <jmoyer@redhat.com>, 
-    "spetrovi@redhat.com" <spetrovi@redhat.com>, Rob Evers <revers@redhat.com>
-Subject: Re: DMMP request-queue vs. BiO
-In-Reply-To: <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com>
-Message-ID: <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com>
-References: <2d5fe016-2941-43a4-8b7c-850b8ee1d6ce@redhat.com> <20241104073547.GA20614@lst.de> <d9733713-eb7b-4efa-ad6b-e6b41d1df93b@suse.de> <20241105103307.GA1385@lst.de> <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QNwHAah9"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-43162cf1eaaso20542715e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 06:58:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1731682724; x=1732287524; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hYkpZrokgShRwnHNQLjF7bON9JaGTh89ekPw+/x3nnU=;
+        b=QNwHAah9kVP/sNWU2STq7VkRoxkVXZGamU4WS7yQaeEw0/N8qUQr+JIqDhCJhVZ1id
+         9xG79YRtEyqQvAQUIXY5nBdzEYkRQM7AqKu18ysWkT12f+UQG5HSQfpnQc69vndDDPKt
+         WeqCCype31IP+ncWSd/jU4WCSBB7aHUcpj/cKpjPHbj3cB3vYypmq3UK3VIu2ZvZiW0p
+         zVmgwJ4UG+udSvuWgB/BnDZvqYA4jvVUKQdrgsLY4AXVCjrJ4iNJCKtzJvRF0uMIxg86
+         KatdWl/Ue/sa1HJZjauPgrE8pRJQn5QwT0mHSyetNys9nITJDQCeexQf7HGlQJ8STiAZ
+         MTiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731682724; x=1732287524;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hYkpZrokgShRwnHNQLjF7bON9JaGTh89ekPw+/x3nnU=;
+        b=VLSXlsUo2Gx9g6uwMCbuK46sQwohyACsr6ZHawApUQI2+zTYNuMQ45z3ESk3tC2V8/
+         2NO0kv9Sr2t04mjeY0Pfbpos/tMp9Sq6ntnGz+RTvU51a/AhSN9F1rkAmrgBfqKLo5vc
+         ObFIeW3gVU13zsrHfagzgit8+IcbGqVXGVVZ8fZlCe+YSzzB57dGF+dc3ZDOvou3fMgq
+         wceiKe5cnYNt/wC4FuxOnEaqLMhtWRVG5TBjWMvsGfIe3EqoeB8GlpdnldCGT0p9gh5b
+         C30UDKQuw5wv/Ok/5rr49Y2/eo6qJHBS+pemIogt2bHU6NroJleclKJLehFq0/J/orfy
+         +5BA==
+X-Forwarded-Encrypted: i=1; AJvYcCWLX1tENLD+q7IceV0/uZBYB0ucapfdU/HGTQ6CAkMOnB+8N410o0NBjLxeuOsJ/8gX73cbEMljoNOg@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBiEM0zSX2V5MTIUlKTMp6jWLfj9BFLt1S6FPyyzGXP4wzBY4/
+	wTLMfJ2UaXE5pXeMKZJamjkZesq1xI/W5WocVai+krFUAWHbKG5kxojFegMCUw==
+X-Google-Smtp-Source: AGHT+IF6n8Bg8dTBUu+QXMNFufC2/aYfVxkB6nJmnv7n+YroB5FKTPnPAnvS6Zdh3SLH4VxoPghK5w==
+X-Received: by 2002:a05:600c:1ca9:b0:431:557e:b40c with SMTP id 5b1f17b1804b1-432df7937bcmr27028745e9.27.1731682724126;
+        Fri, 15 Nov 2024 06:58:44 -0800 (PST)
+Received: from localhost (88.140.78.34.bc.googleusercontent.com. [34.78.140.88])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432da27fc8esm60957785e9.21.2024.11.15.06.58.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 Nov 2024 06:58:43 -0800 (PST)
+Date: Fri, 15 Nov 2024 14:58:39 +0000
+From: Aleksei Vetrov <vvvvvv@google.com>
+To: Xiaosen He <quic_xiaosenh@quicinc.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, quic_jianzhou@quicinc.com,
+	quic_cang@quicinc.com
+Subject: Re: [PATCH v3] scsi: use unsigned int variables to parse partition
+ table
+Message-ID: <Zzdhn7aIR250WgVr@google.com>
+References: <20241115030303.2473414-1-quic_xiaosenh@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241115030303.2473414-1-quic_xiaosenh@quicinc.com>
 
-Hi
-
-
-On Thu, 7 Nov 2024, John Meneghini wrote:
-
-> I've been asked to move this conversation to a public thread on the upstream
-> email distros.
+On Thu, Nov 14, 2024 at 07:03:03PM -0800, Xiaosen He wrote:
+> signed integer overflow happened in the following multiplication,
+> ext_cyl*(end_head+1)*end_sector = 0x41040*(0xff+1)*0x3f = 0xffffc000,
+> the overflow was caught by UBSAN and caused crash to the system,
+> use unsigned int instead of signed int to avoid integer overflow.
 > 
-> Background:
-> 
-> At ALPSS last month (Sept. 2024) Hannes and Christoph spoke with Chris and I
-> about how they'd like to remove the request-interface from DMMP and asked if
-> Red Hat would be willing to help out by running some DMMP/Bio vs. DMMP/req
-> performance tests and share the results.The idea was: with some of the recent
-> performance improvements in the BIO path upstream we believe there may not be
-> much of a performance difference between these two code paths and would like
-> Red Hat's help in demonstrating that.
-> 
-> So Chris and I returned to Red Hat and broached this subject here internally.
-> The Red Hat performance team has agreed to work work with us on an ad hoc
-> basis to do this and we've made some preliminary plans to build a test bed
-> that can used to do some performance tests with DMMP on an upstream kernel
-> using iSCSI and FCP. Then we talked to the DMMP guys about it. They have some
-> questions and asked me discuss this topic in an email thread on linux-scsi,
-> linux-block and dm-devel.
-> 
-> Some questions are:
-> 
-> What are the exact patches which make us think the BIO path is now performant?
-
-There are too many changes that help increasing bio size, so it's not 
-possible to pick one or a few patches.
-
-> Is it Ming's immutable bvecs and moving the splitting down to the driver?
-
-Yes, splitting bios at the driver helps.
-
-Folios also help with using larger bio size.
-
-> I've been told these changes are only applicable if a filesystem is involved.
-> Databases can make direct use of the dmmp device, so late bio splitting not
-> applicable for them. It is filesystems that are building larger bios. See the
-> comments from Hannes and Christoph below.
-
-Databases should use direct I/O and with direct I/O, they can generate as 
-big bios as they want.
-
-Note, that if a database uses buffered block device, performance will be 
-suboptimal, because the buffering mechanism can't create large bios, it 
-only sends page-sized bios. But that is expected to not be used - the 
-database should either use a block device with direct I/O or a filesystem 
-with or without direct I/O.
-
-> I think Red Hat can help out with the performance testing but we will need to
-> answer some of these questions. It will also be important to determine exactly
-> what kind of workload we should use with any DMMP performance tests. Will a
-> simple workload generated with fio work, or do we need to test some actual
-> data base work loads as well?
-
-I suggest to use some real-world workload - you can use something that you 
-already use to verify the performance of RHEL.
-
-The problem with fio is that it generates I/O at random locations, so 
-there is no bio merging possible, so it will show just the IOPS value of 
-the underlying storage device.
-
-> Please reply to this public thread with your thoughts and ideas.
-> 
-> Thanks,
-> 
-> John A. Meneghini
-> Senior Principal Platform Storage Engineer
-> RHEL SST - Platform Storage Group
-> jmeneghi@redhat.com
-
-Mikulas
+> Signed-off-by: Xiaosen He <quic_xiaosenh@quicinc.com>
+> Signed-off-by: Jian Zhou <quic_jianzhou@quicinc.com>
+Reviewed-by: Aleksei Vetrov <vvvvvv@google.com>
 
