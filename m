@@ -1,110 +1,101 @@
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7931D61A3
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 17:45:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8587E188A3A
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 17:45:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731692703; cv=none; b=HnU3TCt3TtFOcOORvu9ChCeeW5SqJGbPlQgoxOPjeuzQb9/bWjFE7TUDTnJGwMkAIMaxiwT1rvvsG8i36VdI0zhULaR+tBWvGdKHSKadEYp3N72BncpoUUSP8jRvDLcvMJ+Iax2lJuHi8R/msVYdaaLM1az+Ns0SLhZQYNbFXBk=
+	t=1731692750; cv=none; b=PEP4Tqcqq+AicyRzPoy+XbYASjd/LiVrx3cI9//BlkhQDC0JM1O9SA/Fypny61kwByVUMKolLCMga0RfL4HXFx8/1IYtoIYU5IJJVqUuLtFaQklHbthHuwA3wSqc0THTz51qcknhSVuuP9DJpW2uvRPLb7rhHptSybSv/+rvT3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731692703; c=relaxed/simple;
-	bh=xqENlfIbZ6oxYGPT3ENwgUPz7q+WvgG+QMg5G0GrWJg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hv+ERfXFYjiLL1VSIoZ+FtkM+xkBsirWuL9KbbLCX7B+QQjs0Z0ZJUS00skXMDjKh98xN04750XSzOztyPebRi6o3P2GaoldD/6WXpgL4ItyLQDu7JEzWSiX1LPNmad3AMgfWQThb+x1HISM0O1EnIEFZgrMotxtk9kZppSUkpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=vBAo++Yz; arc=none smtp.client-ip=209.85.167.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1731692750; c=relaxed/simple;
+	bh=w9hlLDF7xjpkQYRDcwkIB9eEkGYh8j+aLYB/SU13+7Y=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=YyOn+Wrp0fblGT39q1QH91Hb268QozqwOERipLQHE/DKM3ULohObH9sjMUbxrN4YtXPIco07Lfif8I+h+FCRHofGg4qWERsarGFvcirtRbkYGibEJTYvXMxkhwcjtH/E/tb96mlyh9K92vA6VzlAYDXetmG3FFEmu+AeCp2lpcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=eh2JMG5Q; arc=none smtp.client-ip=62.142.5.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="vBAo++Yz"
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-3e60f6ea262so1032732b6e.1
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Nov 2024 09:45:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="eh2JMG5Q"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1731692700; x=1732297500; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GX5wJ6oLxec3STDa1FVtfsmqMbzKtWScheytSQkT1U8=;
-        b=vBAo++Yzi2hDov/7+u0KWx6DifVjZDKRweV1NSDXXlfOAglgIZwxXj8Rttz1OgbpNH
-         Qwy58xHUTEXJurOnc4tY67CioMNZwfjT5HmY8Hw9ZZVumaUGZBeQuFS+ZP9sA6kGemql
-         OJ15Mn4WEJORwJVSLTSr3vsoxRDw0p1g4tCxTya+pmQ3mqNOD9G25XXad6gcOVyTKNav
-         T0sSk7AvxB3OQb9wjU0ybdXXfTKkwsdY7AD9uFx2Y8wZNwgoH1FJdr74/lBpCDOl2NLu
-         Y9Q5h9pIIq6hzvGgHk992fqL4SeA+QdUUEqxwCQk/IlG2wP0TWAmwSwtdOX8hs/81Jtw
-         qIrA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731692700; x=1732297500;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GX5wJ6oLxec3STDa1FVtfsmqMbzKtWScheytSQkT1U8=;
-        b=Of2OLovtiLr0L9tL6thEv21OkgmbynWwgzNlsCPKO5xwNm0gsAEkX4MiI5aR1pbjBW
-         ec9XVqG6DpgjK/SAtxdUqygol3xXJ6HuoZXE+dhfUqJFxYu5SM/tHCH8V3QXX5CLKnG0
-         ZJIRMDfyNN+55S2/2TPjUW+t33cWliVgvd2ql25mIq4sJmL4eR9oGD87OkUWkZiDEdzc
-         A7WwjG6KDqdGjywepytcbycW4GD5kO5iogaz5q2pRgvWHjaEkKki4d0L2AjV4/I3qcgL
-         wAJP1Cecpv5G700X09baK6KoTed3BwVy4YEfSeyIwxVrnftAOKmrv5afMtXzLvPBtgd/
-         cjkw==
-X-Forwarded-Encrypted: i=1; AJvYcCW4nU367va2O0+ck3fM+SilPEBvHdY5cxSesRZI7HRmBanDYTk2I6UFtNx+Y2QUDnwyE0SxviW5bGUd@vger.kernel.org
-X-Gm-Message-State: AOJu0YxiirdeZ4kkbVktbTzJlMY0JZpBUuacfREuuc/qxXuXIFQu//H5
-	npABf94gQb372WWqAKOAZS94cSlNgEUuEXY2y8OmBtArYUw6qnW6K/jXD204Zoo=
-X-Google-Smtp-Source: AGHT+IE7u0RxmsRL3LQWgWu6xddXzAE9XDdBJ1jPG6HxqNvh9lsaMK0XyjGjnH4cynjuaCDt1FSOiA==
-X-Received: by 2002:a05:6808:4401:b0:3e7:c366:d17f with SMTP id 5614622812f47-3e7c366d358mr1389370b6e.38.1731692700454;
-        Fri, 15 Nov 2024 09:45:00 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-3e7bcd12fbasm661744b6e.21.2024.11.15.09.44.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 Nov 2024 09:44:59 -0800 (PST)
-Message-ID: <97b3061c-430d-4fc0-9b62-ab830010568e@kernel.dk>
-Date: Fri, 15 Nov 2024 10:44:58 -0700
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=w9hlLDF7xjpkQYRDcwkIB9eEkGYh8j+aLYB/SU13+7Y=;
+	b=eh2JMG5Q4LiQIo98SLWM0fSoXb2r6P/+eloVIpEmAnA4mQEJRc6PAsxLJxfGdcN/e5Swe2aca3msA
+	 Ky3dBdXngzbhZbeilz+sJEIwRHAnNgaBYiT2dUGaL29j6gzsEg2W0r8lZf8byJYL62wFZ2J5GOZkyY
+	 0RJHZ8UdzUYxyUZntwdOrVapCHnxQpquiOumynoufYfGRxzqIPr+FXoTzulltKN3BZZlL7BEItPLtx
+	 Xluyh8HcaYSViS/ILb+bzNakAMVChdKKmigmf5igGqr7uMDQHq+xvHchYjJApOfyh17T8o4aZmNBn4
+	 A3t/ArgX8rxUxCUkqHAHq1bjuMPdp3Q==
+Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
+	id 6faad07c-a379-11ef-8268-005056bdf889;
+	Fri, 15 Nov 2024 19:45:43 +0200 (EET)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
- and PI support
-To: Christoph Hellwig <hch@lst.de>, Pavel Begunkov <asml.silence@gmail.com>
-Cc: Anuj Gupta <anuj20.g@samsung.com>, kbusch@kernel.org,
- martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
- jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
- gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-References: <20241114104517.51726-1-anuj20.g@samsung.com>
- <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
- <20241114104517.51726-7-anuj20.g@samsung.com> <20241114121632.GA3382@lst.de>
- <3fa101c9-1b38-426d-9d7c-8ed488035d4a@gmail.com>
- <20241114151921.GA28206@lst.de>
- <f945c1fc-2206-45fe-8e83-ebe332a84cb5@gmail.com>
- <20241115171205.GA23990@lst.de>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20241115171205.GA23990@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
+Subject: Re: [PATCH 1/2] scsi: st: Remove use of device->was_reset
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20241115162003.3908-2-Kai.Makisara@kolumbus.fi>
+Date: Fri, 15 Nov 2024 19:45:33 +0200
+Cc: martin.petersen@oracle.com,
+ "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
+ loberman@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <7E2EA0D1-63ED-44A8-A12B-C9B78C28B0E5@kolumbus.fi>
+References: <20241115162003.3908-1-Kai.Makisara@kolumbus.fi>
+ <20241115162003.3908-2-Kai.Makisara@kolumbus.fi>
+To: linux-scsi@vger.kernel.org,
+ jmeneghi@redhat.com
+X-Mailer: Apple Mail (2.3826.200.121)
 
-On 11/15/24 10:12 AM, Christoph Hellwig wrote:
-> On Fri, Nov 15, 2024 at 04:40:58PM +0000, Pavel Begunkov wrote:
->>> So?  If we have a strong enough requirement for something else we
->>> can triviall add another opcode.  Maybe we should just add different
->>> opcodes for read/write with metadata so that folks don't freak out
->>> about this?
->>
->> IMHO, PI is not so special to have a special opcode for it unlike
->> some more generic read/write with meta / attributes, but that one
->> would have same questions.
-> 
-> Well, apparently is one the hand hand not general enough that you
-> don't want to give it SQE128 space, but you also don't want to give
-> it an opcode.
-> 
-> Maybe we just need make it uring_cmd to get out of these conflicting
-> requirements.
 
-Let's please lay off the hyperbole here, uring_cmd would be a terrible
-way to do this. We're working through the flags requirements. Obviously
-this is now missing 6.13, but there's no reason why it's not on track to
-make 6.14 in a saner way.
+> On 15. Nov 2024, at 18.20, Kai M=C3=A4kisara =
+<Kai.Makisara@kolumbus.fi> wrote:
+>=20
+> Don't use the was_reset flag set by scsi error handling. It is enough =
+to
+> recognize device resets based in the UNIT ATTENTION sense data. (The
+> retry counts are zero and either REQ_OP_DRV_OUT or REC_OP_DRV_IN are
+> used to prevent retries by midlevel.)
+>=20
 
--- 
-Jens Axboe
+Please hold this patch until the problem below has been solved.
+
+
+The following came into my mind when I looked at John's debugging data =
+he
+sent to linux-scsi today.
+
+I still think that UNIT ATTENTIONs (UAs) reach the high level device =
+without
+problems. The problem is that the device attached to the target first =
+issuing
+a SCSI command after reset gets the UA. As long as this is st device,
+there are no problems. But, if it is the sg device attached to the same =
+target,
+the tape device misses it.
+
+The device->was_reset flag stays set in many (most?) cases forever, =
+unless
+someone resets it. (Scsi_error resets it only if the associated kthread =
+ends
+up locking the device door.) Because the flag stays set, the st device =
+can
+notice it even if the sg device gets the UA.
+
+Using a flag set by an other layer is ugly (to put it mildly). Even =
+uglier is that
+st clears the flag when it has noticed that it is set.
+
+And there are cases where the device reset does not originate from the
+same computer.
+
+Does anyone have any suggestions?
+
