@@ -1,33 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 70BC9216421;
-	Fri, 15 Nov 2024 21:26:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 795E8213ED9;
+	Fri, 15 Nov 2024 21:26:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731706013; cv=none; b=Edojg5JCDRC4aFIDaFbJJogL1gtHDvJRwtabVGrbnN9zZ/klIgt/FrToOw0dbW0s68ItLsngU6/z79x+rmHR8ueW4TcxKx+Z/BzN8k7CILL7GT5A8fBFVgB6vm5FQbA9L8hnS+P4S5L6m7wUrSLsIwgo5rx6I6DcZz5lkeLcyA0=
+	t=1731706013; cv=none; b=EIzh7K0sit5MrJsI8E1Ziz1LgLSAK7GtAWGuFJd8tlPkTHZspVJKWJ0b4LEpBXZmBgW9mizM81D+UhS6i0b3XGXy8lu02zSK8evON9LJBlC3atJayhJ1E2hHYABw/JLw68FsxHU1PWZ/lJnLdeLTUylhdLEL8gqpM28CJX7V760=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731706013; c=relaxed/simple;
-	bh=ZxuWs+0v/Sd0Nuyk06qwYw5CknEKsfv2byFcGFvpDQI=;
+	bh=rc9ZC19HIInirsSIXiQaedvTTkyvfoYETKmf3YmX0tI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Ie3bLziOXsg23C+NeYUId22ghoaRRlcjQpqzmf7M83Pmq0mcHNq0T0DYu9/XHzUsCAsR1VQlzDvG3w5qmoPF7YGvlNgrZ7utlRn4OaghbtIu9qrbeXM3SH8cZUhF0po8pI86hxLOoadzY9G+p7pzmezakAXsv67g+lwhksvgH1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=OvSN4ExT; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=c+7//HnSyFN0gET4oBOUIhALEdUYkiUXKw8ASXjjaYj71jQc7fDp0yTQCIZ1ARGJTNUC1DGMz+bxRZhJ6LH+p4BriqoPmcbRCRbMDesiVvHG0/CS4ikX5szIbmI8InYsfLMzJqAdVao467mwBhlqPNEDKvvXJ6g7/0F1JdyeqF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=eAVIrYLN; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="OvSN4ExT"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="eAVIrYLN"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E068E2064AE1;
-	Fri, 15 Nov 2024 13:26:44 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E068E2064AE1
+	by linux.microsoft.com (Postfix) with ESMTPSA id E651E23718AC;
+	Fri, 15 Nov 2024 13:26:43 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E651E23718AC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1731706005;
-	bh=kyIMdoD81WSCHIuRs3t1IxAuP6vGJ5R59VD+r/6KKK0=;
+	s=default; t=1731706004;
+	bh=pCX0EpdqmyNkdZPLk4Z0q7m89NufhvHb1Y+2Mrmnnrk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=OvSN4ExTI3ztYwv8z22+okCfYqet5Vamjrrd8DLniE8bXBLrrqlExhm9XqqhqVQAv
-	 K9X4eAD6Lklhy7dtiZRCgteR1YNNFWOyXJy0qOlBw+SNmEx9GYlOniMke213AVuk1H
-	 UgCfCoB89XARJTc4CqTz96UEBf2hkM8Effwv9vsg=
+	b=eAVIrYLNHkRW1opV+l10sI01k9fp5RPobV2nEm7OQtZTXvL1OZpViQrABNURt8i3R
+	 Lt5oz4EgCq0BgTDEpnRIgtHazGUHt44mhOWeQa6X66HXQwFE3odFdSj0nTsElRySJE
+	 uoqOVSbVkxhvj88d1jkAwyWIgOOXRrS//ir9JXro=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Fri, 15 Nov 2024 21:26:34 +0000
-Subject: [PATCH v2 17/21] staging: vc04_services: Convert timeouts to
+Date: Fri, 15 Nov 2024 21:26:30 +0000
+Subject: [PATCH v2 13/21] xen/blkback: Convert timeouts to
  secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241115-converge-secs-to-jiffies-v2-17-911fb7595e79@linux.microsoft.com>
+Message-Id: <20241115-converge-secs-to-jiffies-v2-13-911fb7595e79@linux.microsoft.com>
 References: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
 In-Reply-To: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -121,22 +121,22 @@ Changes made with the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/staging/vc04_services/bcm2835-audio/bcm2835-vchiq.c | 2 +-
+ drivers/block/xen-blkback/blkback.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vc04_services/bcm2835-audio/bcm2835-vchiq.c b/drivers/staging/vc04_services/bcm2835-audio/bcm2835-vchiq.c
-index 133ed15f3dbcc07dc353c22d8522e11a08ee6f46..6bb2562e071c4e623e51852860c682e047f823df 100644
---- a/drivers/staging/vc04_services/bcm2835-audio/bcm2835-vchiq.c
-+++ b/drivers/staging/vc04_services/bcm2835-audio/bcm2835-vchiq.c
-@@ -59,7 +59,7 @@ static int bcm2835_audio_send_msg_locked(struct bcm2835_audio_instance *instance
- 
- 	if (wait) {
- 		if (!wait_for_completion_timeout(&instance->msg_avail_comp,
--						 msecs_to_jiffies(10 * 1000))) {
-+						 secs_to_jiffies(10))) {
- 			dev_err(instance->dev,
- 				"vchi message timeout, msg=%d\n", m->type);
- 			return -ETIMEDOUT;
+diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
+index 838064593f62b75f3d937c0c041ea78dedbbaf84..a7c2b04ab943de9cbd69b596aad177a0534f7762 100644
+--- a/drivers/block/xen-blkback/blkback.c
++++ b/drivers/block/xen-blkback/blkback.c
+@@ -544,7 +544,7 @@ static void print_stats(struct xen_blkif_ring *ring)
+ 		 ring->st_rd_req, ring->st_wr_req,
+ 		 ring->st_f_req, ring->st_ds_req,
+ 		 ring->persistent_gnt_c, max_pgrants);
+-	ring->st_print = jiffies + msecs_to_jiffies(10 * 1000);
++	ring->st_print = jiffies + secs_to_jiffies(10);
+ 	ring->st_rd_req = 0;
+ 	ring->st_wr_req = 0;
+ 	ring->st_oo_req = 0;
 
 -- 
 2.34.1
