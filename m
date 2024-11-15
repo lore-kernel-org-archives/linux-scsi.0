@@ -1,228 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F75C1E2847;
-	Fri, 15 Nov 2024 16:38:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F67818E047;
+	Fri, 15 Nov 2024 16:40:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731688693; cv=none; b=qVXuO4YlOciYw8EwcJ8ocGUPbLUd+QUtdlJqrVI2tO8kl11GjITX92xeyhgg6p/w58YLPvqeOusgDuvpnOTL6nJhLpTC6ROKpQBkmCxlezIFzOZjOBDs8xbGlbF1Y/xic8Y9zRbHaiSISkhfynQHxvy2QX1nACrOS6kmRkIJ+Fs=
+	t=1731688817; cv=none; b=YRaNFIkGJ0+Tk7qsp7ssBnAtUd0yOFdzO9NFSYr2vg6VDpDJ4CbrMSAeVveXj/iG6AT1t50Wmn5a5oKPnUt1P4q8FjV/jfNFgJe4wryZ3LuSyH47vauW3n2lJM/F6W9OSo8t8KsI3P+8g+RxGxWPXCSkMG00KNRufn9RS3TWN5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731688693; c=relaxed/simple;
-	bh=BgQfHLSyHthatLD+HxapCxTxAdxlPMnbJAVKOVCApgQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=LC3cK+/8FllR5uxvyA1MYs27KYUX2o58v6X/YZvBKmHVMqjduJ0WYvNTSckmBIW3R1vg9EHIqCL+XpPbnxLHYf+r4900ML1/hKkTdJnc6v9CLnUGolfwzZ4smQFA92riDbNIIfDvw0uYouO+HjbAHClyr+jkWXJ3gaeX1CZjMu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BBgurO4o; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731688817; c=relaxed/simple;
+	bh=BmfhvPfduMFTiOJCjUktn+SsqKJieOL4flGGbgausyU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eYvhV51o4UC3rceS1EnHghqpa49db4deWEpWzOX5hbpbgJanRlrXdaQh3+1a23CAJaodTAUiHnVzMwisY+tdsQDfkiray+BHYoErFq5IwQA/wMQOb/bfxwTBj0wIuE30mOO8OgSSY4ASk9VysFq3iaQbgW3uIIOg45N5R6aslRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aY0zZh6l; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BBgurO4o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D80BBC4CED0;
-	Fri, 15 Nov 2024 16:38:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731688693;
-	bh=BgQfHLSyHthatLD+HxapCxTxAdxlPMnbJAVKOVCApgQ=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=BBgurO4oDoZZvyVE2K9IUtvT5eb28xNBSFLyGZnyHNbDqeM31c4CpnbIkKYh9Z/BZ
-	 eNnRR/4XdrRFFbkUvYsbkTe6j2h/jkKWFnKJ+D32QYLKkGb1XGDyccQUuVq2MQUFua
-	 plfzORwa9Mu0wRZq0arljETGGXVbBRrVFVxY+z8IadXgWJ5Uo1ZVvi8aSkhUmysKj7
-	 7nQYg0jPOOYSA0QXJ1hvFMmVeefFQgmYYwiYYrA+QJTvPuQd7XBiJiB/WBDnYw4XJ2
-	 WRXFolCFlObPXgwUYtO4jhtjjXhQFF92fXGAHdY17cS722wFwE3lA0TPCIuLjEmU28
-	 JBcq0ARu8VtbQ==
-From: Daniel Wagner <wagi@kernel.org>
-Date: Fri, 15 Nov 2024 17:37:52 +0100
-Subject: [PATCH v5 8/8] blk-mq: remove unused queue mapping helpers
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aY0zZh6l"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-431616c23b5so11966535e9.0;
+        Fri, 15 Nov 2024 08:40:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1731688813; x=1732293613; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DU23KB9CDaJ/ylEjpMmh487mXVL8GrqTA9sTg8RR2Yo=;
+        b=aY0zZh6lPzbAP0UfSKpfhQi7JOcpf7+L9xPq1wuHHG0iKyxaW9H+0blBhFd3nbv+3Q
+         n8h3tvYyBFz2149Kq5LPFOEFTytl+q6CN/JNFJVAjsw55RjwIlozZdGbCgZp6YvbhZ2o
+         bAGmSYxrVjFdiTYOGZmlKgLWMAjRkojowQ11ReRifv4qLXfMGyzXVBYb/8cdc6k3DceO
+         yNLOMaBELAtrbXvQBRhHymDz8t5ZSed+x2qdCW6TlY2NBtyvEzzPqCDN8en9hyTe4ZA8
+         2OdQJcv2AgIu3WoX6NxX/wpUkfMNpFa/9AbXiuK+whKbvWAZqWLl2ZfdjchCrAgpGd0n
+         xmlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731688813; x=1732293613;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DU23KB9CDaJ/ylEjpMmh487mXVL8GrqTA9sTg8RR2Yo=;
+        b=l49oppnxZ1ED6eIYxETTZhD9sPNmOc61D14MWvMMkGbxWelFMEH1UHjeAeDSiwS6r1
+         MkNsTXvEDippXSluosA6sQKu9gBWQgce/yC35ZENEJMwJjHRyssesbnRE2inK/mcDMGu
+         FustgIt2x+NBV2GQjtM7IVq5wCIFUtRLYqyY4IR420U5giKen1HKH+nWhsdGpYxPBcHx
+         c7vOY9kUcj8m+lbvXFburiJQ7t/ZTqpQM4KRxaq2semWnS958MVhBctepn4tnNmoTzYb
+         eqqn/XXFx/34dAkasoa41Y39jsRuW38kdma05QBySG6iA61vmJM/7UPrzFdlvEtdDkaw
+         yhig==
+X-Forwarded-Encrypted: i=1; AJvYcCUTLzMQaTXquosvCovtG8T30UG3t4Js919qA0cp4AcjOGdzcZNibzGEFfB1EvJ5aBFH43TMc4DuS7fLC2U=@vger.kernel.org, AJvYcCUqIwlgdDWq6haN4ejBQfX3k8XvkMDDM4LZSTw5AftcVaOFKILeriNVty81aPSBVv7wM6rsXam3Jul81gqxfg==@vger.kernel.org, AJvYcCVIHU9OzPUhk+2gfEXsz6aMHLXbSb8zccSjrzzUUG3DR/gnbIon7OBrsbonhsj7AX5PhuOwNprSl028Qw==@vger.kernel.org, AJvYcCX7oj9rZCIXw6vm2RfbzMgN1CgILOea5jFVt8eBjpHjL9ssukcXSRFDBtlEtq90KSqcmc6nq0JFIw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6VjneEWDSMVy09+5L4wPo+7ovRynjOgx60+3RRK4N/XEGf3Xl
+	RBcxeEmddFc+m77Y2AtBNGw/m7oEgHizGvmudBSsZJQ/fqbzL2O1
+X-Google-Smtp-Source: AGHT+IGYcRrADCDs0VXLudCPmoKNK8uAFXXrZZvU0GlTfdTzpK46osYHhclfaK73bM6gmSYsQl5j7Q==
+X-Received: by 2002:a05:600c:3553:b0:431:405a:f93b with SMTP id 5b1f17b1804b1-432d9762473mr69603745e9.10.1731688813174;
+        Fri, 15 Nov 2024 08:40:13 -0800 (PST)
+Received: from [192.168.42.191] ([148.252.132.111])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432da265668sm61720245e9.10.2024.11.15.08.40.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 Nov 2024 08:40:12 -0800 (PST)
+Message-ID: <f945c1fc-2206-45fe-8e83-ebe332a84cb5@gmail.com>
+Date: Fri, 15 Nov 2024 16:40:58 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
+ and PI support
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org,
+ martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
+ jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+ gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+ linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+References: <20241114104517.51726-1-anuj20.g@samsung.com>
+ <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
+ <20241114104517.51726-7-anuj20.g@samsung.com> <20241114121632.GA3382@lst.de>
+ <3fa101c9-1b38-426d-9d7c-8ed488035d4a@gmail.com>
+ <20241114151921.GA28206@lst.de>
+Content-Language: en-US
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <20241114151921.GA28206@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241115-refactor-blk-affinity-helpers-v5-8-c472afd84d9f@kernel.org>
-References: <20241115-refactor-blk-affinity-helpers-v5-0-c472afd84d9f@kernel.org>
-In-Reply-To: <20241115-refactor-blk-affinity-helpers-v5-0-c472afd84d9f@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>, 
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
- Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
- =?utf-8?q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, John Garry <john.g.garry@oracle.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, virtualization@lists.linux.dev, 
- linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
- mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, 
- storagedev@microchip.com, linux-nvme@lists.infradead.org, 
- Daniel Wagner <wagi@kernel.org>
-X-Mailer: b4 0.14.2
 
-There are no users left of the pci and virtio queue mapping helpers.
-Thus remove them.
+On 11/14/24 15:19, Christoph Hellwig wrote:
+> On Thu, Nov 14, 2024 at 01:09:44PM +0000, Pavel Begunkov wrote:
+>>> Eww.  I know it's frustration for your if maintainers give contradicting
+>>> guidance, but this is really an awful interface.  Not only the pointless
+>>
+>> Because once you placed it at a fixed location nothing realistically
+>> will be able to reuse it. Not everyone will need PI, but the assumption
+>> that there will be more more additional types of attributes / parameters.
+> 
+> So?  If we have a strong enough requirement for something else we
+> can triviall add another opcode.  Maybe we should just add different
+> opcodes for read/write with metadata so that folks don't freak out
+> about this?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Daniel Wagner <wagi@kernel.org>
----
- block/Makefile                |  2 --
- block/blk-mq-pci.c            | 46 -------------------------------------------
- block/blk-mq-virtio.c         | 46 -------------------------------------------
- include/linux/blk-mq-pci.h    | 11 -----------
- include/linux/blk-mq-virtio.h | 11 -----------
- 5 files changed, 116 deletions(-)
+IMHO, PI is not so special to have a special opcode for it unlike
+some more generic read/write with meta / attributes, but that one
+would have same questions.
 
-diff --git a/block/Makefile b/block/Makefile
-index ddfd21c1a9ffc9c4f49efca9875bd8a1cbf81e4d..33748123710b368a1a3a7b099bbd90d27b24c69b 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -27,8 +27,6 @@ bfq-y				:= bfq-iosched.o bfq-wf2q.o bfq-cgroup.o
- obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
- 
- obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o t10-pi.o
--obj-$(CONFIG_BLK_MQ_PCI)	+= blk-mq-pci.o
--obj-$(CONFIG_BLK_MQ_VIRTIO)	+= blk-mq-virtio.o
- obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
- obj-$(CONFIG_BLK_WBT)		+= blk-wbt.o
- obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
-diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
-deleted file mode 100644
-index d47b5c73c9eb715be7627a2952ad0ef921dd5bc6..0000000000000000000000000000000000000000
---- a/block/blk-mq-pci.c
-+++ /dev/null
-@@ -1,46 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2016 Christoph Hellwig.
-- */
--#include <linux/kobject.h>
--#include <linux/blkdev.h>
--#include <linux/blk-mq-pci.h>
--#include <linux/pci.h>
--#include <linux/module.h>
--
--#include "blk-mq.h"
--
--/**
-- * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
-- * @qmap:	CPU to hardware queue map.
-- * @pdev:	PCI device associated with @set.
-- * @offset:	Offset to use for the pci irq vector
-- *
-- * This function assumes the PCI device @pdev has at least as many available
-- * interrupt vectors as @set has queues.  It will then query the vector
-- * corresponding to each queue for it's affinity mask and built queue mapping
-- * that maps a queue to the CPUs that have irq affinity for the corresponding
-- * vector.
-- */
--void blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
--			   int offset)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
--
--	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = pci_irq_get_affinity(pdev, queue + offset);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			qmap->mq_map[cpu] = qmap->queue_offset + queue;
--	}
--
--	return;
--
--fallback:
--	WARN_ON_ONCE(qmap->nr_queues > 1);
--	blk_mq_clear_mq_map(qmap);
--}
--EXPORT_SYMBOL_GPL(blk_mq_pci_map_queues);
-diff --git a/block/blk-mq-virtio.c b/block/blk-mq-virtio.c
-deleted file mode 100644
-index 68d0945c0b08a2be116125f46c3a56fcdb02aea8..0000000000000000000000000000000000000000
---- a/block/blk-mq-virtio.c
-+++ /dev/null
-@@ -1,46 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2016 Christoph Hellwig.
-- */
--#include <linux/device.h>
--#include <linux/blk-mq-virtio.h>
--#include <linux/virtio_config.h>
--#include <linux/module.h>
--#include "blk-mq.h"
--
--/**
-- * blk_mq_virtio_map_queues - provide a default queue mapping for virtio device
-- * @qmap:	CPU to hardware queue map.
-- * @vdev:	virtio device to provide a mapping for.
-- * @first_vec:	first interrupt vectors to use for queues (usually 0)
-- *
-- * This function assumes the virtio device @vdev has at least as many available
-- * interrupt vectors as @set has queues.  It will then query the vector
-- * corresponding to each queue for it's affinity mask and built queue mapping
-- * that maps a queue to the CPUs that have irq affinity for the corresponding
-- * vector.
-- */
--void blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
--		struct virtio_device *vdev, int first_vec)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
--
--	if (!vdev->config->get_vq_affinity)
--		goto fallback;
--
--	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = vdev->config->get_vq_affinity(vdev, first_vec + queue);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			qmap->mq_map[cpu] = qmap->queue_offset + queue;
--	}
--
--	return;
--
--fallback:
--	blk_mq_map_queues(qmap);
--}
--EXPORT_SYMBOL_GPL(blk_mq_virtio_map_queues);
-diff --git a/include/linux/blk-mq-pci.h b/include/linux/blk-mq-pci.h
-deleted file mode 100644
-index ca544e1d3508f34ab6e198b0bb17efe88de4d14d..0000000000000000000000000000000000000000
---- a/include/linux/blk-mq-pci.h
-+++ /dev/null
-@@ -1,11 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--#ifndef _LINUX_BLK_MQ_PCI_H
--#define _LINUX_BLK_MQ_PCI_H
--
--struct blk_mq_queue_map;
--struct pci_dev;
--
--void blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
--			   int offset);
--
--#endif /* _LINUX_BLK_MQ_PCI_H */
-diff --git a/include/linux/blk-mq-virtio.h b/include/linux/blk-mq-virtio.h
-deleted file mode 100644
-index 13226e9b22dd53e4289d506d49c52671de036ee8..0000000000000000000000000000000000000000
---- a/include/linux/blk-mq-virtio.h
-+++ /dev/null
-@@ -1,11 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--#ifndef _LINUX_BLK_MQ_VIRTIO_H
--#define _LINUX_BLK_MQ_VIRTIO_H
--
--struct blk_mq_queue_map;
--struct virtio_device;
--
--void blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
--		struct virtio_device *vdev, int first_vec);
--
--#endif /* _LINUX_BLK_MQ_VIRTIO_H */
+FWIW, the series was steered from the separate opcode approach to avoid
+duplicating things, for example there are 3 different OP_READ* opcodes
+varying by the buffer type, and there is no reason meta reads wouldn't
+want to support all of them as well. I have to admit that the effort is
+a bit unfortunate on that side switching back a forth at least a couple
+of times including attempts from 2+ years ago by some other guy.
+
+>> With SQE128 it's also a problem that now all SQEs are 128 bytes regardless
+>> of whether a particular request needs it or not, and the user will need
+>> to zero them for each request.
+> 
+> The user is not going to create a SQE128 ring unless they need to,
+> so this seem like a bit of an odd objection.
+
+It doesn't bring this overhead to those who don't use meta/PI, that's
+right, but it does add it if you want to mix it with nearly all other
+request types, and that is desirable.
+
+As I mentioned before, it's just one downside but not a deal breaker.
+I'm more concerned that the next type of meta information won't be
+able to fit into the SQE and then we'll need to solve the same problem
+(indirection + optimising copy_from_user with other means) while having
+PI as a special case. And that's more of a problem of the static
+placing from previous version, e.g. it wouldn't be a problem if in the
+long run it becomes sth like:
+
+struct attr attr, *p;
+
+if (flags & META_IN_USE_SQE128)
+	p = sqe + 1;
+else {
+	copy_from_user(&attr);
+	p = &attr;
+}
+
+but that shouldn't be PI specific.
 
 -- 
-2.47.0
-
+Pavel Begunkov
