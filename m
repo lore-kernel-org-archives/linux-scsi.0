@@ -1,33 +1,34 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 897991FA24D;
-	Fri, 15 Nov 2024 21:26:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 25DBA212168;
+	Fri, 15 Nov 2024 21:26:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731706009; cv=none; b=atUwSXc+kDZelKMRWULb8BogYPhjWOptk1WwaQJypGiwO5UynW7nnbYxA7zoLqQfmN5QDKxB2fe1kqk6uxiJdGyZwrAwOtrkJS7fCBK74cCqp8QBCkwmPJHrmkDjhgdmFdFYCYQUwoykKr9oBLVSXvlNY10dPyPSffwOTxDL0TQ=
+	t=1731706009; cv=none; b=q2tZWOnp0dQu+gsbIb1362bAbJ59pBMKYEKalSxUwPJlt+UHRy0o8BJfyGhNI6O+Ios9XFkF1R8HstLPPCNwsDK24svxdCcwOua1eAsXor2+lPxwkPNppj2zZfx9+Ex64z6QXzODD0bXTHCySr3ycrXz+MM1eBUpaGE/kxMK6Os=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1731706009; c=relaxed/simple;
-	bh=xJhUVlHCco4pWg4EFN1n4/t3XCL5N0nSeGjs+gygfLk=;
+	bh=4SpumHXknpIYt9G4ttwssygR7UqAZ0u9Xn2YxEQEGO4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=c2eonQfe8CengCRNQcvqxVdLeMhNtKYEr7q4v4ILkTHrqIeBgX94ccstQs9ILM0Q3hD2Hw443Kl5FDlvRoDyUuqUMqiIExUMlLYYb0yIxCXZvsEyU881rq4mbolqg/bu3Vryotcf3ULkib/l8/zL27Te2VWtERq3xDFnnvi/3zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=PLg1Ut3p; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=K9FN+C2BC7QYQKBOFw6VhwpLqnEfp7KLdvOHNEKIktPgu/vh3UkgPXG5Xpf33d3HY4Sd2KzFWvqjgSIvUSeWCZvbGzx823VBEBrgHTmlv7vfHQYLBZ6Jr30IjjAiX7QGVl6IhAlmLur5dDZDwdhgNp7fJQw9WsiyphoA/zvpc/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=p+FtT/4X; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="PLg1Ut3p"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="p+FtT/4X"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id D434E206BCFD;
-	Fri, 15 Nov 2024 13:26:42 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D434E206BCFD
+	by linux.microsoft.com (Postfix) with ESMTPSA id 7C145212B5B0;
+	Fri, 15 Nov 2024 13:26:43 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7C145212B5B0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1731706003;
-	bh=GmA2v8FrQkDc3PawrRu1NLBJUu3qRf/naCkvRhlPz0Q=;
+	bh=Dy1gfF2eVFD/Tcz72rvAOzLjHn7ysyv4CietmA0q798=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=PLg1Ut3pMX8AIAjCAjy4bw02khMtlTmOdJICyDZ1qYDkIIeJUIA/Jl8Ax7qK0nzXA
-	 69WpHciXaLS10XUYziHT/1hEXLH04lMhVot2lJeh/b4MNSDj4bBTIfL48/xVYbcOQX
-	 4FHRZuPnT+9sZJ5HuVZVrIr57njKWIxmoNEf7/uw=
+	b=p+FtT/4XQtszN++J1IXw9Qg9gEyc5H8E7fVGDQyv4rc8vpXVJrTKn1ZKVJgsHZbWP
+	 rjXuixLOb+i3KZKhonTBwFBpoEJxLum/RjHrON0Ke//ZO6XKQOf6fpWCnO2rTRIF8v
+	 YazfwYiTUNbn8bgQFWgiljV9mm+EMtTeilLEfIdI=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Fri, 15 Nov 2024 21:26:25 +0000
-Subject: [PATCH v2 08/21] drm/xe: Convert timeout to secs_to_jiffies()
+Date: Fri, 15 Nov 2024 21:26:28 +0000
+Subject: [PATCH v2 11/21] scsi: arcmsr: Convert timeouts to
+ secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241115-converge-secs-to-jiffies-v2-8-911fb7595e79@linux.microsoft.com>
+Message-Id: <20241115-converge-secs-to-jiffies-v2-11-911fb7595e79@linux.microsoft.com>
 References: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
 In-Reply-To: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -120,22 +121,22 @@ Changes made with the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/gpu/drm/xe/xe_device.c | 2 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/xe/xe_device.c b/drivers/gpu/drm/xe/xe_device.c
-index a1987b554a8d2aa42b29301f2853edddfda7fda5..bb3338ef4191e76128611eeb9531c9d2089db85a 100644
---- a/drivers/gpu/drm/xe/xe_device.c
-+++ b/drivers/gpu/drm/xe/xe_device.c
-@@ -502,7 +502,7 @@ static int wait_for_lmem_ready(struct xe_device *xe)
- 	drm_dbg(&xe->drm, "Waiting for lmem initialization\n");
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 35860c61468b02cdb59aa59376ad5ea9be60d12b..fd797e2785490839713f9242014f0adefccc6ddd 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1044,7 +1044,7 @@ static void arcmsr_init_get_devmap_timer(struct AdapterControlBlock *pacb)
+ static void arcmsr_init_set_datetime_timer(struct AdapterControlBlock *pacb)
+ {
+ 	timer_setup(&pacb->refresh_timer, arcmsr_set_iop_datetime, 0);
+-	pacb->refresh_timer.expires = jiffies + msecs_to_jiffies(60 * 1000);
++	pacb->refresh_timer.expires = jiffies + secs_to_jiffies(60);
+ 	add_timer(&pacb->refresh_timer);
+ }
  
- 	start = jiffies;
--	timeout = start + msecs_to_jiffies(60 * 1000); /* 60 sec! */
-+	timeout = start + secs_to_jiffies(60); /* 60 sec! */
- 
- 	do {
- 		if (signal_pending(current))
 
 -- 
 2.34.1
