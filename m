@@ -1,125 +1,194 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from smtp.smtpout.orange.fr (smtp-17.smtpout.orange.fr [80.12.242.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEB174A28;
-	Sat, 16 Nov 2024 00:31:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4802E18D625;
+	Sat, 16 Nov 2024 06:06:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731717102; cv=none; b=laK+jzGSedeabGi5mnhNYxQ8NN8oqQAAF5ZVZpXREc+XZPEpFvGv815OVfPkFAjhOhzXICMPuF4uHRlq1JZwqeLif4V2FMeB56hvfGb2pPleTTequpX6FX+hprC9C3l7FJqbdf+qhSb97xuBHAPbSmnynY/HbPZSFE7WtDXkwug=
+	t=1731737173; cv=none; b=MhxAwLJ2c1bpXvkXFyPUWLWbMk5H5y/haIGtdEYd4iQbAknb+GSEMQYasmbp78A3RjR1TsJS8jXUngAPyDURDY8Pk7ra7nm+Cs1Jz3ynDnGsIa5S5mYGkV7T2ivR44KEYdEB7TSMYVtTqMG0oQ2QpvNVj0t7nwxikF6VxcjDEl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731717102; c=relaxed/simple;
-	bh=f4Pzo65u6Rk2Do4nQXJFlQAYXXz1GhKN1oPw/UryO9o=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=p/CnX9IGgSXMuVPAzTufPKLpUxu4BOivZeaTYvm1xwgdYiASy8tXgE4hWoowqhHxxuTUZ859wjySsAdHZD7s2RmFTuhWo2AH2sWMef30t4WIeX3U1qxRMth+xTtL9UKW9QW1iSkJ0osHWakSoC8Xu4rh5P32f522qm5JYMeiOLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KaOgf+CO; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731737173; c=relaxed/simple;
+	bh=pH1vRRZ7ypbK8ig19ve8VTJ681CoPKnEt+e4Gii8zqE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=U5Xy6Fwq6+crFGvk27H3N5sGM046RWmreh5emx+b7pPCAl9NcnhggLl1ZJYsnJ1/RX2LhebezU6rBNhL5H5fP1SKd7QcdIkgh92pGJWHDDXrb8SQMfX2dXOlvZI9bBre535hjVqQ7MomH0oCUDkGS+a8+FD6dG5vhxMEF8n5uZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=mL98MjzV; arc=none smtp.client-ip=80.12.242.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KaOgf+CO"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4314f38d274so2379715e9.1;
-        Fri, 15 Nov 2024 16:31:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731717099; x=1732321899; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=wUiuDfFBuPq9wmtwULXkxzA4r3Jz1CPuc0lcmODYolg=;
-        b=KaOgf+COwM6BlRzjL2moXTiwudm3DbYGEViM/X+pKbcrqhmfwE1bZXRzHAbSDEWR2v
-         lhXLXzijY6SlK+hw3Ng4ipqsdvLP6D/QAMkyHQiFOEthgHD7LMLUVHHS7YRTRyJv73yz
-         p3o5aaDFFhctdo7RQu74QYShWOgD2gGWNxTEhCcMQmnGXJuMKuCeUWHSckyIvEfEOM/t
-         b1EqBSiwkz2150G8EsuBGYZbcJxWPIaSg9UT26kRRJ76se34HVGymjKImmW+RyqaD0i7
-         U0LuMzgyLu8bumNuRXjVCqUeOuxP1m1idG7xsOHXAXCnGeMesfOixLKajwT4Uanxxx8o
-         zypQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731717099; x=1732321899;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wUiuDfFBuPq9wmtwULXkxzA4r3Jz1CPuc0lcmODYolg=;
-        b=Mkq/N3dSHAWzdA24ubkKlW7Yqgetvn2q4uijSJfoiz0BniFCg4U3/2lA+814U4t3JV
-         ytNEFGc+4g29qKuOLy+Pj0SVtQobCOiqDpVEVX+YDYk24rBSvVtnR4B3SU0DP0RmggP8
-         t/iaWxJxyAvmZwtWKkRkSMKUv2SGq0eyS1vQiLqAc02RvpwqhTpYtbyGquSGlGuLRmEh
-         /oz/tRDIbgpi/xQjqkTtZ1usXVrxxojEDhNJtj1jsgEuyeszPVxfBuDhwu7lchZXou9r
-         4TCj3o7/pVyZyvMnIOsw+5DniQW7ocOHRsFRME+HOrCzDnjj+10ltH0VJMYY1TOMAGie
-         GIow==
-X-Forwarded-Encrypted: i=1; AJvYcCV1On2sJUe1VQJnc8x1zDPWr8OeXmZgkt2SlIRiUccTjRmjb98IVAbBHaxot+BYDcw85kvkHIUksBcktNFPCw==@vger.kernel.org, AJvYcCVZ/E5ggL7xHhAxJhqfvQuTNOjSDQrVIWeEwGETboGUrdLQ1TaO4LHlaDMv+uhrW+ZNX6dCApcsOykThQ==@vger.kernel.org, AJvYcCXjSfG3MnU5bt4Abxu+eQ2U2OlJTD4sJXC+kciM164zRbVDFZrwAEB8bDZW3N/G5zZeg++Od6giJjUD8A==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwcWu4u/dokRxwZrUOCZKsmT2mTWqtJQi9cfIzf8M9VQSvzmNPX
-	0LQDB0edA1CJyR6jGE8IDdMI78Sc44NudoQ2OSelbdoWO8ur1t8k
-X-Google-Smtp-Source: AGHT+IHP+NwuGsuzp6CwtW/eEH7kghS9fmgu7RXZGv2sSD+Jk9ssluc8g0aZVNHccATYYsWWJuTJhQ==
-X-Received: by 2002:a05:600c:45d1:b0:431:604d:b22 with SMTP id 5b1f17b1804b1-432df74fc6dmr51402325e9.16.1731717098903;
-        Fri, 15 Nov 2024 16:31:38 -0800 (PST)
-Received: from [192.168.42.251] ([148.252.132.111])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432da27f4f8sm72122775e9.18.2024.11.15.16.31.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 Nov 2024 16:31:38 -0800 (PST)
-Message-ID: <b61e1bfb-a410-4f5f-949d-a56f2d5f7791@gmail.com>
-Date: Sat, 16 Nov 2024 00:32:25 +0000
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="mL98MjzV"
+Received: from localhost.localdomain ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id CBwItlkEVyQmhCBwItrt0n; Sat, 16 Nov 2024 07:06:02 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1731737162;
+	bh=1GOO379j5kHelQgT13xeDCIW+pFPJCeiM7WSIuvag78=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=mL98MjzVZSShtzisX9zbjDjIb7KE72buAzIx9jorkgCEIlxacBGBiKDqnznYupede
+	 vEhaEvssP8Otw+abSwd4UipThVl5qw3v6w8RixuAXgrl/p9FBRiYmldRfZZljgK0OD
+	 FX0UB9px2S9OjhfpAHnQggpK1elWNH8UBNVIvO5x+AsAiYtyf4oGwInz8jFtqh7DDu
+	 OMNwG4GURPpChqfcVzLVhpacwz+NEqWf9xIvmwF/gxmCGy7nRrRkaf4TeGrlu6c0Ll
+	 o9NHONgP90fIf7c6ZsyFFLJ/v2i9NFywx5+jxHfxBiA3eBfpU5DKAu5obNXbrUQywu
+	 rI95zY+eQlUcg==
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sat, 16 Nov 2024 07:06:02 +0100
+X-ME-IP: 90.11.132.44
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: eahariha@linux.microsoft.com
+Cc: James.Bottomley@HansenPartnership.com,
+	Julia.Lawall@inria.fr,
+	agordeev@linux.ibm.com,
+	airlied@gmail.com,
+	akpm@linux-foundation.org,
+	andrew+netdev@lunn.ch,
+	anna-maria@linutronix.de,
+	ath11k@lists.infradead.org,
+	axboe@kernel.dk,
+	bcm-kernel-feedback-list@broadcom.com,
+	borntraeger@linux.ibm.com,
+	catalin.marinas@arm.com,
+	ceph-devel@vger.kernel.org,
+	christian.gmeiner@gmail.com,
+	christophe.leroy@csgroup.eu,
+	cocci@inria.fr,
+	coreteam@netfilter.org,
+	daniel@zonque.org,
+	davem@davemloft.net,
+	dick.kennedy@broadcom.com,
+	dri-devel@lists.freedesktop.org,
+	edumazet@google.com,
+	etnaviv@lists.freedesktop.org,
+	florian.fainelli@broadcom.com,
+	gor@linux.ibm.com,
+	gregkh@linuxfoundation.org,
+	haojian.zhuang@gmail.com,
+	hca@linux.ibm.com,
+	horms@kernel.org,
+	idryomov@gmail.com,
+	intel-xe@lists.freedesktop.org,
+	james.smart@broadcom.com,
+	jeroendb@google.com,
+	jikos@kernel.org,
+	jinpu.wang@cloud.ionos.com,
+	jjohnson@kernel.org,
+	joe.lawrence@redhat.com,
+	johan.hedberg@gmail.com,
+	jpoimboe@kernel.org,
+	kadlec@netfilter.org,
+	kuba@kernel.org,
+	kvalo@kernel.org,
+	l.stach@pengutronix.de,
+	linux+etnaviv@armlinux.org.uk,
+	linux-arm-kernel@lists.infradead.org,
+	linux-block@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	linux-wireless@vger.kernel.org,
+	linux@armlinux.org.uk,
+	linuxppc-dev@lists.ozlabs.org,
+	live-patching@vger.kernel.org,
+	louis.peens@corigine.com,
+	lucas.demarchi@intel.com,
+	luiz.dentz@gmail.com,
+	maarten.lankhorst@linux.intel.com,
+	maddy@linux.ibm.com,
+	marcel@holtmann.org,
+	martin.petersen@oracle.com,
+	mbenes@suse.cz,
+	mpe@ellerman.id.au,
+	mripard@kernel.org,
+	naveen@kernel.org,
+	netdev@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	nicolas.palix@imag.fr,
+	npiggin@gmail.com,
+	obitton@habana.ai,
+	ogabbay@kernel.org,
+	oss-drivers@corigine.com,
+	pabeni@redhat.com,
+	pablo@netfilter.org,
+	perex@perex.cz,
+	pkaligineedi@google.com,
+	pmladek@suse.com,
+	rjui@broadcom.com,
+	robert.jarzmik@free.fr,
+	rodrigo.vivi@intel.com,
+	roger.pau@citrix.com,
+	sbranden@broadcom.com,
+	shailend@google.com,
+	simona@ffwll.ch,
+	svens@linux.ibm.com,
+	thomas.hellstrom@linux.intel.com,
+	tiwai@suse.com,
+	tzimmermann@suse.de,
+	xen-devel@lists.xenproject.org,
+	xiubli@redhat.com
+Subject: Re: [PATCH v2 02/21] coccinelle: misc: Add secs_to_jiffies script
+Date: Sat, 16 Nov 2024 07:05:40 +0100
+Message-ID: <20241116060541.5798-1-christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.47.0
+In-Reply-To: <20241115-converge-secs-to-jiffies-v2-2-911fb7595e79@linux.microsoft.com>
+References: <20241115-converge-secs-to-jiffies-v2-2-911fb7595e79@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
- and PI support
-From: Pavel Begunkov <asml.silence@gmail.com>
-To: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, hch@lst.de,
- kbusch@kernel.org, martin.petersen@oracle.com, anuj1072538@gmail.com,
- brauner@kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk
-Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-block@vger.kernel.org, gost.dev@samsung.com,
- linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-References: <20241114104517.51726-1-anuj20.g@samsung.com>
- <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
- <20241114104517.51726-7-anuj20.g@samsung.com>
- <c622ee8c-82f0-44d4-99da-91357af7ecac@gmail.com>
-Content-Language: en-US
-In-Reply-To: <c622ee8c-82f0-44d4-99da-91357af7ecac@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 11/16/24 00:00, Pavel Begunkov wrote:
-> On 11/14/24 10:45, Anuj Gupta wrote:
->> Add the ability to pass additional attributes along with read/write.
->> Application can populate an array of 'struct io_uring_attr_vec' and pass
->> its address using the SQE field:
->>     __u64    attr_vec_addr;
->>
->> Along with number of attributes using:
->>     __u8    nr_attr_indirect;
->>
->> Overall 16 attributes are allowed and currently one attribute
->> 'ATTR_TYPE_PI' is supported.
+Le 15/11/2024 à 22:26, Easwar Hariharan a écrit :
+> Suggested-by: Anna-Maria Behnsen <anna-maria@linutronix.de>
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> ---
+>   scripts/coccinelle/misc/secs_to_jiffies.cocci | 21 +++++++++++++++++++++
+>   1 file changed, 21 insertions(+)
 > 
-> Why only 16? It's possible that might need more, 256 would
-> be a safer choice and fits into u8. I don't think you even
-> need to commit to a number, it should be ok to add more as
-> long as it fits into the given types (u8 above). It can also
-> be u16 as well.
+> diff --git a/scripts/coccinelle/misc/secs_to_jiffies.cocci b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+> new file mode 100644
+> index 0000000000000000000000000000000000000000..af762b1c0aac8f044f21150bfaafd9efc834ee87
+> --- /dev/null
+> +++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+> @@ -0,0 +1,21 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +///
+> +/// Find usages of:
+> +/// - msecs_to_jiffies(value*1000)
+> +/// - msecs_to_jiffies(value*MSEC_PER_SEC)
+> +///
+> +// Confidence: High
+> +// Copyright: (C) 2024 Easwar Hariharan Microsoft
+> +//
+> +// Keywords: secs, seconds, jiffies
+> +//
+> +
+> +@@ constant C; @@
+> +
+> +- msecs_to_jiffies(C * 1000)
+> ++ secs_to_jiffies(C)
+> +
+> +@@ constant C; @@
+> +
+> +- msecs_to_jiffies(C * MSEC_PER_SEC)
+> ++ secs_to_jiffies(C)
 > 
->> With PI attribute, userspace can pass following information:
->> - flags: integrity check flags IO_INTEGRITY_CHK_{GUARD/APPTAG/REFTAG}
->> - len: length of PI/metadata buffer
->> - addr: address of metadata buffer
->> - seed: seed value for reftag remapping
->> - app_tag: application defined 16b value
-> 
-> In terms of flexibility I like it apart from small nits,
-> but the double indirection could be a bit inefficient,
-> this thing:
-> 
-> struct pi_attr pi = {};
-> attr_array = { &pi, ... };
-> sqe->attr_addr = attr_array;
+Hi,
 
-We can also reuse your idea from your previous iterations and
-use the bitmap to list all attributes. Then preamble and
-the explicit attr_type field are not needed, type checking
-in the loop is removed and packing is better. And just
-by looking at the map we can calculate the size of the
-array and remove all size checks in the loop.
+	@@ constant C =~ "000"; @@
 
--- 
-Pavel Begunkov
+	* msecs_to_jiffies(C)
+
+also spots things like msecs_to_jiffies(1000)
+
+I'm not sure that coccinelle is enable to capture part of the regex to automate the removal of the 000 when converting from ms to s.
+
+Just my 2c,
+
+CJ
