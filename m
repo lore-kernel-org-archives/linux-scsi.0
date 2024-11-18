@@ -1,57 +1,98 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53C919F103;
-	Mon, 18 Nov 2024 13:05:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC99E186E2F;
+	Mon, 18 Nov 2024 14:43:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731935147; cv=none; b=jjDKIHImQmQesFNie2aNXo6Px/Ay1ke/z8HpmlcLuyXj9mf+A5+mScmxE2PhcMDOJ61NtoqFn68BSUhuM1Hv33yXAOVMrBFzXphn/vIEYmkB/Lwgp9CZJNumVnifXwqY1kttaLlnOT8QibJ+BrFNm7AaSlLxR2yz4z23DYRkHyo=
+	t=1731941020; cv=none; b=c+ZYEbM8SA52OBLBPpPmn45qBo7bI4FPwhL7xGNJ+ULKBveJxTwTAn9JgOFWr0EMXhj9Mq0zr7rJhbUKB1y1pm2F9M++3Tn6KtQf3LdtsI1D3AmgcbH/HgAMgcQ68qsKevGX1nAGYPZ22NR7wphWCEdkwJ/QxuqVwhZnJcrrFKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731935147; c=relaxed/simple;
-	bh=LJh0j+2v8Tr0oL6457rFlEYXiIdQLydd7fS84seABc8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ir1sDc6ECoYicFStUvPb9WW3hWFmY5AjNXJnUQSBlf7RU0JtEbcj12g6rQdK1sjAaVhIoNAoP9yBr8ukKvnCbCJ8d/jU+faRt+vEYSKXKmrMwgbabdS8K30gZpTu/RKHtcKYgAwwkdijVUQIVifZiCcMfbS5GieUV+qOEbdYrOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 3C68E68D47; Mon, 18 Nov 2024 14:05:41 +0100 (CET)
-Date: Mon, 18 Nov 2024 14:05:40 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: John Meneghini <jmeneghi@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mikulas Patocka <mpatocka@redhat.com>,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>,
-	Hannes Reinecke <hare@suse.de>, snitzer@kernel.org,
-	Ming Lei <minlei@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Jonathan Brassow <jbrassow@redhat.com>,
-	Ewan Milne <emilne@redhat.com>, bmarson@redhat.com,
-	Jeff Moyer <jmoyer@redhat.com>,
-	"spetrovi@redhat.com" <spetrovi@redhat.com>,
-	Rob Evers <revers@redhat.com>
-Subject: Re: DMMP request-queue vs. BiO
-Message-ID: <20241118130540.GA29045@lst.de>
-References: <2d5fe016-2941-43a4-8b7c-850b8ee1d6ce@redhat.com> <20241104073547.GA20614@lst.de> <d9733713-eb7b-4efa-ad6b-e6b41d1df93b@suse.de> <20241105103307.GA1385@lst.de> <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com> <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com> <20241115170924.GB23437@lst.de> <e48b533d-c28a-4e92-b459-74820957ec7d@redhat.com>
+	s=arc-20240116; t=1731941020; c=relaxed/simple;
+	bh=Dkk0XeDnaFtE5cVUjuvg9bSVZiOP4HdJhrV5nNAMbN0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jDv4riCsMW83Y6oVHutvLO5jLzb2obtXmS1BHw888nJLwTqLI3uuDk/uz8r4dKnX91b5SflG79yrLUzaWMDRAGDjKb/ebQnJwyeDTBcaMB+gdWdoGn6lordF3BXZ0CfAWTg4nZgnmdCAfOlHX0IBAAhwAzje1R3HhqVuaWX9w18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=gA5cVfEi; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gA5cVfEi"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1731941018; x=1763477018;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Dkk0XeDnaFtE5cVUjuvg9bSVZiOP4HdJhrV5nNAMbN0=;
+  b=gA5cVfEi16XxRZQUGM+gKb+Pj2glMQ6YW36fdMbOWM7mr29wihbQGYv1
+   2FsWDEpO5xyTntf+r39LjGdQ/1WY922jpGq+Jru9wbj63AB1KMpHJ82Ki
+   ftN5PE5MzhRh7h4up7lsg1kheYFj8bOd0tZ/30X2Xr4UpcBZh2LH+tnQy
+   NYvp20tzLZlh/hFh8PNdSl60WKIl1plHWjfBFp3zXlbX0JAhAFL9KapZr
+   TfaMrWRx5NZAjtrjW40ZbQ8ksk1uaXEndAMB/rwG5EBpv5bWogJskly0+
+   fLiNwnEpEofdsk7QaYblriw1hSMqp7KZ81tUYpWeWhl7Ws1c9sP1Eu7Pz
+   A==;
+X-CSE-ConnectionGUID: A/ZXw9ADThyoBIRuy4Ozqg==
+X-CSE-MsgGUID: /EFaHezzSwyULveKhUMHuA==
+X-IronPort-AV: E=Sophos;i="6.12,164,1728921600"; 
+   d="scan'208";a="32754292"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Nov 2024 22:43:37 +0800
+IronPort-SDR: 673b4553_IiYCXxX2kQtVsIh+bhvZ03ixmAb8YDtjpdD6nmlAa1r4Z8c
+ 1a7kBd3/tODgmo/claKdNvNh3g6Tzjfr3RRgMvw==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Nov 2024 05:46:59 -0800
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Nov 2024 06:43:35 -0800
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v4 0/3] Untie the host lock entanglement - part 2
+Date: Mon, 18 Nov 2024 16:41:14 +0200
+Message-Id: <20241118144117.88483-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e48b533d-c28a-4e92-b459-74820957ec7d@redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 15, 2024 at 03:28:03PM -0500, John Meneghini wrote:
->> And, as pointed out in the private mail that John forwarded to the list
->> without my permission if we really have a workload that cares md could
->
-> Ah come on. I deleted most of the private thread....
+Here is the 2nd part in the sequel, watering down the scsi host lock
+usage in the ufs driver. This work is motivated by a comment made by
+Bart [1], of the abuse of the scsi host lock in the ufs driver.  Its
+Precursor [2] removed the host lock around some of the host register
+accesses.
 
-As a rule of thumb forwarding private mail to a public list is never
-valid without previous permission.  I'm not worried about any actual
-information in this one, but it is still a breach of trust and privacy
-expectations.
+This part replaces the scsi host lock by dedicated locks serializing
+access to the clock gating and clock scaling members.
+
+Changes compared to v3:
+ - Keep the host lock when checking ufshcd_state (Bean)
+
+Changes compared to v2:
+ - Use clang-format to fix formating (Bart)
+ - Use guard() in ufshcd_clkgate_enable_store (Bart)
+ - Elaborate commit log (Bart)
+
+Changes compared to v1:
+ - use the guard() & scoped_guard() macros (Bart)
+ - re-order struct ufs_clk_scaling and struct ufs_clk_gating (Bart)
+
+[1] https://lore.kernel.org/linux-scsi/0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org/
+[2] https://lore.kernel.org/linux-scsi/20241024075033.562562-1-avri.altman@wdc.com/
+
+Avri Altman (3):
+  scsi: ufs: core: Prepare to introduce a new clock_gating lock
+  scsi: ufs: core: Introduce a new clock_gating lock
+  scsi: ufs: core: Introduce a new clock_scaling lock
+
+ drivers/ufs/core/ufshcd.c | 255 +++++++++++++++++++-------------------
+ include/ufs/ufshcd.h      |  24 ++--
+ 2 files changed, 144 insertions(+), 135 deletions(-)
+
+-- 
+2.25.1
 
