@@ -1,162 +1,127 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F7BB1DED7B
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2024 21:38:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 093C02E3EB;
+	Mon, 18 Nov 2024 23:37:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731965895; cv=none; b=dAcdOIzk5KZL7efXWFg2+B/siAhEKtJJovxcsl8+1BZkhKCGP5qSrvy9n5tq/PZC3vlt32FZWpOZofdCbCpHbCdheCDmk7U8ieNTwbrCb07cKlzzlQ4e6FxiVeFHUQYoCLr0kRF+JmLB1FR/gta7nBiqx6xTZuAJYJOv3+jPMpw=
+	t=1731973032; cv=none; b=J/oPEuFA6CCM625JasUz6a7ALORFcdTaO2mkuafdtRhdceVHxAd4weZnpXqDFU8XMhcHNQfDuJz9QUf1Z5yCcUGsmOcWfbyuu+Wdu2FZQxZI8rKDUKEdAY3Ren9NxkJIgTIyLATHZs0pkKIPu3A1p/Ye60ZTlasfyVrS/ZSzYt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731965895; c=relaxed/simple;
-	bh=itoNG9upeTqyphS0uJxQkVyvQNAb6a1PKuNNERO3hTA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eqglTKB96kuR6jJ4ENFsYoyI30lCGdAZbbIS6J1oXZre+Mo36DLENRuIg0wB61gQBx9LTfCdfdGdTQH7MGkWaw7qKGkjl/jHmsMMSu7xX9d+sce7y42aN1Aw6591o/fDP2aLGYV61aI5A4KXr5uvkX9Ygi3Lip8gY8fDFc36N7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=fail (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZWj17JiK reason="signature verification failed"; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1731973032; c=relaxed/simple;
+	bh=ZYSc0BBh4PSuJUUQjsGASqp+WcLtE6wE2Rh9sEwzRfA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Xqdjjugu/q4wDI0FsuIjD7VqJMgcPf1rmdLqDHXdlv5yljO3q6+IjNY8XaGHX7bzpvpcZmlBYj+2uUauXigYgAHzsEP5Yu6NVG/E3ilxEa6bGawi3KbJhNnLyjD+0fAWLci2h7sLCs6AhkYlejHUIksu5Dv0TpPDZhUthsLfa6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nsGnLRoE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZWj17JiK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1731965892;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6pGb5jbEth9imQWgXuhcsQVZzJcLecxMWhpN0F9xdt0=;
-	b=ZWj17JiKMt1crEGCeGGqBCoG2N9OOFoz33qC4vRfI8FKLDdXkUN4wdB8mrD5EtvYT4j89C
-	AHyWx5XWCU5yllhACzO5xdDfxYM/pJPIBzXJtav1wlfHiRy83wcZpjwMrnVRZ0T2gpZGEi
-	Wvb5ZBx8pmy6TE2JgsoLo9YLsu8rwiE=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-673-lFmbl7upMxytcCCChSv38A-1; Mon,
- 18 Nov 2024 16:38:08 -0500
-X-MC-Unique: lFmbl7upMxytcCCChSv38A-1
-X-Mimecast-MFC-AGG-ID: lFmbl7upMxytcCCChSv38A
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 75A4219560AE;
-	Mon, 18 Nov 2024 21:38:07 +0000 (UTC)
-Received: from [10.22.81.39] (unknown [10.22.81.39])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 09B33195607C;
-	Mon, 18 Nov 2024 21:38:05 +0000 (UTC)
-Message-ID: <ed7b0142-32bc-41f8-8a89-a922796d3d62@redhat.com>
-Date: Mon, 18 Nov 2024 16:38:05 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nsGnLRoE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7DFCC4CECC;
+	Mon, 18 Nov 2024 23:37:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731973031;
+	bh=ZYSc0BBh4PSuJUUQjsGASqp+WcLtE6wE2Rh9sEwzRfA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nsGnLRoET2OJq/9T7ye05AJbXGLHMVOdvqD92UeO1KjBLRaYL/vU2NQXyQbyinnxd
+	 BSXwXPCTEMvgawu2F4Ha+n/kbkv89ZtK6Zqrq7h8e3MJiOtAtXADgoxCJnI8WdiatC
+	 Ptv67gmVcHDPuSGqIbOF0xQtcdaYKBsurC1wTKV1RA3gq3HowmIYGSon1xJBjXACQI
+	 vuGL1RSPlzKvIz6VuWkKhiXxUhiFuLOmqv8+5n/wzIFBU/CBMGW9hWrbsoK8CQcvfq
+	 a5m8oYckiwgXQdb1gmYCF8Oxfyi1Lakb8jB+2SZTmYnsUEwbAt/sgU3jHWDXACFnS0
+	 SSJBUq6knwMKA==
+Date: Mon, 18 Nov 2024 16:37:08 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, Pierre Labat <plabat@micron.com>,
+	Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@meta.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+	"axboe@kernel.dk" <axboe@kernel.dk>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"asml.silence@gmail.com" <asml.silence@gmail.com>,
+	"javier.gonz@samsung.com" <javier.gonz@samsung.com>
+Subject: Re: [EXT] Re: [PATCHv11 0/9] write hints with nvme fdp and scsi
+ streams
+Message-ID: <ZzvPpD5O8wJzeHth@kbusch-mbp>
+References: <20241111102914.GA27870@lst.de>
+ <7a2f6231-bb35-4438-ba50-3f9c4cc9789a@samsung.com>
+ <20241112133439.GA4164@lst.de>
+ <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com>
+ <DS0PR08MB854131CDA4CDDF2451CEB71DAB592@DS0PR08MB8541.namprd08.prod.outlook.com>
+ <20241113044736.GA20212@lst.de>
+ <ZzU7bZokkTN2s8qr@dread.disaster.area>
+ <20241114060710.GA11169@lst.de>
+ <Zzd2lfQURP70dAxu@kbusch-mbp>
+ <20241115165348.GA22628@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: st: Restore some drive settings after reset
-To: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
- linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
- loberman@redhat.com
-References: <20241115162003.3908-1-Kai.Makisara@kolumbus.fi>
- <20241115162003.3908-3-Kai.Makisara@kolumbus.fi>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20241115162003.3908-3-Kai.Makisara@kolumbus.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241115165348.GA22628@lst.de>
 
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
-Tested-by: John Meneghini <jmeneghi@redhat.com>
+On Fri, Nov 15, 2024 at 05:53:48PM +0100, Christoph Hellwig wrote:
+> On Fri, Nov 15, 2024 at 09:28:05AM -0700, Keith Busch wrote:
+> > SSDs operates that way. FDP just reports more stuff because that's what
+> > people kept asking for. But it doesn't require you fundamentally change
+> > how you acces it. You've singled out FDP to force a sequential write
+> > requirement that that requires unique support from every filesystem
+> > despite the feature not needing that.
+> 
+> No I haven't.  If you think so you are fundamentally misunderstanding
+> what I'm saying.
 
-On 11/15/24 11:20, Kai Mäkisara wrote:
-> Some of the allowed operations put the tape into a known position
-> to continue operation, assuming only the tape position has changed.
-> But reset sets partition, density and block size to drive default
-> values. These should be restored to the values before reset. This
-> is only done for the operations not starting a new tape session.
+We have an API that has existed for 10+ years. You are gatekeeping that
+interface by declaring NVMe's FDP is not allowed to use it. Do I have
+that wrong? You initially blocked this because you didn't like how the
+spec committe worked. Now you've shifted to trying to pretend FDP
+devices require explicit filesystem handholding that was explicely NOT
+part of that protocol.
+ 
+> > We have demonstrated 40% reduction in write amplifcation from doing the
+> > most simplist possible thing that doesn't require any filesystem or
+> > kernel-user ABI changes at all. You might think that's not significant
+> > enough to let people realize those gains without more invasive block
+> > stack changes, but you may not buying NAND in bulk if that's the case.
 > 
-> Normally the current block size and density are stored by the drive.
-> If the settings have been changed, the changed values have to be
-> saved by the driver across reset.
-> 
-> Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-> ---
->   drivers/scsi/st.c | 22 ++++++++++++++++++++--
->   drivers/scsi/st.h |  2 ++
->   2 files changed, 22 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index 3acaa3561c81..0008843e33a8 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -955,7 +955,6 @@ static void reset_state(struct scsi_tape *STp)
->   		STp->partition = find_partition(STp);
->   		if (STp->partition < 0)
->   			STp->partition = 0;
-> -		STp->new_partition = STp->partition;
->   	}
->   }
->   
-> @@ -2928,14 +2927,17 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
->   		if (cmd_in == MTSETDENSITY) {
->   			(STp->buffer)->b_data[4] = arg;
->   			STp->density_changed = 1;	/* At least we tried ;-) */
-> +			STp->changed_density = arg;
->   		} else if (cmd_in == SET_DENS_AND_BLK)
->   			(STp->buffer)->b_data[4] = arg >> 24;
->   		else
->   			(STp->buffer)->b_data[4] = STp->density;
->   		if (cmd_in == MTSETBLK || cmd_in == SET_DENS_AND_BLK) {
->   			ltmp = arg & MT_ST_BLKSIZE_MASK;
-> -			if (cmd_in == MTSETBLK)
-> +			if (cmd_in == MTSETBLK) {
->   				STp->blksize_changed = 1; /* At least we tried ;-) */
-> +				STp->changed_blksize = arg;
-> +			}
->   		} else
->   			ltmp = STp->block_size;
->   		(STp->buffer)->b_data[9] = (ltmp >> 16);
-> @@ -3635,6 +3637,22 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
->   				goto out;
->   			}
->   			reset_state(STp); /* Clears pos_unknown */
-> +
-> +			/* Fix the device settings after reset, ignore errors */
-> +			if (mtc.mt_op == MTREW || mtc.mt_op == MTSEEK ||
-> +				mtc.mt_op == MTEOM) {
-> +				if (STp->can_partitions) {
-> +					/* STp->new_partition contains the
-> +					 *  latest partition set
-> +					 */
-> +					STp->partition = 0;
-> +					switch_partition(STp);
-> +				}
-> +				if (STp->density_changed)
-> +					st_int_ioctl(STp, MTSETDENSITY, STp->changed_density);
-> +				if (STp->blksize_changed)
-> +					st_int_ioctl(STp, MTSETBLK, STp->changed_blksize);
-> +			}
->   		}
->   
->   		if (mtc.mt_op != MTNOP && mtc.mt_op != MTSETBLK &&
-> diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-> index 7a68eaba7e81..2105c6a5b458 100644
-> --- a/drivers/scsi/st.h
-> +++ b/drivers/scsi/st.h
-> @@ -165,12 +165,14 @@ struct scsi_tape {
->   	unsigned char compression_changed;
->   	unsigned char drv_buffer;
->   	unsigned char density;
-> +	unsigned char changed_density;
->   	unsigned char door_locked;
->   	unsigned char autorew_dev;   /* auto-rewind device */
->   	unsigned char rew_at_close;  /* rewind necessary at close */
->   	unsigned char inited;
->   	unsigned char cleaning_req;  /* cleaning requested? */
->   	int block_size;
-> +	int changed_blksize;
->   	int min_block;
->   	int max_block;
->   	int recover_count;     /* From tape opening */
+> And as iterared multiple times you are doing that by bypassing the
+> file system layer in a forceful way that breaks all abstractions and
+> makes your feature unavailabe for file systems.
 
+Your filesystem layering breaks the abstraction and capabilities the
+drives are providing. You're doing more harm than good trying to game
+how the media works here.
+
+> I've also thrown your a nugget by first explaining and then even writing
+> protype code to show how you get what you want while using the proper
+> abstractions.  
+
+Oh, the untested prototype that wasn't posted to any mailing list for
+a serious review? The one that forces FDP to subscribe to the zoned
+interface only for XFS, despite these devices being squarly in the
+"conventional" SSD catagory and absolutely NOT zone devices? Despite I
+have other users using other filesystems successfuly using the existing
+interfaces that your prototype doesn't do a thing for? Yah, thanks...
+
+I appreciate you put the time into getting your thoughts into actual
+code and it does look very valuable for ACTUAL ZONE block devices. But
+it seems to have missed the entire point of what this hardware feature
+does. If you're doing low level media garbage collection with FDP and
+tracking fake media write pointers, then you're doing it wrong. Please
+use Open Channel and ZNS SSDs if you want that interface and stop
+gatekeeping the EXISTING interface that has proven value in production
+software today.
+
+> But instead of a picking up on that you just whine like
+> this.  Either spend a little bit of effort to actually get the interface
+> right or just shut up.
+
+Why the fuck should I make an effort to do improve your pet project that
+I don't have a customer for? They want to use the interface that was
+created 10 years ago, exactly for the reason it was created, and no one
+wants to introduce the risks of an untested and unproven major and
+invasive filesystem and block stack change in the kernel in the near
+term!
