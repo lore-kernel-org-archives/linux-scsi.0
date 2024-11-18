@@ -1,167 +1,148 @@
-Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 946651C07F5
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2024 17:11:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5098F1B0F24;
+	Mon, 18 Nov 2024 17:44:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731949869; cv=none; b=KZB4E8pTdM1E0dvXAMehr+yQNJs34i/fy9hPApOPufOV9I7UTi0FiOIjZaMJLfzH/s21m4wJHzNry1Pz3FrE0bsrKr9UdRBxSwPvhnkdoKTNXF201F7Kzgn9n5zGc87PbGGe8X30mY4184g4BMKPPlYSZAAlLsW7rX1SN+2JK6Y=
+	t=1731951858; cv=none; b=gBmOi+d7A4pQWqlow+xu5v2fEB5dEJwnVYTH9l5ZmUoTywsYjOfne/nqBv2IXB5b2VEPghE6/gqD8V9GrOwRnO+ShlOxS6re5nZVNPdUs/8LDbTGXZ8+GSCxkOKjxFE7yYbWKh7QDQilDaM7jcf5MYHzChLeBGQqXCO1bx2bKZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731949869; c=relaxed/simple;
-	bh=uRqITfdIDYaygG9EGIlz7LE2Qw5MeKKlQzY80u/y+sI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=nzt4iw8ZP2Iy6KGO9EAHgNwD7SIGITNc0pmaNT/qcFEpwaKXCUN3fIYi2ZAERYnUMO9YMIakT0CpH8DKAjDcRTaXEAi2nZYRE4+mZI239zNvD89pryQ7ZqtRt9NJOWO89l8Ny30NICSa6Mrmji2E15GusomBCVPIS/PfZg0DAlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=KZMudU/y; arc=none smtp.client-ip=62.142.5.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1731951858; c=relaxed/simple;
+	bh=63XIO8sRABg67XicxNbfY6QsDQLmc5CXskO87BQUG6I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UJBtedq4Lxi38p4qEGCrzSpTyfTUonwmLKW8MjdCoV3R6GsMwynQ9roQzht4NvEIW0Az0aJlTjlZWcgnuRWmwn78aIvEuezMfdZRDVrj6+Gi3HHrJMn7BmnzlyobK+PtNGATlQ6AJVfIyIMUJtHocPFK9Ts7UBcJ6wJOQ9gRBis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J1IbuvfC; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="KZMudU/y"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J1IbuvfC"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-539fb49c64aso3000957e87.0;
+        Mon, 18 Nov 2024 09:44:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=IN1U5dyDv4JIvSdWJbNYvwWqFa88l+giopRObJrf0co=;
-	b=KZMudU/yiCRJP6nwb0lFudTXbmvtYX7fAwvxAIryHd0e0NditKg6FXLhhShtm2ATsQrqbGflGA/Qr
-	 sPSdxDg6ZOAF+gYX50p94BjQgkOTde28R9rpzXYWgEy1yQiX+uK4Rme9n5HzopNladt97qLfHTX+bx
-	 OiP3hm+vvLdEomN40CjWiAdmZ3FFhIGkVBdjUsBFr2sl8hHbsfJRtNnx4f1raoOJ37kn+B+zRxJiak
-	 9+VzWSzHkHuxPJYildCBbMdC0qn7jNgTr06NoHGE5YezGlzE5+Q2cQhGPnVqQAbO2E048wBb6NEtwV
-	 oIf68Nzl1/hRA0H+JpTSqcjuyxQ3A7Q==
-Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 12c14586-a5d0-11ef-9b59-005056bd6ce9;
-	Mon, 18 Nov 2024 19:10:55 +0200 (EET)
-Content-Type: text/plain;
-	charset=us-ascii
+        d=gmail.com; s=20230601; t=1731951854; x=1732556654; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=bVO8qk3DSHDvk4oNuHMVMR5RvZCXGNXgG4n2Q5ZEl4o=;
+        b=J1IbuvfCm2KEWiNuEMRh1r6WpspKXvlECfVe/BPUCc5RinVHnODC2uO3ltSb9b7bbc
+         ho4UJ9G30hHgq93Y2Yb5Cy7Bd0N9c3WfJ5pbwXcsB0OVZK/sQdVnqagb1pV7YGieCz+N
+         4i1oib0SjH7HUuc/4jDMQrEbYFqgLQHTJumazJMhERm4DZs2zO8S7cFF0K9VcrwbuH7i
+         q2bopH2XCB8kLUakqEmvid0GpCW6PwT10tGBXBeZu0o7uGj3bxcg4vSs3Qi7PL5l4hoD
+         6qwULt2WvDHhErD25Mil4vtrkDPbZGl9lyN7+hQrulMmzX0HQdl+JVFqJBDC40w+7zL8
+         qzmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731951854; x=1732556654;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bVO8qk3DSHDvk4oNuHMVMR5RvZCXGNXgG4n2Q5ZEl4o=;
+        b=rEE5pJk3oiKz6meITOJ0CMxboI7JC9LDjaD9yuiu4DW6wGZmPpURsuyv08QQdkWSFB
+         /7fDisuBWU75GaJTTsiEqgPFPgFfYHWzb79XAgK1dHNy7czHJBL9X7KXJaHXb7MOjOHn
+         VZEPWNc1Zv7PFcXxhXjhJ82QCyFJTzHaY++sw1FjSI6wFqA0TWsUlP9TpZtuY1kt1uQd
+         XImUB0v3G2QbSMnmFoSbCNvBAIG5JHGbyVqeJ5j/o5Aro9Ie56GSah1Exm3fAgIR+txb
+         vVRi1huI87+iHhXTbSmBZh1Vl44pRyOs+sD+Uln4pIWYHtfkpwSpzInZi/c5+7uH8myz
+         k1FQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUbKD2TAp6MpPUKFHxPPADiT1N5EKtBiYZFGPS19NysRUuwJBznXQ5eGPK4wg5LhHjxYUuD8EB8BHJFmk1nBQ==@vger.kernel.org, AJvYcCVS8ssonJ3ZM/NCjuV7tBoxIuBlf50tpCt3J8lJMzpzclCGcHAT3Jp3sHz8OXSeGp9YjcIoyl0QT6GkRys=@vger.kernel.org, AJvYcCWGAO75wx0gXCujhPhSgacWKNq+WewiuGFNcS9tyDig2ASgQdGoG/Xjl1YDBSXVCAJhGxwe4EbKwg==@vger.kernel.org, AJvYcCWJbN8vLrtmRPkdeooFQy/vQJkKuZxoymdPvaQIrZC9WJ/dBg444wFtaGjQAHq+SRXHqO7I/uEiAFUWAw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyhpvmgF9jkOWJcvYYZYvwPch12FXIdqsRxltF44dkf/uABQqB0
+	gNHFpwqxlvuMOP6HdymKi9Wk3kCNpc8y2/Wy13SvEyMJmhwK3BMG
+X-Google-Smtp-Source: AGHT+IE8deZQbEFmLxsNjvaQHppwSiVlfb/JcEO8eBT8Er4XhuZQWQlwrAn+B4VtBktpYvCn9ldPGA==
+X-Received: by 2002:a2e:b896:0:b0:2ff:566e:b597 with SMTP id 38308e7fff4ca-2ff606fb54fmr81123891fa.38.1731951854002;
+        Mon, 18 Nov 2024 09:44:14 -0800 (PST)
+Received: from [192.168.42.187] (82-132-219-237.dab.02.net. [82.132.219.237])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa20e045270sm561214266b.146.2024.11.18.09.44.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Nov 2024 09:44:13 -0800 (PST)
+Message-ID: <4f5ef808-aef0-40dd-b3c8-c34977de58d2@gmail.com>
+Date: Mon, 18 Nov 2024 17:45:02 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.200.121\))
-Subject: Re: [PATCH 2/3] scsi: st: clear was_reset when CHKRES_NEW_SESSION
-From: =?utf-8?Q?Kai_M=C3=A4kisara_=28Kolumbus=29?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <c1ac0724-df0f-44e8-a447-8186da6289a8@redhat.com>
-Date: Mon, 18 Nov 2024 19:10:45 +0200
-Cc: linux-scsi@vger.kernel.org,
- loberman@redhat.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <9859F83C-428D-4302-BEBD-1D3776AE06F2@kolumbus.fi>
-References: <20241031010032.117296-1-jmeneghi@redhat.com>
- <20241031010032.117296-3-jmeneghi@redhat.com>
- <5046E716-BB3D-45A6-B320-6810F5C792EC@kolumbus.fi>
- <67da1859-cfd2-45f0-951b-258ebdf6fd5f@redhat.com>
- <01385357-3D40-4720-82ED-AF8EEAFE7351@kolumbus.fi>
- <c1ac0724-df0f-44e8-a447-8186da6289a8@redhat.com>
-To: John Meneghini <jmeneghi@redhat.com>
-X-Mailer: Apple Mail (2.3826.200.121)
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
+ and PI support
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org,
+ martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
+ jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+ gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+ linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+References: <20241114104517.51726-1-anuj20.g@samsung.com>
+ <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
+ <20241114104517.51726-7-anuj20.g@samsung.com>
+ <c622ee8c-82f0-44d4-99da-91357af7ecac@gmail.com>
+ <b61e1bfb-a410-4f5f-949d-a56f2d5f7791@gmail.com>
+ <20241118125029.GB27505@lst.de>
+ <2a98aa33-121b-46ed-b4ae-e4049179819a@gmail.com>
+ <20241118170329.GA14956@lst.de>
+Content-Language: en-US
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <20241118170329.GA14956@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 11/18/24 17:03, Christoph Hellwig wrote:
+> On Mon, Nov 18, 2024 at 04:59:22PM +0000, Pavel Begunkov wrote:
+>>>
+>>> Can we please stop overdesigning the f**k out of this?  Really,
+>>
+>> Please stop it, it doesn't add weight to your argument. The design
+>> requirement has never changed, at least not during this patchset
+>> iterations.
+> 
+> That's what you think because you are overdesigning the hell out of
+> it.  And at least for me that rings every single alarm bell about
+> horrible interface design.
 
+Well, and that's what you think, terribly incorrectly as far as
+I can say.
 
-> On 15. Nov 2024, at 17.34, John Meneghini <jmeneghi@redhat.com> wrote:
->=20
-...
->> Now, st does allow zero retries. In addition to this, the requests =
-use either REQ_OP_DRV_IN
->> or REQ_OP_DRV_OUT and these requests are not retried. So, now POR UAs =
-reach
->> st (as the experiments have indicated).
->=20
-> Yes, the only time I've see the POR UA not get passed to the st driver =
-is with scsi_debug, when
-> the driver first loads.
->=20
-> [tape_tests]# modprobe -r scsi_debug
-> [tape_tests]# modprobe scsi_debug  ptype=3D1  max_luns=3D1 =
-dev_size_mb=3D10000
-> [Fri Nov 15 09:28:51 2024] scsi_debug:sdebug_driver_probe: scsi_debug: =
-trim poll_queues to 0. poll_q/nr_hw =3D (0/1)
-> [Fri Nov 15 09:28:51 2024] scsi host8: scsi_debug: version 0191 =
-[20210520]
->                             dev_size_mb=3D10000, opts=3D0x0, =
-submit_queues=3D1, statistics=3D0
-> [Fri Nov 15 09:28:51 2024] scsi 8:0:0:0: Sequential-Access Linux    =
-scsi_debug       0191 PQ: 0 ANSI: 7
-> [Fri Nov 15 09:28:51 2024] scsi 8:0:0:0: Power-on or device reset =
-occurred
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> The sg driver is clearing the UA here.
+>>> either we're fine using the space in the extended SQE, or
+>>> we're fine using a separate opcode, or if we really have to just
+>>> make it uring_cmd.  But stop making thing being extensible for
+>>> the sake of being extensible.
+>>
+>> It's asked to be extendible because there is a good chance it'll need to
+>> be extended, and no, I'm not suggesting anyone to implement the entire
+>> thing, only PI bits is fine.
+> 
+> Extensibility as in having reserved fields that can be checked for
+> is one thing.  "Extensibility" by adding indirections over indirections
 
-I enabled some SCSI debug logging (0x3001). It shows that the UA is =
-received as response to
-a 'Report supported operation codes' command. I looked at the code and =
-it seems that scsi_add_lun()
-in scsi_scan.c uses this operation. So, the UA is not cleared by any =
-ULD.
+I don't know where you found indirections over indirections.
 
-...
+> without a concrete use case is another thing.  And we're deep into the
+> latter phase now.
+> 
+>> And no, it doesn't have to be "this or that" while there are other
+>> options suggested for consideration. And the problem with the SQE128
+>> option is not even about SQE128 but how it's placed inside, i.e.
+>> at a fixed spot.
+>>
+>> Do we have technical arguments against the direction in the last
+>> suggestion?
+> 
+> Yes.  It adds completely pointless indirections and variable offsets.
 
-> I have no idea whey the scsi_debug driver doesn't support READ BLOCK =
-LIMITS.
->=20
-scsi_debug does not support any "tape-specific" commands. This includes =
-READ BLOCK LIMITS,
-WRITE FILEMARKS, REWIND, etc. Additionally the CDB definition for tapes =
-is special for reads and
-writes.
+One indirection, and there are no variable offsets while PI remains
+the only user around.
 
-REWIND is implemented in scsi_debug, but it is buggy. MODE SENSE and =
-MODE SELECT without
-any page (i.e., interested only in block descriptor) are not allowed in =
-scsi_debug.
+> How do you expect people to actually use that sanely without
+> introducing bugs left right and center?
 
-St is designed to work with minimal command support. READ BLOCK LIMITS =
-is not needed. I have
-fixed REWIND and MODE SENSE/SELECT for my tests. Using fake_rw I can =
-"read" tape, but
-writing does not work because WRITE FILEMARKS is missing.
+I've just given you an example how the user space can look like, I
+have absolutely no idea what you're talking about.
 
-...
-> Another problem with using scsi_debug is:
->=20
-> [tape_tests]# sg_reset --target /dev/sg3
->=20
-> This does nothing.  I have to use the /dev/st device to reset.  This =
-is not true if you have a real tape device.
+> I really don't get why you want to make an I/O fast path as complicated
+> as possible.
 
-In my tests, resets using both /dev/nstx and /dev/sgx have been working. =
-However, you should note that
-when using /dev/nstx, the device is opened using st driver, whereas if =
-/dev/sgx is used, it is opened
-using the sg driver. Digging deeper reveals that SG_SCSI_RESET through =
-st does not go through
-sg at all. (Both end up to scsi_ioctl_reset() in scsi_error.c, but in a =
-different way.) (And if you use,
-/dev/stx, the tape is rewound.)
+Exactly, _fast path_. PI-only handling is very simple, I don't buy
+that "complicated". If we'd need to add more without an API expecting
+that, that'll mean a yet another forest of never ending checks in the
+fast path effecting all users.
 
-> [tape_tests]# sg_reset --target /dev/nst1
-> [Fri Nov 15 09:37:18 2024] st 8:0:0:0: [st1] check_tape: 1064: =
-pos_unknown 0 was_reset 1 ready 0
-> [Fri Nov 15 09:37:18 2024] st 8:0:0:0: Power-on or device reset =
-occurred
-> [Fri Nov 15 09:37:18 2024] st 8:0:0:0: [st1] Error: 2, cmd: 0 0 0 0 0 =
-0
-> [Fri Nov 15 09:37:18 2024] st 8:0:0:0: [st1] Sense Key : Unit =
-Attention [current]
-> [Fri Nov 15 09:37:18 2024] st 8:0:0:0: [st1] Add. Sense: Scsi bus =
-reset occurred
-> [Fri Nov 15 09:37:18 2024] st 8:0:0:0: [st1] st_chk_result: 421: =
-pos_unknown 1 was_reset 1 ready 0, result 2
-> ^^^^^^^^^^^^^^^^^^
-> Now we've set pos_unkown.
-
-If you use /dev/sgx, you are not supposed to see any output. The next =
-operation sent to /dev/nstx
-(e.g., mt status) sets pos_unknown. In the example above, you probably =
-have used sg_reset -target
-/dev/sg1 previously and it is opening /dev/nst1 the the next sg_reset =
-that catches the previous reset.
-
-...
->=20
-> Please try my latest version of the tape_reset_debug.sh script.
-
-I looked at the script. It tries to write to tape and that is not =
-implemented in the scsi_debug I have
-
+-- 
+Pavel Begunkov
