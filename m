@@ -1,148 +1,144 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5098F1B0F24;
-	Mon, 18 Nov 2024 17:44:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0BE1C1F03
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2024 18:00:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731951858; cv=none; b=gBmOi+d7A4pQWqlow+xu5v2fEB5dEJwnVYTH9l5ZmUoTywsYjOfne/nqBv2IXB5b2VEPghE6/gqD8V9GrOwRnO+ShlOxS6re5nZVNPdUs/8LDbTGXZ8+GSCxkOKjxFE7yYbWKh7QDQilDaM7jcf5MYHzChLeBGQqXCO1bx2bKZ8=
+	t=1731952823; cv=none; b=Ki3F1Af4R/jI1kV+79ttHL/+lS7vnPO/5tR+c/YFoOvFR00Ol1EV2fWOyv/jISf3Xk052ykfWnGgZvYxihPW/8tQsDi4hhC6XZgthpBCmxkzyG1TWhP4MVoCa2VctkL+I9QM3dFLtG4v35gC6xU+2CeU5S2kBtZJTu+e8Vl6dns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731951858; c=relaxed/simple;
-	bh=63XIO8sRABg67XicxNbfY6QsDQLmc5CXskO87BQUG6I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UJBtedq4Lxi38p4qEGCrzSpTyfTUonwmLKW8MjdCoV3R6GsMwynQ9roQzht4NvEIW0Az0aJlTjlZWcgnuRWmwn78aIvEuezMfdZRDVrj6+Gi3HHrJMn7BmnzlyobK+PtNGATlQ6AJVfIyIMUJtHocPFK9Ts7UBcJ6wJOQ9gRBis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J1IbuvfC; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1731952823; c=relaxed/simple;
+	bh=QsjSrbMQadoK4kWwZoO09P1xz68z2hpgAaGO9d7ls5o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qWyvu6vP/42pNFz6P728cB1EiP63z16ii0RKrRtm+2Zqn8xP2A1iTYF+oBRwAKxHATfRXU/Wn9US0el08Qlv9iza+sNuAVHe1HFCSoSixCoqIDQ6lFuMUHkk9fTUWRerTW2J3IyKeope9AwxSgtEJwBaelvjQ82/o70zoPt8JQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=XAI6wHU2; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J1IbuvfC"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-539fb49c64aso3000957e87.0;
-        Mon, 18 Nov 2024 09:44:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XAI6wHU2"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-72487ebd2f5so1721825b3a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2024 10:00:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1731951854; x=1732556654; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bVO8qk3DSHDvk4oNuHMVMR5RvZCXGNXgG4n2Q5ZEl4o=;
-        b=J1IbuvfCm2KEWiNuEMRh1r6WpspKXvlECfVe/BPUCc5RinVHnODC2uO3ltSb9b7bbc
-         ho4UJ9G30hHgq93Y2Yb5Cy7Bd0N9c3WfJ5pbwXcsB0OVZK/sQdVnqagb1pV7YGieCz+N
-         4i1oib0SjH7HUuc/4jDMQrEbYFqgLQHTJumazJMhERm4DZs2zO8S7cFF0K9VcrwbuH7i
-         q2bopH2XCB8kLUakqEmvid0GpCW6PwT10tGBXBeZu0o7uGj3bxcg4vSs3Qi7PL5l4hoD
-         6qwULt2WvDHhErD25Mil4vtrkDPbZGl9lyN7+hQrulMmzX0HQdl+JVFqJBDC40w+7zL8
-         qzmQ==
+        d=google.com; s=20230601; t=1731952821; x=1732557621; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=paCLR7IijVyeUeVe8LL4hZL7nuFgS1QPO7Bsd6hORws=;
+        b=XAI6wHU2stTL3lryYCFXJsQASRpddrNLAFT+QUZ+hdLoBL62jISNWh4MWQijOTX3MS
+         lQ7ZsdCm7+W5ox2QVDmOxhDDi4pi5muHVyBFg1zVta/8kFtAwA6hbL6nBvuAv0lbGIBL
+         x4u+4nC9HyIqFQT2F/+KiPv46Nx1IhETDd/9XezaOWNxzYBBe21BzjjPH68L5LOOuuMU
+         4md3M+POizYuNBd0w23+Qpvl97XIPXqXBZ1uLnOBNTmhcgKbysx8BqcNjCQb2ZSBze86
+         DSW2kwUZqH5jMzBY5Q79aG+x+VdRNcvqJHstv3L5WTHGj0w5T6wNW23XDJqtjSAtfng0
+         sg4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731951854; x=1732556654;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bVO8qk3DSHDvk4oNuHMVMR5RvZCXGNXgG4n2Q5ZEl4o=;
-        b=rEE5pJk3oiKz6meITOJ0CMxboI7JC9LDjaD9yuiu4DW6wGZmPpURsuyv08QQdkWSFB
-         /7fDisuBWU75GaJTTsiEqgPFPgFfYHWzb79XAgK1dHNy7czHJBL9X7KXJaHXb7MOjOHn
-         VZEPWNc1Zv7PFcXxhXjhJ82QCyFJTzHaY++sw1FjSI6wFqA0TWsUlP9TpZtuY1kt1uQd
-         XImUB0v3G2QbSMnmFoSbCNvBAIG5JHGbyVqeJ5j/o5Aro9Ie56GSah1Exm3fAgIR+txb
-         vVRi1huI87+iHhXTbSmBZh1Vl44pRyOs+sD+Uln4pIWYHtfkpwSpzInZi/c5+7uH8myz
-         k1FQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUbKD2TAp6MpPUKFHxPPADiT1N5EKtBiYZFGPS19NysRUuwJBznXQ5eGPK4wg5LhHjxYUuD8EB8BHJFmk1nBQ==@vger.kernel.org, AJvYcCVS8ssonJ3ZM/NCjuV7tBoxIuBlf50tpCt3J8lJMzpzclCGcHAT3Jp3sHz8OXSeGp9YjcIoyl0QT6GkRys=@vger.kernel.org, AJvYcCWGAO75wx0gXCujhPhSgacWKNq+WewiuGFNcS9tyDig2ASgQdGoG/Xjl1YDBSXVCAJhGxwe4EbKwg==@vger.kernel.org, AJvYcCWJbN8vLrtmRPkdeooFQy/vQJkKuZxoymdPvaQIrZC9WJ/dBg444wFtaGjQAHq+SRXHqO7I/uEiAFUWAw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyhpvmgF9jkOWJcvYYZYvwPch12FXIdqsRxltF44dkf/uABQqB0
-	gNHFpwqxlvuMOP6HdymKi9Wk3kCNpc8y2/Wy13SvEyMJmhwK3BMG
-X-Google-Smtp-Source: AGHT+IE8deZQbEFmLxsNjvaQHppwSiVlfb/JcEO8eBT8Er4XhuZQWQlwrAn+B4VtBktpYvCn9ldPGA==
-X-Received: by 2002:a2e:b896:0:b0:2ff:566e:b597 with SMTP id 38308e7fff4ca-2ff606fb54fmr81123891fa.38.1731951854002;
-        Mon, 18 Nov 2024 09:44:14 -0800 (PST)
-Received: from [192.168.42.187] (82-132-219-237.dab.02.net. [82.132.219.237])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa20e045270sm561214266b.146.2024.11.18.09.44.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Nov 2024 09:44:13 -0800 (PST)
-Message-ID: <4f5ef808-aef0-40dd-b3c8-c34977de58d2@gmail.com>
-Date: Mon, 18 Nov 2024 17:45:02 +0000
+        d=1e100.net; s=20230601; t=1731952821; x=1732557621;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=paCLR7IijVyeUeVe8LL4hZL7nuFgS1QPO7Bsd6hORws=;
+        b=QXFiXwjzOC4/xvfuQe5G40b0uOxyZAv3PpwrtZDO6QUpgF/7tAEwgurZqMR325ekQa
+         i3mPWxT6wZVJa6N0JgUo5KHP4NAV753aMV5XVUdVEM5niCnMsJVJo6QFI3MjZvbRP3mc
+         TKg1mn4gxAn5Q4S5im9ruzmX1SjMgJrz20K9RAs2wTsw8Rf0BwupgY4mI/cQ+bok+fDi
+         kTv+wk1GA0/SagviZiG+xUU99e2yccUHcHlJjYSW/xL0XjL+a1R3Er7VhP9/im4BF6If
+         SYmHXpfHHy/klwnsVxFDfPWelzarPthRPa/uCUcNxm41cfOT9OqRyWBS+Q/PYrWKqnn0
+         kuKw==
+X-Forwarded-Encrypted: i=1; AJvYcCU3tASC9JuHvQa+pxcMJ+N3aKNO88pCe5dD3lmKxYzKl76KllwcM0h5cz4HNpNEfV5dF3z9KRd3S1p2@vger.kernel.org
+X-Gm-Message-State: AOJu0YyURr7pR5P/pDtSZTbtie+OCP+6cbSes3mOXSj4zs6NOjerbN0w
+	1IoWjHDrkGDJZx/PGF7NDgCxbU8dHG+GjEAF8rvUEOM35/BZJj5FYbJSuaKoSCddaGv+BVIUFLk
+	P28OjYCP4/lyd1kpfRn8AeYUJ04F1TLnpec65
+X-Google-Smtp-Source: AGHT+IEvP+Hgm5H20x8pvUxEcKp1XAOvvO4NdK41CM3JBoEaSiwByV//WtdDkIh33mYoYd53GkX130MHcohV2iDxSxc=
+X-Received: by 2002:a05:6a00:3a14:b0:71e:3b51:e850 with SMTP id
+ d2e1a72fcca58-72476b72b0emr18120513b3a.2.1731952820747; Mon, 18 Nov 2024
+ 10:00:20 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
- and PI support
-To: Christoph Hellwig <hch@lst.de>
-Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org,
- martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
- jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
- gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-References: <20241114104517.51726-1-anuj20.g@samsung.com>
- <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
- <20241114104517.51726-7-anuj20.g@samsung.com>
- <c622ee8c-82f0-44d4-99da-91357af7ecac@gmail.com>
- <b61e1bfb-a410-4f5f-949d-a56f2d5f7791@gmail.com>
- <20241118125029.GB27505@lst.de>
- <2a98aa33-121b-46ed-b4ae-e4049179819a@gmail.com>
- <20241118170329.GA14956@lst.de>
-Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <20241118170329.GA14956@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240709160013.634308-1-tadamsjr@google.com> <784f6b4a-7c43-4484-988e-73fad594c99d@oracle.com>
+In-Reply-To: <784f6b4a-7c43-4484-988e-73fad594c99d@oracle.com>
+From: TJ Adams <tadamsjr@google.com>
+Date: Mon, 18 Nov 2024 10:00:09 -0800
+Message-ID: <CAL54JgdupgdfeBQwETPv3jCh8iYROqA_DthLQ8cJf7Th1XSV_g@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm80xx: Remove msleep() loop from pm8001_dev_gone_notify()
+To: John Garry <john.g.garry@oracle.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/18/24 17:03, Christoph Hellwig wrote:
-> On Mon, Nov 18, 2024 at 04:59:22PM +0000, Pavel Begunkov wrote:
->>>
->>> Can we please stop overdesigning the f**k out of this?  Really,
->>
->> Please stop it, it doesn't add weight to your argument. The design
->> requirement has never changed, at least not during this patchset
->> iterations.
-> 
-> That's what you think because you are overdesigning the hell out of
-> it.  And at least for me that rings every single alarm bell about
-> horrible interface design.
+Sorry for the late response.
 
-Well, and that's what you think, terribly incorrectly as far as
-I can say.
+> > It's possible to end up in a state where pm8001_dev->running_req never
+> > reaches zero.
+>
+> Is that a driver bug then?
 
->>> either we're fine using the space in the extended SQE, or
->>> we're fine using a separate opcode, or if we really have to just
->>> make it uring_cmd.  But stop making thing being extensible for
->>> the sake of being extensible.
->>
->> It's asked to be extendible because there is a good chance it'll need to
->> be extended, and no, I'm not suggesting anyone to implement the entire
->> thing, only PI bits is fine.
-> 
-> Extensibility as in having reserved fields that can be checked for
-> is one thing.  "Extensibility" by adding indirections over indirections
+I haven't seen this unless artificially creating the situation. This
+is a preventative change rather than a response to a specific issue
+seen.
 
-I don't know where you found indirections over indirections.
+> > In that state we will be sleeping forever.
+> >
+> > sas_execute_internal_abort_dev() can wait for a response for
+> > up to 60 seconds (3 retries x 20 seconds). 60 seconds should be enough
+> > for pm8001_dev->running_req to get to zero.
 
-> without a concrete use case is another thing.  And we're deep into the
-> latter phase now.
-> 
->> And no, it doesn't have to be "this or that" while there are other
->> options suggested for consideration. And the problem with the SQE128
->> option is not even about SQE128 but how it's placed inside, i.e.
->> at a fixed spot.
->>
->> Do we have technical arguments against the direction in the last
->> suggestion?
-> 
-> Yes.  It adds completely pointless indirections and variable offsets.
+> May I suggest you drop running_req at some stage, and use other methods
+> to find how many IOs are active?
+I haven't given much thought about better ways to keep track of active
+ios, so it will have to come later but definitely noted!
 
-One indirection, and there are no variable offsets while PI remains
-the only user around.
-
-> How do you expect people to actually use that sanely without
-> introducing bugs left right and center?
-
-I've just given you an example how the user space can look like, I
-have absolutely no idea what you're talking about.
-
-> I really don't get why you want to make an I/O fast path as complicated
-> as possible.
-
-Exactly, _fast path_. PI-only handling is very simple, I don't buy
-that "complicated". If we'd need to add more without an API expecting
-that, that'll mean a yet another forest of never ending checks in the
-fast path effecting all users.
-
--- 
-Pavel Begunkov
+On Tue, Jul 9, 2024 at 9:09=E2=80=AFAM John Garry <john.g.garry@oracle.com>=
+ wrote:
+>
+> On 09/07/2024 17:00, TJ Adams wrote:
+> > From: Igor Pylypiv <ipylypiv@google.com>
+> >
+> > It's possible to end up in a state where pm8001_dev->running_req never
+> > reaches zero.
+>
+> Is that a driver bug then?
+>
+> > In that state we will be sleeping forever.
+> >
+> > sas_execute_internal_abort_dev() can wait for a response for
+> > up to 60 seconds (3 retries x 20 seconds). 60 seconds should be enough
+> > for pm8001_dev->running_req to get to zero.
+>
+> May I suggest you drop running_req at some stage, and use other methods
+> to find how many IOs are active?
+>
+> >
+> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> > Signed-off-by: TJ Adams <tadamsjr@google.com>
+> > ---
+> >   drivers/scsi/pm8001/pm8001_sas.c | 7 +++++--
+> >   1 file changed, 5 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8=
+001_sas.c
+> > index a5a31dfa4512..513e9a49838c 100644
+> > --- a/drivers/scsi/pm8001/pm8001_sas.c
+> > +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> > @@ -712,8 +712,11 @@ static void pm8001_dev_gone_notify(struct domain_d=
+evice *dev)
+> >               if (atomic_read(&pm8001_dev->running_req)) {
+> >                       spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> >                       sas_execute_internal_abort_dev(dev, 0, NULL);
+> > -                     while (atomic_read(&pm8001_dev->running_req))
+> > -                             msleep(20);
+> > +                     if (atomic_read(&pm8001_dev->running_req)) {
+> > +                             pm8001_dbg(pm8001_ha, FAIL,
+> > +                                        "device_id: %u: Failed to abor=
+t %d requests!\n",
+> > +                                        device_id, atomic_read(&pm8001=
+_dev->running_req));
+> > +                     }
+> >                       spin_lock_irqsave(&pm8001_ha->lock, flags);
+> >               }
+> >               PM8001_CHIP_DISP->dereg_dev_req(pm8001_ha, device_id);
+>
