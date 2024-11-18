@@ -1,36 +1,38 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4D6626AD0;
-	Mon, 18 Nov 2024 12:50:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53C919F103;
+	Mon, 18 Nov 2024 13:05:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731934235; cv=none; b=aSOxNT8C1aBrQUg39iKvHRYw5PA5BI0c+iFVnT6U7YqvKkYp93lVncJrL9ogoLh6aamG3OCyY84lDBTJNz881SIRvAvllR5ihfAis+mLS74TvAzUTMoBzMib2Ri4426nW5W1Wc7YzmZ1jBeoLGBru2E0xxMlQ2aD5outhDB1T6w=
+	t=1731935147; cv=none; b=jjDKIHImQmQesFNie2aNXo6Px/Ay1ke/z8HpmlcLuyXj9mf+A5+mScmxE2PhcMDOJ61NtoqFn68BSUhuM1Hv33yXAOVMrBFzXphn/vIEYmkB/Lwgp9CZJNumVnifXwqY1kttaLlnOT8QibJ+BrFNm7AaSlLxR2yz4z23DYRkHyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731934235; c=relaxed/simple;
-	bh=vVc30S78CSd0YTffVqXFcysvNZ66QZx3RW5IvODdI6g=;
+	s=arc-20240116; t=1731935147; c=relaxed/simple;
+	bh=LJh0j+2v8Tr0oL6457rFlEYXiIdQLydd7fS84seABc8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QDrDZhkNePb3QdWGUAsNhQCFQebu0ABeQLuJ+SAR2GUdByU0kNvjKU1IER0mp4Q6Rrsevp7enwh8vRuxlRuvQ31OqW7ooabTcPu9tRlmj3bEARMgf6fM4/c77nJL1jzDy7rFaveiKU62a8WCAyE0etaUEluZKlOfjDI8NF/feV0=
+	 Content-Type:Content-Disposition:In-Reply-To; b=ir1sDc6ECoYicFStUvPb9WW3hWFmY5AjNXJnUQSBlf7RU0JtEbcj12g6rQdK1sjAaVhIoNAoP9yBr8ukKvnCbCJ8d/jU+faRt+vEYSKXKmrMwgbabdS8K30gZpTu/RKHtcKYgAwwkdijVUQIVifZiCcMfbS5GieUV+qOEbdYrOU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 106FF68BFE; Mon, 18 Nov 2024 13:50:30 +0100 (CET)
-Date: Mon, 18 Nov 2024 13:50:29 +0100
+	id 3C68E68D47; Mon, 18 Nov 2024 14:05:41 +0100 (CET)
+Date: Mon, 18 Nov 2024 14:05:40 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Pavel Begunkov <asml.silence@gmail.com>
-Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, hch@lst.de,
-	kbusch@kernel.org, martin.petersen@oracle.com,
-	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
-	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
-	Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
- and PI support
-Message-ID: <20241118125029.GB27505@lst.de>
-References: <20241114104517.51726-1-anuj20.g@samsung.com> <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com> <20241114104517.51726-7-anuj20.g@samsung.com> <c622ee8c-82f0-44d4-99da-91357af7ecac@gmail.com> <b61e1bfb-a410-4f5f-949d-a56f2d5f7791@gmail.com>
+To: John Meneghini <jmeneghi@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Mikulas Patocka <mpatocka@redhat.com>,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>,
+	Hannes Reinecke <hare@suse.de>, snitzer@kernel.org,
+	Ming Lei <minlei@redhat.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	Jonathan Brassow <jbrassow@redhat.com>,
+	Ewan Milne <emilne@redhat.com>, bmarson@redhat.com,
+	Jeff Moyer <jmoyer@redhat.com>,
+	"spetrovi@redhat.com" <spetrovi@redhat.com>,
+	Rob Evers <revers@redhat.com>
+Subject: Re: DMMP request-queue vs. BiO
+Message-ID: <20241118130540.GA29045@lst.de>
+References: <2d5fe016-2941-43a4-8b7c-850b8ee1d6ce@redhat.com> <20241104073547.GA20614@lst.de> <d9733713-eb7b-4efa-ad6b-e6b41d1df93b@suse.de> <20241105103307.GA1385@lst.de> <643e61a8-b0cb-4c9d-831a-879aa86d888e@redhat.com> <41cf98c3-a1de-a740-01ad-53c86f3bc8a5@redhat.com> <20241115170924.GB23437@lst.de> <e48b533d-c28a-4e92-b459-74820957ec7d@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,20 +41,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b61e1bfb-a410-4f5f-949d-a56f2d5f7791@gmail.com>
+In-Reply-To: <e48b533d-c28a-4e92-b459-74820957ec7d@redhat.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Sat, Nov 16, 2024 at 12:32:25AM +0000, Pavel Begunkov wrote:
-> We can also reuse your idea from your previous iterations and
-> use the bitmap to list all attributes. Then preamble and
-> the explicit attr_type field are not needed, type checking
-> in the loop is removed and packing is better. And just
-> by looking at the map we can calculate the size of the
-> array and remove all size checks in the loop.
+On Fri, Nov 15, 2024 at 03:28:03PM -0500, John Meneghini wrote:
+>> And, as pointed out in the private mail that John forwarded to the list
+>> without my permission if we really have a workload that cares md could
+>
+> Ah come on. I deleted most of the private thread....
 
-Can we please stop overdesigning the f**k out of this?  Really,
-either we're fine using the space in the extended SQE, or
-we're fine using a separate opcode, or if we really have to just
-make it uring_cmd.  But stop making thing being extensible for
-the sake of being extensible.
+As a rule of thumb forwarding private mail to a public list is never
+valid without previous permission.  I'm not worried about any actual
+information in this one, but it is still a breach of trust and privacy
+expectations.
 
