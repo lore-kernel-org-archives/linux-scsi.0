@@ -1,257 +1,88 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FB391D1F56
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2024 18:29:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4118640BE0;
+	Tue, 19 Nov 2024 18:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732040948; cv=none; b=Tqho2kAsfJpHVxNFyLAmFoFLUXEHaCrHL6S1y0rrm47nV9lYpnVG9Aza9hW0wrOgIQ6Tyg5o5OD2gNHNn1is5Tqx8iZtekBttQzyvpH0EThuvulfYzwlXe6zLzmU8YMpGr/KOWq9jdSBWWp/EUusHduqqhagL7poVIkvXZS2Pxo=
+	t=1732042361; cv=none; b=d+eWP4qnHiO/nUY8zZv4stKv1xIeA06Ff28e5A9jnsQu5BRwIiC1tEtnrvTaJ4kX5QbYdAIcdZgluZRoMuucjLauuJsntpOumFyV1yVi9dbofV8lYLuvNQqMtjx+MTRG25Jnd0w3pZ+rsID6OJ5AoYxlBKNAjV5TDXrJo6lMqYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732040948; c=relaxed/simple;
-	bh=7EkmoYAIwgLMOya3DiDGaKKRi9eJcRdqgo7aEZsiTP4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mmfcKxWvtvTMIleU6htW9Ii1pNtM4L2+EzRubUGnRhBaFed7nceDJCW39aHx8fWxPvc6Nx0ZsKC5JKqTpspe/pjVpQfaq7C3cLpVM5aRLNIv3QcoPmQFz12qi7CCKlzogEDnYJ3m/xktPsYfHydQHuDskJWmF/VJJ85YBUZArW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=Xq7txC//; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1732042361; c=relaxed/simple;
+	bh=KROwqvWzCeoO+8AWMaIuzk5h10i+YsNyKAwM2bhLFgA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Sfc3Zx4G0uLfq5kUinlBySvZoTC1V//j8PpvlRzR+4XU+0NsezKMvIhLMKWYyEeBuPMF/OC7FNgCfbK3aVvs9DxT0ikRdr3Izos5y9cLYS8mw5mdWBNHZi5KcDx272IvDvPgivELodUtewdDGI6xjRqMFP98ZDPS0zXgpqsdW/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=C+qkkxD+; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="Xq7txC//"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-3824aef833bso1581273f8f.0
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2024 10:29:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1732040943; x=1732645743; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=TjjEcmv2liyk/XEk1ss5lodHgFTZTAwHIgNTYP/SyTw=;
-        b=Xq7txC//hrlB38W1B3QVYa30x6KnEZzMV7r07Pw6nVuQ5Ee5K3Uctfaush223LfmCI
-         xnNEEhKE5OTxlZumHK3qIPi0xZJVdShgGtpr7S9IC1B+QGu1OzLo2RyAQHx7x3KugJvr
-         ccJ7HWSguPHuwjB18Rwtpew8SlsiTmaKIljWRpuIz70LWIarZtobVYF9oFwtmMqVxuNU
-         X3BZRBM1jTHzUX8ABaNZuCmRvTahrTg1mFa55ZmNMbkonkNMkxtN6pvE4DAyZB0MiEJE
-         2Lt/HlnTIM99ZlWUrV1giQb88Atuq30xFkeWY/4OPKLRNqU95/0JoPn6LVMVqlDuxWNj
-         L2vg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732040943; x=1732645743;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=TjjEcmv2liyk/XEk1ss5lodHgFTZTAwHIgNTYP/SyTw=;
-        b=BDwJG2ia7bZadcy77GeoDpfo16jc2hTLJD0IIUkCN6zUgYi0rYyAs6mEydQezejel2
-         yEFKDhxpb7j7UHiM2TvMfbhbU72nYTsLdy4CQSkcywuniz2nzK9IlJGy/eNXPtLxTyFh
-         My3CQWappd1GXaju4qkfKXAJY8RyAWEaVMqg/Y9Nnz6ulOKTYiJsUuTreWX6NYK1QMgv
-         et1Q12LN7D6HicF88MyvtZUT1BpgROGZflXNLWgrPeXXuWJxoLNU13F7GhpF0Ph0HrKf
-         ZEH1s7tpQFnlOMM5sI31mMZ/JbFqMlOmAmLDUiGhRWh2cGFIV7ThRsJELmDd2dz46dSq
-         ffDg==
-X-Forwarded-Encrypted: i=1; AJvYcCWATrVbGWfLoyx/YDbftp+TAcDwAfN+g0+YY8z7O0LX+C2kM3Zl5IlbbBDJN9Oe9MeEncr8JzfPjpj/@vger.kernel.org
-X-Gm-Message-State: AOJu0YxlxVHwYqvRsoe7R1FePGIMH37iTIQzr4BdCWkHzVZUnaHFS/No
-	Qwd8uUOWiRnfoZhkLl4BzQ7tsrb5GXjW8iMvJVArMXT6bg2rWlEruLxIkadqSXI=
-X-Google-Smtp-Source: AGHT+IFnY/REEdmz7YD1WEr3CSS+CDWUtex9JzX1ZdzW4zdq0+PcYDiFyHyYLuR7W7cpAOYMYdli5w==
-X-Received: by 2002:a5d:6c62:0:b0:382:40cc:5057 with SMTP id ffacd0b85a97d-38240cc530dmr8023061f8f.8.1732040943004;
-        Tue, 19 Nov 2024 10:29:03 -0800 (PST)
-Received: from localhost (p509159f1.dip0.t-ipconnect.de. [80.145.89.241])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38244220183sm7893379f8f.99.2024.11.19.10.29.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Nov 2024 10:29:02 -0800 (PST)
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Pedro Sousa <pedrom.sousa@synopsys.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Orson Zhai <orsonzhai@gmail.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Chunyan Zhang <zhang.lyra@gmail.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] scsi: ufs: Switch back to struct platform_driver::remove()
-Date: Tue, 19 Nov 2024 19:28:56 +0100
-Message-ID: <20241119182856.55743-2-u.kleine-koenig@baylibre.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="C+qkkxD+"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XtDBv3lm1zlgTWM;
+	Tue, 19 Nov 2024 18:52:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1732042357; x=1734634358; bh=FBRC5j4HorFzPcWTIrHuc7qP
+	8xkPYV9CgWbuWHHFlCA=; b=C+qkkxD+MWSEB4QK6KpDJPTg7xYDkEPc5Z+oZFk6
+	uDubO6z/dFX/7PF8XE02SrUnLyl9l4eH98y4ILeZNu5cowsrIviX58ACyUA/EqVb
+	GRzHtbXxNXYDARSrnh6g/5g1wrzzFGfL6scv0dJn05E4yqYH83FUGcyl/xGU+3u/
+	ur6eA9oa2ZVnSWHhpKmqPcf+W0y1FGcZd6jqvf2RVBXIWCwvm3hInt49E3d7gZlO
+	WQKwKbCyx7sRtgfVmeUV+pfK8I20YfYBXU246Ez6j0m2HAm7ZOFiPbFN0ZZa6NBn
+	lL2+Ki/hzXk6L+HYHs1gAz7zH1hYwm9lUTdrTKR1KP0h2Q==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6_iDmGvN1MSW; Tue, 19 Nov 2024 18:52:37 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XtDBq6MnWzlgTWK;
+	Tue, 19 Nov 2024 18:52:35 +0000 (UTC)
+Message-ID: <05d08c8a-7bae-4bf9-8238-46cd739223c4@acm.org>
+Date: Tue, 19 Nov 2024 10:52:34 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6400; i=u.kleine-koenig@baylibre.com; h=from:subject; bh=7EkmoYAIwgLMOya3DiDGaKKRi9eJcRdqgo7aEZsiTP4=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBnPNjp6LSiAa1I5FOmgMRNs6RRlpfp1I+WXQ5Jy kT+1b+r+OmJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZzzY6QAKCRCPgPtYfRL+ TpXpB/0e48BSclKJNk79t2QAL7ya486g/ZENqVkbV84wvxtryeeYwTupocnq00111eq5K0/DmGn 5N4obnl0Yz0e3KeGMA7JfzxJvPrPYGOGz28YyBN6Sd3hOEd6ySenM2sNKhrDFRa+ryLgbBtM+0r t1goFmLAz1bCbMLKdKob3arBzK0CJUYeBB/jgaipkO2eqyCWlNSt+pteiri4uI2flz9pqWJALQL QXPOzQck5OYwjzyutjQCb/e5xiDGpJriITfqlnsNsdFM2WKgrZ/R+MvqLn6nnyNroBHFtNX80WU 7OIgmZQqPyjlHlnMRJJPpcenrvoEatHfp2PJ/iqzncWGiZ5D
-X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 00/26] Improve write performance for zoned UFS devices
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Jaegeuk Kim <jaegeuk@kernel.org>
+References: <20241119002815.600608-1-bvanassche@acm.org>
+ <20241119122533.GA28580@lst.de>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241119122533.GA28580@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-After commit 0edb555a65d1 ("platform: Make platform_driver::remove()
-return void") .remove() is (again) the right callback to implement for
-platform drivers.
+On 11/19/24 4:25 AM, Christoph Hellwig wrote:
+> What's your exact test setup?
 
-Convert all platform drivers below drivers/ufs to use .remove(), with
-the eventual goal to drop struct platform_driver::remove_new(). As
-.remove() and .remove_new() have the same prototypes, conversion is done
-by just changing the structure member name in the driver initializer.
+Pixel 2023 and 2025 development boards with android-mainline kernel
+(https://android.googlesource.com/kernel/common/+/refs/heads/android-mainline). 
+The android mainline kernel tracks the upstream kernel closely. While 
+the performance of Pixel development boards is
+identical to that of the corresponding smartphone generation, these
+development boards have the following advantages:
+- A UFS socket that allows swapping UFS devices without any soldering.
+- A USB port that makes it easy to monitor and capture kernel log
+   messages.
 
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
----
-Hello,
+> Which upstream kernel support zoned UFS device are using?
 
-I did a single patch for all of drivers/ufs. While I usually prefer to
-do one logical change per patch, this seems to be overengineering here
-as the individual changes are really trivial and shouldn't be much in
-the way for stable backports. But I'll happily split the patch if you
-prefer it split. Also if you object the indentation stuff, I can rework
-that.
+A Micron ZUFS device. Micron zoned UFS devices have a zone size that is
+a power of two.
 
-This is based on today's next, if conflicts arise when you apply it at
-some later time and don't want to resolve them, feel free to just drop
-the changes to the conflicting files. I'll notice and followup at a
-later time then. Or ask me for a fixed resend. (Having said that, I
-recommend b4 am -3 + git am -3 which should resolve most conflicts just
-fine.)
+Thanks,
 
-Best regards
-Uwe
+Bart.
 
- drivers/ufs/host/cdns-pltfrm.c        | 2 +-
- drivers/ufs/host/tc-dwc-g210-pltfrm.c | 2 +-
- drivers/ufs/host/ti-j721e-ufs.c       | 2 +-
- drivers/ufs/host/ufs-exynos.c         | 2 +-
- drivers/ufs/host/ufs-hisi.c           | 2 +-
- drivers/ufs/host/ufs-mediatek.c       | 2 +-
- drivers/ufs/host/ufs-qcom.c           | 2 +-
- drivers/ufs/host/ufs-renesas.c        | 2 +-
- drivers/ufs/host/ufs-sprd.c           | 2 +-
- 9 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/ufs/host/cdns-pltfrm.c b/drivers/ufs/host/cdns-pltfrm.c
-index 66811d8d1929..c80f770a6285 100644
---- a/drivers/ufs/host/cdns-pltfrm.c
-+++ b/drivers/ufs/host/cdns-pltfrm.c
-@@ -321,7 +321,7 @@ static const struct dev_pm_ops cdns_ufs_dev_pm_ops = {
- 
- static struct platform_driver cdns_ufs_pltfrm_driver = {
- 	.probe	= cdns_ufs_pltfrm_probe,
--	.remove_new = cdns_ufs_pltfrm_remove,
-+	.remove = cdns_ufs_pltfrm_remove,
- 	.driver	= {
- 		.name   = "cdns-ufshcd",
- 		.pm     = &cdns_ufs_dev_pm_ops,
-diff --git a/drivers/ufs/host/tc-dwc-g210-pltfrm.c b/drivers/ufs/host/tc-dwc-g210-pltfrm.c
-index a3877592604d..9bfaa36cc898 100644
---- a/drivers/ufs/host/tc-dwc-g210-pltfrm.c
-+++ b/drivers/ufs/host/tc-dwc-g210-pltfrm.c
-@@ -89,7 +89,7 @@ static const struct dev_pm_ops tc_dwc_g210_pltfm_pm_ops = {
- 
- static struct platform_driver tc_dwc_g210_pltfm_driver = {
- 	.probe		= tc_dwc_g210_pltfm_probe,
--	.remove_new	= tc_dwc_g210_pltfm_remove,
-+	.remove		= tc_dwc_g210_pltfm_remove,
- 	.driver		= {
- 		.name	= "tc-dwc-g210-pltfm",
- 		.pm	= &tc_dwc_g210_pltfm_pm_ops,
-diff --git a/drivers/ufs/host/ti-j721e-ufs.c b/drivers/ufs/host/ti-j721e-ufs.c
-index 250c22df000d..21214e5d5896 100644
---- a/drivers/ufs/host/ti-j721e-ufs.c
-+++ b/drivers/ufs/host/ti-j721e-ufs.c
-@@ -83,7 +83,7 @@ MODULE_DEVICE_TABLE(of, ti_j721e_ufs_of_match);
- 
- static struct platform_driver ti_j721e_ufs_driver = {
- 	.probe	= ti_j721e_ufs_probe,
--	.remove_new = ti_j721e_ufs_remove,
-+	.remove = ti_j721e_ufs_remove,
- 	.driver	= {
- 		.name   = "ti-j721e-ufs",
- 		.of_match_table = ti_j721e_ufs_of_match,
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 6548f7a8562f..c4098011c4b4 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -2166,7 +2166,7 @@ static const struct dev_pm_ops exynos_ufs_pm_ops = {
- 
- static struct platform_driver exynos_ufs_pltform = {
- 	.probe	= exynos_ufs_probe,
--	.remove_new = exynos_ufs_remove,
-+	.remove = exynos_ufs_remove,
- 	.driver	= {
- 		.name	= "exynos-ufshc",
- 		.pm	= &exynos_ufs_pm_ops,
-diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
-index 5ee73ff05251..494f593702a3 100644
---- a/drivers/ufs/host/ufs-hisi.c
-+++ b/drivers/ufs/host/ufs-hisi.c
-@@ -590,7 +590,7 @@ static const struct dev_pm_ops ufs_hisi_pm_ops = {
- 
- static struct platform_driver ufs_hisi_pltform = {
- 	.probe	= ufs_hisi_probe,
--	.remove_new = ufs_hisi_remove,
-+	.remove = ufs_hisi_remove,
- 	.driver	= {
- 		.name	= "ufshcd-hisi",
- 		.pm	= &ufs_hisi_pm_ops,
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 06ab1e5e8b6f..6fc848d0ada8 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1962,7 +1962,7 @@ static const struct dev_pm_ops ufs_mtk_pm_ops = {
- 
- static struct platform_driver ufs_mtk_pltform = {
- 	.probe      = ufs_mtk_probe,
--	.remove_new = ufs_mtk_remove,
-+	.remove = ufs_mtk_remove,
- 	.driver = {
- 		.name   = "ufshcd-mtk",
- 		.pm     = &ufs_mtk_pm_ops,
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 3b592492e152..d2b8d97b480e 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1897,7 +1897,7 @@ static const struct dev_pm_ops ufs_qcom_pm_ops = {
- 
- static struct platform_driver ufs_qcom_pltform = {
- 	.probe	= ufs_qcom_probe,
--	.remove_new = ufs_qcom_remove,
-+	.remove = ufs_qcom_remove,
- 	.driver	= {
- 		.name	= "ufshcd-qcom",
- 		.pm	= &ufs_qcom_pm_ops,
-diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
-index 3ff97112e1f6..f404019dc5d9 100644
---- a/drivers/ufs/host/ufs-renesas.c
-+++ b/drivers/ufs/host/ufs-renesas.c
-@@ -404,7 +404,7 @@ static void ufs_renesas_remove(struct platform_device *pdev)
- 
- static struct platform_driver ufs_renesas_platform = {
- 	.probe	= ufs_renesas_probe,
--	.remove_new = ufs_renesas_remove,
-+	.remove = ufs_renesas_remove,
- 	.driver	= {
- 		.name	= "ufshcd-renesas",
- 		.of_match_table	= of_match_ptr(ufs_renesas_of_match),
-diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
-index d8b165908809..b1ffb9b05fa7 100644
---- a/drivers/ufs/host/ufs-sprd.c
-+++ b/drivers/ufs/host/ufs-sprd.c
-@@ -442,7 +442,7 @@ static const struct dev_pm_ops ufs_sprd_pm_ops = {
- 
- static struct platform_driver ufs_sprd_pltform = {
- 	.probe = ufs_sprd_probe,
--	.remove_new = ufs_sprd_remove,
-+	.remove = ufs_sprd_remove,
- 	.driver = {
- 		.name = "ufshcd-sprd",
- 		.pm = &ufs_sprd_pm_ops,
-
-base-commit: 414c97c966b69e4a6ea7b32970fa166b2f9b9ef0
--- 
-2.45.2
 
