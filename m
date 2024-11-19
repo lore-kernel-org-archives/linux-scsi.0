@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F91E1482E8;
-	Tue, 19 Nov 2024 07:58:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE0815383E;
+	Tue, 19 Nov 2024 08:01:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732003088; cv=none; b=WjPjWRJqAvnOtcuMmbzMzHXF7xZrpkTqV//4JIttvXYCEiwxBo36gzzvx07Fgvh2pz1VA9grWXkhQTqHUYPMeEsku+d3q7URktF2I3nvlIwjVRjW3dbaM/G23JRDUIHaqaMjjhlBufZVL3BbgNBnJiiGyWpWu2zHqunYKYkFi5o=
+	t=1732003305; cv=none; b=tlXIcJpp7z5dAXx9ZFt6COrrb38yORd1oFtJCJ/S/KkOfQ2G4ceM6+exRQaC0tEiRsme5a2d2clyeMAGHYlhib9TbYpdr7Ml6ndEVybloKAqErW0BpPUnm9jG023cINWzzPRZskeeP/KVU74ssCl8qSHAvlXCLzOsBeS+ovCkKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732003088; c=relaxed/simple;
-	bh=l3u30BnlrxmXDuy49dyNSMmEdwl8ZgM++OlPO33Q+g8=;
+	s=arc-20240116; t=1732003305; c=relaxed/simple;
+	bh=ZUUNauj0C68Uxt6kBfuf5OP1sOOBI3twZoVs/zgf0V8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cobzvafac2q4Z269h47aSVYCJp0LfEbJCc4Mkz5yickQa+y09pksD/AaojlbEYFt0T3wLvo/wKnSibz+dwAUlZp9IL9qYV7yS9PWic7EzLPWfWFpYN+zwAEL5BU1Xsvb5X3OMgxYnUWR+HhTPtBjPMqf+2dMmfB+mBxOfApcwWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YzN5r5HR; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=KDvAFkmRPvZ0UVjrJDVtsltQPOiMKf2BofKd198Eo0L96wU3Bz9CvFTTDBrA1VrqkTm+oeHMnqk1P+OaTMY0VVmyopZ/EWhqTbZIgReu8Coko659lGwLKGo9QLD6QtJTuFY+H3djx8I2/o9dVjmMggSi+D55hJRiVxMFyKDaDjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C32EXrgc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YzN5r5HR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0A6FC4CECF;
-	Tue, 19 Nov 2024 07:58:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C32EXrgc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CA0DC4CECF;
+	Tue, 19 Nov 2024 08:01:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732003087;
-	bh=l3u30BnlrxmXDuy49dyNSMmEdwl8ZgM++OlPO33Q+g8=;
+	s=k20201202; t=1732003305;
+	bh=ZUUNauj0C68Uxt6kBfuf5OP1sOOBI3twZoVs/zgf0V8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=YzN5r5HRDNPGe/kc3KGgNDQ14qCc7faKsAFvKk5gffek8sH0DKcUE/+FERUm5keZn
-	 YMW0s99rYmNjA4ueEuD4G5YOie5uj+q+WuokhrIzwuh55r5J7jPMz+8cTQMs7UxRAI
-	 SJef8z7U7pcqUQGBJ2N6kB8Z3yQc+eno5hXk5Ix4aeTeqrLsG47cKaWgXKCv9YaDUp
-	 AVTbVjTkiGsl6HYN5aptLUh/WNKYWIx0XKzd2m3fwwZART3t4CZoXPuHsln2iwPiBG
-	 RXD5likoYn5UdauY/cmbPiYsU/W+2zyxrlVH9xFXQtLvwiBZ4gaLlWofPjZPD8iXU3
-	 B8OiNC22T1zBg==
-Message-ID: <b9eabe3f-12f3-418f-a07b-3a7089f98524@kernel.org>
-Date: Tue, 19 Nov 2024 16:58:05 +0900
+	b=C32EXrgc0yGkOXsvsmXmYxTeSVkyuLlXW99/fn78HPjjgrYE33ffsQ2jvk1zNoOX8
+	 HVVkPLI5FdYO1fstafpZYeIwhaHWXCnu3aERsyvZBbccvZzcbrejoNgE7Cx/GLUSWJ
+	 UnO+esBpnaMFflP6U30qZsqW8JEkuMn48aoDy+6tcsdoy0of3B4JhaGZ+ttWbhuetr
+	 HqE29ZyORZ3ujW/rRq4TCmTEXR51Ys3/ecGv/ak6sUdf+fBs0TVZ6OYpDhlJjEUYPh
+	 3Ira6GoPWjxyNdAcgh5wbZfVGGC1KV0G65VBJo3f6rRbhu/1tvvKpmdcMMAkv4Xg/H
+	 MbEztyNL4gLfw==
+Message-ID: <95ab028e-6cf7-474e-aa33-37ab3bccd078@kernel.org>
+Date: Tue, 19 Nov 2024 17:01:43 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,52 +35,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 18/26] blk-zoned: Make disk_should_remove_zone_wplug()
- more robust
+Subject: Re: [PATCH v16 00/26] Improve write performance for zoned UFS devices
 To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
 References: <20241119002815.600608-1-bvanassche@acm.org>
- <20241119002815.600608-19-bvanassche@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20241119002815.600608-19-bvanassche@acm.org>
+In-Reply-To: <20241119002815.600608-1-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/19/24 09:28, Bart Van Assche wrote:
-> Make the disk_should_remove_zone_wplug() behavior independent of the
-> number of zwplug references held by the caller.
+On 11/19/24 09:27, Bart Van Assche wrote:
+> Hi Damien and Christoph,
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  block/blk-zoned.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-> index 2b4783026450..59f6559b94da 100644
-> --- a/block/blk-zoned.c
-> +++ b/block/blk-zoned.c
-> @@ -457,12 +457,9 @@ static inline bool disk_should_remove_zone_wplug(struct gendisk *disk,
->  	 * blk_zone_write_plug_finish_request() (e.g. with split BIOs
->  	 * that are chained). In such case, disk_zone_wplug_unplug_bio()
->  	 * should not attempt to remove the zone write plug until all BIO
-> -	 * completions are seen. Check by looking at the zone write plug
-> -	 * reference count, which is 2 when the plug is unused (one reference
-> -	 * taken when the plug was allocated and another reference taken by the
-> -	 * caller context).
-> +	 * completions are seen.
->  	 */
-> -	if (refcount_read(&zwplug->ref) > 2)
-> +	if (zwplug->wp_offset != zwplug->wp_offset_compl)
+> This patch series improves small write IOPS by a factor of four (+300%) for
+> zoned UFS devices on my test setup with an UFSHCI 3.0 controller. Although
+> you are probably busy because the merge window is open, please take a look
+> at this patch series when you have the time. This patch series is organized
+> as follows:
+>  - Bug fixes for existing code at the start of the series.
+>  - The write pipelining support implementation comes after the bug fixes.
 
-See my comment in patch 5 about wp_offset_compl. I do not think it works.
-
-
->  		return false;
->  
->  	/* We can remove zone write plugs for zones that are empty or full. */
+Impressive improvements but the changes are rather invasive. Have you tried
+simpler solution like forcing unplugging a zone write plug from the driver once
+a command is passed to the driver and the driver did not reject it ? It seems
+like this would make everything simpler on the block layer side. But I am not
+sure if the performance gains would be the same.
 
 
 -- 
