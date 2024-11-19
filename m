@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCB2315853A;
-	Tue, 19 Nov 2024 20:21:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 729991D2784;
+	Tue, 19 Nov 2024 20:51:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732047686; cv=none; b=PMvDa0G/KrvtF9qTynDjaHtlWmX83s2o63NKKXT484gKnUsCQymDpm6Ccdin+tWPsAXCtmqQsVw0NK52TzoDGkP6dYN7bi2J9sVLT83eUU1fpVjQKxvUqOZibKvDy2Pt5egRwLkCvzpcO36qZVPWuohXJmFrFOWMyLcOfusUQg8=
+	t=1732049503; cv=none; b=TxM1mmhRVrhn/IeWJZ8pR7nAD0fAJgU2PEvjxWQ7tBPhpAS21SLkgnU+J8YgCw/hGK+0B7q2kavMMDE3nLot3VWg6tN5mwgoTNZOzm71VbolkKvr2Wo7IWgX7v3n3k39qX+3rhcbjr3wkUIlFcCOajrg1tDocsN0miLTCGfB/pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732047686; c=relaxed/simple;
-	bh=b+7fb8zN8SGwpCX5cAxruwCkEcC8k7k96sMyyLZ+2TU=;
+	s=arc-20240116; t=1732049503; c=relaxed/simple;
+	bh=ialYUdFNsj+hOO/mCYfBXJmNlt/CKdhPeNNInyr4rto=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N/HOGMGxmPJHTwabVZSvLgN+ixbDn7oMiuX+ygKMio2nGeZsGqQbCfEDgOI2r/RO4xEVavT+fB0gol7uOIWKD5OHhCuiGLm0Sgxz3Fjlpz+tZ5Y2L+aHhYW5CSCi9ZDN7qVhpUE8XLDg4yM40vymXojqidllj5ziW+V1Kk2kq9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Drt2FdYz; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=Z/CMAI2qGE8Vc9UOC+jof1XoGGyrpm0IRGZpBHBRtdrJRxlwAg8iBVJYLRPDw02Jg+q1iNoQDlWoqsHKiFm39wICe5rVH9etBYlH5q53hJlWXyS/daCE2DEtP7bEE/zT5hb0/b0KEImxsbkTxnFMPcSqOxYTlbpv7Ffv1BNzASg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0mbwVE41; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Drt2FdYz"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0mbwVE41"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XtG9B3lCrzlgTWM;
-	Tue, 19 Nov 2024 20:21:18 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XtGrC6KyZzlgTWM;
+	Tue, 19 Nov 2024 20:51:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1732047675; x=1734639676; bh=ZTDBhM3UJrTh2NsWmlgIX2TW
-	Mmn9XJT/woGQyiJy/Ts=; b=Drt2FdYz6CBCJ0zYXtSAC9Xejv/sCxcNFW2KUVPI
-	FZTn0VxZ47VSFGn8/5cZ+zSpqF6tF5lTnwP6KfhAUoxHTtSCjMr4gEqwYNeOwPNl
-	2p5tNJsLFIxpEDx/VIGHV+VISavR2RTHyYBIcdmqsE/EcfmdDF0Zt+oYX7oyBwPB
-	9sDOQy3rTgec5f5uWYdRhCLu4xAksMlv0dMdjtfcuEXi+wQFCqJgpy2zKZLhpuYL
-	39VuCKWdL4qMmWy7itG6HvU0kZDM+uXouyIR2eGuxLtwM+FfqbFeoglFKQFlCVq4
-	bUD4DAa4pgLspuK8z0ZnaQnq0sviYqjqK1ARC8BwrryqyA==
+	 s=mr01; t=1732049494; x=1734641495; bh=GSpkskIa1RUaSnZDKPC1gWBo
+	Yy73Ox3kk5jHANpu41Q=; b=0mbwVE413EEHaw8X1wCpXQw2WMNZnrAcGwMDramo
+	md7q2Zdf6Pt4Qm4Ep2b3yq4/HwMDt+0Bd5+vwwzwBrHRxwnNCqbzl+wDguEze/5F
+	OMxQGLjUdEo5oaOSoww4gLJYz5eR3eho7J/+5HFEF/w7ifyUSRM8vbMKS5dAg91l
+	Nk0bIYsTJOScSaWwrk3WXcGf389MLsOa0yyeXFszBu4CtVipaVooA4kCiNBx6+dZ
+	ZrALskRufiGVGcMmhfc7oc/rdppn1fPcH33dPpJHPey8OSof6bj82imMboPjij63
+	a91KrRypcT15V6iDZ37vNZ/bjwjZV9jB9QF8oEyKwpYapg==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id mrBeF1V5DoX0; Tue, 19 Nov 2024 20:21:15 +0000 (UTC)
+ id 3NuxoJgCc-JB; Tue, 19 Nov 2024 20:51:34 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XtG954r32zlgTWK;
-	Tue, 19 Nov 2024 20:21:13 +0000 (UTC)
-Message-ID: <e840b66a-79f0-4169-9ab1-c475d9608e4d@acm.org>
-Date: Tue, 19 Nov 2024 12:21:12 -0800
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XtGr46bq2zlgTWK;
+	Tue, 19 Nov 2024 20:51:32 +0000 (UTC)
+Message-ID: <719628f8-5ac2-48b5-8458-68540ae0b2f1@acm.org>
+Date: Tue, 19 Nov 2024 12:51:31 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,102 +50,183 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 01/26] blk-zoned: Fix a reference count leak
+Subject: Re: [PATCH v16 04/26] blk-zoned: Only handle errors after pending
+ zoned writes have completed
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
 References: <20241119002815.600608-1-bvanassche@acm.org>
- <20241119002815.600608-2-bvanassche@acm.org>
- <67d3ec9a-8efd-41c6-8c35-1ba5631c2c9a@kernel.org>
+ <20241119002815.600608-5-bvanassche@acm.org>
+ <7f4058f9-df04-404c-b4f0-25bf0e8e4886@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <67d3ec9a-8efd-41c6-8c35-1ba5631c2c9a@kernel.org>
+In-Reply-To: <7f4058f9-df04-404c-b4f0-25bf0e8e4886@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/18/24 6:23 PM, Damien Le Moal wrote:
+On 11/18/24 6:50 PM, Damien Le Moal wrote:
 > On 11/19/24 9:27 AM, Bart Van Assche wrote:
->> Fix a reference count leak in disk_zone_wplug_handle_error()
->>
->> Fixes: dd291d77cc90 ("block: Introduce zone write plugging")
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> ---
->>   block/blk-zoned.c | 2 ++
->>   1 file changed, 2 insertions(+)
->>
->> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
->> index 70211751df16..3346b8c53605 100644
->> --- a/block/blk-zoned.c
->> +++ b/block/blk-zoned.c
->> @@ -1337,6 +1337,8 @@ static void disk_zone_wplug_handle_error(struct gendisk *disk,
+>> Instead of handling write errors immediately, only handle these after all
+>> pending zoned write requests have completed or have been requeued. This
+>> patch prepares for changing the zone write pointer tracking approach.
+> 
+> A little more explanations about how this is achieved would be nice. I was
+> expecting a shorter change given the short commit message... Took some time to
+> understand the changes without details.
+
+Hi Damien,
+
+I will make the patch description more detailed.
+
+>> @@ -608,6 +608,8 @@ static inline void disk_zone_wplug_set_error(struct gendisk *disk,
+>>   	if (zwplug->flags & BLK_ZONE_WPLUG_ERROR)
+>>   		return;
 >>   
->>   unlock:
->>   	spin_unlock_irqrestore(&zwplug->lock, flags);
+>> +	zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
+>> +	zwplug->flags |= BLK_ZONE_WPLUG_ERROR;
+> 
+> Why move these before the comment ? Also, why set BLK_ZONE_WPLUG_PLUGGED ? It
+> should be set already since this is handling a failed write that was either
+> being prepared for submission or submitted (and completed) already. In both
+> cases, the wplug is plugged since we have a write in flight.
+> 
+>>   	/*
+>>   	 * At this point, we already have a reference on the zone write plug.
+>>   	 * However, since we are going to add the plug to the disk zone write
+>> @@ -616,7 +618,6 @@ static inline void disk_zone_wplug_set_error(struct gendisk *disk,
+>>   	 * handled, or in disk_zone_wplug_clear_error() if the zone is reset or
+>>   	 * finished.
+>>   	 */
+>> -	zwplug->flags |= BLK_ZONE_WPLUG_ERROR;
+>>   	refcount_inc(&zwplug->ref);
+
+Does the comment block refer to the refcount_inc() call only or to both
+the flags changes and the refcount_inc() call? I'm assuming the former.
+That's why I moved the "zwplug->flags |= BLK_ZONE_WPLUG_ERROR;"
+statement. Did I perhaps misunderstand something?
+
+>> +/*
+>> + * Changes @data->res to %false if and only if @rq is a zoned write for the
+>> + * given zone and if it is owned by the block driver.
+> 
+> It would be nice to have a request flag or a state indicating that instead of
+> needing all this code... Can't that be done ?
+
+rq->state and rq->bio are modified independently and are independent of
+whether or not blk_rq_is_seq_zoned_write() evaluates to true. I'm
+concerned that introducing the proposed flag would result in numerous
+changes in the block layer and hence would make the block layer harder
+to maintain.
+
+>> +/*
+>> + * Change the zone state to "error" if a request is requeued to postpone
+>> + * processing of requeued requests until all pending requests have either
+>> + * completed or have been requeued.
+>> + */
+>> +void blk_zone_write_plug_requeue_request(struct request *rq)
+>> +{
+>> +	struct gendisk *disk = rq->q->disk;
+>> +	struct blk_zone_wplug *zwplug;
 >> +
->> +	disk_put_zone_wplug(zwplug);
+>> +	if (!disk->zone_wplugs_hash_bits || !blk_rq_is_seq_zoned_write(rq))
+>> +		return;
 > 
-> The zone wplug put call is right after the single call site to
-> disk_zone_wplug_handle_error(). The reason it is *not* in that function is that
-> the reference on the wplug for handling an error is taken when the wplug is
-> added to the error list. disk_zone_wplug_handle_error() does not itself take a
-> reference on the wplug.
+> I think the disk->zone_wplugs_hash_bits check needs to go inside
+> disk_get_zone_wplug() as that will avoid a similar check in
+> blk_zone_write_plug_free_request() too. That said, I am not even convinced it
+> is needed at all since these functions should be called only for a zoned drive
+> which should have its zone wplug hash setup.
+
+Moving the disk->zone_wplugs_hash_bits check sounds good to me.
+
+I added this check after hitting an UBSAN report that indicates that
+disk->zone_wplugs_hash_bits was used before it was changed into a non-
+zero value. sd_revalidate_disk() submits a very substantial number of
+SCSI commands before it calls blk_revalidate_disk_zones(), the function
+that sets disk->zone_wplugs_hash_bits.
+
+>> @@ -1343,14 +1459,15 @@ static void disk_zone_wplug_handle_error(struct gendisk *disk,
+>>   
+>>   static void disk_zone_process_err_list(struct gendisk *disk)
+>>   {
+>> -	struct blk_zone_wplug *zwplug;
+>> +	struct blk_zone_wplug *zwplug, *next;
+>>   	unsigned long flags;
+>>   
+>>   	spin_lock_irqsave(&disk->zone_wplugs_lock, flags);
+>>   
+>> -	while (!list_empty(&disk->zone_wplugs_err_list)) {
+>> -		zwplug = list_first_entry(&disk->zone_wplugs_err_list,
+>> -					  struct blk_zone_wplug, link);
+>> +	list_for_each_entry_safe(zwplug, next, &disk->zone_wplugs_err_list,
+>> +				 link) {
 > 
-> So how did you come up with this ? What workload/operation did you run to find
-> an issue ?
+> You are holding the disk zwplug spinlock, so why use the _safe() loop ? Not
+> needed, right ?
+> 
+>> +		if (!blk_zone_all_zwr_inserted(zwplug))
+>> +			continue;
+>>   		list_del_init(&zwplug->link);
+>>   		spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
 
-Thanks for the feedback. I can't reproduce the refcount leak without my
-other patches. I will check with which other patch this patch has to be
-combined. This is the script that triggered the leak:
+The _safe suffix in list_for_each_entry_safe() is not related to locking
+  - it means that it is allowed to delete the loop entry 'zwplug' from
+the list.
 
-#!/bin/bash
+I think the _safe variant is needed because of the list_del_init() call.
 
-set -eu
+>> +/* May be called from interrupt context and hence must not sleep. */
+>> +void blk_zone_requeue_work(struct request_queue *q)
+>> +{
+>> +	struct gendisk *disk = q->disk;
+>> +
+>> +	if (!disk)
+>> +		return;
+> 
+> Can this happen ?
 
-qd=${1:-64}
-if modprobe -r scsi_debug; then :; fi
-params=(
-         delay=0
-         dev_size_mb=256
-         every_nth=$((2 * qd))
-         max_queue=${qd}
-         ndelay=100000           # 100 us
-         opts=0x8000             # SDEBUG_OPT_HOST_BUSY
-         preserves_write_order=1
-         sector_size=4096
-         zbc=host-managed
-         zone_nr_conv=0
-         zone_size_mb=4
-)
-modprobe scsi_debug "${params[@]}"
-while true; do
-         bdev=$(cd 
-/sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/block && 
-echo *) 2>/dev/null
-         if [ -e /dev/"${bdev}" ]; then break; fi
-         sleep .1
-done
-dev=/dev/"${bdev}"
-[ -b "${dev}" ]
-for rw in write randwrite; do
-     params=(
-         --direct=1
-         --filename="${dev}"
-         --iodepth="${qd}"
-         --ioengine=io_uring
-         --ioscheduler=none
-         --gtod_reduce=1
-         --hipri=0
-         --name="$(basename "${dev}")"
-         --runtime=30
-         --rw="$rw"
-         --time_based=1
-         --zonemode=zbd
-     )
-     fio "${params[@]}"
-     rc=$?
-     if grep -avH " ref 1 " /sys/kernel/debug/block/sda/zone_wplugs; 
-then :; fi
-     echo ''
-     [ $rc = 0 ] || break
-done
+The code in scsi_scan.c executes SCSI commands like INQUIRY before
+sd_probe() attaches a disk (device_add_disk()) so I think that any code
+inserted into blk_mq_requeue_work() must support q->disk == NULL.
+
+>> @@ -1854,8 +1991,11 @@ static void queue_zone_wplug_show(struct blk_zone_wplug *zwplug,
+>>   	zwp_bio_list_size = bio_list_size(&zwplug->bio_list);
+>>   	spin_unlock_irqrestore(&zwplug->lock, flags);
+>>   
+>> -	seq_printf(m, "%u 0x%x %u %u %u\n", zwp_zone_no, zwp_flags, zwp_ref,
+>> -		   zwp_wp_offset, zwp_bio_list_size);
+>> +	bool all_zwr_inserted = blk_zone_all_zwr_inserted(zwplug);
+> 
+> Is this bool really needed ? If it is, shouldn't it be assigned while holding
+> the zwplug lock to have a "snapshot" of the plug with all printed values
+> consistent ?
+
+Since blk_zone_all_zwr_inserted() checks information that is not
+related to the zwplug state (e.g. the requeue list), I don't think that
+the zwplug lock should be held around this blk_zone_all_zwr_inserted()
+call.
+
+I can keep this change as a local debugging patch if you would prefer
+this.
+
+>> +void blk_zone_write_plug_requeue_request(struct request *rq);
+>> +static inline void blk_zone_requeue_request(struct request *rq)
+>> +{
+>> +	if (!blk_rq_is_seq_zoned_write(rq))
+>> +		return;
+>> +
+>> +	blk_zone_write_plug_requeue_request(rq);
+> 
+> May be:
+> 
+> 	if (blk_rq_is_seq_zoned_write(rq))
+> 		blk_zone_write_plug_requeue_request(rq);
+> 
+> ?
+
+I can make this change - I don't have a strong opinion about which style
+to prefer.
+  Thanks,
+
+Bart.
 
