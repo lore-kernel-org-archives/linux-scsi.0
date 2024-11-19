@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA541514DC;
-	Tue, 19 Nov 2024 07:40:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352B91384BF;
+	Tue, 19 Nov 2024 07:44:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732002049; cv=none; b=tDbdz4KSVyYY3KZx9WjMV0H7yv7qQ5lbFrzHF0AQ6/1f+03nSakMSyRBFkAytpL0Id3XXE6PE4H/i+Lz/snMy+hCo2CtzFra434/bbaWe/43exzYKeY/+SKqokK7BQgk4VRQmaxsBY0fs+LE/fie4yCxs697IIE5XR9Sw067ROs=
+	t=1732002300; cv=none; b=LgN9+sUzqGTZI5uTbXAN2stSrN5hyr80ZkAGiS3fGOn2tRnKsR5EOKv20FQhIVmlOQXr+7TeBO6bSgKHqrk9/TcAtuNh2oh5ei4Ey/VIzXNj1EMkqtqPlp+trXy8OTF48A5f/SlIxjM2a6BOecq7Gvd2XUcgYczOFwxFYgmDErw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732002049; c=relaxed/simple;
-	bh=+fi1GzmWgsYUM24+hhHWpqLQGK3l45iFa7mfvc8LyeA=;
+	s=arc-20240116; t=1732002300; c=relaxed/simple;
+	bh=iGNe3Q+wcKdvH8EIwnKew2LtX/mvNPzigSTnBHiGvtE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RlO4h542nFGFlUDUM1I21exLbmsiFZoUuC2UjSkIYlUOBRkqkTxVxYm2MB/7yOatP1y9zILY5XmNeNiMWpA6Yp4PY1iw/Attr98btSBWW53muHky9ely580TnRDemqHlnLXJ638dXuwUEC63QDZWHWbjZwUNIh9MLqVB0+ABQGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=So5M+5pj; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=lTIG22LQfVGFfIc2d4jFP5W4VbPrvW3nm3Iyf7sbVyUY6dwDOk/dLL6XKs87teXqPMAPskGsAgPZhkOnV/QL2lEMMayvVRnlwUsgrWpfPrg47kmF21rw/fHsC5q6wnes6yOUtgd9wK7YJ2sNFHHP91d13RCfkHi1XYa6U7zO0og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=byA5pXRZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="So5M+5pj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A9E1C4CED1;
-	Tue, 19 Nov 2024 07:40:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="byA5pXRZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8094C4CED1;
+	Tue, 19 Nov 2024 07:44:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732002049;
-	bh=+fi1GzmWgsYUM24+hhHWpqLQGK3l45iFa7mfvc8LyeA=;
+	s=k20201202; t=1732002299;
+	bh=iGNe3Q+wcKdvH8EIwnKew2LtX/mvNPzigSTnBHiGvtE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=So5M+5pjxhrrat+GAI7wFdozURVcOSxieGhGjBsf/NBmJiKXZuiBoA79bQI5AeoCk
-	 7rfTq/SLNXOHP8tN2TzKhhUQrW9TyQGGo18ZYew4gxPLXSBFU2dLnZEbhkdWXrXINQ
-	 mJQDJeg0/ovsDHlxMl4rgmrfaes77OVfhSEy92A1WHMbKDuL3R0EzLBMBesA0L+lZY
-	 857G03fawO4Iu4VLmRicXDrr3fi0sL1ctmvxvFK+Kz2GSN60n36rpdOxdE0SsvNI0G
-	 pvfeWHhkhLLmH1hf2+Em5ucacHSNd4CP+jf+KLGOvZZrut/szD5zKywiOiqcZls8ov
-	 hp6evq9svgbNA==
-Message-ID: <8bf2087a-a903-4339-a7af-3f3f23e3d4d5@kernel.org>
-Date: Tue, 19 Nov 2024 16:40:47 +0900
+	b=byA5pXRZSLRqtoXv6eDpATAYxN2mODJyygFhH1URdXnhyYvVvKgrrmjm9WzAPlYbv
+	 mxC/I04lYIil1kJWmmaDE5Ac8uF3d/LHvowsR50E9BsvS5gyNRsK96N7QjD1OZoruV
+	 siHyDkhjMxMJ4jsKO0h+v5y70I+h5ewWALf2SKdqxl8zOsoVIok/OnsXmh1Ld1F3Lf
+	 /itfKWnICWNjVt/rfY7D492WFF5MpqVilxZclZCbqnqdUCIDOGXONjcg9l+WSG26k1
+	 DsrOVLg/QX/pKK9wmHSVU7G0F4mkMo9mX30z5Ubi6WH8szh1y18WebXI4//YXi4KPe
+	 U/KRdEE/c1Mhw==
+Message-ID: <a64bf902-7cad-45c0-931f-d92c43533864@kernel.org>
+Date: Tue, 19 Nov 2024 16:44:57 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,29 +35,32 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 11/26] block: Optimize blk_mq_submit_bio() for the
- cache hit scenario
+Subject: Re: [PATCH v16 12/26] block: Rework request allocation in
+ blk_mq_submit_bio()
 To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
 References: <20241119002815.600608-1-bvanassche@acm.org>
- <20241119002815.600608-12-bvanassche@acm.org>
+ <20241119002815.600608-13-bvanassche@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20241119002815.600608-12-bvanassche@acm.org>
+In-Reply-To: <20241119002815.600608-13-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/19/24 09:28, Bart Van Assche wrote:
-> Help the CPU branch predictor in case of a cache hit by handling the cache
-> hit scenario first.
+> Prepare for allocating a request from a specific hctx by making
+> blk_mq_submit_bio() allocate a request later.
+> 
+> The performance impact of this patch on the hot path is small: if a
+> request is cached, one percpu_ref_get(&q->q_usage_counter) call and one
+> percpu_ref_put(&q->q_usage_counter) call are added to the hot path.
 > 
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Not sure this really helps but looks OK to me.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+The patch looks OK, but I cannot weight on if this is really a "small" impact on
+performance. Jens may want to run his perf setup with this to verify.
 
 -- 
 Damien Le Moal
