@@ -1,52 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03BE35588F;
-	Wed, 20 Nov 2024 17:35:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4066A1E515;
+	Wed, 20 Nov 2024 18:11:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732124119; cv=none; b=UM8Tvb4m+MTC6hH3cTgWq7RFY+d9w/BckATGR0pPhmHJwMTWEKmR/YkxIOtuWWYDU64+fwWmxoJ2uyPNA6swrKsDzw3JZ4H5z1vBvCo4riZ/P9vzDPHndBPbm/9D/jp0oVJ1lYGHMraXSzqwP79qW+ZzqFvf5mZEL4Ydgzcsans=
+	t=1732126275; cv=none; b=Mzy5s954nHX57icZ7SLDqH5aiIW6P+/fa9A4nbjvXuOgmSMwl3+mDbIHxeFsnbx411lGdw/hZ9IzS2cXx2c0190A6Q0Stm4Qr4GE9qehPNbUmmtfEEx00764TB4E6E/Uwb5IxaBms6YKS3i8OJMDtbaPe8p5raK6FwzrA2njRuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732124119; c=relaxed/simple;
-	bh=zhUb1iqG0sWlDdOWsUtyWjkBDoFZXFk2BYB6s8NvcW0=;
+	s=arc-20240116; t=1732126275; c=relaxed/simple;
+	bh=4KW8uGBjK8rnCZMWN0tePYGPLCRfhRqH20IFPcBM49M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Doq+ohvoMauTE1lmgRIdbUQCuKghJdNNzGmNWXFSyBFbb5FqwC4anCSPbweV2FqNGhgF0gyi5L/vRXES4z1qkaFSEg2x3YsxhEGQJ+in9nHdYrCfIebdVconhKLrmE6dRY3ivtih4lDJlYWCM0km42A4pf9JSVR6YHbVDwfB8cE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LLUzD5nA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cI6yt/aVZFSw/yGczpQwO0S24ML5XVS8oQ4V/+O0e9A7CHwi6BHXkZVBVrqQrLbB8wrsqvyHDKJ1H3lozeNKF1gimabiOa0roKughnLjQZ9GlJa6zbnS7uzdF1/FXetlHQi8oz44ylqIDX+/4o00hhWyBKdnpOCAsZacbIW98mw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V5+GQoE9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LLUzD5nA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9551EC4CECD;
-	Wed, 20 Nov 2024 17:35:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V5+GQoE9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 132BEC4CECD;
+	Wed, 20 Nov 2024 18:11:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732124118;
-	bh=zhUb1iqG0sWlDdOWsUtyWjkBDoFZXFk2BYB6s8NvcW0=;
+	s=k20201202; t=1732126274;
+	bh=4KW8uGBjK8rnCZMWN0tePYGPLCRfhRqH20IFPcBM49M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LLUzD5nAaUwl9vXY+3MQc8Sg4ssq4q4ByVc9JI2Y4n+Yt1kif7fKNsX1iw9qBALKd
-	 jrOIX3vDsp2ybevJ8zF9wEi7L09s4rgIFxHzejp/m2+yh18lWnuoB2Svmu6jQL7+t3
-	 QaBtG50OgjyjfvpbeVJZEVrcnLl8m7cob922A4sdXGTs0c9gELvbboSE2ZPMBQFesP
-	 vOAuV4FlMssmc2SFpWEdfqFsTjNPns8SGxD9Mz+ig/gbJCVrIRii6cssEsFwAuBu8J
-	 DKV3AkQ36KcBvFxleA+LPG4qjhOdljCjhPqKIrXpezWXIJDntBVMJMsZ/6yd6cO5t+
-	 kb0lafconi9CQ==
-Date: Wed, 20 Nov 2024 09:35:17 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Pavel Begunkov <asml.silence@gmail.com>, Christoph Hellwig <hch@lst.de>,
-	Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk,
-	kbusch@kernel.org, martin.petersen@oracle.com,
-	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
-	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
-	Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
- and PI support
-Message-ID: <20241120173517.GQ9425@frogsfrogsfrogs>
-References: <20241114104517.51726-1-anuj20.g@samsung.com>
- <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
- <20241114104517.51726-7-anuj20.g@samsung.com>
- <20241114121632.GA3382@lst.de>
- <3fa101c9-1b38-426d-9d7c-8ed488035d4a@gmail.com>
- <ZzeNEcpSKFemO30g@casper.infradead.org>
+	b=V5+GQoE9ZvQgP5hlFV2GTtIY/O4uH/c404WeWL9Tu4jciPU9OXkj6dLrNwqWMTAeh
+	 ezgg8TpP0M/qsIK7ofAI/svqEyJX6ciEs3pT9FcYeUemxShye00mM8O+RXIQ9W6Hw7
+	 zFOZOGJYGotCtFk/XyieCmJJuAv73Wed6lYtvdrOJ9kzRnrVo1CLfMM/8791dUmeJA
+	 MbCXkHSOOsYlm03MSm/eRM5a1H60Ou3W+euM0f2xRVXaTP5M1JlZDENCAPShluXnSq
+	 9ZLn9Kigpy/cvCyj9iKoQ8eim//N0vlqPXNuAxnQ7WYK+wxFfqYROSF8Yhg5G2hzJ7
+	 /7qJGjyyVgJbQ==
+Date: Wed, 20 Nov 2024 11:11:12 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+	Pierre Labat <plabat@micron.com>,
+	Kanchan Joshi <joshi.k@samsung.com>, Keith Busch <kbusch@meta.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+	"axboe@kernel.dk" <axboe@kernel.dk>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"asml.silence@gmail.com" <asml.silence@gmail.com>,
+	"javier.gonz@samsung.com" <javier.gonz@samsung.com>
+Subject: Re: [EXT] Re: [PATCHv11 0/9] write hints with nvme fdp and scsi
+ streams
+Message-ID: <Zz4mQGrlKMiPa8NH@kbusch-mbp>
+References: <ZzNlaXZTn3Pjiofn@kbusch-mbp.dhcp.thefacebook.com>
+ <DS0PR08MB854131CDA4CDDF2451CEB71DAB592@DS0PR08MB8541.namprd08.prod.outlook.com>
+ <20241113044736.GA20212@lst.de>
+ <ZzU7bZokkTN2s8qr@dread.disaster.area>
+ <20241114060710.GA11169@lst.de>
+ <Zzd2lfQURP70dAxu@kbusch-mbp>
+ <20241115165348.GA22628@lst.de>
+ <ZzvPpD5O8wJzeHth@kbusch-mbp>
+ <20241119071556.GA8417@lst.de>
+ <20241120172158.GP9425@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,43 +62,66 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZzeNEcpSKFemO30g@casper.infradead.org>
+In-Reply-To: <20241120172158.GP9425@frogsfrogsfrogs>
 
-On Fri, Nov 15, 2024 at 06:04:01PM +0000, Matthew Wilcox wrote:
-> On Thu, Nov 14, 2024 at 01:09:44PM +0000, Pavel Begunkov wrote:
-> > With SQE128 it's also a problem that now all SQEs are 128 bytes regardless
-> > of whether a particular request needs it or not, and the user will need
-> > to zero them for each request.
+On Wed, Nov 20, 2024 at 09:21:58AM -0800, Darrick J. Wong wrote:
 > 
-> The way we handled this in NVMe was to use a bit in the command that
-> was called (iirc) FUSED, which let you use two consecutive entries for
-> a single command.
+> How do filesystem users pick a write stream?  I get a pretty strong
+> sense that you're aiming to provide the ability for application software
+> to group together a bunch of (potentially arbitrary) files in a cohort.
+> Then (maybe?) you can say "This cohort of files are all expected to have
+> data blocks related to each other in some fashion, so put them together
+> so that the storage doesn't have to work so hard".
 > 
-> Some variant on that could surely be used for io_uring.  Perhaps a
-> special opcode that says "the real opcode is here, and this is a two-slot
-> command".  Processing gets a little spicy when one slot is the last in
-> the buffer and the next is the the first in the buffer, but that's a SMOP.
+> Part of my comprehension problem here (and probably why few fs people
+> commented on this thread) is that I have no idea what FDP is, or what
+> the write lifetime hints in scsi were/are, or what the current "hinting"
+> scheme is.
 
-I like willy's suggestion -- what's the difficulty in having a SQE flag
-that says "...and keep going into the next SQE"?  I guess that
-introduces the problem that you can no longer react to the observation
-of 4 new SQEs by creating 4 new contexts to process those SQEs and throw
-all 4 of them at background threads, since you don't know how many IOs
-are there.
+FDP is just the "new" version of NVMe's streams. Support for its
+predecessor was added in commit f5d118406247acf ("nvme: add support for
+streams")
 
-That said, depending on the size of the PI metadata, it might be more
-convenient for the app programmer to supply one pointer to a single
-array of PI information for the entire IO request, packed in whatever
-format the underlying device wants.
+  https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f5d118406247acfc4fc481e441e01ea4d6318fdc
 
-Thinking with my xfs(progs) hat on, if we ever wanted to run xfs_buf(fer
-cache) IOs through io_uring with PI metadata, we'd probably want a
-vectored io submission interface (xfs_buffers can map to discontiguous
-LBA ranges on disk), but we'd probably have a single memory object to
-hold all the PI information.
+Various applications were written to that interface and showed initial
+promise, but production quality hardware never materialized. Some of
+these applications are still setting the write hints today, and the
+filesystems are all passing through the block stack, but there's just
+currently no nvme driver listening on the other side.
 
-But really, AFAICT it's 6 of one or half a dozen of the other, so I
-don't care all that much so long as you all pick something and merge it.
-:)
+Contrast to the older nvme streams, capable hardware subscribing to this
+newer FDP scheme have been developed, and so people want to use those
+same applications using those same hints in the exact same way that it
+was originally designed. Enabling them could be just be a simple driver
+patch like the above without bothering the filesystem people :)
+ 
+> Is this what we're arguing about?
+> 
+> enum rw_hint {
+> 	WRITE_LIFE_NOT_SET	= RWH_WRITE_LIFE_NOT_SET,
+> 	WRITE_LIFE_NONE		= RWH_WRITE_LIFE_NONE,
+> 	WRITE_LIFE_SHORT	= RWH_WRITE_LIFE_SHORT,
+> 	WRITE_LIFE_MEDIUM	= RWH_WRITE_LIFE_MEDIUM,
+> 	WRITE_LIFE_LONG		= RWH_WRITE_LIFE_LONG,
+> 	WRITE_LIFE_EXTREME	= RWH_WRITE_LIFE_EXTREME,
+> } __packed;
+> 
+> (What happens if you have two disjoint sets of files, both of which are
+> MEDIUM, but they shouldn't be intertwined?)
 
---D
+It's not going to perform as well. You'd be advised against over
+subscribing the hint value among applications with different relative
+expectations, but it generally (but not always) should be no worse than
+if you hadn't given any hints at all.
+ 
+> Or are these new fdp hint things an overload of the existing write hint
+> fields in the iocb/inode/bio?  With a totally different meaning from
+> anticipated lifetime of the data blocks?
+
+The meaning assigned to an FDP stream is whatever the user wants it to
+mean. It's not strictly a lifetime hint, but that is certainly a valid
+way to use them. The contract on the device's side is that writes to
+one stream won't create media interfere or contention with writes to
+other streams. This is the same as nvme's original streams, which for
+some reason did not carry any of this controversy.
