@@ -1,317 +1,705 @@
-Received: from alln-iport-8.cisco.com (alln-iport-8.cisco.com [173.37.142.95])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BA5E647;
-	Wed, 20 Nov 2024 00:04:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.37.142.95
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732061048; cv=fail; b=IrBAxOWsMmQ8F4q+2EpXiUf6x6lr2b488QPvbZEcVOdnNkPz5KaQs+RDo+/dCjc8qXXcTErH/jcTVUQnije8r6DvMnSzbi781kXCbUkYeV0cufJsmBuqjJuzxrK+LxEU3DUaQPIN2BXCRMEnEbDJRlOTrYIsNOfHL7RlZ0ia3KI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732061048; c=relaxed/simple;
-	bh=XRXduDgLyyoGUMz02ZookNqQAPppOcUxM4/qAckVqao=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=YzfXf3CmFZbzAnYc8piA/4L3maXAZgCBBTS+kBLX1YeyP29oKKEHpv5hkHei+SlSNB4bvDLQxTLxbV/7Wt07Yg0Y/NHca763GiM1QOCI14OyzVv0FMEvUdOprD7wmX1uBUQYtMZLonrrLiUqwh7NWJH00pQp0b+rubcuesY/xr0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=gNEPBTca; arc=fail smtp.client-ip=173.37.142.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 739323C3C
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2024 04:23:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.54
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1732076610; cv=none; b=dsYPC6ouLtvFtpZ6jXBFxbWHcwBrXT9qNYI18nXr+A+ubDsd4Z7rs9JD08GNg1cKif9BQRmaM5UsRd/GZbzThULu50Ll3XMoSPG5azKa74P3oyjeDdGDZyY1UoqvhA8sd6QWiA8skKvcQOZLHXbvyMG8iB2rZsRGhZiaU2vHrEc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1732076610; c=relaxed/simple;
+	bh=/oHVUI/Y1A96yTMqP59ZKPaZtM0WZTbLj39uTUysbIQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Content-Type; b=sUhbZFjQiC3EvEhBoyywhNEjYgy4+iV3lTX8xyzL/gGjoHHK1LCAEL1G5Cc32CSkm27QIvLsVlH8l2Tp4rUgtuaysOS4sLm/cTCqKUwUswTs/DrTlF6RywABMgNV+YIyVbgCLueXnEvuGluwzbBf8CWVi9CQMirjcDo5Xp7i7rY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XpXs9TJ2; arc=none smtp.client-ip=209.85.166.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="gNEPBTca"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XpXs9TJ2"
+Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-83a9cd37a11so63223139f.3
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2024 20:23:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=6250; q=dns/txt; s=iport;
-  t=1732061046; x=1733270646;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=XRXduDgLyyoGUMz02ZookNqQAPppOcUxM4/qAckVqao=;
-  b=gNEPBTcawMOjVG5Of3qM8D7gQkkS7CyHmQrAM/hg4CrU4Nr1v9mTxMh8
-   Al1oxJrMoAnkjw+MRtZHkTiuHMLbxojnB5QsqYuV3phBxZfNLoYPwcMxo
-   ylKMCDjsSxZygFCh2aTE+A0gVq/SxglPNSK/n+LVCribRESBh0skcOo5l
-   s=;
-X-CSE-ConnectionGUID: oVGSuUCWT9mVgAZFayQ5Rw==
-X-CSE-MsgGUID: NvflShFdRhqQxH4kAcRZJg==
-X-IPAS-Result: =?us-ascii?q?A0ACAAD1Jj1nj48QJK1aGgEBAQEBAQEBAQEDAQEBARIBA?=
- =?us-ascii?q?QEBAgIBAQEBQCWBGgUBAQEBCwGBcVKCGUiEVYNMA4ROX4ZRgiEDgROdBBSBE?=
- =?us-ascii?q?QNWDwEBAQ0CRAQBAYUHAhaKPQImNAkOAQIEAQEBAQMCAwEBAQEBAQEBAQEBC?=
- =?us-ascii?q?wEBBQEBAQIBBwUUAQEBAQEBOQUOO4YIhloBAQEBAxIRBA1FEAIBCA4KAgImA?=
- =?us-ascii?q?gICLxUQAgQBDQUIGoJfgmUDAaYTAYFAAooren8zgQHgIIEaLgGISwGBbIN9h?=
- =?us-ascii?q?HcnG4INgRVCgjAHMT6EKhsVg0Q6gi8EgkF5hBYlTYdKaJpFCUl7HANZIREBV?=
- =?us-ascii?q?RMXCwcFY0YhLAOBeU5/gTaBUQFCgk5Kgy6BXgU3Cj+CSmlLNwINAjaCJH2CT?=
- =?us-ascii?q?4UXgQuDYWcvAwMDA4M8hGIdQAMLbT03FBsFBDp7BZ83RoM6FWVfAi59FxkXk?=
- =?us-ascii?q?z+DM0mPYZ9MCoQaoXkXhASNApV7g02YdyKjT4UMAgQCBAUCDwEBBoFnOoFbc?=
- =?us-ascii?q?BWDIlIZD44tDQnJPXg7AgcLAQEDCZFHAQE?=
-IronPort-PHdr: A9a23:zHXs0RJSxD6KtTCX2tmcuVQyDhhOgF28FgcR7pxijKpBbeH+uZ/jJ
- 0fYo/5qiQyBUYba7qdcgvHN++D7WGMG6Iqcqn1KbpFWVhEEhMlX1wwtCcKIEwv6edbhbjcxG
- 4JJU1oNwg==
-IronPort-Data: A9a23:LUbIAKouAYxa0u+2Da1ET853XxpeBmI1ZRIvgKrLsJaIsI4StFCzt
- garIBnXPPbcY2L9ft0iOYWx80gHupGGzNdjHFFkpSE1E38U9uPIVI+TRqvS04x+DSFioGZPt
- Zh2hgzodZhsJpPkjk7zdOCn9T8kiPngqoPUUIbsIjp2SRJvVBAvgBdin/9RqoNziLBVOSvV0
- T/Ji5OZYQXNNwJcaDpOt/va8UI355wehRtB1rAATaET1LPhvyF94KI3fcmZM3b+S49IKe+2L
- 86r5K255G7Q4yA2AdqjlLvhGmVSKlIFFVHT4pb+c/HKbilq/kTe4I5iXBYvQRs/ZwGyojxE4
- I4lWapc5useFvakdOw1C3G0GszlVEFM0OevzXOX6aR/w6BaGpfh660GMa04AWEX0uFJLlpTy
- NcnFGEIUB+qtcy/0YvmcPY506zPLOGzVG8eknhkyTecCbMtRorOBv2Uo9RZxzw3wMtJGJ4yZ
- eJANmEpN0qGOkMJYwtMYH49tL/Aan3XcDRCtFORrKkf6GnIxws327/oWDbQUofaGZsIwRbG+
- Qoq+UzfHB8eD9yxxQCF60u8prPMtCjBaqAdQejQGvlC2wDLmTdJV3X6T2CTpfi/l177WN9FL
- UEQ0jQhoLJ090GxSNT5GRqirxasuh8aRsoVCOYh6SmTxafOpQWUHG4JSnhGctNOiSMtbTUu0
- lnMm5biAiZi9eXLD3mc7byT6zi1PED5MFPuewcDcyQ+/uTIn71iiyzAZ+RNGb+M0+fqTGSYL
- y+xkAAygLAajMgu3qq9/Ezajz/EmnQvZlBpjukwdjz5hj6VdLKYi5qUBU83BMuszbp1rHHd7
- RDoeODHsIji6K1hcgTWGI3h+5nyu5643MX02wIHInXY323FF4SfVY5R+ipiA0xiL9wJfzTkC
- GeK5lgLvMMKZCv1NP8mC25UNyjM5fW+fTgCfq2FBueinrArLWdrAQk3PxfJhDG3+KTSuf1nZ
- MzCGSpTMZrqIf86lGXtHbh1PU4DzSElzmSbXoHg0xmiyvKfYnXTIYrpw3PQBt3VGJis+V2Pm
- /4GbpPi40wGDIXWPHKNmaZNdg9iEJTOLcytwyChXrLYelI+cIzgYteNqY4cl3tNxv8Nz7uWp
- CDlASe1CjPX3BX6FOlDUVg6AJvHVpdkpnV9NispVWtEEVB6O+5DMI93m0MLQIQa
-IronPort-HdrOrdr: A9a23:MCike69weegM09/pvBxuk+GXdr1zdoMgy1knxilNoENuA6+lfp
- GV/MjziyWUtN9IYgBfpTnhAsW9qXO1z+8S3WBjB8bSYOCAghrmEGgC1/qv/9SOIVyFygcw79
- YFT0E6MqyOMbEYt7e13ODbKadc/DDvysnB7omurQYJcegpUdAd0+4TMHfjLqQCfng8OXNPLu
- vl2iMonUvGRV0nKu6AKj0uWe/Fq9fXlJTgTyInKnccgjWmvHeD0pK/NwKX8Cs/flp0rIvK91
- KrryXJooGY992rwB7V0GHeq75MnsH699dFDMuQzuAINzTFkG+TFcRccozHmApwjPCk6V4snt
- WJiQwnJd5P53TYeXzwiQfx2jPnzC0l5xbZuBylaDrY0I7ErQABeo58bLFiA1zkAo0bzZdBOZ
- dwriekXlxsfEr9dWrGloD1vlpR5zqJSDIZ4J0uZjpkIMojgHs7l/1EwKuTe61wRx7S+cQpFv
- JjA9rb4+sTeVSGb2rBtm0q29C0WG8vdy32CXTql/blmgS+pkoJh3cw1YgahDMN5Zg9Q55L66
- DNNblpjqhHSosTYbhmDOkMTMOrAiiVKCi8fV66MBDiDuUKKnjNo5n47PE84/yrYoUByN83lI
- 7aWF1VuGYucwblCNGI3pdM7hfRKV/NFwjF24Vb/dx0q7f8TL3kPWmKT00vidKpp7EFDsjSS5
- +ISeRr6j/YXBzT8KpyrnnDssNpWAsjueUuy6MGZ24=
-X-Talos-CUID: =?us-ascii?q?9a23=3AIYJSFGj0l/+cqzfdkAR+jWcx8DJudUPy92rtCHC?=
- =?us-ascii?q?EWGNXR5SnZ1aBwf5ejJ87?=
-X-Talos-MUID: 9a23:aW2/4QpJByx19KKrPysezxd8OsNT44qiMkAUqIUm58qtPhZCGTjI2Q==
-X-IronPort-Anti-Spam-Filtered: true
-Received: from alln-l-core-06.cisco.com ([173.36.16.143])
-  by alln-iport-8.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 20 Nov 2024 00:03:44 +0000
-Received: from alln-opgw-5.cisco.com (alln-opgw-5.cisco.com [173.37.147.253])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by alln-l-core-06.cisco.com (Postfix) with ESMTPS id B2ABB18000114;
-	Wed, 20 Nov 2024 00:03:44 +0000 (GMT)
-X-CSE-ConnectionGUID: yd+wJXnQR2i7UI15Vb/OmQ==
-X-CSE-MsgGUID: Qe7oGHLFQRCZIa1Elm5SeQ==
-Authentication-Results: alln-opgw-5.cisco.com; dkim=pass (signature verified) header.i=@cisco.com
-X-IronPort-AV: E=Sophos;i="6.12,168,1728950400"; 
-   d="scan'208";a="19901588"
-Received: from mail-dm6nam12lp2177.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.177])
-  by alln-opgw-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 20 Nov 2024 00:03:44 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RGR4FL4FDz/SrkeFM6LN7PUqwJpyaTxv6vrlq9wiqJIBwPqjt+xM39+9cTJz4QIZJz6oNz9/+dU8aE6pBMgpin2/xy6pYT4SdlEtmjmLtFW8RCIXRIIrgnXszd+LQXnrkUrFuSinQIvCBuPmsFDrtt1+54ReHfopEb3UD8+QuvU/Fz44MYBGvgn57J0b7/HiHyLzs83lPPQ2+okGjPDvJ8nXIL7cI51nTowjucRAyBHRrkVqZqR82dDaXb5br1wg0xYmC7p13OTEU5nxrKP8pnrJ/L2S87gAZy2l67FaTQwUr4O/XUM8+2ELG4lgY+IN+EZlHG2UJ74SG7SbSg6T9A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XRXduDgLyyoGUMz02ZookNqQAPppOcUxM4/qAckVqao=;
- b=qoHTiM4b2xlMiUHm8zcpxvjOS7f6VZUDZga+2qe3QUbPwv4NNHkU/6sD01V8D4k6KG48iFY/lOhkW+ZG6bnMoTpfEcRUIc5j1p7JJg1KXqPJdeIdIsKBE2bqlRYH8UWUOh4cXjGpVADYC4vjBL5/sU2hd1auds5Qq5Pa53sZNL2v7BHB/iRfvivwWFUyONKAogGvwPuGRwxooyjcKUmL08WyXxk4dMuXNkGH8P636Ax0kzck9Ut0ed+kKHzxClFFkTM8OY37UN4UfU7jxGt45flOj+Kr8Bo8e/3jfdc8hjjs7xP+AAOyVT81+InNh9tpPrMjtyJjW/tcZcYcMl8/5g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
- dkim=pass header.d=cisco.com; arc=none
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com (2603:10b6:a03:42c::19)
- by SA2PR11MB4777.namprd11.prod.outlook.com (2603:10b6:806:115::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8158.23; Wed, 20 Nov
- 2024 00:03:42 +0000
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::2081:bcd4:cb3e:e2dd]) by SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::2081:bcd4:cb3e:e2dd%6]) with mapi id 15.20.8158.021; Wed, 20 Nov 2024
- 00:03:42 +0000
-From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-To: Hannes Reinecke <hare@suse.de>, "Sesidhar Baddela (sebaddel)"
-	<sebaddel@cisco.com>
-CC: "Arulprabhu Ponnusamy (arulponn)" <arulponn@cisco.com>, "Dhanraj Jhawar
- (djhawar)" <djhawar@cisco.com>, "Gian Carlo Boffa (gcboffa)"
-	<gcboffa@cisco.com>, "Masa Kai (mkai2)" <mkai2@cisco.com>, "Satish Kharat
- (satishkh)" <satishkh@cisco.com>, "Arun Easi (aeasi)" <aeasi@cisco.com>,
-	"jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v5 09/14] scsi: fnic: Modify IO path to use FDLS
-Thread-Topic: [PATCH v5 09/14] scsi: fnic: Modify IO path to use FDLS
-Thread-Index: AQHbIXmydO7YoK2wI0+5Z7qfLOXk9bKVgwIAgAdyzxCAIoTMwA==
-Date: Wed, 20 Nov 2024 00:03:42 +0000
-Message-ID:
- <SJ0PR11MB5896CBD4F94402C6615520A0C3212@SJ0PR11MB5896.namprd11.prod.outlook.com>
-References: <20241018161409.4442-1-kartilak@cisco.com>
- <20241018161409.4442-10-kartilak@cisco.com>
- <6a66c3ec-1b43-44ce-a3ab-65ec794a2dc6@suse.de>
- <SJ0PR11MB58961895AF8525FCE32DA301C34B2@SJ0PR11MB5896.namprd11.prod.outlook.com>
-In-Reply-To:
- <SJ0PR11MB58961895AF8525FCE32DA301C34B2@SJ0PR11MB5896.namprd11.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ0PR11MB5896:EE_|SA2PR11MB4777:EE_
-x-ms-office365-filtering-correlation-id: 6a7465f8-5f74-4774-77a0-08dd08f6cb86
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?RzJlM2lrVEdhcS90K254SFNnS3dBcTlkRm9YdThNSFVObCs0N2NxMGhTb1Bk?=
- =?utf-8?B?WG01MEFWc3RIdTF0UUxWNit2enROYlF3M2pvenJidVhyR3BOejNqUEhoZHhM?=
- =?utf-8?B?NlJjaVE0QlZ4cXdvOVlsZWxDL3BOUlRxN3NSN2k5WnhNWHBBWUdxclhuVjZK?=
- =?utf-8?B?V0xza3EyYTVQMmRTWEJLZ2tqNWtFeUxwRDNydjZLRXI0M0NEUFlhK29BZ3Ux?=
- =?utf-8?B?T0ZZbkM2Z0dOR0NRakp1NkYwSGhDajRlQ3M2QWpKN2QvZk44ZVF2czNyZXpT?=
- =?utf-8?B?d3JsMnlTYVlVWUs0MUF1WjNjVG9wV2t1c0FvQmZPVElkUkZMMXhSN0ltTVp6?=
- =?utf-8?B?b1d2d21IcmhyRDM4bnRzQ3U4VWhNL3lWc2QxNVNjRWtFY2ZtU1lCbSt5TEdx?=
- =?utf-8?B?QUQ1cXpXTmxZak4xN0thOStKNVNEQk83T3hQZEJvWVNBR2pldjRPNXF4b0NZ?=
- =?utf-8?B?UmZ2SDRVVnN6eHgzQXg0OGlvUkYvUzQ2VUd4OTQ0dFpTUHdqSDhCMlVHTS9n?=
- =?utf-8?B?em5rSTdMSlBBQ3JoQVBOd0JWYWlkcDJCTWhleTI1RXNqNWJmK2JwMlRIMWRx?=
- =?utf-8?B?aUlqOGpCSk1nVVJTT3hKOWNjdlE0cmpaRzJQY0ZTZmVITlFDU282ZEhBbURF?=
- =?utf-8?B?T0czZWkzZCt4YWxiTDJIckE0NTRMeVI1SCtPNThyMzNYSHdMcXV6TlBuSzJ1?=
- =?utf-8?B?SklBTXVHa05OdzcrZkI3ZG1naldjWHRVWWhrVnpVNnRjOXpZd09FUTZGSmxm?=
- =?utf-8?B?VVJpZFNyMXVseTNHQU9IQ3Vlbi9nNWZzT2ZZdng4SjVMSmVBRFZaQk5hV1dL?=
- =?utf-8?B?ci9PQ0U5cnpsZm5zVStqaGdLdHQ1dUhIdnhJTGJlM040aWg5T1htNWcvQmZs?=
- =?utf-8?B?QmtoWTVLMXlQMlRFL3drSCthaEtSVVZoWHlabythdjlWTjBJMEhmRVpnTXJ3?=
- =?utf-8?B?a0s4MnkyTXptRHBrK0NGSEpndThUcFpuYnphWDYzaDd5UHBqSWxqQmNvdTVV?=
- =?utf-8?B?Ym82MjV4RWt2ellPeThzdVl4NSt2c1hZVFZROURYUFZwYTYzWFBhZ2ZVNGhT?=
- =?utf-8?B?K1dNQ2lBck9qRGc1czRUK0xIZk1xaUZ5VG55MlFLVEpmQlR0NkZIQXhua2F2?=
- =?utf-8?B?STR0VXkybStTMDF3N0Q5UXhJMFRldTZ2MmQyOHd6dnlwdnRUYWdSYzJEMCtq?=
- =?utf-8?B?SDJTQ3BsVDlMNUdGSUFZRFg2Q2dGckVsWnd6cjRnbVhUWHllVHJqUld5UG92?=
- =?utf-8?B?VkM4eS93M0hiQlFNYkdSNkVBTUtEWm01Q2FhY01HNDZlODIxTTh3UEphOFgx?=
- =?utf-8?B?UmlXWUsyOFRiNXJjWFg0VUtFK1dDQSt5Skxrb1A2SUtNYThJeUJNa1JzR2Jz?=
- =?utf-8?B?bWg4THZkMS9GdWlhSjcxclViTDY3RnJzQURXSFZzaHczNEZ6Y3diajR3RXZk?=
- =?utf-8?B?YjdCV2x0VUhnZWJveWxreWJMbWdBN1pXMGlSS1hjSzlSM2ovaStqcVAwdnI1?=
- =?utf-8?B?R3Z4dExicVZTb294b0REVW1tTHdLMFFDalFVUnBRb214VUFHd1V0RE1tZUVD?=
- =?utf-8?B?MDl3Mlc3VXBvOU8yY00wY3RaRkhSTUwxdUlxWjJWZjBmQzlkZzZ4UERUVWZ2?=
- =?utf-8?B?ZkVXazBpWHhlZ0dEby9keGZ5U0NMaUs3U2VEMUQra3psbXdoZ3NMUEtuNFBo?=
- =?utf-8?B?WGRaTG9wR213aUtPaWpkUXFNSERsZ3hHdkEzTW9VUjQvbHE3TjN0RG5RbnNx?=
- =?utf-8?B?RTkrb2huS0NDWWpnM1kwa0ticUkvZzgxWEl6aGxuR1orSkw4dE1adEZEdnlv?=
- =?utf-8?Q?8PlhVTcoP4iF3udJNaNE12VACxqoYUYkzEJ/0=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?VzBuUlNTT0pWbEdyZkp1NDZWRzlvaXhFVW8wTWVNQi9zVEgwUFlMZWFEUWNi?=
- =?utf-8?B?L1F3YUN1MXhVRXFHZ3VMMXdSbStlZFVhQ09sWk80dzlGZEN2ZU1QUnBRTmZs?=
- =?utf-8?B?TmFsLytmQkRmdHY5YWYvY1ViY0hSOGJiczh2OEZuS1hhWC9uTDkrOFNyM05r?=
- =?utf-8?B?NUpOQnArU09aR2lxTUZOVWdhUXFLVkZ0SG94Y01aaDRJSmRsWjhGcnRMaUFD?=
- =?utf-8?B?d3Q4NjR5SFBaNE9jM3VqMGg4L0lLZXM5K1YrS25TZC9BazlKZE5WYy9aVUtu?=
- =?utf-8?B?VXduM08veDJzUTBUNlI4YUc2ZlF0RU1WWWRKM20yd0o2VlFpU1UzR1l6NW4y?=
- =?utf-8?B?OXRTL1hhTG51alo0bXNJamh6SjArWVNtcGxPWnRXWWtnQnB0TWdQUlNsQ1lX?=
- =?utf-8?B?N3QyOElFVHNHQkM4eE5KcmJiSEhzV2o5aXV1R1d4UE5rTjhZeGFVbWpxQXpC?=
- =?utf-8?B?Rm5oUnFQOGRUYXk4REhmQktRb1BjYmFwT3BtNGF3cGQvRUNqMzQ5RFVkVjhG?=
- =?utf-8?B?bFFPMGdWYytEanltOUp2bXNTYzBUT2VDMlI0Wjl4WXV4K0RhWWlWYUdFc3hq?=
- =?utf-8?B?ekRKQmUwQkMrYWRMdFJ1eW1YaGh5WVdEYU4vbkI1MVFSV2M3dUV3amJQZG02?=
- =?utf-8?B?YTZvWDZZWmFXbWd3ZUFjbTA1eUwxdDdnTU11NWk1Rk1kQjJqOWdOWUNPWlZR?=
- =?utf-8?B?SXNSRk5xaDlWZDBtWjRLOFdmRGdQbmM0WURTcCs1OGVSY2k0V1I1V3dBTEhV?=
- =?utf-8?B?N1Z6aXFSSnZCRk5iK1J1THNiTlJrdncwbEkwcEFDU3g0UEpYbGNJdnIrWTRP?=
- =?utf-8?B?V2pkWnhZa3BzUmhoaVdLUFdBZ1VIWVUvU3VyZmwvMkFQS1ZsVzhTOXlDTkQ1?=
- =?utf-8?B?dmxKMlE3UmRJQ2twUisyckRwb09LRGIzbisvT2QzVElYL3NJUU9NYmpMaWpk?=
- =?utf-8?B?ZnNGYk5PZm5QOWpCMWVUS3NVeDJuaWpYcGlMbUVVOGQva0Rja0lTYXVMaFk3?=
- =?utf-8?B?eU9zYWo5bmRKNHBZd3F1Ukx2UVR4NnV0UEtRMDh3bmVSdFIyNmNTbm90V1RJ?=
- =?utf-8?B?Y0RSZURid0tsMTFWNnRsVjFQQmRXMHhLS1dIQ2wzR1FnVk96WUZyUlR0NGE2?=
- =?utf-8?B?YmswS1RjN04wK1RhZW03c2h6d3hlS0NkS2NwT0JucnFDWDJDVHBTdEpTS2dU?=
- =?utf-8?B?NUtkdStibFJBUjgyZkxOUmV5VndvcGE3L05KenhOMVNjSVpGamo1MzFEeWI0?=
- =?utf-8?B?RnhiV3lTaEVxZDZMYXdLRjhPNnpUWW96bEJFZ0dONHF4ZkU2N0hmOE5wTTV3?=
- =?utf-8?B?bmlaZEN6VW9MVHUxZGp3WjBUU20yZEZDdGU3blZha3Z4SFh6a3BFUzFQMWxP?=
- =?utf-8?B?dXpNV3Z2UGNKeTlqRzU1ZFVxMjlCcExwamNJZWV2ejQ1OEl0YkZkY2svbTZx?=
- =?utf-8?B?MUZERFBhZFMvUnJ5YVhiMEllZXhOV1VPRHZyczhnUCtSU2xVZVJRSFpQcjNm?=
- =?utf-8?B?cVpoSmYzdFBaTmJnMlhPb3pNejhWWE9FK0NtOTIyVTNsSVhaMGRlN1RRUXJT?=
- =?utf-8?B?N3VGeXExRlB4MytrSUFndVZZa0c0ZG9TWWllc0o4NWNpMmVqaWNML3haYkNH?=
- =?utf-8?B?bkVmU1N6QmVaL05IVVhMZFV6azRlNGttS0RGREtvMUc5SFVIWTZ1eUh4RXRR?=
- =?utf-8?B?OGRVV3RHcktTamxYTWtjTW8wYUFOU2RES09Xbm5FTGQ5TWlDamdwYXBNaWpB?=
- =?utf-8?B?QVRtQzh0OFZOa215aUFUV09Ddkwza0VtVTl2K0YwRUtNcVpsaktFdkFhVTBp?=
- =?utf-8?B?YU1mVEZSMTExbzg4Y2pudmZEM1lvZEhIdmQ4cTdpTzgxcUg5a3pzNnFpNUht?=
- =?utf-8?B?VUpjSGwvMW5Zd0k2QytiMGpyUDIxZFNuZXVxQm5ScXVoc0JWQWlBd3NSVFZN?=
- =?utf-8?B?dnZqSjNCTEdvZW5KNVpIbUNQZ1dwckZ4MkJqYm83cjkxRXdiL3k4NzVzREF2?=
- =?utf-8?B?OXV4NExLVEFMdXVEQkl2QU10ZFJyQTRCWmwxWXNjbGpkd1JQV1ByMy9LemJ4?=
- =?utf-8?B?V3BzYmI2VHprd1lLRlJVcnpEa0hlVUsvOXo1akFSM0Jqa091Y0NhbGo2NmhY?=
- =?utf-8?Q?9m9dCU/E8lTZVjrreVHoXpoxJ?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=gmail.com; s=20230601; t=1732076605; x=1732681405; darn=vger.kernel.org;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KrZsFkg2/fQRWAXcieBtEb0S5B4oPHslX2RC3I1z9fk=;
+        b=XpXs9TJ2ZlnU4EI9KxhVapqbIXIW0fMtsK9MVXlccdryznrvE4yYPDn+u42zdhMGOa
+         9mXFBHf6EuAlCtcxshsgLRpoL+skSxFypUeVPRTNJF23DSaf+C2MrB/WBCPUqBZhUinI
+         LCEceXeUUkioPVIelSUfYtjpVq5K2VHKa2hcuXoTkT60vrDXX6vrccXcIdM3NZnkAGPU
+         k1oOjYbIZqvW9QpNUc8tIAoPru08umW1AlcYOqeWZkGUBIvqlFpmlR1PggtuCn3dRQ9d
+         U0uEEvxjyqMgH1rkOz1fIxkdZ8S0rKr59dFXtve8umlNjwTVj2t9nOomOn2qLQUmMdS+
+         jWPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732076605; x=1732681405;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KrZsFkg2/fQRWAXcieBtEb0S5B4oPHslX2RC3I1z9fk=;
+        b=wiyHQ+Gcb7sy14I10mmk3Hk5afyKVslJ403+rv8aRW08JqYLcpDsHK+2kcqfOarqQh
+         AdNdphnoMEGaSpLS84BEPS8Gv5EA4960uMqubE6i1ScTCilZF63nE4LwQj6flINA9UOj
+         twbN/C6O8t0xplY27EBPilaydQX3o2xjERmY5bF6yYWu2eadEe1JicXU4CQ4OLNlEPa9
+         fEJORtJsFDNGbe4XKbC6wRMDvmqkLhd0/vaRlOtP6bghzCXRwKPxybv1XbeqK2NfIX19
+         QOq32ugPe1ZVDLsF50e+1fu++tiUdjXt+GMJTEB8zBOB49U/qwB53TCMzJf6FV0gUO6o
+         LJrQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVZv3jzN/oxPaVzGBktupO9gRNm5/NxhelgkQHrQmY/FC+7nllGN0liCeXCB2350SloJbGjLUkdnL+N@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx9qOm9QxEXR6oatxUETHR7b11BxuBAFzexoz4CXsp7OIUea/7I
+	nDIuXxbxtwenPudhAyta8kjENGOHnmfWFDQqfavdgcIvtjkJb02ZtoPhvMfTkpg7S9DsNFLSxHi
+	GE3frhrP1zW+bSr8mJGrE/DvNpcw=
+X-Google-Smtp-Source: AGHT+IFY+vqIvnBf/6kZqQZpIY0RSfbH1+88vek2/unsBqfuZhX1wcjDsFgIIs9dSQiug6lT12OxPNm+MDLm7bYXOT8=
+X-Received: by 2002:a05:6602:3424:b0:83a:db84:41a8 with SMTP id
+ ca18e2360f4ac-83eb6095330mr167972139f.10.1732076605287; Tue, 19 Nov 2024
+ 20:23:25 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: cisco.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5896.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6a7465f8-5f74-4774-77a0-08dd08f6cb86
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2024 00:03:42.5562
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ELmA3wCH3fvZxbZoXhosdO+bB660E8Ml6obT1p7GXTPTmr5TQoh5OPutLIoA4NxY0ecGOVW2Z++I7ExSb4Obxw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB4777
-X-Outbound-SMTP-Client: 173.37.147.253, alln-opgw-5.cisco.com
-X-Outbound-Node: alln-l-core-06.cisco.com
+References: <CA+-ZZ_gPfU19PdfdiK7NDJpi42bF4wviUR4+8_1vbqd=FZS3yg@mail.gmail.com>
+In-Reply-To: <CA+-ZZ_gPfU19PdfdiK7NDJpi42bF4wviUR4+8_1vbqd=FZS3yg@mail.gmail.com>
+From: reveliofuzzing <reveliofuzzing@gmail.com>
+Date: Tue, 19 Nov 2024 23:23:14 -0500
+Message-ID: <CA+-ZZ_hqBcx_jcPsDkZ=1hbctSw5ui2UjcZ8c8oXH-x61nDX7g@mail.gmail.com>
+Subject: Fwd: Report "general protection fault in unmap_vmas"
+To: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-T24gTW9uZGF5LCBPY3RvYmVyIDI4LCAyMDI0IDU6NTUgUE0sIEthcmFuIFRpbGFrIEt1bWFyIChr
-YXJ0aWxhaykgd3JvdGU6DQo+IA0KPiBPbiBUaHVyc2RheSwgT2N0b2JlciAyNCwgMjAyNCAxMjow
-NSBBTSwgSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuZGU+IHdyb3RlOg0KPiA+IA0KPiA+IE9u
-IDEwLzE4LzI0IDE4OjE0LCBLYXJhbiBUaWxhayBLdW1hciB3cm90ZToNCj4gPiA+IE1vZGlmeSBJ
-TyBwYXRoIHRvIHVzZSBGRExTLg0KPiA+ID4gQWRkIGhlbHBlciBmdW5jdGlvbnMgdG8gcHJvY2Vz
-cyBJT3MuDQo+ID4gPiBSZW1vdmUgdW51c2VkIHRlbXBsYXRlIGZ1bmN0aW9ucy4NCj4gPiA+IENs
-ZWFudXAgb2Jzb2xldGUgY29kZS4NCj4gPiA+IFJlZmFjdG9yIG9sZCBmdW5jdGlvbiBkZWZpbml0
-aW9ucy4NCj4gPiA+IA0KPiA+ID4gUmV2aWV3ZWQtYnk6IFNlc2lkaGFyIEJhZGRlbGEgPHNlYmFk
-ZGVsQGNpc2NvLmNvbT4NCj4gPiA+IFJldmlld2VkLWJ5OiBBcnVscHJhYmh1IFBvbm51c2FteSA8
-YXJ1bHBvbm5AY2lzY28uY29tPg0KPiA+ID4gUmV2aWV3ZWQtYnk6IEdpYW4gQ2FybG8gQm9mZmEg
-PGdjYm9mZmFAY2lzY28uY29tPg0KPiA+ID4gUmV2aWV3ZWQtYnk6IEFydW4gRWFzaSA8YWVhc2lA
-Y2lzY28uY29tPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogS2FyYW4gVGlsYWsgS3VtYXIgPGthcnRp
-bGFrQGNpc2NvLmNvbT4NCj4gPiA+IEBAIC0yMjc0LDExICsyNDk0LDExIEBAIHN0YXRpYyBpbnQg
-Zm5pY19jbGVhbl9wZW5kaW5nX2Fib3J0cyhzdHJ1Y3QgZm5pYyAqZm5pYywNCj4gPiA+ICAgaW50
-IGZuaWNfZGV2aWNlX3Jlc2V0KHN0cnVjdCBzY3NpX2NtbmQgKnNjKQ0KPiA+ID4gICB7DQo+ID4g
-PiAgIAlzdHJ1Y3QgcmVxdWVzdCAqcnEgPSBzY3NpX2NtZF90b19ycShzYyk7DQo+ID4gPiAtCXN0
-cnVjdCBmY19scG9ydCAqbHA7DQo+ID4gPiAgIAlzdHJ1Y3QgZm5pYyAqZm5pYzsNCj4gPiA+ICAg
-CXN0cnVjdCBmbmljX2lvX3JlcSAqaW9fcmVxID0gTlVMTDsNCj4gPiA+ICAgCXN0cnVjdCBmY19y
-cG9ydCAqcnBvcnQ7DQo+ID4gPiAgIAlpbnQgc3RhdHVzOw0KPiA+ID4gKwlpbnQgY291bnQgPSAw
-Ow0KPiA+ID4gICAJaW50IHJldCA9IEZBSUxFRDsNCj4gPiA+ICAgCXVuc2lnbmVkIGxvbmcgZmxh
-Z3M7DQo+ID4gPiAgIAl1bnNpZ25lZCBsb25nIHN0YXJ0X3RpbWUgPSAwOw0KPiA+ID4gQEAgLTIy
-ODksMzEgKzI1MDksNjEgQEAgaW50IGZuaWNfZGV2aWNlX3Jlc2V0KHN0cnVjdCBzY3NpX2NtbmQg
-KnNjKQ0KPiA+ID4gICAJREVDTEFSRV9DT01QTEVUSU9OX09OU1RBQ0sodG1fZG9uZSk7DQo+ID4g
-PiAgIAlib29sIG5ld19zYyA9IDA7DQo+ID4gPiAgIAl1aW50MTZfdCBod3EgPSAwOw0KPiA+ID4g
-KwlzdHJ1Y3QgZm5pY19pcG9ydF9zICppcG9ydCA9IE5VTEw7DQo+ID4gPiArCXN0cnVjdCBycG9y
-dF9kZF9kYXRhX3MgKnJkZF9kYXRhOw0KPiA+ID4gKwlzdHJ1Y3QgZm5pY190cG9ydF9zICp0cG9y
-dDsNCj4gPiA+ICsJdTMyIG9sZF9zb2Z0X3Jlc2V0X2NvdW50Ow0KPiA+ID4gKwl1MzIgb2xkX2xp
-bmtfZG93bl9jbnQ7DQo+ID4gPiArCWludCBleGl0X2RyID0gMDsNCj4gPiA+ICAgDQo+ID4gPiAg
-IAkvKiBXYWl0IGZvciBycG9ydCB0byB1bmJsb2NrICovDQo+ID4gPiAgIAlmY19ibG9ja19zY3Np
-X2VoKHNjKTsNCj4gPiA+ICAgDQo+ID4gPiAgIAkvKiBHZXQgbG9jYWwtcG9ydCwgY2hlY2sgcmVh
-ZHkgYW5kIGxpbmsgdXAgKi8NCj4gPiA+IC0JbHAgPSBzaG9zdF9wcml2KHNjLT5kZXZpY2UtPmhv
-c3QpOw0KPiA+ID4gKwlmbmljID0gKigoc3RydWN0IGZuaWMgKiopIHNob3N0X3ByaXYoc2MtPmRl
-dmljZS0+aG9zdCkpOw0KPiA+ID4gKwlpcG9ydCA9ICZmbmljLT5pcG9ydDsNCj4gPiA+ICAgDQo+
-ID4gPiAtCWZuaWMgPSBscG9ydF9wcml2KGxwKTsNCj4gPiA+ICAgCWZuaWNfc3RhdHMgPSAmZm5p
-Yy0+Zm5pY19zdGF0czsNCj4gPiA+ICAgCXJlc2V0X3N0YXRzID0gJmZuaWMtPmZuaWNfc3RhdHMu
-cmVzZXRfc3RhdHM7DQo+ID4gPiAgIA0KPiA+ID4gICAJYXRvbWljNjRfaW5jKCZyZXNldF9zdGF0
-cy0+ZGV2aWNlX3Jlc2V0cyk7DQo+ID4gPiAgIA0KPiA+ID4gICAJcnBvcnQgPSBzdGFyZ2V0X3Rv
-X3Jwb3J0KHNjc2lfdGFyZ2V0KHNjLT5kZXZpY2UpKTsNCj4gPiA+ICsNCj4gPiA+ICsJc3Bpbl9s
-b2NrX2lycXNhdmUoJmZuaWMtPmZuaWNfbG9jaywgZmxhZ3MpOw0KPiA+ID4gICAJRk5JQ19TQ1NJ
-X0RCRyhLRVJOX0RFQlVHLCBmbmljLT5scG9ydC0+aG9zdCwgZm5pYy0+Zm5pY19udW0sDQo+ID4g
-PiAtCQkiZmNpZDogMHgleCBsdW46IDB4JWxseCBod3E6ICVkIG1xdGFnOiAweCV4IGZsYWdzOiAw
-eCV4IERldmljZSByZXNldFxuIiwNCj4gPiA+ICsJCSJmY2lkOiAweCV4IGx1bjogJWxsdSBod3E6
-ICVkIG1xdGFnOiAweCV4IGZsYWdzOiAweCV4IERldmljZSByZXNldFxuIiwNCj4gPiA+ICAgCQly
-cG9ydC0+cG9ydF9pZCwgc2MtPmRldmljZS0+bHVuLCBod3EsIG1xdGFnLA0KPiA+ID4gICAJCWZu
-aWNfcHJpdihzYyktPmZsYWdzKTsNCj4gPiA+ICAgDQo+ID4gPiAtCWlmIChscC0+c3RhdGUgIT0g
-TFBPUlRfU1RfUkVBRFkgfHwgIShscC0+bGlua191cCkpDQo+ID4gPiArCXJkZF9kYXRhID0gcnBv
-cnQtPmRkX2RhdGE7DQo+ID4gPiArCXRwb3J0ID0gcmRkX2RhdGEtPnRwb3J0Ow0KPiA+ID4gKwlp
-ZiAoIXRwb3J0KSB7DQo+ID4gPiArCQlGTklDX1NDU0lfREJHKEtFUk5fRVJSLCBmbmljLT5scG9y
-dC0+aG9zdCwgZm5pYy0+Zm5pY19udW0sDQo+ID4gPiArCQkgICJEZXYgcnN0IGNhbGxlZCBhZnRl
-ciB0cG9ydCBkZWxldGUhIHJwb3J0IGZjaWQ6IDB4JXggbHVuOiAlbGx1XG4iLA0KPiA+ID4gKwkJ
-ICBycG9ydC0+cG9ydF9pZCwgc2MtPmRldmljZS0+bHVuKTsNCj4gPiA+ICsJCXNwaW5fdW5sb2Nr
-X2lycXJlc3RvcmUoJmZuaWMtPmZuaWNfbG9jaywgZmxhZ3MpOw0KPiA+ID4gKwkJZ290byBmbmlj
-X2RldmljZV9yZXNldF9lbmQ7DQo+ID4gPiArCX0NCj4gPiA+ICsNCj4gPiA+ICsJaWYgKGlwb3J0
-LT5zdGF0ZSAhPSBGTklDX0lQT1JUX1NUQVRFX1JFQURZKSB7DQo+ID4gPiArCQlGTklDX1NDU0lf
-REJHKEtFUk5fSU5GTywgZm5pYy0+bHBvcnQtPmhvc3QsIGZuaWMtPmZuaWNfbnVtLA0KPiA+ID4g
-KwkJCQkJICAiaXBvcnQgTk9UIGluIFJFQURZIHN0YXRlIik7DQo+ID4gPiArCQlzcGluX3VubG9j
-a19pcnFyZXN0b3JlKCZmbmljLT5mbmljX2xvY2ssIGZsYWdzKTsNCj4gPiA+ICAgCQlnb3RvIGZu
-aWNfZGV2aWNlX3Jlc2V0X2VuZDsNCj4gPiA+ICsJfQ0KPiA+ID4gKw0KPiA+ID4gKwlpZiAoKHRw
-b3J0LT5zdGF0ZSAhPSBGRExTX1RHVF9TVEFURV9SRUFEWSkgJiYNCj4gPiA+ICsJCSh0cG9ydC0+
-c3RhdGUgIT0gRkRMU19UR1RfU1RBVEVfQURJU0MpKSB7DQo+ID4gPiArCQlGTklDX1NDU0lfREJH
-KEtFUk5fRVJSLCBmbmljLT5scG9ydC0+aG9zdCwgZm5pYy0+Zm5pY19udW0sDQo+ID4gPiArCQkJ
-CQkgICJ0cG9ydCBzdGF0ZTogJWRcbiIsIHRwb3J0LT5zdGF0ZSk7DQo+ID4gPiArCQlzcGluX3Vu
-bG9ja19pcnFyZXN0b3JlKCZmbmljLT5mbmljX2xvY2ssIGZsYWdzKTsNCj4gPiA+ICsJCWdvdG8g
-Zm5pY19kZXZpY2VfcmVzZXRfZW5kOw0KPiA+ID4gKwl9DQo+ID4gPiArCXNwaW5fdW5sb2NrX2ly
-cXJlc3RvcmUoJmZuaWMtPmZuaWNfbG9jaywgZmxhZ3MpOw0KPiA+ID4gIA0KPiA+IFBsZWFzZSBj
-aGVjayBpZiByZXR1cm5pbmcgRkFTVF9JT19GQUlMIGhlcmUgd291bGRuJ3QgYmUgYSBiZXR0ZXIg
-b3B0aW9uLg0KPiA+IE1vc3Qgb2YgdGhlIHRpbWUgYSBkZXZpY2UgcmVzZXQgaXMgdHJpZ2dlcmVk
-IGJ5IGEgY29tbWFuZCB0aW1lb3V0LCB3aGljaA0KPiA+IHR5cGljYWxseSBoYXBwZW5zIGR1ZSB0
-byBhIHRyYW5zcG9ydCBpc3N1ZSAoZWcgbGluayBpcyBkb3duIG9yIHNvbWV0aGluZykuDQo+ID4g
-U28gcmV0dXJuaW5nICdGQUlMRUQnIHdpbGwganVzdCBlc2NhbGF0ZSB0byBob3N0IHJlc2V0LCBh
-bmQgdGhhdCBjYW4gDQo+ID4gdGFrZSBmb3IgYSByZWFsbHkgbG9uZyB0aW1lIHRyeWluZyB0byBh
-Ym9ydCBhbGwgY29tbWFuZHMuDQo+IA0KPiBUaGFua3MgZm9yIHlvdXIgaW5zaWdodHMgSGFubmVz
-Lg0KPiBXZSdyZSBpbnZlc3RpbmcgdGhpcyBjdXJyZW50bHkuDQo+IA0KDQpUaGFua3MgYWdhaW4g
-Zm9yIHRoaXMgY29tbWVudCwgSGFubmVzLg0KDQpXZSByZXZpZXdlZCB0aGlzIGludGVybmFsbHkg
-YW5kIGFzIHdlIHVuZGVyc3RhbmQgaXQsIA0KcmV0dXJuaW5nIGEgRkFTVF9JT19GQUlMIHN0YXR1
-cyB3b3VsZCBjb21wbGV0ZSB0aGUgc2NzaV9jbW5kLiANClRoaXMgd291bGQgY2F1c2UgaXNzdWVz
-IGlmIHRoZSBJTyBpcyBzdGlsbCBhY3RpdmUgaW4gZmlybXdhcmUuIA0KV2UgZG8gdGFrZSBjYXJl
-IG9mIGNsZWFuaW5nIHVwIHN1Y2ggSS9PcyBpbiB0aGUgaGlnaGVyIGVycm9yIA0KZXNjYWxhdGlv
-biBwYXRoIChob3N0IHJlc2V0KSB0aG91Z2gsIHdoaWNoIHdvdWxkIGJlIGluZHVjZWQgDQpieSBy
-ZXR1cm5pbmcgdGhlICdGQUlMRUQnIHJldHVybiBzdGF0dXMgaGVyZS4gDQoNClJlZ2FyZHMsDQpL
-YXJhbg0K
+Hello,
+
+We would like to forward this bug report to the scsi developers because
+the bug-inducing test seems to involve scsi ioctl.
+
+Also, we have confirmed that the test can crash Linux kernel 6.12.
+
+---------- Forwarded message ---------
+From: reveliofuzzing <reveliofuzzing@gmail.com>
+Date: Tue, Nov 19, 2024 at 10:38=E2=80=AFAM
+Subject: Report "general protection fault in unmap_vmas"
+To: <linux-mm@kvack.org>
+
+
+Hello,
+
+We found a kernel crash at `unmap_vmas` when running a test generated
+by Syzkaller on Linux kernel 6.10, both of which are unmodified. We would l=
+ike
+to report it for your reference because this crash has not been observed be=
+fore.
+
+In a 2-core qemu-kvm VM, this crash took about 1 minute to happen.
+
+This report comes with:
+- the console log of the guest VM
+- the test (syzlang syntax)
+- the test (c program) (url)
+- the compiled test (url)
+- kernel configuration (url)
+- the compiled kernel (url)
+
+
+- Crash
+syzkaller login: [   22.005245] program syz-executor is using a
+deprecated SCSI ioctl, please convert it to SG_IO
+[   83.496476] ata1: lost interrupt (Status 0x58)
+[   84.532478] clocksource: Long readout interval, skipping watchdog
+check: cs_nsec: 1455987654 wd_nsec: 1455987593
+[   84.693047] ata1: found unknown device (class 0)
+[   84.696781] Oops: general protection fault, probably for
+non-canonical address 0xdffffc0000000090: 0000 [#1] PREEMPT SMP KASAN
+PTI
+[   84.699625] KASAN: null-ptr-deref in range
+[0x0000000000000480-0x0000000000000487]
+[   84.701454] CPU: 1 PID: 232 Comm: syz-executor Not tainted 6.10.0 #2
+[   84.702995] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[   84.705181] RIP: 0010:unmap_vmas+0x13e/0x3c0
+[   84.706950] Code: 00 00 00 00 00 e8 22 ac 7f 02 48 8b 84 24 c8 00
+00 00 48 ba 00 00 00 00 00 fc ff df 48 8d b8 80 04 00 00 48 89 f9 48
+c11
+[   84.711418] RSP: 0018:ffff88800c3e78a0 EFLAGS: 00010206
+[   84.712703] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00000000000=
+00090
+[   84.714430] RDX: dffffc0000000000 RSI: ffffffff81635b11 RDI: 00000000000=
+00480
+[   84.716152] RBP: ffff88800c681ee0 R08: ffffffffffffffff R09: fffffffffff=
+fffff
+[   84.717909] R10: ffffed1000f67931 R11: ffff888007b3c98b R12: fffffffffff=
+fffff
+[   84.719640] R13: dffffc0000000000 R14: ffffffffffffffff R15: 00000000000=
+00000
+[   84.721375] FS:  0000000000000000(0000) GS:ffff88806d300000(0000)
+knlGS:0000000000000000
+[   84.723361] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   84.724791] CR2: 000055cdc0a948a8 CR3: 0000000004e66000 CR4: 00000000000=
+006f0
+[   84.726545] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 00000000000=
+00000
+[   84.728278] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 00000000000=
+00400
+[   84.730029] Call Trace:
+[   84.730672]  <TASK>
+[   84.731232]  ? show_regs+0x73/0x80
+[   84.732100]  ? __die_body+0x1f/0x70
+[   84.732985]  ? die_addr+0x4c/0x90
+[   84.733833]  ? exc_general_protection+0x15c/0x2a0
+[   84.735024]  ? asm_exc_general_protection+0x26/0x30
+[   84.736434]  ? unmap_vmas+0xb1/0x3c0
+[   84.737364]  ? unmap_vmas+0x13e/0x3c0
+[   84.738320]  ? __pfx_unmap_vmas+0x10/0x10
+[   84.739340]  ? free_ldt_pgtables+0x94/0x180
+[   84.740388]  ? mas_walk+0x986/0xd10
+[   84.741285]  ? mas_next_slot+0xed8/0x1be0
+[   84.742300]  ? stack_depot_save_flags+0x5ef/0x6f0
+[   84.743482]  exit_mmap+0x171/0x810
+[   84.744358]  ? __pfx_exit_mmap+0x10/0x10
+[   84.745354]  ? exit_aio+0x260/0x340
+[   84.746257]  ? mutex_unlock+0x7e/0xd0
+[   84.747185]  ? __pfx_mutex_unlock+0x10/0x10
+[   84.748222]  ? delayed_uprobe_remove+0x21/0x130
+[   84.749356]  mmput+0x64/0x290
+[   84.750179]  do_exit+0x7fd/0x2850
+[   84.751060]  ? blk_mq_run_hw_queue+0x321/0x520
+[   84.752176]  ? kasan_save_track+0x14/0x30
+[   84.753194]  ? __pfx_do_exit+0x10/0x10
+[   84.754159]  ? scsi_ioctl+0xa16/0x12c0
+[   84.755107]  ? _raw_spin_lock_irq+0x81/0xe0
+[   84.756161]  do_group_exit+0xb6/0x260
+[   84.757107]  get_signal+0x19e3/0x1b00
+[   84.758041]  ? __handle_mm_fault+0x644/0x21c0
+[   84.759129]  ? __pfx_get_signal+0x10/0x10
+[   84.760135]  arch_do_signal_or_restart+0x81/0x750
+[   84.761304]  ? __pfx_arch_do_signal_or_restart+0x10/0x10
+[   84.762621]  ? handle_mm_fault+0xe6/0x520
+[   84.763624]  ? __fget_light+0x175/0x510
+[   84.764586]  ? do_user_addr_fault+0x7de/0x1250
+[   84.765699]  syscall_exit_to_user_mode+0xf6/0x140
+[   84.766879]  do_syscall_64+0x57/0x110
+[   84.767810]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[   84.769062] RIP: 0033:0x7f15ec6a6aad
+[   84.769968] Code: Unable to access opcode bytes at 0x7f15ec6a6a83.
+[   84.771469] RSP: 002b:00007ffe4c340428 EFLAGS: 00000246 ORIG_RAX:
+0000000000000010
+[   84.773299] RAX: 0000000000000002 RBX: 00007ffe4c340450 RCX: 00007f15ec6=
+a6aad
+[   84.775039] RDX: 0000000020000040 RSI: 0000000000000001 RDI: 00000000000=
+00003
+[   84.776795] RBP: 0000000000000000 R08: 0000000000000012 R09: 00000000000=
+00000
+[   84.778532] R10: 00007f15ec6f403c R11: 0000000000000246 R12: 00007ffe4c3=
+40460
+[   84.780263] R13: 00007f15ec71edf0 R14: 0000000000000000 R15: 00000000000=
+00000
+[   84.782008]  </TASK>
+[   84.782586] Modules linked in:
+[   84.783488] ---[ end trace 0000000000000000 ]---
+[   84.784787] RIP: 0010:unmap_vmas+0x13e/0x3c0
+[   84.785965] Code: 00 00 00 00 00 e8 22 ac 7f 02 48 8b 84 24 c8 00
+00 00 48 ba 00 00 00 00 00 fc ff df 48 8d b8 80 04 00 00 48 89 f9 48
+c11
+[   84.790487] RSP: 0018:ffff88800c3e78a0 EFLAGS: 00010206
+[   84.791870] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 00000000000=
+00090
+[   84.793702] RDX: dffffc0000000000 RSI: ffffffff81635b11 RDI: 00000000000=
+00480
+[   84.795546] RBP: ffff88800c681ee0 R08: ffffffffffffffff R09: fffffffffff=
+fffff
+[   84.797424] R10: ffffed1000f67931 R11: ffff888007b3c98b R12: fffffffffff=
+fffff
+[   84.799258] R13: dffffc0000000000 R14: ffffffffffffffff R15: 00000000000=
+00000
+[   84.801081] FS:  0000000000000000(0000) GS:ffff88806d300000(0000)
+knlGS:0000000000000000
+[   84.803135] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   84.804655] CR2: 000055cdc0a948a8 CR3: 0000000004e66000 CR4: 00000000000=
+006f0
+[   84.806521] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 00000000000=
+00000
+[   84.808419] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 00000000000=
+00400
+[   84.810281] Fixing recursive fault but reboot is needed!
+[   84.811680] BUG: scheduling while atomic: syz-executor/232/0x00000000
+[   84.813351] Modules linked in:
+[   84.814245] CPU: 1 PID: 232 Comm: syz-executor Tainted: G      D
+        6.10.0 #2
+[   84.816151] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[   84.818353] Call Trace:
+[   84.818988]  <TASK>
+[   84.819548]  dump_stack_lvl+0x7d/0xa0
+[   84.820470]  __schedule_bug+0xaa/0xf0
+[   84.821414]  ? irq_work_queue+0x23/0x60
+[   84.822404]  __schedule+0x17ce/0x2010
+[   84.823336]  ? __wake_up_klogd.part.0+0x69/0x80
+[   84.824469]  ? vprintk_emit+0x239/0x300
+[   84.825431]  ? __pfx___schedule+0x10/0x10
+[   84.826451]  ? vprintk+0x6b/0x80
+[   84.827276]  ? _printk+0xbf/0x100
+[   84.828123]  ? __pfx__printk+0x10/0x10
+[   84.829065]  ? _raw_spin_lock_irqsave+0x86/0xe0
+[   84.830214]  ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+[   84.831460]  do_task_dead+0x9d/0xc0
+[   84.832344]  make_task_dead+0x2f6/0x340
+[   84.833319]  rewind_stack_and_make_dead+0x16/0x20
+[   84.834504] RIP: 0033:0x7f15ec6a6aad
+[   84.835404] Code: Unable to access opcode bytes at 0x7f15ec6a6a83.
+[   84.836920] RSP: 002b:00007ffe4c340428 EFLAGS: 00000246 ORIG_RAX:
+0000000000000010
+[   84.838751] RAX: 0000000000000002 RBX: 00007ffe4c340450 RCX: 00007f15ec6=
+a6aad
+[   84.840474] RDX: 0000000020000040 RSI: 0000000000000001 RDI: 00000000000=
+00003
+[   84.842209] RBP: 0000000000000000 R08: 0000000000000012 R09: 00000000000=
+00000
+[   84.843932] R10: 00007f15ec6f403c R11: 0000000000000246 R12: 00007ffe4c3=
+40460
+[   84.845654] R13: 00007f15ec71edf0 R14: 0000000000000000 R15: 00000000000=
+00000
+[   84.847402]  </TASK>
+
+
+- syzlang test
+r0 =3D syz_open_dev$sg(&(0x7f0000000000), 0x0, 0x0)
+ioctl$SCSI_IOCTL_SEND_COMMAND(r0, 0x1,
+&(0x7f0000000040)=3DANY=3D[@ANYBLOB=3D"00000000420d0000850aaa",
+@ANYRESHEX=3Dr0])
+
+
+- c test
+// autogenerated by syzkaller (https://github.com/google/syzkaller)
+
+#define _GNU_SOURCE
+
+#include <dirent.h>
+#include <endian.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sched.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mount.h>
+#include <sys/prctl.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
+
+#include <linux/capability.h>
+
+static unsigned long long procid;
+
+static __thread int clone_ongoing;
+static __thread int skip_segv;
+static __thread jmp_buf segv_env;
+
+static void segv_handler(int sig, siginfo_t* info, void* ctx)
+{
+        if (__atomic_load_n(&clone_ongoing, __ATOMIC_RELAXED) !=3D 0) {
+                exit(sig);
+        }
+        uintptr_t addr =3D (uintptr_t)info->si_addr;
+        const uintptr_t prog_start =3D 1 << 20;
+        const uintptr_t prog_end =3D 100 << 20;
+        int skip =3D __atomic_load_n(&skip_segv, __ATOMIC_RELAXED) !=3D 0;
+        int valid =3D addr < prog_start || addr > prog_end;
+        if (skip && valid) {
+                _longjmp(segv_env, 1);
+        }
+        exit(sig);
+}
+
+static void install_segv_handler(void)
+{
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler =3D SIG_IGN;
+        syscall(SYS_rt_sigaction, 0x20, &sa, NULL, 8);
+        syscall(SYS_rt_sigaction, 0x21, &sa, NULL, 8);
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_sigaction =3D segv_handler;
+        sa.sa_flags =3D SA_NODEFER | SA_SIGINFO;
+        sigaction(SIGSEGV, &sa, NULL);
+        sigaction(SIGBUS, &sa, NULL);
+}
+
+#define NONFAILING(...) ({ int ok =3D 1; __atomic_fetch_add(&skip_segv,
+1, __ATOMIC_SEQ_CST); if (_setjmp(segv_env) =3D=3D 0) { __VA_ARGS__; }
+else ok =3D 0; __atomic_fetch_sub(&skip_segv, 1, __ATOMIC_SEQ_CST); ok;
+})
+
+static void sleep_ms(uint64_t ms)
+{
+        usleep(ms * 1000);
+}
+
+static uint64_t current_time_ms(void)
+{
+        struct timespec ts;
+        if (clock_gettime(CLOCK_MONOTONIC, &ts))
+        exit(1);
+        return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000;
+}
+
+static bool write_file(const char* file, const char* what, ...)
+{
+        char buf[1024];
+        va_list args;
+        va_start(args, what);
+        vsnprintf(buf, sizeof(buf), what, args);
+        va_end(args);
+        buf[sizeof(buf) - 1] =3D 0;
+        int len =3D strlen(buf);
+        int fd =3D open(file, O_WRONLY | O_CLOEXEC);
+        if (fd =3D=3D -1)
+                return false;
+        if (write(fd, buf, len) !=3D len) {
+                int err =3D errno;
+                close(fd);
+                errno =3D err;
+                return false;
+        }
+        close(fd);
+        return true;
+}
+
+static long syz_open_dev(volatile long a0, volatile long a1, volatile long =
+a2)
+{
+        if (a0 =3D=3D 0xc || a0 =3D=3D 0xb) {
+                char buf[128];
+                sprintf(buf, "/dev/%s/%d:%d", a0 =3D=3D 0xc ? "char" :
+"block", (uint8_t)a1, (uint8_t)a2);
+                return open(buf, O_RDWR, 0);
+        } else {
+                char buf[1024];
+                char* hash;
+                strncpy(buf, (char*)a0, sizeof(buf) - 1);
+                buf[sizeof(buf) - 1] =3D 0;
+                while ((hash =3D strchr(buf, '#'))) {
+                        *hash =3D '0' + (char)(a1 % 10);
+                        a1 /=3D 10;
+                }
+                return open(buf, a2, 0);
+        }
+}
+
+static void setup_binderfs();
+static void setup_fusectl();
+static void sandbox_common_mount_tmpfs(void)
+{
+        write_file("/proc/sys/fs/mount-max", "100000");
+        if (mkdir("./syz-tmp", 0777))
+        exit(1);
+        if (mount("", "./syz-tmp", "tmpfs", 0, NULL))
+        exit(1);
+        if (mkdir("./syz-tmp/newroot", 0777))
+        exit(1);
+        if (mkdir("./syz-tmp/newroot/dev", 0700))
+        exit(1);
+        unsigned bind_mount_flags =3D MS_BIND | MS_REC | MS_PRIVATE;
+        if (mount("/dev", "./syz-tmp/newroot/dev", NULL,
+bind_mount_flags, NULL))
+        exit(1);
+        if (mkdir("./syz-tmp/newroot/proc", 0700))
+        exit(1);
+        if (mount("syz-proc", "./syz-tmp/newroot/proc", "proc", 0, NULL))
+        exit(1);
+        if (mkdir("./syz-tmp/newroot/selinux", 0700))
+        exit(1);
+        const char* selinux_path =3D "./syz-tmp/newroot/selinux";
+        if (mount("/selinux", selinux_path, NULL, bind_mount_flags, NULL)) =
+{
+                if (errno !=3D ENOENT)
+        exit(1);
+                if (mount("/sys/fs/selinux", selinux_path, NULL,
+bind_mount_flags, NULL) && errno !=3D ENOENT)
+        exit(1);
+        }
+        if (mkdir("./syz-tmp/newroot/sys", 0700))
+        exit(1);
+        if (mount("/sys", "./syz-tmp/newroot/sys", 0, bind_mount_flags, NUL=
+L))
+        exit(1);
+        if (mount("/sys/kernel/debug",
+"./syz-tmp/newroot/sys/kernel/debug", NULL, bind_mount_flags, NULL) &&
+errno !=3D ENOENT)
+        exit(1);
+        if (mount("/sys/fs/smackfs",
+"./syz-tmp/newroot/sys/fs/smackfs", NULL, bind_mount_flags, NULL) &&
+errno !=3D ENOENT)
+        exit(1);
+        if (mount("/proc/sys/fs/binfmt_misc",
+"./syz-tmp/newroot/proc/sys/fs/binfmt_misc", NULL, bind_mount_flags,
+NULL) && errno !=3D ENOENT)
+        exit(1);
+        if (mkdir("./syz-tmp/pivot", 0777))
+        exit(1);
+        if (syscall(SYS_pivot_root, "./syz-tmp", "./syz-tmp/pivot")) {
+                if (chdir("./syz-tmp"))
+        exit(1);
+        } else {
+                if (chdir("/"))
+        exit(1);
+                if (umount2("./pivot", MNT_DETACH))
+        exit(1);
+        }
+        if (chroot("./newroot"))
+        exit(1);
+        if (chdir("/"))
+        exit(1);
+        setup_binderfs();
+        setup_fusectl();
+}
+
+static void setup_fusectl()
+{
+        if (mount(0, "/sys/fs/fuse/connections", "fusectl", 0, 0)) {
+        }
+}
+
+static void setup_binderfs()
+{
+        if (mkdir("/dev/binderfs", 0777)) {
+        }
+        if (mount("binder", "/dev/binderfs", "binder", 0, NULL)) {
+        }
+        if (symlink("/dev/binderfs", "./binderfs")) {
+        }
+}
+
+static void loop();
+
+static void sandbox_common()
+{
+        prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0);
+        if (getppid() =3D=3D 1)
+        exit(1);
+        struct rlimit rlim;
+        rlim.rlim_cur =3D rlim.rlim_max =3D (200 << 20);
+        setrlimit(RLIMIT_AS, &rlim);
+        rlim.rlim_cur =3D rlim.rlim_max =3D 32 << 20;
+        setrlimit(RLIMIT_MEMLOCK, &rlim);
+        rlim.rlim_cur =3D rlim.rlim_max =3D 136 << 20;
+        setrlimit(RLIMIT_FSIZE, &rlim);
+        rlim.rlim_cur =3D rlim.rlim_max =3D 1 << 20;
+        setrlimit(RLIMIT_STACK, &rlim);
+        rlim.rlim_cur =3D rlim.rlim_max =3D 128 << 20;
+        setrlimit(RLIMIT_CORE, &rlim);
+        rlim.rlim_cur =3D rlim.rlim_max =3D 256;
+        setrlimit(RLIMIT_NOFILE, &rlim);
+        if (unshare(CLONE_NEWNS)) {
+        }
+        if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL)) {
+        }
+        if (unshare(CLONE_NEWIPC)) {
+        }
+        if (unshare(0x02000000)) {
+        }
+        if (unshare(CLONE_NEWUTS)) {
+        }
+        if (unshare(CLONE_SYSVSEM)) {
+        }
+        typedef struct {
+                const char* name;
+                const char* value;
+        } sysctl_t;
+        static const sysctl_t sysctls[] =3D {
+            {"/proc/sys/kernel/shmmax", "16777216"},
+            {"/proc/sys/kernel/shmall", "536870912"},
+            {"/proc/sys/kernel/shmmni", "1024"},
+            {"/proc/sys/kernel/msgmax", "8192"},
+            {"/proc/sys/kernel/msgmni", "1024"},
+            {"/proc/sys/kernel/msgmnb", "1024"},
+            {"/proc/sys/kernel/sem", "1024 1048576 500 1024"},
+        };
+        unsigned i;
+        for (i =3D 0; i < sizeof(sysctls) / sizeof(sysctls[0]); i++)
+                write_file(sysctls[i].name, sysctls[i].value);
+}
+
+static int wait_for_loop(int pid)
+{
+        if (pid < 0)
+        exit(1);
+        int status =3D 0;
+        while (waitpid(-1, &status, __WALL) !=3D pid) {
+        }
+        return WEXITSTATUS(status);
+}
+
+static void drop_caps(void)
+{
+        struct __user_cap_header_struct cap_hdr =3D {};
+        struct __user_cap_data_struct cap_data[2] =3D {};
+        cap_hdr.version =3D _LINUX_CAPABILITY_VERSION_3;
+        cap_hdr.pid =3D getpid();
+        if (syscall(SYS_capget, &cap_hdr, &cap_data))
+        exit(1);
+        const int drop =3D (1 << CAP_SYS_PTRACE) | (1 << CAP_SYS_NICE);
+        cap_data[0].effective &=3D ~drop;
+        cap_data[0].permitted &=3D ~drop;
+        cap_data[0].inheritable &=3D ~drop;
+        if (syscall(SYS_capset, &cap_hdr, &cap_data))
+        exit(1);
+}
+
+static int do_sandbox_none(void)
+{
+        if (unshare(CLONE_NEWPID)) {
+        }
+        int pid =3D fork();
+        if (pid !=3D 0)
+                return wait_for_loop(pid);
+        sandbox_common();
+        drop_caps();
+        if (unshare(CLONE_NEWNET)) {
+        }
+        write_file("/proc/sys/net/ipv4/ping_group_range", "0 65535");
+        sandbox_common_mount_tmpfs();
+        loop();
+        exit(1);
+}
+
+static void kill_and_wait(int pid, int* status)
+{
+        kill(-pid, SIGKILL);
+        kill(pid, SIGKILL);
+        for (int i =3D 0; i < 100; i++) {
+                if (waitpid(-1, status, WNOHANG | __WALL) =3D=3D pid)
+                        return;
+                usleep(1000);
+        }
+        DIR* dir =3D opendir("/sys/fs/fuse/connections");
+        if (dir) {
+                for (;;) {
+                        struct dirent* ent =3D readdir(dir);
+                        if (!ent)
+                                break;
+                        if (strcmp(ent->d_name, ".") =3D=3D 0 ||
+strcmp(ent->d_name, "..") =3D=3D 0)
+                                continue;
+                        char abort[300];
+                        snprintf(abort, sizeof(abort),
+"/sys/fs/fuse/connections/%s/abort", ent->d_name);
+                        int fd =3D open(abort, O_WRONLY);
+                        if (fd =3D=3D -1) {
+                                continue;
+                        }
+                        if (write(fd, abort, 1) < 0) {
+                        }
+                        close(fd);
+                }
+                closedir(dir);
+        } else {
+        }
+        while (waitpid(-1, status, __WALL) !=3D pid) {
+        }
+}
+
+static void setup_test()
+{
+        prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0);
+        setpgrp();
+        write_file("/proc/self/oom_score_adj", "1000");
+}
+
+static void execute_one(void);
+
+#define WAIT_FLAGS __WALL
+
+static void loop(void)
+{
+        int iter =3D 0;
+        for (;; iter++) {
+                int pid =3D fork();
+                if (pid < 0)
+        exit(1);
+                if (pid =3D=3D 0) {
+                        setup_test();
+                        execute_one();
+                        exit(0);
+                }
+                int status =3D 0;
+                uint64_t start =3D current_time_ms();
+                for (;;) {
+                        sleep_ms(10);
+                        if (waitpid(-1, &status, WNOHANG | WAIT_FLAGS) =3D=
+=3D pid)
+                                break;
+                        if (current_time_ms() - start < 5000)
+                                continue;
+                        kill_and_wait(pid, &status);
+                        break;
+                }
+        }
+}
+
+uint64_t r[1] =3D {0xffffffffffffffff};
+
+void execute_one(void)
+{
+        intptr_t res =3D 0;
+        if (write(1, "executing program\n", sizeof("executing
+program\n") - 1)) {}
+        NONFAILING(memcpy((void*)0x20000000, "/dev/sg#\000", 9));
+        res =3D -1;
+        NONFAILING(res =3D syz_open_dev(/*dev=3D*/0x20000000, /*id=3D*/0,
+/*flags=3D*/0));
+        if (res !=3D -1)
+                r[0] =3D res;
+        NONFAILING(memcpy((void*)0x20000040,
+"\x00\x00\x00\x00\x42\x0d\x00\x00\x85\x0a\xaa", 11));
+        NONFAILING(sprintf((char*)0x2000004b, "0x%016llx", (long long)r[0])=
+);
+        syscall(__NR_ioctl, /*fd=3D*/r[0], /*cmd=3D*/1, /*arg=3D*/0x2000004=
+0ul);
+
+}
+int main(void)
+{
+        syscall(__NR_mmap, /*addr=3D*/0x1ffff000ul, /*len=3D*/0x1000ul,
+/*prot=3D*/0ul, /*flags=3DMAP_FIXED|MAP_ANONYMOUS|MAP_PRIVATE*/0x32ul,
+/*fd=3D*/-1, /*offset=3D*/0ul);
+        syscall(__NR_mmap, /*addr=3D*/0x20000000ul, /*len=3D*/0x1000000ul,
+/*prot=3DPROT_WRITE|PROT_READ|PROT_EXEC*/7ul,
+/*flags=3DMAP_FIXED|MAP_ANONYMOUS|MAP_PRIVATE*/0x32ul, /*fd=3D*/-1,
+/*offset=3D*/0ul);
+        syscall(__NR_mmap, /*addr=3D*/0x21000000ul, /*len=3D*/0x1000ul,
+/*prot=3D*/0ul, /*flags=3DMAP_FIXED|MAP_ANONYMOUS|MAP_PRIVATE*/0x32ul,
+/*fd=3D*/-1, /*offset=3D*/0ul);
+        const char* reason;
+        (void)reason;
+        install_segv_handler();
+        for (procid =3D 0; procid < 4; procid++) {
+                if (fork() =3D=3D 0) {
+                        do_sandbox_none();
+                }
+        }
+        sleep(1000000);
+        return 0;
+}
+
+
+- compiled test (please run inside VM)
+https://drive.google.com/file/d/1Q9prtQKi5LVrOwrFJ162eXzTwTnDUq5X/view?usp=
+=3Dsharing
+
+- kernel config
+https://drive.google.com/file/d/1LMJgfJPhTu78Cd2DfmDaRitF6cdxxcey/view?usp=
+=3Dsharing
+
+- compiled kernel
+https://drive.google.com/file/d/1B22XKuDqrtk8gvWFFEMXR0o-VcVdYvB4/view?usp=
+=3Dsharing
