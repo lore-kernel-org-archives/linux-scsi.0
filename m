@@ -1,111 +1,137 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177F81A7249;
-	Wed, 20 Nov 2024 09:55:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B751AA7AE;
+	Wed, 20 Nov 2024 13:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732096531; cv=none; b=gZlzK05G5mdO3fJEBOYRgVPlw0jxOZSMDBE5KoqH9C0lfw0gpw+/bpmC0Xg3aK1iCxvRUbStv6IXSkSaOHJn+xKv8e0hbs5WNHeyPig8UTI68LKqzQY5YV4dOXA2FTpHNXTzLb0GS9Si5VHvg0XYWiBVYzutyAVQM2AG8kTKnAs=
+	t=1732107618; cv=none; b=enGll9zo7+7OwtNGaFjXmnRaN+VzZLJaA3vEq+Anx489tlb77p9IU8esKe00xzO85eoLUQqCHCoY2M55nfibhEdHas87KMhHW11rki4I2d0HLP1fxq55GN0S6cXGWVeVL9HOlY8k8ZEosli2Q8mxCSBIvxwTVOmrDE7vtUA2LcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732096531; c=relaxed/simple;
-	bh=JgXS2YPGtCGfmvexfA0wv85U4wkYurILGVSfefa82zM=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HJOd4Ld5LiWUxbDmbgY3FAJu5wq32CKXLNbY5d/Ou8GVYRKg30SRe+sk5477F94d3/FXAhLAj4GGGDtTMLUKTONLEKyustMoeNblg8wg/OlvxBItRw49lYJJZ27egAU1ALE14bIvajN4fl8y4Uv5KEwP9GCrmufe1wXKYBZxCUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=eqaYBbIg; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1732107618; c=relaxed/simple;
+	bh=lnSflGzBTEK00pG99f+FveddFOFgN8Bmzg0DOu60lYE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tKHw9ADN/LS8f2CisFfPnrAPvpuWGxl496+xOiGk82Ee61t/Lj6K3cIGImqWlHllXSiY0C/Scl485m/miGBkYsodMCGw+2/A1+IY5Lz/KY5cjGCW9zdYMdPz27qf/tTgOVMMECIa6Rk2LBVbe28fUhok3XEQRkGwNTi2hMHQWbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=adVLAoln; arc=none smtp.client-ip=209.85.167.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="eqaYBbIg"
-X-UUID: 8ded1336a72511efbd192953cf12861f-20241120
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=HtWbveE8HR0QV6YE5r/k4BhXZ/k8t/AZvqKgT84aTvA=;
-	b=eqaYBbIgj+osh7jfaEzUX1bI65BqBplxML4250w9mYcebWjS5jHlu1FGLWYfV/Cmss2LFlZ5iM9+Qmhw0uc5TuIueN/lhd6WNdqGuToMlN558fSYZcaSYK/+7oZ9ePPvjVhvtNMwCe3vXe3EFBOwm7ldrc3ERbmxhkyyVcDSjuM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.44,REQID:55e8e46b-8d2c-4971-8811-96534c54ff4c,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:464815b,CLOUDID:872b84a0-f395-4dfc-8188-ce2682df7fd8,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 8ded1336a72511efbd192953cf12861f-20241120
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 158762612; Wed, 20 Nov 2024 17:55:20 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 20 Nov 2024 01:55:19 -0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 20 Nov 2024 17:55:19 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<draviv@codeaurora.org>, <stable@vger.kernel.org>
-Subject: [PATCH v1] ufs: core: add missing post notify for power mode change
-Date: Wed, 20 Nov 2024 17:55:18 +0800
-Message-ID: <20241120095518.23690-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="adVLAoln"
+Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-3e5f6e44727so2450725b6e.0;
+        Wed, 20 Nov 2024 05:00:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732107615; x=1732712415; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=EDqOcDIpGKI5hYNE6Sj7mEbCMZ8HdAAjaXY3MTLtetI=;
+        b=adVLAolnqT1jnvr6i+SPnZpkK2BxsF7O6Nmj7yuv/u9Z/eKlffQWoQr+DRWCC1pswl
+         c//JCKg/VHtc/wVn0QMHRJb2DcyRXPGhSPfI7VT9addtW494b3q/VzuRD1hsWDj59XVq
+         OfxdwudFtFrQnfUt/8ii5McSGSCWKfyQpZWcAHZaMg2l6cr3z0NH4oL9bZtWzGj/csNV
+         av86TzKfcNqlOo+3NlEVSIttdANKJj5vSOKHkOeCg2DvuTT9CCFAcW5vnTyHDQo2AGCw
+         1ao8z7DMXRJ51cuvF+njMftkgOjX1ofOc5EzckUATlL/iBNPp6iUYMYaoHXIfeHMtU4Q
+         pz4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732107615; x=1732712415;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=EDqOcDIpGKI5hYNE6Sj7mEbCMZ8HdAAjaXY3MTLtetI=;
+        b=aX8QooZRkfEq2tHzfLzMUHaF9ns5FJk9yRuG6oxj/3EvrxpkCYyAu1zGRLV89QDhIZ
+         Koe29JgMfurjN4U4HTEpVBSkvPRAIpnuIeAcfgJfHrDg1M5c2cmjKS2v0jleqXh54QO7
+         LSq8OJ9JOsePBS8lcFUN6CVpCRN5TrtnaNUR8l9ASnWJgb3VKtiYdI5bVlujtaTnBShg
+         bBUxQz7M/01mTp11eHwHgKc0OeqclrobBHt90yuvpvHjlF+qCLgDWzJ8mFPqNifY8AgM
+         Fa+DDnxXxyGLfoWW5w1YNdu7hJjus2+xHYCwrSFPoZXl6du5Vdg81gGPQCAb5ibuRKyj
+         53vQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWB1Odvk5fGFOh/shIqfMyME+ai0Y9VA9iAyNuo4vFCVNp1alFNKOQui6qIdvculufJvjPYkktlvCCN3g==@vger.kernel.org, AJvYcCWpJ70PFHG+a5uzJA2Zeue6MxnAQV11uVP765Z9tpUfR4WxFBlE2c0RvQ4NLx3sogurQqVYymMkWXOs9rY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwI2YOp4OLmsDulqx1BCa7hFg0q6XvHQFh1p2Dt7R+XctEycmFe
+	oBLXfEpTT16QxowSkEVWWI5ghTgbbhKxeFi9KUZYlctFFWVnCGnI
+X-Google-Smtp-Source: AGHT+IEsDvUDsMBR/Ffo23Ig5BpqckyyMpAfyq8F6YFQdtbAldYWtYa1W2QjOrCPFXyXLI/6QZR1jA==
+X-Received: by 2002:a05:6808:1394:b0:3e6:2889:585e with SMTP id 5614622812f47-3e7eb7d3fd6mr2383564b6e.38.1732107614916;
+        Wed, 20 Nov 2024 05:00:14 -0800 (PST)
+Received: from purva-IdeaPad-Gaming-3-15IHU6.lan ([2409:40c0:11a2:6510:cf5d:dd30:9fe4:5132])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-7f8c1dae969sm9454719a12.63.2024.11.20.05.00.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Nov 2024 05:00:14 -0800 (PST)
+From: Suraj Sonawane <surajsonawane0215@gmail.com>
+To: dgilbert@interlog.com
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Suraj Sonawane <surajsonawane0215@gmail.com>,
+	syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com
+Subject: [PATCH] scsi: sg: fix slab-use-after-free Read in sg_release
+Date: Wed, 20 Nov 2024 18:29:44 +0530
+Message-Id: <20241120125944.88095-1-surajsonawane0215@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+Fix a use-after-free bug in `sg_release`,
+detected by syzbot with KASAN:
 
-When the power mode change is successful but the power mode
-hasn't actually changed, the post notification was missed.
-Similar to the approach with hibernate/clock scale/hce enable,
-having pre/post notifications in the same function will
-make it easier to maintain.
+BUG: KASAN: slab-use-after-free in lock_release+0x151/0xa30
+kernel/locking/lockdep.c:5838
+__mutex_unlock_slowpath+0xe2/0x750 kernel/locking/mutex.c:912
+sg_release+0x1f4/0x2e0 drivers/scsi/sg.c:407
 
-Fixes: 7eb584db73be ("ufs: refactor configuring power mode")
-Cc: stable@vger.kernel.org #6.11.x
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Root Cause:
+In `sg_release`, the function `kref_put(&sfp->f_ref, sg_remove_sfp)`
+is called before releasing the `open_rel_lock` mutex. The `kref_put`
+call may decrement the reference count of `sfp` to zero, triggering
+its cleanup through `sg_remove_sfp`. This cleanup includes scheduling
+deferred work via `sg_remove_sfp_usercontext`, which ultimately frees
+`sfp`.
+
+After `kref_put`, `sg_release` continues to unlock `open_rel_lock` and
+may reference `sfp` or `sdp`. If `sfp` has already been freed, this
+results in a slab-use-after-free error.
+
+Fix:
+The `kref_put(&sfp->f_ref, sg_remove_sfp)` call is moved after unlocking
+the `open_rel_lock` mutex. This ensures:
+- No references to `sfp` or `sdp` occur after the reference count is  
+  decremented.  
+- Cleanup functions such as sg_remove_sfp and sg_remove_sfp_usercontext  
+  can safely execute without impacting the mutex handling in `sg_release`. 
+
+The fix has been tested and validated by syzbot. This patch closes the bug
+reported at the following syzkaller link and ensures proper sequencing of
+resource cleanup and mutex operations, eliminating the risk of
+use-after-free errors in `sg_release`.
+
+Reported-by: syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com 
+Closes: https://syzkaller.appspot.com/bug?extid=7efb5850a17ba6ce098b 
+Tested-by: syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com 
+Fixes: cc833acbee9d ("sg: O_EXCL and other lock handling ")
+Signed-off-by: Suraj Sonawane <surajsonawane0215@gmail.com>
 ---
- drivers/ufs/core/ufshcd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/sg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index abbe7135a977..814402e93a1e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4651,9 +4651,6 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 		dev_err(hba->dev,
- 			"%s: power mode change failed %d\n", __func__, ret);
- 	} else {
--		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, NULL,
--								pwr_mode);
--
- 		memcpy(&hba->pwr_info, pwr_mode,
- 			sizeof(struct ufs_pa_layer_attr));
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index f86be197f..457d54171 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -393,7 +393,6 @@ sg_release(struct inode *inode, struct file *filp)
+ 
+ 	mutex_lock(&sdp->open_rel_lock);
+ 	scsi_autopm_put_device(sdp->device);
+-	kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	sdp->open_cnt--;
+ 
+ 	/* possibly many open()s waiting on exlude clearing, start many;
+@@ -405,6 +404,7 @@ sg_release(struct inode *inode, struct file *filp)
+ 		wake_up_interruptible(&sdp->open_wait);
  	}
-@@ -4682,6 +4679,10 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 
- 	ret = ufshcd_change_power_mode(hba, &final_params);
- 
-+	if (!ret)
-+		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, NULL,
-+					&final_params);
-+
- 	return ret;
+ 	mutex_unlock(&sdp->open_rel_lock);
++	kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
+ 
 -- 
-2.18.0
+2.34.1
 
