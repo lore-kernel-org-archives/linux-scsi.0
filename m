@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0893155CBF;
-	Thu, 21 Nov 2024 17:51:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E42B57C93;
+	Thu, 21 Nov 2024 18:00:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732211490; cv=none; b=oJpdpvpUi+qOy56JzVM/rAvvPFBxbRZ7FBzdmNZtYM7416NHT7UUsapoFA9/XfC4xvDuSHrQ24PzGrX0TzpQEGhsJ2EKPrYZz5n3o4E3nzk3y1iQGbOvVhvf/0bMHeUmmjebiH0ZK9eU+jaRGq7CrNXtk5TZW+bjxC53ZpYmGbc=
+	t=1732212026; cv=none; b=rusDq8quHP+hjKrhhBf5IEf3Z8uBiiZgRWP2HPiCIbvLeIR3Bd0U3p6DtPGO2G84It32+tC91Pc4bh/imvr09In2GWg9qQ2DTS7NpXDWd3JC05aAqAa0stgbkV4GPPzR9uNGyfblZKOxUTsH4WTspEpy5Fl93P060NdwyasxN8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732211490; c=relaxed/simple;
-	bh=qRjAzsmoJD6NCwcH0T21oYoaptcehqPkLMll0vY+Mkg=;
+	s=arc-20240116; t=1732212026; c=relaxed/simple;
+	bh=cuu4lQv6lTc2r66HcLz0Mn3hWTfN3ayWUwMZ/ibap10=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MopgbIZowwnbqQYluaTy30Z1ngLtR4zzx+42pYXYXLjXkGeiMii0AlzjKXLjriU+p9jOLFhywlZ8jimjubbM5G6jpZTcw0Nz7ycUkviFmB5ID1MLft6JtEu/DCVrhaEAOeclQMpOndQ7mOuP+w+8L0bVT+ZEim70K3Q16976mUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nTgllSEC; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=RnL+dAGmxQ6Ud39dROu6CGiUx3reHq+++Z9dHT+/U+Q1puRYih9eGqABkb7ATHGCXmzGGSyiKXjil08i9SL7YiJH2QhiD2LOBV9c1iwnLmB5+llcACWQO+JGhaNZpwPA09O+G+eafb0wgD+X+IK/S64Znv7HlxKRpRdf545JZrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=aUc3cjLy; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nTgllSEC"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="aUc3cjLy"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XvQlK15Qlz6CmQtQ;
-	Thu, 21 Nov 2024 17:51:25 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XvQxZ4jb0zlgTWP;
+	Thu, 21 Nov 2024 18:00:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1732211479; x=1734803480; bh=Emi8rmYIY1SIPX9xXNtt7CiM
-	E/rR3MXA7hUaGHU2EmQ=; b=nTgllSECY6TGPRGfMon9ezaKu0EfUdy22+R2k0DT
-	jOnmau5zZuHkPsQTtmAlYNhtKfmZsXCqxkBUNHBZ5fw+17Vj6v0EYK5bImkdbzrB
-	y7hFaKv4LJ7INfjdrM5MnnLVTpbJ35u307tsAmp3jf1TNWWgymR4g8qo1ep9jxJe
-	CJfY7ehsaFWdbBV20Uh08o90wtLgJ/vvoii2LzDn/1o5drEc1RE5cLONi4GiRVqI
-	5EWvyZsCx1OpTFfaS+dqxDeIpfk1B2lAVjkCf+qCtRbNL+XotWh8ai42KhJ1TFeY
-	XaJ/JilATx1FX4Ql6vT6nu8SqkLB62wvUftz55D6lJWipg==
+	 s=mr01; t=1732212014; x=1734804015; bh=cuu4lQv6lTc2r66HcLz0Mn3h
+	WTfN3ayWUwMZ/ibap10=; b=aUc3cjLypR5zQKvwJY0pCh3DWOyJt0ZGz1wgK5wc
+	vvF/6XkC/t1l3GF8hGc0NE82RbjNJv0TblRV/ln4TUy6Te35wnqsRzCjdbcwX8Tt
+	1BaFh60LUJiIHaqfmFcEmUK78JQUnfk3dy/MEpJI3Yk8YIPEQ4LODFVj4JZ24XXk
+	n+HsL0FtP5j8PIfH8HqozgkOjT5CS5S/NqBlBFL/O6D7J78N75o/ICcO87FK9ALm
+	9dq5nEgdmtyKgTjtvLYCwnQkr4foYJO0HehgmwLKwI/cEqiGbLefYWyluO1Z1oyk
+	goizGHJH+uyFCW10IibQipTNj+3XhNE3i7cNJBDPdVWuWA==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id cFDMuXh3Ixf9; Thu, 21 Nov 2024 17:51:19 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id srRY9R4UBMIg; Thu, 21 Nov 2024 18:00:14 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XvQl963qBz6CmQtD;
-	Thu, 21 Nov 2024 17:51:17 +0000 (UTC)
-Message-ID: <03c6dc60-fc51-4906-b433-aeac6be87083@acm.org>
-Date: Thu, 21 Nov 2024 09:51:16 -0800
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XvQxR6k4KzlgTWG;
+	Thu, 21 Nov 2024 18:00:11 +0000 (UTC)
+Message-ID: <9f26b8a8-f6b5-4329-a899-a2cd1bc51851@acm.org>
+Date: Thu, 21 Nov 2024 10:00:10 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,112 +50,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 05/26] blk-zoned: Fix a deadlock triggered by
- unaligned writes
+Subject: Re: [PATCH v16 00/26] Improve write performance for zoned UFS devices
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
 References: <20241119002815.600608-1-bvanassche@acm.org>
- <20241119002815.600608-6-bvanassche@acm.org>
- <6729e88d-5311-4b6e-a3da-0f144aab56c9@kernel.org>
- <17b232e6-72bf-427a-8ffa-4785182201cc@acm.org>
- <055d17a7-94f3-488f-b45a-90b092a4165d@kernel.org>
+ <95ab028e-6cf7-474e-aa33-37ab3bccd078@kernel.org>
+ <de43ae13-240a-4653-b8ac-f36c433d9ffb@acm.org>
+ <d594be95-2cbf-4f9c-8508-d7adcedb148b@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <055d17a7-94f3-488f-b45a-90b092a4165d@kernel.org>
+In-Reply-To: <d594be95-2cbf-4f9c-8508-d7adcedb148b@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-On 11/20/24 7:32 PM, Damien Le Moal wrote:
-> On 11/20/24 06:04, Bart Van Assche wrote:
->> On 11/18/24 6:57 PM, Damien Le Moal wrote:
->>> On 11/19/24 9:27 AM, Bart Van Assche wrote:
->>>> If the queue is filled with unaligned writes then the following
->>>> deadlock occurs:
->>>>
->>>> Call Trace:
->>>>    <TASK>
->>>>    __schedule+0x8cc/0x2190
->>>>    schedule+0xdd/0x2b0
->>>>    blk_queue_enter+0x2ce/0x4f0
->>>>    blk_mq_alloc_request+0x303/0x810
->>>>    scsi_execute_cmd+0x3f4/0x7b0
->>>>    sd_zbc_do_report_zones+0x19e/0x4c0
->>>>    sd_zbc_report_zones+0x304/0x920
->>>>    disk_zone_wplug_handle_error+0x237/0x920
->>>>    disk_zone_wplugs_work+0x17e/0x430
->>>>    process_one_work+0xdd0/0x1490
->>>>    worker_thread+0x5eb/0x1010
->>>>    kthread+0x2e5/0x3b0
->>>>    ret_from_fork+0x3a/0x80
->>>>    </TASK>
->>>>
->>>> Fix this deadlock by removing the disk->fops->report_zones() call and by
->>>> deriving the write pointer information from successfully completed zoned
->>>> writes.
->>>>
->>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>>
->>> Doesn't this need a Fixes tag and CC stable, and come earlier in the series (or
->>> sent separately) ?
->>
->> I will add Fixes: and Cc: stable tags.
->>
->> I'm not sure how to move this patch earlier since it depends on the
->> previous patch in this series ("blk-zoned: Only handle errors after
->> pending zoned writes have completed"). Without that patch, it is not
->> safe to use zwplug->wp_offset_compl in the error handler.
->>
->>> Overall, this patch seems wrong anyway as zone reset and zone finish may be
->>> done between 2 writes, failing the next one but the recovery done here will use
->>> the previous succeful write end position as the wp, which is NOT correct as
->>> reset or finish changed that...
->>
->> I will add support for the zone reset and zone finish commands in this
->> patch.
->>
->>> And we also have the possibility of torn writes
->>> (partial writes) with SAS SMR drives. So I really think that you cannot avoid
->>> doing a report zone to recover errors.
->>
->> Thanks for having brought this up. This is something I was not aware of.
->>
->> disk_zone_wplug_handle_error() submits a new request to retrieve zone
->> information while handling an error triggered by other requests. This
->> can easily lead to a deadlock as the above call trace shows. How about
->> introducing a queue flag for the "report zones" approach in
->> disk_zone_wplug_handle_error() such that the "report zones" approach is
->> only used for SAS SMR drives?
-> 
-> Sure, but how would that solve the potential deadlock problem ? ALso, I am not
-> entirely clear on how the deadlock can happen given that zone write plugs are
-> queueing/blocking BIOs, not requests. So even assuming you have a large number
-> of BIOs plugged in a zone write plug, the error handler work should still be
-> able to issue a request to do a report zones, no ? On which resource can the
-> deadlock happen ? Plugged BIOs do not yet use a tag, right ?
-> 
-> What am I missing here ? Or is it maybe something that can happen with your
-> modifications because you changed the zone write plug behavior to allow for more
-> than one BIO at a time being unplugged and issued to the device ?
-> 
-> Note that if you do have a test case for this triggering the deadlock, we
-> definitely need to solve this and ideally have a blktest case checking it.
+On 11/20/24 7:20 PM, Damien Le Moal wrote:
+> I am only trying to see if there is not a simpler approach than what you did.
+> The less changes, the better, right ?
 
 Hi Damien,
 
-The call trace mentioned above comes from the kernel log and was
-encountered while I was testing this patch series. A reproducer has
-already been shared - see also
-https://lore.kernel.org/linux-block/e840b66a-79f0-4169-9ab1-c475d9608e4d@acm.org/. 
-The lockup happened after the queue was filled up
-with requests and hence sd_zbc_report_zones() failed to allocate an
-additional request for the zone report.
+I agree with you that we should select the simplest approach that yields
+the desired performance.
 
-I'm wondering whether this lockup can also happen with the current
-upstream kernel by submitting multiple unaligned writes simultaneously
-where each write affects another zone and where the number of writes
-matches the queue depth.
+Regarding the proposed approach, forcing unplugging a zone write plug
+from the driver once a command is passed to the driver and the driver
+did not reject it, is this approach compatible with SCSI devices that
+may report a unit attention? If two zoned writes for the same zone are
+submitted in order to a SCSI device and the SCSI device responds with a
+unit attention condition to the first write then the second write will
+fail with an "unaligned write" error. This will have to be handled by
+pausing zoned write submission and by resubmitting zoned writes after
+all pending zoned writes for the given zone have completed. In other
+words, if higher queue depths are supported per zone, we cannot avoid
+increasing the complexity of the code in block/blk-zoned.c. If we cannot
+avoid increasing the complexity of that code, I think we can as well
+select the approach that yields the highest performance and the fewest
+changes in the block layer code for regular reads and writes.
 
 Thanks,
 
