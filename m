@@ -1,48 +1,48 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C751BF58;
-	Thu, 21 Nov 2024 20:28:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 772FB6F06B;
+	Thu, 21 Nov 2024 20:44:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732220934; cv=none; b=HsXU0rkS60/ewa9n47XFv3/tK+tqxR4HYJJ+dVfPCtpi5YQrm+Qie6v8i4CVQdx/P9xa3JOSo41tp8aUmsFmvCS7NcTd1QR1YjRxVF2rgKTdzd+1biW2IHjo2bgcjIrXU4ZedU3rZ3h9V/R6K32pikVey8gKEKtGci1VomSeoQM=
+	t=1732221871; cv=none; b=SYQUDw6ZKm0B94uurJsgd6QC9MDbLkXUjzpPtpT0/JpGEpIGmDAzabbHKIFl5kawTpUzlzi0+wzucAOE51RHgJ9j8hU6wAaHCDBoZz1T3DDvNSc1qGWdwNk4/2crngvxXYHkmRDyHur2MXFqxuLho3MZeKDXYk8YxaS8FGPFwW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732220934; c=relaxed/simple;
-	bh=aA8GgwXAyAvuaBPYCNtRyjM9WaNoD9Km8KZu7oIKIsQ=;
+	s=arc-20240116; t=1732221871; c=relaxed/simple;
+	bh=wJ5sdqU+h1FpA4uoQmUYeoZU00L0h7RpzZyFK+H9unE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aY9wbaA7HQ+V84Wtj2mlPJ6hr0NRV0It47Umi3HNIhAErplvIaje5HXRSorxgVzkM9l/fs9zT9Dxq0uJgZpV3Dy3xZnhYmSmHGHVD43kW/bU9v7zoGhUucwLTtjNWbabeAtQ1mz5zbbBeETCd37KlR2oyxQfeT5eoCC6DFUFKzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=VlBqUFWe; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=jznQx7DxTGDjPyDeTUxpz6YwCiHLRWCQFj/at4tkNm/un0rhRWKObQqVZb60Fx7GD3lr32dkJlah0TXErJeSe0PyinS/KRs44HuH4UCTPo94rPNnPyVDZHDA2usDHAPhfH1oqjdPgTVGbNiWTokBqWngz1wj6/GWHIV3RRU00Ng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ms9w8eeF; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="VlBqUFWe"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ms9w8eeF"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XvVF01YMwz6CmQtQ;
-	Thu, 21 Nov 2024 20:28:52 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XvVb06LZDz6CmQvG;
+	Thu, 21 Nov 2024 20:44:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1732220928; x=1734812929; bh=EDZPObDU33Lo+5i+FY8ihSx9
-	2XVxH3LXNxyg2UhqEfc=; b=VlBqUFWe4myw8h8wq902eERrFfocFojJpYNTCFOi
-	RjZTkdZI23biiNHRT9lnzqeE1xqq6wi+ZYgImUrZXe3XcUt+yKJTdwRwcNVIvhN9
-	36rFa+t4Vf0mr+Cc8h34v9CT3yMlbQcxOmEJaWzn7uY2CXGEKQ159qq4kR3i+8pj
-	muK0sNNT//IyBlMDn0cOjfUFs3ZBL7C+hfluFUYL6rHXEX3vFDlUvKzjItqJBv7r
-	LLf7sP1uzywrO3d/SQMZ2EreFMh8SnxbInf8kn7t8nZ412buXABD7NbzE5xMDUwY
-	Hj4NOiMT27RCeocUP8KW3toLFlkzGg/Uc1m1YmBcaq6AxQ==
+	 s=mr01; t=1732221865; x=1734813866; bh=xSjvxIJm/rBn1WXHiH+xsQTT
+	Era6sqooRTecPptXB/E=; b=ms9w8eeFxn1T3UhejvFcklXPmOfhOyVtp/TRXIFr
+	oTSSoCcsew3TZD1V6Lm/IW5kbN2Q3oZidnWoBrHOkKNXMj3WIbvXihfBvZNODyTJ
+	wU7GCW1RzaBaSKmdFHAXXXj5+J8D1sgFjcUhIkrdGxxIbSZm9IQsL4RamXljo22y
+	R6uXdqRPxBmMISPracyX4rzRwEPh8oTjvUZC+jen7JbwtS0mWg6RcU4zwc2bzWsJ
+	FeYkHidKr86SGJn3QpY0AqXynji5GWwVPVFgsN7W51ijupN7+i2ADYVEZ7irEcuy
+	ha0T6DZRIVvgKSt7YddXt4FT6Wh2P0RMRUZqTiuEPoME6g==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id o5sYqHc0LaWz; Thu, 21 Nov 2024 20:28:48 +0000 (UTC)
+ id 2Qe2q8k669Hk; Thu, 21 Nov 2024 20:44:25 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XvVDv06bjz6CmQtD;
-	Thu, 21 Nov 2024 20:28:46 +0000 (UTC)
-Message-ID: <2e5e888a-a7d8-4b10-a366-3cefd6685e69@acm.org>
-Date: Thu, 21 Nov 2024 12:28:45 -0800
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XvVZw3K8Qz6CmQyY;
+	Thu, 21 Nov 2024 20:44:24 +0000 (UTC)
+Message-ID: <2955aa00-824d-4803-96f6-35575ae9560e@acm.org>
+Date: Thu, 21 Nov 2024 12:44:23 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,90 +50,75 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/3] scsi: ufs: core: Prepare to introduce a new
- clock_gating lock
+Subject: Re: [PATCH v4 2/3] scsi: ufs: core: Introduce a new clock_gating lock
 To: Avri Altman <avri.altman@wdc.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
  Bean Huo <beanhuo@micron.com>
 References: <20241118144117.88483-1-avri.altman@wdc.com>
- <20241118144117.88483-2-avri.altman@wdc.com>
+ <20241118144117.88483-3-avri.altman@wdc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20241118144117.88483-2-avri.altman@wdc.com>
+In-Reply-To: <20241118144117.88483-3-avri.altman@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 11/18/24 6:41 AM, Avri Altman wrote:
-> Removed hba->clk_gating.active_reqs check from ufshcd_is_ufs_dev_busy
-> function to separate clock gating logic from general device busy checks.
-> 
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 20 ++++++++++++++------
->   1 file changed, 14 insertions(+), 6 deletions(-)
-> 
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index e338867bc96c..be5fe2407382 100644
+> index be5fe2407382..638d9c0e2603 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -258,10 +258,15 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
->   	return UFS_PM_LVL_0;
->   }
->   
-> +static bool ufshcd_has_pending_tasks(struct ufs_hba *hba)
-> +{
-> +	return hba->outstanding_tasks || hba->active_uic_cmd ||
-> +	       hba->uic_async_done;
-> +}
-> +
->   static bool ufshcd_is_ufs_dev_busy(struct ufs_hba *hba)
+> @@ -1816,19 +1816,17 @@ static void ufshcd_exit_clk_scaling(struct ufs_hba *hba)
+>   static void ufshcd_ungate_work(struct work_struct *work)
 >   {
-> -	return (hba->clk_gating.active_reqs || hba->outstanding_reqs || hba->outstanding_tasks ||
-> -		hba->active_uic_cmd || hba->uic_async_done);
-> +	return hba->outstanding_reqs || ufshcd_has_pending_tasks(hba);
->   }
+>   	int ret;
+> -	unsigned long flags;
+>   	struct ufs_hba *hba = container_of(work, struct ufs_hba,
+>   			clk_gating.ungate_work);
 >   
->   static const struct ufs_dev_quirk ufs_fixups[] = {
-> @@ -1943,7 +1948,9 @@ static void ufshcd_gate_work(struct work_struct *work)
->   		goto rel_lock;
+>   	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
+>   
+> -	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	if (hba->clk_gating.state == CLKS_ON) {
+> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -		return;
+> +	scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
+> +	{
+> +		if (hba->clk_gating.state == CLKS_ON)
+> +			return;
 >   	}
->   
-> -	if (ufshcd_is_ufs_dev_busy(hba) || hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL)
-> +	if (ufshcd_is_ufs_dev_busy(hba) ||
-> +	    hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL ||
-> +	    hba->clk_gating.active_reqs)
->   		goto rel_lock;
->   
->   	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> @@ -1999,8 +2006,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
->   
->   	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended ||
->   	    hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL ||
-> -	    hba->outstanding_tasks || !hba->clk_gating.is_initialized ||
-> -	    hba->active_uic_cmd || hba->uic_async_done ||
-> +	    ufshcd_has_pending_tasks(hba) || !hba->clk_gating.is_initialized ||
->   	    hba->clk_gating.state == CLKS_OFF)
->   		return;
->   
-> @@ -8221,7 +8227,9 @@ static void ufshcd_rtc_work(struct work_struct *work)
->   	hba = container_of(to_delayed_work(work), struct ufs_hba, ufs_rtc_update_work);
->   
->   	 /* Update RTC only when there are no requests in progress and UFSHCI is operational */
-> -	if (!ufshcd_is_ufs_dev_busy(hba) && hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL)
-> +	if (!ufshcd_is_ufs_dev_busy(hba) &&
-> +	    hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL &&
-> +	    !hba->clk_gating.active_reqs)
->   		ufshcd_update_rtc(hba);
->   
->   	if (ufshcd_is_ufs_dev_active(hba) && hba->dev_info.rtc_update_period)
 
-Hi Avri,
+Here and elsewhere, please move "{" to the end of the "scoped_guard()"
+line since that is the style used in all other Linux kernel code (I know
+that clang-format gets this wrong).
 
-I see two changes in this patch: introduction of the function
-ufshcd_has_pending_tasks() and removal of hba->clk_gating.active_reqs
-from ufshcd_is_ufs_dev_busy(). Shouldn't this patch be split into two
-patches - one patch per change?
+>   /* host lock must be held before calling this variant */
+
+Please remove this comment since your patch makes it incorrect and
+replace it with a lockdep_assert_held() call.
+
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (ufshcd_has_pending_tasks(hba) ||
+> +	    hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +		return;
+> +	}
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+
+Why explicit lock/unlock calls instead of using scoped_guard()?
+
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index d7aca9e61684..8f9997b0dbf9 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -403,6 +403,8 @@ enum clk_gating_state {
+>    * delay_ms
+>    * @ungate_work: worker to turn on clocks that will be used in case of
+>    * interrupt context
+> + * @clk_gating_workq: workqueue for clock gating work.
+> + * @lock: serialize access to some struct ufs_clk_gating members
+
+Please document that @lock is the outer lock relative to the host lock.
 
 Thanks,
 
