@@ -1,125 +1,86 @@
-Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C9EB156F5E
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2024 19:49:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF9051BF58;
+	Thu, 21 Nov 2024 20:24:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732218561; cv=none; b=uYC3oCvJGAcHR0EZ1vb8UquZ0mapwBLWHIr4BykTlgfRMwjg8MYOY1QGvvmQVbKqtqH/ftaYkKSVLv2Bo2Va4gyUxDKaxKBC8iwIyGX4MyB8SKSRXrm3wiDDsw4RCnfpTl7V1+XaXnBcNyJwKY37b6ljwpvjlZMTrT26u6vrGnE=
+	t=1732220651; cv=none; b=HIpTKLNFrqjKm1nyoZP8Xym6uUVcS0P4GvFlw+fX9jrgpmPD8bOkZ/ISwWvYleP0v60iPytGQoRENFG7PiYnOeV//+yykPk5iQGFsJ3XiUyvwhycAiTG8fj28MxK+yo3fDdUR7UtHexj6sbY4OWFMQa3ZD4WWT5cJZGXwobc/VU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732218561; c=relaxed/simple;
-	bh=/EhwlAowUPBNCPPUkYBxaERl2CCDs7Vetj3wrmlCrDQ=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=qxJUXN/v5t9y4piZtMkHPqkD8S6+S+nfhIMbX90gCk4xdamHDlqtcN/NaY+9rIA6Y6Ox2IbLIUdmPlZwRfv6bnxR0Vhi/WdCoEi5B9rukUANny6XXkrp+a3RiR7Tc0CM4622do+d3GznBL3S5zGWIYEvPr4B9wiQBPQrVg8pbp0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=i/Kpp21V; arc=none smtp.client-ip=209.85.128.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com
+	s=arc-20240116; t=1732220651; c=relaxed/simple;
+	bh=xi/tuuYf9OctfWbVmpD8lnsh2h4jN8j/5RGrSnm2nkU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QHG1EK8j7TjlF4gOcsZa+Qm2UgNmuBiIGQ4apruVRB999CtSJ0TwUZldQegvDzouCS/kCvT2oCEqhui9HuWc248GW/go7RQFK4ldIqkIdgnJn8i1DoD1sj4Zs7gSXjOaTJiMHWVL8jU2Xgzg4j25nbh9nMEj4zt6Wca9YDT/jd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zRjWZoYo; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="i/Kpp21V"
-Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-6eeb9152b2cso24333567b3.1
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2024 11:49:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1732218559; x=1732823359; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=FlTVGm5qa99OPyjgK2sYE6lFf2Ldqoi0UzDo7GJSevQ=;
-        b=i/Kpp21VAn51ZqhFYF7Cjncw62474OtRtoADBZybA2vu4KJKFbuHjNPnKRWFVJyJTD
-         3oi81O6JEzL6EYC25sGd8tlur6uagkkqq+yGKfbMdg4jV9h1W9/ENHx5zqDc94xN7pAo
-         HYQsKjIB5RVBQUjII8LSTWffEmQAhZEvL8dKIQTGQf/XRAGsPx+rRmPJMl/YbxI3PQcx
-         1hdP6G7fAyUZvqtgnSdAVjvUvOroXezjkpbpalofx/uB74EIOv0LOhWuUktp1PB89o34
-         Q1Ij+O8U3lHzJc2bgo0BmWYK8jdecupw7t26906HnNHh0noFNIKxKEOCA3P4x+lQ9s4B
-         e1dg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732218559; x=1732823359;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=FlTVGm5qa99OPyjgK2sYE6lFf2Ldqoi0UzDo7GJSevQ=;
-        b=o/lWV5gXIFYz97Jov0ac6QSAbaN+W3Tyodl+DmMoLNEWSTaPOf3jYQpROoR69YyMBN
-         QsSAiayfvQRu5NeAUUrAC0kXgU7XSVvgi0KcTv9bSe86P4l7cZqjwAqYq2LtLK+STlCx
-         CnvxVGefQMjXQNm8A+XtYePO60POd3ti+pavZG+ZlYtGXw1/Cbe5HvHFab3BNQD30Ov5
-         qTBKxV4nnjw92rYSsqkHR0h00To78tL99fAbRAcm5Ir4ZKW6is542/X1JO/fr4HUwsn3
-         xq1x1LctKL+xx8SmiWZi6VXwbK53yPLAQFb5PPvkoG1c2ktOv9+Jv7tPk2B66zeeLcyr
-         njLA==
-X-Gm-Message-State: AOJu0YxTQghsM4aKHBVWyxrnW6llp7zWUQsjwQ0Uwat1rRpKoIG5TNCc
-	zaPvx9zRnukOm/xhSqDbxWr4pYIrXEpzzFvp4G4yb077OTESW9MYMjzCYI5K0Xuskk7m0XNdjss
-	sOG0lDuj+2A==
-X-Google-Smtp-Source: AGHT+IGJd7/uvd/MveJMgVETHnva4G0+/AAqBaP8ft/tMr6ZWbYv/L2EZ60cfLxbRKbHYVPTXuL+MmRYVE48xQ==
-X-Received: from tadamsjr.c.googlers.com ([fda3:e722:ac3:cc00:13f:f798:ac1c:499f])
- (user=tadamsjr job=sendgmr) by 2002:a05:690c:288d:b0:62c:ea0b:a447 with SMTP
- id 00721157ae682-6eee08a96cemr2517b3.2.1732218559215; Thu, 21 Nov 2024
- 11:49:19 -0800 (PST)
-Date: Thu, 21 Nov 2024 11:49:15 -0800
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zRjWZoYo"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XvV7Y1RLsz6CmQtD;
+	Thu, 21 Nov 2024 20:24:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1732220645; x=1734812646; bh=1II20KjSCTW3+CfSjWTXJ0ox
+	zZQHlqaaITwj6CmNeg4=; b=zRjWZoYoFRFG1Chj9BcEuy1X0K19qpC4kN00bXNH
+	v/s3VfAnwthpiF7f6Q5BAPVgaFc9mW40aJUPF5kGn32K9KeI0aRM7XM4rDlgWUTR
+	hzxZuUvWqo58Y6oh2UR+VBhvsJdrLhKEO/JBpMnxoI9xJXB6glpk57MEfShTty0a
+	J4nDMUuFcViHKWtrh9Yb9u5RkH3+dO9G/AVGZQSoMG6U5Qj2zvP6ptmJ8UFRT0sh
+	iYNGVwW9ZLkPCkHCxxNupmmJZxRwE92pkJUCZVgLTyoempl4vk7US6MlvdSRex9T
+	CDbzzKY6yf5ThBEmC/saPfWUyiUGQaiaWFBQ7V4d0AgM3A==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id YOYPm1PlPNZI; Thu, 21 Nov 2024 20:24:05 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XvV7R5vP8z6CmR09;
+	Thu, 21 Nov 2024 20:24:03 +0000 (UTC)
+Message-ID: <3fe2a0cf-e652-4e4e-b74f-659eb5ab89e3@acm.org>
+Date: Thu, 21 Nov 2024 12:24:02 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.47.0.371.ga323438b13-goog
-Message-ID: <20241121194915.3039073-1-tadamsjr@google.com>
-Subject: [PATCH] scsi: pm80xx: Do not use libsas port id
-From: TJ Adams <tadamsjr@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>, Terrence Adams <tadamsjr@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sg: fix slab-use-after-free Read in sg_release
+To: Suraj Sonawane <surajsonawane0215@gmail.com>, dgilbert@interlog.com
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com
+References: <20241120125944.88095-1-surajsonawane0215@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241120125944.88095-1-surajsonawane0215@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Igor Pylypiv <ipylypiv@google.com>
+On 11/20/24 4:59 AM, Suraj Sonawane wrote:
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index f86be197f..457d54171 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -393,7 +393,6 @@ sg_release(struct inode *inode, struct file *filp)
+>   
+>   	mutex_lock(&sdp->open_rel_lock);
+>   	scsi_autopm_put_device(sdp->device);
+> -	kref_put(&sfp->f_ref, sg_remove_sfp);
+>   	sdp->open_cnt--;
+>   
+>   	/* possibly many open()s waiting on exlude clearing, start many;
+> @@ -405,6 +404,7 @@ sg_release(struct inode *inode, struct file *filp)
+>   		wake_up_interruptible(&sdp->open_wait);
+>   	}
+>   	mutex_unlock(&sdp->open_rel_lock);
+> +	kref_put(&sfp->f_ref, sg_remove_sfp);
+>   	return 0;
+>   }
 
-libsas port ids can differ from the controller's port ids.
-Using libsas port id to index pm8001_ha->port array is a bug.
-
-Remove sas_find_local_port_id(). We can use pm8001_ha->phy[phy_id].port
-to get the port id.
-
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Terrence Adams <tadamsjr@google.com>
----
- drivers/scsi/pm8001/pm8001_sas.c | 21 ++-------------------
- 1 file changed, 2 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index ee2da8e49d4c..061b57b1cc7a 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -374,23 +374,6 @@ static int pm8001_task_prep_ssp(struct pm8001_hba_info *pm8001_ha,
- 	return PM8001_CHIP_DISP->ssp_io_req(pm8001_ha, ccb);
- }
- 
-- /* Find the local port id that's attached to this device */
--static int sas_find_local_port_id(struct domain_device *dev)
--{
--	struct domain_device *pdev = dev->parent;
--
--	/* Directly attached device */
--	if (!pdev)
--		return dev->port->id;
--	while (pdev) {
--		struct domain_device *pdev_p = pdev->parent;
--		if (!pdev_p)
--			return pdev->port->id;
--		pdev = pdev->parent;
--	}
--	return 0;
--}
--
- #define DEV_IS_GONE(pm8001_dev)	\
- 	((!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED)))
- 
-@@ -463,10 +446,10 @@ int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	spin_lock_irqsave(&pm8001_ha->lock, flags);
- 
- 	pm8001_dev = dev->lldd_dev;
--	port = &pm8001_ha->port[sas_find_local_port_id(dev)];
-+	port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
- 
- 	if (!internal_abort &&
--	    (DEV_IS_GONE(pm8001_dev) || !port->port_attached)) {
-+	    (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
- 		ts->resp = SAS_TASK_UNDELIVERED;
- 		ts->stat = SAS_PHY_DOWN;
- 		if (sas_protocol_ata(task_proto)) {
--- 
-2.47.0.371.ga323438b13-goog
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
