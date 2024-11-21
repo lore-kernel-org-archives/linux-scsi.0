@@ -1,48 +1,59 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D95995695;
-	Thu, 21 Nov 2024 10:06:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAF941369B4;
+	Thu, 21 Nov 2024 13:28:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732183604; cv=none; b=aKB2svU4363RZ1CzkzWmHrtUaU1VSKBONzZsIlDxLkQzgWyK0u/Z/czjPK3ZdqrZzdJVQ9eB6k5Ht4hKk+4NT8r2VgcKwLPTAW+G2Xqcu1D2wxnOVwk8TGLKmKQ7fAXPCy47s1P2zg3baGSdKE5/bu94Mz+LZrQKhU6ttnjQGD4=
+	t=1732195697; cv=none; b=nKMQh4u54h4BpFugxV/Y3clHF5BFkpA04VhPNEgQRgOiSc1XVQHIkmaYR5lbwew2v4+9TZgr2i3NrFVTeznYK6Jz3Il9AQCLU43nMhrEp++ZqwFVllSDqjwcTHAHi+tFJqPmnuLnhhtn/OoMRBQpGGHoYNgsvOUTC8+shCH4O4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732183604; c=relaxed/simple;
-	bh=7xRvPQKJiZNj/fVy05mARJFhRfsgg/u+JUF75eGx79g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=GkSVwXdYmGO23jSzv+hOGFvBZfv7KareOqAZEhe/dsHPDjl7UIL2YVWiRIUorcie+LGNvLYEQC7SB/eYJSQTtL430LQIEBGR4llvIOq8T5drbMSEA8mgyaGLih4+Fs7NRAwjdDZJjum8ggkUstiaK1EA20Ql+Rg+imPvV1CNxoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=I0ROKMk+; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1732195697; c=relaxed/simple;
+	bh=raHgp5SQRlVYGfMxAEWOYpZN6ecfHDcpykOUZsJA1N8=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=piEKUGmJLmpSzH2QWdT59epR81panodoinPYpMiU2vFwSzi3RL8eJ+99mtI7wZhAmtMPc0nAr1jZ8vPdPs438NKUL5qyhxjTemjCHJM8wmJShTGKeJZnfqnif/MbKCNxOjwtkE/D/nGGwR2gQxhDyfNk1sW0r+sNWsalyDlfqNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ayo1rKBf; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="I0ROKMk+"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AKNoJAx004593;
-	Thu, 21 Nov 2024 10:06:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	I7eWYK4VpUeRAISJcRupsnAVr6kAA451IJVT2RVjCwU=; b=I0ROKMk+7u1ACLrJ
-	WZGQfakpiUM8kxg8myfKG1LMURm0cF/77VUNdfB8HwIlSBLtI8KDHdP9OU8Bvuoy
-	4b+ybErvLQhGnifoN5oAi04LTeQ1EPmIlFkfi7S0BUdz7Ty2jhctH6TuwhykzSfr
-	zp4uNf3Hcvw0xeSqHU97Phwqk+QfCiM6tFkhejyDgrGQDoA7974DU54d06/EYP1m
-	rtTUwLOIfEdvWy9rCqQ26uDAhrIbBCQ7Umr4NB2Dluzm+2aj3QQApB019I3q7MDV
-	x67AqdRRcGj1gRB8gLq52iZ8gI5NHTl4w/5LvpNOxJiLRFWRLzhcGqPXF6WyyJXO
-	iUErfw==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 431ea739ns-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Nov 2024 10:06:21 +0000 (GMT)
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4ALA6G1t016773
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Nov 2024 10:06:16 GMT
-Received: from [10.64.68.72] (10.80.80.8) by nalasex01c.na.qualcomm.com
- (10.47.97.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 21 Nov
- 2024 02:06:09 -0800
-Message-ID: <e3bbd5de-af15-4b23-b956-8c69243b4955@quicinc.com>
-Date: Thu, 21 Nov 2024 18:06:06 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ayo1rKBf"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-aa20c733e92so125513166b.0;
+        Thu, 21 Nov 2024 05:28:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732195694; x=1732800494; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=UcEid6x7hR6WD3NnjxTjV+SHdDeh2G3crDRCwr0C4Xw=;
+        b=ayo1rKBfWqXE65UIuezbz2T6LPj85a1IJ0CRUBWRL1GPUEp4Ctw5houMluET0PY2+f
+         VQLyMg9NzlIokkzDUZs7irxUknG1xo4y39CK2oqls/684z6Z6LZ29U7iZNsWlLzondMs
+         ZIVYNqUNiObiiGWBnk7dm8wd0I8oCQLX56st1IabM1h5VMTR0m2Mo8O0Lfxb4unwpSmq
+         rMGNXgyZAYercYjqDkO15az0/midglloBryfHuEmKYHQU4+dh/Nt2VBP1Qq35IzPwMfS
+         Yo9BjeodCQ8An/a73cioj/3/IeWOgNGvWGjg9g2XqY9jPlAnQFnUfWW/lurUx/ma0FMo
+         rb8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732195694; x=1732800494;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UcEid6x7hR6WD3NnjxTjV+SHdDeh2G3crDRCwr0C4Xw=;
+        b=SdfQtnRWbEGG1SsOY36fFJ2ujVt8PKs46YnhjgDXmZfjv2Gn17zDGaqwxuwMLlHEXk
+         Lf6F1+OQSX3zJtrKbWsOZMYKVLKaCwMjqyLw13mp71ps3CF8+MVK1kOJDzmTw4yWGlIn
+         a+Zw8pad6+1YzRxrRXjvF06g4FlbmdgS8QdZLJ3iL93/wTWZtQemUwK/ICeaVOTLO0Zm
+         blF/dspP8TVcFmOwSPcbxqwi/rPqY1bTwrfny6tavqnhIEEgYkP5GrKgTgB/x24Jzugb
+         s81kuZyjjZAsx5Cs1yYWjg7MRjWvFSPzaSSBrsy95o80Pf7q+RfB6+B4by80h5BdMy+2
+         gd+g==
+X-Forwarded-Encrypted: i=1; AJvYcCUhyM5Yv6MC0adk86ZJosDqGCxNq5Bdh0U9wh4BXBhpbPw85qTW4bnFPXDQX491Ve3eGSBu1/DlnDRTsgk=@vger.kernel.org, AJvYcCW9FIpaie10QKY4K1/rkzAsT1SFs8sGqKMAgG4+YP+gBLSLJ6PMBkI3LYVWVT8HYemB6dm4sCVadduiyJFfCA==@vger.kernel.org, AJvYcCWM1jJwqoGNvuqi0EpNAXWPBCsqPqljY6gMRgVMiL0RT7zG/tkF2UCdAP9C4+J5rTFKSmkMwjMd7cNaqw==@vger.kernel.org, AJvYcCXZiGCuSPEcwjOWm9tmMv1xICcggnH5vrnO38/Ub/xtPx9FI+aL+Z2xW7Ze8NtHsd3OqPsVyFXbCw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyjxxzRZgnfzLqpukMHWY+sFWOST2ou+QpJSbZ2VVsszLg1+7BK
+	NuYqQbEqeYIf69MEEpLuCqofZGcAv/BHtKIZ/Uantl47hfEyNkky
+X-Google-Smtp-Source: AGHT+IHecWvqkw6Jt2yCsp8YXvCsBLl3jZ1zTbBKU+p/+FeJdjUtQiX377sGWOz0S8T463Hv+SgYcg==
+X-Received: by 2002:a17:907:703:b0:a99:f91e:4abb with SMTP id a640c23a62f3a-aa4dd57ba76mr569480466b.27.1732195693926;
+        Thu, 21 Nov 2024 05:28:13 -0800 (PST)
+Received: from [192.168.42.195] ([163.114.131.193])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa4f42d328dsm81636666b.109.2024.11.21.05.28.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Nov 2024 05:28:13 -0800 (PST)
+Message-ID: <dfef87ff-175a-4387-9d51-9688e7edbcf6@gmail.com>
+Date: Thu, 21 Nov 2024 13:29:05 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,92 +61,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] dt-bindings: ufs: qcom: Add UFS Host Controller
- for QCS615
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Krzysztof Kozlowski
-	<krzk@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski
-	<krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        "Manivannan
- Sadhasivam" <manivannan.sadhasivam@linaro.org>,
-        Bjorn Andersson
-	<andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>
-CC: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <quic_jiegan@quicinc.com>,
-        <quic_aiquny@quicinc.com>, <quic_tingweiz@quicinc.com>,
-        <quic_sayalil@quicinc.com>
-References: <20241119022050.2995511-1-quic_liuxin@quicinc.com>
- <20241119022050.2995511-2-quic_liuxin@quicinc.com>
- <d9c3dc82-24e5-465d-bd1c-7a7c97e17136@kernel.org>
- <eae9d141-9c88-4856-9287-2ba6ea6f4a06@kernel.org>
- <242451d6-2b77-417c-bd98-4455f739dc0d@quicinc.com>
- <26392a7f-82c6-4b7b-829e-76f3d78115d1@linaro.org>
-From: Xin Liu <quic_liuxin@quicinc.com>
-In-Reply-To: <26392a7f-82c6-4b7b-829e-76f3d78115d1@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: j-5MxRfCbNe_sa-ky-Vi8gcR8UQvWs7Y
-X-Proofpoint-ORIG-GUID: j-5MxRfCbNe_sa-ky-Vi8gcR8UQvWs7Y
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 adultscore=0
- bulkscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0 clxscore=1015
- priorityscore=1501 impostorscore=0 malwarescore=0 mlxlogscore=889
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411210079
+From: Pavel Begunkov <asml.silence@gmail.com>
+Subject: Re: [PATCH v9 06/11] io_uring: introduce attributes for read/write
+ and PI support
+To: Christoph Hellwig <hch@lst.de>
+Cc: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, kbusch@kernel.org,
+ martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
+ jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+ gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+ linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+References: <20241114104517.51726-1-anuj20.g@samsung.com>
+ <CGME20241114105405epcas5p24ca2fb9017276ff8a50ef447638fd739@epcas5p2.samsung.com>
+ <20241114104517.51726-7-anuj20.g@samsung.com>
+ <c622ee8c-82f0-44d4-99da-91357af7ecac@gmail.com>
+ <b61e1bfb-a410-4f5f-949d-a56f2d5f7791@gmail.com>
+ <20241118125029.GB27505@lst.de>
+ <2a98aa33-121b-46ed-b4ae-e4049179819a@gmail.com>
+ <20241118170329.GA14956@lst.de>
+ <4f5ef808-aef0-40dd-b3c8-c34977de58d2@gmail.com>
+ <20241119124938.GA30988@lst.de>
+Content-Language: en-US
+In-Reply-To: <20241119124938.GA30988@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-
-
-在 2024/11/21 18:01, Krzysztof Kozlowski 写道:
-> On 21/11/2024 09:37, Xin Liu wrote:
->>
->>
->> 在 2024/11/21 15:40, Krzysztof Kozlowski 写道:
->>> On 20/11/2024 17:57, Krzysztof Kozlowski wrote:
->>>> On 19/11/2024 03:20, Xin Liu wrote:
->>>>> From: Sayali Lokhande <quic_sayalil@quicinc.com>
->>>>>
->>>>> Document the Universal Flash Storage(UFS) Host Controller on the Qualcomm
->>>>> QCS615 Platform.
->>>>>
->>>>> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
->>>>> Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
->>>>> Signed-off-by: Sayali Lokhande <quic_sayalil@quicinc.com>
->>>>> Co-developed-by: Xin Liu <quic_liuxin@quicinc.com>
->>>>> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
->>>> That's a bit odd SoB chain. First, these are just one-liners. Second,
->>>> who authored the patches?
->>> To be clear: SoB regarding authorship is correct, but regarding Acks and
->>> Reviews is not. Savali did not receive these tags. If so, please point
->>> to lore discussion with it.
->>>
->>> All this needs fixing.
->> Thank you for your comments. These are the two reviews I received. One
->> is your reviewd-by, and the other is Manivannan's acked-by.I have also
->> cc Sayali on the email.
->>
->> https://lore.kernel.org/linux-arm-msm/rv3ukz6rhgp3x32s74nbftmoqmdxjxmoii3zsd4wipmhudyq7q@ha4l2svl5lim/
->>
->> https://lore.kernel.org/linux-arm-msm/20241112075619.2ilsccnnk4leqmdy@thinkpad/
+On 11/19/24 12:49, Christoph Hellwig wrote:
+> On Mon, Nov 18, 2024 at 05:45:02PM +0000, Pavel Begunkov wrote:
+>> Exactly, _fast path_. PI-only handling is very simple, I don't buy
+>> that "complicated". If we'd need to add more without an API expecting
+>> that, that'll mean a yet another forest of never ending checks in the
+>> fast path effecting all users.
 > 
-> I meant order of tags. Who received them? You, not Sayali. Then they
-> cannot be before Sayali SoB.
-> 
-Thank you for your comments. I will fix it next version.
-> 
-> Best regards,
-> Krzysztof
+> Well, that's a good argument for a separate opcode for PI, or at least
 
+No, it's not. Apart from full duplication I haven't seen any PI
+implementation that doesn't add overhead to the io_uring read-write
+path, which is ok, but pretending that dropping a new opcode solves
+everything is ill advised.
+
+And I hope there is no misunderstanding on the fact that there are
+other criteria as well, and what's not explicitly mentioned is usually
+common sense. For example, it's supposed to be correct and bug free
+as well as maintainable.
+
+> for a 128-byte write, isn't it?  I have real hard time trying to find
+> a coherent line in your arguments.
+
+When coming from invalid assumptions everything would seem incoherent.
+And please, I'm not here to humour you, you can leave your crude
+statements for yourself, it's getting old.
+
+-- 
+Pavel Begunkov
