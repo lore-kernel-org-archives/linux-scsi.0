@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63DB94317E;
-	Thu, 21 Nov 2024 07:40:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B2EA4317E;
+	Thu, 21 Nov 2024 07:42:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732174839; cv=none; b=SdWT2C9uZ18vTFOkzWms65s7FNKEszcsWraVaEg6/9vgZPtCnwiTVdLNsRt/b0j3R3GKbk0Ho6nrGjBHZRukeeAAfsk2oTjrFS1Kk8Hy7DD3HAFKdiZaVBMOlE/bwB7C67S12pPA8ILWMejt9S7MBy0BjYjGvfBcBBIgSo2v9yw=
+	t=1732174923; cv=none; b=l4bkys2QoT4Q3XckiwpjlAoHVIxzF4WEIsGsmY5ws++i6ythFEPRCEg+z7iMFvBEJTBVa77OVFTp911Jp7oXyahrr5bTS029Wfy90QVU9Nb8d1/5x5YNSVmnwLztk7Pav0VwA2AUxHU3ADZree/1KBhYMQgpFRhVoD9PnhuxEd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732174839; c=relaxed/simple;
-	bh=piHP2NesSEkc/KD2xC1WcuLZkBEuN7Qzn8qXkrknO4s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SsgXVG29xQ5gq6zyRFOTUJt7QMiXcYmmzAMHZ3ownV71A05XFjpC1FhevUvZ64ofwB0dXlWM4Jx+7PwKfzurcAkTSrF7iau+gLHEJA8TLEhwwwgUTzCn5LMBeZx2KII/IcOu01LITJtV+rRrScYR6j+BFGkAq/wpF7b5SCXUTHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gHqY7qUi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732174923; c=relaxed/simple;
+	bh=GM6k3W0TB0s+geDrt+JmszN/+Ajtk5eChMYhgg6SVvU=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=LhY9pWg5yiTnLs+m+hQ94O4Wa4lxzg2Aw8jU+7ctqqfOaEd45/pg4u6DSeRY32qotnbFY0i1qeE/tHmqto7X5YVTBUZY5Tm3jCoivk7NPwIDSMYrIbMCTd9oRIjyma7wlPI5NJ2MAXa4cSzrCvaXP2rgfiALcq0kkO0hdlYNJsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J9xOyJeV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gHqY7qUi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 675CBC4CECC;
-	Thu, 21 Nov 2024 07:40:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J9xOyJeV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C55FC4CECC;
+	Thu, 21 Nov 2024 07:41:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732174838;
-	bh=piHP2NesSEkc/KD2xC1WcuLZkBEuN7Qzn8qXkrknO4s=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gHqY7qUibmEepixtENPDydu5WUuSKf4YjPvsAkTbepouywa2opdQxQxMtnzwOEZlm
-	 8OOeJwshnizsukiQmFoN6XWaZ1XfgQQ86o4wbDkf6wHbTOybIOJtVDqwBTlokO8QvW
-	 rYil275ljR27korW9tcTeTE2/l32lxfpDHTm55AeUCdFzAfj9YEDTM0Fyvdo3Nt4rq
-	 UqPThVJFFa+LwmP95Kb0IJ7zieb8B9iwlDhXGtIxoIA8+5pAQsdmkqLo9WWQmIqSqg
-	 92/ckbVs1Nrduuyk0InlQ24f9P88TS4NY+uTuYVuTgKS/80Hq5e2/YNG2lvyI3rA1x
-	 ZcO68aILWkZMA==
-Message-ID: <eae9d141-9c88-4856-9287-2ba6ea6f4a06@kernel.org>
-Date: Thu, 21 Nov 2024 08:40:29 +0100
+	s=k20201202; t=1732174922;
+	bh=GM6k3W0TB0s+geDrt+JmszN/+Ajtk5eChMYhgg6SVvU=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+	b=J9xOyJeVnaN3rAekvvHnmXhQEMvqXHvaNwxaEP8hZobYWrHrvjcw2gXvlkkZqJIIy
+	 7F9+3H4HZSccdv/YAz02chUDHJ8dJljvvJMrHgn8UkUMPj2ObhSwvHHWJeC255dJyc
+	 Nbw+sWVrEXLPi51Z5ic8rrOse9UO+MSEChaF2loeyWorgbLJXJ21s3NNO+Hzd0hdah
+	 qB5UpZUU4gXOH7pAcyu+Q2sqZrN464iTHe0k2mmIZaINIoFvR2UqFtT/0b5yOTAMh3
+	 OIkQe8tKOnKZZrLEuaekgGC51W3BG/fKxG46DdDSuxV0Ekx1roasJyqwx3KYNwpAFF
+	 nYwI9iX1O1yKg==
+Message-ID: <f5b40d0c-defc-4b91-9313-9e454af22fb8@kernel.org>
+Date: Thu, 21 Nov 2024 08:41:53 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] dt-bindings: ufs: qcom: Add UFS Host Controller
- for QCS615
+Subject: Re: [PATCH v2 2/3] arm64: dts: qcom: qcs615: add UFS node
+From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Xin Liu <quic_liuxin@quicinc.com>, Rob Herring <robh@kernel.org>,
  Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
  <conor+dt@kernel.org>,
@@ -50,12 +50,10 @@ Cc: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I
  linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
  quic_jiegan@quicinc.com, quic_aiquny@quicinc.com, quic_tingweiz@quicinc.com,
- quic_sayalil@quicinc.com,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+ quic_sayalil@quicinc.com
 References: <20241119022050.2995511-1-quic_liuxin@quicinc.com>
- <20241119022050.2995511-2-quic_liuxin@quicinc.com>
- <d9c3dc82-24e5-465d-bd1c-7a7c97e17136@kernel.org>
-From: Krzysztof Kozlowski <krzk@kernel.org>
+ <20241119022050.2995511-3-quic_liuxin@quicinc.com>
+ <4bf9ea1f-4a45-4536-82c0-032f72b28807@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
  xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
@@ -100,29 +98,23 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <d9c3dc82-24e5-465d-bd1c-7a7c97e17136@kernel.org>
+In-Reply-To: <4bf9ea1f-4a45-4536-82c0-032f72b28807@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 20/11/2024 17:57, Krzysztof Kozlowski wrote:
+On 20/11/2024 17:58, Krzysztof Kozlowski wrote:
 > On 19/11/2024 03:20, Xin Liu wrote:
 >> From: Sayali Lokhande <quic_sayalil@quicinc.com>
 >>
->> Document the Universal Flash Storage(UFS) Host Controller on the Qualcomm
->> QCS615 Platform.
+>> Add the UFS Host Controller node and its PHY for QCS615 SoC.
 >>
->> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
->> Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 >> Signed-off-by: Sayali Lokhande <quic_sayalil@quicinc.com>
 >> Co-developed-by: Xin Liu <quic_liuxin@quicinc.com>
 >> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
-> That's a bit odd SoB chain. First, these are just one-liners. Second,
-> who authored the patches?
-To be clear: SoB regarding authorship is correct, but regarding Acks and
-Reviews is not. Savali did not receive these tags. If so, please point
-to lore discussion with it.
-
-All this needs fixing.
+> 
+> Confusing. Who is the FIRST author? Please carefully read submitting
+> patches.
+I retract my comment: It is actually correct here.
 
 Best regards,
 Krzysztof
