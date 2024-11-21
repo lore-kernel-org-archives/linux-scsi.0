@@ -1,90 +1,94 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 494C613C3D3
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2024 03:19:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DB8513C3D3;
+	Thu, 21 Nov 2024 03:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732159179; cv=none; b=caHKOMHkVY01euXeMmmlw+kmJf7/5MQx+buEHFAUI5zB0pfakUo6nsxCaLseofAM7JkjpBpv1SQDlHjnJgHyr+EJ0kSmbbSVkC/gilY7CjtYZTOWheySujZ2RV/jsIsueWojeV5084rbb4E2z3+Ne+N9dEcHrgHNTRTQc1mAVZE=
+	t=1732159217; cv=none; b=QMg1ocAV+tVVdY5hB5GumB0cxQEtuqk278DM89oaeHDPPL4BKtm7T18w+c2n2fPD3u0nd84xgdjOX1a3FS3iWlaZWVE7hKLNrxta7o5e2WkK+/t4s97EbUsfboV+I/0d2vEOuRa/v6RBBmbtxyHFW2fKISMwr1klCb7Ytl/XDOU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732159179; c=relaxed/simple;
-	bh=n6fse5WF/o+E6zikQyV1GpWdO7mrGYNnHHmaFBQqD1I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s2xqV1Iaj7MIkGBPu/9hF3xWQdafVT/8Fw7AOhWbyXt0Hq95XS80pOqKYupKNHHrYZLu2n+kmtysQqC63XvcFqgSd+z0VrOw7qc4w/2rYbCFiQyhUXzo+zGBZ/NfRcTudwzKGN+61nFms9BY3jiohUsxuhQ+3tk8zSwXaCg44do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fBukUS+T; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1732159217; c=relaxed/simple;
+	bh=MC3RFGhGWiA3GAz90LPHnNqEKTvz9BkzkXD0BSzIhps=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gEpAogIcKXzbJLaAzxuQsz1WNM6YphbQ+dzp15zeL18IDZNv3ULkv+Yfc0mONlRSjnFHZLFC/W49v2Ij2oycjImqC3Z0LvqYyd4T2nW5WA/Uh6q1+8NUQp4taS6BObiTK/EY6DSbUFRDMK8CDkTMbLhHaeoGY4H6E97tOrNiYeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iFVWIzsT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fBukUS+T"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1732159177;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AOXvI++XSTiWCp1ZxrfaodBptdhJkbFw4zlLYFWlGt0=;
-	b=fBukUS+ToKtBdMxtS9CjO3hdGR+c9V9UkVVOVUE8tdWJXppLde1hpsk4b3YP4CScQ2ykTF
-	eVdlS2Q5bfkW3MPnDtz795kACPz9OYYm0lta7OOacnfTLFkCqokWk0zfe+kriwsCOOhym6
-	MU/kzAVOg9tOhRwiHEOd0hrn+acuKoc=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-38-9N4rdBEgPGqmul26ngHxlg-1; Wed,
- 20 Nov 2024 22:19:34 -0500
-X-MC-Unique: 9N4rdBEgPGqmul26ngHxlg-1
-X-Mimecast-MFC-AGG-ID: 9N4rdBEgPGqmul26ngHxlg
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9D47419560B8;
-	Thu, 21 Nov 2024 03:19:30 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.87])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 152C830000DF;
-	Thu, 21 Nov 2024 03:19:16 +0000 (UTC)
-Date: Thu, 21 Nov 2024 11:19:11 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	John Garry <john.g.garry@oracle.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v5 8/8] blk-mq: remove unused queue mapping helpers
-Message-ID: <Zz6mrxOumUrDfBRM@fedora>
-References: <20241115-refactor-blk-affinity-helpers-v5-0-c472afd84d9f@kernel.org>
- <20241115-refactor-blk-affinity-helpers-v5-8-c472afd84d9f@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iFVWIzsT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3488AC4CECD;
+	Thu, 21 Nov 2024 03:20:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732159216;
+	bh=MC3RFGhGWiA3GAz90LPHnNqEKTvz9BkzkXD0BSzIhps=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=iFVWIzsT3fznLwc5AScWLtYwT8vYUhkdYLfGcE5KGavxzJRBw2r5pzKbKFwgz68mU
+	 0QVdzQpguBTwSWMEmSv5NWflGZJJL8n7CUJ4VBH7HqboaqN/F0u1uh0WdSzP8YUNWb
+	 cJlulsuJiGrfuMp4PYijul/3TVI60ozH3aJYu9WaLlK7/MJMztA7kRAdIdfxZc7FQN
+	 U34DkmYREiRdEd6tyiP94HGZkcnx9EHIzZFrq5ZLXl2C0gH5v6Lpj3nstHupkV66b/
+	 RYqn7mz5WX34HFxCpcQWQLjaCScBwoPIGVxu3tx43WyAAUIIdpH8ycd0TPcjkLUYMm
+	 GHUc09DxcOiFQ==
+Message-ID: <d594be95-2cbf-4f9c-8508-d7adcedb148b@kernel.org>
+Date: Thu, 21 Nov 2024 12:20:14 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241115-refactor-blk-affinity-helpers-v5-8-c472afd84d9f@kernel.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 00/26] Improve write performance for zoned UFS devices
+To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
+References: <20241119002815.600608-1-bvanassche@acm.org>
+ <95ab028e-6cf7-474e-aa33-37ab3bccd078@kernel.org>
+ <de43ae13-240a-4653-b8ac-f36c433d9ffb@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <de43ae13-240a-4653-b8ac-f36c433d9ffb@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Nov 15, 2024 at 05:37:52PM +0100, Daniel Wagner wrote:
-> There are no users left of the pci and virtio queue mapping helpers.
-> Thus remove them.
+On 11/20/24 04:08, Bart Van Assche wrote:
+> On 11/19/24 12:01 AM, Damien Le Moal wrote:
+>> Impressive improvements but the changes are rather invasive. Have you tried
+>> simpler solution like forcing unplugging a zone write plug from the driver once
+>> a command is passed to the driver and the driver did not reject it ? It seems
+>> like this would make everything simpler on the block layer side. But I am not
+>> sure if the performance gains would be the same.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> Hi Damien,
+> 
+> I'm not sure that the approach of submitting a new zoned write if the
+> driver did not reject the previous write would result in a simpler
+> solution. SCSI devices are allowed to respond to any command with a unit
+> attention instead of processing the command. If a unit attention is
+> reported, the SCSI core requeues the command. In other words, even with
+> this approach, proper support for requeued zoned writes in the block
+> layer is required.
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Yes, but it would be vastly simpler because you would be guaranteed to having
+only a single write request per zone being in-flight between the write plug and
+the device at any time. So the requeue would not need reordering, and likely not
+need any special code at all. nless I am missing something, this would be
+simpler, no ?
+
+The main question though with such approach is: does it give you the same
+performance improvements as your current (more invasive) approach ?
+
+> Additionally, that approach is not compatible with using .queue_rqs().
+> While the SCSI core does not yet support a .queue_rqs() callback, I
+> think it would be good to have this support in the SCSI core.
+
+I do not understand why it is not compatible. What is the problem ?
+
+> If we need requeuing support anyway, why to select an approach that
+> probably will result in lower performance than what has been implemented
+> in this patch series?
+
+I am only trying to see if there is not a simpler approach than what you did.
+The less changes, the better, right ?
 
 -- 
-Ming
-
+Damien Le Moal
+Western Digital Research
