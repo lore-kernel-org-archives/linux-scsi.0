@@ -1,242 +1,110 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44A3D198A2F
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2024 17:00:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A64F21B5325;
+	Thu, 21 Nov 2024 17:43:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732208451; cv=none; b=qI6dvSMTaINsILijN2fVPD6gRavNip4f54MIFjDNyafe3V5mERlwLNFMAV5jz5XWP40DXVrKjzb1INno/Y4Dgv5pljD7PYDt8DSz3gCOyIAFA0/xPpDnTow2vdRwRZA/bGJ4on4biQqjwEXy1okQdPKTajXXjP+uwJ1jALwq3K4=
+	t=1732211005; cv=none; b=PC7LQE6BzhP+aFOiww6MgRes2Unmjyk4gxCPc42wg4N1MBR8uiJGocvPGeNsnb2etCrIYt6pXt2quPN0en0FXtGkX8cdtHylAajpnq28Xn6kU4GIKXbobHgrMIkc3g6+vy+cevfxtMEOian19JxfIPjcDpzb7Jady/43zsLSJxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732208451; c=relaxed/simple;
-	bh=jzTU/z32x3hB0JfDrm8MmAyZ6G+T5pKSWXdt0ly+8jY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HFnINefPRGyyszGiQmpDBvPK/OrQA31YpJ1FuuYO+Hnh89ftPo+R6VI3K3LOX4S7L3bp6AkRyFt5q9cwzYDcC75AmoiNQdIDcunJfwChto+UFAMHtkpfMt16VLROE7qkhn/PDZkp47cGLc6T9TUdogEZSpnRUnF7Hjlt5zEDxeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=L63LVHjP; arc=none smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1732211005; c=relaxed/simple;
+	bh=5dljb1XolvJzVbfZ4LIhIwKXBiJhW0N+BZljmI1e1fg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=e/LTEp95acz2fmC3oVaeynvr/9aKV4Zj+hAXcoJO5HLQW+27m7eS18wRGStutu5Qc3jTULsAlo6gMGAv94nJDNGsJblHuk0ty+/Q50q07aL80Ln9GGELv0qNe97qKgKeyrz8VQbpy+pJouS9P/8Q6X6zT4vq3rRKQhdZQequeUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qFJg2DkG; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="L63LVHjP"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-539f1292a9bso1282501e87.2
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2024 09:00:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1732208447; x=1732813247; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=tTXid3Zut7ENV6u5lEywLtVroH0vN+GAHGKS1dMMtj0=;
-        b=L63LVHjPHU791h+YKXmJCmR5Du5UeMwXxcy3Oangg5fsBdazuhST+klzqEjI4BUd37
-         VCKL1hhApSfjju9vUqtvJoS1iNTlGZ8jgWB9c1a0Ki0/MWq/Hk2zgZBoOjHFxEllnr2T
-         dleqlmsb4L94QZLXL9nbYYdR7enISgCVPjF7jmsycoItxl5b1vJDWON1Y/XZcB378I2B
-         K3S6oH5g/UBWqEH9zlaZ8Vv4RvkvnL9iuU/JwvvjIcCIhiMgbHUMUtUtVkYpuCXKN8/k
-         NZply0MBFOg2bljJ2k7piQm4zsba85IzpGCKYcoN9gc+bhLwPw8frLtLd0GWbdSUfxh0
-         E0Lg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732208447; x=1732813247;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tTXid3Zut7ENV6u5lEywLtVroH0vN+GAHGKS1dMMtj0=;
-        b=LX49SNmZ7+bkSKlWivsYt2lGXz3qHlhdyi7G330LTt26WZrqfZWEpKbFLT7+CMt8Ej
-         JdhmrKaTSIj/FFLAfuVq2AGKN2hOGPEFzrfm7RdnLSi2G3ELNXwZ1ZhHDdJbco3ycfln
-         l2oXkP8A83UroNaew9ouEuVw7IhK8vVdj7PCotHbEJQlrIniS0xWGKVHXKpq4lqDdj8M
-         gXggBdfogE9Zpz9p9IOr0YZ/b3h1WDY1i4AXp3Oyyxkcmg6t+goopm7P1drseft3QJHL
-         sSFXHfe7oD0l+PghKQopPREF9GuegImT7aUF6s2Ug8f7Otib5GkyUjd6FJEp03TIPqrJ
-         64yA==
-X-Forwarded-Encrypted: i=1; AJvYcCWmfXvQAGzfy14x0AXtbsikjH7tUtv6XPS8zj1KuGtyoKQJScKOTF9dCMYozdI/ticU+iWgjJZ4tP78@vger.kernel.org
-X-Gm-Message-State: AOJu0YyPBqLSYBTHbs/VfkLqUr45PMZbPbVcf2z+Z+iNJ6QuIX8UzeL/
-	MLFOMornyAcYA+Oz8Kg0m4QHMzEiZ3IUdoY6VPXZwUZO0rvutWDff5iRvH8QKDM=
-X-Gm-Gg: ASbGncuUCj6FY8Pbf8qsZaplcPVeTbx7vLtdsXHNw8rWTTGiryEbRUlHxFuadNbsaYf
-	oMx/ajhxISGhHNczIfsE4399Neq38c3fO+S8zxOGjQEX4t+h4LWVYPENVep+JNYs4kcd+icd4FM
-	zbxJSXqC6Ae3szEmzv/CcAsaiI93rVhyFub7fnennF0WXhQ26kysgGmqqYFnLX726+XOPKv8W0d
-	gPImT0aDKhnFTgdF6EvVrGI/PWTyOAq5MFZ/mAO77o1L7CB0eI6CdDE3yh+71eBNBY2DuhJyw54
-	orOV43doBvbZ0O/BoxWV6bKRi5H/Sw==
-X-Google-Smtp-Source: AGHT+IHHxVFXWhGPPdA9ksqKTV8tWCXoqA5zp3uVM/KOFvDJ1Wc2NNeKT6Y5HEDYj4Oq06/7SimNdw==
-X-Received: by 2002:a05:6512:32d4:b0:53d:cfe0:5937 with SMTP id 2adb3069b0e04-53dcfe059a2mr1179637e87.13.1732208445738;
-        Thu, 21 Nov 2024 09:00:45 -0800 (PST)
-Received: from eriador.lumag.spb.ru (2001-14ba-a0c3-3a00--b8c.rev.dnainternet.fi. [2001:14ba:a0c3:3a00::b8c])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53dd24455e6sm16713e87.3.2024.11.21.09.00.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Nov 2024 09:00:44 -0800 (PST)
-Date: Thu, 21 Nov 2024 19:00:42 +0200
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To: Xin Liu <quic_liuxin@quicinc.com>
-Cc: Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	quic_jiegan@quicinc.com, quic_aiquny@quicinc.com, quic_tingweiz@quicinc.com, 
-	quic_sayalil@quicinc.com
-Subject: Re: [PATCH v2 2/3] arm64: dts: qcom: qcs615: add UFS node
-Message-ID: <45cb4thpg6mrtxiwdb333w2jxgtpw426akik2l3f7qv57dvwmm@kma6vrglbrjh>
-References: <20241119022050.2995511-1-quic_liuxin@quicinc.com>
- <20241119022050.2995511-3-quic_liuxin@quicinc.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qFJg2DkG"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4XvQYx0lsfz6CmQvG;
+	Thu, 21 Nov 2024 17:43:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1732210993; x=1734802994; bh=rqwte/u4VDOUnz0zCGTlVUFX
+	ijGl/VH99DbTZicbOVQ=; b=qFJg2DkGg+W+Gw9yfT7Gae4RqS8tAlkU3YLxa8XT
+	XHC6UjPptfNGN5hu/iW7YbQ4O4AWjB2xZwldRlsLujq8vUigAL1/F9KhrQKPimB1
+	xHKN954DqJ5Sgo7zEGRr5mQXfls8vJP9CawAvtc/PqbMN/dM6XBC96rfOhTpKpDQ
+	Hsjmr9+eEesZQyE12xwu1UmNFglwMfbxU67FE0EBi1aafdw+sxdvN1bAuP+f8bHO
+	uCiekPZTjDZvYJ8GiaEVQfA2QRvtoMuOD6bflYlA1APkVO81UkouQqnUmtlCtdLr
+	kzTQ2HrztUog/kzDfNJvH4mIBEoHZDx4RMH1JVK/ngzNoA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id LJ4FwaGtTvHj; Thu, 21 Nov 2024 17:43:13 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4XvQYq0xlpz6CmQtQ;
+	Thu, 21 Nov 2024 17:43:10 +0000 (UTC)
+Message-ID: <58fd8b59-c8b1-464e-9bb8-f308cea3021f@acm.org>
+Date: Thu, 21 Nov 2024 09:43:09 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241119022050.2995511-3-quic_liuxin@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 04/26] blk-zoned: Only handle errors after pending
+ zoned writes have completed
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
+References: <20241119002815.600608-1-bvanassche@acm.org>
+ <20241119002815.600608-5-bvanassche@acm.org>
+ <7f4058f9-df04-404c-b4f0-25bf0e8e4886@kernel.org>
+ <719628f8-5ac2-48b5-8458-68540ae0b2f1@acm.org>
+ <c257a046-5f9f-40eb-8ef8-f36a3f1174e6@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c257a046-5f9f-40eb-8ef8-f36a3f1174e6@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Nov 19, 2024 at 10:20:49AM +0800, Xin Liu wrote:
-> From: Sayali Lokhande <quic_sayalil@quicinc.com>
+On 11/20/24 7:23 PM, Damien Le Moal wrote:
+> On 11/20/24 05:51, Bart Van Assche wrote:
+>>>> +/*
+>>>> + * Change the zone state to "error" if a request is requeued to postpone
+>>>> + * processing of requeued requests until all pending requests have either
+>>>> + * completed or have been requeued.
+>>>> + */
+>>>> +void blk_zone_write_plug_requeue_request(struct request *rq)
+>>>> +{
+>>>> +	struct gendisk *disk = rq->q->disk;
+>>>> +	struct blk_zone_wplug *zwplug;
+>>>> +
+>>>> +	if (!disk->zone_wplugs_hash_bits || !blk_rq_is_seq_zoned_write(rq))
+>>>> +		return;
+>>>
+>>> I think the disk->zone_wplugs_hash_bits check needs to go inside
+>>> disk_get_zone_wplug() as that will avoid a similar check in
+>>> blk_zone_write_plug_free_request() too. That said, I am not even convinced it
+>>> is needed at all since these functions should be called only for a zoned drive
+>>> which should have its zone wplug hash setup.
+>>
+>> Moving the disk->zone_wplugs_hash_bits check sounds good to me.
+>>
+>> I added this check after hitting an UBSAN report that indicates that
+>> disk->zone_wplugs_hash_bits was used before it was changed into a non-
+>> zero value. sd_revalidate_disk() submits a very substantial number of
+>> SCSI commands before it calls blk_revalidate_disk_zones(), the function
+>> that sets disk->zone_wplugs_hash_bits.
 > 
-> Add the UFS Host Controller node and its PHY for QCS615 SoC.
-> 
-> Signed-off-by: Sayali Lokhande <quic_sayalil@quicinc.com>
-> Co-developed-by: Xin Liu <quic_liuxin@quicinc.com>
-> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
-> ---
->  arch/arm64/boot/dts/qcom/qcs615.dtsi | 112 +++++++++++++++++++++++++++
->  1 file changed, 112 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
-> index 590beb37f441..ceceafb2e71f 100644
-> --- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
-> @@ -458,6 +458,118 @@ mmss_noc: interconnect@1740000 {
->  			qcom,bcm-voters = <&apps_bcm_voter>;
->  		};
->  
-> +		ufs_mem_hc: ufshc@1d84000 {
-> +			compatible = "qcom,qcs615-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
-> +			reg = <0x0 0x01d84000 0x0 0x3000>, <0x0 0x01d90000 0x0 0x8000>;
+> But non of the commands are writes to sequential zones, so the hash bits check
+> should not even be necessary, no ?
 
-Please consider splitting to have one entry per line (and reg-names
-too).
+Hi Damien,
 
-> +			reg-names = "std", "ice";
-> +
-> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> +
-> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> +				 <&gcc GCC_UFS_PHY_ICE_CORE_CLK>,
-> +				 <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>;
-> +			clock-names = "core_clk",
-> +				      "bus_aggr_clk",
-> +				      "iface_clk",
-> +				      "core_clk_unipro",
-> +					  "core_clk_ice",
+I will double check whether this test is really necessary and leave it
+out if not.
 
-Wrong indentation
+Thanks,
 
-Other than that LGTM.
+Bart.
 
 
-> +				      "ref_clk",
-> +				      "tx_lane0_sync_clk",
-> +				      "rx_lane0_sync_clk";
-> +
-> +			resets = <&gcc GCC_UFS_PHY_BCR>;
-> +			reset-names = "rst";
-> +
-> +			operating-points-v2 = <&ufs_opp_table>;
-> +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-> +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-> +			interconnect-names = "ufs-ddr",
-> +					     "cpu-ufs";
-> +
-> +			power-domains = <&gcc UFS_PHY_GDSC>;
-> +			required-opps = <&rpmhpd_opp_nom>;
-> +
-> +			iommus = <&apps_smmu 0x300 0x0>;
-> +			dma-coherent;
-> +
-> +			lanes-per-direction = <1>;
-> +
-> +			phys = <&ufs_mem_phy>;
-> +			phy-names = "ufsphy";
-> +
-> +			#reset-cells = <1>;
-> +
-> +			status = "disabled";
-> +
-> +			ufs_opp_table: opp-table {
-> +				compatible = "operating-points-v2";
-> +
-> +				opp-50000000 {
-> +					opp-hz = /bits/ 64 <50000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <37500000>,
-> +						 /bits/ 64 <75000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>;
-> +					required-opps = <&rpmhpd_opp_low_svs>;
-> +				};
-> +
-> +				opp-100000000 {
-> +					opp-hz = /bits/ 64 <100000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <75000000>,
-> +						 /bits/ 64 <150000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>;
-> +					required-opps = <&rpmhpd_opp_svs>;
-> +				};
-> +
-> +				opp-200000000 {
-> +					opp-hz = /bits/ 64 <200000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <150000000>,
-> +						 /bits/ 64 <300000000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>;
-> +					required-opps = <&rpmhpd_opp_nom>;
-> +				};
-> +			};
-> +		};
-> +
-> +		ufs_mem_phy: phy@1d87000 {
-> +			compatible = "qcom,qcs615-qmp-ufs-phy", "qcom,sm6115-qmp-ufs-phy";
-> +			reg = <0x0 0x01d87000 0x0 0xe00>;
-> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-> +				 <&gcc GCC_UFS_MEM_CLKREF_CLK>;
-> +			clock-names = "ref",
-> +				      "ref_aux",
-> +				      "qref";
-> +
-> +			power-domains = <&gcc UFS_PHY_GDSC>;
-> +
-> +			resets = <&ufs_mem_hc 0>;
-> +			reset-names = "ufsphy";
-> +
-> +			#clock-cells = <1>;
-> +			#phy-cells = <0>;
-> +
-> +			status = "disabled";
-> +		};
-> +
->  		tcsr_mutex: hwlock@1f40000 {
->  			compatible = "qcom,tcsr-mutex";
->  			reg = <0x0 0x01f40000 0x0 0x20000>;
-> -- 
-> 2.34.1
-> 
-> 
-> -- 
-> linux-phy mailing list
-> linux-phy@lists.infradead.org
-> https://lists.infradead.org/mailman/listinfo/linux-phy
-
--- 
-With best wishes
-Dmitry
