@@ -1,143 +1,101 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98CF2309AC;
-	Fri, 22 Nov 2024 02:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72676EC4
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2024 05:04:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732243796; cv=none; b=rCjv2kAaV5wrMRgDrU/5rMmTrVL3UzhrUH85staXjr5xaZfRcmUDyWvLRYpwTFm0C+qPfzC0+yusotjek+97C/Hx25JlLQ/c7tvZvc0AbRQlcJOPqqVsv7DdBea2xjK6wOx2AJxa7WXUoFohcTR6i/wLjUU+eRSuo/rreWUF17A=
+	t=1732251863; cv=none; b=gR7ajWGBU1V7Onm5a9vZAeN5h4C+s3QVyr7/UE8ZPOlFYm/sEwMOsT8i8gLGY5xaZWET0ymXymwnaVBhCzLNAZKRfvI/MtoYsZs3S9sNcIWUjDoXLFgHqao0xKdYemftOjASm62fNtVwu8lmZplIvwZRNgAUQPN2JzD6qgHRBRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732243796; c=relaxed/simple;
-	bh=cdzMsiV/tKEiouLnKT23Dq0aYQyt65BCw77t6GUW2zg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FWujzbPiWLlsJmYyVVouuJThJ4+iLBy+QqAZeLZp5NUICpIPrf62Ea61JqZXWrRAebC3JkJ7c3En98JFqXotAw0O+BK5Vxp9gA3Qu+7y++8DFJOdJZKlzIdLe0eKZ1ffjlnD1n5K1ydQbPM+x+d+ysxzDNEo2DAshwbvlX8LM10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DZJyjhwE; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1732251863; c=relaxed/simple;
+	bh=A/lHaHfafAQy7OfTvmDU5OKRmJrBpX9Zmsb83aoIxoE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=qEUR80QLB2gfkVxxDSfjJPWTLTt1uqfDqv2czSbqN/ewM7tfJPHhhP72pbPFcAG53GnijKlGz0QMzjxR7x3D3EjBziuUkkD+eIsTIP7iVv2FBVz97BMHEsVV5j2zKR5HZ/fH1cWYh9rxrjxY/uy3e1fMot4qC4+aWCTcTCRDfrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=zFdAxetf; arc=none smtp.client-ip=209.85.161.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DZJyjhwE"
-X-UUID: 6f15d666a87c11ef99858b75a2457dd9-20241122
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=yR4nQ8FcC5S0oePaY8aJ51ztZct7g8GnoM20tznO0Mw=;
-	b=DZJyjhwEtmiOo/jZz6dJyo3rKGz+kR0DJl3DWuqyHHiXx4aXdRBd1lJbIZwf0BoEC+0KA9PvrSvh7MdqZAuj59GLJSA39V+t38t58YlMrMQQ1VHT3CYHZ45v5WxiWJnFJoLLMqYoUCtge4uB+ec2qWf5o43dkBEj73C60NBTXtM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.44,REQID:fe1d30fe-9d07-42d2-90a4-3948f9601e03,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:464815b,CLOUDID:8691e4fe-58af-4a77-b036-41f515d81476,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 6f15d666a87c11ef99858b75a2457dd9-20241122
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1866262619; Fri, 22 Nov 2024 10:49:46 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 22 Nov 2024 10:49:45 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 22 Nov 2024 10:49:45 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<draviv@codeaurora.org>, <stable@vger.kernel.org>
-Subject: [PATCH v2] ufs: core: add missing post notify for power mode change
-Date: Fri, 22 Nov 2024 10:49:43 +0800
-Message-ID: <20241122024943.30589-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zFdAxetf"
+Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-5ee1e04776cso950215eaf.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2024 21:04:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1732251860; x=1732856660; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kIzDwcozFWCn4iWIZHsgYfF1wjH7Z9fC00bR+vHVLs8=;
+        b=zFdAxetfqdy6vjgAlPnY8dcPszsTDct+6mOTzaz8OaYYhujrNWdIyDm6DWDXklwxD9
+         htk6uVhmakXRcC2Fjd+gf0VKabBgujYbdZJXpGtUEjMEEtaaIRE7vqvmJ5hR+wAFI5U8
+         L5I8GNSP3CIuT9SyFp6pG9PwV5p5HISLTOyaBErkch3CTIh7aqGsWYvgFPU1j1pqziiy
+         uKEPXqCROjEj5IyAkIC6yldMzfaMXQ/1Z9Xuj1AZ+dwr52LyscyQch1pg5tlhHkcQpqf
+         NnNm4QFDdYbsyt0pDXl38nk7FdXVag61wo0cD2DJ/VZhdCGE8Q2jpBj3wJrxcG0OJ0Lw
+         5wMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732251860; x=1732856660;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=kIzDwcozFWCn4iWIZHsgYfF1wjH7Z9fC00bR+vHVLs8=;
+        b=mEU5H/Y2VfK9ZLTw+iRWSMrm43/ZBoqJtMw+I1E54leakfa35kSgU6XryZkP9lX6bq
+         xn4yqdJddQTpYzYg/kFidhflE9uPFRyw+nWa+FSPYpVOij9hAACGEcfWfEhtVWyipgfL
+         TLj4Qm1Q9BphLeuws6mDbgG0bemN+R7AUz+ZeZ7gC1PiXH8ANgs8TLs3WxCx28Ov+URh
+         CBoeqDFBGKnaBTP0ycZOhmaNHdcNczP2SHfYRhF19zX95eENsvJGlhc27+Y1DIRuF6r9
+         J6TUWB8bPFACYpev+BHvc5laJAY48xdUwEvUPa4ZisKkvGWX0AGdQW/lf3xMeFziS0dL
+         8TfA==
+X-Forwarded-Encrypted: i=1; AJvYcCWASusaBvc1t54kIjDZ4UJRnI2tcNqoTc7wqviuTcpS9z2Wu0mHhPsZd5U0MnGpNBwGtmfwkKTTdQBO@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4yHJxRgiFKyD8qNn9eusZfrSg4rzC2KlaTqfsKt2Kk/MggiHU
+	jCTPTLT+t/Dt+qXCOkYXSEOOI9bdj3JP5s70HV39HYMpI/nl7sPSGmnHm6VZgO0=
+X-Gm-Gg: ASbGncs5ZH03sz/T6QZcICY3rY0QGEBnSLPbRKKrEkXX90qP1QQBRBhQJdVUUTJnDKT
+	vlGIU7zzpOAdxB28rmTXanowQligr+jWx5nGn8eVPwSqft1Kin4it70sj3/4kCW8weEzOjqW3jX
+	HID9ut7gPcLgnihGZ+y8yjxN+VzxChEjuV/dB0sLA1WvEZuLWOtBO8N3a6E31v0ieyM01QbRuOp
+	f89l9NbnmCwawgtU2hl5ZV5t0Fg3BbBdgBKFDHuX6ZgrrMQ95vdh0Q=
+X-Google-Smtp-Source: AGHT+IGL6MagCY83L4jKNjJ+b2nvEUCxXAYn80qUw2BRxv2rEU4IPc31obmxQrilm0WF+k6fB1jevg==
+X-Received: by 2002:a05:6808:1b0e:b0:3e7:9f14:26cd with SMTP id 5614622812f47-3e9157a3724mr2224346b6e.8.1732251860540;
+        Thu, 21 Nov 2024 21:04:20 -0800 (PST)
+Received: from localhost ([136.62.192.75])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-71c0383ba69sm280935a34.61.2024.11.21.21.04.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Nov 2024 21:04:20 -0800 (PST)
+From: Sam Protsenko <semen.protsenko@linaro.org>
+To: hch@lst.de
+Cc: axboe@kernel.dk,
+	linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] block: remove the ioprio field from struct request
+Date: Thu, 21 Nov 2024 23:04:19 -0600
+Message-Id: <20241122050419.21973-1-semen.protsenko@linaro.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20241112170050.1612998-3-hch@lst.de>
+References: <20241112170050.1612998-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hi Christoph,
 
-When the power mode change is successful but the power mode
-hasn't actually changed, the post notification was missed.
-Similar to the approach with hibernate/clock scale/hce enable,
-having pre/post notifications in the same function will
-make it easier to maintain.
+This patch causes a regression on E850-96 board. Specifically, there are
+two noticeable time lags when booting Debian rootfs:
 
-Additionally, supplement the description of power parameters
-for the pwr_change_notify callback.
+  1. When systemd reports this stage:
 
-Fixes: 7eb584db73be ("ufs: refactor configuring power mode")
-Cc: stable@vger.kernel.org #6.11.x
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c |  7 ++++---
- include/ufs/ufshcd.h      | 10 ++++++----
- 2 files changed, 10 insertions(+), 7 deletions(-)
+         "Reached target getty.target - Login Prompts."
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index abbe7135a977..814402e93a1e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4651,9 +4651,6 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 		dev_err(hba->dev,
- 			"%s: power mode change failed %d\n", __func__, ret);
- 	} else {
--		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, NULL,
--								pwr_mode);
--
- 		memcpy(&hba->pwr_info, pwr_mode,
- 			sizeof(struct ufs_pa_layer_attr));
- 	}
-@@ -4682,6 +4679,10 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 
- 	ret = ufshcd_change_power_mode(hba, &final_params);
- 
-+	if (!ret)
-+		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, NULL,
-+					&final_params);
-+
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 3f68ae3e4330..1db754b4a4d6 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -308,7 +308,9 @@ struct ufs_pwr_mode_info {
-  *                       to allow variant specific Uni-Pro initialization.
-  * @pwr_change_notify: called before and after a power mode change
-  *			is carried out to allow vendor spesific capabilities
-- *			to be set.
-+ *			to be set. PRE_CHANGE can modify final_params based
-+ *			on desired_pwr_mode, but POST_CHANGE must not alter
-+ *			the final_params parameter
-  * @setup_xfer_req: called before any transfer request is issued
-  *                  to set some things
-  * @setup_task_mgmt: called before any task management request is issued
-@@ -350,9 +352,9 @@ struct ufs_hba_variant_ops {
- 	int	(*link_startup_notify)(struct ufs_hba *,
- 				       enum ufs_notify_change_status);
- 	int	(*pwr_change_notify)(struct ufs_hba *,
--					enum ufs_notify_change_status status,
--					struct ufs_pa_layer_attr *,
--					struct ufs_pa_layer_attr *);
-+				enum ufs_notify_change_status status,
-+				struct ufs_pa_layer_attr *desired_pwr_mode,
-+				struct ufs_pa_layer_attr *final_params);
- 	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
- 				  bool is_scsi_cmd);
- 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
--- 
-2.18.0
+     it hangs for 5 seconds or so, before going further.
 
+  2. When I'm logging in, the system hangs for 60 seconds or so before
+     the shell prompt appears.
+
+It only seems to reproduce the first time (during the boot). My attempt to
+re-start the mentioned systemd target or run "login" command again worked
+fine.
+
+Reverting commit 6975c1a486a4 ("block: remove the ioprio field from
+struct request") fixes the issue for me. Do you have any ideas by chance
+what might be the reason? Or maybe you have any pointers on debugging it?
+
+Thanks!
