@@ -1,48 +1,48 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CFA1DF97C;
-	Fri, 22 Nov 2024 18:20:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B702315CD60;
+	Fri, 22 Nov 2024 18:24:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732299639; cv=none; b=RGB9toori5rZh4oLcQch6xEZ0+fljLuvDKwiADDAl3tyiHK1LPyP/vJU1tHh9lKLkdxeh2BMpPYlJ7P0CUKPg0bEtGuWSYmE7I8YqBgBW0fJqpWygTboXhT/kDwgpixl7GVWVkBQWCHM1ASzSkrNp1MdduWF/Zc+71uQG7XS0js=
+	t=1732299847; cv=none; b=J9wcQUH3SfOzBBfaxlISPhDq0z/jpd2ongmkVGVZ3GVe/oD6Sw7PyaHZtbs+qjpaiNcxReiWJLKZ873LAO2Z44vRcT3myErsX0uue1ws3/5I1BRc24SJLJvxmIOiXHZkvIspPT/gOYYDnAHuh/s1kxVamk7cFlesb7mOt2+96Yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732299639; c=relaxed/simple;
-	bh=WnliFglmUfZeWNLF2kN4Yt+995PvKostfOMpqFxOexs=;
+	s=arc-20240116; t=1732299847; c=relaxed/simple;
+	bh=bvKIarzOZXfwNTqZWJJJpFaJGdAF5fLTSYDSdYOjZ/I=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F1ODOLC6BkJ9Nz07Fi3jwVyjNYHa7IMZ8SqgbIIV2a2h4nCWsfMRek1QYF8glPgnZKI9HifZXaL+xxOQ/1T54MDCP/YcGg8QbnzywRCK65z7kU7CAmz6u22Mx7NMmD+ingSbsERn9GkU4Putv0lUW+UqZiY+kHDUy7Nl4ExecqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=RnPA3kY8; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=GdFBVE+yPbqwQBxdgG/RQwKyePYWS89CUaC7R1VLL5a3NwXd303wOmB6dlSjR3mfHSgTXYEv79OaKKImZpZ+W070Oa71hUba4iVyHcPl2lRTmnIBxI2t3c84gvcsxBtMre0d/knLpp9LQTM2LGCC0FJ6qhNKGgYuAuwAOt2P2bs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pFPG4xlZ; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="RnPA3kY8"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pFPG4xlZ"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Xw3LR4mGZzlgMVS;
-	Fri, 22 Nov 2024 18:20:31 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Xw3QQ6HPXz6CmLxR;
+	Fri, 22 Nov 2024 18:23:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1732299628; x=1734891629; bh=xGwZPVbAGLVdk9OY447HfJib
-	RxdKJ1Ggqw1YBrON7Ts=; b=RnPA3kY830DsYlvbNuBVVIvjBZcsN2dcjzjknuiy
-	f17B3qw1/2qKQUGJvjQxrcljkII8tF+KdTk5EI1nBfCo4KHQnK767HIjxFYhfcEo
-	ZybduC8pJXYMwHQMUZ0bBMy6+RbOy6Il92L8uNg3G9ILqm0jWxqHK3oL1NMOD9+K
-	/DQHcIUUxzSwPMzXLI2H2vJMOT06LeElWw4hurHarWLLZgGbS3u1V6U1Cx8lZz4T
-	K0NwGVKEvvcng2G14nntkxIZ9MCg98KiQmt9E3GzJX41C2YSkCufSS7YIjuBmL2N
-	dVs9Za2YSedaZp6A5ZIQwBTfDeTcuTwXifYl2aABUJFxTA==
+	 s=mr01; t=1732299826; x=1734891827; bh=5sivaA00Cl8xZHKaBlXfRVzT
+	IB6kUyIYmQdHF8o7aS0=; b=pFPG4xlZgErAaaIY6f1VcQG1Snzs+EOQKm46SOkP
+	dgwdcZ7l+HnTQGFnLQVgNcvIQWpWQSEBwH7hPdhpf/1BkCLqU/TRe5E4cnmZGanU
+	SbGFNSOQIRucpdvHED4eJRe3971SLdZHW2loXejQouysQhcBVeQ3OULW+FP6R7/F
+	VRLSrSlGOzUwqaEVltpm/jwKpDUBC0xxTbjPweFUiWfVVAIUVRylIM8Pkf6HwiIR
+	k2rp9cgi7YVtpyovZEpVUbsQAfNlaUXvj6o1ACptxMwHRLRBwPOzkh89+f8BVVW8
+	dCRAtswlzNe/q3SsudTCxrHGy7L2tKlSahrpimeRbX4jAw==
 X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id wUOjuKAzGPkT; Fri, 22 Nov 2024 18:20:28 +0000 (UTC)
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id KfgKYxiF_i_m; Fri, 22 Nov 2024 18:23:46 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Xw3LL0V1ZzlgMVP;
-	Fri, 22 Nov 2024 18:20:25 +0000 (UTC)
-Message-ID: <82649541-7db9-4b50-a1e1-e38a9078761c@acm.org>
-Date: Fri, 22 Nov 2024 10:20:24 -0800
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Xw3Q54Dy5z6CmM6d;
+	Fri, 22 Nov 2024 18:23:40 +0000 (UTC)
+Message-ID: <f0cc674e-18f7-47c6-a39e-596b2cb161a4@acm.org>
+Date: Fri, 22 Nov 2024 10:23:40 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,37 +50,59 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 26/26] scsi: ufs: Inform the block layer about write
- ordering
-To: Can Guo <quic_cang@quicinc.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
- Jaegeuk Kim <jaegeuk@kernel.org>, "Bao D. Nguyen"
- <quic_nguyenb@quicinc.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Avri Altman <avri.altman@wdc.com>
-References: <20241119002815.600608-1-bvanassche@acm.org>
- <20241119002815.600608-27-bvanassche@acm.org>
- <37f95f44-ab1d-20db-e0c7-94946cb9d4eb@quicinc.com>
+Subject: Re: [PATCH v2] ufs: core: add missing post notify for power mode
+ change
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
+ jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+ yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
+ tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
+ ed.tsai@mediatek.com, draviv@codeaurora.org, stable@vger.kernel.org
+References: <20241122024943.30589-1-peter.wang@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <37f95f44-ab1d-20db-e0c7-94946cb9d4eb@quicinc.com>
+In-Reply-To: <20241122024943.30589-1-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/21/24 6:58 PM, Can Guo wrote:
-> So, in MCQ mode, we are re-directing all zoned writes to one HW queue to 
-> preserve the write order, is my understanding correct?
-That's somewhat but not entirely correct. As one can see in patch 20/26,
-the software queue (and hence also the hardware queue) that was selected
-for zoned writes is unselected after all pending zoned writes for a
-given zone have completed:
+On 11/21/24 6:49 PM, peter.wang@mediatek.com wrote:
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 3f68ae3e4330..1db754b4a4d6 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -308,7 +308,9 @@ struct ufs_pwr_mode_info {
+>    *                       to allow variant specific Uni-Pro initialization.
+>    * @pwr_change_notify: called before and after a power mode change
+>    *			is carried out to allow vendor spesific capabilities
+> - *			to be set.
+> + *			to be set. PRE_CHANGE can modify final_params based
+> + *			on desired_pwr_mode, but POST_CHANGE must not alter
+> + *			the final_params parameter
+>    * @setup_xfer_req: called before any transfer request is issued
+>    *                  to set some things
+>    * @setup_task_mgmt: called before any task management request is issued
+> @@ -350,9 +352,9 @@ struct ufs_hba_variant_ops {
+>   	int	(*link_startup_notify)(struct ufs_hba *,
+>   				       enum ufs_notify_change_status);
+>   	int	(*pwr_change_notify)(struct ufs_hba *,
+> -					enum ufs_notify_change_status status,
+> -					struct ufs_pa_layer_attr *,
+> -					struct ufs_pa_layer_attr *);
+> +				enum ufs_notify_change_status status,
+> +				struct ufs_pa_layer_attr *desired_pwr_mode,
+> +				struct ufs_pa_layer_attr *final_params);
+>   	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
+>   				  bool is_scsi_cmd);
+>   	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
 
-+	if (refcount_read(&zwplug->ref) == 2)
-+		zwplug->swq_cpu = -1;
+'pwr_change_notify' probably should be split into two callback pointers
+(one for PRE_CHANGE, one for POST_CHANGE) since the third and fourth
+arguments have different roles for pre and post changes. Additionally,
+this would allow to constify the fourth argument for the post callback.
 
-So the next time a write bio or write request is submitted a different
-queue may be selected.
+Anyway, since this patch looks good to me:
 
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
