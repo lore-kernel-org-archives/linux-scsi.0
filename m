@@ -1,128 +1,96 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96E6D44C76
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2024 05:04:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC7B4204B;
+	Sat, 23 Nov 2024 11:30:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732338262; cv=none; b=aup/2vq4ug44zuuz0Ut3G5gVop3a98IJxW88J/dk/shX0QVUN0HVn0KoSfXsdnfCzWrEUbz342t/kLRl/l9F+P7DFBWBwzjwWUI8qFcvpaPPtgTDXyjQri98qekbmCpSeMF675QM5lzQttsPY79CG6OXf97IbuY0qV6lr/PfcsI=
+	t=1732361447; cv=none; b=Kr83YayPPVjMqsy7i3rKQScvjUZC7pumBHnzyUPlhsCFHir/Xb8v+pfHQecuGn7XeE6WvHVYNnh44PY/YFdinpG2d4hElBpbw2H7CrGwDqn8sb0XTHlOC2/4OOxC/vpNvq73AXiXsJAKJymnd+6n3YI+so0f4IB+DD93UZ5noT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732338262; c=relaxed/simple;
-	bh=h7sOQdKgslvytgzjqusSMgmQRkfNmvo2gwZJv5axaTM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JPHBCzwaKC8inYDZkgnqsJ1kymh4W5oSlXcMtiENnxTCZ8neJRzENc4cHYhfS6dk5/n0sPjhGXBVvZXfbbSN77ra9BWIwHW2iWUB2l24BK1t7rrWUauep8mOt+dyNd3jyqfvTAa3m0YzJm7yLFGVVycF/Xv18MG2mp06wgX2SdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xImdXQSk; arc=none smtp.client-ip=209.85.215.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1732361447; c=relaxed/simple;
+	bh=s1kW0GC7tVu/ry+dzlrfNXs6b4WecJETvWvBvwoP7UY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JI0L0u3Nwfq3X8bcD4zYzwGka2TeO1DksTvAAsSc6I5EIXaJWLzaNXthTetGDgfqRVgQJLItm+1+rkaXnGwwv+/YXvmHx4mnpndvDEbSWHMTd+sB6zKmeXGLbHbUB8v5DW43ydPE/3rVXs9Vl8E3O6MvwEFXNpbgL6sZuuFor+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lw+czA8Y; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xImdXQSk"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-7f450f7f11dso2126057a12.2
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2024 21:04:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lw+czA8Y"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2ea8d322297so2367013a91.1;
+        Sat, 23 Nov 2024 03:30:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1732338260; x=1732943060; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=jrrbLdcdGlY2ZcZW0mEDuIlBogzMm+C1CwwsMUranJU=;
-        b=xImdXQSkzVoZT/f4ikoq8h/MHEXQ+juahpRuXmPcIOID0hxsX7ob1C4zNRgJCKejRQ
-         IeWjb/8xHno/zhJvNayI7BVQNRF461S3mbhAoyHIQitzWIQQguIUtg4nndXHgEkyoNL5
-         OSL+KAcor9vGDlXhl2EgHd1kDRutNf7RXPK8CRWATpnYIiII1CRASYdeCZHDKOlEnAv5
-         4L5t8WZM3Ah7VFXerCVYMxidsP13M42FGiAJkh+1bvX/wzb5KT7YXRcUeW0Uy40j0RSc
-         r23JD0cl8wyjrDE3gLrvJHyXTuE+ktk+d0HJDzw4Lp/6obriLU/TqSHkstwGpV6C4+sh
-         jynw==
+        d=gmail.com; s=20230601; t=1732361445; x=1732966245; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=BoDEcCDWOg767qwXyvpXiCVeebqUSdME87+maYfZUUo=;
+        b=Lw+czA8Y4vmDaSyvhMoDjeLAlvgCBJpkIY/n5siDcKIkZ/EmYjrOOLSQNsWW0w88cP
+         IfaAF3/gE/XAwzKgipSzY7SmxVzzW9YlIv170PztAKv5aw4SRbCTQWG4kiXaB2fUyUAM
+         ekm9c9GrQ52P1OdMau3y4YRGF3t4ZifV9n4iJUOAkTGSn5FWcsWW1/ag+5ShU/r71Cju
+         bUXoE9w8DSb0XqnjmkErV56yqDrcMCZ75g1m/L4uN8aFfdDrRSzqqNYEarkqGMrV+4Ck
+         ZpH/jIlabOd3+ZKu40FtJsPnh5GRWCoBDJDSweekonDtGgA4QZKkopg1qqpjvfX9U/yq
+         bNyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732338260; x=1732943060;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jrrbLdcdGlY2ZcZW0mEDuIlBogzMm+C1CwwsMUranJU=;
-        b=iodLaO8FUR0IRBbt1jGL70Tho4VH9j6rnGLg4uXL3DO4EKmQnL1YgpBUrduXMZjimc
-         KTdhhuxE2vKhD1GCIxYR5whEVBzixId9Yi60P//xWTXW+sT1d7ydiby+NokGj8R5wYNL
-         caDjKQz+M5mIEXg/o/FapoOMBRjQeKpW9B31CfT03g+ooolIPRorFO0Z+JP1fQuQ80C8
-         ignwJWHlOwSMtPx8zxBinM+FGnJVg+zwCPIJK2yFAhGYmoNyUfkxEUEO8V8cTvkjoSr4
-         EarotIuzz3HjHcsAg1ZNCy3hrLOXspyqGsf07BRE7ZnmRUArzYduQ4xLNw1KVJ/8SpFs
-         fF/g==
-X-Forwarded-Encrypted: i=1; AJvYcCXWT5Im3JZR6FmgEQ0zUxETVHmkwcADsXpMBJ6gfS8G1E8nB8mvkPUhIE6vk5SPK0oaJQosJOIfkDUH@vger.kernel.org
-X-Gm-Message-State: AOJu0YwMUexq5czHNolnrggG02YtQnKdM4Kbq6tQqfPWh6o81xjFvRrY
-	Ni1EJnSK39JuS7/uxXhg/w+CjUQgrCJOYmu1AXoSjjTPPDcj8IrX01vBjtUjFw==
-X-Gm-Gg: ASbGncuoKLX//ALyzo8MsDyPDGXC/UW8Bc9n5/GyaNXOnuoepPubgNHrMZEvCdNJw06
-	sap9HHctfenaPRHXqAacROE3ITGqefj1DmGAGStr0LC/thggm8WvvUrE1mexM6T3yc5KnjBYJ5x
-	LnRJgpanPDjj4Qh7fU+cdRtRlUrAkK9Ib7sxApJOBdoBnNLecpQrdToq8LjVFeiTIlSBY5VNXeH
-	g+8xYDEYUr5HOyNHM6snuZ74f+j+v+zvWkLUIhSXsTxwSHA71QbeW66vTOE6yQNug==
-X-Google-Smtp-Source: AGHT+IHtEp73R31OmhWsYzXCA+I1V+Hri+7jEcS+EPxf7JnICgfkL145nhRT5ANnQ3iNY2Z3dlcmrA==
-X-Received: by 2002:a05:6a20:7483:b0:1dc:c1c9:fc0a with SMTP id adf61e73a8af0-1e09e472aedmr7640085637.27.1732338260044;
-        Fri, 22 Nov 2024 21:04:20 -0800 (PST)
-Received: from thinkpad ([2409:40f2:101e:13d7:85cf:a1c4:6490:6f75])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-724de532d0csm2519571b3a.116.2024.11.22.21.04.12
+        d=1e100.net; s=20230601; t=1732361445; x=1732966245;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=BoDEcCDWOg767qwXyvpXiCVeebqUSdME87+maYfZUUo=;
+        b=sCMR7UtNqrK9DCDgh7V0K8CdEyOLl1or3BP7bmdtWReaweXgX+znYaCiUbfG5VWGJw
+         sN/6VY8G2cH9U9xWZac5cOwEG6HzLZs03obBojLG0ICiR5IOrCjoBkxE7yA7mIW5tyWv
+         Lxa1w+UrxQIOoQ2YDRD+OgO4u5RQnRKLqnfdauN4xgU3DjXQLruPJsVBYRG0DSuxh1my
+         +SJ7nxQA8Fai9d+uGPhsErfRIl063BKJHa+PSv+ByIXKUsgrS3uEOWPGvTG2JQiqeXI2
+         nEPGd4fVU9DwPAz6ygpS22z1zgVN7dWAzAWiQZEHoPjV3UX97KFJY0tKnK+nvirk3txo
+         TVLw==
+X-Forwarded-Encrypted: i=1; AJvYcCUgXAlhbGTZL8Q8vryx2mD7lZ2o5IZls6fSfZE5TYJpStsgDI4H5eCtW4m9XLDM4KB/xl5TXQ/fx+P7TPU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2DREPa4DPRY+WsbT+XvO1+9FT0KUSMjHyLakkxzs6/4W7axBE
+	dsqW3Y+bHlyZ0JvHgtsOVYDab1wXntPXt2tkdleBzLR3D5BsKewi
+X-Gm-Gg: ASbGnctEdPOG0HWXJraLfAkjbHT28qGktSHKeIcoRcU807x5V/sSRFJR0/Np+VPF3ly
+	cYy2iqeKTD3xtaw2ejiIscmed/+4eO37tbJw6kDzBFoTeFwWGtXPDJOmkTnTDTZWM5I8hEuw+wI
+	uKPdYH4REkERsbNM1+ZaVm3CtgHUd8s7a/MnyVMEACsYCWgVjQI6HgRugpiiU9KpBPdPbqocCpC
+	I6WM4O1w78Xu39WM0ASMwdsUAhsICOiub+fiN1hK6n5CtTFC1g5jA57R/eJ3ApiuTbkzXg04oXN
+	NQxydNIv6cCC5eqOUsXAfTFxEnH5jX8a8TBMA+Vp9lg=
+X-Google-Smtp-Source: AGHT+IEU8x8SQh4r9HRbD5cHK1d/AtFbp85c1bmrSAfvLQQxFbmsHUcltnW+iiHVjVXUgxE48lZiow==
+X-Received: by 2002:a17:90b:17cd:b0:2ea:7368:3359 with SMTP id 98e67ed59e1d1-2eb0e126a6cmr6921008a91.5.1732361445487;
+        Sat, 23 Nov 2024 03:30:45 -0800 (PST)
+Received: from localhost.localdomain ([121.241.130.50])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-724de554fd6sm3072302b3a.139.2024.11.23.03.30.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Nov 2024 21:04:19 -0800 (PST)
-Date: Sat, 23 Nov 2024 10:34:09 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 7/7] arm64: dts: rockchip: Add UFS support for RK3576
- SoC
-Message-ID: <20241123050409.7ynmaw6cqtfefqdy@thinkpad>
-References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
- <1731048987-229149-8-git-send-email-shawn.lin@rock-chips.com>
+        Sat, 23 Nov 2024 03:30:45 -0800 (PST)
+From: Prateek Singh Rathore <prateek.singh.rathore@gmail.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Prateek Singh Rathore <prateek.singh.rathore@gmail.com>
+Subject: [PATCH] [SCSI] csiostor: fix typo doesnt->doesn't
+Date: Sat, 23 Nov 2024 03:30:38 -0800
+Message-Id: <20241123113038.11188-1-prateek.singh.rathore@gmail.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1731048987-229149-8-git-send-email-shawn.lin@rock-chips.com>
 
-On Fri, Nov 08, 2024 at 02:56:26PM +0800, Shawn Lin wrote:
-> Add ufshc node to rk3576.dtsi, so the board using UFS could
-> enable it.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
-> Changes in v5: None
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  arch/arm64/boot/dts/rockchip/rk3576.dtsi | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/rockchip/rk3576.dtsi b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-> index 436232f..32beda2 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-> +++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-> @@ -1110,6 +1110,31 @@
->  			};
->  		};
->  
-> +		ufshc: ufshc@2a2d0000 {
-> +			compatible = "rockchip,rk3576-ufshc";
-> +			reg = <0x0 0x2a2d0000 0 0x10000>, /* 0: HCI standard */
-> +			      <0x0 0x2b040000 0 0x10000>, /* 1: Mphy */
-> +			      <0x0 0x2601f000 0 0x1000>,  /* 2: HCI Vendor specified */
-> +			      <0x0 0x2603c000 0 0x1000>,  /* 3: Mphy Vendor specified */
-> +			      <0x0 0x2a2e0000 0 0x10000>; /* 4: HCI apb */
+Signed-off-by: Prateek Singh Rathore <prateek.singh.rathore@gmail.com>
+---
+ drivers/scsi/csiostor/csio_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-No need to add comments for each region. Bindings describe them.
-
-- Mani
-
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 8329f0cab..d9f0b6888 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -800,7 +800,7 @@ csio_scsis_io_active(struct csio_ioreq *req, enum csio_scsi_ev evt)
+ 			rn = req->rnode;
+ 			/*
+ 			 * FW says remote device is lost, but rnode
+-			 * doesnt reflect it.
++			 * doesn't reflect it.
+ 			 */
+ 			if (csio_scsi_itnexus_loss_error(req->wr_status) &&
+ 						csio_is_rnode_ready(rn)) {
 -- 
-மணிவண்ணன் சதாசிவம்
+2.20.1
+
