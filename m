@@ -1,112 +1,347 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 037B1748A;
-	Sat, 23 Nov 2024 00:35:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E854879B
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2024 05:01:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732322113; cv=none; b=TBHU8+EW0opathVeQaklXHBtVQRfi0RtbehT4/qR61OHs+XJgOwaAlJCjt7HD46+eA7SGPv89dXGIURBZt5cDNYUcs1nbkK0WS1kNTH+SBkV1dICh7fqG5F1uOeeGqaMsD3dqaQ9k8nH26FeZoYM/ANpM1MwTeCEg8FgZ7tn054=
+	t=1732338094; cv=none; b=LcB4aoWFL7oBhMzd2fAednSUcDL50XdINbZJZk1RwAXc9s/+glSXkCr66sqehPfDqEFVjhKlLJZ9N3HISdLzCoRbPDln2aCWn8H1R2AiZx6ZXl9oI+C1pu+tbMdhlI4RMvpb0AgLLrI9aXij2BI6r3+lj1hmMCpslLzvjr0reWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732322113; c=relaxed/simple;
-	bh=bd4qGOwzWCMs5thsWeUzHO4b5jM9gr/L5f9rD/V2znc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=SQBiA4Wx3T9qhIx/BWbF0mAI+rVIgJIlNXv/dpbMwUy9VcOSsSCCDkopzu51AG3TH909pWuwknydny8UYO+85GXsELuAwzcHA2S+f2XKwtGhoZziXIMv5F0Wk8VOA/f+N/ptLcrX2eIBBq75ka2yDmU1JCb7JJssq/LmDMD0+r8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=SHmPsPm2; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1732338094; c=relaxed/simple;
+	bh=z/w/ztYIED66c9kco/FCKsV8axfLYuNctYlUQNWX8wg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PZSOkohOC2ajx3sNjWlCe40FyH8Wh9kUNmiGL1vzF6GtQtLFsg59Qxgyl5UrP+v4EJIAYyfJENcDUdiQ6O33kk0MMziW35RH5qtxcH7Gm95HAIbhxD6FZwrvK4Vxn7n8Dp4kjsvxZ5DDCYaUd+uKqyHapg441FteNLiVe8HvCrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hWmAjqPm; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SHmPsPm2"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AMF6Ftq019747;
-	Sat, 23 Nov 2024 00:34:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Wm95twQ2bd5ofSQCOY9BH+BC09kgLH4FStSo7Lfg8H8=; b=SHmPsPm2vfvlAEnv
-	SHTDe9N5UC7rue+5ZF5KouiVf1o3IVqDeQkrABeCA7Z5H3zFLoPkCasiiumY4M6s
-	3gdRAkaaZT8ObXP3Q7MSptq76MRZ+acGzWJRZDTIZZ3QiWS93zlq64nJpHSwBIgj
-	cl0bYitp1nj0LoHRP8QlVUs7g8UxY3L7xI5bOTQ/0R0nO1tTcYe7b8LFfwtDYggU
-	JegGcOp6AyKi30skGAbtqvgKXy/C7hC94z3y8ka9xS6PjihhuMJBJqoh/1r3+TDt
-	yUVz7uy3QGY7Ab/kNzBX7X5BRy4rI2JQV0BQ4iWF9STQBwBh+GCnIrt12whRZwzf
-	bhg05Q==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4326atck5c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 23 Nov 2024 00:34:48 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AN0YmwB025487
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 23 Nov 2024 00:34:48 GMT
-Received: from [10.253.32.206] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 22 Nov
- 2024 16:34:45 -0800
-Message-ID: <bab3f513-9eaa-40ac-9f0a-57bcaffe834b@quicinc.com>
-Date: Sat, 23 Nov 2024 08:34:43 +0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hWmAjqPm"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-21271dc4084so27466915ad.2
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2024 21:01:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1732338092; x=1732942892; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=RRhZxdnf68b3VsEoqUMxxKiNnq7Wqv07flN0P13doWw=;
+        b=hWmAjqPmgwEWkCDBTHNag9oV3vhO8DqgmpOspyf5EC5g5lqqeMZPqeiX9AbU1708EL
+         zwDRjg4sw4dB/IkzeshbSmhrNWJXsFaRH5/mC+yBb2JknTUCpyehBs0/rPiF9h29ZPtJ
+         n0HKmCZ2Oz70+pM/cX8u7aG2UWfx6sj8fekuDjKHRRJ2PmFpH5nW2PfD7XUZR+LdewHQ
+         yTCn+Yv2upWYqeTn+nnkaUbcUjXzcd4zCFPw0OkvB9buIJTwQFJHWPpOByPmYdbUD73A
+         kOANGF+WomVH9hFS4GdBfBG5+AYVeHkjQ9vRJ6CGlyeRNwm0vZj74VE6p5vUd0kHUbR7
+         C8Vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732338092; x=1732942892;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=RRhZxdnf68b3VsEoqUMxxKiNnq7Wqv07flN0P13doWw=;
+        b=vRzQBq5/g1CKMFy3Dn9MP/FFCxVlJZyWPZacMF5vMDzd13uBKGenb1dcsKXNTnqniz
+         h/o32ECFQVCuByV7N7iqkcw+e8XnJ10sfEY/Rp40AK7x0yMgy+KDSdlmhyarmUVmBj0e
+         jcIPMZa/HB1djJ2HJk3xX/IvnqtZ6C0wl0h8sqnE36F+VAuUCOTUyePZo1OQM+NAzuNR
+         QJdiJLjeo7s2VHECS7rib+MkVKvkttiseZzkL7ufg0qgNryz/BExOaevAg0DL10epOFc
+         8Bd3fU2U4hdreqJgUDUYD375ItBOZ0o0IEb8v2oqRl9fsI8izA7GWIJ4NZrRWgjJ9i5Y
+         S2AA==
+X-Forwarded-Encrypted: i=1; AJvYcCUG5zE1v9VrJDUtlYzCGU5prvS+RGyiT/yjao3PromeSKpXiYaVcoH7rxgMQN5Etu2eutXdwGwEzB5O@vger.kernel.org
+X-Gm-Message-State: AOJu0YyX2/Y3kk+moXqNVcXBTMMjbqDzqycz4P4VM6o/LLCEtFWcSCyy
+	iBPa8rs7EGvHXYucHVc3sFoxvwUPM3FJsRdv9DUfOc5XIfaqap7Ulp5TIzBK7g==
+X-Gm-Gg: ASbGncup1/rFlBArKSpEbJHqsRE58z92NX34LfNjCdjm2BRfKnk0nfjqhV6ETeFCy5d
+	Iq/CfuUcL3FffCT0T02qYv+lG64cYRZgIJ+7607AEBx2sAcucpmCVir1vfnssL5xmw7HJC+AakW
+	S2U42viakYufl/XCPd13trItgVn2brZ9T7lqE+LPmT/kAIpr8jCqbj/WGq8F1k5Y4njBq2OrqjN
+	GJYv/VRx/Mz2k28Fp2KPvKPps0jqY4Pkito5QmibrXwl4d48gs85S8hGMKw2nIGrw==
+X-Google-Smtp-Source: AGHT+IGYsyYlJyUW6FgltnPqSi5ulCgwfmePAnggpg17kRbIAxFCCAEp3D4QZGlxfqp4EXy+h9CrHg==
+X-Received: by 2002:a17:902:f652:b0:20c:5533:36da with SMTP id d9443c01a7336-2129f68034fmr73499945ad.42.1732338091863;
+        Fri, 22 Nov 2024 21:01:31 -0800 (PST)
+Received: from thinkpad ([2409:40f2:101e:13d7:85cf:a1c4:6490:6f75])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2129db87dc9sm25049555ad.7.2024.11.22.21.01.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 Nov 2024 21:01:31 -0800 (PST)
+Date: Sat, 23 Nov 2024 10:31:18 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 6/7] scsi: ufs: rockchip: initial support for UFS
+Message-ID: <20241123050118.g52fxwdzggsyk6en@thinkpad>
+References: <1731048987-229149-1-git-send-email-shawn.lin@rock-chips.com>
+ <1731048987-229149-7-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v16 26/26] scsi: ufs: Inform the block layer about write
- ordering
-To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-CC: <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Christoph
- Hellwig" <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>,
-        Jaegeuk Kim
-	<jaegeuk@kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        "Martin K.
- Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>
-References: <20241119002815.600608-1-bvanassche@acm.org>
- <20241119002815.600608-27-bvanassche@acm.org>
- <37f95f44-ab1d-20db-e0c7-94946cb9d4eb@quicinc.com>
- <82649541-7db9-4b50-a1e1-e38a9078761c@acm.org>
-Content-Language: en-US
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <82649541-7db9-4b50-a1e1-e38a9078761c@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: rdzWA7GCHrOrimhDodULdaT0EYjzhHHB
-X-Proofpoint-GUID: rdzWA7GCHrOrimhDodULdaT0EYjzhHHB
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 clxscore=1015 mlxlogscore=731 lowpriorityscore=0
- phishscore=0 adultscore=0 priorityscore=1501 bulkscore=0 spamscore=0
- mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411230003
+In-Reply-To: <1731048987-229149-7-git-send-email-shawn.lin@rock-chips.com>
 
+On Fri, Nov 08, 2024 at 02:56:25PM +0800, Shawn Lin wrote:
+> RK3576 SoC contains a UFS controller, add initial support for it.
+> The features are:
+> (1) support UFS 2.0 features
+> (2) High speed up to HS-G3
+> (3) 2RX-2TX lanes
+> (4) auto H8 entry and exit
+> 
+> Software limitation:
+> (1) HCE procedure: enable controller->enable intr->dme_reset->dme_enable
+> (2) disable unipro timeout values before power mode change
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+> Changes in v5:
+> - use device_set_awake_path() and disable ref_out_clk in suspend
+> - remove pd_id from header
+> - recontruct ufs_rockchip_hce_enable_notify() to workaround hce enable
+>   without using new quirk
+> 
+> Changes in v4:
+> - deal with power domain of rpm and spm suggested by Ulf
+> - Fix typo and disable clks in ufs_rockchip_remove
+> - remove clk_disable_unprepare(host->ref_out_clk) from
+>   ufs_rockchip_remove
+> 
+> Changes in v3:
+> - reword Kconfig description
+> - elaborate more about controller in commit msg
+> - use rockchip,rk3576-ufshc for compatible
+> - remove useless header file
+> - remove inline for ufshcd_is_device_present
+> - use usleep_range instead
+> - remove initialization, reverse Xmas order
+> - remove useless varibles
+> - check vops for null
+> - other small fixes for err path
+> - remove pm_runtime_set_active
+> - fix the active and inactive reset-gpios logic
+> - fix rpm_lvl and spm_lvl to 5 and move to end of probe path
+> - remove unnecessary system PM callbacks
+> - use UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE instead
+>   of UFSHCI_QUIRK_BROKEN_HCE
+> 
+> Changes in v2: None
+> 
+>  drivers/ufs/host/Kconfig        |  12 ++
+>  drivers/ufs/host/Makefile       |   1 +
+>  drivers/ufs/host/ufs-rockchip.c | 368 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-rockchip.h |  48 ++++++
+>  4 files changed, 429 insertions(+)
+>  create mode 100644 drivers/ufs/host/ufs-rockchip.c
+>  create mode 100644 drivers/ufs/host/ufs-rockchip.h
+> 
+> diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+> index 580c8d0..191fbd7 100644
+> --- a/drivers/ufs/host/Kconfig
+> +++ b/drivers/ufs/host/Kconfig
+> @@ -142,3 +142,15 @@ config SCSI_UFS_SPRD
+>  
+>  	  Select this if you have UFS controller on Unisoc chipset.
+>  	  If unsure, say N.
+> +
+> +config SCSI_UFS_ROCKCHIP
+> +	tristate "Rockchip UFS host controller driver"
+> +	depends on SCSI_UFSHCD_PLATFORM && (ARCH_ROCKCHIP || COMPILE_TEST)
+> +	help
+> +	  This selects the Rockchip specific additions to UFSHCD platform driver.
+> +	  UFS host on Rockchip needs some vendor specific configuration before
+> +	  accessing the hardware which includes PHY configuration and vendor
+> +	  specific registers.
+> +
+> +	  Select this if you have UFS controller on Rockchip chipset.
+> +	  If unsure, say N.
+> diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
+> index 4573aea..2f97feb 100644
+> --- a/drivers/ufs/host/Makefile
+> +++ b/drivers/ufs/host/Makefile
+> @@ -10,5 +10,6 @@ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>  obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
+>  obj-$(CONFIG_SCSI_UFS_RENESAS) += ufs-renesas.o
+> +obj-$(CONFIG_SCSI_UFS_ROCKCHIP) += ufs-rockchip.o
+>  obj-$(CONFIG_SCSI_UFS_SPRD) += ufs-sprd.o
+>  obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
+> diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
+> new file mode 100644
+> index 0000000..b087ce0
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-rockchip.c
 
-On 11/23/2024 2:20 AM, Bart Van Assche wrote:
-> On 11/21/24 6:58 PM, Can Guo wrote:
->> So, in MCQ mode, we are re-directing all zoned writes to one HW queue 
->> to preserve the write order, is my understanding correct?
-> That's somewhat but not entirely correct. As one can see in patch 20/26,
-> the software queue (and hence also the hardware queue) that was selected
-> for zoned writes is unselected after all pending zoned writes for a
-> given zone have completed:
->
-> +    if (refcount_read(&zwplug->ref) == 2)
-> +        zwplug->swq_cpu = -1;
->
-> So the next time a write bio or write request is submitted a different
-> queue may be selected.
+[...]
 
-Understood, thanks for explaining.
+> +
+> +	host->clks[0].id = "core";
+> +	host->clks[1].id = "pclk";
+> +	host->clks[2].id = "pclk_mphy";
+> +	err = devm_clk_bulk_get_optional(dev, UFS_MAX_CLKS, host->clks);
 
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
+Still not using clk_bulk_get_all()? as suggested previously?
 
->
-> Thanks,
->
-> Bart.
+> +	if (err)
+> +		return dev_err_probe(dev, err, "failed to get clocks\n");
+> +
+> +	err = clk_bulk_prepare_enable(UFS_MAX_CLKS, host->clks);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "failed to enable clocks\n");
+> +
+> +	host->hba = hba;
+> +
+> +	ufshcd_set_variant(hba, host);
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_rockchip_rk3576_init(struct ufs_hba *hba)
+> +{
+> +	struct device *dev = hba->dev;
+> +	int ret;
+> +
+> +	hba->quirks = UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING;
+> +
+> +	/* Enable BKOPS when suspend */
+> +	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+> +	/* Enable putting device into deep sleep */
+> +	hba->caps |= UFSHCD_CAP_DEEPSLEEP;
+> +	/* Enable devfreq of UFS */
+> +	hba->caps |= UFSHCD_CAP_CLK_SCALING;
+> +	/* Enable WriteBooster */
+> +	hba->caps |= UFSHCD_CAP_WB_EN;
+> +
+> +	ret = ufs_rockchip_common_init(hba);
+> +	if (ret)
+> +		return dev_err_probe(dev, ret, "ufs common init fail\n");
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_rockchip_device_reset(struct ufs_hba *hba)
+> +{
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	/* Active the reset-gpios */
+> +	gpiod_set_value_cansleep(host->rst_gpio, 1);
+> +	usleep_range(20, 25);
+> +
+> +	/* Inactive the reset-gpios */
+> +	gpiod_set_value_cansleep(host->rst_gpio, 0);
+> +	usleep_range(20, 25);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct ufs_hba_variant_ops ufs_hba_rk3576_vops = {
+> +	.name = "rk3576",
+> +	.init = ufs_rockchip_rk3576_init,
+> +	.device_reset = ufs_rockchip_device_reset,
+> +	.hce_enable_notify = ufs_rockchip_hce_enable_notify,
+> +	.phy_initialization = ufs_rockchip_rk3576_phy_init,
+> +};
+> +
+> +static const struct of_device_id ufs_rockchip_of_match[] = {
+> +	{ .compatible = "rockchip,rk3576-ufshc", .data = &ufs_hba_rk3576_vops },
+> +};
+> +MODULE_DEVICE_TABLE(of, ufs_rockchip_of_match);
+> +
+> +static int ufs_rockchip_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	const struct ufs_hba_variant_ops *vops;
+> +	struct ufs_hba *hba;
+> +	int err;
+> +
+> +	vops = device_get_match_data(dev);
+> +	if (!vops)
+> +		return dev_err_probe(dev, -EINVAL, "ufs_hba_variant_ops not defined.\n");
+> +
+> +	err = ufshcd_pltfrm_init(pdev, vops);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "ufshcd_pltfrm_init failed\n");
+> +
+> +	hba = platform_get_drvdata(pdev);
+> +	/* Set the default desired pm level in case no users set via sysfs */
+> +	ufs_rockchip_set_pm_lvl(hba);
+
+Is it possible to move this to ufs_rockchip_rk3576_init()?
+
+> +
+> +	return 0;
+> +}
+> +
+> +static void ufs_rockchip_remove(struct platform_device *pdev)
+> +{
+> +	struct ufs_hba *hba = platform_get_drvdata(pdev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	pm_runtime_forbid(&pdev->dev);
+> +	pm_runtime_get_noresume(&pdev->dev);
+> +	ufshcd_remove(hba);
+> +	ufshcd_dealloc_host(hba);
+
+You wouldn't need these if you rebase this series on top of scsi/for-next.
+
+> +	clk_bulk_disable_unprepare(UFS_MAX_CLKS, host->clks);
+> +}
+> +
+> +#ifdef CONFIG_PM
+> +static int ufs_rockchip_runtime_suspend(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +
+> +	clk_disable_unprepare(host->ref_out_clk);
+> +
+> +	/* Shouldn't power down if rpm_lvl is less than level 5. */
+> +	dev_pm_genpd_rpm_always_on(dev, hba->rpm_lvl < UFS_PM_LVL_5 ? true : false);
+> +
+> +	return ufshcd_runtime_suspend(dev);
+> +}
+> +
+> +static int ufs_rockchip_runtime_resume(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +	int err;
+> +
+> +	err = clk_prepare_enable(host->ref_out_clk);
+> +	if (err) {
+> +		dev_err(hba->dev, "failed to enable ref out clock %d\n", err);
+> +		return err;
+> +	}
+> +
+> +	reset_control_assert(host->rst);
+> +	usleep_range(1, 2);
+> +	reset_control_deassert(host->rst);
+> +
+> +	return ufshcd_runtime_resume(dev);
+> +}
+> +#endif
+> +
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ufs_rockchip_system_suspend(struct device *dev)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
+> +	int err;
+> +
+> +	if (hba->spm_lvl < UFS_PM_LVL_5)
+> +		device_set_awake_path(dev);
+
+It'd be worth adding a comment here as the API naming is not very clear now.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
