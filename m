@@ -1,70 +1,57 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC7B4204B;
-	Sat, 23 Nov 2024 11:30:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A773A847C;
+	Sun, 24 Nov 2024 07:10:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732361447; cv=none; b=Kr83YayPPVjMqsy7i3rKQScvjUZC7pumBHnzyUPlhsCFHir/Xb8v+pfHQecuGn7XeE6WvHVYNnh44PY/YFdinpG2d4hElBpbw2H7CrGwDqn8sb0XTHlOC2/4OOxC/vpNvq73AXiXsJAKJymnd+6n3YI+so0f4IB+DD93UZ5noT8=
+	t=1732432230; cv=none; b=YP0ImvqsRjHG6L4DTUsThy9Qh/OAZ2dPFTi6wL9KUVXu8OCG2Ms300lG1gR6n4uJsPmSwdBkt2YfRWQLWqH7chh5qMq6voNCo92F7csiKEknLtJhVutzACMqz/ALzl3eFd6hstCF161OtGfmnhxJOcDXPK/kZ35sM++8DfP6uCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732361447; c=relaxed/simple;
-	bh=s1kW0GC7tVu/ry+dzlrfNXs6b4WecJETvWvBvwoP7UY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JI0L0u3Nwfq3X8bcD4zYzwGka2TeO1DksTvAAsSc6I5EIXaJWLzaNXthTetGDgfqRVgQJLItm+1+rkaXnGwwv+/YXvmHx4mnpndvDEbSWHMTd+sB6zKmeXGLbHbUB8v5DW43ydPE/3rVXs9Vl8E3O6MvwEFXNpbgL6sZuuFor+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lw+czA8Y; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732432230; c=relaxed/simple;
+	bh=8/v+dbQ2EPfQZqv+s72OvFy8zQgKe/TlqGjhzbVcaVs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hS+3YXe0Z++g5FveUEDMlm2YDIiquXSRHFtOGp0iummXY/LMhdchrreCoN+RTxRH799X+79UNQa0Fuw+qTkCjUuZJ9M9g7i1nocb8iboDOTQsh0W7FK5XveVzP7641oGSLdFqCIgKuDzI4bbdt5QHlxYcy2iHbJ6zNfpKM/TqVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=HrJ9BGOP; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lw+czA8Y"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2ea8d322297so2367013a91.1;
-        Sat, 23 Nov 2024 03:30:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732361445; x=1732966245; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=BoDEcCDWOg767qwXyvpXiCVeebqUSdME87+maYfZUUo=;
-        b=Lw+czA8Y4vmDaSyvhMoDjeLAlvgCBJpkIY/n5siDcKIkZ/EmYjrOOLSQNsWW0w88cP
-         IfaAF3/gE/XAwzKgipSzY7SmxVzzW9YlIv170PztAKv5aw4SRbCTQWG4kiXaB2fUyUAM
-         ekm9c9GrQ52P1OdMau3y4YRGF3t4ZifV9n4iJUOAkTGSn5FWcsWW1/ag+5ShU/r71Cju
-         bUXoE9w8DSb0XqnjmkErV56yqDrcMCZ75g1m/L4uN8aFfdDrRSzqqNYEarkqGMrV+4Ck
-         ZpH/jIlabOd3+ZKu40FtJsPnh5GRWCoBDJDSweekonDtGgA4QZKkopg1qqpjvfX9U/yq
-         bNyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732361445; x=1732966245;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BoDEcCDWOg767qwXyvpXiCVeebqUSdME87+maYfZUUo=;
-        b=sCMR7UtNqrK9DCDgh7V0K8CdEyOLl1or3BP7bmdtWReaweXgX+znYaCiUbfG5VWGJw
-         sN/6VY8G2cH9U9xWZac5cOwEG6HzLZs03obBojLG0ICiR5IOrCjoBkxE7yA7mIW5tyWv
-         Lxa1w+UrxQIOoQ2YDRD+OgO4u5RQnRKLqnfdauN4xgU3DjXQLruPJsVBYRG0DSuxh1my
-         +SJ7nxQA8Fai9d+uGPhsErfRIl063BKJHa+PSv+ByIXKUsgrS3uEOWPGvTG2JQiqeXI2
-         nEPGd4fVU9DwPAz6ygpS22z1zgVN7dWAzAWiQZEHoPjV3UX97KFJY0tKnK+nvirk3txo
-         TVLw==
-X-Forwarded-Encrypted: i=1; AJvYcCUgXAlhbGTZL8Q8vryx2mD7lZ2o5IZls6fSfZE5TYJpStsgDI4H5eCtW4m9XLDM4KB/xl5TXQ/fx+P7TPU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy2DREPa4DPRY+WsbT+XvO1+9FT0KUSMjHyLakkxzs6/4W7axBE
-	dsqW3Y+bHlyZ0JvHgtsOVYDab1wXntPXt2tkdleBzLR3D5BsKewi
-X-Gm-Gg: ASbGnctEdPOG0HWXJraLfAkjbHT28qGktSHKeIcoRcU807x5V/sSRFJR0/Np+VPF3ly
-	cYy2iqeKTD3xtaw2ejiIscmed/+4eO37tbJw6kDzBFoTeFwWGtXPDJOmkTnTDTZWM5I8hEuw+wI
-	uKPdYH4REkERsbNM1+ZaVm3CtgHUd8s7a/MnyVMEACsYCWgVjQI6HgRugpiiU9KpBPdPbqocCpC
-	I6WM4O1w78Xu39WM0ASMwdsUAhsICOiub+fiN1hK6n5CtTFC1g5jA57R/eJ3ApiuTbkzXg04oXN
-	NQxydNIv6cCC5eqOUsXAfTFxEnH5jX8a8TBMA+Vp9lg=
-X-Google-Smtp-Source: AGHT+IEU8x8SQh4r9HRbD5cHK1d/AtFbp85c1bmrSAfvLQQxFbmsHUcltnW+iiHVjVXUgxE48lZiow==
-X-Received: by 2002:a17:90b:17cd:b0:2ea:7368:3359 with SMTP id 98e67ed59e1d1-2eb0e126a6cmr6921008a91.5.1732361445487;
-        Sat, 23 Nov 2024 03:30:45 -0800 (PST)
-Received: from localhost.localdomain ([121.241.130.50])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-724de554fd6sm3072302b3a.139.2024.11.23.03.30.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 23 Nov 2024 03:30:45 -0800 (PST)
-From: Prateek Singh Rathore <prateek.singh.rathore@gmail.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HrJ9BGOP"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1732432228; x=1763968228;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=8/v+dbQ2EPfQZqv+s72OvFy8zQgKe/TlqGjhzbVcaVs=;
+  b=HrJ9BGOPCux7nlT23OSwS3wIsMCJN/5WApLNtASdfamYdOdyCFvqXBVI
+   jt/WSbjtK1vtq2NiLGUQPqqLLnQ4l2AT8G/f72IChaD8HfQhw/SySgph6
+   lNq6eCPjbMPkP36JN924qeNcL3fHnLIy50xmte2WKQDTqEbNQodBLDkau
+   F32YqcNG1q6OCrzQzKlrbGtqIZz8rhlJz5ZG87F1JsaXVAzXMZZdaVLjO
+   hwtU26uq9QuXmVPx8mYNsXgP6o43L3MJhnZzwJ1ZAlG14r2+okqtRI2a1
+   5iqViWiRy08ZjqhKBIWJp9wxiyrFS0IBqGbuJdDd59Ene2IjaqF6+niPL
+   w==;
+X-CSE-ConnectionGUID: koQibHCSTbW0q8rRukNpYQ==
+X-CSE-MsgGUID: 93OWvHuoT0O8sPzABw2T0g==
+X-IronPort-AV: E=Sophos;i="6.12,180,1728921600"; 
+   d="scan'208";a="32127820"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Nov 2024 15:10:21 +0800
+IronPort-SDR: 6742c410_L3hOgITQWY/yy+L4tyw/l5y6IhacwlPDdhn46r32GKa/FPk
+ oAEvAd242bwmkETVTTmPFm63gAXT/X+0vB9u1Tg==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2024 22:13:37 -0800
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2024 23:10:20 -0800
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Prateek Singh Rathore <prateek.singh.rathore@gmail.com>
-Subject: [PATCH] [SCSI] csiostor: fix typo doesnt->doesn't
-Date: Sat, 23 Nov 2024 03:30:38 -0800
-Message-Id: <20241123113038.11188-1-prateek.singh.rathore@gmail.com>
-X-Mailer: git-send-email 2.20.1
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v5 0/4] Untie the host lock entanglement - part 2
+Date: Sun, 24 Nov 2024 09:08:04 +0200
+Message-Id: <20241124070808.194860-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,24 +60,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Signed-off-by: Prateek Singh Rathore <prateek.singh.rathore@gmail.com>
----
- drivers/scsi/csiostor/csio_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Here is the 2nd part in the sequel, watering down the scsi host lock
+usage in the ufs driver. This work is motivated by a comment made by
+Bart [1], of the abuse of the scsi host lock in the ufs driver.  Its
+Precursor [2] removed the host lock around some of the host register
+accesses.
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 8329f0cab..d9f0b6888 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -800,7 +800,7 @@ csio_scsis_io_active(struct csio_ioreq *req, enum csio_scsi_ev evt)
- 			rn = req->rnode;
- 			/*
- 			 * FW says remote device is lost, but rnode
--			 * doesnt reflect it.
-+			 * doesn't reflect it.
- 			 */
- 			if (csio_scsi_itnexus_loss_error(req->wr_status) &&
- 						csio_is_rnode_ready(rn)) {
+This part replaces the scsi host lock by dedicated locks serializing
+access to the clock gating and clock scaling members.
+
+Changes compared to v4:
+ - split patch 1 into 2 parts (Bart)
+ - use scoped_guard() for the host_lock as well (Bart)
+ - remove irrelevant comment and use lockdep_assert_held instead (Bart)
+ - improve @lock documentation (Bart)
+
+Changes compared to v3:
+ - Keep the host lock when checking ufshcd_state (Bean)
+
+Changes compared to v2:
+ - Use clang-format to fix formating (Bart)
+ - Use guard() in ufshcd_clkgate_enable_store (Bart)
+ - Elaborate commit log (Bart)
+
+Changes compared to v1:
+ - use the guard() & scoped_guard() macros (Bart)
+ - re-order struct ufs_clk_scaling and struct ufs_clk_gating (Bart)
+
+[1] https://lore.kernel.org/linux-scsi/0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org/
+[2] https://lore.kernel.org/linux-scsi/20241024075033.562562-1-avri.altman@wdc.com/
+
+Avri Altman (4):
+  scsi: ufs: core: Introduce ufshcd_has_pending_tasks
+  scsi: ufs: core: Prepare to introduce a new clock_gating lock
+  scsi: ufs: core: Introduce a new clock_gating lock
+  scsi: ufs: core: Introduce a new clock_scaling lock
+
+ drivers/ufs/core/ufshcd.c | 253 ++++++++++++++++++--------------------
+ include/ufs/ufshcd.h      |  25 ++--
+ 2 files changed, 140 insertions(+), 138 deletions(-)
+
 -- 
-2.20.1
+2.25.1
 
