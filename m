@@ -1,46 +1,47 @@
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A773A847C;
-	Sun, 24 Nov 2024 07:10:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CA7317C21B;
+	Sun, 24 Nov 2024 07:10:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732432230; cv=none; b=YP0ImvqsRjHG6L4DTUsThy9Qh/OAZ2dPFTi6wL9KUVXu8OCG2Ms300lG1gR6n4uJsPmSwdBkt2YfRWQLWqH7chh5qMq6voNCo92F7csiKEknLtJhVutzACMqz/ALzl3eFd6hstCF161OtGfmnhxJOcDXPK/kZ35sM++8DfP6uCc=
+	t=1732432232; cv=none; b=WI8Ux2HlwITh0Q0WPEuKhOF81/QwpFI4HXZOFkp9bvfwX1Z3GuB9OQkPC0R7KFodbojdLhM1C3nxBJlFdLqdghGlSQ4p/AxC1J2djdrPv/YSLXG0rFkczQ94n5+cGH1D0HYBowRauMyExJi7W2nQpM6Z6dZgPrxrafQ73BkfdTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732432230; c=relaxed/simple;
-	bh=8/v+dbQ2EPfQZqv+s72OvFy8zQgKe/TlqGjhzbVcaVs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hS+3YXe0Z++g5FveUEDMlm2YDIiquXSRHFtOGp0iummXY/LMhdchrreCoN+RTxRH799X+79UNQa0Fuw+qTkCjUuZJ9M9g7i1nocb8iboDOTQsh0W7FK5XveVzP7641oGSLdFqCIgKuDzI4bbdt5QHlxYcy2iHbJ6zNfpKM/TqVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=HrJ9BGOP; arc=none smtp.client-ip=216.71.154.45
+	s=arc-20240116; t=1732432232; c=relaxed/simple;
+	bh=oQrk5Hkea18ry2jQ5QDwE6l9h5XKpc7q8t2KD7t3x5U=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Hcg9l5FVgbpNaVzKykVVrlaeKMDtSYxHjE6/BCm9w6cvmQ86nbTQhZ2zhsSRGZEa425SAI0lv4qO+oIqbdBAaSyWFyESHTti4SqEnS1bHRiKBzgAmLEusHt6+jnh87dEDY7XmNycxVTVyZVQvIAUktiWv69su3WX9mF7aMM8tLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Vjps4Bb5; arc=none smtp.client-ip=216.71.154.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HrJ9BGOP"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Vjps4Bb5"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1732432228; x=1763968228;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=8/v+dbQ2EPfQZqv+s72OvFy8zQgKe/TlqGjhzbVcaVs=;
-  b=HrJ9BGOPCux7nlT23OSwS3wIsMCJN/5WApLNtASdfamYdOdyCFvqXBVI
-   jt/WSbjtK1vtq2NiLGUQPqqLLnQ4l2AT8G/f72IChaD8HfQhw/SySgph6
-   lNq6eCPjbMPkP36JN924qeNcL3fHnLIy50xmte2WKQDTqEbNQodBLDkau
-   F32YqcNG1q6OCrzQzKlrbGtqIZz8rhlJz5ZG87F1JsaXVAzXMZZdaVLjO
-   hwtU26uq9QuXmVPx8mYNsXgP6o43L3MJhnZzwJ1ZAlG14r2+okqtRI2a1
-   5iqViWiRy08ZjqhKBIWJp9wxiyrFS0IBqGbuJdDd59Ene2IjaqF6+niPL
-   w==;
-X-CSE-ConnectionGUID: koQibHCSTbW0q8rRukNpYQ==
-X-CSE-MsgGUID: 93OWvHuoT0O8sPzABw2T0g==
+  t=1732432230; x=1763968230;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=oQrk5Hkea18ry2jQ5QDwE6l9h5XKpc7q8t2KD7t3x5U=;
+  b=Vjps4Bb5v58aI7XbLKVLRYePvnWSJhbjDqa3buwc0gXBRKsB9i6e/GkX
+   dbsfSKejx3tz5P4LEmQQcsRg+n+7U6TFIdUATulmQCLVDBuM+6szzpGLY
+   xGUjVLhgpW2q/jDIDOCE3es6lchxEDybCIZ/y+FeSoaT6IcjLF49fBZF1
+   bCuqYBrhYv9lAJ4XDzxKHAxyVpBqrtbZ+qiWCVIbdi/VhVHeYl/jyxD31
+   y81yY1yN7B6C5gpQzQ0fGfn2DDFlCockWlxRprDvXkvIIileXghl7xGYo
+   jqz27eSm5K/DmV2seIMB5wNyXMPZ41BhmP2lxMtoXGx87qbV9cKCfmPis
+   A==;
+X-CSE-ConnectionGUID: gUopVunOTVWfMDfxqTKpow==
+X-CSE-MsgGUID: 3hZ/+T74QBGEwEEFD+AXCg==
 X-IronPort-AV: E=Sophos;i="6.12,180,1728921600"; 
-   d="scan'208";a="32127820"
+   d="scan'208";a="32127823"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Nov 2024 15:10:21 +0800
-IronPort-SDR: 6742c410_L3hOgITQWY/yy+L4tyw/l5y6IhacwlPDdhn46r32GKa/FPk
- oAEvAd242bwmkETVTTmPFm63gAXT/X+0vB9u1Tg==
+  by ob1.hgst.iphmx.com with ESMTP; 24 Nov 2024 15:10:25 +0800
+IronPort-SDR: 6742c415_E7CsR2Ac7R81dpZ4fa8Ocvx8tC8+OaYZEWglvJAHiSGCvaQ
+ x6foekNlkNgwVhkCLmJ0NbaiVHeXZIfM9wL8EFA==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2024 22:13:37 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2024 22:13:41 -0800
 WDCIronportException: Internal
 Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2024 23:10:20 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Nov 2024 23:10:24 -0800
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -48,10 +49,12 @@ Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Bean Huo <beanhuo@micron.com>,
 	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v5 0/4] Untie the host lock entanglement - part 2
-Date: Sun, 24 Nov 2024 09:08:04 +0200
-Message-Id: <20241124070808.194860-1-avri.altman@wdc.com>
+Subject: [PATCH v5 1/4] scsi: ufs: core: Introduce ufshcd_has_pending_tasks
+Date: Sun, 24 Nov 2024 09:08:05 +0200
+Message-Id: <20241124070808.194860-2-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241124070808.194860-1-avri.altman@wdc.com>
+References: <20241124070808.194860-1-avri.altman@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,46 +63,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Here is the 2nd part in the sequel, watering down the scsi host lock
-usage in the ufs driver. This work is motivated by a comment made by
-Bart [1], of the abuse of the scsi host lock in the ufs driver.  Its
-Precursor [2] removed the host lock around some of the host register
-accesses.
+Prepare to removed hba->clk_gating.active_reqs check from
+ufshcd_is_ufs_dev_busy.
 
-This part replaces the scsi host lock by dedicated locks serializing
-access to the clock gating and clock scaling members.
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/ufs/core/ufshcd.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Changes compared to v4:
- - split patch 1 into 2 parts (Bart)
- - use scoped_guard() for the host_lock as well (Bart)
- - remove irrelevant comment and use lockdep_assert_held instead (Bart)
- - improve @lock documentation (Bart)
-
-Changes compared to v3:
- - Keep the host lock when checking ufshcd_state (Bean)
-
-Changes compared to v2:
- - Use clang-format to fix formating (Bart)
- - Use guard() in ufshcd_clkgate_enable_store (Bart)
- - Elaborate commit log (Bart)
-
-Changes compared to v1:
- - use the guard() & scoped_guard() macros (Bart)
- - re-order struct ufs_clk_scaling and struct ufs_clk_gating (Bart)
-
-[1] https://lore.kernel.org/linux-scsi/0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org/
-[2] https://lore.kernel.org/linux-scsi/20241024075033.562562-1-avri.altman@wdc.com/
-
-Avri Altman (4):
-  scsi: ufs: core: Introduce ufshcd_has_pending_tasks
-  scsi: ufs: core: Prepare to introduce a new clock_gating lock
-  scsi: ufs: core: Introduce a new clock_gating lock
-  scsi: ufs: core: Introduce a new clock_scaling lock
-
- drivers/ufs/core/ufshcd.c | 253 ++++++++++++++++++--------------------
- include/ufs/ufshcd.h      |  25 ++--
- 2 files changed, 140 insertions(+), 138 deletions(-)
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index acc3607bbd9c..e0a7ef1cb052 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -258,10 +258,16 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
+ 	return UFS_PM_LVL_0;
+ }
+ 
++static bool ufshcd_has_pending_tasks(struct ufs_hba *hba)
++{
++	return hba->outstanding_tasks || hba->active_uic_cmd ||
++	       hba->uic_async_done;
++}
++
+ static bool ufshcd_is_ufs_dev_busy(struct ufs_hba *hba)
+ {
+-	return (hba->clk_gating.active_reqs || hba->outstanding_reqs || hba->outstanding_tasks ||
+-		hba->active_uic_cmd || hba->uic_async_done);
++	return hba->clk_gating.active_reqs || hba->outstanding_reqs ||
++	       ufshcd_has_pending_tasks(hba);
+ }
+ 
+ static const struct ufs_dev_quirk ufs_fixups[] = {
+@@ -1999,8 +2005,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
+ 
+ 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended ||
+ 	    hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL ||
+-	    hba->outstanding_tasks || !hba->clk_gating.is_initialized ||
+-	    hba->active_uic_cmd || hba->uic_async_done ||
++	    ufshcd_has_pending_tasks(hba) || !hba->clk_gating.is_initialized ||
+ 	    hba->clk_gating.state == CLKS_OFF)
+ 		return;
+ 
 -- 
 2.25.1
 
