@@ -1,354 +1,200 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from PUWP216CU001.outbound.protection.outlook.com (mail-koreasouthazon11020139.outbound.protection.outlook.com [52.101.156.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051E61885BD
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2024 08:09:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732522149; cv=none; b=aNXqBZUgZtg6x/BMKreWgTNHR5SsxjGhrPlvxCcyZsxxMQST1VLQX59crtbxo5JjsO7qRYYTBevSI+GmRTTnmBXRsey2uyl3zFI//D1o3FDc1F5XwYrmDiSgGDefrBY/c0Idf6jXL2TwN8j5pZWR6jgxLaohlbd3yGeaUY5zRm4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732522149; c=relaxed/simple;
-	bh=3+EpeSIcCbF/6ZjkqBAtW4O9T46NdqwVVHXXGudPBqs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=uaum63dKhybEPSsmr6EizRVMjo4sUm3V2YKhHX2l4fADkMOPGJMfK6RzHkBHDBm4jrm2SgIYPfj533BrkMb2LppBonOR7DCIBwarXVIneM7PTQoPtUuUOgMOoXWuB/HjSxvSHF2geQLtUfWqg8Kz+adxR+DSj44GM/NQV1PAhTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=IiOBRd3V; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BAAC198A19;
+	Mon, 25 Nov 2024 11:21:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.156.139
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1732533701; cv=fail; b=COPiiFuExCIyyxNHTVGXO38+Wg49F4SBnY5JDCXuku0VICo1xZr0S1wemmRUgCdeguNbG6Z7K88KeXTfQyOp7BDFHzCszxYCVFEET6QTfWkJzaQSZ5MDvlhBOhZ1Gz050B1PkAnL4hVj/7Q8gv6RKVxr+IX81Y+7+hZAzjKEdII=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1732533701; c=relaxed/simple;
+	bh=TQzQzqPoVX3t86N+eoYcAWGHm+nyrgNnBgR7RJdZ2iw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=ugARSSdi/o6lq+WkTjG6l8QsdbcwDtB2b7mBhqU8YuUeZhSO5YCXFPknNOB6Spsw2qQ8lxKS+pIhOj5JQEql34/tfqINTjfTNff2nAhYne+eUMP8hf6QAccDK3Uhzk0ngwoxZlTz0bttQVGZ27GfV5cjAC6m4xTNWutRzRFPVAA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=unist.ac.kr; spf=pass smtp.mailfrom=unist.ac.kr; dkim=pass (1024-bit key) header.d=unist.ac.kr header.i=@unist.ac.kr header.b=PZNXFSVT; arc=fail smtp.client-ip=52.101.156.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=unist.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unist.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IiOBRd3V"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20241125080905epoutp01cc732797951c1e15dc44cf30bdf3981b~LJ7ZIbbTr1125911259epoutp016
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2024 08:09:05 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20241125080905epoutp01cc732797951c1e15dc44cf30bdf3981b~LJ7ZIbbTr1125911259epoutp016
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1732522145;
-	bh=wQsh5MEv2xvuMdMfRC5hx+1fVZ+6hqXmEyHQLubiY3A=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=IiOBRd3VdE0CFYnDxLYf7yWZhycFvdyYIgUBc7YGjpAeHUvhAJiZZ3FDdCgoireTf
-	 rrNHcWUEPiX9jaq9FJEEAsqokfuLtm8OAVI5FwI7Qf8iWCfxOJUtH+DRE36hzuuaJp
-	 UXwPKrk7xgydaNeSDXNy0ENK1A4WktaDAErjX+5g=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-	20241125080904epcas5p2a2b062f3df3661b7c9fe3be95daea41d~LJ7YhXdLs2571325713epcas5p2K;
-	Mon, 25 Nov 2024 08:09:04 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.179]) by
-	epsnrtp2.localdomain (Postfix) with ESMTP id 4XxddW1Qxdz4x9QG; Mon, 25 Nov
-	2024 08:09:03 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-	epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	D5.DF.20052.F9034476; Mon, 25 Nov 2024 17:09:03 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20241125071513epcas5p28b1c27bc43262eb575d576e32f8e3d7b~LJMW5CQMt0301003010epcas5p2U;
-	Mon, 25 Nov 2024 07:15:13 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20241125071513epsmtrp2809e4950879250e1150cd3cc9f0925d8~LJMW4MfQc0299802998epsmtrp2d;
-	Mon, 25 Nov 2024 07:15:13 +0000 (GMT)
-X-AuditID: b6c32a49-3d20270000004e54-49-6744309fc76d
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	32.AE.18937.10424476; Mon, 25 Nov 2024 16:15:13 +0900 (KST)
-Received: from localhost.localdomain (unknown [107.99.41.245]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20241125071510epsmtip1805f7c732c008101b63f5dc352fc2828~LJMUcCQnb0361903619epsmtip1w;
-	Mon, 25 Nov 2024 07:15:10 +0000 (GMT)
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
-	martin.petersen@oracle.com, asml.silence@gmail.com, anuj1072538@gmail.com,
-	brauner@kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk
-Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, gost.dev@samsung.com,
-	linux-scsi@vger.kernel.org, vishak.g@samsung.com,
-	linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>, Anuj
-	Gupta <anuj20.g@samsung.com>
-Subject: [PATCH v10 10/10] block: add support to pass user meta buffer
-Date: Mon, 25 Nov 2024 12:36:33 +0530
-Message-Id: <20241125070633.8042-11-anuj20.g@samsung.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20241125070633.8042-1-anuj20.g@samsung.com>
+	dkim=pass (1024-bit key) header.d=unist.ac.kr header.i=@unist.ac.kr header.b="PZNXFSVT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wkuOxdzKLblxQiMjxM0qDio9CD8gVc76W/yOF7Fk8DJG/72iQLKKrcegyZnRQ7Vma15TTDKeTm4+wShyXC2z/Ehr8tMXFCHnv9XeNTrf00yqAg4oPNcl3JVnA/8Fb0YAYE01v+mNh9961GWdT69W68kCWmMgKPEkV1JkmR9Oylp46yaseNOFOYN0wTeBcf/2NUzP1+tynufTLv8YCU5FlbeuGF99V8qWMI8ocjnQGEAP0nzqoUs8IvKl/xNq2uQM6CqXPJ4tuw0h7Q4MTXGeCTqdNrnU5GPelvgI6Of34x33mC9n+6mlMUiCuKKvs1v8cvA+cYk7cgHpEbFO+/qNRg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TQzQzqPoVX3t86N+eoYcAWGHm+nyrgNnBgR7RJdZ2iw=;
+ b=tviooZuoXiRzxvp5m0NQfsvXQCuqiThRyah2Ls0N6TFOw0fMcEuf9UOo4B18AWdnIx3twT+NJJ8A+a9/VuS6f5TZEjIBe/Aji+saloE2WQ0gEyfFu7krM9jrt7X1ABrDkJHhKCsMY5f2gzQ82Ya8ZDMgsKZLFl4A38dZVmzpN56fr517fxycgD2hPAqhJxLa/qpK6r1EO9rv/dxu2/Ua4N2WTmdezTyi5lUtxXjRvVlI5bQ/HheFJKStLNBXLJRNHUCFuTv7myWtQ4RZ5HU8IQJNXw35ig0rTTs2h31/BKyrWBV7BzrzIKqz6sGBD79OfQaP/tcthDR741o6vyTd2A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=unist.ac.kr; dmarc=pass action=none header.from=unist.ac.kr;
+ dkim=pass header.d=unist.ac.kr; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=unist.ac.kr;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TQzQzqPoVX3t86N+eoYcAWGHm+nyrgNnBgR7RJdZ2iw=;
+ b=PZNXFSVTpHwawdnW+syU8a5LRobn/l66bGC90YmKYOKHNthbIFzSP1Zm2VUanHk1/q2ys6BlV1xYy3eyWLtKn6Iq6RR1y5mpDSI86NeDIb3lEOC2yUSYpWWkpSwBE5K4fXaQjtfFRcPxBXZ5y9MR6GQrCnKy8C3GyUSsR9IQioE=
+Received: from SE1P216MB2287.KORP216.PROD.OUTLOOK.COM (2603:1096:101:15d::5)
+ by SE1P216MB1962.KORP216.PROD.OUTLOOK.COM (2603:1096:101:f6::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8182.20; Mon, 25 Nov
+ 2024 11:21:35 +0000
+Received: from SE1P216MB2287.KORP216.PROD.OUTLOOK.COM
+ ([fe80::abfa:51df:7a24:2f06]) by SE1P216MB2287.KORP216.PROD.OUTLOOK.COM
+ ([fe80::abfa:51df:7a24:2f06%6]) with mapi id 15.20.8182.019; Mon, 25 Nov 2024
+ 11:21:35 +0000
+From: =?utf-8?B?KO2VmeyDnSkg7J6l7J246recICjsu7Ttk6jthLDqs7XtlZnqs7wp?=
+	<ingyujang25@unist.ac.kr>
+To: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "njavali@marvell.com" <njavali@marvell.com>,
+	"GR-QLogic-Storage-Upstream@marvell.com"
+	<GR-QLogic-Storage-Upstream@marvell.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH RESEND] qla2xxx: Fix START_SP_W_RETRIES returns positive
+ EINVAL
+Thread-Topic: [PATCH RESEND] qla2xxx: Fix START_SP_W_RETRIES returns positive
+ EINVAL
+Thread-Index: AQHbPyv85Cfgq/gmnkyVNLOsUVYuDrLH2dMJ
+Date: Mon, 25 Nov 2024 11:21:35 +0000
+Message-ID:
+ <SE1P216MB228778D3FDBBE2C3A45FB9A7FD2E2@SE1P216MB2287.KORP216.PROD.OUTLOOK.COM>
+References:
+ <PU4P216MB228137E6848B4C5BB032D577FD562@PU4P216MB2281.KORP216.PROD.OUTLOOK.COM>
+ <SE1P216MB228748FD61C2B6903FD2E26BFD2E2@SE1P216MB2287.KORP216.PROD.OUTLOOK.COM>
+In-Reply-To:
+ <SE1P216MB228748FD61C2B6903FD2E26BFD2E2@SE1P216MB2287.KORP216.PROD.OUTLOOK.COM>
+Accept-Language: ko-KR, en-US
+Content-Language: ko-KR
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=unist.ac.kr;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SE1P216MB2287:EE_|SE1P216MB1962:EE_
+x-ms-office365-filtering-correlation-id: b9ce9248-93b8-4412-b3bb-08dd0d435263
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|1800799024|366016|41320700013|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?MjhEbGNaRzFCR1UxTXZ0NGhSQk5iNytnMEF3YTJGdFE5MldLZ0FHbU9LclJJ?=
+ =?utf-8?B?SWxPZkNCRlkzc0ZTN3FCMnh6M3RCVjM0ZExoc3dJei9CVDdkMExjKzJjWENC?=
+ =?utf-8?B?ZCtTVEsrbWtlZmtlTWdldy9Td1lQS0ZZQWFvMWs0VWFnV1c0U1NOb3VOSUN3?=
+ =?utf-8?B?NWZ6MEZXTHRqYXcxVktnWXA2WkpMTUY2ZDA3QmF0NGJ4WEFYcnc5aFpha3Ja?=
+ =?utf-8?B?K04yZnJ5MHNSd3c1dFlEa09DQkFiMk1sSnhBRVU0bUd2WnlNNy93cFNqczlj?=
+ =?utf-8?B?QUpibTJEK2ZVd0VlSDA5ZkZCeDU5R05Ec1hzY3Q4OWwvUXJzMjdrVVcwd1dv?=
+ =?utf-8?B?Nmt4M1VvK0dmNmovOHJRU1V0U0gvNnFoUXRZT3JtUWdsTjdOejJYa0NTVUkz?=
+ =?utf-8?B?VDYxaUJnZVNqdW1XdXdISUZEdmFpeisxVGkxbDRVdUpFUjZjMVZra1piQUJF?=
+ =?utf-8?B?SUhFNkcwRFZJWDE1UDY4R0tXcUhKN2FPTFc1eU5RbWt4TWpwSFBoUUZYRDVh?=
+ =?utf-8?B?enN2aFhJc2tKS2JSRjR6eGxaaEQ5ZnVkUWljSjZKZXhEb2dNSTZqcVVVM2lL?=
+ =?utf-8?B?UE54YmhWWWJ5Nmk4anpHbXB0dDUyOUZmQWpEbk5zMjlQSUdISUJ2cnk5Wnkz?=
+ =?utf-8?B?eTJ4dlQxd1RaTTI4OWpiM29RRlIyL1BPNHZyVFJEaUhXOXkxamVtOEttYzYw?=
+ =?utf-8?B?TXU1UEt2eXdXUFZzTnI4T01qMzE4YmN0T0xVVGpxZkxBTmczOUVvem50dUk4?=
+ =?utf-8?B?b3B5VkIzQy9MVlFwbDk4cmh4c2pNOFlSQ3JFZ2dEOTdDRExPS0JTQ2ZYa29a?=
+ =?utf-8?B?NUNnTXViQ3RWbGRQbW1tb2c3V1RXODBVNEhtdGVTRVAyN3l4UVl0S1dxdm1Y?=
+ =?utf-8?B?cDhsMTlnZUtNdTdDVjVrSlBqYmFCekN1SG04YWI4Rmc3R0dhb1lzQjd4cnBV?=
+ =?utf-8?B?M0FXUjV1OEdpRVB3REd6UVdzQlhpOC9mc0hYLzB1M2dOQlVYUzFONGEyUFVh?=
+ =?utf-8?B?eXpPcEpZdmdSQ0RNdGgremNmK2NPTlRDcDNCUWdRcjhUNmVYR2tkVWRibXBt?=
+ =?utf-8?B?VkU0Q1hzME5ram1Nc2U0dVpUTkhZRWdIWGEyMlYra2VDVHo0dUEvb1p5bXpi?=
+ =?utf-8?B?d3BYOCtJbTZRdFlwZkc4TEk4ODFwZXVxY3RvbnA4b0hsaDdraWRlUm5QVk5i?=
+ =?utf-8?B?VGpNMUNxdDFTUkt4UzlCdk5sM0Zibk1sQS8wZGlqMVQ3emZjNi9Xck1Ma1lW?=
+ =?utf-8?B?QWErTjgwSDN3ZjBpbTlpWjBFcHM2ZGwxSEQ2SkN6UW5yY0EzS2tnN1ZWN0c2?=
+ =?utf-8?B?eXBSeXdzZ3FUOEpDclZndjlzTU1yeXNiWGFHWkNWRTM2c1lOT1djd0pkZWVT?=
+ =?utf-8?B?ejY3UDdpdE9MQmZ4UEVmTFRQYlFCLy82eDQ1eDV4cC9RWWJOR0xzUE1zaXAx?=
+ =?utf-8?B?eXErRjFlellFRHpGMzBkU2F1NEUwSmxaV3UycEo4eEU2enZPN2V2R0RvbUxS?=
+ =?utf-8?B?TjdNWC9ITSttdXpVeWRJaWF4S1kzYmd3ejRxSzlkbTYzOHZNQTl0Ykg2WWVC?=
+ =?utf-8?B?dlBUeldNc3dqdUhjc2xTUnk0eklrTDVaWm9EY0NYWnFROUtCVCtMSFllektJ?=
+ =?utf-8?B?WXZiZ2hJT05VL0tYNlB5WDk2NllMd3hLR3d2b3lwUmh4Smo5d1g0MXdpdWhq?=
+ =?utf-8?B?Uzdjc3lFWW1UTDBmZkhKQ09ieU50THpENTAySzF5cGZENkkrZXBGMVdNbDA5?=
+ =?utf-8?B?UTYyK2tndy9vNmJUQU8zaDZHRmVQVERvQmZQTEZMcUY4cnhTRTBjWVNCdDIv?=
+ =?utf-8?B?SVZQZ21rVXhjYndrZUc4U0QzK0lzSldPSEcxZjJERnJIRjczQmU0b0VqdUlV?=
+ =?utf-8?B?WW9ZSTJaTkYvN3VjRCtJbENlNDlNVVU4RUswNUw5T2xrY0E9PQ==?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:ko;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SE1P216MB2287.KORP216.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(41320700013)(38070700018);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?Y3lXWU10My9ZSGYvQkIydjdIQU5MUWtETU1mODV1RXIxNTd1ZXoyN1VGY3V0?=
+ =?utf-8?B?VWxhVWpiVzZJVVN3aENNckczNDJIOEp4TDZoUVdubHNXQjFtWDZYOVhSTGVl?=
+ =?utf-8?B?anFGTy9YT1M4VFhKM3dyNlJCeUhzMHBaSjZ5NkVjSTBkVVJzRXRtM0RMU0FD?=
+ =?utf-8?B?QTNRa21XZnlhcHZLNllBV0tZdGNUbUlpbEM0RWRPZ1BRS0dub2UzUElUVEIx?=
+ =?utf-8?B?azJNYWN3YVlaNFY0MVkxeDVtVVRuMGNlUGxDUG9XdndGVVVuSXVYQlh5TGpX?=
+ =?utf-8?B?Q0I0US9xMFd2T3ZTbi9VbENEaWJPekpXd2hxN0gzNDJtR3NPTHpLZ0JiOVor?=
+ =?utf-8?B?aURLRFdvWGovd3hreEd5QTF0cXB0Y0VPbDRKMDRnb0ozN3ZKTEdoZEVPL3kr?=
+ =?utf-8?B?aVV4NTJXcFFyV01KL2RFeFRnYkZzTzBtNEtid2lNVnUxL3RzZU5FUC9tOFhN?=
+ =?utf-8?B?Unhzd3JmMXp4endFa240L1MyZmtxSElhbFBOeWxJNUJoTVFPQW1md1JhNDZC?=
+ =?utf-8?B?Z09OSjd2TjdJcXhyci9LQWFSNmV0NFcrTjNOZmVLK3dERUhra2xwWHBlWFBt?=
+ =?utf-8?B?L0NaTytJaE8vY0RuYVRKcW5vcGcyQnF2TjFRVllib1h6MGthV0wrUTVqYnQ1?=
+ =?utf-8?B?SDM2WHlmcWZsd3BrYVZBK0pBSmsxekNuR2k2NUtEb1VwVS81OVBKbkRZSlFJ?=
+ =?utf-8?B?dHRLRTR0eW5hVnVMWVZtait2YkludW9jMnFIYWpvak1kY1pGRW1oM3AxM2tL?=
+ =?utf-8?B?WEJ3MjlVeHVNRVpTZW5FMDBaa1Q5RXVPcnZiK0o3cWE4YXNGeDJuVUE2S0Rw?=
+ =?utf-8?B?YTl0OWVEUEYrWHFGMUt2Z21COWRlamJVT1BTQjBiaU1CUFJ6OGdTTUV1Zkc1?=
+ =?utf-8?B?N0RvcDdVV1ZDUVE1RTBhWnhhQXZxZmtkd2MvU1RjNk1Od2hTYXBOTmgxVFFo?=
+ =?utf-8?B?M2F4SnJHR25VYzE3elBqZXVhWVRmZVQzK1ZJYkc4WldrUW9iM25rOExQb2N2?=
+ =?utf-8?B?dGU0bklpNlJVWVpjYjNnOWdUM3JTMzFJMVdTUGFIOWQ3UzNUcHNqMWZYN2tB?=
+ =?utf-8?B?R0doQkhpMTFIYTRGTi9mNkN4c0xaRmtGYWtibUhicHI0RTBpNnpXRGZrclA4?=
+ =?utf-8?B?Y045TENpMHR0Qy9KdGEybUtlYmRHd3ZPVTR0Umt2L0lsNGRXaVZuQlR0cEdp?=
+ =?utf-8?B?bFlUVDNDNmlKUzNoUGdKYVJ6Rk14VDVLNzBJQi9LbU01Y1NrVHc2ZFc5Ykhj?=
+ =?utf-8?B?RlQ4ZWR6WFBYSmRSWHkyVXZKaitEcDF1OUh3dVRFWWlYWjBuQlo4NjZMOG9t?=
+ =?utf-8?B?RjRucFRwOTZyMjl2SzFrcDhBR0xGNWNLRGtaV0lJVWg2dEJheUpISVNwSU5w?=
+ =?utf-8?B?bGJFOHFRZ0gwSnVmZlhKMUc3cEZCaXF2UGFiZ1A3MHUySW5nZGk5ZjhBdjkw?=
+ =?utf-8?B?MzlObHc0WHFQTnlCKzVFaUVPZ2tCYmxsUTAyb3YzVXN0YlVMRmRiL2lCeW1w?=
+ =?utf-8?B?ZDNFcytoekl1Rk1rQkJMNStwTGxPYUJOK1Z4T3FjMHB3NHhOMlBJeGJhYmVr?=
+ =?utf-8?B?RGlEYzI3VXZhY29IZUdPN1c3OWl6VkVSK1NxYjlYUytpMVMvak5tN0RnK0FL?=
+ =?utf-8?B?dWUzakd2Wlp0dEFxSmIxa0RUZE0vWERQZDNYdjZRblFnSHhMQnRsN3hTdFRD?=
+ =?utf-8?B?aFpOZTlwTTZGYkt5VEVNaUV2VVF4OEZVRmROa3lic2xxbFlyNHY3cm1QYUY2?=
+ =?utf-8?B?YnJNRkpBN0lqZHJWV1RWUjBqdWxkeEF2amVPdEl3RnhWQnZhTzJDU3RJeXdw?=
+ =?utf-8?B?K3ZuVk1YRGp6bVkvWCt2RTM4UGZqYlEwT2ZnMWtkRGlhaFFoQjlqWEdaZDRi?=
+ =?utf-8?B?SVJuakZvUjJCeWFYaGhtRWZockJ1TjR2ODRJZC95czJ5SXo1ZDJDWUdJbU9X?=
+ =?utf-8?B?d28xYVNnQ2o2MVkvREY3N1ZsaFZGeUErRU9peVdRYzNLeFEwWVJtSjk4NHhL?=
+ =?utf-8?B?UyttUDBGU2ZOeTdGTE9rdjhvTktZaHFLQjZ2ODdsWUVnc0VROUZyaXZ1d3Z3?=
+ =?utf-8?B?NXNkaHljakl1TDNPWWQ2eExkajZaSVRGcGk5WlNNWlhWbzZLRHowZUV0MnE3?=
+ =?utf-8?Q?DN7pZ9BHMsr8TosZivcC0BbST?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrLJsWRmVeSWpSXmKPExsWy7bCmlu58A5d0g8VnWC0+fv3NYtE04S+z
-	xZxV2xgtVt/tZ7N4ffgTo8XNAzuZLFauPspk8a71HIvF7OnNTBZH/79ls5h06Bqjxd5b2hZ7
-	9p5ksZi/7Cm7Rff1HWwWy4//Y7I4//c4q8X5WXPYHYQ8ds66y+5x+Wypx6ZVnWwem5fUe+y+
-	2cDm8fHpLRaPvi2rGD3OLDjC7vF5k5zHpidvmQK4orJtMlITU1KLFFLzkvNTMvPSbZW8g+Od
-	403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4B+UlIoS8wpBQoFJBYXK+nb2RTll5akKmTkF5fY
-	KqUWpOQUmBToFSfmFpfmpevlpZZYGRoYGJkCFSZkZxzbep+xoNuy4vrllYwNjBf0uhg5OSQE
-	TCT+tZ1l6mLk4hAS2M0osXT3QmYI5xOjxJH+3ywgVWBO311nmI7tBy+xQsR3Mkp82FAI0fCZ
-	UeLLgfPsIAk2AXWJI89bGUESIgJ7GCV6F55mAXGYBSYwSSyYvoUZpEpYwE1ib+9XsA4WAVWJ
-	znUzwNbxClhKHLx6hBFinbzEzEvfwWo4geJv2w5A1QhKnJz5BMxmBqpp3job7G4JgQscEjum
-	zGOBaHaRuNu0nBXCFpZ4dXwLO4QtJfH53V42CDtd4sflp0wQdoFE87F9UIvtJVpP9QMN5QBa
-	oCmxfpc+RFhWYuqpdUwQe/kken8/gWrlldgxD8ZWkmhfOQfKlpDYe66BCWSMhICHxKNmNkho
-	9TBKXNlzm2UCo8IsJO/MQvLOLITNCxiZVzFKphYU56anFpsWGOallsNjOTk/dxMjOJ1ree5g
-	vPvgg94hRiYOxkOMEhzMSiK8fOLO6UK8KYmVValF+fFFpTmpxYcYTYHhPZFZSjQ5H5hR8kri
-	DU0sDUzMzMxMLI3NDJXEeV+3zk0REkhPLEnNTk0tSC2C6WPi4JRqYNoYUbxdTXCW7SpvJq6e
-	vc/CLSU75v7m3C3k9LipLPbQfs8F+ztnGIbnnRa1EWzKuprRNYmntfPSLaammBmJT14trfi7
-	buMWWx11Lb05XpZTHbbt/C8qkz9PummCJtdMsfJ7XeoHYl0u+Op9eXB/z1Sd0j9pxT1L1M6c
-	ZPDVeHjo0EzeTULt+asWS2xWr3o5Wag+tOTrZfXQKaqLJR+xXf4SULV8T/WeNdxTQ1b2ZlSv
-	m3WXXzgwSFpx8qE64aRVr9c5b1u+s2jt8f23imfnuL1I3XX3YdKfXbZ5G3J7dVd9rEn46bnY
-	64qle9LNbxkdRzPZI6qt9uTtVH+tfSP9yI0lz/5sv3TdxnaT7LGHhh1KLMUZiYZazEXFiQCp
-	S6FmcAQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprIIsWRmVeSWpSXmKPExsWy7bCSnC6jiku6Qf9THouPX3+zWDRN+Mts
-	MWfVNkaL1Xf72SxeH/7EaHHzwE4mi5WrjzJZvGs9x2Ixe3ozk8XR/2/ZLCYdusZosfeWtsWe
-	vSdZLOYve8pu0X19B5vF8uP/mCzO/z3OanF+1hx2ByGPnbPusntcPlvqsWlVJ5vH5iX1Hrtv
-	NrB5fHx6i8Wjb8sqRo8zC46we3zeJOex6clbpgCuKC6blNSczLLUIn27BK6MY1vvMxZ0W1Zc
-	v7ySsYHxgl4XIyeHhICJxPaDl1i7GLk4hAS2M0p8XXyLESIhIXHq5TIoW1hi5b/n7BBFHxkl
-	1q/vAkuwCahLHHneCmaLCJxglJg/0Q2kiFlgBpPE7z8LWEASwgJuEnt7v7KD2CwCqhKd62aA
-	xXkFLCUOXj0CtUFeYual72A1nEDxt20HwGqEBCwkZnWuZIWoF5Q4OfMJWJwZqL5562zmCYwC
-	s5CkZiFJLWBkWsUomlpQnJuem1xgqFecmFtcmpeul5yfu4kRHGtaQTsYl63/q3eIkYmD8RCj
-	BAezkggvn7hzuhBvSmJlVWpRfnxRaU5q8SFGaQ4WJXFe5ZzOFCGB9MSS1OzU1ILUIpgsEwen
-	VAOTQd1Ei7M/V8/buv6vYvySJkGdnMe7bk5pW/Fy+af430nn+R7dZ7vuzdXw08h38Zngjxr3
-	5zbHXt7RJdS+Ztecmvsu0qff7woOrNp5bekBFQ2+L38PbTSRm+27aeNxvz2z/jas8Usym7i6
-	dh5H+qxv5739D2ZMTeyW3q7s4sqz7sZZxVsMb5PXvGhd0auSa2g277v1ITvJBr2Mt+qbTWtk
-	Yk5nHd+vE8PAV5H8UKJ+e2zZ1O9tzoUmC1SPrI5YFSRSascwaY3mtwv8r5IcGS690Lxy5NYZ
-	L/kjBz+rXlf45mHWf3vKnmQ154lL9/rMk/zGwfr6jtj6iIgi999Raj+vnWXXXldjkWwbHSpt
-	taDipxJLcUaioRZzUXEiAAgRP4okAwAA
-X-CMS-MailID: 20241125071513epcas5p28b1c27bc43262eb575d576e32f8e3d7b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20241125071513epcas5p28b1c27bc43262eb575d576e32f8e3d7b
-References: <20241125070633.8042-1-anuj20.g@samsung.com>
-	<CGME20241125071513epcas5p28b1c27bc43262eb575d576e32f8e3d7b@epcas5p2.samsung.com>
+X-OriginatorOrg: unist.ac.kr
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SE1P216MB2287.KORP216.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: b9ce9248-93b8-4412-b3bb-08dd0d435263
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Nov 2024 11:21:35.2323
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: e8715ec0-6179-432a-a864-54ea4008adc2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ex1ZPYYTPaNd04Oz8wfOjd+RsHOgXM5V8j3FDU6z6mPbpRQcHYKZ4RqnlK0fOfileCfoyyLpC0rcAnlMMNWdbw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SE1P216MB1962
 
-From: Kanchan Joshi <joshi.k@samsung.com>
-
-If an iocb contains metadata, extract that and prepare the bip.
-Based on flags specified by the user, set corresponding guard/app/ref
-tags to be checked in bip.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
-Reviewed-by: Keith Busch <kbusch@kernel.org>
----
- block/bio-integrity.c         | 50 +++++++++++++++++++++++++++++++++++
- block/fops.c                  | 45 ++++++++++++++++++++++++-------
- include/linux/bio-integrity.h |  7 +++++
- 3 files changed, 92 insertions(+), 10 deletions(-)
-
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 3bee43b87001..5d81ad9a3d20 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -364,6 +364,55 @@ int bio_integrity_map_user(struct bio *bio, struct iov_iter *iter)
- 	return ret;
- }
- 
-+static void bio_uio_meta_to_bip(struct bio *bio, struct uio_meta *meta)
-+{
-+	struct bio_integrity_payload *bip = bio_integrity(bio);
-+
-+	if (meta->flags & IO_INTEGRITY_CHK_GUARD)
-+		bip->bip_flags |= BIP_CHECK_GUARD;
-+	if (meta->flags & IO_INTEGRITY_CHK_APPTAG)
-+		bip->bip_flags |= BIP_CHECK_APPTAG;
-+	if (meta->flags & IO_INTEGRITY_CHK_REFTAG)
-+		bip->bip_flags |= BIP_CHECK_REFTAG;
-+
-+	bip->app_tag = meta->app_tag;
-+}
-+
-+int bio_integrity_map_iter(struct bio *bio, struct uio_meta *meta)
-+{
-+	struct blk_integrity *bi = blk_get_integrity(bio->bi_bdev->bd_disk);
-+	unsigned int integrity_bytes;
-+	int ret;
-+	struct iov_iter it;
-+
-+	if (!bi)
-+		return -EINVAL;
-+	/*
-+	 * original meta iterator can be bigger.
-+	 * process integrity info corresponding to current data buffer only.
-+	 */
-+	it = meta->iter;
-+	integrity_bytes = bio_integrity_bytes(bi, bio_sectors(bio));
-+	if (it.count < integrity_bytes)
-+		return -EINVAL;
-+
-+	/* should fit into two bytes */
-+	BUILD_BUG_ON(IO_INTEGRITY_VALID_FLAGS >= (1 << 16));
-+
-+	if (meta->flags && (meta->flags & ~IO_INTEGRITY_VALID_FLAGS))
-+		return -EINVAL;
-+
-+	it.count = integrity_bytes;
-+	ret = bio_integrity_map_user(bio, &it);
-+	if (!ret) {
-+		bio_uio_meta_to_bip(bio, meta);
-+		bip_set_seed(bio_integrity(bio), meta->seed);
-+		iov_iter_advance(&meta->iter, integrity_bytes);
-+		meta->seed += bio_integrity_intervals(bi, bio_sectors(bio));
-+	}
-+	return ret;
-+}
-+
- /**
-  * bio_integrity_prep - Prepare bio for integrity I/O
-  * @bio:	bio to prepare
-@@ -564,6 +613,7 @@ int bio_integrity_clone(struct bio *bio, struct bio *bio_src,
- 	bip->bip_vec = bip_src->bip_vec;
- 	bip->bip_iter = bip_src->bip_iter;
- 	bip->bip_flags = bip_src->bip_flags & BIP_CLONE_FLAGS;
-+	bip->app_tag = bip_src->app_tag;
- 
- 	return 0;
- }
-diff --git a/block/fops.c b/block/fops.c
-index 2d01c9007681..412ae74032ad 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -54,6 +54,7 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,
- 	struct bio bio;
- 	ssize_t ret;
- 
-+	WARN_ON_ONCE(iocb->ki_flags & IOCB_HAS_METADATA);
- 	if (nr_pages <= DIO_INLINE_BIO_VECS)
- 		vecs = inline_vecs;
- 	else {
-@@ -124,12 +125,16 @@ static void blkdev_bio_end_io(struct bio *bio)
- {
- 	struct blkdev_dio *dio = bio->bi_private;
- 	bool should_dirty = dio->flags & DIO_SHOULD_DIRTY;
-+	bool is_sync = dio->flags & DIO_IS_SYNC;
- 
- 	if (bio->bi_status && !dio->bio.bi_status)
- 		dio->bio.bi_status = bio->bi_status;
- 
-+	if (!is_sync && (dio->iocb->ki_flags & IOCB_HAS_METADATA))
-+		bio_integrity_unmap_user(bio);
-+
- 	if (atomic_dec_and_test(&dio->ref)) {
--		if (!(dio->flags & DIO_IS_SYNC)) {
-+		if (!is_sync) {
- 			struct kiocb *iocb = dio->iocb;
- 			ssize_t ret;
- 
-@@ -221,14 +226,16 @@ static ssize_t __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
- 			 * a retry of this from blocking context.
- 			 */
- 			if (unlikely(iov_iter_count(iter))) {
--				bio_release_pages(bio, false);
--				bio_clear_flag(bio, BIO_REFFED);
--				bio_put(bio);
--				blk_finish_plug(&plug);
--				return -EAGAIN;
-+				ret = -EAGAIN;
-+				goto fail;
- 			}
- 			bio->bi_opf |= REQ_NOWAIT;
- 		}
-+		if (!is_sync && (iocb->ki_flags & IOCB_HAS_METADATA)) {
-+			ret = bio_integrity_map_iter(bio, iocb->private);
-+			if (unlikely(ret))
-+				goto fail;
-+		}
- 
- 		if (is_read) {
- 			if (dio->flags & DIO_SHOULD_DIRTY)
-@@ -269,6 +276,12 @@ static ssize_t __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
- 
- 	bio_put(&dio->bio);
- 	return ret;
-+fail:
-+	bio_release_pages(bio, false);
-+	bio_clear_flag(bio, BIO_REFFED);
-+	bio_put(bio);
-+	blk_finish_plug(&plug);
-+	return ret;
- }
- 
- static void blkdev_bio_end_io_async(struct bio *bio)
-@@ -286,6 +299,9 @@ static void blkdev_bio_end_io_async(struct bio *bio)
- 		ret = blk_status_to_errno(bio->bi_status);
- 	}
- 
-+	if (iocb->ki_flags & IOCB_HAS_METADATA)
-+		bio_integrity_unmap_user(bio);
-+
- 	iocb->ki_complete(iocb, ret);
- 
- 	if (dio->flags & DIO_SHOULD_DIRTY) {
-@@ -330,10 +346,8 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
- 		bio_iov_bvec_set(bio, iter);
- 	} else {
- 		ret = bio_iov_iter_get_pages(bio, iter);
--		if (unlikely(ret)) {
--			bio_put(bio);
--			return ret;
--		}
-+		if (unlikely(ret))
-+			goto out_bio_put;
- 	}
- 	dio->size = bio->bi_iter.bi_size;
- 
-@@ -346,6 +360,13 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
- 		task_io_account_write(bio->bi_iter.bi_size);
- 	}
- 
-+	if (iocb->ki_flags & IOCB_HAS_METADATA) {
-+		ret = bio_integrity_map_iter(bio, iocb->private);
-+		WRITE_ONCE(iocb->private, NULL);
-+		if (unlikely(ret))
-+			goto out_bio_put;
-+	}
-+
- 	if (iocb->ki_flags & IOCB_ATOMIC)
- 		bio->bi_opf |= REQ_ATOMIC;
- 
-@@ -360,6 +381,10 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
- 		submit_bio(bio);
- 	}
- 	return -EIOCBQUEUED;
-+
-+out_bio_put:
-+	bio_put(bio);
-+	return ret;
- }
- 
- static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
-diff --git a/include/linux/bio-integrity.h b/include/linux/bio-integrity.h
-index 2195bc06dcde..de0a6c9de4d1 100644
---- a/include/linux/bio-integrity.h
-+++ b/include/linux/bio-integrity.h
-@@ -23,6 +23,7 @@ struct bio_integrity_payload {
- 	unsigned short		bip_vcnt;	/* # of integrity bio_vecs */
- 	unsigned short		bip_max_vcnt;	/* integrity bio_vec slots */
- 	unsigned short		bip_flags;	/* control flags */
-+	u16			app_tag;	/* application tag value */
- 
- 	struct bvec_iter	bio_iter;	/* for rewinding parent bio */
- 
-@@ -78,6 +79,7 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio, gfp_t gfp,
- int bio_integrity_add_page(struct bio *bio, struct page *page, unsigned int len,
- 		unsigned int offset);
- int bio_integrity_map_user(struct bio *bio, struct iov_iter *iter);
-+int bio_integrity_map_iter(struct bio *bio, struct uio_meta *meta);
- void bio_integrity_unmap_user(struct bio *bio);
- bool bio_integrity_prep(struct bio *bio);
- void bio_integrity_advance(struct bio *bio, unsigned int bytes_done);
-@@ -108,6 +110,11 @@ static int bio_integrity_map_user(struct bio *bio, struct iov_iter *iter)
- 	return -EINVAL;
- }
- 
-+static inline int bio_integrity_map_iter(struct bio *bio, struct uio_meta *meta)
-+{
-+	return -EINVAL;
-+}
-+
- static inline void bio_integrity_unmap_user(struct bio *bio)
- {
- }
--- 
-2.25.1
-
+RnJvbSA2ZTc4ZmYyM2I5ZjExZjY4OTZjMDkyOTllMGEzOGI0NDQzNDIwZWVkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBJbmd5dSBKYW5nIDxpbmd5dWphbmcyNUB1bmlzdC5hYy5rcj4K
+RGF0ZTogTW9uLCAyNSBOb3YgMjAyNCAyMDoyMDowMCArMDkwMApTdWJqZWN0OiBbUEFUQ0ggUkVT
+RU5EXSBxbGEyeHh4OiBGaXggU1RBUlRfU1BfV19SRVRSSUVTIHJldHVybnMgcG9zaXRpdmUgRUlO
+VkFMCgpUaGUgU1RBUlRfU1BfV19SRVRSSUVTIG1hY3JvIHByZXZpb3VzbHkgcmV0dXJuZWQgYSBw
+b3NpdGl2ZSBFSU5WQUwgY29kZQp3aGVuIGNoaXAgZ2VuZXJhdGlvbiBvciBsb2dpbiBnZW5lcmF0
+aW9uIG1pc21hdGNoZXMgd2VyZSBkZXRlY3RlZCwKcG90ZW50aWFsbHkgbGVhZGluZyB0byBpbXBy
+b3BlciBlcnJvciBoYW5kbGluZyBpbiBjYWxsZXIgZnVuY3Rpb25zIGFuZApjcmVhdGluZyBzZWN1
+cml0eSByaXNrcyBpZiB0aGUgZXJyb3Igc3RhdGUgd2FzIG1pc2ludGVycHJldGVkLgoKVGhpcyBw
+YXRjaCB1cGRhdGVzIHRoZSBtYWNybyB0byByZXR1cm4gLUVJTlZBTCwgYWxpZ25pbmcgd2l0aCBr
+ZXJuZWwKZXJyb3IgaGFuZGxpbmcgY29udmVudGlvbnMgYW5kIG1pdGlnYXRpbmcgdW5pbnRlbmRl
+ZCBiZWhhdmlvciBpbgplcnJvciBoYW5kbGluZy4KClNpZ25lZC1vZmYtYnk6IEluZ3l1IEphbmcg
+PGluZ3l1amFuZzI1QHVuaXN0LmFjLmtyPgotLS0KwqBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFf
+aW5pdC5jIHwgMiArLQrCoDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlv
+bigtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pbml0LmMgYi9kcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5pdC5jCmluZGV4IDMxZmM2YTBlY2EzZS4uMDg5ZDU2MGU0
+MTE0IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5pdC5jCisrKyBiL2Ry
+aXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pbml0LmMKQEAgLTIwNTksNyArMjA1OSw3IEBAIHN0YXRp
+YyB2b2lkIHFsYV9tYXJrZXJfc3BfZG9uZShzcmJfdCAqc3AsIGludCByZXMpCsKgwqDCoMKgwqDC
+oMKgwqAgaW50IGNudCA9IDU7IFwKwqDCoMKgwqDCoMKgwqDCoCBkbyB7IFwKwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKF9jaGlwX2dlbiAhPSBzcC0+dmhhLT5ody0+Y2hpcF9y
+ZXNldCB8fCBfbG9naW5fZ2VuICE9IHNwLT5mY3BvcnQtPmxvZ2luX2dlbikge1wKLcKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIF9ydmFsID0gRUlOVkFMOyBcCivC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBfcnZhbCA9IC1FSU5W
+QUw7IFwKwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGJy
+ZWFrOyBcCsKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIH0gXArCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoCBfcnZhbCA9IHFsYTJ4MDBfc3RhcnRfc3AoX3NwKTsgXAotLQoy
+LjM0LjEKCgo=
