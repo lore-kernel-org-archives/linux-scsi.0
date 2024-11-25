@@ -1,63 +1,63 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBBE21922E9;
-	Mon, 25 Nov 2024 14:30:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 295631B0F30;
+	Mon, 25 Nov 2024 14:57:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732545057; cv=none; b=oAgxx0n9l05ty5Nf+l9JW45Ygr78t5EqdCFcpjWkq3MGgXczHRxATUFsl3ff2FOpMwoBNrjjeRSle0qSQMUfKIkqIZBeXWo6ix9Qk/n04LcNmJoKGIzqEviTsWLWKRndH+nHwt0ncLisyiMtDeO+uToZ0gWXj1T+3iwa42AKafA=
+	t=1732546656; cv=none; b=gyj7zhLR+P9lTsb0yYcpjguvUSn473iUJRi8m9jWvnVLZodxibb5Rvm51D2G9EsbQDM9Z3XvuHnjrTnbgge52500Vbs6qsAMX2UdLwunntygqIXJdlgCIxfBI/RvBg/9YFWWjsWv23xVP/05dLbmUobKv+g0TuGl1bHOLmBpBds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732545057; c=relaxed/simple;
-	bh=jjlYlEF3VSNlLImiTd+v25/yYobIAhdJC23Q3KZcxCI=;
+	s=arc-20240116; t=1732546656; c=relaxed/simple;
+	bh=pKNluBWP/OdjdtjZRI6OsprT85cpi/zCHYe2a9DKN2U=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lI8vH/V56Y+Ltu7CuTzwnPC9CPri/I0+9WRuoZbKe9qIPdI/7UDI8DS112FsCGkG0UBlgt30v3ZxIHi++MgTWFvGXwwpV2bkuER/HDg8n+SUoPmf2JiDXb7rdpOz7xoEV30RS4NeTdwmG6dDmBfvUVEPAUWuEugprOKB6YvaZ7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y3AC8aU2; arc=none smtp.client-ip=209.85.215.176
+	 In-Reply-To:Content-Type; b=BKixeC9OO09I5xL+BCQRDupSu5n1FUpOfNFi45QFxpN320ucnaO/gDN1DOR193o4gKe23GogLwxfFMGpAjHqLx0DMQt3XkGRpgwVcuHE1opK4hnTK1szekQ43RDfcudPHFgr6aXiDeM1pbB1Qx0T3lu3FNc3vDa4bTXacJxXBLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fXb67NMm; arc=none smtp.client-ip=209.85.218.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y3AC8aU2"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-7f8b01bd40dso3145049a12.0;
-        Mon, 25 Nov 2024 06:30:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fXb67NMm"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-aa545dc7105so242026166b.3;
+        Mon, 25 Nov 2024 06:57:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732545055; x=1733149855; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1732546652; x=1733151452; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=MqXFbqIyeGY2h3r6ZVQVITO4Q1XyQCzf6ScOHS9hGkY=;
-        b=Y3AC8aU2XQXZPJw26CduT0c2g/bgAvjCYT6cPV5I4zbbWGJ8p3lqNeYqOp+BFueQij
-         6ST8qnBE0Bh1HDBiJwTJkNJtYfoHtZL8uC6ezr8CnMHk8Yu3xxF/gQSuGc8LZeUOeRQx
-         rQlwjwqfE0P2khFHTSieSNmS6wHbpiOKiFem++yaPG7IIKKeo9sfd7O8vluldBcLajls
-         oAPgpPXmNgLaoSf4DRb4BrCDaN/qNu4ON9qM6myUuTSZnQOEFHKXWWYMXpUq4b+NVprf
-         IGWkRQKooRXS4+DBBPSI69IRVh/IVOC4GcgKhabLL8+kVXUaRNKFnXqjHJhxxCbysaaW
-         WLIw==
+        bh=Mwycz/MiAZLiFKmS9hGPG2W/0xImNpvKNhmHBM//itM=;
+        b=fXb67NMm8haEGFgVopgyzguNDr8TnnglrBuzDpKocu33i3pGYfIXur55aDOyxBJpwo
+         e1NJJoWny4hegrVz2kHBC9svlxjwuSu8f8PdzOFzpjDWM0eeKoxkMj6KCirMeLZwxdK4
+         Kj1hRuqoQLyKj0pj0MG4op7SgnHW8meNQpCyQpCpqOtoRW5T0Qjv/bjNLjUtKK01ECHX
+         8/6XVxwLHARrU1jhizvg72/FqUDjPRpRYjxnjqCpB90cyB4If2kZZQEbROtc7KQrIG1y
+         GuN3yVIboG7tw/kP+yOvXJEQyF/2Wc/0Qr0hx+P28iWjNmQ/SLTmQIhjRXqIewXIebbR
+         K7Og==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732545055; x=1733149855;
+        d=1e100.net; s=20230601; t=1732546652; x=1733151452;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MqXFbqIyeGY2h3r6ZVQVITO4Q1XyQCzf6ScOHS9hGkY=;
-        b=VpfSZqid6TW+YuSqqBkp6xAHcfqnOLV+w166PMOVCoEXOHgnDuO9Tvd1MN6um390lS
-         mImjJ+TYBquShs+8SwYMo1Nz/HbToTltobxL7EZaqIqp1rByKKU42nbpaKmUwEW0xMsu
-         zNhHN5WOu+em3wVzTW1S08P7B4nxdina+mf/9fJ8qB+VysWRlR6AX5kBNsvVGGnfrt9U
-         KbdD1HUDrawvr54Ja6mkyQQXLOAboFy295mv2VeocQcs/HJ6nNLAooGnxBjWwZqV4Rgk
-         YRogPTFnN8EmL+33qBXb72EY33DSRvrZ6AK85FFvyu2KtidDXMp839hBa+FNYSyOfCNs
-         U35A==
-X-Forwarded-Encrypted: i=1; AJvYcCWmhxd2rxZBDOlONbwfzoakSMyS2bbnhXhkVdMFq2dbWFXQzcdqAQsKU0l/u89N8fzZhewxTQtj9WjQ8hw=@vger.kernel.org, AJvYcCXa6VGI4ygQtzmSHpfK13kSQPUAEJ15M9Y7SsoKoBO9CQ3SjMXLO1IcHeiTn2IOJx7tY5Q+wJJ3+ASmPw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz+IAMwkrNquzLb9kXSa7j+uM0M6ZHJZVxoymXV79rhy6nrwh/s
-	GIA4pGeGRiCkls2jPsZ1uJ7QVsLAv52C1u1jt72n94tVmsGC1sEX
-X-Gm-Gg: ASbGncuYj1CocRoqU2yYZWn926RNsVs/24uMqmkSYAKao4atO2SlZ6WmrzQg+V7uYNA
-	LbyTzqVaBe2Q3S1h2+5dTNg3KTT4BhnCN3ygKjWphv3ngGN35EWJpWurmJKqo1nNDIsoUzWEPqp
-	3QvvsZdwQpdn3GqBnD06EXcctHysbCWlzd2P5q6pQOriZihWe+AVZoZ6jjRMIKOW37E93GEtE7p
-	fh61wxU/5r+BP+c+h3uCmzjQX6oK+uD74gksZNYN4T4kyJtKTr4oVzmwXGVJ2lI
-X-Google-Smtp-Source: AGHT+IFIcwZszMi/Vg8/3dtE3gpAx3lKCraJsEP4/6Ioz7DziT3l4Fb16+gWv0+6iwcwILIUI7piEA==
-X-Received: by 2002:a17:903:228d:b0:20f:ae7f:a433 with SMTP id d9443c01a7336-2129fe09467mr175950955ad.2.1732545055030;
-        Mon, 25 Nov 2024 06:30:55 -0800 (PST)
-Received: from [192.168.0.203] ([14.139.108.62])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2129dc2a763sm65037285ad.273.2024.11.25.06.30.52
+        bh=Mwycz/MiAZLiFKmS9hGPG2W/0xImNpvKNhmHBM//itM=;
+        b=Lc7L9ZY7qTEek4eNu3vsfW/NbZgDWqthJyN8TKW9oW0ztG1DkUQG0/MgH2L+9lh4Xe
+         Q8EjDY+dboVa6YLA1DyxnW1TJrRpXqeXwiXKLt1tHoTwTHv6gmow6wgovwHDfL2qlszH
+         hkedTjG462n2tJ5Z4WvF4s9l3aLZDWRnqXpdnDOV3q8CbVllqmPF3ZdtfIifBVozcY9u
+         +IYAmpJA7/h8xqsHrFtxgyHWulxT4LYWCOA0iliEr6FfH/MEEPx1EeCi3YqgX+UwDiVb
+         OgwvmMNcuWKmvBKveTv9harbjQLGGOhNIOTTEHROpqdoAUNyjTfWgLxCwvOAtrb83bhe
+         MvwA==
+X-Forwarded-Encrypted: i=1; AJvYcCVObs41tu51Pc3oDQBsKqnA+tRhVjgtSUa4oWo9y7wK7q38Mcdh0nI/yuBxF5Ce2uJbHnu8KxP4aLLw9A==@vger.kernel.org, AJvYcCWGnb2S1Ranf4jFsuG8arZlD10Sg1er3v+iy/BbBDMCxVVjojTJJaLwqWUyIguL1YKeZhKHwlFnhPfG5DYBPA==@vger.kernel.org, AJvYcCXWgPSmoBUisOy1ggs4K3zs3UWfidRETdF+ihIXT8+pApHHR82G3vAUYscvG5s3OEDvV2UY58sqvy+LgQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzVCUVZ9W2+7aKwK8xQhBGr9PddWSC0yQZ3sRhzXbk6O63huhIP
+	8x0XzumwKI0aCm1cIvzyWQcVXLYXTTSsivBUcW7fWjF6x+csWDV1
+X-Gm-Gg: ASbGncvWflhKapIN+gf0mM1eVypMUHmu1yLp/LRg+M46HqxGUFf3OgKU4Q9AVTDPjmw
+	eIThweOHar0+TE1BwL0utvu+uTvp4qVMhyc6yr7B+v8qA/6eu2ZPJl25kDX6VzwGSci0cxi0oI1
+	AKGmYhZBGJOKBr9rC4mFaagXZRHD6UOj3cWXl0mL3c5groiWU6GuqJ3s7xTsoBxJ5mRKY9VyNNs
+	z9RRtHAReHKW+/W6Zcz1HO58beOh+a3ppw46K18DbUUxzuB1ovDjrrzUtrmOw==
+X-Google-Smtp-Source: AGHT+IEzNyoWXmldDRbK4hugvlNPC35UUFsvEms5CLemQoA8167zZU/Ipeyzrkp+FtvQyJR2Aj95nA==
+X-Received: by 2002:a17:906:3194:b0:aa5:28af:f0e with SMTP id a640c23a62f3a-aa528af0f4amr1066397166b.15.1732546651154;
+        Mon, 25 Nov 2024 06:57:31 -0800 (PST)
+Received: from [192.168.42.132] ([163.114.131.193])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa50b52fd20sm473799366b.111.2024.11.25.06.57.30
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Nov 2024 06:30:54 -0800 (PST)
-Message-ID: <d4695943-51b8-40f2-bf2c-3a6436081887@gmail.com>
-Date: Mon, 25 Nov 2024 20:00:48 +0530
+        Mon, 25 Nov 2024 06:57:30 -0800 (PST)
+Message-ID: <a28b46a0-9eb5-45db-80ec-93fdc0eec35e@gmail.com>
+Date: Mon, 25 Nov 2024 14:58:19 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -65,88 +65,160 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: sg: fix slab-use-after-free Read in sg_release
-To: dgilbert@interlog.com
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com
-References: <20241120125944.88095-1-surajsonawane0215@gmail.com>
+Subject: Re: [PATCH v10 06/10] io_uring: introduce attributes for read/write
+ and PI support
+To: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, hch@lst.de,
+ kbusch@kernel.org, martin.petersen@oracle.com, anuj1072538@gmail.com,
+ brauner@kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk
+Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-block@vger.kernel.org, gost.dev@samsung.com,
+ linux-scsi@vger.kernel.org, vishak.g@samsung.com,
+ linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+References: <20241125070633.8042-1-anuj20.g@samsung.com>
+ <CGME20241125071502epcas5p46c373574219a958b565f20732797893f@epcas5p4.samsung.com>
+ <20241125070633.8042-7-anuj20.g@samsung.com>
 Content-Language: en-US
-From: Suraj Sonawane <surajsonawane0215@gmail.com>
-In-Reply-To: <20241120125944.88095-1-surajsonawane0215@gmail.com>
+From: Pavel Begunkov <asml.silence@gmail.com>
+In-Reply-To: <20241125070633.8042-7-anuj20.g@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/20/24 18:29, Suraj Sonawane wrote:
-> Fix a use-after-free bug in `sg_release`,
-> detected by syzbot with KASAN:
+On 11/25/24 07:06, Anuj Gupta wrote:
+> Add the ability to pass additional attributes along with read/write.
+> Application can populate attribute type and attibute specific information
+> in 'struct io_uring_attr' and pass its address using the SQE field:
+> 	__u64	attr_ptr;
 > 
-> BUG: KASAN: slab-use-after-free in lock_release+0x151/0xa30
-> kernel/locking/lockdep.c:5838
-> __mutex_unlock_slowpath+0xe2/0x750 kernel/locking/mutex.c:912
-> sg_release+0x1f4/0x2e0 drivers/scsi/sg.c:407
+> Along with setting a mask indicating attributes being passed:
+> 	__u64	attr_type_mask;
 > 
-> Root Cause:
-> In `sg_release`, the function `kref_put(&sfp->f_ref, sg_remove_sfp)`
-> is called before releasing the `open_rel_lock` mutex. The `kref_put`
-> call may decrement the reference count of `sfp` to zero, triggering
-> its cleanup through `sg_remove_sfp`. This cleanup includes scheduling
-> deferred work via `sg_remove_sfp_usercontext`, which ultimately frees
-> `sfp`.
+> Overall 64 attributes are allowed and currently one attribute
+> 'ATTR_TYPE_PI' is supported.
 > 
-> After `kref_put`, `sg_release` continues to unlock `open_rel_lock` and
-> may reference `sfp` or `sdp`. If `sfp` has already been freed, this
-> results in a slab-use-after-free error.
+> With PI attribute, userspace can pass following information:
+> - flags: integrity check flags IO_INTEGRITY_CHK_{GUARD/APPTAG/REFTAG}
+> - len: length of PI/metadata buffer
+> - addr: address of metadata buffer
+> - seed: seed value for reftag remapping
+> - app_tag: application defined 16b value
+
+The API and io_uring parts look good, I'll ask to address the
+ATTR_TYPE comment below, the rest are nits, which that can be
+ignored and/or delayed.
+
+> Process this information to prepare uio_meta_descriptor and pass it down
+> using kiocb->private.
+
+I'm not sure using ->private is a good thing, but I assume it
+was discussed, so I'll leave it to Jens and other folks.
+
+
+> PI attribute is supported only for direct IO.
 > 
-> Fix:
-> The `kref_put(&sfp->f_ref, sg_remove_sfp)` call is moved after unlocking
-> the `open_rel_lock` mutex. This ensures:
-> - No references to `sfp` or `sdp` occur after the reference count is
->    decremented.
-> - Cleanup functions such as sg_remove_sfp and sg_remove_sfp_usercontext
->    can safely execute without impacting the mutex handling in `sg_release`.
-> 
-> The fix has been tested and validated by syzbot. This patch closes the bug
-> reported at the following syzkaller link and ensures proper sequencing of
-> resource cleanup and mutex operations, eliminating the risk of
-> use-after-free errors in `sg_release`.
-> 
-> Reported-by: syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=7efb5850a17ba6ce098b
-> Tested-by: syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com
-> Fixes: cc833acbee9d ("sg: O_EXCL and other lock handling ")
-> Signed-off-by: Suraj Sonawane <surajsonawane0215@gmail.com>
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 > ---
->   drivers/scsi/sg.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   include/uapi/linux/io_uring.h | 31 +++++++++++++
+>   io_uring/io_uring.c           |  2 +
+>   io_uring/rw.c                 | 82 ++++++++++++++++++++++++++++++++++-
+>   io_uring/rw.h                 | 14 +++++-
+>   4 files changed, 126 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index f86be197f..457d54171 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -393,7 +393,6 @@ sg_release(struct inode *inode, struct file *filp)
+> diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.h
+> index aac9a4f8fa9a..bf28d49583ad 100644
+> --- a/include/uapi/linux/io_uring.h
+> +++ b/include/uapi/linux/io_uring.h
+> @@ -98,6 +98,10 @@ struct io_uring_sqe {
+>   			__u64	addr3;
+>   			__u64	__pad2[1];
+>   		};
+> +		struct {
+> +			__u64	attr_ptr; /* pointer to attribute information */
+> +			__u64	attr_type_mask; /* bit mask of attributes */
+> +		};
+>   		__u64	optval;
+>   		/*
+>   		 * If the ring is initialized with IORING_SETUP_SQE128, then
+> @@ -107,6 +111,33 @@ struct io_uring_sqe {
+>   	};
+>   };
 >   
->   	mutex_lock(&sdp->open_rel_lock);
->   	scsi_autopm_put_device(sdp->device);
-> -	kref_put(&sfp->f_ref, sg_remove_sfp);
->   	sdp->open_cnt--;
+> +
+> +/* Attributes to be passed with read/write */
+> +enum io_uring_attr_type {
+> +	ATTR_TYPE_PI,
+> +	/* max supported attributes */
+> +	ATTR_TYPE_LAST = 64,
+
+ATTR_TYPE sounds too generic, too easy to get a symbol collision
+including with user space code.
+
+Some options: IORING_ATTR_TYPE_PI, IORING_RW_ATTR_TYPE_PI.
+If it's not supposed to be io_uring specific can be
+IO_RW_ATTR_TYPE_PI
+
+> +};
+> +
+> +/* sqe->attr_type_mask flags */
+> +#define ATTR_FLAG_PI	(1U << ATTR_TYPE_PI)
+> +/* PI attribute information */
+> +struct io_uring_attr_pi {
+> +		__u16	flags;
+> +		__u16	app_tag;
+> +		__u32	len;
+> +		__u64	addr;
+> +		__u64	seed;
+> +		__u64	rsvd;
+> +};
+> +
+> +/* attribute information along with type */
+> +struct io_uring_attr {
+> +	enum io_uring_attr_type	attr_type;
+
+I'm not against it, but adding a type field to each attribute is not
+strictly needed, you can already derive where each attr placed purely
+from the mask. Are there some upsides? But again I'm not against it.
+
+> +	/* type specific struct here */
+> +	struct io_uring_attr_pi	pi;
+> +};
+> +
+>   /*
+>    * If sqe->file_index is set to this for opcodes that instantiate a new
+>    * direct descriptor (like openat/openat2/accept), then io_uring will allocate
+> diff --git a/io_uring/io_uring.c b/io_uring/io_uring.c
+> index c3a7d0197636..02291ea679fb 100644
+> --- a/io_uring/io_uring.c
+> +++ b/io_uring/io_uring.c
+> @@ -3889,6 +3889,8 @@ static int __init io_uring_init(void)
+>   	BUILD_BUG_SQE_ELEM(46, __u16,  __pad3[0]);
+>   	BUILD_BUG_SQE_ELEM(48, __u64,  addr3);
+>   	BUILD_BUG_SQE_ELEM_SIZE(48, 0, cmd);
+> +	BUILD_BUG_SQE_ELEM(48, __u64, attr_ptr);
+> +	BUILD_BUG_SQE_ELEM(56, __u64, attr_type_mask);
+>   	BUILD_BUG_SQE_ELEM(56, __u64,  __pad2);
 >   
->   	/* possibly many open()s waiting on exlude clearing, start many;
-> @@ -405,6 +404,7 @@ sg_release(struct inode *inode, struct file *filp)
->   		wake_up_interruptible(&sdp->open_wait);
->   	}
->   	mutex_unlock(&sdp->open_rel_lock);
-> +	kref_put(&sfp->f_ref, sg_remove_sfp);
+>   	BUILD_BUG_ON(sizeof(struct io_uring_files_update) !=
+> diff --git a/io_uring/rw.c b/io_uring/rw.c
+> index 0bcb83e4ce3c..71bfb74fef96 100644
+> --- a/io_uring/rw.c
+> +++ b/io_uring/rw.c
+> @@ -257,11 +257,54 @@ static int io_prep_rw_setup(struct io_kiocb *req, int ddir, bool do_import)
 >   	return 0;
 >   }
->   
+...
+> @@ -902,6 +976,8 @@ static int __io_read(struct io_kiocb *req, unsigned int issue_flags)
+>   	 * manually if we need to.
+>   	 */
+>   	iov_iter_restore(&io->iter, &io->iter_state);
+> +	if (kiocb->ki_flags & IOCB_HAS_METADATA)
+> +		io_meta_restore(io);
 
-Hello!
+That can be turned into a helper, but that can be done as a follow up.
 
-I wanted to follow up on the patch I submitted. I was wondering if you 
-had a chance to review it and if there are any comments or feedback.
+I'd also add a IOCB_HAS_METADATA into or around of
+io_rw_should_retry(). You're relying on O_DIRECT checks, but that
+sounds a bit fragile in the long run.
 
-Thank you for your time and consideration. I look forward to your response.
-
-Best regards,
-Suraj Sonawane
+-- 
+Pavel Begunkov
