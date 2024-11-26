@@ -1,119 +1,196 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69FE1CD2C;
-	Mon, 25 Nov 2024 23:22:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A49D440C
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2024 01:37:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732576923; cv=none; b=G2scl7sPFUfj7zHgvglkek0NGrWp2k14afe3oaKouW2vvt4pQjbH5JkMDUBwaeImP06YDuREniDzx+6VBNlxi4M/WkBikBPUARhTvsfXigfmOxsFSHWi/JliBYiL2xE74808SfBBabw4upZLljBh+p41+IuELIYU+pKlTUSfPJg=
+	t=1732585035; cv=none; b=dzAnfkfBLhPTEe5n6aXanjTDhC0xzd2eHYiC1xEJnqpTisPlifrYVXl/H4l7YCV5UMQak/mGAY2rvILlN48MsIfSp7odPs9ZqCD2G6BafpECbmINl0c5Tk4SE5g2oZAj9dyX0pp7J6kiOVfESrr1B1tH81uyqpH7evHUUyqmpuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732576923; c=relaxed/simple;
-	bh=PnyEp5HDwkYdC+u2fYrcD9DZmakb7fsgFLTXkys5mYs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AxIfGDZA6G1R1/yZzsm+TLUzRSLJo/M1tbk+nYq4jhKIFsMUOOidcmRENj3sXYfU3iA72Vow3aoWKjA1Vq2TnpAGuny1rmdHbcNA9ndyAIYyegtxXEe1t43mJhUs7MAvxRSFaooeJx4EzfzOSWOtjQhsL3csHVvDqM7tk0d/09s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=hcZeOtsJ; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1732585035; c=relaxed/simple;
+	bh=tCYSZSRxi+7C53edvKVUlthPBvV7N/B+KQYy/4ufv98=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EiFS02mBAJaRlUtYrqu9KKciJcmteOBhDfuCUdFLS5WMZ6btlJxVAm5tev/eFCWB+iYoU1plAKlt35J3WRx/Ey5Rw8QkKkEtuDWn8hUqkUrsyGE96RjIWUIJjVrvHzOI9Ah4K/H13s70iLxdbFd4ozSfXUYboMjMjbBEzCdlscQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Hot8eh+8; arc=none smtp.client-ip=209.85.128.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="hcZeOtsJ"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Xy1tx0rF8zlgVnN;
-	Mon, 25 Nov 2024 23:22:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1732576915; x=1735168916; bh=gYn7SNmvOgRtVyBpUwpt9+SL
-	l1/GKJuJp2r+ZPcDOn8=; b=hcZeOtsJw9MqKA073h8LluDpnwkJA8502Ny5K5xF
-	5PfmkXqYsr98J6k8bsoVBWRhGvfkc8AmRW/jDo1Bkx23NRvqBjqvo1+x3qCSF9KX
-	V1DsxVXZzyBgwsnE+LebnaFkNCluTDTt33itJcqDiVtQT5W4WCVezcse/lbJ2kpF
-	hueFUBl0hPqsa7JlnOJ/4Q/EFdNKAUAfnWBGZYntZngXkgtqKzBBT/NdITW9LzNx
-	5XMbsPPGsxYddl6z0XmbqEqeeMIRjdtL6M8cQM6IAJBqmeaA60Ja7AsV9Xz0wwIk
-	WNeXb7FqSUA7IOjgr6amIp0EtKAqVWbwD0H7uIS2/5AmMw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7mH7bJMGB4rO; Mon, 25 Nov 2024 23:21:55 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Xy1tk4CG6zlgVXv;
-	Mon, 25 Nov 2024 23:21:50 +0000 (UTC)
-Message-ID: <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
-Date: Mon, 25 Nov 2024 15:21:47 -0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Hot8eh+8"
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-6e34339d41bso45195267b3.0
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2024 17:37:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1732585031; x=1733189831; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zdjL6zUjj2z/LYq4V/LFmBNcTXQqiOxOfUuvMmMBGKc=;
+        b=Hot8eh+8rUOhaFt8ScRbfa0SJyxv9WSxRZ9iGf3kCkO/XGGoowYJV2d5exDNE4qGyV
+         dlCJSj91VMeUGaMKuu9N5OdyPl9v6zHk7/rIGtr107VyxUMqdZsfSoB4lGg8/rZX0Or6
+         Z/iPesB1rKdsj6oA1CjsgzvtEzEzSIhVoGepjPWMN90Bh23ynpdfCVOtXvBMXJlrN1kp
+         Pqr7Ngr42EnTZ73Jjm1uAuRm5Epdt9CVwQHgFKNQlPa8iY0EJsrwKI7MePIdhQWn2dUR
+         /wMfMp4tQruCtQqLC6IFSQQE/bmDTXCjBuwRKiHxVqit41pkuV0sF5TeXak5lh45FaBI
+         qhgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732585031; x=1733189831;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=zdjL6zUjj2z/LYq4V/LFmBNcTXQqiOxOfUuvMmMBGKc=;
+        b=Zzp2sPklXJvR0W1TmcHwh1iNIYrjnz0/8gWryl2ZeCrkXnMx7KnKunTwF6r+KvKlDy
+         QhHuX4YMDJSOP5zedsA/+7Oj0cFcMsVLRMYhqAAYWz6/N5xbFG96Su0vyaLAhoRslYMS
+         ZQn1GCdkLELlyIuinC8nppA5fMDYhNwAY3U8UUuJe44F49xqhiymrEY8uLuL9T5NikWZ
+         2pjeciCWTKhYeY4GR7xk2+2v3xw9QAbq+Ndv8Nack9IMQHc2wPxBTVjOYOCXA/0U4Uk9
+         yi1Wm4bYSq96nB9viwbMdARyP647FM9waAt6VXw3nNbrZrsV5iyGBqK2wx6KBmQUnGjG
+         vhZA==
+X-Forwarded-Encrypted: i=1; AJvYcCWL6Dy2zBMRbMmne7A9juB1Q6m+RwCPfuu89ERXLYTk8VYAp1OGIsXVF1mQwp/nQP6v1xVQoIvK6xrw@vger.kernel.org
+X-Gm-Message-State: AOJu0YxB0NlFtMuucZErM3UIk7P6H/DWuWYGqaLBhxD3ZjOsGvYFPiz9
+	0uoP6yqoUQjQ0tdsruS6h/c/Hfcbuhn/BuRYUGL+JQN69GdQgMgOJQXS2p7Mq0yLgfeAtnl17pk
+	pHbdr9JoF4VTGh50LIVL/k3B0tWObdNOtVsC1PA==
+X-Gm-Gg: ASbGncsoWn4uZ+Wgn6BvruZn1PPPSC0Lb+c1B0WCluT+UjIhtWTpzfrNFjU3ZDD7RgF
+	gU/rnUi19IHOL5nWlCP2z6Q16HVcPlyY=
+X-Google-Smtp-Source: AGHT+IHyAm521vhyAlEkTFZiSAXUWeUNoBTSz6Vwajou6E+EBUOBcOw0y6/xJsa+g+nihPuDKwmDkBpKLfuUmPaBiA0=
+X-Received: by 2002:a05:690c:2504:b0:6ea:8d6f:b1bf with SMTP id
+ 00721157ae682-6eee0779a6dmr165221367b3.0.1732585031470; Mon, 25 Nov 2024
+ 17:37:11 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nitesh Shetty <nj.shetty@samsung.com>
-Cc: Javier Gonzalez <javier.gonz@samsung.com>,
- Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
- "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "joshi.k@samsung.com" <joshi.k@samsung.com>
-References: <20241105155014.GA7310@lst.de> <Zy0k06wK0ymPm4BV@kbusch-mbp>
- <20241108141852.GA6578@lst.de> <Zy4zgwYKB1f6McTH@kbusch-mbp>
- <CGME20241108165444eucas1p183f631e2710142fbbc7dee9300baf77a@eucas1p1.samsung.com>
- <Zy5CSgNJtgUgBH3H@casper.infradead.org>
- <d7b7a759dd9a45a7845e95e693ec29d7@CAMSVWEXC02.scsc.local>
- <2b5a365a-215a-48de-acb1-b846a4f24680@acm.org>
- <20241111093154.zbsp42gfiv2enb5a@ArmHalley.local>
- <a7ebd158-692c-494c-8cc0-a82f9adf4db0@acm.org>
- <20241112135233.2iwgwe443rnuivyb@ubuntu>
- <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20241112170050.1612998-3-hch@lst.de> <20241122050419.21973-1-semen.protsenko@linaro.org>
+ <20241122120444.GA25679@lst.de> <CAPLW+4==a515TCD93Kp-8zC8iYyYdh92U=j_emnG5sT_d7z64w@mail.gmail.com>
+ <20241125073658.GA15834@lst.de>
+In-Reply-To: <20241125073658.GA15834@lst.de>
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Date: Mon, 25 Nov 2024 19:37:00 -0600
+Message-ID: <CAPLW+4=kuHze3=+g80CsY6OkLno5gyjRfMWLXTFHu3N_=XcmqA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] block: remove the ioprio field from struct request
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi Christoph,
 
-On 11/18/24 6:03 PM, Martin K. Petersen wrote:
-> In my experience the payload-based approach was what made things work. I
-> tried many things before settling on that. Also note that to support
-> token-based SCSI devices, you inevitably need to separate the
-> read/copy_in operation from the write/copy_out ditto and carry the token
-> in the payload.
-> 
-> For "single copy command" devices, you can just synthesize the token in
-> the driver. Although I don't really know what the point of the token is
-> in that case because as far as I'm concerned, the only interesting
-> information is that the read/copy_in operation made it down the stack
-> without being split.
-Hi Martin,
+On Mon, Nov 25, 2024 at 1:37=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrot=
+e:
+>
+> On Fri, Nov 22, 2024 at 03:55:23PM -0600, Sam Protsenko wrote:
+> > It's an Exynos based board with eMMC, so it uses DW MMC driver, with
+> > Exynos glue layer on top of it, so:
+> >
+> >     drivers/mmc/host/dw_mmc.c
+> >     drivers/mmc/host/dw_mmc-exynos.c
+> >
+> > I'm using the regular ARM64 defconfig. Nothing fancy about this setup
+> > neither, the device tree with eMMC definition (mmc_0) is here:
+> >
+> >     arch/arm64/boot/dts/exynos/exynos850-e850-96.dts
+>
+> Thanks.  eMMC itself never looks at the ioprio field.
+>
+> > FWIW, I was able to narrow down the issue to dd_insert_request()
+> > function. With this hack the freeze is gone:
+>
+> Sounds like it isn't the driver that matters here, but the scheduler.
+>
+> >
+> > 8<-------------------------------------------------------------------->=
+8
+> > diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+> > index acdc28756d9d..83d272b66e71 100644
+> > --- a/block/mq-deadline.c
+> > +++ b/block/mq-deadline.c
+> > @@ -676,7 +676,7 @@ static void dd_insert_request(struct blk_mq_hw_ctx
+> > *hctx, struct request *rq,
+> >         struct request_queue *q =3D hctx->queue;
+> >         struct deadline_data *dd =3D q->elevator->elevator_data;
+> >         const enum dd_data_dir data_dir =3D rq_data_dir(rq);
+> > -       u16 ioprio =3D req_get_ioprio(rq);
+> > +       u16 ioprio =3D 0; /* the same as old req->ioprio */
+> >         u8 ioprio_class =3D IOPRIO_PRIO_CLASS(ioprio);
+> >         struct dd_per_prio *per_prio;
+> >         enum dd_prio prio;
+> > 8<-------------------------------------------------------------------->=
+8
+> >
+> > Does it tell you anything about where the possible issue can be?
+>
+> Can you dump the ioprities you see here with and without the reverted
+> patch?
+>
 
-There are some strong arguments in this thread from May 2024 in favor of
-representing the entire copy operation as a single REQ_OP_ operation:
-https://lore.kernel.org/linux-block/20240520102033.9361-1-nj.shetty@samsung.com/
+Collected the logs for you:
+  - with patch reverted (ioprio is always 0): [1]
+  - with patch present: [2]
 
-Token-based copy offloading (called ODX by Microsoft) could be
-implemented by maintaining a state machine in the SCSI sd driver and
-using a single block layer request to submit the four following SCSI
-commands:
-* POPULATE TOKEN
-* RECEIVE ROD TOKEN INFORMATION
-* WRITE USING TOKEN
+This code was added for printing the traces:
 
-I'm assuming that the IMMED bit will be set to zero in the WRITE USING
-TOKEN command. Otherwise one or more additional RECEIVE ROD TOKEN
-INFORMATION commands would be required to poll for the WRITE USING TOKEN
-completion status.
+8<---------------------------------------------------------------------->8
+ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *=
+rq,
+                               blk_insert_t flags, struct list_head *free)
+ {
++#define IOPRIO_N_LIMIT 100
++       static int ioprio_prev =3D 0, ioprio_n =3D 0;
+        struct request_queue *q =3D hctx->queue;
+        struct deadline_data *dd =3D q->elevator->elevator_data;
+        const enum dd_data_dir data_dir =3D rq_data_dir(rq);
+        u16 ioprio =3D req_get_ioprio(rq);
+        u8 ioprio_class =3D IOPRIO_PRIO_CLASS(ioprio);
+        struct dd_per_prio *per_prio;
+        enum dd_prio prio;
 
-I guess that the block layer maintainer wouldn't be happy if all block
-drivers would have to deal with three or four phases for copy offloading
-just because ODX is this complicated.
++       ioprio_n++;
++       if (ioprio !=3D ioprio_prev || ioprio_n =3D=3D IOPRIO_N_LIMIT) {
++               pr_err("### %-20d : %d times\n", ioprio_prev, ioprio_n);
++               ioprio_n =3D 0;
++       }
++       ioprio_prev =3D ioprio;
++
+        lockdep_assert_held(&dd->lock);
+8<---------------------------------------------------------------------->8
 
-Thanks,
+Specifically I'd pay attention to the next two places in [2], where
+the delays were introduced:
 
-Bart.
+1. Starting getty service (5 second delay):
+
+8<---------------------------------------------------------------------->8
+[   14.875199] ### 24580                : 1 times
+...
+[  OK  ] Started getty@tty1.service - Getty on tty1.
+[  OK  ] Started serial-getty@ttySA=C3=A2ice - Serial Getty on ttySAC0.
+[  OK  ] Reached target getty.target - Login Prompts.
+[   19.425354] ### 0                    : 100 times
+...
+8<---------------------------------------------------------------------->8
+
+2. Login (more than 60 seconds delay):
+
+8<---------------------------------------------------------------------->8
+runner-vwmj3eza-project-40964107-concurrent-0 login: root
+...
+[   22.827432] ### 0                    : 100 times
+...
+[  100.100402] ### 24580                : 1 times
+#
+8<---------------------------------------------------------------------->8
+
+I guess the results look similar to the logs from the neighboring
+thread [3]. Not sure if those tools (getty service and login tool) are
+running ioprio_set() internally, or it's just I/O scheduler acting up,
+but the freeze is happening consistently in those two places. Please
+let me know if I can help you debug that further. Not a block layer
+expert by any means, but that looks like a regression, at least on
+E850-96 board. Wonder if it's possible to reproduce that on other
+platforms.
+
+Thanks!
+
+[1] https://termbin.com/aus7
+[2] https://termbin.com/za3t
+[3] https://lore.kernel.org/all/CAP-bSRab1C-_aaATfrgWjt9w0fcYUCQCG7u+TCb1FS=
+PSd6CEaA@mail.gmail.com/
