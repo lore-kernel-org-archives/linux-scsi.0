@@ -1,63 +1,48 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BFD72F32;
-	Tue, 26 Nov 2024 13:03:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7998B1CEAC7;
+	Tue, 26 Nov 2024 13:50:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732626226; cv=none; b=ndkK1P6eFxj1lgdBKA6l+96eyEIDbrE+kjkhtw/xYDihxf0MbTTCVjrQmNuF8OFgDlTOj12c/56qeDyx3JCLKSiuk4q1hIzFPoLEkMph+EcdCIsCD3YhTmFbYXkDBFRAVXhiijNVKj43Z/6euFjywrkNkg+HNeG+9zfh9VCJ6W0=
+	t=1732629004; cv=none; b=fg3oY5rO8LcN+pNp4px82vGcwuWrqdkgj525Lo09Z+aljdSOUn+PVewdNE/DXKu1KwCeUCvAaopAiZjMQS4wpaHucnJFVMKuWxWifpovwKODdAASkdRaaQliyUzVwUkssyu30rPcurdcutGIbtRQwCH9APhyJADGvX920fVKzCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732626226; c=relaxed/simple;
-	bh=FXB4PuxmOEd2vZ5z4u6K66VlomCc0+/oFMfpy5SDFF4=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=MgTo3OfFo5BFWuUGeRfcXV/VKOgdOZIpAMLIV5/oEr6o7+Q1ZfDluI7Cut3slBnRN4e4vRu2/JoRRibslomEPKImT9ixUSSDlciPNhBo1jqIqSl2G6isIqsS0wvZQQCwuGjfCfVxolXik3cTOeufbz1mc+WgsT9U0Z+o50YPZ44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B4l3bgYz; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732629004; c=relaxed/simple;
+	bh=LDHKlvSWEbzHB5vUhCPiMjAvRh/HoM1F8Ra5jPRv8G4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NF2L4PReZEF/rKEKKIw5Xbbkfje38cqsS5nqmTPmWZG/VCsJ3XNIdUwL06/orIrwBedifso9CMT5Nlk/BH4NygEfYPqKg5Bp8PzYp2acg/1DctfX3EvmVoMI6HYGbaaUsyAMMWU+IUmRXEZ7YJKvrjnLqTOrfEmSfK/Zhx6nY9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OJjBfNEB; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B4l3bgYz"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a9a0ec0a94fso796860066b.1;
-        Tue, 26 Nov 2024 05:03:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732626223; x=1733231023; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=M1sK9vv1q3OjkhDWkUYaudPgFH+wG3hp3SHQxCzra7k=;
-        b=B4l3bgYzyHLJHXkaMH7IpUJNzgIJvFaF1GjAqjvdM/7gr3UF5BuirYlDmXyxma21WT
-         coZOk/enFsEOb/iqEsFrivR8XuKPa+u6G2CMM/4wfxWGO/d+EkHl33HJOlERHhq0WT7W
-         aQ5TbqYQqDE6jS9Sy5vDowJ9K0B4wbQf812Vc1egLACiLN39b6NMO1LPJ6QJmKDnJFJQ
-         BZCzM0rWoVZ2A83QAp8FCmbu30CIcBr/x/mSKhEmf8PsqC6uREFwBkj7HbkyCzpZSFfx
-         WFAP+kJGPewIxv+C1EmSji9R/H3oXNz++cfL7gtEkmdl7F/wM7iwdzoetgJcQ14XOHui
-         kwHA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732626223; x=1733231023;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=M1sK9vv1q3OjkhDWkUYaudPgFH+wG3hp3SHQxCzra7k=;
-        b=M7hvzzWid/YgIOAPH4AanaQUgWsjrw67jmzhG4paJBaXaRIo52U0YnPBdKw2UItCVT
-         e8knmkKtzFXVe4GMH5ktj+Qx7OFusluhWYZXXktcBL4/QfoSXmRxqkNaWQCWZ7pfFBro
-         /ccNug6keTSjqAbjn2DN7aWzktIrOSjXkThaJESXcVzPdsOO2X0gQVMq0FH/xcpYMSjo
-         yAgohNwU+EEfjs6GL61KAMBkaoziCU1ZayriT7Ju2MQMSoXF97fIFVnKtuGvYa0mY7qf
-         LoX85CuEhTPmB/Rv9Qj3HicVBlmbXm205OQy+IAQYspy8nQaYGZfzAJkYulELkoPHTcg
-         U6wA==
-X-Forwarded-Encrypted: i=1; AJvYcCUdIf9HP/WeBg/btYs4hnLfe8N92kLiWWZJDZe+kw9Lx8oR2bp4u/H2H2JMOIXpAqT08f5mPhqdENaUrpGOXA==@vger.kernel.org, AJvYcCVlyz2OWkHTbSiglCeL3D6CFKs1XNshNqYrd7yJaIiV9+0oKru0xvLoU3WYpHIC8sP1McPPwd/7kaV5LA==@vger.kernel.org, AJvYcCXPfrDqDWBrxOH1HS8m09HzUlhO4ujgpqXqdzlxQ/tgO5WwYx45MFUf3UI7aGy8MTmam7GW9jD3zIhQjw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3w1wiTaS6ycGdou6dD4iyXuP8/1f4j+VBD9caoZt7C79nijut
-	Wd5g6Qafv4CV0dvjxxAD3Gn9xQJNi7f3Ih/e9ek4lDWQkNnuPaci
-X-Gm-Gg: ASbGncuAggpSo7PAYxBFVtkhCXoaQOKRNIs/2QjnG7WfkW3hr7hFFZZ4JbiFSewnL1X
-	wNWvEkSY6XGC5XK8l66u+yJjFSMpumUr5CV1Xv3ZwTKSH/y9oPpJecdTScj1/HPsfgNsVpX7EaA
-	wEp275t+RdB4YM1GuH+VagkainM2jBR7CNl1hY/mw9DyI3TY9EMUIYuQxf76R0B8og4pi8jzct6
-	KE456rZKN4mzMDeYdqfEmPo3+0uQmhCnYD6NUwbyh430h2TE9jjM6BLNu3foA==
-X-Google-Smtp-Source: AGHT+IGUJJ67zkkw70cU7BTJtW/UZE3uVK6vKazeu4jCOhtR1atDsPsUa64nDbaBqFhJig6PgL/VRA==
-X-Received: by 2002:a17:906:9ca:b0:aa5:3663:64ba with SMTP id a640c23a62f3a-aa536636946mr882554866b.43.1732626216465;
-        Tue, 26 Nov 2024 05:03:36 -0800 (PST)
-Received: from [192.168.42.208] ([163.114.131.193])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa50b2efbf1sm591067766b.44.2024.11.26.05.03.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Nov 2024 05:03:36 -0800 (PST)
-Message-ID: <ad230264-62c1-4e52-b412-d951be514593@gmail.com>
-Date: Tue, 26 Nov 2024 13:04:23 +0000
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OJjBfNEB"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4XyP8T6K1QzlgVXv;
+	Tue, 26 Nov 2024 13:50:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1732628997; x=1735220998; bh=LDHKlvSWEbzHB5vUhCPiMjAv
+	Rh/HoM1F8Ra5jPRv8G4=; b=OJjBfNEBslumokxQFw1dfLQb8NXjU+aVp+D3qSML
+	YB64gfylUqbxQkDErbzUNySWz6Dun0eCXO9c5nfPCyxj5g03th/gV1rsBdS0dPZZ
+	YGSRKJDN7YkWgMG2scpW0LdXb9oEPQJDOOifKr17r1NalOHGVZUO9I37VEhroaIL
+	bRoGb1M8Z60+EwvkcMRrUA/fRuHAg3z4lXgYX0QqPOsZuccUpKG20gu13euudLz2
+	D1CUMC9jVdGqdI1cDv4ggffGjcDdxkN3D5RrpRcp2msZsVym0v718+2ueRDLJac+
+	U2F6e5SS75jZjRtj+t6Js3dD8vTNKpyolgB24iw3j4hTDA==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id YunbblsNHGzo; Tue, 26 Nov 2024 13:49:57 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4XyP8K3vpBzlgTWG;
+	Tue, 26 Nov 2024 13:49:53 +0000 (UTC)
+Message-ID: <ed22e2ea-bf28-4eba-bfb1-afe9f79dc3b7@acm.org>
+Date: Tue, 26 Nov 2024 05:49:50 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -65,57 +50,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 06/10] io_uring: introduce attributes for read/write
- and PI support
-From: Pavel Begunkov <asml.silence@gmail.com>
-To: Anuj Gupta <anuj20.g@samsung.com>, axboe@kernel.dk, hch@lst.de,
- kbusch@kernel.org, martin.petersen@oracle.com, anuj1072538@gmail.com,
- brauner@kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk
-Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-block@vger.kernel.org, gost.dev@samsung.com,
- linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-References: <20241125070633.8042-1-anuj20.g@samsung.com>
- <CGME20241125071502epcas5p46c373574219a958b565f20732797893f@epcas5p4.samsung.com>
- <20241125070633.8042-7-anuj20.g@samsung.com>
- <2cbbe4eb-6969-499e-87b5-02d19f53258f@gmail.com>
+Subject: Re: [PATCH] scsi: Don't wait for completion of in-flight requests
+To: John Garry <john.g.garry@oracle.com>, Qiang Ma <maqianga@uniontech.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ axboe@kernel.dk, dwagner@suse.de, ming.lei@redhat.com, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20241126115008.31272-1-maqianga@uniontech.com>
+ <7c95b86b-68a0-41f8-a09c-3cb4b06fe61a@oracle.com>
 Content-Language: en-US
-In-Reply-To: <2cbbe4eb-6969-499e-87b5-02d19f53258f@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <7c95b86b-68a0-41f8-a09c-3cb4b06fe61a@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 
-On 11/26/24 13:01, Pavel Begunkov wrote:
-> On 11/25/24 07:06, Anuj Gupta wrote:
-> ...
->> +/* sqe->attr_type_mask flags */
->> +#define ATTR_FLAG_PI    (1U << ATTR_TYPE_PI)
->> +/* PI attribute information */
->> +struct io_uring_attr_pi {
->> +        __u16    flags;
->> +        __u16    app_tag;
->> +        __u32    len;
->> +        __u64    addr;
->> +        __u64    seed;
->> +        __u64    rsvd;
->> +};
->> +
->> +/* attribute information along with type */
->> +struct io_uring_attr {
->> +    enum io_uring_attr_type    attr_type;
-> 
-> Hmm, I think there will be implicit padding, we need to deal
-> with it.
+On 11/26/24 4:21 AM, John Garry wrote:
+> On 26/11/2024 11:50, Qiang Ma wrote:
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index adee6f60c966..0a2d5d9327fc 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -2065,7 +2065,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 tag_set->queue_depth =3D shost->can_que=
+ue;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 tag_set->cmd_size =3D cmd_size;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 tag_set->numa_node =3D dev_to_node(shos=
+t->dma_dev);
+>> -=C2=A0=C2=A0=C2=A0 tag_set->flags =3D BLK_MQ_F_SHOULD_MERGE;
+>> +=C2=A0=C2=A0=C2=A0 tag_set->flags =3D BLK_MQ_F_SHOULD_MERGE | BLK_MQ_=
+F_STACKING;
+>=20
+> This should not be set for all SCSI hosts. Some SCSI hosts rely on=20
+> bf0beec0607d.
 
-And it's better to be explicitly sized, e.g.
-s/enum io_uring_attr_type/__u16/
+Are there any SCSI hosts for which it is safe to set this flag? To me
+the above change looks like a hack that should not be merged at all. Did
+I perhaps overlook something?
 
->> +    /* type specific struct here */
->> +    struct io_uring_attr_pi    pi;
->> +};
-> 
-> This also looks PI specific but with a generic name. Or are
-> attribute structures are supposed to be unionised?
-> 
+Thanks,
 
--- 
-Pavel Begunkov
+Bart.
+
