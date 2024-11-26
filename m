@@ -1,137 +1,108 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93608EBE
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2024 04:52:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B295653;
+	Tue, 26 Nov 2024 05:19:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732596734; cv=none; b=loCZb5hb4Vg/kiN3nUn6g9vVjhsZwrsEZdCnAlSvZjZnhYd8AsQwJ9J8qKuLVDrMSkCGUEAboD2ehJgufgTopuellBso/EgssKVLLopYbIKzL7Z3jAPW9H/XSLq9n74Z+csDsNvdzd45MosFvNyNiVyeFX1tc/dC83rNfwgY7U8=
+	t=1732598351; cv=none; b=MECanhRICiDrsvFEeKNxx1vS48zGL8I4d7t5at2W8GeWONcdIU+OWXWkYtIsZTmgHMkcPhdF54VeT6b6rYqUk689dv+4TtmBb43h5UkPGZ/p+Wo3KX6Qn068lBuqPwDm6w+ChLSa8w7qzPeFv2y63MD1vuZFbOzXY2XtA/QlFW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732596734; c=relaxed/simple;
-	bh=UMaGgDkF1T2aYUdiWAaQKUuv145YTS1tpH7aMLKiQmY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=enzm5E6OROWCQxkOT5TrgxyTLypuWItTMbvWhIAeg1XXH9NEVsmXJwVj9X3LGQCWk/ISw5j+43ZH1/3UPfyENCW2I2ddblsXEtUNSJ+AEwqvtuRZHk8b5nQ9EYbzVgeI5J1wszhnPBLzuETR58UQQmKP7DnNt8V+EyiV0v+CqGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=H01l5V74; arc=none smtp.client-ip=209.85.215.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1732598351; c=relaxed/simple;
+	bh=SsXKeG4iKHIGl4IQNsH9J1ULRa5IOJVawi5c5nZBkDo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Q8GWwFwyQDx/jlaG4rk+7IRqAtyf6usxbAdA3aAIVHx9GLMpr9FiCr75IFbU3GcY0Ysf+ARpYfjmeZKqxe5fLfqe+NRBFiMLT+DVBug8nOkojLTRqByg9N5sxPdEuH1tPTC6lNtCJiNk/D5ATLYDL08rSTWEFNEkAWsts+9430E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VRh15urY; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H01l5V74"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-7ae3d7222d4so4285370a12.3
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2024 20:52:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VRh15urY"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7e9e38dd5f1so4420520a12.0;
+        Mon, 25 Nov 2024 21:19:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1732596732; x=1733201532; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Rem8LGZXdVnZ/PI5gsaQii+kftUkAG4f3mUtkM8OBis=;
-        b=H01l5V742yTAVdomk5Oc2AXbgCIGX8hmkHGgtDtxdFR3qig/sVzN8Dye5uD9TGoCt6
-         xsWI6DGv5o6vgr6HsZjLS3X5MxTj5OB1VPL3taGiYoa2XY0HLu7UNbzH/bxHlRTb57M4
-         8Qj0ee6yX8WmH/tDcbov0Bnp7PwHpIBnNUIDkd9aKOK7R0ECC0QNboRJSHXlyQdU1twH
-         VOM2EYD+0AV1dckpnpTubuI21OrL1cO6K3jLhAjzO7hzvFD4ZBXYM8sCIZhQz1DqrJgv
-         I6bf9GUkfxEaDcyUHMlEmeMP+tQXFgS6K29tOh0z5hDWd1Hn3hEPgOVgrwZ+SXYwlGAm
-         C1IA==
+        d=gmail.com; s=20230601; t=1732598349; x=1733203149; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VfgrFkIill8XZ44XmDBIgcIATqnyraRsPjCSbdmLm0M=;
+        b=VRh15urYiZoDkTV/EiAfpEmwCFWvaIs1l14UzuarMGhqOxmEJwZmwQxfq2FQwj9kTE
+         RTkwGsXZNueLiQZDNWu1pQ37Be9nDay6keO0Cbaag0fcHMPb+COtla39uD/eQ2Jk7lT+
+         m+TzSy56PCEltOaigG4IN1+Xy5A62DUEouAOl9J0D+/EHc5cjVhDZSpQTbXa0+wQ6cvR
+         Z9WK6zoJ1dsRfIna/H6CPGS+VjJ6rwCoM/h+hJ3w7w6Y/32zY11/mSR0bmNP/NvkYQm8
+         mSuIYyC5a0yI7+Ymz1MkqctqC3MYmOWjv0iiAtPFc7g2A3PTiPhJYB0oZ95RwIdgtaq1
+         +aew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732596732; x=1733201532;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
+        d=1e100.net; s=20230601; t=1732598349; x=1733203149;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Rem8LGZXdVnZ/PI5gsaQii+kftUkAG4f3mUtkM8OBis=;
-        b=rx2REiS5jZhqbMYdhFhUqE9j/lGZdR0Scx6w9QbUIpGspoqDHwSfJxD0lZLFs2pBZS
-         SBCO3Ziu22iYfgSqQeOQsKX89k+7dBFS1Z+rgarkEtznQjvK27XejKUAzhJquKPsaYIC
-         8Qwoc6o2ktzw1BSopMJWsQIs7NiYv0LOZYy/VSbyPy1eTQ/JZx8ZBZdaDyxdYJ3CVcgn
-         jKIb7HYrq/FgqCT65dconnwl6NlUSB4R4F+aMV95PSru07gv3LBruMRtb4Rajog49HiO
-         TqJ4/HU8l5hBuzyosbGo4PObbLvru5VlKZglJys7myWXHy+k6nJnOkBhU9XkhjW064oS
-         03uw==
-X-Forwarded-Encrypted: i=1; AJvYcCWUFZMhZTAXRi3eeivVivqKMq8/oSnu2pIUW5Km+8kfyTRrNwO6qx2acJ4Yy/P9HtDNOH/RxzepckUp@vger.kernel.org
-X-Gm-Message-State: AOJu0YwrgvGa6LA2ZMqbjaOZ8ovVrKsUTaQ6Huoyc9erStkDlHU2bH8n
-	MWMZmD+h45itzUUPUT3cjA64N83/7H15AR2Qi8O87G5o8jMDLxQJZ6eNo6iQ6A==
-X-Gm-Gg: ASbGncvlypPURTsS2TXAA7ya2pJNb2CN/fNv89oJU0bhQKZCPmgFQfd15aYSW/QgHAP
-	vHgIAlwXOO3PzOdLbYRKduzwR2gPjCCc3TnucE/gcIBwssfYv3YEdFCiJJiiqOBZPjV/3lBWfmX
-	KEsmrqHEzg9DCx8lB21TPZOmn1oedXdROC4kAyLgrxnFN11suW6Ljm0rZKNa7F0ct1LvA5X3dRC
-	pcvGy6XZz9lkqHdrOn01mxF0EC9LlMWGmMQKmM7CNr3PjeoYxLnzb8L1mUkajA=
-X-Google-Smtp-Source: AGHT+IFLS2CiMe6uFsk3VjOrgamDEQHKYFhaEEUWVyLY/IZqdSO4oF/zkuEQngAEkYwNRZrt7cVwfA==
-X-Received: by 2002:a05:6a21:3389:b0:1db:dfe4:daa4 with SMTP id adf61e73a8af0-1e09e40644fmr23624442637.9.1732596731951;
-        Mon, 25 Nov 2024 20:52:11 -0800 (PST)
-Received: from thinkpad ([220.158.156.172])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2129dc2c5fcsm72746705ad.280.2024.11.25.20.52.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Nov 2024 20:52:11 -0800 (PST)
-Date: Tue, 26 Nov 2024 10:22:06 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Vamshi Gajjela <vamshigajjela@google.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: core: Fix link_startup_again on success
-Message-ID: <20241126045206.v64iypeiyt22lcei@thinkpad>
-References: <20241125125338.905146-1-vamshigajjela@google.com>
+        bh=VfgrFkIill8XZ44XmDBIgcIATqnyraRsPjCSbdmLm0M=;
+        b=GhOAr33XIx0JaqTMSUOK/geQEgjJHK30gT2P0l/MI3sg0J9foZS7TY0m9V1Rv2C3JL
+         K8JO7muabMRdRd+OtQOWVjJRgDZjrr8hpGTDwfndZBKgVq0k6Fq7MwFi0dIAAzD8I4P9
+         k+PFdkxamZunYwct48wXB2bakHd6pdhW4dQU8KqunKxpZqNPg/URQggkJ93TmzSdYZa5
+         dv3domD3zJRXKD5dGNEZfij+/mMny9vV2WAYrsIdyPxfJ3cIhPC6REidkz2ZOsBqJdid
+         MK1keN2exLuPrKXIkuE1+zMTc4N7fa0u29uofD2RkbMYvGujByONJNVeNccvtBOSmgsE
+         mwNQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUWL6B+PPSOVMNDGpnGc9RywvynaHfRdVYNpceYcjLUjBYHBDPPaZurXS6dTq5HKbJbUYb+u5Ed+UH07uU=@vger.kernel.org, AJvYcCXWs+g8dzZAeXQooo578RHvQd0dCAJp+duWcynk9vP2K9GoFsj9LNeQYpSRqIPFWKjI080/BG7rvWWyeg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyjR8bCKLKIeoiEPx+nyjsh/5fot7pxfyk4cgYds5+bGWqJBwWU
+	0HUh9RaaHOIM6wfqO6pSObIKY8IeWp/vi352R+vrFsFrsfgSNroo
+X-Gm-Gg: ASbGncvkiiwZ6i+AvY0iIKwr8D4tgjr4nvRr+CLFPMFcUN0qLEVrq+slU3ys4CUSGXF
+	KI+UXLA03Z8S38XFt6aU76WYx7r4U3JDtBtd9xtB86GFvaRB0/0fKUivU7MSTtwq9PSO2LxVFBY
+	ZZSvPTCCNj2Aqp873QCktJbkipA69L391bDti11yMU3KXEg/nO7dVRq1kbWzRFUMlM+yULIIxOp
+	x7ravGh+8bXxxok+y6cJNDd8jTsoO6dHwV6iRF16025kHi6L7pUihsIi+PodEsj
+X-Google-Smtp-Source: AGHT+IFrJNQcj02XB1WYSEjBx4IyMnzG3hPlXoB2Ggdu/AGwMkwtMpSPMOnxThdC55a44X3wZc9cTA==
+X-Received: by 2002:a05:6a20:6a21:b0:1e0:d0b8:20bb with SMTP id adf61e73a8af0-1e0d0b82440mr6190683637.20.1732598349448;
+        Mon, 25 Nov 2024 21:19:09 -0800 (PST)
+Received: from [192.168.0.203] ([14.139.108.62])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2129db87dc9sm75376735ad.7.2024.11.25.21.19.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Nov 2024 21:19:08 -0800 (PST)
+Message-ID: <fa2b0f11-d8bc-4d7c-b6dd-435eeacd6d37@gmail.com>
+Date: Tue, 26 Nov 2024 10:49:03 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sg: fix slab-use-after-free Read in sg_release
+Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>, dgilbert@interlog.com
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ syzbot+7efb5850a17ba6ce098b@syzkaller.appspotmail.com
+References: <20241120125944.88095-1-surajsonawane0215@gmail.com>
+ <d4695943-51b8-40f2-bf2c-3a6436081887@gmail.com>
+ <dc9ee4e6-5410-4635-9970-d0b2a5d02d81@acm.org>
+From: Suraj Sonawane <surajsonawane0215@gmail.com>
+In-Reply-To: <dc9ee4e6-5410-4635-9970-d0b2a5d02d81@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20241125125338.905146-1-vamshigajjela@google.com>
 
-On Mon, Nov 25, 2024 at 06:23:37PM +0530, Vamshi Gajjela wrote:
-> Set link_startup_again to false after a successful
-> ufshcd_dme_link_startup operation and confirmation of device presence.
-> Prevents unnecessary link startup attempts when the previous operation
-> has succeeded.
+On 11/25/24 22:33, Bart Van Assche wrote:
+> On 11/25/24 6:30 AM, Suraj Sonawane wrote:
+>> Hello!
 > 
-> Signed-off-by: Vamshi Gajjela <vamshigajjela@google.com>
-> Fixes: 7caf489b99a4 ("scsi: ufs: issue link starup 2 times if device isn't active")
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/ufs/core/ufshcd.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> Which person are you addressing with this email?
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index abbe7135a977..cc1d15002ab5 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4994,6 +4994,10 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
->  			goto out;
->  		}
->  
-> +		/* link_startup success and device is present */
-> +		if (!ret && ufshcd_is_device_present(hba))
-> +			link_startup_again = false;
-> +
+I apologize for not clarifying earlier—my email was intended for 
+everyone who might be reviewing the patch.
 
-Using 'link_startup_again' flag looks messy. Can't we just check the device
-state after first link startup and if it is still not active, then try link
-startup one more time? (Assuming that the device state won't be active after
-first link startup).
-
-Also, we should move the link startup and its associated check to a helper
-function and call them instead of (ab)using the goto label.
-
-Like,
-
-	ret = __ufshcd_link_startup()
-	if (ret)
-		goto fail
-
-	/* try link startup one more time if the device is not active */
-	if (!ufshcd_is_ufs_dev_active()) {
-		ret = __ufshcd_link_startup()
-		if (ret)
-			goto fail
-	}
-
-- Mani
-
->  		/*
->  		 * DME link lost indication is only received when link is up,
->  		 * but we can't be sure if the link is up until link startup
-> -- 
-> 2.47.0.371.ga323438b13-goog
+>> I wanted to follow up on the patch I submitted. I was wondering if you 
+>> had a chance to review it and if there are any comments or feedback.
+> 
+> Sending a ping after 5 days is too quick. I think that you should wait
+> at least a week before sending a ping.
 > 
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thank you for pointing out that sending a follow-up after five days 
+might be too soon. I truly appreciate your guidance on this. The reason 
+for my follow-up is that, as a mentee in the Linux Kernel Bug Fixing 
+Program, I need to include updates on my contributions in my progress 
+report. I’ll make sure to wait at least a week before sending any future 
+follow-ups.
+
+> Bart.
+> 
+
+
