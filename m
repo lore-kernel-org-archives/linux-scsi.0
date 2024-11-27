@@ -1,132 +1,209 @@
-Received: from 001.lax.mailroute.net (001.lax.mailroute.net [199.89.1.4])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazolkn19012051.outbound.protection.outlook.com [52.103.2.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1BCC140E38;
-	Wed, 27 Nov 2024 21:09:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.4
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732741754; cv=none; b=MiQ5Hw5aYT/+pJivCPZWu/lBJvjfWOkc+pNle+jOUvbFaSKpWZMB9+ZIAjhV70x1naekDpBEAOhXBU2mn8SdGUn6DRV/9zGJH95c6qznuoM0wbG0yffpaon7f3aF7DmbVA9Dh1FEjNb2x+IRz1hxbQmyd8Z63Lrk8mair08M2zc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732741754; c=relaxed/simple;
-	bh=D5XBnnBSHb+YFe5/5cmsGkYiGUO3cyT7bmOr+0fb0Ys=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YE6TLVd2k7NpuElKYxRaiFnhiYlxOV3cdw25vQB+k8OQm1kICgVpJmae5cRMf7hjXDElJGOlUEVruok2V5ixptbRlZMtM5G3RDvwjTNQqY11rriotfCaLPp97cY+wIm9kG7sYmP5ZK6cIu6s/WSkv03yA/wHd4onfjMtzj7XAB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=uCEoSSMJ; arc=none smtp.client-ip=199.89.1.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687B313BC35;
+	Wed, 27 Nov 2024 22:37:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.2.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1732747030; cv=fail; b=IU+OhvGJOWfNZkMF+R5wBZ+jvM4vAprI2ksxmIaztVE1/eFTGXc2S7IXAllNWVdSDLodz4bLJ04vuHdvW4m9aqkqUWJKTdGABEC+AWpdgVDYq/UZjIuBoOmhdilBUd+BoKoBRfob74e6mbLAod1UBfOksEDo1tE57d44VBsWOig=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1732747030; c=relaxed/simple;
+	bh=VQ5PIqd1VZQH8N4XyGZol6ngWoU7Or1fu4pCjiSY2mw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=jYXKqf1j5zwRsrM+qx3mF/zGPOq8J93Rw+OgcHLqYf8Z1Sa6v9435oyx4Ii2FTjLBbwoa/33xCrGwTt2rs8jsxANw/XIOPE0LotAl8ViOxV6OhdKQsjONxjAjGFdNqTFDTwpR6BgOTVeee+e2Z06tcdFqwikL9Hq3fJTg2+TDD0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=nnMzM6j/; arc=fail smtp.client-ip=52.103.2.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="uCEoSSMJ"
-Received: from localhost (localhost [127.0.0.1])
-	by 001.lax.mailroute.net (Postfix) with ESMTP id 4XzBnh0yn9zCm9g;
-	Wed, 27 Nov 2024 21:06:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1732741585; x=1735333586; bh=ISWmwIbPKWfnjDw9QIg1JLPO
-	j+G2EW60oaWfrSMy0X4=; b=uCEoSSMJdJz7xp88pY1TWob0jGDsqDNccGMqS43u
-	t5Z4bVukZBCn6nC6PMTFXOnHMzPBWW2zKn/aCxyRBv4nwjGB7o5mw659cFHHaYM4
-	HXR1VdI28t5MqtRgLAccV10Xn9SQbt6vuR+yU+Ot3NCOtIUehoYfemN/zz4dMywy
-	lmfUsQA/pf/KYtnsGVSShANNiEx7oCSbheaKC5pZRww61kY0mUq5ASvHtczAaX2n
-	wlG1kxyWGAXUY0rcNElD+heejviIukL/DvU79d56l6Z/RT7YZWxA0N3q9mxIa/ee
-	kJMK3rsFLKILTjEKHplUUCazHjODyGjOQvo+7SkBzixi3w==
-X-Virus-Scanned: by MailRoute
-Received: from 001.lax.mailroute.net ([127.0.0.1])
- by localhost (001.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9S9ba-RE9LAW; Wed, 27 Nov 2024 21:06:25 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 001.lax.mailroute.net (Postfix) with ESMTPSA id 4XzBnR0q0kzCm9f;
-	Wed, 27 Nov 2024 21:06:18 +0000 (UTC)
-Message-ID: <7835e7e2-2209-4727-ad74-57db09e4530f@acm.org>
-Date: Wed, 27 Nov 2024 13:06:17 -0800
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="nnMzM6j/"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lza9Wtvr5zXGrrrRmSDQPwPojYwubOd/gV2tCB5a8nLe1+e8WMXstK7K5DFZ1wap0SxCcl+zIDl7LkxFeiibtonhZZy0KanplXa6d0THmUydcqs0Njpe+s/vwKcl40k5rbiHhlaWsZ7NxfVSzzc8hP0AfQw0LKdjSYgYm9et/Rybgo0NSgk8k/e79Gi1z2I0RJPnnB8w2WgnDPMVo89lxX1bOZiWb1pCPbmP2hGoSi9dq+TwD5yZF/Me86y9I/tiTbcWpznyx/751ysFKVvw66TmuZLOQhnEEGIlim6UC2KvoPS4qxij8yDwvmkGTbt7+y1wNUfulOON0Xmrl4SK5w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tSw02FFKNAOc7K6kJ61rZCoeVh9Kh6b7hmJUJYp+HCo=;
+ b=qHKj/EeAjB2U/huPcFZqf4cZQkbKLELpXdcre+36VE1iFhtK+0D+0zf5KAa+zeK9NN6W0LDS0r5EMTpEhL0oYEYHHQtiaSzib6leW4t29uC817K4ChLMPQI92f2XRqaorSbD7Nu88ps4FRFreENERBfmDjG8kS/MU+H5UtWTR6CMMwxqdFNVeg/9dvEkdxomj3+8PV0TX2k21T7VknXLnCQd6ErSfLodxGUM2Ux/QXl6PW/PZkbH79w6FTeKfVB+K7ubmsj59Dx2caDnFCfWiiPscBLcvUvNAF9TZ4waJmKbeKR9n8iOy+32wTlH57GKbi1m56oGmjWTns6NAfkEqw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tSw02FFKNAOc7K6kJ61rZCoeVh9Kh6b7hmJUJYp+HCo=;
+ b=nnMzM6j/erbYrnhsW4VTr1ge7W0f21Xo+T7/hs9GzvxxQlqcbAt4TQdKCZc6f3iag4Wk+7Ic9xlXGoScfXTIaze49ri9keI/kVh2KONTOt3nruveKhnCLy2JDeiGz45dbW/eJIIXrbuSfpiuMfxB7H1HJBnWsfLzrrDQ9ve3sE+Iakh2t9PXDhfeV1uJKlU1S5yeDN41UYCyDu0bZ5jxbMNzDgyOyc7jNkCs0EKpSymDZjsrLEKxCg5mDqfoYlhWfIA9yMe5sPBqwgohQrBEWXpCOxA4nSH4gKg4IG1JWF+Bb12lVHPZ4PHPBZosug6ZL1FM3Zn6GRbyuq4bDsg5pg==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by DS0PR02MB9570.namprd02.prod.outlook.com (2603:10b6:8:f2::6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.8207.12; Wed, 27 Nov 2024 22:37:05 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df%7]) with mapi id 15.20.8182.018; Wed, 27 Nov 2024
+ 22:37:05 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Cathy Avery <cavery@redhat.com>, "kys@microsoft.com" <kys@microsoft.com>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"wei.liu@kernel.org" <wei.liu@kernel.org>, "haiyangz@microsoft.com"
+	<haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>,
+	"jejb@linux.ibm.com" <jejb@linux.ibm.com>, "linux-hyperv@vger.kernel.org"
+	<linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>
+CC: "bhull@redhat.com" <bhull@redhat.com>, "emilne@redhat.com"
+	<emilne@redhat.com>, "loberman@redhat.com" <loberman@redhat.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>
+Subject: RE: [PATCH v2] scsi: storvsc: Do not flag MAINTENANCE_IN return of
+ SRB_STATUS_DATA_OVERRUN as an error
+Thread-Topic: [PATCH v2] scsi: storvsc: Do not flag MAINTENANCE_IN return of
+ SRB_STATUS_DATA_OVERRUN as an error
+Thread-Index: AQHbQPgUa182hHqRi0C/I7R3exzABLLLttKQ
+Date: Wed, 27 Nov 2024 22:37:04 +0000
+Message-ID:
+ <SN6PR02MB41578E632973F20E13989BFFD4282@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20241127181324.3318443-1-cavery@redhat.com>
+In-Reply-To: <20241127181324.3318443-1-cavery@redhat.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|DS0PR02MB9570:EE_
+x-ms-office365-filtering-correlation-id: a1846126-a378-4d6d-27ce-08dd0f3404df
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|15080799006|461199028|19110799003|8060799006|8062599003|102099032|440099028|3412199025;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?pwGCXL9A+XwpzfGea4NMvI4Xa9aOHlrJSMqhOWwh0nrlu5/+HMzGd5krqLxH?=
+ =?us-ascii?Q?ADTubr7eHiLFLlEyZYqzmIjX+rnldJi1ZFeh5HMuvRdbT+A2jDwp7OMqrPT3?=
+ =?us-ascii?Q?9CiCeGFyGL3wn+wd1OebU2ijUx8qlq6QQBETl3m/aVVa9IcXrhBA5uEXTTmK?=
+ =?us-ascii?Q?aAPxXvfC7vu/zDn6/Wjprv3qdTnHbKt3aDVXREe8L5yE+DNbYd04RiWCXaMJ?=
+ =?us-ascii?Q?jSZ9Y3JfnMf6WPq1Lr0ceyvyjcJqRXvgTEGof/o0qexZJIimgRkssEpjEw+E?=
+ =?us-ascii?Q?KX6fWhvqrZS/dEog8dU/md9qipGVq4HzQyT6uQHMQDPUeK6uWv9+Uqd4m/cp?=
+ =?us-ascii?Q?FK2KTSRbwj4XMEbATFEocco+n+gDLm/vZXwPi7kIUshwrEXjAgpZteGSIAcT?=
+ =?us-ascii?Q?Gu1/yFWoof8AAB+ipEPrOctW13W2WJZpjuXK8iDGhlTGGBvvjtypXsWzbA/B?=
+ =?us-ascii?Q?ozwVr2fjCD1m9SBv05cTr5xyIO5toJAjUNlChUImFgtn3Xj8RMQdgy4uwxJt?=
+ =?us-ascii?Q?zTySEKAmi+QSMkUCfSwheryGsgmYOxt6dEKaDS4/cudjdKl7tTFD7s22z21K?=
+ =?us-ascii?Q?t67wVOKNI7uwi+DU18ur8Z+teVBGQuk+EU5/lfNlk4Y7RaJJuGAPmV2JuOY4?=
+ =?us-ascii?Q?0MBhu6TfUvP/0oogcXUW22NNCBgjb0PsWF04o2WTx90Bkctsg0ZXZqEVWUM/?=
+ =?us-ascii?Q?Q4dj+/p8sCpLVpfTlmJzGZjXac2uwNrZS06/u2MRRdeP0/Idu3UxE6sGksve?=
+ =?us-ascii?Q?CdiQ2FHzH4m3WoquJPnCLKLig25YLa/Y+8vQ7z9JXJkwzFhieBAWRz4vHDWI?=
+ =?us-ascii?Q?RQy0Fy4rxZ/7PQQ9ZtsLDmeuDz29+XoCs6MeYq9dhzxb/UOHCvdLltXD8zWO?=
+ =?us-ascii?Q?iX/NYDaX7PUuGKmErPsipIJ9qKfi2uttbJOZtEfEvgHI6BGXOBfDrh3Cayjb?=
+ =?us-ascii?Q?tQskz4GTCbnwmg/OlXdEv2dVE35T6Alm6eBI5yeIkSnSik8DGaqLxSwKIXMu?=
+ =?us-ascii?Q?cEFFLtX618AJ8arm1bJx1PSWUg=3D=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?RQBIu02Czqp0kzyVPWNAk0J8gfmG7M84Q9YqH+lswQLDWWG+mn35NTqWfGMF?=
+ =?us-ascii?Q?V8qilrDxwc0+K/94GX4tjG5Q00LBf+4zv0ZcXR3J6SoHipc5N/Hcg5jhUUoA?=
+ =?us-ascii?Q?sfJmBXSBtQeJ5g0w0UrNwnAPivo0NK1g1YHjWNGdGrNlOMdcgsKKttwNbKSH?=
+ =?us-ascii?Q?KDvcd/T69+2mmrq3/2ZF4aE2/jiAjRDoWegHiRaCKKUUBcRsrMOpYYS2PFo9?=
+ =?us-ascii?Q?44zVxzBH+m+jgQuf3T7uGG7a7ogTvZBHAioc9DaiUzCeDD0sK4AYI5Dd8L0r?=
+ =?us-ascii?Q?OepzsgIaONxnvtAXWjMfedYC9z7hVbTLACrWOPrqu837o6+dHP2lOxfPumL4?=
+ =?us-ascii?Q?BT3P3d+9hCxYq+FD+xCKtB4PFoB7mRrB4T1JMG8BldGzFgkoSHN7ZvQDnQwR?=
+ =?us-ascii?Q?ffh3/882kEhcG+g6zZD0cgiUUVTlkHaKtaueYVa9HDuHTQmMjfx50sUl2BLM?=
+ =?us-ascii?Q?iP/9PRdgznAnVs3sjBtB662Ktn4VmlUG2mBn4wP5sXRwdXVBXxaPsDgr/aSu?=
+ =?us-ascii?Q?65AjB/RvjghdfhBnQ0hWhYy+jYMMGZh6w+Q1/Ww47VzlnP4Pbs+3M90Ur8rn?=
+ =?us-ascii?Q?B4tViP133bsvI1SM9f5jvqz388cMAiqYnJE+SUIaEg2mVqO1RKas+PJKqg4I?=
+ =?us-ascii?Q?c6Xqj30fQOAmVX1S/G/6TRAE9Hkc2IhLhCcLo5ZmaEGC2zjZ1UCckDqrvUsF?=
+ =?us-ascii?Q?H71An6OG7R/9IGlMFG2WtWCsIQB8Y0EIxX+GnRLE82/0VDpS6WbWTtQCVOHp?=
+ =?us-ascii?Q?X2aVCLZ9moENDbCYdovIjUSI/BkmTgyf/dZD1WV7tmyHpzJb8nvSdMifHVGI?=
+ =?us-ascii?Q?lsy2UCPoiou+fpcq4AuJCuiWfvCw2QoGTxysIGNZnObHPw9daJ9TJWCmEaV1?=
+ =?us-ascii?Q?CryRNJHWWwitjWeVuQJ4Lj2AhEqJT2XQSWvSbtBkdI6lcCh8jgHi5tUUwgvk?=
+ =?us-ascii?Q?RIQ9oa/MoufNEUN9PXGYJK4pph/QQphaZUyX2OSedx0Foo4Z7d43e7XhcIKr?=
+ =?us-ascii?Q?TNYpGf4ZDwXfI4ZuDSrNGv+dW0cUMTT0KfwD/anzneTZo1r4x+Jkg7P3yngm?=
+ =?us-ascii?Q?enz5C4mopHNItucPfKNzAAshfnppSQWPvkqx3snn7LnDQt6F0ANrDxJ6dIVc?=
+ =?us-ascii?Q?u6/gZiwI/szrQ3pQ4lzcdUccS7tQeammvpog5DMoh1hSWyuB36PJFgUituPG?=
+ =?us-ascii?Q?dsbwq7ErGcS14ruqnGYraMrRgSUXBtZ8hIxQ+U0wK9aXAcvKE82HgdvRnCo?=
+ =?us-ascii?Q?=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Nitesh Shetty <nj.shetty@samsung.com>,
- Javier Gonzalez <javier.gonz@samsung.com>,
- Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
- "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "joshi.k@samsung.com" <joshi.k@samsung.com>
-References: <20241105155014.GA7310@lst.de> <Zy0k06wK0ymPm4BV@kbusch-mbp>
- <20241108141852.GA6578@lst.de> <Zy4zgwYKB1f6McTH@kbusch-mbp>
- <CGME20241108165444eucas1p183f631e2710142fbbc7dee9300baf77a@eucas1p1.samsung.com>
- <Zy5CSgNJtgUgBH3H@casper.infradead.org>
- <d7b7a759dd9a45a7845e95e693ec29d7@CAMSVWEXC02.scsc.local>
- <2b5a365a-215a-48de-acb1-b846a4f24680@acm.org>
- <20241111093154.zbsp42gfiv2enb5a@ArmHalley.local>
- <a7ebd158-692c-494c-8cc0-a82f9adf4db0@acm.org>
- <20241112135233.2iwgwe443rnuivyb@ubuntu>
- <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com>
- <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
- <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
- <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org>
- <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1846126-a378-4d6d-27ce-08dd0f3404df
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Nov 2024 22:37:05.0569
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR02MB9570
 
-On 11/27/24 12:14 PM, Martin K. Petersen wrote:
-> Once I had support for token-based copy offload working, it became clear
-> to me that this approach is much simpler than pointer matching, bio
-> pairs, etc. The REQ_OP_COPY_IN operation and the REQ_OP_COPY_OUT
-> operation are never in flight at the same time. There are no
-> synchronization hassles, no lifetimes, no lookup tables in the sd
-> driver, no nonsense. Semantically, it's a read followed by a write.
+From: Cathy Avery <cavery@redhat.com> Sent: Wednesday, November 27, 2024 10=
+:13 AM
+>=20
+> This patch partially reverts
+>=20
+> 	commit 812fe6420a6e789db68f18cdb25c5c89f4561334
+> 	Author: Michael Kelley <mikelley@microsoft.com>
+> 	Date:   Fri Aug 25 10:21:24 2023 -0700
+>=20
+> 	scsi: storvsc: Handle additional SRB status values
+>=20
+> HyperV does not support MAINTENANCE_IN resulting in FC passthrough
+> returning the SRB_STATUS_DATA_OVERRUN value. Now that
+> SRB_STATUS_DATA_OVERRUN
+> is treated as an error multipath ALUA paths go into a faulty state as mul=
+tipath
+> ALUA submits RTPG commands via MAINTENANCE_IN.
+>=20
+> [    3.215560] hv_storvsc 1d69d403-9692-4460-89f9-a8cbcc0f94f3:
+> tag#230 cmd 0xa3 status: scsi 0x0 srb 0x12 hv 0xc0000001
+> [    3.215572] scsi 1:0:0:32: alua: rtpg failed, result 458752
+>=20
+> MAINTENANCE_IN now returns success to avoid the error path as
+> is currently done with INQUIRY and MODE_SENSE.
+>=20
+> Suggested-by: Michael Kelley <mhklinux@outlook.com>
+> Signed-off-by: Cathy Avery <cavery@redhat.com>
+> ---
+> Changes since v1:
+> - Handle error and logging by returning success as previously
+>   done with INQUIRY and MODE_SENSE [Michael Kelley].
+> ---
+>  drivers/scsi/storvsc_drv.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 7ceb982040a5..d0b55c1fa908 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -149,6 +149,8 @@ struct hv_fc_wwn_packet {
+>  */
+>  static int vmstor_proto_version;
+>=20
+> +static bool hv_dev_is_fc(struct hv_device *hv_dev);
+> +
+>  #define STORVSC_LOGGING_NONE	0
+>  #define STORVSC_LOGGING_ERROR	1
+>  #define STORVSC_LOGGING_WARN	2
+> @@ -1138,6 +1140,7 @@ static void storvsc_on_io_completion(struct storvsc=
+_device
+> *stor_device,
+>  	 * not correctly handle:
+>  	 * INQUIRY command with page code parameter set to 0x80
+>  	 * MODE_SENSE command with cmd[2] =3D=3D 0x1c
+> +	 * MAINTENANCE_IN is not supported by HyperV FC passthrough
+>  	 *
+>  	 * Setup srb and scsi status so this won't be fatal.
+>  	 * We do this so we can distinguish truly fatal failues
+> @@ -1145,7 +1148,9 @@ static void storvsc_on_io_completion(struct storvsc=
+_device
+> *stor_device,
+>  	 */
+>=20
+>  	if ((stor_pkt->vm_srb.cdb[0] =3D=3D INQUIRY) ||
+> -	   (stor_pkt->vm_srb.cdb[0] =3D=3D MODE_SENSE)) {
+> +	   (stor_pkt->vm_srb.cdb[0] =3D=3D MODE_SENSE) ||
+> +	   (stor_pkt->vm_srb.cdb[0] =3D=3D MAINTENANCE_IN &&
+> +	   hv_dev_is_fc(device))) {
+>  		vstor_packet->vm_srb.scsi_status =3D 0;
+>  		vstor_packet->vm_srb.srb_status =3D SRB_STATUS_SUCCESS;
+>  	}
+> --
+> 2.42.0
 
-What if the source LBA range does not require splitting but the
-destination LBA range requires splitting, e.g. because it crosses a
-chunk_sectors boundary? Will the REQ_OP_COPY_IN operation succeed in
-this case and the REQ_OP_COPY_OUT operation fail? Does this mean that a
-third operation is needed to cancel REQ_OP_COPY_IN operations if the
-REQ_OP_COPY_OUT operation fails?
-
-Additionally, how to handle bugs in REQ_OP_COPY_* submitters where a
-large number of REQ_OP_COPY_IN operations is submitted without
-corresponding REQ_OP_COPY_OUT operation? Is perhaps a mechanism required
-to discard unmatched REQ_OP_COPY_IN operations after a certain time?
-
-> Aside from making things trivially simple, the COPY_IN/COPY_OUT semantic
-> is a *requirement* for token-based offload devices.
-
-Hmm ... we may each have a different opinion about whether or not the 
-COPY_IN/COPY_OUT semantics are a requirement for token-based copy
-offloading.
-
-Additionally, I'm not convinced that implementing COPY_IN/COPY_OUT for
-ODX devices is that simple. The COPY_IN and COPY_OUT operations have
-to be translated into three SCSI commands, isn't it? I'm referring to
-the POPULATE TOKEN, RECEIVE ROD TOKEN INFORMATION and WRITE USING TOKEN
-commands. What is your opinion about how to translate the two block
-layer operations into these three SCSI commands?
-
-> Why would we even consider having two incompatible sets of copy
-> offload semantics coexist in the block layer?
-I am not aware of any proposal to implement two sets of copy operations
-in the block layer. All proposals I have seen so far involve adding a
-single set of copy operations to the block layer. Opinions differ
-however about whether to add a single copy operation primitive or
-separate IN and OUT primitives.
-
-Thanks,
-
-Bart.
-
-
-
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
