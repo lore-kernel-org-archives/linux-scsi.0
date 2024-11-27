@@ -1,134 +1,167 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B14C1FBEBE
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Nov 2024 18:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E027F20102D;
+	Wed, 27 Nov 2024 18:42:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732731218; cv=none; b=WTVWnKIkCBxfj1f9l6Nvf2oxDEUFQC5bSBKWBbK5uFhoK8vz0ZPWbjdgN61k0jEb2cARV1aC2tadjPBF5y+Ja0IPN9RjxmjZtwyRERAWGiloRkBXyKRG9sVpfry+TWpW9/8seRt0HtoCdOb3OesLsWrzjzKEjJ724Gr0IiklVyM=
+	t=1732732970; cv=none; b=Y5kEoVB3UIsrQSeeLsOswpb3+HlLPI23l1dEpnB56NTzC+/DzRiucBNcg/FBjn/IkOPzXd2kqGywn/EdBdsYr1mkbiNj3fKpiYVEc8kBjg/Fwa4tS6na62Hmz8DeiJgjUuGGf6TKiyzSvbd3ol1CizZKb4jFrf0RgH9j8sySv+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732731218; c=relaxed/simple;
-	bh=uCK/oSvqKJse6UZiS4QNw7GTSY59CPZ6FRheoY3Jwjg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h4BXTYpiQi2h8nhZI3M4nyCLmTvrB8IJ12jclKcWrFJ3KZj15sqnfuoGaD10ipj+EZ9QPBQ4NXTtJbpCcvVpVD5tYtmk3tm/auPN65WnBHlG9KsuewLoL8rXp88knDlekieptLfaUKA4RcZb/YJSfbcNFVQ1QH5NXS9L4IMhaqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FKGIP4WY; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1732732970; c=relaxed/simple;
+	bh=0Zz7daY/ckin9t0dZo+dfCS6qt5Sj8Q0wzVIPJ1JSN4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GBSAf6G4bD6VUZ3xQXom9Ha5HH6wE2RryjnacSHL+LYfI1oxfkK8OlrRAQschj5JOau/Qo9zUmlODnCakoTedCUwDrgxtOUtDIIvu6h5QOWhs8jR3NGi+z1jJm2ALJypYyNPETcvT0zCtCuXzen2qkpN3UQaUDa381nccjuw/S0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KxeChMC2; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FKGIP4WY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1732731215;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=bBLKMV5jpNDuJoQl4/1hOw5nZa8O963JZs4hwXdVXR4=;
-	b=FKGIP4WYWf2BqL3Sb+6B1zxI7w54xZxjl187rtw8oRSYQlRbCAXt2yidgHplOEJNP6LnE+
-	0xSCFi0kHXvEoRiYV74nq629hPqr0LG3dne2+PzF+i2Wt4tmuVe2KoZ6zmWAiRr90qQkyq
-	X/El9OSTTOXjvu1NElqZzRIRb5qD42M=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-374-NRDJlUbdOtKuuTsUwaJxTg-1; Wed,
- 27 Nov 2024 13:13:32 -0500
-X-MC-Unique: NRDJlUbdOtKuuTsUwaJxTg-1
-X-Mimecast-MFC-AGG-ID: NRDJlUbdOtKuuTsUwaJxTg
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KxeChMC2"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Xz7br15XmzlgMVS;
+	Wed, 27 Nov 2024 18:42:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1732732959; x=1735324960; bh=0rD1vtjL8fA5reiZaZ8j1ACA
+	Zb6Pm8Jn43c0lhEXs8E=; b=KxeChMC2mhubsbiQVFc53lsKnxnkqs0K7jWNUosX
+	bmQ8igiKF8XIAHggFcaQL28GCe41Zmk+f5hlSn8mUB3Ovr42fxV7JN7LSBN/puyr
+	H6aDv8BehjS+I65ROCXdGDtwAwV0DTN2FBsyP30tYm2KYzcmjkMK2SlxJJpNz4RV
+	G3PfAN3Hp4fuCvkxNhYOfQU2de31Tl5yRf448aSJa0m44wPW+z3hYUJHi8b1HKg1
+	3F7ZYqwaS3vFB9XbSSSXQwsbm4kTvt2uG2T7hTBrgDB6P1LRHVE5kMJ3/aiWB0X9
+	jWTMWh7Mxa/xLAHVQ3jF0Vjz5gWFbPhfdu8nPEFvSu48ig==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id UZScfeYCTww0; Wed, 27 Nov 2024 18:42:39 +0000 (UTC)
+Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4020D1956064;
-	Wed, 27 Nov 2024 18:13:27 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.22.80.211])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D0435195E480;
-	Wed, 27 Nov 2024 18:13:24 +0000 (UTC)
-From: Cathy Avery <cavery@redhat.com>
-To: kys@microsoft.com,
-	martin.petersen@oracle.com,
-	wei.liu@kernel.org,
-	haiyangz@microsoft.com,
-	decui@microsoft.com,
-	jejb@linux.ibm.com,
-	mhklinux@outlook.com,
-	linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: bhull@redhat.com,
-	emilne@redhat.com,
-	loberman@redhat.com,
-	vkuznets@redhat.com
-Subject: [PATCH v2] scsi: storvsc: Do not flag MAINTENANCE_IN return of SRB_STATUS_DATA_OVERRUN as an error
-Date: Wed, 27 Nov 2024 13:13:24 -0500
-Message-ID: <20241127181324.3318443-1-cavery@redhat.com>
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Xz7bb3FMFzlgT1K;
+	Wed, 27 Nov 2024 18:42:35 +0000 (UTC)
+Message-ID: <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org>
+Date: Wed, 27 Nov 2024 10:42:34 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Nitesh Shetty <nj.shetty@samsung.com>,
+ Javier Gonzalez <javier.gonz@samsung.com>,
+ Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+ "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+ "joshi.k@samsung.com" <joshi.k@samsung.com>
+References: <20241105155014.GA7310@lst.de> <Zy0k06wK0ymPm4BV@kbusch-mbp>
+ <20241108141852.GA6578@lst.de> <Zy4zgwYKB1f6McTH@kbusch-mbp>
+ <CGME20241108165444eucas1p183f631e2710142fbbc7dee9300baf77a@eucas1p1.samsung.com>
+ <Zy5CSgNJtgUgBH3H@casper.infradead.org>
+ <d7b7a759dd9a45a7845e95e693ec29d7@CAMSVWEXC02.scsc.local>
+ <2b5a365a-215a-48de-acb1-b846a4f24680@acm.org>
+ <20241111093154.zbsp42gfiv2enb5a@ArmHalley.local>
+ <a7ebd158-692c-494c-8cc0-a82f9adf4db0@acm.org>
+ <20241112135233.2iwgwe443rnuivyb@ubuntu>
+ <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com>
+ <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
+ <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This patch partially reverts
+On 11/26/24 6:54 PM, Martin K. Petersen wrote:
+> Bart wrote:
+>> There are some strong arguments in this thread from May 2024 in favor of
+>> representing the entire copy operation as a single REQ_OP_ operation:
+>> https://lore.kernel.org/linux-block/20240520102033.9361-1-nj.shetty@samsung.com/
+> 
+> As has been discussed many times, a copy operation is semantically a
+> read operation followed by a write operation. And, based on my
+> experience implementing support for both types of copy offload in Linux,
+> what made things elegant was treating the operation as a read followed
+> by a write throughout the stack. Exactly like the token-based offload
+> specification describes.
 
-	commit 812fe6420a6e789db68f18cdb25c5c89f4561334
-	Author: Michael Kelley <mikelley@microsoft.com>
-	Date:   Fri Aug 25 10:21:24 2023 -0700
+Submitting a copy operation as two bios or two requests means that there 
+is a risk that one of the two operations never reaches the block driver
+at the bottom of the storage stack and hence that a deadlock occurs. I
+prefer not to introduce any mechanisms that can cause a deadlock.
 
-	scsi: storvsc: Handle additional SRB status values
+As one can see here, Damien Le Moal and Keith Busch both prefer to
+submit copy operations as a single operation: Keith Busch, Re: [PATCH
+v20 02/12] Add infrastructure for copy offload in block and request
+layer, linux-block mailing list, 2024-06-24 
+(https://lore.kernel.org/all/Znn6C-C73Tps3WJk@kbusch-mbp.dhcp.thefacebook.com/).
 
-HyperV does not support MAINTENANCE_IN resulting in FC passthrough
-returning the SRB_STATUS_DATA_OVERRUN value. Now that SRB_STATUS_DATA_OVERRUN
-is treated as an error multipath ALUA paths go into a faulty state as multipath
-ALUA submits RTPG commands via MAINTENANCE_IN.
+>> Token-based copy offloading (called ODX by Microsoft) could be
+>> implemented by maintaining a state machine in the SCSI sd driver
+> 
+> I suspect the SCSI maintainer would object strongly to the idea of
+> maintaining cross-device copy offload state and associated object
+> lifetime issues in the sd driver.
 
-[    3.215560] hv_storvsc 1d69d403-9692-4460-89f9-a8cbcc0f94f3:
-tag#230 cmd 0xa3 status: scsi 0x0 srb 0x12 hv 0xc0000001
-[    3.215572] scsi 1:0:0:32: alua: rtpg failed, result 458752
+Such information wouldn't have to be maintained inside the sd driver. A
+new kernel module could be introduced that tracks the state of copy
+operations and that interacts with the sd driver.
 
-MAINTENANCE_IN now returns success to avoid the error path as
-is currently done with INQUIRY and MODE_SENSE.
+>> I'm assuming that the IMMED bit will be set to zero in the WRITE USING
+>> TOKEN command. Otherwise one or more additional RECEIVE ROD TOKEN
+>> INFORMATION commands would be required to poll for the WRITE USING TOKEN
+>> completion status.
+> 
+> What would the benefit of making WRITE USING TOKEN be a background
+> operation? That seems like a completely unnecessary complication.
 
-Suggested-by: Michael Kelley <mhklinux@outlook.com>
-Signed-off-by: Cathy Avery <cavery@redhat.com>
----
-Changes since v1:
-- Handle error and logging by returning success as previously
-  done with INQUIRY and MODE_SENSE [Michael Kelley].
----
- drivers/scsi/storvsc_drv.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+If a single copy operation takes significantly more time than the time
+required to switch between power states, power can be saved by using
+IMMED=1. Mechanisms like run-time power management (RPM) or the UFS host
+controller auto-hibernation mechanism can only be activated if no
+commands are in progress. With IMMED=0, the link between the host and
+the storage device will remain powered as long as the copy operation is
+in progress. With IMMED=1, the link between the host and the storage
+device can be powered down after the copy operation has been submitted
+until the host decides to check whether or not the copy operation has
+completed.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 7ceb982040a5..d0b55c1fa908 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -149,6 +149,8 @@ struct hv_fc_wwn_packet {
- */
- static int vmstor_proto_version;
- 
-+static bool hv_dev_is_fc(struct hv_device *hv_dev);
-+
- #define STORVSC_LOGGING_NONE	0
- #define STORVSC_LOGGING_ERROR	1
- #define STORVSC_LOGGING_WARN	2
-@@ -1138,6 +1140,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 	 * not correctly handle:
- 	 * INQUIRY command with page code parameter set to 0x80
- 	 * MODE_SENSE command with cmd[2] == 0x1c
-+	 * MAINTENANCE_IN is not supported by HyperV FC passthrough
- 	 *
- 	 * Setup srb and scsi status so this won't be fatal.
- 	 * We do this so we can distinguish truly fatal failues
-@@ -1145,7 +1148,9 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 	 */
- 
- 	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
--	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
-+	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE) ||
-+	   (stor_pkt->vm_srb.cdb[0] == MAINTENANCE_IN &&
-+	   hv_dev_is_fc(device))) {
- 		vstor_packet->vm_srb.scsi_status = 0;
- 		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
- 	}
--- 
-2.42.0
+>> I guess that the block layer maintainer wouldn't be happy if all block
+>> drivers would have to deal with three or four phases for copy
+>> offloading just because ODX is this complicated.
+> 
+> Last I looked, EXTENDED COPY consumed something like 70 pages in the
+> spec. Token-based copy is trivially simple and elegant by comparison.
 
+I don't know of any storage device vendor who has implemented all
+EXTENDED COPY features that have been standardized. Assuming that 50
+lines of code fit on a single page, here is an example of an EXTENDED
+COPY implementation that can be printed on 21 pages of paper:
+$ wc -l drivers/target/target_core_xcopy.c
+  1041
+$ echo $(((1041 + 49) / 50))
+21
+
+The advantages of EXTENDED COPY over ODX are as follows:
+- EXTENDED COPY is a single SCSI command and hence better suited for
+   devices with a limited queue depth. While the UFS 3.0 standard
+   restricts the queue depth to 32, most UFS 4.0 devices support a
+   queue depth of 64.
+- The latency of setting up a copy command with EXTENDED COPY is
+   lower since only a single command has to be sent to the device.
+   ODX requires three round-trips to the device (assuming IMMED=0).
+- EXTENDED COPY requires less memory in storage devices. Each ODX
+   token occupies some memory and the rules around token lifetimes
+   are nontrivial.
+
+Thanks,
+
+Bart.
