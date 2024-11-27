@@ -1,47 +1,47 @@
-Received: from smtpbg151.qq.com (smtpbg151.qq.com [18.169.211.239])
+Received: from smtpbg156.qq.com (smtpbg156.qq.com [15.184.82.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C977A9463;
-	Wed, 27 Nov 2024 13:54:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.169.211.239
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B54FF1FE44E;
+	Wed, 27 Nov 2024 14:05:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=15.184.82.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732715669; cv=none; b=BKIYh/yQDGOVf/WpI6jttQAY13gRdrnIPevkN5Ewl7zdaaYoLnHA4nzbWjgpTDuDgZ3v3HVIxF79rMKs6ciGoT4sPOMnN/5z6THNBJkPTn7Yyo5lMWXj4tYTDIWGzwZ3oUOZhYiaMbhsngKUdhfkEKIlOdKP4bE6HN9sBLsiJDU=
+	t=1732716367; cv=none; b=k86T95c1btjBrmChXkg3aIMQJGNlGGKlOoTKpx+dAgJSOnYoalDOcDNdYvFBd1P/vyKe2AhaZOFG0ExKEdusypO/s3Gs2x+n+kgADTN5y8UHaH4C/HmSgcP/XFf80W+QVQMzTsm4DZdcuA7HhVqqIt5zkSeBu4kKx+r9yv/vDmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732715669; c=relaxed/simple;
-	bh=Aqw4szN02PG8dHOxpyuuU4c0ytj2/nLiRBeIS61po1A=;
+	s=arc-20240116; t=1732716367; c=relaxed/simple;
+	bh=hl7pSD6Va2jGqRKBmvbTdZ0ciQe7LWwiApySQUTIuvo=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ISkS3MpiRxCHYch0aMSDZGGyfMDWIUN6VYpY2u6BUwDQvMEnCFHnTq7VNWmQt0pY1cQ92l6aMuRNk7ttdiRGW/RekMwMyKCz0w4ssgdcqzLeHodauKJvTZNq0dMhcEhFakxS9S6kcSfQdcIDjAYWHZ3U3LEuXDo5mTJY5G8D9ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=j8TLGYKq; arc=none smtp.client-ip=18.169.211.239
+	 MIME-Version:Content-Type; b=kHl0I85QKh6sX3qyxWJTKKY5c+JSZpgmhlgpaXJoU6a/jEk21SCHLkd0kVC/6JyN3jg+rUAc8SJfJ+zclOoKT2zAft0+axpvd/1DxYDw3T9lfxCLFleZVt91DJyYPrCrqIxc3Zb1o7ThV4rD/dz15SVq5dizSEqqeOGB8CfpKyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=Cw7SGPTs; arc=none smtp.client-ip=15.184.82.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="j8TLGYKq"
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="Cw7SGPTs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1732715619;
-	bh=hhWzNR/51JZI1UYeGWf5oAGKUhNQnvHe6OwnE3nLtxo=;
+	s=onoh2408; t=1732716303;
+	bh=lpUbe2iEsrUtD+K5F9y6D/Hf9UaLdV/dPn5S7BDZQhg=;
 	h=Date:From:To:Subject:Message-ID:MIME-Version;
-	b=j8TLGYKqGwyLInbcJqujcXtrGVQeYWCss+yBDKdeF+gf3xtJpQ5Qxuc2iE9LjFfnE
-	 m8A4F82AETKsT5rm8OBHa54RGIZM0JFMyPYToVc9FoqXwmcNYeZWy0YXyX37I+VKYX
-	 AE7sAQPYKPWv9D0mvzeetMCm37pogyyzNC9ozBk8=
-X-QQ-mid: bizesmtpip2t1732715615tfe6msh
-X-QQ-Originating-IP: 5//ZsfN8GJuQpPxWAmHlF7FZkgXH2FNP1pNhxmgpZXE=
+	b=Cw7SGPTsUlgHMOjE5hqeswDJUjGNiypvJ0beooRjY6NzvRoIoSynJNq5UUTxeJh07
+	 QXPqHPQ4R0kZ1Dm7CmEPN8au2PN+H5gEV2tg2wpLEQ5m+0zRgNlNCJQbT3IT2e85do
+	 4lWzSyLOPc9jX6pOVRrowJCzX4SyqBMIAlm5SvW8=
+X-QQ-mid: bizesmtpip2t1732716296tq0sm4o
+X-QQ-Originating-IP: 6G/NEyDYBKCNIRtbsqGJy8MY0E1haWqHzGi0uC6UhiU=
 Received: from john-PC ( [localhost])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 27 Nov 2024 21:53:33 +0800 (CST)
+	id ; Wed, 27 Nov 2024 22:04:55 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 13632265027764339069
-Date: Wed, 27 Nov 2024 21:53:30 +0800
+X-BIZMAIL-ID: 11257385633280249915
+Date: Wed, 27 Nov 2024 22:04:37 +0800
 From: Qiang Ma <maqianga@uniontech.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- axboe@kernel.dk, dwagner@suse.de, ming.lei@redhat.com, hare@suse.de,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+ axboe@kernel.dk, dwagner@suse.de, hare@suse.de, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] scsi: Don't wait for completion of in-flight requests
-Message-ID: <3472C3D5E7A545A1+20241127215330.493f9690@john-PC>
-In-Reply-To: <7c95b86b-68a0-41f8-a09c-3cb4b06fe61a@oracle.com>
+Message-ID: <2100C70C0D4CA64E+20241127220437.65ae99dd@john-PC>
+In-Reply-To: <Z0XX5ts2yTO7Frl8@fedora>
 References: <20241126115008.31272-1-maqianga@uniontech.com>
-	<7c95b86b-68a0-41f8-a09c-3cb4b06fe61a@oracle.com>
+	<Z0XX5ts2yTO7Frl8@fedora>
 Organization: UOS
 X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 Precedence: bulk
@@ -54,28 +54,29 @@ Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 X-QQ-SENDSIZE: 520
 Feedback-ID: bizesmtpip:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4a-0
-X-QQ-XMAILINFO: MV3QjUGSBBpe2dB3AGQuv1cl+fqjah7MmWcpVuyfdnaamrrvCgqz5bJR
-	CQq36ExtkTOvtjItC1b8TkeMVW7NZ10jBkOcML6C/iH2dp7/up+/aXoLy6iLLtWbvCXv2DT
-	I91PkKrJSdMZMW0bg6LK/KwwOR4enor3Qh62UuT8TJS+eBmKn1ayILyahLLqh90dj/I5kY6
-	V7GAFPBfgzutprk6sQeW9tCtpaFsT+8UaHwk/gKnTfbMbFnr7ps3xyCjI6jVJG1HzuPESWR
-	hTfyPA/3OvQPHtyUAQAM/YErgdYJwKUHZvCLWUNRBsYHT3H7+Szt3pwnn2o96dqQtR8GluT
-	9Msrn7csQvB+i6YfQE71jSoED0FTQehv5dlBypFDauKqDO5gCbOxfTW9OkfuYcX5bT+c4KF
-	myKW7sJh5Hbf0qs4+fv30VEMwAeYk+u/fU7QX9fTw8wFTT/Wn7zzS/4vhXCQNc3upb6THvC
-	N//mEuP2a0e7nzwJuNgORkmWi3GzjYsu7+piUVRXPLk1zoDyge78c38ude0RLtD+xc+JenX
-	dF5oqUvQzFzGYZ0O3vPCZrS1TSiOvJXlbdfIGCL6knRfKlCggg+pGuHK04QyiN4R8ZbWh1n
-	zCku3U+WGfvZ0lkBOBiMvjdtfqRhxFgEe/MPI2oDFQpRodlFUOPdW5R54ZqetlQV61OJA3y
-	wORiiLKLTmCeSFIqdbrh+bskPxFMyQj32mtwbViVthscEZZg+EyafzFQ6epSNkdRt7tR6e/
-	5z/Oi53hT8Z5ZcHkLOl95ukRoy4vxmUALsJnwqD6Ak9BocMvYi7pZ7OI2L3ie+O0+yQ28C+
-	5C+O044Lqlhx/OtK3RpEcf7XMDt9YZaRm9UrnAPPTZsq7NBOJMsP1OMg86SM44ZQBvgOLOZ
-	L0dAJoVevSaDq/0i6/c5oojetKB6Gch4c2fNpJb1CqQSOYypSDiaVZ1OZIfFAtI9hOkInPi
-	n+6Q=
-X-QQ-XMRINFO: OWPUhxQsoeAVDbp3OJHYyFg=
+X-QQ-XMAILINFO: Mvv6JxatWTxOSRmhP7JMgzgavZD0f53HUEeJB2hcQvrlBqsxhpK6+9dF
+	ZFcz4rHRZWIFcF1bVXH+B5JYfzO1U/TDT00TwNpyxwgTKE0czWY8elDpqopmDilDv+HfELp
+	JLIjyvxyGjZAvh2s3sJ5khuSEGnfyHbnEIKPIl7SF5awfGoGJI6px3HlIzgqimF181cpb8P
+	EGS5YsoYHn1vQF3OhAF5iFWJBUDVRQqUBSGcCgiKz9xnOlKvnPiOYiX1YRMOTf8U486LVup
+	2Nd4xfWfwPsXfeljXPGTcF84rA1ESgywNncYp2j7bsRN21TxKTaNVYkD4szraOxiSHHh0JQ
+	cXVRGMlmb2V59n3od55wXyzAeVCyFvhpPd9w0HdaRehw5W4tiI8Fu6fCcaFUmPKWWqC6vTr
+	/mYM/G3tWebIOwaw+3YN792QrYsahHGKbcO3pIBKsgiPtnzeaUAh77+0A0mNuPujzf57PpQ
+	pVwkgR0/vU/luwNsZhJjKT18X2WdJNLccOk4Me0thjYYNbdDC8Xs/V5srV9EyS7S7fzBz+a
+	zgfKO6spNuDjgVGo5ukU9j2lkneP0cW57UWEJR5Z7UX5Z14LswtVg3zoP03LE7XfxhuXqqB
+	yV+8falDei8GrN54GcikPv4hqeAYckxMq8uudsZIIsp9Tv50CLSgBr0/UxIOV2c5k1e0bBN
+	f/aWZX/ziN/ytIHj0ixynt/RqDUXQpuMw9xmTN6v20jWH9hQDxzE8ppki5DBDtMQg4x+vEY
+	mb1tNRgNPU0YqOlavPndtdy55dpTta6Yi0M6fZCrthkGKKUUEltaZ8w6xVRA+moOYHjZtgp
+	MOHIeW6gQMNLSpscwbSPftXJcdQz+XX866CQ9mPX0OvtCmfEChaOUkp0Iy4DjlU4GrAlVOx
+	Hp7dGi6TFkLIkH7IaWcYAw/2pd9V3yh4Bi6bWuyG50skF8alP3UUw6Lkj1e/sCzDRRxJ+/W
+	iE25ST0P69ftc10AGED3J2vbY82gPNyHy/n1Nq5EA6IjmdZOtHu8MTh/1+J2Wf0I5KdNKDq
+	+UVe+XaYpJmSRihKgc
+X-QQ-XMRINFO: MPJ6Tf5t3I/ycC2BItcBVIA=
 X-QQ-RECHKSPAM: 0
 
-On Tue, 26 Nov 2024 12:21:24 +0000
-John Garry <john.g.garry@oracle.com> wrote:
+On Tue, 26 Nov 2024 22:15:02 +0800
+Ming Lei <ming.lei@redhat.com> wrote:
 
-> On 26/11/2024 11:50, Qiang Ma wrote:
+> On Tue, Nov 26, 2024 at 07:50:08PM +0800, Qiang Ma wrote:
 > > Problem:
 > > When the system disk uses the scsi disk bus, The main
 > > qemu command line includes:
@@ -171,52 +172,49 @@ John Garry <john.g.garry@oracle.com> wrote:
 > > [  243.275939][  T115]  process_one_work+0x170/0x3c0
 > > [  243.276410][  T115]  worker_thread+0x234/0x3b8
 > > [  243.276855][  T115]  kthread+0xf0/0x108
-> > [  243.277241][  T115]  ret_from_fork+0x10/0x20
-> > 
-> > ftrace finds that it enters an endless loop, code as follows:
-> > 
-> > if (percpu_ref_tryget(&hctx->queue->q_usage_counter)) {
-> > 	while (blk_mq_hctx_has_requests(hctx))
-> > 		msleep(5);
-> > 	percpu_ref_put(&hctx->queue->q_usage_counter);
-> > }
-> > 
-> > Solution:
-> > Refer to the loop and dm-rq in patch commit bf0beec0607d
-> > ("blk-mq: drain I/O when all CPUs in a hctx are offline"),
-> > add a BLK_MQ_F_STACKING and set it for scsi, so we don't need
-> > to wait for completion of in-flight requests  to avoid a potential
-> > hung task.
-> > 
-> > Fixes: bf0beec0607d ("blk-mq: drain I/O when all CPUs in a hctx are
-> > offline")
-> > 
-> > Signed-off-by: Qiang Ma <maqianga@uniontech.com>
-> > ---
-> >   drivers/scsi/scsi_lib.c | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index adee6f60c966..0a2d5d9327fc 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -2065,7 +2065,7 @@ int scsi_mq_setup_tags(struct Scsi_Host
-> > *shost) tag_set->queue_depth = shost->can_queue;
-> >   	tag_set->cmd_size = cmd_size;
-> >   	tag_set->numa_node = dev_to_node(shost->dma_dev);
-> > -	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
-> > +	tag_set->flags = BLK_MQ_F_SHOULD_MERGE |
-> > BLK_MQ_F_STACKING;  
+> > [  243.277241][  T115]  ret_from_fork+0x10/0x20  
 > 
-> This should not be set for all SCSI hosts. Some SCSI hosts rely on 
-> bf0beec0607d.
+> Question is why this scsi command can't be completed?
+> 
+> When blk_mq_hctx_notify_offline() is called, the CPU isn't shutdown
+> yet, and it still can handle interrupt of this SCSI command.
 > 
 > 
-What are the side effects of setting this up for some scsi hosts?
+> Thanks,
+> Ming
+> 
+> 
+Sorry, at the moment I don't know why it can't be finished,
+just provides a solution like loop and dm-rq.
 
-> >   	tag_set->flags |=
-> >   		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
-> >   	if (shost->queuecommand_may_block)  
-> 
-> 
+Currently see the call stack:
+ => blk_mq_run_hw_queue
+ =>__blk_mq_sched_restart
+ => blk_mq_run_hw_queue
+ => __blk_mq_sched_restart
+ => __blk_mq_free_request
+ => blk_mq_free_request
+ => blk_mq_end_request
+ => blk_flush_complete_seq
+ => flush_end_io
+ => __blk_mq_end_request
+ => scsi_end_request
+ => scsi_io_completion
+ => scsi_finish_command
+ => scsi_complete
+ => blk_mq_complete_request
+ => scsi_done_internal
+ => scsi_done
+ => virtscsi_complete_cmd
+ => virtscsi_req_done
+ => vring_interrupt
 
+In finction blk_mq_run_hw_queue():
+__blk_mq_run_dispatch_ops(hctx->queue, false,
+	need_run = !blk_queue_quiesced(hctx->queue) &&
+	blk_mq_hctx_has_pending(hctx));
+	
+	if (!need_run)
+		return;
+
+Come here and return directly.
