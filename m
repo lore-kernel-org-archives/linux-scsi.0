@@ -1,143 +1,222 @@
-Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbg151.qq.com (smtpbg151.qq.com [18.169.211.239])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187A41F6664;
-	Wed, 27 Nov 2024 11:23:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C977A9463;
+	Wed, 27 Nov 2024 13:54:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.169.211.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732706600; cv=none; b=qyIzL5yLZ8EuIA6dJNUfvv5JnnsXvWMfge08s8cUUHbpdParKmLkpRKLjnCQsKaWWKuEvk9GU0yICGyhstffYgdqr2YNE3O+E+hL/WAHojY0ikasUQh+eDa52xGLMtBzyj7UFn9ojq/wy2qPwyHBtsPVrwHV/u9Thx7PnU9pFSc=
+	t=1732715669; cv=none; b=BKIYh/yQDGOVf/WpI6jttQAY13gRdrnIPevkN5Ewl7zdaaYoLnHA4nzbWjgpTDuDgZ3v3HVIxF79rMKs6ciGoT4sPOMnN/5z6THNBJkPTn7Yyo5lMWXj4tYTDIWGzwZ3oUOZhYiaMbhsngKUdhfkEKIlOdKP4bE6HN9sBLsiJDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732706600; c=relaxed/simple;
-	bh=jPYE7nUJ0PQxj0TL68kBGwrZJwMQjdjzfszDvmh33UA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=c4b8aDiURTydIf/fCd1M8Gd82aPpg78091vZg1YT1S/sqiBAgWFxeuXPTgpJBHlElTPj01yPOsdbbQdNeCKyPmGm83pliNLkReE+wb0fAl0k9cZ1hwuSmUytg88NNwoFl8wxrw8EQ+VJizLoz2/uDSCxOOTlvRipB0FMwc7/FmA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BNBxFTZH; arc=none smtp.client-ip=209.85.218.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732715669; c=relaxed/simple;
+	bh=Aqw4szN02PG8dHOxpyuuU4c0ytj2/nLiRBeIS61po1A=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ISkS3MpiRxCHYch0aMSDZGGyfMDWIUN6VYpY2u6BUwDQvMEnCFHnTq7VNWmQt0pY1cQ92l6aMuRNk7ttdiRGW/RekMwMyKCz0w4ssgdcqzLeHodauKJvTZNq0dMhcEhFakxS9S6kcSfQdcIDjAYWHZ3U3LEuXDo5mTJY5G8D9ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=j8TLGYKq; arc=none smtp.client-ip=18.169.211.239
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BNBxFTZH"
-Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-a9f1c590ecdso1068462566b.1;
-        Wed, 27 Nov 2024 03:23:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732706597; x=1733311397; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=CehglWY5cUyKQpTdTFxSNmTAz6hCZtKrvb/Ae4vWfPc=;
-        b=BNBxFTZHRkZxBfRsrWIJ9cKC4dPepDwljBsZMoCnC/zw8HQt6vRWT2K4oCAl9yHxHF
-         EBvWo4BPgZeAaLk1r5nSof/WniACOXhk6AkY3z7fVpbo7mEtfRaVghKoAY9MBfzfvyXL
-         5RYio4fVQz8e1FCupMskX1ZP1h3X254VB/vsFVHQD9QKridV6kLRAHf+2y+VcObdVFA9
-         w2xJ3HNEgY9gREEACXk+odOYQtXBUSq7zgOwub3aqNPAutrY91wsFraPRNT0dfb9OhB4
-         yJktSKZ6k5pR6BAvMf28lpQozJEIl3T1dSDwu1HsEb1cjkt2ziGpqIxFuDj/KVqSjo+0
-         uQXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732706597; x=1733311397;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=CehglWY5cUyKQpTdTFxSNmTAz6hCZtKrvb/Ae4vWfPc=;
-        b=nwyUnEL0q8v7AVovDKn8fwyyG5PosKhRZCN63VjE6b+/3uxZBjdRM6hS9620VSJWVL
-         j5TCrXBy28O6TxmqLjuclcYih8rOawUhabd7ZEN4LAYcc04DAELgPGTqgIKUn/6C5gPA
-         EmqPMoW8d/96Cz4JRVViTOevH14h1/vvuPL50GHkkENxbwSAL5slUIu0AX+w4cBaQykI
-         C/k/hSu4tRO00CxsYLBN5fIxJO1yg4sl5HXeXZMg3P2A7xHInQ1fnGOgL+J9s3M82ElS
-         7g1ZwfKeyBMIwlwnhJF0IZa/m9EyDUX+GA5+V3F3okHEhaQxyTNthiFMHbUCOw3thyIq
-         5m7A==
-X-Forwarded-Encrypted: i=1; AJvYcCUbTqGpPgImuTR1QVS1xzPjQGZlt/6xbPSRkVyuuP8ygsaTHzHYnzZVCgJqmQ04lZVE4l9JlKkkY2FWQifzFA==@vger.kernel.org, AJvYcCUt3yYZfzQgNC6ft9dx7ZPedssoX/YSK3q7hiawkHozztDFUkiHAkllZtOWSvk4/xNkmC+YKKV+vPwMlg==@vger.kernel.org, AJvYcCW+ZlibOMZVMUKQRrwW3ciW7OfvC2d7UdKOl5w2wOhmcaXpeKrKIA1HY5spis6l0rP/5UnPkM3nudzjDpI=@vger.kernel.org, AJvYcCXvudKq0MDdYKXIWd8Sc/11s/OoCjSxfZM9uSJJa3Gkkcp7M4Jp5K5yVZjaXG5Ik3UgI0wV7TwOzA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLv5BPQ2dp8BJ8jLZaVuVFMBuKoJ/IhNAN4M+QAWgxAiFZjR4E
-	F254AVM7v0yxI8DYFIAyqm4pu76ioZbLOmIWY/KEdXEb+jYkNpjx
-X-Gm-Gg: ASbGncuDYF9896DyuCBg5rZfpi8/pJLDwDc1B1NL4EVWMQj9yuH6XR+pKA6PNo52+yu
-	TU4I8JlSPRhN3i2mS041Xf3TPowEtBgyYfM8JWTXRus1aTmUSNedAKO94fS33/6YBkublrrfdAM
-	7aLFOpMsICb5iqzKgzvl8FPpiByFf+VYK+/cFaYjz0sZUIIPR5/owcPlyFEwOOreE/Ae99s0ssM
-	8ZxN0zbHDESiKBPw0eDjjWAAZqHEgjUW/9SnUB4RHWSHkFHoO7WstsToBPajQ==
-X-Google-Smtp-Source: AGHT+IFsufWWnsFArYdPuvs9Ad81sVtZ17075H7eNLYpimFeYT75Kvd58Sonb/NBCuJN36c+6qQFJg==
-X-Received: by 2002:a17:906:1da9:b0:aa5:274b:60e9 with SMTP id a640c23a62f3a-aa580f4df12mr158891366b.33.1732706597304;
-        Wed, 27 Nov 2024 03:23:17 -0800 (PST)
-Received: from [192.168.42.127] ([163.114.131.193])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa5372002aasm536402466b.66.2024.11.27.03.23.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Nov 2024 03:23:16 -0800 (PST)
-Message-ID: <6c870f8d-6293-4d4b-be2b-f0e221cd103f@gmail.com>
-Date: Wed, 27 Nov 2024 11:24:03 +0000
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="j8TLGYKq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1732715619;
+	bh=hhWzNR/51JZI1UYeGWf5oAGKUhNQnvHe6OwnE3nLtxo=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version;
+	b=j8TLGYKqGwyLInbcJqujcXtrGVQeYWCss+yBDKdeF+gf3xtJpQ5Qxuc2iE9LjFfnE
+	 m8A4F82AETKsT5rm8OBHa54RGIZM0JFMyPYToVc9FoqXwmcNYeZWy0YXyX37I+VKYX
+	 AE7sAQPYKPWv9D0mvzeetMCm37pogyyzNC9ozBk8=
+X-QQ-mid: bizesmtpip2t1732715615tfe6msh
+X-QQ-Originating-IP: 5//ZsfN8GJuQpPxWAmHlF7FZkgXH2FNP1pNhxmgpZXE=
+Received: from john-PC ( [localhost])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 27 Nov 2024 21:53:33 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 13632265027764339069
+Date: Wed, 27 Nov 2024 21:53:30 +0800
+From: Qiang Ma <maqianga@uniontech.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ axboe@kernel.dk, dwagner@suse.de, ming.lei@redhat.com, hare@suse.de,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: Don't wait for completion of in-flight requests
+Message-ID: <3472C3D5E7A545A1+20241127215330.493f9690@john-PC>
+In-Reply-To: <7c95b86b-68a0-41f8-a09c-3cb4b06fe61a@oracle.com>
+References: <20241126115008.31272-1-maqianga@uniontech.com>
+	<7c95b86b-68a0-41f8-a09c-3cb4b06fe61a@oracle.com>
+Organization: UOS
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 06/10] io_uring: introduce attributes for read/write
- and PI support
-To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
- martin.petersen@oracle.com, anuj1072538@gmail.com, brauner@kernel.org,
- jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
- gost.dev@samsung.com, linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
-References: <20241125070633.8042-1-anuj20.g@samsung.com>
- <CGME20241125071502epcas5p46c373574219a958b565f20732797893f@epcas5p4.samsung.com>
- <20241125070633.8042-7-anuj20.g@samsung.com>
- <2cbbe4eb-6969-499e-87b5-02d19f53258f@gmail.com>
- <20241126135423.GB22537@green245>
- <a9d500a4-2609-4dd6-a687-713ae1472a88@gmail.com>
- <20241127094644.GC22537@green245>
-Content-Language: en-US
-From: Pavel Begunkov <asml.silence@gmail.com>
-In-Reply-To: <20241127094644.GC22537@green245>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtpip:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4a-0
+X-QQ-XMAILINFO: MV3QjUGSBBpe2dB3AGQuv1cl+fqjah7MmWcpVuyfdnaamrrvCgqz5bJR
+	CQq36ExtkTOvtjItC1b8TkeMVW7NZ10jBkOcML6C/iH2dp7/up+/aXoLy6iLLtWbvCXv2DT
+	I91PkKrJSdMZMW0bg6LK/KwwOR4enor3Qh62UuT8TJS+eBmKn1ayILyahLLqh90dj/I5kY6
+	V7GAFPBfgzutprk6sQeW9tCtpaFsT+8UaHwk/gKnTfbMbFnr7ps3xyCjI6jVJG1HzuPESWR
+	hTfyPA/3OvQPHtyUAQAM/YErgdYJwKUHZvCLWUNRBsYHT3H7+Szt3pwnn2o96dqQtR8GluT
+	9Msrn7csQvB+i6YfQE71jSoED0FTQehv5dlBypFDauKqDO5gCbOxfTW9OkfuYcX5bT+c4KF
+	myKW7sJh5Hbf0qs4+fv30VEMwAeYk+u/fU7QX9fTw8wFTT/Wn7zzS/4vhXCQNc3upb6THvC
+	N//mEuP2a0e7nzwJuNgORkmWi3GzjYsu7+piUVRXPLk1zoDyge78c38ude0RLtD+xc+JenX
+	dF5oqUvQzFzGYZ0O3vPCZrS1TSiOvJXlbdfIGCL6knRfKlCggg+pGuHK04QyiN4R8ZbWh1n
+	zCku3U+WGfvZ0lkBOBiMvjdtfqRhxFgEe/MPI2oDFQpRodlFUOPdW5R54ZqetlQV61OJA3y
+	wORiiLKLTmCeSFIqdbrh+bskPxFMyQj32mtwbViVthscEZZg+EyafzFQ6epSNkdRt7tR6e/
+	5z/Oi53hT8Z5ZcHkLOl95ukRoy4vxmUALsJnwqD6Ak9BocMvYi7pZ7OI2L3ie+O0+yQ28C+
+	5C+O044Lqlhx/OtK3RpEcf7XMDt9YZaRm9UrnAPPTZsq7NBOJMsP1OMg86SM44ZQBvgOLOZ
+	L0dAJoVevSaDq/0i6/c5oojetKB6Gch4c2fNpJb1CqQSOYypSDiaVZ1OZIfFAtI9hOkInPi
+	n+6Q=
+X-QQ-XMRINFO: OWPUhxQsoeAVDbp3OJHYyFg=
+X-QQ-RECHKSPAM: 0
 
-On 11/27/24 09:46, Anuj Gupta wrote:
-> On Tue, Nov 26, 2024 at 03:45:09PM +0000, Pavel Begunkov wrote:
->> On 11/26/24 13:54, Anuj Gupta wrote:
->>> On Tue, Nov 26, 2024 at 01:01:03PM +0000, Pavel Begunkov wrote:
->>>> On 11/25/24 07:06, Anuj Gupta wrote:
->>
->> Hmm, I have doubts it's going to work well because the union
->> members have different sizes. Adding a new type could grow
->> struct io_uring_attr, which is already bad for uapi. And it
->> can't be stacked:
->>
+On Tue, 26 Nov 2024 12:21:24 +0000
+John Garry <john.g.garry@oracle.com> wrote:
+
+> On 26/11/2024 11:50, Qiang Ma wrote:
+> > Problem:
+> > When the system disk uses the scsi disk bus, The main
+> > qemu command line includes:
+> > ...
+> > -device virtio-scsi-pci,id=scsi0 \
+> > -device scsi-hd,scsi-id=1,drive=drive-virtio-disk
+> > -drive id=drive-virtio-disk,if=none,file=/home/kvm/test.qcow2
+> > ...
+> > 
+> > The dmesg log is as follows::
+> > 
+> > [   50.304591][ T4382] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+> > [   50.377002][ T4382] kexec_core: Starting new kernel
+> > [   50.669775][  T194] psci: CPU1 killed (polled 0 ms)
+> > [   50.849665][  T194] psci: CPU2 killed (polled 0 ms)
+> > [   51.109625][  T194] psci: CPU3 killed (polled 0 ms)
+> > [   51.319594][  T194] psci: CPU4 killed (polled 0 ms)
+> > [   51.489667][  T194] psci: CPU5 killed (polled 0 ms)
+> > [   51.709582][  T194] psci: CPU6 killed (polled 0 ms)
+> > [   51.949508][   T10] psci: CPU7 killed (polled 0 ms)
+> > [   52.139499][   T10] psci: CPU8 killed (polled 0 ms)
+> > [   52.289426][   T10] psci: CPU9 killed (polled 0 ms)
+> > [   52.439552][   T10] psci: CPU10 killed (polled 0 ms)
+> > [   52.579525][   T10] psci: CPU11 killed (polled 0 ms)
+> > [   52.709501][   T10] psci: CPU12 killed (polled 0 ms)
+> > [   52.819509][  T194] psci: CPU13 killed (polled 0 ms)
+> > [   52.919509][  T194] psci: CPU14 killed (polled 0 ms)
+> > [  243.214009][  T115] INFO: task kworker/0:1:10 blocked for more
+> > than 122 seconds. [  243.214810][  T115]       Not tainted 6.6.0+ #1
+> > [  243.215517][  T115] "echo 0
+> > > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > > [  243.216390][  T115] task:kworker/0:1     state:D stack:0
+> > > pid:10    ppid:2      flags:0x00000008
+> > [  243.217299][  T115] Workqueue: events vmstat_shepherd
+> > [  243.217816][  T115] Call trace:
+> > [  243.218133][  T115]  __switch_to+0x130/0x1e8
+> > [  243.218568][  T115]  __schedule+0x660/0xcf8
+> > [  243.219013][  T115]  schedule+0x58/0xf0
+> > [  243.219402][  T115]  percpu_rwsem_wait+0xb0/0x1d0
+> > [  243.219880][  T115]  __percpu_down_read+0x40/0xe0
+> > [  243.220353][  T115]  cpus_read_lock+0x5c/0x70
+> > [  243.220795][  T115]  vmstat_shepherd+0x40/0x140
+> > [  243.221250][  T115]  process_one_work+0x170/0x3c0
+> > [  243.221726][  T115]  worker_thread+0x234/0x3b8
+> > [  243.222176][  T115]  kthread+0xf0/0x108
+> > [  243.222564][  T115]  ret_from_fork+0x10/0x20
+> > ...
+> > [  243.254080][  T115] INFO: task kworker/0:2:194 blocked for more
+> > than 122 seconds. [  243.254834][  T115]       Not tainted 6.6.0+ #1
+> > [  243.255529][  T115] "echo 0
+> > > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > > [  243.256378][  T115] task:kworker/0:2     state:D stack:0
+> > > pid:194   ppid:2      flags:0x00000008
+> > [  243.257284][  T115] Workqueue: events work_for_cpu_fn
+> > [  243.257793][  T115] Call trace:
+> > [  243.258111][  T115]  __switch_to+0x130/0x1e8
+> > [  243.258541][  T115]  __schedule+0x660/0xcf8
+> > [  243.258971][  T115]  schedule+0x58/0xf0
+> > [  243.259360][  T115]  schedule_timeout+0x280/0x2f0
+> > [  243.259832][  T115]  wait_for_common+0xcc/0x2d8
+> > [  243.260287][  T115]  wait_for_completion+0x20/0x38
+> > [  243.260767][  T115]  cpuhp_kick_ap+0xe8/0x278
+> > [  243.261207][  T115]  cpuhp_kick_ap_work+0x5c/0x188
+> > [  243.261688][  T115]  _cpu_down+0x120/0x378
+> > [  243.262103][  T115]  __cpu_down_maps_locked+0x20/0x38
+> > [  243.262609][  T115]  work_for_cpu_fn+0x24/0x40
+> > [  243.263059][  T115]  process_one_work+0x170/0x3c0
+> > [  243.263533][  T115]  worker_thread+0x234/0x3b8
+> > [  243.263981][  T115]  kthread+0xf0/0x108
+> > [  243.264405][  T115]  ret_from_fork+0x10/0x20
+> > [  243.264846][  T115] INFO: task kworker/15:2:639 blocked for more
+> > than 122 seconds. [  243.265602][  T115]       Not tainted 6.6.0+ #1
+> > [  243.266296][  T115] "echo 0
+> > > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > > [  243.267143][  T115] task:kworker/15:2    state:D stack:0
+> > > pid:639   ppid:2      flags:0x00000008
+> > [  243.268044][  T115] Workqueue: events_freezable_power_
+> > disk_events_workfn [  243.268727][  T115] Call trace:
+> > [  243.269051][  T115]  __switch_to+0x130/0x1e8
+> > [  243.269481][  T115]  __schedule+0x660/0xcf8
+> > [  243.269903][  T115]  schedule+0x58/0xf0
+> > [  243.270293][  T115]  schedule_timeout+0x280/0x2f0
+> > [  243.270763][  T115]  io_schedule_timeout+0x50/0x70
+> > [  243.271245][  T115]  wait_for_common_io.constprop.0+0xb0/0x298
+> > [  243.271830][  T115]  wait_for_completion_io+0x1c/0x30
+> > [  243.272335][  T115]  blk_execute_rq+0x1d8/0x278
+> > [  243.272793][  T115]  scsi_execute_cmd+0x114/0x238
+> > [  243.273267][  T115]  sr_check_events+0xc8/0x310 [sr_mod]
+> > [  243.273808][  T115]  cdrom_check_events+0x2c/0x50 [cdrom]
+> > [  243.274408][  T115]  sr_block_check_events+0x34/0x48 [sr_mod]
+> > [  243.274994][  T115]  disk_check_events+0x44/0x1b0
+> > [  243.275468][  T115]  disk_events_workfn+0x20/0x38
+> > [  243.275939][  T115]  process_one_work+0x170/0x3c0
+> > [  243.276410][  T115]  worker_thread+0x234/0x3b8
+> > [  243.276855][  T115]  kthread+0xf0/0x108
+> > [  243.277241][  T115]  ret_from_fork+0x10/0x20
+> > 
+> > ftrace finds that it enters an endless loop, code as follows:
+> > 
+> > if (percpu_ref_tryget(&hctx->queue->q_usage_counter)) {
+> > 	while (blk_mq_hctx_has_requests(hctx))
+> > 		msleep(5);
+> > 	percpu_ref_put(&hctx->queue->q_usage_counter);
+> > }
+> > 
+> > Solution:
+> > Refer to the loop and dm-rq in patch commit bf0beec0607d
+> > ("blk-mq: drain I/O when all CPUs in a hctx are offline"),
+> > add a BLK_MQ_F_STACKING and set it for scsi, so we don't need
+> > to wait for completion of in-flight requests  to avoid a potential
+> > hung task.
+> > 
+> > Fixes: bf0beec0607d ("blk-mq: drain I/O when all CPUs in a hctx are
+> > offline")
+> > 
+> > Signed-off-by: Qiang Ma <maqianga@uniontech.com>
+> > ---
+> >   drivers/scsi/scsi_lib.c | 2 +-
+> >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index adee6f60c966..0a2d5d9327fc 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -2065,7 +2065,7 @@ int scsi_mq_setup_tags(struct Scsi_Host
+> > *shost) tag_set->queue_depth = shost->can_queue;
+> >   	tag_set->cmd_size = cmd_size;
+> >   	tag_set->numa_node = dev_to_node(shost->dma_dev);
+> > -	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+> > +	tag_set->flags = BLK_MQ_F_SHOULD_MERGE |
+> > BLK_MQ_F_STACKING;  
 > 
-> How about something like this [1]. I have removed the io_uring_attr
-> structure, and with the mask scheme the user would pass attributes in
-> order of their types. Do you still see some cracks?
+> This should not be set for all SCSI hosts. Some SCSI hosts rely on 
+> bf0beec0607d.
+> 
+> 
+What are the side effects of setting this up for some scsi hosts?
 
-Looks good to me
+> >   	tag_set->flags |=
+> >   		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
+> >   	if (shost->queuecommand_may_block)  
+> 
+> 
 
-> --- a/io_uring/rw.c
-> +++ b/io_uring/rw.c
-...
-> +static int io_prep_rw_pi(struct io_kiocb *req, struct io_rw *rw, int ddir,
-> +			 u64 attr_ptr, u64 attr_type_mask)
-> +{
-> +	struct io_uring_attr_pi pi_attr;
-> +	struct io_async_rw *io;
-> +	int ret;
-> +
-> +	if (copy_from_user(&pi_attr, u64_to_user_ptr(attr_ptr),
-> +	    sizeof(pi_attr)))
-> +		return -EFAULT;
-> +
-> +	if (pi_attr.rsvd)
-> +		return -EINVAL;
-> +
-> +	io = req->async_data;
-> +	io->meta.flags = pi_attr.flags;
-> +	io->meta.app_tag = pi_attr.app_tag;
-> +	io->meta.seed = READ_ONCE(pi_attr.seed);
-
-Seems an unnecessary READ_ONCE slipped here
-
-> +	ret = import_ubuf(ddir, u64_to_user_ptr(pi_attr.addr),
-> +			  pi_attr.len, &io->meta.iter);
-> +	if (unlikely(ret < 0))
-> +		return ret;
-> +	rw->kiocb.ki_flags |= IOCB_HAS_METADATA;
-> +	io_meta_save_state(io);
-> +	return ret;
-> +}
-...
-
--- 
-Pavel Begunkov
