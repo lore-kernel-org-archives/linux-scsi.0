@@ -1,123 +1,125 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8486F1547FF
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2024 16:04:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FBD41A0B04;
+	Fri, 29 Nov 2024 21:06:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732896257; cv=none; b=td6kaCyRn3jNKQGM+QLRtDQ0dWotYj9tZpkNrCoEeS5CkQuu6OaqoqK32noGT9g81QTWoxX4aP7dEmquJUAZY1NSsUclUiq2VVuyzQDba79dPfl4Dj0gfSclTiO9Zx/xZdtwXd4A/DvFMcG4r0qfr8P4eUWufbHD3tEDrC1+svI=
+	t=1732914418; cv=none; b=KO3kV2GEqhyRXJr4TSnjkPd4AggAR7vvPrfPaP+9ABJVJl6xQOamU9X9fR9lxJypxmDVUgPi/9J1ko44OHTTXkewq6PitlQOodN58yksrNXhQ6M/V5/NcxWCL4YoAHHoA8VwvhDjALB72+jdulXZ90FxMNBmqof4labpmwDJ2G4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732896257; c=relaxed/simple;
-	bh=xu1NVatpA2ZXqTXPG9XzG+l/h1Z/YiWcWL2kKPmqUyE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=d6Ga7vUTwyGSdghxK0zdTVMzMjeagzw5OAE3kVz7R8PykxeO4UCBGscJ0T7ugIuYQEHAWiUu3yzXGaHqHXicdKJbSyEAo2wV3pMK9PpxK6+JBDDxsR7k/3avxYUYY6eNnOCmDEqOrJOVsadQHxD9PUJHFACYWLdzLnHKffWAQLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=kI6RdVCx; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1732914418; c=relaxed/simple;
+	bh=KNG0fF7kHb67K3poJypspiJ6k0hHbpJD5se9XikRlWc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sh8j/hqp64lmX78ZmEhcTiTwpxkdU+ICJ2XVG2OfjuIx0d6XPX9KVX3406c6WzdMutO02auttpqWoVd43B23oPLfFeCC8ov5vlDrZA5ak0w21XJWhg8IeXifHbEzFxW8yUEC54fKH3eOltMWJoD6cyxNZzY13RM9IWtmnt4P6RI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PdsCuOi6; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="kI6RdVCx"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-21210eaa803so18299555ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2024 08:04:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1732896255; x=1733501055; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xRYCaR++kEU3PDN2eQ+b+5uSQTJ5Bb61ApyC7HopWXU=;
-        b=kI6RdVCxu3FlE+LyYaFB2fgCilkcyJVo9bctPBY3EGNmIGZH5K3ICFzTB8Z4hPt9ob
-         9GefcI/KhkjcTqglptLus/Atb0nLJ4AHV4krBujLlQvZ8MVOC7LknhlDPfEI9LeRY/DG
-         gy45bNpssy+Q3Zau0ypRGzffNtHIBUhNs4Qqikq11FZdfxvkB+a2xYp+buvP5pBWWpTP
-         aIHjknJMqT5HtFBeEzsqogI39FYl6VcZyAxg8y1lZkkjQEJfBurV4nI3rmSkmtOyMkff
-         +tiZf0R2Q2mAIQfUwx/Ub4bCGEwKEOjTM+RuWoEkZZwVSAqktcICsriDkx1GPBIS62WL
-         o5gg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732896255; x=1733501055;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xRYCaR++kEU3PDN2eQ+b+5uSQTJ5Bb61ApyC7HopWXU=;
-        b=N0dGDdQdBOxZgRpmKQezoxnLEr5RWvEyCipAb6U8AkklfoZ6nZlsb30LvrBxoLk6RN
-         YaBF6xzNteVzV/0mTzXlQnjls9XwWPQytwc6n0Yxw/NFgdWfI03/4Ebw8sLNyc8y3zpS
-         JawfZFbpoqDNkJK0jkQU/6Qum1TjSmdt1L+h+L5ZWwhBa2PEAo1afDsSfY5PyPtN7vH1
-         grqPZoW4C+tg+HI3/iMiNiu28DjOfZC2s/CVt/2+ACAf4jL3eHg16LhLQNpYZxEFW+fk
-         69if1b/xMkToBF4UWfTOfghrbR4VaulEbwkcOT2Wq28eWI8SddFsErk4Ka2fDATx19kP
-         DJVg==
-X-Forwarded-Encrypted: i=1; AJvYcCVyrhCyisM8nZblHIBXSf/+jpDwY43yzJgxNAb4jZrMUHPcobWjDRjJ8ia3bUAS5/OjN7lg7QBDx2ng@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFkBMqzfJP0QKptQHZTPC5q01wvWunAsC5+wrHhfCYgUUCIQb9
-	dptvoifrihAEa11kmpG3SYnX5xqbx0Rw5F+qggyEc07YE1Casbi/GuL5lhTtZ16YzAM4n6m81Q8
-	O
-X-Gm-Gg: ASbGncscPdwUjJSrxvvwnxdCEqA4oqYpo8fR7DX14qmx4BhTSSmK2QbrVeL57caVePV
-	CrED2rMbWv6QVrseUxFtlxzsyxZLwMpbn5OKDn0cQG2naXQl7JUoLf8KguInZnK9E7iTLOhuctz
-	cM1QdfmdbIyFsbyhOoVlNZIDrTdH0HR+Eq2NNmJYFRuNcaLmOnHWPFEw1V3yngnL9+DXr3KKLo9
-	yUeoyIwx8K/GMIVAjrincciAv4e06SaB0Lhfhyq2A==
-X-Google-Smtp-Source: AGHT+IGy1chS3Zs1DmbJsFkawdj66lilvO7GzDHuIuxS/pEbGyD3FpT+qxCo038R1fV7cDy/7R55Vg==
-X-Received: by 2002:a17:902:d502:b0:212:6187:6a76 with SMTP id d9443c01a7336-215010960cfmr158548025ad.14.1732896254809;
-        Fri, 29 Nov 2024 08:04:14 -0800 (PST)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-215218f46a1sm32302925ad.39.2024.11.29.08.04.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Nov 2024 08:04:14 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: hch@lst.de, kbusch@kernel.org, martin.petersen@oracle.com, 
- asml.silence@gmail.com, anuj1072538@gmail.com, brauner@kernel.org, 
- jack@suse.cz, viro@zeniv.linux.org.uk, Anuj Gupta <anuj20.g@samsung.com>
-Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org, 
- linux-block@vger.kernel.org, gost.dev@samsung.com, 
- linux-scsi@vger.kernel.org, vishak.g@samsung.com, 
- linux-fsdevel@vger.kernel.org
-In-Reply-To: <20241128112240.8867-1-anuj20.g@samsung.com>
-References: <CGME20241128113036epcas5p397ba228852b72fff671fe695c322a3ef@epcas5p3.samsung.com>
- <20241128112240.8867-1-anuj20.g@samsung.com>
-Subject: Re: [PATCH v11 00/10] Read/Write with meta/integrity
-Message-Id: <173289625329.195012.12251484320092641789.b4-ty@kernel.dk>
-Date: Fri, 29 Nov 2024 09:04:13 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PdsCuOi6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1732914417; x=1764450417;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=KNG0fF7kHb67K3poJypspiJ6k0hHbpJD5se9XikRlWc=;
+  b=PdsCuOi6leuU1q4OjwiUOYpxwjz1cJ2I7OlNdrU1lWFL2XCZbt4dwURZ
+   UHOgLgf3nbR2jmHNqZx7AkJ69rdKOQ1Iqo1HmVTrtLNM/JkoK2Uei/G5F
+   Z3TmkeSFGYLf9w3ryfpzgcDEnyxlZDifTgoTerp9zEdCvykXkzE9COul6
+   WJUcrfzE5jDLnRTknmZiYEfoayzWTg7aZ003IOLAtO72xZaLfxveZzx/M
+   xVAZ6ceojTryayU2owtVcVF+KPNBqFCEvVYQyeemg2rxbFufaECFAfFiK
+   /O2T1CRI89T0rfQ/sgt4sRNk0TyjN6MPXBN6QPxXVSiuDgvEQpQ7ktNFl
+   g==;
+X-CSE-ConnectionGUID: oCp59g/IS+enb7X7+tawMg==
+X-CSE-MsgGUID: bx21potkRvCH1gdpW7TWrg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11271"; a="36012870"
+X-IronPort-AV: E=Sophos;i="6.12,196,1728975600"; 
+   d="scan'208";a="36012870"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2024 13:06:56 -0800
+X-CSE-ConnectionGUID: IUqO8ZEbRTykY1960/vQ6g==
+X-CSE-MsgGUID: /1sWLacUT9q2I+hnm1zdJg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,196,1728975600"; 
+   d="scan'208";a="92480813"
+Received: from lkp-server01.sh.intel.com (HELO 5e2646291792) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 29 Nov 2024 13:06:54 -0800
+Received: from kbuild by 5e2646291792 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tH8CR-0000hJ-0l;
+	Fri, 29 Nov 2024 21:06:51 +0000
+Date: Sat, 30 Nov 2024 05:05:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: Anastasia Kovaleva <a.kovaleva@yadro.com>, martin.petersen@oracle.com,
+	bootc@bootc.net, bostroesser@gmail.com, michael.christie@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux@yadro.com
+Subject: Re: [PATCH 08/10] target: core: Use extended logs where possible
+Message-ID: <202411300419.umKHNg4I-lkp@intel.com>
+References: <20241129153056.6985-9-a.kovaleva@yadro.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-86319
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241129153056.6985-9-a.kovaleva@yadro.com>
+
+Hi Anastasia,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on linus/master next-20241128]
+[cannot apply to v6.12]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Anastasia-Kovaleva/target-core-Improve-SCSI-target-logs/20241129-234412
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20241129153056.6985-9-a.kovaleva%40yadro.com
+patch subject: [PATCH 08/10] target: core: Use extended logs where possible
+config: arc-randconfig-001-20241130 (https://download.01.org/0day-ci/archive/20241130/202411300419.umKHNg4I-lkp@intel.com/config)
+compiler: arc-elf-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241130/202411300419.umKHNg4I-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202411300419.umKHNg4I-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/target/target_core_pr.c:75:26: warning: 'pr_preempt_type_table_str' defined but not used [-Wunused-const-variable=]
+      75 | static const char *const pr_preempt_type_table_str[] = {
+         |                          ^~~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/target/target_core_pr.c:64:26: warning: 'pr_register_type_table_str' defined but not used [-Wunused-const-variable=]
+      64 | static const char *const pr_register_type_table_str[] = {
+         |                          ^~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-On Thu, 28 Nov 2024 16:52:30 +0530, Anuj Gupta wrote:
-> This adds a new io_uring interface to exchange additional integrity/pi
-> metadata with read/write.
-> 
-> Example program for using the interface is appended below [1].
-> 
-> The patchset is on top of block/for-next.
-> 
-> [...]
+vim +/pr_preempt_type_table_str +75 drivers/target/target_core_pr.c
 
-Applied, thanks!
+    63	
+  > 64	static const char *const pr_register_type_table_str[] = {
+    65		"REGISTER",
+    66		"REGISTER_AND_IGNORE_EXISTING_KEY",
+    67		"REGISTER_AND_MOVE",
+    68	};
+    69	
+    70	enum preempt_type {
+    71		PREEMPT,
+    72		PREEMPT_AND_ABORT,
+    73	};
+    74	
+  > 75	static const char *const pr_preempt_type_table_str[] = {
+    76		"PREEMPT",
+    77		"PREEMPT_AND_ABORT",
+    78	};
+    79	
 
-[01/10] block: define set of integrity flags to be inherited by cloned bip
-        commit: f64ec9926ed2fb603acf4fbc73c09ba3f68e271b
-[02/10] block: copy back bounce buffer to user-space correctly in case of split
-        commit: fcc1f91de3e3cf013e810183cb6d333b09fb5741
-[03/10] block: modify bio_integrity_map_user to accept iov_iter as argument
-        commit: 465f05a6462bb67ff51c663759ca9b4952718205
-[04/10] fs, iov_iter: define meta io descriptor
-        commit: 3e73053699fc91839e711c75d87fe3da732a323b
-[05/10] fs: introduce IOCB_HAS_METADATA for metadata
-        commit: bbcf8cb45e21c0a4d4afc45fac6cc6b97e737d8e
-[06/10] io_uring: introduce attributes for read/write and PI support
-        commit: 0ff16f75c747522b403ae8a23513afe354f98fd7
-[07/10] block: introduce BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
-        commit: ff19426ed1a805571f2a9ccff7d3432b57f4725e
-[08/10] nvme: add support for passing on the application tag
-        commit: 77a3bcc5847683baefd340f615a51e4fdaf9208e
-[09/10] scsi: add support for user-meta interface
-        commit: 1c1d47350d4eb585e2cc8f010000225b6a578322
-[10/10] block: add support to pass user meta buffer
-        commit: a757ddcd74c4b78403e4b46080de6eb73a17ab9e
-
-Best regards,
 -- 
-Jens Axboe
-
-
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
