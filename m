@@ -1,65 +1,65 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EF77204080
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Dec 2024 12:02:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE882040BC
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Dec 2024 12:02:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733140974; cv=none; b=onkr8z/ppu4oOjDfMm0jQHWXPsk9X0lw7F7a1N2F6P9zLHJlefNxjMEzntuGamUYMHuE+JWl4kokZPY94igPUtM5zvW/T+4kw9me4ukUI8zUTtUaeWbUDypw4k8KpzXsUVDmZsGRghDahlGEwarFRZGe+QHKNBnG12zBGbiaa1Y=
+	t=1733140976; cv=none; b=io8/OPDFMCQGvVL62QJd2+CBXUX9WboEqCLpZl82Cz53I0YcS4gHAQ4V2fqlrJDCQ06u2iptvA058AqntqBafSZKqHcZfdand3d9Yzfp8hbLPrt814ddyCSd1d5H3LucV5g0Mdimb6mEItbLGo9ZWdEq8TGMZhzaKOB1lICc6LU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733140974; c=relaxed/simple;
-	bh=6YzjV0NPQ5Asz3NMWwdStqqiu2ZFZDJL+XQN18G4jho=;
+	s=arc-20240116; t=1733140976; c=relaxed/simple;
+	bh=ROTvJ0Yd+ruiUat4sX5vxOMtnWR7c6X2Q7M75jA57vw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=iDOSE2yKAzDB5JHL2fL0XPxXdo2wCaMSCsNMmVAIefW6ljaVAiII9NFGJc9W5gTR2WbV8eioD5vf8WfTeS9/yUXaLjFHP7jRSyKol+KP2iPgKRpVF6wS9G8Wy4RXr9rj0ngpMbu8vSSTfB+ddfxVbuPn1fWuJgZZwZ34UCoM2WI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=0QxnT2wE; arc=none smtp.client-ip=209.85.128.46
+	 In-Reply-To:To:Cc; b=mzVirRAQ/s8Imh6j5ALjfFu9SHbMUMnSbVv/chuOAC6NUNnzXnkmvr9M8QzUHLAcvpXPFDAUckskIF5TCNJhlYO663GFAQfc97q+LsLtkBx+z1+hMr5d0YePBq/Tao2vG7FijrVa5i187171JH1z2zQQgy2prAzf1lHHU0xVh+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=0vDN1SuR; arc=none smtp.client-ip=209.85.128.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="0QxnT2wE"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-434acf1f9abso38161335e9.2
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Dec 2024 04:02:48 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="0vDN1SuR"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-434a742481aso33373925e9.3
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Dec 2024 04:02:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1733140967; x=1733745767; darn=vger.kernel.org;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1733140971; x=1733745771; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=ZwrqUgzomeZAg551+85HwI0DROl0jONzf+FyxNyg5dI=;
-        b=0QxnT2wEAppUE5irarxp4zFwY8qN5geBVep1eWjFhuUvRGJOLhYH4ubSPiq7fptojW
-         c8swZxFourC5md75I0gkcvJlmFLEw7GgXJpoJtN4LtohjKT4ipg9JZpm1KI0zE+wwWHK
-         Nrd9YINaVPr55/eQzj/12n8yB7PPRQ7EKEeT+hcOZOZIi4IWiB/ybd7OtedKqju9vtPK
-         pbn9zmE2t6HweYHxJCNuCpz735vpTqFf9DdVCEBSu6ea72uH5loEyart+00JicuxJn1j
-         mmcmrb1nM8cz+vMhnl4mGwcSFdwDswibN/GA2dkzQ6GWem/HFnSxAp06eccJQhz4/PTK
-         srDA==
+        bh=SEsGyUMJRC5EIXHWCuaafkTJXMkTib5fTjMr637WgyE=;
+        b=0vDN1SuRUYT/6wqqFm9lr4Q7khtq+BxyslvI7Q5lCxuRbDMMtwsOIRhJE5d0UzDrSX
+         Y+DaPbI5LCHgbaQK2DBP/PO3lFiwCL0FA6JwlCRMhZF7+g4MJy4z+v2/cC6cgITP11R1
+         xkkWufEdSjuX4bB+dGMI1V9LR2IFMctTJ9TcvihDEisV6HJYqdYk4VLcufdtjttwwcxV
+         KbYpXFY3n+Bgki12SFLdju/hdMJ5I9APqGGB5lJwmfQU0q5ut1z+NgEGa/y/aDq55HYx
+         6Myf+2WDQNmqATz9jWb21qSCJSDFXH7JPYRx2mtVk9rOY7WT6jVWANZci/9LfR9t1FoQ
+         eltA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733140967; x=1733745767;
+        d=1e100.net; s=20230601; t=1733140971; x=1733745771;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ZwrqUgzomeZAg551+85HwI0DROl0jONzf+FyxNyg5dI=;
-        b=KtbQ9+Y7iKCqT+t0VosY5PZzldKkMzpPK8Ih6fHBZaKUtq8a6UNkRKQ66rQYIb8VBz
-         Iz2F1kStcIfc47RAK2TEhEYGh2mVuQDGzPt6CzUlLZVIew5pFhAAACrBcevH0n0ZzgR+
-         Vs9GBs/J5+N8I+i/sy+G+STHmobJRbq5mXAwkxmKSpiTQCqs3/VDCFn9cdit8lt+REK6
-         rUCT5y6kxABdJL//ymOIlxujmD3W6TSW72/LNpewNi6Ikfrgk8T4+bYnsGk3DWOvejsC
-         578ZSWxlche0g5F1Q5Bd4iejuyr/DP75G160SuRUyRBB004kJ2jHXDxNMCExV2v+89qq
-         jItQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV5FmQ0PeTIEPOQBre3hBIt0gA8VuVE2Iu/Gxq70QHeBF0kRpOCnDVBlp2OclQSDjgWLFU1p84uJWbw@vger.kernel.org
-X-Gm-Message-State: AOJu0YzOeV+5EjjajGk9SEm0O1nk5WVL/SnfLxhb6H+jiamfFCP2V3lt
-	xyAsWi3lNeBr/0feg4ifIwZwjGKc12YHfnORmzIJP0CSVP8kOVoELDh2uE1GKUc=
-X-Gm-Gg: ASbGncuGAFPqHiJcpUXIi4MfRW3+50Xu7uuKqTZmLLuO4r9t/MzHE3C7ce/7aFNKe7A
-	DPwcKsQnOyKRy8NWOWi3N9R6MAbz6+ToHndPzwaT7ILpL0IKUr0omUoiizGCmcnu9qQmSzdsEZ+
-	o3LxO7VB1dPkryHrLQIkNVGkztauSz8BS3XUbE/dWVpIll5w/alfMJmx+VDBPhGDWMG9omWW/b5
-	SX9Irbg9aQjo4U8GEY0S8XiEjy9PJyY7xdF8guX
-X-Google-Smtp-Source: AGHT+IG/w7cCjN0oKPl08ooPpL18eC2QfHH3rm9TU2c2V07Nmil57JLBdJ4jBndbMqB2SsBSN/dg+w==
-X-Received: by 2002:a05:600c:198c:b0:434:a30b:5455 with SMTP id 5b1f17b1804b1-434a9e0ac32mr189639205e9.27.1733140965235;
-        Mon, 02 Dec 2024 04:02:45 -0800 (PST)
+        bh=SEsGyUMJRC5EIXHWCuaafkTJXMkTib5fTjMr637WgyE=;
+        b=BZkw7LD5SVwgE1XV/EwDHCWEYb1BPZEOZivc6gm+GDjSOejZ2aGYwR4CkhV9wbwL8E
+         c+8vSB2cP9eZdgb9H4YJkFUx1EuQkXRvzcpV6u8lK77hFs1+Tiqlhs/60z03oNBmVqGn
+         E2zOlIboGHhD5CTXZaD6nfaGk1/xl9D5vDqDv5j5DyrMKA3BGubJRdmPVf6QaGqeBQEI
+         pdfq+xp5dHiOgtXcx0AXOIKqJi+theSYgHAlwPZinR/0iSFaTA+kxBOnNEIvnAlkYT1F
+         2QPao0TlxlCHq0Dz/HQRu4WkwEjMSLX/GNPy4YXtY7YqcQfM+S2aLbefTHMVOE227vvb
+         RulA==
+X-Forwarded-Encrypted: i=1; AJvYcCXgm6A/sg+m2bzd76Nt/bYmjmUwnt2oHNdZpPntICjUwbrB1xKRXDUlpMD2FHPM8/vRpI1lEMXngL87@vger.kernel.org
+X-Gm-Message-State: AOJu0YzDiftxkpxqtwi5Q+V1ixXhqdKU7ShQUY6JJhR3Pt7df2Gu4cy9
+	8882ubM5kK1HTXCtkE3P4tXQItw2ynAlfH8sSPQaLqn7dBmv+Vt/Ga67PAry6ks=
+X-Gm-Gg: ASbGncvR6pWuo0xyC9X1ie2nHyYy2TmLfJTWeGOwiQQ35Xk7LxGSdOsHYfIt3E+qXWl
+	+iZLS9bMqsJLWn6Yuvj1mZS4R8o5Oup/eDwhUKFE7AJD+oSBB+kCzrF3ofPev4Lfl0lGxAMIKTS
+	YodkzX+z12ESfnJGc4WQvEkRxQS/zrrVv1LzYbEBXTo7tIIO0ENuwVeTGP+rZWJ8ctFJnn9SQF4
+	uIaTHuUvwXnE7k3WGd9x+eHoj9y4moDUlqs7L0/
+X-Google-Smtp-Source: AGHT+IGGvCQ+UQ3Gz+sFnJwX+0j17r5lPzFWBw9hCLQAKsSSM8aNBNxk7Vxt475KPIwUN1cEjvQLSw==
+X-Received: by 2002:a05:600c:3585:b0:42f:7e87:3438 with SMTP id 5b1f17b1804b1-434a9d4ff94mr219950105e9.0.1733140968936;
+        Mon, 02 Dec 2024 04:02:48 -0800 (PST)
 Received: from [127.0.1.1] ([193.57.185.11])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-434b0d9bed7sm152396095e9.8.2024.12.02.04.02.43
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-434b0d9bed7sm152396095e9.8.2024.12.02.04.02.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Dec 2024 04:02:44 -0800 (PST)
+        Mon, 02 Dec 2024 04:02:48 -0800 (PST)
 From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Mon, 02 Dec 2024 13:02:21 +0100
-Subject: [PATCH RESEND v7 05/17] ice, ufs, mmc: use the blk_crypto_key
- struct when programming the key
+Date: Mon, 02 Dec 2024 13:02:23 +0100
+Subject: [PATCH RESEND v7 07/17] firmware: qcom: scm: add calls for
+ creating, preparing and importing keys
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,7 +68,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241202-wrapped-keys-v7-5-67c3ca3f3282@linaro.org>
+Message-Id: <20241202-wrapped-keys-v7-7-67c3ca3f3282@linaro.org>
 References: <20241202-wrapped-keys-v7-0-67c3ca3f3282@linaro.org>
 In-Reply-To: <20241202-wrapped-keys-v7-0-67c3ca3f3282@linaro.org>
 To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, 
@@ -95,279 +95,264 @@ Cc: linux-block@vger.kernel.org, linux-doc@vger.kernel.org,
  linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
  linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
  linux-arm-msm@vger.kernel.org, 
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
- Om Prakash Singh <quic_omprsing@quicinc.com>
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=9620;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8105;
  i=bartosz.golaszewski@linaro.org; h=from:subject:message-id;
- bh=Xxy7T1ivWX9tbiX/lU4uTl3nRxq9bf8iN/DI5qFBRo4=;
- b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBnTaHSarEJ/NUdEhODEKyrsFZmobZ9td42n/5Va
- leOaiEpWfKJAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZ02h0gAKCRARpy6gFHHX
- ciLJD/9WdWPTFWXr4k9CfLh5BwJ2ksXCgxTPX/hCV8uJPp36IJkZgXBK2kMQ/m4RKPB0AxPQtnC
- /3W1vMNHhU+aQblrj1haiomFSfr34M0Y6KDYpdlLWvDuVPs+QZ4DwSxiZtivQY4y9ccvuu1JXgM
- 6BeWxRD8SdPHA+r7bPBEgfdKG0Ymf/yqhxU9/w27tu/7gV7+mP9hsxGeXB9k9jbklKwJ1tXy1Vq
- 2zx6dGg3Gh16sjt27Dz6a+Cm9ake/TAhJHJlm5geNBOoCOW+IWHicXsH2ue77VO03xl9uJKsLsF
- pB4iKkF1IdIG8c4wkYijgXDcy/ywjNRSPnjQG10Vgg1SWNU/t5ThyR54F65TA/Imf/S0G/ycKYI
- ss5UgeyX/KgIyNeGsuB2PFqd75ILftltKR4g8m2uBqtfgCVayu/zn3y+wBbT3e0Y2H+r7GniuO2
- gwhoKbvhNy/IiqghWMS3lhgSjqIDtrw6cExBYPCbS3cC07eGiQF+kuyalt7AN59+E+jVSeiS1TD
- gofrBL/OD8yyn+0fqFVmrbr00Ec4uhOTIocMOq7fx+728BpJexy5SIq+R3l3ofRjzhEyCLyhGZw
- Lmrs03J1HFzdWl8mguECrWfdf54OJdSY7aGvPX8xEJsEap9v8qqVsbn/grRlmlec8tF3E2iKO/Q
- c6bcieyRsfI3ZqA==
+ bh=iHvq6iDlNKonVx5gQ2c2tHZaOwqk7ZK6GmSQUyzlGxM=;
+ b=owEBbQKS/ZANAwAKARGnLqAUcddyAcsmYgBnTaHTkbQUmO8rR7TlwBjsVv+pAdkGOHURn8Kyt
+ gn2lFrWAHOJAjMEAAEKAB0WIQQWnetsC8PEYBPSx58Rpy6gFHHXcgUCZ02h0wAKCRARpy6gFHHX
+ cv2ED/0Y74IPZuyaqMDggcPamep1hRbZ1e70ccf4F82LpeyvNGtwjWIe9bOUOccNNXGFAazQNRO
+ M0v9u036osn6tsRIuqpFSQ1jFnb/FUVLSxcp2lI4Q83qOsGzXH8SycN4U7aPKdIRVw9A36+vCm6
+ m/0+L7Xu91Shq77pEHIHuqjdBAEYyt/iMxQMCvHQfinj9Kw/yVNx+ZNkhVqjKojQiGUXvhldqI9
+ Wt8qZg5tdAC6Hfz71Xbq5dWHgZBwUCOBJN6czCD/f9rsfTvtz1EaO29i7FccOvp+X6z1o3wiD58
+ HodAlcrC+LfVtACsONNQUz30/wucJbEojQ6Rk8FnnXqXivERxYoKsk7VIj/+lNdmiqaLc0P4buR
+ +/rKL60YvGEI9bCazu9q0BFOyjV4djbtFIFU+W0DXJ0DcMcOgurOMDtr63y+UpqN5eAr1MdzNMX
+ gNsErL29RkWSQV/bcLe2XashBE6PXe6beD8qxmYJYvoW+v0+zpw2L8/O8y6mhid52NOL21ZH1hI
+ aJj1Cvdy2qEdjA19/hVIeX03xQ1Fjh+NiEgLfUPh3pJ6gTVTlqiEzQQ/4TfuXws+jz5MFnF+i3y
+ arj+MFPRnZi3wmb+Cz9TxMn6XEH0uTV2MeV2+hpU25jjZ0HrAsp4/+LvOQfah2FHQkIuWY+SA+Q
+ Dm+y3KAcj6z029Q==
 X-Developer-Key: i=bartosz.golaszewski@linaro.org; a=openpgp;
  fpr=169DEB6C0BC3C46013D2C79F11A72EA01471D772
 
 From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 
-The program key ops in the storage controller does not pass on the
-blk_crypto_key structure to ICE, this is okay with raw keys of standard
-AES XTS sizes. However, wrapped keyblobs can be of any size and in
-preparation for that, modify the ICE and storage controller APIs to
-accept blk_crypto_key which can carry larger keys and indicate their
-size.
+Storage encryption has two IOCTLs for creating, importing and preparing
+keys for encryption. For wrapped keys, these IOCTLs need to interface
+with Qualcomm's Trustzone. Add the following keys:
 
-Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
+generate_key:
+  This is used to generate and return a longterm wrapped key. Trustzone
+  achieves this by generating a key and then wrapping it using the
+  Hawrdware Key Manager (HWKM), returning a wrapped keyblob.
+
+import_key:
+  The functionality is similar to generate, but here: a raw key is
+  imported into the HWKM and a longterm wrapped keyblob is returned.
+
+prepare_key:
+  The longterm wrapped key from the import or generate calls is made
+  further secure by rewrapping it with a per-boot, ephemeral wrapped key
+  before installing it in the kernel for programming into ICE.
+
+[Bartosz:
+  improve kerneldocs,
+  fix hex values coding style,
+  rewrite commit message]
+
 Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Co-developed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Reviewed-by: Konrad Dybcio <konradybcio@kernel.org>
 Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 ---
- drivers/mmc/host/cqhci-crypto.c  | 7 ++++---
- drivers/mmc/host/cqhci.h         | 2 ++
- drivers/mmc/host/sdhci-msm.c     | 6 ++++--
- drivers/soc/qcom/ice.c           | 6 +++---
- drivers/ufs/core/ufshcd-crypto.c | 7 ++++---
- drivers/ufs/host/ufs-qcom.c      | 6 ++++--
- include/soc/qcom/ice.h           | 5 +++--
- include/ufs/ufshcd.h             | 1 +
- 8 files changed, 25 insertions(+), 15 deletions(-)
+ drivers/firmware/qcom/qcom_scm.c       | 161 +++++++++++++++++++++++++++++++++
+ drivers/firmware/qcom/qcom_scm.h       |   3 +
+ include/linux/firmware/qcom/qcom_scm.h |   5 +
+ 3 files changed, 169 insertions(+)
 
-diff --git a/drivers/mmc/host/cqhci-crypto.c b/drivers/mmc/host/cqhci-crypto.c
-index 6652982410ec5..91da6de1d6501 100644
---- a/drivers/mmc/host/cqhci-crypto.c
-+++ b/drivers/mmc/host/cqhci-crypto.c
-@@ -32,6 +32,7 @@ cqhci_host_from_crypto_profile(struct blk_crypto_profile *profile)
+diff --git a/drivers/firmware/qcom/qcom_scm.c b/drivers/firmware/qcom/qcom_scm.c
+index d523ce671997e..14ba2c798f4d7 100644
+--- a/drivers/firmware/qcom/qcom_scm.c
++++ b/drivers/firmware/qcom/qcom_scm.c
+@@ -1344,6 +1344,167 @@ int qcom_scm_derive_sw_secret(const u8 *wkey, size_t wkey_size,
  }
+ EXPORT_SYMBOL_GPL(qcom_scm_derive_sw_secret);
  
- static int cqhci_crypto_program_key(struct cqhci_host *cq_host,
-+				    const struct blk_crypto_key *bkey,
- 				    const union cqhci_crypto_cfg_entry *cfg,
- 				    int slot)
- {
-@@ -39,7 +40,7 @@ static int cqhci_crypto_program_key(struct cqhci_host *cq_host,
- 	int i;
++/**
++ * qcom_scm_generate_ice_key() - Generate a wrapped key for encryption.
++ * @lt_key: the wrapped key returned after key generation
++ * @lt_key_size: size of the wrapped key to be returned.
++ *
++ * Generate a key using the built-in HW module in the SoC. Wrap the key using
++ * the platform-specific Key Encryption Key and return to the caller.
++ *
++ * Return: 0 on success; -errno on failure.
++ */
++int qcom_scm_generate_ice_key(u8 *lt_key, size_t lt_key_size)
++{
++	struct qcom_scm_desc desc = {
++		.svc = QCOM_SCM_SVC_ES,
++		.cmd =  QCOM_SCM_ES_GENERATE_ICE_KEY,
++		.arginfo = QCOM_SCM_ARGS(2, QCOM_SCM_RW, QCOM_SCM_VAL),
++		.args[1] = lt_key_size,
++		.owner = ARM_SMCCC_OWNER_SIP,
++	};
++
++	int ret;
++
++	void *lt_key_buf __free(qcom_tzmem) = qcom_tzmem_alloc(__scm->mempool,
++							       lt_key_size,
++							       GFP_KERNEL);
++	if (!lt_key_buf)
++		return -ENOMEM;
++
++	desc.args[0] = qcom_tzmem_to_phys(lt_key_buf);
++
++	ret = qcom_scm_call(__scm->dev, &desc, NULL);
++	if (!ret)
++		memcpy(lt_key, lt_key_buf, lt_key_size);
++
++	memzero_explicit(lt_key_buf, lt_key_size);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(qcom_scm_generate_ice_key);
++
++/**
++ * qcom_scm_prepare_ice_key() - Get the per-boot ephemeral wrapped key
++ * @lt_key: the longterm wrapped key
++ * @lt_key_size: size of the wrapped key
++ * @eph_key: ephemeral wrapped key to be returned
++ * @eph_key_size: size of the ephemeral wrapped key
++ *
++ * Qualcomm wrapped keys (longterm keys) are rewrapped with a per-boot
++ * ephemeral key for added protection. These are ephemeral in nature as
++ * they are valid only for that boot.
++ *
++ * Retrieve the key wrapped with the per-boot ephemeral key and return it to
++ * the caller.
++ *
++ * Return: 0 on success; -errno on failure.
++ */
++int qcom_scm_prepare_ice_key(const u8 *lt_key, size_t lt_key_size,
++			     u8 *eph_key, size_t eph_key_size)
++{
++	struct qcom_scm_desc desc = {
++		.svc = QCOM_SCM_SVC_ES,
++		.cmd =  QCOM_SCM_ES_PREPARE_ICE_KEY,
++		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RO,
++					 QCOM_SCM_VAL, QCOM_SCM_RW,
++					 QCOM_SCM_VAL),
++		.args[1] = lt_key_size,
++		.args[3] = eph_key_size,
++		.owner = ARM_SMCCC_OWNER_SIP,
++	};
++
++	int ret;
++
++	void *lt_key_buf __free(qcom_tzmem) = qcom_tzmem_alloc(__scm->mempool,
++							       lt_key_size,
++							       GFP_KERNEL);
++	if (!lt_key_buf)
++		return -ENOMEM;
++
++	void *eph_key_buf __free(qcom_tzmem) = qcom_tzmem_alloc(__scm->mempool,
++								eph_key_size,
++								GFP_KERNEL);
++	if (!eph_key_buf) {
++		ret = -ENOMEM;
++		goto out_free_longterm;
++	}
++
++	memcpy(lt_key_buf, lt_key, lt_key_size);
++	desc.args[0] = qcom_tzmem_to_phys(lt_key_buf);
++	desc.args[2] = qcom_tzmem_to_phys(eph_key_buf);
++
++	ret = qcom_scm_call(__scm->dev, &desc, NULL);
++	if (!ret)
++		memcpy(eph_key, eph_key_buf, eph_key_size);
++
++	memzero_explicit(eph_key_buf, eph_key_size);
++
++out_free_longterm:
++	memzero_explicit(lt_key_buf, lt_key_size);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(qcom_scm_prepare_ice_key);
++
++/**
++ * qcom_scm_import_ice_key() - Import a wrapped key for encryption
++ * @imp_key: the raw key that is imported
++ * @imp_key_size: size of the key to be imported
++ * @lt_key: the wrapped key to be returned
++ * @lt_key_size: size of the wrapped key
++ *
++ * Import a raw key and return a long-term wrapped key to the caller.
++ *
++ * Return: 0 on success; -errno on failure.
++ */
++int qcom_scm_import_ice_key(const u8 *imp_key, size_t imp_key_size,
++			    u8 *lt_key, size_t lt_key_size)
++{
++	struct qcom_scm_desc desc = {
++		.svc = QCOM_SCM_SVC_ES,
++		.cmd =  QCOM_SCM_ES_IMPORT_ICE_KEY,
++		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RO,
++					 QCOM_SCM_VAL, QCOM_SCM_RW,
++					 QCOM_SCM_VAL),
++		.args[1] = imp_key_size,
++		.args[3] = lt_key_size,
++		.owner = ARM_SMCCC_OWNER_SIP,
++	};
++
++	int ret;
++
++	void *imp_key_buf __free(qcom_tzmem) = qcom_tzmem_alloc(__scm->mempool,
++								imp_key_size,
++								GFP_KERNEL);
++	if (!imp_key_buf)
++		return -ENOMEM;
++
++	void *lt_key_buf __free(qcom_tzmem) = qcom_tzmem_alloc(__scm->mempool,
++							       lt_key_size,
++							       GFP_KERNEL);
++	if (!lt_key_buf) {
++		ret = -ENOMEM;
++		goto out_free_longterm;
++	}
++
++	memcpy(imp_key_buf, imp_key, imp_key_size);
++	desc.args[0] = qcom_tzmem_to_phys(imp_key_buf);
++	desc.args[2] = qcom_tzmem_to_phys(lt_key_buf);
++
++	ret = qcom_scm_call(__scm->dev, &desc, NULL);
++	if (!ret)
++		memcpy(lt_key, lt_key_buf, lt_key_size);
++
++	memzero_explicit(lt_key_buf, lt_key_size);
++
++out_free_longterm:
++	memzero_explicit(imp_key_buf, imp_key_size);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(qcom_scm_import_ice_key);
++
+ /**
+  * qcom_scm_hdcp_available() - Check if secure environment supports HDCP.
+  *
+diff --git a/drivers/firmware/qcom/qcom_scm.h b/drivers/firmware/qcom/qcom_scm.h
+index 55547ed27edd9..097369d38b84e 100644
+--- a/drivers/firmware/qcom/qcom_scm.h
++++ b/drivers/firmware/qcom/qcom_scm.h
+@@ -129,6 +129,9 @@ struct qcom_tzmem_pool *qcom_scm_get_tzmem_pool(void);
+ #define QCOM_SCM_ES_INVALIDATE_ICE_KEY	0x03
+ #define QCOM_SCM_ES_CONFIG_SET_ICE_KEY	0x04
+ #define QCOM_SCM_ES_DERIVE_SW_SECRET	0x07
++#define QCOM_SCM_ES_GENERATE_ICE_KEY	0x08
++#define QCOM_SCM_ES_PREPARE_ICE_KEY	0x09
++#define QCOM_SCM_ES_IMPORT_ICE_KEY	0x0a
  
- 	if (cq_host->ops->program_key)
--		return cq_host->ops->program_key(cq_host, cfg, slot);
-+		return cq_host->ops->program_key(cq_host, bkey, cfg, slot);
+ #define QCOM_SCM_SVC_HDCP		0x11
+ #define QCOM_SCM_HDCP_INVOKE		0x01
+diff --git a/include/linux/firmware/qcom/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
+index b843678bc3ee4..9a585c1af959d 100644
+--- a/include/linux/firmware/qcom/qcom_scm.h
++++ b/include/linux/firmware/qcom/qcom_scm.h
+@@ -107,6 +107,11 @@ int qcom_scm_ice_set_key(u32 index, const u8 *key, u32 key_size,
+ 			 enum qcom_scm_ice_cipher cipher, u32 data_unit_size);
+ int qcom_scm_derive_sw_secret(const u8 *wkey, size_t wkey_size,
+ 			      u8 *sw_secret, size_t sw_secret_size);
++int qcom_scm_generate_ice_key(u8 *lt_key, size_t lt_key_size);
++int qcom_scm_prepare_ice_key(const u8 *lt_key, size_t lt_key_size,
++			     u8 *eph_key, size_t eph_size);
++int qcom_scm_import_ice_key(const u8 *imp_key, size_t imp_size,
++			    u8 *lt_key, size_t lt_key_size);
  
- 	/* Clear CFGE */
- 	cqhci_writel(cq_host, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
-@@ -99,7 +100,7 @@ static int cqhci_crypto_keyslot_program(struct blk_crypto_profile *profile,
- 		memcpy(cfg.crypto_key, key->raw, key->size);
- 	}
- 
--	err = cqhci_crypto_program_key(cq_host, &cfg, slot);
-+	err = cqhci_crypto_program_key(cq_host, key, &cfg, slot);
- 
- 	memzero_explicit(&cfg, sizeof(cfg));
- 	return err;
-@@ -113,7 +114,7 @@ static int cqhci_crypto_clear_keyslot(struct cqhci_host *cq_host, int slot)
- 	 */
- 	union cqhci_crypto_cfg_entry cfg = {};
- 
--	return cqhci_crypto_program_key(cq_host, &cfg, slot);
-+	return cqhci_crypto_program_key(cq_host, NULL, &cfg, slot);
- }
- 
- static int cqhci_crypto_keyslot_evict(struct blk_crypto_profile *profile,
-diff --git a/drivers/mmc/host/cqhci.h b/drivers/mmc/host/cqhci.h
-index fab9d74445ba7..06099fd32f23e 100644
---- a/drivers/mmc/host/cqhci.h
-+++ b/drivers/mmc/host/cqhci.h
-@@ -12,6 +12,7 @@
- #include <linux/completion.h>
- #include <linux/wait.h>
- #include <linux/irqreturn.h>
-+#include <linux/blk-crypto.h>
- #include <asm/io.h>
- 
- /* registers */
-@@ -291,6 +292,7 @@ struct cqhci_host_ops {
- 	void (*post_disable)(struct mmc_host *mmc);
- #ifdef CONFIG_MMC_CRYPTO
- 	int (*program_key)(struct cqhci_host *cq_host,
-+			   const struct blk_crypto_key *bkey,
- 			   const union cqhci_crypto_cfg_entry *cfg, int slot);
- #endif
- 	void (*set_tran_desc)(struct cqhci_host *cq_host, u8 **desc,
-diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
-index e00208535bd1c..b8770524c0087 100644
---- a/drivers/mmc/host/sdhci-msm.c
-+++ b/drivers/mmc/host/sdhci-msm.c
-@@ -1859,6 +1859,7 @@ static __maybe_unused int sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
-  * vendor-specific SCM calls for this; it doesn't support the standard way.
-  */
- static int sdhci_msm_program_key(struct cqhci_host *cq_host,
-+				 const struct blk_crypto_key *bkey,
- 				 const union cqhci_crypto_cfg_entry *cfg,
- 				 int slot)
- {
-@@ -1866,6 +1867,7 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
- 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
- 	struct sdhci_msm_host *msm_host = sdhci_pltfm_priv(pltfm_host);
- 	union cqhci_crypto_cap_entry cap;
-+	u8 ice_key_size;
- 
- 	/* Only AES-256-XTS has been tested so far. */
- 	cap = cq_host->crypto_cap_array[cfg->crypto_cap_idx];
-@@ -1873,11 +1875,11 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
- 		cap.key_size != CQHCI_CRYPTO_KEY_SIZE_256)
- 		return -EINVAL;
- 
-+	ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
- 	if (cfg->config_enable & CQHCI_CRYPTO_CONFIGURATION_ENABLE)
- 		return qcom_ice_program_key(msm_host->ice,
- 					    QCOM_ICE_CRYPTO_ALG_AES_XTS,
--					    QCOM_ICE_CRYPTO_KEY_SIZE_256,
--					    cfg->crypto_key,
-+					    ice_key_size, bkey,
- 					    cfg->data_unit_size, slot);
- 	else
- 		return qcom_ice_evict_key(msm_host->ice, slot);
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index 393d2d1d275f1..e89baaf574bc1 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -163,8 +163,8 @@ EXPORT_SYMBOL_GPL(qcom_ice_suspend);
- 
- int qcom_ice_program_key(struct qcom_ice *ice,
- 			 u8 algorithm_id, u8 key_size,
--			 const u8 crypto_key[], u8 data_unit_size,
--			 int slot)
-+			 const struct blk_crypto_key *bkey,
-+			 u8 data_unit_size, int slot)
- {
- 	struct device *dev = ice->dev;
- 	union {
-@@ -183,7 +183,7 @@ int qcom_ice_program_key(struct qcom_ice *ice,
- 		return -EINVAL;
- 	}
- 
--	memcpy(key.bytes, crypto_key, AES_256_XTS_KEY_SIZE);
-+	memcpy(key.bytes, bkey->raw, AES_256_XTS_KEY_SIZE);
- 
- 	/* The SCM call requires that the key words are encoded in big endian */
- 	for (i = 0; i < ARRAY_SIZE(key.words); i++)
-diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
-index 7d3a3e228db0d..33083e0cad6e1 100644
---- a/drivers/ufs/core/ufshcd-crypto.c
-+++ b/drivers/ufs/core/ufshcd-crypto.c
-@@ -18,6 +18,7 @@ static const struct ufs_crypto_alg_entry {
- };
- 
- static int ufshcd_program_key(struct ufs_hba *hba,
-+			      const struct blk_crypto_key *bkey,
- 			      const union ufs_crypto_cfg_entry *cfg, int slot)
- {
- 	int i;
-@@ -27,7 +28,7 @@ static int ufshcd_program_key(struct ufs_hba *hba,
- 	ufshcd_hold(hba);
- 
- 	if (hba->vops && hba->vops->program_key) {
--		err = hba->vops->program_key(hba, cfg, slot);
-+		err = hba->vops->program_key(hba, bkey, cfg, slot);
- 		goto out;
- 	}
- 
-@@ -89,7 +90,7 @@ static int ufshcd_crypto_keyslot_program(struct blk_crypto_profile *profile,
- 		memcpy(cfg.crypto_key, key->raw, key->size);
- 	}
- 
--	err = ufshcd_program_key(hba, &cfg, slot);
-+	err = ufshcd_program_key(hba, key, &cfg, slot);
- 
- 	memzero_explicit(&cfg, sizeof(cfg));
- 	return err;
-@@ -107,7 +108,7 @@ static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
- 	 */
- 	union ufs_crypto_cfg_entry cfg = {};
- 
--	return ufshcd_program_key(hba, &cfg, slot);
-+	return ufshcd_program_key(hba, NULL, &cfg, slot);
- }
- 
- /*
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 68040b2ab5f82..44fb4a4c0f2d7 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -150,6 +150,7 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
- }
- 
- static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
-+				    const struct blk_crypto_key *bkey,
- 				    const union ufs_crypto_cfg_entry *cfg,
- 				    int slot)
- {
-@@ -157,6 +158,7 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
- 	union ufs_crypto_cap_entry cap;
- 	bool config_enable =
- 		cfg->config_enable & UFS_CRYPTO_CONFIGURATION_ENABLE;
-+	u8 ice_key_size;
- 
- 	/* Only AES-256-XTS has been tested so far. */
- 	cap = hba->crypto_cap_array[cfg->crypto_cap_idx];
-@@ -164,11 +166,11 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
- 	    cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
- 		return -EOPNOTSUPP;
- 
-+	ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
- 	if (config_enable)
- 		return qcom_ice_program_key(host->ice,
- 					    QCOM_ICE_CRYPTO_ALG_AES_XTS,
--					    QCOM_ICE_CRYPTO_KEY_SIZE_256,
--					    cfg->crypto_key,
-+					    ice_key_size, bkey,
- 					    cfg->data_unit_size, slot);
- 	else
- 		return qcom_ice_evict_key(host->ice, slot);
-diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-index 5870a94599a25..9dd835dba2a78 100644
---- a/include/soc/qcom/ice.h
-+++ b/include/soc/qcom/ice.h
-@@ -7,6 +7,7 @@
- #define __QCOM_ICE_H__
- 
- #include <linux/types.h>
-+#include <linux/blk-crypto.h>
- 
- struct qcom_ice;
- 
-@@ -30,8 +31,8 @@ int qcom_ice_resume(struct qcom_ice *ice);
- int qcom_ice_suspend(struct qcom_ice *ice);
- int qcom_ice_program_key(struct qcom_ice *ice,
- 			 u8 algorithm_id, u8 key_size,
--			 const u8 crypto_key[], u8 data_unit_size,
--			 int slot);
-+			 const struct blk_crypto_key *bkey,
-+			 u8 data_unit_size, int slot);
- int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
- struct qcom_ice *of_qcom_ice_get(struct device *dev);
- #endif /* __QCOM_ICE_H__ */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index d7aca9e61684f..bc6f08397769c 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -373,6 +373,7 @@ struct ufs_hba_variant_ops {
- 				struct devfreq_dev_profile *profile,
- 				struct devfreq_simple_ondemand_data *data);
- 	int	(*program_key)(struct ufs_hba *hba,
-+			       const struct blk_crypto_key *bkey,
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	int	(*fill_crypto_prdt)(struct ufs_hba *hba,
- 				    const struct bio_crypt_ctx *crypt_ctx,
+ bool qcom_scm_hdcp_available(void);
+ int qcom_scm_hdcp_req(struct qcom_scm_hdcp_req *req, u32 req_cnt, u32 *resp);
 
 -- 
 2.45.2
