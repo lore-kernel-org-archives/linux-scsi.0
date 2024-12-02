@@ -1,213 +1,161 @@
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2A71DE8A6;
-	Mon,  2 Dec 2024 19:00:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7FC61DE4E6;
+	Mon,  2 Dec 2024 21:17:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733166045; cv=none; b=aleZLOsHU6LUymvO0uOquzrjlSiKOLqC58IhaaCCcwyilJRYS3CZEvvIQdIGljbhdqEghT/i4aTrIGKS5C1uvS2HdooQCvujVpf0kqMaE9BE+XrvibJ8eO6O1Y0W3/VMv5JRwcr2+Esq2eiCMWKMYoJly42O36OdIzJDG+bvZpY=
+	t=1733174227; cv=none; b=SCnsruMCvLhcpoOl8GsnrS3oX18H653uuB8h2URo3IiRK+ADow3hMAmBhWZCHqiReJSfW7kdW88Fr37CmvOVZ8qkozmJAn0u28KRXrxgl+QHzJXL4/HNIqJF9PrLHLH5xZWU7QiUizAn0blZVksB48HRaqtes4y7CMjOT1BR9mA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733166045; c=relaxed/simple;
-	bh=6f4mNkpvqRUUeyyo/NJcoh7bQ9hdy8tWinO29V+C6p4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=F8lSgy7GSD5WkjwLJn7s4+tNIC7haiewWMkvYKr876fr084mLklKdAfiYKTdV5Z/1aUvrRQDSB1pGtqF5HWcy2K8fpelq6MbCvHki86Mxbid9uKHjN7FoOHOxsyvZXyrV7DjPymm/WFJyXiAqLjhhCYKSg6s1KCIrEJ2NoCOl4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=btGY7MOa; arc=none smtp.client-ip=159.69.126.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
+	s=arc-20240116; t=1733174227; c=relaxed/simple;
+	bh=c/OpwCh+/t+1IaSytHBg7Vl7CNyrcqGFhU7wyEfSfVM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=m+wccwUEQ76V5ZFR+JICaxhnujZ2uVj3snLQ5Pu+CJlT1pUTH6oMrEiRmY8sFcwrudFFjSG0oS0X4j5X+zTuv6vMO8xMd/x69XF2sQ+dmPZ2wuYjWYPJc6xq1amKGhzldwEZf3XXzhDc1Tr3fpxDiTE1u0ikYWBzHPYZ1nPDDHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bMEYBPPm; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="btGY7MOa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1733166038;
-	bh=6f4mNkpvqRUUeyyo/NJcoh7bQ9hdy8tWinO29V+C6p4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=btGY7MOaNEAELCcGQDyjd+njX9nVHFypYDtpB/GQKbJV1iIi5gtyX6lfQLN7FWOuO
-	 bRv+xU7gwx500gh/9MMVmfaAtXQQ8JGkfIy68gIH6SKOtmJKqw+r0n4opaFZwZlINv
-	 6+f7CdANi7p7PQi79BD4w4Iln7oPIuGuojs0Y12Y=
-From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Mon, 02 Dec 2024 20:00:40 +0100
-Subject: [PATCH 5/5] scsi: arcmsr: Use BIN_ATTR_ADMIN_WO() for
- bin_attribute definitions
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bMEYBPPm"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2eeb64f3588so1309034a91.2;
+        Mon, 02 Dec 2024 13:17:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1733174225; x=1733779025; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=FZHtDSci4mxW9uObrOpyGXF4tVtVRk+OAevn+2+RUUc=;
+        b=bMEYBPPmUSzzFVLj9dAXVxkG7SkFjX0RJ9DXF00gd9JPnqb1y0BE+QqO/OfCo8+9zL
+         E3xw4ZetVenH0ISfG7FI2kNitWbxPHzm8dRWOXJSU2qLIVxHvx0kolgC107d7xGUSKq4
+         v+arcQYsDBBPzxLpFgDjZ4cV53opsDDu4cpOG6tKzRm+4Q/CWr/fdHZXvTkjaO4z6FJw
+         JW8/wFLTPFs3dOcmd/W/XioTSaLtHwLHZCSrBeBu+nFViATugRRwMiabDMaNTfZghJUW
+         CVR3flE3Qzl3NNECSuD/bCnXOPEt9BkqzBXNzEYNH4IhHbD943pFZQ7TEzBlhqCD34uC
+         qGgA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733174225; x=1733779025;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FZHtDSci4mxW9uObrOpyGXF4tVtVRk+OAevn+2+RUUc=;
+        b=Qg0iUV6aEDbtErdlOiEJmfERDIcKe8k2PVZ3igqRozFzURvnF0s1nRbZooAVUrqjjv
+         PjL3OurKaWDHgW5dWk3w32O2O1vRkX4VNWMD4VR1vbCBdD50x957FphDQVLtAWHSEHJC
+         8Jmj8XRugz57Z3dFCUS3NBYRFtxQHabiROVSBJZvnhaqI2fACd1+UNU/QRTd1Db6Jy8h
+         1qalxz/uWXYDdP2PY8XSaGm1m1IRHFmXunMqEakwnCOYbtl290Op2ONG/+c6e7OgB43/
+         j/qtMXCu6293zaroFJDzRbslqWPVuxukroppKnnZmyz18ZFUS5qK/7DYlihKyDh/Nm9R
+         CFsw==
+X-Forwarded-Encrypted: i=1; AJvYcCUeSIiWgPUlGzcXhpqF+ZYvjGe8r9nCQiU98EF9WQkhUwaDe787END7bB3EefnJNPBVha00zoKrSL/2vw==@vger.kernel.org, AJvYcCUlpgLldE4AOaELzYpHoJPsJFAn96PIHCf6cTJeZXWuhNQJ0XdxwLT63hfHClcEL3WeJW7w3bgI8HlCx+Q=@vger.kernel.org, AJvYcCUtEu9iWdDWJZ4MBf6HFEqynzaSVPmozu/fuu3UR76i4CDMdx1kQgPTbEsio1IYE1ie96P7g7aoCMOgf+l2zRVk@vger.kernel.org, AJvYcCVAeqE6Gt/HWXKSQKP7UhAfX/XbmFmsUC0RlikhylITWMPqPi85dRGlXy5LCg2h3G/l0LDq2R1CSg8EofRCS/0=@vger.kernel.org, AJvYcCVL6m0HvMGF0gtdcrsLqDJehgFgLSBP9V3FeBkH3OmZpoDcdcMu75wVhqI/lWk57oAPu73znVpWijBI80Y=@vger.kernel.org, AJvYcCVnrIsuMGZoTtv0geGluA8WVEOK9++V3LPUKJ4Yje0r/Hk0UMPQSNoLqAFUudCZQrZ4IH9ejLEJcJULxw==@vger.kernel.org, AJvYcCWoruJmMJHeDyBieTZFO4wD2lEwGBgXFeooR5pIEobKQwWwDsfK9XjihvNHNkj+VnOeEkOu1F7Iyr2yLEf/@vger.kernel.org, AJvYcCX+Iug9e9L896KXYAYQRKzZCZSqwleuIk7bxg5uF+CBDny5kBemu2X64YRRFjzJHiINN/XCg3x1zRKG@vger.kernel.org, AJvYcCX4Sq30BqUje9a7bonyx9qAeEqz1qSmp1THIo5EYauvCRou4qJosyeppNow53OMHujNED1lTa3vgPnR4HDN7uuF@vger.kernel.org, AJvYcCXDtcmbbuEq3ICDfUBDDMq7FI8mIIjTJ/0Om7J36RjzfnSFn+cTmTxOD8cJlIxIjhXD00YRrvAL@vger.kernel.org, AJvYcCXPt1F0JHF7LsQCvlLAkF7VxP9xmVVCcuK3cB7WKUqXEW4mwgy+aOqbehvcadMFvnH6MGwwJ1Yyaq+Xf8IonQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxPJZlwK7dPN9pLNRIuHOE2/WA78m3phmhIEdcEjOQuLbKW98ha
+	21Yu3kncqtWbUEXzy1b/gBOqCqPI6BiAIuywOoF/NpMGngvqxj5RlnguoW5005nZffctAs+7cVM
+	hSLN4opAynq3uTZBaJRE1U5tY7kU=
+X-Gm-Gg: ASbGncvWyXY1AAzpsWgNREUsofaF0rtF3wK0vcBy8Kqr37RHZdpEkJwDX1Tgou+u58J
+	clh7aXq3m+4xvqW6reB++a/iQUsDvfA==
+X-Google-Smtp-Source: AGHT+IFDh1yb6d6zM40EzPJelJu2iVMH0WClLwmjysRWgfnYNSB8awfS5UuhO/EqqMc0eH1dffTLKgwFM99xaAmy4L8=
+X-Received: by 2002:a17:90b:1c09:b0:2ee:3cc1:793a with SMTP id
+ 98e67ed59e1d1-2ef0124c720mr32029a91.29.1733174224966; Mon, 02 Dec 2024
+ 13:17:04 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20241202-sysfs-const-bin_attr-admin_wo-v1-5-f489116210bf@weissschuh.net>
-References: <20241202-sysfs-const-bin_attr-admin_wo-v1-0-f489116210bf@weissschuh.net>
-In-Reply-To: <20241202-sysfs-const-bin_attr-admin_wo-v1-0-f489116210bf@weissschuh.net>
-To: Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
- Alexander Gordeev <agordeev@linux.ibm.com>, 
- Christian Borntraeger <borntraeger@linux.ibm.com>, 
- Sven Schnelle <svens@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
- Nicholas Piggin <npiggin@gmail.com>, 
- Christophe Leroy <christophe.leroy@csgroup.eu>, 
- Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Tzung-Bi Shih <tzungbi@kernel.org>, Brian Norris <briannorris@chromium.org>, 
- Julius Werner <jwerner@chromium.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, chrome-platform@lists.linux.dev, 
- linux-scsi@vger.kernel.org, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1733166036; l=5414;
- i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=6f4mNkpvqRUUeyyo/NJcoh7bQ9hdy8tWinO29V+C6p4=;
- b=X+0t7vXFXcE/fxGdmCbWy1dFY2LlFh9Er23M7zOt4ShPWbyx8SOdqDkvlV+lJJOf3qu+NW089
- pkVCKYBLt9UDGRGnD6yU5YvE+wYS5X+ZbLLkLjH9v7kC4Ht9hxJJQuG
-X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
- pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
+References: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
+ <20241115-converge-secs-to-jiffies-v2-9-911fb7595e79@linux.microsoft.com>
+In-Reply-To: <20241115-converge-secs-to-jiffies-v2-9-911fb7595e79@linux.microsoft.com>
+From: Christian Gmeiner <christian.gmeiner@gmail.com>
+Date: Mon, 2 Dec 2024 22:16:53 +0100
+Message-ID: <CAH9NwWdjXKH-AcKa-prwdqj2JqWLYVp1qM+0kxtQYSwo1J1c7g@mail.gmail.com>
+Subject: Re: [PATCH v2 09/21] drm/etnaviv: Convert timeouts to secs_to_jiffies()
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>, Jozsef Kadlecsik <kadlec@netfilter.org>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+	Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, 
+	Robert Jarzmik <robert.jarzmik@free.fr>, Russell King <linux@armlinux.org.uk>, 
+	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+	Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
+	Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>, 
+	Oded Gabbay <ogabbay@kernel.org>, Lucas De Marchi <lucas.demarchi@intel.com>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Jeroen de Borst <jeroendb@google.com>, Praveen Kaligineedi <pkaligineedi@google.com>, 
+	Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>, 
+	Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Jack Wang <jinpu.wang@cloud.ionos.com>, Marcel Holtmann <marcel@holtmann.org>, 
+	Johan Hedberg <johan.hedberg@gmail.com>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Florian Fainelli <florian.fainelli@broadcom.com>, Ray Jui <rjui@broadcom.com>, 
+	Scott Branden <sbranden@broadcom.com>, 
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, Xiubo Li <xiubli@redhat.com>, 
+	Ilya Dryomov <idryomov@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
+	Miroslav Benes <mbenes@suse.cz>, Petr Mladek <pmladek@suse.com>, 
+	Joe Lawrence <joe.lawrence@redhat.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Lucas Stach <l.stach@pengutronix.de>, Russell King <linux+etnaviv@armlinux.org.uk>, 
+	Louis Peens <louis.peens@corigine.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
+	Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>, netfilter-devel@vger.kernel.org, 
+	coreteam@netfilter.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	cocci@inria.fr, linux-arm-kernel@lists.infradead.org, 
+	linux-s390@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	intel-xe@lists.freedesktop.org, linux-scsi@vger.kernel.org, 
+	xen-devel@lists.xenproject.org, linux-block@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
+	linux-mm@kvack.org, linux-bluetooth@vger.kernel.org, 
+	linux-staging@lists.linux.dev, linux-rpi-kernel@lists.infradead.org, 
+	ceph-devel@vger.kernel.org, live-patching@vger.kernel.org, 
+	linux-sound@vger.kernel.org, etnaviv@lists.freedesktop.org, 
+	oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org, 
+	Anna-Maria Behnsen <anna-maria@linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
 
-Using the macro saves some lines of code and prepares the attributes for
-the general constifications of struct bin_attributes.
+>
+> Changes made with the following Coccinelle rules:
+>
+> @@ constant C; @@
+>
+> - msecs_to_jiffies(C * 1000)
+> + secs_to_jiffies(C)
+>
+> @@ constant C; @@
+>
+> - msecs_to_jiffies(C * MSEC_PER_SEC)
+> + secs_to_jiffies(C)
+>
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-While at it also constify the callback parameters.
+Reviewed-by: Christian Gmeiner <cgmeiner@igalia.com>
 
-Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
----
- drivers/scsi/arcmsr/arcmsr_attr.c | 73 ++++++++++++++-------------------------
- 1 file changed, 26 insertions(+), 47 deletions(-)
+> ---
+>  drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c b/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
+> index 721d633aece9d4c81f0019e4c55884f26ee61c60..0f5a2c885d0ab7029c7248e15d6ea3c31823b782 100644
+> --- a/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
+> +++ b/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
+> @@ -100,7 +100,7 @@ int etnaviv_cmdbuf_init(struct etnaviv_cmdbuf_suballoc *suballoc,
+>                 mutex_unlock(&suballoc->lock);
+>                 ret = wait_event_interruptible_timeout(suballoc->free_event,
+>                                                        suballoc->free_space,
+> -                                                      msecs_to_jiffies(10 * 1000));
+> +                                                      secs_to_jiffies(10));
+>                 if (!ret) {
+>                         dev_err(suballoc->dev,
+>                                 "Timeout waiting for cmdbuf space\n");
+>
+> --
+> 2.34.1
+>
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
-index baeb5e79569026f1af6612705689219bb4a7052f..af7750b551910b06254e443c25bebf323e29f162 100644
---- a/drivers/scsi/arcmsr/arcmsr_attr.c
-+++ b/drivers/scsi/arcmsr/arcmsr_attr.c
-@@ -58,11 +58,11 @@
- #include <scsi/scsi_transport.h>
- #include "arcmsr.h"
- 
--static ssize_t arcmsr_sysfs_iop_message_read(struct file *filp,
--					     struct kobject *kobj,
--					     struct bin_attribute *bin,
--					     char *buf, loff_t off,
--					     size_t count)
-+static ssize_t mu_read_read(struct file *filp,
-+			    struct kobject *kobj,
-+			    const struct bin_attribute *bin,
-+			    char *buf, loff_t off,
-+			    size_t count)
- {
- 	struct device *dev = container_of(kobj,struct device,kobj);
- 	struct Scsi_Host *host = class_to_shost(dev);
-@@ -105,11 +105,11 @@ static ssize_t arcmsr_sysfs_iop_message_read(struct file *filp,
- 	return allxfer_len;
- }
- 
--static ssize_t arcmsr_sysfs_iop_message_write(struct file *filp,
--					      struct kobject *kobj,
--					      struct bin_attribute *bin,
--					      char *buf, loff_t off,
--					      size_t count)
-+static ssize_t mu_write_write(struct file *filp,
-+			      struct kobject *kobj,
-+			      const struct bin_attribute *bin,
-+			      char *buf, loff_t off,
-+			      size_t count)
- {
- 	struct device *dev = container_of(kobj,struct device,kobj);
- 	struct Scsi_Host *host = class_to_shost(dev);
-@@ -153,11 +153,11 @@ static ssize_t arcmsr_sysfs_iop_message_write(struct file *filp,
- 	}
- }
- 
--static ssize_t arcmsr_sysfs_iop_message_clear(struct file *filp,
--					      struct kobject *kobj,
--					      struct bin_attribute *bin,
--					      char *buf, loff_t off,
--					      size_t count)
-+static ssize_t mu_clear_write(struct file *filp,
-+			      struct kobject *kobj,
-+			      const struct bin_attribute *bin,
-+			      char *buf, loff_t off,
-+			      size_t count)
- {
- 	struct device *dev = container_of(kobj,struct device,kobj);
- 	struct Scsi_Host *host = class_to_shost(dev);
-@@ -188,58 +188,37 @@ static ssize_t arcmsr_sysfs_iop_message_clear(struct file *filp,
- 	return 1;
- }
- 
--static const struct bin_attribute arcmsr_sysfs_message_read_attr = {
--	.attr = {
--		.name = "mu_read",
--		.mode = S_IRUSR ,
--	},
--	.size = ARCMSR_API_DATA_BUFLEN,
--	.read = arcmsr_sysfs_iop_message_read,
--};
-+static const BIN_ATTR_ADMIN_RO(mu_read, ARCMSR_API_DATA_BUFLEN);
- 
--static const struct bin_attribute arcmsr_sysfs_message_write_attr = {
--	.attr = {
--		.name = "mu_write",
--		.mode = S_IWUSR,
--	},
--	.size = ARCMSR_API_DATA_BUFLEN,
--	.write = arcmsr_sysfs_iop_message_write,
--};
-+static const BIN_ATTR_ADMIN_WO(mu_write, ARCMSR_API_DATA_BUFLEN);
- 
--static const struct bin_attribute arcmsr_sysfs_message_clear_attr = {
--	.attr = {
--		.name = "mu_clear",
--		.mode = S_IWUSR,
--	},
--	.size = 1,
--	.write = arcmsr_sysfs_iop_message_clear,
--};
-+static const BIN_ATTR_ADMIN_WO(mu_clear, 1);
- 
- int arcmsr_alloc_sysfs_attr(struct AdapterControlBlock *acb)
- {
- 	struct Scsi_Host *host = acb->host;
- 	int error;
- 
--	error = sysfs_create_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_read_attr);
-+	error = sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_mu_read);
- 	if (error) {
- 		printk(KERN_ERR "arcmsr: alloc sysfs mu_read failed\n");
- 		goto error_bin_file_message_read;
- 	}
--	error = sysfs_create_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_write_attr);
-+	error = sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_mu_write);
- 	if (error) {
- 		printk(KERN_ERR "arcmsr: alloc sysfs mu_write failed\n");
- 		goto error_bin_file_message_write;
- 	}
--	error = sysfs_create_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_clear_attr);
-+	error = sysfs_create_bin_file(&host->shost_dev.kobj, &bin_attr_mu_clear);
- 	if (error) {
- 		printk(KERN_ERR "arcmsr: alloc sysfs mu_clear failed\n");
- 		goto error_bin_file_message_clear;
- 	}
- 	return 0;
- error_bin_file_message_clear:
--	sysfs_remove_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_write_attr);
-+	sysfs_remove_bin_file(&host->shost_dev.kobj, &bin_attr_mu_write);
- error_bin_file_message_write:
--	sysfs_remove_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_read_attr);
-+	sysfs_remove_bin_file(&host->shost_dev.kobj, &bin_attr_mu_read);
- error_bin_file_message_read:
- 	return error;
- }
-@@ -248,9 +227,9 @@ void arcmsr_free_sysfs_attr(struct AdapterControlBlock *acb)
- {
- 	struct Scsi_Host *host = acb->host;
- 
--	sysfs_remove_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_clear_attr);
--	sysfs_remove_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_write_attr);
--	sysfs_remove_bin_file(&host->shost_dev.kobj, &arcmsr_sysfs_message_read_attr);
-+	sysfs_remove_bin_file(&host->shost_dev.kobj, &bin_attr_mu_clear);
-+	sysfs_remove_bin_file(&host->shost_dev.kobj, &bin_attr_mu_write);
-+	sysfs_remove_bin_file(&host->shost_dev.kobj, &bin_attr_mu_read);
- }
- 
- 
 
 -- 
-2.47.1
+greets
+--
+Christian Gmeiner, MSc
 
+https://christian-gmeiner.info/privacypolicy
