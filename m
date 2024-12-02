@@ -1,228 +1,197 @@
-Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E040F1FF5F4
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Dec 2024 12:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733141864; cv=none; b=MlDCWxv8tblcTezeV6lyhsLnPqjJ3feHBRfu8ZfuaouJu5wDSX0pelSaiK7rxep5oH/pcchbaDYOZxRaIqbqIIBqAgmk93XuSU8axEtpqDW4/Dy8LntGuBo9abh6exw6ZQ8qyZpixkanxU4UdqrfvrpbgQalDyUhNClLiM0dRLk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733141864; c=relaxed/simple;
-	bh=cjwiLpyces7oEH/gnZel3kh0F0XZ3KiDL4+nGbd7cRw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pU5SL+ewFqw/3kHNqdxrAtmKiy8ia529pSmnPKEVSAbZJfbh/te4mau8O2+TQQm79TJFlJF3nk1RYtP9I01j3GFTjq5yfhCFiAh6AAJvsCjIIdRu1HkKUPiFnMqd8xHfzeG7JMYqXwSd5HbDgzYyt17llhruuEbr67aw+E2NpSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=q2qBpC4J; arc=none smtp.client-ip=209.85.167.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0AD31FE46F
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Dec 2024 13:01:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733144473; cv=fail; b=szcKMOV7TGsm5D/+wJPHzsWU7TbUMFAQFuLgUoRAFllEAFGs+E1VYnyr+JbCANvdvg3tsyWp7Hmcic8OCyKIlNgT4+BsHnnN21xpuIli1mNK5y7pu1fzBEKP9TmnXpur9EnasfYTxO5VzXX/GOjspK1xiKX7CH7HnfpGVFuuPu8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733144473; c=relaxed/simple;
+	bh=uSYA+zZQ9P9s00qHkR6fGdPoYh7hyh5EDBj6LpWJhHw=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=KG2LJLDXYLKn8GUbREusgaRt3Fai36ST290nORPJuaFeAerBOpoRWOrzDqnNKoJjbnWeu8gg3AIWQRA/u1jfoJPoRSFxQl+mdGUVbzq9fMkLYiTDcss7/p0zm7ZcyEDOPJdoL+ZI9U2mt0oDeKOPuRLsGyLs3Bb0WuuM22qqK3s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=B3zn1uwp; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=UERSBUs0; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="q2qBpC4J"
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-53de8ecafeeso4453986e87.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Dec 2024 04:17:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B3zn1uwp";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="UERSBUs0"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B26WvlK006631;
+	Mon, 2 Dec 2024 13:00:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=corp-2023-11-20; bh=QMdp1BNtBurMK/ji
+	Bh7GAzdGA1Gt2xmFlvNcPC/bMec=; b=B3zn1uwphKYtpH1IdBqZ1+volNKe28Pw
+	0jBFgq0HVUk1xt9ySkYa4Km33mCe4hveM/rlB71+vQvzjOd1HgLF7WgR4Tht9WVI
+	k5UQ6axNT2VEuhu6Q8DaWgTpOHmEok+npSH8rxvU1Vqty5bx0S2sAD5zUgGilGgd
+	JdiGLUkHfTivq3ufOI7Sd5jk59De8RxBHCPVMYybLHHApvJjmA4JHujCwV/uj2if
+	HJmRpAG3nzvSietXK1SCg9pqAz4gfyauuylUmxN8VYQpuVH8YI3kiFfku+vdUtKc
+	P7BfXw1z8HJ/fWUVoQvX8IimJhF4d/To75qIQMSkfQzolR1QF+Csmw==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 437tas2yvx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 02 Dec 2024 13:00:54 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 4B2CUKIt030953;
+	Mon, 2 Dec 2024 13:00:54 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2175.outbound.protection.outlook.com [104.47.57.175])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 437wjayx5h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 02 Dec 2024 13:00:53 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mDU0o+iMBq0MG7hhZ2dFnwhMUL0m9nRwAlUoOYCLctJ4/b6B+rDZ13rBbAmp4LkLrCy9ZyeGmJu/+u6EC9D5NMUAWlPOmFjMrG4M6wSFK357d1/kvcRJGZOERaBrDO3V8G9IeV3mBfhwKyoy/H/do4R/yFUVOmmEpoAbl8N3V+B6j9Rym+TpFiaBBn1aH1UOJv1yloVTZqUq46qsHERaQYweeS2h8RQ+kW8jeNbV3LGR6vz3ENrgyi9XH3f4mlCu1xCo6jU1vtEJjyItbgw556dY03I27mczJFeHiyV1qdWxG2frK1DsW2FY7NHmPpOeVjKN0mNDJE2UCJZowOkFOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QMdp1BNtBurMK/jiBh7GAzdGA1Gt2xmFlvNcPC/bMec=;
+ b=Uyl5ZmfbUrTLls0klHlUIUkzwVJIUgz9H7k/RIS4TIt8Z39CT5x3VHG49AkZfk7kqsq5xs+ANAKo4LefdGR9bONSOzAQL2zrsT6hOlpDP2LTI2royvLRNP7+pnPkE46hiSnHZ08DLnKfk8YgIdJhcugIhmuIzdsQywQ+BxSBs5QSXrzFXz+T6L8hwXn1TB/7XjPsdBlB5y26Li/qyElI3zjeY3GHgbfsFIvNE/bl1am3yU4D8vVFpFb5X84vKLIcinLPHH+e+qL/Zmsyc6u5qlY4uggnuXDDZRlqt1dxlqD3mnWJhx8yBWB2vXjz1UkQKPvPNtErMZpy2Si1qcWZAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1733141860; x=1733746660; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bUoLIZvVtbQSISsGIJiv88vjB94vxHsf2pfqlKAM26U=;
-        b=q2qBpC4JylFDvH6kZYUcKPn66I2p3ou2NUMcxustQ/c/eMgR/LSuNuKooK0/H5ETxM
-         kDa6fuZ8vkaA9f4KHBy78mrfcF6rhVdz3E2HuOk9TCQvu3gN6RsPIc7Sy0cPgGGjI/ir
-         BisdLFOuJMV6i2F64eFJbmGSCJxvGDyhKLtXMVnbxMN8hSRX9LeKtvWmDIbHOtuBYu0W
-         T1gRhQ3DqgjEf9bqm/xT4Opy3txS9qxUR/AdDhBfijNRH9IWNHSOkdmaogZkvRvdxvBu
-         d8ytAvUIsT68+YPUfxTWp9v/2YDI+23n6evqPdT3o4HHZoRemXG5yLyD8g4HPg9ToQMq
-         ArOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733141860; x=1733746660;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bUoLIZvVtbQSISsGIJiv88vjB94vxHsf2pfqlKAM26U=;
-        b=osg3tgdYbf6UX05hnwcpPFu1KgGc54hma6St6DA+Q4JC8DdJ+uBBU/8Tt5jPf1/Sn7
-         CUuCLyPdIdm2eKrQ5KACU5wwW/L02B48dCsfclKb0HsIYzlC46RVEL2fxB3KV8Iv3UVH
-         f67cjSW+Q64J42t2tyCEBE4R3CXy0np9vsSD7kl9OzrnlmlxbrVq2fBCICvCcikFOnQ3
-         +DKOZZaLGyIsMLSm9nCaW2DbCL3PFMt5gV+unWdfp/VHcD/fJJjMBzUFrCkhIWum0KJv
-         ngyXzjKe7hncM2yD8mVaW0EeaQst6AH974DP505bpvq0HCwPrnk2R6Kt4PqbbIbfBdpV
-         trjg==
-X-Forwarded-Encrypted: i=1; AJvYcCU7aCArj6r4WHBZRCU77ZZdjWnVRB8sRJohqtAagtkHF1vZYQCvq1wPjuRTltxakkl9r6YoRWLxENJv@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy0eOa5ziDaqn+Zx41ld98ySpGzIZw+pYYQ1vMi4XNl25EE1hUY
-	VVPRHSqdO0zHaZOw5G4D5EZNoahvEJJE34tSpG01tu9YBEJQb5T30iKpfRcAgMA=
-X-Gm-Gg: ASbGnct0tZ/B8lCSSpTEGvfGGb9Z9RM4j/2kzvzizDzMSR8uOywo1/NDvLp9IZcu3tA
-	U0+4AcKfiakjyD58ZWQpjyX7vychfB3WVJwy/otq14Aqhl9GN8ahUeAPgm/ThMNAqwbdQLnYupK
-	WE2bJesHYWSVMGBHVP6FWrk4XHIcd6aBUlkCnmYv3W8P8t06fxA0YMGMCrsQqy9/NqDNUp3A3z/
-	ZYSrtbpjQQRqWksPjGFTwdFFvdTJYUns5eOe+MN+53GIiBEZuTknjD5Q5xNLmSx+4i7SLgKWsCC
-	zaxWjHdjp0APVk6jNYjiN52a4nhkUA==
-X-Google-Smtp-Source: AGHT+IGhAvYybqFJhAz3sCBw+CQSHdAjkvqJ/iPZp81uMYhUbES1NVq6qCCpGOPW79Fcg/GhD/p3Tw==
-X-Received: by 2002:a05:6512:2304:b0:53d:e76b:5e6e with SMTP id 2adb3069b0e04-53df00d9cf4mr11692080e87.31.1733141860084;
-        Mon, 02 Dec 2024 04:17:40 -0800 (PST)
-Received: from eriador.lumag.spb.ru (2001-14ba-a0c3-3a00--b8c.rev.dnainternet.fi. [2001:14ba:a0c3:3a00::b8c])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53df6497197sm1475981e87.224.2024.12.02.04.17.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Dec 2024 04:17:38 -0800 (PST)
-Date: Mon, 2 Dec 2024 14:17:36 +0200
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To: Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, 
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>, Adrian Hunter <adrian.hunter@intel.com>, 
-	Asutosh Das <quic_asutoshd@quicinc.com>, Ritesh Harjani <ritesh.list@gmail.com>, 
-	Ulf Hansson <ulf.hansson@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Gaurav Kashyap <quic_gaurkash@quicinc.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Eric Biggers <ebiggers@kernel.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, 
-	Jaegeuk Kim <jaegeuk@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	linux-block@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dm-devel@lists.linux.dev, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, Om Prakash Singh <quic_omprsing@quicinc.com>
-Subject: Re: [PATCH RESEND v7 10/17] soc: qcom: ice: add support for hardware
- wrapped keys
-Message-ID: <45epch3o66skwhemavcqniqw62zfqyh4qrv2q4ay3esd2kxslu@qv6j4ivp4l3a>
-References: <20241202-wrapped-keys-v7-0-67c3ca3f3282@linaro.org>
- <20241202-wrapped-keys-v7-10-67c3ca3f3282@linaro.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QMdp1BNtBurMK/jiBh7GAzdGA1Gt2xmFlvNcPC/bMec=;
+ b=UERSBUs0rJ8KyO+/7+V4auVi488A0vsdLwF0mBWcIRUACUKMydJ9h7yqmw8d9U+d3vb2Vhs5qiOouRsbYMIh6mJHUwK5BlYftiXLjJlhiEeZ/x5ZvNQMfwX4V8cBiTB5gSKWrjPP1+d1JFjkh1CTYpARLoJWxgM7uCjmJFWnMPM=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by LV8PR10MB7869.namprd10.prod.outlook.com (2603:10b6:408:1e6::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8207.17; Mon, 2 Dec
+ 2024 13:00:50 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%4]) with mapi id 15.20.8207.017; Mon, 2 Dec 2024
+ 13:00:50 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, dgilbert@interlog.com,
+        John Garry <john.g.garry@oracle.com>
+Subject: [PATCH] scsi: scsi_debug: Fix hrtimer support for ndelay
+Date: Mon,  2 Dec 2024 13:00:45 +0000
+Message-Id: <20241202130045.2335194-1-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BLAPR03CA0145.namprd03.prod.outlook.com
+ (2603:10b6:208:32e::30) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241202-wrapped-keys-v7-10-67c3ca3f3282@linaro.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|LV8PR10MB7869:EE_
+X-MS-Office365-Filtering-Correlation-Id: 60db3a82-d03c-489f-3441-08dd12d1589e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?EdiPk46dEnPlOiZETVywDx2MbSQH5zCV6F1HpwYROc6KWjs86iZUAPYzQXm9?=
+ =?us-ascii?Q?Bcuxq5DB+8dA6f2lN5/K8JJXzhE394fROMoIEH+LzwsJplEoGa1YsZwszMBw?=
+ =?us-ascii?Q?vwhjume5ZtwrnYDW70XnFN5QIMNghAhpA80KEpjZ4ihGU+Y/WXC/fp35hpEV?=
+ =?us-ascii?Q?3s8R1huMP/xtGvZyG2FRij5gdK/nXtddz3s7gN2zfU3vovx0cf6S7AUpGAkx?=
+ =?us-ascii?Q?P4rqECACgK66Ib8uRZoAmLnzeT7XZOYN9ShuxwzIUafJSmgYKpjQmluI5kzo?=
+ =?us-ascii?Q?M+0+8s+mqpaf6YeJVXcM6MFaVG3tCp453VkAQiwUj9vK1cC8TxP2sHqyYFsM?=
+ =?us-ascii?Q?H+UFWIS0LzvsqcnFVSL0UWbG59K7Hvb1hUWLhgcWBAr2kpcz7EZYit8fyNoP?=
+ =?us-ascii?Q?6QM4lso+NN9s9FFyJJnJOzLQ978X2/iUwTf0s/aZiLBc877Aux8mk0G+6JH2?=
+ =?us-ascii?Q?Q+EpkXUuS/2ONlQmziUFXWpJpR9gxYp3atkhfGg9F9j17Nq3sTUkYIz191Cl?=
+ =?us-ascii?Q?NRQrPVZhQ9RoQAYxVKGgm8aBxDxE9dTr15/y0E2ngiuc/FLr+b0t4zmeSLWz?=
+ =?us-ascii?Q?y7yEgZg9sQc/wLpQctPg2X3YtfsUscoIwWGTKLpLNRenaDuIJix/aJTIP+Iw?=
+ =?us-ascii?Q?hTQz+WeTInjKpm9EZ7i1+TKtiKlUGgEc/WZs3qeuQlK2NGC2OAlTQwAYv4Fq?=
+ =?us-ascii?Q?OJaaxyaQr+UfVDeFXZisqRPDlsSsBsYxwA+6PbvQKJ/KELBEym9smcvC9f4U?=
+ =?us-ascii?Q?yrnF2PpZeBoQClcsUxR4frT+/Wfa0JCFTprHf9IOCgfi4X3NUxuLU9p4W52u?=
+ =?us-ascii?Q?gsjPbUiB5BmPIIsWu8RooGXQIICKHGdi8b/dKhs2HUFDPr0MlITATkknNxcw?=
+ =?us-ascii?Q?LU9XiorrfLrgL0IDf7EKsiuZ04GFSiV5TJC1sdJKlTgO4XH/pcBUK23Mb9he?=
+ =?us-ascii?Q?DoXqfWmnd7/45sXuufGG+vBy9vCv63+P92rmyMVDuSH67IpnpK+9a7HL9DRd?=
+ =?us-ascii?Q?ja4TI+gXI9VvkPba5/iocpyTx1PHosszpyVScETCqqw6nElj/varWIQNZIub?=
+ =?us-ascii?Q?DRR4z+OupCFq9//6VfMSb4zeridL0sKwCQf1qHwZ8navl9yEAG33Ot3P2wjq?=
+ =?us-ascii?Q?8el3KfIFMqYCKJRDKbYzYqnwaFBlryib/zeHxgXQoHDAdQrongZQy0JfXhlA?=
+ =?us-ascii?Q?3mn//w/JvRtYfBDl/iZXn2x3VRTZlXARqwZudoUf6qWHYHhhGQBLF7G3Ogvt?=
+ =?us-ascii?Q?lC1zFdgooj3vfgZJsKfpQTlzAC6rR/r6dyCmfAI0eMaiG3x/mQkgnmUmMP7t?=
+ =?us-ascii?Q?LKdhIz91LkU+5VlB3psxpwscIIqru+TQV7qxOMa/2MmAGw=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?BwgX9NBxv8/SdZniBXhd9WrWB/XhR5hq6o6yXdjGm8PyDzGkhd1U/gakd2vq?=
+ =?us-ascii?Q?O9ZG8LN96Y0mh/sIZgWbPRAVds9wczHmAQttboMU4H0Wf4+afIliMOFaVHSg?=
+ =?us-ascii?Q?k3WOo8axm3FfBV/pC3gDsXNZoM/kcK9psvKmidDpRlsZD/JCy3mZpVWo1DCP?=
+ =?us-ascii?Q?Hx9M8R1U9v9vpOXt1XkyvTvQmLctLp6wNI8bXbj5NRgGwtUSo+PwYWL5YNLY?=
+ =?us-ascii?Q?9qGoZ94H9w7zKHlBS+LN2RKjZ5rvQ9HtnHxCRwRIoFMK55AwXYYyw9cwqf1j?=
+ =?us-ascii?Q?biUpKXATlPIQ2z700XNgU/bDtSzcWf7diW432CCSFOjYRI6uoVdJPvPySsAL?=
+ =?us-ascii?Q?VPUu/SnmTVGXjYAdoY11JVO6bgVSPMVmVSlEBtMq94ch71yDAJg98dMRf5Ch?=
+ =?us-ascii?Q?w+kUxx4MkIgHfI8wbKZKhlVeXz2gUVJ+xWtz9lUJtBS35D7C6Uvj298VI7zv?=
+ =?us-ascii?Q?9C8+RvGeXDYvNNmHJQwzLmvAzKxk4tmNEEmZejrnKYAnlmaQGnDoP6xi+Aqf?=
+ =?us-ascii?Q?x+dH8sN0gcrxXkMpNp1QEuQs6SDgiDvO67m6QWZM3kFTfDzuMXbAcJPOo217?=
+ =?us-ascii?Q?61D808m+EanMgt1fCdT6XYgHi3HzL5CAPIMsbiHqpLLT/4m1GcnW0hWPXx9j?=
+ =?us-ascii?Q?3prScIzkne3O9co/ipDhZOYFUvP7xNTX37OzT2z8/JgcXZ01JuAfxOs1rQb6?=
+ =?us-ascii?Q?MWrx0MWel9eKlmhHc8015NEV/qqm82UJyHSsF03ZrxBnoqXgOcmHSdhMuWkH?=
+ =?us-ascii?Q?qGMtJvTa101wNuC1Chht8lZg/gdjBAUX4aS5NsGA/btCPtW+2qI5I8iOm8/z?=
+ =?us-ascii?Q?n4+ExZfeTR6PJ3X5hnmLBLitsWRFjl49Z2dF1JY8CqPsuEBkQhnkTwL2vPHA?=
+ =?us-ascii?Q?yagaTrjxyK0/OFt5YEppItfygX9kSXIdk1TUTXujc9k+jKTOZYYOyuMkxgqt?=
+ =?us-ascii?Q?j/kkyQfiLom931yUeoVLrkV9UHR2tyNtcB9YOjzO0pAxHPKAduMsHe4c/uZL?=
+ =?us-ascii?Q?bXaQG2y5pFyvpvurQDChEI87Cy7Qi8aqN/WJB2HreZBi/5OU30xLf2vje5Pg?=
+ =?us-ascii?Q?g76GqdLLRdKBIJXiaZDvC/MKLeyevrgCnBf/Y6NjUQvMbF5vK9snkR9FRb92?=
+ =?us-ascii?Q?YD4fjbcE8F3qIE7BpLjT9rlBEwV3/pLRo/nsyvoQwqS3+cWFAyTXb94zD9bL?=
+ =?us-ascii?Q?Qobt7OSOv/SPcrB2vIus7EEujbu8hXvB6eP2HdVmJqBW8l2+FH8hCZFJVtO+?=
+ =?us-ascii?Q?qSna+PFjxKVt76CiINV3xJ/AN6VyftGcIgFVPF0LG8GMMg3bVDdqC7bETvGd?=
+ =?us-ascii?Q?YM+hVaP6hjN5fn7cH4hj1BjHgwohpnfeXfV55tpVFcR6GLSIjlE+6lfqjHr4?=
+ =?us-ascii?Q?XEqia2FyvWtC3enO1izkQHy5A73Jqs+HgMGAykl8lLYoGOLoN0nFUQpbQoib?=
+ =?us-ascii?Q?MrsKqV+4oDU1SiMkgYQHcfUz7VgnPelNpeWePErPBZlEs3tHjHXdVoZuq5S8?=
+ =?us-ascii?Q?nUOgkgE8+rIZ5mvWGrro351ilcl2GrGpn20v/KFd2f7CDLbh7GBTLqqE7tkD?=
+ =?us-ascii?Q?wpi/OvPm4T1tyyRxZofCjHrIC+zxoHaPM0gVjHciY4LpUES/BvJnakPI5N+1?=
+ =?us-ascii?Q?aA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	IAVBR4aLrI7zix2SX/fRs7GGOxo1jMvmf4959v1UIM9bMAfgu17hdvjYNpanTu5gGES0DIxlJZ9+VKFQPKncYw8Ol8YqiISQCS7ZZ+k7khdnSWLd07d1lXFU4kHP3v2WlQh41dKLeCJP8rVAIdov726Ahi82dhAydUtQRiXeFFGoJCuYLttPIiG4m2GfWxovRAIJ7WPHj2GDdF5AGmTO8tolvomVFScRINNKnReYVmPqfGu5y1GIMvKTPQDMEPKAq+BDNg3btdp1Bex9k6+hsR5lkkHMM2Lfk2SUK3LlR/cBJtBUwZ9fFan7TCp3Dh970fanUk2Qp7eEkDITWfTp0G83UtO+BRm0aP5Ccex3wdW5rjdW8kRWyDo5hotQjdD7Tr42y8AXA+7tElzwT2Tyh9E73Np3dSgFl512B6DdK+YLVDwX8/dBAUy/3xtBXeNm0bARGKokgUWjTeMAY3sNVK9iX3emx4R9H+vPGM14f4hEGCfgHLkPluKum+u16UHM3B/PGiMzZ+TH54m4Q4xmFK5RvfgEJYazCec0wkbmJzPA8QqpLUSI8kiqnOREDrVys1kfv4mWw7UETLesYBeqTrVaAz9BLmAQsrn918NJVW0=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 60db3a82-d03c-489f-3441-08dd12d1589e
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Dec 2024 13:00:50.1921
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1HuXELhzdLqXYfOkThYN1snmDghSvNeZIZlKoYDBqb29IrPnxyXKhzgxxum3UGVvYD8GprTG50jowmpD9jk59Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR10MB7869
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2024-12-02_08,2024-12-02_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 adultscore=0
+ malwarescore=0 bulkscore=0 suspectscore=0 spamscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
+ definitions=main-2412020114
+X-Proofpoint-GUID: M-DzXbijiDGzxLWIhuSHM5_MDgwE6mNb
+X-Proofpoint-ORIG-GUID: M-DzXbijiDGzxLWIhuSHM5_MDgwE6mNb
 
-On Mon, Dec 02, 2024 at 01:02:26PM +0100, Bartosz Golaszewski wrote:
-> From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> 
-> Now that HWKM support has been added to ICE, extend the ICE driver to
-> support hardware wrapped keys programming coming in from the storage
-> controllers (UFS and eMMC). This is similar to raw keys where the call is
-> forwarded to Trustzone, however we also need to clear and re-enable
-> CFGE before and after programming the key.
-> 
-> Derive software secret support is also added by forwarding the call to
-> the corresponding SCM API.
-> 
-> Wrapped keys are only used if the new module parameter is set AND the
-> architecture supports HWKM.
-> 
-> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
-> Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> ---
->  drivers/soc/qcom/ice.c | 128 ++++++++++++++++++++++++++++++++++++++++++++-----
->  include/soc/qcom/ice.h |   4 ++
->  2 files changed, 121 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> index 5f138e278554c..e83e74e39e44f 100644
-> --- a/drivers/soc/qcom/ice.c
-> +++ b/drivers/soc/qcom/ice.c
-> @@ -28,6 +28,8 @@
->  #define QCOM_ICE_REG_BIST_STATUS		0x0070
->  #define QCOM_ICE_REG_ADVANCED_CONTROL		0x1000
->  #define QCOM_ICE_REG_CONTROL			0x0
-> +#define QCOM_ICE_LUT_KEYS_CRYPTOCFG_R16		0x4040
-> +
->  /* QCOM ICE HWKM registers */
->  #define QCOM_ICE_REG_HWKM_TZ_KM_CTL			0x1000
->  #define QCOM_ICE_REG_HWKM_TZ_KM_STATUS			0x1004
-> @@ -62,6 +64,8 @@
->  #define QCOM_ICE_HWKM_DISABLE_CRC_CHECKS_VAL	(BIT(1) | BIT(2))
->  #define QCOM_ICE_HWKM_RSP_FIFO_CLEAR_VAL	BIT(3)
->  
-> +#define QCOM_ICE_HWKM_CFG_ENABLE_VAL		BIT(7)
-> +
->  /* BIST ("built-in self-test") status flags */
->  #define QCOM_ICE_BIST_STATUS_MASK		GENMASK(31, 28)
->  
-> @@ -69,6 +73,8 @@
->  #define QCOM_ICE_FORCE_HW_KEY0_SETTING_MASK	0x2
->  #define QCOM_ICE_FORCE_HW_KEY1_SETTING_MASK	0x4
->  
-> +#define QCOM_ICE_LUT_KEYS_CRYPTOCFG_OFFSET	0x80
-> +
->  #define QCOM_ICE_HWKM_REG_OFFSET	0x8000
->  #define HWKM_OFFSET(reg)		((reg) + QCOM_ICE_HWKM_REG_OFFSET)
->  
-> @@ -78,6 +84,15 @@
->  #define qcom_ice_readl(engine, reg)	\
->  	readl((engine)->base + (reg))
->  
-> +#define QCOM_ICE_LUT_CRYPTOCFG_SLOT_OFFSET(slot) \
-> +	(QCOM_ICE_LUT_KEYS_CRYPTOCFG_R16 + \
-> +	 QCOM_ICE_LUT_KEYS_CRYPTOCFG_OFFSET * slot)
-> +
-> +static bool ufs_qcom_use_wrapped_keys;
-> +module_param_named(use_wrapped_keys, ufs_qcom_use_wrapped_keys, bool, 0660);
-> +MODULE_PARM_DESC(use_wrapped_keys,
-> +"Use HWKM for wrapped keys support if available on the platform");
+Since commit 771f712ba5b0 ("scsi: scsi_debug: Fix cmd duration
+calculation"), ns_from_boot value is only evaluated for in schedule_resp()
+for polled requests.
 
-This should go into the previous patch and it should be handled in
-qcom_ice_check_supported() instead.
+However, ns_from_boot is also required for hrtimer support for when ndelay
+is less than INCLUSIVE_TIMING_MAX_NS, so fix up the logic to decide when to
+evaluate ns_from_boot.
 
-> +
->  struct qcom_ice {
->  	struct device *dev;
->  	void __iomem *base;
+Fixes: 771f712ba5b0 ("scsi: scsi_debug: Fix cmd duration calculation")
+Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-[...]
-
-> @@ -313,24 +378,40 @@ int qcom_ice_program_key(struct qcom_ice *ice,
->  
->  	/* Only AES-256-XTS has been tested so far. */
->  	if (algorithm_id != QCOM_ICE_CRYPTO_ALG_AES_XTS ||
-> -	    key_size != QCOM_ICE_CRYPTO_KEY_SIZE_256) {
-> +	    (key_size != QCOM_ICE_CRYPTO_KEY_SIZE_256 &&
-> +	    key_size != QCOM_ICE_CRYPTO_KEY_SIZE_WRAPPED)) {
->  		dev_err_ratelimited(dev,
->  				    "Unhandled crypto capability; algorithm_id=%d, key_size=%d\n",
->  				    algorithm_id, key_size);
->  		return -EINVAL;
->  	}
->  
-> -	memcpy(key.bytes, bkey->raw, AES_256_XTS_KEY_SIZE);
-> +	if (ufs_qcom_use_wrapped_keys &&
-
-I think it's too late to have the check here.
-
-> +	    (bkey->crypto_cfg.key_type == BLK_CRYPTO_KEY_TYPE_HW_WRAPPED)) {
-> +		/* It is expected that HWKM init has completed before programming wrapped keys */
-> +		if (!ice->use_hwkm || !ice->hwkm_init_complete) {
-> +			dev_err_ratelimited(dev, "HWKM not currently used or initialized\n");
-> +			return -EINVAL;
-> +		}
-> +		err = qcom_ice_program_wrapped_key(ice, bkey, data_unit_size,
-> +						   slot);
-> +	} else {
-> +		if (bkey->size != QCOM_ICE_CRYPTO_KEY_SIZE_256)
-> +			dev_err_ratelimited(dev,
-> +					    "Incorrect key size; bkey->size=%d\n",
-> +					    algorithm_id);
-> +		return -EINVAL;
-> +		memcpy(key.bytes, bkey->raw, AES_256_XTS_KEY_SIZE);
->  
-> -	/* The SCM call requires that the key words are encoded in big endian */
-> -	for (i = 0; i < ARRAY_SIZE(key.words); i++)
-> -		__cpu_to_be32s(&key.words[i]);
-> +		/* The SCM call requires that the key words are encoded in big endian */
-> +		for (i = 0; i < ARRAY_SIZE(key.words); i++)
-> +			__cpu_to_be32s(&key.words[i]);
->  
-> -	err = qcom_scm_ice_set_key(slot, key.bytes, AES_256_XTS_KEY_SIZE,
-> -				   QCOM_SCM_ICE_CIPHER_AES_256_XTS,
-> -				   data_unit_size);
-> -
-> -	memzero_explicit(&key, sizeof(key));
-> +		err = qcom_scm_ice_set_key(slot, key.bytes, AES_256_XTS_KEY_SIZE,
-> +					   QCOM_SCM_ICE_CIPHER_AES_256_XTS,
-> +					   data_unit_size);
-> +		memzero_explicit(&key, sizeof(key));
-> +	}
->  
->  	return err;
->  }
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 936565b5000f..8a8ee4aff49e 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6447,7 +6447,7 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 	}
+ 	sd_dp = &sqcp->sd_dp;
+ 
+-	if (polled)
++	if (polled || (ndelay > 0 && ndelay < INCLUSIVE_TIMING_MAX_NS))
+ 		ns_from_boot = ktime_get_boottime_ns();
+ 
+ 	/* one of the resp_*() response functions is called here */
 -- 
-With best wishes
-Dmitry
+2.31.1
+
