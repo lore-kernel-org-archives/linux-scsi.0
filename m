@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B534A203704;
-	Mon,  2 Dec 2024 14:00:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A9E92040BB;
+	Mon,  2 Dec 2024 14:00:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733148029; cv=none; b=mBCgZbdS8S4mT1CaiDNuPGinUx8KPaqoXFQKT7Ru1Qk+Fn8h9g/AtWVbwTRq6FuaCdc3bAiyIpxFstnBqUqmKoEmzx+QFI7YD/vC1IknGOO5KuDmkgBXYWILrl1Pij8+ZMNlZ2AYA8TQbKJs1lGavusyRiHR5gVcThYCDnRbnE8=
+	t=1733148032; cv=none; b=jDd6LKy39uOkIIoYbpAixKhv0uI3oFwMJqQtrOFNY9mzk0HfwTGNLXzPNj0To4bYaXGSlKy2C1nPGGGp68AcrNBcMM6UZDm92YiVQFV+axewCOr/2B/b3H85qOBOmJ/oDqCttI9s5DIlgBbfuGuncse+8IQotHQx04IxX+735d8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733148029; c=relaxed/simple;
-	bh=Xnjsn5CeW974ObCQuqa0Z+CwPGGhRk0jK5nChV5JWhY=;
+	s=arc-20240116; t=1733148032; c=relaxed/simple;
+	bh=QwopfMBlIpOJKvr84RlumMLTnY5y/KlMMcdWguS43pQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=qIIrQT/v6LxPUqtgC2IteqS422kRynwq0MCkU5Vx2u00ZBIGq+l78atDSR7ODgRyWMdWRS39WMARnCStL39XR0zEjwIddKd4rM4UWIErzJEY15dpnLDBy9rZkgfAtGAjg2qsVjkYB8TNw8S0TY92oyUsnQGCUdD+bfQEljmDef4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gihYJs6s; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=BFKConL5LGBSM9oDZV1Xyhfxxr28zyjzxjg2PbN+0CDeBK2iZg5pjNjjaob5VPwGwyfBk9G24mHNJMK4Imy5OqwNa8haEMTNj+QW0lGGfukJbqbKI4Mu6bape/DZQONNwoKHZ7NC3tWx/jAn6V46YGN9OJ7KSmhIzbISlRk2zT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vILuAv9k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gihYJs6s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 186D2C4CEDE;
-	Mon,  2 Dec 2024 14:00:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vILuAv9k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4E82C4CEDA;
+	Mon,  2 Dec 2024 14:00:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733148029;
-	bh=Xnjsn5CeW974ObCQuqa0Z+CwPGGhRk0jK5nChV5JWhY=;
+	s=k20201202; t=1733148032;
+	bh=QwopfMBlIpOJKvr84RlumMLTnY5y/KlMMcdWguS43pQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=gihYJs6sH7FsUEhZ3dC//xkdgTQZEZbG7ECwDNLCsp+1vwwn3L1qyEARC5IajXlRS
-	 k/Ij4ocvkgn/mwbu6I9aCr1n6U3p6br1g8/VIZp8Ik+DwO7qxB0Y8djvLO2rKHMZdz
-	 Rs5ZemFdzb5wtsiY7rpcpGMi86imiZP1CUCyHDVqIGSQMQIiyJ8xa/ExCoY51MU01z
-	 B3Jh4+amo328tKSoSKYQzrGD44+RvZ8hb4AT5RbfyyghHV57B3/Pr4fJzSW5tzQd3M
-	 C5fCVO/lB3e4or3al7+CQ/jbVcXN08NYb2WaeXVCfRLzzajbgJq34JRUs16b6n2bYq
-	 f80Oqmiwo5Wxg==
+	b=vILuAv9kzZEUUbo+6bQQUIEj33xabc+2LPXE6xcQkvqMHgAH1aBdy133YS7lnQ3pS
+	 K+w6AftighOsw6MS+9LjK1bZ3HSL8jweR9lZXIlSkTo26bG04HRjhKDx9Oij+ZUd7J
+	 AesheAr3s/QFZE5BKlg2eMc51l/05nqFiGXMlZMvPhEX8g8EIyIyYei1t6q+khXwqJ
+	 xTRlQlqKiHxMerLC1PkozpmEC1pAqP6/mB0DKw1MoYxSqvih78jjaB3LcgImkT+Ui6
+	 EazyrShhcg612YOUxJCu4y2IMEQdXdQScRtVeneX+OQ6Wby5k2JrKsTnRiZW5vsicW
+	 Bb7nC1Mn34Z0w==
 From: Daniel Wagner <wagi@kernel.org>
-Date: Mon, 02 Dec 2024 15:00:09 +0100
-Subject: [PATCH v6 1/8] driver core: bus: add irq_get_affinity callback to
- bus_type
+Date: Mon, 02 Dec 2024 15:00:10 +0100
+Subject: [PATCH v6 2/8] PCI: hookup irq_get_affinity callback
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241202-refactor-blk-affinity-helpers-v6-1-27211e9c2cd5@kernel.org>
+Message-Id: <20241202-refactor-blk-affinity-helpers-v6-2-27211e9c2cd5@kernel.org>
 References: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
 In-Reply-To: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>, 
@@ -58,41 +57,51 @@ Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
  Daniel Wagner <wagi@kernel.org>
 X-Mailer: b4 0.14.2
 
-Introducing a callback in struct bus_type so that a subsystem
-can hook up the getters directly. This approach avoids exposing
-random getters in any subsystems APIs.
+struct bus_type has a new callback for retrieving the IRQ affinity for a
+device. Hook this callback up for PCI based devices.
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
- include/linux/device/bus.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/pci-driver.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/include/linux/device/bus.h b/include/linux/device/bus.h
-index cdc4757217f9bb4b36b5c3b8a48bab45737e44c5..b18658bce2c3819fc1cbeb38fb98391d56ec3317 100644
---- a/include/linux/device/bus.h
-+++ b/include/linux/device/bus.h
-@@ -48,6 +48,7 @@ struct fwnode_handle;
-  *		will never get called until they do.
-  * @remove:	Called when a device removed from this bus.
-  * @shutdown:	Called at shut-down time to quiesce the device.
-+ * @irq_get_affinity:	Get IRQ affinity mask for the device on this bus.
-  *
-  * @online:	Called to put the device back online (after offlining it).
-  * @offline:	Called to put the device offline for hot-removal. May fail.
-@@ -87,6 +88,8 @@ struct bus_type {
- 	void (*sync_state)(struct device *dev);
- 	void (*remove)(struct device *dev);
- 	void (*shutdown)(struct device *dev);
-+	const struct cpumask *(*irq_get_affinity)(struct device *dev,
-+			unsigned int irq_vec);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 35270172c833186995aebdda6f95ab3ffd7c67a0..f57ea36d125d6eecfb60a6dc84d189cf9ed9b423 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1670,6 +1670,19 @@ static void pci_dma_cleanup(struct device *dev)
+ 		iommu_device_unuse_default_domain(dev);
+ }
  
- 	int (*online)(struct device *dev);
- 	int (*offline)(struct device *dev);
++/*
++ * pci_device_irq_get_affinity - get IRQ affinity mask for device
++ * @dev: ptr to dev structure
++ * @irq_vec: interrupt vector number
++ *
++ * Return the CPU affinity mask for @dev and @irq_vec.
++ */
++static const struct cpumask *pci_device_irq_get_affinity(struct device *dev,
++					unsigned int irq_vec)
++{
++	return pci_irq_get_affinity(to_pci_dev(dev), irq_vec);
++}
++
+ const struct bus_type pci_bus_type = {
+ 	.name		= "pci",
+ 	.match		= pci_bus_match,
+@@ -1677,6 +1690,7 @@ const struct bus_type pci_bus_type = {
+ 	.probe		= pci_device_probe,
+ 	.remove		= pci_device_remove,
+ 	.shutdown	= pci_device_shutdown,
++	.irq_get_affinity = pci_device_irq_get_affinity,
+ 	.dev_groups	= pci_dev_groups,
+ 	.bus_groups	= pci_bus_groups,
+ 	.drv_groups	= pci_drv_groups,
 
 -- 
 2.47.0
