@@ -1,166 +1,279 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA9D24087C
-	for <linux-scsi@vger.kernel.org>; Sat, 30 Nov 2024 10:03:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C63496FC3;
+	Mon,  2 Dec 2024 01:09:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732960983; cv=none; b=lvfjm64nJsFXqI6ZmSnHVkys2ZUjtPjlR54E6OfFnVIetHICTFWyMlh2FIfoX52O+ISYW/9Rle4eFA5ql1q4gkupqY8J1KEoKP+Q1xjWJ2Fg45QjAS0MFA5wUm3O82mJkYRZ+t0SIwOVh6YWOyiZev3LsP/6kY509mj7idhvDwM=
+	t=1733101770; cv=none; b=HIVND58gtmVE7Fco2nPQYSpioBT/neI2CTm3p084q8UFexEU2IYsFl87rGnVj8E4wEmPA67mOWSO4vl6EBs0TacvRnXYu8u6eiv+38YFdtpJoEsMy46Y0h7IR6aAlT1q/XySbUxjdo1/oOVrM+Bhm9LX4SSBVUwRVb5Cwj7o2cM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732960983; c=relaxed/simple;
-	bh=FHcGQBaRkW0QV+1EdNnjhY6pFMzZr7/s5Aj+Z6HfEhY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Dt1t/M30VBa4oLlbvCOFvSRk01aX0t/AQeKAIMmOuEi5PZ3s/3Noy7ITrNuzYb4kn9LtIA7aU8kxFesZDlX8B2EL5GQLjCl2cNutPxfrXm4HB1Hn2M+6vWB7C9hiGq2tZMuX7+ymXbhzXPlbfz4OL5PUt5ams4JjoJtyYlzByBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=lRRaBgNP; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1733101770; c=relaxed/simple;
+	bh=12FcUtzxv5+whb5AQMtarw/zUncx3kLD/s7M8+WySlU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sPxosdL53YiODwiPnhPLcllGJ96rOVdCFjtohA7BZPBVA8SnV89rIcgyg+zEP4eu3iI0acN15xUy3Gnvh3vs54SbyQSA0IiDcNIJ/eEMbaFjL4msxDriaY1P7r8WWYjgzKxfR4n1wMqvd7IOIOkCzYoQ+3guXfMyjhemi0Q6IMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kagcWz/x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="lRRaBgNP"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-434aa222d96so30337415e9.0
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Nov 2024 02:03:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1732960980; x=1733565780; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tUSjny8lV8zXEJCshKiN4IFoow0xfVyMjpOxrIHAZpI=;
-        b=lRRaBgNPP1V+v6pED3lO2cT/Cdh/iB7/nD1tntNMEx86zFn3Yipi4GSZPvmspSM85U
-         FBPEFQb0lLyaqP0+GslXfkQmYOeh/z/P+dEPYPKQm6A3tl24pauglmRv+HT0BERI+BC/
-         KSkdDSxmnjTfmwAexfc7Lgqpxq55m0iZdFwVSiaf+oHP+A9FoOtXFDpE6tyKah0RS4+C
-         KjrodCDnlnd1qnA4IMT7ZwzovZXd6zU2k7c2ExdPbxt4wYsJ9tDr9GWwxEqfN2l+V3RY
-         s2Ee8/Jeo7Q23SUDKtZfJSRCfKRpNK6ULeqjS0J07EKXSYdV4mQyJ+Q9SCqhKBnb5prH
-         9Xpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732960980; x=1733565780;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tUSjny8lV8zXEJCshKiN4IFoow0xfVyMjpOxrIHAZpI=;
-        b=fZbafG2HuJd71PHpYtptOI2Xlw4Fl4U2TivLNwSAw6vBiZPqvxsC3Wkz08EfjiKR87
-         Qu1Up9y8Npc8Z4+h+0b0ygvl8J8vdSJ0yEtmTmZ6fC0JPeJlOeXbpK2CTXnzhsHlqe8I
-         PwzxrnWQGkkxXQfMbxeEHXj1uY3RFWL3LGPUGeJ1QE6WNh13sU9X3sSglDrrzZF8bkOz
-         jtG4BDDTyiXLy3caTRfKlezY5HyWH/apAISDTJMfRfbxW7utxYyNs9dyE2Wk/BM18WFI
-         p08HTsfJDY2SqQ7P5d7f3QdD6fhKS48UGmuP/+riiEfrMH3cir4UdZylxVIMTnF65sid
-         mJGg==
-X-Forwarded-Encrypted: i=1; AJvYcCVRGht8gWbTolnftyoSWq0rWNXYW0dfeQ2+QTJhfPLECFli5jfd5zpfR32roVzSjWkBAhpNUGn6XzPy@vger.kernel.org
-X-Gm-Message-State: AOJu0YyQOhWa1upYZSp8Yx9xFaCKsEciJjH73h/brkOjwYptAGb7y7zY
-	dEBEq87T2/hjb8FL6SakOAbdkBpXDlpe2iXMU7SuSH0jOFSMwWwr6yU85nvi6dg=
-X-Gm-Gg: ASbGnctJ30BuWYZmLiAgOrXH1Nnk9QY71pMAtNzWzNezVLsWAstAA3i7OYE8XblSdsD
-	i8R2vcnlyms7id3zZZLrcc/Qw9f735AyiMBoHBm79sVMKg8Hinxt2ZSCOzfquwiX6jt1vJNjoy1
-	e7NyocFjtz603Ij+4HiL5udG7bcMr3ewycsc5G+IbUuWxmfDCER8i1FDIpI09PzyVK0q10Gkbj9
-	1MYc3JpfeskDI8/Pn1vVz0Xj4CeJX/Qr5388GukINfosha6VmTIFpnEB3++fyyjdIOqIJAf
-X-Google-Smtp-Source: AGHT+IHs71kAYwenD3rmejVx1DT3G2P3qd0Q/PAn7I4VjVL2cLAnBqs8ox5OjQ53hiHzQAZR/Rtpzw==
-X-Received: by 2002:a5d:64e9:0:b0:385:e8ce:7494 with SMTP id ffacd0b85a97d-385e8ce75e1mr693291f8f.31.1732960980289;
-        Sat, 30 Nov 2024 02:03:00 -0800 (PST)
-Received: from localhost (h1109.n1.ips.mtn.co.ug. [41.210.145.9])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa5996c11d0sm261875266b.16.2024.11.30.02.02.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 30 Nov 2024 02:02:59 -0800 (PST)
-Date: Sat, 30 Nov 2024 13:02:56 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Nilesh Javali <njavali@marvell.com>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
-Subject: [bug report] [SCSI] iscsi_transport: Add support to display CHAP
- list and delete CHAP entry
-Message-ID: <01b69135-e06b-4797-bb3f-95e537e06689@stanley.mountain>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kagcWz/x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA984C4CECF;
+	Mon,  2 Dec 2024 01:09:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733101769;
+	bh=12FcUtzxv5+whb5AQMtarw/zUncx3kLD/s7M8+WySlU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=kagcWz/xzzlX/ayo79ogwuKKR7S86e7FtER7xpn/1bqLLV/ldaW4GY2LRRrSjTYjF
+	 lk413CBdu4OdDDYqIHmkGrV1ltsl6w2KyMccUtpiEvmPNFhcdELStrOTuskQTakw3u
+	 fAOkyrfWGIX9v81yjQgmy6EKlh0fWwHquvq2PYxE97o/gNG3BVhZioVGxJgMDpfAt+
+	 RmqhlKfzWf6e4yBMNRec599PXv+LKbN/vZmIp07Yu/Pa10ydeRbIck/TtwaZgRwgFQ
+	 YFMXzkOvuNV6Ly6p0VesFm4+r9lMPK3xbQJoo2ylT+uhm9H+C7+VoCm5GsXOd8N0G0
+	 XBKmD3iqcF35w==
+From: Eric Biggers <ebiggers@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	linux-mips@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	loongarch@lists.linux.dev,
+	sparclinux@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH v4 00/19] Wire up CRC32 library functions to arch-optimized code
+Date: Sun,  1 Dec 2024 17:08:25 -0800
+Message-ID: <20241202010844.144356-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-[ This code is obviously really old, but the warning may still be worth looking
-  at.  -dan ]
+This patchset applies to v6.13-rc1 and is also available in git via:
 
-Commit 6260a5d22122 ("[SCSI] iscsi_transport: Add support to display
-CHAP list and delete CHAP entry") from Feb 27, 2012 (linux-next),
-leads to the following Smatch static checker warning:
+    git fetch https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git crc32-lib-v4
 
-	drivers/scsi/scsi_transport_iscsi.c:3341 iscsi_get_chap()
-	warn: potential user controlled sizeof overflow '56 + chap_buf_size' '56 + 0-u32max'
+CRC32 is a family of common non-cryptographic integrity check algorithms
+that are fairly fast with a portable C implementation and become far
+faster still with the CRC32 or carryless multiplication instructions
+that most CPUs have.  9 architectures already have optimized code for at
+least some CRC32 variants; however, except for arm64 this optimized code
+was only accessible through the crypto API, not the library functions.
 
-drivers/scsi/scsi_transport_iscsi.c
-    3319 static int
-    3320 iscsi_get_chap(struct iscsi_transport *transport, struct nlmsghdr *nlh)
-    3321 {
-    3322         struct iscsi_uevent *ev = nlmsg_data(nlh);
+This patchset fixes that so that the CRC32 library functions use the
+optimized code.  This allows users to just use the library instead of
+the crypto API.  This is much simpler and also improves performance due
+to eliminating the crypto API overhead including an indirect call.  Some
+examples of updating users are included at the end of the patchset.
 
-Smatch marks nlmsg_data() as untrusted.
+Note: crc32c() was a weird case.  It was a library function layered on
+top of the crypto API, which in turn is layered on top of the real
+library functions.  So while it was easy to use, it was still subject to
+the crypto API overhead.  This patchset provides CRC32C acceleration in
+the real library functions directly.
 
-    3323         struct Scsi_Host *shost = NULL;
-    3324         struct iscsi_chap_rec *chap_rec;
-    3325         struct iscsi_internal *priv;
-    3326         struct sk_buff *skbchap;
-    3327         struct nlmsghdr *nlhchap;
-    3328         struct iscsi_uevent *evchap;
-    3329         uint32_t chap_buf_size;
-    3330         int len, err = 0;
-    3331         char *buf;
-    3332 
-    3333         if (!transport->get_chap)
-    3334                 return -EINVAL;
-    3335 
-    3336         priv = iscsi_if_transport_lookup(transport);
-    3337         if (!priv)
-    3338                 return -EINVAL;
-    3339 
-    3340         chap_buf_size = (ev->u.get_chap.num_entries * sizeof(*chap_rec));
+The updated CRC32 library design is:
 
-This warning is for 32 bits but it affects 64bit as well because chap_buf_size
-is a u32.  Potentially this "ev->u.get_chap.num_entries * sizeof(*chap_rec)"
-multiply could integer wrap.
+- Each arch's CRC32 code (all variants) is in arch/$ARCH/lib/crc32*.
+  This adopts what arm64 and riscv already did.  Note, the crypto
+  directory is not used because CRC32 is not a cryptographic algorithm.
 
---> 3341         len = nlmsg_total_size(sizeof(*ev) + chap_buf_size);
+- Weak symbols are no longer used.  Instead there are crc32*_base() and
+  crc32*_arch(), and the appropriate ones are called based on the
+  kconfig.  This is similar to how the ChaCha20 library code works.
 
-Then nlmsg_total_size() has some addition and the + sizeof(*ev) as well and len
-is stored as an int.
+- Each arch's CRC32 library code is enabled by default when CRC32 is
+  enabled, but it can now be disabled, controlled by the choice that
+  previously controlled the base implementation only.  It can also now
+  be built as a module if CRC32 is a module too, in which case it will
+  be automatically loaded via direct symbol dependency when appropriate.
 
-    3342 
-    3343         shost = scsi_host_lookup(ev->u.get_chap.host_no);
-    3344         if (!shost) {
-    3345                 printk(KERN_ERR "%s: failed. Could not find host no %u\n",
-    3346                        __func__, ev->u.get_chap.host_no);
-    3347                 return -ENODEV;
-    3348         }
-    3349 
-    3350         do {
-    3351                 int actual_size;
-    3352 
-    3353                 skbchap = alloc_skb(len, GFP_KERNEL);
-    3354                 if (!skbchap) {
-    3355                         printk(KERN_ERR "can not deliver chap: OOM\n");
-    3356                         err = -ENOMEM;
-    3357                         goto exit_get_chap;
-    3358                 }
-    3359 
-    3360                 nlhchap = __nlmsg_put(skbchap, 0, 0, 0,
-    3361                                       (len - sizeof(*nlhchap)), 0);
-    3362                 evchap = nlmsg_data(nlhchap);
-    3363                 memset(evchap, 0, sizeof(*evchap));
-    3364                 evchap->transport_handle = iscsi_handle(transport);
-    3365                 evchap->type = nlh->nlmsg_type;
-    3366                 evchap->u.get_chap.host_no = ev->u.get_chap.host_no;
-    3367                 evchap->u.get_chap.chap_tbl_idx = ev->u.get_chap.chap_tbl_idx;
-    3368                 evchap->u.get_chap.num_entries = ev->u.get_chap.num_entries;
-    3369                 buf = (char *)evchap + sizeof(*evchap);
-    3370                 memset(buf, 0, chap_buf_size);
-    3371 
-    3372                 err = transport->get_chap(shost, ev->u.get_chap.chap_tbl_idx,
-    3373                                     &evchap->u.get_chap.num_entries, buf);
-    3374 
-    3375                 actual_size = nlmsg_total_size(sizeof(*ev) + chap_buf_size);
-    3376                 skb_trim(skbchap, NLMSG_ALIGN(actual_size));
-    3377                 nlhchap->nlmsg_len = actual_size;
-    3378 
-    3379                 err = iscsi_multicast_skb(skbchap, ISCSI_NL_GRP_ISCSID,
-    3380                                           GFP_KERNEL);
-    3381         } while (err < 0 && err != -ECONNREFUSED);
-    3382 
-    3383 exit_get_chap:
-    3384         scsi_host_put(shost);
-    3385         return err;
-    3386 }
+- Instead of lots of pointless glue code that wires up each CRC32
+  variant to the crypto API for each architecture, we now just rely on
+  the existing shash algorithms that use the library functions.
 
-regards,
-dan carpenter
+- As before, the library functions don't provide access to off-CPU
+  crypto accelerators.  But these appear to have very little, if any,
+  real-world relevance for CRC32 which is very fast on CPUs.
+
+A separate patchset applies a similar cleanup to CRC-T10DIF.
+
+Changed in v4:
+  - Rebased onto v6.13-rc1.
+  - Removed no-longer-needed CFI stubs from arch/arm/lib/crc32-core.S.
+  - Removed no-longer-needed definition of JBD_MAX_CHECKSUM_SIZE from jbd2.h.
+  - Removed no-longer-needed inclusion of <crypto/hash.h> from f2fs.h.
+  - Merged 'if' statements with the same condition in jbd2_journal_set_features.
+  - Added bcachefs dependency patch, as it wasn't merged in 6.13 as expected.
+  - Reordered CPU feature checks to before crypto_simd_usable(), so that
+    crypto_simd_usable() doesn't get called unnecessarily.
+  - For loongarch, use cpu_has_crc32() instead of cpu_has(CPU_FEATURE_CRC32),
+    for consistency with the rest of the loongarch code.
+  - Correctly set the new dependencies of CRYPTO_VPMSUM_TESTER.
+  - Added Reviewed-by's and Acked-by's.
+
+Changed in v3:
+  - Replaced crc32_optimizations global variable with
+    crc32_optimizations() function.
+  - Make ISCSI_TARGET keep selecting CRYPTO_HASH, since
+    iscsi_target_auth.c still uses the shash API for other algorithms.
+
+Changed in v2:
+  - Added a way to determine if the arch-optimized code is actually
+    being used at runtime, and used this to register the appropriate
+    shash algorithms with crypto API.
+  - Added a patch that converts iSCSI to use the library.
+  - Listed a bcachefs patch as a dependency.
+  - Added Ard's Reviewed-by.
+
+Eric Biggers (19):
+  lib/crc32: drop leading underscores from __crc32c_le_base
+  lib/crc32: improve support for arch-specific overrides
+  lib/crc32: expose whether the lib is really optimized at runtime
+  crypto: crc32 - don't unnecessarily register arch algorithms
+  arm/crc32: expose CRC32 functions through lib
+  loongarch/crc32: expose CRC32 functions through lib
+  mips/crc32: expose CRC32 functions through lib
+  powerpc/crc32: expose CRC32 functions through lib
+  s390/crc32: expose CRC32 functions through lib
+  sparc/crc32: expose CRC32 functions through lib
+  x86/crc32: update prototype for crc_pcl()
+  x86/crc32: update prototype for crc32_pclmul_le_16()
+  x86/crc32: expose CRC32 functions through lib
+  bcachefs: Explicitly select CRYPTO from BCACHEFS_FS
+  lib/crc32: make crc32c() go directly to lib
+  ext4: switch to using the crc32c library
+  jbd2: switch to using the crc32c library
+  f2fs: switch to using the crc32 library
+  scsi: target: iscsi: switch to using the crc32c library
+
+ arch/arm/Kconfig                              |   1 +
+ arch/arm/configs/milbeaut_m10v_defconfig      |   1 -
+ arch/arm/configs/multi_v7_defconfig           |   1 -
+ arch/arm/crypto/Kconfig                       |  14 -
+ arch/arm/crypto/Makefile                      |   2 -
+ arch/arm/crypto/crc32-ce-glue.c               | 247 ------------
+ arch/arm/lib/Makefile                         |   3 +
+ .../crc32-ce-core.S => lib/crc32-core.S}      |   5 +-
+ arch/arm/lib/crc32-glue.c                     | 123 ++++++
+ arch/arm64/Kconfig                            |   1 +
+ arch/arm64/lib/Makefile                       |   3 +-
+ arch/arm64/lib/crc32-glue.c                   |  25 +-
+ arch/loongarch/Kconfig                        |   1 +
+ arch/loongarch/configs/loongson3_defconfig    |   1 -
+ arch/loongarch/crypto/Kconfig                 |   9 -
+ arch/loongarch/crypto/Makefile                |   2 -
+ arch/loongarch/crypto/crc32-loongarch.c       | 300 ---------------
+ arch/loongarch/lib/Makefile                   |   2 +
+ arch/loongarch/lib/crc32-loongarch.c          | 135 +++++++
+ arch/mips/Kconfig                             |   5 +-
+ arch/mips/configs/eyeq5_defconfig             |   1 -
+ arch/mips/configs/eyeq6_defconfig             |   1 -
+ arch/mips/configs/generic/32r6.config         |   2 -
+ arch/mips/configs/generic/64r6.config         |   1 -
+ arch/mips/crypto/Kconfig                      |   9 -
+ arch/mips/crypto/Makefile                     |   2 -
+ arch/mips/crypto/crc32-mips.c                 | 354 ------------------
+ arch/mips/lib/Makefile                        |   2 +
+ arch/mips/lib/crc32-mips.c                    | 192 ++++++++++
+ arch/powerpc/Kconfig                          |   1 +
+ arch/powerpc/configs/powernv_defconfig        |   1 -
+ arch/powerpc/configs/ppc64_defconfig          |   1 -
+ arch/powerpc/crypto/Kconfig                   |  15 +-
+ arch/powerpc/crypto/Makefile                  |   2 -
+ arch/powerpc/crypto/crc32c-vpmsum_glue.c      | 173 ---------
+ arch/powerpc/crypto/crct10dif-vpmsum_asm.S    |   2 +-
+ arch/powerpc/lib/Makefile                     |   3 +
+ arch/powerpc/lib/crc32-glue.c                 |  92 +++++
+ .../{crypto => lib}/crc32-vpmsum_core.S       |   0
+ .../{crypto => lib}/crc32c-vpmsum_asm.S       |   0
+ arch/riscv/Kconfig                            |   1 +
+ arch/riscv/lib/Makefile                       |   3 +-
+ arch/riscv/lib/{crc32.c => crc32-riscv.c}     |  25 +-
+ arch/s390/Kconfig                             |   1 +
+ arch/s390/configs/debug_defconfig             |   1 -
+ arch/s390/configs/defconfig                   |   1 -
+ arch/s390/crypto/Kconfig                      |  12 -
+ arch/s390/crypto/Makefile                     |   2 -
+ arch/s390/crypto/crc32-vx.c                   | 306 ---------------
+ arch/s390/lib/Makefile                        |   3 +
+ arch/s390/lib/crc32-glue.c                    |  92 +++++
+ arch/s390/{crypto => lib}/crc32-vx.h          |   0
+ arch/s390/{crypto => lib}/crc32be-vx.c        |   0
+ arch/s390/{crypto => lib}/crc32le-vx.c        |   0
+ arch/sparc/Kconfig                            |   1 +
+ arch/sparc/crypto/Kconfig                     |  10 -
+ arch/sparc/crypto/Makefile                    |   4 -
+ arch/sparc/crypto/crc32c_glue.c               | 184 ---------
+ arch/sparc/lib/Makefile                       |   2 +
+ arch/sparc/lib/crc32_glue.c                   |  93 +++++
+ arch/sparc/{crypto => lib}/crc32c_asm.S       |   2 +-
+ arch/x86/Kconfig                              |   1 +
+ arch/x86/crypto/Kconfig                       |  22 --
+ arch/x86/crypto/Makefile                      |   7 -
+ arch/x86/crypto/crc32-pclmul_glue.c           | 202 ----------
+ arch/x86/crypto/crc32c-intel_glue.c           | 250 -------------
+ arch/x86/lib/Makefile                         |   4 +
+ arch/x86/lib/crc32-glue.c                     | 124 ++++++
+ .../crc32-pclmul_asm.S => lib/crc32-pclmul.S} |  19 +-
+ .../crc32c-3way.S}                            |  63 ++--
+ crypto/crc32_generic.c                        |   8 +-
+ crypto/crc32c_generic.c                       |  12 +-
+ drivers/target/iscsi/Kconfig                  |   4 +-
+ drivers/target/iscsi/iscsi_target.c           | 153 +++-----
+ drivers/target/iscsi/iscsi_target_login.c     |  50 ---
+ drivers/target/iscsi/iscsi_target_login.h     |   1 -
+ drivers/target/iscsi/iscsi_target_nego.c      |  21 +-
+ fs/bcachefs/Kconfig                           |   1 +
+ fs/ext4/Kconfig                               |   3 +-
+ fs/ext4/ext4.h                                |  25 +-
+ fs/ext4/super.c                               |  15 -
+ fs/f2fs/Kconfig                               |   3 +-
+ fs/f2fs/f2fs.h                                |  20 +-
+ fs/f2fs/super.c                               |  15 -
+ fs/jbd2/Kconfig                               |   2 -
+ fs/jbd2/journal.c                             |  30 +-
+ include/linux/crc32.h                         |  50 ++-
+ include/linux/crc32c.h                        |   7 +-
+ include/linux/jbd2.h                          |  33 +-
+ include/target/iscsi/iscsi_target_core.h      |   3 -
+ lib/Kconfig                                   |  80 ++--
+ lib/Makefile                                  |   1 -
+ lib/crc32.c                                   |  24 +-
+ lib/libcrc32c.c                               |  74 ----
+ 94 files changed, 1159 insertions(+), 2646 deletions(-)
+ delete mode 100644 arch/arm/crypto/crc32-ce-glue.c
+ rename arch/arm/{crypto/crc32-ce-core.S => lib/crc32-core.S} (98%)
+ create mode 100644 arch/arm/lib/crc32-glue.c
+ delete mode 100644 arch/loongarch/crypto/crc32-loongarch.c
+ create mode 100644 arch/loongarch/lib/crc32-loongarch.c
+ delete mode 100644 arch/mips/crypto/crc32-mips.c
+ create mode 100644 arch/mips/lib/crc32-mips.c
+ delete mode 100644 arch/powerpc/crypto/crc32c-vpmsum_glue.c
+ create mode 100644 arch/powerpc/lib/crc32-glue.c
+ rename arch/powerpc/{crypto => lib}/crc32-vpmsum_core.S (100%)
+ rename arch/powerpc/{crypto => lib}/crc32c-vpmsum_asm.S (100%)
+ rename arch/riscv/lib/{crc32.c => crc32-riscv.c} (91%)
+ delete mode 100644 arch/s390/crypto/crc32-vx.c
+ create mode 100644 arch/s390/lib/crc32-glue.c
+ rename arch/s390/{crypto => lib}/crc32-vx.h (100%)
+ rename arch/s390/{crypto => lib}/crc32be-vx.c (100%)
+ rename arch/s390/{crypto => lib}/crc32le-vx.c (100%)
+ delete mode 100644 arch/sparc/crypto/crc32c_glue.c
+ create mode 100644 arch/sparc/lib/crc32_glue.c
+ rename arch/sparc/{crypto => lib}/crc32c_asm.S (92%)
+ delete mode 100644 arch/x86/crypto/crc32-pclmul_glue.c
+ delete mode 100644 arch/x86/crypto/crc32c-intel_glue.c
+ create mode 100644 arch/x86/lib/crc32-glue.c
+ rename arch/x86/{crypto/crc32-pclmul_asm.S => lib/crc32-pclmul.S} (95%)
+ rename arch/x86/{crypto/crc32c-pcl-intel-asm_64.S => lib/crc32c-3way.S} (92%)
+ delete mode 100644 lib/libcrc32c.c
+
+
+base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
+-- 
+2.47.1
+
