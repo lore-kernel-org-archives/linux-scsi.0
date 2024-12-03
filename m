@@ -1,161 +1,223 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pv50p00im-zteg10011501.me.com (pv50p00im-zteg10011501.me.com [17.58.6.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7FC61DE4E6;
-	Mon,  2 Dec 2024 21:17:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5D017555
+	for <linux-scsi@vger.kernel.org>; Tue,  3 Dec 2024 00:34:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733174227; cv=none; b=SCnsruMCvLhcpoOl8GsnrS3oX18H653uuB8h2URo3IiRK+ADow3hMAmBhWZCHqiReJSfW7kdW88Fr37CmvOVZ8qkozmJAn0u28KRXrxgl+QHzJXL4/HNIqJF9PrLHLH5xZWU7QiUizAn0blZVksB48HRaqtes4y7CMjOT1BR9mA=
+	t=1733186103; cv=none; b=dzn+We5CRaeCXTFhBYDULVN60V4SNlh/SPYbLc/QFFTKXAresCNhDBjgUqg2ZEYgBk8PEVOAEW7Loux953dN5tmpylfI9Y3YQyKAKz0elXaKX8T8Vyw3CANLqJ+4frNF+F8HgcMffVDK2PZih0WMN3xVm5UJZ+Y1TveDBa54u3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733174227; c=relaxed/simple;
-	bh=c/OpwCh+/t+1IaSytHBg7Vl7CNyrcqGFhU7wyEfSfVM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=m+wccwUEQ76V5ZFR+JICaxhnujZ2uVj3snLQ5Pu+CJlT1pUTH6oMrEiRmY8sFcwrudFFjSG0oS0X4j5X+zTuv6vMO8xMd/x69XF2sQ+dmPZ2wuYjWYPJc6xq1amKGhzldwEZf3XXzhDc1Tr3fpxDiTE1u0ikYWBzHPYZ1nPDDHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bMEYBPPm; arc=none smtp.client-ip=209.85.216.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1733186103; c=relaxed/simple;
+	bh=90Z3uIVjxiaduJ4fj5p/v/pFRaVs8rKzXxaWEN8s1Fs=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=jJLHz+DhdYA44HMsS0SVnwnyf05bn8QaBuf3ot4Jv690B+8otuSqIwIsdzI9jemv6lINn1btfQ7DvhEFbJY03u+wcfSTDOTIkwNelPhxj2yJla+fIJifyiDRITEY0btAHReGgPFbTYLXLcvB8MJ+jq+A08ncfqyFwbJgtm/JyyY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=miqyYlVd; arc=none smtp.client-ip=17.58.6.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bMEYBPPm"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2eeb64f3588so1309034a91.2;
-        Mon, 02 Dec 2024 13:17:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1733174225; x=1733779025; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=FZHtDSci4mxW9uObrOpyGXF4tVtVRk+OAevn+2+RUUc=;
-        b=bMEYBPPmUSzzFVLj9dAXVxkG7SkFjX0RJ9DXF00gd9JPnqb1y0BE+QqO/OfCo8+9zL
-         E3xw4ZetVenH0ISfG7FI2kNitWbxPHzm8dRWOXJSU2qLIVxHvx0kolgC107d7xGUSKq4
-         v+arcQYsDBBPzxLpFgDjZ4cV53opsDDu4cpOG6tKzRm+4Q/CWr/fdHZXvTkjaO4z6FJw
-         JW8/wFLTPFs3dOcmd/W/XioTSaLtHwLHZCSrBeBu+nFViATugRRwMiabDMaNTfZghJUW
-         CVR3flE3Qzl3NNECSuD/bCnXOPEt9BkqzBXNzEYNH4IhHbD943pFZQ7TEzBlhqCD34uC
-         qGgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733174225; x=1733779025;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=FZHtDSci4mxW9uObrOpyGXF4tVtVRk+OAevn+2+RUUc=;
-        b=Qg0iUV6aEDbtErdlOiEJmfERDIcKe8k2PVZ3igqRozFzURvnF0s1nRbZooAVUrqjjv
-         PjL3OurKaWDHgW5dWk3w32O2O1vRkX4VNWMD4VR1vbCBdD50x957FphDQVLtAWHSEHJC
-         8Jmj8XRugz57Z3dFCUS3NBYRFtxQHabiROVSBJZvnhaqI2fACd1+UNU/QRTd1Db6Jy8h
-         1qalxz/uWXYDdP2PY8XSaGm1m1IRHFmXunMqEakwnCOYbtl290Op2ONG/+c6e7OgB43/
-         j/qtMXCu6293zaroFJDzRbslqWPVuxukroppKnnZmyz18ZFUS5qK/7DYlihKyDh/Nm9R
-         CFsw==
-X-Forwarded-Encrypted: i=1; AJvYcCUeSIiWgPUlGzcXhpqF+ZYvjGe8r9nCQiU98EF9WQkhUwaDe787END7bB3EefnJNPBVha00zoKrSL/2vw==@vger.kernel.org, AJvYcCUlpgLldE4AOaELzYpHoJPsJFAn96PIHCf6cTJeZXWuhNQJ0XdxwLT63hfHClcEL3WeJW7w3bgI8HlCx+Q=@vger.kernel.org, AJvYcCUtEu9iWdDWJZ4MBf6HFEqynzaSVPmozu/fuu3UR76i4CDMdx1kQgPTbEsio1IYE1ie96P7g7aoCMOgf+l2zRVk@vger.kernel.org, AJvYcCVAeqE6Gt/HWXKSQKP7UhAfX/XbmFmsUC0RlikhylITWMPqPi85dRGlXy5LCg2h3G/l0LDq2R1CSg8EofRCS/0=@vger.kernel.org, AJvYcCVL6m0HvMGF0gtdcrsLqDJehgFgLSBP9V3FeBkH3OmZpoDcdcMu75wVhqI/lWk57oAPu73znVpWijBI80Y=@vger.kernel.org, AJvYcCVnrIsuMGZoTtv0geGluA8WVEOK9++V3LPUKJ4Yje0r/Hk0UMPQSNoLqAFUudCZQrZ4IH9ejLEJcJULxw==@vger.kernel.org, AJvYcCWoruJmMJHeDyBieTZFO4wD2lEwGBgXFeooR5pIEobKQwWwDsfK9XjihvNHNkj+VnOeEkOu1F7Iyr2yLEf/@vger.kernel.org, AJvYcCX+Iug9e9L896KXYAYQRKzZCZSqwleuIk7bxg5uF+CBDny5kBemu2X64YRRFjzJHiINN/XCg3x1zRKG@vger.kernel.org, AJvYcCX4Sq30BqUje9a7bonyx9qAeEqz1qSmp1THIo5EYauvCRou4qJosyeppNow53OMHujNED1lTa3vgPnR4HDN7uuF@vger.kernel.org, AJvYcCXDtcmbbuEq3ICDfUBDDMq7FI8mIIjTJ/0Om7J36RjzfnSFn+cTmTxOD8cJlIxIjhXD00YRrvAL@vger.kernel.org, AJvYcCXPt1F0JHF7LsQCvlLAkF7VxP9xmVVCcuK3cB7WKUqXEW4mwgy+aOqbehvcadMFvnH6MGwwJ1Yyaq+Xf8IonQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxPJZlwK7dPN9pLNRIuHOE2/WA78m3phmhIEdcEjOQuLbKW98ha
-	21Yu3kncqtWbUEXzy1b/gBOqCqPI6BiAIuywOoF/NpMGngvqxj5RlnguoW5005nZffctAs+7cVM
-	hSLN4opAynq3uTZBaJRE1U5tY7kU=
-X-Gm-Gg: ASbGncvWyXY1AAzpsWgNREUsofaF0rtF3wK0vcBy8Kqr37RHZdpEkJwDX1Tgou+u58J
-	clh7aXq3m+4xvqW6reB++a/iQUsDvfA==
-X-Google-Smtp-Source: AGHT+IFDh1yb6d6zM40EzPJelJu2iVMH0WClLwmjysRWgfnYNSB8awfS5UuhO/EqqMc0eH1dffTLKgwFM99xaAmy4L8=
-X-Received: by 2002:a17:90b:1c09:b0:2ee:3cc1:793a with SMTP id
- 98e67ed59e1d1-2ef0124c720mr32029a91.29.1733174224966; Mon, 02 Dec 2024
- 13:17:04 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="miqyYlVd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
+	s=1a1hai; t=1733186099;
+	bh=oHbx7nufqBC9FciDzS/LGxt7hmN8dQX6iuRN6cbwUA4=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:
+	 x-icloud-hme;
+	b=miqyYlVd243flQ1IvVsliQiE9DHrrSD+z1j3Ao2U3BsVp7icRgsik+yX27rSCj4D+
+	 T5K/safPmJG6H2G4WE9j7bBQvaFexypWm7FZEDou1MHIH9tDRRWMiQ1UPriELs/+hg
+	 sXJNUkBBU1moy8uzw4v/v66n2uZ4nRbGFXnHbTcyy0JERpSfQmvHQ8NAx4kDoEqPtw
+	 K44qvDlYPQIBfuW/hOl+sPtWJcXOrD96VbESU02KGCiiJXJdFSzYBJ54ViTlBPnRB9
+	 QOAY9cdzyUWJL5EMG594jIK63Bf2SXcNzUNd7nw2qi11pPaZME4OnmSK9qWoRG15E/
+	 2icgiJHx3EH4g==
+Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
+	by pv50p00im-zteg10011501.me.com (Postfix) with ESMTPSA id A517C4A0115;
+	Tue,  3 Dec 2024 00:34:38 +0000 (UTC)
+From: Zijun Hu <zijun_hu@icloud.com>
+Subject: [PATCH v2 00/32] driver core: Constify API device_find_child() and
+ adapt for various existing usages
+Date: Tue, 03 Dec 2024 08:33:22 +0800
+Message-Id: <20241203-const_dfc_done-v2-0-7436a98c497f@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
- <20241115-converge-secs-to-jiffies-v2-9-911fb7595e79@linux.microsoft.com>
-In-Reply-To: <20241115-converge-secs-to-jiffies-v2-9-911fb7595e79@linux.microsoft.com>
-From: Christian Gmeiner <christian.gmeiner@gmail.com>
-Date: Mon, 2 Dec 2024 22:16:53 +0100
-Message-ID: <CAH9NwWdjXKH-AcKa-prwdqj2JqWLYVp1qM+0kxtQYSwo1J1c7g@mail.gmail.com>
-Subject: Re: [PATCH v2 09/21] drm/etnaviv: Convert timeouts to secs_to_jiffies()
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Pablo Neira Ayuso <pablo@netfilter.org>, Jozsef Kadlecsik <kadlec@netfilter.org>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
-	Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, 
-	Robert Jarzmik <robert.jarzmik@free.fr>, Russell King <linux@armlinux.org.uk>, 
-	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
-	Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, 
-	Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>, 
-	Oded Gabbay <ogabbay@kernel.org>, Lucas De Marchi <lucas.demarchi@intel.com>, 
-	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
-	Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Jeroen de Borst <jeroendb@google.com>, Praveen Kaligineedi <pkaligineedi@google.com>, 
-	Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
-	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>, 
-	Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Jack Wang <jinpu.wang@cloud.ionos.com>, Marcel Holtmann <marcel@holtmann.org>, 
-	Johan Hedberg <johan.hedberg@gmail.com>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Florian Fainelli <florian.fainelli@broadcom.com>, Ray Jui <rjui@broadcom.com>, 
-	Scott Branden <sbranden@broadcom.com>, 
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, Xiubo Li <xiubli@redhat.com>, 
-	Ilya Dryomov <idryomov@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
-	Miroslav Benes <mbenes@suse.cz>, Petr Mladek <pmladek@suse.com>, 
-	Joe Lawrence <joe.lawrence@redhat.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Lucas Stach <l.stach@pengutronix.de>, Russell King <linux+etnaviv@armlinux.org.uk>, 
-	Louis Peens <louis.peens@corigine.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
-	Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>, netfilter-devel@vger.kernel.org, 
-	coreteam@netfilter.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	cocci@inria.fr, linux-arm-kernel@lists.infradead.org, 
-	linux-s390@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	intel-xe@lists.freedesktop.org, linux-scsi@vger.kernel.org, 
-	xen-devel@lists.xenproject.org, linux-block@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
-	linux-mm@kvack.org, linux-bluetooth@vger.kernel.org, 
-	linux-staging@lists.linux.dev, linux-rpi-kernel@lists.infradead.org, 
-	ceph-devel@vger.kernel.org, live-patching@vger.kernel.org, 
-	linux-sound@vger.kernel.org, etnaviv@lists.freedesktop.org, 
-	oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org, 
-	Anna-Maria Behnsen <anna-maria@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIANJRTmcC/2XMQQ6CMBCF4auQWVvTFozgynsYQsp0KrOwxRaJh
+ vTuVrYu/5e8b4NEkSnBpdog0sqJgy+hDxXgZPydBNvSoKVulJZKYPBpGazDwQZPwhjCs6J6HMl
+ AOc2RHL938NaXnjgtIX52f1W/dadkq/6oVQkpOtueqHZdU+N4fb4Y2eMRwwP6nPMXYHxV6a4AA
+ AA=
+X-Change-ID: 20241201-const_dfc_done-aaec71e3bbea
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Chun-Kuang Hu <chunkuang.hu@kernel.org>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, David Airlie <airlied@gmail.com>, 
+ Simona Vetter <simona@ffwll.ch>, Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Jean Delvare <jdelvare@suse.com>, Guenter Roeck <linux@roeck-us.net>, 
+ Martin Tuma <martin.tuma@digiteqautomotive.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Andreas Noever <andreas.noever@gmail.com>, 
+ Michael Jamet <michael.jamet@intel.com>, 
+ Mika Westerberg <mika.westerberg@linux.intel.com>, 
+ Yehezkel Bernat <YehezkelShB@gmail.com>, 
+ Linus Walleij <linus.walleij@linaro.org>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andrew Lunn <andrew@lunn.ch>, 
+ Vladimir Oltean <olteanv@gmail.com>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Simon Horman <horms@kernel.org>, 
+ =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>, 
+ Dan Williams <dan.j.williams@intel.com>, 
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+ Ira Weiny <ira.weiny@intel.com>, Takashi Sakamoto <o-takashi@sakamocchi.jp>, 
+ Jiri Slaby <jirislaby@kernel.org>, 
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+ Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
+ Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, 
+ Mike Christie <michael.christie@oracle.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Nilesh Javali <njavali@marvell.com>, 
+ Manish Rangankar <mrangankar@marvell.com>, 
+ GR-QLogic-Storage-Upstream@marvell.com, Davidlohr Bueso <dave@stgolabs.net>, 
+ Jonathan Cameron <jonathan.cameron@huawei.com>, 
+ Alison Schofield <alison.schofield@intel.com>, 
+ Andreas Larsson <andreas@gaisler.com>, Stuart Yoder <stuyoder@gmail.com>, 
+ Laurentiu Tudor <laurentiu.tudor@nxp.com>, Jens Axboe <axboe@kernel.dk>, 
+ Sudeep Holla <sudeep.holla@arm.com>, 
+ Cristian Marussi <cristian.marussi@arm.com>, 
+ Ard Biesheuvel <ardb@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Mathieu Poirier <mathieu.poirier@linaro.org>
+Cc: Zijun Hu <zijun_hu@icloud.com>, linux-kernel@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org, 
+ linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org, 
+ linux-media@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-pwm@vger.kernel.org, nvdimm@lists.linux.dev, 
+ linux1394-devel@lists.sourceforge.net, linux-serial@vger.kernel.org, 
+ linux-sound@vger.kernel.org, open-iscsi@googlegroups.com, 
+ linux-scsi@vger.kernel.org, linux-cxl@vger.kernel.org, 
+ sparclinux@vger.kernel.org, linux-block@vger.kernel.org, 
+ arm-scmi@vger.kernel.org, linux-efi@vger.kernel.org, 
+ linux-remoteproc@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
+X-Mailer: b4 0.14.2
+X-Proofpoint-GUID: cTyu1VL48UqVhY7zPwUQPPYeAfZYowdo
+X-Proofpoint-ORIG-GUID: cTyu1VL48UqVhY7zPwUQPPYeAfZYowdo
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2024-12-02_14,2024-12-02_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
+ mlxlogscore=999 mlxscore=0 spamscore=0 suspectscore=0 malwarescore=0
+ clxscore=1011 adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2308100000 definitions=main-2412030002
+X-Apple-Remote-Links: v=1;h=KCk=;charset=UTF-8
 
->
-> Changes made with the following Coccinelle rules:
->
-> @@ constant C; @@
->
-> - msecs_to_jiffies(C * 1000)
-> + secs_to_jiffies(C)
->
-> @@ constant C; @@
->
-> - msecs_to_jiffies(C * MSEC_PER_SEC)
-> + secs_to_jiffies(C)
->
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+This patch series is to constify the following API:
+struct device *device_find_child(struct device *dev, void *data,
+		int (*match)(struct device *dev, void *data));
+To :
+struct device *device_find_child(struct device *dev, const void *data,
+				 device_match_t match);
+typedef int (*device_match_t)(struct device *dev, const void *data);
 
-Reviewed-by: Christian Gmeiner <cgmeiner@igalia.com>
+Why to constify the API?
 
-> ---
->  drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c b/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
-> index 721d633aece9d4c81f0019e4c55884f26ee61c60..0f5a2c885d0ab7029c7248e15d6ea3c31823b782 100644
-> --- a/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
-> +++ b/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
-> @@ -100,7 +100,7 @@ int etnaviv_cmdbuf_init(struct etnaviv_cmdbuf_suballoc *suballoc,
->                 mutex_unlock(&suballoc->lock);
->                 ret = wait_event_interruptible_timeout(suballoc->free_event,
->                                                        suballoc->free_space,
-> -                                                      msecs_to_jiffies(10 * 1000));
-> +                                                      secs_to_jiffies(10));
->                 if (!ret) {
->                         dev_err(suballoc->dev,
->                                 "Timeout waiting for cmdbuf space\n");
->
-> --
-> 2.34.1
->
+- Protect caller's match data @*data which is for comparison and lookup
+  and the API does not actually need to modify @*data.
 
+- Make the API's parameters (@match)() and @data have the same type as
+  all of other device finding APIs (bus|class|driver)_find_device().
 
+- All kinds of existing device matching functions can be directly taken
+  as the API's argument, they were exported by driver core.
+
+How to constify the API?
+
+- Now, no (@match)() argument of the API usages is modifying its match
+  data @*data after previous cleanup, so it is easy and safe to make its
+  parameter @data take const void * as type.
+
+- Simplify involved codes further if it is possbile with benefits
+  brought by constifying the API.
+
+Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
+---
+Changes in v2:
+- Series v1 have no code review comments and are posted a long time ago, so may ignore differences.
+- Link to v1: https://lore.kernel.org/r/20240811-const_dfc_done-v1-0-9d85e3f943cb@quicinc.com
+- Motivation link: https://lore.kernel.org/lkml/917359cc-a421-41dd-93f4-d28937fe2325@icloud.com
+
+---
+Zijun Hu (32):
+      driver core: Constify API device_find_child()
+      driver core: Introduce device_match_type() to match device with a device type
+      drm/mediatek: Adapt for constified device_find_child()
+      hwmon: Adapt for constified device_find_child()
+      media: pci: mgb4: Adapt for constified device_find_child()
+      thunderbolt: Adapt for constified device_find_child()
+      gpio: sim: Remove gpio_sim_dev_match_fwnode()
+      net: dsa: Adapt for constified device_find_child()
+      pwm: Adapt for constified device_find_child()
+      nvdimm: Adapt for constified device_find_child()
+      libnvdimm: Simplify nd_namespace_store() implementation
+      firewire: core: Adapt for constified device_find_child()
+      serial: core: Adapt for constified device_find_child()
+      usb: typec: class: Remove both cable_match() and partner_match()
+      usb: typec: class: Adapt for constified device_find_child()
+      slimbus: core: Simplify of_find_slim_device() implementation
+      slimbus: core: Constify slim_eaddr_equal()
+      slimbus: core: Adapt for constified device_find_child()
+      scsi: iscsi: Constify API iscsi_find_flashnode_sess()
+      scsi: qla4xxx: Adapt for constified iscsi_find_flashnode_sess()
+      scsi: iscsi: Adapt for constified device_find_child()
+      cxl/region: Adapt for constified device_find_child()
+      cxl/pmem: Remove match_nvdimm_bridge()
+      cxl/core/pci: Adapt for constified device_find_child()
+      cxl/test: Adapt for constified device_find_child()
+      sparc: vio: Adapt for constified device_find_child()
+      bus: fsl-mc: Adapt for constified device_find_child()
+      block: sunvdc: Adapt for constified device_find_child()
+      firmware: arm_scmi: Adapt for constified device_find_child()
+      efi: dev-path-parser: Adapt for constified device_find_child()
+      rpmsg: core: Adapt for constified device_find_child()
+      driver core: Simplify API device_find_child_by_name() implementation
+
+ arch/sparc/kernel/vio.c                |  6 +++---
+ drivers/base/core.c                    | 30 ++++++++++--------------------
+ drivers/block/sunvdc.c                 |  6 +++---
+ drivers/bus/fsl-mc/dprc-driver.c       |  6 +++---
+ drivers/cxl/core/pci.c                 |  4 ++--
+ drivers/cxl/core/pmem.c                |  9 +++------
+ drivers/cxl/core/region.c              | 21 ++++++++++++---------
+ drivers/firewire/core-device.c         |  4 ++--
+ drivers/firmware/arm_scmi/bus.c        |  4 ++--
+ drivers/firmware/efi/dev-path-parser.c |  4 ++--
+ drivers/gpio/gpio-sim.c                |  7 +------
+ drivers/gpu/drm/mediatek/mtk_drm_drv.c |  2 +-
+ drivers/hwmon/hwmon.c                  |  2 +-
+ drivers/media/pci/mgb4/mgb4_core.c     |  4 ++--
+ drivers/nvdimm/bus.c                   |  2 +-
+ drivers/nvdimm/claim.c                 |  9 +--------
+ drivers/pwm/core.c                     |  2 +-
+ drivers/rpmsg/rpmsg_core.c             |  4 ++--
+ drivers/scsi/qla4xxx/ql4_os.c          |  3 ++-
+ drivers/scsi/scsi_transport_iscsi.c    | 10 +++++-----
+ drivers/slimbus/core.c                 | 17 +++++------------
+ drivers/thunderbolt/retimer.c          |  2 +-
+ drivers/thunderbolt/xdomain.c          |  2 +-
+ drivers/tty/serial/serial_core.c       |  4 ++--
+ drivers/usb/typec/class.c              | 31 ++++++++++++++-----------------
+ include/linux/device.h                 |  4 ++--
+ include/linux/device/bus.h             |  1 +
+ include/scsi/scsi_transport_iscsi.h    |  4 ++--
+ net/dsa/dsa.c                          |  2 +-
+ tools/testing/cxl/test/cxl.c           |  2 +-
+ 30 files changed, 89 insertions(+), 119 deletions(-)
+---
+base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
+change-id: 20241201-const_dfc_done-aaec71e3bbea
+
+Best regards,
 -- 
-greets
---
-Christian Gmeiner, MSc
+Zijun Hu <quic_zijuhu@quicinc.com>
 
-https://christian-gmeiner.info/privacypolicy
