@@ -1,57 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A14A202C44;
-	Wed,  4 Dec 2024 17:00:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497552049F3;
+	Wed,  4 Dec 2024 17:00:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733331615; cv=none; b=BhoPZ6DNJWf+o5t2lEVN9EYpNkfT7bMkHaSz60eRCtrrRJJabJlBwzt5Wchp0f8KkoRMopPe5dSR/X/2LmLRvSGmFg0v6Nl6dhNlihw85omNT84CFNMMhfIdEmsDWlAoQsbaKLM3pudsVy/1C6pcy2YSZFIch0tBBSZ1uE+JVT8=
+	t=1733331620; cv=none; b=f17kkdtIAhBpc+v1NYCMOKrUHAQmzgbNiHC+9Z7n5m1wRP1/nfXU2oaGv+T4PVU29R2U6IPGcvdZdINXq9pOykGF2HZlgpVjQvFK20MByzwLBMe2+YKZKLFkqnVV6Juktb+PBgx6qX45vs43CQrZ9LR148Mk5f3415c7ARvxbfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733331615; c=relaxed/simple;
-	bh=PrS5dMApRuvYtyE1/G9FbY88WGrmssJalLtkRCLFrXg=;
+	s=arc-20240116; t=1733331620; c=relaxed/simple;
+	bh=O8Y4Qg2Qmm+muZh74LMkyROia8RxFztdwBLcV0m+0rs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=d1d2JEFUdnumBHs8krHiYsG93NuPtpjiffTpn/xGYdttH81BiiCrVJVuk+OujbP6N6wwtqW48eyHdpFQxCxRP5BPaBjUo6S8fJS135EhhO+O/d2LUjkZXOtXWEq+Uo4ljfzFvGQhwPhJO/H8GQ0EBkhFATbvANGK2eOPsX8REk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ni5wsxV7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=DFrWeD55Kmq4prOmNLa9TLUn6zu7mPSWdudyWf6AJtT/T85ELSeaEHGwpuNw77MxL1lizym31YQsUiQOZ5t1Lkq5mmbp7jLo8UJz62Xcv0IM2VRZvp2WseIG+byCyZWEyPhyoFccwhIik4ibg2nGovFE9i7wNt0/uhSk0JXL31I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FugTz9O6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ni5wsxV7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9C56C4CECD;
-	Wed,  4 Dec 2024 17:00:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FugTz9O6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 255BAC4CECD;
+	Wed,  4 Dec 2024 17:00:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733331615;
-	bh=PrS5dMApRuvYtyE1/G9FbY88WGrmssJalLtkRCLFrXg=;
+	s=k20201202; t=1733331620;
+	bh=O8Y4Qg2Qmm+muZh74LMkyROia8RxFztdwBLcV0m+0rs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ni5wsxV7DiLLTobBia7tM2LkD/0vkHhNBmNQrL8U+FSNr8LHr23Xt1NsQUE5VRvxg
-	 D3Jf7PAo9vR2IvNiodpwx0T0zLRBX8193m9BGijJTGeiJzjwQbY8puCi9D7Qpg4YTi
-	 L7RHgp9HK3wiXcHui7VD80Xz6BJtJt7d7F99O7kqEK+H3QbUngbq54x98PRvXdsA0/
-	 5VqwMUdADkZ7J4gIGrknoWX/MGanqWbawSIFiQ/jWuJEjwY5ZjvlR4Ejo+/MDkV9ln
-	 ty5ZNs/p4DRkveCOMp7z+COn3QLLc+rJpDcSDcK+ebNCSsRvwf9N3A4qoMj83B5tNQ
-	 13S3Y7GvlYEoA==
+	b=FugTz9O6gnmz//ixjhQngALWKZykhGPGOC9TwiWs5mf+7kkvQMtI/Z8V3AmpBT9MP
+	 uIVi/nvA9Rlgu5eeXc5/j62utGGs8K4BNqVIMJwRen+8eHhHIJuXHlL5OBO1CAyAyy
+	 4u6+rQNvvle4W68fTHhvh336Rw+rFx+9sof7ctboXs+pa3iJCg3nNc2XmcpBvhl6a2
+	 6cHpqbYAJBg0PffJcW/5hf70mMJkUbshzgh0T65UUBO+Ws842w9iqhvX4Tuq+qWcT9
+	 UpnfiWuciQbYmB9LqhUyL7BU7+MGv9bzawB2DZfvBstutZyuCwHugkLup4nKLEhZay
+	 ICX8tj/HgnycQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <Avri.Altman@wdc.com>,
-	Peter Wang <peter.wang@mediatek.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
-	yoshihiro.shimoda.uh@renesas.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	avri.altman@wdc.com,
-	manivannan.sadhasivam@linaro.org,
-	ahalaney@redhat.com,
-	beanhuo@micron.com,
-	quic_mnaresh@quicinc.com,
-	ebiggers@google.com,
-	minwoo.im@samsung.com,
-	linux-scsi@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.11 13/33] scsi: ufs: core: Make DMA mask configuration more flexible
-Date: Wed,  4 Dec 2024 10:47:26 -0500
-Message-ID: <20241204154817.2212455-13-sashal@kernel.org>
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.11 16/33] scsi: lpfc: Call lpfc_sli4_queue_unset() in restart and rmmod paths
+Date: Wed,  4 Dec 2024 10:47:29 -0500
+Message-ID: <20241204154817.2212455-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204154817.2212455-1-sashal@kernel.org>
 References: <20241204154817.2212455-1-sashal@kernel.org>
@@ -66,117 +53,182 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.11.10
 Content-Transfer-Encoding: 8bit
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 78bc671bd1501e2f6c571e063301a4fdc5db53b2 ]
+[ Upstream commit d35f7672715d1ff3e3ad9bb4ae6ac6cb484200fe ]
 
-Replace UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS with
-ufs_hba_variant_ops::set_dma_mask.  Update the Renesas driver
-accordingly.  This patch enables supporting other configurations than
-32-bit or 64-bit DMA addresses, e.g. 36-bit DMA addresses.
+During initialization, the driver allocates wq->pring in lpfc_wq_create
+and lpfc_sli4_queue_unset() is the only place where kfree(wq->pring) is
+called.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Link: https://lore.kernel.org/r/20241018194753.775074-1-bvanassche@acm.org
-Reviewed-by: Avri Altman <Avri.Altman@wdc.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+There is a possible memory leak in lpfc_sli_brdrestart_s4() (restart)
+and lpfc_pci_remove_one_s4() (rmmod) paths because there are no calls to
+lpfc_sli4_queue_unset() to kfree() the wq->pring.
+
+Fix by inserting a call to lpfc_sli4_queue_unset() in
+lpfc_sli_brdrestart_s4() and lpfc_sli4_hba_unset() routines.  Also, add
+a check for the SLI_ACTIVE flag before issuing the Q_DESTROY mailbox
+command.  If not set, then the mailbox command will obviously fail.  In
+such cases, skip issuing the mailbox command and only execute the driver
+resource clean up portions of the lpfc_*q_destroy routines.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20241031223219.152342-4-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c      | 4 ++--
- drivers/ufs/host/ufs-renesas.c | 9 ++++++++-
- include/ufs/ufshcd.h           | 9 +++------
- 3 files changed, 13 insertions(+), 9 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |  2 ++
+ drivers/scsi/lpfc/lpfc_sli.c  | 41 ++++++++++++++++++++++++++++++-----
+ 2 files changed, 38 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 03490f062d63a..5c64ef7334546 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2398,8 +2398,6 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
- 	int err;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 0c1404dc5f3bd..01f0f1f2a294f 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -13511,6 +13511,8 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
+ 	/* Disable FW logging to host memory */
+ 	lpfc_ras_stop_fwlog(phba);
  
- 	hba->capabilities = ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
--	if (hba->quirks & UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS)
--		hba->capabilities &= ~MASK_64_ADDRESSING_SUPPORT;
++	lpfc_sli4_queue_unset(phba);
++
+ 	/* Reset SLI4 HBA FCoE function */
+ 	lpfc_pci_function_reset(phba);
  
- 	/* nutrs and nutmrs are 0 based values */
- 	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) + 1;
-@@ -10314,6 +10312,8 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-  */
- static int ufshcd_set_dma_mask(struct ufs_hba *hba)
- {
-+	if (hba->vops && hba->vops->set_dma_mask)
-+		return hba->vops->set_dma_mask(hba);
- 	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
- 		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
- 			return 0;
-diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
-index 8711e5cbc9680..3ff97112e1f6d 100644
---- a/drivers/ufs/host/ufs-renesas.c
-+++ b/drivers/ufs/host/ufs-renesas.c
-@@ -7,6 +7,7 @@
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 7dc34c71eb78c..6f79e0cf6a753 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -5288,6 +5288,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
+ 			"0296 Restart HBA Data: x%x x%x\n",
+ 			phba->pport->port_state, psli->sli_flag);
  
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/dma-mapping.h>
- #include <linux/err.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
-@@ -364,14 +365,20 @@ static int ufs_renesas_init(struct ufs_hba *hba)
++	lpfc_sli4_queue_unset(phba);
++
+ 	rc = lpfc_sli4_brdreset(phba);
+ 	if (rc) {
+ 		phba->link_state = LPFC_HBA_ERROR;
+@@ -17616,6 +17618,9 @@ lpfc_eq_destroy(struct lpfc_hba *phba, struct lpfc_queue *eq)
+ 	if (!eq)
+ 		return -ENODEV;
+ 
++	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
++		goto list_remove;
++
+ 	mbox = mempool_alloc(eq->phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
  		return -ENOMEM;
- 	ufshcd_set_variant(hba, priv);
+@@ -17642,10 +17647,12 @@ lpfc_eq_destroy(struct lpfc_hba *phba, struct lpfc_queue *eq)
+ 				shdr_status, shdr_add_status, rc);
+ 		status = -ENXIO;
+ 	}
++	mempool_free(mbox, eq->phba->mbox_mem_pool);
  
--	hba->quirks |= UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS | UFSHCD_QUIRK_HIBERN_FASTAUTO;
-+	hba->quirks |= UFSHCD_QUIRK_HIBERN_FASTAUTO;
- 
- 	return 0;
++list_remove:
+ 	/* Remove eq from any list */
+ 	list_del_init(&eq->list);
+-	mempool_free(mbox, eq->phba->mbox_mem_pool);
++
+ 	return status;
  }
  
-+static int ufs_renesas_set_dma_mask(struct ufs_hba *hba)
-+{
-+	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
-+}
+@@ -17673,6 +17680,10 @@ lpfc_cq_destroy(struct lpfc_hba *phba, struct lpfc_queue *cq)
+ 	/* sanity check on queue memory */
+ 	if (!cq)
+ 		return -ENODEV;
 +
- static const struct ufs_hba_variant_ops ufs_renesas_vops = {
- 	.name		= "renesas",
- 	.init		= ufs_renesas_init,
-+	.set_dma_mask	= ufs_renesas_set_dma_mask,
- 	.setup_clocks	= ufs_renesas_setup_clocks,
- 	.hce_enable_notify = ufs_renesas_hce_enable_notify,
- 	.dbg_register_dump = ufs_renesas_dbg_register_dump,
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 0fd2aebac7286..3fee38029bfee 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -298,6 +298,8 @@ struct ufs_pwr_mode_info {
-  * @max_num_rtt: maximum RTT supported by the host
-  * @init: called when the driver is initialized
-  * @exit: called to cleanup everything done in init
-+ * @set_dma_mask: For setting another DMA mask than indicated by the 64AS
-+ *	capability bit.
-  * @get_ufs_hci_version: called to get UFS HCI version
-  * @clk_scale_notify: notifies that clks are scaled up/down
-  * @setup_clocks: called before touching any of the controller registers
-@@ -340,6 +342,7 @@ struct ufs_hba_variant_ops {
- 	int	(*init)(struct ufs_hba *);
- 	void    (*exit)(struct ufs_hba *);
- 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
-+	int	(*set_dma_mask)(struct ufs_hba *);
- 	int	(*clk_scale_notify)(struct ufs_hba *, bool,
- 				    enum ufs_notify_change_status);
- 	int	(*setup_clocks)(struct ufs_hba *, bool,
-@@ -622,12 +625,6 @@ enum ufshcd_quirks {
- 	 */
- 	UFSHCD_QUIRK_SKIP_PH_CONFIGURATION		= 1 << 16,
++	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
++		goto list_remove;
++
+ 	mbox = mempool_alloc(cq->phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+ 		return -ENOMEM;
+@@ -17698,9 +17709,11 @@ lpfc_cq_destroy(struct lpfc_hba *phba, struct lpfc_queue *cq)
+ 				shdr_status, shdr_add_status, rc);
+ 		status = -ENXIO;
+ 	}
++	mempool_free(mbox, cq->phba->mbox_mem_pool);
++
++list_remove:
+ 	/* Remove cq from any list */
+ 	list_del_init(&cq->list);
+-	mempool_free(mbox, cq->phba->mbox_mem_pool);
+ 	return status;
+ }
  
--	/*
--	 * This quirk needs to be enabled if the host controller has
--	 * 64-bit addressing supported capability but it doesn't work.
--	 */
--	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
--
- 	/*
- 	 * This quirk needs to be enabled if the host controller has
- 	 * auto-hibernate capability but it's FASTAUTO only.
+@@ -17728,6 +17741,10 @@ lpfc_mq_destroy(struct lpfc_hba *phba, struct lpfc_queue *mq)
+ 	/* sanity check on queue memory */
+ 	if (!mq)
+ 		return -ENODEV;
++
++	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
++		goto list_remove;
++
+ 	mbox = mempool_alloc(mq->phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+ 		return -ENOMEM;
+@@ -17753,9 +17770,11 @@ lpfc_mq_destroy(struct lpfc_hba *phba, struct lpfc_queue *mq)
+ 				shdr_status, shdr_add_status, rc);
+ 		status = -ENXIO;
+ 	}
++	mempool_free(mbox, mq->phba->mbox_mem_pool);
++
++list_remove:
+ 	/* Remove mq from any list */
+ 	list_del_init(&mq->list);
+-	mempool_free(mbox, mq->phba->mbox_mem_pool);
+ 	return status;
+ }
+ 
+@@ -17783,6 +17802,10 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
+ 	/* sanity check on queue memory */
+ 	if (!wq)
+ 		return -ENODEV;
++
++	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
++		goto list_remove;
++
+ 	mbox = mempool_alloc(wq->phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+ 		return -ENOMEM;
+@@ -17807,11 +17830,13 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
+ 				shdr_status, shdr_add_status, rc);
+ 		status = -ENXIO;
+ 	}
++	mempool_free(mbox, wq->phba->mbox_mem_pool);
++
++list_remove:
+ 	/* Remove wq from any list */
+ 	list_del_init(&wq->list);
+ 	kfree(wq->pring);
+ 	wq->pring = NULL;
+-	mempool_free(mbox, wq->phba->mbox_mem_pool);
+ 	return status;
+ }
+ 
+@@ -17841,6 +17866,10 @@ lpfc_rq_destroy(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 	/* sanity check on queue memory */
+ 	if (!hrq || !drq)
+ 		return -ENODEV;
++
++	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
++		goto list_remove;
++
+ 	mbox = mempool_alloc(hrq->phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+ 		return -ENOMEM;
+@@ -17881,9 +17910,11 @@ lpfc_rq_destroy(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 				shdr_status, shdr_add_status, rc);
+ 		status = -ENXIO;
+ 	}
++	mempool_free(mbox, hrq->phba->mbox_mem_pool);
++
++list_remove:
+ 	list_del_init(&hrq->list);
+ 	list_del_init(&drq->list);
+-	mempool_free(mbox, hrq->phba->mbox_mem_pool);
+ 	return status;
+ }
+ 
 -- 
 2.43.0
 
