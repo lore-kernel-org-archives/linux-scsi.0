@@ -1,155 +1,156 @@
-Received: from HK2PR02CU002.outbound.protection.outlook.com (mail-eastasiaazon11010027.outbound.protection.outlook.com [52.101.128.27])
+Received: from pv50p00im-zteg10011401.me.com (pv50p00im-zteg10011401.me.com [17.58.6.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AE971ABEDC;
-	Wed,  4 Dec 2024 11:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.128.27
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733313118; cv=fail; b=atdBabNdUqf9e8iC61qqXhpiMr2pJZ2S7vhjvSZYlnl4kIhBw4dvrfjxzmG2BgkVqxXZqthtVapveBdTUj2cFIW5YBQS0maS7OLqBwkNjndRsdHbukCCtGIuK+Dwgh97uMozU8FqevQpHMiXiBC43rU6KxzbYqHpewTgHgCnOT0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733313118; c=relaxed/simple;
-	bh=fWznVV8JfhiD2xJxXVYVzjESNbsSf/79GRxXlF7GjTg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oQGVe0A2eFFqzB7WjRUnFFOkPd8U2rJcAhWQbVNpMqOebm2XZODYWT1v/xtIHr17cuxfwxuD/mM0urydU4+G7fTgtBFfakhl/GkC6MD6y37HaR1tdCXXlSxmL9WMMjnE/gGHTVfrl2wUzoLFIB3Sib4lMP+OGWJJA8UqSo9TJJY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oppo.com; spf=pass smtp.mailfrom=oppo.com; dkim=pass (1024-bit key) header.d=oppo.com header.i=@oppo.com header.b=gfdtdbXH; arc=fail smtp.client-ip=52.101.128.27
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oppo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oppo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E4681B87DF
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Dec 2024 12:27:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.41
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733315228; cv=none; b=t/6QGD4JmUWQBRdbkBZfpPPR6HA2WFyklvqCiOpO4HsubyXBT5ETgeRkiLHBYUL+Bstl5TnicN4kKLYiB8kpp8XukkgRqlf9uWpdVjj2R5pZzh1P/hyZBiITe7FzfVpCvVXEA9m45B6YUg/0vUe8oZj4RlhF3FToSjbvhd/cgbk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733315228; c=relaxed/simple;
+	bh=b3cKO8E37kdGEfPQBy2NupErjAuGZ0w9V7NN+3pjucc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kGWZGh2TzoA6kUdyWGHQGUNCTSwDi6vZ33ukhZCljb8m4CXoxuh1guMuLq7dWO0wHZ5zPXBmeM2bvOirdrIeHR8LtezTebGx++P10uBcmnKMuLF+kUZ0+q7Tk9evLT7LNDXuQCfL+JKGxn/W5Hkb0wvCAjB5aW8nu01YJAGC/A0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=aDx0LVkM; arc=none smtp.client-ip=17.58.6.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=oppo.com header.i=@oppo.com header.b="gfdtdbXH"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=I9hjA+jW/yCbjY+2qUK0+dvU1AOCIocpg5+HfUZWC+0D/+IksMxP5MNopROabLCFFsUEFApQjdWe+Y7+VNZyykIkj7TmjJPxTzG17afI27ZBQfkBOR2UnqvIyqp7FPwLzFUqYnHmv0xdUoidgYHCraUz82yhBqvGhQCe52XAqdgB2u9vycp8ATGEZjo/DnXZQa4vUJTvnHgd/dLjG6IIATi1aJmw4oXGBO5RmGzNSTJ4jkjsdw9Rprr46x2hdoY/zXN+xV/xQ1UybOtZTHHCHDhdqNZhF49binEMqbqRgLVMkBq2mdSn5N78HopCJoq57u15w88wEpT0R9wi/qFu2A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8jIW/2H3yGsVFI0ke6NPImMo9nnC59ZtXEayoR+KbbM=;
- b=PMcyO+KtsLNtFci3gCbCz0oEAR1wUZ4VDJLdmbLVAe6OJXLrg/DYCNJDBIdU9JiDu9TZz9R4YXDYxEBN+e6STfRdF0SxicJj1OhpxCyFxW6gN9AleCJ0EQuD+bHNMTzL6dinEkZmvd7sanpojduw7RL19Q0wBvdQCvE0zQG+2sF9m2fsrTfF2bKycVd4LHqc/wXiwGrVu2bHlyIUybRYI7lDqeFkC/6g61SpBjyC7hvcTTlY/lFjLZju6bpwwKGrt9+vr2Jz2YeFQnn9IcTeyTtafmcagYWIpzB+Md1dn9sfgKH57mxaEKXSaNKx0tBOFNaaWJIHuC6S2VTtlnZuXw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 58.252.5.68) smtp.rcpttodomain=samsung.com smtp.mailfrom=oppo.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=oppo.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oppo.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8jIW/2H3yGsVFI0ke6NPImMo9nnC59ZtXEayoR+KbbM=;
- b=gfdtdbXHG31ipEUypXH0mFlcwVA38tK/JuHVXG8KHLmsffht7aebVH69OEP9/CLqWJyOVJRw4TWtiXMjiczni4GwoRBHqqD/1AGP+QvQ9HI2Ce9GUHoXGorZcIA7rmXcQS9A1DlfWDiMJwcsC0RhsmSAgo0ZTRt8FgOzrDorWgc=
-Received: from PS2PR02CA0048.apcprd02.prod.outlook.com (2603:1096:300:59::36)
- by SEZPR02MB7539.apcprd02.prod.outlook.com (2603:1096:101:1e8::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8207.19; Wed, 4 Dec
- 2024 11:51:50 +0000
-Received: from HK3PEPF0000021F.apcprd03.prod.outlook.com
- (2603:1096:300:59:cafe::be) by PS2PR02CA0048.outlook.office365.com
- (2603:1096:300:59::36) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.8207.17 via Frontend Transport; Wed,
- 4 Dec 2024 11:51:48 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 58.252.5.68)
- smtp.mailfrom=oppo.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=oppo.com;
-Received-SPF: Pass (protection.outlook.com: domain of oppo.com designates
- 58.252.5.68 as permitted sender) receiver=protection.outlook.com;
- client-ip=58.252.5.68; helo=mail.oppo.com; pr=C
-Received: from mail.oppo.com (58.252.5.68) by
- HK3PEPF0000021F.mail.protection.outlook.com (10.167.8.41) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.8230.7 via Frontend Transport; Wed, 4 Dec 2024 11:51:48 +0000
-Received: from localhost.localdomain (172.16.40.118) by mailappw30.adc.com
- (172.16.56.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 4 Dec
- 2024 19:51:47 +0800
-From: <liuderong@oppo.com>
-To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<peter.wang@mediatek.com>, <manivannan.sadhasivam@linaro.org>,
-	<ahalaney@redhat.com>, <beanhuo@micron.com>, <quic_mnaresh@quicinc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>, liuderong
-	<liuderong@oppo.com>
-Subject: [PATCH] scsi:ufs:core: update compl_time_stamp_local_clock after complete a cqe
-Date: Wed, 4 Dec 2024 19:50:04 +0800
-Message-ID: <1733313004-350420-1-git-send-email-liuderong@oppo.com>
-X-Mailer: git-send-email 2.7.4
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="aDx0LVkM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
+	s=1a1hai; t=1733315226;
+	bh=tDbYa+5DWmHdZ9lmVLNA7xMZvJoZ/PCpc6Zau1xliNU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:
+	 x-icloud-hme;
+	b=aDx0LVkMUXFI75QpCfQtwEzziTl2NnjdGJ/9Nl6EjkD9AoNOPkj0pNJDmDS0yOxmo
+	 cFAXLbMOmPcOl5uunRBBrqBVYZF5ppxfVoWTl3S1fXUPYvDXVgmxgrfgiOzuzDhljR
+	 JXz5mSklSuuNIhx7A4INyoL4v8SXD0un9r9AkY3EWP5hUjq0cVMBNRe3UAI+WH+UEp
+	 aQcXPRWXKjSKZb3dQybv2/fEczrg8mOY6isUSLdmtOWnHvZ0W1/xlosR4mnRECds2h
+	 6Ay6kSNLijQWwdsoHl1pqn9BntMizpWoDbFHr5J8zkhSqKMjCSXP0KeQ2EZIN5IQ7P
+	 WHMoRxUFUJF5Q==
+Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
+	by pv50p00im-zteg10011401.me.com (Postfix) with ESMTPSA id B793434BA6BD;
+	Wed,  4 Dec 2024 12:26:37 +0000 (UTC)
+Message-ID: <235ce0a9-1db1-4558-817b-6f92f22be5ab@icloud.com>
+Date: Wed, 4 Dec 2024 20:26:22 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: mailappw30.adc.com (172.16.56.197) To mailappw30.adc.com
- (172.16.56.197)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: HK3PEPF0000021F:EE_|SEZPR02MB7539:EE_
-X-MS-Office365-Filtering-Correlation-Id: c000fc45-fc30-4b6b-b93e-08dd145a08e8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|36860700013|376014|1800799024|921020;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?j4aUfsU/dJTCyOH3YM1VzQeq0QJIW3qCb9Po0A62yj1T0QVhJ2ts5F7A44Lo?=
- =?us-ascii?Q?PXQiYU3e7Wlm3laVdIbnVVeHdVNCoDKQSljZ/OCRfNH/wXYZzM4U46HWtwl/?=
- =?us-ascii?Q?cBW6/2/h5ytt3F+3iQuxJLTzIT4x/XtWf+/qyrOLCJCUX7b3RhN/9yR/NB42?=
- =?us-ascii?Q?ZZN0CaDY082BJojENjpRkUmWIbh/cfOc8D4jKqyd71ZU9PplSt0w1dUivKuK?=
- =?us-ascii?Q?bo/+B5WACtidaPU0nka+1WOgo5q2U/qe2+o0X9/t5m0yxRZQEcI75PGQRxH0?=
- =?us-ascii?Q?ndGHxcMBL7+JjRuzx9TNn8L1RF8mf3yOAkSrdLBerY6MUmGYVSwqZFj1zM4V?=
- =?us-ascii?Q?cD5NXOr8ZuOb5lv65mMVxXcDNB5CyFNymiZYDtYNi4pn7RzWzcIwuPadLKB/?=
- =?us-ascii?Q?04S6DLsrM3dISBWWhLth95VspG9vd7UUA36pS8tP++n8209iisK72Qp5bX+O?=
- =?us-ascii?Q?NoKSJW3/1eDb+JvMC7qwbA8ghTJrgOzGhSu4m8pSPvJ9SCt2zOAjMYa60p72?=
- =?us-ascii?Q?iQMki5jmyBeQxBT5/bbD8iD/FDB01HA+L/e3UG7/Q5CfpRb0UBzkiacfpY7h?=
- =?us-ascii?Q?iFoUtSDxH4gQGug7X3IBvWrQQvcVhDRP5Cpuax/jP1b/hdlCkgtB1s88P8Rl?=
- =?us-ascii?Q?amC8cxuCtm4vPyoSjwLDXK7acgTx3hUQ/6/Fp98GwoxRzich1n3E3ryXpPw9?=
- =?us-ascii?Q?pVl8wWpZauZUIQVpiMO4QUmpxk7X0cyFJZpPdZd9MkT+1G4Z7hcr8C09ocBv?=
- =?us-ascii?Q?gFnNfhbDaEJDngEAUMH4yFcSv/r0ndcd9tyxN6UQX3BLHHUQRPytuV87uq6j?=
- =?us-ascii?Q?/9vd5HNiORVWDOshBVSFwWohUaacKu0EPmmGMZK6/7VbDWrusjP48cyx2AcU?=
- =?us-ascii?Q?Sd5d8TCiX4mnMqw/ASlbhil931HvlmwHQBwb/IQwQd2Qns9tVtmK0Bo3uI6e?=
- =?us-ascii?Q?s+ArDFebsSqJAhQMxHLhJgGapHhwcTXkb/cL1n6zVyfFo2b+Qv/0NJ5LSzMs?=
- =?us-ascii?Q?xy1v+M7OZThb78CubAr3Dxil9oLH4RuziUTuGn8G13f9DzIHvKuz3Ng1QkoG?=
- =?us-ascii?Q?ZxktT8l/tC7jDMxeD6qhCyu/fS6lEG2O/EYpe058j5W1uz0qQ2oV8nvJkPEx?=
- =?us-ascii?Q?EQ4rH9XBOFMrIhKcMcN1/mpVNZMzMMlJRpIzLBaJh2v7HvYjYyYhiS7e29Zx?=
- =?us-ascii?Q?o/M5EKQRsKQqBS3UFeHceIOJNoZQ9lB6uvGBpXXvKW1xaWOI8gbMili1jJkR?=
- =?us-ascii?Q?56RaDHf4FMhEsh44fBOm7zi+hmaoMuAfJbHseFMUduwx2Lyjj6cRYfcoitKz?=
- =?us-ascii?Q?Px3IHs7eC8LmQcYpJ9tSYfW+rBgaSKVIgLdm497b9+rHYP9TeA1WT0yq7r9y?=
- =?us-ascii?Q?DAAF4dZgB4GpunHJMKHMoMZqCjgzrox2viLD9LRZqm0tT6Z6JQVixxEyjUcz?=
- =?us-ascii?Q?u91i3bDQXr2ynapmQ6o4wgVlvK3yaiABW6Ls8qhVTekslvDUligq2g=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:58.252.5.68;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.oppo.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(36860700013)(376014)(1800799024)(921020);DIR:OUT;SFP:1101;
-X-OriginatorOrg: oppo.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Dec 2024 11:51:48.3841
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c000fc45-fc30-4b6b-b93e-08dd145a08e8
-X-MS-Exchange-CrossTenant-Id: f1905eb1-c353-41c5-9516-62b4a54b5ee6
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=f1905eb1-c353-41c5-9516-62b4a54b5ee6;Ip=[58.252.5.68];Helo=[mail.oppo.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	HK3PEPF0000021F.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR02MB7539
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/32] driver core: Constify API device_find_child()
+ and adapt for various existing usages
+To: James Bottomley <James.Bottomley@HansenPartnership.com>,
+ =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas@t-8ch.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Chun-Kuang Hu <chunkuang.hu@kernel.org>,
+ Philipp Zabel <p.zabel@pengutronix.de>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>, Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Jean Delvare <jdelvare@suse.com>, Guenter Roeck <linux@roeck-us.net>,
+ Martin Tuma <martin.tuma@digiteqautomotive.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Andreas Noever <andreas.noever@gmail.com>,
+ Michael Jamet <michael.jamet@intel.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Yehezkel Bernat <YehezkelShB@gmail.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski
+ <brgl@bgdev.pl>, Andrew Lunn <andrew@lunn.ch>,
+ Vladimir Oltean <olteanv@gmail.com>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Simon Horman <horms@kernel.org>, Dan Williams <dan.j.williams@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Ira Weiny <ira.weiny@intel.com>, Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+ Jiri Slaby <jirislaby@kernel.org>,
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+ Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+ Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+ Mike Christie <michael.christie@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nilesh Javali <njavali@marvell.com>,
+ Manish Rangankar <mrangankar@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com, Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Andreas Larsson <andreas@gaisler.com>, Stuart Yoder <stuyoder@gmail.com>,
+ Laurentiu Tudor <laurentiu.tudor@nxp.com>, Jens Axboe <axboe@kernel.dk>,
+ Sudeep Holla <sudeep.holla@arm.com>,
+ Cristian Marussi <cristian.marussi@arm.com>, Ard Biesheuvel
+ <ardb@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Mathieu Poirier <mathieu.poirier@linaro.org>, linux-kernel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org,
+ linux-media@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
+ linux-pwm@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux1394-devel@lists.sourceforge.net, linux-serial@vger.kernel.org,
+ linux-sound@vger.kernel.org, open-iscsi@googlegroups.com,
+ linux-scsi@vger.kernel.org, linux-cxl@vger.kernel.org,
+ sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+ arm-scmi@vger.kernel.org, linux-efi@vger.kernel.org,
+ linux-remoteproc@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
+References: <20241203-const_dfc_done-v2-0-7436a98c497f@quicinc.com>
+ <g32cigmktmj4egkq2tof27el2yss4liccfxgebkgqvkil32mlb@e3ta4ezv7y4m>
+ <9d34bd6f-b120-428a-837b-5a5813e14618@icloud.com>
+ <2024120320-manual-jockey-dfd1@gregkh>
+ <b9885785-d4d4-4c72-b425-3dc552651d7e@icloud.com>
+ <8eb7c0c54b280b8eb72f82032ede802c001ab087.camel@HansenPartnership.com>
+ <8fb887a0-3634-4e07-9f0d-d8d7c72ca802@t-8ch.de>
+ <f5ea7e17-5550-4658-8f4c-1c51827c7627@icloud.com>
+ <108c63c753f2f637a72c2e105ac138f80d4b0859.camel@HansenPartnership.com>
+Content-Language: en-US
+From: Zijun Hu <zijun_hu@icloud.com>
+In-Reply-To: <108c63c753f2f637a72c2e105ac138f80d4b0859.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: Ptou9-aUclkqdkvBrep0JqLqpE5OAxzN
+X-Proofpoint-GUID: Ptou9-aUclkqdkvBrep0JqLqpE5OAxzN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2024-12-04_09,2024-12-04_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 malwarescore=0 bulkscore=0 mlxscore=0
+ spamscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2308100000 definitions=main-2412040096
 
-From: liuderong <liuderong@oppo.com>
+On 2024/12/3 23:34, James Bottomley wrote:
+>>> This also enables an incremental migration.
+>> change the API prototype from:
+>> device_find_child(..., void *data_0, int (*match)(struct device *dev,
+>> void *data));
+>>
+>> to:
+>> device_find_child(..., const void *data_0, int (*match)(struct device
+>> *dev, const void *data));
+>>
+>> For @data_0,  void * -> const void * is okay.
+>> but for @match, the problem is function pointer type incompatibility.
+>>
+>> there are two solutions base on discussions.
+>>
+>> 1) squashing likewise Greg mentioned.
+>>    Do all of the "prep work" first, and then
+>>    do the const change at the very end, all at once.
+>>
+>> 2)  as changing platform_driver's remove() prototype.
+>> Commit: e70140ba0d2b ("Get rid of 'remove_new' relic from platform
+>> driver struct")
+>>
+>>  introduce extra device_find_child_new() which is constified  -> use
+>> *_new() replace ALL device_find_child() instances one by one -> 
+>> remove device_find_child() -> rename *_new() to device_find_child()
+>> once.
+> Why bother with the last step, which churns the entire code base again?
 
-For now, lrbp->compl_time_stamp_local_clock is set to zero
-after send a sqe, but it is not updated after complete a cqe,
-the printed information in ufshcd_print_tr will always be zero.
-So update lrbp->cmpl_time_stamp_local_clock after complete a cqe.
+keep the good API name device_find_child().
 
-Log sample:
-ufshcd-qcom 1d84000.ufshc: UPIU[8] - issue time 8750227249 us
-ufshcd-qcom 1d84000.ufshc: UPIU[8] - complete time 0 us
+> Why not call the new function device_find_child_const() and simply keep
+> it (it's descriptive of its function).  That way you can have a patch
+> series without merging and at the end simply remove the old function.
 
-Signed-off-by: liuderong <liuderong@oppo.com>
----
- drivers/ufs/core/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 6a26853..bd70fe1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5519,6 +5519,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 
- 	lrbp = &hba->lrb[task_tag];
- 	lrbp->compl_time_stamp = ktime_get();
-+	lrbp->compl_time_stamp_local_clock = local_clock();
- 	cmd = lrbp->cmd;
- 	if (cmd) {
- 		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
--- 
-2.7.4
+device_find_child is a good name for the API, 'find' already means const.
 
