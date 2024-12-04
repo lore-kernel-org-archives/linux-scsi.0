@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1857220FAB9;
-	Wed,  4 Dec 2024 16:59:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36921F03DF;
+	Wed,  4 Dec 2024 16:59:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733331598; cv=none; b=RZI0SRcpekvtjwf4LmLMDGcrL3n4ZOSFmpZcQklCM+fMAX2T4ncf9IkJBC4wnTw33P/U/Fzbu3dfD8bDlboebjJc9X5oXKd1DMCYJZJDDyObHS0tiLGPln7E8JkStx8g1d7SUAtGzCJy9/powt2aj6nXt1sIZwr4qgsLD1h+NJ8=
+	t=1733331599; cv=none; b=BZtB09RgGmQNzLAoKIwjAKgQAqOpHqvpzSA6/Av7VWbxRAnpUIM17utw5nPgLERPRclNDmF0b8qcZQP2rx0Fz/+bVIrMiTmEyRML4jwbGrVHmAo8FnRVgBrs/Zh/vJzDUdl7XNZCJG4LEIvhsf/fI9v3TFP7zVsrbQRoWgbLreM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733331598; c=relaxed/simple;
-	bh=WcBSCY7HjicPkvR1UEZiLawtfYpUExLMjLE/UcDeR5A=;
+	s=arc-20240116; t=1733331599; c=relaxed/simple;
+	bh=7veacg163DEHxux0q4IJwclqH/o6OEQ/H/h2FWmRTpM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZcBmI+dvwreuGCqeVc2NlBeqcQ4IuF+4V74zkxiS0umIA5bXZImtxr2yBLe9/DsyuU9J+B7savofB4wVhGGjXv1/RdpbrerAbMb1vbNyTES9qJIe/1cezi4JYm+dMYopgS16V/1fZQYCc1ZczCmJW1/1PHGx+IgcXulwgwuTRfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uu5knexo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=NIUoptVaAxNPF32IVXn8KJqUPTVNAY3oufumyYj6XhXVZBuLZ5QNW0r2sMuUaTbzoKmniUYzjmV/iuALYI8drnN6qN1bUitJq/fzkQQk56FE5UcnMN4g7s+uVdebtP1llOCdpJP8PRDcY3XTn6JQ37nauvxow6UTM7nTAZfTfVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X65UG1V+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uu5knexo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 050E9C4CED1;
-	Wed,  4 Dec 2024 16:59:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X65UG1V+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D0EBC4CECD;
+	Wed,  4 Dec 2024 16:59:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733331598;
-	bh=WcBSCY7HjicPkvR1UEZiLawtfYpUExLMjLE/UcDeR5A=;
+	s=k20201202; t=1733331599;
+	bh=7veacg163DEHxux0q4IJwclqH/o6OEQ/H/h2FWmRTpM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uu5knexocHz8i599buyps5Q0DVGNNw5TsqcHe37dU9l0bMblHJ8Q2wTOM0H6X6cts
-	 0Cafe6BqkGi+F+5JGXtgXrUl2HDniQyfSpm6ffp1rpzRZYlBsqz7qUywFJelgkIb3I
-	 aoFebJQFBbvys87jviCjqnzthgluyE11sz0+Hq/DXHFk7Wgo2E7j4/QCCDwilsijiz
-	 sGmyTofcZVchkzQCZT59WOEORMJaryDb8oAls9K27juVX6gDvDK/P88R/qLLxPnNm/
-	 8xxXY1iCjEdhMsB7y0frxItqaRdRZqiD6x+7gl3FUi9FIwlg/+OXuf9uqLANPmLdSx
-	 Yn6/i1ebrcKaQ==
+	b=X65UG1V+bsZTozbAlbjstUOnaLwzXuTmt03Qb83lGhgNxAPSrenR0UjdGYPb+1b9D
+	 +eBqaiR7CIk6uQUhYSeWTJAClkO8s8iZLlKEKriJlgx7N7lcAGerC5SRuf8CLAusvg
+	 q9H8C8d+95EGUufkC6hW5z/PGaoNBL1o7KfwlCnWcOZ50Hs3ns9nOCRRpTrRoH9DC+
+	 E5dDHCQ/nq9vT7KNowHs1GKdPFZ3efJ5U2MC/dXXtssVJqQUVkSA+qpJuRU1HDm9D7
+	 /YwF3qo5lYtuyFNc3CcX75WelTj0B17mwxvfjluez8M+8Mrvhj/mEV4m3SuyJ/4y9H
+	 6hokxuNEbwkFg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
 Cc: Yihang Li <liyihang9@huawei.com>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
+	Xingui Yang <yangxingui@huawei.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.11 08/33] scsi: hisi_sas: Add cond_resched() for no forced preemption model
-Date: Wed,  4 Dec 2024 10:47:21 -0500
-Message-ID: <20241204154817.2212455-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.11 09/33] scsi: hisi_sas: Create all dump files during debugfs initialization
+Date: Wed,  4 Dec 2024 10:47:22 -0500
+Message-ID: <20241204154817.2212455-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204154817.2212455-1-sashal@kernel.org>
 References: <20241204154817.2212455-1-sashal@kernel.org>
@@ -54,83 +54,363 @@ Content-Transfer-Encoding: 8bit
 
 From: Yihang Li <liyihang9@huawei.com>
 
-[ Upstream commit 2233c4a0b948211743659b24c13d6bd059fa75fc ]
+[ Upstream commit 9f564f15f88490b484e02442dc4c4b11640ea172 ]
 
-For no forced preemption model kernel, in the scenario where the
-expander is connected to 12 high performance SAS SSDs, the following
-call trace may occur:
+For the current debugfs of hisi_sas, after user triggers dump, the
+driver allocate memory space to save the register information and create
+debugfs files to display the saved information. In this process, the
+debugfs files created after each dump.
 
-[  214.409199][  C240] watchdog: BUG: soft lockup - CPU#240 stuck for 22s! [irq/149-hisi_sa:3211]
-[  214.568533][  C240] pstate: 60400009 (nZCv daif +PAN -UAO -TCO BTYPE=--)
-[  214.575224][  C240] pc : fput_many+0x8c/0xdc
-[  214.579480][  C240] lr : fput+0x1c/0xf0
-[  214.583302][  C240] sp : ffff80002de2b900
-[  214.587298][  C240] x29: ffff80002de2b900 x28: ffff1082aa412000
-[  214.593291][  C240] x27: ffff3062a0348c08 x26: ffff80003a9f6000
-[  214.599284][  C240] x25: ffff1062bbac5c40 x24: 0000000000001000
-[  214.605277][  C240] x23: 000000000000000a x22: 0000000000000001
-[  214.611270][  C240] x21: 0000000000001000 x20: 0000000000000000
-[  214.617262][  C240] x19: ffff3062a41ae580 x18: 0000000000010000
-[  214.623255][  C240] x17: 0000000000000001 x16: ffffdb3a6efe5fc0
-[  214.629248][  C240] x15: ffffffffffffffff x14: 0000000003ffffff
-[  214.635241][  C240] x13: 000000000000ffff x12: 000000000000029c
-[  214.641234][  C240] x11: 0000000000000006 x10: ffff80003a9f7fd0
-[  214.647226][  C240] x9 : ffffdb3a6f0482fc x8 : 0000000000000001
-[  214.653219][  C240] x7 : 0000000000000002 x6 : 0000000000000080
-[  214.659212][  C240] x5 : ffff55480ee9b000 x4 : fffffde7f94c6554
-[  214.665205][  C240] x3 : 0000000000000002 x2 : 0000000000000020
-[  214.671198][  C240] x1 : 0000000000000021 x0 : ffff3062a41ae5b8
-[  214.677191][  C240] Call trace:
-[  214.680320][  C240]  fput_many+0x8c/0xdc
-[  214.684230][  C240]  fput+0x1c/0xf0
-[  214.687707][  C240]  aio_complete_rw+0xd8/0x1fc
-[  214.692225][  C240]  blkdev_bio_end_io+0x98/0x140
-[  214.696917][  C240]  bio_endio+0x160/0x1bc
-[  214.701001][  C240]  blk_update_request+0x1c8/0x3bc
-[  214.705867][  C240]  scsi_end_request+0x3c/0x1f0
-[  214.710471][  C240]  scsi_io_completion+0x7c/0x1a0
-[  214.715249][  C240]  scsi_finish_command+0x104/0x140
-[  214.720200][  C240]  scsi_softirq_done+0x90/0x180
-[  214.724892][  C240]  blk_mq_complete_request+0x5c/0x70
-[  214.730016][  C240]  scsi_mq_done+0x48/0xac
-[  214.734194][  C240]  sas_scsi_task_done+0xbc/0x16c [libsas]
-[  214.739758][  C240]  slot_complete_v3_hw+0x260/0x760 [hisi_sas_v3_hw]
-[  214.746185][  C240]  cq_thread_v3_hw+0xbc/0x190 [hisi_sas_v3_hw]
-[  214.752179][  C240]  irq_thread_fn+0x34/0xa4
-[  214.756435][  C240]  irq_thread+0xc4/0x130
-[  214.760520][  C240]  kthread+0x108/0x13c
-[  214.764430][  C240]  ret_from_fork+0x10/0x18
+Therefore, when the dump is triggered while the driver is unbind, the
+following hang occurs:
 
-This is because in the hisi_sas driver, both the hardware interrupt
-handler and the interrupt thread are executed on the same CPU. In the
-performance test scenario, function irq_wait_for_interrupt() will always
-return 0 if lots of interrupts occurs and the CPU will be continuously
-consumed. As a result, the CPU cannot run the watchdog thread. When the
-watchdog time exceeds the specified time, call trace occurs.
+[67840.853907] Unable to handle kernel NULL pointer dereference at virtual address 00000000000000a0
+[67840.862947] Mem abort info:
+[67840.865855]   ESR = 0x0000000096000004
+[67840.869713]   EC = 0x25: DABT (current EL), IL = 32 bits
+[67840.875125]   SET = 0, FnV = 0
+[67840.878291]   EA = 0, S1PTW = 0
+[67840.881545]   FSC = 0x04: level 0 translation fault
+[67840.886528] Data abort info:
+[67840.889524]   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+[67840.895117]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+[67840.900284]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+[67840.905709] user pgtable: 4k pages, 48-bit VAs, pgdp=0000002803a1f000
+[67840.912263] [00000000000000a0] pgd=0000000000000000, p4d=0000000000000000
+[67840.919177] Internal error: Oops: 0000000096000004 [#1] PREEMPT SMP
+[67840.996435] pstate: 80400009 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[67841.003628] pc : down_write+0x30/0x98
+[67841.007546] lr : start_creating.part.0+0x60/0x198
+[67841.012495] sp : ffff8000b979ba20
+[67841.016046] x29: ffff8000b979ba20 x28: 0000000000000010 x27: 0000000000024b40
+[67841.023412] x26: 0000000000000012 x25: ffff20202b355ae8 x24: ffff20202b35a8c8
+[67841.030779] x23: ffffa36877928208 x22: ffffa368b4972240 x21: ffff8000b979bb18
+[67841.038147] x20: ffff00281dc1e3c0 x19: fffffffffffffffe x18: 0000000000000020
+[67841.045515] x17: 0000000000000000 x16: ffffa368b128a530 x15: ffffffffffffffff
+[67841.052888] x14: ffff8000b979bc18 x13: ffffffffffffffff x12: ffff8000b979bb18
+[67841.060263] x11: 0000000000000000 x10: 0000000000000000 x9 : ffffa368b1289b18
+[67841.067640] x8 : 0000000000000012 x7 : 0000000000000000 x6 : 00000000000003a9
+[67841.075014] x5 : 0000000000000000 x4 : ffff002818c5cb00 x3 : 0000000000000001
+[67841.082388] x2 : 0000000000000000 x1 : ffff002818c5cb00 x0 : 00000000000000a0
+[67841.089759] Call trace:
+[67841.092456]  down_write+0x30/0x98
+[67841.096017]  start_creating.part.0+0x60/0x198
+[67841.100613]  debugfs_create_dir+0x48/0x1f8
+[67841.104950]  debugfs_create_files_v3_hw+0x88/0x348 [hisi_sas_v3_hw]
+[67841.111447]  debugfs_snapshot_regs_v3_hw+0x708/0x798 [hisi_sas_v3_hw]
+[67841.118111]  debugfs_trigger_dump_v3_hw_write+0x9c/0x120 [hisi_sas_v3_hw]
+[67841.125115]  full_proxy_write+0x68/0xc8
+[67841.129175]  vfs_write+0xd8/0x3f0
+[67841.132708]  ksys_write+0x70/0x108
+[67841.136317]  __arm64_sys_write+0x24/0x38
+[67841.140440]  invoke_syscall+0x50/0x128
+[67841.144385]  el0_svc_common.constprop.0+0xc8/0xf0
+[67841.149273]  do_el0_svc+0x24/0x38
+[67841.152773]  el0_svc+0x38/0xd8
+[67841.156009]  el0t_64_sync_handler+0xc0/0xc8
+[67841.160361]  el0t_64_sync+0x1a4/0x1a8
+[67841.164189] Code: b9000882 d2800002 d2800023 f9800011 (c85ffc05)
+[67841.170443] ---[ end trace 0000000000000000 ]---
 
-To fix it, add cond_resched() to execute the watchdog thread.
+To fix this issue, create all directories and files during debugfs
+initialization. In this way, the driver only needs to allocate memory
+space to save information each time the user triggers dumping.
 
 Signed-off-by: Yihang Li <liyihang9@huawei.com>
-Link: https://lore.kernel.org/r/20241008021822.2617339-8-liyihang9@huawei.com
-Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+Link: https://lore.kernel.org/r/20241008021822.2617339-13-liyihang9@huawei.com
+Reviewed-by: Xingui Yang <yangxingui@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 99 ++++++++++++++++++++------
+ 1 file changed, 77 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index feda9b54b4434..5bf4b61eed51d 100644
+index 5bf4b61eed51d..bdcabad21f697 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2493,6 +2493,7 @@ static int complete_v3_hw(struct hisi_sas_cq *cq)
- 	/* update rd_point */
- 	cq->rd_point = rd_point;
- 	hisi_sas_write32(hisi_hba, COMPL_Q_0_RD_PTR + (0x14 * queue), rd_point);
-+	cond_resched();
- 
- 	return completed;
+@@ -3551,6 +3551,11 @@ debugfs_to_reg_name_v3_hw(int off, int base_off,
+ 	return NULL;
  }
+ 
++static bool debugfs_dump_is_generated_v3_hw(void *p)
++{
++	return p ? true : false;
++}
++
+ static void debugfs_print_reg_v3_hw(u32 *regs_val, struct seq_file *s,
+ 				    const struct hisi_sas_debugfs_reg *reg)
+ {
+@@ -3576,6 +3581,9 @@ static int debugfs_global_v3_hw_show(struct seq_file *s, void *p)
+ {
+ 	struct hisi_sas_debugfs_regs *global = s->private;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(global->data))
++		return -EPERM;
++
+ 	debugfs_print_reg_v3_hw(global->data, s,
+ 				&debugfs_global_reg);
+ 
+@@ -3587,6 +3595,9 @@ static int debugfs_axi_v3_hw_show(struct seq_file *s, void *p)
+ {
+ 	struct hisi_sas_debugfs_regs *axi = s->private;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(axi->data))
++		return -EPERM;
++
+ 	debugfs_print_reg_v3_hw(axi->data, s,
+ 				&debugfs_axi_reg);
+ 
+@@ -3598,6 +3609,9 @@ static int debugfs_ras_v3_hw_show(struct seq_file *s, void *p)
+ {
+ 	struct hisi_sas_debugfs_regs *ras = s->private;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(ras->data))
++		return -EPERM;
++
+ 	debugfs_print_reg_v3_hw(ras->data, s,
+ 				&debugfs_ras_reg);
+ 
+@@ -3610,6 +3624,9 @@ static int debugfs_port_v3_hw_show(struct seq_file *s, void *p)
+ 	struct hisi_sas_debugfs_port *port = s->private;
+ 	const struct hisi_sas_debugfs_reg *reg_port = &debugfs_port_reg;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(port->data))
++		return -EPERM;
++
+ 	debugfs_print_reg_v3_hw(port->data, s, reg_port);
+ 
+ 	return 0;
+@@ -3665,6 +3682,9 @@ static int debugfs_cq_v3_hw_show(struct seq_file *s, void *p)
+ 	struct hisi_sas_debugfs_cq *debugfs_cq = s->private;
+ 	int slot;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(debugfs_cq->complete_hdr))
++		return -EPERM;
++
+ 	for (slot = 0; slot < HISI_SAS_QUEUE_SLOTS; slot++)
+ 		debugfs_cq_show_slot_v3_hw(s, slot, debugfs_cq);
+ 
+@@ -3686,8 +3706,12 @@ static void debugfs_dq_show_slot_v3_hw(struct seq_file *s, int slot,
+ 
+ static int debugfs_dq_v3_hw_show(struct seq_file *s, void *p)
+ {
++	struct hisi_sas_debugfs_dq *debugfs_dq = s->private;
+ 	int slot;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(debugfs_dq->hdr))
++		return -EPERM;
++
+ 	for (slot = 0; slot < HISI_SAS_QUEUE_SLOTS; slot++)
+ 		debugfs_dq_show_slot_v3_hw(s, slot, s->private);
+ 
+@@ -3701,6 +3725,9 @@ static int debugfs_iost_v3_hw_show(struct seq_file *s, void *p)
+ 	struct hisi_sas_iost *iost = debugfs_iost->iost;
+ 	int i, max_command_entries = HISI_SAS_MAX_COMMANDS;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(iost))
++		return -EPERM;
++
+ 	for (i = 0; i < max_command_entries; i++, iost++) {
+ 		__le64 *data = &iost->qw0;
+ 
+@@ -3720,6 +3747,9 @@ static int debugfs_iost_cache_v3_hw_show(struct seq_file *s, void *p)
+ 	int i, tab_idx;
+ 	__le64 *iost;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(iost_cache))
++		return -EPERM;
++
+ 	for (i = 0; i < HISI_SAS_IOST_ITCT_CACHE_NUM; i++, iost_cache++) {
+ 		/*
+ 		 * Data struct of IOST cache:
+@@ -3743,6 +3773,9 @@ static int debugfs_itct_v3_hw_show(struct seq_file *s, void *p)
+ 	struct hisi_sas_debugfs_itct *debugfs_itct = s->private;
+ 	struct hisi_sas_itct *itct = debugfs_itct->itct;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(itct))
++		return -EPERM;
++
+ 	for (i = 0; i < HISI_SAS_MAX_ITCT_ENTRIES; i++, itct++) {
+ 		__le64 *data = &itct->qw0;
+ 
+@@ -3762,6 +3795,9 @@ static int debugfs_itct_cache_v3_hw_show(struct seq_file *s, void *p)
+ 	int i, tab_idx;
+ 	__le64 *itct;
+ 
++	if (!debugfs_dump_is_generated_v3_hw(itct_cache))
++		return -EPERM;
++
+ 	for (i = 0; i < HISI_SAS_IOST_ITCT_CACHE_NUM; i++, itct_cache++) {
+ 		/*
+ 		 * Data struct of ITCT cache:
+@@ -3779,10 +3815,9 @@ static int debugfs_itct_cache_v3_hw_show(struct seq_file *s, void *p)
+ }
+ DEFINE_SHOW_ATTRIBUTE(debugfs_itct_cache_v3_hw);
+ 
+-static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba)
++static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba, int index)
+ {
+ 	u64 *debugfs_timestamp;
+-	int dump_index = hisi_hba->debugfs_dump_index;
+ 	struct dentry *dump_dentry;
+ 	struct dentry *dentry;
+ 	char name[256];
+@@ -3790,17 +3825,17 @@ static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba)
+ 	int c;
+ 	int d;
+ 
+-	snprintf(name, 256, "%d", dump_index);
++	snprintf(name, 256, "%d", index);
+ 
+ 	dump_dentry = debugfs_create_dir(name, hisi_hba->debugfs_dump_dentry);
+ 
+-	debugfs_timestamp = &hisi_hba->debugfs_timestamp[dump_index];
++	debugfs_timestamp = &hisi_hba->debugfs_timestamp[index];
+ 
+ 	debugfs_create_u64("timestamp", 0400, dump_dentry,
+ 			   debugfs_timestamp);
+ 
+ 	debugfs_create_file("global", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_regs[dump_index][DEBUGFS_GLOBAL],
++			    &hisi_hba->debugfs_regs[index][DEBUGFS_GLOBAL],
+ 			    &debugfs_global_v3_hw_fops);
+ 
+ 	/* Create port dir and files */
+@@ -3809,7 +3844,7 @@ static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba)
+ 		snprintf(name, 256, "%d", p);
+ 
+ 		debugfs_create_file(name, 0400, dentry,
+-				    &hisi_hba->debugfs_port_reg[dump_index][p],
++				    &hisi_hba->debugfs_port_reg[index][p],
+ 				    &debugfs_port_v3_hw_fops);
+ 	}
+ 
+@@ -3819,7 +3854,7 @@ static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba)
+ 		snprintf(name, 256, "%d", c);
+ 
+ 		debugfs_create_file(name, 0400, dentry,
+-				    &hisi_hba->debugfs_cq[dump_index][c],
++				    &hisi_hba->debugfs_cq[index][c],
+ 				    &debugfs_cq_v3_hw_fops);
+ 	}
+ 
+@@ -3829,32 +3864,32 @@ static void debugfs_create_files_v3_hw(struct hisi_hba *hisi_hba)
+ 		snprintf(name, 256, "%d", d);
+ 
+ 		debugfs_create_file(name, 0400, dentry,
+-				    &hisi_hba->debugfs_dq[dump_index][d],
++				    &hisi_hba->debugfs_dq[index][d],
+ 				    &debugfs_dq_v3_hw_fops);
+ 	}
+ 
+ 	debugfs_create_file("iost", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_iost[dump_index],
++			    &hisi_hba->debugfs_iost[index],
+ 			    &debugfs_iost_v3_hw_fops);
+ 
+ 	debugfs_create_file("iost_cache", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_iost_cache[dump_index],
++			    &hisi_hba->debugfs_iost_cache[index],
+ 			    &debugfs_iost_cache_v3_hw_fops);
+ 
+ 	debugfs_create_file("itct", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_itct[dump_index],
++			    &hisi_hba->debugfs_itct[index],
+ 			    &debugfs_itct_v3_hw_fops);
+ 
+ 	debugfs_create_file("itct_cache", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_itct_cache[dump_index],
++			    &hisi_hba->debugfs_itct_cache[index],
+ 			    &debugfs_itct_cache_v3_hw_fops);
+ 
+ 	debugfs_create_file("axi", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_regs[dump_index][DEBUGFS_AXI],
++			    &hisi_hba->debugfs_regs[index][DEBUGFS_AXI],
+ 			    &debugfs_axi_v3_hw_fops);
+ 
+ 	debugfs_create_file("ras", 0400, dump_dentry,
+-			    &hisi_hba->debugfs_regs[dump_index][DEBUGFS_RAS],
++			    &hisi_hba->debugfs_regs[index][DEBUGFS_RAS],
+ 			    &debugfs_ras_v3_hw_fops);
+ }
+ 
+@@ -4517,22 +4552,34 @@ static void debugfs_release_v3_hw(struct hisi_hba *hisi_hba, int dump_index)
+ 	int i;
+ 
+ 	devm_kfree(dev, hisi_hba->debugfs_iost_cache[dump_index].cache);
++	hisi_hba->debugfs_iost_cache[dump_index].cache = NULL;
+ 	devm_kfree(dev, hisi_hba->debugfs_itct_cache[dump_index].cache);
++	hisi_hba->debugfs_itct_cache[dump_index].cache = NULL;
+ 	devm_kfree(dev, hisi_hba->debugfs_iost[dump_index].iost);
++	hisi_hba->debugfs_iost[dump_index].iost = NULL;
+ 	devm_kfree(dev, hisi_hba->debugfs_itct[dump_index].itct);
++	hisi_hba->debugfs_itct[dump_index].itct = NULL;
+ 
+-	for (i = 0; i < hisi_hba->queue_count; i++)
++	for (i = 0; i < hisi_hba->queue_count; i++) {
+ 		devm_kfree(dev, hisi_hba->debugfs_dq[dump_index][i].hdr);
++		hisi_hba->debugfs_dq[dump_index][i].hdr = NULL;
++	}
+ 
+-	for (i = 0; i < hisi_hba->queue_count; i++)
++	for (i = 0; i < hisi_hba->queue_count; i++) {
+ 		devm_kfree(dev,
+ 			   hisi_hba->debugfs_cq[dump_index][i].complete_hdr);
++		hisi_hba->debugfs_cq[dump_index][i].complete_hdr = NULL;
++	}
+ 
+-	for (i = 0; i < DEBUGFS_REGS_NUM; i++)
++	for (i = 0; i < DEBUGFS_REGS_NUM; i++) {
+ 		devm_kfree(dev, hisi_hba->debugfs_regs[dump_index][i].data);
++		hisi_hba->debugfs_regs[dump_index][i].data = NULL;
++	}
+ 
+-	for (i = 0; i < hisi_hba->n_phy; i++)
++	for (i = 0; i < hisi_hba->n_phy; i++) {
+ 		devm_kfree(dev, hisi_hba->debugfs_port_reg[dump_index][i].data);
++		hisi_hba->debugfs_port_reg[dump_index][i].data = NULL;
++	}
+ }
+ 
+ static const struct hisi_sas_debugfs_reg *debugfs_reg_array_v3_hw[DEBUGFS_REGS_NUM] = {
+@@ -4659,8 +4706,6 @@ static int debugfs_snapshot_regs_v3_hw(struct hisi_hba *hisi_hba)
+ 	debugfs_snapshot_itct_reg_v3_hw(hisi_hba);
+ 	debugfs_snapshot_iost_reg_v3_hw(hisi_hba);
+ 
+-	debugfs_create_files_v3_hw(hisi_hba);
+-
+ 	debugfs_snapshot_restore_v3_hw(hisi_hba);
+ 	hisi_hba->debugfs_dump_index++;
+ 
+@@ -4744,6 +4789,17 @@ static void debugfs_bist_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	hisi_hba->debugfs_bist_linkrate = SAS_LINK_RATE_1_5_GBPS;
+ }
+ 
++static void debugfs_dump_init_v3_hw(struct hisi_hba *hisi_hba)
++{
++	int i;
++
++	hisi_hba->debugfs_dump_dentry =
++			debugfs_create_dir("dump", hisi_hba->debugfs_dir);
++
++	for (i = 0; i < hisi_sas_debugfs_dump_count; i++)
++		debugfs_create_files_v3_hw(hisi_hba, i);
++}
++
+ static void debugfs_exit_v3_hw(struct hisi_hba *hisi_hba)
+ {
+ 	debugfs_remove_recursive(hisi_hba->debugfs_dir);
+@@ -4764,8 +4820,7 @@ static void debugfs_init_v3_hw(struct hisi_hba *hisi_hba)
+ 	/* create bist structures */
+ 	debugfs_bist_init_v3_hw(hisi_hba);
+ 
+-	hisi_hba->debugfs_dump_dentry =
+-			debugfs_create_dir("dump", hisi_hba->debugfs_dir);
++	debugfs_dump_init_v3_hw(hisi_hba);
+ 
+ 	debugfs_phy_down_cnt_init_v3_hw(hisi_hba);
+ 	debugfs_fifo_init_v3_hw(hisi_hba);
 -- 
 2.43.0
 
