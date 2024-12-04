@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497552049F3;
-	Wed,  4 Dec 2024 17:00:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78FC8204A1E;
+	Wed,  4 Dec 2024 17:00:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733331620; cv=none; b=f17kkdtIAhBpc+v1NYCMOKrUHAQmzgbNiHC+9Z7n5m1wRP1/nfXU2oaGv+T4PVU29R2U6IPGcvdZdINXq9pOykGF2HZlgpVjQvFK20MByzwLBMe2+YKZKLFkqnVV6Juktb+PBgx6qX45vs43CQrZ9LR148Mk5f3415c7ARvxbfI=
+	t=1733331622; cv=none; b=R5WJbEVjmuKHZGFkQ6Gl3rUSMsFApz0sqhmMt4Bw8wR+X32nCEPpa+lI13hleEX4S45H3RDa4AhNoJHOCXzv+KS84Y7ebjX+32Idw8l7/Mfl1V2MIVfUoOllryM+P0A5os6x4DzeVSqs4ooeo2WnsAE2kqJN8/1iRRhlP3pBnUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733331620; c=relaxed/simple;
-	bh=O8Y4Qg2Qmm+muZh74LMkyROia8RxFztdwBLcV0m+0rs=;
+	s=arc-20240116; t=1733331622; c=relaxed/simple;
+	bh=q7IXKpaI1TkzlYWOkjYJObT8QGqZyZO0o9GpeFqExvk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DFrWeD55Kmq4prOmNLa9TLUn6zu7mPSWdudyWf6AJtT/T85ELSeaEHGwpuNw77MxL1lizym31YQsUiQOZ5t1Lkq5mmbp7jLo8UJz62Xcv0IM2VRZvp2WseIG+byCyZWEyPhyoFccwhIik4ibg2nGovFE9i7wNt0/uhSk0JXL31I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FugTz9O6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=kvSLasSKJ8H9YVGg/hVMxkj6Td6iTyhVtkOA6S55TkyADNjsLAr3E7eeE3biOVWuhieCgMvV13ntSPYLppP/W2PV/aeex5o5KBfy//6bVSvotJrm2GSVU2j/zmFLbF34pfpl5je7U/dLHEuZjJqsDmk7RKzjR7yEecroT/AUWZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L4dujHU1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FugTz9O6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 255BAC4CECD;
-	Wed,  4 Dec 2024 17:00:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L4dujHU1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03616C4CECD;
+	Wed,  4 Dec 2024 17:00:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733331620;
-	bh=O8Y4Qg2Qmm+muZh74LMkyROia8RxFztdwBLcV0m+0rs=;
+	s=k20201202; t=1733331622;
+	bh=q7IXKpaI1TkzlYWOkjYJObT8QGqZyZO0o9GpeFqExvk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=FugTz9O6gnmz//ixjhQngALWKZykhGPGOC9TwiWs5mf+7kkvQMtI/Z8V3AmpBT9MP
-	 uIVi/nvA9Rlgu5eeXc5/j62utGGs8K4BNqVIMJwRen+8eHhHIJuXHlL5OBO1CAyAyy
-	 4u6+rQNvvle4W68fTHhvh336Rw+rFx+9sof7ctboXs+pa3iJCg3nNc2XmcpBvhl6a2
-	 6cHpqbYAJBg0PffJcW/5hf70mMJkUbshzgh0T65UUBO+Ws842w9iqhvX4Tuq+qWcT9
-	 UpnfiWuciQbYmB9LqhUyL7BU7+MGv9bzawB2DZfvBstutZyuCwHugkLup4nKLEhZay
-	 ICX8tj/HgnycQ==
+	b=L4dujHU1dHzy4TU+JQWlPSHnat2j/jsO0oaa4/wic9SMttBTp/dQ2wDMx6Ecoycya
+	 KkHpqmq+KLhWWLPLYL5PrDvwb/TNSUCiiTqSWu1knq8/5PqlV1x9r58PekhBtCJmFn
+	 ArHmSZJ4pFtn1MOunUflXPKz5g0z292bsc6bUYEhztqAQpt2Hk6WDJvtHVV0aSHzIw
+	 0r1pK3FiPmeR771xhPl7vrSX7BVN+P6d3oK1+X2Ksyk9qgx10uRTSW8Q7Tkgkwg90Y
+	 Qfk2SLeq9/X1VOTQWbv51ZeZAMA+prXA8vcW03DjboqBDTeJivbASwFX9Osni4dzsx
+	 KU4lopEjBFeAQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -36,9 +36,9 @@ Cc: Justin Tee <justin.tee@broadcom.com>,
 	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.11 16/33] scsi: lpfc: Call lpfc_sli4_queue_unset() in restart and rmmod paths
-Date: Wed,  4 Dec 2024 10:47:29 -0500
-Message-ID: <20241204154817.2212455-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.11 17/33] scsi: lpfc: Check SLI_ACTIVE flag in FDMI cmpl before submitting follow up FDMI
+Date: Wed,  4 Dec 2024 10:47:30 -0500
+Message-ID: <20241204154817.2212455-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204154817.2212455-1-sashal@kernel.org>
 References: <20241204154817.2212455-1-sashal@kernel.org>
@@ -55,180 +55,72 @@ Content-Transfer-Encoding: 8bit
 
 From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit d35f7672715d1ff3e3ad9bb4ae6ac6cb484200fe ]
+[ Upstream commit 98f8d3588097e321be70f83b844fa67d4828fe5c ]
 
-During initialization, the driver allocates wq->pring in lpfc_wq_create
-and lpfc_sli4_queue_unset() is the only place where kfree(wq->pring) is
-called.
-
-There is a possible memory leak in lpfc_sli_brdrestart_s4() (restart)
-and lpfc_pci_remove_one_s4() (rmmod) paths because there are no calls to
-lpfc_sli4_queue_unset() to kfree() the wq->pring.
-
-Fix by inserting a call to lpfc_sli4_queue_unset() in
-lpfc_sli_brdrestart_s4() and lpfc_sli4_hba_unset() routines.  Also, add
-a check for the SLI_ACTIVE flag before issuing the Q_DESTROY mailbox
-command.  If not set, then the mailbox command will obviously fail.  In
-such cases, skip issuing the mailbox command and only execute the driver
-resource clean up portions of the lpfc_*q_destroy routines.
+The lpfc_cmpl_ct_disc_fdmi() routine has incorrect logic that treats an
+FDMI completion with error LOCAL_REJECT/SLI_ABORTED as a success status.
+Under the erroneous assumption of successful completion, the routine
+proceeds to issue follow up FDMI commands, which may never complete if
+the HBA is in an errata state as indicated by the errored completion
+status.  Fix by freeing FDMI cmd resources and early return when the
+LPFC_SLI_ACTIVE flag is not set and a LOCAL_REJECT/SLI_ABORTED or
+SLI_DOWN status is received.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20241031223219.152342-4-justintee8345@gmail.com
+Link: https://lore.kernel.org/r/20241031223219.152342-6-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c |  2 ++
- drivers/scsi/lpfc/lpfc_sli.c  | 41 ++++++++++++++++++++++++++++++-----
- 2 files changed, 38 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 0c1404dc5f3bd..01f0f1f2a294f 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -13511,6 +13511,8 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
- 	/* Disable FW logging to host memory */
- 	lpfc_ras_stop_fwlog(phba);
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 134bc96dd1340..ce3a1f42713dd 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2226,6 +2226,11 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		ulp_status, ulp_word4, latt);
  
-+	lpfc_sli4_queue_unset(phba);
-+
- 	/* Reset SLI4 HBA FCoE function */
- 	lpfc_pci_function_reset(phba);
+ 	if (latt || ulp_status) {
++		lpfc_printf_vlog(vport, KERN_WARNING, LOG_DISCOVERY,
++				 "0229 FDMI cmd %04x failed, latt = %d "
++				 "ulp_status: (x%x/x%x), sli_flag x%x\n",
++				 be16_to_cpu(fdmi_cmd), latt, ulp_status,
++				 ulp_word4, phba->sli.sli_flag);
  
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7dc34c71eb78c..6f79e0cf6a753 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5288,6 +5288,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
- 			"0296 Restart HBA Data: x%x x%x\n",
- 			phba->pport->port_state, psli->sli_flag);
- 
-+	lpfc_sli4_queue_unset(phba);
-+
- 	rc = lpfc_sli4_brdreset(phba);
- 	if (rc) {
- 		phba->link_state = LPFC_HBA_ERROR;
-@@ -17616,6 +17618,9 @@ lpfc_eq_destroy(struct lpfc_hba *phba, struct lpfc_queue *eq)
- 	if (!eq)
- 		return -ENODEV;
- 
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(eq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17642,10 +17647,12 @@ lpfc_eq_destroy(struct lpfc_hba *phba, struct lpfc_queue *eq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
+ 		/* Look for a retryable error */
+ 		if (ulp_status == IOSTAT_LOCAL_REJECT) {
+@@ -2234,8 +2239,16 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			case IOERR_SLI_DOWN:
+ 				/* Driver aborted this IO.  No retry as error
+ 				 * is likely Offline->Online or some adapter
+-				 * error.  Recovery will try again.
++				 * error.  Recovery will try again, but if port
++				 * is not active there's no point to continue
++				 * issuing follow up FDMI commands.
+ 				 */
++				if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE)) {
++					free_ndlp = cmdiocb->ndlp;
++					lpfc_ct_free_iocb(phba, cmdiocb);
++					lpfc_nlp_put(free_ndlp);
++					return;
++				}
+ 				break;
+ 			case IOERR_ABORT_IN_PROGRESS:
+ 			case IOERR_SEQUENCE_TIMEOUT:
+@@ -2256,12 +2269,6 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				break;
+ 			}
+ 		}
+-
+-		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+-				 "0229 FDMI cmd %04x latt = %d "
+-				 "ulp_status: x%x, rid x%x\n",
+-				 be16_to_cpu(fdmi_cmd), latt, ulp_status,
+-				 ulp_word4);
  	}
-+	mempool_free(mbox, eq->phba->mbox_mem_pool);
  
-+list_remove:
- 	/* Remove eq from any list */
- 	list_del_init(&eq->list);
--	mempool_free(mbox, eq->phba->mbox_mem_pool);
-+
- 	return status;
- }
- 
-@@ -17673,6 +17680,10 @@ lpfc_cq_destroy(struct lpfc_hba *phba, struct lpfc_queue *cq)
- 	/* sanity check on queue memory */
- 	if (!cq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(cq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17698,9 +17709,11 @@ lpfc_cq_destroy(struct lpfc_hba *phba, struct lpfc_queue *cq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, cq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	/* Remove cq from any list */
- 	list_del_init(&cq->list);
--	mempool_free(mbox, cq->phba->mbox_mem_pool);
- 	return status;
- }
- 
-@@ -17728,6 +17741,10 @@ lpfc_mq_destroy(struct lpfc_hba *phba, struct lpfc_queue *mq)
- 	/* sanity check on queue memory */
- 	if (!mq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(mq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17753,9 +17770,11 @@ lpfc_mq_destroy(struct lpfc_hba *phba, struct lpfc_queue *mq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, mq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	/* Remove mq from any list */
- 	list_del_init(&mq->list);
--	mempool_free(mbox, mq->phba->mbox_mem_pool);
- 	return status;
- }
- 
-@@ -17783,6 +17802,10 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
- 	/* sanity check on queue memory */
- 	if (!wq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(wq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17807,11 +17830,13 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, wq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	/* Remove wq from any list */
- 	list_del_init(&wq->list);
- 	kfree(wq->pring);
- 	wq->pring = NULL;
--	mempool_free(mbox, wq->phba->mbox_mem_pool);
- 	return status;
- }
- 
-@@ -17841,6 +17866,10 @@ lpfc_rq_destroy(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 	/* sanity check on queue memory */
- 	if (!hrq || !drq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(hrq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17881,9 +17910,11 @@ lpfc_rq_destroy(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, hrq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	list_del_init(&hrq->list);
- 	list_del_init(&drq->list);
--	mempool_free(mbox, hrq->phba->mbox_mem_pool);
- 	return status;
- }
- 
+ 	free_ndlp = cmdiocb->ndlp;
 -- 
 2.43.0
 
