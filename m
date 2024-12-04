@@ -1,173 +1,118 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E3820CCE4;
-	Wed,  4 Dec 2024 16:42:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB441E519
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Dec 2024 16:50:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733330566; cv=none; b=M5r7f52+KjUR+/IMvrT/kERb7/1tzrblJ9QBDgqZlgbufr/38VU95Kf8C1H6QSqEgZA5VzgHSTrhdrWsH9GkRp49Stgs7zz2HCW8q9t6Xz32lp+gjLYoAaVxy+NyMl/2ZpHgVFcCCTTPPlDM/E1J85UjatBkD9qoyGo536C/nNY=
+	t=1733331037; cv=none; b=TVQK+fkk3C50y5NUb4MI8n5/jhbCybRE5DnXLh6Y+RSpsiOwFziKbLKAaWjyU8WqYbB10xiLW7IepFcYDevGTuNSwTBUwnTSxQu5d46Uvc+XPOk+CDseM8B95jURJpqlR6cTXASwJiMTiHAebfW6I4k3CpqnS51ULEXM9UQLWgE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733330566; c=relaxed/simple;
-	bh=/tV2/rqC9g/RzItU4xjpFfq9TJiKncFzSdSN5cVSPCI=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=SwVBeuyi5v4Lu3+qjVlZ8iH1SiBRWChE28dBLwbwKnQdQjFyYFaUJ3HjQ0Whr0F8P3iZtcbx2PFNWv2XgHcRGqazdjRc+nPb+PqT2WDeYUYqAIGgpTrIbLt1FgzXtOJ9TPs5Yql3fWFXJf/y3h0MDt6urmx/iYF6l1SdgnQnq3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=u7h8O5xt; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=jwLrm3XJ; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1733331037; c=relaxed/simple;
+	bh=cOvxnz8nA5vmSJ0d8Nz5OX9cYRshN45UbkNlKX2/dYU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fLzruLv8VDzsAgHSIEYD+vuRf9qAbuZ1DSFSx0OU0msa87YyUhLko1DLbiGZ01QuuPoJ29lWb+8aM+11tXx2/wvBjxDeFQYthmfirmGZDFltEaTd/W4WmFZbdO9SjTiV3eD+ms3WOhmHZU7hXYVt4iB0JKZWZxC66KaLuSxJx4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eDQ+LDN6; arc=none smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="u7h8O5xt";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="jwLrm3XJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1733330562;
-	bh=/tV2/rqC9g/RzItU4xjpFfq9TJiKncFzSdSN5cVSPCI=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=u7h8O5xtkqg9XTRjnm2AByw4j1oANOrzOdAZMt8HHLl3Yjm3FyhEHxMbav7cjDIHA
-	 rH9JDDrakhhHcgYv4A62tmDfzUMvJQoGwAdV/vD+hl7hO/48F0u9n++jPP9OAsaCaz
-	 8lQA+iSncabPRQrhy+aNTkLi+yhrKeJAE1MSyUWQ=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0036B12819C7;
-	Wed, 04 Dec 2024 11:42:42 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id UnAtfjdAjrWL; Wed,  4 Dec 2024 11:42:41 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1733330561;
-	bh=/tV2/rqC9g/RzItU4xjpFfq9TJiKncFzSdSN5cVSPCI=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=jwLrm3XJJg0bE+y+jmRYNMFwEElygfQC2HGQiHPd5Xz/u0WtyW7YWY3rX060euBo7
-	 f9S1jUzBwKhA2RFoWPD/ZkuHcVNkBdGsPnMe1XGCn2DaqvTsyQjVXKsqZzFLZSZ0Tt
-	 bvl4/NIRU0Ww5p2EbpvPP+Glg6xJuhny+E4/K7oQ=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 13309128116A;
-	Wed, 04 Dec 2024 11:42:36 -0500 (EST)
-Message-ID: <5c905df49a332b1136787a524955b46b6153c012.camel@HansenPartnership.com>
-Subject: Re: [PATCH v2 00/32] driver core: Constify API device_find_child()
- and adapt for various existing usages
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Zijun Hu <zijun_hu@icloud.com>, Thomas =?ISO-8859-1?Q?Wei=DFschuh?=
-	 <thomas@t-8ch.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Uwe
- =?ISO-8859-1?Q?Kleine-K=F6nig?= <ukleinek@kernel.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>, Chun-Kuang Hu <chunkuang.hu@kernel.org>, Philipp Zabel
- <p.zabel@pengutronix.de>, David Airlie <airlied@gmail.com>, Simona Vetter
- <simona@ffwll.ch>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Jean
- Delvare <jdelvare@suse.com>,  Guenter Roeck <linux@roeck-us.net>, Martin
- Tuma <martin.tuma@digiteqautomotive.com>, Mauro Carvalho Chehab
- <mchehab@kernel.org>, Andreas Noever <andreas.noever@gmail.com>, Michael
- Jamet <michael.jamet@intel.com>, Mika Westerberg
- <mika.westerberg@linux.intel.com>,  Yehezkel Bernat
- <YehezkelShB@gmail.com>, Linus Walleij <linus.walleij@linaro.org>, Bartosz
- Golaszewski <brgl@bgdev.pl>, Andrew Lunn <andrew@lunn.ch>, Vladimir Oltean
- <olteanv@gmail.com>,  "David S. Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
- <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Dan Williams
- <dan.j.williams@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, Dave
- Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>, Takashi
- Sakamoto <o-takashi@sakamocchi.jp>, Jiri Slaby <jirislaby@kernel.org>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, Srinivas Kandagatla
- <srinivas.kandagatla@linaro.org>, Lee Duncan <lduncan@suse.com>, Chris
- Leech <cleech@redhat.com>, Mike Christie <michael.christie@oracle.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali
- <njavali@marvell.com>, Manish Rangankar <mrangankar@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com, Davidlohr Bueso
- <dave@stgolabs.net>, Jonathan Cameron <jonathan.cameron@huawei.com>, Alison
- Schofield <alison.schofield@intel.com>, Andreas Larsson
- <andreas@gaisler.com>, Stuart Yoder <stuyoder@gmail.com>, Laurentiu Tudor
- <laurentiu.tudor@nxp.com>, Jens Axboe <axboe@kernel.dk>, Sudeep Holla
- <sudeep.holla@arm.com>, Cristian Marussi <cristian.marussi@arm.com>, Ard
- Biesheuvel <ardb@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Mathieu Poirier <mathieu.poirier@linaro.org>, 
- linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
- linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org, 
- linux-usb@vger.kernel.org, linux-gpio@vger.kernel.org,
- netdev@vger.kernel.org,  linux-pwm@vger.kernel.org, nvdimm@lists.linux.dev,
-  linux1394-devel@lists.sourceforge.net, linux-serial@vger.kernel.org, 
- linux-sound@vger.kernel.org, open-iscsi@googlegroups.com, 
- linux-scsi@vger.kernel.org, linux-cxl@vger.kernel.org, 
- sparclinux@vger.kernel.org, linux-block@vger.kernel.org, 
- arm-scmi@vger.kernel.org, linux-efi@vger.kernel.org, 
- linux-remoteproc@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
-Date: Wed, 04 Dec 2024 11:42:34 -0500
-In-Reply-To: <235ce0a9-1db1-4558-817b-6f92f22be5ab@icloud.com>
-References: <20241203-const_dfc_done-v2-0-7436a98c497f@quicinc.com>
-	 <g32cigmktmj4egkq2tof27el2yss4liccfxgebkgqvkil32mlb@e3ta4ezv7y4m>
-	 <9d34bd6f-b120-428a-837b-5a5813e14618@icloud.com>
-	 <2024120320-manual-jockey-dfd1@gregkh>
-	 <b9885785-d4d4-4c72-b425-3dc552651d7e@icloud.com>
-	 <8eb7c0c54b280b8eb72f82032ede802c001ab087.camel@HansenPartnership.com>
-	 <8fb887a0-3634-4e07-9f0d-d8d7c72ca802@t-8ch.de>
-	 <f5ea7e17-5550-4658-8f4c-1c51827c7627@icloud.com>
-	 <108c63c753f2f637a72c2e105ac138f80d4b0859.camel@HansenPartnership.com>
-	 <235ce0a9-1db1-4558-817b-6f92f22be5ab@icloud.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eDQ+LDN6"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-aa549d9dffdso1100297466b.2
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Dec 2024 08:50:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1733331033; x=1733935833; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Pdsq6JfjPcCpm2zveC7HsrJs7Jt7/a28/pHa3OaP64o=;
+        b=eDQ+LDN6SWg0nzMthjXVm4O6F/wAMuKlMux5pf0p9ni8sPolWzhpJ2lsOZTuCRaZSY
+         fwiMDY1hkdu56UBiIcj8q/bITnvI6G3GCxmdXoDpKeFBv0GuuepU+gr/FraRt6MPE8MZ
+         QAH1CMfBEyBjXvcxKMoPRe1zGN3VhmT1fuF9x1z+57ji9DXQAGCKhO1tkwN8v6MlUfkn
+         kXeJt8YW+e8ObcS6Z0MDxcO9AjnP25Cg7P4+mYRBcAbStHVRRPpM00JoHr3ZYIh69VQs
+         3ZhdcYgMVv+Mwlc+N09mSL7eQaPoQifOYgyBef6e0Ic1Di+IBsya1gZu3H5D8nXkS7ga
+         PUqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733331033; x=1733935833;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Pdsq6JfjPcCpm2zveC7HsrJs7Jt7/a28/pHa3OaP64o=;
+        b=mJ340t4sUQqQlBTvfnuQnTxK2BAeJs4HkC6FdprGxc68LLraF7UTP9UWT5yjcs4YRk
+         5AJuJA/EXNLG6VPaI2uPoOUjrCJQg8K6ozXiMcDe6h+ScPdyg+aWK2b1yLZpyGrdsr4L
+         qM4oTCp2CbjR1eOqkHhmfRB0zvs8LePU56XnUy6rxqOucyZ35loxZEyMuZLDOOjUHDhN
+         0YkD9NWGKRTpEKV2pkl4QIUe4hZNXm6K0wh33U3eFX9Jb52Ocdhk53yM6jLktj11RQpp
+         3pg4Jc/poCVB91Cn+1R/lEft5VcZZ5hb5vlTpMT9ewNPBMoComqGqQH54i9ZTFrjmYdG
+         gRqQ==
+X-Gm-Message-State: AOJu0YzM6EqLSVmAwQE0HTTI14tr/j5wTXGUbmrxaXsQHtNPVWtiXz5g
+	IGfvXgjpXMk+FRiwQhIDIWmEesR0KUmP0nsK1Y/PnATG8rb3zQ2J7Kv8KBrf51zYUKYaGDYn50b
+	l7LpucMBBuM+6F8g8tSsmHMyo443AZScEnExsQs1+Jd3Wbp48NZ0=
+X-Gm-Gg: ASbGncs7sHSBE6L5j0P64XaydzcJfuedccJLcps2LmY8uyLgs32peIXNwYRMNpRm987
+	vr344VZlYPZChYEXnIUWneAtxHOCqSEGS
+X-Google-Smtp-Source: AGHT+IFH4YdfNYTUv4szeMdmJ2p030B64ITseH5nsh/PHsAkBW16kx5x2mQtfQDO2MLGReAJizp9hsxYoac5cfuXDCk=
+X-Received: by 2002:a17:906:3099:b0:a99:ecaf:4543 with SMTP id
+ a640c23a62f3a-aa5f7d8d1abmr556552566b.25.1733331033338; Wed, 04 Dec 2024
+ 08:50:33 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20241117194604.13827-1-leeman.duncan@gmail.com>
+In-Reply-To: <20241117194604.13827-1-leeman.duncan@gmail.com>
+From: Lee Duncan <lduncan@suse.com>
+Date: Wed, 4 Dec 2024 08:50:22 -0800
+Message-ID: <CAPj3X_XGSQswf=iw_7ekfDaed6JGZMs_+=Rb9fgTKZ9Cj0TYAQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: iscsi: fix sysfs visibility checks for CHAP
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.org, 
+	open-iscsi@googlegroups.com, lduncan@suse.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2024-12-04 at 20:26 +0800, Zijun Hu wrote:
-> On 2024/12/3 23:34, James Bottomley wrote:
-> > > > This also enables an incremental migration.
-> > > change the API prototype from:
-> > > device_find_child(..., void *data_0, int (*match)(struct device
-> > > *dev, void *data));
-> > > 
-> > > to:
-> > > device_find_child(..., const void *data_0, int (*match)(struct
-> > > device *dev, const void *data));
-> > > 
-> > > For @data_0,  void * -> const void * is okay.
-> > > but for @match, the problem is function pointer type
-> > > incompatibility.
-> > > 
-> > > there are two solutions base on discussions.
-> > > 
-> > > 1) squashing likewise Greg mentioned.
-> > >    Do all of the "prep work" first, and then
-> > >    do the const change at the very end, all at once.
-> > > 
-> > > 2)  as changing platform_driver's remove() prototype.
-> > > Commit: e70140ba0d2b ("Get rid of 'remove_new' relic from
-> > > platform driver struct")
-> > > 
-> > >  introduce extra device_find_child_new() which is constified  ->
-> > > use *_new() replace ALL device_find_child() instances one by one
-> > > -> remove device_find_child() -> rename *_new() to
-> > > device_find_child() once.
-> > Why bother with the last step, which churns the entire code base
-> > again?
-> 
-> keep the good API name device_find_child().
+I see there's a spelling error in the description, so I'll resubmit.
 
-Well, I think it's a good opportunity to rename the API better, but if
-that's the goal, you can still do it with _Generic() without churning
-the code base a second time.  The example is in
-slab.h:kmem_cache_create
-
-> > Why not call the new function device_find_child_const() and simply
-> > keep it (it's descriptive of its function).  That way you can have
-> > a patch series without merging and at the end simply remove the old
-> > function.
-> 
-> device_find_child is a good name for the API, 'find' already means
-> const.
-
-Not to me it doesn't, but that's actually not what I think is wrong
-with the API name: it actually only returns the first match, so I'd
-marginally prefer it to be called device_find_first_child() ... not
-enough to churn the code to change it, but since you're doing that
-anyway it might make sense as an update.
-
-Regards,
-
-James
-
+On Sun, Nov 17, 2024 at 11:46=E2=80=AFAM Lee Duncan <leeman.duncan@gmail.co=
+m> wrote:
+>
+> From: Lee Duncan <lduncan@suse.com>
+>
+> The username and password checks were backwards for the sysfs
+> visibility checks, so correct them. This likely went unnoticed,
+> since the visibility/writability for these attributes
+> (username/password and mututual username/password) are all
+> the same.
+>
+> Fixes: 1d063c17298d ('[SCSI] iscsi class: sysfs group is_visible callout =
+for session attrs')
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tran=
+sport_iscsi.c
+> index fde7de3b1e55..81c57e0e8d90 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -4587,13 +4587,13 @@ static umode_t iscsi_session_attr_is_visible(stru=
+ct kobject *kobj,
+>         else if (attr =3D=3D &dev_attr_sess_chap_out_idx.attr)
+>                 param =3D ISCSI_PARAM_CHAP_OUT_IDX;
+>         else if (attr =3D=3D &dev_attr_sess_password.attr)
+> -               param =3D ISCSI_PARAM_USERNAME;
+> +               param =3D ISCSI_PARAM_PASSWORD;
+>         else if (attr =3D=3D &dev_attr_sess_password_in.attr)
+> -               param =3D ISCSI_PARAM_USERNAME_IN;
+> +               param =3D ISCSI_PARAM_PASSWORD_IN;
+>         else if (attr =3D=3D &dev_attr_sess_username.attr)
+> -               param =3D ISCSI_PARAM_PASSWORD;
+> +               param =3D ISCSI_PARAM_USERNAME;
+>         else if (attr =3D=3D &dev_attr_sess_username_in.attr)
+> -               param =3D ISCSI_PARAM_PASSWORD_IN;
+> +               param =3D ISCSI_PARAM_USERNAME_IN;
+>         else if (attr =3D=3D &dev_attr_sess_fast_abort.attr)
+>                 param =3D ISCSI_PARAM_FAST_ABORT;
+>         else if (attr =3D=3D &dev_attr_sess_abort_tmo.attr)
+> --
+> 2.43.0
+>
