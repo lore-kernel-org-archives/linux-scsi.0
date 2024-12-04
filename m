@@ -1,371 +1,155 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from HK2PR02CU002.outbound.protection.outlook.com (mail-eastasiaazon11010027.outbound.protection.outlook.com [52.101.128.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B7F1ABEDC
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Dec 2024 10:02:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733306566; cv=none; b=c/x3Mj9eueyc+/qoMXpWlgJ9ERHVQVbtd3RsGa3TmMKNiq3YYr/5v0lxhEYRWFSiGTJT3yV8ePKeemkMNXmvbEkiD6RWH3pKEz0zi062nNKAyWuZQ+QIhp3Bkrq0Nq5rPsBXobaT2La0+Gf9QBIwUpHf6VjOHATZsocIcB3zPmE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733306566; c=relaxed/simple;
-	bh=MwsR2mbowrnQQui8fv3qlqMbuCSWqqx8gdWPHVBRMp0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bF/nvXWeD6avJ1JPMyUgF6iIOMT28MR35v9vmj+/MhscHxNNSUbfFg5x+8QpNW29QaZbh8jtkpEDH8Z8AXFw/nI2P97mvr6+4/i/kO5YSFUZu2n8mTSqP3nJqu0jyTMy6rAhEOicW9wbGErQyyTpEcGVrtWuN+8klOQgeRu3CAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YSHZ7sHW; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AE971ABEDC;
+	Wed,  4 Dec 2024 11:51:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.128.27
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733313118; cv=fail; b=atdBabNdUqf9e8iC61qqXhpiMr2pJZ2S7vhjvSZYlnl4kIhBw4dvrfjxzmG2BgkVqxXZqthtVapveBdTUj2cFIW5YBQS0maS7OLqBwkNjndRsdHbukCCtGIuK+Dwgh97uMozU8FqevQpHMiXiBC43rU6KxzbYqHpewTgHgCnOT0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733313118; c=relaxed/simple;
+	bh=fWznVV8JfhiD2xJxXVYVzjESNbsSf/79GRxXlF7GjTg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oQGVe0A2eFFqzB7WjRUnFFOkPd8U2rJcAhWQbVNpMqOebm2XZODYWT1v/xtIHr17cuxfwxuD/mM0urydU4+G7fTgtBFfakhl/GkC6MD6y37HaR1tdCXXlSxmL9WMMjnE/gGHTVfrl2wUzoLFIB3Sib4lMP+OGWJJA8UqSo9TJJY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oppo.com; spf=pass smtp.mailfrom=oppo.com; dkim=pass (1024-bit key) header.d=oppo.com header.i=@oppo.com header.b=gfdtdbXH; arc=fail smtp.client-ip=52.101.128.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oppo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oppo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YSHZ7sHW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1733306561;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XdUxnRxx7xG7IK8kX72EG0FoUadvd8/m53LGdPg3aec=;
-	b=YSHZ7sHWVJ/1YMJk2ZGwVympe++Ghg62YWa9236bzd2WFfr62XpWUHPUCofU+hoI+qrxJj
-	JbqyAuohTNBAFZ2gzy5qkCHnUzWrx4pR66lkwsnF44GiZTbGQMuSDC/ETV3a+P44n1V8ju
-	w99TfWmMlddxBBAEPqAEVwz/Lb/uewM=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-26-Wxw75sU_M6qlKAMlK1FbfA-1; Wed,
- 04 Dec 2024 05:02:36 -0500
-X-MC-Unique: Wxw75sU_M6qlKAMlK1FbfA-1
-X-Mimecast-MFC-AGG-ID: Wxw75sU_M6qlKAMlK1FbfA
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A9E5B1954ADC;
-	Wed,  4 Dec 2024 10:02:34 +0000 (UTC)
-Received: from fedora (unknown [10.72.112.144])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 359A019560A2;
-	Wed,  4 Dec 2024 10:02:28 +0000 (UTC)
-Date: Wed, 4 Dec 2024 18:02:23 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Qiang Ma <maqianga@uniontech.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	axboe@kernel.dk, dwagner@suse.de, hare@suse.de,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: Don't wait for completion of in-flight requests
-Message-ID: <Z1Aor8aqEBLjbaxE@fedora>
-References: <20241126115008.31272-1-maqianga@uniontech.com>
- <Z0XX5ts2yTO7Frl8@fedora>
- <2100C70C0D4CA64E+20241127220437.65ae99dd@john-PC>
- <Z0c4vPLnwicI6T9J@fedora>
- <F991D40F7D096653+20241203211857.0291ab1b@john-PC>
- <Z08Xf_ZuMFWfP0jd@fedora>
- <BA66D0A31F3EBFD9+20241204164557.0296e677@john-PC>
+	dkim=pass (1024-bit key) header.d=oppo.com header.i=@oppo.com header.b="gfdtdbXH"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=I9hjA+jW/yCbjY+2qUK0+dvU1AOCIocpg5+HfUZWC+0D/+IksMxP5MNopROabLCFFsUEFApQjdWe+Y7+VNZyykIkj7TmjJPxTzG17afI27ZBQfkBOR2UnqvIyqp7FPwLzFUqYnHmv0xdUoidgYHCraUz82yhBqvGhQCe52XAqdgB2u9vycp8ATGEZjo/DnXZQa4vUJTvnHgd/dLjG6IIATi1aJmw4oXGBO5RmGzNSTJ4jkjsdw9Rprr46x2hdoY/zXN+xV/xQ1UybOtZTHHCHDhdqNZhF49binEMqbqRgLVMkBq2mdSn5N78HopCJoq57u15w88wEpT0R9wi/qFu2A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8jIW/2H3yGsVFI0ke6NPImMo9nnC59ZtXEayoR+KbbM=;
+ b=PMcyO+KtsLNtFci3gCbCz0oEAR1wUZ4VDJLdmbLVAe6OJXLrg/DYCNJDBIdU9JiDu9TZz9R4YXDYxEBN+e6STfRdF0SxicJj1OhpxCyFxW6gN9AleCJ0EQuD+bHNMTzL6dinEkZmvd7sanpojduw7RL19Q0wBvdQCvE0zQG+2sF9m2fsrTfF2bKycVd4LHqc/wXiwGrVu2bHlyIUybRYI7lDqeFkC/6g61SpBjyC7hvcTTlY/lFjLZju6bpwwKGrt9+vr2Jz2YeFQnn9IcTeyTtafmcagYWIpzB+Md1dn9sfgKH57mxaEKXSaNKx0tBOFNaaWJIHuC6S2VTtlnZuXw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 58.252.5.68) smtp.rcpttodomain=samsung.com smtp.mailfrom=oppo.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=oppo.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oppo.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8jIW/2H3yGsVFI0ke6NPImMo9nnC59ZtXEayoR+KbbM=;
+ b=gfdtdbXHG31ipEUypXH0mFlcwVA38tK/JuHVXG8KHLmsffht7aebVH69OEP9/CLqWJyOVJRw4TWtiXMjiczni4GwoRBHqqD/1AGP+QvQ9HI2Ce9GUHoXGorZcIA7rmXcQS9A1DlfWDiMJwcsC0RhsmSAgo0ZTRt8FgOzrDorWgc=
+Received: from PS2PR02CA0048.apcprd02.prod.outlook.com (2603:1096:300:59::36)
+ by SEZPR02MB7539.apcprd02.prod.outlook.com (2603:1096:101:1e8::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8207.19; Wed, 4 Dec
+ 2024 11:51:50 +0000
+Received: from HK3PEPF0000021F.apcprd03.prod.outlook.com
+ (2603:1096:300:59:cafe::be) by PS2PR02CA0048.outlook.office365.com
+ (2603:1096:300:59::36) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.8207.17 via Frontend Transport; Wed,
+ 4 Dec 2024 11:51:48 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 58.252.5.68)
+ smtp.mailfrom=oppo.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=oppo.com;
+Received-SPF: Pass (protection.outlook.com: domain of oppo.com designates
+ 58.252.5.68 as permitted sender) receiver=protection.outlook.com;
+ client-ip=58.252.5.68; helo=mail.oppo.com; pr=C
+Received: from mail.oppo.com (58.252.5.68) by
+ HK3PEPF0000021F.mail.protection.outlook.com (10.167.8.41) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.8230.7 via Frontend Transport; Wed, 4 Dec 2024 11:51:48 +0000
+Received: from localhost.localdomain (172.16.40.118) by mailappw30.adc.com
+ (172.16.56.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 4 Dec
+ 2024 19:51:47 +0800
+From: <liuderong@oppo.com>
+To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<peter.wang@mediatek.com>, <manivannan.sadhasivam@linaro.org>,
+	<ahalaney@redhat.com>, <beanhuo@micron.com>, <quic_mnaresh@quicinc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>, liuderong
+	<liuderong@oppo.com>
+Subject: [PATCH] scsi:ufs:core: update compl_time_stamp_local_clock after complete a cqe
+Date: Wed, 4 Dec 2024 19:50:04 +0800
+Message-ID: <1733313004-350420-1-git-send-email-liuderong@oppo.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BA66D0A31F3EBFD9+20241204164557.0296e677@john-PC>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain
+X-ClientProxiedBy: mailappw30.adc.com (172.16.56.197) To mailappw30.adc.com
+ (172.16.56.197)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: HK3PEPF0000021F:EE_|SEZPR02MB7539:EE_
+X-MS-Office365-Filtering-Correlation-Id: c000fc45-fc30-4b6b-b93e-08dd145a08e8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|7416014|36860700013|376014|1800799024|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?j4aUfsU/dJTCyOH3YM1VzQeq0QJIW3qCb9Po0A62yj1T0QVhJ2ts5F7A44Lo?=
+ =?us-ascii?Q?PXQiYU3e7Wlm3laVdIbnVVeHdVNCoDKQSljZ/OCRfNH/wXYZzM4U46HWtwl/?=
+ =?us-ascii?Q?cBW6/2/h5ytt3F+3iQuxJLTzIT4x/XtWf+/qyrOLCJCUX7b3RhN/9yR/NB42?=
+ =?us-ascii?Q?ZZN0CaDY082BJojENjpRkUmWIbh/cfOc8D4jKqyd71ZU9PplSt0w1dUivKuK?=
+ =?us-ascii?Q?bo/+B5WACtidaPU0nka+1WOgo5q2U/qe2+o0X9/t5m0yxRZQEcI75PGQRxH0?=
+ =?us-ascii?Q?ndGHxcMBL7+JjRuzx9TNn8L1RF8mf3yOAkSrdLBerY6MUmGYVSwqZFj1zM4V?=
+ =?us-ascii?Q?cD5NXOr8ZuOb5lv65mMVxXcDNB5CyFNymiZYDtYNi4pn7RzWzcIwuPadLKB/?=
+ =?us-ascii?Q?04S6DLsrM3dISBWWhLth95VspG9vd7UUA36pS8tP++n8209iisK72Qp5bX+O?=
+ =?us-ascii?Q?NoKSJW3/1eDb+JvMC7qwbA8ghTJrgOzGhSu4m8pSPvJ9SCt2zOAjMYa60p72?=
+ =?us-ascii?Q?iQMki5jmyBeQxBT5/bbD8iD/FDB01HA+L/e3UG7/Q5CfpRb0UBzkiacfpY7h?=
+ =?us-ascii?Q?iFoUtSDxH4gQGug7X3IBvWrQQvcVhDRP5Cpuax/jP1b/hdlCkgtB1s88P8Rl?=
+ =?us-ascii?Q?amC8cxuCtm4vPyoSjwLDXK7acgTx3hUQ/6/Fp98GwoxRzich1n3E3ryXpPw9?=
+ =?us-ascii?Q?pVl8wWpZauZUIQVpiMO4QUmpxk7X0cyFJZpPdZd9MkT+1G4Z7hcr8C09ocBv?=
+ =?us-ascii?Q?gFnNfhbDaEJDngEAUMH4yFcSv/r0ndcd9tyxN6UQX3BLHHUQRPytuV87uq6j?=
+ =?us-ascii?Q?/9vd5HNiORVWDOshBVSFwWohUaacKu0EPmmGMZK6/7VbDWrusjP48cyx2AcU?=
+ =?us-ascii?Q?Sd5d8TCiX4mnMqw/ASlbhil931HvlmwHQBwb/IQwQd2Qns9tVtmK0Bo3uI6e?=
+ =?us-ascii?Q?s+ArDFebsSqJAhQMxHLhJgGapHhwcTXkb/cL1n6zVyfFo2b+Qv/0NJ5LSzMs?=
+ =?us-ascii?Q?xy1v+M7OZThb78CubAr3Dxil9oLH4RuziUTuGn8G13f9DzIHvKuz3Ng1QkoG?=
+ =?us-ascii?Q?ZxktT8l/tC7jDMxeD6qhCyu/fS6lEG2O/EYpe058j5W1uz0qQ2oV8nvJkPEx?=
+ =?us-ascii?Q?EQ4rH9XBOFMrIhKcMcN1/mpVNZMzMMlJRpIzLBaJh2v7HvYjYyYhiS7e29Zx?=
+ =?us-ascii?Q?o/M5EKQRsKQqBS3UFeHceIOJNoZQ9lB6uvGBpXXvKW1xaWOI8gbMili1jJkR?=
+ =?us-ascii?Q?56RaDHf4FMhEsh44fBOm7zi+hmaoMuAfJbHseFMUduwx2Lyjj6cRYfcoitKz?=
+ =?us-ascii?Q?Px3IHs7eC8LmQcYpJ9tSYfW+rBgaSKVIgLdm497b9+rHYP9TeA1WT0yq7r9y?=
+ =?us-ascii?Q?DAAF4dZgB4GpunHJMKHMoMZqCjgzrox2viLD9LRZqm0tT6Z6JQVixxEyjUcz?=
+ =?us-ascii?Q?u91i3bDQXr2ynapmQ6o4wgVlvK3yaiABW6Ls8qhVTekslvDUligq2g=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:58.252.5.68;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.oppo.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(36860700013)(376014)(1800799024)(921020);DIR:OUT;SFP:1101;
+X-OriginatorOrg: oppo.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Dec 2024 11:51:48.3841
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: c000fc45-fc30-4b6b-b93e-08dd145a08e8
+X-MS-Exchange-CrossTenant-Id: f1905eb1-c353-41c5-9516-62b4a54b5ee6
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=f1905eb1-c353-41c5-9516-62b4a54b5ee6;Ip=[58.252.5.68];Helo=[mail.oppo.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	HK3PEPF0000021F.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR02MB7539
 
-On Wed, Dec 04, 2024 at 04:45:57PM +0800, Qiang Ma wrote:
-> On Tue, 3 Dec 2024 22:36:47 +0800
-> Ming Lei <ming.lei@redhat.com> wrote:
-> 
-> > On Tue, Dec 03, 2024 at 09:21:04PM +0800, Qiang Ma wrote:
-> > > On Wed, 27 Nov 2024 23:20:28 +0800
-> > > Ming Lei <ming.lei@redhat.com> wrote:
-> > >   
-> > > > On Wed, Nov 27, 2024 at 10:04:37PM +0800, Qiang Ma wrote:  
-> > > > > On Tue, 26 Nov 2024 22:15:02 +0800
-> > > > > Ming Lei <ming.lei@redhat.com> wrote:
-> > > > >     
-> > > > > > On Tue, Nov 26, 2024 at 07:50:08PM +0800, Qiang Ma wrote:    
-> > > > > > > Problem:
-> > > > > > > When the system disk uses the scsi disk bus, The main
-> > > > > > > qemu command line includes:
-> > > > > > > ...
-> > > > > > > -device virtio-scsi-pci,id=scsi0 \
-> > > > > > > -device scsi-hd,scsi-id=1,drive=drive-virtio-disk
-> > > > > > > -drive
-> > > > > > > id=drive-virtio-disk,if=none,file=/home/kvm/test.qcow2 ...
-> > > > > > > 
-> > > > > > > The dmesg log is as follows::
-> > > > > > > 
-> > > > > > > [   50.304591][ T4382] sd 0:0:0:0: [sda] Synchronizing SCSI
-> > > > > > > cache [   50.377002][ T4382] kexec_core: Starting new
-> > > > > > > kernel    
-> > > > 
-> > > > Why is one new kernel started? what event triggers kernel_kexec()?
-> > > > 
-> > > > machine_shutdown() follows, probably the scsi controller is dead.
-> > > >   
-> > > 
-> > > Yes, triggered by kexec, manually execute the following command:
-> > > kexec -l /boot/vmlinuz-6.6.0+ --reuse-cmdline
-> > > --initrd=/boot/initramfs-6.6.0+.img kexec -e
-> > >   
-> > > > > > > [   50.669775][  T194] psci: CPU1 killed (polled 0 ms)
-> > > > > > > [   50.849665][  T194] psci: CPU2 killed (polled 0 ms)
-> > > > > > > [   51.109625][  T194] psci: CPU3 killed (polled 0 ms)
-> > > > > > > [   51.319594][  T194] psci: CPU4 killed (polled 0 ms)
-> > > > > > > [   51.489667][  T194] psci: CPU5 killed (polled 0 ms)
-> > > > > > > [   51.709582][  T194] psci: CPU6 killed (polled 0 ms)
-> > > > > > > [   51.949508][   T10] psci: CPU7 killed (polled 0 ms)
-> > > > > > > [   52.139499][   T10] psci: CPU8 killed (polled 0 ms)
-> > > > > > > [   52.289426][   T10] psci: CPU9 killed (polled 0 ms)
-> > > > > > > [   52.439552][   T10] psci: CPU10 killed (polled 0 ms)
-> > > > > > > [   52.579525][   T10] psci: CPU11 killed (polled 0 ms)
-> > > > > > > [   52.709501][   T10] psci: CPU12 killed (polled 0 ms)
-> > > > > > > [   52.819509][  T194] psci: CPU13 killed (polled 0 ms)
-> > > > > > > [   52.919509][  T194] psci: CPU14 killed (polled 0 ms)
-> > > > > > > [  243.214009][  T115] INFO: task kworker/0:1:10 blocked for
-> > > > > > > more than 122 seconds. [  243.214810][  T115]       Not
-> > > > > > > tainted 6.6.0+ #1 [  243.215517][  T115] "echo 0    
-> > > > > > > > /proc/sys/kernel/hung_task_timeout_secs" disables this
-> > > > > > > > message. [  243.216390][  T115] task:kworker/0:1
-> > > > > > > > state:D stack:0 pid:10    ppid:2      flags:0x00000008    
-> > > > > > > [  243.217299][  T115] Workqueue: events vmstat_shepherd
-> > > > > > > [  243.217816][  T115] Call trace:
-> > > > > > > [  243.218133][  T115]  __switch_to+0x130/0x1e8
-> > > > > > > [  243.218568][  T115]  __schedule+0x660/0xcf8
-> > > > > > > [  243.219013][  T115]  schedule+0x58/0xf0
-> > > > > > > [  243.219402][  T115]  percpu_rwsem_wait+0xb0/0x1d0
-> > > > > > > [  243.219880][  T115]  __percpu_down_read+0x40/0xe0
-> > > > > > > [  243.220353][  T115]  cpus_read_lock+0x5c/0x70
-> > > > > > > [  243.220795][  T115]  vmstat_shepherd+0x40/0x140
-> > > > > > > [  243.221250][  T115]  process_one_work+0x170/0x3c0
-> > > > > > > [  243.221726][  T115]  worker_thread+0x234/0x3b8
-> > > > > > > [  243.222176][  T115]  kthread+0xf0/0x108
-> > > > > > > [  243.222564][  T115]  ret_from_fork+0x10/0x20
-> > > > > > > ...
-> > > > > > > [  243.254080][  T115] INFO: task kworker/0:2:194 blocked
-> > > > > > > for more than 122 seconds. [  243.254834][  T115]       Not
-> > > > > > > tainted 6.6.0+ #1 [  243.255529][  T115] "echo 0    
-> > > > > > > > /proc/sys/kernel/hung_task_timeout_secs" disables this
-> > > > > > > > message. [  243.256378][  T115] task:kworker/0:2
-> > > > > > > > state:D stack:0 pid:194   ppid:2      flags:0x00000008    
-> > > > > > > [  243.257284][  T115] Workqueue: events work_for_cpu_fn
-> > > > > > > [  243.257793][  T115] Call trace:
-> > > > > > > [  243.258111][  T115]  __switch_to+0x130/0x1e8
-> > > > > > > [  243.258541][  T115]  __schedule+0x660/0xcf8
-> > > > > > > [  243.258971][  T115]  schedule+0x58/0xf0
-> > > > > > > [  243.259360][  T115]  schedule_timeout+0x280/0x2f0
-> > > > > > > [  243.259832][  T115]  wait_for_common+0xcc/0x2d8
-> > > > > > > [  243.260287][  T115]  wait_for_completion+0x20/0x38
-> > > > > > > [  243.260767][  T115]  cpuhp_kick_ap+0xe8/0x278
-> > > > > > > [  243.261207][  T115]  cpuhp_kick_ap_work+0x5c/0x188
-> > > > > > > [  243.261688][  T115]  _cpu_down+0x120/0x378
-> > > > > > > [  243.262103][  T115]  __cpu_down_maps_locked+0x20/0x38
-> > > > > > > [  243.262609][  T115]  work_for_cpu_fn+0x24/0x40
-> > > > > > > [  243.263059][  T115]  process_one_work+0x170/0x3c0
-> > > > > > > [  243.263533][  T115]  worker_thread+0x234/0x3b8
-> > > > > > > [  243.263981][  T115]  kthread+0xf0/0x108
-> > > > > > > [  243.264405][  T115]  ret_from_fork+0x10/0x20
-> > > > > > > [  243.264846][  T115] INFO: task kworker/15:2:639 blocked
-> > > > > > > for more than 122 seconds. [  243.265602][  T115]       Not
-> > > > > > > tainted 6.6.0+ #1 [  243.266296][  T115] "echo 0    
-> > > > > > > > /proc/sys/kernel/hung_task_timeout_secs" disables this
-> > > > > > > > message. [  243.267143][  T115] task:kworker/15:2
-> > > > > > > > state:D stack:0 pid:639   ppid:2      flags:0x00000008    
-> > > > > > > [  243.268044][  T115] Workqueue: events_freezable_power_
-> > > > > > > disk_events_workfn [  243.268727][  T115] Call trace:
-> > > > > > > [  243.269051][  T115]  __switch_to+0x130/0x1e8
-> > > > > > > [  243.269481][  T115]  __schedule+0x660/0xcf8
-> > > > > > > [  243.269903][  T115]  schedule+0x58/0xf0
-> > > > > > > [  243.270293][  T115]  schedule_timeout+0x280/0x2f0
-> > > > > > > [  243.270763][  T115]  io_schedule_timeout+0x50/0x70
-> > > > > > > [  243.271245][  T115]
-> > > > > > > wait_for_common_io.constprop.0+0xb0/0x298
-> > > > > > > [  243.271830][  T115]  wait_for_completion_io+0x1c/0x30
-> > > > > > > [  243.272335][  T115]  blk_execute_rq+0x1d8/0x278
-> > > > > > > [  243.272793][  T115]  scsi_execute_cmd+0x114/0x238
-> > > > > > > [  243.273267][  T115]  sr_check_events+0xc8/0x310 [sr_mod]
-> > > > > > > [  243.273808][  T115]  cdrom_check_events+0x2c/0x50 [cdrom]
-> > > > > > > [  243.274408][  T115]  sr_block_check_events+0x34/0x48
-> > > > > > > [sr_mod] [  243.274994][  T115]
-> > > > > > > disk_check_events+0x44/0x1b0 [  243.275468][  T115]
-> > > > > > > disk_events_workfn+0x20/0x38 [  243.275939][  T115]
-> > > > > > > process_one_work+0x170/0x3c0 [  243.276410][  T115]
-> > > > > > > worker_thread+0x234/0x3b8 [  243.276855][  T115]
-> > > > > > > kthread+0xf0/0x108 [  243.277241][  T115]
-> > > > > > > ret_from_fork+0x10/0x20      
-> > > > > > 
-> > > > > > Question is why this scsi command can't be completed?
-> > > > > > 
-> > > > > > When blk_mq_hctx_notify_offline() is called, the CPU isn't
-> > > > > > shutdown yet, and it still can handle interrupt of this SCSI
-> > > > > > command.
-> > > > > > 
-> > > > > > 
-> > > > > > Thanks,
-> > > > > > Ming
-> > > > > > 
-> > > > > >     
-> > > > > Sorry, at the moment I don't know why it can't be finished,
-> > > > > just provides a solution like loop and dm-rq.
-> > > > > 
-> > > > > Currently see the call stack:    
-> > > > >  => blk_mq_run_hw_queue
-> > > > >  =>__blk_mq_sched_restart
-> > > > >  => blk_mq_run_hw_queue
-> > > > >  => __blk_mq_sched_restart
-> > > > >  => __blk_mq_free_request
-> > > > >  => blk_mq_free_request
-> > > > >  => blk_mq_end_request
-> > > > >  => blk_flush_complete_seq
-> > > > >  => flush_end_io
-> > > > >  => __blk_mq_end_request
-> > > > >  => scsi_end_request
-> > > > >  => scsi_io_completion
-> > > > >  => scsi_finish_command
-> > > > >  => scsi_complete
-> > > > >  => blk_mq_complete_request
-> > > > >  => scsi_done_internal
-> > > > >  => scsi_done
-> > > > >  => virtscsi_complete_cmd
-> > > > >  => virtscsi_req_done
-> > > > >  => vring_interrupt    
-> > > > > 
-> > > > > In finction blk_mq_run_hw_queue():
-> > > > > __blk_mq_run_dispatch_ops(hctx->queue, false,
-> > > > > 	need_run = !blk_queue_quiesced(hctx->queue) &&
-> > > > > 	blk_mq_hctx_has_pending(hctx));
-> > > > > 	
-> > > > > 	if (!need_run)
-> > > > > 		return;
-> > > > > 
-> > > > > Come here and return directly.    
-> > > > 
-> > > > Does blk_queue_quiesced() return true?
-> > > >   
-> > > 
-> > > blk_queue_quiesced() return false
-> > > 
-> > > Sorry, the calltrace above is not the one that is stuck this time.
-> > > The hang is caused by the wait_for_completion_io(), in
-> > > blk_execute_rq():
-> > > 
-> > > blk_status_t blk_execute_rq(struct request *rq, bool at_head)
-> > > {
-> > > 	...
-> > > 	rq->end_io_data = &wait;
-> > > 	rq->end_io = blk_end_sync_rq;
-> > > 	...
-> > > 	blk_account_io_start(rq);
-> > > 	blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD :
-> > > 0); blk_mq_run_hw_queue(hctx, false);
-> > > 
-> > > 	if (blk_rq_is_poll(rq)) {
-> > > 		blk_rq_poll_completion(rq, &wait.done);
-> > > 	} else {
-> > > 		...
-> > > 		wait_for_completion_io(&wait.done);
-> > > 	}
-> > > }
-> > > 
-> > > In this case, end_io is blk_end_sync_rq, which is not executed.
-> > > 
-> > > The process for sending scsi commands is as follows:
-> > > 
-> > >      kworker/7:1-134     [007] .....    32.772727: vp_notify
-> > >      <-virtqueue_notify kworker/7:1-134     [007] .....
-> > > 32.772729: <stack trace> => vp_notify  
-> > >  => virtqueue_notify
-> > >  => virtscsi_add_cmd
-> > >  => virtscsi_queuecommand
-> > >  => scsi_dispatch_cmd
-> > >  => scsi_queue_rq
-> > >  => blk_mq_dispatch_rq_list
-> > >  => __blk_mq_sched_dispatch_requests
-> > >  => blk_mq_sched_dispatch_requests
-> > >  => blk_mq_run_hw_queue
-> > >  => blk_execute_rq
-> > >  => scsi_execute_cmd
-> > >  => sr_check_events
-> > >  => cdrom_check_events
-> > >  => sr_block_check_events
-> > >  => disk_check_events
-> > >  => disk_events_workfn
-> > >  => process_one_work
-> > >  => worker_thread
-> > >  => kthread
-> > >  => ret_from_fork  
-> > > 
-> > > In qemu:
-> > > static void virtio_scsi_handle_cmd_vq(VirtIOSCSI *s, VirtQueue *vq)
-> > > {
-> > > 	...
-> > > 	do {
-> > >         	if (suppress_notifications) {
-> > > 			virtio_queue_set_notification(vq, 0);
-> > > 		}
-> > > 		...
-> > > 	} while (ret != -EINVAL && !virtio_queue_empty(vq));
-> > > 	...
-> > > 	QTAILQ_FOREACH_SAFE(req, &reqs, next, next) {
-> > > 		virtio_scsi_handle_cmd_req_submit(s, req);
-> > > 	}
-> > > }
-> > > 
-> > > virtio_queue_empty() always return true.
-> > > 
-> > > As a result, the virtio_scsi_handle_cmd_req_submit() was not
-> > > executed, and the io command was never submitted.
-> > > 
-> > > The reason is that virtio_device_disabled returns true in
-> > > virtio_queue_split_empty, the code is as follows:
-> > > 
-> > > int virtio_queue_empty(VirtQueue *vq)
-> > > {   
-> > > 	if (virtio_vdev_has_feature(vq->vdev,
-> > > VIRTIO_F_RING_PACKED)) { return virtio_queue_packed_empty(vq);
-> > > 	} else {
-> > > 		return virtio_queue_split_empty(vq);
-> > > 	}
-> > > }
-> > > 
-> > > static int virtio_queue_split_empty(VirtQueue *vq)
-> > > {
-> > > 	bool empty;
-> > >             
-> > > 	if (virtio_device_disabled(vq->vdev)) {
-> > > 		return 1;
-> > > 	...
-> > > }
-> > > 
-> > > This function was introduced in the following patch:
-> > > 
-> > > commit 9d7bd0826f2d19f88631ad7078662668148f7b5f
-> > > Author: Michael Roth <mdroth@linux.vnet.ibm.com>
-> > > Date:   Tue Nov 19 18:50:03 2019 -0600
-> > > 
-> > >     virtio-pci: disable vring processing when bus-mastering is
-> > > disabled  
-> > 
-> > OK, then it is obviously one qemu issue, and it can explain why IO
-> > isn't completed in this case.
-> > 
-> > 
-> 
-> However, in fact, the current pci-master state is disabled, it is
-> shutdown by executing the syscore_shutdown() in kernel_kexec(), and the
-> call stack is as follows:
-> kernel_kexec
-> => syscore_shutdown
-> => ops->shutdown
-> => pci_device_shutdown
-> => pci_clear_master
-> => __pci_set_master
-> 
-> Therefore, qemu determines the pci-master status and disable
-> virtio-pci when tthe state of the pci-master is disabled.
+From: liuderong <liuderong@oppo.com>
 
-But either virtio-scsi driver or qemu knows clearly that there is one
-in-flight request not completed, and is just ignored silently.
+For now, lrbp->compl_time_stamp_local_clock is set to zero
+after send a sqe, but it is not updated after complete a cqe,
+the printed information in ufshcd_print_tr will always be zero.
+So update lrbp->cmpl_time_stamp_local_clock after complete a cqe.
 
-Anyway, it is not one issue in block layer or scsi-core code.
+Log sample:
+ufshcd-qcom 1d84000.ufshc: UPIU[8] - issue time 8750227249 us
+ufshcd-qcom 1d84000.ufshc: UPIU[8] - complete time 0 us
 
+Signed-off-by: liuderong <liuderong@oppo.com>
+---
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Ming
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 6a26853..bd70fe1 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5519,6 +5519,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
+ 
+ 	lrbp = &hba->lrb[task_tag];
+ 	lrbp->compl_time_stamp = ktime_get();
++	lrbp->compl_time_stamp_local_clock = local_clock();
+ 	cmd = lrbp->cmd;
+ 	if (cmd) {
+ 		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+-- 
+2.7.4
 
