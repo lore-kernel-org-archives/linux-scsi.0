@@ -1,156 +1,106 @@
-Received: from pv50p00im-zteg10011401.me.com (pv50p00im-zteg10011401.me.com [17.58.6.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E4681B87DF
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Dec 2024 12:27:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52F5E19F475;
+	Wed,  4 Dec 2024 12:50:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733315228; cv=none; b=t/6QGD4JmUWQBRdbkBZfpPPR6HA2WFyklvqCiOpO4HsubyXBT5ETgeRkiLHBYUL+Bstl5TnicN4kKLYiB8kpp8XukkgRqlf9uWpdVjj2R5pZzh1P/hyZBiITe7FzfVpCvVXEA9m45B6YUg/0vUe8oZj4RlhF3FToSjbvhd/cgbk=
+	t=1733316660; cv=none; b=YXYV1ZyDvZ+lAAWFYZx6HfL/1R/z5vDZYA0stMg+TikRfB3N4p6mxdu/iWaXhdHpNq2sKEIGveWNbcJ9IH4hG+vjUFyCuDBF/KbUBKUdZDfXhOdZZm8SZRVHttRjmlB+H4y+mA4iKya6swWohEGFwyn/jOoJ+Mk93GrGBVUHXwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733315228; c=relaxed/simple;
-	bh=b3cKO8E37kdGEfPQBy2NupErjAuGZ0w9V7NN+3pjucc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kGWZGh2TzoA6kUdyWGHQGUNCTSwDi6vZ33ukhZCljb8m4CXoxuh1guMuLq7dWO0wHZ5zPXBmeM2bvOirdrIeHR8LtezTebGx++P10uBcmnKMuLF+kUZ0+q7Tk9evLT7LNDXuQCfL+JKGxn/W5Hkb0wvCAjB5aW8nu01YJAGC/A0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=aDx0LVkM; arc=none smtp.client-ip=17.58.6.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1733316660; c=relaxed/simple;
+	bh=NDhsbahJD+yAj12Er2ie34fi2x/7kfX4pIrDSW6gQpA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=eUeAnHe1AUAAm8PCRlTTC+P+CtJYdaebfAFkVPIdOFU/VpDUhvfH7P4kT/mk+yv6RIKmwqrcED85YS35Wjw6HzPoY2iET6Pg2Rw+OZ+PHqoIJOvo3oPWxdWTZ+C2D2tJ0XDA107rx2E1El8xvqi1xwE9RNQXQQ1TTcRBqc3t2SM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IMpvMVG2; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="aDx0LVkM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
-	s=1a1hai; t=1733315226;
-	bh=tDbYa+5DWmHdZ9lmVLNA7xMZvJoZ/PCpc6Zau1xliNU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:
-	 x-icloud-hme;
-	b=aDx0LVkMUXFI75QpCfQtwEzziTl2NnjdGJ/9Nl6EjkD9AoNOPkj0pNJDmDS0yOxmo
-	 cFAXLbMOmPcOl5uunRBBrqBVYZF5ppxfVoWTl3S1fXUPYvDXVgmxgrfgiOzuzDhljR
-	 JXz5mSklSuuNIhx7A4INyoL4v8SXD0un9r9AkY3EWP5hUjq0cVMBNRe3UAI+WH+UEp
-	 aQcXPRWXKjSKZb3dQybv2/fEczrg8mOY6isUSLdmtOWnHvZ0W1/xlosR4mnRECds2h
-	 6Ay6kSNLijQWwdsoHl1pqn9BntMizpWoDbFHr5J8zkhSqKMjCSXP0KeQ2EZIN5IQ7P
-	 WHMoRxUFUJF5Q==
-Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
-	by pv50p00im-zteg10011401.me.com (Postfix) with ESMTPSA id B793434BA6BD;
-	Wed,  4 Dec 2024 12:26:37 +0000 (UTC)
-Message-ID: <235ce0a9-1db1-4558-817b-6f92f22be5ab@icloud.com>
-Date: Wed, 4 Dec 2024 20:26:22 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IMpvMVG2"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4349cc45219so61017085e9.3;
+        Wed, 04 Dec 2024 04:50:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1733316657; x=1733921457; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=NDhsbahJD+yAj12Er2ie34fi2x/7kfX4pIrDSW6gQpA=;
+        b=IMpvMVG24VazuNCIAv/pJgJ71EZPxV/jViQiezWk17M0v0YLRDmhbYXsMP0RqdL2gS
+         eKq8eZUClNSFSxbEbRaDgD/0u4K76NN4kMuwU/HrxW+WGgHMFFyHqZXk2XCXym/5iOQG
+         EwNUOYd5tW+WYpkNDwRpPb4fr0BzQG58TnZhVRMNLPTzMSMMhVAz9EGBSguR+4k5llxb
+         vDODDfyo6XRlSlTRFpWPNhYgfyvienL/iA4CX5ZfVOQSjEJKUbDWAVqoi3F05wzbZG8g
+         v1MLEH2tQcOU8tq6MlX6V5WDiEDEKPHjZHMkDNzDWdxv33SVERnXeJKRWfkK0KZhYT7e
+         V8GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733316657; x=1733921457;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NDhsbahJD+yAj12Er2ie34fi2x/7kfX4pIrDSW6gQpA=;
+        b=DMgB3f1Eo7sEs0OoYJoCvK2A64dbOnPqec7Xx2FYDT28rn1996pmBeLcUMOi8xuK3X
+         +jMMEdIRzvKHpHJkzxnghBkLQVgWl/ylYAe0QyUBQ+0OZaMQTK3UowiM3ko/n2CIvdQn
+         uxjO0f8c/275xYykJ5xa74Vg1g6CZEwc0wLUJir20mSeAHthPanN3KZhhtN7S15i1sVG
+         /kiT99svsEJFoih2RTuDn4rnFXcsbcK5coJZS59FjohkdVqMBv9hil5Kzcg6HjipAVss
+         vOG6QJorOztzQi27b+vjotzuQnhB9QS0Y+Oz4NvDvf+E+DOzAtTDSRym+0GjJXywaqU0
+         M+xg==
+X-Forwarded-Encrypted: i=1; AJvYcCV1z+zqC8nC2ewd3SVzazCTTL6PWl/dx9k8KvLVINajv2Wrr+Ynsj/3bCl1V720Nd+NY3FccT5fQJQaa5o=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5yycWab7gflDzkrGvI9GjIJ+GZoUIenL9KDb+lFQ7N9OxW5cv
+	mVIhqYbDhLtEWk0PKO6cqeV2gkVn4OQIjzsOK+VDOJIdqCUVOIzX
+X-Gm-Gg: ASbGncvFjAco5IK2OcHiRMVJXty1tMhOpIrAp77tv9IacKLj5N191WGCoFieq7ove7S
+	xpvHt3CpHAH8+RPZ7ExXILZOp8knlMsrA7096e1LJSQWkA0P1g6TAr7grhV350LREicPYKjcgdK
+	Db7/ATZYrFu5u0jddqHwPT8wjAHe/97Oecq9exGUsU6+rrfLqhrA1kw3q9hoCCmF6dWj+JxukLd
+	BQ67WCu5v2jcccpt+AfLXP/e0cbBHZI/4AJN3x9ZG2HyO+O05JN
+X-Google-Smtp-Source: AGHT+IFwWT7Pst+/G/eyPLR91512VqyL2tkvgnSgk8cxtOg8lJAvE8NQrhAfBubxyWStcdidVl8iOw==
+X-Received: by 2002:a05:6000:4024:b0:385:e94d:b152 with SMTP id ffacd0b85a97d-385fd433427mr5598869f8f.54.1733316656957;
+        Wed, 04 Dec 2024 04:50:56 -0800 (PST)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-434d5280fc4sm23624105e9.24.2024.12.04.04.50.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Dec 2024 04:50:56 -0800 (PST)
+Message-ID: <b1e4207586a7b6bc1dbaef69627eb5c6b8e956db.camel@gmail.com>
+Subject: Re: [PATCH] scsi:ufs:core: update compl_time_stamp_local_clock
+ after complete a cqe
+From: Bean Huo <huobean@gmail.com>
+To: liuderong@oppo.com, alim.akhtar@samsung.com, avri.altman@wdc.com, 
+	bvanassche@acm.org, James.Bottomley@HansenPartnership.com, 
+	martin.petersen@oracle.com, peter.wang@mediatek.com, 
+	manivannan.sadhasivam@linaro.org, ahalaney@redhat.com, beanhuo@micron.com, 
+	quic_mnaresh@quicinc.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 04 Dec 2024 13:50:55 +0100
+In-Reply-To: <1733313004-350420-1-git-send-email-liuderong@oppo.com>
+References: <1733313004-350420-1-git-send-email-liuderong@oppo.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/32] driver core: Constify API device_find_child()
- and adapt for various existing usages
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas@t-8ch.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Chun-Kuang Hu <chunkuang.hu@kernel.org>,
- Philipp Zabel <p.zabel@pengutronix.de>, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- Jean Delvare <jdelvare@suse.com>, Guenter Roeck <linux@roeck-us.net>,
- Martin Tuma <martin.tuma@digiteqautomotive.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Andreas Noever <andreas.noever@gmail.com>,
- Michael Jamet <michael.jamet@intel.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Yehezkel Bernat <YehezkelShB@gmail.com>,
- Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski
- <brgl@bgdev.pl>, Andrew Lunn <andrew@lunn.ch>,
- Vladimir Oltean <olteanv@gmail.com>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Dan Williams <dan.j.williams@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
- Ira Weiny <ira.weiny@intel.com>, Takashi Sakamoto <o-takashi@sakamocchi.jp>,
- Jiri Slaby <jirislaby@kernel.org>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>,
- Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
- Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
- Mike Christie <michael.christie@oracle.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nilesh Javali <njavali@marvell.com>,
- Manish Rangankar <mrangankar@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com, Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Andreas Larsson <andreas@gaisler.com>, Stuart Yoder <stuyoder@gmail.com>,
- Laurentiu Tudor <laurentiu.tudor@nxp.com>, Jens Axboe <axboe@kernel.dk>,
- Sudeep Holla <sudeep.holla@arm.com>,
- Cristian Marussi <cristian.marussi@arm.com>, Ard Biesheuvel
- <ardb@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Mathieu Poirier <mathieu.poirier@linaro.org>, linux-kernel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org,
- linux-media@vger.kernel.org, linux-usb@vger.kernel.org,
- linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
- linux-pwm@vger.kernel.org, nvdimm@lists.linux.dev,
- linux1394-devel@lists.sourceforge.net, linux-serial@vger.kernel.org,
- linux-sound@vger.kernel.org, open-iscsi@googlegroups.com,
- linux-scsi@vger.kernel.org, linux-cxl@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
- arm-scmi@vger.kernel.org, linux-efi@vger.kernel.org,
- linux-remoteproc@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
-References: <20241203-const_dfc_done-v2-0-7436a98c497f@quicinc.com>
- <g32cigmktmj4egkq2tof27el2yss4liccfxgebkgqvkil32mlb@e3ta4ezv7y4m>
- <9d34bd6f-b120-428a-837b-5a5813e14618@icloud.com>
- <2024120320-manual-jockey-dfd1@gregkh>
- <b9885785-d4d4-4c72-b425-3dc552651d7e@icloud.com>
- <8eb7c0c54b280b8eb72f82032ede802c001ab087.camel@HansenPartnership.com>
- <8fb887a0-3634-4e07-9f0d-d8d7c72ca802@t-8ch.de>
- <f5ea7e17-5550-4658-8f4c-1c51827c7627@icloud.com>
- <108c63c753f2f637a72c2e105ac138f80d4b0859.camel@HansenPartnership.com>
-Content-Language: en-US
-From: Zijun Hu <zijun_hu@icloud.com>
-In-Reply-To: <108c63c753f2f637a72c2e105ac138f80d4b0859.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: Ptou9-aUclkqdkvBrep0JqLqpE5OAxzN
-X-Proofpoint-GUID: Ptou9-aUclkqdkvBrep0JqLqpE5OAxzN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2024-12-04_09,2024-12-04_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- mlxlogscore=999 suspectscore=0 malwarescore=0 bulkscore=0 mlxscore=0
- spamscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2308100000 definitions=main-2412040096
 
-On 2024/12/3 23:34, James Bottomley wrote:
->>> This also enables an incremental migration.
->> change the API prototype from:
->> device_find_child(..., void *data_0, int (*match)(struct device *dev,
->> void *data));
->>
->> to:
->> device_find_child(..., const void *data_0, int (*match)(struct device
->> *dev, const void *data));
->>
->> For @data_0,  void * -> const void * is okay.
->> but for @match, the problem is function pointer type incompatibility.
->>
->> there are two solutions base on discussions.
->>
->> 1) squashing likewise Greg mentioned.
->>    Do all of the "prep work" first, and then
->>    do the const change at the very end, all at once.
->>
->> 2)  as changing platform_driver's remove() prototype.
->> Commit: e70140ba0d2b ("Get rid of 'remove_new' relic from platform
->> driver struct")
->>
->>  introduce extra device_find_child_new() which is constified  -> use
->> *_new() replace ALL device_find_child() instances one by one -> 
->> remove device_find_child() -> rename *_new() to device_find_child()
->> once.
-> Why bother with the last step, which churns the entire code base again?
+On Wed, 2024-12-04 at 19:50 +0800, liuderong@oppo.com wrote:
+> =C2=A01 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 6a26853..bd70fe1 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5519,6 +5519,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba,
+> int task_tag,
+> =C2=A0
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0lrbp =3D &hba->lrb[task_t=
+ag];
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0lrbp->compl_time_stamp =
+=3D ktime_get();
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0lrbp->compl_time_stamp_local_c=
+lock =3D local_clock();
 
-keep the good API name device_find_child().
+probably, we should change lrbp->compl_time_stamp =3D ktime_get(); to
+lrbp->compl_time_stamp =3D local_clock(); also, the name of
+compl_time_stamp_local_clock, is so long, should be shorter.=20
 
-> Why not call the new function device_find_child_const() and simply keep
-> it (it's descriptive of its function).  That way you can have a patch
-> series without merging and at the end simply remove the old function.
 
-device_find_child is a good name for the API, 'find' already means const.
+but the patch is ok to me:
 
+Reviewed-by: Bean Huo <beanhuo@micron.com>
