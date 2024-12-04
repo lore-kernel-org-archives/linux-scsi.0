@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6BFF21A431;
-	Wed,  4 Dec 2024 17:01:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9334921B40B;
+	Wed,  4 Dec 2024 17:02:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733331712; cv=none; b=tGOypYLS44NPCSsy+iUHcRuwjv5BvBPjl6WVzASFSMcrp6HZQ4S7g2e2HZFxcT8DQD4uOZ6BGs52gGqjWDk/spVITiHUxM9DJtdqTaiRCAypbeSCuP4IWbIWaBt4nwhwZxmb6lP6kUfwjOdBppvVv4ati7Y9Qv87QS70v4LuCyQ=
+	t=1733331720; cv=none; b=EX7Ji3N2zWwgBEvRXRzhLbHW+bxTJmGa4WWe2EX58AXjX5Msg7XiA2/R6lzKLtrF8o0ntblNIv2UVzLMcFXYunPjven4yoRyF3wxog5ohoy6TX1Kxo1GXL6yuyuLI4FyFMz0RWxRuLAuzFpEcw5P7NgglNKKlFqQgGkJD3bpc7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733331712; c=relaxed/simple;
-	bh=EHJ7vzF8nxQZT43xydObxju0i4U0ZrHh0eQVIonvGbM=;
+	s=arc-20240116; t=1733331720; c=relaxed/simple;
+	bh=ejwqXtfZhaJZhU3e0xVZPqtpKhJ91R3VRW/yQO2jiRE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZIs/j0xkDoVYE46hZsPqoISLSEg2/1DuP86a89hTUcr06P2iMZpYanrVTkZa+PdB5AnTJQP6T4sFLtS7WS4Sf16RTAE7cS+IVsznM0TarMx5nirSg3C/eWZ/9nb+D6fhM9u2Ksqj87814py3K2KprBlbhhgcHHj5opNEK5QAkx4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=srJajYLD; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bfmjO8GRYWO3JP++cTtBa3ohFbC5IPt1WfRglDCWrFzqKMhpAjcVajoZ93kCGWEmeq4heJPQ6aCYXXI2Grz2GAIvuT7SShEY83WmWGIAb7gBdd/DjokQsop4DTuRxPWk1q/nkEGgK/4QgTMqERnJT+O9o7q4Y31+G1yl+RH4wVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q6oG4Jd0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="srJajYLD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DFB3C4CED1;
-	Wed,  4 Dec 2024 17:01:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q6oG4Jd0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77C47C4CEDF;
+	Wed,  4 Dec 2024 17:01:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733331712;
-	bh=EHJ7vzF8nxQZT43xydObxju0i4U0ZrHh0eQVIonvGbM=;
+	s=k20201202; t=1733331720;
+	bh=ejwqXtfZhaJZhU3e0xVZPqtpKhJ91R3VRW/yQO2jiRE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=srJajYLD9mBsMwA3yNsBEd1gvVz3izvdx7JKVJRjhgAJJ0j0DraSh0N/5FDMkruIA
-	 xFWm0WUT/LvnnXXisV75R6PNqqn1232L7KlLWZUXpq1eJxxmBFdaUo+N4N/4Aty7p+
-	 M/aLySiLSZznH75dhfW8IUYoFaQ5C4iPqlYpGtuFFnktFqbHLbiIuxCDMKWOiiCiP/
-	 S4isyr2WZ5HPyMp6Jqx6ZkhMsjYobHonP287rH37v2Z6WFBByCYVVhsNTH2KJB7Zb+
-	 xy2rt9N8SciQITOgdM4Es/dhTdM66KK3sQg0wzFK11zgOEgq3xzOoZzjr/NKCLVRpH
-	 VwYdpXXnXyb2A==
+	b=Q6oG4Jd0Y8X+C8xRowQdBvxlLCQAAP4FU0E8DAKs9cZu/9pq8VK+7HmWCOJJwdH7f
+	 Q1+MlxkEESolOEO6uVNfekqNGB1KuLglGt4jSFLtTwuISgvJ9A7Q5ElR3dg0xGk12p
+	 klIeUa9SGl7Tab4X5GH3gHG/9oyJWBEwCT2V1UhGZ21Kg1/Uo21PMoAxtlxl+rrgd4
+	 FURrLOmsDkCYpqzhV91jB13k26DCWSm6u4vk6v0SS/NfNgBOKhB7PWJHFYA4ipdeQG
+	 ZYb2axLPEokqOsiB0dr8mcG3YN8z9fiu805IypFwOzpU8MP4VE1cL9Wrp1VINxB8mQ
+	 0gA+LmD1WHa2g==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+	John Meneghini <jmeneghi@redhat.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 12/24] scsi: lpfc: Call lpfc_sli4_queue_unset() in restart and rmmod paths
-Date: Wed,  4 Dec 2024 10:49:32 -0500
-Message-ID: <20241204155003.2213733-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 17/24] scsi: st: Don't modify unknown block number in MTIOCGET
+Date: Wed,  4 Dec 2024 10:49:37 -0500
+Message-ID: <20241204155003.2213733-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204155003.2213733-1-sashal@kernel.org>
 References: <20241204155003.2213733-1-sashal@kernel.org>
@@ -48,187 +47,43 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.63
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 
-[ Upstream commit d35f7672715d1ff3e3ad9bb4ae6ac6cb484200fe ]
+[ Upstream commit 5bb2d6179d1a8039236237e1e94cfbda3be1ed9e ]
 
-During initialization, the driver allocates wq->pring in lpfc_wq_create
-and lpfc_sli4_queue_unset() is the only place where kfree(wq->pring) is
-called.
+Struct mtget field mt_blkno -1 means it is unknown. Don't add anything to
+it.
 
-There is a possible memory leak in lpfc_sli_brdrestart_s4() (restart)
-and lpfc_pci_remove_one_s4() (rmmod) paths because there are no calls to
-lpfc_sli4_queue_unset() to kfree() the wq->pring.
-
-Fix by inserting a call to lpfc_sli4_queue_unset() in
-lpfc_sli_brdrestart_s4() and lpfc_sli4_hba_unset() routines.  Also, add
-a check for the SLI_ACTIVE flag before issuing the Q_DESTROY mailbox
-command.  If not set, then the mailbox command will obviously fail.  In
-such cases, skip issuing the mailbox command and only execute the driver
-resource clean up portions of the lpfc_*q_destroy routines.
-
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20241031223219.152342-4-justintee8345@gmail.com
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=219419#c14
+Link: https://lore.kernel.org/r/20241106095723.63254-2-Kai.Makisara@kolumbus.fi
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Tested-by: John Meneghini <jmeneghi@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c |  2 ++
- drivers/scsi/lpfc/lpfc_sli.c  | 41 ++++++++++++++++++++++++++++++-----
- 2 files changed, 38 insertions(+), 5 deletions(-)
+ drivers/scsi/st.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 416816d74ea1c..424b39a8155cb 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -13513,6 +13513,8 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
- 	/* Disable FW logging to host memory */
- 	lpfc_ras_stop_fwlog(phba);
- 
-+	lpfc_sli4_queue_unset(phba);
-+
- 	/* Reset SLI4 HBA FCoE function */
- 	lpfc_pci_function_reset(phba);
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 9cd22588c8eb3..136698862dbad 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5274,6 +5274,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
- 			"0296 Restart HBA Data: x%x x%x\n",
- 			phba->pport->port_state, psli->sli_flag);
- 
-+	lpfc_sli4_queue_unset(phba);
-+
- 	rc = lpfc_sli4_brdreset(phba);
- 	if (rc) {
- 		phba->link_state = LPFC_HBA_ERROR;
-@@ -17619,6 +17621,9 @@ lpfc_eq_destroy(struct lpfc_hba *phba, struct lpfc_queue *eq)
- 	if (!eq)
- 		return -ENODEV;
- 
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(eq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17645,10 +17650,12 @@ lpfc_eq_destroy(struct lpfc_hba *phba, struct lpfc_queue *eq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, eq->phba->mbox_mem_pool);
- 
-+list_remove:
- 	/* Remove eq from any list */
- 	list_del_init(&eq->list);
--	mempool_free(mbox, eq->phba->mbox_mem_pool);
-+
- 	return status;
- }
- 
-@@ -17676,6 +17683,10 @@ lpfc_cq_destroy(struct lpfc_hba *phba, struct lpfc_queue *cq)
- 	/* sanity check on queue memory */
- 	if (!cq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(cq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17701,9 +17712,11 @@ lpfc_cq_destroy(struct lpfc_hba *phba, struct lpfc_queue *cq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, cq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	/* Remove cq from any list */
- 	list_del_init(&cq->list);
--	mempool_free(mbox, cq->phba->mbox_mem_pool);
- 	return status;
- }
- 
-@@ -17731,6 +17744,10 @@ lpfc_mq_destroy(struct lpfc_hba *phba, struct lpfc_queue *mq)
- 	/* sanity check on queue memory */
- 	if (!mq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(mq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17756,9 +17773,11 @@ lpfc_mq_destroy(struct lpfc_hba *phba, struct lpfc_queue *mq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, mq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	/* Remove mq from any list */
- 	list_del_init(&mq->list);
--	mempool_free(mbox, mq->phba->mbox_mem_pool);
- 	return status;
- }
- 
-@@ -17786,6 +17805,10 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
- 	/* sanity check on queue memory */
- 	if (!wq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(wq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17810,11 +17833,13 @@ lpfc_wq_destroy(struct lpfc_hba *phba, struct lpfc_queue *wq)
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, wq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	/* Remove wq from any list */
- 	list_del_init(&wq->list);
- 	kfree(wq->pring);
- 	wq->pring = NULL;
--	mempool_free(mbox, wq->phba->mbox_mem_pool);
- 	return status;
- }
- 
-@@ -17844,6 +17869,10 @@ lpfc_rq_destroy(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 	/* sanity check on queue memory */
- 	if (!hrq || !drq)
- 		return -ENODEV;
-+
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
-+		goto list_remove;
-+
- 	mbox = mempool_alloc(hrq->phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
-@@ -17884,9 +17913,11 @@ lpfc_rq_destroy(struct lpfc_hba *phba, struct lpfc_queue *hrq,
- 				shdr_status, shdr_add_status, rc);
- 		status = -ENXIO;
- 	}
-+	mempool_free(mbox, hrq->phba->mbox_mem_pool);
-+
-+list_remove:
- 	list_del_init(&hrq->list);
- 	list_del_init(&drq->list);
--	mempool_free(mbox, hrq->phba->mbox_mem_pool);
- 	return status;
- }
- 
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 212a402e75358..1537f4a9347f9 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -3757,7 +3757,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 		    ((STp->density << MT_ST_DENSITY_SHIFT) & MT_ST_DENSITY_MASK);
+ 		mt_status.mt_blkno = STps->drv_block;
+ 		mt_status.mt_fileno = STps->drv_file;
+-		if (STp->block_size != 0) {
++		if (STp->block_size != 0 && mt_status.mt_blkno >= 0) {
+ 			if (STps->rw == ST_WRITING)
+ 				mt_status.mt_blkno +=
+ 				    (STp->buffer)->buffer_bytes / STp->block_size;
 -- 
 2.43.0
 
