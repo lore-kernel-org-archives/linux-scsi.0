@@ -1,43 +1,57 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5A322305A;
-	Wed,  4 Dec 2024 17:02:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9249F223A85;
+	Wed,  4 Dec 2024 17:02:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733331756; cv=none; b=oOL6aVJpXG6JuJ4RTmoKVdrtwKpz2+t/FgZy71qYtyjbUBepownwwSsgfcy1dRaHykSh9ka15a7HAZ9S7t+FN5ikJvrhwEtELNM24VV4+d/6EIGEmra5fzEB7ZnXqCeC0WwZo7TLDVc6xoo/vjzF4ttCHhUprLbxZylLJoVmopU=
+	t=1733331762; cv=none; b=hxhMrLm0j/6Gf/Mk4dUhgB4E//Gc2RzgOJqbOB7lFDQF3tyYmWlmZikHv/f13LZAsmGo0x/Jr6ph02+mHeJqxVGjNCp+lgsIeivUwNtxYk57K438URVh3sYocCVXl0GCINz80G0sMZ4o9uZFUs8poBKTcvnWJFFeIKppZH3nPaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733331756; c=relaxed/simple;
-	bh=ng3YnX87YM3ga8kgrS7Ufjz9Dend+FeQo0MzLGYNkYg=;
+	s=arc-20240116; t=1733331762; c=relaxed/simple;
+	bh=7u2DoriNT4352wrIk1exknMyKRlYYDQiy9mn/liPiNA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JsrcUW+ye1FJGriYwtoE5Uco4mIQw5cRq4CcHhfbyv/q3+xYyiJGXx8u8W83mVhss6eJXBTFit+ryw+WoGQg4LwOZXU1GWNdhooFee5XNn3u0QCJ+/h1hOumP5B8AT/CvZA5U3aNiQpHex4H4+DtErzFQriyw+DKquyKlJezgAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=haLoBCWd; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ov6S0cERDXt0oVLb/XRrSp5QGpGwOtJt3SIfQmNXGABnG0RUySvIKEuqOZjkYNTnWf9VK7jXSyzXhZAyXbOjYT7tuTHLqzeNtOQIrAnCHGaFu5FXA4OTfSOIGwKyWqxh+cso0qf2BgLwdX8TaRM7DVJq3N4PxaN09C8ks4UXoTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QAboMdsV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="haLoBCWd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2E66C4CED1;
-	Wed,  4 Dec 2024 17:02:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QAboMdsV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD214C4CECD;
+	Wed,  4 Dec 2024 17:02:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733331755;
-	bh=ng3YnX87YM3ga8kgrS7Ufjz9Dend+FeQo0MzLGYNkYg=;
+	s=k20201202; t=1733331762;
+	bh=7u2DoriNT4352wrIk1exknMyKRlYYDQiy9mn/liPiNA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=haLoBCWdLY32rek8SZtzKIUPCWlkgqSib8moUq8LNuSPypk5IQPyPyETl3uP7inrG
-	 IjqDU2+exszNRfulQgoe9aKpALfR151zs8OoyEQ0rTXymV6ophsLKl9SXml6CsdkG3
-	 ACTCN3RLwYlzXidU3h43GbaXmx0fOdl8TYoHD3urvTDQvydN2y0o+gEPSkACxF26J2
-	 d2Nr2EJudkcwOm2BLU66Ck2alhPd8Y8XFsOMhT/dAX7MTEwKPcTS79C+Pg/qPXjRiG
-	 kGVcPhH8a2euqLicdsNOJmJ/tTrLftjiQo0YNbRY83aaX5pX0LzB72HNT+e/jy3+MP
-	 2KOuWwbeSIYrg==
+	b=QAboMdsVN9OVTuY9mdZTyEBEBqUbNN98zMNsbKZvwIxxVwlTbm9VLqYHZhQq1x8Ho
+	 EwAku4XWmrqhw5+PPQYza05JjlBaalJSnFJ/laF7CC04b2l5bUrOk2uQFuqVuI+iGw
+	 sNfuGXjNKgT5ihLO5VW790BoaOthV/wamQhuAJSLD44eecoox762J+1kikBtkoFpxm
+	 fa1sJiJPvUGGePTsnH1jqdqIe2egMrfs7nSHwtiWjeodYF9oa9XOYfPYoADYfW3G9G
+	 3HbbCWlfjOYEX970z485nH3F4DAg3es5NJOOSEz17pU++tYf97gqJEf04A4Kdg3xb+
+	 6/eYAqN+U0MTg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Yihang Li <liyihang9@huawei.com>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <Avri.Altman@wdc.com>,
+	Peter Wang <peter.wang@mediatek.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 05/15] scsi: hisi_sas: Add cond_resched() for no forced preemption model
-Date: Wed,  4 Dec 2024 10:50:44 -0500
-Message-ID: <20241204155105.2214350-5-sashal@kernel.org>
+	yoshihiro.shimoda.uh@renesas.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	avri.altman@wdc.com,
+	manivannan.sadhasivam@linaro.org,
+	ahalaney@redhat.com,
+	beanhuo@micron.com,
+	quic_mnaresh@quicinc.com,
+	ebiggers@google.com,
+	minwoo.im@samsung.com,
+	linux-scsi@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.1 06/15] scsi: ufs: core: Make DMA mask configuration more flexible
+Date: Wed,  4 Dec 2024 10:50:45 -0500
+Message-ID: <20241204155105.2214350-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204155105.2214350-1-sashal@kernel.org>
 References: <20241204155105.2214350-1-sashal@kernel.org>
@@ -52,85 +66,117 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.119
 Content-Transfer-Encoding: 8bit
 
-From: Yihang Li <liyihang9@huawei.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 2233c4a0b948211743659b24c13d6bd059fa75fc ]
+[ Upstream commit 78bc671bd1501e2f6c571e063301a4fdc5db53b2 ]
 
-For no forced preemption model kernel, in the scenario where the
-expander is connected to 12 high performance SAS SSDs, the following
-call trace may occur:
+Replace UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS with
+ufs_hba_variant_ops::set_dma_mask.  Update the Renesas driver
+accordingly.  This patch enables supporting other configurations than
+32-bit or 64-bit DMA addresses, e.g. 36-bit DMA addresses.
 
-[  214.409199][  C240] watchdog: BUG: soft lockup - CPU#240 stuck for 22s! [irq/149-hisi_sa:3211]
-[  214.568533][  C240] pstate: 60400009 (nZCv daif +PAN -UAO -TCO BTYPE=--)
-[  214.575224][  C240] pc : fput_many+0x8c/0xdc
-[  214.579480][  C240] lr : fput+0x1c/0xf0
-[  214.583302][  C240] sp : ffff80002de2b900
-[  214.587298][  C240] x29: ffff80002de2b900 x28: ffff1082aa412000
-[  214.593291][  C240] x27: ffff3062a0348c08 x26: ffff80003a9f6000
-[  214.599284][  C240] x25: ffff1062bbac5c40 x24: 0000000000001000
-[  214.605277][  C240] x23: 000000000000000a x22: 0000000000000001
-[  214.611270][  C240] x21: 0000000000001000 x20: 0000000000000000
-[  214.617262][  C240] x19: ffff3062a41ae580 x18: 0000000000010000
-[  214.623255][  C240] x17: 0000000000000001 x16: ffffdb3a6efe5fc0
-[  214.629248][  C240] x15: ffffffffffffffff x14: 0000000003ffffff
-[  214.635241][  C240] x13: 000000000000ffff x12: 000000000000029c
-[  214.641234][  C240] x11: 0000000000000006 x10: ffff80003a9f7fd0
-[  214.647226][  C240] x9 : ffffdb3a6f0482fc x8 : 0000000000000001
-[  214.653219][  C240] x7 : 0000000000000002 x6 : 0000000000000080
-[  214.659212][  C240] x5 : ffff55480ee9b000 x4 : fffffde7f94c6554
-[  214.665205][  C240] x3 : 0000000000000002 x2 : 0000000000000020
-[  214.671198][  C240] x1 : 0000000000000021 x0 : ffff3062a41ae5b8
-[  214.677191][  C240] Call trace:
-[  214.680320][  C240]  fput_many+0x8c/0xdc
-[  214.684230][  C240]  fput+0x1c/0xf0
-[  214.687707][  C240]  aio_complete_rw+0xd8/0x1fc
-[  214.692225][  C240]  blkdev_bio_end_io+0x98/0x140
-[  214.696917][  C240]  bio_endio+0x160/0x1bc
-[  214.701001][  C240]  blk_update_request+0x1c8/0x3bc
-[  214.705867][  C240]  scsi_end_request+0x3c/0x1f0
-[  214.710471][  C240]  scsi_io_completion+0x7c/0x1a0
-[  214.715249][  C240]  scsi_finish_command+0x104/0x140
-[  214.720200][  C240]  scsi_softirq_done+0x90/0x180
-[  214.724892][  C240]  blk_mq_complete_request+0x5c/0x70
-[  214.730016][  C240]  scsi_mq_done+0x48/0xac
-[  214.734194][  C240]  sas_scsi_task_done+0xbc/0x16c [libsas]
-[  214.739758][  C240]  slot_complete_v3_hw+0x260/0x760 [hisi_sas_v3_hw]
-[  214.746185][  C240]  cq_thread_v3_hw+0xbc/0x190 [hisi_sas_v3_hw]
-[  214.752179][  C240]  irq_thread_fn+0x34/0xa4
-[  214.756435][  C240]  irq_thread+0xc4/0x130
-[  214.760520][  C240]  kthread+0x108/0x13c
-[  214.764430][  C240]  ret_from_fork+0x10/0x18
-
-This is because in the hisi_sas driver, both the hardware interrupt
-handler and the interrupt thread are executed on the same CPU. In the
-performance test scenario, function irq_wait_for_interrupt() will always
-return 0 if lots of interrupts occurs and the CPU will be continuously
-consumed. As a result, the CPU cannot run the watchdog thread. When the
-watchdog time exceeds the specified time, call trace occurs.
-
-To fix it, add cond_resched() to execute the watchdog thread.
-
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
-Link: https://lore.kernel.org/r/20241008021822.2617339-8-liyihang9@huawei.com
-Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20241018194753.775074-1-bvanassche@acm.org
+Reviewed-by: Avri Altman <Avri.Altman@wdc.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/core/ufshcd.c      | 4 ++--
+ drivers/ufs/host/ufs-renesas.c | 9 ++++++++-
+ include/ufs/ufshcd.h           | 9 +++------
+ 3 files changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 7ae56a2fe2325..05dcd925a3fab 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2410,6 +2410,7 @@ static irqreturn_t  cq_thread_v3_hw(int irq_no, void *p)
- 	/* update rd_point */
- 	cq->rd_point = rd_point;
- 	hisi_sas_write32(hisi_hba, COMPL_Q_0_RD_PTR + (0x14 * queue), rd_point);
-+	cond_resched();
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a1809aa9a8892..df94c563b808a 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2230,8 +2230,6 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+ 	int err;
  
- 	return IRQ_HANDLED;
+ 	hba->capabilities = ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
+-	if (hba->quirks & UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS)
+-		hba->capabilities &= ~MASK_64_ADDRESSING_SUPPORT;
+ 
+ 	/* nutrs and nutmrs are 0 based values */
+ 	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
+@@ -9648,6 +9646,8 @@ EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+  */
+ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+ {
++	if (hba->vops && hba->vops->set_dma_mask)
++		return hba->vops->set_dma_mask(hba);
+ 	if (hba->capabilities & MASK_64_ADDRESSING_SUPPORT) {
+ 		if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+ 			return 0;
+diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
+index ab0652d8705ac..481ad0a3a6c7c 100644
+--- a/drivers/ufs/host/ufs-renesas.c
++++ b/drivers/ufs/host/ufs-renesas.c
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/dma-mapping.h>
+ #include <linux/err.h>
+ #include <linux/iopoll.h>
+ #include <linux/kernel.h>
+@@ -364,14 +365,20 @@ static int ufs_renesas_init(struct ufs_hba *hba)
+ 		return -ENOMEM;
+ 	ufshcd_set_variant(hba, priv);
+ 
+-	hba->quirks |= UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS | UFSHCD_QUIRK_HIBERN_FASTAUTO;
++	hba->quirks |= UFSHCD_QUIRK_HIBERN_FASTAUTO;
+ 
+ 	return 0;
  }
+ 
++static int ufs_renesas_set_dma_mask(struct ufs_hba *hba)
++{
++	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
++}
++
+ static const struct ufs_hba_variant_ops ufs_renesas_vops = {
+ 	.name		= "renesas",
+ 	.init		= ufs_renesas_init,
++	.set_dma_mask	= ufs_renesas_set_dma_mask,
+ 	.setup_clocks	= ufs_renesas_setup_clocks,
+ 	.hce_enable_notify = ufs_renesas_hce_enable_notify,
+ 	.dbg_register_dump = ufs_renesas_dbg_register_dump,
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index b54f22840dabf..c4b1e6dca2397 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -272,6 +272,8 @@ struct ufs_pwr_mode_info {
+  * @name: variant name
+  * @init: called when the driver is initialized
+  * @exit: called to cleanup everything done in init
++ * @set_dma_mask: For setting another DMA mask than indicated by the 64AS
++ *	capability bit.
+  * @get_ufs_hci_version: called to get UFS HCI version
+  * @clk_scale_notify: notifies that clks are scaled up/down
+  * @setup_clocks: called before touching any of the controller registers
+@@ -303,6 +305,7 @@ struct ufs_hba_variant_ops {
+ 	int	(*init)(struct ufs_hba *);
+ 	void    (*exit)(struct ufs_hba *);
+ 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
++	int	(*set_dma_mask)(struct ufs_hba *);
+ 	int	(*clk_scale_notify)(struct ufs_hba *, bool,
+ 				    enum ufs_notify_change_status);
+ 	int	(*setup_clocks)(struct ufs_hba *, bool,
+@@ -582,12 +585,6 @@ enum ufshcd_quirks {
+ 	 */
+ 	UFSHCD_QUIRK_SKIP_PH_CONFIGURATION		= 1 << 16,
+ 
+-	/*
+-	 * This quirk needs to be enabled if the host controller has
+-	 * 64-bit addressing supported capability but it doesn't work.
+-	 */
+-	UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS		= 1 << 17,
+-
+ 	/*
+ 	 * This quirk needs to be enabled if the host controller has
+ 	 * auto-hibernate capability but it's FASTAUTO only.
 -- 
 2.43.0
 
