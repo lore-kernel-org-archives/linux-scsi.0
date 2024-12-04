@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6256321D5A4;
-	Wed,  4 Dec 2024 16:58:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E8C7227B8B;
+	Wed,  4 Dec 2024 16:58:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733331522; cv=none; b=NNdVipCj2t+6RbUgRB7IdMFf1Agj0PAGOI9F0E8oRjmDM8ZGhpk4vuA6/BMU5DJdD1u7V0EaEBO306eWi4TsEtV0Dp8q6mAORCTdwKAlfzk5zrvJqFwIhux2JUfeTQ7TEuxJvrH8VSL76UlSZEfCj5X4GZ/GummV1hu7cqPGuaQ=
+	t=1733331524; cv=none; b=SPGwy2o2ObUWSfFQsX5bhmoMpFi0oUMVziCt/wSu44hAUPVYVvqr1rGUuipwOipSqOusaFXrLdeksqqUT6mxkMgmZz0Wj42TIqXv3IgpZp1NLixmH2GnfN9JIuJkXUEDj+qMvUIIBEJvuwbgZjY1lZE7wTWe7224TDS/c0oduds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733331522; c=relaxed/simple;
-	bh=el6qKyrnX/lE8G/cCrHEpJDI7Uq57SiUfsByr0a5lDg=;
+	s=arc-20240116; t=1733331524; c=relaxed/simple;
+	bh=vxfjZNs/9h/Xsh/1x7vZN8w3mOTuUt5TKOYUMerjhcE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FseyZCgfDVWwudn5wiAN1ZJavymiVaiM0KKHZ4LNzItEdjzdzVVhDb0QWTgvF5xDCmGKe9CELzYIYndUkW6NJJdyP5yYEAbCOIYey8r/xhDesjkb2v3kZTkaDhrSEmu7fdJMukMEpN1ceqiT5CFWdee9+RjANmoJ1kOsWaamXkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KsnGEtTF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lLnwvDsxN6EMK8hpaTl1hoIij+KNmS3FUM0d2tt9lv8DQTypr9hSZh8bnvV3rnvaxEUNchShf8wv7zWDnmUYgt+Kp6ZCYM4AME27HJXDNmq03crht8662BH+981AMSWTPQjcpzAkdzvur6FJn5W+SinOiqtx4qlsojHgfH9zqHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AA5xvYiG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KsnGEtTF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A5F3C4CECD;
-	Wed,  4 Dec 2024 16:58:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AA5xvYiG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC119C4CED1;
+	Wed,  4 Dec 2024 16:58:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733331522;
-	bh=el6qKyrnX/lE8G/cCrHEpJDI7Uq57SiUfsByr0a5lDg=;
+	s=k20201202; t=1733331523;
+	bh=vxfjZNs/9h/Xsh/1x7vZN8w3mOTuUt5TKOYUMerjhcE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=KsnGEtTFFar2sVluE/EwsCWSt76igwHMFZ80CqWMIUJhDEJPp+B65K0EnlRVZMeMm
-	 kmZN9nCRjhSMTwzei1mCH59wO4Mr3nes1OaWyg6Y9rMP2SR+DFm6f6PqtRis7hDLyN
-	 oZkXVjdRkVE68VNwMOIL0AMhWCrVJd21XJx77wMcPaWR5vcFra8l4qUx03JRoWHWLX
-	 UTkraoXA2bZ7vN1UKTW8KR9VnPKihDDiNmw0DmTScY5W260Q0H/mOD5nJF+v7/P+kN
-	 /C9ezjcRxpSoZfmYzay7yov354Ipj4OaU8k8HGqVgL+GnLZN/1kOBdHx6ihWNfEg9a
-	 7GL3s4VT6Q/jA==
+	b=AA5xvYiGkaqx9BQ5YdHpHaYwO/Kh/mklgAujCfqlY7u389YjjwnH4UUiJ5qAXL6+j
+	 D3++wTGbDGVDO73bGjQqVeqwHYLyX6qgFHFMqEYWLxiGmen8zZCGnZZbGK+2j0b+Kw
+	 Svo7nZKtkhKBquEYsffCgwK60H5d1CBY4Gc/Fg/Q5I0Wi3CEZ1zodb4TiOsCs8xf5z
+	 2voad9VKxMkfN2mS64MsAjWR6YfYyhAVzN8EMO2gHCGDCgDQa9+HKvpv+tqbhtWOX7
+	 kxAobU9QKoSqWpZC5dw/g5UkoxIg4Vy4S/aGdW1Nqe88TOd2+zpBErFQN80UrLfrJt
+	 THIDlfo21if8A==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -35,9 +35,9 @@ Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 26/36] scsi: st: Don't modify unknown block number in MTIOCGET
-Date: Wed,  4 Dec 2024 10:45:42 -0500
-Message-ID: <20241204154626.2211476-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 27/36] scsi: st: Add MTIOCGET and MTLOAD to ioctls allowed after device reset
+Date: Wed,  4 Dec 2024 10:45:43 -0500
+Message-ID: <20241204154626.2211476-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204154626.2211476-1-sashal@kernel.org>
 References: <20241204154626.2211476-1-sashal@kernel.org>
@@ -55,35 +55,82 @@ Content-Transfer-Encoding: 8bit
 
 From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 
-[ Upstream commit 5bb2d6179d1a8039236237e1e94cfbda3be1ed9e ]
+[ Upstream commit 0b120edb37dc9dd8ca82893d386922eb6b16f860 ]
 
-Struct mtget field mt_blkno -1 means it is unknown. Don't add anything to
-it.
+Most drives rewind the tape when the device is reset. Reading and writing
+are not allowed until something is done to make the tape position match the
+user's expectation (e.g., rewind the tape). Add MTIOCGET and MTLOAD to
+operations allowed after reset. MTIOCGET is modified to not touch the tape
+if pos_unknown is non-zero. The tape location is known after MTLOAD.
 
 Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 Link: https://bugzilla.kernel.org/show_bug.cgi?id=219419#c14
-Link: https://lore.kernel.org/r/20241106095723.63254-2-Kai.Makisara@kolumbus.fi
+Link: https://lore.kernel.org/r/20241106095723.63254-3-Kai.Makisara@kolumbus.fi
 Reviewed-by: John Meneghini <jmeneghi@redhat.com>
 Tested-by: John Meneghini <jmeneghi@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/st.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/st.c | 29 +++++++++++++++++++++--------
+ 1 file changed, 21 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index beb88f25dbb99..8d27e6caf0277 100644
+index 8d27e6caf0277..c9038284bc893 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -3756,7 +3756,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 		    ((STp->density << MT_ST_DENSITY_SHIFT) & MT_ST_DENSITY_MASK);
- 		mt_status.mt_blkno = STps->drv_block;
- 		mt_status.mt_fileno = STps->drv_file;
--		if (STp->block_size != 0) {
-+		if (STp->block_size != 0 && mt_status.mt_blkno >= 0) {
- 			if (STps->rw == ST_WRITING)
- 				mt_status.mt_blkno +=
- 				    (STp->buffer)->buffer_bytes / STp->block_size;
+@@ -3506,6 +3506,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 	int i, cmd_nr, cmd_type, bt;
+ 	int retval = 0;
+ 	unsigned int blk;
++	bool cmd_mtiocget;
+ 	struct scsi_tape *STp = file->private_data;
+ 	struct st_modedef *STm;
+ 	struct st_partstat *STps;
+@@ -3619,6 +3620,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 			 */
+ 			if (mtc.mt_op != MTREW &&
+ 			    mtc.mt_op != MTOFFL &&
++			    mtc.mt_op != MTLOAD &&
+ 			    mtc.mt_op != MTRETEN &&
+ 			    mtc.mt_op != MTERASE &&
+ 			    mtc.mt_op != MTSEEK &&
+@@ -3732,17 +3734,28 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 		goto out;
+ 	}
+ 
++	cmd_mtiocget = cmd_type == _IOC_TYPE(MTIOCGET) && cmd_nr == _IOC_NR(MTIOCGET);
++
+ 	if ((i = flush_buffer(STp, 0)) < 0) {
+-		retval = i;
+-		goto out;
+-	}
+-	if (STp->can_partitions &&
+-	    (i = switch_partition(STp)) < 0) {
+-		retval = i;
+-		goto out;
++		if (cmd_mtiocget && STp->pos_unknown) {
++			/* flush fails -> modify status accordingly */
++			reset_state(STp);
++			STp->pos_unknown = 1;
++		} else { /* return error */
++			retval = i;
++			goto out;
++		}
++	} else { /* flush_buffer succeeds */
++		if (STp->can_partitions) {
++			i = switch_partition(STp);
++			if (i < 0) {
++				retval = i;
++				goto out;
++			}
++		}
+ 	}
+ 
+-	if (cmd_type == _IOC_TYPE(MTIOCGET) && cmd_nr == _IOC_NR(MTIOCGET)) {
++	if (cmd_mtiocget) {
+ 		struct mtget mt_status;
+ 
+ 		if (_IOC_SIZE(cmd_in) != sizeof(struct mtget)) {
 -- 
 2.43.0
 
