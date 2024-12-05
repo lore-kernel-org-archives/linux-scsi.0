@@ -1,98 +1,72 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01B513EA9A;
-	Thu,  5 Dec 2024 03:13:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C456D193
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 03:33:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733368392; cv=none; b=m/6SPOuxXgP4AfkgzbYRCGfgfBECkUD+J9vAh7t/Y3nVRiYOt4vOSWTQUXbZdUpS5W3TWb/uytRlhMldem1MvHsvT9m3bRA8JF1mU3kxD5ZIHpRtSLjWtbrxm7tjOancMJiRJoyifPVPuaELFE+SCO8Lcuf4TNriDi9qKXgQPC4=
+	t=1733369598; cv=none; b=lQLYV2NZ8j9kibjsF+HpBoHirwd6IEi1AP+How9cLvZxW+QU42HwsHpKRq0Y+w7H7hhzQZUC+PEZXN7rnCLGNyHHnZFcnVtr3ACOHFKIcmLJQdYXzfoN6SfOunOHhvzIPGrIaSg2+r4gpuK/kbEjrV/jw/B7jFXHNq9eTi5hohI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733368392; c=relaxed/simple;
-	bh=S6U6N3BrgifK/MhuHSN2mX6igqOw+eEk/b5KB7r//fw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=djI3Y+PWxxMkiAJlaqHDJKpEozlWPc33CasTUxPFEsQl5egJQINmfQfMu/XZdb4Pz5OtBh/HB/0L7w7hOv+Pl/rjAMyq3+0YZP0ksiElX6k+KqZrjy1PtHWTUVT1XUtEcjAyeYGKbPG+FPsU5u4CHOYyMsaG8GXUNsn+mTKdcWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yWrYmB4l; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1733369598; c=relaxed/simple;
+	bh=aZSHbvKaR037fK5Fzz85rRcDmEDSSMgQsguisMjf2gY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Bl5KBHM3GuYILbzUlG6KlZ4UFwyvEqQSU8i3cJudpTxYaLLrzORhv0bPZcV6yiXCR41f8MbrftT1MpRBEDPOrfOatZ3Mr1NDiWoa5nwQXmsb6KOpwCkmJLh49S1YxsLcQNtDId1v5RTUug3wf1NMwFTsL1QFtQijOk02rnro8GU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QxYnv0+X; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yWrYmB4l"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=IuEXT0ZxkFP5mjNKuU9spG+uGaTgHhCC0eXuN9pMpxI=; b=yWrYmB4liOjk59QfQS4Bg4cDFN
-	ZNSuC6QPt6GXuDv8HmDpBTagyrFy8I9qTWFf3x8lgY2cyCMzl1QYGlBp1+5h/w/ASDXMv5gFORch3
-	HoGvNamPXpOkaez7RxVdHTctW6LYD60+FWSo68UpJv9n5d9+OwM2Cm6VHFTLuoHUV+JmO15/hhIs+
-	Qzi1WtbXIvtrweuW2yd+KVY3JMBRSYBxwQacglC0eCy3PAe2nW7WZM4S3Iy/jPz/jOVyr5M5w0kxG
-	2ZxDw7xKUz1I7cIfHXhbfRCzQ7BD3HELrkkhcD6ZSJOpwzcksAAXBQCIhYjotaIPu0/s2gR8qJZuT
-	nwc31rVg==;
-Received: from [50.53.2.24] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tJ2If-0000000EdB2-0OcT;
-	Thu, 05 Dec 2024 03:13:09 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-scsi@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Christoph Hellwig <hch@lst.de>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	linux-doc@vger.kernel.org
-Subject: [PATCH] scsi: Docs: remove init_this_scsi_driver()
-Date: Wed,  4 Dec 2024 19:13:07 -0800
-Message-ID: <20241205031307.130441-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QxYnv0+X"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Y3fz42nJrz6ClY8w;
+	Thu,  5 Dec 2024 03:30:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1733369406; x=1735961407; bh=aZSHbvKaR037fK5Fzz85rRcD
+	mEDSSMgQsguisMjf2gY=; b=QxYnv0+XacYMtd2jbUjGpRcf9TNbmEy4xL34AGNX
+	i4jAgdz1loWimYQE5yxReCdkoSLywaJc5ANzQnX5k/3KcLc9rbgJl9VTMVg6/Kiv
+	J9wCN+EW84ZBVt/ByqY63ACjoFbgAgzu4la/ZY+RSrTccpBn1xol0y0xlJhfuZvS
+	HTEb0DHp5NxCBPgHkNnAhNoDhotHs9oTwDtXbroRynKOi0JR4YDhhPySXQ0O0hWV
+	uxmYAYA14eYMCQOrfheWI8oYsfIz1ySHDL2bpEmIOarQXfZ6+3f+MYCHBJTnpm1x
+	QhMr4kaDn+XFO1Esw2hwRaeNUXT2eSbrExFP5F6hsgv9eA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6p_3MLTD4XXT; Thu,  5 Dec 2024 03:30:06 +0000 (UTC)
+Received: from [192.168.43.227] (220-135-57-31.hinet-ip.hinet.net [220.135.57.31])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Y3fz10j9nz6CmM6d;
+	Thu,  5 Dec 2024 03:30:04 +0000 (UTC)
+Message-ID: <e4dd503f-be9a-44c2-861b-ed642d5c80d6@acm.org>
+Date: Thu, 5 Dec 2024 11:30:02 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 0/5] Replace the "slave_*" function names
+To: Randy Dunlap <rdunlap@infradead.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org
+References: <20241022180839.2712439-1-bvanassche@acm.org>
+ <69d7efec-1f69-419e-a300-84ff347eaa46@infradead.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <69d7efec-1f69-419e-a300-84ff347eaa46@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Finish removing mention of init_this_scsi_driver() that was removed
-ages ago.
+On 12/5/24 8:57 AM, Randy Dunlap wrote:
+> Can we expect to see this merged for 6.13-rcN soonish?
 
-Fixes: 83c9f08e6c6a ("scsi: remove the old scsi_module.c initialization model")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org
----
- Documentation/scsi/scsi_mid_low_api.rst |   10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Thanks for the reminder Randy. I'm currently traveling and I plan to
+rebase and repost this patch series next week.
 
---- linux-next-20241204.orig/Documentation/scsi/scsi_mid_low_api.rst
-+++ linux-next-20241204/Documentation/scsi/scsi_mid_low_api.rst
-@@ -625,7 +625,7 @@ Interface Functions
- ===================
- Interface functions are supplied (defined) by LLDs and their function
- pointers are placed in an instance of struct scsi_host_template which
--is passed to scsi_host_alloc() [or scsi_register() / init_this_scsi_driver()].
-+is passed to scsi_host_alloc() or scsi_register().
- Some are mandatory. Interface functions should be declared static. The
- accepted convention is that driver "xyz" will declare its sdev_configure()
- function as::
-@@ -636,8 +636,8 @@ and so forth for all interface functions
- 
- A pointer to this function should be placed in the 'sdev_configure' member
- of a "struct scsi_host_template" instance. A pointer to such an instance
--should be passed to the mid level's scsi_host_alloc() [or scsi_register() /
--init_this_scsi_driver()].
-+should be passed to the mid level's scsi_host_alloc() or scsi_register().
-+.
- 
- The interface functions are also described in the include/scsi/scsi_host.h
- file immediately above their definition point in "struct scsi_host_template".
-@@ -817,10 +817,6 @@ Details::
-     *      The SCSI_IOCTL_PROBE_HOST ioctl yields the string returned by this
-     *      function (or struct Scsi_Host::name if this function is not
-     *      available).
--    *      In a similar manner, init_this_scsi_driver() outputs to the console
--    *      each host's "info" (or name) for the driver it is registering.
--    *      Also if proc_info() is not supplied, the output of this function
--    *      is used instead.
-     *
-     *      Optionally defined in: LLD
-     **/
+Bart.
+
