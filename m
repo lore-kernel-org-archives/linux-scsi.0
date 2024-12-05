@@ -1,230 +1,221 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D6A179A3;
-	Thu,  5 Dec 2024 04:18:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733372323; cv=none; b=gvMdo0O7cuJh27lo0wG14NX8g2HVmMT+oGYHnSjJaoWezKd75cyf+PyQSEOjriJCjPYBeYgD6XlkGA92fRg0FUm5ar2TiBs+NDQAXoNxDu3CJ5kUVyt+Vqy4AK6NwbqTbJF5MIwuomoHJwolJcYAZpkz3hQIsTHRkaEld3ONzP0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733372323; c=relaxed/simple;
-	bh=Hc/ogtOEmF7D8YkqBuvJxto0GqNinnc67Jn22EMh1H8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hCnkHA62MSZYJ+rhHUYIjMNcy+gQIP9dy6qMxi3YtOAbJevHt+4XHZD1yeFn8ahPY+BR7Pb9oZhMBOaNOwqOrHpSHJE/D2KY3woUnDLO7udsPWOj9hf5Dkj0ZPkrFWkiyhBWQv3WXfyv5NFNXry0TPbeZMTFAG9SOjmb25Nq3tU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ICjwFIZ3; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9605F12CDA5;
+	Thu,  5 Dec 2024 05:52:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733377966; cv=fail; b=u4lEiHf9ebRQj+sB5PmF2ZNQVTXJDVKM95UTZm1qvMrSw3QJ1thrIiEJGxcpj7GV2XarS3YyNu6EGIU2oO1razVDHMPpGUWRrW/zcSWNlAIyQ/GWLH7O3+grJ8clWfndmziyMDbf3zC7J6mPqpG7jl66MYXYwreV0gDV3LBHHuo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733377966; c=relaxed/simple;
+	bh=RqzgAdapSZg2DkWV8DDD2mpjCszJSiky0bcjGcl0zRg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=eluBxVsVLZeKhGvmrpwLXIhjh3EaKHn5tL6kfEgXK0Dwp133XeMM8jRPsonqJ0i7O8Gwp7xU+O4PZ6mc0nrIwekQQ/FJVS9A7gaswM6570tqj3Fm03sO2lQeATYqfL/IsazShI6OwSSK2ZmbWdeheZ9BMMbsFvC299YlNoGWGXM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=IgiPdHSa; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=ihbSF+Zt; arc=fail smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ICjwFIZ3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=B82C/LcfsYccXrpe7bgH64JBTZbfnHFuNDau8+XaZWI=; b=ICjwFIZ3u/hnsihrH9JZZaBj8y
-	M8w6OC+RqBpWHfXa5lJ8x0QQ/SJdeDxngScJsmjik9eoY3vYoAeB/mdH8uWDuyCia4Kni73JTtohz
-	FXfHYUK5GfDxDbbMLzdgK9GvHbmquz5QQOnyMV07QULJR1c3CZs0uC3hmz55KNM2Pt+ygjAVdgJTt
-	eoP6F/JPWM6y/j5YRAgJLhRgXvyiI5DUMSWVE0oqak9o3p6ILFR2/Og5OLeSp0cvuH3JAPGzT8D0X
-	bTtLCDtyTwh2Ng3MIgJmoygnv5Efw+HbiNCp4+vKOqyEVWG3vuXo8ZeyFRC5k/8i51BIRHRQtDVK7
-	qQf3AdLQ==;
-Received: from [50.53.2.24] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tJ3K4-0000000Eiuw-1Lt5;
-	Thu, 05 Dec 2024 04:18:40 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-scsi@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	linux-doc@vger.kernel.org,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	megaraidlinux.pdl@broadcom.com
-Subject: [PATCH] scsi: eliminate scsi_register() and scsi_unregister() usage & docs.
-Date: Wed,  4 Dec 2024 20:18:39 -0800
-Message-ID: <20241205041839.164404-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="IgiPdHSa";
+	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="ihbSF+Zt"
+X-UUID: 21e8ab92b2cd11efbd192953cf12861f-20241205
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=RqzgAdapSZg2DkWV8DDD2mpjCszJSiky0bcjGcl0zRg=;
+	b=IgiPdHSawv3mapNZlq3DwF9cMHpzft5G+2DKezayc56lKE+OBKSQWIkdNjsBkRLJWSfSe6d2cK2pm1FrIzs0bu70lHerAD3y2veLp7Qz9pcK/nn/23BFguxYntuWhOWYbhfsTKwBheuWYWo/X4OAOsf7h+x2LEoXex5LXF32S5o=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.45,REQID:ea791ffa-557d-4dd2-9bd1-118438afc0ca,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6493067,CLOUDID:41fcf5f5-e524-4511-b681-7d630745cb54,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102,TC:nil,Content:0,EDM
+	:-3,IP:nil,URL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
+	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: 21e8ab92b2cd11efbd192953cf12861f-20241205
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 481196503; Thu, 05 Dec 2024 13:52:37 +0800
+Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Thu, 5 Dec 2024 13:52:36 +0800
+Received: from HK2PR02CU002.outbound.protection.outlook.com (172.21.101.237)
+ by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Thu, 5 Dec 2024 13:52:36 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=B5t6bmrtbUmemeIA2YximzDbsfDUmTEeoAYr5X3/qVffrhtmmIFHFJNuFsAsNn3EJRsHBkjoCHDn17m2VX6r4cfuiiZ2tDHebDKx/hm/R69VwTK5VLg9tjquQp3opiLXPStBFpsbwPQS2VTM9a7kicly1KEuUkHFELUgid6DbpuLN29YiWTMDUkc1EdVIzb35jS88FrXDAzjHojI4/AAMuwzI7WcJ0T1S90p9MBSKnppwqsi6D4zm4uVSOk0LhzHYhdF3VjLBslTmt9pOweqEgevij6mokLRWWh8WxSR6P0FN5dO0nDi3Pq1l3q5IWG5C1qTtjf852Vpazljw+DPIw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RqzgAdapSZg2DkWV8DDD2mpjCszJSiky0bcjGcl0zRg=;
+ b=bUWFJ5mRt534Lqmh2IJNup3z7V8UMyTAsTm+dF/sf1K/3O+++kAH2Ycxm4DSnvCtamO8IV51F7ZEqBvOr5pGpV+ALdYfRRMugajdqRkY0qMjcxPlD+mZUdK5WM5SY2/sOulAspICkz3nKp25C0lxXw6Rf1RlwLAtVSNvlBLf/PnHnTmmBMt7Ka68lQZx2xZfYYPD2oKTPiSqcZkGotWM9GXkfXkU1qxnBr/X49g0V6gYyVmYwz+KmkcJychzqbQS614WOI31158E22FLiEwP2uqQcUV2JDqj6ezwjEJOcQobOpaRXmC0SG7OeXp7EKU3cuN5wlSmXO3orkCZ1JTelw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
+ dkim=pass header.d=mediatek.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RqzgAdapSZg2DkWV8DDD2mpjCszJSiky0bcjGcl0zRg=;
+ b=ihbSF+ZttGRz96bIkQFw4QAVtn3PJrUQTwy24r6qWRwT/VpKz7VSa8fWoV5fwcDbu2AUk+YbNQSPC2m6x0Lp2IWRcCwaqomtDkFEo5sEb2Y7WabG1WMHcEg0cpaVWNp6uB8QJDZVU90QtjVSoPiqtk5Lk/yWtj621TDvqLkX7RI=
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
+ by SEYPR03MB7890.apcprd03.prod.outlook.com (2603:1096:101:178::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8207.19; Thu, 5 Dec
+ 2024 05:52:35 +0000
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c%3]) with mapi id 15.20.8207.017; Thu, 5 Dec 2024
+ 05:52:34 +0000
+From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+To: "ahalaney@redhat.com" <ahalaney@redhat.com>, "quic_mnaresh@quicinc.com"
+	<quic_mnaresh@quicinc.com>, "beanhuo@micron.com" <beanhuo@micron.com>,
+	"avri.altman@wdc.com" <avri.altman@wdc.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "liuderong@oppo.com" <liuderong@oppo.com>,
+	"bvanassche@acm.org" <bvanassche@acm.org>, "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>, "manivannan.sadhasivam@linaro.org"
+	<manivannan.sadhasivam@linaro.org>, "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi:ufs:core: update compl_time_stamp_local_clock after
+ complete a cqe
+Thread-Topic: [PATCH] scsi:ufs:core: update compl_time_stamp_local_clock after
+ complete a cqe
+Thread-Index: AQHbRkL7hBn3G8WCD0SljFhE8z5QEbLXJzuA
+Date: Thu, 5 Dec 2024 05:52:34 +0000
+Message-ID: <febcd6eb3565feaf09d21a8c78fd7412be88e0c1.camel@mediatek.com>
+References: <1733313004-350420-1-git-send-email-liuderong@oppo.com>
+In-Reply-To: <1733313004-350420-1-git-send-email-liuderong@oppo.com>
+Accept-Language: zh-TW, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=mediatek.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|SEYPR03MB7890:EE_
+x-ms-office365-filtering-correlation-id: 05bc76c4-5847-4adf-9c69-08dd14f103ea
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014|921020|38070700018;
+x-microsoft-antispam-message-info: =?utf-8?B?VzFwbmZWRS8rVVM2cEU0SDlQVTZXbGFXWEdFWllJdFk1cU9UemxSRXdjd2N0?=
+ =?utf-8?B?RG9ZcjdUclFCL1MzY0VXSHhDVE5Qb0orTk5wMDZWRzR0VGllMU5EcnozVTIx?=
+ =?utf-8?B?UXNpTWgzY1A3Ym14MmxOanZDQWNTQVBHeUJsMm5FR1UxQVdyRHBqUXBVUkFK?=
+ =?utf-8?B?L3g2SmtCbHlxQ0pNd201V0dWMDEydGFtK1NpK09PK0RKMXJGaW95Zi9KVCs2?=
+ =?utf-8?B?eU9BUEtpSGlScTc2L2dOcTNRYk1PNllzbEZTNUVtQmJaSnJicW00bEl5T0cw?=
+ =?utf-8?B?NDlrVU8zbFUwUXI5Q3dzVEVnSXEyU0J4M1lIaExBalRQamN3QzRrcVovWkNG?=
+ =?utf-8?B?OGlMamo0ZE5qNTlBY3JZWmZuNzJrWjc1aHJGZ1hzN0FPS2k5Njc3TzJzS0x6?=
+ =?utf-8?B?U3NLMGNGTitoeWRzVnpWTFN0d2J0NHEvbm9MY0JYRkZ4WGQ0ME9kVVRCckNT?=
+ =?utf-8?B?dXVEcVVROGcvdmV5eUN0U3kvSGxHVWdNelhkVDBYVm1wOUovdHJhYVJHWWVD?=
+ =?utf-8?B?RVFNNEhuZ0RWK2UzNE1HUUFIcTRUWWN4cFpxUStMaW5zUWlEWlRlL042cnhI?=
+ =?utf-8?B?SGlUNWlzbTdWYTVvc0swVkRxcDJ2bEZGYWQyTENpZk9WdTAvMzZEV2lUREdu?=
+ =?utf-8?B?U0N6SlhLSHpaaE92cExNZ25mWVhJK1grN0w5NjNoVW5HMmRQOHhwMExEWEw0?=
+ =?utf-8?B?bGdCMGVVYkJRTXU4eU5KT1RIMXdPMWcvYk5vK1JNVHhVWXR4OElXYVNyYzJL?=
+ =?utf-8?B?M1NKMk82dUtrYVNkYlB5V3Jldlo0eVhYMFNRL3JqTHZXekVJWkgvMkFBVHlj?=
+ =?utf-8?B?dEF4UUl0cEFzTys0NnJmVHhrUnRibWJvZlNZOGRHRG5xblRHLytvNXdIUTli?=
+ =?utf-8?B?VDRnSFJEWmxyUlErY3pZRDB2TGd0NnJ6NFRDdCtBbFg3djQ3eDVyQ00vRXc4?=
+ =?utf-8?B?RzJnSytESWJEMStZbzU1S3I5Snd1bWR2eEdUb2pOU0FYUVFYeHhqSjY5N21N?=
+ =?utf-8?B?bHVpVG1IR3pKYXNENytaYnlqTDdiNEc0d1l3OWk1NnBWdzBtTmtBNHNnVFRJ?=
+ =?utf-8?B?VUx5ZVdjWm1ONks1Z1hOTTZteVRjVWZmWTZyQTFPMFlCZ1JyRndhR2dVVW5U?=
+ =?utf-8?B?aHUvNW03SW9rK3J2ZHg5WjY3WGtQS0RQZnA3WXhyeDBsMFF3cWF5L1FNY25Q?=
+ =?utf-8?B?d3Z3N242OUJRT3FCSk1OYlRVTHgzWFg1ZTdjbTdHdDhvSFN3dHByU0tRTGxD?=
+ =?utf-8?B?QldsWTM2Q1RHNW5hK0doOWY1b0FlL3NYL2IvNHdBM0xjYldDTmxEQ2tKUXhW?=
+ =?utf-8?B?bFFaN1Vib21IbzFhSDMvT05SZFp0ZjVoTEp0NUpkWVR4NVBaUjdwR3ZwUkFy?=
+ =?utf-8?B?SVlRR05nQU80Unp2NngvZ0RVYUlseGVkbi8wTEJVb1FrbHBRSWtQN3IzMHpN?=
+ =?utf-8?B?aFBJQytJNDRNb05vcFI5QXJRNW80S1BOdGhWaVpIVUJmQ09wWkRsbHdFNURN?=
+ =?utf-8?B?bHFMSkRWbm43NEZWNTBpMENLKzBiWHJQNlRIRm5lQkJPb0UwMmpVTHgxZVFE?=
+ =?utf-8?B?RUxFekViU0dzN3FrSjZhU3RZeVd3ZDZGeER6T3JNUVFVMkVlZDFYRHdGdkVS?=
+ =?utf-8?B?T0dLZjJpa2cwVUFzb0hHbUg3ZkZ1ODhEZTBGdEI4TFlVT08wMFdIMlF3WXJk?=
+ =?utf-8?B?R1dMaktHTWJCQ2VJQ2FRU1VLNzFTVDc5MmlNejdIV29PdDBuRjhVZ1ZsVzhj?=
+ =?utf-8?B?ZjhpaGovMldMcnZXSVFxZjcvb0dxUWwzTURIdis2b0Z3eVZ4emszVWwyVUFk?=
+ =?utf-8?B?WSswaFduU0xnaW9vOGthV1doTXVUU0trZEFjVzZLZ1JLWUtqMDQ2K0N0eEpY?=
+ =?utf-8?B?RVNIeFZFb1ZIM0tPZDFxWFJjcmVwM3NTdXJQMldXNS8rbWdrbVAxVGI3b05O?=
+ =?utf-8?Q?aiaZ2qEcohg=3D?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(921020)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WlJmb1N2V0N2ajl3ZTc4ZFZ4MEE1VlBTbU1lYWJSV29vdk4wbDRyZ2FLUUxX?=
+ =?utf-8?B?c1Nob0FrN0szek1sOUZPOEN5N2d6Rkk3ZWlkVXI2c0N3dXh3cytEcDNSa1pM?=
+ =?utf-8?B?QlBUbmhnT05ScDRwaVNPRmpQUU1OME80aVd5dktXeERZa2pWdGp3RVNXREFr?=
+ =?utf-8?B?bHJ4a0lSVXZjMDkwWlRWVllFNFBxT3Z1T3hVMDRrZGdYa0tWanlJbDdWdGcw?=
+ =?utf-8?B?bE8vazFDUTFYVWNFMFNMRUlmOVk1bzlucXcwaS9DNlptOVFGYzFVL2ZYT1hI?=
+ =?utf-8?B?N0NTS2p1S2daOGtycTBjRjFiL25LTURSQVJBTnBTK0NsUTR5U1VFellBa3JY?=
+ =?utf-8?B?WWM2YWdpUGlKSTd0aUUrUW9lV2xVVVNqR3MvYUF3Q1p3T3dMejQwTmRseGJZ?=
+ =?utf-8?B?VGJpYkdOc0pMQ25CZ3E0b24ycUJhNXg1aDVic0xOT2dFdHptNDFuZ2oyR1lU?=
+ =?utf-8?B?eFM2d1ZMem5HSDB1Q20zSkF1dGNLMU5KN2p6K3c0aFg1bjR6SWF0L3FJRVBE?=
+ =?utf-8?B?WGNGTm53MEpWN2hKTFQxMk5tMFRxdndyZDh6bnhwQ3R5SStRdzg2aFBNUHVU?=
+ =?utf-8?B?ZUttdUxqcXl3V0R1VWJHZTVralp0OXFIRFgxNEc3ajdtK3Q4SGF5b29vU0tO?=
+ =?utf-8?B?a2NwR2NaTjQ1OS9pLzNTV2FQYzlDSHkrekdyTC9hbU5vb3JXd3oyRThXc1g4?=
+ =?utf-8?B?MmlGT1BGQkV3SEFieXR4Y0FHdWg2dDlLaUx4MTRXbm1Uamp3d0lOT1E0YlNt?=
+ =?utf-8?B?dmgzYzRMNHIySjNONHRsSUxZaE9ka0k4M3l5MEZ4a01iY1N5Um5kSFhWL1BG?=
+ =?utf-8?B?VDg2N205WFJnVFA5L1JNTU5ibU10U2lpTGdjVE5SWis5Wm5TakErNWdUaWp4?=
+ =?utf-8?B?bmR4S25TckpxaklwVmY4ZnRsWjJQMXNTQ040SCtKS2NLRWtGYzZqRlM2UnNs?=
+ =?utf-8?B?OXUreVNBSlV4clBYRjdkcTQzWm15UXU3Z2N2UFBLVS92Nk9QMVFiZFluMkdK?=
+ =?utf-8?B?U1M2eDR6TW5JTTZmR3ZwT3ZENUxPNWRmQjlPRDRWL3NDV1BCY1lpVTFDb1Rp?=
+ =?utf-8?B?YWZqTXFZVlFhQXBpWElkdElpZG10K2RZZHVJVmhsUnNyb09QdUlNWHhnWTF6?=
+ =?utf-8?B?RjhPbnJSMHZjOFg1TDRRR3ljRkFtV1pCNXNtY2NUTVVTZjR5U0kralV5Nnpt?=
+ =?utf-8?B?ZTg3TEhoQzBrNXJnQ2k0YmtCQzVtTnAzcHNwZTAxL29Ec0tMZGIvTkJWZS9I?=
+ =?utf-8?B?bUQ0RWJkb2VQZXNBa3dIK2dLSndsbmtBZkxkUW1oRXZDWkNSNWdKRi82aWVW?=
+ =?utf-8?B?UFNTa21WaDlSMkZEYVExQmVtbFBFUXphQ1BsbWRsNGtiNTlNUi9vd1N1bDYy?=
+ =?utf-8?B?dmNKYzc3bng2dk9ScGxNUHZIaVJFUTVlaXJTcmtRRFJaSHFNaHBKUVkvVUFv?=
+ =?utf-8?B?YytUei9FQzBGMzloWHl6aHZQV01GZFBBKy9LRlNtNzY0YU10M0FoZDBmWnkv?=
+ =?utf-8?B?ekZpd2FVL1hndHc1SkJwSkpodzJ1eDZDREhIVlhhMEVhMUlPVXRzaUExZC9G?=
+ =?utf-8?B?ZGxXNGRleXlXS2ozMlFhT0xxbkM5V3BwcTNxa0VVUDBzUTY4bVdkR040UXRZ?=
+ =?utf-8?B?ZWgvU1F6VUptWXUrUXlNRjNhUG5DMWFRVzlYT3BoK2tSSEhmck1JMTFhU295?=
+ =?utf-8?B?WUxEUS9uL2t4T3VmalFyUWhiNGlUWEFRaUZ6MkQ4UGZHeFRVbTl4cVUwUkxU?=
+ =?utf-8?B?dUFjZHVtLzRvZEV1ck5wdCs4azlVUDBwZDNPdGUwWmxMRDB6WTFXR0ZUeVlN?=
+ =?utf-8?B?NG5LdHg5SUFBb0k1RnJ2S3ZySVVDNTlxOHdZSUlTaTNaNWszb0hFL2FpVjEz?=
+ =?utf-8?B?aDN5dGx3aW1KdVFCdFVlSnBTTlVxaTZmNUJVaVNjRHNKQ3F0UG9xeGl1VUlP?=
+ =?utf-8?B?cFlzWDFLRXlTL3Y0VkZRcmZsdy82UVltakRhQ0crblp0aTNYYjByeW1mbFNX?=
+ =?utf-8?B?SkdzcGxBNFFhVTFnZmtMajFwZmpwdHRUVFU1cjY1VktqZC96emZyeVFuZDVu?=
+ =?utf-8?B?M0hPRlRvbDFPQjRDc3QyWUtEenNtU3lOTm14R0poVTU0YnFmRUNiWG1xRTlK?=
+ =?utf-8?B?M2lwN0dVL1RCNDcyaWgybEszSEZVTWJpSWtFd0hGQ0xsQzNiSmhBMVdrY1Nv?=
+ =?utf-8?B?RVE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <AABF3A2ED0A1C0488ED8ADB59DAEBCB0@apcprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 05bc76c4-5847-4adf-9c69-08dd14f103ea
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Dec 2024 05:52:34.1220
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 851BOrDYVOnQZ8OYrEymtARQdnft0JGOypUWVPf8S7lYxw/OqInD2UnejsYhvpk84/rQnRn4lbknRXn/y4VFqw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR03MB7890
+X-MTK: N
 
-scsi_mid_low_api.rst refers to scsi_register() and scsi_unregister()
-but these functions (or macros) don't exist. They have been replaced
-by more meaningful names.
-
-Update one driver (megaraid_mbox.c) that uses "scsi_unregister" in a
-warning message. Update scsi_mid_low_api.rst to eliminate references to
-scsi_register() and scsi_unregister().
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Cc: megaraidlinux.pdl@broadcom.com
----
-Please note: This patch should follow the previous patch:
-  scsi: Docs: remove init_this_scsi_driver()
-
- Documentation/scsi/scsi_mid_low_api.rst |   55 ++--------------------
- drivers/scsi/megaraid/megaraid_mbox.c   |    2 
- include/scsi/scsi_host.h                |    2 
- 3 files changed, 7 insertions(+), 52 deletions(-)
-
---- linux-next-20241204.orig/drivers/scsi/megaraid/megaraid_mbox.c
-+++ linux-next-20241204/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -621,7 +621,7 @@ megaraid_io_attach(adapter_t *adapter)
- 	host = scsi_host_alloc(&megaraid_template_g, 8);
- 	if (!host) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid mbox: scsi_register failed\n"));
-+			"megaraid mbox: scsi_host_alloc failed\n"));
- 
- 		return -1;
- 	}
---- linux-next-20241204.orig/include/scsi/scsi_host.h
-+++ linux-next-20241204/include/scsi/scsi_host.h
-@@ -595,7 +595,7 @@ struct Scsi_Host {
- 	 * have some way of identifying each detected host adapter properly
- 	 * and uniquely.  For hosts that do not support more than one card
- 	 * in the system at one time, this does not need to be set.  It is
--	 * initialized to 0 in scsi_register.
-+	 * initialized to 0 in scsi_host_alloc.
- 	 */
- 	unsigned int unique_id;
- 
---- linux-next-20241204.orig/Documentation/scsi/scsi_mid_low_api.rst
-+++ linux-next-20241204/Documentation/scsi/scsi_mid_low_api.rst
-@@ -101,7 +101,7 @@ supplied functions" below.
- Those functions in group b) are listed in a section entitled "Interface
- functions" below. Their function pointers are placed in the members of
- "struct scsi_host_template", an instance of which is passed to
--scsi_host_alloc() [#]_.  Those interface functions that the LLD does not
-+scsi_host_alloc().  Those interface functions that the LLD does not
- wish to supply should have NULL placed in the corresponding member of
- struct scsi_host_template.  Defining an instance of struct
- scsi_host_template at file scope will cause NULL to be  placed in function
-@@ -116,9 +116,6 @@ should be static. For example the sdev_i
- called "xxx" could be defined as
- ``static int xxx_sdev_init(struct scsi_device * sdev) { /* code */ }``
- 
--.. [#] the scsi_host_alloc() function is a replacement for the rather vaguely
--       named scsi_register() function in most situations.
--
- 
- Hotplug initialization model
- ============================
-@@ -302,14 +299,12 @@ Summary:
-   - scsi_host_alloc - return a new scsi_host instance whose refcount==1
-   - scsi_host_get - increments Scsi_Host instance's refcount
-   - scsi_host_put - decrements Scsi_Host instance's refcount (free if 0)
--  - scsi_register - create and register a scsi host adapter instance.
-   - scsi_remove_device - detach and remove a SCSI device
-   - scsi_remove_host - detach and remove all SCSI devices owned by host
-   - scsi_report_bus_reset - report scsi _bus_ reset observed
-   - scsi_scan_host - scan SCSI bus
-   - scsi_track_queue_full - track successive QUEUE_FULL events
-   - scsi_unblock_requests - allow further commands to be queued to given host
--  - scsi_unregister - [calls scsi_host_put()]
- 
- 
- Details::
-@@ -475,27 +470,6 @@ Details::
- 
- 
-     /**
--    * scsi_register - create and register a scsi host adapter instance.
--    * @sht:        pointer to scsi host template
--    * @privsize:   extra bytes to allocate in hostdata array (which is the
--    *              last member of the returned Scsi_Host instance)
--    *
--    *      Returns pointer to new Scsi_Host instance or NULL on failure
--    *
--    *      Might block: yes
--    *
--    *      Notes: When this call returns to the LLD, the SCSI bus scan on
--    *      this host has _not_ yet been done.
--    *      The hostdata array (by default zero length) is a per host scratch
--    *      area for the LLD.
--    *
--    *      Defined in: drivers/scsi/hosts.c .
--    **/
--    struct Scsi_Host * scsi_register(struct scsi_host_template * sht,
--				    int privsize)
--
--
--    /**
-     * scsi_remove_device - detach and remove a SCSI device
-     * @sdev:      a pointer to a scsi device instance
-     *
-@@ -524,7 +498,7 @@ Details::
-     *
-     *      Notes: Should only be invoked if the "hotplug initialization
-     *      model" is being used. It should be called _prior_ to
--    *      scsi_unregister().
-+    *      calling scsi_host_put().
-     *
-     *      Defined in: drivers/scsi/hosts.c .
-     **/
-@@ -601,31 +575,12 @@ Details::
-     void scsi_unblock_requests(struct Scsi_Host * shost)
- 
- 
--    /**
--    * scsi_unregister - unregister and free memory used by host instance
--    * @shp:        pointer to scsi host instance to unregister.
--    *
--    *      Returns nothing
--    *
--    *      Might block: no
--    *
--    *      Notes: Should not be invoked if the "hotplug initialization
--    *      model" is being used. Called internally by exit_this_scsi_driver()
--    *      in the "passive initialization model". Hence a LLD has no need to
--    *      call this function directly.
--    *
--    *      Defined in: drivers/scsi/hosts.c .
--    **/
--    void scsi_unregister(struct Scsi_Host * shp)
--
--
--
- 
- Interface Functions
- ===================
- Interface functions are supplied (defined) by LLDs and their function
- pointers are placed in an instance of struct scsi_host_template which
--is passed to scsi_host_alloc() or scsi_register().
-+is passed to scsi_host_alloc().
- Some are mandatory. Interface functions should be declared static. The
- accepted convention is that driver "xyz" will declare its sdev_configure()
- function as::
-@@ -636,7 +591,7 @@ and so forth for all interface functions
- 
- A pointer to this function should be placed in the 'sdev_configure' member
- of a "struct scsi_host_template" instance. A pointer to such an instance
--should be passed to the mid level's scsi_host_alloc() or scsi_register().
-+should be passed to the mid level's scsi_host_alloc().
- .
- 
- The interface functions are also described in the include/scsi/scsi_host.h
-@@ -1111,7 +1066,7 @@ of interest:
-     hostdata[0]
- 		 - area reserved for LLD at end of struct Scsi_Host. Size
-                    is set by the second argument (named 'xtr_bytes') to
--                   scsi_host_alloc() or scsi_register().
-+                   scsi_host_alloc().
-     vendor_id
- 		 - a unique value that identifies the vendor supplying
-                    the LLD for the Scsi_Host.  Used most often in validating
+T24gV2VkLCAyMDI0LTEyLTA0IGF0IDE5OjUwICswODAwLCBsaXVkZXJvbmdAb3Bwby5jb20gd3Jv
+dGU6DQo+IEV4dGVybmFsIGVtYWlsIDogUGxlYXNlIGRvIG5vdCBjbGljayBsaW5rcyBvciBvcGVu
+IGF0dGFjaG1lbnRzIHVudGlsDQo+IHlvdSBoYXZlIHZlcmlmaWVkIHRoZSBzZW5kZXIgb3IgdGhl
+IGNvbnRlbnQuDQo+IA0KPiANCj4gRnJvbTogbGl1ZGVyb25nIDxsaXVkZXJvbmdAb3Bwby5jb20+
+DQo+IA0KPiBGb3Igbm93LCBscmJwLT5jb21wbF90aW1lX3N0YW1wX2xvY2FsX2Nsb2NrIGlzIHNl
+dCB0byB6ZXJvDQo+IGFmdGVyIHNlbmQgYSBzcWUsIGJ1dCBpdCBpcyBub3QgdXBkYXRlZCBhZnRl
+ciBjb21wbGV0ZSBhIGNxZSwNCj4gdGhlIHByaW50ZWQgaW5mb3JtYXRpb24gaW4gdWZzaGNkX3By
+aW50X3RyIHdpbGwgYWx3YXlzIGJlIHplcm8uDQo+IFNvIHVwZGF0ZSBscmJwLT5jbXBsX3RpbWVf
+c3RhbXBfbG9jYWxfY2xvY2sgYWZ0ZXIgY29tcGxldGUgYSBjcWUuDQo+IA0KPiBMb2cgc2FtcGxl
+Og0KPiB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVmc2hjOiBVUElVWzhdIC0gaXNzdWUgdGltZSA4NzUw
+MjI3MjQ5IHVzDQo+IHVmc2hjZC1xY29tIDFkODQwMDAudWZzaGM6IFVQSVVbOF0gLSBjb21wbGV0
+ZSB0aW1lIDAgdXMNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IGxpdWRlcm9uZyA8bGl1ZGVyb25nQG9w
+cG8uY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMgfCAxICsNCj4gIDEg
+ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+dWZzL2NvcmUvdWZzaGNkLmMgYi9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jDQo+IGluZGV4IDZh
+MjY4NTMuLmJkNzBmZTEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMN
+Cj4gKysrIGIvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYw0KPiBAQCAtNTUxOSw2ICs1NTE5LDcg
+QEAgdm9pZCB1ZnNoY2RfY29tcGxfb25lX2NxZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiBpbnQg
+dGFza190YWcsDQo+IA0KPiAgICAgICAgIGxyYnAgPSAmaGJhLT5scmJbdGFza190YWddOw0KPiAg
+ICAgICAgIGxyYnAtPmNvbXBsX3RpbWVfc3RhbXAgPSBrdGltZV9nZXQoKTsNCj4gKyAgICAgICBs
+cmJwLT5jb21wbF90aW1lX3N0YW1wX2xvY2FsX2Nsb2NrID0gbG9jYWxfY2xvY2soKTsNCj4gICAg
+ICAgICBjbWQgPSBscmJwLT5jbWQ7DQo+ICAgICAgICAgaWYgKGNtZCkgew0KPiAgICAgICAgICAg
+ICAgICAgaWYgKHVubGlrZWx5KHVmc2hjZF9zaG91bGRfaW5mb3JtX21vbml0b3IoaGJhLA0KPiBs
+cmJwKSkpDQo+IC0tDQo+IDIuNy40DQoNClJldmlld2VkLWJ5OiBQZXRlciBXYW5nIDxwZXRlci53
+YW5nQG1lZGlhdGVrLmNvbT4NCg0KDQo+IA0K
