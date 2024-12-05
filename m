@@ -1,71 +1,113 @@
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pv50p00im-zteg10021301.me.com (pv50p00im-zteg10021301.me.com [17.58.6.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E35C5207DE4
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 12:46:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2146A218AB5
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 13:16:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733402765; cv=none; b=o0RdXKr/Ni/kIlPHcRFaqaOIFlwj/jdEnqu9cl8z2t6AMxVWXcyNjjOOtvpsUx8GQXdtqyH0hRFaeIU/KxLI13GF2Aw8cb0D+SLGKG8aTzmfkn6+226twUMEYXVn8HH631gTMIGwIm7+w6Cj5wnk9hG/YgEBqSFLVoM+u3ph6VU=
+	t=1733404588; cv=none; b=o++GwV4x0uJU9PjainjAyxGwZQU+e31gr97rO/VXVIRUBLEd+5+U9wQ8VWFTkBvZdOWZfgiEbvcXDz/q58NruEkYKsVVZDx1zKev1G4eQzdp76Q/LmZztqly+u3Tq2OJPHtIW3ZoI0ijK4XovIIbRqw1JJNDruke5wfQZONREGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733402765; c=relaxed/simple;
-	bh=eImJIpIF/KSB4uiwTOn7hdKg77lgYoGfVOXw0Hhbj5Y=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=tu9HXFuKp5T95O790uPGkk73Gxzi6MGJqNCdZzAVn8YvMAU5GTIbATc9Huyj9sr0fTTVmHQEKLbGUdiCfRz2LyDK4DV37u5cYrAJvwoC34Ql77CU27EBbfF4FNZN2G5U2FQa1KhW3bOae1tb9TqmAguhLiGbkJbxPctHbFs9Jas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-3a77085a3d7so8556175ab.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Dec 2024 04:46:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733402763; x=1734007563;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=l0iaCAPdaKa9qoLnGhVA0Z5j3Ik/H4wNtiMhCICR7/8=;
-        b=AIT5d5hIWTu9GnQP74UEMKOeFspPW0KmbaAxYpzeerx1WpSD/q3sORk5WXbKcC9//t
-         avFtpLyMt+pqSkG2b6jio4bUwD5aI+xH7loZsgBIpT3XHOklGiP8b8oSTuPovQRlpUFc
-         vzBT7shf4JV6pIfcv6vh9vXYM5xZ5ctS9uTk2f+wyFtoI+c2smRogsAqN5VcpDtPyOnp
-         +2Bns+L6pMNwY9hN63/lnyETOz3apFsj6qxlRgP4RjUKtUwVEtcCLUbmsoGI/UtDJxC7
-         GSmUediDSb4VbEXO4l4Xwdkd0R0RB1V61xIgojjFtSlT2KctuM+vGAKGYoHFB0tU+C0E
-         VHEg==
-X-Forwarded-Encrypted: i=1; AJvYcCUgIdLA22iQt6qesq/yD/PTui8xQPDgy3hv9oqlQ/ewfrDyC/ZcJJsWRRM5dcYtXTPddtZhj03f4+Sg@vger.kernel.org
-X-Gm-Message-State: AOJu0YytZWZtBmy+mGlMqux3QyaSiuSQpKwBFka1jb8SL0tVkz00FJRR
-	Z/MFxAPQjq+UUuq0vckQi3ZJU9AgcT7AsZiyAPjWzeVgAYfzVi7jK/NaeVJRO4Ro73Phd3+WA+4
-	UYgUg0R3WsoPYlxgfXQOBfd3ZBGspEZPjFXZyo4ggMMuoSsGHR3CU7IY=
-X-Google-Smtp-Source: AGHT+IFTvRfKxh9O+0cvI5lb/BT7auEzA7r36ebWM+MMTsGUSosowkPGFsx5Ci7/GOAOsm1aaFjR8MlQwx95i0rRr2TuoXxlTcy2
+	s=arc-20240116; t=1733404588; c=relaxed/simple;
+	bh=tn4WSJdpVgE9M2OBdZCoiMZKyp3FTNFC8afvj7cJt8o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JJRVj5RXWCFHJnS784Uv3PNiUhZU0scJEwM/sh7xDpUe6cVXRw4Q+/VCs49djhavDxYPuectei9TTzVDjn13HbvZxdXpHE8gFJEgdH89YWoZtL2UHsD4RWhQtceFbrVopKdPhbxqj7QEDWgVtNNNJIdG0a/HP61VvNIshXeexE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=MjPupEdG; arc=none smtp.client-ip=17.58.6.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="MjPupEdG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
+	s=1a1hai; t=1733404584;
+	bh=DV2DLIPPHvXQjlEWI+ismKBgnjP6WxidLPVJKGZHkhg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:
+	 x-icloud-hme;
+	b=MjPupEdG3LXOunytThOaHzAK+bVhMpwfidC4n4MdvWKwaw8FV9EPV38plq0FTVN0C
+	 xl5AJriUjHfG5OmhTjUfel+BiaQmCJ2o11t+HqLNUWEQy+m6PrJy5nTRDH5pAAFr3F
+	 J4kdsm/wsRNS1dCZBzSVcqt6FSBCyESPY4vVf8wVpfRnxrXl+Z7US8BNL1A1OPWxLK
+	 2GRk6Q02wvLPjNllCH4Kvi6WwRClOdscINadBncjANCtZiOXEyTZMT5H3N1gTMvQCq
+	 3a3ozKHsj1VnZvyfYLPMLSg23wNQ6MfFLBXVef/l3ga5iNw4NVuLybECqVK+bdE1jb
+	 2YeT4c6Wiec4A==
+Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
+	by pv50p00im-zteg10021301.me.com (Postfix) with ESMTPSA id 5F7A7500292;
+	Thu,  5 Dec 2024 13:16:16 +0000 (UTC)
+Message-ID: <d4d49b0c-7766-4f06-b098-ceee54ceeefb@icloud.com>
+Date: Thu, 5 Dec 2024 21:16:12 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1fc3:b0:3a7:e069:95e0 with SMTP id
- e9e14a558f8ab-3a807576882mr27752645ab.1.1733402763106; Thu, 05 Dec 2024
- 04:46:03 -0800 (PST)
-Date: Thu, 05 Dec 2024 04:46:03 -0800
-In-Reply-To: <20241205123216.2354-1-hdanton@sina.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6751a08b.050a0220.17bd51.00a1.GAE@google.com>
-Subject: Re: [syzbot] [scsi?] possible deadlock in balance_pgdat (2)
-From: syzbot <syzbot+ac962f01776f0d739973@syzkaller.appspotmail.com>
-To: hdanton@sina.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 04/11] driver core: Constify API device_find_child()
+ then adapt for various usages
+To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ James Bottomley <James.Bottomley@hansenpartnership.com>,
+ =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas@t-8ch.de>,
+ linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-sound@vger.kernel.org, sparclinux@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
+ linux1394-devel@lists.sourceforge.net, arm-scmi@vger.kernel.org,
+ linux-efi@vger.kernel.org, linux-gpio@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org,
+ linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org,
+ linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+ linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
+ linux-usb@vger.kernel.org, linux-serial@vger.kernel.org,
+ netdev@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
+References: <20241205-const_dfc_done-v3-0-1611f1486b5a@quicinc.com>
+ <20241205-const_dfc_done-v3-4-1611f1486b5a@quicinc.com>
+ <h4pndknfwvck5yjnbs5rdmrxkqeksfxldwj4qbjqyvdzs5cjbf@i4afsjsg3obw>
+Content-Language: en-US
+From: Zijun Hu <zijun_hu@icloud.com>
+In-Reply-To: <h4pndknfwvck5yjnbs5rdmrxkqeksfxldwj4qbjqyvdzs5cjbf@i4afsjsg3obw>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: LL8r5U1rSRzQLinnfL26afznvBJlVJho
+X-Proofpoint-GUID: LL8r5U1rSRzQLinnfL26afznvBJlVJho
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2024-12-05_11,2024-12-05_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 clxscore=1015
+ malwarescore=0 adultscore=0 suspectscore=0 phishscore=0 mlxscore=0
+ spamscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2308100000 definitions=main-2412050096
 
-Hello,
+On 2024/12/5 18:41, Uwe Kleine-König wrote:
+> On Thu, Dec 05, 2024 at 08:10:13AM +0800, Zijun Hu wrote:
+>> diff --git a/arch/sparc/kernel/vio.c b/arch/sparc/kernel/vio.c
+>> index 07933d75ac815160a2580dce39fde7653a9502e1..1a1a9d6b8f2e8dfedefafde846315a06a167fbfb 100644
+>> --- a/arch/sparc/kernel/vio.c
+>> +++ b/arch/sparc/kernel/vio.c
+>> @@ -419,13 +419,13 @@ struct vio_remove_node_data {
+>>  	u64 node;
+>>  };
+>>  
+>> -static int vio_md_node_match(struct device *dev, void *arg)
+>> +static int vio_md_node_match(struct device *dev, const void *arg)
+>>  {
+>>  	struct vio_dev *vdev = to_vio_dev(dev);
+>> -	struct vio_remove_node_data *node_data;
+>> +	const struct vio_remove_node_data *node_data;
+>>  	u64 node;
+>>  
+>> -	node_data = (struct vio_remove_node_data *)arg;
 
-syzbot has tested the proposed patch but the reproducer is still triggering an issue:
-lost connection to test machine
+existing code has such cast
+>> +	node_data = (const struct vio_remove_node_data *)arg;
+>
+i just follow existing code here.
 
+> You can just drop the cast here. But maybe that is better be done i a
+> separate change.
+> 
 
+agree, removing such casts may be another topic.
 
-Tested on:
+>>  	node = vio_vdev_node(node_data->hp, vdev);
+>>  
+> 
+> Best regards
+> Uwe
 
-commit:         c018ec9d block: rnull: Initialize the module in place
-git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-6.14/block
-console output: https://syzkaller.appspot.com/x/log.txt?x=17441330580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=6851fe4f61792030
-dashboard link: https://syzkaller.appspot.com/bug?extid=ac962f01776f0d739973
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-
-Note: no patches were applied.
