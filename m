@@ -1,95 +1,106 @@
-Received: from pv50p00im-zteg10021301.me.com (pv50p00im-zteg10021301.me.com [17.58.6.46])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08623218852
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 13:39:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E66C218851;
+	Thu,  5 Dec 2024 14:20:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733405991; cv=none; b=hH0MIE0bbsaXIC2u/AXh0zzavF4OjSfMxlPqbkuGIZ9bza9mul75TwdaaRphmLYypgqXVeAO+nkKR/dbz9zoUbsNcd4apKQSGI6235tIP1w1rVEmAkwyLMxK7+y2v8M+UzIEG6BLZ0GX3Hxlrs6+QANEzSP+RnghK+mLiuqmksA=
+	t=1733408432; cv=none; b=Th/VPexqSrVFvn59ROINaZ5eNI634FbVEWmVJ1lmSX4SgfMRD3jJjofOT+LNwGzF6btvpgXaLWHfqiH8UV9aPmz6zXnKPtND92yEepNBkE0ICLK9hkzMoa1n9uAFf1HwH6zVagQ64ocy2rwdY4vzEXLqD6M1DKeM18/m77aJeqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733405991; c=relaxed/simple;
-	bh=w+L/ijIwxtCjBnjeF2BOoaJY0nsNF0I+MjgrNIZmI/E=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=JHIMiXE183EdxmngWm1U2LIWe0pCKI/ZqpLb+6oREJsoPBAFqqfy5L/lQTPW+YHw3bjfBzGFkGpgdjj+eBWnVsqMgkp2KcKGZAZcHwvZXQzxIK3D0LUU7DkptqiW2ueyz8szcWxV+aYlK8MAcm96neVd2jNQPZFb9IpheWDhCug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=Z6ptqCKB; arc=none smtp.client-ip=17.58.6.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1733408432; c=relaxed/simple;
+	bh=F6+AXs2n/iw9yM7hACvdYVS8WGv+Wx5bm1dCQNnWSv4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HRYqbhWgnB8hkyosp8Y9JooPM9Glz2jic0nMaO9Vu7o2CUjzpnmNISg5wg+6DXYD91A+yblNI8ywmJP0asU/HyFFBuvDdDTTlaIVA1EzwsLgDVCzm+erTmZRK5yXDriAt19gFswk900M4S5ivagqJqDUB6hYojI33E/kcsb2zcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=FvdkGyWe; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="Z6ptqCKB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
-	s=1a1hai; t=1733405989;
-	bh=EGaT1YDpM3YHyk2JGIqu5Mj6uAzoCxkX7HHojx+Nakw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:
-	 x-icloud-hme;
-	b=Z6ptqCKB8VbbMOxA3C2zdd27e4pyc841ODJECqWb4IybLv6WmFqLzgUY49mCwb+zY
-	 bUQWK+0uA1eZKMdsykc82oUvX7wvM5sY2iPB93t6z6wae9/g5Xc4NEcnNFTwwSJEnS
-	 NdPLaV5wSoSL8fawCOx+k5OgaqeCUeHQ3pMj9Diwtc0wvv3CCyeVgYnNvipbI6R8g7
-	 4oAOzj2yMJGRmX5JnI+r/tdARog3N7UkYkumD+8tobk3h56WTzVe9bljFte184afcJ
-	 vv3nnMNtpJ3dHMp1OHMiWq3xIMsVmKFkQRgXgK7jFEgcLKFRnQgSuUvsMS3JwuDn0z
-	 ayCVCmZqzn12A==
-Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
-	by pv50p00im-zteg10021301.me.com (Postfix) with ESMTPSA id E5E225000BE;
-	Thu,  5 Dec 2024 13:39:46 +0000 (UTC)
-From: Zijun Hu <zijun_hu@icloud.com>
-Date: Thu, 05 Dec 2024 21:39:22 +0800
-Subject: [PATCH] MAINTAINERS: Remove open-iscsi@googlegroups.com
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="FvdkGyWe"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B5A0Q7b028468;
+	Thu, 5 Dec 2024 14:20:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=gxG8WGA3PNNW+pGX/00rSON9YWK8/zchGTvjruAE9
+	7g=; b=FvdkGyWeNkYcZ7OlMuaiW8rDAwzttbf6V3Oy0CZwneRDw7WtRQ2zSMJKi
+	g/vy181ro3QwSOcShcoQKaYVM/UQRmg8dVlSR63V5tDdWvFFzKIpeC6yephjkkoF
+	KGBkMXGyCxM/yDfNczIqL2NzdL9/dbcmOvd2wONc0oPLxS8N92C7Aj/XvDLcEUyh
+	M19rG5M+HV0ky72rL0Ttj6BL0NpCa78pd/iZIS4YNAJImNeQYc8lDT4QHP3Ih/nL
+	h5uiQZgvpjFRIvWN50/q29XahHoRD4/WRSsOhuNBQv3Vg//zbXE+fkHdVbT8BRJr
+	OoSSdS9CdaRJ9lVH6sFj919aHX/aA==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ax65vbjp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Dec 2024 14:20:21 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4B5AqHSO017943;
+	Thu, 5 Dec 2024 14:20:20 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 438d1sj8x0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Dec 2024 14:20:20 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4B5EKFFD35193278
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 5 Dec 2024 14:20:15 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id ED7A92004B;
+	Thu,  5 Dec 2024 14:20:14 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AD4BC20040;
+	Thu,  5 Dec 2024 14:20:14 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  5 Dec 2024 14:20:14 +0000 (GMT)
+From: Nihar Panda <niharp@linux.ibm.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Subject: [PATCH 0/3] zfcp changes for v6.14
+Date: Thu,  5 Dec 2024 15:19:29 +0100
+Message-ID: <20241205141932.1227039-1-niharp@linux.ibm.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20241205-remove_iscsi_group-v1-1-890ee8484978@quicinc.com>
-X-B4-Tracking: v=1; b=H4sIAAmtUWcC/x3MQQqAIBBA0avErBPUMqqrRETUaLMoY4YkiO6et
- HyL/x8QZEKBvniAMZFQPDJMWcCyzUdARWs2WG1rY7VTjHtMOJEsQlPgeJ2qc9qbZm4r52vI4cn
- o6f6nw/i+HymhhdtkAAAA
-X-Change-ID: 20241205-remove_iscsi_group-950f16a835f4
-To: Zijun Hu <zijun_hu@icloud.com>, linux-scsi@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-Cc: Zijun Hu <quic_zijuhu@quicinc.com>
-X-Mailer: b4 0.14.2
-X-Proofpoint-GUID: vmZ35Z26o7HxTXn3aJvdxYPTEpY_yAdH
-X-Proofpoint-ORIG-GUID: vmZ35Z26o7HxTXn3aJvdxYPTEpY_yAdH
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: SoXUkrDYQvv9mQcNb8O2ZIaRIsIXd2Kk
+X-Proofpoint-GUID: SoXUkrDYQvv9mQcNb8O2ZIaRIsIXd2Kk
 X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2024-12-05_11,2024-12-05_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 suspectscore=0
- mlxlogscore=890 adultscore=0 malwarescore=0 phishscore=0 mlxscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2308100000 definitions=main-2412050098
-X-Apple-Remote-Links: v=1;h=KCk=;charset=UTF-8
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
+ priorityscore=1501 mlxlogscore=755 malwarescore=0 spamscore=0
+ suspectscore=0 lowpriorityscore=0 clxscore=1011 impostorscore=0
+ bulkscore=0 adultscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2411120000 definitions=main-2412050097
 
-From: Zijun Hu <quic_zijuhu@quicinc.com>
+Hello James, Martin,
 
-There are always erroneous response when send mail to
-open-iscsi@googlegroups.com.
+here is a small set of changes for the zFCP device driver.
 
-Remove that unreachable address.
+Fedor Loshakov (1):
+  zfcp: correct kdoc parameter description for sending ELS and CT
 
-Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
----
- MAINTAINERS | 1 -
- 1 file changed, 1 deletion(-)
+Steffen Maier (2):
+  zfcp: clarify zfcp_port refcount ownership during "link" test
+  MAINTAINERS: Update zfcp entry
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1e930c7a58b13d8bbe6bf133ba7b36aa24c2b5e0..1c203d335c8d3e76ea2683996e9804999e4a4d53 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12175,7 +12175,6 @@ ISCSI
- M:	Lee Duncan <lduncan@suse.com>
- M:	Chris Leech <cleech@redhat.com>
- M:	Mike Christie <michael.christie@oracle.com>
--L:	open-iscsi@googlegroups.com
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- W:	www.open-iscsi.com
+ MAINTAINERS                  | 3 +--
+ drivers/s390/scsi/zfcp_fc.c  | 7 ++++++-
+ drivers/s390/scsi/zfcp_fsf.c | 4 ++--
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
----
-base-commit: feffde684ac29a3b7aec82d2df850fbdbdee55e4
-change-id: 20241205-remove_iscsi_group-950f16a835f4
 
-Best regards,
+base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
 -- 
-Zijun Hu <quic_zijuhu@quicinc.com>
+2.45.2
 
