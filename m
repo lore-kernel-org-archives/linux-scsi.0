@@ -1,37 +1,37 @@
-Received: from pv50p00im-tydg10011801.me.com (pv50p00im-tydg10011801.me.com [17.58.6.52])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91CCADF78
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 00:32:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B29B1F5FA
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 00:57:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733358731; cv=none; b=V5HQpPLjMnY1rCNUcUg/ti7WndSEDFTwzlR0G5GiggapjjpArVZ+eScCtVlGplrjeM/f33cFODU74wuEvG19g8Qe3UmgpLCb3mjaVefPBVUGLRfv3w/Xri4lurWM/MTTWqJvYehFEK4Xrgtr6ppxfKs9yDV5VHT81BHgPrGGSCA=
+	t=1733360253; cv=none; b=IAlFFJwtlz201deVaElP75KdpMIrHRCmzRbPRKp32R80A8WmO7LYShsvoiujshwkk0O670Xnoa/EHZZgPRmcO2t1oXSGfoZ8+C6Dq9gu2g4aT8i4sDevcYGIIEXy4zMYzuLdCYA/RI4Wlc2/8ehY2dRs8VWRaF9JapAL6BgB9lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733358731; c=relaxed/simple;
-	bh=jTnaUO4D/Q7MxZQscA3/XMdfWqggPPOxxvGW/7ZeXgA=;
+	s=arc-20240116; t=1733360253; c=relaxed/simple;
+	bh=rbSn1nYH53aXF/087IpQbbHYjVrtP9huSxyDdlVEsU4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MzxiN/miVNWpk2oeitRgYZauNScdFBhutmB72pDPaH0ps8lchQQFN/RmAQflxnmTBZzer0IkdgocJXcvKRVbG1MVTBk2yh7z1D3HyWQYswAR2++nlcqKt8UIQiMQTWoCDDxJbJxjw+b44TK0nARDrKK4Y3voxMPerK/hACaZi4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=NvUB+1Qn; arc=none smtp.client-ip=17.58.6.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	 In-Reply-To:Content-Type; b=csjoPiECEkWGnP+IgHsba2fk8l2G/Q5KaVec8WlKQKfx2X83lrKyor9nq4EmDvbVF8x1ze+/UXCzvqHoJX7ER0FZD2q12xH8GZnBFCTUB2hb/76YylE8Hbv9702WP8WepH6eLK9a+vX7vY5MNY4ZDlrsxK4kuo1VCgIvvWeHkzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BWpd7EoS; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="NvUB+1Qn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
-	s=1a1hai; t=1733358727;
-	bh=cXKPzq1F5TX5/uxkKzMSB1NXoT3FhOuw3zI5BP+SzJo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:
-	 x-icloud-hme;
-	b=NvUB+1QnWMYICgzWlemCLtbKtw0Tm9UBfjUIS4wXxNaGs9onuC2hnMzT/iYvnz07/
-	 HOJi6i+ZJu7u9TFjWv6p091BQybVr1dy2GK+s4Y1dBRyb01zFxvkpYzmKIcdYc+f+h
-	 EPlThxGXJ2V2jWHZoWnqU8CzaC/gBYpkJxrTxi6CAYmoJiqC5cfkokKhTuJPqzI01y
-	 SPAxLX9iaP6k8j/wWV+9x5JN+dMn3a4RipO7xV6ggbD4vgGWQxJbKf7T9HWef6iKb9
-	 MWAynZUufAflnI+7Qdg6sA6wGLflOnhzBW2AQHEIridePBX3xOYMQYs1ZNBMu+9K4s
-	 KuvLdIcO+3S3w==
-Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
-	by pv50p00im-tydg10011801.me.com (Postfix) with ESMTPSA id 1971880021D;
-	Thu,  5 Dec 2024 00:32:00 +0000 (UTC)
-Message-ID: <18dd5368-d583-44f3-8dd4-74c669ef3bf9@icloud.com>
-Date: Thu, 5 Dec 2024 08:31:58 +0800
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BWpd7EoS"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description;
+	bh=qWzPjaD00QTIQ0n6R4LFhFI9r9DCIL+kvwJnvqJbr5I=; b=BWpd7EoSOEO1Wq80tKU1tvtkhp
+	HBS8yy1MAXuwesPTI65n2UkQ9p34Futsyhz4joHafI++/PI+gnW+efUN6lITgY2hKPD1OcVM8WdAx
+	9fmtmRHiob8v17jUPZNWWcGznS2mCN5Mx7aqdliPil7vkczvBrCTqBjxhcQwgL1Sj/ko6wNZtTlCv
+	RmWrVesPbFwKMesyX1z5HF6csF+DsTvY3hyf25MS8PC1iuf9y3nF/mCSix2MI1BJl+28+IG1XVNuJ
+	zXTn+gy4oof4PqaYbu8t61HJkUTZtjU7veSPDp61U5crbhFu/keLidInnS7MeSolMGSgZkAbO6MPD
+	ZdjISOMA==;
+Received: from [50.53.2.24] (helo=[192.168.254.17])
+	by casper.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tJ0BK-0000000CHKs-2v4O;
+	Thu, 05 Dec 2024 00:57:28 +0000
+Message-ID: <69d7efec-1f69-419e-a300-84ff347eaa46@infradead.org>
+Date: Wed, 4 Dec 2024 16:57:24 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,69 +39,80 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 00/11] driver core: Constify API device_find_child()
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas@t-8ch.de>,
- linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-sound@vger.kernel.org, sparclinux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
- linux1394-devel@lists.sourceforge.net, arm-scmi@vger.kernel.org,
- linux-efi@vger.kernel.org, linux-gpio@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org,
- linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org,
- linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
- linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
- linux-usb@vger.kernel.org, linux-serial@vger.kernel.org,
- netdev@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
-References: <20241205-const_dfc_done-v3-0-1611f1486b5a@quicinc.com>
+Subject: Re: [PATCH v4 0/5] Replace the "slave_*" function names
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org
+References: <20241022180839.2712439-1-bvanassche@acm.org>
 Content-Language: en-US
-From: Zijun Hu <zijun_hu@icloud.com>
-In-Reply-To: <20241205-const_dfc_done-v3-0-1611f1486b5a@quicinc.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20241022180839.2712439-1-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: RvRSqKy8ZqOUE5anLWfZCokK2N1USz-Y
-X-Proofpoint-ORIG-GUID: RvRSqKy8ZqOUE5anLWfZCokK2N1USz-Y
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2024-12-04_19,2024-12-04_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 mlxscore=0
- bulkscore=0 malwarescore=0 mlxlogscore=919 clxscore=1015 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2308100000 definitions=main-2412050001
 
-On 2024/12/5 08:10, Zijun Hu wrote:
-> This patch series is to constify the following API:
+Hi--
 
-This patch series is based on the lasted mainline commit
-Commit: feffde684ac2 ("Merge tag 'for-6.13-rc1-tag' of
-git://git.kernel.org/pub/scm/linux/kernel/git/kdave/linux")
-to avoid potential conflict as much as possible.
 
-> struct device *device_find_child(struct device *dev, void *data,
-> 		int (*match)(struct device *dev, void *data));
-> To :
-> struct device *device_find_child(struct device *dev, const void *data,
-> 				 device_match_t match);
-> typedef int (*device_match_t)(struct device *dev, const void *data);
+On 10/22/24 11:07 AM, Bart Van Assche wrote:
+> Hi Martin,
 > 
-> Why to constify the API?
+> The text "slave_" in multiple function names does not make it clear what
+> the purpose of these functions is. Hence this patch series that renames all
+> SCSI functions that have the word "slave" in their function name. Please
+> consider this patch series for the next merge window.
 > 
-> - Protect caller's match data @*data which is for comparison and lookup
->   and the API does not actually need to modify @*data.
+> Thanks,
 > 
-> - Make the API's parameters (@match)() and @data have the same type as
->   all of other device finding APIs (bus|class|driver)_find_device().
-> 
-> - All kinds of existing device matching functions can be directly taken
->   as the API's argument, they were exported by driver core.
-> 
-> What to do?
-> 
-> - Patches [1/11, 3/11] prepare for constifying the API.
-> 
-> - Patch 4/11 constifies the API and adapt for its various subsystem usages.
-> 
-> - Remaining do cleanup for several usages with benefits brought above.
+> Bart.
 
+for patches 1 & 3: this file has been removed: (using quilt & patch)
+
+--------------------------
+|diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rtsx.c
+|index 6851a28f5ec6..2ee5d6341b53 100644
+|--- a/drivers/staging/rts5208/rtsx.c
+|+++ b/drivers/staging/rts5208/rtsx.c
+--------------------------
+No file to patch.  Skipping patch.
+
+
+For the documentation changes in all 5 patches:
+
+
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
+Acked-by: Randy Dunlap <rdunlap@infradead.org>
+
+Can we expect to see this merged for 6.13-rcN soonish?
+
+I am working on some patches that would like to be applied
+after this series.
+
+
+> 
+> Changes compared to v3:
+>  - Combined two Documentation/scsi/scsi_mid_low_api.rst patches into a single
+>    patch.
+> 
+> Changes compared to v2:
+>  - Renamed sdev_prep() into sdev_init().
+>  - Dropped the patches again that remove SCSI LLD changelog files.
+> 
+> Changes compared to v1:
+>  - Switch to the names proposed by Matthew Wilcox.
+>  - Included a patch that renames .device_configure() into .sdev_configure().
+>  - Split off the documentation changes into a separate patch as requested by
+>    Damien.
+>  - Added 5 patches that remove obsolete SCSI LLD changelog files.
+> 
+> Bart Van Assche (5):
+>   scsi: Rename .slave_alloc() and .slave_destroy()
+>   scsi: Rename .device_configure() into .sdev_configure()
+>   scsi: Convert SCSI drivers to .sdev_configure()
+>   scsi: core: Remove the .slave_configure() method
+>   scsi: core: Update API documentation
+
+
+Thanks.
+
+-- 
+~Randy
