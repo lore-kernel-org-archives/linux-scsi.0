@@ -1,139 +1,106 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E87E21D5B6
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 16:24:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 510901922FB;
+	Thu,  5 Dec 2024 18:04:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733415901; cv=none; b=IXSOQicHURqL97LRYZaeCTPUBqiOry53iqcRFdY3inyPpMeisnP/z6JQDBT9QktC1BPagniUDc1FZsMa8I590ZkphAURI4UrZBX8sdSzFCwK3RmR+Iarw/yZV/WuEhQFsehvoRyMHhPaF3y49TxI31BUFk+nR5AccPzF4j3V9Wc=
+	t=1733421894; cv=none; b=eVwKy84WFoklo4rjfR7a71QEec9im5NJ/x3NdDxbd/tOpH000dP7AUITKK2j1qKl7UbmUE6RlpXDVZcUXBW1nLT9NA1mxCOxQ97acKhPOLl/wwv185XgGy+SUkbbD6s6f5XzkoaCIPhdPjT7YjIUqADU5P1HTZBKBDBAxI3RXUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733415901; c=relaxed/simple;
-	bh=R7CVb9LI65y/3Qu32CYYXvSxOe5U0ZYewJNDLJ5FwCc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fz5t12GII9iwnkpRFeggaQ/aUYBKxi4zXLqucg20/yX3o/MC3AG1DaTaOueWkW1lF+Hu5u76xn5wFX1lJqGHLyIuDu47t8mKhC0Yu5zVG6CwLR4cH7A9JDteeTiKL8+p4H2kCRtvRO7W7HxWO0HGNyz21L0wFLlZNQ8liZh4KTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=3ZpoIMZn; arc=none smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
+	s=arc-20240116; t=1733421894; c=relaxed/simple;
+	bh=hZtXBo2jdC7H9GEX5zEd/6dIqnpMpPqcvFJELa7vEWQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jgxpPad9GhnEqH5i9qeUiNTVII3g6IMgZWAruNI1NONfts/Pbsssg+ahbFowfltCq+kXkbpLm/y7Jm/kXQLEXuyPS5UaubnB5VBJFakjbXFs1lZIFYYIApz3WTP/oz70q8azsW2E6580JiVmjEgn/bsOUSobIGFd06lXvGgCuM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m07EyLZj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="3ZpoIMZn"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-53dd57589c8so2474118e87.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Dec 2024 08:24:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1733415897; x=1734020697; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ItHEVA7I8S1EP8oyTKl1F93KEEHRVDFUauUtw/1Acb0=;
-        b=3ZpoIMZnwjCl4Vv5bu6PGSXVdDmY7k4Cj1zgHc6F/cvtw8CM1rNR1LTJDsCfgmd0g2
-         BceSlvbQiLyYiwl1rdWJ3jv2Ns4UxCWRnsrFu4TQEusFPgx7FkT2UIodCH6L3llBjvZX
-         XNAHzd6Taqadu0P2fGi/yUIsqcbc2LJaCMf0KU5YlqUl8Ra8J04m6hedyjqo7k0PtBfa
-         YzZpvhommBUg5ON/+IUYW1PeMHGPsGOGeDu3G435iCu3IM89jIWqEOC9Hd0bT3dOemUj
-         +5wiSeoDLmTU2wBbs3vqgyCGSboeppp2+z3qZoXORDMgU0UpKaORWbQqfQFXw+JpXtdd
-         NE3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733415897; x=1734020697;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ItHEVA7I8S1EP8oyTKl1F93KEEHRVDFUauUtw/1Acb0=;
-        b=DvG1bgNv4N+S1f+ihB1zlpZxfgfq1slIQ8USNna0QKrn3nL1dmjgQQRAy+dRDeSKeh
-         pFSZUGZQs7QoSiJGY3Deqwb/IkVO9NEII5JysE7WUWbtvPc5dzEW6jldc86itBSg4tCf
-         uja8eAVkZZO/lDoU8aSfbWeIsr9klun2goDwCWq/gz//lsuuvPfUQyP/74/H5DbpWKu9
-         vFHYqLoGuAxX0/4GkwQJI7T8jCiJIfFCxlmFgyuHfnGEZuQetCclBXQujH9B4Iy7Y2BH
-         iQ2Pf/0bH0K4H/gGofcM2TT+8MBpRGD4ObAwaJU/GH7THW+Vb7RHl+tQkM4z8v5DTzn5
-         KQYA==
-X-Forwarded-Encrypted: i=1; AJvYcCVa9eiUHdPzQ1qwFH1DqwzhVkUtpEGeN1G/dJLqtUvob/Qxe13i0pRC68kQVG+VdLy7QvFJ+7sC4n+4@vger.kernel.org
-X-Gm-Message-State: AOJu0YzAcy6IxdlqeuJFAT5R9dr9wW+rWqlg+2XOFkaqz0RPZwkO1WIb
-	nJrrGAWupR/UQtWnd0KJb4yaEWPc9g2nlqKSi0WTZ90cTpW4q80uRy0vhJ3G9IkJMBEPeuztPZA
-	cLq1QZXIqHrsx0MwTsSfl2QF/n8BhMFcLqq8T3w==
-X-Gm-Gg: ASbGnctkUkUJPvdH/y6WjpCF8bSOUUN22luJ6ifVf82IbpU+SvPhMuSbVm/IXtT7VrH
-	xySQpHQYNQaRXFACfLB1UFXDDVzBOSf7gQbkt12G5PXFd76VTNGasz9hfWIsI6g==
-X-Google-Smtp-Source: AGHT+IErYJU9bnmgh/S4XgU0jcrMWfkUEiJSX94XfyJ1xliCjLlWQwaDM6P30GxT6teJ6fjjXCYzQKweIZQ1ynm3Yi8=
-X-Received: by 2002:a05:6512:4006:b0:53d:f6bc:23ec with SMTP id
- 2adb3069b0e04-53e216f74ecmr1077273e87.5.1733415897149; Thu, 05 Dec 2024
- 08:24:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m07EyLZj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BABDC4CED1;
+	Thu,  5 Dec 2024 18:04:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733421894;
+	bh=hZtXBo2jdC7H9GEX5zEd/6dIqnpMpPqcvFJELa7vEWQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=m07EyLZjU+dhfWLP/mB5cAFfr5igeKowggMRD3cYlKDgXfxZkhZ5UddV/46QQlF6z
+	 3E4O4Yv25mh6PBav+Mh9A+tIqOGX6rB51txBav+RdsY3sXHL7VPamNp3fev0mPSIr/
+	 EiSfDKKiu6JAyc+1LIEfqY/srROvlqGGEpS0TnuAIDfASOtP/L47igrhICFsgzikjx
+	 t7/ilUJdJwCI1gR3UJ9f0DRBQ9+ZyQViV90RV1AiR5PR4j5c5lryss5/V9N6oiDi/T
+	 TkfiY4HaT8ymdtViw6Q8FIW7IVA1N98wQCFfh6IRys0BOdsiLDPuJz+dNvsbX71KkX
+	 +t4SMo43J9pUA==
+Date: Thu, 5 Dec 2024 10:04:51 -0800
+From: Keith Busch <kbusch@kernel.org>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
+	asml.silence@gmail.com, anuj1072538@gmail.com, brauner@kernel.org,
+	jack@suse.cz, viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
+	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH v11 06/10] io_uring: introduce attributes for read/write
+ and PI support
+Message-ID: <Z1HrQ8lz7vYlRUtX@kbusch-mbp.dhcp.thefacebook.com>
+References: <20241128112240.8867-1-anuj20.g@samsung.com>
+ <CGME20241128113109epcas5p46022c85174da65853c85a8848b32f164@epcas5p4.samsung.com>
+ <20241128112240.8867-7-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241205-const_dfc_done-v3-0-1611f1486b5a@quicinc.com> <20241205-const_dfc_done-v3-8-1611f1486b5a@quicinc.com>
-In-Reply-To: <20241205-const_dfc_done-v3-8-1611f1486b5a@quicinc.com>
-From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Thu, 5 Dec 2024 17:24:46 +0100
-Message-ID: <CAMRc=Mf--vRm15N2au-zvP89obcxRuk+3OOLqFtrjgg61_LotA@mail.gmail.com>
-Subject: Re: [PATCH v3 08/11] gpio: sim: Remove gpio_sim_dev_match_fwnode()
-To: Zijun Hu <zijun_hu@icloud.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <ukleinek@kernel.org>, 
-	James Bottomley <James.Bottomley@hansenpartnership.com>, 
-	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas@t-8ch.de>, 
-	linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev, 
-	linux-sound@vger.kernel.org, sparclinux@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	linux1394-devel@lists.sourceforge.net, arm-scmi@vger.kernel.org, 
-	linux-efi@vger.kernel.org, linux-gpio@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org, 
-	linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org, 
-	linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, 
-	linux-usb@vger.kernel.org, linux-serial@vger.kernel.org, 
-	netdev@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241128112240.8867-7-anuj20.g@samsung.com>
 
-On Thu, Dec 5, 2024 at 1:15=E2=80=AFAM Zijun Hu <zijun_hu@icloud.com> wrote=
-:
->
-> From: Zijun Hu <quic_zijuhu@quicinc.com>
->
-> gpio_sim_dev_match_fwnode() is a simple wrapper of device_match_fwnode()
-> Remvoe the unnecessary wrapper.
->
-> Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
+On Thu, Nov 28, 2024 at 04:52:36PM +0530, Anuj Gupta wrote:
+> Add the ability to pass additional attributes along with read/write.
+> Application can prepare attibute specific information and pass its
+> address using the SQE field:
+> 	__u64	attr_ptr;
+> 
+> Along with setting a mask indicating attributes being passed:
+> 	__u64	attr_type_mask;
+> 
+> Overall 64 attributes are allowed and currently one attribute
+> 'IORING_RW_ATTR_FLAG_PI' is supported.
+> 
+> With PI attribute, userspace can pass following information:
+> - flags: integrity check flags IO_INTEGRITY_CHK_{GUARD/APPTAG/REFTAG}
+> - len: length of PI/metadata buffer
+> - addr: address of metadata buffer
+> - seed: seed value for reftag remapping
+> - app_tag: application defined 16b value
+> 
+> Process this information to prepare uio_meta_descriptor and pass it down
+> using kiocb->private.
+> 
+> PI attribute is supported only for direct IO.
+> 
+> Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 > ---
->  drivers/gpio/gpio-sim.c | 7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
->
-> diff --git a/drivers/gpio/gpio-sim.c b/drivers/gpio/gpio-sim.c
-> index 370b71513bdb529112e157fa22a5451e02502a17..b1f33cbaaaa78aca324f99c45=
-a868e7e79a9d672 100644
-> --- a/drivers/gpio/gpio-sim.c
-> +++ b/drivers/gpio/gpio-sim.c
-> @@ -413,11 +413,6 @@ static int gpio_sim_setup_sysfs(struct gpio_sim_chip=
- *chip)
->         return devm_add_action_or_reset(dev, gpio_sim_sysfs_remove, chip)=
-;
->  }
->
-> -static int gpio_sim_dev_match_fwnode(struct device *dev, const void *dat=
-a)
-> -{
-> -       return device_match_fwnode(dev, data);
-> -}
-> -
->  static int gpio_sim_add_bank(struct fwnode_handle *swnode, struct device=
- *dev)
->  {
->         struct gpio_sim_chip *chip;
-> @@ -503,7 +498,7 @@ static int gpio_sim_add_bank(struct fwnode_handle *sw=
-node, struct device *dev)
->         if (ret)
->                 return ret;
->
-> -       chip->dev =3D device_find_child(dev, swnode, gpio_sim_dev_match_f=
-wnode);
-> +       chip->dev =3D device_find_child(dev, swnode, device_match_fwnode)=
-;
->         if (!chip->dev)
->                 return -ENODEV;
->
->
-> --
-> 2.34.1
->
->
+>  include/uapi/linux/io_uring.h | 16 +++++++
+>  io_uring/io_uring.c           |  2 +
+>  io_uring/rw.c                 | 83 ++++++++++++++++++++++++++++++++++-
+>  io_uring/rw.h                 | 14 +++++-
+>  4 files changed, 112 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.h
+> index aac9a4f8fa9a..38f0d6b10eaf 100644
+> --- a/include/uapi/linux/io_uring.h
+> +++ b/include/uapi/linux/io_uring.h
+> @@ -98,6 +98,10 @@ struct io_uring_sqe {
+>  			__u64	addr3;
+>  			__u64	__pad2[1];
+>  		};
+> +		struct {
+> +			__u64	attr_ptr; /* pointer to attribute information */
+> +			__u64	attr_type_mask; /* bit mask of attributes */
+> +		};
 
-Please use get_maintainers.pl to get the complete list of addresses to Cc.
-
-Bartosz
+I can't say I'm a fan of how this turned out. I'm merging up the write
+hint stuff, and these new fields occupy where that 16-bit value was
+initially going. Okay, so I guess I need to just add a new attribute
+flag? That might work if I am only appending exactly one extra attribute
+per SQE, but what if I need both PI and Write Hint? Do the attributes
+need to appear in a strict order?
