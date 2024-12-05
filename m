@@ -1,37 +1,72 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93D9A5028C
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 21:05:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F48A1B393B
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Dec 2024 21:21:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733432730; cv=none; b=aEGRJfaJ7poRRs9JWzyAX0WsNLjqGlxRF1k1k3n8d34tykgVaOGp4MngSleTpolgG0JswkTihimj6oHQyj442CL8yljBl4PhBIZkPUdJL7tL0KMvcNlpQvyfbXZR6B3JZ203a3UuQzLu7976b1O1szPx34VkgL6Xqab5KoYZg0o=
+	t=1733433701; cv=none; b=b1n+r89VZLFsoPCvNSo6D8RRnJWe3WFLUFZNlQ/otzBkczIv3EpbzBWYwN71GQOIfIgYj5hVkacRs+i/LRSIHiQkC8z/DrScDnkyEiOjptwPWq9ubMe4ABf2jDG+tiXB7goy3nrMXKhyZt8qzgBIEow+jTSSvtXj+e6I+tzdZ6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733432730; c=relaxed/simple;
-	bh=MNmXYjxB4XaYR8DXUYQyKQ8zU7BMCCDbAt+peiIIbq8=;
+	s=arc-20240116; t=1733433701; c=relaxed/simple;
+	bh=OXG1ROAvB8Ka+BpsxdTrr6f/QoqTagXp322JhE/Jub8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sO85g8EVL3/GJnVjqLWLLwOaaCa2gg1fL2nLhudZpu2gKQXEJ7K9ybGpKbAgz3OjVXeAtolXMN01sYQPAcT+wZ3x7PtqB12sLRQ6sC9Yng2GvRL76kVBmgTO5AbIDgw9U7/3UM6yK2EGgn20LJofFnntBXy165kn8GAOr8hGLrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mWUMLqTt; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 In-Reply-To:Content-Type; b=sCN5GxjIiNGhU3F+dzQ+teP3j5YGv2r9iZczPMffwbkbrkHcraKrniVm7XXOcyyT9Y5q5snc29EQcgqtJKSzLSA2IxD2rF6eRNwjT7uApDtl3xNdvSRb+oimuMy/gunHE8pdWLuO1y+Rv1uYQpnMRAy++/bB/TMQjgW5VX6yPOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=c72aI9GE; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mWUMLqTt"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
-	:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=awe3ZeDg6QeaK+2CuRSkG590RKRCHOMF6m/Tdcv7qUA=; b=mWUMLqTthX3ZILRROUa774xxij
-	MkolykvwOOtv99ZrzpYAFiHFIQXtSNsM08ud37wniScdunQtKtnmlQnfrynSVOmAsaEkiCgEOXTNy
-	f7kYQsx3LctqMyu7yMrgDQfmpbRVFLp3n07tKPCa7W34woz957wPGBki7/yhVRkYD3VTI7S7Deea0
-	FwavxgMn/h7U6O9smu+AygtQMXYNWgj431d9mZCmSbG6feZqagsfZCPOFbuOCHrkuESsZ04F+BlnU
-	ZyKhnT6sxWCVQUVo9vlnALQEAlUAGv9tEM42Jz8+hQZuKTNKKlk4VrvdC2brb1zRyHkCJ2sU54ZU+
-	lZQzR05g==;
-Received: from [50.53.2.24] (helo=[192.168.254.17])
-	by desiato.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tJJ2C-00000002yC2-30I1;
-	Thu, 05 Dec 2024 21:05:20 +0000
-Message-ID: <8bc51b87-60ff-4064-ad8c-be98116fd41c@infradead.org>
-Date: Thu, 5 Dec 2024 13:05:12 -0800
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="c72aI9GE"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B5HaLPK006894
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Dec 2024 21:21:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	9wSKuFAw0pvLNlawQARI7JAUgvlhJLy4giEcuIJ/xFE=; b=c72aI9GE3h1hgefA
+	yh2mdztFSppkAR1fa4zj5DaMbyqGfRj0jPqj8JIhkp99f1WQXpukx4oahsSqLJYu
+	7M7osg8nhVjzrMu1Wv6eAPeNbQ6Ky5xYBnw1Dsq2l2u8BPAWVWdTrkrNpUR/HCnB
+	d6YLbqz3zE5ij5+6ke9BtAcA4qyoiZtdmvVFK3nbr9cDaovu5ezWHcRdpeFjSC2b
+	M1kAiz5sKqEPwkkCMs5pql4RVnVSd5YSVMdWYBcLKxnRJcSKaB/XqvOCd2EleTK8
+	lEMTH0H/bvkjqWnXB5e7vrXL5KUbCGqept2xv9qktFLzsQTtk+/tKfLlki45OBSn
+	q6/CiQ==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43ben88wnc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 05 Dec 2024 21:21:39 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-7b67127ab77so12418385a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Dec 2024 13:21:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733433698; x=1734038498;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9wSKuFAw0pvLNlawQARI7JAUgvlhJLy4giEcuIJ/xFE=;
+        b=Fg5VRHzSlJ9KYAjRzm9zOPdQLUXsaUBkxkE6dQQYJvyIbYm39GT4rezzNjl+7FwhAz
+         hF8Yxodwo0S6ZDwTSnZ1lU3szzZYhifGK5I1ae7z9RJfEXA0PS3NxerDbJuvssPBwRV6
+         FriSZTYZcSZbkyWHYDdjSJSW553aMHUZcbW4hSDQni9DSWOv6E7Mm9qYJ9TL+PgoMjVl
+         omSEFc2gMKRw0NdYvHrEnmB3hxyvjsS7hCyG5Io0SexkmwwtAboobExbPt0MeckuPfKW
+         QcH9M1/MvVmt/fu8VV/v9VAer+LMK3up6J5nKS0NGbqLSvU9WE2cxZK1HlC7+OreMw+w
+         eAJg==
+X-Forwarded-Encrypted: i=1; AJvYcCW82ipjQIFwV0BjG3i4xqUjy3QFs/MKMH8X1akiVvYUJLry5iUHarQaP/KvOxp/2Di7BAJQLoZdni92@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz1JsvuXD5FMwPXzdf/UMi+gJqYavTLEo6VDvcIAmiL4Xq5TuDQ
+	zko+M/pyU6GIXeoT/Mg9HSO5k0ByGjvorCd8Wic2yE6jTvNfjLhNjtro3MOrH5IbBGa3LCF1AoV
+	LQY49fKYLAe5UGNcut6vNe8TCsQcBpcr4s9U4To4UJLi5fQnKULJBzk3oxE3x
+X-Gm-Gg: ASbGncu1HqYTa56oDkYi35tgMGRmAycJ6iv20aNdnkgVrYpNQ+0Gytx5Xu8wvlPul5p
+	lqrnr5FNrexvb0IrJHTrBVFAO3n9jJX1jG28nNmFFQDE4OYQBbrLGpLacC+u8DOL6a3mXtCEldL
+	NS3uZunRIOo6+sQdorFRmQGcvAyHTUtEud8vVbbwfjkczQlpyeD4imfj4nxkZJqdGQ9PvLfqCGS
+	mDKdfUjHs+1l60bAHuRDsMHsNL5y6TLDBCRzSrOnFrep0ufQ0Go8QDCb5DyqilwtfOlsmTN4R2m
+	h+FjZxkm6117H2lXJom343I84TU5olA=
+X-Received: by 2002:a05:620a:40d1:b0:7b3:2107:2eef with SMTP id af79cd13be357-7b6bcbb4a89mr43688485a.16.1733433698198;
+        Thu, 05 Dec 2024 13:21:38 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGP2eroqw5GjfjqU4teCdxLTjTM2852lowFJw5191BqDO0Ct4lPnhyAhDYPqgGpdYtEezYmZg==
+X-Received: by 2002:a05:620a:40d1:b0:7b3:2107:2eef with SMTP id af79cd13be357-7b6bcbb4a89mr43685085a.16.1733433697790;
+        Thu, 05 Dec 2024 13:21:37 -0800 (PST)
+Received: from [192.168.212.120] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa625e4dbfesm142253866b.6.2024.12.05.13.21.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Dec 2024 13:21:37 -0800 (PST)
+Message-ID: <d4f7ca97-b37e-4b8f-918c-9976e4a9cf41@oss.qualcomm.com>
+Date: Thu, 5 Dec 2024 22:21:35 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,35 +74,98 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/5] Replace the "slave_*" function names
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Damien Le Moal
- <dlemoal@kernel.org>, linux-scsi@vger.kernel.org
-References: <20241022180839.2712439-1-bvanassche@acm.org>
- <69d7efec-1f69-419e-a300-84ff347eaa46@infradead.org>
- <yq1ldwtoqbk.fsf@ca-mkp.ca.oracle.com>
+Subject: Re: [PATCH v3 2/3] arm64: dts: qcom: qcs615: add UFS node
+To: Xin Liu <quic_liuxin@quicinc.com>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>
+Cc: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I
+ <kishon@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, quic_jiegan@quicinc.com,
+        quic_aiquny@quicinc.com, quic_tingweiz@quicinc.com,
+        quic_sayalil@quicinc.com
+References: <20241122064428.278752-1-quic_liuxin@quicinc.com>
+ <20241122064428.278752-3-quic_liuxin@quicinc.com>
 Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <yq1ldwtoqbk.fsf@ca-mkp.ca.oracle.com>
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20241122064428.278752-3-quic_liuxin@quicinc.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: vx6pB-nzeLhbtOSTrkv1OcCspqIwmJog
+X-Proofpoint-GUID: vx6pB-nzeLhbtOSTrkv1OcCspqIwmJog
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
+ priorityscore=1501 impostorscore=0 mlxlogscore=999 clxscore=1015
+ malwarescore=0 suspectscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412050159
 
-
-
-On 12/5/24 12:00 PM, Martin K. Petersen wrote:
+On 22.11.2024 7:44 AM, Xin Liu wrote:
+> From: Sayali Lokhande <quic_sayalil@quicinc.com>
 > 
-> Randy,
+> Add the UFS Host Controller node and its PHY for QCS615 SoC.
 > 
->> Can we expect to see this merged for 6.13-rcN soonish?
->>
->> I am working on some patches that would like to be applied
->> after this series.
-> 
-> Already merged, it's in 6.14/scsi-staging.
+> Signed-off-by: Sayali Lokhande <quic_sayalil@quicinc.com>
+> Co-developed-by: Xin Liu <quic_liuxin@quicinc.com>
+> Signed-off-by: Xin Liu <quic_liuxin@quicinc.com>
+> ---
 
-Ah good. I was looking at the linux-next tree.
+[...]
 
-thanks.
--- 
-~Randy
+> +
+> +			operating-points-v2 = <&ufs_opp_table>;
+> +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
+> +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
 
+QCOM_ICC_TAG_ACTIVE_ONLY for the cpu path
+
+> +			interconnect-names = "ufs-ddr",
+> +					     "cpu-ufs";
+> +
+> +			power-domains = <&gcc UFS_PHY_GDSC>;
+> +			required-opps = <&rpmhpd_opp_nom>;
+
+this contradicts the levels in the OPP table:
+
+> +
+> +			iommus = <&apps_smmu 0x300 0x0>;
+> +			dma-coherent;
+> +
+> +			lanes-per-direction = <1>;
+> +
+> +			phys = <&ufs_mem_phy>;
+> +			phy-names = "ufsphy";
+> +
+> +			#reset-cells = <1>;
+> +
+> +			status = "disabled";
+> +
+> +			ufs_opp_table: opp-table {
+> +				compatible = "operating-points-v2";
+> +
+> +				opp-50000000 {
+> +					opp-hz = /bits/ 64 <50000000>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <37500000>,
+> +						 /bits/ 64 <75000000>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>;
+> +					required-opps = <&rpmhpd_opp_low_svs>;
+> +				};
+> +
+
+Konrad
