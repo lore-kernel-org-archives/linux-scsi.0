@@ -1,71 +1,71 @@
-Received: from rcdn-iport-5.cisco.com (rcdn-iport-5.cisco.com [173.37.86.76])
+Received: from rcdn-iport-7.cisco.com (rcdn-iport-7.cisco.com [173.37.86.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A4FA20456E;
-	Fri,  6 Dec 2024 21:11:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35876212F83;
+	Fri,  6 Dec 2024 21:12:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733519482; cv=none; b=El4ytckaPK2UE8XvMl4CCzyDB2JQTg3BbQoy7tFxD+4UVNFu0w6lMpEoYKwzfVGnmEm63SXpnVHXIUxtjpboxxBo0QzWeNY+TjZpEyUNOyALvb0W4DeiRbgSYZ/C0WAjUyF2PoV5EdOeSCLPNIuE1iDlGuIlQvZS7k7U2BrbBbs=
+	t=1733519531; cv=none; b=OdwEdNcB4gOxGPwv6hlWTlssj5o9auMq3gXMhktrA86axs2GzSw8OAJFkCmdWOuHD7kEELMDqA9+rVZZnCII2r/eXCXTC6CsAdlMBhb3zQ2J+mQ5fM1U2OKFDVI/Nxu3I/DQrTJDlRgC/x3bEvqvwKjvCaCBc15voP3X8DXqV4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733519482; c=relaxed/simple;
-	bh=F47pQSZuf+uyWREv2YPfTZdjLY+MkYoBqyzQDFReeZw=;
+	s=arc-20240116; t=1733519531; c=relaxed/simple;
+	bh=Er2kMvV3WwmWG7YM9zuMtLAX9mlXrysAwteFtpDMk+U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=keeNp+dvAMDQdOHXDbkWv89Vau2ZITH5/DlU95uX3oJFUjx95q1h6NTFM/WXVsx72n/gmqhW5Ml7YQg3Yco5p76GaKU53f4rtElG+LrNDEbShlZRMomk8O+t1fdrgBAXHoqstR033una9fqgVRIXVXs5SzstAmVjajvABngxY/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=Gq6Cj8aS; arc=none smtp.client-ip=173.37.86.76
+	 MIME-Version; b=dcsoelJV1YsEXemSNYLRWBpHzCvPMUkxMCY2VfqCv9T8I7Ck09RGN27hi8ShWUDzLEo5ysjlGZgNI5J4yhusaRRT1DgfEKZWbfT+M0vf0gE7Af3HY9xOCOdKL6ht1yW84FcToD0Rf+YsCdIUcZOVY5rfI3Yfqd6/LLpOgVRd2mA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=Ptm//F1A; arc=none smtp.client-ip=173.37.86.78
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="Gq6Cj8aS"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="Ptm//F1A"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=23808; q=dns/txt;
-  s=iport; t=1733519479; x=1734729079;
+  d=cisco.com; i=@cisco.com; l=25384; q=dns/txt;
+  s=iport; t=1733519528; x=1734729128;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=FW12+og9jLwbCTR/893s1RqtaQKSc3jIjxZiIztlYsQ=;
-  b=Gq6Cj8aSv2KzZjNXUJFgpTaeQHEWN8aGsdonAybBjgDv+TLQ9PgGc0ya
-   am8AOoMIkRM5fFsWXYxLTBk712ULucVlBWvIEp4qo14i2MhVwfo0O6NXe
-   rdR46V+/PlhoDu+izGInWj2lJrTThBPIKc7oIBJFzZLVyZkLk4NVqdn6O
-   E=;
-X-CSE-ConnectionGUID: RO9AUI3WTL6WZ3k5QsqxLA==
-X-CSE-MsgGUID: M/9bsoCUQXqdlLw6i0g4IQ==
-X-IPAS-Result: =?us-ascii?q?A0BkAwBwZ1Nn/4//Ja1aH4I9ghwvgU9DGS+WQ4EWnQUUg?=
- =?us-ascii?q?REDVg8BAQEPRAQBAYUHAopoAiY0CQ4BAgQBAQEBAwIDAQEBAQEBAQEBAQELA?=
- =?us-ascii?q?QEFAQEBAgEHBYEOE4YIhlsCAQMaDQsBRhA5ARdWGYIpWIJlA7F9gXkzgQHeM?=
- =?us-ascii?q?4FtgUiNSnCEdycVBoFJRIEUAYE7gTcHb4FSgjQfZgKFegSCIoFOgmh2JYETh?=
- =?us-ascii?q?22dHUiBIQNZIREBVRMNCgsHBYF2A4JNeiuBC4EXOoF+gRNKhQxGPYJKaUs3A?=
- =?us-ascii?q?g0CNoIkfYJNhRmEaWMvAwMDA4M8hiWCNEADCxgNSBEsNxQbBj5uB6FGRoM5I?=
- =?us-ascii?q?IEBDQETHEwrCngWAR4BBAQ8kniSEaEBhCSaHocmGjOqUZh7o1wYUIRmgWc8g?=
- =?us-ascii?q?VkzGggbFTuCZ1IZD44tFsIjJTI8AgcLAQEDCZM+gXsBAQ?=
-IronPort-Data: A9a23:q2egi64P6h9IsVCIaxctYgxRtCnGchMFZxGqfqrLsTDasY5as4F+v
- mcdWWjTbPzbZDHwKIolbYix80sH6p/XmNAyQAs/qi8zZn8b8sCt6fZ1gavT04J+CuWZESqLO
- u1HMoGowPgcFyGa/lH1dOC89RGQ7InQLpLkEunIJyttcgFtTSYlmHpLlvUw6mJSqYDR7zil5
- 5Wr+aUzBHf/g2QoazhMtfrYwP9SlK2aVA0w7wRWic9j5Dcyp1FNZLoDKKe4KWfPQ4U8NoaSW
- +bZwbilyXjS9hErB8nNuu6TnpoiG+O60aCm0xK6aoD66vRwjnVaPpUTaJLwXXxqZwChxLid/
- jniWauYEm/FNoWU8AgUvoIx/ytWZcWq85efSZSzXFD6I0DuKxPRL/tS4E4eB6pJ09tWWl5y0
- aInGmsOMymYnvKS6efuIgVsrpxLwMjDJogTvDRkiDreF/tjGc6FSKTR7tge1zA17ixMNa+BP
- IxCNnw1MUmGOkEUUrsUIMpWcOOAhXDlbzxcoVG9rqss6G+Vxwt0uFToGICEIYHbFJ4Kxy50o
- ErjuDXzGRYxCeWv0DaB1m3yh7fAwQLCDdd6+LqQs6QCbEeo7m4eChc+UVq9vOn/i0S7HdlYL
- iQ8/yM0sak0slSmUtTnRBC+iHmetxUYVpxbFOhSwAWMzLfEpgWUHG4JShZfZ9E88sw7Xzon0
- hmOhdyBLThutqCFDGmW7ba8szy/I24WIHUEaCtCShEKi+QPu6kphR7JC9ImG6mvg5itR3f7w
- iuBq241gLB7YdM36phXNGvv21qEzqUlhCZsjukLdgpJNj9EWbM=
-IronPort-HdrOrdr: A9a23:mR4DgKEOC/eEpKykpLqEx8eALOsnbusQ8zAXPo5KJSC9Ffbo8/
+  bh=XrN8922JwF/hNmELsoVY7LZx7qolCGwUZWsl2aFLoLw=;
+  b=Ptm//F1Akbcpjd2y3yfceFr4kP4eaK8SkLRFinNrCqXVvliYEz0JIdDo
+   gKIb2UZqGcHFEgAJcVLt8HBeLtZI0vjWm9u248Ems6+XLyCpxapMJ6yrN
+   EACK0av4nDCQrHuiyPZwBh/glKFNztd/VaKZBOxwXTUKk/q/41q1CdcDg
+   c=;
+X-CSE-ConnectionGUID: bRDGa6yJQ4ir1uBufnrqTA==
+X-CSE-MsgGUID: 7WbVIJbyS3SctPrZejktdA==
+X-IPAS-Result: =?us-ascii?q?A0AnAABwZ1Nn/4//Ja1aHAEBAQEBAQcBARIBAQQEAQGBf?=
+ =?us-ascii?q?wcBAQsBgkp2WUMZL4xyiVGBFp0FFIERA1YPAQEBDzkLBAEBhQcCimgCJjQJD?=
+ =?us-ascii?q?gECBAEBAQEDAgMBAQEBAQEBAQEBAQsBAQUBAQECAQcFgQ4ThXsNhlsCAQMaD?=
+ =?us-ascii?q?QsBRhA5ARdWGYMBAYJkAxGxbIF5M4EB3jOBZwaBSAGNSXCEdycVBoFJRIEVg?=
+ =?us-ascii?q?nIHb4EFAUyCV2IChXoEh04lgROEIYNMjkOOWkiBIQNZIREBVRMNCgsHBYF2A?=
+ =?us-ascii?q?4JNeiuBC4EXOoF+gRNKg0qBQkY9gkppSzcCDQI2giR9eIFVhRmEaWMvAwMDA?=
+ =?us-ascii?q?4McIIYlRIE4OEADCxgNSBEsFCMUGwY+bgehRQFGg0oIBy0EShMsF4E2MAcPA?=
+ =?us-ascii?q?R4BCpMXkiyBNIl1lViEJIwXjgeHJhozm1mOeJh7jgKVclCEZoFnPIFZMxoIG?=
+ =?us-ascii?q?xU7gmcTPxkPji0LC4hsuTclMgI6AgcLAQEDCZM8AgIkB4FOAQE?=
+IronPort-Data: A9a23:3E1UoKMKgjplLrHvrR2DlsFynXyQoLVcMsEvi/4bfWQNrUp20mZUm
+ GdKUTyCOfuLYWH1eIgkPI/k8hsD7ZPTyt81HXM5pCpnJ55oRWUpJjg4wmPYZX76whjrFRo/h
+ ykmQoCeaphyFjmE+0/F3oHJ9RFUzbuPSqf3FNnKMyVwQR4MYCo6gHqPocZh6mJTqYb/WlnlV
+ e/a+ZWFZAb/g2AsaQr41orawP9RlKWq0N8nlgRWicBj5Df2i3QTBZQDEqC9R1OQapVUBOOzW
+ 9HYx7i/+G7Dlz91Yj9yuu+mGqGiaue60Tmm0hK6aYD76vRxjnBaPpIACRYpQRw/ZwNlMDxG4
+ I4lWZSYEW/FN0BX8QgXe0Ew/ypWZcWq9FJbSJSymZT78qHIT5fj6/9UIG4/Y5w6w7p2GzhT3
+ +EWLioUUjnW0opawJrjIgVtrt4oIM+uOMYUvWttiGmHS/0nWpvEBa7N4Le03h9p2ZsIRqmYP
+ ZdEL2MzN3wsYDUXUrsTIJE3hvupgnD8WzZZs1mS46Ew5gA/ySQrgeK8aYaOJoXiqcN9wXmSm
+ EPk9XXCWSoRKOSF+zeH8W6gr7qa9c/8cMdIfFGizdZug0W7x2oPBRlQXly+ydG7h0y0c9ZeL
+ VEEvCskqO4580nDZtz0RQG5pjicswIRQcFdFcU98giGzqeS6AGcbkAATzhceJkludUwSDgCy
+ FCEhZXqCCZpvbnTTmiSnp+QrDWvKW0OJnQDTTELQBFD4NT5pow3yBXVQb5e/LWdlNb5H3T0h
+ juNtiV73+tVhs8Q3KL99lfC696xmqX0oscOzl2/dgqYAslRPeZJu6TABYDn0Mt9
+IronPort-HdrOrdr: A9a23:I/bLqKEjb1PNW1y3pLqEx8eALOsnbusQ8zAXPo5KJSC9Ffbo8/
  xG88506faZslwssTQb6LO90cq7MBbhHPxOgLX5VI3KNGLbUSmTXeNfBODZrAEIdReSysdtkY
  99bqlzD8DxB1Bmgcu/3BO1CL8bsb66GdiT5ds3CxxWPHhXg2YK1XYeNjqm
-X-Talos-CUID: =?us-ascii?q?9a23=3AqnIilmuczdpFtYIw/W+MmPc26IsfVSz08VaLHHO?=
- =?us-ascii?q?cV1lbE77IcESJ6IdNxp8=3D?=
-X-Talos-MUID: 9a23:mxa3bQni6PeXD0yXS+DHdnpHc5Zi+KOFNXk9iJkCn9baNHR/Zxak2WE=
+X-Talos-CUID: 9a23:EyJXP28J+iaSMDmA6fyVv0QuNu8sLGz/9SvRORalI3tnTqeMdXbFrQ==
+X-Talos-MUID: 9a23:ZJXGDwkpId0iGmxF5kTYdno9C81WwoakGXtWqp4ag9O2OC5zJzu02WE=
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.12,214,1728950400"; 
-   d="scan'208";a="293599371"
+   d="scan'208";a="292914341"
 Received: from rcdn-l-core-06.cisco.com ([173.37.255.143])
-  by rcdn-iport-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Dec 2024 21:10:09 +0000
+  by rcdn-iport-7.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Dec 2024 21:12:07 +0000
 Received: from fedora.cisco.com (unknown [10.24.83.168])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id 4734718000254;
-	Fri,  6 Dec 2024 21:10:08 +0000 (GMT)
+	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id 880B118000263;
+	Fri,  6 Dec 2024 21:12:06 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -78,10 +78,11 @@ Cc: arulponn@cisco.com,
 	martin.petersen@oracle.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v6 02/15] scsi: fnic: Add headers and definitions for FDLS
-Date: Fri,  6 Dec 2024 13:08:39 -0800
-Message-ID: <20241206210852.3251-3-kartilak@cisco.com>
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH v6 05/15] scsi: fnic: Add support for unsolicited requests and responses
+Date: Fri,  6 Dec 2024 13:08:42 -0800
+Message-ID: <20241206210852.3251-6-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241206210852.3251-1-kartilak@cisco.com>
 References: <20241206210852.3251-1-kartilak@cisco.com>
@@ -96,8 +97,13 @@ X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.24.83.168, [10.24.83.168]
 X-Outbound-Node: rcdn-l-core-06.cisco.com
 
-Add headers and definitions for FDLS (Fabric Discovery and Login
-Services).
+Add support for unsolicited requests and responses.
+Add support to accept and reject frames.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Closes:
+https://lore.kernel.org/oe-kbuild-all/202409291705.MugERX98-lkp@
+intel.com/
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Co-developed-by: Gian Carlo Boffa <gcboffa@cisco.com>
@@ -110,744 +116,764 @@ Co-developed-by: Karan Tilak Kumar <kartilak@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
 Changes between v5 and v6:
-    Rebase to 6.14/scsi-queue.
     Incorporate review comments from Martin:
         Remove GCC 13.3 warnings.
     Incorporate review comments from Hannes:
-	Replace custom definitions with standard definitions.
-	Remove FDMI macro definitions.
-	Replace FDMI with standard FDMI definition.
+	Allocate OXID from a pool.
+	Modify frame initialization.
 
 Changes between v4 and v5:
     Incorporate review comments from Martin:
-        Remove newline at the end of fnic_fdls.h.
+        Remove unnecessary fdls_get_tgt_oxid_pool call.
         Modify attribution appropriately.
 
+Changes between v3 and v4:
+   Fix kernel test robot warnings.
+
 Changes between v2 and v3:
+    Add fnic_std_ba_acc removed from previous patch.
     Incorporate review comments from Hannes:
-        Replace redundant structure definitions with standard
-        definitions.
-        Remove multiple endian macro copies.
-        Remove static OXIDs macro definitions.
+        Replace redundant definitions with standard definitions.
 
 Changes between v1 and v2:
     Incorporate review comments from Hannes:
-        Remove redundant patch description.
-        Replace htonll() with get_unaligned_be64().
-        Replace raw values with macro names.
-        Remove fnic_del_fabric_timer_sync macro.
-        Remove fnic_del_tport_timer_sync macro.
-        Add fnic_del_fabric_timer_sync function declaration.
-        Add fnic_del_tport_timer_sync function declaration.
+        Replace fnic_del_tport_timer_sync macro calls with function
+        calls.
+        Fix indentation.
         Replace definitions with standard definitions from fc_els.h.
-        Move FDMI function declaration to this patch.
-    Incorporate review comments from John:
-        Replace int return value with void.
 ---
- drivers/scsi/fnic/fdls_fc.h   | 253 ++++++++++++++++++++
- drivers/scsi/fnic/fnic_fdls.h | 433 ++++++++++++++++++++++++++++++++++
- 2 files changed, 686 insertions(+)
- create mode 100644 drivers/scsi/fnic/fdls_fc.h
- create mode 100644 drivers/scsi/fnic/fnic_fdls.h
+ drivers/scsi/fnic/fdls_disc.c | 683 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 683 insertions(+)
 
-diff --git a/drivers/scsi/fnic/fdls_fc.h b/drivers/scsi/fnic/fdls_fc.h
-new file mode 100644
-index 000000000000..012f43afd083
---- /dev/null
-+++ b/drivers/scsi/fnic/fdls_fc.h
-@@ -0,0 +1,253 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
-+ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
-+ */
-+
-+#ifndef _FDLS_FC_H_
-+#define _FDLS_FC_H_
-+
-+/* This file contains the declarations for FC fabric services
-+ * and target discovery
-+ *
-+ * Request and Response for
-+ * 1. FLOGI
-+ * 2. PLOGI to Fabric Controller
-+ * 3. GPN_ID, GPN_FT
-+ * 4. RSCN
-+ * 5. PLOGI to Target
-+ * 6. PRLI to Target
-+ */
-+
-+#include <scsi/scsi.h>
-+#include <scsi/fc/fc_els.h>
-+#include <uapi/scsi/fc/fc_fs.h>
-+#include <uapi/scsi/fc/fc_ns.h>
-+#include <uapi/scsi/fc/fc_gs.h>
-+#include <uapi/linux/if_ether.h>
-+#include <scsi/fc/fc_ms.h>
-+#include <linux/minmax.h>
-+#include <linux/if_ether.h>
-+#include <scsi/fc/fc_encaps.h>
-+#include <scsi/fc/fc_fcoe.h>
-+
-+#define FDLS_MIN_FRAMES	(32)
-+#define FDLS_MIN_FRAME_ELEM	(4)
-+#define FNIC_FCP_SP_RD_XRDY_DIS 0x00000002
-+#define FNIC_FCP_SP_TARGET      0x00000010
-+#define FNIC_FCP_SP_INITIATOR   0x00000020
-+#define FNIC_FCP_SP_CONF_CMPL   0x00000080
-+#define FNIC_FCP_SP_RETRY       0x00000100
-+
-+#define FNIC_FC_CONCUR_SEQS    (0xFF)
-+#define FNIC_FC_RO_INFO        (0x1F)
-+
-+/* Little Endian */
-+#define FNIC_UNASSIGNED_OXID	(0xffff)
-+#define FNIC_UNASSIGNED_RXID	(0xffff)
-+#define FNIC_ELS_REQ_FCTL      (0x000029)
-+#define FNIC_ELS_REP_FCTL      (0x000099)
-+
-+#define FNIC_FCP_RSP_FCTL      (0x000099)
-+#define FNIC_REQ_ABTS_FCTL     (0x000009)
-+
-+#define FNIC_FC_PH_VER_HI      (0x20)
-+#define FNIC_FC_PH_VER_LO      (0x20)
-+#define FNIC_FC_PH_VER         (0x2020)
-+#define FNIC_FC_B2B_CREDIT     (0x0A)
-+#define FNIC_FC_B2B_RDF_SZ     (0x0800)
-+
-+#define FNIC_LOGI_RDF_SIZE(_logi) ((_logi).fl_csp.sp_bb_data)
-+#define FNIC_LOGI_R_A_TOV(_logi) ((_logi).fl_csp.sp_r_a_tov)
-+#define FNIC_LOGI_E_D_TOV(_logi) ((_logi).fl_csp.sp_e_d_tov)
-+#define FNIC_LOGI_FEATURES(_logi) (be16_to_cpu((_logi).fl_csp.sp_features))
-+#define FNIC_LOGI_PORT_NAME(_logi) ((_logi).fl_wwpn)
-+#define FNIC_LOGI_NODE_NAME(_logi) ((_logi).fl_wwnn)
-+
-+#define FNIC_LOGI_SET_RDF_SIZE(_logi, _rdf_size) \
-+	(FNIC_LOGI_RDF_SIZE(_logi) = cpu_to_be16(_rdf_size))
-+#define FNIC_LOGI_SET_E_D_TOV(_logi, _e_d_tov) \
-+	(FNIC_LOGI_E_D_TOV(_logi) = cpu_to_be32(_e_d_tov))
-+#define FNIC_LOGI_SET_R_A_TOV(_logi, _r_a_tov) \
-+	(FNIC_LOGI_R_A_TOV(_logi) = cpu_to_be32(_r_a_tov))
-+
-+#define FNIC_STD_SET_S_ID(_fchdr, _sid)        memcpy((_fchdr).fh_s_id, _sid, 3)
-+#define FNIC_STD_SET_D_ID(_fchdr, _did)        memcpy((_fchdr).fh_d_id, _did, 3)
-+#define FNIC_STD_SET_OX_ID(_fchdr, _oxid)      ((_fchdr).fh_ox_id = cpu_to_be16(_oxid))
-+#define FNIC_STD_SET_RX_ID(_fchdr, _rxid)      ((_fchdr).fh_rx_id = cpu_to_be16(_rxid))
-+
-+#define FNIC_STD_SET_R_CTL(_fchdr, _rctl)	((_fchdr).fh_r_ctl = _rctl)
-+#define FNIC_STD_SET_TYPE(_fchdr, _type)	((_fchdr).fh_type = _type)
-+#define FNIC_STD_SET_F_CTL(_fchdr, _fctl) \
-+	put_unaligned_be24(_fctl, &((_fchdr).fh_f_ctl))
-+
-+#define FNIC_STD_SET_NPORT_NAME(_ptr, _wwpn)	put_unaligned_be64(_wwpn, _ptr)
-+#define FNIC_STD_SET_NODE_NAME(_ptr, _wwnn)	put_unaligned_be64(_wwnn, _ptr)
-+#define FNIC_STD_SET_PORT_ID(__req, __portid) \
-+	memcpy(__req.fr_fid.fp_fid, __portid, 3)
-+#define FNIC_STD_SET_PORT_NAME(_req, _pName) \
-+	(put_unaligned_be64(_pName, &_req.fr_wwn))
-+
-+#define FNIC_STD_GET_OX_ID(_fchdr)		(be16_to_cpu((_fchdr)->fh_ox_id))
-+#define FNIC_STD_GET_RX_ID(_fchdr)		(be16_to_cpu((_fchdr)->fh_rx_id))
-+#define FNIC_STD_GET_S_ID(_fchdr)		((_fchdr)->fh_s_id)
-+#define FNIC_STD_GET_D_ID(_fchdr)		((_fchdr)->fh_d_id)
-+#define FNIC_STD_GET_TYPE(_fchdr)		((_fchdr)->fh_type)
-+#define FNIC_STD_GET_F_CTL(_fchdr)		((_fchdr)->fh_f_ctl)
-+#define FNIC_STD_GET_R_CTL(_fchdr)		((_fchdr)->fh_r_ctl)
-+
-+#define FNIC_STD_GET_FC_CT_CMD(__fcct_hdr)  (be16_to_cpu(__fcct_hdr->ct_cmd))
-+
-+#define FNIC_FCOE_MAX_FRAME_SZ  (2048)
-+#define FNIC_FCOE_MIN_FRAME_SZ  (280)
-+#define FNIC_FC_MAX_PAYLOAD_LEN (2048)
-+#define FNIC_MIN_DATA_FIELD_SIZE  (256)
-+
-+#define FNIC_FC_EDTOV_NSEC    (0x400)
-+#define FNIC_NSEC_TO_MSEC     (0x1000000)
-+#define FCP_PRLI_FUNC_TARGET	(0x0010)
-+
-+#define FNIC_FC_R_CTL_SOLICITED_DATA			(0x21)
-+#define FNIC_FC_F_CTL_LAST_END_SEQ				(0x98)
-+#define FNIC_FC_F_CTL_LAST_END_SEQ_INT			(0x99)
-+#define FNIC_FC_F_CTL_FIRST_LAST_SEQINIT		(0x29)
-+#define FNIC_FC_R_CTL_FC4_SCTL					(0x03)
-+#define FNIC_FC_CS_CTL							(0x00)
-+
-+#define FNIC_FC_FRAME_UNSOLICITED(_fchdr)				\
-+		(_fchdr->fh_r_ctl == FC_RCTL_ELS_REQ)
-+#define FNIC_FC_FRAME_SOLICITED_DATA(_fchdr)			\
-+		(_fchdr->fh_r_ctl == FNIC_FC_R_CTL_SOLICITED_DATA)
-+#define FNIC_FC_FRAME_SOLICITED_CTRL_REPLY(_fchdr)		\
-+		(_fchdr->fh_r_ctl == FC_RCTL_ELS_REP)
-+#define FNIC_FC_FRAME_FCTL_LAST_END_SEQ(_fchdr)			\
-+		(_fchdr->fh_f_ctl[0] == FNIC_FC_F_CTL_LAST_END_SEQ)
-+#define FNIC_FC_FRAME_FCTL_LAST_END_SEQ_INT(_fchdr)		\
-+		(_fchdr->fh_f_ctl[0] == FNIC_FC_F_CTL_LAST_END_SEQ_INT)
-+#define FNIC_FC_FRAME_FCTL_FIRST_LAST_SEQINIT(_fchdr)	\
-+		(_fchdr->fh_f_ctl[0] == FNIC_FC_F_CTL_FIRST_LAST_SEQINIT)
-+#define FNIC_FC_FRAME_FC4_SCTL(_fchdr)					\
-+		(_fchdr->fh_r_ctl == FNIC_FC_R_CTL_FC4_SCTL)
-+#define FNIC_FC_FRAME_TYPE_BLS(_fchdr) (_fchdr->fh_type == FC_TYPE_BLS)
-+#define FNIC_FC_FRAME_TYPE_ELS(_fchdr) (_fchdr->fh_type == FC_TYPE_ELS)
-+#define FNIC_FC_FRAME_TYPE_FC_GS(_fchdr) (_fchdr->fh_type == FC_TYPE_CT)
-+#define FNIC_FC_FRAME_CS_CTL(_fchdr) (_fchdr->fh_cs_ctl == FNIC_FC_CS_CTL)
-+
-+#define FNIC_FC_C3_RDF         (0xfff)
-+#define FNIC_FC_PLOGI_RSP_RDF(_plogi_rsp) \
-+	(min(_plogi_rsp->u.csp_plogi.b2b_rdf_size, \
-+	(_plogi_rsp->spc3[4] & FNIC_FC_C3_RDF)))
-+#define FNIC_FC_PLOGI_RSP_CONCUR_SEQ(_plogi_rsp) \
-+	(min((uint16_t) (be16_to_cpu(_plogi_rsp->els.fl_csp.sp_tot_seq)), \
-+	 (uint16_t) (be16_to_cpu(_plogi_rsp->els.fl_cssp[2].cp_con_seq) & 0xff)))
-+
-+/* FLOGI/PLOGI struct */
-+struct fc_std_flogi {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_flogi els;
-+} __packed;
-+
-+struct fc_std_els_acc_rsp {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_ls_acc acc;
-+} __packed;
-+
-+struct fc_std_els_rjt_rsp {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_ls_rjt rej;
-+} __packed;
-+
-+struct fc_std_els_adisc {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_adisc els;
-+} __packed;
-+
-+struct fc_std_rls_acc {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_rls_resp els;
-+} __packed;
-+
-+struct fc_std_abts_ba_acc {
-+	struct fc_frame_header fchdr;
-+	struct fc_ba_acc acc;
-+} __packed;
-+
-+struct fc_std_abts_ba_rjt {
-+	struct fc_frame_header fchdr;
-+	struct fc_ba_rjt rjt;
-+} __packed;
-+
-+struct fc_std_els_prli {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_prli els_prli;
-+	struct fc_els_spp sp;
-+}	 __packed;
-+
-+struct fc_std_rpn_id {
-+	struct fc_frame_header fchdr;
-+	struct fc_ct_hdr fc_std_ct_hdr;
-+	struct fc_ns_rn_id rpn_id;
-+} __packed;
-+
-+struct fc_std_fdmi_rhba {
-+	struct fc_frame_header fchdr;
-+	struct fc_ct_hdr fc_std_ct_hdr;
-+	struct fc_fdmi_rhba rhba;
-+} __packed;
-+
-+struct fc_std_fdmi_rpa {
-+	struct fc_frame_header fchdr;
-+	struct fc_ct_hdr fc_std_ct_hdr;
-+	struct fc_fdmi_rpa rpa;
-+}	 __packed;
-+
-+struct fc_std_rft_id {
-+	struct fc_frame_header fchdr;
-+	struct fc_ct_hdr fc_std_ct_hdr;
-+	struct fc_ns_rft_id rft_id;
-+} __packed;
-+
-+struct fc_std_rff_id {
-+	struct fc_frame_header fchdr;
-+	struct fc_ct_hdr fc_std_ct_hdr;
-+	struct fc_ns_rff_id rff_id;
-+} __packed;
-+
-+struct fc_std_gpn_ft {
-+	struct fc_frame_header fchdr;
-+	struct fc_ct_hdr fc_std_ct_hdr;
-+	struct fc_ns_gid_ft gpn_ft;
-+} __packed;
-+
-+/* Accept CT_IU	for	GPN_FT	*/
-+struct fc_gpn_ft_rsp_iu {
-+	uint8_t		ctrl;
-+	uint8_t		fcid[3];
-+	uint32_t	rsvd;
-+	__be64		wwpn;
-+} __packed;
-+
-+struct fc_std_rls {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_rls els;
-+} __packed;
-+
-+struct fc_std_scr {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_scr scr;
-+} __packed;
-+
-+struct fc_std_rscn {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_rscn els;
-+} __packed;
-+
-+struct fc_std_logo {
-+	struct fc_frame_header fchdr;
-+	struct fc_els_logo els;
-+} __packed;
-+
-+#define	FNIC_ETH_FCOE_HDRS_OFFSET	\
-+	(sizeof(struct ethhdr) + sizeof(struct fcoe_hdr))
-+
-+#endif	/*	_FDLS_FC_H	*/
-diff --git a/drivers/scsi/fnic/fnic_fdls.h b/drivers/scsi/fnic/fnic_fdls.h
-new file mode 100644
-index 000000000000..5d78eea20873
---- /dev/null
-+++ b/drivers/scsi/fnic/fnic_fdls.h
-@@ -0,0 +1,433 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
-+ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
-+ */
-+
-+#ifndef _FNIC_FDLS_H_
-+#define _FNIC_FDLS_H_
-+
-+#include "fnic_stats.h"
-+#include "fdls_fc.h"
-+
-+/* FDLS - Fabric discovery and login services
-+ * -> VLAN discovery
-+ *   -> retry every retry delay seconds until it succeeds.
-+ *                        <- List of VLANs
-+ *
-+ * -> Solicitation
-+ *                        <- Solicitation response (Advertisement)
-+ *
-+ * -> FCF selection & FLOGI ( FLOGI timeout - 2 * E_D_TOV)
-+ *                        <- FLOGI response
-+ *
-+ * -> FCF keep alive
-+ *                         <- FCF keep alive
-+ *
-+ * -> PLOGI to FFFFFC (DNS) (PLOGI timeout - 2 * R_A_TOV)
-+ *    -> ABTS if timeout (ABTS tomeout - 2 * R_A_TOV)
-+ *                        <- PLOGI response
-+ *    -> Retry PLOGI to FFFFFC (DNS) - Number of retries from vnic.cfg
-+ *
-+ * -> SCR to FFFFFC (DNS) (SCR timeout - 2 * R_A_TOV)
-+ *    -> ABTS if timeout (ABTS tomeout - 2 * R_A_TOV)
-+ *                        <- SCR response
-+ *    -> Retry SCR - Number of retries 2
-+ *
-+ * -> GPN_FT to FFFFFC (GPN_FT timeout - 2 * R_A_TOV)a
-+ *    -> Retry on BUSY until it succeeds
-+ *    -> Retry on BUSY until it succeeds
-+ *    -> 2 retries on timeout
-+ *
-+ * -> RFT_ID to FFFFFC (DNS)        (RFT_ID timeout - 3 * R_A_TOV)
-+ *    -> ABTS if timeout (ABTS tomeout - 2 * R_A_TOV)
-+ *    -> Retry RFT_ID to FFFFFC (DNS) (Number of retries 2 )
-+ *    -> Ignore if both retires fail.
-+ *
-+ *        Session establishment with targets
-+ * For each PWWN
-+ *   -> PLOGI to FCID of that PWWN (PLOGI timeout 2 * R_A_TOV)
-+ *    -> ABTS if timeout (ABTS tomeout - 2 * R_A_TOV)
-+ *                        <- PLOGI response
-+ *    -> Retry PLOGI. Num retries using vnic.cfg
-+ *
-+ *   -> PRLI to FCID of that PWWN (PRLI timeout 2 * R_A_TOV)
-+ *    -> ABTS if timeout (ABTS tomeout - 2 * R_A_TOV)
-+ *                        <- PRLI response
-+ *    -> Retry PRLI. Num retries using vnic.cfg
-+ *
-+ */
-+
-+#define FDLS_RETRY_COUNT 2
-+
-+/*
-+ * OXID encoding:
-+ * bits 0-8: oxid idx - allocated from poool
-+ * bits 9-13: oxid frame code from fnic_oxid_frame_type_e
-+ * bits 14-15: all zeros
-+ */
-+#define FNIC_OXID_POOL_SZ	(512)	/* always power of 2 */
-+#define FNIC_OXID_ENCODE(idx, frame_type)	(frame_type | idx)
-+#define FNIC_FRAME_MASK				0xFE00
-+#define FNIC_FRAME_TYPE(oxid)			(oxid & FNIC_FRAME_MASK)
-+#define FNIC_OXID_IDX(oxid)		((oxid) & (FNIC_OXID_POOL_SZ - 1))
-+
-+#define OXID_RECLAIM_TOV(iport) (2 * iport->r_a_tov) /* in milliseconds */
-+
-+#define FNIC_FDLS_FABRIC_ABORT_ISSUED     0x1
-+#define FNIC_FDLS_FPMA_LEARNT             0x2
-+
-+/* tport flags */
-+#define FNIC_FDLS_TPORT_IN_GPN_FT_LIST 0x1
-+#define FNIC_FDLS_TGT_ABORT_ISSUED     0x2
-+#define FNIC_FDLS_TPORT_SEND_ADISC     0x4
-+#define FNIC_FDLS_RETRY_FRAME          0x8
-+#define FNIC_FDLS_TPORT_BUSY	       0x10
-+#define FNIC_FDLS_TPORT_TERMINATING      0x20
-+#define FNIC_FDLS_TPORT_DELETED        0x40
-+#define FNIC_FDLS_SCSI_REGISTERED      0x200
-+
-+/* Retry supported by rport(returned by prli service parameters) */
-+#define FDLS_FC_RP_FLAGS_RETRY 0x1
-+
-+#define fdls_set_state(_fdls_fabric, _state)  ((_fdls_fabric)->state = _state)
-+#define fdls_get_state(_fdls_fabric)          ((_fdls_fabric)->state)
-+
-+#define FNIC_FDMI_ACTIVE    0x8
-+#define FNIC_FIRST_LINK_UP    0x2
-+
-+#define fdls_set_tport_state(_tport, _state)    (_tport->state = _state)
-+#define fdls_get_tport_state(_tport)            (_tport->state)
-+
-+#define FNIC_PORTSPEED_10GBIT   1
-+#define FNIC_FRAME_HT_ROOM     (2148)
-+#define FNIC_FCOE_FRAME_MAXSZ   (2112)
-+
-+
-+#define FNIC_FRAME_TYPE_FABRIC_FLOGI	0x1000
-+#define FNIC_FRAME_TYPE_FABRIC_PLOGI	0x1200
-+#define FNIC_FRAME_TYPE_FABRIC_RPN	0x1400
-+#define FNIC_FRAME_TYPE_FABRIC_RFT	0x1600
-+#define FNIC_FRAME_TYPE_FABRIC_RFF	0x1800
-+#define FNIC_FRAME_TYPE_FABRIC_SCR	0x1A00
-+#define FNIC_FRAME_TYPE_FABRIC_GPN_FT	0x1C00
-+#define FNIC_FRAME_TYPE_FABRIC_LOGO	0x1E00
-+#define FNIC_FRAME_TYPE_FDMI_PLOGI	0x2000
-+#define FNIC_FRAME_TYPE_FDMI_RHBA	0x2200
-+#define FNIC_FRAME_TYPE_FDMI_RPA	0x2400
-+#define FNIC_FRAME_TYPE_TGT_PLOGI	0x2600
-+#define FNIC_FRAME_TYPE_TGT_PRLI	0x2800
-+#define FNIC_FRAME_TYPE_TGT_ADISC	0x2A00
-+#define FNIC_FRAME_TYPE_TGT_LOGO	0x2C00
-+
-+struct fnic_fip_fcf_s {
-+	uint16_t vlan_id;
-+	uint8_t fcf_mac[6];
-+	uint8_t fcf_priority;
-+	uint32_t fka_adv_period;
-+	uint8_t ka_disabled;
-+};
-+
-+enum fnic_fdls_state_e {
-+	FDLS_STATE_INIT = 0,
-+	FDLS_STATE_LINKDOWN,
-+	FDLS_STATE_FABRIC_LOGO,
-+	FDLS_STATE_FLOGO_DONE,
-+	FDLS_STATE_FABRIC_FLOGI,
-+	FDLS_STATE_FABRIC_PLOGI,
-+	FDLS_STATE_RPN_ID,
-+	FDLS_STATE_REGISTER_FC4_TYPES,
-+	FDLS_STATE_REGISTER_FC4_FEATURES,
-+	FDLS_STATE_SCR,
-+	FDLS_STATE_GPN_FT,
-+	FDLS_STATE_TGT_DISCOVERY,
-+	FDLS_STATE_RSCN_GPN_FT,
-+	FDLS_STATE_SEND_GPNFT
-+};
-+
-+struct fnic_fdls_fabric_s {
-+	enum fnic_fdls_state_e state;
-+	uint32_t flags;
-+	struct list_head tport_list; /* List of discovered tports */
-+	struct timer_list retry_timer;
-+	int del_timer_inprogress;
-+	int del_fdmi_timer_inprogress;
-+	int retry_counter;
-+	int timer_pending;
-+	int fdmi_retry;
-+	struct timer_list fdmi_timer;
-+	int fdmi_pending;
-+};
-+
-+struct fnic_fdls_fip_s {
-+	uint32_t state;
-+	uint32_t flogi_retry;
-+};
-+
-+/* Message to tport_event_handler */
-+enum fnic_tgt_msg_id {
-+	TGT_EV_NONE = 0,
-+	TGT_EV_RPORT_ADD,
-+	TGT_EV_RPORT_DEL,
-+	TGT_EV_TPORT_DELETE,
-+	TGT_EV_REMOVE
-+};
-+
-+struct fnic_tport_event_s {
-+	struct list_head links;
-+	enum fnic_tgt_msg_id event;
-+	void *arg1;
-+};
-+
-+enum fdls_tgt_state_e {
-+	FDLS_TGT_STATE_INIT = 0,
-+	FDLS_TGT_STATE_PLOGI,
-+	FDLS_TGT_STATE_PRLI,
-+	FDLS_TGT_STATE_READY,
-+	FDLS_TGT_STATE_LOGO_RECEIVED,
-+	FDLS_TGT_STATE_ADISC,
-+	FDL_TGT_STATE_PLOGO,
-+	FDLS_TGT_STATE_OFFLINING,
-+	FDLS_TGT_STATE_OFFLINE
-+};
-+
-+struct fnic_tport_s {
-+	struct list_head links; /* To link the tports */
-+	enum fdls_tgt_state_e state;
-+	uint32_t flags;
-+	uint32_t fcid;
-+	uint64_t wwpn;
-+	uint64_t wwnn;
-+	uint16_t active_oxid;
-+	uint16_t tgt_flags;
-+	atomic_t in_flight; /* io counter */
-+	uint16_t max_payload_size;
-+	uint16_t r_a_tov;
-+	uint16_t e_d_tov;
-+	uint16_t lun0_delay;
-+	int max_concur_seqs;
-+	uint32_t fcp_csp;
-+	struct timer_list retry_timer;
-+	int del_timer_inprogress;
-+	int retry_counter;
-+	int timer_pending;
-+	unsigned int num_pending_cmds;
-+	int nexus_restart_count;
-+	int exch_reset_in_progress;
-+	void *iport;
-+	struct work_struct tport_del_work;
-+	struct completion *tport_del_done;
-+	struct fc_rport *rport;
-+	char str_wwpn[20];
-+	char str_wwnn[20];
-+};
-+
-+/* OXID pool related structures */
-+struct reclaim_entry_s {
-+	struct list_head links;
-+	/* oxid that needs to be freed after 2*r_a_tov */
-+	uint16_t oxid_idx;
-+	/* in jiffies. Use this to waiting time */
-+	unsigned long expires;
-+	unsigned long *bitmap;
-+};
-+
-+/* used for allocating oxids for fabric and fdmi requests */
-+struct fnic_oxid_pool_s {
-+	DECLARE_BITMAP(bitmap, FNIC_OXID_POOL_SZ);
-+	int sz;			/* size of the pool or block */
-+	int next_idx;		/* used for cycling through the oxid pool */
-+
-+	/* retry schedule free */
-+	DECLARE_BITMAP(pending_schedule_free, FNIC_OXID_POOL_SZ);
-+	struct delayed_work schedule_oxid_free_retry;
-+
-+	/* List of oxids that need to be freed and reclaimed.
-+	 * This list is shared by all the oxid pools
-+	 */
-+	struct list_head oxid_reclaim_list;
-+	/* Work associated with reclaim list */
-+	struct delayed_work oxid_reclaim_work;
-+};
-+
-+/* iport */
-+enum fnic_iport_state_e {
-+	FNIC_IPORT_STATE_INIT = 0,
-+	FNIC_IPORT_STATE_LINK_WAIT,
-+	FNIC_IPORT_STATE_FIP,
-+	FNIC_IPORT_STATE_FABRIC_DISC,
-+	FNIC_IPORT_STATE_READY
-+};
-+
-+struct fnic_iport_s {
-+	enum fnic_iport_state_e state;
-+	struct fnic *fnic;
-+	uint64_t boot_time;
-+	uint32_t flags;
-+	int usefip;
-+	uint8_t hwmac[6]; /* HW MAC Addr */
-+	uint8_t fpma[6]; /* Fabric Provided MA */
-+	uint8_t fcfmac[6]; /* MAC addr of Fabric */
-+	uint16_t vlan_id;
-+	uint32_t fcid;
-+
-+	/* oxid pool */
-+	struct fnic_oxid_pool_s oxid_pool;
+diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+index d440934f365c..b99b1387580a 100644
+--- a/drivers/scsi/fnic/fdls_disc.c
++++ b/drivers/scsi/fnic/fdls_disc.c
+@@ -42,6 +42,8 @@ static void fdls_tport_timer_callback(struct timer_list *t);
+ static void fdls_start_fabric_timer(struct fnic_iport_s *iport,
+ 			int timeout);
+ static void fdls_init_plogi_frame(uint8_t *frame, struct fnic_iport_s *iport);
++static void fdls_init_els_acc_frame(uint8_t *frame, struct fnic_iport_s *iport);
++static void fdls_init_els_rjt_frame(uint8_t *frame, struct fnic_iport_s *iport);
+ static void fdls_init_logo_frame(uint8_t *frame, struct fnic_iport_s *iport);
+ static void fdls_init_fabric_abts_frame(uint8_t *frame,
+ 						struct fnic_iport_s *iport);
+@@ -447,6 +449,39 @@ void fdls_init_plogi_frame(uint8_t *frame,
+ 	FNIC_STD_SET_S_ID(pplogi->fchdr, s_id);
+ }
+ 
++static void fdls_init_els_acc_frame(uint8_t *frame,
++		struct fnic_iport_s *iport)
++{
++	struct fc_std_els_acc_rsp *pels_acc;
++	uint8_t s_id[3];
++
++	pels_acc = (struct fc_std_els_acc_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	*pels_acc = (struct fc_std_els_acc_rsp) {
++		.fchdr = {.fh_r_ctl = FC_RCTL_ELS_REP,
++			  .fh_type = FC_TYPE_ELS, .fh_f_ctl = {FNIC_ELS_REP_FCTL, 0, 0}},
++		.acc.la_cmd = ELS_LS_ACC,
++	};
++
++	hton24(s_id, iport->fcid);
++	FNIC_STD_SET_S_ID(pels_acc->fchdr, s_id);
++	FNIC_STD_SET_RX_ID(pels_acc->fchdr, FNIC_UNASSIGNED_RXID);
++}
++
++static void fdls_init_els_rjt_frame(uint8_t *frame,
++		struct fnic_iport_s *iport)
++{
++	struct fc_std_els_rjt_rsp *pels_rjt;
++
++	pels_rjt = (struct fc_std_els_rjt_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	*pels_rjt = (struct fc_std_els_rjt_rsp) {
++		.fchdr = {.fh_r_ctl = FC_RCTL_ELS_REP, .fh_type = FC_TYPE_ELS,
++			  .fh_f_ctl = {FNIC_ELS_REP_FCTL, 0, 0}},
++		.rej.er_cmd = ELS_LS_RJT,
++	};
++
++	FNIC_STD_SET_RX_ID(pels_rjt->fchdr, FNIC_UNASSIGNED_RXID);
++}
++
+ static void fdls_init_logo_frame(uint8_t *frame,
+ 		struct fnic_iport_s *iport)
+ {
+@@ -484,6 +519,73 @@ static void fdls_init_fabric_abts_frame(uint8_t *frame,
+ 		.fh_parm_offset = 0x00000000,	/* bit:0 = 0 Abort a exchange */
+ 	};
+ }
++
++static void
++fdls_send_rscn_resp(struct fnic_iport_s *iport,
++		    struct fc_frame_header *rscn_fchdr)
++{
++	uint8_t *frame;
++	struct fc_std_els_acc_rsp *pels_acc;
++	struct fnic *fnic = iport->fnic;
++	uint16_t oxid;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_els_acc_rsp);
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"Failed to allocate frame to send RSCN response");
++		return;
++	}
++
++	pels_acc = (struct fc_std_els_acc_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	fdls_init_els_acc_frame(frame, iport);
++
++	FNIC_STD_SET_D_ID(pels_acc->fchdr, rscn_fchdr->fh_s_id);
++
++	oxid = FNIC_STD_GET_OX_ID(rscn_fchdr);
++	FNIC_STD_SET_OX_ID(pels_acc->fchdr, oxid);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++		 "0x%x: FDLS send RSCN response with oxid: 0x%x",
++		 iport->fcid, oxid);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
++static void
++fdls_send_logo_resp(struct fnic_iport_s *iport,
++		    struct fc_frame_header *req_fchdr)
++{
++	uint8_t *frame;
++	struct fc_std_els_acc_rsp *plogo_resp;
++	struct fnic *fnic = iport->fnic;
++	uint16_t oxid;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_els_acc_rsp);
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"Failed to allocate frame to send LOGO response");
++		return;
++	}
++
++	plogo_resp = (struct fc_std_els_acc_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	fdls_init_els_acc_frame(frame, iport);
++
++	FNIC_STD_SET_D_ID(plogo_resp->fchdr, req_fchdr->fh_s_id);
++
++	oxid = FNIC_STD_GET_OX_ID(req_fchdr);
++	FNIC_STD_SET_OX_ID(plogo_resp->fchdr, oxid);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++		 "0x%x: FDLS send LOGO response with oxid: 0x%x",
++		 iport->fcid, oxid);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
+ void
+ fdls_send_tport_abts(struct fnic_iport_s *iport,
+ 					 struct fnic_tport_s *tport)
+@@ -3118,6 +3220,232 @@ fdls_process_fabric_abts_rsp(struct fnic_iport_s *iport,
+ 	}
+ }
+ 
++static void
++fdls_process_abts_req(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
++{
++	uint8_t *frame;
++	struct fc_std_abts_ba_acc *pba_acc;
++	uint32_t nport_id;
++	uint16_t oxid;
++	struct fnic_tport_s *tport;
++	struct fnic *fnic = iport->fnic;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_abts_ba_acc);
++
++	nport_id = ntoh24(fchdr->fh_s_id);
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Received abort from SID 0x%8x", nport_id);
++
++	tport = fnic_find_tport_by_fcid(iport, nport_id);
++	if (tport) {
++		oxid = FNIC_STD_GET_OX_ID(fchdr);
++		if (tport->active_oxid == oxid) {
++			tport->flags |= FNIC_FDLS_TGT_ABORT_ISSUED;
++			fdls_free_oxid(iport, oxid, &tport->active_oxid);
++		}
++	}
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"0x%x: Failed to allocate frame to send response for ABTS req",
++				iport->fcid);
++		return;
++	}
++
++	pba_acc = (struct fc_std_abts_ba_acc *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	*pba_acc = (struct fc_std_abts_ba_acc) {
++		.fchdr = {.fh_r_ctl = FC_RCTL_BA_ACC,
++				.fh_f_ctl = {FNIC_FCP_RSP_FCTL, 0, 0}},
++		.acc = {.ba_low_seq_cnt = 0, .ba_high_seq_cnt = cpu_to_be16(0xFFFF)}
++	};
++
++	FNIC_STD_SET_S_ID(pba_acc->fchdr, fchdr->fh_d_id);
++	FNIC_STD_SET_D_ID(pba_acc->fchdr, fchdr->fh_s_id);
++	FNIC_STD_SET_OX_ID(pba_acc->fchdr, FNIC_STD_GET_OX_ID(fchdr));
++	FNIC_STD_SET_RX_ID(pba_acc->fchdr, FNIC_STD_GET_RX_ID(fchdr));
++
++	pba_acc->acc.ba_rx_id = cpu_to_be16(FNIC_STD_GET_RX_ID(fchdr));
++	pba_acc->acc.ba_ox_id = cpu_to_be16(FNIC_STD_GET_OX_ID(fchdr));
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++		 "0x%x: FDLS send BA ACC with oxid: 0x%x",
++		 iport->fcid, oxid);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
++static void
++fdls_process_unsupported_els_req(struct fnic_iport_s *iport,
++				 struct fc_frame_header *fchdr)
++{
++	uint8_t *frame;
++	struct fc_std_els_rjt_rsp *pls_rsp;
++	uint16_t oxid;
++	uint32_t d_id = ntoh24(fchdr->fh_d_id);
++	struct fnic *fnic = iport->fnic;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_els_rjt_rsp);
++
++	if (iport->fcid != d_id) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Dropping unsupported ELS with illegal frame bits 0x%x\n",
++			 d_id);
++		return;
++	}
++
++	if ((iport->state != FNIC_IPORT_STATE_READY)
++		&& (iport->state != FNIC_IPORT_STATE_FABRIC_DISC)) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Dropping unsupported ELS request in iport state: %d",
++			 iport->state);
++		return;
++	}
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			"Failed to allocate frame to send response to unsupported ELS request");
++		return;
++	}
++
++	pls_rsp = (struct fc_std_els_rjt_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	fdls_init_els_rjt_frame(frame, iport);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "0x%x: Process unsupported ELS request from SID: 0x%x",
++		     iport->fcid, ntoh24(fchdr->fh_s_id));
++
++	/* We don't support this ELS request, send a reject */
++	pls_rsp->rej.er_reason = 0x0B;
++	pls_rsp->rej.er_explan = 0x0;
++	pls_rsp->rej.er_vendor = 0x0;
++
++	FNIC_STD_SET_S_ID(pls_rsp->fchdr, fchdr->fh_d_id);
++	FNIC_STD_SET_D_ID(pls_rsp->fchdr, fchdr->fh_s_id);
++	oxid = FNIC_STD_GET_OX_ID(fchdr);
++	FNIC_STD_SET_OX_ID(pls_rsp->fchdr, oxid);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
++static void
++fdls_process_rls_req(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
++{
++	uint8_t *frame;
++	struct fc_std_rls_acc *prls_acc_rsp;
++	uint16_t oxid;
++	struct fnic *fnic = iport->fnic;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_rls_acc);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Process RLS request %d", iport->fnic->fnic_num);
++
++	if ((iport->state != FNIC_IPORT_STATE_READY)
++		&& (iport->state != FNIC_IPORT_STATE_FABRIC_DISC)) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Received RLS req in iport state: %d. Dropping the frame.",
++			 iport->state);
++		return;
++	}
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"Failed to allocate frame to send RLS accept");
++		return;
++	}
++	prls_acc_rsp = (struct fc_std_rls_acc *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++
++	FNIC_STD_SET_S_ID(prls_acc_rsp->fchdr, fchdr->fh_d_id);
++	FNIC_STD_SET_D_ID(prls_acc_rsp->fchdr, fchdr->fh_s_id);
++
++	oxid = FNIC_STD_GET_OX_ID(fchdr);
++	FNIC_STD_SET_OX_ID(prls_acc_rsp->fchdr, oxid);
++	FNIC_STD_SET_RX_ID(prls_acc_rsp->fchdr, FNIC_UNASSIGNED_RXID);
++
++	FNIC_STD_SET_F_CTL(prls_acc_rsp->fchdr, FNIC_ELS_REP_FCTL << 16);
++	FNIC_STD_SET_R_CTL(prls_acc_rsp->fchdr, FC_RCTL_ELS_REP);
++	FNIC_STD_SET_TYPE(prls_acc_rsp->fchdr, FC_TYPE_ELS);
++
++	prls_acc_rsp->els.rls_cmd = ELS_LS_ACC;
++	prls_acc_rsp->els.rls_lesb.lesb_link_fail =
++	    cpu_to_be32(iport->fnic->link_down_cnt);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
++static void
++fdls_process_els_req(struct fnic_iport_s *iport, struct fc_frame_header *fchdr,
++					 uint32_t len)
++{
++	uint8_t *frame;
++	struct fc_std_els_acc_rsp *pels_acc;
++	uint16_t oxid;
++	uint8_t *fc_payload;
++	uint8_t type;
++	struct fnic *fnic = iport->fnic;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET;
++
++	fc_payload = (uint8_t *) fchdr + sizeof(struct fc_frame_header);
++	type = *fc_payload;
++
++	if ((iport->state != FNIC_IPORT_STATE_READY)
++		&& (iport->state != FNIC_IPORT_STATE_FABRIC_DISC)) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Dropping ELS frame type: 0x%x in iport state: %d",
++				 type, iport->state);
++		return;
++	}
++	switch (type) {
++	case ELS_ECHO:
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "sending LS_ACC for ECHO request %d\n",
++					 iport->fnic->fnic_num);
++		break;
++
++	case ELS_RRQ:
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "sending LS_ACC for RRQ request %d\n",
++					 iport->fnic->fnic_num);
++		break;
++
++	default:
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "sending LS_ACC for 0x%x ELS frame\n", type);
++		break;
++	}
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"Failed to allocate frame to send ELS response for 0x%x",
++				type);
++		return;
++	}
++
++	if (type == ELS_ECHO) {
++		/* Brocade sends a longer payload, copy all frame back */
++		memcpy(frame, fchdr, len);
++	}
++
++	pels_acc = (struct fc_std_els_acc_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	fdls_init_els_acc_frame(frame, iport);
++
++	FNIC_STD_SET_D_ID(pels_acc->fchdr, fchdr->fh_s_id);
++
++	oxid = FNIC_STD_GET_OX_ID(fchdr);
++	FNIC_STD_SET_OX_ID(pels_acc->fchdr, oxid);
++
++	if (type == ELS_ECHO)
++		frame_size += len;
++	else
++		frame_size += sizeof(struct fc_std_els_acc_rsp);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
+ static void
+ fdls_process_tgt_abts_rsp(struct fnic_iport_s *iport,
+ 			  struct fc_frame_header *fchdr)
+@@ -3254,6 +3582,336 @@ fdls_process_tgt_abts_rsp(struct fnic_iport_s *iport,
+ 	}
+ 
+ }
++
++static void
++fdls_process_plogi_req(struct fnic_iport_s *iport,
++		       struct fc_frame_header *fchdr)
++{
++	uint8_t *frame;
++	struct fc_std_els_rjt_rsp *pplogi_rsp;
++	uint16_t oxid;
++	uint32_t d_id = ntoh24(fchdr->fh_d_id);
++	struct fnic *fnic = iport->fnic;
++	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_els_rjt_rsp);
++
++	if (iport->fcid != d_id) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Received PLOGI with illegal frame bits. Dropping frame from 0x%x",
++			 d_id);
++		return;
++	}
++
++	if (iport->state != FNIC_IPORT_STATE_READY) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Received PLOGI request in iport state: %d Dropping frame",
++			 iport->state);
++		return;
++	}
++
++	frame = fdls_alloc_frame(iport);
++	if (frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			"Failed to allocate frame to send response to PLOGI request");
++		return;
++	}
++
++	pplogi_rsp = (struct fc_std_els_rjt_rsp *) (frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++	fdls_init_els_rjt_frame(frame, iport);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "0x%x: Process PLOGI request from SID: 0x%x",
++				 iport->fcid, ntoh24(fchdr->fh_s_id));
++
++	/* We don't support PLOGI request, send a reject */
++	pplogi_rsp->rej.er_reason = 0x0B;
++	pplogi_rsp->rej.er_explan = 0x0;
++	pplogi_rsp->rej.er_vendor = 0x0;
++
++	FNIC_STD_SET_S_ID(pplogi_rsp->fchdr, fchdr->fh_d_id);
++	FNIC_STD_SET_D_ID(pplogi_rsp->fchdr, fchdr->fh_s_id);
++	oxid = FNIC_STD_GET_OX_ID(fchdr);
++	FNIC_STD_SET_OX_ID(pplogi_rsp->fchdr, oxid);
++
++	fnic_send_fcoe_frame(iport, frame, frame_size);
++}
++
++static void
++fdls_process_logo_req(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
++{
++	struct fc_std_logo *logo = (struct fc_std_logo *)fchdr;
++	uint32_t nport_id;
++	uint64_t nport_name;
++	struct fnic_tport_s *tport;
++	struct fnic *fnic = iport->fnic;
++	uint16_t oxid;
++
++	nport_id = ntoh24(logo->els.fl_n_port_id);
++	nport_name = be64_to_cpu(logo->els.fl_n_port_wwn);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Process LOGO request from fcid: 0x%x", nport_id);
++
++	if (iport->state != FNIC_IPORT_STATE_READY) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			 "Dropping LOGO req from 0x%x in iport state: %d",
++			 nport_id, iport->state);
++		return;
++	}
++
++	tport = fnic_find_tport_by_fcid(iport, nport_id);
++
++	if (!tport) {
++		/* We are not logged in with the nport, log and drop... */
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			 "Received LOGO from an nport not logged in: 0x%x(0x%llx)",
++			 nport_id, nport_name);
++		return;
++	}
++	if (tport->fcid != nport_id) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++		 "Received LOGO with invalid target port fcid: 0x%x(0x%llx)",
++		 nport_id, nport_name);
++		return;
++	}
++	if (tport->timer_pending) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++					 "tport fcid 0x%x: Canceling disc timer\n",
++					 tport->fcid);
++		fnic_del_tport_timer_sync(fnic, tport);
++		tport->timer_pending = 0;
++	}
++
++	/* got a logo in response to adisc to a target which has logged out */
++	if (tport->state == FDLS_TGT_STATE_ADISC) {
++		tport->retry_counter = 0;
++		oxid = tport->active_oxid;
++		fdls_free_oxid(iport, oxid, &tport->active_oxid);
++		fdls_delete_tport(iport, tport);
++		fdls_send_logo_resp(iport, &logo->fchdr);
++		if ((iport->state == FNIC_IPORT_STATE_READY)
++			&& (fdls_get_state(&iport->fabric) != FDLS_STATE_SEND_GPNFT)
++			&& (fdls_get_state(&iport->fabric) != FDLS_STATE_RSCN_GPN_FT)) {
++			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++						 "Sending GPNFT in response to LOGO from Target:0x%x",
++						 nport_id);
++			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
++			return;
++		}
++	} else {
++		fdls_delete_tport(iport, tport);
++	}
++	if (iport->state == FNIC_IPORT_STATE_READY) {
++		fdls_send_logo_resp(iport, &logo->fchdr);
++		if ((fdls_get_state(&iport->fabric) != FDLS_STATE_SEND_GPNFT) &&
++			(fdls_get_state(&iport->fabric) != FDLS_STATE_RSCN_GPN_FT)) {
++			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++						 "Sending GPNFT in response to LOGO from Target:0x%x",
++						 nport_id);
++			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
++		}
++	}
++}
++
++static void
++fdls_process_rscn(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
++{
++	struct fc_std_rscn *rscn;
++	struct fc_els_rscn_page *rscn_port = NULL;
++	int num_ports;
++	struct fnic_tport_s *tport, *next;
++	uint32_t nport_id;
++	uint8_t fcid[3];
++	int newports = 0;
++	struct fnic_fdls_fabric_s *fdls = &iport->fabric;
++	struct fnic *fnic = iport->fnic;
++	uint16_t rscn_payload_len;
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "FDLS process RSCN %p", iport);
++
++	if (iport->state != FNIC_IPORT_STATE_READY) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "FDLS RSCN received in state(%d). Dropping",
++					 fdls_get_state(fdls));
++		return;
++	}
++
++	rscn = (struct fc_std_rscn *)fchdr;
++	rscn_payload_len = be16_to_cpu(rscn->els.rscn_plen);
++
++	/* frame validation */
++	if ((rscn_payload_len % 4 != 0) || (rscn_payload_len < 8)
++	    || (rscn_payload_len > 1024)
++	    || (rscn->els.rscn_page_len != 4)) {
++		num_ports = 0;
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "RSCN payload_len: 0x%x page_len: 0x%x",
++				     rscn_payload_len, rscn->els.rscn_page_len);
++		/* if this happens then we need to send ADISC to all the tports. */
++		list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
++			if (tport->state == FDLS_TGT_STATE_READY)
++				tport->flags |= FNIC_FDLS_TPORT_SEND_ADISC;
++			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "RSCN for port id: 0x%x", tport->fcid);
++		}
++	} else {
++		num_ports = (rscn_payload_len - 4) / rscn->els.rscn_page_len;
++		rscn_port = (struct fc_els_rscn_page *)(rscn + 1);
++	}
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "RSCN received for num_ports: %d payload_len: %d page_len: %d ",
++		     num_ports, rscn_payload_len, rscn->els.rscn_page_len);
 +
 +	/*
-+	 * fabric reqs are serialized and only one req at a time.
-+	 * Tracking the oxid for sending abort
++	 * RSCN have at least one Port_ID page , but may not have any port_id
++	 * in it. If no port_id is specified in the Port_ID page , we send
++	 * ADISC to all the tports
 +	 */
-+	uint16_t active_oxid_fabric_req;
-+	/* fdmi only */
-+	uint16_t active_oxid_fdmi_plogi;
-+	uint16_t active_oxid_fdmi_rhba;
-+	uint16_t active_oxid_fdmi_rpa;
 +
-+	struct fnic_fip_fcf_s selected_fcf;
-+	struct fnic_fdls_fip_s fip;
-+	struct fnic_fdls_fabric_s fabric;
-+	struct list_head tport_list;
-+	struct list_head tport_list_pending_del;
-+	/* list of tports for which we are yet to send PLOGO */
-+	struct list_head inprocess_tport_list;
-+	struct list_head deleted_tport_list;
-+	struct work_struct tport_event_work;
-+	uint32_t e_d_tov; /* msec */
-+	uint32_t r_a_tov; /* msec */
-+	uint32_t link_supported_speeds;
-+	uint32_t max_flogi_retries;
-+	uint32_t max_plogi_retries;
-+	uint32_t plogi_timeout;
-+	uint32_t service_params;
-+	uint64_t wwpn;
-+	uint64_t wwnn;
-+	uint16_t max_payload_size;
-+	spinlock_t deleted_tport_lst_lock;
-+	struct completion *flogi_reg_done;
-+	char str_wwpn[20];
-+	char str_wwnn[20];
-+	};
-+	struct rport_dd_data_s {
++	while (num_ports) {
++
++		memcpy(fcid, rscn_port->rscn_fid, 3);
++
++		nport_id = ntoh24(fcid);
++		rscn_port++;
++		num_ports--;
++		/* if this happens then we need to send ADISC to all the tports. */
++		if (nport_id == 0) {
++			list_for_each_entry_safe(tport, next, &iport->tport_list,
++									 links) {
++				if (tport->state == FDLS_TGT_STATE_READY)
++					tport->flags |= FNIC_FDLS_TPORT_SEND_ADISC;
++
++				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++							 "RSCN for port id: 0x%x", tport->fcid);
++			}
++			break;
++		}
++		tport = fnic_find_tport_by_fcid(iport, nport_id);
++
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "RSCN port id list: 0x%x", nport_id);
++
++		if (!tport) {
++			newports++;
++			continue;
++		}
++		if (tport->state == FDLS_TGT_STATE_READY)
++			tport->flags |= FNIC_FDLS_TPORT_SEND_ADISC;
++	}
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++		 "FDLS process RSCN sending GPN_FT: newports: %d", newports);
++		fdls_send_gpn_ft(iport, FDLS_STATE_RSCN_GPN_FT);
++		fdls_send_rscn_resp(iport, fchdr);
++}
++static void
++fdls_process_adisc_req(struct fnic_iport_s *iport,
++		       struct fc_frame_header *fchdr)
++{
++	struct fc_std_els_adisc *padisc_acc;
++	struct fc_std_els_adisc *adisc_req = (struct fc_std_els_adisc *)fchdr;
++	uint64_t frame_wwnn;
++	uint64_t frame_wwpn;
++	uint32_t tgt_fcid;
 +	struct fnic_tport_s *tport;
-+	struct fnic_iport_s *iport;
-+};
++	uint8_t *fcid;
++	uint8_t *rjt_frame;
++	uint8_t *acc_frame;
++	struct fc_std_els_rjt_rsp *prjts_rsp;
++	uint16_t oxid;
++	struct fnic *fnic = iport->fnic;
++	uint16_t rjt_frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_els_rjt_rsp);
++	uint16_t acc_frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
++			sizeof(struct fc_std_els_adisc);
 +
-+enum fnic_recv_frame_type_e {
-+	FNIC_FABRIC_FLOGI_RSP = 1,
-+	FNIC_FABRIC_PLOGI_RSP,
-+	FNIC_FABRIC_RPN_RSP,
-+	FNIC_FABRIC_RFT_RSP,
-+	FNIC_FABRIC_RFF_RSP,
-+	FNIC_FABRIC_SCR_RSP,
-+	FNIC_FABRIC_GPN_FT_RSP,
-+	FNIC_FABRIC_BLS_ABTS_RSP,
-+	FNIC_FDMI_PLOGI_RSP,
-+	FNIC_FDMI_REG_HBA_RSP,
-+	FNIC_FDMI_RPA_RSP,
-+	FNIC_FDMI_BLS_ABTS_RSP,
-+	FNIC_FABRIC_LOGO_RSP,
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Process ADISC request %d", iport->fnic->fnic_num);
 +
-+	/* responses to target requests */
-+	FNIC_TPORT_PLOGI_RSP,
-+	FNIC_TPORT_PRLI_RSP,
-+	FNIC_TPORT_ADISC_RSP,
-+	FNIC_TPORT_BLS_ABTS_RSP,
-+	FNIC_TPORT_LOGO_RSP,
++	fcid = FNIC_STD_GET_S_ID(fchdr);
++	tgt_fcid = ntoh24(fcid);
++	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
++	if (!tport) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++					 "tport for fcid: 0x%x not found. Dropping ADISC req.",
++					 tgt_fcid);
++		return;
++	}
++	if (iport->state != FNIC_IPORT_STATE_READY) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			 "Dropping ADISC req from fcid: 0x%x in iport state: %d",
++			 tgt_fcid, iport->state);
++		return;
++	}
 +
-+	/* unsolicited requests */
-+	FNIC_BLS_ABTS_REQ,
-+	FNIC_ELS_PLOGI_REQ,
-+	FNIC_ELS_RSCN_REQ,
-+	FNIC_ELS_LOGO_REQ,
-+	FNIC_ELS_ECHO_REQ,
-+	FNIC_ELS_ADISC,
-+	FNIC_ELS_RLS,
-+	FNIC_ELS_RRQ,
-+	FNIC_ELS_UNSUPPORTED_REQ,
-+};
++	frame_wwnn = be64_to_cpu(adisc_req->els.adisc_wwnn);
++	frame_wwpn = be64_to_cpu(adisc_req->els.adisc_wwpn);
 +
-+enum fnic_port_speeds {
-+	DCEM_PORTSPEED_NONE = 0,
-+	DCEM_PORTSPEED_1G = 1000,
-+	DCEM_PORTSPEED_2G = 2000,
-+	DCEM_PORTSPEED_4G = 4000,
-+	DCEM_PORTSPEED_8G = 8000,
-+	DCEM_PORTSPEED_10G = 10000,
-+	DCEM_PORTSPEED_16G = 16000,
-+	DCEM_PORTSPEED_20G = 20000,
-+	DCEM_PORTSPEED_25G = 25000,
-+	DCEM_PORTSPEED_32G = 32000,
-+	DCEM_PORTSPEED_40G = 40000,
-+	DCEM_PORTSPEED_4x10G = 41000,
-+	DCEM_PORTSPEED_50G = 50000,
-+	DCEM_PORTSPEED_64G = 64000,
-+	DCEM_PORTSPEED_100G = 100000,
-+	DCEM_PORTSPEED_128G = 128000,
-+};
++	if ((frame_wwnn != tport->wwnn) || (frame_wwpn != tport->wwpn)) {
++		/* send reject */
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			 "ADISC req from fcid: 0x%x mismatch wwpn: 0x%llx wwnn: 0x%llx",
++			 tgt_fcid, frame_wwpn, frame_wwnn);
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++			 "local tport wwpn: 0x%llx wwnn: 0x%llx. Sending RJT",
++			 tport->wwpn, tport->wwnn);
 +
-+/* Function Declarations */
-+/* fdls_disc.c */
-+void fnic_fdls_disc_init(struct fnic_iport_s *iport);
-+void fnic_fdls_disc_start(struct fnic_iport_s *iport);
-+void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
-+			  int len, int fchdr_offset);
-+void fnic_fdls_link_down(struct fnic_iport_s *iport);
-+int fdls_init_frame_pool(struct fnic_iport_s *iport);
-+uint8_t *fdls_alloc_frame(struct fnic_iport_s *iport);
-+uint16_t fdls_alloc_oxid(struct fnic_iport_s *iport, int oxid_frame_type,
-+	uint16_t *active_oxid);
-+void fdls_free_oxid(struct fnic_iport_s *iport,
-+	uint16_t oxid, uint16_t *active_oxid);
-+void fdls_tgt_logout(struct fnic_iport_s *iport,
-+		     struct fnic_tport_s *tport);
-+void fnic_del_fabric_timer_sync(struct fnic *fnic);
-+void fnic_del_tport_timer_sync(struct fnic *fnic,
-+							struct fnic_tport_s *tport);
-+void fdls_send_fabric_logo(struct fnic_iport_s *iport);
-+int fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
-+	struct fc_frame_header *fchdr);
-+void fdls_send_tport_abts(struct fnic_iport_s *iport,
-+			  struct fnic_tport_s *tport);
-+bool fdls_delete_tport(struct fnic_iport_s *iport,
-+		       struct fnic_tport_s *tport);
-+void fdls_fdmi_timer_callback(struct timer_list *t);
++		rjt_frame = fdls_alloc_frame(iport);
++		if (rjt_frame == NULL) {
++			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"Failed to allocate rjt_frame to send response to ADISC request");
++			return;
++		}
 +
-+/* fnic_fcs.c */
-+void fnic_fdls_init(struct fnic *fnic, int usefip);
-+void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
-+	int frame_size);
-+void fnic_fcoe_send_vlan_req(struct fnic *fnic);
-+int fnic_send_fip_frame(struct fnic_iport_s *iport,
-+	void *frame, int frame_size);
-+void fnic_fdls_learn_fcoe_macs(struct fnic_iport_s *iport, void *rx_frame,
-+	uint8_t *fcid);
++		prjts_rsp = (struct fc_std_els_rjt_rsp *) (rjt_frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++		fdls_init_els_rjt_frame(rjt_frame, iport);
 +
-+void fnic_fdls_add_tport(struct fnic_iport_s *iport,
-+		struct fnic_tport_s *tport, unsigned long flags);
-+void fnic_fdls_remove_tport(struct fnic_iport_s *iport,
-+			    struct fnic_tport_s *tport,
-+			    unsigned long flags);
++		prjts_rsp->rej.er_reason = 0x03;	/*  logical error */
++		prjts_rsp->rej.er_explan = 0x1E;	/*  N_port login required */
++		prjts_rsp->rej.er_vendor = 0x0;
 +
-+/* fip.c */
-+void fnic_fcoe_send_vlan_req(struct fnic *fnic);
-+void fnic_common_fip_cleanup(struct fnic *fnic);
-+int fdls_fip_recv_frame(struct fnic *fnic, void *frame);
-+void fnic_handle_fcs_ka_timer(struct timer_list *t);
-+void fnic_handle_enode_ka_timer(struct timer_list *t);
-+void fnic_handle_vn_ka_timer(struct timer_list *t);
-+void fnic_handle_fip_timer(struct timer_list *t);
-+extern void fdls_fabric_timer_callback(struct timer_list *t);
++		FNIC_STD_SET_S_ID(prjts_rsp->fchdr, fchdr->fh_d_id);
++		FNIC_STD_SET_D_ID(prjts_rsp->fchdr, fchdr->fh_s_id);
++		oxid = FNIC_STD_GET_OX_ID(fchdr);
++		FNIC_STD_SET_OX_ID(prjts_rsp->fchdr, oxid);
 +
-+/* fnic_scsi.c */
-+void fnic_scsi_fcpio_reset(struct fnic *fnic);
-+extern void fdls_fabric_timer_callback(struct timer_list *t);
-+void fnic_rport_exch_reset(struct fnic *fnic, u32 fcid);
-+int fnic_fdls_register_portid(struct fnic_iport_s *iport, u32 port_id,
-+		void *fp);
-+struct fnic_tport_s *fnic_find_tport_by_fcid(struct fnic_iport_s *iport,
-+		uint32_t fcid);
-+struct fnic_tport_s *fnic_find_tport_by_wwpn(struct fnic_iport_s *iport,
-+		uint64_t  wwpn);
++		fnic_send_fcoe_frame(iport, rjt_frame, rjt_frame_size);
++		return;
++	}
 +
-+#endif /* _FNIC_FDLS_H_ */
++	acc_frame = fdls_alloc_frame(iport);
++	if (acc_frame == NULL) {
++		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
++				"Failed to allocate frame to send ADISC accept");
++		return;
++	}
++
++	padisc_acc = (struct fc_std_els_adisc *) (acc_frame + FNIC_ETH_FCOE_HDRS_OFFSET);
++
++	FNIC_STD_SET_S_ID(padisc_acc->fchdr, fchdr->fh_d_id);
++	FNIC_STD_SET_D_ID(padisc_acc->fchdr, fchdr->fh_s_id);
++
++	FNIC_STD_SET_F_CTL(padisc_acc->fchdr, FNIC_ELS_REP_FCTL << 16);
++	FNIC_STD_SET_R_CTL(padisc_acc->fchdr, FC_RCTL_ELS_REP);
++	FNIC_STD_SET_TYPE(padisc_acc->fchdr, FC_TYPE_ELS);
++
++	oxid = FNIC_STD_GET_OX_ID(fchdr);
++	FNIC_STD_SET_OX_ID(padisc_acc->fchdr, oxid);
++	FNIC_STD_SET_RX_ID(padisc_acc->fchdr, FNIC_UNASSIGNED_RXID);
++
++	padisc_acc->els.adisc_cmd = ELS_LS_ACC;
++
++	FNIC_STD_SET_NPORT_NAME(&padisc_acc->els.adisc_wwpn,
++			iport->wwpn);
++	FNIC_STD_SET_NODE_NAME(&padisc_acc->els.adisc_wwnn,
++			iport->wwnn);
++	memcpy(padisc_acc->els.adisc_port_id, fchdr->fh_d_id, 3);
++
++	fnic_send_fcoe_frame(iport, acc_frame, acc_frame_size);
++}
++
+ /*
+  * Performs a validation for all FCOE frames and return the frame type
+  */
+@@ -3529,6 +4187,31 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
+ 	case FNIC_FABRIC_BLS_ABTS_RSP:
+ 			fdls_process_fabric_abts_rsp(iport, fchdr);
+ 		break;
++	case FNIC_BLS_ABTS_REQ:
++		fdls_process_abts_req(iport, fchdr);
++		break;
++	case FNIC_ELS_UNSUPPORTED_REQ:
++		fdls_process_unsupported_els_req(iport, fchdr);
++		break;
++	case FNIC_ELS_PLOGI_REQ:
++		fdls_process_plogi_req(iport, fchdr);
++		break;
++	case FNIC_ELS_RSCN_REQ:
++		fdls_process_rscn(iport, fchdr);
++		break;
++	case FNIC_ELS_LOGO_REQ:
++		fdls_process_logo_req(iport, fchdr);
++		break;
++	case FNIC_ELS_RRQ:
++	case FNIC_ELS_ECHO_REQ:
++		fdls_process_els_req(iport, fchdr, len);
++		break;
++	case FNIC_ELS_ADISC:
++		fdls_process_adisc_req(iport, fchdr);
++		break;
++	case FNIC_ELS_RLS:
++		fdls_process_rls_req(iport, fchdr);
++		break;
+ 	default:
+ 		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+ 			 "s_id: 0x%x d_did: 0x%x", s_id, d_id);
 -- 
 2.47.0
 
