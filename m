@@ -1,69 +1,71 @@
-Received: from rcdn-iport-6.cisco.com (rcdn-iport-6.cisco.com [173.37.86.77])
+Received: from rcdn-iport-1.cisco.com (rcdn-iport-1.cisco.com [173.37.86.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 599D5212F87;
-	Fri,  6 Dec 2024 21:10:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.77
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B569212F86;
+	Fri,  6 Dec 2024 21:10:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733519419; cv=none; b=OYy0hiKYit7vgTkm+/rjeamSYjBVn0q71U4ASbbJx+kU19ET2awOD6G8pWVn/1+6+o6lIZtvTsP7o5w2LtUPThyxkU1+hKBG4DtheiPpcZNE5r6MsREAcZ+kLl/zcODpCWImIpOIpT4Tp0NXIAElEVOJRkOhVqD29M4BdLuSPx4=
+	t=1733519442; cv=none; b=lkvGm615+W8SxwvHrxhnJIgBP1FUwZB98PM0FW4DJji/Hjl6CY5Nj6x7GjYKu+csHW2p3kKvy9z12ay6FbTLicP6Dc9xLXmfL5lpRiOqMgzixyCPHHBwo8yKMCRXNv1upecTvv1TxMPO9fdHE3TEKqjP/54bzuNvORdMdry85D0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733519419; c=relaxed/simple;
-	bh=vcgDZ0oSmql7uhsB+iwfZurwuZPYS4+9GO8QL+pfcYk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ASXPtYq68NfYWd/iSnhs3XfHxa1JK8rQGii/Kbt3X571D1P1eP38YfrEIMrhZnfxy9JDYiqjupfx+M7Oszr8i51291rQqOs7z+Oedpl1YTriMgku4u5gO4LDCjc0zYt9tk35TshMhPexHS812gJ31EQ7h2vWG1ZXSvwPjo42mtU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=f2t0w+94; arc=none smtp.client-ip=173.37.86.77
+	s=arc-20240116; t=1733519442; c=relaxed/simple;
+	bh=64eUe/0DnEUkxyH6z5mssvv+6LwZ9VcqDJ/9Ph3ntro=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lJCU7lp4OBF2+SqHUUiHfijsLnnSAWDkqLqkUOy4B794Wm/zKNmUZ2BkDOgsZ21yiIbBlAnzANQck45Dg/bAf6e92hlCfCZxL88ljKSNbKSr1y4WjBrro3+E/kIT7v0xA9i0arkVU+x+fQCWW8jOnXqRCgtPZRaU8+PsmckV7NM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=H/bszw/t; arc=none smtp.client-ip=173.37.86.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="f2t0w+94"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="H/bszw/t"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=8851; q=dns/txt; s=iport;
-  t=1733519417; x=1734729017;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=vA/8CXH2/SH9IS7wtOylGa20PgDkYh8lgYvbnfid8UU=;
-  b=f2t0w+941NWWNBJP/6edzLmRP5KqudI3fK+Id++YyFBpkBMfccv2RHH/
-   AF2Cj9cAyt4ff4FpVJ8OlGjKCs2mP2idA1dRTEekaukF56LKzu42Y1whg
-   NZPVIaPA9fONTB40/DioOWyHr6lyGSYX2EuhCk6f9VyJXGDJB5m6JYo1m
+  d=cisco.com; i=@cisco.com; l=16859; q=dns/txt;
+  s=iport; t=1733519440; x=1734729040;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=4CH/+5Ttrv+BDi4qfP2E+5IWB1nvUZi8jY94DqyLlSQ=;
+  b=H/bszw/t7AwxGqFACoQfatt4vsDHFakLH40nrYiRrVM7otUxxATNong2
+   hAt63WqvxjpIPhk6cwjtpPXbMrkqKsdswEyq2fYTH8tVxAwv0haJB274g
+   tdjgSRmW8lYjYMmRhB8Bg7288Pj+9YzFiVKMX/i6KnkzC54MPZAylQM/7
    8=;
-X-CSE-ConnectionGUID: fkMUhUfxShW76ZGA2iubyQ==
-X-CSE-MsgGUID: ekvbH+orRfmJtQSAQG4IDA==
-X-IPAS-Result: =?us-ascii?q?A0BaAwBwZ1Nn/4//Ja1aHgEBCxIMgggLghwvgU9DGZZyg?=
- =?us-ascii?q?RadBYF+DwEBAQ9EBAEBhQeKagImNAkOAQIEAQEBAQMCAwEBAQEBAQEBAQEBC?=
- =?us-ascii?q?wEBBQEBAQIBBwWBDhOGCIZdKwsBRkkBgy9YgmUDsX2BeTOBAd4zgW2BSI1Kc?=
- =?us-ascii?q?IR3JxUGgUlEgRWCcgeCQYM5AoV6BII8hQASJU1Gg3ODep0dSIEhA1khARABV?=
- =?us-ascii?q?RMNCgsHBYF2A4JNeiuBC4EXOoF+gRNKhQxGPYJKaUs3Ag0CNoIkfYJNhRmEa?=
- =?us-ascii?q?WMvAwMDA4M8hiWCNEADCxgNSBEsNxQbBj5uB6VXDoEOASIrLitIOg4IHwUGO?=
- =?us-ascii?q?JJCHQdHjz6CIIE0n02EJJoehyYaM4QEjQWZSJh7o1wxN4RmgWc8gVkzGggbF?=
- =?us-ascii?q?YMjURkPji0WwiMlbgIHCwEBAwmTPoF7AQE?=
-IronPort-Data: A9a23:5pAw3ajFas8Z3JzZ1udpg6liX161cREKZh0ujC45NGQN5FlHY01je
- htvXWmAPP3YZ2GkftgnYNiy9ksPvZLcz4BlSQZu/ns2EStjpJueD7x1DKtf0wB+jyHnZBg6h
- ynLQoCYdKjYdleF+FH1dOCn9SQkvU2xbuKUIPbePSxsThNTRi4kiBZy88Y0mYcAbeKRW2thg
- vus5ZSFULOZ82QsaD5Nsfrd8EgHUMna4Vv0gHRvPZing3eG/5UlJMp3Db28KXL+Xr5VEoaSL
- 87fzKu093/u5BwkDNWoiN7TKiXmlZaLYGBiIlIPM0STqkAqSh4ai87XB9JAAatjsAhlqvgqo
- Dl7WTNcfi9yVkHEsLx1vxC1iEiSN4UekFPMCSDXXcB+UyQqflO0q8iCAn3aMqUW+cNKAVxA5
- ccYF29TXD+q3eOryqOCH7wEasQLdKEHPasFsX1miDWcBvE8TNWbHePB5MRT23E7gcUm8fT2P
- pVCL2EwKk6dPlsWZgx/5JEWxI9EglH8eidEqVacpoI84nPYy0p6172F3N/9II3RHp4FxBrIz
- o7A12n6HBs6d9uF8zSA0G6Vvcb2sn/adKtHQdVU8dYv2jV/3Fc7ChAUX3O/oP+kmgi/UdcZI
- EsRkgIrpLIu9UrtVtThUgejrXisuQQVUN5dVeY97WmlzqvS/hbcBWUeSDNFQMIpudVwRjEw0
- FKN2dTzClRHtLyTVGLY7byPrBusNiUPa2wPfykJSU0C+daLnW0opgjEQtAmFOu+icf4XGmuh
- TuLtyM5wb4UiKbnypmGwLwOuBr0zrChc+L/zl+/sr6Nhu+hWLOYWg==
-IronPort-HdrOrdr: A9a23:awF3fa4e4nRp8Yu6NQPXwPvXdLJyesId70hD6qm+c3Bom6uj5q
- KTdZsguyMc5Ax6ZJhCo6HiBEDjexLhHPdOiOF7AV7IZmbbUQWTQb1K3M/L3yDgFyri9uRUyK
- tsN5RlBMaYNykesS+D2mmF+xJK+qjhzEhu7t2uq0tQcQ==
-X-Talos-CUID: 9a23:W5iPuWBhtoRXabv6Eydk0XMUJ841SX3ikyniDGbiCHtjWYTAHA==
-X-Talos-MUID: 9a23:rYQaXgp55yPgcR6Sse4ezzxhKs1IoKO0Mk4Is4k/gOC9GnBRFx7I2Q==
+X-CSE-ConnectionGUID: N2BlJa1WQMSRWP9ivD3fMA==
+X-CSE-MsgGUID: KAKdkdCfRn+arW7rCcvqBQ==
+X-IPAS-Result: =?us-ascii?q?A0ANAABwZ1Nn/4//Ja1aGwEBAQEBAQEBBQEBARIBAQEDA?=
+ =?us-ascii?q?wEBAYF/BgEBAQsBgkqBT0MZL4xyiVGBFp0FgSUDVg8BAQEPRAQBAYUHAopoA?=
+ =?us-ascii?q?iY0CQ4BAgQBAQEBAwIDAQEBAQEBAQEBAQELAQEFAQEBAgEHBYEOE4YIhlsCA?=
+ =?us-ascii?q?QMnCwFGEFFWGYMBgmUDsX2BeTOBAd4zgW2BSAGNSXCEdycVBoFJRIEUAYE7g?=
+ =?us-ascii?q?Td2gVKJNQSDIxKEGSWBE4Nzg3qBb4VVhEuBXB0wRoFojDdIgSEDWSERAVUTD?=
+ =?us-ascii?q?QoLBwWBdgOCTXorgQuBFzqBfoETSoUMRj2CSmlLNwINAjaCJH2CTYUZhGljL?=
+ =?us-ascii?q?wMDAwODPIYlgjRAAwsYDUgRLDcUGwY+bgehRkaDWTFKFCJZMw6BAgEfkyEJC?=
+ =?us-ascii?q?JIbgTSfTYQkoUQaM6pRLphNo1wPCVCEZoFnPIFZMxoIGxWDIlIZD44tFsIjJ?=
+ =?us-ascii?q?TI8AgcLAQEDCYZLjg5gAQE?=
+IronPort-Data: A9a23:C9C4haOoz1e/Hf/vrR2ClsFynXyQoLVcMsEvi/4bfWQNrUp30jVTy
+ 2cdXmHVOP2KM2KnKNpzPITl/EgO6JCDz4NmG3M5pCpnJ55oRWUpJjg4wmPYZX76whjrFRo/h
+ ykmQoCeaphyFjmE+0/F3oHJ9RFUzbuPSqf3FNnKMyVwQR4MYCo6gHqPocZh6mJTqYb/WlnlV
+ e/a+ZWFZAb/g2AsaQr41orawP9RlKWq0N8nlgRWicBj5Df2i3QTBZQDEqC9R1OQapVUBOOzW
+ 9HYx7i/+G7Dlz91Yj9yuu+mGqGiaue60Tmm0hK6aYD76vRxjnBaPpIACRYpQRw/ZwNlMDxG4
+ I4lWZSYEW/FN0BX8QgXe0Ew/ypWZcWq9FJbSJSymZT78qHIT5fj69M0JkUUNNQnw8NMO152p
+ P0GBGsDSznW0opawJrjIgVtrt4oIM+uOMYUvWttiGmHS/0nWpvEBa7N4Le03h9p2ZsIRqmYP
+ ZdEL2MzN3wsYDUXUrsTIJE3hvupgnD8WzZZs1mS46Ew5gA/ySQrgeK8bYSOII3iqcN9vW+7q
+ mHK1GrDBFITLuPA0xGO7GuGv7qa9c/8cMdIfFGizdZojV+Z7mgSDgAGE1qxpL+yjUvWc9dWM
+ VAV/Gw2oLQ/7lemSPH6RRSzpHPCtRkZM/JQGvc3wBqQ0aeS7wvxLmwFSCNRLd8rrsk7QRQ02
+ VKT2dDkHzpitPuSU3313rOVqy6ifDMeNm4qeyAJV00G7sPlrYV1iQjAJuuPC4avhdHzXDW1y
+ DeQoW1m2fMYjNUA0OOw+lWvby+Qm6UlhzUdvm3/Nl9JJCsgDGJ5T+REMWTm0Ms=
+IronPort-HdrOrdr: A9a23:1JXcXqPTiyHgf8BcTu6jsMiBIKoaSvp037Dk7SxMoHtuA6ilfq
+ +V8sjzuSWftN9VYgBCpTniAtjkfZq/z/9ICOAqVN/IYOClghrLEGgI1+TfKlPbdhHWx6p0yb
+ pgf69iCNf5EFR2yfrh7BLQKadG/DD+ysCVbSO09QYVcemsAJsQiTtENg==
+X-Talos-CUID: 9a23:Y1IwVmFHnVaCLLx0qmJBrmQQOMl8TUT4903vGx65F0oyRpi8HAo=
+X-Talos-MUID: 9a23:os1uCgqIDajhteb0m54ezxJLF8tr74+gMkZOmI855NOvPjJpEQ7I2Q==
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.12,214,1728950400"; 
-   d="scan'208";a="293338248"
+   d="scan'208";a="292956329"
 Received: from rcdn-l-core-06.cisco.com ([173.37.255.143])
-  by rcdn-iport-6.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Dec 2024 21:09:06 +0000
+  by rcdn-iport-1.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Dec 2024 21:09:30 +0000
 Received: from fedora.cisco.com (unknown [10.24.83.168])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id 8987918000263;
-	Fri,  6 Dec 2024 21:09:05 +0000 (GMT)
+	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id 146E518000263;
+	Fri,  6 Dec 2024 21:09:29 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -76,11 +78,14 @@ Cc: arulponn@cisco.com,
 	martin.petersen@oracle.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v6 00/15] Introduce support for Fabric Discovery and...
-Date: Fri,  6 Dec 2024 13:08:37 -0800
-Message-ID: <20241206210852.3251-1-kartilak@cisco.com>
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v6 01/15] scsi: fnic: Replace shost_printk with dev_info/dev_err
+Date: Fri,  6 Dec 2024 13:08:38 -0800
+Message-ID: <20241206210852.3251-2-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.0
+In-Reply-To: <20241206210852.3251-1-kartilak@cisco.com>
+References: <20241206210852.3251-1-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -92,225 +97,430 @@ X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.24.83.168, [10.24.83.168]
 X-Outbound-Node: rcdn-l-core-06.cisco.com
 
-...Login Services
+Sending host information to shost_printk
+prior to host initialization in fnic is unnecessary.
+Replace shost_printk and a printk prior to this
+initialization with dev_info and dev_err accordingly.
 
-Hi Martin, reviewers,
-
-This cover letter describes the feature: add support for Fabric
-Discovery and Login Services (FDLS) to fnic driver.
-
-This functionality is needed to support port channel RSCN (PC-RSCN)
-handling and serves as a base to create FC-NVME initiators
-(planned later), and eCPU handling (planned later).
-
-It is used to discover the fabric and target ports associated with the
-fabric.
-It will then login to the target ports that are zoned to it.
-The driver uses the tport structure presented by FDLS.
-
-Port channel RSCN is a Cisco vendor specific RSCN
-event. It is applicable only to Cisco UCS fabrics.
-
-In cases where the eCPU in the UCS VIC (Unified Computing Services
-Virtual Interface Card) hangs, a fabric log out is sent to the fabric.
-Upon successful log out from the fabric, the IO path is failed over
-to a new path.
-
-Generally from a feature perspective, the code is divided into adding
-support for this functionality initially. Then, code has been added to
-modify the IO path and interfaces. Finally, support for port channel
-RSCN handling has been added.
-
-Here are the headers of some of the salient patches:
-
-o add headers and definitions for FDLS
-o add support for fabric based solicited requests and responses
-o add support for target based solicited requests and responses
-o add support for unsolicited requests and responses
-o add support for FDMI
-o add support for FIP
-o add functionality in fnic to support FDLS
-o modify IO path to use FDLS and tport
-o modify fnic interfaces to use FDLS
-o add support to handle port channel RSCN
-
-Even though the patches have been made into a series, some patches are
-heavier than others. But, every effort has been made to keep the
-purpose of each patch as a single-purpose, and to compile cleanly.
-All the individual patches compile cleanly. The compiler used is
-GCC 13.3. Some function calls have been coded as placeholders with
-appropriate comments to avoid compiler warnings.
-
-This patchset has been tested as a whole. Therefore, the tested-by
-fields have been added only to one patch in the set.
-I've refrained from adding tested-by to most of the patches,
-so as to not mislead the reviewer/reader.
-
-A brief note on the unit tests:
-
-o. Perform zone in zone out testing in a loop: remove a target
-port from the zone, add it to the zone in a loop. 1000+ iterations
-of this test have been successful.
-o. Configure multipathing, and run link flaps on single link.
-IOs drop briefly, but pick up as expected.
-o. Configure multipathing, and run link flaps on two links, with a
-30 second delay in between. IOs drop briefly, but pick up as expected.
-o. Module load/unload test.
-o. Repeat the above tests with 1 queue and 64 queues.
-All tests were successful.
-
-Please consider this patch series for the next merge window.
-
+Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+---
 Changes between v1 and v2:
-	Replace pr_err with printk.
-	Replace simultaneous use of fc_tport_abts_s and tport_abts with
-    just tport_abts.
-	Incorporate review comments by Hannes:
-		Replace pr_info with dev_info.
-		Replace pr_err with dev_err.
-		Restore usage of tagset iterators.
-		Replace fnic_del_tport_timer_sync macro calls with function
-		calls.
-		Use the correct kernel-doc format.
-		Replace definitions with standard definitions from
-		fc_els.h.
-		Replace htonll() with get_unaligned_be64().
-		Use standard definitions from scsi_transport_fc.h for
-		port speeds.
-		Refactor definitions in struct fnic to avoid cache holes.
-		Replace memcmp with not equal to operator.
-		Fix indentation.
-		Replace fnic_del_fabric_timer_sync macro calls to function
-		calls.
-		Rename fc_abts_s to fc_tport_abts_s.
-		Modify fc_tport_abts_s to be a global frame.
-		Rename variable pfc_abts to tport_abts.
-		Modify functions with returns in the middle to if else
-		clauses.
-		Remove double newline.
-		Fix indentation in fnic_send_frame.
-		Add fnic_del_fabric_timer_sync as an inline function.
-		Add fnic_del_tport_timer_sync as an inline function.
-		Modify fc_abts_s variable name to fc_fabric_abts_s.
-		Modify fc_fabric_abts_s to be a global frame.
-		Rename pfc_abts to fabric_abts.
-		Remove redundant patch description.
-		Replace htonll() with get_unaligned_be64().
-		Replace raw values with macro names.
-		Remove fnic_del_fabric_timer_sync macro.
-		Remove fnic_del_tport_timer_sync macro.
-		Add fnic_del_fabric_timer_sync function declaration.
-		Add fnic_del_tport_timer_sync function declaration.
-		Move FDMI function declaration.
-		Modify patch heading and description appropriately.
-	Incorporate review comments from John:
-		Remove unreferenced variable.
-		Use standard definitions of true and false.
-		Replace if else clauses with switch statement.
-		Use kzalloc instead of kmalloc.
-		Modify fnic_send_fcoe_frame to not send a return value.
-		Replace int return value with void.
-	Fix warning from kernel test robot:
-		Remove version.h
-
-Changes between v2 and v3:
     Incorporate review comments from Hannes:
-        Replace redundant structure definitions with standard
-        definitions.
-		Replace static OXIDs with pool-based OXIDs for fabric.
-		Replace static OXIDs with pool-based OXIDs for targets.
-		Remove multiple endian macro copies.
-		Modify locking as applicable.
-	Incorporate review comments from John:
-		Replace GFP_ATOMIC with GFP_KERNEL where applicable.
-	Replace fnic->host with fnic->lport->host in some patches to
-	prevent compilation errors.
-	Fix issues found by kernel test robot.
-	Refactor fnic_std_ba_acc definition to fix compilation warning.
-	Refactor fnic_fdls_remove_tport to fix null pointer exception.
-	Modify scsi_unload to fix null pointer exception during fnic_remove.
+        Replace pr_info with dev_info.
+        Replace pr_err with dev_err.
+        Modify patch heading and description appropriately.
+---
+ drivers/scsi/fnic/fnic_main.c | 84 ++++++++++++-----------------------
+ drivers/scsi/fnic/fnic_res.c  | 69 ++++++++++------------------
+ 2 files changed, 51 insertions(+), 102 deletions(-)
 
-Changes between v3 and v4:
-	Fix kernel test robot warnings.
-	Rebase code to 6.12/scsi-queue.
-
-Changes between v4 and v5:
-	Remove unnecessary tabs from the bottom of fip.h.
-	Incorporate review comments from Martin:
-		Remove newline at the end of files.
-		Modify attribution appropriately.
-		Refactor call to fnic_fdls_start_flogi.
-		Refactor call to fdls_get_tgt_oxid_pool.
-		Modify fnic_get_stats to suppress compiler warning.
-
-Changes between v5 and v6:
-	Rebase to 6.14/scsi-queue.
-    Incorporate review comments from Martin:
-        Remove GCC 13.3 warnings.
-    Incorporate review comments from Hannes:
-		Refactor function definitions to top of file.
-		Modify OXID allocation and reclaim design.
-		Allocate OXID from a mempool.
-		Allocate frames from a mempool.
-		Modify frame initialization.
-		Modify frame send by avoiding memcpy in hot path.
-		Add comments.
-		Replace tag walk with scsi_host_busy_iter.
-		Replace custom definitions with standard definitions.
-		Split FDMI patch into PCI patch and FDMI patch.
-		Refactor FDMI macros into fnic_main.c.
-		Replace FDMI custom definition with standard definition.
-
-Thanks and regards,
-Karan
-
-Karan Tilak Kumar (15):
-  scsi: fnic: Replace shost_printk with dev_info/dev_err
-  scsi: fnic: Add headers and definitions for FDLS
-  scsi: fnic: Add support for fabric based solicited requests and
-    responses
-  scsi: fnic: Add support for target based solicited requests and
-    responses
-  scsi: fnic: Add support for unsolicited requests and responses
-  scsi: fnic: Add Cisco hardware model names
-  scsi: fnic: Add and integrate support for FDMI
-  scsi: fnic: Add and integrate support for FIP
-  scsi: fnic: Add functionality in fnic to support FDLS
-  scsi: fnic: Modify IO path to use FDLS
-  scsi: fnic: Modify fnic interfaces to use FDLS
-  scsi: fnic: Add stats and related functionality
-  scsi: fnic: Code cleanup
-  scsi: fnic: Add support to handle port channel RSCN
-  scsi: fnic: Increment driver version
-
- drivers/scsi/fnic/Makefile                |    5 +-
- drivers/scsi/fnic/fdls_disc.c             | 5019 +++++++++++++++++++++
- drivers/scsi/fnic/fdls_fc.h               |  253 ++
- drivers/scsi/fnic/fip.c                   | 1008 +++++
- drivers/scsi/fnic/fip.h                   |  157 +
- drivers/scsi/fnic/fnic.h                  |  290 +-
- drivers/scsi/fnic/fnic_attrs.c            |   12 +-
- drivers/scsi/fnic/fnic_debugfs.c          |   30 +-
- drivers/scsi/fnic/fnic_fcs.c              | 1745 +++----
- drivers/scsi/fnic/fnic_fdls.h             |  434 ++
- drivers/scsi/fnic/fnic_fip.h              |   48 -
- drivers/scsi/fnic/fnic_io.h               |   14 +-
- drivers/scsi/fnic/fnic_isr.c              |   28 +-
- drivers/scsi/fnic/fnic_main.c             |  731 +--
- drivers/scsi/fnic/fnic_pci_subsys_devid.c |  131 +
- drivers/scsi/fnic/fnic_res.c              |   77 +-
- drivers/scsi/fnic/fnic_scsi.c             | 1161 +++--
- drivers/scsi/fnic/fnic_stats.h            |   49 +-
- drivers/scsi/fnic/fnic_trace.c            |   81 +-
- 19 files changed, 9342 insertions(+), 1931 deletions(-)
- create mode 100644 drivers/scsi/fnic/fdls_disc.c
- create mode 100644 drivers/scsi/fnic/fdls_fc.h
- create mode 100644 drivers/scsi/fnic/fip.c
- create mode 100644 drivers/scsi/fnic/fip.h
- create mode 100644 drivers/scsi/fnic/fnic_fdls.h
- delete mode 100644 drivers/scsi/fnic/fnic_fip.h
- create mode 100644 drivers/scsi/fnic/fnic_pci_subsys_devid.c
-
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index adec0df24bc4..471a156b074e 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -344,25 +344,19 @@ void fnic_log_q_error(struct fnic *fnic)
+ 	for (i = 0; i < fnic->raw_wq_count; i++) {
+ 		error_status = ioread32(&fnic->wq[i].ctrl->error_status);
+ 		if (error_status)
+-			shost_printk(KERN_ERR, fnic->lport->host,
+-				     "WQ[%d] error_status"
+-				     " %d\n", i, error_status);
++			dev_err(&fnic->pdev->dev, "WQ[%d] error_status %d\n", i, error_status);
+ 	}
+ 
+ 	for (i = 0; i < fnic->rq_count; i++) {
+ 		error_status = ioread32(&fnic->rq[i].ctrl->error_status);
+ 		if (error_status)
+-			shost_printk(KERN_ERR, fnic->lport->host,
+-				     "RQ[%d] error_status"
+-				     " %d\n", i, error_status);
++			dev_err(&fnic->pdev->dev, "RQ[%d] error_status %d\n", i, error_status);
+ 	}
+ 
+ 	for (i = 0; i < fnic->wq_copy_count; i++) {
+ 		error_status = ioread32(&fnic->hw_copy_wq[i].ctrl->error_status);
+ 		if (error_status)
+-			shost_printk(KERN_ERR, fnic->lport->host,
+-				     "CWQ[%d] error_status"
+-				     " %d\n", i, error_status);
++			dev_err(&fnic->pdev->dev, "CWQ[%d] error_status %d\n", i, error_status);
+ 	}
+ }
+ 
+@@ -396,8 +390,7 @@ static int fnic_notify_set(struct fnic *fnic)
+ 		err = vnic_dev_notify_set(fnic->vdev, fnic->wq_copy_count + fnic->copy_wq_base);
+ 		break;
+ 	default:
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Interrupt mode should be set up"
++		dev_err(&fnic->pdev->dev, "Interrupt mode should be set up"
+ 			     " before devcmd notify set %d\n",
+ 			     vnic_dev_get_intr_mode(fnic->vdev));
+ 		err = -1;
+@@ -567,12 +560,10 @@ static int fnic_scsi_drv_init(struct fnic *fnic)
+ 
+ 	host->nr_hw_queues = fnic->wq_copy_count;
+ 
+-	shost_printk(KERN_INFO, host,
+-			"fnic: can_queue: %d max_lun: %llu",
++	dev_info(&fnic->pdev->dev, "fnic: can_queue: %d max_lun: %llu",
+ 			host->can_queue, host->max_lun);
+ 
+-	shost_printk(KERN_INFO, host,
+-			"fnic: max_id: %d max_cmd_len: %d nr_hw_queues: %d",
++	dev_info(&fnic->pdev->dev, "fnic: max_id: %d max_cmd_len: %d nr_hw_queues: %d",
+ 			host->max_id, host->max_cmd_len, host->nr_hw_queues);
+ 
+ 	return 0;
+@@ -622,7 +613,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	lp = libfc_host_alloc(&fnic_host_template, sizeof(struct fnic));
+ 	if (!lp) {
+-		printk(KERN_ERR PFX "Unable to alloc libfc local port\n");
++		dev_err(&pdev->dev, "Unable to alloc libfc local port\n");
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
+@@ -632,7 +623,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	fnic_id = ida_alloc(&fnic_ida, GFP_KERNEL);
+ 	if (fnic_id < 0) {
+-		pr_err("Unable to alloc fnic ID\n");
++		dev_err(&pdev->dev, "Unable to alloc fnic ID\n");
+ 		err = fnic_id;
+ 		goto err_out_ida_alloc;
+ 	}
+@@ -650,15 +641,13 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Cannot enable PCI device, aborting.\n");
++		dev_err(&fnic->pdev->dev, "Cannot enable PCI device, aborting.\n");
+ 		goto err_out_free_hba;
+ 	}
+ 
+ 	err = pci_request_regions(pdev, DRV_NAME);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Cannot enable PCI resources, aborting\n");
++		dev_err(&fnic->pdev->dev, "Cannot enable PCI resources, aborting\n");
+ 		goto err_out_disable_device;
+ 	}
+ 
+@@ -672,8 +661,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (err) {
+ 		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 		if (err) {
+-			shost_printk(KERN_ERR, fnic->lport->host,
+-				     "No usable DMA configuration "
++			dev_err(&fnic->pdev->dev, "No usable DMA configuration "
+ 				     "aborting\n");
+ 			goto err_out_release_regions;
+ 		}
+@@ -681,8 +669,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	/* Map vNIC resources from BAR0 */
+ 	if (!(pci_resource_flags(pdev, 0) & IORESOURCE_MEM)) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "BAR0 not memory-map'able, aborting.\n");
++		dev_err(&fnic->pdev->dev, "BAR0 not memory-map'able, aborting.\n");
+ 		err = -ENODEV;
+ 		goto err_out_release_regions;
+ 	}
+@@ -692,8 +679,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	fnic->bar0.len = pci_resource_len(pdev, 0);
+ 
+ 	if (!fnic->bar0.vaddr) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Cannot memory-map BAR0 res hdr, "
++		dev_err(&fnic->pdev->dev, "Cannot memory-map BAR0 res hdr, "
+ 			     "aborting.\n");
+ 		err = -ENODEV;
+ 		goto err_out_release_regions;
+@@ -701,8 +687,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	fnic->vdev = vnic_dev_register(NULL, fnic, pdev, &fnic->bar0);
+ 	if (!fnic->vdev) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "vNIC registration failed, "
++		dev_err(&fnic->pdev->dev, "vNIC registration failed, "
+ 			     "aborting.\n");
+ 		err = -ENODEV;
+ 		goto err_out_iounmap;
+@@ -710,8 +695,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	err = vnic_dev_cmd_init(fnic->vdev);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-				"vnic_dev_cmd_init() returns %d, aborting\n",
++		dev_err(&fnic->pdev->dev, "vnic_dev_cmd_init() returns %d, aborting\n",
+ 				err);
+ 		goto err_out_vnic_unregister;
+ 	}
+@@ -719,22 +703,19 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	err = fnic_dev_wait(fnic->vdev, vnic_dev_open,
+ 			    vnic_dev_open_done, CMD_OPENF_RQ_ENABLE_THEN_POST);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "vNIC dev open failed, aborting.\n");
++		dev_err(&fnic->pdev->dev, "vNIC dev open failed, aborting.\n");
+ 		goto err_out_dev_cmd_deinit;
+ 	}
+ 
+ 	err = vnic_dev_init(fnic->vdev, 0);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "vNIC dev init failed, aborting.\n");
++		dev_err(&fnic->pdev->dev, "vNIC dev init failed, aborting.\n");
+ 		goto err_out_dev_close;
+ 	}
+ 
+ 	err = vnic_dev_mac_addr(fnic->vdev, fnic->ctlr.ctl_src_addr);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "vNIC get MAC addr failed \n");
++		dev_err(&fnic->pdev->dev, "vNIC get MAC addr failed\n");
+ 		goto err_out_dev_close;
+ 	}
+ 	/* set data_src for point-to-point mode and to keep it non-zero */
+@@ -743,8 +724,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* Get vNIC configuration */
+ 	err = fnic_get_vnic_config(fnic);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Get vNIC configuration failed, "
++		dev_err(&fnic->pdev->dev, "Get vNIC configuration failed, "
+ 			     "aborting.\n");
+ 		goto err_out_dev_close;
+ 	}
+@@ -756,16 +736,14 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	err = fnic_set_intr_mode(fnic);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Failed to set intr mode, "
++		dev_err(&fnic->pdev->dev, "Failed to set intr mode, "
+ 			     "aborting.\n");
+ 		goto err_out_dev_close;
+ 	}
+ 
+ 	err = fnic_alloc_vnic_resources(fnic);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Failed to alloc vNIC resources, "
++		dev_err(&fnic->pdev->dev, "Failed to alloc vNIC resources, "
+ 			     "aborting.\n");
+ 		goto err_out_clear_intr;
+ 	}
+@@ -778,7 +756,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 					kzalloc((fnic->sw_copy_wq[hwq].ioreq_table_size + 1) *
+ 					sizeof(struct fnic_io_req *), GFP_KERNEL);
+ 	}
+-	shost_printk(KERN_INFO, fnic->lport->host, "fnic copy wqs: %d, Q0 ioreq table size: %d\n",
++	dev_info(&fnic->pdev->dev, "fnic copy wqs: %d, Q0 ioreq table size: %d\n",
+ 			fnic->wq_copy_count, fnic->sw_copy_wq[0].ioreq_table_size);
+ 
+ 	/* initialize all fnic locks */
+@@ -818,8 +796,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	fnic->ctlr.update_mac = fnic_update_mac;
+ 	fnic->ctlr.get_src_addr = fnic_get_mac;
+ 	if (fnic->config.flags & VFCF_FIP_CAPABLE) {
+-		shost_printk(KERN_INFO, fnic->lport->host,
+-			     "firmware supports FIP\n");
++		dev_info(&fnic->pdev->dev, "firmware supports FIP\n");
+ 		/* enable directed and multicast */
+ 		vnic_dev_packet_filter(fnic->vdev, 1, 1, 0, 0, 0);
+ 		vnic_dev_add_addr(fnic->vdev, FIP_ALL_ENODE_MACS);
+@@ -834,8 +811,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		INIT_LIST_HEAD(&fnic->evlist);
+ 		INIT_LIST_HEAD(&fnic->vlans);
+ 	} else {
+-		shost_printk(KERN_INFO, fnic->lport->host,
+-			     "firmware uses non-FIP mode\n");
++		dev_info(&fnic->pdev->dev, "firmware uses non-FIP mode\n");
+ 		fcoe_ctlr_init(&fnic->ctlr, FIP_MODE_NON_FIP);
+ 		fnic->ctlr.state = FIP_ST_NON_FIP;
+ 	}
+@@ -850,8 +826,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* Setup notification buffer area */
+ 	err = fnic_notify_set(fnic);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Failed to alloc notify buffer, aborting.\n");
++		dev_err(&fnic->pdev->dev, "Failed to alloc notify buffer, aborting.\n");
+ 		goto err_out_free_max_pool;
+ 	}
+ 
+@@ -863,8 +838,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	for (i = 0; i < fnic->rq_count; i++) {
+ 		err = vnic_rq_fill(&fnic->rq[i], fnic_alloc_rq_frame);
+ 		if (err) {
+-			shost_printk(KERN_ERR, fnic->lport->host,
+-				     "fnic_alloc_rq_frame can't alloc "
++			dev_err(&fnic->pdev->dev, "fnic_alloc_rq_frame can't alloc "
+ 				     "frame\n");
+ 			goto err_out_rq_buf;
+ 		}
+@@ -882,8 +856,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	err = fnic_request_intr(fnic);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Unable to request irq.\n");
++		dev_err(&fnic->pdev->dev, "Unable to request irq.\n");
+ 		goto err_out_request_intr;
+ 	}
+ 
+@@ -893,8 +866,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	err = scsi_add_host(lp->host, &pdev->dev);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "fnic: scsi_add_host failed...exiting\n");
++		dev_err(&fnic->pdev->dev, "fnic: scsi_add_host failed...exiting\n");
+ 		goto err_out_scsi_add_host;
+ 	}
+ 
+diff --git a/drivers/scsi/fnic/fnic_res.c b/drivers/scsi/fnic/fnic_res.c
+index 33dd27f6f24e..dd24e25574db 100644
+--- a/drivers/scsi/fnic/fnic_res.c
++++ b/drivers/scsi/fnic/fnic_res.c
+@@ -30,9 +30,7 @@ int fnic_get_vnic_config(struct fnic *fnic)
+ 				    offsetof(struct vnic_fc_config, m), \
+ 				    sizeof(c->m), &c->m); \
+ 		if (err) { \
+-			shost_printk(KERN_ERR, fnic->lport->host, \
+-				     "Error getting %s, %d\n", #m, \
+-				     err); \
++			dev_err(&fnic->pdev->dev, "Error getting %s, %d\n", #m, err); \
+ 			return err; \
+ 		} \
+ 	} while (0);
+@@ -139,40 +137,29 @@ int fnic_get_vnic_config(struct fnic *fnic)
+ 
+ 	c->wq_copy_count = min_t(u16, FNIC_WQ_COPY_MAX, c->wq_copy_count);
+ 
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC MAC addr %pM "
++	dev_info(&fnic->pdev->dev, "vNIC MAC addr %pM "
+ 		     "wq/wq_copy/rq %d/%d/%d\n",
+ 		     fnic->ctlr.ctl_src_addr,
+ 		     c->wq_enet_desc_count, c->wq_copy_desc_count,
+ 		     c->rq_desc_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC node wwn %llx port wwn %llx\n",
++	dev_info(&fnic->pdev->dev, "vNIC node wwn %llx port wwn %llx\n",
+ 		     c->node_wwn, c->port_wwn);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC ed_tov %d ra_tov %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC ed_tov %d ra_tov %d\n",
+ 		     c->ed_tov, c->ra_tov);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC mtu %d intr timer %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC mtu %d intr timer %d\n",
+ 		     c->maxdatafieldsize, c->intr_timer);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC flags 0x%x luns per tgt %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC flags 0x%x luns per tgt %d\n",
+ 		     c->flags, c->luns_per_tgt);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC flogi_retries %d flogi timeout %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC flogi_retries %d flogi timeout %d\n",
+ 		     c->flogi_retries, c->flogi_timeout);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC plogi retries %d plogi timeout %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC plogi retries %d plogi timeout %d\n",
+ 		     c->plogi_retries, c->plogi_timeout);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC io throttle count %d link dn timeout %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC io throttle count %d link dn timeout %d\n",
+ 		     c->io_throttle_count, c->link_down_timeout);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		     "vNIC port dn io retries %d port dn timeout %d\n",
++	dev_info(&fnic->pdev->dev, "vNIC port dn io retries %d port dn timeout %d\n",
+ 		     c->port_down_io_retries, c->port_down_timeout);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-			"vNIC wq_copy_count: %d\n", c->wq_copy_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-			"vNIC intr mode: %d\n", c->intr_mode);
++	dev_info(&fnic->pdev->dev, "vNIC wq_copy_count: %d\n", c->wq_copy_count);
++	dev_info(&fnic->pdev->dev, "vNIC intr mode: %d\n", c->intr_mode);
+ 
+ 	return 0;
+ }
+@@ -206,18 +193,12 @@ void fnic_get_res_counts(struct fnic *fnic)
+ 	fnic->intr_count = vnic_dev_get_res_count(fnic->vdev,
+ 		RES_TYPE_INTR_CTRL);
+ 
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		"vNIC fw resources wq_count: %d\n", fnic->wq_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		"vNIC fw resources raw_wq_count: %d\n", fnic->raw_wq_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		"vNIC fw resources wq_copy_count: %d\n", fnic->wq_copy_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		"vNIC fw resources rq_count: %d\n", fnic->rq_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		"vNIC fw resources cq_count: %d\n", fnic->cq_count);
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-		"vNIC fw resources intr_count: %d\n", fnic->intr_count);
++	dev_info(&fnic->pdev->dev, "vNIC fw resources wq_count: %d\n", fnic->wq_count);
++	dev_info(&fnic->pdev->dev, "vNIC fw resources raw_wq_count: %d\n", fnic->raw_wq_count);
++	dev_info(&fnic->pdev->dev, "vNIC fw resources wq_copy_count: %d\n", fnic->wq_copy_count);
++	dev_info(&fnic->pdev->dev, "vNIC fw resources rq_count: %d\n", fnic->rq_count);
++	dev_info(&fnic->pdev->dev, "vNIC fw resources cq_count: %d\n", fnic->cq_count);
++	dev_info(&fnic->pdev->dev, "vNIC fw resources intr_count: %d\n", fnic->intr_count);
+ }
+ 
+ void fnic_free_vnic_resources(struct fnic *fnic)
+@@ -253,19 +234,17 @@ int fnic_alloc_vnic_resources(struct fnic *fnic)
+ 
+ 	intr_mode = vnic_dev_get_intr_mode(fnic->vdev);
+ 
+-	shost_printk(KERN_INFO, fnic->lport->host, "vNIC interrupt mode: %s\n",
++	dev_info(&fnic->pdev->dev, "vNIC interrupt mode: %s\n",
+ 		     intr_mode == VNIC_DEV_INTR_MODE_INTX ? "legacy PCI INTx" :
+ 		     intr_mode == VNIC_DEV_INTR_MODE_MSI ? "MSI" :
+ 		     intr_mode == VNIC_DEV_INTR_MODE_MSIX ?
+ 		     "MSI-X" : "unknown");
+ 
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-			"vNIC resources avail: wq %d cp_wq %d raw_wq %d rq %d",
++	dev_info(&fnic->pdev->dev, "res avail: wq %d cp_wq %d raw_wq %d rq %d",
+ 			fnic->wq_count, fnic->wq_copy_count,
+ 			fnic->raw_wq_count, fnic->rq_count);
+ 
+-	shost_printk(KERN_INFO, fnic->lport->host,
+-			"vNIC resources avail: cq %d intr %d cpy-wq desc count %d\n",
++	dev_info(&fnic->pdev->dev, "res avail: cq %d intr %d cpy-wq desc count %d\n",
+ 			fnic->cq_count, fnic->intr_count,
+ 			fnic->config.wq_copy_desc_count);
+ 
+@@ -340,8 +319,7 @@ int fnic_alloc_vnic_resources(struct fnic *fnic)
+ 				RES_TYPE_INTR_PBA_LEGACY, 0);
+ 
+ 	if (!fnic->legacy_pba && intr_mode == VNIC_DEV_INTR_MODE_INTX) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "Failed to hook legacy pba resource\n");
++		dev_err(&fnic->pdev->dev, "Failed to hook legacy pba resource\n");
+ 		err = -ENODEV;
+ 		goto err_out_cleanup;
+ 	}
+@@ -444,8 +422,7 @@ int fnic_alloc_vnic_resources(struct fnic *fnic)
+ 	/* init the stats memory by making the first call here */
+ 	err = vnic_dev_stats_dump(fnic->vdev, &fnic->stats);
+ 	if (err) {
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "vnic_dev_stats_dump failed - x%x\n", err);
++		dev_err(&fnic->pdev->dev, "vnic_dev_stats_dump failed - x%x\n", err);
+ 		goto err_out_cleanup;
+ 	}
+ 
 -- 
 2.47.0
 
