@@ -1,123 +1,118 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 735AF190470;
-	Fri,  6 Dec 2024 07:19:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990E71D63D1;
+	Fri,  6 Dec 2024 07:21:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733469591; cv=none; b=oQ43nM619xQ6s0j0dj5OkdrwKxaEctIn8FkgaLOvgk8THAtdAYMXJunjwXwUxl7D6H8l9X+RqbdGra2vfjgP9xeC8WHj+maYlz6ln5Q1C8680O8L/WCTXp5QarCCRtYYxFba6T0I2yf5L2d5UZMHYIEf848ope45lEu56kmyyvA=
+	t=1733469664; cv=none; b=QfeDiMMWc5Bs0wkk3k2iDmPs19vJFOuy5uQQ10oBSpu8l7bjqNFQCzslVL3uoN3tB3AMQXox7aQT0Djm7ImF8noAnb/ha8N4HYiP7Xi3EndSDIc6DIHd/ei1msZ8pmds4X4iGn3wKdKZKmYD0GUwOGNEkR+LvDnRHBMhRASU7PA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733469591; c=relaxed/simple;
-	bh=qc847rXB/emgaSDmSWzW62whsERGti559LD/d+kyWWE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=I57HsMRibQP59nf2uZi9O3Q5kzYSlqXi6TDi5bWQIdN2jjhY+gkw2IgOLdcsxcfPH07NmiWljLtfEEGIXprw/xhAAu/n9vb8fMCgLgki2J8thTl9Xsx2xoHvn0HUVgTbhqj82219slS6fPdHcMKW7jPoWfOM/ZcvzD4OuV8iqP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=N6A5MsVK; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1733469664; c=relaxed/simple;
+	bh=eXgkPnSuV1DLMSpxicSxCmpRMc11qSId1Ps39ZgC62E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DgGs0eLziaCw/VfWhS12larD8OcwilOKczfSyb5h9dRhYsRfc0T5NRgHEbWMkf4493OE9qUZo90pxQUTG26Pw4MyydRR2weEyiRXY0jX8tUnaDB6EPNvf/kXqmEoLglnFBpZQuvUrJnhLMeLIlzwnpql6qdp6rMooeRPbcGKHWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o+wG9rcY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="N6A5MsVK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=8QQoNxrQTXZNpi1Cv2dfxMHY8MZth7/afGsAC9SfYVM=;
-	b=N6A5MsVKPVgQEhMEoSaf9vQEwxdI5L248rSY35bYOhx5RDMYLKbXOD2UJtV5KI
-	68TzgAqdCQU0F63IDJ8BLXlGK59LsbCm5Qm9QVXjl8DLPK997bw9EbpSJ6LbE2ZE
-	wuRJySFINBmWwC1iv+bBbNZXc0jhHIaY+emcx9Su0FiQY=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3PzeBpVJnjx1eBg--.45092S2;
-	Fri, 06 Dec 2024 15:19:29 +0800 (CST)
-From: wangdicheng <wangdich9700@163.com>
-To: hare@suse.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	wangdicheng <wangdicheng@kylinos.cn>,
-	huanglei <huanglei@kylinos.cn>
-Subject: [PATCH] scsi: aic7xxx: Fix build 'aicasm' warning
-Date: Fri,  6 Dec 2024 15:19:26 +0800
-Message-Id: <20241206071926.63832-1-wangdich9700@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o+wG9rcY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F657C4CED1;
+	Fri,  6 Dec 2024 07:21:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733469664;
+	bh=eXgkPnSuV1DLMSpxicSxCmpRMc11qSId1Ps39ZgC62E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=o+wG9rcYnotlrUeuc0PL7wpQWKlXXxbgXtHgvJy7YCCwHVZ9BkccRLmauWqsz+ZV/
+	 iY49BGCvaEwufLj74wUd4KOO2j4hv4jUIw8urqblrYMJBpAv6CgCbIU/8R6GyV73VK
+	 9c58t+wda7Myy5qJF2WzOXzK3/BQJ0i/AkjHXsZFMr7s3vepRv5asoxKqYToTl/hYB
+	 VNEio9U05OacRjqjaygqmLG9eUZQ17GF0aovEsH5OsM54NY9ccCb7HeNz79C2xEmMj
+	 yLXMkRkJbjJNx0ViCQboZDxE2VKg3DG3+oa6CDnctzD5D0J8giHgftdS96ghXZOqUx
+	 A94yQD2wKTalw==
+Date: Fri, 6 Dec 2024 08:21:01 +0100
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+To: Zijun Hu <zijun_hu@icloud.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	James Bottomley <James.Bottomley@hansenpartnership.com>, Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <thomas@t-8ch.de>, 
+	linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev, linux-sound@vger.kernel.org, 
+	sparclinux@vger.kernel.org, linux-block@vger.kernel.org, linux-cxl@vger.kernel.org, 
+	linux1394-devel@lists.sourceforge.net, arm-scmi@vger.kernel.org, linux-efi@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-mediatek@lists.infradead.org, linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org, 
+	linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	open-iscsi@googlegroups.com, linux-usb@vger.kernel.org, linux-serial@vger.kernel.org, 
+	netdev@vger.kernel.org, Zijun Hu <quic_zijuhu@quicinc.com>
+Subject: Re: [PATCH v3 04/11] driver core: Constify API device_find_child()
+ then adapt for various usages
+Message-ID: <7ylfj462lf6g3ej6d2cmsxadawsmajogbimi7cl4pjemb7df4h@snr73pd7vaid>
+References: <20241205-const_dfc_done-v3-0-1611f1486b5a@quicinc.com>
+ <20241205-const_dfc_done-v3-4-1611f1486b5a@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3PzeBpVJnjx1eBg--.45092S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZr18Xr4rCFyxJFykKr1Utrb_yoW5XFyUpF
-	W8C3ykAw15Jr1Uuw4ktrZ2qa45ZayktrWDJF4UZ3s29FW7WasYqF45Kay3JFy8JF10qF13
-	X3Wagry7XF17A3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UNSd9UUUUU=
-X-CM-SenderInfo: pzdqwv5lfkmliqq6il2tof0z/1tbioxOtT2dSigx62AABsC
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="owd7bvwanf7sxd4s"
+Content-Disposition: inline
+In-Reply-To: <20241205-const_dfc_done-v3-4-1611f1486b5a@quicinc.com>
 
-From: wangdicheng <wangdicheng@kylinos.cn>
 
-When building with CONFIG_AIC7XXX_BUILD_FIRMWARE=y or
-CONFIG_AIC79XX_BUILD_FIRMWARE=y,  the warning message is as follow:
+--owd7bvwanf7sxd4s
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v3 04/11] driver core: Constify API device_find_child()
+ then adapt for various usages
+MIME-Version: 1.0
 
-  aicasm_gram.tab.c:1722:16: warning: implicit declaration of function
-    ‘yylex’ [-Wimplicit-function-declaration]
+Hello,
 
-  aicasm_macro_gram.c:68:25: warning: implicit declaration of function
-    ‘mmlex’ [-Wimplicit-function-declaration]
+On Thu, Dec 05, 2024 at 08:10:13AM +0800, Zijun Hu wrote:
+> From: Zijun Hu <quic_zijuhu@quicinc.com>
+>=20
+> Constify the following API:
+> struct device *device_find_child(struct device *dev, void *data,
+> 		int (*match)(struct device *dev, void *data));
+> To :
+> struct device *device_find_child(struct device *dev, const void *data,
+>                                  device_match_t match);
+> typedef int (*device_match_t)(struct device *dev, const void *data);
+> with the following reasons:
+>=20
+> - Protect caller's match data @*data which is for comparison and lookup
+>   and the API does not actually need to modify @*data.
+>=20
+> - Make the API's parameters (@match)() and @data have the same type as
+>   all of other device finding APIs (bus|class|driver)_find_device().
+>=20
+> - All kinds of existing device match functions can be directly taken
+>   as the API's argument, they were exported by driver core.
+>=20
+> Constify the API and adapt for various existing usages by simply making
+> various match functions take 'const void *' as type of match data @data.
 
-  aicasm_scan.l:417:6: warning: implicit declaration of function
-    ‘mm_switch_to_buffer’
+With the discussion that a new name would ease the conversion, maybe
+consider device_find_child_device() to also align the name (somewhat) to
+the above mentioned (bus|class|driver)_find_device()?
 
-  aicasm_scan.l:418:6: warning: implicit declaration of function
-    ‘mmparse’
+Do you have a merge plan already? I guess this patch will go through
+Greg's driver core tree?
 
-  aicasm_scan.l:421:6: warning: implicit declaration of function
-    ‘mm_delete_buffer’
+Best regards
+Uwe
 
-The solution is to add the corresponding function declaration to the
-corresponding file.
+--owd7bvwanf7sxd4s
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Signed-off-by: wangdicheng <wangdicheng@kylinos.cn>
-Signed-off-by: huanglei <huanglei@kylinos.cn>
----
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y       | 1 +
- drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y | 1 +
- drivers/scsi/aic7xxx/aicasm/aicasm_scan.l       | 3 +++
- 3 files changed, 5 insertions(+)
+-----BEGIN PGP SIGNATURE-----
 
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-index 65182ad9cdf8..b1c9ce477cbd 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-@@ -102,6 +102,7 @@ static void add_conditional(symbol_t *symbol);
- static void add_version(const char *verstring);
- static int  is_download_const(expression_t *immed);
- static int  is_location_address(symbol_t *symbol);
-+int yylex();
- void yyerror(const char *string);
- 
- #define SRAM_SYMNAME "SRAM_BASE"
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-index 8c0479865f04..5c7350eb5b5c 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-@@ -61,6 +61,7 @@
- static symbol_t *macro_symbol;
- 
- static void add_macro_arg(const char *argtext, int position);
-+int mmlex();
- void mmerror(const char *string);
- 
- %}
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-index c78d4f68eea5..fc7e6c58148d 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-@@ -64,6 +64,9 @@ static char *string_buf_ptr;
- static int  parren_count;
- static int  quote_count;
- static char buf[255];
-+void mm_switch_to_buffer(YY_BUFFER_STATE);
-+void mmparse();
-+void mm_delete_buffer(YY_BUFFER_STATE);
- %}
- 
- PATH		([/]*[-A-Za-z0-9_.])+
--- 
-2.25.1
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmdSpdoACgkQj4D7WH0S
+/k4dIQf/Zne0n0ncNUTb3GbDwFv4sf3wAVH368SbrNYMV23ZdWpNl4KZPovf5L1+
+5nMlPkc2I/CBZGE2OJcZWUhHI7cZ2ZYDHBBAf/TYhsY9f0+6wXgdi2cc+bbbQpo1
+JdabxMtgPX9tQ1Rbtv6jNu1AUvx8pONwQvUe5vmIBeLFDx5+wEwm4LppEVU+x9zB
+dApq6D2VfLguHwMf8HDycoa0nd0GL3R4KIJF4+taiSmhz9q+yjewqiXD2ag3fYrF
+1IeZ6pnyXoaq0aTwLmXXhI6se14Q+IZIVQPRXVQ5i9A8kbsWN0Fj2LfXnnNWhmHl
+YR8uP+UVLcfagxTg7ascr+SuV4OlCw==
+=cpdm
+-----END PGP SIGNATURE-----
 
+--owd7bvwanf7sxd4s--
