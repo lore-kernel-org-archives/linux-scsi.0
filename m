@@ -1,22 +1,22 @@
 Received: from air.basealt.ru (air.basealt.ru [193.43.8.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35A5153808;
-	Mon,  9 Dec 2024 17:03:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A4B8153814;
+	Mon,  9 Dec 2024 17:03:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.43.8.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733763831; cv=none; b=m28+i9jEhZ7B1n8JLSsAZ42MBxK2QVKJ3wzHQIMW5sWqnDLTrqlPPv59pHDJxsomjoXPb6xntVtD0ZHjDVK+ZaUXUBwOj/dY/LQxvfxirtQTmyBFLJdBLPkQR1YgaSwygZUujWNlP8/Pk+qAkvfOr2Pj7zvi/wzupyqRbYrUhro=
+	t=1733763832; cv=none; b=FeMaD4zpM3fiJ6aUcJ9SGXSGfm3uNaIYbcPDt92SgSvZ+nAaJ3gFsNpNTNuiAHptyz4+i7xYcOm2bKrtfvIndquqx5OufK2RbWj/RMsEmtLZyOxfEXbKlsS89quqlKWYsDIKKe9OIHSet6KrufDkB96P8AKBjoSTeJk8Ly9fmKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733763831; c=relaxed/simple;
-	bh=JhD/0VV5bz+GHGfjTQmm9tvzSk0rpxVIqEukVkwBKAI=;
+	s=arc-20240116; t=1733763832; c=relaxed/simple;
+	bh=pDMotxxAEfmtrMG6MLfN/X4Rpw+KCwDjiko2Kn3T9xQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CI0Dtg8VscPOlWL9J8YEZQX30Ebzuf/rghE2Pyd1hMmQk+dFjN3peOhT1ZCTrpaib6QTQyKtJXSGMIu9e03YVQ1j6WbymQNY5u5I+rFNjQrUTtcegBULKYD9L7jvRZg3K0K+YlMLdyqD+StHMnUolLtC8kUg9IEs0Ubu2yfVUmU=
+	 MIME-Version; b=ECDhsNznOiFPISu2Fik+d97O5jAAOfknY3zmX8qqgVEvfBzRbU/lRovcVruyNySADES/A8Sqqt/la6W6wolC6NX5c4YvJNLaLNhJ77LnPS4aWqenC/59ovMjFvJ6wN+S5xwePDZm1V0GXYEV+io6jmdQMLw+PUtQX6ZMa4PlcDk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=193.43.8.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
 Received: from altlinux.ipa.basealt.ru (unknown [178.76.204.78])
-	by air.basealt.ru (Postfix) with ESMTPSA id 833A6233B9;
-	Mon,  9 Dec 2024 20:03:47 +0300 (MSK)
+	by air.basealt.ru (Postfix) with ESMTPSA id 27C48233BE;
+	Mon,  9 Dec 2024 20:03:48 +0300 (MSK)
 From: Vasiliy Kovalev <kovalev@altlinux.org>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Sasha Levin <sashal@kernel.org>,
@@ -30,9 +30,9 @@ Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	nickel@altlinux.org,
 	gerben@altlinux.org,
 	dutyrok@altlinux.org
-Subject: [PATCH 5.10.y 2/3] scsi: core: Fix scsi_mode_select() buffer length handling
-Date: Mon,  9 Dec 2024 20:03:29 +0300
-Message-Id: <20241209170330.113179-3-kovalev@altlinux.org>
+Subject: [PATCH 5.10.y 3/3] scsi: sd: Fix sd_do_mode_sense() buffer length handling
+Date: Mon,  9 Dec 2024 20:03:30 +0300
+Message-Id: <20241209170330.113179-4-kovalev@altlinux.org>
 X-Mailer: git-send-email 2.33.8
 In-Reply-To: <20241209170330.113179-1-kovalev@altlinux.org>
 References: <20241209170330.113179-1-kovalev@altlinux.org>
@@ -46,72 +46,38 @@ Content-Transfer-Encoding: 8bit
 
 From: Damien Le Moal <damien.lemoal@wdc.com>
 
-commit a7d6840bed0c2b16ac3071b74b5fcf08fc488241 upstream.
+commit c749301ebee82eb5e97dec14b6ab31a4aabe37a6 upstream.
 
-The MODE SELECT(6) command allows handling mode page buffers that are up to
-255 bytes, including the 4 byte header needed in front of the page
-buffer. For requests larger than this limit, automatically use the MODE
-SELECT(10) command.
+For devices that explicitly asked for MODE SENSE(10) use, make sure that
+scsi_mode_sense() is called with a buffer of at least 8 bytes so that the
+sense header fits.
 
-In both cases, since scsi_mode_select() adds the mode select page header,
-checks on the buffer length value must include this header size to avoid
-overflows of the command CDB allocation length field.
-
-While at it, use put_unaligned_be16() for setting the header block
-descriptor length and CDB allocation length when using MODE SELECT(10).
-
-[mkp: fix MODE SENSE vs. MODE SELECT confusion]
-
-Link: https://lore.kernel.org/r/20210820070255.682775-3-damien.lemoal@wdc.com
+Link: https://lore.kernel.org/r/20210820070255.682775-4-damien.lemoal@wdc.com
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Vasiliy Kovalev <kovalev@altlinux.org>
 ---
- drivers/scsi/scsi_lib.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/sd.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0a9db3464fd48e..06838cf5300d00 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2019,8 +2019,15 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
- 	memset(cmd, 0, sizeof(cmd));
- 	cmd[1] = (pf ? 0x10 : 0) | (sp ? 0x01 : 0);
- 
--	if (sdev->use_10_for_ms) {
--		if (len > 65535)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index f2dfd9853d3432..2f2ca287887603 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2649,6 +2649,13 @@ sd_do_mode_sense(struct scsi_disk *sdkp, int dbd, int modepage,
+ 		 unsigned char *buffer, int len, struct scsi_mode_data *data,
+ 		 struct scsi_sense_hdr *sshdr)
+ {
 +	/*
-+	 * Use MODE SELECT(10) if the device asked for it or if the mode page
-+	 * and the mode select header cannot fit within the maximumm 255 bytes
-+	 * of the MODE SELECT(6) command.
++	 * If we must use MODE SENSE(10), make sure that the buffer length
++	 * is at least 8 bytes so that the mode sense header fits.
 +	 */
-+	if (sdev->use_10_for_ms ||
-+	    len + 4 > 255 ||
-+	    data->block_descriptor_length > 255) {
-+		if (len > 65535 - 8)
- 			return -EINVAL;
- 		real_buffer = kmalloc(8 + len, GFP_KERNEL);
- 		if (!real_buffer)
-@@ -2033,15 +2040,13 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
- 		real_buffer[3] = data->device_specific;
- 		real_buffer[4] = data->longlba ? 0x01 : 0;
- 		real_buffer[5] = 0;
--		real_buffer[6] = data->block_descriptor_length >> 8;
--		real_buffer[7] = data->block_descriptor_length;
-+		put_unaligned_be16(data->block_descriptor_length,
-+				   &real_buffer[6]);
- 
- 		cmd[0] = MODE_SELECT_10;
--		cmd[7] = len >> 8;
--		cmd[8] = len;
-+		put_unaligned_be16(len, &cmd[7]);
- 	} else {
--		if (len > 255 || data->block_descriptor_length > 255 ||
--		    data->longlba)
-+		if (data->longlba)
- 			return -EINVAL;
- 
- 		real_buffer = kmalloc(4 + len, GFP_KERNEL);
++	if (sdkp->device->use_10_for_ms && len < 8)
++		len = 8;
++
+ 	return scsi_mode_sense(sdkp->device, dbd, modepage, buffer, len,
+ 			       SD_TIMEOUT, sdkp->max_retries, data,
+ 			       sshdr);
 -- 
 2.33.8
 
