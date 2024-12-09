@@ -1,75 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05580154BFC
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Dec 2024 18:08:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9217E14A4DF;
+	Mon,  9 Dec 2024 18:35:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733767693; cv=none; b=JAvwSUZfMP81INnAPkfdLrhztUCGLB+rr4sKWg6Dp4BO3vVYqP4FFAowH0avSbGKk+ATJ3mQBQw7P7krn+XgROk5KQVa8hqGgllnOWLZDL5eN9s0BujbUV0jMQwJ2vGalfSC45nIvb3CEZmL/3ujk2Eu5F5ik+Hbl6W+zV5KtJU=
+	t=1733769354; cv=none; b=VkFSVUZ+rDaoEUqaieKrpA69vpokMPWYS1fO07mrWVOfM6BhN8hv8q7/db9rd7PghHkzDAI/adbTdOIOT6ZphuvHoHhLpKsYME/Pw1K5Lmy3tXtdk3iqrI+Kl3LLEfpztDLsSWInZqiO7QKt56YqVxIiviAmmhqcgRFx8ivHfco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733767693; c=relaxed/simple;
-	bh=gaCqSzov3nG1gwdM1Xq3FGe+lidVlKrnCqjU3z3HBjM=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=b84Sqh34hV8hRHw3GkUGpvULMevHnhaybuwPkdj4qD4142nnUJtyRfJR+mn1/C5AxhRzpv+7nX8RYui7TDxo5c2q7Xrdvp52njLPXBUKI07WHanW3IXG+/TTZsDFLYnBMrnDSAlz/xd3uEao8Dhxo07EBnJBa6mKXQfYy3ej09Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iqHBQLNR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733769354; c=relaxed/simple;
+	bh=FikoH/OLAp90CZxx8fi+jVVT/nEKJxV6h3uquUAYhow=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sxE5sVcEi/JPFcyqZkU+/JIbHeVwVtCg6Dmd24Qsp4J+jgTOw4Hr+FtI/yj3g017ckYbc/eYNSFjEo1k37sBmELT1pmJh5pp1VBGdn4Q9xs3KRVUpoPDFusxq2Y2HyJArmMTaS9bZ1zgHHj7cmeEPn4qnSzUX4nQVSvQOUrj0NY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=EHl6HNng; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iqHBQLNR"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 82E26C4CEE1
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Dec 2024 18:08:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733767692;
-	bh=gaCqSzov3nG1gwdM1Xq3FGe+lidVlKrnCqjU3z3HBjM=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=iqHBQLNR0rw0TvUizon1JZBxPfVgYOVYVBx+ZTp7CCWAB29ZfS0+zKGe3CwLbqRht
-	 bwemO3vcIL2sZwU5aOc1aZriUKRg+LeIhL6BnYuXoBxghj83pI/O9ilrzcTjA9PWZM
-	 /YqJGKkN9fM3eLehTH67JboY0eWOrjWCkR4sr7c0jeIp0sPQM3GbJzWQT7G0q5vnz3
-	 U5I/dfXitszXLK9wBcyLcP1FNY9kFA9Es64H6PlPWtmyDeHbRDa0cnsMv3lKKS9Y0+
-	 3QEAJSrbVsq0C0Z8+w1D3nZzxN6qf8OyU3lYLBgOnBjYdi91CI6MNJd+enkAuAaT/J
-	 laHwtyaVuxY5Q==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 7DF0BC41614; Mon,  9 Dec 2024 18:08:12 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 219575] UBSAN: array-index-out-of-bounds in
- drivers/message/fusion/mptsas.c:2446:22 ; index 1 is out of range for type
- 'MPI_SAS_IO_UNIT0_PHY_DATA [1]'
-Date: Mon, 09 Dec 2024 18:08:12 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: aros@gmx.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-219575-11613-ogrtZ0J3EJ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219575-11613@https.bugzilla.kernel.org/>
-References: <bug-219575-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="EHl6HNng"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Y6VtG5scgzlfflk;
+	Mon,  9 Dec 2024 18:35:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1733769346; x=1736361347; bh=BfyQAJGAVo12eipLGdGPpy0O
+	2Dp5VbPjMP7VeXdAo8Y=; b=EHl6HNngujAV/9vws1c/1zUHz1gnSU6iwgwA6u2L
+	Mdz6wP3H0zQjk1ApGDeJiVNgAwMBUKYNyjpBmKX9wXJkA1hunarorQhEPJszHnND
+	6ivvjE1uKCVhoWETAEeTDh9jbknoNDa6268Q4Fz39rimTUBB+XsbeBJ/UpR3eGZT
+	Wy5rD/M0vGqB4eaXbzUD3kyePMViV6YzqgO198orvmvWVFAHSK4YQZZGtG5f5FAR
+	c8ZXeGuGdHIAXpNtPeoIRUde1w9VpBdIliH5ByjxQWV9r3EwnvD/ObHTplkQhM9A
+	lnoAEvqi14HNW5dQyMC/rD+SLzzhueuUKJURKZBzFnohwQ==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id vdpo-xe8nAIa; Mon,  9 Dec 2024 18:35:46 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Y6Vt62HvvzlfflL;
+	Mon,  9 Dec 2024 18:35:41 +0000 (UTC)
+Message-ID: <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
+Date: Mon, 9 Dec 2024 10:35:39 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
+ Testbus Registers
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+ Manish Pandey <quic_mapa@quicinc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
+References: <20241025055054.23170-1-quic_mapa@quicinc.com>
+ <20241112075000.vausf7ulr2t5svmg@thinkpad>
+ <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
+ <20241209040355.kc4ab6nfp6syw37q@thinkpad>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241209040355.kc4ab6nfp6syw37q@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219575
+On 12/8/24 12:03 PM, Manivannan Sadhasivam wrote:
+> On Tue, Nov 12, 2024 at 10:10:02AM -0800, Bart Van Assche wrote:
+>> On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
+>>> On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
+>>>> Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
+>>>> of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
+>>>> aid in diagnosing and resolving issues related to hardware and software operations.
+>>>>
+>>>
+>>> TBH, the current state of dumping UFSHC registers itself is just annoying as it
+>>> pollutes the kernel ring buffer. I don't think any peripheral driver in the
+>>> kernel does this. Please dump only relevant registers, not everything that you
+>>> feel like dumping.
+>>
+>> I wouldn't mind if the code for dumping  UFSHC registers would be removed.
+> 
+> Instead of removing, I'm planning to move the dump to dev_coredump framework.
+> But should we move all the error prints also? Like all ufshcd_print_*()
+> functions?
 
---- Comment #1 from Artem S. Tashkinov (aros@gmx.com) ---
-Have you checked Linux 6.12.4?
+Hmm ... we may be better off to check which of these functions can be 
+removed rather than moving all of them to another framework.
 
---=20
-You may reply to this email to add a comment.
+Thanks,
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Bart.
+
