@@ -1,151 +1,183 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48A121714DF;
-	Mon,  9 Dec 2024 04:47:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E2381922C0;
+	Mon,  9 Dec 2024 04:56:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733719665; cv=none; b=sx0EMvUKq6NVkAXXcby9EZH860vufZDGyji1wahZe0mJ+0ziILRRuVvb4z4CelSeFuUmZcGnk18XKVmN0nsl/m3U8li+obQYqnQwYM1PrKFGtnXB8FcWDE2LsnAO181ofg6VvMKutdKZluKGm6qf3QX2nGU8goXqC8xDkWFScRQ=
+	t=1733720219; cv=none; b=l2RL2x6tCL531wBoZrucyigJCb5T91Wa1XffVPxQ7t+SGLsaetjMjdhT4MjyMaeNyG8Ch3E72SN0rXi7CK6l6azQ/qQJ5ze2TtxUACqGUZ7w9iGu/Yrjn2eqHzHcfXiiLUfA/b6NYdOfeOVfLItfWZC2Rne2+D3KDb/fBYCjBJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733719665; c=relaxed/simple;
-	bh=oGQLEO9Jk5yk6DnfCNJIWMvX22cHDx9xeH8e6qrGBJI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kVE1A+sypXjSs3IFY2ZUSqVWlMcffOI+jnbfJxJYES9BlWd2LF64g5XhJumrSxnmTSBOWy4anpJvCuN5klPZsPxmt6C/3criq0G+lb7J3D6SSUnX0BLtD07BrCwrrjL1GVmQwnKDH+wvrCtcOF7rGrdmKp76Vj8/q37/5+9Ahec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cNAdAFaz; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1733720219; c=relaxed/simple;
+	bh=Q4qXw6u0QnVWnTLxcFvhi8tAx/uPHNBoJYh1c3lbTGA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Tp7Or7/LmH1WePvCaV3zdoCdjMq58rDljKExrooTARimbhV5MVRaNxg28AEaszgj9y3sd0sWtmcCb6CON6DpetWbqZwY9kfeR4X2f1jC3GOysEXRH6dlXD/LsrKussGN8IWz43DyOgvld6DUvNuG+HVUcZvYQ5iidNqBiP6GL9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJ8Z59pT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cNAdAFaz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1733719665; x=1765255665;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=oGQLEO9Jk5yk6DnfCNJIWMvX22cHDx9xeH8e6qrGBJI=;
-  b=cNAdAFazPfRYs97QPNAb46q0hDS/ge9ANNp/1ptyKb56rZEQdcBF0Jhp
-   uSqsyJKVyYUUuZUkicihWLYfRkuXKCpCoxUWHOHVvpNRlYW4FKuLEkBke
-   lTQmX2u5ut1X9rw4kGK7X39+izyL5F3JC6K2lypAlOFrr6l14was8opSX
-   8T156vBq6Z7ZePSHntSO5UuMq7erJfLzISHWgYm4RtfAIDAuXtBYNvB56
-   bgWBGz6VnJOB8/oiDNFWXcOhQX0mmWqHuGO6QE01Aae/yP9kuLwguIF4M
-   aLfpEWpHf1hCjyC0ZTAI0MGxNr9KrQjqDR2L6kP/z+XRSmisHtJngoKOC
-   w==;
-X-CSE-ConnectionGUID: LlrlTp9VTziBAPtmfNK1Uw==
-X-CSE-MsgGUID: LLWaYoB7T26343CPnWOtqQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11280"; a="34060171"
-X-IronPort-AV: E=Sophos;i="6.12,218,1728975600"; 
-   d="scan'208";a="34060171"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2024 20:47:42 -0800
-X-CSE-ConnectionGUID: MZbzW0C7S7W33okZ/hyHDA==
-X-CSE-MsgGUID: fxGVWoO2Rlq1vyVVCgyBhQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,218,1728975600"; 
-   d="scan'208";a="99012438"
-Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 08 Dec 2024 20:47:39 -0800
-Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tKVgG-0003un-2g;
-	Mon, 09 Dec 2024 04:47:36 +0000
-Date: Mon, 9 Dec 2024 12:47:30 +0800
-From: kernel test robot <lkp@intel.com>
-To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
-Cc: oe-kbuild-all@lists.linux.dev, arulponn@cisco.com, djhawar@cisco.com,
-	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
-	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v6 08/15] scsi: fnic: Add and integrate support for FIP
-Message-ID: <202412081904.pXwdx15J-lkp@intel.com>
-References: <20241206210852.3251-9-kartilak@cisco.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJ8Z59pT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FAD2C4CED1;
+	Mon,  9 Dec 2024 04:56:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733720218;
+	bh=Q4qXw6u0QnVWnTLxcFvhi8tAx/uPHNBoJYh1c3lbTGA=;
+	h=From:To:Cc:Subject:Date:From;
+	b=UJ8Z59pTP1FvU+F/ffL2U5GeXaTz2WS6b5mYydTseoix8Rs3scr0mpy2aqbDpDK4q
+	 4Wiz9nnSeecyHGvvNI7HQCtAVY1B/nLMWpZKXb6zTQ92Qo+DmHeAKdhyStZKUAq2hF
+	 5vgS1lHK3+pzBtQ7yagOw3I1zegoA5SuuuVJ3UHg5fEEGTP/v/YSoRmzBnzEgimE60
+	 iV6ADyWoh/Q1OjLMvYIA7GJVKu/lek4MMlRnyAWxmgX9akXwmVmfhs1QpKtz9q2ZLF
+	 uTra7No/X2l4WqMIi6HUZh/0YtBRFCyERBXKv2JqRSahCtVv2SQrRAwUJfzLa6WJ9z
+	 lU2liyyLF4csg==
+From: Eric Biggers <ebiggers@kernel.org>
+To: linux-block@vger.kernel.org,
+	linux-fscrypt@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Cc: Adrian Hunter <adrian.hunter@intel.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>
+Subject: [PATCH v9 00/12] Support for hardware-wrapped inline encryption keys
+Date: Sun,  8 Dec 2024 20:55:18 -0800
+Message-ID: <20241209045530.507833-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241206210852.3251-9-kartilak@cisco.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Karan,
+This patchset is also available in git via:
 
-kernel test robot noticed the following build warnings:
+    git fetch https://git.kernel.org/pub/scm/fs/fscrypt/linux.git wrapped-keys-v9
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on linus/master v6.13-rc1]
-[cannot apply to mkp-scsi/for-next next-20241206]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+This is a reworked version of the patchset
+https://lore.kernel.org/linux-fscrypt/20241202-wrapped-keys-v7-0-67c3ca3f3282@linaro.org/T/#u
+that was recently sent by Bartosz Golaszewski.  It turned out there were a lot
+of things I wanted to fix, and it would have taken much too long to address them
+in a code review.  For now this is build-tested only; I've errored on the side
+of sending this out early since others are working on this too.  Besides many
+miscellaneous fixes and cleanups, I've made the following notable changes:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Replace-shost_printk-with-dev_info-dev_err/20241207-054453
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20241206210852.3251-9-kartilak%40cisco.com
-patch subject: [PATCH v6 08/15] scsi: fnic: Add and integrate support for FIP
-config: i386-allmodconfig (https://download.01.org/0day-ci/archive/20241208/202412081904.pXwdx15J-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241208/202412081904.pXwdx15J-lkp@intel.com/reproduce)
+- ufs-qcom and sdhci-msm now just initialize the blk_crypto_profile themselves,
+  like what ufs-exynos was doing.  This avoids needing to add all the
+  host-specific hooks for wrapped key support to the MMC and UFS core drivers.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202412081904.pXwdx15J-lkp@intel.com/
+- When passing the blk_crypto_key further down the stack, it now replaces
+  parameters like the algorithm ID, to avoid creating two sources of truth.
 
-All warnings (new ones prefixed by >>):
+- The module parameter qcom_ice.use_wrapped_keys should work correctly now.
 
-   In file included from drivers/scsi/fnic/fnic_fcs.c:21:
-   drivers/scsi/fnic/fnic_fcs.c: In function 'fnic_rq_cmpl_frame_recv':
->> drivers/scsi/fnic/fnic.h:235:33: warning: format '%ld' expects argument of type 'long int', but argument 7 has type 'unsigned int' [-Wformat=]
-     235 |                                 "fnic<%d>: %s: %d: " fmt, fnic_num,\
-         |                                 ^~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/fnic/fnic.h:222:25: note: in definition of macro 'FNIC_CHECK_LOGGING'
-     222 |                         CMD;                                    \
-         |                         ^~~
-   include/scsi/scsi_host.h:737:9: note: in expansion of macro 'dev_printk'
-     737 |         dev_printk(prefix, &(shost)->shost_gendev, fmt, ##a)
-         |         ^~~~~~~~~~
-   drivers/scsi/fnic/fnic.h:234:26: note: in expansion of macro 'shost_printk'
-     234 |                          shost_printk(kern_level, host,                 \
-         |                          ^~~~~~~~~~~~
-   drivers/scsi/fnic/fnic_fcs.c:491:17: note: in expansion of macro 'FNIC_FCS_DBG'
-     491 |                 FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-         |                 ^~~~~~~~~~~~
-   drivers/scsi/fnic/fnic_fcs.c: In function 'fdls_send_fcoe_frame':
-   drivers/scsi/fnic/fnic.h:235:33: warning: format '%lu' expects argument of type 'long unsigned int', but argument 7 has type 'unsigned int' [-Wformat=]
-     235 |                                 "fnic<%d>: %s: %d: " fmt, fnic_num,\
-         |                                 ^~~~~~~~~~~~~~~~~~~~
-   drivers/scsi/fnic/fnic.h:222:25: note: in definition of macro 'FNIC_CHECK_LOGGING'
-     222 |                         CMD;                                    \
-         |                         ^~~
-   include/scsi/scsi_host.h:737:9: note: in expansion of macro 'dev_printk'
-     737 |         dev_printk(prefix, &(shost)->shost_gendev, fmt, ##a)
-         |         ^~~~~~~~~~
-   drivers/scsi/fnic/fnic.h:234:26: note: in expansion of macro 'shost_printk'
-     234 |                          shost_printk(kern_level, host,                 \
-         |                          ^~~~~~~~~~~~
-   drivers/scsi/fnic/fnic_fcs.c:675:25: note: in expansion of macro 'FNIC_FCS_DBG'
-     675 |                         FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-         |                         ^~~~~~~~~~~~
+- The fscrypt support no longer uses a policy flag to indicate when a file is
+  protected by a HW-wrapped key, since it was already implied by the file's key
+  identifier being that of a HW-wrapped key.  Originally there was an issue
+  where raw and HW-wrapped keys could share key identifiers, but I had fixed
+  that earlier by introducing a new HKDF context byte.
+
+- The term "standard keys" is no longer used.  Now "raw keys" is consistently
+  used instead.  I've found that people find the term "raw keys" to be more
+  intuitive.  Also HW-wrapped keys could in principle be standardized.
+
+- I've reordered the patchset to place preparatory patches that don't depend on
+  the actual HW-wrapped key support first.
+
+My current thinking is that for 6.14 we should just aim to get the preparatory
+patches 1-5 merged via the ufs and mmc trees, while the actual HW-wrapped key
+support continues to be finalized and properly tested.  But let me know if
+anyone has any other thoughts.
+
+A quick intro to the patchset for anyone who hasn't been following along:
+
+This patchset adds support for hardware-wrapped inline encryption keys, a
+security feature supported by some SoCs and that has already seen a lot of
+real-world use downstream.  It adds the block and fscrypt framework for the
+feature as well as support for it with UFS on Qualcomm SoCs.
+
+This feature is described in full detail in the included Documentation changes.
+But to summarize, hardware-wrapped keys are inline encryption keys that are
+wrapped (encrypted) by a key internal to the hardware so that they can only be
+unwrapped (decrypted) by the hardware.  Initially keys are wrapped with a
+permanent hardware key, but during actual use they are re-wrapped with a
+per-boot ephemeral key for improved security.  The hardware supports importing
+keys as well as generating keys itself.
+
+This differs from the existing support for hardware-wrapped keys in the kernel
+crypto API (which also goes by names such as "hardware-bound keys", depending on
+the driver) in the same way that the crypto API differs from blk-crypto: the
+crypto API is for general crypto operations, whereas blk-crypto is for inline
+storage encryption.
+
+This feature is already being used by Android downstream for several years
+(https://source.android.com/docs/security/features/encryption/hw-wrapped-keys),
+but on other platforms userspace support will be provided via fscryptctl and
+tests via xfstests (I have some old patches for this that need to be updated).
+
+Eric Biggers (10):
+  ufs: crypto: add ufs_hba_from_crypto_profile()
+  ufs: qcom: convert to use UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE
+  mmc: crypto: add mmc_from_crypto_profile()
+  mmc: sdhci-msm: convert to use custom crypto profile
+  soc: qcom: ice: make qcom_ice_program_key() take struct blk_crypto_key
+  blk-crypto: add basic hardware-wrapped key support
+  blk-crypto: show supported key types in sysfs
+  blk-crypto: add ioctls to create and prepare hardware-wrapped keys
+  fscrypt: add support for hardware-wrapped keys
+  ufs: qcom: add support for wrapped keys
+
+Gaurav Kashyap (2):
+  firmware: qcom: scm: add calls for wrapped key support
+  soc: qcom: ice: add HWKM support to the ICE driver
+
+ Documentation/ABI/stable/sysfs-block          |  18 +
+ Documentation/block/inline-encryption.rst     | 251 +++++++++++-
+ Documentation/filesystems/fscrypt.rst         | 201 +++++++--
+ .../userspace-api/ioctl/ioctl-number.rst      |   2 +
+ block/blk-crypto-fallback.c                   |   7 +-
+ block/blk-crypto-internal.h                   |  10 +
+ block/blk-crypto-profile.c                    | 103 +++++
+ block/blk-crypto-sysfs.c                      |  35 ++
+ block/blk-crypto.c                            | 196 ++++++++-
+ block/ioctl.c                                 |   5 +
+ drivers/firmware/qcom/qcom_scm.c              | 214 ++++++++++
+ drivers/firmware/qcom/qcom_scm.h              |   4 +
+ drivers/md/dm-table.c                         |   1 +
+ drivers/mmc/host/cqhci-crypto.c               |  38 +-
+ drivers/mmc/host/cqhci.h                      |   8 +-
+ drivers/mmc/host/sdhci-msm.c                  | 102 +++--
+ drivers/soc/qcom/ice.c                        | 383 +++++++++++++++++-
+ drivers/ufs/core/ufshcd-crypto.c              |  33 +-
+ drivers/ufs/host/ufs-exynos.c                 |   3 +-
+ drivers/ufs/host/ufs-qcom.c                   | 137 +++++--
+ fs/crypto/fscrypt_private.h                   |  75 +++-
+ fs/crypto/hkdf.c                              |   4 +-
+ fs/crypto/inline_crypt.c                      |  42 +-
+ fs/crypto/keyring.c                           | 157 +++++--
+ fs/crypto/keysetup.c                          |  63 ++-
+ fs/crypto/keysetup_v1.c                       |   4 +-
+ include/linux/blk-crypto-profile.h            |  73 ++++
+ include/linux/blk-crypto.h                    |  73 +++-
+ include/linux/firmware/qcom/qcom_scm.h        |   8 +
+ include/linux/mmc/host.h                      |   8 +
+ include/soc/qcom/ice.h                        |  34 +-
+ include/uapi/linux/blk-crypto.h               |  44 ++
+ include/uapi/linux/fs.h                       |   6 +-
+ include/uapi/linux/fscrypt.h                  |   7 +-
+ include/ufs/ufshcd.h                          |  11 +-
+ 35 files changed, 2091 insertions(+), 269 deletions(-)
+ create mode 100644 include/uapi/linux/blk-crypto.h
 
 
-vim +235 drivers/scsi/fnic/fnic.h
-
-5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  225  
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  226  #define FNIC_MAIN_DBG(kern_level, host, fnic_num, fmt, args...)		\
-5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  227  	FNIC_CHECK_LOGGING(FNIC_MAIN_LOGGING,			\
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  228  			 shost_printk(kern_level, host,			\
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  229  				"fnic<%d>: %s: %d: " fmt, fnic_num,\
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  230  				__func__, __LINE__, ##args);)
-5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  231  
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  232  #define FNIC_FCS_DBG(kern_level, host, fnic_num, fmt, args...)		\
-5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  233  	FNIC_CHECK_LOGGING(FNIC_FCS_LOGGING,			\
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  234  			 shost_printk(kern_level, host,			\
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11 @235  				"fnic<%d>: %s: %d: " fmt, fnic_num,\
-3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  236  				__func__, __LINE__, ##args);)
-5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  237  
-
+base-commit: f486c8aa16b8172f63bddc70116a0c897a7f3f02
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.47.1
+
