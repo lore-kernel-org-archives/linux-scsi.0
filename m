@@ -1,108 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 191731E515;
-	Mon,  9 Dec 2024 20:55:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C283519C561;
+	Mon,  9 Dec 2024 21:54:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733777756; cv=none; b=mJIfikm5/UxCY6nr+rBRGupdtWERgJzTGxmLPtYatq/uz6uW2KV5fx/8FlnjEHOIy3g7VbgT1hp7Z9MeHp8JKL567+Hq0jJdHloBwiQXOAXQ8Wr10XQFiAaWqrCm0/4nBjQQyTnKXtNobxX2BQNFbVWUsrro3nv0oVoOhmEXM00=
+	t=1733781265; cv=none; b=oVyxb2GFr8OrRY0AWBk02xP1wlv9ukO7MI0UvmFFGdRrvPMiUTs0CmaEI4Co6gmHbASYuwrjHPZeDVgtRGgFeeT3fwc5ibVpKJfKrlf7wrk6/KfhtLRLvyu7lw5b50NPbT16FAMgCbMJtv0YgiExR2/NebrSEZV9LdCZqF33JJM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733777756; c=relaxed/simple;
-	bh=sOgXmVXOEnzT7dUlGozpoOeQowFqZSP83pipX0+N+CQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k2Zcp7iz/t3WiJ+tVbMByNlJzHxy8SUrH10YJovHSCOtYx7jzmg6JNTRNhHvcKmqjxhfbOeuD1nek2irHPOxvDgN21reOnERBEc+2C5t5vWIaVbzooZtCKAnwbYICEhwb6KfVDay5s0M+aZ+K3PHrKqCcZiaclxHxRg6KqaYe7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kc7T0fp7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733781265; c=relaxed/simple;
+	bh=ZrRCLe8p7MbTrHB1VAysrsoSnyPE1tTECkyjO7/dNgk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NFXFXreEj1b/QaBKUphuL4Fx/+3wxB9fjnV/OyrSE5T4C/FkcQr70dNy7i6achT1lDsZduicphfUTfIU9ZxgsNIjbwosDH8Cm2Rsv6doW4bN0P0zbY8C33n5MJfc9sZmWuLbUh1k6XyINYhYEzSDt7Rf8IZWdfbMn1/K0M0djXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=G4sMGhD4; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kc7T0fp7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 684BEC4CEDF;
-	Mon,  9 Dec 2024 20:55:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733777756;
-	bh=sOgXmVXOEnzT7dUlGozpoOeQowFqZSP83pipX0+N+CQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Kc7T0fp7U/kfgCVYqCSBWyEw5nXhU+20/Q/1Kp5gy5q8ilJzSe8m7+5RUOtBM2oq/
-	 et4sz5xMsvxFRRuLWae9iPhdrEJnUjTyJVfenzh2Z2t+Ct90H/yEs310Vafb0KaoVg
-	 DCTCJHmOwTLO8e4uiANX/d7Rk72R+4QytWyw8AQBH3JdZgXjSLH38K5fl0K9XE+vjN
-	 DyStQ+w0tz1HHTKw8vMHkoxexcWRBTtbTOIOdFqNZyImqKzcbbt2JvvB2F4Gf4d6Ev
-	 dLIkK1tev0HW7zh+50gWRVzP9QWsuY6GVYa55Ei8/RNnWRlBOa9ciIAfDiE/Y8bXPQ
-	 R8ANvT3YcVRZw==
-Date: Mon, 9 Dec 2024 12:55:53 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH v9 00/12] Support for hardware-wrapped inline encryption
- keys
-Message-ID: <20241209205553.GC1742@sol.localdomain>
-References: <20241209045530.507833-1-ebiggers@kernel.org>
- <CAMRc=MfLzuNjRqURpVwLzVTsdr8OmtK+NQZ6XU4hUsawKWTcqQ@mail.gmail.com>
- <20241209201516.GA1742@sol.localdomain>
- <CAMRc=Me7kEBHW1BTDkJ6w+3GjucCfC+GNZBch3kX=gsZniFHvA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="G4sMGhD4"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Y6bHK0R8Lzlfflk;
+	Mon,  9 Dec 2024 21:54:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1733781253; x=1736373254; bh=9sgB1Xfr/cwENdJWfeZe9l0S
+	l5Itmk2Pe4rUGDVEgjQ=; b=G4sMGhD4hccjRsO/nkbCoH7XNn58eJmQT9UCRHn+
+	HEnmMYFsfi5YFuMx73ZV8QQ+tOroqtc+jEKUVrscdC9Mj7glMEktcBdlr2f86CYN
+	9ogl1KwZGqXodq6hOiueQpFh1ILyEtQ36C/XGv3SHs/Fg9Wqi5NVdzFNxjU9npZ0
+	nVine2cCHSmuHL694l3j0lLBJtprSEBWwTIZJpEgE2ppBwbE2/K/Vf7lCBSWTise
+	m7x8iSjKELOF+s1Ui4zmadyjVp/snVDTFpNPYXnL8SzwFSGs8rACyhz9BiQ/Nxv0
+	y3LD0x83Qk3qjCQZ44rWdJzxoptLITu0Nz+A0WmDfGICxQ==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ZFoJCw0eQ_Yx; Mon,  9 Dec 2024 21:54:13 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Y6bH31xBbzlfflB;
+	Mon,  9 Dec 2024 21:54:06 +0000 (UTC)
+Message-ID: <e2693069-2f8f-458b-98c2-f9d43514061b@acm.org>
+Date: Mon, 9 Dec 2024 13:54:04 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAMRc=Me7kEBHW1BTDkJ6w+3GjucCfC+GNZBch3kX=gsZniFHvA@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi:ufs:core: update compl_time_stamp_local_clock
+ after complete a cqe
+To: liuderong@oppo.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
+ ahalaney@redhat.com, beanhuo@micron.com, quic_mnaresh@quicinc.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1733470182-220841-1-git-send-email-liuderong@oppo.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1733470182-220841-1-git-send-email-liuderong@oppo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Dec 09, 2024 at 02:35:29PM -0600, Bartosz Golaszewski wrote:
-> On Mon, 9 Dec 2024 21:15:16 +0100, Eric Biggers <ebiggers@kernel.org> said:
-> > On Mon, Dec 09, 2024 at 04:00:18PM +0100, Bartosz Golaszewski wrote:
-> >>
-> >> I haven't gotten to the bottom of this yet but the
-> >> FS_IOC_ADD_ENCRYPTION_KEY ioctl doesn't work due to the SCM call
-> >> returning EINVAL. Just FYI. I'm still figuring out what's wrong.
-> >>
-> >> Bart
-> >>
-> >
-> > Can you try the following?
-> >
-> > diff --git a/drivers/firmware/qcom/qcom_scm.c b/drivers/firmware/qcom/qcom_scm.c
-> > index 180220d663f8b..36f3ddcb90207 100644
-> > --- a/drivers/firmware/qcom/qcom_scm.c
-> > +++ b/drivers/firmware/qcom/qcom_scm.c
-> > @@ -1330,11 +1330,11 @@ int qcom_scm_derive_sw_secret(const u8 *eph_key, size_t eph_key_size,
-> >  								  sw_secret_size,
-> >  								  GFP_KERNEL);
-> >  	if (!sw_secret_buf)
-> >  		return -ENOMEM;
-> >
-> > -	memcpy(eph_key_buf, eph_key_buf, eph_key_size);
-> > +	memcpy(eph_key_buf, eph_key, eph_key_size);
-> >  	desc.args[0] = qcom_tzmem_to_phys(eph_key_buf);
-> >  	desc.args[1] = eph_key_size;
-> >  	desc.args[2] = qcom_tzmem_to_phys(sw_secret_buf);
-> >  	desc.args[3] = sw_secret_size;
-> >
-> >
-> 
-> That's better, thanks. Now it's fscryptctl set_policy that fails like this:
-> 
-> ioctl(3, FS_IOC_SET_ENCRYPTION_POLICY, 0xffffcaf8bb20) = -1 EINVAL
-> (Invalid argument)
-> 
 
-Yes, as I mentioned I decided to drop the new encryption policy flag and go back
-to just relying on the key.  I assume you were using
-https://github.com/ebiggers/fscryptctl/tree/wip-wrapped-keys?  I have pushed out
-an updated version of that that should work.
+On 12/5/24 11:29 PM, liuderong@oppo.com wrote:
+> From: liuderong <liuderong@oppo.com>
+> 
+> For now, lrbp->compl_time_stamp_local_clock is set to zero
+> after send a sqe, but it is not updated after complete a cqe,
+> the printed information in ufshcd_print_tr will always be zero.
+> So update lrbp->cmpl_time_stamp_local_clock after complete a cqe.
+> 
+> Log sample:
+> ufshcd-qcom 1d84000.ufshc: UPIU[8] - issue time 8750227249 us
+> ufshcd-qcom 1d84000.ufshc: UPIU[8] - complete time 0 us
+> 
+> Fixes: c30d8d010b5e ("scsi: ufs: core: Prepare for completion in MCQ")
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+> Signed-off-by: liuderong <liuderong@oppo.com>
+> ---
+> v1 -> v2: add fixes tag
+>   drivers/ufs/core/ufshcd.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 6a26853..bd70fe1 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5519,6 +5519,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
+>   
+>   	lrbp = &hba->lrb[task_tag];
+>   	lrbp->compl_time_stamp = ktime_get();
+> +	lrbp->compl_time_stamp_local_clock = local_clock();
+>   	cmd = lrbp->cmd;
+>   	if (cmd) {
+>   		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
 
-- Eric
+Although this patch looks good to me: an infrastructure for gathering
+I/O statistics should not occur in the UFS driver. This functionality
+should be moved into the block layer core.
+
+Thanks,
+
+Bart.
