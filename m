@@ -1,115 +1,182 @@
-Received: from pegase2.c-s.fr (pegase2.c-s.fr [93.17.235.10])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BB8E221D86;
-	Mon,  9 Dec 2024 12:45:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=93.17.235.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 056F6231CA5;
+	Mon,  9 Dec 2024 12:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733748322; cv=none; b=TAHtoVwD4vAR5+UBe9t0NrBgiiBeB6T/W63ZzpT/MIBiA2dLXWHQtWP8VXtzN6RD64W6KXkp7K2feKndl2GK3QMTkoeE/rwkK4Ma/+6pqXRn/E3RQys5y+IKBL/2+ojqZjspO+L772nCFuzSwmiDxmu35DQzm/EIxoFTgL+Iruk=
+	t=1733749064; cv=none; b=hedwEkDhZemLJxtd37h0jSHfT4NARKSE0ckdgMrmDUmcTZF6rOSegU7F4MUkHvdsJB6peH72Owau0KeeOJP50x4Dsne48H1z9TWwrUwQU1Hy+M2isaLw5sN4xz+EFesfJIBJ3J/AJQXnoPw/BeveskVvCsqzS7CyiPSESmFDS1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733748322; c=relaxed/simple;
-	bh=A5ejJ/BX/PS60+9iiR3WDF+uIu660h9qKllHzZGc5G4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aja6EPjtZHUpZZmSplvcLsW0eIEjuh1rJTC6a/b8nIUMdqAY/pAmZexUdHl+LDK+4rEX7PDTSn1KPfbY+5Jxnl3hi4nsl4AK4UMu9cjwAxR7BBGP/CY+6Jb/8MQbmEvKa5M2RlTWoTYIqLyfbw3UjdLwwzGu0HYYxyvOCdFKUk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=csgroup.eu; spf=pass smtp.mailfrom=csgroup.eu; arc=none smtp.client-ip=93.17.235.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=csgroup.eu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=csgroup.eu
-Received: from localhost (mailhub3.si.c-s.fr [172.26.127.67])
-	by localhost (Postfix) with ESMTP id 4Y6M5p179vz9tBf;
-	Mon,  9 Dec 2024 13:45:18 +0100 (CET)
-X-Virus-Scanned: amavisd-new at c-s.fr
-Received: from pegase2.c-s.fr ([172.26.127.65])
-	by localhost (pegase2.c-s.fr [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id ad8aC7rBW98b; Mon,  9 Dec 2024 13:45:18 +0100 (CET)
-Received: from messagerie.si.c-s.fr (messagerie.si.c-s.fr [192.168.25.192])
-	by pegase2.c-s.fr (Postfix) with ESMTP id 4Y6M5p0DxHz9tBd;
-	Mon,  9 Dec 2024 13:45:18 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by messagerie.si.c-s.fr (Postfix) with ESMTP id E8A068B766;
-	Mon,  9 Dec 2024 13:45:17 +0100 (CET)
-X-Virus-Scanned: amavisd-new at c-s.fr
-Received: from messagerie.si.c-s.fr ([127.0.0.1])
-	by localhost (messagerie.si.c-s.fr [127.0.0.1]) (amavisd-new, port 10023)
-	with ESMTP id OUa8UHFVNS_8; Mon,  9 Dec 2024 13:45:17 +0100 (CET)
-Received: from [10.25.209.139] (unknown [10.25.209.139])
-	by messagerie.si.c-s.fr (Postfix) with ESMTP id A70C18B763;
-	Mon,  9 Dec 2024 13:45:17 +0100 (CET)
-Message-ID: <95a461ca-3ed6-4380-ad1a-da12e1109675@csgroup.eu>
-Date: Mon, 9 Dec 2024 13:45:17 +0100
+	s=arc-20240116; t=1733749064; c=relaxed/simple;
+	bh=EbuJhA4qQx4XDk7llJVA7OD1EXIiE7sPMPIq2v+X2vY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BfRxd1/Fto0AfWjObp1gaqJyo7EgpTiqH2635miTi8qbdWuNZt0elzmhYfQCOQSLXYh4sUGhALP+50eDaSImClxtafQaw8Fy69y6/rC9hCAQH5xSlm3ruO/Co5zI3bs/+WmcN15DsALOCfEIn1/hpT5+JrP87c98102ltfoV5Qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oJfzU7Ih; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oJfzU7Ih"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1733749062; x=1765285062;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=EbuJhA4qQx4XDk7llJVA7OD1EXIiE7sPMPIq2v+X2vY=;
+  b=oJfzU7IhXwkVAVrBqi5Wf4krzSXzxq46HlunoS+q2IZSmnJ264VKJq8W
+   6fodg63iP38eeJrblN52iDSb+8MrrImgiclEJIjHAHOiYjYfeZjKZPaZC
+   lfKz4LbWweFc3fxsfEH09kYpWcFD05L3q6vFhi0aszyhyX9/q2zL/fLjO
+   7vrhKJgj9te9pPsU5jjcwJkgLJkQlRSv508b8V9KH8XluJ/4wwPw7Grcz
+   z1tRG2acHJjhh/Xd42qmEmHXd/Nk+IcwOeFVEvxCkkrUDENBHz9k7L6qM
+   zkafjOaXtAjggJAuSwWfYyuNVs9EUiN3IUJ8oiTxshqXm259P2qse7uw+
+   Q==;
+X-CSE-ConnectionGUID: 0u/8TbIoTDOuLLmReWyEvA==
+X-CSE-MsgGUID: 2HlJ2vTyRWa7B7KRxZnerg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11281"; a="21632660"
+X-IronPort-AV: E=Sophos;i="6.12,219,1728975600"; 
+   d="scan'208";a="21632660"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Dec 2024 04:57:37 -0800
+X-CSE-ConnectionGUID: U8+Nfyd1TY6n08jUrXsG2Q==
+X-CSE-MsgGUID: Ptj6aMXxQvqLGUEjw6vqGQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,219,1728975600"; 
+   d="scan'208";a="100023631"
+Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 09 Dec 2024 04:57:32 -0800
+Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tKdKL-0004LJ-0i;
+	Mon, 09 Dec 2024 12:57:29 +0000
+Date: Mon, 9 Dec 2024 20:57:06 +0800
+From: kernel test robot <lkp@intel.com>
+To: Eric Biggers <ebiggers@kernel.org>, linux-block@vger.kernel.org,
+	linux-fscrypt@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH v9 04/12] mmc: sdhci-msm: convert to use custom crypto
+ profile
+Message-ID: <202412092047.I2fWyclK-lkp@intel.com>
+References: <20241209045530.507833-5-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/21] Converge on using secs_to_jiffies()
-To: Przemek Kitszel <przemyslaw.kitszel@intel.com>,
- Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr,
- linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org,
- dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
- linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, linux-mm@kvack.org,
- linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev,
- linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org,
- live-patching@vger.kernel.org, linux-sound@vger.kernel.org,
- etnaviv@lists.freedesktop.org, oss-drivers@corigine.com,
- linuxppc-dev@lists.ozlabs.org, Anna-Maria Behnsen <anna-maria@linutronix.de>
-References: <20241115-converge-secs-to-jiffies-v2-0-911fb7595e79@linux.microsoft.com>
- <b9fcb12a-b7a4-4c33-836e-67109ce07deb@intel.com>
- <dab77729-682f-4182-9fb2-cd522ac29b5f@linux.microsoft.com>
- <72c8eb66-eb67-4f8b-b0c0-13f1aa001698@intel.com>
-Content-Language: fr-FR
-From: Christophe Leroy <christophe.leroy@csgroup.eu>
-In-Reply-To: <72c8eb66-eb67-4f8b-b0c0-13f1aa001698@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241209045530.507833-5-ebiggers@kernel.org>
+
+Hi Eric,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on f486c8aa16b8172f63bddc70116a0c897a7f3f02]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Eric-Biggers/ufs-crypto-add-ufs_hba_from_crypto_profile/20241209-130301
+base:   f486c8aa16b8172f63bddc70116a0c897a7f3f02
+patch link:    https://lore.kernel.org/r/20241209045530.507833-5-ebiggers%40kernel.org
+patch subject: [PATCH v9 04/12] mmc: sdhci-msm: convert to use custom crypto profile
+config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20241209/202412092047.I2fWyclK-lkp@intel.com/config)
+compiler: clang version 19.1.3 (https://github.com/llvm/llvm-project ab51eccf88f5321e7c60591c5546b254b6afab99)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241209/202412092047.I2fWyclK-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202412092047.I2fWyclK-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In file included from drivers/mmc/host/cqhci-crypto.c:8:
+   In file included from include/linux/blk-crypto.h:72:
+   In file included from include/linux/blk_types.h:10:
+   In file included from include/linux/bvec.h:10:
+   In file included from include/linux/highmem.h:10:
+   In file included from include/linux/mm.h:2223:
+   include/linux/vmstat.h:504:43: warning: arithmetic between different enumeration types ('enum zone_stat_item' and 'enum numa_stat_item') [-Wenum-enum-conversion]
+     504 |         return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~ ^
+     505 |                            item];
+         |                            ~~~~
+   include/linux/vmstat.h:511:43: warning: arithmetic between different enumeration types ('enum zone_stat_item' and 'enum numa_stat_item') [-Wenum-enum-conversion]
+     511 |         return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~ ^
+     512 |                            NR_VM_NUMA_EVENT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/vmstat.h:518:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
+     518 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
+         |                               ~~~~~~~~~~~ ^ ~~~
+   include/linux/vmstat.h:524:43: warning: arithmetic between different enumeration types ('enum zone_stat_item' and 'enum numa_stat_item') [-Wenum-enum-conversion]
+     524 |         return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~ ^
+     525 |                            NR_VM_NUMA_EVENT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/mmc/host/cqhci-crypto.c:176:6: warning: variable 'num_keyslots' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
+     176 |         if (cq_host->ops->uses_custom_crypto_profile)
+         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/mmc/host/cqhci-crypto.c:230:24: note: uninitialized use occurs here
+     230 |         for (slot = 0; slot < num_keyslots; slot++)
+         |                               ^~~~~~~~~~~~
+   drivers/mmc/host/cqhci-crypto.c:176:2: note: remove the 'if' if its condition is always false
+     176 |         if (cq_host->ops->uses_custom_crypto_profile)
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     177 |                 goto profile_initialized;
+         |                 ~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/mmc/host/cqhci-crypto.c:166:27: note: initialize the variable 'num_keyslots' to silence this warning
+     166 |         unsigned int num_keyslots;
+         |                                  ^
+         |                                   = 0
+   5 warnings generated.
 
 
+vim +176 drivers/mmc/host/cqhci-crypto.c
 
-Le 09/12/2024 à 13:01, Przemek Kitszel a écrit :
-> On 12/6/24 9:58 PM, Easwar Hariharan wrote:
->> On 11/29/2024 4:57 AM, Przemek Kitszel wrote:
->>>
->>> [removed most non-list recipients, it's just too much]
->>>
->>> On 11/15/24 10:26 PM, Easwar Hariharan wrote:
->> <snip>
-> 
->>>
->>> Regarding code - you could also convert msecs_to_jiffies(const * HZ),
->>> there are 10 that are greppable.
->>>
->>
->> Those seem to be mistakes. const*HZ is a seconds-denominated timeout,
->> being passed to msecs_to_jiffies() which will treat it as a
->> millisecond-denominated timeout resulting in an excessively long
->> timeout. I suppose that's better than a too-short timeout, and
->> apparently it's been working fine all along since hardware responds
->> before the too-long timeout expires. Half of them are in
->> drivers/scsi/arcmsr/arcmsr_hba.c and the pattern has apparently been
->> there since 2010.
-> 
-> my point was that, the default value of HZ is 1000, and most of the code
-> that is just `$value*HZ` was meant as "$value seconds, in ms unit".
+   147	
+   148	/**
+   149	 * cqhci_crypto_init - initialize CQHCI crypto support
+   150	 * @cq_host: a cqhci host
+   151	 *
+   152	 * If the driver previously set MMC_CAP2_CRYPTO and the CQE declares
+   153	 * CQHCI_CAP_CS, initialize the crypto support.  This involves reading the
+   154	 * crypto capability registers, initializing the blk_crypto_profile, clearing
+   155	 * all keyslots, and enabling 128-bit task descriptors.
+   156	 *
+   157	 * Return: 0 if crypto was initialized or isn't supported; whether
+   158	 *	   MMC_CAP2_CRYPTO remains set indicates which one of those cases it is.
+   159	 *	   Also can return a negative errno value on unexpected error.
+   160	 */
+   161	int cqhci_crypto_init(struct cqhci_host *cq_host)
+   162	{
+   163		struct mmc_host *mmc = cq_host->mmc;
+   164		struct device *dev = mmc_dev(mmc);
+   165		struct blk_crypto_profile *profile = &mmc->crypto_profile;
+   166		unsigned int num_keyslots;
+   167		unsigned int cap_idx;
+   168		enum blk_crypto_mode_num blk_mode_num;
+   169		unsigned int slot;
+   170		int err = 0;
+   171	
+   172		if (!(mmc->caps2 & MMC_CAP2_CRYPTO) ||
+   173		    !(cqhci_readl(cq_host, CQHCI_CAP) & CQHCI_CAP_CS))
+   174			goto out;
+   175	
+ > 176		if (cq_host->ops->uses_custom_crypto_profile)
 
-I can't follow you here. The default value of HZ is 250 as far as I can see.
-
-Regardless, HZ is the number of jiffies per second, nothing else.
-
-> 
-> Same for HZ/const, HZ/2 being 500ms.
-> 
-> HZ is awful in that it is not 1s but 1/s, but it was easy to abuse the
-> value in simple context.
-
-Why is that awful ?
-
-HZ is a nice macro that gives you the number of ticks per second, so 
-that you are able to easily calculate the number of ticks for a given 
-duration, regardless of the configured number of ticks per second.
-
-Christophe
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
