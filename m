@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C283519C561;
-	Mon,  9 Dec 2024 21:54:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A91E19D090;
+	Mon,  9 Dec 2024 22:13:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733781265; cv=none; b=oVyxb2GFr8OrRY0AWBk02xP1wlv9ukO7MI0UvmFFGdRrvPMiUTs0CmaEI4Co6gmHbASYuwrjHPZeDVgtRGgFeeT3fwc5ibVpKJfKrlf7wrk6/KfhtLRLvyu7lw5b50NPbT16FAMgCbMJtv0YgiExR2/NebrSEZV9LdCZqF33JJM=
+	t=1733782437; cv=none; b=dvE8rGeVIMBRW/NDws6dugIfz8cekkhWvYopguqlrJWAOm8hnGoOF9h/hJSgD2ZLoZwIUr4ir91bwAR2rNbgm5yz0h8T+nL2LTSgrDpzUPiIiHkdTDz66V75Sl+boteLc/iLRODMRY09wdlX2z7xB0karAuN3uUYdcewnPzF2wY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733781265; c=relaxed/simple;
-	bh=ZrRCLe8p7MbTrHB1VAysrsoSnyPE1tTECkyjO7/dNgk=;
+	s=arc-20240116; t=1733782437; c=relaxed/simple;
+	bh=Zoicv6FCB+iFzMQfrU4Z9XfeuHWSrSqyKjxadK6Xa+M=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NFXFXreEj1b/QaBKUphuL4Fx/+3wxB9fjnV/OyrSE5T4C/FkcQr70dNy7i6achT1lDsZduicphfUTfIU9ZxgsNIjbwosDH8Cm2Rsv6doW4bN0P0zbY8C33n5MJfc9sZmWuLbUh1k6XyINYhYEzSDt7Rf8IZWdfbMn1/K0M0djXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=G4sMGhD4; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=MLDV5Aw7cIbs5lup6f/Mgy5Jxd5JWGkxqGRVre65B9kh0wTyQvtm5wYiOvahzkI3eG6nC+vTFQ+SUuvypmZNXuqY6zx24kpDg1NGWvAc9eM4936HevFtt0fI+UnYJYH0xWUcN4Zb2XbgOQSDKjR0K6KAJULQ2zvhtxFJSUhh7BU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jDq10gFK; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="G4sMGhD4"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jDq10gFK"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Y6bHK0R8Lzlfflk;
-	Mon,  9 Dec 2024 21:54:21 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Y6bjv2dDszlfflB;
+	Mon,  9 Dec 2024 22:13:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1733781253; x=1736373254; bh=9sgB1Xfr/cwENdJWfeZe9l0S
-	l5Itmk2Pe4rUGDVEgjQ=; b=G4sMGhD4hccjRsO/nkbCoH7XNn58eJmQT9UCRHn+
-	HEnmMYFsfi5YFuMx73ZV8QQ+tOroqtc+jEKUVrscdC9Mj7glMEktcBdlr2f86CYN
-	9ogl1KwZGqXodq6hOiueQpFh1ILyEtQ36C/XGv3SHs/Fg9Wqi5NVdzFNxjU9npZ0
-	nVine2cCHSmuHL694l3j0lLBJtprSEBWwTIZJpEgE2ppBwbE2/K/Vf7lCBSWTise
-	m7x8iSjKELOF+s1Ui4zmadyjVp/snVDTFpNPYXnL8SzwFSGs8rACyhz9BiQ/Nxv0
-	y3LD0x83Qk3qjCQZ44rWdJzxoptLITu0Nz+A0WmDfGICxQ==
+	 s=mr01; t=1733782429; x=1736374430; bh=IQKVDEMj0TrHltVURdtOup6I
+	IRHQAQ4lIbXGduLnT6I=; b=jDq10gFK/44haFYNLdurY4fNR+uBNg0nU4knZqPa
+	ibGTnIO0Rl5EA+MPlZ4I5pCwvbTrPvQCB0DiYqmkZrE3zzRRmiECLY4uOJmZeKv7
+	OvGmexAE5Z2hai0js6fM7Rxwg9PbyphTBqFEKalOQQwR3nhHwRigEY0paW1OxGug
+	M4l/G846p7QRGdNb/z3j99331bgyzQ4FIDPiarmykDUolWZSB4WwgRcPCZmftVms
+	Djmn6GlTt3+3AMAUhRq8HUJHiFM0NdmTdZ3XvlxPqfEGKY9Aqo41s+CwgyysZ5v1
+	fcIIUCBF06cRgzg2HVDqMe/aiIe8MCu1CPv879TXpzViqQ==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZFoJCw0eQ_Yx; Mon,  9 Dec 2024 21:54:13 +0000 (UTC)
+ id jToVKEuMeHKC; Mon,  9 Dec 2024 22:13:49 +0000 (UTC)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Y6bH31xBbzlfflB;
-	Mon,  9 Dec 2024 21:54:06 +0000 (UTC)
-Message-ID: <e2693069-2f8f-458b-98c2-f9d43514061b@acm.org>
-Date: Mon, 9 Dec 2024 13:54:04 -0800
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Y6bjf55d1zlfflY;
+	Mon,  9 Dec 2024 22:13:41 +0000 (UTC)
+Message-ID: <c639f90f-bdd1-4808-aeb7-e9b667822413@acm.org>
+Date: Mon, 9 Dec 2024 14:13:40 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,58 +50,70 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi:ufs:core: update compl_time_stamp_local_clock
- after complete a cqe
-To: liuderong@oppo.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
- ahalaney@redhat.com, beanhuo@micron.com, quic_mnaresh@quicinc.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1733470182-220841-1-git-send-email-liuderong@oppo.com>
+Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
+To: Nitesh Shetty <nj.shetty@samsung.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Javier Gonzalez <javier.gonz@samsung.com>,
+ Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+ "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+ "joshi.k@samsung.com" <joshi.k@samsung.com>
+References: <d7b7a759dd9a45a7845e95e693ec29d7@CAMSVWEXC02.scsc.local>
+ <2b5a365a-215a-48de-acb1-b846a4f24680@acm.org>
+ <20241111093154.zbsp42gfiv2enb5a@ArmHalley.local>
+ <a7ebd158-692c-494c-8cc0-a82f9adf4db0@acm.org>
+ <20241112135233.2iwgwe443rnuivyb@ubuntu>
+ <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com>
+ <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
+ <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
+ <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org>
+ <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com>
+ <CGME20241205081138epcas5p2a47090e70c3cf19e562f63cd9fc495d1@epcas5p2.samsung.com>
+ <20241205080342.7gccjmyqydt2hb7z@ubuntu>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1733470182-220841-1-git-send-email-liuderong@oppo.com>
+In-Reply-To: <20241205080342.7gccjmyqydt2hb7z@ubuntu>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
+On 12/5/24 12:03 AM, Nitesh Shetty wrote:
+> But where do we store the read sector info before sending write.
+> I see 2 approaches here,
+> 1. Should it be part of a payload along with write ?
+>  =C2=A0=C2=A0=C2=A0=C2=A0We did something similar in previous series wh=
+ich was not liked
+>  =C2=A0=C2=A0=C2=A0=C2=A0by Christoph and Bart.
+> 2. Or driver should store it as part of an internal list inside
+> namespace/ctrl data structure ?
+>  =C2=A0=C2=A0=C2=A0=C2=A0As Bart pointed out, here we might need to sen=
+d one more fail
+>  =C2=A0=C2=A0=C2=A0=C2=A0request later if copy_write fails to land in s=
+ame driver.
 
-On 12/5/24 11:29 PM, liuderong@oppo.com wrote:
-> From: liuderong <liuderong@oppo.com>
-> 
-> For now, lrbp->compl_time_stamp_local_clock is set to zero
-> after send a sqe, but it is not updated after complete a cqe,
-> the printed information in ufshcd_print_tr will always be zero.
-> So update lrbp->cmpl_time_stamp_local_clock after complete a cqe.
-> 
-> Log sample:
-> ufshcd-qcom 1d84000.ufshc: UPIU[8] - issue time 8750227249 us
-> ufshcd-qcom 1d84000.ufshc: UPIU[8] - complete time 0 us
-> 
-> Fixes: c30d8d010b5e ("scsi: ufs: core: Prepare for completion in MCQ")
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
-> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-> Signed-off-by: liuderong <liuderong@oppo.com>
-> ---
-> v1 -> v2: add fixes tag
->   drivers/ufs/core/ufshcd.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 6a26853..bd70fe1 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5519,6 +5519,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->   
->   	lrbp = &hba->lrb[task_tag];
->   	lrbp->compl_time_stamp = ktime_get();
-> +	lrbp->compl_time_stamp_local_clock = local_clock();
->   	cmd = lrbp->cmd;
->   	if (cmd) {
->   		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+Hi Nitesh,
 
-Although this patch looks good to me: an infrastructure for gathering
-I/O statistics should not occur in the UFS driver. This functionality
-should be moved into the block layer core.
+Consider the following example: dm-linear is used to concatenate two
+block devices. An NVMe device (LBA 0..999) and a SCSI device (LBA
+1000..1999). Suppose that a copy operation is submitted to the dm-linear
+device to copy LBAs 1..998 to LBAs 2..1998. If the copy operation is
+submitted as two separate operations (REQ_OP_COPY_SRC and
+REQ_OP_COPY_DST) then the NVMe device will receive the REQ_OP_COPY_SRC
+operation and the SCSI device will receive the REQ_OP_COPY_DST
+operation. The NVMe and SCSI device drivers should fail the copy=20
+operations after a timeout because they only received half of the copy
+operation. After the timeout the block layer core can switch from
+offloading to emulating a copy operation. Waiting for a timeout is
+necessary because requests may be reordered.
+
+I think this is a strong argument in favor of representing copy
+operations as a single operation. This will allow stacking drivers
+as dm-linear to deal in an elegant way with copy offload requests
+where source and destination LBA ranges map onto different block
+devices and potentially different block drivers.
 
 Thanks,
 
