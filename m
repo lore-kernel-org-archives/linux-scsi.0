@@ -1,108 +1,136 @@
-Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7787E2AF1B
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Dec 2024 04:04:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3865F16F8E9;
+	Mon,  9 Dec 2024 04:35:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733717043; cv=none; b=J9rEBU9TfTB5Vw4q7xD7/ZJIisD5zSdRil7Q8+t8ensyIrXkzpCJvxVTC1mbl/96SghwFjk4ksRmclbu+NzRLdulZWHFcevQaKp9gWzdFfV/TUp6NVaD2g1wR3gzf13PsAQ4XyUP2C79dNxAWoDmVXs3Tpv2rRtXsNOTGBqzzUM=
+	t=1733718927; cv=none; b=kaDGZsCOmsEEQKfwycYr7tWd/M8Nb6fZowiYyD8Hw3FygJJGuVjzf2YoyJMXN/WLH4cIWtdwnrw0jdrUYs/rRGObcakonNy7Hezup0SmoPOmPL+mkMfBiTzS0OI/jbJlfcgQCD5YogivSwS54j0gTXRhsHCIREYToOEp8CnR+l8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733717043; c=relaxed/simple;
-	bh=cETlEE0WzQEHwy8QEzoaAMqjhzhL0tNxzJ0RsFPbUTM=;
+	s=arc-20240116; t=1733718927; c=relaxed/simple;
+	bh=e0msx8DoGYxBgxhnq1KW8NrILsSQHRKlDWN0V1Q+IL0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GRuMgF1LY4jRN1cAo+qPHGoemQd3kOWZu6bdnivdAgt+DSFmlLHjxj6dCgQboG7qvXZQsxK9QylAjvXAQFAcLbCeHQUVSN6PcWcQY1Qvf2EHrD9hGq9iRF7iFlPGSvDw+byXgCa3ADSyk+OgN1lae8m6rzLg1JNsQzwR5XP9bas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=aCTotBxC; arc=none smtp.client-ip=209.85.210.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=is6Bo7YZ5NoaeD9p4keKrJBCMG7bzWsQzqe/vFQUCwm550vrclr0Uyn260iBeE0NHkMqBOou4t1ap1Nzs6Oj0TlQAdGjTzkqKq4rslLqqY+CG82gxadV42mP7PlOSIshAPFfe4IPVOhQUF+/DbCWzMTSA96SJ2PLn9sSctnZg6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Xq8VipPi; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aCTotBxC"
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-71deabe9d24so407523a34.1
-        for <linux-scsi@vger.kernel.org>; Sun, 08 Dec 2024 20:04:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1733717040; x=1734321840; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=xSueRKS2Dc0oEFrhPvduUyI5vUBlKuQKvD4Db72M8fs=;
-        b=aCTotBxC6veSmtoiU3NYRwqPWeFvOyubNoM1ckIbpIu7VRZM6TfFMFASN2wlGvefEu
-         HGHMcrQdIKsgoFzsT+7658dhohetRFt8Aq8A/0+gRgFIDwSrgFU9nJyP/ha7zz1YZiPZ
-         UQ6ikk/KjKksIcqrCpD7GUMDDO/fY4q/RwrsUf+TlWaJc2buOEiJqjDocRTeXULFjlJp
-         X/n2llRQ5zb+VNXJ0UWiFxc3NhJYMcGLIrKKyknPq+hTExchj3xvcXD/ntWt/jg+yw5h
-         zY1Ntt0YsL+d8d0B5lhXpZdF3AZaLkN7aql260Jg8OlW2Z0FKuXumvV3czWTsdPJgVsw
-         WH5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733717040; x=1734321840;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xSueRKS2Dc0oEFrhPvduUyI5vUBlKuQKvD4Db72M8fs=;
-        b=r0TlywsopIS3Ha2E+yhx24VV+XQNvssvc35s8fmvXMathcXRTpN407xrUxR0UfAxDH
-         I4qFdJrSN+kxf6aM/aPSIa3dSB02Fk+S++SqZCQTruH6T8B9fa3ZEJ0xozckygBEslmr
-         kr3XHR+2Sxl2+1zuUbRzFtKfkLWbnpQnLhHiF7iuYcfU/EeF/h396J/8dk5U6RGccgFn
-         mK3Xy/4rNptMaVREoKd7jKVQK4nsGJ5lMJe9zWMh2IVRJSEI2Q6nsnrYsFLx83H2Cy2Q
-         jfw+q3CnUo34vDfzpW8B8cGn7+BoQHBSXhiAtyyzM8qNSrc5QxKw72C7CHdk2M+jugxV
-         Silw==
-X-Forwarded-Encrypted: i=1; AJvYcCVOxrwuQjwsiJXFCKG5Y3vDkrMT4LpcY3JtfPj1YjncyLdl0HMbJIyGVZ4b+qYis8eSZnx72I37wJhk@vger.kernel.org
-X-Gm-Message-State: AOJu0YwiO4swTMWD9VSS1tbY1ZoV423c5pMuZQWfbWFt+c7a3D0bmzhn
-	BmR35TmNrmPahu2THgU30bC6V9M4G3MzNpUeIByDQMC9aNX+0NYJcJSgRjRrDA==
-X-Gm-Gg: ASbGncuQPn3W9k3JxaySNrDgW39vklSz5SXtERjMfrHnykhU+St3SlNr35Vsclo7wpo
-	0xTW9wmc8zi0TufpLXmA5AYJVvHNp4kOqq4YDY7FjIe6foTBGbryRDxPLrXHOaxV7hwA1tF3G7f
-	bO0OyHmYgdaU0hYfhKxK217XgSHgYcbxXG2BqURLTEE/S+TsLjfGg8BJQUKrvLWGijRhMjW1Z7M
-	ko6I/q2G0trTNdAWa+3lapOLJy/DYNnr94B3DZqo/pGzju7CiJUjiFFtuc=
-X-Google-Smtp-Source: AGHT+IHU6Xu+n7ZNg85zbpBlEgO5QS7TgqjBuo8IL4KCXkx6Wsj/Pkxh7R3VW7ABG7uDeLGEC57Xcw==
-X-Received: by 2002:a05:6830:65c2:b0:71d:ee65:7c38 with SMTP id 46e09a7af769-71dee6581cbmr2249231a34.22.1733717040567;
-        Sun, 08 Dec 2024 20:04:00 -0800 (PST)
-Received: from thinkpad ([36.255.19.22])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-725da385bfcsm2772546b3a.70.2024.12.08.20.03.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Dec 2024 20:04:00 -0800 (PST)
-Date: Mon, 9 Dec 2024 09:33:55 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	Manish Pandey <quic_mapa@quicinc.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
-Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
- Testbus Registers
-Message-ID: <20241209040355.kc4ab6nfp6syw37q@thinkpad>
-References: <20241025055054.23170-1-quic_mapa@quicinc.com>
- <20241112075000.vausf7ulr2t5svmg@thinkpad>
- <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Xq8VipPi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1733718926; x=1765254926;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=e0msx8DoGYxBgxhnq1KW8NrILsSQHRKlDWN0V1Q+IL0=;
+  b=Xq8VipPi8rofUllQdd9H1WrFRR6y1LJTt2D+YHF/wocWapR76vKX4JuX
+   05MREg5Orv5UkJkS1wJHGvz3t+Snlc6ER9fMY9MMHR5av5KchE1aF8Woy
+   +AjlnzTtF9KqNf5r+9ngNUSACXf6I1KUjgktr8yxMpLoM2XzYYFKRWSiQ
+   Rl8RbEFFbt7FUaJy2M32otWAMcQJUuMB4GNgb5P+b8b0HlI/uEWRhe0W0
+   wtvuC+1I9pnMiSDdJjJIWKRabQoKszzI5XXDLHCf1A0UvG2tkmZwzZ+8X
+   4ZvpIS+Np52r1VO+rL78eU3SUlU4Vi4EGAVMbLzahgZ5o+Pva14/JTZlR
+   Q==;
+X-CSE-ConnectionGUID: eYKNvnIcTUORcAxdmu/vEQ==
+X-CSE-MsgGUID: 3ILZzx+qQkq3UT3uvo3KLw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11280"; a="34237099"
+X-IronPort-AV: E=Sophos;i="6.12,218,1728975600"; 
+   d="scan'208";a="34237099"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2024 20:35:26 -0800
+X-CSE-ConnectionGUID: Do6IxgJjTGeygUubTLHx2w==
+X-CSE-MsgGUID: XH1UaaCxSTC9G2nF+WsJEA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,218,1728975600"; 
+   d="scan'208";a="125844611"
+Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 08 Dec 2024 20:35:22 -0800
+Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tKVUO-0003se-0a;
+	Mon, 09 Dec 2024 04:35:20 +0000
+Date: Mon, 9 Dec 2024 12:35:08 +0800
+From: kernel test robot <lkp@intel.com>
+To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
+Cc: oe-kbuild-all@lists.linux.dev, arulponn@cisco.com, djhawar@cisco.com,
+	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
+	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v6 03/15] scsi: fnic: Add support for fabric based
+ solicited requests and responses
+Message-ID: <202412080837.2JU0r2Ny-lkp@intel.com>
+References: <20241206210852.3251-4-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
+In-Reply-To: <20241206210852.3251-4-kartilak@cisco.com>
 
-On Tue, Nov 12, 2024 at 10:10:02AM -0800, Bart Van Assche wrote:
-> On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
-> > On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
-> > > Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
-> > > of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
-> > > aid in diagnosing and resolving issues related to hardware and software operations.
-> > > 
-> > 
-> > TBH, the current state of dumping UFSHC registers itself is just annoying as it
-> > pollutes the kernel ring buffer. I don't think any peripheral driver in the
-> > kernel does this. Please dump only relevant registers, not everything that you
-> > feel like dumping.
-> 
-> I wouldn't mind if the code for dumping  UFSHC registers would be removed.
-> 
+Hi Karan,
 
-Instead of removing, I'm planning to move the dump to dev_coredump framework.
-But should we move all the error prints also? Like all ufshcd_print_*()
-functions?
+kernel test robot noticed the following build warnings:
 
-- Mani
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on linus/master v6.13-rc1 next-20241206]
+[cannot apply to mkp-scsi/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Replace-shost_printk-with-dev_info-dev_err/20241207-054453
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20241206210852.3251-4-kartilak%40cisco.com
+patch subject: [PATCH v6 03/15] scsi: fnic: Add support for fabric based solicited requests and responses
+config: i386-allmodconfig (https://download.01.org/0day-ci/archive/20241208/202412080837.2JU0r2Ny-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241208/202412080837.2JU0r2Ny-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202412080837.2JU0r2Ny-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In file included from drivers/scsi/fnic/fnic_fcs.c:22:
+   drivers/scsi/fnic/fnic_fcs.c: In function 'fdls_send_fcoe_frame':
+>> drivers/scsi/fnic/fnic.h:164:33: warning: format '%lu' expects argument of type 'long unsigned int', but argument 7 has type 'unsigned int' [-Wformat=]
+     164 |                                 "fnic<%d>: %s: %d: " fmt, fnic_num,\
+         |                                 ^~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/fnic/fnic.h:151:25: note: in definition of macro 'FNIC_CHECK_LOGGING'
+     151 |                         CMD;                                    \
+         |                         ^~~
+   include/scsi/scsi_host.h:737:9: note: in expansion of macro 'dev_printk'
+     737 |         dev_printk(prefix, &(shost)->shost_gendev, fmt, ##a)
+         |         ^~~~~~~~~~
+   drivers/scsi/fnic/fnic.h:163:26: note: in expansion of macro 'shost_printk'
+     163 |                          shost_printk(kern_level, host,                 \
+         |                          ^~~~~~~~~~~~
+   drivers/scsi/fnic/fnic_fcs.c:1231:25: note: in expansion of macro 'FNIC_FCS_DBG'
+    1231 |                         FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+         |                         ^~~~~~~~~~~~
+
+
+vim +164 drivers/scsi/fnic/fnic.h
+
+5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  154  
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  155  #define FNIC_MAIN_DBG(kern_level, host, fnic_num, fmt, args...)		\
+5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  156  	FNIC_CHECK_LOGGING(FNIC_MAIN_LOGGING,			\
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  157  			 shost_printk(kern_level, host,			\
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  158  				"fnic<%d>: %s: %d: " fmt, fnic_num,\
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  159  				__func__, __LINE__, ##args);)
+5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  160  
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  161  #define FNIC_FCS_DBG(kern_level, host, fnic_num, fmt, args...)		\
+5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  162  	FNIC_CHECK_LOGGING(FNIC_FCS_LOGGING,			\
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  163  			 shost_printk(kern_level, host,			\
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11 @164  				"fnic<%d>: %s: %d: " fmt, fnic_num,\
+3df9dd0d51c2e4 Karan Tilak Kumar 2023-12-11  165  				__func__, __LINE__, ##args);)
+5df6d737dd4b0f Abhijeet Joglekar 2009-04-17  166  
 
 -- 
-மணிவண்ணன் சதாசிவம்
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
