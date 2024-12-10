@@ -1,119 +1,57 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 147C2227599
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2024 06:14:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6982248A1;
+	Tue, 10 Dec 2024 07:13:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733811282; cv=none; b=lwoohkvIXKwzeWB6Cnxjl29VBD/mo5PMwItCuFMN9DuL0ATNto+N68b/zPlKAOYN7PBSP4tZfhwizAUNP04IkehCGg43GxmAf6sLma+Vh5H/rgm3n78EyUB/LkDCelkmBul+j9V/7grnUlV19DDqTe8S+nm1AbTW78MwsmVDutI=
+	t=1733814783; cv=none; b=JWf+p52Fxs90ucW1RE9o2Pyjm4WTWhxhR+DgkwG8eVM7REY6rNa9NDq6G8eLyyVkHEoUQ7DEJrLSKNkQILob+NWMKsozGpeCmVBzVWLZG1IJ/wQqvDcEzVku5FJcnLf5KvD7qX8ZZIXRxdcXhLcX1kXNpJ4suMZN5yLw6jvyeJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733811282; c=relaxed/simple;
-	bh=H5jhkkBmcSeHnp14FMPbK7KoVdIILqWdySHjtUR3xmE=;
+	s=arc-20240116; t=1733814783; c=relaxed/simple;
+	bh=/VW9fFpJpECsO9404X78yAIjScJubZ6XEb5rfPEXHos=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eXbkjTCVJtXdnE3gnPlY1hBlDcEzaAS0r8vyotkXznZnRg+xi423FDBOa52hCOTSkIYSditeKQgP7OObOMl01uK/kr90qDCYb+A2vqH9JshV+t0qrPQ7tjvjzPoegHUxqUXUWPB9oTSOIUOWl2MwuJ8Xy3gC7X3LTTntdJ2j2Rk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Y462j8qQ; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Y462j8qQ"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7fd10cd5b1aso3570325a12.2
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Dec 2024 22:14:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1733811280; x=1734416080; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=LpAEUHjy0DmUd/FI9eBMVOYYjjorp2l0DbXffRcgJ5E=;
-        b=Y462j8qQlBXq7N6LQIOYblicdfUwWVdQ1LXl3CWvwFP75T80aSAt65FihsUg6oKv2v
-         nBBK8GsG30oBGcfXxZTtrQ/u/qnLwIkyxkcje2EMT8zHnfrEvaMD9sm9eGEk9fSkzQ4x
-         Lw2dBOqRK3Gr2uYRG6BNfkkVRUmYtI2Z4OlMh064295qJg6TaJpY+3Hkfs2TDnW5Qy9f
-         JWlaRTUfXWIc0DKlYKRJRQ7kO4u9ohlQPEYT3MVgd6knd1DGD/Cc9aPk3dwAefbclhIs
-         J/7n36BODFrkyjXI0YR3fqY3R4wRhJiha1DNbM0JOtQjJoCXnNj8TOZBvVSBzzlJvkmH
-         KfDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733811280; x=1734416080;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LpAEUHjy0DmUd/FI9eBMVOYYjjorp2l0DbXffRcgJ5E=;
-        b=RTW6fGgLL1n3twH0HgLkHB0YbBPrYQRguwEdqseGhAYE64MVamXUWTFe0k9BHDQq0r
-         4/BoPnTkAh9l3RadO/Q1J8YqH9vZnQN+mhZboLroXtJeTXE7m+30zY4fygzq8LLkKs9O
-         MPs6Agu++zaU1mnOpeRX9qY4Egy50dGDE0lzJayxUAowiMXpo3MdCzM9d7k5o8WDcsRA
-         H34laEhhq+A0he3mIAdq6FuQnkxPZvMPwYX5EaCndtzaYDkq0mGmzUdIlM2NrtsjDc3h
-         VRzqQ14J5jv1+RdnNDKb1TjCNbo+ql76IT0FHtrF2nBowRIkgkmSMpl1oYNfbe3gafdb
-         eMyQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXK0M2H7T0izpdc6zsgLjTOl/uazqpqnbrDJmoUBAT9kIoNvvswOVA7rOsQ8gWMlkw1bL66OCyDBqru@vger.kernel.org
-X-Gm-Message-State: AOJu0YwscViGR+0MnYiLyrDwnR72x6Cc4CQmC7XWN498potaAbrPBOH9
-	mdQkp3tch7PyNftnF37JUk2KfeBXPfshQn7ygJIm4PjoXjISAzvWyBTWpSYt9w==
-X-Gm-Gg: ASbGnctXZAO7cJII7N+gxFQqT+aQKYjNbpXt6SINuBcnI6hWvJWtaKxx1OnAjR+ScG4
-	yrHMoYEidytf5l3eOpI9ok/GPniuuiFNonLn+b2INTGreRmwGVy6kMbac5KsGjoRjoL3hTCBb4X
-	E7+pRIcxQ1FmS39Sol8QQbQXJpN6rIC+hnqQcrUamFh1jW0EnDrQf/7QQyJJ9jQO6NTRrsx1D93
-	M74aIkqXEZRXNArdCBDZ9a9VigXMz8GrxilpSdUa16aoOs2LJD8OnebhMHcaSZz
-X-Google-Smtp-Source: AGHT+IEiT5QWdrtrlNLz0y/XTxkbz1jJLbvpAPbUeDX4xD2zua00YW8f3fwqZuwMML6Qot71OABORQ==
-X-Received: by 2002:a17:902:ec8c:b0:216:2bd7:1c27 with SMTP id d9443c01a7336-2162bd71f80mr170672615ad.33.1733811280440;
-        Mon, 09 Dec 2024 22:14:40 -0800 (PST)
-Received: from thinkpad ([120.60.59.140])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2163b1f8697sm37552555ad.261.2024.12.09.22.14.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Dec 2024 22:14:40 -0800 (PST)
-Date: Tue, 10 Dec 2024 11:44:30 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	Manish Pandey <quic_mapa@quicinc.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
-Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
- Testbus Registers
-Message-ID: <20241210061430.fmj5d6xyqgtqm3jc@thinkpad>
-References: <20241025055054.23170-1-quic_mapa@quicinc.com>
- <20241112075000.vausf7ulr2t5svmg@thinkpad>
- <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
- <20241209040355.kc4ab6nfp6syw37q@thinkpad>
- <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=O0tQ/W2+geGxCvyCiTWvNGVlvR5N7CREnH8oTKdouIWdUDnD55vWYjGJmmiF8kJlNlqgfZ0SvVS3xbzNL+i65W3SDcJs687V4DnPkWk9rR0R0kyZzZnQmypmKZJdAmzr58d8EyurKA1VfKFxj7VBGlDTvYpH9dh20ZLaBNL6VLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id A863168C4E; Tue, 10 Dec 2024 08:12:54 +0100 (CET)
+Date: Tue, 10 Dec 2024 08:12:53 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Nitesh Shetty <nj.shetty@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Javier Gonzalez <javier.gonz@samsung.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Keith Busch <kbusch@meta.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+	"joshi.k@samsung.com" <joshi.k@samsung.com>
+Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
+Message-ID: <20241210071253.GA19956@lst.de>
+References: <a7ebd158-692c-494c-8cc0-a82f9adf4db0@acm.org> <20241112135233.2iwgwe443rnuivyb@ubuntu> <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com> <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org> <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com> <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org> <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com> <CGME20241205081138epcas5p2a47090e70c3cf19e562f63cd9fc495d1@epcas5p2.samsung.com> <20241205080342.7gccjmyqydt2hb7z@ubuntu> <yq1a5d9op6p.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
+In-Reply-To: <yq1a5d9op6p.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Dec 09, 2024 at 10:35:39AM -0800, Bart Van Assche wrote:
-> On 12/8/24 12:03 PM, Manivannan Sadhasivam wrote:
-> > On Tue, Nov 12, 2024 at 10:10:02AM -0800, Bart Van Assche wrote:
-> > > On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
-> > > > On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
-> > > > > Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
-> > > > > of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
-> > > > > aid in diagnosing and resolving issues related to hardware and software operations.
-> > > > > 
-> > > > 
-> > > > TBH, the current state of dumping UFSHC registers itself is just annoying as it
-> > > > pollutes the kernel ring buffer. I don't think any peripheral driver in the
-> > > > kernel does this. Please dump only relevant registers, not everything that you
-> > > > feel like dumping.
-> > > 
-> > > I wouldn't mind if the code for dumping  UFSHC registers would be removed.
-> > 
-> > Instead of removing, I'm planning to move the dump to dev_coredump framework.
-> > But should we move all the error prints also? Like all ufshcd_print_*()
-> > functions?
-> 
-> Hmm ... we may be better off to check which of these functions can be
-> removed rather than moving all of them to another framework.
-> 
+On Thu, Dec 05, 2024 at 03:37:25PM -0500, Martin K. Petersen wrote:
+> The problem with option 2 is that when you're doing copy between two
+> different LUNs, then you suddenly have to maintain state in one kernel
+> object about stuff relating to another kernel object. I think that is
+> messy. Seems unnecessarily complex.
 
-They are mostly for debugging the errors. I don't see why we should completely
-get rid of them. Moving to devcoredump allows debugging the errors in a
-standardized way and also prevents spamming the kernel ring buffer.
+Generally agreeing with all you said, but do we actually have any
+serious use case for cross-LU copies?  They just seem incredibly
+complex any not all that useful.
 
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
