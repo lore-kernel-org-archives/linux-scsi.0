@@ -1,34 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 09BDC23A57E;
-	Tue, 10 Dec 2024 22:02:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3589A23EA66;
+	Tue, 10 Dec 2024 22:02:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733868167; cv=none; b=Fg8CGHKIG0TmqGWjxOiM7kGyDqayfAhRbPktHt2DHI5fbwdaBOQ5nwCUQ9MJ+/sx7BpywHywfc+DcQ/KlYx3o0LYnlVjn+zwI2yusNG+qTDgpOl2t6rVKyl3BZM/31IYS0XSFNwlZ1zsTpZBEkE8CtWPlo3Yy6BZ1InC/rs0fcc=
+	t=1733868168; cv=none; b=n3zhN6nY0YimcxdBi5YDhzV2qnkmAd+MsvUbLvth8SWO9gv5ZlyUzw/P5oWYz6HhXgleF8hX7iOT9uWwO4Kw9WWvnyv2+4wrOU4DNIZRrRGJuJWhzlLYQY/nzWiQ0rQmrv8sDAperMy2QaLqt3/nSadvzy4ACFkG9E+uBc6EPDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733868167; c=relaxed/simple;
-	bh=yhBY6Ud+Gxvbs17fwA8DjWKu3Cz6TEza0NogR84diwk=;
+	s=arc-20240116; t=1733868168; c=relaxed/simple;
+	bh=Z8shQorNdAVVBXW89PJ8z16tdPckgC3+mqGh+YMMQ6A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=oyr5iD58XhopPQYQ2Xq9NAKfXdiYJEeXKVC5sbUMtkKrz4mp0UgajLxxRxvv+ec4TA3lITR27irKo82NG5C2HVG4VGmaDRzoeK3uG0uTY41O1E1FmRJC7eSCgQ05s4/klqDPPZlZ+4reBwdUt0JGuJWM/4hDenkWsfOzxOEJPq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=svAtqGWU; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=iT7Vhp2GtqB0+OzsehswV7mmtLhzmi5YTHtGnYVm77y8H6Dg+a42FazGPvqkY6reH0Mk3OGxZG9iwKG3Rgi1hmYUcSm5lCbSbyk4jSiIErI3tm1PHadEg4kJKiEdSJLf34xU9F+eks0Wuq9xz0VBFYjBlHyvR/BmX1QQON6ZCVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=IIAWMyJ8; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="svAtqGWU"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="IIAWMyJ8"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 9DC932047231;
-	Tue, 10 Dec 2024 14:02:38 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 9DC932047231
+	by linux.microsoft.com (Postfix) with ESMTPSA id D4E6A204722D;
+	Tue, 10 Dec 2024 14:02:37 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D4E6A204722D
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1733868158;
-	bh=gKZLAOaJwfAP+6Kmm8Uoact7ay9fLs6b2uIK/ai8VsE=;
+	bh=DhJBfAD2d6ET0f+MR7PDWaX6CpgYhpsGb+RQrMGIOAY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=svAtqGWUfwwxhkPtOsHM9wFpOe5H7V37CPLpc1efEJB+hZDbAOkD4T5b6sfMzxhZ+
-	 yP7ZIp8mBgs9llSr4qUZT5sBXpDyffL9kReLgTxKKh0F7Rks+AtMLKTRz+ik8N0b4l
-	 Co5R1xYnpZA/XZN3kdMilWWEgRejdEMkmjUvT5B4=
+	b=IIAWMyJ8NzQC8a9Pk8dz0U3jdNgu9NGd3SiawGSbAFHI2lBJj9kVVY+Jrn6mOAaem
+	 Wm2Q0riPqkUNNLsJAJDVn84Us2zbSxk2FObucA7BvA+Ci0Obga6BtVUEDHD7pm4PpM
+	 tPAQA1jtOYji99byX6HP0p2SzC0hDQD6638LF7MQ=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 10 Dec 2024 22:02:43 +0000
-Subject: [PATCH v3 12/19] xen/blkback: Convert timeouts to
- secs_to_jiffies()
+Date: Tue, 10 Dec 2024 22:02:39 +0000
+Subject: [PATCH v3 08/19] drm/xe: Convert timeout to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20241210-converge-secs-to-jiffies-v3-12-ddfefd7e9f2a@linux.microsoft.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20241210-converge-secs-to-jiffies-v3-8-ddfefd7e9f2a@linux.microsoft.com>
 References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 In-Reply-To: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -120,24 +119,25 @@ the following Coccinelle rules:
 - msecs_to_jiffies(C * MSEC_PER_SEC)
 + secs_to_jiffies(C)
 
+Reviewed-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/block/xen-blkback/blkback.c | 2 +-
+ drivers/gpu/drm/xe/xe_device.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
-index 838064593f62b75f3d937c0c041ea78dedbbaf84..a7c2b04ab943de9cbd69b596aad177a0534f7762 100644
---- a/drivers/block/xen-blkback/blkback.c
-+++ b/drivers/block/xen-blkback/blkback.c
-@@ -544,7 +544,7 @@ static void print_stats(struct xen_blkif_ring *ring)
- 		 ring->st_rd_req, ring->st_wr_req,
- 		 ring->st_f_req, ring->st_ds_req,
- 		 ring->persistent_gnt_c, max_pgrants);
--	ring->st_print = jiffies + msecs_to_jiffies(10 * 1000);
-+	ring->st_print = jiffies + secs_to_jiffies(10);
- 	ring->st_rd_req = 0;
- 	ring->st_wr_req = 0;
- 	ring->st_oo_req = 0;
+diff --git a/drivers/gpu/drm/xe/xe_device.c b/drivers/gpu/drm/xe/xe_device.c
+index 56d4ffb650dade8622cc25026a96155fa5572434..9093469a275f46f7bf58ff1049c1c9cc712cdd33 100644
+--- a/drivers/gpu/drm/xe/xe_device.c
++++ b/drivers/gpu/drm/xe/xe_device.c
+@@ -519,7 +519,7 @@ static int wait_for_lmem_ready(struct xe_device *xe)
+ 	drm_dbg(&xe->drm, "Waiting for lmem initialization\n");
+ 
+ 	start = jiffies;
+-	timeout = start + msecs_to_jiffies(60 * 1000); /* 60 sec! */
++	timeout = start + secs_to_jiffies(60); /* 60 sec! */
+ 
+ 	do {
+ 		if (signal_pending(current))
 
 -- 
 2.43.0
