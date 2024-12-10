@@ -1,86 +1,196 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9DE78F24
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2024 11:30:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72DAA1AAE33;
+	Tue, 10 Dec 2024 14:59:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733830241; cv=none; b=S7Oa2mUw5YFGebMNJIvHMyYSFawggWRBvPaLYG8Vj78zRnu6YRP8yj3ReStuz+DnAGv+nxsSAy9IFLtfRx+D0fJI28sv2vn3mYpf550lOM/xHFCQxZ1pE/v13CtguEFV3QKlIu1/syce0vp41AiIO5ym3NkJ+/B2sUEdBBfTGNo=
+	t=1733842794; cv=none; b=TGBmuYdERLDo1Im3ylGwQecs0KNao3/R4rb7YwZkMrpDYKGC73vXKjxguHeO05PAuEeS1hhJiTnNcDkPDcfQAySXmgeORvF3tU+AUZ5fqJ2NFFENvSDyXTMnNBLhS2n08p368qWm8gUL1hqUpJ1pu5K1WGXn06rjLYhnCDRjruE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733830241; c=relaxed/simple;
-	bh=KEVQsC3T6+iAqrQ7FLyL+SB2OiYbN3HNw6W15G36LSI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NqSZ9gZozddQdaDFoJ5aOIlfd6b+AtHLHbYl0wirOMjkZJnGbj48SfYfBkZ5l2f1GIeNWpDotFmGW5j0Tmiat92C58qBTcz1yUNOG4tsjIpaNSlgo7svLbbj+L2JztwbbAa+jDmJi7kP9vJ5CprJjYOgIhghj/qayA18IjXbfGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DJIaiegg; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1733842794; c=relaxed/simple;
+	bh=6zwrH7NOfsoHfQqIznKg1azt1RDvRgkouT0IH9qiPds=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t2CJ7ugAN2idve59tuAkW3QHd90HZG8rgz5CNPeQ5guqqHUzQautSkP0V3tYp0Qd9g9KLOMHGdDtbcSaQFvRctYqITyQMe9fztWnDQRdqVCg7jYsUM4PI+EYhx6cpOWK3wWcLH+sk90b9V9t5pMuz3FxTW2kKAbs7j/JqIQN1w0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=mLAbg/b7; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DJIaiegg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1733830239; x=1765366239;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=KEVQsC3T6+iAqrQ7FLyL+SB2OiYbN3HNw6W15G36LSI=;
-  b=DJIaieggF1td2e9CKFpRIA0BJMn11lh2aTKDfUtijk6OByLhVtlRPe/f
-   b+qv2qdlGp7ki17eDervSY/UwrPvoG29/3VGJPkkh6qkYDRzKnBbnOTNa
-   Mu7vl73qGl6egNSRHNokoGVy1Gp+o50uRHsWRNF3TG5HTCEK3JhunU+Y2
-   d211mbzkS/nPZatOYBFzgqfGKYuCSGdbO6vxEAwcaYVpVKT8Euu2mm6Hx
-   rF5RwJaEurPZ1SNd4USS1LecesMJxpXbU6iIlj7PBPBAPVbwoVVmmmU/u
-   usDxCiJd654JF1lA4nIudCatkudzEh10ErYLZTIjXE3NYY4juMYLTLxEX
-   Q==;
-X-CSE-ConnectionGUID: 78dDRWOGSsuI4CCBr1Bvfg==
-X-CSE-MsgGUID: cd+xzBDWTrGjaW/pWSYt8A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11278"; a="45550808"
-X-IronPort-AV: E=Sophos;i="6.12,214,1728975600"; 
-   d="scan'208";a="45550808"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2024 03:30:39 -0800
-X-CSE-ConnectionGUID: 0c7Woq/lSj+n8th4HleUYg==
-X-CSE-MsgGUID: 3jdk2KuQT16w3vIrIdNPyg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,222,1728975600"; 
-   d="scan'208";a="95259207"
-Received: from unknown (HELO apaszkie-mobl2.igk.intel.com) ([10.217.181.53])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2024 03:30:38 -0800
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH] MAINTAINERS: remove myself as isci driver maintainer
-Date: Tue, 10 Dec 2024 12:30:28 +0100
-Message-ID: <20241210113028.13810-1-artur.paszkiewicz@intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mLAbg/b7"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BADrYSi007192;
+	Tue, 10 Dec 2024 14:59:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=Afsg7V
+	UbuAH53aaPeUSfI9JRaF+ZQPD2bSYYkrMcSHA=; b=mLAbg/b75n3LOq/fpaAKSv
+	UIChmJmuQRl77kBh5TFnhWqiL2cGRk5I1GC495Be4XfrOoXah8qoB/WRONoUBKNi
+	8oFvzvEsbABkliVsYi+MZb+WljI1oHNaUCTg4joR+YM7y9ZGFLjc4TDMMNM8i2V9
+	rRy6RlUliP1HxkUL3Mofq3+UyWL8j5GzCBivc4sJK+0A4uxeHLnDyMM/3hp3Qg1q
+	jRdUnPxrZkVEa8JYuYxgXruqWeuiu+c61irH4ma5ukZGxF76d0arRrrqjT27eRQI
+	nrKLxnclUQ94rbfotBjfMFmZIxXJmJMe1GiTKDh9M7PlsL+YH+gjhvNRR9KePzdA
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43cdv8qr78-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 10 Dec 2024 14:59:46 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BAB2eXn016911;
+	Tue, 10 Dec 2024 14:59:45 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 43d12y4900-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 10 Dec 2024 14:59:45 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BAExdEX42533140
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 10 Dec 2024 14:59:40 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DB83120040;
+	Tue, 10 Dec 2024 14:59:39 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8FE492004D;
+	Tue, 10 Dec 2024 14:59:39 +0000 (GMT)
+Received: from [9.84.194.138] (unknown [9.84.194.138])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 10 Dec 2024 14:59:39 +0000 (GMT)
+Message-ID: <bdba3042-4654-4e09-9060-57445ccac09c@linux.ibm.com>
+Date: Tue, 10 Dec 2024 15:59:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] cxl: Deprecate driver
+To: Andrew Donnellan <ajd@linux.ibm.com>, linuxppc-dev@lists.ozlabs.org,
+        linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, ukrishn@linux.ibm.com, manoj@linux.ibm.com,
+        clombard@linux.ibm.com, vaibhav@linux.ibm.com
+References: <20241210054055.144813-1-ajd@linux.ibm.com>
+ <20241210054055.144813-2-ajd@linux.ibm.com>
+Content-Language: en-US
+From: Frederic Barrat <fbarrat@linux.ibm.com>
+In-Reply-To: <20241210054055.144813-2-ajd@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: R7fSBkR1R2cVa9KkSkNJz3oqMbgnzCZj
+X-Proofpoint-ORIG-GUID: R7fSBkR1R2cVa9KkSkNJz3oqMbgnzCZj
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 lowpriorityscore=0 spamscore=0 clxscore=1011 mlxscore=0
+ malwarescore=0 adultscore=0 phishscore=0 suspectscore=0 mlxlogscore=999
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412100112
 
-I'm leaving Intel and I could not find a new maintainer for this so mark
-it as orphan.
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- MAINTAINERS | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 17daa9ee9384..2d5c2d1057f2 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11442,9 +11442,8 @@ F:	drivers/mfd/intel_pmc_bxt.c
- F:	include/linux/mfd/intel_pmc_bxt.h
- 
- INTEL C600 SERIES SAS CONTROLLER DRIVER
--M:	Artur Paszkiewicz <artur.paszkiewicz@intel.com>
- L:	linux-scsi@vger.kernel.org
--S:	Supported
-+S:	Orphan
- T:	git git://git.code.sf.net/p/intel-sas/isci
- F:	drivers/scsi/isci/
- 
--- 
-2.43.0
+On 10/12/2024 06:40, Andrew Donnellan wrote:
+> The cxl driver is no longer actively maintained and we intend to remove it
+> in a future kernel release.
+> 
+> cxl has received minimal maintenance for several years, and is not
+> supported on the Power10 processor. We aren't aware of any users who are
+> likely to be using recent kernels.
+> 
+> Change its MAINTAINERS status to obsolete, update the sysfs ABI
+> documentation accordingly, add a warning message on device probe, change
+> the Kconfig options to label it as deprecated, and don't build it by
+> default.
+> 
+> Signed-off-by: Andrew Donnellan <ajd@linux.ibm.com>
+
+
+Acked-by: Frederic Barrat <fbarrat@linux.ibm.com>
+
+   Fred
+
+
+> ---
+>   Documentation/ABI/{testing => obsolete}/sysfs-class-cxl | 3 +++
+>   MAINTAINERS                                             | 4 ++--
+>   drivers/misc/cxl/Kconfig                                | 6 ++++--
+>   drivers/misc/cxl/of.c                                   | 2 ++
+>   drivers/misc/cxl/pci.c                                  | 2 ++
+>   5 files changed, 13 insertions(+), 4 deletions(-)
+>   rename Documentation/ABI/{testing => obsolete}/sysfs-class-cxl (99%)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-class-cxl b/Documentation/ABI/obsolete/sysfs-class-cxl
+> similarity index 99%
+> rename from Documentation/ABI/testing/sysfs-class-cxl
+> rename to Documentation/ABI/obsolete/sysfs-class-cxl
+> index cfc48a87706b..8cba1b626985 100644
+> --- a/Documentation/ABI/testing/sysfs-class-cxl
+> +++ b/Documentation/ABI/obsolete/sysfs-class-cxl
+> @@ -1,3 +1,6 @@
+> +The cxl driver is no longer maintained, and will be removed from the kernel in
+> +the near future.
+> +
+>   Please note that attributes that are shared between devices are stored in
+>   the directory pointed to by the symlink device/.
+>   For example, the real path of the attribute /sys/class/cxl/afu0.0s/irqs_max is
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 17daa9ee9384..1737a8ff4f2b 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6228,8 +6228,8 @@ CXL (IBM Coherent Accelerator Processor Interface CAPI) DRIVER
+>   M:	Frederic Barrat <fbarrat@linux.ibm.com>
+>   M:	Andrew Donnellan <ajd@linux.ibm.com>
+>   L:	linuxppc-dev@lists.ozlabs.org
+> -S:	Supported
+> -F:	Documentation/ABI/testing/sysfs-class-cxl
+> +S:	Obsolete
+> +F:	Documentation/ABI/obsolete/sysfs-class-cxl
+>   F:	Documentation/arch/powerpc/cxl.rst
+>   F:	arch/powerpc/platforms/powernv/pci-cxl.c
+>   F:	drivers/misc/cxl/
+> diff --git a/drivers/misc/cxl/Kconfig b/drivers/misc/cxl/Kconfig
+> index 5efc4151bf58..15307f5e4307 100644
+> --- a/drivers/misc/cxl/Kconfig
+> +++ b/drivers/misc/cxl/Kconfig
+> @@ -9,11 +9,13 @@ config CXL_BASE
+>   	select PPC_64S_HASH_MMU
+>   
+>   config CXL
+> -	tristate "Support for IBM Coherent Accelerators (CXL)"
+> +	tristate "Support for IBM Coherent Accelerators (CXL) (DEPRECATED)"
+>   	depends on PPC_POWERNV && PCI_MSI && EEH
+>   	select CXL_BASE
+> -	default m
+>   	help
+> +	  The cxl driver is deprecated and will be removed in a future
+> +	  kernel release.
+> +
+>   	  Select this option to enable driver support for IBM Coherent
+>   	  Accelerators (CXL).  CXL is otherwise known as Coherent Accelerator
+>   	  Processor Interface (CAPI).  CAPI allows accelerators in FPGAs to be
+> diff --git a/drivers/misc/cxl/of.c b/drivers/misc/cxl/of.c
+> index cf6bd8a43056..e26ee85279fa 100644
+> --- a/drivers/misc/cxl/of.c
+> +++ b/drivers/misc/cxl/of.c
+> @@ -295,6 +295,8 @@ int cxl_of_probe(struct platform_device *pdev)
+>   	int ret;
+>   	int slice = 0, slice_ok = 0;
+>   
+> +	dev_err_once(&pdev->dev, "DEPRECATION: cxl is deprecated and will be removed in a future kernel release\n");
+> +
+>   	pr_devel("in %s\n", __func__);
+>   
+>   	np = pdev->dev.of_node;
+> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
+> index 3d52f9b92d0d..92bf7c5c7b35 100644
+> --- a/drivers/misc/cxl/pci.c
+> +++ b/drivers/misc/cxl/pci.c
+> @@ -1726,6 +1726,8 @@ static int cxl_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>   	int slice;
+>   	int rc;
+>   
+> +	dev_err_once(&dev->dev, "DEPRECATED: cxl is deprecated and will be removed in a future kernel release\n");
+> +
+>   	if (cxl_pci_is_vphb_device(dev)) {
+>   		dev_dbg(&dev->dev, "cxl_init_adapter: Ignoring cxl vphb device\n");
+>   		return -ENODEV;
 
