@@ -1,138 +1,119 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73B5F227586;
-	Tue, 10 Dec 2024 05:42:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 147C2227599
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2024 06:14:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733809322; cv=none; b=CYhdQEZNUPrSNem/XEb9YmuecFhp8wcGoVc/wgEsIlcIc6nXqpA5RVlA/qsyocRLb5GFRj6A386VliRJC9/oXG6J0XvnPwY8WphgmxbQXXwMFZCFGlcoeGZK+b84WHSQYdcORcwjqov99S5OemBMKViIecw+CGzBEegWnsW+Uys=
+	t=1733811282; cv=none; b=lwoohkvIXKwzeWB6Cnxjl29VBD/mo5PMwItCuFMN9DuL0ATNto+N68b/zPlKAOYN7PBSP4tZfhwizAUNP04IkehCGg43GxmAf6sLma+Vh5H/rgm3n78EyUB/LkDCelkmBul+j9V/7grnUlV19DDqTe8S+nm1AbTW78MwsmVDutI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733809322; c=relaxed/simple;
-	bh=vnI6oV2IOEBJDB7cr15+QsQC5zROnqgDjJXFFolGBhA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gPc4xOhd62zy7m45MrLHD+91Hu9Jjjb9L4jdISb1S/DRbgAwFdUzHpr94iKJdnodL/4Sh3QjVXCHFmgvN4vSyy3ETqGYU5SgzLO4Q8EjhrU02RRhdmO3/CNBJbJzvlIfpGElLU4gkN7BdKd7nbtY98QzdR/LwTnhN9fdMdkzWxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=HFKtCLIt; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1733811282; c=relaxed/simple;
+	bh=H5jhkkBmcSeHnp14FMPbK7KoVdIILqWdySHjtUR3xmE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eXbkjTCVJtXdnE3gnPlY1hBlDcEzaAS0r8vyotkXznZnRg+xi423FDBOa52hCOTSkIYSditeKQgP7OObOMl01uK/kr90qDCYb+A2vqH9JshV+t0qrPQ7tjvjzPoegHUxqUXUWPB9oTSOIUOWl2MwuJ8Xy3gC7X3LTTntdJ2j2Rk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Y462j8qQ; arc=none smtp.client-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="HFKtCLIt"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B9MLtEY018470;
-	Tue, 10 Dec 2024 05:41:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=9b7d+qyvkKmlZann7
-	J+1XFkGmFtpdtEdxyDOAxkGRuc=; b=HFKtCLItxw+KCK/uI1qeGE3R6e6tNmeAI
-	qIUNQueHcNFM6zsGep6lJ9UwqgGMwlrMwQWK7wyhaDFmA02y5OS13cv3M5wsmh9f
-	4oVdoaluCLgI57+Q1UpWnhpaomo4cS/9pShC7kELqlSEr/70/DJSho7+axxDjuCl
-	fc/2gd8QeO7yFmyvHgWlWtEr20KdgQ+rLZM0CKPj3r/8qwfuWG5Co3H0l/VwNKNI
-	NCvmbaxYBxtnLda1MDjkhbdHJ9kthkSLF8YMD0D30biH/+6ppRd6b4KzFZg8H6Hr
-	drQ+klz8LDzvPwZZqx8imiqzVo4XXdRzb2BvfdZGqrrqfyBpQ1cZg==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43cbsq4jjs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 10 Dec 2024 05:41:55 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BA4trxY017369;
-	Tue, 10 Dec 2024 05:41:55 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 43d3d1hu7q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 10 Dec 2024 05:41:54 +0000
-Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BA5frog65601834
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 10 Dec 2024 05:41:53 GMT
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 48BBD20043;
-	Tue, 10 Dec 2024 05:41:53 +0000 (GMT)
-Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C8C4E20040;
-	Tue, 10 Dec 2024 05:41:52 +0000 (GMT)
-Received: from ozlabs.au.ibm.com (unknown [9.63.197.14])
-	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 10 Dec 2024 05:41:52 +0000 (GMT)
-Received: from jarvis.ozlabs.ibm.com.com (unknown [9.36.5.92])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 438FC60AF0;
-	Tue, 10 Dec 2024 16:41:47 +1100 (AEDT)
-From: Andrew Donnellan <ajd@linux.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, fbarrat@linux.ibm.com, ukrishn@linux.ibm.com,
-        manoj@linux.ibm.com, clombard@linux.ibm.com, vaibhav@linux.ibm.com
-Subject: [PATCH 2/2] scsi/cxlflash: Deprecate driver
-Date: Tue, 10 Dec 2024 16:40:55 +1100
-Message-ID: <20241210054055.144813-3-ajd@linux.ibm.com>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20241210054055.144813-1-ajd@linux.ibm.com>
-References: <20241210054055.144813-1-ajd@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Y462j8qQ"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7fd10cd5b1aso3570325a12.2
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Dec 2024 22:14:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1733811280; x=1734416080; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=LpAEUHjy0DmUd/FI9eBMVOYYjjorp2l0DbXffRcgJ5E=;
+        b=Y462j8qQlBXq7N6LQIOYblicdfUwWVdQ1LXl3CWvwFP75T80aSAt65FihsUg6oKv2v
+         nBBK8GsG30oBGcfXxZTtrQ/u/qnLwIkyxkcje2EMT8zHnfrEvaMD9sm9eGEk9fSkzQ4x
+         Lw2dBOqRK3Gr2uYRG6BNfkkVRUmYtI2Z4OlMh064295qJg6TaJpY+3Hkfs2TDnW5Qy9f
+         JWlaRTUfXWIc0DKlYKRJRQ7kO4u9ohlQPEYT3MVgd6knd1DGD/Cc9aPk3dwAefbclhIs
+         J/7n36BODFrkyjXI0YR3fqY3R4wRhJiha1DNbM0JOtQjJoCXnNj8TOZBvVSBzzlJvkmH
+         KfDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733811280; x=1734416080;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=LpAEUHjy0DmUd/FI9eBMVOYYjjorp2l0DbXffRcgJ5E=;
+        b=RTW6fGgLL1n3twH0HgLkHB0YbBPrYQRguwEdqseGhAYE64MVamXUWTFe0k9BHDQq0r
+         4/BoPnTkAh9l3RadO/Q1J8YqH9vZnQN+mhZboLroXtJeTXE7m+30zY4fygzq8LLkKs9O
+         MPs6Agu++zaU1mnOpeRX9qY4Egy50dGDE0lzJayxUAowiMXpo3MdCzM9d7k5o8WDcsRA
+         H34laEhhq+A0he3mIAdq6FuQnkxPZvMPwYX5EaCndtzaYDkq0mGmzUdIlM2NrtsjDc3h
+         VRzqQ14J5jv1+RdnNDKb1TjCNbo+ql76IT0FHtrF2nBowRIkgkmSMpl1oYNfbe3gafdb
+         eMyQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXK0M2H7T0izpdc6zsgLjTOl/uazqpqnbrDJmoUBAT9kIoNvvswOVA7rOsQ8gWMlkw1bL66OCyDBqru@vger.kernel.org
+X-Gm-Message-State: AOJu0YwscViGR+0MnYiLyrDwnR72x6Cc4CQmC7XWN498potaAbrPBOH9
+	mdQkp3tch7PyNftnF37JUk2KfeBXPfshQn7ygJIm4PjoXjISAzvWyBTWpSYt9w==
+X-Gm-Gg: ASbGnctXZAO7cJII7N+gxFQqT+aQKYjNbpXt6SINuBcnI6hWvJWtaKxx1OnAjR+ScG4
+	yrHMoYEidytf5l3eOpI9ok/GPniuuiFNonLn+b2INTGreRmwGVy6kMbac5KsGjoRjoL3hTCBb4X
+	E7+pRIcxQ1FmS39Sol8QQbQXJpN6rIC+hnqQcrUamFh1jW0EnDrQf/7QQyJJ9jQO6NTRrsx1D93
+	M74aIkqXEZRXNArdCBDZ9a9VigXMz8GrxilpSdUa16aoOs2LJD8OnebhMHcaSZz
+X-Google-Smtp-Source: AGHT+IEiT5QWdrtrlNLz0y/XTxkbz1jJLbvpAPbUeDX4xD2zua00YW8f3fwqZuwMML6Qot71OABORQ==
+X-Received: by 2002:a17:902:ec8c:b0:216:2bd7:1c27 with SMTP id d9443c01a7336-2162bd71f80mr170672615ad.33.1733811280440;
+        Mon, 09 Dec 2024 22:14:40 -0800 (PST)
+Received: from thinkpad ([120.60.59.140])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2163b1f8697sm37552555ad.261.2024.12.09.22.14.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Dec 2024 22:14:40 -0800 (PST)
+Date: Tue, 10 Dec 2024 11:44:30 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+	Manish Pandey <quic_mapa@quicinc.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
+Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
+ Testbus Registers
+Message-ID: <20241210061430.fmj5d6xyqgtqm3jc@thinkpad>
+References: <20241025055054.23170-1-quic_mapa@quicinc.com>
+ <20241112075000.vausf7ulr2t5svmg@thinkpad>
+ <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
+ <20241209040355.kc4ab6nfp6syw37q@thinkpad>
+ <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: ZpxFikb_j4vs-7Bvs-T4OsDSdT_Ho2Al
-X-Proofpoint-GUID: ZpxFikb_j4vs-7Bvs-T4OsDSdT_Ho2Al
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=625 adultscore=0
- lowpriorityscore=0 clxscore=1015 phishscore=0 impostorscore=0
- suspectscore=0 spamscore=0 mlxscore=0 priorityscore=1501 malwarescore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412100039
+In-Reply-To: <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
 
-We intend to remove the cxlflash driver in an upcoming release. It is
-already marked as Obsolete in MAINTAINERS.
+On Mon, Dec 09, 2024 at 10:35:39AM -0800, Bart Van Assche wrote:
+> On 12/8/24 12:03 PM, Manivannan Sadhasivam wrote:
+> > On Tue, Nov 12, 2024 at 10:10:02AM -0800, Bart Van Assche wrote:
+> > > On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
+> > > > On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
+> > > > > Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
+> > > > > of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
+> > > > > aid in diagnosing and resolving issues related to hardware and software operations.
+> > > > > 
+> > > > 
+> > > > TBH, the current state of dumping UFSHC registers itself is just annoying as it
+> > > > pollutes the kernel ring buffer. I don't think any peripheral driver in the
+> > > > kernel does this. Please dump only relevant registers, not everything that you
+> > > > feel like dumping.
+> > > 
+> > > I wouldn't mind if the code for dumping  UFSHC registers would be removed.
+> > 
+> > Instead of removing, I'm planning to move the dump to dev_coredump framework.
+> > But should we move all the error prints also? Like all ufshcd_print_*()
+> > functions?
+> 
+> Hmm ... we may be better off to check which of these functions can be
+> removed rather than moving all of them to another framework.
+> 
 
-The cxlflash driver has received minimal maintenance for some time, and
-the CAPI Flash hardware that uses it is no longer commercially available.
+They are mostly for debugging the errors. I don't see why we should completely
+get rid of them. Moving to devcoredump allows debugging the errors in a
+standardized way and also prevents spamming the kernel ring buffer.
 
-Add a warning message on probe and change Kconfig to label the driver as
-deprecated and not build the driver by default.
+- Mani
 
-Signed-off-by: Andrew Donnellan <ajd@linux.ibm.com>
----
- drivers/scsi/cxlflash/Kconfig | 6 ++++--
- drivers/scsi/cxlflash/main.c  | 2 ++
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/cxlflash/Kconfig b/drivers/scsi/cxlflash/Kconfig
-index 5533bdcb0458..c424d36e89a6 100644
---- a/drivers/scsi/cxlflash/Kconfig
-+++ b/drivers/scsi/cxlflash/Kconfig
-@@ -4,10 +4,12 @@
- #
- 
- config CXLFLASH
--	tristate "Support for IBM CAPI Flash"
-+	tristate "Support for IBM CAPI Flash (DEPRECATED)"
- 	depends on PCI && SCSI && (CXL || OCXL) && EEH
- 	select IRQ_POLL
--	default m
- 	help
-+	  The cxlflash driver is deprecated and will be removed in a future
-+	  kernel release.
-+
- 	  Allows CAPI Accelerated IO to Flash
- 	  If unsure, say N.
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 60d62b93d624..62806f5e32e6 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -3651,6 +3651,8 @@ static int cxlflash_probe(struct pci_dev *pdev,
- 	int rc = 0;
- 	int k;
- 
-+	dev_err_once(&pdev->dev, "DEPRECATION: cxlflash is deprecated and will be removed in a future kernel release\n");
-+
- 	dev_dbg(&pdev->dev, "%s: Found CXLFLASH with IRQ: %d\n",
- 		__func__, pdev->irq);
- 
 -- 
-2.47.1
-
+மணிவண்ணன் சதாசிவம்
