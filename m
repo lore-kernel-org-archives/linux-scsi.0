@@ -1,42 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF1652AEFE;
-	Tue, 10 Dec 2024 03:09:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 389C44EB48;
+	Tue, 10 Dec 2024 04:02:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733800179; cv=none; b=gJnaJrraf42TFjuI879f5JAs/S2J5n+sbYEM+olBKavtz4gIis0EFFZVESLrQHtIlFNwuDoW2aPpnFrq0bnMnzS0eWvM16QdG4Wd34XTEamPBkJnprSe6XnRm68s3umDjx0X7+GVLrHMMSaRcTJ7yuZ27+ATQG/ibbeH5fboxP4=
+	t=1733803343; cv=none; b=Th1pz64UlVbgK53CJk/O4uPVRUmNvcbiv3dmnImdce+jv4YEpiNhBmK0oKFBJ8az4ouOZb1Rc+rCO2aGYSdHLlGq29dKq++sSKHdfuz5FHMh0qqUgh811aXCJJwHyd2SHhpvXAQv1g6QsDlFbotjWIMhwsk3DKQ+5+oMTR7SVjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733800179; c=relaxed/simple;
-	bh=NOA2/DBZGRoJDn0ABlS/fs8FhWVxOXQ7w2bXuvP5gRk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NNZGlbHoWtRFbdyzNeV3tHl9oix96BDBBH7+rJmt9p3F6Tjx3Ij7MBzSrWGAHMtAuHvxqRrdo3tBKrxGApAEtazRAcxb8llVIEycGZwzCFsPjvhYjQFTbLZ2mbqz2dFP74ewz2xK5yjeMNSNAbQKhlPaAgT2vFUR8iqs7ucaI7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bsxzbqyt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733803343; c=relaxed/simple;
+	bh=5NhHa7O6RtwdRtCJDoaZPit06rKeTXv3h3+jqyfnaIo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cmhySg6wEAl2Xzh6YUhowNhgZl08U1j/+A0cduWNS9vg/AFcnkO8t+nkaVq7R2C/gfudgyFUY3EfGZt/jZqo5h+PrNaGDkaMoG1Xbs9awkDH0RxIGzekvbna2yL6W/WWTfGflnUj3Va5HIhaeSWKi+TckinKCDyww5q9DBw06Vo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Oo0eOLqf; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bsxzbqyt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F7AEC4CED1;
-	Tue, 10 Dec 2024 03:09:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733800179;
-	bh=NOA2/DBZGRoJDn0ABlS/fs8FhWVxOXQ7w2bXuvP5gRk=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Bsxzbqyt+q747cJsxlqPG9HqNqJcai8XUqziSHZPikS7cGOE7tt72YLm7iqc5O1T6
-	 1Bl53GFA+6APMZiMTgKUE894MSFyALdSHl58rcIajzjCNAG4q3msOmtw5UVuCEh6yW
-	 rX4VKfC5pA5O74jv4Tqnn7vN8Cx+ePetu0pxrWc03+js/RMHnVITe46sQkigALQ76W
-	 TZxr0VrfVOuXDYAL0oV949siLeW0TNqVEudw6bV8iU4Rlq/cm/P14sf1e93707low2
-	 faY7SVJNRZQjaiP36pZq1aYWa+rYR6DnvWVZ7/QFD35Kh0pKwMcpSo2VLnE5elSA0T
-	 EMSh/PNPljdog==
-From: Eric Biggers <ebiggers@kernel.org>
-To: linux-scsi@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-	stable@vger.kernel.org,
-	Abel Vesa <abel.vesa@linaro.org>
-Subject: [PATCH] ufs: qcom: fix crypto key eviction
-Date: Mon,  9 Dec 2024 19:08:39 -0800
-Message-ID: <20241210030839.1118805-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Oo0eOLqf"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2ee989553c1so4381836a91.3;
+        Mon, 09 Dec 2024 20:02:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1733803341; x=1734408141; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bh6xZ2UBk2TKGM3uWfsxOOPw8xFKLneJ4kGsbyp9EA0=;
+        b=Oo0eOLqfur/Dzfgv7GYY8ZwPs1gPHQWUeLYzuMDTRYeLwNryL2+HK2VF2EWELPGPmq
+         ldzoX3FIzb4m+1zBPlokYZcwMlyqB+vkgP+PEQegfrGO/MyKwClWu/edVW6cyIcczPw3
+         pA7htwsoVgtp5rbLRMjQ4bhLRSMHvXnnPClIBd4UqLCir1mCYH7D8GKmDQsQi7tKUfu7
+         2XngtB9NFSu85v0dJscOHGszS7de1wK9F45ckIzo1x72bKeJwljSx+nowf0ZYea45C5h
+         kKzdPsbo2XZ2sJ95hu49S5T1dD+xn3KT1AMqJrtL2EdGMvVtP1Wu1DyyKcoDBZjD/WBe
+         XGqQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733803341; x=1734408141;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bh6xZ2UBk2TKGM3uWfsxOOPw8xFKLneJ4kGsbyp9EA0=;
+        b=CsbgjSXF5pDVnE6P/cy0FWHaiiANwiaxYhPHCks/bTq1t5NUdLpSDhtgvR54FmvIRs
+         WDgzUcB28EsR5Eyd9cECsMjyPWbo4p/Lh9WkBqIzzdnWolCGxI6G3NgB1sU2h/hEr/Xl
+         bt7P6FiJiZ/75oWYeUC4gLWz04wovzIXQffvRTdoeLygFvWBHveRxgxrTCZpKoX8aOMv
+         kemGz/vcuZuWIxapN7AtlyQ4o+Cf/OcWIW4gF22IvDmzn03HmKRlXcT9/0WaP3aC+5hG
+         pxkiDWIUyeTtOYkq6qUNpmovgKVEbIbiZj4UAzPyweaD4Sqb+OUiY5L36lR4tId1Ex55
+         nVrw==
+X-Forwarded-Encrypted: i=1; AJvYcCWbrOU8v8fwHRILsAdXIKgy77kiFoKRPNGmwCPpe7gNf4wDoBR7+NRT7YRYydKvin6ElzvXyg+4JTp/Qb8=@vger.kernel.org, AJvYcCX/XSPiO3xpl8KHaxNi/RdpdQ0B4TKx2qZWxrIqeOMRxWppC1lbcHigacc5J7+YY/Z9MvsqV+pRpQ0NRg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyHOro5pKTR4XVfTDZHXFJrKLl3LAqqujfFvyPws9H6gdapjBZp
+	rlQ8/9Tjfzf4mHmgcoJIRrYnK8n9IXzGZoYn1QhedPlrAQzW3gAx
+X-Gm-Gg: ASbGncts2fn0/yVXEVVT+s4Yt05KvWL39OZdiYHqusFeJR1Fg1XbNLfN37U2Te7z41q
+	3lxOlO1/SdZNxZpjxllABtMktrb3q/s7FX3peCsfFn3vunsahjI67BzV/mcvORYWoz/BaOVtHFY
+	SwMDInFuqNWO8m0931EkmZ4Y1kT4tkpELKl6XYDCTOrC7N3krLwAX18rYFkZgR6yUl0mIu5xLcI
+	M6RTDr06FXeokmqjB5ig1uL88es0T737jNInv4VMsque+Mc/nVKzmXyD7yEmP9/e1ZafynuRbL7
+	R8SJcf0k
+X-Google-Smtp-Source: AGHT+IFYlecFe3Su4R1e5q1bWYZOEGeW/wghL9TD+5r1xZQ5LM8x8xZn/smn38idLqW+fxYe4nR1yQ==
+X-Received: by 2002:a17:90a:e7c3:b0:2ea:9ccb:d1f4 with SMTP id 98e67ed59e1d1-2efcef27dbcmr5104185a91.0.1733803341358;
+        Mon, 09 Dec 2024 20:02:21 -0800 (PST)
+Received: from BiscuitBobby.am.students.amrita.edu ([175.184.253.10])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ef45fa652csm9617496a91.30.2024.12.09.20.02.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Dec 2024 20:02:20 -0800 (PST)
+From: Siddharth Menon <simeddon@gmail.com>
+To: martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: Siddharth Menon <simeddon@gmail.com>
+Subject: [PATCH] Drivers/scsi: Fix variable typo
+Date: Tue, 10 Dec 2024 09:32:02 +0530
+Message-Id: <20241210040202.11112-1-simeddon@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,62 +73,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Eric Biggers <ebiggers@google.com>
+Renamed ESP_CONGIG4_TEST to ESP_CONFIG4_TEST
 
-Commit 56541c7c4468 ("scsi: ufs: ufs-qcom: Switch to the new ICE API")
-introduced an incorrect check of the algorithm ID into the key eviction
-path, and thus qcom_ice_evict_key() is no longer ever called.  Fix it.
-
-Fixes: 56541c7c4468 ("scsi: ufs: ufs-qcom: Switch to the new ICE API")
-Cc: stable@vger.kernel.org
-Cc: Abel Vesa <abel.vesa@linaro.org>
-Signed-off-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: Siddharth Menon <simeddon@gmail.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/scsi/esp_scsi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 68040b2ab5f82..e33ae71245dd0 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -153,27 +153,25 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
- 				    const union ufs_crypto_cfg_entry *cfg,
- 				    int slot)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	union ufs_crypto_cap_entry cap;
--	bool config_enable =
--		cfg->config_enable & UFS_CRYPTO_CONFIGURATION_ENABLE;
-+
-+	if (!(cfg->config_enable & UFS_CRYPTO_CONFIGURATION_ENABLE))
-+		return qcom_ice_evict_key(host->ice, slot);
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 00cd7c0ccc76..7bb0b69bff24 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -80,7 +80,7 @@
  
- 	/* Only AES-256-XTS has been tested so far. */
- 	cap = hba->crypto_cap_array[cfg->crypto_cap_idx];
- 	if (cap.algorithm_id != UFS_CRYPTO_ALG_AES_XTS ||
- 	    cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
- 		return -EOPNOTSUPP;
- 
--	if (config_enable)
--		return qcom_ice_program_key(host->ice,
--					    QCOM_ICE_CRYPTO_ALG_AES_XTS,
--					    QCOM_ICE_CRYPTO_KEY_SIZE_256,
--					    cfg->crypto_key,
--					    cfg->data_unit_size, slot);
--	else
--		return qcom_ice_evict_key(host->ice, slot);
-+	return qcom_ice_program_key(host->ice,
-+				    QCOM_ICE_CRYPTO_ALG_AES_XTS,
-+				    QCOM_ICE_CRYPTO_KEY_SIZE_256,
-+				    cfg->crypto_key,
-+				    cfg->data_unit_size, slot);
- }
- 
- #else
- 
- #define ufs_qcom_ice_program_key NULL
-
-base-commit: 7cb1b466315004af98f6ba6c2546bb713ca3c237
+ /* ESP config register 4 read-write */
+ #define ESP_CONFIG4_BBTE      0x01     /* Back-to-back transfers     (fsc)   */
+-#define ESP_CONGIG4_TEST      0x02     /* Transfer counter test mode (fsc)   */
++#define ESP_CONFIG4_TEST      0x02     /* Transfer counter test mode (fsc)   */
+ #define ESP_CONFIG4_RADE      0x04     /* Active negation   (am53c974/fsc)   */
+ #define ESP_CONFIG4_RAE       0x08     /* Act. negation REQ/ACK (am53c974)   */
+ #define ESP_CONFIG4_PWD       0x20     /* Reduced power feature (am53c974)   */
 -- 
-2.47.1
+2.39.5
 
