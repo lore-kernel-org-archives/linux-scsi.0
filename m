@@ -1,70 +1,69 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 389C44EB48;
-	Tue, 10 Dec 2024 04:02:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F459224CC;
+	Tue, 10 Dec 2024 05:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733803343; cv=none; b=Th1pz64UlVbgK53CJk/O4uPVRUmNvcbiv3dmnImdce+jv4YEpiNhBmK0oKFBJ8az4ouOZb1Rc+rCO2aGYSdHLlGq29dKq++sSKHdfuz5FHMh0qqUgh811aXCJJwHyd2SHhpvXAQv1g6QsDlFbotjWIMhwsk3DKQ+5+oMTR7SVjs=
+	t=1733809319; cv=none; b=RXduTE4VtqVly5RPUAycD+aEt9nzgI+SVNBudYZJv+uIfYa/eUFyMbryqfsaa8ZZ0vOuKX1Ynhy5j0eO0sRc7mw2O2qBXTz0dN3kRoBHlExPSjJdi+Pa587x71RHJpZjmSNL37fkHKVpzuaxK4me6p54Y34jJeLapsnIeKQ1bHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733803343; c=relaxed/simple;
-	bh=5NhHa7O6RtwdRtCJDoaZPit06rKeTXv3h3+jqyfnaIo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cmhySg6wEAl2Xzh6YUhowNhgZl08U1j/+A0cduWNS9vg/AFcnkO8t+nkaVq7R2C/gfudgyFUY3EfGZt/jZqo5h+PrNaGDkaMoG1Xbs9awkDH0RxIGzekvbna2yL6W/WWTfGflnUj3Va5HIhaeSWKi+TckinKCDyww5q9DBw06Vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Oo0eOLqf; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1733809319; c=relaxed/simple;
+	bh=zwJyZKK94b+nYvZJonFFlJJPXj20lAl/lbiUGX4NdOk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=slVIRdPfZt8Lnz6PyOgt5MXOJlLnN/edfMvksLNTQqoLVdMEucEEgQJH2XHAdEpg2610K9ymTqRkhB8qEQJtpzdP7tnjKPWtPNdC1PXhtpv+xlU5K4uRDEfnr1MpN2NehBMeryZG1mpPJa4emtBP7fxJRWCFKbINi8Uk7OncxxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TD3oxNdW; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Oo0eOLqf"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2ee989553c1so4381836a91.3;
-        Mon, 09 Dec 2024 20:02:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1733803341; x=1734408141; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=bh6xZ2UBk2TKGM3uWfsxOOPw8xFKLneJ4kGsbyp9EA0=;
-        b=Oo0eOLqfur/Dzfgv7GYY8ZwPs1gPHQWUeLYzuMDTRYeLwNryL2+HK2VF2EWELPGPmq
-         ldzoX3FIzb4m+1zBPlokYZcwMlyqB+vkgP+PEQegfrGO/MyKwClWu/edVW6cyIcczPw3
-         pA7htwsoVgtp5rbLRMjQ4bhLRSMHvXnnPClIBd4UqLCir1mCYH7D8GKmDQsQi7tKUfu7
-         2XngtB9NFSu85v0dJscOHGszS7de1wK9F45ckIzo1x72bKeJwljSx+nowf0ZYea45C5h
-         kKzdPsbo2XZ2sJ95hu49S5T1dD+xn3KT1AMqJrtL2EdGMvVtP1Wu1DyyKcoDBZjD/WBe
-         XGqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733803341; x=1734408141;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bh6xZ2UBk2TKGM3uWfsxOOPw8xFKLneJ4kGsbyp9EA0=;
-        b=CsbgjSXF5pDVnE6P/cy0FWHaiiANwiaxYhPHCks/bTq1t5NUdLpSDhtgvR54FmvIRs
-         WDgzUcB28EsR5Eyd9cECsMjyPWbo4p/Lh9WkBqIzzdnWolCGxI6G3NgB1sU2h/hEr/Xl
-         bt7P6FiJiZ/75oWYeUC4gLWz04wovzIXQffvRTdoeLygFvWBHveRxgxrTCZpKoX8aOMv
-         kemGz/vcuZuWIxapN7AtlyQ4o+Cf/OcWIW4gF22IvDmzn03HmKRlXcT9/0WaP3aC+5hG
-         pxkiDWIUyeTtOYkq6qUNpmovgKVEbIbiZj4UAzPyweaD4Sqb+OUiY5L36lR4tId1Ex55
-         nVrw==
-X-Forwarded-Encrypted: i=1; AJvYcCWbrOU8v8fwHRILsAdXIKgy77kiFoKRPNGmwCPpe7gNf4wDoBR7+NRT7YRYydKvin6ElzvXyg+4JTp/Qb8=@vger.kernel.org, AJvYcCX/XSPiO3xpl8KHaxNi/RdpdQ0B4TKx2qZWxrIqeOMRxWppC1lbcHigacc5J7+YY/Z9MvsqV+pRpQ0NRg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyHOro5pKTR4XVfTDZHXFJrKLl3LAqqujfFvyPws9H6gdapjBZp
-	rlQ8/9Tjfzf4mHmgcoJIRrYnK8n9IXzGZoYn1QhedPlrAQzW3gAx
-X-Gm-Gg: ASbGncts2fn0/yVXEVVT+s4Yt05KvWL39OZdiYHqusFeJR1Fg1XbNLfN37U2Te7z41q
-	3lxOlO1/SdZNxZpjxllABtMktrb3q/s7FX3peCsfFn3vunsahjI67BzV/mcvORYWoz/BaOVtHFY
-	SwMDInFuqNWO8m0931EkmZ4Y1kT4tkpELKl6XYDCTOrC7N3krLwAX18rYFkZgR6yUl0mIu5xLcI
-	M6RTDr06FXeokmqjB5ig1uL88es0T737jNInv4VMsque+Mc/nVKzmXyD7yEmP9/e1ZafynuRbL7
-	R8SJcf0k
-X-Google-Smtp-Source: AGHT+IFYlecFe3Su4R1e5q1bWYZOEGeW/wghL9TD+5r1xZQ5LM8x8xZn/smn38idLqW+fxYe4nR1yQ==
-X-Received: by 2002:a17:90a:e7c3:b0:2ea:9ccb:d1f4 with SMTP id 98e67ed59e1d1-2efcef27dbcmr5104185a91.0.1733803341358;
-        Mon, 09 Dec 2024 20:02:21 -0800 (PST)
-Received: from BiscuitBobby.am.students.amrita.edu ([175.184.253.10])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ef45fa652csm9617496a91.30.2024.12.09.20.02.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Dec 2024 20:02:20 -0800 (PST)
-From: Siddharth Menon <simeddon@gmail.com>
-To: martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: Siddharth Menon <simeddon@gmail.com>
-Subject: [PATCH] Drivers/scsi: Fix variable typo
-Date: Tue, 10 Dec 2024 09:32:02 +0530
-Message-Id: <20241210040202.11112-1-simeddon@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TD3oxNdW"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B9NcWlu032615;
+	Tue, 10 Dec 2024 05:41:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=2P+jQaWUNjFuD4UCAcPCp5v1vlynyr+oJ6Z2P2dOL
+	/E=; b=TD3oxNdWBoqRHX/MVLVygLR+K3+A+AjltyOXkSBROnrdptOlhOqXdKJsL
+	q51xJrIjeWvzvuZ0KLgW2386GjMNBijiegqA5CAorbJTCdQkrMvTzkUyROWhrNbT
+	esbq2XC60iXRJvF42D7p90HPfleQGlUgDVHn2K+Uotmnu9EUXIcxxc+KMF1XpT0k
+	mO0pnvqhgEVaRSpnP5bAD1oY0oYhyTiVMDi5sxXq7MMFFjJ0HGRSVPkrwl1rh0jr
+	5AE3fvV9k0mm2o0xLQPfmN+fBxel52wfJifFq7xVOLse1TzPlzWgtOiWTLrxFv40
+	lCR8UTyw/sx4nPmM8BJJoFc7+PErA==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ce0xc7f2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 10 Dec 2024 05:41:50 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BA59uJi017397;
+	Tue, 10 Dec 2024 05:41:50 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 43d3d1hu7n-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 10 Dec 2024 05:41:50 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BA5fmfE18088346
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 10 Dec 2024 05:41:48 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9CEDE20043;
+	Tue, 10 Dec 2024 05:41:48 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2B3F620040;
+	Tue, 10 Dec 2024 05:41:48 +0000 (GMT)
+Received: from ozlabs.au.ibm.com (unknown [9.63.197.14])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 10 Dec 2024 05:41:48 +0000 (GMT)
+Received: from jarvis.ozlabs.ibm.com.com (unknown [9.36.5.92])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 5CC7760687;
+	Tue, 10 Dec 2024 16:41:41 +1100 (AEDT)
+From: Andrew Donnellan <ajd@linux.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, fbarrat@linux.ibm.com, ukrishn@linux.ibm.com,
+        manoj@linux.ibm.com, clombard@linux.ibm.com, vaibhav@linux.ibm.com
+Subject: [PATCH 0/2] Deprecate cxl and cxlflash drivers
+Date: Tue, 10 Dec 2024 16:40:53 +1100
+Message-ID: <20241210054055.144813-1-ajd@linux.ibm.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,27 +71,49 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: rKu_YlGomn6n8q2dRNRVIjGEXP3dN9uA
+X-Proofpoint-ORIG-GUID: rKu_YlGomn6n8q2dRNRVIjGEXP3dN9uA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 clxscore=1015 impostorscore=0 mlxscore=0 mlxlogscore=440
+ priorityscore=1501 malwarescore=0 adultscore=0 bulkscore=0 phishscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412100039
 
-Renamed ESP_CONGIG4_TEST to ESP_CONFIG4_TEST
+This series marks the cxl and cxlflash drivers as obsolete/deprecated,
+disables them by default, and prints a warning to users on probe.
 
-Signed-off-by: Siddharth Menon <simeddon@gmail.com>
----
- drivers/scsi/esp_scsi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+CAPI devices have been out of production for some time, and we're not
+aware of any remaining users who are likely to want a modern kernel.
+There's almost certainly some remaining driver bugs and we don't have much
+hardware available to properly test the drivers any more.
 
-diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-index 00cd7c0ccc76..7bb0b69bff24 100644
---- a/drivers/scsi/esp_scsi.h
-+++ b/drivers/scsi/esp_scsi.h
-@@ -80,7 +80,7 @@
- 
- /* ESP config register 4 read-write */
- #define ESP_CONFIG4_BBTE      0x01     /* Back-to-back transfers     (fsc)   */
--#define ESP_CONGIG4_TEST      0x02     /* Transfer counter test mode (fsc)   */
-+#define ESP_CONFIG4_TEST      0x02     /* Transfer counter test mode (fsc)   */
- #define ESP_CONFIG4_RADE      0x04     /* Active negation   (am53c974/fsc)   */
- #define ESP_CONFIG4_RAE       0x08     /* Act. negation REQ/ACK (am53c974)   */
- #define ESP_CONFIG4_PWD       0x20     /* Reduced power feature (am53c974)   */
+This was previously discussed at [0] - I've decided not to try to do
+anything funny with the Kconfig settings as explored in that thread, as it
+seems unlikely to have any significant benefit.
+
+This series will be followed up with patches to remove the drivers and
+associated arch code, which I hope will be merged in the following cycle.
+
+[0] https://patchwork.ozlabs.org/project/linuxppc-dev/patch/20240409031027.41587-2-ajd@linux.ibm.com/
+
+Andrew Donnellan (2):
+  cxl: Deprecate driver
+  scsi/cxlflash: Deprecate driver
+
+ Documentation/ABI/{testing => obsolete}/sysfs-class-cxl | 3 +++
+ MAINTAINERS                                             | 4 ++--
+ drivers/misc/cxl/Kconfig                                | 6 ++++--
+ drivers/misc/cxl/of.c                                   | 2 ++
+ drivers/misc/cxl/pci.c                                  | 2 ++
+ drivers/scsi/cxlflash/Kconfig                           | 6 ++++--
+ drivers/scsi/cxlflash/main.c                            | 2 ++
+ 7 files changed, 19 insertions(+), 6 deletions(-)
+ rename Documentation/ABI/{testing => obsolete}/sysfs-class-cxl (99%)
+
 -- 
-2.39.5
+2.47.1
 
