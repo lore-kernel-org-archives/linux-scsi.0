@@ -1,33 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BBA6C2397B6;
-	Tue, 10 Dec 2024 22:02:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 09BDC23A57E;
+	Tue, 10 Dec 2024 22:02:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733868166; cv=none; b=tM6cCZm1kIfzPzLGpbJmRyfMhD6X0IVqZh3aoZAJss0oazV4CCSCfutbgLvh2zcc39/TW9DZJc7WvyPFq2U69jR9CYnGndYw3snwUV8mswxELZQbO2dCEVLo54OrYKDyP/bL5l4iPmdSVsfrcXydldtolc+k/CWrUEz5EUIGD2I=
+	t=1733868167; cv=none; b=Fg8CGHKIG0TmqGWjxOiM7kGyDqayfAhRbPktHt2DHI5fbwdaBOQ5nwCUQ9MJ+/sx7BpywHywfc+DcQ/KlYx3o0LYnlVjn+zwI2yusNG+qTDgpOl2t6rVKyl3BZM/31IYS0XSFNwlZ1zsTpZBEkE8CtWPlo3Yy6BZ1InC/rs0fcc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733868166; c=relaxed/simple;
-	bh=nniDws7itELJemCoz5vvfn51FZhwQieAw+a8XhFQj+8=;
+	s=arc-20240116; t=1733868167; c=relaxed/simple;
+	bh=yhBY6Ud+Gxvbs17fwA8DjWKu3Cz6TEza0NogR84diwk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=TJ/goJLD8Sa1LETfIA9JLjjvKnPKQErTFOdzQvrRumciCJHsV0I/lhtqfO9LkjQBVv4U7mc+gHMo/tez0A1L7B9X0BxSv1ZYiSDnmWAwe/akqw8JmnB6hb/GUkJXs1kA163OPjGFgnVQhw9sDQLyXYsnt225aQb1boIYPuWYe4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=qVCIV9cf; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=oyr5iD58XhopPQYQ2Xq9NAKfXdiYJEeXKVC5sbUMtkKrz4mp0UgajLxxRxvv+ec4TA3lITR27irKo82NG5C2HVG4VGmaDRzoeK3uG0uTY41O1E1FmRJC7eSCgQ05s4/klqDPPZlZ+4reBwdUt0JGuJWM/4hDenkWsfOzxOEJPq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=svAtqGWU; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="qVCIV9cf"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="svAtqGWU"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E562F204722A;
-	Tue, 10 Dec 2024 14:02:36 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E562F204722A
+	by linux.microsoft.com (Postfix) with ESMTPSA id 9DC932047231;
+	Tue, 10 Dec 2024 14:02:38 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 9DC932047231
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1733868157;
-	bh=c41QzYd4hhSXlS6Xp2pgWqH2EB3T3v3i9Pb37cjnO/o=;
+	s=default; t=1733868158;
+	bh=gKZLAOaJwfAP+6Kmm8Uoact7ay9fLs6b2uIK/ai8VsE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=qVCIV9cfYQFUEbAPN5oHTbVOOCMPtJTRnplX1niaLB3lEuL2MM5F44Gr4RM6lOTTS
-	 WXCIz2JA6aYjhurN56TEZJEQV0OG8AVSPHDGlGJRGWabTGSgGWE+1I7d1M8c078PhJ
-	 k5GeR3RvYMN/zDxLHn2xchQHWB1a1MyycuJ1TrJU=
+	b=svAtqGWUfwwxhkPtOsHM9wFpOe5H7V37CPLpc1efEJB+hZDbAOkD4T5b6sfMzxhZ+
+	 yP7ZIp8mBgs9llSr4qUZT5sBXpDyffL9kReLgTxKKh0F7Rks+AtMLKTRz+ik8N0b4l
+	 Co5R1xYnpZA/XZN3kdMilWWEgRejdEMkmjUvT5B4=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 10 Dec 2024 22:02:34 +0000
-Subject: [PATCH v3 03/19] arm: pxa: Convert timeouts to use
+Date: Tue, 10 Dec 2024 22:02:43 +0000
+Subject: [PATCH v3 12/19] xen/blkback: Convert timeouts to
  secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241210-converge-secs-to-jiffies-v3-3-ddfefd7e9f2a@linux.microsoft.com>
+Message-Id: <20241210-converge-secs-to-jiffies-v3-12-ddfefd7e9f2a@linux.microsoft.com>
 References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 In-Reply-To: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -122,28 +122,22 @@ the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- arch/arm/mach-pxa/sharpsl_pm.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/block/xen-blkback/blkback.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/arm/mach-pxa/sharpsl_pm.c b/arch/arm/mach-pxa/sharpsl_pm.c
-index 0c8d9000df5a6384d615cf231ff986c0c6b71681..dd930e3a61a493293597815782d2ffd36605a700 100644
---- a/arch/arm/mach-pxa/sharpsl_pm.c
-+++ b/arch/arm/mach-pxa/sharpsl_pm.c
-@@ -31,10 +31,10 @@
- /*
-  * Constants
-  */
--#define SHARPSL_CHARGE_ON_TIME_INTERVAL        (msecs_to_jiffies(1*60*1000))  /* 1 min */
--#define SHARPSL_CHARGE_FINISH_TIME             (msecs_to_jiffies(10*60*1000)) /* 10 min */
--#define SHARPSL_BATCHK_TIME                    (msecs_to_jiffies(15*1000))    /* 15 sec */
--#define SHARPSL_BATCHK_TIME_SUSPEND            (60*10)                        /* 10 min */
-+#define SHARPSL_CHARGE_ON_TIME_INTERVAL        (secs_to_jiffies(60))
-+#define SHARPSL_CHARGE_FINISH_TIME             (secs_to_jiffies(10*60))
-+#define SHARPSL_BATCHK_TIME                    (secs_to_jiffies(15))
-+#define SHARPSL_BATCHK_TIME_SUSPEND            (60*10) /* 10 min */
- 
- #define SHARPSL_WAIT_CO_TIME                   15  /* 15 sec */
- #define SHARPSL_WAIT_DISCHARGE_ON              100 /* 100 msec */
+diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
+index 838064593f62b75f3d937c0c041ea78dedbbaf84..a7c2b04ab943de9cbd69b596aad177a0534f7762 100644
+--- a/drivers/block/xen-blkback/blkback.c
++++ b/drivers/block/xen-blkback/blkback.c
+@@ -544,7 +544,7 @@ static void print_stats(struct xen_blkif_ring *ring)
+ 		 ring->st_rd_req, ring->st_wr_req,
+ 		 ring->st_f_req, ring->st_ds_req,
+ 		 ring->persistent_gnt_c, max_pgrants);
+-	ring->st_print = jiffies + msecs_to_jiffies(10 * 1000);
++	ring->st_print = jiffies + secs_to_jiffies(10);
+ 	ring->st_rd_req = 0;
+ 	ring->st_wr_req = 0;
+ 	ring->st_oo_req = 0;
 
 -- 
 2.43.0
