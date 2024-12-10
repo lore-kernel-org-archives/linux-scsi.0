@@ -1,34 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 50FE023FA00;
-	Tue, 10 Dec 2024 22:02:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 33F0823EA65;
+	Tue, 10 Dec 2024 22:02:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733868170; cv=none; b=neI7eMYHLDm27yTPeMITMRA4lPF80qHVyn22UhkLrD0ZsofR2Wskbv5syUorYmiwgoWTIGleijBSji/5tsjkvuUQeovMkvQ9KZLExdbiv1qi7AxjAVKF8ymqoKrn1zQpuFtW7+EP8+qhvzpl7qamOc+eNpp6cNx+biwfSkOTiFQ=
+	t=1733868171; cv=none; b=dyrqJosgAqBUypYYs7k9asIairvli+Hfh9TvBquK/hMMGwCtl+oBMo9U4idiwAbAs4ym1ppYcRKGbiBgxgPi3gpLZEu7by+CX5KeGUsNsn0ufgyYXb2gPUXfEq3UGpt9EWfig89wv5HMWDHPyIfNvs+Vr5w3zaQ6ugLxRLilUmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733868170; c=relaxed/simple;
-	bh=JTtHnl8SBt0ums+WrwYX/WsLEXzsL5v9nTYLAjtwmJg=;
+	s=arc-20240116; t=1733868171; c=relaxed/simple;
+	bh=54d8m4Eim8lD4getFnvzmfrDLMUyr8KHezV0gwHZcPA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Q0x26eebH1j1ImZWacafj1BruSUt4wywVd0fWHCdpToMyLX3GPd7YI4bsJl18kvwg8dvuDM/aSNgPIw4XnMo+nOrZ6EqtTlK4vvktbg5yDOyDYjOVuN1ibusxLckJJ80M62S1bspKSqh7kmsq2BcZ4XRus/eDZ99pxDi3ZoIsgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=k1q7WXOx; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=IMJSOgiQkwoDdgJb5/dhbe7rQXMiGnr6KHTcqrI9FXFd2QKhbcqglOMpRkWwD1qDcvohpoMcvvCxIdOtFx8devNZ1qCFoDo2aA0v7xxFOJuUlYB8IbqC/su8K8kNoyQH0/Hsbr6P8WwKUnP3kYIH/ctfOeEcYSwTyQeNofzxax0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=MyS1GphF; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="k1q7WXOx"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="MyS1GphF"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id A7DE320BCAEA;
-	Tue, 10 Dec 2024 14:02:37 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A7DE320BCAEA
+	by linux.microsoft.com (Postfix) with ESMTPSA id CC9872047232;
+	Tue, 10 Dec 2024 14:02:38 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com CC9872047232
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1733868157;
-	bh=WjXR/e+Bt5J36pfaIEwWXUE8wYei/ElgtSssYeLrLS0=;
+	s=default; t=1733868158;
+	bh=Nu1FTDRwT3eJ8G3TZ1SOaVXDK1brjinK2gy4k85VNBc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=k1q7WXOxk1qYLVn196G3sb8s3XVjdPiH9giyU/vMWpK4NQiBox8ErAeTFxnenHayv
-	 1NLSp5g4CPg/qfYp440BlKTVCcToWDafQQXFfUYhXGaNJP4LCGPckmvvkPFrzQ2ykv
-	 8WoFkMMhJxjwt/2RQ+Oo6g69AunqDN5xYmAoTPZY=
+	b=MyS1GphFvmGr2JHW6tyCf5nlmMH9PAcPu/qJOqDicxYHN3ga/E8mPiUpYdOmKe+08
+	 ESmMPf61fW9R/vd5fEqw2UI0IyMH9O+5zBGiCitLbR/PLOMP+sV+LtAwK3GV6cBnMZ
+	 qMuvwZX6TCbpYuenDC/gzSBNDFt3OVWamZA4/4ys=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 10 Dec 2024 22:02:38 +0000
-Subject: [PATCH v3 07/19] accel/habanalabs: Convert timeouts to
- secs_to_jiffies()
+Date: Tue, 10 Dec 2024 22:02:44 +0000
+Subject: [PATCH v3 13/19] gve: Convert timeouts to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +36,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241210-converge-secs-to-jiffies-v3-7-ddfefd7e9f2a@linux.microsoft.com>
+Message-Id: <20241210-converge-secs-to-jiffies-v3-13-ddfefd7e9f2a@linux.microsoft.com>
 References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 In-Reply-To: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -122,37 +121,33 @@ the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/accel/habanalabs/common/device.c         | 2 +-
- drivers/accel/habanalabs/common/habanalabs_drv.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/ethernet/google/gve/gve_tx_dqo.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/accel/habanalabs/common/device.c b/drivers/accel/habanalabs/common/device.c
-index e0cf3b4343bb081638430f2552ed27431b488ff9..30277ae410d4b742ffb7bddc35498564ff96fe62 100644
---- a/drivers/accel/habanalabs/common/device.c
-+++ b/drivers/accel/habanalabs/common/device.c
-@@ -817,7 +817,7 @@ static void device_hard_reset_pending(struct work_struct *work)
- 		}
+diff --git a/drivers/net/ethernet/google/gve/gve_tx_dqo.c b/drivers/net/ethernet/google/gve/gve_tx_dqo.c
+index f879426cb5523a7e150f363b5e57b9d472b5817c..394debc62268aadf2579f9b516e045cb48287e7c 100644
+--- a/drivers/net/ethernet/google/gve/gve_tx_dqo.c
++++ b/drivers/net/ethernet/google/gve/gve_tx_dqo.c
+@@ -1146,8 +1146,7 @@ static void gve_handle_miss_completion(struct gve_priv *priv,
+ 	/* jiffies can wraparound but time comparisons can handle overflows. */
+ 	pending_packet->timeout_jiffies =
+ 			jiffies +
+-			msecs_to_jiffies(GVE_REINJECT_COMPL_TIMEOUT *
+-					 MSEC_PER_SEC);
++			secs_to_jiffies(GVE_REINJECT_COMPL_TIMEOUT);
+ 	add_to_list(tx, &tx->dqo_compl.miss_completions, pending_packet);
  
- 		queue_delayed_work(hdev->reset_wq, &device_reset_work->reset_work,
--					msecs_to_jiffies(HL_PENDING_RESET_PER_SEC * 1000));
-+					secs_to_jiffies(HL_PENDING_RESET_PER_SEC));
- 	}
- }
- 
-diff --git a/drivers/accel/habanalabs/common/habanalabs_drv.c b/drivers/accel/habanalabs/common/habanalabs_drv.c
-index 5409b2c656c803f6d172dd882711357061f30022..596c52e8aa266bf48e2be45e719adb202604577b 100644
---- a/drivers/accel/habanalabs/common/habanalabs_drv.c
-+++ b/drivers/accel/habanalabs/common/habanalabs_drv.c
-@@ -361,8 +361,7 @@ static void fixup_device_params_per_asic(struct hl_device *hdev, int timeout)
- 		 * a different default timeout for Gaudi
+ 	*bytes += pending_packet->skb->len;
+@@ -1191,8 +1190,7 @@ static void remove_miss_completions(struct gve_priv *priv,
+ 		pending_packet->state = GVE_PACKET_STATE_TIMED_OUT_COMPL;
+ 		pending_packet->timeout_jiffies =
+ 				jiffies +
+-				msecs_to_jiffies(GVE_DEALLOCATE_COMPL_TIMEOUT *
+-						 MSEC_PER_SEC);
++				secs_to_jiffies(GVE_DEALLOCATE_COMPL_TIMEOUT);
+ 		/* Maintain pending packet in another list so the packet can be
+ 		 * unallocated at a later time.
  		 */
- 		if (timeout == HL_DEFAULT_TIMEOUT_LOCKED)
--			hdev->timeout_jiffies = msecs_to_jiffies(GAUDI_DEFAULT_TIMEOUT_LOCKED *
--										MSEC_PER_SEC);
-+			hdev->timeout_jiffies = secs_to_jiffies(GAUDI_DEFAULT_TIMEOUT_LOCKED);
- 
- 		hdev->reset_upon_device_release = 0;
- 		break;
 
 -- 
 2.43.0
