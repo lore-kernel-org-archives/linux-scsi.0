@@ -1,33 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7C3C123A59C;
-	Tue, 10 Dec 2024 22:02:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 946F923EBFD;
+	Tue, 10 Dec 2024 22:02:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733868169; cv=none; b=fgJPmjxqAQJIsbgQUUSAWvZg239KX/wN7WGdYDUnZcGlGDNfrRpNACIvZeTMRUqmAp7HGIU+agq8eIP1nyjUTlDsqyyYOp+vA+tyGY8osgmD4vGbQ7KudirHSemZzHCNGOsbQrkJ8VF9hWVV2A2BbTtpcpxclI/KGXyITrk/uok=
+	t=1733868170; cv=none; b=qHnvSeH21A7oh8VKgGaBoCvajC7ls7Grhlci4HTEOhCcspFeDoo05+/iGVnaa/J3xV6bDnQuGQjVZBZ8K2w8CWSMLeRJSKHvv9/swhKplxgTeWRWEjJjiFfrF0jqTVsOdHl4RE2m3cVTFWuUDcYIAg73FI8qCicTWrjZdaqIuz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733868169; c=relaxed/simple;
-	bh=nACRMoll1gJ79dVFouA4XmHlSJk2izLB4wuQTmJ0fMY=;
+	s=arc-20240116; t=1733868170; c=relaxed/simple;
+	bh=xaA3eWpi0YmCimYR4Gvp6HZamwzn4YOA1sZL0Htcpms=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SCQkoqcloEo6DOw2fjXkSQxW9PA3MkELtBskG5UzWGfh+gCWARiUW6vQer8MFvzpcZMhpxIupMX24FnABJUGuIzjsEVxiaNqCCCEAnvjK7w8n3mD7IrAscE0ch17xO+wny1hLzZnvFK+QSMf2xZuRE/jFsgQ+W8owWPkuJgX87g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=f8FLrazo; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=W2uNqzCxUquDqoB2AQ7hdsyjypvAwN1EozNgPUw0HabUp/cbhPx3KgdT9sxC7kFf0+sv/I0k/j4M5GT0cS6VeTuL8AmSFGqwJKZZuelsbYT+aBebEAKcF4SmLrmDvUpqqTvaD1rtxS+Ad0WGAFJGuY8IxPyPWAX5Ufy1ZCctPE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=WbJnm80T; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="f8FLrazo"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="WbJnm80T"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 40433204722F;
-	Tue, 10 Dec 2024 14:02:38 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 40433204722F
+	by linux.microsoft.com (Postfix) with ESMTPSA id 05ECB20ACD66;
+	Tue, 10 Dec 2024 14:02:39 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 05ECB20ACD66
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1733868158;
-	bh=BGnsC+198VTSc2YUOR+tnnzodlQEmbpaf1xRkHMeOLA=;
+	s=default; t=1733868159;
+	bh=VvjxiqfKxbyi9uGzXsW8xZpGKBVs2F3SKydD57RgoIM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=f8FLrazoOSnG7X8aDWVI3nVNlHmQntetz0EU8Jiq9ArRSLgklxjGdYHhwJFkuGOqx
-	 IH/VjuOQp54aRZNV03h5piA8Q49loXnKOX2ThzuLLFf9IwCIw5oEVNJs8TgQ/6gM17
-	 zOuBTvw2xYfRYO0jrQtMw2wpWhKIeaajYB7zt3gs=
+	b=WbJnm80TvYnXykJB9DgMtqoZ50ou8AhS1efFy3dCoV03536YA3dJhXmL0IMKChnpw
+	 CujNWFZtiMOuyACXPjtJ3tU0PrbAysQ8+2RTG/TU5ekLFjjJ/pUAEWKon7ssztFoiO
+	 F9frqglM8e2VebaFFRHMBRJ+sqXulRejbFKVUSag=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 10 Dec 2024 22:02:41 +0000
-Subject: [PATCH v3 10/19] scsi: arcmsr: Convert timeouts to
+Date: Tue, 10 Dec 2024 22:02:45 +0000
+Subject: [PATCH v3 14/19] wifi: ath11k: Convert timeouts to
  secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241210-converge-secs-to-jiffies-v3-10-ddfefd7e9f2a@linux.microsoft.com>
+Message-Id: <20241210-converge-secs-to-jiffies-v3-14-ddfefd7e9f2a@linux.microsoft.com>
 References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 In-Reply-To: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -100,7 +100,8 @@ Cc: netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
  live-patching@vger.kernel.org, linux-sound@vger.kernel.org, 
  oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org, 
  Anna-Maria Behnsen <anna-maria@linutronix.de>, 
- Easwar Hariharan <eahariha@linux.microsoft.com>
+ Easwar Hariharan <eahariha@linux.microsoft.com>, 
+ Jeff Johnson <quic_jjohnson@quicinc.com>
 X-Mailer: b4 0.14.2
 
 Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
@@ -120,23 +121,24 @@ the following Coccinelle rules:
 - msecs_to_jiffies(C * MSEC_PER_SEC)
 + secs_to_jiffies(C)
 
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 2 +-
+ drivers/net/wireless/ath/ath11k/debugfs.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 6a32e3e0d516881fd87a56a394607930582644ee..fe7de7705b7e2c84324f1a493f7825343d6476c6 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1045,7 +1045,7 @@ static void arcmsr_init_get_devmap_timer(struct AdapterControlBlock *pacb)
- static void arcmsr_init_set_datetime_timer(struct AdapterControlBlock *pacb)
- {
- 	timer_setup(&pacb->refresh_timer, arcmsr_set_iop_datetime, 0);
--	pacb->refresh_timer.expires = jiffies + msecs_to_jiffies(60 * 1000);
-+	pacb->refresh_timer.expires = jiffies + secs_to_jiffies(60);
- 	add_timer(&pacb->refresh_timer);
- }
+diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
+index 57281a135dd7fa6b8610636f47873c8bba21053c..bf192529e3fe26a91e72105a77b4c6f849b905ec 100644
+--- a/drivers/net/wireless/ath/ath11k/debugfs.c
++++ b/drivers/net/wireless/ath/ath11k/debugfs.c
+@@ -178,7 +178,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
+ 	 * received 'update stats' event, we keep a 3 seconds timeout in case,
+ 	 * fw_stats_done is not marked yet
+ 	 */
+-	timeout = jiffies + msecs_to_jiffies(3 * 1000);
++	timeout = jiffies + secs_to_jiffies(3);
+ 
+ 	ath11k_debugfs_fw_stats_reset(ar);
  
 
 -- 
