@@ -1,59 +1,86 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B0EC2080C6;
-	Tue, 10 Dec 2024 10:58:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9DE78F24
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2024 11:30:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733828316; cv=none; b=NBsQtVd0bOeWcmy6Rgqar4sO9DrnQKuoC9OXhz71N3teorLORsRPP7di3QqrcLyaJoJdn/vRxA83FU3eE2JVhm6cJk5rPVPPwm7/uhpiRkqPdDRJJdFxOw0JkRsFGOSYzUiNFqLmAwO4JDZBL6gbi5PI1tjlDXCEruIU8kQa+AQ=
+	t=1733830241; cv=none; b=S7Oa2mUw5YFGebMNJIvHMyYSFawggWRBvPaLYG8Vj78zRnu6YRP8yj3ReStuz+DnAGv+nxsSAy9IFLtfRx+D0fJI28sv2vn3mYpf550lOM/xHFCQxZ1pE/v13CtguEFV3QKlIu1/syce0vp41AiIO5ym3NkJ+/B2sUEdBBfTGNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733828316; c=relaxed/simple;
-	bh=d9G4uh5kXI0bl5+4qhmaObA8jCmdOFmW5rrC+dcx+lM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KmsAC1MFui3Jp5tY9twB7Rx4qfyOw/lVSwS4eDSgEqesvd7+VF6Fn8CM7r6w31HqNk5KSJHSmAW//HO8iO+dmOQ2v+5Ro7p/jKd1XeANrhontM3uLUSkXQBUXsnCM6cHu0XixQ6YKGTruG8wLxAkiKAX7z9DAB7qof/3ZCa0P3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B1E4368CFE; Tue, 10 Dec 2024 11:58:22 +0100 (CET)
-Date: Tue, 10 Dec 2024 11:58:22 +0100
-From: hch <hch@lst.de>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: hch <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nitesh Shetty <nj.shetty@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Javier Gonzalez <javier.gonz@samsung.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Keith Busch <kbusch@kernel.org>, Keith Busch <kbusch@meta.com>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"joshi.k@samsung.com" <joshi.k@samsung.com>
-Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
-Message-ID: <20241210105822.GA3123@lst.de>
-References: <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com> <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org> <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com> <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org> <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com> <CGME20241205081138epcas5p2a47090e70c3cf19e562f63cd9fc495d1@epcas5p2.samsung.com> <20241205080342.7gccjmyqydt2hb7z@ubuntu> <yq1a5d9op6p.fsf@ca-mkp.ca.oracle.com> <20241210071253.GA19956@lst.de> <2a272dbe-a90a-4531-b6a2-ee7c4c536233@wdc.com>
+	s=arc-20240116; t=1733830241; c=relaxed/simple;
+	bh=KEVQsC3T6+iAqrQ7FLyL+SB2OiYbN3HNw6W15G36LSI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NqSZ9gZozddQdaDFoJ5aOIlfd6b+AtHLHbYl0wirOMjkZJnGbj48SfYfBkZ5l2f1GIeNWpDotFmGW5j0Tmiat92C58qBTcz1yUNOG4tsjIpaNSlgo7svLbbj+L2JztwbbAa+jDmJi7kP9vJ5CprJjYOgIhghj/qayA18IjXbfGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DJIaiegg; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DJIaiegg"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1733830239; x=1765366239;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=KEVQsC3T6+iAqrQ7FLyL+SB2OiYbN3HNw6W15G36LSI=;
+  b=DJIaieggF1td2e9CKFpRIA0BJMn11lh2aTKDfUtijk6OByLhVtlRPe/f
+   b+qv2qdlGp7ki17eDervSY/UwrPvoG29/3VGJPkkh6qkYDRzKnBbnOTNa
+   Mu7vl73qGl6egNSRHNokoGVy1Gp+o50uRHsWRNF3TG5HTCEK3JhunU+Y2
+   d211mbzkS/nPZatOYBFzgqfGKYuCSGdbO6vxEAwcaYVpVKT8Euu2mm6Hx
+   rF5RwJaEurPZ1SNd4USS1LecesMJxpXbU6iIlj7PBPBAPVbwoVVmmmU/u
+   usDxCiJd654JF1lA4nIudCatkudzEh10ErYLZTIjXE3NYY4juMYLTLxEX
+   Q==;
+X-CSE-ConnectionGUID: 78dDRWOGSsuI4CCBr1Bvfg==
+X-CSE-MsgGUID: cd+xzBDWTrGjaW/pWSYt8A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11278"; a="45550808"
+X-IronPort-AV: E=Sophos;i="6.12,214,1728975600"; 
+   d="scan'208";a="45550808"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2024 03:30:39 -0800
+X-CSE-ConnectionGUID: 0c7Woq/lSj+n8th4HleUYg==
+X-CSE-MsgGUID: 3jdk2KuQT16w3vIrIdNPyg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,222,1728975600"; 
+   d="scan'208";a="95259207"
+Received: from unknown (HELO apaszkie-mobl2.igk.intel.com) ([10.217.181.53])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2024 03:30:38 -0800
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
+Subject: [PATCH] MAINTAINERS: remove myself as isci driver maintainer
+Date: Tue, 10 Dec 2024 12:30:28 +0100
+Message-ID: <20241210113028.13810-1-artur.paszkiewicz@intel.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <2a272dbe-a90a-4531-b6a2-ee7c4c536233@wdc.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Dec 10, 2024 at 08:05:31AM +0000, Johannes Thumshirn wrote:
-> > Generally agreeing with all you said, but do we actually have any
-> > serious use case for cross-LU copies?  They just seem incredibly
-> > complex any not all that useful.
-> 
-> One use case I can think of is (again) btrfs balance (GC, convert, etc) 
-> on a multi drive filesystem. BUT this use case is something that can 
-> just use the fallback read-write path as it is doing now.
+I'm leaving Intel and I could not find a new maintainer for this so mark
+it as orphan.
 
-Who uses multi-device file systems on multiple LUs of the same SCSI
-target ơr multiple namespaces on the same nvme subsystem?
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ MAINTAINERS | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 17daa9ee9384..2d5c2d1057f2 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11442,9 +11442,8 @@ F:	drivers/mfd/intel_pmc_bxt.c
+ F:	include/linux/mfd/intel_pmc_bxt.h
+ 
+ INTEL C600 SERIES SAS CONTROLLER DRIVER
+-M:	Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+ L:	linux-scsi@vger.kernel.org
+-S:	Supported
++S:	Orphan
+ T:	git git://git.code.sf.net/p/intel-sas/isci
+ F:	drivers/scsi/isci/
+ 
+-- 
+2.43.0
+
