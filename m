@@ -1,47 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE42824B258;
-	Wed, 11 Dec 2024 18:53:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE37252489;
+	Wed, 11 Dec 2024 18:53:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733943203; cv=none; b=ILezabA/luYAQKdPUL+0H4lQyVp4Tvi/idQs8xWJh8dUL4/zck/yPJi2/LfPMgbVb+uUYmKkdyUhTEhTzTQBLM/vSTWvjI4PwzZcKabO0tfPzIaFi6xku3z+SLANo6UXhyYXtZHRVElU+IHC3xq1kEF40AXZ/c6oO8TpyDwmboc=
+	t=1733943217; cv=none; b=JZaZP5jqH8w/07NqmS8yaGDN7TjGtkubUeJjYAr0gQzUQA4YZIqFXsBUYeVWEsncaGqu0Vx4rnpshCen/w8HAg0yWuA77ka1EDN/domitB+7YqNgTVm8ns6xo+43l/gUceMx2WRmKpTMC9bATctKItKpGfuDnHIvCjvTNLasibo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733943203; c=relaxed/simple;
-	bh=CNz9k/uT+0M1sEaOYVeoWRLnLqWi4vuVQfBExRs6Tho=;
+	s=arc-20240116; t=1733943217; c=relaxed/simple;
+	bh=BAv85C6e4PYq5+5qthT6t4YBDo4rviPq9j45B2fTOw0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PGHAMv48cFwm5jbZZqGgM4Cvx3SxG/KFH+Eli1KEPM6XSC8twWPI6x2BOkhIFRsAZUrYrvkzKKMclh+AgksnbkJOPjgNfKBHPTaQGjQPbPnJnk/OXTuDRLWJxx0t7RRUtgmV5m/XkumdanriKE/pVOOsWI6uqZ4WL/B7KI/IKaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tVVVPIhy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IUST3lVhZI0bDYXDOKha1mqZ0jfKI1IZH7maInlshfkbh430HdFjSaiCON7nPMUgWadXmkNVLOArwyr7N0zS3F/GsiGRNGYYR3HmBB289MMDVdo/WScOQpjnBSoPDSs4XM8YZddTGn4JdAHsd4JBoqZbV0iiIBuK75fzBgvWXzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZyzesyCL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tVVVPIhy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB4BDC4CEDD;
-	Wed, 11 Dec 2024 18:53:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZyzesyCL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 162F9C4CED2;
+	Wed, 11 Dec 2024 18:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733943202;
-	bh=CNz9k/uT+0M1sEaOYVeoWRLnLqWi4vuVQfBExRs6Tho=;
+	s=k20201202; t=1733943217;
+	bh=BAv85C6e4PYq5+5qthT6t4YBDo4rviPq9j45B2fTOw0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=tVVVPIhyqJifhGB55qglJHiPDW67JYqh5y4+GhAW3k8iEPRbxvCPv1NoOXGQzeyo5
-	 pZcOKszv4ykGyfDoWLoJzQDA78Spj0oD33xzKAY/WXH669zD14oGogYJHb2E01utaY
-	 m/3X2lQHQUZm6HjVRZX2Kq4/+KLZGDsTO2UYL152kjnZRKuJvlLuik1Jb3c9AbrsTV
-	 A0jy+ryAgQYRbt7p5gN4AwcoKkIQqjL8rpK56lbCi9UbDrC0NHy63XeIxqkPotD8ct
-	 oscDJzEEGq5v/IYTd2HTmQI25ruPemNhI1xDZRuGhB90nZwc8F06shLNJTm3vz4KDX
-	 +GsLeZfN/FCyg==
+	b=ZyzesyCLoN6+zI3PzV0dd/ZzzidZ9kzVWYwVIDL5lVBZoJj10IfLK7S9yDP8sO41q
+	 C7jfOfYXCYhR6TTWRGQEtwLRAqAADG8ZpE9tS8C/1TbrWxyuVQt3gnnSQ3Sgxe9KqA
+	 xphx+mM36MUVTb30bD21RstdGiIHyjqYUw49zln3RE5vf9j+3LZqG5gD44QQDy/3QW
+	 ypycKUbsjK3R9V4VDWxy2zpIt+HbX/EznSELONWZu1MuwvG7WjRZsjObN9tY3Ui686
+	 byXnyJBVHKfspFHHapvKz4hGC5qq0SRsqTyON9YZ5ssqFBurCdKf6d6W4eRZndNOoS
+	 tHJ8m6nvApMkg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Tomas Henzl <thenzl@redhat.com>,
-	Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	shivasharan.srikanteshwara@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
-	megaraidlinux.pdl@broadcom.com,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 03/15] scsi: megaraid_sas: Fix for a potential deadlock
-Date: Wed, 11 Dec 2024 13:52:55 -0500
-Message-ID: <20241211185316.3842543-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 10/15] scsi: mpt3sas: Diag-Reset when Doorbell-In-Use bit is set during driver load time
+Date: Wed, 11 Dec 2024 13:53:02 -0500
+Message-ID: <20241211185316.3842543-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241211185316.3842543-1-sashal@kernel.org>
 References: <20241211185316.3842543-1-sashal@kernel.org>
@@ -56,46 +55,50 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.119
 Content-Transfer-Encoding: 8bit
 
-From: Tomas Henzl <thenzl@redhat.com>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 50740f4dc78b41dec7c8e39772619d5ba841ddd7 ]
+[ Upstream commit 3f5eb062e8aa335643181c480e6c590c6cedfd22 ]
 
-This fixes a 'possible circular locking dependency detected' warning
-      CPU0                    CPU1
-      ----                    ----
- lock(&instance->reset_mutex);
-                              lock(&shost->scan_mutex);
-                              lock(&instance->reset_mutex);
- lock(&shost->scan_mutex);
+Issue a Diag-Reset when the "Doorbell-In-Use" bit is set during the
+driver load/initialization.
 
-Fix this by temporarily releasing the reset_mutex.
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Link: https://lore.kernel.org/r/20240923174833.45345-1-thenzl@redhat.com
-Acked-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Link: https://lore.kernel.org/r/20241110173341.11595-2-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 37208bc08c667..f4b32ce45ce09 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -8905,8 +8905,11 @@ megasas_aen_polling(struct work_struct *work)
- 						   (ld_target_id / MEGASAS_MAX_DEV_PER_CHANNEL),
- 						   (ld_target_id % MEGASAS_MAX_DEV_PER_CHANNEL),
- 						   0);
--			if (sdev1)
-+			if (sdev1) {
-+				mutex_unlock(&instance->reset_mutex);
- 				megasas_remove_scsi_device(sdev1);
-+				mutex_lock(&instance->reset_mutex);
-+			}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 03fcaf7359391..5c13358416c42 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -7061,11 +7061,12 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+ 	int i;
+ 	u8 failed;
+ 	__le32 *mfp;
++	int ret_val;
  
- 			event_type = SCAN_VD_CHANNEL;
- 			break;
+ 	/* make sure doorbell is not in use */
+ 	if ((ioc->base_readl_ext_retry(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
+ 		ioc_err(ioc, "doorbell is in use (line=%d)\n", __LINE__);
+-		return -EFAULT;
++		goto doorbell_diag_reset;
+ 	}
+ 
+ 	/* clear pending doorbell interrupts from previous state changes */
+@@ -7155,6 +7156,10 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
+ 			    le32_to_cpu(mfp[i]));
+ 	}
+ 	return 0;
++
++doorbell_diag_reset:
++	ret_val = _base_diag_reset(ioc);
++	return ret_val;
+ }
+ 
+ /**
 -- 
 2.43.0
 
