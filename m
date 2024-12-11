@@ -1,87 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB4F1DC999;
-	Wed, 11 Dec 2024 15:40:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA9F1FECB6;
+	Wed, 11 Dec 2024 17:27:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733931654; cv=none; b=UlcqMBRC6e3fypEmCOVJTZB6kRD9Qg43f0gS3AaKNNJG9uM6DXvhM/lW7I0RF/G7chbUWskXVLINJ7XBi9TiZB6vxTE97P036UBo1+d5sJeEw1W3acpgvOl7ebn9DMN/A/9c+e3i559Qn0ueIzfIlrcb+knamXHHekXhd1qjM5Y=
+	t=1733938049; cv=none; b=EZZ+3HBvvSs7MlvLquVmIO66jtk9xJJTSy3Q9P0djAjJg378sLKxIRg3JbrLzAXQdcT4slPDUta7NrKR6c99gIoWNeUGR5r4YfOpdLkZLX0ifFnmbhDX3g6v3VWECjilP0T9VvFb3oYjfzK6jaZW1wn/EDCh5Afk2l8HQQqgno8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733931654; c=relaxed/simple;
-	bh=8evu9K6E5GzQx4Ei0JNqaBXa1Egs/UTLupfziVAOhhQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RTCC9vai6fK9ZV0P2J9lZmOV+7kQo6C1eBr55acxNiL9NoITJi7HsQx8YkGR1VOO7ZxKrrgbkK5wn8/Kb8ax1MuawyRMZpbL/A+jgknWnbxsW8IwPHEgTogH1tFvpHUmHD4VmW1vWsdhSEZcSNTc1AXsFrhFPolARaPU/daS/Ao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s6ntzut6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733938049; c=relaxed/simple;
+	bh=uerRqakrwvO4G34fxy4mWJpHc8Jzm+HfcVjh/HslRvk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Lh66R23qBQiG1bmMndl5vywrupKsSCqTMrD7pvNbYULN+hRH9i47VX0lC5jK6UtSHF39xn5BWuU4Czi/tx88abI6lL/WnFe5Dg2DYVjkaoVS8OSC15kvET6jNbOhPZXn/mnrj6hqf1nS8ouxMiVeTiY5qbwkmovX/G2UkpeB6UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Jn6+ZsKH; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s6ntzut6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8D29C4CED4;
-	Wed, 11 Dec 2024 15:40:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733931653;
-	bh=8evu9K6E5GzQx4Ei0JNqaBXa1Egs/UTLupfziVAOhhQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=s6ntzut6wKAb9D/XcIGpxhpsKDJzAv/j3KZV7TRqVGndMQjodIhRFnHQERA+IENmZ
-	 hjVJhkPax9/SXwdtxtOLfqRkm7WnVw2Bmx+KZNYKd4rf6i+ZIcT1ZI/jVCuHN9+dBk
-	 twwDt7m+ugypNlkEREUt0AWI4+dad48ETFZDxAFQRQ/7NCVf0shpRU01PiaO7V3iZx
-	 7DN+aZsQNj5XIPkQVOqlRvld+dMcIJ8M1hIGUnrmI4tZ7YhVH77SPUoUuSwHe/qpTu
-	 9Ax+DfTVGI0I1TxMlCYLTwCDgdkR38P6O9JtwxqryUhLK+uue61bP00J3a0PHKeGlF
-	 CdfoUrYw9xV1g==
-From: Frederic Weisbecker <frederic@kernel.org>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Frederic Weisbecker <frederic@kernel.org>,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 05/19] scsi: qedi: Use kthread_create_on_cpu()
-Date: Wed, 11 Dec 2024 16:40:18 +0100
-Message-ID: <20241211154035.75565-6-frederic@kernel.org>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20241211154035.75565-1-frederic@kernel.org>
-References: <20241211154035.75565-1-frederic@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Jn6+ZsKH"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Y7jGQ6jb4z6Cr2Gt;
+	Wed, 11 Dec 2024 17:27:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1733938040; x=1736530041; bh=gmWh5tFfs7soVBLFuSO/qLnX
+	u+8CTMZDvRiQMaBPqDA=; b=Jn6+ZsKHbREar6WFe1GZ0ByPNPgeHh1eoVH5k3Bf
+	mH/A5t7lCLVsuWak0fNQXlIKOfzO8126Uzjxaba+goDPEjzFT9AjaBJtIULKzqe0
+	9IWyuEoe9yd53BI+GN7KPYPmZUQw52b/ofwJJtzgSSYTRROAPtiBuqxT82oaIDf0
+	HpAedfiM8HBcDPijE4nqorCERsOU0bxylbNfd0qb4M7fHn2k9LptP8qKw51lM4H9
+	G1dmjVSE85gGToRztGnGgtDPO/kpi57nFluPjq0j5JEQ0KcPP4ChqlvrsRIflYeH
+	ORJIpf7HL5DSubgUBgwRZ2ik7TSML8T1sqIGrppT0jkkhA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 7pH0caqGSLM7; Wed, 11 Dec 2024 17:27:20 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Y7jGC4KWJz6Cr2Fp;
+	Wed, 11 Dec 2024 17:27:14 +0000 (UTC)
+Message-ID: <2f260b23-006a-4ea2-a508-39f2bace1bec@acm.org>
+Date: Wed, 11 Dec 2024 09:27:13 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
+To: Nitesh Shetty <nj.shetty@samsung.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Javier Gonzalez <javier.gonz@samsung.com>,
+ Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+ "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+ "joshi.k@samsung.com" <joshi.k@samsung.com>
+References: <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
+ <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
+ <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org>
+ <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com>
+ <CGME20241205081138epcas5p2a47090e70c3cf19e562f63cd9fc495d1@epcas5p2.samsung.com>
+ <20241205080342.7gccjmyqydt2hb7z@ubuntu>
+ <yq1a5d9op6p.fsf@ca-mkp.ca.oracle.com>
+ <d9cc57b5-d998-4896-b5ec-efa5fa06d5a5@acm.org>
+ <yq1frmwl1zf.fsf@ca-mkp.ca.oracle.com>
+ <7d06cc60-7640-4431-a1cb-043a959e2ff3@acm.org>
+ <20241211093549.n6dvl6c6xp4blccd@ubuntu>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241211093549.n6dvl6c6xp4blccd@ubuntu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Use the proper API instead of open coding it.
+On 12/11/24 1:36 AM, Nitesh Shetty wrote:
+> Block layer can allocate a buffer and send this as part of copy
+> operation.
 
-However it looks like qedi_percpu_io_thread() kthread could be
-replaced by the use of a high prio workqueue instead.
+The block layer can only do that if it knows how large the buffer should
+be. Or in other words, if knowledge of a SCSI buffer size is embedded in
+the block layer. That doesn't sound ideal to me.
 
-Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
----
- drivers/scsi/qedi/qedi_main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> This scheme will require sequential submission of SRC and DST
+> bio's. This might increase in latency, but allows to have simpler design.
+> Main use case for copy is GC, which is mostly a background operation.
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 628d59dda20c..f2bb49019617 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1961,13 +1961,11 @@ static int qedi_cpu_online(unsigned int cpu)
- 	struct qedi_percpu_s *p = this_cpu_ptr(&qedi_percpu);
- 	struct task_struct *thread;
- 
--	thread = kthread_create_on_node(qedi_percpu_io_thread, (void *)p,
--					cpu_to_node(cpu),
--					"qedi_thread/%d", cpu);
-+	thread = kthread_create_on_cpu(qedi_percpu_io_thread, (void *)p,
-+				       cpu, "qedi_thread/%d");
- 	if (IS_ERR(thread))
- 		return PTR_ERR(thread);
- 
--	kthread_bind(thread, cpu);
- 	p->iothread = thread;
- 	wake_up_process(thread);
- 	return 0;
--- 
-2.46.0
+I still prefer a single REQ_OP_COPY operation instead of separate
+REQ_OP_COPY_SRC and REQ_OP_COPY_DST operations. While this will require
+additional work in the SCSI disk (sd) driver (implementation of a state
+machine), it prevents that any details about the SCSI copy offloading
+approach have to be known by the block layer. Even if copy offloading
+would be implemented as two operations (REQ_OP_COPY_SRC and 
+REQ_OP_COPY_DST), a state machine is required anyway in the SCSI disk
+driver because REQ_OP_COPY_SRC would have to be translated into two SCSI
+commands (POPULATE TOKEN + RECEIVE ROD TOKEN INFORMATION).
+
+Thanks,
+
+Bart.
 
