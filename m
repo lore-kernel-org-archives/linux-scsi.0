@@ -1,115 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F7D195;
-	Wed, 11 Dec 2024 03:01:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1DCB2451C0;
+	Wed, 11 Dec 2024 04:08:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733886098; cv=none; b=ZQpQk5iefKYSH4lEV1e7TEkKZp4ymeRcFYp6v3PymiIrw7XdbgWvaeuzhupCMlC/jvuNZ9HB/QA7sZZk7+NqjT9MhQFjF8HcNsiWV+xqaveFHWb9FhpBtLbMvYvRqJQsUL8RUzrHuyBBVPFsjlNIwxt1qifUHDV1to0JvT5rWk8=
+	t=1733890087; cv=none; b=L1/NqGQKSMy/78FkaHsltz3Thphs/0rH9Hg1yivfmzMzCqV6OGuDhu1WroUmFwHBRFyQNJ1heV/UXdQlGBN7wN6Gb8F5pTGJzWJ2UhY6mWmEcGOqC8TuanmdAKW0XztDnSQksr0bMkbFJF/3VqbKau2tOL1XLpRnqjk6tmEudCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733886098; c=relaxed/simple;
-	bh=08Gv+rg+muCd4b+QXxh4lSp3ciy5sU1jyZsQ2rNGCQs=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qexHXYE5iMTL/9RBIRlxKnZ36TRzcGRdBz+8OOPsDeI9VH9lqz7NMWj0lylpamMDnulUoJZWydJfCMilRXrFweN0gC/1fGUGBkIBlD1ypvHjxhJqYjvGzuLEzLPmbV1ltTRWfThEiCoLVD8yfR3M3AOOYe5MCSNztrViL46LtHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EmcE4/lj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733890087; c=relaxed/simple;
+	bh=7/3hmNoQ4LWXf/liq0trPhtYhdVp9Bh0JJE/pGvZqI0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XkXdcnpFFnQ9gkxJDKhM1i6wbD+LpTshddOyY61G6CaZ4hqk3ThkB3lzCnilR3uAb4yq6pQ8wDQ2WHPRVCRT6mXrrUnDtk7A6Q5z3oe7HEQfjRjttbQieoGHAGjW27XkeiE9C6V8O/fkjcCkXDfCFNJ052RH4dYQsKJ+1wUDBJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m/UfDmLE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EmcE4/lj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097C6C4CED6;
-	Wed, 11 Dec 2024 03:01:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m/UfDmLE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 373A1C4CED2;
+	Wed, 11 Dec 2024 04:08:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733886097;
-	bh=08Gv+rg+muCd4b+QXxh4lSp3ciy5sU1jyZsQ2rNGCQs=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=EmcE4/ljfCRY3RJanBjxtPhT62/nJjxk7ELO0ZGNbc2mhHWfd391knNb2HOuZGhSx
-	 1e9fTFNcZABywOnqpoRKAEZbgjlix3qU4Qd2lcLQX3AgcLKJ4vrIgfKpyVm37bJMAM
-	 wiwQScSc5AP2YRJa64ls0Q4PrRlmeIvzeFuzlqiXSS0E4b38+g1f5LgHQjP+e4bxxF
-	 EWfJBUd/sx64BPsSVOGtlrnzPfoqLHGXyBoBKFxBYI5CCDVF2OYRXR0K/LPrQzVMJu
-	 IZkEdyC65OkC/1hbUFTVO1xckc1Src7rjo3nhww+SaTgc+dkPD8qefo1Jh9IYKWx27
-	 gFWQHpinQ+82w==
-Date: Tue, 10 Dec 2024 19:01:33 -0800
-From: Jakub Kicinski <kuba@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Easwar Hariharan <eahariha@linux.microsoft.com>, Jeff Johnson
- <jeff.johnson@oss.qualcomm.com>, Pablo Neira Ayuso <pablo@netfilter.org>,
- Jozsef Kadlecsik <kadlec@netfilter.org>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Paolo Abeni
- <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Julia Lawall
- <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, Daniel Mack
- <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert
- Jarzmik <robert.jarzmik@free.fr>, Russell King <linux@armlinux.org.uk>,
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
- Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger
- <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, Ofir
- Bitton <obitton@habana.ai>, Oded Gabbay <ogabbay@kernel.org>, Lucas De
- Marchi <lucas.demarchi@intel.com>, Thomas =?UTF-8?B?SGVsbHN0csO2bQ==?=
- <thomas.hellstrom@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
- <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie
- <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Jeroen de Borst
- <jeroendb@google.com>, Praveen Kaligineedi <pkaligineedi@google.com>,
- Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
- James Smart <james.smart@broadcom.com>, Dick Kennedy
- <dick.kennedy@broadcom.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Roger Pau =?UTF-8?B?TW9ubsOp?=
- <roger.pau@citrix.com>, Jens Axboe <axboe@kernel.dk>, Kalle Valo
- <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, Catalin Marinas
- <catalin.marinas@arm.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, Marcel
- Holtmann <marcel@holtmann.org>, Johan Hedberg <johan.hedberg@gmail.com>,
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Florian Fainelli
- <florian.fainelli@broadcom.com>, Ray Jui <rjui@broadcom.com>, Scott Branden
- <sbranden@broadcom.com>, Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Xiubo Li <xiubli@redhat.com>, Ilya
- Dryomov <idryomov@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, Jiri
- Kosina <jikos@kernel.org>, Miroslav Benes <mbenes@suse.cz>, Petr Mladek
- <pmladek@suse.com>, Joe Lawrence <joe.lawrence@redhat.com>, Jaroslav Kysela
- <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Louis Peens
- <louis.peens@corigine.com>, Michael Ellerman <mpe@ellerman.id.au>, Nicholas
- Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>,
- Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan
- <maddy@linux.ibm.com>, netfilter-devel@vger.kernel.org,
- coreteam@netfilter.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org, cocci@inria.fr,
- linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org,
- dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
- linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, linux-mm@kvack.org,
- linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev,
- linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org,
- live-patching@vger.kernel.org, linux-sound@vger.kernel.org,
- oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org, Anna-Maria Behnsen
- <anna-maria@linutronix.de>
-Subject: Re: [PATCH v3 00/19] Converge on using secs_to_jiffies()
-Message-ID: <20241210190133.44818a76@kernel.org>
-In-Reply-To: <20241210185040.96c81a25f098f59191223c9f@linux-foundation.org>
-References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
-	<315e9178-5b10-4de0-bdcf-7243e0e355bb@oss.qualcomm.com>
-	<20241210153604.cf99699f264f12740ffce5c7@linux-foundation.org>
-	<20241210173548.5d32efe0@kernel.org>
-	<20241210183130.81111d05148c41278a299aad@linux-foundation.org>
-	<20241210184129.41aaf371@kernel.org>
-	<20241210185040.96c81a25f098f59191223c9f@linux-foundation.org>
+	s=k20201202; t=1733890086;
+	bh=7/3hmNoQ4LWXf/liq0trPhtYhdVp9Bh0JJE/pGvZqI0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=m/UfDmLE/Egvp+aU2S6OtaAiPyALgOouiw8E+uIWgCmIcPR4C2wjS73sbWaCLIIRt
+	 gWn+RRFTfqC4ombZ1LaTAOmlr/qYUJepIDpqF1zfy3lkHpnd0LFqNKnpsIdlwoNV1q
+	 torokdsotdOIaYmZoXSRFVu40kfdYFGDnY4JzzhDcn517OIX8RyHltAn5FUn2dgJh0
+	 90Ev9VNXFa6tQ/jVAAgQ42wn9SV0Bz8UhMHM51OIXl55ihfMyWYmRPVVpfr5MsQpQp
+	 XtdWAqu4dNI6qKMz3dGzSWvaISGjEYAGwulQJRy4k64T+fzqLVloAEjgQP4OdvMwNj
+	 KSOqYl/OYF4LQ==
+Message-ID: <6ff84297-d133-48d4-b847-807a75cab0f6@kernel.org>
+Date: Wed, 11 Dec 2024 13:07:38 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
+To: Bart Van Assche <bvanassche@acm.org>, hch <hch@lst.de>,
+ Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nitesh Shetty <nj.shetty@samsung.com>,
+ Javier Gonzalez <javier.gonz@samsung.com>,
+ Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
+ Keith Busch <kbusch@meta.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+ "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+ "joshi.k@samsung.com" <joshi.k@samsung.com>
+References: <yq1ed38roc9.fsf@ca-mkp.ca.oracle.com>
+ <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
+ <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
+ <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org>
+ <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com>
+ <CGME20241205081138epcas5p2a47090e70c3cf19e562f63cd9fc495d1@epcas5p2.samsung.com>
+ <20241205080342.7gccjmyqydt2hb7z@ubuntu>
+ <yq1a5d9op6p.fsf@ca-mkp.ca.oracle.com> <20241210071253.GA19956@lst.de>
+ <2a272dbe-a90a-4531-b6a2-ee7c4c536233@wdc.com> <20241210105822.GA3123@lst.de>
+ <a10da3f8-9a71-4794-9473-95385ac4e59f@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <a10da3f8-9a71-4794-9473-95385ac4e59f@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, 10 Dec 2024 18:50:40 -0800 Andrew Morton wrote:
-> > > Very unlikely, and any such conflict will be trivial.  
-> > 
-> > Agreed, mainly I don't understand why we'd make an exception
-> > and take the patchset via a special tree.  
+On 12/11/24 4:21 AM, Bart Van Assche wrote:
+> On 12/10/24 2:58 AM, hch wrote:
+>> On Tue, Dec 10, 2024 at 08:05:31AM +0000, Johannes Thumshirn wrote:
+>>>> Generally agreeing with all you said, but do we actually have any
+>>>> serious use case for cross-LU copies?  They just seem incredibly
+>>>> complex any not all that useful.
+>>>
+>>> One use case I can think of is (again) btrfs balance (GC, convert, etc)
+>>> on a multi drive filesystem. BUT this use case is something that can
+>>> just use the fallback read-write path as it is doing now.
+>>
+>> Who uses multi-device file systems on multiple LUs of the same SCSI
+>> target ơr multiple namespaces on the same nvme subsystem?
 > 
-> It saves work for everyone?
-> 
-> The patches are super-simple.  If a maintainer chooses to merge one of
-> them, Stephen tells us and I drop the mm.git copy.  It's all so easy.
+> On Android systems F2FS combines a small conventional logical unit and a
+> large zoned logical unit into a single filesystem. This use case will
+> benefit from copy offloading between different logical units on the same
+> SCSI device. While there may be disagreement about how desirable this
+> setup is from a technical point of view, there is a real use case today
+> for offloading data copying between different logical units.
 
-If it's just to save work - we're fine.
-Please don't apply the networking changes.
+But for F2FS, the conventional unit is used for metadata and the other zoned LU
+for data. How come copying from one to the other can be useful ?
+
+> 
+> Bart.
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
