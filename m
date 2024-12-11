@@ -1,44 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C1BE256167;
-	Wed, 11 Dec 2024 18:54:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E42D123E6E8;
+	Wed, 11 Dec 2024 18:54:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733943263; cv=none; b=G+025geSLbvCXE7RSvJZ8ENA92W3Z7AZqB08r6XIUg4X/EO0qxDEvGzHUh9/av6QIZmh8nN7UD9dSq9Ctg3lu0XpRKp9uEHTn8E2ArefZrJzbgl07Vy+EuHM3AyWR7PwLbCww2hTSm41LEslaQaAftjVadO4eCYQyhwQWEqJQh4=
+	t=1733943269; cv=none; b=W20jOco+LOYQRaPMbNUD8laHLDWxDDAzeZ8Mwwg6BHlXwl4YdjGV5+D8pqLIXj6ZaiIULfGzWUI4UfRjQK1nHCWui9pzEj/FhEULhykY2hxsgCfQvRaAwfYL98+/eV9GFSxLI2rBH+yPRMaNoIskFhJb/UCTxSv27X96mU4PhNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733943263; c=relaxed/simple;
-	bh=hE7o4tTWZINIJU8nthSiHxq0NPPs3Ub6Bz6t/xJ16Cw=;
+	s=arc-20240116; t=1733943269; c=relaxed/simple;
+	bh=TmToAHmrV3T65V5SglJTT2b+W8YbFAnlDtctDL1mYRo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=erohyt5Y2y0sYoaQBusLTeSneroqPGmnAPZ08PF++RafTRNfInCQTawRAb77unF3JnKrb8zcflU/vwO2prRPuuvivJWIFbzZroczYAXgLkJ/jmuhAs9KwlN/aL/4LHpbum9L943rqRS1FRzAPu4QxEUW1lDid4Fd/7F/q9rwH4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=muOCTsUk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=M97N0aIuHsa5s9KPpgA1L1q5gWC1iaLhUcAlyw98Kz9taaXv1Vlz7cmtPzx4+fLtrMglJ+DHS+1zmmPYPGJ0jRNwD+PEAJFX1RzRP5BKF3X7Gw3qzv4qnr1dKUFiFFtvE9eQ9A+69SnT1gvh1YOcQpSFrJZMl1MCrtxhztATWng=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JnDbvFtV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="muOCTsUk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 690CCC4CEDD;
-	Wed, 11 Dec 2024 18:54:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JnDbvFtV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08D99C4CED4;
+	Wed, 11 Dec 2024 18:54:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733943263;
-	bh=hE7o4tTWZINIJU8nthSiHxq0NPPs3Ub6Bz6t/xJ16Cw=;
+	s=k20201202; t=1733943265;
+	bh=TmToAHmrV3T65V5SglJTT2b+W8YbFAnlDtctDL1mYRo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=muOCTsUkfqb/3xULAYqpxr9CfuQ6RzFC7qOPr4Cf8z/bcmPkehd8lC3Nls0Lwu1r9
-	 eUrbjpw/veSRWUSXYmEg7OhJotIczaldVmhuU23JzFjotNz70SFUTkWwK5ZqpVnJKI
-	 XUPfjNUGkjVqVePLhhTDoAkegG301qnOXvfSIw15xmY/nadI7y33+PHkaYHb5ptlaE
-	 buoBTCSLwWlBJ/FbNbR/vj1gu2P3IFi5JumbSvl7VEG5O3jz+SVrEh3rbLFGgYAL+x
-	 5QaqwQtEKJZG3orHMezAafObTyTwcIthpUZGy+PtNFqdjirVh6eKGugsmOeEGpWAa/
-	 tXXc/cga1GPxg==
+	b=JnDbvFtV6egl+euHZFRaV9s0af+pghPU5Ukt3ONW+1pKW6OviGbPBir2EbupXvynK
+	 jAZbzpebnXiEGwKw0fdUQI3CYyi9pCGijk2DdtcyixPh71aNxWKoX4XtqD6qnHpc7U
+	 ajkzh5pRGCZP9gctr2qUkD7Bin/XDv7PYhG7vN2Knq8mjv/5EgG6zDiQPJ6ywGBXJV
+	 XoOBf73FKPa2Z/WOUcHPTT4kk406kWP/+6z3sgdqpg0wi1iStTlg3R7gUrljCPtsqb
+	 SQmtzNNhx0VuGPbKZ1bC/CQIRSQDZ6eyTSyoHcT50GqTREw2C0Nzhx8FzsvitfWD8D
+	 qj5dn1zuF4Zmw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Magnus Lindholm <linmag7@gmail.com>,
-	Christoph Hellwig <hch@lst.de>,
+Cc: Tomas Henzl <thenzl@redhat.com>,
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	mdr@sgi.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
+	megaraidlinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 02/10] scsi: qla1280: Fix hw revision numbering for ISP1020/1040
-Date: Wed, 11 Dec 2024 13:54:08 -0500
-Message-ID: <20241211185419.3843138-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 03/10] scsi: megaraid_sas: Fix for a potential deadlock
+Date: Wed, 11 Dec 2024 13:54:09 -0500
+Message-ID: <20241211185419.3843138-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241211185419.3843138-1-sashal@kernel.org>
 References: <20241211185419.3843138-1-sashal@kernel.org>
@@ -53,47 +56,46 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 5.10.230
 Content-Transfer-Encoding: 8bit
 
-From: Magnus Lindholm <linmag7@gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
 
-[ Upstream commit c064de86d2a3909222d5996c5047f64c7a8f791b ]
+[ Upstream commit 50740f4dc78b41dec7c8e39772619d5ba841ddd7 ]
 
-Fix the hardware revision numbering for Qlogic ISP1020/1040 boards.  HWMASK
-suggests that the revision number only needs four bits, this is consistent
-with how NetBSD does things in their ISP driver. Verified on a IPS1040B
-which is seen as rev 5 not as BIT_4.
+This fixes a 'possible circular locking dependency detected' warning
+      CPU0                    CPU1
+      ----                    ----
+ lock(&instance->reset_mutex);
+                              lock(&shost->scan_mutex);
+                              lock(&instance->reset_mutex);
+ lock(&shost->scan_mutex);
 
-Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
-Link: https://lore.kernel.org/r/20241113225636.2276-1-linmag7@gmail.com
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fix this by temporarily releasing the reset_mutex.
+
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Link: https://lore.kernel.org/r/20240923174833.45345-1-thenzl@redhat.com
+Acked-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla1280.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
-index e7820b5bca38c..c0a9251b2bed2 100644
---- a/drivers/scsi/qla1280.h
-+++ b/drivers/scsi/qla1280.h
-@@ -117,12 +117,12 @@ struct device_reg {
- 	uint16_t id_h;		/* ID high */
- 	uint16_t cfg_0;		/* Configuration 0 */
- #define ISP_CFG0_HWMSK   0x000f	/* Hardware revision mask */
--#define ISP_CFG0_1020    BIT_0	/* ISP1020 */
--#define ISP_CFG0_1020A	 BIT_1	/* ISP1020A */
--#define ISP_CFG0_1040	 BIT_2	/* ISP1040 */
--#define ISP_CFG0_1040A	 BIT_3	/* ISP1040A */
--#define ISP_CFG0_1040B	 BIT_4	/* ISP1040B */
--#define ISP_CFG0_1040C	 BIT_5	/* ISP1040C */
-+#define ISP_CFG0_1020	 1	/* ISP1020 */
-+#define ISP_CFG0_1020A	 2	/* ISP1020A */
-+#define ISP_CFG0_1040	 3	/* ISP1040 */
-+#define ISP_CFG0_1040A	 4	/* ISP1040A */
-+#define ISP_CFG0_1040B	 5	/* ISP1040B */
-+#define ISP_CFG0_1040C	 6	/* ISP1040C */
- 	uint16_t cfg_1;		/* Configuration 1 */
- #define ISP_CFG1_F128    BIT_6  /* 128-byte FIFO threshold */
- #define ISP_CFG1_F64     BIT_4|BIT_5 /* 128-byte FIFO threshold */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 365279d7c9829..d709d261d0ad1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -8868,8 +8868,11 @@ megasas_aen_polling(struct work_struct *work)
+ 						   (ld_target_id / MEGASAS_MAX_DEV_PER_CHANNEL),
+ 						   (ld_target_id - MEGASAS_MAX_DEV_PER_CHANNEL),
+ 						   0);
+-			if (sdev1)
++			if (sdev1) {
++				mutex_unlock(&instance->reset_mutex);
+ 				megasas_remove_scsi_device(sdev1);
++				mutex_lock(&instance->reset_mutex);
++			}
+ 
+ 			event_type = SCAN_VD_CHANNEL;
+ 			break;
 -- 
 2.43.0
 
