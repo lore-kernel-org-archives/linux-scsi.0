@@ -1,46 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC65D22967C;
-	Wed, 11 Dec 2024 18:52:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B74922969F;
+	Wed, 11 Dec 2024 18:52:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733943169; cv=none; b=U+e+nZk5UXk3eR92WUOf8OHJloIGSU5wmD8+dnSiMaFyhajKMlU+MFhrb/6g0D1xU/AYvnS50tq1Ri+OWcyw+tf6dm0+QEQYOLi2/640A4zjc7+JG21DCthxMmtyjmVIXzPzUTkCGPeZf2Ui7x2VI8OwitQ6jVCqH72JaYAamsQ=
+	t=1733943171; cv=none; b=U5CDnMe1axgNxcQzlCXSzP+X6B2Pi8GXy4idEL+YHEeAB/IRypoNoUlXQ4nbUNtuNIiANzBSMb2febhpiy1zccSw+o7+ENgyDAwEapTLbvLTRiFqF5KC/EZU6KeZEzVgaKpMI/gma0hwv0YWBhgraor/VlglsetsCKqOdo31TkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733943169; c=relaxed/simple;
-	bh=T2CyAFjapRQwsYCTJENWC+rWbyLUqMcwKWrbwRNy0Ug=;
+	s=arc-20240116; t=1733943171; c=relaxed/simple;
+	bh=vMNkWgZTfSLfZctclNGDWLQltRThVFLyCU9o/OptEQw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=c6VOMmgEI1AW+tq2AwQYcTz6wavgXsfgcmj1puI3DumclleUnnX9QNPAlX+MBna47wwtSGJGNsvuP+JpLIo5+s0THoXFINQMQCNwYB0b2Tv5AcwK/tb+FVUW41WJXCncwGTp0jx972aTvoOqfpBeMeEynnGQOZcZm2glxLjpyTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2eg3W9A; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=MtUQURZOHGN8NsTD3T+J3ZHB2+xFpsRO0taKv9sbHF+ap1KopkPKNQ03Qw9P0oaDAPRQQZ/nwiYfRmx0dp8lxSiPZfi3yuSk6+tXm04096HmVA5vPsg0uTe9VKayojIsxsjE2YDorjFq79hzBbY3jDEW72wAJigSJFcwkAJ2l0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WLD7FmFA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2eg3W9A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDC98C4CEDD;
-	Wed, 11 Dec 2024 18:52:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WLD7FmFA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF6E2C4CEDF;
+	Wed, 11 Dec 2024 18:52:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733943169;
-	bh=T2CyAFjapRQwsYCTJENWC+rWbyLUqMcwKWrbwRNy0Ug=;
+	s=k20201202; t=1733943171;
+	bh=vMNkWgZTfSLfZctclNGDWLQltRThVFLyCU9o/OptEQw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=F2eg3W9A3wZ2oxiCB2Mf+/M8YaN5FQVcVgVe5ShNo23QDlx3q2G36CjhOiJpR4BzK
-	 ogZOzsfkHftoUCDJOSYa7tTfZQ6n/s7Es+Rnb6f87XMB5j7eipm5y3VtCajSA2C3vT
-	 peSKr7m4Y4VP4RBv299N8p+If7LRqpyFHMHW+Agf+AWEKlajYsvE3cSpEbT0Pn0xpY
-	 1Tit92J69LqG79TJQcPuu9l7PaNsVzbXb98PUcPCHgHsPeSsLLck1dHHwOUwkgCFmz
-	 f1VvlB0dot5V521vEFzV3ADpPIS4U8O+3LKjwO+zucpBcoryOzDIX6vBLVXUrrP8dE
-	 qWgKIEoapVWgA==
+	b=WLD7FmFA+vNxN0/fVlO/Ed/mDX6mWk0u9j3q+VWkDjH1dvPdFGDRISewzKbhHTFJ8
+	 o6RxYo0Ivhwo7RJeHUt5Y3bUNtVUsMGINU9Lby0A20waYIoxrlfO7tIGc3gdLj/IZf
+	 7zxSpIcE6GV9tFv1vKk9reG6v5Xur5cR6cit4+W2ZHqf4dg1TEUD6wyWEzb+nNPaa6
+	 C1yKJ7QVb+4kH76xzXUWADx5YVplusqh9HcR35j/7oWeBT2/CxX7GIBZYA9a5Y/bCn
+	 hFEKLs9UdVgxkRQppC2aSOyctHbjlVopl1drcy7lhvAd0gZ/Jwo/cTgZSTX+27a4+e
+	 H4JUzZxCc+bkA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
+Cc: Cathy Avery <cavery@redhat.com>,
+	Michael Kelley <mhklinux@outlook.com>,
+	"Ewan D . Milne" <emilne@redhat.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
 	James.Bottomley@HansenPartnership.com,
-	MPT-FusionLinux.pdl@broadcom.com,
+	linux-hyperv@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 16/23] scsi: mpt3sas: Diag-Reset when Doorbell-In-Use bit is set during driver load time
-Date: Wed, 11 Dec 2024 13:51:53 -0500
-Message-ID: <20241211185214.3841978-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 17/23] scsi: storvsc: Do not flag MAINTENANCE_IN return of SRB_STATUS_DATA_OVERRUN as an error
+Date: Wed, 11 Dec 2024 13:51:54 -0500
+Message-ID: <20241211185214.3841978-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241211185214.3841978-1-sashal@kernel.org>
 References: <20241211185214.3841978-1-sashal@kernel.org>
@@ -55,50 +58,69 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.65
 Content-Transfer-Encoding: 8bit
 
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+From: Cathy Avery <cavery@redhat.com>
 
-[ Upstream commit 3f5eb062e8aa335643181c480e6c590c6cedfd22 ]
+[ Upstream commit b1aee7f034615b6824d2c70ddb37ef9fc23493b7 ]
 
-Issue a Diag-Reset when the "Doorbell-In-Use" bit is set during the
-driver load/initialization.
+This partially reverts commit 812fe6420a6e ("scsi: storvsc: Handle
+additional SRB status values").
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Link: https://lore.kernel.org/r/20241110173341.11595-2-ranjan.kumar@broadcom.com
+HyperV does not support MAINTENANCE_IN resulting in FC passthrough
+returning the SRB_STATUS_DATA_OVERRUN value. Now that
+SRB_STATUS_DATA_OVERRUN is treated as an error, multipath ALUA paths go
+into a faulty state as multipath ALUA submits RTPG commands via
+MAINTENANCE_IN.
+
+[    3.215560] hv_storvsc 1d69d403-9692-4460-89f9-a8cbcc0f94f3:
+tag#230 cmd 0xa3 status: scsi 0x0 srb 0x12 hv 0xc0000001
+[    3.215572] scsi 1:0:0:32: alua: rtpg failed, result 458752
+
+Make MAINTENANCE_IN return success to avoid the error path as is
+currently done with INQUIRY and MODE_SENSE.
+
+Suggested-by: Michael Kelley <mhklinux@outlook.com>
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+Link: https://lore.kernel.org/r/20241127181324.3318443-1-cavery@redhat.com
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 7 ++++++-
+ drivers/scsi/storvsc_drv.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 8acf586dc8b2e..a5d12b95fbd09 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -7050,11 +7050,12 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 	int i;
- 	u8 failed;
- 	__le32 *mfp;
-+	int ret_val;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 7ceb982040a5d..d0b55c1fa908a 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -149,6 +149,8 @@ struct hv_fc_wwn_packet {
+ */
+ static int vmstor_proto_version;
  
- 	/* make sure doorbell is not in use */
- 	if ((ioc->base_readl_ext_retry(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
- 		ioc_err(ioc, "doorbell is in use (line=%d)\n", __LINE__);
--		return -EFAULT;
-+		goto doorbell_diag_reset;
- 	}
- 
- 	/* clear pending doorbell interrupts from previous state changes */
-@@ -7144,6 +7145,10 @@ _base_handshake_req_reply_wait(struct MPT3SAS_ADAPTER *ioc, int request_bytes,
- 			    le32_to_cpu(mfp[i]));
- 	}
- 	return 0;
++static bool hv_dev_is_fc(struct hv_device *hv_dev);
 +
-+doorbell_diag_reset:
-+	ret_val = _base_diag_reset(ioc);
-+	return ret_val;
- }
+ #define STORVSC_LOGGING_NONE	0
+ #define STORVSC_LOGGING_ERROR	1
+ #define STORVSC_LOGGING_WARN	2
+@@ -1138,6 +1140,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+ 	 * not correctly handle:
+ 	 * INQUIRY command with page code parameter set to 0x80
+ 	 * MODE_SENSE command with cmd[2] == 0x1c
++	 * MAINTENANCE_IN is not supported by HyperV FC passthrough
+ 	 *
+ 	 * Setup srb and scsi status so this won't be fatal.
+ 	 * We do this so we can distinguish truly fatal failues
+@@ -1145,7 +1148,9 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+ 	 */
  
- /**
+ 	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
+-	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
++	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE) ||
++	   (stor_pkt->vm_srb.cdb[0] == MAINTENANCE_IN &&
++	   hv_dev_is_fc(device))) {
+ 		vstor_packet->vm_srb.scsi_status = 0;
+ 		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
+ 	}
 -- 
 2.43.0
 
