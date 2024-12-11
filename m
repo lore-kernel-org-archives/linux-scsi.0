@@ -1,107 +1,114 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA9F1FECB6;
-	Wed, 11 Dec 2024 17:27:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01FB21DE4C1;
+	Wed, 11 Dec 2024 17:40:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733938049; cv=none; b=EZZ+3HBvvSs7MlvLquVmIO66jtk9xJJTSy3Q9P0djAjJg378sLKxIRg3JbrLzAXQdcT4slPDUta7NrKR6c99gIoWNeUGR5r4YfOpdLkZLX0ifFnmbhDX3g6v3VWECjilP0T9VvFb3oYjfzK6jaZW1wn/EDCh5Afk2l8HQQqgno8=
+	t=1733938828; cv=none; b=Y7NBuFlSfOjUpPpzYR4uEGkn+juUWHVqr/uZp+WH9e0/god1gorAc2jlemUimyv70x+9g8c44LEGdZUfNByECCzPhmyA7dqi+OdWYNlCSxHheU8pMJ+IiWi+Iu+axdnFxT5GMSSREyyOr2wSVQUzgRQAXyWlqEvB9wt27k+J3c4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733938049; c=relaxed/simple;
-	bh=uerRqakrwvO4G34fxy4mWJpHc8Jzm+HfcVjh/HslRvk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Lh66R23qBQiG1bmMndl5vywrupKsSCqTMrD7pvNbYULN+hRH9i47VX0lC5jK6UtSHF39xn5BWuU4Czi/tx88abI6lL/WnFe5Dg2DYVjkaoVS8OSC15kvET6jNbOhPZXn/mnrj6hqf1nS8ouxMiVeTiY5qbwkmovX/G2UkpeB6UQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Jn6+ZsKH; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1733938828; c=relaxed/simple;
+	bh=nTPLx+F/uIjNlE3QmhI8zO7IqE2vvW6UobaEj+4tukI=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=fWDI+lQiL5dXMQxTc2rPuL5FcTt94mYgZ0k0x7d5c5Gpo839Z6eqTHMHWiOpGKzxDQZEPGLw6JLtZ/RtpY6/Qv3vaKX+HcZznXCYEMr5/Z/BnT9o27uR0AS4wgLefrEgyoeJBgxl96tHtO9DzxN8F9cbEbExkxELn/m423Jw2Xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=URM0g8vs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Jn6+ZsKH"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Y7jGQ6jb4z6Cr2Gt;
-	Wed, 11 Dec 2024 17:27:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1733938040; x=1736530041; bh=gmWh5tFfs7soVBLFuSO/qLnX
-	u+8CTMZDvRiQMaBPqDA=; b=Jn6+ZsKHbREar6WFe1GZ0ByPNPgeHh1eoVH5k3Bf
-	mH/A5t7lCLVsuWak0fNQXlIKOfzO8126Uzjxaba+goDPEjzFT9AjaBJtIULKzqe0
-	9IWyuEoe9yd53BI+GN7KPYPmZUQw52b/ofwJJtzgSSYTRROAPtiBuqxT82oaIDf0
-	HpAedfiM8HBcDPijE4nqorCERsOU0bxylbNfd0qb4M7fHn2k9LptP8qKw51lM4H9
-	G1dmjVSE85gGToRztGnGgtDPO/kpi57nFluPjq0j5JEQ0KcPP4ChqlvrsRIflYeH
-	ORJIpf7HL5DSubgUBgwRZ2ik7TSML8T1sqIGrppT0jkkhA==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7pH0caqGSLM7; Wed, 11 Dec 2024 17:27:20 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Y7jGC4KWJz6Cr2Fp;
-	Wed, 11 Dec 2024 17:27:14 +0000 (UTC)
-Message-ID: <2f260b23-006a-4ea2-a508-39f2bace1bec@acm.org>
-Date: Wed, 11 Dec 2024 09:27:13 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="URM0g8vs"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6CCB2C4CED2;
+	Wed, 11 Dec 2024 17:40:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733938827;
+	bh=nTPLx+F/uIjNlE3QmhI8zO7IqE2vvW6UobaEj+4tukI=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=URM0g8vs8XZcfUCbzk3fN6McQpepdX/K0nOU7YXdqpV4dv085eQMHdOEzZNkKaALk
+	 pO5Yc6oK7hLDwrg+TrpBykxRh3UfUr6LBakvTB/o1Cbk61zWy43Vl/qnnGYBFJmkFs
+	 ofjk79z06wd13/s6YbnEFxHXllGki/x2SNm4wvGGjCfqek6DZHfuBvH74uzYlFY4qH
+	 ke45jtFiWeaWHb86WyXoFsRrnMVFT1eDi3qeqziATdrLcbkooEHupbkr4pXyrAwMFh
+	 OfVJlzorcj9aISaYw21DebARucewOr/irFMc9dgMJoJ+LXSiug6CyybJULYQ5lGAqT
+	 SbnrMQ6IJmZAg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D6BE7717D;
+	Wed, 11 Dec 2024 17:40:27 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
+Subject: [PATCH 0/3] scsi: ufs: qcom: Suspend fixes
+Date: Wed, 11 Dec 2024 23:10:15 +0530
+Message-Id: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv10 0/9] write hints with nvme fdp, scsi streams
-To: Nitesh Shetty <nj.shetty@samsung.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
- Javier Gonzalez <javier.gonz@samsung.com>,
- Matthew Wilcox <willy@infradead.org>, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@meta.com>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
- "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "joshi.k@samsung.com" <joshi.k@samsung.com>
-References: <9d61a62f-6d95-4588-bcd8-de4433a9c1bb@acm.org>
- <yq1plmhv3ah.fsf@ca-mkp.ca.oracle.com>
- <8ef1ec5b-4b39-46db-a4ed-abf88cbba2cd@acm.org>
- <yq1jzcov5am.fsf@ca-mkp.ca.oracle.com>
- <CGME20241205081138epcas5p2a47090e70c3cf19e562f63cd9fc495d1@epcas5p2.samsung.com>
- <20241205080342.7gccjmyqydt2hb7z@ubuntu>
- <yq1a5d9op6p.fsf@ca-mkp.ca.oracle.com>
- <d9cc57b5-d998-4896-b5ec-efa5fa06d5a5@acm.org>
- <yq1frmwl1zf.fsf@ca-mkp.ca.oracle.com>
- <7d06cc60-7640-4431-a1cb-043a959e2ff3@acm.org>
- <20241211093549.n6dvl6c6xp4blccd@ubuntu>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20241211093549.n6dvl6c6xp4blccd@ubuntu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAH/OWWcC/x2MSQqAMAwAvyI5GzB1Qf2KeJA2ag5WbagI4t8tH
+ mdg5gHlIKzQZw8EvkRl9wkoz8Cuk18YxSUGU5iKDBHGWfG0+4Ya9WDvcJYb64Za7mzduK6ElB6
+ Bk/63w/i+H+hB7tlmAAAA
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Abel Vesa <abel.vesa@linaro.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>, 
+ Nitin Rawat <quic_nitirawa@quicinc.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ stable@vger.kernel.org, Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1691;
+ i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
+ bh=nTPLx+F/uIjNlE3QmhI8zO7IqE2vvW6UobaEj+4tukI=;
+ b=owGbwMvMwMUYOl/w2b+J574ynlZLYkiPPNf60/Tk6StscSpJE6I7pL7Fr73e7JXqOsstcGmq4
+ Jo3b5gudjIaszAwcjHIiimypC911mr0OH1jSYT6dJhBrEwgUxi4OAVgImXf2H8xc0WrWzOuPzix
+ Nl7GWiLB/0w8h/zzxC+fY/6ZZfx+4bqKaaX+bWEJHuPMRCejr9ssWLbpN07sK243+rQksmnH/co
+ lTDWVUmnt674L2bVFKjw4cfQBowF//PS3m33KK7aZHTTXXrjj5GvjnEWmzjYcp6fbbsi8sv5P/y
+ Ld3NsTWMXW/ynbd5nl5lT5Z6FKfKriHt+dU56xHbgcn7ZT6PPN9KDCBe39V6Q7Fp9NyjU93VD6g
+ 4NTcGW7gFZ/mZqs8ERDNV2pL47Ln4gZ9PDZNrH9U32kYC8Tc1NEgWH6qafnDFZdLb2dpZn1bmvU
+ DO5YH4kirTO3TmxW+PnRPMI1MnhZimfYDiePOy5N9uJZAA==
+X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@linaro.org/default with auth_id=185
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reply-To: manivannan.sadhasivam@linaro.org
 
-On 12/11/24 1:36 AM, Nitesh Shetty wrote:
-> Block layer can allocate a buffer and send this as part of copy
-> operation.
+Hi,
 
-The block layer can only do that if it knows how large the buffer should
-be. Or in other words, if knowledge of a SCSI buffer size is embedded in
-the block layer. That doesn't sound ideal to me.
+This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
+the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
+this patch, I couldn't figure out the exact commit that caused the issue. So I
+used the commit that introduced reinit support as a placeholder.
 
-> This scheme will require sequential submission of SRC and DST
-> bio's. This might increase in latency, but allows to have simpler design.
-> Main use case for copy is GC, which is mostly a background operation.
+Patch 3 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
+PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
+this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
+device powerdown during suspend. This supersedes the previous series [1] that
+tried to fix the issue in clock drivers.
 
-I still prefer a single REQ_OP_COPY operation instead of separate
-REQ_OP_COPY_SRC and REQ_OP_COPY_DST operations. While this will require
-additional work in the SCSI disk (sd) driver (implementation of a state
-machine), it prevents that any details about the SCSI copy offloading
-approach have to be known by the block layer. Even if copy offloading
-would be implemented as two operations (REQ_OP_COPY_SRC and 
-REQ_OP_COPY_DST), a state machine is required anyway in the SCSI disk
-driver because REQ_OP_COPY_SRC would have to be translated into two SCSI
-commands (POPULATE TOKEN + RECEIVE ROD TOKEN INFORMATION).
+This series is tested on Qcom SM8550 MTP and Qcom RB5 boards.
 
-Thanks,
+[1] https://lore.kernel.org/linux-arm-msm/20241107-ufs-clk-fix-v1-0-6032ff22a052@linaro.org
 
-Bart.
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+Manivannan Sadhasivam (3):
+      scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()
+      scsi: ufs: qcom: Allow passing platform specific OF data
+      scsi: ufs: qcom: Power down the controller/device during system suspend for SM8550/SM8650 SoCs
+
+ drivers/ufs/core/ufshcd-priv.h |  6 ------
+ drivers/ufs/core/ufshcd.c      |  1 -
+ drivers/ufs/host/ufs-qcom.c    | 31 +++++++++++++++++++------------
+ drivers/ufs/host/ufs-qcom.h    |  5 +++++
+ include/ufs/ufshcd.h           |  2 --
+ 5 files changed, 24 insertions(+), 21 deletions(-)
+---
+base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
+change-id: 20241211-ufs-qcom-suspend-fix-5618e9c56d93
+
+Best regards,
+-- 
+Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
 
