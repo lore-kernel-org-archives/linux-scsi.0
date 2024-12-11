@@ -1,87 +1,102 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B81CB1F0E29
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2024 22:14:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DF201F239F;
+	Wed, 11 Dec 2024 23:24:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733955298; cv=none; b=u2qUApk/1nYNdTzxRuzDWChD1Ab2CXOi1lzhN4svgWycUwvBjt8voHYX/XrnSBL/RfWZcbAuQNtRcGfdNMTlXHkuH6NkjhHA5wY5Kwil/BZYB8mE93gXkcB1ggGGPtFFWJTRYbCX+OjG0/FGN4kO6CSYTP3JUMamJh6O3a4oNM0=
+	t=1733959473; cv=none; b=Ll2AwcT4ATengwtRvwrE0YNIbUxsUyrJ19kvl38KIE5C1/WtQILY1Ran3JjVHmKhEBbAwvd4KwZM9ALo0fJHmrReb6bKBg/PTkFmYmReq1gftXlckBkIyaBgaMXYl7f00L4G0Ur/RHDTtTQBhXsxs1NlPkTMZHsPNVaQnGgm5EE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733955298; c=relaxed/simple;
-	bh=bSrByfkoqYdKpF0famt5jb9JcTfkFX2z/Y+W9IN14Dk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QiOmXnxDt+FxLxb8SzC1vRMj1CmgxA6aauU5vyJJEPOsflR5iHXY+97kM6g7Z6atEDJMyGa1CHPKm/6yFdGeVXJXphAo/GPK83GSY6Ucg8t2wX3z/MphGuanq2/Wl8XfhAHAoQLmW8hNqP/R0cVJmDz6ghatLqzVznMKqHIx+MQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=R34w7vyn; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1733959473; c=relaxed/simple;
+	bh=62eGNKv2jlcOfyJIkzn6DDpCE5ZY2ynMYIthNzGLF2E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=X+L9nk8oVq1yqKu5EYRObIASRe91Opwv7UdTTPKuXYM81V9jBUKsMtNxLnyovptr62eP12oRNQkVOQR3Iw6SzceZamnAeb944n6NPNzAhzQqwfhSh89aAxjwurcZTUvs1k9jmia28foLHS6oXVB4BsW3L2106hZLcHZD60HxWU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hyoJfb3x; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="R34w7vyn"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Y7qf804sFzlff0K;
-	Wed, 11 Dec 2024 22:14:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1733955293; x=1736547294; bh=k2jVbTao7XhRUC90BiORCt+M
-	/h8IZHm3jryAUbQC+7Q=; b=R34w7vyncJDrVpkTThmhzuuArlzlr/LhD4PoSbgM
-	rfvA1OQW7EViUiF1ZBqWBseT7WGzJy5pFHFKhQxwz0ub9GoQjg3CsW+7TVrS4YTa
-	n/Nb32X4ILLh5myHS15Bet48l23egaiuVloBrqjHAygRpXYn25C0nZutXqLADQKR
-	TsA+EJfoJC9O9Fn6ZuzqEiSixlyT7viNcG9WtV6wS5J2/OgWI3FORlEzltqcD2uy
-	8FsHbmJZVZIEWb0CHXIkaI/8B+s35osx7lzqAVJosSyIhsGU8nUkizPITuywKdMP
-	EGOfEzZr69wdPPWumVAPLTgTD5PQGQivs0h5vnD1YvGQFw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Zp0GWx7Cm8uH; Wed, 11 Dec 2024 22:14:53 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Y7qf33CsTzlff0H;
-	Wed, 11 Dec 2024 22:14:50 +0000 (UTC)
-Message-ID: <2e21a7f9-f59c-4f8c-a942-ced71cace6df@acm.org>
-Date: Wed, 11 Dec 2024 14:14:48 -0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hyoJfb3x"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1733959471; x=1765495471;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=62eGNKv2jlcOfyJIkzn6DDpCE5ZY2ynMYIthNzGLF2E=;
+  b=hyoJfb3xpwbZfBPnxT+xF5UinutXXpvE2kZ8+VC8kKjcovk1U6nC9Vd9
+   nm5wx3XWfZI13LKXlbcbKN7lFShqtogT8TTQdqesQUK+vsHR95RGaIdnB
+   KW6J7o8nZ2rYNzxXQDOZK0vZcwHprVxLpKhKj0II1HiRMFYS2LXp9mZ9z
+   HRa7tZQ9wydZly2aBj4kI/b5Xr0GcMrCpOBRLSKqglwYiF5jdNwaF5TO0
+   H0tlP35B2OqZXZfFp+rhBKNGjnHRdNKCFyZIXPKl0sR5yXa9P/o0kRETQ
+   +u0aIkCgINNRJfAEt6CRyAnVa0FDO/ee2nZAQoRU0pfO4/aemwC+LUtzM
+   g==;
+X-CSE-ConnectionGUID: hUAZlC9WRtGAo8T3B7EiKg==
+X-CSE-MsgGUID: A6D4Ek9dQjOtUAlcYs6xYA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11283"; a="44973645"
+X-IronPort-AV: E=Sophos;i="6.12,226,1728975600"; 
+   d="scan'208";a="44973645"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Dec 2024 15:24:31 -0800
+X-CSE-ConnectionGUID: 1UA/6KddRz+DuWLMcGse0g==
+X-CSE-MsgGUID: X3/2OIgvQPuaqA1El1xOAg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
+   d="scan'208";a="126969147"
+Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 11 Dec 2024 15:24:28 -0800
+Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tLW4A-0007Cf-0u;
+	Wed, 11 Dec 2024 23:24:26 +0000
+Date: Thu, 12 Dec 2024 07:23:45 +0800
+From: kernel test robot <lkp@intel.com>
+To: Andrew Donnellan <ajd@linux.ibm.com>, linuxppc-dev@lists.ozlabs.org,
+	linux-scsi@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
+	fbarrat@linux.ibm.com, ukrishn@linux.ibm.com, manoj@linux.ibm.com,
+	clombard@linux.ibm.com, vaibhav@linux.ibm.com
+Subject: Re: [PATCH 1/2] cxl: Deprecate driver
+Message-ID: <202412120701.08jViR9I-lkp@intel.com>
+References: <20241210054055.144813-2-ajd@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/4] scsi: scsi_error: Add counters for New Media and
- Power On/Reset UNIT ATTENTIONs
-To: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
- linux-scsi@vger.kernel.org, jmeneghi@redhat.com
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
- loberman@redhat.com
-References: <20241125140301.3912-1-Kai.Makisara@kolumbus.fi>
- <20241125140301.3912-3-Kai.Makisara@kolumbus.fi>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20241125140301.3912-3-Kai.Makisara@kolumbus.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241210054055.144813-2-ajd@linux.ibm.com>
 
-On 11/25/24 6:02 AM, Kai M=C3=A4kisara wrote:
-> +	unsigned char ua_new_media_ctr;	/* Counter for New Media UNIT ATTENTI=
-ONs */
-> +	unsigned char ua_por_ctr;	/* Counter for Power On / Reset UAs */
+Hi Andrew,
 
-Why unsigned char instead of e.g. u16 or u32? With one of the latter two=20
-data types, no cast would be necessary in the macros below.
+kernel test robot noticed the following build warnings:
 
-> +/* Macros to access the UNIT ATTENTION counters */
-> +#define scsi_get_ua_new_media_ctr(sdev) \
-> +	((const unsigned int)(sdev->ua_new_media_ctr))
-> +#define scsi_get_ua_por_ctr(sdev) \
-> +	((const unsigned int)(sdev->ua_por_ctr))
+[auto build test WARNING on char-misc/char-misc-testing]
+[also build test WARNING on char-misc/char-misc-next char-misc/char-misc-linus jejb-scsi/for-next mkp-scsi/for-next linus/master v6.13-rc2 next-20241211]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Please introduce macros in the patch that introduces the first user of=20
-these macros. I don't see any users of these macros in this patch?
+url:    https://github.com/intel-lab-lkp/linux/commits/Andrew-Donnellan/cxl-Deprecate-driver/20241210-134451
+base:   char-misc/char-misc-testing
+patch link:    https://lore.kernel.org/r/20241210054055.144813-2-ajd%40linux.ibm.com
+patch subject: [PATCH 1/2] cxl: Deprecate driver
+reproduce: (https://download.01.org/0day-ci/archive/20241212/202412120701.08jViR9I-lkp@intel.com/reproduce)
 
-Thanks,
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202412120701.08jViR9I-lkp@intel.com/
 
-Bart.
+All warnings (new ones prefixed by >>):
 
+>> Warning: Documentation/arch/powerpc/cxl.rst references a file that doesn't exist: Documentation/ABI/testing/sysfs-class-cxl
+   Warning: Documentation/devicetree/bindings/regulator/siliconmitus,sm5703-regulator.yaml references a file that doesn't exist: Documentation/devicetree/bindings/mfd/siliconmitus,sm5703.yaml
+   Warning: Documentation/hwmon/g762.rst references a file that doesn't exist: Documentation/devicetree/bindings/hwmon/g762.txt
+   Warning: Documentation/hwmon/isl28022.rst references a file that doesn't exist: Documentation/devicetree/bindings/hwmon/isl,isl28022.yaml
+   Warning: Documentation/translations/ja_JP/SubmittingPatches references a file that doesn't exist: linux-2.6.12-vanilla/Documentation/dontdiff
+   Warning: MAINTAINERS references a file that doesn't exist: Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
