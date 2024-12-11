@@ -1,47 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F521242EE0;
-	Wed, 11 Dec 2024 18:51:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ACBC242F03;
+	Wed, 11 Dec 2024 18:51:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733943098; cv=none; b=KLZe5YOUf7l85gGA3qc3E4QazxPKzauytb7GM21AgIQTgddncAM1Y19Vd2k4ijytE79w4VrKiL0Gf9POhNYcV7uVBwYxDGktpz/UK60vakE5wwt7rJhA3Kipn7Mo5caDZhOlPo7JeTtBApfqmF7g5D7dlk4VzownBE4+lAxK2ho=
+	t=1733943100; cv=none; b=RRWdC/wVGf4yw5NQxd359kS6kSqY+kp0kaF2xjZSf5X5F6TitUBi+bUrlK9/Z1ZRqMhjkmidYnb9aiSLPS1Pl46Qf3XgQGDsd/o4TdDqORBl9CrOtJp9AEQpcdn2BCoLY97Da8CaSosbGAy0wfWp9cz+MRN4dN4e62cP5bVmR3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733943098; c=relaxed/simple;
-	bh=Gt84YUveXdEPxC2xpT/68Qqk4ysOf39wRKz/4+HEY3Q=;
+	s=arc-20240116; t=1733943100; c=relaxed/simple;
+	bh=nHZ9ez5NEG3v/aXAwov+Llsdqu13OQNFnQ0ciLbwRqc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ruERUtpIQ5fvrNScJZM22xk9b3tEgyFJFu0O2D/xN3ShN4aSXtqVjTOQn/H9nTNC2vrZxE4m0P2GDNTz0FIi0Ys/oJKwAZPCdDwztPrW4JlY6dNPisCQF+aDd3TaRiRWKYIgUMLJ/zAm0ONnPdCs9sKUhqIieGFzMTzzcYYFUm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dNDRrt0P; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=vFZ1V2TU+OJNpz82vAr1VoZ5b3VnzdvqF0FHWAp4caxGmYPr432MDge1JIplB8WL/ra0LJtWR61cQE1r9VzyXeffFcgOsEjor4bnX4gnL9ATPLgc/h/DIO+1MmdN6nEzKGB5eMSTdopolZpI3FhKTZ+ojYHQAfMnXz6YMx2Wgs8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uO6dHw+h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dNDRrt0P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9189EC4CED4;
-	Wed, 11 Dec 2024 18:51:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uO6dHw+h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D5E2C4CEDE;
+	Wed, 11 Dec 2024 18:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733943098;
-	bh=Gt84YUveXdEPxC2xpT/68Qqk4ysOf39wRKz/4+HEY3Q=;
+	s=k20201202; t=1733943100;
+	bh=nHZ9ez5NEG3v/aXAwov+Llsdqu13OQNFnQ0ciLbwRqc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=dNDRrt0PY0sDtlXW2PB2vyRnlb8eHlfaZkvMyGJnRmVQ4AA/dwIKWZbtNoO6BJGDb
-	 SF3ZmRdjzGG01QEnwGIQgu2w1VN2mMgBzIozPcKAfow8WuCHpo0zFMCb7QZIqeC91G
-	 hiQnqTGLhtVXRQd8xrZLbb785b7nwm12MYen0HrOkvro/SAh1/ck8gQnWBNQ75Lqb5
-	 ZkkDhuRtX1Od0WoLtss92X3TAd5HsOqo+bubxImur4FVRvwVPt93IEAknQEnFSB5f+
-	 0U1SzZBiP1kNAROxxTibXJydluX/H5FOopvqChMLOmZk770bId4EmA0vGEt9d0dt/X
-	 PcKOXGS4xfHzg==
+	b=uO6dHw+h107i65J3uGXKvvO3GE+Cj57VGGU9f2VRbyereqobauMv4Sw3iU+qTEb9f
+	 kLaDAvllWlP4heJiISX1TtMYxwS307Sky9aqaDl8ZiT4jT1lgAPZYHl/demRt+uRvB
+	 JFSQWhyNi9EBfB1Mb0ayTxGt44qJbM6y2eVzVRRa46ni45y813uPuswl41GXmt0lT2
+	 +THMpKovP65HEL5QeLedRbhZl9e1aahZNLweTAnVpvMng8KuD/jtIdou9tiW9TMJOh
+	 v5axucxhY+Cy4uxW+ulmL2sC1FBj3eS7rK2iCTvd9h+5u+PqqfZkLpuM5DdsnZYwXu
+	 xbV2YU+Iluuzw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
 Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Prayas Patel <prayas.patel@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	sathya.prakash@broadcom.com,
 	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
 	sreekanth.reddy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 27/36] scsi: mpi3mr: Start controller indexing from 0
-Date: Wed, 11 Dec 2024 13:49:43 -0500
-Message-ID: <20241211185028.3841047-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 28/36] scsi: mpi3mr: Handling of fault code for insufficient power
+Date: Wed, 11 Dec 2024 13:49:44 -0500
+Message-ID: <20241211185028.3841047-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241211185028.3841047-1-sashal@kernel.org>
 References: <20241211185028.3841047-1-sashal@kernel.org>
@@ -58,33 +59,87 @@ Content-Transfer-Encoding: 8bit
 
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 0d32014f1e3e7a7adf1583c45387f26b9bb3a49d ]
+[ Upstream commit fb6eb98f3965e2ee92cbcb466051d2f2acf552d1 ]
 
-Instead of displaying the controller index starting from '1' make the
-driver display the controller index starting from '0'.
+Before retrying initialization, check and abort if the fault code
+indicates insufficient power. Also mark the controller as unrecoverable
+instead of issuing reset in the watch dog timer if the fault code
+indicates insufficient power.
 
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Signed-off-by: Prayas Patel <prayas.patel@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Link: https://lore.kernel.org/r/20241110194405.10108-4-ranjan.kumar@broadcom.com
+Link: https://lore.kernel.org/r/20241110194405.10108-5-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 40 +++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 5f2f67acf8bf3..1bef88130d0c0 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -5215,7 +5215,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 2e6245bd4282e..5ed31fe57474a 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1035,6 +1035,36 @@ static const char *mpi3mr_reset_type_name(u16 reset_type)
+ 	return name;
+ }
  
- 	mrioc = shost_priv(shost);
--	retval = ida_alloc_range(&mrioc_ida, 1, U8_MAX, GFP_KERNEL);
-+	retval = ida_alloc_range(&mrioc_ida, 0, U8_MAX, GFP_KERNEL);
- 	if (retval < 0)
- 		goto id_alloc_failed;
- 	mrioc->id = (u8)retval;
++/**
++ * mpi3mr_is_fault_recoverable - Read fault code and decide
++ * whether the controller can be recoverable
++ * @mrioc: Adapter instance reference
++ * Return: true if fault is recoverable, false otherwise.
++ */
++static inline bool mpi3mr_is_fault_recoverable(struct mpi3mr_ioc *mrioc)
++{
++	u32 fault;
++
++	fault = (readl(&mrioc->sysif_regs->fault) &
++		      MPI3_SYSIF_FAULT_CODE_MASK);
++
++	switch (fault) {
++	case MPI3_SYSIF_FAULT_CODE_COMPLETE_RESET_NEEDED:
++	case MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED:
++		ioc_warn(mrioc,
++		    "controller requires system power cycle, marking controller as unrecoverable\n");
++		return false;
++	case MPI3_SYSIF_FAULT_CODE_INSUFFICIENT_PCI_SLOT_POWER:
++		ioc_warn(mrioc,
++		    "controller faulted due to insufficient power,\n"
++		    " try by connecting it to a different slot\n");
++		return false;
++	default:
++		break;
++	}
++	return true;
++}
++
+ /**
+  * mpi3mr_print_fault_info - Display fault information
+  * @mrioc: Adapter instance reference
+@@ -1373,6 +1403,11 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 	ioc_info(mrioc, "ioc_status(0x%08x), ioc_config(0x%08x), ioc_info(0x%016llx) at the bringup\n",
+ 	    ioc_status, ioc_config, base_info);
+ 
++	if (!mpi3mr_is_fault_recoverable(mrioc)) {
++		mrioc->unrecoverable = 1;
++		goto out_device_not_present;
++	}
++
+ 	/*The timeout value is in 2sec unit, changing it to seconds*/
+ 	mrioc->ready_timeout =
+ 	    ((base_info & MPI3_SYSIF_IOC_INFO_LOW_TIMEOUT_MASK) >>
+@@ -2734,6 +2769,11 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 	mpi3mr_print_fault_info(mrioc);
+ 	mrioc->diagsave_timeout = 0;
+ 
++	if (!mpi3mr_is_fault_recoverable(mrioc)) {
++		mrioc->unrecoverable = 1;
++		goto schedule_work;
++	}
++
+ 	switch (trigger_data.fault) {
+ 	case MPI3_SYSIF_FAULT_CODE_COMPLETE_RESET_NEEDED:
+ 	case MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED:
 -- 
 2.43.0
 
