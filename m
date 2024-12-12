@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 738511917D6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B0911A4F22
 	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 20:52:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734036745; cv=none; b=RTFgkzOMfo/ogGKIx3ScsgmRpuqxTxGctvOosgnGiroDfE8Kk4V23mJoRWgcZK5z6sQa3Bbwqv/eawxrWlJXJLdP+/kHVKQEg1lOeYJUvoSIIqrH1ZMeNu1flaoLTDnvZu5h+BxlyQjGej3sEd+CiRCCfukRPELRxgFdzNJI5Qg=
+	t=1734036745; cv=none; b=BUVWCbME9PXDv9FEQO1ahNE4qBDj0syIYUKfSC/a191BJzrx2BaJkvtcdFF2dARKlGP58ozvi8adKflfe/GOVzbMJSvbsusgmnWk83nSvdEx4wkG8H6bZ0xiGec7c5vcPuOksEwSUH5OsdZDUPxrnGyuFRDDkvGuYTjm6/u/dac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1734036745; c=relaxed/simple;
-	bh=rbW1MWjtSR5nGGTwTbZhYFX/todq16UnxeMXHgwMn7A=;
+	bh=++GVuqGnOdqduHfgyfRPg2vHaMJGQK29XZRdvyQ4xdM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iKA9RM6nVQK/ktXg/1v69JrFrbHMSzjin0yawTlIUacrxOS2zkLQ+buVgayKcpCqjSBv/rhAgx/jFeXn3lJFboD5SaHv7JjMwtEqiNMhkcfISSkIwgqSxY5Mc+KeEOY0K5BPhIe7GeFKxzBs58OGCMUb+UTXngBcalEbOarFR9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=d4Jtg193; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=AcMKTzJsoejiQHJ5IMklTyJAP+ie9CjpYiWsykYJiaJpAQFbaTjlpm8uCSHbr+BVVTEdKcWUcswCyOyjukevyCP4pKK9G3cLLYw9y9EHNDv7L+nlTbIgY5n+VmRo1NRPlcu+rBnbKBnAHH2AzVKvIzYx4rt+X2LFFjWnb99yyfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R4ErBP3w; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d4Jtg193"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R4ErBP3w"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=6EG/TMrAs+0NuIAxtUlxCtd0MXNMBUvcVZY0rG9bFgw=; b=d4Jtg193SrHVZ1Sm5kL/tZTmdP
-	o4nh/8qPwBP+K01OtQiSWQFSlKGlk8xxRQYmZ57OWnoq8WzQq48wIqXvaDAh1Ke6Xv65qBz/EStxk
-	9I1Zw958Bay9A3QLrlQoeTZFL6Oc4B2DiVYySA5fw3hS9rMpn7J39MNZA4csePsP1WN3ZqTiVX53+
-	vaeCkXw32DQXiuZ4e3bJlSo9kjy+RVg3/k8WKNJevKgAIBJP7ULuUnloSa3z0Bv+utasCVbd1Ry/j
-	ic0jwhamlkrDdudnFniOGcVPgskYn6CsR0mftUgPZCtFMsSUbKxorKhc2Ntzmfwj46oxVo3BN07eZ
-	t+HNKDvQ==;
+	bh=PXEkCulTFjRJ7qcn0gnZBXZ52hajeLcq5bPwWoTRmsw=; b=R4ErBP3wUKR7i2rSZf2jzdjP1v
+	j6yc/0OCXLgsLVJjvdE4i1QKTkfSISb2p7rUWCh32uD89zFwAFw7PNfmkZCXWINXhfGjdzjg03IEN
+	DeiRDpvqa0KiyoPB8FU6V18m8mEvjIzs989TtiO9uNmXRkJA3egIeDC3jQnotgyPwOG8tA1dJkK7p
+	6RqAfwfpfQGtgkN8FisXB0c2fXD4xzlPeU/BoKC/ZoCVmu3/Q1OMArcKJpAu6QPn/5pYvkg0XnfvS
+	k9lWJqLqhIst8BkXJ7CizTlpdhQe0zYZa4VCMb5v5KRsfQfnGoPQxdUgjglAhvTkzVWlHRtmLbpw2
+	mhK2ZTzQ==;
 Received: from [50.53.2.24] (helo=bombadil.infradead.org)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tLqAY-00000001rO5-0CJr;
-	Thu, 12 Dec 2024 20:52:22 +0000
+	id 1tLqAX-00000001rO5-3S4w;
+	Thu, 12 Dec 2024 20:52:21 +0000
 From: Randy Dunlap <rdunlap@infradead.org>
 To: linux-scsi@vger.kernel.org
 Cc: Randy Dunlap <rdunlap@infradead.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/5] scsi: scsi_lib: add kernel-doc for exported functions
-Date: Thu, 12 Dec 2024 12:52:15 -0800
-Message-ID: <20241212205217.597844-4-rdunlap@infradead.org>
+Subject: [PATCH 2/5] scsi: scsi_ioctl: add kernel-doc for exported functions
+Date: Thu, 12 Dec 2024 12:52:14 -0800
+Message-ID: <20241212205217.597844-3-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20241212205217.597844-1-rdunlap@infradead.org>
 References: <20241212205217.597844-1-rdunlap@infradead.org>
@@ -49,66 +49,90 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add kernel-doc for scsi_failures_reset_retries() and
-scsi_alloc_request() since these are exported.
+Add kernel-doc for scsi_set_medium_removal(), scsi_cmd_allowed(), and
+scsi_ioctl_block_when_processing_errors() since these are exported.
 This allows them to be part of the SCSI driver-api docbook.
-
-Fix kernel-doc comments for scsi_vpd_tpg_id() [add kernel-doc for
-one parameter and fix a typo].
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 CC: "Martin K. Petersen" <martin.petersen@oracle.com>
 ---
- drivers/scsi/scsi_lib.c |   21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_ioctl.c |   35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
 
---- linux-next-20241212.orig/drivers/scsi/scsi_lib.c
-+++ linux-next-20241212/drivers/scsi/scsi_lib.c
-@@ -184,6 +184,10 @@ void scsi_queue_insert(struct scsi_cmnd
- 	__scsi_queue_insert(cmd, reason, true);
- }
- 
-+/**
-+ * scsi_failures_reset_retries - reset all failures to zero
-+ * @failures: &struct scsi_failures with specific failure modes set
-+ */
- void scsi_failures_reset_retries(struct scsi_failures *failures)
+--- linux-next-20241212.orig/drivers/scsi/scsi_ioctl.c
++++ linux-next-20241212/drivers/scsi/scsi_ioctl.c
+@@ -37,8 +37,10 @@
+  * @host:	host to identify
+  * @buffer:	userspace buffer for identification
+  *
+- * Return an identifying string at @buffer, if @buffer is non-NULL, filling
+- * to the length stored at * (int *) @buffer.
++ * Return:
++ * * if successful, %1 and an identifying string at @buffer, if @buffer
++ * is non-NULL, filling to the length stored at * (int *) @buffer.
++ * * <0 error code on failure.
+  */
+ static int ioctl_probe(struct Scsi_Host *host, void __user *buffer)
  {
- 	struct scsi_failure *failure;
-@@ -1214,6 +1218,15 @@ static void scsi_initialize_rq(struct re
- 	cmd->retries = 0;
+@@ -121,6 +123,16 @@ out:
+ 	return result;
  }
  
 +/**
-+ * scsi_alloc_request - allocate a block request and partially
-+ *                      initialize its &scsi_cmnd
-+ * @q: the device's request queue
-+ * @opf: the request operation code
-+ * @flags: block layer allocation flags
++ * scsi_set_medium_removal() - send command to allow or prevent medium removal
++ * @sdev: target scsi device
++ * @state: removal state to set (prevent or allow)
 + *
-+ * Return: &struct request pointer on success or %NULL on failure
++ * Returns:
++ * * %0 if @sdev is not removable or not lockable or successful.
++ * * non-%0 is a SCSI result code if > 0 or kernel error code if < 0.
++ * * Sets @sdev->locked to the new state on success.
 + */
- struct request *scsi_alloc_request(struct request_queue *q, blk_opf_t opf,
- 				   blk_mq_req_flags_t flags)
+ int scsi_set_medium_removal(struct scsi_device *sdev, char state)
  {
-@@ -3365,14 +3378,16 @@ int scsi_vpd_lun_id(struct scsi_device *
+ 	char scsi_cmd[MAX_COMMAND_SIZE];
+@@ -242,11 +254,15 @@ static int scsi_send_start_stop(struct s
+ 				      NORMAL_RETRIES);
  }
- EXPORT_SYMBOL(scsi_vpd_lun_id);
+ 
+-/*
+- * Check if the given command is allowed.
++/**
++ * scsi_cmd_allowed() - Check if the given command is allowed.
++ * @cmd:            SCSI command to check
++ * @open_for_write: is the file / block device opened for writing?
+  *
+  * Only a subset of commands are allowed for unprivileged users. Commands used
+  * to format the media, update the firmware, etc. are not permitted.
++ *
++ * Return: %true if the cmd is allowed, otherwise @false.
+  */
+ bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
+ {
+@@ -859,6 +875,8 @@ static int scsi_ioctl_sg_io(struct scsi_
+  * Description: The scsi_ioctl() function differs from most ioctls in that it
+  * does not take a major/minor number as the dev field.  Rather, it takes
+  * a pointer to a &struct scsi_device.
++ *
++ * Return: varies depending on the @cmd
+  */
+ int scsi_ioctl(struct scsi_device *sdev, bool open_for_write, int cmd,
+ 		void __user *arg)
+@@ -941,8 +959,15 @@ int scsi_ioctl(struct scsi_device *sdev,
+ }
+ EXPORT_SYMBOL(scsi_ioctl);
  
 -/*
 +/**
-  * scsi_vpd_tpg_id - return a target port group identifier
-  * @sdev: SCSI device
-+ * @rel_id: pointer to return relative target port in if not %NULL
-  *
-  * Returns the Target Port Group identifier from the information
-- * froom VPD page 0x83 of the device.
-+ * from VPD page 0x83 of the device.
-+ * Optionally sets @rel_id to the relative target port on success.
-  *
-- * Returns the identifier or error on failure.
-+ * Return: the identifier or error on failure.
++ * scsi_ioctl_block_when_processing_errors - prevent commands from being queued
++ * @sdev: target scsi device
++ * @cmd: which ioctl is it
++ * @ndelay: no delay (non-blocking)
++ *
+  * We can process a reset even when a device isn't fully operable.
++ *
++ * Return: %0 on success, <0 error code.
   */
- int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
- {
+ int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev, int cmd,
+ 		bool ndelay)
