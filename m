@@ -1,95 +1,115 @@
-Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E882223C57
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 18:33:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E498C1ABECF
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 20:52:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734028428; cv=none; b=NAWE6W3pWo39M2sKlCp/ZbpvzPoWU0Scw8I3/NmpuyCWyczcBWLZmFH/hpy61B5CqDXw54zLfwkB6iXB6HFUaxaSsZBbzg5kZYXEMnQDCekiGVksDc61H9sDkXmWvx0FWsF0SqnDTjmI4dE5peZjtDQ1SOHyRP7gJwE8uydnqgY=
+	t=1734036744; cv=none; b=E9to+vImDhTbQYyKnjJGGM3GiWRXvMxXc25Hd8nxQ4kAy1UkQO02F1HeAT59I/it86fuMC84eL9W7kbMs9vUeB6reku4iGj4v7x2UD4mZ7wmrhp1HFg6N8UTOFa7ml/qGRWQpFLekvahBkIdfSYC36Y/EWn8dHCYZH3Pn4dom9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734028428; c=relaxed/simple;
-	bh=vqWYTvyRNuySyRTt0fcTcq6Kv2k+oOywGqy5nFG3rB0=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=aShdI8uOXGcy2vdVXryo4yYOqonkoUa9ZhaFtyFNkxC7UYYN7Um9CCvFODuUxkHKeDCrfsUd24eM011KBhNalmlKMsd5vvR5eK4BDsH8jMLeT4OrcYPXXui4gcvKjeqJWiCsfupxFmw16oEqCgx4fXVq0LQO4TYp4cRB/EDbXlo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=sIXjtb6H; arc=none smtp.client-ip=62.142.5.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1734036744; c=relaxed/simple;
+	bh=/ndaERqmRgwGQ9r6zP/NB3YKf/JSGMmm+65eWWD2sIc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=bjZzrtjND87fLPkLhwCYxnNH2ifZFTqn/Hmz1wye6+Cp/IO15TIUq+uyRdFSik0HhwuI0SrrRzNCNrJrWZMlJnlMrHKtafQKRTYQ4zwfHxwlQ/CLipdP5Uygd/D6JI3msTPmy+S769RVQazW3H1U/ejCxCL2tedMprnI30R4ntw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=To9FaaDM; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="sIXjtb6H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=vqWYTvyRNuySyRTt0fcTcq6Kv2k+oOywGqy5nFG3rB0=;
-	b=sIXjtb6H/My9eUFE3yFI3TKdelfx96td9zNDOdjVpWOF4tU3Usk+6aLtSXHi7LwdwcLb/3imbqRvW
-	 sz+30CjPQPNxNADDULuFXVimz4gUXxkhpHhdXMR7uqaQst+bSVl7EH6CQ+oTc87w2u0fcoBTl0XsXR
-	 sz7/WidfZsxKKqbXCmI3bVgXiADOCfvlfJAmMcDYg2ACDkU2xETDOwqi+cvpCbY2gZZknuUOsBfyHb
-	 P4aLKTAlhYDeUuryJU0+cMUMKPR95Aw8b7CGPEF77Aq4pK/ysdZkMhpxa2Vmh6YACKZuI6ih4O4Xm5
-	 GWxWfr60W6WwGtaRhpnNwhMyCqfh0VA==
-Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw21.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 9bdb49dc-b8b7-11ef-888c-005056bdd08f;
-	Thu, 12 Dec 2024 20:33:41 +0200 (EET)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="To9FaaDM"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=vx5PlpxbwZpb2opqxy2k3FqmU4u+duEDP1k6keYODu4=; b=To9FaaDMGqYlda+8V5ciAUaqnY
+	+OSNaO+g8kY49/q1urg2Z7wYWFzgY8fgtWYIFlWabfh0rU6UevW4DMZ139+GRlmoAC/eLNFVgIzpe
+	bcuPWw5siWscQMmTKCEaxXfO1y0RT3h0aDB6ACoWFEey5KWw2wugsTV47hheQ8/L50dvB4/a08ZW4
+	m/4tdjgl2AyHkJcHiqQGh4k8x2UfUBRy4l9OFzM9+SnqJTHJ9a6oLuFxdjE9iNWhrzhHw5efNGpO2
+	Uq9VIpt70Ozpe/4Sj9gyr6vkJMnoRkAzMmvNwF2i6yqAWUt5IKCANj14F3XGnowHk57wzVZXiEEjm
+	Bn9osUSg==;
+Received: from [50.53.2.24] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tLqAY-00000001rO5-27Bf;
+	Thu, 12 Dec 2024 20:52:22 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-scsi@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 5/5] scsi: transports: fix kernel-doc for exported functions
+Date: Thu, 12 Dec 2024 12:52:17 -0800
+Message-ID: <20241212205217.597844-6-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20241212205217.597844-1-rdunlap@infradead.org>
+References: <20241212205217.597844-1-rdunlap@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.300.87.4.3\))
-Subject: Re: [PATCH v2 2/4] scsi: scsi_error: Add counters for New Media and
- Power On/Reset UNIT ATTENTIONs
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <2e21a7f9-f59c-4f8c-a942-ced71cace6df@acm.org>
-Date: Thu, 12 Dec 2024 20:33:30 +0200
-Cc: linux-scsi@vger.kernel.org,
- jmeneghi@redhat.com,
- martin.petersen@oracle.com,
- "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
- loberman@redhat.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <FAAC229D-CC44-4365-B8B1-0844CA584303@kolumbus.fi>
-References: <20241125140301.3912-1-Kai.Makisara@kolumbus.fi>
- <20241125140301.3912-3-Kai.Makisara@kolumbus.fi>
- <2e21a7f9-f59c-4f8c-a942-ced71cace6df@acm.org>
-To: Bart Van Assche <bvanassche@acm.org>
-X-Mailer: Apple Mail (2.3826.300.87.4.3)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+Fix kernel-doc for sas_port_alloc(), sas_port_alloc_num(), and
+spi_dv_device().
+This allows them to be part of the SCSI driver-api docbook.
 
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+CC: "Martin K. Petersen" <martin.petersen@oracle.com>
+---
+ drivers/scsi/scsi_transport_sas.c |   10 ++++++----
+ drivers/scsi/scsi_transport_spi.c |    3 ++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-> On 12. Dec 2024, at 0.14, Bart Van Assche <bvanassche@acm.org> wrote:
->=20
-> On 11/25/24 6:02 AM, Kai M=C3=A4kisara wrote:
->> + unsigned char ua_new_media_ctr; /* Counter for New Media UNIT =
-ATTENTIONs */
->> + unsigned char ua_por_ctr; /* Counter for Power On / Reset UAs */
->=20
-> Why unsigned char instead of e.g. u16 or u32? With one of the latter =
-two data types, no cast would be necessary in the macros below.
-
-The purpose was to save memory. (Because of the alignment rules, =
-probably nothing is saved now compared to u16.)
-I will change teh counters to u16.
-
-The const casts are there to prevent the users to use the macros to =
-change the counter values.
-
->=20
->> +/* Macros to access the UNIT ATTENTION counters */
->> +#define scsi_get_ua_new_media_ctr(sdev) \
->> + ((const unsigned int)(sdev->ua_new_media_ctr))
->> +#define scsi_get_ua_por_ctr(sdev) \
->> + ((const unsigned int)(sdev->ua_por_ctr))
->=20
-> Please introduce macros in the patch that introduces the first user of =
-these macros. I don't see any users of these macros in this patch?
-
-The idea was to introduce the mechanism in one patch and the user in the =
-next. But I will move the macros to the next patch.
-
-Thanks,
-Kai
-
+--- linux-next-20241212.orig/drivers/scsi/scsi_transport_sas.c
++++ linux-next-20241212/drivers/scsi/scsi_transport_sas.c
+@@ -888,7 +888,8 @@ static void sas_port_delete_link(struct
+ 	sysfs_remove_link(&phy->dev.kobj, "port");
+ }
+ 
+-/** sas_port_alloc - allocate and initialize a SAS port structure
++/**
++ * sas_port_alloc - allocate and initialize a SAS port structure
+  *
+  * @parent:	parent device
+  * @port_id:	port number
+@@ -897,7 +898,7 @@ static void sas_port_delete_link(struct
+  * below the device specified by @parent which must be either a Scsi_Host
+  * or a sas_expander_device.
+  *
+- * Returns %NULL on error
++ * Returns: %NULL on error
+  */
+ struct sas_port *sas_port_alloc(struct device *parent, int port_id)
+ {
+@@ -932,7 +933,8 @@ struct sas_port *sas_port_alloc(struct d
+ }
+ EXPORT_SYMBOL(sas_port_alloc);
+ 
+-/** sas_port_alloc_num - allocate and initialize a SAS port structure
++/**
++ * sas_port_alloc_num - allocate and initialize a SAS port structure
+  *
+  * @parent:	parent device
+  *
+@@ -942,7 +944,7 @@ EXPORT_SYMBOL(sas_port_alloc);
+  * the device tree below the device specified by @parent which must be
+  * either a Scsi_Host or a sas_expander_device.
+  *
+- * Returns %NULL on error
++ * Returns: %NULL on error
+  */
+ struct sas_port *sas_port_alloc_num(struct device *parent)
+ {
+--- linux-next-20241212.orig/drivers/scsi/scsi_transport_spi.c
++++ linux-next-20241212/drivers/scsi/scsi_transport_spi.c
+@@ -985,7 +985,8 @@ spi_dv_device_internal(struct scsi_devic
+ }
+ 
+ 
+-/**	spi_dv_device - Do Domain Validation on the device
++/**
++ *	spi_dv_device - Do Domain Validation on the device
+  *	@sdev:		scsi device to validate
+  *
+  *	Performs the domain validation on the given device in the
