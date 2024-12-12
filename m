@@ -1,138 +1,74 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B0911A4F22
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 20:52:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B3019995A;
+	Thu, 12 Dec 2024 21:37:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734036745; cv=none; b=BUVWCbME9PXDv9FEQO1ahNE4qBDj0syIYUKfSC/a191BJzrx2BaJkvtcdFF2dARKlGP58ozvi8adKflfe/GOVzbMJSvbsusgmnWk83nSvdEx4wkG8H6bZ0xiGec7c5vcPuOksEwSUH5OsdZDUPxrnGyuFRDDkvGuYTjm6/u/dac=
+	t=1734039456; cv=none; b=q6/mnV+AzOqLutTaOicvTx/6t5L1jaq2oUf2DA35Q++vxKXpVSrbkVa5H6j46wYZs0sL+5IVRVU0rPW6qDIUU7QU03VWbgZFc6zoy7OfFYkBsV9PfMOO6ozXSVK8hNWL3P/W2X1Kn6s8Df7aTLUBvyNwFuApXlqMjaCRJlR7q1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734036745; c=relaxed/simple;
-	bh=++GVuqGnOdqduHfgyfRPg2vHaMJGQK29XZRdvyQ4xdM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AcMKTzJsoejiQHJ5IMklTyJAP+ie9CjpYiWsykYJiaJpAQFbaTjlpm8uCSHbr+BVVTEdKcWUcswCyOyjukevyCP4pKK9G3cLLYw9y9EHNDv7L+nlTbIgY5n+VmRo1NRPlcu+rBnbKBnAHH2AzVKvIzYx4rt+X2LFFjWnb99yyfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R4ErBP3w; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1734039456; c=relaxed/simple;
+	bh=hF4mJhnVVXZXfZmgDwcher6bwGaSHVExWyvvXFEjp2w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lXyxX5qTluJ/tJdDP3BHIOmLiPaozIW0VSzxubc39ffq124jgIqvMCmlpNBhxnvDXLPoe2EYrNpE+c1AJLxRtxFc3ro3bSVh4DXqzNBnyXiNj2THGFtNJ7st5QbWt6d8f4yv4AmROoCgzSmhTwbsDvKZqu6zJtNNG6k609b0/9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=olHk7jG7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R4ErBP3w"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=PXEkCulTFjRJ7qcn0gnZBXZ52hajeLcq5bPwWoTRmsw=; b=R4ErBP3wUKR7i2rSZf2jzdjP1v
-	j6yc/0OCXLgsLVJjvdE4i1QKTkfSISb2p7rUWCh32uD89zFwAFw7PNfmkZCXWINXhfGjdzjg03IEN
-	DeiRDpvqa0KiyoPB8FU6V18m8mEvjIzs989TtiO9uNmXRkJA3egIeDC3jQnotgyPwOG8tA1dJkK7p
-	6RqAfwfpfQGtgkN8FisXB0c2fXD4xzlPeU/BoKC/ZoCVmu3/Q1OMArcKJpAu6QPn/5pYvkg0XnfvS
-	k9lWJqLqhIst8BkXJ7CizTlpdhQe0zYZa4VCMb5v5KRsfQfnGoPQxdUgjglAhvTkzVWlHRtmLbpw2
-	mhK2ZTzQ==;
-Received: from [50.53.2.24] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tLqAX-00000001rO5-3S4w;
-	Thu, 12 Dec 2024 20:52:21 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-scsi@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/5] scsi: scsi_ioctl: add kernel-doc for exported functions
-Date: Thu, 12 Dec 2024 12:52:14 -0800
-Message-ID: <20241212205217.597844-3-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20241212205217.597844-1-rdunlap@infradead.org>
-References: <20241212205217.597844-1-rdunlap@infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="olHk7jG7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAE1CC4CECE;
+	Thu, 12 Dec 2024 21:37:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734039456;
+	bh=hF4mJhnVVXZXfZmgDwcher6bwGaSHVExWyvvXFEjp2w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=olHk7jG7/rj4jRsPenllCQhTf5QGq/o+IXUWAK82q6pCJzN6i0SdtI7XXvHvfiYLW
+	 o7Yb2dtL1CH8VNEjEG8A5mpzTFx8yH0hEIFW7L1nUsgKKc9ugXfj5gaT9OXUqTDi58
+	 6N9jkLSNkjhUTqlAcmvg1HLxdVRSD5WcssiicIJ2Nxmvr9M6pJD1wQCUfPhz2WNC+t
+	 2xdjNIS1+MX5kC7hdRX17/1bm7hIdvOxPxxX9hHKaS50L38XE0/FImLbSAiegVPTIq
+	 VSrgB1QqyjlJeR5aTe0UIkwwE/K4CIPz765ubY7ooteF3fveq0wORNZ7ubo5V6o5Xr
+	 rY71XaqihMshQ==
+Date: Thu, 12 Dec 2024 13:37:34 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-mips@vger.kernel.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	loongarch@lists.linux.dev, sparclinux@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH v4 00/19] Wire up CRC32 library functions to
+ arch-optimized code
+Message-ID: <20241212213734.GB39696@sol.localdomain>
+References: <20241202010844.144356-1-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241202010844.144356-1-ebiggers@kernel.org>
 
-Add kernel-doc for scsi_set_medium_removal(), scsi_cmd_allowed(), and
-scsi_ioctl_block_when_processing_errors() since these are exported.
-This allows them to be part of the SCSI driver-api docbook.
+On Sun, Dec 01, 2024 at 05:08:25PM -0800, Eric Biggers wrote:
+> This patchset applies to v6.13-rc1 and is also available in git via:
+> 
+>     git fetch https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git crc32-lib-v4
+> 
+> CRC32 is a family of common non-cryptographic integrity check algorithms
+> that are fairly fast with a portable C implementation and become far
+> faster still with the CRC32 or carryless multiplication instructions
+> that most CPUs have.  9 architectures already have optimized code for at
+> least some CRC32 variants; however, except for arm64 this optimized code
+> was only accessible through the crypto API, not the library functions.
+> 
+> This patchset fixes that so that the CRC32 library functions use the
+> optimized code.  This allows users to just use the library instead of
+> the crypto API.  This is much simpler and also improves performance due
+> to eliminating the crypto API overhead including an indirect call.  Some
+> examples of updating users are included at the end of the patchset.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-CC: "Martin K. Petersen" <martin.petersen@oracle.com>
----
- drivers/scsi/scsi_ioctl.c |   35 ++++++++++++++++++++++++++++++-----
- 1 file changed, 30 insertions(+), 5 deletions(-)
+FYI, this patchset is now in linux-next via the crc-next branch in my repo.
+Additional reviews and acks would always be appreciated, of course.
 
---- linux-next-20241212.orig/drivers/scsi/scsi_ioctl.c
-+++ linux-next-20241212/drivers/scsi/scsi_ioctl.c
-@@ -37,8 +37,10 @@
-  * @host:	host to identify
-  * @buffer:	userspace buffer for identification
-  *
-- * Return an identifying string at @buffer, if @buffer is non-NULL, filling
-- * to the length stored at * (int *) @buffer.
-+ * Return:
-+ * * if successful, %1 and an identifying string at @buffer, if @buffer
-+ * is non-NULL, filling to the length stored at * (int *) @buffer.
-+ * * <0 error code on failure.
-  */
- static int ioctl_probe(struct Scsi_Host *host, void __user *buffer)
- {
-@@ -121,6 +123,16 @@ out:
- 	return result;
- }
- 
-+/**
-+ * scsi_set_medium_removal() - send command to allow or prevent medium removal
-+ * @sdev: target scsi device
-+ * @state: removal state to set (prevent or allow)
-+ *
-+ * Returns:
-+ * * %0 if @sdev is not removable or not lockable or successful.
-+ * * non-%0 is a SCSI result code if > 0 or kernel error code if < 0.
-+ * * Sets @sdev->locked to the new state on success.
-+ */
- int scsi_set_medium_removal(struct scsi_device *sdev, char state)
- {
- 	char scsi_cmd[MAX_COMMAND_SIZE];
-@@ -242,11 +254,15 @@ static int scsi_send_start_stop(struct s
- 				      NORMAL_RETRIES);
- }
- 
--/*
-- * Check if the given command is allowed.
-+/**
-+ * scsi_cmd_allowed() - Check if the given command is allowed.
-+ * @cmd:            SCSI command to check
-+ * @open_for_write: is the file / block device opened for writing?
-  *
-  * Only a subset of commands are allowed for unprivileged users. Commands used
-  * to format the media, update the firmware, etc. are not permitted.
-+ *
-+ * Return: %true if the cmd is allowed, otherwise @false.
-  */
- bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
- {
-@@ -859,6 +875,8 @@ static int scsi_ioctl_sg_io(struct scsi_
-  * Description: The scsi_ioctl() function differs from most ioctls in that it
-  * does not take a major/minor number as the dev field.  Rather, it takes
-  * a pointer to a &struct scsi_device.
-+ *
-+ * Return: varies depending on the @cmd
-  */
- int scsi_ioctl(struct scsi_device *sdev, bool open_for_write, int cmd,
- 		void __user *arg)
-@@ -941,8 +959,15 @@ int scsi_ioctl(struct scsi_device *sdev,
- }
- EXPORT_SYMBOL(scsi_ioctl);
- 
--/*
-+/**
-+ * scsi_ioctl_block_when_processing_errors - prevent commands from being queued
-+ * @sdev: target scsi device
-+ * @cmd: which ioctl is it
-+ * @ndelay: no delay (non-blocking)
-+ *
-  * We can process a reset even when a device isn't fully operable.
-+ *
-+ * Return: %0 on success, <0 error code.
-  */
- int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev, int cmd,
- 		bool ndelay)
+- Eric
