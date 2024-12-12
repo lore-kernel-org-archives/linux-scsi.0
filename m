@@ -1,87 +1,126 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05212080D9;
-	Thu, 12 Dec 2024 17:51:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6916F215776
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 18:28:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734025918; cv=none; b=eQ32JYlflhVZ2jtRGS8h5LB3OfHxhBanEUMSoen2XuvHL4A7XfjObnsvPtrQukmjfSFj+i6yuQae2W7kyH2hnLidLZaatwQKyGTKzJ99G5k3gntzyKPZUv73LyFg4/2DGlblsXuijdhE9hPZxym5Ztpg1CbIemYUsTQXeuFWFWg=
+	t=1734028122; cv=none; b=W3jJRQeGBVsHe/bVZblbDLE69HiEOirNKHMxgxsx6qHmfL3QCG19+JhlOUVRPyQQBRYSCx2TOA53RhxZmFuEI4Ct8zxt/7/9HEKQoNCoX39zFec/fvNCMIAOR3z6zpNLwYl5JRmEWU+3fnfXg17GaVwgZLbUVqgg1OZBI7m4PR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734025918; c=relaxed/simple;
-	bh=37De6D9LQ7LcziRlzSJ395yH/xzhUwZrp0FvITUNjDA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pUKgLmr3abN2Lz5Wnk+S86UjiBSquBVxjASNfBiiJ0c98CMEZLZumARd5aNFr28l4/PwW6PP9tw92X5gCWxdR1XxaUCj+Val9yi1PH/IUVajPl3xaK6FpEcPFtOmhMkFhruPo4O1LmQr9K4QthshIVmvevDGgmb+hAjV95n00nY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DRcEbENb; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1734028122; c=relaxed/simple;
+	bh=JWKL7zKZUdq1409eCqTiWPFBEbeZUuY4UA4lIc2oeJ4=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=fAtef+ezDkKBjzIuQiuxSbQWj6tYoYip4H5yTtZ2swzTkNFbTyKhSndEOLVf+BjVoOeVL2au55GlecNelkoD52OxAh9yh2Y05/71HKmYu16FAzzqT6sJExVCeurR/z/lAxXBb+b82H6tl2pmVV0Jpp5v/w2IyvKsFyfEuO/6/ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=nbN6swmK; arc=none smtp.client-ip=62.142.5.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DRcEbENb"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Y8KmD1sVDzlff0N;
-	Thu, 12 Dec 2024 17:51:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1734025910; x=1736617911; bh=tds9zeWQEmz0GeQ0VraJwgrh
-	HE7qE6Q6NGyFq0XBSbQ=; b=DRcEbENbmFV3uTHubYjJOW1PrBdr/4BGwbQtxuXY
-	IqTlJBXgvQhJMSpWMMvg4PrjEo3kF44Nmhv2OYXYMBSEJMliPV294y0rfeNIFBKQ
-	CmEuak5SV8hSpRDz9s61SqRMDrqFW2kEj9winVTXAKlZblbKMZbc38l69UUkvbJN
-	0b2rFT7l3nsOcTVYWaijVO4OwiBGHJAGdmZlg2cF606ihWuLUjufhrxprVSSMiYY
-	LZRUQgHUQRS5AecSAmXPKZ8ddPv5BVFdxVRwALIJc5P2YauAm/RuhCtiDUIwQaIo
-	r2S/XZeP4XLbrJhrt5MvXR40gHOZ78i5j0YdCie4v9xerQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8EDkbcjNz0Ah; Thu, 12 Dec 2024 17:51:50 +0000 (UTC)
-Received: from [100.118.141.249] (unknown [104.135.204.81])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Y8Klz1Z48zlff0D;
-	Thu, 12 Dec 2024 17:51:42 +0000 (UTC)
-Message-ID: <8511253c-d496-4c87-9625-bcaefa440c64@acm.org>
-Date: Thu, 12 Dec 2024 09:51:40 -0800
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="nbN6swmK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=uivl0z5FFDfSkYevq3qryosYqbmMXlj94CNoV/foQus=;
+	b=nbN6swmKejHZZSODknPEwaPw7R9+PgCvUK9ceHtDnmGjRguOc8r1VOK+XOFkQh4dtHGf3TjVAOmO5
+	 zPKJzL9NUC/vtuHLnzC49Hn+nPFel4HSWRnAE6OEq+3FLrGdXpPyI2MTivOc+tFbtzoK83OKHM+cDT
+	 Ox2hn7uTfXwz4fQvcOiLMj+r83xGilSf6HdevGjV18cwNtlaW+6bocDlyOaWIl5MxsGP2ubvOfDUeP
+	 3cMe9Z2pST9ehk6AvBjnRVIfLjR6BY5Lr13Ssa4MRqSGGR01f0jE9DpiCCHwdAenQYTLoFWUQ90PGw
+	 NtCUPTTbKj0nUEycZ0HeVOMhWwXZGHA==
+Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
+	id bd35d5da-b8b6-11ef-9c13-005056bd6ce9;
+	Thu, 12 Dec 2024 20:27:27 +0200 (EET)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/3] scsi: ufs: qcom: Suspend fixes
-To: manivannan.sadhasivam@linaro.org, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Abel Vesa <abel.vesa@linaro.org>, Bjorn Andersson <andersson@kernel.org>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>,
- Nitin Rawat <quic_nitirawa@quicinc.com>, stable@vger.kernel.org,
- Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-References: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.300.87.4.3\))
+Subject: Re: [PATCH v2 0/4] scsi: st: scsi_error: More reset patches
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <0c6e699b-8f77-411f-b73d-e6762c6ad286@redhat.com>
+Date: Thu, 12 Dec 2024 20:27:16 +0200
+Cc: linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com,
+ "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
+ loberman@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <8B3169CC-BD8A-46B5-B9B0-140047A44661@kolumbus.fi>
+References: <20241125140301.3912-1-Kai.Makisara@kolumbus.fi>
+ <0c6e699b-8f77-411f-b73d-e6762c6ad286@redhat.com>
+To: John Meneghini <jmeneghi@redhat.com>
+X-Mailer: Apple Mail (2.3826.300.87.4.3)
 
-On 12/11/24 9:40 AM, Manivannan Sadhasivam via B4 Relay wrote:
-> This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
-> the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
-> this patch, I couldn't figure out the exact commit that caused the issue. So I
-> used the commit that introduced reinit support as a placeholder.
-> 
-> Patch 3 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
-> PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
-> this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
-> device powerdown during suspend. This supersedes the previous series [1] that
-> tried to fix the issue in clock drivers.
+While doing some detective work, I found a serious problem. So, please =
+hold these patches again.
+More about the reason below.
 
-If Avri's comment is addressed, feel free to add my reviewed-by to this
-series.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> On 11. Dec 2024, at 23.57, John Meneghini <jmeneghi@redhat.com> wrote:
+>=20
+> Sorry it has taken me so long to get back to this....
+>=20
+> I've tested these patches with both my tape drive and with scsi_debug =
+tape emulation.
+>=20
+> see:
+>=20
+>  https://github.com/johnmeneghini/tape_tests
+>=20
+> All hardware tests are passing and everything is working as expected =
+with the tape drive tests, but the power on reset behavior of the =
+scsi_debug test is still showing the some strangeness.
+>=20
+> =
+https://github.com/johnmeneghini/tape_tests/blob/master/tape_reset_debug.s=
+h
+>=20
+> Specifically, every time you reload the scsi_debug driver the SCSI mid =
+layer clears the POR UA. If I am not mistaken, your intention with =
+adding the counters for ua_new_media_ctr and ua_por_ctr to the mid layer =
+was to catch these events and report them to the upper layer driver.
+>=20
+Well, the counters work as designed. The st driver stores reference =
+values when the driver
+probing the device. This means that the UAs before the probe are missed.
+
+I previously suspected that the first POR UA is caught by scsi scanning =
+when it issues
+MAINTENANCE_IN to get the supported opcodes. This happens when scanning =
+calls
+scsi_cdl_check(). However, this function does not do anything if Scsi =
+level is less than
+SPC-5 (ANSi 7). Scsi_debug claims SPC-5 and so scsi_cdl_check() gets the =
+UA
+before the st device exists. Your drive probably is reporting a level =
+less than SPC-5
+and so the UA is not received by the scanning code.
+
+I changed scsi_debug so that it reports SPC-4 (ANSI 6). After this =
+change st received
+the POR UA. But I had 'mt stsetoptions' in my script and it failed!
+
+
+The problem is that no driver options for the device can be set before =
+something has
+been done to clear the blocking. For instance, the stinit tool is a =
+recommended method
+to set the options based on a configuration file, but it fails.
+
+Note that this problem has existed since commit =
+9604eea5bd3ae1fa3c098294f4fc29ad687141ea
+(for version 6.6) that added recognition of POR UA as an additional =
+method to detect
+resets. Nobody seems to have noticed this problem in the "real world". =
+(Using
+was_reset was not problematic because it caught only resets initiated by =
+the midlevel.)
+
+A solution might be to add some more ioctls to the list of allowed =
+commands.
+But I must think about this a little more.
+
