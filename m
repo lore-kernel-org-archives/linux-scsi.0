@@ -1,69 +1,69 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 700EB1AC891
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 23:14:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33E321DE89B
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 23:14:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734045286; cv=none; b=o24k61moq69KCMx+pqLEY8xN72iFGzCX7OY28yv/ViDy32Um7AKqOG504+DlYOXgA6NnmbsooAaGqXqrr5No5DIwKyWQ3vb/KWf9OI++3XnQlWyI0bzAbCFXQDbSOlgnm/ts2FFFSNLdg0MsE1zgJHP0BgL8a0pDiVLIoNx0Ups=
+	t=1734045288; cv=none; b=PhuEa87+eyJQjWGj8eaATf1uvHD58Bvh9QGdVzrQprlyppc+SwJjLcfwo0aKzQhgwdiiByKvsVfbhugj66Q2K6xaRPN78URxWzSaBQywtd832OqX75lWoJmZRNO8ostSOntn03LLbrFc128NooOUvs15lzBSjfLLslC3NyvYx/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734045286; c=relaxed/simple;
-	bh=QZlbgphKUCDE4lwWBxXQr7bh39j0yqOT06VHz9LByOw=;
+	s=arc-20240116; t=1734045288; c=relaxed/simple;
+	bh=s/NRhH7EcuHFvDmZYPPrOAxpo0Kj9bxVsFXAiJpaiPM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eP3PqAx3/tTMnX4FBI8SIqKX9q9TlJSNINUa4ShYni4Yz1Ss653wF50yFTP1UnYIlwWjz97yiOl7puB2MrW8Mp7giqTzOlt04CvVGatKpspXBV7yx6nJ7Lsh097fTZsjuuBS1B41cKBLz0l7pYpT8RnbAQIA/pU2oG1P5kS9Zsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iV8NQ343; arc=none smtp.client-ip=209.85.214.179
+	 MIME-Version; b=R8FG6E+9QOwiohCZdiM85E8I12WeOsv85xNun7A7TDRmRXTW8vk3+OazHKmCJal6qXPZKYzcCGgjnxObOVgzHuX2DSHfnjVJ57DX8+7KbUemko4gHWIgaW+3jHnn8oVnGiOgA0MGBj0U9HHMQ0lyVPe7NaNdp8kcGlRtvjgyZU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KzcnBnY4; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iV8NQ343"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-216395e151bso7824035ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 15:14:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KzcnBnY4"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2163bd70069so11966545ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 15:14:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1734045284; x=1734650084; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1734045286; x=1734650086; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=BfUlV5Au1B6a5Kic7bUZWej6b7ILHa5XUrJrlRhG+p8=;
-        b=iV8NQ343ov8uq4lsSPNHLkyTImfpQR1KbE8oVCeqzHGB6UxHlIKiuXdYE2YjiZpHi8
-         Fncu1o/Mp+veLHOvAet8Rbei5vFICCkZ/+EH7U7EQgtI8AvF56acVBrObBzXlxipdqUA
-         tD296iasQk9zLK+rwB2wUk7YHNbrd5MBe0OlzgyhqGJZ7HdEt8goX6sAV0JUQV0+1B+f
-         jfnSl6cGX7qiC0jKctAeA/WWpy0x1I8i7eoJ8z3W8qutrxKKgD5s+ItaS6sPfr952CNJ
-         mw5Nv+dJ6nRzkPAQ+SY/8VAU4VU/zgjFtB+WSpuqTr+eacrjuyVN1V/+/Xd4B56ymc/z
-         g5gg==
+        bh=msb7H6YpNqhqS3i3C8VSQeTs1vnGuAB686qyJ7Ilrik=;
+        b=KzcnBnY4FW7BiCRkbPYvdUmKV+G1TFobXVC3QvnB+Df7BAP7XD2Bor3G+0D0ZwMfw3
+         xRrofhCiaQUo0bc4PQkcBkZK/evGtRxbnhiniOXlYX45BvqB8nYXEbSCUC2294suBD67
+         Q1DViU1KwvtrNcwL2pG3C8++NsEVtC/GosQSvQppZVi4CYFZPyljXmWY2Nuo2IpalE0W
+         ymYbZ7Zh14AOZbefnj9W/H+zKegb9YFnVMUbGXktQ0n4ccQLroFMwnioUqXyBMVDi7uo
+         B9Ke9WgzQ34/UNwb3wwzifYuYN/Ncnkl4qiCXqGONvMOkOR8Jhc2MwuOErI6qE9ZLJWC
+         /Uag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734045284; x=1734650084;
+        d=1e100.net; s=20230601; t=1734045286; x=1734650086;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=BfUlV5Au1B6a5Kic7bUZWej6b7ILHa5XUrJrlRhG+p8=;
-        b=Vg273qX6gknDiitkXESOIy+pOvE2VlUWm6/zHBC6tR5SDfQ/Z7dZ3xL0RM8gc1RihY
-         l++DJ3jcni30PFMA25QYgJjnqMFFsQj3vaAmngTrV9WpMBKQ7McJPf3vseSOdNlmoUco
-         UWVGpN1kp0vbnjRSDQQ3U5TAeJl/HcTWtGsI1obXfnxupOa10HFAGVZi1O+STEBDt0cW
-         sBW6MRS3SzpZw1EJgPYqa40f9UhMwIgNsCi4krA2lchVfTNuk9dB8zTGr6R8pEm2yayO
-         wrnw9ih6RGMlad2oGTLjT6h9zXzLpnYBezXv1aPzomXYF0WP3wNxuQLBhk8XKp9A3RiM
-         hI8Q==
-X-Gm-Message-State: AOJu0YxbbGjnjEyWht/EOLgEst7GywvdBfIgNzdNCaYSwakJBhdbfl/c
-	DkPVtpI4Ge4CRBcyej0zfOvc+3BYBe1x3/9IlAj+hAz/pA0WWGXbTNgJNg==
-X-Gm-Gg: ASbGnctrs8J0viItFMA4F5+ronD5uqg/PQCUBoocw6Vq5zWODrwj9Ezny0qfd8b9YEP
-	5oiajKvP5Pj2lVJZVu1w+3fFy4cRX/X8iQjHOIiFQ9Zn6SmOEa0k3f4+0u6Uk7chpkkyvN4CZic
-	IVvLzowrUesMe0JCyLEhibNCMtdF8sJga6iizBCPHI4mE//uNb/KWZ3UUmi1H+ugEMvcKOO2jwP
-	kj2EGu43pyWnPOq+p60vRT1mVWJ3xjpAmhysv/yeVQAOnZkyQYixWH+aZ32tartcJ7oSK9TsBtG
-	+hEab2queXdGPeoqdWe9esDX5QrZOlhLLHlBCv7pTg==
-X-Google-Smtp-Source: AGHT+IEfkMyLJcX+sGEh2y4vSLxf1FqtXz9TAhUvL99Mr+Ov66+JCLYw8peU0+cb4mltbmkHkkcJbA==
-X-Received: by 2002:a17:902:db02:b0:216:3440:3d21 with SMTP id d9443c01a7336-2178c874e19mr78954985ad.26.1734045284521;
-        Thu, 12 Dec 2024 15:14:44 -0800 (PST)
+        bh=msb7H6YpNqhqS3i3C8VSQeTs1vnGuAB686qyJ7Ilrik=;
+        b=XWMgP7r4KMqd6VNZMOVbZ9xAxtww5fv3oR3DlZ/3tGLJ5Dr+jfscgBFtcoMvws+a/D
+         /Wl69rsaqLLV3IRYZfPv3DEyjTqJpkVQQ5Ai+7LJtZ3fn1pgw7MKo76mu65MRrWSE0Hm
+         eJN0Rja8TQ5+Z3Jb8OgbFJz6DfnJGlE7Sk/o66mfavp/hnCUl2sG4SRX/Kw+jeqRhuQy
+         moyIcEMy6BYiI0eRCofoUoxFuOLb2IiUMtpQlGFX+KUxbmobYGH7QXHm6FrIndzCu5QN
+         N/qkAQ9QQkaupMVcP/hndwnEu2E7OLc7Q5LzBNk49mgoKbCPkMJXPIXCiPJdT1WjVJbP
+         aEug==
+X-Gm-Message-State: AOJu0Yw61LsM6kCSZaiNw9k8JmfBEXKGeMHwW9rMKjFrPqA2xEhzt3RJ
+	eFDnaNyfDk4fzwDjrohilkyPaGWR82OtThngItAEkt4mnFLLNH4XqGyXow==
+X-Gm-Gg: ASbGncsungeN/jfO24kbpUNAwnkAHvq6qdKCFMrJhdZVu3lWN/RfD+4QDlXAUl2r4fa
+	k/ARCkoKRsCe4sQ7ZgQmKKNpmAjYYSEnIsXPWdIciS1Bt8JbCcUrS2f5KS+VGuYUpPylsCfAzCT
+	ncnQ9DcQ+uQxZkLMA/oh8Dd0SZl+eOARGU2nFh31q2EKiGBQw5n+cIUZVTYfWofFi65ocNjeBcq
+	571NVucErnfmGpLgx3Ej8xDn0nKh1CMXRstj9hu4E+0lZvFKq8h9LV4Gq3G7RHskFBMgmoznDb7
+	dI7T5+sdsFV2pe9hT1qy8RiD+lTlHmQKRwxvSAqwgw==
+X-Google-Smtp-Source: AGHT+IHTjH6jXGgzNP5BxRAxPs5iUgXkRhMN7KmLk4Hm3Y6yOTYnogh7Dp5/AQi6tn77zC7FSDKLCg==
+X-Received: by 2002:a17:902:d492:b0:216:50c6:6b47 with SMTP id d9443c01a7336-21892a510d5mr7581015ad.46.1734045286257;
+        Thu, 12 Dec 2024 15:14:46 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-216325f51d6sm92727875ad.197.2024.12.12.15.14.43
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-216325f51d6sm92727875ad.197.2024.12.12.15.14.45
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Dec 2024 15:14:44 -0800 (PST)
+        Thu, 12 Dec 2024 15:14:45 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 02/10] lpfc: Restrict the REG_FCFI MAM field to FCoE adapters only
-Date: Thu, 12 Dec 2024 15:33:01 -0800
-Message-Id: <20241212233309.71356-3-justintee8345@gmail.com>
+Subject: [PATCH 03/10] lpfc: Delete NLP_TARGET_REMOVE flag due to obsolete usage
+Date: Thu, 12 Dec 2024 15:33:02 -0800
+Message-Id: <20241212233309.71356-4-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20241212233309.71356-1-justintee8345@gmail.com>
 References: <20241212233309.71356-1-justintee8345@gmail.com>
@@ -75,32 +75,95 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Qualify setting the REG_FCFI MAM field to FCoE adapters only by keying
-off HBA_FCOE_MODE phba->hba_flag.  The field is not applicable to FC
-adapters.
+Remove the NLP_TARGET_REMOVE flag as its usage is obsolete.  The current
+framework is to rely on the lpfc_dev_loss_tmo_callbk from upper layer to
+notify final ndlp kref release.  There's no need to specifically set
+NLP_EVT_DEVICE_RM when a LOGO completes.  The dev_loss_tmo_callbk is
+responsible for the final kref put.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_mbox.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_disc.h      |  1 -
+ drivers/scsi/lpfc/lpfc_els.c       | 17 +----------------
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 10 ++++++----
+ 3 files changed, 7 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index e98f1c2b2220..fb6dbcb86c09 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -2524,8 +2524,10 @@ lpfc_reg_fcfi(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
- 		bf_set(lpfc_reg_fcfi_rq_id1, reg_fcfi, REG_FCF_INVALID_QID);
+diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+index 3e173b5d00e0..81cfa35dab98 100644
+--- a/drivers/scsi/lpfc/lpfc_disc.h
++++ b/drivers/scsi/lpfc/lpfc_disc.h
+@@ -208,7 +208,6 @@ enum lpfc_nlp_flag {
+ 					   NPR list */
+ 	NLP_RM_DFLT_RPI    = 26,        /* need to remove leftover dflt RPI */
+ 	NLP_NODEV_REMOVE   = 27,        /* Defer removal till discovery ends */
+-	NLP_TARGET_REMOVE  = 28,        /* Target remove in process */
+ 	NLP_SC_REQ         = 29,        /* Target requires authentication */
+ 	NLP_FIRSTBURST     = 30,        /* Target supports FirstBurst */
+ 	NLP_RPI_REGISTERED = 31         /* nlp_rpi is valid */
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 37f0a930d469..842b67e37f10 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3035,19 +3035,6 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* Call state machine. This will unregister the rpi if needed. */
+ 	lpfc_disc_state_machine(vport, ndlp, cmdiocb, NLP_EVT_CMPL_LOGO);
  
- 		/* addr mode is bit wise inverted value of fcf addr_mode */
--		bf_set(lpfc_reg_fcfi_mam, reg_fcfi,
--		       (~phba->fcf.addr_mode) & 0x3);
-+		if (test_bit(HBA_FCOE_MODE, &phba->hba_flag)) {
-+			bf_set(lpfc_reg_fcfi_mam, reg_fcfi,
-+			       (~phba->fcf.addr_mode) & 0x3);
-+		}
- 	} else {
- 		/* This is ONLY for NVMET MRQ == 1 */
- 		if (phba->cfg_nvmet_mrq != 1)
+-	if (skip_recovery)
+-		goto out;
+-
+-	/* The driver sets this flag for an NPIV instance that doesn't want to
+-	 * log into the remote port.
+-	 */
+-	if (test_bit(NLP_TARGET_REMOVE, &ndlp->nlp_flag)) {
+-		clear_bit(NLP_NPR_2B_DISC, &ndlp->nlp_flag);
+-		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
+-					NLP_EVT_DEVICE_RM);
+-		goto out_rsrc_free;
+-	}
+-
+ out:
+ 	/* At this point, the LOGO processing is complete. NOTE: For a
+ 	 * pt2pt topology, we are assuming the NPortID will only change
+@@ -3091,7 +3078,7 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
+ 					NLP_EVT_DEVICE_RM);
+ 	}
+-out_rsrc_free:
++
+ 	/* Driver is done with the I/O. */
+ 	lpfc_els_free_iocb(phba, cmdiocb);
+ 	lpfc_nlp_put(ndlp);
+@@ -10411,8 +10398,6 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 			}
+ 		}
+ 
+-		clear_bit(NLP_TARGET_REMOVE, &ndlp->nlp_flag);
+-
+ 		lpfc_disc_state_machine(vport, ndlp, elsiocb,
+ 					NLP_EVT_RCV_PLOGI);
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 4d88cfe71cae..71c76d90e8e7 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -2255,11 +2255,13 @@ lpfc_cmpl_prli_prli_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	    (vport->port_type == LPFC_NPIV_PORT) &&
+ 	     vport->cfg_restrict_login) {
+ out:
+-		set_bit(NLP_TARGET_REMOVE, &ndlp->nlp_flag);
++		lpfc_printf_vlog(vport, KERN_INFO,
++				 LOG_ELS | LOG_DISCOVERY | LOG_NODE,
++				 "6228 Sending LOGO, determined nlp_type "
++				 "0x%x nlp_flag x%lx refcnt %u\n",
++				 ndlp->nlp_type, ndlp->nlp_flag,
++				 kref_read(&ndlp->kref));
+ 		lpfc_issue_els_logo(vport, ndlp, 0);
+-
+-		ndlp->nlp_prev_state = NLP_STE_PRLI_ISSUE;
+-		lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
+ 		return ndlp->nlp_state;
+ 	}
+ 
 -- 
 2.38.0
 
