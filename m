@@ -1,84 +1,115 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2091898FB;
-	Thu, 12 Dec 2024 22:21:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0BE1AC891
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 23:14:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734042065; cv=none; b=L5YeO5CMHA325+b67IKOy+m/4ov/1ZSXHUvPDI3Mc2wNF8fA6gJ7EwdbpVraCkeZ4iQBZsh7dBAltRJqNbm2RtpSETvENk6rLbdiutf3n1V/aOKOFGlw9+rNo5+kMqg6+QG9U45rJdxhQFkNhna7fz76Wob1e3uy6vstqCeIZbg=
+	t=1734045278; cv=none; b=XHoK6V1FP+etU1XmwS4ruUpVhIynSydFy7knURNnIHoHXZPNvvs/rc3JSAukY1HT5UtD8CUXzDxUuvSb9dbu/BrRhNtYzf9wsWopibLlnuFQTPlUXI7z0mtRXaVDVzBz1BxwoRXZK1a1gIhrrw4rtaefo//AMr1s7Ne80eAydls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734042065; c=relaxed/simple;
-	bh=fbcp7kRVdrdG/+lofIHykddjUrr2VdJGhMH9O/gNX2M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZnYtZbq15J3d53JO/P3X+LE+ehPE8zcjS7jmybjW56T0YNJdGHT++sKTMO9gebxhTg9e9nh1YvSQmjj8V5qn2k6cryRSmu8yxFlGatQMi1C7FHt0A+yLjiw/5xJtmaVmrb1+9uLTIzlA/B4LCF2L7vFlvLnBtj8DHabD1Nutbts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.0.2] (unknown [95.90.243.58])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 0AA2861E64786;
-	Thu, 12 Dec 2024 23:20:46 +0100 (CET)
-Message-ID: <1e0eb9ca-6edc-4ce7-b62f-d34ca254fe52@molgen.mpg.de>
-Date: Thu, 12 Dec 2024 23:20:42 +0100
+	s=arc-20240116; t=1734045278; c=relaxed/simple;
+	bh=SM9cVzSbdQjrv6P+IxglD8mr2WIrhPSPjGBe9JGuYVM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RBPUi8No+Ysloqsibrwob01NRBciGO+mfpEu6u0BYkm0wVwa7yN/K0ZE8ClRLjtAlohRbRkye532Q17+EqZPnRJNbRQI5YohFAOhvMXAScwdoAYaoQvkZtJJErsalH64e4cYQp728Vn2Z0mf8FTRzE4m6/QLEoycyL9k3abDyqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Kv8adGZg; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kv8adGZg"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-21654fdd5daso10429465ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 15:14:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1734045276; x=1734650076; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Lu+THFnITDnPTu1bIprypbSzRE6k/8FC4X/HummEiVs=;
+        b=Kv8adGZg6foK4NLcGvhCo1LbL9pYRxpsVoftzfHMEHlMsMGbM3V5GsBV3hl5Yq7/MY
+         Fo4WpQrxM7YBRN4rrnjyeU57vWBtvsA/9rLEL5RfoJdgbIpcqJKd5yGQY/cxPtnoNtjk
+         2DgZxK5DQc5PHNYMNPI4sp9f+HiKHQj2rTuyb6EZi6pvVA75PzXg1KE9SJum4hLQgtbq
+         VLjXw386/NgaGOkfC9PUpHmuwIE6/RqW83A6gRAjDzf6mNWhrexYeRLObL+WJhPsmFsE
+         /UnIEMxwyMUFIJ2GZSG8DGtLxcDI4zD0EoEfLrjDds0AaW9MevXfZ5WmHTVWFU4V57lG
+         CaGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734045276; x=1734650076;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Lu+THFnITDnPTu1bIprypbSzRE6k/8FC4X/HummEiVs=;
+        b=DJYDSTJ5iJBMnE8FOdWrUlyx5yChK8cMdJ0YCdnLxL/x2nK0EXQRJM4AEqntMEvCYV
+         sRrTChoh8SbXFxHIcoxT9mvXvygxtHXg/FOYi0J2ST9+vpQjt7DckUe58621ATJSYtKF
+         8zUDFk87U6IDEVu8dYitBpKJJglAFlUQ0Zwg257K1jhePrtnb+nHmAEue69KYMaPiAFG
+         5eIpZKLZvFttxNy4RIjrCM7fDGN6ua2QF5CRppP9VIqtnAlimkKfulwVVJ8HR9PeVjP9
+         dvpPaxyUDZ04Ysn54ygaQXA6x9E8kRCSCtKq9CHRGrfEJcJv0B04RuP2QOYQiHyYE+qL
+         VzHQ==
+X-Gm-Message-State: AOJu0Yz6Z3Tn3aXcP3AZtSa1C51wUFtN+MHTqqUQJlckW13nm+32zjlH
+	BsoQm1xMHhf13RuWUXcjqIlE7wHxw4Tl5O0iPHtJHxL5Z08ePCD7ENYNlw==
+X-Gm-Gg: ASbGncs3gml/CvLWE5CDklPWpaO6hRJyZxcNJgnQtI0VU/wU17Wv0kvi5CB4Yq7wxjl
+	3fwDs4OzNCYRUhTlNjn48KwRkLXkiru/47LyKCI5quMobeX5Jl+EvCnPdyo3pVtkMUrL/lydZ1T
+	GHq203KJKyKjp2jQ6GHCLmzWIlccsUiviIcNl/7FzTrlZpPU4S1LJuhXFiFZMYt2b1qL2MWHPlQ
+	vZNt0ypAkFAvF4lSFL7PvTcvNX0hJFj3vjwxI/V1f18uirZoiyVtsrEkfeeODfIsmbinV9qeSc3
+	L4xXj9Vy0mKnMrVXqh3IDIB/M7nNedQdRwepyqUoPw==
+X-Google-Smtp-Source: AGHT+IHUx+UhNdrR2MYvqgV6jlVIrJqu3yRnyMLpfby7VLE+ZxiONo4mr3WS+R4liexTzfIGEBUSPA==
+X-Received: by 2002:a17:902:da84:b0:216:6a4a:9a39 with SMTP id d9443c01a7336-21892a86816mr6725375ad.56.1734045276479;
+        Thu, 12 Dec 2024 15:14:36 -0800 (PST)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-216325f51d6sm92727875ad.197.2024.12.12.15.14.35
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 12 Dec 2024 15:14:36 -0800 (PST)
+From: Justin Tee <justintee8345@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: jsmart2021@gmail.com,
+	justin.tee@broadcom.com,
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 00/10] Update lpfc to revision 14.4.0.7
+Date: Thu, 12 Dec 2024 15:32:59 -0800
+Message-Id: <20241212233309.71356-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: mpt3sas: Set ioc->manu_pg11.EEDPTagMode
- directly to 1
-To: Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- James Bottomley <JBottomley@Parallels.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20241212221817.78940-1-pmenzel@molgen.mpg.de>
- <20241212221817.78940-2-pmenzel@molgen.mpg.de>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20241212221817.78940-2-pmenzel@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-[Remove non-working @lsi.com addresses]
+Update lpfc to revision 14.4.0.7
 
-Am 12.12.24 um 23:18 schrieb Paul Menzel:
-> Currently, the code does:
-> 
->      if (x == 0) {
->      	x &= ~0x3;
-> 	x |= 0x1;
->      }
-> 
-> Zeroing bits 0 and 1 of a variable that is 0 is not necessary. So
-> directly set the variable to 1.
-> 
-> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-> Fixes: f92363d12359 ("[SCSI] mpt3sas: add new driver supporting 12GB SAS")
-> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> ---
->   drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 87fcafce947c..2cd0bb606d88 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -5629,8 +5629,7 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
->   	if (!ioc->is_gen35_ioc && ioc->manu_pg11.EEDPTagMode == 0) {
->   		pr_err("%s: overriding NVDATA EEDPTagMode setting from 0 to 1.\n",
->   		    ioc->name);
-> -		ioc->manu_pg11.EEDPTagMode &= ~0x3;
-> -		ioc->manu_pg11.EEDPTagMode |= 0x1;
-> +		ioc->manu_pg11.EEDPTagMode = 0x1;
->   		mpt3sas_config_set_manufacturing_pg11(ioc, &mpi_reply,
->   		    &ioc->manu_pg11);
->   	}
+This patch set contains fixes related to smatch, clean up of obsolete code
+and global spinlocks, changes to ADISC and LS_RJT handling, and support for
+large fw object reads used in proprietary applications.
+
+The patches were cut against Martin's 6.14/scsi-queue tree.
+
+Justin Tee (10):
+  lpfc: Redefine incorrect type in lpfc_create_device_data
+  lpfc: Restrict the REG_FCFI MAM field to FCoE adapters only
+  lpfc: Delete NLP_TARGET_REMOVE flag due to obsolete usage
+  lpfc: Modify handling of ADISC based on ndlp state and RPI
+    registration
+  lpfc: Add handling for LS_RJT reason explanation authentication
+    required
+  lpfc: Change lpfc_nodelist save_flags member into a bitmask
+  lpfc: Update definition of firmware configuration mbox cmds
+  lpfc: Add support for large fw object application layer reads
+  lpfc: Update lpfc version to 14.4.0.7
+  lpfc: Copyright updates for 14.4.0.7 patches
+
+ drivers/scsi/lpfc/lpfc_bsg.c       | 210 +++++++++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_bsg.h       |  19 ++-
+ drivers/scsi/lpfc/lpfc_ct.c        |   6 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |  11 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  55 ++++----
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  13 +-
+ drivers/scsi/lpfc/lpfc_hw.h        |   3 +-
+ drivers/scsi/lpfc/lpfc_hw4.h       |  85 ++++--------
+ drivers/scsi/lpfc/lpfc_init.c      |  11 +-
+ drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  53 ++++----
+ drivers/scsi/lpfc/lpfc_scsi.c      |  27 ++--
+ drivers/scsi/lpfc/lpfc_sli4.h      |   2 -
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |  22 +--
+ 15 files changed, 351 insertions(+), 174 deletions(-)
+
+-- 
+2.38.0
+
