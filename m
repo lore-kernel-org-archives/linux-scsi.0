@@ -1,68 +1,72 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0BE1AC891
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 23:14:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC72F1AC891
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 23:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734045278; cv=none; b=XHoK6V1FP+etU1XmwS4ruUpVhIynSydFy7knURNnIHoHXZPNvvs/rc3JSAukY1HT5UtD8CUXzDxUuvSb9dbu/BrRhNtYzf9wsWopibLlnuFQTPlUXI7z0mtRXaVDVzBz1BxwoRXZK1a1gIhrrw4rtaefo//AMr1s7Ne80eAydls=
+	t=1734045284; cv=none; b=Zzjne/aWKE5ZpXnxG0BQ3RLSJLua/gtCK4pViyl7Ad9CFRIGFpxCHWysWtHFzya0LIOmE1B5rsizK8UWXdjDtbDGXTtKGY1q3KUD9cqipbxBEp6Q/yxQX0Q0yLaUk967HHjHlHUY3COA7XuovyYLIe+VUxkfsOUOCkBPENPiIkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734045278; c=relaxed/simple;
-	bh=SM9cVzSbdQjrv6P+IxglD8mr2WIrhPSPjGBe9JGuYVM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RBPUi8No+Ysloqsibrwob01NRBciGO+mfpEu6u0BYkm0wVwa7yN/K0ZE8ClRLjtAlohRbRkye532Q17+EqZPnRJNbRQI5YohFAOhvMXAScwdoAYaoQvkZtJJErsalH64e4cYQp728Vn2Z0mf8FTRzE4m6/QLEoycyL9k3abDyqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Kv8adGZg; arc=none smtp.client-ip=209.85.214.177
+	s=arc-20240116; t=1734045284; c=relaxed/simple;
+	bh=4k92MtZjJmZ2mrX2PydRLJJHpMkHuox7DW00Mq2dAoY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QxHnzQDcoSO8qrd7vnXhHTzptF08CPsnDbbBALGlNQaEL4ZzPQU6XsjIVnJEYxv+GwxcdGY90/WB51yRnZvS55JsWMzmr3+EUAxe8qr2r2rQar+aBIUTRvkXzIJPxM87hP2hyUY9e5g4mojGA0/Eb6+TvJvi8LLjlVrKa3QI5i8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MlvtoyHG; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kv8adGZg"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-21654fdd5daso10429465ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 15:14:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MlvtoyHG"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-21654fdd5daso10429995ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2024 15:14:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1734045276; x=1734650076; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Lu+THFnITDnPTu1bIprypbSzRE6k/8FC4X/HummEiVs=;
-        b=Kv8adGZg6foK4NLcGvhCo1LbL9pYRxpsVoftzfHMEHlMsMGbM3V5GsBV3hl5Yq7/MY
-         Fo4WpQrxM7YBRN4rrnjyeU57vWBtvsA/9rLEL5RfoJdgbIpcqJKd5yGQY/cxPtnoNtjk
-         2DgZxK5DQc5PHNYMNPI4sp9f+HiKHQj2rTuyb6EZi6pvVA75PzXg1KE9SJum4hLQgtbq
-         VLjXw386/NgaGOkfC9PUpHmuwIE6/RqW83A6gRAjDzf6mNWhrexYeRLObL+WJhPsmFsE
-         /UnIEMxwyMUFIJ2GZSG8DGtLxcDI4zD0EoEfLrjDds0AaW9MevXfZ5WmHTVWFU4V57lG
-         CaGA==
+        d=gmail.com; s=20230601; t=1734045282; x=1734650082; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7Xoh0fInBWbhi/eDwU8jUtcyY7mrX8SIdhTjfoMZaeg=;
+        b=MlvtoyHGaLl/byY+1BHpaCRjKBty+EN9FCoL6HBwU5Ps0rSpDGlNNS+UuIoop1/Mvy
+         3yEONzHeIA5sUy3z3TbdeR+A3gzg6f526qAQqr4aHRunv/GiH6hY90u/zgmaK+WDovCf
+         bhInReM7zpQp/tK1jtKZg1e63KqXGAyqB2zffWdA/xOiA63QVgdY1eE+ylfW5y2xSrPW
+         ZgsYlpafm4j/3/Ed+qUm+U5On5UucYb9snny4mgS1enzFvHox9dCpXvVokcLnEhr6jAV
+         ci8aCf0ql3I8R4DgWwERoe/68VNzWvwMIRTMVKCJ9rH8ZlFnwsof06i8uhFTcDRvtPol
+         T48A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734045276; x=1734650076;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Lu+THFnITDnPTu1bIprypbSzRE6k/8FC4X/HummEiVs=;
-        b=DJYDSTJ5iJBMnE8FOdWrUlyx5yChK8cMdJ0YCdnLxL/x2nK0EXQRJM4AEqntMEvCYV
-         sRrTChoh8SbXFxHIcoxT9mvXvygxtHXg/FOYi0J2ST9+vpQjt7DckUe58621ATJSYtKF
-         8zUDFk87U6IDEVu8dYitBpKJJglAFlUQ0Zwg257K1jhePrtnb+nHmAEue69KYMaPiAFG
-         5eIpZKLZvFttxNy4RIjrCM7fDGN6ua2QF5CRppP9VIqtnAlimkKfulwVVJ8HR9PeVjP9
-         dvpPaxyUDZ04Ysn54ygaQXA6x9E8kRCSCtKq9CHRGrfEJcJv0B04RuP2QOYQiHyYE+qL
-         VzHQ==
-X-Gm-Message-State: AOJu0Yz6Z3Tn3aXcP3AZtSa1C51wUFtN+MHTqqUQJlckW13nm+32zjlH
-	BsoQm1xMHhf13RuWUXcjqIlE7wHxw4Tl5O0iPHtJHxL5Z08ePCD7ENYNlw==
-X-Gm-Gg: ASbGncs3gml/CvLWE5CDklPWpaO6hRJyZxcNJgnQtI0VU/wU17Wv0kvi5CB4Yq7wxjl
-	3fwDs4OzNCYRUhTlNjn48KwRkLXkiru/47LyKCI5quMobeX5Jl+EvCnPdyo3pVtkMUrL/lydZ1T
-	GHq203KJKyKjp2jQ6GHCLmzWIlccsUiviIcNl/7FzTrlZpPU4S1LJuhXFiFZMYt2b1qL2MWHPlQ
-	vZNt0ypAkFAvF4lSFL7PvTcvNX0hJFj3vjwxI/V1f18uirZoiyVtsrEkfeeODfIsmbinV9qeSc3
-	L4xXj9Vy0mKnMrVXqh3IDIB/M7nNedQdRwepyqUoPw==
-X-Google-Smtp-Source: AGHT+IHUx+UhNdrR2MYvqgV6jlVIrJqu3yRnyMLpfby7VLE+ZxiONo4mr3WS+R4liexTzfIGEBUSPA==
-X-Received: by 2002:a17:902:da84:b0:216:6a4a:9a39 with SMTP id d9443c01a7336-21892a86816mr6725375ad.56.1734045276479;
-        Thu, 12 Dec 2024 15:14:36 -0800 (PST)
+        d=1e100.net; s=20230601; t=1734045282; x=1734650082;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=7Xoh0fInBWbhi/eDwU8jUtcyY7mrX8SIdhTjfoMZaeg=;
+        b=NNZgqiDgKLdhu2/LerFr2+16nK1qNWwgU5YSJjs6ETX04yrQDoJjtNuyWyvV5cVcDA
+         LFa/4UiJtRZwyC/dabcqQsO3beP24/Ut4n+2uxG0Ac7O+tmxW/qcmOtqyqTuaph3InNj
+         fdsGayQes/uej3FqK6GlIlKjpnq7m37aE63nt3UFh0736f3cPl2rOBWiuyo1uCgCBTIR
+         RCHbNs1YEPon5fLhtP+PJDcTR8lWQSstGKM+ptAkhVu1AaKFGsvRU+Dqkke4niHmlMNO
+         mbZ9w1k+pXFEVgVtfUp1R3vUrHmultBvqkOaWOcfxxw1C+Bf9XUgOtUUMN1bz95eXPBk
+         eNBA==
+X-Gm-Message-State: AOJu0YwhFnc9r1JLSLav/K8hrG1SZ3C0Gf88fcnb+E7ZgnNpnsyZr+AD
+	zSiEE3RIkNu0CIkD/dz/DiGo0PfPGxTN4b+v3ZqVfHwBFUgMI7E2DH9P4Q==
+X-Gm-Gg: ASbGncu1iAWifdKCbXiB9qKTo7q3P74uVXQR2J1P5VbtUwf1QSgIEZecNpu+sw+HwuX
+	8oX87i+Sjx6bosXK1CZJSsrYZCrFez8zv2Rpa9EE4GVm0noCIxYtqd/10CASnY8k2+WpjteqA1i
+	euze6PM4eZEKyqmBMXatZ5+m17Gpf8t/T4XMZPKu6n+d7CMLoSFfzUSP++hlA3BW37JiMwYx2fC
+	LzZ2t9HHkmbdiri7CPAtTMaDz9+dJ2SrGmjVQAZmwU5ul3o3+WJAZzt0Uzhkur2ZkxSr8FwFRtK
+	dujEtqJcpDi9iW8NpWOc6EVKq+hFce+def2+71ns8A==
+X-Google-Smtp-Source: AGHT+IFuS0xiZ4DjdZw6SgzUgE4ni6TlQ8HJLOJzusQmkZejsDQNcjmh4xYj1t7GALrNt2r4DL9iPw==
+X-Received: by 2002:a17:902:d508:b0:216:6f1a:1c81 with SMTP id d9443c01a7336-21892992997mr6951755ad.2.1734045281880;
+        Thu, 12 Dec 2024 15:14:41 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-216325f51d6sm92727875ad.197.2024.12.12.15.14.35
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-216325f51d6sm92727875ad.197.2024.12.12.15.14.41
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Dec 2024 15:14:36 -0800 (PST)
+        Thu, 12 Dec 2024 15:14:41 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 00/10] Update lpfc to revision 14.4.0.7
-Date: Thu, 12 Dec 2024 15:32:59 -0800
-Message-Id: <20241212233309.71356-1-justintee8345@gmail.com>
+Subject: [PATCH 01/10] lpfc: Redefine incorrect type in lpfc_create_device_data
+Date: Thu, 12 Dec 2024 15:33:00 -0800
+Message-Id: <20241212233309.71356-2-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20241212233309.71356-1-justintee8345@gmail.com>
+References: <20241212233309.71356-1-justintee8345@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,45 +75,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update lpfc to revision 14.4.0.7
+Fix smatch warning by redefining local variable memory_flags from int to
+gfp_t.
 
-This patch set contains fixes related to smatch, clean up of obsolete code
-and global spinlocks, changes to ADISC and LS_RJT handling, and support for
-large fw object reads used in proprietary applications.
+lpfc_scsi.c: warning: incorrect type in argument 2 (different base types)
+lpfc_scsi.c:    expected restricted gfp_t [usertype] gfp_mask
+lpfc_scsi.c:    got int memory_flags
 
-The patches were cut against Martin's 6.14/scsi-queue tree.
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Justin Tee (10):
-  lpfc: Redefine incorrect type in lpfc_create_device_data
-  lpfc: Restrict the REG_FCFI MAM field to FCoE adapters only
-  lpfc: Delete NLP_TARGET_REMOVE flag due to obsolete usage
-  lpfc: Modify handling of ADISC based on ndlp state and RPI
-    registration
-  lpfc: Add handling for LS_RJT reason explanation authentication
-    required
-  lpfc: Change lpfc_nodelist save_flags member into a bitmask
-  lpfc: Update definition of firmware configuration mbox cmds
-  lpfc: Add support for large fw object application layer reads
-  lpfc: Update lpfc version to 14.4.0.7
-  lpfc: Copyright updates for 14.4.0.7 patches
-
- drivers/scsi/lpfc/lpfc_bsg.c       | 210 +++++++++++++++++++++++++++--
- drivers/scsi/lpfc/lpfc_bsg.h       |  19 ++-
- drivers/scsi/lpfc/lpfc_ct.c        |   6 +-
- drivers/scsi/lpfc/lpfc_disc.h      |  11 +-
- drivers/scsi/lpfc/lpfc_els.c       |  55 ++++----
- drivers/scsi/lpfc/lpfc_hbadisc.c   |  13 +-
- drivers/scsi/lpfc/lpfc_hw.h        |   3 +-
- drivers/scsi/lpfc/lpfc_hw4.h       |  85 ++++--------
- drivers/scsi/lpfc/lpfc_init.c      |  11 +-
- drivers/scsi/lpfc/lpfc_mbox.c      |   6 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  53 ++++----
- drivers/scsi/lpfc/lpfc_scsi.c      |  27 ++--
- drivers/scsi/lpfc/lpfc_sli4.h      |   2 -
- drivers/scsi/lpfc/lpfc_version.h   |   2 +-
- drivers/scsi/lpfc/lpfc_vport.c     |  22 +--
- 15 files changed, 351 insertions(+), 174 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index b83627108eca..c57f11f6fc84 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -6423,7 +6423,7 @@ lpfc_create_device_data(struct lpfc_hba *phba, struct lpfc_name *vport_wwpn,
+ {
+ 
+ 	struct lpfc_device_data *lun_info;
+-	int memory_flags;
++	gfp_t memory_flags;
+ 
+ 	if (unlikely(!phba) || !vport_wwpn || !target_wwpn  ||
+ 	    !(phba->cfg_fof))
 -- 
 2.38.0
 
