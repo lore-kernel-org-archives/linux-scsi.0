@@ -1,98 +1,151 @@
-Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB071B3922
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 13:10:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9A6E43166;
+	Fri, 13 Dec 2024 13:53:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734095441; cv=none; b=dwu3jjKoHsLcGMo4XokwB9gUQhO9Gho7SNuvPqOgDuthEH+dPzoi+y7Ejjx1ThcLaYsOk6ckVuWFkgiU8GvoI8aZW+CqTiE3V7hDgVCWCCobXTYLTe0z4KQoVgxisiaJK0DmvJGzik4us7l3LOpbyGBwsZXru6jVQublFIm6iYE=
+	t=1734098016; cv=none; b=n4cRcB6U0Ir8JIt2at9w84ysTqn1nxGXQd1vGpWlxolibSLbpTbr/nALJIKPgYNlpnWCE7ug9EyXid0bVgpSEdtYHiB3qZzFbY5h1iBdvWMDuhzNGqb/nrXN1yqHMxGKHDDLCaUR9GXa1fXYFYBNuJbpqPmeEQIl9rlTYUANJmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734095441; c=relaxed/simple;
-	bh=vfNfwxnHQJP5jbtjS5adEdI1JrNsx9CYBUZ7fz/mjI4=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=Tpzv6DMj1mwAwy03eN5AJmHhF0hu0B33t3GHh7WYpqh6xJZFf5SpUQsGCjXBTxifPAfYsx6wFSDz3aYwR4AtF9lR15fQFkqLvpWTmWnjcPl4gUOxiyIa5iWFXuMMpkKOvSIshDVdZ7fQ/T4m1OBa+gHmH1pm46eC7rL/OYbAE5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=StqFaX4y; arc=none smtp.client-ip=62.142.5.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1734098016; c=relaxed/simple;
+	bh=mdHii9nRNOur98TYJL9W/B0MjRM9s+5aXB/CNs8G4jU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=EOC9JgIXSA9QO4gfAi6WXJebrvOLOBF3psGHW4AhMboAzaKLpWXyIfaxwdu2yI1X3ONc00HMBs29KI6cuKi+tGcdlN3CpKeyQLyYj4x0fhwq0zdVT0gFz2MI7Z1xPKdL0YH1AxeuSr555VELbrMypTd1ecD0L4+uSfZ/Dy5E3Jo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t6T4QING; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="StqFaX4y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=vfNfwxnHQJP5jbtjS5adEdI1JrNsx9CYBUZ7fz/mjI4=;
-	b=StqFaX4yVVay9Vie8bR7bu60TFJ/iwRGZsUZHvwwMjxJvj8xDo6jLf1699ZgxCc9HczJXJRQHoXx8
-	 D4XI2rtTb8e4cs0Dk2OEZKc3OEgff5Lkan7WJMwtTGuMhvyWbizt0+v+DBRYXEnT8wr8KeNSJcs8CI
-	 H2oZarY/s5QVO7Wnw8X0ySPDpDYDbrzSD+jd0k2w485hEhA6OqSL3djCUeIJu1J+17HTzQXOmTw2AY
-	 94UtCkpWSutmI4DTvEoy+3XRHAt/MBqN3IrU7kVImHYj2UP9TC5iZVzOGlTgRpPS3cAzZrjd9EpW++
-	 1PpHTeAS3zp+uSeO+bWmX6H8MOocU+w==
-Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 7a657f48-b953-11ef-a138-005056bdfda7;
-	Fri, 13 Dec 2024 15:09:26 +0200 (EET)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t6T4QING"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 92E0EC4CED7;
+	Fri, 13 Dec 2024 13:53:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734098016;
+	bh=mdHii9nRNOur98TYJL9W/B0MjRM9s+5aXB/CNs8G4jU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=t6T4QINGnsbV7YalJZg23vvtlgJC+vFpBtwEdX6EB7fDhBjNo+bFcBQZhWERZFEbf
+	 HcuY/a5edj0r/F27CJbqEyAkLqD30U/5ov321csqpRNEvVPmauQ8XQIRrWwJgiHSuW
+	 rTvmRbkk1Lr/OLT66pvmSu/sINLp/015dnWufH9zpTruI2QByyD72LsLN02AP1Ffth
+	 nlRBP7R6OaE1yeq/8RJDjS7wCdX2kgXWSxaxjNmMbblGybzO5SBvoB1vHxPHiMe289
+	 2fhnOCWFykGTogNxQvSNKKcHdTc/mV14jHbvTG2/eC43NSiD8DP36ZYw8AMJKmoKVI
+	 4JPI8oCyVkaBQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F6EDE77182;
+	Fri, 13 Dec 2024 13:53:36 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
+Date: Fri, 13 Dec 2024 19:23:30 +0530
+Subject: [PATCH v2 2/3] scsi: ufs: qcom: Allow passing platform specific OF
+ data
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.300.87.4.3\))
-Subject: Re: [PATCH v2 0/4] scsi: st: scsi_error: More reset patches
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <8B3169CC-BD8A-46B5-B9B0-140047A44661@kolumbus.fi>
-Date: Fri, 13 Dec 2024 15:09:15 +0200
-Cc: linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com,
- "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
- loberman@redhat.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <964CF609-B7DB-44CF-80A2-2955E73561EF@kolumbus.fi>
-References: <20241125140301.3912-1-Kai.Makisara@kolumbus.fi>
- <0c6e699b-8f77-411f-b73d-e6762c6ad286@redhat.com>
- <8B3169CC-BD8A-46B5-B9B0-140047A44661@kolumbus.fi>
-To: John Meneghini <jmeneghi@redhat.com>
-X-Mailer: Apple Mail (2.3826.300.87.4.3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20241213-ufs-qcom-suspend-fix-v2-2-1de6cd2d6146@linaro.org>
+References: <20241213-ufs-qcom-suspend-fix-v2-0-1de6cd2d6146@linaro.org>
+In-Reply-To: <20241213-ufs-qcom-suspend-fix-v2-0-1de6cd2d6146@linaro.org>
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Abel Vesa <abel.vesa@linaro.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>, 
+ Nitin Rawat <quic_nitirawa@quicinc.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2709;
+ i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
+ bh=qqrxdC5u7a2vZfs8QFNpeAZBHqn1+eO7J3Xdho8U5SY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnXDxc+9/I1Jb3eWtP2983AMBHpbG+joy36Ntck
+ aqYAwgqzuGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZ1w8XAAKCRBVnxHm/pHO
+ 9aJeB/4jtWCKxXc9qwEo64zElXLbEEQqNkPs8ZnFmOG3ENGVzDQ2g+83YJ8nG/1g8wSuEOBu62N
+ qUDUwnTp4Ts14JmWMiJXz3Wa+lewGZqnxCBupsDRuUZ81AL/z+2e3Z8xj5qiiAbYGGaiuyu+zKJ
+ BrJny0V8yHUkbCsqF3Tg2X8oFBS5TM1IRvPSyZp9yzRK/1ODd/lolElkJ8QBDWS2fzzGyqrMtbU
+ tsmMKYCDb1i8f4dXhs2FmxvxIbzGKARMqpCNTRLWmjecOsIGUYrbNsc+JzGzlvfvmsBIDGaUt2O
+ E81DEi3LOH/iNxMpxb+pXg/MTiRrUiHW8RmuphVT4X46R0km
+X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@linaro.org/default with auth_id=185
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reply-To: manivannan.sadhasivam@linaro.org
 
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-> On 12. Dec 2024, at 20.27, Kai M=C3=A4kisara (Kolumbus) =
-<kai.makisara@kolumbus.fi> wrote:
->=20
-> While doing some detective work, I found a serious problem. So, please =
-hold these patches again.
-> More about the reason below.
-...
-> The problem is that no driver options for the device can be set before =
-something has
-> been done to clear the blocking. For instance, the stinit tool is a =
-recommended method
-> to set the options based on a configuration file, but it fails.
->=20
-> Note that this problem has existed since commit =
-9604eea5bd3ae1fa3c098294f4fc29ad687141ea
-> (for version 6.6) that added recognition of POR UA as an additional =
-method to detect
-> resets. Nobody seems to have noticed this problem in the "real world". =
-(Using
-> was_reset was not problematic because it caught only resets initiated =
-by the midlevel.)
->=20
-> A solution might be to add some more ioctls to the list of allowed =
-commands.
-> But I must think about this a little more.
+In order to allow platform specific flags and configurations, introduce
+the platform specific OF data and move the existing quirk
+UFSHCD_QUIRK_BROKEN_LSDBS_CAP for SM8550 and SM8650 SoCs.
 
-This does not seem to be a promising direction. I think it is better to =
-see that the
-first test_ready() (called from st_open()) does not set the pos_unknown =
-flag.
-If there are no objections, I will add this to the next version of the =
-patches.
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+Tested-by: Amit Pundir <amit.pundir@linaro.org> # on SM8550-HDK
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/ufs/host/ufs-qcom.c | 13 +++++++++----
+ drivers/ufs/host/ufs-qcom.h |  4 ++++
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-The justification for this solution is that just after the device is =
-detected by st,
-the position of the tape is known to the user and there is no need to =
-prevent,
-for instance, writing to the tape.
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 32b0c74437de..35ae8c8fc301 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -871,6 +871,7 @@ static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
+  */
+ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ {
++	const struct ufs_qcom_drvdata *drvdata = of_device_get_match_data(hba->dev);
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 
+ 	if (host->hw_ver.major == 0x2)
+@@ -879,9 +880,8 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ 	if (host->hw_ver.major > 0x3)
+ 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+ 
+-	if (of_device_is_compatible(hba->dev->of_node, "qcom,sm8550-ufshc") ||
+-	    of_device_is_compatible(hba->dev->of_node, "qcom,sm8650-ufshc"))
+-		hba->quirks |= UFSHCD_QUIRK_BROKEN_LSDBS_CAP;
++	if (drvdata && drvdata->quirks)
++		hba->quirks |= drvdata->quirks;
+ }
+ 
+ static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
+@@ -1864,9 +1864,14 @@ static void ufs_qcom_remove(struct platform_device *pdev)
+ 	platform_device_msi_free_irqs_all(hba->dev);
+ }
+ 
++static const struct ufs_qcom_drvdata ufs_qcom_sm8550_drvdata = {
++	.quirks = UFSHCD_QUIRK_BROKEN_LSDBS_CAP,
++};
++
+ static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
+ 	{ .compatible = "qcom,ufshc" },
+-	{ .compatible = "qcom,sm8550-ufshc" },
++	{ .compatible = "qcom,sm8550-ufshc", .data = &ufs_qcom_sm8550_drvdata },
++	{ .compatible = "qcom,sm8650-ufshc", .data = &ufs_qcom_sm8550_drvdata },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index b9de170983c9..15f6dad8b27f 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -217,6 +217,10 @@ struct ufs_qcom_host {
+ 	bool esi_enabled;
+ };
+ 
++struct ufs_qcom_drvdata {
++	enum ufshcd_quirks quirks;
++};
++
+ static inline u32
+ ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
+ {
+
+-- 
+2.25.1
+
 
