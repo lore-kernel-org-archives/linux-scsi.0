@@ -1,180 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from arara2.ipen.br (arara2.ipen.br [200.136.52.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0FE19258E;
-	Fri, 13 Dec 2024 04:20:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 977B7185B56
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 06:13:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=200.136.52.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734063633; cv=none; b=pwZhQ4HeJFtm+fTl9+QXjfagLpATFA4rvWtjm9T5CD0d1hEmYCFRotp2ufJ9SVrF2NCg18za7JfR++unlnAnsi4Pu7A2TCAtjXcI2/GKQvzZnaDJFuHbKMMCYswfswWSvyXY/J8eSCyKySEC4NNF0qR+QzxOp7y01j73BYQSyeM=
+	t=1734070401; cv=none; b=i3vZLA3FQCKPPZS9kU3IPH3jacPcCjiJy6zmpTdEx8Mu5PkcKaW/DxiqRGC5/36sOYSGhW0lkbgVtLJLLQIcT9cgQdjz8xyFVm23tESYE75+zaa7bTRahK3cAK9cXHuB52luhS6MMTOZY72VdQrIDcgHNQGdCfQZ8rR7EGU7bQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734063633; c=relaxed/simple;
-	bh=CabWA9BaaCRJ5kUMUib1srOSTchr0i1t04gMY0qbEWg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FDgFJ0IwgPYOQ7eEMvRaQatXiLp3i85tqbk67QTNHKaiAiUos9UvatiH3/HSsxpyn/cprkMIBLLJqbVtLKH/B8l382/Ds/qEjXmUb/G5J8z126LjEWBYOUag/5ZWoTg5Y4WmPeDpzZMXvgrmSoGH3xNsWNOgzScRv1ERPupn8iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V08LK1oO; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V08LK1oO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E668CC4CED2;
-	Fri, 13 Dec 2024 04:20:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734063632;
-	bh=CabWA9BaaCRJ5kUMUib1srOSTchr0i1t04gMY0qbEWg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=V08LK1oOmILKcGiM/+h75Vixxd2jhjEZ4FH8mLoJzU9O40KLPjXe4Q5ShoqNWTqEb
-	 BN5Ie6Qh5Kec49+ILvAiKwhgBDdsNp7DrfY/3xppZbXfwjsW51kplcLjpOqPgTY7p/
-	 JLEPNYWDfiJ4XUF3RfT94jmF80FvbgdlJJm9cBFr2BgXeKMommRtfRZCUwAuOfb5bZ
-	 BFLNQZFAm57/aDUJF1GNqJbPSb6pm/xP1D+mpN3g/q3Dud9cde6pKReytsO9O+v6JM
-	 jebO1ZGELijIzSFzV5uz4U+GzCY3ebpdLTpcaUeJpn/spmYPNVx+hY6HmLBfponC8v
-	 dzTczgtuVdC5g==
-From: Eric Biggers <ebiggers@kernel.org>
-To: linux-block@vger.kernel.org,
-	linux-fscrypt@vger.kernel.org,
-	linux-mmc@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Cc: Adrian Hunter <adrian.hunter@intel.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: [PATCH v10 15/15] ufs: qcom: add support for wrapped keys
-Date: Thu, 12 Dec 2024 20:19:58 -0800
-Message-ID: <20241213041958.202565-16-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20241213041958.202565-1-ebiggers@kernel.org>
-References: <20241213041958.202565-1-ebiggers@kernel.org>
+	s=arc-20240116; t=1734070401; c=relaxed/simple;
+	bh=Cgr97JBiSX1QIcd2ZZZsKVChGTY1ZlWJ/4AhaVFA7Wc=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bCx9pNqAI0yTDMUxvz7Nl31cixwbN5JwzkSxjX9WZH1BIKI2CzlGyU4HrIbOTBdYcSyVlWyAX2YyBKu5ntxAhuR+41l9mxswydXY+7Q55ynyurVkoLJJfSXYtKxsOnunEPvGPcqi3bkYfcYHk+Hs6vwmPwvbS5CMOwpemjtMRIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ipen.br; spf=pass smtp.mailfrom=ipen.br; arc=none smtp.client-ip=200.136.52.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ipen.br
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ipen.br
+X-ASG-Debug-ID: 1734070336-055fc729ec1487ef000c-ziuLRu
+Received: from arara.ipen.br (webmail.ipen.br [10.0.10.11]) by arara2.ipen.br with ESMTP id VwREfnfk4MCUaaSQ for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 03:13:12 -0300 (BRT)
+X-Barracuda-Envelope-From: TCWM178518@ipen.br
+X-Barracuda-RBL-Trusted-Forwarder: 10.0.10.11
+Received: from ipen.br (unknown [102.129.145.191])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by arara.ipen.br (Postfix) with ESMTPSA id D19F1FBE390
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 01:24:26 -0300 (-03)
+Reply-To: t.mazowieckie@mazowieckie.org
+X-Barracuda-Effective-Source-IP: UNKNOWN[102.129.145.191]
+X-Barracuda-Apparent-Source-IP: 102.129.145.191
+X-Barracuda-RBL-IP: 102.129.145.191
+From: <TCWM178518@ipen.br>
+To: linux-scsi@vger.kernel.org
+Subject:  I urge you to understand my viewpoint accurately.
+Date: 13 Dec 2024 12:24:26 +0800
+X-ASG-Orig-Subj: I urge you to understand my viewpoint accurately.
+Message-ID: <20241213122426.C1FEA64130ACBB38@ipen.br>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Barracuda-Connect: webmail.ipen.br[10.0.10.11]
+X-Barracuda-Start-Time: 1734070392
+X-Barracuda-URL: https://10.40.40.18:443/cgi-mod/mark.cgi
+X-Barracuda-Scan-Msg-Size: 512
+X-Virus-Scanned: by bsmtpd at ipen.br
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-BRTS-Evidence: 34fbb5788938ad5710ad28835fd12206-499-txt
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=1000.0 tests=NO_REAL_NAME
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.45577
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
+	0.00 NO_REAL_NAME           From: does not include a real name
 
-From: Eric Biggers <ebiggers@google.com>
+I am Tomasz Chmielewski, a Portfolio Manager and Chartered=20
+Financial Analyst affiliated with Iwoca Poland Sp. Z OO in=20
+Poland. I have the privilege of working with distinguished=20
+investors who are eager to support your company's current=20
+initiatives, thereby broadening their investment portfolios. If=20
+this proposal aligns with your interests, I invite you to=20
+respond, and I will gladly share more information to assist you.
 
-Wire up the wrapped key support for ufs-qcom by implementing the needed
-methods in struct blk_crypto_ll_ops and setting the appropriate flags in
-blk_crypto_profile::key_types_supported.
-
-For more information about this feature and how to use it, refer to
-the sections about hardware-wrapped keys in
-Documentation/block/inline-encryption.rst and
-Documentation/filesystems/fscrypt.rst.
-
-Based on patches by Gaurav Kashyap <quic_gaurkash@quicinc.com>.
-Reworked to use the custom crypto profile support.
-
-Tested-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org> # sm8650
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- drivers/ufs/host/ufs-qcom.c | 54 ++++++++++++++++++++++++++++++++-----
- 1 file changed, 48 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 9c700bbaa12c..c9cca4348dab 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -132,15 +132,10 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 	}
- 
- 	if (IS_ERR_OR_NULL(ice))
- 		return PTR_ERR_OR_ZERO(ice);
- 
--	if (qcom_ice_using_hwkm(ice)) {
--		dev_warn(dev, "HWKM mode unsupported; disabling inline encryption support\n");
--		return 0;
--	}
--
- 	host->ice = ice;
- 
- 	/* Initialize the blk_crypto_profile */
- 
- 	caps.reg_val = cpu_to_le32(ufshcd_readl(hba, REG_UFS_CCAP));
-@@ -150,11 +145,14 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 	if (err)
- 		return err;
- 
- 	profile->ll_ops = ufs_qcom_crypto_ops;
- 	profile->max_dun_bytes_supported = 8;
--	profile->key_types_supported = BLK_CRYPTO_KEY_TYPE_RAW;
-+	if (qcom_ice_using_hwkm(ice))
-+		profile->key_types_supported = BLK_CRYPTO_KEY_TYPE_HW_WRAPPED;
-+	else
-+		profile->key_types_supported = BLK_CRYPTO_KEY_TYPE_RAW;
- 	profile->dev = dev;
- 
- 	/*
- 	 * Currently this driver only supports AES-256-XTS.  All known versions
- 	 * of ICE support it, but to be safe make sure it is really declared in
-@@ -218,13 +216,57 @@ static int ufs_qcom_ice_keyslot_evict(struct blk_crypto_profile *profile,
- 	err = qcom_ice_evict_key(host->ice, slot);
- 	ufshcd_release(hba);
- 	return err;
- }
- 
-+static int ufs_qcom_ice_derive_sw_secret(struct blk_crypto_profile *profile,
-+					 const u8 *eph_key, size_t eph_key_size,
-+					 u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE])
-+{
-+	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	return qcom_ice_derive_sw_secret(host->ice, eph_key, eph_key_size,
-+					 sw_secret);
-+}
-+
-+static int ufs_qcom_ice_import_key(struct blk_crypto_profile *profile,
-+				   const u8 *raw_key, size_t raw_key_size,
-+				   u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-+{
-+	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	return qcom_ice_import_key(host->ice, raw_key, raw_key_size, lt_key);
-+}
-+
-+static int ufs_qcom_ice_generate_key(struct blk_crypto_profile *profile,
-+				     u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-+{
-+	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	return qcom_ice_generate_key(host->ice, lt_key);
-+}
-+
-+static int ufs_qcom_ice_prepare_key(struct blk_crypto_profile *profile,
-+				    const u8 *lt_key, size_t lt_key_size,
-+				    u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-+{
-+	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	return qcom_ice_prepare_key(host->ice, lt_key, lt_key_size, eph_key);
-+}
-+
- static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops = {
- 	.keyslot_program	= ufs_qcom_ice_keyslot_program,
- 	.keyslot_evict		= ufs_qcom_ice_keyslot_evict,
-+	.derive_sw_secret	= ufs_qcom_ice_derive_sw_secret,
-+	.import_key		= ufs_qcom_ice_import_key,
-+	.generate_key		= ufs_qcom_ice_generate_key,
-+	.prepare_key		= ufs_qcom_ice_prepare_key,
- };
- 
- #else
- 
- static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
--- 
-2.47.1
-
+=20
+Yours sincerely,=20
+Tomasz Chmielewski Warsaw, Mazowieckie,
+=20
+Poland.
