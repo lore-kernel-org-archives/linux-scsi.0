@@ -1,163 +1,202 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A3B818A6D7;
-	Fri, 13 Dec 2024 07:16:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF761C07F1
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 10:46:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734074193; cv=none; b=WzudXPiGB+0tthCoSfhkqjqzLZ1ZGHIwfITiT2ev5yRmeTUSIiNUe4GMZ6q716IWYNjVFmh+zAava+ysPyII3XEjQ0o8WxGzfQsNmenxQCQmosv9yS3NpYKJG3wpeFnFH+SidOL0ed0Zbf8Kw6ocKRTypmTFkWFZjDXK4gQpegA=
+	t=1734086773; cv=none; b=cbscp0LlMeGteSPtoZU5fedJby6Zoo7adH3eCMNdO1YB2GlfovK1oFiF8pLh/784DCzzcxU8ugnk2NZ/977x6QqrfmAImWpKCmd+qZ1mLTnMegYCticGfGyBbYgaBfwUh+uMeWT17V/8xc/AJoPFfz2DviSuL80oWFQcP6ToBCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734074193; c=relaxed/simple;
-	bh=Hr3hwFuzFkYYHl1m8O4baQEsPK0Xs3hONmPqtZrPWYc=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=SqRwDNHCjLwfLwIYSOpDazt7mUNajp+YWVJvDrrzS4ys6r9DrBIO9tbpPixl8gh3iMA+yXE4Yak/2ihPSmzSsvaYd7pPhYqVM9E+8Jf6NruLmUGeoDToTXdE9MIwBp1aMCabMNB8TkiKibXwwKjuho8VQH96BWxq0IViEkox8Jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=VNxsQp+m; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1734086773; c=relaxed/simple;
+	bh=yvGIyROqXTCwWw3C1ksAH2chXTpdbfX1VhFRfwvgLX8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=uEwQNHGTKt3ts6RJS/AW9P1oqz3dZJSSWgi2TUNUAYZEH8LZiSwJd/peXEr25cWfQVE3OhjPa7DmL4gAw/VmQBucuh5lRjYK8MLXy+nKPwIROD4YFChb+jsqWl0U4OVpg0uzfTyQ5ge7Bfg2qTGX0LjScPkKScbrvoUkX7ZY8sY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=KBEDEq8N; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VNxsQp+m"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BD3xiEj029658;
-	Fri, 13 Dec 2024 07:16:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pp1; bh=IgZ7cZ+16ESsDPfDeuwM+zyJIXs1
-	iIg6IinIyl1DzJY=; b=VNxsQp+mfl4yyF6yv0wlkFqu4pQMv8j2C+IyyJ7o4WeS
-	iNdKgImEqbT/dCfeIdQbSsrrdIOz6xTA4j0psqeF0Ft8S89xpNe91aq/CE0dkqlm
-	OBSVL9vM+HHNG5iMBDHH1yK8AYBnHx+H1Kl9/JtkoAn6+PGgBLQqUalDvkfjoG/Q
-	q1Xyx+VU5ZTrOJRg1NPfPl18gUimPD11vu+5qWwRpSrzOlQEJAVgRvMK9YclgZCp
-	XXrek4mIKi4Ux/T/zPg9lpB7Pgz0Y8e2vrvxVsDUY0UYqoPCP/3SwG7v87TV16oG
-	tdmyWzrhYhtwtIytIT8REy0mImLTHL47dW+XJFCiTg==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43ccsjyfc9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 07:16:22 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BD34Fih029309;
-	Fri, 13 Dec 2024 07:16:22 GMT
-Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 43gcprrv2n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 07:16:22 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BD7GKuM25297624
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 13 Dec 2024 07:16:20 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 959E15805F;
-	Fri, 13 Dec 2024 07:16:20 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AF8B35805D;
-	Fri, 13 Dec 2024 07:16:16 +0000 (GMT)
-Received: from [9.43.77.91] (unknown [9.43.77.91])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 13 Dec 2024 07:16:16 +0000 (GMT)
-Message-ID: <f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com>
-Date: Fri, 13 Dec 2024 12:46:14 +0530
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="KBEDEq8N"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-434a766b475so16223265e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 02:46:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1734086769; x=1734691569; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-disposition:mime-version
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1Sve8pnwBIa0k3Fo9Yj0biS11b57p46yyg7zp7DqbGE=;
+        b=KBEDEq8NHyyDc/AXPEBEPZfGrQN0aPWtquX8dNnULEdMLkS4pB1iF9aphlyq5NqKKs
+         H94BLUkWn2vrJbkBOO1DRPvYmzDTjBk9U+s2fP8auY+QCjee7WlSxcPOrlRBT3rJLWno
+         OBJ7nHFs5Ba4jctJz4e7MO5dlrK2vjUCPpwhxkjLfTVtTDpL1Y4dwiXFPvL35of/KBIo
+         ko3A4CD5zKMd7/vrRo3LMVw2BjwNquEcUEdci5Bytzc+mDxwyUCeQvp70Z+yWJqzKKws
+         f2bUI2HhdgM5yhy4IYlRnUOmRcBe4hjJQx49Dhf45V50M62OUFmTZK+glxesrjvCYvbO
+         7uww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734086769; x=1734691569;
+        h=content-transfer-encoding:content-disposition:mime-version
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1Sve8pnwBIa0k3Fo9Yj0biS11b57p46yyg7zp7DqbGE=;
+        b=Ox0Q1IE4hG7ttTJqJM5LolAhMZNPfMwqFvu92UI7/4nzJkg6vhJTXXqCFrg5vNERqN
+         A49i0srxf2aFsGqHxSzGWRfCk2m+azC47WqqtdRoOzzTx0XZBjsBWkJXxpy3vV+c4e5e
+         a8f8hHQVKkgO35WTsrM8TM6uNBR7Do2N025Y1PjF/N6WDV3bZbgU+G55DMCBjeWU0XqD
+         8rgQM+eWyOZ4K8SkiJs+mfyPnq4KvzzaoBazm1fFa/mRWKNGbiP5E3omxPlGYzmk4Nrw
+         JijpdqWwuPO9cfRxMsOoDfg2RdLgrCrFhOMqQ0e+23H1LsBhyhMD+c8IkjpLEGsoGngS
+         a0Fw==
+X-Gm-Message-State: AOJu0Yx5MZMLSAxHbgv+jjN31Uu3WHZvH6I+7zPgjtn3EcWrvETa5v5v
+	iuiebVkfTL5RFBdABYMocvIfeeZTJA3ojd8SbhLN5TUsyVct85olDxcqiDhoyig=
+X-Gm-Gg: ASbGncs5F1B9p6CJoLC+bXJ0X+G2CCN6uK5c60cV8PXNUzUFSa6cJ4EEQCcOVVqFPKW
+	iJ72TYtSzBMhV2Y4Bqrlb2kfvjBry9HvaQtnGpHXfWrgwoM/LbxeIPrdMNMgrdw8Z4KdCuRKOcS
+	yFWziFstUOgIj5MWAjMLR55oV+fVng9aXP9Ula4PazZFm1GV7PxaUUj9jgh4KAzfwxvezw/Vz2y
+	9tQ1HJd/2sKuJn5QrquGbxy/FY6MIb8rnTkRLnId6ikrqE=
+X-Google-Smtp-Source: AGHT+IFwOoZpIuq7JwkqBKBUH1jKuHJePdoKI8a5nIlR5OcswOlr6jGLXfryjmtIfeJ9smPPAQIYMg==
+X-Received: by 2002:a05:600c:154c:b0:434:ff30:a159 with SMTP id 5b1f17b1804b1-4362a982c34mr18289725e9.0.1734086769544;
+        Fri, 13 Dec 2024 02:46:09 -0800 (PST)
+Received: from localhost ([193.86.92.181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-436255531b1sm46569255e9.2.2024.12.13.02.46.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Dec 2024 02:46:09 -0800 (PST)
+Date: Fri, 13 Dec 2024 11:46:08 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: lsf-pc@lists.linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+	bpf@vger.kernel.org
+Subject: LSF/MM/BPF: 2025: Call for Proposals
+Message-ID: <Z1wQcKKw14iei0Va@tiehlicka>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-From: M Nikhil <nikh1092@linux.ibm.com>
-Subject: Change in reported values of some block integrity sysfs attributes
-To: linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-        linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-scsi@vger.kernel.org, hare@suse.de, hch@lst.de
-Cc: steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block
- <bblock@linux.ibm.com>,
-        Nihar Panda <niharp@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: pNrUCGEOCIZLXuwnpAdUiLLv66Vx_bzk
-X-Proofpoint-ORIG-GUID: pNrUCGEOCIZLXuwnpAdUiLLv66Vx_bzk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
- impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0 mlxlogscore=554
- mlxscore=0 priorityscore=1501 suspectscore=0 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
- definitions=main-2412130049
 
-Hi Everyone,
+The annual Linux Storage, Filesystem, Memory Management, and BPF
+(LSF/MM/BPF) Summit for 2025 will be held March 24–26, 2025
+at the Delta hotel Montreal
 
-  * We have observed change in the values of some of the block integrity
-    sysfs attributes for the block devices on the master branch. The
-    sysfs attributes related to block device integrity , write_generate
-    and read_verify are  enabled for the block device when the parameter
-    device_is_integrity_capable is disabled. This behaviour is seen on
-    the scsi disks irrespective of DIF protection enabled or disabled on
-    the disks.
+LSF/MM/BPF is an invitation-only technical workshop to map out
+improvements to the Linux storage, filesystem, BPF, and memory
+management subsystems that will make their way into the mainline
+kernel within the coming years.
 
-    *Logs of the block integrity sysfs attributes for one of the block
-    device:*
+LSF/MM/BPF 2025 will be a three day, stand-alone conference with
+four subsystem-specific tracks, cross-track discussions, as well
+as BoF and hacking sessions:
 
-a3560030:~ # cat /sys/block/sda/integrity/write_generate
+          https://events.linuxfoundation.org/lsfmmbpf/
 
-1
+On behalf of the committee I am issuing a call for agenda proposals
+that are suitable for cross-track discussion as well as technical
+subjects for the breakout sessions.
 
-a3560030:~ # cat /sys/block/sda/integrity/read_verify
+If advance notice is required for visa applications then please
+point that out in your proposal or request to attend, and submit
+the topic as soon as possible.
 
-1
+We are asking that you please let us know you want to be invited
+by Feb 1st 2025. We realize that travel is an ever changing target,
+but it helps us to get an idea of possible attendance numbers.
+Clearly things can and will change, so consider the request to
+attend deadline more about planning and less about concrete plans.
 
-a3560030:~ # cat /sys/block/sda/integrity/device_is_integrity_capable
+We are still looking to arrange / fund a virtual component for one
+or more of the tracks. We will follow up on the final decision soon
+hopefuly. Please note that it is possible that we might not have
+virtual attendees option this time.
 
-0
+1) Fill out the following Google form to request attendance and
+suggest any topics for discussion:
 
-  * Similarly unexpected values of block integrity sysfs attributes are
-    seen for multipath devices as well. Multipath device reporting value
-    1 for device_is_integrity_capable even though it is based on SCSI
-    disk devices, which all have 0 for device_is_integrity_capable.
+	  https://forms.gle/xXvQicSFeFKjayxB9
 
-a3560030:~ # cat /sys/block/dm-0/integrity/device_is_integrity_capable
+In previous years we have accidentally missed people's attendance
+requests because they either did not Cc lsf-pc@ or we simply missed
+them in the flurry of emails we get. Our community is large and our
+volunteers are busy, filling this out will help us to make sure we
+do not miss anybody.
 
-1
+2) Proposals for agenda topics should ideally still be sent to the
+following lists to allow for discussion among your peers. This will
+help us figure out which topics are important for the agenda:
 
-a3560030:~ # cat /sys/block/dm-0/integrity/read_verify
+          lsf-pc@lists.linux-foundation.org
 
-1
+... and Cc the mailing lists that are relevant for the topic in
+question:
 
-a3560030:~ # cat /sys/block/dm-0/integrity/write_generate
+          FS:     linux-fsdevel@vger.kernel.org
+          MM:     linux-mm@kvack.org
+          Block:  linux-block@vger.kernel.org
+          ATA:    linux-ide@vger.kernel.org
+          SCSI:   linux-scsi@vger.kernel.org
+          NVMe:   linux-nvme@lists.infradead.org
+          BPF:    bpf@vger.kernel.org
 
-1
+Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
+to track. In addition, please make sure to start a new thread for
+each topic rather than following up to an existing one. Agenda
+topics and attendees will be selected by the program committee,
+but the final agenda will be formed by consensus of the attendees
+on the day.
 
-  * Earlier the block integrity sysfs parameters "write_generate" and
-    "read_verify" reported value 0 when the sysfs attribute
-    device_is_integrity_capable was not set. But when tested with a
-    recent upstream kernel, there is a change in the block device
-    integrity sysfs attributes.
-  * In the process of finding the kernel changes which might have caused
-    the change in functionality, we have identified the below commit
-    which was leading to the change in the sysfs attributes.
-    9f4aa46f2a74 ("block: invert the BLK_INTEGRITY_{GENERATE,VERIFY} flags")
-  * By reverting the code changes which are part of above commit and
-    when tested the values of attributes read_verify and write_generate
-    were set to 0 which was the older functionality.
-   * From the description in the patch related to above commit, what we
-    understand is that the changes are meant to invert the block
-    integrity flags(READ_VERIFY and WRITE_GENERATE) vs the values in
-    sysfs for making the user values persistent.
-  * We would like to know if the change in the values of sysfs
-    attributes write_generate and read_verify is expected?
-  * And some additional information on in which scenario the attributes
-    will be disabled or set to 0 and the affect of other block integrity
-    attribute device_is_integrity_capable on attributes read_verify and
-    write_generate.
+3) Like previous years we would also like to try and make sure we are
+including new members in the community that the program committee
+may not be familiar with. The Google form has an area for people to
+add required/optional attendees. Please encourage new members of the
+community to submit a request for an invite as well, but additionally
+if maintainers or long term community members could add nominees to
+the form it would help us make sure that new members get the proper
+consideration.
 
+For discussion leaders, slides and visualizations are encouraged to
+outline the subject matter and focus the discussions. Please refrain
+from lengthy presentations and talks in order for sessions to be
+productive; the sessions are supposed to be interactive, inclusive
+discussions.
 
-Regards,
+We are still looking into the virtual component. We will likely run
+something similar to what we did last year, but details on that will
+be forthcoming.
 
-*M Nikhil
-*
+2024: https://lwn.net/Articles/lsfmmbpf2024/
 
-Software Engineer
+2023: https://lwn.net/Articles/lsfmmbpf2023/
 
-ISDL, Bangalore, India
+2022: https://lwn.net/Articles/lsfmm2022/
 
-Linux on IBM Z and LinuxONE
+2019: https://lwn.net/Articles/lsfmm2019/
 
+2018: https://lwn.net/Articles/lsfmm2018/
+
+2017: https://lwn.net/Articles/lsfmm2017/
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+4) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+          lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+          Christian Brauner (Filesystems)
+          Jan Kara (Filesystems)
+          Martin K. Petersen (Storage)
+          Javier González (Storage)
+          Michal Hocko (MM)
+          Dan Williams (MM)
+          Daniel Borkmann (BPF)
+          Martin KaFai Lau (BPF)
+
+-- 
+Michal Hocko
+SUSE Labs
