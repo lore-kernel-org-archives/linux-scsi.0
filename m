@@ -1,202 +1,125 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-ua1-f48.google.com (mail-ua1-f48.google.com [209.85.222.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF761C07F1
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 10:46:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF561DF721
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 12:29:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734086773; cv=none; b=cbscp0LlMeGteSPtoZU5fedJby6Zoo7adH3eCMNdO1YB2GlfovK1oFiF8pLh/784DCzzcxU8ugnk2NZ/977x6QqrfmAImWpKCmd+qZ1mLTnMegYCticGfGyBbYgaBfwUh+uMeWT17V/8xc/AJoPFfz2DviSuL80oWFQcP6ToBCc=
+	t=1734092956; cv=none; b=oRZ3o2/Q6vmqjrqAP9R3xL871e7wtr/Zu8zecaGjm3RTEhFU1HW8TBURPdGyEOXqLZ7/yujS36IYxEzMWVDd2AKOBVBvz92tIMqi+P+jPkNRxYLb8JFarMzm4DdOXakaDl8q6sPKTdHeYZwAN6avt4pnO2d1fAAxP+GwKbGonM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734086773; c=relaxed/simple;
-	bh=yvGIyROqXTCwWw3C1ksAH2chXTpdbfX1VhFRfwvgLX8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=uEwQNHGTKt3ts6RJS/AW9P1oqz3dZJSSWgi2TUNUAYZEH8LZiSwJd/peXEr25cWfQVE3OhjPa7DmL4gAw/VmQBucuh5lRjYK8MLXy+nKPwIROD4YFChb+jsqWl0U4OVpg0uzfTyQ5ge7Bfg2qTGX0LjScPkKScbrvoUkX7ZY8sY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=KBEDEq8N; arc=none smtp.client-ip=209.85.128.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1734092956; c=relaxed/simple;
+	bh=93KVkxX3HqqmyrQ/h4LhI1Yswq7WZECZktzyWt2bZz4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KfFUXKX26337Qj6wzb/+4YGsZZMSz1Xmhlv7ewsiFf9dCo4KVFtXghqwOM1DVYHc0EvH0FIZVXaRqi4Fzy4Vl56hpYodfyuPabgNavcW2+QCiwrydgrbbxIseQwCkk3pwdfJorKQ+UziGyJmazu/cP3U23LpQR/fCAbbOyiELhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ApTCdx4y; arc=none smtp.client-ip=209.85.222.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="KBEDEq8N"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-434a766b475so16223265e9.1
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 02:46:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ApTCdx4y"
+Received: by mail-ua1-f48.google.com with SMTP id a1e0cc1a2514c-85ba8b1c7b9so875887241.1
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 04:29:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1734086769; x=1734691569; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1Sve8pnwBIa0k3Fo9Yj0biS11b57p46yyg7zp7DqbGE=;
-        b=KBEDEq8NHyyDc/AXPEBEPZfGrQN0aPWtquX8dNnULEdMLkS4pB1iF9aphlyq5NqKKs
-         H94BLUkWn2vrJbkBOO1DRPvYmzDTjBk9U+s2fP8auY+QCjee7WlSxcPOrlRBT3rJLWno
-         OBJ7nHFs5Ba4jctJz4e7MO5dlrK2vjUCPpwhxkjLfTVtTDpL1Y4dwiXFPvL35of/KBIo
-         ko3A4CD5zKMd7/vrRo3LMVw2BjwNquEcUEdci5Bytzc+mDxwyUCeQvp70Z+yWJqzKKws
-         f2bUI2HhdgM5yhy4IYlRnUOmRcBe4hjJQx49Dhf45V50M62OUFmTZK+glxesrjvCYvbO
-         7uww==
+        d=linaro.org; s=google; t=1734092953; x=1734697753; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=FtUtQH27YInSkS7QubBxHe0++ef4URa+tbTRrDJRxjQ=;
+        b=ApTCdx4yqf7ajKoTqT1ybcA3/ECB1uL8BHxcYukX2IQRPw8hibHTFftbBIblBjKfHk
+         7716vDyMG5rC/Wl/1MoEEx+ohNAZiU08VU1YvRMeBBOw0aiX5US83Nbu6j1E3tTqBj6b
+         p7bxx6K9whYBzEQzXOMttnWkt7H+0m9AguCl7uTDxl76IbCW0EfyluDQtRqDqcuGFwUt
+         fyrvVmrOSDUYjYb0pzhk2BkywMwU4iu5Pd/mf8cNAVPQ2FzSa9SNUFT6ETJ1vpNeLoZ+
+         M7AzG6kOWXGJ/jGfV4/OV0xbIYSo15OXOxckKA7WTAabJz0eLLMvE41Gc3b9K8JX38Ad
+         kWSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734086769; x=1734691569;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1Sve8pnwBIa0k3Fo9Yj0biS11b57p46yyg7zp7DqbGE=;
-        b=Ox0Q1IE4hG7ttTJqJM5LolAhMZNPfMwqFvu92UI7/4nzJkg6vhJTXXqCFrg5vNERqN
-         A49i0srxf2aFsGqHxSzGWRfCk2m+azC47WqqtdRoOzzTx0XZBjsBWkJXxpy3vV+c4e5e
-         a8f8hHQVKkgO35WTsrM8TM6uNBR7Do2N025Y1PjF/N6WDV3bZbgU+G55DMCBjeWU0XqD
-         8rgQM+eWyOZ4K8SkiJs+mfyPnq4KvzzaoBazm1fFa/mRWKNGbiP5E3omxPlGYzmk4Nrw
-         JijpdqWwuPO9cfRxMsOoDfg2RdLgrCrFhOMqQ0e+23H1LsBhyhMD+c8IkjpLEGsoGngS
-         a0Fw==
-X-Gm-Message-State: AOJu0Yx5MZMLSAxHbgv+jjN31Uu3WHZvH6I+7zPgjtn3EcWrvETa5v5v
-	iuiebVkfTL5RFBdABYMocvIfeeZTJA3ojd8SbhLN5TUsyVct85olDxcqiDhoyig=
-X-Gm-Gg: ASbGncs5F1B9p6CJoLC+bXJ0X+G2CCN6uK5c60cV8PXNUzUFSa6cJ4EEQCcOVVqFPKW
-	iJ72TYtSzBMhV2Y4Bqrlb2kfvjBry9HvaQtnGpHXfWrgwoM/LbxeIPrdMNMgrdw8Z4KdCuRKOcS
-	yFWziFstUOgIj5MWAjMLR55oV+fVng9aXP9Ula4PazZFm1GV7PxaUUj9jgh4KAzfwxvezw/Vz2y
-	9tQ1HJd/2sKuJn5QrquGbxy/FY6MIb8rnTkRLnId6ikrqE=
-X-Google-Smtp-Source: AGHT+IFwOoZpIuq7JwkqBKBUH1jKuHJePdoKI8a5nIlR5OcswOlr6jGLXfryjmtIfeJ9smPPAQIYMg==
-X-Received: by 2002:a05:600c:154c:b0:434:ff30:a159 with SMTP id 5b1f17b1804b1-4362a982c34mr18289725e9.0.1734086769544;
-        Fri, 13 Dec 2024 02:46:09 -0800 (PST)
-Received: from localhost ([193.86.92.181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-436255531b1sm46569255e9.2.2024.12.13.02.46.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Dec 2024 02:46:09 -0800 (PST)
-Date: Fri, 13 Dec 2024 11:46:08 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: lsf-pc@lists.linuxfoundation.org
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-	bpf@vger.kernel.org
-Subject: LSF/MM/BPF: 2025: Call for Proposals
-Message-ID: <Z1wQcKKw14iei0Va@tiehlicka>
+        d=1e100.net; s=20230601; t=1734092953; x=1734697753;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FtUtQH27YInSkS7QubBxHe0++ef4URa+tbTRrDJRxjQ=;
+        b=unzErg9VH33I+bm2JhJyWcElrFkg+ISa2PtMGbMku8bmvZ/SRg8NlNVUO4lTqmSdu8
+         wg/Miar9741J6JV7DDYQRb3IHqcahOITma0arCsbUMKOM9d64zQGjV9b1H0ZiEBsf5XP
+         Y2Mmfe5YQKuzFelMDEkHlPTaalK7lvqC5KWUmCXZfWGyLlMYq5tCC+DUOkNisegurLWO
+         Sj2DXDTMZWL3L9R+TUMd3pR//fT3YU+j5Hv2z+3VlaHfsrYf5zmU48MiBEiPQkas+tEI
+         3Y1jkf7WXJlrq6OeRBqti2g1e99dgHSNaRSg2Y16Pyfnk0m9a8veZA9VOgaTN602Kx7y
+         LGNg==
+X-Forwarded-Encrypted: i=1; AJvYcCURhiuDuTe64y0Vwt4Xn+0/xeLlG366wVDYFnJ8UF029NubTJFB/I2ZZRkTYEfFDmKuvjZcZJ1cOK5I@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywfn2cp33AEhTYYVtZvEf8CnJKxCku1MmxVTdrt97bgk6QCULTb
+	YJ8IjU70raeVfGJHKTzldQQ5VTewypnYh245CtRRbdg71xFZ0EPk21cMlKAmI9+sDPSM5wsGaBq
+	lEEj+H675R0TqFAa6xAnb6sP7mAZwo+1ir2BJng==
+X-Gm-Gg: ASbGnct9GeqECEIMXlWvSwnVWm3IpYATCbCZNpxhPcdNYC/U9VoqeHdfW8tlh9Ull9x
+	F17bO2hLX0TVOrqZJilb0kZzHDvCW+BQfwiFNYy4hnQAbxON/PouzDTPOM0Ov6o+tQw0DaA==
+X-Google-Smtp-Source: AGHT+IG1eUwqPBtXeSmNUetsnaD01mL9MHBqUyLkem51OibyPkckl12MvzfT6CQybG/qaUW/KE7JovIxwZSB3Z1xuaQ=
+X-Received: by 2002:a05:6102:54a3:b0:4af:dcf3:b384 with SMTP id
+ ada2fe7eead31-4b257b57f38mr4991199137.11.1734092952957; Fri, 13 Dec 2024
+ 04:29:12 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+References: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
+In-Reply-To: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
+From: Amit Pundir <amit.pundir@linaro.org>
+Date: Fri, 13 Dec 2024 17:58:37 +0530
+Message-ID: <CAMi1Hd3_aDCwkg6g5Mb7Oc3sKQPmCcwoSz1vigHUbkDS2Y8a3A@mail.gmail.com>
+Subject: Re: [PATCH 0/3] scsi: ufs: qcom: Suspend fixes
+To: manivannan.sadhasivam@linaro.org
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Abel Vesa <abel.vesa@linaro.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	Nitin Rawat <quic_nitirawa@quicinc.com>, stable@vger.kernel.org, 
+	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
 
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2025 will be held March 24–26, 2025
-at the Delta hotel Montreal
+On Wed, 11 Dec 2024 at 23:10, Manivannan Sadhasivam via B4 Relay
+<devnull+manivannan.sadhasivam.linaro.org@kernel.org> wrote:
+>
+> Hi,
+>
+> This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
+> the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
+> this patch, I couldn't figure out the exact commit that caused the issue. So I
+> used the commit that introduced reinit support as a placeholder.
+>
+> Patch 3 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
+> PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
+> this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
+> device powerdown during suspend. This supersedes the previous series [1] that
+> tried to fix the issue in clock drivers.
+>
+> This series is tested on Qcom SM8550 MTP and Qcom RB5 boards.
 
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline
-kernel within the coming years.
+Thank you Mani. This patch-series fixes a UFS breakage on SM8550-HDK
+running AOSP.
 
-LSF/MM/BPF 2025 will be a three day, stand-alone conference with
-four subsystem-specific tracks, cross-track discussions, as well
-as BoF and hacking sessions:
+Tested-by: Amit Pundir <amit.pundir@linaro.org> # on SM8550-HDK
 
-          https://events.linuxfoundation.org/lsfmmbpf/
-
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
-
-If advance notice is required for visa applications then please
-point that out in your proposal or request to attend, and submit
-the topic as soon as possible.
-
-We are asking that you please let us know you want to be invited
-by Feb 1st 2025. We realize that travel is an ever changing target,
-but it helps us to get an idea of possible attendance numbers.
-Clearly things can and will change, so consider the request to
-attend deadline more about planning and less about concrete plans.
-
-We are still looking to arrange / fund a virtual component for one
-or more of the tracks. We will follow up on the final decision soon
-hopefuly. Please note that it is possible that we might not have
-virtual attendees option this time.
-
-1) Fill out the following Google form to request attendance and
-suggest any topics for discussion:
-
-	  https://forms.gle/xXvQicSFeFKjayxB9
-
-In previous years we have accidentally missed people's attendance
-requests because they either did not Cc lsf-pc@ or we simply missed
-them in the flurry of emails we get. Our community is large and our
-volunteers are busy, filling this out will help us to make sure we
-do not miss anybody.
-
-2) Proposals for agenda topics should ideally still be sent to the
-following lists to allow for discussion among your peers. This will
-help us figure out which topics are important for the agenda:
-
-          lsf-pc@lists.linux-foundation.org
-
-... and Cc the mailing lists that are relevant for the topic in
-question:
-
-          FS:     linux-fsdevel@vger.kernel.org
-          MM:     linux-mm@kvack.org
-          Block:  linux-block@vger.kernel.org
-          ATA:    linux-ide@vger.kernel.org
-          SCSI:   linux-scsi@vger.kernel.org
-          NVMe:   linux-nvme@lists.infradead.org
-          BPF:    bpf@vger.kernel.org
-
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
-to track. In addition, please make sure to start a new thread for
-each topic rather than following up to an existing one. Agenda
-topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees
-on the day.
-
-3) Like previous years we would also like to try and make sure we are
-including new members in the community that the program committee
-may not be familiar with. The Google form has an area for people to
-add required/optional attendees. Please encourage new members of the
-community to submit a request for an invite as well, but additionally
-if maintainers or long term community members could add nominees to
-the form it would help us make sure that new members get the proper
-consideration.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks in order for sessions to be
-productive; the sessions are supposed to be interactive, inclusive
-discussions.
-
-We are still looking into the virtual component. We will likely run
-something similar to what we did last year, but details on that will
-be forthcoming.
-
-2024: https://lwn.net/Articles/lsfmmbpf2024/
-
-2023: https://lwn.net/Articles/lsfmmbpf2023/
-
-2022: https://lwn.net/Articles/lsfmm2022/
-
-2019: https://lwn.net/Articles/lsfmm2019/
-
-2018: https://lwn.net/Articles/lsfmm2018/
-
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-4) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-          lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-          Christian Brauner (Filesystems)
-          Jan Kara (Filesystems)
-          Martin K. Petersen (Storage)
-          Javier González (Storage)
-          Michal Hocko (MM)
-          Dan Williams (MM)
-          Daniel Borkmann (BPF)
-          Martin KaFai Lau (BPF)
-
--- 
-Michal Hocko
-SUSE Labs
+>
+> [1] https://lore.kernel.org/linux-arm-msm/20241107-ufs-clk-fix-v1-0-6032ff22a052@linaro.org
+>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+> Manivannan Sadhasivam (3):
+>       scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()
+>       scsi: ufs: qcom: Allow passing platform specific OF data
+>       scsi: ufs: qcom: Power down the controller/device during system suspend for SM8550/SM8650 SoCs
+>
+>  drivers/ufs/core/ufshcd-priv.h |  6 ------
+>  drivers/ufs/core/ufshcd.c      |  1 -
+>  drivers/ufs/host/ufs-qcom.c    | 31 +++++++++++++++++++------------
+>  drivers/ufs/host/ufs-qcom.h    |  5 +++++
+>  include/ufs/ufshcd.h           |  2 --
+>  5 files changed, 24 insertions(+), 21 deletions(-)
+> ---
+> base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
+> change-id: 20241211-ufs-qcom-suspend-fix-5618e9c56d93
+>
+> Best regards,
+> --
+> Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>
+>
