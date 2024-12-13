@@ -1,125 +1,98 @@
-Received: from mail-ua1-f48.google.com (mail-ua1-f48.google.com [209.85.222.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF561DF721
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 12:29:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB071B3922
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 13:10:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734092956; cv=none; b=oRZ3o2/Q6vmqjrqAP9R3xL871e7wtr/Zu8zecaGjm3RTEhFU1HW8TBURPdGyEOXqLZ7/yujS36IYxEzMWVDd2AKOBVBvz92tIMqi+P+jPkNRxYLb8JFarMzm4DdOXakaDl8q6sPKTdHeYZwAN6avt4pnO2d1fAAxP+GwKbGonM4=
+	t=1734095441; cv=none; b=dwu3jjKoHsLcGMo4XokwB9gUQhO9Gho7SNuvPqOgDuthEH+dPzoi+y7Ejjx1ThcLaYsOk6ckVuWFkgiU8GvoI8aZW+CqTiE3V7hDgVCWCCobXTYLTe0z4KQoVgxisiaJK0DmvJGzik4us7l3LOpbyGBwsZXru6jVQublFIm6iYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734092956; c=relaxed/simple;
-	bh=93KVkxX3HqqmyrQ/h4LhI1Yswq7WZECZktzyWt2bZz4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KfFUXKX26337Qj6wzb/+4YGsZZMSz1Xmhlv7ewsiFf9dCo4KVFtXghqwOM1DVYHc0EvH0FIZVXaRqi4Fzy4Vl56hpYodfyuPabgNavcW2+QCiwrydgrbbxIseQwCkk3pwdfJorKQ+UziGyJmazu/cP3U23LpQR/fCAbbOyiELhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ApTCdx4y; arc=none smtp.client-ip=209.85.222.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1734095441; c=relaxed/simple;
+	bh=vfNfwxnHQJP5jbtjS5adEdI1JrNsx9CYBUZ7fz/mjI4=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=Tpzv6DMj1mwAwy03eN5AJmHhF0hu0B33t3GHh7WYpqh6xJZFf5SpUQsGCjXBTxifPAfYsx6wFSDz3aYwR4AtF9lR15fQFkqLvpWTmWnjcPl4gUOxiyIa5iWFXuMMpkKOvSIshDVdZ7fQ/T4m1OBa+gHmH1pm46eC7rL/OYbAE5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=StqFaX4y; arc=none smtp.client-ip=62.142.5.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ApTCdx4y"
-Received: by mail-ua1-f48.google.com with SMTP id a1e0cc1a2514c-85ba8b1c7b9so875887241.1
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Dec 2024 04:29:13 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="StqFaX4y"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1734092953; x=1734697753; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=FtUtQH27YInSkS7QubBxHe0++ef4URa+tbTRrDJRxjQ=;
-        b=ApTCdx4yqf7ajKoTqT1ybcA3/ECB1uL8BHxcYukX2IQRPw8hibHTFftbBIblBjKfHk
-         7716vDyMG5rC/Wl/1MoEEx+ohNAZiU08VU1YvRMeBBOw0aiX5US83Nbu6j1E3tTqBj6b
-         p7bxx6K9whYBzEQzXOMttnWkt7H+0m9AguCl7uTDxl76IbCW0EfyluDQtRqDqcuGFwUt
-         fyrvVmrOSDUYjYb0pzhk2BkywMwU4iu5Pd/mf8cNAVPQ2FzSa9SNUFT6ETJ1vpNeLoZ+
-         M7AzG6kOWXGJ/jGfV4/OV0xbIYSo15OXOxckKA7WTAabJz0eLLMvE41Gc3b9K8JX38Ad
-         kWSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734092953; x=1734697753;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=FtUtQH27YInSkS7QubBxHe0++ef4URa+tbTRrDJRxjQ=;
-        b=unzErg9VH33I+bm2JhJyWcElrFkg+ISa2PtMGbMku8bmvZ/SRg8NlNVUO4lTqmSdu8
-         wg/Miar9741J6JV7DDYQRb3IHqcahOITma0arCsbUMKOM9d64zQGjV9b1H0ZiEBsf5XP
-         Y2Mmfe5YQKuzFelMDEkHlPTaalK7lvqC5KWUmCXZfWGyLlMYq5tCC+DUOkNisegurLWO
-         Sj2DXDTMZWL3L9R+TUMd3pR//fT3YU+j5Hv2z+3VlaHfsrYf5zmU48MiBEiPQkas+tEI
-         3Y1jkf7WXJlrq6OeRBqti2g1e99dgHSNaRSg2Y16Pyfnk0m9a8veZA9VOgaTN602Kx7y
-         LGNg==
-X-Forwarded-Encrypted: i=1; AJvYcCURhiuDuTe64y0Vwt4Xn+0/xeLlG366wVDYFnJ8UF029NubTJFB/I2ZZRkTYEfFDmKuvjZcZJ1cOK5I@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywfn2cp33AEhTYYVtZvEf8CnJKxCku1MmxVTdrt97bgk6QCULTb
-	YJ8IjU70raeVfGJHKTzldQQ5VTewypnYh245CtRRbdg71xFZ0EPk21cMlKAmI9+sDPSM5wsGaBq
-	lEEj+H675R0TqFAa6xAnb6sP7mAZwo+1ir2BJng==
-X-Gm-Gg: ASbGnct9GeqECEIMXlWvSwnVWm3IpYATCbCZNpxhPcdNYC/U9VoqeHdfW8tlh9Ull9x
-	F17bO2hLX0TVOrqZJilb0kZzHDvCW+BQfwiFNYy4hnQAbxON/PouzDTPOM0Ov6o+tQw0DaA==
-X-Google-Smtp-Source: AGHT+IG1eUwqPBtXeSmNUetsnaD01mL9MHBqUyLkem51OibyPkckl12MvzfT6CQybG/qaUW/KE7JovIxwZSB3Z1xuaQ=
-X-Received: by 2002:a05:6102:54a3:b0:4af:dcf3:b384 with SMTP id
- ada2fe7eead31-4b257b57f38mr4991199137.11.1734092952957; Fri, 13 Dec 2024
- 04:29:12 -0800 (PST)
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=vfNfwxnHQJP5jbtjS5adEdI1JrNsx9CYBUZ7fz/mjI4=;
+	b=StqFaX4yVVay9Vie8bR7bu60TFJ/iwRGZsUZHvwwMjxJvj8xDo6jLf1699ZgxCc9HczJXJRQHoXx8
+	 D4XI2rtTb8e4cs0Dk2OEZKc3OEgff5Lkan7WJMwtTGuMhvyWbizt0+v+DBRYXEnT8wr8KeNSJcs8CI
+	 H2oZarY/s5QVO7Wnw8X0ySPDpDYDbrzSD+jd0k2w485hEhA6OqSL3djCUeIJu1J+17HTzQXOmTw2AY
+	 94UtCkpWSutmI4DTvEoy+3XRHAt/MBqN3IrU7kVImHYj2UP9TC5iZVzOGlTgRpPS3cAzZrjd9EpW++
+	 1PpHTeAS3zp+uSeO+bWmX6H8MOocU+w==
+Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
+	id 7a657f48-b953-11ef-a138-005056bdfda7;
+	Fri, 13 Dec 2024 15:09:26 +0200 (EET)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
-In-Reply-To: <20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org>
-From: Amit Pundir <amit.pundir@linaro.org>
-Date: Fri, 13 Dec 2024 17:58:37 +0530
-Message-ID: <CAMi1Hd3_aDCwkg6g5Mb7Oc3sKQPmCcwoSz1vigHUbkDS2Y8a3A@mail.gmail.com>
-Subject: Re: [PATCH 0/3] scsi: ufs: qcom: Suspend fixes
-To: manivannan.sadhasivam@linaro.org
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Abel Vesa <abel.vesa@linaro.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	Nitin Rawat <quic_nitirawa@quicinc.com>, stable@vger.kernel.org, 
-	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.300.87.4.3\))
+Subject: Re: [PATCH v2 0/4] scsi: st: scsi_error: More reset patches
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <8B3169CC-BD8A-46B5-B9B0-140047A44661@kolumbus.fi>
+Date: Fri, 13 Dec 2024 15:09:15 +0200
+Cc: linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com,
+ "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
+ loberman@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <964CF609-B7DB-44CF-80A2-2955E73561EF@kolumbus.fi>
+References: <20241125140301.3912-1-Kai.Makisara@kolumbus.fi>
+ <0c6e699b-8f77-411f-b73d-e6762c6ad286@redhat.com>
+ <8B3169CC-BD8A-46B5-B9B0-140047A44661@kolumbus.fi>
+To: John Meneghini <jmeneghi@redhat.com>
+X-Mailer: Apple Mail (2.3826.300.87.4.3)
 
-On Wed, 11 Dec 2024 at 23:10, Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.linaro.org@kernel.org> wrote:
->
-> Hi,
->
-> This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
-> the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
-> this patch, I couldn't figure out the exact commit that caused the issue. So I
-> used the commit that introduced reinit support as a placeholder.
->
-> Patch 3 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
-> PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
-> this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
-> device powerdown during suspend. This supersedes the previous series [1] that
-> tried to fix the issue in clock drivers.
->
-> This series is tested on Qcom SM8550 MTP and Qcom RB5 boards.
 
-Thank you Mani. This patch-series fixes a UFS breakage on SM8550-HDK
-running AOSP.
+> On 12. Dec 2024, at 20.27, Kai M=C3=A4kisara (Kolumbus) =
+<kai.makisara@kolumbus.fi> wrote:
+>=20
+> While doing some detective work, I found a serious problem. So, please =
+hold these patches again.
+> More about the reason below.
+...
+> The problem is that no driver options for the device can be set before =
+something has
+> been done to clear the blocking. For instance, the stinit tool is a =
+recommended method
+> to set the options based on a configuration file, but it fails.
+>=20
+> Note that this problem has existed since commit =
+9604eea5bd3ae1fa3c098294f4fc29ad687141ea
+> (for version 6.6) that added recognition of POR UA as an additional =
+method to detect
+> resets. Nobody seems to have noticed this problem in the "real world". =
+(Using
+> was_reset was not problematic because it caught only resets initiated =
+by the midlevel.)
+>=20
+> A solution might be to add some more ioctls to the list of allowed =
+commands.
+> But I must think about this a little more.
 
-Tested-by: Amit Pundir <amit.pundir@linaro.org> # on SM8550-HDK
+This does not seem to be a promising direction. I think it is better to =
+see that the
+first test_ready() (called from st_open()) does not set the pos_unknown =
+flag.
+If there are no objections, I will add this to the next version of the =
+patches.
 
->
-> [1] https://lore.kernel.org/linux-arm-msm/20241107-ufs-clk-fix-v1-0-6032ff22a052@linaro.org
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
-> Manivannan Sadhasivam (3):
->       scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()
->       scsi: ufs: qcom: Allow passing platform specific OF data
->       scsi: ufs: qcom: Power down the controller/device during system suspend for SM8550/SM8650 SoCs
->
->  drivers/ufs/core/ufshcd-priv.h |  6 ------
->  drivers/ufs/core/ufshcd.c      |  1 -
->  drivers/ufs/host/ufs-qcom.c    | 31 +++++++++++++++++++------------
->  drivers/ufs/host/ufs-qcom.h    |  5 +++++
->  include/ufs/ufshcd.h           |  2 --
->  5 files changed, 24 insertions(+), 21 deletions(-)
-> ---
-> base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
-> change-id: 20241211-ufs-qcom-suspend-fix-5618e9c56d93
->
-> Best regards,
-> --
-> Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
->
->
+The justification for this solution is that just after the device is =
+detected by st,
+the position of the tape is known to the user and there is no need to =
+prevent,
+for instance, writing to the tape.
+
