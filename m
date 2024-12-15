@@ -1,105 +1,63 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 044C281E
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Dec 2024 00:03:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D77C0C8CE;
+	Sun, 15 Dec 2024 00:54:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734220990; cv=none; b=mTN+BzfEud7o9XhiM7dwvG5I5+keJnqTRSP6FWMmnwb5aT90la5JebSJ3nSi+9PRe6kf4qiKVnuMzSgG6TVXzVTMq2pFy5zuj167+jR7lsBflQJhTdnr7WCxvNsM7DG8tkiCnxqK3oDTSpwr+wv2zk4EP16TzBkEQ9AzP6GTRtI=
+	t=1734224053; cv=none; b=XlvukFvtATSE8kHGTwNQi7Oog60nTdLnF+WSXUAhFj9oTnpnu4AzJEDYRL0agr7VqyepL9lntkBZW+X+R08EOYpVAoLaLVxowtRXseeulQjolLJwlEJ/++e6PyS4bNQGe8/8iTsVpDkxXkGk1Ld3iSIriuXo0w9ET/52L8R+0sc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734220990; c=relaxed/simple;
-	bh=xQFkpgBPg4Q78xCiadfJSR1zWL7V/gBsQiInFrVHHm0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OyJBlVDEk8CD6KTWtWfrAXCcSCBHDqEKUYF6NmQa/1Vq9LMawTJG4Au7PnXkso2c7toyNMVuR4d1fjxIzi2m4607UujTsw9FvPTPN55ByMmvzOljYx0i2h90SNS2YK02nkSbyXKIVLm1OBBFMdZRzrebaIzNVOfekdBgCfI+4KI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=GJYR2PW/; arc=none smtp.client-ip=209.85.208.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1734224053; c=relaxed/simple;
+	bh=fQ7fyIiCvqRBnS9dD3O0cMYTdMkV8mPuYqd5RZlaUHs=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=Uf0P/rUztptCxDo5oI+1Dx74RxOzY8hclguqOEVhIo1BG1kWt9XvtxmxAC3lSG1oOkNQ32cgwUaqCq2A2/pX4+APd/Lx9+QA9HntniXm3uaynoaNGTKOuIr57HCfisUNwPw4/D31e6BpxUvJ+hHCdS2D8cqcY+Bath/2E4+eAUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ehm82Brh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="GJYR2PW/"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-5d3bdccba49so5227678a12.1
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Dec 2024 16:03:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1734220986; x=1734825786; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=T3usN9VYGUEh24gR+LciJgIyFJjC0v6UAg/jDOmx3oE=;
-        b=GJYR2PW/J2E9gcF7loKLRmwX8qNvIdQ9IBY0mcQ+w5gpcFCu5jwPoKVIycf4IkmIzO
-         m/7112sqXk8cYeEO2HY/RIMSGIM5MHPJjrBPVdgNjhg2iZwzJRUT3TeHvprnS+ve6Qkd
-         k77LCdH9OCnm0pL4fSGbKAvdelvogQs+MtntQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734220986; x=1734825786;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=T3usN9VYGUEh24gR+LciJgIyFJjC0v6UAg/jDOmx3oE=;
-        b=Md0tDep+nRY4nt5anGsMx+4IsT1npsC8eKjMX3jMzPaEP6f/1yU37hpB3Vv5bp1iAE
-         d8PB34WAHNyG7RnXnjo3/CNYcY1SXAGgGB9HV5EJpcT/VDHBhYOz1hpn9qCyC+4ESHBY
-         UMOOuU2rnZpjIwzXoVMfCjXHgqDsAX2omdaeccOrwFwW2ORxx3FXdQP+M4ELlzUTwe1t
-         1gluCdidURYF5nnEjE7uTaSqSErGh8xlzpVxX7CA1Jo5qppUHGq2SjCKrvt6+y5oydUC
-         pLQAjioadnGrbXG6iH9+pgvmnK42JSm6UWPB5F+KKnNM/GOe5KYcOeu9YPzxooWR+k2x
-         dbEQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU5r7i+22jEeuNdftAavtQoDJTqHDW45DlrIu5Ff+rY3ejmvjtB4vPQeceLlU6/RbsZIpsV/WETBtGm@vger.kernel.org
-X-Gm-Message-State: AOJu0YyzNA7VzUwrl7FfcVJev0RGG83HqX3iu1FieUrs4sQ1S7ta74r5
-	4RoXdEsfBHIM39/UrCYy9hw4zfvyjwAiv3HbbHMf3IKRy0MvAKpdYfBzgsDXp4GLFh1IFA3k+AQ
-	VcQ4=
-X-Gm-Gg: ASbGncsN5y0uNvmDs6PRMXqIGXXPSJslvam7ZepPzUohauo/A+IxnXa3p8lqlj+EOtv
-	F8EpUUX6dPy4MBedo8B20oAmqVlvoocoaJ383s3gzhtLUV066F5pr0w5Cml0a8vgq/aPBe2zkLN
-	UGXKBP3b/tlbGGdFAaVuSKQcuggyml5buL0xj1JbIYy7ulMOdAtIfy3plkjlaIt/alwC1rnPTlF
-	Ojc/i8twF0FrMAyWv7yP8CLMkEt3DxT13IkbOaZUjkmiah9QCNsebkIOSw3pQik7jT4FVKyKKLj
-	mSrA5l1lA/V27v7gfnl11XTjONkXRrg=
-X-Google-Smtp-Source: AGHT+IGA0MgR+xwVcQhrby9aKoQ8xNlYUZ3BzRKQHqAiBrnfkqCSyshcL1X1iDNUaxmPwD+gnnVO5A==
-X-Received: by 2002:a05:6402:254e:b0:5d1:2290:c623 with SMTP id 4fb4d7f45d1cf-5d63c2e8742mr7379890a12.7.1734220986116;
-        Sat, 14 Dec 2024 16:03:06 -0800 (PST)
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com. [209.85.218.53])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5d652f270bfsm1502661a12.61.2024.12.14.16.03.03
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 14 Dec 2024 16:03:04 -0800 (PST)
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-aab925654d9so249183066b.2
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Dec 2024 16:03:03 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUL8NZiMGBzjXlQkqtORuEHSjarVhjbRd6D6qYOtleOyskr9cjzjdaukJCa1kHTUf4LaS5Zsru0ckgG@vger.kernel.org
-X-Received: by 2002:a17:906:c146:b0:aa6:82e3:2103 with SMTP id
- a640c23a62f3a-aab779b7e12mr856494866b.32.1734220983343; Sat, 14 Dec 2024
- 16:03:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ehm82Brh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85DCBC4CEDE;
+	Sun, 15 Dec 2024 00:54:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734224053;
+	bh=fQ7fyIiCvqRBnS9dD3O0cMYTdMkV8mPuYqd5RZlaUHs=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=ehm82BrhRarDttsXs2RY4mVJTEVKh1iI9mbCoiR+2GcMZvvz2K4XCH9vbNAWm70WA
+	 XlyyjQfzVTpPhWL2aUHhbVBFiw9wVtGHMd9A67gAplscpALnJRNyPKK8iddY05kEmt
+	 LPJPclntMpddMC4ei9y1x6/jfS1Rb7KAuaw8ohfiaUoylidOko4ASJqGmWO94P1Qij
+	 zCAsBIc2hnmWyaLvUEgY0dJv6aHqj4n8qtm68r31qwn/Q4z3kIwuiydBchF4mHssW7
+	 lNcPsUx02l7ObzVFmWWkRR3PtUsHESfnws14pfduITb9sjLzb9fAUQXoVPAnRRgeNQ
+	 Ov89hUIATqw7g==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 70CD2380A959;
+	Sun, 15 Dec 2024 00:54:31 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.13-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <395d805645f141b15ef818dadf39c8689986e8b4.camel@HansenPartnership.com>
+References: <395d805645f141b15ef818dadf39c8689986e8b4.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <395d805645f141b15ef818dadf39c8689986e8b4.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: f103396ae31851d00b561ff9f8a32a441953ff8b
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 2d8308bf5b67dff50262d8a9260a50113b3628c6
+Message-Id: <173422406995.3425667.13785335161823338952.pr-tracker-bot@kernel.org>
+Date: Sun, 15 Dec 2024 00:54:29 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <395d805645f141b15ef818dadf39c8689986e8b4.camel@HansenPartnership.com>
-In-Reply-To: <395d805645f141b15ef818dadf39c8689986e8b4.camel@HansenPartnership.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 14 Dec 2024 16:02:47 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wjUTLUdiyc=+Mw3qTiQRu5xhtkBYd9r+o_hJTKgoW9XKQ@mail.gmail.com>
-Message-ID: <CAHk-=wjUTLUdiyc=+Mw3qTiQRu5xhtkBYd9r+o_hJTKgoW9XKQ@mail.gmail.com>
-Subject: Re: [GIT PULL] SCSI fixes for 6.13-rc2
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 
-On Sat, 14 Dec 2024 at 15:08, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
->       scsi: ufs: core: Update compl_time_stamp_local_clock after completing a cqe
+The pull request you sent on Sat, 14 Dec 2024 18:08:14 -0500:
 
-Why does that ufs driver have that pointless "local_clock" version,
-when it also does a real ktime?
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-It's documented to be just for debugging.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/2d8308bf5b67dff50262d8a9260a50113b3628c6
 
-Then the "ktime" version is documented to be for statistics.
+Thank you!
 
-What makes this all make sense? Two different clocks, for two
-different non-essential uses? And that duplication literally causes
-bugs because clearly people get confused.
-
-This particular bug has been around for almost two years, so equally
-clearly these timestamps really *really* aren't that important.
-
-Can we just agree that it's silly *and* confusing to maintain two
-different completely unimportant timestamps in parallel, and just get
-rid of at least one of them?
-
-            Linus
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
