@@ -1,90 +1,116 @@
-Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
+Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 387C3204F66;
-	Mon, 16 Dec 2024 11:29:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27B3E1FFC43
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Dec 2024 11:38:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734348563; cv=none; b=bl/ZhhCtHxNuJnnHh8AVHD/a5feAFd96dCs2nzhRWQRRM/G37uMS84CshuIwGXP9cm7MIshIt0c/qmKvbVcSXnTdvWhMv9nrVc/1ODVTglAcZOmB4qZ9zMmSRMwwYB6/SsOgDaRoFFxnoouiNgSu190ceM0PtA08Hwbh+IC8EP4=
+	t=1734349112; cv=none; b=eyhzY/1agDCMwZQP+aT5vsf8SfIxdar7NVqq2WZ+B2CnYPIaelWbZTK3Nm5spTzTODqn2N06eilNKvXdLKSglF8oagzbVpoE+1xNQKcWBgkSyaxHfqbqL3O4puVcm60FdnebQZk0s8nqu+67FLRZ8amIz0PLJ1mjiG5uoaUy3kE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734348563; c=relaxed/simple;
-	bh=0zAR1Zgw045+wqZMsF16+d7FFPr4+tRVMSP1LbUeDkQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RicB43d3X3lAizq50wf9aaUop7EVb/8Lve9ByuEHSYR95in7epa4FkdiF8pQ4u53K2MIFM0XcXTgTTVQiQ64AhinlA7HzqewxQyIxtEGRr6LS3Dliwqo3yNi83N5AfWl9f6gcU7I9L+ItnW9sw7PDPR5YPsuiyUnB4EpxljtDy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=IfQGNQzq; arc=none smtp.client-ip=159.69.126.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
+	s=arc-20240116; t=1734349112; c=relaxed/simple;
+	bh=nJcrKjbb/izKfhO5ZCTPYd6zolh1/6O7j/l3sTLP/NQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=CK2B6OD+pA8ABHDOUV57eUUZotrX9V19prG20IFxMYPbOWzeNBydm8eaL8PvP15g7EZMSedlZ44+W0piItv+Iqi/MaquLyVnlpcXZqzjeTBL/QKJqUJHGeUZbk+rgF8NaVAAmqYOHBEYQpwOsBUK7U8cagLwRjcuwIH5SQtRH7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=GCfDkvzh; arc=none smtp.client-ip=62.142.5.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="IfQGNQzq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1734348553;
-	bh=0zAR1Zgw045+wqZMsF16+d7FFPr4+tRVMSP1LbUeDkQ=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=IfQGNQzq3sv2I6lR7Bm4wIXf4JexmJ6Orz/ItN7wWI5NG1ehxVi8OJiDmBs3XloXw
-	 SpKa9d0FdcuKXuLbHQ0vgALExfPumXMeWpgHDlTMkDWRfAvHcYQabjxC0qb4cyffv7
-	 Tz2Rcr8yjxSC1drhVomftVoQCIvwhT/jsZ2yCP28=
-From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Mon, 16 Dec 2024 12:29:16 +0100
-Subject: [PATCH 09/11] scsi: qedi: Constify 'struct bin_attribute'
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="GCfDkvzh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=content-transfer-encoding:content-type:mime-version:message-id:date:subject:
+	 cc:to:from:from:to:cc:reply-to:subject:date:in-reply-to:references:
+	 list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=nQ/yC+8xWtNHB16AC7Zp2qZMVpjX31p5rRFFK6w3pLg=;
+	b=GCfDkvzhqb7rTXUPy1KQQaNd6o3SVWoogVimHogTCazU4aVJPidYVr41kx630NglfcSQu26Cax+5b
+	 rxbEl0k8BA+Q2NBslkfqzEjPrzEmdfM2h/VNSQR/BD3dQCMZ6rTfUf/FuzSbM15v8k4uy1s7HdDPtn
+	 /LJgm+s4rUbGTbXfxchsvF2+CCor+8palLwYiYVUyBTP5VCaDzQznp7YjPSwLVSKjj1Tn0nAhUfjRb
+	 629RDPGZOqsKwdBtGay29EvCVSCTci87U9M5RRaxTh17C0Lk9zeknhyzdQNXnPS98qnlNzTPy6ApBz
+	 j8OFMyOWUxNXbffv/5n15710KcSc0+g==
+Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
+	id 3ed63cc6-bba2-11ef-a13a-005056bdfda7;
+	Mon, 16 Dec 2024 13:38:19 +0200 (EET)
+From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+To: linux-scsi@vger.kernel.org,
+	jmeneghi@redhat.com
+Cc: martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	loberman@redhat.com,
+	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: st: Regression fix: Don't set pos_unknown just after device recognition
+Date: Mon, 16 Dec 2024 13:37:55 +0200
+Message-ID: <20241216113755.30415-1-Kai.Makisara@kolumbus.fi>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Message-Id: <20241216-sysfs-const-bin_attr-scsi-v1-9-f0a5e54b3437@weissschuh.net>
-References: <20241216-sysfs-const-bin_attr-scsi-v1-0-f0a5e54b3437@weissschuh.net>
-In-Reply-To: <20241216-sysfs-const-bin_attr-scsi-v1-0-f0a5e54b3437@weissschuh.net>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Adam Radford <aradford@gmail.com>, 
- Bradley Grove <linuxdrivers@attotech.com>, 
- Tyrel Datwyler <tyreld@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- Christophe Leroy <christophe.leroy@csgroup.eu>, 
- Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>, 
- James Smart <james.smart@broadcom.com>, 
- Dick Kennedy <dick.kennedy@broadcom.com>, Brian King <brking@us.ibm.com>, 
- Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>, 
- GR-QLogic-Storage-Upstream@marvell.com, Nilesh Javali <njavali@marvell.com>, 
- Manish Rangankar <mrangankar@marvell.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1734348551; l=802;
- i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=0zAR1Zgw045+wqZMsF16+d7FFPr4+tRVMSP1LbUeDkQ=;
- b=1W6RZ9BA9Dsc+CBzANf4Tht8N5AIdCyB6NGgVKB+IsTA27eXPneFAttchQy0ojXOOZQZt6vds
- A+mCsUddQeNDsjzwyDljmAV7qogymPgp/ZcoHbiY7G+vm89CQ7DGCvg
-X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
- pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 
-The sysfs core now allows instances of 'struct bin_attribute' to be
-moved into read-only memory. Make use of that to protect them against
-accidental or malicious modifications.
+Commit 9604eea5bd3a ("scsi: st: Add third party poweron reset handling")
+in v6.6 added new code to handle the Power On/Reset Unit Attention
+(POR UA) sense data. This was in addition to the existing method. When
+this Unit Attention is received, the driver blocks attempts to read,
+write and some other operations because the reset may have rewinded
+the tape. Because of the added code, also the initial POR UA resulted
+in blocking operations, including those that are used to set the driver
+options after the device is recognized. Also, reading and writing are
+refused, whereas they succeeded before this commit.
 
-Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+This patch adds code to not set pos_unknown to block operations if the
+POR UA is received from the first test_ready() call after the st device
+has been created. This restores the behavior before v6.6.
+
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Fixes: 9604eea5bd3a ("scsi: st: Add third party poweron reset handling")
+Closes: https://lore.kernel.org/linux-scsi/2201CF73-4795-4D3B-9A79-6EE5215CF58D@kolumbus.fi/
+CC: stable@vger.kernel.org
 ---
- drivers/scsi/qedi/qedi_dbg.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/st.c | 6 ++++++
+ drivers/scsi/st.h | 1 +
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_dbg.h b/drivers/scsi/qedi/qedi_dbg.h
-index fdda12ef13b0fd1f69103a28b8a9e8641281e151..5a1ec45421834bfed5f7d7b87391ae8cc4905c6e 100644
---- a/drivers/scsi/qedi/qedi_dbg.h
-+++ b/drivers/scsi/qedi/qedi_dbg.h
-@@ -91,7 +91,7 @@ struct Scsi_Host;
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e8ef27d7ef61..ebbd50ec0cda 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -1030,6 +1030,11 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
+ 			retval = new_session ? CHKRES_NEW_SESSION : CHKRES_READY;
+ 		break;
+ 	}
++	if (STp->first_tur) {
++		/* Don't set pos_unknown right after device recognition */
++		STp->pos_unknown = 0;
++		STp->first_tur = 0;
++	}
  
- struct sysfs_bin_attrs {
- 	char *name;
--	struct bin_attribute *attr;
-+	const struct bin_attribute *attr;
- };
+ 	if (SRpnt != NULL)
+ 		st_release_request(SRpnt);
+@@ -4328,6 +4333,7 @@ static int st_probe(struct device *dev)
+ 	blk_queue_rq_timeout(tpnt->device->request_queue, ST_TIMEOUT);
+ 	tpnt->long_timeout = ST_LONG_TIMEOUT;
+ 	tpnt->try_dio = try_direct_io;
++	tpnt->first_tur = 1;
  
- int qedi_create_sysfs_attr(struct Scsi_Host *shost,
-
+ 	for (i = 0; i < ST_NBR_MODES; i++) {
+ 		STm = &(tpnt->modes[i]);
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index 7a68eaba7e81..1aaaf5369a40 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -170,6 +170,7 @@ struct scsi_tape {
+ 	unsigned char rew_at_close;  /* rewind necessary at close */
+ 	unsigned char inited;
+ 	unsigned char cleaning_req;  /* cleaning requested? */
++	unsigned char first_tur;     /* first TEST UNIT READY */
+ 	int block_size;
+ 	int min_block;
+ 	int max_block;
 -- 
-2.47.1
+2.43.0
 
