@@ -1,31 +1,31 @@
 Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D974204F7A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 387C3204F66;
 	Mon, 16 Dec 2024 11:29:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734348562; cv=none; b=YneuaUmuA5ahxfFVTvN0r5nd7Z1DyYGIi/toXueL+vadicQLgw5LNdqdF+c7CiuhUHt2rYgOVhIVdlxw4lXJ0yp3FRwxp2xLNj7mLTzd7n99t3ngfSIS1/h9LW5dMfZ7R9shCUgxzldOySTRpqG6XVOqAGYf7B7HFQA/tQmJQig=
+	t=1734348563; cv=none; b=bl/ZhhCtHxNuJnnHh8AVHD/a5feAFd96dCs2nzhRWQRRM/G37uMS84CshuIwGXP9cm7MIshIt0c/qmKvbVcSXnTdvWhMv9nrVc/1ODVTglAcZOmB4qZ9zMmSRMwwYB6/SsOgDaRoFFxnoouiNgSu190ceM0PtA08Hwbh+IC8EP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734348562; c=relaxed/simple;
-	bh=qDXql5e0dlsoUkgnrUATod+FIdN2oCDJzygWUo2bAxI=;
+	s=arc-20240116; t=1734348563; c=relaxed/simple;
+	bh=0zAR1Zgw045+wqZMsF16+d7FFPr4+tRVMSP1LbUeDkQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Uhw48A+cVdogrpE+1yrw55WJn0Bi/fNb0h6dgMFgDEeKVAPNAHHg3Zvwyny8L24wWX5lgqAw5ESZrYUTf2ELmHZgtBhST8t4PQLwd2JoNq67SIx2lrWsTly8EH3l9uBtOmyRwJs16C3t6dQzQo6Z6PovxpyfK54IwOA5UF8G5C8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=dZKEYZOu; arc=none smtp.client-ip=159.69.126.157
+	 In-Reply-To:To:Cc; b=RicB43d3X3lAizq50wf9aaUop7EVb/8Lve9ByuEHSYR95in7epa4FkdiF8pQ4u53K2MIFM0XcXTgTTVQiQ64AhinlA7HzqewxQyIxtEGRr6LS3Dliwqo3yNi83N5AfWl9f6gcU7I9L+ItnW9sw7PDPR5YPsuiyUnB4EpxljtDy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=IfQGNQzq; arc=none smtp.client-ip=159.69.126.157
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="dZKEYZOu"
+	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="IfQGNQzq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
-	s=mail; t=1734348552;
-	bh=qDXql5e0dlsoUkgnrUATod+FIdN2oCDJzygWUo2bAxI=;
+	s=mail; t=1734348553;
+	bh=0zAR1Zgw045+wqZMsF16+d7FFPr4+tRVMSP1LbUeDkQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=dZKEYZOuYIHlGMQvecOcn2uix+tggU/FkxIxa3rtLJR1ytNHcWcz1br92ylyAydSN
-	 AaGg4z+b62l/Jnx9a7qEvnDagQ+5qgY9qf6W8AsuUNgYyCRQkCdx06aCL3kp1iUP93
-	 j6hK6BCVF2OpA96b4jyQJflQWD6xbwe6Il2RcEQk=
+	b=IfQGNQzq3sv2I6lR7Bm4wIXf4JexmJ6Orz/ItN7wWI5NG1ehxVi8OJiDmBs3XloXw
+	 SpKa9d0FdcuKXuLbHQ0vgALExfPumXMeWpgHDlTMkDWRfAvHcYQabjxC0qb4cyffv7
+	 Tz2Rcr8yjxSC1drhVomftVoQCIvwhT/jsZ2yCP28=
 From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Date: Mon, 16 Dec 2024 12:29:12 +0100
-Subject: [PATCH 05/11] scsi: ibmvfc: Constify 'struct bin_attribute'
+Date: Mon, 16 Dec 2024 12:29:16 +0100
+Subject: [PATCH 09/11] scsi: qedi: Constify 'struct bin_attribute'
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,7 +34,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20241216-sysfs-const-bin_attr-scsi-v1-5-f0a5e54b3437@weissschuh.net>
+Message-Id: <20241216-sysfs-const-bin_attr-scsi-v1-9-f0a5e54b3437@weissschuh.net>
 References: <20241216-sysfs-const-bin_attr-scsi-v1-0-f0a5e54b3437@weissschuh.net>
 In-Reply-To: <20241216-sysfs-const-bin_attr-scsi-v1-0-f0a5e54b3437@weissschuh.net>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -54,11 +54,11 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
  linuxppc-dev@lists.ozlabs.org, 
  =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1734348551; l=1371;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1734348551; l=802;
  i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=qDXql5e0dlsoUkgnrUATod+FIdN2oCDJzygWUo2bAxI=;
- b=dDgz9Ydf6v4c6BI1Dnxg8otiPshJZaMRuHcfAE+qvBaHTOKVPItUmjE76IBIT2jLd/2Q0crxB
- eOz7VAZ6/uECvTk+TKC/HJAY59i1sBjxrZyaCFMfdE1+rcuzjW44oZJ
+ bh=0zAR1Zgw045+wqZMsF16+d7FFPr4+tRVMSP1LbUeDkQ=;
+ b=1W6RZ9BA9Dsc+CBzANf4Tht8N5AIdCyB6NGgVKB+IsTA27eXPneFAttchQy0ojXOOZQZt6vds
+ A+mCsUddQeNDsjzwyDljmAV7qogymPgp/ZcoHbiY7G+vm89CQ7DGCvg
 X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
  pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 
@@ -68,38 +68,22 @@ accidental or malicious modifications.
 
 Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qedi/qedi_dbg.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index e66c3ef74267a5527b21e6e1d13efb91425b158e..dc8401587bb529860d261ac83b924fceac8335d9 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3639,7 +3639,7 @@ static DEVICE_ATTR(nr_scsi_channels, S_IRUGO | S_IWUSR,
-  *	number of bytes printed to buffer
-  **/
- static ssize_t ibmvfc_read_trace(struct file *filp, struct kobject *kobj,
--				 struct bin_attribute *bin_attr,
-+				 const struct bin_attribute *bin_attr,
- 				 char *buf, loff_t off, size_t count)
- {
- 	struct device *dev = kobj_to_dev(kobj);
-@@ -3662,13 +3662,13 @@ static ssize_t ibmvfc_read_trace(struct file *filp, struct kobject *kobj,
- 	return count;
- }
+diff --git a/drivers/scsi/qedi/qedi_dbg.h b/drivers/scsi/qedi/qedi_dbg.h
+index fdda12ef13b0fd1f69103a28b8a9e8641281e151..5a1ec45421834bfed5f7d7b87391ae8cc4905c6e 100644
+--- a/drivers/scsi/qedi/qedi_dbg.h
++++ b/drivers/scsi/qedi/qedi_dbg.h
+@@ -91,7 +91,7 @@ struct Scsi_Host;
  
--static struct bin_attribute ibmvfc_trace_attr = {
-+static const struct bin_attribute ibmvfc_trace_attr = {
- 	.attr =	{
- 		.name = "trace",
- 		.mode = S_IRUGO,
- 	},
- 	.size = 0,
--	.read = ibmvfc_read_trace,
-+	.read_new = ibmvfc_read_trace,
+ struct sysfs_bin_attrs {
+ 	char *name;
+-	struct bin_attribute *attr;
++	const struct bin_attribute *attr;
  };
- #endif
  
+ int qedi_create_sysfs_attr(struct Scsi_Host *shost,
 
 -- 
 2.47.1
