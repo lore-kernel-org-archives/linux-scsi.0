@@ -1,191 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106EC1F8EE4;
-	Tue, 17 Dec 2024 20:34:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DB5E11D89EC;
+	Tue, 17 Dec 2024 20:53:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734467696; cv=none; b=B91V96T7sRdzWE8TW+FAi3TCt1nKgd8SF5Ky8qqT/NXajGu5NU0uREAin7YfnfJZy+2yMsYMLxT1RnYgdnsGUmj4Q7I5gJ5GNoS9gi+Ab0wIPiEU4YOfIP7wN/Pvg/bp42YacD3XB3omZjdwGLHjOoEQq2uUgd4eYd2bNMZnouc=
+	t=1734468808; cv=none; b=J6iIu0jP5BI8CPgWTJ9wGjMr0xqdNB+cff313scXxM0ONuMsxvJHghfw6k8BLr2A4WFpJDIGUcLAPgn3bmiDmilYYX+A4A3QwdB3E1oyb/w98C6Sfa5PWnVbCwt3WrnEkD/igj5qk83zJ6gkmXyjuQYzeDqXP0jn6ppHUVVrvSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734467696; c=relaxed/simple;
-	bh=nvnPPN7j/2p/JFEejejW+Qg34E36N01t9rBWoj3OZgM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=flzgx+Gp7iDoEYQIpfCY8FwJA0+/4kNnXGC6CFO0nCLMwqDOIxGuY5vOJ1Bb4Fall/Oza+u9TDuSpUKsyCLLNaYfMRJ6keGnGHSgTCvZG5XEDnYcFsYJ91T5tSV/zIQD1YEFJR7I1QIOo1PXgyS7ffuw7SnjI8JsTY1EErNx8zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LsVQxRIV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734468808; c=relaxed/simple;
+	bh=AZ0CsLKt8J6l6W4VDxSftOcj1gfWEjTLXyKq8DV0roY=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=dwDQMpU6mk+Lo8KUOSSXsIzOLy2BKL0l6Wc83FApFCet/kF1R9z2jPo4po/j8cLEwuUqzuKojbuksb7KIOGpNU0a97g1NteXfdtoNSdHbsmJZJxqM6QI+zAbgVSCVQlUF+MEV/GIwXUn5gqKlofdjmdbhU5SqmO7Lj5x83aUlbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=PN+5X7vl; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LsVQxRIV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B71EC4CED3;
-	Tue, 17 Dec 2024 20:34:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734467695;
-	bh=nvnPPN7j/2p/JFEejejW+Qg34E36N01t9rBWoj3OZgM=;
-	h=From:To:Cc:Subject:Date:From;
-	b=LsVQxRIVnTWmK+4yYhndt3mInuvU6Ulb1pJ+dF2ABRL/mwqpll9QvwFYN/kVaDAVj
-	 nmml2P7yeZ4cs7yKcMTNpo1oHhZVy/v6otDSGOSxYUbO8OVOBwn5SwOcGEwLH+/rZh
-	 COAP0iABpRqOHQIa4GC52DMLTOU/IguAK8DCrbCxPO13jyWqF5phrMQebu/wkemc5F
-	 5Em6BzMo73YoxS1/y0Q0qTJ49zUi7Y8THuemgc7BkfYNCWBFd61SGJbbZ0UGlW8ZGJ
-	 xzKDOoLJBFpx5Tqhk+5eJdPW57RilOoZJxAUQ9iAla6gKIcEEtOaJ76s/xVlM0sSbh
-	 PHl8XF22RXb4w==
-From: Kees Cook <kees@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kees Cook <kees@kernel.org>,
-	Simon Horman <horms@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	Max Gurtovoy <mgurtovoy@nvidia.com>,
-	Maurizio Lombardi <mlombard@redhat.com>,
-	Dmitry Bogdanov <d.bogdanov@yadro.com>,
-	Mingzhe Zou <mingzhe.zou@easystack.cn>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v2] net: core: Convert inet_addr_is_any() to sockaddr_storage
-Date: Tue, 17 Dec 2024 12:34:51 -0800
-Message-Id: <20241217203447.it.588-kees@kernel.org>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="PN+5X7vl"
+Received: from [192.168.35.166] (c-73-118-245-227.hsd1.wa.comcast.net [73.118.245.227])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 313DC2171F96;
+	Tue, 17 Dec 2024 12:53:23 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 313DC2171F96
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1734468805;
+	bh=aVc5gziW3F5u0OxTruXlabKnVm24GGvTVYzcdDQRKKI=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=PN+5X7vl8fqADT/aII8zIGfk60UMtxJ9pR+EBirm4pXAa4JZO11zP4etUexy4ZsF1
+	 Hz5jBPkUY126l1G2C1Lf0cgYJmqJpx2Ac/wrr+Dl/I1W058j7FPkFRH8CsABxT6WHb
+	 +lq4b3CWgOR3ojB2J6CV+93O4Hyq14ifZiz9VEy4=
+Message-ID: <14ad0c08-7b3b-47b6-8cc1-8a4179238e5a@linux.microsoft.com>
+Date: Tue, 17 Dec 2024 12:53:22 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4896; i=kees@kernel.org; h=from:subject:message-id; bh=nvnPPN7j/2p/JFEejejW+Qg34E36N01t9rBWoj3OZgM=; b=owGbwMvMwCVmps19z/KJym7G02pJDOmJD7IXGD1bHnYlpCN4y6Tg3H9XYj89Nfrz4+kPLX+O4 85567JEOkpZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTACZS6sHwP3hN4eMGY3eGE5Jq dVe+buJK2Zey8KEWkxbn7C/6h39eM2RkmLRCIm6RyO4Hq9Z7xwQ8alw1TW5+5nTH7UclY4/eXLZ 3CycA
-X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Cc: eahariha@linux.microsoft.com, Pablo Neira Ayuso <pablo@netfilter.org>,
+ Jozsef Kadlecsik <kadlec@netfilter.org>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Simon Horman <horms@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>,
+ Nicolas Palix <nicolas.palix@imag.fr>, Daniel Mack <daniel@zonque.org>,
+ Haojian Zhuang <haojian.zhuang@gmail.com>,
+ Robert Jarzmik <robert.jarzmik@free.fr>, Russell King
+ <linux@armlinux.org.uk>, Heiko Carstens <hca@linux.ibm.com>,
+ Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev
+ <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>,
+ Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>,
+ Oded Gabbay <ogabbay@kernel.org>, Lucas De Marchi
+ <lucas.demarchi@intel.com>,
+ =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Jeroen de Borst <jeroendb@google.com>,
+ Praveen Kaligineedi <pkaligineedi@google.com>,
+ Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+ Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>,
+ Jeff Johnson <jjohnson@kernel.org>, Catalin Marinas
+ <catalin.marinas@arm.com>, Jack Wang <jinpu.wang@cloud.ionos.com>,
+ Marcel Holtmann <marcel@holtmann.org>,
+ Johan Hedberg <johan.hedberg@gmail.com>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Florian Fainelli <florian.fainelli@broadcom.com>, Ray Jui
+ <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>, Xiubo Li <xiubli@redhat.com>,
+ Ilya Dryomov <idryomov@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>,
+ Jiri Kosina <jikos@kernel.org>, Miroslav Benes <mbenes@suse.cz>,
+ Petr Mladek <pmladek@suse.com>, Joe Lawrence <joe.lawrence@redhat.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ Louis Peens <louis.peens@corigine.com>, Michael Ellerman
+ <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
+ Christophe Leroy <christophe.leroy@csgroup.eu>,
+ Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>,
+ netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr,
+ linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+ linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
+ linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
+ ath11k@lists.infradead.org, linux-mm@kvack.org,
+ linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev,
+ linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org,
+ live-patching@vger.kernel.org, linux-sound@vger.kernel.org,
+ oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org,
+ Anna-Maria Behnsen <anna-maria@linutronix.de>,
+ Jeff Johnson <quic_jjohnson@quicinc.com>, paul@paul-moore.com
+Subject: Re: [PATCH v3 00/19] Converge on using secs_to_jiffies()
+To: Andrew Morton <akpm@linux-foundation.org>
+References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
+ <20241210163520.95fa1c8aa83e1915004ed884@linux-foundation.org>
+ <422470cd-84f0-469e-93c2-493c5091391d@linux.microsoft.com>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <422470cd-84f0-469e-93c2-493c5091391d@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-All the callers of inet_addr_is_any() have a sockaddr_storage-backed
-sockaddr. Avoid casts and switch prototype to the actual object being
-used.
+On 12/10/2024 5:00 PM, Easwar Hariharan wrote:
+> On 12/10/2024 4:35 PM, Andrew Morton wrote:
+>> On Tue, 10 Dec 2024 22:02:31 +0000 Easwar Hariharan <eahariha@linux.microsoft.com> wrote:
+>>
+>>> This is a series that follows up on my previous series to introduce
+>>> secs_to_jiffies() and convert a few initial users.
+>>
+>> Thanks, I added this to mm.git.  I suppressed the usual added-to-mm
+>> emails because soooo many cc's!
+>>
+>> I'd ask relevant maintainers to send in any acks and I'll paste them
+>> into the relevant changelogs.
+> 
+> Thank you, Andrew!
+> 
+> - Easwar
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Simon Horman <horms@kernel.org>
-Signed-off-by: Kees Cook <kees@kernel.org>
----
- v2: drop "extern" in header (hch)
- v1: https://lore.kernel.org/all/20241217012618.work.323-kees@kernel.org/
----
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Chaitanya Kulkarni <kch@nvidia.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: Max Gurtovoy <mgurtovoy@nvidia.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc: Mingzhe Zou <mingzhe.zou@easystack.cn>
-Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
-Cc: Simon Horman <horms@kernel.org>
-Cc: "Dr. David Alan Gilbert" <linux@treblig.org>
-Cc: linux-nvme@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/nvme/target/rdma.c          | 2 +-
- drivers/nvme/target/tcp.c           | 2 +-
- drivers/target/iscsi/iscsi_target.c | 2 +-
- include/linux/inet.h                | 2 +-
- net/core/utils.c                    | 8 ++++----
- 5 files changed, 8 insertions(+), 8 deletions(-)
+Hi Andrew,
 
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 1afd93026f9b..18ea11342af1 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -1986,7 +1986,7 @@ static void nvmet_rdma_disc_port_addr(struct nvmet_req *req,
- 	struct nvmet_rdma_port *port = nport->priv;
- 	struct rdma_cm_id *cm_id = port->cm_id;
- 
--	if (inet_addr_is_any((struct sockaddr *)&cm_id->route.addr.src_addr)) {
-+	if (inet_addr_is_any(&cm_id->route.addr.src_addr)) {
- 		struct nvmet_rdma_rsp *rsp =
- 			container_of(req, struct nvmet_rdma_rsp, req);
- 		struct rdma_cm_id *req_cm_id = rsp->queue->cm_id;
-diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
-index 7c51c2a8c109..df24244fb820 100644
---- a/drivers/nvme/target/tcp.c
-+++ b/drivers/nvme/target/tcp.c
-@@ -2158,7 +2158,7 @@ static void nvmet_tcp_disc_port_addr(struct nvmet_req *req,
- {
- 	struct nvmet_tcp_port *port = nport->priv;
- 
--	if (inet_addr_is_any((struct sockaddr *)&port->addr)) {
-+	if (inet_addr_is_any(&port->addr)) {
- 		struct nvmet_tcp_cmd *cmd =
- 			container_of(req, struct nvmet_tcp_cmd, req);
- 		struct nvmet_tcp_queue *queue = cmd->queue;
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 6002283cbeba..1ce68eda0090 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3471,7 +3471,7 @@ iscsit_build_sendtargets_response(struct iscsit_cmd *cmd,
- 					}
- 				}
- 
--				if (inet_addr_is_any((struct sockaddr *)&np->np_sockaddr))
-+				if (inet_addr_is_any(&np->np_sockaddr))
- 					sockaddr = &conn->local_sockaddr;
- 				else
- 					sockaddr = &np->np_sockaddr;
-diff --git a/include/linux/inet.h b/include/linux/inet.h
-index bd8276e96e60..9158772f3559 100644
---- a/include/linux/inet.h
-+++ b/include/linux/inet.h
-@@ -55,6 +55,6 @@ extern int in6_pton(const char *src, int srclen, u8 *dst, int delim, const char
- 
- extern int inet_pton_with_scope(struct net *net, unsigned short af,
- 		const char *src, const char *port, struct sockaddr_storage *addr);
--extern bool inet_addr_is_any(struct sockaddr *addr);
-+bool inet_addr_is_any(struct sockaddr_storage *addr);
- 
- #endif	/* _LINUX_INET_H */
-diff --git a/net/core/utils.c b/net/core/utils.c
-index 27f4cffaae05..e47feeaa5a49 100644
---- a/net/core/utils.c
-+++ b/net/core/utils.c
-@@ -399,9 +399,9 @@ int inet_pton_with_scope(struct net *net, __kernel_sa_family_t af,
- }
- EXPORT_SYMBOL(inet_pton_with_scope);
- 
--bool inet_addr_is_any(struct sockaddr *addr)
-+bool inet_addr_is_any(struct sockaddr_storage *addr)
- {
--	if (addr->sa_family == AF_INET6) {
-+	if (addr->ss_family == AF_INET6) {
- 		struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
- 		const struct sockaddr_in6 in6_any =
- 			{ .sin6_addr = IN6ADDR_ANY_INIT };
-@@ -409,13 +409,13 @@ bool inet_addr_is_any(struct sockaddr *addr)
- 		if (!memcmp(in6->sin6_addr.s6_addr,
- 			    in6_any.sin6_addr.s6_addr, 16))
- 			return true;
--	} else if (addr->sa_family == AF_INET) {
-+	} else if (addr->ss_family == AF_INET) {
- 		struct sockaddr_in *in = (struct sockaddr_in *)addr;
- 
- 		if (in->sin_addr.s_addr == htonl(INADDR_ANY))
- 			return true;
- 	} else {
--		pr_warn("unexpected address family %u\n", addr->sa_family);
-+		pr_warn("unexpected address family %u\n", addr->ss_family);
- 	}
- 
- 	return false;
--- 
-2.34.1
+There have been a couple of comments[1][2] that came in after you queued
+the series to mm. Would you rather I send individual patches addressing
+these, or just send a v4 of the entire series (-netdev of course) so you
+can replace it wholesale?
 
+Thanks,
+Easwar
+
+[1]
+https://lore.kernel.org/all/07784753-6874-4dda-a080-2d2812f4a10a@csgroup.eu/
+[2]
+https://lore.kernel.org/all/Z2G1ZPL2cAlQOYlF@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com/
