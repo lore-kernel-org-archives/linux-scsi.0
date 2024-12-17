@@ -1,40 +1,38 @@
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5771D63CC
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2024 10:31:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D7281E633C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2024 10:58:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734431497; cv=none; b=MBFgiHHjx9YJRsQR6/G9JK+a4Q9mfEJ4i/0FcHMC/XZHkt8fV7SiXooDWEKUI9MrEbj5/NTqscKfzal5l4uFBNfBpZPziT53VAqRsNhWUc0Ac37swdNtdamQ5Ro1wjultLew+tl8loqCbUDioYVKYN6yG94rzkGjtCX0QM0qWTw=
+	t=1734433134; cv=none; b=oZ9W/R/jq0L4c0LNd21/XweOLv1YAI66srjfXCdRDVc5iq9ksk1Nx0V08czzDMBvtFCtswKhLiVBjGcBxVve9aunU3xrKojrirPvNQuSEj0wLtcNcOjEDsfWQfHL/eOkjbs6kyMnEb9P1HMyYfOOLkOcc1y8N6TYJLZv6JuCv+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734431497; c=relaxed/simple;
-	bh=fajVf/r3LPJsa9GAi29E1rTXH/qGwzuvrJ6v36PQzlw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ly9YOclxEFWzSDmTrEnpwGPYRrWYRdeQO2fJuB9mMqYXiu1SqZOI+biaxlBMXeNr4X9L4+30eHqAohaqhtLnnk4Mb3RnXBwKRni+aVNlJtl74pkzkfSkBDPoFH3366612HtSfXypJCjOUJV1PVuiHsd/naYEIaGtgs/UlYuL2uI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=gTXWm3Z5; arc=none smtp.client-ip=115.124.30.130
+	s=arc-20240116; t=1734433134; c=relaxed/simple;
+	bh=3OB44eyTbxaAXpNXVvxB3xTKoDXtUS0JRvqnqh/ThhE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oASfRaj/iBVq7JQrVT5BS2lPObXxU5oaUv7HvW+KOEu6ertLJpDWYuRLqIB6RDexozHtSya5hZEC7ph+buLp7poh/Nz0Gnjl8diKzXwSta/5oajdVIKwkbwORW9qqC14DEAI1atgghVxwPvtrQ+NmVv4Lgx2BYuBddXFNfd44FI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=Vg+MQ6HB; arc=none smtp.client-ip=115.124.30.101
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="gTXWm3Z5"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="Vg+MQ6HB"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1734431492; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=oFWIM/KAvGFbJti/0TJxnLfdri5EIhGQDulcIINopRo=;
-	b=gTXWm3Z5vHCbLdoxgHBTIlknL7cd4In3n7LdJQTKtbJaCB9E1UkTHXtqnOUs6oitWItFxxgmUSj00WUqTZVL6AXV7e06/QMYC0MEone9RTmnCYAtO50otJrqvxkzxRkBqEva57/5Bz2xo5mHSGXM6MflbCXimCVit6ObV0L1+mI=
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WLiRTWs_1734431486 cluster:ay36)
+	t=1734433126; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=d7IV8y6wRJmmWKUqGFfJ2cgCPVjXaDZQiKCDQ2JJTqU=;
+	b=Vg+MQ6HBt+X+7l8+3uPCl9XI7Q52ua156a5KDTo48i3J3pngZvFAQbo92ygc3WTttHiYng5aqNqYFp5GOWTuDATjeVQi+GCZO9LN7QFk+8sJxrQabsWPRbiqnMTOQlnJJZ5c1E8faL0oKb1Csg4vrQtFCItap4DmtZAyeKReaUc=
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WLiWqBt_1734433120 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Tue, 17 Dec 2024 18:31:31 +0800
+          Tue, 17 Dec 2024 18:58:45 +0800
 From: Guixin Liu <kanie@linux.alibaba.com>
-To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: mpi3mr: fix possible crash when setup bsg fail
-Date: Tue, 17 Dec 2024 18:31:26 +0800
-Message-ID: <20241217103126.88206-1-kanie@linux.alibaba.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: [PATCH 0/2] fix some bsg related bugs
+Date: Tue, 17 Dec 2024 18:58:38 +0800
+Message-ID: <20241217105840.120081-1-kanie@linux.alibaba.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -44,48 +42,13 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If bsg_setup_queue() fails, the bsg_queue is assigned a non-NULL value.
-Consequently, in mpi3mr_bsg_exit(), the condition
-"if(!mrioc->bsg_queue)" will not be satisfied, preventing execution
-from entering bsg_remove_queue(), which could lead to a crash.
+Guixin Liu (2):
+  scsi: ufs: delete bsg_dev when setup bsg fail
+  scsi: ufs: set bsg_queue to NULL after remove
 
-Fixes: 4268fa751365 ("scsi: mpi3mr: Add bsg device support")
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
----
- drivers/scsi/mpi3mr/mpi3mr_app.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/ufs/core/ufs_bsg.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 10b8e4dc64f8..f4cacae1d3a4 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2951,6 +2951,7 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- 		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
- 		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
- 	};
-+	struct request_queue *q;
- 
- 	device_initialize(bsg_dev);
- 
-@@ -2966,14 +2967,16 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- 		return;
- 	}
- 
--	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
-+	q = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
- 			mpi3mr_bsg_request, NULL, 0);
--	if (IS_ERR(mrioc->bsg_queue)) {
-+	if (IS_ERR(q)) {
- 		ioc_err(mrioc, "%s: bsg registration failed\n",
- 		    dev_name(bsg_dev));
- 		device_del(bsg_dev);
- 		put_device(bsg_dev);
- 	}
-+
-+	mrioc->bsg_queue = q;
- }
- 
- /**
 -- 
 2.43.0
 
