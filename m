@@ -1,127 +1,195 @@
-Received: from mail-il1-f176.google.com (mail-il1-f176.google.com [209.85.166.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE6D214A609
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2024 16:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8259D1F8918;
+	Tue, 17 Dec 2024 17:31:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734453442; cv=none; b=GyJ0ACgufI1Rj69VF5y+8s+yenZEj57xT7nuvsBIO+jjrQ1Hn60Syr1fJzoUv2t4uQoTKJ0kYY6flHmI4MJH1Wk8wead24YMRjxC0tsh23EtipcXFnulhex5o/bNBNFxmKcqVRKHsoK9bWP56Yz2TnS1cbJ6SOrkTj0TWEQc9YI=
+	t=1734456668; cv=none; b=k/d+XnoCC6d1obqmKXUSOLIsDva8EQ/hERCJZCRCckH0sqUB7rIwyXzxCgqlYf3NzWGO60KQDXcoPWHUsYq123IV8Fbilw7olH7eYZuR/e9ESLnk/etKAdofc+H4ZSCQazHXzrCd7x5xTOzavqI7LF5X2il0hmVoeqLCo6Mtgqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734453442; c=relaxed/simple;
-	bh=1ATu9wgaYAQKhmswVhuoVZ2QLTUdUkiXPcR6R4v8PvA=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=L/FPcXf4knjcMMq/TTVy+J3/QmWAqMPPNHn7Y72uGYIcJ9obVXIj/t6rc3qLUgti7bK3oMSD3kOW8QxLCS0SN5Uu1dQGn9frkvW1EzcrA/on0WRVKZxU4pGPh9NnpOzp62hNualFG9WXFT9G2LeDDk9R8EYmLaPLAb9Cr9UiGpQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=YkvrTB0a; arc=none smtp.client-ip=209.85.166.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1734456668; c=relaxed/simple;
+	bh=5pZ3VHzHC4E9oZDpCgM75Zh6ux4FAUr0FIbkyLOg/Nk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iQXh7kieYISTejU9EMSqpeluAXnWKj0RP9pzWUr2RjtJOEyLursMgu4d9VWPTJYz+an4wr8JmvT50D39lveBY9M3CHBnhcykFvxX+c6pvDuDOZ82kEvz8Y4UDqdjFsq4mApj38qxZX3Cf5NrPIYxxF73+4JwVVFFV5SvbGSIr+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cl9r35o3; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="YkvrTB0a"
-Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-3a817ee9936so19113725ab.2
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2024 08:37:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1734453440; x=1735058240; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eLXAYiyU1iqMID7+HfNyBZxwgcF9EMYHiTYuuHxkZvc=;
-        b=YkvrTB0aNwKvR4xRlDpztlOMbeGYbo4Ym1ToMR0mUwdkDj9J59eG6lLIA1luzDT1tB
-         Z5GvUBO1asaMNLI0vh6XMq1oB4V3MfCWBl/JHIYoclfd+hNwEc42Rdgt3mXOMwUuCX8p
-         tcBlcLxeNkR/iMJHOTsg1OMzMJoXJwFVVKKstenMMcC9lnXvKFNoN9VgWtXaemj0AF+a
-         vTx/aA/pm+I4h7s9Rbw8T0mbO47cPcDl162FZsDTchFamGnzW2OWUeMtxLq32eb0xIa+
-         7i58HBGU0nE0yB0+R7qBns6wt3VAQldTcQL2mJ7HitNLPcK65E5mSmkcazdPuJtJUjB6
-         FN5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734453440; x=1735058240;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eLXAYiyU1iqMID7+HfNyBZxwgcF9EMYHiTYuuHxkZvc=;
-        b=AuJ5yR3dvDAqX3CJMHZEbZ0maKwdf2/kfFCOQptJeePUrOozHQUrx8HNTpfLgMXP0/
-         +pAe3AKixWsniQnKk7x+7I6qE+9rVqExvzAJlCQp9ggEReT2ofTsZJ634/9ieoU/uEnI
-         OcC7yyPPEkxjObxC5e35d2jLTyBrGx4cutB1L9EGPW2aaexdPf+g6b8YaD9DMPGNqg1Q
-         n/7INBTk94KPx7aVabmJrCcv3ASYiJW7BozplZJPJ+qxaP6Lzznm97IYU/WTfunBwV0H
-         YaCzhJOwa9JMICYn0+3Z00VTaio05xFWtZg3YNup/0kXskPgEcqJDb1kJiTKBPzKKq3C
-         Ze+Q==
-X-Forwarded-Encrypted: i=1; AJvYcCX8xTjgTuS2HHZ9KbV52+KAgda8KqU437P4jlMt2sEZLO9JAdOvZ+r9A9ajZTNSAGJJdkpGJl/+FAbk@vger.kernel.org
-X-Gm-Message-State: AOJu0YypdBSwINotT1GLla2GHBIwt+5aae+Hve3J2UlDknry80Darmcl
-	PUNuT+qs+RAT36B8RIyHBU0YIpp9fQ6BO5i6vu+Aiuw9RxnM60T6Mo4f0XW0wAM=
-X-Gm-Gg: ASbGnctgUx0E4AIhNaNcdFWiRmoOKLKaBGeW6lmIYVXIC+hypNtR5u2/sszQ4T863Wa
-	Fs9pX0kKVyR4qDguUAHwQ2+OextRHVcsSiyYh7PVZSq70WLLBDmtUI4wbEnB7Uz3bfONu7t2W+8
-	SXm849gTcc3WNwgKnSMwClhya/7BG4bCgGhZyaUXmrbyYUk9PszQ+hSYa8ziUsoqb0v8cVCFnOM
-	cpBrH51wBeNZBVaSBuNzx8yy7mIZ/tRzfxF0c5N/wzncXc=
-X-Google-Smtp-Source: AGHT+IE/HVlmxcalHVFA9B+15PGcwD/7VUAayQaHnmJ8VTv9HsAtDcrPfDzLFsYJKWRCm33fWsrd4w==
-X-Received: by 2002:a05:6e02:1d11:b0:3a7:708b:da28 with SMTP id e9e14a558f8ab-3bd8b195aa9mr912455ab.21.1734453440010;
-        Tue, 17 Dec 2024 08:37:20 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4e5e0a3de5esm1774339173.51.2024.12.17.08.37.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Dec 2024 08:37:19 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
- Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
- =?utf-8?q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, John Garry <john.g.garry@oracle.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>, 
- Daniel Wagner <wagi@kernel.org>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, virtualization@lists.linux.dev, 
- linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
- mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, 
- storagedev@microchip.com, linux-nvme@lists.infradead.org
-In-Reply-To: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
-References: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
-Subject: Re: [PATCH v6 0/8] blk: refactor queue affinity helpers
-Message-Id: <173445343855.487134.18283101203931240403.b4-ty@kernel.dk>
-Date: Tue, 17 Dec 2024 09:37:18 -0700
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cl9r35o3"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BHHJOLq032407;
+	Tue, 17 Dec 2024 17:29:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=g1hrCVwsLDHFXBw9S8SSEtW44ND3hI
+	e5hEs7mvzMcv0=; b=cl9r35o36KsL7jJKYCoj5LWAqgbCAwKQJ20PeY0lNPC00K
+	Wb2kXbck5OilzEheJEhO1UdwI+su1vwZEx+ymJ0mFVZPhk383HWoO7VUfjl4QPyC
+	NRZU5GuH7HUeI7pIrbgheTo3G3YyL9iJUTzTdJ2rQy11ZZUXxk/oz1ZsT4ro/HXW
+	RF1p1weL++6yCLkAsXqi4doi+5uKWL9CuTqE9RqoY9qtQhM5eVDQSPo42O2F/pZf
+	1E2hEAM56w/Zk8qrE4sU++MACbkaEvxnTnuSkGX19AfN+yNNhecbQM6ZfMsHhRv0
+	9OFeYY0UtsvX1JEiQmcTgZp6vrtBDv/o0B5nndaw==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 43k5g2jmnp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 17 Dec 2024 17:29:14 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BHDmDdx014412;
+	Tue, 17 Dec 2024 17:29:03 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 43hq21kfhm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 17 Dec 2024 17:29:03 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4BHHT0u259441574
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 17 Dec 2024 17:29:00 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0EEE820040;
+	Tue, 17 Dec 2024 17:29:00 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E39DD2004B;
+	Tue, 17 Dec 2024 17:28:58 +0000 (GMT)
+Received: from li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com (unknown [9.155.204.135])
+	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 17 Dec 2024 17:28:58 +0000 (GMT)
+Date: Tue, 17 Dec 2024 18:28:57 +0100
+From: Alexander Gordeev <agordeev@linux.ibm.com>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>,
+        Jozsef Kadlecsik <kadlec@netfilter.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>,
+        Julia Lawall <Julia.Lawall@inria.fr>,
+        Nicolas Palix <nicolas.palix@imag.fr>, Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Robert Jarzmik <robert.jarzmik@free.fr>,
+        Russell King <linux@armlinux.org.uk>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>,
+        Oded Gabbay <ogabbay@kernel.org>,
+        Lucas De Marchi <lucas.demarchi@intel.com>,
+        Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+        Jeroen de Borst <jeroendb@google.com>,
+        Praveen Kaligineedi <pkaligineedi@google.com>,
+        Shailend Chand <shailend@google.com>,
+        Andrew Lunn <andrew+netdev@lunn.ch>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Florian Fainelli <florian.fainelli@broadcom.com>,
+        Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+        Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+        Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+        Josh Poimboeuf <jpoimboe@kernel.org>, Jiri Kosina <jikos@kernel.org>,
+        Miroslav Benes <mbenes@suse.cz>, Petr Mladek <pmladek@suse.com>,
+        Joe Lawrence <joe.lawrence@redhat.com>,
+        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+        Louis Peens <louis.peens@corigine.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Naveen N Rao <naveen@kernel.org>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr,
+        linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+        linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org, linux-mm@kvack.org,
+        linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org,
+        live-patching@vger.kernel.org, linux-sound@vger.kernel.org,
+        oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org,
+        Anna-Maria Behnsen <anna-maria@linutronix.de>
+Subject: Re: [PATCH v3 02/19] coccinelle: misc: Add secs_to_jiffies script
+Message-ID: <Z2G02RN7VelcrjNT@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
+ <20241210-converge-secs-to-jiffies-v3-2-ddfefd7e9f2a@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-86319
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241210-converge-secs-to-jiffies-v3-2-ddfefd7e9f2a@linux.microsoft.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: fnzByXeLFO0AZ_AJF8SbPJqhCHN_hCrL
+X-Proofpoint-GUID: fnzByXeLFO0AZ_AJF8SbPJqhCHN_hCrL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-15_01,2024-10-11_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ phishscore=0 clxscore=1011 priorityscore=1501 lowpriorityscore=0
+ impostorscore=0 suspectscore=0 spamscore=0 mlxlogscore=985 malwarescore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412170134
 
+On Tue, Dec 10, 2024 at 10:02:33PM +0000, Easwar Hariharan wrote:
 
-On Mon, 02 Dec 2024 15:00:08 +0100, Daniel Wagner wrote:
-> I've rebased and retested the series on top of for-6.14/block and updated
-> the docummentation as requested by John.
+Hi Easwar,
+
+> This script finds and suggests conversions of timeout patterns that
+> result in seconds-denominated timeouts to use the new secs_to_jiffies()
+> API in include/linux/jiffies.h for better readability.
 > 
-> Original cover letter:
+> Suggested-by: Anna-Maria Behnsen <anna-maria@linutronix.de>
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> ---
+>  scripts/coccinelle/misc/secs_to_jiffies.cocci | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
 > 
-> These patches were part of 'honor isolcpus configuration' [1] series. To
-> simplify the review process I decided to send this as separate series
-> because I think it's a nice cleanup independent of the isolcpus feature.
-> 
-> [...]
+> diff --git a/scripts/coccinelle/misc/secs_to_jiffies.cocci b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+> new file mode 100644
+> index 0000000000000000000000000000000000000000..8bbb2884ea5db939c63fd4513cf5ca8c977aa8cb
+> --- /dev/null
+> +++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+> @@ -0,0 +1,22 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +///
+> +/// Find usages of:
+> +/// - msecs_to_jiffies(value*1000)
+> +/// - msecs_to_jiffies(value*MSEC_PER_SEC)
+> +///
+> +// Confidence: High
+> +// Copyright: (C) 2024 Easwar Hariharan, Microsoft
+> +// Keywords: secs, seconds, jiffies
+> +//
+> +
+> +virtual patch
+> +
+> +@depends on patch@ constant C; @@
+> +
+> +- msecs_to_jiffies(C * 1000)
+> ++ secs_to_jiffies(C)
+> +
+> +@depends on patch@ constant C; @@
+> +
+> +- msecs_to_jiffies(C * MSEC_PER_SEC)
+> ++ secs_to_jiffies(C)
 
-Applied, thanks!
+If you used this script only, then it did not seem to recognize line arch/s390/mm/cmm.c:207
 
-[1/8] driver core: bus: add irq_get_affinity callback to bus_type
-      commit: ccddd556cfba3db6cb4d45d9f7d30c075e34808b
-[2/8] PCI: hookup irq_get_affinity callback
-      commit: 86ae920136e7c6352e7239a459544b0eae57613a
-[3/8] virtio: hookup irq_get_affinity callback
-      commit: df0e932e866b5cfad8cedafa0123ab0072a665ce
-[4/8] blk-mq: introduce blk_mq_map_hw_queues
-      commit: 2b30fab613e2ef54ae4b3fbb238245a29ba2a285
-[5/8] scsi: replace blk_mq_pci_map_queues with blk_mq_map_hw_queues
-      commit: 7c72e20573d0d350c7c087289e7b7b605100651f
-[6/8] nvme: replace blk_mq_pci_map_queues with blk_mq_map_hw_queues
-      commit: f0d672680e0b383b14add766b57db60c4c4acf92
-[7/8] virtio: blk/scsi: replace blk_mq_virtio_map_queues with blk_mq_map_hw_queues
-      commit: 5a1c50296039ca32a22015bbb9696d6a96514947
-[8/8] blk-mq: remove unused queue mapping helpers
-      commit: 737371e839a368007758be329413b3f5ec9e7976
+	mod_timer(&cmm_timer, jiffies + msecs_to_jiffies(cmm_timeout_seconds * MSEC_PER_SEC));
 
-Best regards,
--- 
-Jens Axboe
-
-
-
+Thanks!
