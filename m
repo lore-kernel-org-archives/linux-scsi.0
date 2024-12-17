@@ -1,106 +1,219 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39FAD148850;
-	Tue, 17 Dec 2024 21:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390271D7986
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2024 22:30:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734469945; cv=none; b=BnSzVQoPRnr+ERuP3JjClXumpKL+DwiDGMO0hWqPZg5lBHdhqByHQa6R1CFEbpqrt29sstxSFxsiBecVlN5WNwNug4kQSLbv5nAwITxV6T3CRyzBywI3URTzxRacCQNEx/cq5wqLEN4Unrh+tOHpBCJcoMi40Bqyxolkq1gTHJM=
+	t=1734474635; cv=none; b=OmtHoGYWJAMb6HxXmOLZPHZ27WE8VyidRTTgAoSSN5FAkHqvvrGFufIU+U1FAPvqjjm6t0NNIiIkbw7GoDJLrxfOalT7Bl2W2GQ/LSnXjKjSAmBj1cccfdq/x1bnvtQS964+CHLfsB3F/9O01P/b94PdZNluBy2U3D6uDjeqfpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734469945; c=relaxed/simple;
-	bh=6wrZIip+47/78xZMxlKfy5iKCSXmDm0ozFscqh0XaL0=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=BDxnZIV7DYhFkaZVCqHYVN+Wvrk8lae8Cdw7IXFIe1h5nu+RLs+Nkf0AIbpcIM4nY8BmwhjP+Ux08m1ozuEPlWHBSiCFgR+eUfMF1L6Afb9ttFhXVXQN5UVesoBroT+CLoFcvzIu4fe8bh9Zs8kazZ/jtu2wkt8hswD9FsURX8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=nmF/sQCS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734474635; c=relaxed/simple;
+	bh=1zZeWbrbpFIbWkurcgeLMiOptQugVrvR+iT8Miee75M=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=FTTiUiWCwjJ8jT+pjfKxUVlLQVRpjOyxswLUegQkQnTclTaHPjDoRn0Y0kFDH9rwdToCi/UxnqUxMxY7AICndFxsEQEikQlU4TLxy/bA5CV+TzE7wW0bv5LhdzhWCzfActmKf35UJPYM/DLQ0S/jygwCbfepwTCfuCxy3cNulHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JGeFYmU6; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="nmF/sQCS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30F7CC4CED7;
-	Tue, 17 Dec 2024 21:12:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-	s=korg; t=1734469944;
-	bh=6wrZIip+47/78xZMxlKfy5iKCSXmDm0ozFscqh0XaL0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=nmF/sQCS1D3KNHotz6/Uis21dHNJl7nLly6pcknq1IkDIafHawvIl5RaL9/QyQcZn
-	 nyGQz6EdiI98Lm7qeFHMwWswlC3Qfefy9eWeYO8Zhv+gHExXCf5+0KsSm0kSj2kwOJ
-	 8nof/rwPL6N6M8ZNuUmnLRmLS4svJ9udLDC6DdE4=
-Date: Tue, 17 Dec 2024 13:12:21 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Easwar Hariharan <eahariha@linux.microsoft.com>
-Cc: Pablo Neira Ayuso <pablo@netfilter.org>, Jozsef Kadlecsik
- <kadlec@netfilter.org>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
- Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Julia Lawall
- <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, Daniel Mack
- <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert
- Jarzmik <robert.jarzmik@free.fr>, Russell King <linux@armlinux.org.uk>,
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
- Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger
- <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, Ofir
- Bitton <obitton@habana.ai>, Oded Gabbay <ogabbay@kernel.org>, Lucas De
- Marchi <lucas.demarchi@intel.com>, Thomas =?ISO-8859-1?Q?Hellstr=F6m?=
- <thomas.hellstrom@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
- <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie
- <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Jeroen de Borst
- <jeroendb@google.com>, Praveen Kaligineedi <pkaligineedi@google.com>,
- Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
- James Smart <james.smart@broadcom.com>, Dick Kennedy
- <dick.kennedy@broadcom.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Roger Pau =?ISO-8859-1?Q?Monn=E9?=
- <roger.pau@citrix.com>, Jens Axboe <axboe@kernel.dk>, Kalle Valo
- <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, Catalin Marinas
- <catalin.marinas@arm.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, Marcel
- Holtmann <marcel@holtmann.org>, Johan Hedberg <johan.hedberg@gmail.com>,
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Florian Fainelli
- <florian.fainelli@broadcom.com>, Ray Jui <rjui@broadcom.com>, Scott Branden
- <sbranden@broadcom.com>, Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Xiubo Li <xiubli@redhat.com>, Ilya
- Dryomov <idryomov@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, Jiri
- Kosina <jikos@kernel.org>, Miroslav Benes <mbenes@suse.cz>, Petr Mladek
- <pmladek@suse.com>, Joe Lawrence <joe.lawrence@redhat.com>, Jaroslav Kysela
- <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Louis Peens
- <louis.peens@corigine.com>, Michael Ellerman <mpe@ellerman.id.au>, Nicholas
- Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>,
- Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan
- <maddy@linux.ibm.com>, netfilter-devel@vger.kernel.org,
- coreteam@netfilter.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org, cocci@inria.fr,
- linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org,
- dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
- linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, linux-mm@kvack.org,
- linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev,
- linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org,
- live-patching@vger.kernel.org, linux-sound@vger.kernel.org,
- oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org, Anna-Maria Behnsen
- <anna-maria@linutronix.de>, Jeff Johnson <quic_jjohnson@quicinc.com>,
- paul@paul-moore.com
-Subject: Re: [PATCH v3 00/19] Converge on using secs_to_jiffies()
-Message-Id: <20241217131221.e1b1262f97dc6a5d616ca8e7@linux-foundation.org>
-In-Reply-To: <14ad0c08-7b3b-47b6-8cc1-8a4179238e5a@linux.microsoft.com>
-References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
-	<20241210163520.95fa1c8aa83e1915004ed884@linux-foundation.org>
-	<422470cd-84f0-469e-93c2-493c5091391d@linux.microsoft.com>
-	<14ad0c08-7b3b-47b6-8cc1-8a4179238e5a@linux.microsoft.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JGeFYmU6"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YCWjP4PjYz6ClY9G;
+	Tue, 17 Dec 2024 22:30:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:subject
+	:subject:from:from:content-language:user-agent:mime-version:date
+	:date:message-id:received:received; s=mr01; t=1734474630; x=
+	1737066631; bh=+SeWvDxYnaq0AgC9aM68HXynnDClFNgXrSS+blbtCrc=; b=J
+	GeFYmU6kObKXep5xwn69XQmmIvwbuapBHafPFFdOCKBBIyf2IOMBqJeeQZt8zE+9
+	qhm5GVfcjIlLovZgptC17cJtU552G10ElTEYuGnQnrdXq3bgdcMETcteo3aVq4T6
+	ms0WuGoeuYMJHWiTjhVV8oUSf5ZsoBrUs+vAxsuJFbkDEwQhJTbO8oab1VH3pPNf
+	rLQIcz8lBIG/kGVdWP3x3Vqyy/mNdnb2LgsxvxrwWKUDz9GOIdL5Qq74GwJEVBml
+	6LTKoGV36tsZM7+jT1myWgIZ1/eTdi8KOaOs9ITTBQnKAc4Cp6mtOMq/lYY8bYOd
+	96sy9aWnwF/64Nu5ke0qA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6mq5h9myC1Vu; Tue, 17 Dec 2024 22:30:30 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YCWjK6ZWSz6ClY9D;
+	Tue, 17 Dec 2024 22:30:29 +0000 (UTC)
+Message-ID: <e78b6e21-7b7b-40b1-8a2f-bbcfb4e794f3@acm.org>
+Date: Tue, 17 Dec 2024 14:30:29 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+ Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: block/032 triggers lockdep complaint with v6.13-rc3
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Tue, 17 Dec 2024 12:53:22 -0800 Easwar Hariharan <eahariha@linux.microsoft.com> wrote:
+Hi,
 
-> There have been a couple of comments[1][2] that came in after you queued
-> the series to mm. Would you rather I send individual patches addressing
-> these, or just send a v4 of the entire series (-netdev of course) so you
-> can replace it wholesale?
+If I run test block/032, a lockdep complaint appears. Has anyone else 
+noticed this?
 
-Individual small fixes would be preferable please.  Mainly to
-preserve the validity of current review efforts.
+Thanks,
+
+Bart.
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.13.0-rc3-dbg #23 Not tainted
+------------------------------------------------------
+check/8526 is trying to acquire lock:
+ffff88811e19c458 (&q->sysfs_lock){+.+.}-{4:4}, at: 
+blk_unregister_queue+0xa7/0x2b0
+
+but task is already holding lock:
+ffff88811e19c018 (&q->q_usage_counter(queue)#28){++++}-{0:0}, at: 
+sd_remove+0x95/0x150 [sd_mod]
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (&q->q_usage_counter(queue)#28){++++}-{0:0}:
+        __lock_acquire+0xbec/0x1d90
+        lock_acquire.part.0+0x13b/0x390
+        lock_acquire+0x80/0xb0
+        blk_queue_enter+0x3fc/0x520
+        blk_mq_alloc_request+0x3dd/0x860
+        scsi_execute_cmd+0x3f4/0x7b0 [scsi_mod]
+        read_capacity_16+0x1d6/0xca0 [sd_mod]
+        sd_read_capacity+0x196/0xa50 [sd_mod]
+        sd_revalidate_disk.isra.0+0xb34/0x2090 [sd_mod]
+        sd_probe+0x7f7/0xe20 [sd_mod]
+        really_probe+0x1f4/0x8b0
+        __driver_probe_device+0x19a/0x380
+        driver_probe_device+0x4f/0x140
+        __device_attach_driver+0x18c/0x290
+        bus_for_each_drv+0x113/0x1a0
+        __device_attach_async_helper+0x19b/0x240
+        async_run_entry_fn+0x99/0x520
+        process_one_work+0xdd0/0x1490
+        worker_thread+0x5eb/0x1010
+        kthread+0x2e5/0x3b0
+        ret_from_fork+0x3a/0x80
+        ret_from_fork_asm+0x11/0x20
+
+-> #1 (&q->limits_lock){+.+.}-{4:4}:
+        __lock_acquire+0xbec/0x1d90
+        lock_acquire.part.0+0x13b/0x390
+        lock_acquire+0x80/0xb0
+        __mutex_lock+0x16f/0x13b0
+        mutex_lock_nested+0x1f/0x30
+        __blk_mq_update_nr_hw_queues+0x678/0x1410
+        blk_mq_update_nr_hw_queues+0x31/0x40
+        scsi_debug_write_info+0x34/0x1b0 [scsi_debug]
+        zbc_show+0x3e/0x80 [scsi_debug]
+        configfs_write_iter+0x2cf/0x4a0
+        vfs_write+0x5ec/0x1220
+        ksys_write+0x10a/0x1f0
+        __x64_sys_write+0x76/0xb0
+        x64_sys_call+0x27f/0x17d0
+        do_syscall_64+0x92/0x180
+        entry_SYSCALL_64_after_hwframe+0x4b/0x53
+
+-> #0 (&q->sysfs_lock){+.+.}-{4:4}:
+        check_prev_add+0x1b7/0x23b0
+        validate_chain+0xf3d/0x1d70
+        __lock_acquire+0xbec/0x1d90
+        lock_acquire.part.0+0x13b/0x390
+        lock_acquire+0x80/0xb0
+        __mutex_lock+0x16f/0x13b0
+        mutex_lock_nested+0x1f/0x30
+        blk_unregister_queue+0xa7/0x2b0
+        del_gendisk+0x266/0xb30
+        sd_remove+0x95/0x150 [sd_mod]
+        device_remove+0x111/0x160
+        device_release_driver_internal+0x3c5/0x570
+        device_release_driver+0x16/0x20
+        bus_remove_device+0x1fa/0x3e0
+        device_del+0x3ed/0xa20
+        __scsi_remove_device+0x280/0x340 [scsi_mod]
+        sdev_store_delete+0x8c/0x120 [scsi_mod]
+        dev_attr_store+0x3f/0x70
+        sysfs_kf_write+0x106/0x150
+        kernfs_fop_write_iter+0x39e/0x5a0
+        vfs_write+0x5ec/0x1220
+        ksys_write+0x10a/0x1f0
+        __x64_sys_write+0x76/0xb0
+        x64_sys_call+0x27f/0x17d0
+        do_syscall_64+0x92/0x180
+        entry_SYSCALL_64_after_hwframe+0x4b/0x53
+
+other info that might help us debug this:
+Chain exists of:
+   &q->sysfs_lock --> &q->limits_lock --> &q->q_usage_counter(queue)#28
+  Possible unsafe locking scenario:
+        CPU0                    CPU1
+        ----                    ----
+   lock(&q->q_usage_counter(queue)#28);
+                                lock(&q->limits_lock);
+                                lock(&q->q_usage_counter(queue)#28);
+   lock(&q->sysfs_lock);
+
+  *** DEADLOCK ***
+5 locks held by check/8526:
+  #0: ffff88812e746418 (sb_writers#3){.+.+}-{0:0}, at: 
+ksys_write+0x10a/0x1f0
+  #1: ffff888189e4bc88 (&of->mutex#2){+.+.}-{4:4}, at: 
+kernfs_fop_write_iter+0x261/0x5a0
+  #2: ffff888190fee0e0 (&shost->scan_mutex){+.+.}-{4:4}, at: 
+sdev_store_delete+0x84/0x120 [scsi_mod]
+  #3: ffff88812e47a378 (&dev->mutex){....}-{4:4}, at: 
+device_release_driver_internal+0xaa/0x570
+  #4: ffff88811e19c018 (&q->q_usage_counter(queue)#28){++++}-{0:0}, at: 
+sd_remove+0x95/0x150 [sd_mod]
+
+stack backtrace:
+CPU: 21 UID: 0 PID: 8526 Comm: check Not tainted 6.13.0-rc3-dbg #23 
+65ecec9f9b5989219cd64cfc2b6ef3edbedebe25
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 
+1.16.3-debian-1.16.3-2 04/01/2014
+Call Trace:
+  <TASK>
+  show_stack+0x4d/0x60
+  dump_stack_lvl+0x61/0x80
+  dump_stack+0x14/0x16
+  print_circular_bug.cold+0x39/0x43
+  check_noncircular+0x2f4/0x3d0
+  check_prev_add+0x1b7/0x23b0
+  validate_chain+0xf3d/0x1d70
+  __lock_acquire+0xbec/0x1d90
+  lock_acquire.part.0+0x13b/0x390
+  lock_acquire+0x80/0xb0
+  __mutex_lock+0x16f/0x13b0
+  mutex_lock_nested+0x1f/0x30
+  blk_unregister_queue+0xa7/0x2b0
+  del_gendisk+0x266/0xb30
+  sd_remove+0x95/0x150 [sd_mod 95fdb9620c9f51a5a0ad41c05aada49874bfacdd]
+  device_remove+0x111/0x160
+  device_release_driver_internal+0x3c5/0x570
+  device_release_driver+0x16/0x20
+  bus_remove_device+0x1fa/0x3e0
+  device_del+0x3ed/0xa20
+  __scsi_remove_device+0x280/0x340 [scsi_mod 
+bb02a8ce36abc63da71f0d4ee9a3085037ce1922]
+  sdev_store_delete+0x8c/0x120 [scsi_mod 
+bb02a8ce36abc63da71f0d4ee9a3085037ce1922]
+  dev_attr_store+0x3f/0x70
+  sysfs_kf_write+0x106/0x150
+  kernfs_fop_write_iter+0x39e/0x5a0
+  vfs_write+0x5ec/0x1220
+  ksys_write+0x10a/0x1f0
+  __x64_sys_write+0x76/0xb0
+  x64_sys_call+0x27f/0x17d0
+  do_syscall_64+0x92/0x180
+  entry_SYSCALL_64_after_hwframe+0x4b/0x53
