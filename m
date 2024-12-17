@@ -1,132 +1,191 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF7E11F76C7;
-	Tue, 17 Dec 2024 19:21:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106EC1F8EE4;
+	Tue, 17 Dec 2024 20:34:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734463318; cv=none; b=Glr84PMOmwDhXMq5eOpKUykwdCmpB/0iLavMdY5m0VFChsEykwm8OQnUhTlKDbJYZkrEP3uBlPmb1bgrBWKCstWtlgOaFYwfAw/xd9TJh29TEdXnGghLnRQsoL475Gjav6ojEyymtAfvuoMQ6uVCPMsmRLMo/22/lYdMk8nZVfY=
+	t=1734467696; cv=none; b=B91V96T7sRdzWE8TW+FAi3TCt1nKgd8SF5Ky8qqT/NXajGu5NU0uREAin7YfnfJZy+2yMsYMLxT1RnYgdnsGUmj4Q7I5gJ5GNoS9gi+Ab0wIPiEU4YOfIP7wN/Pvg/bp42YacD3XB3omZjdwGLHjOoEQq2uUgd4eYd2bNMZnouc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734463318; c=relaxed/simple;
-	bh=GaDNdtEf3V/Quwv0a67s1DQ1eOlCYVx+3g5YUMb9+NY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z0RPtItjNRee2+DJQa/OMJVD4j76egADwEulRV9nrZeWQbjcl407xdGcsytUK0Ibc1lIUp5IZ44tbYZvP2cZL1zjmDP91oUpjIYLjrotu5EjPo81X2yOWMcD7W5lO/F4TyVbUo7Y/F5ii+XCptxO1VKYhM73Tpiv0+OltCdeBSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j/6gh/H7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734467696; c=relaxed/simple;
+	bh=nvnPPN7j/2p/JFEejejW+Qg34E36N01t9rBWoj3OZgM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=flzgx+Gp7iDoEYQIpfCY8FwJA0+/4kNnXGC6CFO0nCLMwqDOIxGuY5vOJ1Bb4Fall/Oza+u9TDuSpUKsyCLLNaYfMRJ6keGnGHSgTCvZG5XEDnYcFsYJ91T5tSV/zIQD1YEFJR7I1QIOo1PXgyS7ffuw7SnjI8JsTY1EErNx8zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LsVQxRIV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j/6gh/H7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5FFCC4CED3;
-	Tue, 17 Dec 2024 19:21:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LsVQxRIV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B71EC4CED3;
+	Tue, 17 Dec 2024 20:34:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734463318;
-	bh=GaDNdtEf3V/Quwv0a67s1DQ1eOlCYVx+3g5YUMb9+NY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j/6gh/H740JjP2fCj6AY92fq9iWZYl+3YHoh0l6lgpD+VHEw90lkSLzwO9c9ray9L
-	 GA6vIQBoOLmzQU8Rc9rgPiq3MA1YKPT9FNNSUwqosbdhHOzQeyH8uoMqDRbDMvgCDx
-	 fEzzK0QAXEFyFRgMmAWjfvskwFlNwh3h7/7PElSx9TW3bOy8oozHY9x5UZn1AOm1u0
-	 RalCohXUzgrHvTUYF995BIwI1PqgQGmp1bHSo++YQK3Le9ifBthINWeGUu2Je7zLA5
-	 kt5Iy5sMgsFBoeOJpXs64PgyyXvme50EGSY+DYXJZ0cJmUQceYi6zT5oUbzFFC+eyL
-	 B3G02MXn7+7vw==
-Date: Tue, 17 Dec 2024 19:21:56 +0000
-From: Wei Liu <wei.liu@kernel.org>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "wei.liu@kernel.org" <wei.liu@kernel.org>,
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kys@microsoft.com" <kys@microsoft.com>,
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>,
-	"decui@microsoft.com" <decui@microsoft.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"mingo@redhat.com" <mingo@redhat.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-	"x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"will@kernel.org" <will@kernel.org>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"edumazet@google.com" <edumazet@google.com>,
-	"kuba@kernel.org" <kuba@kernel.org>,
-	"pabeni@redhat.com" <pabeni@redhat.com>,
-	"James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/5] hyper-v: Don't assume cpu_possible_mask is dense
-Message-ID: <Z2HPVCCfznUeMXh3@liuwe-devbox-debian-v2>
-References: <20241003035333.49261-1-mhklinux@outlook.com>
- <SN6PR02MB415740B41A34B1468BC6AE28D43D2@SN6PR02MB4157.namprd02.prod.outlook.com>
- <Z1jZengWxcjEPdJD@liuwe-devbox-debian-v2>
+	s=k20201202; t=1734467695;
+	bh=nvnPPN7j/2p/JFEejejW+Qg34E36N01t9rBWoj3OZgM=;
+	h=From:To:Cc:Subject:Date:From;
+	b=LsVQxRIVnTWmK+4yYhndt3mInuvU6Ulb1pJ+dF2ABRL/mwqpll9QvwFYN/kVaDAVj
+	 nmml2P7yeZ4cs7yKcMTNpo1oHhZVy/v6otDSGOSxYUbO8OVOBwn5SwOcGEwLH+/rZh
+	 COAP0iABpRqOHQIa4GC52DMLTOU/IguAK8DCrbCxPO13jyWqF5phrMQebu/wkemc5F
+	 5Em6BzMo73YoxS1/y0Q0qTJ49zUi7Y8THuemgc7BkfYNCWBFd61SGJbbZ0UGlW8ZGJ
+	 xzKDOoLJBFpx5Tqhk+5eJdPW57RilOoZJxAUQ9iAla6gKIcEEtOaJ76s/xVlM0sSbh
+	 PHl8XF22RXb4w==
+From: Kees Cook <kees@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Kees Cook <kees@kernel.org>,
+	Simon Horman <horms@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Max Gurtovoy <mgurtovoy@nvidia.com>,
+	Maurizio Lombardi <mlombard@redhat.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Mingzhe Zou <mingzhe.zou@easystack.cn>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH v2] net: core: Convert inet_addr_is_any() to sockaddr_storage
+Date: Tue, 17 Dec 2024 12:34:51 -0800
+Message-Id: <20241217203447.it.588-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z1jZengWxcjEPdJD@liuwe-devbox-debian-v2>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4896; i=kees@kernel.org; h=from:subject:message-id; bh=nvnPPN7j/2p/JFEejejW+Qg34E36N01t9rBWoj3OZgM=; b=owGbwMvMwCVmps19z/KJym7G02pJDOmJD7IXGD1bHnYlpCN4y6Tg3H9XYj89Nfrz4+kPLX+O4 85567JEOkpZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTACZS6sHwP3hN4eMGY3eGE5Jq dVe+buJK2Zey8KEWkxbn7C/6h39eM2RkmLRCIm6RyO4Hq9Z7xwQ8alw1TW5+5nTH7UclY4/eXLZ 3CycA
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-On Wed, Dec 11, 2024 at 12:14:50AM +0000, Wei Liu wrote:
-> On Tue, Dec 10, 2024 at 07:58:34PM +0000, Michael Kelley wrote:
-> > From: mhkelley58@gmail.com <mhkelley58@gmail.com> Sent: Wednesday, October 2, 2024 8:53 PM
-> > > 
-> > > Code specific to Hyper-V guests currently assumes the cpu_possible_mask
-> > > is "dense" -- i.e., all bit positions 0 thru (nr_cpu_ids - 1) are set,
-> > > with no "holes". Therefore, num_possible_cpus() is assumed to be equal
-> > > to nr_cpu_ids.
-> > > 
-> > > Per a separate discussion[1], this assumption is not valid in the
-> > > general case. For example, the function setup_nr_cpu_ids() in
-> > > kernel/smp.c is coded to assume cpu_possible_mask may be sparse,
-> > > and other patches have been made in the past to correctly handle
-> > > the sparseness. See bc75e99983df1efd ("rcu: Correctly handle sparse
-> > > possible cpu") as noted by Mark Rutland.
-> > > 
-> > > The general case notwithstanding, the configurations that Hyper-V
-> > > provides to guest VMs on x86 and ARM64 hardware, in combination
-> > > with the algorithms currently used by architecture specific code
-> > > to assign Linux CPU numbers, *does* always produce a dense
-> > > cpu_possible_mask. So the invalid assumption is not currently
-> > > causing failures. But in the interest of correctness, and robustness
-> > > against future changes in the code that populates cpu_possible_mask,
-> > > update the Hyper-V code to no longer assume denseness.
-> > > 
-> > > The typical code pattern with the invalid assumption is as follows:
-> > > 
-> > > 	array = kcalloc(num_possible_cpus(), sizeof(<some struct>),
-> > > 			GFP_KERNEL);
-> > > 	....
-> > > 	index into "array" with smp_processor_id()
-> > > 
-> > > In such as case, the array might be indexed by a value beyond the size
-> > > of the array. The correct approach is to allocate the array with size
-> > > "nr_cpu_ids". While this will probably leave unused any array entries
-> > > corresponding to holes in cpu_possible_mask, the holes are assumed to
-> > > be minimal and hence the amount of memory wasted by unused entries is
-> > > minimal.
-> > > 
-> > > Removing the assumption in Hyper-V code is done in several patches
-> > > because they touch different kernel subsystems:
-> > > 
-> > > Patch 1: Hyper-V x86 initialization of hv_vp_assist_page (there's no
-> > > 	 hv_vp_assist_page on ARM64)
-> > > Patch 2: Hyper-V common init of hv_vp_index
-> > > Patch 3: Hyper-V IOMMU driver
-> > > Patch 4: storvsc driver
-> > > Patch 5: netvsc driver
-> > 
-> > Wei --
-> > 
-> > Could you pick up Patches 1, 2, and 3 in this series for the hyperv-next
-> > tree? Peter Zijlstra acked the full series [2], and Patches 4 and 5 have
-> > already been picked by the SCSI and net maintainers respectively [3][4].
-> > 
-> > Let me know if you have any concerns.
-> 
-> Michael, I will take a look later after I finish dealing with the
-> hyperv-fixes branch.
+All the callers of inet_addr_is_any() have a sockaddr_storage-backed
+sockaddr. Avoid casts and switch prototype to the actual object being
+used.
 
-Patch 1 to 3 have been applied to the hyperv-next branch.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ v2: drop "extern" in header (hch)
+ v1: https://lore.kernel.org/all/20241217012618.work.323-kees@kernel.org/
+---
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Chaitanya Kulkarni <kch@nvidia.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Mike Christie <michael.christie@oracle.com>
+Cc: Max Gurtovoy <mgurtovoy@nvidia.com>
+Cc: Maurizio Lombardi <mlombard@redhat.com>
+Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc: Mingzhe Zou <mingzhe.zou@easystack.cn>
+Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc: Simon Horman <horms@kernel.org>
+Cc: "Dr. David Alan Gilbert" <linux@treblig.org>
+Cc: linux-nvme@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/nvme/target/rdma.c          | 2 +-
+ drivers/nvme/target/tcp.c           | 2 +-
+ drivers/target/iscsi/iscsi_target.c | 2 +-
+ include/linux/inet.h                | 2 +-
+ net/core/utils.c                    | 8 ++++----
+ 5 files changed, 8 insertions(+), 8 deletions(-)
 
-Wei.
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 1afd93026f9b..18ea11342af1 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -1986,7 +1986,7 @@ static void nvmet_rdma_disc_port_addr(struct nvmet_req *req,
+ 	struct nvmet_rdma_port *port = nport->priv;
+ 	struct rdma_cm_id *cm_id = port->cm_id;
+ 
+-	if (inet_addr_is_any((struct sockaddr *)&cm_id->route.addr.src_addr)) {
++	if (inet_addr_is_any(&cm_id->route.addr.src_addr)) {
+ 		struct nvmet_rdma_rsp *rsp =
+ 			container_of(req, struct nvmet_rdma_rsp, req);
+ 		struct rdma_cm_id *req_cm_id = rsp->queue->cm_id;
+diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
+index 7c51c2a8c109..df24244fb820 100644
+--- a/drivers/nvme/target/tcp.c
++++ b/drivers/nvme/target/tcp.c
+@@ -2158,7 +2158,7 @@ static void nvmet_tcp_disc_port_addr(struct nvmet_req *req,
+ {
+ 	struct nvmet_tcp_port *port = nport->priv;
+ 
+-	if (inet_addr_is_any((struct sockaddr *)&port->addr)) {
++	if (inet_addr_is_any(&port->addr)) {
+ 		struct nvmet_tcp_cmd *cmd =
+ 			container_of(req, struct nvmet_tcp_cmd, req);
+ 		struct nvmet_tcp_queue *queue = cmd->queue;
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 6002283cbeba..1ce68eda0090 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -3471,7 +3471,7 @@ iscsit_build_sendtargets_response(struct iscsit_cmd *cmd,
+ 					}
+ 				}
+ 
+-				if (inet_addr_is_any((struct sockaddr *)&np->np_sockaddr))
++				if (inet_addr_is_any(&np->np_sockaddr))
+ 					sockaddr = &conn->local_sockaddr;
+ 				else
+ 					sockaddr = &np->np_sockaddr;
+diff --git a/include/linux/inet.h b/include/linux/inet.h
+index bd8276e96e60..9158772f3559 100644
+--- a/include/linux/inet.h
++++ b/include/linux/inet.h
+@@ -55,6 +55,6 @@ extern int in6_pton(const char *src, int srclen, u8 *dst, int delim, const char
+ 
+ extern int inet_pton_with_scope(struct net *net, unsigned short af,
+ 		const char *src, const char *port, struct sockaddr_storage *addr);
+-extern bool inet_addr_is_any(struct sockaddr *addr);
++bool inet_addr_is_any(struct sockaddr_storage *addr);
+ 
+ #endif	/* _LINUX_INET_H */
+diff --git a/net/core/utils.c b/net/core/utils.c
+index 27f4cffaae05..e47feeaa5a49 100644
+--- a/net/core/utils.c
++++ b/net/core/utils.c
+@@ -399,9 +399,9 @@ int inet_pton_with_scope(struct net *net, __kernel_sa_family_t af,
+ }
+ EXPORT_SYMBOL(inet_pton_with_scope);
+ 
+-bool inet_addr_is_any(struct sockaddr *addr)
++bool inet_addr_is_any(struct sockaddr_storage *addr)
+ {
+-	if (addr->sa_family == AF_INET6) {
++	if (addr->ss_family == AF_INET6) {
+ 		struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
+ 		const struct sockaddr_in6 in6_any =
+ 			{ .sin6_addr = IN6ADDR_ANY_INIT };
+@@ -409,13 +409,13 @@ bool inet_addr_is_any(struct sockaddr *addr)
+ 		if (!memcmp(in6->sin6_addr.s6_addr,
+ 			    in6_any.sin6_addr.s6_addr, 16))
+ 			return true;
+-	} else if (addr->sa_family == AF_INET) {
++	} else if (addr->ss_family == AF_INET) {
+ 		struct sockaddr_in *in = (struct sockaddr_in *)addr;
+ 
+ 		if (in->sin_addr.s_addr == htonl(INADDR_ANY))
+ 			return true;
+ 	} else {
+-		pr_warn("unexpected address family %u\n", addr->sa_family);
++		pr_warn("unexpected address family %u\n", addr->ss_family);
+ 	}
+ 
+ 	return false;
+-- 
+2.34.1
+
