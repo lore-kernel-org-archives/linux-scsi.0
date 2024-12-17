@@ -1,147 +1,91 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C5B8155393;
-	Tue, 17 Dec 2024 08:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5771D63CC
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2024 10:31:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734423708; cv=none; b=dUZbGu/jBwQqCqJFNUpS7ww6TJaHjv7YAjfDOP3235EHnlR2NOMivvYxlIcZln5KW11b0LyA7ik7yCYMuxDastr+APFOf8uhqW769KBf4M+CVGEOhzdkOKnBTgJ8SgIrh5JYTouBvyO9b8lZRdsjhV5IJXnBQeqZpPUIED7dr7s=
+	t=1734431497; cv=none; b=MBFgiHHjx9YJRsQR6/G9JK+a4Q9mfEJ4i/0FcHMC/XZHkt8fV7SiXooDWEKUI9MrEbj5/NTqscKfzal5l4uFBNfBpZPziT53VAqRsNhWUc0Ac37swdNtdamQ5Ro1wjultLew+tl8loqCbUDioYVKYN6yG94rzkGjtCX0QM0qWTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734423708; c=relaxed/simple;
-	bh=F5S4FhtmltsBwBx86PvuD+lMhYGZK3Hqs0mfpw44AcI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d6JHPuOMMPzOah1f7Hv9Rq7w8MsLGBGLLONCcT1OWpYTWYnvUufnjcmWrI/a7Hebuv2jxqch8eQvg2EQkoT/+SJNQxsGWcPlJEHODICms033cREFzCTYlI/tC+b4ZrScMA1c/hFOmZNCp4jwZ9aNCAR7KR6cGDK1CwKVFTPUPME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qVwW87h9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3iwiwvyj; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qVwW87h9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3iwiwvyj; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1734431497; c=relaxed/simple;
+	bh=fajVf/r3LPJsa9GAi29E1rTXH/qGwzuvrJ6v36PQzlw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ly9YOclxEFWzSDmTrEnpwGPYRrWYRdeQO2fJuB9mMqYXiu1SqZOI+biaxlBMXeNr4X9L4+30eHqAohaqhtLnnk4Mb3RnXBwKRni+aVNlJtl74pkzkfSkBDPoFH3366612HtSfXypJCjOUJV1PVuiHsd/naYEIaGtgs/UlYuL2uI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=gTXWm3Z5; arc=none smtp.client-ip=115.124.30.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qVwW87h9";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3iwiwvyj";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qVwW87h9";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3iwiwvyj"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 3BE1821120;
-	Tue, 17 Dec 2024 08:21:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1734423705; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=K0ccd5T/w72yfTNgA1rqqzypkLFYQGNqOiIvNG54Ot8=;
-	b=qVwW87h9IIRltr8VdEQKJhEHFuizPMnxm0At6YVF3qu+QiNzXpcpWmb0c3EcfdTqfazSpW
-	rFjbHnPZBb4MqKFKk758sazgfQJW8bw7GPrJyefEfU9FE6uZ8mWdlPQf4HhNdTPtmIdJIo
-	uIfhHPGBVf6Z3CqFuQIL2ayxRKzFaB8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1734423705;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=K0ccd5T/w72yfTNgA1rqqzypkLFYQGNqOiIvNG54Ot8=;
-	b=3iwiwvyjFkJl+c1TbcwB8Pfq8gRzCBQ6bjAAAmtXFrCrO4FldFK7xQD1+gf7kU35PPhUF4
-	vs35Wg5oVgtVd3DA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1734423705; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=K0ccd5T/w72yfTNgA1rqqzypkLFYQGNqOiIvNG54Ot8=;
-	b=qVwW87h9IIRltr8VdEQKJhEHFuizPMnxm0At6YVF3qu+QiNzXpcpWmb0c3EcfdTqfazSpW
-	rFjbHnPZBb4MqKFKk758sazgfQJW8bw7GPrJyefEfU9FE6uZ8mWdlPQf4HhNdTPtmIdJIo
-	uIfhHPGBVf6Z3CqFuQIL2ayxRKzFaB8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1734423705;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=K0ccd5T/w72yfTNgA1rqqzypkLFYQGNqOiIvNG54Ot8=;
-	b=3iwiwvyjFkJl+c1TbcwB8Pfq8gRzCBQ6bjAAAmtXFrCrO4FldFK7xQD1+gf7kU35PPhUF4
-	vs35Wg5oVgtVd3DA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 19E3213A3C;
-	Tue, 17 Dec 2024 08:21:45 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id mA8iBJk0YWe4GQAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Tue, 17 Dec 2024 08:21:45 +0000
-Date: Tue, 17 Dec 2024 09:21:44 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, John Garry <john.g.garry@oracle.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, 
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v6 0/8] blk: refactor queue affinity helpers
-Message-ID: <632d25c7-ac46-4a1a-b2bc-14258a88216c@flourine.local>
-References: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
- <c5f7f562-c8b0-422b-bb51-744ecba7ecee@flourine.local>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="gTXWm3Z5"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1734431492; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=oFWIM/KAvGFbJti/0TJxnLfdri5EIhGQDulcIINopRo=;
+	b=gTXWm3Z5vHCbLdoxgHBTIlknL7cd4In3n7LdJQTKtbJaCB9E1UkTHXtqnOUs6oitWItFxxgmUSj00WUqTZVL6AXV7e06/QMYC0MEone9RTmnCYAtO50otJrqvxkzxRkBqEva57/5Bz2xo5mHSGXM6MflbCXimCVit6ObV0L1+mI=
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WLiRTWs_1734431486 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 17 Dec 2024 18:31:31 +0800
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: mpi3mr: fix possible crash when setup bsg fail
+Date: Tue, 17 Dec 2024 18:31:26 +0800
+Message-ID: <20241217103126.88206-1-kanie@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c5f7f562-c8b0-422b-bb51-744ecba7ecee@flourine.local>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[24];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
 
-Hi Jens,
+If bsg_setup_queue() fails, the bsg_queue is assigned a non-NULL value.
+Consequently, in mpi3mr_bsg_exit(), the condition
+"if(!mrioc->bsg_queue)" will not be satisfied, preventing execution
+from entering bsg_remove_queue(), which could lead to a crash.
 
-On Mon, Dec 09, 2024 at 10:42:26AM +0100, Daniel Wagner wrote:
-> On Mon, Dec 02, 2024 at 03:00:08PM +0100, Daniel Wagner wrote:
-> > I've rebased and retested the series on top of for-6.14/block and updated
-> > the docummentation as requested by John.
-> > 
-> > Original cover letter:
-> > 
-> > These patches were part of 'honor isolcpus configuration' [1] series. To
-> > simplify the review process I decided to send this as separate series
-> > because I think it's a nice cleanup independent of the isolcpus feature.
-> > 
-> > Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> 
-> I've based this work on top of your tree as I think it should go your
-> tree. If this should go via different tree, let me know which one.
-> 
-> And in case the series didn't hit your inbox, I really don't know what I
-> am doing wrong. I've switched over to use b4 and korg for sending the
-> patches and on my side all looks good and the mails also appear on lore
-> completely normal.
+Fixes: 4268fa751365 ("scsi: mpi3mr: Add bsg device support")
+Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Any chance to get this merged?
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 10b8e4dc64f8..f4cacae1d3a4 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -2951,6 +2951,7 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+ 		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
+ 		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
+ 	};
++	struct request_queue *q;
+ 
+ 	device_initialize(bsg_dev);
+ 
+@@ -2966,14 +2967,16 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+ 		return;
+ 	}
+ 
+-	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
++	q = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
+ 			mpi3mr_bsg_request, NULL, 0);
+-	if (IS_ERR(mrioc->bsg_queue)) {
++	if (IS_ERR(q)) {
+ 		ioc_err(mrioc, "%s: bsg registration failed\n",
+ 		    dev_name(bsg_dev));
+ 		device_del(bsg_dev);
+ 		put_device(bsg_dev);
+ 	}
++
++	mrioc->bsg_queue = q;
+ }
+ 
+ /**
+-- 
+2.43.0
 
-Thanks,
-Daniel
