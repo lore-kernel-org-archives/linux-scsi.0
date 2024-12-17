@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D3B1FA17F;
-	Tue, 17 Dec 2024 18:29:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DCD1FA832;
+	Tue, 17 Dec 2024 18:30:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734460199; cv=none; b=sybJarCoyG1ePc7I/DxDBkI+rqr7bzcOIaJEu7/0UhUmUYNrdUo2VCHdLk86xu5uwErxJc7YsXZWfHWY7shQxdVcwGY17gdOFC8TBzwNbUxo3axa5kaVknlGvOYQHWg6ifsw/DFxG4xcwts3SV4r/37grQvQxhviwp29TCNfCDw=
+	t=1734460202; cv=none; b=YHqiksFtp70Gq082Y2TcBwmSj9D78g4l3A+/hHyVs38IPgmt6MaH5tbj82ixRPSkfXjqG0ZxcsB7fks5WVzeDkIbdt17Bp0u943SvzHFB7bF3I+rOvJquMy8d4cNFW962DNEGq6Qz2LmSKI4LvkuxDHVL63lUTq9+CywIR16FF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734460199; c=relaxed/simple;
-	bh=Y+iIQqMxZ1GFfz3mNIIyf5XCB6LBEtLrtx8kjb0qqss=;
+	s=arc-20240116; t=1734460202; c=relaxed/simple;
+	bh=dzcQYVyMq7ub0Uj13RUnX1qE3Yh3C14qRsIHuipGrl4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=bWMPQ/YVN5i3LVDVMKk4aNKEnEh3KoFW+EcdyhFyaCZyE5/EZy5/2vDI4Y7TFY3aXRbHkz9McMyCusQVsmo30M5O7rTGAbMfF63GHfRlX6TndWqGMizzurS+t6UiH1Y72Hf1pdY7XD2HpKhoIgt/rkewB5eCRnI0kIYx50TXwFs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pSoZ6F8q; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=QcMbf4txpbj9Dzd8vuO4H3aupL+pg6w5KJd9XdmYtrLN2WmzHvzpItFubGeYVPHE+LCpx4rf7LfvmV1UHBz1JJtKl61C7Yl/KXILwiM73Qu+VQ3usw6rRS3nL1eDI0pmZJsX09sSkT+WRq9TE22N2NwGyCV6TD7zGjxXHhHw62w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nG8pG+od; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pSoZ6F8q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BB92C4CED7;
-	Tue, 17 Dec 2024 18:29:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nG8pG+od"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C648CC4CED3;
+	Tue, 17 Dec 2024 18:30:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734460198;
-	bh=Y+iIQqMxZ1GFfz3mNIIyf5XCB6LBEtLrtx8kjb0qqss=;
+	s=k20201202; t=1734460201;
+	bh=dzcQYVyMq7ub0Uj13RUnX1qE3Yh3C14qRsIHuipGrl4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=pSoZ6F8qGVrkkdoMmGLN16Vf7JLEg1ohgX1Hu2SO9f5u+qm027a+QG6gtvkmr/OyM
-	 8ZUk9wQiXoWpbnQQG6pl/lcaHZsuSE8CxyolIk5t9I5B9H6ZrWWvEmQ2l/9oRMu8ds
-	 pd+j1xdlIBS6ypdMAHRoToXbpCNGj3+re2SbWXE8tj7LOTLPmew5wcoAE2OMocemoR
-	 85MYkR5/J7WUakbHF4Ar0RBvCwFhBbo2t1K8WJyi69lt1SPG6RpRnrAfAA98vMqPPY
-	 c90MbVqX8HL51d5WQBch8oMDz7tW4Pdb+mzX+zWU8vKZTGqjguvOAIPN3QGwXjYWKx
-	 D6AXmynGoKCWg==
+	b=nG8pG+odeN1F8AWBvZ1AHzhJUVjMLxbf0U4UGyEmyvPLYagYuGY9t7D6ZG8IiLogH
+	 S2Oo3if0xy+Q5mPj117g+Uf0Ip4jJ+G/rah17rpxaFZIvlI9CJ3BuTUfs0YKbntkrZ
+	 eiVD1NSO9mSUGcJofDrvcHxvEDD8EE0ndWVTjudgJGwtvkvbNRrR7wXsq8weYPYIEw
+	 VfV+68CSK2f0pSwNYoh1cPH0E5vWHCpefh8qNL5Okq3zMPBB+AoeQBh2QcftyjFvAE
+	 VMd/nuashhEo2taaGbXUnHk6Jjt5OFpdIOIklZcK19PziWJxsEPYNg4ozj6meap0uX
+	 0M2cZFIskAI4g==
 From: Daniel Wagner <wagi@kernel.org>
-Date: Tue, 17 Dec 2024 19:29:40 +0100
-Subject: [PATCH v4 6/9] virtio: blk/scsi: use block layer helpers to
- calculate num of queues
+Date: Tue, 17 Dec 2024 19:29:41 +0100
+Subject: [PATCH v4 7/9] lib/group_cpus: honor housekeeping config when
+ grouping CPUs
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241217-isolcpus-io-queues-v4-6-5d355fbb1e14@kernel.org>
+Message-Id: <20241217-isolcpus-io-queues-v4-7-5d355fbb1e14@kernel.org>
 References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
 In-Reply-To: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
@@ -71,62 +71,130 @@ Cc: Costa Shulyupin <costa.shul@redhat.com>,
  Daniel Wagner <wagi@kernel.org>
 X-Mailer: b4 0.14.2
 
-Multiqueue devices should only allocate queues for the housekeeping CPUs
-when isolcpus=managed_irq is set. This avoids that the isolated CPUs get
-disturbed with OS workload.
+group_cpus_evenly distributes all present CPUs into groups. This ignores
+the isolcpus configuration and assigns isolated CPUs into the groups.
 
-Use helpers which calculates the correct number of queues which should
-be used when isolcpus is used.
+Make group_cpus_evenly aware of isolcpus configuration and use the
+housekeeping CPU mask as base for distributing the available CPUs into
+groups.
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
- drivers/block/virtio_blk.c                | 5 ++---
- drivers/scsi/megaraid/megaraid_sas_base.c | 3 ++-
- drivers/scsi/virtio_scsi.c                | 1 +
- 3 files changed, 5 insertions(+), 4 deletions(-)
+ lib/group_cpus.c | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 75 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index ed514ff46dc82acd629ae594cb0fa097bd301a9b..0287ceaaf19972f3a18e81cd2e3252e4d539ba93 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -976,9 +976,8 @@ static int init_vq(struct virtio_blk *vblk)
- 		return -EINVAL;
- 	}
+diff --git a/lib/group_cpus.c b/lib/group_cpus.c
+index 73da83ca2c45347a3a443d42d4f16801a47effd5..927e4ed634d0d9ca14235c977fc53d6f5f649396 100644
+--- a/lib/group_cpus.c
++++ b/lib/group_cpus.c
+@@ -8,6 +8,7 @@
+ #include <linux/cpu.h>
+ #include <linux/sort.h>
+ #include <linux/group_cpus.h>
++#include <linux/sched/isolation.h>
  
--	num_vqs = min_t(unsigned int,
--			min_not_zero(num_request_queues, nr_cpu_ids),
--			num_vqs);
-+	num_vqs = blk_mq_num_possible_queues(
-+			min_not_zero(num_request_queues, num_vqs));
+ #ifdef CONFIG_SMP
  
- 	num_poll_vqs = min_t(unsigned int, poll_queues, num_vqs - 1);
+@@ -330,7 +331,7 @@ static int __group_cpus_evenly(unsigned int startgrp, unsigned int numgrps,
+ }
  
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 59d385e5a917979ae2f61f5db2c3355b9cab7e08..3ff0978b3acb5baf757fee25d9fccf4971976272 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6236,7 +6236,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		intr_coalescing = (scratch_pad_1 & MR_INTR_COALESCING_SUPPORT_OFFSET) ?
- 								true : false;
- 		if (intr_coalescing &&
--			(blk_mq_num_online_queues(0) >= MR_HIGH_IOPS_QUEUE_COUNT) &&
-+			(blk_mq_num_online_queues(0) >=
-+			 MR_HIGH_IOPS_QUEUE_COUNT) &&
- 			(instance->msix_vectors == MEGASAS_MAX_MSIX_QUEUES))
- 			instance->perf_mode = MR_BALANCED_PERF_MODE;
- 		else
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 60be1a0c61836ba643adcf9ad8d5b68563a86cb1..46ca0b82f57ce2211c7e2817dd40ee34e65bcbf9 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -919,6 +919,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 	/* We need to know how many queues before we allocate. */
- 	num_queues = virtscsi_config_get(vdev, num_queues) ? : 1;
- 	num_queues = min_t(unsigned int, nr_cpu_ids, num_queues);
-+	num_queues = blk_mq_num_possible_queues(num_queues);
- 
- 	num_targets = virtscsi_config_get(vdev, max_target) + 1;
- 
+ /**
+- * group_cpus_evenly - Group all CPUs evenly per NUMA/CPU locality
++ * group_possible_cpus_evenly - Group all CPUs evenly per NUMA/CPU locality
+  * @numgrps: number of groups
+  *
+  * Return: cpumask array if successful, NULL otherwise. And each element
+@@ -345,7 +346,7 @@ static int __group_cpus_evenly(unsigned int startgrp, unsigned int numgrps,
+  * We guarantee in the resulted grouping that all CPUs are covered, and
+  * no same CPU is assigned to multiple groups
+  */
+-struct cpumask *group_cpus_evenly(unsigned int *numgrps)
++static struct cpumask *group_possible_cpus_evenly(unsigned int *numgrps)
+ {
+ 	unsigned int curgrp = 0, nr_present = 0, nr_others = 0, nr_grps;
+ 	cpumask_var_t *node_to_cpumask;
+@@ -426,6 +427,78 @@ struct cpumask *group_cpus_evenly(unsigned int *numgrps)
+ 	*numgrps = nr_present + nr_others;
+ 	return masks;
+ }
++
++/**
++ * group_mask_cpus_evenly - Group all CPUs evenly per NUMA/CPU locality
++ * @numgrps: number of groups
++ * @cpu_mask: CPU to consider for the grouping
++ *
++ * Return: cpumask array if successful, NULL otherwise. And each element
++ * includes CPUs assigned to this group.
++ *
++ * Try to put close CPUs from viewpoint of CPU and NUMA locality into
++ * same group. Allocate present CPUs on these groups evenly.
++ */
++static struct cpumask *group_mask_cpus_evenly(unsigned int *numgrps,
++					      const struct cpumask *cpu_mask)
++{
++	cpumask_var_t *node_to_cpumask;
++	cpumask_var_t nmsk;
++	unsigned int nr_grps;
++	int ret = -ENOMEM;
++	struct cpumask *masks = NULL;
++
++	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
++		return NULL;
++
++	node_to_cpumask = alloc_node_to_cpumask();
++	if (!node_to_cpumask)
++		goto fail_nmsk;
++
++	nr_grps = *numgrps;
++	masks = kcalloc(nr_grps, sizeof(*masks), GFP_KERNEL);
++	if (!masks)
++		goto fail_node_to_cpumask;
++
++	build_node_to_cpumask(node_to_cpumask);
++
++	ret = __group_cpus_evenly(0, nr_grps, node_to_cpumask, cpu_mask, nmsk,
++				  masks);
++
++fail_node_to_cpumask:
++	free_node_to_cpumask(node_to_cpumask);
++
++fail_nmsk:
++	free_cpumask_var(nmsk);
++	if (ret < 0) {
++		kfree(masks);
++		return NULL;
++	}
++	*numgrps = ret;
++	return masks;
++}
++
++/**
++ * group_cpus_evenly - Group all CPUs evenly per NUMA/CPU locality
++ * @numgrps: number of groups
++ *
++ * Return: cpumask array if successful, NULL otherwise.
++ *
++ * group_possible_cpus_evently() is used for distributing the cpus on all
++ * possible cpus in absence of isolcpus command line argument.
++ * group_mask_cpu_evenly() is used when the isolcpus command line
++ * argument is used with managed_irq option. In this case only the
++ * housekeeping CPUs are considered.
++ */
++struct cpumask *group_cpus_evenly(unsigned int *numgrps)
++{
++	if (housekeeping_enabled(HK_TYPE_MANAGED_IRQ)) {
++		return group_mask_cpus_evenly(numgrps,
++				housekeeping_cpumask(HK_TYPE_MANAGED_IRQ));
++	}
++
++	return group_possible_cpus_evenly(numgrps);
++}
+ #else /* CONFIG_SMP */
+ struct cpumask *group_cpus_evenly(unsigned int *numgrps)
+ {
 
 -- 
 2.47.1
