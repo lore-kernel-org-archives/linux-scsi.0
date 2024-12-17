@@ -1,176 +1,322 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5A4661FA24A;
-	Tue, 17 Dec 2024 17:43:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797591F76C7;
+	Tue, 17 Dec 2024 18:29:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734457425; cv=none; b=uydDUNVCCdBV7WhmXD2f6HyMk008XcXZgITXqGV5/NsKx9qVQ9SJin0EPAH0XXr2gaqzYcopSo9DL0eQ1V+AmaAV+2bRpx9r/vgxQ6QuFL9wqA9QR+NdirOATWCrZ7voXo8Gi+6nkiw6hEITJOdPd7ZYwaCti3angAtKFsUUheg=
+	t=1734460184; cv=none; b=Lae1+WCX2s0P0DHVi7knpHH5ue2pT1FztFYAHzOjImd5iJwBYJgDiHgLrHk8MJsDT6K+maqoJNbwEGyR4+OtvRg2PzFnwfno8GRwGhUkTYmClBxRWLfq11ZmkVRseAEExBzy9K8VkrQkNUvVEiySVmPL26u8V3Z1kEgVi16gyoo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734457425; c=relaxed/simple;
-	bh=8L9yZu+YSSMC3BBiLERVQU5N7SevsXLGZW7h8pfgPR8=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=m6jJlDXE3BNb7ve8PvLvGuN5QqhJyyXCL5txmQb74C9QoNRa8CejS8xyT2VKDcqJa6IQqcwgo1GhhKeHdE0PwMjHM2NbRP3YpMABX1G6aeVXSqztyP8lalaVD9o9ZygrlKNftY3mNJPWJum5ekpShwxnvBdSrg6uvQMYu6gkNWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=VkPXr4Q5; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1734460184; c=relaxed/simple;
+	bh=hHu0hy2/wGUImCgXCBSjy1eogHX5z0frXHx8vJgLTRE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=lFaUmFVXgHGJousl3RUiSZBEBPMaFZKa75E+P4e5ljI+cP7ofDQJiLdK/wg2ntFmFzddYvbNkwd9WiBkMtkKfjPvTYImVRYlYgSkxMxTuU3jc+nZMhCfBg8i9frD4ssyVD38v+wJfxGlJlshZgBDB2iiqJLjC8XkYAq2zgaBueg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QC/x7fZ+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="VkPXr4Q5"
-Received: from [192.168.35.166] (c-73-118-245-227.hsd1.wa.comcast.net [73.118.245.227])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 4C1542171F87;
-	Tue, 17 Dec 2024 09:43:32 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4C1542171F87
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1734457414;
-	bh=qz8oz73s4rCDJSC1TgNUQNYJjOVU8exHA2BYkyw+ZD0=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=VkPXr4Q51kSzYXC6iV4Rnt0hdXMx9YWH59To4VTRyzVF/4SXLeJpUxO01knfWumzM
-	 CzAbcmQnzc2Qsz94yaL1AgsNLmsei1LV793lD8Qkn1YDLJvzyEf9X476Tc2IwzAabU
-	 HeEAso29uXPVkfVcznz9hizNBAvL5QWBolCDD9Qs=
-Message-ID: <f3f9a686-8be3-49f0-bcfb-10b864fa5a11@linux.microsoft.com>
-Date: Tue, 17 Dec 2024 09:43:31 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QC/x7fZ+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87846C4CED3;
+	Tue, 17 Dec 2024 18:29:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734460184;
+	bh=hHu0hy2/wGUImCgXCBSjy1eogHX5z0frXHx8vJgLTRE=;
+	h=From:Subject:Date:To:Cc:From;
+	b=QC/x7fZ+i5oe1UmVSof5V74FINpBvmWKFO8uH8nqQJ6z2Ha2H8GRrK2X41tMiFk7o
+	 tuohweIZmBCTT59Pi0ugOqQ20k35h0M/dYoyutT/6eKRCOIMcWqymJamb4+D6pYMFW
+	 hKICvz+RYC+hQAo3FP9ZU1jQOOJ7SwU2Iekp/WrFK3s2255kyiOak44Q9EKmOPGfOw
+	 AnhEgt0nqpWQ7FtYlzvHQQaudv30K2pjolfZdswPIToOyP0yzMBPY2LZasYCWA66uA
+	 zDWUi+el6qf0e9bAJs3K4ULBi8rRX1Q1iGVz0tJsVqQ9oed58T0WanB2tkgH4t01/J
+	 f0u95M8QLKVvQ==
+From: Daniel Wagner <wagi@kernel.org>
+Subject: [PATCH v4 0/9] blk: honor isolcpus configuration
+Date: Tue, 17 Dec 2024 19:29:34 +0100
+Message-Id: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: eahariha@linux.microsoft.com, Pablo Neira Ayuso <pablo@netfilter.org>,
- Jozsef Kadlecsik <kadlec@netfilter.org>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Nicolas Palix <nicolas.palix@imag.fr>,
- Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>,
- Robert Jarzmik <robert.jarzmik@free.fr>, Russell King
- <linux@armlinux.org.uk>, Heiko Carstens <hca@linux.ibm.com>,
- Vasily Gorbik <gor@linux.ibm.com>,
- Christian Borntraeger <borntraeger@linux.ibm.com>,
- Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>,
- Oded Gabbay <ogabbay@kernel.org>, Lucas De Marchi
- <lucas.demarchi@intel.com>,
- =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Jeroen de Borst <jeroendb@google.com>,
- Praveen Kaligineedi <pkaligineedi@google.com>,
- Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
- James Smart <james.smart@broadcom.com>,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
- Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>,
- Jeff Johnson <jjohnson@kernel.org>, Catalin Marinas
- <catalin.marinas@arm.com>, Andrew Morton <akpm@linux-foundation.org>,
- Jack Wang <jinpu.wang@cloud.ionos.com>, Marcel Holtmann
- <marcel@holtmann.org>, Johan Hedberg <johan.hedberg@gmail.com>,
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Florian Fainelli <florian.fainelli@broadcom.com>, Ray Jui
- <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Xiubo Li <xiubli@redhat.com>,
- Ilya Dryomov <idryomov@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>,
- Jiri Kosina <jikos@kernel.org>, Miroslav Benes <mbenes@suse.cz>,
- Petr Mladek <pmladek@suse.com>, Joe Lawrence <joe.lawrence@redhat.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- Louis Peens <louis.peens@corigine.com>, Michael Ellerman
- <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- Christophe Leroy <christophe.leroy@csgroup.eu>,
- Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>,
- netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr,
- linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org,
- dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
- linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, linux-mm@kvack.org,
- linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev,
- linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org,
- live-patching@vger.kernel.org, linux-sound@vger.kernel.org,
- oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org,
- Anna-Maria Behnsen <anna-maria@linutronix.de>
-Subject: Re: [PATCH v3 02/19] coccinelle: misc: Add secs_to_jiffies script
-To: Julia Lawall <julia.lawall@inria.fr>,
- Alexander Gordeev <agordeev@linux.ibm.com>
-References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
- <20241210-converge-secs-to-jiffies-v3-2-ddfefd7e9f2a@linux.microsoft.com>
- <Z2G02RN7VelcrjNT@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
- <alpine.DEB.2.22.394.2412171831300.3566@hadrien>
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <alpine.DEB.2.22.394.2412171831300.3566@hadrien>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAA7DYWcC/23QwY6DIBAG4FcxnHcaQKu0p75HswfEoZK6Yhk12
+ zR99x1tNt1NvJD8JHzDPw9BmAKSOGYPkXAOFGLPofjIhGttf0EIDWehpS5kqSUEip0bJoIQ4Tb
+ hhATKGoN1UXlvasEPh4Q+fK/o+ZNzG2iM6b7OmNVy+8upLW5WIMHUqjzUvlDS5CeaCHcNigWb9
+ V+g2gQ0A7q0ucbcFb7a/wfyN2BkuQnkDDRWIjqPllu9geerX8LbxLsaXyXFFxLZdVfHbIEVH8B
+ bsI6LQ91dwXof+jDeocVuwMQzyuWTlVYKD067Zn+6Yuqx28V04THPH7ytWCGaAQAA
+X-Change-ID: 20240620-isolcpus-io-queues-1a88eb47ff8b
+To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+ Kashyap Desai <kashyap.desai@broadcom.com>, 
+ Sumit Saxena <sumit.saxena@broadcom.com>, 
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, 
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, 
+ Don Brace <don.brace@microchip.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+ Jason Wang <jasowang@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+ Stefan Hajnoczi <stefanha@redhat.com>, 
+ =?utf-8?q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
+ Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Thomas Gleixner <tglx@linutronix.de>
+Cc: Costa Shulyupin <costa.shul@redhat.com>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
+ Ming Lei <ming.lei@redhat.com>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, 
+ Hannes Reinecke <hare@suse.de>, 
+ Sridhar Balaraman <sbalaraman@parallelwireless.com>, 
+ "brookxu.cn" <brookxu.cn@gmail.com>, linux-kernel@vger.kernel.org, 
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+ storagedev@microchip.com, virtualization@lists.linux.dev, 
+ Daniel Wagner <wagi@kernel.org>
+X-Mailer: b4 0.14.2
 
-On 12/17/2024 9:33 AM, Julia Lawall wrote:
-> 
-> 
-> On Tue, 17 Dec 2024, Alexander Gordeev wrote:
-> 
->> On Tue, Dec 10, 2024 at 10:02:33PM +0000, Easwar Hariharan wrote:
->>
->> Hi Easwar,
->>
->>> This script finds and suggests conversions of timeout patterns that
->>> result in seconds-denominated timeouts to use the new secs_to_jiffies()
->>> API in include/linux/jiffies.h for better readability.
->>>
->>> Suggested-by: Anna-Maria Behnsen <anna-maria@linutronix.de>
->>> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
->>> ---
->>>  scripts/coccinelle/misc/secs_to_jiffies.cocci | 22 ++++++++++++++++++++++
->>>  1 file changed, 22 insertions(+)
->>>
->>> diff --git a/scripts/coccinelle/misc/secs_to_jiffies.cocci b/scripts/coccinelle/misc/secs_to_jiffies.cocci
->>> new file mode 100644
->>> index 0000000000000000000000000000000000000000..8bbb2884ea5db939c63fd4513cf5ca8c977aa8cb
->>> --- /dev/null
->>> +++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
->>> @@ -0,0 +1,22 @@
->>> +// SPDX-License-Identifier: GPL-2.0-only
->>> +///
->>> +/// Find usages of:
->>> +/// - msecs_to_jiffies(value*1000)
->>> +/// - msecs_to_jiffies(value*MSEC_PER_SEC)
->>> +///
->>> +// Confidence: High
->>> +// Copyright: (C) 2024 Easwar Hariharan, Microsoft
->>> +// Keywords: secs, seconds, jiffies
->>> +//
->>> +
->>> +virtual patch
->>> +
->>> +@depends on patch@ constant C; @@
->>> +
->>> +- msecs_to_jiffies(C * 1000)
->>> ++ secs_to_jiffies(C)
->>> +
->>> +@depends on patch@ constant C; @@
->>> +
->>> +- msecs_to_jiffies(C * MSEC_PER_SEC)
->>> ++ secs_to_jiffies(C)
->>
->> If you used this script only, then it did not seem to recognize line arch/s390/mm/cmm.c:207
->>
->> 	mod_timer(&cmm_timer, jiffies + msecs_to_jiffies(cmm_timeout_seconds * MSEC_PER_SEC));
-> 
-> There is the requirement that C is a constant, and cmm_timeout_seconds is
-> not considered to be a constant, ie it is not all capital letters.
-> Indeed, it doesn't seem to be a constant at all.  I don't know if the
-> requirement of being a comstant is really necessary.
-> 
-> julia
-> 
->>
->> Thanks!
->>
+The first part of the v3 of this series when in [3], so here is the
+rebased, retested and slightly extended second halve.
 
-As the cover letter says, this is part 1. I intend to do further parts
-that address the cases where the multiplicand is an expression, as well
-as the cases where the timeout provided to msecs_to_jiffies() is
-denominated in seconds (i.e. ends in 000)
+During testing I run into the situation that group_cpu_evenly returned a
+masks array which had less groups then requested; KASAN was unhappy and
+the kernel also crashed. After starring for a long time on the code and
+also reading Ming's comment in alloc_nodes_groups, this is something
+which can happen, depending on the online/offline and with this series
+isolated CPU configuration.
 
-Thanks,
-Easwar
+Second big discussion point in v3 is how to handle the situation when we
+have an hardware context with a mapped housekeeping and and isolated CPU
+and the housekeeping CPU goes offline. In this case there is nothing
+handling IOs for the given context and when the isolated online CPUs is
+issuing IO those will just hang.
+
+I've experimented for a while and all solutions I came up were horrible
+hacks (the hotpath needs to be touched) and I don't want to slow down all
+other users (which are almost everyone). IMO, it's just not worth trying
+to fix this corner case. If the user is using isolcpus and does CPU
+hotplug, we can expect that the user can also first offline the isolated
+CPUs. I've discussed this topic during ALPSS and the room came to the
+same conclusion. Thus I just added a patch which issues a warning that
+IOs are likely to hang.
+
+Furthermore, I started to work getting the nvme-fabrics honoring the
+isolcpu configuration as well but I decied to leave it away for now. No
+need to make this series bigger again.
+
+Daniel
+
+ps: CCed a few more who were involved the isolcpu discussion during
+plumbers.
+
+Initial cover letter:
+
+The nvme-pci driver is ignoring the isolcpus configuration. There were
+several attempts to fix this in the past [1][2]. This is another attempt
+but this time trying to address the feedback and solve it in the core
+code.
+
+The first patch introduces a new option for isolcpus 'io_queue', but I'm
+not really sure if this is needed and we could just use the managed_irq
+option instead. I guess depends if there is an use case which depens on
+queues on the isolated CPUs.
+
+The second patch introduces a new block layer helper which returns the
+number of possible queues. I suspect it would makes sense also to make
+this helper a bit smarter and also consider the number of queues the
+hardware supports.
+
+And the last patch updates the group_cpus_evenly function so that it uses
+only the housekeeping CPUs when they are defined
+
+Note this series is not addressing the affinity setting of the admin
+queue (queue 0). I'd like to address this after we agreed on how to solve
+this. Currently, the admin queue affinity can be controlled by the
+irq_afffinity command line option, so there is at least a workaround for
+it.
+
+Baseline:
+
+available: 2 nodes (0-1)
+node 0 cpus: 0 1 2 3
+node 0 size: 1536 MB
+node 0 free: 1227 MB
+node 1 cpus: 4 5 6 7
+node 1 size: 1729 MB
+node 1 free: 1422 MB
+node distances:
+node   0   1
+  0:  10  20
+  1:  20  10
+
+options nvme write_queues=4 poll_queues=4
+
+55: 0 41 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 0-edge nvme0q0 affinity: 0-3
+63: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 1-edge nvme0q1 affinity: 4-5
+64: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 2-edge nvme0q2 affinity: 6-7
+65: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 3-edge nvme0q3 affinity: 0-1
+66: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 4-edge nvme0q4 affinity: 2-3
+67: 0 0 0 0 24 0 0 0 PCI-MSIX-0000:00:05.0 5-edge nvme0q5 affinity: 4
+68: 0 0 0 0 0 1 0 0 PCI-MSIX-0000:00:05.0 6-edge nvme0q6 affinity: 5
+69: 0 0 0 0 0 0 41 0 PCI-MSIX-0000:00:05.0 7-edge nvme0q7 affinity: 6
+70: 0 0 0 0 0 0 0 3 PCI-MSIX-0000:00:05.0 8-edge nvme0q8 affinity: 7
+71: 1 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 9-edge nvme0q9 affinity: 0
+72: 0 18 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 10-edge nvme0q10 affinity: 1
+73: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 11-edge nvme0q11 affinity: 2
+74: 0 0 0 3 0 0 0 0 PCI-MSIX-0000:00:05.0 12-edge nvme0q12 affinity: 3
+
+queue mapping for /dev/nvme0n1
+        hctx0: default 4 5
+        hctx1: default 6 7
+        hctx2: default 0 1
+        hctx3: default 2 3
+        hctx4: read 4
+        hctx5: read 5
+        hctx6: read 6
+        hctx7: read 7
+        hctx8: read 0
+        hctx9: read 1
+        hctx10: read 2
+        hctx11: read 3
+        hctx12: poll 4 5
+        hctx13: poll 6 7
+        hctx14: poll 0 1
+        hctx15: poll 2 3
+
+PCI name is 00:05.0: nvme0n1
+        irq 55, cpu list 0-3, effective list 1
+        irq 63, cpu list 4-5, effective list 5
+        irq 64, cpu list 6-7, effective list 7
+        irq 65, cpu list 0-1, effective list 1
+        irq 66, cpu list 2-3, effective list 3
+        irq 67, cpu list 4, effective list 4
+        irq 68, cpu list 5, effective list 5
+        irq 69, cpu list 6, effective list 6
+        irq 70, cpu list 7, effective list 7
+        irq 71, cpu list 0, effective list 0
+        irq 72, cpu list 1, effective list 1
+        irq 73, cpu list 2, effective list 2
+        irq 74, cpu list 3, effective list 3
+
+* patched:
+
+48: 0 0 33 0 0 0 0 0 PCI-MSIX-0000:00:05.0 0-edge nvme0q0 affinity: 0-3
+58: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 1-edge nvme0q1 affinity: 4
+59: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 2-edge nvme0q2 affinity: 5
+60: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 3-edge nvme0q3 affinity: 0
+61: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 4-edge nvme0q4 affinity: 1
+62: 0 0 0 0 45 0 0 0 PCI-MSIX-0000:00:05.0 5-edge nvme0q5 affinity: 4
+63: 0 0 0 0 0 12 0 0 PCI-MSIX-0000:00:05.0 6-edge nvme0q6 affinity: 5
+64: 2 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 7-edge nvme0q7 affinity: 0
+65: 0 35 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 8-edge nvme0q8 affinity: 1
+
+queue mapping for /dev/nvme0n1
+        hctx0: default 2 3 4 6 7
+        hctx1: default 5
+        hctx2: default 0
+        hctx3: default 1
+        hctx4: read 4
+        hctx5: read 5
+        hctx6: read 0
+        hctx7: read 1
+        hctx8: poll 4
+        hctx9: poll 5
+        hctx10: poll 0
+        hctx11: poll 1
+
+PCI name is 00:05.0: nvme0n1
+        irq 48, cpu list 0-3, effective list 2
+        irq 58, cpu list 4, effective list 4
+        irq 59, cpu list 5, effective list 5
+        irq 60, cpu list 0, effective list 0
+        irq 61, cpu list 1, effective list 1
+        irq 62, cpu list 4, effective list 4
+        irq 63, cpu list 5, effective list 5
+        irq 64, cpu list 0, effective list 0
+        irq 65, cpu list 1, effective list 1
+
+[1] https://lore.kernel.org/lkml/20220423054331.GA17823@lst.de/T/#m9939195a465accbf83187caf346167c4242e798d
+[2] https://lore.kernel.org/linux-nvme/87fruci5nj.ffs@tglx/
+[3] https://lore.kernel.org/linux-nvme/20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org/
+
+Signed-off-by: Daniel Wagner <wagi@kernel.org>
+---
+Changes in v4:
+- added "blk-mq: issue warning when offlining hctx with online isolcpus"
+- fixed check in cgroup_cpus_evenly, the if condition needs to use
+  housekeeping_enabled() and not cpusmask_weight(housekeeping_masks),
+  because the later will always return a valid mask.
+- dropped fixed tag from "lib/group_cpus.c: honor housekeeping config when
+  grouping CPUs"
+- fixed overlong line "scsi: use block layer helpers to calculate num
+  of queues"
+- dropped "sched/isolation: Add io_queue housekeeping option",
+  just document the housekeep enum hk_type
+- added "lib/group_cpus: let group_cpu_evenly return number of groups"
+- collected tags
+- splitted series into a preperation series:
+  https://lore.kernel.org/linux-nvme/20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org/
+- Link to v3: https://lore.kernel.org/r/20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de
+
+Changes in v3:
+- lifted a couple of patches from
+  https://lore.kernel.org/all/20210709081005.421340-1-ming.lei@redhat.com/
+  "virito: add APIs for retrieving vq affinity"
+  "blk-mq: introduce blk_mq_dev_map_queues"
+- replaces all users of blk_mq_[pci|virtio]_map_queues with
+  blk_mq_dev_map_queues
+- updated/extended number of queue calc helpers
+- add isolcpus=io_queue CPU-hctx mapping function
+- documented enum hk_type and isolcpus=io_queue
+- added "scsi: pm8001: do not overwrite PCI queue mapping"
+- Link to v2: https://lore.kernel.org/r/20240627-isolcpus-io-queues-v2-0-26a32e3c4f75@suse.de
+
+Changes in v2:
+- updated documentation
+- splitted blk/nvme-pci patch
+- dropped HK_TYPE_IO_QUEUE, use HK_TYPE_MANAGED_IRQ
+- Link to v1: https://lore.kernel.org/r/20240621-isolcpus-io-queues-v1-0-8b169bf41083@suse.de
+
+---
+Daniel Wagner (9):
+      lib/group_cpus: let group_cpu_evenly return number of groups
+      sched/isolation: document HK_TYPE housekeeping option
+      blk-mq: add number of queue calc helper
+      nvme-pci: use block layer helpers to calculate num of queues
+      scsi: use block layer helpers to calculate num of queues
+      virtio: blk/scsi: use block layer helpers to calculate num of queues
+      lib/group_cpus: honor housekeeping config when grouping CPUs
+      blk-mq: use hk cpus only when isolcpus=managed_irq is enabled
+      blk-mq: issue warning when offlining hctx with online isolcpus
+
+ block/blk-mq-cpumap.c                     | 118 +++++++++++++++++++++++++++++-
+ block/blk-mq.c                            |  43 ++++++++++-
+ drivers/block/virtio_blk.c                |   5 +-
+ drivers/nvme/host/pci.c                   |   5 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  16 ++--
+ drivers/scsi/qla2xxx/qla_isr.c            |  10 +--
+ drivers/scsi/smartpqi/smartpqi_init.c     |   5 +-
+ drivers/scsi/virtio_scsi.c                |   1 +
+ drivers/virtio/virtio_vdpa.c              |   2 +-
+ fs/fuse/virtio_fs.c                       |   7 +-
+ include/linux/blk-mq.h                    |   2 +
+ include/linux/group_cpus.h                |   2 +-
+ include/linux/sched/isolation.h           |  13 ++++
+ kernel/irq/affinity.c                     |   2 +-
+ lib/group_cpus.c                          |  98 ++++++++++++++++++++++---
+ 15 files changed, 289 insertions(+), 40 deletions(-)
+---
+base-commit: 737371e839a368007758be329413b3f5ec9e7976
+change-id: 20240620-isolcpus-io-queues-1a88eb47ff8b
+prerequisite-message-id: 20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org
+prerequisite-patch-id: e61d7c94facf2774a03c8c7d900f4c5c074bb7e7
+prerequisite-patch-id: ed8d884af9fbc0961ad19e4c039136b6f371850f
+prerequisite-patch-id: 639d56c8b9d83e516c652dea5f66ae878cd67bf8
+prerequisite-patch-id: 79bc9d9cab5c55e31a8f780410a381d44d9c32eb
+prerequisite-patch-id: 1fe870f3017d345011c53b51fefceaef97c29d0c
+prerequisite-patch-id: 2612b868389ae9d851eb8b0230339faf17071a19
+prerequisite-patch-id: c68b002174e1bfa1b2a7ac37e36ecdeec74e6d80
+prerequisite-patch-id: 4d24a54316efce94595c811531ef0db9d94ff1b6
+
+Best regards,
+-- 
+Daniel Wagner <wagi@kernel.org>
+
