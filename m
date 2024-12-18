@@ -1,48 +1,48 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B37376410;
-	Wed, 18 Dec 2024 15:19:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 781CE6EB7C;
+	Wed, 18 Dec 2024 17:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734535173; cv=none; b=pFKlWN4goKfW6r1p0D2w311M/So2+XGgqhdW5BsS2bTyWItY9m3U5AtvAwx/nGvsa1DcblQUOB7tvBUhUcCMDtg90Dha3/ib95+439jCm3Ihf9F3mZHa0OREJkI92gVLF+FBhi1gVkx2tK38YIKIN3WNJFLUZugkWxeQ3JsiCcg=
+	t=1734542379; cv=none; b=Fe93iW7eekt4cUYTWVymqNdSCXSbUxRxDwJndBLr2LDq5zYQkzE/CWz0S1OQdWwT7YE7i92x6sh4UBbQAOCenJJkiU71qe28pMauWiO4L94Utlukzx7LFyJVhyLWhYzICaSRNIQRthcFLpniRKADi6krqsQkn4NVxqV/ulQqsgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734535173; c=relaxed/simple;
-	bh=LjFNish1dc/CV+o5lZI8OS72vVCjbei47j1H7DVlClo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=IIk3YeL1Ew9ba+J/6cDDdpLseK0HUng3MrVS5ihKF1iT0EQKKQFSopm94qQ61gRBXjsCDiE7KoAuINlkAFBMfOyv1vmClq7ByracyuUyV6spy9e7X5e16vfuuaq8tj/oTYs+EmvCXxQPgP12sEjdTjrEpmuJy3FHxG4V2T37lEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pD5jB407; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1734542379; c=relaxed/simple;
+	bh=zUGTX2Sbr/Y+n0B2aKgCffJBxllW9eT2YqZ9IcLBnd0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FQ9hDfTvjOkg1ZRRBcul2kf8kXmKk6iRZUhhSKF2N1wyn/a4Je+Z91BlMm7TZizyammZKqeAGoje+w1mdebGDVCSwfTmv5f01LjKy9fjsEG86Qmyzw0XI9THYRPmxamznmEOu6oWqkWCCLfVdsUwSbgtCnQrq3yXwz2QBoHQTyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jE4cLSzW; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pD5jB407"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BIEICbf010042;
-	Wed, 18 Dec 2024 15:18:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	MlCWfORcQPF1uS9V5F+d7aUrmO/JpT8/ia+4goMdXqI=; b=pD5jB407PelmCaVk
-	vAMg7sX6Qkeaz+faQ2h7APWoYqlmOCzbF+thVuskJKNTo5jHi2RJpjdjVGjYMjTM
-	xvGvbW5BiWUdW9C0vpnCZISk/R/4IM1GeKsZ7V+m6bJo39f1cmCoe7bstC7J+Wq8
-	froP3KJ43spw0nhnvKIKzxYtAYwW0e7i99KrniChHAdczYWjGBx7tTPZ+DyWL540
-	GfZmMehHnsNvu8A1VeO/W1k7uZX7DDXyzNtZLlzzKwC9dOI9i2/igdVCw57F4LW7
-	d4SXbvBOUAmjryynuiuosPQyp1riOj4ivnCQz1bcnDGb2T7ct6aaIMdoCjGXBhx5
-	7LXIWA==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43m01gg59k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 18 Dec 2024 15:18:43 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BIFIgSC010610
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 18 Dec 2024 15:18:42 GMT
-Received: from [10.218.43.20] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 18 Dec
- 2024 07:18:39 -0800
-Message-ID: <0f4836c6-9a1d-4798-af1c-b3a01d2328d5@quicinc.com>
-Date: Wed, 18 Dec 2024 20:48:36 +0530
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jE4cLSzW"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YD0m85vlZz6ClY9D;
+	Wed, 18 Dec 2024 17:19:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1734542372; x=1737134373; bh=HNfsazHOtIvoyG0rKv4kSW0y
+	1EyqA57XAnLNyjOu0r0=; b=jE4cLSzWGFHYoeYXaw1U0yser8cKKCm4nW+NIteb
+	6P4cB0wmGEFAf84lVSJreEREIqEUeynbl1lCXKSR53gGdOXC8ULxCHD1LzQ2zj5G
+	7iDbZUZ7bjAo0Ta/cZ22aN45DfLgres+F+yYqW0BCaACY0jO4RCUmUqcIYJn2g5h
+	ku7B+qnDq0ZH2jltZMH+zYKQH/UTx71VTi4QJ14DgOg//ZFA5YPfYva6ZM0yw002
+	DHEg8rZClVB4IKhU1JF2fllZvbUWx0U57Jnz92/3O7g/E8yqhBZ0JbNXC45ZWoUc
+	UP8vNC+3ctNgwV3mbT/06qgiADQkcgm/HBa/HLeb5zGUwQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id lwM-ixazdC5C; Wed, 18 Dec 2024 17:19:32 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YD0m24W37z6CmLxj;
+	Wed, 18 Dec 2024 17:19:30 +0000 (UTC)
+Message-ID: <ac08d417-87b3-4ddd-ae68-8e8e9a68e04a@acm.org>
+Date: Wed, 18 Dec 2024 09:19:29 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,60 +50,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-To: Bart Van Assche <bvanassche@acm.org>, <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <andersson@kernel.org>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Naveen Kumar Goud Arepalli
-	<quic_narepall@quicinc.com>,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-References: <20241217144059.30693-1-quic_rdwivedi@quicinc.com>
- <65f95b01-8d2d-4e03-88a2-c501379f21ea@acm.org>
+Subject: Re: [PATCH V4] scsi: ufs: qcom: Enable UFS Shared ICE Feature
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
+ manivannan.sadhasivam@linaro.org, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, andersson@kernel.org
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
+ Nitin Rawat <quic_nitirawa@quicinc.com>
+References: <20241218151118.18683-1-quic_rdwivedi@quicinc.com>
 Content-Language: en-US
-From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-In-Reply-To: <65f95b01-8d2d-4e03-88a2-c501379f21ea@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: RmQ4LPZ2YxEkw_JjUQOHKMePgi5HsbsK
-X-Proofpoint-ORIG-GUID: RmQ4LPZ2YxEkw_JjUQOHKMePgi5HsbsK
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
- clxscore=1015 mlxscore=0 bulkscore=0 impostorscore=0 malwarescore=0
- suspectscore=0 adultscore=0 priorityscore=1501 lowpriorityscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412180119
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20241218151118.18683-1-quic_rdwivedi@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 12/18/24 7:11 AM, Ram Kumar Dwivedi wrote:
+> +static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
+> +{
+> +	struct ufs_hba *hba = host->hba;
+> +	uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
 
+This array can be declared 'static const', isn't it?
 
-On 17-Dec-24 9:16 PM, Bart Van Assche wrote:
-> On 12/17/24 6:40 AM, Ram Kumar Dwivedi wrote:
->> +    unsigned int val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
->> +    unsigned int config;
->> +
->> +    if (!is_ice_config_supported(host))
->> +        return;
->> +
->> +    config = val[0] | (val[1] << 8) | (val[2] << 16) | (val[3] << 24);
-> 
-> Has it been considered to change the data type of val[] from unsigned int into u8 or uint8_t? That would allow to use get_unaligned_le32() instead of the above bit-shift expression. Additionally, why has 'config' been declared as 'int' instead of 'u32'?
->
-Hi Bart, 
-Thanks for review. We have addressed your comment in latest patchset.
+> +	u32 config;
+> +
+> +	if (!is_ice_config_supported(host))
+> +		return;
+> +
+> +	config = val[0] | (val[1] << 8) | (val[2] << 16) | (val[3] << 24);
+
+Isn't this is an open-coded version of get_unaligned_le32()?
 
 Thanks,
-Ram.
 
-> Thanks,
-> 
-> Bart.
-
-
-
+Bart.
