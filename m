@@ -1,115 +1,70 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B1B78F4C;
-	Thu, 19 Dec 2024 06:16:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C96778F4C;
+	Thu, 19 Dec 2024 06:25:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734589001; cv=none; b=li2LNy3r/A6EvbPtLH+mGz0SSzDH+pfZH6RytwDN2oZoTxb/nqBC2sLO+CVcsZGeSprpbhd35mRFuxt/fWTi2F3H2pDjwwOYhxrDe0rBuveAqU0VvjPwLzNl+vzn17RhZg95IYpSAQ9xmjP3RCQZwM9dAUATxYFKgWhE+2xIbgo=
+	t=1734589521; cv=none; b=eMdG/HbI84N6qM/8lamqL4pjUvbpZTjzaVPZMpzTNvzb0Q0VpG4Ej3WS8POHqnUNnsjHDOe/GZ3JzDfumuszIYbmrBBAbV87DkGyYxs2CxKJ25YzNMNEo/tfiV7WOmYXQ59mjFobWJfhJtUz5H9mMTJkhlnATHKMwDw4/mqiGi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734589001; c=relaxed/simple;
-	bh=ZhyGHaF/gQbFKaN1aLpdkZlPhA+1u0F82ScEbJPOsnA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Ix3FnpCd8/jaDp/ZelvE2He4r1exd8JcGSAFIZ5oq4iDPyvX7OWcC10o+reLmiZmhyrPZ5C2VJ0tTgfqEbzCN6PdTs12csU1cwlAEmRneTIBKDUza1UmNjeNK9l9LZKXU5bTqZK/VPk+2g68ERalXPhgdSUapU/FNR14bM6saZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DfAmBqMy; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DfAmBqMy"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BJ3SbD3001919;
-	Thu, 19 Dec 2024 06:16:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	kK5Opena1xVSZM83wubWjcYiRKdnsQja371XurM3dtI=; b=DfAmBqMyIlxherqM
-	ejZ5c8WjXdZexHfuBxcSNhvaJcfrzdyAIfUDxr3HrDo+kXt+R34G0U45TDxc5crO
-	HzyhVzBR8c+BecbiAJceD52YM9IglVyusz2WMjqgIGtFuN+FVugHBfmeBA0WbDYH
-	AnGAyS8e+73OZTsJ+P5rJby3K53zA4jIW5yPFJdgiFYoKSS39BRxvZApswnrv4OW
-	Il+R7vCTlJzITs77noSRchwWkRlJ3namHyfGHGlpkyQaZW7jVYdWDuwCeCKsgJFV
-	+CbnOe8CZlKDUGIEQOl99XdV1yWQ4zF687gmN9ZNOmPuOoqv/vCevx881LzR3VTn
-	G46rcg==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43mbm60aas-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 19 Dec 2024 06:16:20 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BJ6GJdE011628
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 19 Dec 2024 06:16:19 GMT
-Received: from [10.218.43.20] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 18 Dec
- 2024 22:16:16 -0800
-Message-ID: <69503b23-12da-4270-9910-9440dba7df07@quicinc.com>
-Date: Thu, 19 Dec 2024 11:46:12 +0530
+	s=arc-20240116; t=1734589521; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nZmOicVUMD6sOyl8C2Y+d5PXD66BLwCROgYciBMib7IC2AdtxZZO38cfmJp+rEXaYGQ9i8xwFDDvKlNC/sr7KpCPGWFdL5OVC8sDhm6tWu31HwMBWmkYTh3U1PvecwmZvRtAT8t8io3+CWe2CAxvNQ9UHZTxP650fqYYYGFPBvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 90F5968AFE; Thu, 19 Dec 2024 07:25:12 +0100 (CET)
+Date: Thu, 19 Dec 2024 07:25:12 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Daniel Wagner <wagi@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Don Brace <don.brace@microchip.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Stefan Hajnoczi <stefanha@redhat.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Costa Shulyupin <costa.shul@redhat.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
+	Sridhar Balaraman <sbalaraman@parallelwireless.com>,
+	"brookxu.cn" <brookxu.cn@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	storagedev@microchip.com, virtualization@lists.linux.dev
+Subject: Re: [PATCH v4 6/9] virtio: blk/scsi: use block layer helpers to
+ calculate num of queues
+Message-ID: <20241219062512.GA19782@lst.de>
+References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org> <20241217-isolcpus-io-queues-v4-6-5d355fbb1e14@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-To: Bart Van Assche <bvanassche@acm.org>, <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <andersson@kernel.org>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Naveen Kumar Goud Arepalli
-	<quic_narepall@quicinc.com>,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-References: <20241218151118.18683-1-quic_rdwivedi@quicinc.com>
- <ac08d417-87b3-4ddd-ae68-8e8e9a68e04a@acm.org>
-Content-Language: en-US
-From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-In-Reply-To: <ac08d417-87b3-4ddd-ae68-8e8e9a68e04a@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: TDYoq5GPD3F6jVpqzeZGrpMBCSRr-e42
-X-Proofpoint-GUID: TDYoq5GPD3F6jVpqzeZGrpMBCSRr-e42
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- suspectscore=0 phishscore=0 adultscore=0 impostorscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 priorityscore=1501 spamscore=0 bulkscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412190048
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241217-isolcpus-io-queues-v4-6-5d355fbb1e14@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
+Looks good:
 
-
-On 18-Dec-24 10:49 PM, Bart Van Assche wrote:
-> On 12/18/24 7:11 AM, Ram Kumar Dwivedi wrote:
->> +static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
->> +{
->> +    struct ufs_hba *hba = host->hba;
->> +    uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
-> 
-> This array can be declared 'static const', isn't it?
-
-Hi Bart,
-As this value is not modified in this function, we will declare it as const in next patchset
-> 
->> +    u32 config;
->> +
->> +    if (!is_ice_config_supported(host))
->> +        return;
->> +
->> +    config = val[0] | (val[1] << 8) | (val[2] << 16) | (val[3] << 24);
-> 
-> Isn't this is an open-coded version of get_unaligned_le32()?
-sure will make the suggested change in next patchset
-
-Thanks,
-Ram.
-
-> 
-> Thanks,
-> 
-> Bart.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
