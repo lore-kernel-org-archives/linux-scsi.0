@@ -1,158 +1,168 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB93622653D
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Dec 2024 15:26:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7A98633E;
+	Thu, 19 Dec 2024 15:38:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734621991; cv=none; b=VBH1p3yKW4OFpJnhGp8A68w+zwOaksdK6ihYwsWWLSHbSPhbTsY+RJcwlY7hTW40Z8xCWcc1zqo3HY/r5E74J3Z8JN4lu2WiAbkfLtS2L+MBftZMKx2HY72ZNYU4NmgEzK+l0udhdYOK77uqFX2ArMeFULAT02npl6nDUhyGelc=
+	t=1734622733; cv=none; b=m2q5uTQ4iQjEt7SQHRxjg8/NSYXeWrOBhboZTzVlguQEibekee/mxXTNAbyqTZkPG00uDsqcYyhNLtKaAffHHpCkFfHpMzmybxEOnNgjUX2QxAk3qVvyDt11zSYksicEm+D/Y+22WvupBvI4dlp5TEKgr6i7A4y66mps1wPhRx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734621991; c=relaxed/simple;
-	bh=15RrTWKQpHCq/hvcLugkHfHdil5oe73YrQ2pQ1CJlL0=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=T6470N2j5YS6dmwg3dBvAWsUT7SgyY515DrJ7dvT9k03DLAzRq0xeHyt3/RJs2IZURwzPw5DdabSknd7t+0SC9JvNOIT5TUq6cCEthEKXT4Ns10twM8j5Zl+6fI84fikD6FHMrRM02LGFWdyPp6lcGDaf/JjUe1SvpXDwk01p0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=LgvlmS/X; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1734622733; c=relaxed/simple;
+	bh=ZwCCCKKdJfUkajbRuIfXBHqtvA2LzQrqJ8Q5lDvhrAs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Am1EFPF6N1uK65zKwNTN4LxdZLlNsqPgFeQJuwjSv1y6Pv85ciUXKFpfnVV8HoWGS6rc4JDPEesIMgNBSHastGdkzarF2anyxKdlZ9vNdrEIylenHXC/wCoWIbDhpQLjh012MyXVIw/fZXL3mr9h7v3wsk34qdpWyeiWdg2jwB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lIuIKLZ3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Awx86fPr; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lIuIKLZ3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Awx86fPr; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="LgvlmS/X"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-436345cc17bso7151995e9.0
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Dec 2024 07:26:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1734621987; x=1735226787; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VQ7HZmEeCGMgy0e+vPaSllNgD7jxFlhgiuqO+Gf6oic=;
-        b=LgvlmS/Xe1DbBaOh2EqvwcEOO6YusRBXskAlnyEyADAINemZ4uoxyNdQRgHQtKqsNT
-         MV6oZniWv4Kq9XUVQ8YwoGWrtsswxPn6+MOTDj44owNPi9LB/B/tVBjxmKDvyLmAWXtb
-         obtY7syLHbEiJoZOjODqNq/ULJ4Jpb69CcQaTCCHGCVFusiAU5aeJnvaijslrJk3+9k0
-         PltVSi3U3mAUkoOgfT6OaDlzviRbcpLf782u36qxGjdr6UDU4IeECcmkRh03Yx1lwVqn
-         JG9ZSu2hT2yOM8Gnft0y4aC/3fLu7iejd+ymrtxNefdVegnZ1gBzRZTXv0zlACkpBI8A
-         +Ebg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734621987; x=1735226787;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=VQ7HZmEeCGMgy0e+vPaSllNgD7jxFlhgiuqO+Gf6oic=;
-        b=QdJI8mSYsAePmKsNkD5gOvGE+o8YpEHuATBH6JtS0fip6QUtPaN99j4wlIuFguSUT9
-         OWJZCPm61aBauKf2k4DZYCSJh9IG2qtjpFxgFRcQAw9swigAWaB1gG+gXolOvaAOu+0C
-         12AuW4Y2t8m8WoNKaSozvUkgSl/6BUvuB59wnIqbDcxbVgnIj76Yso7ELwbwgABUttVH
-         hOazapEQ1NMmdVz1hIX/V6KEaVtTFpY39BnOWr2bHvaj4BxD+Olcd+L+v6tuCDLaOE9a
-         MFfsCV9ebVuWD5u5ulIzgAULFT3cu/04WccAOKyIjcO5kMZYfEEqcgtknNY4i8JTfeE0
-         vnsw==
-X-Gm-Message-State: AOJu0YzBBPdHh91ivMWkCFvR8eLh+jKbptu75vFoBCWmITewX1Z9LrLS
-	IZetC2DAWhLnGzJWj3K6iMCeq99ruIiJHvKvQQPza/0yFElibl0qgoTsQs2HKdw=
-X-Gm-Gg: ASbGnctzJZFLzKS+VE54VutGX6AhZE0Wj1VjqgUy3avdDHfVd1OKcKZ94Zh2eU2cpqV
-	Psj+bd80udUXqf/zXG/MIKc/rNOase+vkOezbP5QV7Q7OF+JQEZiiAH5QmCoXhgblbu2WzXNaDJ
-	MgF7rM14jxcV6BQHKPdxbPWSKZVsp+f4+u1rankSq4w57U5WBuhU/CtEejmL+mRX/rmatl6Uj+c
-	SgMXxYs3ZW4PgUdoPAPrjqxY4aDfACmw7TFfBgcymHbW0ZrgRFs8razDRhDDwV5h9X539RWQn6i
-	41Pw5n4XsUor0s3W9QkIm1GczgAJeo7U2w==
-X-Google-Smtp-Source: AGHT+IEy1xHzK9K7OC7FPc2fyDm4x3L6AUfcIgdgbQdf1FCaNr7K1xPzw5OtAxsv5OKQ4c4RA4lwuA==
-X-Received: by 2002:a05:600c:4fd3:b0:434:a929:42bb with SMTP id 5b1f17b1804b1-4365536f6camr66630715e9.18.1734621985918;
-        Thu, 19 Dec 2024 07:26:25 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:982:cbb0:a0fd:4342:76af:7533? ([2a01:e0a:982:cbb0:a0fd:4342:76af:7533])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a1c829235sm1779437f8f.15.2024.12.19.07.26.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Dec 2024 07:26:25 -0800 (PST)
-Message-ID: <145dd6ae-be08-4f19-9e9d-abc238b35b8c@linaro.org>
-Date: Thu, 19 Dec 2024 16:26:24 +0100
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lIuIKLZ3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Awx86fPr";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lIuIKLZ3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Awx86fPr"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 2DC081F392;
+	Thu, 19 Dec 2024 15:38:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1734622724; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
+	b=lIuIKLZ3tx9Tlasx+4eYis53arw0VaKm3Wb1cWvb25z+Dg8VMTHXyFLY9DQgh1izh5tKcn
+	TgFWIX4sl7yYM3i8in2DGUM6Np6WDhTCk7CjE4/KBwwx/G63QhBgvaQWAY0k/qdhoLDev5
+	MS3Z43ARDJrKXLuTjCXs6oSlJ8R9DXY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1734622724;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
+	b=Awx86fPr/B1eNZPuzu33T8EOyLecp2Vl8kd0f176Ei8UGx0R6SiZf7ATaV3NDN+OTRnuaj
+	32KyGSHHHdAli/Dg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=lIuIKLZ3;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Awx86fPr
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1734622724; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
+	b=lIuIKLZ3tx9Tlasx+4eYis53arw0VaKm3Wb1cWvb25z+Dg8VMTHXyFLY9DQgh1izh5tKcn
+	TgFWIX4sl7yYM3i8in2DGUM6Np6WDhTCk7CjE4/KBwwx/G63QhBgvaQWAY0k/qdhoLDev5
+	MS3Z43ARDJrKXLuTjCXs6oSlJ8R9DXY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1734622724;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
+	b=Awx86fPr/B1eNZPuzu33T8EOyLecp2Vl8kd0f176Ei8UGx0R6SiZf7ATaV3NDN+OTRnuaj
+	32KyGSHHHdAli/Dg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0E99513A77;
+	Thu, 19 Dec 2024 15:38:44 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id bzRPAwQ+ZGc2PgAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Thu, 19 Dec 2024 15:38:44 +0000
+Date: Thu, 19 Dec 2024 16:38:43 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali <njavali@marvell.com>, 
+	GR-QLogic-Storage-Upstream@marvell.com, Don Brace <don.brace@microchip.com>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, 
+	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
+	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Frederic Weisbecker <frederic@kernel.org>, 
+	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
+	Sridhar Balaraman <sbalaraman@parallelwireless.com>, "brookxu.cn" <brookxu.cn@gmail.com>, 
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, storagedev@microchip.com, 
+	virtualization@lists.linux.dev
+Subject: Re: [PATCH v4 8/9] blk-mq: use hk cpus only when
+ isolcpus=managed_irq is enabled
+Message-ID: <cc5e44dd-e1dc-4f24-88d9-ce45a8b0794f@flourine.local>
+References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
+ <20241217-isolcpus-io-queues-v4-8-5d355fbb1e14@kernel.org>
+ <Z2PlbL0XYTQ_LxTw@fedora>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH v2 0/3] scsi: ufs: qcom: Suspend fixes
-To: manivannan.sadhasivam@linaro.org, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Abel Vesa <abel.vesa@linaro.org>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>,
- Nitin Rawat <quic_nitirawa@quicinc.com>, stable@vger.kernel.org,
- Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-References: <20241213-ufs-qcom-suspend-fix-v2-0-1de6cd2d6146@linaro.org>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <20241213-ufs-qcom-suspend-fix-v2-0-1de6cd2d6146@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z2PlbL0XYTQ_LxTw@fedora>
+X-Rspamd-Queue-Id: 2DC081F392
+X-Spam-Score: -3.01
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[39];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_CC(0.00)[kernel.org,kernel.dk,lst.de,grimberg.me,broadcom.com,oracle.com,marvell.com,microchip.com,redhat.com,linux.alibaba.com,linux-foundation.org,linutronix.de,suse.com,suse.de,parallelwireless.com,gmail.com,vger.kernel.org,lists.infradead.org,lists.linux.dev];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLy1uc785cwzda5mnrw36e8hj5)];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On 13/12/2024 14:53, Manivannan Sadhasivam via B4 Relay wrote:
-> Hi,
+On Thu, Dec 19, 2024 at 05:20:44PM +0800, Ming Lei wrote:
+> > +	cpumask_andnot(isol_mask,
+> > +		       cpu_possible_mask,
+> > +		       housekeeping_cpumask(HK_TYPE_MANAGED_IRQ));
+> > +
+> > +	for_each_cpu(cpu, isol_mask) {
+> > +		qmap->mq_map[cpu] = qmap->queue_offset + queue;
+> > +		queue = (queue + 1) % qmap->nr_queues;
+> > +	}
 > 
-> This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
-> the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
-> this patch, I couldn't figure out the exact commit that caused the issue. So I
-> used the commit that introduced reinit support as a placeholder.
+> Looks the IO hang issue in V3 isn't addressed yet, is it?
 > 
-> Patch 3 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
-> PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
-> this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
-> device powerdown during suspend. This supersedes the previous series [1] that
-> tried to fix the issue in clock drivers.
-> 
-> This series is tested on Qcom SM8550 MTP and Qcom RB5 boards.
-> 
-> [1] https://lore.kernel.org/linux-arm-msm/20241107-ufs-clk-fix-v1-0-6032ff22a052@linaro.org
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
-> Changes in v2:
-> - Changed 'ufs_qcom_drvdata::quirks' type to 'enum ufshcd_quirks'
-> - Collected tags
-> - Link to v1: https://lore.kernel.org/r/20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org
-> 
-> ---
-> Manivannan Sadhasivam (3):
->        scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()
->        scsi: ufs: qcom: Allow passing platform specific OF data
->        scsi: ufs: qcom: Power down the controller/device during system suspend for SM8550/SM8650 SoCs
-> 
->   drivers/ufs/core/ufshcd-priv.h |  6 ------
->   drivers/ufs/core/ufshcd.c      |  1 -
->   drivers/ufs/host/ufs-qcom.c    | 31 +++++++++++++++++++------------
->   drivers/ufs/host/ufs-qcom.h    |  5 +++++
->   include/ufs/ufshcd.h           |  2 --
->   5 files changed, 24 insertions(+), 21 deletions(-)
-> ---
-> base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
-> change-id: 20241211-ufs-qcom-suspend-fix-5618e9c56d93
-> 
-> Best regards,
+> https://lore.kernel.org/linux-block/ZrtX4pzqwVUEgIPS@fedora/
 
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8550-QRD
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-QRD
+I've added an explanation in the cover letter why this is not
+addressed. From the cover letter:
+
+I've experimented for a while and all solutions I came up were horrible
+hacks (the hotpath needs to be touched) and I don't want to slow down all
+other users (which are almost everyone). IMO, it's just not worth trying
+to fix this corner case. If the user is using isolcpus and does CPU
+hotplug, we can expect that the user can also first offline the isolated
+CPUs. I've discussed this topic during ALPSS and the room came to the
+same conclusion. Thus I just added a patch which issues a warning that
+IOs are likely to hang.
