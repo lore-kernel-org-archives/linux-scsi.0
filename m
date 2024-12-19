@@ -1,168 +1,129 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7A98633E;
-	Thu, 19 Dec 2024 15:38:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DD1146D6B;
+	Thu, 19 Dec 2024 16:50:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734622733; cv=none; b=m2q5uTQ4iQjEt7SQHRxjg8/NSYXeWrOBhboZTzVlguQEibekee/mxXTNAbyqTZkPG00uDsqcYyhNLtKaAffHHpCkFfHpMzmybxEOnNgjUX2QxAk3qVvyDt11zSYksicEm+D/Y+22WvupBvI4dlp5TEKgr6i7A4y66mps1wPhRx8=
+	t=1734627057; cv=none; b=a7O+YI7KvrsHXvBTTRdFztWLVfy6sKilcCj0P29qd3yz0L/nFGDwQhD8cWOgHGlvekj8MUHoT+04zbgAvHnOAr5K12FHxGoCfSmiK1g3DLRjIQjJvIqz52MJtiAwTqayeEeiLwTuqp+IbT4y4GrhdDezgUqA1gG+THK+n6jOEC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734622733; c=relaxed/simple;
-	bh=ZwCCCKKdJfUkajbRuIfXBHqtvA2LzQrqJ8Q5lDvhrAs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Am1EFPF6N1uK65zKwNTN4LxdZLlNsqPgFeQJuwjSv1y6Pv85ciUXKFpfnVV8HoWGS6rc4JDPEesIMgNBSHastGdkzarF2anyxKdlZ9vNdrEIylenHXC/wCoWIbDhpQLjh012MyXVIw/fZXL3mr9h7v3wsk34qdpWyeiWdg2jwB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lIuIKLZ3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Awx86fPr; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lIuIKLZ3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Awx86fPr; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1734627057; c=relaxed/simple;
+	bh=IiSx2c1rWCpopOjw7IUhmvQhktehYl5PNc2RgbhH8LM=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VRAR4sqCAoyCvVrrZddPKCDjJ96/sJYFWBJ+qL62uyelJvkCVS8DeRibqVGDeN/f//cu1rvR/pRtU1rJKYSgopW2ux8RmaUzlm97V/G1J7KLW3vcTlu5xLt7QtP435uwuB3gcPSQuzJAf8NCrsqUVZMeK4KhBuDI1TK4b/OsIc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Evy1K8wR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lIuIKLZ3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Awx86fPr";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lIuIKLZ3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Awx86fPr"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 2DC081F392;
-	Thu, 19 Dec 2024 15:38:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1734622724; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
-	b=lIuIKLZ3tx9Tlasx+4eYis53arw0VaKm3Wb1cWvb25z+Dg8VMTHXyFLY9DQgh1izh5tKcn
-	TgFWIX4sl7yYM3i8in2DGUM6Np6WDhTCk7CjE4/KBwwx/G63QhBgvaQWAY0k/qdhoLDev5
-	MS3Z43ARDJrKXLuTjCXs6oSlJ8R9DXY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1734622724;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
-	b=Awx86fPr/B1eNZPuzu33T8EOyLecp2Vl8kd0f176Ei8UGx0R6SiZf7ATaV3NDN+OTRnuaj
-	32KyGSHHHdAli/Dg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=lIuIKLZ3;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Awx86fPr
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1734622724; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
-	b=lIuIKLZ3tx9Tlasx+4eYis53arw0VaKm3Wb1cWvb25z+Dg8VMTHXyFLY9DQgh1izh5tKcn
-	TgFWIX4sl7yYM3i8in2DGUM6Np6WDhTCk7CjE4/KBwwx/G63QhBgvaQWAY0k/qdhoLDev5
-	MS3Z43ARDJrKXLuTjCXs6oSlJ8R9DXY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1734622724;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7YJfQlySGqkADIe6C2FpqIGeFo+bGA1iN79AkPkxUCM=;
-	b=Awx86fPr/B1eNZPuzu33T8EOyLecp2Vl8kd0f176Ei8UGx0R6SiZf7ATaV3NDN+OTRnuaj
-	32KyGSHHHdAli/Dg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0E99513A77;
-	Thu, 19 Dec 2024 15:38:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id bzRPAwQ+ZGc2PgAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Thu, 19 Dec 2024 15:38:44 +0000
-Date: Thu, 19 Dec 2024 16:38:43 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali <njavali@marvell.com>, 
-	GR-QLogic-Storage-Upstream@marvell.com, Don Brace <don.brace@microchip.com>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
-	Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
-	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, 
-	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Frederic Weisbecker <frederic@kernel.org>, 
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
-	Sridhar Balaraman <sbalaraman@parallelwireless.com>, "brookxu.cn" <brookxu.cn@gmail.com>, 
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, storagedev@microchip.com, 
-	virtualization@lists.linux.dev
-Subject: Re: [PATCH v4 8/9] blk-mq: use hk cpus only when
- isolcpus=managed_irq is enabled
-Message-ID: <cc5e44dd-e1dc-4f24-88d9-ce45a8b0794f@flourine.local>
-References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
- <20241217-isolcpus-io-queues-v4-8-5d355fbb1e14@kernel.org>
- <Z2PlbL0XYTQ_LxTw@fedora>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Evy1K8wR"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 179EEC4CECE;
+	Thu, 19 Dec 2024 16:50:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1734627057;
+	bh=IiSx2c1rWCpopOjw7IUhmvQhktehYl5PNc2RgbhH8LM=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=Evy1K8wRb8TvH3rHotl6L+hZW37cKJ60QMji8x9T772g6QLFxTz9MVnRKccYbOSzp
+	 qR3Vj37JDaW2H2D8RRTeb9A18jm9SBDrsI01Ug6EuaWHP44FgWTQkgKdTCGtbWL7f7
+	 XFsQ9yDPqXtuEDiIxfBRgIBYs37AwMvNwFfSY9jLyNDWtZE7yrZhaqzTTUma23ZDPG
+	 Bl7nrG7OB/67hssxr2wOIe8HV2cZRk+GenuD8xQ3EC+HvL1kgnHMkLq9TJaum9cwOH
+	 2yrnTHJhVpbarNeIEWrGamZfYfmTSZtKvubCOuCVpIyJGGLCmiUwwILzALlky7C5EQ
+	 p7AYSjG6+BaSg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEECFE77184;
+	Thu, 19 Dec 2024 16:50:56 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
+Subject: [PATCH v3 0/4] scsi: ufs: qcom: Suspend fixes
+Date: Thu, 19 Dec 2024 22:20:40 +0530
+Message-Id: <20241219-ufs-qcom-suspend-fix-v3-0-63c4b95a70b9@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z2PlbL0XYTQ_LxTw@fedora>
-X-Rspamd-Queue-Id: 2DC081F392
-X-Spam-Score: -3.01
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	ARC_NA(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RCPT_COUNT_TWELVE(0.00)[39];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_CC(0.00)[kernel.org,kernel.dk,lst.de,grimberg.me,broadcom.com,oracle.com,marvell.com,microchip.com,redhat.com,linux.alibaba.com,linux-foundation.org,linutronix.de,suse.com,suse.de,parallelwireless.com,gmail.com,vger.kernel.org,lists.infradead.org,lists.linux.dev];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLy1uc785cwzda5mnrw36e8hj5)];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAOBOZGcC/4XNQQ6CMBCF4auQrh3DtFDBlfcwLqAdoIm22EqjI
+ dzdwkoXxuX/kvlmZoG8ocCO2cw8RROMsynELmNqaGxPYHRqxnNeIEeEqQtwV+4GYQojWQ2deUI
+ psaJalVLXgqXT0VOaN/Z8ST2Y8HD+tX2JuK5/wIiQQyWobTUdZIvqdDW28W7vfM9WMfJPRfxQe
+ FJQk1Saa4mF/FKWZXkDArZAGP8AAAA=
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Abel Vesa <abel.vesa@linaro.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>, 
+ Nitin Rawat <quic_nitirawa@quicinc.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ stable@vger.kernel.org, Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2310;
+ i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
+ bh=IiSx2c1rWCpopOjw7IUhmvQhktehYl5PNc2RgbhH8LM=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnZE7pF0xR8u5j1AZQNq0a1iIPAASQkMD+7+21s
+ TL6BvlQftOJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZ2RO6QAKCRBVnxHm/pHO
+ 9Y7xB/wJQUKBYCijZxDVSc4pOmjWd4WRh4wnXcK5J6+Xz6N3i1CNoFuu2JQGfbMx7vUQCgtzsjY
+ H8GahM/OrQSw1LWp8tOJQ2idxcqLOYtj76lF/Z6vq97A3rF3O1XoNAS8nfh2aCemWnFx1CofxMy
+ YbkPFly62g1yTOe1qboqc7FUjgiXtIAgH79y/RjrpKenhF7aY8ecLbn4kyWn7h+bjTkiGmNGOrW
+ EScBBX7B36xE+ifj3bp8FHK8KrL2xkc5KcN6M6fYnrdcmtxwSX0XwMEsqwcCPoqVqqhzqUMKADH
+ lfN0Hkcf5d3LO8chNNHB5Zdc5bVUSx+3n+dEeHB2Z1eG/ki4
+X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@linaro.org/default with auth_id=185
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reply-To: manivannan.sadhasivam@linaro.org
 
-On Thu, Dec 19, 2024 at 05:20:44PM +0800, Ming Lei wrote:
-> > +	cpumask_andnot(isol_mask,
-> > +		       cpu_possible_mask,
-> > +		       housekeeping_cpumask(HK_TYPE_MANAGED_IRQ));
-> > +
-> > +	for_each_cpu(cpu, isol_mask) {
-> > +		qmap->mq_map[cpu] = qmap->queue_offset + queue;
-> > +		queue = (queue + 1) % qmap->nr_queues;
-> > +	}
-> 
-> Looks the IO hang issue in V3 isn't addressed yet, is it?
-> 
-> https://lore.kernel.org/linux-block/ZrtX4pzqwVUEgIPS@fedora/
+Hi,
 
-I've added an explanation in the cover letter why this is not
-addressed. From the cover letter:
+This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
+the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
+this patch, I couldn't figure out the exact commit that caused the issue. So I
+used the commit that introduced reinit support as a placeholder.
 
-I've experimented for a while and all solutions I came up were horrible
-hacks (the hotpath needs to be touched) and I don't want to slow down all
-other users (which are almost everyone). IMO, it's just not worth trying
-to fix this corner case. If the user is using isolcpus and does CPU
-hotplug, we can expect that the user can also first offline the isolated
-CPUs. I've discussed this topic during ALPSS and the room came to the
-same conclusion. Thus I just added a patch which issues a warning that
-IOs are likely to hang.
+Patch 4 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
+PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
+this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
+device powerdown during suspend. This supersedes the previous series [1] that
+tried to fix the issue in clock drivers.
+
+This series is tested on Qcom SM8550 QRD, SM8650 QRD and Qcom RB5 boards.
+
+[1] https://lore.kernel.org/linux-arm-msm/20241107-ufs-clk-fix-v1-0-6032ff22a052@linaro.org
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+Changes in v3:
+- Added a patch that honors the runtime/system PM levels set by host drivers.
+  Otherwise patch 4 doesn't have any effect. This was discovered with SM8650
+  QRD.
+- Collected tags
+- Link to v2: https://lore.kernel.org/r/20241213-ufs-qcom-suspend-fix-v2-0-1de6cd2d6146@linaro.org
+
+Changes in v2:
+- Changed 'ufs_qcom_drvdata::quirks' type to 'enum ufshcd_quirks'
+- Collected tags
+- Link to v1: https://lore.kernel.org/r/20241211-ufs-qcom-suspend-fix-v1-0-83ebbde76b1c@linaro.org
+
+---
+Manivannan Sadhasivam (4):
+      scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()
+      scsi: ufs: core: Honor runtime/system PM levels if set by host controller drivers
+      scsi: ufs: qcom: Allow passing platform specific OF data
+      scsi: ufs: qcom: Power down the controller/device during system suspend for SM8550/SM8650 SoCs
+
+ drivers/ufs/core/ufshcd-priv.h |  6 ------
+ drivers/ufs/core/ufshcd.c      | 10 ++++++----
+ drivers/ufs/host/ufs-qcom.c    | 31 +++++++++++++++++++------------
+ drivers/ufs/host/ufs-qcom.h    |  5 +++++
+ include/ufs/ufshcd.h           |  2 --
+ 5 files changed, 30 insertions(+), 24 deletions(-)
+---
+base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
+change-id: 20241211-ufs-qcom-suspend-fix-5618e9c56d93
+
+Best regards,
+-- 
+Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+
