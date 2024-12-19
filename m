@@ -1,86 +1,168 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45AF919CD13;
-	Thu, 19 Dec 2024 17:23:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A065B8F6D;
+	Thu, 19 Dec 2024 21:49:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734629025; cv=none; b=ppwC9LFUdzG+sK63JIg3OaDx8fyjIAv/cJ3e3FFo67FTxAQJS5Y8fT7qyd5tp1at+kykmbWglwDdr6WssIx8MQXdoB+oU5u7eSTA9skQ4H4A403Ql46NG03q5NJrYouZolJeRzjFfLImU6RCB+DAWmF5SJrjhV05JNrpGzocRmY=
+	t=1734644977; cv=none; b=LRr7SFDlVdcnBA6J/5zqDGWkf1mOQFlwbZPoVOixhOhb+jDe6g3T6TQmviGrHIzrN4kFz+l+cUxqNsswQXFm2hZC6uk4xdxHTc73ZV+INK722ogWHINYzUW8PpkZOPVHA5NE/n7bdV0cSBJIZjDKLK7LzYNd7hQF47q7pwoTBUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734629025; c=relaxed/simple;
-	bh=bN+zIzjqUcjBSmayVtdcxW06WYaMkm2dEZFgRJcul/4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fr6rH2VOUSSCU4SZ83BDYxEze+wal1V60NEAwVt5W6ZzPDuE6f7KMgu/mbUxaRQ/cu4fEHceP9Fp4u6TdFhNZQwJE7i51bSk7ebFx7tNtxK/WkQjdpcdDPSpuK5z50sh3FOGoLRV3k1xe02YLKFeV6NuKphdO/Kj4wj6oDY5zU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=H4zGfLWC; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1734644977; c=relaxed/simple;
+	bh=pOuqnKIFfDOuJbt8wzSYVnYP0AGZfUm7m4WIaN0n8GM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Bc50NfXO/+PQqDIWRgJHkV3XpeBYG4fy4MuOza4S5XlOJh+EQm9R7kCfEOfP+TLb/UjiAfNOdgao9/5yuosqGXC/GuG2oSH1+clqZeI7G2iHuAMS+T56mnWsAySs39qr6ePvFlQnEYfj+fhnWu00Rumu0QIG0PCo7HKz653i2NU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NQftOciz; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="H4zGfLWC"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YDcpR5KPdz6CmQvG;
-	Thu, 19 Dec 2024 17:23:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1734629019; x=1737221020; bh=bN+zIzjqUcjBSmayVtdcxW06
-	WYaMkm2dEZFgRJcul/4=; b=H4zGfLWCqZVCvr+/soQZG/1PmzesZcQ5EMaAWial
-	pQgXZyhDM1qOTZr1l3mTZUCZ0yRaI493nM9UKOr11zQ8Wv+eYeHNCwNB63/spwqz
-	1INTgHrPdFW2vNOL8KLScSlLCScuMI+DLtkIFXb9ACa1p+U+tC9n2Q8fLFHwjDZY
-	HM22ZxxW9+LjlS+/PVK2hq9trCHGep6kM23xRJoPBi9d05FNhmJVUeKddGWoBMG3
-	UQlZmb272TpzrDYre7triqA9oFWurwm0IbJEYJ8BxdybRVGeCRqJ2tdbrfhP6An+
-	O2lHH2mUGfyfuMnGfXG2EkjFmA1nX8CiL0YwSxdtBpuYXQ==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id UO2x2iMcYNh2; Thu, 19 Dec 2024 17:23:39 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YDcpJ0txfz6CmM6M;
-	Thu, 19 Dec 2024 17:23:35 +0000 (UTC)
-Message-ID: <eadb98dd-f482-4479-8ff8-dcf301edf18c@acm.org>
-Date: Thu, 19 Dec 2024 09:23:33 -0800
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NQftOciz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=CG+y38/wd3+mfeCBhwqUa50I/70VetXzAPAvCxo6yCE=; b=NQftOcizPZ3VUp9U52EOFBKitV
+	W+MTH/frVXHRDADQuz48UipKW2mJSpqkRNSPcCBW4bZPnZjXC+88v7hLhz195IgKwFkkEB7YzrFGo
+	77uQPGrZPQtxeT09ZVrYpKk810Wdegq2ks00OKNeAkYLN6f/SYDVKQZvaz4oGkmeYSjumNkGkw6yj
+	KxgkvYrQmrIFkAK17SUlhNTTUIXwCfMe635Tjx31os7QribmqTxCCxxSYzt7nDQSwpT1Ejmc6NtP9
+	b3ge6qplxkZbaIrItIahU/MxhgJqiZL1sE3udLy8aO/RMj+q5s7CwtV23iRsZb8Oux1u/dLdWCgC2
+	t+tDczHw==;
+Received: from [50.53.2.24] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tOOOi-00000003CZ4-2CAl;
+	Thu, 19 Dec 2024 21:49:32 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-scsi@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	linux-doc@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: documentation: scsi_eh: updates for EH changes
+Date: Thu, 19 Dec 2024 13:49:28 -0800
+Message-ID: <20241219214928.1170302-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
- manivannan.sadhasivam@linaro.org, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, andersson@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
- Nitin Rawat <quic_nitirawa@quicinc.com>
-References: <20241218151118.18683-1-quic_rdwivedi@quicinc.com>
- <ac08d417-87b3-4ddd-ae68-8e8e9a68e04a@acm.org>
- <69503b23-12da-4270-9910-9440dba7df07@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <69503b23-12da-4270-9910-9440dba7df07@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On 12/18/24 10:16 PM, Ram Kumar Dwivedi wrote:
-> On 18-Dec-24 10:49 PM, Bart Van Assche wrote:
->> On 12/18/24 7:11 AM, Ram Kumar Dwivedi wrote:
->>> +=C2=A0=C2=A0=C2=A0 uint8_t val[4] =3D { NUM_RX_R1W0, NUM_TX_R0W1, NU=
-M_RX_R1W1, NUM_TX_R1W1 };
->>
->> This array can be declared 'static const', isn't it?
->=20
-> As this value is not modified in this function, we will declare it as c=
-onst in next patchset
+SCSI_SOFTIRQ and scsi_softirq() are no longer used. Change to block
+layer equivalents.
 
-Why only 'const'? Why not 'static const' as everyone else does for this
-type of arrays?
+scsi_setup_cmd_retry() has been deleted. Remove references to it.
 
-Thanks,
+SCSI_EH_CANCEL_CMD has been deleted. Remove references to it.
 
-Bart.
+scsi_eh_abort_cmds() has been deleted. Remove references to it.
+
+START_STOP_UNIT command should be "START_STOP" instead.
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+---
+ Documentation/scsi/scsi_eh.rst |   46 ++++++-------------------------
+ 1 file changed, 9 insertions(+), 37 deletions(-)
+
+--- linux-next-20241218.orig/Documentation/scsi/scsi_eh.rst
++++ linux-next-20241218/Documentation/scsi/scsi_eh.rst
+@@ -54,13 +54,13 @@ invoking hostt->queuecommand() or the bl
+ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 
+ For all non-EH commands, scsi_done() is the completion callback.  It
+-just calls blk_complete_request() to delete the block layer timer and
+-raise SCSI_SOFTIRQ
++just calls blk_mq_complete_request() to delete the block layer timer and
++raise BLOCK_SOFTIRQ.
+ 
+-SCSI_SOFTIRQ handler scsi_softirq calls scsi_decide_disposition() to
+-determine what to do with the command.  scsi_decide_disposition()
+-looks at the scmd->result value and sense data to determine what to do
+-with the command.
++The BLOCK_SOFTIRQ indirectly calls scsi_complete(), which calls
++scsi_decide_disposition() to determine what to do with the command.
++scsi_decide_disposition() looks at the scmd->result value and sense
++data to determine what to do with the command.
+ 
+  - SUCCESS
+ 
+@@ -110,7 +110,7 @@ The timeout handler is scsi_timeout().
+     retry which failed), when retries are exceeded, or when the EH deadline is
+     expired. In these cases Step #3 is taken.
+ 
+- 3. scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD) is invoked for the
++ 3. scsi_eh_scmd_add(scmd) is invoked for the
+     command.  See [1-4] for more information.
+ 
+ 1.3 Asynchronous command aborts
+@@ -277,7 +277,6 @@ scmd->allowed.
+ 
+     :ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
+ 
+-	- scsi_setup_cmd_retry()
+ 	- move from local eh_work_q to local eh_done_q
+ 
+     :LOCKING: none
+@@ -317,7 +316,7 @@ scmd->allowed.
+     ``scsi_eh_get_sense``
+ 
+ 	This action is taken for each error-completed
+-	(!SCSI_EH_CANCEL_CMD) commands without valid sense data.  Most
++	command without valid sense data.  Most
+ 	SCSI transports/LLDDs automatically acquire sense data on
+ 	command failures (autosense).  Autosense is recommended for
+ 	performance reasons and as sense information could get out of
+@@ -347,30 +346,6 @@ scmd->allowed.
+ 	   - otherwise
+ 		No action.
+ 
+-    3. If !list_empty(&eh_work_q), invoke scsi_eh_abort_cmds().
+-
+-    ``scsi_eh_abort_cmds``
+-
+-	This action is taken for each timed out command when
+-	no_async_abort is enabled in the host template.
+-	hostt->eh_abort_handler() is invoked for each scmd.  The
+-	handler returns SUCCESS if it has succeeded to make LLDD and
+-	all related hardware forget about the scmd.
+-
+-	If a timedout scmd is successfully aborted and the sdev is
+-	either offline or ready, scsi_eh_finish_cmd() is invoked for
+-	the scmd.  Otherwise, the scmd is left in eh_work_q for
+-	higher-severity actions.
+-
+-	Note that both offline and ready status mean that the sdev is
+-	ready to process new scmds, where processing also implies
+-	immediate failing; thus, if a sdev is in one of the two
+-	states, no further recovery action is needed.
+-
+-	Device readiness is tested using scsi_eh_tur() which issues
+-	TEST_UNIT_READY command.  Note that the scmd must have been
+-	aborted successfully before reusing it for TEST_UNIT_READY.
+-
+     4. If !list_empty(&eh_work_q), invoke scsi_eh_ready_devs()
+ 
+     ``scsi_eh_ready_devs``
+@@ -384,7 +359,7 @@ scmd->allowed.
+ 
+ 	    For each sdev which has failed scmds with valid sense data
+ 	    of which scsi_check_sense()'s verdict is FAILED,
+-	    START_STOP_UNIT command is issued w/ start=1.  Note that
++	    START_STOP command is issued w/ start=1.  Note that
+ 	    as we explicitly choose error-completed scmds, it is known
+ 	    that lower layers have forgotten about the scmd and we can
+ 	    reuse it for STU.
+@@ -478,9 +453,6 @@ except for #1 must be implemented by eh_
+ 
+  - shost->host_failed is zero.
+ 
+- - Each scmd is in such a state that scsi_setup_cmd_retry() on the
+-   scmd doesn't make any difference.
+-
+  - shost->eh_cmd_q is cleared.
+ 
+  - Each scmd->eh_entry is cleared.
