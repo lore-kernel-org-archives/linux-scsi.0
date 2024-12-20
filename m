@@ -1,102 +1,156 @@
-Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FBC259497
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2024 01:37:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31F31AAA1C
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2024 08:54:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734658640; cv=none; b=bcH453cC/ZKHRNQckajqi1ualfcypUoo7zELm4zKnnfUVS89IqZoBpmdENWvuaikBVtgBMkJZkYpMhwtWSE+KWTMd4UqIaZSmjeTMY0GG20xWovjMz2c8U3nkL94Ijziz1v+71g93yNV6PPDwezAZby9wp3uUXwObj20zHIvt/U=
+	t=1734684900; cv=none; b=NZDtNkE+Z0uUQ+zt9hGqvmjsix7ELOCjlLejfCi2GrZEAuQ94uH5iA88yWHJI5f7Bl+Xng0p1cJos64Hffkp5iRgokujPOTTs/AUCEV+2fg3Fnb98/1NeeieJo3KzpXlhv2hwmOLcbdKgUkqzepwhHg3bZIz/xCmkeA1dqW0L10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734658640; c=relaxed/simple;
-	bh=eQ+7ILVRFwm27dR6XvyoWPj3UUZ4jthSb7o1LLHVYX4=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=eJJbBw3meMVQl6WvN3AsfWXBkQ7a1ILTghL+5PTXiC5Kqt4XMOyL3EYvVoXD0ULKmBzQMXjWsgKjoRJl+I69IfnGkYFgyH2nx7RR9M/ma2jYJnNxYAlRS791XSU/hzZZZLR8J7ulP7feNbYPHWNSRDjbOs70lo0TAnCz5Ai8Dh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=RwT8IHxa; arc=none smtp.client-ip=115.124.30.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1734684900; c=relaxed/simple;
+	bh=AOTV0eBOsnWPs4GbHqW3cxDrn0aK+yS9J9TWDDc/C+c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FdJxzbyxfxw+3fum9jU/caBFHEBUJo2Y8XAYV09Mjr8rBhjHmY6H0Cfe3SFf7mZcfbArn6p+pclb4nJvvDkUMZM+TxrRctg/tU9DEQ7wwqW+DoEn0E4KyIrlUDNopVo4QvT+okPm6FwXLiXk3n5eUcBzwJfICO5rdxsgYVN+GGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=e9C+spFe; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="RwT8IHxa"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1734658628; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
-	bh=hVo47zZLxVC66bnXsEFef9WvEb4M8TEGadKykZcXGZ4=;
-	b=RwT8IHxaJOY7cG9829jIe4U6Qd71ZEYrgoQdQmSNiEGQ3x+0fnzR+LGA7Q+KfiAR7IcGHLK3rngpj5bzq7u3pp7bC1xAK8FTrgi176eKAZBWz7ErA4WK9TUhJ3E0w3Jxaoml8SDcqhRySIxkdgD+c6gm1Zj8NmZgY2P5zjO5F7s=
-Received: from 30.178.82.44(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WLrwg2C_1734658626 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 20 Dec 2024 09:37:07 +0800
-Message-ID: <8e783802-a74f-42f9-b0cd-9b831179c472@linux.alibaba.com>
-Date: Fri, 20 Dec 2024 09:37:04 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e9C+spFe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1734684897;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QzjzcdcjxJq94HHw+ivm1Rh4H1wHHh3+V1gm+dCRqaY=;
+	b=e9C+spFe3IrhC0L606a+USkBw7Inf6Ix8QLDRL4N56SO+RBdrhUAGq4DB2wsVY93YJtrfJ
+	PJ/3JmbWthZXOXO8nmCJmVt8eTGP4fjkHnj+OdrImT067/pzvZ3iCuBgKRCZzxU6N/WCR8
+	SC2S+fzSGWmPfBU2IG9FzATtQgHg0/E=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-284-AQ6ceaTROi2gD8kt32fNWQ-1; Fri,
+ 20 Dec 2024 03:54:54 -0500
+X-MC-Unique: AQ6ceaTROi2gD8kt32fNWQ-1
+X-Mimecast-MFC-AGG-ID: AQ6ceaTROi2gD8kt32fNWQ
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C293B19560B1;
+	Fri, 20 Dec 2024 08:54:48 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.29])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 85E3F19560AD;
+	Fri, 20 Dec 2024 08:54:26 +0000 (UTC)
+Date: Fri, 20 Dec 2024 16:54:21 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Daniel Wagner <dwagner@suse.de>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Don Brace <don.brace@microchip.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Stefan Hajnoczi <stefanha@redhat.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Costa Shulyupin <costa.shul@redhat.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Waiman Long <llong@redhat.com>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
+	Sridhar Balaraman <sbalaraman@parallelwireless.com>,
+	"brookxu.cn" <brookxu.cn@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	storagedev@microchip.com, virtualization@lists.linux.dev
+Subject: Re: [PATCH v4 8/9] blk-mq: use hk cpus only when
+ isolcpus=managed_irq is enabled
+Message-ID: <Z2UwvQoDM3f4zAxG@fedora>
+References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
+ <20241217-isolcpus-io-queues-v4-8-5d355fbb1e14@kernel.org>
+ <Z2PlbL0XYTQ_LxTw@fedora>
+ <cc5e44dd-e1dc-4f24-88d9-ce45a8b0794f@flourine.local>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
-Subject: Re: [PATCH v2] scsi: mpi3mr: fix possible crash when setup bsg fail
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
-References: <20241217110408.126413-1-kanie@linux.alibaba.com>
-In-Reply-To: <20241217110408.126413-1-kanie@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cc5e44dd-e1dc-4f24-88d9-ce45a8b0794f@flourine.local>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-Gentle ping...
+On Thu, Dec 19, 2024 at 04:38:43PM +0100, Daniel Wagner wrote:
 
-Best Regards,
+> When isolcpus=managed_irq is enabled all hardware queues should run on
+> the housekeeping CPUs only. Thus ignore the affinity mask provided by
+> the driver.
 
-Guixin Liu
+Compared with in-tree code, the above words are misleading.
 
-在 2024/12/17 19:04, Guixin Liu 写道:
-> If bsg_setup_queue() fails, the bsg_queue is assigned a non-NULL value.
-> Consequently, in mpi3mr_bsg_exit(), the condition
-> "if(!mrioc->bsg_queue)" will not be satisfied, preventing execution
-> from entering bsg_remove_queue(), which could lead to a crash.
->
-> Fixes: 4268fa751365 ("scsi: mpi3mr: Add bsg device support")
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-> ---
-> Changes from v1 to v2:
-> - Add return statement when setup bsg queue fail, sorry for the v1
-> trouble.
->   drivers/scsi/mpi3mr/mpi3mr_app.c | 8 ++++++--
->   1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> index 10b8e4dc64f8..7589f48aebc8 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -2951,6 +2951,7 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
->   		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
->   		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
->   	};
-> +	struct request_queue *q;
->   
->   	device_initialize(bsg_dev);
->   
-> @@ -2966,14 +2967,17 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
->   		return;
->   	}
->   
-> -	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
-> +	q = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
->   			mpi3mr_bsg_request, NULL, 0);
-> -	if (IS_ERR(mrioc->bsg_queue)) {
-> +	if (IS_ERR(q)) {
->   		ioc_err(mrioc, "%s: bsg registration failed\n",
->   		    dev_name(bsg_dev));
->   		device_del(bsg_dev);
->   		put_device(bsg_dev);
-> +		return;
->   	}
-> +
-> +	mrioc->bsg_queue = q;
->   }
->   
->   /**
+- irq core code respects isolated CPUs by trying to exclude isolated
+CPUs from effective masks
+
+- blk-mq won't schedule blockd on isolated CPUs
+
+If application aren't run on isolated CPUs, IO interrupt usually won't
+be triggered on isolated CPUs, so isolated CPUs are _not_ ignored.
+
+> On Thu, Dec 19, 2024 at 05:20:44PM +0800, Ming Lei wrote:
+> > > +	cpumask_andnot(isol_mask,
+> > > +		       cpu_possible_mask,
+> > > +		       housekeeping_cpumask(HK_TYPE_MANAGED_IRQ));
+> > > +
+> > > +	for_each_cpu(cpu, isol_mask) {
+> > > +		qmap->mq_map[cpu] = qmap->queue_offset + queue;
+> > > +		queue = (queue + 1) % qmap->nr_queues;
+> > > +	}
+> > 
+> > Looks the IO hang issue in V3 isn't addressed yet, is it?
+> > 
+> > https://lore.kernel.org/linux-block/ZrtX4pzqwVUEgIPS@fedora/
+> 
+> I've added an explanation in the cover letter why this is not
+> addressed. From the cover letter:
+> 
+> I've experimented for a while and all solutions I came up were horrible
+> hacks (the hotpath needs to be touched) and I don't want to slow down all
+> other users (which are almost everyone). IMO, it's just not worth trying
+
+IMO, this patchset is one improvement on existed best-effort approach, which
+works fine most of times, so why you do think it slows down everyone?
+
+> to fix this corner case. If the user is using isolcpus and does CPU
+> hotplug, we can expect that the user can also first offline the isolated
+> CPUs. I've discussed this topic during ALPSS and the room came to the
+> same conclusion. Thus I just added a patch which issues a warning that
+> IOs are likely to hang.
+
+If the change need userspace cooperation for using 'managed_irq', the exact
+behavior need to be documented in both this commit and Documentation/admin-guide/kernel-parameters.txt,
+instead of cover-letter only.
+
+But this patch does cause regression for old applications which can't
+follow the new introduced rule:
+
+	```
+	If the user is using isolcpus and does CPU hotplug, we can expect that the
+	user can also first offline the isolated CPUs.
+	```
+
+Thanks,
+Ming
+
