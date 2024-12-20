@@ -1,110 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053C41AC444
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2024 09:04:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE431AAE33;
+	Fri, 20 Dec 2024 10:06:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734685497; cv=none; b=nUQP/9/p2S6jRyKKdK1lSR+VESktRiohc39fZ4tLUAnfL07kWlajyJeqtPEI/SMdMsqg6+KUWf9z70JMY3iMtTDHuzRJfb8aRC4erIYNNvMo/f8VCxbx/7/UAnFh0tTkCzT5FP2KLU7h4SnezEwccommapsgpeuuyM5jb793qEM=
+	t=1734689190; cv=none; b=qdCGivF5IiIGE20on9TE6bmt+C2bqYi7PPSoqCd0LCWhH4HymQNimHmJGgJyJf7WiHRl/DkTst5aYveJ4w4bsGXNBvhmrU5jXDbTDvFMnBPSyTXHY7p91tMImeZl/i0rTlgw9s5Tf1hGdtzWC9rDpjjoj4yy+kVZidnKVe8n+b0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734685497; c=relaxed/simple;
-	bh=23QV/Z0ncYZtoK3/rhdLeNgePmQZYVuuHiMosMT5tyo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kSTLdQvNdVA7v5zVs8Fjoxmm+lAcC5x6pbxVKAMoEsMW17i7dRvA3tfosiaiwyysE0HZlCp88QodaWWUOSrk6YBRwc2tMG3RwspiPgrp+HI++2frirFmdi1ZHjehpw39jCCkoxSW1ANGueHmZ20Tf7lKhiYthrRxjR2E8n0+2H0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CfMQAJdk; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1734689190; c=relaxed/simple;
+	bh=DLmwSM2lo5lnYMzvp9cy1FJMzLutSGaEBabuCtapcB0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=A6+SxiXfd+t9SLljs0XjmMurv1Lr3JAdplFRyGBGzpEAEK7cJIShWM5oEDBeiks81/yXexsKiNlb8bVUVoOhOZ23jX7aCs5BXWX/i1w2bPd5a5io1jaiOgv3ukJq5YIrTBLTNSbz+h9T+/nwbE2ygL93EYp70ja7Nzsjh12IptM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dYKBziqG; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CfMQAJdk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1734685495;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TNCekzdNJZmUuGpzwzOxUn2DY6eci5HZ8lsy1e03Zho=;
-	b=CfMQAJdkh4gnCz3RG8ZyH/v9Q1s7jgnAgefn0Dtt4+K7VBFpK4Pv6aGu8w2t7BwHFToFv8
-	JxTyg9m3tRz3UZHg4utZP9IigzGnLNIwgFi/tCqGka492QXht53bCSgYmX1uhj1XqI3ZHd
-	3Ejh4ArPsha5z4WwUIlmEpcAGz2TF6I=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-9-V_hpjVgqOaWhO_PeQOMseg-1; Fri,
- 20 Dec 2024 04:04:50 -0500
-X-MC-Unique: V_hpjVgqOaWhO_PeQOMseg-1
-X-Mimecast-MFC-AGG-ID: V_hpjVgqOaWhO_PeQOMseg
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 53E431956048;
-	Fri, 20 Dec 2024 09:04:46 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.29])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E4FDE195608A;
-	Fri, 20 Dec 2024 09:04:24 +0000 (UTC)
-Date: Fri, 20 Dec 2024 17:04:19 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Don Brace <don.brace@microchip.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Stefan Hajnoczi <stefanha@redhat.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Costa Shulyupin <costa.shul@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Waiman Long <llong@redhat.com>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
-	Sridhar Balaraman <sbalaraman@parallelwireless.com>,
-	"brookxu.cn" <brookxu.cn@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	storagedev@microchip.com, virtualization@lists.linux.dev
-Subject: Re: [PATCH v4 9/9] blk-mq: issue warning when offlining hctx with
- online isolcpus
-Message-ID: <Z2UzE-CGa7YVwx0f@fedora>
-References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
- <20241217-isolcpus-io-queues-v4-9-5d355fbb1e14@kernel.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dYKBziqG"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BK4PXBD024584;
+	Fri, 20 Dec 2024 10:06:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	EbWH6PzvPSwBBL3IR8Km5GJcpj7lj6OvamPjCQxRXd4=; b=dYKBziqGatgO3id5
+	SpuDsO6OZAB2aIMtAfGCjgFCFcI9ay1kiC/LkP6h1odet2fj/7k+9YPm/z065Nb8
+	D8JS6rs3v1w4LKzcA6eJbJuN094QIgKZhmOuBNKCWv7MrOuQZXn1atfT7GH3Jj7W
+	GkD1l51L+Jwgvbohy7N9rLpy9t6dcrSZ3QV6Rn/fQxiYOx3kUitS/5IzaQv6pIIW
+	Zo5kX/viNdhd5Qh45lXD3X3Yb2IGjlWQ8tcc0CFGtfdK0OtzvXwwj9UT2K5m0NE6
+	YgXB27fJrsQ9A7DapWQNVI1M1zPtlTItFD6T8vY7KONyuqT0Ulm12kdjYprjSo8Z
+	uPgSTA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43n1hx0uwa-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Dec 2024 10:06:07 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BKA66ij015624
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Dec 2024 10:06:07 GMT
+Received: from [10.218.43.20] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 20 Dec
+ 2024 02:06:03 -0800
+Message-ID: <1d407f42-681d-4e8b-86f5-a4d368987115@quicinc.com>
+Date: Fri, 20 Dec 2024 15:36:00 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241217-isolcpus-io-queues-v4-9-5d355fbb1e14@kernel.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V4] scsi: ufs: qcom: Enable UFS Shared ICE Feature
+To: Bart Van Assche <bvanassche@acm.org>, <manivannan.sadhasivam@linaro.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <andersson@kernel.org>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Naveen Kumar Goud Arepalli
+	<quic_narepall@quicinc.com>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+References: <20241218151118.18683-1-quic_rdwivedi@quicinc.com>
+ <ac08d417-87b3-4ddd-ae68-8e8e9a68e04a@acm.org>
+ <69503b23-12da-4270-9910-9440dba7df07@quicinc.com>
+ <eadb98dd-f482-4479-8ff8-dcf301edf18c@acm.org>
+Content-Language: en-US
+From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+In-Reply-To: <eadb98dd-f482-4479-8ff8-dcf301edf18c@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: VUEoKOIH1eVaERMaBcwie1htMm7cPabe
+X-Proofpoint-ORIG-GUID: VUEoKOIH1eVaERMaBcwie1htMm7cPabe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 suspectscore=0
+ phishscore=0 adultscore=0 bulkscore=0 mlxlogscore=810 impostorscore=0
+ malwarescore=0 priorityscore=1501 spamscore=0 lowpriorityscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412200083
 
-On Tue, Dec 17, 2024 at 07:29:43PM +0100, Daniel Wagner wrote:
-> When we offlining a hardware context which also serves isolcpus mapped
-> to it, any IO issued by the isolcpus will stall as there is nothing
-> which handles the interrupts etc.
+
+
+On 19-Dec-24 10:53 PM, Bart Van Assche wrote:
+> On 12/18/24 10:16 PM, Ram Kumar Dwivedi wrote:
+>> On 18-Dec-24 10:49 PM, Bart Van Assche wrote:
+>>> On 12/18/24 7:11 AM, Ram Kumar Dwivedi wrote:
+>>>> +    uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
+>>>
+>>> This array can be declared 'static const', isn't it?
+>>
+>> As this value is not modified in this function, we will declare it as const in next patchset
 > 
-> This configuration/setup is not supported at this point thus just issue
-> a warning.
+> Why only 'const'? Why not 'static const' as everyone else does for this
+> type of arrays?
 
-As I mentioned on patch 8, this io hang is regression on existed
-applications which can work just fine with 'isolcpus=managed_irq'.
-
-Do you think the added warning will prevent people from complaining
-the regression? :-)
-
+Hi Bart,
+This function will be only called once during boot and "val" is a local variable, we don't see any advantage in making it static.
+If you still recommend, i will add the static keyword in next patchset.
 
 Thanks,
-Ming
+Ram.
+> Thanks,
+> 
+> Bart.
 
