@@ -1,73 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C145C28DA1;
-	Mon, 23 Dec 2024 19:31:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1028E185935;
+	Mon, 23 Dec 2024 20:23:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734982298; cv=none; b=AhTR1EI8Bxn31xtueHvTOrnba0JGi6oRHda691ELMpDGCy0B5y3Gx9OZlnFukbxDbeJmJEsSQ3MLfLqLV63JSo+nrzKLZiSb6NeDq0inBrL7Q76mgBbVhn7k73GMKn/EjSQVEXWcFQTrlOmStN4KuNaFfhm4d1gzTarUXLEL1qk=
+	t=1734985429; cv=none; b=sYix/QnUH+A46CvoRiuEMhylmiZuqgwPTF+hlQQe5nFqm9i4TXLeRexIBocJWg72+efL9I2f7BCn8D7xeLdldsk9dW33DNNIeYsT18zjzzHe4lIi9GJkOawO/6O0EnWBUKtlT4DfuQibOKKwqKtt6j7Rgq7uHkgHXTu7uWWxRcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734982298; c=relaxed/simple;
-	bh=QgRNRj78knXDngnKc16a7nkbz9IBqFky6+XDfD+lum0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dRFOCtSi7pCKkCQNRdGdwPs58IRL1ko6Lgi1lhjE1zMpEZ6gXlV+B5mjdVBh5axDfMayjCSEkKyBmfqTvjggDnBlwvdvFFubpdLbQXGte/Rb3Tf3wQOn7bSgrbu37FFoOYl+I1hR/IR0p69t5SR2plPYE7tRDJDyqknbeCvdgy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mAGjKCAp; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mAGjKCAp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D62F4C4CED3;
-	Mon, 23 Dec 2024 19:31:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734982298;
-	bh=QgRNRj78knXDngnKc16a7nkbz9IBqFky6+XDfD+lum0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mAGjKCApoN8q1iYUtBRkT1ZF+011kVBhEWrjl2RUv03Hqxujpg+kZap/Y3bMVfoN+
-	 +DnMmZ3uAKbBHLxfQlCyaXwIoP1jXkcSKtVjlMYaRouFuwJNPsNcWqOKeiHg8Vg6jl
-	 KH//6RrwyE7zj3bVbqyNBhSHuKrExc6gNqxC2K0Vhqw3+u5Iy6H3CYcIoH68y3pPDm
-	 OWl0hj5+Sd8i2+lmcq/NqsCACg7LbPGjWcDNrvekQgXlHUC51IVljaTXWLnYvBvj+F
-	 TCXACx48T5lDrcFxnSzMW+BbrQshaYCcjkVhROAkCQGJszYmjcRki3Uv7IXkpJmZOc
-	 1D3np/ZEieohg==
-Date: Mon, 23 Dec 2024 11:31:30 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Cc: manivannan.sadhasivam@linaro.org, James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com, andersson@kernel.org,
-	bvanassche@acm.org, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: Re: [PATCH V6] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-Message-ID: <20241223193130.GA2032@quark.localdomain>
-References: <20241223132033.11706-1-quic_rdwivedi@quicinc.com>
+	s=arc-20240116; t=1734985429; c=relaxed/simple;
+	bh=EhpspA5sajDc9hrd86Als7SI/ixPtGf9S25wwVgK7Us=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nVqykMc1gJDOxL6lVugBKlRJbtGQTVHNprYA8GCuQTsXSHzoRbjDrRJjATLITFV4oEblTvfOO5jIIx7VgLkrzLh2GurveZovKTdB6Mel7SqXi3gw7GW1Xv9DqCsD/X7RgVFgP/S/I6jTATf/Lpp1ZfFoA2SgYzJZF+QkG0IeXHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.231])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4YH8Wr3bFBz6K5cM;
+	Tue, 24 Dec 2024 04:19:52 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id 6DB69140B3C;
+	Tue, 24 Dec 2024 04:23:43 +0800 (CST)
+Received: from localhost (10.47.75.118) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Mon, 23 Dec
+ 2024 21:23:41 +0100
+Date: Mon, 23 Dec 2024 20:23:39 +0000
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Zijun Hu <zijun_hu@icloud.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Walleij
+	<linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, Uwe
+ =?ISO-8859-1?Q?Kleine-K=F6nig?= <ukleinek@kernel.org>, James Bottomley
+	<James.Bottomley@HansenPartnership.com>, Thomas =?ISO-8859-1?Q?Wei=DFschu?=
+ =?ISO-8859-1?Q?h?= <thomas@t-8ch.de>, <linux-kernel@vger.kernel.org>,
+	<nvdimm@lists.linux.dev>, <linux-sound@vger.kernel.org>,
+	<sparclinux@vger.kernel.org>, <linux-block@vger.kernel.org>,
+	<linux-cxl@vger.kernel.org>, <linux1394-devel@lists.sourceforge.net>,
+	<arm-scmi@vger.kernel.org>, <linux-efi@vger.kernel.org>,
+	<linux-gpio@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-hwmon@vger.kernel.org>,
+	<linux-media@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+	<linux-remoteproc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+	<netdev@vger.kernel.org>, Zijun Hu <quic_zijuhu@quicinc.com>, "Alison
+ Schofield" <alison.schofield@intel.com>
+Subject: Re: [PATCH v4 01/11] libnvdimm: Replace namespace_match() with
+ device_find_child_by_name()
+Message-ID: <20241223202339.00004dc1@huawei.com>
+In-Reply-To: <20241211-const_dfc_done-v4-1-583cc60329df@quicinc.com>
+References: <20241211-const_dfc_done-v4-0-583cc60329df@quicinc.com>
+	<20241211-const_dfc_done-v4-1-583cc60329df@quicinc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241223132033.11706-1-quic_rdwivedi@quicinc.com>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-On Mon, Dec 23, 2024 at 06:50:33PM +0530, Ram Kumar Dwivedi wrote:
->  #ifdef CONFIG_SCSI_UFS_CRYPTO
-> +/**
-> + * ufs_qcom_config_ice_allocator() - ICE core allocator configuration
-> + *
-> + * @host: pointer to qcom specific variant structure.
-> + */
-> +static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
-> +{
-> +	struct ufs_hba *hba = host->hba;
-> +	static const uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
-> +	u32 config;
-> +
-> +	if (!is_ice_config_supported(host))
-> +		return;
+On Wed, 11 Dec 2024 08:08:03 +0800
+Zijun Hu <zijun_hu@icloud.com> wrote:
 
-This is the only place that is_ice_config_supported() is called, so the helper
-function seems unnecessary vs. just checking UFS_QCOM_CAP_ICE_CONFIG directly.
+> From: Zijun Hu <quic_zijuhu@quicinc.com>
+> 
+> Simplify nd_namespace_store() implementation by
+> using device_find_child_by_name().
+> 
+> Reviewed-by: Alison Schofield <alison.schofield@intel.com>
+> Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
+LGTM
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-Also, shouldn't any ICE configuration also be conditional on UFSHCD_CAP_CRYPTO?
-Just in case the ICE support got turned off for some reason.
+> ---
+>  drivers/nvdimm/claim.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/drivers/nvdimm/claim.c b/drivers/nvdimm/claim.c
+> index 030dbde6b0882050c90fb8db106ec15b1baef7ca..9e84ab411564f9d5e7ceb687c6491562564552e3 100644
+> --- a/drivers/nvdimm/claim.c
+> +++ b/drivers/nvdimm/claim.c
+> @@ -67,13 +67,6 @@ bool nd_attach_ndns(struct device *dev, struct nd_namespace_common *attach,
+>  	return claimed;
+>  }
+>  
+> -static int namespace_match(struct device *dev, void *data)
+> -{
+> -	char *name = data;
+> -
+> -	return strcmp(name, dev_name(dev)) == 0;
+> -}
+> -
+>  static bool is_idle(struct device *dev, struct nd_namespace_common *ndns)
+>  {
+>  	struct nd_region *nd_region = to_nd_region(dev->parent);
+> @@ -168,7 +161,7 @@ ssize_t nd_namespace_store(struct device *dev,
+>  		goto out;
+>  	}
+>  
+> -	found = device_find_child(dev->parent, name, namespace_match);
+> +	found = device_find_child_by_name(dev->parent, name);
+>  	if (!found) {
+>  		dev_dbg(dev, "'%s' not found under %s\n", name,
+>  				dev_name(dev->parent));
+> 
 
-- Eric
