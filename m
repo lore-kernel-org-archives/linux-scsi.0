@@ -1,46 +1,43 @@
 Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CE791AF0D7;
-	Mon, 23 Dec 2024 18:01:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82AF3383;
+	Mon, 23 Dec 2024 18:02:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734976884; cv=none; b=jk9h+G/wl8HWFn44AORye21+yf9NSwOMlxXduVFH8q6jKLLBB0pNbqF/z0e+k9Bu7sCxWxUKUgMJLutnahl9hn9/MT20EYnGd+9gcdECSQfDZONs7z4mHvZJ9naKmllaNtGKfu4yhr5m9ncGrqeMkPUVG7AVyXytthRaEuU6mKU=
+	t=1734976947; cv=none; b=ibGe9gWM4QUHYf9f0+18aaO7Ez1myObbb1CrYawratmE6O0lnsj74w1PfHPlmhgYXRiH/u1SVTwZ4VSAHXIbqX3+fBM+I38RmnsSJCfm/b/0kAECKtRvjQUKUgTWyoji+QCCI+DWivL0pPzSAaGcZZsXDJiqfuaA860tnU1WhpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734976884; c=relaxed/simple;
-	bh=fFcYOVV1J6ZSiBeZEmR7DhoYM7yMSAfkFc2Q293bmUA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K7Q8HacXLmMMynaICvpXLpzZ8cQ5eE2WdOISrI73+s5tGE1DSqu5mWTNSaYD9WtTC0Cu1VGTpdi2rJQdZmLGqb/tp7sPNX49PO2c5Szo4FxE4Yb81n8RyTwiKqFHua49PFyn+XSH/7T/cmrYpUqcjebJqF65Z5lp6XbINvaZcvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=iYvJGNt9; arc=none smtp.client-ip=46.235.229.95
+	s=arc-20240116; t=1734976947; c=relaxed/simple;
+	bh=na9wOzSW9tyu1Z50w4SPbOyxFQ9tLbEOICTi9NJ33H4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=efUxAfqW5TtX6ojN6I67B5JMF+f7+7vxuKfT1y52g/wzFzfQfo/hd5SEQqwIh5ZkLHj5C2O/UCbfJMaqkdeXFfjHaACsvu2HnIsnC14z5JMc6PKpOwKmMViHSRcFiPfzbq5HCFc9KaI4zeb2jCRxwKFUjA2qYbY+pLjCox74AdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=Lo9gT0zQ; arc=none smtp.client-ip=46.235.229.95
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="iYvJGNt9"
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="Lo9gT0zQ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
 	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=Ik3x0FYHFo/iQgBcTqpNku8S7FmBbhDYxy7i8w/n5Xg=; b=iYvJGNt9w/UYnnsg
-	ykIDkJ78rjUSXHpW3Kse7QUltnGYWvHpSS9PoONv0j4YCpuYwbaofhGjkQcH+LO5TYh7BvTWl1hp2
-	7O6DHwzQ/GTG2gmGFOwFpraz59wXPa/+KDTS7ceKkMgAnmG7Hd3SK0Hcy2trHRt9E1VdyUpGBzzKV
-	QeEcXfXxxufQLI+a710AWot1xIYfvTfSAp5oB5xCIXLDQz/pR+zmagPprkT6APFTmrE2NVMdqjr1e
-	BpsUCEFkHvxYiMcqkHfBxuLeA5SUyoCAgvECoXZj5LHPjm6HC0OuODOjeRUFIh1j+h/S+adPOYM4o
-	bJtsvMnj0E1bNf0JGQ==;
+	:Subject; bh=mYLR/nRGp3vsWfYF7ZNHDlKfDT7umynGc7DcJRFwp2s=; b=Lo9gT0zQfgDddwBA
+	ZB8fIrgiyQkShxlYBkgIGscFbziQkkhTMpB+fgwEPQYy1sZfCDzGTr0rsViI/H5+5c7wLwoF4iWwY
+	WNHs8egBhsSqwY1N7oCxUqN6GKHS2ymLXNJ2UkjfKHKsSrJ1e+T4Fkw3fAqSXFUrSg8yZF2umBNVN
+	x+KfFZ9U0nYkzgUcHXEdw/llNJ1lI1BcLQzLUxyjf3va2xDHj3n+CfNrhkw6a2MnwfF2glfhjl7Rp
+	xAkrKzr9QovbRjUkkfqx4Kc/PG2btFb2Xcz44dFwpdQRCp7/rSVPkch9M4+I+yy71UwB8H8uqSGid
+	HmNtf+uyTiptGUaFuw==;
 Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
 	by mx.treblig.org with esmtp (Exim 4.96)
 	(envelope-from <linux@treblig.org>)
-	id 1tPmjv-006uG9-0g;
-	Mon, 23 Dec 2024 18:01:11 +0000
+	id 1tPml1-006uHQ-1c;
+	Mon, 23 Dec 2024 18:02:19 +0000
 From: linux@treblig.org
-To: lduncan@suse.com,
-	cleech@redhat.com,
-	michael.christie@oracle.com,
+To: artur.paszkiewicz@intel.com,
 	James.Bottomley@HansenPartnership.com,
 	martin.petersen@oracle.com
-Cc: open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
+Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH] scsi: iscsi: Remove unused iscsi_create_session
-Date: Mon, 23 Dec 2024 18:01:10 +0000
-Message-ID: <20241223180110.50266-1-linux@treblig.org>
+Subject: [PATCH] scsi: isci: remote_device: Remove unused isci_remote_device_reset_complete
+Date: Mon, 23 Dec 2024 18:02:18 +0000
+Message-ID: <20241223180218.50426-1-linux@treblig.org>
 X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -52,71 +49,103 @@ Content-Transfer-Encoding: 8bit
 
 From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-iscsi_create_session() last use was removed in 2008 by
-commit 756135215ec7 ("[SCSI] iscsi: remove session and host binding in
-libiscsi")
+isci_remote_device_reset_complete() last use was removed in 2012 by
+commit 14aaa9f0a318 ("isci: Redesign device suspension, abort, cleanup.")
+
+Remove it.
+
+It was the last user of sci_remote_device_reset_complete().
 
 Remove it.
 
 Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 27 ---------------------------
- include/scsi/scsi_transport_iscsi.h |  4 ----
- 2 files changed, 31 deletions(-)
+ drivers/scsi/isci/remote_device.c | 29 -----------------------------
+ drivers/scsi/isci/remote_device.h | 17 -----------------
+ 2 files changed, 46 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index fde7de3b1e55..8fc5e0aa5eaf 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2122,33 +2122,6 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index 866950a02965..287e1ba8ddd7 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -422,21 +422,6 @@ enum sci_status sci_remote_device_reset(struct isci_remote_device *idev)
+ 	}
  }
- EXPORT_SYMBOL_GPL(iscsi_add_session);
+ 
+-enum sci_status sci_remote_device_reset_complete(struct isci_remote_device *idev)
+-{
+-	struct sci_base_state_machine *sm = &idev->sm;
+-	enum sci_remote_device_states state = sm->current_state_id;
+-
+-	if (state != SCI_DEV_RESETTING) {
+-		dev_warn(scirdev_to_dev(idev), "%s: in wrong state: %s\n",
+-			 __func__, dev_state_name(state));
+-		return SCI_FAILURE_INVALID_STATE;
+-	}
+-
+-	sci_change_state(sm, SCI_DEV_READY);
+-	return SCI_SUCCESS;
+-}
+-
+ enum sci_status sci_remote_device_frame_handler(struct isci_remote_device *idev,
+ 						     u32 frame_index)
+ {
+@@ -1694,20 +1679,6 @@ enum sci_status sci_remote_device_abort_requests_pending_abort(
+ 	return sci_remote_device_terminate_reqs_checkabort(idev, 1);
+ }
+ 
+-enum sci_status isci_remote_device_reset_complete(
+-	struct isci_host *ihost,
+-	struct isci_remote_device *idev)
+-{
+-	unsigned long flags;
+-	enum sci_status status;
+-
+-	spin_lock_irqsave(&ihost->scic_lock, flags);
+-	status = sci_remote_device_reset_complete(idev);
+-	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+-
+-	return status;
+-}
+-
+ void isci_dev_set_hang_detection_timeout(
+ 	struct isci_remote_device *idev,
+ 	u32 timeout)
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 3ad681c4c20a..27ae45332704 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -174,19 +174,6 @@ enum sci_status sci_remote_device_stop(
+ enum sci_status sci_remote_device_reset(
+ 	struct isci_remote_device *idev);
  
 -/**
-- * iscsi_create_session - create iscsi class session
-- * @shost: scsi host
-- * @transport: iscsi transport
-- * @dd_size: private driver data size
-- * @target_id: which target
+- * sci_remote_device_reset_complete() - This method informs the device object
+- *    that the reset operation is complete and the device can resume operation
+- *    again.
+- * @remote_device: This parameter specifies the device which is to be informed
+- *    of the reset complete operation.
 - *
-- * This can be called from a LLD or iscsi_transport.
+- * An indication that the device is resuming operation. SCI_SUCCESS the device
+- * is resuming operation.
 - */
--struct iscsi_cls_session *
--iscsi_create_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
--		     int dd_size, unsigned int target_id)
--{
--	struct iscsi_cls_session *session;
+-enum sci_status sci_remote_device_reset_complete(
+-	struct isci_remote_device *idev);
 -
--	session = iscsi_alloc_session(shost, transport, dd_size);
--	if (!session)
--		return NULL;
+ /**
+  * enum sci_remote_device_states - This enumeration depicts all the states
+  *    for the common remote device state machine.
+@@ -364,10 +351,6 @@ enum sci_status isci_remote_device_reset(
+ 	struct isci_host *ihost,
+ 	struct isci_remote_device *idev);
+ 
+-enum sci_status isci_remote_device_reset_complete(
+-	struct isci_host *ihost,
+-	struct isci_remote_device *idev);
 -
--	if (iscsi_add_session(session, target_id)) {
--		iscsi_free_session(session);
--		return NULL;
--	}
--	return session;
--}
--EXPORT_SYMBOL_GPL(iscsi_create_session);
--
- static void iscsi_conn_release(struct device *dev)
- {
- 	struct iscsi_cls_conn *conn = iscsi_dev_to_conn(dev);
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index bd1243657c01..5474494a1e99 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -447,10 +447,6 @@ extern int iscsi_add_session(struct iscsi_cls_session *session,
- 			     unsigned int target_id);
- extern int iscsi_session_event(struct iscsi_cls_session *session,
- 			       enum iscsi_uevent_e event);
--extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
--						struct iscsi_transport *t,
--						int dd_size,
--						unsigned int target_id);
- extern void iscsi_force_destroy_session(struct iscsi_cls_session *session);
- extern void iscsi_remove_session(struct iscsi_cls_session *session);
- extern void iscsi_free_session(struct iscsi_cls_session *session);
+ enum sci_status isci_remote_device_suspend_terminate(
+ 	struct isci_host *ihost,
+ 	struct isci_remote_device *idev,
 -- 
 2.47.1
 
