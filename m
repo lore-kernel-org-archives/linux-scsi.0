@@ -1,171 +1,78 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0101AE01E;
-	Mon, 23 Dec 2024 20:52:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A6251494AB
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Dec 2024 06:24:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734987180; cv=none; b=L5J18H2qHdkP0W04n/zjahRpWFjtM0YaqIcaGtjCq4SxHKU9IBMZKD66fDgduibXcPz9qEY6R08bUT4Dogt8mLsN5EsyYNU00arbTG/8kqjIzmnAtqXxE2k39I86FDec2YQxiYfuVFz2ZfNn2d6noqV6HPd07V4qMn377tVAORk=
+	t=1735021444; cv=none; b=hK8aXQHNluVn4MDb7sKXy5wMnLdw5Rb3h7D6uwFFZvDiTu7iEcL0Hp9LtH5Ke0ggBTiaPHc2ROhGu5TPZdcvNsrJ/g37aV+tgXKQ9TqxpgdBABOrslljpCxV5v7nXu5plIXtaZJ4CCLLRSlpOHQLih0KnvPcthfkud/RW5arduE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734987180; c=relaxed/simple;
-	bh=rKOBVJ18KO/XxbrIs6wnq7uYvmLiERzT2M7jzyWvEEs=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=W/G7vkGJfzdeYOK3dfEGpRJjJSbdXfx8tS5ocJpunaDjn5uYiVyiRQgnCDuKJHbEwA/VW5h3BnjrD+oex2MZx4rE8yppAQs7SxViRxfEoEryg9kNCNjtC2RnyObFGGfhvfQVoQ/sZ6h8NhafntrSHxifzOf73sWG7ZfYbDX5kCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.31])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4YH99X3N2zz6K5Zf;
-	Tue, 24 Dec 2024 04:49:04 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id 78F9C14039E;
-	Tue, 24 Dec 2024 04:52:55 +0800 (CST)
-Received: from localhost (10.47.75.118) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Mon, 23 Dec
- 2024 21:52:54 +0100
-Date: Mon, 23 Dec 2024 20:52:52 +0000
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: Zijun Hu <zijun_hu@icloud.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Walleij
-	<linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, Uwe
- =?ISO-8859-1?Q?Kleine-K=F6nig?= <ukleinek@kernel.org>, James Bottomley
-	<James.Bottomley@HansenPartnership.com>, Thomas =?ISO-8859-1?Q?Wei=DFschu?=
- =?ISO-8859-1?Q?h?= <thomas@t-8ch.de>, <linux-kernel@vger.kernel.org>,
-	<nvdimm@lists.linux.dev>, <linux-sound@vger.kernel.org>,
-	<sparclinux@vger.kernel.org>, <linux-block@vger.kernel.org>,
-	<linux-cxl@vger.kernel.org>, <linux1394-devel@lists.sourceforge.net>,
-	<arm-scmi@vger.kernel.org>, <linux-efi@vger.kernel.org>,
-	<linux-gpio@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-hwmon@vger.kernel.org>,
-	<linux-media@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
-	<linux-remoteproc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <linux-serial@vger.kernel.org>,
-	<netdev@vger.kernel.org>, Zijun Hu <quic_zijuhu@quicinc.com>
-Subject: Re: [PATCH v4 11/11] usb: typec: class: Remove both cable_match()
- and partner_match()
-Message-ID: <20241223205252.00003d6b@huawei.com>
-In-Reply-To: <20241211-const_dfc_done-v4-11-583cc60329df@quicinc.com>
-References: <20241211-const_dfc_done-v4-0-583cc60329df@quicinc.com>
-	<20241211-const_dfc_done-v4-11-583cc60329df@quicinc.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1735021444; c=relaxed/simple;
+	bh=MXzlKSwOGCI1XXQ61VjEYAgCn6j6p10k4UqY5qMglZw=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=PbXIHlQVaqc1HmbJ7gb3W4aHHs5V8TB2Psk2O1Rv50pEKGj3zQWdP4MkvTBXbfLtlciADmdyNR/JI7t372+xLwDzL8FOa563OrLG/Hcr4xWlHWlgRrtD+KTgVCVIAroPu1twPlTObNqmddz5zy0mtzDCDNP/5575xct3BhJHrCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-3abe7375ba6so90323385ab.3
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Dec 2024 22:24:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735021442; x=1735626242;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=SblzuJBesHFVjaNJKKW8WutChPVdT51mxhglVDJXNiE=;
+        b=kXH0IUmXWIGKsfoT3UJsuE+s3wHfpy+xVD35my1dD5lcQ+IpHER3VT2pfj4N5dhIrU
+         SffQruHP44rm5Ky4cU1XhfNP/taXW4nhc60sR+IG2aadO+cTXrgDFpD1WPExM1Y+rFq9
+         mvUSgaFZwXZ3o6iqcFjYPHCVrTzR6gH63lnOOcRBN1BAxAHr0qzvoyAcyzMD9gTzW05T
+         JXyLEF/p3g8hgNWfkOl4zSA/eHTG6ji7VtcacZ5YYnt+HhpmK1YvDCrYol/fWR/amvLx
+         PXkYMJi9CjGzQpa1Fx5i4Y6bvFM5JCWFHbaAborLDy2dLaMQGObzAvkx9kx5y5wQHEgq
+         yitw==
+X-Forwarded-Encrypted: i=1; AJvYcCVynOQ50xerAFScaWJ/r76CFnJIfRcLDHI+OgqYBVRXRUKBow4SHQWaqBsS6aGM2iiqdfMhcmMD5q8l@vger.kernel.org
+X-Gm-Message-State: AOJu0YwmTlpCHJzh+rnRwqnS6uhQ78tHozJuK5KhWfN0uX+AazaWzOD5
+	GnhTWEMxdYcDF9OMQ5OBmgBau6ZN+6WX/BNdAAdy3WJfMAAEm9NAoktXM4OqprogQ9KZfXjrx5O
+	ChKxzVp5DZGjPoUVWxBgfgpCMcQiClNlqecv2v6591Q6/lQfefhsVBD8=
+X-Google-Smtp-Source: AGHT+IH5Hx62rRepnJelJtQJ8sdAWuFF5a3JpWmRIfv6/1eGAfZAGB/MKANmjkpA7PjVg1BABMu96SJYY0CPLJHJNwgC8idATgJ/
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500009.china.huawei.com (7.191.174.84) To
- frapeml500008.china.huawei.com (7.182.85.71)
+X-Received: by 2002:a05:6e02:34a0:b0:3a7:21ad:72a9 with SMTP id
+ e9e14a558f8ab-3c2d5152acfmr130327635ab.17.1735021442596; Mon, 23 Dec 2024
+ 22:24:02 -0800 (PST)
+Date: Mon, 23 Dec 2024 22:24:02 -0800
+In-Reply-To: <672ad9a8.050a0220.2a847.1aac.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <676a5382.050a0220.2f3838.015e.GAE@google.com>
+Subject: Re: [syzbot] [scsi?] [usb?] WARNING: bad unlock balance in sd_revalidate_disk
+From: syzbot <syzbot+331e232a5d7a69fa7c81@syzkaller.appspotmail.com>
+To: James.Bottomley@HansenPartnership.com, axboe@kernel.dk, hch@lst.de, 
+	james.bottomley@hansenpartnership.com, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-usb@vger.kernel.org, martin.petersen@oracle.com, ming.lei@redhat.com, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 11 Dec 2024 08:08:13 +0800
-Zijun Hu <zijun_hu@icloud.com> wrote:
+syzbot has bisected this issue to:
 
-> From: Zijun Hu <quic_zijuhu@quicinc.com>
-> 
-> cable_match(), as matching function of device_find_child(), matches
-> a device with device type @typec_cable_dev_type, and its task can be
-> simplified by the recently introduced API device_match_type().
-> 
-> partner_match() is similar with cable_match() but with a different
-> device type @typec_partner_dev_type.
-> 
-> Remove both functions and use the API plus respective device type instead.
-> 
-> Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
-Looks good, but there is the same trade off here between internal
-detail of type identification and reducing the use of helpers
-where the generic ones are fine.  Here is less obvious even than
-the CXL one as the helper macros do have other uses in these
-files.
+commit f1be1788a32e8fa63416ad4518bbd1a85a825c9d
+Author: Ming Lei <ming.lei@redhat.com>
+Date:   Fri Oct 25 00:37:20 2024 +0000
 
-So, it's on for USB folk to decide on and I won't be giving a tag
-as a result.
+    block: model freeze & enter queue as lock for supporting lockdep
 
-Jonathan
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=117bbf30580000
+start commit:   c88416ba074a Add linux-next specific files for 20241101
+git tree:       linux-next
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=137bbf30580000
+console output: https://syzkaller.appspot.com/x/log.txt?x=157bbf30580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=704b6be2ac2f205f
+dashboard link: https://syzkaller.appspot.com/bug?extid=331e232a5d7a69fa7c81
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16952b40580000
 
-> ---
->  drivers/usb/typec/class.c | 27 ++++++++++++---------------
->  1 file changed, 12 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/usb/typec/class.c b/drivers/usb/typec/class.c
-> index 601a81aa1e1024265f2359393dee531a7779c6ea..3a4e0bd0131774afd0d746d2f0a306190219feec 100644
-> --- a/drivers/usb/typec/class.c
-> +++ b/drivers/usb/typec/class.c
-> @@ -1282,11 +1282,6 @@ const struct device_type typec_cable_dev_type = {
->  	.release = typec_cable_release,
->  };
->  
-> -static int cable_match(struct device *dev, const void *data)
-> -{
-> -	return is_typec_cable(dev);
-> -}
-> -
->  /**
->   * typec_cable_get - Get a reference to the USB Type-C cable
->   * @port: The USB Type-C Port the cable is connected to
-> @@ -1298,7 +1293,8 @@ struct typec_cable *typec_cable_get(struct typec_port *port)
->  {
->  	struct device *dev;
->  
-> -	dev = device_find_child(&port->dev, NULL, cable_match);
-> +	dev = device_find_child(&port->dev, &typec_cable_dev_type,
-> +				device_match_type);
->  	if (!dev)
->  		return NULL;
->  
-> @@ -2028,16 +2024,12 @@ const struct device_type typec_port_dev_type = {
->  /* --------------------------------------- */
->  /* Driver callbacks to report role updates */
->  
-> -static int partner_match(struct device *dev, const void *data)
-> -{
-> -	return is_typec_partner(dev);
-> -}
-> -
->  static struct typec_partner *typec_get_partner(struct typec_port *port)
->  {
->  	struct device *dev;
->  
-> -	dev = device_find_child(&port->dev, NULL, partner_match);
-> +	dev = device_find_child(&port->dev, &typec_partner_dev_type,
-> +				device_match_type);
->  	if (!dev)
->  		return NULL;
->  
-> @@ -2170,7 +2162,9 @@ void typec_set_pwr_opmode(struct typec_port *port,
->  	sysfs_notify(&port->dev.kobj, NULL, "power_operation_mode");
->  	kobject_uevent(&port->dev.kobj, KOBJ_CHANGE);
->  
-> -	partner_dev = device_find_child(&port->dev, NULL, partner_match);
-> +	partner_dev = device_find_child(&port->dev,
-> +					&typec_partner_dev_type,
-> +					device_match_type);
->  	if (partner_dev) {
->  		struct typec_partner *partner = to_typec_partner(partner_dev);
->  
-> @@ -2334,7 +2328,9 @@ int typec_get_negotiated_svdm_version(struct typec_port *port)
->  	enum usb_pd_svdm_ver svdm_version;
->  	struct device *partner_dev;
->  
-> -	partner_dev = device_find_child(&port->dev, NULL, partner_match);
-> +	partner_dev = device_find_child(&port->dev,
-> +					&typec_partner_dev_type,
-> +					device_match_type);
->  	if (!partner_dev)
->  		return -ENODEV;
->  
-> @@ -2361,7 +2357,8 @@ int typec_get_cable_svdm_version(struct typec_port *port)
->  	enum usb_pd_svdm_ver svdm_version;
->  	struct device *cable_dev;
->  
-> -	cable_dev = device_find_child(&port->dev, NULL, cable_match);
-> +	cable_dev = device_find_child(&port->dev, &typec_cable_dev_type,
-> +				      device_match_type);
->  	if (!cable_dev)
->  		return -ENODEV;
->  
-> 
+Reported-by: syzbot+331e232a5d7a69fa7c81@syzkaller.appspotmail.com
+Fixes: f1be1788a32e ("block: model freeze & enter queue as lock for supporting lockdep")
 
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
