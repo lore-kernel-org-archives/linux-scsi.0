@@ -1,118 +1,99 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A51193409;
-	Tue, 24 Dec 2024 15:50:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E8621FF1D2;
+	Tue, 24 Dec 2024 16:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735055452; cv=none; b=Ei5JKGRK93qoag3W5R0yTnr0I4EDC4JqOzE14nUf2NY32VBeZJCkMj5CkXnopKjW1nuDlCNJy0Zo6hkoV/yas8xG/f17xdd98kLqkhXFdbkQL60JpCe+NKulNJ9LHC9iei7Ja+DcjcvRkcWZDv1wVlswsq733iRiDrmV8mNs4tg=
+	t=1735057430; cv=none; b=o2605PcIh1Eaoq0JGgl7mMAXh81FHeCJiGdLSghFdf0jQCR7WsOjhL/0OaB3dNMeZP+0XnUBoh8JcwLunD2t/hSMLBslsbm2Pp2EST87A0k94EzdK62pfWpKdr6+EBDPns7SYV53XbreL9NM2d4Gpr4eDfPuOgz4QerfseytN3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735055452; c=relaxed/simple;
-	bh=XK9EM62l8D28weOoTNQt4e9ZL1oZ8up/PdVzEuQisFU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=dy+rAgIA9vwGMRBhlIexBNo66XtcONICWqcsFiY9PxJD7AdaNFRIkx3/7v1qUHRzqNiqzOghtsL4u/BsCCguKvxnBmjuQD5FeZE8rgflvXKk0QBe17nSCqR+61DplXAV2oncLXQLbeOtFPlDBrteDNtwW/WItyW45UeYUkFWfZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DTd1aYa0; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DTd1aYa0"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BOBLl5w027681;
-	Tue, 24 Dec 2024 15:50:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Wt7MCs5Mpet14ES+5dqo1HnNMsp1jNFFPBOKUT0UDQ0=; b=DTd1aYa0FQuvqx8V
-	pXkF3FnoAPCbf+F+0ke+pTUj8/NB+2wSTwwnEy/exsjfk1bFoVJr1iLdEkoDSMBY
-	tBbx/zhf1jTeBD+h2UGkv/56VQKDl48t5VVR4AT9pWnNp3S6Yc+7V4gRLQXIkiY5
-	dF5Q/J8Ku7l5leERM2RAatRUq/DZQQXZ4Bw0hBR7Cn57q0JbCRiOaCRBZHKf+0t7
-	UEJS4cJ2wO6JarZ/Tz+vWSBetb0wS7RS9Fsw74zR9gocwGDuI9lhPZWj5if0hAaE
-	t3y3aUCZiurZPdZY0u+TxJNy1/s0HaIQmXfrnGg6479kFWF7FajVNfZ6pzARxjZU
-	GqgABA==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43qv0wh1ju-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Dec 2024 15:50:33 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BOFoXZs021103
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Dec 2024 15:50:33 GMT
-Received: from [10.218.43.20] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 24 Dec
- 2024 07:50:29 -0800
-Message-ID: <160d04cc-c5be-4fa7-b039-0716ecc52b70@quicinc.com>
-Date: Tue, 24 Dec 2024 21:20:26 +0530
+	s=arc-20240116; t=1735057430; c=relaxed/simple;
+	bh=NjKP/NDnZui6cRLx6+QFhIMJNuampyyKItUNSBZPxhk=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Bwdf47XxJEOPQtDwch2q5ceUUFUsvXBJMadB4VkJce1KI8vQb4UMfMp3puF3wr1enzJy7wwdwE2TCmypat1YK6Eb8NCGICqez1/DKzXM0mWnALBu73eplGvKrJYF5BOvBGUsep3df0H51YZui6ReSh0E341uZeDTtQYnJCkdVV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.31])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4YHgCQ4C2Wz6LDFf;
+	Wed, 25 Dec 2024 00:22:26 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id 20E24140391;
+	Wed, 25 Dec 2024 00:23:40 +0800 (CST)
+Received: from localhost (10.48.156.150) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 24 Dec
+ 2024 17:23:38 +0100
+Date: Tue, 24 Dec 2024 16:23:36 +0000
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Zijun Hu <zijun_hu@icloud.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Walleij
+	<linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, Uwe
+ =?ISO-8859-1?Q?Kleine-K=F6nig?= <ukleinek@kernel.org>, James Bottomley
+	<James.Bottomley@HansenPartnership.com>, Thomas =?ISO-8859-1?Q?Wei=DFschu?=
+ =?ISO-8859-1?Q?h?= <thomas@t-8ch.de>, <linux-kernel@vger.kernel.org>,
+	<nvdimm@lists.linux.dev>, <linux-sound@vger.kernel.org>,
+	<sparclinux@vger.kernel.org>, <linux-block@vger.kernel.org>,
+	<linux-cxl@vger.kernel.org>, <linux1394-devel@lists.sourceforge.net>,
+	<arm-scmi@vger.kernel.org>, <linux-efi@vger.kernel.org>,
+	<linux-gpio@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-hwmon@vger.kernel.org>,
+	<linux-media@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+	<linux-remoteproc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+	<netdev@vger.kernel.org>, Zijun Hu <quic_zijuhu@quicinc.com>, "Alison
+ Schofield" <alison.schofield@intel.com>, Takashi Sakamoto
+	<o-takashi@sakamocchi.jp>
+Subject: Re: [PATCH v5 04/12] driver core: Constify API device_find_child()
+ and adapt for various usages
+Message-ID: <20241224162336.00002486@huawei.com>
+In-Reply-To: <20241224-const_dfc_done-v5-4-6623037414d4@quicinc.com>
+References: <20241224-const_dfc_done-v5-0-6623037414d4@quicinc.com>
+	<20241224-const_dfc_done-v5-4-6623037414d4@quicinc.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V6] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-To: Eric Biggers <ebiggers@kernel.org>
-CC: <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <andersson@kernel.org>, <bvanassche@acm.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Naveen Kumar Goud Arepalli
-	<quic_narepall@quicinc.com>,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-References: <20241223132033.11706-1-quic_rdwivedi@quicinc.com>
- <20241223193130.GA2032@quark.localdomain>
-Content-Language: en-US
-From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-In-Reply-To: <20241223193130.GA2032@quark.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ecfJjZU8E3qOlW2DD7ku8V9wZfwWdAq_
-X-Proofpoint-ORIG-GUID: ecfJjZU8E3qOlW2DD7ku8V9wZfwWdAq_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- adultscore=0 impostorscore=0 phishscore=0 mlxlogscore=999 spamscore=0
- bulkscore=0 clxscore=1015 malwarescore=0 mlxscore=0 priorityscore=1501
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412240137
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: lhrpeml500012.china.huawei.com (7.191.174.4) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
+On Tue, 24 Dec 2024 21:05:03 +0800
+Zijun Hu <zijun_hu@icloud.com> wrote:
 
-
-On 24-Dec-24 1:01 AM, Eric Biggers wrote:
-> On Mon, Dec 23, 2024 at 06:50:33PM +0530, Ram Kumar Dwivedi wrote:
->>  #ifdef CONFIG_SCSI_UFS_CRYPTO
->> +/**
->> + * ufs_qcom_config_ice_allocator() - ICE core allocator configuration
->> + *
->> + * @host: pointer to qcom specific variant structure.
->> + */
->> +static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
->> +{
->> +	struct ufs_hba *hba = host->hba;
->> +	static const uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
->> +	u32 config;
->> +
->> +	if (!is_ice_config_supported(host))
->> +		return;
-> 
-> This is the only place that is_ice_config_supported() is called, so the helper
-> function seems unnecessary vs. just checking UFS_QCOM_CAP_ICE_CONFIG directly.
-> 
-> Also, shouldn't any ICE configuration also be conditional on UFSHCD_CAP_CRYPTO?
-> Just in case the ICE support got turned off for some reason.
-
-Hi Eric,
-Thanks for review. I have addressed your comments in the latest patchset.
-
-Thanks,
-Ram.
-
-> 
-> - Eric
-
+> From: Zijun Hu <quic_zijuhu@quicinc.com>
+>=20
+> Constify the following API:
+> struct device *device_find_child(struct device *dev, void *data,
+> 		int (*match)(struct device *dev, void *data));
+> To :
+> struct device *device_find_child(struct device *dev, const void *data,
+>                                  device_match_t match);
+> typedef int (*device_match_t)(struct device *dev, const void *data);
+> with the following reasons:
+>=20
+> - Protect caller's match data @*data which is for comparison and lookup
+>   and the API does not actually need to modify @*data.
+>=20
+> - Make the API's parameters (@match)() and @data have the same type as
+>   all of other device finding APIs (bus|class|driver)_find_device().
+>=20
+> - All kinds of existing device match functions can be directly taken
+>   as the API's argument, they were exported by driver core.
+>=20
+> Constify the API and adapt for various existing usages.
+>=20
+> BTW, various subsystem changes are squashed into this commit to meet
+> 'git bisect' requirement, and this commit has the minimal and simplest
+> changes to complement squashing shortcoming, and that may bring extra
+> code improvement.
+>=20
+> Reviewed-by: Alison Schofield <alison.schofield@intel.com>
+> Reviewed-by: Takashi Sakamoto <o-takashi@sakamocchi.jp>
+> Acked-by: Uwe Kleine-K=F6nig <ukleinek@kernel.org> # for drivers/pwm
+> Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
