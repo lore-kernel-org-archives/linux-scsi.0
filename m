@@ -1,44 +1,44 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EE24C80;
-	Tue, 24 Dec 2024 15:02:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B414A7E9;
+	Tue, 24 Dec 2024 15:48:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735052570; cv=none; b=AYouzXtvPLy6IXKGuihV8lmusMSUFMaoFiiaAAQ2dWXj5krk2dj+HAzJuitkn+GA7bJAANpPGRvLujT64lXWEPHzDWBDf72gso6vJB87IVEITrprDCh5HM9pY2Tr1tpT1tZabSH3fi4MIMWO2ux7avXg413jGx1sE3K1dHqblEE=
+	t=1735055282; cv=none; b=CkmlqVHUB1ILUEnVEct81yj4hVTRP9rRuJCm0os0aOQ7//fGeLjnctnaLaaHDyieu5bWQuNQCJZrlccHyZufTF9rGq2jDmt3Byp/uNU84GWCmglUGMqsaT2I5tnWLUSwYpqU83/VAEgUOiWObKteY8U8K4TYW7Em+eshbtSlUnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735052570; c=relaxed/simple;
-	bh=mv0xEqOcZf7gC57i/BZ/mGwaSJDXJaFd8Mlesxo6NDQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tnb/OPPFu/05A6n8Lu5ZZqIXB3LJ6LiolqmzlXCCEFh6kBG/+rl4cAvU5KVV6n88F/pZOuiG6bATAqL52BAdiow5h9lG7RJYEAQ7DcEcdGcJ220zWybD7wyiLFWXPwDcNTg8g2BK8Go/02xNOBO4kiT6ukzIdJv0qMYxbVMFIDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=fxBcPA4E; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1735055282; c=relaxed/simple;
+	bh=V3GMK85/EdJ/5MiYljSsmQ0AW37Kjd1ib614gR3ahAQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=YItvM9pQpG+MaUXS0Gdozczxax2/2OWYqAqtJSgChBTsbNNUwE6U4Su6FmeNpgvZgVwLCbVTby4bETHQxsh/Py7mLzzzeAFdLTBGZRqjA50ImCh0NVHpe/g8qQ7w+Xld4W7XXbSn4MyUOv8nHIh1vp1f97njVbe28vYhvnOX3vU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=MtJMarqW; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fxBcPA4E"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BODAWod012574;
-	Tue, 24 Dec 2024 15:02:31 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MtJMarqW"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BOC5Nbb009731;
+	Tue, 24 Dec 2024 15:47:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=jMtcSW0SkaBkA+fELMjWGn
-	VeZDWBBCwKtLeA6t712Xk=; b=fxBcPA4EawIAgoAi3wT3VyKPVjFEbM2DIqvCS6
-	uqZDc5cfG5P9gsW7SMOqMv+8mDraOx/wKLH0/gSfLOBNZp8fds7RmvbNy5B1LbhE
-	/RjZ79rnYSpubDO7BLDgT1IpdRbl17lXkFQDR3PYfsC/mMJAuTD/qKGPCE2QD7xj
-	kVxgczTK5nmrFp+Wo8zHXpkN8ahYgJ8STStiGye5DD+eNK+ti7RHAHtVT9at6DT1
-	g7KKAHasn9WVoBVsM9wy8xEyoPnWszOa2MIUY/Am7QBW0V75PtDEB+EnLYOBD5KV
-	t5WeIhTf0Nn65Fp0oF5nLBubFRNMDyRXspxgDSyRF12CUH9Q==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43qwm18etq-1
+	:mime-version:subject:to; s=qcppdkim1; bh=z8VFvYCz3yvco3CZRCJ8Rg
+	WDeEYxNBTukwEd1Qq/F4E=; b=MtJMarqW+/D1sO3e5CFhYKzlsd2Rc5MDr5YaEJ
+	pNjZ6HV4mo9WOfd9mACx2HSX+bFIe1jsuscQKzJOW67b2bWcLpPXA39LjCBnIA9I
+	UNibmKz99YFFeMXyaWu2dW7b8P3qpL5N5cVvMt4WeFWoAzu+8lrTHbmR6BB7RwuP
+	5/HUtYYj+s9CmUMKkAe3mhpesTl81qw6Q3ueIL3Q4orShyeUYFxN352DMF+0/OOz
+	acOeYilAU/5nJu29+34ko73K/dgGCnwef2Wo5GklX7Nn9+ubO9QPs7bDpqa1Vzh0
+	QMfhXENIUS91GGS7BV7K8UubvxV9xOHOASf1Z6BwmvNuwg/A==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43qvnggvg3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Dec 2024 15:02:30 +0000 (GMT)
+	Tue, 24 Dec 2024 15:47:40 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BOF2UqJ028145
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BOFldJ0001387
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 24 Dec 2024 15:02:30 GMT
+	Tue, 24 Dec 2024 15:47:40 GMT
 Received: from hu-rdwivedi-hyd.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 24 Dec 2024 07:02:26 -0800
+ 15.2.1544.9; Tue, 24 Dec 2024 07:47:36 -0800
 From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 To: <manivannan.sadhasivam@linaro.org>,
         <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
@@ -48,9 +48,9 @@ CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         Naveen Kumar Goud Arepalli
 	<quic_narepall@quicinc.com>,
         Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V7] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-Date: Tue, 24 Dec 2024 20:32:06 +0530
-Message-ID: <20241224150206.6232-1-quic_rdwivedi@quicinc.com>
+Subject: [PATCH V8] scsi: ufs: qcom: Enable UFS Shared ICE Feature
+Date: Tue, 24 Dec 2024 21:17:25 +0530
+Message-ID: <20241224154725.8127-1-quic_rdwivedi@quicinc.com>
 X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -64,16 +64,16 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 9XXdcnhIhQ8N7vNggusfZ_g91cXVzhXF
-X-Proofpoint-ORIG-GUID: 9XXdcnhIhQ8N7vNggusfZ_g91cXVzhXF
+X-Proofpoint-GUID: MIR5PENmVPn9ZOjCtxKyixrW6RF6clUd
+X-Proofpoint-ORIG-GUID: MIR5PENmVPn9ZOjCtxKyixrW6RF6clUd
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 lowpriorityscore=0 spamscore=0
- impostorscore=0 suspectscore=0 malwarescore=0 bulkscore=0 adultscore=0
- clxscore=1015 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412240130
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ suspectscore=0 adultscore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0
+ bulkscore=0 phishscore=0 spamscore=0 clxscore=1015 malwarescore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412240137
 
 By default, the UFS controller allocates a fixed number of RX
 and TX engines statically. Consequently, when UFS reads are in
@@ -92,11 +92,15 @@ Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 ---
-Changes from v6:
-1. Addressed Eric comment to replace is_ice_config_supported() helper
+Changes from v7:
+1. Addressed Eric's comment to perform ice configuration only if
+   UFSHCD_CAP_CRYPTO is enabled.
+ 
+Changes from v6: 
+1. Addressed Eric's comment to replace is_ice_config_supported() helper
    function with a conditional check for UFS_QCOM_CAP_ICE_CONFIG.
 
-Changes from v5:
+Changes from v5: 
 1. Addressed Bart's comment to declare the "val" variable with
    the "static" keyword.
 
@@ -104,30 +108,30 @@ Changes from v4:
 1. Addressed Bart's comment to use get_unaligned_le32() instead of
    bit shifting and to declare val with the const keyword.
 
-Changes from v3: 
-1. Addressed Bart's comment to change the data type of "config" to u32 
+Changes from v3:
+1. Addressed Bart's comment to change the data type of "config" to u32
    and "val" to uint8_t.
 
-Changes from v2: 
-1. Refactored the code to have a single algorithm in the code and 
+Changes from v2:
+1. Refactored the code to have a single algorithm in the code and
 enabled by default.
 2. Revised the commit message to incorporate the refactored change.
 3. Qcom host capabilities are now enabled in a separate function.
 
-Changes from v1: 
-1. Addressed Rob's and Krzysztof's comment to fix dt binding compilation 
+Changes from v1:
+1. Addressed Rob's and Krzysztof's comment to fix dt binding compilation
    issue.
 2. Addressed Rob's comment to enable the nodes in example.
 3. Addressed Eric's comment to rephrase patch commit description.
    Used terminology as ICE allocator instead of ICE algorithm.
 4. Addressed Christophe's comment to align the comment as per kernel doc.
 ---
- drivers/ufs/host/ufs-qcom.c | 37 +++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.c | 38 ++++++++++++++++++++++++++++++++++
  drivers/ufs/host/ufs-qcom.h | 41 ++++++++++++++++++++++++++++++++++++-
- 2 files changed, 77 insertions(+), 1 deletion(-)
+ 2 files changed, 78 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 68040b2ab5f8..94ea456edaf6 100644
+index 68040b2ab5f8..ffc67b5d5c3e 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
 @@ -15,6 +15,7 @@
@@ -138,7 +142,7 @@ index 68040b2ab5f8..94ea456edaf6 100644
  
  #include <soc/qcom/ice.h>
  
-@@ -105,6 +106,25 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
+@@ -105,6 +106,26 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
  }
  
  #ifdef CONFIG_SCSI_UFS_CRYPTO
@@ -153,7 +157,8 @@ index 68040b2ab5f8..94ea456edaf6 100644
 +	static const uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
 +	u32 config;
 +
-+	if (!(host->caps & UFS_QCOM_CAP_ICE_CONFIG))
++	if (!(host->caps & UFS_QCOM_CAP_ICE_CONFIG) ||
++			!(host->hba->caps & UFSHCD_CAP_CRYPTO))
 +		return;
 +
 +	config = get_unaligned_le32(val);
@@ -164,7 +169,7 @@ index 68040b2ab5f8..94ea456edaf6 100644
  
  static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
  {
-@@ -196,6 +216,11 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
+@@ -196,6 +217,11 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
  {
  	return 0;
  }
@@ -176,7 +181,7 @@ index 68040b2ab5f8..94ea456edaf6 100644
  #endif
  
  static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
-@@ -435,6 +460,8 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+@@ -435,6 +461,8 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
  		err = ufs_qcom_enable_lane_clks(host);
  		break;
  	case POST_CHANGE:
@@ -185,7 +190,7 @@ index 68040b2ab5f8..94ea456edaf6 100644
  		/* check if UFS PHY moved from DISABLED to HIBERN8 */
  		err = ufs_qcom_check_hibern8(hba);
  		ufs_qcom_enable_hw_clk_gating(hba);
-@@ -932,6 +959,14 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+@@ -932,6 +960,14 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
  	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
  }
  
@@ -200,7 +205,7 @@ index 68040b2ab5f8..94ea456edaf6 100644
  static void ufs_qcom_set_caps(struct ufs_hba *hba)
  {
  	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
-@@ -940,6 +975,8 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+@@ -940,6 +976,8 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
  	hba->caps |= UFSHCD_CAP_WB_EN;
  	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
  	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
