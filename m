@@ -1,74 +1,74 @@
 Received: from mail-yb1-f179.google.com (mail-yb1-f179.google.com [209.85.219.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABA8919EED2;
-	Sat, 28 Dec 2024 18:50:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE56F19F41A;
+	Sat, 28 Dec 2024 18:50:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735411819; cv=none; b=QwmGcH1ollIwVmLxFAUN6ySVigFWSmL32fVyRcvti2yRP27em5SGcXfBDjP0O/ADugETDGuONewwbVwetbvZZmMvaLK2AYpg1uNakVB5ntab5QKlimL2Q1/8FRTr1CqXE9NEpUBF5UjGQ+gyiCRUVFpbKDeqvi5M5cS3lvLYo6w=
+	t=1735411821; cv=none; b=Y1L5wjNvX1OZTBKbSp/LeL2Qmi+300KGMsmNfAVZNrAlPozzW1Mq//axdkgpiLvshYvkvq8hvmilX+BcziX34ObITB+oM4jN0voplIfEWIRzpKe5tWO7SN4dH1aFcdmmieHIv2E7kPWccsU0hnKMb6jmzDE9vnHmgLPd+KycbM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735411819; c=relaxed/simple;
-	bh=s1rUMlu7DzVnUwDvM6XNMOc3MzlAh/fRbyTbur6LiVg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=M8hvZWN61fA/ku5giLFjKeDVkq74bJ7gOFt07kuJ6/c8YVp5bxpUonri6m2yEZl1V4vQWEspQpfhtUIkR5sEyTEkunJ/OCs15qjHldKoNkjyJNEz6uPJYFHNWukA2k9dpffsZWTOr7Iemd+pF/Vj8MhFqhsJIwq1Zn8FrfJ1VNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cvVNDvWi; arc=none smtp.client-ip=209.85.219.179
+	s=arc-20240116; t=1735411821; c=relaxed/simple;
+	bh=CCJtLFBCs6CKtlN21Jf8J9218bTM+KX7G7To006Rf3o=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HDE61zVLKhBIkLym52JgrsB4K/2LKOc3v0wRUtdo4m/FlfIdfpwfzYbOl9jiO0N1VDoXvp1ZjI8MOMa3gkUOfKg/SuOgSF8Xqcrtzit5DZAdNH/pITU6edGTpWrE3RyLCDjL3KOsbuMi4sEntfxQJeZEAw5g4lU103rrCFFuo/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nIGenw5z; arc=none smtp.client-ip=209.85.219.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cvVNDvWi"
-Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-e396c98af22so4237708276.1;
-        Sat, 28 Dec 2024 10:50:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nIGenw5z"
+Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-e53ef7462b6so4633666276.3;
+        Sat, 28 Dec 2024 10:50:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1735411817; x=1736016617; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1735411819; x=1736016619; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uRlDoR4ytnS2bQfcaaePRsRcamLJG88lUbbmmAU/YJw=;
-        b=cvVNDvWi0iHS8bcjeV6A4002fifCA7dc7ltEF0UGbkEletabWtG/sf3XfvUFAkFPUU
-         iBCYjDOkpwMGfJ/WkBsVXgVXLuyW3SHSTh1lDRXFGwatUKvjay4/d37U0peAuSTqILUV
-         16aQIz03Xv2gOO+y18Sg4QUzSJUSLYkRwvdM7wQgHY8CkKbmCdJE0jdP5Y6GtyOvH4jA
-         vQvS4FzT5lvhWOmPh7EUdb3uEMZVQdANrnu8bHOPPtDJz0iHCixZFKXPPCGeCSDtFg/E
-         PBTy/fFRj7zddPyUmbKUZ61H+EMNOxbNu5qeM9+Pd6f2oga8ZQgJXZSo4B6a0ZrqClM1
-         pUqQ==
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=QHPIZAncAii6tgbh0wNxh85yAc7Gn1z/+3/HM+ibJUk=;
+        b=nIGenw5zaGkJmAryzB3kQXm8+qNZZorrCRzWZyV5LH+/Uuh0ZTSp+f/V2rStzQ1yaZ
+         fbv3ugUSlSPVgz0Hga5GYWf/bQFPdNw4O2u4XJIqC/Bdo1ln8dFrW8UnQeRZma5F1OB9
+         1OMfFn9LEvF8GuYy1CTCvsv+nLcc/TwFZZ0jzEIN1NABgwPVedujH1kFslAqenyQFKhH
+         y6LHeKtCXTDU/dIL0V8zQYAGh3c5akZiNsYm+WC7DoAcnnriZeXanD7JiunhQ+K1FvWJ
+         aqrTuCFldlBg+2zO4Br7clxLznEo4g0zJGvY7wDZB3+pdTEJiPJWpEdgwMUI06VUaaV3
+         ADSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735411817; x=1736016617;
+        d=1e100.net; s=20230601; t=1735411819; x=1736016619;
         h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=uRlDoR4ytnS2bQfcaaePRsRcamLJG88lUbbmmAU/YJw=;
-        b=rz/uoIqHPuDAQcmagMFKJs0AxbT9q+r/pxZyaIqIEczAa/3RssFTP9/LxlmXVRsVLA
-         sipIn0wevu2kfUpqDXpWCwj7OpMcwCkJ7YQ8uPULiyIrkLHK5NAlTBgVtPPBzYx0ZQ13
-         OffyLmSQs8zraCD5Hw+sicn+clY2KVX8xchzkMjeDNha1hRppNQvkMufXxXe+N7MpWty
-         wsXUWp6zsHFKVFPMNZeSHZ0JqamF+SCt2p231/sxNgoyZT8ehB8OpfKJ4n/kLSK+9O1A
-         EUECOKzYVBAcDua709EkzEZeoq4AYTEeCuw+8/5CYFSyB3VPHu1goievpONi/bgPuArw
-         xTjw==
-X-Forwarded-Encrypted: i=1; AJvYcCW/kc+e4O3VBdG3B97v/gHjmgpgHa72Y3Y68JtaKZ6MmahoErUvWkncFolzGemTQRPnQz8STbCG2fX0@vger.kernel.org
-X-Gm-Message-State: AOJu0YzpqK46lo5v2vJZy55ko7WpGH4KqeJervVkZ95Mlb3wZ3IQ73gT
-	KJCxAtNp6/b5sNhLXzO30pq3GfeCRmjlvazRBAYVNQjGcfDKDSYQdrzubZn4
-X-Gm-Gg: ASbGnctxpthxJ+sqHwDhqI1fGbX+br6gLgcenMNPM9ckH4hD6yZLHBpptW0wjSZIS8X
-	CkKpYEiM3WPS6dQ8qmIYF0u2CRigbKYrzMlUxBUvgbxi77azYiy7IHuY5wrUjHn0lTazJB60UFp
-	3G1VjnY12nP3Q6/fHZNVMH+GGqKRAmay2O7hSlbZw2U5LJovY5TSJF0Xq0kpHImcJS04ejPfmee
-	qlC+QG4uZGIc9gxMnarVjqDVpC9KO+3PctBqIQ7yRg7+f3Qk8C2auRI9SPwyoGL9/2FFRj7UF0h
-	4eROC2SrFNSeyAzK
-X-Google-Smtp-Source: AGHT+IGn/WRKVrT82iGZgkf9/jp1T9k7GHzUIn3Wq3ZCorYLAnjeqsNRUFnIKIH67oVoVPLCROoorg==
-X-Received: by 2002:a25:6a02:0:b0:e44:82ef:397d with SMTP id 3f1490d57ef6-e538c20def6mr15858003276.6.1735411816812;
-        Sat, 28 Dec 2024 10:50:16 -0800 (PST)
+        bh=QHPIZAncAii6tgbh0wNxh85yAc7Gn1z/+3/HM+ibJUk=;
+        b=hZkR/zxBo0Z1JDWOFA45nsmmxtM7b33Z3QP2LrE2uhfN4fc4OnxCCrjEQtHSCq43Eb
+         o2va0eOBMmNUhljLrBvjSZ26o4+R/bvAZTR1SyIjDr43HR7hGhK35DWZY7GErNe8S4EH
+         cqAkMeFROv/vuPS7F3qndym9LG7JGCiKXtUYNzyXYiVZkQ4/8fiuA8pZzDljsMZaeFs/
+         Od0wKf51/xTARzIHIM1FzNG9poRzWefA5IIIZFnQdqkX/ZwSUFwIT5XYQB/8iE/MQzeO
+         vkHQj730HsxmhFKg7jTbEc3VHZsDRZx+AfavIOeh9Vq610oSSrD61969NGi48BxqaeB0
+         A3Lg==
+X-Forwarded-Encrypted: i=1; AJvYcCUvaFUZIyy4W6Pe0z4w0WKKYzxFcqOjP2kxkOcoJWmJOkKV/Be2//G/WMsWVUyEADJxy+bhc9mae7leuvc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzyvEOi0OLwznRx9FHQ1f/JPw/hfg5vDY6qDijLtqX0/j1boDm9
+	XYvCVRH1Xi6kNHfwnRyFgVcXeS9aD2hQrCnEVscXW2XIM8/Vrg1gf9ZxxzkX
+X-Gm-Gg: ASbGncs4C4fY3EPb/bfpvJE04Wlrr9lcSmyL/lZQQPKXjZBIyAhxpDkEjGooWa3JrJg
+	qNi8/3WZlZVoF2GiVEE3HtgEAwQ5y9CWimjLbeC9hY+v6SY9aVjEneMZzuBpFEWYUl8Scv0fhUO
+	jtEMkxFuLcgRlXmlNagFsgitkRToyMGooxojTxsbyU/ZNi/Lih71wBpOw+rMCGr5XnWjY75fVL7
+	ZPDFqBQiwnXi6Odvf7sB/FGAQhYxlNMuwrmfKcyRS1elgvUN6OeUrsCSaOiAaAP/q6aXjwRY9HO
+	IKsPKK6vNpS8Wq9K
+X-Google-Smtp-Source: AGHT+IHcVmQ8u7XvWW06STVtFjh0Z/K0WoYV9ZsBMGJX581Zr3/nYzYWbMrabkokE7DvE5bpKUWkOw==
+X-Received: by 2002:a25:21d7:0:b0:e3a:3c1a:3bef with SMTP id 3f1490d57ef6-e538c3a0018mr17151525276.36.1735411818952;
+        Sat, 28 Dec 2024 10:50:18 -0800 (PST)
 Received: from localhost (c-24-129-28-254.hsd1.fl.comcast.net. [24.129.28.254])
-        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e537cc1e928sm5201774276.17.2024.12.28.10.50.14
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e537cf46c0dsm5057066276.43.2024.12.28.10.50.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Dec 2024 10:50:15 -0800 (PST)
+        Sat, 28 Dec 2024 10:50:18 -0800 (PST)
 From: Yury Norov <yury.norov@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
+To: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	James Smart <james.smart@broadcom.com>,
 	Dick Kennedy <dick.kennedy@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Yury Norov <yury.norov@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Yury Norov <yury.norov@gmail.com>,
 	Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH 11/14] scsi: lpfc: switch lpfc_irq_rebalance() to using cpumask_next_wrap()
-Date: Sat, 28 Dec 2024 10:49:43 -0800
-Message-ID: <20241228184949.31582-12-yury.norov@gmail.com>
+Subject: [PATCH 12/14] scsi: lpfc: rework lpfc_next_{online,present}_cpu()
+Date: Sat, 28 Dec 2024 10:49:44 -0800
+Message-ID: <20241228184949.31582-13-yury.norov@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241228184949.31582-1-yury.norov@gmail.com>
 References: <20241228184949.31582-1-yury.norov@gmail.com>
@@ -80,29 +80,65 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Calling cpumask_next_wrap_old() with starting CPU equal to wrapping CPU
-is the same as request to find next CPU, wrapping around if needed.
+lpfc_next_online_cpu() opencodes cpumask_next_and_wrap() by using
+a for-loop. Use it and make the lpfc_next_online_cpu() a plain
+one-liner.
 
-cpumask_next_wrap() is the proper replacement for that.
+While there, rework lpfc_next_present_cpu() similarly. Notice that
+cpumask_next() followed by cpumask_first() in the worst case of an
+empty mask may traverse the mask twice. Cpumask_next_wrap() takes
+care of that correctly.
 
 Signed-off-by: Yury Norov <yury.norov@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc.h | 23 +++++------------------
+ 1 files changed, 5 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 31622fb0614a..e94a7b8973a7 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12876,7 +12876,7 @@ lpfc_irq_rebalance(struct lpfc_hba *phba, unsigned int cpu, bool offline)
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index e5a9c5a323f8..62438e84e52a 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -1715,18 +1715,12 @@ lpfc_phba_elsring(struct lpfc_hba *phba)
+  * Note: If no valid cpu found, then nr_cpu_ids is returned.
+  *
+  **/
+-static inline unsigned int
++static __always_inline unsigned int
+ lpfc_next_online_cpu(const struct cpumask *mask, unsigned int start)
+ {
+-	unsigned int cpu_it;
+-
+-	for_each_cpu_wrap(cpu_it, mask, start) {
+-		if (cpu_online(cpu_it))
+-			break;
+-	}
+-
+-	return cpu_it;
++	return cpumask_next_and_wrap(start, mask, cpu_online_mask);
+ }
++
+ /**
+  * lpfc_next_present_cpu - Finds next present CPU after n
+  * @n: the cpu prior to search
+@@ -1734,16 +1728,9 @@ lpfc_next_online_cpu(const struct cpumask *mask, unsigned int start)
+  * Note: If no next present cpu, then fallback to first present cpu.
+  *
+  **/
+-static inline unsigned int lpfc_next_present_cpu(int n)
++static __always_inline unsigned int lpfc_next_present_cpu(int n)
+ {
+-	unsigned int cpu;
+-
+-	cpu = cpumask_next(n, cpu_present_mask);
+-
+-	if (cpu >= nr_cpu_ids)
+-		cpu = cpumask_first(cpu_present_mask);
+-
+-	return cpu;
++	return cpumask_next_wrap(n, cpu_present_mask);
+ }
  
- 	if (offline) {
- 		/* Find next online CPU on original mask */
--		cpu_next = cpumask_next_wrap_old(cpu, orig_mask, cpu, true);
-+		cpu_next = cpumask_next_wrap(cpu, orig_mask);
- 		cpu_select = lpfc_next_online_cpu(orig_mask, cpu_next);
- 
- 		/* Found a valid CPU */
+ /**
 -- 
 2.43.0
 
