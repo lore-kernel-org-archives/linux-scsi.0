@@ -1,46 +1,46 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63ACA1E1A18;
-	Wed,  1 Jan 2025 13:29:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B551157A5C;
+	Wed,  1 Jan 2025 13:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735738175; cv=none; b=Tijc5GFi1ofK+LPFn4j5NjyiNBA/FjP8leRkiRoQa61s/lQJxoZVeL+klskNkGI5xqdNWOb6D9Uf89JAqkZlYD2YibGuQBsYaESyp3qLqZzYrzj5CvIQ2I1NtwcoxBL7QUfXCPsdWeepWUxBLH/TPpggobU59+q28JwF+UllqZg=
+	t=1735739118; cv=none; b=SdsnMpfputa0gMj42x5ANKxNyUvJsj+Ss4qD/xtnJnGOr37nPrBwzZ08nZgDkhKzfgnWPFx2GROMtIIXvuRV+biMFaxJrFReKOerd/eveXkLEFSBFAVvFolBeOhsezsMR6dhMgcsHU56i/aYPnrfCaU6vHjwDpPAYWQCsa4EC90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735738175; c=relaxed/simple;
-	bh=LxwJ195ZmHF7cCp5pImY4bELG4eR8XJsgUpKUHMagc0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jCXdY3Eo0FXdYNsrizIhPuokMx+OZI1HRfh0WXB3npbz/THaBrPvtkyvUyN8Bqa6bahPxn6zviEW7N1viNgXYWbLrLrLTmmr/Of+GeILglYvSiBkbeJwPuhoE6+WbMMICloCyRagM5+gydmYuzL7wX8z4zZyuEZ+5Tn7yKqUiAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=UCU54o5k; arc=none smtp.client-ip=216.71.153.141
+	s=arc-20240116; t=1735739118; c=relaxed/simple;
+	bh=jh1RjnqXX7XvMOxypOqZqXND+h4qbC6V8O8MPTV0Nag=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZM3AFnzv+QYX4zMvV8hVWZTdLsuY0L9JJGX8NXfn5LBs1Yfq55gzZ4f3T3BiVg95FXp3NSdFDfLm+FCO9TIMD0d/AG0sxHXWnOxmPosfZ61auY9VxBkgV22mZvzd4vS8/m+fTJsJzD22IigcPbbu/W+m51zSYSWJjkr+LnBOTE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=onjPs/YV; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="UCU54o5k"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="onjPs/YV"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1735738174; x=1767274174;
+  t=1735739116; x=1767275116;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=LxwJ195ZmHF7cCp5pImY4bELG4eR8XJsgUpKUHMagc0=;
-  b=UCU54o5ki1PtPYdIpGaL00lut1gfHWDR7LBGo6M3o2e7UiGjqOTZTSAx
-   wRjEaGmC34cD0xPdOkTWrY/WNhdrar6hopvzU4jPwPaiaI3VN6cpfTJ3Y
-   H12h5N3ZLD75TiHulGCUfwS79rYZS/vze1MbHcR8CazBzZNO1xqQEV0/M
-   n0OL1mHrrC5OuVwZXLlxDsvfAuxEiOq7hNNH4nFJR8ryieZWF/VTG9CHU
-   T7NBbE/iuCuXPPpz3nUTIyY8eIcgttYT1fejtZGjVhrpeWgfTrSBsv5pN
-   bSopA9opmujGFRb/5HeuCoUZJ6aHOB2u6w/JoVlni0xye3fp0Nhp9FHZ6
-   g==;
-X-CSE-ConnectionGUID: NJKZh04USw+I9DXiCWXRlA==
-X-CSE-MsgGUID: F+L8oYy4QBOJxjifg1cxQA==
+  bh=jh1RjnqXX7XvMOxypOqZqXND+h4qbC6V8O8MPTV0Nag=;
+  b=onjPs/YVZp+K94kJSXRuNRkKp5sOW8u9zR6NBzFmDhPWHli5btVtnhXj
+   kz5LVeIFOHVKedgFJmv6Te73hFpJESAaNCO2S6O0FOEcBYaYiD1FlK0aU
+   14h1LCvbT6T7e3E0PTdcRtdclFvl2Xpys8y6CEVs/P2GSh25WApfNMKT5
+   zJeMaUtoOhxKafEvoYp+f6Qi9082ObeCH+FNLsz0+8j6ce/or0pgy2B8y
+   Lq9hWH2hmLTOWGOfixz66qpvbaRHsFNEy5sllOHXiYYttN6+5z/8SPFQ9
+   5Id1Lzi25KAIaJyoMiWUxDzr/FIX73PcRAYodt+sWpFLy4cm3BAwNCqOk
+   A==;
+X-CSE-ConnectionGUID: vuT3ExnsR1yjenPkC+0Jvw==
+X-CSE-MsgGUID: hK6++Rb6S+W5l7qIvNclhQ==
 X-IronPort-AV: E=Sophos;i="6.12,282,1728921600"; 
-   d="scan'208";a="35022517"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Jan 2025 21:28:25 +0800
-IronPort-SDR: 67753432_VWgUoxcMXz4jnjvNwN2DEiwqePAWUf4sROMn5pw/z5MZINc
- dO24AWF3kCd7OHAskP18DEGL8aI/vcKG0QVNtTw==
+   d="scan'208";a="36177427"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Jan 2025 21:44:06 +0800
+IronPort-SDR: 6775392a_GTy+nW8L4HXWMkohVZUtJGzVeSn2IEfV7nruvkXJWLZHdeu
+ HZP6InMbQn2AwfhH+yMHFABfaykVRUSwiOeZvXw==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Jan 2025 04:25:22 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Jan 2025 04:46:34 -0800
 WDCIronportException: Internal
 Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Jan 2025 05:28:23 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Jan 2025 05:44:05 -0800
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -48,9 +48,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Avri Altman <avri.altman@wdc.com>,
 	Can Guo <quic_cang@quicinc.com>,
 	Asutosh Das <quic_asutoshd@quicinc.com>
-Subject: [PATCH] Revert "scsi: ufs: core: Probe for EXT_IID support"
-Date: Wed,  1 Jan 2025 15:25:51 +0200
-Message-Id: <20250101132551.52307-1-avri.altman@wdc.com>
+Subject: [PATCH v2] Revert "scsi: ufs: core: Probe for EXT_IID support"
+Date: Wed,  1 Jan 2025 15:41:40 +0200
+Message-Id: <20250101134140.57580-1-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -69,32 +69,35 @@ as it is just a dead code.
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 Cc: Can Guo <quic_cang@quicinc.com>
 Cc: Asutosh Das <quic_asutoshd@quicinc.com>
+
 ---
- drivers/ufs/core/ufshcd.c | 35 -----------------------------------
+Changes compared to v1:
+ - Fix typo
+---
+ drivers/ufs/core/ufshcd.c | 33 ---------------------------------
  include/ufs/ufs.h         |  5 -----
  include/ufs/ufshcd.h      |  2 --
- include/ufs/ufshci.h      |  6 ------
- 4 files changed, 48 deletions(-)
+ include/ufs/ufshci.h      |  7 +------
+ 4 files changed, 1 insertion(+), 46 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3dfaeba5b691..dad5556547cb 100644
+index 3dfaeba5b691..7d672bd52b84 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2411,13 +2411,6 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+@@ -2411,12 +2411,7 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
  	else
  		hba->lsdb_sup = true;
  
 -	if (!hba->mcq_sup)
 -		return 0;
 -
--	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
+ 	hba->mcq_capabilities = ufshcd_readl(hba, REG_MCQCAP);
 -	hba->ext_iid_sup = FIELD_GET(MASK_EXT_IID_SUPPORT,
 -				     hba->mcq_capabilities);
--
+ 
  	return 0;
  }
- 
-@@ -8082,31 +8075,6 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
+@@ -8082,31 +8077,6 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
  	}
  }
  
@@ -126,7 +129,7 @@ index 3dfaeba5b691..dad5556547cb 100644
  static void ufshcd_set_rtt(struct ufs_hba *hba)
  {
  	struct ufs_dev_info *dev_info = &hba->dev_info;
-@@ -8302,9 +8270,6 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+@@ -8302,9 +8272,6 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
  
  	ufs_init_rtc(hba, desc_buf);
  
@@ -187,18 +190,19 @@ index ce7667b020e2..a2f7d565a79b 100644
  	bool mcq_sup;
  	bool lsdb_sup;
 diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 27364c4a6ef9..cfd618fd1915 100644
+index 27364c4a6ef9..155f0801e907 100644
 --- a/include/ufs/ufshci.h
 +++ b/include/ufs/ufshci.h
-@@ -23,7 +23,6 @@ enum {
+@@ -23,7 +23,7 @@ enum {
  /* UFSHCI Registers */
  enum {
  	REG_CONTROLLER_CAPABILITIES		= 0x00,
 -	REG_MCQCAP				= 0x04,
++	REG_MCQCAP                              = 0x04,
  	REG_UFS_VERSION				= 0x08,
  	REG_EXT_CONTROLLER_CAPABILITIES		= 0x0C,
  	REG_CONTROLLER_PID			= 0x10,
-@@ -82,11 +81,6 @@ enum {
+@@ -82,11 +82,6 @@ enum {
  	MASK_MCQ_SUPPORT			= 0x40000000,
  };
  
