@@ -1,56 +1,77 @@
-Received: from mail115-79.sinamail.sina.com.cn (mail115-79.sinamail.sina.com.cn [218.30.115.79])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74CC7190485
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2025 10:29:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.30.115.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F28B19E999
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2025 10:41:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735813750; cv=none; b=PWVlv7i0f9CWyrktsDP/upMneIFaNe7YyYd3ngxg5qGWv4DSdsfAMSuEnRdOKFHZQj2V2UVs90G110+++fysBRRtS0irTNxfXmGn6dypyK+8gdpaEjQuHysAKHIH+Ytpu5CT5HZ7GZb/P+YXFQtxrQZrjcJP4XzbP5ZwD1gk//Y=
+	t=1735814465; cv=none; b=TeKukGGpxko3wVa3MLFf2OnbktYGE/n6YO2XofJEHEPL1UxK+k3gmsDPYIc7+lPmgWvcyjaKUKVo4sFtdh2IqUtJujNeGgammMljy+nme94oaMDWimgxxFGZrrgFx6x1IRRgIHIKa+cWUX8drfcvz3fJr3DP9spsXd6XJn97ac4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735813750; c=relaxed/simple;
-	bh=Vx5GO7PyIWzEGTIeSdDqDqz7LuV7VBS9VwqozIFlvAs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xxu7Kt7vHn9GifE+0fVLfG8wsiae/z6qPQb0qHrGdD9Br3TAJVSzqYseI3y4IJw8MK6Kwrpz0zBVFfRC131BdMOn/IZSkDB1uuXLLzVnXTuoPWlTIntG/hExiQBydNOCKIWWiDM/RWmFwlV4XQnncwrjMfl9juODlaa05KoIKTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sina.com; spf=pass smtp.mailfrom=sina.com; arc=none smtp.client-ip=218.30.115.79
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sina.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sina.com
-X-SMAIL-HELO: localhost.localdomain
-Received: from unknown (HELO localhost.localdomain)([113.118.64.128])
-	by sina.com (10.185.250.22) with ESMTP
-	id 67766A4A00003252; Thu, 2 Jan 2025 18:28:28 +0800 (CST)
-X-Sender: hdanton@sina.com
-X-Auth-ID: hdanton@sina.com
-Authentication-Results: sina.com;
-	 spf=none smtp.mailfrom=hdanton@sina.com;
-	 dkim=none header.i=none;
-	 dmarc=none action=none header.from=hdanton@sina.com
-X-SMAIL-MID: 6959147602503
-X-SMAIL-UIID: 5DD46E63FE364BF6A7A4FFFE105F2AFC-20250102-182828-1
-From: Hillf Danton <hdanton@sina.com>
-To: syzbot <syzbot+566d48f3784973a22771@syzkaller.appspotmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Ming Lei <ming.lei@redhat.com>,
-	linux-block@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [scsi?] possible deadlock in sd_remove
-Date: Thu,  2 Jan 2025 18:28:15 +0800
-Message-ID: <20250102102816.1261-1-hdanton@sina.com>
-In-Reply-To: <6773a494.050a0220.2f3838.04da.GAE@google.com>
-References: 
+	s=arc-20240116; t=1735814465; c=relaxed/simple;
+	bh=pMXZiRpBRPmiXly100IZhcwAkq4eNjiCbRiC92Qtw3g=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=WcfbpmsxIZyfu/ATBbO/g7Y5/8njMyivlNGd/bN5hVbJ/R3FMBvaFztx0gzCsxq+xGFriIcPaMIGkMu/Bd40tOdknUeFncI/nlXCp+gvatomFnTwKtptg1aYJWo+ARhDYFRiqKYRVJXVr2Jh04lT/RxOrxeYRvl6zR4E+eLhgdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-3a81777ab57so97333775ab.2
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Jan 2025 02:41:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735814462; x=1736419262;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hzyV7ZElCa83ikzcuqqoZD0xz4zHyxxfrWJ2R/1Mz00=;
+        b=Pr8KjJ/zRKWznHKa8BCF56/cURD/sGyFmvX6h+DiZ4Ey92z9vnvO2b3nzioB+fpTAO
+         kIJCxOleIaESrW6g/nUM8UnQw2RGJbaY2fxfiX7IiGzRfNyUIh+gbapnhIETQN/gtXGv
+         K3NU7RjXEclSaNuISQazzw2PlEIvw0dvFq6fW8mPMjoenAjGRTpU86al0hsiqv+gAfzD
+         kui2D32nKKpp0KfzcgPDSnjIBM0MyUTf1BXEGYZwuj/caul861WZ4o355Oe826Z2miHU
+         pzjsXqRlLg6Vckd0wt8MYL3Q7nsuWKGKn35A152kwfkaQvtpzG10qWciF8C9TpptcvOO
+         CKbA==
+X-Forwarded-Encrypted: i=1; AJvYcCX67rRe90jsJPEUjFKayZp8Omi+eYM9h8GxZjTxA54g6U394PC5OvXt9FWIKzXBHvcJNceCrcNo/XP0@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkZLAeliFN+A/22RXf+G+aH4sKbDpve8DGxdVLU2Ec3bYtJBsA
+	gPprJkR2jDHKzwjqh0YKkqgzXEoOTzN6FknKKY9+Evq/JaDkT+mrsCypQVCzbu5DBi9+SXDrFiI
+	atGJLrDKKuEH6bhNuf/4UlzrM0cazmYWYHJicLOJt/rfE5FazAZd8GtE=
+X-Google-Smtp-Source: AGHT+IGA47IBOBbWR6mdnglpI3uKmGDqxXLykYJo4Q03z3y7tq1aR+ciBFlNzYQC2yO+rKBanjoFhJopRY/m7KUMI3RP96hMqXnu
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6e02:1705:b0:3a7:e800:7d36 with SMTP id
+ e9e14a558f8ab-3c2d2279c01mr369064545ab.10.1735814462620; Thu, 02 Jan 2025
+ 02:41:02 -0800 (PST)
+Date: Thu, 02 Jan 2025 02:41:02 -0800
+In-Reply-To: <20250102102816.1261-1-hdanton@sina.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67766d3e.050a0220.3a8527.0038.GAE@google.com>
+Subject: Re: [syzbot] [scsi?] possible deadlock in sd_remove
+From: syzbot <syzbot+566d48f3784973a22771@syzkaller.appspotmail.com>
+To: hdanton@sina.com, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ming.lei@redhat.com, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 31 Dec 2024 00:00:20 -0800
-> syzbot has found a reproducer for the following issue on:
-> 
-> HEAD commit:    573067a5a685 Merge branch 'for-next/core' into for-kernelci
-> git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14a09818580000
+Hello,
 
-#syz test: https://github.com/ming1/linux v6.13/block-fix
+syzbot tried to test the proposed patch but the build/boot failed:
+
+block/blk.h:728:7: error: use of undeclared identifier 'queue_dying'; did you mean 'cpu_dying'?
+block/partitions/../blk.h:728:7: error: use of undeclared identifier 'queue_dying'; did you mean 'cpu_dying'?
+block/partitions/../blk.h:734:7: error: use of undeclared identifier 'queue_dying'; did you mean 'cpu_dying'?
+block/blk.h:734:7: error: use of undeclared identifier 'queue_dying'; did you mean 'cpu_dying'?
+kernel/trace/../../block/blk.h:728:7: error: use of undeclared identifier 'queue_dying'; did you mean 'cpu_dying'?
+kernel/trace/../../block/blk.h:734:7: error: use of undeclared identifier 'queue_dying'; did you mean 'cpu_dying'?
+
+
+Tested on:
+
+commit:         cbacbf06 block: track queue dying state automatically ..
+git tree:       https://github.com/ming1/linux v6.13/block-fix
+kernel config:  https://syzkaller.appspot.com/x/.config?x=cd7202b56d469648
+dashboard link: https://syzkaller.appspot.com/bug?extid=566d48f3784973a22771
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+userspace arch: arm64
+
+Note: no patches were applied.
