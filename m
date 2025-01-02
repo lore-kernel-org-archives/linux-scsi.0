@@ -1,67 +1,68 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A731BC07A;
-	Thu,  2 Jan 2025 22:47:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA9EF1B6D0F;
+	Thu,  2 Jan 2025 22:47:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735858056; cv=none; b=c6Lgft1h0KGXXEK0tXmKBGX0st89/BdvF+X0P8GUyVM+DK5LAC3CLDUrgY+ChjypdbDhQMEmbw1159nVATbpvTGfoWBQmtoW++xlt7aWV2pqM9qxywpMyNf5q0s58bPkotpkni8DH2MdvrpeR3gIQ0wqbDRSkoaEAi0Q54H3pp8=
+	t=1735858062; cv=none; b=XNLQu//UgqjsccuwR1qboTY6Nx8WpV81a4IQNmFBQRLVKPLJoYZoAPiAKYih9MgjUjG/5HAfTehy8D6Z8HrtBs1gIvMDg0alxCC9An9RFrd9ezYkGpARYe/SCnJuucCmjM78ZM4V/Mdx6KYuvVx/AZXwodGrOoHN3UHElJP3dlM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735858056; c=relaxed/simple;
-	bh=yaP3ArhksUzcUztzm0RhgaJvyHWlGVks5nCkB6DNcBI=;
+	s=arc-20240116; t=1735858062; c=relaxed/simple;
+	bh=DSsgKLf1vbtZiKK9KqlWW0egQ9/9VEQqsppWlI2aGHE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FClX+CFxG1FoIUK2xgFkTq2jiqh1MyyDuYOsKngjVdhWn/KnVT9w8jv7Yh4TMTD8NbkEOGebv9aUI4sxyyuKICvBuc0bMpAPWDNsFMBEZ2wIEVh9DxZLFZNMzAHUPn7v+9PtyUpLY/FlOeokcN9c4I5+FF0BAaGXqBf5hGK9irk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=E5ibsIqb; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=QAMsdOwYE7XJov1ief47hh/twqDEAOziMHB2EiemldzLZ4wNFo7aQQH8V51LFlQTl2WTdD2Qn0Izoqv5CoXuXnuXPFF+DN1uX/XtMVP/uZ7CldUokMwy2GYBgSobxzLpE4+AA1dIjEUX0neHuPCUcbQC6EcbHpbYdYU67bd1w+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SDNGaaw3; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="E5ibsIqb"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 502KgCAm011508;
-	Thu, 2 Jan 2025 22:47:18 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SDNGaaw3"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 502KfuJ3015265;
+	Thu, 2 Jan 2025 22:47:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=TCdeT2FePSqJUIMxy/jtROQLvufeSuYVOswtHDcMDwM=; b=
-	E5ibsIqbLF9o+rS7Z6zZ9G79gnBidd0P8P0WlIISZN9JHPhncnECwV3y93fKEavR
-	25faqdRkqJN+6+RCx5kZjbX4QA8hstU7v4dyVzLNbGIJ5RMfPq6tRcQDHuB1LBdS
-	KJvE9M1+XBNoTljoUZtc/TzfT6tu74RnOsd3rG2GTa2bFj2NGJyzjPIiMEOZa0K1
-	S1uOPiuNvM5S2dQfwQLiwd1aItjFYNb9k30J+1AjlQ5qJOHBHMHEk0G2m4kyrsKp
-	IhvBWwoVKpylqxE/qxDYMXVYScdkOuD22U0lhbUvh42jQCe8hAT1iBFsekwcKC3S
-	N5MtOpGZaKelXyJTjcjWNA==
+	corp-2023-11-20; bh=U7tnL0OGsltMWpN+/Pzxk8lgQVrxvWRSVUe9cvOe/ig=; b=
+	SDNGaaw3XbUj1S6QFvLVC5139scD7TWpEhyd5yis3wIKVV6VSOVbHlNrcbCU66nl
+	NVdhDYFwYbqv6NS8bkpwAdaWyyh3tOIF8bz+UkBWocmCmuLpmxfbG2TIOeUWP7Fm
+	c0Mr8tuTzNrtw2S8YuCEO6OKQ7bn/zWvrMUEOfeJZvZBQn5bhslrSBXfLkFbFRgH
+	3ZGgYVRJoa3WOTDSDSQp5gklzoOx67mGwJvrTZWdw0xTcyS0le6eFMWLDsNP7fbH
+	slppSPpJ40jmikDZS+DjCfLcNOHahqZEymWZn0Ds0I5cEeEtVBlV00WHVXLQ+9DR
+	0X2p9LQ1ZP8OY3huRPh0sg==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43wrb8aa63-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43t88a7d86-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 02 Jan 2025 22:47:18 +0000 (GMT)
+	Thu, 02 Jan 2025 22:47:14 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 502LUGsI009571;
-	Thu, 2 Jan 2025 22:47:17 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 502LaiUr008778;
+	Thu, 2 Jan 2025 22:47:13 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43t7s93ny4-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43t7s93nwu-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 02 Jan 2025 22:47:17 +0000
+	Thu, 02 Jan 2025 22:47:13 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 502MlAtl004461;
-	Thu, 2 Jan 2025 22:47:17 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 502MlAtf004461;
+	Thu, 2 Jan 2025 22:47:12 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43t7s93nuq-5;
-	Thu, 02 Jan 2025 22:47:16 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43t7s93nuq-2;
+	Thu, 02 Jan 2025 22:47:12 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Bart Van Assche <bvanassche@acm.org>, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-        megaraidlinux.pdl@broadcom.com
-Subject: Re: [PATCH] scsi: eliminate scsi_register() and scsi_unregister() usage & docs.
-Date: Thu,  2 Jan 2025 17:46:41 -0500
-Message-ID: <173583977779.171606.15732169812385582553.b4-ty@oracle.com>
+To: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+        hpa@zytor.com, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, James.Bottomley@HansenPartnership.com,
+        mhkelley58@gmail.com
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, iommu@lists.linux.dev,
+        netdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: (subset) [PATCH 0/5] hyper-v: Don't assume cpu_possible_mask is dense
+Date: Thu,  2 Jan 2025 17:46:38 -0500
+Message-ID: <173583977795.171606.8906239465384373872.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241205041839.164404-1-rdunlap@infradead.org>
-References: <20241205041839.164404-1-rdunlap@infradead.org>
+In-Reply-To: <20241003035333.49261-1-mhklinux@outlook.com>
+References: <20241003035333.49261-1-mhklinux@outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,28 +75,32 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-02_03,2025-01-02_01,2024-11-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxscore=0
- suspectscore=0 phishscore=0 mlxlogscore=768 adultscore=0 malwarescore=0
+ suspectscore=0 phishscore=0 mlxlogscore=983 adultscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
  definitions=main-2501020199
-X-Proofpoint-GUID: Cj2Y9qUjQj1hFk5--OK_ESiSg-sHo0MN
-X-Proofpoint-ORIG-GUID: Cj2Y9qUjQj1hFk5--OK_ESiSg-sHo0MN
+X-Proofpoint-GUID: e6Ywwye_omB8U1gOZ8hmAB14_FT6wkJA
+X-Proofpoint-ORIG-GUID: e6Ywwye_omB8U1gOZ8hmAB14_FT6wkJA
 
-On Wed, 04 Dec 2024 20:18:39 -0800, Randy Dunlap wrote:
+On Wed, 02 Oct 2024 20:53:28 -0700, mhkelley58@gmail.com wrote:
 
-> scsi_mid_low_api.rst refers to scsi_register() and scsi_unregister()
-> but these functions (or macros) don't exist. They have been replaced
-> by more meaningful names.
+> Code specific to Hyper-V guests currently assumes the cpu_possible_mask
+> is "dense" -- i.e., all bit positions 0 thru (nr_cpu_ids - 1) are set,
+> with no "holes". Therefore, num_possible_cpus() is assumed to be equal
+> to nr_cpu_ids.
 > 
-> Update one driver (megaraid_mbox.c) that uses "scsi_unregister" in a
-> warning message. Update scsi_mid_low_api.rst to eliminate references to
-> scsi_register() and scsi_unregister().
+> Per a separate discussion[1], this assumption is not valid in the
+> general case. For example, the function setup_nr_cpu_ids() in
+> kernel/smp.c is coded to assume cpu_possible_mask may be sparse,
+> and other patches have been made in the past to correctly handle
+> the sparseness. See bc75e99983df1efd ("rcu: Correctly handle sparse
+> possible cpu") as noted by Mark Rutland.
 > 
 > [...]
 
 Applied to 6.14/scsi-queue, thanks!
 
-[1/1] scsi: eliminate scsi_register() and scsi_unregister() usage & docs.
-      https://git.kernel.org/mkp/scsi/c/c17618cf664d
+[4/5] scsi: storvsc: Don't assume cpu_possible_mask is dense
+      https://git.kernel.org/mkp/scsi/c/6cb7063feb2e
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
