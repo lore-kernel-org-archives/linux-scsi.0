@@ -1,57 +1,43 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B08AC186A
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2025 01:09:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0376D1494C2;
+	Thu,  2 Jan 2025 04:06:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735780184; cv=none; b=P0B1jt6L/nqJ9ZDzKNapTch/LD21drMe3Bj+qRMIaCHbP2AkbvKPyhKuESmqfv/6vZEG6xpfdkAFHCgAKg8mR+4SdZkpQMTu3orXJ8euRs70e/XFWT60FqZeGw8YrjUxAWJmnsyV7mpWLUzbEoj7SjjQHywZrhaEMiMsQ76BTQ4=
+	t=1735790799; cv=none; b=FtjjkzinWfgYzTxTFzAiKmAiienAVScowfg6m2GKKKAFkhqIDYur+AB8saix+M28Xva9cFiq/uETK8jyVqKVFxr8elPhvWV5DA0aIP6fwvKpQXWItehUJWS/UG2HHAk+VQlb67HlvK+nmKczcO4KzDT1Ys7zAU/F/sQZmtX0Zaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735780184; c=relaxed/simple;
-	bh=vK2S31op6HgRcI43NMM/DmXNiOId0ZVGZBjm0T4Shio=;
+	s=arc-20240116; t=1735790799; c=relaxed/simple;
+	bh=Yo7DKW63ImneN9BmI6CKAS0RorOk00phbTxdnFBsDsQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ESA1i91IQw7KdkPO7a70UHHAq2aI/aId94YxVxtwIWAMkIA26Y7xc0aflwFXkYveODz4LdeNQYvv9cfhLQhjV1tzr6+V8L0XuqcKfzJdomhgki2N1OYUS28qKZzaZQHIYQkgFzWvjMXVhvUEmNFwlbqQ+d7dPxTlu0FKhit96Wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UGXejBSR; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=U8A0wbDfuV2pFmOrzWME1X3Moo1+WfGXIGy3j+qqDuCpOBVHjDe6aWQShxoZqOcpnGjcmNu91wOOOjmPlj4+czQs0rLejlQXZ/CNNRLpoXEPN1gjaGkz88w0Fd1ZuSNuhKm2m6m1KXsTpgHj6oU48uePA0cbpL1aJrZkOVoPTIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=dMNZe5ql; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UGXejBSR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1735780179;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iZ9z+4tuCGk0PzTSTJVbv4mymQKi2zKIkkcXzOuC7/M=;
-	b=UGXejBSRUarbqp57i/HQ4alefTXmy5WpmDKLpuduYoyE+GnMpJzn9b8WE9wxsxgoI02ptX
-	fdYFCLbJ1+Dw9lTmVCP0SELFD7OjlQTrGRtqCqJMOw/etzzT+VxTg3Uz6c5Ci4H9PynFB+
-	PlT1tsCPnkjG8Y0XOmPbdbmUvseLPq8=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-533-Q_mqlZ8sPMi9FdVQHbSqTg-1; Wed,
- 01 Jan 2025 20:09:34 -0500
-X-MC-Unique: Q_mqlZ8sPMi9FdVQHbSqTg-1
-X-Mimecast-MFC-AGG-ID: Q_mqlZ8sPMi9FdVQHbSqTg
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DDD2D19560B4;
-	Thu,  2 Jan 2025 01:09:32 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.50])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2416619560AA;
-	Thu,  2 Jan 2025 01:09:26 +0000 (UTC)
-Date: Thu, 2 Jan 2025 09:09:21 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Nilay Shroff <nilay@linux.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH] scsi: avoid to send scsi command with ->queue_limits
- lock held
-Message-ID: <Z3XnQVsao-fPcHgQ@fedora>
-References: <20241231042241.171227-1-ming.lei@redhat.com>
- <e1c7b616-301a-4746-8842-896c5336d00f@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dMNZe5ql"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=iMLpK7U9WYHmx0iT1T9KJlpKXJYaEu7HU7H6KfDU588=; b=dMNZe5qlfMN+VDuQTbBhmp+4Bv
+	QrKPAHI3LFcSRnmBoLSL+g/BDLPFLYYPw/kwlIkqCnrz4LaogbA9VD8hbFlqKG12C2acEd0cuTkb/
+	MCs4WtPL+VPdiIKQJ/+vqZcNmXsMcKAv9T0lf4eAYE1ecfv/CFrylrt2KA2Z42Ta9irR5fRjQZOR6
+	XHV+FVYBI6PTpDE9/vcoFdkn3/FoIvM5LDVW4QWYwIBpj9BFe+z9KFFwqRhTn0ejfRES70jY62/EE
+	i9wlIg07in6ehPSfcIUhasxRZOg9P23V3pm2h3wbbXPrqTwZF9J5dzAmXMYeRlStCZdGikHnohD/0
+	p9j7Q+Sw==;
+Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tTCTZ-0000000Eyaj-2SUV;
+	Thu, 02 Jan 2025 04:06:25 +0000
+Date: Thu, 2 Jan 2025 04:06:25 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Jerry <jerrydeng079@163.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] mm: fix dead-loop bug
+Message-ID: <Z3YQwcX8SpJbcVAD@casper.infradead.org>
+References: <20250101132148.126393-1-jerrydeng079@163.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,598 +46,263 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e1c7b616-301a-4746-8842-896c5336d00f@linux.ibm.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+In-Reply-To: <20250101132148.126393-1-jerrydeng079@163.com>
 
-On Wed, Jan 01, 2025 at 04:46:24PM +0530, Nilay Shroff wrote:
+On Wed, Jan 01, 2025 at 09:21:48PM +0800, Jerry wrote:
+> KERNEL-5.10.232.generic_perform_write()->balance_dirty_pages_ratelimited()->        
+
+Can you reproduce this with a kernel that's newer than four years old?
+
+> balance_dirty_pages() At this point,if the block device removed, 
+> the process  may trapped in a dead loop.and the memory of the bdi 
+> device hass also been released.
+
+I think this is a block layer bug, not an MM bug.  Devices shouldn't
+go away while the MM is still writing to them.
+
+> Insert a USB flash and directly writing to device node.
+> Remove the USB flash while writing, and the writing process 
+> may trapped in a dead loop.
+> 
+> user code:
+> 
+> int fd = open("/dev/sda", O_RDWR);
+> char *p = malloc(0x1000000);
+> memset(p, 0xa, 0x1000000);
+> for(int i=0; i<100; i++) {
 > 
 > 
-> On 12/31/24 09:52, Ming Lei wrote:
-> > Block request queue is often frozen before acquiring the queue
-> > ->limits_lock.
-> > 
-> > However, in sd_revalidate_disk(), queue_limits_start_update() is called
-> > before reading all kinds of queue limits from hardware, and this way
-> > causes ABBA lock easily[1][2] because queue usage counter is grabbed
-> > when allocating scsi command.
-> > 
-> > [1] https://lore.kernel.org/linux-block/Z1A8fai9_fQFhs1s@hovoldconsulting.com/
-> > [2] https://lore.kernel.org/linux-scsi/ZxG38G9BuFdBpBHZ@fedora/
-> > 
-> > Fix the issue by reading limits into one scsi disk shadow queue limits
-> > structure first, then sync it to the block queue limits with
-> > ->limits_lock.
-> > 
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Damien Le Moal <dlemoal@kernel.org>
-> > Cc: Nilay Shroff <nilay@linux.ibm.com>
-> > Fixes: 804e498e0496 ("sd: convert to the atomic queue limits API")
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  drivers/scsi/sd.c     | 156 +++++++++++++++++++++++++++++++-----------
-> >  drivers/scsi/sd.h     |  59 +++++++++++++++-
-> >  drivers/scsi/sd_dif.c |   3 +-
-> >  drivers/scsi/sd_zbc.c |  14 ++--
-> >  4 files changed, 181 insertions(+), 51 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index 8947dab132d7..6af5334dee2f 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -102,10 +102,10 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
-> >  
-> >  #define SD_MINORS	16
-> >  
-> > -static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
-> > +static void sd_config_discard(struct scsi_disk *sdkp, struct sd_limits *lim,
-> >  		unsigned int mode);
-> >  static void sd_config_write_same(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim);
-> > +		struct sd_limits *lim);
-> >  static int  sd_revalidate_disk(struct gendisk *);
-> >  static void sd_unlock_native_capacity(struct gendisk *disk);
-> >  static void sd_shutdown(struct device *);
-> > @@ -121,8 +121,64 @@ static const char *sd_cache_types[] = {
-> >  	"write back, no read (daft)"
-> >  };
-> >  
-> > +static void sd_sync_limits(struct queue_limits *blk_lim,
-> > +		const struct sd_limits *lim)
-> > +{
-> > +	if (lim->has_features)
-> > +		blk_lim->features |= lim->features;
-> > +
-> > +	if (lim->has_neg_features)
-> > +		blk_lim->features &= ~lim->neg_features;
-> > +
-> > +	if (lim->has_alignment_offset)
-> > +		blk_lim->alignment_offset = lim->alignment_offset;
-> > +
-> > +	if (lim->has_integrity)
-> > +		blk_lim->integrity = lim->integrity;
-> > +
-> > +	if (lim->has_bs) {
-> > +		blk_lim->logical_block_size = lim->bs.logical_block_size;
-> > +		blk_lim->physical_block_size = lim->bs.physical_block_size;
-> > +	}
-> > +
-> > +	if (lim->has_discard) {
-> > +		blk_lim->discard_granularity =
-> > +			lim->discard.discard_granularity;
-> > +		blk_lim->discard_alignment =
-> > +			lim->discard.discard_alignment;
-> > +		blk_lim->max_hw_discard_sectors =
-> > +			lim->discard.max_hw_discard_sectors;
-> > +	}
-> > +
-> > +	if (lim->has_ws)
-> > +		blk_lim->max_write_zeroes_sectors =
-> > +			lim->ws.max_write_zeroes_sectors;
-> > +
-> > +	if (lim->has_aw) {
-> > +		blk_lim->atomic_write_hw_max = lim->aw.atomic_write_hw_max;
-> > +		blk_lim->atomic_write_hw_boundary =
-> > +			lim->aw.atomic_write_hw_boundary;
-> > +		blk_lim->atomic_write_hw_unit_min =
-> > +			lim->aw.atomic_write_hw_unit_min;
-> > +		blk_lim->atomic_write_hw_unit_max =
-> > +			lim->aw.atomic_write_hw_unit_max;
-> > +	}
-> > +
-> > +	if (lim->has_io) {
-> > +		blk_lim->max_dev_sectors = lim->io.max_dev_sectors;
-> > +		blk_lim->io_opt = lim->io.io_opt;
-> > +		blk_lim->io_min = lim->io.io_min;
-> > +	}
-> > +
-> > +	if (lim->has_zone) {
-> > +		blk_lim->max_open_zones = lim->zone.max_open_zones;
-> > +		blk_lim->max_active_zones = lim->zone.max_active_zones;
-> > +		blk_lim->chunk_sectors = lim->zone.chunk_sectors;
-> > +	}
-> > +}
-> > +
-> >  static void sd_set_flush_flag(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim)
-> > +		struct sd_limits *lim)
-> >  {
-> >  	if (sdkp->WCE) {
-> >  		lim->features |= BLK_FEAT_WRITE_CACHE;
-> > @@ -133,6 +189,7 @@ static void sd_set_flush_flag(struct scsi_disk *sdkp,
-> >  	} else {
-> >  		lim->features &= ~(BLK_FEAT_WRITE_CACHE | BLK_FEAT_FUA);
-> >  	}
-> > +	lim->has_features = 1;
-> >  }
-> >  
-> >  static ssize_t
-> > @@ -170,15 +227,18 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
-> >  	wce = (ct & 0x02) && !sdkp->write_prot ? 1 : 0;
-> >  
-> >  	if (sdkp->cache_override) {
-> > -		struct queue_limits lim;
-> > +		struct queue_limits blk_lim;
-> > +		struct sd_limits lim = { 0 };
-> >  
-> >  		sdkp->WCE = wce;
-> >  		sdkp->RCD = rcd;
-> >  
-> > -		lim = queue_limits_start_update(sdkp->disk->queue);
-> >  		sd_set_flush_flag(sdkp, &lim);
-> > +
-> > +		blk_lim = queue_limits_start_update(sdkp->disk->queue);
-> > +		sd_sync_limits(&blk_lim, &lim);
-> >  		blk_mq_freeze_queue(sdkp->disk->queue);
-> > -		ret = queue_limits_commit_update(sdkp->disk->queue, &lim);
-> > +		ret = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
-> >  		blk_mq_unfreeze_queue(sdkp->disk->queue);
-> >  		if (ret)
-> >  			return ret;
-> > @@ -468,7 +528,8 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
-> >  {
-> >  	struct scsi_disk *sdkp = to_scsi_disk(dev);
-> >  	struct scsi_device *sdp = sdkp->device;
-> > -	struct queue_limits lim;
-> > +	struct queue_limits blk_lim;
-> > +	struct sd_limits lim = { 0 };
-> >  	int mode, err;
-> >  
-> >  	if (!capable(CAP_SYS_ADMIN))
-> > @@ -481,10 +542,11 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
-> >  	if (mode < 0)
-> >  		return -EINVAL;
-> >  
-> > -	lim = queue_limits_start_update(sdkp->disk->queue);
-> >  	sd_config_discard(sdkp, &lim, mode);
-> > +	blk_lim = queue_limits_start_update(sdkp->disk->queue);
-> > +	sd_sync_limits(&blk_lim, &lim);
-> >  	blk_mq_freeze_queue(sdkp->disk->queue);
-> > -	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
-> > +	err = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
-> >  	blk_mq_unfreeze_queue(sdkp->disk->queue);
-> >  	if (err)
-> >  		return err;
-> > @@ -570,7 +632,8 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
-> >  {
-> >  	struct scsi_disk *sdkp = to_scsi_disk(dev);
-> >  	struct scsi_device *sdp = sdkp->device;
-> > -	struct queue_limits lim;
-> > +	struct queue_limits blk_lim;
-> > +	struct sd_limits lim = { 0 };
-> >  	unsigned long max;
-> >  	int err;
-> >  
-> > @@ -592,10 +655,11 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
-> >  		sdkp->max_ws_blocks = max;
-> >  	}
-> >  
-> > -	lim = queue_limits_start_update(sdkp->disk->queue);
-> >  	sd_config_write_same(sdkp, &lim);
-> > +	blk_lim = queue_limits_start_update(sdkp->disk->queue);
-> > +	sd_sync_limits(&blk_lim, &lim);
-> >  	blk_mq_freeze_queue(sdkp->disk->queue);
-> > -	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
-> > +	err = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
-> >  	blk_mq_unfreeze_queue(sdkp->disk->queue);
-> >  	if (err)
-> >  		return err;
-> > @@ -847,14 +911,14 @@ static void sd_disable_discard(struct scsi_disk *sdkp)
-> >  	blk_queue_disable_discard(sdkp->disk->queue);
-> >  }
-> >  
-> > -static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
-> > +static void sd_config_discard(struct scsi_disk *sdkp, struct sd_limits *lim,
-> >  		unsigned int mode)
-> >  {
-> >  	unsigned int logical_block_size = sdkp->device->sector_size;
-> >  	unsigned int max_blocks = 0;
-> >  
-> > -	lim->discard_alignment = sdkp->unmap_alignment * logical_block_size;
-> > -	lim->discard_granularity = max(sdkp->physical_block_size,
-> > +	lim->discard.discard_alignment = sdkp->unmap_alignment * logical_block_size;
-> > +	lim->discard.discard_granularity = max(sdkp->physical_block_size,
-> >  			sdkp->unmap_granularity * logical_block_size);
-> >  	sdkp->provisioning_mode = mode;
-> >  
-> > @@ -893,8 +957,9 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
-> >  		break;
-> >  	}
-> >  
-> > -	lim->max_hw_discard_sectors = max_blocks *
-> > +	lim->discard.max_hw_discard_sectors = max_blocks *
-> >  		(logical_block_size >> SECTOR_SHIFT);
-> > +	lim->has_discard = 1;
-> >  }
-> >  
-> >  static void *sd_set_special_bvec(struct request *rq, unsigned int data_len)
-> > @@ -940,7 +1005,7 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
-> >  	return scsi_alloc_sgtables(cmd);
-> >  }
-> >  
-> > -static void sd_config_atomic(struct scsi_disk *sdkp, struct queue_limits *lim)
-> > +static void sd_config_atomic(struct scsi_disk *sdkp, struct sd_limits *lim)
-> >  {
-> >  	unsigned int logical_block_size = sdkp->device->sector_size,
-> >  		physical_block_size_sectors, max_atomic, unit_min, unit_max;
-> > @@ -992,10 +1057,11 @@ static void sd_config_atomic(struct scsi_disk *sdkp, struct queue_limits *lim)
-> >  			return;
-> >  	}
-> >  
-> > -	lim->atomic_write_hw_max = max_atomic * logical_block_size;
-> > -	lim->atomic_write_hw_boundary = 0;
-> > -	lim->atomic_write_hw_unit_min = unit_min * logical_block_size;
-> > -	lim->atomic_write_hw_unit_max = unit_max * logical_block_size;
-> > +	lim->aw.atomic_write_hw_max = max_atomic * logical_block_size;
-> > +	lim->aw.atomic_write_hw_boundary = 0;
-> > +	lim->aw.atomic_write_hw_unit_min = unit_min * logical_block_size;
-> > +	lim->aw.atomic_write_hw_unit_max = unit_max * logical_block_size;
-> > +	lim->has_aw = 1;
-> >  }
-> >  
-> >  static blk_status_t sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd,
-> > @@ -1088,7 +1154,7 @@ static void sd_disable_write_same(struct scsi_disk *sdkp)
-> >  }
-> >  
-> >  static void sd_config_write_same(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim)
-> > +		struct sd_limits *lim)
-> >  {
-> >  	unsigned int logical_block_size = sdkp->device->sector_size;
-> >  
-> > @@ -1143,8 +1209,9 @@ static void sd_config_write_same(struct scsi_disk *sdkp,
-> >  	}
-> >  
-> >  out:
-> > -	lim->max_write_zeroes_sectors =
-> > +	lim->ws.max_write_zeroes_sectors =
-> >  		sdkp->max_ws_blocks * (logical_block_size >> SECTOR_SHIFT);
-> > +	lim->has_ws = 1;
-> >  }
-> >  
-> >  static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
-> > @@ -2574,7 +2641,7 @@ static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer
-> >  }
-> >  
-> >  static void sd_config_protection(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim)
-> > +		struct sd_limits *lim)
-> >  {
-> >  	struct scsi_device *sdp = sdkp->device;
-> >  
-> > @@ -2628,7 +2695,7 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> >  #define READ_CAPACITY_RETRIES_ON_RESET	10
-> >  
-> >  static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> > -		struct queue_limits *lim, unsigned char *buffer)
-> > +		struct sd_limits *lim, unsigned char *buffer)
-> >  {
-> >  	unsigned char cmd[16];
-> >  	struct scsi_sense_hdr sshdr;
-> > @@ -2703,6 +2770,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> >  	/* Lowest aligned logical block */
-> >  	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
-> >  	lim->alignment_offset = alignment;
-> > +	lim->has_alignment_offset = 1;
-> >  	if (alignment && sdkp->first_scan)
-> >  		sd_printk(KERN_NOTICE, sdkp,
-> >  			  "physical block alignment offset: %u\n", alignment);
-> > @@ -2814,7 +2882,7 @@ static int sd_try_rc16_first(struct scsi_device *sdp)
-> >   * read disk capacity
-> >   */
-> >  static void
-> > -sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
-> > +sd_read_capacity(struct scsi_disk *sdkp, struct sd_limits *lim,
-> >  		unsigned char *buffer)
-> >  {
-> >  	int sector_size;
-> > @@ -2900,8 +2968,9 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
-> >  		 */
-> >  		sector_size = 512;
-> >  	}
-> > -	lim->logical_block_size = sector_size;
-> > -	lim->physical_block_size = sdkp->physical_block_size;
-> > +	lim->bs.logical_block_size = sector_size;
-> > +	lim->bs.physical_block_size = sdkp->physical_block_size;
-> > +	lim->has_bs = 1;
-> >  	sdkp->device->sector_size = sector_size;
-> >  
-> >  	if (sdkp->capacity > 0xffffffff)
-> > @@ -3333,7 +3402,7 @@ static unsigned int sd_discard_mode(struct scsi_disk *sdkp)
-> >   * Query disk device for preferred I/O sizes.
-> >   */
-> >  static void sd_read_block_limits(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim)
-> > +		struct sd_limits *lim)
-> >  {
-> >  	struct scsi_vpd *vpd;
-> >  
-> > @@ -3395,7 +3464,7 @@ static void sd_read_block_limits_ext(struct scsi_disk *sdkp)
-> >  
-> >  /* Query block device characteristics */
-> >  static void sd_read_block_characteristics(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim)
-> > +		struct sd_limits *lim)
-> >  {
-> >  	struct scsi_vpd *vpd;
-> >  	u16 rot;
-> > @@ -3412,8 +3481,10 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp,
-> >  	sdkp->zoned = (vpd->data[8] >> 4) & 3;
-> >  	rcu_read_unlock();
-> >  
-> > -	if (rot == 1)
-> > -		lim->features &= ~(BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
-> > +	if (rot == 1) {
-> > +		lim->neg_features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
-> > +		lim->has_neg_features = 1;
-> > +	}
-> >  
-> >  	if (!sdkp->first_scan)
-> >  		return;
-> > @@ -3700,7 +3771,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
-> >  	struct scsi_disk *sdkp = scsi_disk(disk);
-> >  	struct scsi_device *sdp = sdkp->device;
-> >  	sector_t old_capacity = sdkp->capacity;
-> > -	struct queue_limits lim;
-> > +	struct queue_limits blk_lim;
-> > +	struct sd_limits lim = { 0 };
-> >  	unsigned char *buffer;
-> >  	unsigned int dev_max;
-> >  	int err;
-> > @@ -3724,8 +3796,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
-> >  
-> >  	sd_spinup_disk(sdkp);
-> >  
-> > -	lim = queue_limits_start_update(sdkp->disk->queue);
-> > -
-> >  	/*
-> >  	 * Without media there is no reason to ask; moreover, some devices
-> >  	 * react badly if we do.
-> > @@ -3746,6 +3816,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
-> >  		 * doesn't support it should be treated as rotational.
-> >  		 */
-> >  		lim.features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
-> > +		lim.has_features = 1;
-> >  
-> >  		if (scsi_device_supports_vpd(sdp)) {
-> >  			sd_read_block_provisioning(sdkp);
-> > @@ -3779,23 +3850,24 @@ static int sd_revalidate_disk(struct gendisk *disk)
-> >  
-> >  	/* Some devices report a maximum block count for READ/WRITE requests. */
-> >  	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
-> > -	lim.max_dev_sectors = logical_to_sectors(sdp, dev_max);
-> > +	lim.io.max_dev_sectors = logical_to_sectors(sdp, dev_max);
-> >  
-> >  	if (sd_validate_min_xfer_size(sdkp))
-> > -		lim.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
-> > +		lim.io.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
-> >  	else
-> > -		lim.io_min = 0;
-> > +		lim.io.io_min = 0;
-> >  
-> >  	/*
-> >  	 * Limit default to SCSI host optimal sector limit if set. There may be
-> >  	 * an impact on performance for when the size of a request exceeds this
-> >  	 * host limit.
-> >  	 */
-> > -	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
-> > +	lim.io.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
-> >  	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
-> > -		lim.io_opt = min_not_zero(lim.io_opt,
-> > +		lim.io.io_opt = min_not_zero(lim.io.io_opt,
-> >  				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
-> >  	}
-> > +	lim.has_io = 1;
-> >  
-> >  	sdkp->first_scan = 0;
-> >  
-> > @@ -3803,8 +3875,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
-> >  	sd_config_write_same(sdkp, &lim);
-> >  	kfree(buffer);
-> >  
-> > +	blk_lim = queue_limits_start_update(sdkp->disk->queue);
-> > +	sd_sync_limits(&blk_lim, &lim);
-> >  	blk_mq_freeze_queue(sdkp->disk->queue);
-> > -	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
-> > +	err = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
-> >  	blk_mq_unfreeze_queue(sdkp->disk->queue);
-> >  	if (err)
-> >  		return err;
-> > diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> > index 36382eca941c..68c2db27cbf3 100644
-> > --- a/drivers/scsi/sd.h
-> > +++ b/drivers/scsi/sd.h
-> > @@ -67,6 +67,59 @@ enum {
-> >  	SD_ZERO_WS10_UNMAP,	/* Use WRITE SAME(10) with UNMAP */
-> >  };
-> >  
-> > +struct sd_limits {
-> > +	unsigned int has_features:1;
-> > +	unsigned int has_neg_features:1;
-> > +	unsigned int has_alignment_offset:1;
-> > +	unsigned int has_bs:1;
-> > +	unsigned int has_discard:1;
-> > +	unsigned int has_integrity:1;
-> > +	unsigned int has_aw:1;
-> > +	unsigned int has_ws:1;
-> > +	unsigned int has_io:1;
-> > +	unsigned int has_zone:1;
-> > +
-> > +	blk_features_t		features;
-> > +	blk_features_t		neg_features;
-> > +	unsigned int		alignment_offset;
-> > +	struct blk_integrity	integrity;
-> > +
-> > +	struct {
-> > +		unsigned int logical_block_size;
-> > +		unsigned int physical_block_size;
-> > +	} bs;
-> > +
-> > +	struct {
-> > +		unsigned int		discard_granularity;
-> > +		unsigned int		discard_alignment;
-> > +		unsigned int		max_hw_discard_sectors;
-> > +	} discard;
-> > +
-> > +	struct {
-> > +		unsigned int		max_write_zeroes_sectors;
-> > +	} ws;
-> > +
-> > +	struct {
-> > +		unsigned int		atomic_write_hw_max;
-> > +		unsigned int		atomic_write_hw_boundary;
-> > +		unsigned int		atomic_write_hw_unit_min;
-> > +		unsigned int		atomic_write_hw_unit_max;
-> > +	} aw;
-> > +
-> > +	struct {
-> > +		unsigned int		max_dev_sectors;
-> > +		unsigned int		io_opt;
-> > +		unsigned int		io_min;
-> > +	} io;
-> > +
-> > +	struct {
-> > +		unsigned int		zone_write_granularity;
-> > +		unsigned int		max_open_zones;
-> > +		unsigned int		max_active_zones;
-> > +		unsigned int		chunk_sectors;
-> > +	} zone;
-> > +};
-> > +
-> >  /**
-> >   * struct zoned_disk_info - Specific properties of a ZBC SCSI device.
-> >   * @nr_zones: number of zones.
-> > @@ -228,11 +281,11 @@ static inline sector_t sectors_to_logical(struct scsi_device *sdev, sector_t sec
-> >  	return sector >> (ilog2(sdev->sector_size) - 9);
-> >  }
-> >  
-> > -void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim);
-> > +void sd_dif_config_host(struct scsi_disk *sdkp, struct sd_limits *lim);
-> >  
-> >  #ifdef CONFIG_BLK_DEV_ZONED
-> >  
-> > -int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
-> > +int sd_zbc_read_zones(struct scsi_disk *sdkp, struct sd_limits *lim,
-> >  		u8 buf[SD_BUF_SIZE]);
-> >  int sd_zbc_revalidate_zones(struct scsi_disk *sdkp);
-> >  blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
-> > @@ -245,7 +298,7 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
-> >  #else /* CONFIG_BLK_DEV_ZONED */
-> >  
-> >  static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
-> > -		struct queue_limits *lim, u8 buf[SD_BUF_SIZE])
-> > +		struct sd_limits *lim, u8 buf[SD_BUF_SIZE])
-> >  {
-> >  	return 0;
-> >  }
-> > diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-> > index ae6ce6f5d622..081168d4aee3 100644
-> > --- a/drivers/scsi/sd_dif.c
-> > +++ b/drivers/scsi/sd_dif.c
-> > @@ -24,13 +24,14 @@
-> >  /*
-> >   * Configure exchange of protection information between OS and HBA.
-> >   */
-> > -void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim)
-> > +void sd_dif_config_host(struct scsi_disk *sdkp, struct sd_limits *lim)
-> >  {
-> >  	struct scsi_device *sdp = sdkp->device;
-> >  	u8 type = sdkp->protection_type;
-> >  	struct blk_integrity *bi = &lim->integrity;
-> >  	int dif, dix;
-> >  
-> > +	lim->has_integrity = 1;
-> >  	memset(bi, 0, sizeof(*bi));
-> >  
-> >  	dif = scsi_host_dif_capable(sdp->host, type);
-> > diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> > index 7a447ff600d2..c8e398a08b31 100644
-> > --- a/drivers/scsi/sd_zbc.c
-> > +++ b/drivers/scsi/sd_zbc.c
-> > @@ -588,7 +588,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
-> >   * also the zoned device information in *sdkp. Called by sd_revalidate_disk()
-> >   * before the gendisk capacity has been set.
-> >   */
-> > -int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
-> > +int sd_zbc_read_zones(struct scsi_disk *sdkp, struct sd_limits *lim,
-> >  		u8 buf[SD_BUF_SIZE])
-> >  {
-> >  	unsigned int nr_zones;
-> > @@ -598,6 +598,7 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
-> >  	if (sdkp->device->type != TYPE_ZBC)
-> >  		return 0;
-> >  
-> > +	lim->has_features = 1;
-> >  	lim->features |= BLK_FEAT_ZONED;
-> >  
-> >  	/*
-> > @@ -605,7 +606,7 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
-> >  	 * zones of host-managed devices must be aligned to the device physical
-> >  	 * block size.
-> >  	 */
-> > -	lim->zone_write_granularity = sdkp->physical_block_size;
-> > +	lim->zone.zone_write_granularity = sdkp->physical_block_size;
-> >  
-> >  	/* READ16/WRITE16/SYNC16 is mandatory for ZBC devices */
-> >  	sdkp->device->use_16_for_rw = 1;
-> > @@ -628,11 +629,12 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
-> >  
-> >  	/* The drive satisfies the kernel restrictions: set it up */
-> >  	if (sdkp->zones_max_open == U32_MAX)
-> > -		lim->max_open_zones = 0;
-> > +		lim->zone.max_open_zones = 0;
-> >  	else
-> > -		lim->max_open_zones = sdkp->zones_max_open;
-> > -	lim->max_active_zones = 0;
-> > -	lim->chunk_sectors = logical_to_sectors(sdkp->device, zone_blocks);
-> > +		lim->zone.max_open_zones = sdkp->zones_max_open;
-> > +	lim->zone.max_active_zones = 0;
-> > +	lim->zone.chunk_sectors = logical_to_sectors(sdkp->device, zone_blocks);
-> > +	lim->has_zone = 1;
-> >  
-> >  	return 0;
-> >  
+> 	write(fd, p, 0x1000000);
 > 
-> I see that we use shadow queue for few fucntions other than sd_revalidate_disk(). 
-> Do we really need to use shadow queue for those other functions like provisioning_mode_store(), 
-> max_write_same_blocks_store() and cache_type_store() ? It seems shadow queue would be 
-> only needed for sd_revalidate_disk(). 
-
-Yes.
-
-But shadow limits structure is introduced and applied for these functions,
-so they have to switch to this pattern, and the change is correct.
-
 > 
-> Moreover, with this change the locking order is to first acquire limit locks followed by 
-> queue freeze lock and this patch only addresses scsi. However as we know we do have other places 
-> where we first freeze queue and then acquire limits lock. So those places also need to be fixed
-> otherwise we would get lockdep splat. Are you going to fix it in another patch? 
-
-Yes, and it belongs to another easier problem.
-
-If this patch can be accepted, we can adjust the lock order for these functions.
-
-
-Thanks,
-Ming
-
+> }
+> return;
+> 
+> ISSUE 1: Dead loop may occr here.
+> CALL trace:
+> 
+> schedule_timeout()
+> 
+> io_schedule_timeout()
+> 
+> balance_dirty_pages()
+> 
+> balance_dirty_pages_ratelimited()
+> 
+> balance_dirty_pages_ratelimited)
+> 
+> ISSUE 2 , BDI&WB memory illegal .
+> void balance_dirty_pages_ratelimited(struct address_space *mapping)
+> {
+> 	struct inode *inode = mapping->host;
+> 	struct backing_dev_info *bdi = inode_to_bdi(inode);
+> 	struct bdi_writeback *wb = NULL;
+> 	int ratelimit;
+> 	.....
+> 
+> }
+> BDI&WB memory belong to SCSI device. If the USB flash remove, 
+> The BDI&WB memeory released by below process:
+> 
+> bdi_unregister()
+> 
+> del_gendisk()
+> 
+> sd_remove()
+> 
+> __device_release_driver()
+> 
+> device_release_driver()
+> 
+> bus_remove_device()
+> 
+> device_del()
+> 
+> __scsi_remove_deice()
+> 
+> scsi_forget_host()
+> 
+> scsi_remove_host()
+> 
+> usb_stor_disconnect()
+> 
+> ...
+> 
+> usb_unbind_initerface()
+> 
+> usb_disable_device()
+> 
+> usb_disconnect()
+> 
+> Signed-off-by: Jerry <jerrydeng079@163.com>
+> ---
+>  mm/backing-dev.c    |  1 +
+>  mm/filemap.c        |  6 ++++-
+>  mm/page-writeback.c | 56 ++++++++++++++++++++++++++++++++++++++++-----
+>  3 files changed, 56 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+> index dd08ab928..0b86bd980 100755
+> --- a/mm/backing-dev.c
+> +++ b/mm/backing-dev.c
+> @@ -878,6 +878,7 @@ void bdi_unregister(struct backing_dev_info *bdi)
+>  	/* make sure nobody finds us on the bdi_list anymore */
+>  	bdi_remove_from_list(bdi);
+>  	wb_shutdown(&bdi->wb);
+> +	wake_up(&(bdi->wb_waitq));
+>  	cgwb_bdi_unregister(bdi);
+>  
+>  	/*
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 3b0d8c6dd..48424240f 100755
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3300,6 +3300,7 @@ ssize_t generic_perform_write(struct file *file,
+>  	long status = 0;
+>  	ssize_t written = 0;
+>  	unsigned int flags = 0;
+> +	errseq_t err = 0;
+>  
+>  	do {
+>  		struct page *page;
+> @@ -3368,8 +3369,11 @@ ssize_t generic_perform_write(struct file *file,
+>  		}
+>  		pos += copied;
+>  		written += copied;
+> -
+> +		
+>  		balance_dirty_pages_ratelimited(mapping);
+> +		err = errseq_check(&mapping->wb_err, 0);
+> +		if (err)
+> +			return err;
+>  	} while (iov_iter_count(i));
+>  
+>  	return written ? written : status;
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index b2c916474..001dd0c5e 100755
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -146,6 +146,13 @@ struct dirty_throttle_control {
+>  	unsigned long		pos_ratio;
+>  };
+>  
+> +struct bdi_wq_callback_entry {
+> +	struct task_struct *tsk;
+> +	struct wait_queue_entry  wq_entry;
+> +	int bdi_unregister;
+> +};
+> +
+> +
+>  /*
+>   * Length of period for aging writeout fractions of bdis. This is an
+>   * arbitrarily chosen number. The longer the period, the slower fractions will
+> @@ -1567,6 +1574,22 @@ static inline void wb_dirty_limits(struct dirty_throttle_control *dtc)
+>  	}
+>  }
+>  
+> +
+> +static int wake_up_bdi_waitq(wait_queue_entry_t *wait, unsigned int mode,
+> +				int sync, void *key)
+> +{
+> +
+> +	struct bdi_wq_callback_entry *bwce =
+> +		container_of(wait, struct bdi_wq_callback_entry, wq_entry);
+> +
+> +	bwce->bdi_unregister = 1;
+> +	if (bwce->tsk)
+> +		wake_up_process(bwce->tsk);
+> +
+> +	return 0;
+> +}
+> +
+> +
+>  /*
+>   * balance_dirty_pages() must be called by processes which are generating dirty
+>   * data.  It looks at the number of dirty pages in the machine and will force
+> @@ -1574,7 +1597,7 @@ static inline void wb_dirty_limits(struct dirty_throttle_control *dtc)
+>   * If we're over `background_thresh' then the writeback threads are woken to
+>   * perform some writeout.
+>   */
+> -static void balance_dirty_pages(struct bdi_writeback *wb,
+> +static int balance_dirty_pages(struct bdi_writeback *wb,
+>  				unsigned long pages_dirtied)
+>  {
+>  	struct dirty_throttle_control gdtc_stor = { GDTC_INIT(wb) };
+> @@ -1595,7 +1618,15 @@ static void balance_dirty_pages(struct bdi_writeback *wb,
+>  	struct backing_dev_info *bdi = wb->bdi;
+>  	bool strictlimit = bdi->capabilities & BDI_CAP_STRICTLIMIT;
+>  	unsigned long start_time = jiffies;
+> +	struct bdi_wq_callback_entry bwce = {NULL};
+> +	int ret = 0;
+>  
+> +	if (!test_bit(WB_registered, &wb->state))
+> +		return -EIO;
+> +	
+> +	init_waitqueue_func_entry(&(bwce.wq_entry), wake_up_bdi_waitq);
+> +	bwce.tsk = current;
+> +	add_wait_queue(&(bdi->wb_waitq), &(bwce.wq_entry));
+>  	for (;;) {
+>  		unsigned long now = jiffies;
+>  		unsigned long dirty, thresh, bg_thresh;
+> @@ -1816,6 +1847,11 @@ static void balance_dirty_pages(struct bdi_writeback *wb,
+>  		wb->dirty_sleep = now;
+>  		io_schedule_timeout(pause);
+>  
+> +		/* bid is unregister NULL, all bdi memory is illegal */
+> +		if (bwce.bdi_unregister) {
+> +			ret = -EIO;
+> +			break;
+> +		}
+>  		current->dirty_paused_when = now + pause;
+>  		current->nr_dirtied = 0;
+>  		current->nr_dirtied_pause = nr_dirtied_pause;
+> @@ -1844,11 +1880,14 @@ static void balance_dirty_pages(struct bdi_writeback *wb,
+>  			break;
+>  	}
+>  
+> +	if (bwce.bdi_unregister == 0)
+> +		remove_wait_queue(&(bdi->wb_waitq), &(bwce.wq_entry));
+> +	
+>  	if (!dirty_exceeded && wb->dirty_exceeded)
+>  		wb->dirty_exceeded = 0;
+>  
+>  	if (writeback_in_progress(wb))
+> -		return;
+> +		return ret;
+>  
+>  	/*
+>  	 * In laptop mode, we wait until hitting the higher threshold before
+> @@ -1859,10 +1898,12 @@ static void balance_dirty_pages(struct bdi_writeback *wb,
+>  	 * background_thresh, to keep the amount of dirty memory low.
+>  	 */
+>  	if (laptop_mode)
+> -		return;
+> +		return ret;
+>  
+>  	if (nr_reclaimable > gdtc->bg_thresh)
+>  		wb_start_background_writeback(wb);
+> +
+> +	return ret;
+>  }
+>  
+>  static DEFINE_PER_CPU(int, bdp_ratelimits);
+> @@ -1944,9 +1985,12 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
+>  	}
+>  	preempt_enable();
+>  
+> -	if (unlikely(current->nr_dirtied >= ratelimit))
+> -		balance_dirty_pages(wb, current->nr_dirtied);
+> -
+> +	if (unlikely(current->nr_dirtied >= ratelimit)) {
+> +	
+> +		if (balance_dirty_pages(wb, current->nr_dirtied) < 0)
+> +			errseq_set(&(mapping->wb_err), -EIO);
+> +	}
+> +	
+>  	wb_put(wb);
+>  }
+>  EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
+> -- 
+> 2.43.0
+> 
+> 
