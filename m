@@ -1,712 +1,184 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FD1C2C8
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2025 17:07:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735837669; cv=none; b=m1GFD9bz+Gd85HOD3undsnsJBGlJ80f320ii20mlJkZ6hNBVd11Y2w93M/i2GBX0JBK9bneo5SviOmNIMJOoYbkNDNqv3xbCRA5RvpWdh0+NGCd3i+80LtfewWB+NZ9P31MVY2xF8xAhfPbpeDe9N3me9Q987khX8C8nANe1QpA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735837669; c=relaxed/simple;
-	bh=TuvKzyQ+3SpkBIYQUp/wNFGvui+YP1CDH3q6s+owH/A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N7lAwoSmSglLzus7ryyhuTZ1KVYWQYQbcpuvcJDlzMPaCmqJ/j3OyDYGc8IFc19TjZrEDYL2nvvrbqGp6JpIjxIEiHoXNjX2ARHTfjKlLVp0QvyQJC/gvMherhtxevP1TH86LxBfrJJkdkWWmeMJwuCy46ZlvRo5dnQOx3WzS8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Ki7trcHq; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 644064689
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jan 2025 17:49:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1735840153; cv=fail; b=YzWRWQB4fZPKdUXAhdeFte3aWHZh9Mq+GORMWRx5DpXRkDmNS8EDQyxmsvwCT1DCaDSMtF9ovFKLOoq7mDKj/0gDeao9MPMLIN9yEL1frgtH/udMmjgStGi9Q632WEelDcShHNqwh0KgqjNGBIsHLjpXNy5N33n3UozdllYMeUo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1735840153; c=relaxed/simple;
+	bh=hTQEbL+XdxEGuZmNX9Zlosry4GiIRBuigRqQVwESeu8=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=C48JAJ/5NRI+xZELAW8c4eixBBJQI0gjrNmmyNRYTsuDwGa1tkv/PmdVJfqam33V46FngxpL2ZhyB4OJfnjT35JCauHdwjftsgrxVewfDpn3hkOa9Oa7AYxd8qDzguww2Ww1M5sbue+B7+cjwEXq08t7aFH/aXA7awPBiM1bfrY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=DYv46IXM; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=wuD7IFLp; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Ki7trcHq"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2166651f752so182447605ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jan 2025 09:07:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DYv46IXM";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="wuD7IFLp"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 502HXort023845;
+	Thu, 2 Jan 2025 17:49:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2023-11-20; bh=wkAF3XOBYOOEoGxvLK
+	qCgS+JSFKzR8eHp29XxLQMNWY=; b=DYv46IXM6EU5pw195mP43CeZ+0S++u3xqT
+	G2uNi89rnUgJpRb7rdOtHEl8EpkM1NZIIn58z571qn4DiLBawfxO09BrBX7NnxM2
+	cykgwj0cABrILwo+YO51qkIEknvKvC71oNJpfPVmui74rZ233CQbWJM2IgMqVgjL
+	DyTE/pgMgD47QDoym15XBAcBg56kMZOLitghkGfRe7l/o9+hEcmOi13h0lEkgA28
+	NzW51D1BJvZRfGgFp8d/2rLPaKn3tAQqVm5f0eQLS8Bzc/tJwWue1j5G8Ccr14N8
+	OJ+zmEEZT2mXidBm0qPhLTCFdKkWRAmCkxsqkZj1gy/+Rl+RvgqQ==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43t9che5ya-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 02 Jan 2025 17:49:07 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 502GXoYT034084;
+	Thu, 2 Jan 2025 17:49:06 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2172.outbound.protection.outlook.com [104.47.57.172])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 43t7s8kjmc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 02 Jan 2025 17:49:06 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lZu9d9RC4utjkdACpdj9h+Om0TByD5oXHEvbNGHbGGQkXn1bUjvccU0WINuT39o/Ru1m1ghuHRaClgadk53y5SPwF24viBeeS4okXPvQfrSY1eiYgH/WioNxugqb8Hcmm81/00hAHs0977Aj7a6Ycten5Rkj1qIFGbYZ5RhoD3Ne5A6oLeLcRuffDftUaNTiaKkURvoCiwxCb+93LumLq4pa+/udLytR/sqGl2pKMRXVvWzSzIiWI0ne5DXteAETJFUiRnO0b3j7TDGUPFsvg72hGlu3zaR+FyxVOvcjmWNYZ+04nHv1bpB52NGlGnmbUvw/pmbFdn5ULsjg3Uo/iw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wkAF3XOBYOOEoGxvLKqCgS+JSFKzR8eHp29XxLQMNWY=;
+ b=t7RR5459EqGy8t4KW+c+U/odDj1bC9y7H1sAmmxTNI90t0a8kqw5fkZPWGsEGTDROtwUuYAE+DmAbVHnrjIbMnncxPlX0XRpoXFY8bepSSO/Ld+sVvzlV3s8okznkYUpEw82B5AeN9fEeojtHU0vH9iL7/wQ3b6yqNwqqMpa/eVhZNMOBAkHAQFbLJRl4CIq9nFWZPr/tBHmzCV+g9dzOHOFWPCN75pNk8cDfhYXNxjqSFbDCTQZCFDl7vu/eOG5zAy0InY2cdRPXbD7nB/lWG8+jhD4ryNEfsG9E8vZ4aWoqO8tEaWAalfYkV6ABEfbRZsVH7l80DXVwmRqd2DKFg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1735837666; x=1736442466; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=o1I7wk15wRvO/zojjjgalbdlLqOx9NB1sPLwkJhiddk=;
-        b=Ki7trcHq5FkQUdKmO8JvwiHDeZLRZxFdFKFdeSJjMk/1I3eeC5B7KgcoT6PvGoyBQy
-         Mzv1rC7ECwU21Ec/rav4ORCpO5ZtIjhLUZ01+/8pPzzUv4jdDWF5fp2r9PI3r3y/sbe5
-         JXAQH6my0/SaG2LDVkWZ1nLLEIIQHIrjLUB/WBygMsDaZlhhvIjW5r1oYySl1baZExgW
-         v8hi78dQFKZkH3Bzf2tRg3ioz7AtXW/p00oSv/gNosI5lTpcjAG+WCcEkiT27IsRI/gQ
-         VPcFlqZGF9IYfqyP9NOlCnIf0nJBb/kvfijTJLV/zmZrqmQlIIPYtKMRywldqeT51p2V
-         Aatw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735837666; x=1736442466;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o1I7wk15wRvO/zojjjgalbdlLqOx9NB1sPLwkJhiddk=;
-        b=itf5HA4hh6wgbX/HIrdjtBRyP6YPCUynDhhLDY3hUs7hYjkIj9zCDBz2nlPAcOivx9
-         LXziNtGOM1oc914zD5K7OsDpItKU92Ujgxz/mhK7tH3zgcckRpY0UOE0z2Z29GltpXy9
-         8yrxpkqbqKx4Y8t7VsJwQtMBbXwLhqExWCIdCdgxkGQoDVUu9pPi3zRhMfN5CMyD5XcC
-         5YTKn1e9AtwpSdNc9asFMeB26UKkwXaA4bxfKg5dzupBr9GQeTsYJx/KiYWDIEc1A/sJ
-         o335G4vDLqxWQEXf4zjNkS/Eec1zlxpGVcbKGBqHEZ7lZYRUquPsCJsG4quGhqBiYNnI
-         7NVg==
-X-Forwarded-Encrypted: i=1; AJvYcCUa8tDBO1fMJ+n04oMSBTG+busBo8o8J4ynqc2dXi/gESRiGdL/XYM5ZrZ5KEwi+MOWZ0XSjaZ4NnjC@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw1WAnXU9UWJX/jLk2PMRyrHKnZy07xejDAS2vZzQdkfxDrJW9l
-	YQawrJCSLn3bib1gFc3uK2r5NNlKDrvN91+JH+mdrwFGVmeUIMHcOZ2ji43Mmpc=
-X-Gm-Gg: ASbGncv3Zz6wI9zioEG1BTVXwSGdZoQ+cqgEzvIxugg+gHnrKBN4fujeeMNP0lXUu9j
-	yKBLMgJFVCsPu7b/3TePsIkxxlKZJDR9X3bR5BrcYjM/qIWS0/q1gBD+I6MVfj9L+hzyLCo81eV
-	ZqMoxd39G0uvRcBf5NaJXdUUoN1OBVj+4GNUjx6Y3Bm7q7FfBpj3UTpF5vXqX0MBFUmvxycBU7U
-	+D9Mn6fAqommWGF4ZXr4w4f6h+rym8RpmTgYNxs7xXAxdLiWA8YLKHgjgUR
-X-Google-Smtp-Source: AGHT+IHE8PlcerGfpsLeItgzh1PNUW59Fh7GldU5PFGYGPWG3HIlVB3bhO4rSkf0AY6wN6xXj5nfAw==
-X-Received: by 2002:a05:6a00:b51:b0:726:f7c9:7b28 with SMTP id d2e1a72fcca58-72abdd7c2aemr68833922b3a.8.1735837665771;
-        Thu, 02 Jan 2025 09:07:45 -0800 (PST)
-Received: from p14s ([2604:3d09:148c:c800:e54b:c134:3ca6:8a60])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72aad8dbaf1sm24557135b3a.112.2025.01.02.09.07.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Jan 2025 09:07:45 -0800 (PST)
-Date: Thu, 2 Jan 2025 10:07:40 -0700
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
-To: Zijun Hu <zijun_hu@icloud.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <ukleinek@kernel.org>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <thomas@t-8ch.de>,
-	linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
-	linux-sound@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
-	linux1394-devel@lists.sourceforge.net, arm-scmi@vger.kernel.org,
-	linux-efi@vger.kernel.org, linux-gpio@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org,
-	linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-serial@vger.kernel.org, netdev@vger.kernel.org,
-	Zijun Hu <quic_zijuhu@quicinc.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Takashi Sakamoto <o-takashi@sakamocchi.jp>
-Subject: Re: [PATCH v4 04/11] driver core: Constify API device_find_child()
- then adapt for various usages
-Message-ID: <Z3bH3MzyEzC1/GLi@p14s>
-References: <20241211-const_dfc_done-v4-0-583cc60329df@quicinc.com>
- <20241211-const_dfc_done-v4-4-583cc60329df@quicinc.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wkAF3XOBYOOEoGxvLKqCgS+JSFKzR8eHp29XxLQMNWY=;
+ b=wuD7IFLpLptnU8KVHJfcY4s1VltGPFlZxeDTea9txcpM4qnyQ9GAKKdK8tDiwT5iwxORQfahjWPkHRWRHTShXYeHyGVZj3ewDCn/P5+J7S891toH0tZhq2t32qbONhDm/fcWEyjDswMgE0Gg+n5pADHvsRj7w5Qw7NkefHACkDc=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by SA6PR10MB8133.namprd10.prod.outlook.com (2603:10b6:806:436::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8314.13; Thu, 2 Jan
+ 2025 17:49:01 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%6]) with mapi id 15.20.8314.013; Thu, 2 Jan 2025
+ 17:49:01 +0000
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: remove myself as isci driver maintainer
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20241210113028.13810-1-artur.paszkiewicz@intel.com> (Artur
+	Paszkiewicz's message of "Tue, 10 Dec 2024 12:30:28 +0100")
+Organization: Oracle Corporation
+Message-ID: <yq17c7dhzvx.fsf@ca-mkp.ca.oracle.com>
+References: <20241210113028.13810-1-artur.paszkiewicz@intel.com>
+Date: Thu, 02 Jan 2025 12:48:58 -0500
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR07CA0086.namprd07.prod.outlook.com
+ (2603:10b6:a03:12b::27) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241211-const_dfc_done-v4-4-583cc60329df@quicinc.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|SA6PR10MB8133:EE_
+X-MS-Office365-Filtering-Correlation-Id: ceb068ca-d71c-4082-2c23-08dd2b55bd8b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?VXt310yumKc/hTvvZayTb8W2aQa8L/II9M1V0wgdh3M/etlwv1HSp6ZbIKNj?=
+ =?us-ascii?Q?tMYvvseZrm4yEjm1ISOg1LrAFISJ1yGz1rbXGDkQvKs1OwRYVl4G1L1guNGd?=
+ =?us-ascii?Q?X8/+eVnsi2UPxX/OM4R6pj0n5AwmigywBIya5PGw5nSBi+kKDS0BoH71GwZS?=
+ =?us-ascii?Q?n3N1Hjh0EGTSoHt7+v2EdFFuPvq+DZH8fjhWrFzj0Z2HGldjP+wFCVwooKw2?=
+ =?us-ascii?Q?m9zZk1EvJ547E+KWPl56pXt3x24yXexkQ5PFsWgP+auca1+w0nkfIfur9cpM?=
+ =?us-ascii?Q?rrxw2TzJNuyM9OPGxgo8NytmWQbHdjgQlTTMdFiAbqsKcP6YiSCpgqRCHO9e?=
+ =?us-ascii?Q?4MH0yHzVt6Vb5RgmqqZsW3isf96Ql7ANgRAI61/Nd+AJ3I8NcTtjUkTpWg60?=
+ =?us-ascii?Q?u4AEtONp8AndEWcuLKIaeEiNbfuHZMb5R1fc/1ijSzzoVQjtQLdX4tq+4jkt?=
+ =?us-ascii?Q?PNpIHSUfKVPpUIHMACiabQN/mm1+/EKNmmwBBHl2/lriFBZESp18M2LuI7Fw?=
+ =?us-ascii?Q?pyw8rtBCE6zWXrOsSSiDZhUzIvR+a5arknBTHSMDdVGjGPZOWQGkhwlBKjoK?=
+ =?us-ascii?Q?nfiM7hNG6ROGmCRbUVXeLOokNFyY3jP+9436KE7LTchx9MYtguocuZP3yHqP?=
+ =?us-ascii?Q?Fnbntka47TUq4DLH3jWdnWvyIa6jY88HsSCnyfx2rknoJng/hkpMao8aWPlW?=
+ =?us-ascii?Q?9wWdC2r3t/0xvMMK1LWYIINZ/YT4Up/A3+gNLRlsYcUbHrt+yj9Af2nCK2yI?=
+ =?us-ascii?Q?Fhc2XCsvY+JzEhcKXD/AkgiL0zMBe6N7ZnTKCg9oGPxFqWDHIcxJNK9es48f?=
+ =?us-ascii?Q?c/cRUVfAX9Fgwou3/z2B2rorHURjhUIEOQ5yqFLX2ZYM3xtxnYn1nkOfsDfN?=
+ =?us-ascii?Q?nan3dNH3rrVH1vwchSLTJfLWTo7C7mpQmUlEgaQj53JBDCjvWrwJsAZ8yPQo?=
+ =?us-ascii?Q?ZMuIWwBDEz4kV0H5IfP65hHOGFXyyVPklifHH5iAfB4hkHp4Pa5VvWcVDVp9?=
+ =?us-ascii?Q?x88p/z8r+qGuCmxaOGUHNbnqypUCOG1k4Ga//XKJls0ORCKaLjWyK7NOsiM8?=
+ =?us-ascii?Q?OtkvBluX6Zx257bR6vtzDetVwhOkEb0wDCOHvc8yHMZeZp6hO+3Ps8VQVz/J?=
+ =?us-ascii?Q?YmKlYiJy1pzWU8a4maw6oTlpwd4GOMnZQ2CBN+JLW2sLjDGePGxwwIrLap59?=
+ =?us-ascii?Q?QB7iTOjI0/DHmZdFyL+NKQONVf8uioCRzZZQkjkCl5H/0Of/8RKbxUfmsLis?=
+ =?us-ascii?Q?f+94jLDx/Q9d45yz1hQGXM0qudCM2O8Rl52MPlfNvhgQgAoPRD8iHgTrNGxB?=
+ =?us-ascii?Q?VZCs+jE1PgYFz7SrkcDoUvrgA8hpN779JGZHTZMjPJY7sDRlVHUkLg0EEjbS?=
+ =?us-ascii?Q?xd+hr8mQ7eChc8+Ndv6mELdZXHEs?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?utbBPWC7x6gWoXsNP8DQsC/iTpZfXBUVkcVsC4XF8GwCBA5YTLFJLEtZyr4n?=
+ =?us-ascii?Q?ogNRBeANoEquxLC8BLdFUizBhMtg/8hk7l7cirkCsNftyAwmB15y8VZso2J2?=
+ =?us-ascii?Q?p7s39tzE48+n4hQ22n+Y+RFtPhkdjMHXCFKvZbgWT6ejgEqpOUxCBxiAtoUi?=
+ =?us-ascii?Q?JVwkupWkwSJoMiTjkSVD2QoIr17GqPyvVqeshSiytW3Yz5SmbJhMDVsMbuGk?=
+ =?us-ascii?Q?BuDuhq5XO3wca7xb7cMBcDSETespkRZxWDl45CAvkBiVc7dKZwNtejExK9ZN?=
+ =?us-ascii?Q?Z33T2b/ksHw3kPdwzj6lmos+YzRDZSpx9mRzGdABLYyagESuENkLFf3zgJzd?=
+ =?us-ascii?Q?8vTIgFN5WCtBwBuCHG5XoY1xXY4LEovy3Ac7VJAJtRa/GYlHWRqtPI2vH3HB?=
+ =?us-ascii?Q?X2/iztLa4qcX6GGBhv/ylmCt2+JCVZXU2kVOzCmKpQ+sskZ2sVWRM7lEb3gX?=
+ =?us-ascii?Q?jaLVlWVHRoBnHy/wpCG+RaSG+LtCg/vx+JksDNgxrOZbxHG4EB6rhbU9lRsW?=
+ =?us-ascii?Q?GiWMsiI2hjDmpA5Dh4flVUZ1tcxKLArz6zGjL7jtTu37aWzXaD2raBb9u38F?=
+ =?us-ascii?Q?JqLZBFmY0LBADXnexFRRXwswipEpEuVxOjfWf2oq9ZM0M0texEuC8U6VsXFD?=
+ =?us-ascii?Q?fDZHB2vdntLsqgclSdBRHJsJGLG0gRRi8vx/0+4BABoWjorWxEHxrlpaFMW/?=
+ =?us-ascii?Q?AJRTSG7vJq/kVk6XWAfMtQVIiYEHZvmfbpIR+TvmncacSRFHiXwEYtTDoNcC?=
+ =?us-ascii?Q?Hn4Ke4Pcj4MIHPtM8irbqr1JpYkm9sal3OK43mmuP7OgUB0/ElS+SfIKhqET?=
+ =?us-ascii?Q?FM44sEYaMgD7uW/MwWZcS7WPcwpXWDb2pGd3QBgLARPDd35h+CXnvPctMPeF?=
+ =?us-ascii?Q?MFHWwdCyfb7GZO7J7EEl0b24F2K7vmsPFUACuCu0k3YFfPIQPEwQwEc+baSx?=
+ =?us-ascii?Q?UMXg+kjjcCybYVO9bAbhOF/RfSm+pbHiTU074g0oX5gJkMTAcPIFIOkyCuWH?=
+ =?us-ascii?Q?ij9OZZSbZvlFOgado3ce/gUEEKPtT0zk93fnC9ZKQ6ArjucYk8Jws8qPsfx2?=
+ =?us-ascii?Q?MuJfa81hDSKkviGzrhcp5hYjlnhpZ3QHK0GFGViFhx34ZzAxkr9+c55uqBhp?=
+ =?us-ascii?Q?RdFNv8qGXY5FkGMcMqGok5DA3VB0xb6bWoqaPU3yxhjGV4PKPydDcbird5VT?=
+ =?us-ascii?Q?Ryd6XNmiSyGkuTkq2cPHOlE0kDnovQCufoN8nLYp2MO+xU7CpPgZmfwjxZab?=
+ =?us-ascii?Q?A9AN9pV7EBhpsMS8W5YCdor+AUDUVhaj4e0qLUToRYSpYtKJCgxcdat1RP9l?=
+ =?us-ascii?Q?UWJdnndXB6+OzyoKob4XzB6H4n1QPTCr4Vs0X5+9xx23MEfB5Rcdrqalfsh/?=
+ =?us-ascii?Q?j7DjNyHmQVw2YGErH5KdFpTIVXr91cskGV0G0x/t68Gx0u4gzw/fS7tsSiGH?=
+ =?us-ascii?Q?JbmGTzBfK1fk/G/w27wv9Cif/obNvdONZ+4haVQi9kYRAFHUtb+cB12Ahsc4?=
+ =?us-ascii?Q?9dW2O+nP4uMr/Y5HwO/Rfzn5XtLjkmMFnG6/SM8Lntw/MQT1V7OJd9S7LXfH?=
+ =?us-ascii?Q?JjSjsdW91Alkqi/UChksh+k4Yktm0YYVjImmllgh8R+MbFYj/QYky3pbH4eq?=
+ =?us-ascii?Q?ug=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	D+U4ou/qsKyPf59gyOq9YFR6l8ZtS0SdhMngXBfqbyaWT3E2gbolOj6YENKKm5yWsnX5k/609nSVwwnGLFbLBcsADjxhuF9D1ZSaiwKQyPqAR5TRqG1ND7RZPJNLZIy9vwzcEAmrSVu5FTnVjJyUpVomW2JcbsoDPzzCAh/KJO3+BLlgOWj3dwrRZ8ZECVORVvnmOtkk3h0DBUgxYkrvjxlt5uuxiAj6BEwBr3dDqbse2PBLdXBkEarq/e2XMHCeL3Gxs/9cDdxS93KaAIk/uEHB6IxLEOumZ6zypLEQlBStG5gGyzW/r2B+eAj1N2glxLbC5AYussGz0WcGsMlj7C7S3r6vGUQ4wLDkij1ejLtxw512fapBvK3RalMHq0aO7XIbMpvMZn1DuLEtiOKSAD6QuIvq19mpKDPv4ddXOcv90uyWaR86xLvo7dVLYiM0iqO1IU1V962op8CeoKHu0Cj3+auB1qDVnub+0zV/5y1HRE5Wp1GStOwzvB4e/9a/QjtzBiHIbih29Zhcza13J5AjFZi/Ek0OBFOdy7kvOv3OMN7y0Mhz0yd04CCIU9twpTfjodLagcjD2Ahm5OSnVd2iub1G4jaFHPwte/cGOR4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ceb068ca-d71c-4082-2c23-08dd2b55bd8b
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jan 2025 17:49:01.0676
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: NR5estvVLo4VFqUBrhQHhirFM4TR0p8ro2hAW4qEk5gfqHKHhj1RVq6QZ0OHNDEtAabT4VfdJPNdEnKusv+aZb9915EDX/WK/RM0oKeBk8c=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA6PR10MB8133
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-02_03,2025-01-02_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 bulkscore=0
+ mlxlogscore=690 malwarescore=0 mlxscore=0 adultscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
+ definitions=main-2501020156
+X-Proofpoint-GUID: yuEjylIAnVh6uWxUe4pS6JBiEO2rHulh
+X-Proofpoint-ORIG-GUID: yuEjylIAnVh6uWxUe4pS6JBiEO2rHulh
 
-On Wed, Dec 11, 2024 at 08:08:06AM +0800, Zijun Hu wrote:
-> From: Zijun Hu <quic_zijuhu@quicinc.com>
-> 
-> Constify the following API:
-> struct device *device_find_child(struct device *dev, void *data,
-> 		int (*match)(struct device *dev, void *data));
-> To :
-> struct device *device_find_child(struct device *dev, const void *data,
->                                  device_match_t match);
-> typedef int (*device_match_t)(struct device *dev, const void *data);
-> with the following reasons:
-> 
-> - Protect caller's match data @*data which is for comparison and lookup
->   and the API does not actually need to modify @*data.
-> 
-> - Make the API's parameters (@match)() and @data have the same type as
->   all of other device finding APIs (bus|class|driver)_find_device().
-> 
-> - All kinds of existing device match functions can be directly taken
->   as the API's argument, they were exported by driver core.
-> 
-> Constify the API and adapt for various existing usages by simply making
-> various match functions take 'const void *' as type of match data @data.
-> 
-> Reviewed-by: Alison Schofield <alison.schofield@intel.com>
-> Reviewed-by: Takashi Sakamoto <o-takashi@sakamocchi.jp>
-> Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
-> ---
->  arch/sparc/kernel/vio.c                |  6 +++---
->  drivers/base/core.c                    |  6 +++---
->  drivers/block/sunvdc.c                 |  6 +++---
->  drivers/bus/fsl-mc/dprc-driver.c       |  4 ++--
->  drivers/cxl/core/pci.c                 |  4 ++--
->  drivers/cxl/core/pmem.c                |  2 +-
->  drivers/cxl/core/region.c              | 21 ++++++++++++---------
->  drivers/firewire/core-device.c         |  4 ++--
->  drivers/firmware/arm_scmi/bus.c        |  4 ++--
->  drivers/firmware/efi/dev-path-parser.c |  4 ++--
->  drivers/gpio/gpio-sim.c                |  2 +-
->  drivers/gpu/drm/mediatek/mtk_drm_drv.c |  2 +-
->  drivers/hwmon/hwmon.c                  |  2 +-
->  drivers/media/pci/mgb4/mgb4_core.c     |  4 ++--
->  drivers/nvdimm/bus.c                   |  2 +-
->  drivers/pwm/core.c                     |  2 +-
->  drivers/rpmsg/rpmsg_core.c             |  4 ++--
 
-Reviewed-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+Artur,
 
->  drivers/scsi/qla4xxx/ql4_os.c          |  3 ++-
->  drivers/scsi/scsi_transport_iscsi.c    | 10 +++++-----
->  drivers/slimbus/core.c                 |  8 ++++----
->  drivers/thunderbolt/retimer.c          |  2 +-
->  drivers/thunderbolt/xdomain.c          |  2 +-
->  drivers/tty/serial/serial_core.c       |  4 ++--
->  drivers/usb/typec/class.c              |  8 ++++----
->  include/linux/device.h                 |  4 ++--
->  include/scsi/scsi_transport_iscsi.h    |  4 ++--
->  net/dsa/dsa.c                          |  2 +-
->  tools/testing/cxl/test/cxl.c           |  2 +-
->  28 files changed, 66 insertions(+), 62 deletions(-)
-> 
-> diff --git a/arch/sparc/kernel/vio.c b/arch/sparc/kernel/vio.c
-> index 07933d75ac815160a2580dce39fde7653a9502e1..1a1a9d6b8f2e8dfedefafde846315a06a167fbfb 100644
-> --- a/arch/sparc/kernel/vio.c
-> +++ b/arch/sparc/kernel/vio.c
-> @@ -419,13 +419,13 @@ struct vio_remove_node_data {
->  	u64 node;
->  };
->  
-> -static int vio_md_node_match(struct device *dev, void *arg)
-> +static int vio_md_node_match(struct device *dev, const void *arg)
->  {
->  	struct vio_dev *vdev = to_vio_dev(dev);
-> -	struct vio_remove_node_data *node_data;
-> +	const struct vio_remove_node_data *node_data;
->  	u64 node;
->  
-> -	node_data = (struct vio_remove_node_data *)arg;
-> +	node_data = (const struct vio_remove_node_data *)arg;
->  
->  	node = vio_vdev_node(node_data->hp, vdev);
->  
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 94865c9d8adcf5f2ce5002ffd7bf0ef4fc85e4d7..bc3b523a4a6366080c3c9fd190e54c7fd13c8ded 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -4079,8 +4079,8 @@ EXPORT_SYMBOL_GPL(device_for_each_child_reverse_from);
->   *
->   * NOTE: you will need to drop the reference with put_device() after use.
->   */
-> -struct device *device_find_child(struct device *parent, void *data,
-> -				 int (*match)(struct device *dev, void *data))
-> +struct device *device_find_child(struct device *parent, const void *data,
-> +				 device_match_t match)
->  {
->  	struct klist_iter i;
->  	struct device *child;
-> @@ -4125,7 +4125,7 @@ struct device *device_find_child_by_name(struct device *parent,
->  }
->  EXPORT_SYMBOL_GPL(device_find_child_by_name);
->  
-> -static int match_any(struct device *dev, void *unused)
-> +static int match_any(struct device *dev, const void *unused)
->  {
->  	return 1;
->  }
-> diff --git a/drivers/block/sunvdc.c b/drivers/block/sunvdc.c
-> index 2d38331ee66793402e803ec0cc82e9e71c991c84..386643ceed59921203828844aa070833c44c67fb 100644
-> --- a/drivers/block/sunvdc.c
-> +++ b/drivers/block/sunvdc.c
-> @@ -918,12 +918,12 @@ struct vdc_check_port_data {
->  	char	*type;
->  };
->  
-> -static int vdc_device_probed(struct device *dev, void *arg)
-> +static int vdc_device_probed(struct device *dev, const void *arg)
->  {
->  	struct vio_dev *vdev = to_vio_dev(dev);
-> -	struct vdc_check_port_data *port_data;
-> +	const struct vdc_check_port_data *port_data;
->  
-> -	port_data = (struct vdc_check_port_data *)arg;
-> +	port_data = (const struct vdc_check_port_data *)arg;
->  
->  	if ((vdev->dev_no == port_data->dev_no) &&
->  	    (!(strcmp((char *)&vdev->type, port_data->type))) &&
-> diff --git a/drivers/bus/fsl-mc/dprc-driver.c b/drivers/bus/fsl-mc/dprc-driver.c
-> index 11c8fadcf85148b4e4ea6b97b7efb6d4ddf22d3c..52053f7c6d9a654ba46c6579c6a3c5c3faaa75c1 100644
-> --- a/drivers/bus/fsl-mc/dprc-driver.c
-> +++ b/drivers/bus/fsl-mc/dprc-driver.c
-> @@ -112,9 +112,9 @@ void dprc_remove_devices(struct fsl_mc_device *mc_bus_dev,
->  }
->  EXPORT_SYMBOL_GPL(dprc_remove_devices);
->  
-> -static int __fsl_mc_device_match(struct device *dev, void *data)
-> +static int __fsl_mc_device_match(struct device *dev, const void *data)
->  {
-> -	struct fsl_mc_obj_desc *obj_desc = data;
-> +	const struct fsl_mc_obj_desc *obj_desc = data;
->  	struct fsl_mc_device *mc_dev = to_fsl_mc_device(dev);
->  
->  	return fsl_mc_device_match(mc_dev, obj_desc);
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 9d58ab9d33c554e05ddfa2610269e6d08bfaa8e9..a3c57f96138a28c9f30562d554c42cb5224bcf4b 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -252,9 +252,9 @@ static int devm_cxl_enable_mem(struct device *host, struct cxl_dev_state *cxlds)
->  }
->  
->  /* require dvsec ranges to be covered by a locked platform window */
-> -static int dvsec_range_allowed(struct device *dev, void *arg)
-> +static int dvsec_range_allowed(struct device *dev, const void *arg)
->  {
-> -	struct range *dev_range = arg;
-> +	const struct range *dev_range = arg;
->  	struct cxl_decoder *cxld;
->  
->  	if (!is_root_decoder(dev))
-> diff --git a/drivers/cxl/core/pmem.c b/drivers/cxl/core/pmem.c
-> index b3378d3f6acb4c9e3601683119754e3cd6329df2..a8473de24ebfd92f12f47e0556e28b81a29cff7c 100644
-> --- a/drivers/cxl/core/pmem.c
-> +++ b/drivers/cxl/core/pmem.c
-> @@ -57,7 +57,7 @@ bool is_cxl_nvdimm_bridge(struct device *dev)
->  }
->  EXPORT_SYMBOL_NS_GPL(is_cxl_nvdimm_bridge, "CXL");
->  
-> -static int match_nvdimm_bridge(struct device *dev, void *data)
-> +static int match_nvdimm_bridge(struct device *dev, const void *data)
->  {
->  	return is_cxl_nvdimm_bridge(dev);
->  }
-> diff --git a/drivers/cxl/core/region.c b/drivers/cxl/core/region.c
-> index d778996507984a759bbe84e7acac3774e0c7af98..bfecd71040c2f4373645380b4c31327d8b42d095 100644
-> --- a/drivers/cxl/core/region.c
-> +++ b/drivers/cxl/core/region.c
-> @@ -792,7 +792,7 @@ static int check_commit_order(struct device *dev, const void *data)
->  	return 0;
->  }
->  
-> -static int match_free_decoder(struct device *dev, void *data)
-> +static int match_free_decoder(struct device *dev, const void *data)
->  {
->  	struct cxl_port *port = to_cxl_port(dev->parent);
->  	struct cxl_decoder *cxld;
-> @@ -824,9 +824,9 @@ static int match_free_decoder(struct device *dev, void *data)
->  	return 1;
->  }
->  
-> -static int match_auto_decoder(struct device *dev, void *data)
-> +static int match_auto_decoder(struct device *dev, const void *data)
->  {
-> -	struct cxl_region_params *p = data;
-> +	const struct cxl_region_params *p = data;
->  	struct cxl_decoder *cxld;
->  	struct range *r;
->  
-> @@ -1722,10 +1722,12 @@ static struct cxl_port *next_port(struct cxl_port *port)
->  	return port->parent_dport->port;
->  }
->  
-> -static int match_switch_decoder_by_range(struct device *dev, void *data)
-> +static int match_switch_decoder_by_range(struct device *dev,
-> +					 const void *data)
->  {
->  	struct cxl_switch_decoder *cxlsd;
-> -	struct range *r1, *r2 = data;
-> +	const struct range *r1, *r2 = data;
-> +
->  
->  	if (!is_switch_decoder(dev))
->  		return 0;
-> @@ -3176,9 +3178,10 @@ static int devm_cxl_add_dax_region(struct cxl_region *cxlr)
->  	return rc;
->  }
->  
-> -static int match_root_decoder_by_range(struct device *dev, void *data)
-> +static int match_root_decoder_by_range(struct device *dev,
-> +				       const void *data)
->  {
-> -	struct range *r1, *r2 = data;
-> +	const struct range *r1, *r2 = data;
->  	struct cxl_root_decoder *cxlrd;
->  
->  	if (!is_root_decoder(dev))
-> @@ -3189,11 +3192,11 @@ static int match_root_decoder_by_range(struct device *dev, void *data)
->  	return range_contains(r1, r2);
->  }
->  
-> -static int match_region_by_range(struct device *dev, void *data)
-> +static int match_region_by_range(struct device *dev, const void *data)
->  {
->  	struct cxl_region_params *p;
->  	struct cxl_region *cxlr;
-> -	struct range *r = data;
-> +	const struct range *r = data;
->  	int rc = 0;
->  
->  	if (!is_cxl_region(dev))
-> diff --git a/drivers/firewire/core-device.c b/drivers/firewire/core-device.c
-> index a99fe35f1f0d1a2e585ac49b86cc6fd0807cffb6..ec3e21ad202520dda745064b954c853a26d03e3d 100644
-> --- a/drivers/firewire/core-device.c
-> +++ b/drivers/firewire/core-device.c
-> @@ -988,7 +988,7 @@ int fw_device_set_broadcast_channel(struct device *dev, void *gen)
->  	return 0;
->  }
->  
-> -static int compare_configuration_rom(struct device *dev, void *data)
-> +static int compare_configuration_rom(struct device *dev, const void *data)
->  {
->  	const struct fw_device *old = fw_device(dev);
->  	const u32 *config_rom = data;
-> @@ -1039,7 +1039,7 @@ static void fw_device_init(struct work_struct *work)
->  	//
->  	// serialize config_rom access.
->  	scoped_guard(rwsem_read, &fw_device_rwsem) {
-> -		found = device_find_child(card->device, (void *)device->config_rom,
-> +		found = device_find_child(card->device, device->config_rom,
->  					  compare_configuration_rom);
->  	}
->  	if (found) {
-> diff --git a/drivers/firmware/arm_scmi/bus.c b/drivers/firmware/arm_scmi/bus.c
-> index 157172a5f2b577ce4f04425f967f548230c1ebed..a3386bf36de508d312e2c4fa2e27ba62ba3776a0 100644
-> --- a/drivers/firmware/arm_scmi/bus.c
-> +++ b/drivers/firmware/arm_scmi/bus.c
-> @@ -238,10 +238,10 @@ static int scmi_dev_match(struct device *dev, const struct device_driver *drv)
->  	return 0;
->  }
->  
-> -static int scmi_match_by_id_table(struct device *dev, void *data)
-> +static int scmi_match_by_id_table(struct device *dev, const void *data)
->  {
->  	struct scmi_device *sdev = to_scmi_dev(dev);
-> -	struct scmi_device_id *id_table = data;
-> +	const struct scmi_device_id *id_table = data;
->  
->  	return sdev->protocol_id == id_table->protocol_id &&
->  		(id_table->name && !strcmp(sdev->name, id_table->name));
-> diff --git a/drivers/firmware/efi/dev-path-parser.c b/drivers/firmware/efi/dev-path-parser.c
-> index 937be269fee86d5d71256758aed94741e794431c..13ea141c0defb5e80d5af43cca73cf527444a238 100644
-> --- a/drivers/firmware/efi/dev-path-parser.c
-> +++ b/drivers/firmware/efi/dev-path-parser.c
-> @@ -47,9 +47,9 @@ static long __init parse_acpi_path(const struct efi_dev_path *node,
->  	return 0;
->  }
->  
-> -static int __init match_pci_dev(struct device *dev, void *data)
-> +static int __init match_pci_dev(struct device *dev, const void *data)
->  {
-> -	unsigned int devfn = *(unsigned int *)data;
-> +	unsigned int devfn = *(const unsigned int *)data;
->  
->  	return dev_is_pci(dev) && to_pci_dev(dev)->devfn == devfn;
->  }
-> diff --git a/drivers/gpio/gpio-sim.c b/drivers/gpio/gpio-sim.c
-> index f387dad81f2960b5ec3c1b5fd04081ee501cc75b..370b71513bdb529112e157fa22a5451e02502a17 100644
-> --- a/drivers/gpio/gpio-sim.c
-> +++ b/drivers/gpio/gpio-sim.c
-> @@ -413,7 +413,7 @@ static int gpio_sim_setup_sysfs(struct gpio_sim_chip *chip)
->  	return devm_add_action_or_reset(dev, gpio_sim_sysfs_remove, chip);
->  }
->  
-> -static int gpio_sim_dev_match_fwnode(struct device *dev, void *data)
-> +static int gpio_sim_dev_match_fwnode(struct device *dev, const void *data)
->  {
->  	return device_match_fwnode(dev, data);
->  }
-> diff --git a/drivers/gpu/drm/mediatek/mtk_drm_drv.c b/drivers/gpu/drm/mediatek/mtk_drm_drv.c
-> index 0829ceb9967ca5d03509c52a559494d58776077b..4aeb393b58e636225ba3b529e4529f3028219e62 100644
-> --- a/drivers/gpu/drm/mediatek/mtk_drm_drv.c
-> +++ b/drivers/gpu/drm/mediatek/mtk_drm_drv.c
-> @@ -359,7 +359,7 @@ static const struct of_device_id mtk_drm_of_ids[] = {
->  };
->  MODULE_DEVICE_TABLE(of, mtk_drm_of_ids);
->  
-> -static int mtk_drm_match(struct device *dev, void *data)
-> +static int mtk_drm_match(struct device *dev, const void *data)
->  {
->  	if (!strncmp(dev_name(dev), "mediatek-drm", sizeof("mediatek-drm") - 1))
->  		return true;
-> diff --git a/drivers/hwmon/hwmon.c b/drivers/hwmon/hwmon.c
-> index bbb9cc44e29fbc635706db5bed21f3b8a1cd4987..6552ee5186896e9290658a26d8f230849aacafa6 100644
-> --- a/drivers/hwmon/hwmon.c
-> +++ b/drivers/hwmon/hwmon.c
-> @@ -341,7 +341,7 @@ static int hwmon_attr_base(enum hwmon_sensor_types type)
->  
->  static DEFINE_MUTEX(hwmon_pec_mutex);
->  
-> -static int hwmon_match_device(struct device *dev, void *data)
-> +static int hwmon_match_device(struct device *dev, const void *data)
->  {
->  	return dev->class == &hwmon_class;
->  }
-> diff --git a/drivers/media/pci/mgb4/mgb4_core.c b/drivers/media/pci/mgb4/mgb4_core.c
-> index bc63dc81bcae0d20924174be74b93a2139d5879f..697d50bedfe285d74c702efde61e510df87c1229 100644
-> --- a/drivers/media/pci/mgb4/mgb4_core.c
-> +++ b/drivers/media/pci/mgb4/mgb4_core.c
-> @@ -123,7 +123,7 @@ static const struct hwmon_chip_info temp_chip_info = {
->  };
->  #endif
->  
-> -static int match_i2c_adap(struct device *dev, void *data)
-> +static int match_i2c_adap(struct device *dev, const void *data)
->  {
->  	return i2c_verify_adapter(dev) ? 1 : 0;
->  }
-> @@ -139,7 +139,7 @@ static struct i2c_adapter *get_i2c_adap(struct platform_device *pdev)
->  	return dev ? to_i2c_adapter(dev) : NULL;
->  }
->  
-> -static int match_spi_adap(struct device *dev, void *data)
-> +static int match_spi_adap(struct device *dev, const void *data)
->  {
->  	return to_spi_device(dev) ? 1 : 0;
->  }
-> diff --git a/drivers/nvdimm/bus.c b/drivers/nvdimm/bus.c
-> index 2237715e42eb32a14a4134746739a0df5ca27414..0ccf4a9e523a52ef52a96a339ecff0bcb51b214b 100644
-> --- a/drivers/nvdimm/bus.c
-> +++ b/drivers/nvdimm/bus.c
-> @@ -1212,7 +1212,7 @@ enum nd_ioctl_mode {
->  	DIMM_IOCTL,
->  };
->  
-> -static int match_dimm(struct device *dev, void *data)
-> +static int match_dimm(struct device *dev, const void *data)
->  {
->  	long id = (long) data;
->  
-> diff --git a/drivers/pwm/core.c b/drivers/pwm/core.c
-> index 675b252d9c8ce74705ef245faae42e2c1330ed15..14144d0fa38e0c4e0bc34b9c929e127f1b2e96b6 100644
-> --- a/drivers/pwm/core.c
-> +++ b/drivers/pwm/core.c
-> @@ -1276,7 +1276,7 @@ static int pwm_export_child(struct device *pwmchip_dev, struct pwm_device *pwm)
->  	return 0;
->  }
->  
-> -static int pwm_unexport_match(struct device *pwm_dev, void *data)
-> +static int pwm_unexport_match(struct device *pwm_dev, const void *data)
->  {
->  	return pwm_from_dev(pwm_dev) == data;
->  }
-> diff --git a/drivers/rpmsg/rpmsg_core.c b/drivers/rpmsg/rpmsg_core.c
-> index 712c06c02696663821c8c884bcbd83036098899b..207b64c0a2fe9ccdb03b4ed66d1cee81e6f4c1ae 100644
-> --- a/drivers/rpmsg/rpmsg_core.c
-> +++ b/drivers/rpmsg/rpmsg_core.c
-> @@ -377,9 +377,9 @@ EXPORT_SYMBOL(rpmsg_get_mtu);
->   * this is used to make sure we're not creating rpmsg devices for channels
->   * that already exist.
->   */
-> -static int rpmsg_device_match(struct device *dev, void *data)
-> +static int rpmsg_device_match(struct device *dev, const void *data)
->  {
-> -	struct rpmsg_channel_info *chinfo = data;
-> +	const struct rpmsg_channel_info *chinfo = data;
->  	struct rpmsg_device *rpdev = to_rpmsg_device(dev);
->  
->  	if (chinfo->src != RPMSG_ADDR_ANY && chinfo->src != rpdev->src)
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-> index d91f54a6e752f2feb68da69f474375f1415f33a2..133f36457b283a53b4dca29adf081f385a371368 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -7189,7 +7189,8 @@ static void qla4xxx_build_new_nt_list(struct scsi_qla_host *ha,
->   *	1: if flashnode entry is non-persistent
->   *	0: if flashnode entry is persistent
->   **/
-> -static int qla4xxx_sysfs_ddb_is_non_persistent(struct device *dev, void *data)
-> +static int qla4xxx_sysfs_ddb_is_non_persistent(struct device *dev,
-> +					       const void *data)
->  {
->  	struct iscsi_bus_flash_session *fnode_sess;
->  
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index fde7de3b1e55381f7cd468ad308a3e4ee9417c8c..0d474de2d960a865c52c9e7253f173d70ddd8f16 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -1324,7 +1324,7 @@ EXPORT_SYMBOL_GPL(iscsi_create_flashnode_conn);
->   *  1 on success
->   *  0 on failure
->   */
-> -static int iscsi_is_flashnode_conn_dev(struct device *dev, void *data)
-> +static int iscsi_is_flashnode_conn_dev(struct device *dev, const void *data)
->  {
->  	return dev->bus == &iscsi_flashnode_bus;
->  }
-> @@ -1335,7 +1335,7 @@ static int iscsi_destroy_flashnode_conn(struct iscsi_bus_flash_conn *fnode_conn)
->  	return 0;
->  }
->  
-> -static int flashnode_match_index(struct device *dev, void *data)
-> +static int flashnode_match_index(struct device *dev, const void *data)
->  {
->  	struct iscsi_bus_flash_session *fnode_sess = NULL;
->  	int ret = 0;
-> @@ -1344,7 +1344,7 @@ static int flashnode_match_index(struct device *dev, void *data)
->  		goto exit_match_index;
->  
->  	fnode_sess = iscsi_dev_to_flash_session(dev);
-> -	ret = (fnode_sess->target_id == *((int *)data)) ? 1 : 0;
-> +	ret = (fnode_sess->target_id == *((const int *)data)) ? 1 : 0;
->  
->  exit_match_index:
->  	return ret;
-> @@ -1389,8 +1389,8 @@ iscsi_get_flashnode_by_index(struct Scsi_Host *shost, uint32_t idx)
->   *  %NULL on failure
->   */
->  struct device *
-> -iscsi_find_flashnode_sess(struct Scsi_Host *shost, void *data,
-> -			  int (*fn)(struct device *dev, void *data))
-> +iscsi_find_flashnode_sess(struct Scsi_Host *shost, const void *data,
-> +			  device_match_t fn)
->  {
->  	return device_find_child(&shost->shost_gendev, data, fn);
->  }
-> diff --git a/drivers/slimbus/core.c b/drivers/slimbus/core.c
-> index b5d5bbb9fdb6614ffd578f5754226b50e394f0df..ab927fd077cb4fe1e29c004269fe52b2896c302f 100644
-> --- a/drivers/slimbus/core.c
-> +++ b/drivers/slimbus/core.c
-> @@ -337,9 +337,9 @@ static bool slim_eaddr_equal(const struct slim_eaddr *a,
->  		a->instance == b->instance);
->  }
->  
-> -static int slim_match_dev(struct device *dev, void *data)
-> +static int slim_match_dev(struct device *dev, const void *data)
->  {
-> -	struct slim_eaddr *e_addr = data;
-> +	const struct slim_eaddr *e_addr = data;
->  	struct slim_device *sbdev = to_slim_device(dev);
->  
->  	return slim_eaddr_equal(&sbdev->e_addr, e_addr);
-> @@ -385,9 +385,9 @@ struct slim_device *slim_get_device(struct slim_controller *ctrl,
->  }
->  EXPORT_SYMBOL_GPL(slim_get_device);
->  
-> -static int of_slim_match_dev(struct device *dev, void *data)
-> +static int of_slim_match_dev(struct device *dev, const void *data)
->  {
-> -	struct device_node *np = data;
-> +	const struct device_node *np = data;
->  	struct slim_device *sbdev = to_slim_device(dev);
->  
->  	return (sbdev->dev.of_node == np);
-> diff --git a/drivers/thunderbolt/retimer.c b/drivers/thunderbolt/retimer.c
-> index 89d2919d0193e8f5c68e669d054f3efc7abf78c8..21d2902c6102f0f593fb0c6d645acaff31ebb274 100644
-> --- a/drivers/thunderbolt/retimer.c
-> +++ b/drivers/thunderbolt/retimer.c
-> @@ -461,7 +461,7 @@ struct tb_retimer_lookup {
->  	u8 index;
->  };
->  
-> -static int retimer_match(struct device *dev, void *data)
-> +static int retimer_match(struct device *dev, const void *data)
->  {
->  	const struct tb_retimer_lookup *lookup = data;
->  	struct tb_retimer *rt = tb_to_retimer(dev);
-> diff --git a/drivers/thunderbolt/xdomain.c b/drivers/thunderbolt/xdomain.c
-> index 11a50c86a1e4302968f44dafeab47977bac01dd5..b0630e6d94726f9069c20017876ec7e212071686 100644
-> --- a/drivers/thunderbolt/xdomain.c
-> +++ b/drivers/thunderbolt/xdomain.c
-> @@ -1026,7 +1026,7 @@ static int remove_missing_service(struct device *dev, void *data)
->  	return 0;
->  }
->  
-> -static int find_service(struct device *dev, void *data)
-> +static int find_service(struct device *dev, const void *data)
->  {
->  	const struct tb_property *p = data;
->  	struct tb_service *svc;
-> diff --git a/drivers/tty/serial/serial_core.c b/drivers/tty/serial/serial_core.c
-> index 74fa02b237729931928b2ae4902c699ec017af94..8e0aa2c76d4037047a16f6c631eccaa066d8f230 100644
-> --- a/drivers/tty/serial/serial_core.c
-> +++ b/drivers/tty/serial/serial_core.c
-> @@ -2365,9 +2365,9 @@ struct uart_match {
->  	struct uart_driver *driver;
->  };
->  
-> -static int serial_match_port(struct device *dev, void *data)
-> +static int serial_match_port(struct device *dev, const void *data)
->  {
-> -	struct uart_match *match = data;
-> +	const struct uart_match *match = data;
->  	struct tty_driver *tty_drv = match->driver->tty_driver;
->  	dev_t devt = MKDEV(tty_drv->major, tty_drv->minor_start) +
->  		match->port->line;
-> diff --git a/drivers/usb/typec/class.c b/drivers/usb/typec/class.c
-> index 4b3047e055a3737d3eb841e00fc976a70f8c9c3e..601a81aa1e1024265f2359393dee531a7779c6ea 100644
-> --- a/drivers/usb/typec/class.c
-> +++ b/drivers/usb/typec/class.c
-> @@ -229,10 +229,10 @@ static const char * const usb_modes[] = {
->  /* ------------------------------------------------------------------------- */
->  /* Alternate Modes */
->  
-> -static int altmode_match(struct device *dev, void *data)
-> +static int altmode_match(struct device *dev, const void *data)
->  {
->  	struct typec_altmode *adev = to_typec_altmode(dev);
-> -	struct typec_device_id *id = data;
-> +	const struct typec_device_id *id = data;
->  
->  	if (!is_typec_altmode(dev))
->  		return 0;
-> @@ -1282,7 +1282,7 @@ const struct device_type typec_cable_dev_type = {
->  	.release = typec_cable_release,
->  };
->  
-> -static int cable_match(struct device *dev, void *data)
-> +static int cable_match(struct device *dev, const void *data)
->  {
->  	return is_typec_cable(dev);
->  }
-> @@ -2028,7 +2028,7 @@ const struct device_type typec_port_dev_type = {
->  /* --------------------------------------- */
->  /* Driver callbacks to report role updates */
->  
-> -static int partner_match(struct device *dev, void *data)
-> +static int partner_match(struct device *dev, const void *data)
->  {
->  	return is_typec_partner(dev);
->  }
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 667cb6db9019349c9db0233acf9e78ff6a6d9625..0e0bc9bfe0d15a8734bf3d34106300f4df6b5364 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -1081,8 +1081,8 @@ int device_for_each_child_reverse(struct device *dev, void *data,
->  int device_for_each_child_reverse_from(struct device *parent,
->  				       struct device *from, const void *data,
->  				       int (*fn)(struct device *, const void *));
-> -struct device *device_find_child(struct device *dev, void *data,
-> -				 int (*match)(struct device *dev, void *data));
-> +struct device *device_find_child(struct device *dev, const void *data,
-> +				 device_match_t match);
->  struct device *device_find_child_by_name(struct device *parent,
->  					 const char *name);
->  struct device *device_find_any_child(struct device *parent);
-> diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-> index bd1243657c019962853849b07fc2ae190ec3b557..4d3baf324900f4b2b1ff3a5724b7ca7d122dc468 100644
-> --- a/include/scsi/scsi_transport_iscsi.h
-> +++ b/include/scsi/scsi_transport_iscsi.h
-> @@ -497,8 +497,8 @@ extern void iscsi_destroy_all_flashnode(struct Scsi_Host *shost);
->  extern int iscsi_flashnode_bus_match(struct device *dev,
->  				     const struct device_driver *drv);
->  extern struct device *
-> -iscsi_find_flashnode_sess(struct Scsi_Host *shost, void *data,
-> -			  int (*fn)(struct device *dev, void *data));
-> +iscsi_find_flashnode_sess(struct Scsi_Host *shost, const void *data,
-> +			  device_match_t fn);
->  extern struct device *
->  iscsi_find_flashnode_conn(struct iscsi_bus_flash_session *fnode_sess);
->  
-> diff --git a/net/dsa/dsa.c b/net/dsa/dsa.c
-> index 5a7c0e565a894545ee14f0e0186ed3c46b809b16..e827775baf2ee1d0e1c0ce5807c2cca5c372fc75 100644
-> --- a/net/dsa/dsa.c
-> +++ b/net/dsa/dsa.c
-> @@ -1367,7 +1367,7 @@ static int dsa_switch_parse_of(struct dsa_switch *ds, struct device_node *dn)
->  	return dsa_switch_parse_ports_of(ds, dn);
->  }
->  
-> -static int dev_is_class(struct device *dev, void *class)
-> +static int dev_is_class(struct device *dev, const void *class)
->  {
->  	if (dev->class != NULL && !strcmp(dev->class->name, class))
->  		return 1;
-> diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
-> index d0337c11f9ee675b0c461c8ae28e50957dc644ce..cc8948f49117a98086b3ef2ea7a8de0ce1ec36a5 100644
-> --- a/tools/testing/cxl/test/cxl.c
-> +++ b/tools/testing/cxl/test/cxl.c
-> @@ -725,7 +725,7 @@ static void default_mock_decoder(struct cxl_decoder *cxld)
->  	cxld->reset = mock_decoder_reset;
->  }
->  
-> -static int first_decoder(struct device *dev, void *data)
-> +static int first_decoder(struct device *dev, const void *data)
->  {
->  	struct cxl_decoder *cxld;
->  
-> 
-> -- 
-> 2.34.1
-> 
-> 
+> I'm leaving Intel and I could not find a new maintainer for this so
+> mark it as orphan.
+
+Applied to 6.14/scsi-staging. Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
