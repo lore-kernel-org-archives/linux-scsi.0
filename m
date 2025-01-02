@@ -1,68 +1,71 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA9EF1B6D0F;
-	Thu,  2 Jan 2025 22:47:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5954E18FC8F;
+	Thu,  2 Jan 2025 22:47:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735858062; cv=none; b=XNLQu//UgqjsccuwR1qboTY6Nx8WpV81a4IQNmFBQRLVKPLJoYZoAPiAKYih9MgjUjG/5HAfTehy8D6Z8HrtBs1gIvMDg0alxCC9An9RFrd9ezYkGpARYe/SCnJuucCmjM78ZM4V/Mdx6KYuvVx/AZXwodGrOoHN3UHElJP3dlM=
+	t=1735858064; cv=none; b=KVT6ngRrEyiN+IYblWabqbUJWhunBYvT0XJb7gOmV7WVsfWOMlasSDcsByheoGFTzKS3rRM4EPU0BFZl/RLKl2YG1RrQ+fqljadCyUAErnwIdynVnzMa6lZBs3ORcmuS9+pRALorb73KwcYqe07DP4x9lJOvHRDCPUsaMYo3fGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735858062; c=relaxed/simple;
-	bh=DSsgKLf1vbtZiKK9KqlWW0egQ9/9VEQqsppWlI2aGHE=;
+	s=arc-20240116; t=1735858064; c=relaxed/simple;
+	bh=362Kp3yiv/MIDOpgb5Pxmu6NtZ4eXnwuST+RJ3FKn1o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QAMsdOwYE7XJov1ief47hh/twqDEAOziMHB2EiemldzLZ4wNFo7aQQH8V51LFlQTl2WTdD2Qn0Izoqv5CoXuXnuXPFF+DN1uX/XtMVP/uZ7CldUokMwy2GYBgSobxzLpE4+AA1dIjEUX0neHuPCUcbQC6EcbHpbYdYU67bd1w+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SDNGaaw3; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=o+24GUahTbVTGa996FDmjPqqNOMdvwbquzSsXaTxTbH7sLEgzPs9bbqA31tLHGkjdoP75WnaLN1hfE942xLNbPLB5+SWieE4Fd5lnzZuuEN+OIqhvpzB5xlAolJp/ot3HeKkeLpSxNTHCZd0fX9IVBzYgPnkbbEDBw2ju+EXoMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mU1UDqhw; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SDNGaaw3"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 502KfuJ3015265;
-	Thu, 2 Jan 2025 22:47:14 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mU1UDqhw"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 502KgNJN031223;
+	Thu, 2 Jan 2025 22:47:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=U7tnL0OGsltMWpN+/Pzxk8lgQVrxvWRSVUe9cvOe/ig=; b=
-	SDNGaaw3XbUj1S6QFvLVC5139scD7TWpEhyd5yis3wIKVV6VSOVbHlNrcbCU66nl
-	NVdhDYFwYbqv6NS8bkpwAdaWyyh3tOIF8bz+UkBWocmCmuLpmxfbG2TIOeUWP7Fm
-	c0Mr8tuTzNrtw2S8YuCEO6OKQ7bn/zWvrMUEOfeJZvZBQn5bhslrSBXfLkFbFRgH
-	3ZGgYVRJoa3WOTDSDSQp5gklzoOx67mGwJvrTZWdw0xTcyS0le6eFMWLDsNP7fbH
-	slppSPpJ40jmikDZS+DjCfLcNOHahqZEymWZn0Ds0I5cEeEtVBlV00WHVXLQ+9DR
-	0X2p9LQ1ZP8OY3huRPh0sg==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43t88a7d86-1
+	corp-2023-11-20; bh=+1vN7PJEpZ09dhospqFvT7FvXNjyEpJh9KnfAkfsDLg=; b=
+	mU1UDqhwQEHJ11LlUN5jECMDRyrcnVWCVhBionQ7E09MyEyBa+RmIUY3yc+jaa2+
+	F5owE+K9tWDy5vfnlVCfcXu7+p3LrWtcLl5GAufA5tTynloiCHS1w+H+VJ2hu8pu
+	T2wluIH2ERs03R0Ar1t0Tge7bsDBBVmN906/RN0SHOwPjvjqXLHMpnCCuYb/xhZr
+	KXuGlGQpTeX/bbZLlNOd/H3nnMHdJ2c6ZdJBxipk/NrL8yG5kgWzrHqOZjQ+3T2X
+	bU/1xQoDjSx6/gmj5bPx1iUqNhC1XKA1/XdClvaY2RRsOLUCd1tfhf0OcAfa+pmK
+	cms+OoA6fhIdmEd5tBmTgg==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43t9vt7b80-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 02 Jan 2025 22:47:14 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 502LaiUr008778;
-	Thu, 2 Jan 2025 22:47:13 GMT
+	Thu, 02 Jan 2025 22:47:22 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 502MKcQW034231;
+	Thu, 2 Jan 2025 22:47:21 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43t7s93nwu-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 43t7s8vs9g-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 02 Jan 2025 22:47:13 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 502MlAtf004461;
-	Thu, 2 Jan 2025 22:47:12 GMT
+	Thu, 02 Jan 2025 22:47:21 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 502MlKrx016933;
+	Thu, 2 Jan 2025 22:47:21 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43t7s93nuq-2;
-	Thu, 02 Jan 2025 22:47:12 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 43t7s8vs96-1;
+	Thu, 02 Jan 2025 22:47:20 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
-        hpa@zytor.com, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, James.Bottomley@HansenPartnership.com,
-        mhkelley58@gmail.com
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, iommu@lists.linux.dev,
-        netdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: (subset) [PATCH 0/5] hyper-v: Don't assume cpu_possible_mask is dense
-Date: Thu,  2 Jan 2025 17:46:38 -0500
-Message-ID: <173583977795.171606.8906239465384373872.b4-ty@oracle.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Abel Vesa <abel.vesa@linaro.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>, stable@vger.kernel.org,
+        Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+Subject: Re: [PATCH v3 0/4] scsi: ufs: qcom: Suspend fixes
+Date: Thu,  2 Jan 2025 17:46:56 -0500
+Message-ID: <173585773702.369835.2709540698524341995.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241003035333.49261-1-mhklinux@outlook.com>
-References: <20241003035333.49261-1-mhklinux@outlook.com>
+In-Reply-To: <20241219-ufs-qcom-suspend-fix-v3-0-63c4b95a70b9@linaro.org>
+References: <20241219-ufs-qcom-suspend-fix-v3-0-63c4b95a70b9@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,33 +77,38 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-02_03,2025-01-02_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxscore=0
- suspectscore=0 phishscore=0 mlxlogscore=983 adultscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 bulkscore=0
+ mlxlogscore=999 malwarescore=0 mlxscore=0 adultscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
  definitions=main-2501020199
-X-Proofpoint-GUID: e6Ywwye_omB8U1gOZ8hmAB14_FT6wkJA
-X-Proofpoint-ORIG-GUID: e6Ywwye_omB8U1gOZ8hmAB14_FT6wkJA
+X-Proofpoint-GUID: 9OeQ55FO__vnxIJybm4US3pHkrwzp4fn
+X-Proofpoint-ORIG-GUID: 9OeQ55FO__vnxIJybm4US3pHkrwzp4fn
 
-On Wed, 02 Oct 2024 20:53:28 -0700, mhkelley58@gmail.com wrote:
+On Thu, 19 Dec 2024 22:20:40 +0530, Manivannan Sadhasivam wrote:
 
-> Code specific to Hyper-V guests currently assumes the cpu_possible_mask
-> is "dense" -- i.e., all bit positions 0 thru (nr_cpu_ids - 1) are set,
-> with no "holes". Therefore, num_possible_cpus() is assumed to be equal
-> to nr_cpu_ids.
+> This series fixes the several suspend issues on Qcom platforms. Patch 1 fixes
+> the resume failure with spm_lvl=5 suspend on most of the Qcom platforms. For
+> this patch, I couldn't figure out the exact commit that caused the issue. So I
+> used the commit that introduced reinit support as a placeholder.
 > 
-> Per a separate discussion[1], this assumption is not valid in the
-> general case. For example, the function setup_nr_cpu_ids() in
-> kernel/smp.c is coded to assume cpu_possible_mask may be sparse,
-> and other patches have been made in the past to correctly handle
-> the sparseness. See bc75e99983df1efd ("rcu: Correctly handle sparse
-> possible cpu") as noted by Mark Rutland.
+> Patch 4 fixes the suspend issue on SM8550 and SM8650 platforms where UFS
+> PHY retention is not supported. Hence the default spm_lvl=3 suspend fails. So
+> this patch configures spm_lvl=5 as the default suspend level to force UFSHC/
+> device powerdown during suspend. This supersedes the previous series [1] that
+> tried to fix the issue in clock drivers.
 > 
 > [...]
 
-Applied to 6.14/scsi-queue, thanks!
+Applied to 6.13/scsi-fixes, thanks!
 
-[4/5] scsi: storvsc: Don't assume cpu_possible_mask is dense
-      https://git.kernel.org/mkp/scsi/c/6cb7063feb2e
+[1/4] scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()
+      https://git.kernel.org/mkp/scsi/c/7bac65687510
+[2/4] scsi: ufs: core: Honor runtime/system PM levels if set by host controller drivers
+      https://git.kernel.org/mkp/scsi/c/bb9850704c04
+[3/4] scsi: ufs: qcom: Allow passing platform specific OF data
+      https://git.kernel.org/mkp/scsi/c/4f78a56af4c4
+[4/4] scsi: ufs: qcom: Power down the controller/device during system suspend for SM8550/SM8650 SoCs
+      https://git.kernel.org/mkp/scsi/c/3b2f56860b05
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
