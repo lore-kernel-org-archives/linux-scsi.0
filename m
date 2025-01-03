@@ -1,86 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ABA917FE
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 03:37:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227D1101E6;
+	Fri,  3 Jan 2025 07:02:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735875467; cv=none; b=fpsV4HuDZpDaVKxzqzrDBhN86LCs7W7nOqvE2sdgicv07PUsgUhFiaY/8A5aBxdxMx236nzybKPfZvqX8uH0YWiqcXD4fTbmapXmE65RlqnnfX3368DAVfQAQoJTww08bjuO9LPIYbsarqH1/5L3NyIxdt9GpSopjoR7PyKVFMw=
+	t=1735887761; cv=none; b=IiTm53qfdsbz2a4emKWbh8wHy4mD/cUcvd6LDc2NA3aaOt1RRkYts5BOlg3X7SInFM3BvUKfzR3FhETbU1sfEo+/a0ECs6iZM4h6t92Hz9oAgn5w6W1ztBKjnkeubBQ2JW29nq4DsoOSMt7rXQ/kyd8nzYDAz+rdNq0oK4Nvc4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735875467; c=relaxed/simple;
-	bh=vo56qt10hstoUluZeMkpyAb2eNxsilm8ysxPvrgXw1I=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=AlLDQlECbceAaOGG0uHYyi0q/aAM3UME8e9nVkB9e87dwz//VX0Pcm02jGGe5zH8Z/LZrFfYIRWi9JjcU3/VAZ8gWKSCaBus4/vKxnkomLuFO5vPzK1gXIZUJhT5KNe2pVb1MePi51pcspLK1P/N43eb/Hswa9zoRU67j8FIzc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JKk9hKFc; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JKk9hKFc"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B2D3AC4CEDC
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 03:37:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735875466;
-	bh=vo56qt10hstoUluZeMkpyAb2eNxsilm8ysxPvrgXw1I=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=JKk9hKFcqanyOWBB9lb14Yx1bzzTmma5Uot+mQ4fvQqoWGMjwmi17zgaMEoKKp2ea
-	 pcWDsKeVqyS3OJ1TJK54/4aHT0PzI5I70ZGOgiOQxQakTfy3JAsDlIi3bZgUvxcdhD
-	 BjpVdzIHJAj0WUFuDZRfvoMXFi2Q7W6AiFpxQQwCO56Kd7CWyc2ws4m99objS6ZPug
-	 tqUM0Ako139z3cWbGTLimHDyPExJyagsCCJLqcNIqX7AyLOBnc6htwC5X3dsCw4t9K
-	 21nHdVwa/Nh8Q4Z5TfLDUQZo6UqVRZtBEuLmlEjoC8cq2r+LjAQYU1dDsk2TYNqQlV
-	 75jLD7hGK3qZg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id A47EEC41613; Fri,  3 Jan 2025 03:37:46 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 219652] READ CAPACITY(16) not used on large USB-attached drive
- in recent kernels
-Date: Fri, 03 Jan 2025 03:37:46 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: stern@rowland.harvard.edu
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-219652-11613-MdrLl4fi8h@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219652-11613@https.bugzilla.kernel.org/>
-References: <bug-219652-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1735887761; c=relaxed/simple;
+	bh=SPZEWfN/R4Rj4I3RGMZkVlSC7prs5DAi1smJJ+I+hYc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sXqKlfjK1AQb8UO4bbVzG4lYI3OLa4oOe9GbStKZihPt/6ydgk3CBNoo1nY2s6mylPvpTweJhXkcv+D2r4GGOCl2JkKrhMpaQV4+pz+4YNp1gPezSVYY3hzJWJ/DpNMCIpeAiszmu9Ow9kHtOnIS9O8r609UWmo1jTm6LPRLgrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1D09668C7B; Fri,  3 Jan 2025 08:02:30 +0100 (CET)
+Date: Fri, 3 Jan 2025 08:02:29 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Yury Norov <yury.norov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-s390@vger.kernel.org, netdev@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Naveen N Rao <naveen@kernel.org>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Haren Myneni <haren@linux.ibm.com>,
+	Rick Lindsley <ricklind@linux.ibm.com>,
+	Nick Child <nnac123@linux.ibm.com>,
+	Thomas Falcon <tlfalcon@linux.ibm.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Matt Wu <wuqiang.matt@bytedance.com>,
+	Steffen Klassert <steffen.klassert@secunet.com>,
+	Daniel Jordan <daniel.m.jordan@oracle.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kurz <groug@kaod.org>, Peter Xu <peterx@redhat.com>,
+	Shrikanth Hegde <sshegde@linux.ibm.com>,
+	Hendrik Brueckner <brueckner@linux.ibm.com>
+Subject: Re: [PATCH 00/14] cpumask: cleanup cpumask_next_wrap()
+ implementation and usage
+Message-ID: <20250103070229.GC28303@lst.de>
+References: <20241228184949.31582-1-yury.norov@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241228184949.31582-1-yury.norov@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219652
+You've sent me less than a handfull of 14 patches, there's no way
+to properly review this.
 
---- Comment #11 from Alan Stern (stern@rowland.harvard.edu) ---
-For example, at the appropriate points in sd_read_capacity(), add:
-
-   sd_printk(KERN_NOTICE, sdkp, "sd_try_rc16_first(): %d\n",
-sd_try_rc16_first(sdp));
-
-   sd_printk(KERN_NOTICE, sdkp, "sector_size: %d\n", sector_size);
-
-   sd_printk(KERN_NOTICE, sdkp, "sizeof(sdkp->capacity): %d\n", (int)
-sizeof(sdkp->capacity));
-
-   sd_printk(KERN_NOTICE, sdkp, "sdkp->capacity: %llx\n", (unsigned long lo=
-ng)
-sdkp->capacity);
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
