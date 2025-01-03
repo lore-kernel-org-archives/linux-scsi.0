@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF7519DF8D
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 03:01:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5AA1AAA02
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 03:30:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735873265; cv=none; b=V25q1xF/myGrALlGs+26hwk/g75EUsyj53Fp+3OhDCHqT7U1wjn6mdgMf9GLodDMNb3bFZ6er21jaf9lRpWCBynsLSsoaBNzv8eG9/6e/jM+FqJR5Z9HBMKQ+3Bjfc0zNRpNZW5R2c9O6dbf/g2sKOEVMRdShA7yXgzrPXtvdf0=
+	t=1735875002; cv=none; b=QUyn3P7UupdOw8Od0KvpMAFfq/pEeywwiAkNkyzC5DEkPU+vLeIxXLppNnvumITbJE7DNPG2o/n+u4v7glVTnYeR9bbUPEUvhcsfp3CrPGifCtCZ8I1FRK/3il84yJnDr9ZAqwlATP787IbEMDeITN6TvLxSgd+uhnemLS2Asu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735873265; c=relaxed/simple;
-	bh=nay4NmIEc/Kulx00SrFoE7UNrW/CPjw/dxsUYXOyXXk=;
+	s=arc-20240116; t=1735875002; c=relaxed/simple;
+	bh=3J64ccYbxsPBCIoT0ynikNZTWf7jXFZ9ywbF7sMRBes=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=t4V+F81v+x1CREmAWC8vBt7h8i+Jq6sAKcMp8bVUNXngb35LMhP+wkhKCLBPWd2Uq098kpIqyqMhdOF/TWr44euYNbsogsPKn2TE0tdAFtOSvxELyFVNG0UBanQqBcLu94YcuWdpb+LpnRIKZDt3Cif39eqO/V/JWD2qLs1CXdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hTvd28sg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=sKKfTI7zdlpu+NkWfJNY2a7ud93iKaIt6j1lyD8aAbMdeuaMsp/Rr2jRqWkRz4CwfQhqf3arIkcV5MsEpUFExjM8TqcNPa2BKiTgf2ZTEHg9fIip8KcAUxBV4uTXyoCw9FVJFjFz5SU43hstAUX5VPFOSmNLPOiUhaq3ASRGfYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n9pl5BW8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hTvd28sg"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7618AC4AF09
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 03:01:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n9pl5BW8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E6FA6C4CECE
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 03:30:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1735873264;
-	bh=nay4NmIEc/Kulx00SrFoE7UNrW/CPjw/dxsUYXOyXXk=;
+	s=k20201202; t=1735875001;
+	bh=3J64ccYbxsPBCIoT0ynikNZTWf7jXFZ9ywbF7sMRBes=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=hTvd28sgkFQ7KI7Nc+4iR6dDbA2Hc7y/lDOYcx0F6WBHRgQ0EjeHk/I9ia1YlCElj
-	 FmLgJZXZkRa4D5iUucSMM+eM+8kdMtvZFzFG+fgDFOvd7WzmfvvHxpnR2Mo/thNTtE
-	 g1Ulxx70dGHrZLr8Nhoet3L7GnjwoCOevWB26aK0DIwgNX6riCqT0J5fwZowEd5iy5
-	 o3Phblf4QfqGSJiYjzNjq/Po6uYF0ET3BT6H54KqiFp436K+oDG/vsIZUnAzoMpHS2
-	 PTbWQv7WOvGCyqWzX1ssIfDhGEI8ahOWUmST4CtFAOlveKATpBWNow+CAmMomOV961
-	 tcQGWcpcC/w1w==
+	b=n9pl5BW8EegA4h1lmMPRuYld49sF2vKCjgYazur3Mq0N1ZPYmJnNMxqXQ1lOTa6sA
+	 jq9FHL5ZEvHVconR2VanHLqjaZAYLzXb553/XcSavU7BVyBr15j2L0Fzw3v3pdxRO+
+	 +CiwKNl6b0SzLVpnUZXrweYCYbX6QXgZC87LQKBJKSXRkNaK46EMoWnNXRvuzOW2Wd
+	 9lLqcLaddFMEwN44deFUbSVru2/O4e675Iq7nFojYaTvrzT4o87rxFUAfv3OFeMzK5
+	 ScXmTgzzs9rFE23zQwpefuBSy+jmYU1D9jZv1txzN6Lu+mhMpFEZzJl7QdBrrGr8XJ
+	 anccbmbNhCKhg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 62FD3C41614; Fri,  3 Jan 2025 03:01:04 +0000 (UTC)
+	id DBA0FC41613; Fri,  3 Jan 2025 03:30:01 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 219652] READ CAPACITY(16) not used on large USB-attached drive
  in recent kernels
-Date: Fri, 03 Jan 2025 03:01:04 +0000
+Date: Fri, 03 Jan 2025 03:30:01 +0000
 X-Bugzilla-Reason: AssignedTo
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -41,14 +41,14 @@ X-Bugzilla-Component: SCSI
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bugs-a21@moonlit-rail.com
+X-Bugzilla-Who: stern@rowland.harvard.edu
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-219652-11613-x7rrreeyvD@https.bugzilla.kernel.org/>
+Message-ID: <bug-219652-11613-5LnvEcp66x@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-219652-11613@https.bugzilla.kernel.org/>
 References: <bug-219652-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -64,31 +64,26 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D219652
 
---- Comment #9 from Kris Karas (bugs-a21@moonlit-rail.com) ---
-Just saw Alan's comment #7 (posting race).
+--- Comment #10 from Alan Stern (stern@rowland.harvard.edu) ---
+Re comment #8: I would like to know the answers to the questions asked in
+comment #4 about the bad kernel:
 
-FWIW, there are two drives showing this error.  The first is a Toshiba
-DT01ACA300, and the second, a Seagate ST3000DM001.  So it's rather unlikely=
- to
-be a drive firmware bug.
+   In sd_read_capacity(), does sd_try_rc16_first() return true?
 
-Given that this patch has been out since 6.9.1 (if I read git correctly), i=
-t's
-a bit odd that my searches for relevant/duplicate bug reports came up empty=
-.=20
-Hardware bug with this particular USB/SATA bridge?  I checked the
-manufacturer's website, and the model 1610 sports an embedded 8051 uP with
-downloadable firmware; however, there are no firmware resources on their
-website.
+   And why doesn't the "Very big device. Trying to use READ CAPACITY(16)" l=
+ine,
+along with the subsequent call to read_capacity_16(), get executed in the b=
+ad
+kernel?
 
-I found one "smoking gun" in this report from site hddguru:
-https://forum.hddguru.com/viewtopic.php?t=3D33369
-It indicates that other initio USB-to-SATA adapters report sector_count-1 in
-some cases.
+   Or does read_capacity_16() get executed but return immediately with an e=
+rror
+instead of communicating with the device?
 
-If this is specific to Initio adapters, perhaps the easiest patch here is to
-assume that if read_capacity_10 is reported as 0xfffffffe, then it's buggy
-hardware, treat it as 0xffffffff and proceed thusly.
+The whole business about 0xffffffff vs. 0xfffffffe is a red herring.  If the
+bad kernel were working properly, the issue wouldn't even arise.  Notice th=
+at
+you never see the erroneous value under the good kernel.
 
 --=20
 You may reply to this email to add a comment.
