@@ -1,110 +1,73 @@
-Received: from mr85p00im-ztdg06011101.me.com (mr85p00im-ztdg06011101.me.com [17.58.23.185])
+Received: from smtp.eurecom.fr (smtp.eurecom.fr [193.55.113.210])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B276200A0
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jan 2025 00:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.23.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A045C17FE;
+	Fri,  3 Jan 2025 00:47:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.55.113.210
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735864201; cv=none; b=WNL+tWzUFC1mMhBT20wSfY37dkT7aHGPDfepxxxU9UeQ95lzyVQ5d2i5oF3iio+mPmKjVuAJKOjxewpRHgVTs1BGbgeOKh8xn+XPfGUU7+Y6M2C0kUPCHdF6Ydlib47AnCven9/l+pm8v7Z/hZ2tST1D3ifNAvC7Z8lVDUNYMLo=
+	t=1735865254; cv=none; b=gFZLyFNLDT9ED+w6j+4RkZuxgdT0AZaK2S95Bpbodw7Y9QPkx80m59OUFiTeNKiNRR+DeNOC0E7zPO4eh8xqPoJJl1SY2pksYzVVtj3yBclxBqToIJqL7xbufz7aVyTGgxPKLNQAx7fACnQ3bkQt1HAc3DNA9sd2+jFnKr0PbqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735864201; c=relaxed/simple;
-	bh=9OKtjR1OqVgdyYo7PBAJ2n+E+ZuEA9Qci0SNdsRT6zM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZINJElEGUuWMLOnfk9+GX/F6iQAeVfPcE+ajvJfmoJcrmwMK9jX5Lh0joMznQAJcY4pLoQwrg+48CsvbybIyXX4IajhR5Q5D3kEhxEERSgH2slwbCVtOZbXBztZrBk+GU4kno+I3J1rMXiekXj+R3PI6Lv6bgLVvuBxlRHBFhD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=mOkTDaQ/; arc=none smtp.client-ip=17.58.23.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1735865254; c=relaxed/simple;
+	bh=qSAojnGac8iiWgQNm/GwymTaLAR/dOnzURMucEMiN3Q=;
+	h=From:In-Reply-To:Content-Type:References:Date:Cc:To:MIME-Version:
+	 Message-ID:Subject; b=kLL4yIn4KhEc/ZtlFwA7XVIHCo7IHvj87EFgRnn3sCTfUKl0gtpfZZQoCcbByq2QDscru/p5IeX6E7iyDUFBRpDtYtnoHi/iRnt1IdkWdDRFiQpftOVjlygvTFRu6D61MjsxqDewWVEoOOXsjGI4QG4JSkA+pHZ3ETbXRatwpYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=eurecom.fr; spf=pass smtp.mailfrom=eurecom.fr; dkim=pass (1024-bit key) header.d=eurecom.fr header.i=@eurecom.fr header.b=LyHtmrv4; arc=none smtp.client-ip=193.55.113.210
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=eurecom.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eurecom.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="mOkTDaQ/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
-	s=1a1hai; t=1735864198;
-	bh=sX00kjdMMkpbEo7t/2MEjZFR57bisypxfIJ+Q9mKzxY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:
-	 x-icloud-hme;
-	b=mOkTDaQ/GuVii6DBvUjnFzJIAdLAeaaL2tmFlRCZ4P+A6TYAVQrRWp9Er4PXba69V
-	 7uSsUCLtOa63r9/3gMumkZmwFIEJtfG9H7DrHOBn8VlVz1XIhdLGUpypXWFkWu6bB8
-	 12Lwz3XHfyn//c8VkfZ/5/nckvSnkCoTO1R/fPwDGARAEbrdQkb/xTRlQjO1qZxC/z
-	 RJBK/KTEi6Bfsh1R4xlfoaQqy05mCIS0oWki+dsxYfz4DoTRws4M1be+zF4Ihp8ZaV
-	 YgKVNniBsmJEp1/jlXOCVacxKat31ZnCxX15TS4W0gpYAvwSUtQIuTLSHGpxBZ/hrZ
-	 LrwcTpexf4FRQ==
-Received: from [192.168.1.25] (mr38p00im-dlb-asmtp-mailmevip.me.com [17.57.152.18])
-	by mr85p00im-ztdg06011101.me.com (Postfix) with ESMTPSA id 0B02FDA0388;
-	Fri,  3 Jan 2025 00:29:47 +0000 (UTC)
-Message-ID: <2f8abbad-a70c-4ff0-94c7-8a8a37ad0845@icloud.com>
-Date: Fri, 3 Jan 2025 08:29:43 +0800
+	dkim=pass (1024-bit key) header.d=eurecom.fr header.i=@eurecom.fr header.b="LyHtmrv4"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=eurecom.fr; i=@eurecom.fr; q=dns/txt; s=default;
+  t=1735865251; x=1767401251;
+  h=from:in-reply-to:references:date:cc:to:mime-version:
+   message-id:subject:content-transfer-encoding;
+  bh=qSAojnGac8iiWgQNm/GwymTaLAR/dOnzURMucEMiN3Q=;
+  b=LyHtmrv40VKPhmH4P6eFgifYKE33qw3mlS7sGOC8xEiKlv5TRxLSSUDb
+   WPXSNkf0hffjUYa5gS059bWBw/FJsPVhznVAQCTENzQoD3Zg6uwm3isnH
+   WhCMRd1kFVmEFQsxpY+fEshlQg5kP63qugjR2Ctv4BUaa89FzGIr2jtO/
+   k=;
+X-CSE-ConnectionGUID: Qr5dsO1jQguNzUXQbgKoew==
+X-CSE-MsgGUID: l0V1AArUTJyeei5hpacyiw==
+X-IronPort-AV: E=Sophos;i="6.12,286,1728943200"; 
+   d="scan'208";a="28362203"
+Received: from quovadis.eurecom.fr ([10.3.2.233])
+  by drago1i.eurecom.fr with ESMTP; 03 Jan 2025 01:47:28 +0100
+From: "Ariel Otilibili-Anieli" <Ariel.Otilibili-Anieli@eurecom.fr>
+In-Reply-To: <yq1jzbcde3v.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="utf-8"
+X-Forward: 88.183.119.157
+References: <20241213225852.62741-1-ariel.otilibili-anieli@eurecom.fr>
+	<20241213225852.62741-2-ariel.otilibili-anieli@eurecom.fr>
+	<yq1ed1lf3z1.fsf@ca-mkp.ca.oracle.com>
+	<2f7a87-67770480-d1b1-141f3260@133486995> <yq1jzbcde3v.fsf@ca-mkp.ca.oracle.com>
+Date: Fri, 03 Jan 2025 01:47:27 +0100
+Cc: linux-scsi@vger.kernel.org, "Hannes Reinecke" <hare@kernel.org>, =?utf-8?q?James_E=2EJ=2E_Bottomley?= <James.Bottomley@HansenPartnership.com>, Linux-kernel@vger.kernel.org
+To: =?utf-8?q?Martin_K=2E_Petersen?= <martin.petersen@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 01/11] libnvdimm: Replace namespace_match() with
- device_find_child_by_name()
-To: Fan Ni <nifan.cxl@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski
- <brgl@bgdev.pl>, =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
- James Bottomley <James.Bottomley@hansenpartnership.com>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas@t-8ch.de>,
- linux-kernel@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-sound@vger.kernel.org, sparclinux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
- linux1394-devel@lists.sourceforge.net, arm-scmi@vger.kernel.org,
- linux-efi@vger.kernel.org, linux-gpio@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-mediatek@lists.infradead.org,
- linux-hwmon@vger.kernel.org, linux-media@vger.kernel.org,
- linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
- linux-serial@vger.kernel.org, netdev@vger.kernel.org,
- Zijun Hu <quic_zijuhu@quicinc.com>,
- Alison Schofield <alison.schofield@intel.com>
-References: <20241211-const_dfc_done-v4-0-583cc60329df@quicinc.com>
- <20241211-const_dfc_done-v4-1-583cc60329df@quicinc.com>
- <Z3bYMiOG0u3Jtv3h@smc-140338-bm01>
-Content-Language: en-US
-From: Zijun Hu <zijun_hu@icloud.com>
-In-Reply-To: <Z3bYMiOG0u3Jtv3h@smc-140338-bm01>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: ybkBbilc0XTCT_YEDgTjyLJ9DRFrwcwH
-X-Proofpoint-ORIG-GUID: ybkBbilc0XTCT_YEDgTjyLJ9DRFrwcwH
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-02_03,2025-01-02_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 bulkscore=0
- mlxlogscore=738 mlxscore=0 suspectscore=0 adultscore=0 phishscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2308100000 definitions=main-2501030002
+Message-ID: <2f7a88-67773380-f509-208cdcc@258589942>
+Subject: =?utf-8?q?Re=3A?= [PATCH 1/1] =?utf-8?q?drivers/scsi=3A?= remove dead code
+User-Agent: SOGoMail 5.11.1
+Content-Transfer-Encoding: quoted-printable
 
-On 2025/1/3 02:17, Fan Ni wrote:
->> -
->>  static bool is_idle(struct device *dev, struct nd_namespace_common *ndns)
->>  {
->>  	struct nd_region *nd_region = to_nd_region(dev->parent);
->> @@ -168,7 +161,7 @@ ssize_t nd_namespace_store(struct device *dev,
->>  		goto out;
->>  	}
->>  
->> -	found = device_find_child(dev->parent, name, namespace_match);
->> +	found = device_find_child_by_name(dev->parent, name);
-> Looks good to me.
-> Just one general question.
-> The function device_find_child checks parent and parent->p, but
-> device_find_child_by_name only checks parent although they share the
-> code except the match function. Why that?
-> 
+On Thursday, January 02, 2025 23:51 CET, "Martin K. Petersen" <martin.p=
+etersen@oracle.com> wrote:
 
-Thank you Fan for code review.
+>=20
+> Ariel,
+>=20
+> > Were you referring to this tree? The commit hasn=E2=80=99t appeared=
+ yet.
+>=20
+> It's there now.
 
-I did not touch device_find_child_by_name() parameter checking at
-that time.
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=903c44939abc02e2f3d6f2ad65fa090f7e5df5b6
-
-since
-[PATCH v5 05/12] will come finally.
-https://lore.kernel.org/all/20241224-const_dfc_done-v5-5-6623037414d4@quicinc.com/
-
-
-> Fan
+Indeed. Thanks, Martin;
+Have a good one.
+>=20
+> --=20
+> Martin K. Petersen	Oracle Linux Engineering
 
