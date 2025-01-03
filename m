@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160851C4A29;
-	Fri,  3 Jan 2025 07:42:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4AB1C1F10;
+	Fri,  3 Jan 2025 07:42:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735890162; cv=none; b=d/poknF03oaN+SUf5dvLDterBGOVVVetwI8BbkOVRNVwfmrhsOWohK4ffRP+C54gn2R236j/uUeODGnDKOGZ0PBGQN8hHDv2EzFfw35vwf4qj2UwVlFFaCLM66tAtG9b9S6qDwy6D+NfzfJoM6fgss4IgWngXySQrwi0x0iduNg=
+	t=1735890165; cv=none; b=MbGqsLkRE8SVIuXFUDVK8tFhZ/o4rWZr1HAIO6HxhCeSM82s1ISR2INUZqfVGKMIMSUf6oyw+1ecLkk1nRk/4mSufX++q/D7IcleDpm+VmLCf2XEFBobBi2WcSpEeyJRoZdF3+RSIZCGcoS1AR3yjGXMccg4leV4nFsNl2YdPOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735890162; c=relaxed/simple;
-	bh=nBZk6MCEnsicXGMT88kc+MGMjYZyU1oIKz9Tl+j3/fU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h8FEzinCDchbhXXOes62Vvp9TZ+TOT1cu8KEPjWZwB5aYKQ9yRXD0twAjBLe7ApeyH+6pzKl3RATB5AJgQ1I46rQzbnIFCL/I6a/LRoqAofmoKyZWrSLTTByXE37yq4k87yjfQAo0T8QwJD2+xjz59lUQKRUU4ED+5EJzGRjlbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kITwkeXk; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1735890165; c=relaxed/simple;
+	bh=U9IogqFQ/+OuQqloW2oIf/dg5DDB439QS/jvfhpNFwo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=TyCxP3ZQsgFxMRecT/jRODurRMPSzVl4hwq0SJy/+gY4GWNB0mknqZVhco+32IgN7q/E0VvxwI/QRQNJ6IneHTJNZzMBsK1+lu2PrscNikJ1N7oExCHkjtvkJm344YwhSd8S5IZNzGSDmuUoxkOHB8XzFJFH/otzB0Pjx05g+zU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xNgauOQh; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kITwkeXk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xNgauOQh"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=RhGNLIrUNWWckjSN8l+x4TuA0j9IhfvO3RuggJHkrdw=; b=kITwkeXkQ+3/v5dlV69eiQw41z
-	qBSJpWE9pGk/DuOEOzvE86XdVdr09qUKxFLSxX830AmhIz5QDnVu+NTytbHgSwz1ZO0gAMRbfTH+0
-	R3OvGDdnDM1W2NUwJ9+V82tgahiWnF4j/ljs/627Rlx7dL9CVylnMbha/PSe8r6D7RRDUPx10T7tB
-	wlj6Hz1jDwGs+6f+Xno/mII5lu79AGMWrkMw08xWgqbYbwX+IUlaHfxSYE4AOMUPZWWdRvgpRzgyf
-	rYwC5EXttCdaLCk3plyUKPjP9bBPfm9H0LEhnnA2qU1ITkYgtD7A0o0R4PL0KA2dJB+eDMQcuMabs
-	LoXXYl0A==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=iQlA8Yz+qd2U/c34P+2wJP+a7YEau+u9d5FsTdJxE5E=; b=xNgauOQhiaKkhUeDDVsv9LGowd
+	m+i2iE8usGs1gk4qLZu8iaEpppF0Kll6XybaMYeryTvANCf4A5NP1PiEXiosg90Y0oCE1YJVbDDw6
+	YKUXcl8YXTqKIvyOcXJ7UyARNj+5lzeob633+lEtwKg6OM7oyRTB3+xQJ42HO4VTACJj13bFdripR
+	dQDjuZEvvLvNwzL7HNrWWYO7Ohzo8JlTE5ZfptIyhZS77cL8VrdTSBgw01uxNFQ1vPr0lhea5SkZF
+	J37bthEDraSpUWjbWK53E9o/ljA3t3m4n+l+xgRi7wf4SGjaSuKhyfkfIi71SjK0DbtSTNHP8Zvog
+	zJ2kE5rQ==;
 Received: from [2001:4bb8:2dc:484c:63c3:48c7:ceee:8370] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tTcKO-0000000CNqU-0NXe;
-	Fri, 03 Jan 2025 07:42:40 +0000
+	id 1tTcKR-0000000CNrG-07uw;
+	Fri, 03 Jan 2025 07:42:43 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -38,10 +39,12 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-block@vger.kernel.org,
 	linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: more BLK_MQ_F_* simplification
-Date: Fri,  3 Jan 2025 08:42:08 +0100
-Message-ID: <20250103074237.460751-1-hch@lst.de>
+Subject: [PATCH 1/4] block: better split mq vs non-mq code in add_disk_fwnode
+Date: Fri,  3 Jan 2025 08:42:09 +0100
+Message-ID: <20250103074237.460751-2-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20250103074237.460751-1-hch@lst.de>
+References: <20250103074237.460751-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,34 +54,57 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi Jens,
+Add a big conditional for blk-mq vs not mq at the beginning of
+add_disk_fwnode so that elevator_init_mq is only called for blk-mq disks,
+and add checks that the right methods or set or not set based on the
+queue type.
 
-this series removes another BLK_MQ_F_ that just duplicates an implicit
-condition and cleans up the tag allocation policy selection by using
-an actual BLK_MQ_F_ flag instead of a two-value enum awkwardly encoded
-into it.  If we'd ever grow another policy we'd be much better off just
-adding a separate field to the tagset for it.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/genhd.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-Diffstat:
- block/blk-mq-debugfs.c                 |   26 +++-----------------
- block/blk-mq-tag.c                     |   41 ++++++++++-----------------------
- block/blk-mq.c                         |    3 --
- block/blk-mq.h                         |    5 ----
- block/bsg-lib.c                        |    2 -
- block/elevator.c                       |   20 ----------------
- block/genhd.c                          |   28 ++++++++++++----------
- drivers/ata/ahci.h                     |    2 -
- drivers/ata/pata_macio.c               |    2 -
- drivers/ata/sata_mv.c                  |    2 -
- drivers/ata/sata_nv.c                  |    4 +--
- drivers/ata/sata_sil24.c               |    2 -
- drivers/block/null_blk/main.c          |    4 +--
- drivers/nvme/host/apple.c              |    1 
- drivers/nvme/host/core.c               |    1 
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |    2 -
- drivers/scsi/scsi_lib.c                |    4 +--
- drivers/ufs/core/ufshcd.c              |    1 
- include/linux/blk-mq.h                 |   24 +++++--------------
- include/linux/libata.h                 |    4 +--
- include/scsi/scsi_host.h               |    7 ++++-
- 21 files changed, 61 insertions(+), 124 deletions(-)
+diff --git a/block/genhd.c b/block/genhd.c
+index 5678194b6b1a..018721b14053 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -400,21 +400,23 @@ int __must_check add_disk_fwnode(struct device *parent, struct gendisk *disk,
+ 	struct device *ddev = disk_to_dev(disk);
+ 	int ret;
+ 
+-	/* Only makes sense for bio-based to set ->poll_bio */
+-	if (queue_is_mq(disk->queue) && disk->fops->poll_bio)
+-		return -EINVAL;
+-
+-	/*
+-	 * The disk queue should now be all set with enough information about
+-	 * the device for the elevator code to pick an adequate default
+-	 * elevator if one is needed, that is, for devices requesting queue
+-	 * registration.
+-	 */
+-	elevator_init_mq(disk->queue);
++	if (queue_is_mq(disk->queue)) {
++		/*
++		 * ->submit_bio and ->poll_bio are bypassed for blk-mq drivers.
++		 */
++		if (disk->fops->submit_bio || disk->fops->poll_bio)
++			return -EINVAL;
+ 
+-	/* Mark bdev as having a submit_bio, if needed */
+-	if (disk->fops->submit_bio)
++		/*
++		 * Initialize the I/O scheduler code and pick a default one if
++		 * needed.
++		 */
++		elevator_init_mq(disk->queue);
++	} else {
++		if (!disk->fops->submit_bio)
++			return -EINVAL;
+ 		bdev_set_flag(disk->part0, BD_HAS_SUBMIT_BIO);
++	}
+ 
+ 	/*
+ 	 * If the driver provides an explicit major number it also must provide
+-- 
+2.45.2
+
