@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4AB1C1F10;
-	Fri,  3 Jan 2025 07:42:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AD641C1F10;
+	Fri,  3 Jan 2025 07:42:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735890165; cv=none; b=MbGqsLkRE8SVIuXFUDVK8tFhZ/o4rWZr1HAIO6HxhCeSM82s1ISR2INUZqfVGKMIMSUf6oyw+1ecLkk1nRk/4mSufX++q/D7IcleDpm+VmLCf2XEFBobBi2WcSpEeyJRoZdF3+RSIZCGcoS1AR3yjGXMccg4leV4nFsNl2YdPOI=
+	t=1735890168; cv=none; b=taUW1T7W4kkk7jCnVmIrhDE7v/9/JIQCjfXkfc9KQ4YIZgFur5yxOHuCwDIrXqDWMogcbXb1oO8tMNXUWuQhuE+oGrGQjKB/OVUDlEMRuEs/MD3mb2ptC88MyCDme7Hloo7b3BsOeyyJm45GMGhYgjSy8y8LBPjuy5ptDcK/xY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735890165; c=relaxed/simple;
-	bh=U9IogqFQ/+OuQqloW2oIf/dg5DDB439QS/jvfhpNFwo=;
+	s=arc-20240116; t=1735890168; c=relaxed/simple;
+	bh=gqiiuxWFqOtjmGeacp7miM9NePkQV3IGJbgcDuIFJrA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TyCxP3ZQsgFxMRecT/jRODurRMPSzVl4hwq0SJy/+gY4GWNB0mknqZVhco+32IgN7q/E0VvxwI/QRQNJ6IneHTJNZzMBsK1+lu2PrscNikJ1N7oExCHkjtvkJm344YwhSd8S5IZNzGSDmuUoxkOHB8XzFJFH/otzB0Pjx05g+zU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xNgauOQh; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=c0/tBxglfQzuJAbQD1INTr3fCrEa7DrRB3F2xp0aWBF9SFjfOHuHrmQNmdGYx8JillOoD2g2VuchqdxsWtTLXkh5CYbvE7FNy1j3LHmGHjgcZEyggJxmzy9rN/dsv+r81GZnyXHvnFwu6hygLQXQ1ZmxQY+jn9Bb0q1zsQHi+zY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=frmeOPwJ; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xNgauOQh"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="frmeOPwJ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=iQlA8Yz+qd2U/c34P+2wJP+a7YEau+u9d5FsTdJxE5E=; b=xNgauOQhiaKkhUeDDVsv9LGowd
-	m+i2iE8usGs1gk4qLZu8iaEpppF0Kll6XybaMYeryTvANCf4A5NP1PiEXiosg90Y0oCE1YJVbDDw6
-	YKUXcl8YXTqKIvyOcXJ7UyARNj+5lzeob633+lEtwKg6OM7oyRTB3+xQJ42HO4VTACJj13bFdripR
-	dQDjuZEvvLvNwzL7HNrWWYO7Ohzo8JlTE5ZfptIyhZS77cL8VrdTSBgw01uxNFQ1vPr0lhea5SkZF
-	J37bthEDraSpUWjbWK53E9o/ljA3t3m4n+l+xgRi7wf4SGjaSuKhyfkfIi71SjK0DbtSTNHP8Zvog
-	zJ2kE5rQ==;
+	bh=Bd8p4JEGKwYB4tvubVq9HlXXuKHyAC7dFmjVLgsKr4s=; b=frmeOPwJomu55PiJ+dp2tDmpJG
+	yZXPgOSwhuBj3X52Si3HKV/skVj+Elyg+utXkBtGFEY+qGr6ApymX0OQ9xGmuP4LyMQ1xI0THNxhA
+	x4uFCacv0XuHVlqnw5kHmPgbc+qnO+vW+4DB+fhNXsVPLD5LhJZ8+gZ0nSXrHRYvHmVIXWMH9Vesk
+	a6Y5jBPcXX9enYr2NR1I8OHpmDfzePeZCpIFe3zqVsGEyRLsraMcxTZj0dKhS9l6js7FLHZa4SyPY
+	Yms9vHZBMO1zkG2a1tRjRmPyDiyCH4sXyzlxc/f7kyeXvieiv0YtaTk8IibqRB4KTd6VEYywkBPRx
+	OHnjpy/w==;
 Received: from [2001:4bb8:2dc:484c:63c3:48c7:ceee:8370] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tTcKR-0000000CNrG-07uw;
-	Fri, 03 Jan 2025 07:42:43 +0000
+	id 1tTcKT-0000000CNrV-2ds3;
+	Fri, 03 Jan 2025 07:42:46 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -39,9 +39,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-block@vger.kernel.org,
 	linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 1/4] block: better split mq vs non-mq code in add_disk_fwnode
-Date: Fri,  3 Jan 2025 08:42:09 +0100
-Message-ID: <20250103074237.460751-2-hch@lst.de>
+Subject: [PATCH 2/4] block: remove blk_mq_init_bitmaps
+Date: Fri,  3 Jan 2025 08:42:10 +0100
+Message-ID: <20250103074237.460751-3-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250103074237.460751-1-hch@lst.de>
 References: <20250103074237.460751-1-hch@lst.de>
@@ -54,57 +54,91 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a big conditional for blk-mq vs not mq at the beginning of
-add_disk_fwnode so that elevator_init_mq is only called for blk-mq disks,
-and add checks that the right methods or set or not set based on the
-queue type.
+The little work done in blk_mq_init_bitmaps is easier done in the only
+caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ block/blk-mq-tag.c | 38 ++++++++++++--------------------------
+ block/blk-mq.h     |  3 ---
+ 2 files changed, 12 insertions(+), 29 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 5678194b6b1a..018721b14053 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -400,21 +400,23 @@ int __must_check add_disk_fwnode(struct device *parent, struct gendisk *disk,
- 	struct device *ddev = disk_to_dev(disk);
- 	int ret;
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 2cafcf11ee8b..ab4a66791a20 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -544,30 +544,12 @@ static int bt_alloc(struct sbitmap_queue *bt, unsigned int depth,
+ 				       node);
+ }
  
--	/* Only makes sense for bio-based to set ->poll_bio */
--	if (queue_is_mq(disk->queue) && disk->fops->poll_bio)
--		return -EINVAL;
+-int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
+-			struct sbitmap_queue *breserved_tags,
+-			unsigned int queue_depth, unsigned int reserved,
+-			int node, int alloc_policy)
+-{
+-	unsigned int depth = queue_depth - reserved;
+-	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
 -
--	/*
--	 * The disk queue should now be all set with enough information about
--	 * the device for the elevator code to pick an adequate default
--	 * elevator if one is needed, that is, for devices requesting queue
--	 * registration.
--	 */
--	elevator_init_mq(disk->queue);
-+	if (queue_is_mq(disk->queue)) {
-+		/*
-+		 * ->submit_bio and ->poll_bio are bypassed for blk-mq drivers.
-+		 */
-+		if (disk->fops->submit_bio || disk->fops->poll_bio)
-+			return -EINVAL;
+-	if (bt_alloc(bitmap_tags, depth, round_robin, node))
+-		return -ENOMEM;
+-	if (bt_alloc(breserved_tags, reserved, round_robin, node))
+-		goto free_bitmap_tags;
+-
+-	return 0;
+-
+-free_bitmap_tags:
+-	sbitmap_queue_free(bitmap_tags);
+-	return -ENOMEM;
+-}
+-
+ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+ 				     unsigned int reserved_tags,
+ 				     int node, int alloc_policy)
+ {
++	unsigned int depth = total_tags - reserved_tags;
++	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
+ 	struct blk_mq_tags *tags;
  
--	/* Mark bdev as having a submit_bio, if needed */
--	if (disk->fops->submit_bio)
-+		/*
-+		 * Initialize the I/O scheduler code and pick a default one if
-+		 * needed.
-+		 */
-+		elevator_init_mq(disk->queue);
-+	} else {
-+		if (!disk->fops->submit_bio)
-+			return -EINVAL;
- 		bdev_set_flag(disk->part0, BD_HAS_SUBMIT_BIO);
-+	}
+ 	if (total_tags > BLK_MQ_TAG_MAX) {
+@@ -582,14 +564,18 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+ 	tags->nr_tags = total_tags;
+ 	tags->nr_reserved_tags = reserved_tags;
+ 	spin_lock_init(&tags->lock);
++	if (bt_alloc(&tags->bitmap_tags, depth, round_robin, node))
++		goto out_free_tags;
++	if (bt_alloc(&tags->breserved_tags, reserved_tags, round_robin, node))
++		goto out_free_bitmap_tags;
  
- 	/*
- 	 * If the driver provides an explicit major number it also must provide
+-	if (blk_mq_init_bitmaps(&tags->bitmap_tags, &tags->breserved_tags,
+-				total_tags, reserved_tags, node,
+-				alloc_policy) < 0) {
+-		kfree(tags);
+-		return NULL;
+-	}
+ 	return tags;
++
++out_free_bitmap_tags:
++	sbitmap_queue_free(&tags->bitmap_tags);
++out_free_tags:
++	kfree(tags);
++	return NULL;
+ }
+ 
+ void blk_mq_free_tags(struct blk_mq_tags *tags)
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 89a20fffa4b1..3bb9ea80f9b6 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -165,9 +165,6 @@ struct blk_mq_alloc_data {
+ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+ 		unsigned int reserved_tags, int node, int alloc_policy);
+ void blk_mq_free_tags(struct blk_mq_tags *tags);
+-int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
+-		struct sbitmap_queue *breserved_tags, unsigned int queue_depth,
+-		unsigned int reserved, int node, int alloc_policy);
+ 
+ unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data);
+ unsigned long blk_mq_get_tags(struct blk_mq_alloc_data *data, int nr_tags,
 -- 
 2.45.2
 
