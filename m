@@ -1,246 +1,630 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B8A2F5E
-	for <linux-scsi@vger.kernel.org>; Sat,  4 Jan 2025 03:50:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735962646; cv=fail; b=GH6MIXeLt6iA0TjFfSF/XchnwTLMkWrTbhHxu3Q/+2nZoagNxTVNLg1vUxE/zUnHib6LcsMEYJw1imr+lfTQL6s7HqLxPMi2d4f1Ko2MRL2jndsOGNx/zoDkGe4nre5GWQxaTFUC+LT1ULMDDpawmfgE/NxkGasDpiu5aHNdxws=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735962646; c=relaxed/simple;
-	bh=74CiTKKJDJLkr3FrTbprW4TOvVPu8Nq8NVbs4bDUEew=;
-	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=UlpDs8mY+T4Hc9vi6hWuE4WOl34XrkG9De2oOK/xzGTMohl7h/cNmCqVnbhIKo0FsuxxGHxCLIHp15Sk5cY+P7j3MHL+YYNGP9iAoxhhfPHpbRK9n4/e/QO5gnYI59tRTSiMzpNUcp4YUDOdmVPfSB1SQ0wxbotu8RAg5kop0Lg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Ftr3V9rS; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Y6o/2XG6; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 927022914;
+	Sat,  4 Jan 2025 07:17:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1735975069; cv=none; b=NyBMJIUKlqtcV3n9RMzT9pzJo6YOmvKE4fMQA9wEDmPvV6mMOq7Dlg27hPvu7lB/TikFFvwbSYP34vgLQjG8uOEwrt/WfEfroP973BjkuqM96q9Mxm2khWHyw95jgtpLnmjLaP60KkgcED/QHya29OZavGFeAtQoxaQVRDVudbk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1735975069; c=relaxed/simple;
+	bh=qCTgSbOzkEyKQp383XVu9JniyA4Hagdox+0TWhx2s+M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DuRfKZd3P3MX4HAF3sJjhEpwFSMdFmppRrUOBaygsUniKFoaHa1d/laPrB3vDXWZYW0gk2VxI3r6WDZJAYxuUSetixQS34j+Y2fEyBDj8p2+utCK9Hzg6M0goV+r9Jxc4lCnAIuQzhOqBUZsDXe6MED736wciTAS1Q5p2f9Sc/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u3RiOVF2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ftr3V9rS";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Y6o/2XG6"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5041uSk0027367;
-	Sat, 4 Jan 2025 03:50:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=cHaaX3nFxeSBgnfh8mzOAJi50U4/009gIQH+fenjG3Y=; b=
-	Ftr3V9rSG0qbPw6XaFkvKhWjhBmh3YbQw3830Jpr4RrvFqhAFF7l7iTSGbfo0TO9
-	xI0si5BPjw9OvFgfsQ+ziPWacEGpRrXPsE2DcET2MgaiZ/5WTSkwP234SK4dLrJu
-	/lFrYYn2zo857wsYo9ZIQIrkTXdgwfxubBUIvPlC1lJnMwZzgOHurM9p7mOWL334
-	umIKykonfe6KYN8ftXt4xlbvknYsrK9TVI3gEQkSnf66yI6i4DgIBY88//KxJY+y
-	VXWLLp9SIhWyxLuwqMY66DAmL1BIgV6dISyvpb1TE2B6T046OWHNC1UO3jR6bpzb
-	z+9EsZUItgmBLT2To27MyQ==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43xus289en-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 04 Jan 2025 03:50:40 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5041YDhW020040;
-	Sat, 4 Jan 2025 03:50:39 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2177.outbound.protection.outlook.com [104.47.55.177])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 43xuebtfxa-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 04 Jan 2025 03:50:39 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZnmL2J10EbxBd8muNgQLhjM131uMwqwIlhdIDFUcNzlDHkeQ0QUCM7THl5baidFIz4v+8LxAcYWZIQ/1Q2dCRKprQSG2riy1U6NMQjBZJEK5/z5GibZYQxSPep1PQs3BM4IqXWoaA9kpGgEg2iuM6jiiJvKS0pjjJvJqVHO2wNaP6Gb67nOre3zZFtU3ObhCNWL+0u6aZLBJl7gVaXoSzuJ1gPqEUTvcQxYax5LMg2h8WMntqKCoQlqQIMjXfeSDWLjNHDQLN9Sfjg8cL5kg0LdGumhX6qTUFL9F3lrmDgj52zy5dHciGO+hH55J0y/BJuJSbUVf7lQRFR5sYetl9g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=cHaaX3nFxeSBgnfh8mzOAJi50U4/009gIQH+fenjG3Y=;
- b=PrWL21aHs8ydSDHCzP974HyOHpYkhA21F/4yyPj6Cj8p1y/AvflmjfojYKICEWYOoCYsYtP2K/kjCK+rIhJzQe2FMqY2mziU3YhnDRdl5QwBm3DpS14zIjHSenVQfYMjZIimPHCFUTrMnqpmYm+fCs9IrlK8dVJAtshKqiQaU/x8cWu23X9g49l0iWu92Hws/o6MF7f1a9inYTzHDuFhHIjuOjLwbTbWNPY/ZVFCQXQ4ZoTwPXI0L182ZkJMxpP0WWp4w9RQAqSq1hYj6EqMyFwSPvbmZv9tnEq/OOM28MpBOM/GmnuHNqZ37Y+U/R9pT++DRXxm5pL9ZeAOt9di3A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cHaaX3nFxeSBgnfh8mzOAJi50U4/009gIQH+fenjG3Y=;
- b=Y6o/2XG6GOLrS4wtJMr89Q6GCgtjbUXZyUDqxupbgQws16PESImvEAADk8MLzKHvbWzMVVr3bEtgsjqeSdNxr8Xc0ef8jKsLHE/QTai5ML/Bl9V3yfhzzBljmGwCbNxNOBAhKYEqaaxWHUaun0yuKeFf7bRa/f1LnJ6eRLUwjYo=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by CH0PR10MB5177.namprd10.prod.outlook.com (2603:10b6:610:df::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8314.14; Sat, 4 Jan
- 2025 03:50:32 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0%3]) with mapi id 15.20.8314.013; Sat, 4 Jan 2025
- 03:50:32 +0000
-Message-ID: <802d5417-0d13-4bf0-ac6d-8c816bda2c96@oracle.com>
-Date: Fri, 3 Jan 2025 21:50:30 -0600
-User-Agent: Mozilla Thunderbird
-Subject: Re: [Bug 219652] READ CAPACITY(16) not used on large USB-attached
- drive in recent kernels
-To: bugzilla-daemon@kernel.org, linux-scsi@vger.kernel.org
-References: <bug-219652-11613@https.bugzilla.kernel.org/>
- <bug-219652-11613-5LnvEcp66x@https.bugzilla.kernel.org/>
-Content-Language: en-US
-From: Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <bug-219652-11613-5LnvEcp66x@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7PR03CA0298.namprd03.prod.outlook.com
- (2603:10b6:5:3ad::33) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u3RiOVF2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C228C4CED1;
+	Sat,  4 Jan 2025 07:17:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1735975069;
+	bh=qCTgSbOzkEyKQp383XVu9JniyA4Hagdox+0TWhx2s+M=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=u3RiOVF2gF1N+VNyaqScSRepgnUX+4R38TLTePOn4TBADikfQXrmGI8EHgmoVBZ4m
+	 VwGrncEmIhMj746M3jKCfMeifys98CqDj4mIB7exooZGGeXd7INPJBTYuT4NqXX466
+	 cAcustBxqm68XWZlIcWK2yJwaCyJ436iV9H4DBnZXBg5ozwATTXPSkkoQjQiEo6Hd5
+	 seDqTlSaBF1nUqA/1d48W5EXYpVLZvwitY1Mx64OAwfjOlvDPa5HHKJgxldj/UO2Vw
+	 mOlEmc9nKTkJylhg6mEQBH/UdvM2hcCIs0LZf/jXwz/DqegRaE0X0U9zHW1ddxupFa
+	 wM7uDNiFAOQ3g==
+Message-ID: <770947cc-6ce9-4ef0-8577-6966c7b8d555@kernel.org>
+Date: Sat, 4 Jan 2025 16:17:47 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|CH0PR10MB5177:EE_
-X-MS-Office365-Filtering-Correlation-Id: fec69408-85fb-48ce-a4a4-08dd2c72efde
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?YjFld0FTeE5kWUxPcEQzWEdZYXJKYUwxejZwOU5WWkpXNWlLVW9LMG91WFJE?=
- =?utf-8?B?dXluNFlpYlk4aFBYWGpyU1hKZGpGK2dCa0F6VjBrTHZHTWtpTXE4bmNTZ0Rh?=
- =?utf-8?B?WFlmNGU0cnN5dTNobFQwaGMya0hDdFAwbDlZY2lPQkIzVVgxb3Byb3dvaHJU?=
- =?utf-8?B?RmxmSEl1aXpuY2R6WDlwcWprZWUvbGVUdzlqMXV1cGJUZXRQVDMrVFBoSUk5?=
- =?utf-8?B?ektONW1WclBpSkpEZlhtWlRqN2pPWWNJblh6LzU0OEpsOEU4a3owZTlkUmVw?=
- =?utf-8?B?UG5WNGpKMHF2c3BhcnltaHRla21kM2Y5N1VZS1BiUUZWd2RWSmFmM0hPeHFO?=
- =?utf-8?B?K2NtMUtic3ZoR3hyQVVNNEZHaXptaWpqSWYzb05XRVFvNDdUOGQweVZ6TTZZ?=
- =?utf-8?B?QlFGZUZyVlQyYUU2cWt2eHhJR1lZSEJxT1V2bEdOZ09kY0IxUlhrVFYzNDM5?=
- =?utf-8?B?TFU2UTlmWFJsSHE2Nzh6YVp6Y3ptWmdySWtFVUhxN29Ja2NjUCtEL2F6V2lw?=
- =?utf-8?B?VmN2Z1Q5b2FkSjgybGEwbnZBTVpTTXJmcG9Cc0pudmFZZFZoREdqdEhPb3Bn?=
- =?utf-8?B?QTZRNDBYUUhNQk1BamRlTEQ0anZNTjdSbjhZaFkzSG5HQjd0VW15SlAzN2Jm?=
- =?utf-8?B?dFhhNEE3TmtCV0w5V3J4UGcrTnpFZDN3MkFGSThMV2RaNG1vblJZQ0kzQ0tw?=
- =?utf-8?B?ZVZXY0pvWDljZC9sKy8zelluaEpMR3FoVUszR0JtbTlKdzFwc3NRTmt6bFBJ?=
- =?utf-8?B?UEZVRS9XMEtrdVJSVE1IVjk3TCtKYU55TVl6UER2MHhCM1FVOGNQcytaODUr?=
- =?utf-8?B?L3ZYSEpFNzRJamZKVEVKbHR5b3E1Q1ZpYUFqT3Q1aG5NM093c0Fjc0h3WWJs?=
- =?utf-8?B?Z3NyUURleWlVbE1SNi9oaHIzYy9kalF1VlJraDdTNmp5QmlGSjhpdEp6cUJr?=
- =?utf-8?B?YS9Wem1KT3Q1R09RUGg3c0I1TXI5djhxOEttUHFMWmRRWDZuT2dvc1d6SmFL?=
- =?utf-8?B?ZXZENnBZYnN3cXpudlBlSDZ3SEt0Z0JhUEtQT1FZdVZ5QzczeVA0eTNibDdV?=
- =?utf-8?B?azd0TTRpMmNkTGRSQTErOFZnQ0J5cGU1U1ViaVRWWExpaGNOdWhjK1JON0ZI?=
- =?utf-8?B?Y2Y1UFFsdk5ObkV1RWRNZWllSGltNUNJTTY1Y0VPU3c5RWdYek1WM3QvK3ZI?=
- =?utf-8?B?ZHZKczB0Zkc2WjJadys0OVhpNkxtUzAyckc0MDExRlA0YUpuNDBXUnJRUjF2?=
- =?utf-8?B?TWh0Mysza2RBcU1tQ0dEVjFpeDBRdVlFWE1aZU83d2dBbjFzbGdmUTFDTURM?=
- =?utf-8?B?WW51MEdIRlNSUC81RTR6aWJYY1o1YXoyU2Y3emFlSGd2WnloV2Zhb240VEZ1?=
- =?utf-8?B?SFhYZmxRRzNFbmplMXIrL3VDTEpKZHVhREJucmU1b1A2RFJUWDNTWmpNMjY2?=
- =?utf-8?B?N0NZVVpzK2RZTEdxb0c2MEJRSTNOMVdvci9ydG5zM2FmL1JqdkNheTVyY2RJ?=
- =?utf-8?B?VkQ4cTB6MUVjYjhlbXpGUkRwSWpXRmJoTWFDYy8ybDNNMXRrYmRqdWF3TGor?=
- =?utf-8?B?UUxsMmZMVTlmYnhmTjNCUlNrSTMweGR5dkhHdjFYMTNGd1IvT3h3UkVYV1U5?=
- =?utf-8?B?bGhTdjNYb2NvL0ZUUlIwbE16c0dhMXFQL0JUcFVXMXRhdFUwamNMeHU4RzY1?=
- =?utf-8?B?WHprQ3J3WE5GTHU1THNNRFFWZGRyYlUwL2ZlTGl0b3hNeXVkSVMvM3IrYWha?=
- =?utf-8?B?Yk14Rkp3Y1c5M1E2WGFRcm1CWUdmZklmRnptZVNTQzNPYi84YkxCQjhBVWpt?=
- =?utf-8?B?T2hBUFd0S2JmZ1FxR2hIRjgwWmc5RUdvTlo2eU16T2FhR2l2Q2QrOHdrV280?=
- =?utf-8?Q?Abubk4UigYz7b?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Qm93VE1ISi93VzRXZDN6MS9LN0JMUnBVdkJwS1dlcm1jWHRDM3BTRU4ycHQr?=
- =?utf-8?B?Y3hzb3ZVTTUzZTRJbG1yNUpZeDVFVXpwREZBcXdyMFNrejUxakt5SUc2TklU?=
- =?utf-8?B?YlJmTWtucWZIMGVFZHNTNm9lVFo1RDNuRHhBQWRVVDdZWE9CSkhkNi9pV3l4?=
- =?utf-8?B?aEdmQW1SUjNMK3cvWnFpNjZRWTQzVzgwSVJrc21aVE4rLzJNUkVtSnZVZmRk?=
- =?utf-8?B?OW0rWkx4UXowL2grZHo1N3VGWkFFM3crWTJyNTdRYkprbzBWaVhYT1JOYXVy?=
- =?utf-8?B?MVhuOTZJaHM2VEZYWWpDQXgyNFVaT08rRmZhWUduWDhpQWVISDFuZE5pbEpk?=
- =?utf-8?B?d29FMUdZd2VuZy9wUzZPZFQzbWdLamQ5SmpZeGpldGFlOFp4OE5QR2d5VjRh?=
- =?utf-8?B?SDZvZXRldk5nWTBpK3M3MDdsMWpwS0pDR041TzU2VVBHKzc0REp6Q3FUbTA5?=
- =?utf-8?B?cWd3elRYay9POWQvNFFmdWVYK0FRZFF0QnRxb3RaNHI3dHYvOTBsRXlkS3Ja?=
- =?utf-8?B?QXk1MlZXUXJsNEk5Y2lSUnBnVlo2VzBzdk5IRkRFQ040M0hTSlZYc004RWhj?=
- =?utf-8?B?eGcwa0JLcjZUTVlxdFVVeFY2VTNUMEZwRVR6R1ZSMGNzRHhCdStKUGtnMlRF?=
- =?utf-8?B?TW40aG42YkNKQkJnVy9WNHN3S2Jtait0RmFVMGdRR2JSelIvZ2RneFNRdlhu?=
- =?utf-8?B?QnI3V2l5bWNwcm00ODNGNzdncTRWRElTMm8yR0RoWWhEWWptK3RVdlVocEhL?=
- =?utf-8?B?NlB6ZTJZNENDOTlJWVBQdDhUYk8wTUlFNkdXWCtUbTE3MHBjYWxpdnVKcTF6?=
- =?utf-8?B?OVhrcGJuVWZIRnk2SGRCQmZsN3lXOU5Td21WU0xjazVNZEFtQ2t2VnlocjVG?=
- =?utf-8?B?WVdjV3F2ZzV2U3BaMkg2K2RJMkJXb1JabUdqaExXaVBsQ0NSRGVUVjdFU0Jr?=
- =?utf-8?B?L3IwbnRnYTlyb2FaUlhyZ2FGNHRIOERLa2hoNVpvd3paVXM0WWdXemhOWWRN?=
- =?utf-8?B?NWU5b3U2c2ZNOHQxbzZocnlneGlGNlNXK0JyNjFjU1gycDZOSEhYbU1XM1M1?=
- =?utf-8?B?K1lCa0N4aEFtVzVkVFJpNHVWdTYzYUZTTkliOTNRZ2ZaS3FJL3FZYnNQczBF?=
- =?utf-8?B?a0x1VE9GZ0pqMVZPTURQdzhkRWxtZXJtNExYNUc0R1BhdTUxcXltdDVtYnZY?=
- =?utf-8?B?Y3RqbmU3bHJLcUVmRHpHbGViVklsY2QvdHBjR3ViVEFDd0dZNUNXYm4wYVlV?=
- =?utf-8?B?NHBLbFM3aFg3OTFhaG1SaWRDdXZpb0FNV1hZQ1pVdTlhdU1rYkliRzhkSzdt?=
- =?utf-8?B?cHpGQ0RueGRaY2EvMkdxbFB4R1d4VUpzWWdlZENpajFGbkdKNDh6OENPWVl4?=
- =?utf-8?B?Vk5BTkNSWXFRRlVWYVIxOE5ZSW5hMWNsUmpBZVNhakNqeVFsem5YYVVXK1FW?=
- =?utf-8?B?V2lmSUl3ckZ2YVNFNHdJMnlNZlc1K0d5a3B6Z1V2QU5oNVBRS3FEQTVTR3NG?=
- =?utf-8?B?RVVzdGorMEc4N01hd0UxNVZCRGdOK2dwTUN3dlRONUhKSTduMW9Ha2I3blgz?=
- =?utf-8?B?dEtzY2tVUEZhcnp3VWUzbmlhTDB5ZlVNeDAzTExnVnk3OGRQbFMzZzJrQ2pF?=
- =?utf-8?B?dS9zZGVScGtYNTlPTXUzbzVDOFIxUHdtNms1cWZCajNneldRL2s5S0M5UzdM?=
- =?utf-8?B?TXRta3pORVZFZVRRQmlreE9Cd2czNG9NTXplaE5mVVRUYnZOL1pWa011eHdT?=
- =?utf-8?B?eEVrbUUxRitDaFlKRDErbHNtKzhZaXYrMnRNRTUyYW5rZlZySTdXYkFWUFV5?=
- =?utf-8?B?V0wwc3Q3R1JIUGZBUENYeHgvMnlHT2xsMDN2VGRYblFyY1dvUHg5OGM2clpn?=
- =?utf-8?B?cDlKSFVmN0ZvMkE2YUs0cWpHZ3hnWjFRdzZ0UnZCSFZKcStRbTZZMnFCbllB?=
- =?utf-8?B?Uy9pNkNaN3VHTmpzcjZRVjE1OHYyWjBDZHFVVEJWZmtFdUhPWnpOeVdvZWs2?=
- =?utf-8?B?VFRQaU1pL0pPYTVGQ3VDN2xKK1dWUUN4ZmducnhHSHB2WmlxUkg2OFdTUjhh?=
- =?utf-8?B?TzJQdGVWTWxBOGUwVGRkeXhEcXlzQnlkSWVNS2xJU1Vab0hqdWFzalpHbVJ1?=
- =?utf-8?B?eDJuOXMrS0xUOXVtUUdwSlNiWm9jTGxrNEZzRHVwTWVEUGhTVitCczNOdzVH?=
- =?utf-8?B?cEE9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	1RLbOVh7P32GhAA6zZ1/Mru5LgIm4z1veZtv/Yu818gDmi10oIMTsR/FNxvwxGbb6HyLxUEDPWfd6EJQ1G9T+dJCQjgZRF17TuntgvEnnvqbCHuc29ZDD+mHVm6EAT7Y/CfQbwWL7zxnqDf3GF5WKv+NwAyLRlZOkEl9RraymPWUNf6qXjWDMqrjYjoBCR6NxIH5xEXp4k1SGCO3RMosXcrUkE2S28vijLMZ7iTZM1CrD7EU1X9JG9oYtBo3VAdoRuE7kZTP2T4YH2V1eLdEjKknhGfNvYyGBDobsDaBMh4+b/7+Ucws9cXvBjEgF2CO89Yn5dAQ/UQZe4DNpvMDhWRQntZOc/fxHcJoa40XNMImIWlPaawoppiyv4q05vVm8z61qM7SBcsSQiiwPJZEoq6wBloJ6MWvNEQ2M/Fp6iaabx1lJBSNCzbychEUHDB7esRIdrvzymE1PSxXSSg4ofzz7piflcHO+/CEWYk0Q1atYgCiOEDspE+HNSGP6UhuOaHaalVUs2AFBb2bINlM4W7Zs2QFSAo8Aih9TicFm2ZbswFJpI9c0LMahDHc03NlTjoFRE9W/Y4KJLg3fBvOwacq+CimgWZaak49LWzrVwE=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fec69408-85fb-48ce-a4a4-08dd2c72efde
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jan 2025 03:50:32.0662
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: W5FaT4oZCRxhTj4lq95qwaUvbtPPA7rCKqeZ+uB1bwHmw5jRZvCt8hd82PxkKwQHCCT2EuK1vkE9qw3VL7B0jC8hfJ7q4kYYV8E7KZh63PA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5177
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-02_03,2025-01-02_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 spamscore=0
- mlxlogscore=999 bulkscore=0 phishscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
- definitions=main-2501040028
-X-Proofpoint-ORIG-GUID: NkBp4vHljT_kQRJOpYniFwLezI4yx4df
-X-Proofpoint-GUID: NkBp4vHljT_kQRJOpYniFwLezI4yx4df
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: avoid to send scsi command with ->queue_limits lock
+ held
+To: Ming Lei <ming.lei@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+ Nilay Shroff <nilay@linux.ibm.com>
+References: <20241231042241.171227-1-ming.lei@redhat.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20241231042241.171227-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 1/2/25 9:30 PM, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=219652
+On 12/31/24 13:22, Ming Lei wrote:
+> Block request queue is often frozen before acquiring the queue
+> ->limits_lock.
+
+"often" is rather vague. What cases are we talking about here beside the block
+layer sysfs ->store() operations ? Fixing these is easy and does not need this
+change.
+
+Furthermore, this change almost feels like a layering violation as it replicates
+most of the queue limits structure inside sd. This introducing a strong
+dependency to the block layer internals which we should avoid.
+
 > 
-> --- Comment #10 from Alan Stern (stern@rowland.harvard.edu) ---
-> Re comment #8: I would like to know the answers to the questions asked in
-> comment #4 about the bad kernel:
+> However, in sd_revalidate_disk(), queue_limits_start_update() is called
+> before reading all kinds of queue limits from hardware, and this way
+> causes ABBA lock easily[1][2] because queue usage counter is grabbed
+> when allocating scsi command.
 > 
->    In sd_read_capacity(), does sd_try_rc16_first() return true?
+> [1] https://lore.kernel.org/linux-block/Z1A8fai9_fQFhs1s@hovoldconsulting.com/
+> [2] https://lore.kernel.org/linux-scsi/ZxG38G9BuFdBpBHZ@fedora/
 > 
->    And why doesn't the "Very big device. Trying to use READ CAPACITY(16)" line,> along with the subsequent call to read_capacity_16(), get executed in the bad
-> kernel?
+> Fix the issue by reading limits into one scsi disk shadow queue limits
+> structure first, then sync it to the block queue limits with
+> ->limits_lock.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Nilay Shroff <nilay@linux.ibm.com>
+> Fixes: 804e498e0496 ("sd: convert to the atomic queue limits API")
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/sd.c     | 156 +++++++++++++++++++++++++++++++-----------
+>  drivers/scsi/sd.h     |  59 +++++++++++++++-
+>  drivers/scsi/sd_dif.c |   3 +-
+>  drivers/scsi/sd_zbc.c |  14 ++--
+>  4 files changed, 181 insertions(+), 51 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 8947dab132d7..6af5334dee2f 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -102,10 +102,10 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+>  
+>  #define SD_MINORS	16
+>  
+> -static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
+> +static void sd_config_discard(struct scsi_disk *sdkp, struct sd_limits *lim,
+>  		unsigned int mode);
+>  static void sd_config_write_same(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim);
+> +		struct sd_limits *lim);
+>  static int  sd_revalidate_disk(struct gendisk *);
+>  static void sd_unlock_native_capacity(struct gendisk *disk);
+>  static void sd_shutdown(struct device *);
+> @@ -121,8 +121,64 @@ static const char *sd_cache_types[] = {
+>  	"write back, no read (daft)"
+>  };
+>  
+> +static void sd_sync_limits(struct queue_limits *blk_lim,
+> +		const struct sd_limits *lim)
+> +{
+> +	if (lim->has_features)
+> +		blk_lim->features |= lim->features;
+> +
+> +	if (lim->has_neg_features)
+> +		blk_lim->features &= ~lim->neg_features;
+> +
+> +	if (lim->has_alignment_offset)
+> +		blk_lim->alignment_offset = lim->alignment_offset;
+> +
+> +	if (lim->has_integrity)
+> +		blk_lim->integrity = lim->integrity;
+> +
+> +	if (lim->has_bs) {
+> +		blk_lim->logical_block_size = lim->bs.logical_block_size;
+> +		blk_lim->physical_block_size = lim->bs.physical_block_size;
+> +	}
+> +
+> +	if (lim->has_discard) {
+> +		blk_lim->discard_granularity =
+> +			lim->discard.discard_granularity;
+> +		blk_lim->discard_alignment =
+> +			lim->discard.discard_alignment;
+> +		blk_lim->max_hw_discard_sectors =
+> +			lim->discard.max_hw_discard_sectors;
+> +	}
+> +
+> +	if (lim->has_ws)
+> +		blk_lim->max_write_zeroes_sectors =
+> +			lim->ws.max_write_zeroes_sectors;
+> +
+> +	if (lim->has_aw) {
+> +		blk_lim->atomic_write_hw_max = lim->aw.atomic_write_hw_max;
+> +		blk_lim->atomic_write_hw_boundary =
+> +			lim->aw.atomic_write_hw_boundary;
+> +		blk_lim->atomic_write_hw_unit_min =
+> +			lim->aw.atomic_write_hw_unit_min;
+> +		blk_lim->atomic_write_hw_unit_max =
+> +			lim->aw.atomic_write_hw_unit_max;
+> +	}
+> +
+> +	if (lim->has_io) {
+> +		blk_lim->max_dev_sectors = lim->io.max_dev_sectors;
+> +		blk_lim->io_opt = lim->io.io_opt;
+> +		blk_lim->io_min = lim->io.io_min;
+> +	}
+> +
+> +	if (lim->has_zone) {
+> +		blk_lim->max_open_zones = lim->zone.max_open_zones;
+> +		blk_lim->max_active_zones = lim->zone.max_active_zones;
+> +		blk_lim->chunk_sectors = lim->zone.chunk_sectors;
+> +	}
+> +}
+> +
+>  static void sd_set_flush_flag(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim)
+> +		struct sd_limits *lim)
+>  {
+>  	if (sdkp->WCE) {
+>  		lim->features |= BLK_FEAT_WRITE_CACHE;
+> @@ -133,6 +189,7 @@ static void sd_set_flush_flag(struct scsi_disk *sdkp,
+>  	} else {
+>  		lim->features &= ~(BLK_FEAT_WRITE_CACHE | BLK_FEAT_FUA);
+>  	}
+> +	lim->has_features = 1;
+>  }
+>  
+>  static ssize_t
+> @@ -170,15 +227,18 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+>  	wce = (ct & 0x02) && !sdkp->write_prot ? 1 : 0;
+>  
+>  	if (sdkp->cache_override) {
+> -		struct queue_limits lim;
+> +		struct queue_limits blk_lim;
+> +		struct sd_limits lim = { 0 };
+>  
+>  		sdkp->WCE = wce;
+>  		sdkp->RCD = rcd;
+>  
+> -		lim = queue_limits_start_update(sdkp->disk->queue);
+>  		sd_set_flush_flag(sdkp, &lim);
+> +
+> +		blk_lim = queue_limits_start_update(sdkp->disk->queue);
+> +		sd_sync_limits(&blk_lim, &lim);
+>  		blk_mq_freeze_queue(sdkp->disk->queue);
+> -		ret = queue_limits_commit_update(sdkp->disk->queue, &lim);
+> +		ret = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
+>  		blk_mq_unfreeze_queue(sdkp->disk->queue);
+>  		if (ret)
+>  			return ret;
+> @@ -468,7 +528,8 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
+>  {
+>  	struct scsi_disk *sdkp = to_scsi_disk(dev);
+>  	struct scsi_device *sdp = sdkp->device;
+> -	struct queue_limits lim;
+> +	struct queue_limits blk_lim;
+> +	struct sd_limits lim = { 0 };
+>  	int mode, err;
+>  
+>  	if (!capable(CAP_SYS_ADMIN))
+> @@ -481,10 +542,11 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
+>  	if (mode < 0)
+>  		return -EINVAL;
+>  
+> -	lim = queue_limits_start_update(sdkp->disk->queue);
+>  	sd_config_discard(sdkp, &lim, mode);
+> +	blk_lim = queue_limits_start_update(sdkp->disk->queue);
+> +	sd_sync_limits(&blk_lim, &lim);
+>  	blk_mq_freeze_queue(sdkp->disk->queue);
+> -	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
+> +	err = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
+>  	blk_mq_unfreeze_queue(sdkp->disk->queue);
+>  	if (err)
+>  		return err;
+> @@ -570,7 +632,8 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
+>  {
+>  	struct scsi_disk *sdkp = to_scsi_disk(dev);
+>  	struct scsi_device *sdp = sdkp->device;
+> -	struct queue_limits lim;
+> +	struct queue_limits blk_lim;
+> +	struct sd_limits lim = { 0 };
+>  	unsigned long max;
+>  	int err;
+>  
+> @@ -592,10 +655,11 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
+>  		sdkp->max_ws_blocks = max;
+>  	}
+>  
+> -	lim = queue_limits_start_update(sdkp->disk->queue);
+>  	sd_config_write_same(sdkp, &lim);
+> +	blk_lim = queue_limits_start_update(sdkp->disk->queue);
+> +	sd_sync_limits(&blk_lim, &lim);
+>  	blk_mq_freeze_queue(sdkp->disk->queue);
+> -	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
+> +	err = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
+>  	blk_mq_unfreeze_queue(sdkp->disk->queue);
+>  	if (err)
+>  		return err;
+> @@ -847,14 +911,14 @@ static void sd_disable_discard(struct scsi_disk *sdkp)
+>  	blk_queue_disable_discard(sdkp->disk->queue);
+>  }
+>  
+> -static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
+> +static void sd_config_discard(struct scsi_disk *sdkp, struct sd_limits *lim,
+>  		unsigned int mode)
+>  {
+>  	unsigned int logical_block_size = sdkp->device->sector_size;
+>  	unsigned int max_blocks = 0;
+>  
+> -	lim->discard_alignment = sdkp->unmap_alignment * logical_block_size;
+> -	lim->discard_granularity = max(sdkp->physical_block_size,
+> +	lim->discard.discard_alignment = sdkp->unmap_alignment * logical_block_size;
+> +	lim->discard.discard_granularity = max(sdkp->physical_block_size,
+>  			sdkp->unmap_granularity * logical_block_size);
+>  	sdkp->provisioning_mode = mode;
+>  
+> @@ -893,8 +957,9 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  		break;
+>  	}
+>  
+> -	lim->max_hw_discard_sectors = max_blocks *
+> +	lim->discard.max_hw_discard_sectors = max_blocks *
+>  		(logical_block_size >> SECTOR_SHIFT);
+> +	lim->has_discard = 1;
+>  }
+>  
+>  static void *sd_set_special_bvec(struct request *rq, unsigned int data_len)
+> @@ -940,7 +1005,7 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+>  	return scsi_alloc_sgtables(cmd);
+>  }
+>  
+> -static void sd_config_atomic(struct scsi_disk *sdkp, struct queue_limits *lim)
+> +static void sd_config_atomic(struct scsi_disk *sdkp, struct sd_limits *lim)
+>  {
+>  	unsigned int logical_block_size = sdkp->device->sector_size,
+>  		physical_block_size_sectors, max_atomic, unit_min, unit_max;
+> @@ -992,10 +1057,11 @@ static void sd_config_atomic(struct scsi_disk *sdkp, struct queue_limits *lim)
+>  			return;
+>  	}
+>  
+> -	lim->atomic_write_hw_max = max_atomic * logical_block_size;
+> -	lim->atomic_write_hw_boundary = 0;
+> -	lim->atomic_write_hw_unit_min = unit_min * logical_block_size;
+> -	lim->atomic_write_hw_unit_max = unit_max * logical_block_size;
+> +	lim->aw.atomic_write_hw_max = max_atomic * logical_block_size;
+> +	lim->aw.atomic_write_hw_boundary = 0;
+> +	lim->aw.atomic_write_hw_unit_min = unit_min * logical_block_size;
+> +	lim->aw.atomic_write_hw_unit_max = unit_max * logical_block_size;
+> +	lim->has_aw = 1;
+>  }
+>  
+>  static blk_status_t sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd,
+> @@ -1088,7 +1154,7 @@ static void sd_disable_write_same(struct scsi_disk *sdkp)
+>  }
+>  
+>  static void sd_config_write_same(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim)
+> +		struct sd_limits *lim)
+>  {
+>  	unsigned int logical_block_size = sdkp->device->sector_size;
+>  
+> @@ -1143,8 +1209,9 @@ static void sd_config_write_same(struct scsi_disk *sdkp,
+>  	}
+>  
+>  out:
+> -	lim->max_write_zeroes_sectors =
+> +	lim->ws.max_write_zeroes_sectors =
+>  		sdkp->max_ws_blocks * (logical_block_size >> SECTOR_SHIFT);
+> +	lim->has_ws = 1;
+>  }
+>  
+>  static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+> @@ -2574,7 +2641,7 @@ static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer
+>  }
+>  
+>  static void sd_config_protection(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim)
+> +		struct sd_limits *lim)
+>  {
+>  	struct scsi_device *sdp = sdkp->device;
+>  
+> @@ -2628,7 +2695,7 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  #define READ_CAPACITY_RETRIES_ON_RESET	10
+>  
+>  static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+> -		struct queue_limits *lim, unsigned char *buffer)
+> +		struct sd_limits *lim, unsigned char *buffer)
+>  {
+>  	unsigned char cmd[16];
+>  	struct scsi_sense_hdr sshdr;
+> @@ -2703,6 +2770,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  	/* Lowest aligned logical block */
+>  	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
+>  	lim->alignment_offset = alignment;
+> +	lim->has_alignment_offset = 1;
+>  	if (alignment && sdkp->first_scan)
+>  		sd_printk(KERN_NOTICE, sdkp,
+>  			  "physical block alignment offset: %u\n", alignment);
+> @@ -2814,7 +2882,7 @@ static int sd_try_rc16_first(struct scsi_device *sdp)
+>   * read disk capacity
+>   */
+>  static void
+> -sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
+> +sd_read_capacity(struct scsi_disk *sdkp, struct sd_limits *lim,
+>  		unsigned char *buffer)
+>  {
+>  	int sector_size;
+> @@ -2900,8 +2968,9 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  		 */
+>  		sector_size = 512;
+>  	}
+> -	lim->logical_block_size = sector_size;
+> -	lim->physical_block_size = sdkp->physical_block_size;
+> +	lim->bs.logical_block_size = sector_size;
+> +	lim->bs.physical_block_size = sdkp->physical_block_size;
+> +	lim->has_bs = 1;
+>  	sdkp->device->sector_size = sector_size;
+>  
+>  	if (sdkp->capacity > 0xffffffff)
+> @@ -3333,7 +3402,7 @@ static unsigned int sd_discard_mode(struct scsi_disk *sdkp)
+>   * Query disk device for preferred I/O sizes.
+>   */
+>  static void sd_read_block_limits(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim)
+> +		struct sd_limits *lim)
+>  {
+>  	struct scsi_vpd *vpd;
+>  
+> @@ -3395,7 +3464,7 @@ static void sd_read_block_limits_ext(struct scsi_disk *sdkp)
+>  
+>  /* Query block device characteristics */
+>  static void sd_read_block_characteristics(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim)
+> +		struct sd_limits *lim)
+>  {
+>  	struct scsi_vpd *vpd;
+>  	u16 rot;
+> @@ -3412,8 +3481,10 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp,
+>  	sdkp->zoned = (vpd->data[8] >> 4) & 3;
+>  	rcu_read_unlock();
+>  
+> -	if (rot == 1)
+> -		lim->features &= ~(BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
+> +	if (rot == 1) {
+> +		lim->neg_features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
+> +		lim->has_neg_features = 1;
+> +	}
+>  
+>  	if (!sdkp->first_scan)
+>  		return;
+> @@ -3700,7 +3771,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  	struct scsi_disk *sdkp = scsi_disk(disk);
+>  	struct scsi_device *sdp = sdkp->device;
+>  	sector_t old_capacity = sdkp->capacity;
+> -	struct queue_limits lim;
+> +	struct queue_limits blk_lim;
+> +	struct sd_limits lim = { 0 };
+>  	unsigned char *buffer;
+>  	unsigned int dev_max;
+>  	int err;
+> @@ -3724,8 +3796,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  
+>  	sd_spinup_disk(sdkp);
+>  
+> -	lim = queue_limits_start_update(sdkp->disk->queue);
+> -
+>  	/*
+>  	 * Without media there is no reason to ask; moreover, some devices
+>  	 * react badly if we do.
+> @@ -3746,6 +3816,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  		 * doesn't support it should be treated as rotational.
+>  		 */
+>  		lim.features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
+> +		lim.has_features = 1;
+>  
+>  		if (scsi_device_supports_vpd(sdp)) {
+>  			sd_read_block_provisioning(sdkp);
+> @@ -3779,23 +3850,24 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  
+>  	/* Some devices report a maximum block count for READ/WRITE requests. */
+>  	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
+> -	lim.max_dev_sectors = logical_to_sectors(sdp, dev_max);
+> +	lim.io.max_dev_sectors = logical_to_sectors(sdp, dev_max);
+>  
+>  	if (sd_validate_min_xfer_size(sdkp))
+> -		lim.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+> +		lim.io.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+>  	else
+> -		lim.io_min = 0;
+> +		lim.io.io_min = 0;
+>  
+>  	/*
+>  	 * Limit default to SCSI host optimal sector limit if set. There may be
+>  	 * an impact on performance for when the size of a request exceeds this
+>  	 * host limit.
+>  	 */
+> -	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
+> +	lim.io.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
+>  	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+> -		lim.io_opt = min_not_zero(lim.io_opt,
+> +		lim.io.io_opt = min_not_zero(lim.io.io_opt,
+>  				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
+>  	}
+> +	lim.has_io = 1;
+>  
+>  	sdkp->first_scan = 0;
+>  
+> @@ -3803,8 +3875,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  	sd_config_write_same(sdkp, &lim);
+>  	kfree(buffer);
+>  
+> +	blk_lim = queue_limits_start_update(sdkp->disk->queue);
+> +	sd_sync_limits(&blk_lim, &lim);
+>  	blk_mq_freeze_queue(sdkp->disk->queue);
+> -	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
+> +	err = queue_limits_commit_update(sdkp->disk->queue, &blk_lim);
+>  	blk_mq_unfreeze_queue(sdkp->disk->queue);
+>  	if (err)
+>  		return err;
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 36382eca941c..68c2db27cbf3 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -67,6 +67,59 @@ enum {
+>  	SD_ZERO_WS10_UNMAP,	/* Use WRITE SAME(10) with UNMAP */
+>  };
+>  
+> +struct sd_limits {
+> +	unsigned int has_features:1;
+> +	unsigned int has_neg_features:1;
+> +	unsigned int has_alignment_offset:1;
+> +	unsigned int has_bs:1;
+> +	unsigned int has_discard:1;
+> +	unsigned int has_integrity:1;
+> +	unsigned int has_aw:1;
+> +	unsigned int has_ws:1;
+> +	unsigned int has_io:1;
+> +	unsigned int has_zone:1;
+> +
+> +	blk_features_t		features;
+> +	blk_features_t		neg_features;
+> +	unsigned int		alignment_offset;
+> +	struct blk_integrity	integrity;
+> +
+> +	struct {
+> +		unsigned int logical_block_size;
+> +		unsigned int physical_block_size;
+> +	} bs;
+> +
+> +	struct {
+> +		unsigned int		discard_granularity;
+> +		unsigned int		discard_alignment;
+> +		unsigned int		max_hw_discard_sectors;
+> +	} discard;
+> +
+> +	struct {
+> +		unsigned int		max_write_zeroes_sectors;
+> +	} ws;
+> +
+> +	struct {
+> +		unsigned int		atomic_write_hw_max;
+> +		unsigned int		atomic_write_hw_boundary;
+> +		unsigned int		atomic_write_hw_unit_min;
+> +		unsigned int		atomic_write_hw_unit_max;
+> +	} aw;
+> +
+> +	struct {
+> +		unsigned int		max_dev_sectors;
+> +		unsigned int		io_opt;
+> +		unsigned int		io_min;
+> +	} io;
+> +
+> +	struct {
+> +		unsigned int		zone_write_granularity;
+> +		unsigned int		max_open_zones;
+> +		unsigned int		max_active_zones;
+> +		unsigned int		chunk_sectors;
+> +	} zone;
+> +};
+> +
+>  /**
+>   * struct zoned_disk_info - Specific properties of a ZBC SCSI device.
+>   * @nr_zones: number of zones.
+> @@ -228,11 +281,11 @@ static inline sector_t sectors_to_logical(struct scsi_device *sdev, sector_t sec
+>  	return sector >> (ilog2(sdev->sector_size) - 9);
+>  }
+>  
+> -void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim);
+> +void sd_dif_config_host(struct scsi_disk *sdkp, struct sd_limits *lim);
+>  
+>  #ifdef CONFIG_BLK_DEV_ZONED
+>  
+> -int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+> +int sd_zbc_read_zones(struct scsi_disk *sdkp, struct sd_limits *lim,
+>  		u8 buf[SD_BUF_SIZE]);
+>  int sd_zbc_revalidate_zones(struct scsi_disk *sdkp);
+>  blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
+> @@ -245,7 +298,7 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
+>  #else /* CONFIG_BLK_DEV_ZONED */
+>  
+>  static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
+> -		struct queue_limits *lim, u8 buf[SD_BUF_SIZE])
+> +		struct sd_limits *lim, u8 buf[SD_BUF_SIZE])
+>  {
+>  	return 0;
+>  }
+> diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
+> index ae6ce6f5d622..081168d4aee3 100644
+> --- a/drivers/scsi/sd_dif.c
+> +++ b/drivers/scsi/sd_dif.c
+> @@ -24,13 +24,14 @@
+>  /*
+>   * Configure exchange of protection information between OS and HBA.
+>   */
+> -void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim)
+> +void sd_dif_config_host(struct scsi_disk *sdkp, struct sd_limits *lim)
+>  {
+>  	struct scsi_device *sdp = sdkp->device;
+>  	u8 type = sdkp->protection_type;
+>  	struct blk_integrity *bi = &lim->integrity;
+>  	int dif, dix;
+>  
+> +	lim->has_integrity = 1;
+>  	memset(bi, 0, sizeof(*bi));
+>  
+>  	dif = scsi_host_dif_capable(sdp->host, type);
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 7a447ff600d2..c8e398a08b31 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+> @@ -588,7 +588,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+>   * also the zoned device information in *sdkp. Called by sd_revalidate_disk()
+>   * before the gendisk capacity has been set.
+>   */
+> -int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+> +int sd_zbc_read_zones(struct scsi_disk *sdkp, struct sd_limits *lim,
+>  		u8 buf[SD_BUF_SIZE])
+>  {
+>  	unsigned int nr_zones;
+> @@ -598,6 +598,7 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  	if (sdkp->device->type != TYPE_ZBC)
+>  		return 0;
+>  
+> +	lim->has_features = 1;
+>  	lim->features |= BLK_FEAT_ZONED;
+>  
+>  	/*
+> @@ -605,7 +606,7 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  	 * zones of host-managed devices must be aligned to the device physical
+>  	 * block size.
+>  	 */
+> -	lim->zone_write_granularity = sdkp->physical_block_size;
+> +	lim->zone.zone_write_granularity = sdkp->physical_block_size;
+>  
+>  	/* READ16/WRITE16/SYNC16 is mandatory for ZBC devices */
+>  	sdkp->device->use_16_for_rw = 1;
+> @@ -628,11 +629,12 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  
+>  	/* The drive satisfies the kernel restrictions: set it up */
+>  	if (sdkp->zones_max_open == U32_MAX)
+> -		lim->max_open_zones = 0;
+> +		lim->zone.max_open_zones = 0;
+>  	else
+> -		lim->max_open_zones = sdkp->zones_max_open;
+> -	lim->max_active_zones = 0;
+> -	lim->chunk_sectors = logical_to_sectors(sdkp->device, zone_blocks);
+> +		lim->zone.max_open_zones = sdkp->zones_max_open;
+> +	lim->zone.max_active_zones = 0;
+> +	lim->zone.chunk_sectors = logical_to_sectors(sdkp->device, zone_blocks);
+> +	lim->has_zone = 1;
+>  
+>  	return 0;
+>  
 
-I see it.
 
-With the new code we think the command is failing. We then retry the command 3 times
-like you described you saw in the trace. Then because on the 3rd retry we get
-0xfffffffe instead of 0xffffffff, we don't hit the check below like I mentioned before:
-
-                sector_size = read_capacity_10(sdkp, sdp, buffer);
-                if (sector_size == -EOVERFLOW)
-                        goto got_data;
-                if (sector_size < 0)
-                        return;
-                if ((sizeof(sdkp->capacity) > 4) &&
-                    (sdkp->capacity > 0xffffffffULL)) {
-                        int old_sector_size = sector_size;
-                        sd_printk(KERN_NOTICE, sdkp, "Very big device. "
-                                        "Trying to use READ CAPACITY(16).\n");
-                        sector_size = read_capacity_16(sdkp, sdp, lim, buffer);
-
-With the old kernel, we saw the first try succeed. We then saw the 0xffffffff
-and then tried read_capacity_16 above.
-
-And the reason for the difference was that with the new code, I forgot to
-add a check for if there was even an error. We ended up always retrying
-3 times and that lead us to get the 0xfffffffe value on that last retry.
-
-so we need:
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index adee6f60c966..2dcf225c7017 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -210,6 +210,9 @@ static int scsi_check_passthrough(struct scsi_cmnd *scmd,
- 	struct scsi_sense_hdr sshdr;
- 	enum sam_status status;
- 
-+	if (!scmd->result)
-+		return 0;
-+
- 	if (!failures)
- 		return 0;
- 
+-- 
+Damien Le Moal
+Western Digital Research
