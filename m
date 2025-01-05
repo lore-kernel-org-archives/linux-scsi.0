@@ -1,113 +1,86 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 419D6170A0B
-	for <linux-scsi@vger.kernel.org>; Sat,  4 Jan 2025 22:27:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81795224D6
+	for <linux-scsi@vger.kernel.org>; Sun,  5 Jan 2025 06:32:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736029677; cv=none; b=WoQ/6NHMSjmkSJqu6IKyUBWvR8qT6dSEQHzGMuCI6cuPiAB2xqcPXB+n7s4JtiGnEIgURrJTXv9ttIKOKQNpiE028omS/mtVNW+TB6QJi19MgNl9epOJ611JwgSsFf99mBP6IqA4xqEk2f8HuORJ3Mc/J57eT0zTf6hfOiG62c8=
+	t=1736058742; cv=none; b=VFVuJnv9bz99r97efZP7MS09AwlQzBnRaJnX49VqBrDT/rZRqMyneRbOjttbfGqZZiS/KPJvDWgsCZAjJi2CgtVL0vMIgNAkMxccYgsN4nSLRLMgEuxVqCEHOfyt6rIy8QPkuvgcqIff6rxZZj7vYfcVbn4JR1CHsW/Ubc/lgvc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736029677; c=relaxed/simple;
-	bh=dbW9sZ4K4CVni2WzfS5PIhq9YPepuP+wgQlHyfd4Js0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=AzUamZQwhRj6doGi9CUHqYcSC1NuAUJS0pwzq60U0quoznnOGT5KSWE2MUFJeCiT9t4dS9ButwBBwC+SxbtRqxdvchQtdH8/IU8gH3PTKnaJ0WFBVaSrmPqbqWTHD9jenAifmIcW855i1pZJyBMjSgpnFdGWVAA8sBq8GixQgZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=xoYooiqn; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1736058742; c=relaxed/simple;
+	bh=NbCZ7DFjXmcKZD1zBaTTJfZAMy/JVsDelXfLV7te4/M=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=LNnPBIfMUCnOe3Neafk4oM5I3J0sk64WaKkaC7As5zLoPaB6Ptsz/jDSXmJrpyhpr+zZBGIyjMw4RCwLnujLSLUXCaZd5pnpMej1z9uc73KXpqu3qLbK4ItF3GtRblKhfs6+gEilPE8bG82qtLeHmuYvcEzu0V4TFe8AZHnps0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bw7rawX0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="xoYooiqn"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-21628b3fe7dso181622535ad.3
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Jan 2025 14:27:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1736029674; x=1736634474; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ydW0TG4z7XBo7HBBH7ij90+wnNI4JxxB1fs88STRyos=;
-        b=xoYooiqnsEbhRX7oNLMe+4zSKtiFsQwy8/aciLwR5MW3a6ReCHKk8eZipkbBAx9V5X
-         mHYHz7rcg1tUUyQ6Yqf8fi4GmvZcQbh2o/byeXJiT0EvxL88mAJvZ4zYPx1HaVPufL7z
-         572+GXzuEpX+yVbDLRp7jRi3O7IR9AIjcCmnmNqZfHWp63qdaBqFhhGUDljGkfj03OLr
-         DqFHc7rwsLT3E2pTPGVxrCl6xKYiB53u2lFSVi1L84K1Cnl0XM6YKWhHZ3wy1+h7Y6mQ
-         /+5vIRZlags29GTRIJ+fRIdig73iwZHSd2gEIkrp7K+yhrt6woslPZ5YYeER5UNv6UHS
-         aOdg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736029674; x=1736634474;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ydW0TG4z7XBo7HBBH7ij90+wnNI4JxxB1fs88STRyos=;
-        b=FkDhjpfp0hmLRoVZFqdTgMe+2z6UAjpkMcBj/JR9joYlPrccu2GdTddMx7Zwqc6ivu
-         zrNH5ltxnCBbh+an8VScrOepqO35zgGwAx3eWuvoHahIlvwiawqnl5QpyfVDrESpw3sC
-         UJaDP1g4QWoRc1v2SbYyLMUL4ENbhDMJUw03ldAw5nzlp23pSh8ZYOvXNmCqjo6kQFEp
-         amTvza5WXJnX5DBwCfBqKpH4Kv2FpuCY3amGygzSWbs0YW756HUJz/jfECDYfzTG/qg8
-         xDS9JKiHgsaWZ+tb3SsXxhKS1E8NFEk3jMrHvNfr0bZ5xcjwYigL9yeazh4cvqZXYm4t
-         2Cog==
-X-Forwarded-Encrypted: i=1; AJvYcCWUgDT3ihy1u9317ADR7y++HUV07nP3CqIovx2Xxc2xVBYhfdjst7hz5DY8+PXQFnU2Tzv1tYXbpR3C@vger.kernel.org
-X-Gm-Message-State: AOJu0YwL4TjLARUiUA2CijwoNpJzQSXn/YDAv6MXBCJpJu8O8yJJ7QUE
-	7TBcEf7bBA4wMHj4yEwsogeSPd6Ph5cb9i6W1AZBceWpna+oQbyRp887NTGQaeH+q6RIw5XAZ1V
-	W
-X-Gm-Gg: ASbGnctwrLUjDc+GseldbgyKDeRTPj8K4fBQW9E5XqP2yGWHG43A2GZAT7DqWfWLFIj
-	q9eODg5vaQ5ulc9/gh/xQMAJg70zxII9pBser/YaYRnKHhVrSfggfLgNEibD/GRZ1vukqNrXznN
-	SBFsxlcm99o+yZOtznwlO5WlRx559xfTafeMpO8O5jnlPL4C5Q9k1silSviUi5quMqS6ciUBFDv
-	tPsrbBxjrFDD3Ms+hpZDWV/56+SUPxmEH5c18ZGHBo0JpfT
-X-Google-Smtp-Source: AGHT+IF+L+86xLxNKDCy3NJpJ1Whra//RstFOL/I1FY0ppQLvIlzdnb8Hv8hv/Dxi+bSvhcBNsb4Ww==
-X-Received: by 2002:a05:6a20:6f06:b0:1e1:b014:aec9 with SMTP id adf61e73a8af0-1e5e080c77fmr83798682637.29.1736029674019;
-        Sat, 04 Jan 2025 14:27:54 -0800 (PST)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72aad81641esm28451472b3a.3.2025.01.04.14.27.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Jan 2025 14:27:53 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
- linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20250103073417.459715-1-hch@lst.de>
-References: <20250103073417.459715-1-hch@lst.de>
-Subject: Re: simplify passthrough bio handling
-Message-Id: <173602967287.135972.1134077263108813311.b4-ty@kernel.dk>
-Date: Sat, 04 Jan 2025 15:27:52 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bw7rawX0"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C3D07C4CEE8
+	for <linux-scsi@vger.kernel.org>; Sun,  5 Jan 2025 06:32:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736058739;
+	bh=NbCZ7DFjXmcKZD1zBaTTJfZAMy/JVsDelXfLV7te4/M=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=Bw7rawX0D4GHayXDbZR1dlyzB7rkb6/nZEwSnVyq9mzJEj1MDOlLE9wseaIMQlfWW
+	 xfKRnDEHA3jWDKSEqZb7XyKFx4tztFKpgvF/Sarx6RkEG0sOtpMxzZJBssra2VQtea
+	 /QFmEAmIUM6HY3Q8W3jmo00X+rzYj2OA8NSB5bWtkQjukF1HobNS2CoQkVwi6AfGXA
+	 83qjw7LhtuTf0mJ1HH8tIV7zo/+beBVX9haOFRpwUzjXsUv0TUVKc1Tt9j5FNaQQ5V
+	 2Mw1tiZyKrBGR+bQbH99y9VeAreG8N/DALePJHnDWJc5LgOev87YuKZU4TgOfVB8S7
+	 kUj0qtTfM8lvg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id BE869C41614; Sun,  5 Jan 2025 06:32:19 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 213759] CD tray ejected on hibernate resume
+Date: Sun, 05 Jan 2025 06:32:19 +0000
+X-Bugzilla-Reason: CC
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: wifiti9585@pixdd.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: CODE_FIX
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-213759-11613-zmpY08S4nH@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-213759-11613@https.bugzilla.kernel.org/>
+References: <bug-213759-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-14bd6
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D213759
 
-On Fri, 03 Jan 2025 08:33:56 +0100, Christoph Hellwig wrote:
-> this series removes the special casing when adding pages to passthrough
-> bios in favor of simply checking that they match the queue limits once
-> before submissions.  This mirrors where the zone append users have been
-> moving and a recent doing the same for a single optimizes passthrough
-> user.
-> 
-> Diffstat:
->  block/bio.c                        |  107 +-----------------------------
->  block/blk-map.c                    |  128 ++++++++++---------------------------
->  block/blk-mq.c                     |    4 -
->  block/blk.h                        |    8 --
->  drivers/nvme/target/passthru.c     |   18 +++--
->  drivers/nvme/target/zns.c          |    3
->  drivers/target/target_core_pscsi.c |    6 -
->  include/linux/bio.h                |    2
->  include/linux/blk-mq.h             |    8 --
->  9 files changed, 57 insertions(+), 227 deletions(-)
-> 
-> [...]
+Peltier (wifiti9585@pixdd.com) changed:
 
-Applied, thanks!
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |wifiti9585@pixdd.com
 
-[1/2] block: remove bio_add_pc_page
-      commit: 6aeb4f836480617be472de767c4cb09c1060a067
-[2/2] block: remove blk_rq_bio_prep
-      commit: 02ee5d69e3baf2796ba75b928fcbc9cf7884c5e9
+--- Comment #16 from Peltier (wifiti9585@pixdd.com) ---
+The Yamaha XSR 300 distinguishes itself with its ability to cater to diverse
+rider needs. Its harmonious blend of retro design and modern functionality,
+coupled with Yamaha's engineering prowess, ensures a bike that=E2=80=99s as=
+ reliable as
+it is stylish.
+https://wheel4world.com/yamaha-xsr-300-overview-design-engine-specs-and-pri=
+ce-in-india/
 
-Best regards,
--- 
-Jens Axboe
+--=20
+You may reply to this email to add a comment.
 
-
-
+You are receiving this mail because:
+You are on the CC list for the bug.
+You are watching the assignee of the bug.=
