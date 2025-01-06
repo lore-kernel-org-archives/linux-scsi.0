@@ -1,78 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421011917E9
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 04:31:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2584184F;
+	Mon,  6 Jan 2025 07:35:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736137918; cv=none; b=dM6gqFvzRU9LxwPn/uD7D8zmXiBZmjgRVkRefeoZth/OqTZNuZtOq2MehLSHrQmHCUsQAk6JkaVfLgZ28ZpOw8kVxCRlbb8wgqdcuX3T/kCKleYKFPHJSB2I8iaS0Ujn+/hHYUUOtiHzNWkz+QiDKB22+wE4dCWmVAvQuB2Py3Y=
+	t=1736148926; cv=none; b=FrlnXIhK8byCGeJdVk4BY8GShJXZuAgB958SaE8/kcSKtI0szUxUW5s9fD0fZJclBc8IB3CxupVlNlbT3DCFQANUuJmKVCfism0jBMnBMvUx1xwH+9SAg7q1vb016zLnpNrsbdP/vM9+aYCdKH1uL+7SvHlcDmP+ePL/hSFsRgI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736137918; c=relaxed/simple;
-	bh=JteebABBMtcacaalcYbaqx8UuUwJuCB9e/cKaZEVQGg=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=TzK6x8Bdc+Or9f5U/MS/JcGTCiH5aUIfBwT1B1MiOB68iA662fjUMZCDinX8vOfbNFL9JuvSAQt6PL9APcuuY4ajYGSLS3U2c23iGJM0CK5pYuRpgrAZcONiuGvZ3qurbCo6dixj7mUx/IcpWLsipuCaks06KEO0GsqFL80+IIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Thl152SX; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Thl152SX"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C082AC4CEE2
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 04:31:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736137917;
-	bh=JteebABBMtcacaalcYbaqx8UuUwJuCB9e/cKaZEVQGg=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Thl152SXqOHBARnMbalWcvFlt2g5dK+6Xtx3M1QLFaVftKacgs6cPr8JUxiLzbX3G
-	 q9HA9HTQDoCxdQ0O5/3YBmcyyTgx4mi9T5MwxGyULy8FF40RiG870zWtGl1A79OOJ+
-	 c+F+uUBMSmx2R54uMxZss1XzFSfIZfM1RDFLcH8NWvPfWLeMhLhPL0MQzvYrlrR38Z
-	 6T7k/QLVyVrfQqaOSlrtOSpsNvazhlx1Kv9+a4M1mmsEPRlIkp0kpkj58CkGGGwzg7
-	 51bVAjNZu8l7MEJJw4KThdEpkJ8HZHKTTE/bEt+RoDBiIJON8euLDDU3vv871xyhTB
-	 tlfxSHDh5E4SQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id B8D8FC3279E; Mon,  6 Jan 2025 04:31:57 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Mon, 06 Jan 2025 04:31:56 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: sagar.biradar@microchip.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-rdFczxK7rH@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1736148926; c=relaxed/simple;
+	bh=qbko2Z+H6pgF7QgMKcN3IFdAcCTv0LQGjnrM1OmzeeE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gx93kTzyxVTSpXD8YQeXOlG14cWY6J9m/yp1WLSsMCT+jgqxSRDOWqQz2AWUHL8S2u5tk+LMm7zbRQZ/N7NYCjEBIL/X8J93dn+KxGThWExQTbqxPwGO69zHtqbSNVLnEkL6cXkHQA1jLr7zoZ7WgKmKhCNwvHhpYzNN0JF/uAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 75F6E68BFE; Mon,  6 Jan 2025 08:35:20 +0100 (CET)
+Date: Mon, 6 Jan 2025 08:35:20 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 4/4] block: simplify tag allocation policy selection
+Message-ID: <20250106073520.GA17229@lst.de>
+References: <20250103074237.460751-1-hch@lst.de> <20250103074237.460751-5-hch@lst.de> <d7cbbe46-ecd1-4bdc-8fe9-7df499ba9e6f@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d7cbbe46-ecd1-4bdc-8fe9-7df499ba9e6f@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On Fri, Jan 03, 2025 at 09:33:31AM +0000, John Garry wrote:
+>> -	BUILD_BUG_ON(ARRAY_SIZE(alloc_policy_name) != BLK_TAG_ALLOC_MAX);
+>> +	BUILD_BUG_ON(ARRAY_SIZE(hctx_flag_name) != ilog2(BLK_MQ_F_MAX));
+>>   -	seq_puts(m, "alloc_policy=");
+>
+> Maybe it's nice to preserve this formatting, but I know that debugfs is not 
+> a stable ABI...
 
---- Comment #69 from Sagar (sagar.biradar@microchip.com) ---
-Hi all,
-Currently the patch which caused the issue has been reverted.
-I have reworked and I have a fix ready for this issue.
+It's not a stable API indeed, and I'd rather not keep extra code for
+debugging.
 
-I am working towards submitting the patch sometime this week.
+>> index 72c03cbdaff4..d51eeba4da3c 100644
+>> --- a/drivers/ata/sata_sil24.c
+>> +++ b/drivers/ata/sata_sil24.c
+>> @@ -378,7 +378,7 @@ static const struct scsi_host_template sil24_sht = {
+>>   	.can_queue		= SIL24_MAX_CMDS,
+>>   	.sg_tablesize		= SIL24_MAX_SGE,
+>>   	.dma_boundary		= ATA_DMA_BOUNDARY,
+>> -	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
+>> +	.tag_alloc_policy	= SCSI_TAG_ALLOC_FIFO,
+>
+> do we actually need to set tag_alloc_policy to the default 
+> (SCSI_TAG_ALLOC_FIFO)?
 
---=20
-You may reply to this email to add a comment.
+libata uses weird inheritance where __ATA_BASE_SHT sets default fields
+that can then later be override, so this is indeed needed to set the
+field back to the original default after the previous assignment changed
+it.  (Did I mentioned I hate this style of programming? :))
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> Could we just have
+>
+> struct scsi_host_template {
+> 	...
+> 	int tag_alloc_policy_rr:1
+>
+> instead of this enum?
+
+This should probably work.  I tried to reduce the churn a bit, but
+due to the change of the enum value names that didn't actually work.
+
+>
+> Or does that cause issues for the ATA SHT and descendants where it 
+> overrides members? I didn't think that it would.
+
+It'll still work fine.  It will be even less obvious, so the case
+mentioned above by you will probably have to grow a comment explaining
+it to preempt the cleanup brigade from removing it.
+
