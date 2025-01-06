@@ -1,75 +1,71 @@
-Received: from alln-iport-7.cisco.com (alln-iport-7.cisco.com [173.37.142.94])
+Received: from rcdn-iport-9.cisco.com (rcdn-iport-9.cisco.com [173.37.86.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6953A8821;
-	Mon,  6 Jan 2025 22:45:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.94
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E97A21E1023;
+	Mon,  6 Jan 2025 22:46:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736203535; cv=none; b=JP8Cox+3JRRKIQQGXtu3f+WqlW38VK36W563M2+z2Orm3GQPebWfP3ynrQEPsozlj9uRuojrtQnCVtJsGVLWDRKxBDb/3sZgcY+Cf6ZzzQAvhdXqNmK3/Vhszf3yz6z3/4w+U2k4oz34/XYyExl5gt/gnawATvrp3fhUifxLCmY=
+	t=1736203612; cv=none; b=ZBwiAfyBmqkeX8Y7vhmcIQ7ghYHfF4p5BUkwBCGKHykxqZOMx90sNA0OnHQTf2P7pn69R9+sVmsxX+dbzar+AlJZs9AuhWdMD8H2JeWyAT0HZLyu1F4/i0hH2U8ERvz2wIvDT3tZ9IawYd1IvYdO2xnvllPgwnPm/mN/bKZ1Yr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736203535; c=relaxed/simple;
-	bh=jMYctyOgStI2zZ2AMhBzIJm7nFI7+CUExrDudzwj79M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P4t83S57/8sZSZiqYKbz7qVq53Va3SpJQ56TdRabU9TNSptvOhW2yJj3xbDPxdeK27smO4CIPv0M+Nv1RFKZz2u6hrdoqQaPG1+5zCie6LzKB1EjvbFRXosnDaf+LwFBarmIFbRgmiNlkP3X6z4A+wcSd1zc9I2OQ2nCv2wrZj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=Xfhb/WiE; arc=none smtp.client-ip=173.37.142.94
+	s=arc-20240116; t=1736203612; c=relaxed/simple;
+	bh=T3eoqBxEdsM9eHOp5GWLUU16jZKxAJc2ONLHG3yQQqk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qUiLNi2EO2IKh+FLSTRzdBU6o+TrNwcfHHnPXIUHj0BIQyRpEgPT2FMLwt4IaI9Ds0qqbhKFLiXJegiMDzuDjJNI/TRvhdz2ABR3Ecddg3fGTAj2jf5nLgSEgdTvcFAoELsIhyh2qu4Gcg5LBCAlMoPBloPHLH/OUzT9OAO9wjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=kDdUldTc; arc=none smtp.client-ip=173.37.86.80
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="Xfhb/WiE"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="kDdUldTc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1565; q=dns/txt; s=iport;
-  t=1736203533; x=1737413133;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=9PMdEQCFtlJ/DKjM4PdTjAUlJZJ9Um7jg2KJB8pUT1Y=;
-  b=Xfhb/WiEDfIcmWZHTmcYDw65DGIyrDrBecOeYgHzyt/VdgSN6X2Nm8MZ
-   SUIjalLtRlopjioQgk1pSos5EuxXQ3f5WJZz6YOQYrABFAvNMsh6GdMNT
-   0zgGNjQXefXiM/UltNEvIz/whGZbmOIo4f+VYRBkPWfWMRcSmA9OtgQNp
-   Y=;
-X-CSE-ConnectionGUID: ftH/vGYFTnuqZqFLh3UlsA==
-X-CSE-MsgGUID: LHN+uUe5SXex+DCWwZUlnQ==
-X-IPAS-Result: =?us-ascii?q?A0ATAACGXHxnj4r/Ja1aHQEBAQEJARIBBQUBgX8IAQsBh?=
- =?us-ascii?q?BlDGS+McopnnQWBJQNWDwEBAQ9EBAEBhQeKdgImNAkOAQIEAQEBAQMCAwEBA?=
- =?us-ascii?q?QEBAQEBAQEBCwEBBQEBAQIBBwUUAQEBAQEBOQVJhgiGXSsLAUaBUIMBgmUDs?=
- =?us-ascii?q?EmBeTOBAd4zgW2BSAGNSXCEdycVBoFJRIEVgnIHb4FSgz6FdwSHbJ1wSIEhA?=
- =?us-ascii?q?1ksAVUTDQoLBwWBcwM4DAswFTWBJkQ5gkZpSTcCDQI1gh58giuEXIRHhFaFZ?=
- =?us-ascii?q?oIXhQBAAwsYDUgRLDcUGwY+bgeaZDyDboEOgikWAZNRkh+hA4QloUYaM6pTm?=
- =?us-ascii?q?HykR4RmgWc6gVszGggbFYMiUhkPjjq3XSUyPAIHCwEBAwmRdAEB?=
-IronPort-Data: A9a23:bWCm6KKG8Tmq0sNoFE+RGpUlxSXFcZb7ZxGr2PjKsXjdYENS1DwGz
- WsYWGmEPvqPYzT9Kdp+PNm+9B8Pv5OAxtM2HQcd+CA2RRqmiyZq6fd1j6vUF3nPRiEWZBs/t
- 63yUvGZcoZsCCea/kr1WlTYhSEU/bmSQbbhA/LzNCl0RAt1IA8skhsLd9QR2uaEuvDnRVrX0
- T/Oi5eHYgL9gmYqajh8B5+r8XuDgtyj4Fv0gXRmDRx7lAe2v2UYCpsZOZawIxPQKqFIHvS3T
- vr017qw+GXU5X8FUrtJRZ6iLyXm6paLVeS/oiI+t5qK23CulQRuukoPD8fwXG8M49m/c3+d/
- /0W3XC4YV9B0qQhA43xWTEAe811FfUuFLMqvRFTvOTLp3AqfUcAzN1gEGFxI6Ip1NpxHHh87
- NI8KGswaguq0rfeLLKTEoGAh+w5J8XteYdasXZ6wHSBVLAtQIvIROPB4towMDUY358VW62BI
- ZBENHw2N0Sojx5nYj/7DLo9lf20h332cBVTqUmeouw85G27IAlZjOC9a4SKIYTQLSlTtmK4g
- CHbwmmkOSEXJJ+z4gWawE+ogNaayEsXX6pJSeXnraQ16LGJ/UQRBR8cfV+6p+SpzE+0XpRUL
- El80i8nt7Qz8gqzQ8XwRQa1plaDpBcXX9cWGOo/gCmJy6zJ80OaC3ICQzppdtMrrok1SCYs2
- 1vPmMnmbRRrsbuIWTeG/ayVhS29NDJTLmIYYyIACwwf7LHeTJoblBnDSJNnVaWylNCwQWi2y
- DGRpy94jLIW5SIW60ml1V7bo3Wyianncggo/zfOcEaltT59f6fwMuRE9mPnxfpHKY+YSHyIs
- 34Fh9WS4Ygy4XelynTlrAIlQu3B2hqVDAAwl2KDCHXIythMx5JBVd0NiN2dDB41WirhRdMPS
- BSJ0e+2zMQMVEZGlYctP+qM5z0ClMAM7+jNWPHOdcZpaZNsbgKB9ywGTRfPhD60yBF9zftkZ
- 8jznSOQ4ZAyVP4PIN2eGrZ17FPX7nplrY8ubcmhlk35jer2iIC9FuddbAHmgh8FAFOs+1iNr
- I0FaKNmOj1UUfb1ZWHM4JUPIFURZXk9DtaeliCkXrDrH+aSI0l4U6W56ep4I+RNxv0F/s+Wp
- SvVchEDlzLCaYjvdV7ihoZLNOi3Bc4XQLNSFXBEAGtELFB6Pd/ws/9EKMNuFVTlncQ6pcNJo
- zA+U53oKpxypv7voVzxsbGVQFReSSmW
-IronPort-HdrOrdr: A9a23:94weBKpuS4PDr2VJMPvzHY4aV5oYeYIsimQD101hICG9vPb1qy
- nIpoV46faaslgssR0b8+xoW5PwIk80l6QV3WB5B97LNzUO01HGEGgN1+bf6gylMzHi9+JbyK
- dre7VzBZnNF1Rg5PyKhTVQa+xB/DFCm5rY4ts3CBxWPGVXV50=
-X-Talos-CUID: =?us-ascii?q?9a23=3Af2nmUGj9qMlYa+Ol1mwLAYy5kDJufGH9i2n/EmG?=
- =?us-ascii?q?ED3tweqS7bV/Lxad/up87?=
-X-Talos-MUID: 9a23:xIxyawmy+MryM3KdBJvldnpGFOEr/pmjVXs9nIVFl+K7Kh5NPzGk2WE=
+  d=cisco.com; i=@cisco.com; l=1413; q=dns/txt; s=iport;
+  t=1736203610; x=1737413210;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=m9SeWd2Cd94o1scMlQR5oXbooM2v106DAHykBUqJ6TY=;
+  b=kDdUldTcwepWeDy4MfWbDlR4MRJMf5EN4lRp2ismoT9OX6gxoD2hYdei
+   ZIWG8QdYh0tBjsl1nPEjRJhQ67/c1ExB5TphJljHirt8z1G61Uxtff0Yk
+   2fIg3lKuNaEL4XoHfDmsCmufq1N75slkIL3GFH8+HK2P056RtHgcmweHt
+   A=;
+X-CSE-ConnectionGUID: 6sZC6BuNSOOvClutsb3pOg==
+X-CSE-MsgGUID: LuDLKqrkRRuRCLsHm8DwhA==
+X-IPAS-Result: =?us-ascii?q?A0BAAACGXHxn/4r/Ja1aHAEBAQEBAQcBARIBAQQEAQGCA?=
+ =?us-ascii?q?AYBAQsBgkqBT0MZL5ZDnhuBJQNWDwEBAQ9EBAEBhQcCinQCJjUIDgECBAEBA?=
+ =?us-ascii?q?QEDAgMBAQEBAQEBAQEBAQsBAQUBAQECAQcFgQ4ThgiGWwIBAycLAUYQUVYZg?=
+ =?us-ascii?q?wGCZQOwSYF5M4EB3jOBbYFIAY1JcIR3JxUGgUlEglCBPm+BUoM+hXcEh2ydc?=
+ =?us-ascii?q?EiBIQNZLAFVEw0KCwcFgXMDOAwLMBU1gSZEOYJGaUk3Ag0CNYIefIIrhFyER?=
+ =?us-ascii?q?4RWhWaCF4RWKkADCxgNSBEsNxQbBj5uB5pkPIJ8coEOQ4FmFgGlcKEDhCWhR?=
+ =?us-ascii?q?hozqlOYfKQQN4RmgWkCOIFZMxoIGxU7gmdSGQ+OLRa3VCUyPAIHCwEBAwmRd?=
+ =?us-ascii?q?AEB?=
+IronPort-Data: A9a23:UwBNMq1zRb9pTKcV3/bD5cJwkn2cJEfYwER7XKvMYLTBsI5bpzVTy
+ 2UaXGqDOPeDajDzfYt/bovg8ExSv5aDzdVjGgpv3Hw8FHgiRegpqji6wuYcGwvIc6UvmWo+t
+ 512huHodZ5yFjmE4E/watANlFEkvYmQXL3wFeXYDS54QA5gWU8JhAlq8wIDqtYAbeORXUXU4
+ 7sen+WFYAX4g2csbDpOg06+gEoHUMra6WtwUmMWPZinjHeG/1EJAZQWI72GLneQauF8Au6gS
+ u/f+6qy92Xf8g1FIovNfmHTKxBirhb6ZGBiu1IOM0SQqkEqSh8ajs7XAMEhhXJ/0F1lqTzeJ
+ OJl7vRcQS9xVkHFdX90vxNwS0mSNoUekFPLzOTWXcG7lyX7n3XQL/pGUloEFtMy58BMJkZQ3
+ vgFNCsHNQikiLfjqF67YrEEasULNsLnOsYb/3pn1zycVa9gSpHYSKKM7thdtNsyrpkRRrCFO
+ IxDNGcpNU+QC/FMEg9/5JYWn+6ymnj7ej5wo1OOrq1x6G/WpOB0+OO1aoWPKoXWHq25mG68u
+ 07i3H3jASsgKea07SGl9yKAme/myHaTtIU6UefQGuRRqF+exGY7DBwQSEv9oPO8zEW5Xrp3L
+ kUO5iso67A/6EGxVdT7dxqiqXWAs1gXXN84O+k77hydj6nZ+QCUAkAaQTNbLt8rrsk7QXotz
+ FDht9foAyF/9aaeUnO16LiZt3WxNDITIGtEYjULJTbp+PH5q401yxaKRdF5Hevt15v+GCr7x
+ HaBqy1Wa6gvsPPnHp6TpTjv6w9AbLCQJuLpzm07hl6Y0z4=
+IronPort-HdrOrdr: A9a23:ShVL8K/JtIZ1cIQ4O4huk+D3I+orL9Y04lQ7vn2ZhyY4TiX+rb
+ HLoB1173HJYVoqMk3I3OrwW5VoIkmskKKdg7NxAV7KZmCP01dAbrsSj7cKqAeOJ8SRzINg/J
+ YlW7RiCdH2EFhxhdv37U2FCdo6qeP3l5xA/d2/85+oJjsaEp2JKGxCe2CmLnE=
+X-Talos-CUID: =?us-ascii?q?9a23=3AltqBb2iVr4oVtxgwsC8uuk+ZIDJuLGbv5yn6Pmm?=
+ =?us-ascii?q?DLkF3Y7mIVUSao7tDnJ87?=
+X-Talos-MUID: 9a23:ixi64ggogYLs5Yl/3heFA8MpENpEx4e3EkM3q4g8kO2fFSkgFyidpWHi
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.12,293,1728950400"; 
-   d="scan'208";a="408367302"
+   d="scan'208";a="302728143"
 Received: from rcdn-l-core-01.cisco.com ([173.37.255.138])
-  by alln-iport-7.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Jan 2025 22:45:05 +0000
+  by rcdn-iport-9.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Jan 2025 22:45:41 +0000
 Received: from fedora.cisco.com (unknown [10.188.112.101])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-01.cisco.com (Postfix) with ESMTPSA id E446F180002A2;
-	Mon,  6 Jan 2025 22:45:03 +0000 (GMT)
+	by rcdn-l-core-01.cisco.com (Postfix) with ESMTPSA id 5C30A18000299;
+	Mon,  6 Jan 2025 22:45:40 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -83,10 +79,12 @@ Cc: arulponn@cisco.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH 1/3] scsi: fnic: Remove unnecessary else and unnecessary break in FDLS
-Date: Mon,  6 Jan 2025 14:44:49 -0800
-Message-ID: <20250106224451.3597-1-kartilak@cisco.com>
+Subject: [PATCH 3/3] scsi: fnic: Remove unnecessary else to fix warning in FDLS FIP
+Date: Mon,  6 Jan 2025 14:44:51 -0800
+Message-ID: <20250106224451.3597-3-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20250106224451.3597-1-kartilak@cisco.com>
+References: <20250106224451.3597-1-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -98,9 +96,8 @@ X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.188.112.101, [10.188.112.101]
 X-Outbound-Node: rcdn-l-core-01.cisco.com
 
-Incorporate review comments from Martin:
-    Remove unnecessary else and unnecessary break to fix warnings
-    in the FDLS code.
+Implement review comments from Martin:
+    Remove unnecessary else from fip.c to fix a warning.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
@@ -108,43 +105,38 @@ Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
 Reviewed-by: Arun Easi <aeasi@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/fnic/fdls_disc.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/fnic/fip.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index 2534af2fff53..2513a82a8915 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -2776,23 +2776,19 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
- 			/*Retry Plogi again from the timer routine. */
- 			tport->flags |= FNIC_FDLS_RETRY_FRAME;
- 			return;
+diff --git a/drivers/scsi/fnic/fip.c b/drivers/scsi/fnic/fip.c
+index aaf5f768a9bd..7bb85949033f 100644
+--- a/drivers/scsi/fnic/fip.c
++++ b/drivers/scsi/fnic/fip.c
+@@ -154,16 +154,15 @@ void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct fip_header *fiph)
+ 			vlan->state = FIP_VLAN_AVAIL;
+ 			list_add_tail(&vlan->list, &fnic->vlan_list);
+ 			break;
 -		} else {
--			FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
--						 "PRLI returned ELS_LS_RJT from target: 0x%x",
--						 tgt_fcid);
--
--			fdls_tgt_logout(iport, tport);
--			fdls_delete_tport(iport, tport);
--			return;
+-			FNIC_FIP_DBG(KERN_INFO, fnic->host,
+-				     fnic->fnic_num,
+-				     "Invalid descriptor type(%x) in VLan response\n",
+-				     vlan_desc->fd_desc.fip_dtype);
+-			/*
+-			 * Note : received a type=2 descriptor here i.e. FIP
+-			 * MAC Address Descriptor
+-			 */
  		}
--		break;
-+		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-+					 "PRLI returned ELS_LS_RJT from target: 0x%x",
-+					 tgt_fcid);
- 
-+		fdls_tgt_logout(iport, tport);
-+		fdls_delete_tport(iport, tport);
-+		return;
- 	default:
- 		atomic64_inc(&iport->iport_stats.tport_prli_misc_rejects);
- 		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
- 					 "PRLI not accepted from target: 0x%x", tgt_fcid);
- 		return;
--		break;
++		FNIC_FIP_DBG(KERN_INFO, fnic->host,
++			     fnic->fnic_num,
++			     "Invalid descriptor type(%x) in VLan response\n",
++			     vlan_desc->fd_desc.fip_dtype);
++		/*
++		 * Note : received a type=2 descriptor here i.e. FIP
++		 * MAC Address Descriptor
++		 */
+ 		cur_desc += vlan_desc->fd_desc.fip_dlen;
+ 		desc_len -= vlan_desc->fd_desc.fip_dlen;
  	}
- 
- 	FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
 -- 
 2.47.1
 
