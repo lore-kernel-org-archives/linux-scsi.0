@@ -1,76 +1,75 @@
-Received: from alln-iport-4.cisco.com (alln-iport-4.cisco.com [173.37.142.91])
+Received: from alln-iport-7.cisco.com (alln-iport-7.cisco.com [173.37.142.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B9A61E0DB0;
-	Mon,  6 Jan 2025 22:45:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.91
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6953A8821;
+	Mon,  6 Jan 2025 22:45:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.94
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736203532; cv=none; b=pEXcyFpSK9Dlzzjagk/3+otzfxPuPYvZz5fov+MV4AgwYfbupO5VRtIw0qFyopecPzIJO3IK9D4qjZoaBZe2xCwpenI7qSqXHl2iVdmYQp4xS7HOzvKMUMdCkRUTug02+S+47zBDcHogkGahehjFouTUjd2WWYkLA9n9W3K7UUQ=
+	t=1736203535; cv=none; b=JP8Cox+3JRRKIQQGXtu3f+WqlW38VK36W563M2+z2Orm3GQPebWfP3ynrQEPsozlj9uRuojrtQnCVtJsGVLWDRKxBDb/3sZgcY+Cf6ZzzQAvhdXqNmK3/Vhszf3yz6z3/4w+U2k4oz34/XYyExl5gt/gnawATvrp3fhUifxLCmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736203532; c=relaxed/simple;
-	bh=wmOknkTwJxOtqnsV1XMil+6bbgDzsn0IgQkxEtPtIdw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hlRGoFGaJzAOwwA2FAghhl5MW6ieTQZHgLygFqB1fl80PkHZf/gwuVXA7vvIqrPXbOZ1QPHGdFhv5NQUpFglsaEiHcIuiSJK3TA2LgIfShGGtorISVCYIKaGELwgI+5EyrF3o/fpB3KtP7VX/3aRE6HxL+zkD1sYGu2JiYyibJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=BnHy90r6; arc=none smtp.client-ip=173.37.142.91
+	s=arc-20240116; t=1736203535; c=relaxed/simple;
+	bh=jMYctyOgStI2zZ2AMhBzIJm7nFI7+CUExrDudzwj79M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P4t83S57/8sZSZiqYKbz7qVq53Va3SpJQ56TdRabU9TNSptvOhW2yJj3xbDPxdeK27smO4CIPv0M+Nv1RFKZz2u6hrdoqQaPG1+5zCie6LzKB1EjvbFRXosnDaf+LwFBarmIFbRgmiNlkP3X6z4A+wcSd1zc9I2OQ2nCv2wrZj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=Xfhb/WiE; arc=none smtp.client-ip=173.37.142.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="BnHy90r6"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="Xfhb/WiE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1794; q=dns/txt; s=iport;
-  t=1736203530; x=1737413130;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Gx+Pb4z/q0lNaAccmsZd68iqZP2DGrLoqmDZ9ds2gJ8=;
-  b=BnHy90r6zvZ8RwN3GKSBE1RMyqe6THJkPJBvMEGMM3SwNj+89V728Ybp
-   TGzB3+YTm8MdkO5KCZ59PCCT/0G4b9znRImN2TcIPXDaO3oTXbnOg9hoa
-   Yab/mp/Hua/4aiG5R8M2KCn4iFP3NQe9GMhjZCuGWlOnY6QNxB30f33yV
-   I=;
-X-CSE-ConnectionGUID: 6mufl0+PRpqrA0IKNhl8Wg==
-X-CSE-MsgGUID: OG22L9ihTYORmhg9tpP2Ag==
-X-IPAS-Result: =?us-ascii?q?A0AeAAAIXHxnj4r/Ja1aHAEBAQEBAQcBARIBAQQEAQGCA?=
- =?us-ascii?q?QUBAQsBhBlDGS+0XoElA1YPAQEBD0QEAQGFBwKKdAImNgcOAQIEAQEBAQMCA?=
- =?us-ascii?q?wEBAQEBAQEBAQEBCwEBBQEBAQIBBwUUAQEBAQEBOQVJhgiGWwIBAzIBRhBRV?=
- =?us-ascii?q?hmDAYJlA7BHgiyBAd4zgW2BSAGNSXCEdycVBoFJRIJQgT5vgVKDPoVVIgSHb?=
- =?us-ascii?q?J1wSIEhA1ksAVUTDQoLBwWBcwM4DAswFYFbRDmCRmlJNwINAjWCHnyCK4Rch?=
- =?us-ascii?q?EeEVoVmgheFAEADCxgNSBEsNxQbBj5uB5pkPINugQ+CKBYBpXChA4QloUYaM?=
- =?us-ascii?q?6pTmHykR4RmgW0BM4FbMxoIGxWDIlIZD44tDQm3UyUyPAIHCwEBAwmRdAEB?=
-IronPort-Data: A9a23:GuWqhaj62czDbf3HtkfPMmrJX161qxAKZh0ujC45NGQN5FlHY01je
- htvUW2AbP2MZTGme4p0YYjkp0kO75eGyIJhSgI9qyoxFy5jpJueD7x1DKtf0wB+jyHnZBg6h
- ynLQoCYdKjYdleF+FH1dOCn9SQkvU2xbuKUIPbePSxsThNTRi4kiBZy88Y0mYcAbeKRW2thg
- vus5ZSFULOZ82QsaD9Msvrd8EkHUMna4Vv0gHRvPZing3eG/5UlJMp3Db28KXL+Xr5VEoaSL
- 87fzKu093/u5BwkDNWoiN7TKiXmlZaLYGBiIlIPM0STqkAqSh4ai87XB9JAAatjsAhlqvgqo
- Dl7WTNcfi9yVkHEsLx1vxC1iEiSN4UekFPMCSDXXcB+UyQqflO0q8iCAn3aMqVG//t5BTkNz
- cYAMSokNjGgoeKykI20H7wEasQLdKEHPasFsX1miDWcBvE8TNWbGuPB5MRT23E7gcUm8fT2P
- pVCL2EwKk6dPlsWYQd/5JEWxI9EglH8eidEqVacpoI84nPYy0p6172F3N/9JoTaFJkLxBfCz
- o7A10PWWEs+Zd2f9QuiyHesib7ThRuhcY1HQdVU8dYx3QXMnTZMYPEMbnO5rPuzokq/Xc9Pb
- U0e/2wlqq1a3EmiVMX8WVugrWKJpAURXfJXCeQx7AzLwa3Riy6dB24ZXntCZcYgucseWzMnz
- BmKksnvCDgpt6eaIVqZ97GJvXapMjMUBXENaDVCTgYf5dTn5oYpgXryos1LCqW5iJjxXDr32
- T3P9HF4jLQIhslN3KK+lbzav96yjsbMUwAxvkbvZHq89CohRa2DZ4j41leOuJ6sM72lZlWGu
- XEFne2X4+YPEYyBmUSxrAMlQunBCxGtbmG0vLJ/I6TN4QhB7JJKQGyx3N2cDBo0WirnUWa1C
- KM2he+3zMQJVJdNRfQoC79d8+xwkcDd+S3ND5g4lOZmbJlrbxOg9ypzf0OW1G2FuBFzyv9mY
- c7KLZz3Uyly5UFbINyeGr11PVgDm3FW+I8vbcqgp/ha+ePEPSfLFedt3KWmMbBhsPnsTPrpH
- yZ3bJbSlE4FD4USkwHc8JUYKhgRPGMnCJXt481RfajrH+aVMD9JNhMl+pt4I9YNt/0Mzo/gp
- yjtMmcGkwCXrSOcdm23hoVLNOiHsWBX8SljZXRE0JfB8yRLXLtDG49GK8JoIuF8q7Q6pRO2J
- tFcE/i97j10Ymyv01wggVPV9eSOqDzDadqyAheY
-IronPort-HdrOrdr: A9a23:LrQ18KAfoK0r2xPlHemD55DYdb4zR+YMi2TDGXocdfUzSL39qy
- nAppomPHPP4gr5HUtQ+uxoW5PwJE80l6QV3WB5B97LNzUO+lHYTr2KhrGM/9SPIUDD398Y/b
- t8cqR4Fd37BUV3gILH+gWieuxQp+VviJrJuQ8bpE0dND2DrMpbnmFENjo=
-X-Talos-CUID: =?us-ascii?q?9a23=3Ae1EWlmnR31LcuySxn9t0iPF18EHXOSPY0XnUewy?=
- =?us-ascii?q?AM35wUpTNaHy2+Kc0rMU7zg=3D=3D?=
-X-Talos-MUID: 9a23:BA3e7AR/OpzmoAk+RXTLq2s4EJZp45ifL3oIkZpXp9G8bwV/bmI=
+  d=cisco.com; i=@cisco.com; l=1565; q=dns/txt; s=iport;
+  t=1736203533; x=1737413133;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=9PMdEQCFtlJ/DKjM4PdTjAUlJZJ9Um7jg2KJB8pUT1Y=;
+  b=Xfhb/WiEDfIcmWZHTmcYDw65DGIyrDrBecOeYgHzyt/VdgSN6X2Nm8MZ
+   SUIjalLtRlopjioQgk1pSos5EuxXQ3f5WJZz6YOQYrABFAvNMsh6GdMNT
+   0zgGNjQXefXiM/UltNEvIz/whGZbmOIo4f+VYRBkPWfWMRcSmA9OtgQNp
+   Y=;
+X-CSE-ConnectionGUID: ftH/vGYFTnuqZqFLh3UlsA==
+X-CSE-MsgGUID: LHN+uUe5SXex+DCWwZUlnQ==
+X-IPAS-Result: =?us-ascii?q?A0ATAACGXHxnj4r/Ja1aHQEBAQEJARIBBQUBgX8IAQsBh?=
+ =?us-ascii?q?BlDGS+McopnnQWBJQNWDwEBAQ9EBAEBhQeKdgImNAkOAQIEAQEBAQMCAwEBA?=
+ =?us-ascii?q?QEBAQEBAQEBCwEBBQEBAQIBBwUUAQEBAQEBOQVJhgiGXSsLAUaBUIMBgmUDs?=
+ =?us-ascii?q?EmBeTOBAd4zgW2BSAGNSXCEdycVBoFJRIEVgnIHb4FSgz6FdwSHbJ1wSIEhA?=
+ =?us-ascii?q?1ksAVUTDQoLBwWBcwM4DAswFTWBJkQ5gkZpSTcCDQI1gh58giuEXIRHhFaFZ?=
+ =?us-ascii?q?oIXhQBAAwsYDUgRLDcUGwY+bgeaZDyDboEOgikWAZNRkh+hA4QloUYaM6pTm?=
+ =?us-ascii?q?HykR4RmgWc6gVszGggbFYMiUhkPjjq3XSUyPAIHCwEBAwmRdAEB?=
+IronPort-Data: A9a23:bWCm6KKG8Tmq0sNoFE+RGpUlxSXFcZb7ZxGr2PjKsXjdYENS1DwGz
+ WsYWGmEPvqPYzT9Kdp+PNm+9B8Pv5OAxtM2HQcd+CA2RRqmiyZq6fd1j6vUF3nPRiEWZBs/t
+ 63yUvGZcoZsCCea/kr1WlTYhSEU/bmSQbbhA/LzNCl0RAt1IA8skhsLd9QR2uaEuvDnRVrX0
+ T/Oi5eHYgL9gmYqajh8B5+r8XuDgtyj4Fv0gXRmDRx7lAe2v2UYCpsZOZawIxPQKqFIHvS3T
+ vr017qw+GXU5X8FUrtJRZ6iLyXm6paLVeS/oiI+t5qK23CulQRuukoPD8fwXG8M49m/c3+d/
+ /0W3XC4YV9B0qQhA43xWTEAe811FfUuFLMqvRFTvOTLp3AqfUcAzN1gEGFxI6Ip1NpxHHh87
+ NI8KGswaguq0rfeLLKTEoGAh+w5J8XteYdasXZ6wHSBVLAtQIvIROPB4towMDUY358VW62BI
+ ZBENHw2N0Sojx5nYj/7DLo9lf20h332cBVTqUmeouw85G27IAlZjOC9a4SKIYTQLSlTtmK4g
+ CHbwmmkOSEXJJ+z4gWawE+ogNaayEsXX6pJSeXnraQ16LGJ/UQRBR8cfV+6p+SpzE+0XpRUL
+ El80i8nt7Qz8gqzQ8XwRQa1plaDpBcXX9cWGOo/gCmJy6zJ80OaC3ICQzppdtMrrok1SCYs2
+ 1vPmMnmbRRrsbuIWTeG/ayVhS29NDJTLmIYYyIACwwf7LHeTJoblBnDSJNnVaWylNCwQWi2y
+ DGRpy94jLIW5SIW60ml1V7bo3Wyianncggo/zfOcEaltT59f6fwMuRE9mPnxfpHKY+YSHyIs
+ 34Fh9WS4Ygy4XelynTlrAIlQu3B2hqVDAAwl2KDCHXIythMx5JBVd0NiN2dDB41WirhRdMPS
+ BSJ0e+2zMQMVEZGlYctP+qM5z0ClMAM7+jNWPHOdcZpaZNsbgKB9ywGTRfPhD60yBF9zftkZ
+ 8jznSOQ4ZAyVP4PIN2eGrZ17FPX7nplrY8ubcmhlk35jer2iIC9FuddbAHmgh8FAFOs+1iNr
+ I0FaKNmOj1UUfb1ZWHM4JUPIFURZXk9DtaeliCkXrDrH+aSI0l4U6W56ep4I+RNxv0F/s+Wp
+ SvVchEDlzLCaYjvdV7ihoZLNOi3Bc4XQLNSFXBEAGtELFB6Pd/ws/9EKMNuFVTlncQ6pcNJo
+ zA+U53oKpxypv7voVzxsbGVQFReSSmW
+IronPort-HdrOrdr: A9a23:94weBKpuS4PDr2VJMPvzHY4aV5oYeYIsimQD101hICG9vPb1qy
+ nIpoV46faaslgssR0b8+xoW5PwIk80l6QV3WB5B97LNzUO01HGEGgN1+bf6gylMzHi9+JbyK
+ dre7VzBZnNF1Rg5PyKhTVQa+xB/DFCm5rY4ts3CBxWPGVXV50=
+X-Talos-CUID: =?us-ascii?q?9a23=3Af2nmUGj9qMlYa+Ol1mwLAYy5kDJufGH9i2n/EmG?=
+ =?us-ascii?q?ED3tweqS7bV/Lxad/up87?=
+X-Talos-MUID: 9a23:xIxyawmy+MryM3KdBJvldnpGFOEr/pmjVXs9nIVFl+K7Kh5NPzGk2WE=
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.12,293,1728950400"; 
-   d="scan'208";a="408946292"
+   d="scan'208";a="408367302"
 Received: from rcdn-l-core-01.cisco.com ([173.37.255.138])
-  by alln-iport-4.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Jan 2025 22:45:22 +0000
+  by alln-iport-7.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 06 Jan 2025 22:45:05 +0000
 Received: from fedora.cisco.com (unknown [10.188.112.101])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-01.cisco.com (Postfix) with ESMTPSA id 7519518000299;
-	Mon,  6 Jan 2025 22:45:21 +0000 (GMT)
+	by rcdn-l-core-01.cisco.com (Postfix) with ESMTPSA id E446F180002A2;
+	Mon,  6 Jan 2025 22:45:03 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -84,12 +83,10 @@ Cc: arulponn@cisco.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH 2/3] scsi: fnic: Remove extern definition from .c files
-Date: Mon,  6 Jan 2025 14:44:50 -0800
-Message-ID: <20250106224451.3597-2-kartilak@cisco.com>
+Subject: [PATCH 1/3] scsi: fnic: Remove unnecessary else and unnecessary break in FDLS
+Date: Mon,  6 Jan 2025 14:44:49 -0800
+Message-ID: <20250106224451.3597-1-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20250106224451.3597-1-kartilak@cisco.com>
-References: <20250106224451.3597-1-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -101,8 +98,9 @@ X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.188.112.101, [10.188.112.101]
 X-Outbound-Node: rcdn-l-core-01.cisco.com
 
-Implement review comments from Martin:
-    Remove extern definition of fnic_fip_queue from .c files
+Incorporate review comments from Martin:
+    Remove unnecessary else and unnecessary break to fix warnings
+    in the FDLS code.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
@@ -110,49 +108,43 @@ Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
 Reviewed-by: Arun Easi <aeasi@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/fnic/fip.c      | 2 --
- drivers/scsi/fnic/fip.h      | 2 ++
- drivers/scsi/fnic/fnic_fcs.c | 1 -
- 3 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/fnic/fdls_disc.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fip.c b/drivers/scsi/fnic/fip.c
-index 161075e3bb95..aaf5f768a9bd 100644
---- a/drivers/scsi/fnic/fip.c
-+++ b/drivers/scsi/fnic/fip.c
-@@ -7,8 +7,6 @@
- #include "fip.h"
- #include <linux/etherdevice.h>
- 
--extern struct workqueue_struct *fnic_fip_queue;
+diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+index 2534af2fff53..2513a82a8915 100644
+--- a/drivers/scsi/fnic/fdls_disc.c
++++ b/drivers/scsi/fnic/fdls_disc.c
+@@ -2776,23 +2776,19 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
+ 			/*Retry Plogi again from the timer routine. */
+ 			tport->flags |= FNIC_FDLS_RETRY_FRAME;
+ 			return;
+-		} else {
+-			FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
+-						 "PRLI returned ELS_LS_RJT from target: 0x%x",
+-						 tgt_fcid);
 -
- #define FIP_FNIC_RESET_WAIT_COUNT 15
+-			fdls_tgt_logout(iport, tport);
+-			fdls_delete_tport(iport, tport);
+-			return;
+ 		}
+-		break;
++		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
++					 "PRLI returned ELS_LS_RJT from target: 0x%x",
++					 tgt_fcid);
  
- /**
-diff --git a/drivers/scsi/fnic/fip.h b/drivers/scsi/fnic/fip.h
-index c62993c76dc7..79fee7628870 100644
---- a/drivers/scsi/fnic/fip.h
-+++ b/drivers/scsi/fnic/fip.h
-@@ -131,6 +131,8 @@ void fnic_fcoe_start_flogi(struct fnic *fnic);
- void fnic_fcoe_process_cvl(struct fnic *fnic, struct fip_header *fiph);
- void fnic_vlan_discovery_timeout(struct fnic *fnic);
++		fdls_tgt_logout(iport, tport);
++		fdls_delete_tport(iport, tport);
++		return;
+ 	default:
+ 		atomic64_inc(&iport->iport_stats.tport_prli_misc_rejects);
+ 		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
+ 					 "PRLI not accepted from target: 0x%x", tgt_fcid);
+ 		return;
+-		break;
+ 	}
  
-+extern struct workqueue_struct *fnic_fip_queue;
-+
- #ifdef FNIC_DEBUG
- static inline void
- fnic_debug_dump_fip_frame(struct fnic *fnic, struct ethhdr *eth,
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 471d4a7553bf..1e8cd64f9a5c 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -27,7 +27,6 @@
- 
- #define MAX_RESET_WAIT_COUNT    64
- 
--extern struct workqueue_struct *fnic_fip_queue;
- struct workqueue_struct *fnic_event_queue;
- 
- static uint8_t FCOE_ALL_FCF_MAC[6] = FC_FCOE_FLOGI_MAC;
+ 	FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
 -- 
 2.47.1
 
