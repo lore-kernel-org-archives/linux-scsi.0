@@ -1,48 +1,48 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2A71B4F17;
-	Mon,  6 Jan 2025 18:18:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E46B01DEFE8
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 18:30:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736187500; cv=none; b=j2sojYELCvv2REp36Xjjvv2FVRvvByW+drelQg8GjHY8+SjrYCpAPMGTl/KzxPcCrD8lWemdA7jWbCQ4s5sjNBZdjrf3bvgFJ5n6MUm5iQn5be6KOlowXA8EEtJD1vCYpZAIVCPtNn5Q6vQyh7Ke73yF0wEOLEX8HgRG0ePlT2Y=
+	t=1736188238; cv=none; b=fllsK8uWnlJ+mJ+cmo9hPiR2fn8yKhzJJ3ytfr2g5DJZq1vMZglCg9aZY7S6eAjX9/Dx59tRLw9jfUKEaGPSOsIQbnMkqSyVs1ZrPTmbNsvNbjQ6csROhrhLljU196pJ3m2XKokUer6t5FTMym2EbH6crnpyRLdvr2IkoxfOzuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736187500; c=relaxed/simple;
-	bh=OV03JzjA3Cc8V7ESCHvo9OEdamwOpvso7AtXD/HmKDo=;
+	s=arc-20240116; t=1736188238; c=relaxed/simple;
+	bh=iRS3zx0kaOx0u1lZiffMCVbwSjZWRFwrXBQYMuLZ1I4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ayy3hSe+IeoIihjfPIpCy70bDDWR3XIKiPParCd9eVYFeOC0npuUh0vK9U53/awSjaWKQQIteNy1UIXg+rVgBkR6gfRalUNSTTx2ViL3ZHYzkxilb2qbMJBi6G29ipItbDN3AEVPjjEseBWLrDLUo2Nhn+zDYqUw50j+c5Wc3dQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qBFPmZF+; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=rbRjOwDcLUF/95yDS0YsmKZuQtO6UJewKiah5Gfkti15mE+LuMG+pgpfL0/V1DC1q8P2pbGyUx0bH3PvfmfXSvqjn++HO4hK2ausCjQLm3KPmAbGMR+eLWJmK9MGhj55eTZwceUqpHWrarruyBDLnd1IcCH8MG1/ZLNZIgLAVr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FYU/9/V2; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qBFPmZF+"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FYU/9/V2"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YRj8v09Mtz6ClbFS;
-	Mon,  6 Jan 2025 18:18:07 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YRjRH0jYzz6CmLxj;
+	Mon,  6 Jan 2025 18:30:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1736187484; x=1738779485; bh=I1qPDMIZVQgpfskE0eX3E2M+
-	WPI73kJD6boY7a9WVFI=; b=qBFPmZF+q0W+rOUrbGUCzGXhoklOuCYPozFUOkw0
-	5bMRIAONU3iVLoCs98U0+VQ0GDsFVVyhVVIm6liTn4m1/foCoNks1LIli3vAP1Oz
-	XVTBm9fVgSPM09MUfrnYh7uxMBB2NDv1h6GB78lOb5et8yb3F/J1SuOheuIsUhWe
-	PJffkGzRRJ9Iu6JN3M0rqFg11/zBL5T88JQwCNOy3FrjYO9WhNaw5d3obBwfYenD
-	R4UX+h8D+SvrK28iBIT3PmfnocZemxFG5QWQBtnIUMseyzAovapLfqqsA7YEinZt
-	YB20d9Txzz2xidomWgCFcbt7CNkWdX2aZjhXL1HUfWO2QQ==
+	 s=mr01; t=1736188230; x=1738780231; bh=hzo0qdIXPdPwojp33nYqdT42
+	FD5TeRSJM3i3ynJsRvU=; b=FYU/9/V29NpoC5J/QjNSLQh7iJWb0fkBRJj0UZd5
+	aekc8Yl0gjlM4MCz1MTluFCDBZNDpIjsOtEn9dwdQeZ93EojtwfJpVVORc2gIqlS
+	6aOpP89RR65mBx3Q/ZzNj9PjYvTvTjy7xp/vzybSUQDxwftYMouRNrznkcPSXsaA
+	r4ySA5UWjNIfEfoZ+65hyj8vaMtA40pzc+HPKvacTqUddso/vRZ5WqqiJ4zmQ+Jc
+	9z4G0UD7NwEAC/6iAtowwEQxiHQyubXCeciunywpIaVcIgqGOWTR5SSET12XI6A+
+	n/LFnvL9PbPaYOroXBiWJuckJXPI4l7KIof+MPtNG1+JPA==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id q5H2BvI4cy1E; Mon,  6 Jan 2025 18:18:04 +0000 (UTC)
+ id CNeQQM3pA_mb; Mon,  6 Jan 2025 18:30:30 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YRj8p0Y7bz6CmLxT;
-	Mon,  6 Jan 2025 18:18:01 +0000 (UTC)
-Message-ID: <174ece00-e296-4840-a13e-083de0d89dc4@acm.org>
-Date: Mon, 6 Jan 2025 10:17:59 -0800
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YRjR718rDz6CmLxY;
+	Mon,  6 Jan 2025 18:30:26 +0000 (UTC)
+Message-ID: <3e87b69b-38aa-413f-a2bf-388da21afaa0@acm.org>
+Date: Mon, 6 Jan 2025 10:30:25 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,23 +50,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] Revert "scsi: ufs: core: Probe for EXT_IID support"
-To: Avri Altman <avri.altman@wdc.com>,
+Subject: Re: [PATCH v3] scsi: mpi3mr: fix possible crash when setup bsg fail
+To: Guixin Liu <kanie@linux.alibaba.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- Can Guo <quic_cang@quicinc.com>, Asutosh Das <quic_asutoshd@quicinc.com>
-References: <20250103080204.63951-1-avri.altman@wdc.com>
+Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
+References: <20241226121808.46396-1-kanie@linux.alibaba.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250103080204.63951-1-avri.altman@wdc.com>
+In-Reply-To: <20241226121808.46396-1-kanie@linux.alibaba.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/3/25 12:02 AM, Avri Altman wrote:
-> This reverts commit 6e1d850acff9477ae4c18a73c19ef52841ac2010.
-> 
-> Although added a while ago, to date no one make use of ext_iid,
-> specifically incorporates it in the upiu header.  Therefore, remove it
-> as it is currently unused and not serving any purpose.
+On 12/26/24 4:18 AM, Guixin Liu wrote:
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+> index 10b8e4dc64f8..7589f48aebc8 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+> @@ -2951,6 +2951,7 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+>   		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
+>   		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
+>   	};
+> +	struct request_queue *q;
+>   
+>   	device_initialize(bsg_dev);
+>   
+> @@ -2966,14 +2967,17 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+>   		return;
+>   	}
+>   
+> -	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
+> +	q = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
+>   			mpi3mr_bsg_request, NULL, 0);
+> -	if (IS_ERR(mrioc->bsg_queue)) {
+> +	if (IS_ERR(q)) {
+>   		ioc_err(mrioc, "%s: bsg registration failed\n",
+>   		    dev_name(bsg_dev));
+>   		device_del(bsg_dev);
+>   		put_device(bsg_dev);
+> +		return;
+>   	}
+> +
+> +	mrioc->bsg_queue = q;
+>   }
+
+Next time, when including a call stack in the patch description, please
+clean it up. This means removing the timestamps, the register dumps and
+also the stack frames that start with " ? ". Anyway:
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
