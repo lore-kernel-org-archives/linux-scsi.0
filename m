@@ -1,80 +1,86 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3927878F4F
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 18:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D73970830
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 20:33:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736188990; cv=none; b=PDh09gewTgonoIR78KU/U0qA052mOgGYtORaKwSFCQYPdJasM/Y1+MY9tgg9fF/Q2sEFQ4cP1veZA7X3NdwvfhsI3/QpKeTNmnmirKpNZCLK95R4wFcCsDQYcxuOGo+QztVR8mbBFcIt56gFgS9oVCVFRFWUosjw2tqrwh1qMxk=
+	t=1736195620; cv=none; b=W14ImY6O7Fx8GWNxcGcTRvfpTmHYwJqBegt5JrwiSIOpwYxNLOHar7BsMiqRlqcqSssiyI0IwHeUJr6jG4lNcgCMz2Cg17LJtBKlTyUpIOZ1u7ZBPzkNIPIas77fZZVukInWuZ1i/9mSxN/uXd70lzs9hoA4z3UZlmBu1jqppn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736188990; c=relaxed/simple;
-	bh=PzuymmHf0Sof8uB/+3TS5JFdIDpiI0yJ2rIPMF5hvvw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Nrv6W14XujUl5eLkJDWj+3SKhZUZWeeetKm3lFBMUS0mfA1/tBWjGzMvGHiyNpOPDz5gBvV0ayj5N8lxq5KkqhwBulnumhNhQnNE3azXQeuh32feuyKyfDVh3Xj9+xVzZEm9MV4a2r6oyj9EF4t7SXcDD6YVrSBP5yluNI/ilO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=XCzR1VR5; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1736195620; c=relaxed/simple;
+	bh=HASvGLVqzWTDinuteIXyxtIp4dPf91NZEFXSZ6VKAYE=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=TIbQhdaA1vsaAI/8B3ac2n3vn5Mz+1EFCS7Qa0eS25OBdMuq2GI2YTT96rR2ryB5q3xsHwa6utB3F3w3PtSBCvvqtU0nvueHa7K/jLVEpfoxEAjeIMRAGwN9SugP7oSC0BoBQMOizxhalH92m8u/8nlkpcwfxN5LHVuYDdCzLvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MZoJTdYJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="XCzR1VR5"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id A07AE240101
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 19:43:06 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
-	t=1736188986; bh=PzuymmHf0Sof8uB/+3TS5JFdIDpiI0yJ2rIPMF5hvvw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:From;
-	b=XCzR1VR5RjBikHmt3YaQ4nrXe11gVICtwDAPLyKv6QGWWQnK6m/jXJOyPTnvgUluU
-	 JDmJG1kGxSg2Jw1uLJN5TKHPCFRfUvkYy+kcRKNZb1k4d78c01PKvX+eJxvnD0lLQP
-	 uRQBbGN5M5FuT9pxI/wPWAqnn/hOqWYey5slD+lT2eRss5AO5egWAnGhQqE8qYLXoJ
-	 5UDHNbxkvbTFqSU76Fh50to45V1DpXfvLr5oV5Ujij+TIIKDUBcXsq+uvQYQew3IV5
-	 5El+Baz3sZTnMyALd+KiMFjRzA7tNbBs/ly3yD+nzJ0bMk05MoS030miz3LATQZw/m
-	 ILrZNtdF3EgiQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4YRjjj11J9z6twr;
-	Mon,  6 Jan 2025 19:43:04 +0100 (CET)
-Date: Mon,  6 Jan 2025 18:42:54 +0000
-From: Daniil Stas <daniil.stas@posteo.net>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-hwmon@vger.kernel.org, Chris Healy <cphealy@gmail.com>, Linus
- Walleij <linus.walleij@linaro.org>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-ide@vger.kernel.org
-Subject: Re: [PATCH] hwmon: drivetemp: Fix driver producing garbage data
- when SCSI errors occur
-Message-ID: <20250106204254.28b79000@pc>
-In-Reply-To: <89d05805-74e4-4cf4-97e3-4d25314be013@roeck-us.net>
-References: <20250105213618.531691-1-daniil.stas@posteo.net>
-	<89d05805-74e4-4cf4-97e3-4d25314be013@roeck-us.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MZoJTdYJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0B242C4CEE2
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Jan 2025 20:33:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736195620;
+	bh=HASvGLVqzWTDinuteIXyxtIp4dPf91NZEFXSZ6VKAYE=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=MZoJTdYJsC3mbRrvtCiCKQA0e2M7rZaq7M48tviAFo5PVBV9nFj/g5wTiTCi3O2uv
+	 BkCZ3dKsemiLtQdhMx5PGkZ48RZUHtShAUtzSCzTGOKKg17niRYpZKYmJ1EA4ouLTT
+	 V5n5ZuXrGBo8RkCsk6YsdEcPJQwdju6tvWW22y06r9zuz5Cd4QJUBVwRq36ugu7fFS
+	 6XdWtch4DSR7+Om03nxjFREoAYNP/1k9wVJCQJtafYvV/cHH1P3bodAe8IVJMjeRmS
+	 jElxepMtYqKgbVb5g2sVgUWycNxlh9r/POb5xXvO5DoHij5lhmEGxAUUnauRjbLJgx
+	 WX9QJHHTIg9Gg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id EBC40C41612; Mon,  6 Jan 2025 20:33:39 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 219652] READ CAPACITY(16) not used on large USB-attached drive
+ in recent kernels
+Date: Mon, 06 Jan 2025 20:33:39 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bugs-a21@moonlit-rail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-219652-11613-6J9RBsAnC0@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-219652-11613@https.bugzilla.kernel.org/>
+References: <bug-219652-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Mon, 6 Jan 2025 08:43:54 -0800
-Guenter Roeck <linux@roeck-us.net> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D219652
 
-> On Sun, Jan 05, 2025 at 09:36:18PM +0000, Daniil Stas wrote:
-> > scsi_execute_cmd() function can return both negative (linux codes)
-> > and positive (scsi_cmnd result field) error codes.
-> > 
-> > Currently the driver just passes error codes of scsi_execute_cmd()
-> > to hwmon core, which is incorrect because hwmon only checks for
-> > negative error codes. This leads to hwmon reporting uninitialized
-> > data to userspace in case of SCSI errors (for example if the disk
-> > drive was disconnected).
-> > 
-> > This patch checks scsi_execute_cmd() output and returns -EIO if it's
-> > error code is positive.
-> >   
-> 
-> Applied.
-> 
-> Thanks,
-> Guenter
+--- Comment #13 from Kris Karas (bugs-a21@moonlit-rail.com) ---
+Sorry for late reply, was out of town.
 
-Thanks!
+Just checked Michael's proposed two-liner in comment #12, and am most happy=
+ to=20
+confirm it fixes this bug!
+
+FWIW, I also investigated the related issue mentioned in comment #9, from t=
+he
+HDDGuru forum, and can confirm that (with this same brand, Initio) of
+USB-to-SATA connector, when you perform a disk capacity check via USB, it
+returns exactly one sector less than when the enclosure is connected via eS=
+ATA.
+ So their chipset/firmware clearly has a bug.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
