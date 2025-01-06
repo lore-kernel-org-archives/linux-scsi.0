@@ -1,33 +1,33 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF42148838;
-	Mon,  6 Jan 2025 15:27:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC05114900B;
+	Mon,  6 Jan 2025 15:27:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736177237; cv=none; b=V776uW5k3WxCdIv2Vi57QPzAtuvmhLAySGnWk0IsGIUDrlwZA/u0HgGvNacdDOIDRJ6Sivl/FlOFULiTstxqJbBQEqzP3phPQe/+lZuLYGNpinBiObwp8jAagnCX1MS9dPKGJ2eHpIrRodgXkijK2wOjVoB0h26t6zEP2qwEHMo=
+	t=1736177274; cv=none; b=iKGEoAhNkvX1XQhTN+zGIP7eGC5oJ5GaSyKuE8aIK3Wi7uHoXw1rTRQuMVoAkOzixC4LKwjrX9su0LJiXv5YZh8QwOgvxUatpLWqPl/k7yHYIBpP6swK0UrvBGOO3ye9oqraa5S/OfcOyTZGtdfyE8+ZYeqUxHTFpuHM6MRypZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736177237; c=relaxed/simple;
-	bh=+iZj72vs1oUGhMHh+imKfqfDEr4waAhow996P5NhBG8=;
+	s=arc-20240116; t=1736177274; c=relaxed/simple;
+	bh=Q+Sn7tP2GijySTssF07MDC+pdwKRbv7+6PiebqHDPdg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b78yXPizdxUcguZFVShViAHk7Rydeo+P0op3EckGp9PydYPEMFjtb1YJIDLTng1p0/klPYKkDRI//uhjbb3MArYmtInj4jCl9TViNfpfIMYYx4mwohXjHe8CfqCNIG1/HtcLz1e6Yb7fAtGvnsSIBFj4eSqUXYkAqpBSN5xOVHs=
+	 Content-Type:Content-Disposition:In-Reply-To; b=unfkgThZBp85u5/zZaeH6kxAYC4pz1+u8BwNSbvU7ZZp0YReIBXFIvf9IKVxpsCvWV/DoQnq0f7cKdpYyQQuZAyL4VYGPI8KvZ2bCq0trsCfx0NqAoCMjnLJy1tD+GUXCB9HM0SFqf0+RdvH2iutr01YpWl+U/8So2r+inCzTXc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 98D4A68C7B; Mon,  6 Jan 2025 16:27:08 +0100 (CET)
-Date: Mon, 6 Jan 2025 16:27:08 +0100
+	id B42BE68C7B; Mon,  6 Jan 2025 16:27:48 +0100 (CET)
+Date: Mon, 6 Jan 2025 16:27:48 +0100
 From: Christoph Hellwig <hch@lst.de>
-To: Nilay Shroff <nilay@linux.ibm.com>
+To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Damien Le Moal <dlemoal@kernel.org>, Ming Lei <ming.lei@redhat.com>,
+	Ming Lei <ming.lei@redhat.com>, Nilay Shroff <nilay@linux.ibm.com>,
 	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
 	nbd@other.debian.org, virtualization@lists.linux.dev,
 	linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-Subject: Re: [PATCH 05/10] block: don't update BLK_FEAT_POLL in
- __blk_mq_update_nr_hw_queues
-Message-ID: <20250106152708.GA27431@lst.de>
-References: <20250106100645.850445-1-hch@lst.de> <20250106100645.850445-6-hch@lst.de> <4addcb5e-fc88-4a86-a464-cc25d8674267@linux.ibm.com> <20250106110532.GA22062@lst.de> <3fb212e4-8fff-45fc-9cff-f5b5eaff4231@linux.ibm.com>
+Subject: Re: [PATCH 06/10] virtio_blk: use
+ queue_limits_commit_update_frozen in cache_type_store
+Message-ID: <20250106152748.GB27431@lst.de>
+References: <20250106100645.850445-1-hch@lst.de> <20250106100645.850445-7-hch@lst.de> <07353499-b62d-488a-9575-12de5d9b6f2e@kernel.org> <20250106105957.GC21833@lst.de> <3cf61c5f-b53b-43b6-90de-e42272f74e3f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,25 +36,14 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3fb212e4-8fff-45fc-9cff-f5b5eaff4231@linux.ibm.com>
+In-Reply-To: <3cf61c5f-b53b-43b6-90de-e42272f74e3f@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Mon, Jan 06, 2025 at 05:36:52PM +0530, Nilay Shroff wrote:
-> Oh yes, I saw that you moved blk_mq_can_poll() to blk-mq.h and 
-> made it inline so thought why bdev_can_poll() can't be made inline?
+On Mon, Jan 06, 2025 at 10:09:16PM +0900, Damien Le Moal wrote:
+> Sounds good to me, but let's be consistent then: do not remove the
+> freeze/unfreeze from virtio_blk in patch 2 and do it here in this patch.
+> Otherwise, patch 2 *does* change the behavior of virtio_blk, introducing a bug
+> (missing freeze around commit update).
 
-It can be, but why would you want it to?  What do you gain from forcing
-the compiler to inline it, when sane compilers with a sane inlining
-threshold will do that anyway.
-
-> BTW, bdev_can_poll() is  called from IO fastpath and so making it inline 
-> may slightly improve performance. 
-> On another note, I do see that blk_mq_can_poll() is now only called 
-> from bdev_can_poll(). So you may want to merge these two functions 
-> in a single call and make that inline.
-
-I'd rather keep generic block layer logic separate from blk-mq logic.
-We tend to do a few direct calls into blk-mq from the core code to
-avoid the indirect call overhead, but we should still keep the code
-as separate as possible to keep it somewhat modular.
-
+Yeah, I'll fix it up.  As mentioned in the cover letter I just brushed
+this up just enough to be presentable for now.
