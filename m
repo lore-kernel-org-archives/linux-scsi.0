@@ -1,364 +1,254 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9EE01DA103;
-	Mon,  6 Jan 2025 08:35:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736152546; cv=none; b=kYYfAkdql+kA+TF4tIPueg93DBuKcBa0qn2Lz0kKkalh4iBy/gjZr6Lk5uNkC08/+S49ZLu0i75uMTZLq9wBoVeNl4sqm/An7pv/5cYQ91pjrBtH4daGYmLyH1RXqfPkeAr3Qcx2AAMCWaCPzy7FdgLJgqeFb8Stue0psN8c7D8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736152546; c=relaxed/simple;
-	bh=V7VA223K2lhcLy5j/K2WCv0EU7DHY4jDmAJUKwFmpDg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KpG5UoHBHqYL48pBNr0O58qHMT1duUu2okGSAu8WDLuUy4yC5kI/eQ/TE9Hv++eTFZGdNtluBbx6ZzdnB8hmk5WDacl/bQqEiaY0yTb8zGjF18c5Wj/8ZPM4rRqwYG7R6U5Fg14bqpgxKFuANMQzYgZlhL8ftVq7ZTaMN9dxpko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZBZKXW+F; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B559B17E0;
+	Mon,  6 Jan 2025 08:50:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1736153438; cv=fail; b=af4vA2pYiWKPur5Klsai7cOyRmv0QqmHFM0qFSOA+eZtadtwBEC/ejWI80+2exihPnM+iDAGBVkqPxiFODcTxDuBULfezjhdQPfLDp/Qj1DTXa5sqMN1jSAqI3JqHAZoDjKV1n2KDnKYq3dK5zPNO1ju/8a5TqlP97K8K2HAH9w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1736153438; c=relaxed/simple;
+	bh=re1EF9USSNq+fuPHNZU5TRgHbAFkHewBGLy+OfcwY5U=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=eQ1sg8evFHu7infotBjsG3pEkobKAmKrUX+pR445dPvswItasyaVjTdHRxvG4r+XUH+KBt9pRC2nnM9PMZgX4bSSh+HUznqapuFTR/7GyMoYCMXslt4RypGaDjZy9qAsf0B35Ii1KFwKOd/JNk1Hxa1vFuvb8p98uAmZPKkmRZM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=BZmuU+YE; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=euwIozUB; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZBZKXW+F"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=aJiCmeBuMbB7cHw2TQoob2VNqU2xzmL7dBAmsxp18Ew=; b=ZBZKXW+FkxQhhMvp6De3elYjDU
-	DYcIj0eOvgCJbqjhHYayg1U5jNmDjrLPsTc2ywf0u2g7kJInsSGosShH+euO0mgE0xeb3PHaqcfqW
-	s45GhLjRvkG8I9Fkqd41MRmiYzVLRsxgg+lnnwLF7mRC7uV6FDz/2ssmzgg6OK/bO7QKPLwT8Nl+I
-	SDuzndgM/NCFbuIk0+ynPSi9j36wPiS/Vtfsof9IcQFXQ4TnYM0zeXwFi3XgFGMe7q3dPiQCHO8Gy
-	1+TGkwJitXsECtgVRcWjbntxZYvOAJEnGaZ3FTNX5uSTmQf3d/W7R4O3+f5aQXxZ0cWAxFBi50/yU
-	O/o1GO9Q==;
-Received: from 2a02-8389-2341-5b80-db6b-99e8-3feb-3b4e.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:db6b:99e8:3feb:3b4e] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tUiaO-00000000XHA-0RmB;
-	Mon, 06 Jan 2025 08:35:44 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH 4/4] block: simplify tag allocation policy selection
-Date: Mon,  6 Jan 2025 09:35:11 +0100
-Message-ID: <20250106083531.799976-5-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250106083531.799976-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BZmuU+YE";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="euwIozUB"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 505KP2AI011855;
+	Mon, 6 Jan 2025 08:50:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2023-11-20; bh=Zd1h5CL7wEvh+wUkNZCvx31FDOxM/81Ftzr1h+PsYLA=; b=
+	BZmuU+YEQtsWwL1An4U9N7S2tuTuRaMaR06J4XGgBbaVFwr+eQlNXvzWzewf61yJ
+	KuKfucMSZ23gmQnsy31h8lDzL5WKWPfsf+l7IMdBj1FkKZR8Fh/NTPscU9C0zHbq
+	9gE89OKNgwpScY+12CfuQIYxRb0Xn0RxICkAV/i7yjjceZNsxYJJPlmkl13rGJ2o
+	mDmmFrmntZIdOHQxK019U3c9OkNWkRJHoZnaWsd6jpRPTwQAnsNuSpuU9N6YCiw4
+	2jtfarQ4z/lqxnpOlGpPiQE8BHAehaKR4zj/y1vTNhgU/SjR31SpDUWi+AE554DA
+	MjyAjLZwJq//XTe7veiLnA==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43xvv91wbc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 06 Jan 2025 08:50:29 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 50671iaS022724;
+	Mon, 6 Jan 2025 08:50:29 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam02lp2044.outbound.protection.outlook.com [104.47.56.44])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43xue71hx9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 06 Jan 2025 08:50:29 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=dxvHRH4T+l7q2iW/ksLNxqziTS7/CzF67hJcjc3J0SZrIivDR2iVSsvPpWbIB+ZW3hjc0jatMORj6W43QRVU5xPE20i6BQrxlXCifOmLdl8VDWLDn1t8hKw7p9aOfI5AbVu1PPZCU3fUvhAGwSTTPXKrmfMiNr46P+5/aQHQuWT+6aBSA2A+9IuLA/8CgOXcv2ng0Ldk8UY2XZtgDWyyXbC8nCU3TuyrLPXJlWV/v+gwgaFNbyQephgYRLN6gZyaYeB0Gf8i4Huf5I5QCju8j9cKYTxjP/lFE/ixP5th2/euWr940e9I5RqIFQYKKl9WonJzhGzuC9EzXzKtww2UZw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Zd1h5CL7wEvh+wUkNZCvx31FDOxM/81Ftzr1h+PsYLA=;
+ b=UOfvDBtehygBQlx4c+4i3V25jO8UJ0NC10HrXzqb4RxjCzciu0hSz1ocK3jJy8pGk9iJ0Z2B/hHBgg72FdiIT8qLKCp9ZK9pxqaxBdlFwgxNQ/I0nNgEe/DZjNbGCsStEzqaINw1CL7ZktwV0F6XPX6QQhn2EgCL/kunZpuOxfFnPOOT5PZzhwcicWMfEIRlmmVSosPB/66N2qhpsQ+MBcH3VQskWwnfAmc+O34Hwr9t+xXzWFoD9xiAbTUfRRIuRIuanuSbd9kyRsaOoZ1EJ2IbOwuvJ7eNc3JnyISRSB3nCHIvZdP8BWIq5RTdr6UkPgy0O0hj5uf8iYJYzdrvdg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Zd1h5CL7wEvh+wUkNZCvx31FDOxM/81Ftzr1h+PsYLA=;
+ b=euwIozUBwasex/28jCBa8OoA3UpmOVB/k+wwlYQaQDJbDyCrxNeSmC7H57yaZFRZUBYQFbEUvhYUQx91/1Iia9EDKZIydE7fz3QKPVRwiztKq8VToGWNx6TP0JibB4dleYqO40ZQbXpumvlgqARukpKxxVOck9xWM4hAqm8WjBU=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by BN0PR10MB5142.namprd10.prod.outlook.com (2603:10b6:408:114::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8314.17; Mon, 6 Jan
+ 2025 08:50:23 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%4]) with mapi id 15.20.8314.012; Mon, 6 Jan 2025
+ 08:50:23 +0000
+Message-ID: <10f1383a-fe7e-4cf8-a15f-14cd4385a7de@oracle.com>
+Date: Mon, 6 Jan 2025 08:50:20 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 4/4] block: simplify tag allocation policy selection
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org
 References: <20250106083531.799976-1-hch@lst.de>
+ <20250106083531.799976-5-hch@lst.de>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20250106083531.799976-5-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO2P265CA0255.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:8a::27) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BN0PR10MB5142:EE_
+X-MS-Office365-Filtering-Correlation-Id: f843df99-2f2b-4211-5f73-08dd2e2f2844
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?WXZtcUxGWEFYOHBGL3U4dm5pUmZtYTdLSUFTaUNpWGRCNVRYL3hMcnNiTDFs?=
+ =?utf-8?B?SFo5OXVGMmZvNXAxWFgrU1pLdXYvQ0pvcjdJMHdsSENJNW9jakFKMnJXT2N3?=
+ =?utf-8?B?UUZxV1pxU2lMd05OcW1aSnFJeWJUL25ETWthQmFjdGJ6dDVsWkk3aUgxK2Ri?=
+ =?utf-8?B?akZyQ2EwVlkwUThtRFlPVFkyMkVkSFRHTWRHTGlBQW83L210RHB6NVUyeDhq?=
+ =?utf-8?B?VkplOHh0NjI3WFNPaXZmenFMZzRlbjJkcjRCNnB2QkVwUUYwanlSb1VxdzJD?=
+ =?utf-8?B?QUJueHpjL2hsenhya1ViOEpCOWtkM3FKUldOdXFjSzNIRW1peVVjZlJOZHRZ?=
+ =?utf-8?B?Y0p4ZnlMa1FZSHZJTHJCbkdUaDgwb2FCZnNwVThEeUhEb2NoUzRPYlZMaG1U?=
+ =?utf-8?B?UzE3aU1lSTc4TUZHQ0VXUnJUS0N5UWhtMjBockt3QnpJeGtPR0tFRGp4OGZx?=
+ =?utf-8?B?YW9ZWWtGV1JzOHRaUnNFSE5BRmpOUGM2VGRqblZxOGRRYzFMWDViSElZeitC?=
+ =?utf-8?B?RzI0a0V0c05aRkdCYUZzTmdNVUp0OHlCRnNMd040YXY0Nlo5RTV6VWRobUh1?=
+ =?utf-8?B?OVVIZXp5Vi9OWjVVeXQwdlN2cU4zaUx4YVErY3Y2cVR4Z0p5Y3JDOVJwa1Mx?=
+ =?utf-8?B?VHlBODJvRktMNkFmUWdrRVRlYzN3cEpRdnJJaEM1ak1TVmFVbUJLMWgrWnNu?=
+ =?utf-8?B?d1FsSnpzNVBDNkUyZHBmNlRhVUhnbTRxWUZMeGRyZGNRT1k0UDNuUTlsL0Jt?=
+ =?utf-8?B?SHU2a3VyN2wxdFE1cXdmTnJkRWZWUUIvQml6eXRJOHJVdE1MTXk2ZlVaYkFJ?=
+ =?utf-8?B?MENSb0JRUER4MHpWVzB4N1BIZVh5SER6RC9UUUtSRHBzNlZzZjgwTkpTTnM4?=
+ =?utf-8?B?VXFQVk5FZDVTNVFCc3MzdVhPLzFPa3RDWE05NmQrTXhER3RWUlFNemF6YkFx?=
+ =?utf-8?B?UHJ0YnRDRXlIZWRzSUN5MHhDMWozdjZwWEtPNDRUR2l4OU91cmlSR05oLy8y?=
+ =?utf-8?B?c0g0dDdSWkR2ZWNIUVVhRnlVbjRVZGVYNnhGb0JkTm9PWXhjVS8reDlXNXAz?=
+ =?utf-8?B?UVpQSXFLcXlNb0E5eVFJZHR4bVhPbVNla1JyclhKWENkdHZ5V3BnSzBNaXRK?=
+ =?utf-8?B?Q3U0d2NuM1RsaUJlcW42Qkl3WXA5OUtpa2IyZitCdXBGZUVwMFpGbFBVdzlx?=
+ =?utf-8?B?dW1lb3pudER0MUZRNmZsRkpqV0p3L21sNVEvYmhPLzBnOStYejBXN0l1anpH?=
+ =?utf-8?B?T2VCdmVMSnR2b3dTalh5Y0g4a0UwbDMyU05aUE9xbEFyTm5iM0lkYm1GOHFp?=
+ =?utf-8?B?NjdvREdRc2tWRWJVbUdPeDNVSGFSSnE4aUg4MEs5bzFzbDJYZmZZRHhGeUpp?=
+ =?utf-8?B?L0c0RXNMbWxJZGR4UTdrM1B4SndtVkxZQ3h2QXNKNlJkV1JITXF4MXd4V21T?=
+ =?utf-8?B?b0ZpZVhVZFR6M0NZSHcyTkRqUXhPWXAzclJINWFDRVd4Y3llL2Jld1RmY0lw?=
+ =?utf-8?B?UUpqSnhXR2Z5cHZyalhIOXlwbjE2c2FUWTB1V2NSdmIzU21LMFhUbTB1OVFJ?=
+ =?utf-8?B?d09MVWxBWGlSVXl0ZDE0eVA4Ty9CWS9VcTJjME9RMmZsS0JQRXNDcHg3Zlkr?=
+ =?utf-8?B?SWFITC9lVGhCak9oSW1oWDBsbExJVXVUd1lBMzdNTWNFaExQeG42WSt2Mm4y?=
+ =?utf-8?B?UFdWNmVJK0lONVlLSHFFYTNCbGJlMnI1MVpKNldaSjhtdnFQSi9aRGFXTzAy?=
+ =?utf-8?B?WDYyRmNkNFBNZ3NhV2M5OXd3dlJUUnhhMFU3dWRyV1FQVTVUQTgvSzNqNC9Q?=
+ =?utf-8?B?Z21SZjNQd0dObkh5SEhabStjZnJQbWY5V3RCSTg4SVpwazR5ZkFoT3VPMm12?=
+ =?utf-8?Q?WrQ2nNKaJ9pLw?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Q2psQnh0aWFTRGZhMnc1UVB0eVlKQURCcFVjMkdUSXdFc3F3QnNQbFkwT1FE?=
+ =?utf-8?B?UTFNdWdCd1RTUlBpTmllV01YNkZjdUJMd2QvYm1wZ1BLa2NWVk0vQzJsK1dn?=
+ =?utf-8?B?cDkraGpsMWg0bGc0clBJVis3eUNUUFFaQk1KTHRmWnFiaEd2RGFQbGI4MzQ5?=
+ =?utf-8?B?cjE5aGtCa2xQakhXK1VaUkRQeEF3TncyL0dlM2dITEs0Nmo4Y2M2bkNOVjR5?=
+ =?utf-8?B?MHhaMUVEcUp1aDFyeVMreUNxM0ZQSmNFa0Y2a0QvODQydWNxdVZpcjY3b1Jq?=
+ =?utf-8?B?SG4weGgrei9tWDJiNzZHczVPenUxQi9zYzRzRUw0cmZXcUM3MldKYVJYWDNT?=
+ =?utf-8?B?amlWc09vYXNqMmtOR002VmhIV3F3TjN2SnVsMzhmdW05aEgzWG92RGdJZzhk?=
+ =?utf-8?B?SU9udVl3ZFlZd3NJdmd0Ky82ekVGd3ExdXFCOXJYUmZielkzeWhKNlc2ZEQ0?=
+ =?utf-8?B?U2RyUC9pMzFHNlFHUTVMQXpaME9ETkk2VjlybGpSSG8rYVhXQW1wU2ZJcjBW?=
+ =?utf-8?B?TW51Z2NzQXN6MEJ2cjd2eFJWUGlyZHdXQzNnL1FxRXFlRUYraUhwMUUvdGRE?=
+ =?utf-8?B?U2szTTQ0dGJnK21BU3FCYWY3Smx4dXdrQTNQSG9NTjM2SlJZd2ZkbWhPaWh5?=
+ =?utf-8?B?N3IzeExTS3o1T3k4dGEvSHpXY3FrOGpLcGFLd1lhelhqY2Vwek94K2x3Rzgy?=
+ =?utf-8?B?UFM2V0dOdGJ2cmg3b1YyUk1LQTJyYzdHWTR6MEx3Qi96RFNCTnBCSFJlblhi?=
+ =?utf-8?B?RlhPYnFoZlJGKzVnWDdIMXF0cDcvOWtvd1JMTG9RZlFwMlZ1SFNpVmgwd01K?=
+ =?utf-8?B?VGY5QWVPYkhzWTdjcENsYVFYL3lmL05HRDYyTTVHSU5uMFBzdVJ5M2c3R0hs?=
+ =?utf-8?B?cUdjdzRFVzUvdWs0SUNPNWJ6U01qZEFpaUs2M3NPTDVPREZ4Mmw2UDFiYjJo?=
+ =?utf-8?B?K3QwM3VDNCtqcmFnMmZOb3NFOG51TTNCL2hEUE5LMGpOWWNuS2pjZWM0d0pm?=
+ =?utf-8?B?ZjJ1Q1pnWGw4cmVKYktRai9rdHJXUFpLdEt2YXhIMHUwVEJTc1ZmcTFTbzk0?=
+ =?utf-8?B?MXdsQTMxUkVGVE9XQXlDcEgyNTE0ck5LUUV0WGhMbXU5MytDZVMwSVVIZ0hk?=
+ =?utf-8?B?NHoyZnZKUUFYS1JxTEpFbHlPenFyWDJDKy9vWFBaQ1RaSHVIb0d3dWlIUzh5?=
+ =?utf-8?B?NmpJaVJrRldIR29GVG5rUkEwQ2JJQWlHdEZiampXM1d1RnpyaEpNZWZRa0gw?=
+ =?utf-8?B?L1dKTUF0cW1OcDQ2Y0p4YmJjMmNYN3F3dzZMaDdueXRZUE10L1k2TDIrdkxR?=
+ =?utf-8?B?RDFzNG1lUFNNazZwMC9oVndzdFpaNTREUzFuZmdSUDN6eExwY2dTZytJWW43?=
+ =?utf-8?B?b3ZOaFVkSm1CVW9WaGdVVlJGOUNnY2Q4dHlQNC8yOVRkN1J2NHh0dnJtdERC?=
+ =?utf-8?B?RFNSZkFzdjJ0UWVZQ3hTYWxYb0tmY25TY3lTdGUzWk9yaWF3dW5EWU5WOFI1?=
+ =?utf-8?B?TVhkVnJiWURiL1BIZEk3ZHZTVThSc25NREhpUG1LTmwzcXcyeUJjVXhnVzNT?=
+ =?utf-8?B?ajNLZFQ4SFN1T2Q2b29TZi9yNWh6UDd3b3JoNUUyOXFRYlBTM3Q0d3lqQ1U1?=
+ =?utf-8?B?OEpFdlJSL3hZVFVvaDQ3c2h2QjcwK3VkMnJwUytvS3F3MFZXZ3ZhbFpwRGZC?=
+ =?utf-8?B?MjhkQ3FEbG1OM1crUlAvWEhKWUVnWWpNQ1o3Y0dmK2QrVHA5cWZUeW5lbmdu?=
+ =?utf-8?B?b1hLVFJDYkgwR0N6Nk8xaWRqUDJiT2k1UXkrQ2V1eG9kZ2hjRDdYalRtZjFk?=
+ =?utf-8?B?V3JxbjY2MWQ4dHg3WVlISEdzZzFPMXBnWEtHYWw2UEZucGEyTGUvY0RpWkM5?=
+ =?utf-8?B?RXpUZWkvZHNROVJwVDVubWRzTDF3c242N2JyeDdzNE5CUmxBS1E3U0Z5ZTVM?=
+ =?utf-8?B?MVIvM2krWVpEclRGKytidndmZXd2MzZwMTlaU3RtUGFDMWpOUUxKTFVwbXJt?=
+ =?utf-8?B?SC9sMXp1dHdHb0hETU43QzhHTmNPejlFdUsrRmY2OTVEbldhNzZIaFd5N3VE?=
+ =?utf-8?B?Nng0SlVwcTQzZi9OL2h3aUlGajJoSURhOEpaUm5Ca1VvV21iMXBnV2hORXBE?=
+ =?utf-8?B?Lzk4cGJpT3lTZkFKOTlrRXI4SzlIQXIyamhzbWZNb0REWDJ1N3N0azBpYWZS?=
+ =?utf-8?B?bVE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	UNsJaVZiQJSIn5FZ1MaosTZTO+WbeZuHH1g2kmNSBcyGUX6YbZOAPbwrReakIKR0Vg7ncjWJAFso+HIwzLFbVbK62SY9KJifERPwgGaCQlEFQQEJKa2knquBZiDDmJ25NJTDswEjkZj4OXdwlLTrS/LTOgyiUPf4TlkwVh0spNS6+j00pW2WsGRC+cb4rBFHOq3P43Pzl8rPZmMmrWWv0rTjrO77qEvxZN4NL9H6hONtMYro34l2fri2p/67L62MA09WD5YD3WYpicZGALJFiOxkYxxHFU9vVKy38EvbS9a6ZRKI2iznthceXz7vMFM9dRmNpeSC6Mmp1GPlcYr6ueCX+PvBVfK3jQy2HKNoInHAEIS6VBL4Oqwv+U9S2uhB9+i0hwhaAyrF7FeGr9rw25ENK83bKNGwsry7g5ttUHtJFRBC3gHMJZiMTgLrieMMNMl26XN+nsk2a5gfbWbE5DCSKAtlvp4CyrgXicvNbD8yLZxMBMNJGEP2Y6wr8z57xLjVm6keB3p0NlJJ0P9cw5jLA18aXIIbRs8Vxc/SL9YBHwaAO4Tp6NiATAxsDvWG7GlK14LrsoRm+vZv57osrnP5CVe7VQbCt42kE3nppPo=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f843df99-2f2b-4211-5f73-08dd2e2f2844
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jan 2025 08:50:23.2598
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: uro231Vag7BQIcIrKGoEAd+R7oL1Z995PdW5dWAC4EgJw7B2BprnCBKB/Xo5BWjyzqfeUKYPHmj1s4Jm6prL6w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5142
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-02_03,2025-01-06_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 mlxscore=0 adultscore=0 mlxlogscore=999 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
+ definitions=main-2501060077
+X-Proofpoint-GUID: 3kJDcl39UL27WYtUiHtVt8bQP0wLvymg
+X-Proofpoint-ORIG-GUID: 3kJDcl39UL27WYtUiHtVt8bQP0wLvymg
 
-Use a plain BLK_MQ_F_* flag to select the round robin tag selection
-instead of overlaying an enum with just two possible values into the
-flags space.
+On 06/01/2025 08:35, Christoph Hellwig wrote:
+> Use a plain BLK_MQ_F_* flag to select the round robin tag selection
+> instead of overlaying an enum with just two possible values into the
+> flags space.
+> 
+> Doing so allows adding a BLK_MQ_F_MAX sentinel for simplified overflow
+> checking in the messy debugfs helpers.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Doing so allows adding a BLK_MQ_F_MAX sentinel for simplified overflow
-checking in the messy debugfs helpers.
+Looks fine, but some small comments still. However, feel free to add:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-mq-debugfs.c                 | 25 ++++---------------------
- block/blk-mq-tag.c                     |  5 ++---
- block/blk-mq.c                         |  3 +--
- block/blk-mq.h                         |  2 +-
- drivers/ata/ahci.h                     |  2 +-
- drivers/ata/pata_macio.c               |  2 +-
- drivers/ata/sata_mv.c                  |  2 +-
- drivers/ata/sata_nv.c                  |  4 ++--
- drivers/ata/sata_sil24.c               |  1 -
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  2 +-
- drivers/scsi/scsi_lib.c                |  4 ++--
- include/linux/blk-mq.h                 | 22 +++++++---------------
- include/linux/libata.h                 |  4 ++--
- include/scsi/scsi_host.h               |  6 ++++--
- 14 files changed, 29 insertions(+), 55 deletions(-)
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 64b3c333aa47..adf5f0697b6b 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -172,19 +172,13 @@ static int hctx_state_show(void *data, struct seq_file *m)
- 	return 0;
- }
- 
--#define BLK_TAG_ALLOC_NAME(name) [BLK_TAG_ALLOC_##name] = #name
--static const char *const alloc_policy_name[] = {
--	BLK_TAG_ALLOC_NAME(FIFO),
--	BLK_TAG_ALLOC_NAME(RR),
--};
--#undef BLK_TAG_ALLOC_NAME
--
- #define HCTX_FLAG_NAME(name) [ilog2(BLK_MQ_F_##name)] = #name
- static const char *const hctx_flag_name[] = {
- 	HCTX_FLAG_NAME(TAG_QUEUE_SHARED),
- 	HCTX_FLAG_NAME(STACKING),
- 	HCTX_FLAG_NAME(TAG_HCTX_SHARED),
- 	HCTX_FLAG_NAME(BLOCKING),
-+	HCTX_FLAG_NAME(TAG_RR),
- 	HCTX_FLAG_NAME(NO_SCHED_BY_DEFAULT),
- };
- #undef HCTX_FLAG_NAME
-@@ -192,22 +186,11 @@ static const char *const hctx_flag_name[] = {
- static int hctx_flags_show(void *data, struct seq_file *m)
- {
- 	struct blk_mq_hw_ctx *hctx = data;
--	const int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(hctx->flags);
- 
--	BUILD_BUG_ON(ARRAY_SIZE(hctx_flag_name) !=
--			BLK_MQ_F_ALLOC_POLICY_START_BIT);
--	BUILD_BUG_ON(ARRAY_SIZE(alloc_policy_name) != BLK_TAG_ALLOC_MAX);
-+	BUILD_BUG_ON(ARRAY_SIZE(hctx_flag_name) != ilog2(BLK_MQ_F_MAX));
- 
--	seq_puts(m, "alloc_policy=");
--	if (alloc_policy < ARRAY_SIZE(alloc_policy_name) &&
--	    alloc_policy_name[alloc_policy])
--		seq_puts(m, alloc_policy_name[alloc_policy]);
--	else
--		seq_printf(m, "%d", alloc_policy);
--	seq_puts(m, " ");
--	blk_flags_show(m,
--		       hctx->flags ^ BLK_ALLOC_POLICY_TO_MQ_FLAG(alloc_policy),
--		       hctx_flag_name, ARRAY_SIZE(hctx_flag_name));
-+	blk_flags_show(m, hctx->flags, hctx_flag_name,
-+			ARRAY_SIZE(hctx_flag_name));
- 	seq_puts(m, "\n");
- 	return 0;
- }
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index ab4a66791a20..b9f417d980b4 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -545,11 +545,10 @@ static int bt_alloc(struct sbitmap_queue *bt, unsigned int depth,
- }
- 
- struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
--				     unsigned int reserved_tags,
--				     int node, int alloc_policy)
-+		unsigned int reserved_tags, unsigned int flags, int node)
- {
- 	unsigned int depth = total_tags - reserved_tags;
--	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
-+	bool round_robin = flags & BLK_MQ_F_TAG_RR;
- 	struct blk_mq_tags *tags;
- 
- 	if (total_tags > BLK_MQ_TAG_MAX) {
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 17f10683d640..2e6132f778fd 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3476,8 +3476,7 @@ static struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
- 	if (node == NUMA_NO_NODE)
- 		node = set->numa_node;
- 
--	tags = blk_mq_init_tags(nr_tags, reserved_tags, node,
--				BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags));
-+	tags = blk_mq_init_tags(nr_tags, reserved_tags, set->flags, node);
- 	if (!tags)
- 		return NULL;
- 
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 3bb9ea80f9b6..c872bbbe6411 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -163,7 +163,7 @@ struct blk_mq_alloc_data {
- };
- 
- struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
--		unsigned int reserved_tags, int node, int alloc_policy);
-+		unsigned int reserved_tags, unsigned int flags, int node);
- void blk_mq_free_tags(struct blk_mq_tags *tags);
- 
- unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data);
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 8f40f75ba08c..06781bdde0d2 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -396,7 +396,7 @@ extern const struct attribute_group *ahci_sdev_groups[];
- 	.shost_groups		= ahci_shost_groups,			\
- 	.sdev_groups		= ahci_sdev_groups,			\
- 	.change_queue_depth     = ata_scsi_change_queue_depth,		\
--	.tag_alloc_policy       = BLK_TAG_ALLOC_RR,             	\
-+	.tag_alloc_policy_rr	= true,					\
- 	.device_configure	= ata_scsi_device_configure
- 
- extern struct ata_port_operations ahci_ops;
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index f2f36e55a1f4..4b01bb6880b0 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -935,7 +935,7 @@ static const struct scsi_host_template pata_macio_sht = {
- 	.device_configure	= pata_macio_device_configure,
- 	.sdev_groups		= ata_common_sdev_groups,
- 	.can_queue		= ATA_DEF_QUEUE,
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
-+	.tag_alloc_policy_rr	= true,
- };
- 
- static struct ata_port_operations pata_macio_ops = {
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index b8f363370e1a..21c72650f9cc 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -672,7 +672,7 @@ static const struct scsi_host_template mv6_sht = {
- 	.dma_boundary		= MV_DMA_BOUNDARY,
- 	.sdev_groups		= ata_ncq_sdev_groups,
- 	.change_queue_depth	= ata_scsi_change_queue_depth,
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
-+	.tag_alloc_policy_rr	= true,
- 	.device_configure	= ata_scsi_device_configure
- };
- 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 36d99043ef50..823cce5ea1e9 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -385,7 +385,7 @@ static const struct scsi_host_template nv_adma_sht = {
- 	.device_configure	= nv_adma_device_configure,
- 	.sdev_groups		= ata_ncq_sdev_groups,
- 	.change_queue_depth     = ata_scsi_change_queue_depth,
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
-+	.tag_alloc_policy_rr	= true,
- };
- 
- static const struct scsi_host_template nv_swncq_sht = {
-@@ -396,7 +396,7 @@ static const struct scsi_host_template nv_swncq_sht = {
- 	.device_configure	= nv_swncq_device_configure,
- 	.sdev_groups		= ata_ncq_sdev_groups,
- 	.change_queue_depth     = ata_scsi_change_queue_depth,
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
-+	.tag_alloc_policy_rr	= true,
- };
- 
- /*
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 72c03cbdaff4..935b13e79dec 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -378,7 +378,6 @@ static const struct scsi_host_template sil24_sht = {
- 	.can_queue		= SIL24_MAX_CMDS,
- 	.sg_tablesize		= SIL24_MAX_SGE,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
- 	.sdev_groups		= ata_ncq_sdev_groups,
- 	.change_queue_depth	= ata_scsi_change_queue_depth,
- 	.device_configure	= ata_scsi_device_configure
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 79129c977704..35501d0aa655 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3345,7 +3345,7 @@ static const struct scsi_host_template sht_v3_hw = {
- 	.slave_alloc		= hisi_sas_slave_alloc,
- 	.shost_groups		= host_v3_hw_groups,
- 	.sdev_groups		= sdev_groups_v3_hw,
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
-+	.tag_alloc_policy_rr	= true,
- 	.host_reset             = hisi_sas_host_reset,
- 	.host_tagset		= 1,
- 	.mq_poll		= queue_complete_v3_hw,
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5cf124e13097..51c496ca9380 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2065,8 +2065,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 	tag_set->queue_depth = shost->can_queue;
- 	tag_set->cmd_size = cmd_size;
- 	tag_set->numa_node = dev_to_node(shost->dma_dev);
--	tag_set->flags |=
--		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
-+	if (shost->hostt->tag_alloc_policy_rr)
-+		tag_set->flags |= BLK_MQ_F_TAG_RR;
- 	if (shost->queuecommand_may_block)
- 		tag_set->flags |= BLK_MQ_F_BLOCKING;
- 	tag_set->driver_data = shost;
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index f2ff0ffa0535..a0a9007cc1e3 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -296,13 +296,6 @@ enum blk_eh_timer_return {
- 	BLK_EH_RESET_TIMER,
- };
- 
--/* Keep alloc_policy_name[] in sync with the definitions below */
--enum {
--	BLK_TAG_ALLOC_FIFO,	/* allocate starting from 0 */
--	BLK_TAG_ALLOC_RR,	/* allocate starting from last allocated tag */
--	BLK_TAG_ALLOC_MAX
--};
--
- /**
-  * struct blk_mq_hw_ctx - State for a hardware queue facing the hardware
-  * block device
-@@ -677,20 +670,19 @@ enum {
- 	BLK_MQ_F_TAG_HCTX_SHARED = 1 << 3,
- 	BLK_MQ_F_BLOCKING	= 1 << 4,
- 
-+	/*
-+	 * Alloc tags on a round-robin base instead of the first available one.
-+	 */
-+	BLK_MQ_F_TAG_RR		= 1 << 5,
-+
- 	/*
- 	 * Select 'none' during queue registration in case of a single hwq
- 	 * or shared hwqs instead of 'mq-deadline'.
- 	 */
- 	BLK_MQ_F_NO_SCHED_BY_DEFAULT	= 1 << 6,
--	BLK_MQ_F_ALLOC_POLICY_START_BIT = 7,
--	BLK_MQ_F_ALLOC_POLICY_BITS = 1,
-+
-+	BLK_MQ_F_MAX = 1 << 7,
- };
--#define BLK_MQ_FLAG_TO_ALLOC_POLICY(flags) \
--	((flags >> BLK_MQ_F_ALLOC_POLICY_START_BIT) & \
--		((1 << BLK_MQ_F_ALLOC_POLICY_BITS) - 1))
--#define BLK_ALLOC_POLICY_TO_MQ_FLAG(policy) \
--	((policy & ((1 << BLK_MQ_F_ALLOC_POLICY_BITS) - 1)) \
--		<< BLK_MQ_F_ALLOC_POLICY_START_BIT)
- 
- #define BLK_MQ_MAX_DEPTH	(10240)
- #define BLK_MQ_NO_HCTX_IDX	(-1U)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index c1a85d46eba6..be5183d75736 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1467,13 +1467,13 @@ extern const struct attribute_group *ata_common_sdev_groups[];
- #define ATA_SUBBASE_SHT(drv_name)				\
- 	__ATA_BASE_SHT(drv_name),				\
- 	.can_queue		= ATA_DEF_QUEUE,		\
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
-+	.tag_alloc_policy_rr	= true,				\
- 	.device_configure	= ata_scsi_device_configure
- 
- #define ATA_SUBBASE_SHT_QD(drv_name, drv_qd)			\
- 	__ATA_BASE_SHT(drv_name),				\
- 	.can_queue		= drv_qd,			\
--	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
-+	.tag_alloc_policy_rr	= true,				\
- 	.device_configure	= ata_scsi_device_configure
- 
- #define ATA_BASE_SHT(drv_name)					\
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 2b4ab0369ffb..02823d6af37d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -438,8 +438,10 @@ struct scsi_host_template {
- 	 */
- 	short cmd_per_lun;
- 
--	/* If use block layer to manage tags, this is tag allocation policy */
--	int tag_alloc_policy;
-+	/*
-+	 * Allocate tags starting from last allocated tag.
-+	 */
-+	bool tag_alloc_policy_rr : 1;
- 
- 	/*
- 	 * Track QUEUE_FULL events and reduce queue depth on demand.
--- 
-2.45.2
+>   /*
+> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+> index 72c03cbdaff4..935b13e79dec 100644
+> --- a/drivers/ata/sata_sil24.c
+> +++ b/drivers/ata/sata_sil24.c
+> @@ -378,7 +378,6 @@ static const struct scsi_host_template sil24_sht = {
+>   	.can_queue		= SIL24_MAX_CMDS,
+>   	.sg_tablesize		= SIL24_MAX_SGE,
+>   	.dma_boundary		= ATA_DMA_BOUNDARY,
+> -	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
+
+nit: maybe that could be a separate patch, but no biggie
+
+>   	.sdev_groups		= ata_ncq_sdev_groups,
+>   	.change_queue_depth	= ata_scsi_change_queue_depth,
+>   	.device_configure	= ata_scsi_device_configure
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index 79129c977704..35501d0aa655 100644
+
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -438,8 +438,10 @@ struct scsi_host_template {
+>   	 */
+>   	short cmd_per_lun;
+>   
+> -	/* If use block layer to manage tags, this is tag allocation policy */
+> -	int tag_alloc_policy;
+> +	/*
+> +	 * Allocate tags starting from last allocated tag.
+> +	 */
+> +	bool tag_alloc_policy_rr : 1;
+
+Is it proper to use bool here? I am not sure. Others use unsigned int or 
+unsigned.
+
+nit: coding style elsewhere in scsi_host_template would be to use 
+"tag_alloc_policy_rr:1;"
+
+>   
+>   	/*
+>   	 * Track QUEUE_FULL events and reduce queue depth on demand.
 
