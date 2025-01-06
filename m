@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6E4F1DB36B;
-	Mon,  6 Jan 2025 10:42:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E66C8126BF9;
+	Mon,  6 Jan 2025 10:47:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736160136; cv=none; b=Gt4iQLvx9+nTtxBUHT/DHgWKtHjQUW1rYjRDsi65gF33RfIgOlSyfGWXnNlbeQRysfKSZLByWBsEoMpozlnlqUZljVe7lk0eS3pdgJILgihrWoY+MS7nq+X+91sAP9vEDA0dLOhUGn116n/wGIlavn4IzYmWOurGVicCV4gnr8M=
+	t=1736160426; cv=none; b=kYO6BZlDPDqgiHlGajfT6J04AatRI+R5U1Qy2BzI0TtXqmaAK+x0Eof+66pfc4HxfCQpAF4x7DqIZH8ZdxG5KAn3msQPC1fm3uVgxORY6uWovv0ZMZS/8K3IOgu8XzPr/x3Gwxv+D8IieGLg5JpoC10uk1DTx9T5O35yqXDSvSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736160136; c=relaxed/simple;
-	bh=euhWvUhz5CciYJh8Yuw2cExBVHc9+EtlTZ1pgZbX7Ho=;
+	s=arc-20240116; t=1736160426; c=relaxed/simple;
+	bh=wej234ibZ1R8OLTpkTc9rxS5V8U0eLOGtXxAG8f0G9Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OW6i2Ci3Yfknq42qNUXOuL0OljLelD6X0FW6U0Z4JRvpMYd1CSc+v9ahznPXhtxK2wY+Yf4W1bHVNoc6rfH1P6DwUZwvK3frK3hKMA+6Ul5YjD+vtkwUR7BWv55H+T9abbtdxlG4tlsbec4wIkBxsZv53+RM6ULiYIbauIbk+mE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hUODWLJY; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=JCyA0BtXaG/X1epDNvuOpfjB4VsIddbmVxqEN84flL6IYPdefvvOhPElgK7FpB1cfff6oyLe0Fji35O+DGjEC+n3yjllJBV+StpLn4VxkDGk+7kfD6vqUxUFVjzdl723h7IsKXkDIlJwhK9rJoj/+EhlQFx6FGFbBv6hBkk+zqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QtMzyfuD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hUODWLJY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B58D2C4CEE0;
-	Mon,  6 Jan 2025 10:42:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QtMzyfuD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D402C4CEDD;
+	Mon,  6 Jan 2025 10:47:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736160135;
-	bh=euhWvUhz5CciYJh8Yuw2cExBVHc9+EtlTZ1pgZbX7Ho=;
+	s=k20201202; t=1736160425;
+	bh=wej234ibZ1R8OLTpkTc9rxS5V8U0eLOGtXxAG8f0G9Q=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=hUODWLJYC9lAQuwth5KQ9f/9n4JkccHviDS4BUW+GVnYUc95BTbiEfTLJTO2cSnhI
-	 RoGLBLJs/jDMAKfkGSoG8fMvgAx1f+wf/EoLVq5jlCe5Aj3acYnWwRbQGefxm3Mk9y
-	 Se7gjWn7ohH1ELKxO/yfEDpwedIExf6+QWU+QcTdeme4+2Syu5DERgr2CZJUWfbOaT
-	 u1/Kl9WCgzP0ekKNfmY2vOBe+7Xpneq1f8fTkpfwoym9kbHfUXAwDhUN3RpSPjKDxE
-	 Lq4zljlYQUJJRYaE589asV0Y2gFz7Ho5fL+S9ICfeYhrdshKYQIWtuuwVkio2eASNk
-	 oPa63ka2qmKYg==
-Message-ID: <c760f509-8902-429c-bf1b-526b1043c483@kernel.org>
-Date: Mon, 6 Jan 2025 19:41:29 +0900
+	b=QtMzyfuDr2WNgnvsHFz2I+5Ou4y6rqsWJjZ/PHVKqnL013v7PDKnnIUaTpUxxBneH
+	 bb6oZLKYhNfPUaCgUIofZ+nJZAKLILSD41nmIXtic/DvtGzLHz5cIBWRcYtKermD8J
+	 ZzjiokHMuU2Q7TTVFQmG9aOuuzCC5Vp8ePniWkR3PwEpBHGNPZi+r48oP0x7LOQAxK
+	 2S4KCGRdrNmKdImmai72QHvLxq+PQah2S8cMd4tXmZWJ72b0Sgq3yR1wj4EB8Vf32P
+	 Bo+ibYFAdtZVy7+36citiVsHaS1FduSGAwv+aZk06ZWiyGRuvIdEE9tExdorHxco5s
+	 qEUq74Bc6OqpQ==
+Message-ID: <a461bbbc-f251-4f44-89c7-f80f72e6e96d@kernel.org>
+Date: Mon, 6 Jan 2025 19:46:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,45 +35,71 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/10] block: add a queue_limits_commit_update_frozen
- helper
+Subject: Re: [PATCH 03/10] block: add a store_limit operations for sysfs
+ entries
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc: Ming Lei <ming.lei@redhat.com>, Nilay Shroff <nilay@linux.ibm.com>,
  linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
  nbd@other.debian.org, virtualization@lists.linux.dev,
  linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20250106100645.850445-1-hch@lst.de>
- <20250106100645.850445-3-hch@lst.de>
+ <20250106100645.850445-4-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250106100645.850445-3-hch@lst.de>
+In-Reply-To: <20250106100645.850445-4-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 1/6/25 7:06 PM, Christoph Hellwig wrote:
-> Add a helper that freezes the queue, updates the queue limits and
-> unfreezes the queue and convert all open coded versions of that to the
-> new helper.
+> De-duplicate the code for updating queue limits by adding a store_limit
+> method that allows having common code handle the actual queue limits
+> update.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 [...]
 
-> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-> index 71a7ffeafb32..0a987f195630 100644
-> --- a/drivers/block/virtio_blk.c
-> +++ b/drivers/block/virtio_blk.c
-> @@ -1105,9 +1105,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
->  		lim.features |= BLK_FEAT_WRITE_CACHE;
->  	else
->  		lim.features &= ~BLK_FEAT_WRITE_CACHE;
-> -	blk_mq_freeze_queue(disk->queue);
->  	i = queue_limits_commit_update(disk->queue, &lim);
+> @@ -706,11 +687,24 @@ queue_attr_store(struct kobject *kobj, struct attribute *attr,
+>  	if (entry->load_module)
+>  		entry->load_module(disk, page, length);
+>  
+> -	blk_mq_freeze_queue(q);
+>  	mutex_lock(&q->sysfs_lock);
+> -	res = entry->store(disk, page, length);
+> -	mutex_unlock(&q->sysfs_lock);
+> +	blk_mq_freeze_queue(q);
 
-You need to change this line to use queue_limits_commit_update_frozen().
+The freeze must NOT be done for the "if (entry->store_limit)" case. So this
+needs to go int the "else". Otherwise, you still have freeze the take limit
+lock order which can cause the ABBA deadlocks in SCSI sd.
 
-Other than that, looks good !
+> +	if (entry->store_limit) {
+> +		struct queue_limits lim = queue_limits_start_update(q);
+> +
+> +		res = entry->store_limit(disk, page, length, &lim);
+> +		if (res < 0) {
+> +			queue_limits_cancel_update(q);
+> +		} else {
+> +			res = queue_limits_commit_update(q, &lim);
+
+Here you must use queue_limits_commit_update_frozen().
+
+> +			if (!res)
+> +				res = length;
+> +		}
+> +	} else {
+> +		res = entry->store(disk, page, length);
+> +	}
+>  	blk_mq_unfreeze_queue(q);
+
+And this one needs to go in the else after the call to entry->store().
+
+> +	mutex_unlock(&q->sysfs_lock);
+>  	return res;
+>  }
+>  
+
 
 -- 
 Damien Le Moal
