@@ -1,125 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF6C259493
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 03:34:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46A31DED66;
+	Tue,  7 Jan 2025 06:31:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736220841; cv=none; b=e6/9nBxPLXjONyv6T0o0/KCw6sFnkWGLjY8CIUygK8Mv7nun2ILEwnJMsddcQvQslA48E/a8Pmbd9nT8AesDY1pwbpovEbuvWjBI0HGA7S2xIFX6L3PjZ6HIn16sOYzhzA7CNxAGZRfIY3zLNwGHf7aAwez1YFJNRy0Ywk9vLBw=
+	t=1736231488; cv=none; b=BhRm/JyBX2narQdmlj1oQa4nEkGG9R7U4HvG+HdAeiZ9IXQNsw2HPMQKTmcdrlP1UFgZF2e8aig+u5L2taPEVo1Av7vIIvpp0fKN2mZh17mZEKtogU+wE7OjrdQal5dyx9VZDBSDoefH/wzuEjWfRP9ECj8NxmH7EyKwgV4B/oY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736220841; c=relaxed/simple;
-	bh=VxiwwODegGwBFty7b9GkbGbA2RmJT4zHSKMKdZ6Gmns=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=lA5v4e9ey5JY79Y5xKtihA/9kweLPt1DKYrJPTffRY8rPi5TgeBvMbEEh2oRdYXYPksNuOl9zTVBe5y/2ZnmrXFCRqw+9FUHrjr/zWHkUyxc50fdkpeh8i2KpdMItJOvJUt4CPlY844QQ2Ds0GsP5aIcwpFZjz21yOf6NZm9xDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MGv0tV8E; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1736231488; c=relaxed/simple;
+	bh=e06AhQpC04P9zZT7VwqdQ6B25Dny1hASLZ0r75fG0gs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VVkIg2zYpCNaTmS2Cs+xFHR020BbQGNJ5OVPvGkHtxnjrlit4+RApV1+Olrb0Y2yMQaoeRICB6ag4745JCHwbzxfi0pRBjpbMFqd+k1TqlEDVzwxhHD+bLzAqD46MFL4dxfJg0vwOZMr6tYb70XkXljqugNERfr7j4ELIwu4BGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=l8zEQzw/; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MGv0tV8E"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 929E7C4CEE1
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 03:34:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736220840;
-	bh=VxiwwODegGwBFty7b9GkbGbA2RmJT4zHSKMKdZ6Gmns=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=MGv0tV8E20kJWugQ/kxf8FuQDU+qMrZiLMRcEEoDeAUBjrjWUa45HRViB2B6Eey4e
-	 ylKTnab2S0dTzANl6mzNgQMKKcisut73B0VFYSl1hlxpACRiaDQe1nBerNKWMg18SL
-	 0I7LjRlhKeZCSCYdusCCMWKBCAZUR0JK1uEnl8x3Tp2mstmxFLkd5jvuFYcXam9coK
-	 F9INOPBn2u6gt3GJkaMy0PRtCkxH8T2RAKgEPvqtmhiH8yLI9Ad6e3R2aMNvFNFZGm
-	 TH7dzo7t3iHuG192B9rWmB7DSHI1uMIMzdbHaKxCSON9nmhtSaWOwPL4R9y13ws1zY
-	 YS20DUgqEuy/Q==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 8A182C3279E; Tue,  7 Jan 2025 03:34:00 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Tue, 07 Jan 2025 03:33:59 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: sagar.biradar@microchip.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-5ReMht2qWA@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="l8zEQzw/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=TreWHTKV2tbBOHQr6HaKSg8mx5igp3LbRHsuMCPKwNw=; b=l8zEQzw/u++2XFk9bEzWvApa68
+	RxWCrZOU1UeorEJ9VK91rRF1R7kTii4mBJj3REDkx+ysihUzTpaMy8Za7aU3QaS4Wx7iFKKREi2Db
+	V17LC5D1A5lnC54dSkhFpdrD1hxGwtWjkkyOZGSeE0n0WVoTE21yw4GxaiHxxuHydxfzly3/Ek3Yz
+	mCohROu/VloylPW4sPbhelO/wQWe83D0RmXjMEJkTEDyCcklSNTW+/jBxeKMc//MbgEbYNTnTHBj0
+	VmSrlaXdngqlp9Jb2TBbqBKfSZPDpjOxikJYZY4sE+hig/xMTlcn1PUrc/qGpUdgU44A1S2/RrBGz
+	+K3LmdHg==;
+Received: from 2a02-8389-2341-5b80-d467-d75d-35bf-0eb6.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d467:d75d:35bf:eb6] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tV37b-00000003dok-2sfk;
+	Tue, 07 Jan 2025 06:31:24 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Ming Lei <ming.lei@redhat.com>,
+	Nilay Shroff <nilay@linux.ibm.com>,
+	linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	nbd@other.debian.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: fix queue freeze and limit locking order
+Date: Tue,  7 Jan 2025 07:30:32 +0100
+Message-ID: <20250107063120.1011593-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+Hi all,
 
---- Comment #71 from Sagar (sagar.biradar@microchip.com) ---
-(In reply to Steve from comment #70)
-> (In reply to Sagar from comment #69)
-> > Hi all,
-> > Currently the patch which caused the issue has been reverted.
-> > I have reworked and I have a fix ready for this issue.
-> >=20
-> > I am working towards submitting the patch sometime this week.
->=20
-> this is my dmesg log if it can help:
->=20
-> [    0.801036] Adaptec aacraid driver 1.2.1[50983]-custom
-> [    0.801047] aacraid 0000:03:00.0: can't disable ASPM; OS doesn't have
-> ASPM control
-> [    0.805979] aacraid: Comm Interface type2 enabled
-> [    0.839258] scsi host0: aacraid
-> [    1.933550] scsi 0:3:0:0: Enclosure         NETAPP   DS424IOM6=20=20=
-=20=20=20=20=20
-> 0191 PQ: 0 ANSI: 5
-> [    1.947104] aacraid: Host bus reset request. SCSI hang ?
-> [    1.947113] aacraid 0000:03:00.0: outstanding cmd: midlevel-1
-> [    1.947114] aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
-> [    1.947115] aacraid 0000:03:00.0: outstanding cmd: error handler-0
-> [    1.947115] aacraid 0000:03:00.0: outstanding cmd: firmware-0
-> [    1.947116] aacraid 0000:03:00.0: outstanding cmd: kernel-0
-> [    1.954062] aacraid 0000:03:00.0: Controller reset type is 3
-> [    1.954063] aacraid 0000:03:00.0: Issuing IOP reset
-> [   78.145262] aacraid 0000:03:00.0: IOP reset succeeded
-> [   78.151156] aacraid: Comm Interface type2 enabled
-> [   87.187835] aacraid 0000:03:00.0: Scheduling bus rescan
-> [   97.589026] aacraid: Host bus reset request. SCSI hang ?
-> [   97.589047] aacraid 0000:03:00.0: outstanding cmd: midlevel-1
-> [   97.589054] aacraid 0000:03:00.0: outstanding cmd: lowlevel-0
-> [   97.589057] aacraid 0000:03:00.0: outstanding cmd: error handler-0
-> [   97.589061] aacraid 0000:03:00.0: outstanding cmd: firmware-0
-> [   97.589064] aacraid 0000:03:00.0: outstanding cmd: kernel-0
-> [   97.599053] aacraid 0000:03:00.0: Controller reset type is 3
-> [   97.599066] aacraid 0000:03:00.0: Issuing IOP reset
-> [  173.373888] aacraid 0000:03:00.0: IOP reset succeeded
-> [  173.380165] aacraid: Comm Interface type2 enabled
-> [  182.417010] aacraid 0000:03:00.0: Scheduling bus rescan
-> [  192.812389] scsi 0:3:0:0: tag#164 timing out command, waited 120s
+this is my version of Damien's "Fix queue freeze and limit locking order".
+A lot looks very similar, but it was done independently based on the
+previous discussion.
 
-Hi Steve,
-Thanks for your efforts with providing the logs.
-Yes,  we are aware of the issue and I have put together a patch that works =
-for
-me.
-I will submit it to the community sometime this week and please feel free to
-provide me your inputs.
+Changes since RFC:
+ - fix a bizzare virtio_blk bisection snafu
+ - set BLK_FEAT_POLL a little less eagerly for blk-mq
+ - drop the loop patch just adding a comment
+ - improve various commit logs and coments
 
-I will post the link of the patch once I submit it.
-Thanks
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Diffstat:
+ block/blk-core.c               |   17 ++++-
+ block/blk-integrity.c          |    4 -
+ block/blk-mq.c                 |   17 -----
+ block/blk-settings.c           |   27 ++++++++
+ block/blk-sysfs.c              |  128 +++++++++++++++++++----------------------
+ block/blk-zoned.c              |    7 --
+ drivers/block/nbd.c            |   17 -----
+ drivers/block/virtio_blk.c     |    4 -
+ drivers/nvme/host/core.c       |    9 +-
+ drivers/scsi/sd.c              |   17 +----
+ drivers/scsi/sr.c              |    5 -
+ drivers/usb/storage/scsiglue.c |    5 -
+ include/linux/blkdev.h         |    5 -
+ 13 files changed, 123 insertions(+), 139 deletions(-)
