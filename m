@@ -1,103 +1,103 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8042C1E8839
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 10:23:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F5011E3DE8
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 10:25:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736245435; cv=none; b=Oqs1NHRwBQPSVddwobWpr5Ulxfg9tCD5JKZ9jJBiJuGsuTK5KuPBZ5xtoZc2ItMgSBXhgM9SqYB3hJvttIpsYd1h4A3egnvwdFkupD2rcyi3gQAyjdk3SrRo4CJqurI7Fk3dGLRWd9MHH9yCLZ8INFEsbdmRSgwXGk5JyeUVjIU=
+	t=1736245543; cv=none; b=b1kbV41xsP7uBs714PQUJPNF3v72cfk1VNKUTubO5P81/0J6jYhCJLgVM7iWBRzHihjZXvW/kf0i4XAvKsuhtMvNJX/ts3oJOC7vQt/g6x8UhbIuZFxiZB0p+pDG3h9ShjetzQ6J1eF75m0V6BaiDA4+fs5ZU37Zkcya3TWhAjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736245435; c=relaxed/simple;
-	bh=f40GZyskT5c/R/N8DyVzjExYvlzYyrtbl1SGvGE47fM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UDwcipK7ebShKJLF7LBU3SKmGBFfvrrLIeyk1QPylEKATEpGHBCzM7XJ7AU5HSW+su9u7aCiKKshOiaR76f8SzOt4Hn81Pt8Md1QN1K6T/nu1c9mwxviTqewBUFYhIckc0rPqzXyHmKKpNP+lVei7qS3fi7ieatXk+N55HXzfE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fIU72/bD; arc=none smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1736245543; c=relaxed/simple;
+	bh=Ltko/t9sUklM1UW/yxtw+NkoOQ3q5ebqnCUDhoIeACs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kZ78K/nBcQ4mXyx4dbrlh6VmSB3apd8xy/Lwj2rvOYbbaeDCXAaFp6XT61NCZwDhrj+01HC+KztOEh8+5b/Fcq0fbmgA9uX6xVmufhetBJz3dECPEZ6s8dEazZV6JTIXORAocqEBfPXyjSud0LK7SO/7ktvwK0fZ4uPuEJYSQbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QwGzK0qc; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fIU72/bD"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5d3e638e1b4so4788a12.1
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Jan 2025 02:23:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1736245431; x=1736850231; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=f40GZyskT5c/R/N8DyVzjExYvlzYyrtbl1SGvGE47fM=;
-        b=fIU72/bDW8BlhRNzAZkgD6EdPtaGP/pI7u2DGHMYxpxs2ii0KspHQ58eZZv58wXr3g
-         bsKcM1RXHvfo8O1gx3f5306o1dPIzvTJA3iXsi1cNSE4KDDvKUMZHIZF5Mgm+fUd8XPR
-         AhfmU08DfJj6zLBlmcmcyUyFmQQTkDo7vu7CCJnLCn/6AGq/iBszMozMfVlSam7mEtWE
-         ZRYeOl5ua7Q/LoiNHrzW7+89wgycVa7H7Dp62jk/lKZQQkXWK/uyvX5jbODIBmZseuWX
-         LgpNhYvwLWctp1EkeuIUZeF0lj9+MZ97zzYqSJ5QOVklEWClJQIj5tutVj9sHpvG0Z9b
-         XMSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736245431; x=1736850231;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=f40GZyskT5c/R/N8DyVzjExYvlzYyrtbl1SGvGE47fM=;
-        b=FWELYF1q3ltpmuJlb2jfhiS5cJI4zNC/XErsO5s9um5BvxteEhZp4/e9/lhjxpU4+4
-         qbK5meKcxpolZYrMv/A/fjG+y2dq2bcdwivvajGt/02LvmTNU7F1xcZ5MjZPP0U4BKE8
-         8iaUCWdvHmJGPBWmUN+a5FBQkLmCYx29SKERQSMX5O6YCRC4RV3ZOw0Bd1scvqUml1Tj
-         FC6lslGJA7ifyB6T5HxvFEUDZw/uabR405cfWR6ShJdkKQ9d/RTM5jW24ZgY+g93NGev
-         FN7ppA1fZOHDm1/e30e5wGut0GryYKZ5PtDTajsZiaautCU3fPIwe4EUZmRVPk2AqvvA
-         Dkbw==
-X-Forwarded-Encrypted: i=1; AJvYcCW5z2BvTEu4b3xN15FNhxYXfcLzmDxDkbRBYvWO5ThZVDYwumIm29hag2SC9KX44s5OSI34/T2TMrQR@vger.kernel.org
-X-Gm-Message-State: AOJu0YzR1NYV6pUcA+Nhl/iN9iQexCfAbmHE8bAzHlovLtZ5PV2IYtpf
-	rGk9GPz5vlRm0cBsK0u8/IXhN3a8mgewvTOdJ2r63cIB7eaVb/Qd/vbkQkfpzUoYdnUgIPPahw9
-	kRFXVv3tqZsC+Fl8QrxpKeDnKgdXbghfNhkMt
-X-Gm-Gg: ASbGncuSu2R8kjUhKA6hzf0omUzZnXJ85NLM2xe/VgyUp3dQ8yLL6L5Hg4/GgN/gg3v
-	C2G38X4Lvfres7fGxl/jPEG0XLTKGr0IN6TT/WkBXGrMrll97yNDRVI1+NRXzrcOCkc8=
-X-Google-Smtp-Source: AGHT+IEOC3r+GC8qQ+uoOx3yBauv/2O1ACtn8B43uGAQwI44DB0iNp164uNOKEDJH7gnxjyAP2D355m3/JaVTeKVPjk=
-X-Received: by 2002:a50:8d46:0:b0:5d0:eb21:264d with SMTP id
- 4fb4d7f45d1cf-5d965d049ebmr51172a12.1.1736245430674; Tue, 07 Jan 2025
- 02:23:50 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QwGzK0qc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1736245539;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=g+kgv40Nv3jmk18aQH5jxbGFwIkI3jfpro4OOu8qIeE=;
+	b=QwGzK0qcfSUl+FIR3c9wA4D+1ZgGhpqQnszaxcsUt/ToQmBUFmzHgXN6N0W7tSE00jbL2M
+	VfdA4b3lOLMnN9TQ+xd6v9zq2UgLWsOQpEMbKS5IJT/kVUEG2Z82oQpHBT4CXziK1bxL36
+	qpJJ3+Um7rDUpt72P6nGLyoT1HA/LjI=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-580-w5dnKRt2PPm84kKWsCv9qg-1; Tue,
+ 07 Jan 2025 05:25:36 -0500
+X-MC-Unique: w5dnKRt2PPm84kKWsCv9qg-1
+X-Mimecast-MFC-AGG-ID: w5dnKRt2PPm84kKWsCv9qg
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A16BB19560A3;
+	Tue,  7 Jan 2025 10:25:32 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.66])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 318F5195605F;
+	Tue,  7 Jan 2025 10:25:25 +0000 (UTC)
+Date: Tue, 7 Jan 2025 18:25:20 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Nilay Shroff <nilay@linux.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, nbd@other.debian.org,
+	linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 4/8] block: add a store_limit operations for sysfs entries
+Message-ID: <Z30AsQq89_lcstNl@fedora>
+References: <20250107063120.1011593-1-hch@lst.de>
+ <20250107063120.1011593-5-hch@lst.de>
+ <Z3zXANbFk6GBZg_z@fedora>
+ <ae6b7727-64d6-4d9e-9bf5-951e38d8a768@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240220090805.2886914-1-rohitner@google.com> <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
- <c7635c10-1724-4db5-9568-d554e1c64f72@quicinc.com> <CAGt9f=T5352bo=K2OAa7QRMds=tQC1JspN+zQ2aYxNRDWGSVnA@mail.gmail.com>
- <f5ac9637-99e2-487a-998c-5e63fdd3ccff@acm.org>
-In-Reply-To: <f5ac9637-99e2-487a-998c-5e63fdd3ccff@acm.org>
-From: Rohit Ner <rohitner@google.com>
-Date: Tue, 7 Jan 2025 15:53:38 +0530
-Message-ID: <CAGt9f=RffRM=gvvEFvmhWMk7PKDAp3bHhRFFpgaDWq0aV=AKyg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>, 
-	Stanley Chu <stanley.chu@mediatek.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Jaegeuk Kim <jaegeuk@kernel.org>, 
-	Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ae6b7727-64d6-4d9e-9bf5-951e38d8a768@linux.ibm.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Thu, Feb 22, 2024 at 8:56=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 2/22/24 00:27, Rohit Ner wrote:
-> > Can we stick to the current approach of moving the .setup_xfer_req()
-> > up, keeping in mind the following pros?
-> > 1. Avoid redundant callbacks for setting up transfers
-> > 2. Trim the duration for which hba->outstanding_lock is acquired unnece=
-ssarily
->
-> No, we can't. The Exynos implementation of the .setup_xfer_req() callback
-> is not thread-safe and relies on serialization by the caller. This patch
-> breaks the Exynos driver. A better title for this patch would be "Break
-> the setup_xfer_req() invocation".
-It would be inaccurate to tag this patch as breaking as Can did
-mention a vops use case in the hotpath for UFSHCI compliant drivers.
+On Tue, Jan 07, 2025 at 01:21:14PM +0530, Nilay Shroff wrote:
+> 
+> 
+> On 1/7/25 12:55 PM, Ming Lei wrote:
+> > On Tue, Jan 07, 2025 at 07:30:36AM +0100, Christoph Hellwig wrote:
+> >> De-duplicate the code for updating queue limits by adding a store_limit
+> >> method that allows having common code handle the actual queue limits
+> >> update.
+> >>
+> >> Note that this is a pure refactoring patch and does not address the
+> >> existing freeze vs limits lock order problem in the refactored code,
+> >> which will be addressed next.
+> >>
+> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Having two different setup_xfer_req functions for mcq/lsdb mode just
-because a particular vendor driver relies on serialization by the
-caller defeats the purpose of having vops as the core logic is still
-burdened with quirks.
->
-> Bart.
->
+...
 
-Rohit.
+> > Order between freeze and ->sysfs_lock is changed, and it may cause new
+> > lockdep warning because we may freeze queue first before acquiring
+> > ->sysfs_lock in del_gendisk().
+> > 
+> On contrary, in elevator_disable() and elevator_switch() we acquire 
+> ->sysfs_lock first before freezing the queue. I think this is a mess and 
+> we need to fix ordering. We need to decide ordering rules. IMO, the 
+> correct order should be to acquire ->sysfs_lock before freezing queue. 
+> Likewise with this patch now we acquire ->limits_lock before freezing the 
+> queue.
+
+__blk_mq_update_nr_hw_queues() freezes queue before acquiring ->syfs_lock too.
+
+So yes, it is a mess wrt. order between ->sysfs_lock and freezing queue.
+
+
+Thanks,
+Ming
+
