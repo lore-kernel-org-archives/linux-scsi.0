@@ -1,42 +1,78 @@
-Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51586154BF5
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 02:20:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51507083F;
+	Tue,  7 Jan 2025 02:24:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736216450; cv=none; b=exrdPFZ+sThGSs8JEiw1zbDeAQnaGVqTUKUUkk2iEfRlqsXM9fcmfURzM9tvtScwfCfr1gq77clL9scEfSG0a/R0VjhlaehMddFuP+dT5AxEYZTfzOcUEPUqYEtjwLsSp+Nk3S18njINY4dkXKTyYvK+74ElZLioUDSi7gFmneU=
+	t=1736216695; cv=none; b=b1YQT3QbgpeYQU9bIK/Vr8K/02QtrM/hs5Za7nZ21mNmYKH4SnGRGL3qp3gBQdjHoidJhcFE84YX15h8zejKOk81FeoijW0y10c5c6tDKij4TDgOfClRpDdojfMzcXn5HnegI34qGAKddA41IgJ6Uf0qE0VAR8g42qH+t0SeeUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736216450; c=relaxed/simple;
-	bh=nBBQzWcqQnxqzZ84DdmHGJc3K1e8OrEkyec8pneqUlw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gC1vs2/ChnPyutghNYSdVSQ20SpM4A2eKHBFkWMkHS6sWt4T2LGdNb/kWoRYGCVInkoNsceAvn3UnFbaEE9nhshPGRWtrx29s1q4Y+00PwWgGg1/pg5gBxh+FnfhLMbIQiGUornguBbXDKFpgex/nBmIXRv8BG5yy6Tv4M05VZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=k4LNwDbO; arc=none smtp.client-ip=115.124.30.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1736216695; c=relaxed/simple;
+	bh=7F58Vl8TjHNx8B99tq9Hltto5rwLMq3Jh+WEJK90txA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sU67z8LfBKiH7nCuGGWRnjnAhtSaKJvqho19JVgEbwlfhJVmSHp3JsPmLccn3AQUwmXUzsLlOHFWFJEmWNni3H08hFkCNR1r0xQbRA4WYxXP2dqvLJt2PuQuMMi19jQ04iDaSZdcVKGaxxirYTyXeL0x8cisV9P3nLfUBM9Tj/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UOoghbhC; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="k4LNwDbO"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1736216437; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=qTZdaUe9FmBJxhyFYnvIk1mFlYvfchK3KzwBRbRWIx8=;
-	b=k4LNwDbO9hAaoGOul2JiKBWs4sR/tscFo7dq5Bew9S7oSBzSiiwuv8zVVKBEw0U8g9daTloOQq8JGIJekdS3ghh6jrXa0+MIh5LvFJ5BnScrd+lEMqLFtBQb7wKfAsaiWpQVl+Ybsqti/NUE6LWlKqftL9E1uGPVoGYJDo4ktzg=
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WN8tlzR_1736216432 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 07 Jan 2025 10:20:37 +0800
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v4] scsi: mpi3mr: fix possible crash when setup bsg fail
-Date: Tue,  7 Jan 2025 10:20:32 +0800
-Message-ID: <20250107022032.24006-1-kanie@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UOoghbhC"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-21670dce0a7so38869955ad.1;
+        Mon, 06 Jan 2025 18:24:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736216693; x=1736821493; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=U2594Hu6hEqRcHlKyw6lRZmC8FeJXoytHNqn1YvR/vY=;
+        b=UOoghbhCFjyQ8LUXR1ss5uKS+hlsWP0Sx6ft1LjvXWIrFlTF7TBVCgtLosEHqocdSO
+         9rv54YsCc89G77LJn1H9Wrb7Mh70eaq9wz0Jl+yJ5pW1ZQ29uVlAOlbaPTFDAhW2RpZA
+         zdQUzx8PAfO2QS5Vt7ERzUxgsJ0uby8i9dz3lpA2yUJgW4rG4A3m0XYEBTdBQ4xsZv8A
+         SC/uPf7iPsunSwuBVMyjOYqsi9mmBvO7q3Txl9OYNc/Z33E9r7ab/OkrL6QRBqo2f0VN
+         YuzLaRi+xBOo8xh6ctKFO0RavHlPdz7ucOkDSVjdxXncW49jET7mNEmBz7U2K08kaxoH
+         aXNA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736216693; x=1736821493;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=U2594Hu6hEqRcHlKyw6lRZmC8FeJXoytHNqn1YvR/vY=;
+        b=ZcJeioxqwHv6dfeM0Umc+DXkMCgQdfijW8LTm/o5ZlmJ0Kj/V/vlk9RApZMaP+/Pcb
+         Ck697FIN5A+wlWPAndTJqySQ0bl0iWiKB9im23N0+FzTPtPy42M19SHVf2SP7//DYDQK
+         L6wynpfyU46X507ud71NSyJfB++xHmxHP9TNr6AipZh69jCLnAMJkGm2SojqjRQ1P7Zt
+         Ue+Ckp8z+9/HTtIt43oTvTvKkYZTUm9czL0wH8j043Ema1tFuu7yafqWkFtymwrFhRMW
+         DJlggBbHEZz4JsX+tRZdYraEcbEhxLAJ7cI1y+cT1ckJttqReJM5iTnUIIcrlnS2sdjb
+         8F5Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVvCz7TfJ3OjlDv3nWOlC2NKPJMicm9PAB1+v+bFGSc5ygFa4iVRl2eLeuHaWYefT6Yr7GxoWceSXa9XeM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7Va8SrznBLymu4+yq89NaRY+Iqg//ZtR2LOzVXXoP1BNNdkLw
+	a0arW5KDEsX9MVwvUyz7pAMDhXpInEwmlx99djtvUIMcm+Quod0z
+X-Gm-Gg: ASbGncuGWuZjyzRLbL03ae89YBASHIHRsfYsHLta1rJQfHdQct4jNCNf7R/y70g/J8D
+	KUK/9BGfP5mOK0+8f6E+P5eEulEPJ82k0DFpYuTsj7/ARKLl+IT3G30L+6f5OpQDnmCwicenJVV
+	3m1WR1CgsODJ62YRLi5QUqEBaX2+WsUAXU75cebOPfcYhHm2+f54uhdPUv7cwFAUTNU94sUxgPs
+	76ziZiAbkrEDvEchYXTTgQIL8zuHfOq90UkjW96JkMuWmbJihWckiTHsxGLCFmxZAtxg30zHyl2
+	UFF48f+Mtw==
+X-Google-Smtp-Source: AGHT+IEUVAovTOeEHgXqYaKk9fwAX7Kt/DrwEQQ8loXXKZPmWHmkXbei8hX5wrJqpH4t4Latdh6QXg==
+X-Received: by 2002:a17:902:e844:b0:216:3083:d03d with SMTP id d9443c01a7336-219e6f13c50mr883089265ad.44.1736216693011;
+        Mon, 06 Jan 2025 18:24:53 -0800 (PST)
+Received: from localhost.localdomain ([103.150.184.35])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-219dc9cdeecsm292883645ad.123.2025.01.06.18.24.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jan 2025 18:24:52 -0800 (PST)
+From: Xiang Zhang <hawkxiang.cpp@gmail.com>
+To: michael.christie@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Xiang Zhang <hawkxiang.cpp@gmail.com>,
+	Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	open-iscsi@googlegroups.com
+Subject: [PATCH v3] scsi: iscsi: Fix redundant response for ISCSI_UEVENT_GET_HOST_STATS request
+Date: Tue,  7 Jan 2025 10:24:31 +0800
+Message-ID: <20250107022432.65390-1-hawkxiang.cpp@gmail.com>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <d9be3663-f6f2-4a1c-bd88-2a3978f92bb1@oracle.com>
+References: <d9be3663-f6f2-4a1c-bd88-2a3978f92bb1@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,75 +81,43 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If bsg_setup_queue() fails, the bsg_queue is assigned a non-NULL value.
-Consequently, in mpi3mr_bsg_exit(), the condition
-"if(!mrioc->bsg_queue)" will not be satisfied, preventing execution
-from entering bsg_remove_queue(), which could lead to the following
-crash:
+The ISCSI_UEVENT_GET_HOST_STATS request is already replied to
+iscsid in iscsi_get_host_stats. This fix ensures
+that redundant responses are skipped in iscsi_if_rx.
+- On success: send reply and stats from iscsi_get_host_stats()
+  within if_recv_msg().
+- On error: fall through.
 
-BUG: kernel NULL pointer dereference, address: 000000000000041c
-Call Trace:
-  <TASK>
-  mpi3mr_bsg_exit+0x1f/0x50 [mpi3mr]
-  mpi3mr_remove+0x6f/0x340 [mpi3mr]
-  pci_device_remove+0x3f/0xb0
-  device_release_driver_internal+0x19d/0x220
-  unbind_store+0xa4/0xb0
-  kernfs_fop_write_iter+0x11f/0x200
-  vfs_write+0x1fc/0x3e0
-  ksys_write+0x67/0xe0
-  do_syscall_64+0x38/0x80
-  entry_SYSCALL_64_after_hwframe+0x78/0xe2
-
-Fixes: 4268fa751365 ("scsi: mpi3mr: Add bsg device support")
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Xiang Zhang <hawkxiang.cpp@gmail.com>
 ---
-Changes from v3 to v4:
-- Clean up the call trace (Bart).
-- Add the rb tag from Bart, thanks.
+V2 -> V3: Update code comments
+V1 -> V2: Update commit message
+---
+ drivers/scsi/scsi_transport_iscsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Changes from v2 to v3:
-- Add the crash stack to commit body.
-
-Changes from v1 to v2:
-- Add return statement when setup bsg queue fail, sorry for the v1
-trouble.
- drivers/scsi/mpi3mr/mpi3mr_app.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 10b8e4dc64f8..7589f48aebc8 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2951,6 +2951,7 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- 		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
- 		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
- 	};
-+	struct request_queue *q;
- 
- 	device_initialize(bsg_dev);
- 
-@@ -2966,14 +2967,17 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- 		return;
- 	}
- 
--	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
-+	q = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
- 			mpi3mr_bsg_request, NULL, 0);
--	if (IS_ERR(mrioc->bsg_queue)) {
-+	if (IS_ERR(q)) {
- 		ioc_err(mrioc, "%s: bsg registration failed\n",
- 		    dev_name(bsg_dev));
- 		device_del(bsg_dev);
- 		put_device(bsg_dev);
-+		return;
- 	}
-+
-+	mrioc->bsg_queue = q;
- }
- 
- /**
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index fde7de3b1e55..9b47f91c5b97 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -4104,7 +4104,7 @@ iscsi_if_rx(struct sk_buff *skb)
+ 		}
+ 		do {
+ 			/*
+-			 * special case for GET_STATS:
++			 * special case for GET_STATS, GET_CHAP and GET_HOST_STATS:
+ 			 * on success - sending reply and stats from
+ 			 * inside of if_recv_msg(),
+ 			 * on error - fall through.
+@@ -4113,6 +4113,8 @@ iscsi_if_rx(struct sk_buff *skb)
+ 				break;
+ 			if (ev->type == ISCSI_UEVENT_GET_CHAP && !err)
+ 				break;
++			if (ev->type == ISCSI_UEVENT_GET_HOST_STATS && !err)
++				break;
+ 			err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
+ 						  ev, sizeof(*ev));
+ 			if (err == -EAGAIN && --retries < 0) {
 -- 
-2.43.0
+2.44.0
 
