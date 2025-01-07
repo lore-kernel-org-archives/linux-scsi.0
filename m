@@ -1,134 +1,164 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5911EF08A
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 12:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD8A1E9B18
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 13:10:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736253014; cv=none; b=lOXAVChAujcAkJ6+JetJyzPXjQv5x1GFbr8LC++RuUtyrZxeKYJD49YNrd+5AC5N5eIqHFo8LP9mb+u6DxsZXRB5ICA2WtKmOiEJFOAx6Kk2ylrTkhxrth/rabHdeB02kgY+yZ43dVVp/lqEAeRemyYI17ocbbZR6PS7hnUQ0w8=
+	t=1736255427; cv=none; b=jgvbfaeZ4oPLoUH5SNJRapGH0b1LkiA7tEpkqCWHP1x9/zOR/U6YTuRNTVJZoCsztMw+uufhwUnA68IANnT8xUAwqXeEza+xlQ3JtsThqq1E0knbTWhp2i+2yZEz+SpCEBUE4VOiBTu4v8XM2yDA/GPRDqpjVPInaBU4BVcE0Tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736253014; c=relaxed/simple;
-	bh=NWekeuKUOLvDOs6s2gbwTr1+mKpu8Z8AuyHjmEI5UOI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mjwADlo9n4yTEV5Nxj/FtKsltDQnGQPOntxlNxfjZXpzpuORAJysLn4NLD4O1c4JdglYNgAD3bFGFct4Llu9KiBQCquYnpDOyNdV1+FqPmsg6LChBGezLcZnDAUeB3QWmzqQouU2uYIJi3VVM2zir8+/npkKUYNf8vvYW4WAZRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=TdYvUu8D; arc=none smtp.client-ip=209.85.128.46
+	s=arc-20240116; t=1736255427; c=relaxed/simple;
+	bh=ZSVfHvcyonMMaAuHxLoTsm3svmwPbJluMG1JO7rk65k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YssPInSK1dRCGkD9kRCH3TRdlMQVnZYA0q7MA6qNAc7me6iTq2ANtCBHLl+EK//hAimKfbYzwqfzjEKnLFS370xO8fGTZ9OLB1eO9Zd10jF7SIXq+YHtVL0QaLEOyE305C73exgFDoxnJGQfVMS1grTbQC9XAJcwIrNwsrbbUUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RInHeiDj; arc=none smtp.client-ip=209.85.221.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TdYvUu8D"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-43621d27adeso107200825e9.2
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Jan 2025 04:30:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RInHeiDj"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-3862e570832so1757848f8f.0
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jan 2025 05:10:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1736253009; x=1736857809; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9oKx+g6OpK2tMiz1AXArp0pzfyJtWxMl3EtD57kJgmw=;
-        b=TdYvUu8D1IuwKVOTG7VQEgvUbwo+BS/u9NKUNPIWoBg3j0vcgWdfIhIuQkZG9pRqdk
-         LVfZNViM+VGwKGMiC7HNrkjzpV6lBpClMvm6zvGfzifYySY8Tnud65cs4S+qvTOUjc5k
-         VDAWPpwDCjnx/04BS3tllNeud6qhQrY3YWoeuSq0tl0jTNOgMqyMhJItfGKGTZYnqlG9
-         fR6x5T8FUwx8+HLdTMpKpJ1kjXA7grGXv3E1jyUYOfaHs6lg5Vp3IKHP/1jRlxuUkZMM
-         wpfdeM1KQSqQPn1gY7pq98odiblfzfqelUvPXtwdy+fgfSrvsoGVHNAwg/oMGZ/3G9tW
-         rQYw==
+        d=linaro.org; s=google; t=1736255423; x=1736860223; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=T66eNQvkCk8ULvCPWitWaVVqgBtMU9sicY2LjyOUOVo=;
+        b=RInHeiDjnH+WvBxRlr+gVSHftNWwS1mS7TpIcUqboHLJtkMjQODvRVjfdvKv0dnbtC
+         vEHqXYkiS0EBBIdYItYbYForUasMfWd56E493K7Aor0lKhXb0va+kK0IG9SdXHwDhTQ7
+         2d6955dcnbHnRv3sVNNxoEP85G8QNZNLF6ZdoyhIQuX41FYuTa/ESm9W2wh4qxhWK4Bh
+         +bxjYkBRPHB3IC6RtyvmA6/NqGSq3CK/bvHbZQcaP4jAhXG4pXlSL8yFW7L9xicTyseP
+         qqkFJtzcTJB1yMjSv6Hai37gGqGHcLE/MEKwsYtwp4pCYDP+9J9TgqCAHLF0ZOw5qFjn
+         ucog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736253009; x=1736857809;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9oKx+g6OpK2tMiz1AXArp0pzfyJtWxMl3EtD57kJgmw=;
-        b=Y7MsrRZpvi4XJ1eJtG0D61zK6T5lKT1wfkWWWDejm5YRW4PxLs9M2iJEujfLPVWgaN
-         GK5SBJizV+qNn1Nqy/7fW/Z/9qwyIY1xLhLEIjvP5o3YizGpb6TKIsoEYGo6+ex+WRwr
-         jFMcAA6eGDd3kb6AHpI054YQD0x7EiMP2rbJtesg+nSh4PYaAAu5SyZYyv7rIQhHJUDW
-         RBIH60XywznDw4ivDgi1/4SJsfshDsY91LM9DBkqWt/Tq389kKh52Vp0mqT6CpC2fH6Q
-         sUVHbSJP6YLJtq1XNUz9WjTBB1llC2g0x/cznsVDEyMAN4REKpViuRgrx7KfFVYooQ73
-         1mOA==
-X-Forwarded-Encrypted: i=1; AJvYcCUd/6kspKAp3zDwxEWCwE482mH3kBcJ1cao/shQC8U9817YESxG8k+sZZzlE3h32innMmz5Rtko9uQt@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSy0n46BwIqxNJgDuWLhM+pFetxVVjBOC0FzdWvjERHq+4Jqw3
-	s+18y0s5R6fLW/fpGp1R7HJH6V3F4uNRKWEkKEXZasqEDC3pW6YS3hRFy7MZeT4=
-X-Gm-Gg: ASbGncscbkeLAurrzSdn15hwCT5P0qOtgQVZdcweeMUK6vTAU0yyEaVqJb8G+sPKHPJ
-	qKtZRD6jsG5jZt/4GUJm6hmSI2Qu9iU2UaIGSWmJrsg6o0v+0e0Rks++1IlgueyOK4iWwotdZCW
-	YGpPK+/agaeiZt24eoUznZ6wiAwgdqjOiDKDGKz6nj++8i+GDpd3ASQ7BXUrMeM9WchXtCjCaNZ
-	qotzrCKUZ37ykOtplQ0sgcg0UfLcgkv67J0KHVJK1N3XTeyO1K/D97aDyBWXw==
-X-Google-Smtp-Source: AGHT+IEKKA4graFSHjqic7No2WQQs5z7AjXA66Y32ufFyWwCe5KXzQuwUPNJQ7n1GyPlo1MVe3Z4nQ==
-X-Received: by 2002:a05:600c:150c:b0:431:5aea:95f with SMTP id 5b1f17b1804b1-4366a0cf7e7mr532081855e9.16.1736253009178;
-        Tue, 07 Jan 2025 04:30:09 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43656b441bbsm627320025e9.40.2025.01.07.04.30.08
+        d=1e100.net; s=20230601; t=1736255423; x=1736860223;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=T66eNQvkCk8ULvCPWitWaVVqgBtMU9sicY2LjyOUOVo=;
+        b=mCbhKVhZP7nea2AXd3ig45ZH8j2l37jGTsaexU0uctzCVBCtPLdSOxLdF/cGzcRV8K
+         CTIbU/hb7Gp9RUWOGAAE+aJHr83hHH4fvxu4wdrX8dytAecc0ozsAmwo7eKHXFrObQzm
+         4fDnksGRvzuG5YYGuaQdib94N/QYNjbL0VSM/lygeps3gFGGY2ZU5SfCvsQPUHfGLc8X
+         jhHaX6FPEa0nztZspvBeQpgcnfgwkLwkAeOAKfy6nSpW7itkCLapBqLkl8iMeamkb3sy
+         a1CqsxGheoqFPQ0W2f+XzyooGnfFMauu97OAPuSUJgiqYezKq4EUGRvnoVkXPUO87kwR
+         gKgw==
+X-Forwarded-Encrypted: i=1; AJvYcCWrtop9YC9g7FQytvIfmqASbhezPAVUHEdmDMaHh5aVuba9G0ZIJUx15axGCOBci73ney9Qix8dMiTl@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSVpRrQ01wQsP+g8tFQlzcEs21K0Db/OA51CBFKwWLUEsPQH8f
+	Js4l+zDM7LtWyLhNrGdN8H/xTnyvcP8Hb+cQF35isreGzJfA5VK1sf27ljiKI5g=
+X-Gm-Gg: ASbGncsp1Az/CO85uomVeNdWHd6CyNHKcCn8b5iS/4FRmMbI+V3CrRIN1DQYADoxtw0
+	/TWqVRNRJkzoOoqXh7hsXXCdnH12pKj0go99Q3jmKU35271iSIuZGud7Y/yQaaoemHvA0jyqu5T
+	Knph91l78JGOSOt0vOagB+t9SRaAp6BP8c4xb4Gr/oCGDQiyxw3iLBX3p/Ue/IQES2dCmF0xwLV
+	fGPPFzYxJ4s9XK/t4jvhP3WSOhdcfumUAJj1TVB2JK/5ws40Zfxu4hc4bXFoH4tSHotCqs=
+X-Google-Smtp-Source: AGHT+IGJtRYkKYFK2PfPatv3vBYhYEZyX64bizP7nth8eSlErNUm+QXw16gIId4ACUxbkB0wlK9AkA==
+X-Received: by 2002:a5d:6d0f:0:b0:385:ebbf:8736 with SMTP id ffacd0b85a97d-38a223f7484mr20095420f8f.9.1736255422748;
+        Tue, 07 Jan 2025 05:10:22 -0800 (PST)
+Received: from krzk-bin.. ([178.197.223.165])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4366127c4bbsm593719505e9.32.2025.01.07.05.10.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jan 2025 04:30:08 -0800 (PST)
-Date: Tue, 7 Jan 2025 15:30:05 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
-	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
-	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v7 07/15] scsi: fnic: Add and integrate support for FDMI
-Message-ID: <4141c9ab-c640-4765-a23c-c2f64df687cb@stanley.mountain>
-References: <20241212020312.4786-1-kartilak@cisco.com>
- <20241212020312.4786-8-kartilak@cisco.com>
+        Tue, 07 Jan 2025 05:10:21 -0800 (PST)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH] dt-bindings: ufs: Correct indentation and style in DTS example
+Date: Tue,  7 Jan 2025 14:10:19 +0100
+Message-ID: <20250107131019.246517-1-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241212020312.4786-8-kartilak@cisco.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Dec 11, 2024 at 06:03:04PM -0800, Karan Tilak Kumar wrote:
-> @@ -612,6 +615,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	unsigned long flags;
->  	int hwq;
->  	char *desc, *subsys_desc;
-> +	int len;
+DTS example in the bindings should be indented with 2- or 4-spaces and
+aligned with opening '- |', so correct any differences like 3-spaces or
+mixtures 2- and 4-spaces in one binding.
 
-Do not introduce unnecessary levels of indirection.  Get rid of this len
-variable.
+No functional changes here, but saves some comments during reviews of
+new patches built on existing code.
 
->  
->  	/*
->  	 * Allocate SCSI Host and set up association between host,
-> @@ -646,9 +650,17 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	fnic_stats_debugfs_init(fnic);
->  
->  	/* Find model name from PCIe subsys ID */
-> -	if (fnic_get_desc_by_devid(pdev, &desc, &subsys_desc) == 0)
-> +	if (fnic_get_desc_by_devid(pdev, &desc, &subsys_desc) == 0) {
->  		dev_info(&fnic->pdev->dev, "Model: %s\n", subsys_desc);
-> -	else {
-> +
-> +		/* Update FDMI model */
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ .../devicetree/bindings/ufs/renesas,ufs.yaml  | 16 +++++------
+ .../bindings/ufs/samsung,exynos-ufs.yaml      | 28 +++++++++----------
+ 2 files changed, 22 insertions(+), 22 deletions(-)
 
-This comment adds no information.  Delete it.
+diff --git a/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml b/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+index f04f9f61fa9f..1949a15e73d2 100644
+--- a/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+@@ -50,12 +50,12 @@ examples:
+     #include <dt-bindings/power/r8a779f0-sysc.h>
+ 
+     ufs: ufs@e686000 {
+-            compatible = "renesas,r8a779f0-ufs";
+-            reg = <0xe6860000 0x100>;
+-            interrupts = <GIC_SPI 235 IRQ_TYPE_LEVEL_HIGH>;
+-            clocks = <&cpg CPG_MOD 1514>, <&ufs30_clk>;
+-            clock-names = "fck", "ref_clk";
+-            freq-table-hz = <200000000 200000000>, <38400000 38400000>;
+-            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+-            resets = <&cpg 1514>;
++        compatible = "renesas,r8a779f0-ufs";
++        reg = <0xe6860000 0x100>;
++        interrupts = <GIC_SPI 235 IRQ_TYPE_LEVEL_HIGH>;
++        clocks = <&cpg CPG_MOD 1514>, <&ufs30_clk>;
++        clock-names = "fck", "ref_clk";
++        freq-table-hz = <200000000 200000000>, <38400000 38400000>;
++        power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++        resets = <&cpg 1514>;
+     };
+diff --git a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
+index 720879820f66..b4e744ebffd1 100644
+--- a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
+@@ -112,19 +112,19 @@ examples:
+     #include <dt-bindings/clock/exynos7-clk.h>
+ 
+     ufs: ufs@15570000 {
+-       compatible = "samsung,exynos7-ufs";
+-       reg = <0x15570000 0x100>,
+-             <0x15570100 0x100>,
+-             <0x15571000 0x200>,
+-             <0x15572000 0x300>;
+-       reg-names = "hci", "vs_hci", "unipro", "ufsp";
+-       interrupts = <GIC_SPI 200 IRQ_TYPE_LEVEL_HIGH>;
+-       clocks = <&clock_fsys1 ACLK_UFS20_LINK>,
+-                <&clock_fsys1 SCLK_UFSUNIPRO20_USER>;
+-       clock-names = "core_clk", "sclk_unipro_main";
+-       pinctrl-names = "default";
+-       pinctrl-0 = <&ufs_rst_n &ufs_refclk_out>;
+-       phys = <&ufs_phy>;
+-       phy-names = "ufs-phy";
++        compatible = "samsung,exynos7-ufs";
++        reg = <0x15570000 0x100>,
++              <0x15570100 0x100>,
++              <0x15571000 0x200>,
++              <0x15572000 0x300>;
++        reg-names = "hci", "vs_hci", "unipro", "ufsp";
++        interrupts = <GIC_SPI 200 IRQ_TYPE_LEVEL_HIGH>;
++        clocks = <&clock_fsys1 ACLK_UFS20_LINK>,
++                 <&clock_fsys1 SCLK_UFSUNIPRO20_USER>;
++        clock-names = "core_clk", "sclk_unipro_main";
++        pinctrl-names = "default";
++        pinctrl-0 = <&ufs_rst_n &ufs_refclk_out>;
++        phys = <&ufs_phy>;
++        phy-names = "ufs-phy";
+     };
+ ...
+-- 
+2.43.0
 
-> +		fnic->subsys_desc_len = strlen(subsys_desc);
-
-Keep in mind that strlen() does not count the NUL-terminator.
-
-> +		len = ARRAY_SIZE(fnic->subsys_desc);
-
-Use sizeof() when you are talking about bytes or chars.  For snprintf() and
-other string functions, it's always sizeof() and never ARRAY_SIZE().
-
-> +		if (fnic->subsys_desc_len > len)
-> +			fnic->subsys_desc_len = len;
-> +		memcpy(fnic->subsys_desc, subsys_desc, fnic->subsys_desc_len);
-
-So this is an 0-14 character buffer.  If fnic->subsys_desc_len is set to 14,
-then the string is not NUL terminated.  This is how the buffer is used in
-fdls_fdmi_register_hba()
-
-	strscpy_pad(data, fnic->subsys_desc, FNIC_FDMI_MODEL_LEN);
-	data[FNIC_FDMI_MODEL_LEN - 1] = 0;
-
-This suggests that fnic->subsys_desc is expected to be NUL-terminated.
-However FNIC_FDMI_MODEL_LEN is 12.  So in that case the last 3 characters
-are removed.  LOL.  It's harmless but so very annoying.
-
-Also strscpy_pad() will ensure that data[FNIC_FDMI_MODEL_LEN - 1] is set
-to zero so that line could be deleted.
-
-regards,
-dan carpenter
