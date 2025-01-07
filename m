@@ -1,299 +1,238 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BB481F12F8;
-	Tue,  7 Jan 2025 13:57:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 540491F12F8
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 14:08:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736258242; cv=none; b=jBZHUh+Jp5fvoW7+x0/8TrD0I+w9TKN1uCTUfsjJnUFIHigYNXYcCIvNFnkXVPGNVXgqQVVniv1u65xTU/q4Iz6yYqcQ3Bw59hhPL5Y+pJw0zHVg6ZEZQadCrTo/GZGqaNBDrkbOL0L9PHmP4poh4vEfVcROUXk1tjPPVfPXX/M=
+	t=1736258887; cv=none; b=XxlgNbxc9izTnY+ix5GtmqAFlndpuY1XHdt8tGXxTFZSgrOaNTZjSoNSlIElK/KCPJh9Uk/83mOkOER6e/3rqV83VC1jNh082aOZOgh2YLWuoAJ4GP4X6ChBrtW0ZyXBm8qf4Q7AaudbpI+aKZ0k0/EWOZkqYHd8jmqbG4XrwP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736258242; c=relaxed/simple;
-	bh=9sFDOBQur3f5tBNr0wmawF+I1m57JmBRamz+mNTH6oo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=GlYG13jxlCbiLyuMp/t6Vuau/0p/fNJpASnDvl0UvoF/XIWrTx4nkfR02Fa2gCDFUFTgq84aKbWwygYKR0Qdaici7Vz/kP53Dc7AikZl5AcXsAJjhpC/cqKCp01MOcL0Ld0YBtacupOrIHIApDgOu8e2WitB/qjegUvK1h6PwXw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=jEjf4ch9; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1736258887; c=relaxed/simple;
+	bh=9h5jJAtJof99Jly7eSpiYE+fjffW1iQZpf3954k+0Ig=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=cKjXcMeAkx2ifOEiwKnoM7T1pPyhzhwRHEet4Uvd1TjRVqc24MZYxCrV+uMw6mWJ9va9lVgwp/gYLjyzZLKzXFsPsRZB5cTCa/dUiKjhbkPksttuB5y5YqZMdc4kbpnNxQ6a2cowQo30eXdKz2TC+hLWGwI1KRS2EDJGgGEwvok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ubQTfIIV; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="jEjf4ch9"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 507Afflo025761;
-	Tue, 7 Jan 2025 13:57:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	iSdzEm08lsBGc08NAggX/tt0VgwWKdoXo57PETNi5LY=; b=jEjf4ch9pBBXHabY
-	y5th0Dtoq052pJ2e1L4tEEx74KL8mziOgYljqIqVEgx/cq08eKxnxZ8eV7v8yy/5
-	ZyLwJ+N/4rspvjHnMPN2VKn3N3BCSz/M37PyfvhFN0SmA6Z4IN4F34Y7VgDkF0/L
-	H6tpftn1kEUTPvmW4vzV/xkVhLv4/MLnT8x3X7+QaRWC6/Hw9zncUmGXeBLCpnJz
-	Nm+j/KPo7T29xB5kywX3LMYgCygEwdrv+Fy2TaNoft95R8oDSo4F44xW6blEw4kt
-	cAgoqogWMA0vayegBSp0KoV+WtKV0p18QcrWa0trBEzRKR70yKbBWcBuER5mVlBn
-	3blJ9g==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4412r78eqd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 07 Jan 2025 13:56:59 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 507DuxvC027495
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 7 Jan 2025 13:56:59 GMT
-Received: from [10.218.43.20] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 7 Jan 2025
- 05:56:55 -0800
-Message-ID: <c0ae7ca0-6855-45ff-b466-7c1c312c760b@quicinc.com>
-Date: Tue, 7 Jan 2025 19:26:52 +0530
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ubQTfIIV"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4362bae4d7dso111642155e9.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jan 2025 06:08:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1736258883; x=1736863683; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=V0eMBMBHn0hE1R+X0qsZ45MfTkd1D6d9P2VREjyMP6I=;
+        b=ubQTfIIVZmN9gbKUN1KeCKJEkvuXYwuuEd/Hiz+b8biOEVBuJh7Z1MBHdJsPEyUhJL
+         15903Teb/1DOd6TJR7AC6m+YB2eptLQ47mCqFEiAcKk85UtBkQsYENAieR3PkAEe36yc
+         I8jFwV11YFyuIEO1cysiGfei1OPjUbu0oL2xMq/4qAG4sQ/b0Ea5kWN+lKfq48Xo6jTm
+         4B7e+MoRrL0uGwYwYBtY5cxOXRgird4whdXuW2WaFsCUWgsfVV9qCsd92WgYH5vxR+5z
+         juGDgUl7krx/6qsQ+0QJeUpAafn6ykh4G2Yk7Ef+dFRyoJxrF87OFbvgeOeAZLcBW+aN
+         k5dQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736258883; x=1736863683;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=V0eMBMBHn0hE1R+X0qsZ45MfTkd1D6d9P2VREjyMP6I=;
+        b=pqq7LvNFClHyq6cjf7p+x8dVXaH50SiuMhg6LtoBZqvw56jnqEmriEb/NeVeD+baQH
+         pjmCBYzGJjX9yTs781ng0AYrVNhkOYfHW03fKtVvCYF+7OcyDKLFC1medS928yxqK96e
+         diAvKr11ygzW+9frIUJBZ1GJE7lYVojYicGC5b7p6UbjawPp73D3LNpSUDw59b5zfndM
+         e3IyyvczjTjNMOzrXAkhrhloiY8bvCe7dCSD9ns4Sk0BDv/meQ5jXoihC70955wckE4N
+         tHDY5UKj25qA4+n04mIO6Yb11wEoy4hJJ3aw7MNVh+qLuVC94OINgIQRybPW6BRKdZg0
+         6M8g==
+X-Gm-Message-State: AOJu0Yx6xB9ACANLv3WLN6O7+sMS93cRJLTqUsSZwbpjFj3SVd6NTyz+
+	A672gjK0/9vvx8u6aTVGLLPjr+9p8TJiwQdnbLMWqXLElZsSJiaZ9KtSQrJFZa4=
+X-Gm-Gg: ASbGnctO/UmQ930zmCevjL++V4ROXROW7y1Kq6lSz0RYogTYMlnc4bXzeoJmA84U8x6
+	xZTILgJRNhUUH/7UubJLtDAOAi5TztM9dECl4tKLlht+RwyZLFkDnhhrl9o37KPr2ekQdL58Lfx
+	WupHkrvBVAI6PmAyJqHeeCyWkmGoHZvGDoCPSyaXHdQX4wBrbO9NuLxq7prIVoCRvuVWY2K5fKQ
+	qnpqOCUAwikLMqpSVejlQYrRR3p7N1xIDz7q8UH4pcH+NotuQh1lF4gX5wkvA==
+X-Google-Smtp-Source: AGHT+IGpOhD+J1ZZ5144ZbpcA/MVLZ2kdr/2oNRF+XT9QWpAGbrRi63YBBHGfx7MPN51Om1+cSitLw==
+X-Received: by 2002:a05:600c:470b:b0:434:f609:1afa with SMTP id 5b1f17b1804b1-43668547314mr519865235e9.4.1736258883373;
+        Tue, 07 Jan 2025 06:08:03 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43656b3b214sm639807115e9.28.2025.01.07.06.08.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jan 2025 06:08:02 -0800 (PST)
+Date: Tue, 7 Jan 2025 17:07:59 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: fnic: Add support for fabric based solicited
+ requests and responses
+Message-ID: <06645656-9445-4710-9646-7a2c147d1f51@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V8] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <andersson@kernel.org>, <bvanassche@acm.org>, <ebiggers@kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Naveen Kumar Goud Arepalli
-	<quic_narepall@quicinc.com>,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-References: <20241224154725.8127-1-quic_rdwivedi@quicinc.com>
- <20250106140203.2euwwch4hnjtfbzl@thinkpad>
-Content-Language: en-US
-From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-In-Reply-To: <20250106140203.2euwwch4hnjtfbzl@thinkpad>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: nG8GL77hXMsimDfac5S41yTGF6VNaSuq
-X-Proofpoint-ORIG-GUID: nG8GL77hXMsimDfac5S41yTGF6VNaSuq
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- mlxlogscore=999 malwarescore=0 mlxscore=0 clxscore=1015 spamscore=0
- suspectscore=0 phishscore=0 adultscore=0 impostorscore=0
- priorityscore=1501 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2411120000 definitions=main-2501070117
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hello Karan Tilak Kumar,
 
+Commit a63e78eb2b0f ("scsi: fnic: Add support for fabric based
+solicited requests and responses") from Dec 11, 2024 (linux-next),
+leads to the following Smatch static checker warning:
 
-On 06-Jan-25 7:32 PM, Manivannan Sadhasivam wrote:
-> On Tue, Dec 24, 2024 at 09:17:25PM +0530, Ram Kumar Dwivedi wrote:
->> By default, the UFS controller allocates a fixed number of RX
->> and TX engines statically. Consequently, when UFS reads are in
->> progress, the TX ICE engines remain idle, and vice versa.
->> This leads to inefficient utilization of RX and TX engines.
->>
->> To address this limitation, enable the UFS shared ICE feature for
->> Qualcomm UFS V5.0 and above. This feature utilizes a pool of crypto
->> cores for both TX streams (UFS Write – Encryption) and RX streams
->> (UFS Read – Decryption). With this approach, crypto cores are
->> dynamically allocated to either the RX or TX stream as needed.
->>
->> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
->> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
->> Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
->> ---
->> Changes from v7:
->> 1. Addressed Eric's comment to perform ice configuration only if
->>    UFSHCD_CAP_CRYPTO is enabled.
->>  
->> Changes from v6: 
->> 1. Addressed Eric's comment to replace is_ice_config_supported() helper
->>    function with a conditional check for UFS_QCOM_CAP_ICE_CONFIG.
->>
->> Changes from v5: 
->> 1. Addressed Bart's comment to declare the "val" variable with
->>    the "static" keyword.
->>
->> Changes from v4:
->> 1. Addressed Bart's comment to use get_unaligned_le32() instead of
->>    bit shifting and to declare val with the const keyword.
->>
->> Changes from v3:
->> 1. Addressed Bart's comment to change the data type of "config" to u32
->>    and "val" to uint8_t.
->>
->> Changes from v2:
->> 1. Refactored the code to have a single algorithm in the code and
->> enabled by default.
->> 2. Revised the commit message to incorporate the refactored change.
->> 3. Qcom host capabilities are now enabled in a separate function.
->>
->> Changes from v1:
->> 1. Addressed Rob's and Krzysztof's comment to fix dt binding compilation
->>    issue.
->> 2. Addressed Rob's comment to enable the nodes in example.
->> 3. Addressed Eric's comment to rephrase patch commit description.
->>    Used terminology as ICE allocator instead of ICE algorithm.
->> 4. Addressed Christophe's comment to align the comment as per kernel doc.
->> ---
->>  drivers/ufs/host/ufs-qcom.c | 38 ++++++++++++++++++++++++++++++++++
->>  drivers/ufs/host/ufs-qcom.h | 41 ++++++++++++++++++++++++++++++++++++-
->>  2 files changed, 78 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index 68040b2ab5f8..ffc67b5d5c3e 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -15,6 +15,7 @@
->>  #include <linux/platform_device.h>
->>  #include <linux/reset-controller.h>
->>  #include <linux/time.h>
->> +#include <linux/unaligned.h>
->>  
->>  #include <soc/qcom/ice.h>
->>  
->> @@ -105,6 +106,26 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
->>  }
->>  
->>  #ifdef CONFIG_SCSI_UFS_CRYPTO
->> +/**
->> + * ufs_qcom_config_ice_allocator() - ICE core allocator configuration
->> + *
->> + * @host: pointer to qcom specific variant structure.
->> + */
->> +static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
->> +{
->> +	struct ufs_hba *hba = host->hba;
->> +	static const uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
->> +	u32 config;
->> +
->> +	if (!(host->caps & UFS_QCOM_CAP_ICE_CONFIG) ||
->> +			!(host->hba->caps & UFSHCD_CAP_CRYPTO))
->> +		return;
->> +
->> +	config = get_unaligned_le32(val);
->> +
->> +	ufshcd_writel(hba, ICE_ALLOCATOR_TYPE, REG_UFS_MEM_ICE_CONFIG);
->> +	ufshcd_writel(hba, config, REG_UFS_MEM_ICE_NUM_CORE);
->> +}
->>  
->>  static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
->>  {
->> @@ -196,6 +217,11 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
->>  {
->>  	return 0;
->>  }
->> +
->> +static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
->> +{
->> +}
->> +
->>  #endif
->>  
->>  static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
->> @@ -435,6 +461,8 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
->>  		err = ufs_qcom_enable_lane_clks(host);
->>  		break;
->>  	case POST_CHANGE:
->> +		ufs_qcom_config_ice_allocator(host);
->> +
-> 
-> Any reason why this is not paired with ufs_qcom_ice_enable() below?
-Hi Mani,
+	drivers/scsi/fnic/fnic_main.c:907 fnic_probe()
+	warn: missing error code 'err'
 
-I have addressed this in the latest patchset.
+drivers/scsi/fnic/fnic_main.c
+    866 
+    867         err = fnic_alloc_vnic_resources(fnic);
+    868         if (err) {
+    869                 dev_err(&fnic->pdev->dev, "Failed to alloc vNIC resources, "
+    870                              "aborting.\n");
+    871                 goto err_out_fnic_alloc_vnic_res;
+    872         }
+    873         dev_info(&fnic->pdev->dev, "fnic copy wqs: %d, Q0 ioreq table size: %d\n",
+    874                         fnic->wq_copy_count, fnic->sw_copy_wq[0].ioreq_table_size);
+    875 
+    876         /* initialize all fnic locks */
+    877         spin_lock_init(&fnic->fnic_lock);
+    878 
+    879         for (i = 0; i < FNIC_WQ_MAX; i++)
+    880                 spin_lock_init(&fnic->wq_lock[i]);
+    881 
+    882         for (i = 0; i < FNIC_WQ_COPY_MAX; i++) {
+    883                 spin_lock_init(&fnic->wq_copy_lock[i]);
+    884                 fnic->wq_copy_desc_low[i] = DESC_CLEAN_LOW_WATERMARK;
+    885                 fnic->fw_ack_recd[i] = 0;
+    886                 fnic->fw_ack_index[i] = -1;
+    887         }
+    888 
+    889         pool = mempool_create_slab_pool(2, fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
+    890         if (!pool)
+    891                 goto err_out_free_resources;
 
-Thanks,
-Ram.
-> 
->>  		/* check if UFS PHY moved from DISABLED to HIBERN8 */
->>  		err = ufs_qcom_check_hibern8(hba);
->>  		ufs_qcom_enable_hw_clk_gating(hba);
->> @@ -932,6 +960,14 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
->>  	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
->>  }
->>  
->> +static void ufs_qcom_set_host_caps(struct ufs_hba *hba)
->> +{
->> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> +
->> +	if (host->hw_ver.major >= 0x5)
->> +		host->caps |= UFS_QCOM_CAP_ICE_CONFIG;
->> +}
->> +
->>  static void ufs_qcom_set_caps(struct ufs_hba *hba)
->>  {
->>  	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
->> @@ -940,6 +976,8 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
->>  	hba->caps |= UFSHCD_CAP_WB_EN;
->>  	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->>  	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
->> +
->> +	ufs_qcom_set_host_caps(hba);
->>  }
->>  
->>  /**
->> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
->> index b9de170983c9..92e2278b6a54 100644
->> --- a/drivers/ufs/host/ufs-qcom.h
->> +++ b/drivers/ufs/host/ufs-qcom.h
->> @@ -196,7 +196,8 @@ struct ufs_qcom_host {
->>  #ifdef CONFIG_SCSI_UFS_CRYPTO
->>  	struct qcom_ice *ice;
->>  #endif
->> -
->> +	#define UFS_QCOM_CAP_ICE_CONFIG BIT(0)
-> 
-> Do not place definition inside struct.
-Hi Mani,
+err = -ENOMEM;
 
-I have addressed this in the latest patchset.
+    892         fnic->io_sgl_pool[FNIC_SGL_CACHE_DFLT] = pool;
+    893 
+    894         pool = mempool_create_slab_pool(2, fnic_sgl_cache[FNIC_SGL_CACHE_MAX]);
+    895         if (!pool)
+    896                 goto err_out_free_dflt_pool;
 
-Thanks,
-Ram.
+err = -ENOMEM;
 
-> 
->> +	u32 caps;
->>  	void __iomem *dev_ref_clk_ctrl_mmio;
->>  	bool is_dev_ref_clk_enabled;
->>  	struct ufs_hw_version hw_ver;
->> @@ -226,6 +227,44 @@ ufs_qcom_get_debug_reg_offset(struct ufs_qcom_host *host, u32 reg)
->>  	return UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(reg);
->>  };
->>  
->> +#ifdef CONFIG_SCSI_UFS_CRYPTO
-> 
-> This guard is strictly not needed.
+    897         fnic->io_sgl_pool[FNIC_SGL_CACHE_MAX] = pool;
+    898 
+    899         pool = mempool_create_slab_pool(FDLS_MIN_FRAMES, fdls_frame_cache);
+    900         if (!pool)
+    901                 goto err_out_fdls_frame_pool;
 
-Hi Mani,
+err = -ENOMEM;
 
-The ufs shared ice functionality needs to be enabled only when crypto is enabled. 
-Hence we are guarding it.
+    902         fnic->frame_pool = pool;
+    903 
+    904         pool = mempool_create_slab_pool(FDLS_MIN_FRAME_ELEM,
+    905                                                 fdls_frame_elem_cache);
+    906         if (!pool)
+--> 907                 goto err_out_fdls_frame_elem_pool;
 
-Thanks,
-Ram.
+err = -ENOMEM;
 
+regards,
+dan carpenter
 
+    908         fnic->frame_elem_pool = pool;
+    909 
+    910         /* setup vlan config, hw inserts vlan header */
+    911         fnic->vlan_hw_insert = 1;
+    912         fnic->vlan_id = 0;
+    913 
+    914         if (fnic->config.flags & VFCF_FIP_CAPABLE) {
+    915                 dev_info(&fnic->pdev->dev, "firmware supports FIP\n");
+    916                 /* enable directed and multicast */
+    917                 vnic_dev_packet_filter(fnic->vdev, 1, 1, 0, 0, 0);
+    918                 vnic_dev_add_addr(fnic->vdev, FIP_ALL_ENODE_MACS);
+    919                 vnic_dev_add_addr(fnic->vdev, iport->hwmac);
+    920                 spin_lock_init(&fnic->vlans_lock);
+    921                 INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
+    922                 INIT_LIST_HEAD(&fnic->fip_frame_queue);
+    923                 INIT_LIST_HEAD(&fnic->vlan_list);
+    924                 timer_setup(&fnic->retry_fip_timer, fnic_handle_fip_timer, 0);
+    925                 timer_setup(&fnic->fcs_ka_timer, fnic_handle_fcs_ka_timer, 0);
+    926                 timer_setup(&fnic->enode_ka_timer, fnic_handle_enode_ka_timer, 0);
+    927                 timer_setup(&fnic->vn_ka_timer, fnic_handle_vn_ka_timer, 0);
+    928                 fnic->set_vlan = fnic_set_vlan;
+    929         } else {
+    930                 dev_info(&fnic->pdev->dev, "firmware uses non-FIP mode\n");
+    931         }
+    932         fnic->state = FNIC_IN_FC_MODE;
+    933 
+    934         atomic_set(&fnic->in_flight, 0);
+    935         fnic->state_flags = FNIC_FLAGS_NONE;
+    936 
+    937         /* Enable hardware stripping of vlan header on ingress */
+    938         fnic_set_nic_config(fnic, 0, 0, 0, 0, 0, 0, 1);
+    939 
+    940         /* Setup notification buffer area */
+    941         err = fnic_notify_set(fnic);
+    942         if (err) {
+    943                 dev_err(&fnic->pdev->dev, "Failed to alloc notify buffer, aborting.\n");
+    944                 goto err_out_fnic_notify_set;
+    945         }
+    946 
 
-> 
->> +
->> +/* ICE configuration to share AES engines among TX stream and RX stream */
->> +#define ICE_ALLOCATOR_TYPE 2
->> +#define REG_UFS_MEM_ICE_CONFIG 0x260C
->> +#define REG_UFS_MEM_ICE_NUM_CORE  0x2664
-> 
-> These register definitions should go inside the enum at the top of this file.
-> 
-> Also move other ICE definitions above REG_UFS_CFG2_CGC_EN_ALL to align with
-> other register definitions.
+[ snip ]
 
-Hi Mani,
+    1048 
+    1049         return 0;
+    1050 
+    1051 err_out_free_stats_debugfs:
+    1052         fnic_stats_debugfs_remove(fnic);
+    1053         scsi_remove_host(fnic->host);
+    1054 err_out_scsi_drv_init:
+    1055         fnic_free_intr(fnic);
+    1056 err_out_fnic_request_intr:
+    1057 err_out_alloc_rq_buf:
+    1058         for (i = 0; i < fnic->rq_count; i++) {
+    1059                 if (ioread32(&fnic->rq[i].ctrl->enable))
+    1060                         vnic_rq_disable(&fnic->rq[i]);
+    1061                 vnic_rq_clean(&fnic->rq[i], fnic_free_rq_buf);
+    1062         }
+    1063         vnic_dev_notify_unset(fnic->vdev);
+    1064 err_out_fnic_notify_set:
+    1065         mempool_destroy(fnic->frame_elem_pool);
+    1066 err_out_fdls_frame_elem_pool:
+    1067         mempool_destroy(fnic->frame_pool);
+    1068 err_out_fdls_frame_pool:
+    1069         mempool_destroy(fnic->io_sgl_pool[FNIC_SGL_CACHE_MAX]);
+    1070 err_out_free_dflt_pool:
+    1071         mempool_destroy(fnic->io_sgl_pool[FNIC_SGL_CACHE_DFLT]);
+    1072 err_out_free_resources:
+    1073         fnic_free_vnic_resources(fnic);
+    1074 err_out_fnic_alloc_vnic_res:
+    1075         fnic_clear_intr_mode(fnic);
+    1076 err_out_fnic_set_intr_mode:
+    1077         if (IS_FNIC_FCP_INITIATOR(fnic))
+    1078                 scsi_host_put(fnic->host);
+    1079 err_out_fnic_role:
+    1080 err_out_scsi_host_alloc:
+    1081 err_out_fnic_get_config:
+    1082 err_out_dev_mac_addr:
+    1083 err_out_dev_init:
+    1084         vnic_dev_close(fnic->vdev);
+    1085 err_out_dev_open:
+    1086 err_out_dev_cmd_init:
+    1087         vnic_dev_unregister(fnic->vdev);
+    1088 err_out_dev_register:
+    1089         fnic_iounmap(fnic);
+    1090 err_out_fnic_map_bar:
+    1091 err_out_map_bar:
+    1092 err_out_set_dma_mask:
+    1093         pci_release_regions(pdev);
+    1094 err_out_pci_request_regions:
+    1095         pci_disable_device(pdev);
+    1096 err_out_pci_enable_device:
+    1097         ida_free(&fnic_ida, fnic->fnic_num);
+    1098 err_out_ida_alloc:
+    1099         kfree(fnic);
+    1100 err_out_fnic_alloc:
+    1101         return err;
+    1102 }
 
-I have addressed this in the latest patchset.
-
-Thanks,
-Ram.
-> 
-> - Mani
-> 
-
+regards,
+dan carpenter
