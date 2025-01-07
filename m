@@ -1,111 +1,71 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4F6FD1F429A;
-	Tue,  7 Jan 2025 17:28:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF0B1898F8
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jan 2025 17:50:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736270936; cv=none; b=ou3nBpPWZ2na4OASOD9l0fO7gMehxd4fDPkreRzQilqSw7IFajaBDK9ic3ZosahAsGhG8/KXeoJCOgVlj+oRRaS4VcNgj3LPcE7HioDGkyfh6IFsqUZfuypgXyZpsLkBI55/NJWEEwvSCa03BMsynCzJjNc8QO8d49tu+5aZOAQ=
+	t=1736272225; cv=none; b=rdZlllbU4E/yYJYq0dvMy1fcZYcqvHHLc80zYBRJdZzD+TGpZu4GO3n5slaBgdVTes/sHZzQYNvOZ53Ne9jA0S0sC0ujHn/OsdwR3akOLMoFx6QpRf+5oXE/OHO9dr5EJjZqX8Vwn4ilqqswBDUoMtE0OxIlbiploAiMEOgiU5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736270936; c=relaxed/simple;
-	bh=TisQnCmmSL0Nfk54fDb9nFoo1EhZB2GRxYFF9PdNH/E=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=o1rkgeKhNJPIW208wUgGIvwJQnjEqfGPbFlmdpFVOBbRDKfeitHn2ueVun1D3/eL8SomPK37lBjHjVFt2zj8tEoLZ/wngVa1ZxR/YmnOsUI8FbAovV4fnX8vAk8xQ1Jh4DI3TbY/YHp8C1X+bmDSyR+oWwxkpv0jZaJWUEHHdMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=O/bl6gzR; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1736272225; c=relaxed/simple;
+	bh=CdOd06Hrglkv4hyGlHbKCF6KmQxd6PSX9bH6KdnpXiU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZQyR26uJBEF8YcR75VdYFgHRanAmX88hd5pJ0Wn20H9E96KXTbkyjr2gM7p8xVZSW359XwHaD3QMpAAi0I5abuQyzicXh1eREbGpz0QTVfc11Goa8RCfS/3mbvj6JJJrdMYeHHpOL766/SQi2zEMMPODHU7bOXf2HiJS6eSwBsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Qrrf/Coi; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="O/bl6gzR"
-Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E6D8E206AB9F;
-	Tue,  7 Jan 2025 09:28:54 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E6D8E206AB9F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1736270935;
-	bh=6I+kWiGEEYc47l6CYP9wmZuo3hMSP2dj+LxZQBdvPaE=;
-	h=From:Date:Subject:To:Cc:From;
-	b=O/bl6gzRhfW5wPtxlsVm/wXqymoD+uPkJ6TMZw6QNIXGHHZdKWtsyAGkEheew8Swi
-	 cJsvWMqo8AFDx1koQaR28qefA0recAj01LoEqqLa4V3r/yVqJYk4UKTngQh583poi2
-	 n2eT9fvgek1xzu4cV938dJInqPiOJTdL7jSlz344=
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 07 Jan 2025 17:28:40 +0000
-Subject: [PATCH] scsi: storvsc: Ratelimit warning logs to prevent VM denial
- of service
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Qrrf/Coi"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YSJVP4lJnz6ClY91;
+	Tue,  7 Jan 2025 17:50:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1736272219; x=1738864220; bh=CdOd06Hrglkv4hyGlHbKCF6K
+	mQxd6PSX9bH6KdnpXiU=; b=Qrrf/Coio5/seZkoCI6CkXY/gzceu8pCgcXVSF84
+	R9C2rd3jYhAT1fI3uEFjlSbbr6ySxcW0Hzmq1t4MkRWF5M3RbWrbSB69uMVQi44X
+	1RHQ5l767xcnwnZxepsbsDTzG/CoMzDLYP1r5NvBzweDQU9giLjWMeZrZLsWjhA1
+	GbwU15ACkc97VCwyPdijFZC9FTV3vjp9CfqNH7lnjpHL/vngsuAxoj990VfW9xC8
+	BIwFTlfxcVdButdhr2qDS6nQU4yQp+fNm67K8TO36/e859o7GJpj+NFiRa+BTNi+
+	kZDd+rCJ5gpqZUflfy1vz/l88G5+MSYRqQ0hSmnoMZs+bw==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id VV9vSaAsweWR; Tue,  7 Jan 2025 17:50:19 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YSJVM11JMz6ClY8x;
+	Tue,  7 Jan 2025 17:50:18 +0000 (UTC)
+Message-ID: <23cab973-d189-40c8-b843-a135378386d7@acm.org>
+Date: Tue, 7 Jan 2025 09:50:18 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: scsi_debug: Constify sdebug_driver_template
+To: John Garry <john.g.garry@oracle.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
+References: <20250107153325.1689432-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250107153325.1689432-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250107-eahariha-ratelimit-storvsc-v1-1-7fc193d1f2b0@linux.microsoft.com>
-X-B4-Tracking: v=1; b=H4sIAEdkfWcC/x3MwQqDMAwA0F+RnBeorcLwV2SHzKVrYGslKSKI/
- 27x+C7vAGMVNpi6A5Q3MSm5oX90sCTKX0b5NIN3fuidD8iUSCURKlX+yV8qWi262YLvEHkM0Xk
- an9CCVTnKfufz6zwvAhRLeGwAAAA=
-X-Change-ID: 20241023-eahariha-ratelimit-storvsc-b3fe53f02a58
-To: "K. Y. Srinivasan" <kys@microsoft.com>, 
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
- Dexuan Cui <decui@microsoft.com>, Long Li <longli@linux.microsoft.com>, 
- Long Li <longli@microsoft.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mitchell Levy <levymitchell0@gmail.com>, 
- Mitchell Levy <mitchelllevy@linux.microsoft.com>, 
- linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-kernel@vger.kernel.org, 
- Vijay Balakrishna <vijayb@linux.microsoft.com>, 
- Easwar Hariharan <eahariha@linux.microsoft.com>
-X-Mailer: b4 0.14.2
 
-If there's a persistent error in the hypervisor, the scsi warning for
-failed IO can flood the kernel log and max out CPU utilization,
-preventing troubleshooting from the VM side. Ratelimit the warning so
-it doesn't DOS the VM.
+On 1/7/25 7:33 AM, John Garry wrote:
+> It's better to have sdebug_driver_template as const, so update the probe
+> path to set the shost members directly after allocation and make that
+> change.
 
-Closes: https://github.com/microsoft/WSL/issues/9173
-Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
----
-If there's a persistent error in the hypervisor, the scsi warning for
-failed IO can overwhelm the kernel log and max out CPU utilization,
-preventing troubleshooting. Ratelimit the warning so it doesn't DOS the
-VM.
+The patch description does not explain why 'const' is better. Anyway:
 
-This is not super critical and can be deferred to an 6.14 rc since it
-mostly occurs when there's a problem with the host disk or filesystem.
----
- drivers/scsi/storvsc_drv.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 45665d4aca925a10ce4293edf40cebdc4d4997f2..5a101ac06c478aad9b01072e7a6c5af48219f5c8 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -171,6 +171,12 @@ do {								\
- 		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
- } while (0)
- 
-+#define storvsc_log_ratelimited(dev, level, fmt, ...)				\
-+do {										\
-+	if (do_logging(level))							\
-+		dev_warn_ratelimited(&(dev)->device, fmt, ##__VA_ARGS__);	\
-+} while (0)
-+
- struct vmscsi_request {
- 	u16 length;
- 	u8 srb_status;
-@@ -1176,7 +1182,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 		int loglevel = (stor_pkt->vm_srb.cdb[0] == TEST_UNIT_READY) ?
- 			STORVSC_LOGGING_WARN : STORVSC_LOGGING_ERROR;
- 
--		storvsc_log(device, loglevel,
-+		storvsc_log_ratelimited(device, loglevel,
- 			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x hv 0x%x\n",
- 			scsi_cmd_to_rq(request->cmd)->tag,
- 			stor_pkt->vm_srb.cdb[0],
-
----
-base-commit: 4e16367cfe0ce395f29d0482b78970cce8e1db73
-change-id: 20241023-eahariha-ratelimit-storvsc-b3fe53f02a58
-
-Best regards,
--- 
-Easwar Hariharan <eahariha@linux.microsoft.com>
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
