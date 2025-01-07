@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83CEC1DE8AA;
-	Tue,  7 Jan 2025 06:31:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352DA1DF963;
+	Tue,  7 Jan 2025 06:31:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736231495; cv=none; b=ed1pOwSoTUKAeYXWmcNKGg6og1BbiggDJQ2uuh2RCCldv5DAoctK3xd8Fx+A4hvEbxmgm623Jdc62Exd1Y1XEW0LouLRSCbIoYnUlM0U+CRG9OIdGTQKegVmnKwtdxK/27V2CijtE9/h3uuqhI2ZIKEAaRQ8gMCwWF52V+bP1Q8=
+	t=1736231499; cv=none; b=GVJ/we9n42WydKM/he31GpLF/P0GakdTjZeaDXU19VFanXp+dz+53FHsaUDE3Vd9WL0H4Ua6BDSOyNjJ2DDPCZOEySYgH1xb+QFnYZs1823DBse3lsAXyV0wfLXXlnvI6Qev0Hr5b6khoFD3qko1wlwNXwt2yLO8Zihdgz719Kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736231495; c=relaxed/simple;
-	bh=MCQSR0weS3mvFYyac14o1qa2VzluI8UiQyUzor9bU1M=;
+	s=arc-20240116; t=1736231499; c=relaxed/simple;
+	bh=5ygCuy5pBLUtxArT6HTCVgBD7BvHfhuK86/FBp7gSQY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xg5IacA3drVnvfx2mZg2Nb3aKntniMn47p3UEUod2J5oo9zN9GDBlwk4cc7uPpCcIHHbl10drKVJLEvyD8dN8JzI5upnC92zk2HH1YZvb5EzAfZHbELrpYZObhVHgsL8p194HS8RQ82A2mWaPT+Qy8y0gDzaS0a8uLTMM4I/Fsw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fr+rWfYm; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=Gqe+PBhTFSveNYLuB8zehR3DjNcSZF3ygCDBTq1eSe9Ze/4Q8hr7kYxO/V2IYz8iURwphMVYBaNo9kZYIFXO6RxdPSwRe5RS/Y1c4kog4wBQ+nPWifoG2+VPqeJ8rxuQ/vtNRvv6qt9ZQsZSYH6TeE3lwbbRL3YDUNUzwp40bTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=n2iN6rsN; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fr+rWfYm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n2iN6rsN"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=AXp5b/SaMnyr0NyPtwbboGVI2AIHtcycWI2fx/lObGg=; b=fr+rWfYmj7G6ACym0YWWlsQ0Ph
-	IkNVsqpobp/n0St6Mh9CbtLpeqPVoNc6p8TlqxR0gLfIkoJlxKVLAqYH9oW5kxUNeZ9MvFRQAaaSK
-	+IykUYe4VC8t3oI567zL34ndDbLs3e92I8rgXuH1ZeQT1pBvKOQZYn+ewbZz1DkjDjFuCLUwL7jo1
-	8fBTZ1Vlqpzjf3iv6JxSL4R0zy79QdbrnrLCqdEES6wFugCXo3ecLqfWWj275WxJXsgeRzyTBuHh4
-	evpJ5cdIW6dhm/kcPCRSXKIExg6hnXno6FpiLiLF0n24JhagD2J4ygP9nz86ottKC1Pfqhd4cLnPH
-	2DpVB2gQ==;
+	bh=td9hXTRm3bIkt4nDSZFirDvnCCVcnWUnxIQRddOHupE=; b=n2iN6rsN9kQji3Ytgvqk1+j8fv
+	APZ4d715CYM4l44UrYft9K7Ei3RG2I4aKt7azWRNqHWJqJ7TyKa/kMV2ai8bjW2C3W1LaJT1/9h7m
+	VRdtd8VGpNL4sLB6JC7jG0/dHbYcNe/Uz/+DLAgnwXxRCUA2YZFO97LZIAGlhdfpA80EqKIiFiNvo
+	jgoXbYGP+XdSPQD1KAZUtaCGf4CTB2YtdKElxDAJO1i+Myzj5+KQO+P20l17KxTeJ0yjIdH6GGKOL
+	DOx+UqJHcYywf8VJV8aHSzt5BeLgN3oO779GENncgJbxph92Y6Jnq9ljGT9TpfekXax6okmUhuFjK
+	kAg9vjdQ==;
 Received: from 2a02-8389-2341-5b80-d467-d75d-35bf-0eb6.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d467:d75d:35bf:eb6] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tV37g-00000003dqF-3fMc;
-	Tue, 07 Jan 2025 06:31:29 +0000
+	id 1tV37j-00000003ds7-1Qz0;
+	Tue, 07 Jan 2025 06:31:31 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -40,9 +40,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	nbd@other.debian.org,
 	linux-scsi@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 2/8] block: add a queue_limits_commit_update_frozen helper
-Date: Tue,  7 Jan 2025 07:30:34 +0100
-Message-ID: <20250107063120.1011593-3-hch@lst.de>
+Subject: [PATCH 3/8] block: don't update BLK_FEAT_POLL in __blk_mq_update_nr_hw_queues
+Date: Tue,  7 Jan 2025 07:30:35 +0100
+Message-ID: <20250107063120.1011593-4-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250107063120.1011593-1-hch@lst.de>
 References: <20250107063120.1011593-1-hch@lst.de>
@@ -55,189 +55,115 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Add a helper that freezes the queue, updates the queue limits and
-unfreezes the queue and convert all open coded versions of that to the
-new helper.
+When __blk_mq_update_nr_hw_queues changes the number of tag sets, it
+might have to disable poll queues.  Currently it does so by adjusting
+the BLK_FEAT_POLL, which is a bit against the intent of features that
+describe hardware / driver capabilities, but more importantly causes
+nasty lock order problems with the broadly held freeze when updating the
+number of hardware queues and the limits lock.  Fix this by leaving
+BLK_FEAT_POLL alone, and instead check for the number of poll queues in
+the bio submission and poll handlers.  While this adds extra work to the
+fast path, the variables are in cache lines used by these operations
+anyway, so it should be cheap enough.
 
+Fixes: 8023e144f9d6 ("block: move the poll flag to queue_limits")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-integrity.c      |  4 +---
- block/blk-settings.c       | 24 ++++++++++++++++++++++++
- block/blk-zoned.c          |  7 +------
- drivers/block/virtio_blk.c |  4 +---
- drivers/scsi/sd.c          | 17 +++++------------
- drivers/scsi/sr.c          |  5 +----
- include/linux/blkdev.h     |  2 ++
- 7 files changed, 35 insertions(+), 28 deletions(-)
+ block/blk-core.c | 17 ++++++++++++++---
+ block/blk-mq.c   | 17 +----------------
+ 2 files changed, 15 insertions(+), 19 deletions(-)
 
-diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-index b180cac61a9d..013469faa5e7 100644
---- a/block/blk-integrity.c
-+++ b/block/blk-integrity.c
-@@ -218,9 +218,7 @@ static ssize_t flag_store(struct device *dev, const char *page, size_t count,
- 	else
- 		lim.integrity.flags |= flag;
- 
--	blk_mq_freeze_queue(q);
--	err = queue_limits_commit_update(q, &lim);
--	blk_mq_unfreeze_queue(q);
-+	err = queue_limits_commit_update_frozen(q, &lim);
- 	if (err)
- 		return err;
- 	return count;
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index b6b8c580d018..2afc67182efd 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -444,6 +444,30 @@ int queue_limits_commit_update(struct request_queue *q,
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 666efe8fa202..bd5bec843d37 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -753,6 +753,18 @@ static blk_status_t blk_validate_atomic_write_op_size(struct request_queue *q,
+ 	return BLK_STS_OK;
  }
- EXPORT_SYMBOL_GPL(queue_limits_commit_update);
  
-+/**
-+ * queue_limits_commit_update_frozen - commit an atomic update of queue limits
-+ * @q:		queue to update
-+ * @lim:	limits to apply
-+ *
-+ * Apply the limits in @lim that were obtained from queue_limits_start_update()
-+ * and updated by the caller to @q.  Freezes the queue before the updated and
-+ * unfreezes it after.
-+ *
-+ * Returns 0 if successful, else a negative error code.
-+ */
-+int queue_limits_commit_update_frozen(struct request_queue *q,
-+		struct queue_limits *lim)
++static bool bdev_can_poll(struct block_device *bdev)
 +{
-+	int ret;
++	struct request_queue *q = bdev_get_queue(bdev);
 +
-+	blk_mq_freeze_queue(q);
-+	ret = queue_limits_commit_update(q, lim);
-+	blk_mq_unfreeze_queue(q);
++	if (!(q->limits.features & BLK_FEAT_POLL))
++		return false;
 +
-+	return ret;
++	if (queue_is_mq(q))
++		return q->tag_set->map[HCTX_TYPE_POLL].nr_queues;
++	return true;
 +}
-+EXPORT_SYMBOL_GPL(queue_limits_commit_update_frozen);
 +
  /**
-  * queue_limits_set - apply queue limits to queue
-  * @q:		queue to update
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 4b0be40a8ea7..9d08a54c201e 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -1444,7 +1444,6 @@ static int disk_update_zone_resources(struct gendisk *disk,
- 	unsigned int nr_seq_zones, nr_conv_zones;
- 	unsigned int pool_size;
- 	struct queue_limits lim;
--	int ret;
- 
- 	disk->nr_zones = args->nr_zones;
- 	disk->zone_capacity = args->zone_capacity;
-@@ -1495,11 +1494,7 @@ static int disk_update_zone_resources(struct gendisk *disk,
+  * submit_bio_noacct - re-submit a bio to the block device layer for I/O
+  * @bio:  The bio describing the location in memory and on the device.
+@@ -805,8 +817,7 @@ void submit_bio_noacct(struct bio *bio)
+ 		}
  	}
  
- commit:
--	blk_mq_freeze_queue(q);
--	ret = queue_limits_commit_update(q, &lim);
--	blk_mq_unfreeze_queue(q);
+-	if (!(q->limits.features & BLK_FEAT_POLL) &&
+-			(bio->bi_opf & REQ_POLLED)) {
++	if ((bio->bi_opf & REQ_POLLED) && !bdev_can_poll(bdev)) {
+ 		bio_clear_polled(bio);
+ 		goto not_supported;
+ 	}
+@@ -935,7 +946,7 @@ int bio_poll(struct bio *bio, struct io_comp_batch *iob, unsigned int flags)
+ 		return 0;
+ 
+ 	q = bdev_get_queue(bdev);
+-	if (cookie == BLK_QC_T_NONE || !(q->limits.features & BLK_FEAT_POLL))
++	if (cookie == BLK_QC_T_NONE || !bdev_can_poll(bdev))
+ 		return 0;
+ 
+ 	blk_flush_plug(current->plug, false);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 2e6132f778fd..f795d81b6b38 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -4320,12 +4320,6 @@ void blk_mq_release(struct request_queue *q)
+ 	blk_mq_sysfs_deinit(q);
+ }
+ 
+-static bool blk_mq_can_poll(struct blk_mq_tag_set *set)
+-{
+-	return set->nr_maps > HCTX_TYPE_POLL &&
+-		set->map[HCTX_TYPE_POLL].nr_queues;
+-}
 -
--	return ret;
-+	return queue_limits_commit_update_frozen(q, &lim);
- }
+ struct request_queue *blk_mq_alloc_queue(struct blk_mq_tag_set *set,
+ 		struct queue_limits *lim, void *queuedata)
+ {
+@@ -4336,7 +4330,7 @@ struct request_queue *blk_mq_alloc_queue(struct blk_mq_tag_set *set,
+ 	if (!lim)
+ 		lim = &default_lim;
+ 	lim->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT;
+-	if (blk_mq_can_poll(set))
++	if (set->nr_maps > HCTX_TYPE_POLL)
+ 		lim->features |= BLK_FEAT_POLL;
  
- static int blk_revalidate_conv_zone(struct blk_zone *zone, unsigned int idx,
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 71a7ffeafb32..bbaa26b523b8 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -1105,9 +1105,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 		lim.features |= BLK_FEAT_WRITE_CACHE;
- 	else
- 		lim.features &= ~BLK_FEAT_WRITE_CACHE;
--	blk_mq_freeze_queue(disk->queue);
--	i = queue_limits_commit_update(disk->queue, &lim);
--	blk_mq_unfreeze_queue(disk->queue);
-+	i = queue_limits_commit_update_frozen(disk->queue, &lim);
- 	if (i)
- 		return i;
- 	return count;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8947dab132d7..af62a8ed8620 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -177,9 +177,8 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 	q = blk_alloc_queue(lim, set->numa_node);
+@@ -5024,8 +5018,6 @@ static void __blk_mq_update_nr_hw_queues(struct blk_mq_tag_set *set,
+ fallback:
+ 	blk_mq_update_queue_map(set);
+ 	list_for_each_entry(q, &set->tag_list, tag_set_list) {
+-		struct queue_limits lim;
+-
+ 		blk_mq_realloc_hw_ctxs(set, q);
  
- 		lim = queue_limits_start_update(sdkp->disk->queue);
- 		sd_set_flush_flag(sdkp, &lim);
--		blk_mq_freeze_queue(sdkp->disk->queue);
--		ret = queue_limits_commit_update(sdkp->disk->queue, &lim);
--		blk_mq_unfreeze_queue(sdkp->disk->queue);
-+		ret = queue_limits_commit_update_frozen(sdkp->disk->queue,
-+				&lim);
- 		if (ret)
- 			return ret;
- 		return count;
-@@ -483,9 +482,7 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
+ 		if (q->nr_hw_queues != set->nr_hw_queues) {
+@@ -5039,13 +5031,6 @@ static void __blk_mq_update_nr_hw_queues(struct blk_mq_tag_set *set,
+ 			set->nr_hw_queues = prev_nr_hw_queues;
+ 			goto fallback;
+ 		}
+-		lim = queue_limits_start_update(q);
+-		if (blk_mq_can_poll(set))
+-			lim.features |= BLK_FEAT_POLL;
+-		else
+-			lim.features &= ~BLK_FEAT_POLL;
+-		if (queue_limits_commit_update(q, &lim) < 0)
+-			pr_warn("updating the poll flag failed\n");
+ 		blk_mq_map_swqueue(q);
+ 	}
  
- 	lim = queue_limits_start_update(sdkp->disk->queue);
- 	sd_config_discard(sdkp, &lim, mode);
--	blk_mq_freeze_queue(sdkp->disk->queue);
--	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
--	blk_mq_unfreeze_queue(sdkp->disk->queue);
-+	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
- 	if (err)
- 		return err;
- 	return count;
-@@ -594,9 +591,7 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
- 
- 	lim = queue_limits_start_update(sdkp->disk->queue);
- 	sd_config_write_same(sdkp, &lim);
--	blk_mq_freeze_queue(sdkp->disk->queue);
--	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
--	blk_mq_unfreeze_queue(sdkp->disk->queue);
-+	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
- 	if (err)
- 		return err;
- 	return count;
-@@ -3803,9 +3798,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	sd_config_write_same(sdkp, &lim);
- 	kfree(buffer);
- 
--	blk_mq_freeze_queue(sdkp->disk->queue);
--	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
--	blk_mq_unfreeze_queue(sdkp->disk->queue);
-+	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 198bec87bb8e..b17796d5ee66 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -797,10 +797,7 @@ static int get_sectorsize(struct scsi_cd *cd)
- 
- 	lim = queue_limits_start_update(q);
- 	lim.logical_block_size = sector_size;
--	blk_mq_freeze_queue(q);
--	err = queue_limits_commit_update(q, &lim);
--	blk_mq_unfreeze_queue(q);
--	return err;
-+	return queue_limits_commit_update_frozen(q, &lim);
- }
- 
- static int get_capabilities(struct scsi_cd *cd)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index e781d4e6f92d..13d353351c37 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -952,6 +952,8 @@ queue_limits_start_update(struct request_queue *q)
- 	mutex_lock(&q->limits_lock);
- 	return q->limits;
- }
-+int queue_limits_commit_update_frozen(struct request_queue *q,
-+		struct queue_limits *lim);
- int queue_limits_commit_update(struct request_queue *q,
- 		struct queue_limits *lim);
- int queue_limits_set(struct request_queue *q, struct queue_limits *lim);
 -- 
 2.45.2
 
