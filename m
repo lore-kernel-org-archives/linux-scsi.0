@@ -1,122 +1,131 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A01C1F03C7;
-	Wed,  8 Jan 2025 09:26:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C376A1A0BED
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Jan 2025 09:35:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736328367; cv=none; b=O2sTUgayZyWcCwo9y1cFBxNVSoXrSIFMAnpLJtnpIT9fVKgUHWHuyG16Pj8oh4mMyDF02AexL9IqQg9qhRIZmYrLWu9+l3zz8JlrdMGttTBJTwYcXqFjrszLz/QNdIoyAA8ruqe3yi/zCKfPzvytbCifM8/D2Mdwudk0iPncViY=
+	t=1736328939; cv=none; b=hgSH06B1yrB3At+jhSK9TDOq2FyspsJGGIq03DJTIHGmZLW4DQaoFql6YGZXMEsr7K0n8PFx3P9arj1XiJEOMiK4sBRgi9y1t0CexwMk0FJeCU0VDHg8o3Te6HIaURWN5wSgYXF1jUx/KGPPahfAMGXlHMQfgK2W/L+pbzIzkiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736328367; c=relaxed/simple;
-	bh=N1rZyYckV9/psrk+5ym2jvZ+sC5iptNam9oZ4mslYUU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FBzPTeENdlSUSI1/8Z8u1HGCYzNizSqiacGOaqratvp1wzQsuauWE6KKFbNoFHfZibJUOZKt7vxLGlVz+SMQQPd6mYy+DZcQouY5RV7LI+LOABvRpXl/fBJ/ErI80zUgFekxjYCqzzD7hyuiHmK20hH3iv39NyDNL6ImI/jpsfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=1tEf1x7/; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1736328939; c=relaxed/simple;
+	bh=l3PCIEIelthuqSR/jv3i+CQPS9ryNqQSVLw9c6AHRlU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=LKW2jceT92d2Lg7Ft/JFl/0CH6LEAvZAyiTS1e/8cgYWfolbrzPXSRmqqrQ0khBDdTt89kthr4CVa1ATD+cqCfCoCtn8vWfW2kd/XJZB/IwnMTuVh7xpDe3Oe5Vl0Kgnl0HCncgnmvNqmjQe/NaSPn6G6XAFyLZ15adsAX6o15w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Nc0RiNjb; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="1tEf1x7/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=l/31ESR3+qEAHHMxPuf7j9P2G6uDf3ZUExmKKhtWzmA=; b=1tEf1x7/XO8v/25JUi9W59yd8c
-	YHpYnpE1lAZONHiLmbW9QE/vRt60M/+Gl0Bl4QMTrQniCQkzE9pl3Xj1Bh6deDn5UcRJ0PvXPUxX0
-	aIDqTvEcljLJ8lqQkAyQGVUiUZVqkc8VxAGxoNNCbdifMpKvMyJPB0U15a6e0GHALwUitznxemd9j
-	Hn5j/NC6QuAUy34lEcNfcJJDC42UHkAV4oJ1EOhnKluzpRU5+PTyuei17Wutf8WbX3ZRhwnwj6T1Z
-	pSkDdimlHJDGUswLYEkDg3CG+Ivnpkw3fVM2H8r/adAu6Igypq3z67ZHuZEiatYAFCnPJ7LWuBldP
-	tAfxtNFQ==;
-Received: from 2a02-8389-2341-5b80-e44b-b36a-6403-8f06.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:e44b:b36a:6403:8f06] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tVSKB-00000007lwB-274R;
-	Wed, 08 Jan 2025 09:26:04 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Ming Lei <ming.lei@redhat.com>,
-	Nilay Shroff <nilay@linux.ibm.com>,
-	linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	nbd@other.debian.org,
-	linux-scsi@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 10/10] loop: fix queue freeze vs limits lock order
-Date: Wed,  8 Jan 2025 10:25:07 +0100
-Message-ID: <20250108092520.1325324-11-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250108092520.1325324-1-hch@lst.de>
-References: <20250108092520.1325324-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Nc0RiNjb"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-385de59c1a0so9819310f8f.2
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2025 01:35:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1736328936; x=1736933736; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=1gOlSbqAtJLbCepP7eHZHaLXruDphs2i+XBgu9g4oDQ=;
+        b=Nc0RiNjbetn0jLT4RKxWjA/kp7eE0bfHntv2RB/6ZNRAHQ5n7B1+jBxodXWvaNzyWd
+         +qYDg3it4ylI+0TC3DweiIxhM7ToaMME7HwvQVPCjFFiG6sSk7JCU07rSNZAEL4h96QE
+         mz9ecwNmwVRYqlQC5EP35fosYJ4dNvOp+HXLKB0bLHn5yT7O4Ysr8NTcpc6PRkmtW1Tn
+         qb1o4B6CcxI5JIdIHC5B7VOz3XWos+Fc1d5SIAbZjuLmVvGQkMh04tTzsZqUhsBPIl4B
+         iyEDWixUcFNpaAktARgf5aIinhg94iI4soViwqNL/Mr2nBoNbn3/DjQawdrxv8zr3ZoC
+         VnaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736328936; x=1736933736;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1gOlSbqAtJLbCepP7eHZHaLXruDphs2i+XBgu9g4oDQ=;
+        b=T8qJnXcr5rx6ylESisQEUZCdyAOP1d803nh2ltepNNID/P53efo0Lhw0VIThbLr3mg
+         maPv2hZUZ+O7TTeskzcwBLN7inaounu/hPebmI1vmJDywTzqpH8B9lwVEB21N2miLrSQ
+         ZBBfGzbjav5FatDYFxbKr2VpOoogm66EHSPO3PNloOpGHF8Yj665/N4CXVDwRaCAr9/v
+         HlfPWsjDbhHZO+1jcCjE6fbkdiS199keRwakKrqKo3XOIOITz4x2gw1hLrPKlzSB4niS
+         wUoCOHnwlI+vCXt0/yYxkp0F8UTery67syx8JDUU4NT+RJ0HEq8C4X0r3NO7IwFEYSja
+         Jjgg==
+X-Gm-Message-State: AOJu0YzbRG3WcCVWEIAY+Mw32Xa4WjGiqCYqhSnTh/5AGRT82iP66FWU
+	Pc12jHscQ56BwoHfTHi21vWQ9KTkWSWbgmtWUl2ScUPd/SAOYe0WrmQy/3vnT0o=
+X-Gm-Gg: ASbGncu3qq+95fblDQlNsoBOZFDjK9PvTpMBZ9Pdc0wkuuQ4VEjudzgSx3+0boPSNFU
+	k5dzu32GzLlVxC80pOv/xhO59WEJR65sXk3fpot0soKQeOollqqStnujRw3ZHKY5E/R+NqkxDls
+	gaaoykJrjfUXH2dXdXuVbx7E9Gdr3vwpIp1gLOP6uPPFhd9rc3+KIvt9LhIdc+RAJXugsHNlL+r
+	ZTk+0f3E4V8RSI+2YgbSvFkP5kgdL3euuyfGxhIovWvegCzD5wx2EiCTws+tw==
+X-Google-Smtp-Source: AGHT+IFNcDTgv1su7hVk4FdVvjUjDk5eBwbICda4rJdAZ3sEKQMJiPzFTtUWJMDOUNvBGUxU1Q0fDg==
+X-Received: by 2002:a05:6000:1849:b0:385:e5d8:3ec2 with SMTP id ffacd0b85a97d-38a8730b535mr1604117f8f.28.1736328936122;
+        Wed, 08 Jan 2025 01:35:36 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a1c8330d4sm51844229f8f.29.2025.01.08.01.35.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jan 2025 01:35:35 -0800 (PST)
+Date: Wed, 8 Jan 2025 12:35:32 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Bikash Hazarika <bhazarika@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: qla2xxx: Add support for mailbox passthru
+Message-ID: <6505482d-b861-4f66-8c61-f5dca867f844@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Match the locking order used by the core block code by only freezing
-the queue after taking the limits lock using the
-queue_limits_commit_update_frozen helper and document the callers that
-do not freeze the queue at all.
+Hello Bikash Hazarika,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/block/loop.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+Commit 9e1c3206960f ("scsi: qla2xxx: Add support for mailbox
+passthru") from Sep 8, 2021 (linux-next), leads to the following
+Smatch static checker warning:
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 560d6d5879d6..15e486baa223 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -311,6 +311,13 @@ static void loop_clear_limits(struct loop_device *lo, int mode)
- 		lim.discard_granularity = 0;
- 	}
- 
-+	/*
-+	 * XXX: this updates the queue limits without freezing the queue, which
-+	 * is against the locking protocol and dangerous.  But we can't just
-+	 * freeze the queue as we're inside the ->queue_rq method here.  So this
-+	 * should move out into a workqueue unless we get the file operations to
-+	 * advertise if they support specific fallocate operations.
-+	 */
- 	queue_limits_commit_update(lo->lo_queue, &lim);
- }
- 
-@@ -1091,6 +1098,7 @@ static int loop_configure(struct loop_device *lo, blk_mode_t mode,
- 
- 	lim = queue_limits_start_update(lo->lo_queue);
- 	loop_update_limits(lo, &lim, config->block_size);
-+	/* No need to freeze the queue as the device isn't bound yet. */
- 	error = queue_limits_commit_update(lo->lo_queue, &lim);
- 	if (error)
- 		goto out_unlock;
-@@ -1151,7 +1159,12 @@ static void __loop_clr_fd(struct loop_device *lo)
- 	lo->lo_sizelimit = 0;
- 	memset(lo->lo_file_name, 0, LO_NAME_SIZE);
- 
--	/* reset the block size to the default */
-+	/*
-+	 * Reset the block size to the default.
-+	 *
-+	 * No queue freezing needed because this is called from the final
-+	 * ->release call only, so there can't be any outstanding I/O.
-+	 */
- 	lim = queue_limits_start_update(lo->lo_queue);
- 	lim.logical_block_size = SECTOR_SIZE;
- 	lim.physical_block_size = SECTOR_SIZE;
-@@ -1471,9 +1484,10 @@ static int loop_set_block_size(struct loop_device *lo, unsigned long arg)
- 	sync_blockdev(lo->lo_device);
- 	invalidate_bdev(lo->lo_device);
- 
--	blk_mq_freeze_queue(lo->lo_queue);
- 	lim = queue_limits_start_update(lo->lo_queue);
- 	loop_update_limits(lo, &lim, arg);
-+
-+	blk_mq_freeze_queue(lo->lo_queue);
- 	err = queue_limits_commit_update(lo->lo_queue, &lim);
- 	loop_update_dio(lo);
- 	blk_mq_unfreeze_queue(lo->lo_queue);
--- 
-2.45.2
+	drivers/scsi/qla2xxx/qla_bsg.c:3241 qla2x00_mailbox_passthru()
+	warn: sizeof(void)
 
+drivers/scsi/qla2xxx/qla_bsg.c
+    3205 int qla2x00_mailbox_passthru(struct bsg_job *bsg_job)
+    3206 {
+    3207         struct fc_bsg_reply *bsg_reply = bsg_job->reply;
+    3208         scsi_qla_host_t *vha = shost_priv(fc_bsg_to_shost(bsg_job));
+    3209         int ret = -EINVAL;
+    3210         int ptsize = sizeof(struct qla_mbx_passthru);
+    3211         struct qla_mbx_passthru *req_data = NULL;
+    3212         uint32_t req_data_len;
+    3213 
+    3214         req_data_len = bsg_job->request_payload.payload_len;
+    3215         if (req_data_len != ptsize) {
+    3216                 ql_log(ql_log_warn, vha, 0xf0a3, "req_data_len invalid.\n");
+    3217                 return -EIO;
+    3218         }
+    3219         req_data = kzalloc(ptsize, GFP_KERNEL);
+    3220         if (!req_data) {
+    3221                 ql_log(ql_log_warn, vha, 0xf0a4,
+    3222                        "req_data memory allocation failure.\n");
+    3223                 return -ENOMEM;
+    3224         }
+    3225 
+    3226         /* Copy the request buffer in req_data */
+    3227         sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+    3228                           bsg_job->request_payload.sg_cnt, req_data, ptsize);
+    3229         ret = qla_mailbox_passthru(vha, req_data->mbx_in, req_data->mbx_out);
+    3230 
+    3231         /* Copy the req_data in  request buffer */
+    3232         sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+    3233                             bsg_job->reply_payload.sg_cnt, req_data, ptsize);
+    3234 
+    3235         bsg_reply->reply_payload_rcv_len = ptsize;
+    3236         if (ret == QLA_SUCCESS)
+    3237                 bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
+    3238         else
+    3239                 bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_ERR;
+    3240 
+--> 3241         bsg_job->reply_len = sizeof(*bsg_job->reply);
+
+bsg_job->reply is a void pointer so the sizeof() is 1.  Even if this is
+correct, it would be more clear to say size(u8) or something.
+
+    3242         bsg_reply->result = DID_OK << 16;
+    3243         bsg_job_done(bsg_job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
+    3244 
+    3245         kfree(req_data);
+    3246 
+    3247         return ret;
+    3248 }
+
+regards,
+dan carpenter
