@@ -1,170 +1,170 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF3631A7264;
-	Wed,  8 Jan 2025 07:19:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6C311A0BE0
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Jan 2025 08:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736320763; cv=none; b=a6btawuBvhrqBJ6Oo5f4slmX5kP5vqvAFis36FY9mybHcKGq4uomFMiKPxmXKWCK8i2z3CR1FMNrF7SI+NilleVwTkiBnbgAT06haPC85icbdGHEDYqNAzA62ik0b+SgJ/U+XiBlyKZDAWRONCm++68AbUnZ06SF6w7SqnCyhsE=
+	t=1736325094; cv=none; b=V7MdAJn5Wl7P+kUv1DCEAAd5PzPJL6p20vOattf2ySyTWTvqtHZcmVONiA9IuhtiRBESmYqUgJY+Zncmj9FDnO2LhwqcFoYkNghe1u5lvGPCa8KRzSKnyU0FAtPgpyPVlEYayEcTit0BZFkHGHHQywulfotCmg5eRgxw3Juvrt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736320763; c=relaxed/simple;
-	bh=2OmpbwECjc3ztteZgZS83w5ZYoOVpKG0/XhfbIN52io=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=O0WT1T7IwEUboszs6/fnmP0u9Zgx/3VWDRPbZ/eGjU1HM9Zff1wTdLzWixcMlLPMBBsXCNxNW/JxlMe5AfSftUSqpyw8sg6PNT4HEF57c/ZKBXZRdh8pmKLMdjtw9h9S4mCC8+cD6VMp2caWVXARo15d2R8qj0C8nNGT+a6+i3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YHtY3luf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4OaKIcLN; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=U8BlRzIZ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qRu/+kJi; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1736325094; c=relaxed/simple;
+	bh=Bzs2e7QsDs9RDz4VMTIhWKcqMJcsFXSu+5fSQyNjB1c=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=W9wYUFmUFW1NzP5PvgAzIkg483vhPJYgn4QSlgY5wQCz4ZAToG3PbKjVfNkkE+LIQWZlFUOWte3LoFpKJ8YyQ1is3OGmutlZ5wlmHfhdJuFUf4bH6yWtnLXuUulfvj5xvlw/Sw/PFAbPZmTXhactf/L1vksZD2wP4wczuFDfj6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=EC28b59P; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YHtY3luf";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4OaKIcLN";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="U8BlRzIZ";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qRu/+kJi"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id EB00C21109;
-	Wed,  8 Jan 2025 07:19:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1736320760; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UMHSN1RUI191v0AL+xJ8VycN40kw5fLrPVaLypzjD+E=;
-	b=YHtY3lufWWZVElyJtifBFzBtdrFMEJFsJfjmrAPgUD2ZAe/Ct5BA8ENg1wKRwTBZKfoKpF
-	q/gD+XWMMSROgUZbXOEVFhvTcYym/Fj5JF+JxAWq7jH79ASW7ljR9BJq2cs+xQqCnGsGcj
-	RpnVfdNMKQ7oNW3k1AfwNHCWrhrp9M0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1736320760;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UMHSN1RUI191v0AL+xJ8VycN40kw5fLrPVaLypzjD+E=;
-	b=4OaKIcLN+9VWhR6Mn7PYR6Vje53hndZu7LNwssLmjKwu7KPIrWMVLYoGyk9gTj9Kkd5A63
-	aGWBQYpTPddefcBw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1736320759; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UMHSN1RUI191v0AL+xJ8VycN40kw5fLrPVaLypzjD+E=;
-	b=U8BlRzIZ3xaDo2aiJn88NeswoYKPmsMcBAwE6GhQr3dBhr/XwT6dbRUDHaMPmgMGaajzY/
-	La2CUU40RaUCepVxhb/CaT++R7ur/o0LLCRuaDeLTVc6aad+hSGOdn/1oj5AsZU4IBdi98
-	U19iOzSpLPjQg/9PnjHieGftnpNNDak=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1736320759;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UMHSN1RUI191v0AL+xJ8VycN40kw5fLrPVaLypzjD+E=;
-	b=qRu/+kJigVE6teuHtYZdh+XkEMgI/J3KKinf+oiu/1W7kjTtPtxYZgfZfrVAoRac5R9z6k
-	nN+3Te5i303osNAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E16A9137DA;
-	Wed,  8 Jan 2025 07:19:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ChdINPUmfme7QAAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 08 Jan 2025 07:19:17 +0000
-Message-ID: <c191fe47-a8d0-4a3e-8dc8-8946ee00808f@suse.de>
-Date: Wed, 8 Jan 2025 08:19:17 +0100
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EC28b59P"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-38634c35129so12634566f8f.3
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2025 00:31:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1736325091; x=1736929891; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=AFs1K43243tx/gfO7cqwcr3K80lvlfp/e4fzp8mtSNo=;
+        b=EC28b59P1upr5Ayxv5DgWfR2uIEA/nH4tyuEBflJwKfwGN49j1NIJEhUbWwPTTsipq
+         IGh/an46q6VAuXoOuRSXjp31pLQhgwDpbkdeh7OtvZmuqBl2tmm1bdp4gDjIqY1l/R58
+         J86rWCpmTE+k1Yx+6lak1vGj2mek/ugVYG42P3XcxdrWWs2hVD0k5qRRBob8368abWWx
+         ivAlrRLDLWGBiLkcwY5Keez6vJrU4esTFWuPfduY5LXdUw86lRpaipXQie5wT4/CmKrA
+         loqbrCNZyUoB2lB6JzgmX4YsPbRgCilRlwErJSF0CzT7nR63qJ9u4UIxTA/h4pYJNUi0
+         R0Qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736325091; x=1736929891;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=AFs1K43243tx/gfO7cqwcr3K80lvlfp/e4fzp8mtSNo=;
+        b=Xm7neQt/LtPTDrD6YPqzylfiSr/QYomMEgHk04X0bAOqdmz3W+GS+R1SXWjblYX5uv
+         AhSrqtKYb4JzN0qKK2JS9XaTS2sbb+XORkOEFY9JpGcf24oZtB7m3heAbrL0/HERmCvC
+         8V75JeTPwwYNqbMDnlTaI2DS6xQnGlT1SshP7E8R1w4c2r8XpO0Rf8cNak/nAFS9XicK
+         W/1HhwuUn1Onx/nsJGouCONChAhDVTK1FxHYmdWbl4bbyFTcrxe3XN57z3k5NwtbsT0C
+         Ls6c2HKbE1fDAtZ05nbXdqiw7wmI0VDPy950TWL0VerZ1N42SLFfEgzxJJSXWQSIWIjj
+         RBLQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX9ouCIiwf7WBP87z0Jlt1F8dzuKCWZtZInX+xob9TLynhPxTZwA02tUjkzmrh+HanOtcc/6CEGhLWo@vger.kernel.org
+X-Gm-Message-State: AOJu0YxEKiZP1dUXhQIr352RJUH/Abfdu1iDTWli4hz0ZCufjKjMlHfp
+	tlKB2/wTrcbWJTamV8EuOdjeEd6QFkgPqUnLn92TtdwjwP5y1fS8zUftvxs+A/s=
+X-Gm-Gg: ASbGncuMv+Q4eMgfjx25GRx29LuHRyOTe7agFXPr2Y2xg/auGQnOAmE+5lNex/SCJ42
+	mQk0R5M+g9EMptQu68h+fBFp+4VoFVmZJR8xRMRmJTwbWfpgynr1I96YUyMCxelNbx6qywmncKM
+	N8zaBlKiALJc8BVs44rq+Y7crddLT0jDehZ9mZb8bPyrbOmwwb7/TT8ZFeMKt3G5XpQOES+oOyT
+	uywzShgMTaqEb5o/yAKDPRl9X83SBO8TEw5t+ECwfezbwHmhevnAIIgAPGuSQ==
+X-Google-Smtp-Source: AGHT+IEekKhcfmrJWcNCSKBuwIyEUsxTaZ+SAH7WrlV1pES8bLej52b4bGfmsZ0376cXImzObKpeYQ==
+X-Received: by 2002:a05:6000:1f82:b0:385:f560:7924 with SMTP id ffacd0b85a97d-38a872fc5cbmr1155953f8f.4.1736325090766;
+        Wed, 08 Jan 2025 00:31:30 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-436e2df3610sm12801015e9.20.2025.01.08.00.31.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jan 2025 00:31:30 -0800 (PST)
+Date: Wed, 8 Jan 2025 11:31:27 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: mpi3mr: Add support for recovering controller
+Message-ID: <83f63c99-0964-4572-852c-aa01b015b994@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 4/9] nvme-pci: use block layer helpers to calculate num
- of queues
-To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, Kashyap Desai
- <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- Don Brace <don.brace@microchip.com>, "Michael S. Tsirkin" <mst@redhat.com>,
- Jason Wang <jasowang@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>,
- Stefan Hajnoczi <stefanha@redhat.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?=
- <eperezma@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Thomas Gleixner <tglx@linutronix.de>
-Cc: Costa Shulyupin <costa.shul@redhat.com>,
- Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider
- <vschneid@redhat.com>, Waiman Long <llong@redhat.com>,
- Ming Lei <ming.lei@redhat.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Frederic Weisbecker <frederic@kernel.org>,
- Mel Gorman <mgorman@suse.de>,
- Sridhar Balaraman <sbalaraman@parallelwireless.com>,
- "brookxu.cn" <brookxu.cn@gmail.com>, linux-kernel@vger.kernel.org,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- storagedev@microchip.com, virtualization@lists.linux.dev
-References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
- <20241217-isolcpus-io-queues-v4-4-5d355fbb1e14@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20241217-isolcpus-io-queues-v4-4-5d355fbb1e14@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -2.80
-X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	MIME_TRACE(0.00)[0:+];
-	TAGGED_RCPT(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[38];
-	RCVD_TLS_ALL(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[redhat.com,suse.com,kernel.org,suse.de,parallelwireless.com,gmail.com,vger.kernel.org,lists.infradead.org,broadcom.com,microchip.com,lists.linux.dev];
-	R_RATELIMIT(0.00)[to_ip_from(RLwoqrtcdrtewo8fubna94zinu)];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 12/17/24 19:29, Daniel Wagner wrote:
-> Multiqueue devices should only allocate queues for the housekeeping CPUs
-> when isolcpus=managed_irq is set. This avoids that the isolated CPUs get
-> disturbed with OS workload.
-> 
-> Use helpers which calculates the correct number of queues which should
-> be used when isolcpus is used.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> ---
->   drivers/nvme/host/pci.c | 5 +++--
->   1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hello Kashyap Desai,
 
-Cheers,
+Commit fb9b04574f14 ("scsi: mpi3mr: Add support for recovering
+controller") from May 20, 2021 (linux-next), leads to the following
+Smatch static checker warning:
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4605 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4606 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4608 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4610 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4612 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4614 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4617 mpi3mr_memset_buffers() warn: sizeof(void)
+drivers/scsi/mpi3mr/mpi3mr_fw.c:4620 mpi3mr_memset_buffers() warn: sizeof(void)
+
+drivers/scsi/mpi3mr/mpi3mr_fw.c
+    4590 void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+    4591 {
+    4592         u16 i;
+    4593         struct mpi3mr_throttle_group_info *tg;
+    4594 
+    4595         mrioc->change_count = 0;
+    4596         mrioc->active_poll_qcount = 0;
+    4597         mrioc->default_qcount = 0;
+    4598         if (mrioc->admin_req_base)
+    4599                 memset(mrioc->admin_req_base, 0, mrioc->admin_req_q_sz);
+    4600         if (mrioc->admin_reply_base)
+    4601                 memset(mrioc->admin_reply_base, 0, mrioc->admin_reply_q_sz);
+    4602         atomic_set(&mrioc->admin_reply_q_in_use, 0);
+    4603 
+    4604         if (mrioc->init_cmds.reply) {
+--> 4605                 memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
+
+This one should probably be:
+
+	memset(mrioc->init_cmds.reply, 0, mrioc->reply_sz);
+
+sizeof() a void is 1.
+
+    4606                 memset(mrioc->bsg_cmds.reply, 0,
+    4607                     sizeof(*mrioc->bsg_cmds.reply));
+    4608                 memset(mrioc->host_tm_cmds.reply, 0,
+    4609                     sizeof(*mrioc->host_tm_cmds.reply));
+    4610                 memset(mrioc->pel_cmds.reply, 0,
+    4611                     sizeof(*mrioc->pel_cmds.reply));
+    4612                 memset(mrioc->pel_abort_cmd.reply, 0,
+    4613                     sizeof(*mrioc->pel_abort_cmd.reply));
+    4614                 memset(mrioc->transport_cmds.reply, 0,
+    4615                     sizeof(*mrioc->transport_cmds.reply));
+    4616                 for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
+    4617                         memset(mrioc->dev_rmhs_cmds[i].reply, 0,
+    4618                             sizeof(*mrioc->dev_rmhs_cmds[i].reply));
+    4619                 for (i = 0; i < MPI3MR_NUM_EVTACKCMD; i++)
+    4620                         memset(mrioc->evtack_cmds[i].reply, 0,
+    4621                             sizeof(*mrioc->evtack_cmds[i].reply));
+    4622                 bitmap_clear(mrioc->removepend_bitmap, 0,
+    4623                              mrioc->dev_handle_bitmap_bits);
+    4624                 bitmap_clear(mrioc->devrem_bitmap, 0, MPI3MR_NUM_DEVRMCMD);
+    4625                 bitmap_clear(mrioc->evtack_cmds_bitmap, 0,
+    4626                              MPI3MR_NUM_EVTACKCMD);
+    4627         }
+    4628 
+    4629         for (i = 0; i < mrioc->num_queues; i++) {
+    4630                 mrioc->op_reply_qinfo[i].qid = 0;
+    4631                 mrioc->op_reply_qinfo[i].ci = 0;
+    4632                 mrioc->op_reply_qinfo[i].num_replies = 0;
+    4633                 mrioc->op_reply_qinfo[i].ephase = 0;
+    4634                 atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
+    4635                 atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
+    4636                 mpi3mr_memset_op_reply_q_buffers(mrioc, i);
+    4637 
+    4638                 mrioc->req_qinfo[i].ci = 0;
+    4639                 mrioc->req_qinfo[i].pi = 0;
+    4640                 mrioc->req_qinfo[i].num_requests = 0;
+    4641                 mrioc->req_qinfo[i].qid = 0;
+    4642                 mrioc->req_qinfo[i].reply_qid = 0;
+    4643                 spin_lock_init(&mrioc->req_qinfo[i].q_lock);
+    4644                 mpi3mr_memset_op_req_q_buffers(mrioc, i);
+    4645         }
+    4646 
+    4647         atomic_set(&mrioc->pend_large_data_sz, 0);
+    4648         if (mrioc->throttle_groups) {
+    4649                 tg = mrioc->throttle_groups;
+    4650                 for (i = 0; i < mrioc->num_io_throttle_group; i++, tg++) {
+    4651                         tg->id = 0;
+    4652                         tg->fw_qd = 0;
+    4653                         tg->modified_qd = 0;
+    4654                         tg->io_divert = 0;
+    4655                         tg->need_qd_reduction = 0;
+    4656                         tg->high = 0;
+    4657                         tg->low = 0;
+    4658                         tg->qd_reduction = 0;
+    4659                         atomic_set(&tg->pend_large_data_sz, 0);
+    4660                 }
+    4661         }
+    4662 }
+
+regards,
+dan carpenter
