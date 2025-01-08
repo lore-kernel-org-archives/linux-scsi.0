@@ -1,103 +1,88 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F33187550
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Jan 2025 09:16:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8E461DFE0F;
+	Wed,  8 Jan 2025 09:25:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736327788; cv=none; b=WM10lkAEzvgHzbziA2BU7dtcSew+5jKmhCwBrPNEuXl3nQO7sjxVaVvPgWgUSBdMEYxDtohaL6tNVUD6KzB0ctr6uhvk4HYxr2dXLqdF4ArM8RHS8+YKnJ8n1p+6gavX7ub2OdlxzP9dJPysaxteg55CzacL7nnVgiumRYjz6Ec=
+	t=1736328326; cv=none; b=uz/+zxEyWpz7g31o/5KZlIhbMc+qheyT1Ye2SHwKoCTnfL06dGgEx+1O4Af8boW+ZWIXS2nVfZrucZbf70EztPl4w9y2Aka2bDCdKIKtSbieUX9qiKvbj7FOWYB4OKXRZJyMae+bXgY0F4NZ+pel+oN1e1KG1bfrnvYr7cewEdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736327788; c=relaxed/simple;
-	bh=6fEqdrjg45C/fj+t5/mAi2jKTpDwP2K1L9DsWLhE3bM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=alTtLiJ+2Ig27WTO/QsuQC2MMJUStpZHhpze9ofbGYXoQQEnxuxs3kHA0Nwa0OL+PgN+kGQlcmYjvdHfnUcSeJex06ScqNRhFYNkPAa+U+ACe45yplE+8VRzKRngnv9TRRD+d9VUZFkq9pWdg13GKC2tNVSFZPKokjVZwGRY3nA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=shc0tX46; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1736328326; c=relaxed/simple;
+	bh=FFgW0j1yaIXwK39khgwmIcTdemdFiuGf+LUXNTDYOrw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=irER51eO00SvdtK5VErgYLabuhH0lQW3iAgoF34SsigjPPufQuI+3QD9UF1fR3Qsrg374e9BpTlxDV0njXD7O3weqS11mPj/la3ykavBl9NCikKcJsIVLSO3AdYEb9jw+TAivNWpGss1Ty9ixHDHRI/nAJ1M7oOo2jFPe6k3wXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PbEZjoi8; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="shc0tX46"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-43625c4a50dso113556665e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2025 01:16:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1736327785; x=1736932585; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Fn//Ft/rrO4h6PGoNs5D2RI0tSKQdOI4bkl3jeswABw=;
-        b=shc0tX46fUbk5fVgv/IiMygXViap8imLidwrQfmrABBtxCoZ+OEbQfrfz+4qBVij56
-         2UDsZnjm4poVM+Tq9j951jnXiruoLzo528Z6Lh7l9mvk+PMZJTRoYIWnhq+O8QXnSTqZ
-         1y272lM5+55mWcLqUCd+Zmu18UR35ZvbFLwI3FmkwBsBxv2k92b7+JMGZfHHN9pHbHbA
-         aQ148+JawVj1x1mO1yboryx/qGp4o5G5gkUy5Gzf8Wgmwg1nDizmEqrMr76XBy247I8X
-         4MycLO+gnIzeuEC4+9tHiTimwR4lrexgO3xgVCZdJi+fvbiXDKYaazGlLR46BoVheZTR
-         JAFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736327785; x=1736932585;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Fn//Ft/rrO4h6PGoNs5D2RI0tSKQdOI4bkl3jeswABw=;
-        b=YeXg07jTD+mum5iQiOKcMi7v6A4STMLaVzWNnM5YGnPqfGJzo7DTAAnwObReECdhaA
-         jWtzIlV3XLd9lgWLSuojnog3tD2hNCPhDtNjZ7r6z3PTzKT9E8RjTjSzGIW0Qv6LllhK
-         ADJcAtw81DYlY/0hKUcZNREvSOd9OvYkrc9RDSfQdCU4yTEzLUbLnWrmzswaZUooQk2B
-         Mb/EEWZkCw/vANt0K3YLic8t2zCEoxsB8rWK/nDezM/TwFikIqxjjhndHWPnH30jjkKy
-         i2mr3pHUwJWWrNaWgg7ImC9nS93LaeRSgCXaHPh45n3e3k7Bv56JfonNTwTPhNJxFVaB
-         qxzA==
-X-Forwarded-Encrypted: i=1; AJvYcCUj+35ih9NVBXvzkAftXF+6U9dE9R+n2DxcyZ2VdvxrPR3EIQZ3bjBjqh7KP6ReZ0NZCajwqjSxNJJB@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVgLdCzmZw4Dc8FJRmxxUH2jm6OeJptmHkt/3rw3o1+67OnLQd
-	aG1qTd1FgyH7xjfTMiTDUcIJYUybS4pYBE1XSXcUoP+PL/NiEkodjseLQL8ksds=
-X-Gm-Gg: ASbGncvFwSnpTecajiXsxxoeYJ8P9wO63rHNtVaMMGm8U+GjnOeFAXxTCPSRDTfrxP/
-	z1eOz2Qbi2xlRt3YEltWup8ydQLpWEV7N3Aop78tkm1eIOX5qKpuyi+YFyCjLbnE8DSON+SvioA
-	VdI7kKfO7UAff+Og+Fty0XchBSQEQ23hhZTsIDdFxO6dwn64DEgFSC8LtG6WBuRyXh0tN8kBCb+
-	ZSVbwjIhO0yoxrd9fbB1Jb3d1KbV1OUAl/n89jnSZved4qnk4ysXV+FbdIpAg==
-X-Google-Smtp-Source: AGHT+IEV+g5tBiCUOowMcZ4bkWs6MfAgQFbEsVW0/O0O+m+/43gKa1QD/RB8+ayhAPAWM8ZrbexWnA==
-X-Received: by 2002:a05:6000:1a88:b0:38a:5557:7685 with SMTP id ffacd0b85a97d-38a872f6ee0mr1454922f8f.5.1736327785001;
-        Wed, 08 Jan 2025 01:16:25 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a1c8a6ca5sm53652859f8f.86.2025.01.08.01.16.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jan 2025 01:16:24 -0800 (PST)
-Date: Wed, 8 Jan 2025 12:16:21 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Arulprabhu Ponnusamy <arulponn@cisco.com>,
-	Gian Carlo Boffa <gcboffa@cisco.com>, Arun Easi <aeasi@cisco.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH next] scsi: fnic: silence uninitialized variable warning
-Message-ID: <99df3555-6763-4870-9af3-fbfa4fbd5268@stanley.mountain>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PbEZjoi8"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=ryN0z1Pp3IvUFA7Af5iKRLT0TkpMzEngq0fQMHX47v8=; b=PbEZjoi8R7AHtgeqHEdx2xq/Y+
+	MvbTIP2dqEt3CCoyBUcO9sISsHtvySjiTKrt4IGnxQgzrtm2I9doeRxuMivSaziOhgtGysx0UUGIT
+	3U58D+fiwGqGhmH6jZ33FOXW5flKIqJCV0AKN0viQyzZur5Z+GiV/dIwx3cmYiefoiX3SQ9z4dEIN
+	ME0gTCMsStalLn9jCXgG0aUh95XTBDToq9K9VxOBlHUboRd4FjL12C+WIjJnJ9Vs3H9QvxxuhLMmb
+	aZp0MVyI0DwB2J60GQvvjnc/KAii+8YBZZJrWpqXq/EdCu2K4hc2E24PnVykOuU4sc5p2dtZSWXeS
+	e7Or5HSw==;
+Received: from 2a02-8389-2341-5b80-e44b-b36a-6403-8f06.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:e44b:b36a:6403:8f06] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
+	id 1tVSJX-00000007lPb-02aU;
+	Wed, 08 Jan 2025 09:25:23 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Ming Lei <ming.lei@redhat.com>,
+	Nilay Shroff <nilay@linux.ibm.com>,
+	linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	nbd@other.debian.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: fix queue freeze and limit locking order v2
+Date: Wed,  8 Jan 2025 10:24:57 +0100
+Message-ID: <20250108092520.1325324-1-hch@lst.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The debug code prints "oxid" but it isn't always initialized.
+Hi all,
 
-Fixes: f828af44b8dd ("scsi: fnic: Add support for unsolicited requests and responses")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/scsi/fnic/fdls_disc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+this is my version of Damien's "Fix queue freeze and limit locking order".
+A lot looks very similar, but it was done independently based on the
+previous discussion.
 
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index 2534af2fff53..7928f94d3202 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -3904,7 +3904,7 @@ fdls_process_abts_req(struct fnic_iport_s *iport, struct fc_frame_header *fchdr)
- 	uint8_t *frame;
- 	struct fc_std_abts_ba_acc *pba_acc;
- 	uint32_t nport_id;
--	uint16_t oxid;
-+	uint16_t oxid = 0;
- 	struct fnic_tport_s *tport;
- 	struct fnic *fnic = iport->fnic;
- 	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
--- 
-2.45.2
+Changes since v1:
+ - more comment typo fixing
+ - fix loop as well
+ - make the poll sysfs attr show method more accurate
+ 
+Changes since RFC:
+ - fix a bizzare virtio_blk bisection snafu
+ - set BLK_FEAT_POLL a little less eagerly for blk-mq
+ - drop the loop patch just adding a comment
+ - improve various commit logs and coments
 
+Diffstat:
+ block/blk-core.c               |   17 ++++-
+ block/blk-integrity.c          |    4 -
+ block/blk-mq.c                 |   17 -----
+ block/blk-settings.c           |   27 +++++++-
+ block/blk-sysfs.c              |  134 ++++++++++++++++++++---------------------
+ block/blk-zoned.c              |    7 --
+ block/blk.h                    |    1 
+ drivers/block/loop.c           |   52 ++++++++++-----
+ drivers/block/nbd.c            |   17 -----
+ drivers/block/virtio_blk.c     |    4 -
+ drivers/nvme/host/core.c       |    9 +-
+ drivers/scsi/sd.c              |   17 +----
+ drivers/scsi/sr.c              |    5 -
+ drivers/usb/storage/scsiglue.c |    5 -
+ include/linux/blkdev.h         |    5 -
+ 15 files changed, 164 insertions(+), 157 deletions(-)
