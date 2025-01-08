@@ -1,83 +1,86 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7491DFFD
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Jan 2025 02:22:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C78919C54A;
+	Wed,  8 Jan 2025 02:52:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736302933; cv=none; b=gWsT5Yf8x/mG+oIqo3WxgDWwy8gYwTRrExA/r8Y6uN7NmYI13zj9NoY+MU3IdaEjkk97YvPLVhjDYLsGifmxb+EY2dnuTChz68qj7n5N/LvukE+m0oTvvOBDG5Whq855yuFqBqdVeqtXII1kBvWxKu6+TLgHey6hmYh/priLVO0=
+	t=1736304777; cv=none; b=HXCo219GThPhcJJXHdIHaTAwzH9V0dGu2Rd/pEBR0FLEajebfeS7Q8ctEfPiMwohPe2hRxPjsVUHvLc8zHc2HLAogB1oJROwLe5jXt0FeR8q9uV3deQF3rom4hjqebSoXrozwsLHXCWnFKONYWfDilw+XPdEOGVJbsAet3YkvlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736302933; c=relaxed/simple;
-	bh=EXRrD5zZ3BO53qhfNw9BukEZkzxSGaRPGtQEG7bh/kI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=muB+QFu7gdwZkDnnoJh1yL0e4Cd5fTpnv0l7ji7cv4DU+tCw5Zg61sMXD9raK3llT93ycHE3sXL372/Y8rZL8SEKq3rEjPQJ1A9bjw+CkHbeXKQer8Ol75lmmGOadSylfJjVEYKbj4pfnh2FHF5zX5Qasm+euI/2Yt1G0gwEL1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FrubBByy; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1736304777; c=relaxed/simple;
+	bh=bWk0N/iUuUmPksh/fczOo0wVV/WukZ+Ms8pDNiaGQZE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=C+hJzv3yYWV83hdf9DA8ntlS2iEI3TlUCl/eMCbYf+NEfdDSyin875e15LcuoFnCXhTc/o089swr7/3gugfrpBzJvKeVTu57eVCpDu8FeDb4g/NlTdDckFu34MH1Rsu5yM+lALAPAcNkTFCxSX+PJToOwpOjARwR5w8c65wmWRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RyRbOvJF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FrubBByy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1736302930;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BUmFn0QdcbnrP+kAJCEAifsFmvKuEgoz5SMuFeJiqRM=;
-	b=FrubBByy+yr3OxwVH4HVEYGwaSTxl0NBiN8HF1T/CRjCxJWRBV2oJ4MDEWpZdg3atwzHMH
-	Zj5yVN3mKr9ro1i+lFRx/GR3g/RFq29/cHZ4oRq0bdnF9Xwb7fV6y9ULlfZ5Gd3FdioYW7
-	Ed1EywQ1gDd0Jc1hFqXqEMBFW5hAf2Q=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-82-rFxU6K-JNFO5J-Hw5JdVVw-1; Tue,
- 07 Jan 2025 21:22:07 -0500
-X-MC-Unique: rFxU6K-JNFO5J-Hw5JdVVw-1
-X-Mimecast-MFC-AGG-ID: rFxU6K-JNFO5J-Hw5JdVVw
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D476919560BE;
-	Wed,  8 Jan 2025 02:22:04 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.126])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E153D3000197;
-	Wed,  8 Jan 2025 02:21:58 +0000 (UTC)
-Date: Wed, 8 Jan 2025 10:21:53 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Damien Le Moal <dlemoal@kernel.org>,
-	Nilay Shroff <nilay@linux.ibm.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, nbd@other.debian.org,
-	linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-Subject: Re: fix queue freeze and limit locking order
-Message-ID: <Z33hQfkbolsku7yr@fedora>
-References: <20250107063120.1011593-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RyRbOvJF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71DA0C4CEE2;
+	Wed,  8 Jan 2025 02:52:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736304777;
+	bh=bWk0N/iUuUmPksh/fczOo0wVV/WukZ+Ms8pDNiaGQZE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=RyRbOvJF2PC/qT3MNekGSZii9EkGPm8hFQigHKgfapeMtQdVLwzqFpPJDl1PqKj++
+	 B0HhCEaG3BJH3a2XCQ+2PjAEsz1x7aXAjqJtc7jaIdr6MwKvQQu4x4/qkE7OYyUEvM
+	 vdKYWn5swry8SaDgVnwpbZ6f8616SsgZLDtRKIJkCqXFQIHtSDqx+S6C3RCSO9Yv0l
+	 kgW9brB4T6trQAjxLPL75KQhtVNfgFA4AUA74DUpKCVLeFgSDQSf0CcMdlFFaTvafy
+	 Cit5jImGFVaaPeKISmUO+M0s4qNds7gxAf+C3Zb/a+2/cZz+DPFAQcX1nPwLxH5fyy
+	 CZ/usle2TsF6A==
+From: Bjorn Andersson <andersson@kernel.org>
+To: Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Xin Liu <quic_liuxin@quicinc.com>
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Gross <agross@kernel.org>,
+	linux-arm-msm@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	quic_jiegan@quicinc.com,
+	quic_aiquny@quicinc.com,
+	quic_tingweiz@quicinc.com,
+	quic_sayalil@quicinc.com
+Subject: Re: (subset) [PATCH v4 0/3] Enable UFS on QCS615
+Date: Tue,  7 Jan 2025 20:52:46 -0600
+Message-ID: <173630476486.101108.6875505033763914837.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20241216095439.531357-1-quic_liuxin@quicinc.com>
+References: <20241216095439.531357-1-quic_liuxin@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250107063120.1011593-1-hch@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 07, 2025 at 07:30:32AM +0100, Christoph Hellwig wrote:
-> Hi all,
+
+On Mon, 16 Dec 2024 17:54:36 +0800, Xin Liu wrote:
+> From: Sayali Lokhande <quic_sayalil@quicinc.com>
 > 
-> this is my version of Damien's "Fix queue freeze and limit locking order".
-> A lot looks very similar, but it was done independently based on the
-> previous discussion.
+> Add UFS support to the QCS615 Ride platform. The UFS host controller and
+> QMP UFS PHY hardware of QCS615 are derived from SM6115. Include the
+> relevant binding documents accordingly. Additionally, configure UFS-related
+> clock, power, and interconnect settings in the device tree.
 > 
-> Changes since RFC:
->  - fix a bizzare virtio_blk bisection snafu
->  - set BLK_FEAT_POLL a little less eagerly for blk-mq
->  - drop the loop patch just adding a comment
->  - improve various commit logs and coments
-> 
+> [...]
 
-loop_set_block_size() needs same change, can you cover it to this series?
+Applied, thanks!
 
-Thanks,
-Ming
+[2/3] arm64: dts: qcom: qcs615: add UFS node
+      commit: a6a9d10e796957aefbc4c8d53ed7673714e83b31
+[3/3] arm64: dts: qcom: qcs615-ride: Enable UFS node
+      commit: 4b120ef62ed653f4bc05e5f68832d2d2ac548b60
 
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
