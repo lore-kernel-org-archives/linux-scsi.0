@@ -1,127 +1,307 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D11012147EA;
-	Thu,  9 Jan 2025 06:00:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2374337160;
+	Thu,  9 Jan 2025 07:04:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736402410; cv=none; b=kYgX1xhektA01snChSDMISdgihIxofRtpvr72UIaaJuMR+j8DA8nWqxO4iDNgdqLxhjBINN6K+o4RvseFNSmRyLXQTUqBywgpqxZyD8haLorOIs/O3jMz/TkbdC1mtYmMSI3TV0tHzvCUMyGlBzPABMOVj2l4GwTc/exSPHyW5w=
+	t=1736406281; cv=none; b=ptKMljZAXpxIjnmZn0j1S0tJ2q7czz/pucrKe2pHo/67UYN0Q/jJQAyZfr27blpzVgW42SyXyxzLY246bZZ2fbk/GwTjNP0M4mSyrXwr30DMipa3DonXYZyvq7nueBYwI5T67nP50hoD1i2fZF5GIAxx+QxBc/HHdbxP4qoMK+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736402410; c=relaxed/simple;
-	bh=fi/s+cBhAmLuIop2UBpkN71LlHYlHzy90jizfqIlh9k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uModkgR5Fr0e1MrbMZbxWEu3QtXn4ZQNPcdXwfO9fkoUL78+pkIJF3Mt3YnDPPpWGbtcYw9kBqoLLCo0on0XrscOCM1P9BqCYKXDNCzZRrdKCXUExXUWuwn5xRXrZfCvDbJYdsUmKPaX4dIz0fTTZ//Sc2SlAZ//AmO2ChEpTN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=v00tT2VE; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1736406281; c=relaxed/simple;
+	bh=woxLb+0wS3wxExOB7T3NnE6qpa7rQS3ayiDLRdK1yAc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=k3mRj2wksGOJjdXSmG3j2CauOK5mkuj4OVwLBHmVHvJGbqMQ7agUzoj6L7RPV52FpDoU57gcgO6Ggg2WhSdn9kLfQV/xuEz6QTO2F7UwAuH8AqNgWuXUTA4xlspCQertcgC5tapsxIx0b46cYJmgiN3EWzLLL7BHyJ6OsX1P4WE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Y+ctwC3A; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="v00tT2VE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=QYjYnvJCCu85L8ZQwU17Zz1hszoqzw6yMycLiSn8ENM=; b=v00tT2VE3Ao8aSvkQWXTOcIoow
-	HDTjHMjmYrEXJmVZ4aGOZth6886xv3R/Vul+yXz5491biKjSfGLrtl+7PSjTPHp3DuNi7uGA2VMP9
-	qCLucNeKmfFms6u4KUdCsIN8wo1y2mkesnpuwU36rd90y/KJqXQ+5+0I2cwAMj0eNg5LmxzstITSN
-	S9VVEh+zQjmYHJ9DPcG2qlgEHcNf0wS6HwOCTZxdHe+AqjOv6Tj32UnMwbkPkOvhYHEOmFdTLMVLP
-	6mLp+ml8IDooGTWPDbreGDPA3amwpF0/pUnxUjV4Q11JEFV3Kvt1UqOr8FY3z+7YRQPJjlpcXcL7B
-	3BY3ndcg==;
-Received: from 2a02-8389-2341-5b80-ddeb-cdec-70b9-e2f0.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:ddeb:cdec:70b9:e2f0] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tVlZF-0000000ArfV-2ZaU;
-	Thu, 09 Jan 2025 05:59:22 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Ming Lei <ming.lei@redhat.com>,
-	Nilay Shroff <nilay@linux.ibm.com>,
-	linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	nbd@other.debian.org,
-	linux-scsi@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 11/11] loop: fix queue freeze vs limits lock order
-Date: Thu,  9 Jan 2025 06:57:32 +0100
-Message-ID: <20250109055810.1402918-12-hch@lst.de>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250109055810.1402918-1-hch@lst.de>
-References: <20250109055810.1402918-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Y+ctwC3A"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5095mFku027056;
+	Thu, 9 Jan 2025 07:04:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=pcrTEpBzuUwh+gwvERwnV+
+	KFAfwJkshMP3aWngGtrL8=; b=Y+ctwC3AKEsCLDMeg6Z97sWfUnCO1VuVcqmYD6
+	AlIL/w98Hs/753ryXMyGLtSbBR4HD9Lze7QZIZONR+6a9IBrO6JZY6oTV5z0NWKG
+	yE398VR3COezGliiEGBCp3yOc7rUjipohlc3ylJNHI7h/iY2cNAvTAWhFtzQapt6
+	2Y0fukxSmE7dIIKXWqocHN79/Rv2lL+BE14znXfpGsnoaXv5kQCTpsz52ANFBFJR
+	006t4ejW2BllWXy9jOS79RZp0zfVeEiSyzun4fJxgOlgM7cZC57ihMPOe70T2lLZ
+	8hCZJEaXllJ616j3tZCPO/ngWTKGgOyNEf5PYMZTi+Ux+n4Q==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4428mf859q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 09 Jan 2025 07:04:08 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 509747v4003765
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 9 Jan 2025 07:04:07 GMT
+Received: from hu-rdwivedi-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Wed, 8 Jan 2025 23:04:04 -0800
+From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+To: <manivannan.sadhasivam@linaro.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <andersson@kernel.org>, <bvanassche@acm.org>, <ebiggers@kernel.org>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Naveen Kumar Goud Arepalli
+	<quic_narepall@quicinc.com>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V10] scsi: ufs: qcom: Enable UFS Shared ICE Feature
+Date: Thu, 9 Jan 2025 12:33:52 +0530
+Message-ID: <20250109070352.8801-1-quic_rdwivedi@quicinc.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: bWFoh0cpvBMnribOXRtAO7DIs7fLafWI
+X-Proofpoint-ORIG-GUID: bWFoh0cpvBMnribOXRtAO7DIs7fLafWI
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ mlxlogscore=999 clxscore=1011 priorityscore=1501 mlxscore=0
+ lowpriorityscore=0 bulkscore=0 spamscore=0 impostorscore=0 adultscore=0
+ malwarescore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2411120000 definitions=main-2501090056
 
-Match the locking order used by the core block code by only freezing
-the queue after taking the limits lock using the
-queue_limits_commit_update_frozen helper and document the callers that
-do not freeze the queue at all.
+By default, the UFS controller allocates a fixed number of RX
+and TX engines statically. Consequently, when UFS reads are in
+progress, the TX ICE engines remain idle, and vice versa.
+This leads to inefficient utilization of RX and TX engines.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To address this limitation, enable the UFS shared ICE feature for
+Qualcomm UFS V5.0 and above. This feature utilizes a pool of crypto
+cores for both TX streams (UFS Write – Encryption) and RX streams
+(UFS Read – Decryption). With this approach, crypto cores are
+dynamically allocated to either the RX or TX stream as needed.
+
+Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 ---
- drivers/block/loop.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+Changes from v9:
+1. Addressed Manivannan's comment to pair ufs_qcom_config_ice_allocator
+   with ufs_qcom_ice_enable.
+2. Addressed Manivannan's comment to avoid guarding the definitions.
+3. Addressed Manivannan's comment to align bit definitions.
+2. Addressed Manivannan's comment to use enum for register definitions.
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 560d6d5879d6..15e486baa223 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -311,6 +311,13 @@ static void loop_clear_limits(struct loop_device *lo, int mode)
- 		lim.discard_granularity = 0;
- 	}
+Changes from v8:
+1. Addressed Manivannan's comment to call ufs_qcom_config_ice_allocator()
+   from ufs_qcom_ice_enable().
+2. Addressed Manivannan's comment to place UFS_QCOM_CAP_ICE_CONFIG
+   definition outside of the ufs_qcom_host struct.
+3. Addressed Manivannan's comment to align ICE definitions with
+   other definitions.
+
+Changes from v7:
+1. Addressed Eric's comment to perform ice configuration only if
+   UFSHCD_CAP_CRYPTO is enabled.
  
-+	/*
-+	 * XXX: this updates the queue limits without freezing the queue, which
-+	 * is against the locking protocol and dangerous.  But we can't just
-+	 * freeze the queue as we're inside the ->queue_rq method here.  So this
-+	 * should move out into a workqueue unless we get the file operations to
-+	 * advertise if they support specific fallocate operations.
-+	 */
- 	queue_limits_commit_update(lo->lo_queue, &lim);
+Changes from v6: 
+1. Addressed Eric's comment to replace is_ice_config_supported() helper
+   function with a conditional check for UFS_QCOM_CAP_ICE_CONFIG.
+
+Changes from v5: 
+1. Addressed Bart's comment to declare the "val" variable with
+   the "static" keyword.
+
+Changes from v4:
+1. Addressed Bart's comment to use get_unaligned_le32() instead of
+   bit shifting and to declare val with the const keyword.
+
+Changes from v3:
+1. Addressed Bart's comment to change the data type of "config" to u32
+   and "val" to uint8_t.
+
+Changes from v2:
+1. Refactored the code to have a single algorithm in the code and
+enabled by default.
+2. Revised the commit message to incorporate the refactored change.
+3. Qcom host capabilities are now enabled in a separate function.
+
+Changes from v1:
+1. Addressed Rob's and Krzysztof's comment to fix dt binding compilation
+   issue.
+2. Addressed Rob's comment to enable the nodes in example.
+3. Addressed Eric's comment to rephrase patch commit description.
+   Used terminology as ICE allocator instead of ICE algorithm.
+4. Addressed Christophe's comment to align the comment as per kernel doc.
+---
+ drivers/ufs/host/ufs-qcom.c | 37 ++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h | 42 ++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 78 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 68040b2ab5f8..83bf156eb171 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -15,6 +15,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/reset-controller.h>
+ #include <linux/time.h>
++#include <linux/unaligned.h>
+ 
+ #include <soc/qcom/ice.h>
+ 
+@@ -105,6 +106,26 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
  }
  
-@@ -1091,6 +1098,7 @@ static int loop_configure(struct loop_device *lo, blk_mode_t mode,
- 
- 	lim = queue_limits_start_update(lo->lo_queue);
- 	loop_update_limits(lo, &lim, config->block_size);
-+	/* No need to freeze the queue as the device isn't bound yet. */
- 	error = queue_limits_commit_update(lo->lo_queue, &lim);
- 	if (error)
- 		goto out_unlock;
-@@ -1151,7 +1159,12 @@ static void __loop_clr_fd(struct loop_device *lo)
- 	lo->lo_sizelimit = 0;
- 	memset(lo->lo_file_name, 0, LO_NAME_SIZE);
- 
--	/* reset the block size to the default */
-+	/*
-+	 * Reset the block size to the default.
-+	 *
-+	 * No queue freezing needed because this is called from the final
-+	 * ->release call only, so there can't be any outstanding I/O.
-+	 */
- 	lim = queue_limits_start_update(lo->lo_queue);
- 	lim.logical_block_size = SECTOR_SIZE;
- 	lim.physical_block_size = SECTOR_SIZE;
-@@ -1471,9 +1484,10 @@ static int loop_set_block_size(struct loop_device *lo, unsigned long arg)
- 	sync_blockdev(lo->lo_device);
- 	invalidate_bdev(lo->lo_device);
- 
--	blk_mq_freeze_queue(lo->lo_queue);
- 	lim = queue_limits_start_update(lo->lo_queue);
- 	loop_update_limits(lo, &lim, arg);
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
++/**
++ * ufs_qcom_config_ice_allocator() - ICE core allocator configuration
++ *
++ * @host: pointer to qcom specific variant structure.
++ */
++static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
++{
++	struct ufs_hba *hba = host->hba;
++	static const uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
++	u32 config;
 +
-+	blk_mq_freeze_queue(lo->lo_queue);
- 	err = queue_limits_commit_update(lo->lo_queue, &lim);
- 	loop_update_dio(lo);
- 	blk_mq_unfreeze_queue(lo->lo_queue);
++	if (!(host->caps & UFS_QCOM_CAP_ICE_CONFIG) ||
++			!(host->hba->caps & UFSHCD_CAP_CRYPTO))
++		return;
++
++	config = get_unaligned_le32(val);
++
++	ufshcd_writel(hba, ICE_ALLOCATOR_TYPE, REG_UFS_MEM_ICE_CONFIG);
++	ufshcd_writel(hba, config, REG_UFS_MEM_ICE_NUM_CORE);
++}
+ 
+ static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
+ {
+@@ -196,6 +217,11 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
+ {
+ 	return 0;
+ }
++
++static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
++{
++}
++
+ #endif
+ 
+ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+@@ -439,6 +465,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+ 		err = ufs_qcom_check_hibern8(hba);
+ 		ufs_qcom_enable_hw_clk_gating(hba);
+ 		ufs_qcom_ice_enable(host);
++		ufs_qcom_config_ice_allocator(host);
+ 		break;
+ 	default:
+ 		dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
+@@ -932,6 +959,14 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+ 	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
+ }
+ 
++static void ufs_qcom_set_host_caps(struct ufs_hba *hba)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	if (host->hw_ver.major >= 0x5)
++		host->caps |= UFS_QCOM_CAP_ICE_CONFIG;
++}
++
+ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+ {
+ 	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
+@@ -940,6 +975,8 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+ 	hba->caps |= UFSHCD_CAP_WB_EN;
+ 	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
+ 	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
++
++	ufs_qcom_set_host_caps(hba);
+ }
+ 
+ /**
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index b9de170983c9..2975a9e545fa 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -76,6 +76,12 @@ enum {
+ 	UFS_MEM_CQIS_VS		= 0x8,
+ };
+ 
++/* QCOM UFS host controller Shared ICE registers */
++enum {
++	REG_UFS_MEM_ICE_CONFIG			= 0x260C,
++	REG_UFS_MEM_ICE_NUM_CORE		= 0x2664,
++};
++
+ #define UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(x)	(0x000 + x)
+ #define UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(x)	(0x400 + x)
+ 
+@@ -110,6 +116,9 @@ enum {
+ /* bit definition for UFS_UFS_TEST_BUS_CTRL_n */
+ #define TEST_BUS_SUB_SEL_MASK	GENMASK(4, 0)  /* All XXX_SEL fields are 5 bits wide */
+ 
++/* bit definition for UFS Shared ICE config */
++#define UFS_QCOM_CAP_ICE_CONFIG BIT(0)
++
+ #define REG_UFS_CFG2_CGC_EN_ALL (UAWM_HW_CGC_EN | UARM_HW_CGC_EN |\
+ 				 TXUC_HW_CGC_EN | RXUC_HW_CGC_EN |\
+ 				 DFC_HW_CGC_EN | TRLUT_HW_CGC_EN |\
+@@ -135,6 +144,37 @@ enum {
+ #define UNIPRO_CORE_CLK_FREQ_201_5_MHZ         202
+ #define UNIPRO_CORE_CLK_FREQ_403_MHZ           403
+ 
++/* ICE allocator type to share AES engines among TX stream and RX stream */
++#define ICE_ALLOCATOR_TYPE 2
++
++/*
++ * Number of cores allocated for RX stream when Read data block received and
++ * Write data block is not in progress
++ */
++#define NUM_RX_R1W0 28
++
++/*
++ * Number of cores allocated for TX stream when Device asked to send write
++ * data block and Read data block is not in progress
++ */
++#define NUM_TX_R0W1 28
++
++/*
++ * Number of cores allocated for RX stream when Read data block received and
++ * Write data block is in progress
++ * OR
++ * Device asked to send write data block and Read data block is in progress
++ */
++#define NUM_RX_R1W1 15
++
++/*
++ * Number of cores allocated for TX stream (UFS write) when Read data block
++ * received and Write data block is in progress
++ * OR
++ * Device asked to send write data block and Read data block is in progress
++ */
++#define NUM_TX_R1W1 13
++
+ static inline void
+ ufs_qcom_get_controller_revision(struct ufs_hba *hba,
+ 				 u8 *major, u16 *minor, u16 *step)
+@@ -196,7 +236,7 @@ struct ufs_qcom_host {
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
+ 	struct qcom_ice *ice;
+ #endif
+-
++	u32 caps;
+ 	void __iomem *dev_ref_clk_ctrl_mmio;
+ 	bool is_dev_ref_clk_enabled;
+ 	struct ufs_hw_version hw_ver;
 -- 
-2.45.2
+2.47.1
 
