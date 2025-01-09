@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 237702144D7;
-	Thu,  9 Jan 2025 05:58:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79D0F2144C9;
+	Thu,  9 Jan 2025 05:58:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736402318; cv=none; b=Yu01AvIgXwWR+RMHIQsBFISSZObZ9eVfmRspayf1WSNqnPin+vaGAo/GABIUQMoJxDR4Fc85l4wucBwIqR4Ot2/kvSimRMTvFWiZDId+3XuoE6wMEqs7mefgZYLtwvvqyg7NNnvskYXjpBi6YD5XAohozG9+0bDHRmkImVdmCmM=
+	t=1736402322; cv=none; b=WVXsFPpDChOA1JDeDuLGWhwz3sAqaUD22SFUfZDmpDqF1iIvY9j1LY/PqJLznTmAP/hs8rAMAD/fr0IlRwdOLIyiw9yC3Sw39n0fnVyUSJ1zlh5kUZ6QdXu/wuoHf6aLhGxELNuijUqOgYTxQUVLHln+i2X6hGNkQt2pHHqa9fM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736402318; c=relaxed/simple;
-	bh=VkkIIGaDtBWtzBu4BvY9bOl/SmckN9v9iQT5lN+pfjA=;
+	s=arc-20240116; t=1736402322; c=relaxed/simple;
+	bh=E3CwkcLIxTEbkDipoziiOphLtPgdljmJaFtrhxPSDJQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VL/7isZLYREdgS32oVmWiKPpmmeW52nlNvLsqn5aDYIIUxbzupCYvIVVNlpYB3dxczYxGOc3J3WUo5gBDwSRFmAjvueNMI2w1bLzDQJjZ/JdpVy/HzDsuPDY2JuBGql6dv6dRH5df+Z1W2KiYFDZJNL+5h460p6S1V+2HAhvFq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0kUg0rLl; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=aMzhzqR6w+AJZ2/uqKJ0D8fNv0t0NMLTqPn5556TjVlYeewIBq3CsQ70VK8J7ROq3RvY74Pf8QLfmR6r7HF6zaf6K3Ca2OOnRS1cAcrE5gP/BbmoXGcGElMzhaTgtjD3ojLRjEn7tXyCWwCxqmUIiPmvsOcU289j5GkDSHVwIcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZhTuH3o0; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0kUg0rLl"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZhTuH3o0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=o2Aj0wgk32Q0I51KcfGG6ftWWZKQo4e+5ypDpflhfcI=; b=0kUg0rLlZKsch1+ZnPp7JWIu2W
-	pKh8mlojcryA52IpAC0M6aZZO9g4GK+JqlzFZmz05ILGdcC/q2SzL2lbTRn7eKbY+X61uXZS6NCSS
-	C2kTTZem8GXIgyTznkTWjxNm24Yu6qGwMbeSV54vlh3114mY8/U9WhEhGikOCMjUW5Wi0Ujs89apL
-	xP/fm8nGC2yTSXuD0KsEulUdsX4QdDqRtUCFw1BuVE2+qMY86Dnjrod1hAUcJDD8XuupwMJUpBW+M
-	rV4G4SlLlg4g8BnzGKizeACp7B55sh3XL00hVGWoGf9FpHky6XoI+C21FrUfBbeGs5BP1cYwVS+M7
-	ngeLw16Q==;
+	bh=LcHCnPrgvEln0yA32Omgiz1QyLiHNTz7aZhCILYH5I4=; b=ZhTuH3o045GS2jN2Wbx9DUXYv/
+	IIKPrOT7x0c93kemvRdyZ01zd8mzzlg8quO27HRTwOW2ISfnMxmHKs1Ev2ffE+JsWAlF9UYSVdzco
+	LBytEzd0RWhW22eGFNX6RqUqn/SDmy/1cbf2Uwj5TgDkvCnxhs4a3ZTYa/aHqrGDjpYzp0TcLoRcW
+	21iSrDE7GRO8ePJxm/i77p7iQJEjXpXNr01Cp/uGB9Kv1wlT1w6P7fYU7Bgh1hIDFijHoS6vrh2NV
+	unmZpy9Kwqr0ytRwuRbcF24zIGlKfH4x5QahS0jl+aTXP/7Gj5R9781eOsWJruWY9v0w8GohqgwcM
+	CF6rhgbw==;
 Received: from 2a02-8389-2341-5b80-ddeb-cdec-70b9-e2f0.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:ddeb:cdec:70b9:e2f0] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tVlYw-0000000ArMo-3rq1;
-	Thu, 09 Jan 2025 05:58:35 +0000
+	id 1tVlZ1-0000000ArQh-12ah;
+	Thu, 09 Jan 2025 05:58:40 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -41,9 +41,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 06/11] block: fix queue freeze vs limits lock order in sysfs store methods
-Date: Thu,  9 Jan 2025 06:57:27 +0100
-Message-ID: <20250109055810.1402918-7-hch@lst.de>
+Subject: [PATCH 07/11] nvme: fix queue freeze vs limits lock order
+Date: Thu,  9 Jan 2025 06:57:28 +0100
+Message-ID: <20250109055810.1402918-8-hch@lst.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250109055810.1402918-1-hch@lst.de>
 References: <20250109055810.1402918-1-hch@lst.de>
@@ -56,75 +56,69 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-queue_attr_store() always freezes a device queue before calling the
-attribute store operation. For attributes that control queue limits, the
-store operation will also lock the queue limits with a call to
-queue_limits_start_update(). However, some drivers (e.g. SCSI sd) may
-need to issue commands to a device to obtain limit values from the
-hardware with the queue limits locked. This creates a potential ABBA
-deadlock situation if a user attempts to modify a limit (thus freezing
-the device queue) while the device driver starts a revalidation of the
-device queue limits.
+Match the locking order used by the core block code by only freezing
+the queue after taking the limits lock.
 
-Avoid such deadlock by not freezing the queue before calling the
-->store_limit() method in struct queue_sysfs_entry and instead use the
-queue_limits_commit_update_frozen helper to freeze the queue after taking
-the limits lock.
+Unlike most queue updates this does not use the
+queue_limits_commit_update_frozen helper as the nvme driver want the
+queue frozen for more than just the limits update.
 
-This also removes taking the sysfs lock for the store_limit method as
-it doesn't protect anything here, but creates even more nesting.
-Hopefully it will go away from the actual sysfs methods entirely soon.
-
-(commit log adapted from a similar patch from  Damien Le Moal)
-
-Fixes: ff956a3be95b ("block: use queue_limits_commit_update in queue_discard_max_store")
-Fixes: 0327ca9d53bf ("block: use queue_limits_commit_update in queue_max_sectors_store")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Ming Lei <ming.lei@redhat.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/blk-sysfs.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/nvme/host/core.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index d2aa2177e4ba..e828be777206 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -694,22 +694,24 @@ queue_attr_store(struct kobject *kobj, struct attribute *attr,
- 	if (entry->load_module)
- 		entry->load_module(disk, page, length);
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index c2250ddef5a2..1ccf17f6ea7f 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2128,9 +2128,10 @@ static int nvme_update_ns_info_generic(struct nvme_ns *ns,
+ 	struct queue_limits lim;
+ 	int ret;
  
--	mutex_lock(&q->sysfs_lock);
--	blk_mq_freeze_queue(q);
- 	if (entry->store_limit) {
- 		struct queue_limits lim = queue_limits_start_update(q);
- 
- 		res = entry->store_limit(disk, page, length, &lim);
- 		if (res < 0) {
- 			queue_limits_cancel_update(q);
--		} else {
--			res = queue_limits_commit_update(q, &lim);
--			if (!res)
--				res = length;
-+			return res;
- 		}
--	} else {
--		res = entry->store(disk, page, length);
+-	blk_mq_freeze_queue(ns->disk->queue);
+ 	lim = queue_limits_start_update(ns->disk->queue);
+ 	nvme_set_ctrl_limits(ns->ctrl, &lim);
 +
-+		res = queue_limits_commit_update_frozen(q, &lim);
-+		if (res)
-+			return res;
-+		return length;
++	blk_mq_freeze_queue(ns->disk->queue);
+ 	ret = queue_limits_commit_update(ns->disk->queue, &lim);
+ 	set_disk_ro(ns->disk, nvme_ns_is_readonly(ns, info));
+ 	blk_mq_unfreeze_queue(ns->disk->queue);
+@@ -2177,12 +2178,12 @@ static int nvme_update_ns_info_block(struct nvme_ns *ns,
+ 			goto out;
  	}
+ 
++	lim = queue_limits_start_update(ns->disk->queue);
 +
-+	mutex_lock(&q->sysfs_lock);
-+	blk_mq_freeze_queue(q);
-+	res = entry->store(disk, page, length);
- 	blk_mq_unfreeze_queue(q);
- 	mutex_unlock(&q->sysfs_lock);
- 	return res;
+ 	blk_mq_freeze_queue(ns->disk->queue);
+ 	ns->head->lba_shift = id->lbaf[lbaf].ds;
+ 	ns->head->nuse = le64_to_cpu(id->nuse);
+ 	capacity = nvme_lba_to_sect(ns->head, le64_to_cpu(id->nsze));
+-
+-	lim = queue_limits_start_update(ns->disk->queue);
+ 	nvme_set_ctrl_limits(ns->ctrl, &lim);
+ 	nvme_configure_metadata(ns->ctrl, ns->head, id, nvm, info);
+ 	nvme_set_chunk_sectors(ns, id, &lim);
+@@ -2285,6 +2286,7 @@ static int nvme_update_ns_info(struct nvme_ns *ns, struct nvme_ns_info *info)
+ 		struct queue_limits *ns_lim = &ns->disk->queue->limits;
+ 		struct queue_limits lim;
+ 
++		lim = queue_limits_start_update(ns->head->disk->queue);
+ 		blk_mq_freeze_queue(ns->head->disk->queue);
+ 		/*
+ 		 * queue_limits mixes values that are the hardware limitations
+@@ -2301,7 +2303,6 @@ static int nvme_update_ns_info(struct nvme_ns *ns, struct nvme_ns_info *info)
+ 		 * the splitting limits in to make sure we still obey possibly
+ 		 * lower limitations of other controllers.
+ 		 */
+-		lim = queue_limits_start_update(ns->head->disk->queue);
+ 		lim.logical_block_size = ns_lim->logical_block_size;
+ 		lim.physical_block_size = ns_lim->physical_block_size;
+ 		lim.io_min = ns_lim->io_min;
 -- 
 2.45.2
 
