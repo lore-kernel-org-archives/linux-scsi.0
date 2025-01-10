@@ -1,144 +1,95 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF310207E19
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jan 2025 08:44:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A14207E19
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Jan 2025 08:55:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736498662; cv=none; b=FrCmhubIx2VtaDl5tmq3CDIVVjHVQ2Lyj+aqw6duja41L5q2XMBZavevBwNRI/9I85ko9jlM/2TazZSEIYHKSHuf9wrSPaks8fzKklgE30tPvo6hbuqZjNYvPIJMoTKV37Pwi8xlqswpxBOk36KDBILHUmo/gsiysqz6baMSvJY=
+	t=1736499321; cv=none; b=kOLts/1VHsXufry0Mac1doJ2MTA1jbhonZHdLVOOpfbFQp2rXdYbzp11qfU3HsOroYg7fjN4Uvs3X+RaKlUZvcmIO/s7vpK/o+NVsx8oWjkDiEywXMMJpLMFCUGT3i8NIB5yUomIwW5UKqR05mGIDThNsixmYucWJvnihc73RCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736498662; c=relaxed/simple;
-	bh=bcs5XrixjJuICcKrOi0QLiwMCzGybnpSV1jIYpcaEdk=;
+	s=arc-20240116; t=1736499321; c=relaxed/simple;
+	bh=cbmAgBIFGegMw9/n64PG7MiCf/X/4twOdx1csl9BLho=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ll9kN5oCp27raH+TH9HDzKtcD8TGaPn3T3PEFFjRJD4FI0oJw3BI4YnPe1ZJMxEyqRvSKEv04vaOishDKHy6Z24oFxsxNkeHpQpY67V5D5dz9Jn/APlrLLg2mSF4gkIFoS32JPyp4u4x+BUkfVRKVyHGNdhEcnXkDg/yFBr6wcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=oqhdcaDh; arc=none smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
+	 To:Cc:Content-Type; b=fCZ3SK9Fa9KmpzG+JnONVS2bf673OfHm4ZrVGpsEMgo6vc3o5BqlM4BWoqIMG8ka83Rp59paVa//u6ACwB52B5/UuB6tqPCUf1MNSS2B2NNN2fF6pDUtdopE/++p8Nu/ZeBFnTOt2xSM1nAZjKU3iZRgv6Vn6HB4dq7Em9IMKew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HnmeJPxX; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="oqhdcaDh"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-540215984f0so2005895e87.1
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Jan 2025 00:44:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1736498659; x=1737103459; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3J6ybie5MZTohAU5zO4AHtHmlS6SVT///Z6RnwOTF0I=;
-        b=oqhdcaDhpg7uKVN/GIznd4jiSK2ORwiXk9h/zpw9FR245bEuGdgGwuv+iH7nlP+B8m
-         9zSJy/VKhvJMc6ppvhGlbHo0DpM4g+sUf+393Z8NQE5l644lXXhX/hc02MoRYreuPbqy
-         1r7QVc8llQBVdCfRPVAL+k/Y9s9TGUl8HgbN9u680Qy4aSKB90ejT4XD+RT9i7blL+NE
-         cGP+WYt29uNl4d9Gw2WB4t37qzpLJXDzmBUYGtIqQZ/70PnLzFAUzfmBXAjKu9Q09iGx
-         +l7IMfhAkeuAw4F38csY9kRhSxRMk/6yUGsObLAkdEDRMnEffvi9RyOJf1veWr4qfHlw
-         KPfg==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HnmeJPxX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1736499316;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cbmAgBIFGegMw9/n64PG7MiCf/X/4twOdx1csl9BLho=;
+	b=HnmeJPxXvKe4kiBou1wyPLffXx83HpKCHnWwtbmiAQnA51IV8ES0es4ERl9472fFLhNHzz
+	BfZORQ15a6I65owTfSxxio6bN+ZU/XwBRc7AR3dysn4cT1w0EoNewdVcKPqyGTwrxaa0ED
+	uUwpgxvcPL51KKyJajY833QY7328mRc=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-244-C9lftecXOvqhLWMHzWDZ1Q-1; Fri, 10 Jan 2025 03:55:15 -0500
+X-MC-Unique: C9lftecXOvqhLWMHzWDZ1Q-1
+X-Mimecast-MFC-AGG-ID: C9lftecXOvqhLWMHzWDZ1Q
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-6d8eb5ea994so20854336d6.1
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Jan 2025 00:55:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736498659; x=1737103459;
+        d=1e100.net; s=20230601; t=1736499314; x=1737104114;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=3J6ybie5MZTohAU5zO4AHtHmlS6SVT///Z6RnwOTF0I=;
-        b=FLH/sbU42+2sIHRr8VMT7Or2N8Gq8SvA1jQBvJai7MNRmSdt4KwPE5D8+B4ukEk8aA
-         kMi0aRnC7LTWxtuaaeGEruMaAts9yFNZNOLGE3ZsLB+VKOCwV6vfjDn/3kOVK3oE5jFo
-         NcJbevgbdwFAamOUBeU6Yl4PbuVoFhWQTuyABjCGrHmxKQA0yBczsqUOmLFdDX8FH/kG
-         wiAY7niWg144JZVly4glGhVB2/HlSqT+sQuRb1E/TVWhPxdrHhhoFCapN80gAseVU/RM
-         bKt8ZXfwSZjFAuAMjJG1e7chehJeEir9uTdlCTG6ShBQBVXkgQGMlohg5we29oLoEYBa
-         eeyQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW9VifCWZyd8ccNpow9jZYWOFfTSfHq5jjvVMoFtKmd/tUcCtD+gCsKZqJtdi3yepfyJG4GI4dDPcWw@vger.kernel.org
-X-Gm-Message-State: AOJu0YwTijlrTCrTsXMUl1zAtE+sF6Mf4vg2ocMVD55D+BTjbXmvLl72
-	+73hFn25qBl7gclQH9muoeuWXcLmBlTiNn+rHGa/D/1v0zfOwUYGe5R7/cmLo2Nw890IyGRyDVc
-	GlquJx0dVtcPAJFtfRW8ZOskrpFheAlL5QWzNfw==
-X-Gm-Gg: ASbGncuYic6kJNMgRaRDxIGQRo1s1ks/P5b9Lvflo8I8wvPNA2MXeRGlWIggYQakwvm
-	WQyNXsvS+9yOsP5OU4okTAcpKk7f4VqXAvWOhH5XHFXBm0gtMPhb1OotX9g3ElfwsBZ/2
-X-Google-Smtp-Source: AGHT+IEyB2cuChMeX1r+nZtaJdP6Mzdmo0n9PGPsFhkwAW7ukTnXjzzz9a+MUocObbefl6A9T2AxU0IqAEz7Wjzjkhg=
-X-Received: by 2002:a05:6512:2399:b0:540:1ea7:44db with SMTP id
- 2adb3069b0e04-542845b1aedmr3480546e87.4.1736498658964; Fri, 10 Jan 2025
- 00:44:18 -0800 (PST)
+        bh=cbmAgBIFGegMw9/n64PG7MiCf/X/4twOdx1csl9BLho=;
+        b=l1PAn/atGvm8W27mxNpVdOQE0Pkjnx6qSwaF5cwBX5pW3K3IDjmMcP+jUfwQ67YcO1
+         NJPZndkqbDVjaMhbLDZ0vOBcJltypXffFfMD6Fsln7O5XaeRe67Y/UYddwnWOXow/7Fn
+         wSk2z68Okieb/4Q1XSaIjSdtEEyzCw3mfJ4SPfz8nDqqdCZuEBwB1kPsykUN8MX06oZE
+         s7JYnwxU8h9WIHIidEzul+QGBRhe+r5eMGCWwgv9VZKCrqWQXkP7Xh0MssysAqQTTfd7
+         l6Jzxp5rHTwnzkD87xy6y/y6ROOYY9tjp9qFQbM2G2zQVDLDfvg1MhEYOkMWjmHzP1yN
+         f3tw==
+X-Forwarded-Encrypted: i=1; AJvYcCWLyMsq1/zQEdCi70bycmJwlhEnMtQHVPUbrgpd/0F/RKZgXA1SSvl6vXNB+qZUxKL0PBnAMP5m6/OM@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw3ImJtU3GYdUFyDl2w4zsbdRBNvHdQWEf1lKX7BwN3QczcgP21
+	TF4AEicNoeCOdcuOXx7YyOi8lPH2+f38RE867ZXKfpnPUIZjaf/O/Ye/QEzVnZN5qW6hy9G6d1r
+	Rm+4TRjYtWwu0bdWctqFvHjpByt1VhOUT5AKxc4PF1/WzxnmpBCesSxkf7lg6aK98y41bAKU8K0
+	ZYGXD1i/me2xGgVVgt7EvQRmQKRIv6vFiIXx+FflII9Yzb
+X-Gm-Gg: ASbGncuoN5CcfUtpdsUA6PtQrrzkrP4r3d2bq467vjsvcGSH/fI5RMiMKFDCdJP4qk0
+	EWL8i5d6rllUuPTV1mOdVoYx7G9J+q+q0HBHRbw==
+X-Received: by 2002:a05:6214:5087:b0:6d4:2131:563c with SMTP id 6a1803df08f44-6df9b262054mr165554686d6.27.1736499314553;
+        Fri, 10 Jan 2025 00:55:14 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFlFJ0HS11+WfG0bEtJnjkEwNkOKy8oKZOjFbOo4kwZMQuiwkXmEgjDB8+21fXJ6QpeTexzK3Pg9H5Pxdc7LOM=
+X-Received: by 2002:a05:6214:5087:b0:6d4:2131:563c with SMTP id
+ 6a1803df08f44-6df9b262054mr165554486d6.27.1736499314213; Fri, 10 Jan 2025
+ 00:55:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241213041958.202565-1-ebiggers@kernel.org>
-In-Reply-To: <20241213041958.202565-1-ebiggers@kernel.org>
-From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Fri, 10 Jan 2025 09:44:07 +0100
-X-Gm-Features: AbW1kvYIJl4nVvnVQIFwQlGZKMe8mAAA_MH2MqnfAcbAm7yp2J-zmj2cn1w9I5U
-Message-ID: <CAMRc=MdeZ_k9z+ZKW1ub0m9ymh3eABUU7ZRPY9TYHM_fc+D+qQ@mail.gmail.com>
-Subject: Re: [PATCH v10 00/15] Support for hardware-wrapped inline encryption keys
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, Gaurav Kashyap <quic_gaurkash@quicinc.com>, 
-	Adrian Hunter <adrian.hunter@intel.com>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, Jens Axboe <axboe@kernel.dk>, 
-	Konrad Dybcio <konradybcio@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Ulf Hansson <ulf.hansson@linaro.org>
+References: <20241224101757.32300-1-d.bogdanov@yadro.com>
+In-Reply-To: <20241224101757.32300-1-d.bogdanov@yadro.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Date: Fri, 10 Jan 2025 09:55:02 +0100
+X-Gm-Features: AbW1kvYnXJkhbPEqu4IpXNoV5UnRXMqrTZBLlHDj0sIcttE3Bl45IJFK-3u3QEM
+Message-ID: <CAFL455nr=4V9ObetZaoECTTvm8wEREkQDfbFN_9_dqjqgJQ_Vg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: target: iscsi: fix timeout on deleted connection
+To: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc: Martin Petersen <martin.petersen@oracle.com>, target-devel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux@yadro.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Dec 13, 2024 at 5:20=E2=80=AFAM Eric Biggers <ebiggers@kernel.org> =
-wrote:
+=C3=BAt 24. 12. 2024 v 11:37 odes=C3=ADlatel Dmitry Bogdanov
+<d.bogdanov@yadro.com> napsal:
 >
-> This patchset is based on next-20241212 and is also available in git via:
+> NOPIN response timer may expire on a deleted connection and crash with
+> such logs:
+> That is because nopin response timer may be re-started on nopin timer exp=
+iration.
 >
->     git fetch https://git.kernel.org/pub/scm/fs/fscrypt/linux.git wrapped=
--keys-v10
->
-> This patchset adds support for hardware-wrapped inline encryption keys, a
-> security feature supported by some SoCs.  It adds the block and fscrypt
-> framework for the feature as well as support for it with UFS on Qualcomm =
-SoCs.
->
-> This feature is described in full detail in the included Documentation ch=
-anges.
-> But to summarize, hardware-wrapped keys are inline encryption keys that a=
-re
-> wrapped (encrypted) by a key internal to the hardware so that they can on=
-ly be
-> unwrapped (decrypted) by the hardware.  Initially keys are wrapped with a
-> permanent hardware key, but during actual use they are re-wrapped with a
-> per-boot ephemeral key for improved security.  The hardware supports impo=
-rting
-> keys as well as generating keys itself.
->
-> This differs from the existing support for hardware-wrapped keys in the k=
-ernel
-> crypto API (also called "hardware-bound keys" in some places) in the same=
- way
-> that the crypto API differs from blk-crypto: the crypto API is for genera=
-l
-> crypto operations, whereas blk-crypto is for inline storage encryption.
->
-> This feature is already being used by Android downstream for several year=
-s
-> (https://source.android.com/docs/security/features/encryption/hw-wrapped-=
-keys),
-> but on other platforms userspace support will be provided via fscryptctl =
-and
-> tests via xfstests (I have some old patches for this that need to be upda=
-ted).
->
-> Maintainers, please consider merging the following preparatory patches fo=
-r 6.14:
->
->   - UFS / SCSI tree: patches 1-4
->   - MMC tree: patches 5-7
->   - Qualcomm / MSM tree: patch 8
->
+> Stop nopin timer before stopping the nopin response timer to be sure
+> that no one of them will be re-started.
 
-IIUC The following patches will have to wait for the v6.15 cycle?
+Looks ok to me,
 
-[PATCH v10 9/15] soc: qcom: ice: make qcom_ice_program_key() take
-struct blk_crypto_key
-[PATCH v10 10/15] blk-crypto: add basic hardware-wrapped key support
-[PATCH v10 11/15] blk-crypto: show supported key types in sysfs
-[PATCH v10 12/15] blk-crypto: add ioctls to create and prepare
-hardware-wrapped keys
-[PATCH v10 13/15] fscrypt: add support for hardware-wrapped keys
-[PATCH v10 14/15] soc: qcom: ice: add HWKM support to the ICE driver
-[PATCH v10 15/15] ufs: qcom: add support for wrapped keys
+Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
 
-Bartosz
