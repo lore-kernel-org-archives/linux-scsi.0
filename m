@@ -1,133 +1,230 @@
-Received: from alln-iport-6.cisco.com (alln-iport-6.cisco.com [173.37.142.93])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D16A20ADCF;
-	Fri, 10 Jan 2025 09:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 835BA20B7F4;
+	Fri, 10 Jan 2025 09:21:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736500809; cv=none; b=FoIfzXqowwtRwlQm8kB8B1QF+zaUFYq4sVAuTxHf1y5GqDpXhdigFJOXrkB9KV7cy5zxCLT9pBb9LMzTDwBQgtuHOrZF/NGmOPIx6OvNJIrZXFX8icFMJs8rf7bnFrWn86FjdZ8r2/wqFmL+8fZ05d5Mk413z9S6vjMUR05guj0=
+	t=1736500913; cv=none; b=XUew0rIzaDL4IrwrKNfhrPhjsQ/aq0j7RDloYBxbC9AR2VBLZGg/Nj4Nx7DQEkYKgzrra94RFfVd1spCWzc/MRTlzjX4ygf4bM5709fdhQm55WGK0tJqqdgwmVoemKwk9AGAC8M89suizUaDp0t7CIiR1zQ4nr8FrYTPo4sHPrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736500809; c=relaxed/simple;
-	bh=bNa7YQeauaAsS/Lue2NDZ6h/nkc5tqYN1mD3eWYbk5k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QnMbG2z7i9EtevKUInu3UePFxnIURAKyPRqpNZshJol/csEq03vaLvoqKjqZGL/ONFZ0ihhpnYQHjOzvDSLi/bPGBrqZe06fY77D+TbRJaMCgJKfmg7QYKm/itmOqYOew/lAB+8YJGOZGWY3WtPDj9GFAvWPBjmDbkbXOpZDee8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=lz/ogmu6; arc=none smtp.client-ip=173.37.142.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	s=arc-20240116; t=1736500913; c=relaxed/simple;
+	bh=JPFn7TpJptfEglULM9N+4ezAx2VVTnRpHNdjHv6+cWg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=t6lNA5J3Y4vUHY0dYPz2jxUfBcocp2lv66AbE9eFUYDcnsBM2bBCtgW83mOYSCuIMP0h0rihqcw21riE+utDF9p8XW4FnM/hwL1V4kBcW+6/D3xfgdinMvNvHEec0yD28epHwlNddzhAYe0kDAtFll7GVu6WktG1E3dUsR+9LYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VggD9E13; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=l5r1KcXL; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VggD9E13; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=l5r1KcXL; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="lz/ogmu6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1042; q=dns/txt; s=iport;
-  t=1736500807; x=1737710407;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=f/8f+tj2zX92XDvost4GnPugul88xhAEwbHZ/Y553R4=;
-  b=lz/ogmu6T1oAOuOOwL3oPKJWnohbq8gUdi59/tmMrY3KvsPcVJpOWkrb
-   iuoZHu0AS/PMpwIh/PG6ZF1odw1iRhucOuySTR1oG+Nti9ADLcL6aQ0kY
-   b47NwdR45p5jz89ptkOe3HBoky1AsMyt+JeSOsA5pEYePnrX78uCb6R8b
-   Y=;
-X-CSE-ConnectionGUID: iqEWOrGCT82o2I57YO1krg==
-X-CSE-MsgGUID: auXAOVj3Tn2RGnt01cdKBg==
-X-IPAS-Result: =?us-ascii?q?A0ABAAA35YBnj4v/Ja1aGgEBAwMBAQMBARYBAQICAQGCA?=
- =?us-ascii?q?QUBAQ0BhBlDGS+vAYVdgSUDVg8BAQEPRAQBAYUHinYCJjQJDgECBAEBAQEDA?=
- =?us-ascii?q?gMBAQEBAQEBAQEBAQsBAQUBAQECAQcFFAEBAQEBATkFDjuGCIZdKwsBRjCBI?=
- =?us-ascii?q?IMBgmUDszaBeTOBAd4zgW2BSAGNSYVnJxUGgUlEhH2BUoI4gQaFdwSCM4F2g?=
- =?us-ascii?q?z+eSkiBIQNZLAFVEw0KCwcFgXMDOAwLMBU1gRp7gkZpSTcCDQI1gh58giuEX?=
- =?us-ascii?q?IRHhFaFZYIXhXhAAwsYDUgRLDcUGwY+bgebGzyDcHsTgkCTQJIwgTSfT4Qlo?=
- =?us-ascii?q?UYaM6pSAS6HZJBqqS2BZzqBWzMaCBsVgyJSGQ+OOrwfJTI8AgcLAQEDCY8hg?=
- =?us-ascii?q?X0BAQ?=
-IronPort-Data: A9a23:1rzDL6pxB3KLIf2T4fnnTwJjK/5eBmL1ZRIvgKrLsJaIsI4StFCzt
- garIBmPaazbMGKmet0gaIux9hsH78KGmoAwQAVpryAwF3tBpePIVI+TRqvS04x+DSFioGZPt
- Zh2hgzodZhsJpPkjk7zdOCn9T8kiPngqoPUUIbsIjp2SRJvVBAvgBdin/9RqoNziLBVOSvV0
- T/Ji5OZYQXNNwJcaDpOtvra8Us35ZwehRtB1rAATaET1LPhvyF94KI3fcmZM3b+S49IKe+2L
- 86r5K255G7Q4yA2AdqjlLvhGmVSKlIFFVHT4pb+c/HKbilq/kTe4I5iXBYvQRs/ZwGyojxE4
- I4lWapc5useFvakdOw1C3G0GszlVEFM0OevzXOX6aR/w6BaGpfh660GMa04AWEX0uduLF5p7
- 9MzFGBXaUqi2r2H5+u4UOY506zPLOGzVG8ekmtrwTecCbMtRorOBv2Qo9RZxzw3wMtJGJ4yZ
- eJANmEpN0uGOUASfA5MWfrSn8/w7pX7Wz5Rsk6UoaM0y2PS1wd2lrPqNbI5f/TWHJ0LxhfE9
- zmuE2LRCwwqHfuhy2G59CiWqenTxXrwVKE4G+jtnhJtqAbOnjNIUkJ+uUGAifWwjAi1UshHJ
- koI9zAGqak0/VasCN7nUHWQonOGtDYYWtxNA6s74gTLwa3Riy6cD3IYTzgHcNE6udUtSDoC0
- UWAlNfkQzdotdW9TXOb66fRrj6oPyURBXENaDVCTgYf5dTn5oYpgXrnStdlDb7wldbuGBnuz
- D2Q6isznbMeiYgMzarTwLzcqyinqp6MSks+4R/aGzr/qAh4f4WiIYev7DA38MqsMq6YV3S+m
- 2IrsPTOtudULMzSpQvUQ/8CSeTBC+m+DBXQhltmHp8E/jur+mK+cY043N2YDBkyWirjUWGyC
- HI/qT9sCIlv0GxGhJKbgr5d6ex3lsAM9vy8Cpg4i+aihLAqK2drGwk1OiatM5jFyhRErE3GE
- c7znTyQJXgbE7976zG9Wv0Q17QmrghnmjiNGcykkkj7jeTODJJwdVvjGAbRBgzexP7VyDg5D
- /4FbaNmNj0GCrSnPHWHmWLtBQ9adSJgbXwJlyCnXrXeelU9Qj5J5w75yrI6cIsthLVOiurN5
- Tm8XEQeoGcTdlWZQThmnktLMeu1Nb4m9CpTFXV1YT6AhSN5Ca7xt/h3SnfCVeV8nACV5aIvF
- 6FdEyhBa9wTIgn6F8M1NsCi9dQ6KEv13mpj/UONOVACQnKpfCSRkveMQ+cl3HJm4vaf3Sfmn
- 4Cd6w==
-IronPort-HdrOrdr: A9a23:0So6Ba4l4AMfAWDjdAPXwPvXdLJyesId70hD6qm+c3Bom6uj5q
- KTdZsguyMc5Ax6ZJhCo6HiBEDjexLhHPdOiOF7AV7IZmbbUQWTQb1K3M/L3yDgFyri9uRUyK
- tsN5RlBMaYNykesS+D2mmF+xJK+qjhzEhu7t2uq0tQcQ==
-X-Talos-CUID: =?us-ascii?q?9a23=3A9NCu9mmSdENFxMqyv9gqqpX+TXzXOXzE4Uj3OWC?=
- =?us-ascii?q?TNTYzT+e0FACh3/pnicU7zg=3D=3D?=
-X-Talos-MUID: 9a23:38GnsQmvEuZYz/I69zq0dnprKfdBxJqsU3wLy68pvdXcbCd8GB2S2WE=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-AV: E=Sophos;i="6.12,303,1728950400"; 
-   d="scan'208";a="410609493"
-Received: from rcdn-l-core-02.cisco.com ([173.37.255.139])
-  by alln-iport-6.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 10 Jan 2025 09:20:06 +0000
-Received: from fedora.cisco.com (unknown [10.188.32.212])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VggD9E13";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="l5r1KcXL";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VggD9E13";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="l5r1KcXL"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-02.cisco.com (Postfix) with ESMTPSA id 358971800023D;
-	Fri, 10 Jan 2025 09:20:05 +0000 (GMT)
-From: Karan Tilak Kumar <kartilak@cisco.com>
-To: sebaddel@cisco.com
-Cc: arulponn@cisco.com,
-	djhawar@cisco.com,
-	gcboffa@cisco.com,
-	mkai2@cisco.com,
-	satishkh@cisco.com,
-	aeasi@cisco.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@linaro.org>,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH] scsi: fnic: Propagate scsi error code from fnic_scsi_drv_init
-Date: Fri, 10 Jan 2025 01:19:56 -0800
-Message-ID: <20250110091956.17749-1-kartilak@cisco.com>
-X-Mailer: git-send-email 2.47.1
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 8D4A421137;
+	Fri, 10 Jan 2025 09:21:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1736500909; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5K5tRuf9RAXyTMoNI3bIMwCXOB93swtFl5w0aetpzz4=;
+	b=VggD9E131ngIixhrfT/RlutwzoWzOw2j7y1EcB/S/80M+0q77ykQTRRDVCT4X8TSteJrX+
+	V9iXI+sfAK338e6EZmXI1PimDlvVcBlqS+pimhRSFSD0KwBC3EiEvp1Ww/a+VBJkxCvkjt
+	+uYQH6q/P3gytibK0E6MjK/V2SUGXNk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1736500909;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5K5tRuf9RAXyTMoNI3bIMwCXOB93swtFl5w0aetpzz4=;
+	b=l5r1KcXL8dDVVpqBGbbkpennMgaXNaAVW+B60EdIMryESE92hDmk2b6AyiqCW+Jt4sGHWf
+	1OFCLYlv/L5VDMBA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1736500909; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5K5tRuf9RAXyTMoNI3bIMwCXOB93swtFl5w0aetpzz4=;
+	b=VggD9E131ngIixhrfT/RlutwzoWzOw2j7y1EcB/S/80M+0q77ykQTRRDVCT4X8TSteJrX+
+	V9iXI+sfAK338e6EZmXI1PimDlvVcBlqS+pimhRSFSD0KwBC3EiEvp1Ww/a+VBJkxCvkjt
+	+uYQH6q/P3gytibK0E6MjK/V2SUGXNk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1736500909;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5K5tRuf9RAXyTMoNI3bIMwCXOB93swtFl5w0aetpzz4=;
+	b=l5r1KcXL8dDVVpqBGbbkpennMgaXNaAVW+B60EdIMryESE92hDmk2b6AyiqCW+Jt4sGHWf
+	1OFCLYlv/L5VDMBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7930613763;
+	Fri, 10 Jan 2025 09:21:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id l8OMHa3mgGecDwAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Fri, 10 Jan 2025 09:21:49 +0000
+Date: Fri, 10 Jan 2025 10:21:49 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali <njavali@marvell.com>, 
+	GR-QLogic-Storage-Upstream@marvell.com, Don Brace <don.brace@microchip.com>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, 
+	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
+	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Frederic Weisbecker <frederic@kernel.org>, 
+	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
+	Sridhar Balaraman <sbalaraman@parallelwireless.com>, "brookxu.cn" <brookxu.cn@gmail.com>, 
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, storagedev@microchip.com, 
+	virtualization@lists.linux.dev
+Subject: Re: [PATCH v4 8/9] blk-mq: use hk cpus only when
+ isolcpus=managed_irq is enabled
+Message-ID: <ae9abe4c-010a-41ff-be44-1d52a331eb11@flourine.local>
+References: <20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org>
+ <20241217-isolcpus-io-queues-v4-8-5d355fbb1e14@kernel.org>
+ <Z2PlbL0XYTQ_LxTw@fedora>
+ <cc5e44dd-e1dc-4f24-88d9-ce45a8b0794f@flourine.local>
+ <Z2UwvQoDM3f4zAxG@fedora>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.188.32.212, [10.188.32.212]
-X-Outbound-Node: rcdn-l-core-02.cisco.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z2UwvQoDM3f4zAxG@fedora>
+X-Spam-Score: -2.80
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[39];
+	FREEMAIL_CC(0.00)[kernel.org,kernel.dk,lst.de,grimberg.me,broadcom.com,oracle.com,marvell.com,microchip.com,redhat.com,linux.alibaba.com,linux-foundation.org,linutronix.de,suse.com,suse.de,parallelwireless.com,gmail.com,vger.kernel.org,lists.infradead.org,lists.linux.dev];
+	RCVD_TLS_ALL(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLtq7xx1p6rx585ucya5i3u39z)];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-From: Arun Easi <aeasi@cisco.com>
+Hi Ming,
 
-Propagate scsi_add_host() error instead of returning -1.
+On Fri, Dec 20, 2024 at 04:54:21PM +0800, Ming Lei wrote:
+> On Thu, Dec 19, 2024 at 04:38:43PM +0100, Daniel Wagner wrote:
+> 
+> > When isolcpus=managed_irq is enabled all hardware queues should run on
+> > the housekeeping CPUs only. Thus ignore the affinity mask provided by
+> > the driver.
+> 
+> Compared with in-tree code, the above words are misleading.
+> 
+> - irq core code respects isolated CPUs by trying to exclude isolated
+> CPUs from effective masks
+> 
+> - blk-mq won't schedule blockd on isolated CPUs
 
-Suggested-by: Dan Carpenter <dan.carpenter@linaro.org>
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-Signed-off-by: Arun Easi <aeasi@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- drivers/scsi/fnic/fnic_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I see your point, the commit should highlight the fact when an
+application is issuing an I/O, this can lead to stalls.
 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 6880b40507aa..2fc5e9688147 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -637,7 +637,7 @@ static int fnic_scsi_drv_init(struct fnic *fnic)
- 	err = scsi_add_host(fnic->host, &pdev->dev);
- 	if (err) {
- 		dev_err(&fnic->pdev->dev, "fnic: scsi add host failed: aborting\n");
--		return -1;
-+		return err;
- 	}
- 	fc_host_maxframe_size(fnic->host) = iport->max_payload_size;
- 	fc_host_dev_loss_tmo(fnic->host) =
--- 
-2.47.1
+What about a commit message like:
 
+  When isolcpus=managed_irq is enabled, and the last housekeeping CPU for
+  a given hardware context goes offline, there is no CPU left which
+  handles the IOs anymore. If isolated CPUs mapped to this hardware
+  context are online and an application running on these isolated CPUs
+  issue an IO this will lead to stalls.
+
+  The kernel will not schedule IO to isolated CPUS thus this avoids IO
+  stalls.
+
+  Thus issue a warning when housekeeping CPUs are offlined for a hardware
+  context while there are still isolated CPUs online.
+
+> If application aren't run on isolated CPUs, IO interrupt usually won't
+> be triggered on isolated CPUs, so isolated CPUs are _not_ ignored.
+
+FWIW, the 'usually' part is what made our customers nervous. They saw
+some IRQ noise on the isolated CPUs with their workload and reported
+with these changes all was good. Unfortunately, we never got the hands
+on the workload, hard to say what was causing it.
+
+> > On Thu, Dec 19, 2024 at 05:20:44PM +0800, Ming Lei wrote:
+> > > > +	cpumask_andnot(isol_mask,
+> > > > +		       cpu_possible_mask,
+> > > > +		       housekeeping_cpumask(HK_TYPE_MANAGED_IRQ));
+> > > > +
+> > > > +	for_each_cpu(cpu, isol_mask) {
+> > > > +		qmap->mq_map[cpu] = qmap->queue_offset + queue;
+> > > > +		queue = (queue + 1) % qmap->nr_queues;
+> > > > +	}
+> > > 
+> > > Looks the IO hang issue in V3 isn't addressed yet, is it?
+> > > 
+> > > https://lore.kernel.org/linux-block/ZrtX4pzqwVUEgIPS@fedora/
+> > 
+> > I've added an explanation in the cover letter why this is not
+> > addressed. From the cover letter:
+> > 
+> > I've experimented for a while and all solutions I came up were horrible
+> > hacks (the hotpath needs to be touched) and I don't want to slow down all
+> > other users (which are almost everyone). IMO, it's just not worth trying
+> 
+> IMO, this patchset is one improvement on existed best-effort approach, which
+> works fine most of times, so why you do think it slows down everyone?
+
+I was talking about implementing the feature which would remap the
+isolated CPUs to online hardware context when the current hardware
+context goes offline. I didn't find a solution which I think would be
+worth presenting. All involved some sort of locking/refcounting in the
+hotpath, which I think we should just avoid.
+
+> > to fix this corner case. If the user is using isolcpus and does CPU
+> > hotplug, we can expect that the user can also first offline the isolated
+> > CPUs. I've discussed this topic during ALPSS and the room came to the
+> > same conclusion. Thus I just added a patch which issues a warning that
+> > IOs are likely to hang.
+> 
+> If the change need userspace cooperation for using 'managed_irq', the exact
+> behavior need to be documented in both this commit and Documentation/admin-guide/kernel-parameters.txt,
+> instead of cover-letter only.
+> 
+> But this patch does cause regression for old applications which can't
+> follow the new introduced rule:
+> 
+> 	```
+> 	If the user is using isolcpus and does CPU hotplug, we can expect that the
+> 	user can also first offline the isolated CPUs.
+> 	```
+
+Indeed, I forgot to update the documentation. I'll update it accordingly.
+
+Thanks,
+Daniel
