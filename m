@@ -1,66 +1,74 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E552215058;
-	Fri, 10 Jan 2025 21:17:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F403821506D;
+	Fri, 10 Jan 2025 21:17:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736543874; cv=none; b=aVI8tpsZNiajrI94DIbdzG8663CBvGuNMqiK8jyRT8D0D3NpxhQsLP3CdKxItbe/5dpO4HRvwEWkOMur0gBE6FfcyizyBuvrfoK2uoT+UrYAU7hp7a+YBV+CoDwUGo4BAiYep3ywvY/2zLN7aAAqVbWBqNSObNmw8pqfXUwktWw=
+	t=1736543876; cv=none; b=rhGAwPnsD7PCyaCYqj8win2vN6b3G9yqHIB1awk/RvzLP9+sVMlJheHWV9gzaHsLdXE8kRYiRH1xc1M8WVRnTUYySuxnHq+C7QsF0QimSUHuLjUV7ff8vKepEAK0vPR58qmyFKC/AkPbwXq3KzhKFXdEor7Es892+FSMkyWoMhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736543874; c=relaxed/simple;
-	bh=qd8HmzWXUvj1FSxkJZxLbC+UsLy3aqRWKxZfpPF28xc=;
+	s=arc-20240116; t=1736543876; c=relaxed/simple;
+	bh=gHTVtfqFaTl7kz/Aqg4ejB+gR6umXsXipAaIlpaZrss=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SedZ9Xyfdm4TA3rnNbmWokNG/xiPCtq+qXDPBl5HTn69sKjTU8e6+9m59srnzViJIhwk+L6pgSbL4oJEJQ0W1zHucTgqyBTncDrPySaiTG1ZC/VD61Dx59CbXNLGP7q+AZLBvj0j9llJF3GdEG0ONv91FxdI9wKx5NaORc5OwGI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ClPT1+lT; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=dyQxVmQtfDJL/iG0tj7UeQRZ/UXiWTBGKUGrRSOZ4K2fImM4X6QBIXCCGpYdwZ9kYCh8V56G4p2ch0y5fENt7uCHDuSdPV1AutFSTyJZHBsvMwtUJvccUGxmsmXDVQ9v0UXrjTYdS5eN9ETvCd6sObs6VCpNMCgtY1sdZ3WdvMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=alymwtPW; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ClPT1+lT"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50ALBtwe015591;
-	Fri, 10 Jan 2025 21:17:40 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="alymwtPW"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50ALBw3H022284;
+	Fri, 10 Jan 2025 21:17:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=8ymIlVifxb6BkytjP8D009NFsA+RYCchj5hd5P5wYC0=; b=
-	ClPT1+lTsO9+kdtXDT8rvV/IfjC1ChhCk2V5Nesq+deqaiHVP6Cv6ZaJGbnCRR9I
-	hHWCm/ggKZh0oGMBOOBkhPNeJjgO//qednz6tRneba8Wzevck9HivnpzlEs4HmgA
-	W1UpuejEpNl7A0VH7n4hYtB7w+/gkOzxj0Y9Au/q8EEbx0UP6fMJc0+kMzAHwD/e
-	m5pGRMVCccz0bcs04OWwTE6m3jDNNvN8i1vOok1Dv+J7hB4ZKzN/SSxtDSO7ViW3
-	zNpZxNz3kiQ9zVYavHwVQle4sJ6HPahuzBts6L1mUUOPAswG9K1eAH5C+CpqeAmy
-	hPnRZ/u1l0C9aHgILoLtfg==
+	corp-2023-11-20; bh=ajGyttwmIKtn5/bP/iQzmbsjuv7wkTTYbWgojMBY5Lo=; b=
+	alymwtPWo/Aa6GaIoOEB1dotH9qAXc9sw1nafmX2o3cheLtUSxD9DbliFnqquIOl
+	mM4e3yzamBPWDFto4xs2f+4Q0Yr1u3dzd20DazV+8JD/RK/PDA7AqSPOLm5G60bq
+	ER0BAv5LgXgqfMjDH45g+Ihvl/rIQ51j/QO1spohV7lmKusXuVlsqxuEfZZEScVA
+	G8wALYVns7zEliH/6DML4qkEMMbvmjX0zWQujxJ13fEKlTs1cu/BLG42yA6dVx0v
+	1YfpuZg3zjpa0vbrmwqKTl/+f4spLZK0RSn3kpB3rFhWvAvsxp+OMSmfZdmMkbGX
+	8eQtqklXupnyHZEnNLaacw==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 442my6261q-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43xudcc0su-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 10 Jan 2025 21:17:40 +0000 (GMT)
+	Fri, 10 Jan 2025 21:17:31 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 50AJ7SOa027663;
-	Fri, 10 Jan 2025 21:17:40 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 50AKnpxi027091;
+	Fri, 10 Jan 2025 21:17:30 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43xued5r94-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43xued5r5r-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 10 Jan 2025 21:17:40 +0000
+	Fri, 10 Jan 2025 21:17:30 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50ALHQ28034137;
-	Fri, 10 Jan 2025 21:17:39 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50ALHQ1s034137;
+	Fri, 10 Jan 2025 21:17:30 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43xued5r3k-10;
-	Fri, 10 Jan 2025 21:17:39 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43xued5r3k-3;
+	Fri, 10 Jan 2025 21:17:30 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
+To: linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Bartosz Golaszewski <brgl@bgdev.pl>,
+        Gaurav Kashyap <quic_gaurkash@quicinc.com>,
+        Eric Biggers <ebiggers@kernel.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] scsi: mpt3sas: Add details to EEDPTagMode error message
-Date: Fri, 10 Jan 2025 16:16:52 -0500
-Message-ID: <173654330186.638636.11731163498673648499.b4-ty@oracle.com>
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Jens Axboe <axboe@kernel.dk>, Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: (subset) [PATCH v10 00/15] Support for hardware-wrapped inline encryption keys
+Date: Fri, 10 Jan 2025 16:16:45 -0500
+Message-ID: <173654330182.638636.6890747703522161816.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241212221817.78940-1-pmenzel@molgen.mpg.de>
-References: <20241212221817.78940-1-pmenzel@molgen.mpg.de>
+In-Reply-To: <20241213041958.202565-1-ebiggers@kernel.org>
+References: <20241213041958.202565-1-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -76,27 +84,29 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamsc
  malwarescore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
  definitions=main-2501100164
-X-Proofpoint-GUID: FBoWv3TB2n__MfLbOB897POzCVB2yVVh
-X-Proofpoint-ORIG-GUID: FBoWv3TB2n__MfLbOB897POzCVB2yVVh
+X-Proofpoint-ORIG-GUID: r9072SpeA4o0_1k9_Mso4XzKCRb-DUpt
+X-Proofpoint-GUID: r9072SpeA4o0_1k9_Mso4XzKCRb-DUpt
 
-On Thu, 12 Dec 2024 23:18:11 +0100, Paul Menzel wrote:
+On Thu, 12 Dec 2024 20:19:43 -0800, Eric Biggers wrote:
 
-> Linux 5.15 logs the error below
+> This patchset is based on next-20241212 and is also available in git via:
 > 
->     mpt3sas_cm0: overriding NVDATA EEDPTagMode setting
+>     git fetch https://git.kernel.org/pub/scm/fs/fscrypt/linux.git wrapped-keys-v10
 > 
-> on a Dell PowerEdge T440 with the card below.
-> 
->     5e:00.0 Serial Attached SCSI controller [0107]: Broadcom / LSI SAS3008 PCI-Express Fusion-MPT SAS-3 [1000:0097] (rev 02)
+> This patchset adds support for hardware-wrapped inline encryption keys, a
+> security feature supported by some SoCs.  It adds the block and fscrypt
+> framework for the feature as well as support for it with UFS on Qualcomm SoCs.
 > 
 > [...]
 
 Applied to 6.14/scsi-queue, thanks!
 
-[1/2] scsi: mpt3sas: Add details to EEDPTagMode error message
-      https://git.kernel.org/mkp/scsi/c/09ecc187ebde
-[2/2] scsi: mpt3sas: Set ioc->manu_pg11.EEDPTagMode directly to 1
-      https://git.kernel.org/mkp/scsi/c/ad7c3c0cb8f6
+[02/15] ufs: crypto: add ufs_hba_from_crypto_profile()
+        https://git.kernel.org/mkp/scsi/c/75d0c649eca4
+[03/15] ufs: qcom: convert to use UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE
+        https://git.kernel.org/mkp/scsi/c/30b32c647cf3
+[04/15] ufs: crypto: remove ufs_hba_variant_ops::program_key
+        https://git.kernel.org/mkp/scsi/c/409f21010d92
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
