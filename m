@@ -1,63 +1,62 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F65D204098
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jan 2025 21:17:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9989D208986;
+	Fri, 10 Jan 2025 21:17:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736543857; cv=none; b=t8Limd7eB976xkMP8GgGLD0RpvqUEk6+cIEmZlO5aY8qjeDd22XkePxVPIcWPcQd6gaSo1Fhea4604wZbwy4ubidX6firkdHSVscn8hO81QfdAK13mp/6+soVN9nwUbOwQa6UDDj1TTIl2xZElbf7CWd67JnIDxnlHZ6UN3k7AM=
+	t=1736543859; cv=none; b=YMhrBmYq7GSGgBWibqMeWOIi/ijRDpCnH5wJJjrpj4lVKB6d9ms3TBh2wAmwYRUsGcpT4j8HFdoAArtq0q+BGyoBegJmCkd5Gu7FPUw7RjRNnYiOGP7I59/q+j6e+FsHyir+ywXXXOCyTjTJ+tdSO/asiislU1rZvcvd+iqq9vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736543857; c=relaxed/simple;
-	bh=/Di7beZGI24/u7oP+c13cuuCApFEnntgIkyd5cEWoTM=;
+	s=arc-20240116; t=1736543859; c=relaxed/simple;
+	bh=cx5Qo919KvcGWlYYmPXzAPvqI9JBs/kK1w/32WKh60w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=H5M1kl10kLUkhEAAvVtjJFasOr5spMBqbCNaxyW6yybU79cFI4b4NhEXGGjB1ubv1xP0f6rbGHTvjjszwsGV8MCRrOy2waIYop9Up+bKPXdFUXgd4pkXdDraFtkuJ+ySdJp9EpZ5xvO9UMm3rESE66XfLRHHfaz5BXDQS/heh6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RXFTfkZM; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=pA0E4QnHfkQ3IreVvM0k/m55EA57koTYbpX2tRMeZYjoQ0HLS842GG75wl3J8qUXDFpQoRXZieagmgVezou284h+nhNLDl6lVJH8DIuho7HIgK9hWBNLnPe4kxA8MX+PoxFdiktUr22AOKwOwgBRkItGbjIZ+ZVhTy2ixEA2oy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=CIKv8p8z; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RXFTfkZM"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50ALBm7X018732;
-	Fri, 10 Jan 2025 21:17:28 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CIKv8p8z"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50ALBuZo015604;
+	Fri, 10 Jan 2025 21:17:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=qzVdnRhld3d25bKnxvboPkigjTPcjfZv609dlNKErYI=; b=
-	RXFTfkZMKJU0TlGZy/x9ydRLgXEPvmCCtxWKV9foqIGyGKo3U8cEMbOmb6YiAWoF
-	6Kqv2to2EHKyv/D6lEUz4xWORgpebG/Jj5dyIeNGSCCNbKJtmLtfGzxGX0SlDOsj
-	dgGnCZkjQYOBxzAiWLEpnKX8aBY8PdO0aRWVlv+AOn56SfN9SjTs3Fomv0hJ/IQb
-	H1ePC8D3wDx+WXeceMmhV4tOyIu9LRbeePvnCfElfOYt1ByxHissiLQM0Op7dAuW
-	fg31myuLXv3GNHXkBFjpSG1zyyOul/awyBsP8VccCeWvFFMASK6+lC+cdY/5VG+p
-	1p6C8L5N5PGE8aOqBVYv6w==
+	corp-2023-11-20; bh=aFHoH/Imogqe9IPskBCTEq6eLTfK9A1oggfiADBecpc=; b=
+	CIKv8p8z3J+f+nX0LiVXis/YefJiTOiEJbW6cAadHucx1AjoHdaHOPNRqph5oEUs
+	8i7FFVmfx1ZcaMZbvAMr2D7Ah84RmJStLXtfSsWbGvMwjqOL+iS9PrJPoXwiDPp+
+	fAKKkYtFcRbNxF6wpCEJszXNJL+1hF+ND/3wpB+vFnyepddEMPonKoz/aaiEQsK9
+	RfJm73w+ghu8XsHkRwaKuywfIymaT96494zAr/tEkavLHQ6R97iY6E573JaBtW2u
+	sTzZ+uymlOCMhpcdSzP3qa6bRpQSLR1c06Mu7BWK0lZOFtklL3Fxyn0UUHMi+l68
+	myJeDQUxjp4OY8IrtK7m5A==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 442kcxabdg-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 442my6261n-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 10 Jan 2025 21:17:28 +0000 (GMT)
+	Fri, 10 Jan 2025 21:17:34 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 50AK2tYA026550;
-	Fri, 10 Jan 2025 21:17:27 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 50ALFOBU027463;
+	Fri, 10 Jan 2025 21:17:33 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43xued5r47-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43xued5r6w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 10 Jan 2025 21:17:27 +0000
+	Fri, 10 Jan 2025 21:17:33 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50ALHQ1o034137;
-	Fri, 10 Jan 2025 21:17:26 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50ALHQ20034137;
+	Fri, 10 Jan 2025 21:17:33 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43xued5r3k-1;
-	Fri, 10 Jan 2025 21:17:26 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43xued5r3k-6;
+	Fri, 10 Jan 2025 21:17:32 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org,
-        Ariel Otilibili <ariel.otilibili-anieli@eurecom.fr>
+To: artur.paszkiewicz@intel.com, James.Bottomley@HansenPartnership.com,
+        linux@treblig.org
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] drivers/scsi: remove dead code
-Date: Fri, 10 Jan 2025 16:16:43 -0500
-Message-ID: <173654330188.638636.13544089296953730749.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: isci: remote_device: Remove unused isci_remote_device_reset_complete
+Date: Fri, 10 Jan 2025 16:16:48 -0500
+Message-ID: <173654330170.638636.8821257150404113284.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241213225852.62741-2-ariel.otilibili-anieli@eurecom.fr>
-References: <20241213225852.62741-1-ariel.otilibili-anieli@eurecom.fr> <20241213225852.62741-2-ariel.otilibili-anieli@eurecom.fr>
+In-Reply-To: <20241223180218.50426-1-linux@treblig.org>
+References: <20241223180218.50426-1-linux@treblig.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,23 +69,27 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-10_09,2025-01-10_03,2024-11-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
- malwarescore=0 phishscore=0 bulkscore=0 mlxlogscore=668 suspectscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 mlxlogscore=707 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
  definitions=main-2501100164
-X-Proofpoint-ORIG-GUID: edzYZMmC2q28SZ0ZOCAGb4LwpeRxsYmt
-X-Proofpoint-GUID: edzYZMmC2q28SZ0ZOCAGb4LwpeRxsYmt
+X-Proofpoint-GUID: lohTME6pECIpyvMZiRpDdJt7FEgPDGg7
+X-Proofpoint-ORIG-GUID: lohTME6pECIpyvMZiRpDdJt7FEgPDGg7
 
-On Fri, 13 Dec 2024 23:57:29 +0100, Ariel Otilibili wrote:
+On Mon, 23 Dec 2024 18:02:18 +0000, linux@treblig.org wrote:
 
-> * reported by Coverity ID 1602240
-> * ldev_info is always true, therefore the branch statement is never called.
+> isci_remote_device_reset_complete() last use was removed in 2012 by
+> commit 14aaa9f0a318 ("isci: Redesign device suspension, abort, cleanup.")
 > 
+> Remove it.
 > 
+> It was the last user of sci_remote_device_reset_complete().
+> 
+> [...]
 
 Applied to 6.14/scsi-queue, thanks!
 
-[1/1] drivers/scsi: remove dead code
-      https://git.kernel.org/mkp/scsi/c/850f814b01a5
+[1/1] scsi: isci: remote_device: Remove unused isci_remote_device_reset_complete
+      https://git.kernel.org/mkp/scsi/c/5d10344ab652
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
