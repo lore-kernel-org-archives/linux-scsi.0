@@ -1,112 +1,103 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 998202135CD;
-	Fri, 10 Jan 2025 17:13:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B97C1213222;
+	Fri, 10 Jan 2025 18:17:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736529242; cv=none; b=YHA6WPjai2AXfv8OxCgDNDW8FylN1NKdGUqRSC6O90OLumH01NHdj+tExkim4UrVuEpaBrxeWW0ai5/asBXa+KLeTLSlafDwEeWsl0l1YfvFTA4OtmWaTR8GkMDHj6MlmRNRch3FGSU6NMqpvnx9EzlQs2pxJYVBC7vEqR5Jwe8=
+	t=1736533076; cv=none; b=eVdBhWDaOqJFgfAUqJfCsMTGvybVGFwYGLpnn+afjMk9oTGLqrwWB+7E5xJOjhc0OWFqS29UYCz2etThjBItpv+XGfhLYo58Dip7vwncxWMqQ6MzQlSUd6gxRCR3/WV94W/Op6RwzYKsaYAYQJUy6GdsFbR+odjTkC6l++hk8gU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736529242; c=relaxed/simple;
-	bh=zCD9wMt7oj+kJBhlIcsVVTGT43QE2wPIyfO0mHZuo3E=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AAjN4aD1+LG9tm4CDTT98hANfLwZOwpT1esfVG5PUP6rD7p7JWcTczqfDiExaoNz3ll+vgd7jPhqO5SOXaqsiL0jBTIJg7zQs17Fy/X+gzZ7qpj2jCYmpz0HK+OUtxEG5+vAlk3BL/j4o23sXW2dz9yvHfZw2tUEfPpwytLLdGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hWvPm9S9; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1736533076; c=relaxed/simple;
+	bh=M4/miNOIFbl9jwExAg2KrDMIy9jYUK3U9gqIYHI+YSA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JbDEux6BtpE3LvYmMANJLGibi7n2SRczOlCinrX4WHzL9G6UOxseOqA7Y1H/KlAaQjJW6V+LrtP1yyFbj2PwPMniutOke/L3fACrL9833SVB98jNHVe02ourRs/HdRO04wJ8F8U4mDyfLkOd7xJF7LPyUWzmOw2276gFXRnqX6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=M/jH4cuM; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hWvPm9S9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1736529240; x=1768065240;
-  h=date:message-id:from:to:cc:subject:in-reply-to:
-   references:mime-version;
-  bh=zCD9wMt7oj+kJBhlIcsVVTGT43QE2wPIyfO0mHZuo3E=;
-  b=hWvPm9S9gyyWflhxezAJQ0/Zw5EZKsCuAkNL9pt9ibrxvKhfx8igBLau
-   BqAxt/w+4WkhB7JJeGhd2XKu7BTEUI/u+ZCjJZLax3klENzioM0Ogu8lV
-   PfZO/Ur9FgiISKQAktuwXDv+fKDWBBLhsHE3nTEvd7HEfk5ILPMEy+C+i
-   v7E/Bn3dcZExGuv+WXwcKSpdB8KGwD5qn3eKJp4zYHR+m82wlFlpFSVej
-   Zj+F+2HJbkF1YqnKygWuQDJ/VUu15h2UnCLWYzcjwzwNjZ/0bri7MxpqP
-   ws6x4YtpsaSIYSiiMKXJNlfXHbNtrSTP7okJPY7QFGY+mFzAY/yI1B5Pm
-   Q==;
-X-CSE-ConnectionGUID: eETlnapHTZaJYZoWsWncOQ==
-X-CSE-MsgGUID: kcx024AdTVSnnR8CHTt/pw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11311"; a="36712482"
-X-IronPort-AV: E=Sophos;i="6.12,303,1728975600"; 
-   d="scan'208";a="36712482"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2025 09:13:58 -0800
-X-CSE-ConnectionGUID: d+N1H3FPQryemumCSoERgQ==
-X-CSE-MsgGUID: skCK+1HISZSgobnkHZdoJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="127073384"
-Received: from orsosgc001.jf.intel.com (HELO orsosgc001.intel.com) ([10.165.21.142])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2025 09:13:57 -0800
-Date: Fri, 10 Jan 2025 09:13:56 -0800
-Message-ID: <8534hqvbfv.wl-ashutosh.dixit@intel.com>
-From: "Dixit, Ashutosh" <ashutosh.dixit@intel.com>
-To: Joel Granados <joel.granados@kernel.org>
-Cc: Thomas =?ISO-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,	Kees Cook
- <kees@kernel.org>,	Luis Chamberlain <mcgrof@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,	linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,	linux-riscv@lists.infradead.org,
-	linux-s390@vger.kernel.org,	linux-crypto@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net,	intel-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,	intel-xe@lists.freedesktop.org,
-	linux-hyperv@vger.kernel.org,	linux-rdma@vger.kernel.org,
-	linux-raid@vger.kernel.org,	linux-scsi@vger.kernel.org,
-	linux-serial@vger.kernel.org,	xen-devel@lists.xenproject.org,
-	linux-aio@kvack.org,	linux-fsdevel@vger.kernel.org,	netfs@lists.linux.dev,
-	codalist@coda.cs.cmu.edu,	linux-mm@kvack.org,	linux-nfs@vger.kernel.org,
-	ocfs2-devel@lists.linux.dev,	fsverity@lists.linux.dev,
-	linux-xfs@vger.kernel.org,	io-uring@vger.kernel.org,	bpf@vger.kernel.org,
-	kexec@lists.infradead.org,	linux-trace-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org,	apparmor@lists.ubuntu.com,
-	linux-security-module@vger.kernel.org,	keyrings@vger.kernel.org
-Subject: Re: [PATCH] treewide: const qualify ctl_tables where applicable
-In-Reply-To: <20250109-jag-ctl_table_const-v1-1-622aea7230cf@kernel.org>
-References: <20250109-jag-ctl_table_const-v1-1-622aea7230cf@kernel.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?ISO-8859-4?Q?Goj=F2?=) APEL-LB/10.8 EasyPG/1.0.0
- Emacs/28.2 (x86_64-redhat-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="M/jH4cuM"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YV8yf6xcdz6CmQtQ;
+	Fri, 10 Jan 2025 18:17:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1736533063; x=1739125064; bh=LHr63z/qXB61GZgjN3/nqk/O
+	vSZZtv+W4XiU69tj4oU=; b=M/jH4cuM/mNlKz2GRTih1Y6a16+RJa0WzM+ggtJ4
+	AIvbhc+tK/r8UoyCbDAJuaLo1952Uh/FP5EyVBb6x/uS6CJd93xHHkSVNSqLfFRE
+	HoyB0NRhpiAk6BhCxKHNMrtgQHYqOK0UnKI31BWpc5EXudP1ImizUZiPqxmwfNSE
+	XKgYq1/Ak+znCiKMgZqvI7MpdJ5pt4gZlAgZ107VkcLfMLmysweoba/0+EzX/Md6
+	CAiL/bPnYJ3IwoNSyyH7mtMePJ7+wJTdxmttlkTR2ohCGCYxbQ/epKinaIJxigTW
+	fWch5l4DtGiFxDCKIsRUw72/+MLia5fKXzZNVQ+r/SyYxQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6GmqrkNIM9vi; Fri, 10 Jan 2025 18:17:43 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YV8yZ2cGFz6CmQwT;
+	Fri, 10 Jan 2025 18:17:42 +0000 (UTC)
+Message-ID: <3a62c833-42e9-4763-a3d8-18b3edf97db0@acm.org>
+Date: Fri, 10 Jan 2025 10:17:41 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 05/26] blk-zoned: Fix a deadlock triggered by
+ unaligned writes
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>
+References: <20241119002815.600608-1-bvanassche@acm.org>
+ <20241119002815.600608-6-bvanassche@acm.org>
+ <6729e88d-5311-4b6e-a3da-0f144aab56c9@kernel.org>
+ <8c0c3833-22e4-46ae-8daf-89de989545bf@acm.org>
+ <bf6328f2-c660-4431-9ef6-39722dafa9e7@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <bf6328f2-c660-4431-9ef6-39722dafa9e7@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, 09 Jan 2025 05:16:39 -0800, Joel Granados wrote:
->
-> diff --git a/drivers/gpu/drm/i915/i915_perf.c b/drivers/gpu/drm/i915/i915_perf.c
-> index 2406cda75b7b..5384d1bb4923 100644
-> --- a/drivers/gpu/drm/i915/i915_perf.c
-> +++ b/drivers/gpu/drm/i915/i915_perf.c
-> @@ -4802,7 +4802,7 @@ int i915_perf_remove_config_ioctl(struct drm_device *dev, void *data,
->	return ret;
->  }
->
-> -static struct ctl_table oa_table[] = {
-> +static const struct ctl_table oa_table[] = {
->	{
->	 .procname = "perf_stream_paranoid",
->	 .data = &i915_perf_stream_paranoid,
-> diff --git a/drivers/gpu/drm/xe/xe_observation.c b/drivers/gpu/drm/xe/xe_observation.c
-> index 8ec1b84cbb9e..57cf01efc07f 100644
-> --- a/drivers/gpu/drm/xe/xe_observation.c
-> +++ b/drivers/gpu/drm/xe/xe_observation.c
-> @@ -56,7 +56,7 @@ int xe_observation_ioctl(struct drm_device *dev, void *data, struct drm_file *fi
->	}
->  }
->
-> -static struct ctl_table observation_ctl_table[] = {
-> +static const struct ctl_table observation_ctl_table[] = {
->	{
->	 .procname = "observation_paranoid",
->	 .data = &xe_observation_paranoid,
 
-For i915 and xe:
+On 1/9/25 9:07 PM, Damien Le Moal wrote:
+> On 1/10/25 04:11, Bart Van Assche wrote:
+>> On 11/18/24 6:57 PM, Damien Le Moal wrote:
+>>> And we also have the possibility of torn writes (partial writes) with
+>>> SAS SMR drives. So I really think that you cannot avoid doing a
+>>> report zone to recover errors.
+>> (replying to an email of two months ago)
+>>
+>> Hi Damien,
+>>
+>> How about keeping the current approach (setting the
+>> BLK_ZONE_WPLUG_NEED_WP_UPDATE flag after an I/O error has been observed)
+>> if write pipelining is disabled and using the wp_offset_compl approach
+>> only if write pipelining is enabled? This approach preserves the
+>> existing behavior for SAS SMR drives and allows to restore the write
+>> pointer after a write error has been observed for UFS devices. Please
+>> note that so far I have only observed write errors for UFS devices if I
+>> add write error injection code in the UFS driver.
+> 
+> If you get write errors, they will be propagated to the user (f2fs in this case
+> I suspect) which should do a report zone to verify things. So I do not see why
+> this part would need to change.
 
-Acked-by: Ashutosh Dixit <ashutosh.dixit@intel.com>
+Hi Damien,
+
+In my email I was referring to write errors that should *not* be
+propagated to the user but that should result in a retry by the kernel.
+This is e.g. necessary if multiple writes are outstanding simultaneously
+and the storage device reports a unit attention condition for any of
+these writes except the last write.
+
+Thanks,
+
+Bart.
