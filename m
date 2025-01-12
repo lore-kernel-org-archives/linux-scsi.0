@@ -1,70 +1,77 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5CC17BB6
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Jan 2025 03:41:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6626B19F424
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Jan 2025 10:36:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736566873; cv=none; b=AiBxcZccJcLBXRHYIFAGlqyB3SDRbr3IVBeHhvLTsiDadVl08thM9sPv1BVnF7ZBHSn29ECaaOnSX6v7Lk/MJHA7M84DQi+x6j44pe6wzjeUC+YrqN4sR1AD2Qr6PRYGYElGcaEGUzyZMKlRXAPbPKANSNpY9TYXOtGK6GevHi4=
+	t=1736678211; cv=none; b=UI58XOixjBnW5FOmAjZJAJnsf/HYM0CxCdHpEWozPO2KOam37uwOvGJVwht8Z3VXWMx4qzxzZKXZkoXtBh/NY4JYFh8BXLB0myUevbZmE9pEYUHDfHvxstue31UAvn4Xp6PFgLLNVhdYo4byySxo2/MRsCJyLZR1HDwekXJ2tgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736566873; c=relaxed/simple;
-	bh=SY3ZkHRd1kXRdXW/z27Av3VBVXcUG9mklyUNsdIljHk=;
+	s=arc-20240116; t=1736678211; c=relaxed/simple;
+	bh=REgFctRGG2i+aWyJ1ZRxJ6TwTZBV1cOPjFQdvPEnzK0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Pz3eE308Y0Dhko3dUnLMzIoOZft7xxBwJxw1GObTtul9oE2zJ0BFG4rCiXsFkIHR5JnBYAlNpdtH8rb0p3YFA6L2ajhhlpas4KkBqvt1C7dVvOj7qjhezxa3EAI1VQzQG39xioLPHCvYzI0z6Sj2/j/FOpw+LoHi+xAdkeHIjxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JDe/n3NY; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=R6lkcd3BE3AswfTS2l3E4ITEszyBhvfslWl9Gly5Hqi6BL1XAH+v7DJnBoO1rIx9bEWqyLU6BkS6QyKW7OGBSaD3X59rLOMXxo7ePEZrINOSo9BQXyD7dHOr/DQBG8970khaicrdvwkHkU5HNoDsyxpB1trIpxwb0uYD++VmRzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=goh6LFI0; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JDe/n3NY"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="goh6LFI0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1736566871;
+	s=mimecast20190719; t=1736678207;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gFwpZ4lNqHc8a93lKvyOmLFaFeR0q5NU2Y4FGP31Aws=;
-	b=JDe/n3NY1qj0j1ZtrXNrtKHxWbD4dvDBKoIrfg9khYFLEDSX1ylEQjxsB3MzwZcNqalEfl
-	5WV+Yo8vVAROzqAogr5rmBViWoPoHunOfaycsAAMNFlQCDjfMyzFr9R8vH0LBndEjJMKfZ
-	DiCL2kI3FRXy91MFmQ48cEzMkz0xHqM=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=sjZIf+MqzlX40O8hdTacUc+jXg2UIC0x4trWd6422To=;
+	b=goh6LFI0BorCJNDiSrzjPNHTJPbuCbid6WOTNGhx7jU99Bm5zzdEvIo168uYZTDDpGuBp7
+	UnSKNw3LiOYAUyn9/jY+Hj8q5VKzPF7uEs6j9R1lDkNz92IQ3905eGmtInMMCNrgQLCm/E
+	LGMY9P8MDhWMPusJynLhGLHCy3iH3k8=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-284-9L9FZIIhP4Sk_aSRXlxo0Q-1; Fri,
- 10 Jan 2025 22:41:05 -0500
-X-MC-Unique: 9L9FZIIhP4Sk_aSRXlxo0Q-1
-X-Mimecast-MFC-AGG-ID: 9L9FZIIhP4Sk_aSRXlxo0Q
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-543-0DSN8VPiNBSr_DA-YHIeIA-1; Sun,
+ 12 Jan 2025 05:36:43 -0500
+X-MC-Unique: 0DSN8VPiNBSr_DA-YHIeIA-1
+X-Mimecast-MFC-AGG-ID: 0DSN8VPiNBSr_DA-YHIeIA
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3FD781956083;
-	Sat, 11 Jan 2025 03:40:58 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.10])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EFABD19560AB;
-	Sat, 11 Jan 2025 03:40:44 +0000 (UTC)
-Date: Sat, 11 Jan 2025 11:40:39 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A2F3A19560BB;
+	Sun, 12 Jan 2025 10:36:36 +0000 (UTC)
+Received: from localhost (unknown [10.72.113.4])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5808B195608A;
+	Sun, 12 Jan 2025 10:36:31 +0000 (UTC)
+Date: Sun, 12 Jan 2025 18:36:27 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Joel Granados <joel.granados@kernel.org>
+Cc: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
+	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-aio@kvack.org,
+	linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
+	codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
+	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
+	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+	io-uring@vger.kernel.org, bpf@vger.kernel.org,
+	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
+	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+	Song Liu <song@kernel.org>,
+	"Steven Rostedt (Google)" <rostedt@goodmis.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Costa Shulyupin <costa.shul@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Waiman Long <llong@redhat.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org, storagedev@microchip.com,
-	virtualization@lists.linux.dev,
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v5 8/9] blk-mq: issue warning when offlining hctx with
- online isolcpus
-Message-ID: <Z4HoN0F0cKD5G16F@fedora>
-References: <20250110-isolcpus-io-queues-v5-0-0e4f118680b0@kernel.org>
- <20250110-isolcpus-io-queues-v5-8-0e4f118680b0@kernel.org>
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Jani Nikula <jani.nikula@intel.com>,
+	Corey Minyard <cminyard@mvista.com>
+Subject: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
+Message-ID: <Z4ObK5hkQ7qjWgbf@MiWiFi-R3L-srv>
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,32 +80,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250110-isolcpus-io-queues-v5-8-0e4f118680b0@kernel.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-Hi Daniel,
+On 01/10/25 at 03:16pm, Joel Granados wrote:
+...snip...
+> diff --git a/kernel/kexec_core.c b/kernel/kexec_core.c
+> index c0caa14880c3..71b0809e06d6 100644
+> --- a/kernel/kexec_core.c
+> +++ b/kernel/kexec_core.c
+> @@ -925,7 +925,7 @@ static int kexec_limit_handler(const struct ctl_table *table, int write,
+>  	return proc_dointvec(&tmp, write, buffer, lenp, ppos);
+>  }
+>  
+> -static struct ctl_table kexec_core_sysctls[] = {
+> +static const struct ctl_table kexec_core_sysctls[] = {
+>  	{
+>  		.procname	= "kexec_load_disabled",
+>  		.data		= &kexec_load_disabled,
 
-On Fri, Jan 10, 2025 at 05:26:46PM +0100, Daniel Wagner wrote:
-> When isolcpus=managed_irq is enabled, and the last housekeeping CPU for
-> a given hardware context goes offline, there is no CPU left which
-> handles the IOs anymore. If isolated CPUs mapped to this hardware
-> context are online and an application running on these isolated CPUs
-> issue an IO this will lead to stalls.
-> 
-> The kernel will not schedule IO to isolated CPUS thus this avoids IO
-> stalls.
-> 
-> Thus issue a warning when housekeeping CPUs are offlined for a hardware
-> context while there are still isolated CPUs online.
+For the kexec/kdump part,
 
-Why do you continue to send patch without addressing the fundamental regression?
-
-This patchset does break existed applications which can't follow the new
-rule of offlining CPU in order.
-
-Again, it violates no-regression rule of kernel development.
-
-
-Thanks,
-Ming
+Acked-by: Baoquan He <bhe@redhat.com>
+......
 
