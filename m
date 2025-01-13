@@ -1,48 +1,81 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBB8C749C;
-	Mon, 13 Jan 2025 02:59:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE511B7F4;
+	Mon, 13 Jan 2025 07:08:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736737179; cv=none; b=aYAvb/nb14xd2DG46bwSSM6INlyn8OJW0sENDOWZwlbWsiKRjvHFkMDml5HaFLCa4aPp/qYRG1J+t2YsdBLk0lVRZB65x1LisSMa4qnkU4mtTr9tmi1D/LmYrrccJCWtgyxmz4V+G7KlplNkQ6RL6qwZuafvdpTzlJUNGEXKK9g=
+	t=1736752086; cv=none; b=ZzL+7sh8Qz2xnipK5ubOgSGPf4FZYu1Asla/Hrqc5MbuFDEobOMJNkQNkfMy5EfANVAh2rnLdqnPIg9C489nOV/tw61nAuBOobrzl4zYxIHc364mXSvLch5fC0ZB219KOQbd3OdcnBdTFXnbxR2+8oS+xwEnsugNQbhdp1zJ1mA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736737179; c=relaxed/simple;
-	bh=BcAl9u+K5vYiMaqtPIMLtTKIylCdEyNnUF/i4eAGuOY=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
-	 In-Reply-To:Content-Type; b=P396GkSV3hSbwD8MFcaredaFlr47FXfz4tnc0xWG+KJqRz8lM/PuvE9QBcPoImCcJ0tWyP8Hcg1xE5giz/psQ7pua+FvRYMF2ekNVFRPP1ObUkZ8P4vJcLMFthfmDP8lJs/7/8mwvewTR6e7JJNgDiSAe0yfnPTEjUcB0D0t5VA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=KS0DsQsM; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1736752086; c=relaxed/simple;
+	bh=UQ/bILYCb6BTWhBYUZ/d+YcqU/4uMopsm7v8dhSn5Q8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YVCWUk5A+DlhvpgOi8r5nu+I3YmbjVqVePyySF7L1dMbXLrKV5mkdnMjANhUQUpd7HBvdo0TW9xtaKFfxF6PLDbdeuhyHVmeR20exV1aDfK39WJ2c4ycnUWjaZ/ntM9bFCiSVyXbtqgvupCVMFdjuxx7javTLaKnyz6IByT2KaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zIEEhLDX; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ZIaA65BX; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zIEEhLDX; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ZIaA65BX; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KS0DsQsM"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50D2sIJO030898;
-	Mon, 13 Jan 2025 02:59:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Rw1HisMX7BaCF0HZd08xQbXqYY/N4Tw0QDxlmJ/5qaU=; b=KS0DsQsMwQR9cMV0
-	bNYkzdEfZzhLu0lJN8LmQw8OQLp8MeR7eZeKyMadG/bps2Iu9Rdn8BzbkrJloZJr
-	h9PEr+yE2qXvNfiozIiibNpRv9678N0PNVAwtwT8iLeqYBfTs5TGrnNp7tsfPELy
-	OucNqR+QqJQj4QJonwYf2HnSbX78yZKZDIL8ynAqmVGcQ6h68HTijnJPeioPHy5U
-	5uWGVoZVZK1fSurbAxB9VBLrGnD/72/f7NLrQQTUMOQExQZmBjGCVT3WHPlvF8DP
-	Oi7jVQTxAhIsRTiU23jk2wkWzWqWo4r4GK06TVRBS+rl7RbP1s1uQlogYBj+qxmR
-	VDQAmQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 444tevr0c7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Jan 2025 02:59:14 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50D2xDuY019382
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Jan 2025 02:59:13 GMT
-Received: from [10.64.68.72] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 12 Jan
- 2025 18:59:06 -0800
-Message-ID: <c1128991-29fe-47e2-887e-10f63cb4f7f5@quicinc.com>
-Date: Mon, 13 Jan 2025 10:59:04 +0800
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zIEEhLDX";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ZIaA65BX";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zIEEhLDX";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ZIaA65BX"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 7C17B2110A;
+	Mon, 13 Jan 2025 07:07:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1736752076; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TaoASj0lVyE9FAn2HXC0AYJQkjIkt1qbiCgs4Qbv0t0=;
+	b=zIEEhLDX4fDlf6a1oijGTf8FJ+x0l2AxsT+9mYLNj+2bW1hTXo0qkjKRPWDpdbDbcH+JVC
+	jnKjCHFzoaUmNlFFojAXnvyq6j4DV9hUkLmhK89z9g7J1/E4IMlLnMKOvG9z0galQOtKTT
+	4Wi4h5geehYXWr3lRDH/GkC5DzEnBwU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1736752076;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TaoASj0lVyE9FAn2HXC0AYJQkjIkt1qbiCgs4Qbv0t0=;
+	b=ZIaA65BXf7++yEAEDwkc/xaBmsjiRKDMdIcKCVF5Jl778oFlPYgZfSOC9+s01o2OQVFGpR
+	JLA46C+jwjBFhoAw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=zIEEhLDX;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=ZIaA65BX
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1736752076; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TaoASj0lVyE9FAn2HXC0AYJQkjIkt1qbiCgs4Qbv0t0=;
+	b=zIEEhLDX4fDlf6a1oijGTf8FJ+x0l2AxsT+9mYLNj+2bW1hTXo0qkjKRPWDpdbDbcH+JVC
+	jnKjCHFzoaUmNlFFojAXnvyq6j4DV9hUkLmhK89z9g7J1/E4IMlLnMKOvG9z0galQOtKTT
+	4Wi4h5geehYXWr3lRDH/GkC5DzEnBwU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1736752076;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TaoASj0lVyE9FAn2HXC0AYJQkjIkt1qbiCgs4Qbv0t0=;
+	b=ZIaA65BXf7++yEAEDwkc/xaBmsjiRKDMdIcKCVF5Jl778oFlPYgZfSOC9+s01o2OQVFGpR
+	JLA46C+jwjBFhoAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A445913876;
+	Mon, 13 Jan 2025 07:07:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id a5BzJsu7hGfWKQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 13 Jan 2025 07:07:55 +0000
+Message-ID: <06ae6360-f252-47e9-b705-43270edee582@suse.de>
+Date: Mon, 13 Jan 2025 08:07:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,76 +83,88 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: (subset) [PATCH v4 0/3] Enable UFS on QCS615
-From: Xin Liu <quic_liuxin@quicinc.com>
-To: Bjorn Andersson <andersson@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Konrad Dybcio
-	<konradybcio@kernel.org>
-CC: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <quic_jiegan@quicinc.com>,
-        <quic_aiquny@quicinc.com>, <quic_tingweiz@quicinc.com>,
-        <quic_sayalil@quicinc.com>
-References: <20241216095439.531357-1-quic_liuxin@quicinc.com>
- <173631142070.110881.10056360680137751835.b4-ty@kernel.org>
- <6292f709-ca4b-423f-8d78-e7e0531b3026@quicinc.com>
-In-Reply-To: <6292f709-ca4b-423f-8d78-e7e0531b3026@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Subject: Re: [PATCH v5 1/9] lib/group_cpus: let group_cpu_evenly return number
+ initialized masks
+To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Costa Shulyupin
+ <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
+ Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>,
+ Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>,
+ Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ storagedev@microchip.com, virtualization@lists.linux.dev,
+ GR-QLogic-Storage-Upstream@marvell.com
+References: <20250110-isolcpus-io-queues-v5-0-0e4f118680b0@kernel.org>
+ <20250110-isolcpus-io-queues-v5-1-0e4f118680b0@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20250110-isolcpus-io-queues-v5-1-0e4f118680b0@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: GQaxR1X0zUXOyUkGHu0vCt0EOlg2OMFb
-X-Proofpoint-GUID: GQaxR1X0zUXOyUkGHu0vCt0EOlg2OMFb
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 malwarescore=0
- mlxscore=0 suspectscore=0 bulkscore=0 impostorscore=0 lowpriorityscore=0
- spamscore=0 phishscore=0 adultscore=0 mlxlogscore=999 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
- definitions=main-2501130023
+X-Rspamd-Queue-Id: 7C17B2110A
+X-Spam-Score: -4.51
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[23];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_DN_SOME(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-I mean the modification of binding.
-dt-bindings: ufs: qcom: Add UFS Host Controller for QCS615
-
-https://lore.kernel.org/all/20241216095439.531357-2-quic_liuxin@quicinc.com/
-
-在 2025/1/13 10:02, Xin Liu 写道:
-> This patch has been reviewed one month ago, do you have any other 
-> comments? Thank you very much.
+On 1/10/25 17:26, Daniel Wagner wrote:
+> group_cpu_evenly might allocated less groups then the requested:
 > 
-> https://lore.kernel.org/linux-arm-msm/20241216095439.531357-2- 
-> quic_liuxin@quicinc.com/
+> group_cpu_evenly
+>    __group_cpus_evenly
+>      alloc_nodes_groups
+>        # allocated total groups may be less than numgrps when
+>        # active total CPU number is less then numgrps
 > 
-> 在 2025/1/8 12:43, Bjorn Andersson 写道:
->>
->> On Mon, 16 Dec 2024 17:54:36 +0800, Xin Liu wrote:
->>> From: Sayali Lokhande <quic_sayalil@quicinc.com>
->>>
->>> Add UFS support to the QCS615 Ride platform. The UFS host controller and
->>> QMP UFS PHY hardware of QCS615 are derived from SM6115. Include the
->>> relevant binding documents accordingly. Additionally, configure UFS- 
->>> related
->>> clock, power, and interconnect settings in the device tree.
->>>
->>> [...]
->>
->> Applied, thanks!
->>
->> [2/3] arm64: dts: qcom: qcs615: add UFS node
->>        commit: a6a9d10e796957aefbc4c8d53ed7673714e83b31
->> [3/3] arm64: dts: qcom: qcs615-ride: Enable UFS node
->>        commit: 4b120ef62ed653f4bc05e5f68832d2d2ac548b60
->>
->> Best regards,
+> In this case, the caller will do an out of bound access because the
+> caller assumes the masks returned has numgrps.
 > 
+> Return the number of groups created so the caller can limit the access
+> range accordingly.
+> 
+> Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> ---
+>   block/blk-mq-cpumap.c        |  6 +++---
+>   drivers/virtio/virtio_vdpa.c |  9 +++++----
+>   fs/fuse/virtio_fs.c          |  6 +++---
+>   include/linux/group_cpus.h   |  3 ++-
+>   kernel/irq/affinity.c        |  9 +++++----
+>   lib/group_cpus.c             | 12 +++++++++---
+>   6 files changed, 27 insertions(+), 18 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
