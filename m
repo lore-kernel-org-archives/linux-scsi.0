@@ -1,163 +1,214 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 113D81586C8
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 15:15:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146FD18A6AE
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 16:01:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736867730; cv=none; b=VyEGla5dQ5hHE2cd72CQecP8ut0D3wLKXeRSUTtbidjvsrlIO3zyBrSpBSsXgDml8hb47341TceB+pTL0xwmv+awDMTQX6PmxlCT2TVrAa4THZfj9Zut8hXym8FclN9k+u+veaq68+RixeaAB1nWeXYMhyy/FjmDTO5h2/Kqx0Y=
+	t=1736870509; cv=none; b=py1hYXMHjGEck4BFnD46npz4k3WLKIBHMprTwfXvVNHOyx4Wj5Dd6PCxAOrFkPgC4Zs7ISHKmLFAwWSsUztHIvz9/Pm6Sn93OKoOn+2ItNojYRfE3A+lIjPZhwR6qM4Jf4qT7F3MTCREYwZRMGbW+mTP61TAtRcrN59Ys9/IjCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736867730; c=relaxed/simple;
-	bh=wfXyhtiQPnU2HE0W4lXp0FNyqSd4JhxvaFWQFFh7dcw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aXnDBV7pjYthGOeZCD+ZDQsPveGL58/hrwvQFGhSfA2XjSt9jI7oIJdiQExG9Xeb9/rYmR4YHonli5RM+HCoCWGOIX/aoW1Qz4/0mgi9MqfZ4QeggE0NCgFNF8QWFhNt86y0cVBTpjbyX/slBJ+nsDzbeE70BJSK20qAFY6rT/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QekxIUbO; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1736870509; c=relaxed/simple;
+	bh=9BdltbDDHeFSXUWsnVc9OJqpzmurFQ6f/EuLikIG0m4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Uz6CZD3B8BIki71Xkzq2Oewf0tg+hQxOERgpAVzktv8RCSA4DnjacINHml/CR9AYh4V3v0yAvGgoP87wix03eQsnNmiT1zvTuiOc7W0bzn89aeqiIA8mXpxoujBzvOVWp9+ogsho2jfuNyZQWcKcWJQceZMSnsi22pEuKWYZyMc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=fhbd4G75; arc=none smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QekxIUbO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1736867726;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5mNuXciAb5PuQi+i36llnf9CVbQqWe+kNA6jURmPnkg=;
-	b=QekxIUbOWIrOQZVM2htgUlqnd64y8Zu7yfZ9ItrSn/EzjiwPjEIO8EetxQXEHGX0owSlxR
-	45i5/++MDHF7Kw1BG1kOEMRUi6gURNN2oUVt5ZZuc006FXBaes8eCbt5a50RPc10KDBjlh
-	k5bOP77KFD6kUBiwVNyfU1jJl0j8gUU=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-404-0yitujSRPBuRvZvJJLvPQQ-1; Tue,
- 14 Jan 2025 10:15:20 -0500
-X-MC-Unique: 0yitujSRPBuRvZvJJLvPQQ-1
-X-Mimecast-MFC-AGG-ID: 0yitujSRPBuRvZvJJLvPQQ
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6372C195607C;
-	Tue, 14 Jan 2025 15:15:16 +0000 (UTC)
-Received: from [10.22.80.21] (unknown [10.22.80.21])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 77B3B30001BE;
-	Tue, 14 Jan 2025 15:15:13 +0000 (UTC)
-Message-ID: <dfa5c473-ef65-4065-b64a-6bcd213a26bc@redhat.com>
-Date: Tue, 14 Jan 2025 10:15:12 -0500
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="fhbd4G75"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-385d7b4da2bso4823757f8f.1
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 08:01:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1736870505; x=1737475305; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=RMuk+UifsraxPn2X2KqUIxPaLF/bAyO14bSWUMchq6M=;
+        b=fhbd4G75NBFu12SFRT+4ahF7Y8m1oLtKmf/lo8xvlHzR/DXgD3KDmt7bJ8BXXjlaV+
+         rP34rNxjK8G5eXER/45eKp3rBuAipB8k+wc0M25jHWxTw7e/AoSyP8Zan+dMIj5IyIS3
+         GT+OQwMC1Oe6TYnxuUNBgjRg+5mOvPEv83fT2AUOBEcrmTXR2PVcLw4H8lqGL3pCuT8f
+         rixsqmMLmw+zrifBnI4RbLLEJ6EtckmIbi3VCq3L6b/yETcDpEjv62S1UiRiNLEBBqLn
+         oocx3WleatTYhKnKw5LQok3tAALEe8mHmKWQKn0Yr+xwpHTdMMmKsVhr83dwoTTgBdgt
+         mwVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736870505; x=1737475305;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RMuk+UifsraxPn2X2KqUIxPaLF/bAyO14bSWUMchq6M=;
+        b=oM2Gx8isN6pu8b/sxtGQIZGcKuji+m3qju9XnWqhHPELIN30jC3vVIw+uedFhkBkB2
+         NNfxNLTA4GXkPXOz8OS9PLvYHnVx7izkh5xzmHdLv5qQ2ZAfgWHz8KWSjbKpBIzKnYRW
+         OTBKqwFydNH5BArWjn5cKqt5nPfYOd2HV+5j3LHW+5MQggdRc5vnuoJij05tPKMmccZ8
+         d2CQkOu1rV59dErxxkyyElOpaNbX0fm2e8/kVwDlG3h+7TCIGMyC4LARCJEJ91ArYDwU
+         EEVdcJFyj58obrJOohiJLUYe7vJMIONiQvAl2+srC8heeS7pn4glD2zMDyEe+Vg1sTel
+         eb2Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVdjU2LdRGuC+pQ71QidSaE55qBcY26PyvVaQSkUOYwX+GzVAb6Zc2zWosI8LqhXsjJifY+Ic68uOfc@vger.kernel.org
+X-Gm-Message-State: AOJu0YweyCo29vbWFSI8v2w/jJWr7DXmTfF59cYLs18ASRRUZvVwJ3Fb
+	KajM2bVNx8saWXTADS6GWPBh/RRyZ9kXbbAMqp58ubJuPtWvh4S2sboCSh7O3KQ=
+X-Gm-Gg: ASbGncsoZzOWtzH9FXIMtcP6pDMDJFqz7ClU1aNK8t8BHzB4zOkvcYuhdL2mDoJ+JFB
+	WAgQ/gs3M1HY/3eSKLbmzWnvlW41Rq9pmlt4XsuEJJIz9i7ffN7nui+QUr84lqdnlZlUFBaMxZU
+	mRnOikO2PTTo8AF79rs3GlBoWv3mUkvGfTSmE7aYigUMHvpfN76X+iHc9XBXInvlcjkdJRm1EIW
+	Q5fjZhk584DIa5BMERPOeMdmB5JXo+nBULxTGQq7vOaQGiJ7ssl8hSEoE8vKHXzT0o=
+X-Google-Smtp-Source: AGHT+IF3J9KLkHSdxkhJLVphEdnFgZopbnshppEer6gQraM6YW4Ox7lnjy1tK1UMNKFQ1TSYcrtXkQ==
+X-Received: by 2002:a05:6000:4024:b0:38b:d765:7039 with SMTP id ffacd0b85a97d-38bd765737cmr8157919f8f.17.1736870505207;
+        Tue, 14 Jan 2025 08:01:45 -0800 (PST)
+Received: from [192.168.243.26] ([80.233.72.14])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38a8e37d0fasm15516855f8f.19.2025.01.14.08.01.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jan 2025 08:01:44 -0800 (PST)
+Message-ID: <b97f6231496d2fb0323c9e51b5bfae7c635750e9.camel@linaro.org>
+Subject: Re: [PATCH] scsi: ufs: pltfrm: fix use-after free in init error and
+ remove paths
+From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
+ <avri.altman@wdc.com>,  Bart Van Assche <bvanassche@acm.org>, "James E.J.
+ Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Peter Griffin <peter.griffin@linaro.org>,
+ Krzysztof Kozlowski <krzk@kernel.org>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>,  Tudor Ambarus
+ <tudor.ambarus@linaro.org>, Will McVicker <willmcvicker@google.com>,
+ kernel-team@android.com,  linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,  linux-samsung-soc@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org,  linux-arm-msm@vger.kernel.org
+Date: Tue, 14 Jan 2025 16:01:42 +0000
+In-Reply-To: <20250113203136.GB1800842@google.com>
+References: <20250113-ufshcd-fix-v1-1-ca63d1d4bd55@linaro.org>
+	 <20250113192235.GA1800842@google.com>
+	 <c4129ea9da39badb3a686f7f93c334ecbc6d83f6.camel@linaro.org>
+	 <20250113203136.GB1800842@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.1-4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 07/15] scsi: fnic: Add and integrate support for FDMI
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com,
- arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
- satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
-References: <20241212020312.4786-1-kartilak@cisco.com>
- <20241212020312.4786-8-kartilak@cisco.com>
- <4141c9ab-c640-4765-a23c-c2f64df687cb@stanley.mountain>
- <d18ed046-0d16-49d6-b666-8ef8ee20f6d2@redhat.com>
- <b3c29afc-c49b-42af-9733-7cf2b934cd90@stanley.mountain>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <b3c29afc-c49b-42af-9733-7cf2b934cd90@stanley.mountain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Hi Dan.
+On Mon, 2025-01-13 at 20:31 +0000, Eric Biggers wrote:
+> On Mon, Jan 13, 2025 at 07:28:00PM +0000, Andr=C3=A9 Draszik wrote:
+> > On Mon, 2025-01-13 at 19:22 +0000, Eric Biggers wrote:
+> > > On Mon, Jan 13, 2025 at 07:13:45PM +0000, Andr=C3=A9 Draszik wrote:
+> > > > [...]
 
-I absolutely agree with all of your comments and I appreciate your review.
-I agree that all of the issues you've pointed out, with the the exception of
-one, need to be addressed. The issues pointed out - especially the string
-manipulation issues - can turn into CVEs. We don't want to be checking bugs
-like this into Linux. Certainly, nothing should be merged that does not
-pass the static checker, et al, automated tools we have.
+> > > > ther approaches for solving this issue I see are the following, but=
+ I
+> > > > believe this one here is the cleanest:
+> > > >=20
+> > > > * turn 'struct ufs_hba::crypto_profile' into a dynamically allocate=
+d
+> > > > =C2=A0 pointer, in which case it doesn't matter if cleanup runs aft=
+er
+> > > > =C2=A0 scsi_host_put()
+> > > > * add an explicit devm_blk_crypto_profile_deinit() to be called by =
+API
+> > > > =C2=A0 users when necessary, e.g. before ufshcd_dealloc_host() in t=
+his case
+> > >=20
+> > > Thanks for catching this.
+> > >=20
+> > > There's also the option of using blk_crypto_profile_init() instead of
+> > > devm_blk_crypto_profile_init(), and calling blk_crypto_profile_destro=
+y()
+> > > explicitly.=C2=A0 Would that be any easier here?
+> >=20
+> > Ah, yes, that was actually my initial fix for testing, but I dismissed
+> > that due to needing more changes and potentially not knowing in all
+> > situation if it needs to be called or not.
+> >=20
+> > TBH, my preferred fix would actually be the alternative 1 outlined
+> > above (dynamic allocation). This way future drivers can not make this
+> > same mistake.
+> >=20
+> > Any thoughts?
+> >=20
+>=20
+> I assume you mean replacing devm_blk_crypto_profile_init() with a new fun=
+ction
+> devm_blk_crypto_profile_new() that dynamically allocates a struct
+> blk_crypto_profile, and making struct ufs_hba store a pointer to struct
+> blk_crypto_profile instead of embed it.=C2=A0 And likewise for struct mmc=
+_host.
 
-My comment here was only to say that I don't think it's reasonable to
-ask Karan to break this change into a series of 100 small, reviewable changes.
+Yes, but I was only thinking of ufs_hba since I believe mmc_host
+uses an approach similar to my patch, where the lifetime of the
+crypto devm cleanup is bound to the underlying mmc device.
 
-To explain: the fnic driver is Cisco's driver. Cisco has always taken responsibility
-for this driver and Karan is one of the many Cisco Maintainers. What's happening is,
-after a long period of time where the code has been somewhat neglected, Cisco has
-decided to do a major update of their upstream driver. These changes
-are really more like a new driver, with some major new features, than a
-series of bug fixes or updates. This is happening because - at the insistence
-of some of the Distros, like Red Hat - Cisco is being told they need to bring
-their upstream drivers in line with their out-of-box drivers.
+For consistency reasons, I guess both would have to be changed
+indeed.
 
-Karan can confirm if this is the case. My question for Karan is: are there any more
-major driver changes coming for fnic, or is this the majority of it?
+> I think that would avoid this bug, but it seems suboptimal to introduce t=
+he
+> extra level of indirection.=C2=A0 The blk_crypto_profile is not really an=
+ independent
+> object from struct ufs_hba; all its methods need to cast the blk_crypto_p=
+rofile
+> to the struct ufs_hba that contains it.=C2=A0 We could replace the contai=
+ner_of()
+> with a back-pointer, so technically it would work.=C2=A0 But the fact tha=
+t both would
+> be pointing to each other suggests that they really should be in the same
+> struct.
 
-If this were simply a new feature or a series of bug fixes I agree the changes
-need to be organized into a series of small, reviewable patches. However,
-under the circumstances, I am willing to hold my nose and say: just get your driver
-updated and into order, and then we will hold the Maintainers (not Martin) accountable.
+Noted. Thanks for your thoughts.
 
-So I guess I am recommending an exception to the rule, just this once, in regard to breaking the
-overall change into a smaller and smaller patch series. I would prefer, instead, that any and all
-changes needed to address further review comments be presented as a small series of patches, broken
-down into reviewable chunks, on top of the exiting patch series. It can be decided later if these
-patches can or should be squashed into the respective 17 commits.
+> If it's possible, it would be nice to just make the destruction of the cr=
+ypto
+> profile happen at the right time, when the other resources owned by the u=
+fs_hba
+> are destroyed.
 
-Anyways, those are my thoughts.
+Just to clarify, are you saying you'd prefer to rather see something
+like you mentioned above (calling blk_crypto_profile_destroy()
+explicitly)?
 
-Thanks again for your help with this review. I agree Karan needs help and support,
-and I will try to be more public about they ways I am doing that - which have been
-mostly in the back-ground.
+I had a quick look, and it seems harder than this patch: one option
+could be to make calling the destroy dependent on UFSHCD_CAP_CRYPTO,
+but ufs-mediatek.c and ufs-sprd.c appear to clear that flag on
+errors at runtime, so we might miss a necessary cleanup call.
 
-/John
 
-On 1/14/25 04:59, Dan Carpenter wrote:
-> On Mon, Jan 13, 2025 at 12:35:03PM -0500, John Meneghini wrote:
->> Just a note to say that these patches are important to Red Hat and we
->> are actively engaged in back porting and testing these patches in to
->> RHEL-9 and RHEL-10.
->>
->> I think these issues that Dan has pointed out are all issues which
->> can be addressed in a follow up patch.
-> 
-> I mean we already merged this.  I only got involved because of static
-> checker issues in linux-next.
-> 
-> What I'm complaining about is not so much any specific issue but just
-> that the process was not followed.  Normally this patch would not
-> be merged.  If anyone sent a patch like this to drivers/staging it
-> would have triggered Greg's patch-bot automated response:
-> 
-> - Your patch did many different things all at once, making it difficult
->    to review.  All Linux kernel patches need to only do one thing at a
->    time.  If you need to do multiple things (such as clean up all coding
->    style issues in a file/driver), do it in a sequence of patches, each
->    one doing only one thing.  This will make it easier to review the
->    patches to ensure that they are correct, and to help alleviate any
->    merge issues that larger patches can cause.
-> 
-> This rule is the same in every subsystem.  No one wants to merge a patch
-> like this.  But what happened is the patch sat on the list and only
-> Hannes and Martin were doing any review.  Karan was left doing all the
-> work with no help or guidance.  Eventually Martin has to give up right?
-> The patchset isn't up to normal standards but it's basically okay and
-> Martin can't do every single thing by himself and eventually it's pretty
-> clear no one else is coming to help.  It is what it is etc.
-> 
-> Please understand this in the gentlest way.  Next time if something is
-> important then assign an engineer to help out.  It would have taken a day
-> to prepare this patchset for merging.  You had seven months.  It's not
-> fair to show up five days before the merge window asking for special
-> exemptions from the review process.  Maintainers and reviewers are
-> already overworked, they shouldn't have to work around your deadlines.
-> 
->  From what I've seen Karan is absolutely doing a good job addressing the
-> problems I reported so it's fine.  But normally this is not how it works.
-> 
-> regards,
-> dan carpenter
-> 
+I think the best alternative to keep devm-based crypto profile
+destruction, and to make it happen while other ufs_hba-owned
+resources are destroyed, and before SCSI destruction, is to
+change ufshcd_alloc_host() to register a devres action to
+automatically cleanup the underlying SCSI device on ufshcd
+destruction, without requiring explicit calls to
+ufshcd_dealloc_host(). I am not sure if this has wider implications
+(in particular if there is any underlying assumption or requirement
+for the Scsi_host device to clean up before the ufshcd device), but
+this way:
+
+* the crypto profile would be destroyed before SCSI (as it's
+  registered after)
+* a memleak would be plugged in tc-dwc-g210-pci.c
+* EXPORT_SYMBOL_GPL(ufshcd_dealloc_host) could be removed fully
+* no future drivers using ufshcd_alloc_host() could ever forget
+  adding the cleanup
+
+
+Something like the following in ufshcd.c:
+
+static void ufshcd_scsi_host_put_callback(void *host)
+{
+	scsi_host_put(host);
+}
+
+
+and in ufshcd_alloc_host() just after scsi_host_alloc() in same file:
+
+	err =3D devm_add_action_or_reset(dev, ufshcd_scsi_host_put_callback,
+				       host);
+	if (err)
+		return dev_err_probe(dev, err,
+				     "failed to add ufshcd dealloc action\n");
+
+
+I'll change v2 to do just that.
+
+
+Cheers,
+Andre'
 
