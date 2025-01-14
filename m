@@ -1,123 +1,184 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09701209671
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 19:56:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E61219149F
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 20:07:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736884600; cv=none; b=oStEs1a5lzkrmCA6OQGinvN5WdF4r3eBG4VnOR28oCdZhVwGQktZ+NixOUmXGdCouIfbOswlEMbePu6BNxfGhFCTFVtmDvirlVtI8EK9Fd0u7GMepGLAPCKYBkRAMkhS2ifoLGVC6uSNRmmqjiu8En8kfLM+gIG6Ivuq8I4kaH8=
+	t=1736885245; cv=none; b=Oi63DgiTM+OWpPk4u75gGEI9fUzWz7fg+Ztcb5xNmFuOLUs6ssAFbeIGgyOa47kPGFjwUj+bXWpgXWBN61mJxj0jtfxhtjYHoBvJkUvYHneNed3e7G4Q+cg2kE7KoTAqstb5RVUG1VzusKKlvX5Na75RV0YUKUiQD+ph+o8SFLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736884600; c=relaxed/simple;
-	bh=y/+EmGDA9oQh65FkQDBWgjTtUb9Q8LO/NWhu/sSSR2s=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Y7k32IcQ9LbMXeQgcK1HDXAvjVbaM3m86aVS3LDv3/yZbo11uIqmpJdizq6f87+ugmzjkDHR/U//zX52gltmhYkaNotvS4FdkVEb/m/o8VouCXNYINEfZ0BJ8WUCEN2gKycWyvejDFjlMWnKuvzm5prs6YJkXbhSBs1+K/TtA58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Lwbg7obx; arc=none smtp.client-ip=209.85.128.42
+	s=arc-20240116; t=1736885245; c=relaxed/simple;
+	bh=CvW4khQ6vHl70GiNOhk5gbmrXwzLs1ymn4wa9CmkFYY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=j9IobF6AKTjTwwsng/RX0SpJW0GDpUfd2FKH3PrfpHPk6Fa4MMJqssn7QYqGhl1RrkP0PLj22tCbNOAe6UQLriaWunN1x2BLg91tamxNjQpLM6ke8fXNLF2v4s2o4Abybns5VkTsZVtdAqL8wpsufiDq4kp0LZPE86cgo+l7Zic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=FYLcWYx1; arc=none smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Lwbg7obx"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4361c705434so42564415e9.3
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 11:56:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FYLcWYx1"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-43620a5f81bso6428725e9.0
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 12:07:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1736884597; x=1737489397; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=OmWlR4cF+mPlvD/SKofAb59V+xFfrfDkiiQN2ULLVu8=;
-        b=Lwbg7obx6A9/bESQudinRz6qKVK+DOZJokUjGSNHcw6pSbb1XKY9YxyJH9+y+XOvHB
-         JBzEEKp9jHf5xz12via0CbnxZ/3qWmS26D6g7KrZ+xle1sES4bPHKk1znJourdMeHZJg
-         5ypWAT6BVB4447KtyueqA1trXRfhWYMFbg+anGv6GyBwhaF1bIq75dbBcx33ROfMzhOW
-         OIVOIyJMQtSLt+8aTS0HJ3XWW5ByAkc5dGb6/fqAl4r6ow7ri2JQ1wqGhOzMLoOaAih7
-         DQW6cE0y76hJ/3yoy/4thiqSq3bs2PG5OlZiXz8m6LlE5s578LSqKJ/wjAux+5p+YIfz
-         vScw==
+        d=linaro.org; s=google; t=1736885242; x=1737490042; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wz3rX4Je09/J+8Ei/25Zrj8Kfz/o7SKbn92nTSq0sP4=;
+        b=FYLcWYx1FxGrCKahddKggnhROrci4LLAfE5NoQBrppzw40dvAWswbrde6c1Q34PCTD
+         sCjxnPhTZAWHBIaLbhq1K7oGNRwlWigkEtev6sKPeLkHp2ha7zycUoqnHxb566SzbcHF
+         UZoLUdW9kiZwF2BgGaHLeS4O1RLGq/MQIH86LaCwuh2RwMFACpoz+WEJ+TumbiOSJi3g
+         6//hSinWYKjGxULYNJafW3+/mkq5hSVSL7jkPszcEfnXqoe4PR6ru1XRQ9TpvmYHD0hU
+         j2fiwHhrTp8YUBhMrKQ/IGXiGpjXAVSJsnv9xkLiGomQaa5yn6si7snFfh0JmyghJ4eR
+         ByIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736884597; x=1737489397;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=OmWlR4cF+mPlvD/SKofAb59V+xFfrfDkiiQN2ULLVu8=;
-        b=rtq11KGCkH0s/v6GeTGJgiDPoY3UIXFGvZGbNGVuPGuwnKzGPRuz470M+UyYiF/NYd
-         1QciFFJWapbpCpSufH7WqNjSdXjJPgWWdP+XC1Yr/Icj0p0Mn9rs8tNsxJP/SJhPNQvK
-         dNkBgCona+h0vxoalinY4oRyGfTM1LTcpJ4fYQ30GFuFPG66hC6vvqbCtakhJ8PQYOLx
-         9iokwN4NCXYMnYfZOwRxAsEaZ1pEzpYvOegL36ru3aDfyFBFOaYHweUg+SMy//Jp1YS0
-         /kLEIrqhVbXmGvNXGI9Bdko+ffYnwouFOLJHjSi7oHewFmUgI5fwC3VFfshCCyIA0YWJ
-         NqZg==
-X-Forwarded-Encrypted: i=1; AJvYcCVhHFKkaMiHXQ2Wbucz+JVudEpPxqcTfat6+H4j8GB4OcLgiuejfLK+JbdbxjGBjOJy3MRFI9DqxNAK@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyen59Z6EMZ+dbDSyeKqL8r1ffgxMuJK7bw90Q1Y9lSOoWS2rRA
-	5U8E1wsNeZzA5Hgjbkc2BaTt/ge2A/hAiRd322p5yEXxmJmSWbZ2jw9oba359Sw=
-X-Gm-Gg: ASbGncsUwQnyP6KjnMUPTA8Se3SnoXeq4bFph9SDlEPhQsn1gxdG6Xhs5RCkXT3qG/K
-	oRdhJa0vgvS2vzjLbF1Qr/PLkxP5huoUTnrep+mLoTLi46MBHsv/IlCvqYJZaDQ/wvDWShbZFm9
-	9Oc8FLrR8VpOnKYjNYFdrk1f8YxqaL7SvM04GSdE6TrAZabejXNmzvgCeoiIx13X4ZnNmZcrFmH
-	bLZW+Auffx6fmeJRCWncJXelEDz/T/b2i2wUFU5CzHiUMKWxsOKFT4aKPIi
-X-Google-Smtp-Source: AGHT+IGQouXUOO+qEb5G2vSRcAAdIKYNRk9bOvvSttjkX7QyY7z4FXFdlG3d/Ksq2SBLmY2mxOAH8w==
-X-Received: by 2002:a05:6000:1f88:b0:38a:615c:8223 with SMTP id ffacd0b85a97d-38a872f69c7mr22826797f8f.10.1736884597362;
-        Tue, 14 Jan 2025 11:56:37 -0800 (PST)
-Received: from draszik.lan ([80.111.64.44])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38bddbf50a2sm5275313f8f.43.2025.01.14.11.56.36
+        d=1e100.net; s=20230601; t=1736885242; x=1737490042;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wz3rX4Je09/J+8Ei/25Zrj8Kfz/o7SKbn92nTSq0sP4=;
+        b=OgZ38037hhMm9PIK2VXQAaixYHnzU9I7ORVvdm5LOFs14H+ggEH8/jJvFVheQ14/vJ
+         wJTZ8U849IdNnN/7f4bRqIP0pmptEOQCMEPMMGMoBNO15bRGfZjQlQfQP2ydYv4AxJfQ
+         VR3vNye06yubh7smJc5qI8mTgOw/braHOPfaYEjfn6IT/p6xu6POySIiIUSP7bm09frd
+         IS/4d6nE7kza4f1gMAFlRMS4eXq/FBpcrosa67FuYyEtUQgmXW1SQ8MWX7O6rYj+cUCw
+         Tp4As/N5UQwl1lezH3N4NrRZNNTdpKhwxR4GUeH/L6LurfpimjSkWmB6fdT0mFAit1Ft
+         +Lug==
+X-Forwarded-Encrypted: i=1; AJvYcCXrvsBCRB+L5uGqbBcI1mj7GyTmO579pxjIxhc4MLeeYpOCDsgJtX95JaekixFwmt541m6Qa7iZI4kB@vger.kernel.org
+X-Gm-Message-State: AOJu0YyLDpUJPzzgZNOrDin/XhrTOBFk/NsJe1RL75I0CwQ2GLkx3P5y
+	3DTSYh+wNvzgPon40h+JPHVfMv7QiWa9Q9+1NFgTf4nAXfJ35Le1mtqtfTPnMiY=
+X-Gm-Gg: ASbGncv5EA9DmBKbWBUzST/jIJO6iIadORCUQb26bzhDmrCMgNU9FBpX0XSpzwvA6at
+	NdSM/9gJZAs7UKxWM7P+jEmt6ParKJeAJC8pKD13HuA0ySOadf9V76/awTQuSQfEE4O1EfYwt/A
+	SAB1LS7s4lWUhHVXz7gGvXqLfC9sxhkiT3RJSZXpAKRTEnUIA1U2l3wTZR0GGTAZYvAFB12DPzn
+	UNeF75VLCL9kcddGgFnyzyAiDoXvv27N17mXe2ZtvCsQ9OowQBOqPj/mwj+UpgQYez6/uI=
+X-Google-Smtp-Source: AGHT+IE7Jj8lfNs/6Mawrj444oeAra8QM8Y3meAjqJpf/75OfBxvuzPW0rWmRWiybb+fzK9QvFi5qA==
+X-Received: by 2002:adf:b60c:0:b0:385:df73:2f43 with SMTP id ffacd0b85a97d-38a872c8972mr6632398f8f.2.1736885241685;
+        Tue, 14 Jan 2025 12:07:21 -0800 (PST)
+Received: from krzk-bin.. ([178.197.223.165])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-436e9df958dsm185199475e9.17.2025.01.14.12.07.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jan 2025 11:56:36 -0800 (PST)
-Message-ID: <13a3fdb675baa36fcda1bb254b05032b1175a2a8.camel@linaro.org>
-Subject: Re: [PATCH v2] scsi: ufs: fix use-after free in init error and
- remove paths
-From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>, Alim Akhtar
- <alim.akhtar@samsung.com>,  Avri Altman <avri.altman@wdc.com>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <martin.petersen@oracle.com>, Peter Griffin <peter.griffin@linaro.org>,
- Krzysztof Kozlowski <krzk@kernel.org>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>,  Eric Biggers <ebiggers@kernel.org>
-Cc: Tudor Ambarus <tudor.ambarus@linaro.org>, Will McVicker
- <willmcvicker@google.com>, kernel-team@android.com,
- linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org,  stable@vger.kernel.org
-Date: Tue, 14 Jan 2025 19:56:35 +0000
-In-Reply-To: <58f1b701-68da-49c0-b2b1-e079bad4cd08@acm.org>
-References: <20250114-ufshcd-fix-v2-1-2dc627590a4a@linaro.org>
-	 <58f1b701-68da-49c0-b2b1-e079bad4cd08@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.1-4 
+        Tue, 14 Jan 2025 12:07:21 -0800 (PST)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH] ufs: Use str_enable_disable-like helpers
+Date: Tue, 14 Jan 2025 21:07:16 +0100
+Message-ID: <20250114200716.969457-1-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi Bart,
+Replace ternary (condition ? "enable" : "disable") syntax with helpers
+from string_choices.h because:
+1. Simple function call with one argument is easier to read.  Ternary
+   operator has three arguments and with wrapping might lead to quite
+   long code.
+2. Is slightly shorter thus also easier to read.
+3. It brings uniformity in the text - same string.
+4. Allows deduping by the linker, which results in a smaller binary
+   file.
 
-On Tue, 2025-01-14 at 09:55 -0800, Bart Van Assche wrote:
-> On 1/14/25 8:16 AM, Andr=C3=A9 Draszik wrote:
-> > +/**
-> > + * ufshcd_scsi_host_put_callback - deallocate underlying Scsi_Host and
-> > + *				=C2=A0=C2=A0 thereby the Host Bus Adapter (HBA)
-> > + * @host: pointer to SCSI host
-> > + */
-> > +static void ufshcd_scsi_host_put_callback(void *host)
-> > +{
-> > +	scsi_host_put(host);
-> > +}
->=20
-> Please rename ufshcd_scsi_host_put_callback() such that the function=20
-> name makes clear when this function is called instead of what the=20
-> function does.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ drivers/ufs/core/ufshcd.c       | 11 ++++++-----
+ drivers/ufs/host/ufs-mediatek.c |  7 +++----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-Would you have a suggestion for such a name? Something like
-ufshcd_driver_release_action()?
-
-Unless I'm misunderstanding you, I believe most drivers use
-a function name that says what the function does, e.g.
-dell_wmi_ddv_debugfs_remove (just as a completely random
-example out of many).
-
-If going by when it is called and if applying this principle
-throughout ufshcd, then there can only ever be one such
-function in ufshcd, as all devm_add_action() callback actions
-happen at driver release, which surely isn't what you mean.
-
-You probably meant something different?
-
-Cheers,
-Andre'
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 27154a5dcb7b..5225d48a47f8 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -23,6 +23,7 @@
+ #include <linux/pm_opp.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/sched/clock.h>
++#include <linux/string_choices.h>
+ #include <linux/iopoll.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_dbg.h>
+@@ -1187,7 +1188,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
+ 
+ out:
+ 	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
+-			(scale_up ? "up" : "down"),
++			str_up_down(scale_up),
+ 			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 	return ret;
+ }
+@@ -1549,7 +1550,7 @@ static int ufshcd_devfreq_target(struct device *dev,
+ 		hba->clk_scaling.target_freq = *freq;
+ 
+ 	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
+-		(scale_up ? "up" : "down"),
++		str_up_down(scale_up),
+ 		ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 
+ out:
+@@ -6026,7 +6027,7 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ 
+ 	hba->dev_info.wb_enabled = enable;
+ 	dev_dbg(hba->dev, "%s: Write Booster %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++			__func__, str_enabled_disabled(enable));
+ 
+ 	return ret;
+ }
+@@ -6044,7 +6045,7 @@ static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
+ 		return;
+ 	}
+ 	dev_dbg(hba->dev, "%s: WB-Buf Flush during H8 %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++			__func__, str_enabled_disabled(enable));
+ }
+ 
+ int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+@@ -6064,7 +6065,7 @@ int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+ 
+ 	hba->dev_info.wb_buf_flush_enabled = enable;
+ 	dev_dbg(hba->dev, "%s: WB-Buf Flush %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++			__func__, str_enabled_disabled(enable));
+ 
+ 	return ret;
+ }
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 135cd78109e2..a7804fe387e9 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -19,6 +19,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
++#include <linux/string_choices.h>
+ 
+ #include <ufs/ufshcd.h>
+ #include "ufshcd-pltfrm.h"
+@@ -480,10 +481,8 @@ static int ufs_mtk_mphy_power_on(struct ufs_hba *hba, bool on)
+ 	}
+ out:
+ 	if (ret) {
+-		dev_info(hba->dev,
+-			 "failed to %s va09: %d\n",
+-			 on ? "enable" : "disable",
+-			 ret);
++		dev_info(hba->dev, "failed to %s va09: %d\n",
++			 str_enable_disable(on), ret);
+ 	} else {
+ 		host->mphy_powered_on = on;
+ 	}
+-- 
+2.43.0
 
