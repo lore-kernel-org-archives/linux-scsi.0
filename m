@@ -1,212 +1,206 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85031229604
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 10:52:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0861E86E;
+	Tue, 14 Jan 2025 14:49:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736851946; cv=none; b=MxP6OacZdtWYr0KCveu6r5CLMCarsx1jvtrkudcf2gora4quFItET+UBJHqq2uGmwu+XCSooHHpc4CcAlCJXr4a6zMYSG1q/5Dk7N0tDOd75OBflBOy+5RSeVx8cdF2o+KmGIw5tlw3Vkx/3nw9r1ajWB1n9VjGuILCCfmFV6/0=
+	t=1736866199; cv=none; b=CFQiAzryMi2OluJGC9+JIYDlsxUWlAUsa+iama3U0kHZf6gWH1hme0swPu+kPcKa9IS+/E27rNLFgw4zCHZDMf6x4iiJyYcFjyiB1x37K09L9J/rpRGpw/6x5bWfltQ5IDraEnNzJ6C61wJDBfu2OB7/xUwDLokocvfC1vZEzeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736851946; c=relaxed/simple;
-	bh=pIVuQyr+4FOCAnhM9xbxHM68aNV1hy0VoQRwSL1iAyw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ioWG36eM1rHULRSfGGstpegu3I18wPerGDrPc0zoFMndA3eBY8Rx7sveSu/nVTIybup7E2EERbbChoFFmXgy/SGRZpgLl+B3aLloZSxAfASizB4y8dKWenQqxdkcCv0vYxDOGeZjSqd8d5q5kxwkdV3TE3ivLGBsQczgVK5dfxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=olauuDOy; arc=none smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1736866199; c=relaxed/simple;
+	bh=Pxh3kQE9DqemRRY5A/xlc1bC8PF7bNCfxT8IqCph1Eg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=b2FIdNYDqvEpyaqxn0EVghjn0GHJy12j+xGgvO669TeHFm8sqZZjw38V+e5FGQpd/QuPOmvdinRhRyUXyDjugyB7iGts5LqEryoLQii41vwW/+ATAVEIW30ucC2cHGaciNXQZ0P8IUQJrUxrSprLB7+AQ/NXjxtxflF6uvSEGw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZydzXk5S; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="olauuDOy"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-54024aa9febso4657566e87.1
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2025 02:52:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZydzXk5S"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-21a7ed0155cso96336875ad.3;
+        Tue, 14 Jan 2025 06:49:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1736851943; x=1737456743; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=rN4m3NQ5n5N7wtBEgakYpYBKKXw32xM8SaDJsWoHWYE=;
-        b=olauuDOycZKssbYAkae0khnYnwJ3EDwvRbPWIXtdbjsfo6LC1TVFO61v7uFYS4fhCx
-         EC/530Xji9GVI512b7d/z4GZav66mMEiHP2uY3UQ+nCiKdSqYdT/Ca7gz9G20yzdt09c
-         pF/oQJBgyAdDqoOZLfDtWxZqYqwLdWhD3vsPHf9lQtdULKiG6heqjL4mpL1xOH9SN/GQ
-         vg4olu0hHi/Yse7rBG85zzVE4PBOIseyLIKZGsqvKuVA+MG6rKesntTcdYMSCWS1pUCs
-         VoYBWMlDfVFELcgCzL7STjlicREMmaHDM2ItIvP1wNaCQKUnpQ8SU5CkY/lGWS3DGX4I
-         g7cw==
+        d=gmail.com; s=20230601; t=1736866197; x=1737470997; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kau0WwvXt8Nt9vi/G17hGuAEyvknENrp4uqh1eI5TwA=;
+        b=ZydzXk5SMycsg0OAUt7lDTOOrMS23zwHMk+wMN9kQY+75xGRqxfa+2IuBLqrYOcrtZ
+         KlT2aBVdhclKEPDjqkq8cFP5wQdqqbLbLLPypsE+ySW6+S63vhpQc9nVvj/RI854E1Ju
+         xk0g9ffddkUl1CviMFjeMGkNy4FRAQwJYVv4kdgDe3zwI/EUWhfkJrjjd/i9RA5EONbm
+         YZZ5/Z0/D4hLdp/R8RKvntfNchxLh8Llra4cFAke8DijMeDNYXJqxeI+WbR7TGerrPn8
+         u7UdvhepgC1HAdazwLH8esT6wtooTD2joBD+AqdwX5l9S/9qO4fa9HFkdm0MchFTeT4O
+         WOYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736851943; x=1737456743;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20230601; t=1736866197; x=1737470997;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rN4m3NQ5n5N7wtBEgakYpYBKKXw32xM8SaDJsWoHWYE=;
-        b=obqjW/876rHyuPdOkdZQNmKTB2f4xdQcvn68oQ5PyLAjAN9HXZ2Gmybl/KxmjtaywS
-         cc7FX8okcTufr9WXV8PA5Q3mX8GAPFLs3b/vDqrianM9QQVkqtxtvEvPzwpMWJzRMq8x
-         dqZ75H18WLRRVHiDAz3CasonkxqWbyHl9PBrX7a0dl7p0RTCHTxGttW755O7BURpPEi8
-         hBCOziUCZ6HN+pDn3+zRQUeDCi8kDh6JXq9B/kfTC/nJstZFSvOaC8CCfkNSE3mAW5Xm
-         xgDDhZ13YwfXWybq7ksH7A+Ep8ZR5i1dUNtaftZ7ACsrdpmGqWl5uvC7pQD4Wg6g+xD6
-         681A==
-X-Forwarded-Encrypted: i=1; AJvYcCVLjeH9wBzl2GhKav7by+yZD2OIXxhkIAMpYjFgny+2CJe+l3OZFfWiS1DSETpTiCAnvo9VYTtnbt8h@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCBsdufI/exPeQSZQDLoNDWfwlRoDPDmotSAK5YxdyXvhbsLme
-	f79mQOwD4HrNaehByAr3+6W5svSVtjg1VyxcXM6HaJM9VYEzW2j/g/EVapDyrn0=
-X-Gm-Gg: ASbGnctpJPgsizjBKRaNDvdmDoK2siXjfwkibKO9UgyunAFwvwrpLurHJOViFDGOdzD
-	7cvMFRXVvXkSK6qPcW2CFkR2GQwE+aOE16aYjVrup280mPwZnf1t90pZEioc8hrJnQuWuotLrDq
-	hNLk6IK7bN8rT/nbRUC6ZmQiwwjurXVUTvxR4mTrci/MRtzwIFRY4Hd0C1I7FZok2M8Ly3Ti3VQ
-	cXw5/6fviz9IjpQV1N4Kg+TjSxokZRhSeZciuvUnQsIiNOt52Ah2aHygzyjqYzkfvkrME04uBgp
-	YshchUXs5pNeVBBeXHZNkQpO1n9jECJRkWJ8
-X-Google-Smtp-Source: AGHT+IFXNDZ+6CVMWolZf+t30Za37hYF2mQh5sPd0zYDKOS8PyTtXOJy3bJAdSC7lS3KwvFjETHcXA==
-X-Received: by 2002:a05:6512:3d22:b0:540:2022:e3b7 with SMTP id 2adb3069b0e04-5428481c05emr6867029e87.53.1736851942720;
-        Tue, 14 Jan 2025 02:52:22 -0800 (PST)
-Received: from eriador.lumag.spb.ru (2001-14ba-a0c3-3a00--7a1.rev.dnainternet.fi. [2001:14ba:a0c3:3a00::7a1])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5428be540c6sm1677395e87.71.2025.01.14.02.52.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jan 2025 02:52:21 -0800 (PST)
-Date: Tue, 14 Jan 2025 12:52:19 +0200
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To: Melody Olvera <quic_molvera@quicinc.com>
-Cc: Vinod Koul <vkoul@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>, 
-	Trilok Soni <quic_tsoni@quicinc.com>, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Nitin Rawat <quic_nitirawa@quicinc.com>, Manish Pandey <quic_mapa@quicinc.com>
-Subject: Re: [PATCH 4/5] arm64: dts: qcom: sm8750: Add UFS nodes for SM8750
- SoC
-Message-ID: <vifyx2lcaq3lhani5ovmxxqsknhkx24ggbu7sxnulrxv4gxzsk@bvmk3znm2ivl>
-References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
- <20250113-sm8750_ufs_master-v1-4-b3774120eb8c@quicinc.com>
+        bh=Kau0WwvXt8Nt9vi/G17hGuAEyvknENrp4uqh1eI5TwA=;
+        b=fAkW5y0cYrwrlH+Y5E8PZY80Ix4DhzZqJo3/irF1zejEFTPMz6edqZpq0NHyQFEUO9
+         6BZgNiNVoaqI8KaJlHQuBywD7LH2PuL3r5fbVM7EBLOwmotPpgUpm454VW2AzXgjX8Zi
+         /42as8brBLPbdkNtMi6w0E4S6NDQd+loHhRnzKOp8AELqj4tCIna9mjeUzTFzjizyPiD
+         sgQwDxta7tW5TYoeiH/kuXNr92Qvxn1F04WOut0nWp6vVO5VCR9P+a9Wr5kaZfxTT88A
+         aOdIyb6Xne2Se47orab8U8EDsINWFgvRuqiA3yCBt9sgvATZX162GLE/qWqNHGkgD52p
+         vSKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVKhA/5rSBTfhEwVUE3TTCuR1CBgTGFr0kkTPw/4EZbkxDRnU6dd4eaJcfsGbOlPeW3MeJ4YDgi3xyKdUU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxyE2HFNqEpD83hwL3S70L9HQpO7w23VaYEpNkC/moxFEXbMfrn
+	ZRf54pj4/HrUgWQeldNQeB7ZS3/ndPwSCGltR76xU4ZMHb9/4O1r
+X-Gm-Gg: ASbGnctGP6R+hU/7uuj3Hq7UD7Vsd1LK7ZSbONCuSgsLXuQr0rcD9XR09WJHFQ+4a9D
+	uOJqh1qR4BwczjGNhv6HIObhp6m+AYHJB6lt46CWj+W+AU6+6ZP6rnVOvTUhiB3yvgRbo9QUMl5
+	hP4Lv3lMqYG8201BtPAJ2DmlkqE77Z5x/Vw5HwKsSKB3JCCXjPg7EyMqog4ulRgevRinu/SqzNr
+	HsCKUXzu9jY+ujbfL0Cke290EjmlQLqcWPbqvMV5V7hkubbKS+j+c38ALeIGEacnrhxmK71iehJ
+	oEqayArWQ/RFomGORZIs0c2Vnwnyiw==
+X-Google-Smtp-Source: AGHT+IHxJO8RdlBMWoVyXnUWmZ35/shfzvWpFEJNhRWrIqV5hH4qsUp2Lh4SieDDHg76VSuVr/ZF2w==
+X-Received: by 2002:a17:902:f54e:b0:215:5935:7eef with SMTP id d9443c01a7336-21a83f5509cmr452489505ad.22.1736866197193;
+        Tue, 14 Jan 2025 06:49:57 -0800 (PST)
+Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21a9f219f0dsm68227105ad.139.2025.01.14.06.49.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Jan 2025 06:49:56 -0800 (PST)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <2f2fe6f6-cc10-48fc-8df6-b82e4ba22247@roeck-us.net>
+Date: Tue, 14 Jan 2025 06:49:55 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250113-sm8750_ufs_master-v1-4-b3774120eb8c@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: ufs: hwmon: Add missing ABI documentation
+To: Avri Altman <avri.altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Bart Van Assche <bvanassche@acm.org>
+References: <20250114093512.151019-1-avri.altman@wdc.com>
+ <20250114093512.151019-3-avri.altman@wdc.com>
+Content-Language: en-US
+From: Guenter Roeck <linux@roeck-us.net>
+Autocrypt: addr=linux@roeck-us.net; keydata=
+ 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
+ mDW4+i+XlNFUPUYMrIKi9joBhu18ssf5i5Q=
+In-Reply-To: <20250114093512.151019-3-avri.altman@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jan 13, 2025 at 01:46:27PM -0800, Melody Olvera wrote:
-> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+On 1/14/25 01:35, Avri Altman wrote:
+> This commit adds ABI documentation for the UFS hwmon driver, detailing
+> the sysfs attributes exposed by the driver. It includes the missing
+> temperature notification entries, that were added back in 2021.
 > 
-> Add UFS host controller and PHY nodes for SM8750 SoC.
+> The following sysfs attributes are documented:
+> - /sys/class/hwmon/hwmon*/temp*_input
+> - /sys/class/hwmon/hwmon*/temp*_crit
+> - /sys/class/hwmon/hwmon*/temp*_lcrit
+> - /sys/class/hwmon/hwmon*/temp*_enable
 > 
-> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
+> While at it, update a missing reference to the ufs ABI doc in the
+> MAINTAINERS file.
+> 
+> Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notification support")
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
 > ---
->  arch/arm64/boot/dts/qcom/sm8750.dtsi | 81 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 81 insertions(+)
+>   .../ABI/testing/sysfs-driver-ufs-hwmon        | 31 +++++++++++++++++++
+
+The hardware monitoring ABI is documented in ABI/testing/sysfs-class-hwmon.
+It does not make sense to document hwmon driver sysfs attributes per driver
+unless there are non-standard attributes.
+
+Guenter
+
+>   MAINTAINERS                                   |  2 ++
+>   2 files changed, 33 insertions(+)
+>   create mode 100644 Documentation/ABI/testing/sysfs-driver-ufs-hwmon
 > 
-> diff --git a/arch/arm64/boot/dts/qcom/sm8750.dtsi b/arch/arm64/boot/dts/qcom/sm8750.dtsi
-> index 3bbd7d18598ee0a3a0d5130c03a3166e1fc14d82..20690c102244b337847a6482dd83c37e19746de9 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8750.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sm8750.dtsi
-> @@ -13,6 +13,7 @@
->  #include <dt-bindings/power/qcom,rpmhpd.h>
->  #include <dt-bindings/power/qcom-rpmpd.h>
->  #include <dt-bindings/soc/qcom,rpmh-rsc.h>
-> +#include <dt-bindings/gpio/gpio.h>
->  
->  / {
->  	interrupt-parent = <&intc>;
-> @@ -1939,6 +1940,86 @@ mmss_noc: interconnect@1780000 {
->  			#interconnect-cells = <2>;
->  		};
->  
-> +		ufs_mem_phy: phy@1d80000 {
-> +			compatible = "qcom,sm8750-qmp-ufs-phy";
-> +			reg = <0x0 0x01d80000 0x0 0x2000>;
+> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs-hwmon b/Documentation/ABI/testing/sysfs-driver-ufs-hwmon
+> new file mode 100644
+> index 000000000000..a27a108ffd28
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-driver-ufs-hwmon
+> @@ -0,0 +1,31 @@
+> +What:		/sys/class/hwmon/hwmon*/temp*_input
+> +Date:		September 2021
+> +KernelVersion:	5.16
+> +Contact:	avri.altman@wdc.com
+> +Description:
+> +		Temperature input value in millidegrees Celsius.
+> +		Read-only.
 > +
-> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-> +				 <&tcsrcc TCSR_UFS_CLKREF_EN>;
-> +			clock-names =	"ref",
-> +					"ref_aux",
-> +					"qref";
+> +What:		/sys/class/hwmon/hwmon*/temp*_crit
+> +Date:		September 2021
+> +KernelVersion:	5.16
+> +Contact:	avri.altman@wdc.com
+> +Description:
+> +		Critical temperature value in millidegrees Celsius.
+> +		Read-only.
 > +
-> +			resets = <&ufs_mem_hc 0>;
-> +			reset-names = "ufsphy";
+> +What:		/sys/class/hwmon/hwmon*/temp*_lcrit
+> +Date:		September 2021
+> +KernelVersion:	5.16
+> +Contact:	avri.altman@wdc.com
+> +Description:
+> +		Lower critical temperature value in millidegrees Celsius.
+> +		Read-only.
 > +
-> +			power-domains = <&gcc GCC_UFS_MEM_PHY_GDSC>;
-> +
-> +			#clock-cells = <1>;
-> +			#phy-cells = <0>;
-> +
-> +			status = "disabled";
-> +		};
-> +
-> +		ufs_mem_hc: ufs@1d84000 {
-> +			compatible = "qcom,sm8750-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
-> +			reg = <0x0 0x01d84000 0x0 0x3000>;
-> +
-> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> +
-> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> +				 <&rpmhcc RPMH_LN_BB_CLK3>,
-> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> +			clock-names = "core_clk",
-> +				      "bus_aggr_clk",
-> +				      "iface_clk",
-> +				      "core_clk_unipro",
-> +				      "ref_clk",
-> +				      "tx_lane0_sync_clk",
-> +				      "rx_lane0_sync_clk",
-> +				      "rx_lane1_sync_clk";
-> +			freq-table-hz = <100000000 403000000>,
-> +					<0 0>,
-> +					<0 0>,
-> +					<100000000 403000000>,
-> +					<100000000 403000000>,
-> +					<0 0>,
-> +					<0 0>,
-> +					<0 0>;
+> +What:		/sys/class/hwmon/hwmon*/temp*_enable
+> +Date:		September 2021
+> +KernelVersion:	5.16
+> +Contact:	avri.altman@wdc.com
+> +Description:
+> +		Enable (1) or disable (0) this temperature sensor.
+> +		Read-write.
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 838d3038e1ea..71a69551aee2 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -24070,6 +24070,8 @@ R:	Avri Altman <avri.altman@wdc.com>
+>   R:	Bart Van Assche <bvanassche@acm.org>
+>   L:	linux-scsi@vger.kernel.org
+>   S:	Supported
+> +F:	Documentation/ABI/testing/sysfs-driver-ufs
+> +F:	Documentation/ABI/testing/sysfs-driver-ufs-hwmon
+>   F:	Documentation/devicetree/bindings/ufs/
+>   F:	Documentation/scsi/ufs.rst
+>   F:	drivers/ufs/core/
 
-Use OPP table instead
-
-> +
-> +			resets = <&gcc GCC_UFS_PHY_BCR>;
-> +			reset-names = "rst";
-> +
-> +
-> +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-> +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-
-Shouldn't cpu-ufs be ACTIVE_ONLY?
-
-> +			interconnect-names = "ufs-ddr",
-> +					     "cpu-ufs";
-> +
-> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-> +			required-opps = <&rpmhpd_opp_nom>;
-> +
-> +			iommus = <&apps_smmu 0x60 0>;
-> +			dma-coherent;
-> +
-> +			lanes-per-direction = <2>;
-> +
-> +			phys = <&ufs_mem_phy>;
-> +			phy-names = "ufsphy";
-> +
-> +			#reset-cells = <1>;
-> +
-> +			status = "disabled";
-> +		};
-> +
->  		tcsr_mutex: hwlock@1f40000 {
->  			compatible = "qcom,tcsr-mutex";
->  			reg = <0x0 0x01f40000 0x0 0x20000>;
-> 
-> -- 
-> 2.46.1
-> 
-
--- 
-With best wishes
-Dmitry
