@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFDC922FDE9;
-	Wed, 15 Jan 2025 11:52:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445BE2416A1;
+	Wed, 15 Jan 2025 11:52:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736941936; cv=none; b=blP/SbdTDmEKSl+izyl2f+TOlr/QrnTZVEve3vvHTqZ0D8ghOjaCAeqal9WaCWZePZ0MUblvezhMkWkwzKUueG9AylaLlVYdA28LVGkWyzy/h7qGaOBGAhVEtbRvySbYhLWn5YYHC2ZmkL+4Cit6jGLzDjvMDxdDWE0Qdi96IAY=
+	t=1736941936; cv=none; b=twv64rnP3RJ1aDAqI3a14VDM3uuxoh5EdrVEVIRXHU6AmnRqE7JGli6qy454qg5zvg6kfvKm+GfMIROkMgfZlYb7k9ZbB9FibjLNS9RB2fmty4y2mR0zJQtnZiiYyo0CvCswHmtTtfLjLQUzg4gkwib56vBCb0JFPe1kjX34GwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1736941936; c=relaxed/simple;
-	bh=DHUMwRmKNqhI1kJO7Otx0T1Ai0iC7wiRDZUxWS6mXOM=;
+	bh=nn8LM8LfTV6ykNNnF9ygx5tY1+AB8D4wMnfwwxu/rkw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=clpwgzOo5opXXfEblDLAc9+RHGGJwnXcQU2usCYQiNois/cN3qXh20TtoPeRJgv7kaWYzvvMhdcLDl6akvnbC3zTSglOiOxCYrzLMDhKwFm9ozy32ISVQJ63kOQ8dMaWYJB12PfT33NySDzll9zoSVKsehnMiUICCYUY7/YgPTY=
+	 MIME-Version; b=ciKVkK1z+f7YFI2rzsLrQtS3wrc3aybe1O+G0S59poApxXLs9gJwOgFvRJ5DKpD5iBbqYqk7eadObo//yl/x/Hzod5fwwv/mQrHPYR1A+bDkzBCssAQFrcXm3oFeWgVxdmbd8tOC5Jd/+8JgI8aABOjnsf5LvWJW+IeuTsh+mYI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YY4960dGgz4f3jsv;
-	Wed, 15 Jan 2025 19:51:54 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YY4913cfZz4f3jMG;
+	Wed, 15 Jan 2025 19:51:49 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 49D481A1387;
-	Wed, 15 Jan 2025 19:52:09 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 25CCF1A16F9;
+	Wed, 15 Jan 2025 19:52:11 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgC3Gl9aoYdnvK0ZBA--.21959S7;
-	Wed, 15 Jan 2025 19:52:09 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgC3Gl9aoYdnvK0ZBA--.21959S10;
+	Wed, 15 Jan 2025 19:52:10 +0800 (CST)
 From: Zhang Yi <yi.zhang@huaweicloud.com>
 To: linux-fsdevel@vger.kernel.org,
 	linux-ext4@vger.kernel.org,
@@ -39,9 +39,9 @@ Cc: linux-kernel@vger.kernel.org,
 	chengzhihao1@huawei.com,
 	yukuai3@huawei.com,
 	yangerkun@huawei.com
-Subject: [RFC PATCH v2 3/8] scsi: sd: set BLK_FEAT_WRITE_ZEROES_UNMAP if device supports unmap zeroing mode
-Date: Wed, 15 Jan 2025 19:46:32 +0800
-Message-Id: <20250115114637.2705887-4-yi.zhang@huaweicloud.com>
+Subject: [RFC PATCH v2 6/8] block: add FALLOC_FL_WRITE_ZEROES support
+Date: Wed, 15 Jan 2025 19:46:35 +0800
+Message-Id: <20250115114637.2705887-7-yi.zhang@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250115114637.2705887-1-yi.zhang@huaweicloud.com>
 References: <20250115114637.2705887-1-yi.zhang@huaweicloud.com>
@@ -52,54 +52,71 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3Gl9aoYdnvK0ZBA--.21959S7
-X-Coremail-Antispam: 1UD129KBjvdXoWrZFW3tF18AF48ur4kZFW5Wrg_yoWDXwc_Ca
-	1furZ7Jr4vyFyIyrZaqr4avryvvan7u340grnFqryFyrZ2vrs5t3Wv9r1a9a1UJw4jgwnx
-	AayDXr1SyryDJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbkkFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWwA2048vs2IY02
-	0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
-	wVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
-	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-	vE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
-	v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j
-	6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7
-	AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE
-	2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
-	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
-	vjDU0xZFpf9x0JULBMNUUUUU=
+X-CM-TRANSID:gCh0CgC3Gl9aoYdnvK0ZBA--.21959S10
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zry7Wr4xCr18Cw13ury3Arb_yoW8WFykpF
+	WDXF1rJFZ0gas7WF1fCF4q9ryFya1kJrWrGayI9wn5uws3XF97Krn0gF45KryUWFy5Aw4D
+	ZF909ryY93W7ArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0JUljgxUUUUU=
 X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
 From: Zhang Yi <yi.zhang@huawei.com>
 
-When the device supports the Write Zeroes command and the zeroing mode
-is set to SD_ZERO_WS16_UNMAP or SD_ZERO_WS10_UNMAP, this means that the
-device supports unmap Write Zeroes, so set the corresponding
-BLK_FEAT_WRITE_ZEROES_UNMAP feature to the device's queue limit.
+Add support for FALLOC_FL_WRITE_ZEROES. It directly calls
+blkdev_issue_zeroout() with flags set to 0. The underlying process will
+attempt to use the fastest method for issuing zeroes. First, the block
+layer will try to issue a write zeroes command if the storage device
+supports it; if not, it will fall back to issuing zeroed data. Then, the
+storage device driver may attempt to submit an unmap write zero command
+if the device supports it; if not, the driver may fall back to
+submitting a no-unmap write zeroes command.
 
 Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
 ---
- drivers/scsi/sd.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ block/fops.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8947dab132d7..95e115c69286 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1122,6 +1122,11 @@ static void sd_config_write_same(struct scsi_disk *sdkp,
- 	else
- 		sdkp->zeroing_mode = SD_ZERO_WRITE;
+diff --git a/block/fops.c b/block/fops.c
+index 13a67940d040..56486de0960b 100644
+--- a/block/fops.c
++++ b/block/fops.c
+@@ -777,7 +777,7 @@ static ssize_t blkdev_read_iter(struct kiocb *iocb, struct iov_iter *to)
  
-+	if (sdkp->max_ws_blocks &&
-+	    (sdkp->zeroing_mode == SD_ZERO_WS16_UNMAP ||
-+	     sdkp->zeroing_mode == SD_ZERO_WS10_UNMAP))
-+		lim->features |= BLK_FEAT_WRITE_ZEROES_UNMAP;
+ #define	BLKDEV_FALLOC_FL_SUPPORTED					\
+ 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
+-		 FALLOC_FL_ZERO_RANGE)
++		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_WRITE_ZEROES)
+ 
+ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+ 			     loff_t len)
+@@ -836,6 +836,15 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+ 					     len >> SECTOR_SHIFT, GFP_KERNEL,
+ 					     BLKDEV_ZERO_NOFALLBACK);
+ 		break;
++	case FALLOC_FL_WRITE_ZEROES:
++		error = truncate_bdev_range(bdev, file_to_blk_mode(file), start, end);
++		if (error)
++			goto fail;
 +
- 	if (sdkp->max_ws_blocks &&
- 	    sdkp->physical_block_size > logical_block_size) {
- 		/*
++		error = blkdev_issue_zeroout(bdev, start >> SECTOR_SHIFT,
++					     len >> SECTOR_SHIFT, GFP_KERNEL,
++					     0);
++		break;
+ 	default:
+ 		error = -EOPNOTSUPP;
+ 	}
 -- 
 2.39.2
 
