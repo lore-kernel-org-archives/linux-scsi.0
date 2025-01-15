@@ -1,220 +1,98 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 219522416A0;
-	Wed, 15 Jan 2025 11:52:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89E898632E;
+	Wed, 15 Jan 2025 14:45:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736941940; cv=none; b=LRhfVDZkau768Kg5038eGMxu+GA3WCwB+RbS4JL9iOQpSDbN/QknWJ6Dbbk+fVNTycgIyBuJEL0QjW9S6j7rGS4ugnMspw280bzrYKMGFL18gYkZQUWnAbvc2G5ye4mRqbOM4gt1V/ZRkP7OTn7W1gt8Urq8tURF2WNdNF62xi4=
+	t=1736952344; cv=none; b=fRIVfEO1o+N7DPAkAivzBp1R4PYx8+ovk3BRcK243AWYk4aLyKioQxraXPchZX3SFcLppV+aSmlBJ/vTIGf1mUOQ/s3xw7sA/hNaMHp/AXrEuHyWz3oaz6HkZvKGdjTWUfLiLWY0gQF6FIt/W6/mA0Plv2nnlRK8/l2ewvecIhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736941940; c=relaxed/simple;
-	bh=JgsJW573ldrbF6x31hKKXz0mNmXN80sqUcdXYcBP948=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eSeCgTmetuQucKBG8Om0V1K1x570kjub+zUs4hNpVm2gP5Q0egVEORRUVR+jYUdTPwsG88cUE3RGNK2BlkR/0Qh6aKprzoAJtyXX097wTJfykVjcPSqdv0tX9eKiC+gaoZQyo8H3+7AisVyIdBA24GYMowbsKnX2Ymk8RTi7O2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YY4991F4Fz4f3jss;
-	Wed, 15 Jan 2025 19:51:57 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 5C2941A0DBA;
-	Wed, 15 Jan 2025 19:52:12 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgC3Gl9aoYdnvK0ZBA--.21959S12;
-	Wed, 15 Jan 2025 19:52:12 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	hch@lst.de,
-	tytso@mit.edu,
-	djwong@kernel.org,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com,
-	yangerkun@huawei.com
-Subject: [RFC PATCH v2 8/8] ext4: add FALLOC_FL_WRITE_ZEROES support
-Date: Wed, 15 Jan 2025 19:46:37 +0800
-Message-Id: <20250115114637.2705887-9-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250115114637.2705887-1-yi.zhang@huaweicloud.com>
-References: <20250115114637.2705887-1-yi.zhang@huaweicloud.com>
+	s=arc-20240116; t=1736952344; c=relaxed/simple;
+	bh=xDcaFirZd2OzqeozTaAS0Y1wGIC2GLBAnw4EoBR1Zxw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=nugg6ZavN6CdmJtr9AdJAxC+7fELmRvLKMFv8xS3bJc/FraHZOyaTtOMX8BRzSNkRffe16m2SBu+qJjdp4EVLr+fD8kAGEXeSOuCbdkqopA8WMQ6FOLrFWrWEtIVbbPl2tM0cm72Ygt1bEAxbYTto67RXGIdFq9gabOR5krfGBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QOoJhM8e; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QOoJhM8e"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-aaec111762bso1226006066b.2;
+        Wed, 15 Jan 2025 06:45:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1736952341; x=1737557141; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=xDcaFirZd2OzqeozTaAS0Y1wGIC2GLBAnw4EoBR1Zxw=;
+        b=QOoJhM8ep+KF/JCUTvoffdnpEJv6seYUM8qJv1XVWgrvUkuaanRiZZke5sZrLM1P22
+         y0Bn2m1UDhW+aFX4hB5mlzYZIgzOSwLGVuTtoaQ2eFXiWX9/EBFn0I2FaD5rRwdm7zON
+         CyHErhTLJZca2OKZV3ESH+hvjkMm9J4WkXdB+k9DaQ9HEOsO1L4u608VBng4hOgipdoM
+         rKCDosV9aAIniKogkouvKSvrRjoKK05tVdjzc3VeZrIKI0EZtNRi/Zjdo+FNWrCIk3jt
+         Wf0T0IhVIyU5Sf6qWmTYCGahtqGU/Aa1+iALTHroNocmcn3EVDRnG9Qp58euyMsMegJr
+         4LtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736952341; x=1737557141;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xDcaFirZd2OzqeozTaAS0Y1wGIC2GLBAnw4EoBR1Zxw=;
+        b=bkB5oAEIzXyIfO1GpEbDZkMtAsuav85NlZ33kmulORusEZ7jZgNGRutCo6O7A/s5pN
+         DkoCL8R7getUqe95UhbFwyuLfWun5zNDnVtm9LMxuTRkSxOiXDkcPn2MFe5xNHCOFNX1
+         BgUdGIt+t+LeicHYqBUkRim+QSQ6+PRAYAVmBe1Md9KzCpY2ndyUulBXegUHIxnUeXJv
+         vrkbeHdPn703dNQKuKUdayggIiKXuN82U175G2lYYYSyM116bCPrbdzhvxLfoClyOPho
+         hSGDjav7FgrhGm6wmCEfW5qHkFsoaQXexWFE8hojNXYXHtSSvlMGNdlphhJveJWHKljQ
+         oeTg==
+X-Forwarded-Encrypted: i=1; AJvYcCUbCmrr64/VuoDfsnzKK9FptV6rRwC+vSzrP+7rq58mx5SJ1XUwKMha4iBefhFeAqsHoV2YuQgYZmFNVYM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0YKTS+HVfREkZetUG7NkMpV8a+fZoH+M+y2DCC7kWSozf7qAs
+	xLKuKXN5nSJbnzKAGOCMYUnXQz9eun03Ag/ItpNLErtUemF9KRBT
+X-Gm-Gg: ASbGnctNP+wL8yHDZbY5WmlNIjXra8p18yq/g5PWq0NA95JfJRJPrGyjFJu/WILx8ZO
+	fPnqrw0nErr2UiX1cukoGzc3KaWmd1sGmk5kN+dUFQQhigV9f3wlsnJrTlYBqnLIYFVKj64a0Rs
+	V7BoQr//7OUZ0erAgFBOc+nKSq+7HuMbLFIrS86ELg46r05raop1wernRqnFDj8DlC8Gt3cdrpt
+	rcxZ6ejKyqkESgcP2NyXmwBy7wGPJbAM3Jjuqt/UbaM7k6kea+YDF3UovY=
+X-Google-Smtp-Source: AGHT+IG6GkwzVXueUea2nm8PdXconvgh2gXJIBdDW7hrjM8Ql3CS1eRyyEIgaF4s0VbKT+z7FywWWg==
+X-Received: by 2002:a17:907:da5:b0:aac:431:4ee7 with SMTP id a640c23a62f3a-ab2ab6a8e99mr2832574766b.5.1736952340616;
+        Wed, 15 Jan 2025 06:45:40 -0800 (PST)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab2e8c753fdsm633545566b.184.2025.01.15.06.45.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jan 2025 06:45:40 -0800 (PST)
+Message-ID: <2639eb5c75da3f64877641dc0fc5babe5b9f30b4.camel@gmail.com>
+Subject: Re: [PATCH v2] scsi: ufs: core: Simplify temperature exception
+ event handling
+From: Bean Huo <huobean@gmail.com>
+To: Avri Altman <avri.altman@wdc.com>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Guenter Roeck
+	 <linux@roeck-us.net>, Bart Van Assche <bvanassche@acm.org>
+Date: Wed, 15 Jan 2025 15:45:38 +0100
+In-Reply-To: <20250114181205.153760-1-avri.altman@wdc.com>
+References: <20250114181205.153760-1-avri.altman@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3Gl9aoYdnvK0ZBA--.21959S12
-X-Coremail-Antispam: 1UD129KBjvJXoW3Xry7Ar13Xw13XFy8XFW3GFg_yoW7GF4UpF
-	Z8XF1rKFWIq3429r4fCw4kurn0q3WkKry5WrWSgry093yUJr1fKFn09Fy8uas0gFW8AF45
-	Xa1Y9ryDK3W7A37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0JUljgxUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On Tue, 2025-01-14 at 20:12 +0200, Avri Altman wrote:
+> This commit simplifies the temperature exception event handling by
+> removing the `ufshcd_temp_exception_event_handler` function and
+> directly
+> calling `ufs_hwmon_notify_event` in the
+> `ufshcd_exception_event_handler`
+> function.
+>=20
+> The `ufshcd_temp_exception_event_handler` function contained a
+> placeholder comment for platform vendors to add additional steps if
+> required. However, since its introduction a few years ago, no vendor
+> has
+> added any additional steps. Therefore, the placeholder function is
+> removed to streamline the code.
+>=20
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+at the moment, removing this is ok.
 
-Add support for FALLOC_FL_WRITE_ZEROES. This first allocates blocks as
-unwritten, then issues a zero command outside of the running journal
-handle, and finally converts them to a written state.
-
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
----
- fs/ext4/extents.c           | 59 ++++++++++++++++++++++++++++++-------
- include/trace/events/ext4.h |  3 +-
- 2 files changed, 50 insertions(+), 12 deletions(-)
-
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index 1b028be19193..e937a714085c 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -4483,6 +4483,8 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 	struct ext4_map_blocks map;
- 	unsigned int credits;
- 	loff_t epos, old_size = i_size_read(inode);
-+	unsigned int blkbits = inode->i_blkbits;
-+	bool alloc_zero = false;
- 
- 	BUG_ON(!ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS));
- 	map.m_lblk = offset;
-@@ -4495,6 +4497,17 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 	if (len <= EXT_UNWRITTEN_MAX_LEN)
- 		flags |= EXT4_GET_BLOCKS_NO_NORMALIZE;
- 
-+	/*
-+	 * Do the actual write zero during a running journal transaction
-+	 * costs a lot. First allocate an unwritten extent and then
-+	 * convert it to written after zeroing it out.
-+	 */
-+	if (flags & EXT4_GET_BLOCKS_ZERO) {
-+		flags &= ~EXT4_GET_BLOCKS_ZERO;
-+		flags |= EXT4_GET_BLOCKS_UNWRIT_EXT;
-+		alloc_zero = true;
-+	}
-+
- 	/*
- 	 * credits to insert 1 extent into extent tree
- 	 */
-@@ -4531,9 +4544,7 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 		 * allow a full retry cycle for any remaining allocations
- 		 */
- 		retries = 0;
--		map.m_lblk += ret;
--		map.m_len = len = len - ret;
--		epos = (loff_t)map.m_lblk << inode->i_blkbits;
-+		epos = (loff_t)(map.m_lblk + ret) << blkbits;
- 		inode_set_ctime_current(inode);
- 		if (new_size) {
- 			if (epos > new_size)
-@@ -4553,6 +4564,21 @@ static int ext4_alloc_file_blocks(struct file *file, ext4_lblk_t offset,
- 		ret2 = ret3 ? ret3 : ret2;
- 		if (unlikely(ret2))
- 			break;
-+
-+		if (alloc_zero &&
-+		    (map.m_flags & (EXT4_MAP_MAPPED | EXT4_MAP_UNWRITTEN))) {
-+			ret2 = ext4_issue_zeroout(inode, map.m_lblk, map.m_pblk,
-+						  map.m_len);
-+			if (likely(!ret2))
-+				ret2 = ext4_convert_unwritten_extents(NULL,
-+					inode, (loff_t)map.m_lblk << blkbits,
-+					(loff_t)map.m_len << blkbits);
-+			if (ret2)
-+				break;
-+		}
-+
-+		map.m_lblk += ret;
-+		map.m_len = len = len - ret;
- 	}
- 	if (ret == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
- 		goto retry;
-@@ -4618,7 +4644,11 @@ static long ext4_zero_range(struct file *file, loff_t offset,
- 	if (end_lblk > start_lblk) {
- 		ext4_lblk_t zero_blks = end_lblk - start_lblk;
- 
--		flags |= (EXT4_GET_BLOCKS_CONVERT_UNWRITTEN | EXT4_EX_NOCACHE);
-+		if (mode & FALLOC_FL_WRITE_ZEROES)
-+			flags = EXT4_GET_BLOCKS_CREATE_ZERO | EXT4_EX_NOCACHE;
-+		else
-+			flags |= (EXT4_GET_BLOCKS_CONVERT_UNWRITTEN |
-+				  EXT4_EX_NOCACHE);
- 		ret = ext4_alloc_file_blocks(file, start_lblk, zero_blks,
- 					     new_size, flags);
- 		if (ret)
-@@ -4730,8 +4760,8 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 
- 	/* Return error if mode is not supported */
- 	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
--		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |
--		     FALLOC_FL_INSERT_RANGE))
-+		     FALLOC_FL_ZERO_RANGE | FALLOC_FL_COLLAPSE_RANGE |
-+		     FALLOC_FL_INSERT_RANGE | FALLOC_FL_WRITE_ZEROES))
- 		return -EOPNOTSUPP;
- 
- 	inode_lock(inode);
-@@ -4762,16 +4792,23 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	if (ret)
- 		goto out_invalidate_lock;
- 
--	if (mode & FALLOC_FL_PUNCH_HOLE)
-+	switch (mode & FALLOC_FL_MODE_MASK) {
-+	case FALLOC_FL_PUNCH_HOLE:
- 		ret = ext4_punch_hole(file, offset, len);
--	else if (mode & FALLOC_FL_COLLAPSE_RANGE)
-+		break;
-+	case FALLOC_FL_COLLAPSE_RANGE:
- 		ret = ext4_collapse_range(file, offset, len);
--	else if (mode & FALLOC_FL_INSERT_RANGE)
-+		break;
-+	case FALLOC_FL_INSERT_RANGE:
- 		ret = ext4_insert_range(file, offset, len);
--	else if (mode & FALLOC_FL_ZERO_RANGE)
-+		break;
-+	case FALLOC_FL_ZERO_RANGE:
-+	case FALLOC_FL_WRITE_ZEROES:
- 		ret = ext4_zero_range(file, offset, len, mode);
--	else
-+		break;
-+	default:
- 		ret = -EOPNOTSUPP;
-+	}
- 
- out_invalidate_lock:
- 	filemap_invalidate_unlock(mapping);
-diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
-index 156908641e68..6f9cf2811733 100644
---- a/include/trace/events/ext4.h
-+++ b/include/trace/events/ext4.h
-@@ -92,7 +92,8 @@ TRACE_DEFINE_ENUM(ES_REFERENCED_B);
- 	{ FALLOC_FL_KEEP_SIZE,		"KEEP_SIZE"},		\
- 	{ FALLOC_FL_PUNCH_HOLE,		"PUNCH_HOLE"},		\
- 	{ FALLOC_FL_COLLAPSE_RANGE,	"COLLAPSE_RANGE"},	\
--	{ FALLOC_FL_ZERO_RANGE,		"ZERO_RANGE"})
-+	{ FALLOC_FL_ZERO_RANGE,		"ZERO_RANGE"},		\
-+	{ FALLOC_FL_WRITE_ZEROES,	"WRITE_ZEROES"})
- 
- TRACE_DEFINE_ENUM(EXT4_FC_REASON_XATTR);
- TRACE_DEFINE_ENUM(EXT4_FC_REASON_CROSS_RENAME);
--- 
-2.39.2
-
+Reviewed-by: Bean Huo <beanhuo@micron.com>
