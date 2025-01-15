@@ -1,143 +1,154 @@
-Received: from mail-yb1-f173.google.com (mail-yb1-f173.google.com [209.85.219.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869721DA21;
-	Wed, 15 Jan 2025 03:41:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B182822F171
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2025 04:38:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736912467; cv=none; b=OZdchNCwkV9PCjfeON7eWUVU6IZX6xFW9Bwhr8iJte36j0eoz3rXqan0LDyGwf2yjGVBAFB/rmkqX9hFcew59gRx48CqnGNWKsmNbSlaFeP19RZ70NT7g+74rX9+4KaxzjvsOFRiqTTeDc9ByG6scHgQ1dQZV3+ttdSbgKdbqhQ=
+	t=1736915894; cv=none; b=b4tshLoAibj59ucUnTW8A3PrtBkNxZ3YSvtBu8a3WKErCLKglomCmHhsG2mPLqgKwEMAb4wyQZ8zmSbIF2oiS+54u1/aFgC52TulH0eQaRAbQlBvHSH6KNbXp+siL4y1BUy3i0021MmGd1fqHLrEXppovIBVd66tx35X2p906wQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736912467; c=relaxed/simple;
-	bh=lx1JoZuyAOvH+tAWIwuUhi8eFxOhxcAC6JbtgL/RLvk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ksz+t/egkHB6w4nNVEKUh1mw7QiLcQGySaFfozjrnw7w5Cz6oBxahRdQvS3LlHLwOJsw51HJNigebXlwoNV3WqfYE76tx2wwYMqNO0CKl29hx02GwbzZc1FGe+F0n4QZvWOn8DflymYssOn7OnREUGz3Ua68jZQfMdRvAO9nZUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hfi1tIJz; arc=none smtp.client-ip=209.85.219.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1736915894; c=relaxed/simple;
+	bh=7Wj6Lt9VD86BQX6ErYGAlR/O/oKXvdjHtmq7r63FjJ8=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=tBrkIWn+UJiVvygw4gdO/6CO4TiJAx+vXb9lOePnphq2UoRpT6zacs54lD6xfZvVTw+N1krjeZjIgNtpkv96ynCC9bThEc367o2snyrk78PVO7aME6Khv8kUWt+MIsYrb/LP/itvsIBvtMLqZYL0sCZAutD+0V6SSuDqH8MSzZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=jPC8Ixez; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hfi1tIJz"
-Received: by mail-yb1-f173.google.com with SMTP id 3f1490d57ef6-e455bf1f4d3so8887064276.2;
-        Tue, 14 Jan 2025 19:41:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1736912464; x=1737517264; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UmTK2k4vF2mqctoCssOfytU8KQ/2i1ya8c1dPxSZwZk=;
-        b=Hfi1tIJzaEvPFCF3le0hG16EY7Fxb+IXk/gRu+vZg4lY2/6XkXEUwOdf7EDudX9O5S
-         l3ZiMs/teaAUbwlHUqIgRLnsKrQlyGRjoZMNHcvHs39tF2qO9yaTvsNpa7pEG/7NbXZu
-         yHRw3ex0rW5dg7uiWnPYawBP6Z2aLBm0W7xeCNgfXrllv8GstTVQ61S1km2knGwH3pL+
-         P2xuL3xDj8rUT32jQIyPJEn8dAZKLF0LDLPDa5T9EwlG3ag9bRmkF/8qZshbPMnJbNiG
-         Yg+vt9KYRiQAOkkPpAiPEtpnxeC4zx9JRDqaM3E4IUPvSgqLZVOrNEd5X9ysJWeF1U4N
-         4D9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736912464; x=1737517264;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UmTK2k4vF2mqctoCssOfytU8KQ/2i1ya8c1dPxSZwZk=;
-        b=vKcg/R8sEpuiHKJNYCPAFgiginzJ3OmNrlVW33+LaF4TK0+ykHFKMDWHCQBdvoIDa4
-         4IQNET3FM9biKXtu70I7uCLevdR5RgXkgYLVQn/3fftMezX3W0MXKuReuCTOAzfGRXsU
-         rVDgtyaeZ0kbQjgGxWfzZhaPHzt8JNeBMzjk0gbW15YnisDUZFlAlR8JJrM3+2pimjMw
-         TGK7jFyW4rqq8Z+GmuWsNN8v+wPnTA2S3+NdEnJhLBRzrg5OpNSlU/zlSBufTWYs/vkk
-         V9+tm6wtBYt8j1Uh2yMM80NxaoI4WyKoPKF75UFPNaJfVOtLNcsbfC5Ua77YeaLVUXU2
-         /wCA==
-X-Forwarded-Encrypted: i=1; AJvYcCV8pAq8hhU4/KpZnBa9jssjz1OfsIENEpT4uGJixhiuWrgdbIxy8Q9YFATugmcDtMj9OODiAwfjm+YakDs=@vger.kernel.org, AJvYcCVE/cBO4NuCblNuIAp0te19QAVq2Mh3exPL1kxmDj4/gteUqVT1nzvIA43xhkjMuFnd2AITjIO3qkwcob11@vger.kernel.org, AJvYcCVhyiPIP3p5j2Q0ZrUf7XW66dJagBJs5QWtolJj3aVvoQYlJOcLNT7/JRMV2642GEJKgaNod9Ct@vger.kernel.org, AJvYcCVteOQXqbo5nrtqZKvsWurnqAlEWkNwDdpOAIuGa7zYbdsi5OVJ6kg4oI+iZheNbsxj5pNGqsLIT1w8dQ==@vger.kernel.org, AJvYcCWd9AiKX1Hfg817o4P+AIPGXczWQyGn77IZOEZbREv7iB9cWabU5PQRtD97e4JOqmZtz+Yh6iu/9KwnRg==@vger.kernel.org, AJvYcCXV+z7h/strYjt1ouDU01tF3sN4eh0U3Hime3YrIF8Sfky4EEaKVomWadIpL83CIJwzN3Av8/zEFx3V@vger.kernel.org
-X-Gm-Message-State: AOJu0YwbhxAL0+uFTeFvbJklRveEqLShOylFBsqfz2tf1ZMUuuLNsMNm
-	bv1XxrMLEfMXARXzgWR/7fL6GW5F5+oq4YP29kK1FHU4kbaPt4zA
-X-Gm-Gg: ASbGncvOtNq/6VbtG7ovVdBVU26FTa69d7MnAcWdUUqbJdmCY3ctNEbbo+ZXVggnsZH
-	mTV7eT52Pb1I0TznzBqtp+QnZ6yLbsWCcTAAFTMIt6BROTJGZg78MHaE6k7Yd6lYFXTtNC7DEZX
-	v0prpdhq1Z+8Ze5lka1uP6Lm40NtTxOjvKRsLZ85HrN+9W6+OVuP3yt/zYoO3oW6ttRB2RuwT6E
-	iDWTiqL+Q1gfJbdD2c5o7diouivUgz/0Jhs9kZqdUIp365cIuUd2V2Z
-X-Google-Smtp-Source: AGHT+IGlCnPNZfANCVJooif/vwR9Wcfdn14fNs9Squ/CXSzhwHBTvNfC1cp1ga3/es5eAiOB92QKfQ==
-X-Received: by 2002:a05:690c:45c9:b0:6f6:cad6:6b5a with SMTP id 00721157ae682-6f6cad66c84mr8171767b3.13.1736912464441;
-        Tue, 14 Jan 2025 19:41:04 -0800 (PST)
-Received: from localhost ([2601:347:100:5ea0:e12f:d330:c8d6:a6b7])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-6f6c93732c9sm1796417b3.103.2025.01.14.19.41.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jan 2025 19:41:03 -0800 (PST)
-Date: Tue, 14 Jan 2025 22:41:02 -0500
-From: Yury Norov <yury.norov@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, netdev@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Naveen N Rao <naveen@kernel.org>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Haren Myneni <haren@linux.ibm.com>,
-	Rick Lindsley <ricklind@linux.ibm.com>,
-	Nick Child <nnac123@linux.ibm.com>,
-	Thomas Falcon <tlfalcon@linux.ibm.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Matt Wu <wuqiang.matt@bytedance.com>,
-	Steffen Klassert <steffen.klassert@secunet.com>,
-	Daniel Jordan <daniel.m.jordan@oracle.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kurz <groug@kaod.org>, Peter Xu <peterx@redhat.com>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>,
-	Hendrik Brueckner <brueckner@linux.ibm.com>
-Subject: Re: [PATCH 06/14] cpumask: re-introduce cpumask_next{,_and}_wrap()
-Message-ID: <Z4cuTsHbO6yiuFKA@thinkpad>
-References: <20241228184949.31582-7-yury.norov@gmail.com>
- <20250103174432.GA4182129@bhelgaas>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="jPC8Ixez"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250115043803epoutp0418f559fa7fa2779ca46e1b9062f3075c~aw8skdFj52714227142epoutp04B
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2025 04:38:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250115043803epoutp0418f559fa7fa2779ca46e1b9062f3075c~aw8skdFj52714227142epoutp04B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1736915883;
+	bh=fwE2zfHSZsIAIwhO6bCQFceBK8F+GWTHqDXZ1N3Mnig=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=jPC8IxezYjiizX1AwhlVuf9ysG1gH08HUjrc1ZSqGo8CtTOIFiBTQG4EyeZoPJwBC
+	 rMOEn8WJURx8RC/u2BqGMs4IgIxN7lzVXj7WY/SaowhRskBpoxhX2DSgZ2UnoECitd
+	 0R4iAnkp40y7LLKCtOmTqhLjlNqjTcySR8sRXyGU=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+	20250115043802epcas5p4cee7f8802fdc0802f9f709038cbb9fd2~aw8r0r4RK0138701387epcas5p4S;
+	Wed, 15 Jan 2025 04:38:02 +0000 (GMT)
+Received: from epcpadp2new (unknown [182.195.40.142]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4YXtXV4XKBz4x9Pr; Wed, 15 Jan
+	2025 04:38:02 +0000 (GMT)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250115040249epcas5p3e3dc20b887ccadc31f7698e953e63ee7~awd7ulJjA2943529435epcas5p3K;
+	Wed, 15 Jan 2025 04:02:49 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250115040249epsmtrp10e02996ddc8c9e2379a39a56ae2a133f~awd7txdeA2418724187epsmtrp1C;
+	Wed, 15 Jan 2025 04:02:49 +0000 (GMT)
+X-AuditID: b6c32a2a-38bf570000004a05-56-67873369a270
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	22.2A.18949.96337876; Wed, 15 Jan 2025 13:02:49 +0900 (KST)
+Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250115040247epsmtip2b2a8e54942f3c2e6b1e7083ee838b2ee~awd5xwhX43010430104epsmtip2k;
+	Wed, 15 Jan 2025 04:02:47 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: "'Krzysztof Kozlowski'" <krzysztof.kozlowski@linaro.org>, "'Avri
+	Altman'" <avri.altman@wdc.com>, "'Bart Van Assche'" <bvanassche@acm.org>,
+	"'James E.J. Bottomley'" <James.Bottomley@HansenPartnership.com>, "'Martin
+ K. Petersen'" <martin.petersen@oracle.com>, "'Peter Wang'"
+	<peter.wang@mediatek.com>, "'Stanley	Jhu'" <chu.stanley@gmail.com>,
+	"'Matthias Brugger'" <matthias.bgg@gmail.com>, "'AngeloGioacchino Del
+	Regno'" <angelogioacchino.delregno@collabora.com>,
+ <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-mediatek@lists.infradead.org>, <linux-arm-kernel@lists.infradead.org>
+Cc: <cpgs@samsung.com>
+In-Reply-To: <20250114200716.969457-1-krzysztof.kozlowski@linaro.org>
+Subject: RE: [PATCH] ufs: Use str_enable_disable-like helpers
+Date: Wed, 15 Jan 2025 09:32:46 +0530
+Message-ID: <1891546521.01736915882616.JavaMail.epsvc@epcpadp2new>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250103174432.GA4182129@bhelgaas>
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKOlDQiw1aDG1OI85tvS2g7EBI6nAKoU7y+sZuZQrA=
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHIsWRmVeSWpSXmKPExsWy7bCSvG6mcXu6wY+fYhaXVkpYvPx5lc1i
+	2oefzBZfLu5ntnh5SNNiYz+Hxd7XW9ktNj2+xmpxedccNovLzRcZLbqv72CzWH78H5NFU4ux
+	xdZPv1kd+DwuX/H22HF3CaPHzll32T2mTTrF5nHn2h42j81L6j1aTu5n8fj49BaLR9+WVYwe
+	nzfJebQf6GYK4I7isklJzcksSy3St0vgymid389a0CNQ0bP7AlsD4zHeLkZODgkBE4m+2U+Z
+	uhi5OIQEdjNKfFrUzAKRkJa4vnECO4QtLLHy33N2iKLnjBKH93UzgSTYBHQldixuYwNJiAh8
+	YZG4/eQSG0iCWUBM4uezI6wQHdMYJRpXLAUbxSngKvFn0nZGEFtYwFbi365tYOtYBFQlLsz9
+	xgpi8wpYSqx/+JARwhaUODnzCVANB9BQPYm2jYwQ8+Ultr+dwwxxnYLEz6fLwFpFBKwkJhy+
+	zAxRIy7x8ugR9gmMwrOQTJqFMGkWkkmzkHQsYGRZxSiZWlCcm55bbFhglJdarlecmFtcmpeu
+	l5yfu4kRHMVaWjsY96z6oHeIkYmD8RCjBAezkgjvErbWdCHelMTKqtSi/Pii0pzU4kOM0hws
+	SuK83173pggJpCeWpGanphakFsFkmTg4pRqYVtwxYwt56FETlGTEnes0N3NuQFrBeUtWpSav
+	kxcvCz3mqdS62L/l51anYwHi2+yemDd0uZ86NT+9ZGLi15n36sz5b3UoZosH8Pqvc5nfqv71
+	3wWpktIJE218lveVp4uWa/jqiEz4oXnP8LHXGpFXSx7kuJ/Kdzj4etP81/O2z1q0/We6YkHl
+	X9XO2Xfc2eYHxGtt9mHY4ljvsTN0MYthjvWyF+IeM7btWrF6RpEax+W7lb4LZnoktTgvX7pp
+	yuJZ978FXbXxqWRLCgjryJsapR7++yDz9n9C5688ufnXhL19b/nBGWZXFR9M0bsmeSdxysrz
+	ZV5TG34+8t6ctO7sg6Ob39wOqHbPvsO5YUFgnxJLcUaioRZzUXEiAMZ7jD5RAwAA
+X-CMS-MailID: 20250115040249epcas5p3e3dc20b887ccadc31f7698e953e63ee7
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20250114200726epcas5p4dc896686dd6cdcc449344dbef87af21d
+References: <CGME20250114200726epcas5p4dc896686dd6cdcc449344dbef87af21d@epcas5p4.samsung.com>
+	<20250114200716.969457-1-krzysztof.kozlowski@linaro.org>
 
-On Fri, Jan 03, 2025 at 11:44:32AM -0600, Bjorn Helgaas wrote:
-> On Sat, Dec 28, 2024 at 10:49:38AM -0800, Yury Norov wrote:
-> > cpumask_next_wrap_old() has two additional parameters, comparing to it's
-> > analogue in linux/find.h find_next_bit_wrap(). The reason for that is
-> > historical.
-> 
-> s/it's/its/
-> 
-> Personally I think cscope/tags/git grep make "find_next_bit_wrap()"
-> enough even without mentioning "linux/find.h".
-> 
-> > + * cpumask_next_and_wrap - get the next cpu in *src1p & *src2p, starting from
-> > + *			   @n and wrapping around, if needed
-> > + * @n: the cpu prior to the place to search (i.e. return will be > @n)
-> 
-> Is the return really > @n if it wraps?
+Hello Krzysztof,
 
-No, this is a copy-paste error. Will fix in v2.
+> -----Original Message-----
+> From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Sent: Wednesday, January 15, 2025 1:37 AM
+> To: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
+> <avri.altman@wdc.com>; Bart Van Assche <bvanassche@acm.org>; James
+> E.J. Bottomley <James.Bottomley@HansenPartnership.com>; Martin K.
+> Petersen <martin.petersen@oracle.com>; Peter Wang
+> <peter.wang@mediatek.com>; Stanley Jhu <chu.stanley@gmail.com>;
+> Matthias Brugger <matthias.bgg@gmail.com>; AngeloGioacchino Del Regno
+> <angelogioacchino.delregno@collabora.com>; linux-scsi@vger.kernel.org;
+> linux-kernel@vger.kernel.org; linux-mediatek@lists.infradead.org; linux-
+> arm-kernel@lists.infradead.org
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Subject: [PATCH] ufs: Use str_enable_disable-like helpers
+> 
+> Replace ternary (condition ? "enable" : "disable") syntax with helpers
+from
+> string_choices.h because:
+> 1. Simple function call with one argument is easier to read.  Ternary
+>    operator has three arguments and with wrapping might lead to quite
+>    long code.
+> 2. Is slightly shorter thus also easier to read.
+> 3. It brings uniformity in the text - same string.
+> 4. Allows deduping by the linker, which results in a smaller binary
+>    file.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> ---
+>  drivers/ufs/core/ufshcd.c       | 11 ++++++-----
+>  drivers/ufs/host/ufs-mediatek.c |  7 +++----
+>  2 files changed, 9 insertions(+), 9 deletions(-)
+> 
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-Thanks,
-Yury
+On a side note, there are other host controller driver (e.g. exynos and
+Qcomm) which also uses few conditional operators, But I didn't find a
+matching helper in string_choices.h, so may be that can be taken separately
+in future.
+
+
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
+> 27154a5dcb7b..5225d48a47f8 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+[Snip]
+> --
+> 2.43.0
+
+
+
