@@ -1,98 +1,90 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89E898632E;
-	Wed, 15 Jan 2025 14:45:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCE24155C96;
+	Wed, 15 Jan 2025 17:52:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736952344; cv=none; b=fRIVfEO1o+N7DPAkAivzBp1R4PYx8+ovk3BRcK243AWYk4aLyKioQxraXPchZX3SFcLppV+aSmlBJ/vTIGf1mUOQ/s3xw7sA/hNaMHp/AXrEuHyWz3oaz6HkZvKGdjTWUfLiLWY0gQF6FIt/W6/mA0Plv2nnlRK8/l2ewvecIhA=
+	t=1736963564; cv=none; b=as7OqnqLMcKoxSEZauhJUGRslfL9HwpuuqhIsXXMRUQlcvLYuVXExZ4MTXqKU7yFLp93AT4sRvwLdHib1N/BJ61LNL5WqU/yg2v8nVgh/T7fHUMy4IvNoxM2CeMzZhIKReOr+AnK3IJr6XeQ5R8HtzbnwWF1h6ePtXmTNEXng0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736952344; c=relaxed/simple;
-	bh=xDcaFirZd2OzqeozTaAS0Y1wGIC2GLBAnw4EoBR1Zxw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nugg6ZavN6CdmJtr9AdJAxC+7fELmRvLKMFv8xS3bJc/FraHZOyaTtOMX8BRzSNkRffe16m2SBu+qJjdp4EVLr+fD8kAGEXeSOuCbdkqopA8WMQ6FOLrFWrWEtIVbbPl2tM0cm72Ygt1bEAxbYTto67RXGIdFq9gabOR5krfGBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QOoJhM8e; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1736963564; c=relaxed/simple;
+	bh=SAuv4o0YPcUZA0Dnn4TAU1w9hrOHI62b2s0bpW+yq4M=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=QplvuKlWnT4nVi8mqnHX4Vm5dJKeDpFj+1O++IbEEzsjJMt8BNXNS4HY6xoRjddYgGAszy1KrP4zniiZQDM0jFj5SFOGeZ2RVxp9sujHScBJzHMsR1UGivVU8c664i/MvMd2DSik4n6Sx4mfw6EETGfnV6UgJ7KNsBavnC5j/sE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=O59TkAiV; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=fzGlQJbE; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QOoJhM8e"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-aaec111762bso1226006066b.2;
-        Wed, 15 Jan 2025 06:45:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1736952341; x=1737557141; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=xDcaFirZd2OzqeozTaAS0Y1wGIC2GLBAnw4EoBR1Zxw=;
-        b=QOoJhM8ep+KF/JCUTvoffdnpEJv6seYUM8qJv1XVWgrvUkuaanRiZZke5sZrLM1P22
-         y0Bn2m1UDhW+aFX4hB5mlzYZIgzOSwLGVuTtoaQ2eFXiWX9/EBFn0I2FaD5rRwdm7zON
-         CyHErhTLJZca2OKZV3ESH+hvjkMm9J4WkXdB+k9DaQ9HEOsO1L4u608VBng4hOgipdoM
-         rKCDosV9aAIniKogkouvKSvrRjoKK05tVdjzc3VeZrIKI0EZtNRi/Zjdo+FNWrCIk3jt
-         Wf0T0IhVIyU5Sf6qWmTYCGahtqGU/Aa1+iALTHroNocmcn3EVDRnG9Qp58euyMsMegJr
-         4LtQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736952341; x=1737557141;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=xDcaFirZd2OzqeozTaAS0Y1wGIC2GLBAnw4EoBR1Zxw=;
-        b=bkB5oAEIzXyIfO1GpEbDZkMtAsuav85NlZ33kmulORusEZ7jZgNGRutCo6O7A/s5pN
-         DkoCL8R7getUqe95UhbFwyuLfWun5zNDnVtm9LMxuTRkSxOiXDkcPn2MFe5xNHCOFNX1
-         BgUdGIt+t+LeicHYqBUkRim+QSQ6+PRAYAVmBe1Md9KzCpY2ndyUulBXegUHIxnUeXJv
-         vrkbeHdPn703dNQKuKUdayggIiKXuN82U175G2lYYYSyM116bCPrbdzhvxLfoClyOPho
-         hSGDjav7FgrhGm6wmCEfW5qHkFsoaQXexWFE8hojNXYXHtSSvlMGNdlphhJveJWHKljQ
-         oeTg==
-X-Forwarded-Encrypted: i=1; AJvYcCUbCmrr64/VuoDfsnzKK9FptV6rRwC+vSzrP+7rq58mx5SJ1XUwKMha4iBefhFeAqsHoV2YuQgYZmFNVYM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0YKTS+HVfREkZetUG7NkMpV8a+fZoH+M+y2DCC7kWSozf7qAs
-	xLKuKXN5nSJbnzKAGOCMYUnXQz9eun03Ag/ItpNLErtUemF9KRBT
-X-Gm-Gg: ASbGnctNP+wL8yHDZbY5WmlNIjXra8p18yq/g5PWq0NA95JfJRJPrGyjFJu/WILx8ZO
-	fPnqrw0nErr2UiX1cukoGzc3KaWmd1sGmk5kN+dUFQQhigV9f3wlsnJrTlYBqnLIYFVKj64a0Rs
-	V7BoQr//7OUZ0erAgFBOc+nKSq+7HuMbLFIrS86ELg46r05raop1wernRqnFDj8DlC8Gt3cdrpt
-	rcxZ6ejKyqkESgcP2NyXmwBy7wGPJbAM3Jjuqt/UbaM7k6kea+YDF3UovY=
-X-Google-Smtp-Source: AGHT+IG6GkwzVXueUea2nm8PdXconvgh2gXJIBdDW7hrjM8Ql3CS1eRyyEIgaF4s0VbKT+z7FywWWg==
-X-Received: by 2002:a17:907:da5:b0:aac:431:4ee7 with SMTP id a640c23a62f3a-ab2ab6a8e99mr2832574766b.5.1736952340616;
-        Wed, 15 Jan 2025 06:45:40 -0800 (PST)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab2e8c753fdsm633545566b.184.2025.01.15.06.45.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jan 2025 06:45:40 -0800 (PST)
-Message-ID: <2639eb5c75da3f64877641dc0fc5babe5b9f30b4.camel@gmail.com>
-Subject: Re: [PATCH v2] scsi: ufs: core: Simplify temperature exception
- event handling
-From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Guenter Roeck
-	 <linux@roeck-us.net>, Bart Van Assche <bvanassche@acm.org>
-Date: Wed, 15 Jan 2025 15:45:38 +0100
-In-Reply-To: <20250114181205.153760-1-avri.altman@wdc.com>
-References: <20250114181205.153760-1-avri.altman@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="O59TkAiV";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="fzGlQJbE"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1736963561;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HoxPdbGDiDXMZjZ2YzakPSB0m74gINsG6VFgtuazYj8=;
+	b=O59TkAiVIoh/kyWqt3sD2QUaiElCxlt4joNfsm5Vy47rl6VB5TFRsEG8yyBoGzvY2r/6mY
+	lQrxl2KFOtZwXB8o2yGswqA28AwPR3ILexVj+8YMlHNoNTQyAqrecm5DQu43fEOAoeu1zB
+	AUUJUV3mFLL/jKj4Q1eejS9vRnjN/1NreJFiVLN6lXCv97Xxmp1pRrzkdAR4+8k7oYySE3
+	EjRlx3bwRLZ1kPZatpooq203bOQXFsUoJ5K9wvWgIoGkzYbbWPFekFpYB6FKtIibo4IGCl
+	3qtrgWckX7984+Okk9ULQbx1KIxKVOK20qnnIXjJMWBsTxDlkgtJ8kE9XE9ROg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1736963561;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HoxPdbGDiDXMZjZ2YzakPSB0m74gINsG6VFgtuazYj8=;
+	b=fzGlQJbELsuQf/TIokTn215dpIYwMgfAYRUXgXNteW1TJ/rfCFCi40yte9UtrzUzNBp68H
+	ns68VXLDVpNCEbAA==
+To: Joel Granados <joel.granados@kernel.org>, Thomas =?utf-8?Q?Wei=C3=9Fsc?=
+ =?utf-8?Q?huh?=
+ <linux@weissschuh.net>, Kees Cook <kees@kernel.org>, Luis Chamberlain
+ <mcgrof@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+ linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
+ openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+ linux-hyperv@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-serial@vger.kernel.org, xen-devel@lists.xenproject.org,
+ linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
+ codalist@coda.cs.cmu.edu, linux-mm@kvack.org, linux-nfs@vger.kernel.org,
+ ocfs2-devel@lists.linux.dev, fsverity@lists.linux.dev,
+ linux-xfs@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org,
+ kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
+ linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
+ linux-security-module@vger.kernel.org, keyrings@vger.kernel.org, Song Liu
+ <song@kernel.org>, "Steven Rostedt (Google)" <rostedt@goodmis.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong"
+ <djwong@kernel.org>, Jani Nikula <jani.nikula@intel.com>, Corey Minyard
+ <cminyard@mvista.com>, Joel Granados <joel.granados@kernel.org>
+Subject: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
+In-Reply-To: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+Date: Wed, 15 Jan 2025 18:52:40 +0100
+Message-ID: <87jzawarrr.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
 
-On Tue, 2025-01-14 at 20:12 +0200, Avri Altman wrote:
-> This commit simplifies the temperature exception event handling by
-> removing the `ufshcd_temp_exception_event_handler` function and
-> directly
-> calling `ufs_hwmon_notify_event` in the
-> `ufshcd_exception_event_handler`
-> function.
->=20
-> The `ufshcd_temp_exception_event_handler` function contained a
-> placeholder comment for platform vendors to add additional steps if
-> required. However, since its introduction a few years ago, no vendor
-> has
-> added any additional steps. Therefore, the placeholder function is
-> removed to streamline the code.
->=20
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-at the moment, removing this is ok.
+On Fri, Jan 10 2025 at 15:16, Joel Granados wrote:
+> sed:
+>     sed --in-place \
+>       -e "s/struct ctl_table .table = &uts_kern/const struct ctl_table *table = \&uts_kern/" \
+>       kernel/utsname_sysctl.c
+>
+> Reviewed-by: Song Liu <song@kernel.org>
+> Acked-by: Steven Rostedt (Google) <rostedt@goodmis.org> # for kernel/trace/
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com> # SCSI
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org> # xfs
+> Acked-by: Jani Nikula <jani.nikula@intel.com>
+> Acked-by: Corey Minyard <cminyard@mvista.com>
+> Signed-off-by: Joel Granados <joel.granados@kernel.org>
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
