@@ -1,177 +1,368 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6139C1D9A49
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 09:59:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F4C1DE2C1
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 11:18:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737021588; cv=none; b=BseSJmR+yjRK2rQPiASqeTbu9iPzXQEfn74FXw2FZvqRJxwN5ua3ZLOkaZ7wg1WCwh2R827YYn/UikrPU8ayk1qmHmVP9M2LwTP/2bTg4Ix0/bzbKjrK8lrDkVC3w9//zzP07DqKs/XLFeqTSgCLYg4hEdhEPHcoKmMEoialnmk=
+	t=1737026308; cv=none; b=MYLpFW5pC0QAbvStGQ74f3RdLE7wqcw8pRu6GbbfF317VZB7qYXaZPxegckLMsqn8AE+XHscwn3XCMOtttbZWlgincIDLObgN6liGgRw3fTMReL092tf7mVxHOiCkX4hyPWzqzzfSZdtqeWCwnrlolYg3QPH6bl+Crz0Yqece6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737021588; c=relaxed/simple;
-	bh=IlCw8fA1nxfVSyN5MLWPc9yR25fLVVn+3/t0RHnWbGI=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=PmMFfcF3uYx36QJ7fUfodCG+/4kxY70EWjg08wDxWKzm0+T7zhLQVKJqRqynUyLzjXxQCg9z++b3uhJOx059QLUbz0/pBki7jETqokJFUV5sEcJIC3sxFGb+IEJuFRQ07FSe4PsMfUsaTjqU3fmV8VzrJ+ggR4Oz3uAciH7xxzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ZsypRApX; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1737026308; c=relaxed/simple;
+	bh=Zd7jHP+XGlfY47OnGIk7XJX8Utuk+7lFL+EDjcWb7Bw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=WJsaogpQGxmuGt02X/isDjHqHjmzZiDUkJG2rp1s3u6fv3qv7aEN7Now76Lop93tYxX2bVjN8D6+dcZhUc6c9LrNWlHSjmmpXZcu7a4kTPra+MzfysZXXmBWP2ZGigNOckssnNJ5nrDfFsTkb/f6VzpfYAYPPPIYxspa9COvFlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=fcL9TxvF; arc=none smtp.client-ip=209.85.218.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ZsypRApX"
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250116095943epoutp0115f88755f00f4d0db9ed6b652594f2c0~bI_1Fv_yk0581005810epoutp01Q
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 09:59:43 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250116095943epoutp0115f88755f00f4d0db9ed6b652594f2c0~bI_1Fv_yk0581005810epoutp01Q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1737021583;
-	bh=2l0kxbwZVaqgJTX0w16kLUp1PZkCVaeSLxiwlkySHoA=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=ZsypRApXyD+JHL5R23S0W7/tanL9uTbISmOnAKGrPeV1tMc5baCP1+KhdRoXlo7RG
-	 PcZTFzYUrR3LF4zxA9IMf0YGPMXEQnl7PVnBYo0x1enjQlEuibvPEeI0IlaeQ9coLb
-	 wlnSU31M0GDxifIYk+j9dwlsd7pmgvrnk37KlvjA=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20250116095942epcas1p2c23c89935977f40e49df25bef1da87f4~bI_0a6mPJ1492014920epcas1p2S;
-	Thu, 16 Jan 2025 09:59:42 +0000 (GMT)
-Received: from epsmges1p4.samsung.com (unknown [182.195.36.225]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4YYddB1L24z4x9Px; Thu, 16 Jan
-	2025 09:59:42 +0000 (GMT)
-Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
-	epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-	6C.DE.24218.E88D8876; Thu, 16 Jan 2025 18:59:42 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-	20250116095941epcas1p42b54034c1afd7e1d261ef84a1425e498~bI_y-CZIw0721107211epcas1p4S;
-	Thu, 16 Jan 2025 09:59:41 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250116095940epsmtrp2c565b5e11dd6d52e2ad4d57e602f22a2~bI_y97hUv2160421604epsmtrp26;
-	Thu, 16 Jan 2025 09:59:40 +0000 (GMT)
-X-AuditID: b6c32a38-56bff70000005e9a-a5-6788d88e3b34
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	85.7B.18729.C88D8876; Thu, 16 Jan 2025 18:59:40 +0900 (KST)
-Received: from dh0421hwang02 (unknown [10.253.101.58]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250116095940epsmtip187af124efb13243c90760aa3bbd9cbc1~bI_yu6cCA0721507215epsmtip1Y;
-	Thu, 16 Jan 2025 09:59:40 +0000 (GMT)
-From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
-To: "'Avri Altman'" <Avri.Altman@wdc.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
-	<bvanassche@acm.org>, <James.Bottomley@HansenPartnership.com>,
-	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
-	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
-Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
-	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
-	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
-	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
-In-Reply-To: <DM6PR04MB6575C2833DD66B847572F53CFC1A2@DM6PR04MB6575.namprd04.prod.outlook.com>
-Subject: RE: [PATCH] scsi: ufs: core: increase the NOP_OUT command timeout
-Date: Thu, 16 Jan 2025 18:59:40 +0900
-Message-ID: <425301db67fd$5c27ca60$14775f20$@samsung.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="fcL9TxvF"
+Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-aa679ad4265so388001266b.0
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 03:18:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1737026304; x=1737631104; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=52cZ4LMER5qN3pwWPAv/+1Mc4HkXxw2FRobsdgIPybw=;
+        b=fcL9TxvFJXYizI9l8LMguT3E/rLevim6zyrS0J7C01XdWKSGCCJWwyi9oVBmm0CJng
+         ffvHUSi9AAqVbWX7EnLrjxu52QgsubpgyCz6IzdU74a9Q9Rxk9pP+j0I/xS8QbEB14wx
+         Xr1IYNIeym+VbJIocrS2fAdfZQPtLU3XH+TniSIRSLGoSQ1pmH9dcqHDnAgUPwnnQqfj
+         QFDUvsZDx/OOU/uX8wKxPsg9CRpbkBJWpETMV4OBhnVridoXoXZdcNkBVjkv6qJNCHRO
+         xAGuVJ7U220CS088BhgWq/QhLpHxbJ9sVbwhxYMBpyqYsWpXDTmdDaMksT+pCBDxCEvF
+         WgoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737026304; x=1737631104;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=52cZ4LMER5qN3pwWPAv/+1Mc4HkXxw2FRobsdgIPybw=;
+        b=uxHwr89y+bdG1YIg5XhVu4fjBJs95ed8u91ksbN62QxQTM0ncotno+m8IAWdbfSZnI
+         s7oDbQ9yizpPlaF0ZJQaIaYNmd9IdpsaOfg+uALrgxhctWtv/RCtQgVO/hRRiIAho+Qa
+         3yHDD74FK9wsa1iJH+6+Y8zIXEf9cuoOhTa4QpszWk3nMVKWjR3wcrCXc8eToWCuio6Y
+         zWo2q7yXA8J8ysc6Cl0p0w1RvayDyS+r2Xyolk4yZJbZ1pWAMN2YOnOkFYd6AIWDQqyF
+         xPfNiuORHdgmFFIDkHSlxMLfGj83B8SwbCzMqiuY+7YQtxea7lKLejlfCXQWtrVCi9LJ
+         wN7g==
+X-Forwarded-Encrypted: i=1; AJvYcCUOJ7BHzJwhjfG03FHOwpWCAFGvfDgJqnGusxqzGf25wpsDTZr6pMuoRp7JzYoF5AqQViyOlcolDLze@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCjkXd9qyMBd5B2XeBzWWCSb3fGKNdM86H/Wxkwjir4AsTvI0s
+	hbxz9p0KMvrQFV0qBLeSuhPh8nh8kni/wCgjXT2OskCbCaUXrFwGM1zzW50t1hM=
+X-Gm-Gg: ASbGncuK/44qGnfd6cjr3CmuRvdGL9DJVNxw4rx60l1X0dkGptZQWxJqw8HfvhgmCNi
+	d6JZbAavjhJE0Bft63NcaLxEnREPchw7aHmxkurYgFRpx/a92zZt6d0KgC9W9iwLpPZJh6wJQlI
+	tBF/Ie46iksBqdw18SyPl5MPlN1fSazPt1PJNlhqgJIkJSJm+65lH9dmtHNnrFkE0tm53vElWuK
+	HFnhP92nl9TrQkUy9uQeZ8HjxOZARwz1pTMUk5L3NO94cazUo4Nvvuhzb74pveGjQFE7yZ6y8nx
+	TPMP/V/nnomATmauJAEdwivyhqapQUfgCFq9xRjX
+X-Google-Smtp-Source: AGHT+IHpMBoX/IkroSmo+PWN098yPyDq9q0kh7bX4gtU767TKeBokR24kjM0/xfgYfs9ZvIbTgjPYw==
+X-Received: by 2002:a17:906:fc3:b0:aa6:489e:5848 with SMTP id a640c23a62f3a-ab36e434f5dmr158846666b.25.1737026304076;
+        Thu, 16 Jan 2025 03:18:24 -0800 (PST)
+Received: from puffmais.c.googlers.com (140.20.91.34.bc.googleusercontent.com. [34.91.20.140])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab2c90da0casm902233366b.61.2025.01.16.03.18.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Jan 2025 03:18:23 -0800 (PST)
+From: =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+Date: Thu, 16 Jan 2025 11:18:08 +0000
+Subject: [PATCH v3] scsi: ufs: fix use-after free in init error and remove
+ paths
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKQSHeU970FIzmh0/qkLVV+LAs8RgHb9Bl4AkEjfm+xjn960A==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDJsWRmVeSWpSXmKPExsWy7bCmgW7fjY50g0vv2SwezNvGZvHy51U2
-	i2kffjJbzDjVxmrx6+96douN/RwWHVsnM1nseH6G3WLX32Ymi8u75rBZdF/fwWZxt6WT1WL5
-	8X9MFls//Wa1+Nb3hN2i6c8+FotrZ06wWmy+9I3FQcjj8hVvj2mTTrF53Lm2h82j5eR+Fo+P
-	T2+xeEzcU+fRt2UVo8fnTXIe7Qe6mQI4o7JtMlITU1KLFFLzkvNTMvPSbZW8g+Od403NDAx1
-	DS0tzJUU8hJzU22VXHwCdN0yc4DeUVIoS8wpBQoFJBYXK+nb2RTll5akKmTkF5fYKqUWpOQU
-	mBXoFSfmFpfmpevlpZZYGRoYGJkCFSZkZzRM+s1e8Jq7YtnR7AbGWZxdjBwcEgImEm9nlXcx
-	cnEICexglFiz7hszhPOJUWLPx9dQzjdGidVLd7F2MXKCdew5vpgFIrGXUeL9tzmsEM5rRokz
-	7c3MIFVsAgYSk4+9YQNJiAgcYpJYtnsyI4jDLHCdUeLnvS9MINs5BWIl3r5TBmkQFvCSuP/v
-	MhuIzSKgKjFj9iewdbwClhIrD+xghLAFJU7OfMICYjMLyEtsfzuHGeIkBYmfT5exgowUEXCS
-	6PxSBFEiIjG7sw3sBQmBZk6JNe9OM0HUu0j8f9vFBmELS7w6voUdwpaS+PxuL1S8WOLKubNQ
-	dgujxKOODAjbXqK5tZkNZBezgKbE+l36ELv4JN597WGFhCmvREebEES1msTif9+BrmcHsmUk
-	Grkhoh4S3/efY5/AqDgLyVuzkLw1C8n9sxBWLWBkWcUollpQnJueWmxYYAKP6eT83E2M4GSu
-	ZbGDce7bD3qHGJk4GA8xSnAwK4nwLmFrTRfiTUmsrEotyo8vKs1JLT7EaAoM6InMUqLJ+cB8
-	klcSb2hiaWBiZmRiYWxpbKYkznthW0u6kEB6YklqdmpqQWoRTB8TB6dUA5PVipt8Arc7D+5I
-	3yWZmPZj2odd+qoZir9kKq4a6y7ze1e+TvdA4GXvV6emnL//NW7fnRmibBe+HzV4YRQX+adK
-	9MMrifcvnofb3UyZJjrd1DH9YFA31yvziXdyc9s1f869Yi+v+yU9l8c4i1VwjhxD9hYrAa9o
-	mQ+ahTuXvvr2qNhNLmbW36OxyoYKr36cn/HdT0ttXbND/qNF4jZcl06uZDp7r/9NJ9vm4km1
-	DqKN/a3BjZvSwh4lHpy37Fqmxewtq5Y1T365c8HEPP4gth3qO0/OuhPY/+LR3MxWtt7bqwRL
-	dxieibT+rOjkLqOTKGT0uX+NrJ3OLy++zsja9YffpbbP2jnXqKk5+NEN0zglluKMREMt5qLi
-	RAAOL+nlbwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRmVeSWpSXmKPExsWy7bCSnG7PjY50g0tXzCwezNvGZvHy51U2
-	i2kffjJbzDjVxmrx6+96douN/RwWHVsnM1nseH6G3WLX32Ymi8u75rBZdF/fwWZxt6WT1WL5
-	8X9MFls//Wa1+Nb3hN2i6c8+FotrZ06wWmy+9I3FQcjj8hVvj2mTTrF53Lm2h82j5eR+Fo+P
-	T2+xeEzcU+fRt2UVo8fnTXIe7Qe6mQI4o7hsUlJzMstSi/TtErgyGib9Zi94zV2x7Gh2A+Ms
-	zi5GTg4JAROJPccXs3QxcnEICexmlDh5dQUbREJGovv+XvYuRg4gW1ji8OFiiJqXjBKzJy9j
-	BalhEzCQmHzsDVi9iMAZJonuNzogRcwC9xklFm2byg6SEAJxDv8xAxnEKRAr8fadMkhYWMBL
-	4v6/y2C9LAKqEjNmfwKbyStgKbHywA5GCFtQ4uTMJywgNrOAtsTTm0+hbHmJ7W/nMEPcqSDx
-	8ynIPRxANzhJdH4pgigRkZjd2cY8gVF4FpJJs5BMmoVk0iwkLQsYWVYxSqYWFOem5xYbFhjm
-	pZbrFSfmFpfmpesl5+duYgRHtpbmDsbtqz7oHWJk4mA8xCjBwawkwruErTVdiDclsbIqtSg/
-	vqg0J7X4EKM0B4uSOK/4i94UIYH0xJLU7NTUgtQimCwTB6dUA5MZS85nayfxx/OO3ZfSnirT
-	XVlxOn6Kjo7ovNjLsVeS5Iz6e+04Zq11eDZzFT+fzu8XbyvN2T1PdrkFb/7WqJcb8q5qyq3H
-	eeo/Olc1GibZCv+bf2LVikVvX7gvD43d9apT/M0N/lU6N3/XSZQ+rTrzQ9k8MWmhoMpRO6O5
-	En3abDNS1eQtF77cu2BVbcrNG+ltGRvPx69cYON276fdibVcbCs3Wdl+NHwsobRp38XCgrYn
-	FuaXo44lHChatnZB8BzPrItBpyYJ/nXucXtyh3POBLXHTX0r5MJWLiv52HX1jm6cWvyX9Qut
-	BTOsV8/ZUiD3ovaDnN7qxbkF9t1/9jsxlmS37G6Jub3o9xOu/l9KLMUZiYZazEXFiQCj14Y8
-	WwMAAA==
-X-CMS-MailID: 20250116095941epcas1p42b54034c1afd7e1d261ef84a1425e498
-X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250115022348epcas1p29705c109f51c01e1e91ef227233c7119
-References: <CGME20250115022348epcas1p29705c109f51c01e1e91ef227233c7119@epcas1p2.samsung.com>
-	<20250115022344.3967-1-dh0421.hwang@samsung.com>
-	<DM6PR04MB6575C2833DD66B847572F53CFC1A2@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20250116-ufshcd-fix-v3-1-6a83004ea85c@linaro.org>
+X-B4-Tracking: v=1; b=H4sIAO/qiGcC/22MSwrCMBQAr1Le2kjyklTqqvcQFzGf9oE0kmhQS
+ u9u2pUFlzMwM0P2iXyGczND8oUyxamCPDRgRzMNnpGrDMhRcyEke4U8WscCvZlGxbuATmIIUIN
+ H8lVvs8u18kj5GdNnexex2r+bIphg1rTSCaduTuv+TpNJ8RjTAOun4G+rdi3WFp1t8aQ7bpTZt
+ cuyfAE0Smqa4QAAAA==
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Peter Griffin <peter.griffin@linaro.org>, 
+ Krzysztof Kozlowski <krzk@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, Satya Tangirala <satyat@google.com>, 
+ Eric Biggers <ebiggers@google.com>
+Cc: Tudor Ambarus <tudor.ambarus@linaro.org>, 
+ Will McVicker <willmcvicker@google.com>, kernel-team@android.com, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-samsung-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, stable@vger.kernel.org, 
+ =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+X-Mailer: b4 0.13.0
 
-> 
-> > It is found that is UFS device may take longer than 500ms(50ms *
-> > 10times) to respond to NOP_OUT command.
-> >
-> > The NOP_OUT command timeout was total 500ms that is from a timeout
-> > value of 50ms(defined by NOP_OUT_TIMEOUT) with 10 retries(defined by
-> > NOP_OUT_RETRIES)
-> >
-> > This change increase the NOP_OUT command timeout to total 1000ms by
-> > changing timeout value to 100ms(NOP_OUT_TIMEOUT)
-> >
-> > Signed-off-by: DooHyun Hwang <dh0421.hwang@samsung.com>
-> Why not edit hba->nop_out_timeout in the .init vop?
-> Like some vendors already do.
-> 
-> Thanks,
-> Avri
-> 
-Thank you for your suggestion.
-I'll fix that in .init vop as you said.
+devm_blk_crypto_profile_init() registers a cleanup handler to run when
+the associated (platform-) device is being released. For UFS, the
+crypto private data and pointers are stored as part of the ufs_hba's
+data structure 'struct ufs_hba::crypto_profile'. This structure is
+allocated as part of the underlying ufshd allocation.
 
-And I'll reject this patch.
+During driver release or during error handling in ufshcd_pltfrm_init(),
+this structure is released as part of ufshcd_dealloc_host() before the
+(platform-) device associated with the crypto call above is released.
+Once this device is released, the crypto cleanup code will run, using
+the just-released 'struct ufs_hba::crypto_profile'. This causes a
+use-after-free situation:
 
-BR,
-Thank you.
-DooHyun Hwang.
+    exynos-ufshc 14700000.ufs: ufshcd_pltfrm_init() failed -11
+    exynos-ufshc 14700000.ufs: probe with driver exynos-ufshc failed with error -11
+    Unable to handle kernel paging request at virtual address 01adafad6dadad88
+    Mem abort info:
+      ESR = 0x0000000096000004
+      EC = 0x25: DABT (current EL), IL = 32 bits
+      SET = 0, FnV = 0
+      EA = 0, S1PTW = 0
+      FSC = 0x04: level 0 translation fault
+    Data abort info:
+      ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+      CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+      GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+    [01adafad6dadad88] address between user and kernel address ranges
+    Internal error: Oops: 0000000096000004 [#1] PREEMPT SMP
+    Modules linked in:
+    CPU: 0 UID: 0 PID: 1 Comm: swapper/0 Tainted: G        W          6.13.0-rc5-next-20250106+ #70
+    Tainted: [W]=WARN
+    Hardware name: Oriole (DT)
+    pstate: 20400005 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+    pc : kfree+0x60/0x2d8
+    lr : kvfree+0x44/0x60
+    sp : ffff80008009ba80
+    x29: ffff80008009ba90 x28: 0000000000000000 x27: ffffbcc6591e0130
+    x26: ffffbcc659309960 x25: ffffbcc658f89c50 x24: ffffbcc659539d80
+    x23: ffff22e000940040 x22: ffff22e001539010 x21: ffffbcc65714b22c
+    x20: 6b6b6b6b6b6b6b6b x19: 01adafad6dadad80 x18: 0000000000000000
+    x17: ffffbcc6579fbac8 x16: ffffbcc657a04300 x15: ffffbcc657a027f4
+    x14: ffffbcc656f969cc x13: ffffbcc6579fdc80 x12: ffffbcc6579fb194
+    x11: ffffbcc6579fbc34 x10: 0000000000000000 x9 : ffffbcc65714b22c
+    x8 : ffff80008009b880 x7 : 0000000000000000 x6 : ffff80008009b940
+    x5 : ffff80008009b8c0 x4 : ffff22e000940518 x3 : ffff22e006f54f40
+    x2 : ffffbcc657a02268 x1 : ffff80007fffffff x0 : ffffc1ffc0000000
+    Call trace:
+     kfree+0x60/0x2d8 (P)
+     kvfree+0x44/0x60
+     blk_crypto_profile_destroy_callback+0x28/0x70
+     devm_action_release+0x1c/0x30
+     release_nodes+0x6c/0x108
+     devres_release_all+0x98/0x100
+     device_unbind_cleanup+0x20/0x70
+     really_probe+0x218/0x2d0
 
-> > ---
-> >  drivers/ufs/core/ufshcd.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index cd404ade48dc..bf5c4620ef6b 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -57,8 +57,8 @@ enum {
-> >  };
-> >  /* NOP OUT retries waiting for NOP IN response */
-> >  #define NOP_OUT_RETRIES    10
-> > -/* Timeout after 50 msecs if NOP OUT hangs without response */
-> > -#define NOP_OUT_TIMEOUT    50 /* msecs */
-> > +/* Timeout after 100 msecs if NOP OUT hangs without response */
-> > +#define NOP_OUT_TIMEOUT    100 /* msecs */
-> >
-> >  /* Query request retries */
-> >  #define QUERY_REQ_RETRIES 3
-> > --
-> > 2.48.0
-> >
+In other words, the initialisation code flow is:
 
+  platform-device probe
+    ufshcd_pltfrm_init()
+      ufshcd_alloc_host()
+        scsi_host_alloc()
+          allocation of struct ufs_hba
+          creation of scsi-host devices
+    devm_blk_crypto_profile_init()
+      devm registration of cleanup handler using platform-device
+
+and during error handling of ufshcd_pltfrm_init() or during driver
+removal:
+
+  ufshcd_dealloc_host()
+    scsi_host_put()
+      put_device(scsi-host)
+        release of struct ufs_hba
+  put_device(platform-device)
+    crypto cleanup handler
+
+To fix this use-after free, change ufshcd_alloc_host() to register a
+devres action to automatically cleanup the underlying SCSI device on
+ufshcd destruction, without requiring explicit calls to
+ufshcd_dealloc_host(). This way:
+
+    * the crypto profile and all other ufs_hba-owned resources are
+      destroyed before SCSI (as they've been registered after)
+    * a memleak is plugged in tc-dwc-g210-pci.c remove() as a
+      side-effect
+    * EXPORT_SYMBOL_GPL(ufshcd_dealloc_host) can be removed fully as
+      it's not needed anymore
+    * no future drivers using ufshcd_alloc_host() could ever forget
+      adding the cleanup
+
+Fixes: cb77cb5abe1f ("blk-crypto: rename blk_keyslot_manager to blk_crypto_profile")
+Fixes: d76d9d7d1009 ("scsi: ufs: use devm_blk_ksm_init()")
+Cc: stable@vger.kernel.org
+Signed-off-by: André Draszik <andre.draszik@linaro.org>
+---
+Changes in v3:
+- rename devres action handler to ufshcd_devres_release() (Bart)
+- Link to v2: https://lore.kernel.org/r/20250114-ufshcd-fix-v2-1-2dc627590a4a@linaro.org
+
+Changes in v2:
+- completely new approach using devres action for Scsi_host cleanup, to
+  ensure ordering
+- add Fixes: and CC: stable tags (Eric)
+- Link to v1: https://lore.kernel.org/r/20250113-ufshcd-fix-v1-1-ca63d1d4bd55@linaro.org
+---
+In my case, as per above trace I initially encountered an error in
+ufshcd_verify_dev_init(), which made me notice this problem both during
+error handling and release. For reproducing, it'd be possible to change
+that function to just return an error, or rmmod the platform glue
+driver.
+
+Other approaches for solving this issue I see are the following, but I
+believe this one here is the cleanest:
+
+* turn 'struct ufs_hba::crypto_profile' into a dynamically allocated
+  pointer, in which case it doesn't matter if cleanup runs after
+  scsi_host_put()
+* add an explicit devm_blk_crypto_profile_deinit() to be called by API
+  users when necessary, e.g. before ufshcd_dealloc_host() in this case
+* register the crypto cleanup handler against the scsi-host device
+  instead, like in v1 of this patch
+---
+ drivers/ufs/core/ufshcd.c        | 27 +++++++++++++++++----------
+ drivers/ufs/host/ufshcd-pci.c    |  2 --
+ drivers/ufs/host/ufshcd-pltfrm.c | 11 ++++-------
+ include/ufs/ufshcd.h             |  1 -
+ 4 files changed, 21 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 43ddae7318cb..8351795296bb 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10279,16 +10279,6 @@ int ufshcd_system_thaw(struct device *dev)
+ EXPORT_SYMBOL_GPL(ufshcd_system_thaw);
+ #endif /* CONFIG_PM_SLEEP  */
+ 
+-/**
+- * ufshcd_dealloc_host - deallocate Host Bus Adapter (HBA)
+- * @hba: pointer to Host Bus Adapter (HBA)
+- */
+-void ufshcd_dealloc_host(struct ufs_hba *hba)
+-{
+-	scsi_host_put(hba->host);
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+-
+ /**
+  * ufshcd_set_dma_mask - Set dma mask based on the controller
+  *			 addressing capability
+@@ -10307,6 +10297,16 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+ 	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
+ }
+ 
++/**
++ * ufshcd_devres_release - devres cleanup handler, invoked during release of
++ *			   hba->dev
++ * @host: pointer to SCSI host
++ */
++static void ufshcd_devres_release(void *host)
++{
++	scsi_host_put(host);
++}
++
+ /**
+  * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
+  * @dev: pointer to device handle
+@@ -10334,6 +10334,13 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ 		err = -ENOMEM;
+ 		goto out_error;
+ 	}
++
++	err = devm_add_action_or_reset(dev, ufshcd_devres_release,
++				       host);
++	if (err)
++		return dev_err_probe(dev, err,
++				     "failed to add ufshcd dealloc action\n");
++
+ 	host->nr_maps = HCTX_TYPE_POLL + 1;
+ 	hba = shost_priv(host);
+ 	hba->host = host;
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index ea39c5d5b8cf..9cfcaad23cf9 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -562,7 +562,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+ 	ufshcd_remove(hba);
+-	ufshcd_dealloc_host(hba);
+ }
+ 
+ /**
+@@ -605,7 +604,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Initialization failed\n");
+-		ufshcd_dealloc_host(hba);
+ 		return err;
+ 	}
+ 
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index 505572d4fa87..adb0a65d9df5 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -488,13 +488,13 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	if (err) {
+ 		dev_err(dev, "%s: clock parse failed %d\n",
+ 				__func__, err);
+-		goto dealloc_host;
++		goto out;
+ 	}
+ 	err = ufshcd_parse_regulator_info(hba);
+ 	if (err) {
+ 		dev_err(dev, "%s: regulator init failed %d\n",
+ 				__func__, err);
+-		goto dealloc_host;
++		goto out;
+ 	}
+ 
+ 	ufshcd_init_lanes_per_dir(hba);
+@@ -502,14 +502,14 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	err = ufshcd_parse_operating_points(hba);
+ 	if (err) {
+ 		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+-		goto dealloc_host;
++		goto out;
+ 	}
+ 
+ 	err = ufshcd_init(hba, mmio_base, irq);
+ 	if (err) {
+ 		dev_err_probe(dev, err, "Initialization failed with error %d\n",
+ 			      err);
+-		goto dealloc_host;
++		goto out;
+ 	}
+ 
+ 	pm_runtime_set_active(dev);
+@@ -517,8 +517,6 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 
+ 	return 0;
+ 
+-dealloc_host:
+-	ufshcd_dealloc_host(hba);
+ out:
+ 	return err;
+ }
+@@ -534,7 +532,6 @@ void ufshcd_pltfrm_remove(struct platform_device *pdev)
+ 
+ 	pm_runtime_get_sync(&pdev->dev);
+ 	ufshcd_remove(hba);
+-	ufshcd_dealloc_host(hba);
+ 	pm_runtime_disable(&pdev->dev);
+ 	pm_runtime_put_noidle(&pdev->dev);
+ }
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index da0fa5c65081..58eb6e897827 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1311,7 +1311,6 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+ void ufshcd_enable_irq(struct ufs_hba *hba);
+ void ufshcd_disable_irq(struct ufs_hba *hba);
+ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+-void ufshcd_dealloc_host(struct ufs_hba *);
+ int ufshcd_hba_enable(struct ufs_hba *hba);
+ int ufshcd_init(struct ufs_hba *, void __iomem *, unsigned int);
+ int ufshcd_link_recovery(struct ufs_hba *hba);
+
+---
+base-commit: 4e16367cfe0ce395f29d0482b78970cce8e1db73
+change-id: 20250113-ufshcd-fix-52409f2d32ff
+
+Best regards,
+-- 
+André Draszik <andre.draszik@linaro.org>
 
