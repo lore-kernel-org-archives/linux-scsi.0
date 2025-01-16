@@ -1,109 +1,83 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019BE1D6DAA
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 11:30:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779161F37BE
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 13:07:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737027048; cv=none; b=IQxb23CPtntieEPZsDCjb1GS8i1c7F8ZTAqDq922+o2zcWgwFTGW1V2quRznieIpehsEK9TkrETdWXwPy3imkthyXWddJA0JTp1m4OoQRBKhGQCPuyI7yfyaTyeZzPZnh2pn9lxV4JFU0f9Xh1nxgT/hSKdhXIicDZw9NOOE3yU=
+	t=1737032845; cv=none; b=SyBkbESbpGxRLU4xYiFnEs5aB30nYPEDR/8qY233MphnavnvyC5INUph79OobMxZTluURFUy/kTxkHucmBley/fRsoGYBRM4aaBoR4S739IHpYFO4HAjnAw7fcdkd4pCc2SmAjChuiFDCx4lQ+oylmu6bFX60h6+kLeHTE0+Bm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737027048; c=relaxed/simple;
-	bh=kzDN9dmdAK48wXWx0awduq7CrBP6vYP35O8PwR+e9qk=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=U4ypsAIFb7TH8segbQEjZbazCnW/1lZb6PNCg4Q8J3vQ7h4dRxWoiHjFj6T6d7N3zkMjWjOwr87W1dzuDcVZlzAQdGa+GDFI8Q5axnpD1wklMHkbRyQhdTc0m8KqHJ502z5AQeNuWBJbpUGD7bl0+VOEMBHhrGV4iSr2FKOC3HU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=S5PRRw1E; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="S5PRRw1E"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-3862b40a6e0so484028f8f.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 03:30:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1737027045; x=1737631845; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=kzDN9dmdAK48wXWx0awduq7CrBP6vYP35O8PwR+e9qk=;
-        b=S5PRRw1En8G+21KOJC9ZD6IqUHXgz4xQLsvIBxr/XWZPdIgRHRo/eicNlgEHSbm1kb
-         1GSs0FuwZkJWhSTbI8sRnjw4lqGhGVOHWmzZ0yxkZ199QjpJ48qSkyfwlh0J7t2cDH16
-         5O+UvF7PGwbTxzl8xtZQjUu2yIhdNvIjWZaX7uFfOqe4w24yiEAkdt1+OoG+UHZ0ii6u
-         4l9rBpEwm0MJgnEvnBvLGqAb2KXZ1W7WasebdcT1tz8uneIWS4mZcpNqQUbB3A6WCvIU
-         VaO0n04kdHOCGitjn0dYqnYnHbSiJdKfZFG5DzRhNNd9oYOuRAVQuWsx2j0NfW/la/bm
-         m4Wg==
+	s=arc-20240116; t=1737032845; c=relaxed/simple;
+	bh=rmo2fmx8NWHeXe0BSVePybHzO7bTeCJWxm8ZHlUojmk=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=mjnhnWMz6IsmjswdSpEIii/g5N/btijL7fIUG0+Cx8Fia0FVgCAQOjbawmmxKZtE7pqaS/ZyVF16Na2tPa1ohbW4CNBGhhE9k9yJdxjAmcmo66A4JLygEoOLzX0Oz6ToYmMSJl7XNVGVFCRbzSXWWsC4yVJ1n6dnmApihipXvvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-3ce7880e816so12664215ab.2
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 05:07:22 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737027045; x=1737631845;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+        d=1e100.net; s=20230601; t=1737032841; x=1737637641;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=kzDN9dmdAK48wXWx0awduq7CrBP6vYP35O8PwR+e9qk=;
-        b=UcLm3YVc4aVIrQRWVPqqoNLf2ycEQYtCU9IebqMawAEkbc7Q/XSbgJsjvfATVSYJpl
-         Xhii3yObXTC/O+HKM7vgcLMZaj5r5Iy5ygU0w+vB7RPEKCh9PjsOjfIH5aSg29yxx1f0
-         Cw7wq8bgpoxl2W+JqVxnPMGMxFMJ1Mj4R74Omg+xhpKCJP6+hAKIFFiLCMnFxM8Kiscf
-         rkS9zHV1X/ks+ryubStQVROQJHC0enGGvggu7yCcwA0zGUkOkHzOLbz6f4CEbDZqANzY
-         TwqOAWba210IAc2nzwJeUxmW9Zje+5VtEL6xd7U61ftW9CEjAsqR333CKYxTQhKLlBOn
-         nIoQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVTVCoWxztLBPbiImOWOeU9n+pYhobRK0tUVezuTQ6YCKqxuQxUjBSmB9+HHFcNer3QmBAHIGCxjbh7@vger.kernel.org
-X-Gm-Message-State: AOJu0YxI8Uz88djvt+Ez0wtD3rKeFNbsPhiElYCxzELCWWN7Pw4dGCMZ
-	nSkFYry5Ls2fpPZH64qq4UExjn0dn0VrmYP+1S6NW0rbjdJ5rijqfNNiw6f5L8U=
-X-Gm-Gg: ASbGncv+Yd3W4uLmgbsLAM7n3cRAzTw6P3wTGyx9/TWBPgEoWM9CrAJ4k/o0EBpOJrY
-	WgWvZsqqCZnC4llGqry+etYH3dNtWWzg11hrIQPKV2jsVsNnZLDZ8OZ9wpdt0jublF0jGsJ/fSD
-	Ivk9AibL/F5LinOG1TG3ah31xkYUrwkkTsntsS70IVJXBLCJJWeXX1gFSoYi5aURYr0fXrM0PkL
-	DBG81i1lD/AJLBXtO3nMVEjtOzOLBznGQnv8wN7nv5Tq7mME3fOii7tZPKA6Q==
-X-Google-Smtp-Source: AGHT+IGsW7R8SXZiI21rLVry2LB3/IZkmamq2Z2hj3KPYHeT5ENtm5n56n32F1wCYQ4Tz4sR0OmrNQ==
-X-Received: by 2002:a5d:648b:0:b0:386:3e3c:ef1 with SMTP id ffacd0b85a97d-38a87312f36mr34852486f8f.35.1737027045345;
-        Thu, 16 Jan 2025 03:30:45 -0800 (PST)
-Received: from [10.1.1.109] ([80.111.64.44])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-437c74ac707sm55516355e9.15.2025.01.16.03.30.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jan 2025 03:30:44 -0800 (PST)
-Message-ID: <941c7920a7d07496222e6e93cb338ca6df38dc33.camel@linaro.org>
-Subject: Re: [PATCH v3] scsi: ufs: fix use-after free in init error and
- remove paths
-From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
- <avri.altman@wdc.com>,  Bart Van Assche <bvanassche@acm.org>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Peter Griffin <peter.griffin@linaro.org>,
- Krzysztof Kozlowski <krzk@kernel.org>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>,  Mike Snitzer <snitzer@redhat.com>,
- Jens Axboe <axboe@kernel.dk>, Ulf Hansson <ulf.hansson@linaro.org>,  Eric
- Biggers <ebiggers@google.com>
-Cc: Tudor Ambarus <tudor.ambarus@linaro.org>, Will McVicker
- <willmcvicker@google.com>, kernel-team@android.com,
- linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org,  stable@vger.kernel.org
-Date: Thu, 16 Jan 2025 11:30:43 +0000
-In-Reply-To: <20250116-ufshcd-fix-v3-1-6a83004ea85c@linaro.org>
-References: <20250116-ufshcd-fix-v3-1-6a83004ea85c@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.1-4 
+        bh=mQi/6bu/3tPBI3ln3zn1h0FyYoqzT3lrOkG2HpG4frc=;
+        b=LDyROu25HMKVqywtkjDU2dIaWmYqa++SRRQLDPzo9BVmSnwK+SB9UJknFkzS3Dup7n
+         sNbg/i4XwcYULCA+hI63gwxKpYt7iypx2vC4Zq30lmGkdCAQkzlV9sApUfzaIIfbK8We
+         kIeDxVUOter5/DcKClf/nBTbg+VI/jkTE6fZT1X5P0xC2T0XnJs4i/v3LLH6ZFI8dxuS
+         g71AKIdmgvdAdCjdG/aa7fVWPSawiRlXo+ESA4lNn8SLdaR0E3558HiSG/ktmi/lwY6F
+         PEfsznJAcjacIWj1Rf8BIN41mQyrlUuBSV8unWmgcf6Oa/VSe7S0GDnPOjMWj6/J+97O
+         un4A==
+X-Forwarded-Encrypted: i=1; AJvYcCVVosqkun1aifMLfFNu/mXBGfscLbBUynLgCAY9J56GGM6rsIwu5+JsCk9/N8XP32uO8EFCsmqHvmwS@vger.kernel.org
+X-Gm-Message-State: AOJu0YxgW5yw+2k5QA4tf/tHWiptJMfakuv55QcXxBLJgLcCWo01vrag
+	BJS+oJ3jkVYVOTLHQt9tcK4wGELpoaJS6Ee9v4gJkcL9CZrhI+6mcOCTyV+WMqOetSRJ4TM7dZH
+	JOgXkZFWNHacLlk4Er259BMfPNaqWK09b/WrKtMZfaeGjkb6rYPXTtmQ=
+X-Google-Smtp-Source: AGHT+IGsRfXBrJG9XO0C7ARI8I/walJ1UoEVGkR4z6NDug8C+VbF4eL26IKhd10J8f0EdHLpj9X9aT3AG/2Spwx5aTBj2egRF1uH
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Received: by 2002:a05:6e02:3cc9:b0:3ce:9193:20ee with SMTP id
+ e9e14a558f8ab-3ce9193242emr33209565ab.17.1737032841335; Thu, 16 Jan 2025
+ 05:07:21 -0800 (PST)
+Date: Thu, 16 Jan 2025 05:07:21 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67890489.050a0220.20d369.003b.GAE@google.com>
+Subject: [syzbot] Monthly scsi report (Jan 2025)
+From: syzbot <syzbot+list6f126a98724c339192d0@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 2025-01-16 at 11:18 +0000, Andr=C3=A9 Draszik wrote:
-> Changes in v2:
-> - completely new approach using devres action for Scsi_host cleanup, to
-> =C2=A0 ensure ordering
+Hello scsi maintainers/developers,
 
-Just repeating this again due to updated recipients list:
+This is a 31-day syzbot report for the scsi subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/scsi
 
-This new approach now means that Scsi_host cleanup (scsi_host_put)
-happens after ufshcd's hba->dev cleanup and I am not sure if this
-approach has wider implications (in particular if there is any
-underlying assumption or requirement for the Scsi_host device to
-clean up before the ufshcd device).
+During the period, 1 new issues were detected and 0 were fixed.
+In total, 4 issues are still open and 7 have already been fixed.
 
-Simple testing using a few iteration of manual module bind/unbind
-worked, as did the error handling / cleanup during init. But I'm
-not sure if that is sufficient testing for the changed release
-ordering.
+Some of the still happening issues:
 
-Cheers,
-Andre'
+Ref Crashes Repro Title
+<1> 18      Yes   possible deadlock in sd_remove
+                  https://syzkaller.appspot.com/bug?extid=566d48f3784973a22771
+<2> 4       Yes   possible deadlock in balance_pgdat (2)
+                  https://syzkaller.appspot.com/bug?extid=ac962f01776f0d739973
+<3> 1       No    possible deadlock in sg_mmap
+                  https://syzkaller.appspot.com/bug?extid=941903927d608a37e1f6
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
