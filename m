@@ -1,179 +1,180 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 947E01D90A5;
-	Thu, 16 Jan 2025 09:13:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96882139566;
+	Thu, 16 Jan 2025 09:22:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737018824; cv=none; b=l4JMjKDsC0hz91qd+bjo4CuKNf3YQb5eA/vRmL0uAOnPduvhsgqbmKHjttVygP9ZqtU+uKb1j481FZ/3mmfX0mjqCQk0yEIIES828E4lj9K8BJbQ5tp1S9bJiwqpvyaSYdkJoIg/9z7mg7R4fPyB0wkOnqBU1dgtQDkSOsRL1XM=
+	t=1737019376; cv=none; b=NoRo3zUyu+yRCTev2M5W+MeAHsEVMovJ7KkTOrjywBuTTkEI2SqTxK8DFypjGBf1TJDU3TOM0CSE6UKIG/nM6TXjJoQIsml9dWhIbGFn3NVTBfQYn4xdwzG/eP69DhTqGAsUtbEeAsx86puER813zIBQ0Wb12dIxlWFoHGKwsZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737018824; c=relaxed/simple;
-	bh=am3pycCG0HB1VymIG+RPCE/lTRaFqY+iJt6+1oXCuVU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eXxQfcKlNgyRBXxNZhiPP07LHAXigk11VEVo8eJQpoGLAnioJGQmzPtYEc/65fF8EeCFEQF8Xgghz2jYQDGYFy7lCv27sV908+X2AbNQfviCoXUR0+aasq5tDtdcEasfDCn4ucTvLY+tETwjg7TIHdTMKgRodQ4UAXJnGTxZaSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Y4bk0b5c; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1737019376; c=relaxed/simple;
+	bh=v0X3E64VCHaTPugml817BhH2IqWT8FThZLYh6LkYuDQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=btza+1p/ujhXlbLUwPULjL6USxyztk7cG780ifDZmFxTyZVzs5WMPem+vm0cU+8521QQ6umURi0GAZoqBuqW+GtE38Xg0LDMLRoz5wEd6hoc3keY7ar7M18tSVrsZrv9mGN0W6O7uyVN+YYzEg2/yqcE1GdXRKFRoE9tFuKM0xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cCo972y1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Y4bk0b5c"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50G87bxn001414;
-	Thu, 16 Jan 2025 09:13:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=4aXd8QsTxM5
-	2VfkVONXOxiq2R/hDKDJ2l4jJc/5ldJ0=; b=Y4bk0b5cXa0EFd3zlWaOsZF+qvg
-	VZK0USAogBxf88tkOhEL8svAkDKrKrEKiUYtn3I2p7G/A5CFXqQDZWVaNkupH6c1
-	n802X7UrW2rVgX7lXqiFI+iQcMOVR0UM1GUvTMfvQay7Y/A5T5ATtld7I4ytrlEX
-	Vo3hn/ugxUtDDRGMEO3ducLqbbzF4ZTGWuf3Ul9YuKW+DHbJN+t6K8Q4ARzZrfui
-	8/jZkfT5GJEFAgJcm+ed4VASl8/zT0HFMUzrycyu3UqADc2QFBaXrpgZRr4uTNi5
-	j2eREZf4AdRuOFG0sbW1unStVIlLEcjH3igSTfoUPhkj3oGRRNH7Y3huTOQ==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 446xay85rj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 16 Jan 2025 09:13:13 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 50G9DBTZ022864;
-	Thu, 16 Jan 2025 09:13:11 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 44426qw52e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 16 Jan 2025 09:13:11 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50G9DAUr022858;
-	Thu, 16 Jan 2025 09:13:10 GMT
-Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 50G9DA5W022857
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 16 Jan 2025 09:13:10 +0000
-Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id 3118B40BF9; Thu, 16 Jan 2025 17:13:09 +0800 (CST)
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Andrew Halaney <ahalaney@redhat.com>,
-        Maramaina Naresh <quic_mnaresh@quicinc.com>,
-        Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 7/8] scsi: ufs: core: Toggle Write Booster during clock scaling base on gear speed
-Date: Thu, 16 Jan 2025 17:11:48 +0800
-Message-Id: <20250116091150.1167739-8-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
-References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cCo972y1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFA00C4CED6;
+	Thu, 16 Jan 2025 09:22:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737019376;
+	bh=v0X3E64VCHaTPugml817BhH2IqWT8FThZLYh6LkYuDQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=cCo972y1n+x6rv0uNEhxeCjUmwmc34/EXEzkIfYaCpn8kISz2cUWOHQISkYvJGLS5
+	 xE4X8am2QPPwzpEwotK6W04PYNMxUuIvaC7uosdD2FlQHIMHJA2sNLZtpjwTU+LmNB
+	 eDNqfdYjnZ9AC50vmzm2Oe4Ld47c1GZaz8z7hi5z2H5FKKuLCWQ6VUcwPDx2tyHXKD
+	 rLNtZQ+QoGWYES4LYD37Bix5qff9y0DNG+npoU8HpWbzCr25le/ppjbLyh9WGKxPec
+	 gq0m5eNlpDRk5oMYqvQGEjZouw8az8ElYMuO0+7b9ofCSdXLdsQX6jz/srb82/3e6/
+	 hBFic51i+C2XQ==
+Message-ID: <5b419c6a-ba22-41d3-bd5e-869d422f3c5d@kernel.org>
+Date: Thu, 16 Jan 2025 10:22:47 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: hyS6x_8RAYyi8kJNWmZJJF9X5L30bKgO
-X-Proofpoint-ORIG-GUID: hyS6x_8RAYyi8kJNWmZJJF9X5L30bKgO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-16_03,2025-01-16_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 bulkscore=0
- adultscore=0 mlxlogscore=999 phishscore=0 malwarescore=0 spamscore=0
- mlxscore=0 suspectscore=0 priorityscore=1501 impostorscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501160067
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 8/8] ARM: dts: msm: Use Operation Points V2 for UFS on
+ SM8650
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
+ bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
+ avri.altman@wdc.com, junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com
+Cc: linux-scsi@vger.kernel.org, Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>,
+ "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
+ <20250116091150.1167739-9-quic_ziqichen@quicinc.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20250116091150.1167739-9-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Can Guo <quic_cang@quicinc.com>
+On 16/01/2025 10:11, Ziqi Chen wrote:
+> Use Operation Points V2 for UFS on SM8650 so that multi-level
+> clock/gear scaling can be possible.
+> 
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 
-During clock scaling, Write Booster is toggled on or off based on
-whether the clock is scaled up or down. However, with OPP V2 powered
-multi-level gear scaling, the gear can be scaled amongst multiple gear
-speeds, e.g., it may scale down from G5 to G4, or from G4 to G2. To provide
-flexibilities, add a new field for clock scaling such that during clock
-scaling Write Booster can be enabled or disabled based on gear speeds but
-not based on scaling up or down.
+Please don't send downstream code directly, but fix it first. Actually -
+rework it 100%.
 
-Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 17 ++++++++++++-----
- include/ufs/ufshcd.h      |  3 +++
- 2 files changed, 15 insertions(+), 5 deletions(-)
+Please use subject prefixes matching the subsystem. You can get them for
+example with `git log --oneline -- DIRECTORY_OR_FILE` on the directory
+your patch is touching. For bindings, the preferred subjects are
+explained here:
+https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 721bf9d1a356..31ebf267135b 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1395,13 +1395,17 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 	return ret;
- }
- 
--static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool scale_up)
-+static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
- {
- 	up_write(&hba->clk_scaling_lock);
- 
--	/* Enable Write Booster if we have scaled up else disable it */
--	if (ufshcd_enable_wb_if_scaling_up(hba) && !err)
--		ufshcd_wb_toggle(hba, scale_up);
-+	/* Enable Write Booster if current gear requires it else disable it */
-+	if (ufshcd_enable_wb_if_scaling_up(hba) && !err) {
-+		bool wb_en;
-+
-+		wb_en = hba->pwr_info.gear_rx >= hba->clk_scaling.wb_gear ? true : false;
-+		ufshcd_wb_toggle(hba, wb_en);
-+	}
- 
- 	mutex_unlock(&hba->wb_mutex);
- 
-@@ -1456,7 +1460,7 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
- 	}
- 
- out_unprepare:
--	ufshcd_clock_scaling_unprepare(hba, ret, scale_up);
-+	ufshcd_clock_scaling_unprepare(hba, ret);
- 	return ret;
- }
- 
-@@ -1816,6 +1820,9 @@ static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
- 	if (!hba->clk_scaling.min_gear)
- 		hba->clk_scaling.min_gear = UFS_HS_G1;
- 
-+	if (!hba->clk_scaling.wb_gear)
-+		hba->clk_scaling.wb_gear = UFS_HS_G3;
-+
- 	INIT_WORK(&hba->clk_scaling.suspend_work,
- 		  ufshcd_clk_scaling_suspend_work);
- 	INIT_WORK(&hba->clk_scaling.resume_work,
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 8c7c497d63d3..8e6c2eb68011 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -448,6 +448,8 @@ struct ufs_clk_gating {
-  * @resume_work: worker to resume devfreq
-  * @target_freq: frequency requested by devfreq framework
-  * @min_gear: lowest HS gear to scale down to
-+ * @wb_gear: enable Write Booster when HS gear scales above or equal to it, else
-+ *		disable Write Booster
-  * @is_enabled: tracks if scaling is currently enabled or not, controlled by
-  *		clkscale_enable sysfs node
-  * @is_allowed: tracks if scaling is currently allowed or not, used to block
-@@ -468,6 +470,7 @@ struct ufs_clk_scaling {
- 	struct work_struct resume_work;
- 	unsigned long target_freq;
- 	u32 min_gear;
-+	u32 wb_gear;
- 	bool is_enabled;
- 	bool is_allowed;
- 	bool is_initialized;
--- 
-2.34.1
+> ---
+>  arch/arm64/boot/dts/qcom/sm8650.dtsi | 51 +++++++++++++++++++++++-----
+>  1 file changed, 43 insertions(+), 8 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+> index 01ac3769ffa6..5466f1217f64 100644
+> --- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+> @@ -2557,18 +2557,11 @@ ufs_mem_hc: ufs@1d84000 {
+>  				      "tx_lane0_sync_clk",
+>  				      "rx_lane0_sync_clk",
+>  				      "rx_lane1_sync_clk";
+> -			freq-table-hz = <100000000 403000000>,
+> -					<0 0>,
+> -					<0 0>,
+> -					<100000000 403000000>,
+> -					<100000000 403000000>,
+> -					<0 0>,
+> -					<0 0>,
+> -					<0 0>;
+>  
+>  			resets = <&gcc GCC_UFS_PHY_BCR>;
+>  			reset-names = "rst";
+>  
+> +			operating-points-v2 = <&ufs_opp_table>;
+>  			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+>  					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>  					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
+> @@ -2590,6 +2583,48 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>  			#reset-cells = <1>;
+>  
+>  			status = "disabled";
+> +
+> +			ufs_opp_table: opp-table {
+> +					   compatible = "operating-points-v2";
 
+
+Messed indentation.
+
+> +					   // LOW_SVS
+
+
+Drop
+
+> +					   opp-100000000 {
+> +							   opp-hz = /bits/ 64 <100000000>,
+> +									   /bits/ 64 <0>,
+
+Messed alignment.
+
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <100000000>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+
+
+
+
+Best regards,
+Krzysztof
