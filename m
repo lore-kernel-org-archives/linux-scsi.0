@@ -1,141 +1,106 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819FC22C9E3
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 14:49:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E285A22BAA6;
+	Thu, 16 Jan 2025 14:59:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737038974; cv=none; b=QemLvp2IvJLh6nB54GOAvIlmwmI145RCcleZNmQWeO8pu0GbVkOvOel25+MO+qUB91NXRkWidBGF90Fg1QUUYRJ3o7er0+mjNv55Nk66GaqDZjSCge7WHwbQ5UjKaJli+bU6hOoJt4cxa44kjMl/ENEfOrw9IVXLr5qzFvBFHlU=
+	t=1737039551; cv=none; b=Dwc9aE0QmceOvG+bDlHDRa7cFnrG8ph72VTMLriIdcLAG44GGFsv3Z9CVI7N0vnECYykiriSSBmo4TsAITvraGFmuZpM2/O84ndaXygw+U9rLjp6oRa1N0fImbMEmvayZw3IJ9YiW99gTHkWAIkodgPOlql/fQaH3/vh43hMZ7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737038974; c=relaxed/simple;
-	bh=SLPk0X7feJzjbp6iNB5msnLoDstFDxW+7yuOzADYOIY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=G2XNSiEhLFrSS+L2/u1HRI1oT6q+3Jz5eBs5tBX8si9oUrjb9NQhOQh7Th2gMqlBgTjHxmgAr0zjR6U3F+FE41siOM1VHq3XSC7OFkk6zasIjdCCUkraj6donhW3TNUm5J6BBuiYbTQl4q3RNPGftwJ3L98c5JlLObrd/0fIK1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=k+paxNDI; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1737039551; c=relaxed/simple;
+	bh=i+V3Z2NUJCMCx/znFI/oGZZdryeyksmDefW2R52fwB8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BAwNdYv3SS6DxSL/0rG+hS36itAYe9pgvL8eLnsj4BQx5LBvFPgx6PnLClNkCQY1UGqvHul5AhkLIgFmiSxRz/QMYLBtTuchqBEYGLfA+9XT5kFgT2swOlXegbJTBseDvJc8gKfsIWlpWynEA8JJiAsf+kgs4B2+vDFWd0ZaII4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=px9Yhk9t; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="k+paxNDI"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-3863c36a731so885212f8f.1
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 06:49:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1737038969; x=1737643769; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=e7cRMSVWB1iA1Z/E9hbzESrNuj3mM1/u3MbHi16H2W4=;
-        b=k+paxNDIjOxDJgPjAQG1KtidazknNY471iVzSHZQNe6EgPboggEra9/7VcAlUw7/o8
-         fY5tDLXNNxoIfYERctcld0qybKoLCBy5gfdMaWR2LpefZTo6J+Z9ytcHocx+O3VDxInC
-         3mqZxcLEemohTrWZBpxHrbvB8ONTmm4gUXB5vvzEr7WQXl6ESFPiuc/U2XhUZRLI/9bS
-         IPm3I83AR8ub4NYD2Z8WBUJN+aoZToBv0cvpiiNvGzhH3d6zPrEGQGFtaZt30uHSYO/9
-         q706kNsf99ulZQCS0aOYibKgTuvitR7LNS8OblVZLa3PkQLGDhGcu78k/OzPWbIrgbeH
-         u6qw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737038969; x=1737643769;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=e7cRMSVWB1iA1Z/E9hbzESrNuj3mM1/u3MbHi16H2W4=;
-        b=ZGOW+qJz5DfJeG09ZdndN99RY0Iby2Kx5LgQf/W+cNtIeu7l7uFTmgzK6k7JF5tP+e
-         jUKzhPquo6Mau5wjp816VuSMzRAN5JbhoN0utj0baYS+LA0S4mVfjxKlsVQu1gw+s9rs
-         jlsiimh0by4NKVCQPG8a+iX+RedfdJIBwMF6EWTKZ60Gli6xdBXjItdtn3iDaFplOKpo
-         HBf2pQaaHTA44zHknP3z9qB1clCVOZ1tXMTwBmVSQbg+DaQK7fn6ccjOIOIDqpy2epO7
-         V8aPb+vEDTFhmG/88vs66au2Sho0Zl9Rt7ticSDtqdV+bZe+S3hNEz6tLTlVdLHg8SUs
-         kYTQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUwbd6uAdCR0htyZjXTEsVogBxR6k9jWj9Yk+0d3WBvQAD/hmnCsL6Y7/nDio2GlTPDx13TynzlHYNm@vger.kernel.org
-X-Gm-Message-State: AOJu0YzJRSg8PWiKjXQhST1XewdtiFo14FeS+dg/jXHHWrBoTcnv9Ay7
-	383E/yHTPM9MQJgbrQgf+Y+/0QzYw5JwA67jzVvcE/gOQk/ePkHSBBfwVD294jpgSjNaZajOkm0
-	P93o=
-X-Gm-Gg: ASbGncvEbcl4abJ+O1l2MAQF7ur+xN8qPcv3HtdLP4338rMkP75TSriiGAHwQTfnnKD
-	Ld59tV4M8/4Yr5GQXVH1CkbG+s5cjldBwySNJ91nFPQY5KipRABNR/Q5OSNMbaKshm0uCSnsj3/
-	IuHrtzPNMmEg1GSYLgpp4juWmvckoABcXtXaU/onZsdOb0u7gemc24O5KHSkPno1ts23pqvWo8V
-	vF4USQOEFVX34iBtun+tRvPhBDzMPZNRae3k7lSmxCxjPLTYJ+eya/nM+lpVoofGsKtHBFtN4it
-	Nkmk/JbMV6LJon03dFGsEcuTi+2EYN83dVwY
-X-Google-Smtp-Source: AGHT+IGuLmvbYhQXQ99Ngdjm7P7XXhs6Xz5bChZGEdZB5e+12utWg4WoIKuw3R2n6RN9NlrJ92GEfA==
-X-Received: by 2002:adf:a3c7:0:b0:38a:88d0:18d6 with SMTP id ffacd0b85a97d-38a88d018dcmr19384870f8f.42.1737038969571;
-        Thu, 16 Jan 2025 06:49:29 -0800 (PST)
-Received: from ta2.c.googlers.com (169.178.77.34.bc.googleusercontent.com. [34.77.178.169])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38bf321508esm70310f8f.10.2025.01.16.06.49.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jan 2025 06:49:29 -0800 (PST)
-From: Tudor Ambarus <tudor.ambarus@linaro.org>
-Date: Thu, 16 Jan 2025 14:49:08 +0000
-Subject: [PATCH 4/4] soc: qcom: ice: make of_qcom_ice_get() static
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="px9Yhk9t"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YYmGd25f3z6CmQyT;
+	Thu, 16 Jan 2025 14:59:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1737039536; x=1739631537; bh=j12opHSIEh0oDBccvVD9ZvPw
+	ZPzo7OXtIm4cM0e9PzM=; b=px9Yhk9tf32prO7dpZ2IqqOyuGPIQjcd1E9mOfwL
+	55X+JuldZ8UjUQVt+CSTkAEYMLYiv2e7Ybmq7WUpKjkQN/maUDMt3axMIztICjMM
+	zisopiavgL35quyhvjAjNRoMm9PUA39SpwitzJZOJ25mMvQndfvtSdD96trgV90/
+	jU0SXSkkciZ8tLWN6W0+14AW6X98B6V7Y4VqwmjFgbDpK8YAj6zQYvK9T1Radw4k
+	yQcMG0v4TTWcjCQ9ftPUyvvEAv0nnsdNzoymYeWpf5IUdrbuGnPOQjx1oipSk9oY
+	y59k0HWOuh0+ZYf0U2vSOtJUaKLt6IDNvimGJNDnfXWgHA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id xygppzRZorP3; Thu, 16 Jan 2025 14:58:56 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YYmGJ2qHmz6Cnk9G;
+	Thu, 16 Jan 2025 14:58:47 +0000 (UTC)
+Message-ID: <0509c5a9-47ec-4a0f-8251-f1be62e8ca1e@acm.org>
+Date: Thu, 16 Jan 2025 06:58:46 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250116-qcom-ice-fix-dev-leak-v1-4-84d937683790@linaro.org>
-References: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
-In-Reply-To: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
-To: Krzysztof Kozlowski <krzk@kernel.org>, 
- Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, 
- Adrian Hunter <adrian.hunter@intel.com>, 
- Ulf Hansson <ulf.hansson@linaro.org>, Abel Vesa <abel.vesa@linaro.org>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Eric Biggers <ebiggers@google.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
- andre.draszik@linaro.org, peter.griffin@linaro.org, willmcvicker@google.com, 
- kernel-team@android.com, Tudor Ambarus <tudor.ambarus@linaro.org>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1737038965; l=1554;
- i=tudor.ambarus@linaro.org; s=20241212; h=from:subject:message-id;
- bh=SLPk0X7feJzjbp6iNB5msnLoDstFDxW+7yuOzADYOIY=;
- b=G8iEARZbH9wv6CQbJi1hOS5u+HYxxskB3G6McP5l6dHKR3FG9vTnp5n4BD0jqXTdLl4BSdAzC
- 4JF38mDEPEmDQ7SXoKyDlewZGuD6XTgwZIpVqagkG1RWcJfa0FQRTzo
-X-Developer-Key: i=tudor.ambarus@linaro.org; a=ed25519;
- pk=uQzE0NXo3dIjeowMTOPCpIiPHEz12IA/MbyzrZVh9WI=
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: core: increase the NOP_OUT command timeout
+To: =?UTF-8?B?RG9vSHl1biBId2FuZyjtmanrkZDtmIQvRGV2aWNlIFMvVyBTb2x1dGlvbiBM?=
+ =?UTF-8?B?YWIuKE1YKS/sgrzshLHsoITsnpAp?= <dh0421.hwang@samsung.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ alim.akhtar@samsung.com, avri.altman@wdc.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
+ quic_mnaresh@quicinc.com
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
+ jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
+ sh8267.baek@samsung.com, wkon.kim@samsung.com
+References: <CGME20250115022348epcas1p29705c109f51c01e1e91ef227233c7119@epcas1p2.samsung.com>
+ <20250115022344.3967-1-dh0421.hwang@samsung.com>
+ <44520a93-a52e-4f88-8ca5-5f0fb38df607@acm.org>
+ <351601db67ba$b67a54d0$236efe70$@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <351601db67ba$b67a54d0$236efe70$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-There's no consumer calling it left, make the method static.
+On 1/15/25 6:02 PM, DooHyun Hwang(=ED=99=A9=EB=91=90=ED=98=84/Device S/W =
+Solution Lab.(MX)/=EC=82=BC=EC=84=B1=EC=A0=84=EC=9E=90)=20
+wrote:
+> I want to keep sending NOP_OUT commands repeatedly to get a response
+> from the UFS device, as per the existing method. To accommodate this me=
+thod,
+> I propose increasing the total timeout duration by increasing the singl=
+e timeout
+> value(defined by NOP_OUT_TIMEOUT) from 50ms to 100ms rather than
+> increasing the timeout value(defined by NOP_OUT_TIMEOUT) from 50ms to 1=
+000ms
+> or increasing the retry count value(defined by NOP_OUT_RETRIES).
+>=20
+> This is time measurement log confirmed on a real device with NOP_OUT_TI=
+MEOUT is 100ms
+>=20
+> 1. normal operation
+> [    2.010156] [6:  kworker/u18:0:   76] ufshcd-qcom 1d84000.ufshc: [TE=
+ST] ufshcd_verify_dev_init: takes 1271 us, retries =3D 1 * 100ms.
+>=20
+> 2. issued log : exceeds 500ms
+> [    2.524525] [6:  kworker/u17:2:  141] ufshcd-qcom 1d84000.ufshc: [TE=
+ST] ufshcd_verify_dev_init: takes 533000 us, retries =3D 6 * 100ms.
+>=20
+> And a certain UFS vendor has confirmed that the response to NOP_OUT com=
+mand
+> can be delayed by up to 540ms in certain circumstances on a specific mo=
+del.
 
-Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
----
- drivers/soc/qcom/ice.c | 3 +--
- include/soc/qcom/ice.h | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+Thank you for having provided all this additional information. Because
+of the above clarification, feel free to add:
 
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index 9cdf0acba6d1..1a2f77cc7175 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -262,7 +262,7 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
-  * Return: ICE pointer on success, NULL if there is no ICE data provided by the
-  * consumer or ERR_PTR() on error.
-  */
--struct qcom_ice *of_qcom_ice_get(struct device *dev)
-+static struct qcom_ice *of_qcom_ice_get(struct device *dev)
- {
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct qcom_ice *ice;
-@@ -323,7 +323,6 @@ struct qcom_ice *of_qcom_ice_get(struct device *dev)
- 
- 	return ice;
- }
--EXPORT_SYMBOL_GPL(of_qcom_ice_get);
- 
- static void qcom_ice_put(const struct qcom_ice *ice)
- {
-diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-index d5f6a228df65..fdf1b5c21eb9 100644
---- a/include/soc/qcom/ice.h
-+++ b/include/soc/qcom/ice.h
-@@ -33,7 +33,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
- 			 const u8 crypto_key[], u8 data_unit_size,
- 			 int slot);
- int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
--struct qcom_ice *of_qcom_ice_get(struct device *dev);
- struct qcom_ice *devm_of_qcom_ice_get(struct device *dev);
- 
- #endif /* __QCOM_ICE_H__ */
-
--- 
-2.48.0.rc2.279.g1de40edade-goog
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
