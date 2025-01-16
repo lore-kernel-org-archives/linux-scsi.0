@@ -1,65 +1,66 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9788198A29
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 14:49:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1AB022B8DF
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 14:49:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737038972; cv=none; b=gsmDtcw9ISkvjd5JlwDGhHPNLAnsCSQEE87msbKBi0ggyuO3vmq4ujHu6KbrcKriPrXplL07+2FW7h7sJsDPtV6zRHIV+KSqpxvEEARgpsv2imTSgNXOaixBVsw1YB5v0NHMthDbnyW+04s60IGYcPfyCA3zJ6ipj2/W6CzzKAY=
+	t=1737038973; cv=none; b=nJeX0SBdKXdxH+/KprdR2mcf3IF605oufg1M+6KZ1GcNUEvS/YB0cWjNbYI12mnwGStBxpZV6Nm3zIPWDxJExLayKFehLeRMLzAcRrKB3jH0VY1UqIRW66j49Nx8fUb5U3FrQHG8jGtY3JPQ6cMaT8eNuiPKfA9ND2do0pSun2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737038972; c=relaxed/simple;
-	bh=yQnJYX0uPLjPaWJCg5DBrwaaox/zrNkiPK9/oReRrBQ=;
+	s=arc-20240116; t=1737038973; c=relaxed/simple;
+	bh=mMqcSmFFvw2TkkbHF0Z/tBSpa/sSu9tnGHtQ8tATY60=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SfrQMmcC+YYhkShbII0DtSeTXMVeBMLANKB9h9YUzOp6MFzuyGY/igcRSUpVvhRTEenhsu+L1t1gJ3AJasrlLcegk/hSPk+nPZA/JIANKol/4nIaOvRSRlR++nq8jtjkd8EPNrzOhvqQ9oCz+plSqzaBy+bP2sh05OoDM0qVJHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=l2e090i0; arc=none smtp.client-ip=209.85.128.52
+	 In-Reply-To:To:Cc; b=cPR6UFi8uNwEy11E0VGUexYGZXFeoIPMdk0qmXSJlnfFuWkABHpF5CUTddnC3xzgx40nYwfGhKWzdsnfAb4BmMe6+lz23XzeMd4gevXySDnBnCB448QUFqMYiE2QuQKetLI3ppt8whqXEDzYFqeCS3+dQ4jz47bTQBJZMvMVc3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=klpmnC8R; arc=none smtp.client-ip=209.85.221.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="l2e090i0"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-436ce2ab251so6647285e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 06:49:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="klpmnC8R"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-3862b40a6e0so625377f8f.0
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 06:49:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1737038967; x=1737643767; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1737038969; x=1737643769; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=IQqtN2LlHzbsYqCaGCM4YS8VgGj6g0tDMtNz77m0JDs=;
-        b=l2e090i0Q8lcEfoEJsWtJ99BHhcbAEsb55xutF1JLErna75gulQL3KLZKfyrms7Mxw
-         fR/DY1GEeSTmhcyJnlEqIWAvRyUhDLs2cKkqSUDI3hemWKNT+oYSuIbHO4YFihycpBZ3
-         ulB/Dmw9iA4XV65snB9l8q3jAXkcrHgwCRFB7LhKNJGkXMuym7Sj+i8NwRYl1qGDnhz6
-         NZA9sCEkf1DS8Y1Mzug0Ij410SYnAx90Yql8W0UlZnfN4BaxMgAl6DkJNXpjFZDn0n/7
-         GU6NBLnKxBTMLctNwHWMamjSH+GjjYjiMrV3ECy//vU34uqgIFlgI+W1BaHOKQweXeiB
-         mRtQ==
+        bh=3VDvVHb7Hz9aOiJJ+fFlf31oRvekJW72ufAgH10hVdw=;
+        b=klpmnC8Rc29mih5tU+C64KE486W9gvyUUxMcSb97BRBkhino/vFeLzUI8xBK0L38PU
+         rsDc0fEadxBOI8D7Lsi8p3zd7fGZ9LN7/zPnEXYFG80/3km/cFgrMoNWt4dcqTUoauLM
+         fIt7I8wSz+iOMWpgpjGWqnBLUYpQ2gELlTV/rJaG9XNdx3hp8Zo1XHdK/E6RbcGimMsW
+         fsNpZlE4YpPp89c8WycXOK7qeqeui/tGTxRT+5CqSwF6pnIcarc1gQ0+1Kg+OEJyQG2D
+         WpbACsVqQz9XusnUwJDRTQAh1iqKXCKdhYvniLrFnLVD/ylonoTL90TX9hJJ4sbCZMte
+         UWNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737038967; x=1737643767;
+        d=1e100.net; s=20230601; t=1737038969; x=1737643769;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=IQqtN2LlHzbsYqCaGCM4YS8VgGj6g0tDMtNz77m0JDs=;
-        b=uWhSC6C3dvK0XwLAopGjK3kL0gul+e8XQ1ixfH/E0+QHyDb0Bz9vnjuenON7v3w2L+
-         6NdxisZfLC7lBq43UuUdSnNlyVDfAI1AVB5jomSGCnVk/dfFiCu4B974yVzVkvjjUuLD
-         ss2JtFlaZMtlOkem2bIqWF/Y717xmqBbTrs4Yh9YDC52iWQ8th6bLzXHfdKeuwj72KxJ
-         0Lwr3KYyJ47rp5jt/3KATQDXKOk67hi8TWSMZ3mcMO9gKyEjtqtctiNRHgnD3ETO6tql
-         7XsbR/vNrqODqsWPWb2amwHnt9TPIZsGY/UyyDwTfLmZwQXYnPejKHY9i3sjDSmSRpq0
-         1DVg==
-X-Forwarded-Encrypted: i=1; AJvYcCXplMYP/IQvZUXaIRqq4cDQId6gjt3JDCEtl6kASxirqNg7cm5kTRDetAy1FttWJCulO7U8LjqQaum8@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw2rXlymD60qQEDOV3zj2tPIivDs4LTopyBDPh6ERCiyTWcGVw7
-	0jEVCTdFekyD2+murCOKs6H8OHeC71oILN2IavNxtxBOgB76S08XmoOVHnbMZh0=
-X-Gm-Gg: ASbGncv8YVYsrSm6/Se7SoC1NYD3UYaQ8JYgv+7ra7wvfLRDfLsdK+Rkwb1Gb+wz3Rk
-	aNWrGBSy8JYbeEEwPQH6ZB7s7iuxrrYV5VVEXoeXNWVMTSuxalcbvR4w2Uj8g1+8+AAwEoroD3Q
-	APB7WTf+5/IaFoRDYXMSK8TaUxcoa2BXwnMDlj+uZj3FBnwwA2oVRh3+cLBJpk0HMu8xM/4ZdmZ
-	r1Sc+AZZX6c4ui21I940/pm/1ErkGtn/Abf56kYgTmFmAOVwz6bR99PaSKhBzVmn5EURN3ZR/1x
-	hWjTCTQHfFRGSGljTXbIc7UH208OrD5Yhr9S
-X-Google-Smtp-Source: AGHT+IHRJ4zrdb1ZRXErSV709NTqBsRUMyS0Kfg5tPapw4Kqm0cLHb/MJRkLo19NNccX4K+54bKn3Q==
-X-Received: by 2002:a05:600c:3c82:b0:434:a10f:c3 with SMTP id 5b1f17b1804b1-436e2696082mr301334975e9.9.1737038967196;
-        Thu, 16 Jan 2025 06:49:27 -0800 (PST)
+        bh=3VDvVHb7Hz9aOiJJ+fFlf31oRvekJW72ufAgH10hVdw=;
+        b=qnWWChEy981McMp+7SYUmbw9k50+ppQTu3LtZr/FxQNYEHs7OOzyJx1LoSoZnO1DSe
+         CxawSm6llQRuTvAPQlvdbxBJvaM6FjkYDLZ2MsEBZ370rmqUq/7n+K0jwSiWCcfS7bsP
+         oier8/hDDHaqEG1WYN81fZPiG2nCvEWrxlZ4wpybH89aazc+3KPB9k5nCy4bIKxfpjYg
+         hxxDNbjB09+khfG/JUhAtzaVLARKD+bEOlyVupCfyKDA/iONYL+9aF+xiiUi7NByF4xw
+         +OaTEGYK/0k6O9dkLxHEib0hBmvpoLChtQ1geEnrMY4gr/6JXaSp0cIedWkIIhnEzYo5
+         DEHQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVoLJcg7LfA4R8TkhCL3n5B7PkfB9W5X9ubd0tTp3qCXEVitEnpK37/h3as+2NsmT7TQKg0YpcDK1/3@vger.kernel.org
+X-Gm-Message-State: AOJu0YzoUDBm2wHmuh8ObxEKwoBYQsm1g6gsMqw3uBtdO05x1T+N1Iwa
+	4rL9dxS8CO2DcqRFPYHrUz9VfH+TloMmia1lfQWIA2oB9JPHDLE/CQqIdMCjzIs=
+X-Gm-Gg: ASbGncsV1cuGNvgvcQfg0avg3PJmH/brXKJ5dcseXBKjcZHTtga7D3KZw5/GzcoTVfd
+	sPhGKQRJcDVwsglkB8+kgI8XHOdMFCpGvzRKsCUzeC+0tvkhkGm3RzfDjNGUD9grH2PwMFAUx9f
+	Ph8fo3WU4h1IY9ov3eKPVlhfAhSf3ug3mO+4icEOW/NXyQS1jbNk6yH9k2Gk1vk2LX0M3MARZN3
+	FQaFdS1tQF6cK5jazuoFZum0PGurowJtTYsQzjRLpFZJuLtNFeZ9+8JNBaMncVWg7qqnr/ch1KG
+	tah1B6YPbzJbvw/NawqKOmRjCyvThlg0vhl7
+X-Google-Smtp-Source: AGHT+IEYjm37I0xC5oyYW1bza4Imter6m0Ap3ye3A3KaXLIpUrnXkIdWfDmQraHXh7LXwIvTqWenkQ==
+X-Received: by 2002:a05:6000:1862:b0:38a:41a3:218 with SMTP id ffacd0b85a97d-38a8733899emr28060936f8f.36.1737038968835;
+        Thu, 16 Jan 2025 06:49:28 -0800 (PST)
 Received: from ta2.c.googlers.com (169.178.77.34.bc.googleusercontent.com. [34.77.178.169])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38bf321508esm70310f8f.10.2025.01.16.06.49.26
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38bf321508esm70310f8f.10.2025.01.16.06.49.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jan 2025 06:49:26 -0800 (PST)
+        Thu, 16 Jan 2025 06:49:28 -0800 (PST)
 From: Tudor Ambarus <tudor.ambarus@linaro.org>
-Date: Thu, 16 Jan 2025 14:49:05 +0000
-Subject: [PATCH 1/4] soc: qcom: ice: introduce devm_of_qcom_ice_get
+Date: Thu, 16 Jan 2025 14:49:07 +0000
+Subject: [PATCH 3/4] scsi: ufs: qcom: fix dev reference leaked through
+ of_qcom_ice_get
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,7 +69,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250116-qcom-ice-fix-dev-leak-v1-1-84d937683790@linaro.org>
+Message-Id: <20250116-qcom-ice-fix-dev-leak-v1-3-84d937683790@linaro.org>
 References: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
 In-Reply-To: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
 To: Krzysztof Kozlowski <krzk@kernel.org>, 
@@ -83,89 +84,40 @@ To: Krzysztof Kozlowski <krzk@kernel.org>,
 Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
  andre.draszik@linaro.org, peter.griffin@linaro.org, willmcvicker@google.com, 
- kernel-team@android.com, Tudor Ambarus <tudor.ambarus@linaro.org>
+ kernel-team@android.com, Tudor Ambarus <tudor.ambarus@linaro.org>, 
+ stable@vger.kernel.org
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1737038965; l=2250;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1737038965; l=881;
  i=tudor.ambarus@linaro.org; s=20241212; h=from:subject:message-id;
- bh=yQnJYX0uPLjPaWJCg5DBrwaaox/zrNkiPK9/oReRrBQ=;
- b=dvOHW0gq57zT7su0+EvrZUYQUdDDd52T/OiLXmz9qbseW7TNEx8fJuXgbrcX10BK9uz7fBYdf
- xSVXGVPO2zLA8oEk6fKZbw1aWt2g8ht6yA1GYf/x52/vAjCy7Zwwvs+
+ bh=mMqcSmFFvw2TkkbHF0Z/tBSpa/sSu9tnGHtQ8tATY60=;
+ b=ckw/p8Yr8OAqf94ouXfHUwYbbzLskOGYomyFslWm+iFcOpDzJC0mlpKDWKk8wbQ91TJMNb+5E
+ nC9f+glXfEdCGF3iseCm7YkfK5PJU3TI7PKc9l6rqwoy5fHLepwJFWH
 X-Developer-Key: i=tudor.ambarus@linaro.org; a=ed25519;
  pk=uQzE0NXo3dIjeowMTOPCpIiPHEz12IA/MbyzrZVh9WI=
 
-Callers of of_qcom_ice_get() leak the device reference taken by
-of_find_device_by_node(). Introduce devm variant for of_qcom_ice_get()
-to spare consumers of an extra call to put the dev reference.
+The driver leaks the device reference taken with
+of_find_device_by_node(). Fix the leak by using devm_of_qcom_ice_get().
 
+Fixes: 56541c7c4468 ("scsi: ufs: ufs-qcom: Switch to the new ICE API")
+Cc: stable@vger.kernel.org
 Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
 ---
- drivers/soc/qcom/ice.c | 34 ++++++++++++++++++++++++++++++++++
- include/soc/qcom/ice.h |  2 ++
- 2 files changed, 36 insertions(+)
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index 393d2d1d275f..9cdf0acba6d1 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -11,6 +11,7 @@
- #include <linux/cleanup.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/device.h>
- #include <linux/iopoll.h>
- #include <linux/of.h>
- #include <linux/of_platform.h>
-@@ -324,6 +325,39 @@ struct qcom_ice *of_qcom_ice_get(struct device *dev)
- }
- EXPORT_SYMBOL_GPL(of_qcom_ice_get);
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 23b9f6efa047..a455a95f65fc 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -125,7 +125,7 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+ 	int err;
+ 	int i;
  
-+static void qcom_ice_put(const struct qcom_ice *ice)
-+{
-+	struct platform_device *pdev = to_platform_device(ice->dev);
-+
-+	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
-+		platform_device_put(pdev);
-+}
-+
-+static void devm_of_qcom_ice_put(struct device *dev, void *res)
-+{
-+	qcom_ice_put(*(struct qcom_ice **)res);
-+}
-+
-+struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
-+{
-+	struct qcom_ice *ice, **dr;
-+
-+	dr = devres_alloc(devm_of_qcom_ice_put, sizeof(*dr), GFP_KERNEL);
-+	if (!dr)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ice = of_qcom_ice_get(dev);
-+	if (!IS_ERR_OR_NULL(ice)) {
-+		*dr = ice;
-+		devres_add(dev, dr);
-+	} else {
-+		devres_free(dr);
-+	}
-+
-+	return ice;
-+}
-+EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
-+
- static int qcom_ice_probe(struct platform_device *pdev)
- {
- 	struct qcom_ice *engine;
-diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-index 5870a94599a2..d5f6a228df65 100644
---- a/include/soc/qcom/ice.h
-+++ b/include/soc/qcom/ice.h
-@@ -34,4 +34,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
- 			 int slot);
- int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
- struct qcom_ice *of_qcom_ice_get(struct device *dev);
-+struct qcom_ice *devm_of_qcom_ice_get(struct device *dev);
-+
- #endif /* __QCOM_ICE_H__ */
+-	ice = of_qcom_ice_get(dev);
++	ice = devm_of_qcom_ice_get(dev);
+ 	if (ice == ERR_PTR(-EOPNOTSUPP)) {
+ 		dev_warn(dev, "Disabling inline encryption support\n");
+ 		ice = NULL;
 
 -- 
 2.48.0.rc2.279.g1de40edade-goog
