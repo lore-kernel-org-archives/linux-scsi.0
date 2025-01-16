@@ -1,116 +1,118 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50CB6156F3C;
-	Thu, 16 Jan 2025 03:04:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1EB41482F2
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 06:30:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736996686; cv=none; b=lrXQvekCIcbOEn/rUteDS/HULxzefaH7fzu56l0E24HTxCBM6gr++2/ICAYOl9gOIpJM+wVaabFmqpmALpI65ZFzR6/H7P6jZh31onc9hvVH3OwIXACaH1E7r6pXwZUL80Bdyz70eNF3qj7QpjXBfHZVknYfnz/bHut84/nzS0M=
+	t=1737009002; cv=none; b=e7JPxnmtbidTKmYna8akRv/mWfns0NWa4Vl62UILeX3Bx/3korSfN3Lp6hUsEAFcSwXfrXyoyRqpMXwMx0SK41t/5A5ybz9nGmNiuUltfOdwX/3g2n5z32105uaOtKAWKbeTM/8U60jr2+lkdmVO7CjQSM3xb7W0U0K12b42BzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736996686; c=relaxed/simple;
-	bh=EBV0OW05/JxgCgTU9SnU/dFX3BjZl3agdkLEtQYLN4k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lGCdzJX9cYIPMmx7btjTb0oake4KhVI95WwF0/auANfWDicqrE5rnVc/qVaXYWcTiKC85NdHrDv7DD/Vi3KEaY2kUntfbQFrSjWDwr1hxCn7dfQFoY9ji+ExrbocDGxoNBXehb6UN+SzYudMWJ4LdcGbrir6p27AZHwfzXWJBvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YYSPs3q4lz4f3l26;
-	Thu, 16 Jan 2025 11:04:17 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 2E1901A0E96;
-	Thu, 16 Jan 2025 11:04:39 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgDHKl9Fd4hnGHdVBA--.30220S3;
-	Thu, 16 Jan 2025 11:04:38 +0800 (CST)
-Message-ID: <a8ea2143-0b10-43ba-a464-7ce3348bb5af@huaweicloud.com>
-Date: Thu, 16 Jan 2025 11:04:36 +0800
+	s=arc-20240116; t=1737009002; c=relaxed/simple;
+	bh=y/hhKsXz7+RJHiYxmVckkuEFs2FBoseLN/lUjDPbSvE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=on2lIqZZzhD9HMRK6l99oYN2UBkHcuDmdqA1HfF9yv4SJhJXY0nCLu2VbSCcDPxcPJi0o/K/plcj4RY3EeQhxrwsPtH1Q37oVR/J93rANKlq3jbtMvEXczB4XKkStZePZPtcU8EQnKgUCxRHmY38Fkhhmyu1uW43Z8kWsxAzME4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=rYLpSDD0; arc=none smtp.client-ip=209.85.218.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rYLpSDD0"
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-aa689a37dd4so121578966b.3
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jan 2025 22:30:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1737008999; x=1737613799; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=20bpVgTSCeDncmudr0CWlsJifis41HaVEEKwTD34AY4=;
+        b=rYLpSDD0H1mHN3IK8OzJZ86w5gPahHWnIbQXHzOp9pY10pC7htMi/7oeVjnAeTIlzr
+         mSKRe5AaasALwmhx2L5UNmdV1802xq0Pjsg6xH2+F5nCg8oM7U/0+2zMsNe/zQ2lcEsH
+         N2tcxHHVZfbNfX8vuI0ZS83O+759Uh9mPS7zZCnl+MH6jiGi2QXWIBlGx9vE5dCzY31y
+         njiWefWIr9Q6lbGkSGd5sznnmr4ExbGrl4dyH6KhBqSNdQcm9TYvKnlYpGqe2jvU1ybc
+         U3B2de/FN5nez+OC/eVSP0aKRcHFJAwI0uA/7R/tpYXR2olSBi1WeuWAgxvtLF+uImfs
+         R+gQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737008999; x=1737613799;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=20bpVgTSCeDncmudr0CWlsJifis41HaVEEKwTD34AY4=;
+        b=RvXu1YqgvJHp/mGcw52mS8YgaDJoFFNRGosSeIurPKrQ1jX64bqWOsIJMnktdeSo46
+         4ISmuk0lHw8O0XDNOXe04pQ9EX3u9hMrM/1FQvVOl2NqR8i9ocelflCAhBoNN7biPNWL
+         7GJvhLipE4dexiekR1clLXPtv+9QvijB2wyPbnLXhb/GA39vBuJnEpw3GUW0YkIvzdl7
+         OfM22kmZ1m62Hlh+8qDXNNVwSa0RJWXtRyeJQxdloQxXnOcn+UzjyViV9dvflexC0bZv
+         pIbVJMjA1OcXbKVEpI0/YMehekJ1s9NyaNrq3FUex49OPqMJtDXNWtACsVgJAFsSCdaB
+         9d9Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUkClVE7Vc/ORdSHZSzUfMia1x1ZpQpZxJ/zORJwyNI2cZtmLGXiN5v6M6owMJUDc7anO1sYUz5pQSw@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx9PDMIs19c/Bx1EmQUtSA4x083GpLhlRamt50aYIi5JtQs/AlG
+	3v8HZ0IxlGU3o7bC9y8r0vlKIwJGtlx81uXvbqyrMBFzICUfRsvm+JL/ZH7tvGU=
+X-Gm-Gg: ASbGncsPDYZ9ss1BhHv5Y4OQ+04gds1h+nF1+TTz+dO9xN2v+EAsQNd+QeIQsfXGJdp
+	VN4yPtiSQ7SZpUORpr4jYwpewFq53yg9PD6HzobhMADz0HmrFpNQWqoyzV6LmXwbjprWU9omp04
+	tQTMsbmnm2LMq/ruo6DaaS56aCSoaAMYofnWQHu8m3S9R11u6X0jSrQx5OYlpseC2tsCxWVTjxJ
+	hFXDoG2iW2KK0LZEDqGmEm6a4PRtElD9VJGw0gum03uBIvYjobSd3z7sV7JYQ==
+X-Google-Smtp-Source: AGHT+IFv4cd1XHDGjCciGJV0nfZgjVHchc8bJSn2YYD/Oz6r9jUt6RA1l+Aw3OEK/UX06Kc5G8CKcg==
+X-Received: by 2002:a17:907:724b:b0:aa6:abb2:be12 with SMTP id a640c23a62f3a-ab2abc91b53mr3125542266b.37.1737008998931;
+        Wed, 15 Jan 2025 22:29:58 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab337d71352sm324174766b.54.2025.01.15.22.29.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jan 2025 22:29:58 -0800 (PST)
+Date: Thu, 16 Jan 2025 09:29:54 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: John Meneghini <jmeneghi@redhat.com>
+Cc: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com,
+	arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
+	mkai2@cisco.com, satishkh@cisco.com, aeasi@cisco.com,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v7 07/15] scsi: fnic: Add and integrate support for FDMI
+Message-ID: <ab9fdfb5-b9b6-4195-8bce-5b19e8cc17af@stanley.mountain>
+References: <20241212020312.4786-1-kartilak@cisco.com>
+ <20241212020312.4786-8-kartilak@cisco.com>
+ <4141c9ab-c640-4765-a23c-c2f64df687cb@stanley.mountain>
+ <d18ed046-0d16-49d6-b666-8ef8ee20f6d2@redhat.com>
+ <b3c29afc-c49b-42af-9733-7cf2b934cd90@stanley.mountain>
+ <dfa5c473-ef65-4065-b64a-6bcd213a26bc@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v2 0/8] fallocate: introduce FALLOC_FL_WRITE_ZEROES
- flag
-To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
- "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "hch@lst.de" <hch@lst.de>, "tytso@mit.edu" <tytso@mit.edu>,
- "djwong@kernel.org" <djwong@kernel.org>,
- "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
- "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>,
- "yukuai3@huawei.com" <yukuai3@huawei.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>,
- Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-References: <20250115114637.2705887-1-yi.zhang@huaweicloud.com>
- <ccebada1-ac72-468e-8342-a9c645e5221e@nvidia.com>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <ccebada1-ac72-468e-8342-a9c645e5221e@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgDHKl9Fd4hnGHdVBA--.30220S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7KFW8AryxWrW8Kr4xAw18Zrb_yoW8Aw43pF
-	WUXrZ8KrWkuF40yrnrua17u34fXw4xCr1fArWUWFyUZ3ZxAry7CanxK3yj9FW8uF9agF1j
-	vrW8JF9rCr4FyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-	aFAJUUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dfa5c473-ef65-4065-b64a-6bcd213a26bc@redhat.com>
 
-On 2025/1/16 5:07, Chaitanya Kulkarni wrote:
-> On 1/15/25 03:46, Zhang Yi wrote:
->> Currently, we can use the fallocate command to quickly create a
->> pre-allocated file. However, on most filesystems, such as ext4 and XFS,
->> fallocate create pre-allocation blocks in an unwritten state, and the
->> FALLOC_FL_ZERO_RANGE flag also behaves similarly. The extent state must
->> be converted to a written state when the user writes data into this
->> range later, which can trigger numerous metadata changes and consequent
->> journal I/O. This may leads to significant write amplification and
->> performance degradation in synchronous write mode. Therefore, we need a
->> method to create a pre-allocated file with written extents that can be
->> used for pure overwriting. At the monent, the only method available is
->> to create an empty file and write zero data into it (for example, using
->> 'dd' with a large block size). However, this method is slow and consumes
->> a considerable amount of disk bandwidth, we must pre-allocate files in
->> advance but cannot add pre-allocated files while user business services
->> are running.
+On Tue, Jan 14, 2025 at 10:15:12AM -0500, John Meneghini wrote:
+> Hi Dan.
 > 
-> it will be very useful if we can get some blktests for scsi/nvme/dm.
-> Please note that this not a blocker to get this path series to be merged,
-> but this will help everyone including regular tests runs we do to ensure
-> the stability of new interface.
-
-Hello, Chaitanya,
-
-Thanks for your feedback! Yeah, the proposal for this series is still under
-discussion, I will add counterpart tests to both blktests and fstests once
-the solution is determined.
-
+> I absolutely agree with all of your comments and I appreciate your review.
+> I agree that all of the issues you've pointed out, with the the exception of
+> one, need to be addressed. The issues pointed out - especially the string
+> manipulation issues - can turn into CVEs. We don't want to be checking bugs
+> like this into Linux. Certainly, nothing should be merged that does not
+> pass the static checker, et al, automated tools we have.
 > 
-> if you do please CC and Shinichiro (added to CC list) to we can help those
-> tests review and potentially also can provide tested by tag tht can help
-> this work to move forward.
-> 
-Sure, this will be very helpful.
+> My comment here was only to say that I don't think it's reasonable to
+> ask Karan to break this change into a series of 100 small, reviewable changes.
 
-Thanks,
-Yi.
+100 small changes is hyperbole.  It would have made this set of 15
+patches into probably 23 patches.  A day's work perhaps.
+
+Creating reviewable patches is part of the process because it forces
+you to review the code yourself.  It makes reviewing the code easier
+and safer and faster.
+
+I feel like if people had asked in Jun last year, you have two options:
+Option A: Would you rather do one day's work cleaning this code up to
+make it easy to review?  Option B: Would you rather resend it as-is
+every month for seven months?  I feel like most people would choose
+option A.
+
+But the real problem is that we don't have enough SCSI maintainers...
+Even a quite junior maintainer would help.  In drivers/staging, we have
+a bunch of random volunteers who chime in on stuff like this.  It is
+what it is.
+
+regards,
+dan carpenter
 
