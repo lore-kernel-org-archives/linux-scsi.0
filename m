@@ -1,33 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96882139566;
-	Thu, 16 Jan 2025 09:22:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD5CD1D79BE
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 09:24:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737019376; cv=none; b=NoRo3zUyu+yRCTev2M5W+MeAHsEVMovJ7KkTOrjywBuTTkEI2SqTxK8DFypjGBf1TJDU3TOM0CSE6UKIG/nM6TXjJoQIsml9dWhIbGFn3NVTBfQYn4xdwzG/eP69DhTqGAsUtbEeAsx86puER813zIBQ0Wb12dIxlWFoHGKwsZw=
+	t=1737019480; cv=none; b=dLS5SuT9go1GotzG/yJjjaa1KFxGOBq6XdhDinxn2qBCibQApoMkeO9gSfCO+o5jlXm1AjfsGF3VQRb8qArYRfZMh/QjI9KCyOBNvb4ENacC3fIOuNMrZ7BCGozi55W/WXmuii3OhlzUtcN4c3qrzyoBGeoewYMN5+XaQz83ync=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737019376; c=relaxed/simple;
-	bh=v0X3E64VCHaTPugml817BhH2IqWT8FThZLYh6LkYuDQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=btza+1p/ujhXlbLUwPULjL6USxyztk7cG780ifDZmFxTyZVzs5WMPem+vm0cU+8521QQ6umURi0GAZoqBuqW+GtE38Xg0LDMLRoz5wEd6hoc3keY7ar7M18tSVrsZrv9mGN0W6O7uyVN+YYzEg2/yqcE1GdXRKFRoE9tFuKM0xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cCo972y1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737019480; c=relaxed/simple;
+	bh=wz/6VArm0fm4IK+UCKlCzR1Uz0mgnf9Z2nHw/aBWy9c=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=Bzna1F5S/IUU4G57zS4RXhU2H+x2ODlVkJOriY8Z/y2Ny7VLvMdN2o0W5Hnax1HtgkqDtx21QRBZRwbIa83ZIUrrai6YlcPQLZTnVANhk2kd2ufm/+SZ+1m+GdUduQgDNZ6CsmLcr+4ySXnNxFUWlBhgPTMdxsWwEGyfKgYirys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WBABoPfq; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cCo972y1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFA00C4CED6;
-	Thu, 16 Jan 2025 09:22:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737019376;
-	bh=v0X3E64VCHaTPugml817BhH2IqWT8FThZLYh6LkYuDQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=cCo972y1n+x6rv0uNEhxeCjUmwmc34/EXEzkIfYaCpn8kISz2cUWOHQISkYvJGLS5
-	 xE4X8am2QPPwzpEwotK6W04PYNMxUuIvaC7uosdD2FlQHIMHJA2sNLZtpjwTU+LmNB
-	 eDNqfdYjnZ9AC50vmzm2Oe4Ld47c1GZaz8z7hi5z2H5FKKuLCWQ6VUcwPDx2tyHXKD
-	 rLNtZQ+QoGWYES4LYD37Bix5qff9y0DNG+npoU8HpWbzCr25le/ppjbLyh9WGKxPec
-	 gq0m5eNlpDRk5oMYqvQGEjZouw8az8ElYMuO0+7b9ofCSdXLdsQX6jz/srb82/3e6/
-	 hBFic51i+C2XQ==
-Message-ID: <5b419c6a-ba22-41d3-bd5e-869d422f3c5d@kernel.org>
-Date: Thu, 16 Jan 2025 10:22:47 +0100
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WBABoPfq"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4363ae65100so6048005e9.0
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2025 01:24:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1737019476; x=1737624276; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3lIaWSI2S+exW7AJdc9gF6v3PkwuGrMgeaYPmVrCZYI=;
+        b=WBABoPfqO5GXPHk4+l212iVmfvolEeqlbvg+E2BIbuj++xJs4P9MzwkS4ZT0TPc0yl
+         xiXhkcDHxk0k7+n88Df7LI4pZOGFZ0PC+W9q3c6yJw5pk7uYoBFryud5pwc1G3s44g+0
+         zWlYhjKrgOqkJCS8gKL8TlCmaMmSvXPKZAAxmtrNYWD8yfEyMjKXzY7PURZpMsjDFd7O
+         RnNyhSelOr3BgWcRoHBRZabvpUxMIswiSOLKUZva7EgCTAyBDROjIPv9AYPZPSNrebLF
+         wp7wmwxcsBUcTcuAe0ROb4KGYYQ9knTqy0NMmyzY95OxtuEZyV3f08sMePhYHIY51XgE
+         YGYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737019476; x=1737624276;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=3lIaWSI2S+exW7AJdc9gF6v3PkwuGrMgeaYPmVrCZYI=;
+        b=C8AaJX/jnqcpzfWfbwwvwireKjh6nAN/3LHs6e0FP6hJyaTpCzWlHXV3kxC6pKxAk5
+         VC3ics6cpgmN3O0ODe69VCEQUHgykHIEv8EG66Eb74jtAQ58f7QroMkGFs0AWagjaO80
+         jmXkq92ukM88x5BZR5unvQHc/MvtB6F2PwXG2F9fPQ/d8GzRRyGDRJoggh72rgMLPAut
+         sTtltPs78lyIllEIsAuMlv1+RNJNtqns/V4Loc6FhTsSbCVqNNhck3tJ2oewT/Pwbc1M
+         syzQm6PDfYwBy24t8eWbQ7DjbVVrYJIy4jM+51jSxXWqXLxfBYenD+0DYdpVISy1d8jI
+         i2vA==
+X-Gm-Message-State: AOJu0Yz/KVoSh++T2kOVrp4GXX6XGr62rKTeFwwXwL87ctEarJuALWfy
+	q5Wh+if2ud+u0mTWPNVpQj6gjO8N0NIs7/2k8KijlJ/LPlOCRs40UKWn3nYWuDY=
+X-Gm-Gg: ASbGnctnCkoFMD1mixf0VJmJ3Ck8WtUTMHSEUxAVB5zaBowHgCLPlrrv8yhW4aMRCXS
+	JU8bfhx1wtqit4fpa3XOFQ4w6hz/jY2gcSKBpOWOAechjPsHAVeMNGagD+Z+GYf9sGbS8pYJUJQ
+	iiXSoTPIrrFRVnAqLARcHLZBR/8HxgZJIPFI7iuQkZheCsE6DoUzjPS5QEuLuKeWUTGOwNbXlwJ
+	P6GnVlFsk3gfOZKEBvc3NBwE04mY0a4SIIxDIkI9dqXRsSG0rY4wNCXqOMrcT+TSbQj5PDPEVkF
+	DfEAPqfnsAGq1PV4xODi0oDg93baF8w=
+X-Google-Smtp-Source: AGHT+IFEgF8BZ/mYTGL6mOSmrxd/cLDyZc/Tv7cZxz3UDZhV9tkkfFiLKZQrO9BAMPcCteDuw4L/HA==
+X-Received: by 2002:a05:600c:1987:b0:434:fddf:5c0c with SMTP id 5b1f17b1804b1-436e2679e05mr308050335e9.4.1737019476004;
+        Thu, 16 Jan 2025 01:24:36 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:982:cbb0:69b:c51f:3072:d4f5? ([2a01:e0a:982:cbb0:69b:c51f:3072:d4f5])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-437c753c617sm52784235e9.37.2025.01.16.01.24.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 16 Jan 2025 01:24:35 -0800 (PST)
+Message-ID: <e61d05d3-eb9d-4b58-8a56-43263c58f513@linaro.org>
+Date: Thu, 16 Jan 2025 10:24:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,6 +67,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+From: neil.armstrong@linaro.org
+Reply-To: neil.armstrong@linaro.org
 Subject: Re: [PATCH 8/8] ARM: dts: msm: Use Operation Points V2 for UFS on
  SM8650
 To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
@@ -51,84 +85,63 @@ Cc: linux-scsi@vger.kernel.org, Bjorn Andersson <andersson@kernel.org>,
  <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
  <20250116091150.1167739-9-quic_ziqichen@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
 In-Reply-To: <20250116091150.1167739-9-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+
+Hi,
 
 On 16/01/2025 10:11, Ziqi Chen wrote:
 > Use Operation Points V2 for UFS on SM8650 so that multi-level
 > clock/gear scaling can be possible.
+
+
+I've already sent a similar one at https://lore.kernel.org/all/20250115-topic-sm8x50-upstream-dt-icc-update-v1-10-eaa8b10e2af7@linaro.org/
+
+Neil
+
 > 
 > Co-developed-by: Can Guo <quic_cang@quicinc.com>
 > Signed-off-by: Can Guo <quic_cang@quicinc.com>
 > Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-
-Please don't send downstream code directly, but fix it first. Actually -
-rework it 100%.
-
-Please use subject prefixes matching the subsystem. You can get them for
-example with `git log --oneline -- DIRECTORY_OR_FILE` on the directory
-your patch is touching. For bindings, the preferred subjects are
-explained here:
-https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
-
 > ---
->  arch/arm64/boot/dts/qcom/sm8650.dtsi | 51 +++++++++++++++++++++++-----
->  1 file changed, 43 insertions(+), 8 deletions(-)
+>   arch/arm64/boot/dts/qcom/sm8650.dtsi | 51 +++++++++++++++++++++++-----
+>   1 file changed, 43 insertions(+), 8 deletions(-)
 > 
 > diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
 > index 01ac3769ffa6..5466f1217f64 100644
 > --- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
 > +++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
 > @@ -2557,18 +2557,11 @@ ufs_mem_hc: ufs@1d84000 {
->  				      "tx_lane0_sync_clk",
->  				      "rx_lane0_sync_clk",
->  				      "rx_lane1_sync_clk";
+>   				      "tx_lane0_sync_clk",
+>   				      "rx_lane0_sync_clk",
+>   				      "rx_lane1_sync_clk";
 > -			freq-table-hz = <100000000 403000000>,
 > -					<0 0>,
 > -					<0 0>,
@@ -137,44 +150,61 @@ https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.ht
 > -					<0 0>,
 > -					<0 0>,
 > -					<0 0>;
->  
->  			resets = <&gcc GCC_UFS_PHY_BCR>;
->  			reset-names = "rst";
->  
+>   
+>   			resets = <&gcc GCC_UFS_PHY_BCR>;
+>   			reset-names = "rst";
+>   
 > +			operating-points-v2 = <&ufs_opp_table>;
->  			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
->  					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
->  					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
+>   			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+>   					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>   					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
 > @@ -2590,6 +2583,48 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
->  			#reset-cells = <1>;
->  
->  			status = "disabled";
+>   			#reset-cells = <1>;
+>   
+>   			status = "disabled";
 > +
 > +			ufs_opp_table: opp-table {
 > +					   compatible = "operating-points-v2";
-
-
-Messed indentation.
-
 > +					   // LOW_SVS
-
-
-Drop
-
 > +					   opp-100000000 {
 > +							   opp-hz = /bits/ 64 <100000000>,
 > +									   /bits/ 64 <0>,
-
-Messed alignment.
-
 > +									   /bits/ 64 <0>,
 > +									   /bits/ 64 <100000000>,
 > +									   /bits/ 64 <0>,
 > +									   /bits/ 64 <0>,
 > +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>;
+> +							   required-opps = <&rpmhpd_opp_low_svs>;
+> +					   };
+> +
+> +					   // SVS
+> +					   opp-201500000 {
+> +							   opp-hz = /bits/ 64 <201500000>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <201500000>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>;
+> +							   required-opps = <&rpmhpd_opp_svs>;
+> +					   };
+> +
+> +					   // NOM/TURBO
+> +					   opp-403000000 {
+> +							   opp-hz = /bits/ 64 <403000000>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <403000000>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>,
+> +									   /bits/ 64 <0>;
+> +							   required-opps = <&rpmhpd_opp_nom>;
+> +					   };
+> +			   };
+>   		};
+>   
+>   		ice: crypto@1d88000 {
 
-
-
-
-Best regards,
-Krzysztof
