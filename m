@@ -1,69 +1,69 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D94941D934B;
-	Thu, 16 Jan 2025 09:13:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A3341DACA7;
+	Thu, 16 Jan 2025 09:13:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737018813; cv=none; b=gYRalB9sEHMU6LV43D04UOsd8pXHgji0jj8JosZ+BCThbuom0m6feSIm6hTA+iW4RlG+hBY9z/AW10Yjevi76JCFZvA74vKEJyOXxTyR3BbMs5723gfgagaJ2WD0mM5F7xwLoN2IghdQ4LrLzMBjqiBhxwKnyvLplf8fkCPnOTU=
+	t=1737018818; cv=none; b=fFGXZy9+45+qw1Oknj+gVk+p6jwJn+lknVFi4mt0iZtcQn66zDTRQiAtDPuOJFGYMIIHm1LzHyD80nPBGVZimfa9Q2PFzKj6CDtunpy4P4oR4RE8ButP4f2HDqGkW4ZvQmeN38/YdFYT7qCMiYP+ehs00Z41IcEePdj2qZqM9M8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737018813; c=relaxed/simple;
-	bh=xR8xAsc0Yh8ZCeX0OsTJyZ2cqtKxMSgFTLw2jaIiJVI=;
+	s=arc-20240116; t=1737018818; c=relaxed/simple;
+	bh=kzC/b/O1QqgM1SiUyZc+MEhHQcQ9G5e1OKc/GknHAcg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PhKb8awrD7v+8oFT8E0bwYn2x1M804GU/3KFa95g8B+26JrryoURtoS3ioHcnMldlFO4xPVinXr3Bz4r9dLbKtrDQSGYs6fGqxwWtr/heLMfLSVDIdYu7yNwzb5F9UN89gsEQoB8i4FttsFQ5lg9q75+WIwF/hj7cRKrOijh+ik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=KP2EyBBP; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=Z0AYjIRuOXjqfLzSQ1Ccs5LNVd0ZODTVgHkpRCaKELDJeMmxTWKuRXMABxGp6tDYmKOOKsI3siyWVlkK8xk+F+xTZ58txovyJUXcq7hSr2KMizkcCbpQYy84f2AAQVcMnwXRdwfY+siEFLNHb1lmbuH6XqOaakHG7PgoQ2ZMrnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=VANNYrxX; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KP2EyBBP"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50G62dHn015712;
-	Thu, 16 Jan 2025 09:13:06 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="VANNYrxX"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50G92c2Z027195;
+	Thu, 16 Jan 2025 09:13:16 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=6EEEPWbmhB1
-	Cr5+dZsPPJkal8hjqFsBNJkUF6BlN25U=; b=KP2EyBBPPI9vJdKSpAF+ciMfUQC
-	bJZy1BIeaLL/QQ3jBzoYKe5pcvUFKotviRfYijRm0WCm6w/exCer4tUoDln3CO4u
-	v9Ldrv7bF6s37wP6KxfUn2I2LDv7QkZ6Ahq857FtFzNZKuEInUCyYWtDKalhqBHv
-	nuZbmFac3YcbMBcIyUQpOG/41/9k7ms76pvZxpcjCy+PSYIo0NbnPhE2Q59QhFZv
-	u2Ig7wSVsZg/DmFUjSWzJdcBGlWovUPqybSUe3l2vlY30qtJp2c6y6vOMnJpzjTm
-	CCNG10W76IwoLrYOpOPWkA6d3giJC+CShogyY3vd4X+xuYtXVBzYbSbyWvA==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 446vge8f5e-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=g9kDW/UNkqq
+	s/cQQ+ZBmFRtX6kFtjzj3xDryfLRJYdI=; b=VANNYrxXbL0kGtxg2DhV5Rm30MU
+	wIbT+5sUyVSP9bgP/+XhNjYkEluVu7GlagSLUN62Wm5gbHmgdiW7zHU+D/UxTycS
+	RpPaFsT2rB6b+9phhFphJRv7XFxnFVmSUOQkl+wlCplASLTFkk9Vd/PVGZTOFG3A
+	DbPS9tK4mywiQG7a2275udYU5JlZRlGQ/2u0LGkwRdfbNLWlWHFVdzu9yatxszaq
+	/ivo8AyZRxTBAB0q/6JYRyJUmW6QOO7sOH7RXzP5jFxH6jGmxmyMPkfp+wBNQRVV
+	T6ldsOOUvvyqDtzRAOSgSDoAEy54zcQMkdo0ChalI5XctaHhrj6jjI9Ur7A==
+Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 446y4t814p-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 16 Jan 2025 09:13:06 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 50G9Ci04032498;
-	Thu, 16 Jan 2025 09:13:04 GMT
+	Thu, 16 Jan 2025 09:13:15 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 50G9DDdU022876;
+	Thu, 16 Jan 2025 09:13:13 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 4442bf51tv-1
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 44426qw52j-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 16 Jan 2025 09:13:04 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50G9D3l1032617;
-	Thu, 16 Jan 2025 09:13:04 GMT
+	Thu, 16 Jan 2025 09:13:13 +0000
+Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50G9DCWc022870;
+	Thu, 16 Jan 2025 09:13:12 GMT
 Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 50G9D3XW032615
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 50G9DCJ9022869
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 16 Jan 2025 09:13:03 +0000
+	Thu, 16 Jan 2025 09:13:12 +0000
 Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id 9BABE40BF9; Thu, 16 Jan 2025 17:13:02 +0800 (CST)
+	id 9201E40BF9; Thu, 16 Jan 2025 17:13:11 +0800 (CST)
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
         martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
         quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
         quic_rampraka@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Andrew Halaney <ahalaney@redhat.com>,
-        Maramaina Naresh <quic_mnaresh@quicinc.com>,
+Cc: linux-scsi@vger.kernel.org, Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 6/8] scsi: ufs: core: Check if scaling up is required when disable clkscale
-Date: Thu, 16 Jan 2025 17:11:47 +0800
-Message-Id: <20250116091150.1167739-7-quic_ziqichen@quicinc.com>
+Subject: [PATCH 8/8] ARM: dts: msm: Use Operation Points V2 for UFS on SM8650
+Date: Thu, 16 Jan 2025 17:11:49 +0800
+Message-Id: <20250116091150.1167739-9-quic_ziqichen@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
 References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
@@ -78,43 +78,100 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: -v7OLBlPnmIIQ_Lq3j-1qj5-1Fbhr559
-X-Proofpoint-GUID: -v7OLBlPnmIIQ_Lq3j-1qj5-1Fbhr559
+X-Proofpoint-GUID: oPrL8zVPxjni7RsM2nHafNjXn7RUWybz
+X-Proofpoint-ORIG-GUID: oPrL8zVPxjni7RsM2nHafNjXn7RUWybz
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-16_03,2025-01-16_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
- lowpriorityscore=0 malwarescore=0 mlxlogscore=997 spamscore=0
- priorityscore=1501 phishscore=0 mlxscore=0 impostorscore=0 suspectscore=0
- clxscore=1015 adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 mlxscore=0
+ adultscore=0 priorityscore=1501 phishscore=0 spamscore=0 malwarescore=0
+ bulkscore=0 impostorscore=0 lowpriorityscore=0 suspectscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2411120000 definitions=main-2501160067
 
-When disabling clkscale via the clkscale_enable sysfs entry, UFS driver
-shall perform scaling up once regardless. Check if scaling up is required
-or not first to avoid repetitive work.
+Use Operation Points V2 for UFS on SM8650 so that multi-level
+clock/gear scaling can be possible.
 
 Co-developed-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 ---
- drivers/ufs/core/ufshcd.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/arm64/boot/dts/qcom/sm8650.dtsi | 51 +++++++++++++++++++++++-----
+ 1 file changed, 43 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 839bc23aeda0..721bf9d1a356 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1772,6 +1772,10 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
- 	freq = clki->max_freq;
+diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+index 01ac3769ffa6..5466f1217f64 100644
+--- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+@@ -2557,18 +2557,11 @@ ufs_mem_hc: ufs@1d84000 {
+ 				      "tx_lane0_sync_clk",
+ 				      "rx_lane0_sync_clk",
+ 				      "rx_lane1_sync_clk";
+-			freq-table-hz = <100000000 403000000>,
+-					<0 0>,
+-					<0 0>,
+-					<100000000 403000000>,
+-					<100000000 403000000>,
+-					<0 0>,
+-					<0 0>,
+-					<0 0>;
  
- 	ufshcd_suspend_clkscaling(hba);
+ 			resets = <&gcc GCC_UFS_PHY_BCR>;
+ 			reset-names = "rst";
+ 
++			operating-points-v2 = <&ufs_opp_table>;
+ 			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+ 					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+ 					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
+@@ -2590,6 +2583,48 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+ 			#reset-cells = <1>;
+ 
+ 			status = "disabled";
 +
-+	if (!ufshcd_is_devfreq_scaling_required(hba, freq, true))
-+		goto out_rel;
++			ufs_opp_table: opp-table {
++					   compatible = "operating-points-v2";
++					   // LOW_SVS
++					   opp-100000000 {
++							   opp-hz = /bits/ 64 <100000000>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <100000000>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>;
++							   required-opps = <&rpmhpd_opp_low_svs>;
++					   };
 +
- 	err = ufshcd_devfreq_scale(hba, freq, true);
- 	if (err)
- 		dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
++					   // SVS
++					   opp-201500000 {
++							   opp-hz = /bits/ 64 <201500000>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <201500000>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>;
++							   required-opps = <&rpmhpd_opp_svs>;
++					   };
++
++					   // NOM/TURBO
++					   opp-403000000 {
++							   opp-hz = /bits/ 64 <403000000>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <403000000>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>,
++									   /bits/ 64 <0>;
++							   required-opps = <&rpmhpd_opp_nom>;
++					   };
++			   };
+ 		};
+ 
+ 		ice: crypto@1d88000 {
 -- 
 2.34.1
 
