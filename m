@@ -1,73 +1,75 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECBEC19F461
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 16:52:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F36D19DF62
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 16:59:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737132762; cv=none; b=WEyJrsAJaGz8cLpLlZn35Y/MZkGHbcQw6pZhRnf0xjlJdM6l2MarJ//Jp8cAs1dX5LvPyqXhnrdAPQaIhCocIPXx87PnW72SLFfwQVfJ944yD+0s0x+9MSAYrSalpv2Vc+VN9bgw/JkHB7EkCRahnpLUPz3ZI0WC2zM6fTmX66g=
+	t=1737133158; cv=none; b=DKyibOYHd5I43uqh+4KT+5PcFeX8AVxZLBDysumhQUdISXuWniIOD5L8UapiWe7oRK7tvjOBc1sB6Azrd757g4AZP9J/BxaTb2wls9t5UThokGJxz8aPQzXBS4FiqDNse5H9MYXVeSXXKgcfn+zQZ4KSy2lPv4Jc2HHFCXGnb7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737132762; c=relaxed/simple;
-	bh=vfXbcAEkUkGVDoAgTrHzBgAX9ptwqKG3+IUO2reZg+k=;
+	s=arc-20240116; t=1737133158; c=relaxed/simple;
+	bh=eELjTMxy9R374bYdUfkFwRMkrtaOe7EhJHvKRy25pnE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cjQ261UsDrpg3OjxhYwCTmtx5GD7IjrDrZK/IY4zFmf0w+aczeLNi+tCoaHOLbrHcnZLnfK1XK7V/ggBZJOPXqsO6CzIJX2Xw6JYzcB0XRhDJCzVUf8kQYTwCsWcxwm/sh3rQzJIgwj3cHtpqC8yJI1WjLOUKXM2cTvVPmXCvEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=LccEAxp3; arc=none smtp.client-ip=209.85.216.50
+	 Content-Type:Content-Disposition:In-Reply-To; b=qrMa+KZnWGKpxB/ntN/VxhK4VFAkJ5PhYs87/mTU7Hf4tJyvsyltcjfD8Gexq2Rknq7m8GXooGV/AV/q9QI/KlyySSHi93hogI2ju9uHj6Suk0P22Z7TI3M0LWMuqxJu45YhLEOPT2LQWTDBwfe3pCTacqxJxjJ6vHVK1STQzYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=FX6T+eAp; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="LccEAxp3"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2f4409fc8fdso3888608a91.1
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 08:52:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FX6T+eAp"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-216401de828so43809415ad.3
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 08:59:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1737132760; x=1737737560; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1737133156; x=1737737956; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=XYRmv+ik4I99HG5kSGaFlKGAPIZBRFxcHku4TW6p5J0=;
-        b=LccEAxp3u0HqacEfexuKW55GnDbhxQ4mvGtAXirXOg27/Hvhud1zI+kxmYx7JjQ2qT
-         l+WkWnqKnqZomGqJejk4+dUBHHXvRxgkYGCIiiEEr4iWo+Mq6/+xRVzkVin2kGAaaJbI
-         Boe9CfgQTvK4FUjHzfTTZnJLnfR+FCgSE9QyliCjkywzSnM2wVouIPy0/xB8Gtezno0N
-         hyRLBmaZR8HSsiki5Jk+h6UBMTThrKtBrnjpDD/mnQd1XALmsLeQUpUGiehjqaD0siYY
-         ush7Gx+2NXwXOTJWB3NTsDybnZLSU3V+tCncVGredgPI5LwtbKaBHMZX/9aBSTr2vvhE
-         YiuQ==
+        bh=XkhbZO8tYS+x52lOvx8K04qENXNly95zhsaFcqaUxAQ=;
+        b=FX6T+eApkix0ks3jZyk0VSywgekeWYV+VEoow8Q3dDk9yMSfXe6G4SHjguPc/Ig5bc
+         L02K6zFvs+ZGZLYOfSUnB6dRdiAvI0nfhKHp7hCF0md1MexzMqVRj8TSO2IkkuINbkaQ
+         Gmzdw6syA8hYh7krDlgcLAU2u7KAG8c4jFdOe1mQk1mHqBpIiV7z8YcrhdTVVDijWOyH
+         sNS0gmo+F/AQWgRyQLBuDyQLJX5PizYcKUccFjrjucOzjwskSwahnD8k9/98eggfCrAT
+         ANVWicHzTN9ofaoD7svlu4r6pW6nE5GkcXAeBYJwnOEbEryPA32J+zW7QVHkjuXdmggg
+         lrRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737132760; x=1737737560;
+        d=1e100.net; s=20230601; t=1737133156; x=1737737956;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XYRmv+ik4I99HG5kSGaFlKGAPIZBRFxcHku4TW6p5J0=;
-        b=CYfUBDJxA/w0T2SyWwGcpOkJ3ZoWOxh+UUh65luOXiK9pu8xFWV0Rf25jhjRdVpqMd
-         LCM5CIr1yBlo6hn/boyg5p8bhb0jpxw5kiHNFUhLL9xALrrvXWTjJKMxBOrk34vKDynS
-         tW6gIrny1j/Ww0n2IgQKN/EbkI7UTMOXxe8NF8UsJbNl4voHMuv0NZ1JKFnQ9CVgv7Fi
-         kYWXXluy4hnNhUyvz+4GlTus2yNLcvVfAvWnppPRl9K3mlVc/GKuwowgPTNy9Gn5I5JQ
-         Nui+fwQbpDSjOu9MEAC+7MWP+aT+VN+fAwgkNtarpjtfenvtVm2nhmRHAw6QK074WNM+
-         OVpg==
-X-Forwarded-Encrypted: i=1; AJvYcCW5jIEw3tvdHHDT79lUBVSCVTs4e61DMfpU7WuuSPdA68aVGzO0LNYwpOFjRseeSRPoPaDvh01IQTcq@vger.kernel.org
-X-Gm-Message-State: AOJu0YygdR4Mfr5hdeukxQCGb+aDPrPEmwyhTJcLXrQBkCLdtgwjz4DN
-	Tm68QSMCu8WC9xiZEbRpWosigccsVYxBVsH9K2T1PpWiFs6Biva1I1gqojZp/w==
-X-Gm-Gg: ASbGncvzZuglJlcJF6oV89jUtGiVwuWYGe2J4PkuVe+mg41SRlvoWaCOINp0Yl5XriW
-	RC990S5siQ/WDE8y+wOBjerSj2nkdCPnpt1uX84ejvMaeJY1d0TFzDdHfglCIOKaKUhIzDyK75G
-	1rVz0vqwN+gJCSlamNu/yno5nuOvUvRpv93EmTI3/Ov6wiSooa0qYc1agkMB6N60XTq4UK8bi1k
-	ah2Vh3mW8bJPnlVzwHRL1HSZKYyDKN7DY8v/ig5LaKD9uyIybd0h9BZRqFAAxlY+mGa
-X-Google-Smtp-Source: AGHT+IHuuqObPKcCAKAqYBISa1hIQabkLSxHQtBS8bGWogkXy1+XPYKrJ3EaruDEnzvcOowr2m4G7Q==
-X-Received: by 2002:a17:90b:38ca:b0:2f1:2e10:8160 with SMTP id 98e67ed59e1d1-2f782d02707mr5077036a91.11.1737132760153;
-        Fri, 17 Jan 2025 08:52:40 -0800 (PST)
+        bh=XkhbZO8tYS+x52lOvx8K04qENXNly95zhsaFcqaUxAQ=;
+        b=ff8xSd5bOWFtkqSZinDzZMIDoJrJSyjTaEqBrOqxMQuZl4CRD0H8LA2b3uEWIEodZ/
+         JzN1/rYT1O8d0nWWtGDV1b7v5hX20xWa1VSPE8vjmy8ScYCzgN4fbcz16FPjCNhH+TaW
+         BuhoOGZrnoixkxYSeusO/hQX9ylZq1e+KIn3grIYSPaqA36PbkCjBvUfyH61pxcXiV13
+         9NpyvKgcMDRDxLmui6GTgX856JtpdOplq6iNtXKBvncAZ2riRK3kWFzqHaqw1JRHw67q
+         4ajU2+gRmcsMyruvl7ZYidRJZBXZgfM6waAhCw77+W3wdnbtIvd7Ka/hJpCSs52Ta8h2
+         87rQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXkG+J40SJQJoJgZw9XuJaPaUQMzkXI99/gRM0Fu0KtGijQUG6edYJdzhw/NsfNvUFHOBI1i4KUjAv8@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7BjZivKNhZSUMvqEZpnY45prELuRU2+S8RSILUse+v921JIXa
+	QdVCx33Ria7QoNMfSvjbIhO/unGskffJk0xzKZ/qWRXzWhEjB3s6bXtiQoxwpg==
+X-Gm-Gg: ASbGnctPzcNFidTaxm7fyuy29Tbg/u4p/shYNfkH6wkT2a3SgbwzmlfQR4uUhGRPgGO
+	1BkCsD7BmvVvxFjx9g0p98gw8HM97i59eekc1DaHndFpsWwlHWJh9fwuMJd5z7EHC7FoCT5KmW0
+	2DGj046M/4qZRYzs9tRr2oXPBpZTDF3I9e/lp3DPqtW3Xu8QB3MIepPVr8E3E/iPVfpnl8RxNv0
+	LaLZuP757eIFvqkM2RGgW9WgtjSHltDkwC83Q//LR84PcpbiAnHQfr6/bvvhcOVFR3I
+X-Google-Smtp-Source: AGHT+IEfnnL3mUhpv8k8DjWFKRShJa/iF7JsGrlzqODd5Qcyj+91fLelDJ83KysyOwgQsgiCtdXH0A==
+X-Received: by 2002:a05:6a20:9143:b0:1e0:dc06:4f4d with SMTP id adf61e73a8af0-1eb214da876mr5836750637.19.1737133156381;
+        Fri, 17 Jan 2025 08:59:16 -0800 (PST)
 Received: from thinkpad ([117.193.215.12])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21c2ceb9b9csm18231565ad.94.2025.01.17.08.52.36
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-a9bdf0b43aasm2041206a12.66.2025.01.17.08.59.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jan 2025 08:52:39 -0800 (PST)
-Date: Fri, 17 Jan 2025 22:22:32 +0530
+        Fri, 17 Jan 2025 08:59:15 -0800 (PST)
+Date: Fri, 17 Jan 2025 22:29:07 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-	andersson@kernel.org, bvanassche@acm.org, ebiggers@kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: Re: [PATCH V10] scsi: ufs: qcom: Enable UFS Shared ICE Feature
-Message-ID: <20250117165157.euq56jnbizhgfjtf@thinkpad>
-References: <20250109070352.8801-1-quic_rdwivedi@quicinc.com>
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc: quic_cang@quicinc.com, bvanassche@acm.org, avri.altman@wdc.com,
+	peter.wang@mediatek.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, stable@vger.kernel.org,
+	Bean Huo <beanhuo@micron.com>,
+	Daejun Park <daejun7.park@samsung.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/1] scsi: ufs: core: Fix the HIGH/LOW_TEMP Bit
+ Definitions
+Message-ID: <20250117165907.rfdaayq4a6ichhmy@thinkpad>
+References: <69992b3e3e3434a5c7643be5a64de48be892ca46.1736793068.git.quic_nguyenb@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,94 +79,47 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250109070352.8801-1-quic_rdwivedi@quicinc.com>
+In-Reply-To: <69992b3e3e3434a5c7643be5a64de48be892ca46.1736793068.git.quic_nguyenb@quicinc.com>
 
-On Thu, Jan 09, 2025 at 12:33:52PM +0530, Ram Kumar Dwivedi wrote:
+On Mon, Jan 13, 2025 at 10:32:07AM -0800, Bao D. Nguyen wrote:
+> According to the UFS Device Specification, the dExtendedUFSFeaturesSupport
+> defines the support for TOO_HIGH_TEMPERATURE as bit[4] and the
+> TOO_LOW_TEMPERATURE as bit[5]. Correct the code to match with
+> the UFS device specification definition.
+> 
+> Fixes: e88e2d322 ("scsi: ufs: core: Probe for temperature notification support")
 
-[...]
+Fixes commit SHA should be 12 characters:
 
->  static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
-> @@ -439,6 +465,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
->  		err = ufs_qcom_check_hibern8(hba);
->  		ufs_qcom_enable_hw_clk_gating(hba);
->  		ufs_qcom_ice_enable(host);
-> +		ufs_qcom_config_ice_allocator(host);
-
-This should be moved before ufs_qcom_ice_enable(), no?
-
->  		break;
->  	default:
->  		dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
-> @@ -932,6 +959,14 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
->  	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
->  }
->  
-> +static void ufs_qcom_set_host_caps(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +
-> +	if (host->hw_ver.major >= 0x5)
-> +		host->caps |= UFS_QCOM_CAP_ICE_CONFIG;
-> +}
-> +
->  static void ufs_qcom_set_caps(struct ufs_hba *hba)
->  {
->  	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
-> @@ -940,6 +975,8 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
->  	hba->caps |= UFSHCD_CAP_WB_EN;
->  	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->  	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-> +
-> +	ufs_qcom_set_host_caps(hba);
->  }
->  
->  /**
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index b9de170983c9..2975a9e545fa 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -76,6 +76,12 @@ enum {
->  	UFS_MEM_CQIS_VS		= 0x8,
->  };
->  
-> +/* QCOM UFS host controller Shared ICE registers */
-> +enum {
-> +	REG_UFS_MEM_ICE_CONFIG			= 0x260C,
-> +	REG_UFS_MEM_ICE_NUM_CORE		= 0x2664,
-> +};
-> +
-
-No, I asked for this change:
-
-```
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index b9de170983c9..9d1c9da51688 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -50,6 +50,9 @@ enum {
-         */
-        UFS_AH8_CFG                             = 0xFC,
- 
-+       REG_UFS_MEM_ICE_CONFIG                  = 0x260C,
-+       REG_UFS_MEM_ICE_NUM_CORE                = 0x2664,
-+
-        REG_UFS_CFG3                            = 0x271C,
- 
-        REG_UFS_DEBUG_SPARE_CFG                 = 0x284C,
-```
-
->  #define UFS_CNTLR_2_x_x_VEN_REGS_OFFSET(x)	(0x000 + x)
->  #define UFS_CNTLR_3_x_x_VEN_REGS_OFFSET(x)	(0x400 + x)
->  
-> @@ -110,6 +116,9 @@ enum {
->  /* bit definition for UFS_UFS_TEST_BUS_CTRL_n */
->  #define TEST_BUS_SUB_SEL_MASK	GENMASK(4, 0)  /* All XXX_SEL fields are 5 bits wide */
->  
-> +/* bit definition for UFS Shared ICE config */
-
-'bit definition for REG_UFS_MEM_ICE_CONFIG register'
+Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notification support")
 
 - Mani
+
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+> Reviewed-by: Avri Altman <Avri.Altman@wdc.com>
+> ---
+>  include/ufs/ufs.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+> index e594abe..f0c6111 100644
+> --- a/include/ufs/ufs.h
+> +++ b/include/ufs/ufs.h
+> @@ -386,8 +386,8 @@ enum {
+>  
+>  /* Possible values for dExtendedUFSFeaturesSupport */
+>  enum {
+> -	UFS_DEV_LOW_TEMP_NOTIF		= BIT(4),
+> -	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(5),
+> +	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(4),
+> +	UFS_DEV_LOW_TEMP_NOTIF		= BIT(5),
+>  	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+>  	UFS_DEV_HPB_SUPPORT		= BIT(7),
+>  	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+> -- 
+> 2.7.4
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
