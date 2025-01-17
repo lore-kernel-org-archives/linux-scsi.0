@@ -1,108 +1,124 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4E901FE453
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 10:47:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 822161FC7F0
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 11:27:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737110831; cv=none; b=VVB6A7nmrTz7etTf3J2hG3gelUrYX4eLO4hsb7BJVuzIiZzkq3fbVWm1GdkOei5ze7vIDXsJh381ySdUZY/jOLw9QaTuYA67nfbdVL5Aa6AJkAp0tPo/a72IACLQfvYjdhjn3o+HESkYMCw72afOR39BMRTz6NtJi9FSHArGbTY=
+	t=1737113273; cv=none; b=ei29LDftyjA1RujrukRlOcXBsTT1+y2nEF3nn0RRgvs0uFC1yb/tLAUZBnVMx2TqZosY1H6R0ZlK3xWn0sD8EgR4w4T8Kl+56ROVfzkkHOSU+bjmVHRJ49oGuvSQbpVHTKHy660Uc+tqxvbWbwAPRrMYlFqtukqLPtbbJnjVLhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737110831; c=relaxed/simple;
-	bh=aAWmhIUeOOlZxwS8MPwtNkT56SWl4jfli2zZb6RZDQk=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=C4FpFYcF56i0o/7MRZO6Dg7mNG/+AXBuKIQLvcNC0G3osIwXvt7vsLWarjl7FNUPpKkalCBGcJyrJNs+eveSgcgNo1y1IhlH65vW1ITa3A/9u5D3x8dP6hNtMyzgu72Kvn9uOmxULyAdbY/kqHc8oe7XVDhkzp/ioWPEm/TGylI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=frvuPMVU; arc=none smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1737113273; c=relaxed/simple;
+	bh=WyThD8FrVBJCKDybx9LaT3OiS2rtnaogPPFxd7+ndtA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=haJp5ABlYhpIVMCu1wchRoJ9gOxmL9iZ12VQK+Kr7tbhbKXBdDWJLO2kNBSHDyogdCR4A1ftzy5C7giyyoxzbq77oaTkBZIEKcF+1tfLc7R3TIdyWvBze8r1euzebiEU0AZVbLKvfCmaucKONl8lPJhg3VnLiyKvcfO/nhwE7fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=yW3iFQLE; arc=none smtp.client-ip=209.85.219.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="frvuPMVU"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5d3d0205bd5so2951229a12.3
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 02:47:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yW3iFQLE"
+Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-e5787c3fcf8so3601034276.1
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 03:27:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737110828; x=1737715628; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=aAWmhIUeOOlZxwS8MPwtNkT56SWl4jfli2zZb6RZDQk=;
-        b=frvuPMVUQr2WEm3A+HKRZPbiTYLDWarcGYodI2A5RgD8BrQr2ZDkcKdDLFHO2xgQFo
-         k+KNmVp0PASfSy81p4q2cSS/JuQ28nzl5s2QkS4Hnd9QO0oqp+4isV/qip8DIXsJ1fV4
-         6Bm+zfMvPLr1tY84bUxpE73wCf96/BLZ2nRVTxG+GM87dt2SDKoI9cKOhyaEPv2Jhj7v
-         MiTcWAbJofPvxN0Iwp7BxsdFSF4WhoSwmP/1GL0t0PxHe0HHlr9BXuKGLNM6w+RsqV+O
-         xdgMXORkHQjzkr1BLhkkNnyhwt5qUnljumirCKZ5iYWD+gN1D1HEYaTcHqNc8MoL6dlp
-         eqbg==
+        d=linaro.org; s=google; t=1737113270; x=1737718070; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=RxfEkKlYRP7ukIrs1MaCPw8T+wP3qoi186DEfWEac0E=;
+        b=yW3iFQLE+aCthxXOqRuxgYtGjPFBBIx1L5OScZVVdblhd7JHw/lmYR9VVn5SK4Z2xl
+         XYnwJ+FFCiQFujF+n5qjGd57NcyHSVlZOFg5Rh/FcNfpVQpHynbkmAJmXgrFOkyg/uEs
+         MnuX4jwtDiaz4NDTn7oJ4KpWtljuOGTihcf1DODcrR62vMtTe7mVGJPM6O5TjWqBTZLi
+         kwUbFK5AoXxf1a8JpSDtMVcwUrMLyRKbWoPAbxvX/pNFRtRoT3nJHJtekBwu1JTuXxj+
+         z09ELZLHDBg5qr3GdJe3sv2UZKg1TtdJ5Pm9bkJq+AAYXQtnJRYEXzPatdwU33AeJWfl
+         HDBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737110828; x=1737715628;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=aAWmhIUeOOlZxwS8MPwtNkT56SWl4jfli2zZb6RZDQk=;
-        b=KDDJjUOhYCWJkMPPBZboO50dxAk5Hv3DRaUXnKMLE2nwbqL5uXXUSy6rfgL5kVEO62
-         uamGorK5NCLxLPSDJYTHL2ma1HzboFyXYL+axENRe64wV2h0o4b6Ly2WUpZTHDL79HOB
-         iTNFpiBcyDQu22auodIkrf4sZNC+4JIBiw+pTqaSY8k7h1nNftWg5Y/7u/hLnZxmJtEn
-         YlV5eiaLqVFnO7SH8jLj45hEwtWY7FhmHKwTJ2YdEwmXYtxBAqo2ecvxn1FM+2q1AIT9
-         0hpnd+1zattvEtODNmrpOsoQJqx4Hl8GvLmsaidAbnSTjLsrQTbPanqGze/nzPzQdOOq
-         seWA==
-X-Forwarded-Encrypted: i=1; AJvYcCVRS+Q+0m4IiYzos3g69YNlJo1FMXddA50g3mR3mcGigIqz1+uDNuuurY0iZlZk4b4jEoMLaVrHZMfs@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyowhhdl813N+EhnjQaPgRc8qAmAmOYRHHPI2CsQi0JVTcJEpyN
-	a13y+8TSPq2CxugnVGwpKygjwgNRlIkLxjZ6qL0iXHThX01rHmBV
-X-Gm-Gg: ASbGncuK4abM2bv/Zz04/qtB3vA913XvmcyCd44F9w3q/eQdxvnduyJQHEJqq4bhT6a
-	IFE0K0xUB4lPYP5EMIHS+wwlyZEwgPI7S/ZstIKIAfFqysJPLJQOvYeDNmlQOrVbZQA9u6JA/77
-	aHT9EcFyg1XoBsLgMiqa2YX/+km0WfAvTjV0f395JQ3qeHbR1OPw7R6wdN8qFj2EcuevQKDhjGV
-	9fbloUx8ngoCBZJ5HRaMlH/3w1t7wwZtib4L/txz+idc5dzaKOBg6iugWI=
-X-Google-Smtp-Source: AGHT+IGC4HnkjIM8O2+eG0dEZgOvQbbnW+vmZw8/TCm4kxff/humFhkm73n2bGCfXDvcQ5ZsPDqw2Q==
-X-Received: by 2002:a17:907:1c8b:b0:ab3:83c2:755a with SMTP id a640c23a62f3a-ab38b402651mr186153766b.49.1737110827793;
-        Fri, 17 Jan 2025 02:47:07 -0800 (PST)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab384d2d69fsm148475566b.79.2025.01.17.02.47.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jan 2025 02:47:07 -0800 (PST)
-Message-ID: <478fd574de9b6059061ea9112aea2c1542c61b59.camel@gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Fix error return with query response
-From: Bean Huo <huobean@gmail.com>
-To: Seunghui Lee <sh043.lee@samsung.com>, linux-scsi@vger.kernel.org
-Date: Fri, 17 Jan 2025 11:47:06 +0100
-In-Reply-To: <20250117071600.19369-1-sh043.lee@samsung.com>
-References: 
-	<CGME20250117071604epcas1p44c7f7898b826ad8762cfdd79aa31bbf5@epcas1p4.samsung.com>
-	 <20250117071600.19369-1-sh043.lee@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.44.4-0ubuntu2 
+        d=1e100.net; s=20230601; t=1737113270; x=1737718070;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=RxfEkKlYRP7ukIrs1MaCPw8T+wP3qoi186DEfWEac0E=;
+        b=MVn5IfjZFFtLOIuzJuSjfQUpvyOhl8jO554W+IEsvuXbs1i1HP/geXSxB9Xla2r1Xh
+         BIefyI5O+GMk3x5Q/odLod5eugBnwDekvXy6ledvPocHk8FlSxJqalvkbJqjFLh1VnPf
+         +hD3bnn22V03UT4iuctEFGBnTSeXfiePsSbvVBYkWPqUK1O1R5eUY7CxpN148RA3DiD8
+         uCdZ5D3TpzD0Y1tKUykSFyjQYvn0AzcD774d3RKkDeRwvp8VS/a26fT5JUFEim3e1hGX
+         X9u6V620FGVAoR605bJh+EV2s9Zz9BqH1Cxk1ZsqBXoPCkdTdyoA80ApdxSeu9YBqoWI
+         xodQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWIeG3ePbpg3DNycgFEJQke0Gu3Xu78GpaTC0NiHvajDD9c3NEvbPgR3Ed8LG+n2K8PGQpV4Wr/5wk9@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywa3wlDGEVN7p1EKlMJyih/zcP4zTn1/Nns2OHPyWQQM07jj5/U
+	ULTY0B2qn8xvzelb3r44d+02pd7AJt1ugNWlljiXhw1kNvIWQuWdLyAX/m6WdzdsQ8B5GWc5w1A
+	v3HkD1Pnq13Q789gVunPukThJfAJcyzTkY0oMSw==
+X-Gm-Gg: ASbGncu9aXzljEWoGoIh2ENYTggvzYNnT4FvM2eC/15lzLsNO/L3Mfk1oCbLf6gpihS
+	kFKiupIPYALl+L/I6Xzw6qRQFG9faxV8VuLcdezM=
+X-Google-Smtp-Source: AGHT+IEusORJsnLAB7uFHDjBIfrb4yJchecR7K5y4IVMIjvxS62ubvLYuQH1myauXkx8D3tFzPYY0Wl0i5Jr+dSW0ss=
+X-Received: by 2002:a05:690c:6d88:b0:6f6:c9c6:9547 with SMTP id
+ 00721157ae682-6f6eb93f836mr13306007b3.33.1737113270604; Fri, 17 Jan 2025
+ 03:27:50 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
+In-Reply-To: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Fri, 17 Jan 2025 12:27:14 +0100
+X-Gm-Features: AbW1kvaav0qfOpmqvSp4jWBVis9VJqr0HfdaWWKr4JZ4uCU_pLkRAxHIiYm35ms
+Message-ID: <CAPDyKFrV6OASHxtS-yKxBvhRpjkN2POFdL5EiWHyj+geZ8ufCw@mail.gmail.com>
+Subject: Re: [PATCH 0/4] soc: qcom: ice: fix dev reference leaked through of_qcom_ice_get
+To: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, 
+	Abel Vesa <abel.vesa@linaro.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Eric Biggers <ebiggers@google.com>, 
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	andre.draszik@linaro.org, peter.griffin@linaro.org, willmcvicker@google.com, 
+	kernel-team@android.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-T24gRnJpLCAyMDI1LTAxLTE3IGF0IDE2OjE2ICswOTAwLCBTZXVuZ2h1aSBMZWUgd3JvdGU6Cj4g
-VGhlcmUgaXMgY3VycmVudGx5IG5vIG1lY2hhbmlzbSB0byByZXR1cm4gZXJyb3IgZnJvbSBxdWVy
-eSByZXNwb25zZXMuCj4gUmV0dXJuIHRoZSBlcnJvciBhbmQgcHJpbnQgdGhlIGNvcnJlc3BvbmRp
-bmcgZXJyb3IgbWVzc2FnZSB3aXRoIGl0Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IFNldW5naHVpIExl
-ZSA8c2gwNDMubGVlQHNhbXN1bmcuY29tPgo+IC0tLQo+IMKgZHJpdmVycy91ZnMvY29yZS91ZnNo
-Y2QuYyB8IDcgKysrKysrLQo+IMKgMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygrKSwgMSBk
-ZWxldGlvbigtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jIGIv
-ZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYwo+IGluZGV4IDljMjZlODc2NzUxNS4uNmIyN2VhMWE3
-YTFiIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMKPiArKysgYi9kcml2
-ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jCj4gQEAgLTMxMTgsOCArMzExOCwxMyBAQCB1ZnNoY2RfZGV2
-X2NtZF9jb21wbGV0aW9uKHN0cnVjdCB1ZnNfaGJhICpoYmEsCj4gc3RydWN0IHVmc2hjZF9scmIg
-KmxyYnApCj4gwqDCoMKgwqDCoMKgwqDCoGNhc2UgVVBJVV9UUkFOU0FDVElPTl9RVUVSWV9SU1A6
-IHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHU4IHJlc3BvbnNlID0gbHJicC0+
-dWNkX3JzcF9wdHItPmhlYWRlci5yZXNwb25zZTsKPiDCoAo+IC3CoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqBpZiAocmVzcG9uc2UgPT0gMCkKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgaWYgKHJlc3BvbnNlID09IDApIHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqBlcnIgPSB1ZnNoY2RfY29weV9xdWVyeV9yZXNwb25zZShoYmEs
-IGxyYnApOwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9IGVsc2Ugewo+ICvCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZXJyID0gLUVJTlZBTDsK
-PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldl9lcnIo
-aGJhLT5kZXYsICIlczogdW5leHBlY3RlZCByZXNwb25zZQo+ICV4XG4iLAo+ICvCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqBfX2Z1bmNfXywgcmVzcCk7Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoH0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyZWFrOwo+IMKgwqDCoMKg
-wqDCoMKgwqB9Cj4gwqDCoMKgwqDCoMKgwqDCoGNhc2UgVVBJVV9UUkFOU0FDVElPTl9SRUpFQ1Rf
-VVBJVToKCgoKVGhlcmUgaXMgYSBjb25mdXNpbmcgbWl4IG9mIFVQSVUgdHJhbnNhY3Rpb24gY29k
-ZSBhbmQgcmVzcG9uc2UgaW4gVVBJVQpoZXJlLCBJIHRoaW5rIHlvdSB3YW50IHRvIHByaW50ICJy
-ZXNwb25zZSIgaW5zdGVhZCBvZiB0cmFuc2FjdGlvbiBjb2RlLgoKZGV2X2VycihoYmEtPmRldiwg
-IiVzOiBVbmV4cGVjdGVkIHJlc3BvbnNlIGluIFF1ZXJ5IFJTUDogJXhcbiIsCl9fZnVuY19fLCBy
-ZXNwb25zZSk7CgoKCg==
+On Thu, 16 Jan 2025 at 15:49, Tudor Ambarus <tudor.ambarus@linaro.org> wrote:
+>
+> Hi!
+>
+> I was recently pointed to this driver for an example on how consumers
+> can get a pointer to the supplier's driver data and I noticed a leak.
+>
+> Callers of of_qcom_ice_get() leak the device reference taken by
+> of_find_device_by_node(). Introduce devm variant for of_qcom_ice_get()
+> to spare consumers of an extra call to put the dev reference.
+>
+> This set touches mmc and scsi subsystems. Since the fix is trivial for
+> them, I'd suggest taking everything through the SoC tree with Acked-by
+> tags if people consider this useful. Thanks!
 
+Sure!
+
+>
+> Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
+
+Kind regards
+Uffe
+
+> ---
+> Tudor Ambarus (4):
+>       soc: qcom: ice: introduce devm_of_qcom_ice_get
+>       mmc: sdhci-msm: fix dev reference leaked through of_qcom_ice_get
+>       scsi: ufs: qcom: fix dev reference leaked through of_qcom_ice_get
+>       soc: qcom: ice: make of_qcom_ice_get() static
+>
+>  drivers/mmc/host/sdhci-msm.c |  2 +-
+>  drivers/soc/qcom/ice.c       | 37 +++++++++++++++++++++++++++++++++++--
+>  drivers/ufs/host/ufs-qcom.c  |  2 +-
+>  include/soc/qcom/ice.h       |  3 ++-
+>  4 files changed, 39 insertions(+), 5 deletions(-)
+> ---
+> base-commit: b323d8e7bc03d27dec646bfdccb7d1a92411f189
+> change-id: 20250110-qcom-ice-fix-dev-leak-bbff59a964fb
+>
+> Best regards,
+> --
+> Tudor Ambarus <tudor.ambarus@linaro.org>
+>
