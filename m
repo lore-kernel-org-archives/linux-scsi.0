@@ -1,124 +1,103 @@
-Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 822161FC7F0
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 11:27:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EAC91FE45A
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 11:57:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737113273; cv=none; b=ei29LDftyjA1RujrukRlOcXBsTT1+y2nEF3nn0RRgvs0uFC1yb/tLAUZBnVMx2TqZosY1H6R0ZlK3xWn0sD8EgR4w4T8Kl+56ROVfzkkHOSU+bjmVHRJ49oGuvSQbpVHTKHy660Uc+tqxvbWbwAPRrMYlFqtukqLPtbbJnjVLhQ=
+	t=1737115028; cv=none; b=raUUqT5k4VTk7+xZQSZSeubprMU3U8iCTkhtmYbnXBvt2qWNOMdt6w9FowhfofSdG+ijOaI2pJiJ/4ifq9YB1pdynUQ88ngmrOvmSGSRsn0dcSH3NJLZtv/cJXKXC4tNGbJP5y1X5GL40LOd4bpmoEjC3H+0We7PVl+LWV5D26E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737113273; c=relaxed/simple;
-	bh=WyThD8FrVBJCKDybx9LaT3OiS2rtnaogPPFxd7+ndtA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=haJp5ABlYhpIVMCu1wchRoJ9gOxmL9iZ12VQK+Kr7tbhbKXBdDWJLO2kNBSHDyogdCR4A1ftzy5C7giyyoxzbq77oaTkBZIEKcF+1tfLc7R3TIdyWvBze8r1euzebiEU0AZVbLKvfCmaucKONl8lPJhg3VnLiyKvcfO/nhwE7fk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=yW3iFQLE; arc=none smtp.client-ip=209.85.219.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1737115028; c=relaxed/simple;
+	bh=PdsR6eDtPLGU0UCT2ZWFhbGcZ1xhlz6rKWTWzAO6NWg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rr0svubonyj4ER3x6as/oXOpdNyDuz0+l+8es/FcGG9oKEvGfZ3ZsvieujSWBFZ6zWLusQWCS/+kuu33vSl0LtsAn2olLZqocBqAfmuesGv1g84jBaiIGtyUnF9tsBpigQ9u8ZCu8uoOuW3SWKcbsJ9N0MxUH4uNjUjbj6qjCVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZKdY4jtv; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yW3iFQLE"
-Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-e5787c3fcf8so3601034276.1
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 03:27:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1737113270; x=1737718070; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=RxfEkKlYRP7ukIrs1MaCPw8T+wP3qoi186DEfWEac0E=;
-        b=yW3iFQLE+aCthxXOqRuxgYtGjPFBBIx1L5OScZVVdblhd7JHw/lmYR9VVn5SK4Z2xl
-         XYnwJ+FFCiQFujF+n5qjGd57NcyHSVlZOFg5Rh/FcNfpVQpHynbkmAJmXgrFOkyg/uEs
-         MnuX4jwtDiaz4NDTn7oJ4KpWtljuOGTihcf1DODcrR62vMtTe7mVGJPM6O5TjWqBTZLi
-         kwUbFK5AoXxf1a8JpSDtMVcwUrMLyRKbWoPAbxvX/pNFRtRoT3nJHJtekBwu1JTuXxj+
-         z09ELZLHDBg5qr3GdJe3sv2UZKg1TtdJ5Pm9bkJq+AAYXQtnJRYEXzPatdwU33AeJWfl
-         HDBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737113270; x=1737718070;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=RxfEkKlYRP7ukIrs1MaCPw8T+wP3qoi186DEfWEac0E=;
-        b=MVn5IfjZFFtLOIuzJuSjfQUpvyOhl8jO554W+IEsvuXbs1i1HP/geXSxB9Xla2r1Xh
-         BIefyI5O+GMk3x5Q/odLod5eugBnwDekvXy6ledvPocHk8FlSxJqalvkbJqjFLh1VnPf
-         +hD3bnn22V03UT4iuctEFGBnTSeXfiePsSbvVBYkWPqUK1O1R5eUY7CxpN148RA3DiD8
-         uCdZ5D3TpzD0Y1tKUykSFyjQYvn0AzcD774d3RKkDeRwvp8VS/a26fT5JUFEim3e1hGX
-         X9u6V620FGVAoR605bJh+EV2s9Zz9BqH1Cxk1ZsqBXoPCkdTdyoA80ApdxSeu9YBqoWI
-         xodQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWIeG3ePbpg3DNycgFEJQke0Gu3Xu78GpaTC0NiHvajDD9c3NEvbPgR3Ed8LG+n2K8PGQpV4Wr/5wk9@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywa3wlDGEVN7p1EKlMJyih/zcP4zTn1/Nns2OHPyWQQM07jj5/U
-	ULTY0B2qn8xvzelb3r44d+02pd7AJt1ugNWlljiXhw1kNvIWQuWdLyAX/m6WdzdsQ8B5GWc5w1A
-	v3HkD1Pnq13Q789gVunPukThJfAJcyzTkY0oMSw==
-X-Gm-Gg: ASbGncu9aXzljEWoGoIh2ENYTggvzYNnT4FvM2eC/15lzLsNO/L3Mfk1oCbLf6gpihS
-	kFKiupIPYALl+L/I6Xzw6qRQFG9faxV8VuLcdezM=
-X-Google-Smtp-Source: AGHT+IEusORJsnLAB7uFHDjBIfrb4yJchecR7K5y4IVMIjvxS62ubvLYuQH1myauXkx8D3tFzPYY0Wl0i5Jr+dSW0ss=
-X-Received: by 2002:a05:690c:6d88:b0:6f6:c9c6:9547 with SMTP id
- 00721157ae682-6f6eb93f836mr13306007b3.33.1737113270604; Fri, 17 Jan 2025
- 03:27:50 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZKdY4jtv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1737115025;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pQeV0O+jL1G/DFyqYGy9184NT6E7z1zePUvfpKkhxQI=;
+	b=ZKdY4jtvWMN3MUhSBM45GYN3q0HIiLvq42cv2sVsOaruWoUdAIA2SsmE3y3wgDPl+XR+eI
+	BQZuWC0l2wqn7jTJ3Ir01uGeV+zDxq70YPLGA3HWbV4wWtTyN40QJM+pUQpqGV+Yojnlgs
+	OLFn6g3xMCGD8VWzt4NoS32pFvQpsr4=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-517-X-QMKzuZMpylKLq_glYHgA-1; Fri,
+ 17 Jan 2025 06:57:02 -0500
+X-MC-Unique: X-QMKzuZMpylKLq_glYHgA-1
+X-Mimecast-MFC-AGG-ID: X-QMKzuZMpylKLq_glYHgA
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7363919560BB;
+	Fri, 17 Jan 2025 11:57:00 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.68])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9CA3F1955F10;
+	Fri, 17 Jan 2025 11:56:53 +0000 (UTC)
+Date: Fri, 17 Jan 2025 19:56:48 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+	nbd@other.debian.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-mtd@lists.infradead.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/2] loop: force GFP_NOIO for underlying file systems
+ allocations
+Message-ID: <Z4pFgIqB50gz-ODi@fedora>
+References: <20250117074442.256705-1-hch@lst.de>
+ <20250117074442.256705-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
-In-Reply-To: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 17 Jan 2025 12:27:14 +0100
-X-Gm-Features: AbW1kvaav0qfOpmqvSp4jWBVis9VJqr0HfdaWWKr4JZ4uCU_pLkRAxHIiYm35ms
-Message-ID: <CAPDyKFrV6OASHxtS-yKxBvhRpjkN2POFdL5EiWHyj+geZ8ufCw@mail.gmail.com>
-Subject: Re: [PATCH 0/4] soc: qcom: ice: fix dev reference leaked through of_qcom_ice_get
-To: Tudor Ambarus <tudor.ambarus@linaro.org>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, 
-	Abel Vesa <abel.vesa@linaro.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Eric Biggers <ebiggers@google.com>, 
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	andre.draszik@linaro.org, peter.griffin@linaro.org, willmcvicker@google.com, 
-	kernel-team@android.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250117074442.256705-2-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Thu, 16 Jan 2025 at 15:49, Tudor Ambarus <tudor.ambarus@linaro.org> wrote:
->
-> Hi!
->
-> I was recently pointed to this driver for an example on how consumers
-> can get a pointer to the supplier's driver data and I noticed a leak.
->
-> Callers of of_qcom_ice_get() leak the device reference taken by
-> of_find_device_by_node(). Introduce devm variant for of_qcom_ice_get()
-> to spare consumers of an extra call to put the dev reference.
->
-> This set touches mmc and scsi subsystems. Since the fix is trivial for
-> them, I'd suggest taking everything through the SoC tree with Acked-by
-> tags if people consider this useful. Thanks!
-
-Sure!
-
->
-> Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
-
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
-
-Kind regards
-Uffe
-
+On Fri, Jan 17, 2025 at 08:44:07AM +0100, Christoph Hellwig wrote:
+> File systems can and often do allocate memory in the read-write path.
+> If these allocations are done with __GFP_IO or __GFP_FS set they can
+> recurse into the file system or swap device on top of the loop device
+> and cause deadlocks.  Prevent this by forcing a noio scope over the
+> calls into the file system.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> Tudor Ambarus (4):
->       soc: qcom: ice: introduce devm_of_qcom_ice_get
->       mmc: sdhci-msm: fix dev reference leaked through of_qcom_ice_get
->       scsi: ufs: qcom: fix dev reference leaked through of_qcom_ice_get
->       soc: qcom: ice: make of_qcom_ice_get() static
->
->  drivers/mmc/host/sdhci-msm.c |  2 +-
->  drivers/soc/qcom/ice.c       | 37 +++++++++++++++++++++++++++++++++++--
->  drivers/ufs/host/ufs-qcom.c  |  2 +-
->  include/soc/qcom/ice.h       |  3 ++-
->  4 files changed, 39 insertions(+), 5 deletions(-)
-> ---
-> base-commit: b323d8e7bc03d27dec646bfdccb7d1a92411f189
-> change-id: 20250110-qcom-ice-fix-dev-leak-bbff59a964fb
->
-> Best regards,
-> --
-> Tudor Ambarus <tudor.ambarus@linaro.org>
->
+>  drivers/block/loop.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+> index 1ec7417c7f00..71eccc5cfffb 100644
+> --- a/drivers/block/loop.c
+> +++ b/drivers/block/loop.c
+> @@ -1905,6 +1905,15 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
+>  	int ret = 0;
+>  	struct mem_cgroup *old_memcg = NULL;
+>  	const bool use_aio = cmd->use_aio;
+> +	unsigned int memflags;
+> +
+> +	/*
+> +	 * We're calling into file system which could do be doing memory
+> +	 * allocations.  Ensure the memory reclaim does not cause I/O,
+> +	 * because that could end up in the user of this loop devices again and
+> +	 * deadlock.
+> +	 */
+> +	memflags = memalloc_noio_save();
+
+If we call memalloc_noio_save() here, setting PF_MEMALLOC_NOIO can be removed
+from loop_process_work().
+
+
+Thanks,
+Ming
+
