@@ -1,125 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DC6B1F6679;
-	Fri, 17 Jan 2025 07:45:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4E901FE453
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 10:47:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737099924; cv=none; b=VGHh/cnvk49iXaXkH5cXtQAtxYHvYTnLQ2IqIeWkAa2BQZAhpEhb9/8g6Saltde12AJp2asRgttGpiKohsMxpW6LYLLnFDe82WeYQISkqQkGNKWk7y46K1zztfWTIFi9Bqcm7+Wpm+6Og5jD6HOH9NX4gnOhK31AW9hYst9g+WM=
+	t=1737110831; cv=none; b=VVB6A7nmrTz7etTf3J2hG3gelUrYX4eLO4hsb7BJVuzIiZzkq3fbVWm1GdkOei5ze7vIDXsJh381ySdUZY/jOLw9QaTuYA67nfbdVL5Aa6AJkAp0tPo/a72IACLQfvYjdhjn3o+HESkYMCw72afOR39BMRTz6NtJi9FSHArGbTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737099924; c=relaxed/simple;
-	bh=PwJGixOrKUpcfEK06xNqnWtQAmBumS63X4h6iYMMMg0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hF+BTE9NjhE8GWACeDsNR5GYY637U+e8D6hgP4Gu7SddEcIAfCBE1H/ndD1Sq4q0obE4Y3NShcykoeYFF5npGoPX4CPdqt3CNpckOWYdBEpRci81bNv1gBz6RcGEPh4/P5blzTK3HUM+FL2UJHYBJa+vrKWvmor3Qq3m2nIm3Tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A4vPnjZq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737110831; c=relaxed/simple;
+	bh=aAWmhIUeOOlZxwS8MPwtNkT56SWl4jfli2zZb6RZDQk=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=C4FpFYcF56i0o/7MRZO6Dg7mNG/+AXBuKIQLvcNC0G3osIwXvt7vsLWarjl7FNUPpKkalCBGcJyrJNs+eveSgcgNo1y1IhlH65vW1ITa3A/9u5D3x8dP6hNtMyzgu72Kvn9uOmxULyAdbY/kqHc8oe7XVDhkzp/ioWPEm/TGylI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=frvuPMVU; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A4vPnjZq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D50C4CEDD;
-	Fri, 17 Jan 2025 07:45:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737099923;
-	bh=PwJGixOrKUpcfEK06xNqnWtQAmBumS63X4h6iYMMMg0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=A4vPnjZqIPKsS+yylZHeNtbSrIHnu1MJ9STIV6gmvex2vGCKld3TqoqgxeZafOWo2
-	 Q7BvM1mJ5F2X5Ouk90rrtjQZJfWrbCBNr8akTOsVfcQf2MebsCJudvsTx4qgyfi8hW
-	 e2hz/7+5xIbFMhqvBVqMop285wY+PWfZmHXM0wXg7N6RLqZlVWnIU7g8OYN0mnRHtK
-	 QjOA5TC+8NgPdsWcj9+KJCCvWYALUfQPQRG0JcDqMhDD54SrScT7Lc+ntn4ypSHVCk
-	 LFSri80Iq1nW+W8lFhrvjGA9HPk6QdwRtlSgMbZ0K5B00nHh01ZsU/AF/bHef7BUaF
-	 kFJpqmLS7ifFw==
-Message-ID: <30f3701b-86ea-40ee-afe4-b85578c7e4a8@kernel.org>
-Date: Fri, 17 Jan 2025 08:45:17 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="frvuPMVU"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5d3d0205bd5so2951229a12.3
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2025 02:47:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737110828; x=1737715628; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aAWmhIUeOOlZxwS8MPwtNkT56SWl4jfli2zZb6RZDQk=;
+        b=frvuPMVUQr2WEm3A+HKRZPbiTYLDWarcGYodI2A5RgD8BrQr2ZDkcKdDLFHO2xgQFo
+         k+KNmVp0PASfSy81p4q2cSS/JuQ28nzl5s2QkS4Hnd9QO0oqp+4isV/qip8DIXsJ1fV4
+         6Bm+zfMvPLr1tY84bUxpE73wCf96/BLZ2nRVTxG+GM87dt2SDKoI9cKOhyaEPv2Jhj7v
+         MiTcWAbJofPvxN0Iwp7BxsdFSF4WhoSwmP/1GL0t0PxHe0HHlr9BXuKGLNM6w+RsqV+O
+         xdgMXORkHQjzkr1BLhkkNnyhwt5qUnljumirCKZ5iYWD+gN1D1HEYaTcHqNc8MoL6dlp
+         eqbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737110828; x=1737715628;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=aAWmhIUeOOlZxwS8MPwtNkT56SWl4jfli2zZb6RZDQk=;
+        b=KDDJjUOhYCWJkMPPBZboO50dxAk5Hv3DRaUXnKMLE2nwbqL5uXXUSy6rfgL5kVEO62
+         uamGorK5NCLxLPSDJYTHL2ma1HzboFyXYL+axENRe64wV2h0o4b6Ly2WUpZTHDL79HOB
+         iTNFpiBcyDQu22auodIkrf4sZNC+4JIBiw+pTqaSY8k7h1nNftWg5Y/7u/hLnZxmJtEn
+         YlV5eiaLqVFnO7SH8jLj45hEwtWY7FhmHKwTJ2YdEwmXYtxBAqo2ecvxn1FM+2q1AIT9
+         0hpnd+1zattvEtODNmrpOsoQJqx4Hl8GvLmsaidAbnSTjLsrQTbPanqGze/nzPzQdOOq
+         seWA==
+X-Forwarded-Encrypted: i=1; AJvYcCVRS+Q+0m4IiYzos3g69YNlJo1FMXddA50g3mR3mcGigIqz1+uDNuuurY0iZlZk4b4jEoMLaVrHZMfs@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyowhhdl813N+EhnjQaPgRc8qAmAmOYRHHPI2CsQi0JVTcJEpyN
+	a13y+8TSPq2CxugnVGwpKygjwgNRlIkLxjZ6qL0iXHThX01rHmBV
+X-Gm-Gg: ASbGncuK4abM2bv/Zz04/qtB3vA913XvmcyCd44F9w3q/eQdxvnduyJQHEJqq4bhT6a
+	IFE0K0xUB4lPYP5EMIHS+wwlyZEwgPI7S/ZstIKIAfFqysJPLJQOvYeDNmlQOrVbZQA9u6JA/77
+	aHT9EcFyg1XoBsLgMiqa2YX/+km0WfAvTjV0f395JQ3qeHbR1OPw7R6wdN8qFj2EcuevQKDhjGV
+	9fbloUx8ngoCBZJ5HRaMlH/3w1t7wwZtib4L/txz+idc5dzaKOBg6iugWI=
+X-Google-Smtp-Source: AGHT+IGC4HnkjIM8O2+eG0dEZgOvQbbnW+vmZw8/TCm4kxff/humFhkm73n2bGCfXDvcQ5ZsPDqw2Q==
+X-Received: by 2002:a17:907:1c8b:b0:ab3:83c2:755a with SMTP id a640c23a62f3a-ab38b402651mr186153766b.49.1737110827793;
+        Fri, 17 Jan 2025 02:47:07 -0800 (PST)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab384d2d69fsm148475566b.79.2025.01.17.02.47.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jan 2025 02:47:07 -0800 (PST)
+Message-ID: <478fd574de9b6059061ea9112aea2c1542c61b59.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Fix error return with query response
+From: Bean Huo <huobean@gmail.com>
+To: Seunghui Lee <sh043.lee@samsung.com>, linux-scsi@vger.kernel.org
+Date: Fri, 17 Jan 2025 11:47:06 +0100
+In-Reply-To: <20250117071600.19369-1-sh043.lee@samsung.com>
+References: 
+	<CGME20250117071604epcas1p44c7f7898b826ad8762cfdd79aa31bbf5@epcas1p4.samsung.com>
+	 <20250117071600.19369-1-sh043.lee@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] soc: qcom: ice: make of_qcom_ice_get() static
-To: Tudor Ambarus <tudor.ambarus@linaro.org>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>,
- Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson
- <ulf.hansson@linaro.org>, Abel Vesa <abel.vesa@linaro.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Eric Biggers <ebiggers@google.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
- andre.draszik@linaro.org, peter.griffin@linaro.org, willmcvicker@google.com,
- kernel-team@android.com
-References: <20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org>
- <20250116-qcom-ice-fix-dev-leak-v1-4-84d937683790@linaro.org>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <20250116-qcom-ice-fix-dev-leak-v1-4-84d937683790@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 16/01/2025 15:49, Tudor Ambarus wrote:
-> -EXPORT_SYMBOL_GPL(of_qcom_ice_get);
->  
->  static void qcom_ice_put(const struct qcom_ice *ice)
->  {
-> diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-> index d5f6a228df65..fdf1b5c21eb9 100644
-> --- a/include/soc/qcom/ice.h
-> +++ b/include/soc/qcom/ice.h
-> @@ -33,7 +33,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
->  			 const u8 crypto_key[], u8 data_unit_size,
->  			 int slot);
->  int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
-> -struct qcom_ice *of_qcom_ice_get(struct device *dev);
->  struct qcom_ice *devm_of_qcom_ice_get(struct device *dev);
+T24gRnJpLCAyMDI1LTAxLTE3IGF0IDE2OjE2ICswOTAwLCBTZXVuZ2h1aSBMZWUgd3JvdGU6Cj4g
+VGhlcmUgaXMgY3VycmVudGx5IG5vIG1lY2hhbmlzbSB0byByZXR1cm4gZXJyb3IgZnJvbSBxdWVy
+eSByZXNwb25zZXMuCj4gUmV0dXJuIHRoZSBlcnJvciBhbmQgcHJpbnQgdGhlIGNvcnJlc3BvbmRp
+bmcgZXJyb3IgbWVzc2FnZSB3aXRoIGl0Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IFNldW5naHVpIExl
+ZSA8c2gwNDMubGVlQHNhbXN1bmcuY29tPgo+IC0tLQo+IMKgZHJpdmVycy91ZnMvY29yZS91ZnNo
+Y2QuYyB8IDcgKysrKysrLQo+IMKgMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygrKSwgMSBk
+ZWxldGlvbigtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jIGIv
+ZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYwo+IGluZGV4IDljMjZlODc2NzUxNS4uNmIyN2VhMWE3
+YTFiIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMKPiArKysgYi9kcml2
+ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jCj4gQEAgLTMxMTgsOCArMzExOCwxMyBAQCB1ZnNoY2RfZGV2
+X2NtZF9jb21wbGV0aW9uKHN0cnVjdCB1ZnNfaGJhICpoYmEsCj4gc3RydWN0IHVmc2hjZF9scmIg
+KmxyYnApCj4gwqDCoMKgwqDCoMKgwqDCoGNhc2UgVVBJVV9UUkFOU0FDVElPTl9RVUVSWV9SU1A6
+IHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHU4IHJlc3BvbnNlID0gbHJicC0+
+dWNkX3JzcF9wdHItPmhlYWRlci5yZXNwb25zZTsKPiDCoAo+IC3CoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqBpZiAocmVzcG9uc2UgPT0gMCkKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgaWYgKHJlc3BvbnNlID09IDApIHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqBlcnIgPSB1ZnNoY2RfY29weV9xdWVyeV9yZXNwb25zZShoYmEs
+IGxyYnApOwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9IGVsc2Ugewo+ICvCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZXJyID0gLUVJTlZBTDsK
+PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldl9lcnIo
+aGJhLT5kZXYsICIlczogdW5leHBlY3RlZCByZXNwb25zZQo+ICV4XG4iLAo+ICvCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqBfX2Z1bmNfXywgcmVzcCk7Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoH0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyZWFrOwo+IMKgwqDCoMKg
+wqDCoMKgwqB9Cj4gwqDCoMKgwqDCoMKgwqDCoGNhc2UgVVBJVV9UUkFOU0FDVElPTl9SRUpFQ1Rf
+VVBJVToKCgoKVGhlcmUgaXMgYSBjb25mdXNpbmcgbWl4IG9mIFVQSVUgdHJhbnNhY3Rpb24gY29k
+ZSBhbmQgcmVzcG9uc2UgaW4gVVBJVQpoZXJlLCBJIHRoaW5rIHlvdSB3YW50IHRvIHByaW50ICJy
+ZXNwb25zZSIgaW5zdGVhZCBvZiB0cmFuc2FjdGlvbiBjb2RlLgoKZGV2X2VycihoYmEtPmRldiwg
+IiVzOiBVbmV4cGVjdGVkIHJlc3BvbnNlIGluIFF1ZXJ5IFJTUDogJXhcbiIsCl9fZnVuY19fLCBy
+ZXNwb25zZSk7CgoKCg==
 
-So this explains why you did not export the put(). Mention the reason
-for missing put() in the first commit.
-
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-Best regards,
-Krzysztof
