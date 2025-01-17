@@ -1,81 +1,75 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 240341DC9BF;
-	Fri, 17 Jan 2025 00:00:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD9F1F63DA;
+	Fri, 17 Jan 2025 05:57:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737072015; cv=none; b=WgJXtCt3xhmuwUQCOPjZ3EW27GItIc3ka4mZT56SkoGhJxBf3v8Nx9uNGbq8qwaulw03hk55vTVj4GPL++8Qab8/j5ybRdAI306Gc3IqVjBKZ8BW0iPuSsEJD8CozFp9cAHe6uI4Ay9uGeV6etQ1KL/20J/W+L9Vbr4HZzHezkE=
+	t=1737093479; cv=none; b=taMIjqe08fyRMvy1W10MAY4x2HqbSnNutDi8l3GGYlhYfKT65/nfieKmSwOBuSpZQWSwbiQTH1l4Tgv3vCuIkbvkxdc8yXdyg3qVQLSwpe7JHOzTTUQMXf1csl+PcoJ6zu9XA9v74e2Deu6l/zHDjzXouHiOcjb+Ce64zHlV1No=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737072015; c=relaxed/simple;
-	bh=bumM6SHdKIfRqq0jgQzzgk+FqG20uDhaorghaG3gjtM=;
-	h=From:To:Cc:Subject:Date:Message-Id; b=PajkXuTGignkwSkT2aQjpnGZSllXrqR9nY/XXWrjyERRLME1+ZoW7dwYurPYacTAEt+HbtPGkY2yrSm/39PYnPs/rRoSNnrRgZJiPkzuggNQzw2Gctp+h+YDavnvwXX6YOE1ln5V4UppUDb+PN5TVwzXvmWOuFnmRcpbMGv7WMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linuxonhyperv.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b=ChLcA5uT; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linuxonhyperv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1737093479; c=relaxed/simple;
+	bh=flLZFqgT23RWMVdyLvhClp7ZWuOZy+UUWnj2z11ITAU=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=qYO4031XQkuC/3BdiYvRNo42lal9AuW6smqz3LTTZJTqOPTijaxYw1tvjCvCuir3HgGy3j8g//zCCKuR5VQB1kxh2k5HO8tOiaFXXs+wN5DZM2/M6gc1+eQxgj4JIWCCT68Hh7VTHmJNHxU9A4BS2OTwVvB76+/D13Y8bppdeVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=Z8xpeNWQ; arc=none smtp.client-ip=115.124.30.110
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="ChLcA5uT"
-Received: by linux.microsoft.com (Postfix, from userid 1202)
-	id 625FC20591A6; Thu, 16 Jan 2025 16:00:13 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 625FC20591A6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
-	s=default; t=1737072013;
-	bh=Suo+WpdGCkX7MsFAoak0w+IQ7n7KHDwbjKCC7FAckuQ=;
-	h=From:To:Cc:Subject:Date:From;
-	b=ChLcA5uTh6FVkeX8QBohCv6zIKu2+9ZreZ2ayd+Uum4EjcgHq1rYdNCCB9ceMAvwl
-	 /JZOYuKc/yqN5coKZZSBbs9oc8jYk1Th9oxDiciYM+Mm++dSeSpODdHhbUsk7OY5J+
-	 OP9S+ku0JbXA7i8ox2iDSX4fyYrAS9KvPz71xai0=
-From: longli@linuxonhyperv.com
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	James Bottomley <JBottomley@Odin.com>,
-	linux-hyperv@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>,
-	stable@kernel.org
-Subject: [PATCH] scsi: storvsc: Set correct data length for sending SCSI command without payload
-Date: Thu, 16 Jan 2025 15:59:58 -0800
-Message-Id: <1737071998-4566-1-git-send-email-longli@linuxonhyperv.com>
-X-Mailer: git-send-email 1.8.3.1
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="Z8xpeNWQ"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1737093468; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
+	bh=Q7oxCHPvrlD1lyZCU7eHs+mrqH16FXh/KtPA/I594Wc=;
+	b=Z8xpeNWQpjz6oQppNGzTLo1wv7Of4PxJaz3XbJqIx11yAm3tFE8iUuvogcNke4u1gpxvaQ3qVbBX6Zf4Xog59vx8eQrdqPuA3XBbBA3aGqnEpPtmIg1d4CaX9oMLTcpY8d0C0U0Dcw19DfTBGkcStwxztJkBdBtQ5IGB300FzXs=
+Received: from 30.178.82.3(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WNnoPI3_1737093467 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 17 Jan 2025 13:57:47 +0800
+Message-ID: <21654373-2bf7-4e30-a7eb-928419677af9@linux.alibaba.com>
+Date: Fri, 17 Jan 2025 13:57:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
+Subject: Re: [PATCH] scsi: target: core: add line break to status show
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20250114025041.97301-1-kanie@linux.alibaba.com>
+In-Reply-To: <20250114025041.97301-1-kanie@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-From: Long Li <longli@microsoft.com>
+gentle ping...
 
-In StorVSC, payload->range.len is used to indicate if this SCSI command
-carries payload. This data is allocated as part of the private driver
-data by the upper layer and may get passed to lower driver uninitialized.
+Best Regards,
 
-If a SCSI command doesn't carry payload, the driver may use this value as
-is for communicating with host, resulting in possible corruption.
+Guixin Liu
 
-Fix this by always initializing this value.
-
-Fixes: be0cf6ca301c ("scsi: storvsc: Set the tablesize based on the information given by the host")
-Cc: stable@kernel.org
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 7ceb982040a5..ca5e5c0aeabf 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1789,6 +1789,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 
- 	length = scsi_bufflen(scmnd);
- 	payload = (struct vmbus_packet_mpb_array *)&cmd_request->mpb;
-+	payload->range.len = 0;
- 	payload_sz = 0;
- 
- 	if (scsi_sg_count(scmnd)) {
--- 
-2.43.0
-
+在 2025/1/14 10:50, Guixin Liu 写道:
+> To ensure the output is not tangled with the shell prompt, add a
+> line break to clearly display the status.
+>
+> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+> ---
+>   drivers/target/target_core_stat.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
+> index c42cbde8a31b..210648a0092e 100644
+> --- a/drivers/target/target_core_stat.c
+> +++ b/drivers/target/target_core_stat.c
+> @@ -117,9 +117,9 @@ static ssize_t target_stat_tgt_status_show(struct config_item *item,
+>   		char *page)
+>   {
+>   	if (to_stat_tgt_dev(item)->export_count)
+> -		return snprintf(page, PAGE_SIZE, "activated");
+> +		return snprintf(page, PAGE_SIZE, "activated\n");
+>   	else
+> -		return snprintf(page, PAGE_SIZE, "deactivated");
+> +		return snprintf(page, PAGE_SIZE, "deactivated\n");
+>   }
+>   
+>   static ssize_t target_stat_tgt_non_access_lus_show(struct config_item *item,
