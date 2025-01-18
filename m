@@ -1,93 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 516E31F60A
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Jan 2025 03:07:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E5712F50;
+	Sat, 18 Jan 2025 13:31:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737169655; cv=none; b=UwEvA3cddT8WXGRJFHnsdgz2jMSwJZQnaUVIq7RRO9MecWWZSkhsSmAhnOPJpsHht8dskdXmvXgOxeVRBdn/5KfQxSvmzQAl6kV2oC8bZQUhawBhNYXAXqzYO+xIb4N6UB6XFwPz+vUgTq+GvXBgq6xXvSv7BF6rk5Xk4LL32iY=
+	t=1737207084; cv=none; b=NEyeWOoormdRMnf7/kg2631E+QPGWoMxJgtJNfJWRGIZFrnDG5ImPR3nOg2hQibNAnTTOY4Q8l4BOQw3JZr1u5zAe87wmI4WufGDWJ/Ly5Fw/0AYGgoJj4UCUQm4X8SuHMgdl2SXYl+Q51Xz2k5hNkFaGsrEhQKvcQ7qEsyiHIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737169655; c=relaxed/simple;
-	bh=xzXgKMf0DDPr6NZ4KlE/II4GZl8hq2mmxI0UHxeNtLg=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=RA49UZGjkGNG/KcRmiXFpyacnDI/Ng2kZ82fn+eoab3CqAocr/PTABM6sl2XoOaBmxB26lOv6qNZ39ErgH/ub/Xwv6wNH5z3Og8PjHYimMysApOPNM5y5iA0ccukTgPF1PT0rIQF+gXxQ5HqtV2z8l7uEDdlLV7DCzewDjS0RcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=esGhR77y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737207084; c=relaxed/simple;
+	bh=FG4edJESgZt7GKM71wYwm9Eud73t07AkVXKhlI/vKfI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jNNbVtE0gEiKZzd+X2izOaaOvpuT1xSE7K5hh5io0XZcLqp0QGtz5TwY9whBXciro+xOKhsCUkigO+SdbrnOQU8z+1na9eHZCiLISMYAfaHuiIjRhy4QDT6DA0q6FN0Yg9wvS6lnjh69LN2jzSY7zqmrbb/wwgnO6Bc35Utaofc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DJcK3Cw4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="esGhR77y"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B6C2BC4CEE4
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Jan 2025 03:07:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DJcK3Cw4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3EFCC4CED1;
+	Sat, 18 Jan 2025 13:31:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737169654;
-	bh=xzXgKMf0DDPr6NZ4KlE/II4GZl8hq2mmxI0UHxeNtLg=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=esGhR77y+WGKVPZxzgI/DSdMKCMuSufcf9NOUg8ifZ4ln4aCD/TzKhA5bWDh3W+ho
-	 ebdPvA7vBcTzwb6JhITKPBfoWM/YvmMH3PMc3lz/J8COK3Xs6/MkjjikOYxucDhIpS
-	 LN0no8uCGFc84I2LkXuXhA6NRmYaxluX2hBgW3M+GzGJo9zK6tFiY4N299y117WTqe
-	 DPFbNULMhLhaZ/fsMViGtAuiyLKHDHuf/+CjPol/BltDdUZ2tMYys7CBqvszKJm9h8
-	 PtwozF/TL0GSG7sDPcunJ7oU2FakdxO1UDIzoByr2Qxz6M+OukaAtu22mV9S+uSRPj
-	 DyeqOlrzHC1+A==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id AAF60C41615; Sat, 18 Jan 2025 03:07:34 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 214967] mvsas not detecting some disks
-Date: Sat, 18 Jan 2025 03:07:34 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: andyzhu35@yahoo.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: CODE_FIX
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc attachments.created
-Message-ID: <bug-214967-11613-w2l53DNdTa@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
-References: <bug-214967-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1737207083;
+	bh=FG4edJESgZt7GKM71wYwm9Eud73t07AkVXKhlI/vKfI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=DJcK3Cw4+vXoJYZngVZMlSHSKMH6w01UUttqv0GgSNCcMgbJ3wdfGMZwEMz9cyceT
+	 PnzFX1yJdENp8Lhc2XhkjfZ5ZVK734XS6gthLiE6aOVjnFfNEZo6++3xvdLrMmQ1J+
+	 NYZ14F83TskVfBdjg/C1JOLJ0bHMHPe7/BpEq5RiCswoyQj46t3qyd/nXhfcCzTSo5
+	 qZCow53qE6j7Wxm9O3qH46+oua+WVe6hFF+0Z88RfZXVEULsyKAe2sks/MFntZVSfp
+	 wKA1obOgIgrDayvvE2qATb7KjlTF0pTTWlSAgWuCAREeon09Dq26c40fxxhSgasT2R
+	 mBWJI2yEcy7MQ==
+Message-ID: <78cabce3-c623-43fc-8de5-fd6a093b61c3@kernel.org>
+Date: Sat, 18 Jan 2025 14:31:16 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/4] soc: qcom: ice: introduce devm_of_qcom_ice_get
+To: Tudor Ambarus <tudor.ambarus@linaro.org>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson
+ <ulf.hansson@linaro.org>, Abel Vesa <abel.vesa@linaro.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Eric Biggers <ebiggers@google.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
+ andre.draszik@linaro.org, peter.griffin@linaro.org, willmcvicker@google.com,
+ kernel-team@android.com
+References: <20250117-qcom-ice-fix-dev-leak-v2-0-1ffa5b6884cb@linaro.org>
+ <20250117-qcom-ice-fix-dev-leak-v2-1-1ffa5b6884cb@linaro.org>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20250117-qcom-ice-fix-dev-leak-v2-1-1ffa5b6884cb@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
+On 17/01/2025 15:18, Tudor Ambarus wrote:
+> Callers of of_qcom_ice_get() leak the device reference taken by
+> of_find_device_by_node(). Introduce devm variant for of_qcom_ice_get().
+> Existing consumers need the ICE instance for the entire life of their
+> device, thus exporting qcom_ice_put() is not required.
+> 
+> Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+> ---
+>  drivers/soc/qcom/ice.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/soc/qcom/ice.h |  2 ++
+>  2 files changed, 50 insertions(+)
 
-Andy Zhu (andyzhu35@yahoo.com) changed:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |andyzhu35@yahoo.com
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
---- Comment #18 from Andy Zhu (andyzhu35@yahoo.com) ---
-Created attachment 307503
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D307503&action=3Dedit
-Resurface the bug -- 1/17/2025
-
-I encountered a similar issue with the initial report back in 2021.=20
-
-I tried to revive my old workstation which has BIOS/MBR with 5 HDD slots.
-However, Arch linux can only detect 2 of the disks. BIOS can see all the HD=
-Ds.
-Linux kernel is: 6.6.72-1-lts and updated system with pacman -Syu.  attache=
-d my
-journalctl output here.
-
-First time to post, not sure what posting policy/requirement. Thanks for any
-help in advance.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Best regards,
+Krzysztof
