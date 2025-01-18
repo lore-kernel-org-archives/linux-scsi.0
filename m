@@ -1,164 +1,140 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20E04C76
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Jan 2025 02:16:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91E6BF507
+	for <linux-scsi@vger.kernel.org>; Sat, 18 Jan 2025 02:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737166605; cv=none; b=uJc9RAwHH9xTiQQrET2nUtU7Ocl6MmG1Xz6okeR8qByHqFfriCftqItRn3nzIoQd4T52jkk+/mDf6TK3cKL/P0xCIAgnLry5JpQNCtTBPDkx/0uB4Pdztf1Nh6jpI/CWhIlTxbE+mIdmOj+DfLdrSmecvl7tMlivU6xBSTzyFRM=
+	t=1737167904; cv=none; b=q9ufFskK0Gt/ZzRio9FUyyX/16aZXpsWeqKTEDjHWXN3/gR8MmVv4eIWX7F954tcNSRNnWP0B2/2WHdHgIyDpKLDeKwPT/vlOhqv4fXPc7XpJ3vY5eGqo9cTCtYz4BWrupCl0mLvw2foLnmzjFGTl73oETWOb3UfLOTnoJqBp5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737166605; c=relaxed/simple;
-	bh=PA2j4PXn+SZaNvjJCSwPWV3ajxxzrNN8EF80U7iEkWU=;
-	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=ANUwrQR8SXLy8CAnGe/DpjFPyy5NcJOI9F8DhxQvUKIZaTONo1Ukfzpb8Sz8ofE+DGoRLq/ltxkuheJceirU/+1/mlY/lyIsN5ZHpF83XjJXOfTnE8WLFihoohw0AjdJ9EDpIzY1D4Tiub4mj98RvXycbonOpUGjyPvwlrsMQ6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=BNNwCLLa; arc=none smtp.client-ip=203.254.224.34
+	s=arc-20240116; t=1737167904; c=relaxed/simple;
+	bh=7nGIoxNmbWgoriwcuI0TRB2ru/JH/tIaYmzUtuMRcts=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 References; b=QnJURGi2a57Dvs5ifko7TGk3xNjN73w3eeas19AHO77iTDYtE8Mu0Uw+GOYJgu53f6Q4hqaAnGAtxGUO6YAAPj5itHNrOi+1JW54JkK5pSi6Uewb1yPm/z+tKc2Bm0Ssbp2lvGlE0lvUDcS4QZ63Zp9rauLqE5OhPCuZJzqsAJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=X/Fz9EgU; arc=none smtp.client-ip=203.254.224.24
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BNNwCLLa"
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250118021633epoutp0404540e9152bf76ffcd85a041422d887f~bp9AyQ5S_0341903419epoutp04e
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Jan 2025 02:16:33 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250118021633epoutp0404540e9152bf76ffcd85a041422d887f~bp9AyQ5S_0341903419epoutp04e
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="X/Fz9EgU"
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250118023819epoutp01ac84f48094f4c916823635fa4cb3570b~bqQAmOrnT3193331933epoutp01x
+	for <linux-scsi@vger.kernel.org>; Sat, 18 Jan 2025 02:38:19 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250118023819epoutp01ac84f48094f4c916823635fa4cb3570b~bqQAmOrnT3193331933epoutp01x
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1737166593;
-	bh=hry7ebK+dZT8622vI6btVyWNt3LPeD0KZdrI0+uLYE8=;
-	h=From:To:In-Reply-To:Subject:Date:References:From;
-	b=BNNwCLLavUR2h+yz2WpZ1dHyu7H90JBAZ3fqt1K36Fet6iF2lc8Ics90p9rCYmKAT
-	 rgGA/PpAB9wyr6lD/MMhnaj7WU+QQ/SrmZyshJuka1ByF2XzOkzwqxoXAllnceedqO
-	 yP8586CzEnB9OacDFsfJFfWGk2jHAx2qel26hvRY=
+	s=mail20170921; t=1737167899;
+	bh=vf5MbK1efJ4AJaTGErEjVcVCmnTTRSqk80chmHdypI8=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=X/Fz9EgUcztolUMjmvuigm7twrkup87vi8WRku+BZEMqZRVYz9ol2P2VUykPbfzdE
+	 nBcA/tn63gPhTjsyVse+I37f1dR++YLUWcn5CAirXC2mk496D0vJdReHpHSwsApJeL
+	 s0cx/p1D5iSUqngt4iKQW60nhagc4NeJuTXE0UKo=
 Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
 	epcas1p3.samsung.com (KnoxPortal) with ESMTP id
-	20250118021633epcas1p3fc069e9d20b3dfd5aa3fbc858a6a830c~bp9AeYSwG1111711117epcas1p3q;
-	Sat, 18 Jan 2025 02:16:33 +0000 (GMT)
-Received: from epsmges1p5.samsung.com (unknown [182.195.36.224]) by
-	epsnrtp3.localdomain (Postfix) with ESMTP id 4YZgFs1Yn9z4x9Pp; Sat, 18 Jan
-	2025 02:16:33 +0000 (GMT)
-Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
-	epsmges1p5.samsung.com (Symantec Messaging Gateway) with SMTP id
-	5E.29.23425.10F0B876; Sat, 18 Jan 2025 11:16:33 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-	20250118021632epcas1p40b7b55527cdb5ffda7b0fb497ca9d525~bp8-r3Hp_0937109371epcas1p4_;
-	Sat, 18 Jan 2025 02:16:32 +0000 (GMT)
+	20250118023819epcas1p30882b0e66921e3bfe1cdaff4212d7e6f~bqQAYbl7v1043510435epcas1p3i;
+	Sat, 18 Jan 2025 02:38:19 +0000 (GMT)
+Received: from epsmges1p3.samsung.com (unknown [182.195.38.243]) by
+	epsnrtp3.localdomain (Postfix) with ESMTP id 4YZgky5k2Vz4x9Pp; Sat, 18 Jan
+	2025 02:38:18 +0000 (GMT)
+Received: from epcas1p3.samsung.com ( [182.195.41.47]) by
+	epsmges1p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+	EC.E1.23379.A141B876; Sat, 18 Jan 2025 11:38:18 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
+	20250118023817epcas1p1a7cb68709776f01c5ebeeb02908ed157~bqP_39_JH2188421884epcas1p18;
+	Sat, 18 Jan 2025 02:38:17 +0000 (GMT)
 Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250118021632epsmtrp29aea4f37aa81ece4cfebdb7b82bc8b6d~bp8-rVJTy1164411644epsmtrp2Z;
-	Sat, 18 Jan 2025 02:16:32 +0000 (GMT)
-X-AuditID: b6c32a39-973e970000005b81-2a-678b0f01966d
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250118023817epsmtrp17b881dd881353e96164d0eaa25d2d03a~bqP_3cAGX1814718147epsmtrp1f;
+	Sat, 18 Jan 2025 02:38:17 +0000 (GMT)
+X-AuditID: b6c32a37-17dea70000005b53-f2-678b141a99bc
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
 	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	6A.58.18949.00F0B876; Sat, 18 Jan 2025 11:16:32 +0900 (KST)
-Received: from sh043lee04 (unknown [10.253.101.72]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250118021632epsmtip113247e65ce7bf15b8a630b93c0f556c8~bp8-hGq7Z0759807598epsmtip1O;
-	Sat, 18 Jan 2025 02:16:32 +0000 (GMT)
-From: =?utf-8?B?7J207Iq57Z2s?= <sh043.lee@samsung.com>
-To: "'Bean Huo'" <huobean@gmail.com>, <linux-scsi@vger.kernel.org>
-In-Reply-To: <478fd574de9b6059061ea9112aea2c1542c61b59.camel@gmail.com>
-Subject: RE: [PATCH] scsi: ufs: core: Fix error return with query response
-Date: Sat, 18 Jan 2025 11:16:32 +0900
-Message-ID: <000101db694e$fde3c550$f9ab4ff0$@samsung.com>
+	D0.D8.18949.9141B876; Sat, 18 Jan 2025 11:38:17 +0900 (KST)
+Received: from sh043lee-960XFH.. (unknown [10.253.98.183]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20250118023817epsmtip12260c2885aed70537461ef0940f5056d~bqP_qbctO2024620246epsmtip1Q;
+	Sat, 18 Jan 2025 02:38:17 +0000 (GMT)
+From: Seunghui Lee <sh043.lee@samsung.com>
+To: linux-scsi@vger.kernel.org
+Cc: Seunghui Lee <sh043.lee@samsung.com>
+Subject: [PATCH v2] scsi: ufs: core: Fix error return with query response
+Date: Sat, 18 Jan 2025 11:38:08 +0900
+Message-ID: <20250118023808.24726-1-sh043.lee@samsung.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Content-Language: ko
-Thread-Index: AQFFMZX7mslXVJs3Rj22MiNMunAHGAKXNj9MAXkV2Ly0J7edAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrAKsWRmVeSWpSXmKPExsWy7bCmni4jf3e6wYzl7BZzzjYwWXRf38Hm
-	wOSxc9Zddo/Pm+QCmKKybTJSE1NSixRS85LzUzLz0m2VvIPjneNNzQwMdQ0tLcyVFPISc1Nt
-	lVx8AnTdMnOAxisplCXmlAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCswK9IoTc4tL89L1
-	8lJLrAwNDIxMgQoTsjNmn9vMVNDOX/H38zSmBsZ7XF2MnBwSAiYSx54dZepi5OIQEtjBKHHh
-	TTsrhPOJUeLPnnaozDegzMNv7DAt1980MEIk9jJK9PWugmp5wSjx+OQ8oBYODjYBM4nnd4JA
-	TBEBJ4nfh2xBejkF3CXePt/HCGILC3hJPJs2kxnEZhFQlbi65wYriM0rYCkxZcUHZghbUOLk
-	zCcsIDazgLzE9rdzmCFuUJD4+XQZK0RcRGJ2ZxtYHGTVnaVHwW6TEDjHLvHuxnw2kBskBFwk
-	7s01g+gVlnh1fAvUL1ISn9/tZYOob2aUaGv4ygLhTGCUeLHgFRNElb1Ec2sz2CBmAU2J9bv0
-	IRbzSbz72sMKMZ9XoqNNCKJaWeLlo2VQnZISS9pvQd3sITHx8StouJ1mlFgx7T3bBEaFWUj+
-	nIXkz1lIfpuFsHkBI8sqRrHUguLc9NRiwwJTeGwn5+duYgQnPS3LHYzT337QO8TIxMF4iFGC
-	g1lJhDftd0e6EG9KYmVValF+fFFpTmrxIUZTYMhPZJYSTc4Hpt28knhDE0sDEzMjEwtjS2Mz
-	JXHeC9ta0oUE0hNLUrNTUwtSi2D6mDg4pRqYNixq3M+34G/Td9GMYLlSty+Foad4wiQXctyP
-	ZWWrm3n7Y2sHT4XgXP+IhZ+9Lm3/Ede3taBfWZqTkUHZxX97U2/Ht/0vPx05PeNHEf8s3drI
-	pun3jjy40qjs0GOWuuSLtceUvXxOSj0PVR99O1cVol6T4t0u4aIfarLF/ff+w/x6J/bpqTe6
-	ZMjm716pElS3TXCKUDjDZMkzvBfrMs4uXKhxb8a9rzrzl6QnNGxnTGFgKgcm/k0m2960TTY6
-	8kNHzPMN+7VVEv9uP8u3T3wQWuPrYfbxst4PhcJr8SpbzEUWcjDNP1W5O9B8c07l3p9rpBgZ
-	X/EIlOonVxTm8jGZFgonTlGb96g4f5KRuxJLcUaioRZzUXEiAPm8RlIDBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrHLMWRmVeSWpSXmKPExsWy7bCSnC4Df3e6wdbN6hZzzjYwWXRf38Hm
-	wOSxc9Zddo/Pm+QCmKK4bFJSczLLUov07RK4Mmaf28xU0M5f8ffzNKYGxntcXYycHBICJhLX
-	3zQwdjFycQgJ7GaUWLbtGxNEQlJi8aOHbF2MHEC2sMThw8UQNc8YJVb83sgMEmcTMJN4ficI
-	pFxEwEVi+5oeZoia44wSp+bcAZvDKeAu8fb5PkYQW1jAS+LZtJnMIDaLgKrE1T03WEFsXgFL
-	iSkrPjBD2IISJ2c+YQGxmQW0JZ7efAply0tsfzuHGeI2BYmfT5exQsRFJGZ3tjFDHOEkcWfp
-	UcYJjEKzkIyahWTULCSjZiFpX8DIsopRMrWgODc9t9iwwCgvtVyvODG3uDQvXS85P3cTIzjI
-	tbR2MO5Z9UHvECMTB+MhRgkOZiUR3rTfHelCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeb+97k0R
-	EkhPLEnNTk0tSC2CyTJxcEo1MEllG1QzFrt+2/NY3M31n2CdBd+cwAqxVxrBZ5Mf9cj+ZFjx
-	it/KpT/mh0JWZMqL5v953hpMVd4/cnbs/76I+YyWd5xF3Lm6GUst/0xgWXbaYGLs0wT7iLjJ
-	a5Nt/rHe67VMtX/LtfKJutbjTWWFpXqZKSufPuzedWSfW9ov77iHt7yuuU4Vvb1AYN76bbaz
-	+ton7k3SZjC4u7ks22LTZ9Ndenf3/117UeDLS193Jp//W9v6t64NTS39oRelG2YT13fr0qb8
-	8D+7An6kJOpuF953MNypynTpKzvNZVsELRbwHFJ9XyvZxemtkWScMiUptHBl+XTXSx96DzLc
-	6JCdKjKt+dT69byzQv7uXDZbVImlOCPRUIu5qDgRACrQA5bhAgAA
-X-CMS-MailID: 20250118021632epcas1p40b7b55527cdb5ffda7b0fb497ca9d525
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrDKsWRmVeSWpSXmKPExsWy7bCmvq6USHe6wbttmhbd13ewWTT92cfi
+	wOTRt2UVo8fnTXIBTFHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2
+	Si4+AbpumTlA45UUyhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BWYFesWJucWleel6
+	eaklVoYGBkamQIUJ2RlnVvxiLJjHUfHt3xqWBsa7bF2MnBwSAiYSD260ANlcHEICOxgl2r5c
+	ZIdwPjFKPLr9gRHC+cYo0fH1PnMXIwdYy/mLIRDxvYwSTxf8Y4Vw3jNK9F07ywgyl01AS2L6
+	pi1MILaIgJzE5uVfWUBsZgENiZcNE8B2Cwt4SqxatY4RZCiLgKrEzGNOIGFeASuJM//+sEOc
+	Jy+xeMdyZoi4oMTJmU+gxshLNG+dzQyyV0Kgn13i9PSDrBANLhKr961lgrCFJV4d3wI1SEri
+	ZX8bO0RDM9CfDSAHgTgTGCVeLHgF1WEv0dzazAZyEbOApsT6XfoQ2/gk3n3tYYX4nleio00I
+	olpZ4uWjZVCdkhJL2m8xQ9geEi1XDoAdKiQQK3Frag/rBEa5WUh+mIXkh1kIyxYwMq9iFEst
+	KM5NTy02LDCGx2Ryfu4mRnCy0jLfwTjt7Qe9Q4xMHIyHGCU4mJVEeNN+d6QL8aYkVlalFuXH
+	F5XmpBYfYjQFBupEZinR5HxguswriTc0sTQwMTMysTC2NDZTEue9sK0lXUggPbEkNTs1tSC1
+	CKaPiYNTqoEp4/Vq0dVfVPc8Wupx6v3eho61YbpblP9Zshm0p4ls6mDYtUncWOQtW8wdQ7kp
+	POmczyTfzHngr7dIPkGH/9cRLtXnizdOWC4gLFrm/TttgUnIrZ3Li77HJuQ7ng58enY/R9B2
+	T9sXD/eYLlGV22l39sHnPQHPetjdUurX7L757Pqvh0WmzkKfl2YwHmOd/74ypyf3tFNLw/6v
+	cWtPiza8135TeHmpg9PPMyrz5p5n7Xk4feJyxj+uPt//SSm9cOv4P+HaVbVt3+dO3M7l5Jf+
+	Oo3hemuG4BqlY+sn1S5NeHrH96nzZT1BN5F11xtlP+wobeQSOaCReidcIyfTOnTOIf6bTRwb
+	61I/pqwI3l+zXImlOCPRUIu5qDgRAJQJ7OHfAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmluLIzCtJLcpLzFFi42LZdlhJTldSpDvd4OBLSYvu6zvYLJr+7GNx
+	YPLo27KK0ePzJrkApigum5TUnMyy1CJ9uwSujDMrfjEWzOOo+PZvDUsD4122LkYODgkBE4nz
+	F0O6GLk4hAR2M0qcWfqJtYuREyguKbH40UOoGmGJw4eLQcJCAm8ZJc532IPYbAJaEtM3bWEC
+	sUUE5CQ2L//KAmIzC2hIvGyYwAZiCwt4SqxatY4RZAyLgKrEzGNOIGFeASuJM//+sENskpdY
+	vGM5M0RcUOLkzCdQY+QlmrfOZp7AyDcLSWoWktQCRqZVjJKpBcW56bnFhgVGeanlesWJucWl
+	eel6yfm5mxjB4aSltYNxz6oPeocYmTgYDzFKcDArifCm/e5IF+JNSaysSi3Kjy8qzUktPsQo
+	zcGiJM777XVvipBAemJJanZqakFqEUyWiYNTqoFJcd1iZzt57iv35eW+OpgbfP9+JnzC13R7
+	lZ6Tjvx6dhrb/NVrRGJYChRK3E4wv3vyRf7A51OmTDbcAspRAtPnZS1V9Q7oLA67+Px04oPG
+	2/O27qwyNfnhdM3afZnhmxe3m/blTZ7zPvKy1efe/QeLlE8L2jKq/shuti5wjxD8X7Hm23Wu
+	CcWqk12rNhbnmazda3c+oe1SSNXK3kYWFy6dMMW9NiVHVooG+z3L1mK0n+D3SLKUSW/DvTwb
+	qz+SPf+LV7rytrw4tNZ3iWBUjICZqXJ9iplZTe1C7uP7L/ZzPut/bZLFl2tfGKg+20efb5ej
+	zMubarzXW06bGm8JNavzm1O1a//Vj/m7aqdaKbEUZyQaajEXFScCAHi71EOWAgAA
+X-CMS-MailID: 20250118023817epcas1p1a7cb68709776f01c5ebeeb02908ed157
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 101P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250117071604epcas1p44c7f7898b826ad8762cfdd79aa31bbf5
-References: <CGME20250117071604epcas1p44c7f7898b826ad8762cfdd79aa31bbf5@epcas1p4.samsung.com>
-	<20250117071600.19369-1-sh043.lee@samsung.com>
-	<478fd574de9b6059061ea9112aea2c1542c61b59.camel@gmail.com>
+X-CMS-RootMailID: 20250118023817epcas1p1a7cb68709776f01c5ebeeb02908ed157
+References: <CGME20250118023817epcas1p1a7cb68709776f01c5ebeeb02908ed157@epcas1p1.samsung.com>
 
-> -----Original Message-----
-> From: Bean Huo <huobean@gmail.com>
-> Sent: Friday, January 17, 2025 7:47 PM
-> To: Seunghui Lee <sh043.lee@samsung.com>; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH] scsi: ufs: core: Fix error return with query response
-> 
-> On Fri, 2025-01-17 at 16:16 +0900, Seunghui Lee wrote:
-> > There is currently no mechanism to return error from query responses.
-> > Return the error and print the corresponding error message with it.
-> >
-> > Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
-> > ---
-> >  drivers/ufs/core/ufshcd.c | 7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index 9c26e8767515..6b27ea1a7a1b 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -3118,8 +3118,13 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba,
-> > struct ufshcd_lrb *lrbp)
-> >         case UPIU_TRANSACTION_QUERY_RSP: {
-> >                 u8 response = lrbp->ucd_rsp_ptr->header.response;
-> >
-> > -               if (response == 0)
-> > +               if (response == 0) {
-> >                         err = ufshcd_copy_query_response(hba, lrbp);
-> > +               } else {
-> > +                       err = -EINVAL;
-> > +                       dev_err(hba->dev, "%s: unexpected response
-> > %x\n",
-> > +                                       __func__, resp);
-> > +               }
-> >                 break;
-> >         }
-> >         case UPIU_TRANSACTION_REJECT_UPIU:
-> 
-> 
-> 
-> There is a confusing mix of UPIU transaction code and response in UPIU
-> here, I think you want to print "response" instead of transaction code.
-> 
-> dev_err(hba->dev, "%s: Unexpected response in Query RSP: %x\n", __func__,
-> response);
-> 
-> 
+There is currently no mechanism to return error from query responses.
+Return the error and print the corresponding error message with it.
 
-I think that your suggestion is much better.
-I'll modify this as your suggestion with v2.
-Thank you.
+Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
+---
+Changes to v1:
+- modify the error message with response in UPIU(Bean Huo's suggestion)
+---
+ drivers/ufs/core/ufshcd.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9c26e8767515..97e50bccb95c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3118,8 +3118,13 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	case UPIU_TRANSACTION_QUERY_RSP: {
+ 		u8 response = lrbp->ucd_rsp_ptr->header.response;
+ 
+-		if (response == 0)
++		if (response == 0) {
+ 			err = ufshcd_copy_query_response(hba, lrbp);
++		} else {
++			err = -EINVAL;
++			dev_err(hba->dev, "%s: unexpected response in Query RSP: %x\n",
++					__func__, response);
++		}
+ 		break;
+ 	}
+ 	case UPIU_TRANSACTION_REJECT_UPIU:
+-- 
+2.43.0
 
