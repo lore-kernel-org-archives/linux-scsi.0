@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EA4C18BC20;
-	Sat, 18 Jan 2025 14:44:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E09B316D9DF;
+	Sat, 18 Jan 2025 14:45:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737211493; cv=none; b=MWnMqggyWBw2T5STubaH+UvwQmTA7be5salOR2k35dhCnfc/UYCcK3lsYpja0JONE/KM6pzRQHUzaNdtFOEyKlHlxXQKS28NRT3fwbUKBaroZdgsnlDfy0B33thpIKHnQkWek4dnqMnCBcShaPdJf5Z+CKOUycNGhQ/lqXzPikQ=
+	t=1737211550; cv=none; b=LFFxSiZ62b3JpnFz4/adHTspObcr+H9/J4c8FTRYzDXDARUADCpM32+KEXdgdv17NuNg29GdegXrmSv8dBF9UmWy3/VrogFfDnOLor3mknL+wO2iQvZUD8EDwh6LbL4yLfb8mtDTOEHeE/kkPtcx/+6ljidbKtaREb0+Ikvzne4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737211493; c=relaxed/simple;
-	bh=yzyYeRsnULL3tlm7okdtyouKJWANz7x87jxQKcldjnY=;
+	s=arc-20240116; t=1737211550; c=relaxed/simple;
+	bh=UVYF+ImoZ8RLdWLsucuuSH9TQgAlv3l/NXIkVeacLq0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jYwQgb4zyCOt6hPKVjx3oAlH+Q3Aag+nfbTmUAFfAFCZ+WGBSNgjjoPI86UD+trMR3BT/pj+IcQ/JGEvFub0Lk4qD77vvESDYqKf86ihIjMD7L5D9fh97mLPkBC5x+7EECsWCJSR+ThPVBWmmyzoO/e6dZTCO+eFE1mzR86fCRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=scEhG96P; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=W+brU3v1NUr+9oSVj+IcSB8+LsJWjwfEJjhKCNmwLbcDip05dy+Ve91ncsGnjV0xSuJZB/4ec6+KIEVM7rQgkUQrjMrgV0w36mtai7pmdfp7ZP0FgQTAbdV8oygjO4I1JbeCVH/WPZZNqKwoe1JaSKYoB8zVdC3LzzqzREJkrHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YlHrloem; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="scEhG96P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B04C0C4CED1;
-	Sat, 18 Jan 2025 14:44:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YlHrloem"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA2F9C4CED1;
+	Sat, 18 Jan 2025 14:45:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737211492;
-	bh=yzyYeRsnULL3tlm7okdtyouKJWANz7x87jxQKcldjnY=;
+	s=k20201202; t=1737211549;
+	bh=UVYF+ImoZ8RLdWLsucuuSH9TQgAlv3l/NXIkVeacLq0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=scEhG96PAbqb49mM4Y/7uYqd2h3X5wx9lpS03Mw2SpwwZJPeiG9cDTIyK9BE/wU9g
-	 WB7AznEvt4moVwwhcpqbXxCV7a8sGlpLc65OBKN1u2Wb0K01Z06AjLEInfn5TgywtB
-	 Jwjo65AeQIqXA9CEEjEqDydchgMQi0G3KfGq+8c55d6R+wgduDyk6NA4qZRk6axbLk
-	 TuPPgDe/s9G65CagDhOUbS37PVyZ7wmtji0B1H1eF+VLviAsYeG9j1R58RxGkN09LG
-	 FERM5tRctvmm7hIMtPE65Ez45SF7vvwFFYBwiiLi3iYF8TKs2SFkvjRQTu0Q0H4WSG
-	 X8wOBDFVyYdlQ==
-Date: Sat, 18 Jan 2025 15:44:49 +0100
+	b=YlHrloemHqG5AL/at6zEr50bhQ8zWO3FGdCBtUQfNivICg6G74s7XVjksIwycpn9y
+	 1K/q7qKJZN9bhBp9he3x3ZlJJk+o36GAuItz45Z58YrnZmZnsTWCvg3cJ1DtLfhPMv
+	 JpMhrUpqQuEV2QN+xVJbfk0Hu+wupd6KSDhSWJ0+tmGaC8IOQCa6YiXHoG+AGSkSeI
+	 SdFgBsQEoqN25tP+fAOc0JLzydygCK42M8bOud5d4NNrZ9p5l/uHocG6Qg6ymIomh/
+	 xpOZ+pBZyqoyvQf4eWUG1ZgcH8dy4WEBzBSO7AGRUunjmkl1tP3ulsKITl60GWXE0l
+	 3J7a0/tzBLSsQ==
+Date: Sat, 18 Jan 2025 15:45:46 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Melody Olvera <quic_molvera@quicinc.com>
 Cc: Vinod Koul <vkoul@kernel.org>, 
@@ -39,11 +39,11 @@ Cc: Vinod Koul <vkoul@kernel.org>,
 	Trilok Soni <quic_tsoni@quicinc.com>, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
 	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
 	Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: Re: [PATCH 1/5] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy:
- Document the SM8750 QMP UFS PHY
-Message-ID: <20250118-uptight-crocodile-of-music-2becee@krzk-bin>
+Subject: Re: [PATCH 3/5] dt-bindings: ufs: qcom: Document the SM8750 UFS
+ Controller
+Message-ID: <20250118-vagabond-sparrow-of-merriment-beafbd@krzk-bin>
 References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
- <20250113-sm8750_ufs_master-v1-1-b3774120eb8c@quicinc.com>
+ <20250113-sm8750_ufs_master-v1-3-b3774120eb8c@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,21 +52,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20250113-sm8750_ufs_master-v1-1-b3774120eb8c@quicinc.com>
+In-Reply-To: <20250113-sm8750_ufs_master-v1-3-b3774120eb8c@quicinc.com>
 
-On Mon, Jan 13, 2025 at 01:46:24PM -0800, Melody Olvera wrote:
+On Mon, Jan 13, 2025 at 01:46:26PM -0800, Melody Olvera wrote:
 > From: Nitin Rawat <quic_nitirawa@quicinc.com>
 > 
-> Document the QMP UFS PHY on the SM8750 Platform.
-
-Pretty obvious commit msg, duplicating subject. Say something useful,
-e.g. why this is not compatible with sm8650.
-
+> Document the UFS Controller on the SM8750 Platform.
 > 
 > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 > Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
 
 Best regards,
 Krzysztof
