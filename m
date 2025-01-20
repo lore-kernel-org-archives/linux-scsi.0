@@ -1,135 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1173017C68;
-	Mon, 20 Jan 2025 15:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D521B1E0B66;
+	Mon, 20 Jan 2025 16:54:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737387710; cv=none; b=QpWw4sBb9puBLuDmVIrCSQF5wvPPCOxeRyzrLn8Zmfco/71/2aIUNU08E2J1n4mlw3kAdgR2bfCKbC4dE9BRE1lCzGlv0AT1xB2j2SL+L0P+1bYeJoTgO/tDcprkmmlK+ZStZMKszgvLJ8gh5/2Yh/pCcbbl4GkApt4VHnfOSCE=
+	t=1737392101; cv=none; b=Zr8WYR6h/rE8YwXcoI4vuK1Y36DQR3yIPi6jDy95lmOcDdUlJ6XibAdCJaNU31M27qMLSnk0DJk+AC4OgcKsoxvlCaF1g19+wl0EFuG7qXXgoNOXdkjD54uEA+mqkomsVY6rCQx3H9+XemGGwPkFr3daauNC1pLSnoExmUBpEnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737387710; c=relaxed/simple;
-	bh=HLDHizSBJBuDKpSc1jLQRo5tMMcBm24/Q+DGpwKcGMo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q7fk0eBbth9JO53LsAoJgnB0rKqeegVT7hhXbFyfLowFeoLipwILA/BJ6m+Snam1Mon2Yow1FNp85ZLbuGAFZ0r6cZbEcdVJfye/k+9hY9Kfwe3dUId69eYVmCM6JE+YChMhMXQqQfEwf9daUHqop6gtNd8uKMdI7mYNhf5b1xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XYh9Yrjt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1737392101; c=relaxed/simple;
+	bh=EIQgPWUyPWoQ1pyt2dYvP2yKpltv26NAMY254fVjGPA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dr0GFsC5eD6gjmBndBVSHIgCxVdhL12M6Lg1Sj+cC5gIdFtCCeMu97AVlM2PPB77I32+erdpxMPZt0EaskbhUpXbdY32QBHtSk/HXgnHneFFxAhnORtFkdhzPCsp8/OLnsafveuv2xVJqRACZ2b00rdIk0tztY5qYBx1frs3n10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ethancedwards.com; spf=pass smtp.mailfrom=ethancedwards.com; dkim=pass (2048-bit key) header.d=ethancedwards.com header.i=@ethancedwards.com header.b=WSeZkiEp; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ethancedwards.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ethancedwards.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XYh9Yrjt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE37DC4CEDD;
-	Mon, 20 Jan 2025 15:41:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737387709;
-	bh=HLDHizSBJBuDKpSc1jLQRo5tMMcBm24/Q+DGpwKcGMo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XYh9YrjtV7onpWYaskgn8ukOky0WFCDXaey6oXU1kXTMDGjzlM2yVS3Bu28/R4LpE
-	 bBzwk9ULGQcUt04vULGpIw6Y1U5WMhfFRIB5oSifLpc9a0TnGZixs35yjPqaT5KQGi
-	 ZPJT4wqcTJ9EobT0u/9VYRr7vlCoimjXt6+6E1yZ5cTOex/U9Lf0NMVRikVRud3iH0
-	 VsDd1wPchSXuFlgwKSkmJogoQUmVRT52B07X9TWqXjAh70+JMSLeQ8ko+ZHUbX1nQ0
-	 X1qXcazgs2ndJDJ2JJwCdSwcXhfd70zsLhEmVpPSpjCsz3XxG04nDYvj/3DRAhPYXR
-	 9jQ69hyrSD96g==
-Date: Mon, 20 Jan 2025 21:11:35 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Ziqi Chen <quic_ziqichen@quicinc.com>
-Cc: quic_cang@quicinc.com, bvanassche@acm.org, beanhuo@micron.com,
-	avri.altman@wdc.com, junwoo80.lee@samsung.com,
-	martin.petersen@oracle.com, quic_nguyenb@quicinc.com,
-	quic_nitirawa@quicinc.com, quic_rampraka@quicinc.com,
-	linux-scsi@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	dkim=pass (2048-bit key) header.d=ethancedwards.com header.i=@ethancedwards.com header.b="WSeZkiEp"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4YcGfJ4yKVz9t6D;
+	Mon, 20 Jan 2025 17:54:48 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ethancedwards.com;
+	s=MBO0001; t=1737392089;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=LS+MZG6fzjs7nxyUtXWsT4ov/e2VyX4vAlGsW6xC8Ww=;
+	b=WSeZkiEpiH98uSVuU0s7xTbcv6GZJ1hBAp13hQtd9Eyu4sBIR6KDVWRc+JmEgnaRWm+ejR
+	NCx2P7o1SPCoNOJWanAX1jLfGA8PSR3sFj+sz9RmJzyZpbfYgor2b8mwFFIx5lC9unS/uV
+	fWmbmsSXZxuCJsroyy581WoLsn9yh2Vj0hckVVGwvlwwlK4uUsysF5R64aT1ZQkU2g1pm3
+	SwQN/TwSrQOaPOAtrTuinl3f+wqW6nVCR0iqFcVUPKAzsiud2lpLYY6ZQlaZMBs2DBD2xI
+	AY44WqgPzgrdkbYEwFWlAdaymTUwsvGZget3Ui43DhJjUCV702pinRS/P/GnAA==
+From: Ethan Carter Edwards <ethan@ethancedwards.com>
+To: manoj@linux.ibm.com
+Cc: linux-hardening@vger.kernel.org,
+	kernel-hardening@lists.openwall.com,
+	Ethan Carter Edwards <ethan@ethancedwards.com>,
+	Uma Krishnan <ukrishn@linux.ibm.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"open list:ARM/QUALCOMM MAILING LIST" <linux-arm-msm@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4/8] scsi: ufs: qcom: Implement the freq_to_gear_speed()
- vops
-Message-ID: <20250120154135.xhrrmy37xdr6asmu@thinkpad>
-References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
- <20250116091150.1167739-5-quic_ziqichen@quicinc.com>
- <20250119073056.houuz5xjyeen7nw5@thinkpad>
- <e0207040-bebd-4e59-abd8-dee16edcc5b9@quicinc.com>
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: cxlflash: change kzalloc to kcalloc
+Date: Mon, 20 Jan 2025 11:53:55 -0500
+Message-ID: <20250120165411.32256-1-ethan@ethancedwards.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <e0207040-bebd-4e59-abd8-dee16edcc5b9@quicinc.com>
 
-On Mon, Jan 20, 2025 at 08:07:07PM +0800, Ziqi Chen wrote:
-> Hi Mani，
-> 
-> Thanks for your comments~
-> 
-> On 1/19/2025 3:30 PM, Manivannan Sadhasivam wrote:
-> > On Thu, Jan 16, 2025 at 05:11:45PM +0800, Ziqi Chen wrote:
-> > > From: Can Guo <quic_cang@quicinc.com>
-> > > 
-> > > Implement the freq_to_gear_speed() vops to map the unipro core clock
-> > > frequency to the corresponding maximum supported gear speed.
-> > > 
-> > > Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> > > Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> > > ---
-> > >   drivers/ufs/host/ufs-qcom.c | 32 ++++++++++++++++++++++++++++++++
-> > >   1 file changed, 32 insertions(+)
-> > > 
-> > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> > > index 1e8a23eb8c13..64263fa884f5 100644
-> > > --- a/drivers/ufs/host/ufs-qcom.c
-> > > +++ b/drivers/ufs/host/ufs-qcom.c
-> > > @@ -1803,6 +1803,37 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
-> > >   	return ret;
-> > >   }
-> > > +static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq, u32 *gear)
-> > > +{
-> > > +	int ret = 0 >
-> > Please do not initialize ret with 0. Return the actual value directly.
-> > 
-> 
-> If we don't initialize ret here, for the cases of freq matched in the table,
-> it will return an unknown ret value. It is not make sense, right?
-> 
-> Or you may want to say we don't need “ret” , just need to return gear value?
-> But we need this "ret" to check whether the freq is invalid.
-> 
+We are replacing any instances of kzalloc(size * count, ...) with
+kcalloc(count, size, ...) due to risk of overflow [1].
 
-I meant to say that you can just return 0 directly in success case and -EINVAL
-in the case of error.
+[1] https://www.kernel.org/doc/html/next/process/deprecated.html#open-coded-arithmetic-in-allocator-arguments
 
-> > > +
-> > > +	switch (freq) {
-> > > +	case 403000000:
-> > > +		*gear = UFS_HS_G5;
-> > > +		break;
-> > > +	case 300000000:
-> > > +		*gear = UFS_HS_G4;
-> > > +		break;
-> > > +	case 201500000:
-> > > +		*gear = UFS_HS_G3;
-> > > +		break;
-> > > +	case 150000000:
-> > > +	case 100000000:
-> > > +		*gear = UFS_HS_G2;
-> > > +		break;
-> > > +	case 75000000:
-> > > +	case 37500000:
-> > > +		*gear = UFS_HS_G1;
-> > > +		break;
-> > > +	default:
-> > > +		ret = -EINVAL;
-> > > +		dev_err(hba->dev, "Unsupported clock freq\n");
-> > 
-> > Print the freq.
-> 
-> Ok, thank for your suggestion, we can print freq with dev_dbg() in next
-> version.
-> 
+Link: https://github.com/KSPP/linux/issues/162
+Signed-off-by: Ethan Carter Edwards <ethan@ethancedwards.com>
+---
+ drivers/scsi/cxlflash/superpipe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-No, use dev_err() with the freq.
-
-- Mani 
-
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index b375509d1470..fc26e62e0dbf 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -785,8 +785,8 @@ static struct ctx_info *create_context(struct cxlflash_cfg *cfg)
+ 	struct sisl_rht_entry *rhte;
+ 
+ 	ctxi = kzalloc(sizeof(*ctxi), GFP_KERNEL);
+-	lli = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*lli)), GFP_KERNEL);
+-	ws = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*ws)), GFP_KERNEL);
++	lli = kcalloc(MAX_RHT_PER_CONTEXT, sizeof(*lli), GFP_KERNEL);
++	ws = kcalloc(MAX_RHT_PER_CONTEXT, sizeof(*ws), GFP_KERNEL);
+ 	if (unlikely(!ctxi || !lli || !ws)) {
+ 		dev_err(dev, "%s: Unable to allocate context\n", __func__);
+ 		goto err;
 -- 
-மணிவண்ணன் சதாசிவம்
+2.48.0
+
