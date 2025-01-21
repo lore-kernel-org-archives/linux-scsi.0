@@ -1,192 +1,206 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazolkn19010019.outbound.protection.outlook.com [52.103.2.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0743148832;
-	Tue, 21 Jan 2025 03:53:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737431593; cv=none; b=tofkZzavM9tJZNvH8RNExoDoTu6jQJ7QuOIuR5f4Y72dMsJz9Sncc45W2Acksmt9dYXfpzqyED1LNm01fz8CttOt/cTpWlpqgVII+z+RTT5dbt0RH6HGUJ2pJElmHg180h6M3TRKDV3w0/6Cmlg9LGhRvfLenxfUbA+XC+1rP1s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737431593; c=relaxed/simple;
-	bh=py00Jl0wUOtx/Ke0yrO8zjnKSnQa/oXBM8Jl78gCkCY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ezP5025tYo7zdbaylE/IZH5JbwB7+GiowP5hDMeTWGbEPsc3TbDXJnWBPxmdV39rfLRSMaVI79AOJN5VdYSHmzCdhZ5Sg/BxzzJKHsLEzCCjoy0TjlQs8Wsz9GvLKlpvAeuRQpMLLMxcQUgJCIdm6LYHqazb79wMZtlRUQ+b460=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=IiL4SvHc; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BD4A15C0;
+	Tue, 21 Jan 2025 04:22:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.2.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1737433343; cv=fail; b=QVvGPAfey97MExoZd4ftkIG2V02Uv6iQRqZHWpG48eJit0MH6LDsg7walv/ltZO6seSPREKTMqVnd4DF5nRSj1Wh6bletrfkkWZdkQHQblc9RvyGj8TIqIcJYlm7T9SxJrfbDMRf37mefTY/eQazXwWli5YU9PB/O6+JOA9LNHk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1737433343; c=relaxed/simple;
+	bh=BZhYApmQkA8a2XRwdcsZnI0SkQeKAi1CovvNfjAOIOk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tbanJAIjHr8jqdnCUb6lqjFxFciw6megnGPsJDFIqV+14Azho09shKIizEfNTateq6EwBCACm8YohqtBaW3eG5/mfJEt3IypIHzKLYqV8kHPjmSB8LfNRl29qXxQ+g0xWgbc1JHMEuP6mf0gGIBV4S5x3IA+SIGfyC4N0D0Rw9s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=BVe3D/CO; arc=fail smtp.client-ip=52.103.2.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="IiL4SvHc"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50KNlhem024304;
-	Tue, 21 Jan 2025 03:52:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	5Z9Fk7lyEM++4IIen9M7v/hxdHa0lcaOlEhOA1WFe7Q=; b=IiL4SvHcDq9I+uKu
-	Ytl4uExbzA4JwIEu6s3UJ5L40POZDRDH2hWklRSE4COIbjoPrlnb0KVDWBa9lvRF
-	15Zq/4B7A8Z3AfYa6OvTzeGqVfc40EFw1s3BxW5K/kEtxKkSTGGOCBDN+9bPbM10
-	bAv2u6MF/g/f13bk+zBjh25j5Q/efRP/Kl3RJ/DjnAcrBMNnYW9saHjeIUtwVR/p
-	qA/kT2GpcfcoJs7z7reFbaRiBAQNnLX4Gfvw/YSYhzlUTZ0dq2BlpRKbcH/VYGyT
-	9YKnHFyvP8Z8VL1Clgp1IuGSxrcOo9/57z+wVJbiuyLXPV6sxSEeUus4Fj9I0LlS
-	dAAiXg==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 449whe8m70-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 03:52:49 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50L3qnNi015777
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 03:52:49 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 20 Jan
- 2025 19:52:45 -0800
-Message-ID: <12f4234b-91ca-48e2-8638-771acc15a7be@quicinc.com>
-Date: Tue, 21 Jan 2025 11:52:42 +0800
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="BVe3D/CO"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rNZWE6FaeMeGZtA7gW/xxVbYXl+4tGom2jqy9Y9h+hYufCiX29PGp480GRRkijhThDFUkr0v5hu0KvkSIgW4OGnvDk45Xrg8kXq2/eiZIv+qpzXfIoFK4y5zu2JgCxgWDoFgyg2WysHab9QV/k/Juox1ZweXwQUQeOM55Y6euO1LX3Ix8FZWMt4eO6AhiUzc7915XMVngWVenwgGNDVvx9nm/KqCZhYWlS0A336o3l+5Q0uB0cuSW7fLb4VGombyb25WDsfCb6OpFQGDg+YN40iQIJcs0SKs2GURz740gJoECidt2oClJ3tUIdXP1q9BX2pvJ0NpyD3WDRTeYqK/pQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=VMW71yNyyzVHDd20BGJpMR7nyeM9ApMdUKe2G2IsX5A=;
+ b=hJBKswYpfJ1iG5d+QNSF0DAAn6qrhg0jydJfbD+7a1MOpcUYXI1zklEWZnRxPJw9MA+whz4g2oP8ni+r8KvGEw2RJjeCY8z5qWkxrG3/6Pvszi4PGWPo0rguo6NLY4gM628vUSymT2GderClhcv8j+qCZBNiFeCkq81Z6Uml2QeDVckqqtaa3mrSRGEWliHRdDfkEBVN7aISVu1YGzBP0/mEGUhPxkvWFmiYH3OW+rQPaQvnE4zecR/lpLw46YdeC58gSRGlkAG3/ak3pUv1kF8Bf/S/WRS8eV/YJ8Rb9u4M+MsYIyWe3Q97uy/IupFOnmvSgeQTsKBaMCi+3SKwPA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VMW71yNyyzVHDd20BGJpMR7nyeM9ApMdUKe2G2IsX5A=;
+ b=BVe3D/COj3HoDt4NZfz/M0XsGNKTnDZTrxr/MmsZEnjZ9td9vDGsnxXwJDncaeZ0X13ED+G1DjV7TYGO25wMrVbSUdy1gnkRKwI0p/NSUzKEQq+OSUC9CFbQMpnGHiCcuyXjwju6e2iyZjfwLj4bW32UIGOar0s9ZnUU0w7PYYn27mH6sJtqAzTMHnFS1sBDQKCbxqqLguMSUba1QFHYxBf8rPNA6TxNsag24A+QS4rJC6r6xS5j+3c1wkVf8RmxvUmlPIK/qNn6zyTqk54/5zfzkJFV8H9xL/TK+KcYpIomf1qeu2woiFpFm61D07MqkugI+N5XlBFHSpoYbVNpOA==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by MW6PR02MB9719.namprd02.prod.outlook.com (2603:10b6:303:245::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8356.17; Tue, 21 Jan
+ 2025 04:22:17 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df%4]) with mapi id 15.20.8356.020; Tue, 21 Jan 2025
+ 04:22:16 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Long Li <longli@microsoft.com>, "longli@linuxonhyperv.com"
+	<longli@linuxonhyperv.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang
+	<haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui
+	<decui@microsoft.com>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, James Bottomley <JBottomley@Odin.com>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "stable@kernel.org" <stable@kernel.org>
+Subject: RE: [PATCH] scsi: storvsc: Set correct data length for sending SCSI
+ command without payload
+Thread-Topic: [PATCH] scsi: storvsc: Set correct data length for sending SCSI
+ command without payload
+Thread-Index: AQHbaHLRzkYQZ+EqJE6PNc5JdE6XVLMdMCTwgAMi2oCAAE46EA==
+Date: Tue, 21 Jan 2025 04:22:16 +0000
+Message-ID:
+ <SN6PR02MB415751506B4B116CFD081939D4E62@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <1737071998-4566-1-git-send-email-longli@linuxonhyperv.com>
+ <BN7PR02MB41487C2C9BA6B963758E722AD4E52@BN7PR02MB4148.namprd02.prod.outlook.com>
+ <MW4PR21MB1857121CA82F0CE544F245BFCEE72@MW4PR21MB1857.namprd21.prod.outlook.com>
+In-Reply-To:
+ <MW4PR21MB1857121CA82F0CE544F245BFCEE72@MW4PR21MB1857.namprd21.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=563ecf69-e157-4f2e-b3a3-9ba714c38af2;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2025-01-20T22:51:24Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
+ 3, 0, 1;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|MW6PR02MB9719:EE_
+x-ms-office365-filtering-correlation-id: 62093f08-4d6e-4550-78d3-08dd39d33044
+x-ms-exchange-slblob-mailprops:
+ znQPCv1HvwU46ctkesNAQSdI89rGQphJZj1DBGJMoCIbh4qCrHhmpKQomuIS3nInt5tcaU4dbxN9H8tQM7R0xf0SkxLVCL1pNwC8gcDX8g5lCU2Yl3Gdh6vgqhv/unu8pM8Wq+BiH+rZqCS8T1TL63kYmminTkDUj9fKcFLr50LcXYU4X8nd1xDRfUGXFcSai23j7gKe080/7Yw8mODsy7TA0F2/+XfPV+riD0KJLaw4FEUiuq46oO/YxGHOEjE57FWScAdUtVOr6r0YIMa5wJ0rxmpd1yVyf3OWSq8V5sjM8dLWSUNEbVMrUJ80lSITs+AA4HXrKgEeh0DmnW8PMY3TJHO8ASzJQ6+qlN8iNTle1qXyWKQqLLWWyPGG8DPFgHhoJ0qq4Hb2OA2SPSLA/FnhxsgQMPUkazkPOQk6Kfug1mzGByVMuMyXf7mi5g6fGZBKmsHAkjp34eCndflYGXhzNHwdlAxPG69vHkG0C7wuNf6vMHv+8ygTWwOlS1j3JuQfbrmGuycTwS2JxNJUrKZDP7jGUKQjPj8pzIx5KHYW7voEJix0wnzi1ZYUtcKgwIOrwSt/r99SNLYUlr+JS4jeIUm1KVLwsux44PWXPpugOf399qtumCcfSusbzL3Kl4R4MqrFy0UBwyhedj5Ch9fTomANPBs+HiqQ4qYUkYxWlm2M1DTMMEuCGM4wV8rla1u+HwkMacReNwthq9RY9C1SLBLpxfTzw4Xkz1S9ibN6gvKeQx8CC+4OnEOvmph1DVkVkX8Zkmc=
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|461199028|8062599003|8060799006|19110799003|15080799006|3412199025|440099028|102099032;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?hLZj01B99ebQ8WiqWSGsd16I5AiUajOG/G7phl8XwR2OlYjgZ2vVtJRM0zZN?=
+ =?us-ascii?Q?Ga+KNq8tKgYy2+YaTJdO2WUF4WhyjaJslG/rwE9opi0eG9B27+WTmZCE+w7u?=
+ =?us-ascii?Q?kTI4Y1pYzORkuhvLNEiNBPcQ2+6dVXRZGYSVRA5TfzhZsTaoE3iGnfyjrt6q?=
+ =?us-ascii?Q?MzPBuBwq+y5/bNSiNkLv3QOfQG8EACZrBYAztuQeYqYNQRYMVrixFcd773ob?=
+ =?us-ascii?Q?58YWSG7A9p/c4Avvuki7Z+qT4bax8sBQ7ZgRG7kkoV4X2HCD0M3Va/sQG760?=
+ =?us-ascii?Q?XgXnFuL4dwiPdolqnCSEa61b/LLA6/OSqMRifq8h9XxF+4+8G6oGRDV5SS5g?=
+ =?us-ascii?Q?nQ10ib2DSsRbYSxa9xdtTuGoc3U4726wbTXAnPtR98YIwkovo3IPGslJqBic?=
+ =?us-ascii?Q?nQsnN1l0YehhoAH8RsJH4Jhu6c6P5D54hWweQAa+VLaIaSoOfKKEOg3QfnfP?=
+ =?us-ascii?Q?tEUKWewLA89881ucTpmv3vG3Cr6XoT5tGPnAUL/g+HIJAk6dKuhBZkfTNnd4?=
+ =?us-ascii?Q?ajrK8TEJhoiRQNaxX/GfCi6LCJKj+zSVarE2vllSCV7uz03wecty7ZmgILe7?=
+ =?us-ascii?Q?M15T3KzBUYUhNM85u4qgELZPIDMK+KgD5+tlxIg8lK/ma5ccU6VwhSeh3u8U?=
+ =?us-ascii?Q?4MIy+ETOKwl4GAYmVBXF9+iHygJlvcXD5QvtFfx+VgtRXF5FMYLbBIpaoMjn?=
+ =?us-ascii?Q?pZ0Ke/0BlDXnJz2cGeI31dCSe0U9Os+cRjx66rV1BwCwo1DtTR3wjmfc/Pli?=
+ =?us-ascii?Q?ejcF5i7XQbjp2r06cQyq4ojbII8Y+ti4co5m5H0cytrwndvRbZQ9Yr6Pttpi?=
+ =?us-ascii?Q?6iq9rzUIR4c4EaG0ag1N2kozf95C8a4AGvQ79rVt6IPHBjQdQ6arNCvQCATm?=
+ =?us-ascii?Q?Gz/GLKHy86uwXIcfp8FqwaVUy6ay4LxqPwFa5zrdLS0PBUrY2Sjl4m/5uCvN?=
+ =?us-ascii?Q?arBCVRa0KYPWd+/A6NlDMda5BDPRoHlc5zoPxLDWmavlgL09vQ8HTXscbOnh?=
+ =?us-ascii?Q?VM4nFu+6MRmHPIfY2NA09jktADya0dftiUdGjY4xECx6fuk=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?NDCt4gCng1O26QrSCQSndX+R5sa6sr0y05wiRDiF4TcbkWarjiKm5VzTOk33?=
+ =?us-ascii?Q?+n4TEIPofbpuOLX1PeK7cFs9pJ3opg9Ay7S3vD3qhz1vwbJxcN0kSWfnplMY?=
+ =?us-ascii?Q?NJ92qYmyCvDUpdw2VgahowGALsyCZJgwwkPEZWgyF8TASxGMlQjMsA58DMqY?=
+ =?us-ascii?Q?WgbMUHSbPvTsuLvtHarUgNV3zhwigizKPxuH9oQbq3OC4gM6DWMfRfmeAaIp?=
+ =?us-ascii?Q?z/DoD9/CJPmSSg8pNBlfkh2YjPhrG/MYkjx6vOb+yFygyImr3oq5v+OrkUIV?=
+ =?us-ascii?Q?cQsxAEhVc+uHlW3sO6OmgAp79N1+yyswjJbobTOeKVj6DS1VgJsM3ckQloOP?=
+ =?us-ascii?Q?R4I8DGFjoU/nURfhIsxmTBYBIJDhjOnjkX+m1itWeG65ZQZwwjJkC2u7ZB9b?=
+ =?us-ascii?Q?/ybtzJCiOq0RPowd1zgitP2NGNtGP5ev3756g+4cbMFDX8prJeZVTWeSetYm?=
+ =?us-ascii?Q?Fq5kN4ycI1flZRncnWMLqQTtIH/F8FIaSmK3kZmwxZ/BhtyRlQMal1efKnLu?=
+ =?us-ascii?Q?Ocamb2OBOKc2sQjhbhpbBqSvBEPC/ytpFaeLOxK908oKpZv+0zHihmsQppk/?=
+ =?us-ascii?Q?9I+seIXhKH+MfdNxZUdj145x+bwZAu9iWeN+jlE3eJtL4FAES9rXAqHUYhNV?=
+ =?us-ascii?Q?jo0DLAJfX4nOBFuJXCyys9TYseJN6cwpM/PNO0qQcEXHAUmbjNknuhLFuNcE?=
+ =?us-ascii?Q?5byajaYBh7x8Ip8xrVacG+AEMALb8ZA6FBJY2y92OGK5rcl4OwL6CJIn6Vzr?=
+ =?us-ascii?Q?0jPxfwvyLVbCI2ZZIFocquZ7oLQwR097HrTPolOi54q0zY/UQuezy9ZtzIwx?=
+ =?us-ascii?Q?H2lMMctEXsdKxKtpc/tR6vjUMfzPZLpsoSPffWZaoUQfF97yFzGCf020f7t4?=
+ =?us-ascii?Q?LGEYnH5kifO0SEw+LOHUhHMogNSaIwYeQkh1ktn92qWoV1s86QY9NEih0cTy?=
+ =?us-ascii?Q?RAnDyMZ3fPD7iSK8ZFVcpGf/PuptWipb07NZKZmCln2/zD2HqKrlLTPReLWs?=
+ =?us-ascii?Q?pxkST6Alwmo/lFRBHjLZDsl6HxqhhnYeZEzlCBUY8Xc2NzGgLAeRk5fWy7ns?=
+ =?us-ascii?Q?dRVBrOkM22wbz+BYCycjtB2JXWsODjxkHJXuiMsyMjeTC74cr6gIgfjNxlX8?=
+ =?us-ascii?Q?1z7ogO5Z0TbAwbshWhYbaXFd94S/ngpX8obElBhXnroFrRJ9p7NhDsDvrbK1?=
+ =?us-ascii?Q?OsGSDqft3VV8esoQ9nCKKbWCk3Gynh1THcxnxNvH+9BxUeB/FyZ11cxSySo?=
+ =?us-ascii?Q?=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/8] scsi: ufs: qcom: Implement the freq_to_gear_speed()
- vops
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <quic_cang@quicinc.com>, <bvanassche@acm.org>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
-        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <linux-scsi@vger.kernel.org>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>,
-        "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>,
-        "open list:ARM/QUALCOMM MAILING
- LIST" <linux-arm-msm@vger.kernel.org>,
-        open list
-	<linux-kernel@vger.kernel.org>
-References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
- <20250116091150.1167739-5-quic_ziqichen@quicinc.com>
- <20250119073056.houuz5xjyeen7nw5@thinkpad>
- <e0207040-bebd-4e59-abd8-dee16edcc5b9@quicinc.com>
- <20250120154135.xhrrmy37xdr6asmu@thinkpad>
-Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <20250120154135.xhrrmy37xdr6asmu@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: nEU-Pn08-4t-AcO1LPwKqW9w3sCQPlSt
-X-Proofpoint-GUID: nEU-Pn08-4t-AcO1LPwKqW9w3sCQPlSt
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-21_02,2025-01-20_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- mlxlogscore=999 priorityscore=1501 suspectscore=0 mlxscore=0 phishscore=0
- impostorscore=0 bulkscore=0 malwarescore=0 adultscore=0 clxscore=1015
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501210029
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 62093f08-4d6e-4550-78d3-08dd39d33044
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jan 2025 04:22:16.6566
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR02MB9719
 
+From: Long Li <longli@microsoft.com> Sent: Monday, January 20, 2025 3:21 PM
+>=20
+> > > In StorVSC, payload->range.len is used to indicate if this SCSI
+> > > command carries payload. This data is allocated as part of the privat=
+e
+> > > driver data by the upper layer and may get passed to lower driver uni=
+nitialized.
+> >
+> > I had always thought the private driver data *is* initialized to zero b=
+y the
+> > upper layer. Indeed, scsi_queue_rq() calls scsi_prepare_cmd(), which ze=
+ros the
+> > private driver data as long as the driver does not specify a custom fun=
+ction to
+> > do the initialization (and storvsc does not).  So I'm curious -- what's=
+ the
+> > execution path where this initialization doesn't happen?
+> >
+> > Michael
+>=20
+> SCSI mid layer may send commands to lower driver without initializing pri=
+vate data.
+> For example, scsi_send_eh_cmnd() may send TEST_UNIT_READY and REQUEST_SEN=
+SE
+> to lower layer driver without initializing private data.
 
+Right. Thanks for pointing out this path that I wasn't aware of. My
+suggestion would be to add a little more detail in the commit message,
+including identifying this path where the private data isn't zero'ed. Some
+future developer will wonder what's going on and appreciate having
+the specific reason provided.
 
-On 1/20/2025 11:41 PM, Manivannan Sadhasivam wrote:
-> On Mon, Jan 20, 2025 at 08:07:07PM +0800, Ziqi Chen wrote:
->> Hi Mani，
->>
->> Thanks for your comments~
->>
->> On 1/19/2025 3:30 PM, Manivannan Sadhasivam wrote:
->>> On Thu, Jan 16, 2025 at 05:11:45PM +0800, Ziqi Chen wrote:
->>>> From: Can Guo <quic_cang@quicinc.com>
->>>>
->>>> Implement the freq_to_gear_speed() vops to map the unipro core clock
->>>> frequency to the corresponding maximum supported gear speed.
->>>>
->>>> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->>>> ---
->>>>    drivers/ufs/host/ufs-qcom.c | 32 ++++++++++++++++++++++++++++++++
->>>>    1 file changed, 32 insertions(+)
->>>>
->>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>>> index 1e8a23eb8c13..64263fa884f5 100644
->>>> --- a/drivers/ufs/host/ufs-qcom.c
->>>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>> @@ -1803,6 +1803,37 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
->>>>    	return ret;
->>>>    }
->>>> +static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq, u32 *gear)
->>>> +{
->>>> +	int ret = 0 >
->>> Please do not initialize ret with 0. Return the actual value directly.
->>>
->>
->> If we don't initialize ret here, for the cases of freq matched in the table,
->> it will return an unknown ret value. It is not make sense, right?
->>
->> Or you may want to say we don't need “ret” , just need to return gear value?
->> But we need this "ret" to check whether the freq is invalid.
->>
-> 
-> I meant to say that you can just return 0 directly in success case and -EINVAL
-> in the case of error.
-> 
-Hi Mani,
+>=20
+> I don't know if there are other places doing similar things outside scsi_=
+error.c, but
+> storvsc is already calling memset() on its private data:
+> (in storvsc_queuecommand)
+> memset(&cmd_request->vstor_packet, 0, sizeof(struct vstor_packet));
+>=20
+> The assumption is that private data is not guaranteed to be 0.
+>=20
 
-If we don't print freq here , I think your suggestion is very good. If 
-we print freq in this function , using "ret" to indicate success case 
-and failure case and print freq an the end of this function is the way 
-to avoid code bloat.
+That memset() was added relatively recently (in 2020) when doing the driver
+hardening for Confidential VMs. At the time, I was thinking it was needed
+because the private data isn't zero'ed, but later discovered what
+scsi_prepare_cmd() does. Then I was thinking the memset() is duplicative
+and wasteful, but didn't ever go back and remove it.
 
-How do you think about it?
+It seems like the SCSI subsystem has a generic inconsistency here in that
+scsi_prepare_cmd() *does* zero the private data. In an attempt to give the
+low level driver a clean slate, that zero'ing is done when a command is fir=
+st
+assigned to a request. But in the error case, the command can be re-used,
+or "hijacked" per the comment for scsi_send_eh_cmnd(), and the private
+data does not get zero'ed again. If the low level driver isn't guaranteed a
+clean slate, then the zero'ing in scsi_prepare_cmd() is arguably not needed=
+.
 
->>>> +
->>>> +	switch (freq) {
->>>> +	case 403000000:
->>>> +		*gear = UFS_HS_G5;
->>>> +		break;
->>>> +	case 300000000:
->>>> +		*gear = UFS_HS_G4;
->>>> +		break;
->>>> +	case 201500000:
->>>> +		*gear = UFS_HS_G3;
->>>> +		break;
->>>> +	case 150000000:
->>>> +	case 100000000:
->>>> +		*gear = UFS_HS_G2;
->>>> +		break;
->>>> +	case 75000000:
->>>> +	case 37500000:
->>>> +		*gear = UFS_HS_G1;
->>>> +		break;
->>>> +	default:
->>>> +		ret = -EINVAL;
->>>> +		dev_err(hba->dev, "Unsupported clock freq\n");
->>>
->>> Print the freq.
->>
->> Ok, thank for your suggestion, we can print freq with dev_dbg() in next
->> version.
->>
-> 
-> No, use dev_err() with the freq. >
-> - Mani
->
-I think use dev_err() here does not make sense:
+But that generic inconsistency is a different problem for another day. I'm
+good with your fix in storvsc.
 
-1. This print is not an error message , just an information print. Using 
-dev_err() reduces the readability of this code.
-2. This prints will be print very frequent, I afraid it will increase 
-the latency of clock scaling.
-
-
-How do you think ?
-
--Ziqi
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
 
 
