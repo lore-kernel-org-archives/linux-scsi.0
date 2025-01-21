@@ -1,220 +1,186 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E391119A;
-	Tue, 21 Jan 2025 13:40:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737466858; cv=none; b=bJQoNIMjC/ZXVoJ9wiufPCSv5ONcgARl1wWqraDdni4qk1GowmVhzTHL6R998R8EqbzgTlSvgGzEZlCYymJCYngaqJ0SXqrrIhxezLxr2xByS2OncKC/RsC8VRnyt47GMNuAI5uxtioi9uIDm14kjd45oLvhwocHzVQ4q/+2rSc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737466858; c=relaxed/simple;
-	bh=O6UDpyy68BQo7X626NvkAmSzVuRiTAwo5GjYO1FKjts=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rEQwzI8gOlpxKvmAG5rEfLCFl3QaHckMVAjI5Qbbgr4hNKX7uuOo8DAHBjFUMyQU0qjpKhxAxpFG5zZ9VVeS8VVvzYJwFYfVmgQyFpWy4z/+SgRVlBJvhROJWQm0JcpvL70u98TRZpKvMYUSvw0amTkvcpyZ6mIXFj1TysfDmYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XXJc1fjY; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF4501F5421
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2025 17:16:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1737479812; cv=fail; b=Q3lWlFKGAPQfAIbSTa4CinPlG6MkzNbnOsr/UyP7nQzS9KJtvJ8yAkw9XDQbUo1YOOaa68SR3GG/BWnp0nurgmMt3tXWV41Z5KM+Fv1m4bzrREliJMPwxLyTAyIfyDTdtqe1GZH3CWBiL4a7mtRModJJc3Xzzk99Xq+Lvo0H1fc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1737479812; c=relaxed/simple;
+	bh=oOyK612wLLeBhuRW/3CbwaRsp1cG64LeigkOMggq1sc=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=PYDFVBVGKUA6IQcmQldMpom/o+vG00YSR4flik6aND0SSuZ0/Q5LniuRLyMjMhAvsdq8q/GV6U0reFVBsHp4JPBLWtT367W5aDc8sPQoQpRK8ZlHKgBMr8YJtH2CyelbLfiW04eI10jhqyHa2kYIDDtiDwDT3RCZn6PEyaXeJCA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=DmaUF1eB; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=dFigYj4b; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XXJc1fjY"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50LBcWDl021758;
-	Tue, 21 Jan 2025 13:40:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DmaUF1eB";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="dFigYj4b"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50LFDvsQ030861;
+	Tue, 21 Jan 2025 17:16:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=1XuHjAhe+6crgeyPxGiThULHkHEa/Q
-	wDtL3yiBvZqn4=; b=XXJc1fjY1LEte8uWYOHY0rVlVq4wX9PCcoXpIbn1EYs9EL
-	OD4/8pPTNQ9wGah7zwpokGzeZLvKhyS2XwyswSQynQSvx4Pq0nVXT5v0PMm1KdzN
-	F6FmU2v9zN3MF0dGtVIr8337iz/SeaELL+AkChcaIBTAfjVK9Q1TKCVQHZUYF4b8
-	lkEmavTZcGG7bcRDLLuw9HOFrKWm+iyEw+rBb1iDcR2ksQakFyzbWZB9l+0n9NZH
-	7bFXS3CXhWJ3qAfxFUQeEb9d90I2xBmDXS8qIuY9SsKjzzFL1VStL4eYIhJR/WhB
-	kacwVPn3TvuRt93neu9S0HZxZA9oxnhjkLM3qkFg==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44a1n9b0sf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 13:40:21 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 50LAtOsq021012;
-	Tue, 21 Jan 2025 13:40:19 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 448sb1b14q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 13:40:19 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 50LDeIWj60031254
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 21 Jan 2025 13:40:18 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 25C3B2004B;
-	Tue, 21 Jan 2025 13:40:18 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7FD1A20040;
-	Tue, 21 Jan 2025 13:40:17 +0000 (GMT)
-Received: from li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com (unknown [9.155.204.135])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 21 Jan 2025 13:40:17 +0000 (GMT)
-Date: Tue, 21 Jan 2025 14:40:16 +0100
-From: Alexander Gordeev <agordeev@linux.ibm.com>
-To: Joel Granados <joel.granados@kernel.org>
-Cc: Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
-        Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-aio@kvack.org,
-        linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
-        codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-        fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-        io-uring@vger.kernel.org, bpf@vger.kernel.org,
-        kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-        Song Liu <song@kernel.org>,
-        "Steven Rostedt (Google)" <rostedt@goodmis.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jani Nikula <jani.nikula@intel.com>,
-        Corey Minyard <cminyard@mvista.com>
-Subject: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
-Message-ID: <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
-References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+	:references:subject:to; s=corp-2023-11-20; bh=Z5amxSSr7oTycmSqmv
+	viJSzsZyR0EpMr40OTfhjrcpc=; b=DmaUF1eBUT39NgnwB3xIFuklyhYOuHLUZp
+	6DDKuWjVg+lROdVc6G4vhX+ShOXtHTw1Poe8SpC38A5Ujmdkwi6LDbRg3pel8RUj
+	Iad8+h9NblXbs7XL6Z5lpmGuMmEf0pnyX8T7S85b6NLaPsekydUzGEiSzssdlMbF
+	5Oy7hQAM9TkbU2MKIIyJTAuJjx6QUrwIWvJ+3F7Tkk+Bu251z3SJZfQORrlhQCaB
+	tHIofYSod0wPUlSng409B8KfrKJrGU3rQfGnl5kEHibEQJbaj/uH3SN0yf7nw/7A
+	PPLi/7BHJ7F8LKB++FgAXUAwbQm0JvKxR5t5hsjoMkVVGuPYt/Lw==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4485qkwwha-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 21 Jan 2025 17:16:45 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 50LHDw7R004851;
+	Tue, 21 Jan 2025 17:16:45 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2168.outbound.protection.outlook.com [104.47.57.168])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 449194jg1s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 21 Jan 2025 17:16:44 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Cl/uVJxHZFFH0aRapzu96hx5tmQ3mfZUkqBjghHVeY/D426LkH41/u3h/XtO0ZoIKZythZiWvW163ker1WYPw6aewPal/LALtTmwkWVilNb7WtsC/mcdPHtLioMhDOv2znmhSG4NqRLxFc8AfieiSzi/KL39wT+ycTq9N/ZTO2rJTTAT6Rsb2H96PjobnVqRw0BUpfhEGpBtwd+polHVoao3hLoM59QyXoOYYMeFhBYXkCqpyIe1h21wYds/OSwQLto66EmPmZI3LW8OJszQ+WlrmVq1Y8HpYCv0ix5I29DAFnuXYXeKAYKox6dQxFORrTy2HBST6sNvwX2UqTR2cA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Z5amxSSr7oTycmSqmvviJSzsZyR0EpMr40OTfhjrcpc=;
+ b=EtNS3gcUrWypa3Ni+pcHwF+q6PFtBvFPTVrRF/Eje0TT0R8g1rUY+ll+8fd0GnjGJUbG24bgwLKA13xXgE14gsdrQpX8NUGZjEzlbaugGXG+3gZ1CrZ8jWHOJyiH05VLChSXGe3l3SqQlRbVj1gz0549I2pZ9CQ2JgXge/Cxyc5OYCFxo0pmm5ntaG9lzGVHCOBg+AyqYhk24WMw6pjV6PYqya64Py7n+u0aweO5YFaEIXef84BCzzxmiCeMFt2uFcobxql+TKpAoH2cxG/d/RswXL5AryU0Gl7yPHQswfP57gs2dxdMXlfdv1RGuarcqb3z7e33MDlnLz2yP27sbw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Z5amxSSr7oTycmSqmvviJSzsZyR0EpMr40OTfhjrcpc=;
+ b=dFigYj4bs7c7StOecx49YpKA9qIuK9JTtouNGhoBhkd1VimsuXMtrRTSxTZ/ORsbyUMBpIrSsoEzfzw3wsQAlQp5buUO6QvTAa54DRHX7pSfWxQsfzPyWrRHUIDow3LsmD38X5WqZs69x5CEL6xzQRl5fCsqnTEWAz3l9zBTAlw=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by IA3PR10MB7993.namprd10.prod.outlook.com (2603:10b6:208:504::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8377.16; Tue, 21 Jan
+ 2025 17:16:38 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%6]) with mapi id 15.20.8356.020; Tue, 21 Jan 2025
+ 17:16:38 +0000
+To: Mike Christie <michael.christie@oracle.com>
+Cc: <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <james.bottomley@hansenpartnership.com>
+Subject: Re: [PATCH 1/1] scsi: Add passthrough tests for success and no
+ failure definitions
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20250113180757.16691-1-michael.christie@oracle.com> (Mike
+	Christie's message of "Mon, 13 Jan 2025 12:07:57 -0600")
+Organization: Oracle Corporation
+Message-ID: <yq134hcxf2r.fsf@ca-mkp.ca.oracle.com>
+References: <20250113180757.16691-1-michael.christie@oracle.com>
+Date: Tue, 21 Jan 2025 12:16:35 -0500
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR13CA0231.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c1::26) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: mWjZL4Eizm--6YwnTI2RlL8astD0-e-i
-X-Proofpoint-GUID: mWjZL4Eizm--6YwnTI2RlL8astD0-e-i
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|IA3PR10MB7993:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9642bec5-1565-49e9-288d-08dd3a3f5d5c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?sxI9BKNiq1QEruZ5F4tgEiqa3OaWKyPuKVQMhbEO6mwP1ujXnM+6YGn7gJn+?=
+ =?us-ascii?Q?T/Mhgl4kV2jzyOdJm3+BfRhagXg3xgvCufx1j6PKWMdrYXeaZRplUUJjlgfN?=
+ =?us-ascii?Q?ohXwsfSgF1hOO5kTdYE2cmwD0YKZTfFkW1YYRzxpUqloQvhwgx5Gp9vSgUPc?=
+ =?us-ascii?Q?6z1iRiRbDNf6c1QSb2QpPOqPWxEoseiN1zKylnI/CRIi6b6g4UykFjOW3LUq?=
+ =?us-ascii?Q?DhLF0ZFBDUo02EooqddWf2KWqI7owhaAAMcTHFbCP044TRcW7Ze1srjwYYFN?=
+ =?us-ascii?Q?NPBNp6wkue7r8ygBN8Ry0gtyGD32TsTiSvvAT8b7/aQecidcS/roM+4vcJY+?=
+ =?us-ascii?Q?2VzzkZzbkGVY+oziKOw9qsT9P5GLogVQjWA2XeHDTsm0VTeS5hvlUtbgTSgh?=
+ =?us-ascii?Q?E1rzR9Yd7tzv9Al77GIQypmLlRiVr2hvWgxgx14FPY0pjAZ90i78melyjFJ1?=
+ =?us-ascii?Q?mDnII4XtmyRT3bLMULWkyJNy5lh5wvd9R895nCXjdeS+CkPW+dnVXOUYP2z0?=
+ =?us-ascii?Q?9AN6KEpsBeOIcCfK3dm2eX4wWHjvvriPRPznFAmr5npjOf1M+y65rR/AcHCF?=
+ =?us-ascii?Q?kgCIY3hcKHMjKBDLMJBTowmwTwrdYVLI3Gieb+4lfs7x6+bc9qONSs+vGOtq?=
+ =?us-ascii?Q?mzrBbyQF+8xfhng5BRU0vf5FXlnnjvbd4tl1uaDGiq/tb7fSqK7MVNsLwX1K?=
+ =?us-ascii?Q?Om2IWIAtUKedoMK0oOJyowyS5KyvGa7rJvv/RlPMFQ8pVHxHv/EkcS2DAYpJ?=
+ =?us-ascii?Q?z17MCgthtOqM/dOUZQhmiLILUXQAFp/fRKMGboLNYvMdM6T0wxrhsNhTjgw9?=
+ =?us-ascii?Q?YFe0TVyO+ZfOIQbTZ1XBlJ1t57sSR9g6oCFgiUlp8X+lY6gzzR4DXcs69UVB?=
+ =?us-ascii?Q?jxEqaHyJBx2ucl/zML26om+ZU3cDN7zvoQqt5ptObOMuZ6ui93Gjn0PL46H+?=
+ =?us-ascii?Q?436FATBW/AVZu8ik1/aXRcEfTnWGHTSIiZIpTpLK5h3UUwvYgeT6sztn1O/X?=
+ =?us-ascii?Q?RsThrKEXSx6gPc/zT3bPOPTBRVDeUqV9hwmUV1z/JFO5/Odte6BxkS3J26+S?=
+ =?us-ascii?Q?XxoXUZlLTQzzunDmawc3c0r/W782as6k9eCPCA+xlGgPyUd3jWY9jikAWJLs?=
+ =?us-ascii?Q?O7ZFvIDmSs4eb+PMVJyXHhVjQseVf8usFQlC1bT+f2Z4o/rExUKS1DQwsmsd?=
+ =?us-ascii?Q?m58hUJoQVPDWFAotKlLhxTpHp2nhxFk+Sav0gQVTFubXc6VzHfE2CcsTxP8F?=
+ =?us-ascii?Q?a1T0wPKz2VVgddDZHBUZrpZYxp90/FCt7MWJTd3FlHmPlVnheRU/Of9q2o2t?=
+ =?us-ascii?Q?wOuNqsrt0CUFRbHc/BoPEAUWKYRxnfPQMSI2hC7r+4chHDTa44xCOQSr0sv/?=
+ =?us-ascii?Q?jD689ediYq1KVXqfaOW6mg9+7Kwk?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Jne4fgR1wf+cgsCcd4ETHzKnckLlz/ksUJMvyqQ7G9vybcism45vDmbnJVVL?=
+ =?us-ascii?Q?9urTCnsQRMWtq16E6Pz6AQn7TuPeFUVoom0k9YpBnOLAy4vW5BNHSZtkJXSs?=
+ =?us-ascii?Q?mVywnq3IOw3ZviCJodjS4YFwaKXHr5YGqQ8Xxqq2un7xJbxnEpj8YrH2Jdox?=
+ =?us-ascii?Q?buGQdY7yiWi4hSbVa/6R+NXx+L7JllnGeyDUBuCk1cqnyM//Zhog4Lc2MpwM?=
+ =?us-ascii?Q?st3cUyP2smmhVCBqLryYzZiSaxm6QdNACOLKCzBDaAxBWasaSNWM0ncZJuvF?=
+ =?us-ascii?Q?gkrtYg7w7pqQgpJ8h5z+NXpuUPvtKToHSG8Mkvv6LrmgqYqJgYYgCWYNTOeR?=
+ =?us-ascii?Q?tKpazzLhpdRIYzU3ZPz0P242EzMb0HpQ4D+KH7AIlxHbeGNw4jaY7Y0sJzHF?=
+ =?us-ascii?Q?Ga1qaWcdGzp6MuDr5XC5hsQV5dQ1k4cXKDpEFSnFz/Wn8WcK2xj2ujdxVbdS?=
+ =?us-ascii?Q?b9TgcCh9zfBhKjZoUA34e7vaaNtcEvjOSB7kpw+ZMCIIG3LuzTWksX2emNSL?=
+ =?us-ascii?Q?8ooLdD93R5fi/MWDEaxmJ3nbzc/BXkD4mamiQd93cirNvMcSnBqYT7bXeopD?=
+ =?us-ascii?Q?SOjDfl0dNdUQvBB7/yx+7WkLj97Qrei9bqB3Dh8QzQeZadR/d37M/ck0fpeC?=
+ =?us-ascii?Q?OMQvei2z5Ro3rO5+WhvZM7C+YilZ8VjHYFLPvsbSHihrd60KOAr9r593AGWC?=
+ =?us-ascii?Q?RyJa0WoYm8zxgdFKdbM4Zw7RiLugcS6fLX3e+GvOFGJQX+S9KFBWsRkH8vS2?=
+ =?us-ascii?Q?FwK6pOSsIhJcbG8M4ptHfv5oDdzS0Ahkk7iQrh4dUyt/gZlVWQRkwVamhvLo?=
+ =?us-ascii?Q?/GOiQZyh9sP0kcpq0PCqAIs8PVWm52Ytjs+i6LwKnxTx6s+GBD1zMg+RRbE9?=
+ =?us-ascii?Q?iu+1ELm9MT+YcJJMLmHYC9lCCxttseRJyM/Zxk9kVj3vX1XUZCnVj6F9XIxb?=
+ =?us-ascii?Q?rnxxZ4OLj9mS5508sjnynLzxVwyKg5cbfF6Q07KWAO0TQJO97iP12RZo3qz0?=
+ =?us-ascii?Q?Us6k+0SpLAlRavYvB5IXBzt3buSmNMO9JFQjXVuPCaCebTSqec14ic+L2Xob?=
+ =?us-ascii?Q?YeFGiMOM6Pp7M0HT8e/n8VCwtNZWYahPXVdLcoYFIufhJ9/lNwD69VA0lk7y?=
+ =?us-ascii?Q?YuOVP0aZmMdaMHQUfXs27BFnTQ3twuMYPusBXBgnaS7EbrA06utJwpPCI7GO?=
+ =?us-ascii?Q?VPMVI8gex9WjHAzZfFm7luTjHflx6MEIXgWnTQmojuf/lTXgHR08SfZusJK+?=
+ =?us-ascii?Q?DR4JP3VG/v2Q6GjWamF48sRfTpZPrjGjS6YRDyfF73eglJLfcTdIBYPJP18W?=
+ =?us-ascii?Q?7zHuR5Inzz1nTU3JpQl3GZDjpdRlHvlJYNj1MgmoC9nfZQhaeQdmu5mpbuQj?=
+ =?us-ascii?Q?/xkM8su2lB4Ul1FrjUs0kJze3NpteJEgqy/WKkm6+GjUCuDi9DidPMeHeGBt?=
+ =?us-ascii?Q?bbd8KZ8rofMOnUNTM8iChe+q3GkB2VrMj5dDAnX3rzIijMt8gcVPm3SKi570?=
+ =?us-ascii?Q?mwKBMdReb08xnj14G2IOOB6XF7U+E42OnMSX84DjtPPuiAEbYDmFEb9iA0nE?=
+ =?us-ascii?Q?ACr1VRG2r4SOGoqoIcs7hqm9wDA9H/vR6VmoftDwR8RJvsgc01RQhyNS/cl4?=
+ =?us-ascii?Q?FQ=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	s+DieEvwOZFhJyiqbXn/G86ndPq4iB6p8jL0BuYrGALZSMKL12GibS9P4AIQ9Zwig6CK9u0QNZN87O+NvFNZzR6eviPt3KI2eDfUtsCZrEekToDP+2o1XluKRRUksEHA4Hr9aePl/8teIsCcv83ZvoOt1h521Q7tgwmMQwrTzzu2clgCOhL7KFvlh2XtCVjjzK/0uf9ahhYhAw0NTsFfm9o3+Kpfuxh+bVWjTTdEOyrjYk+9E7sRPIZ6TTLRSHRHo1AgVgj66TCLxz8MOOK+7luyMscwHngn5O/4SFn89dwXaJsLC7ufpuGyBcwVBkI6S+5a9zIMDrU8rlSG3xRbJHxJK0nd+x1fr92mKQ1jtXFHHTQ9vQ9oqoQoMX+pH6Q8uhlqTukUanm7jMo8U9AMVSuN7X65MdBJ+qAGCJmwznuARwZl+DieXekMM7Wh4MyLwUv/9IpMZZGW/zPS3DS82x436z/wto+LBYEbbguUbk2HYuugtjznhTAaSl9Etcfjxevu9M/VTrtKe+uQf/HFdz4+9r6WUd3DU9fwZNaesU8uGd27pKKWdwXJ2DlPcL11EfGlBd071g6mgW+/oVt9bc9fJEUv/B/bL5El6poGgwo=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9642bec5-1565-49e9-288d-08dd3a3f5d5c
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jan 2025 17:16:38.1361
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eqXqL/ZFQeYxTyqOgo42wfeVuI8dTKHPVLO6SKIw3UV8qdJG3YuT9RmXXZ8SEhLoTyOD7NnPG7Zjj4dOsrj+rretpk0rVhPfw5t7QcNolnQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA3PR10MB7993
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-21_05,2025-01-21_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- bulkscore=0 suspectscore=0 adultscore=0 clxscore=1011 priorityscore=1501
- spamscore=0 impostorscore=0 lowpriorityscore=0 mlxscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
- definitions=main-2501210112
-
-On Fri, Jan 10, 2025 at 03:16:08PM +0100, Joel Granados wrote:
-
-Hi Joel,
-
-> Add the const qualifier to all the ctl_tables in the tree except for
-> watchdog_hardlockup_sysctl, memory_allocation_profiling_sysctls,
-> loadpin_sysctl_table and the ones calling register_net_sysctl (./net,
-> drivers/inifiniband dirs). These are special cases as they use a
-> registration function with a non-const qualified ctl_table argument or
-> modify the arrays before passing them on to the registration function.
-> 
-> Constifying ctl_table structs will prevent the modification of
-> proc_handler function pointers as the arrays would reside in .rodata.
-> This is made possible after commit 78eb4ea25cd5 ("sysctl: treewide:
-> constify the ctl_table argument of proc_handlers") constified all the
-> proc_handlers.
-
-I could identify at least these occurences in s390 code as well:
-
-diff --git a/arch/s390/appldata/appldata_base.c b/arch/s390/appldata/appldata_base.c
-index dd7ba7587dd5..9b83c318f919 100644
---- a/arch/s390/appldata/appldata_base.c
-+++ b/arch/s390/appldata/appldata_base.c
-@@ -204,7 +204,7 @@ appldata_timer_handler(const struct ctl_table *ctl, int write,
- {
- 	int timer_active = appldata_timer_active;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &timer_active,
- 		.maxlen		= sizeof(int),
-@@ -237,7 +237,7 @@ appldata_interval_handler(const struct ctl_table *ctl, int write,
- {
- 	int interval = appldata_interval;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &interval,
- 		.maxlen		= sizeof(int),
-@@ -269,7 +269,7 @@ appldata_generic_handler(const struct ctl_table *ctl, int write,
- 	struct list_head *lh;
- 	int rc, found;
- 	int active;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.data		= &active,
- 		.maxlen		= sizeof(int),
- 		.extra1		= SYSCTL_ZERO,
-diff --git a/arch/s390/kernel/hiperdispatch.c b/arch/s390/kernel/hiperdispatch.c
-index 7857a7e8e56c..7d0ba16085c1 100644
---- a/arch/s390/kernel/hiperdispatch.c
-+++ b/arch/s390/kernel/hiperdispatch.c
-@@ -273,7 +273,7 @@ static int hiperdispatch_ctl_handler(const struct ctl_table *ctl, int write,
- {
- 	int hiperdispatch;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &hiperdispatch,
- 		.maxlen		= sizeof(int),
-diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
-index 6691808bf50a..26e50de83d80 100644
---- a/arch/s390/kernel/topology.c
-+++ b/arch/s390/kernel/topology.c
-@@ -629,7 +629,7 @@ static int topology_ctl_handler(const struct ctl_table *ctl, int write,
- 	int enabled = topology_is_enabled();
- 	int new_mode;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &enabled,
- 		.maxlen		= sizeof(int),
-@@ -658,7 +658,7 @@ static int polarization_ctl_handler(const struct ctl_table *ctl, int write,
- {
- 	int polarization;
- 	int rc;
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &polarization,
- 		.maxlen		= sizeof(int),
-diff --git a/arch/s390/mm/cmm.c b/arch/s390/mm/cmm.c
-index 939e3bec2db7..8e354c90a3dd 100644
---- a/arch/s390/mm/cmm.c
-+++ b/arch/s390/mm/cmm.c
-@@ -263,7 +263,7 @@ static int cmm_pages_handler(const struct ctl_table *ctl, int write,
- 			     void *buffer, size_t *lenp, loff_t *ppos)
- {
- 	long nr = cmm_get_pages();
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &nr,
- 		.maxlen		= sizeof(long),
-@@ -283,7 +283,7 @@ static int cmm_timed_pages_handler(const struct ctl_table *ctl, int write,
- 				   loff_t *ppos)
- {
- 	long nr = cmm_get_timed_pages();
--	struct ctl_table ctl_entry = {
-+	const struct ctl_table ctl_entry = {
- 		.procname	= ctl->procname,
- 		.data		= &nr,
- 		.maxlen		= sizeof(long),
+ definitions=2025-01-21_07,2025-01-21_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ suspectscore=0 mlxscore=0 mlxlogscore=820 malwarescore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
+ definitions=main-2501210138
+X-Proofpoint-GUID: R8fNorfkCprVOczuXBQXnuDC80nHXfmj
+X-Proofpoint-ORIG-GUID: R8fNorfkCprVOczuXBQXnuDC80nHXfmj
 
 
-> Best regards,
-> -- 
-> Joel Granados <joel.granados@kernel.org>
+Mike,
 
-Thanks!
+> This patch adds scsi_check_passthrough tests for the cases where a
+> command completes successfully and when the command failed but the
+> caller did not pass in a list of failures.
+
+Applied to 6.14/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
