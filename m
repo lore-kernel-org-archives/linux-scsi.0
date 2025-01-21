@@ -1,189 +1,180 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11020100.outbound.protection.outlook.com [52.101.46.100])
+Received: from mail-m49234.qiye.163.com (mail-m49234.qiye.163.com [45.254.49.234])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57844192D70;
-	Mon, 20 Jan 2025 23:20:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.100
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737415256; cv=fail; b=g/5zDtFalYcR/B0dJdRnWL8UPxMC8SMSCfyqZw5KAmy+3G9UM48KnipquCagDu76xBoLXkZsIe1LMHhCxP/5DFA2O4TU7oXBXPHgrk8dms5sut0DRCrFScxqHubkKD1qDkbCm30CFKD9JhSH++hSjqd/TYOrI2RaFPFZby9vkII=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737415256; c=relaxed/simple;
-	bh=ZfITZwkkh5cG307dKA/0JnAoKhay++VqNg+CnC0zjdE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=r2Jb8q//WV6J2H6PVh3dEO3oVP10805atfRIgpl12QmVUV8R3yU3FvR9o0oDnE/WBd2ZGE5dXjcvJianM1vWTgKDekZy3LwHF7valu0643k8VUrFSPXxHfBHYixLDccjolf8d8S0oOmxehlt+0KRjEwvz5UGdRd4peqUSeGr5wA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=NZ4HCLyZ; arc=fail smtp.client-ip=52.101.46.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E5838831;
+	Tue, 21 Jan 2025 03:01:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.234
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1737428494; cv=none; b=SO8f4gWi5+Yj4ylNqJEyYugSM5332MOVFKzPzEY0tlxd49fDtEwhh1VxcPoNUZQ6vLkbNLSngsiV8SwFvT8dr/Ma//IpSE598XS7yj3EPg1hZlbvwm68MLHyqd08wR0nPCK94zwZsAMZOcwxNUhWS+uRIVijJx7rO3xe+bhcc00=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1737428494; c=relaxed/simple;
+	bh=g/nwDZP9SLEI2Vjd99fwinnM0/MNyabMv89OXaCJVow=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=uawpQ6sphzpxvUcUSLH9PGZsO3fGyU6NV8WLcHxeXAQRaAaoFq4n8AVdikUjlsWZGqepqXuGS9o+sNFisG3A3nR+4WI3Xyd/0F+9hPuZBRP+jgbo+rkP/O/MmTqbwreJcRgXx1lQMN/ZR2yW3ytXIk9ikJMu5tfM/vo8WqpIGKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=C+T0xur9; arc=none smtp.client-ip=45.254.49.234
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="NZ4HCLyZ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PMvzYpNFjaDXQxJ67EKRmZTEHraTkTuTyWWhZyGJOjNs5B6k3KgZLbgyQQncOajInKpg652O5pozk4vXtkClqR5amY9Gv4qdW85tx921iPL7uW0Udj6M75d2hwbyme1viTIR7GhBd9/C69thW451urvA76fqZsGsfzPix5wTkUi8pHAgGuMQQdY169fEN7rnzIMvEmc8oqXCUkh84JCecVFyvTb0U4TsPfvgoRJwPg6SMPIjxGcaIFS6lReeLLcQNoGSQpNA+1CJ0iV0bqEUQso2+/P1U0lAiifFPjkv0BEhKgI/Ro/xhM0U1STlPq8yS9McCZrduz/3+td363ZuxQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kaAA2or4ZIv5he6fl2G6R/UpSVgI2+NA4yGbhACGJCE=;
- b=AGTbHV3uyrv25SE8I9koD6HvrrO1mHvhwef+F1QTakPLQDlaTGLo9T109Q+OeI9nkET8krGCDCVmmoU6Igig3B0drdtC9hRxvWBw67SRZw8OufyN0ja5+qinxmDvxKbcboKVVQNtBUhmM60kMtqDYkEh5Yo9IoyxCAxzr6ELKCFvC40eyepdxP3oYaPuRFcSEGb4KBPifoqdf00uxoeJOsJ1UbjX70rrJ/O1ChHm9VXEiLJ+fmkyRrN7TdZq/oLUWiUf0iAwaHzlRsTTKwYLDTZtLtX4idyZL0vDEcPLse4T5YPoH0LWX3pQOkUSV9a7pBiCfPURX9byDS4Le73Wtg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kaAA2or4ZIv5he6fl2G6R/UpSVgI2+NA4yGbhACGJCE=;
- b=NZ4HCLyZ5Ho62hZaOQkO/9yyCQKzdRFNtzTJ0nZa8R3djN2pv667E65B9WMKTpGcMLismIDLsxn0FcXnQWA4ohsHagevhbu1SNcirLhw0JD6SRv2+ao+oBNARL5c8NMy4uhdaaen5VeMnugp6EzFI0n2LLcoK9WCQpnFicuLRns=
-Received: from MW4PR21MB1857.namprd21.prod.outlook.com (2603:10b6:303:74::12)
- by CH2PPF910B3338D.namprd21.prod.outlook.com (2603:10b6:61f:fc00::14e) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8377.15; Mon, 20 Jan
- 2025 23:20:52 +0000
-Received: from MW4PR21MB1857.namprd21.prod.outlook.com
- ([fe80::cc83:d3aa:1ee5:d6d2]) by MW4PR21MB1857.namprd21.prod.outlook.com
- ([fe80::cc83:d3aa:1ee5:d6d2%6]) with mapi id 15.20.8377.009; Mon, 20 Jan 2025
- 23:20:51 +0000
-From: Long Li <longli@microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>, "longli@linuxonhyperv.com"
-	<longli@linuxonhyperv.com>, KY Srinivasan <kys@microsoft.com>, Haiyang Zhang
-	<haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui
-	<decui@microsoft.com>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, James Bottomley <JBottomley@Odin.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "stable@kernel.org" <stable@kernel.org>
-Subject: RE: [PATCH] scsi: storvsc: Set correct data length for sending SCSI
- command without payload
-Thread-Topic: [PATCH] scsi: storvsc: Set correct data length for sending SCSI
- command without payload
-Thread-Index: AQHbagGi33dHDMlkpUquI/gnvyhfYLMgR6Zg
-Date: Mon, 20 Jan 2025 23:20:51 +0000
-Message-ID:
- <MW4PR21MB1857121CA82F0CE544F245BFCEE72@MW4PR21MB1857.namprd21.prod.outlook.com>
-References: <1737071998-4566-1-git-send-email-longli@linuxonhyperv.com>
- <BN7PR02MB41487C2C9BA6B963758E722AD4E52@BN7PR02MB4148.namprd02.prod.outlook.com>
-In-Reply-To:
- <BN7PR02MB41487C2C9BA6B963758E722AD4E52@BN7PR02MB4148.namprd02.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=563ecf69-e157-4f2e-b3a3-9ba714c38af2;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2025-01-20T22:51:24Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MW4PR21MB1857:EE_|CH2PPF910B3338D:EE_
-x-ms-office365-filtering-correlation-id: 83f8f034-eb44-4069-8bc2-08dd39a914a7
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|10070799003|366016|376014|7416014|921020|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?g5ZWviWsvS1BSJM/FfZXmAJk7sm8BYOTgc9G7AyiFLcAT294zakWni6ivcj3?=
- =?us-ascii?Q?520RHEjcUD8XErCj9bL0KXOn/MVDDWhrdWPMO9OyO5K3O+wEtOpsfvu9W56W?=
- =?us-ascii?Q?cypQWXNq1eC7OsR5reFGeGsLCAcqJuy9Uo8EvhgCcSIMl6NF3DPYMmuPCJDu?=
- =?us-ascii?Q?cJV2KGDquVI/mYxmt9T37ihibQYDWiw0yGcUMQ6zSoAApj1I7zU5/zJhM3bL?=
- =?us-ascii?Q?vySPfF7hLcVtLUU4ALLZQPDc/X2db+NsuqyyuNJGK7xFFg1R5XXvSle9xIT4?=
- =?us-ascii?Q?zinkT2+/Z+8Og1hCKe0EijegYOu/wkPPii1EiQrEPyPlOWjTVICX08Gt3mu1?=
- =?us-ascii?Q?ETf0YC8Q32srqC543E1ChgTasZh9C5a3nzGQTELhIfkaLufPWA3Mt8Ey0wCr?=
- =?us-ascii?Q?B8txyJb3yTJeEOPixYfU/cUHfDlmW4eHWe1Zqd21QwuAPyZArnoTJBkLTQbn?=
- =?us-ascii?Q?9Uhq5qJ56lgYa1XqMM89F0DtEMfM6cS2eT0GYTCUaHjJs9xmh+owqhRiytr9?=
- =?us-ascii?Q?PZlIoxUl84vL1BTqNJ+Hsd5fxolXzI1LD/d6lr1r6E6/0+qlI26hItF4cooG?=
- =?us-ascii?Q?AMSZxuSzHa6+anYwUY0YxJUQrEDxsFm8eHW/Hld/BA5eHOJvTDKrsXnApf1Z?=
- =?us-ascii?Q?BRmJtWyXKpfRZ5qtN1sto1BCjhPTYlmTBmXx4bbJDACSKr4f45myAdbXJ0Qd?=
- =?us-ascii?Q?kxMrT/ZPlpBVRzBavmtCZlYRnuxQxA14QoLyN6xwgeGjm7n8l1+mkkxQOXY6?=
- =?us-ascii?Q?Yp4+htMyEHgErL2j09umwFJ6HCRZvIlSr4pj+1bYhXW7O1veguaWdOr74ji1?=
- =?us-ascii?Q?WSpjg0sg9nhABTy7mIayEM0xKBwskqIMsV/Vc2iaykpM1/I/nfwLLb91PdFp?=
- =?us-ascii?Q?qOKrOrB67Btr7Br9/3vuk3DIEehV3IOBcdkfEbySwmDTM8wfd98vY3arh++o?=
- =?us-ascii?Q?y89mzjDoMy3ATiX63fJ2SCzRZJyv3yNiw9GAq1Uuwe3JHGnlbnGYY3oiJJw7?=
- =?us-ascii?Q?RUstfxKATeEQNeKv3esPnQAmBXcv2o3Y3wTxmxdHzbuOV9gSZZ4Nlj7fVrGK?=
- =?us-ascii?Q?2f0MPtXBl1B1gTilC0cwWLP/sbQFA/7o6Yof2LZUxJ0GnFIXQ+3Fm0YRmOPF?=
- =?us-ascii?Q?9XYO30KWYob7HhxNCtT7ozPPGVL1QokwSckbLtx6wvfqZlX4vbTYaDdy9Y+/?=
- =?us-ascii?Q?RQqcjj8SEFimJOxvsneVc+ZZJhoYdKVrtOzYBDjgpXeo4kC3t2eta6rl1FFl?=
- =?us-ascii?Q?EcMRcgAhL8rm0/5P11KNXocsJvblA65f4mgFr/ijji9yqAB1xmPZkwq111iK?=
- =?us-ascii?Q?68FFbE6gMOoo/SJf09GTGPwEPmhtJW4LoMAW1BfPE57S50vAPULzbNLKvG/p?=
- =?us-ascii?Q?dPRm/WFna9n3Xi3yRyzRkqA8i2WucnW87K3BQkB/rmV9a5q7gyhotd/yD5tA?=
- =?us-ascii?Q?m3vEawwXQMUWS+exGBFlfrSzhtDgrPHMQwsjtT1TiGt9eZDpL3Jrsw=3D=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW4PR21MB1857.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(376014)(7416014)(921020)(38070700018);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?0UhQSSKNYOypMyyUCcW+TW2/VkhSg/dAGbxTud4PKb+igAKSUzWnHObb0vq9?=
- =?us-ascii?Q?wiFqhYe3BFJUzzevXw1KS/Fe0Qzqp8dIjeiQgEP0GvQV4ztQZ1flJ00MTPeN?=
- =?us-ascii?Q?nNldKAMVlmAsUCAcePlxYT1zF6T75SytPMjftwDZi2toA/I0YjYZr3kb7+7a?=
- =?us-ascii?Q?DOcfYcM0ohVgzu0tLwdLO0Vqd6wtO913Pinrbhx/rKy6wjko4thqRkf6XHbR?=
- =?us-ascii?Q?IE0zlSpU0ROGLLdcCgD+/fnzd8FOo1RnKQmuh1JCVJF3sNmYRM0vE7Un4LUG?=
- =?us-ascii?Q?A5WKL+70rftKao02KQshiVrvJsb+xJWx6gKufKNAfjEqW45AtENwq37G70qX?=
- =?us-ascii?Q?GfqXiouPB3f05fGbSVhdl+yhlnfXFg7bNBfeMO6bZ4mnrz3Vnj9DzWmnJT2j?=
- =?us-ascii?Q?kLvRZ67yGoVKuGpgOEvoxG5xRs/sqzLEK9O6z/5wgoefBgmv5yozR1keaAum?=
- =?us-ascii?Q?VTWGoBfffYrA0qWz0r7J8McZ5uEfwPlsm1lkVR1YqXKTyswlytsukadI1Cwb?=
- =?us-ascii?Q?hL2eZ/3bak8hwlibAe62EiS+dqGNU9ga9tUhPMuGDM/8qQFBVqjl2vAcIAN3?=
- =?us-ascii?Q?fq/IRJoqN8izUNMZzJC4WHN5EjChMLS2gS6My2d881EZVXRWXENmNIo91y28?=
- =?us-ascii?Q?w/io54UpsnpnWnvcwAggyBG7c5XWvBCCqSzr0QQj2DmsJgGzt3ooneIZCNUQ?=
- =?us-ascii?Q?1DTlMONp2W1IUIZcnI3s83mPoizS4PoOEh+65FwWv0ZpVisk5bqNNKjHmRVU?=
- =?us-ascii?Q?6SuebT1dUebD9ro8kgs5YT8/z2PK3bMu2Uy/D3Z3Ql9fvNMxj1WZAVaaxd1d?=
- =?us-ascii?Q?QP2owjlxfIXXXox6em3Wu7u62klYrWySbAFGb29R7DNW/4EPM15swjyLdE/d?=
- =?us-ascii?Q?80N8jo3DGChFCeEkBtF4KoP30SH1oL6dT5vURK30RUqg4aKJlFw1rvf2mqMt?=
- =?us-ascii?Q?qUKPeZjQj234GmwTCQiG0QCqnLgrncB7rVFXXYYq5t636MzY1Tttn+TJEeOH?=
- =?us-ascii?Q?RojB8o0/+EXfubsNzVo0OODRl+WR1qWAwZM6XTmS9+nh/lAmBbvLGG4HiCpw?=
- =?us-ascii?Q?BQ/Bb9y017h04+RYqKbeb3ktS5Wn3GarzNAaOjb8jn2D62f+FhONqiEdp0gk?=
- =?us-ascii?Q?WFO3bxMiOpY8X6oy2USZbN6a6tAW3nu2/NYGKbAs68zp7KMn54JZrJspMxD/?=
- =?us-ascii?Q?/oW7xcvYgxuMxqoxGricVQSnrnuYTa+34GIARd+/Cedg4+y3hMJKoP6Er4hH?=
- =?us-ascii?Q?HSIfE8Omj0JwawbJOxfM9UgPaDpiv8OCCgVqNzlFclE/yJ7O9owlOc++Kiyd?=
- =?us-ascii?Q?7xE4kXfBSPg7vCgykWD5NPrn9thh2+/9tY07QtntKRDDQOUooYwXZ8iIy7z4?=
- =?us-ascii?Q?25AhPcLaQL3Ex0gBPKZhBPwBJbDUeiTJVB6fC2RrjBr/o7dMuNs8b3cPYDho?=
- =?us-ascii?Q?OYyzE25Ts17sOdux/mPeh9BVg3PtSuUHp6eGm7lY9XaNeYO8mjJF7js05/ad?=
- =?us-ascii?Q?hYEuuZ5iYhIXebsYTHGv/7Cd+e94dNkVgAVHnwVgZGJgjD0QF3NQwhC8YgWR?=
- =?us-ascii?Q?12t1K6389lfLJNBMY9Rjn3DBEogdjP+/kh2vs0D1c85GJtPu/7GZVLeicFrT?=
- =?us-ascii?Q?cQ3+FEol0aiVAQc7eJfF/z+3V0Udj6VIFcunNYGnOHG6?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="C+T0xur9"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 93fdcf00;
+	Tue, 21 Jan 2025 11:01:26 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v6 3/7] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
+Date: Tue, 21 Jan 2025 11:00:23 +0800
+Message-Id: <1737428427-32393-4-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1737428427-32393-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1737428427-32393-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkMZGVZIQk9CGUoeQ0NKGBpWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
+	NVSktLVUpCS0tZBg++
+X-HM-Tid: 0a9486cec7e909cckunm93fdcf00
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NSo6STo*OTIRNDVNHgstEjEZ
+	KQswFExVSlVKTEhMT0lDT0NMTE9LVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhDQk83Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=C+T0xur92zfdXVdz9scdLgm4Aypk0CBcgFBWQD1SVlAhuFBgchP6VY9J7XQ8zkuGc3bCJEZhwevLSNuGWNm+Yzw+Ah0QPbCEN/cMuunFcWpnSMDJ9FCGI/wLyu+dA0+jOmerKBUQOUXyCs/uhDPe5qVYnWywuzE0ipqN3sVh9PQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=S8k3+QF/U7BZrl92gLsmr2O43MinCweidYG2hgjh7D0=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW4PR21MB1857.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 83f8f034-eb44-4069-8bc2-08dd39a914a7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jan 2025 23:20:51.4712
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: +qHXv8W6WoeTvMbmf214405StHRwjDqeF0c7RshyQo7gYaof9uafYu/ACh8Zt8rsqp4YzC6p93BdkrJbp9U68A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PPF910B3338D
 
-> > In StorVSC, payload->range.len is used to indicate if this SCSI
-> > command carries payload. This data is allocated as part of the private
-> > driver data by the upper layer and may get passed to lower driver
-> uninitialized.
->=20
-> I had always thought the private driver data *is* initialized to zero by =
-the
-> upper layer. Indeed, scsi_queue_rq() calls scsi_prepare_cmd(), which zero=
-s the
-> private driver data as long as the driver does not specify a custom funct=
-ion to
-> do the initialization (and storvsc does not).  So I'm curious -- what's t=
-he
-> execution path where this initialization doesn't happen?
->=20
-> Michael
+From: Ulf Hansson <ulf.hansson@linaro.org>
 
-SCSI mid layer may send commands to lower driver without initializing priva=
-te data.=20
-For example, scsi_send_eh_cmnd() may send TEST_UNIT_READY and REQUEST_SENSE=
- to lower layer driver without initializing private data.
+For some usecases a consumer driver requires its device to remain power-on
+from the PM domain perspective during runtime. Using dev PM qos along with
+the genpd governors, doesn't work for this case as would potentially
+prevent the device from being runtime suspended too.
 
-I don't know if there are other places doing similar things outside scsi_er=
-ror.c, but storvsc is already calling memset() on its private data:
-(in storvsc_queuecommand)
-memset(&cmd_request->vstor_packet, 0, sizeof(struct vstor_packet));
+To support these usecases, let's introduce dev_pm_genpd_rpm_always_on() to
+allow consumers drivers to dynamically control the behaviour in genpd for a
+device that is attached to it.
 
-The assumption is that private data is not guaranteed to be 0.
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Long
+Changes in v6:
+- export dev_pm_genpd_rpm_always_on()
+
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pmdomain/core.c   | 35 +++++++++++++++++++++++++++++++++++
+ include/linux/pm_domain.h |  7 +++++++
+ 2 files changed, 42 insertions(+)
+
+diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
+index a6c8b85..b44c300 100644
+--- a/drivers/pmdomain/core.c
++++ b/drivers/pmdomain/core.c
+@@ -697,6 +697,37 @@ bool dev_pm_genpd_get_hwmode(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(dev_pm_genpd_get_hwmode);
+ 
++/**
++ * dev_pm_genpd_rpm_always_on() - Control if the PM domain can be powered off.
++ *
++ * @dev: Device for which the PM domain may need to stay on for.
++ * @on: Value to set or unset for the condition.
++ *
++ * For some usecases a consumer driver requires its device to remain power-on
++ * from the PM domain perspective during runtime. This function allows the
++ * behaviour to be dynamically controlled for a device attached to a genpd.
++ *
++ * It is assumed that the users guarantee that the genpd wouldn't be detached
++ * while this routine is getting called.
++ *
++ * Return: Returns 0 on success and negative error values on failures.
++ */
++int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
++{
++	struct generic_pm_domain *genpd;
++
++	genpd = dev_to_genpd_safe(dev);
++	if (!genpd)
++		return -ENODEV;
++
++	genpd_lock(genpd);
++	dev_gpd_data(dev)->rpm_always_on = on;
++	genpd_unlock(genpd);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(dev_pm_genpd_rpm_always_on);
++
+ static int _genpd_power_on(struct generic_pm_domain *genpd, bool timed)
+ {
+ 	unsigned int state_idx = genpd->state_idx;
+@@ -868,6 +899,10 @@ static int genpd_power_off(struct generic_pm_domain *genpd, bool one_dev_on,
+ 		if (!pm_runtime_suspended(pdd->dev) ||
+ 			irq_safe_dev_in_sleep_domain(pdd->dev, genpd))
+ 			not_suspended++;
++
++		/* The device may need its PM domain to stay powered on. */
++		if (to_gpd_data(pdd)->rpm_always_on)
++			return -EBUSY;
+ 	}
+ 
+ 	if (not_suspended > 1 || (not_suspended == 1 && !one_dev_on))
+diff --git a/include/linux/pm_domain.h b/include/linux/pm_domain.h
+index 45646bf..d4c4a7c 100644
+--- a/include/linux/pm_domain.h
++++ b/include/linux/pm_domain.h
+@@ -260,6 +260,7 @@ struct generic_pm_domain_data {
+ 	unsigned int rpm_pstate;
+ 	unsigned int opp_token;
+ 	bool hw_mode;
++	bool rpm_always_on;
+ 	void *data;
+ };
+ 
+@@ -292,6 +293,7 @@ ktime_t dev_pm_genpd_get_next_hrtimer(struct device *dev);
+ void dev_pm_genpd_synced_poweroff(struct device *dev);
+ int dev_pm_genpd_set_hwmode(struct device *dev, bool enable);
+ bool dev_pm_genpd_get_hwmode(struct device *dev);
++int dev_pm_genpd_rpm_always_on(struct device *dev, bool on);
+ 
+ extern struct dev_power_governor simple_qos_governor;
+ extern struct dev_power_governor pm_domain_always_on_gov;
+@@ -375,6 +377,11 @@ static inline bool dev_pm_genpd_get_hwmode(struct device *dev)
+ 	return false;
+ }
+ 
++static inline int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
++{
++	return -EOPNOTSUPP;
++}
++
+ #define simple_qos_governor		(*(struct dev_power_governor *)(NULL))
+ #define pm_domain_always_on_gov		(*(struct dev_power_governor *)(NULL))
+ #endif
+-- 
+2.7.4
+
