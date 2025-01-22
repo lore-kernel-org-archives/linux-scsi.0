@@ -1,53 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B18211473;
-	Wed, 22 Jan 2025 10:04:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D42211476;
+	Wed, 22 Jan 2025 10:04:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737540263; cv=none; b=ho+OCUxqO+UFmKN/iIlGgboDZpDuQ1R1NlgE86HDKKBrxQdjfQg6nvGcmL+oOCfhLQZ4veZ47TBlQveYvxuq658Orn/wM8Hvphd5hvzud9fg+LrDJrVsqCKD3+2noY6NxdiOw4sFKlghqGQ3kIgnJkhQfPVuqJhx6n26t8LGCSQ=
+	t=1737540264; cv=none; b=QMlOEWgtxv5jOawJlcKrENygCKMDHaEAfeC62S0CKa4WfEDeyDpjUOP2MRab/cXjRfwTZg5gvDjjLrixYh92FkuR/tgn7Xc61wFzZebc23iy97wjyoa7TX2k9m0NmGPljdQr0BCRSvsqQgyu8Fs/61mCNnYsIIs5Q7JwLmpKVlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737540263; c=relaxed/simple;
-	bh=6mdWUrrVahAt/4fJaGIy7eiVqiIHbpAylmNmOk241kk=;
+	s=arc-20240116; t=1737540264; c=relaxed/simple;
+	bh=YLIKmT/voqU7lJoYBk0dzxmf1NPi00fxL6KTMLlpV6U=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UNea0P2uOBqN1jnsNfFKHyjpHxg2PM6+q5LA36Bx20DSUn0ABaN73r3y+NWqq5mHpT4+5PP9tnQg3bnyi4FpeuWz4mHJpV+aUzskS+oiI1/YBzKvps3ZBiD3GCAGi0c+4vlR+T+AcTR1xzHVirYIKgUKiGFBKOHGuGhDDdB7sBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=l2AaFEpA; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=BHU4N0+p+vfJ63Gl7P7uapccKONRkW67zYQUPkNSW4v4EbGUV+OWwZ/2cvJF1iQlWFUCJCCm0hzzHqdMDbVwFDKO+JD1a2d4wPcfAk2WDudJLoHkX/v6vnFgYqu1zuvM9wpEcyI/GRt9LnQrsh9J7b0A9+N0nt0rf48p0ewlj1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EhxhfuoU; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="l2AaFEpA"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50M5htn5005065;
-	Wed, 22 Jan 2025 10:03:06 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EhxhfuoU"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50M6I7aY023350;
+	Wed, 22 Jan 2025 10:02:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Cb2OUInCQ6N
-	UjMEozfJkNPHrCqzxlA21t77oiJVeWeE=; b=l2AaFEpAKk6xuW6Zp26BpdZXep/
-	EJ0Fbc5BYb/W0eLhaNME55c/cqJgXs3X4pd2chQz3prtBRaZi7O6aE9PJXEf1Azi
-	uSue3Z/qkPjosnze2eEky0XKEofCDOg/ylbydiUSAYYTrlxgEQdFlOsrDqx50GvY
-	FIFHVxLlj5cBelnANYa92dje9aCgPoH57dICPCtd3os1gNkmRoPeH641msSLBGe6
-	wraY5xQGpqG3cyR0rO2Qk9QB+flWBQ+427H8oKhWQP7RN3m1oVjG5r/Vg1qCLfnD
-	biNNh+qA10LJhErOs2g7+oXV+7te+oW2AaXysyUdxJ3TYScONqlX1KzCZGw==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=4manhHXny9F
+	i7hRVodbdsginf0hAnZ34xkZ6PFG3Ifw=; b=EhxhfuoUpWcrw4H3JiOfxw+aMZW
+	FAakIlbxCzmYw0fqijNY3Z+0WtePR4B+pMolM8nOY2qsWsEDzuHhNR5v3MObgNs8
+	pLUEdlyvJLGISsi9XrNp6g6xA8Cph6Bx2ooVrv5mwVH/mddBEPtiWeFDgXcqaRxq
+	yZVFsSO3iE8uzSj6lCh5PeWbXghV70IW8NFcQX/D/RWNIFlH+E4k+IbYSSIxb7Gn
+	5B64YwZ406jJMSjz/pUdHlbkFUeMVowEDuBxjTvYFsM2M6iF+x6KlE/DXnab0Ao7
+	i2GDEjxWrvX28zh6TUFU/sxEKE8NZs5MJLzXIaVF5ruCmA4Mx6pweGPNpxw==
 Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44atsgrm4v-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44au9eghj9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Jan 2025 10:03:06 +0000 (GMT)
+	Wed, 22 Jan 2025 10:02:57 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 50MA33aJ006903;
-	Wed, 22 Jan 2025 10:03:03 GMT
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 50MA2cRs006767;
+	Wed, 22 Jan 2025 10:02:54 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4485cm3b7w-1
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4485cm3b6d-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Jan 2025 10:03:03 +0000
+	Wed, 22 Jan 2025 10:02:54 +0000
 Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50MA33qM006896;
-	Wed, 22 Jan 2025 10:03:03 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 50MA2saQ006794;
+	Wed, 22 Jan 2025 10:02:54 GMT
 Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 50MA32u6006890
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 50MA2sZ2006792
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Jan 2025 10:03:03 +0000
+	Wed, 22 Jan 2025 10:02:54 +0000
 Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id 3E9DE40CE9; Wed, 22 Jan 2025 18:03:02 +0800 (CST)
+	id 274BB40CE9; Wed, 22 Jan 2025 18:02:53 +0800 (CST)
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
@@ -58,12 +58,19 @@ Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         Peter Wang <peter.wang@mediatek.com>,
+        Stanley Jhu <chu.stanley@gmail.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Andrew Halaney <ahalaney@redhat.com>,
+        Maramaina Naresh <quic_mnaresh@quicinc.com>,
         Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 3/8] scsi: ufs: core: Add a vops to map clock frequency to gear speed
-Date: Wed, 22 Jan 2025 18:02:09 +0800
-Message-Id: <20250122100214.489749-4-quic_ziqichen@quicinc.com>
+        linux-kernel@vger.kernel.org (open list),
+        linux-mediatek@lists.infradead.org (moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC support:Keyword:mediatek)
+Subject: [PATCH v2 1/8] scsi: ufs: core: Pass target_freq to clk_scale_notify() vops
+Date: Wed, 22 Jan 2025 18:02:07 +0800
+Message-Id: <20250122100214.489749-2-quic_ziqichen@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250122100214.489749-1-quic_ziqichen@quicinc.com>
 References: <20250122100214.489749-1-quic_ziqichen@quicinc.com>
@@ -78,76 +85,125 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 3qZBRg-p4KqRKExBAo0ogzj8DowRKOLR
-X-Proofpoint-GUID: 3qZBRg-p4KqRKExBAo0ogzj8DowRKOLR
+X-Proofpoint-GUID: 5ZQFgq9QRSnfX9-yTrJraYm7RFXEx-Dv
+X-Proofpoint-ORIG-GUID: 5ZQFgq9QRSnfX9-yTrJraYm7RFXEx-Dv
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-22_04,2025-01-22_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- priorityscore=1501 adultscore=0 phishscore=0 mlxscore=0 bulkscore=0
- mlxlogscore=999 clxscore=1015 lowpriorityscore=0 impostorscore=0
- spamscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501220072
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ suspectscore=0 mlxlogscore=999 clxscore=1015 mlxscore=0 phishscore=0
+ impostorscore=0 adultscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2501220073
 
 From: Can Guo <quic_cang@quicinc.com>
 
-Add a vops to map UFS host controller clock frequencies to the maximum
-supported UFS high speed gear speeds. During clock scaling, we can map the
-target clock frequency, demanded by devfreq, to the maximum supported gear
-speed, so that devfreq can scale the gear to the highest gear speed
-supported at the target clock frequency, instead of just scaling up/down
-the gear between the min and max gear speeds.
+Instead of only two frequencies, If OPP V2 is used, the UFS devfreq clock
+scaling may scale the clock among multiple frequencies, so just passing
+up/down to vops clk_scale_notify() is not enough to cover the intermediate
+clock freqs between the min and max freqs. Hence pass the target_freq ,
+which will be used in successive commits, to clk_scale_notify() to allow
+the vops to perform corresponding configurations with regard to the clock
+freqs.
 
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
 ---
- drivers/ufs/core/ufshcd-priv.h | 10 ++++++++++
- include/ufs/ufshcd.h           |  3 +++
- 2 files changed, 13 insertions(+)
+
+v1 -> v2:
+Modify commit message to make it more clear.
+---
+ drivers/ufs/core/ufshcd-priv.h  | 7 ++++---
+ drivers/ufs/core/ufshcd.c       | 4 ++--
+ drivers/ufs/host/ufs-mediatek.c | 1 +
+ drivers/ufs/host/ufs-qcom.c     | 5 +++--
+ include/ufs/ufshcd.h            | 2 +-
+ 5 files changed, 11 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 0549b65f71ed..a8f05fc6e830 100644
+index 9ffd94ddf8c7..0549b65f71ed 100644
 --- a/drivers/ufs/core/ufshcd-priv.h
 +++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -277,6 +277,16 @@ static inline int ufshcd_mcq_vops_config_esi(struct ufs_hba *hba)
- 	return -EOPNOTSUPP;
+@@ -117,11 +117,12 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
+ 	return ufshcd_readl(hba, REG_UFS_VERSION);
  }
  
-+static inline int ufshcd_vops_freq_to_gear_speed(struct ufs_hba *hba,
-+						 unsigned long freq,
-+						 u32 *gear)
-+{
-+	if (hba->vops && hba->vops->freq_to_gear_speed)
-+		return hba->vops->freq_to_gear_speed(hba, freq, gear);
-+
-+	return -EOPNOTSUPP;
-+}
-+
- extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+-static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
+-			bool up, enum ufs_notify_change_status status)
++static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba, bool up,
++					       unsigned long target_freq,
++					       enum ufs_notify_change_status status)
+ {
+ 	if (hba->vops && hba->vops->clk_scale_notify)
+-		return hba->vops->clk_scale_notify(hba, up, status);
++		return hba->vops->clk_scale_notify(hba, up, target_freq, status);
+ 	return 0;
+ }
  
- /**
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index acc3607bbd9c..8d295cc827cc 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1157,7 +1157,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
+ 	int ret = 0;
+ 	ktime_t start = ktime_get();
+ 
+-	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
++	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, freq, PRE_CHANGE);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -1168,7 +1168,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
+ 	if (ret)
+ 		goto out;
+ 
+-	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
++	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, freq, POST_CHANGE);
+ 	if (ret) {
+ 		if (hba->use_pm_opp)
+ 			ufshcd_opp_set_rate(hba,
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 135cd78109e2..977dd0caaef6 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1643,6 +1643,7 @@ static void ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
+ }
+ 
+ static int ufs_mtk_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
++				    unsigned long target_freq,
+ 				    enum ufs_notify_change_status status)
+ {
+ 	if (!ufshcd_is_clkscaling_supported(hba))
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 68040b2ab5f8..b6eef975dc46 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1333,8 +1333,9 @@ static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
+ 	return ufs_qcom_set_core_clk_ctrl(hba, false);
+ }
+ 
+-static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+-		bool scale_up, enum ufs_notify_change_status status)
++static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
++				     unsigned long target_freq,
++				     enum ufs_notify_change_status status)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	int err;
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a4dac897a169..8c7c497d63d3 100644
+index d7aca9e61684..a4dac897a169 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -336,6 +336,7 @@ struct ufs_pwr_mode_info {
-  * @get_outstanding_cqs: called to get outstanding completion queues
-  * @config_esi: called to config Event Specific Interrupt
-  * @config_scsi_dev: called to configure SCSI device parameters
-+ * @freq_to_gear_speed: called to map clock frequency to the max supported gear speed
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -387,6 +388,8 @@ struct ufs_hba_variant_ops {
- 				       unsigned long *ocqs);
- 	int	(*config_esi)(struct ufs_hba *hba);
- 	void	(*config_scsi_dev)(struct scsi_device *sdev);
-+	int (*freq_to_gear_speed)(struct ufs_hba *hba, unsigned long freq,
-+					u32 *gear);
- };
- 
- /* clock gating state  */
+@@ -344,7 +344,7 @@ struct ufs_hba_variant_ops {
+ 	void    (*exit)(struct ufs_hba *);
+ 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
+ 	int	(*set_dma_mask)(struct ufs_hba *);
+-	int	(*clk_scale_notify)(struct ufs_hba *, bool,
++	int (*clk_scale_notify)(struct ufs_hba *, bool, unsigned long,
+ 				    enum ufs_notify_change_status);
+ 	int	(*setup_clocks)(struct ufs_hba *, bool,
+ 				enum ufs_notify_change_status);
 -- 
 2.34.1
 
