@@ -1,286 +1,106 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 925091F94A;
-	Wed, 22 Jan 2025 14:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCB6EED8;
+	Wed, 22 Jan 2025 15:30:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737556737; cv=none; b=TimbdI69k+cMejLxdNvLffebnuuKHt87I/zlgAGr7l4fkEcX3kLpaIPYxN0dgaRjogFm4QQM19EXLnN4fhkc5PnbDDk4gFBigzxUrvHYmi9CWcrkq3nbYVulbyJ3j3mWlee+W3N+77s7hYzqXrt8n/gqPeknvZijZZ13lqWVEXE=
+	t=1737559844; cv=none; b=f+M5jH9D21BEO3KJrO1WFugEVSpY8BHxl4uB3aYHWiofzVrUgCkIc6hRYsLhqbWB/gw2uvVU5lqMTkIq+4RU4frwnNLGj+CeHBBhzqCUx9iEQeZuYYnOLdr6n1CUQc6f00nU95aXS1bKkzUwR6NuVz8yIpf7BEe6MhJNic0psGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737556737; c=relaxed/simple;
-	bh=JIXXb4VR7cSSmfX8H0HaQkKqzEbRkLvxUDpomKCNzFw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CVK0Y/64Ch9XF+mHHxkrSFOuzizcyUcN/Pi4twM5XTAAhl2R8zCTHUpH034nfRi3HDMp67JZW/s0EpF32wtLWBjA11z2V3g96lHq2AXgJYMNwFkHhqZ9F9u6X8JeWEmQ8Yv68kPKdgTVhgTIiZHkH9naqCcHf41Oele16V7230A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ftNktYOq; arc=none smtp.client-ip=216.71.153.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1737559844; c=relaxed/simple;
+	bh=S15uzAAAqP5rA2jQWjYpQsN681b2HmQTqE9bXAl6hPs=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Uo7gc4qmfvB3s6mOg3jigr2PG9Augv+WpscBo/TS6gTHuGIM1HUl5aCiGPSHt/9KojzUw3zeE2rhLz/smrFkMsEnna+Yy2GYbXVvUQ/3jmcXDVcCK1QhjFUtm5PqNw/PgccRbK5ja9a049hbB3mPp1sL4178IdvQRLa5nrRlhj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dJhKX/y8; arc=none smtp.client-ip=209.85.218.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ftNktYOq"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1737556736; x=1769092736;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=JIXXb4VR7cSSmfX8H0HaQkKqzEbRkLvxUDpomKCNzFw=;
-  b=ftNktYOquHzXgN4v2wmuKWBVHyvUIc8LnyYkIi9OE3zCqerlDVq72lK7
-   Y4RmtBYmtEWN9T02nOA/XvmvaornZgXbHG2ucsj9zbCyAtwmTRhCTmKSP
-   b/4HKsKLS9IL246ozX+94OZ4oI4N0b0CZWtzgtGmOZlFwRm5Lonfh0o3h
-   fyucv6a+B5rbsOvg6RAwZQpztBxpWFDqFjoX7xL9X7CRqBVOXLAjx8lpt
-   sMIHtTiGEvN6d6zHb8/sRs+OlMrGyS0W/kuSepTsq3KiCZ4bh7fLsmCXv
-   awfnI7cdeuDCkjj1arT+mXEx2/Mb5XGYwNUjyFJjawZarY8xsQSIhNrvF
-   Q==;
-X-CSE-ConnectionGUID: PR25BGZAR42lNzEMS/1yYg==
-X-CSE-MsgGUID: ugiq2wA9SkOiKPA7UiiaPw==
-X-IronPort-AV: E=Sophos;i="6.13,225,1732550400"; 
-   d="scan'208";a="36527780"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Jan 2025 22:38:50 +0800
-IronPort-SDR: 6790f561_JyCXd7wBUr3317NJ0/22SXZfsXFJk5Y8W4uZWRN2FhpjPYO
- L5LeNLNMAdw2Aqb/oekg5co/i8RsMdYeqko5EAA==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jan 2025 05:40:49 -0800
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jan 2025 06:38:47 -0800
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <cang@qti.qualcomm.com>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH] scsi: ufs: Move clock gating sysfs entries to ufs-sysfs.c
-Date: Wed, 22 Jan 2025 16:36:05 +0200
-Message-Id: <20250122143605.3804506-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dJhKX/y8"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-aa6b4cc7270so1075862066b.0;
+        Wed, 22 Jan 2025 07:30:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737559841; x=1738164641; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=S15uzAAAqP5rA2jQWjYpQsN681b2HmQTqE9bXAl6hPs=;
+        b=dJhKX/y8PaVr52dfDY/Q2JxqxiPlefoNLW3DJmulfhz3Pv5Zj9nzv2cY/ziScDuFh4
+         jb93ynKNJ1AsMogJbKi0Y2NWXRANiQSq/Kj/ByBbWoZJ6AiKCpQ8FvumucjmX4k/7EtO
+         i9LOhT7E/FcfbXxxL8hwLug6IEfIy2h3eo52mOxOiZJlMsDjHJubK1wH+r1ns+3BtmOv
+         6+D3B1/LvMdi6plnxo4jVAMfNaVQpMFKPUcoqCZxdX5kXuk6B0yyBdh17nie+LotWGVJ
+         Er57mcfwA0fT/7kyawr2cV9F6X6R0+3sWSngKNdsqlvDWbyQVPackkzED8nFUPrBsEHD
+         9+4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737559841; x=1738164641;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S15uzAAAqP5rA2jQWjYpQsN681b2HmQTqE9bXAl6hPs=;
+        b=SesmOE//rJN41QlX1MH/5labvyNTLtKVQdaPrZIls6a0A5ZdlX+MYRf9xf95ImGAb0
+         N0THbujPBqnsLnLbqvKJ3TQXRWwLSvZQwjMs6bCzyqatZmzqe9J6qH3N8Z6/IAgVgsII
+         RELWt6Ky6ftSHZJpcGGzaGgJCDgGfv9jMmTaO9DiZebmcYxeGjTB7N36eO8chqQtCtgd
+         n8Fkv2sp+2VGN3AvX3P71lQGpd1qrNO066jqR726M319aWJ3diKvpT0xm4XdoA1hiRII
+         pW/gbKkARTzxNdVd6FSaiHliUREpJ867ydnWcQpleGXbRPEu7AQpBpzKrzA3rtCknjHC
+         +e9g==
+X-Forwarded-Encrypted: i=1; AJvYcCU8dFGcpJs6uNQGRrBYc5j9gFReNJ9pDmFpR7Jx8xYa/VjJuqCUM4uOhF7e1RvVaGcT09Jeaib3hXP6t6Y=@vger.kernel.org, AJvYcCWT/n0Ii9fzCDrducdfPBjou5clg/x51GCb0TpyNatjZ7r7rNLlrWB5+wu4C0Nx2JFDoK4fuLMd2VDLLQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzQ7Q/j+tT++8EAV4T2UzMiYriY/wyN4SyGI+GWLMhkGQX2KY+9
+	EMs89cw2apofCCaQ01aZEVIWjLLy3QzuqVhIBbMj13isQQ66igtm
+X-Gm-Gg: ASbGncvm4Odld6yZBlwRY9ApZXtDFUVceazAJ2fAhMqL+C/DkQLuPpsoi8EuvPJ6T3K
+	md/k+TCgFztsGQHj5hjkoNY72x6O87vafg5nZm6xz1fFGB5hF3vqdDNk3PwxdsR9QpBlLMFrp9d
+	MSmHi+IENv5/EA0ka9nvGbDaWUIVSPU72ytqnxHfwPW+ackQs8gXkZ8oLZ1VpV0XyOaczCXDuDM
+	BXWBlr5ECbh7R+eSH46Xn2gGTAXAfQE0L2iEpK0rWP3F2cVJUO/AIzcsRQ+L+496DIeD/GC
+X-Google-Smtp-Source: AGHT+IFLDI2xNX6J+pzyb9IaPyORMnCXhEOOoj4DwOs+Iarbw4IEqG/U48whIQtK7zQG2CqjULdJSQ==
+X-Received: by 2002:a05:6402:1ed4:b0:5d0:c697:1f02 with SMTP id 4fb4d7f45d1cf-5db7d30092amr45990846a12.17.1737559840959;
+        Wed, 22 Jan 2025 07:30:40 -0800 (PST)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab384c75baesm922292966b.1.2025.01.22.07.30.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jan 2025 07:30:40 -0800 (PST)
+Message-ID: <84951628fd2823c60727cd67992cd035acb53e17.camel@gmail.com>
+Subject: Re: [PATCH v2 3/8] scsi: ufs: core: Add a vops to map clock
+ frequency to gear speed
+From: Bean Huo <huobean@gmail.com>
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com, 
+ bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
+ avri.altman@wdc.com,  junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com,  quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Alim Akhtar
+ <alim.akhtar@samsung.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, Peter Wang
+ <peter.wang@mediatek.com>,  Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, Eric Biggers <ebiggers@google.com>,
+ Minwoo Im <minwoo.im@samsung.com>,  open list <linux-kernel@vger.kernel.org>
+Date: Wed, 22 Jan 2025 16:30:38 +0100
+In-Reply-To: <20250122100214.489749-4-quic_ziqichen@quicinc.com>
+References: <20250122100214.489749-1-quic_ziqichen@quicinc.com>
+	 <20250122100214.489749-4-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-This commit moves the clock gating sysfs entries from `ufshcd.c` to
-`ufs-sysfs.c` where it belongs. This change improves the organization of
-the code by consolidating all sysfs-related code into a single file.
+On Wed, 2025-01-22 at 18:02 +0800, Ziqi Chen wrote:
+> From: Can Guo <quic_cang@quicinc.com>
+>=20
+> Add a vops to map UFS host controller clock frequencies to the
+> maximum
+> supported UFS high speed gear speeds. During clock scaling, we can
+> map the
+> target clock frequency, demanded by devfreq, to the maximum supported
+> gear
+> speed, so that devfreq can scale the gear to the highest gear speed
+> supported at the target clock frequency, instead of just scaling
+> up/down
+> the gear between the min and max gear speeds.
+>=20
+> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-The `clkgate_enable` and `clkgate_delay_ms` attributes are now defined
-and managed in `ufs-sysfs.c`, and the corresponding initialization and
-removal functions in `ufshcd.c` are removed.
-
-No functional change.
-
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufs-sysfs.c | 62 ++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd.c    | 85 ------------------------------------
- 2 files changed, 62 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 796e37a1d859..dd0db44b18a6 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -458,6 +458,64 @@ static ssize_t pm_qos_enable_store(struct device *dev,
- 	return count;
- }
- 
-+static ssize_t
-+clkgate_enable_show(struct device *dev, struct device_attribute *attr,
-+		    char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", hba->clk_gating.is_enabled);
-+}
-+
-+static ssize_t
-+clkgate_enable_store(struct device *dev, struct device_attribute *attr,
-+		     const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+
-+	if (kstrtou32(buf, 0, &value))
-+		return -EINVAL;
-+
-+	value = !!value;
-+
-+	guard(spinlock_irqsave)(&hba->clk_gating.lock);
-+
-+	if (value == hba->clk_gating.is_enabled)
-+		return count;
-+
-+	if (value)
-+		ufshcd_release(hba);
-+	else
-+		hba->clk_gating.active_reqs++;
-+
-+	hba->clk_gating.is_enabled = value;
-+
-+	return count;
-+}
-+
-+static ssize_t
-+clkgate_delay_ms_show(struct device *dev, struct device_attribute *attr,
-+		      char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->clk_gating.delay_ms);
-+}
-+
-+static ssize_t
-+clkgate_delay_ms_store(struct device *dev, struct device_attribute *attr,
-+		       const char *buf, size_t count)
-+{
-+	unsigned long value;
-+
-+	if (kstrtoul(buf, 0, &value))
-+		return -EINVAL;
-+
-+	ufshcd_clkgate_delay_set(dev, value);
-+	return count;
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -470,6 +528,8 @@ static DEVICE_ATTR_RW(enable_wb_buf_flush);
- static DEVICE_ATTR_RW(wb_flush_threshold);
- static DEVICE_ATTR_RW(rtc_update_ms);
- static DEVICE_ATTR_RW(pm_qos_enable);
-+static DEVICE_ATTR_RW(clkgate_delay_ms);
-+static DEVICE_ATTR_RW(clkgate_enable);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -484,6 +544,8 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_wb_flush_threshold.attr,
- 	&dev_attr_rtc_update_ms.attr,
- 	&dev_attr_pm_qos_enable.attr,
-+	&dev_attr_clkgate_delay_ms.attr,
-+	&dev_attr_clkgate_enable.attr,
- 	NULL
- };
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f6c38cf10382..901aef52a452 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2019,14 +2019,6 @@ void ufshcd_release(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_release);
- 
--static ssize_t ufshcd_clkgate_delay_show(struct device *dev,
--		struct device_attribute *attr, char *buf)
--{
--	struct ufs_hba *hba = dev_get_drvdata(dev);
--
--	return sysfs_emit(buf, "%lu\n", hba->clk_gating.delay_ms);
--}
--
- void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value)
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
-@@ -2036,79 +2028,6 @@ void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value)
- }
- EXPORT_SYMBOL_GPL(ufshcd_clkgate_delay_set);
- 
--static ssize_t ufshcd_clkgate_delay_store(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	unsigned long value;
--
--	if (kstrtoul(buf, 0, &value))
--		return -EINVAL;
--
--	ufshcd_clkgate_delay_set(dev, value);
--	return count;
--}
--
--static ssize_t ufshcd_clkgate_enable_show(struct device *dev,
--		struct device_attribute *attr, char *buf)
--{
--	struct ufs_hba *hba = dev_get_drvdata(dev);
--
--	return sysfs_emit(buf, "%d\n", hba->clk_gating.is_enabled);
--}
--
--static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	struct ufs_hba *hba = dev_get_drvdata(dev);
--	u32 value;
--
--	if (kstrtou32(buf, 0, &value))
--		return -EINVAL;
--
--	value = !!value;
--
--	guard(spinlock_irqsave)(&hba->clk_gating.lock);
--
--	if (value == hba->clk_gating.is_enabled)
--		return count;
--
--	if (value)
--		__ufshcd_release(hba);
--	else
--		hba->clk_gating.active_reqs++;
--
--	hba->clk_gating.is_enabled = value;
--
--	return count;
--}
--
--static void ufshcd_init_clk_gating_sysfs(struct ufs_hba *hba)
--{
--	hba->clk_gating.delay_attr.show = ufshcd_clkgate_delay_show;
--	hba->clk_gating.delay_attr.store = ufshcd_clkgate_delay_store;
--	sysfs_attr_init(&hba->clk_gating.delay_attr.attr);
--	hba->clk_gating.delay_attr.attr.name = "clkgate_delay_ms";
--	hba->clk_gating.delay_attr.attr.mode = 0644;
--	if (device_create_file(hba->dev, &hba->clk_gating.delay_attr))
--		dev_err(hba->dev, "Failed to create sysfs for clkgate_delay\n");
--
--	hba->clk_gating.enable_attr.show = ufshcd_clkgate_enable_show;
--	hba->clk_gating.enable_attr.store = ufshcd_clkgate_enable_store;
--	sysfs_attr_init(&hba->clk_gating.enable_attr.attr);
--	hba->clk_gating.enable_attr.attr.name = "clkgate_enable";
--	hba->clk_gating.enable_attr.attr.mode = 0644;
--	if (device_create_file(hba->dev, &hba->clk_gating.enable_attr))
--		dev_err(hba->dev, "Failed to create sysfs for clkgate_enable\n");
--}
--
--static void ufshcd_remove_clk_gating_sysfs(struct ufs_hba *hba)
--{
--	if (hba->clk_gating.delay_attr.attr.name)
--		device_remove_file(hba->dev, &hba->clk_gating.delay_attr);
--	if (hba->clk_gating.enable_attr.attr.name)
--		device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
--}
--
- static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- {
- 	if (!ufshcd_is_clkgating_allowed(hba))
-@@ -2126,8 +2045,6 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
- 		hba->host->host_no);
- 
--	ufshcd_init_clk_gating_sysfs(hba);
--
- 	hba->clk_gating.is_enabled = true;
- 	hba->clk_gating.is_initialized = true;
- }
-@@ -2137,8 +2054,6 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
- 	if (!hba->clk_gating.is_initialized)
- 		return;
- 
--	ufshcd_remove_clk_gating_sysfs(hba);
--
- 	/* Ungate the clock if necessary. */
- 	ufshcd_hold(hba);
- 	hba->clk_gating.is_initialized = false;
--- 
-2.25.1
-
+Reviewed-by: Bean Huo <beanhuo@micron.com>
