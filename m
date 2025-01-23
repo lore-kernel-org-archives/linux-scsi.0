@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B9E154C07;
-	Thu, 23 Jan 2025 18:02:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2138D155742;
+	Thu, 23 Jan 2025 18:37:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737655373; cv=none; b=Jkzd5LTyfmhqrj4fJjgf4X450TyzVn123Av0rZWVxSbEjxFOa0YSDhCW1GqHqd5UfDj7b/eOG+Q5IakOTs/GzJXEb2rW6WxnwZWWGWxDkitzYsZVZuTxp7rocbY3HOxmRlIsS9clHwau3aGxfXUKfwGrG2bBfdOBuuKyTJN0J5s=
+	t=1737657455; cv=none; b=cA+2pLaThoCdFhyyw70h1aZRCAetgK/aJsrPz73q0RaV6SCrdM7198h7udBjnoMU8W2LiJAC18RNLj3faSnZdqXj3/K3XdovJdSz4FldLFvQBFpkwxFAJUaxwC+pnrYHE+qdJRAaulHldn6+Cgn/RDsVYfC62l3RTIyOlHhynGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737655373; c=relaxed/simple;
-	bh=IQ23k7DgELJHPisXJDjODcjTmt8fE5b1E3B+SAErn54=;
+	s=arc-20240116; t=1737657455; c=relaxed/simple;
+	bh=m7duHxIbBH3L3SmBqgno07ypccOnWOZitvYRcmczPq0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QP2b4lTOyzGWPUHBgtyrTTcvN8X64ESz+YkKLFzU4im2IK2Qpwu2IRiGsmDY6HkHOq0+cYIby6ENcLx38UVMn2H38D48C8JYcuYMNT7d9+8UTEokNsgRdwJjniw75feLzIYe7bMbPevPvNuFvysYvr4fgJpa7VH05AkJuR+QV5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=PJVt9p5Z; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=qM4TH0F+GdgYfncgOYFg1BrldTMUaVDchDuJ4yyyynRffdJzR1QBwWTl3/Yp8y8jsKuiYs9jDBfT3d/Jd5n4GFECpKxWflcFAGtktQRs2rR2Q8rPprJ24ECpQcgm7n9Dhz+Zx6XduXSfh0IiLPi3hpzs/kOwLWVfb5+gsxD1euE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=m0Y4ZWW+; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="PJVt9p5Z"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="m0Y4ZWW+"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Yf81R3QKMz6CmQtD;
-	Thu, 23 Jan 2025 18:02:51 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Yf8nM52Bzzlfw6N;
+	Thu, 23 Jan 2025 18:37:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1737655362; x=1740247363; bh=WIJVbTEo0h5RhJGwRqPjf0Bs
-	0I+xKtRiGutiyLdgKfA=; b=PJVt9p5Z0ol5VAp/vtzqbnyfHrTuC+GFspSIboLY
-	CKi6TbkDiQ+4S/MKPd7G5Xow+Sqk5OmLmROf76Z78e/6k9MmCkblR4gQgrw0+rP5
-	6S2hR/YBX7PlQm/ajKp4I8P3RIMVwLq3yJTQ4W3IxsSmmn7Zjup04lsqxGLMdt+Y
-	CGVH++zhFdHud5UWmYgz+D+qovGyBXxp/wPmIcbWsFHS1uGTJB6L0Jkd4/FtVr+2
-	hy4UL3Ph6HW8j6YwA2s3ectd1oe1SMV1NDutGGktxPkyznTVZ4fEhFf4Qw/lLRk3
-	talt2XGQ8cjN5bz5y/m+CK6cKrQPiH5UuzEUVzJkXpOHVw==
+	 s=mr01; t=1737657444; x=1740249445; bh=Sc1C6DNv+URymf11ILQ4Xa34
+	vJDaZ5LuqTzQ1+bijsc=; b=m0Y4ZWW+qQfWo8M/eMKsloQ5vlR0fzXwncyUR3ml
+	B5YmBCAxdgGGNgaF6yn3FEC5RAX/siumCwBVzMtB9I70qUAoTpgLD7O+x5nrLNrT
+	pM2livktQJub+0eprAW5LFhVzWYaRln2jVHuhvfSJGorm16zMOPyi+aZymVs6EIT
+	cSOUZvaMdOGw97QhDOqOgYKcsOZBP9xhvN2LHjNuS/Jtvbqc2CcyDGBawqq1UDlA
+	bA7JEwjnjRVZDwTlN2CS1kLLB1FPZhG7uKiTJyiLr1fT3pkxcAEKCyXp9XaSgZGW
+	0f4zANShcChknaUlH5lXVxGuzFStwPpZO01eQLKn0VhBZw==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6RkP4OS1-S08; Thu, 23 Jan 2025 18:02:42 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id gMKkBHSa3s2R; Thu, 23 Jan 2025 18:37:24 +0000 (UTC)
 Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Yf8154CYZz6CmQyM;
-	Thu, 23 Jan 2025 18:02:32 +0000 (UTC)
-Message-ID: <9337b005-f468-471c-97e1-f4059ed4283d@acm.org>
-Date: Thu, 23 Jan 2025 10:02:32 -0800
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Yf8nG614bzlgVnN;
+	Thu, 23 Jan 2025 18:37:22 +0000 (UTC)
+Message-ID: <8a714674-fecf-4067-97e4-59e28816c854@acm.org>
+Date: Thu, 23 Jan 2025 10:37:21 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,55 +50,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 5/8] scsi: ufs: core: Enable multi-level gear scaling
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
- mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
- junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Andrew Halaney <ahalaney@redhat.com>,
- Maramaina Naresh <quic_mnaresh@quicinc.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <20250122100214.489749-1-quic_ziqichen@quicinc.com>
- <20250122100214.489749-6-quic_ziqichen@quicinc.com>
- <da2df1b2-5d32-4fcf-8298-6d045b4f7d42@acm.org>
- <bd7f88a8-8e59-464b-ac2d-3c75739076ae@quicinc.com>
+Subject: Re: [PATCH] scsi: ufs: Move clock gating sysfs entries to ufs-sysfs.c
+To: Avri Altman <Avri.Altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+ Can Guo <cang@qti.qualcomm.com>
+References: <20250122143605.3804506-1-avri.altman@wdc.com>
+ <52d287b6-f6e4-4644-aef8-2c22bff59613@acm.org>
+ <DM6PR04MB657584F352A1AD45FBD7B23DFCE02@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <bd7f88a8-8e59-464b-ac2d-3c75739076ae@quicinc.com>
+In-Reply-To: <DM6PR04MB657584F352A1AD45FBD7B23DFCE02@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/22/25 11:41 PM, Ziqi Chen wrote:
-> We use memcpy() here is due to memcpy() can be faster than direct 
-> assignment. We don't worry about safety because they are same struct 
-> "ufs_pa_layer_attr" so that we can ensure the accuracy of number of 
-> bytes and member type.
+On 1/22/25 11:31 PM, Avri Altman wrote:
+>> On 1/22/25 6:36 AM, Avri Altman wrote:
+>>> +static ssize_t
+>>> +clkgate_enable_show(struct device *dev, struct device_attribute *attr,
+>>> +                 char *buf)
+>>> +{
+>>
+>> The above formatting does not conform to the Linux kernel coding style.
+>> Please fix this, e.g. by running git clang-format HEAD^ && git commit --amend
+>> on the git branch with this patch.
+> Done.
+> AFAIK, there hasn't been a formal announcement that `clang-format` should replace `checkpatch` for Linux kernel development.
+> And yes, while checkpatch --strict accepted the above formatting, clang-format did make changes.
 
-The memcpy() call we are discussing is not in the hot path so it doesn't
-have to be hyper-optimized. Making the compiler perform type checking is
-more important in this code path than micro-optimizing the code.
+Hi Avri,
 
-Additionally, please do not try to be smarter than the compiler. 
-Compilers are able to convert struct assignments into a memcpy() call if
-there are good reasons to assume that the memcpy() call will be faster.
+Nobody ever required to use clang-format as far as I know.
 
-Given the small size of struct ufs_pa_layer_attr (7 * 4 = 28 bytes),
-memberwise assignment probably is faster than a memcpy() call. The trunk
-version of gcc (ARM64) translates a memberwise assignment of struct 
-ufs_pa_layer_attr into the following four assembler instructions (x0 and
-x1 point to struct ufs_pa_layer_attr instances, q30 and q31 are 128 bit
-registers):
-
-         ldr     q30, [x1]
-         ldr     q31, [x1, 12]
-         str     q30, [x0]
-         str     q31, [x0, 12]
+With my email I was referring to the requirement that the return type
+and the function name occur on the same line.
 
 Thanks,
 
