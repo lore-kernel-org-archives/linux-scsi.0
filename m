@@ -1,287 +1,136 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E771179A7;
-	Thu, 23 Jan 2025 07:36:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73C19179A7;
+	Thu, 23 Jan 2025 07:38:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737617804; cv=none; b=ItrbMF91VfLnMKOEqjO3Ds2zpeouELnehy7GF+G0XgDl0Be+AOR2/ut1iv9umZpWJRBtSQpkfw5ghIWDaj4C3x0HNYX2AolOZMDcJJ8ZwmA2MSYBAL0Fo43usEW0jNq4QBruzc0qhjxr537OjXIH3HI/oPSrDffspv3czzfGaJs=
+	t=1737617902; cv=none; b=jhOzC82gJRIgh713kiL4fJ4CXrWtpaDmIRQ1tmdZEL/2CHT9Hm8+2Zgrpe8YxYUCdROEuZXCSsHHN1vcoo8v15SzpbaL6vDgdEy7K7sAt3DwwQamNIxtWNJ5c5qN99W4V9n6ghMtn37vAhGDPztwoIOiFg0cCsfkLVMFQ/3dN5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737617804; c=relaxed/simple;
-	bh=wTBUQbh6p6c8GRWQlSHXjiXan3OxBt6/XBH9ltE9mpA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lq5u+f+Fq6UTuoQxTXPfm0NwkxtiFVQ3twltbo1Bulx18mJUQDNlXk7+m7rPqJ3rMBgGkv4UB0A/OQkieHX/iOLNv2gCuJ+0S6F8h4eWaEibT3lOirQFZzQbeUQ0iwZqcKu8KxAQxw0xgc0o82tCd870BWnEGWrDMFjP+9ZKRrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=GLaDH1jy; arc=none smtp.client-ip=216.71.153.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1737617902; c=relaxed/simple;
+	bh=waAZu7tTipTbm/hiA/MKEsqHe1zlHko8OZE8jjFYskU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=KJgaq+xAr28gAHoFS5E1DxnNcmC74JbtN9KsJDUcQOVIydA6Ou4Jrx0HvCPyVuXveVnlijy3AqpP41IXccqKwYvos6y+8UbSaVMNs+TUTKpiV8QSZddyTCHGrvwOy3IG/vQCSLF2sBRIHHAd0J2+DJMyed+x+ZyYwiPSOSuA0J0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dPqQvTr9; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="GLaDH1jy"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1737617803; x=1769153803;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=wTBUQbh6p6c8GRWQlSHXjiXan3OxBt6/XBH9ltE9mpA=;
-  b=GLaDH1jy5HYPqHs6P4WMqm1rmsffOJz7q0mn4v3rCaDRWa4YB2GGSB1Y
-   E4kB5EHDn8nzd99Dr0TJi66vOHfm1OLDotQZXrZQaEoo+BjtXgaoVBtv0
-   J6dIU1T7PMDy74eEqDHT/zyYT5nNIgeExqUeGxO0L1his0xqbXg+aDugN
-   Q69ucXv/5sZNyRKVuNdkS468qqUi9U6+qJqWnrAPAgXlnuCJdOpKoxjn2
-   Po3uCdhdQ7xgKGeuE/6qb+X5GIeDm5TmFclO0Vaf58JcWR9z31QTvO58E
-   RVagZLl7bfw7IzKThcFdks9m+1taHhx5/lb47uSBygvQLStk39qhucJZn
-   w==;
-X-CSE-ConnectionGUID: KUlNrfHtR5SfowXsWyXvaQ==
-X-CSE-MsgGUID: HQrKgGQiQPOx4Ksa9SXhaw==
-X-IronPort-AV: E=Sophos;i="6.13,227,1732550400"; 
-   d="scan'208";a="36593340"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Jan 2025 15:36:40 +0800
-IronPort-SDR: 6791e3ef_unY5EWiLjBUx/51Efoc+budlddbsiO14gIWzkQvdJ0tt+RQ
- LmKFdubZSyUPQlidOJx3JeBoJz4H/Pb66U6SAbw==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jan 2025 22:38:39 -0800
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jan 2025 23:36:38 -0800
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <cang@qti.qualcomm.com>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v2] scsi: ufs: Move clock gating sysfs entries to ufs-sysfs.c
-Date: Thu, 23 Jan 2025 09:33:59 +0200
-Message-Id: <20250123073359.3809072-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dPqQvTr9"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50N3wf9L017075;
+	Thu, 23 Jan 2025 07:37:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	XaiEwb9GzSb1/VXlwzCT2CT2IHfMEAwz/tMVIauuf48=; b=dPqQvTr9LyVe1xEn
+	MX7AkSZ2PItM6U5xtxpFXHTQZKUrNBttI1catuJNSpsS3gCDPbfKi+Wzt2lltN6A
+	iFjVfQr8KgIfPUmFT/fN1vsQTmzIKEryVIgz1TDNhvqTr3rbQxrlVYGxT7lHqkW2
+	jtZY2HMKduqe3SExqqWBAH+j7HWGDWeaZNf5dyAVoNOvfumvMG4XNTR3wudDU6AP
+	5Uzet0zt/7eoQ8nRZsmBzl7NSUgXxsisbou/vBgM1KV87A9E6xXnV8H+PvpYW1/8
+	NI/haH9yJwdGNuavzDjHMhymH8m5maMjtIXb1j3jcstPz3gVMba0/+4rp4DizRkx
+	TIqR0A==
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44bebbgd6j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 23 Jan 2025 07:37:58 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50N7bvFb019617
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 23 Jan 2025 07:37:57 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 22 Jan
+ 2025 23:37:51 -0800
+Message-ID: <f3a0b0b1-f4a8-4285-96de-8ce2633c7918@quicinc.com>
+Date: Thu, 23 Jan 2025 15:37:48 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/8] scsi: ufs: core: Pass target_freq to
+ clk_scale_notify() vops
+To: Bart Van Assche <bvanassche@acm.org>, <quic_cang@quicinc.com>,
+        <mani@kernel.org>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
+        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_rampraka@quicinc.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Alim Akhtar
+	<alim.akhtar@samsung.com>,
+        "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>,
+        Peter Wang
+	<peter.wang@mediatek.com>,
+        Stanley Jhu <chu.stanley@gmail.com>,
+        "Manivannan
+ Sadhasivam" <manivannan.sadhasivam@linaro.org>,
+        Matthias Brugger
+	<matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>,
+        Andrew Halaney
+	<ahalaney@redhat.com>,
+        Maramaina Naresh <quic_mnaresh@quicinc.com>,
+        "Eric
+ Biggers" <ebiggers@google.com>,
+        Minwoo Im <minwoo.im@samsung.com>,
+        open list
+	<linux-kernel@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST
+ CONTROLLER DRIVER..." <linux-mediatek@lists.infradead.org>,
+        "moderated
+ list:ARM/Mediatek SoC support:Keyword:mediatek"
+	<linux-arm-kernel@lists.infradead.org>
+References: <20250122100214.489749-1-quic_ziqichen@quicinc.com>
+ <20250122100214.489749-2-quic_ziqichen@quicinc.com>
+ <2e42cc2b-5597-435a-a58d-507c46e1132f@acm.org>
+Content-Language: en-US
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <2e42cc2b-5597-435a-a58d-507c46e1132f@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 1GpTbm2S83pcV9tsyR83haxBRJ49a72g
+X-Proofpoint-ORIG-GUID: 1GpTbm2S83pcV9tsyR83haxBRJ49a72g
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-23_03,2025-01-22_02,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 malwarescore=0 adultscore=0 spamscore=0 lowpriorityscore=0
+ bulkscore=0 mlxlogscore=999 clxscore=1015 suspectscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2501230057
 
-This commit moves the clock gating sysfs entries from `ufshcd.c` to
-`ufs-sysfs.c` where it belongs. This change improves the organization of
-the code by consolidating all sysfs-related code into a single file.
 
-The `clkgate_enable` and `clkgate_delay_ms` attributes are now defined
-and managed in `ufs-sysfs.c`, and the corresponding initialization and
-removal functions in `ufshcd.c` are removed.
 
-No functional change.
+On 1/23/2025 2:19 AM, Bart Van Assche wrote:
+> On 1/22/25 2:02 AM, Ziqi Chen wrote:
+>> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+>> index d7aca9e61684..a4dac897a169 100644
+>> --- a/include/ufs/ufshcd.h
+>> +++ b/include/ufs/ufshcd.h
+>> @@ -344,7 +344,7 @@ struct ufs_hba_variant_ops {
+>>       void    (*exit)(struct ufs_hba *);
+>>       u32    (*get_ufs_hci_version)(struct ufs_hba *);
+>>       int    (*set_dma_mask)(struct ufs_hba *);
+>> -    int    (*clk_scale_notify)(struct ufs_hba *, bool,
+>> +    int (*clk_scale_notify)(struct ufs_hba *, bool, unsigned long,
+>>                       enum ufs_notify_change_status);
+>>       int    (*setup_clocks)(struct ufs_hba *, bool,
+>>                   enum ufs_notify_change_status);
+> 
+> Please keep the indentation consistent.
+> 
+> Thanks,
+> 
+> Bart.
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
+Thanks, Bart, I will improve it.
 
----
-Changes compared to v1:
- - Use clang-format instead of checkpatch to fix coding style (Bart)
- - Use kstrbool instead of kstrtou32 (Bart)
----
- drivers/ufs/core/ufs-sysfs.c | 58 ++++++++++++++++++++++++
- drivers/ufs/core/ufshcd.c    | 85 ------------------------------------
- 2 files changed, 58 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 796e37a1d859..7183709603ae 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -458,6 +458,60 @@ static ssize_t pm_qos_enable_store(struct device *dev,
- 	return count;
- }
- 
-+static ssize_t clkgate_enable_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%d\n", hba->clk_gating.is_enabled);
-+}
-+
-+static ssize_t clkgate_enable_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	bool value;
-+
-+	if (kstrtobool(buf, &value))
-+		return -EINVAL;
-+
-+	guard(spinlock_irqsave)(&hba->clk_gating.lock);
-+
-+	if (value == hba->clk_gating.is_enabled)
-+		return count;
-+
-+	if (value)
-+		ufshcd_release(hba);
-+	else
-+		hba->clk_gating.active_reqs++;
-+
-+	hba->clk_gating.is_enabled = value;
-+
-+	return count;
-+}
-+
-+static ssize_t clkgate_delay_ms_show(struct device *dev,
-+				     struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%lu\n", hba->clk_gating.delay_ms);
-+}
-+
-+static ssize_t clkgate_delay_ms_store(struct device *dev,
-+				      struct device_attribute *attr,
-+				      const char *buf, size_t count)
-+{
-+	unsigned long value;
-+
-+	if (kstrtoul(buf, 0, &value))
-+		return -EINVAL;
-+
-+	ufshcd_clkgate_delay_set(dev, value);
-+	return count;
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -470,6 +524,8 @@ static DEVICE_ATTR_RW(enable_wb_buf_flush);
- static DEVICE_ATTR_RW(wb_flush_threshold);
- static DEVICE_ATTR_RW(rtc_update_ms);
- static DEVICE_ATTR_RW(pm_qos_enable);
-+static DEVICE_ATTR_RW(clkgate_delay_ms);
-+static DEVICE_ATTR_RW(clkgate_enable);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -484,6 +540,8 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_wb_flush_threshold.attr,
- 	&dev_attr_rtc_update_ms.attr,
- 	&dev_attr_pm_qos_enable.attr,
-+	&dev_attr_clkgate_delay_ms.attr,
-+	&dev_attr_clkgate_enable.attr,
- 	NULL
- };
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f6c38cf10382..901aef52a452 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2019,14 +2019,6 @@ void ufshcd_release(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_release);
- 
--static ssize_t ufshcd_clkgate_delay_show(struct device *dev,
--		struct device_attribute *attr, char *buf)
--{
--	struct ufs_hba *hba = dev_get_drvdata(dev);
--
--	return sysfs_emit(buf, "%lu\n", hba->clk_gating.delay_ms);
--}
--
- void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value)
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
-@@ -2036,79 +2028,6 @@ void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value)
- }
- EXPORT_SYMBOL_GPL(ufshcd_clkgate_delay_set);
- 
--static ssize_t ufshcd_clkgate_delay_store(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	unsigned long value;
--
--	if (kstrtoul(buf, 0, &value))
--		return -EINVAL;
--
--	ufshcd_clkgate_delay_set(dev, value);
--	return count;
--}
--
--static ssize_t ufshcd_clkgate_enable_show(struct device *dev,
--		struct device_attribute *attr, char *buf)
--{
--	struct ufs_hba *hba = dev_get_drvdata(dev);
--
--	return sysfs_emit(buf, "%d\n", hba->clk_gating.is_enabled);
--}
--
--static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	struct ufs_hba *hba = dev_get_drvdata(dev);
--	u32 value;
--
--	if (kstrtou32(buf, 0, &value))
--		return -EINVAL;
--
--	value = !!value;
--
--	guard(spinlock_irqsave)(&hba->clk_gating.lock);
--
--	if (value == hba->clk_gating.is_enabled)
--		return count;
--
--	if (value)
--		__ufshcd_release(hba);
--	else
--		hba->clk_gating.active_reqs++;
--
--	hba->clk_gating.is_enabled = value;
--
--	return count;
--}
--
--static void ufshcd_init_clk_gating_sysfs(struct ufs_hba *hba)
--{
--	hba->clk_gating.delay_attr.show = ufshcd_clkgate_delay_show;
--	hba->clk_gating.delay_attr.store = ufshcd_clkgate_delay_store;
--	sysfs_attr_init(&hba->clk_gating.delay_attr.attr);
--	hba->clk_gating.delay_attr.attr.name = "clkgate_delay_ms";
--	hba->clk_gating.delay_attr.attr.mode = 0644;
--	if (device_create_file(hba->dev, &hba->clk_gating.delay_attr))
--		dev_err(hba->dev, "Failed to create sysfs for clkgate_delay\n");
--
--	hba->clk_gating.enable_attr.show = ufshcd_clkgate_enable_show;
--	hba->clk_gating.enable_attr.store = ufshcd_clkgate_enable_store;
--	sysfs_attr_init(&hba->clk_gating.enable_attr.attr);
--	hba->clk_gating.enable_attr.attr.name = "clkgate_enable";
--	hba->clk_gating.enable_attr.attr.mode = 0644;
--	if (device_create_file(hba->dev, &hba->clk_gating.enable_attr))
--		dev_err(hba->dev, "Failed to create sysfs for clkgate_enable\n");
--}
--
--static void ufshcd_remove_clk_gating_sysfs(struct ufs_hba *hba)
--{
--	if (hba->clk_gating.delay_attr.attr.name)
--		device_remove_file(hba->dev, &hba->clk_gating.delay_attr);
--	if (hba->clk_gating.enable_attr.attr.name)
--		device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
--}
--
- static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- {
- 	if (!ufshcd_is_clkgating_allowed(hba))
-@@ -2126,8 +2045,6 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
- 		hba->host->host_no);
- 
--	ufshcd_init_clk_gating_sysfs(hba);
--
- 	hba->clk_gating.is_enabled = true;
- 	hba->clk_gating.is_initialized = true;
- }
-@@ -2137,8 +2054,6 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
- 	if (!hba->clk_gating.is_initialized)
- 		return;
- 
--	ufshcd_remove_clk_gating_sysfs(hba);
--
- 	/* Ungate the clock if necessary. */
- 	ufshcd_hold(hba);
- 	hba->clk_gating.is_initialized = false;
--- 
-2.25.1
-
+-Ziqi
