@@ -1,213 +1,177 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22C941D86C0
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2025 03:59:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2504B17FE;
+	Fri, 24 Jan 2025 05:35:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737691185; cv=none; b=mF7WQyKQ5H5JNkfPA2g/0U+lrJcvk/0ivV6FFVEhNzIGIjc5+NzwcFoAM8z5mkkODBvHgqpsHj264niYcZdpkVBr1XClD3yNBt/2hix5B2lVDHmbZ5ys7e/n/WbyqpRVP8l3NweWUDt0QBOnWDr4UgR5YSrVlmiUbJEwpVBmNQw=
+	t=1737696938; cv=none; b=Gs9rDiPEwzvSvyXu3NLkzfGxg1nq9RqKLgt8YExi19QZJcATmTL6GulgRJ0XZ4mlr5QFkqiAujv/TGsWHqX+shbLlD3VSlxiNboqO3O8crTd1tWpOHO0eVZ2OtmrKIdO+U9zW8RITA+YKDFe9EvT6qSVMbdPMOCOUEuzCtM73iI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737691185; c=relaxed/simple;
-	bh=GIaDQq4aq+u5KsMm0lV5bL72GvrqZN9a9wvcKgawXD0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=apCkF2pgGW5ewbSXGjr489rLdE9uzXCcriFFUYCWX8ZkYKNtoQj0bU81Tseqsg2PppP2kfGk1pavLKOm9FsSaeZpDzWjjYxRowNu1RmADRpFrRLTegKjrT3wTnGGaGtWmiLFXPYJMpMyJk/zngW/LxXnn+CB+aGj5SF2WCA5GgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YPbcKw5S; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YPbcKw5S"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2166f1e589cso40418145ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2025 19:59:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737691183; x=1738295983; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fSLbYZVKQ7n+PQViw9RsBZGhbuXkq5VzMZdKgoTa9lY=;
-        b=YPbcKw5SW2MjmQSfmfYyLZ/vrVIaGs3lmTnUQlsVbRxzzz+qx+IWVA+2Alc+5bbCon
-         iTqjQsndxMr+Xlr7LOO+Jh4aD+4e0xl9ng3lncFMbKD6N3UHkra9p2cJJv8H+9G5Vg0K
-         XZVn63G+1+Nu+abo3aVGYKLwJ2402270woAVmliJKVNX0VPQPCaR7ushUoCSp4RitCdm
-         IVt0Za+IQFgX5V0/fCt4g+Kps84qnzdjbzar7yGZlmEFxxs4ZQzUPJJNrUspNhDvSekz
-         3beKxCtrzIEHJ18UPENDwYtSVJ2cjtjGvUgsaSWdwnMTkJ5XrNcFThTLdb954wW3Gce9
-         FgXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737691183; x=1738295983;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fSLbYZVKQ7n+PQViw9RsBZGhbuXkq5VzMZdKgoTa9lY=;
-        b=wrf04w8PSvUCKF1Q8ImZzeqs6z2j2c+cglp8kZngy6oUVwWzaaIF1xitkwH1f8PNl+
-         mr928HKgqTDCAxH/MkN9GUZDwdDbHWZi+/3MZdpY6fjIy/AHYuDoexPoV+IwsAqogEcJ
-         qQ4ofB7yoHwVMH9VyIn35Zv6HlFvjn6hb6dfJqeNLWoIQhfYMnDHf4c11vTHhXAnDr72
-         Qn7JEHhx9CUhCbm29YBQ8YILmUiptZ2Z4uFViVYoxok1FpFNcQ/cdMP0I35BzooUG+VT
-         gRdWvedDUH80mFNvvPd+5VVhNUZ4JLAduEpQjcmk8jT20YBvATVZDg8WSfJUNO5W0SWC
-         4aZQ==
-X-Gm-Message-State: AOJu0Ywg4Wmai5OYSapzptH54WD4iFtp/djjUPFyaKfp+pVsFzbZXJ7X
-	Q4z7BxMslY9YPJgrvTh41ypqmlRUydT1+FtMI8C/egXozFLjx2IsGt51AA==
-X-Gm-Gg: ASbGncsnfDjGqMXv2zSMOG2DoLvHZ8R+DVQKzIs0Mk4x8uMtw3k+4hpIyRtQ3iD94s+
-	HeYHcq4ca3yT5RC4W4RsgXLq7pgM0X1XZhMbislpV+v32WXDrMkktDzGWRLKxfu7QCNR4dGhsln
-	lJJWZWVvEpez6JNLYzX+JMLCCql+/OxoSkQOiftdKZptQoKwWsx3LhNU1M2XVtAv3/c3pqw/9UW
-	8u/Tge5KVDDts7/l2JqQxIKVQ8pVBcExmuqZrv1Kdxacow8Q5vC1TyM74V/BrFWSuWLnbtfeNnu
-	PYmuJ+aDwwEXCpX0Mgfo9z7v
-X-Google-Smtp-Source: AGHT+IHjRqhp46YX9p5ANXGVufoZfZuXRbx0c7aXxNPZhegt1r0E2FW+f0DGqtx4gGeoy6Q4KebtOQ==
-X-Received: by 2002:a05:6a20:6f8f:b0:1eb:3661:da33 with SMTP id adf61e73a8af0-1eb3661dcf1mr40486461637.30.1737691183371;
-        Thu, 23 Jan 2025 19:59:43 -0800 (PST)
-Received: from localhost ([107.155.12.245])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72f8a6b3067sm774702b3a.47.2025.01.23.19.59.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jan 2025 19:59:42 -0800 (PST)
-From: "qiwu.chen" <qiwuchen55@gmail.com>
-X-Google-Original-From: "qiwu.chen" <qiwu.chen@transsion.com>
-To: alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	manivannan.sadhasivam@linaro.org
-Cc: linux-scsi@vger.kernel.org,
-	"qiwu.chen" <qiwu.chen@transsion.com>
-Subject: [PATCH] ufs: fix deadlock issue for the race scenario of suspend and shutdown simultaneously
-Date: Fri, 24 Jan 2025 11:59:34 +0800
-Message-Id: <20250124035934.18217-1-qiwu.chen@transsion.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1737696938; c=relaxed/simple;
+	bh=LD259O69EjZIwR7GKds0hX/13kux6dbH6gMPQnv4gcE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KEQZGFkcCTWo1Ah6bJ7+0FZE8D4EJT34bI8jkwgnPB8JrWHkY6g0wLB+0PrAJnMo5LtBJzX9sYRiMJeJH+CfIo2/qNBuOp5qqgKfVCEr+7iddpqCaIoCormQMFQIdjItnjyq+H8Y7Gus7F9Q2OFeKmJiqImY+vgbZRQwkibTCIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3993C4CED2;
+	Fri, 24 Jan 2025 05:35:32 +0000 (UTC)
+Date: Fri, 24 Jan 2025 11:05:25 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Ziqi Chen <quic_ziqichen@quicinc.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, quic_cang@quicinc.com,
+	bvanassche@acm.org, beanhuo@micron.com, avri.altman@wdc.com,
+	junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+	quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+	quic_rampraka@quicinc.com, linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"open list:ARM/QUALCOMM MAILING LIST" <linux-arm-msm@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 4/8] scsi: ufs: qcom: Implement the freq_to_gear_speed()
+ vops
+Message-ID: <20250124053525.2sbefy4jitmzr6so@thinkpad>
+References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
+ <20250116091150.1167739-5-quic_ziqichen@quicinc.com>
+ <20250119073056.houuz5xjyeen7nw5@thinkpad>
+ <e0207040-bebd-4e59-abd8-dee16edcc5b9@quicinc.com>
+ <20250120154135.xhrrmy37xdr6asmu@thinkpad>
+ <12f4234b-91ca-48e2-8638-771acc15a7be@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <12f4234b-91ca-48e2-8638-771acc15a7be@quicinc.com>
 
-There is a deadlock when suspend, shutdown and resume are ocurred almost simultaneously.
-Here is the deadlock cause:
-1. System enter suspend flow, it will call ufshcd_wl_suspend() to get host_sem, the host_sem
-is supposed to up in ufshcd_wl_resume:
-pm_suspend
-     ufshcd_wl_suspend
-          down(&hba->host_sem)
+On Tue, Jan 21, 2025 at 11:52:42AM +0800, Ziqi Chen wrote:
+> 
+> 
+> On 1/20/2025 11:41 PM, Manivannan Sadhasivam wrote:
+> > On Mon, Jan 20, 2025 at 08:07:07PM +0800, Ziqi Chen wrote:
+> > > Hi Mani，
+> > > 
+> > > Thanks for your comments~
+> > > 
+> > > On 1/19/2025 3:30 PM, Manivannan Sadhasivam wrote:
+> > > > On Thu, Jan 16, 2025 at 05:11:45PM +0800, Ziqi Chen wrote:
+> > > > > From: Can Guo <quic_cang@quicinc.com>
+> > > > > 
+> > > > > Implement the freq_to_gear_speed() vops to map the unipro core clock
+> > > > > frequency to the corresponding maximum supported gear speed.
+> > > > > 
+> > > > > Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> > > > > Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> > > > > Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> > > > > ---
+> > > > >    drivers/ufs/host/ufs-qcom.c | 32 ++++++++++++++++++++++++++++++++
+> > > > >    1 file changed, 32 insertions(+)
+> > > > > 
+> > > > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > > > > index 1e8a23eb8c13..64263fa884f5 100644
+> > > > > --- a/drivers/ufs/host/ufs-qcom.c
+> > > > > +++ b/drivers/ufs/host/ufs-qcom.c
+> > > > > @@ -1803,6 +1803,37 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+> > > > >    	return ret;
+> > > > >    }
+> > > > > +static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq, u32 *gear)
+> > > > > +{
+> > > > > +	int ret = 0 >
+> > > > Please do not initialize ret with 0. Return the actual value directly.
+> > > > 
+> > > 
+> > > If we don't initialize ret here, for the cases of freq matched in the table,
+> > > it will return an unknown ret value. It is not make sense, right?
+> > > 
+> > > Or you may want to say we don't need “ret” , just need to return gear value?
+> > > But we need this "ret" to check whether the freq is invalid.
+> > > 
+> > 
+> > I meant to say that you can just return 0 directly in success case and -EINVAL
+> > in the case of error.
+> > 
+> Hi Mani,
+> 
+> If we don't print freq here , I think your suggestion is very good. If we
+> print freq in this function , using "ret" to indicate success case and
+> failure case and print freq an the end of this function is the way to avoid
+> code bloat.
+> 
+> How do you think about it?
+> 
 
-2. Shutdown is happened due to low battery during suspend progress, it will get ufshcd_wl device mutex
-and blocked in down host_sem in ufshcd_wl_shutdown() unfortunately.
-__switch_to+0x174/0x338
-__schedule+0x608/0x9f0
-schedule+0x7c/0xe8
-schedule_timeout+0x44/0x1c8
-__down_common+0xbc/0x238
-__down+0x18/0x28
-down+0x50/0x54
-ufshcd_wl_shutdown+0x28/0xb4
-device_shutdown+0x1a0/0x254
-kernel_power_off+0x3c/0xf0
-power_misc_routine_thread+0x814/0x970 [mt6375_battery]
-kthread+0x104/0x1d4
-ret_from_fork+0x10/0x20
+I don't understand how code bloat comes into picture here. I'm just asking for
+this:
 
-3. Meanwhile, suspend flow is waked up by a interrupt and go to resume
-work, the resume work will be blocked in getting ufshcd_wl device mutex.
-__switch_to+0x174/0x338
-__schedule+0x608/0x9f0
-schedule+0x7c/0xe8
-schedule_preempt_disabled+0x24/0x40
-__mutex_lock+0x408/0xdac
-__mutex_lock_slowpath+0x14/0x24
-mutex_lock+0x40/0xec
-__device_resume+0x50/0x360
-async_resume+0x24/0x3c
-async_run_entry_fn+0x44/0x118
-process_one_work+0x1e4/0x43c
-worker_thread+0x25c/0x430
-kthread+0x104/0x1d4
-ret_from_fork+0x10/0x20
+static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq, u32 *gear)
+{
+	switch (freq) {
+	case 403000000:
+		*gear = UFS_HS_G5;
+		break;
+	...
 
-Fix the deadlock issue by define an atomic value of shutting_down to
-check if shutdown has been invoked.
+	default:
+		dev_err(hba->dev, "Unsupported clock freq: %ld\n", freq);
+		return -EINVAL;
+	}
+	
+	return 0;
+}
 
-Signed-off-by: qiwu.chen <qiwu.chen@transsion.com>
----
- drivers/ufs/core/ufshcd-priv.h |  2 +-
- drivers/ufs/core/ufshcd.c      | 21 +++++++++------------
- include/ufs/ufshcd.h           |  2 +-
- 3 files changed, 11 insertions(+), 14 deletions(-)
+> > > > > +
+> > > > > +	switch (freq) {
+> > > > > +	case 403000000:
+> > > > > +		*gear = UFS_HS_G5;
+> > > > > +		break;
+> > > > > +	case 300000000:
+> > > > > +		*gear = UFS_HS_G4;
+> > > > > +		break;
+> > > > > +	case 201500000:
+> > > > > +		*gear = UFS_HS_G3;
+> > > > > +		break;
+> > > > > +	case 150000000:
+> > > > > +	case 100000000:
+> > > > > +		*gear = UFS_HS_G2;
+> > > > > +		break;
+> > > > > +	case 75000000:
+> > > > > +	case 37500000:
+> > > > > +		*gear = UFS_HS_G1;
+> > > > > +		break;
+> > > > > +	default:
+> > > > > +		ret = -EINVAL;
+> > > > > +		dev_err(hba->dev, "Unsupported clock freq\n");
+> > > > 
+> > > > Print the freq.
+> > > 
+> > > Ok, thank for your suggestion, we can print freq with dev_dbg() in next
+> > > version.
+> > > 
+> > 
+> > No, use dev_err() with the freq. >
+> > - Mani
+> > 
+> I think use dev_err() here does not make sense:
+> 
+> 1. This print is not an error message , just an information print. Using
+> dev_err() reduces the readability of this code.
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 786f20ef2238..76d323de42f9 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -8,7 +8,7 @@
- 
- static inline bool ufshcd_is_user_access_allowed(struct ufs_hba *hba)
- {
--	return !hba->shutting_down;
-+	return !atomic_read(&hba->shutting_down);
- }
- 
- void ufshcd_schedule_eh_work(struct ufs_hba *hba);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3094f3c89e82..b0f5152e5b04 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1729,12 +1729,10 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
- 	if (kstrtou32(buf, 0, &value))
- 		return -EINVAL;
- 
--	down(&hba->host_sem);
--	if (!ufshcd_is_user_access_allowed(hba)) {
--		err = -EBUSY;
--		goto out;
--	}
-+	if (!ufshcd_is_user_access_allowed(hba))
-+		return -EBUSY;
- 
-+	down(&hba->host_sem);
- 	value = !!value;
- 	if (value == hba->clk_scaling.is_enabled)
- 		goto out;
-@@ -6416,8 +6414,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
- 
- static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
- {
--	return (!hba->is_powered || hba->shutting_down ||
--		!hba->ufs_device_wlun ||
-+	return (!hba->is_powered || !hba->ufs_device_wlun ||
- 		hba->ufshcd_state == UFSHCD_STATE_ERROR ||
- 		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
- 		   ufshcd_is_link_broken(hba))));
-@@ -6541,10 +6538,13 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	dev_info(hba->dev,
- 		 "%s started; HBA state %s; powered %d; shutting down %d; saved_err = %d; saved_uic_err = %d; force_reset = %d%s\n",
- 		 __func__, ufshcd_state_name[hba->ufshcd_state],
--		 hba->is_powered, hba->shutting_down, hba->saved_err,
-+		 hba->is_powered, atomic_read(&hba->shutting_down), hba->saved_err,
- 		 hba->saved_uic_err, hba->force_reset,
- 		 ufshcd_is_link_broken(hba) ? "; link is broken" : "");
- 
-+	if (!ufshcd_is_user_access_allowed(hba))
-+		return;
-+
- 	down(&hba->host_sem);
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (ufshcd_err_handling_should_stop(hba)) {
-@@ -10194,10 +10194,7 @@ static void ufshcd_wl_shutdown(struct device *dev)
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct ufs_hba *hba = shost_priv(sdev->host);
- 
--	down(&hba->host_sem);
--	hba->shutting_down = true;
--	up(&hba->host_sem);
--
-+	atomic_set(&hba->shutting_down, 1);
- 	/* Turn on everything while shutting down */
- 	ufshcd_rpm_get_sync(hba);
- 	scsi_device_quiesce(sdev);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 74e5b9960c54..db38141278c7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1034,7 +1034,7 @@ struct ufs_hba {
- 	u16 ee_usr_mask;
- 	struct mutex ee_ctrl_mutex;
- 	bool is_powered;
--	bool shutting_down;
-+	atomic_t shutting_down;
- 	struct semaphore host_sem;
- 
- 	/* Work Queues */
+Then why it was dev_err() in the first place?
+
+> 2. This prints will be print very frequent, I afraid it will increase the
+> latency of clock scaling.
+> 
+
+First you need to decide whether this print should warn user or not. It is
+telling users that the OPP table supplied a frequency that doesn't match the
+gear speed. This can happen if there is a discrepancy between DT and the driver.
+In that case, the users *should* be warned to fix the driver/DT. If you bury it
+with dev_dbg(), no one will notice it.
+
+If your concern is with the frequency of logs, then use dev_err_ratelimited().
+
+- Mani
+
 -- 
-2.25.1
-
+மணிவண்ணன் சதாசிவம்
