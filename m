@@ -1,116 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from ssh248.corpemail.net (ssh248.corpemail.net [210.51.61.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5668B13AC1;
-	Fri, 24 Jan 2025 07:39:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD1A1D61A3;
+	Fri, 24 Jan 2025 08:14:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.51.61.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737704352; cv=none; b=XHjHxtimQdfwq/PANglQTdKlCT33/Qh+2uf6NcQiXIV/tG7ZykZYSuqTAlcDl1z3MuHhbrODGAMm/vkZbGXjECDKFt2GvZlT5iZLPBfaBssCH+WdzTpVMYEMjyTlCf8F4OMMb/I1mXI/cEB4aKCGP3RXrws1c50rZvQwoLXNyRg=
+	t=1737706493; cv=none; b=kQUDF9VcpRd2xnIwHuj+bUmeoG47B4uqTsaFnAgMBkbxIBY53ZEQ8rI7s+pt9ddwXAwNGvZmtLnI13BawLX2R4o21zPMiVl3FiRVB6ceADWolyLUPvGUKRthr1F3u+M7EkkoYz9TsYFIDXcjn+p9CXYrOFnZul0xrGnL4Gpghe8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737704352; c=relaxed/simple;
-	bh=G8q15h6IsDOD4LQJQB5VGPoicFwDLIJTNfZolKmAslI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RGdFoH82ODgp25RIspgnvtMucGs8rYHhjcA4T+alKBmwdJelBW19BqqBZxZZLlBGPUBDo2VuWFvVwKIZ6mtSzaRXW4xC5zGVJk9ary27gDAwFoeAgHuG5cIlufnhHx/+vzjeoBj+nCYT2QeklTwYhMjd4Eb/3JX4XuYCCHMfWY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m299zHQB; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m299zHQB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17CF9C4CEE1;
-	Fri, 24 Jan 2025 07:39:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737704352;
-	bh=G8q15h6IsDOD4LQJQB5VGPoicFwDLIJTNfZolKmAslI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=m299zHQBNHTeNuZe7VNB+LF7p7kkvbO6hOTPO+lJEXxWflhGCP7PfjAyksjh7ZFtr
-	 zVBMQXpSfdAMGULjTa/TeiskIvyYNus3JaqXfvj6BAlFIeOOaUlqSKcfinh1Q3mDt4
-	 dF91iFkYoDk3UiGmYMoZW2WH7XSR2z1TXf5BWpvQp0rxP10d4rgLv2OcLGSZRIYYa/
-	 ZTC1k2SfY02I6sZBiyahZj2BrJbiWUSekzEjdGQGBqwui2VARkTZoC+5s9aqfHxW85
-	 oN/E8967beb12RZ2B2HCLNAdqiX7wQxjl4h1K9s4/HSPnv9IuJEWVlxOX/927ZYb5E
-	 yLtNJHthUOciQ==
-Date: Fri, 24 Jan 2025 13:08:57 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Tudor Ambarus <tudor.ambarus@linaro.org>, \@thinkpad
-Cc: Krzysztof Kozlowski <krzk@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Abel Vesa <abel.vesa@linaro.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Eric Biggers <ebiggers@google.com>, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-scsi@vger.kernel.org, andre.draszik@linaro.org,
-	peter.griffin@linaro.org, willmcvicker@google.com,
-	kernel-team@android.com, stable@vger.kernel.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: Re: [PATCH v2 0/4] soc: qcom: ice: fix dev reference leaked through
- of_qcom_ice_get
-Message-ID: <20250124073857.qwnl4ozccsictom5@thinkpad>
-References: <20250117-qcom-ice-fix-dev-leak-v2-0-1ffa5b6884cb@linaro.org>
+	s=arc-20240116; t=1737706493; c=relaxed/simple;
+	bh=MD25qTp2z+CdtaSbxA3TtbwM8lTY/olhUkA0W00MMco=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tW3vQ+mu0zfUs7Tq/RvLp61dTlcSNf/tykW4PUrebIEOJzCaioUrh/zEz0w2BUKQMESwqBwZBv9F6adY3cMHFhlLjXgQ7ObsEDUxS6dSHGUELeauQFJ4v83ViBujoUO8y2rtWdE9lujeO+az3OcRtj9lMreUqyiW22CGzuBMawM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com; spf=pass smtp.mailfrom=inspur.com; arc=none smtp.client-ip=210.51.61.248
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inspur.com
+Received: from ssh248.corpemail.net
+        by ssh248.corpemail.net ((D)) with ASMTP (SSL) id WBM00131;
+        Fri, 24 Jan 2025 16:13:31 +0800
+Received: from jtjnmail201607.home.langchao.com (10.100.2.7) by
+ jtjnmail201603.home.langchao.com (10.100.2.3) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Fri, 24 Jan 2025 16:13:32 +0800
+Received: from localhost.localdomain (10.94.9.245) by
+ jtjnmail201607.home.langchao.com (10.100.2.7) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Fri, 24 Jan 2025 16:13:32 +0800
+From: Charles Han <hanchunchao@inspur.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux@treblig.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Charles Han
+	<hanchunchao@inspur.com>
+Subject: [PATCH] scsi: isci: Fix double word in comments
+Date: Fri, 24 Jan 2025 16:13:30 +0800
+Message-ID: <20250124081330.210724-1-hanchunchao@inspur.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250117-qcom-ice-fix-dev-leak-v2-0-1ffa5b6884cb@linaro.org>
+Content-Type: text/plain
+X-ClientProxiedBy: Jtjnmail201618.home.langchao.com (10.100.2.18) To
+ jtjnmail201607.home.langchao.com (10.100.2.7)
+tUid: 20251241613315ceb5ee6b2fa245d95cfd47851a992a9
+X-Abuse-Reports-To: service@corp-email.com
+Abuse-Reports-To: service@corp-email.com
+X-Complaints-To: service@corp-email.com
+X-Report-Abuse-To: service@corp-email.com
 
-On Fri, Jan 17, 2025 at 02:18:49PM +0000, Tudor Ambarus wrote:
-> Hi!
-> 
-> Recently I've been pointed to this driver for an example on how consumers
-> can get a pointer to the supplier's driver data and I noticed a leak.
-> 
-> Callers of of_qcom_ice_get() leak the device reference taken by
-> of_find_device_by_node(). Introduce devm_of_qcom_ice_get().
-> Exporting qcom_ice_put() is not done intentionally as the consumers need
-> the ICE intance for the entire life of their device. Update the consumers
-> to use the devm variant and make of_qcom_ice_get() static afterwards.
-> 
-> This set touches mmc and scsi subsystems. Since the fix is trivial for
-> them, I'd suggest taking everything through the SoC tree with Acked-by
-> tags if people consider this fine. Note that the mmc and scsi patches
-> depend on the first patch that introduces devm_of_qcom_ice_get().
-> 
-> Thanks!
-> 
-> Signed-off-by: Tudor Ambarus <tudor.ambarus@linaro.org>
+Remove the repeated word "for" in comments.
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Charles Han <hanchunchao@inspur.com>
+---
+ drivers/scsi/isci/remote_device.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Mani
-
-> ---
-> Changes in v2:
-> - add kernel doc for newly introduced devm_of_qcom_ice_get().
-> - update cover letter and commit message of first patch.
-> - collect R-b and A-b tags.
-> - Link to v1: https://lore.kernel.org/r/20250116-qcom-ice-fix-dev-leak-v1-0-84d937683790@linaro.org
-> 
-> ---
-> Tudor Ambarus (4):
->       soc: qcom: ice: introduce devm_of_qcom_ice_get
->       mmc: sdhci-msm: fix dev reference leaked through of_qcom_ice_get
->       scsi: ufs: qcom: fix dev reference leaked through of_qcom_ice_get
->       soc: qcom: ice: make of_qcom_ice_get() static
-> 
->  drivers/mmc/host/sdhci-msm.c |  2 +-
->  drivers/soc/qcom/ice.c       | 51 ++++++++++++++++++++++++++++++++++++++++++--
->  drivers/ufs/host/ufs-qcom.c  |  2 +-
->  include/soc/qcom/ice.h       |  3 ++-
->  4 files changed, 53 insertions(+), 5 deletions(-)
-> ---
-> base-commit: b323d8e7bc03d27dec646bfdccb7d1a92411f189
-> change-id: 20250110-qcom-ice-fix-dev-leak-bbff59a964fb
-> 
-> Best regards,
-> -- 
-> Tudor Ambarus <tudor.ambarus@linaro.org>
-> 
-
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 27ae45332704..561ae3f2cbbd 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -198,7 +198,7 @@ enum sci_status sci_remote_device_reset(
+  * device.  When there are no active IO for the device it is is in this
+  * state.
+  *
+- * @SCI_STP_DEV_CMD: This is the command state for for the STP remote
++ * @SCI_STP_DEV_CMD: This is the command state for the STP remote
+  * device.  This state is entered when the device is processing a
+  * non-NCQ command.  The device object will fail any new start IO
+  * requests until this command is complete.
 -- 
-மணிவண்ணன் சதாசிவம்
+2.31.1
+
