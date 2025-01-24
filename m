@@ -1,229 +1,183 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com [209.85.221.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D8BC23A0;
-	Fri, 24 Jan 2025 09:36:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 749B61BD504;
+	Fri, 24 Jan 2025 10:01:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737711381; cv=none; b=KtwtQr+4VX2JCbrzJlH1sL37M2vTCigeABUadSDCP9KXhLqNXN2SoAy3rGP1/fjQlL4DEM1dvl2UZxyeuImLZfkorlrnbIdIR/GbmFPHdlFvAXNH5LJJb/T65sV8lP7BYa/6gzyfT5OrdcWC+INcwDotXT5en9u2eXD7W56ZmMY=
+	t=1737712863; cv=none; b=qc1fy6iFxna5QTYxqODJVr7u4ctbGTq1ReijLKvDLggvYerIZcM86vrKr6v0hNGfVWdXHR3uiYQK4locieGBPdSSdO+t7+kQjK7KAnQCpBgsgCdbURUXqsmvij+5BtDgBx2E+aHjOdWQ8T2TXljiqAt03FN7waWuvwAV/cVUOdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737711381; c=relaxed/simple;
-	bh=XUJ23gPHIiL+ZLwdPA4Ee1XKHpwW8xHBtCnDO7H9crg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ZdE6PMdKGtpLhA3Y0J5WwiRDctgaJKGz+8cOqvWq8+bXRmzZfCql8mB57PJ4HIgCNTjQHrhgh8E5b9TXFl61d/2jG03xCBzWxxS4svX2mZx/B7tah8/J5GMEKfvqlegJskNnNdFBvhp/LH5L+a8lWffoChK3zUh+m4G+bcb5tSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=U0KRPfoJ; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="U0KRPfoJ"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50O5NjFf029272;
-	Fri, 24 Jan 2025 09:35:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	LqHEfkxym8B9dTOwzL6PipoECZDL445ZY6ikV9g+504=; b=U0KRPfoJZ5XbOsw9
-	cUuRxiIr7RfoNEkEu5JTWL5LbDvUCyrw2tHy5kAJb9DRnt6SzDb4SFB1VlD5Iq9h
-	fwFWMFnx781wAWS/neSDOAhFs/CM5V52UXTGOGaFjKA4g7NM+BC1U93mYU5mqHJD
-	n5nof+xY9YAjXHgdm+Y3ry4OpCHDCJVPeM5ymN/Pp4JhxxmKdG5xRCbxDVQTv7M+
-	0vSqPUBbE69WECwFyiBx8rnTbv4SeVo6qQlsB+JU+WAuWn13hAQ0q41JLMYFJcGV
-	/M1gzd/NvvbzZbIWDrlbZJEYUO3zudi2xree27SxqYlMjChWC8GuYuuhx8bM9FBD
-	76XJww==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44c4p5gm4k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Jan 2025 09:35:06 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50O9Z5cH015386
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Jan 2025 09:35:05 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 24 Jan
- 2025 01:35:01 -0800
-Message-ID: <da2fa545-5b4a-4113-85f5-6c2ffaf4e60e@quicinc.com>
-Date: Fri, 24 Jan 2025 17:34:58 +0800
+	s=arc-20240116; t=1737712863; c=relaxed/simple;
+	bh=9xPnkIRvyUKIbebzNpOh36TPopZWm47xElGwKwL3Fs8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dInXE+GT2lR/l94xRsyFOy9jTL4feb4zDkSab2OPdmZ+16hLYr8Mw62GTreBSZLw4CGFNkhOykkkbmj+fzxmkUDIt+ilOYf5CHSu43J+Xc80Ucs3mqHTCw8K+LoM1KMmXYMZalghYk575sJNKfX1D/Dq0Y5RHxC0GQrYd1NzrTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f176.google.com with SMTP id 71dfb90a1353d-51889930cb1so573532e0c.0;
+        Fri, 24 Jan 2025 02:01:00 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737712858; x=1738317658;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KCXYxtEOmN85a3oqwY7Ex77YaQHE2iiC5mU4J2Q7BHI=;
+        b=da8k5F7VHSZkr98aGpTySDpnX3QqO7v8Fmsy32lDyecV6zUL7V8w0Oc6XBeHCRPD2B
+         d2+eK2tw/uoFl5PqLVKCBZUT8E3SJLVNoQ7xUVWpthMsGhYj82KRgR8ysYa5Lrfso92i
+         ECt5WlfiF99n+2oySwjUAXpYB92o43VpH0xrCqjhbl29JoxdSJYkVYsvGoGWocUGcsq6
+         fEL7P2nq/84oTG7tHn3o1gDcFfYKH/82I+YuUpqBIkavhgLBSv3Pje1CrUq3ghzqBdQE
+         mhoZASZ77ZpubLnmy15hvEjnEkg2atqNuGCUtswAgLVf3S8fJZ1TfRlulLupxTBOjLd+
+         C4AQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUM0l6tu62QvvVkK3YktuObUx2CmJhMW3lXrXbyCAK8HnPlG+JW0Q4V/KHz5PF5Obp7OfRpJL32/Ao9iQ==@vger.kernel.org, AJvYcCUOYJqY+3hes/bFquXN2cuGNXYbUAPqtWMK2MKqu45YBmXhUo4xO4hVs/W9jYsEV2CgpFmjpnTmcEDAg+k=@vger.kernel.org, AJvYcCVHKCYK0PL85s9nZL+PL4YcWkWAuV/P4pmMaHn7AAF1xqI0YuHVbgO70b2jhEN23sPzkOWeBeMGQnJ44Q9BKsSaC7o=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy04GBtisJ9rXdTJ2sx/m5Bs+OD+g/9MIPbkXtsQdo65k8mlTZo
+	/9UZTbsCbrwS2S593DX97vzM5rKJxWpcdcE0cGiinNrd/ZdE4M9tInAXLeYn
+X-Gm-Gg: ASbGncu9BYSLhBte9KI9wSI5PNXBjJ0cxXRx5uE8lGHm/Ndkj4SMpfjUwueIyZITGqa
+	FA2XKDAP81vyr4Dw/2uR5fUaCKy2EAKe45J5lsnPTXtqHl3d0dV60FOYm0KKqR3hsgyZjoaP78O
+	9ZZPfJ+SmANTYjKzOUquvCAEp7r8P7n90BDwfXMgWddlP/Vhg+2/okVWhLNDygEw2dsOO/5xxS3
+	KjsuziQcda3WrBiXS8Nv4od1VfOg8w8aCIlnn0gOjnf/bSHjwDYoJjJYSPvxGPJAj1i8GzDHo6V
+	ogf1JdrkkOvUogm9kthT/jk4t/35EsL5bxFhkaO0dgVG3/Y=
+X-Google-Smtp-Source: AGHT+IHzgYGv2lP1P6wU+0v7sL8lFUdJ52nBFMplW8cNT0BXXrFCae5HYAvJrgg7q9fOvYGkm8uTgg==
+X-Received: by 2002:a05:6122:2109:b0:518:859e:87ae with SMTP id 71dfb90a1353d-51d5b2c385bmr25198194e0c.7.1737712858068;
+        Fri, 24 Jan 2025 02:00:58 -0800 (PST)
+Received: from mail-vk1-f173.google.com (mail-vk1-f173.google.com. [209.85.221.173])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-51e4ebea379sm313138e0c.42.2025.01.24.02.00.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 24 Jan 2025 02:00:57 -0800 (PST)
+Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-51889930cb1so573521e0c.0;
+        Fri, 24 Jan 2025 02:00:57 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCW6Xkv3Whnf6oNeqvrkFxsGpoRLaO/B5ILPUMFWL0mftIxNwd4hi2IuBPRYteBWrbV3/uX557+tKAVmAuM=@vger.kernel.org, AJvYcCWUggGnqlsj7sjl3UKuL0GWgqHiOqJIGdrSONi5aI2a5gCbCTrotbUDQ1ubWG5FaHzYfwkzoPq8Mj18rQ==@vger.kernel.org, AJvYcCXk41oeDNpgGQUHk1nhV5uU89opu7oWvzGxghuMyPZDJYZUPYqgDYzaLG0yPwip6cw/ZuGovh/mHeqBgp0N7sr/MKA=@vger.kernel.org
+X-Received: by 2002:a05:6122:2109:b0:518:859e:87ae with SMTP id
+ 71dfb90a1353d-51d5b2c385bmr25198072e0c.7.1737712857106; Fri, 24 Jan 2025
+ 02:00:57 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/8] scsi: ufs: qcom: Implement the freq_to_gear_speed()
- vops
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: Manivannan Sadhasivam <mani@kernel.org>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
-        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
-        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
-        <quic_rampraka@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "open list:ARM/QUALCOMM
- MAILING LIST" <linux-arm-msm@vger.kernel.org>,
-        open list
-	<linux-kernel@vger.kernel.org>
-References: <20250116091150.1167739-1-quic_ziqichen@quicinc.com>
- <20250116091150.1167739-5-quic_ziqichen@quicinc.com>
- <20250119073056.houuz5xjyeen7nw5@thinkpad>
- <e0207040-bebd-4e59-abd8-dee16edcc5b9@quicinc.com>
- <20250120154135.xhrrmy37xdr6asmu@thinkpad>
- <12f4234b-91ca-48e2-8638-771acc15a7be@quicinc.com>
- <20250124053525.2sbefy4jitmzr6so@thinkpad>
-Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <20250124053525.2sbefy4jitmzr6so@thinkpad>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: mNrugttpm7MkaH5o0-778hzefEIxI5ue
-X-Proofpoint-ORIG-GUID: mNrugttpm7MkaH5o0-778hzefEIxI5ue
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-24_03,2025-01-23_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
- spamscore=0 mlxlogscore=999 impostorscore=0 bulkscore=0 malwarescore=0
- mlxscore=0 priorityscore=1501 adultscore=0 lowpriorityscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501240069
+References: <20250124073354.3814674-1-avri.altman@wdc.com>
+In-Reply-To: <20250124073354.3814674-1-avri.altman@wdc.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 24 Jan 2025 11:00:45 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdUnjKJHtWoNfxTTtm2HD3h3wXbpYPbBsky-PcD+yQTqOw@mail.gmail.com>
+X-Gm-Features: AWEUYZnYu6cDV1dHP9duL1Fo6Alz1y8ixJePXejqZeDq1qjA7hHFACA7SR-do0Q
+Message-ID: <CAMuHMdUnjKJHtWoNfxTTtm2HD3h3wXbpYPbBsky-PcD+yQTqOw@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: ufs: core: Ensure clk_gating.lock is used only
+ after initialization
+To: Avri Altman <avri.altman@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, 
+	Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi Avri,
 
+On Fri, Jan 24, 2025 at 8:36=E2=80=AFAM Avri Altman <avri.altman@wdc.com> w=
+rote:
+> This commit addresses a lockdep warning triggered by the use of the
+> clk_gating.lock before it is properly initialized. The warning is as
+> follows:
+>
+> [    4.388838] INFO: trying to register non-static key.
+> [    4.395673] The code is fine but needs lockdep annotation, or maybe
+> [    4.402118] you didn't initialize this object before use?
+> [    4.407673] turning off the locking correctness validator.
+> [    4.413334] CPU: 5 UID: 0 PID: 58 Comm: kworker/u32:1 Not tainted 6.12=
+-rc1 #185
+> [    4.413343] Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (D=
+T)
+> [    4.413362] Call trace:
+> [    4.413364]  show_stack+0x18/0x24 (C)
+> [    4.413374]  dump_stack_lvl+0x90/0xd0
+> [    4.413384]  dump_stack+0x18/0x24
+> [    4.413392]  register_lock_class+0x498/0x4a8
+> [    4.413400]  __lock_acquire+0xb4/0x1b90
+> [    4.413406]  lock_acquire+0x114/0x310
+> [    4.413413]  _raw_spin_lock_irqsave+0x60/0x88
+> [    4.413423]  ufshcd_setup_clocks+0x2c0/0x490
+> [    4.413433]  ufshcd_init+0x198/0x10ec
+> [    4.413437]  ufshcd_pltfrm_init+0x600/0x7c0
+> [    4.413444]  ufs_qcom_probe+0x20/0x58
+> [    4.413449]  platform_probe+0x68/0xd8
+> [    4.413459]  really_probe+0xbc/0x268
+> [    4.413466]  __driver_probe_device+0x78/0x12c
+> [    4.413473]  driver_probe_device+0x40/0x11c
+> [    4.413481]  __device_attach_driver+0xb8/0xf8
+> [    4.413489]  bus_for_each_drv+0x84/0xe4
+> [    4.413495]  __device_attach+0xfc/0x18c
+> [    4.413502]  device_initial_probe+0x14/0x20
+> [    4.413510]  bus_probe_device+0xb0/0xb4
+> [    4.413517]  deferred_probe_work_func+0x8c/0xc8
+> [    4.413524]  process_scheduled_works+0x250/0x658
+> [    4.413534]  worker_thread+0x15c/0x2c8
+> [    4.413542]  kthread+0x134/0x200
+> [    4.413550]  ret_from_fork+0x10/0x20
+>
+> To fix this issue, ensure that the spinlock is only used after it
+> has been properly initialized before using it in `ufshcd_setup_clocks`.
+>
+> Fixes: 209f4e43b806 ("scsi: ufs: core: Introduce a new clock_gating lock"=
+)
+> Reported-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+>
+> ---
+> Changes since v1:
+>  - move the spin_lock_init(&hba->clk_gating.lock) call from
+>    ufshcd_init_clk_gating() just before the ufshcd_hba_init() call in
+>    ufshcd_init() (Bart)
 
-On 1/24/2025 1:35 PM, Manivannan Sadhasivam wrote:
-> On Tue, Jan 21, 2025 at 11:52:42AM +0800, Ziqi Chen wrote:
->>
->>
->> On 1/20/2025 11:41 PM, Manivannan Sadhasivam wrote:
->>> On Mon, Jan 20, 2025 at 08:07:07PM +0800, Ziqi Chen wrote:
->>>> Hi Mani，
->>>>
->>>> Thanks for your comments~
->>>>
->>>> On 1/19/2025 3:30 PM, Manivannan Sadhasivam wrote:
->>>>> On Thu, Jan 16, 2025 at 05:11:45PM +0800, Ziqi Chen wrote:
->>>>>> From: Can Guo <quic_cang@quicinc.com>
->>>>>>
->>>>>> Implement the freq_to_gear_speed() vops to map the unipro core clock
->>>>>> frequency to the corresponding maximum supported gear speed.
->>>>>>
->>>>>> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>>>>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>>>>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->>>>>> ---
->>>>>>     drivers/ufs/host/ufs-qcom.c | 32 ++++++++++++++++++++++++++++++++
->>>>>>     1 file changed, 32 insertions(+)
->>>>>>
->>>>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>>>>> index 1e8a23eb8c13..64263fa884f5 100644
->>>>>> --- a/drivers/ufs/host/ufs-qcom.c
->>>>>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>>>> @@ -1803,6 +1803,37 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
->>>>>>     	return ret;
->>>>>>     }
->>>>>> +static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq, u32 *gear)
->>>>>> +{
->>>>>> +	int ret = 0 >
->>>>> Please do not initialize ret with 0. Return the actual value directly.
->>>>>
->>>>
->>>> If we don't initialize ret here, for the cases of freq matched in the table,
->>>> it will return an unknown ret value. It is not make sense, right?
->>>>
->>>> Or you may want to say we don't need “ret” , just need to return gear value?
->>>> But we need this "ret" to check whether the freq is invalid.
->>>>
->>>
->>> I meant to say that you can just return 0 directly in success case and -EINVAL
->>> in the case of error.
->>>
->> Hi Mani,
->>
->> If we don't print freq here , I think your suggestion is very good. If we
->> print freq in this function , using "ret" to indicate success case and
->> failure case and print freq an the end of this function is the way to avoid
->> code bloat.
->>
->> How do you think about it?
->>
-> 
-> I don't understand how code bloat comes into picture here. I'm just asking for
-> this:
-> 
-> static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq, u32 *gear)
-> {
-> 	switch (freq) {
-> 	case 403000000:
-> 		*gear = UFS_HS_G5;
-> 		break;
-> 	...
-> 
-> 	default:
-> 		dev_err(hba->dev, "Unsupported clock freq: %ld\n", freq);
-> 		return -EINVAL;
-> 	}
-> 	
-> 	return 0;
-> }
-> 
->>>>>> +
->>>>>> +	switch (freq) {
->>>>>> +	case 403000000:
->>>>>> +		*gear = UFS_HS_G5;
->>>>>> +		break;
->>>>>> +	case 300000000:
->>>>>> +		*gear = UFS_HS_G4;
->>>>>> +		break;
->>>>>> +	case 201500000:
->>>>>> +		*gear = UFS_HS_G3;
->>>>>> +		break;
->>>>>> +	case 150000000:
->>>>>> +	case 100000000:
->>>>>> +		*gear = UFS_HS_G2;
->>>>>> +		break;
->>>>>> +	case 75000000:
->>>>>> +	case 37500000:
->>>>>> +		*gear = UFS_HS_G1;
->>>>>> +		break;
->>>>>> +	default:
->>>>>> +		ret = -EINVAL;
->>>>>> +		dev_err(hba->dev, "Unsupported clock freq\n");
->>>>>
->>>>> Print the freq.
->>>>
->>>> Ok, thank for your suggestion, we can print freq with dev_dbg() in next
->>>> version.
->>>>
->>>
->>> No, use dev_err() with the freq. >
->>> - Mani
->>>
->> I think use dev_err() here does not make sense:
->>
->> 1. This print is not an error message , just an information print. Using
->> dev_err() reduces the readability of this code.
-> 
-> Then why it was dev_err() in the first place?
-> 
->> 2. This prints will be print very frequent, I afraid it will increase the
->> latency of clock scaling.
->>
-> 
-> First you need to decide whether this print should warn user or not. It is
-> telling users that the OPP table supplied a frequency that doesn't match the
-> gear speed. This can happen if there is a discrepancy between DT and the driver.
-> In that case, the users *should* be warned to fix the driver/DT. If you bury it
-> with dev_dbg(), no one will notice it.
-> 
-> If your concern is with the frequency of logs, then use dev_err_ratelimited().
-> 
-> - Mani
-> 
-I misunderstand your point Mani, I thought you want me to print freq for 
-all cases...  if you mean that print failure case, I already added it in 
-patch V2.
+Thanks for the update!
 
--Ziqi
+On Renesas R-Car S4 Starter Kit:
+
+    BUG: spinlock bad magic on CPU#6, swapper/0/1
+     lock: 0xffffff84443014e8, .magic: 00000000, .owner: <none>/-1,
+.owner_cpu: 0
+    CPU: 6 UID: 0 PID: 1 Comm: swapper/0 Not tainted
+6.13.0-rcar3-initrd-08318-g75abbef32a94 #896
+    Hardware name: R-Car S4 Starter Kit board (DT)
+    Call trace:
+     show_stack+0x18/0x24 (C)
+     dump_stack_lvl+0x60/0x80
+     dump_stack+0x18/0x24
+     spin_bug+0x7c/0xa0
+     do_raw_spin_lock+0x34/0xb4
+     _raw_spin_lock_irqsave+0x1c/0x30
+     class_spinlock_irqsave_constructor+0x18/0x30
+     ufshcd_setup_clocks+0x98/0x23c
+     ufshcd_init+0x288/0xd38
+     ufshcd_pltfrm_init+0x618/0x738
+     ufs_renesas_probe+0x18/0x24
+     platform_probe+0x68/0xb8
+     really_probe+0x138/0x268
+     __driver_probe_device+0xf4/0x10c
+     driver_probe_device+0x3c/0xf8
+     __driver_attach+0xf0/0x100
+     bus_for_each_dev+0x84/0xdc
+     driver_attach+0x24/0x30
+     bus_add_driver+0xe8/0x1dc
+     driver_register+0xbc/0xf8
+     __platform_driver_register+0x24/0x30
+     ufs_renesas_platform_init+0x1c/0x28
+     do_one_initcall+0x84/0x1f4
+     kernel_init_freeable+0x238/0x23c
+     kernel_init+0x20/0x120
+     ret_from_fork+0x10/0x20
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
