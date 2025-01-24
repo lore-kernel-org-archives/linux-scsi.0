@@ -1,228 +1,382 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3EA3182C5;
-	Fri, 24 Jan 2025 12:48:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.141
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737722938; cv=fail; b=NMkU51nasLV/TDt2SOWCmjx8+muPng37/LYVu+/N703Aps/ASXNAjD3ZTEwOxMmcTyelRwjFJeG47RRLZdMAbKDwczgoDZ7qUI2W7SOnVqc30+MK+2XPZK7+ntupuI9lj78hhM4Fi7bcKTLzGjBi3S6htUm24aokIkJwn1cRsZY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737722938; c=relaxed/simple;
-	bh=4nZbZEI6qOkVuLSJvPCjkV65l3IozfYDMsXlgA7QOm8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=YuyeMqnbM3tIkYfa84UBeAFpRGsMdC7DynA/ifL8+cu4VNROEL/LDkVrN0g7K6J1rTemn3WwEMD+JKwhSF19+4J9zSFvG57BSuhcjWcFPuLJHbm2yATLUyup6dUMEAwRbimkTceeFbi6EO9SSBpMg+iNC/L+3rg16fQZ8Dwq1Iw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=UXMeSj1g; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=S0cSt7cv; arc=fail smtp.client-ip=216.71.153.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2546A155A30
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2025 15:09:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1737731346; cv=none; b=GwVmXkOGsq/y3PNTq/eUwDq1cnpjEenAzPyEP6+h2OdUxNb+i3f1xK+bkQUwRBHnLpBRk4o7Wjn6lOL/e/NcKh+ezSo4CCaizFFqBb6iKqG13AbBz/u9hxi6cMFRBX9E8ubnRRCRTXwDElocZrYg6ujegwABpr4rXMqhvhToUzg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1737731346; c=relaxed/simple;
+	bh=SYN7jUI36yhTHImTxVS/qwjaEpW4+e8FProjCmVvKdc=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=XFMeZjc2qCyGN8WrJ1mgoQM3f6RLgs/odg7uDg/UR3bQifktvPcWqTljkYbHRbJmpk3Z6/RrKeiq/laSDcxHYyEmCQ+Sy8MXC6hPNyEbqgKhf8WkkpQ4/98RqpW0HQ9LKlJRSYzctwy18RYUNxwI29f53qsDFvLCtHqSWqBjK3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=f3Dz4QUZ; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="UXMeSj1g";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="S0cSt7cv"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1737722937; x=1769258937;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=4nZbZEI6qOkVuLSJvPCjkV65l3IozfYDMsXlgA7QOm8=;
-  b=UXMeSj1gMRDcPl6AEnfa90hXQmuWbzSteHm941YJzpXkrLTh034qZQVd
-   RKBcYsgTJNNqL784C1BY9UcZSeFiMit3D8SMEBmaIa+1/UEwQuVyaehw3
-   YF4tu/nFeJieO0ZIE6QGNUvbnJNiRD3AFOcgrJvVBCJZhEZFYCDI3W9N+
-   TsrUqAQyWmc2FbNtb3gvM4WSz2eO3E+QLvyERMx787ZpSCGzz4txiK/zn
-   vOB2P9xdBcWgrPoxxG+XG44kXrpbuG5hUiMFOXRkEInNpCYyBmgS0Qbw1
-   8eOj+tVUMYD1xbTZ6gGmWqbh7kzMKkcJCD0+j6ccd/flS7pmYxHZJ4A4/
-   A==;
-X-CSE-ConnectionGUID: wMP8sg5aTbCoZ62lVs5xfw==
-X-CSE-MsgGUID: lPz3EeFgTxizkWk2mcv3kw==
-X-IronPort-AV: E=Sophos;i="6.13,231,1732550400"; 
-   d="scan'208";a="36715338"
-Received: from mail-co1nam11lp2173.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.173])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Jan 2025 20:48:50 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZMT84MmH981NFF3SNaY6pn3q6bjZDBxlh4gd0VsewfziZ4jO83nWuIx+AO4DhNePUyICAvDudBro7gKKTWzmjfke3+qrapMsTUtGSc1xSoqUP6arKeVVPFcJ1byY8QJahKD/yTlw+L/4jZC3g1a520kplcV0o5uf2Sc/nCbPcQjZFszq5TD89ckI+r8Aeai2rGdpkkKSpKSyYYijslphmSipH03edBQUqJnr10g0CqubocmN3WoVhVCyixFb5uNXPTthKZW/gw6aPGOe7d+6kMpRs/v3DNNoJ6Ovk6HRwSadE6iw5D2XDF09JxuGFtb7xpmT957r2h8sdEjBFNFtjw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4nZbZEI6qOkVuLSJvPCjkV65l3IozfYDMsXlgA7QOm8=;
- b=JMeYwewZ+s9SkXocNrk/P//sU13mAPmrBsxbIz97AjrokXyKXXqXcu2e0yzuRH5bop7fjCeq5Z87vs8iU3JGIYN54gDvJ1YTffyCu8kz3D1kTA+n+HLpl6cnjS66x65Fak+EM2YYABQpNfvz4fdV+6NLLK3QmsXchIyk4fYAaS3KVAKvlLuYGcdDRMeKNlnT4qsOZzINv2JuVyQPeRA4uQRFUwihz4/QseAositJmbtPEEyjsN8F5qpTzuh/FF94NqRLx02AcCbW+fFCEYGYobBgG54mLuyHcigdvcbRq6msCmpaEZ+MTwhR6pCTktvlX62RtO3/IYUXghpldXTnyg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="f3Dz4QUZ"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5d3f65844deso3904765a12.0
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2025 07:09:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4nZbZEI6qOkVuLSJvPCjkV65l3IozfYDMsXlgA7QOm8=;
- b=S0cSt7cv12/Yqsgjy7cwyhNJn18Uupd/WpX6uzo1doq5eAA+PLnHDKkHxPz3vyC3RqY2hTgr33GhSoeXfvQM6Ek2eKCgG7FlsBJBLXd5Nlxi0tF+fIy/+J45fLlSqIe4KDvXD6nnOrgv/r21hK/CzlSdICL7V3oZ3mrmWljT7s8=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- BY5PR04MB7076.namprd04.prod.outlook.com (2603:10b6:a03:222::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8377.17; Fri, 24 Jan
- 2025 12:48:48 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::bf16:5bed:e63:588f%4]) with mapi id 15.20.8377.009; Fri, 24 Jan 2025
- 12:48:47 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Manivannan
- Sadhasivam <manisadhasivam.linux@gmail.com>, Bart Van Assche
-	<bvanassche@acm.org>, Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Subject: RE: [PATCH v2] scsi: ufs: core: Ensure clk_gating.lock is used only
- after initialization
-Thread-Topic: [PATCH v2] scsi: ufs: core: Ensure clk_gating.lock is used only
- after initialization
-Thread-Index: AQHbbjK7MtFbQrGgbEacrXj0TabXHbMl03IAgAAH3UA=
-Date: Fri, 24 Jan 2025 12:48:47 +0000
-Message-ID:
- <DM6PR04MB657531813CCA81C40A7D65E5FCE32@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20250124073354.3814674-1-avri.altman@wdc.com>
- <CAMuHMdVHMH8=i3v=qYGhR5t+mbz07TyS7b=6OnnxmHox58c7Eg@mail.gmail.com>
-In-Reply-To:
- <CAMuHMdVHMH8=i3v=qYGhR5t+mbz07TyS7b=6OnnxmHox58c7Eg@mail.gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|BY5PR04MB7076:EE_
-x-ms-office365-filtering-correlation-id: 199cd37a-1831-44f8-4f65-08dd3c757215
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?ZXFBMjBEVDErMk9EcFNLMkpTcXpuQ0RRQVVFRmRSWnROUGJkSFJMbkFZa3l2?=
- =?utf-8?B?NnRxY3VyM09leHNIVkIrZkFRUGZmWGpVaGpucXdzMHZTb2EvSC9NcURJQ1hq?=
- =?utf-8?B?REI2MVE3VE5rZ0JLb0lhUUczN0ZCQm83UldHWUpIQTNnOCtla21XZy9KSDF2?=
- =?utf-8?B?dVRTQi9IdDVEbXErZFpJU3RzblNVNnBScmFhL0dOOVVkaFZDN2VXVkZYNENw?=
- =?utf-8?B?ZmF1bEdFS1pOMzFYM3BWNG9ZRkJtSHkvb0NkTmhiNFRsT21kOFBsZ1dUNXhB?=
- =?utf-8?B?T3J5WVJkZmRJMGZJaGptVURmYmh1bDRIVVFNb09QVyt0MlNBd1diRkZDL2xN?=
- =?utf-8?B?enRib3dHaDk4VW9XWm5xV3FyMm01TnBOa2RFSmxsanQvRXMrbHU1dTh4WTBN?=
- =?utf-8?B?YUJzOEhIb09KZlRVWUdrZGdLSGRHZzFkc29oUjRjREZUS3FGK0NGeU9XVy9G?=
- =?utf-8?B?Qll3eEh4RkxCUDl3NkIycjl5bThmencvN0VEempUYUxIeFZPWVpRc01YYzFt?=
- =?utf-8?B?REMzMjVHSlJGYk4zMjNkQWIrM3BVaXE1SU9IUFBBTC81dkV3OUJJdGZjOXBW?=
- =?utf-8?B?akNteHF1VE9scjl0U2FnbGZLOXFRTjY4RkkzdUM2alBFZUFPbHRmdzM1UFQ1?=
- =?utf-8?B?SVJrK1B1VGZ0NDlNRXRZd2l2cXNXSWREeVpmL055VUtIdXpVMi94K3AxcUFF?=
- =?utf-8?B?by82RmVteFJRcHp6TllYeXdoMG1TbmFDVXVoMXhiZmgxL0ZsRXRtemNUZVdr?=
- =?utf-8?B?eW9ZbjdPMDJtZVh2NzkySVJ0alNTaHpwWlF6UHFmM3VsM0ExcmRNUjV3clYy?=
- =?utf-8?B?S2svVWVXVEFIMDNTV0wvS1hPbmZWaW1vd2hLMGl1NTczQjFZaGsrWGdpYXpR?=
- =?utf-8?B?eVl0MFlQQlAwYU9TNm5hWUMwMXBROXRNU1lVcWY2N2N5UE02VjYwY1BVNzNR?=
- =?utf-8?B?akl0TDZOM1J5aUE1OGNxQUNSck9qaFRUZE9BY2NGY0wwWFI0MU11L1MxSS8v?=
- =?utf-8?B?L1lBc1oxVGFXTEplSVdMWGpVczh5VHB5a3duL0U1enBiWHZ5elVGQ0d5M0h1?=
- =?utf-8?B?Q1NJV291b2JHQlJhbFZwNDg1K2Z2YVJYREl4Z3VsYnF5ZEpXY1ZOVjFOWjZm?=
- =?utf-8?B?MEpxWjgzR082dFd3T1lYUHNXK3d2WE9RVFYxNk8yT3N4TEQyOHlUcVVNRWJ2?=
- =?utf-8?B?N3VrWXFrMTY2MlNYMkhpMjRxTWV0ZTRDL2JIRnFLSCt6L0R4UngyeU4yQm9J?=
- =?utf-8?B?ZHN0a0lWQnRFaTVqZnA3eHdjN1RLa3FLYkhQOFZIQkhKRVpjSWlkMDZSZENG?=
- =?utf-8?B?bkhUTWVkN216bEdXWmJsQTdNQm1TMERkcnZqOWtjcG9rNm0yTy9qY01yeXZp?=
- =?utf-8?B?RElDN0U3YXg0Nkp2OGNmVWd6R0tHS2NjZkdVQ3lMeFl3aWZrU0J1Y3VvaExQ?=
- =?utf-8?B?UFBocmFac3FjK1lnQ3lQYjZ3d0JBSHQ2QWlTMVRNQnlpL215czRRUm1jN3Zj?=
- =?utf-8?B?ZXM1S3pWNnR4ZDNkZ1lVYXRpZUVVeWc5QlpUR0ZSNXF4QzJ3VDNLc1pjdGhi?=
- =?utf-8?B?QStvSi8yakJQR3hoZTJHYUN2YXE1MzJ2R2ZSWkt4TDhid2I2RTlRUVhOWHMx?=
- =?utf-8?B?RE8xSmJOZVVaVnBPV0VIWjBvNmxDdUNZSGN4ZENDZDJsZmttNnlzeStsajNh?=
- =?utf-8?B?NExyNzhhOExQekhudXZhTHhNRU95UEllOVlmLzJ6bGQ4bXJ1bnVTdTRzaFI1?=
- =?utf-8?B?MlRwQ0tEeFZGY3VVVVF6VmJ0OHZER3FvNmxMR3hDTHZaZXNrYWFkQjFuc2p6?=
- =?utf-8?B?TmdWZlpkbjVGZXR1MVpJOVpVaURrNXFseXRMNzZTMzBoUC82cVRobG9kVjlY?=
- =?utf-8?B?TVkrOEN3QVd3bUw5bGlockRvUE5MQW5haVlJall3VUh3V0FFRndpOUNMUXA1?=
- =?utf-8?Q?pbRFFfaRq68p267dIFBhvZ+y2NyOnAzd?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?WVk0MzQxZk1XOHE3Qk1YMzUxMkxZK2VYWFJtRzZ1a0hkdTdaVGRIdFJPWU9K?=
- =?utf-8?B?SkRMSW1US1lBeXVrLzMzZC9KQ1VHR3N0VzB3ZUEyUjM4THcwbmtOSnZzazZW?=
- =?utf-8?B?ZmxKVENpYVdnRUZnU3RGVitadmRaWTFlbkZCNVZiZGhtaVJRaTd3cHhFMDhm?=
- =?utf-8?B?NE5vSThYS3I5NnhiQWN0RkZkMm1LdkxzbFBaTHhmdmVwcVY0bk90VU9lM2hm?=
- =?utf-8?B?V3EySEpKVllyNUhRM2czbDdkWlZLQmdzVEE1ejFkaE8zT3hYenFkNkFsYTJq?=
- =?utf-8?B?RFNoU0szMnVsc0orMzBEYVZIQ2txejlDMURJUDR1Y00xVnVqUTBKT05ZdWI0?=
- =?utf-8?B?ai9PL3piRFc5cTBZcGtGYkV3UHdkelpEVzI0c1EvaFRuRU8xU2lPZTFwK25o?=
- =?utf-8?B?eWhRbWVvZFRackhKNlhyK2d0ZjBkZmxpMHZhUGdhZk5IOXphcGwzU3UzbzlE?=
- =?utf-8?B?SG1SanRJQjI1S3dmV1YzcnEzZnJPMm9RVG9OMUZEalI1TkhXMVZ4dEoreU1E?=
- =?utf-8?B?SmVFc1B2cFpKQ1djaXNHelZ2c0xKRlNadVZ5SEFTRk9lVEE5R2NuL1BQSVhG?=
- =?utf-8?B?bDFRN2ppU2Z4OVBUZVA2a2dURm1XWGNkNEtRYzBtWGppUWxUMXEzTHgwaXgz?=
- =?utf-8?B?VnJhaDdiRy9UdEpaVFcrc1pUbU8wZXhxQTRyLzJ0V0Jjdkk1NTZXNUhZazJZ?=
- =?utf-8?B?U2xGS2pVdkcwK2w2TEpIc2dJcUdDSDNVU2VSQ2diU1M3a05NTVp5WkVQbU1y?=
- =?utf-8?B?M0RWQndEWHJmMnBvc2NhVk1aWjg3Z0M2RFJXTEF2aG1PUXA2eTFaNGEwNnN2?=
- =?utf-8?B?cjR4MThtMDE1VjhXUTBKNThDajhLbHdZTnlhQXQ3VXZ6K1RVbXBaQmNnVm9M?=
- =?utf-8?B?dHRVaWtQSGE2b1M2MkQ5YzJ0SzBpdFlPeUoxV25jRXgrcGc3bnFyRUY5Qnox?=
- =?utf-8?B?S0RCbkErV1JxcVRBd3dCU05sZFJHeGNrN0hoUHlCYTVHS3NrakFhdVYvYk45?=
- =?utf-8?B?aVBuY3Nla2g4THZjUmpzRGpsQ1lnKzJ5eDMvY1phcHIzVHNPZmh3dGI5bWFz?=
- =?utf-8?B?OUd3WFQ1YlJvaENRNElvSFlyVE10dkNDVFBUMzJtNXZqQktRUVFKRnozeXF2?=
- =?utf-8?B?WHQ3cFo3dDh1S2N5WmMwY0lZYTQ3cDB2WnZZcWlMNG83dmNRclJseUZBS21Y?=
- =?utf-8?B?NWJlbDUwekF6ZmdvbEdoWnlWVWUvTHRuNE53ZWIxU0M4azVESGgzdnFlM0Nv?=
- =?utf-8?B?UTRycFRNcjdBVFArblFhUm5UQU1PcTVYWWdjU1EwdlVsZDR6bjdYWi9sbGVr?=
- =?utf-8?B?SXpyeDB6a3ZoUWlXazcyY1hobXJncFNha2YwODVERWRmRUZUWUlqbUg0K2t6?=
- =?utf-8?B?T0hNTWw3L24yZ2hkcEFDMlk4NjZBb1BHWjRRUndEOGFPR3NFVXZzR0hyZ2Vz?=
- =?utf-8?B?dXpzMllTS3JvckNRQXkrL2tPQVh3dGRPUXlrOFB0cEdjVDN6bktJV3IwYVlG?=
- =?utf-8?B?dm92SHh5KzFHOE4xUlhnWmttaHV0VkRVWkhwWEVIWkcvQjR6V2FQQlVoZXhh?=
- =?utf-8?B?SWhJUVVCYS9iWUxwWldlZVdHaE15SERHSjRsQnovVTRpSC9HTC9VZTU5TlJR?=
- =?utf-8?B?V1pRcXRlNHMwbkVxN3Bobm5nZjh1elk1eHhpaGpYamo1MkVZYUZVa1Qwb2Np?=
- =?utf-8?B?cFhvdDFPaWcxejdISFJZWkUra1M1K1VwMjdUd3ZKWmRxZDBMcVI1OERudUI1?=
- =?utf-8?B?MDdKeXFQNGQwYytQM0U4anhoZDgrWlQvbitiV3dLVUVNUkFDYk5JT24yaS82?=
- =?utf-8?B?U0F4VXcwdFozRUUyQ1JmZWV2SGlZeTF3QW03MGIrYkdSK3htcy9US09Fa3NI?=
- =?utf-8?B?Z3Z0RUZ0NWFTMkZpd2QzcFk0NTQ3bm80SmJHYlM5YWFrd1pMR0l5NE54UDZP?=
- =?utf-8?B?RlZqVk9JRkJrdU5HZWhNaXUwaEpDSnlNV2N4aTd0U054V1lHNzlIK0NxTTIx?=
- =?utf-8?B?cURMRlU5Q3d5aUo4b3dFQnVBVFJzYTF1NVdzb3FISU1acnNQdk90ZXlhTzhB?=
- =?utf-8?B?dnYrZ0dJMUxkT2U0K28yOVhvVjMyWUlKVXFuNm56NE0xU2p2Ykd5Zy9HMzJh?=
- =?utf-8?Q?FB/RTSlg1ugAJ3iIFvtBo1AUF?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=linaro.org; s=google; t=1737731341; x=1738336141; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bAOmv5FCPTXNOJDPGsnz0m7/ff6FMzEiZAc+WWEKk5w=;
+        b=f3Dz4QUZtso6p4zE7OJWgm0pHhEw2t2sjt8QUxREUXKIw67CF1l8iJ8+zmieKOElpJ
+         MjUuvciK7cJKG3qSeMYJoQGtBfedoXWAmXDSk/OOxGerx4JyqXliG+TKZhWI2dMvC+ai
+         rmRQk58J6U8xQ7yFR+e8ZhBveW/Go0ifuaACgMRwmRcqwdfaSZ8JaByjQt9+us6UZ01u
+         Z0l8M41WNZ/OAKi5nYD84h9pWPoI1YNuPR1JmVeZZFwxy5Z7dQzfHoSJ4MUm6mcMFAMo
+         zUCiUC/W9BUVuQUcqIwTNGqjZ24JYbgGPdBMv0grPcwoMjD67ao3Se+23FAwCqRP+H6o
+         KIXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737731341; x=1738336141;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bAOmv5FCPTXNOJDPGsnz0m7/ff6FMzEiZAc+WWEKk5w=;
+        b=GUiU+cIh64C4Jai5ebFUCQrjnZbcUXqBXZCBTWehrfZx83BKH05owTFkguRKIJ8VX1
+         Td/1/Io+BhhYFeX5U1NCSlfaggUKNbYRpq3H3zDPYQte1pwn5soMq7Jxuy+eTICTJV2s
+         RaDitVQ81HpqDOlIRLX/23otpDyyVF8TrJpasopZesOWZErmbN/HBmWAqy6YUX4pCqfy
+         6az/ASr6BwseSvH29tNOuMzn+d7RCWLO43Uilcr0dZ+kfHtWjXMNMlB11B1DxXY5Dm05
+         O6kyQN09bPyaxL/+gL65FrNBFeLdRPSmvfExHFuaYjJE/GGqs6XlXAsLEK0/OcyFbMPN
+         gRxQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWR0B0PHwsGwIo38Sh/Xoghf0JNI9K2cYpE6AGLRLKStQexsEf/9W8Gsq8Z9ulH4QEjDLbDZrW8twcL@vger.kernel.org
+X-Gm-Message-State: AOJu0YzNSJ4dlt04eRuGpNReLeGM2qw0sDSn7VmZV0cc9Rhn6FMSjHuG
+	ULWbJb/GosOrMIIIbFWMAuTipft1dTtnSQqdjfQBYl/XgjRJKoXBtqD7lVurmlo=
+X-Gm-Gg: ASbGncsAshN48cRS5bYsHlqH/rL7ZUahRMaAV3G4dsoxjFSM3Wuc60Zm8+1SgO5LL9A
+	4tPuK7Kyu7eZDRHc/b7wKxzvutown10pZbwLjk6vMQ0JoIjptluWo9MglDCe27WDmEk0jh42SY3
+	l4SuT0tbL/MjNf76iAxBAxZDqBZRZ+a6xY9Ghxi1zfTmWeH+V5LmxDHR7PhIUaUep3suM+LmWtY
+	2lJ+49QpSVc1tKVq6uKe6RcksjiN4u+zyHJtCQGjsGZFaGS8kfzKuAwjQQtb9dUgynKPaJ7mbB2
+	vdrKK+g8TqV5p3v299S60Bc6THLtpcdDRwpYYRT+z+P68fp3C4IhoI4l9SwJ6Hh6
+X-Google-Smtp-Source: AGHT+IEUHPzYRalGh+hxyuLEjodrsl0WyGddaoYtcZB2H0vu5gdI49NrpaTUetnMdrHqMx1e3s6GWw==
+X-Received: by 2002:a17:907:72d0:b0:aa6:912f:7ec1 with SMTP id a640c23a62f3a-ab38b44d439mr2969999266b.39.1737731341144;
+        Fri, 24 Jan 2025 07:09:01 -0800 (PST)
+Received: from puffmais.c.googlers.com (140.20.91.34.bc.googleusercontent.com. [34.91.20.140])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab676117b02sm142670366b.173.2025.01.24.07.09.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jan 2025 07:09:00 -0800 (PST)
+From: =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+Date: Fri, 24 Jan 2025 15:09:00 +0000
+Subject: [PATCH v4] scsi: ufs: fix use-after free in init error and remove
+ paths
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	c9szNYHzRGSl/08Y26pYu53pdNyfOgHZYjC4sQVvL8yI4oo2VxnqDNPZWatJG2oJQdWpEMeROlJwM7KRmy8d9t1vW0LtpPeujtDtPCzCVBQkErVpD+Gp5WyqNQCh0Yy9PEakO/6rXzGXrTwCcVj4sBIBH9XNVradICVvHi1bk/SfElxmGQMCYTxwDmaGkFOmOAahj26enymc9mD3756dgGrc9CDgTfCSnibIAMcs1Zo0RLcZNqotJ5u/NXQ1tnDAL5O8uaVBrp3U45qvypU8tV4M+pBnTnFqjD/ySkAm1M0hnElPgkkLWMA4ActpejboXEPfEu+15bVYtVmpeiakvYaC7TCkZSFz3P/rt/3/jjQqJEctpgzp4FUKRY1qxfDoyqNGMTmBlCnsJVR8DCOXZli+zkJPYXMAyO8F+LgOTqh05FGEKV+zFP9ZLZ6MQEGNG+EP0Xq0FnbDaEUMXf125RKafZsa6y/GFCBnAlJOJOMaqeuasaSqUsBAz4KMPxbo6d4kTBhgExB6erJX08DSXEsSEl1xruIJB2N+FwbVyzc5+Or9EF+7T7/XpaTZtuDpLr2LyKhSy4JTJnvs9W+jpZKtGUlcExZZkCGVYzDJazBGB2LNz9G6ibTV3vL07mmT
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 199cd37a-1831-44f8-4f65-08dd3c757215
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Jan 2025 12:48:47.9093
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qy0um2UW7jxEwYVUlIWkEYtW0LKQwUNHwSwTOUIsR+0lTX2Lj83hI2/fnDFolsF7qbAkQQZdCgDVDxbv0rmIRA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB7076
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
+X-B4-Tracking: v=1; b=H4sIAAutk2cC/23MSwrCMBSF4a3IHRtJbh62jtyHOIh5tAFpJNGgl
+ O7dtKMWHZ4D3z9Cdim4DKfdCMmVkEMc6hD7HZheD50jwdYNSFFSxjh5+dwbS3x4E4mCth4tR++
+ hgkdy9V5il2vdfcjPmD5Lu7D5/ZspjDBitOKWWXGzUp7vYdApHmLqYO4UXFuxsVgtWqPwKFuqh
+ f6xfG3VxvJqlW44pcLpRpqNnabpCx1P4tEdAQAA
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Peter Griffin <peter.griffin@linaro.org>, 
+ Krzysztof Kozlowski <krzk@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, Satya Tangirala <satyat@google.com>, 
+ Eric Biggers <ebiggers@google.com>
+Cc: Tudor Ambarus <tudor.ambarus@linaro.org>, 
+ Will McVicker <willmcvicker@google.com>, kernel-team@android.com, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-samsung-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, stable@vger.kernel.org, 
+ =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+X-Mailer: b4 0.13.0
 
-PiA+ICsgICAgICAgLyoNCj4gPiArICAgICAgICAqIEluaXRpYWxpemUgY2xrX2dhdGluZy5sb2Nr
-IGVhcmx5IHNpbmNlIGl0IGlzIGJlaW5nIHVzZWQgaW4NCj4gPiArICAgICAgICAqIHVmc2hjZF9z
-ZXR1cF9jbG9ja3MoKQ0KPiA+ICsgICAgICAgICovDQo+ID4gKyAgICAgICBpZiAodWZzaGNkX2lz
-X2Nsa2dhdGluZ19hbGxvd2VkKGhiYSkpDQo+IA0KPiBUaGlzIGNoZWNrcyBpZiB0aGUgVUZTSENE
-X0NBUF9DTEtfR0FUSU5HIGZsYWcgaXMgc2V0LCB3aGljaCBpcyBvbmx5IGRvbmUgaW4gYQ0KPiBz
-dWJzZXQgb2YgdGhlIGhvc3QgZHJpdmVyczoNCj4gDQo+IGRyaXZlcnMvdWZzL2hvc3QvdWZzLWV4
-eW5vcy5jOiAgaGJhLT5jYXBzIHw9IFVGU0hDRF9DQVBfQ0xLX0dBVElORyB8DQo+IFVGU0hDRF9D
-QVBfSElCRVJOOF9XSVRIX0NMS19HQVRJTkc7DQo+IGRyaXZlcnMvdWZzL2hvc3QvdWZzLW1lZGlh
-dGVrLmM6ICAgICAgICBoYmEtPmNhcHMgfD0gVUZTSENEX0NBUF9DTEtfR0FUSU5HOw0KPiBkcml2
-ZXJzL3Vmcy9ob3N0L3Vmcy1xY29tLmM6ICAgIGhiYS0+Y2FwcyB8PSBVRlNIQ0RfQ0FQX0NMS19H
-QVRJTkcgfA0KPiBVRlNIQ0RfQ0FQX0hJQkVSTjhfV0lUSF9DTEtfR0FUSU5HOw0KPiBkcml2ZXJz
-L3Vmcy9ob3N0L3Vmcy1zcHJkLmM6ICAgIGhiYS0+Y2FwcyB8PSBVRlNIQ0RfQ0FQX0NMS19HQVRJ
-TkcgfA0KPiANCj4gPiArICAgICAgICAgICAgICAgc3Bpbl9sb2NrX2luaXQoJmhiYS0+Y2xrX2dh
-dGluZy5sb2NrKTsNCj4gDQo+IEhlbmNlIHRoZSBzcGlubG9jayBpcyBub3QgdW5pbml0aWFsaXpl
-ZCBvbiBhbGwgb3RoZXIgaG9zdCBkcml2ZXJzLg0KT2ggLSBUaGFua3MgZm9yIHBvaW50aW5nIHRo
-aXMgb3V0LiAgSSB0b3RhbGx5IG1pc3NlZCBpdC4NCkF0IGlzIGFwcGVhcnMgd2hlbiBjbG9ja19n
-YXRpbmcgd2FzIGludmVudGVkIC0gMWFiMjdjOWNmOGI2ICgidWZzOiBBZGQgc3VwcG9ydCBmb3Ig
-Y2xvY2sgZ2F0aW5nIikNClRoZSBiZWxvdyB3YXMgYWRkZWQgd2l0aG91dCBjaGVja2luZyBpZiB1
-ZnNoY2RfaXNfY2xrZ2F0aW5nX2FsbG93ZWQsIG9yIGJldHRlciB5ZXQgLSBjbGtfZ2F0aW5nLmlz
-X2luaXRpYWxpemVkOg0KDQpAQCAtNDE1MSwxMiArNDQyMCwxOSBAQCBzdGF0aWMgaW50IF9fdWZz
-aGNkX3NldHVwX2Nsb2NrcyhzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBib29sIG9uLA0KICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNsa2ktPm5hbWUsIG9uID8gImVuIiA6ICJk
-aXMiKTsNCiAgICAgICAgICAgICAgICB9DQogICAgICAgIH0NCisgICAgICAgfSBlbHNlIGlmICgh
-cmV0ICYmIG9uKSB7DQorICAgICAgICAgICAgICAgc3Bpbl9sb2NrX2lycXNhdmUoaGJhLT5ob3N0
-LT5ob3N0X2xvY2ssIGZsYWdzKTsNCisgICAgICAgICAgICAgICBoYmEtPmNsa19nYXRpbmcuc3Rh
-dGUgPSBDTEtTX09OOw0KKyAgICAgICAgICAgICAgIHNwaW5fdW5sb2NrX2lycXJlc3RvcmUoaGJh
-LT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCiAgICAgICAgfQ0KDQpMb29rcyBsaWtlIHRoaXMg
-aXMgdGhlIG1pc3NpbmcgcGllY2UuDQpXaWxsIGZpeCB0aGlzIGluIGEgMm5kIHBhdGNoLg0KDQpU
-aGFua3MsDQpBdnJpDQoNCj4gDQo+ID4gKw0KPiA+ICAgICAgICAgZXJyID0gdWZzaGNkX2hiYV9p
-bml0KGhiYSk7DQo+ID4gICAgICAgICBpZiAoZXJyKQ0KPiA+ICAgICAgICAgICAgICAgICBnb3Rv
-IG91dF9lcnJvcjsNCj4gDQo+IEdye29ldGplLGVldGluZ31zLA0KPiANCj4gICAgICAgICAgICAg
-ICAgICAgICAgICAgR2VlcnQNCj4gDQo+IC0tDQo+IEdlZXJ0IFV5dHRlcmhvZXZlbiAtLSBUaGVy
-ZSdzIGxvdHMgb2YgTGludXggYmV5b25kIGlhMzIgLS0gZ2VlcnRAbGludXgtDQo+IG02OGsub3Jn
-DQo+IA0KPiBJbiBwZXJzb25hbCBjb252ZXJzYXRpb25zIHdpdGggdGVjaG5pY2FsIHBlb3BsZSwg
-SSBjYWxsIG15c2VsZiBhIGhhY2tlci4gQnV0IHdoZW4NCj4gSSdtIHRhbGtpbmcgdG8gam91cm5h
-bGlzdHMgSSBqdXN0IHNheSAicHJvZ3JhbW1lciIgb3Igc29tZXRoaW5nIGxpa2UgdGhhdC4NCj4g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAtLSBMaW51cyBUb3J2YWxkcw0K
+devm_blk_crypto_profile_init() registers a cleanup handler to run when
+the associated (platform-) device is being released. For UFS, the
+crypto private data and pointers are stored as part of the ufs_hba's
+data structure 'struct ufs_hba::crypto_profile'. This structure is
+allocated as part of the underlying ufshcd and therefore Scsi_host
+allocation.
+
+During driver release or during error handling in ufshcd_pltfrm_init(),
+this structure is released as part of ufshcd_dealloc_host() before the
+(platform-) device associated with the crypto call above is released.
+Once this device is released, the crypto cleanup code will run, using
+the just-released 'struct ufs_hba::crypto_profile'. This causes a
+use-after-free situation:
+
+  Call trace:
+   kfree+0x60/0x2d8 (P)
+   kvfree+0x44/0x60
+   blk_crypto_profile_destroy_callback+0x28/0x70
+   devm_action_release+0x1c/0x30
+   release_nodes+0x6c/0x108
+   devres_release_all+0x98/0x100
+   device_unbind_cleanup+0x20/0x70
+   really_probe+0x218/0x2d0
+
+In other words, the initialisation code flow is:
+
+  platform-device probe
+    ufshcd_pltfrm_init()
+      ufshcd_alloc_host()
+        scsi_host_alloc()
+          allocation of struct ufs_hba
+          creation of scsi-host devices
+    devm_blk_crypto_profile_init()
+      devm registration of cleanup handler using platform-device
+
+and during error handling of ufshcd_pltfrm_init() or during driver
+removal:
+
+  ufshcd_dealloc_host()
+    scsi_host_put()
+      put_device(scsi-host)
+        release of struct ufs_hba
+  put_device(platform-device)
+    crypto cleanup handler
+
+To fix this use-after free, change ufshcd_alloc_host() to register a
+devres action to automatically cleanup the underlying SCSI device on
+ufshcd destruction, without requiring explicit calls to
+ufshcd_dealloc_host(). This way:
+
+    * the crypto profile and all other ufs_hba-owned resources are
+      destroyed before SCSI (as they've been registered after)
+    * a memleak is plugged in tc-dwc-g210-pci.c remove() as a
+      side-effect
+    * EXPORT_SYMBOL_GPL(ufshcd_dealloc_host) can be removed fully as
+      it's not needed anymore
+    * no future drivers using ufshcd_alloc_host() could ever forget
+      adding the cleanup
+
+Fixes: cb77cb5abe1f ("blk-crypto: rename blk_keyslot_manager to blk_crypto_profile")
+Fixes: d76d9d7d1009 ("scsi: ufs: use devm_blk_ksm_init()")
+Cc: stable@vger.kernel.org
+Signed-off-by: André Draszik <andre.draszik@linaro.org>
+---
+Changes in v4:
+- add a kdoc note to ufshcd_alloc_host() to state why there is no
+  ufshcd_dealloc_host() (Mani)
+- use return err, without goto (Mani)
+- drop register dump and abort info from commit message (Mani)
+- Link to v3: https://lore.kernel.org/r/20250116-ufshcd-fix-v3-1-6a83004ea85c@linaro.org
+
+Changes in v3:
+- rename devres action handler to ufshcd_devres_release() (Bart)
+- Link to v2: https://lore.kernel.org/r/20250114-ufshcd-fix-v2-1-2dc627590a4a@linaro.org
+
+Changes in v2:
+- completely new approach using devres action for Scsi_host cleanup, to
+  ensure ordering
+- add Fixes: and CC: stable tags (Eric)
+- Link to v1: https://lore.kernel.org/r/20250113-ufshcd-fix-v1-1-ca63d1d4bd55@linaro.org
+---
+In my case, as per above trace I initially encountered an error in
+ufshcd_verify_dev_init(), which made me notice this problem both during
+error handling and release. For reproducing, it'd be possible to change
+that function to just return an error, or rmmod the platform glue
+driver.
+
+Other approaches for solving this issue I see are the following, but I
+believe this one here is the cleanest:
+
+* turn 'struct ufs_hba::crypto_profile' into a dynamically allocated
+  pointer, in which case it doesn't matter if cleanup runs after
+  scsi_host_put()
+* add an explicit devm_blk_crypto_profile_deinit() to be called by API
+  users when necessary, e.g. before ufshcd_dealloc_host() in this case
+* register the crypto cleanup handler against the scsi-host device
+  instead, like in v1 of this patch
+---
+ drivers/ufs/core/ufshcd.c        | 31 +++++++++++++++++++++----------
+ drivers/ufs/host/ufshcd-pci.c    |  2 --
+ drivers/ufs/host/ufshcd-pltfrm.c | 28 +++++++++-------------------
+ include/ufs/ufshcd.h             |  1 -
+ 4 files changed, 30 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 43ddae7318cb..4328f769a7c8 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10279,16 +10279,6 @@ int ufshcd_system_thaw(struct device *dev)
+ EXPORT_SYMBOL_GPL(ufshcd_system_thaw);
+ #endif /* CONFIG_PM_SLEEP  */
+ 
+-/**
+- * ufshcd_dealloc_host - deallocate Host Bus Adapter (HBA)
+- * @hba: pointer to Host Bus Adapter (HBA)
+- */
+-void ufshcd_dealloc_host(struct ufs_hba *hba)
+-{
+-	scsi_host_put(hba->host);
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+-
+ /**
+  * ufshcd_set_dma_mask - Set dma mask based on the controller
+  *			 addressing capability
+@@ -10307,12 +10297,26 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+ 	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
+ }
+ 
++/**
++ * ufshcd_devres_release - devres cleanup handler, invoked during release of
++ *			   hba->dev
++ * @host: pointer to SCSI host
++ */
++static void ufshcd_devres_release(void *host)
++{
++	scsi_host_put(host);
++}
++
+ /**
+  * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
+  * @dev: pointer to device handle
+  * @hba_handle: driver private handle
+  *
+  * Return: 0 on success, non-zero value on failure.
++ *
++ * NOTE: There is no corresponding ufshcd_dealloc_host() because this function
++ * keeps track of its allocations using devres and deallocates everything on
++ * device removal automatically.
+  */
+ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ {
+@@ -10334,6 +10338,13 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ 		err = -ENOMEM;
+ 		goto out_error;
+ 	}
++
++	err = devm_add_action_or_reset(dev, ufshcd_devres_release,
++				       host);
++	if (err)
++		return dev_err_probe(dev, err,
++				     "failed to add ufshcd dealloc action\n");
++
+ 	host->nr_maps = HCTX_TYPE_POLL + 1;
+ 	hba = shost_priv(host);
+ 	hba->host = host;
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index ea39c5d5b8cf..9cfcaad23cf9 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -562,7 +562,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+ 	ufshcd_remove(hba);
+-	ufshcd_dealloc_host(hba);
+ }
+ 
+ /**
+@@ -605,7 +604,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Initialization failed\n");
+-		ufshcd_dealloc_host(hba);
+ 		return err;
+ 	}
+ 
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index 505572d4fa87..ffe5d1d2b215 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -465,21 +465,17 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	struct device *dev = &pdev->dev;
+ 
+ 	mmio_base = devm_platform_ioremap_resource(pdev, 0);
+-	if (IS_ERR(mmio_base)) {
+-		err = PTR_ERR(mmio_base);
+-		goto out;
+-	}
++	if (IS_ERR(mmio_base))
++		return PTR_ERR(mmio_base);
+ 
+ 	irq = platform_get_irq(pdev, 0);
+-	if (irq < 0) {
+-		err = irq;
+-		goto out;
+-	}
++	if (irq < 0)
++		return irq;
+ 
+ 	err = ufshcd_alloc_host(dev, &hba);
+ 	if (err) {
+ 		dev_err(dev, "Allocation failed\n");
+-		goto out;
++		return err;
+ 	}
+ 
+ 	hba->vops = vops;
+@@ -488,13 +484,13 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	if (err) {
+ 		dev_err(dev, "%s: clock parse failed %d\n",
+ 				__func__, err);
+-		goto dealloc_host;
++		return err;
+ 	}
+ 	err = ufshcd_parse_regulator_info(hba);
+ 	if (err) {
+ 		dev_err(dev, "%s: regulator init failed %d\n",
+ 				__func__, err);
+-		goto dealloc_host;
++		return err;
+ 	}
+ 
+ 	ufshcd_init_lanes_per_dir(hba);
+@@ -502,25 +498,20 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	err = ufshcd_parse_operating_points(hba);
+ 	if (err) {
+ 		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+-		goto dealloc_host;
++		return err;
+ 	}
+ 
+ 	err = ufshcd_init(hba, mmio_base, irq);
+ 	if (err) {
+ 		dev_err_probe(dev, err, "Initialization failed with error %d\n",
+ 			      err);
+-		goto dealloc_host;
++		return err;
+ 	}
+ 
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
+ 
+ 	return 0;
+-
+-dealloc_host:
+-	ufshcd_dealloc_host(hba);
+-out:
+-	return err;
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
+ 
+@@ -534,7 +525,6 @@ void ufshcd_pltfrm_remove(struct platform_device *pdev)
+ 
+ 	pm_runtime_get_sync(&pdev->dev);
+ 	ufshcd_remove(hba);
+-	ufshcd_dealloc_host(hba);
+ 	pm_runtime_disable(&pdev->dev);
+ 	pm_runtime_put_noidle(&pdev->dev);
+ }
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index da0fa5c65081..58eb6e897827 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1311,7 +1311,6 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+ void ufshcd_enable_irq(struct ufs_hba *hba);
+ void ufshcd_disable_irq(struct ufs_hba *hba);
+ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+-void ufshcd_dealloc_host(struct ufs_hba *);
+ int ufshcd_hba_enable(struct ufs_hba *hba);
+ int ufshcd_init(struct ufs_hba *, void __iomem *, unsigned int);
+ int ufshcd_link_recovery(struct ufs_hba *hba);
+
+---
+base-commit: 4e16367cfe0ce395f29d0482b78970cce8e1db73
+change-id: 20250113-ufshcd-fix-52409f2d32ff
+
+Best regards,
+-- 
+André Draszik <andre.draszik@linaro.org>
+
