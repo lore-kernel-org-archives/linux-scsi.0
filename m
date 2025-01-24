@@ -1,169 +1,147 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85BC7282F5
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2025 06:16:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8E813AC1;
+	Fri, 24 Jan 2025 07:36:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737699383; cv=none; b=iqLfVyTlGXmL6O+FN85PFsbre6HYgZFp1NWsi9CF5DN1V4wWZ5cmHhMkzw9I1IUXrngFJUzGgIsr4GrszSPQVwDASpewN4rHvDjTXtnQumYxbN4yUOK7eJ6wC9jo4GTNqNRJDfmnf7HtjY647L6FtlXzh77zyKGqDxXevjcTOeo=
+	t=1737704211; cv=none; b=XIhnW8YcIHtj6KVgEpFC//J+cf/NkHHWG9Om/gLUX9Wjce8e4tShQTxsJQw/W34vLNmiMp9Uy2zuRR9kAJDnKKCRfF7Zue7Ty0oI8cEEBP4IEaut5z6ryVSGpSxy7+Olp1YPK+a2fOMghZ0L39RE6C//JrAX+tLPNoneB8w7HHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737699383; c=relaxed/simple;
-	bh=UilMh9SbX4NQuzHI58VTtAynTtkbzLheztbNESSsnw0=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=AqNZPkxNaPTfolhhbHEGTrwW1kRlAfC7Fu+AS64QLwHkL2eAPrTFbGgfmLWwLuUdauHYN2pKiXK0dedpR43QXKJDXcpbbXmuYmqGVLi6KekjEpcwm8Kil4BV0SX7K/s1MNA7BcVy4SkvuqzUspCz+YKcm5RPSeZYskE3wJylphk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=PlDi/eJd; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1737704211; c=relaxed/simple;
+	bh=III9aeivKKsByI2pyvRmy4KldHI+hMPrNe3oADAH9B4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=q5G6ZwLswh3DLGr1t90onE8OMhJBf26uxdDnKlFucftxI5Sn+Ll9jleiwMzyByxe1lNSFl4q0J0n+VkEZcS0fW4r2y1AlZCnVxzqbUbmoYh5ZqiJ0yHyGSyOsHzj/63Ss8fDUUkfRiWrK8ururPNuo4iMS+hweITQYoV2ciNPSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=W+AHWRcP; arc=none smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="PlDi/eJd"
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250124061612epoutp032f8c8f394b9cb692fa7c05a0d981c394~djF9nHjEI0119901199epoutp03U
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2025 06:16:12 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250124061612epoutp032f8c8f394b9cb692fa7c05a0d981c394~djF9nHjEI0119901199epoutp03U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1737699372;
-	bh=WIgo5MH6l08HeK8L3BrQuxcOQOWOwek6ssgRhrvqzlw=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=PlDi/eJdARMAxlz9MrIyQJl/b/5fMIAfoO5ea18ocGT7GdDnspfoLDIweENOP8nBO
-	 1tHP4OI8Vd8kS+z27Ray0Hd42OWpNFXOj5K7HVTu5DnPiZEQieyt7Ljlhi8sKqw1X0
-	 PcesuKeKCsBVqFNzIJG7a2Uv6gmV/Ew8d4wv2x7o=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTP id
-	20250124061611epcas1p1a7cbace80344ee15f8dab4b5eb17bd69~djF9AqjNY1040610406epcas1p1L;
-	Fri, 24 Jan 2025 06:16:11 +0000 (GMT)
-Received: from epsmgec1p1-new.samsung.com (unknown [182.195.38.248]) by
-	epsnrtp2.localdomain (Postfix) with ESMTP id 4YfSHb3zWTz4x9Q1; Fri, 24 Jan
-	2025 06:16:11 +0000 (GMT)
-Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
-	epsmgec1p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	70.58.31735.B2033976; Fri, 24 Jan 2025 15:16:11 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250124061611epcas1p2ad34999373e7cb1677a663d348e0e49a~djF8L2Q252380423804epcas1p2P;
-	Fri, 24 Jan 2025 06:16:11 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250124061611epsmtrp26a24dc56c418f230472610278c3cad72~djF8K6lLd1664516645epsmtrp21;
-	Fri, 24 Jan 2025 06:16:11 +0000 (GMT)
-X-AuditID: b6c32a4c-ad1fe70000007bf7-c9-6793302b1c50
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	E4.EF.23488.A2033976; Fri, 24 Jan 2025 15:16:10 +0900 (KST)
-Received: from dh0421hwang02 (unknown [10.253.101.58]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250124061610epsmtip18cbf49a754f72770e3919e59e5523e53~djF76EIbP3135331353epsmtip1h;
-	Fri, 24 Jan 2025 06:16:10 +0000 (GMT)
-From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
-To: "'Bao D. Nguyen'" <quic_nguyenb@quicinc.com>, "'Avri Altman'"
-	<Avri.Altman@wdc.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
-	<bvanassche@acm.org>, <James.Bottomley@HansenPartnership.com>,
-	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
-	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
-Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
-	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
-	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
-	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
-In-Reply-To: <6a49b676-e530-2320-9f53-c05597a56dac@quicinc.com>
-Subject: RE: [PATCH] scsi: ufs: core: increase the NOP_OUT command timeout
-Date: Fri, 24 Jan 2025 15:16:10 +0900
-Message-ID: <006f01db6e27$768291d0$6387b570$@samsung.com>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="W+AHWRcP"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1737704209; x=1769240209;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=III9aeivKKsByI2pyvRmy4KldHI+hMPrNe3oADAH9B4=;
+  b=W+AHWRcPszTICf8kNSeC0YAQi53M7eMy4HHxKLN/FH+IyTmonFlgHhtX
+   hHHtCgPI0/03w2LjlJr0bo4zj0Jp07tMqYTQ8EVyODglmIPnvjoBQQGXP
+   5ehJ7BB5YMgFyEiw2glCmHHRNmCaefSZhjgoJxVo1fkO1Fgo4PPednu9l
+   vm2MN1TGIaKiGKRY/pfKHBeiEdcLk0rGNYzB3Ezoh6ELBpJqkpcu9HAOl
+   y3n9EA02hQe7D503phwtSy0SprW5rHGDj2LsjHV3wdhOemY1ZICegCdua
+   Qa0OIXrxv7x2/jPdIczh6AbeAuftwfByDEyOpzRB1T35qVa8ObgvFjwPi
+   g==;
+X-CSE-ConnectionGUID: vmcXwT+aQTqfuQSp/HCtxQ==
+X-CSE-MsgGUID: iMWohm79TYC2lV1Yx+6pZw==
+X-IronPort-AV: E=Sophos;i="6.13,230,1732550400"; 
+   d="scan'208";a="37226748"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Jan 2025 15:36:45 +0800
+IronPort-SDR: 67933571_OTWnJbEV1dNHOvsfWuzVITONh21pqUJqZ96YZp1XhejVjAf
+ dy4S3VZfFd6aUvVCNAmCrxhLrqI3gZO24JLd9Jg==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jan 2025 22:38:41 -0800
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jan 2025 23:36:41 -0800
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Avri Altman <avri.altman@wdc.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Subject: [PATCH v2] scsi: ufs: core: Ensure clk_gating.lock is used only after initialization
+Date: Fri, 24 Jan 2025 09:33:54 +0200
+Message-Id: <20250124073354.3814674-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKQSHeU970FIzmh0/qkLVV+LAs8RgHb9Bl4AkEjfm8CcqkRDQJ9ENlZsXNUBVA=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrJJsWRmVeSWpSXmKPExsWy7bCmga62weR0g+frZC0ezNvGZvHy51U2
-	i2kffjJbzDjVxmrx6+96douN/RwWHVsnM1nseH6G3WLX32Ymi8u75rBZdF/fwWZxt6WT1WL5
-	8X9MFls//Wa1+Nb3hN1i6ovj7BZNf/axWFw7c4LVYvOlbywOwh6Xr3h7TJt0is3jzrU9bB4t
-	J/ezeHx8eovFY+KeOo++LasYPT5vkvNoP9DNFMAZlW2TkZqYklqkkJqXnJ+SmZduq+QdHO8c
-	b2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA/STkkJZYk4pUCggsbhYSd/Opii/tCRVISO/uMRW
-	KbUgJafArECvODG3uDQvXS8vtcTK0MDAyBSoMCE74/L7vewFy7gqjiw+ytjA2MvRxcjJISFg
-	IvHtzwL2LkYuDiGBPYwSPcv6GCGcT4wS/Yc3s0A43xgldjz9xQjT8nvHLKiqvYwSK1tes0I4
-	rxkljt6dD1bFJmAgMfnYGzaQhIjAJyaJ6dMegW1hFrjOKPHz3hcmkCpOAXuJaRuegXUIC3hJ
-	3P93mQ3EZhFQlXj6tR3M5hWwlGj7uIoJwhaUODnzCQuIzSwgL7H97RxmiJsUJH4+XcYKYosI
-	+ElcmHqcGaJGRGJ2ZxszyGIJgcmcEi/nnGaBaHCRWHP2NZQtLPHq+BZ2CFtK4vO7vWwQdrHE
-	lXNnoewWRolHHRkQtr1Ec2szUJwDaIGmxPpd+hC7+CTefe1hBQlLCPBKdLQJQVSrSSz+9x3o
-	RXYgW0aikRsi6iHxff859gmMirOQ/DULyV+zkNw/C2HVAkaWVYxSqQXFuempyYYFhrp5qeXw
-	GE/Oz93ECE7zWj47GL+v/6t3iJGJg/EQowQHs5II7/8nE9KFeFMSK6tSi/Lji0pzUosPMZoC
-	Q3sis5Rocj4w0+SVxBuaWBqYmBmZWBhbGpspifNe2NaSLiSQnliSmp2aWpBaBNPHxMEp1cBk
-	1CSdXdXj4d6sxJO191XHKZPZFap6nXMS+Y+nsAS+vbfj0rPs5tnOP6MDiwwcevXfeoV1v+RY
-	xTQxSk7K9nH5fgYv7W61pI0XZra9+Zm011jCXM5td4nByu1Rbx0mMszZu0CGJWf7haX3/HzF
-	0wL9vZbdONHBwflKWXsad5K92eT9XJXxNw5NPNk30036YteUjCVf/ZNdz65+IDvf5JfVrZxr
-	TqkLb0+dtWJD87Ra19l3FU3n+Yj/5ctw8ZFZnRXy9X9m/cmz253nnFt/+apdwofYXRM7U349
-	v2DWfm7e55RJq1N/mwiXBARZxcxZUaRWJtRrGbGqe6ZL4/JDE67rLOc5OIntzo9Jd16vtWdQ
-	YinOSDTUYi4qTgQAAjO8Z3wEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrEIsWRmVeSWpSXmKPExsWy7bCSnK6WweR0gz+zrSwezNvGZvHy51U2
-	i2kffjJbzDjVxmrx6+96douN/RwWHVsnM1nseH6G3WLX32Ymi8u75rBZdF/fwWZxt6WT1WL5
-	8X9MFls//Wa1+Nb3hN1i6ovj7BZNf/axWFw7c4LVYvOlbywOwh6Xr3h7TJt0is3jzrU9bB4t
-	J/ezeHx8eovFY+KeOo++LasYPT5vkvNoP9DNFMAZxWWTkpqTWZZapG+XwJVx+f1e9oJlXBVH
-	Fh9lbGDs5ehi5OSQEDCR+L1jFmMXIxeHkMBuRonjs5azQSRkJLrv72XvYuQAsoUlDh8uhqh5
-	ySix8n07O0gNm4CBxORjb9hAEiICf5gkZi8/xATiMAvcZ5RYtG0qO0TLASaJ1X+nMYK0cArY
-	S0zb8AzMFhbwkrj/7zLYOhYBVYmnX9vBbF4BS4m2j6uYIGxBiZMzn7CA2MwC2hK9D1sZIWx5
-	ie1v5zBDnKog8fPpMlYQW0TAT+LC1OPMEDUiErM725gnMArPQjJqFpJRs5CMmoWkZQEjyypG
-	ydSC4tz03GTDAsO81HK94sTc4tK8dL3k/NxNjOBo19LYwfjuW5P+IUYmDsZDjBIczEoivP+f
-	TEgX4k1JrKxKLcqPLyrNSS0+xCjNwaIkzrvSMCJdSCA9sSQ1OzW1ILUIJsvEwSnVwNRgnPzm
-	HKfSAflL+9q4O2a/XrV2c6ShP+cc7wVy90zqWLlSmo7KHHD9e/HVFV2hrRzxX2dKLn4SGNz2
-	O0/la4b5zLVJZ715Z17rqJ7/+9PtT1d/qHddkGo3/D2vJ87w/twS2Q+dAhZLP32wvB4gHlzt
-	Yde2benjpPJAYceDRqLn0xY/vmXvkto+ye7Mtp7Dfklyt+2n7LgpLdxzfq35hq6U3109Kp4P
-	K+60VE97wf/UO2jJ6+zFpz4V6oo23Ny/aF++z87O1P3nJxyLO9Hlc+Wb1o2TQUn3SmaIa+vb
-	n9/yYNPrrxpP3tyNrhU89on94rI5S5wd2UJnnMrZMNsm7PTq9OauggZR60085+UOvGxQYinO
-	SDTUYi4qTgQAlLnmXGUDAAA=
-X-CMS-MailID: 20250124061611epcas1p2ad34999373e7cb1677a663d348e0e49a
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250115022348epcas1p29705c109f51c01e1e91ef227233c7119
-References: <CGME20250115022348epcas1p29705c109f51c01e1e91ef227233c7119@epcas1p2.samsung.com>
-	<20250115022344.3967-1-dh0421.hwang@samsung.com>
-	<DM6PR04MB6575C2833DD66B847572F53CFC1A2@DM6PR04MB6575.namprd04.prod.outlook.com>
-	<425301db67fd$5c27ca60$14775f20$@samsung.com>
-	<6a49b676-e530-2320-9f53-c05597a56dac@quicinc.com>
+Content-Transfer-Encoding: 8bit
 
-On 1/16/2025 8:30 AM, Bao D. Nguyen wrote:
-> On 1/16/2025 1:59 AM, DooHyun Hwang wrote:
-> >>
-> >>> It is found that is UFS device may take longer than 500ms(50ms *
-> >>> 10times) to respond to NOP_OUT command.
-> >>>
-> >>> The NOP_OUT command timeout was total 500ms that is from a timeout
-> >>> value of 50ms(defined by NOP_OUT_TIMEOUT) with 10 retries(defined by
-> >>> NOP_OUT_RETRIES)
-> >>>
-> >>> This change increase the NOP_OUT command timeout to total 1000ms by
-> >>> changing timeout value to 100ms(NOP_OUT_TIMEOUT)
-> >>>
-> >>> Signed-off-by: DooHyun Hwang <dh0421.hwang@samsung.com>
-> >> Why not edit hba->nop_out_timeout in the .init vop?
-> >> Like some vendors already do.
-> >>
-> >> Thanks,
-> >> Avri
-> >>
-> > Thank you for your suggestion.
-> > I'll fix that in .init vop as you said.
-> >
-> > And I'll reject this patch.
-> Hi DooHyun Hwang,
-> Since this is a common issue that multiple platform vendors have to fix in
-> their vops, should we fix it in the common code instead?
-> 
-> Reviewed-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+This commit addresses a lockdep warning triggered by the use of the
+clk_gating.lock before it is properly initialized. The warning is as
+follows:
 
+[    4.388838] INFO: trying to register non-static key.
+[    4.395673] The code is fine but needs lockdep annotation, or maybe
+[    4.402118] you didn't initialize this object before use?
+[    4.407673] turning off the locking correctness validator.
+[    4.413334] CPU: 5 UID: 0 PID: 58 Comm: kworker/u32:1 Not tainted 6.12-rc1 #185
+[    4.413343] Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
+[    4.413362] Call trace:
+[    4.413364]  show_stack+0x18/0x24 (C)
+[    4.413374]  dump_stack_lvl+0x90/0xd0
+[    4.413384]  dump_stack+0x18/0x24
+[    4.413392]  register_lock_class+0x498/0x4a8
+[    4.413400]  __lock_acquire+0xb4/0x1b90
+[    4.413406]  lock_acquire+0x114/0x310
+[    4.413413]  _raw_spin_lock_irqsave+0x60/0x88
+[    4.413423]  ufshcd_setup_clocks+0x2c0/0x490
+[    4.413433]  ufshcd_init+0x198/0x10ec
+[    4.413437]  ufshcd_pltfrm_init+0x600/0x7c0
+[    4.413444]  ufs_qcom_probe+0x20/0x58
+[    4.413449]  platform_probe+0x68/0xd8
+[    4.413459]  really_probe+0xbc/0x268
+[    4.413466]  __driver_probe_device+0x78/0x12c
+[    4.413473]  driver_probe_device+0x40/0x11c
+[    4.413481]  __device_attach_driver+0xb8/0xf8
+[    4.413489]  bus_for_each_drv+0x84/0xe4
+[    4.413495]  __device_attach+0xfc/0x18c
+[    4.413502]  device_initial_probe+0x14/0x20
+[    4.413510]  bus_probe_device+0xb0/0xb4
+[    4.413517]  deferred_probe_work_func+0x8c/0xc8
+[    4.413524]  process_scheduled_works+0x250/0x658
+[    4.413534]  worker_thread+0x15c/0x2c8
+[    4.413542]  kthread+0x134/0x200
+[    4.413550]  ret_from_fork+0x10/0x20
 
-This is already set to rejected state on patchwork.
-Anyway, thank you for the review.
+To fix this issue, ensure that the spinlock is only used after it
+has been properly initialized before using it in `ufshcd_setup_clocks`.
 
-I thought it would be efficient to fix it in the common code.
-I don't know which UFS devices have the same problem.
+Fixes: 209f4e43b806 ("scsi: ufs: core: Introduce a new clock_gating lock")
+Reported-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
-Thank you.
-DooHyun Hwang.
+---
+Changes since v1:
+ - move the spin_lock_init(&hba->clk_gating.lock) call from
+   ufshcd_init_clk_gating() just before the ufshcd_hba_init() call in
+   ufshcd_init() (Bart)
+---
+ drivers/ufs/core/ufshcd.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index f6c38cf10382..9b17f6e2f807 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2120,8 +2120,6 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
+ 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
+ 
+-	spin_lock_init(&hba->clk_gating.lock);
+-
+ 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(
+ 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
+ 		hba->host->host_no);
+@@ -10412,6 +10410,13 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	hba->irq = irq;
+ 	hba->vps = &ufs_hba_vps;
+ 
++	/*
++	 * Initialize clk_gating.lock early since it is being used in
++	 * ufshcd_setup_clocks()
++	 */
++	if (ufshcd_is_clkgating_allowed(hba))
++		spin_lock_init(&hba->clk_gating.lock);
++
+ 	err = ufshcd_hba_init(hba);
+ 	if (err)
+ 		goto out_error;
+-- 
+2.25.1
 
