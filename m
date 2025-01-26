@@ -1,61 +1,40 @@
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EBED70839;
-	Sun, 26 Jan 2025 06:48:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C41518DF62;
+	Sun, 26 Jan 2025 15:10:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737874117; cv=none; b=XtC02gL+VMdYruYuCOFlp838psqOOO43dDRZJuZ7bgcTsu/80HH6AoBr6b9L6M/9bQuPUU0Iqu5cji7vuLdc2WQZ3z/eUe/DxBPD++BTA5ZrhE//asjMA0cSyYJyeyPGJ0KgH5qSD38DlzqKaFePX7twNWNqscEyZ0KvHYl8jG0=
+	t=1737904225; cv=none; b=AUQ4e3MEuohp+wuG1XHCr/pUm08O3oUqin+JOq0Hyxtyve2jJhSkb8qEjodVP9yUd1CFTSXtfgXvAlW/rM0mR0O90AdJYFwMESFOIlewkbvuDb3gUnPRxrTOw1WCdjSWMzjXr3ccVEAifqrkljJeWccInzfqCQsnCAoDA3yCOeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737874117; c=relaxed/simple;
-	bh=d19W+FapVGrIgQjfm3lNAjqHEF57wreNHedB3RFpZY4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Tcm/2bksO1aNofJLaUlbk0tffBPG2+DPP9a+/piZKX+9nwRDQiFOmbP5loxrEi46SEzurYXZXUEXwXoBSPzLFDZaWmSLSfe9SOfxwr5jQOZFkyBUpUIPu/hC71l49HKQZcyWBs+2W9P/qoqeZ8CS7KvUZZXNti/fVJJxr7yJZjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=eoT0watW; arc=none smtp.client-ip=68.232.143.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1737904225; c=relaxed/simple;
+	bh=1gSWKZyoIzcrjDwOmJs8MP7eddn9xnHDRsFiCfC7wfs=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=Vl7PcPKpOR5ABq/H3Fzz2Ia8/ll2+nYXAMIqF4tK8C8diuRVmCpjbO3wL0tr1WQIYCTgqCf4e/4PaxGKO8NzZ1nB2YRx51fuPiLbt/EthLYpQxRaAhOU3XITwE3VRHeSbkHy8lBA8cCh/AzIyvLpU/eKitgI0V9mYCZm3DpAe1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NrgJkz+Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="eoT0watW"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1737874115; x=1769410115;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=d19W+FapVGrIgQjfm3lNAjqHEF57wreNHedB3RFpZY4=;
-  b=eoT0watWp9g93dyENtY5F4Nb6AETHJPimunXjb/hVsi+sccsRDNRMmH9
-   jBdnVn2H+LlbsSeq1jMZr7lVIuBqpE8e0Y7C/U0u8mBvy/6Urjm4i2wGy
-   C11d4EVzLbgNKti5cpl6sZPThlguXS5OtRAq8LTfLBLIYUZl2LD2NTslu
-   n69d4fD9Fzbrr7tVgnbCDoVl0JQYaTWOjTW8bHFqBcAwEuIcYzWnyLmJd
-   Mx0y3BUkGfYegu4hYcA7B8xS+ctPSFgicvu47+BsMgsC3uM/6075iIXw7
-   1gJFmzjbm3e9iO8GCxAJqQ5Aau5eTIvPsBDy7Tgdt66Jttx86WzXoUst+
-   w==;
-X-CSE-ConnectionGUID: q4SEr/DiTyKNPu81Vipurw==
-X-CSE-MsgGUID: 5VfNDJwNR9KPVbNi2YhMOw==
-X-IronPort-AV: E=Sophos;i="6.13,235,1732550400"; 
-   d="scan'208";a="37344168"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Jan 2025 14:48:34 +0800
-IronPort-SDR: 6795cd26_cbGJzkz8wAG+BExxANnKap0Xb73nXH288r+120eEGgw6PRz
- JG18iHGEzevgqD2OjpfQBBSXhDEFcUIWcdZj4xA==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Jan 2025 21:50:30 -0800
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Jan 2025 22:48:33 -0800
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v3 2/2] scsi: ufs: Fix toggling of clk_gating.state when clock gating is not allowed
-Date: Sun, 26 Jan 2025 08:45:21 +0200
-Message-Id: <20250126064521.3857557-3-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250126064521.3857557-1-avri.altman@wdc.com>
-References: <20250126064521.3857557-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NrgJkz+Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0376AC4CEE2;
+	Sun, 26 Jan 2025 15:10:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737904225;
+	bh=1gSWKZyoIzcrjDwOmJs8MP7eddn9xnHDRsFiCfC7wfs=;
+	h=Subject:From:To:Cc:Date:From;
+	b=NrgJkz+YkDqpyVNPHUOyuLu0+Ig3q+dBpog6GlyEDeDnCVTSMCx4wjEys9yqa4jr+
+	 3Tp0bhBBtyfMRhuNLqaC/SlZswyUtH9MgE6qtY/xcEyxRW2G0YE730fldFpnF/cFaC
+	 3oKHyFjhwkGlQe2ofAZy6DSStF3oeIae8Vtv5xb/Dktz0gllUwHtqtx/sJSZrzTl07
+	 19Ie+272srvS1oE27bg6qjspUTycoExglQ8mdKiA6htTZFIa1gHAseU16PLgdjOqeM
+	 5fkSi8uCU5a2q79aDmyYvijSqBPFH9r/1JCfmRiVJCJ9gGCCc4JU0gntKVsoypbjgK
+	 GO+u3HlTGhhXg==
+Message-ID: <383ace1bc4fc8acb1f14403218f0891bcbc21cdf.camel@kernel.org>
+Subject: [GIT PULL] SCSI updates for the 6.12+ merge window
+From: James Bottomley <jejb@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Sun, 26 Jan 2025 10:10:21 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -64,75 +43,400 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This commit addresses an issue where `clk_gating.state` is being toggled
-in `ufshcd_setup_clocks` even if clock gating is not allowed. This can
-lead to a crash with the following error:
+[From kernel.org for once because hansenpartnership.com is suffering a
+prolonged outage due to data centre issues in Los Angeles]
 
-    BUG: spinlock bad magic on CPU#6, swapper/0/1
-     lock: 0xffffff84443014e8, .magic: 00000000, .owner: <none>/-1,
-    .owner_cpu: 0
-    CPU: 6 UID: 0 PID: 1 Comm: swapper/0 Not tainted
-    6.13.0-rcar3-initrd-08318-g75abbef32a94 #896
-    Hardware name: R-Car S4 Starter Kit board (DT)
-    Call trace:
-     show_stack+0x18/0x24 (C)
-     dump_stack_lvl+0x60/0x80
-     dump_stack+0x18/0x24
-     spin_bug+0x7c/0xa0
-     do_raw_spin_lock+0x34/0xb4
-     _raw_spin_lock_irqsave+0x1c/0x30
-     class_spinlock_irqsave_constructor+0x18/0x30
-     ufshcd_setup_clocks+0x98/0x23c
-     ufshcd_init+0x288/0xd38
-     ufshcd_pltfrm_init+0x618/0x738
-     ufs_renesas_probe+0x18/0x24
-     platform_probe+0x68/0xb8
-     really_probe+0x138/0x268
-     __driver_probe_device+0xf4/0x10c
-     driver_probe_device+0x3c/0xf8
-     __driver_attach+0xf0/0x100
-     bus_for_each_dev+0x84/0xdc
-     driver_attach+0x24/0x30
-     bus_add_driver+0xe8/0x1dc
-     driver_register+0xbc/0xf8
-     __platform_driver_register+0x24/0x30
-     ufs_renesas_platform_init+0x1c/0x28
-     do_one_initcall+0x84/0x1f4
-     kernel_init_freeable+0x238/0x23c
-     kernel_init+0x20/0x120
-     ret_from_fork+0x10/0x20
+[There are three obvious ata merge conflicts where the update to remove
+the slave_ prefix  changed device_configure to sdev_configure and is
+next to a different name change from tag_alloc_policy to
+tag_alloc_policy_rr]
 
-The root cause of the issue is that `clk_gating.state` is being toggled
-even if clock gating is not allowed. This can lead to the spinlock being
-used before it is properly initialized.
+Updates to the usual drivers (ufs, lpfc, fnic, qla2xx, mpi3mr)  The
+major core change is the renaming of the slave_ methods plus a bit of
+constification. The rest are minor updates and fixes.
 
-The fix is to add a check for `hba->clk_gating.is_initialized` before
-toggling `clk_gating.state` in `ufshcd_setup_clocks`. Since
-`clk_gating.lock` is now initialized unconditionally, this is for
-documentation purposes, to ensure clarity in the code. The primary fix
-remains to prevent toggling the `clk_gating.state` if clock gating is
-not allowed.
+The patch is available here:
 
-Fixes: 1ab27c9cf8b6 ("ufs: Add support for clock gating")
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b73c87da383d..abe0774133f5 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9140,7 +9140,7 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
- 			if (!IS_ERR_OR_NULL(clki->clk) && clki->enabled)
- 				clk_disable_unprepare(clki->clk);
- 		}
--	} else if (!ret && on) {
-+	} else if (!ret && on && hba->clk_gating.is_initialized) {
- 		scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
- 			hba->clk_gating.state = CLKS_ON;
- 		trace_ufshcd_clk_gating(dev_name(hba->dev),
--- 
-2.25.1
+The short changelog is:
+
+Ariel Otilibili (1):
+      scsi: myrb: Remove dead code
+
+Artur Paszkiewicz (1):
+      scsi: MAINTAINERS: Remove myself as isci driver maintainer
+
+Arun Easi (2):
+      scsi: fnic: Propagate SCSI error code from fnic_scsi_drv_init()
+      scsi: fnic: Remove always-true IS_FNIC_FCP_INITIATOR macro
+
+Avri Altman (6):
+      scsi: Revert "scsi: ufs: core: Probe for EXT_IID support"
+      scsi: ufs: core: Do not hold any lock in ufshcd_hba_stop()
+      scsi: ufs: core: Introduce a new clock_scaling lock
+      scsi: ufs: core: Introduce a new clock_gating lock
+      scsi: ufs: core: Prepare to introduce a new clock_gating lock
+      scsi: ufs: core: Introduce ufshcd_has_pending_tasks()
+
+Bart Van Assche (6):
+      scsi: scsi_debug: Skip host/bus reset settle delay
+      scsi: core: Update API documentation
+      scsi: core: Remove the .slave_configure() method
+      scsi: Convert SCSI drivers to .sdev_configure()
+      scsi: Rename .device_configure() into .sdev_configure()
+      scsi: Rename .slave_alloc() and .slave_destroy()
+
+Christophe JAILLET (1):
+      scsi: Constify struct pci_device_id
+
+Dan Carpenter (1):
+      scsi: fnic: Delete incorrect debugfs error handling
+
+Dheeraj Reddy Jonnalagadda (1):
+      scsi: fnic: Fix use of uninitialized value in debug message
+
+Dr. David Alan Gilbert (3):
+      scsi: isci: Remove unused isci_remote_device_reset_complete()
+      scsi: iscsi: Remove unused iscsi_create_session()
+      scsi: target: Remove unused functions
+
+Easwar Hariharan (1):
+      scsi: storvsc: Ratelimit warning logs to prevent VM denial of
+service
+
+Eric Biggers (4):
+      scsi: ufs: crypto: Remove ufs_hba_variant_ops::program_key
+      scsi: ufs: qcom: Convert to use
+UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE
+      scsi: ufs: crypto: Add ufs_hba_from_crypto_profile()
+      scsi: ufs: qcom: Fix crypto key eviction
+
+Fedor Loshakov (1):
+      scsi: zfcp: Correct kdoc parameter description for sending ELS
+and CT
+
+Frederic Weisbecker (3):
+      scsi: qedi: Use kthread_create_on_cpu()
+      scsi: bnx2i: Use kthread_create_on_cpu()
+      scsi: bnx2fc: Use kthread_create_on_cpu()
+
+Guixin Liu (3):
+      scsi: mpi3mr: Fix possible crash when setting up bsg fails
+      scsi: ufs: bsg: Set bsg_queue to NULL after removal
+      scsi: ufs: bsg: Delete bsg_dev when setting up bsg fails
+
+Igor Pylypiv (2):
+      scsi: pm80xx: Increase reserved tags from 8 to 128
+      scsi: pm80xx: Do not use libsas port ID
+
+John Garry (1):
+      scsi: scsi_debug: Constify sdebug_driver_template
+
+Jolly Shah (1):
+      scsi: pm80xx: Use dynamic tag numbers for PHY start and stop
+
+Justin Tee (10):
+      scsi: lpfc: Copyright updates for 14.4.0.7 patches
+      scsi: lpfc: Update lpfc version to 14.4.0.7
+      scsi: lpfc: Add support for large fw object application layer
+reads
+      scsi: lpfc: Update definition of firmware configuration mbox cmds
+      scsi: lpfc: Change lpfc_nodelist save_flags member into a bitmask
+      scsi: lpfc: Add handling for LS_RJT reason explanation
+authentication required
+      scsi: lpfc: Modify handling of ADISC based on ndlp state and RPI
+registration
+      scsi: lpfc: Delete NLP_TARGET_REMOVE flag due to obsolete usage
+      scsi: lpfc: Restrict the REG_FCFI MAM field to FCoE adapters only
+      scsi: lpfc: Redefine incorrect type in lpfc_create_device_data()
+
+Kai Mäkisara (1):
+      scsi: st: Don't set pos_unknown just after device recognition
+
+Karan Tilak Kumar (21):
+      scsi: fnic: Test for memory allocation failure and return error
+code
+      scsi: fnic: Return appropriate error code from failure of scsi
+drv init
+      scsi: fnic: Return appropriate error code for mem alloc failure
+      scsi: fnic: Remove unnecessary else to fix warning in FDLS FIP
+      scsi: fnic: Remove extern definition from .c files
+      scsi: fnic: Remove unnecessary else and unnecessary break in FDLS
+      scsi: fnic: Increment driver version
+      scsi: fnic: Add support to handle port channel RSCN
+      scsi: fnic: Code cleanup
+      scsi: fnic: Add stats and related functionality
+      scsi: fnic: Modify fnic interfaces to use FDLS
+      scsi: fnic: Modify IO path to use FDLS
+      scsi: fnic: Add functionality in fnic to support FDLS
+      scsi: fnic: Add and integrate support for FIP
+      scsi: fnic: Add and integrate support for FDMI
+      scsi: fnic: Add Cisco hardware model names
+      scsi: fnic: Add support for unsolicited requests and responses
+      scsi: fnic: Add support for target based solicited requests and
+responses
+      scsi: fnic: Add support for fabric based solicited requests and
+responses
+      scsi: fnic: Add headers and definitions for FDLS
+      scsi: fnic: Replace shost_printk() with dev_info()/dev_err()
+
+Michael Kelley (1):
+      scsi: storvsc: Don't assume cpu_possible_mask is dense
+
+Paul Menzel (2):
+      scsi: mpt3sas: Set ioc->manu_pg11.EEDPTagMode directly to 1
+      scsi: mpt3sas: Add details to EEDPTagMode error message
+
+Prateek Singh Rathore (1):
+      scsi: csiostor: Fix typo doesnt->doesn't
+
+Quinn Tran (1):
+      scsi: qla2xxx: Move FCE Trace buffer allocation to user control
+
+Randy Dunlap (10):
+      scsi: documentation: Corrections for struct updates
+      scsi: driver-api: documentation: Change what is added to docbook
+      scsi: transport: sas: spi: Fix kernel-doc for exported functions
+      scsi: scsi_scan: Add kernel-doc for exported function
+      scsi: scsi_lib: Add kernel-doc for exported functions
+      scsi: scsi_ioctl: Add kernel-doc for exported functions
+      scsi: scsi_error: Add kernel-doc for exported functions
+      scsi: documentation: scsi_eh: updates for EH changes
+      scsi: Eliminate scsi_register() and scsi_unregister() usage &
+docs
+      scsi: docs: Remove init_this_scsi_driver()
+
+Siddharth Menon (1):
+      scsi: esp: Fix variable typo
+
+Steffen Maier (2):
+      scsi: MAINTAINERS: Update zfcp entry
+      scsi: zfcp: Clarify zfcp_port refcount ownership during "link"
+test
+
+Thomas Weißschuh (11):
+      scsi: qla4xxx: Constify 'struct bin_attribute'
+      scsi: qla2xxx: Constify 'struct bin_attribute'
+      scsi: qedi: Constify 'struct bin_attribute'
+      scsi: qedf: Constify 'struct bin_attribute'
+      scsi: ipr: Constify 'struct bin_attribute'
+      scsi: lpfc: Constify 'struct bin_attribute'
+      scsi: ibmvfc: Constify 'struct bin_attribute'
+      scsi: esas2r: Constify 'struct bin_attribute'
+      scsi: arcmsr: Constify 'struct bin_attribute'
+      scsi: 3w-sas: Constify 'struct bin_attribute'
+      scsi: core: Constify 'struct bin_attribute'
+
+Thorsten Blum (2):
+      scsi: bsg: Replace zero-length array with flexible array member
+      scsi: fnic: Use vcalloc() instead of vmalloc() and memset(0)
+
+Vishakha Channapattan (1):
+      scsi: pm80xx: Improve debugging for aborted commands
+
+wangdicheng (1):
+      scsi: aic7xxx: Fix build 'aicasm' warning
+
+And the diffstat:
+
+ Documentation/driver-api/scsi.rst               |    5 +-
+ Documentation/scsi/scsi_eh.rst                  |   46 +-
+ Documentation/scsi/scsi_mid_low_api.rst         |  206 +-
+ MAINTAINERS                                     |    6 +-
+ drivers/ata/ahci.h                              |    2 +-
+ drivers/ata/libata-sata.c                       |    8 +-
+ drivers/ata/libata-scsi.c                       |   19 +-
+ drivers/ata/pata_macio.c                        |    8 +-
+ drivers/ata/sata_mv.c                           |    2 +-
+ drivers/ata/sata_nv.c                           |   24 +-
+ drivers/ata/sata_sil24.c                        |    2 +-
+ drivers/firewire/sbp2.c                         |   10 +-
+ drivers/infiniband/ulp/srp/ib_srp.c             |    5 +-
+ drivers/message/fusion/mptfc.c                  |   14 +-
+ drivers/message/fusion/mptsas.c                 |   14 +-
+ drivers/message/fusion/mptscsih.c               |   10 +-
+ drivers/message/fusion/mptscsih.h               |    5 +-
+ drivers/message/fusion/mptspi.c                 |   19 +-
+ drivers/s390/scsi/zfcp_fc.c                     |    7 +-
+ drivers/s390/scsi/zfcp_fsf.c                    |    4 +-
+ drivers/s390/scsi/zfcp_scsi.c                   |   15 +-
+ drivers/s390/scsi/zfcp_sysfs.c                  |    2 +-
+ drivers/s390/scsi/zfcp_unit.c                   |    2 +-
+ drivers/scsi/3w-9xxx.c                          |    9 +-
+ drivers/scsi/3w-sas.c                           |   21 +-
+ drivers/scsi/3w-xxxx.c                          |   10 +-
+ drivers/scsi/53c700.c                           |   19 +-
+ drivers/scsi/BusLogic.c                         |    9 +-
+ drivers/scsi/BusLogic.h                         |    3 +-
+ drivers/scsi/a100u2w.c                          |    2 +-
+ drivers/scsi/aacraid/linit.c                    |    8 +-
+ drivers/scsi/advansys.c                         |   25 +-
+ drivers/scsi/aic7xxx/aic79xx_osm.c              |    8 +-
+ drivers/scsi/aic7xxx/aic7xxx_osm.c              |    8 +-
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y       |    1 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y |    1 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l       |    3 +
+ drivers/scsi/am53c974.c                         |    2 +-
+ drivers/scsi/arcmsr/arcmsr_attr.c               |   12 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c                |   10 +-
+ drivers/scsi/atp870u.c                          |    2 +-
+ drivers/scsi/bfa/bfad_im.c                      |   26 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c               |   14 +-
+ drivers/scsi/bnx2i/bnx2i_init.c                 |    7 +-
+ drivers/scsi/csiostor/csio_scsi.c               |   20 +-
+ drivers/scsi/cxlflash/main.c                    |    2 +-
+ drivers/scsi/dc395x.c                           |   14 +-
+ drivers/scsi/dmx3191d.c                         |    2 +-
+ drivers/scsi/elx/efct/efct_driver.c             |    2 +-
+ drivers/scsi/esas2r/esas2r.h                    |   12 +-
+ drivers/scsi/esas2r/esas2r_main.c               |   32 +-
+ drivers/scsi/esp_scsi.c                         |   14 +-
+ drivers/scsi/esp_scsi.h                         |    2 +-
+ drivers/scsi/fcoe/fcoe.c                        |    2 +-
+ drivers/scsi/fdomain_pci.c                      |    2 +-
+ drivers/scsi/fnic/Makefile                      |    5 +-
+ drivers/scsi/fnic/fdls_disc.c                   | 4997
++++++++++++++++++++++++
+ drivers/scsi/fnic/fdls_fc.h                     |  253 ++
+ drivers/scsi/fnic/fip.c                         | 1005 +++++
+ drivers/scsi/fnic/fip.h                         |  159 +
+ drivers/scsi/fnic/fnic.h                        |  288 +-
+ drivers/scsi/fnic/fnic_attrs.c                  |   12 +-
+ drivers/scsi/fnic/fnic_debugfs.c                |   11 +-
+ drivers/scsi/fnic/fnic_fcs.c                    | 1742 ++++----
+ drivers/scsi/fnic/fnic_fdls.h                   |  434 ++
+ drivers/scsi/fnic/fnic_fip.h                    |   48 -
+ drivers/scsi/fnic/fnic_io.h                     |   14 +-
+ drivers/scsi/fnic/fnic_isr.c                    |   28 +-
+ drivers/scsi/fnic/fnic_main.c                   |  758 ++--
+ drivers/scsi/fnic/fnic_pci_subsys_devid.c       |  131 +
+ drivers/scsi/fnic/fnic_res.c                    |   77 +-
+ drivers/scsi/fnic/fnic_scsi.c                   | 1161 ++++--
+ drivers/scsi/fnic/fnic_stats.h                  |   49 +-
+ drivers/scsi/fnic/fnic_trace.c                  |   97 +-
+ drivers/scsi/hisi_sas/hisi_sas.h                |    5 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c           |   13 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c          |    4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c          |    4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c          |   10 +-
+ drivers/scsi/hpsa.c                             |   20 +-
+ drivers/scsi/hptiop.c                           |    8 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c                  |   20 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c                |    8 +-
+ drivers/scsi/initio.c                           |    2 +-
+ drivers/scsi/ipr.c                              |   48 +-
+ drivers/scsi/ips.c                              |    6 +-
+ drivers/scsi/ips.h                              |    3 +-
+ drivers/scsi/isci/remote_device.c               |   29 -
+ drivers/scsi/isci/remote_device.h               |   17 -
+ drivers/scsi/iscsi_tcp.c                        |    6 +-
+ drivers/scsi/libfc/fc_fcp.c                     |    6 +-
+ drivers/scsi/libsas/sas_scsi_host.c             |   11 +-
+ drivers/scsi/lpfc/lpfc_attr.c                   |   20 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                    |  210 +-
+ drivers/scsi/lpfc/lpfc_bsg.h                    |   19 +-
+ drivers/scsi/lpfc/lpfc_ct.c                     |    6 +-
+ drivers/scsi/lpfc/lpfc_disc.h                   |   11 +-
+ drivers/scsi/lpfc/lpfc_els.c                    |   55 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                |   13 +-
+ drivers/scsi/lpfc/lpfc_hw.h                     |    3 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                    |   85 +-
+ drivers/scsi/lpfc/lpfc_init.c                   |   11 +-
+ drivers/scsi/lpfc/lpfc_mbox.c                   |    6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c              |   53 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                   |   64 +-
+ drivers/scsi/lpfc/lpfc_sli4.h                   |    2 -
+ drivers/scsi/lpfc/lpfc_version.h                |    2 +-
+ drivers/scsi/lpfc/lpfc_vport.c                  |   22 +-
+ drivers/scsi/megaraid.c                         |    2 +-
+ drivers/scsi/megaraid/megaraid_mbox.c           |    4 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c       |   16 +-
+ drivers/scsi/mpi3mr/mpi3mr_app.c                |    8 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c                 |   20 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c             |    5 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c            |   24 +-
+ drivers/scsi/mvsas/mv_init.c                    |    2 +-
+ drivers/scsi/mvumi.c                            |    5 +-
+ drivers/scsi/myrb.c                             |   23 +-
+ drivers/scsi/myrs.c                             |   13 +-
+ drivers/scsi/ncr53c8xx.c                        |    9 +-
+ drivers/scsi/nsp32.c                            |    2 +-
+ drivers/scsi/pm8001/pm8001_defs.h               |    2 +-
+ drivers/scsi/pm8001/pm8001_hwi.c                |    5 +-
+ drivers/scsi/pm8001/pm8001_init.c               |    2 +-
+ drivers/scsi/pm8001/pm8001_sas.c                |   78 +-
+ drivers/scsi/pm8001/pm8001_sas.h                |    2 +
+ drivers/scsi/pm8001/pm80xx_hwi.c                |   59 +-
+ drivers/scsi/pmcraid.c                          |   24 +-
+ drivers/scsi/ps3rom.c                           |    5 +-
+ drivers/scsi/qedf/qedf_attr.c                   |   10 +-
+ drivers/scsi/qedf/qedf_dbg.h                    |    2 +-
+ drivers/scsi/qedf/qedf_main.c                   |    5 +-
+ drivers/scsi/qedi/qedi_dbg.h                    |    2 +-
+ drivers/scsi/qedi/qedi_main.c                   |    8 +-
+ drivers/scsi/qla1280.c                          |    8 +-
+ drivers/scsi/qla2xxx/qla_attr.c                 |   80 +-
+ drivers/scsi/qla2xxx/qla_def.h                  |    2 +
+ drivers/scsi/qla2xxx/qla_dfs.c                  |  124 +-
+ drivers/scsi/qla2xxx/qla_gbl.h                  |    3 +
+ drivers/scsi/qla2xxx/qla_init.c                 |   28 +-
+ drivers/scsi/qla2xxx/qla_os.c                   |   14 +-
+ drivers/scsi/qla4xxx/ql4_attr.c                 |   12 +-
+ drivers/scsi/qla4xxx/ql4_os.c                   |    8 +-
+ drivers/scsi/qlogicpti.c                        |    5 +-
+ drivers/scsi/scsi_debug.c                       |   32 +-
+ drivers/scsi/scsi_error.c                       |   26 +-
+ drivers/scsi/scsi_ioctl.c                       |   35 +-
+ drivers/scsi/scsi_lib.c                         |   24 +-
+ drivers/scsi/scsi_scan.c                        |   42 +-
+ drivers/scsi/scsi_sysfs.c                       |   20 +-
+ drivers/scsi/scsi_transport_iscsi.c             |   31 +-
+ drivers/scsi/scsi_transport_sas.c               |   10 +-
+ drivers/scsi/scsi_transport_spi.c               |    3 +-
+ drivers/scsi/smartpqi/smartpqi_init.c           |   13 +-
+ drivers/scsi/snic/snic_main.c                   |   14 +-
+ drivers/scsi/st.c                               |    6 +
+ drivers/scsi/st.h                               |    1 +
+ drivers/scsi/stex.c                             |    6 +-
+ drivers/scsi/storvsc_drv.c                      |   28 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c             |   17 +-
+ drivers/scsi/virtio_scsi.c                      |    2 +-
+ drivers/scsi/xen-scsifront.c                    |   11 +-
+ drivers/target/iscsi/iscsi_target.c             |   15 -
+ drivers/target/iscsi/iscsi_target.h             |    1 -
+ drivers/target/iscsi/iscsi_target_erl2.c        |   48 -
+ drivers/target/iscsi/iscsi_target_erl2.h        |    2 -
+ drivers/target/iscsi/iscsi_target_parameters.c  |   48 -
+ drivers/target/iscsi/iscsi_target_parameters.h  |    3 -
+ drivers/target/iscsi/iscsi_target_tpg.c         |    5 -
+ drivers/target/iscsi/iscsi_target_tpg.h         |    1 -
+ drivers/target/iscsi/iscsi_target_util.c        |   58 -
+ drivers/target/iscsi/iscsi_target_util.h        |    2 -
+ drivers/ufs/core/ufs_bsg.c                      |    2 +
+ drivers/ufs/core/ufshcd-crypto.c                |   26 +-
+ drivers/ufs/core/ufshcd.c                       |  316 +-
+ drivers/ufs/host/ufs-qcom.c                     |   93 +-
+ drivers/usb/image/microtek.c                    |    4 +-
+ drivers/usb/storage/scsiglue.c                  |   10 +-
+ drivers/usb/storage/uas.c                       |   10 +-
+ include/linux/libata.h                          |   19 +-
+ include/scsi/libfc.h                            |    2 +-
+ include/scsi/libsas.h                           |    9 +-
+ include/scsi/scsi_bsg_iscsi.h                   |    2 +-
+ include/scsi/scsi_device.h                      |    4 +-
+ include/scsi/scsi_host.h                        |   26 +-
+ include/scsi/scsi_transport_iscsi.h             |    4 -
+ include/ufs/ufs.h                               |    5 -
+ include/ufs/ufshcd.h                            |   38 +-
+ include/ufs/ufshci.h                            |    5 -
+ 189 files changed, 10976 insertions(+), 3534 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fdls_disc.c
+ create mode 100644 drivers/scsi/fnic/fdls_fc.h
+ create mode 100644 drivers/scsi/fnic/fip.c
+ create mode 100644 drivers/scsi/fnic/fip.h
+ create mode 100644 drivers/scsi/fnic/fnic_fdls.h
+ delete mode 100644 drivers/scsi/fnic/fnic_fip.h
+ create mode 100644 drivers/scsi/fnic/fnic_pci_subsys_devid.c
+
 
