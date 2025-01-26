@@ -1,47 +1,47 @@
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BC9D645;
-	Sun, 26 Jan 2025 06:48:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EBED70839;
+	Sun, 26 Jan 2025 06:48:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737874111; cv=none; b=rvGupJfgFCCZud0uu534MRV7gMVU4Q0GviW81m+H8nMVzWHu+tYPkWdC+C6vBx5JpdacGIf/EqQl7Yng6HUNpljFv2PgaX/g7KrdeabNPwE0fUPMgs1KyUe3LdU8Qu66aqaACxr1PDre5rPwpChWegX+LBET9emOwQRK/n1GlTk=
+	t=1737874117; cv=none; b=XtC02gL+VMdYruYuCOFlp838psqOOO43dDRZJuZ7bgcTsu/80HH6AoBr6b9L6M/9bQuPUU0Iqu5cji7vuLdc2WQZ3z/eUe/DxBPD++BTA5ZrhE//asjMA0cSyYJyeyPGJ0KgH5qSD38DlzqKaFePX7twNWNqscEyZ0KvHYl8jG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737874111; c=relaxed/simple;
-	bh=E9iw3JaNK8Hvxxzw45ObpZZqmzDbVTsBLJjyGar2Wms=;
+	s=arc-20240116; t=1737874117; c=relaxed/simple;
+	bh=d19W+FapVGrIgQjfm3lNAjqHEF57wreNHedB3RFpZY4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=T/RI+hW5nFXw6rlqaQhqjNR/RGuS5cq6Cfwf55BrvWg3zOpKYipYl3iOl7vjDogeXDSzBq5qTxcnCmYjmCiKISwiA3+xwDRqflaJgw3mnmty0Wt/a70ufRU6ZPM58BNu2N9ROFZJgJbO09zvL3X6KxX57wLT0lw/RA6ewxH49w0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Abd8A5yy; arc=none smtp.client-ip=216.71.153.144
+	 MIME-Version; b=Tcm/2bksO1aNofJLaUlbk0tffBPG2+DPP9a+/piZKX+9nwRDQiFOmbP5loxrEi46SEzurYXZXUEXwXoBSPzLFDZaWmSLSfe9SOfxwr5jQOZFkyBUpUIPu/hC71l49HKQZcyWBs+2W9P/qoqeZ8CS7KvUZZXNti/fVJJxr7yJZjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=eoT0watW; arc=none smtp.client-ip=68.232.143.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Abd8A5yy"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="eoT0watW"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1737874109; x=1769410109;
+  t=1737874115; x=1769410115;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=E9iw3JaNK8Hvxxzw45ObpZZqmzDbVTsBLJjyGar2Wms=;
-  b=Abd8A5yy/VJ7IO+SGB6ObO7qVQ2gzkaDhGKP7KyTLa4/d/mAvjuyvVgo
-   Ldz+YICVVWcy1sVGJlpJk1l+t2spS3VcrCrUSvgjuP0H1qxAcx9BunSG0
-   jDC6OP8Pdn27+RgV0L6O1FosR6PfCO1D8o3xQ8ZcukHzt0/Y5VEU40ZPU
-   zlkVCCD3UIGMK7hP+dtih+Lna4tc1VvMZtU46EDP8k0B8Yspy1J8j2aqj
-   pM/aAWMdjq6YIPaVT9e5cNRF1sWoEuv3uzctQLfkT9aN4QumwdauHPb18
-   dvj5i5+tgO56IKP97YH5XDBwcEAuYTFVaBb4JEDPx59fuIMLaR8h+EFXa
-   g==;
-X-CSE-ConnectionGUID: 9DHs8PewRAWdaD+nSTgDvw==
-X-CSE-MsgGUID: oM4nGf8zTiW07IWlB0bXTA==
+  bh=d19W+FapVGrIgQjfm3lNAjqHEF57wreNHedB3RFpZY4=;
+  b=eoT0watWp9g93dyENtY5F4Nb6AETHJPimunXjb/hVsi+sccsRDNRMmH9
+   jBdnVn2H+LlbsSeq1jMZr7lVIuBqpE8e0Y7C/U0u8mBvy/6Urjm4i2wGy
+   C11d4EVzLbgNKti5cpl6sZPThlguXS5OtRAq8LTfLBLIYUZl2LD2NTslu
+   n69d4fD9Fzbrr7tVgnbCDoVl0JQYaTWOjTW8bHFqBcAwEuIcYzWnyLmJd
+   Mx0y3BUkGfYegu4hYcA7B8xS+ctPSFgicvu47+BsMgsC3uM/6075iIXw7
+   1gJFmzjbm3e9iO8GCxAJqQ5Aau5eTIvPsBDy7Tgdt66Jttx86WzXoUst+
+   w==;
+X-CSE-ConnectionGUID: q4SEr/DiTyKNPu81Vipurw==
+X-CSE-MsgGUID: 5VfNDJwNR9KPVbNi2YhMOw==
 X-IronPort-AV: E=Sophos;i="6.13,235,1732550400"; 
-   d="scan'208";a="37833294"
+   d="scan'208";a="37344168"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Jan 2025 14:48:23 +0800
-IronPort-SDR: 6795cd1b_/NSAKl0lDNAlIsJsYYgwMzwHNaiKl1T20fzJRgkPvkdCduX
- B+Dg1a09t07lnWK2+53RFL6iKS48CL7CTfcVbBg==
+  by ob1.hgst.iphmx.com with ESMTP; 26 Jan 2025 14:48:34 +0800
+IronPort-SDR: 6795cd26_cbGJzkz8wAG+BExxANnKap0Xb73nXH288r+120eEGgw6PRz
+ JG18iHGEzevgqD2OjpfQBBSXhDEFcUIWcdZj4xA==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Jan 2025 21:50:19 -0800
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Jan 2025 21:50:30 -0800
 WDCIronportException: Internal
 Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Jan 2025 22:48:21 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Jan 2025 22:48:33 -0800
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -49,11 +49,10 @@ Cc: linux-scsi@vger.kernel.org,
 	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
 	Bart Van Assche <bvanassche@acm.org>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Subject: [PATCH v3 1/2] scsi: ufs: core: Ensure clk_gating.lock is used only after initialization
-Date: Sun, 26 Jan 2025 08:45:20 +0200
-Message-Id: <20250126064521.3857557-2-avri.altman@wdc.com>
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v3 2/2] scsi: ufs: Fix toggling of clk_gating.state when clock gating is not allowed
+Date: Sun, 26 Jan 2025 08:45:21 +0200
+Message-Id: <20250126064521.3857557-3-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250126064521.3857557-1-avri.altman@wdc.com>
 References: <20250126064521.3857557-1-avri.altman@wdc.com>
@@ -65,80 +64,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This commit addresses a lockdep warning triggered by the use of the
-clk_gating.lock before it is properly initialized. The warning is as
-follows:
+This commit addresses an issue where `clk_gating.state` is being toggled
+in `ufshcd_setup_clocks` even if clock gating is not allowed. This can
+lead to a crash with the following error:
 
-[    4.388838] INFO: trying to register non-static key.
-[    4.395673] The code is fine but needs lockdep annotation, or maybe
-[    4.402118] you didn't initialize this object before use?
-[    4.407673] turning off the locking correctness validator.
-[    4.413334] CPU: 5 UID: 0 PID: 58 Comm: kworker/u32:1 Not tainted 6.12-rc1 #185
-[    4.413343] Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
-[    4.413362] Call trace:
-[    4.413364]  show_stack+0x18/0x24 (C)
-[    4.413374]  dump_stack_lvl+0x90/0xd0
-[    4.413384]  dump_stack+0x18/0x24
-[    4.413392]  register_lock_class+0x498/0x4a8
-[    4.413400]  __lock_acquire+0xb4/0x1b90
-[    4.413406]  lock_acquire+0x114/0x310
-[    4.413413]  _raw_spin_lock_irqsave+0x60/0x88
-[    4.413423]  ufshcd_setup_clocks+0x2c0/0x490
-[    4.413433]  ufshcd_init+0x198/0x10ec
-[    4.413437]  ufshcd_pltfrm_init+0x600/0x7c0
-[    4.413444]  ufs_qcom_probe+0x20/0x58
-[    4.413449]  platform_probe+0x68/0xd8
-[    4.413459]  really_probe+0xbc/0x268
-[    4.413466]  __driver_probe_device+0x78/0x12c
-[    4.413473]  driver_probe_device+0x40/0x11c
-[    4.413481]  __device_attach_driver+0xb8/0xf8
-[    4.413489]  bus_for_each_drv+0x84/0xe4
-[    4.413495]  __device_attach+0xfc/0x18c
-[    4.413502]  device_initial_probe+0x14/0x20
-[    4.413510]  bus_probe_device+0xb0/0xb4
-[    4.413517]  deferred_probe_work_func+0x8c/0xc8
-[    4.413524]  process_scheduled_works+0x250/0x658
-[    4.413534]  worker_thread+0x15c/0x2c8
-[    4.413542]  kthread+0x134/0x200
-[    4.413550]  ret_from_fork+0x10/0x20
+    BUG: spinlock bad magic on CPU#6, swapper/0/1
+     lock: 0xffffff84443014e8, .magic: 00000000, .owner: <none>/-1,
+    .owner_cpu: 0
+    CPU: 6 UID: 0 PID: 1 Comm: swapper/0 Not tainted
+    6.13.0-rcar3-initrd-08318-g75abbef32a94 #896
+    Hardware name: R-Car S4 Starter Kit board (DT)
+    Call trace:
+     show_stack+0x18/0x24 (C)
+     dump_stack_lvl+0x60/0x80
+     dump_stack+0x18/0x24
+     spin_bug+0x7c/0xa0
+     do_raw_spin_lock+0x34/0xb4
+     _raw_spin_lock_irqsave+0x1c/0x30
+     class_spinlock_irqsave_constructor+0x18/0x30
+     ufshcd_setup_clocks+0x98/0x23c
+     ufshcd_init+0x288/0xd38
+     ufshcd_pltfrm_init+0x618/0x738
+     ufs_renesas_probe+0x18/0x24
+     platform_probe+0x68/0xb8
+     really_probe+0x138/0x268
+     __driver_probe_device+0xf4/0x10c
+     driver_probe_device+0x3c/0xf8
+     __driver_attach+0xf0/0x100
+     bus_for_each_dev+0x84/0xdc
+     driver_attach+0x24/0x30
+     bus_add_driver+0xe8/0x1dc
+     driver_register+0xbc/0xf8
+     __platform_driver_register+0x24/0x30
+     ufs_renesas_platform_init+0x1c/0x28
+     do_one_initcall+0x84/0x1f4
+     kernel_init_freeable+0x238/0x23c
+     kernel_init+0x20/0x120
+     ret_from_fork+0x10/0x20
 
-To fix this issue, ensure that the spinlock is only used after it
-has been properly initialized before using it in `ufshcd_setup_clocks`.
-Do that unconditionally as initializing a spinlock is a fast operation.
+The root cause of the issue is that `clk_gating.state` is being toggled
+even if clock gating is not allowed. This can lead to the spinlock being
+used before it is properly initialized.
 
-Fixes: 209f4e43b806 ("scsi: ufs: core: Introduce a new clock_gating lock")
-Reported-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+The fix is to add a check for `hba->clk_gating.is_initialized` before
+toggling `clk_gating.state` in `ufshcd_setup_clocks`. Since
+`clk_gating.lock` is now initialized unconditionally, this is for
+documentation purposes, to ensure clarity in the code. The primary fix
+remains to prevent toggling the `clk_gating.state` if clock gating is
+not allowed.
+
+Fixes: 1ab27c9cf8b6 ("ufs: Add support for clock gating")
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/ufs/core/ufshcd.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/ufs/core/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f6c38cf10382..b73c87da383d 100644
+index b73c87da383d..abe0774133f5 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2120,8 +2120,6 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
- 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
- 
--	spin_lock_init(&hba->clk_gating.lock);
--
- 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(
- 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
- 		hba->host->host_no);
-@@ -10412,6 +10410,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	hba->irq = irq;
- 	hba->vps = &ufs_hba_vps;
- 
-+	/*
-+	 * Initialize clk_gating.lock early since it is being used in
-+	 * ufshcd_setup_clocks()
-+	 */
-+	spin_lock_init(&hba->clk_gating.lock);
-+
- 	err = ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
+@@ -9140,7 +9140,7 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
+ 			if (!IS_ERR_OR_NULL(clki->clk) && clki->enabled)
+ 				clk_disable_unprepare(clki->clk);
+ 		}
+-	} else if (!ret && on) {
++	} else if (!ret && on && hba->clk_gating.is_initialized) {
+ 		scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
+ 			hba->clk_gating.state = CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
 -- 
 2.25.1
 
