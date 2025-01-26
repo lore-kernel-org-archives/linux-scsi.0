@@ -1,78 +1,86 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B613B17BEC6;
-	Sun, 26 Jan 2025 21:55:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24BD05684;
+	Sun, 26 Jan 2025 22:00:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737928527; cv=none; b=uvDXlkjlwUWqhyViQ6204+j72jQ3PlCxvWX7/0HHIvc7jkEmpnDoN2HFWNLdQMsfIRXeMrts+160+H7I4NWaZ11NyuT+QmjSyDLMmZXAjqMgm7u7VATifCCC2C5rkH9H9aQomV0Zxaa/PO1vQh9SMXxV87AFsnejXop9vRE4gP8=
+	t=1737928834; cv=none; b=u+uTekt4o7Cq1duF6VmrNBl0Cz1rh0u1L0jMEvPD1MJzuEvE8LuSAL0JDKbgO0v+IeyQlM1N4o+aycPZbEr5a8JbO865DZiZUy9vMLHA2akW5K05OUFvHlkaRyquDqgU35vwKEm7QOlWWzOvM6ym9b1Dbb/679q+J+qXH/vGjoQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737928527; c=relaxed/simple;
-	bh=Z06D22f9X6xZWYUdmZRHeOE7TK+BW5GBa46Do+8ZD8I=;
+	s=arc-20240116; t=1737928834; c=relaxed/simple;
+	bh=4DdbTStKVkTb7WFrUrJoNlbv7lkdF9Cm9SPJk5oqJFw=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=UO03y8Ah03BrosHgdZsKTvaOSpxccSJJrcyy+vprE8ddGLzpH4v9AIDq1+iz4+LWXqRfGW3Pis8xwyS9nnSYzIMjfcjtzvlgZPE9SlJ13cpJRvlAG+MfhI+gfK/K4caOdv9WQqVQVb8+emeCe0cQPUNk7mUx8yx22LSBiCjHR68=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BlEE+OsG; arc=none smtp.client-ip=209.85.128.50
+	 Content-Type:MIME-Version; b=hu3Sdx++XzJ9b/amtySmY6oMwMr5wkQFovVLH3IpNerklgYyyRXOVsvz34m8zVexZxHrj99CU0txE4i5tEwSjI7D4wIXPDWjXO07/XRlxagWKBtOaN7hZd1Wly+zGnqW9HvUWvOSoRcRpo7ImRRntZxiYbfhoHenFftJzAQHxNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TZ0aiknH; arc=none smtp.client-ip=209.85.221.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BlEE+OsG"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43618283d48so26468475e9.1;
-        Sun, 26 Jan 2025 13:55:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TZ0aiknH"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-3863703258fso3023457f8f.1;
+        Sun, 26 Jan 2025 14:00:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737928524; x=1738533324; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1737928831; x=1738533631; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=Z06D22f9X6xZWYUdmZRHeOE7TK+BW5GBa46Do+8ZD8I=;
-        b=BlEE+OsGlk0xr6rfr3BOrS1ish3+sl+gk5o0jGQ3pDkOzSqZpRXsYk8GwpUC39l6tg
-         htOlgqavhchtMPZHXoWqJauBvpJm/GDer6m02lBa97fpaBVQKLf6KGkG00gb970FBJ69
-         ZiCB2CTwItHC/dEZstVuJTAZrDnH/BWbUaS/YN4JX64pdBuHrkoyv+9jAuEBHfA2VPa8
-         WwYUwsTOlKfY6dAnstuc9gyKeNGXAb9WCVSA0J2yfOFMW0x9H92Doxth1HoYmEqdQUAv
-         Md00SfXIMyFoW+0DoMxY04ChFbVEcSo5FVfK5EIjN05Yudoa9BUfPH2Ci8/IAxv9mVYp
-         PQnw==
+        bh=4DdbTStKVkTb7WFrUrJoNlbv7lkdF9Cm9SPJk5oqJFw=;
+        b=TZ0aiknH8vc531izZlOS8WibXHPKNIcCWNvZSMiYXAXvHyJ031jtOKJ+1q6DqE4MHF
+         QbxsJYaR+64Gwx+tBkxeGZmf5v85/DaMMyv0hA475WxfebxxcENYkEu8ou7EmS/Rp1+y
+         HFuhV3A6Rmra9w1RuZKs+ZI0IV3nLCKSbjZV+pQbdVDSaKIxlst2hjDSDE/7Djxz3PKp
+         vwqOIZBILN3tm0afn0wg/B2ZjalP6JOHHopX1mShsrXopVzJOp86WLWwML5c/oyLZGdu
+         9Qa5F7PnJrYWp+Zk24JO5LkpxiLUYS9hwMwPg/Z3wUsZFpcJm0a4vTRX6dFxBWbHM1aG
+         SrFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737928524; x=1738533324;
+        d=1e100.net; s=20230601; t=1737928831; x=1738533631;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=Z06D22f9X6xZWYUdmZRHeOE7TK+BW5GBa46Do+8ZD8I=;
-        b=d2v8F2iT/yuhlqbgMVDGLmL3cTRgZE0joC0rzD36n6ydPkAsYA4N/llFVyfcsLZVEh
-         4yub9PdzYjw4h2oMCpKDf5Hn5C6CxyoMz+qvsV3KNfc3dk5gzFsT27FTjrgxYM1dkttk
-         FkoM0WvJpxMic79nRhljVeIx9ka2BdkhI1QWQtVzKAbWrHQThqvxgmKKCPCMNBAyav0G
-         xHxC15LeR0C0cUpW8gQXUBKQLCthHjBhhJAFrfbMWFCRcu4O/SoT7tNlWOaQUT9x2Ced
-         CqmuZDqV4lrUGD3ri+vdX15H2a4zKrmfNul3FS6iZVMuluPC8Bx20hWr2J+S/9yBTzEK
-         YuoQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXKs8pT1JfORsZVwhu0NlKiFXuS2Tk0Mx8fey8mdJ2txcUGzVdpwwXyc7XEUKF2oqrtWUpRHDsSEzQCbCY=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx0I/u9xMaKgBtMJwd9UfN9p2qDRE7O/cn6oOJ8o6XQM2Ep0Qte
-	ERqGl6GXpMOgFB6iedbf05ONLJ9xB98CD6jvv8djhA5nYUWqmmtn
-X-Gm-Gg: ASbGncue2dlPcXbn+ZChCRrX4Cch6+zPHGd13kB+uv6qy1DTnXXXMXZTYuAZ/X+cFaW
-	ctWUhPubOvjojAHBm+zzeyvBj0D41AcV3oJlTYW/MqnPj3yZsN35Q/CalDqe6OXAZsNgCzLnYIW
-	0Ru4eTevVGCMIN8/uS6r2nkZ+82CiRdJkV+NQpOt72sf5KVBzeNz5sWoTZxKNl/0HG3umFIPMxf
-	pyQa4tKAUWWCe2CN9e7G161p7SIS/EzfHB1N3Rj8tjPZp87W2EJZAmmR9/HhlYXs0fOB5v1Dx8t
-	+Sro5gxQ9ljbrbMzuBeWZua+1UP3Fqcx8E7ykE78TvVk1Zrhp3Qm5HZ9g2zgCuTHuA9PqC033Gm
-	dn1xI5ICXzNB5vK6uNFWvCPDiUOHuYqmRsV/wW4eBclhD
-X-Google-Smtp-Source: AGHT+IHbLb05krmjL74OWcOlY+O17N6O05zCvgPUjcSOkqsIgPPumqqjcswBG3yeAZAW90JfhO4l9Q==
-X-Received: by 2002:a05:600c:c0e:b0:431:5044:e388 with SMTP id 5b1f17b1804b1-4389142968emr348645505e9.22.1737928523606;
-        Sun, 26 Jan 2025 13:55:23 -0800 (PST)
+        bh=4DdbTStKVkTb7WFrUrJoNlbv7lkdF9Cm9SPJk5oqJFw=;
+        b=tf2GbDRotRwXJgB4lQaULAViZlm9COIah8qaDR+EeFw4rfIi5kMkvBaXIRfKr0QA0m
+         sHwj3d7+Lu0wfUlLwQaMMl/WZhywsIsb/5jfOLBB5YoDVFQ4PhBnDWCUDc8EMDYqWe4/
+         Vd+2kuGji2SEbOByJsyamTPQIjoExvY2MwIqEA/xikGjKtAa3T+R8IbI5ndjphpDX1iG
+         8k3rzTE/3fXwudZIQaqAON55oLANm+3g6zKV73c/xHk6VQ/vCy3kYJTq3oJxdzhpF/h6
+         Pye6UB4hMd0XiqVQ4cAS9ZDv6dH+m4ftcnaXnbX2UpXw8JDs96ENP89Xi+/YwMQQ0Iq0
+         WOzA==
+X-Forwarded-Encrypted: i=1; AJvYcCU2A+ns00IecNB2FwippvLBHmerjWUe2tyZk5nSc1QSv3V72mylXJNdlWBFm6oLxLsS+cBDf3MTj6tLxKVewSuHsVU=@vger.kernel.org, AJvYcCUj5UuAbBY35QWPCVabRyr/aBEzgqgL4cs1ZE0rfjRj39JVpkRNGXzsU1sryPgV3K61KgFIFH4YW72/ObM/@vger.kernel.org, AJvYcCVfVtJ77jpDXB97tjKnK1XIM/qOG6jquAiCpbu7qZ8aB8+GMEMz+BejciDW3yDLr59VsVz2WXbPW/jWpQ==@vger.kernel.org, AJvYcCW9niv/imvUY6PY4usn+Ll1ziPKfAgtzGIrWA+W82QXyLkS/dWne02tB8a+QRVnco6PVoPl+sJXcWtjmf8p@vger.kernel.org, AJvYcCX1CeTMJyWoVg0uvs/XUOyL2LWHj9EANU8wRn5gGlP0pprycrGB5ZE0LjFStbJ2G4IIMNKeMklm@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCax6s1OepPDjFSrrFjz3WzPbnelracm+BSFysFqAcXbpVs5Cd
+	I2UygH2jpCbrIhKqpXha6GXjrLlLjlkrBjFuZkDTjcj07TtJSv23
+X-Gm-Gg: ASbGncsqZkIJ47Tr+h8bxqOFwyDJITUfdUwAli1fPFat3Tr5WYv2a6Qzw2/MmZgHQog
+	KCTn0iGu1mRhRwLEiwGyEXjN75/9ZeSHy2kdA9vQ7WlZ9FewqjztsMotE1pgZY20vNe/0q/ik4K
+	EqYZMItpCRb+GHoQyj3/h04okgMEneZvJEzrVzjk6b3e0gmu6FGnX8H0oXiAXrbAFM/ikQwpqqK
+	+2ixO8Smt1r0iPb3ExIHXH3ZRVo/KliDRDIixlzJCnMGGJ1RE8XUiauO4dvspRFKyKCbtN1DEFf
+	YBXvRicxT8V81U64pDX7CrCArh9dgFqzEGCioswn/sjUdG5X1Hdbb6GKw0MEgXhfc2f1N7JRYHI
+	6f6i8/TJKLFWRprQdrC/Gky/aZZs/ZCubThVlTcmE3F++
+X-Google-Smtp-Source: AGHT+IGsZIr2STvVAqncSIrcbBNbIGfPo1HDsn0GMZTH13nRBH3HPa/wKJc6AIwOxi8bTdK3IydwYQ==
+X-Received: by 2002:a05:6000:401f:b0:38a:8b34:76b0 with SMTP id ffacd0b85a97d-38c2b7d12a7mr8375865f8f.27.1737928831040;
+        Sun, 26 Jan 2025 14:00:31 -0800 (PST)
 Received: from p200300c5871e95f7cf8ec2b454ca4b5c.dip0.t-ipconnect.de (p200300c5871e95f7cf8ec2b454ca4b5c.dip0.t-ipconnect.de. [2003:c5:871e:95f7:cf8e:c2b4:54ca:4b5c])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-438bd4d34e3sm107340875e9.39.2025.01.26.13.55.22
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c2a1baf3esm9290068f8f.75.2025.01.26.14.00.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jan 2025 13:55:23 -0800 (PST)
-Message-ID: <f069e33f01f8489b4baa8d1e5b3db4eb055ff118.camel@gmail.com>
-Subject: Re: [PATCH v3 2/2] scsi: ufs: Fix toggling of clk_gating.state when
- clock gating is not allowed
+        Sun, 26 Jan 2025 14:00:29 -0800 (PST)
+Message-ID: <76ddd6b18a35a19d284496345e41f5a22866f171.camel@gmail.com>
+Subject: Re: [PATCH v4] scsi: ufs: fix use-after free in init error and
+ remove paths
 From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Manivannan
- Sadhasivam <manisadhasivam.linux@gmail.com>, Bart Van Assche
- <bvanassche@acm.org>, Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Sun, 26 Jan 2025 22:55:22 +0100
-In-Reply-To: <20250126064521.3857557-3-avri.altman@wdc.com>
-References: <20250126064521.3857557-1-avri.altman@wdc.com>
-	 <20250126064521.3857557-3-avri.altman@wdc.com>
+To: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>, Alim Akhtar
+ <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van
+ Assche <bvanassche@acm.org>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Peter Griffin <peter.griffin@linaro.org>, 
+ Krzysztof Kozlowski <krzk@kernel.org>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>,  Mike Snitzer <snitzer@redhat.com>,
+ Jens Axboe <axboe@kernel.dk>, Ulf Hansson <ulf.hansson@linaro.org>,  Satya
+ Tangirala <satyat@google.com>, Eric Biggers <ebiggers@google.com>
+Cc: Tudor Ambarus <tudor.ambarus@linaro.org>, Will McVicker
+ <willmcvicker@google.com>, kernel-team@android.com,
+ linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
+ linux-samsung-soc@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org,  stable@vger.kernel.org
+Date: Sun, 26 Jan 2025 23:00:28 +0100
+In-Reply-To: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
+References: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -81,13 +89,11 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-T24gU3VuLCAyMDI1LTAxLTI2IGF0IDA4OjQ1ICswMjAwLCBBdnJpIEFsdG1hbiB3cm90ZToKPiDC
-oMKgwqDCoMKgwqDCoMKgfSBlbHNlIGlmICghcmV0ICYmIG9uICYmIGhiYS0+Y2xrX2dhdGluZy5p
-c19pbml0aWFsaXplZCkgewo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc2NvcGVk
-X2d1YXJkKHNwaW5sb2NrX2lycXNhdmUsICZoYmEtPmNsa19nYXRpbmcubG9jaykKPiDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBoYmEtPmNsa19nYXRpbmcu
-c3RhdGUgPSBDTEtTX09OOwo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdHJhY2Vf
-dWZzaGNkX2Nsa19nYXRpbmcoZGV2X25hbWUoaGJhLT5kZXYpCgpDb25zb2xpZGF0aW5nIGFsbCBj
-bG9jay1yZWxhdGVkIGluaXRpYWxpemF0aW9uIGludG8gYSBzaW5nbGUgZnVuY3Rpb24sCnN1Y2gg
-YXMgdWZzaGNkX2luaXRfY2xvY2tzKCksIHNob3VsZCBiZSBjb25zaWRlcmVkLgoK
+On Fri, 2025-01-24 at 15:09 +0000, Andr=C3=A9 Draszik wrote:
+> Fixes: cb77cb5abe1f ("blk-crypto: rename blk_keyslot_manager to
+> blk_crypto_profile")
+> Fixes: d76d9d7d1009 ("scsi: ufs: use devm_blk_ksm_init()")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
 
+Reviewed-by: Bean Huo <beanhuo@micron.com>
