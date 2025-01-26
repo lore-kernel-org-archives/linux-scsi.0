@@ -1,395 +1,428 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D07D7E792
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 05:29:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4CC25A638;
+	Mon, 27 Jan 2025 05:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737955776; cv=none; b=qWS/wgsBQ+kSeSJU/1Zftbv8ey0kZprqsWDOpf0I1GiGdAlb4kgqJ+vCxm+LoMvlASNVVCBmyclL1XIyT6VvKehR6y8Blp4HP890Q5krQ44Im6ci6A2BHBPZkxWqxUTE0raUIz3/Jd2uEaoQV+Zi3Yjbj8pt9y0SjRMH0RwC6yE=
+	t=1737956523; cv=none; b=tMk39d/r5+CvyfHPQ9JvwsTBI1xMHxZ1OhugEqgJ2woBpe9VoiMbE7gKFVnFsSokh+wAE9wRa+ntMdrfaGIEtovCjXWQ3bKmU9VeoFmcJnJbITeVOOy7BPEXxqODtCavUPZ7p8cIK9DNXb99BQI33ibM8AUGdPRpDuuWa+c81xU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737955776; c=relaxed/simple;
-	bh=F3sTReY6m3kvGuzQp7gRS1og/NFu2awRGtg5IERKlj8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hrnevfi2VmGpYXs5IT6IyyRg7dYLp59bcne+eKdq+dANJ9EZElaMOZuoEOf+8heHddZ29G6O+DqosBy+WDL0SQNS+/OGzKhEpoWSb2WpPdnF7qIAEUJDIFijeLQV5Li/iN4K6mHtHvi7ctSpW7f8rZaT59IW3LYf8qRusLaHBLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=McLM2ChS; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1737956523; c=relaxed/simple;
+	bh=eSAwsrINHgdLeoC/TS3CugwINhtgrgVSWXZ4X8iPZ/U=;
+	h=Message-ID:Subject:From:To:Cc:Content-Type:Date:MIME-Version; b=kTr1wJlKzd52tFYe1xdoCC7kqJI/nwp6+McC0/vJTEnwY8jPFL+NAPDarfHIHZZWC0PMb4MjRmlCp6BnYWS5CYRGHu4LJALlog0EzI32bj2xB+EGiP0C+MbvdZYdRGcRaIkPZnbYKvjNsSORX1E2rKJ3LfA4VaTRYOuy5y1pBUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+y1VRmL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="McLM2ChS"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2162c0f6a39so90079085ad.0
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Jan 2025 21:29:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1737955773; x=1738560573; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=MbpwGjRvSKm7OOEA02QMMzXw4gclV688EfXIr1lIj7Y=;
-        b=McLM2ChSvHSfvcnjbXgVJ2fhNmMFxQo77RTTZkqEvaw1DC+VHjM+FDyARmcgDgkyEE
-         mEL/YXvJkyzH1ecJ1+G6aT9x/PEWH3zrHmZMyhvIKb0OZJlYUOq+e32Rj9EWox0auRFj
-         NZZbMT0Ml/C48ewMPb/a7rV2GTMls4xVYzFaaHKGPmL0Z7dJ4hE3+gFzbNOwrrDoy48o
-         QxbCRHdjq79Gwz0sYzbxv29JhAF5y7m0AUWL+uhgkQn3rh1oZ9aktStETJ4Ml7Xnc4Me
-         DVk82SYNcxKBkMN2CoAJXJueWTbxwXRffpqA9g2vIEySAyB1IVYuGq/ch3Mr02tEWjsR
-         hhcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737955773; x=1738560573;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MbpwGjRvSKm7OOEA02QMMzXw4gclV688EfXIr1lIj7Y=;
-        b=sA7I2VIeloAw5Ty3hs91oj3hethm0+Fg+OoiHhEq0eZmfTrhhGqlo62Qg4fNjNPreB
-         vNUJgx/beN2V6K0o/ReoF0pqlKeCzcBmML7yEpnF06pjcX0I+tpnxoZuU4GMgk8L/909
-         uQ+4brCLr2r5wmdNAWRrVfiBojuoUXJ3SMAxt1ff7byVZ5H2ROMUqQo+Ns/ILAdJpc8t
-         KHRGt1aF8KTmyg6IcPoEO7b6r+qC98M1DmY3NrbZv82gNlDD8JjQYyNXxecJZ/dDVYUJ
-         0fY7cGYhqGvoXyuBDoEa7bwNeETZD8fK7AJb++FruFIVvrUlYXSTHxzKT1EuNoJVW+rX
-         YkpA==
-X-Forwarded-Encrypted: i=1; AJvYcCVHFh56MB8DXQ5PobuqHnbREAKFSmw4p9HvCGmXiKJR2+3kuWv9RZaMyJ/8ojJ5s9mnGpLSacGIJ/z5@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx9gKq3b219GcFBkq2cMRUZnkTZTrFwiGJYJxHiOzdwTM++Nlc+
-	4f7VXlC2PStK8gPl+3R4OR5WBf1v64N/Q7hTyr8wO8VEYE0yn5/lwBi/KMpHow==
-X-Gm-Gg: ASbGncsW0hKmURjJCWmEfrCoa/AyNfx7f6GSSCjQ34OZngvFI7j0xKK1y6uycF1njrr
-	h0zt/xWqZKrv3YMqI/uiZzIVWdzhWfTMsKR7xDN+my8Ms7W4GPYJO/sf9Katf0N5Ivr87nfdLd9
-	0j2rH3E7uGFY+8XrcZrViGz2a/aQSGJ8WN7xGfQZpN83Hy5lJIUNT8ACZ4VN65gcc9A4zoI/6sE
-	mtHhK2/wCzmILh00taNRLCIzb8i3/xgZx9sEXqm2fWnlN9vUw6m1wfeWLhXDQNoXjFK485eUVV0
-	VdGXLmGPK34WnJU=
-X-Google-Smtp-Source: AGHT+IH5cyt33BRSgNah7zwHKJcgR39y5T6qnFhhcjWjaEzJr2vmBVaKLe1dN2yQKZ4MyPHMC1o4Rw==
-X-Received: by 2002:a05:6a21:6d9f:b0:1e1:ad90:dda6 with SMTP id adf61e73a8af0-1eb697c1bb0mr27369444637.20.1737955772669;
-        Sun, 26 Jan 2025 21:29:32 -0800 (PST)
-Received: from thinkpad ([120.60.139.80])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72f8a7614c4sm6185758b3a.120.2025.01.26.21.29.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jan 2025 21:29:32 -0800 (PST)
-Date: Mon, 27 Jan 2025 10:59:21 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: =?utf-8?B?QW5kcsOp?= Draszik <andre.draszik@linaro.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Satya Tangirala <satyat@google.com>,
-	Eric Biggers <ebiggers@google.com>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Will McVicker <willmcvicker@google.com>, kernel-team@android.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v4] scsi: ufs: fix use-after free in init error and
- remove paths
-Message-ID: <20250127052921.7cld6rrb2fmr2srt@thinkpad>
-References: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+y1VRmL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D673C4CED2;
+	Mon, 27 Jan 2025 05:42:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737956523;
+	bh=eSAwsrINHgdLeoC/TS3CugwINhtgrgVSWXZ4X8iPZ/U=;
+	h=Subject:From:To:Cc:Date:From;
+	b=T+y1VRmLmy8Cd7NwScqssmPs6Dr+wZg9u24oPfO+9paf+k/r3dgf48DfpytdK7pjq
+	 2qGbJrr1y/DkjqxZZkKCRX93itVqv8A7rTd8lOfLwr2aPHSifstbixNKrPCYtg1U03
+	 NUaXfxWmMPn+h7yd87J4kgBYVbYTwyWMYqLKF9Wy1FUycCNlKMDh92iLRSvauiIt9Y
+	 J8U7peYIzQ3LhtTVmEM6oZ+TSU7bTN0DH2Ehk2h5XB77bnDnUw1MI0ECJn2f91rSfz
+	 rF69P9F+fzAArDoAGO7FcRcztd9eNvrntXwiFztY8QGrrSu2FGmww0yLUnYew1xr+3
+	 msEAZnI7D1tSA==
+Message-ID: <5ab4ebbbc02e818a0461f2129d7999ad9ad89ae5.camel@kernel.org>
+Subject: [GIT PULL] SCSI updates for the 6.12+ merge window
+From: James Bottomley <jejb@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 26 Jan 2025 10:10:05 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Evolution 3.42.4 
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
 
-On Fri, Jan 24, 2025 at 03:09:00PM +0000, André Draszik wrote:
-> devm_blk_crypto_profile_init() registers a cleanup handler to run when
-> the associated (platform-) device is being released. For UFS, the
-> crypto private data and pointers are stored as part of the ufs_hba's
-> data structure 'struct ufs_hba::crypto_profile'. This structure is
-> allocated as part of the underlying ufshcd and therefore Scsi_host
-> allocation.
-> 
-> During driver release or during error handling in ufshcd_pltfrm_init(),
-> this structure is released as part of ufshcd_dealloc_host() before the
-> (platform-) device associated with the crypto call above is released.
-> Once this device is released, the crypto cleanup code will run, using
-> the just-released 'struct ufs_hba::crypto_profile'. This causes a
-> use-after-free situation:
-> 
->   Call trace:
->    kfree+0x60/0x2d8 (P)
->    kvfree+0x44/0x60
->    blk_crypto_profile_destroy_callback+0x28/0x70
->    devm_action_release+0x1c/0x30
->    release_nodes+0x6c/0x108
->    devres_release_all+0x98/0x100
->    device_unbind_cleanup+0x20/0x70
->    really_probe+0x218/0x2d0
-> 
-> In other words, the initialisation code flow is:
-> 
->   platform-device probe
->     ufshcd_pltfrm_init()
->       ufshcd_alloc_host()
->         scsi_host_alloc()
->           allocation of struct ufs_hba
->           creation of scsi-host devices
->     devm_blk_crypto_profile_init()
->       devm registration of cleanup handler using platform-device
-> 
-> and during error handling of ufshcd_pltfrm_init() or during driver
-> removal:
-> 
->   ufshcd_dealloc_host()
->     scsi_host_put()
->       put_device(scsi-host)
->         release of struct ufs_hba
->   put_device(platform-device)
->     crypto cleanup handler
-> 
-> To fix this use-after free, change ufshcd_alloc_host() to register a
-> devres action to automatically cleanup the underlying SCSI device on
-> ufshcd destruction, without requiring explicit calls to
-> ufshcd_dealloc_host(). This way:
-> 
->     * the crypto profile and all other ufs_hba-owned resources are
->       destroyed before SCSI (as they've been registered after)
->     * a memleak is plugged in tc-dwc-g210-pci.c remove() as a
->       side-effect
->     * EXPORT_SYMBOL_GPL(ufshcd_dealloc_host) can be removed fully as
->       it's not needed anymore
->     * no future drivers using ufshcd_alloc_host() could ever forget
->       adding the cleanup
-> 
-> Fixes: cb77cb5abe1f ("blk-crypto: rename blk_keyslot_manager to blk_crypto_profile")
-> Fixes: d76d9d7d1009 ("scsi: ufs: use devm_blk_ksm_init()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: André Draszik <andre.draszik@linaro.org>
+[From kernel.org for once because hansenpartnership.com is suffering a
+prolonged outage due to data centre issues in Los Angeles]
 
-LGTM!
+[There are three obvious ata merge conflicts where the update to remove
+the slave_ prefix  changed device_configure to sdev_configure and is
+next to a different name change from tag_alloc_policy to
+tag_alloc_policy_rr]
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Updates to the usual drivers (ufs, lpfc, fnic, qla2xx, mpi3mr)  The
+major core change is the renaming of the slave_ methods plus a bit of
+constification. The rest are minor updates and fixes.
 
-- Mani
+The patch is available here:
 
-> ---
-> Changes in v4:
-> - add a kdoc note to ufshcd_alloc_host() to state why there is no
->   ufshcd_dealloc_host() (Mani)
-> - use return err, without goto (Mani)
-> - drop register dump and abort info from commit message (Mani)
-> - Link to v3: https://lore.kernel.org/r/20250116-ufshcd-fix-v3-1-6a83004ea85c@linaro.org
-> 
-> Changes in v3:
-> - rename devres action handler to ufshcd_devres_release() (Bart)
-> - Link to v2: https://lore.kernel.org/r/20250114-ufshcd-fix-v2-1-2dc627590a4a@linaro.org
-> 
-> Changes in v2:
-> - completely new approach using devres action for Scsi_host cleanup, to
->   ensure ordering
-> - add Fixes: and CC: stable tags (Eric)
-> - Link to v1: https://lore.kernel.org/r/20250113-ufshcd-fix-v1-1-ca63d1d4bd55@linaro.org
-> ---
-> In my case, as per above trace I initially encountered an error in
-> ufshcd_verify_dev_init(), which made me notice this problem both during
-> error handling and release. For reproducing, it'd be possible to change
-> that function to just return an error, or rmmod the platform glue
-> driver.
-> 
-> Other approaches for solving this issue I see are the following, but I
-> believe this one here is the cleanest:
-> 
-> * turn 'struct ufs_hba::crypto_profile' into a dynamically allocated
->   pointer, in which case it doesn't matter if cleanup runs after
->   scsi_host_put()
-> * add an explicit devm_blk_crypto_profile_deinit() to be called by API
->   users when necessary, e.g. before ufshcd_dealloc_host() in this case
-> * register the crypto cleanup handler against the scsi-host device
->   instead, like in v1 of this patch
-> ---
->  drivers/ufs/core/ufshcd.c        | 31 +++++++++++++++++++++----------
->  drivers/ufs/host/ufshcd-pci.c    |  2 --
->  drivers/ufs/host/ufshcd-pltfrm.c | 28 +++++++++-------------------
->  include/ufs/ufshcd.h             |  1 -
->  4 files changed, 30 insertions(+), 32 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 43ddae7318cb..4328f769a7c8 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -10279,16 +10279,6 @@ int ufshcd_system_thaw(struct device *dev)
->  EXPORT_SYMBOL_GPL(ufshcd_system_thaw);
->  #endif /* CONFIG_PM_SLEEP  */
->  
-> -/**
-> - * ufshcd_dealloc_host - deallocate Host Bus Adapter (HBA)
-> - * @hba: pointer to Host Bus Adapter (HBA)
-> - */
-> -void ufshcd_dealloc_host(struct ufs_hba *hba)
-> -{
-> -	scsi_host_put(hba->host);
-> -}
-> -EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
-> -
->  /**
->   * ufshcd_set_dma_mask - Set dma mask based on the controller
->   *			 addressing capability
-> @@ -10307,12 +10297,26 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
->  	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
->  }
->  
-> +/**
-> + * ufshcd_devres_release - devres cleanup handler, invoked during release of
-> + *			   hba->dev
-> + * @host: pointer to SCSI host
-> + */
-> +static void ufshcd_devres_release(void *host)
-> +{
-> +	scsi_host_put(host);
-> +}
-> +
->  /**
->   * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
->   * @dev: pointer to device handle
->   * @hba_handle: driver private handle
->   *
->   * Return: 0 on success, non-zero value on failure.
-> + *
-> + * NOTE: There is no corresponding ufshcd_dealloc_host() because this function
-> + * keeps track of its allocations using devres and deallocates everything on
-> + * device removal automatically.
->   */
->  int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
->  {
-> @@ -10334,6 +10338,13 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
->  		err = -ENOMEM;
->  		goto out_error;
->  	}
-> +
-> +	err = devm_add_action_or_reset(dev, ufshcd_devres_release,
-> +				       host);
-> +	if (err)
-> +		return dev_err_probe(dev, err,
-> +				     "failed to add ufshcd dealloc action\n");
-> +
->  	host->nr_maps = HCTX_TYPE_POLL + 1;
->  	hba = shost_priv(host);
->  	hba->host = host;
-> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-> index ea39c5d5b8cf..9cfcaad23cf9 100644
-> --- a/drivers/ufs/host/ufshcd-pci.c
-> +++ b/drivers/ufs/host/ufshcd-pci.c
-> @@ -562,7 +562,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
->  	pm_runtime_forbid(&pdev->dev);
->  	pm_runtime_get_noresume(&pdev->dev);
->  	ufshcd_remove(hba);
-> -	ufshcd_dealloc_host(hba);
->  }
->  
->  /**
-> @@ -605,7 +604,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	err = ufshcd_init(hba, mmio_base, pdev->irq);
->  	if (err) {
->  		dev_err(&pdev->dev, "Initialization failed\n");
-> -		ufshcd_dealloc_host(hba);
->  		return err;
->  	}
->  
-> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-> index 505572d4fa87..ffe5d1d2b215 100644
-> --- a/drivers/ufs/host/ufshcd-pltfrm.c
-> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
-> @@ -465,21 +465,17 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->  	struct device *dev = &pdev->dev;
->  
->  	mmio_base = devm_platform_ioremap_resource(pdev, 0);
-> -	if (IS_ERR(mmio_base)) {
-> -		err = PTR_ERR(mmio_base);
-> -		goto out;
-> -	}
-> +	if (IS_ERR(mmio_base))
-> +		return PTR_ERR(mmio_base);
->  
->  	irq = platform_get_irq(pdev, 0);
-> -	if (irq < 0) {
-> -		err = irq;
-> -		goto out;
-> -	}
-> +	if (irq < 0)
-> +		return irq;
->  
->  	err = ufshcd_alloc_host(dev, &hba);
->  	if (err) {
->  		dev_err(dev, "Allocation failed\n");
-> -		goto out;
-> +		return err;
->  	}
->  
->  	hba->vops = vops;
-> @@ -488,13 +484,13 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->  	if (err) {
->  		dev_err(dev, "%s: clock parse failed %d\n",
->  				__func__, err);
-> -		goto dealloc_host;
-> +		return err;
->  	}
->  	err = ufshcd_parse_regulator_info(hba);
->  	if (err) {
->  		dev_err(dev, "%s: regulator init failed %d\n",
->  				__func__, err);
-> -		goto dealloc_host;
-> +		return err;
->  	}
->  
->  	ufshcd_init_lanes_per_dir(hba);
-> @@ -502,25 +498,20 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
->  	err = ufshcd_parse_operating_points(hba);
->  	if (err) {
->  		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
-> -		goto dealloc_host;
-> +		return err;
->  	}
->  
->  	err = ufshcd_init(hba, mmio_base, irq);
->  	if (err) {
->  		dev_err_probe(dev, err, "Initialization failed with error %d\n",
->  			      err);
-> -		goto dealloc_host;
-> +		return err;
->  	}
->  
->  	pm_runtime_set_active(dev);
->  	pm_runtime_enable(dev);
->  
->  	return 0;
-> -
-> -dealloc_host:
-> -	ufshcd_dealloc_host(hba);
-> -out:
-> -	return err;
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
->  
-> @@ -534,7 +525,6 @@ void ufshcd_pltfrm_remove(struct platform_device *pdev)
->  
->  	pm_runtime_get_sync(&pdev->dev);
->  	ufshcd_remove(hba);
-> -	ufshcd_dealloc_host(hba);
->  	pm_runtime_disable(&pdev->dev);
->  	pm_runtime_put_noidle(&pdev->dev);
->  }
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index da0fa5c65081..58eb6e897827 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -1311,7 +1311,6 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
->  void ufshcd_enable_irq(struct ufs_hba *hba);
->  void ufshcd_disable_irq(struct ufs_hba *hba);
->  int ufshcd_alloc_host(struct device *, struct ufs_hba **);
-> -void ufshcd_dealloc_host(struct ufs_hba *);
->  int ufshcd_hba_enable(struct ufs_hba *hba);
->  int ufshcd_init(struct ufs_hba *, void __iomem *, unsigned int);
->  int ufshcd_link_recovery(struct ufs_hba *hba);
-> 
-> ---
-> base-commit: 4e16367cfe0ce395f29d0482b78970cce8e1db73
-> change-id: 20250113-ufshcd-fix-52409f2d32ff
-> 
-> Best regards,
-> -- 
-> André Draszik <andre.draszik@linaro.org>
-> 
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
--- 
-மணிவண்ணன் சதாசிவம்
+The short changelog is:
+
+Ariel Otilibili (1):
+      scsi: myrb: Remove dead code
+
+Artur Paszkiewicz (1):
+      scsi: MAINTAINERS: Remove myself as isci driver maintainer
+
+Arun Easi (2):
+      scsi: fnic: Propagate SCSI error code from fnic_scsi_drv_init()
+      scsi: fnic: Remove always-true IS_FNIC_FCP_INITIATOR macro
+
+Avri Altman (6):
+      scsi: Revert "scsi: ufs: core: Probe for EXT_IID support"
+      scsi: ufs: core: Do not hold any lock in ufshcd_hba_stop()
+      scsi: ufs: core: Introduce a new clock_scaling lock
+      scsi: ufs: core: Introduce a new clock_gating lock
+      scsi: ufs: core: Prepare to introduce a new clock_gating lock
+      scsi: ufs: core: Introduce ufshcd_has_pending_tasks()
+
+Bart Van Assche (6):
+      scsi: scsi_debug: Skip host/bus reset settle delay
+      scsi: core: Update API documentation
+      scsi: core: Remove the .slave_configure() method
+      scsi: Convert SCSI drivers to .sdev_configure()
+      scsi: Rename .device_configure() into .sdev_configure()
+      scsi: Rename .slave_alloc() and .slave_destroy()
+
+Christophe JAILLET (1):
+      scsi: Constify struct pci_device_id
+
+Dan Carpenter (1):
+      scsi: fnic: Delete incorrect debugfs error handling
+
+Dheeraj Reddy Jonnalagadda (1):
+      scsi: fnic: Fix use of uninitialized value in debug message
+
+Dr. David Alan Gilbert (3):
+      scsi: isci: Remove unused isci_remote_device_reset_complete()
+      scsi: iscsi: Remove unused iscsi_create_session()
+      scsi: target: Remove unused functions
+
+Easwar Hariharan (1):
+      scsi: storvsc: Ratelimit warning logs to prevent VM denial of service
+
+Eric Biggers (4):
+      scsi: ufs: crypto: Remove ufs_hba_variant_ops::program_key
+      scsi: ufs: qcom: Convert to use UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE
+      scsi: ufs: crypto: Add ufs_hba_from_crypto_profile()
+      scsi: ufs: qcom: Fix crypto key eviction
+
+Fedor Loshakov (1):
+      scsi: zfcp: Correct kdoc parameter description for sending ELS and CT
+
+Frederic Weisbecker (3):
+      scsi: qedi: Use kthread_create_on_cpu()
+      scsi: bnx2i: Use kthread_create_on_cpu()
+      scsi: bnx2fc: Use kthread_create_on_cpu()
+
+Guixin Liu (3):
+      scsi: mpi3mr: Fix possible crash when setting up bsg fails
+      scsi: ufs: bsg: Set bsg_queue to NULL after removal
+      scsi: ufs: bsg: Delete bsg_dev when setting up bsg fails
+
+Igor Pylypiv (2):
+      scsi: pm80xx: Increase reserved tags from 8 to 128
+      scsi: pm80xx: Do not use libsas port ID
+
+John Garry (1):
+      scsi: scsi_debug: Constify sdebug_driver_template
+
+Jolly Shah (1):
+      scsi: pm80xx: Use dynamic tag numbers for PHY start and stop
+
+Justin Tee (10):
+      scsi: lpfc: Copyright updates for 14.4.0.7 patches
+      scsi: lpfc: Update lpfc version to 14.4.0.7
+      scsi: lpfc: Add support for large fw object application layer reads
+      scsi: lpfc: Update definition of firmware configuration mbox cmds
+      scsi: lpfc: Change lpfc_nodelist save_flags member into a bitmask
+      scsi: lpfc: Add handling for LS_RJT reason explanation authentication required
+      scsi: lpfc: Modify handling of ADISC based on ndlp state and RPI registration
+      scsi: lpfc: Delete NLP_TARGET_REMOVE flag due to obsolete usage
+      scsi: lpfc: Restrict the REG_FCFI MAM field to FCoE adapters only
+      scsi: lpfc: Redefine incorrect type in lpfc_create_device_data()
+
+Kai Mäkisara (1):
+      scsi: st: Don't set pos_unknown just after device recognition
+
+Karan Tilak Kumar (21):
+      scsi: fnic: Test for memory allocation failure and return error code
+      scsi: fnic: Return appropriate error code from failure of scsi drv init
+      scsi: fnic: Return appropriate error code for mem alloc failure
+      scsi: fnic: Remove unnecessary else to fix warning in FDLS FIP
+      scsi: fnic: Remove extern definition from .c files
+      scsi: fnic: Remove unnecessary else and unnecessary break in FDLS
+      scsi: fnic: Increment driver version
+      scsi: fnic: Add support to handle port channel RSCN
+      scsi: fnic: Code cleanup
+      scsi: fnic: Add stats and related functionality
+      scsi: fnic: Modify fnic interfaces to use FDLS
+      scsi: fnic: Modify IO path to use FDLS
+      scsi: fnic: Add functionality in fnic to support FDLS
+      scsi: fnic: Add and integrate support for FIP
+      scsi: fnic: Add and integrate support for FDMI
+      scsi: fnic: Add Cisco hardware model names
+      scsi: fnic: Add support for unsolicited requests and responses
+      scsi: fnic: Add support for target based solicited requests and responses
+      scsi: fnic: Add support for fabric based solicited requests and responses
+      scsi: fnic: Add headers and definitions for FDLS
+      scsi: fnic: Replace shost_printk() with dev_info()/dev_err()
+
+Michael Kelley (1):
+      scsi: storvsc: Don't assume cpu_possible_mask is dense
+
+Paul Menzel (2):
+      scsi: mpt3sas: Set ioc->manu_pg11.EEDPTagMode directly to 1
+      scsi: mpt3sas: Add details to EEDPTagMode error message
+
+Prateek Singh Rathore (1):
+      scsi: csiostor: Fix typo doesnt->doesn't
+
+Quinn Tran (1):
+      scsi: qla2xxx: Move FCE Trace buffer allocation to user control
+
+Randy Dunlap (10):
+      scsi: documentation: Corrections for struct updates
+      scsi: driver-api: documentation: Change what is added to docbook
+      scsi: transport: sas: spi: Fix kernel-doc for exported functions
+      scsi: scsi_scan: Add kernel-doc for exported function
+      scsi: scsi_lib: Add kernel-doc for exported functions
+      scsi: scsi_ioctl: Add kernel-doc for exported functions
+      scsi: scsi_error: Add kernel-doc for exported functions
+      scsi: documentation: scsi_eh: updates for EH changes
+      scsi: Eliminate scsi_register() and scsi_unregister() usage & docs
+      scsi: docs: Remove init_this_scsi_driver()
+
+Siddharth Menon (1):
+      scsi: esp: Fix variable typo
+
+Steffen Maier (2):
+      scsi: MAINTAINERS: Update zfcp entry
+      scsi: zfcp: Clarify zfcp_port refcount ownership during "link" test
+
+Thomas Weißschuh (11):
+      scsi: qla4xxx: Constify 'struct bin_attribute'
+      scsi: qla2xxx: Constify 'struct bin_attribute'
+      scsi: qedi: Constify 'struct bin_attribute'
+      scsi: qedf: Constify 'struct bin_attribute'
+      scsi: ipr: Constify 'struct bin_attribute'
+      scsi: lpfc: Constify 'struct bin_attribute'
+      scsi: ibmvfc: Constify 'struct bin_attribute'
+      scsi: esas2r: Constify 'struct bin_attribute'
+      scsi: arcmsr: Constify 'struct bin_attribute'
+      scsi: 3w-sas: Constify 'struct bin_attribute'
+      scsi: core: Constify 'struct bin_attribute'
+
+Thorsten Blum (2):
+      scsi: bsg: Replace zero-length array with flexible array member
+      scsi: fnic: Use vcalloc() instead of vmalloc() and memset(0)
+
+Vishakha Channapattan (1):
+      scsi: pm80xx: Improve debugging for aborted commands
+
+wangdicheng (1):
+      scsi: aic7xxx: Fix build 'aicasm' warning
+
+And the diffstat:
+
+ Documentation/driver-api/scsi.rst               |    5 +-
+ Documentation/scsi/scsi_eh.rst                  |   46 +-
+ Documentation/scsi/scsi_mid_low_api.rst         |  206 +-
+ MAINTAINERS                                     |    6 +-
+ drivers/ata/ahci.h                              |    2 +-
+ drivers/ata/libata-sata.c                       |    8 +-
+ drivers/ata/libata-scsi.c                       |   19 +-
+ drivers/ata/pata_macio.c                        |    8 +-
+ drivers/ata/sata_mv.c                           |    2 +-
+ drivers/ata/sata_nv.c                           |   24 +-
+ drivers/ata/sata_sil24.c                        |    2 +-
+ drivers/firewire/sbp2.c                         |   10 +-
+ drivers/infiniband/ulp/srp/ib_srp.c             |    5 +-
+ drivers/message/fusion/mptfc.c                  |   14 +-
+ drivers/message/fusion/mptsas.c                 |   14 +-
+ drivers/message/fusion/mptscsih.c               |   10 +-
+ drivers/message/fusion/mptscsih.h               |    5 +-
+ drivers/message/fusion/mptspi.c                 |   19 +-
+ drivers/s390/scsi/zfcp_fc.c                     |    7 +-
+ drivers/s390/scsi/zfcp_fsf.c                    |    4 +-
+ drivers/s390/scsi/zfcp_scsi.c                   |   15 +-
+ drivers/s390/scsi/zfcp_sysfs.c                  |    2 +-
+ drivers/s390/scsi/zfcp_unit.c                   |    2 +-
+ drivers/scsi/3w-9xxx.c                          |    9 +-
+ drivers/scsi/3w-sas.c                           |   21 +-
+ drivers/scsi/3w-xxxx.c                          |   10 +-
+ drivers/scsi/53c700.c                           |   19 +-
+ drivers/scsi/BusLogic.c                         |    9 +-
+ drivers/scsi/BusLogic.h                         |    3 +-
+ drivers/scsi/a100u2w.c                          |    2 +-
+ drivers/scsi/aacraid/linit.c                    |    8 +-
+ drivers/scsi/advansys.c                         |   25 +-
+ drivers/scsi/aic7xxx/aic79xx_osm.c              |    8 +-
+ drivers/scsi/aic7xxx/aic7xxx_osm.c              |    8 +-
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y       |    1 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y |    1 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l       |    3 +
+ drivers/scsi/am53c974.c                         |    2 +-
+ drivers/scsi/arcmsr/arcmsr_attr.c               |   12 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c                |   10 +-
+ drivers/scsi/atp870u.c                          |    2 +-
+ drivers/scsi/bfa/bfad_im.c                      |   26 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c               |   14 +-
+ drivers/scsi/bnx2i/bnx2i_init.c                 |    7 +-
+ drivers/scsi/csiostor/csio_scsi.c               |   20 +-
+ drivers/scsi/cxlflash/main.c                    |    2 +-
+ drivers/scsi/dc395x.c                           |   14 +-
+ drivers/scsi/dmx3191d.c                         |    2 +-
+ drivers/scsi/elx/efct/efct_driver.c             |    2 +-
+ drivers/scsi/esas2r/esas2r.h                    |   12 +-
+ drivers/scsi/esas2r/esas2r_main.c               |   32 +-
+ drivers/scsi/esp_scsi.c                         |   14 +-
+ drivers/scsi/esp_scsi.h                         |    2 +-
+ drivers/scsi/fcoe/fcoe.c                        |    2 +-
+ drivers/scsi/fdomain_pci.c                      |    2 +-
+ drivers/scsi/fnic/Makefile                      |    5 +-
+ drivers/scsi/fnic/fdls_disc.c                   | 4997 +++++++++++++++++++++++
+ drivers/scsi/fnic/fdls_fc.h                     |  253 ++
+ drivers/scsi/fnic/fip.c                         | 1005 +++++
+ drivers/scsi/fnic/fip.h                         |  159 +
+ drivers/scsi/fnic/fnic.h                        |  288 +-
+ drivers/scsi/fnic/fnic_attrs.c                  |   12 +-
+ drivers/scsi/fnic/fnic_debugfs.c                |   11 +-
+ drivers/scsi/fnic/fnic_fcs.c                    | 1742 ++++----
+ drivers/scsi/fnic/fnic_fdls.h                   |  434 ++
+ drivers/scsi/fnic/fnic_fip.h                    |   48 -
+ drivers/scsi/fnic/fnic_io.h                     |   14 +-
+ drivers/scsi/fnic/fnic_isr.c                    |   28 +-
+ drivers/scsi/fnic/fnic_main.c                   |  758 ++--
+ drivers/scsi/fnic/fnic_pci_subsys_devid.c       |  131 +
+ drivers/scsi/fnic/fnic_res.c                    |   77 +-
+ drivers/scsi/fnic/fnic_scsi.c                   | 1161 ++++--
+ drivers/scsi/fnic/fnic_stats.h                  |   49 +-
+ drivers/scsi/fnic/fnic_trace.c                  |   97 +-
+ drivers/scsi/hisi_sas/hisi_sas.h                |    5 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c           |   13 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c          |    4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c          |    4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c          |   10 +-
+ drivers/scsi/hpsa.c                             |   20 +-
+ drivers/scsi/hptiop.c                           |    8 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c                  |   20 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c                |    8 +-
+ drivers/scsi/initio.c                           |    2 +-
+ drivers/scsi/ipr.c                              |   48 +-
+ drivers/scsi/ips.c                              |    6 +-
+ drivers/scsi/ips.h                              |    3 +-
+ drivers/scsi/isci/remote_device.c               |   29 -
+ drivers/scsi/isci/remote_device.h               |   17 -
+ drivers/scsi/iscsi_tcp.c                        |    6 +-
+ drivers/scsi/libfc/fc_fcp.c                     |    6 +-
+ drivers/scsi/libsas/sas_scsi_host.c             |   11 +-
+ drivers/scsi/lpfc/lpfc_attr.c                   |   20 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                    |  210 +-
+ drivers/scsi/lpfc/lpfc_bsg.h                    |   19 +-
+ drivers/scsi/lpfc/lpfc_ct.c                     |    6 +-
+ drivers/scsi/lpfc/lpfc_disc.h                   |   11 +-
+ drivers/scsi/lpfc/lpfc_els.c                    |   55 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                |   13 +-
+ drivers/scsi/lpfc/lpfc_hw.h                     |    3 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                    |   85 +-
+ drivers/scsi/lpfc/lpfc_init.c                   |   11 +-
+ drivers/scsi/lpfc/lpfc_mbox.c                   |    6 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c              |   53 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                   |   64 +-
+ drivers/scsi/lpfc/lpfc_sli4.h                   |    2 -
+ drivers/scsi/lpfc/lpfc_version.h                |    2 +-
+ drivers/scsi/lpfc/lpfc_vport.c                  |   22 +-
+ drivers/scsi/megaraid.c                         |    2 +-
+ drivers/scsi/megaraid/megaraid_mbox.c           |    4 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c       |   16 +-
+ drivers/scsi/mpi3mr/mpi3mr_app.c                |    8 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c                 |   20 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c             |    5 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c            |   24 +-
+ drivers/scsi/mvsas/mv_init.c                    |    2 +-
+ drivers/scsi/mvumi.c                            |    5 +-
+ drivers/scsi/myrb.c                             |   23 +-
+ drivers/scsi/myrs.c                             |   13 +-
+ drivers/scsi/ncr53c8xx.c                        |    9 +-
+ drivers/scsi/nsp32.c                            |    2 +-
+ drivers/scsi/pm8001/pm8001_defs.h               |    2 +-
+ drivers/scsi/pm8001/pm8001_hwi.c                |    5 +-
+ drivers/scsi/pm8001/pm8001_init.c               |    2 +-
+ drivers/scsi/pm8001/pm8001_sas.c                |   78 +-
+ drivers/scsi/pm8001/pm8001_sas.h                |    2 +
+ drivers/scsi/pm8001/pm80xx_hwi.c                |   59 +-
+ drivers/scsi/pmcraid.c                          |   24 +-
+ drivers/scsi/ps3rom.c                           |    5 +-
+ drivers/scsi/qedf/qedf_attr.c                   |   10 +-
+ drivers/scsi/qedf/qedf_dbg.h                    |    2 +-
+ drivers/scsi/qedf/qedf_main.c                   |    5 +-
+ drivers/scsi/qedi/qedi_dbg.h                    |    2 +-
+ drivers/scsi/qedi/qedi_main.c                   |    8 +-
+ drivers/scsi/qla1280.c                          |    8 +-
+ drivers/scsi/qla2xxx/qla_attr.c                 |   80 +-
+ drivers/scsi/qla2xxx/qla_def.h                  |    2 +
+ drivers/scsi/qla2xxx/qla_dfs.c                  |  124 +-
+ drivers/scsi/qla2xxx/qla_gbl.h                  |    3 +
+ drivers/scsi/qla2xxx/qla_init.c                 |   28 +-
+ drivers/scsi/qla2xxx/qla_os.c                   |   14 +-
+ drivers/scsi/qla4xxx/ql4_attr.c                 |   12 +-
+ drivers/scsi/qla4xxx/ql4_os.c                   |    8 +-
+ drivers/scsi/qlogicpti.c                        |    5 +-
+ drivers/scsi/scsi_debug.c                       |   32 +-
+ drivers/scsi/scsi_error.c                       |   26 +-
+ drivers/scsi/scsi_ioctl.c                       |   35 +-
+ drivers/scsi/scsi_lib.c                         |   24 +-
+ drivers/scsi/scsi_scan.c                        |   42 +-
+ drivers/scsi/scsi_sysfs.c                       |   20 +-
+ drivers/scsi/scsi_transport_iscsi.c             |   31 +-
+ drivers/scsi/scsi_transport_sas.c               |   10 +-
+ drivers/scsi/scsi_transport_spi.c               |    3 +-
+ drivers/scsi/smartpqi/smartpqi_init.c           |   13 +-
+ drivers/scsi/snic/snic_main.c                   |   14 +-
+ drivers/scsi/st.c                               |    6 +
+ drivers/scsi/st.h                               |    1 +
+ drivers/scsi/stex.c                             |    6 +-
+ drivers/scsi/storvsc_drv.c                      |   28 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c             |   17 +-
+ drivers/scsi/virtio_scsi.c                      |    2 +-
+ drivers/scsi/xen-scsifront.c                    |   11 +-
+ drivers/target/iscsi/iscsi_target.c             |   15 -
+ drivers/target/iscsi/iscsi_target.h             |    1 -
+ drivers/target/iscsi/iscsi_target_erl2.c        |   48 -
+ drivers/target/iscsi/iscsi_target_erl2.h        |    2 -
+ drivers/target/iscsi/iscsi_target_parameters.c  |   48 -
+ drivers/target/iscsi/iscsi_target_parameters.h  |    3 -
+ drivers/target/iscsi/iscsi_target_tpg.c         |    5 -
+ drivers/target/iscsi/iscsi_target_tpg.h         |    1 -
+ drivers/target/iscsi/iscsi_target_util.c        |   58 -
+ drivers/target/iscsi/iscsi_target_util.h        |    2 -
+ drivers/ufs/core/ufs_bsg.c                      |    2 +
+ drivers/ufs/core/ufshcd-crypto.c                |   26 +-
+ drivers/ufs/core/ufshcd.c                       |  316 +-
+ drivers/ufs/host/ufs-qcom.c                     |   93 +-
+ drivers/usb/image/microtek.c                    |    4 +-
+ drivers/usb/storage/scsiglue.c                  |   10 +-
+ drivers/usb/storage/uas.c                       |   10 +-
+ include/linux/libata.h                          |   19 +-
+ include/scsi/libfc.h                            |    2 +-
+ include/scsi/libsas.h                           |    9 +-
+ include/scsi/scsi_bsg_iscsi.h                   |    2 +-
+ include/scsi/scsi_device.h                      |    4 +-
+ include/scsi/scsi_host.h                        |   26 +-
+ include/scsi/scsi_transport_iscsi.h             |    4 -
+ include/ufs/ufs.h                               |    5 -
+ include/ufs/ufshcd.h                            |   38 +-
+ include/ufs/ufshci.h                            |    5 -
+ 189 files changed, 10976 insertions(+), 3534 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fdls_disc.c
+ create mode 100644 drivers/scsi/fnic/fdls_fc.h
+ create mode 100644 drivers/scsi/fnic/fip.c
+ create mode 100644 drivers/scsi/fnic/fip.h
+ create mode 100644 drivers/scsi/fnic/fnic_fdls.h
+ delete mode 100644 drivers/scsi/fnic/fnic_fip.h
+ create mode 100644 drivers/scsi/fnic/fnic_pci_subsys_devid.c
+
