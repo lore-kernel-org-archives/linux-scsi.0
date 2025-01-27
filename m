@@ -1,44 +1,46 @@
 Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6AAF2907;
-	Mon, 27 Jan 2025 00:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EAEE17D2;
+	Mon, 27 Jan 2025 00:28:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737937641; cv=none; b=n/+J9XYzo818crgFBHaftyUAd7YWbjFDXGoWxkMMAbLqN1KGHJV3TnXn/6lbQyNj37xdPOjcMcUz3OFCJ1GZuBcfZyjO5ZxD1789x5apZmLmNRZARP2bvRR50UzMqqb7bDvq28RdCRPkc5Bh1NGawJ727pvlvDMWsBdn71+3T5w=
+	t=1737937741; cv=none; b=ICFGzyEgrpaXFPst3KZ1yOQZdwjTZobQtRPHfFdTgYdRV2ogWSx5CDDU1trvYVIo2V61Sd9CxOEJMKRiR+VZBFikHvf3XATbC26bT2JJLRQd0C2oRR9EuCBokP2UBqeWYJE+tfWDDctGBICg8amZgzpumZIlngzLALG0FydSNw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737937641; c=relaxed/simple;
-	bh=BEJybrIIEgHvIMoObl6RIWTD6BjcQ4QJ76PwXv6EtfU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IuBFWA6CoIVsY02haWAFWQd4A2fOSOfJs5oCQllGdw5R9C+KS43WqVklhN4NSZb3XT9GZhqmecDh9+YcHThoEgUs/lPgRITnjv7mr11GNQMRgq7JMUiRN5rUfqUybJCtD3oylKrMfktAWJk+OJbb8RAQqh8W3mkZmCII+qNhxT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=RRgJegkp; arc=none smtp.client-ip=46.235.229.95
+	s=arc-20240116; t=1737937741; c=relaxed/simple;
+	bh=J1gHFXec4k9NYnun4JQSkNCLi1jidMCbfWh6Yy6iDXY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uEu78PuYQEHJbB/3aKwWSeLTtwGqZ/Aic6U7/oZrvKjlZzZrowQp43b7xj+XgrF2bi5N/MFrJfG0WEnwhBrPcpet+fNiRmgZPmCf0nzeEM0Q7UV/oHuNRvj7h2g2z7SQ9aCNMgFOCNFhCFjPCEs+g4h9yzsxZ5rMynCWuZ4Vud8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=Hf/rdxXg; arc=none smtp.client-ip=46.235.229.95
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="RRgJegkp"
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="Hf/rdxXg"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
 	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=a9Iwuv2f0Cmw7lrIZoks3WMz0lwqvW7hrY4Go569ZIo=; b=RRgJegkpCRQpqpm7
-	T5Db0aQhbrwAhZ06hGA4i1UHuDkrkwl2/M0YCXMbFF38fIKWUynjuViG7Pn64YwpzzZDrFn+2ggF+
-	UsVLJXCPL+A/v3Cf3m+rMmLqO0lrS3k+3trjg+vlxZ+khSK2ZdHbeXZZDJqZ6xLXDqwQO0+xlczmv
-	CXWm1amTdVsj+frfJKgLbtnOuMW+uhwwS2XQJIQv1sPphb2p5MhdkS0ZyPlUAjUmyw2gJ/s7w0D1h
-	DbN1pB2uKCbp9BHxHXT27EH4xnEDlYvzbhHa/pvLJD5IXyhyY8Fs03/5KxOsBAZlaos+KvDNn0hbG
-	6vff4ELK5Jm63hPVYA==;
+	:Subject; bh=v1GLcctXV4mZNKYy6wReyvmyFMezFCC4Mx8j8S94Ls0=; b=Hf/rdxXgBNtTiOqg
+	rxM1M1sSyGpcVvn23sCoh6WNmh6Rwq+vL0y9tolg1u8e2GX1oJ7WG7GPnNjUK400WPOzlZv8JpfMv
+	ZpoBytU2CF4wWOjUDyKQECqArhwMnBXxPE/x143A1H8tHECrsxh1ja2nMERncsbSMobIEAP55vqq8
+	90+XaJrkSF4rfNIMC90EjmqN6DWfwqEm5B+BauMA/FQPtQtCTJZ9S+s8eketjy7sAsdRDyIAlQNO0
+	awfdJBWhnVYwFIVdQLKEgQehkos2V+sPLFR/JoEeCPamANZqVV45vybb/8gKKgSx33XT6hGAh4VOT
+	d6ueS+zsDygr6HbcdA==;
 Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
 	by mx.treblig.org with esmtp (Exim 4.96)
 	(envelope-from <linux@treblig.org>)
-	id 1tcCyD-00CDva-0H;
-	Mon, 27 Jan 2025 00:27:17 +0000
+	id 1tcCzk-00CDwe-1y;
+	Mon, 27 Jan 2025 00:28:52 +0000
 From: linux@treblig.org
 To: sathya.prakash@broadcom.com,
 	sreekanth.reddy@broadcom.com,
 	suganath-prabu.subramani@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com
+	MPT-FusionLinux.pdl@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH] scsi: message: fusion: Remove unused mptscsih_target_reset
-Date: Mon, 27 Jan 2025 00:27:16 +0000
-Message-ID: <20250127002716.113641-1-linux@treblig.org>
+Subject: [PATCH] scsi: mpt3sas: Remove unused config functions
+Date: Mon, 27 Jan 2025 00:28:51 +0000
+Message-ID: <20250127002851.113711-1-linux@treblig.org>
 X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -50,109 +52,140 @@ Content-Transfer-Encoding: 8bit
 
 From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-mptscsih_target_reset() was added in 2023 by
-commit e6629081fb12 ("scsi: message: fusion: Correct definitions for
-mptscsih_dev_reset()")
-but never used.
+mpt3sas_config_get_manufacturing_pg7() and
+mpt3sas_config_get_sas_device_pg1() were added as part of 2012's
+commit f92363d12359 ("[SCSI] mpt3sas: add new driver supporting 12GB SAS")
+but haven't been used.
 
-Remove it.
+Remove them.
 
 Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 ---
- drivers/message/fusion/mptscsih.c | 60 -------------------------------
- drivers/message/fusion/mptscsih.h |  1 -
- 2 files changed, 61 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h   |  6 --
+ drivers/scsi/mpt3sas/mpt3sas_config.c | 79 ---------------------------
+ 2 files changed, 85 deletions(-)
 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 6c3f25cc33ff..86f113d98d3e 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1843,65 +1843,6 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
- 		return FAILED;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index d8d1a64b4764..85aed2147aac 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1858,9 +1858,6 @@ int mpt3sas_config_get_manufacturing_pg0(struct MPT3SAS_ADAPTER *ioc,
+ int mpt3sas_config_get_manufacturing_pg1(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage1_t *config_page);
+ 
+-int mpt3sas_config_get_manufacturing_pg7(struct MPT3SAS_ADAPTER *ioc,
+-	Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage7_t *config_page,
+-	u16 sz);
+ int mpt3sas_config_get_manufacturing_pg10(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t *mpi_reply,
+ 	struct Mpi2ManufacturingPage10_t *config_page);
+@@ -1887,9 +1884,6 @@ int mpt3sas_config_get_iounit_pg0(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ int mpt3sas_config_get_sas_device_pg0(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t *mpi_reply, Mpi2SasDevicePage0_t *config_page,
+ 	u32 form, u32 handle);
+-int mpt3sas_config_get_sas_device_pg1(struct MPT3SAS_ADAPTER *ioc,
+-	Mpi2ConfigReply_t *mpi_reply, Mpi2SasDevicePage1_t *config_page,
+-	u32 form, u32 handle);
+ int mpt3sas_config_get_pcie_device_pg0(struct MPT3SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t *mpi_reply, Mpi26PCIeDevicePage0_t *config_page,
+ 	u32 form, u32 handle);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index 2e88f456fc34..45ac853e1289 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -576,44 +576,6 @@ mpt3sas_config_get_manufacturing_pg1(struct MPT3SAS_ADAPTER *ioc,
+ 	return r;
  }
  
--/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 -/**
-- *	mptscsih_target_reset - Perform a SCSI TARGET_RESET!
-- *	@SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
+- * mpt3sas_config_get_manufacturing_pg7 - obtain manufacturing page 7
+- * @ioc: per adapter object
+- * @mpi_reply: reply mf payload returned from firmware
+- * @config_page: contents of the config page
+- * @sz: size of buffer passed in config_page
+- * Context: sleep.
 - *
-- *	(linux scsi_host_template.eh_target_reset_handler routine)
-- *
-- *	Returns SUCCESS or FAILED.
-- **/
+- * Return: 0 for success, non-zero for failure.
+- */
 -int
--mptscsih_target_reset(struct scsi_cmnd * SCpnt)
+-mpt3sas_config_get_manufacturing_pg7(struct MPT3SAS_ADAPTER *ioc,
+-	Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage7_t *config_page,
+-	u16 sz)
 -{
--	MPT_SCSI_HOST	*hd;
--	int		 retval;
--	VirtDevice	 *vdevice;
--	MPT_ADAPTER	*ioc;
+-	Mpi2ConfigRequest_t mpi_request;
+-	int r;
 -
--	/* If we can't locate our host adapter structure, return FAILED status.
--	 */
--	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
--		printk(KERN_ERR MYNAM ": target reset: "
--		   "Can't locate host! (sc=%p)\n", SCpnt);
--		return FAILED;
--	}
--
--	ioc = hd->ioc;
--	printk(MYIOC_s_INFO_FMT "attempting target reset! (sc=%p)\n",
--	       ioc->name, SCpnt);
--	scsi_print_command(SCpnt);
--
--	vdevice = SCpnt->device->hostdata;
--	if (!vdevice || !vdevice->vtarget) {
--		retval = 0;
+-	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+-	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+-	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
+-	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_MANUFACTURING;
+-	mpi_request.Header.PageNumber = 7;
+-	mpi_request.Header.PageVersion = MPI2_MANUFACTURING7_PAGEVERSION;
+-	ioc->build_zero_len_sge_mpi(ioc, &mpi_request.PageBufferSGE);
+-	r = _config_request(ioc, &mpi_request, mpi_reply,
+-	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
+-	if (r)
 -		goto out;
--	}
 -
--	/* Target reset to hidden raid component is not supported
--	 */
--	if (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
--		retval = FAILED;
--		goto out;
--	}
--
--	retval = mptscsih_IssueTaskMgmt(hd,
--				MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
--				vdevice->vtarget->channel,
--				vdevice->vtarget->id, 0, 0,
--				mptscsih_get_tm_timeout(ioc));
--
+-	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
+-	r = _config_request(ioc, &mpi_request, mpi_reply,
+-	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
+-	    sz);
 - out:
--	printk (MYIOC_s_INFO_FMT "target reset: %s (sc=%p)\n",
--	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
--
--	if (retval == 0)
--		return SUCCESS;
--	else
--		return FAILED;
+-	return r;
 -}
 -
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
  /**
-@@ -3306,7 +3247,6 @@ EXPORT_SYMBOL(mptscsih_slave_destroy);
- EXPORT_SYMBOL(mptscsih_slave_configure);
- EXPORT_SYMBOL(mptscsih_abort);
- EXPORT_SYMBOL(mptscsih_dev_reset);
--EXPORT_SYMBOL(mptscsih_target_reset);
- EXPORT_SYMBOL(mptscsih_bus_reset);
- EXPORT_SYMBOL(mptscsih_host_reset);
- EXPORT_SYMBOL(mptscsih_bios_param);
-diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-index e3d92c392673..a22c5eaf703c 100644
---- a/drivers/message/fusion/mptscsih.h
-+++ b/drivers/message/fusion/mptscsih.h
-@@ -120,7 +120,6 @@ extern void mptscsih_slave_destroy(struct scsi_device *device);
- extern int mptscsih_slave_configure(struct scsi_device *device);
- extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
- extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
--extern int mptscsih_target_reset(struct scsi_cmnd * SCpnt);
- extern int mptscsih_bus_reset(struct scsi_cmnd * SCpnt);
- extern int mptscsih_host_reset(struct scsi_cmnd *SCpnt);
- extern int mptscsih_bios_param(struct scsi_device * sdev, struct block_device *bdev, sector_t capacity, int geom[]);
+  * mpt3sas_config_get_manufacturing_pg10 - obtain manufacturing page 10
+  * @ioc: per adapter object
+@@ -1213,47 +1175,6 @@ mpt3sas_config_get_sas_device_pg0(struct MPT3SAS_ADAPTER *ioc,
+ 	return r;
+ }
+ 
+-/**
+- * mpt3sas_config_get_sas_device_pg1 - obtain sas device page 1
+- * @ioc: per adapter object
+- * @mpi_reply: reply mf payload returned from firmware
+- * @config_page: contents of the config page
+- * @form: GET_NEXT_HANDLE or HANDLE
+- * @handle: device handle
+- * Context: sleep.
+- *
+- * Return: 0 for success, non-zero for failure.
+- */
+-int
+-mpt3sas_config_get_sas_device_pg1(struct MPT3SAS_ADAPTER *ioc,
+-	Mpi2ConfigReply_t *mpi_reply, Mpi2SasDevicePage1_t *config_page,
+-	u32 form, u32 handle)
+-{
+-	Mpi2ConfigRequest_t mpi_request;
+-	int r;
+-
+-	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+-	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+-	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
+-	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_EXTENDED;
+-	mpi_request.ExtPageType = MPI2_CONFIG_EXTPAGETYPE_SAS_DEVICE;
+-	mpi_request.Header.PageVersion = MPI2_SASDEVICE1_PAGEVERSION;
+-	mpi_request.Header.PageNumber = 1;
+-	ioc->build_zero_len_sge_mpi(ioc, &mpi_request.PageBufferSGE);
+-	r = _config_request(ioc, &mpi_request, mpi_reply,
+-	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
+-	if (r)
+-		goto out;
+-
+-	mpi_request.PageAddress = cpu_to_le32(form | handle);
+-	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
+-	r = _config_request(ioc, &mpi_request, mpi_reply,
+-	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
+-	    sizeof(*config_page));
+- out:
+-	return r;
+-}
+-
+ /**
+  * mpt3sas_config_get_pcie_device_pg0 - obtain pcie device page 0
+  * @ioc: per adapter object
 -- 
 2.48.1
 
