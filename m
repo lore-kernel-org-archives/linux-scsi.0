@@ -1,151 +1,129 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223651FDA99;
-	Mon, 27 Jan 2025 10:11:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C401FCFE5
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 10:20:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737972675; cv=none; b=fgL4cLpY57KTd8g1xPI0e7fzwAsevUFtMtET0yKw/SqZ5NneYXaruBKEesawpAcVYRkjO1xgJYKlHomMaVjAgIWwS8OEM4yxfM1Oyz9rI6KCnn/kv+RmumLJUxmlyGoHngq1OZPDnkzu2DQySfUXvJ85Bpb1oDbQFuse9fEsGHk=
+	t=1737973252; cv=none; b=iVIavjLMPV5QDoeG7NAD+ZLvBFi00gaq+/y6htsEx+/k+8GapHU3i/cMBjIVi0bIDSufLYix5Bj0F0OP6XgkZqpmEOiIVQigp1BI7hkDyYxvH3BevHCZ5GebJ8bXAKMXGVolmveNmKn6pWhLn0J2vp1cfmu/7D6sAMk/aaRn6Zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737972675; c=relaxed/simple;
-	bh=+/eGD0dm0u5C8nJ8xe0IJ0r5Zm8pSInYDED0BjYx/rc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bSQsFA41Vcn3DlP1BfxLfc3w/fP9ihrjVC0IDQ/nuoCjow0XM/YJaOZHvrT2hRTwg2JtKHOs8FTy999knHL0K0FYEoie2j2Yp2riOT/dDFdY0gd1dwa/PGZySQsmeIaLUb2Sn9gPtSWFbt3rbdFiLNGd1+QSNsKg67+FPgYS8x8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5d414b8af7bso9430608a12.0;
-        Mon, 27 Jan 2025 02:11:12 -0800 (PST)
+	s=arc-20240116; t=1737973252; c=relaxed/simple;
+	bh=Hxw8IyGjQ5J3gtUl3IIP44BkHPVhF2xScdnF9smecmw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=l4/CW+IcCXTPTgdjZuym0Onn7idwZ5fhj7wM+kwwXvab6h8PJHZLC1bf1kf7Xbt1Od4Gv+nevSJNkKEgxS7pEENGdwTLV0NneI3Oyd4u3Ky0nBtHE7bqqQ9qPrYqCz8uRdmRmYaksLva36yAYFD1IssBOTQXVvBebisq8FCSY3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jpMv7jNo; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jpMv7jNo"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50R4kQbi017979
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 10:20:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	iRHY/8aTKLk5Axq/TaQ4eFvrRO/9DYyZjmqiQ/7+6XU=; b=jpMv7jNoRqDLEUbW
+	JdFEZR1Q5XmRERgVr8OVhbMxQmEBVForyNHaKjSMz1+t8p4KhnvMdQ0ym5wGDA2i
+	YdW4GLAlPh3d5FF0HtJ/IT/rXOH3MF+k4KLf/K0HD6yFuZzazaM/rbztt83f2MFT
+	H4Myw5tS1Zcy1jlm3LW2FBpddicV6lkHabeKh6Q/oDF2mq469tuHhNXehUX1riWs
+	9kjmeGVcM76NXoSv7QQMaeliBNYSM1zXBj8L+EMyhF+TnWFSvMpiEdjAAYqn2WCa
+	AZ5PfAqR0SwvDBQjXRPpWp9tIgDLKoSqk04RwwhsQOYxTk4pE/xUKN/gnU9CDUBd
+	LSzJ3g==
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44e3dr0mg5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 10:20:49 +0000 (GMT)
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-467a437e5feso12431641cf.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 02:20:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737972670; x=1738577470;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/rXimrNVmUJ2T+1xkOIS6Xv2e4XJVVv+Odxg6YrQzcU=;
-        b=ddNSKWUj2YmdfxGfYi4WLqYm3266d6Wtr2eOuJdbGBeocA90QFkRbo5zGHSp2OZ9nM
-         gsUJXxD4UkVFiwP3Ccdxq5hpgmFLusu21I2BqmiroVJQszsAISUQyUNqd+8oYNj7pez6
-         z+Q6HIPRfjvROcujmF4fNDq16MgH5IQxUatIkyK5c42jR/2KdbiTSiOA6S6I4wGh+HWR
-         XgrBmDCosMgMhH+sXEJ2h593vQDR4XvX5JokH4EAvfsoBhT+qD15eWXPAtHKW5IbWBii
-         mDNtO9/qQcBywfqb9ue4pWWkcRYerYmVqJQVvl4WefGbmfDx7+LkOT0DcwFe8iTPdBsi
-         XS1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVtxxpDVJJSx/YPAfsa39uuYBSRb0QW+kfvR/fbMvfllPZPtYdnPfNhwseQyH+/nKC6Mv0o3hxSUW6DoUWLtdwKW8A=@vger.kernel.org, AJvYcCWVgVNCY4u/ChqvNxKOhC4v7sxzuLDR+a1KATJfWwQyhMtvWZKqTPmmnYdpS64AGNo2wiCXrsnpnOIwm5o=@vger.kernel.org, AJvYcCWfDnzkC3PJ01kDomtAy5lQiiSVqHzJqHb+f9TZI5ArcytEE60ji43BMranq54D6xp2ReOR6LPkKJJAMA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxgWHGtw+r2uiDsHkPcrZOa4FEUrXMNLToNdB7eFfBcrYyEa1ms
-	GI0PRAsI1pepCII6ySB1TZYcunKq84W8EC07/ULXC93jfrz43n3S2ybbpC2M9bQ=
-X-Gm-Gg: ASbGncvdOrPrvx6VsX4/7kBL97mwAiMbkGyA6CcKL5CyUmKi5J5X+EDbWxw3VUVkn3l
-	1fs7YMZfyC9ZNq+AFT0o1Bo2BIGKNoRWW1vTLhLa6YM6gvnhRsPORLlbR+8Is2g7nbdWr0Kdx1N
-	D9CvCbe9+vS+w/ysj+KohCC57mEQHN16FYihpmgujqxEhg1fYtsoHft4XMdIuzbqG0TI36MqHmv
-	Sx+lt7J/8+gnqBydsi7ZlA2Cxcq9q8Gn50tZXqD7PZp+2DeQt8IaBFSEuogC98Z/nABI3DhKojt
-	96ZbRYGWWihrNihOlwNkeL02eA+xVGc6i7OU/jmKtno=
-X-Google-Smtp-Source: AGHT+IG7HvEgRaRL4TM44K3YKbA8gxG16rp1cDIelqU86itu7eY3HUqMmjex6iznV8Krk0VttUTE4w==
-X-Received: by 2002:a05:6402:845:b0:5d0:cd85:a0fe with SMTP id 4fb4d7f45d1cf-5db7d339cdamr32609426a12.25.1737972669856;
-        Mon, 27 Jan 2025 02:11:09 -0800 (PST)
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com. [209.85.208.41])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5dc18628919sm5249996a12.25.2025.01.27.02.11.08
+        d=1e100.net; s=20230601; t=1737973248; x=1738578048;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=iRHY/8aTKLk5Axq/TaQ4eFvrRO/9DYyZjmqiQ/7+6XU=;
+        b=EgPrwMzNs3apM1CclmFJJNhF1vKgDOzUnv8sTOpBK6J1IWMJNSz+yb8Op38aKySj+3
+         rrJ+YWrcezatqrLqqJ/wWlpLrEwp9Lk/rwMUeNDwK/aFs8P4jsuUGJX5z6/vEAYjxokH
+         eeuqeX5bwPNCzqZKQiTVnKedpoqOSwoAAavOh2uZI7tFuYDrjKCY510tkNvKVfGqutCP
+         HmJOnxB4WiCBttIaKYlCw9Yu+a1sABKlVHuSdiYvu/ZhFPjPeXSdCofBUEbRvBRt5pZU
+         UoQZwN9wO/3dI/RzamUxFO9ge5K+/1hgvskKOQ7zC7BBn47uHdCbUVw+d0zD/pGIidtK
+         9New==
+X-Forwarded-Encrypted: i=1; AJvYcCXE4vFYZh1JL5mtSLo6MPkyl+X9VIY52JXS+uGy6DrAEKoEo4VqhFqtW2H8IiNNXdcpTkiZqosDbFiw@vger.kernel.org
+X-Gm-Message-State: AOJu0YyW1khW7rocJamiXO+Q4K5EEyWuTgtLh0gqpRuXlMUlHlSpzFyH
+	m/Tp1AvosjxftdOezDcZad5hQku0uKUmTd7/JieAftnJ5j9RzwGHBKJOArJI2tSGTMH4Zc02e8D
+	fbRBbmLi2HDFK1mrnVVVOu2Rz0yPfobUQdFkB3obghjDkZunq6293lFWRA2kA
+X-Gm-Gg: ASbGncsCbtNAfNtneUefAgXyODZwW2Q/4C/9mRjSxn5SC6HrxSUcI235fow4SsUWFkt
+	NiPBHtIdTpcxjWwJYvVUIRM/CMNnQgfQiztvYT8YkWdLev4k63PmHPbNFKGggMfhI1woCRhGwHt
+	Adp7ElLDGW3TAl5Gk0+jdfA3aEYFKPW0XmGRYMo2Grn0WpH3MnAXAawFCLmM5/in8n7YS1Rh62B
+	6aqcbMDgpJRVCbOMON0d25oJPuwE8RtHeMzH2Xuxgx4n8GswjHg9l+dG4HGL3Q45F5DuK4EnEMn
+	FWczF5YGYrSJhY0qt6JX2TS6D9xMK3nf/+S+BB1MjZdPEDOG8mKRg/Xjnp0=
+X-Received: by 2002:a05:620a:6884:b0:7b6:6b55:887a with SMTP id af79cd13be357-7be631f49cfmr2438125685a.6.1737973248516;
+        Mon, 27 Jan 2025 02:20:48 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHuECCNFGoubW/Ui1yA1XWf9mVhKR81xmqRhv+HGsGJHLDgTBaX/glpXBzB7yhX5w+9mKrFPQ==
+X-Received: by 2002:a05:620a:6884:b0:7b6:6b55:887a with SMTP id af79cd13be357-7be631f49cfmr2438104185a.6.1737973248048;
+        Mon, 27 Jan 2025 02:20:48 -0800 (PST)
+Received: from [192.168.65.90] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5dc186b319asm5333483a12.49.2025.01.27.02.20.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Jan 2025 02:11:09 -0800 (PST)
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-5db689a87cbso8531135a12.3;
-        Mon, 27 Jan 2025 02:11:08 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUGHx4Ixx+9dMfwTV5QUbV9hN818b4ukP/3wkq10FxN1atz8b36CvVLgYw9bEU7bag1F7p964OiVxkMDA==@vger.kernel.org, AJvYcCVs0RJsg9b5p0I1j2CDK/upLaBYUB0/kUNy8ki0OrdgXVX87fcCpLBrTkrcclou9qaSGOoinUeldUq3XeqdKJbMtwo=@vger.kernel.org, AJvYcCWjEl9Tek1SOHhhRe1OtOcvWqQOFN9Jdg2zmliNPSf6sKfDQcuYPsPeF51ik4Dr2+9aJX3313EzQsJXrPc=@vger.kernel.org
-X-Received: by 2002:a05:6402:2711:b0:5d9:a55:4307 with SMTP id
- 4fb4d7f45d1cf-5db7d33933emr34599399a12.22.1737972668435; Mon, 27 Jan 2025
- 02:11:08 -0800 (PST)
+        Mon, 27 Jan 2025 02:20:47 -0800 (PST)
+Message-ID: <f11012b5-f387-4144-a4f2-b9d629a4c53e@oss.qualcomm.com>
+Date: Mon, 27 Jan 2025 11:20:44 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250126064521.3857557-1-avri.altman@wdc.com> <20250126064521.3857557-3-avri.altman@wdc.com>
-In-Reply-To: <20250126064521.3857557-3-avri.altman@wdc.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 27 Jan 2025 11:10:53 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUjkwgo+PZBfcp4c2nqQcdezzo=LCAjmHgLhUhS2FcSRQ@mail.gmail.com>
-X-Gm-Features: AWEUYZkAjkEIij01nJVLZw9KKkp3I5vb0EaOCUTIeqdx54OnKkAd7GgPwZhhdbw
-Message-ID: <CAMuHMdUjkwgo+PZBfcp4c2nqQcdezzo=LCAjmHgLhUhS2FcSRQ@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] scsi: ufs: Fix toggling of clk_gating.state when
- clock gating is not allowed
-To: Avri Altman <avri.altman@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, 
-	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 5/5] arm64: dts: qcom: sm8750: Add UFS nodes for SM8750
+ QRD and MTP boards
+To: Melody Olvera <quic_molvera@quicinc.com>, Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bjorn Andersson
+ <andersson@kernel.org>,
+        Andy Gross <agross@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>,
+        Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>,
+        Trilok Soni <quic_tsoni@quicinc.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Manish Pandey <quic_mapa@quicinc.com>
+References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
+ <20250113-sm8750_ufs_master-v1-5-b3774120eb8c@quicinc.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20250113-sm8750_ufs_master-v1-5-b3774120eb8c@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: 5zDMRvYByWSjpQ78-gtbsNSx_eKz2TXT
+X-Proofpoint-GUID: 5zDMRvYByWSjpQ78-gtbsNSx_eKz2TXT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-27_04,2025-01-27_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 suspectscore=0
+ mlxlogscore=711 priorityscore=1501 phishscore=0 adultscore=0 clxscore=1011
+ spamscore=0 mlxscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
+ definitions=main-2501270082
 
-Hi Avri,
+On 13.01.2025 10:46 PM, Melody Olvera wrote:
+> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+> 
+> Add UFS host controller and PHY nodes for SM8750 QRD and MTP boards.
+> 
+> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
+> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
+> ---
 
-Thanks for your patch!
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 
-On Sun, 26 Jan 2025 at 07:48, Avri Altman <avri.altman@wdc.com> wrote:
-> This commit addresses an issue where `clk_gating.state` is being toggled
-> in `ufshcd_setup_clocks` even if clock gating is not allowed. This can
-> lead to a crash with the following error:
->
->     BUG: spinlock bad magic on CPU#6, swapper/0/1
->      lock: 0xffffff84443014e8, .magic: 00000000, .owner: <none>/-1,
->     .owner_cpu: 0
->     CPU: 6 UID: 0 PID: 1 Comm: swapper/0 Not tainted
->     6.13.0-rcar3-initrd-08318-g75abbef32a94 #896
->     Hardware name: R-Car S4 Starter Kit board (DT)
->     Call trace:
->      show_stack+0x18/0x24 (C)
->      dump_stack_lvl+0x60/0x80
->      dump_stack+0x18/0x24
->      spin_bug+0x7c/0xa0
->      do_raw_spin_lock+0x34/0xb4
->      _raw_spin_lock_irqsave+0x1c/0x30
->      class_spinlock_irqsave_constructor+0x18/0x30
->      ufshcd_setup_clocks+0x98/0x23c
->      ufshcd_init+0x288/0xd38
->      ufshcd_pltfrm_init+0x618/0x738
->      ufs_renesas_probe+0x18/0x24
->      platform_probe+0x68/0xb8
->      really_probe+0x138/0x268
->      __driver_probe_device+0xf4/0x10c
->      driver_probe_device+0x3c/0xf8
->      __driver_attach+0xf0/0x100
->      bus_for_each_dev+0x84/0xdc
->      driver_attach+0x24/0x30
->      bus_add_driver+0xe8/0x1dc
->      driver_register+0xbc/0xf8
->      __platform_driver_register+0x24/0x30
->      ufs_renesas_platform_init+0x1c/0x28
->      do_one_initcall+0x84/0x1f4
->      kernel_init_freeable+0x238/0x23c
->      kernel_init+0x20/0x120
->      ret_from_fork+0x10/0x20
-
-Note that after "[PATCH v3 1/2] scsi: ufs: core: Ensure clk_gating.lock
-is used only after initialization", I no longer see the above BUG(), so
-I don't think it's a good idea to include this log.
-
-> The root cause of the issue is that `clk_gating.state` is being toggled
-> even if clock gating is not allowed. This can lead to the spinlock being
-> used before it is properly initialized.
-
-Which doesn't mean the underlying issue no longer exists...
-
-> The fix is to add a check for `hba->clk_gating.is_initialized` before
-> toggling `clk_gating.state` in `ufshcd_setup_clocks`. Since
-> `clk_gating.lock` is now initialized unconditionally, this is for
-> documentation purposes, to ensure clarity in the code. The primary fix
-> remains to prevent toggling the `clk_gating.state` if clock gating is
-> not allowed.
->
-> Fixes: 1ab27c9cf8b6 ("ufs: Add support for clock gating")
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-
-Seems to work fine on R-Car S4 SK, so
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Konrad
