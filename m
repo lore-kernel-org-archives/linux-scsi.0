@@ -1,109 +1,127 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C1C98632B
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 16:30:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F6E14B942
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 18:05:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737995451; cv=none; b=N8bZUop7Cn8tLwQF/N38cLT1mqkqhEVOxoIujEd+mN+1IacRx8z50Bm/5fRNCqZcyE0m3ehuH40n6GuYwNnr1E/pl4s4Y+xUJElBnoJSgFAYksRANO/gGuwXcME9CTIvIhQVZL0b+tq1HDLI/At3+Bfnc+n3PTo96f1rNykf/KU=
+	t=1738001137; cv=none; b=C0jFY15pdCQgJiqFIvohXBFSlXzGW9lkdRY9GWN9aoagn/N3EfaFQ7Dy5cnqvh2or9Npkf79+URzJnDW4rFThtdC+2dXxVJGUKxCBWZbqaC5LBEBEMrrAGtzcSgkbUlxs+jB7MfoLotvRE6oNuv8DZGaSVMWgK7c7BtR58ih0vM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737995451; c=relaxed/simple;
-	bh=NJcpODpBkDL8az4Mn+xcZ06dSAItLCQL0ea5ixqU3Ss=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gxS71pWwO2SGv5lKj/jkLs9TYzupsZBBl2IyzWtTQaTPOsW+0MGhlHT++PXgJgdpO6LQ08GaiVC9Q2u/ZMy53BSJeXTKBZm0BFSgHYwLaZ6nn16GaS25YcLK6W5hxiGROEC1jFw1y4bxjqS1tDx9eaxLEy0YDKiz6DjyUrw8N+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QYp15hpO; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738001137; c=relaxed/simple;
+	bh=BEsb6n9siTaP4x7qFV/R66om8n+Tzywea90SydC5C44=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B6R0wF4gUauK13IuTOnuxhv7s+gNI2n1jezY67ICjJyyzhGihT5jW9R6UChmpUt/Ryv9rCXfz7kB3wHNdWn857xMUgo6Rny5aPhJI+RlVciR7L5ZvYKAcViRlKhkpCewG9X5rlP7zfMkEW7bMW+zv5qpGIGWI6KmAPSlYAKkReo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fastly.com; spf=pass smtp.mailfrom=fastly.com; dkim=pass (1024-bit key) header.d=fastly.com header.i=@fastly.com header.b=DjcEO86d; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fastly.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fastly.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QYp15hpO"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5d3cf094768so8800192a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 08:30:49 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=fastly.com header.i=@fastly.com header.b="DjcEO86d"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-7b6e4d38185so477888385a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 10:05:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737995448; x=1738600248; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=NJcpODpBkDL8az4Mn+xcZ06dSAItLCQL0ea5ixqU3Ss=;
-        b=QYp15hpOAfRM7lwO3ZaeMcEb/KhQl5POQsm3bg6AWQ2WOzYtfHdgpTSRjM2MqKCSUG
-         aMGo2VJ4ni1LSwcbV6XakyymMC5rgIJG/qy3O09dubvyCogdDiTSflicm66OnW4E+svI
-         MLgDb631AkhEuyLjsVrTqG3GjszJQ9s/ITSYcOKaGkTAVl7QNCp2nKachjWH4mJ8VNeS
-         6ZI235fXi3o7QzQ5wCujhvwCnjhbrqfyvpo1o2r8DOlduH8vXssMTeeMnlwV7l8BhL42
-         n5G6dbvF+p9P3NMIkIUjMe72aXNtzljYaBhYM/NoD88UGkyxj5xug5x0PhEAcJxvA42U
-         wwaQ==
+        d=fastly.com; s=google; t=1738001134; x=1738605934; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=AMDn01SWIjmfdhQcwUIs75izjTf9Hnbhitqkx9MGjr8=;
+        b=DjcEO86dDG+nK02pcFEjZRpNhTXqYRYWF0R0TQ/xldO+P9mKnndPEHX1lF4mM471Cr
+         89gAabhK0KjKTQ0xTiekmEGyzVanbzJ9dlJp/gw3ihgSc7Gj79H/Xt1xdF/mHon29PYF
+         OypBAZm2MH7hOXpHogXOIZS6oEm7YoA0j+iBc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737995448; x=1738600248;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NJcpODpBkDL8az4Mn+xcZ06dSAItLCQL0ea5ixqU3Ss=;
-        b=U9OkiDfo66A9tYCyE9SF4MVo1IXARWGHvJpugvUCP4xp8QGNrRG/fhN5BiWKQE0JDe
-         uENKFh6u4ki/2MqhePnhiEYhg7XTJjmJCayfzVMrKtlPcnBhbGBqOFrlG3fIaommPlJZ
-         ab6/gSFJf82t3wFYf8NzSBf9kVzWals7Jfm5n+TbCt+bU9wpNqmjhM+EwxunD40NOKHU
-         ocLrH16OXTrLLFW1hah0xhaCwsCjxRbyDeilZHacjjFCJ6kDFgMZA5PpKHuceNM6tRBd
-         p7aYanA7sq1k7wWL8mP9Ua+FqtOnyXFlxJTH4gICuy1qJCgleMrjV3BIrS9ZKRFTbXcu
-         FxjA==
-X-Forwarded-Encrypted: i=1; AJvYcCWiEXMf7hwfnzTA34+3zqWBkega5dMbAhW4RfEIKqZcfb3HmJcNSYnt0QNCFXBzph3uzXz5kFtKdMLy@vger.kernel.org
-X-Gm-Message-State: AOJu0YzC+BkhBFksB49dZAWdFMrq0WQsEOj8hIPoo7uV2M++GG0hCqm7
-	UthVNj1nRT53OGO0phHYbIr95kYuq7WGmFNF7QCx7H4qTvK8/dNzAJ4rxvyZaHiD4u6yZoPt2BD
-	ra2nPiArufT8Gg4KgGsUHpk9vn4uDhmEPiRY=
-X-Gm-Gg: ASbGncsCX8gtUDS24k4O8pXX6NA5FJF87yptP18imvCj7zXap31FQeOv3VPeeYD4wnZ
-	wN6W4GPr9A+dQ/zNxghgNlHk+jEwqmjZJu+imy+YSsGs1xCHhOnXeYUxkVBxQbDs=
-X-Google-Smtp-Source: AGHT+IH4Hg2ja9PHXsWUlxALPRdk7O9Natg/ThYu4TL/SSVWScEOL9kAECYG7ajmwAEzw//QMJql+uPqMawtQfsE+ZE=
-X-Received: by 2002:a05:6402:27cc:b0:5d4:5e4:1561 with SMTP id
- 4fb4d7f45d1cf-5db7d828becmr35936761a12.20.1737995447178; Mon, 27 Jan 2025
- 08:30:47 -0800 (PST)
+        d=1e100.net; s=20230601; t=1738001134; x=1738605934;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=AMDn01SWIjmfdhQcwUIs75izjTf9Hnbhitqkx9MGjr8=;
+        b=Vb8RIQh5BvVGjCjlOOBukV76piWmtf9CccvINVMmrjGi/sZSBnbDHSpV9W0XyPymhG
+         VVlEPC1LAiPXIVew7mRdOghDItDVrusJp9K/ilpbxo3gY0QnXbNWg/ElntF6WoyQLaCG
+         RW802AFVoKuuqo1iRakrcfxzVbk+OXZIEFXGEmd/11Yqt8Ylxm/IlxOcNEqNZs4D0ouU
+         5I+r/dA5ySaH6Y8GgT0dtpbL240AQKxDffS9b426bpf+9PZEc+Zdv0qw0Lk3TNPRNaMY
+         1vovRsZsat8pHzi3aYCBUr1T3P2XoQ4DDnNDaWCGa6A/g9JoYWPq1+E7Jg2nmVenx2A1
+         NgCg==
+X-Forwarded-Encrypted: i=1; AJvYcCVe+WLKRJWrjFpUtc3erIlkBzgGI8Xo/ol2UohUSoHn0KvdiXaJj/+QK2/xiBvsXLfhE+i3zXhIT3V+@vger.kernel.org
+X-Gm-Message-State: AOJu0YykTfnKZg52DEQXeRzkmhOkSV7KWAOaMn19wWoE/+ZsiMH9CReV
+	rgOVsxDRjUf5TMeWLMPnPJ6MaWLEJHtbXG2RN2DZIHG0+qyKtyicUC1ArMytSRU=
+X-Gm-Gg: ASbGnctD/uJA+uduk5CxuRfE5hoBtw4vQAVPiSinY4qRQPQa649wa12pWK1RKZMfkLO
+	sDMyvPLwcG1TI/UVRSz1OQq/NDgeKkZ24cm3oQ5ErfAMLn2LKnEgIH9I7Mx1N6pg4w+3JDbdjmC
+	QHj0ofy5felrAHbngop2edyLYvGMg4x9BDHHguzJ+Ox7Fz9pDmSfCVW1JHkUuckAkM6/SkAnteE
+	c8e9OlHi08sRNJMsSwGa/KxQFqePKRvdWM9XYUscSJRZYdOMzyuMSDiHlJUD7NTpSazQHq/Rk1f
+	cuZVvk138xylLkFfhkm+Wuj/NeZVEwdZM9qckmlA1mffUSyF
+X-Google-Smtp-Source: AGHT+IGyYeeR4TsA+WdrCQYCr/8+qk1j+5VwubRGe5d2pC8iYUgJlAW0YwezLbYdTJ+RcwEWCyf2Yg==
+X-Received: by 2002:a05:620a:14e:b0:7be:6eb1:f4dc with SMTP id af79cd13be357-7be6eb1f594mr4305704785a.51.1738001134568;
+        Mon, 27 Jan 2025 10:05:34 -0800 (PST)
+Received: from LQ3V64L9R2 (ip-185-104-139-70.ptr.icomera.net. [185.104.139.70])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7be9aeefd88sm414259285a.77.2025.01.27.10.05.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jan 2025 10:05:34 -0800 (PST)
+Date: Mon, 27 Jan 2025 13:05:30 -0500
+From: Joe Damato <jdamato@fastly.com>
+To: nicolas.bouchinet@clip-os.org
+Cc: linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu,
+	linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+	Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>,
+	Joel Granados <j.granados@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v1 0/9] Fixes multiple sysctl bound checks
+Message-ID: <Z5fK6jnrjMBDrDJg@LQ3V64L9R2>
+Mail-Followup-To: Joe Damato <jdamato@fastly.com>,
+	nicolas.bouchinet@clip-os.org, linux-kernel@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+	codalist@coda.cs.cmu.edu, linux-nfs@vger.kernel.org,
+	netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	coreteam@netfilter.org,
+	Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>,
+	Joel Granados <j.granados@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>
+References: <20250127142014.37834-1-nicolas.bouchinet@clip-os.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
- <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
- <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
- <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
- <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
- <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
- <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
- <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
- <CA+=Fv5Q5Q1BUscm2Tua9y1b=2f33+3SkULNwe0gKQpJFL1PLig@mail.gmail.com>
- <20241112145253.7aa5c2ab@samweis> <CA+=Fv5QF7yUQd=CnrrDSwrFVbBC7wGdzXffJV__AjP9TDxqw=A@mail.gmail.com>
- <alpine.DEB.2.21.2411251925410.44939@angie.orcam.me.uk> <CA+=Fv5TVZ7v43EQ8jx7g4RV0n6F6Wb1N83oEbeWnMAQbNQvT5g@mail.gmail.com>
-In-Reply-To: <CA+=Fv5TVZ7v43EQ8jx7g4RV0n6F6Wb1N83oEbeWnMAQbNQvT5g@mail.gmail.com>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Mon, 27 Jan 2025 17:30:35 +0100
-X-Gm-Features: AWEUYZlh-NEZaMleqtLsvlgAdok19XsxM__35jI2WILd_VaqsEIJx1VuFb3qQww
-Message-ID: <CA+=Fv5Sq89wYF3a16omtDUTnbjb23sUY-9ef8KjiEtNp4bv0Hg@mail.gmail.com>
-Subject: Re: qla1280 driver for qlogic-1040 on alpha
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250127142014.37834-1-nicolas.bouchinet@clip-os.org>
 
-Hi again,
+On Mon, Jan 27, 2025 at 03:19:57PM +0100, nicolas.bouchinet@clip-os.org wrote:
+> From: Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>
+> 
+> Hi,
+> 
+> This patchset adds some bound checks to sysctls to avoid negative
+> value writes.
+> 
+> The patched sysctls were storing the result of the proc_dointvec
+> proc_handler into an unsigned int data. proc_dointvec being able to
+> parse negative value, and it return value being a signed int, this could
+> lead to undefined behaviors.
+> This has led to kernel crash in the past as described in commit
+> 3b3376f222e3 ("sysctl.c: fix underflow value setting risk in vm_table")
+> 
+> Most of them are now bounded between SYSCTL_ZERO and SYSCTL_INT_MAX.
+> nf_conntrack_expect_max is bounded between SYSCTL_ONE and SYSCTL_INT_MAX
+> as defined by its documentation.
 
-I'm returning to my qla1280 driver issues on Alpha. To sum things up:
-SGI/mips need full 64-bit DMA addressing while anything above 32-bit
-DMA addressing on Alpha will result in file-system corruption. The
-hypothesis so far has been that some ISP1040 chip revisions don't
-support DAC. This feature only appears in data sheets for chip rev C
-so it's reasonable to assume that rev B and less do not support it.
-The problem arises on Alpha systems with more than 2GB RAM installed.
-Up until this point the only Alphas available to me, which has more
-than 2GB ram, has been Tsunami based Alphas (21264 UP2000+ and
-Alphaserver ES40). I recently got my hands on an Alphaserver-4100
-(Rawhide Family) with 4GB ram. On this system I see no file-system
-corruption with the ISP1040 rev B card, even though it does seem to
-emit bus addresses which are greater than 32-bits, i.e very similar
-addresses as on the Tsunami based machines, the so called "monster
-window" (where address-bit 40 is set). This gets me thinking that
-maybe this really is an issue with how DMA/DAC is handled on the
-Tsunami boards, rather than a problem with the qla1280 driver and DAC
-support in various chip revisions?
+I noticed that none of the patches have a Fixes tags. Do any of
+these fix existing crashes or is this just cleanup?
 
-Any thoughts on this?
+I am asking because if this is cleanup then it would be "net-next"
+material instead of "net" and would need to be resubmit when then
+merge window has passed [1].
 
+FWIW, I submit a similar change some time ago and it was submit to
+net-next as cleanup [2].
 
-Btw, does anyone have access to "rawhide system programmer's manual"
-referred to in the kernel source?
-
-/Magnus
+[1]: https://lore.kernel.org/netdev/20250117182059.7ce1196f@kernel.org/
+[2]: https://lore.kernel.org/netdev/CANn89i+=HiffVo9iv2NKMC2LFT15xFLG16h7wN3MCrTiKT3zQQ@mail.gmail.com/T/
