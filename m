@@ -1,87 +1,109 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F368A19BBA;
-	Mon, 27 Jan 2025 15:42:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C1C98632B
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 16:30:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737992581; cv=none; b=hlKJ084b+wIEqZXyGUKaz7+c0w8WaWn5o0hoAaeubRTleSjf1mswjJTKsK59jZOs2Vz3B0rrY+AlvAbz449SGJkZ/003U2pbuza3vd4wk/cmUUvDjhUAXv8nqfyaARgsKu+LYmanLs4LbwRrC0GtHk4l/nVs0yDkh941/nwwHR0=
+	t=1737995451; cv=none; b=N8bZUop7Cn8tLwQF/N38cLT1mqkqhEVOxoIujEd+mN+1IacRx8z50Bm/5fRNCqZcyE0m3ehuH40n6GuYwNnr1E/pl4s4Y+xUJElBnoJSgFAYksRANO/gGuwXcME9CTIvIhQVZL0b+tq1HDLI/At3+Bfnc+n3PTo96f1rNykf/KU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737992581; c=relaxed/simple;
-	bh=754tTQ0Xv0FV1pAPiQ7XMzOqvV5Ru3eT2/4MtIxHkKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pcxjjWPHVuwrYIY3AW5zCkXqNuIvI2fQQ0VJx0xLK3WwbCAoyoO1pu4yLS/kX6gczLJqYNs4V2wyhB3ULJzgKjwL/IDvffeq1CbImkTFPDwGY7ajdNyjpUetqcdWx+dtSyOqy04rVVlQvjLsKbrQIrM+Zsrco896Xe2Q6pjCfmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Pyozw0ts; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1737995451; c=relaxed/simple;
+	bh=NJcpODpBkDL8az4Mn+xcZ06dSAItLCQL0ea5ixqU3Ss=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gxS71pWwO2SGv5lKj/jkLs9TYzupsZBBl2IyzWtTQaTPOsW+0MGhlHT++PXgJgdpO6LQ08GaiVC9Q2u/ZMy53BSJeXTKBZm0BFSgHYwLaZ6nn16GaS25YcLK6W5hxiGROEC1jFw1y4bxjqS1tDx9eaxLEy0YDKiz6DjyUrw8N+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QYp15hpO; arc=none smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pyozw0ts"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=754tTQ0Xv0FV1pAPiQ7XMzOqvV5Ru3eT2/4MtIxHkKc=; b=Pyozw0tsKLD9gp97o+N6ZbHkTo
-	Il8/2Vpa4F0aqTQ5eLNtncdojFavxqC+3hOoMyt2pPZYgpxoa7oSXp+1z19h2FwdJ9ksectEr6L5y
-	pdndzuM9IJbuYbMGyY8OnttTeia0ZsfUEQN3vE3Kvu3ywzVzVm7PiaoVN1j+XGx7cGtNMyIWcHM2K
-	IHU9EJmiTnsw2atKedPjlIYgnndG3plYffG/psV0clxoDlPsLg9vBJ8MCt7RCyZQNR2Rl4uIk2hOI
-	SGpvgckCCBw+KC2Pto4K/lzMPYNt+Lyqoqjs99RL8H5P/AQH7nlJDuMDpJ1IZ/IMsyAIp8YsG+ytq
-	PlpOQ/eA==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tcRG3-00000009b8r-2Zcd;
-	Mon, 27 Jan 2025 15:42:39 +0000
-Date: Mon, 27 Jan 2025 15:42:39 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Jani Nikula <jani.nikula@intel.com>
-Cc: Joel Granados <joel.granados@kernel.org>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
-	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
-	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org, linux-hyperv@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-	xen-devel@lists.xenproject.org, linux-aio@kvack.org,
-	linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev,
-	codalist@coda.cs.cmu.edu, linux-mm@kvack.org,
-	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	io-uring@vger.kernel.org, bpf@vger.kernel.org,
-	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com,
-	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-	Song Liu <song@kernel.org>,
-	"Steven Rostedt (Google)" <rostedt@goodmis.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Corey Minyard <cminyard@mvista.com>
-Subject: Re: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where
- applicable
-Message-ID: <Z5epb86xkHQ3BLhp@casper.infradead.org>
-References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
- <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
- <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
- <CAMj1kXEZPe8zk7s67SADK9wVH3cfBup-sAZSC6_pJyng9QT7aw@mail.gmail.com>
- <f4lfo2fb7ajogucsvisfd5sg2avykavmkizr6ycsllcrco4mo3@qt2zx4zp57zh>
- <87jzag9ugx.fsf@intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QYp15hpO"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5d3cf094768so8800192a12.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2025 08:30:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737995448; x=1738600248; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=NJcpODpBkDL8az4Mn+xcZ06dSAItLCQL0ea5ixqU3Ss=;
+        b=QYp15hpOAfRM7lwO3ZaeMcEb/KhQl5POQsm3bg6AWQ2WOzYtfHdgpTSRjM2MqKCSUG
+         aMGo2VJ4ni1LSwcbV6XakyymMC5rgIJG/qy3O09dubvyCogdDiTSflicm66OnW4E+svI
+         MLgDb631AkhEuyLjsVrTqG3GjszJQ9s/ITSYcOKaGkTAVl7QNCp2nKachjWH4mJ8VNeS
+         6ZI235fXi3o7QzQ5wCujhvwCnjhbrqfyvpo1o2r8DOlduH8vXssMTeeMnlwV7l8BhL42
+         n5G6dbvF+p9P3NMIkIUjMe72aXNtzljYaBhYM/NoD88UGkyxj5xug5x0PhEAcJxvA42U
+         wwaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737995448; x=1738600248;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=NJcpODpBkDL8az4Mn+xcZ06dSAItLCQL0ea5ixqU3Ss=;
+        b=U9OkiDfo66A9tYCyE9SF4MVo1IXARWGHvJpugvUCP4xp8QGNrRG/fhN5BiWKQE0JDe
+         uENKFh6u4ki/2MqhePnhiEYhg7XTJjmJCayfzVMrKtlPcnBhbGBqOFrlG3fIaommPlJZ
+         ab6/gSFJf82t3wFYf8NzSBf9kVzWals7Jfm5n+TbCt+bU9wpNqmjhM+EwxunD40NOKHU
+         ocLrH16OXTrLLFW1hah0xhaCwsCjxRbyDeilZHacjjFCJ6kDFgMZA5PpKHuceNM6tRBd
+         p7aYanA7sq1k7wWL8mP9Ua+FqtOnyXFlxJTH4gICuy1qJCgleMrjV3BIrS9ZKRFTbXcu
+         FxjA==
+X-Forwarded-Encrypted: i=1; AJvYcCWiEXMf7hwfnzTA34+3zqWBkega5dMbAhW4RfEIKqZcfb3HmJcNSYnt0QNCFXBzph3uzXz5kFtKdMLy@vger.kernel.org
+X-Gm-Message-State: AOJu0YzC+BkhBFksB49dZAWdFMrq0WQsEOj8hIPoo7uV2M++GG0hCqm7
+	UthVNj1nRT53OGO0phHYbIr95kYuq7WGmFNF7QCx7H4qTvK8/dNzAJ4rxvyZaHiD4u6yZoPt2BD
+	ra2nPiArufT8Gg4KgGsUHpk9vn4uDhmEPiRY=
+X-Gm-Gg: ASbGncsCX8gtUDS24k4O8pXX6NA5FJF87yptP18imvCj7zXap31FQeOv3VPeeYD4wnZ
+	wN6W4GPr9A+dQ/zNxghgNlHk+jEwqmjZJu+imy+YSsGs1xCHhOnXeYUxkVBxQbDs=
+X-Google-Smtp-Source: AGHT+IH4Hg2ja9PHXsWUlxALPRdk7O9Natg/ThYu4TL/SSVWScEOL9kAECYG7ajmwAEzw//QMJql+uPqMawtQfsE+ZE=
+X-Received: by 2002:a05:6402:27cc:b0:5d4:5e4:1561 with SMTP id
+ 4fb4d7f45d1cf-5db7d828becmr35936761a12.20.1737995447178; Mon, 27 Jan 2025
+ 08:30:47 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87jzag9ugx.fsf@intel.com>
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+ <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+ <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
+ <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
+ <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
+ <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
+ <CA+=Fv5Q5Q1BUscm2Tua9y1b=2f33+3SkULNwe0gKQpJFL1PLig@mail.gmail.com>
+ <20241112145253.7aa5c2ab@samweis> <CA+=Fv5QF7yUQd=CnrrDSwrFVbBC7wGdzXffJV__AjP9TDxqw=A@mail.gmail.com>
+ <alpine.DEB.2.21.2411251925410.44939@angie.orcam.me.uk> <CA+=Fv5TVZ7v43EQ8jx7g4RV0n6F6Wb1N83oEbeWnMAQbNQvT5g@mail.gmail.com>
+In-Reply-To: <CA+=Fv5TVZ7v43EQ8jx7g4RV0n6F6Wb1N83oEbeWnMAQbNQvT5g@mail.gmail.com>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Mon, 27 Jan 2025 17:30:35 +0100
+X-Gm-Features: AWEUYZlh-NEZaMleqtLsvlgAdok19XsxM__35jI2WILd_VaqsEIJx1VuFb3qQww
+Message-ID: <CA+=Fv5Sq89wYF3a16omtDUTnbjb23sUY-9ef8KjiEtNp4bv0Hg@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc: Thomas Bogendoerfer <tbogendoerfer@suse.de>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jan 27, 2025 at 04:55:58PM +0200, Jani Nikula wrote:
-> You could have static const within functions too. You get the rodata
-> protection and function local scope, best of both worlds?
+Hi again,
 
-timer_active is on the stack, so it can't be static const.
+I'm returning to my qla1280 driver issues on Alpha. To sum things up:
+SGI/mips need full 64-bit DMA addressing while anything above 32-bit
+DMA addressing on Alpha will result in file-system corruption. The
+hypothesis so far has been that some ISP1040 chip revisions don't
+support DAC. This feature only appears in data sheets for chip rev C
+so it's reasonable to assume that rev B and less do not support it.
+The problem arises on Alpha systems with more than 2GB RAM installed.
+Up until this point the only Alphas available to me, which has more
+than 2GB ram, has been Tsunami based Alphas (21264 UP2000+ and
+Alphaserver ES40). I recently got my hands on an Alphaserver-4100
+(Rawhide Family) with 4GB ram. On this system I see no file-system
+corruption with the ISP1040 rev B card, even though it does seem to
+emit bus addresses which are greater than 32-bits, i.e very similar
+addresses as on the Tsunami based machines, the so called "monster
+window" (where address-bit 40 is set). This gets me thinking that
+maybe this really is an issue with how DMA/DAC is handled on the
+Tsunami boards, rather than a problem with the qla1280 driver and DAC
+support in various chip revisions?
 
-Does this really need to be cc'd to such a wide distribution list?
+Any thoughts on this?
+
+
+Btw, does anyone have access to "rawhide system programmer's manual"
+referred to in the kernel source?
+
+/Magnus
