@@ -1,99 +1,99 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24BD05684;
-	Sun, 26 Jan 2025 22:00:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADB610E3;
+	Mon, 27 Jan 2025 00:26:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737928834; cv=none; b=u+uTekt4o7Cq1duF6VmrNBl0Cz1rh0u1L0jMEvPD1MJzuEvE8LuSAL0JDKbgO0v+IeyQlM1N4o+aycPZbEr5a8JbO865DZiZUy9vMLHA2akW5K05OUFvHlkaRyquDqgU35vwKEm7QOlWWzOvM6ym9b1Dbb/679q+J+qXH/vGjoQ=
+	t=1737937580; cv=none; b=IwgWUzbURX+7zVTHxCBJvyG5XIorbwvfK3rH/C76XSc41Ozg3MSYek53jfWKKHrr0Awm0L9wVZUXRXZ4+3zcNsNTcn23Bhsq3x3i/7S8dKgHNIlwE+LAtRibC67LgvHpByKwsNPQx9g/I6RHE2PWTblNXnyddg0w3611084EFrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737928834; c=relaxed/simple;
-	bh=4DdbTStKVkTb7WFrUrJoNlbv7lkdF9Cm9SPJk5oqJFw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=hu3Sdx++XzJ9b/amtySmY6oMwMr5wkQFovVLH3IpNerklgYyyRXOVsvz34m8zVexZxHrj99CU0txE4i5tEwSjI7D4wIXPDWjXO07/XRlxagWKBtOaN7hZd1Wly+zGnqW9HvUWvOSoRcRpo7ImRRntZxiYbfhoHenFftJzAQHxNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TZ0aiknH; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1737937580; c=relaxed/simple;
+	bh=sp07x5YK/Br0Ron2AUSGI/+KniTnGGcnlh/1vbXnqJU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gYmmp0swf7EMkudgt2DpsNcg3pfa9SgDDj8o8a4f80m38mpj+y8I6y+/AMLgCSsRDFgF8NaJBRflpoOoTfC63Cpo2lfN/eQMueike26RScAFNaREBYTF8+9xsmEwnIavKoRwM5RYyL4SnweJSVumk5BZfYJqeluyVreT5BYsH9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=DMmeHhDv; arc=none smtp.client-ip=46.235.229.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TZ0aiknH"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-3863703258fso3023457f8f.1;
-        Sun, 26 Jan 2025 14:00:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737928831; x=1738533631; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=4DdbTStKVkTb7WFrUrJoNlbv7lkdF9Cm9SPJk5oqJFw=;
-        b=TZ0aiknH8vc531izZlOS8WibXHPKNIcCWNvZSMiYXAXvHyJ031jtOKJ+1q6DqE4MHF
-         QbxsJYaR+64Gwx+tBkxeGZmf5v85/DaMMyv0hA475WxfebxxcENYkEu8ou7EmS/Rp1+y
-         HFuhV3A6Rmra9w1RuZKs+ZI0IV3nLCKSbjZV+pQbdVDSaKIxlst2hjDSDE/7Djxz3PKp
-         vwqOIZBILN3tm0afn0wg/B2ZjalP6JOHHopX1mShsrXopVzJOp86WLWwML5c/oyLZGdu
-         9Qa5F7PnJrYWp+Zk24JO5LkpxiLUYS9hwMwPg/Z3wUsZFpcJm0a4vTRX6dFxBWbHM1aG
-         SrFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737928831; x=1738533631;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=4DdbTStKVkTb7WFrUrJoNlbv7lkdF9Cm9SPJk5oqJFw=;
-        b=tf2GbDRotRwXJgB4lQaULAViZlm9COIah8qaDR+EeFw4rfIi5kMkvBaXIRfKr0QA0m
-         sHwj3d7+Lu0wfUlLwQaMMl/WZhywsIsb/5jfOLBB5YoDVFQ4PhBnDWCUDc8EMDYqWe4/
-         Vd+2kuGji2SEbOByJsyamTPQIjoExvY2MwIqEA/xikGjKtAa3T+R8IbI5ndjphpDX1iG
-         8k3rzTE/3fXwudZIQaqAON55oLANm+3g6zKV73c/xHk6VQ/vCy3kYJTq3oJxdzhpF/h6
-         Pye6UB4hMd0XiqVQ4cAS9ZDv6dH+m4ftcnaXnbX2UpXw8JDs96ENP89Xi+/YwMQQ0Iq0
-         WOzA==
-X-Forwarded-Encrypted: i=1; AJvYcCU2A+ns00IecNB2FwippvLBHmerjWUe2tyZk5nSc1QSv3V72mylXJNdlWBFm6oLxLsS+cBDf3MTj6tLxKVewSuHsVU=@vger.kernel.org, AJvYcCUj5UuAbBY35QWPCVabRyr/aBEzgqgL4cs1ZE0rfjRj39JVpkRNGXzsU1sryPgV3K61KgFIFH4YW72/ObM/@vger.kernel.org, AJvYcCVfVtJ77jpDXB97tjKnK1XIM/qOG6jquAiCpbu7qZ8aB8+GMEMz+BejciDW3yDLr59VsVz2WXbPW/jWpQ==@vger.kernel.org, AJvYcCW9niv/imvUY6PY4usn+Ll1ziPKfAgtzGIrWA+W82QXyLkS/dWne02tB8a+QRVnco6PVoPl+sJXcWtjmf8p@vger.kernel.org, AJvYcCX1CeTMJyWoVg0uvs/XUOyL2LWHj9EANU8wRn5gGlP0pprycrGB5ZE0LjFStbJ2G4IIMNKeMklm@vger.kernel.org
-X-Gm-Message-State: AOJu0YyCax6s1OepPDjFSrrFjz3WzPbnelracm+BSFysFqAcXbpVs5Cd
-	I2UygH2jpCbrIhKqpXha6GXjrLlLjlkrBjFuZkDTjcj07TtJSv23
-X-Gm-Gg: ASbGncsqZkIJ47Tr+h8bxqOFwyDJITUfdUwAli1fPFat3Tr5WYv2a6Qzw2/MmZgHQog
-	KCTn0iGu1mRhRwLEiwGyEXjN75/9ZeSHy2kdA9vQ7WlZ9FewqjztsMotE1pgZY20vNe/0q/ik4K
-	EqYZMItpCRb+GHoQyj3/h04okgMEneZvJEzrVzjk6b3e0gmu6FGnX8H0oXiAXrbAFM/ikQwpqqK
-	+2ixO8Smt1r0iPb3ExIHXH3ZRVo/KliDRDIixlzJCnMGGJ1RE8XUiauO4dvspRFKyKCbtN1DEFf
-	YBXvRicxT8V81U64pDX7CrCArh9dgFqzEGCioswn/sjUdG5X1Hdbb6GKw0MEgXhfc2f1N7JRYHI
-	6f6i8/TJKLFWRprQdrC/Gky/aZZs/ZCubThVlTcmE3F++
-X-Google-Smtp-Source: AGHT+IGsZIr2STvVAqncSIrcbBNbIGfPo1HDsn0GMZTH13nRBH3HPa/wKJc6AIwOxi8bTdK3IydwYQ==
-X-Received: by 2002:a05:6000:401f:b0:38a:8b34:76b0 with SMTP id ffacd0b85a97d-38c2b7d12a7mr8375865f8f.27.1737928831040;
-        Sun, 26 Jan 2025 14:00:31 -0800 (PST)
-Received: from p200300c5871e95f7cf8ec2b454ca4b5c.dip0.t-ipconnect.de (p200300c5871e95f7cf8ec2b454ca4b5c.dip0.t-ipconnect.de. [2003:c5:871e:95f7:cf8e:c2b4:54ca:4b5c])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c2a1baf3esm9290068f8f.75.2025.01.26.14.00.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jan 2025 14:00:29 -0800 (PST)
-Message-ID: <76ddd6b18a35a19d284496345e41f5a22866f171.camel@gmail.com>
-Subject: Re: [PATCH v4] scsi: ufs: fix use-after free in init error and
- remove paths
-From: Bean Huo <huobean@gmail.com>
-To: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>, Alim Akhtar
- <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van
- Assche <bvanassche@acm.org>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Peter Griffin <peter.griffin@linaro.org>, 
- Krzysztof Kozlowski <krzk@kernel.org>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>,  Mike Snitzer <snitzer@redhat.com>,
- Jens Axboe <axboe@kernel.dk>, Ulf Hansson <ulf.hansson@linaro.org>,  Satya
- Tangirala <satyat@google.com>, Eric Biggers <ebiggers@google.com>
-Cc: Tudor Ambarus <tudor.ambarus@linaro.org>, Will McVicker
- <willmcvicker@google.com>, kernel-team@android.com,
- linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org,  stable@vger.kernel.org
-Date: Sun, 26 Jan 2025 23:00:28 +0100
-In-Reply-To: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
-References: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="DMmeHhDv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
+	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
+	:Subject; bh=xM1qx7/9y3dZfBk+GZBSvha489O+0pxmvwzewQVRcq0=; b=DMmeHhDvlERUaiYj
+	putgXnT1yXxdKx09jn0tdPbjkauXgXulW0iTQmrTImn68tSsIYOOC7gdtJTeIkJ6MKgssMy0ImXGL
+	U+DYZq+86NPQR2UPJhTRpJqwG+JEwb1D0GNE/l0J8wdeKKUIhzr66UkiNJcyBnoGAHhx+eeUx3NjS
+	PQ36bMYIZatUrawXoADkY7fVqJdRrE7ktyY89WnJen6tgyerince+5cWwe5hCp2JPQ2xlEElahdPr
+	cN79RvbNJccjgjWju0ec29DuGfucr1zfP+bsnJKbSJnKtzpqV2AceXFfMWELQ4xvjd7mYERLqEu+Q
+	drgCQX7OattVFyv84A==;
+Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
+	by mx.treblig.org with esmtp (Exim 4.96)
+	(envelope-from <linux@treblig.org>)
+	id 1tcCx1-00CDuU-11;
+	Mon, 27 Jan 2025 00:26:03 +0000
+From: linux@treblig.org
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Dr. David Alan Gilbert" <linux@treblig.org>
+Subject: [PATCH] scsi: mvsas: remove unused mvs_phys_reset
+Date: Mon, 27 Jan 2025 00:26:01 +0000
+Message-ID: <20250127002601.113555-1-linux@treblig.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2025-01-24 at 15:09 +0000, Andr=C3=A9 Draszik wrote:
-> Fixes: cb77cb5abe1f ("blk-crypto: rename blk_keyslot_manager to
-> blk_crypto_profile")
-> Fixes: d76d9d7d1009 ("scsi: ufs: use devm_blk_ksm_init()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
+From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+mvs_phys_reset() was added in 2009's
+commit 20b09c2992fe ("[SCSI] mvsas: add support for 94xx; layout change;
+bug fixes")
+but hasn't been used.
+
+Remove it.
+
+Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+---
+ drivers/scsi/mvsas/mv_sas.c | 10 ----------
+ drivers/scsi/mvsas/mv_sas.h |  1 -
+ 2 files changed, 11 deletions(-)
+
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 1444b1f1c4c8..c4592de4fefc 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -151,16 +151,6 @@ static inline u8 mvs_assign_reg_set(struct mvs_info *mvi,
+ 	return MVS_CHIP_DISP->assign_reg_set(mvi, &dev->taskfileset);
+ }
+ 
+-void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard)
+-{
+-	u32 no;
+-	for_each_phy(phy_mask, phy_mask, no) {
+-		if (!(phy_mask & 1))
+-			continue;
+-		MVS_CHIP_DISP->phy_reset(mvi, no, hard);
+-	}
+-}
+-
+ int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 			void *funcdata)
+ {
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 19b01f7c4767..09ce3f2241f2 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -425,7 +425,6 @@ struct mvs_task_exec_info {
+ void mvs_get_sas_addr(void *buf, u32 buflen);
+ void mvs_iounmap(void __iomem *regs);
+ int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex);
+-void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard);
+ int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 			void *funcdata);
+ void mvs_set_sas_addr(struct mvs_info *mvi, int port_id, u32 off_lo,
+-- 
+2.48.1
+
