@@ -1,42 +1,44 @@
 Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ADB610E3;
-	Mon, 27 Jan 2025 00:26:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6AAF2907;
+	Mon, 27 Jan 2025 00:27:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737937580; cv=none; b=IwgWUzbURX+7zVTHxCBJvyG5XIorbwvfK3rH/C76XSc41Ozg3MSYek53jfWKKHrr0Awm0L9wVZUXRXZ4+3zcNsNTcn23Bhsq3x3i/7S8dKgHNIlwE+LAtRibC67LgvHpByKwsNPQx9g/I6RHE2PWTblNXnyddg0w3611084EFrg=
+	t=1737937641; cv=none; b=n/+J9XYzo818crgFBHaftyUAd7YWbjFDXGoWxkMMAbLqN1KGHJV3TnXn/6lbQyNj37xdPOjcMcUz3OFCJ1GZuBcfZyjO5ZxD1789x5apZmLmNRZARP2bvRR50UzMqqb7bDvq28RdCRPkc5Bh1NGawJ727pvlvDMWsBdn71+3T5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737937580; c=relaxed/simple;
-	bh=sp07x5YK/Br0Ron2AUSGI/+KniTnGGcnlh/1vbXnqJU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gYmmp0swf7EMkudgt2DpsNcg3pfa9SgDDj8o8a4f80m38mpj+y8I6y+/AMLgCSsRDFgF8NaJBRflpoOoTfC63Cpo2lfN/eQMueike26RScAFNaREBYTF8+9xsmEwnIavKoRwM5RYyL4SnweJSVumk5BZfYJqeluyVreT5BYsH9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=DMmeHhDv; arc=none smtp.client-ip=46.235.229.95
+	s=arc-20240116; t=1737937641; c=relaxed/simple;
+	bh=BEJybrIIEgHvIMoObl6RIWTD6BjcQ4QJ76PwXv6EtfU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IuBFWA6CoIVsY02haWAFWQd4A2fOSOfJs5oCQllGdw5R9C+KS43WqVklhN4NSZb3XT9GZhqmecDh9+YcHThoEgUs/lPgRITnjv7mr11GNQMRgq7JMUiRN5rUfqUybJCtD3oylKrMfktAWJk+OJbb8RAQqh8W3mkZmCII+qNhxT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=RRgJegkp; arc=none smtp.client-ip=46.235.229.95
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="DMmeHhDv"
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="RRgJegkp"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
 	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=xM1qx7/9y3dZfBk+GZBSvha489O+0pxmvwzewQVRcq0=; b=DMmeHhDvlERUaiYj
-	putgXnT1yXxdKx09jn0tdPbjkauXgXulW0iTQmrTImn68tSsIYOOC7gdtJTeIkJ6MKgssMy0ImXGL
-	U+DYZq+86NPQR2UPJhTRpJqwG+JEwb1D0GNE/l0J8wdeKKUIhzr66UkiNJcyBnoGAHhx+eeUx3NjS
-	PQ36bMYIZatUrawXoADkY7fVqJdRrE7ktyY89WnJen6tgyerince+5cWwe5hCp2JPQ2xlEElahdPr
-	cN79RvbNJccjgjWju0ec29DuGfucr1zfP+bsnJKbSJnKtzpqV2AceXFfMWELQ4xvjd7mYERLqEu+Q
-	drgCQX7OattVFyv84A==;
+	:Subject; bh=a9Iwuv2f0Cmw7lrIZoks3WMz0lwqvW7hrY4Go569ZIo=; b=RRgJegkpCRQpqpm7
+	T5Db0aQhbrwAhZ06hGA4i1UHuDkrkwl2/M0YCXMbFF38fIKWUynjuViG7Pn64YwpzzZDrFn+2ggF+
+	UsVLJXCPL+A/v3Cf3m+rMmLqO0lrS3k+3trjg+vlxZ+khSK2ZdHbeXZZDJqZ6xLXDqwQO0+xlczmv
+	CXWm1amTdVsj+frfJKgLbtnOuMW+uhwwS2XQJIQv1sPphb2p5MhdkS0ZyPlUAjUmyw2gJ/s7w0D1h
+	DbN1pB2uKCbp9BHxHXT27EH4xnEDlYvzbhHa/pvLJD5IXyhyY8Fs03/5KxOsBAZlaos+KvDNn0hbG
+	6vff4ELK5Jm63hPVYA==;
 Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
 	by mx.treblig.org with esmtp (Exim 4.96)
 	(envelope-from <linux@treblig.org>)
-	id 1tcCx1-00CDuU-11;
-	Mon, 27 Jan 2025 00:26:03 +0000
+	id 1tcCyD-00CDva-0H;
+	Mon, 27 Jan 2025 00:27:17 +0000
 From: linux@treblig.org
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
+To: sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	MPT-FusionLinux.pdl@broadcom.com
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH] scsi: mvsas: remove unused mvs_phys_reset
-Date: Mon, 27 Jan 2025 00:26:01 +0000
-Message-ID: <20250127002601.113555-1-linux@treblig.org>
+Subject: [PATCH] scsi: message: fusion: Remove unused mptscsih_target_reset
+Date: Mon, 27 Jan 2025 00:27:16 +0000
+Message-ID: <20250127002716.113641-1-linux@treblig.org>
 X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -48,52 +50,109 @@ Content-Transfer-Encoding: 8bit
 
 From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-mvs_phys_reset() was added in 2009's
-commit 20b09c2992fe ("[SCSI] mvsas: add support for 94xx; layout change;
-bug fixes")
-but hasn't been used.
+mptscsih_target_reset() was added in 2023 by
+commit e6629081fb12 ("scsi: message: fusion: Correct definitions for
+mptscsih_dev_reset()")
+but never used.
 
 Remove it.
 
 Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 ---
- drivers/scsi/mvsas/mv_sas.c | 10 ----------
- drivers/scsi/mvsas/mv_sas.h |  1 -
- 2 files changed, 11 deletions(-)
+ drivers/message/fusion/mptscsih.c | 60 -------------------------------
+ drivers/message/fusion/mptscsih.h |  1 -
+ 2 files changed, 61 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 1444b1f1c4c8..c4592de4fefc 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -151,16 +151,6 @@ static inline u8 mvs_assign_reg_set(struct mvs_info *mvi,
- 	return MVS_CHIP_DISP->assign_reg_set(mvi, &dev->taskfileset);
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 6c3f25cc33ff..86f113d98d3e 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1843,65 +1843,6 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
+ 		return FAILED;
  }
  
--void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard)
+-/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-/**
+- *	mptscsih_target_reset - Perform a SCSI TARGET_RESET!
+- *	@SCpnt: Pointer to scsi_cmnd structure, IO which reset is due to
+- *
+- *	(linux scsi_host_template.eh_target_reset_handler routine)
+- *
+- *	Returns SUCCESS or FAILED.
+- **/
+-int
+-mptscsih_target_reset(struct scsi_cmnd * SCpnt)
 -{
--	u32 no;
--	for_each_phy(phy_mask, phy_mask, no) {
--		if (!(phy_mask & 1))
--			continue;
--		MVS_CHIP_DISP->phy_reset(mvi, no, hard);
+-	MPT_SCSI_HOST	*hd;
+-	int		 retval;
+-	VirtDevice	 *vdevice;
+-	MPT_ADAPTER	*ioc;
+-
+-	/* If we can't locate our host adapter structure, return FAILED status.
+-	 */
+-	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
+-		printk(KERN_ERR MYNAM ": target reset: "
+-		   "Can't locate host! (sc=%p)\n", SCpnt);
+-		return FAILED;
 -	}
+-
+-	ioc = hd->ioc;
+-	printk(MYIOC_s_INFO_FMT "attempting target reset! (sc=%p)\n",
+-	       ioc->name, SCpnt);
+-	scsi_print_command(SCpnt);
+-
+-	vdevice = SCpnt->device->hostdata;
+-	if (!vdevice || !vdevice->vtarget) {
+-		retval = 0;
+-		goto out;
+-	}
+-
+-	/* Target reset to hidden raid component is not supported
+-	 */
+-	if (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
+-		retval = FAILED;
+-		goto out;
+-	}
+-
+-	retval = mptscsih_IssueTaskMgmt(hd,
+-				MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
+-				vdevice->vtarget->channel,
+-				vdevice->vtarget->id, 0, 0,
+-				mptscsih_get_tm_timeout(ioc));
+-
+- out:
+-	printk (MYIOC_s_INFO_FMT "target reset: %s (sc=%p)\n",
+-	    ioc->name, ((retval == 0) ? "SUCCESS" : "FAILED" ), SCpnt);
+-
+-	if (retval == 0)
+-		return SUCCESS;
+-	else
+-		return FAILED;
 -}
 -
- int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 			void *funcdata)
- {
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 19b01f7c4767..09ce3f2241f2 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -425,7 +425,6 @@ struct mvs_task_exec_info {
- void mvs_get_sas_addr(void *buf, u32 buflen);
- void mvs_iounmap(void __iomem *regs);
- int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex);
--void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard);
- int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 			void *funcdata);
- void mvs_set_sas_addr(struct mvs_info *mvi, int port_id, u32 off_lo,
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /**
+@@ -3306,7 +3247,6 @@ EXPORT_SYMBOL(mptscsih_slave_destroy);
+ EXPORT_SYMBOL(mptscsih_slave_configure);
+ EXPORT_SYMBOL(mptscsih_abort);
+ EXPORT_SYMBOL(mptscsih_dev_reset);
+-EXPORT_SYMBOL(mptscsih_target_reset);
+ EXPORT_SYMBOL(mptscsih_bus_reset);
+ EXPORT_SYMBOL(mptscsih_host_reset);
+ EXPORT_SYMBOL(mptscsih_bios_param);
+diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
+index e3d92c392673..a22c5eaf703c 100644
+--- a/drivers/message/fusion/mptscsih.h
++++ b/drivers/message/fusion/mptscsih.h
+@@ -120,7 +120,6 @@ extern void mptscsih_slave_destroy(struct scsi_device *device);
+ extern int mptscsih_slave_configure(struct scsi_device *device);
+ extern int mptscsih_abort(struct scsi_cmnd * SCpnt);
+ extern int mptscsih_dev_reset(struct scsi_cmnd * SCpnt);
+-extern int mptscsih_target_reset(struct scsi_cmnd * SCpnt);
+ extern int mptscsih_bus_reset(struct scsi_cmnd * SCpnt);
+ extern int mptscsih_host_reset(struct scsi_cmnd *SCpnt);
+ extern int mptscsih_bios_param(struct scsi_device * sdev, struct block_device *bdev, sector_t capacity, int geom[]);
 -- 
 2.48.1
 
