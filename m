@@ -1,428 +1,204 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4CC25A638;
-	Mon, 27 Jan 2025 05:42:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737956523; cv=none; b=tMk39d/r5+CvyfHPQ9JvwsTBI1xMHxZ1OhugEqgJ2woBpe9VoiMbE7gKFVnFsSokh+wAE9wRa+ntMdrfaGIEtovCjXWQ3bKmU9VeoFmcJnJbITeVOOy7BPEXxqODtCavUPZ7p8cIK9DNXb99BQI33ibM8AUGdPRpDuuWa+c81xU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737956523; c=relaxed/simple;
-	bh=eSAwsrINHgdLeoC/TS3CugwINhtgrgVSWXZ4X8iPZ/U=;
-	h=Message-ID:Subject:From:To:Cc:Content-Type:Date:MIME-Version; b=kTr1wJlKzd52tFYe1xdoCC7kqJI/nwp6+McC0/vJTEnwY8jPFL+NAPDarfHIHZZWC0PMb4MjRmlCp6BnYWS5CYRGHu4LJALlog0EzI32bj2xB+EGiP0C+MbvdZYdRGcRaIkPZnbYKvjNsSORX1E2rKJ3LfA4VaTRYOuy5y1pBUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+y1VRmL; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBF391FBEAF;
+	Mon, 27 Jan 2025 07:07:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.144
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1737961671; cv=fail; b=MmkCQGWPFKMw2wiP4Lt+enKZNoMVe2UShLztrO9w7o/P68XUj1VRX6giAenxLijx33o387u29ilNEfQ/mQaHaZ+x4qRonPM5yTzzLeA/CDlZh52Sf0gKwE8+O7nl8M5Y0Jmh2Ym2kUsyHl5thD+gu0O9h+8JaOXh6N7blYKQCJ8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1737961671; c=relaxed/simple;
+	bh=NLx+3BC1nu9By3itJSvc55buiKfiWunjMog/ozcZzUY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=RH1qbx0ld/bedFhUVbcSC7oyFyPAvvKDA2kchrMfClq+xwK+HjwsNj9+IgPd1MBG1Yu/TY7cImyi2LstHKQ8syKawKz7/6ULJszZ704G9qgBbUpBeZ2+PIEwGGCLdGOH0D4WWhJ4nRPG7wSrto9In2qwlo6oJAF+iZ4xEtdNOKo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=rKIvbHes; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=pt/swzdM; arc=fail smtp.client-ip=216.71.153.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+y1VRmL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D673C4CED2;
-	Mon, 27 Jan 2025 05:42:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737956523;
-	bh=eSAwsrINHgdLeoC/TS3CugwINhtgrgVSWXZ4X8iPZ/U=;
-	h=Subject:From:To:Cc:Date:From;
-	b=T+y1VRmLmy8Cd7NwScqssmPs6Dr+wZg9u24oPfO+9paf+k/r3dgf48DfpytdK7pjq
-	 2qGbJrr1y/DkjqxZZkKCRX93itVqv8A7rTd8lOfLwr2aPHSifstbixNKrPCYtg1U03
-	 NUaXfxWmMPn+h7yd87J4kgBYVbYTwyWMYqLKF9Wy1FUycCNlKMDh92iLRSvauiIt9Y
-	 J8U7peYIzQ3LhtTVmEM6oZ+TSU7bTN0DH2Ehk2h5XB77bnDnUw1MI0ECJn2f91rSfz
-	 rF69P9F+fzAArDoAGO7FcRcztd9eNvrntXwiFztY8QGrrSu2FGmww0yLUnYew1xr+3
-	 msEAZnI7D1tSA==
-Message-ID: <5ab4ebbbc02e818a0461f2129d7999ad9ad89ae5.camel@kernel.org>
-Subject: [GIT PULL] SCSI updates for the 6.12+ merge window
-From: James Bottomley <jejb@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 26 Jan 2025 10:10:05 -0500
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rKIvbHes";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="pt/swzdM"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1737961669; x=1769497669;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=NLx+3BC1nu9By3itJSvc55buiKfiWunjMog/ozcZzUY=;
+  b=rKIvbHesapsbqd+a71bZGijZagnIMzlaBfU3vr6shG0rfQECXWUfuT1x
+   +fEFTY7/CUYmioWNVyN2Shyhb4uetgcV0FGRhBK7upcyi7/71lZu120Ut
+   1oWoO9bz4G/zAu9Vyv5K6LH7izYWIcCITeyXBPpmTZrIDtuD166fa0dPo
+   wEJ7AFWy13xuFg4LLAAbF8KS61+5T5HPLFw3EYcKMJ9W/LzErqg6nDbkr
+   I9j1AxMNP/NC0O/mJ5VPKPwp7S++muCt/GJx/kZ/t0soK7TbqmDoFanyA
+   RhvhqI8vpcKKoYd/EjVsvQWEaeAco4HlJX9voxJu7lRVZWmjGXXl1l/9B
+   w==;
+X-CSE-ConnectionGUID: 0Cv4Ak4ETHa+Oz59guIDTg==
+X-CSE-MsgGUID: UcuYN6xnR4CDD8P1+AWXzw==
+X-IronPort-AV: E=Sophos;i="6.13,237,1732550400"; 
+   d="scan'208";a="37890298"
+Received: from mail-westcentralusazlp17011031.outbound.protection.outlook.com (HELO CY4PR02CU008.outbound.protection.outlook.com) ([40.93.6.31])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2025 15:07:42 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=s68WS4tgYF6FCKp3QmSwJVZAwREC8/NXM9MaVTMBlN7OwGv3zDq5rm9uNwQ0AxNNKLx/zAKPfHKuLusjC0kIgBF3HMfznl/a4rFEjzuyYOthiJac75BfRvUpYa8F0t0dm1Hvlyk4ds6qmtZ45eELJEbmZPdklZAdrCUkHpifWS5bPsHb+We7mpEWiT8wBvJvBZ0LI2BSCz8IBXGOFOPk+GRUZiDDVfOkuqsmrgHBKfKd4rY/XSROi/WIXlT1nl1b+v3nFKZGBFsOGr5zkFeJYZ9+OU3S1A4EXIt/gLJQpzGlZHIx61WFPgIMux/qXIGlQvcZtvs3TDosOOtS7H6rvQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NLx+3BC1nu9By3itJSvc55buiKfiWunjMog/ozcZzUY=;
+ b=hVX3USlqQxQEHANmnsai0nmjclKJkpyWhV2bE/5S51/MaurThIwt+thar1qQr8+XCRa44JwXUwonc4H3+SmGKO4dI+DLcXEa6Ew0HG2BBU8zvPuszQBhPKG0Gd75JPZHH6pfWLDp9PKURXD7mR/+EOu1jUXA+gNvffZtQSVZ6gNfGxeHQg9tSfcCBEKJGSPeoZFYirh4GvEOO/vZrHU9PVpeshDsdoyObxqPfZ/GHqCpcKKaGXGWR/99wICdwwSTqfmlypVZxqTbi6B6eookhVSFqdLRJa6+6twbu6GTezCC5oxLYxanSEGSdobKjDVrf6XeZPekjMlAuyXS8JJVtg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NLx+3BC1nu9By3itJSvc55buiKfiWunjMog/ozcZzUY=;
+ b=pt/swzdMkH8+bZT4MHftXL5sNwWOBtHm2+WOW/x8eAJugfjz7gVJhsyUdLjOT75Kc1zd0CIPg1evQs0dVbiTNK0x2V9qZWWh0IxcC5EdpCEl2bbkHelSfrbVUmt9AjNx0jYkLlPY8ZbYc2q9ojfaqEH2V9BJE14uzELgu4pP7bA=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ MN2PR04MB6847.namprd04.prod.outlook.com (2603:10b6:208:1ef::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8377.22; Mon, 27 Jan
+ 2025 07:07:41 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::bf16:5bed:e63:588f]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::bf16:5bed:e63:588f%4]) with mapi id 15.20.8377.021; Mon, 27 Jan 2025
+ 07:07:41 +0000
+From: Avri Altman <Avri.Altman@wdc.com>
+To: Bean Huo <huobean@gmail.com>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Manivannan
+ Sadhasivam <manisadhasivam.linux@gmail.com>, Bart Van Assche
+	<bvanassche@acm.org>, Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: RE: [PATCH v3 2/2] scsi: ufs: Fix toggling of clk_gating.state when
+ clock gating is not allowed
+Thread-Topic: [PATCH v3 2/2] scsi: ufs: Fix toggling of clk_gating.state when
+ clock gating is not allowed
+Thread-Index: AQHbb75UYt4JvqPgtEewjMQ1OoUlILMpmoEAgACX3uA=
+Date: Mon, 27 Jan 2025 07:07:40 +0000
+Message-ID:
+ <DM6PR04MB6575B1329711C4BE5D75D0B8FCEC2@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20250126064521.3857557-1-avri.altman@wdc.com>
+	 <20250126064521.3857557-3-avri.altman@wdc.com>
+ <f069e33f01f8489b4baa8d1e5b3db4eb055ff118.camel@gmail.com>
+In-Reply-To: <f069e33f01f8489b4baa8d1e5b3db4eb055ff118.camel@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|MN2PR04MB6847:EE_
+x-ms-office365-filtering-correlation-id: 98a45c7c-4c14-484e-6f03-08dd3ea14a19
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?bm5KK0dVcFF1dGVoNGFISDVqSnY1K3ozN0Zoc1dORm5NdUt5UWxXc2o5M1lV?=
+ =?utf-8?B?ZGg3elZxdkJwRTZiMUZNQis1SG1zZUpRRmhpYys1VVF6R1RlUDVoMzhMOHdo?=
+ =?utf-8?B?L3RWa2NjR1dDcWtOUGZKMW9maWcrRXVDRzBUSGhvRFVOR0N1Q2pMblZkUG01?=
+ =?utf-8?B?dVB0UTZ5SFM2YjJSRi9VcWc2OW5lNHhtaWQrL3dtVjVpUUtvNVZLUzR0cFJy?=
+ =?utf-8?B?YzJOQmdaK0tvWkphWDQ3eFkrcWU1UU9mbWhCdUsrWVFmbGVuTG54cEhNbmZh?=
+ =?utf-8?B?a2FaTTVyTmFsNnJBUS83Q3pTZ0I5SVBCVFVIR1A2VFNkeDJYalR5NE81aEdp?=
+ =?utf-8?B?eExKOXptZ051amtkem1zcnp4SFc3M2RIQkFTeUxJcEczMmFENUFZazBEYUJq?=
+ =?utf-8?B?K2NMYnkxbkc2Wk1YSEg3UnQ1Um43NEF5bTJPSjBLcUtxYUNYNW1IdXMxM2dB?=
+ =?utf-8?B?VkdMTmhxQml1QzhmNnpiRlNSOVZDQWNha3NrVnNLWDRuWDBrVlR4UitOZ1ly?=
+ =?utf-8?B?QTQ0MGI2TTJNM1hPV2FmaHRuUFhtMy9XWmtaRGFjOGxKazFCQXZpSDgzRXpY?=
+ =?utf-8?B?NVRLZmlBbHFiNUpvNVlWRnozVit1cEtyZVRHeVRZQXhYd2hqTTFZNk9lNnVo?=
+ =?utf-8?B?U1N0T3RFN0RtU3hld0xYVlg5ZE1yZVpXVUhONlJNekgrNkdEZkFkYVdmYTY4?=
+ =?utf-8?B?bG5FM3I4VDlZamdLMmEySGp6QmpMVEU3MWcxb2NhcGRsN2xuVjg4VjZIWG5U?=
+ =?utf-8?B?VzFwZ3laZGNNK1AyMzQ2Z282RHIvbHlDUU1ycllzMHJQR01mV1hoM0kyR2h0?=
+ =?utf-8?B?S1dwNE4yT3B3L0c0bVQxYTZOZVMvc1RzbzAzM1NuVlZmY1RWRW5IL0U5Nkds?=
+ =?utf-8?B?TS90Kzh4RzNnd0Jxdm1EWlZiUlVjQW9DaEdrT3BEMk9HRStLK0hNUndqQVZM?=
+ =?utf-8?B?MnBJa3VnR012a1M0Y1k4emFSWjMwOW1LNDhNUFZHNWc1VUppYTVFRmxKbWdz?=
+ =?utf-8?B?bmtXTSt0MVg1ZUNrczh3T2g2cklad0w3RDlpZ0ZVOUdjSUZtQnBOcmZVb2RJ?=
+ =?utf-8?B?VnRhYStFTUEvcFNDZjJIMHFUNnVacVdrRnIxYkVWVGdOdExvRWFOclYzSWVO?=
+ =?utf-8?B?U2RuOWowTnQzaXdHckszdnJFRmNNdWJEdm5KbGdIOWdVeHRGQUkwOXM2cmFv?=
+ =?utf-8?B?clJjTkVuS3ZRTElNZjlSbmpEbWpIYUc2Z3JhbU5uSnlBYTJ3S09obVhrN05j?=
+ =?utf-8?B?RUpYSWl5NHBOczNlaVpyZXRWajBxWGpQbStmNzk2VTNSQVk0UWtzWGc1Y0tM?=
+ =?utf-8?B?M0ppV1haM3ZqdzJGdjlaM1ZTZmtRVEhGVnV4L0FoeEVWc25FdmdvZCsvL0Q0?=
+ =?utf-8?B?dEhQYUZFRENPU05UTU1jVEpVNko1K0JVN3NsN0FlN2c4WVU2SGxocTRJWHBR?=
+ =?utf-8?B?TFhZWkU2T2tHdDFRWU9QSzRjRys5WjQ2V085VTFlODFlMmtQMmpTcFgwWm15?=
+ =?utf-8?B?NHl6Y0VVVDRmdzhpRncwVThWc2ZEVnlzb0JCM1pIUDM4bDkzSHBEdE5iZ0JW?=
+ =?utf-8?B?NTdvbnJCWWk4RW5DT1hzT2grVW1HcTdseUJZRnAzeVY2VUg0c0t5bHJiNWNw?=
+ =?utf-8?B?cXJFZlAwTllXSU1Pb2t1WTRFbFFlMXpJNjN3Y1BJWGh4Z2poTkVqcDBQVmFK?=
+ =?utf-8?B?ODVTZzduRnFHNllnQVg2VGVhVk9FZktlNnk4SEs0ODhaUjllWU43eXdCMHJ4?=
+ =?utf-8?B?QllQeVhsVTlhUTNCTEJkdHYvN0pVQytMeEltWnN6TlpsRUMwNDJHbTg1UUgw?=
+ =?utf-8?B?RTNuN3FwMVBoalgrR0FIcHNsYVU1MFd6YkNaS2orTlNOWHNCeDkrbmxaUFpU?=
+ =?utf-8?B?N3dJd2dMMHlnMUFyaGl1K1YzbzNBMnF5SlFzb0trYS80NUdLY01rZ2R4a1dw?=
+ =?utf-8?Q?+oXNiZ7QI6V5NYfw7ves16O/avod5pIL?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?NTNJL0p5UVljdVYrRXQvdHVBTkRkMW51T05hUEZXY1lnQjgwWjFGRCsxN3dQ?=
+ =?utf-8?B?U3llZFIrektLZ1FydUdjYXBJNE9xZmt4MFhZRzJRVGJLR0ozZGpnQURQbHdS?=
+ =?utf-8?B?WUlWNG5mNmdsZTlzQldCQjd0bFN5RG1ZbHlHdG4rR1Q0QkhUMXlIOUZQeVUw?=
+ =?utf-8?B?R1hZMDVqSW9HRXhkcEgrQm5YVk5kTmpXcGNicXdSMWNFRDdkRUkyK3JFNGw3?=
+ =?utf-8?B?K1RVOGxTMFhFTmRtSms4TmRYTU15WDdBcWwyNU1DcmpFUXNmb0RLWENKdXE4?=
+ =?utf-8?B?NnFQMUpFRmttSUdUTEJsNjFScHdNVHlmaWRkS0R1bzJLZVlZUTIrWmduMjlv?=
+ =?utf-8?B?cEdRUXdwODlIVGRURG1UNFZtZ0lnQ0NEQTgwSFhvbWFObVo3RkpKdXBzNkdX?=
+ =?utf-8?B?L1JPdjkvd0RkYWx2OGR3bXJiY3lNbGdTeXd1ellvSnVUYkZrN0lmR1FPcC94?=
+ =?utf-8?B?N2tGbUFySVZacUIrU3pKM1hqR0JJbXYzWERxTC9aSmY4Q2NqSVRlWFJtd1Fj?=
+ =?utf-8?B?WDhxNmRtYWlyVSs0Mnpoa1ZwMHlMVFE3NmlhaFlIUmNsRExkZG1pcGJpRHRz?=
+ =?utf-8?B?aURFSitVSzhLd2YyMXB6NzJHb3RiU3B4eXNhY1FCYTY2SVF2SlptTzNwdG5E?=
+ =?utf-8?B?TGRoZGdadWZ3VHY1d0lneHFXVURFUC9yVmY0YXNoekFUOTMzZG9DcFB4NXln?=
+ =?utf-8?B?MnB6cXpVcFdBRFVpQmxCanJvclRRYTJ2Njd2c29EcDZ2cmFVNzZJMU5IQVdY?=
+ =?utf-8?B?NHdZbksybGVoRG8xT25FTXhLcFcrR25yRVRPMUVHbndqbkc4RUx2dy9RMk0w?=
+ =?utf-8?B?RG9yZlFBcGpJekhVZ2xUUm5KU3NIeUxCcFRZSGhQN3MyTVJ6LzZqRk5mRkpG?=
+ =?utf-8?B?bVBicXZuRjFpdVNTeVA3dUl3NjhQc0owM21jZllrUWNnRndvM2Mzbm16RmxZ?=
+ =?utf-8?B?NW9OQ0h6bm41SmdNVU9uL2tYZE1PS0FDOXBMbEtHUTBScCtBanAwZk81aFVs?=
+ =?utf-8?B?WmdvQXNKbkx2Ty8zYU5CL1czUWZWMlFLRWlHcS9yM3pLZWh5YWp2U1FJM1Z0?=
+ =?utf-8?B?T1RMOHVibURENDRWZEJFcGRONitBYjFYMEZUdGpDN21GdXY4UTZkYnZNbVly?=
+ =?utf-8?B?WlYvcFFGUS9wdGM2Mms4bEFsZHFWdmZnaXhqMmYxcUYwaXY5eDNVTVRmRmVw?=
+ =?utf-8?B?dFEvMGhWKzJZbW5hM2l3eFpCay92NzRQNnVRbW9jRmgzNVdrSHNZc0Z5VHpR?=
+ =?utf-8?B?L1BBV2YzbzZDOE5lanoxMGM0Tlo3SWFOWWV6eG00ZklBeWJhclo5QUlwRHRJ?=
+ =?utf-8?B?cTNXb0RjOFk2V3VoUVBmLzdSRDcxMWJJVDU2NURib1ZmZ0RmWkMvL2puS0s2?=
+ =?utf-8?B?WTB0aS9BR2hJTlkwTHQ4bVc1N1MyNWJ3c0tkaEVGbUVHdUhXZmM1K2Vzbkox?=
+ =?utf-8?B?bXVUajNsc1dhMEVGdkkwYm1qcHF2d2VWc3BlMkN6bnZXK0tGVXRMcnNwcytH?=
+ =?utf-8?B?SWZsMFR2WFREQTNtVEp1ODZWZ3B1b1Bwdi9PRWlFUmttTXZuN2pteis1MnZE?=
+ =?utf-8?B?QjVROUJyYytGOXlHRE1TbHFRNGQwdk5JUFk5ZVlPRUhIc2VOWFJJb3d2eDBW?=
+ =?utf-8?B?d1Vjb3lDZGExeWUyS1ZIQXBIUkRWUExqZUdKL1VjWXFiZ2F4WWVpa3BEeVZS?=
+ =?utf-8?B?UnhGZUUzcDVuNFFYNkhZNUNNN1pHdXZ2ajRMWFRFOEQzRnZxdFkrbU14RlV6?=
+ =?utf-8?B?dXNDc1krVzRDNmtKd2MxajZqNmcyTGZ6Ym0zR053QnpFb3ViWVRiamgxYUlR?=
+ =?utf-8?B?UE9wOUFGZUh3Mm9ra1MwY3QwSTdCS1FVcXN4NGlwdURtbFBSdmZpUUQzSkYv?=
+ =?utf-8?B?cW45dFMxNUo1Z0h1TzlSSWNoV3p5RmNEdHdlMWhadFR3WHY5M0Fwdm1Fc2o4?=
+ =?utf-8?B?eXd1QlJ0dEVvTXM4SUJvN0RWWmRDWXdJNUpkWFpZSXBpRlVGNlNJOUsrbVBs?=
+ =?utf-8?B?UVlxcHM4djVmR29sdVdxY2NtRi9SUFZhUndndWFNUGxZTVBjWkhFQmxIMEhU?=
+ =?utf-8?B?L24wV0ZhU003YjU5Y0FwMmVzbnhiTlNVeFUxQnRwZzdrbEFmVkFtajlQSWla?=
+ =?utf-8?Q?TUNy4P6ChFhSkcYaLMsu92FJH?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Evolution 3.42.4 
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	7/ZpjAf576Dvqtpx6f6Saw6eIQLUcaJJGangLX7U+veFvfYgLcQzaZ6wNgemRj3XdqSMvawgwD7Jg3kanagGotr/6SOtco9I85foEGh4WO+Ha3LNK9eSJ4FLPBkPnvmFAtzTu5H2XRJLZDh46cU3uLPhaVzjrO2BGnYgssNnHp124w6M7leudHmwUxs01HYJev5d2wr/oDbopiz/xR8kTwuH8DSvmncpefsXN0bPPR6p6socEk/DFDTTr5/X2TP6Jq8KSuCmTzLzGXjW2g7/rG7+P9jcItCyx9EBd2p4GmTz0poZjmIfzGfu8XTWJxOEygPxL/yuCTrHbEJhFHsfP8i8471rWTiH8WxA1XfGAo6Urd8bwgmwByviytJGk2ECmYSQOMyA3BeMmSdKNOWXRh/DN+0UukJ0N49h6kho4Twya+MUuEg0yAzBCV6A6NJ/nMcP5p2NDrumzK53g3EXN6qfYg8Tz+Rl8//Je/mcOkUtFvINm+SZZ7uwXgNxeG1gSBRk8CNS2+T0J8tWKuHH/4qXZ5LE/ZlN7DGwPfg8PHaehd/VBYYcTmXhKCneF1aAJXKBFJatauNmgU/QPa67RAB1nAsGQQpxca7LuthKjEAd4xqcqbLzRjRagEaqeW2y
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 98a45c7c-4c14-484e-6f03-08dd3ea14a19
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jan 2025 07:07:40.9766
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3swLpFhrnfFO9a9A5mQIn6MfFNlSUcGoMRCMzUj8H6yoJ+c+bouM3uWTbhECcU/4cbPvKwor8PBP6xZXmxpyBg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6847
 
-[From kernel.org for once because hansenpartnership.com is suffering a
-prolonged outage due to data centre issues in Los Angeles]
-
-[There are three obvious ata merge conflicts where the update to remove
-the slave_ prefix  changed device_configure to sdev_configure and is
-next to a different name change from tag_alloc_policy to
-tag_alloc_policy_rr]
-
-Updates to the usual drivers (ufs, lpfc, fnic, qla2xx, mpi3mr)  The
-major core change is the renaming of the slave_ methods plus a bit of
-constification. The rest are minor updates and fixes.
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-
-The short changelog is:
-
-Ariel Otilibili (1):
-      scsi: myrb: Remove dead code
-
-Artur Paszkiewicz (1):
-      scsi: MAINTAINERS: Remove myself as isci driver maintainer
-
-Arun Easi (2):
-      scsi: fnic: Propagate SCSI error code from fnic_scsi_drv_init()
-      scsi: fnic: Remove always-true IS_FNIC_FCP_INITIATOR macro
-
-Avri Altman (6):
-      scsi: Revert "scsi: ufs: core: Probe for EXT_IID support"
-      scsi: ufs: core: Do not hold any lock in ufshcd_hba_stop()
-      scsi: ufs: core: Introduce a new clock_scaling lock
-      scsi: ufs: core: Introduce a new clock_gating lock
-      scsi: ufs: core: Prepare to introduce a new clock_gating lock
-      scsi: ufs: core: Introduce ufshcd_has_pending_tasks()
-
-Bart Van Assche (6):
-      scsi: scsi_debug: Skip host/bus reset settle delay
-      scsi: core: Update API documentation
-      scsi: core: Remove the .slave_configure() method
-      scsi: Convert SCSI drivers to .sdev_configure()
-      scsi: Rename .device_configure() into .sdev_configure()
-      scsi: Rename .slave_alloc() and .slave_destroy()
-
-Christophe JAILLET (1):
-      scsi: Constify struct pci_device_id
-
-Dan Carpenter (1):
-      scsi: fnic: Delete incorrect debugfs error handling
-
-Dheeraj Reddy Jonnalagadda (1):
-      scsi: fnic: Fix use of uninitialized value in debug message
-
-Dr. David Alan Gilbert (3):
-      scsi: isci: Remove unused isci_remote_device_reset_complete()
-      scsi: iscsi: Remove unused iscsi_create_session()
-      scsi: target: Remove unused functions
-
-Easwar Hariharan (1):
-      scsi: storvsc: Ratelimit warning logs to prevent VM denial of service
-
-Eric Biggers (4):
-      scsi: ufs: crypto: Remove ufs_hba_variant_ops::program_key
-      scsi: ufs: qcom: Convert to use UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE
-      scsi: ufs: crypto: Add ufs_hba_from_crypto_profile()
-      scsi: ufs: qcom: Fix crypto key eviction
-
-Fedor Loshakov (1):
-      scsi: zfcp: Correct kdoc parameter description for sending ELS and CT
-
-Frederic Weisbecker (3):
-      scsi: qedi: Use kthread_create_on_cpu()
-      scsi: bnx2i: Use kthread_create_on_cpu()
-      scsi: bnx2fc: Use kthread_create_on_cpu()
-
-Guixin Liu (3):
-      scsi: mpi3mr: Fix possible crash when setting up bsg fails
-      scsi: ufs: bsg: Set bsg_queue to NULL after removal
-      scsi: ufs: bsg: Delete bsg_dev when setting up bsg fails
-
-Igor Pylypiv (2):
-      scsi: pm80xx: Increase reserved tags from 8 to 128
-      scsi: pm80xx: Do not use libsas port ID
-
-John Garry (1):
-      scsi: scsi_debug: Constify sdebug_driver_template
-
-Jolly Shah (1):
-      scsi: pm80xx: Use dynamic tag numbers for PHY start and stop
-
-Justin Tee (10):
-      scsi: lpfc: Copyright updates for 14.4.0.7 patches
-      scsi: lpfc: Update lpfc version to 14.4.0.7
-      scsi: lpfc: Add support for large fw object application layer reads
-      scsi: lpfc: Update definition of firmware configuration mbox cmds
-      scsi: lpfc: Change lpfc_nodelist save_flags member into a bitmask
-      scsi: lpfc: Add handling for LS_RJT reason explanation authentication required
-      scsi: lpfc: Modify handling of ADISC based on ndlp state and RPI registration
-      scsi: lpfc: Delete NLP_TARGET_REMOVE flag due to obsolete usage
-      scsi: lpfc: Restrict the REG_FCFI MAM field to FCoE adapters only
-      scsi: lpfc: Redefine incorrect type in lpfc_create_device_data()
-
-Kai Mäkisara (1):
-      scsi: st: Don't set pos_unknown just after device recognition
-
-Karan Tilak Kumar (21):
-      scsi: fnic: Test for memory allocation failure and return error code
-      scsi: fnic: Return appropriate error code from failure of scsi drv init
-      scsi: fnic: Return appropriate error code for mem alloc failure
-      scsi: fnic: Remove unnecessary else to fix warning in FDLS FIP
-      scsi: fnic: Remove extern definition from .c files
-      scsi: fnic: Remove unnecessary else and unnecessary break in FDLS
-      scsi: fnic: Increment driver version
-      scsi: fnic: Add support to handle port channel RSCN
-      scsi: fnic: Code cleanup
-      scsi: fnic: Add stats and related functionality
-      scsi: fnic: Modify fnic interfaces to use FDLS
-      scsi: fnic: Modify IO path to use FDLS
-      scsi: fnic: Add functionality in fnic to support FDLS
-      scsi: fnic: Add and integrate support for FIP
-      scsi: fnic: Add and integrate support for FDMI
-      scsi: fnic: Add Cisco hardware model names
-      scsi: fnic: Add support for unsolicited requests and responses
-      scsi: fnic: Add support for target based solicited requests and responses
-      scsi: fnic: Add support for fabric based solicited requests and responses
-      scsi: fnic: Add headers and definitions for FDLS
-      scsi: fnic: Replace shost_printk() with dev_info()/dev_err()
-
-Michael Kelley (1):
-      scsi: storvsc: Don't assume cpu_possible_mask is dense
-
-Paul Menzel (2):
-      scsi: mpt3sas: Set ioc->manu_pg11.EEDPTagMode directly to 1
-      scsi: mpt3sas: Add details to EEDPTagMode error message
-
-Prateek Singh Rathore (1):
-      scsi: csiostor: Fix typo doesnt->doesn't
-
-Quinn Tran (1):
-      scsi: qla2xxx: Move FCE Trace buffer allocation to user control
-
-Randy Dunlap (10):
-      scsi: documentation: Corrections for struct updates
-      scsi: driver-api: documentation: Change what is added to docbook
-      scsi: transport: sas: spi: Fix kernel-doc for exported functions
-      scsi: scsi_scan: Add kernel-doc for exported function
-      scsi: scsi_lib: Add kernel-doc for exported functions
-      scsi: scsi_ioctl: Add kernel-doc for exported functions
-      scsi: scsi_error: Add kernel-doc for exported functions
-      scsi: documentation: scsi_eh: updates for EH changes
-      scsi: Eliminate scsi_register() and scsi_unregister() usage & docs
-      scsi: docs: Remove init_this_scsi_driver()
-
-Siddharth Menon (1):
-      scsi: esp: Fix variable typo
-
-Steffen Maier (2):
-      scsi: MAINTAINERS: Update zfcp entry
-      scsi: zfcp: Clarify zfcp_port refcount ownership during "link" test
-
-Thomas Weißschuh (11):
-      scsi: qla4xxx: Constify 'struct bin_attribute'
-      scsi: qla2xxx: Constify 'struct bin_attribute'
-      scsi: qedi: Constify 'struct bin_attribute'
-      scsi: qedf: Constify 'struct bin_attribute'
-      scsi: ipr: Constify 'struct bin_attribute'
-      scsi: lpfc: Constify 'struct bin_attribute'
-      scsi: ibmvfc: Constify 'struct bin_attribute'
-      scsi: esas2r: Constify 'struct bin_attribute'
-      scsi: arcmsr: Constify 'struct bin_attribute'
-      scsi: 3w-sas: Constify 'struct bin_attribute'
-      scsi: core: Constify 'struct bin_attribute'
-
-Thorsten Blum (2):
-      scsi: bsg: Replace zero-length array with flexible array member
-      scsi: fnic: Use vcalloc() instead of vmalloc() and memset(0)
-
-Vishakha Channapattan (1):
-      scsi: pm80xx: Improve debugging for aborted commands
-
-wangdicheng (1):
-      scsi: aic7xxx: Fix build 'aicasm' warning
-
-And the diffstat:
-
- Documentation/driver-api/scsi.rst               |    5 +-
- Documentation/scsi/scsi_eh.rst                  |   46 +-
- Documentation/scsi/scsi_mid_low_api.rst         |  206 +-
- MAINTAINERS                                     |    6 +-
- drivers/ata/ahci.h                              |    2 +-
- drivers/ata/libata-sata.c                       |    8 +-
- drivers/ata/libata-scsi.c                       |   19 +-
- drivers/ata/pata_macio.c                        |    8 +-
- drivers/ata/sata_mv.c                           |    2 +-
- drivers/ata/sata_nv.c                           |   24 +-
- drivers/ata/sata_sil24.c                        |    2 +-
- drivers/firewire/sbp2.c                         |   10 +-
- drivers/infiniband/ulp/srp/ib_srp.c             |    5 +-
- drivers/message/fusion/mptfc.c                  |   14 +-
- drivers/message/fusion/mptsas.c                 |   14 +-
- drivers/message/fusion/mptscsih.c               |   10 +-
- drivers/message/fusion/mptscsih.h               |    5 +-
- drivers/message/fusion/mptspi.c                 |   19 +-
- drivers/s390/scsi/zfcp_fc.c                     |    7 +-
- drivers/s390/scsi/zfcp_fsf.c                    |    4 +-
- drivers/s390/scsi/zfcp_scsi.c                   |   15 +-
- drivers/s390/scsi/zfcp_sysfs.c                  |    2 +-
- drivers/s390/scsi/zfcp_unit.c                   |    2 +-
- drivers/scsi/3w-9xxx.c                          |    9 +-
- drivers/scsi/3w-sas.c                           |   21 +-
- drivers/scsi/3w-xxxx.c                          |   10 +-
- drivers/scsi/53c700.c                           |   19 +-
- drivers/scsi/BusLogic.c                         |    9 +-
- drivers/scsi/BusLogic.h                         |    3 +-
- drivers/scsi/a100u2w.c                          |    2 +-
- drivers/scsi/aacraid/linit.c                    |    8 +-
- drivers/scsi/advansys.c                         |   25 +-
- drivers/scsi/aic7xxx/aic79xx_osm.c              |    8 +-
- drivers/scsi/aic7xxx/aic7xxx_osm.c              |    8 +-
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y       |    1 +
- drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y |    1 +
- drivers/scsi/aic7xxx/aicasm/aicasm_scan.l       |    3 +
- drivers/scsi/am53c974.c                         |    2 +-
- drivers/scsi/arcmsr/arcmsr_attr.c               |   12 +-
- drivers/scsi/arcmsr/arcmsr_hba.c                |   10 +-
- drivers/scsi/atp870u.c                          |    2 +-
- drivers/scsi/bfa/bfad_im.c                      |   26 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c               |   14 +-
- drivers/scsi/bnx2i/bnx2i_init.c                 |    7 +-
- drivers/scsi/csiostor/csio_scsi.c               |   20 +-
- drivers/scsi/cxlflash/main.c                    |    2 +-
- drivers/scsi/dc395x.c                           |   14 +-
- drivers/scsi/dmx3191d.c                         |    2 +-
- drivers/scsi/elx/efct/efct_driver.c             |    2 +-
- drivers/scsi/esas2r/esas2r.h                    |   12 +-
- drivers/scsi/esas2r/esas2r_main.c               |   32 +-
- drivers/scsi/esp_scsi.c                         |   14 +-
- drivers/scsi/esp_scsi.h                         |    2 +-
- drivers/scsi/fcoe/fcoe.c                        |    2 +-
- drivers/scsi/fdomain_pci.c                      |    2 +-
- drivers/scsi/fnic/Makefile                      |    5 +-
- drivers/scsi/fnic/fdls_disc.c                   | 4997 +++++++++++++++++++++++
- drivers/scsi/fnic/fdls_fc.h                     |  253 ++
- drivers/scsi/fnic/fip.c                         | 1005 +++++
- drivers/scsi/fnic/fip.h                         |  159 +
- drivers/scsi/fnic/fnic.h                        |  288 +-
- drivers/scsi/fnic/fnic_attrs.c                  |   12 +-
- drivers/scsi/fnic/fnic_debugfs.c                |   11 +-
- drivers/scsi/fnic/fnic_fcs.c                    | 1742 ++++----
- drivers/scsi/fnic/fnic_fdls.h                   |  434 ++
- drivers/scsi/fnic/fnic_fip.h                    |   48 -
- drivers/scsi/fnic/fnic_io.h                     |   14 +-
- drivers/scsi/fnic/fnic_isr.c                    |   28 +-
- drivers/scsi/fnic/fnic_main.c                   |  758 ++--
- drivers/scsi/fnic/fnic_pci_subsys_devid.c       |  131 +
- drivers/scsi/fnic/fnic_res.c                    |   77 +-
- drivers/scsi/fnic/fnic_scsi.c                   | 1161 ++++--
- drivers/scsi/fnic/fnic_stats.h                  |   49 +-
- drivers/scsi/fnic/fnic_trace.c                  |   97 +-
- drivers/scsi/hisi_sas/hisi_sas.h                |    5 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c           |   13 +-
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c          |    4 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c          |    4 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c          |   10 +-
- drivers/scsi/hpsa.c                             |   20 +-
- drivers/scsi/hptiop.c                           |    8 +-
- drivers/scsi/ibmvscsi/ibmvfc.c                  |   20 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c                |    8 +-
- drivers/scsi/initio.c                           |    2 +-
- drivers/scsi/ipr.c                              |   48 +-
- drivers/scsi/ips.c                              |    6 +-
- drivers/scsi/ips.h                              |    3 +-
- drivers/scsi/isci/remote_device.c               |   29 -
- drivers/scsi/isci/remote_device.h               |   17 -
- drivers/scsi/iscsi_tcp.c                        |    6 +-
- drivers/scsi/libfc/fc_fcp.c                     |    6 +-
- drivers/scsi/libsas/sas_scsi_host.c             |   11 +-
- drivers/scsi/lpfc/lpfc_attr.c                   |   20 +-
- drivers/scsi/lpfc/lpfc_bsg.c                    |  210 +-
- drivers/scsi/lpfc/lpfc_bsg.h                    |   19 +-
- drivers/scsi/lpfc/lpfc_ct.c                     |    6 +-
- drivers/scsi/lpfc/lpfc_disc.h                   |   11 +-
- drivers/scsi/lpfc/lpfc_els.c                    |   55 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c                |   13 +-
- drivers/scsi/lpfc/lpfc_hw.h                     |    3 +-
- drivers/scsi/lpfc/lpfc_hw4.h                    |   85 +-
- drivers/scsi/lpfc/lpfc_init.c                   |   11 +-
- drivers/scsi/lpfc/lpfc_mbox.c                   |    6 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c              |   53 +-
- drivers/scsi/lpfc/lpfc_scsi.c                   |   64 +-
- drivers/scsi/lpfc/lpfc_sli4.h                   |    2 -
- drivers/scsi/lpfc/lpfc_version.h                |    2 +-
- drivers/scsi/lpfc/lpfc_vport.c                  |   22 +-
- drivers/scsi/megaraid.c                         |    2 +-
- drivers/scsi/megaraid/megaraid_mbox.c           |    4 +-
- drivers/scsi/megaraid/megaraid_sas_base.c       |   16 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c                |    8 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c                 |   20 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c             |    5 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c            |   24 +-
- drivers/scsi/mvsas/mv_init.c                    |    2 +-
- drivers/scsi/mvumi.c                            |    5 +-
- drivers/scsi/myrb.c                             |   23 +-
- drivers/scsi/myrs.c                             |   13 +-
- drivers/scsi/ncr53c8xx.c                        |    9 +-
- drivers/scsi/nsp32.c                            |    2 +-
- drivers/scsi/pm8001/pm8001_defs.h               |    2 +-
- drivers/scsi/pm8001/pm8001_hwi.c                |    5 +-
- drivers/scsi/pm8001/pm8001_init.c               |    2 +-
- drivers/scsi/pm8001/pm8001_sas.c                |   78 +-
- drivers/scsi/pm8001/pm8001_sas.h                |    2 +
- drivers/scsi/pm8001/pm80xx_hwi.c                |   59 +-
- drivers/scsi/pmcraid.c                          |   24 +-
- drivers/scsi/ps3rom.c                           |    5 +-
- drivers/scsi/qedf/qedf_attr.c                   |   10 +-
- drivers/scsi/qedf/qedf_dbg.h                    |    2 +-
- drivers/scsi/qedf/qedf_main.c                   |    5 +-
- drivers/scsi/qedi/qedi_dbg.h                    |    2 +-
- drivers/scsi/qedi/qedi_main.c                   |    8 +-
- drivers/scsi/qla1280.c                          |    8 +-
- drivers/scsi/qla2xxx/qla_attr.c                 |   80 +-
- drivers/scsi/qla2xxx/qla_def.h                  |    2 +
- drivers/scsi/qla2xxx/qla_dfs.c                  |  124 +-
- drivers/scsi/qla2xxx/qla_gbl.h                  |    3 +
- drivers/scsi/qla2xxx/qla_init.c                 |   28 +-
- drivers/scsi/qla2xxx/qla_os.c                   |   14 +-
- drivers/scsi/qla4xxx/ql4_attr.c                 |   12 +-
- drivers/scsi/qla4xxx/ql4_os.c                   |    8 +-
- drivers/scsi/qlogicpti.c                        |    5 +-
- drivers/scsi/scsi_debug.c                       |   32 +-
- drivers/scsi/scsi_error.c                       |   26 +-
- drivers/scsi/scsi_ioctl.c                       |   35 +-
- drivers/scsi/scsi_lib.c                         |   24 +-
- drivers/scsi/scsi_scan.c                        |   42 +-
- drivers/scsi/scsi_sysfs.c                       |   20 +-
- drivers/scsi/scsi_transport_iscsi.c             |   31 +-
- drivers/scsi/scsi_transport_sas.c               |   10 +-
- drivers/scsi/scsi_transport_spi.c               |    3 +-
- drivers/scsi/smartpqi/smartpqi_init.c           |   13 +-
- drivers/scsi/snic/snic_main.c                   |   14 +-
- drivers/scsi/st.c                               |    6 +
- drivers/scsi/st.h                               |    1 +
- drivers/scsi/stex.c                             |    6 +-
- drivers/scsi/storvsc_drv.c                      |   28 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c             |   17 +-
- drivers/scsi/virtio_scsi.c                      |    2 +-
- drivers/scsi/xen-scsifront.c                    |   11 +-
- drivers/target/iscsi/iscsi_target.c             |   15 -
- drivers/target/iscsi/iscsi_target.h             |    1 -
- drivers/target/iscsi/iscsi_target_erl2.c        |   48 -
- drivers/target/iscsi/iscsi_target_erl2.h        |    2 -
- drivers/target/iscsi/iscsi_target_parameters.c  |   48 -
- drivers/target/iscsi/iscsi_target_parameters.h  |    3 -
- drivers/target/iscsi/iscsi_target_tpg.c         |    5 -
- drivers/target/iscsi/iscsi_target_tpg.h         |    1 -
- drivers/target/iscsi/iscsi_target_util.c        |   58 -
- drivers/target/iscsi/iscsi_target_util.h        |    2 -
- drivers/ufs/core/ufs_bsg.c                      |    2 +
- drivers/ufs/core/ufshcd-crypto.c                |   26 +-
- drivers/ufs/core/ufshcd.c                       |  316 +-
- drivers/ufs/host/ufs-qcom.c                     |   93 +-
- drivers/usb/image/microtek.c                    |    4 +-
- drivers/usb/storage/scsiglue.c                  |   10 +-
- drivers/usb/storage/uas.c                       |   10 +-
- include/linux/libata.h                          |   19 +-
- include/scsi/libfc.h                            |    2 +-
- include/scsi/libsas.h                           |    9 +-
- include/scsi/scsi_bsg_iscsi.h                   |    2 +-
- include/scsi/scsi_device.h                      |    4 +-
- include/scsi/scsi_host.h                        |   26 +-
- include/scsi/scsi_transport_iscsi.h             |    4 -
- include/ufs/ufs.h                               |    5 -
- include/ufs/ufshcd.h                            |   38 +-
- include/ufs/ufshci.h                            |    5 -
- 189 files changed, 10976 insertions(+), 3534 deletions(-)
- create mode 100644 drivers/scsi/fnic/fdls_disc.c
- create mode 100644 drivers/scsi/fnic/fdls_fc.h
- create mode 100644 drivers/scsi/fnic/fip.c
- create mode 100644 drivers/scsi/fnic/fip.h
- create mode 100644 drivers/scsi/fnic/fnic_fdls.h
- delete mode 100644 drivers/scsi/fnic/fnic_fip.h
- create mode 100644 drivers/scsi/fnic/fnic_pci_subsys_devid.c
-
+PiBPbiBTdW4sIDIwMjUtMDEtMjYgYXQgMDg6NDUgKzAyMDAsIEF2cmkgQWx0bWFuIHdyb3RlOg0K
+PiA+ICAgICAgICAgfSBlbHNlIGlmICghcmV0ICYmIG9uICYmIGhiYS0+Y2xrX2dhdGluZy5pc19p
+bml0aWFsaXplZCkgew0KPiA+ICAgICAgICAgICAgICAgICBzY29wZWRfZ3VhcmQoc3BpbmxvY2tf
+aXJxc2F2ZSwgJmhiYS0+Y2xrX2dhdGluZy5sb2NrKQ0KPiA+ICAgICAgICAgICAgICAgICAgICAg
+ICAgIGhiYS0+Y2xrX2dhdGluZy5zdGF0ZSA9IENMS1NfT047DQo+ID4gICAgICAgICAgICAgICAg
+IHRyYWNlX3Vmc2hjZF9jbGtfZ2F0aW5nKGRldl9uYW1lKGhiYS0+ZGV2KQ0KPiANCj4gQ29uc29s
+aWRhdGluZyBhbGwgY2xvY2stcmVsYXRlZCBpbml0aWFsaXphdGlvbiBpbnRvIGEgc2luZ2xlIGZ1
+bmN0aW9uLCBzdWNoIGFzDQo+IHVmc2hjZF9pbml0X2Nsb2NrcygpLCBzaG91bGQgYmUgY29uc2lk
+ZXJlZC4NCkhpIEJlYW4sDQpJIGRvbid0IHRoaW5rIGl0IHdpbGwgcmVzb2x2ZSB0aGUgaXNzdWUg
+dGhhdCBpcyBhZGRyZXNzZWQgaW4gdGhpcyBwYXRjaC4NCg0KSG93ZXZlciwgY29uc29saWRhdGlu
+ZyBhbGwgY2xvY2stcmVsYXRlZCBpbml0aWFsaXphdGlvbiBpbnRvIGEgc2luZ2xlIGZ1bmN0aW9u
+LCBpcyBpbmRlZWQgYSBnb29kIGlkZWEuDQpJIG1pZ2h0IHRyeSB0byBkbyB0aGF0IC0gYnV0IGlu
+IGFub3RoZXIgcGF0Y2guDQoNClRoYW5rcywNCkF2cmkNCg==
