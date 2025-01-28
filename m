@@ -1,366 +1,125 @@
-Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com [209.85.219.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B3219F11B
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2025 14:24:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A3431D6DBF
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2025 15:43:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738074284; cv=none; b=H4E+GeDTdA/8cP84iFkU+ZYUZQlMvSEX695pREJOrGr2CTS5Le1wZTuurDf/8rU8NWGvXMJgNwYPoanIdkfmB54uCpzx8S1ImeelUagt48JTvlGaxqbOCppQVSVeMZZi5L0ulPxCvy4+Gxzc97hiKA/Q1ARmRIjw+n+4GAYdtBg=
+	t=1738079005; cv=none; b=tfdJgQ8HLk7yc5JD+IuBzPrwYAnx7M4l+NMQhDuRaJouGzTfkNy9Jqb/5v1ywsZ4ND5nFOJBmt74DCPwmwBqBINo/jVh9ext1cOHWvppFiDkO5VJh1mZ+msdgPHD3dgj0Ik+ObfRJBt8AgOCN7/LrrEWAvxPebAf44QU6IwG+lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738074284; c=relaxed/simple;
-	bh=7/oj29mv6lLECmUmz7j4/7hDe1DuR0RGLd/oZUaK3QE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=miLHUonFCZDY/zAadxvsQHaArrUQ5a3wH79UnIYw7O1q8WtXYpMgcJNanMUtYodLGl9E959ZxYhTye+EF1NtLZywVyCaGoVkNJjj1y0XSxw5cJNKmCDVN0DXmu9rbyV2LCNLsfdGzIkId7BsF0GfmIfIG8JhpNQHB4PTVVMgimg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=cPZogSYJ; arc=none smtp.client-ip=62.142.5.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1738079005; c=relaxed/simple;
+	bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=utgv2sCbaop+WNqUiGJuTIq+P96X7MtwKOG0fnO1hMyOdHq94jdKryKxH3Mw7ei55wrpHjyaKh43v5oq7OzM0VkRFOppkEfR/mjJsUZ3R+HjLwiDzoIPFTDDEuLH3fUTmd3tuwPVXogWI0yOTHW2TTrQzks4eg5v4SEek/i5rd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=ZzdR8vdI; arc=none smtp.client-ip=209.85.219.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="cPZogSYJ"
+	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="ZzdR8vdI"
+Received: by mail-yb1-f174.google.com with SMTP id 3f1490d57ef6-e549b0f8d57so9734989276.3
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2025 07:43:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
-	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
-	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
-	 content-type:content-transfer-encoding:message-id;
-	bh=YASrf/2teccezNM2m8VRe9kcTfB4tVhgNXs6mH5fZRQ=;
-	b=cPZogSYJDQpxHDTrEhgQDZdstEvq59d5BiSfmjV9TaFOlc8sDxX2lcVT2wm1D+AP2I3Ve6muO/d7X
-	 DWrenp0bjz5tcX8sr1eUEF7+esa1ZHPZKpUU1N8l003gDt8FU2imNAEtZyFb0mZpU9i/wyTUKGbJFs
-	 4JUjLaHNW5DKlVf2m1CULr8piQudhYRuZ0TMgw4Yn+5YSOEogkaJBRXQOPVef+kU6+ToGVMQbe02N0
-	 uJyNlpw7mUBhoRgSE/n1R/tFhBGPqAoJNu+wqosGSSZWqn8WI4/aXHKIhn+e4z+bxZbhST4XSB8lHy
-	 2EXjvUK7u3nwdpZON2mGy67b8KfUsng==
-Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 68008b17-dd83-11ef-a25c-005056bdfda7;
-	Tue, 28 Jan 2025 16:23:12 +0200 (EET)
-From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-To: linux-scsi@vger.kernel.org,
-	dgilbert@interlog.com
-Cc: jmeneghi@redhat.com,
-	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-Subject: [RFC PATCH 3/6] scsi: scsi_debug: Add tape write support with block lengths and 4 bytes of data
-Date: Tue, 28 Jan 2025 16:22:47 +0200
-Message-ID: <20250128142250.163901-4-Kai.Makisara@kolumbus.fi>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20250128142250.163901-1-Kai.Makisara@kolumbus.fi>
-References: <20250128142250.163901-1-Kai.Makisara@kolumbus.fi>
+        d=paul-moore.com; s=google; t=1738079001; x=1738683801; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
+        b=ZzdR8vdIiohnoZ4hKdRsx8vjUSASU/72vdBDURxTPxW6Y5y+xqJe1XFJv37MN3/RSh
+         1N9DWACiMe42Ssr+6RyacQYB0mKZF7r9X4dw06gLm3TJ5kXU+QA6Pwxa8XDIazhEp8C0
+         9uU7YdXy5cLi0N5EPxtYGd6vErWsFg/mLsK5lwXF/VP7H3vmwwe2R2U45ytaFkUMk6Za
+         lp6jed/BVTI9FjvFUI0MN7HYChc3iERhjHp52qu+iW++/bUjLH+wfDW2Jw7AJF6Rr/MJ
+         y67AxGiMWpozGojGCejMex/pBvJsfQOTerwdd08tOqwT12ksmB/+EE0jtUDQTB2nY1qi
+         QFbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738079001; x=1738683801;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4CM+Y34LzyqTPbJa964bMKTZoegb6ZCbeVLJYvxkr2Y=;
+        b=Tl6r7fxbqO//edCWiYIpqkC2oWYGQEDVVXUZ9a4G0RLXUrjpYzJgHyNUPYVTs5QTui
+         MQHv1bkxJkMV5sZjDDHa1Y5NIRCChSDzUdyTU/y0BBEqPEdlk2W+PS6B4R7ao2MXvvKj
+         HOqs+EAHwoCHYiOekwxMp3R5Myude2IpkCo4Bc8+eLVVRFbJQxctTxMtgTfHvjohqENn
+         t3xDp9gNnD3D5Fyl82gdkXHalzYH01veyh48h+TMXAUX5nv5pKVaqkKS84hKmUhZ3QdN
+         +gdNzUuO5YmYYCZlxCtfWDvFEzs8xxSIRbJimjHOFbQR13Z7e9tKy7M+87IXUCcoHQ7N
+         6ibA==
+X-Forwarded-Encrypted: i=1; AJvYcCX/ipkPkImG5SLxG4pM1W0lEReaGfRkVOoMK6ahipuSEmcfKZIunauGfSHguWNNsHPHDNj8WN0UzaCm@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0NuJeSHBK4NJS9o8qZ0IqWeWTQp0L/bc6UTzo6m/PIPi9Y9PZ
+	ZYJ0viA9sp2RB0LTnTRw03qKTVR3X/SEzs+sTy+42KUVNPyCq7QkWsBuCb69oQSqdb4it5qcqYD
+	JSlQiE5eri0B4oFnGOi731uHz/ku5foIcwel/
+X-Gm-Gg: ASbGncvOyNZMRqkXRO2d6yeAiTvci9ANdVIvd7Kq7SZDSCxKFoa/tQ2Cz7FW4VNDvP9
+	/MG5d6tgpbRnL0SxHDnNuQDTF9sVE0/W/R5/TMFo2C0p296fgcjUq/3948cXF8CSW7pfN64c=
+X-Google-Smtp-Source: AGHT+IGuLqrmdoXiE8apV7tzhOJZ5Xm1OF/NxWm8Kjkh7RMoG05FR1MdO9WMx2ebniwyt0o5rEC0Jv+xP432BtVJDY0=
+X-Received: by 2002:a05:690c:4d02:b0:6ef:6646:b50a with SMTP id
+ 00721157ae682-6f6eb6b2881mr361409457b3.20.1738079001445; Tue, 28 Jan 2025
+ 07:43:21 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20250110-jag-ctl_table_const-v2-1-0000e1663144@kernel.org>
+ <Z4+jwDBrZNRgu85S@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+ <nslqrapp4v3rknjgtfk4cg64ha7rewrrg24aslo2e5jmxfwce5@t4chrpuk632k>
+ <CAMj1kXEZPe8zk7s67SADK9wVH3cfBup-sAZSC6_pJyng9QT7aw@mail.gmail.com>
+ <f4lfo2fb7ajogucsvisfd5sg2avykavmkizr6ycsllcrco4mo3@qt2zx4zp57zh>
+ <87jzag9ugx.fsf@intel.com> <Z5epb86xkHQ3BLhp@casper.infradead.org> <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
+In-Reply-To: <u2fwibsnbfvulxj6adigla6geiafh2vuve4hcyo4vmeytwjl7p@oz6xonrq5225>
+From: Paul Moore <paul@paul-moore.com>
+Date: Tue, 28 Jan 2025 10:43:10 -0500
+X-Gm-Features: AWEUYZkHRaUuCTQsu1U9C5jhigmIE9c2_8OmkE_i2Qv7ILXtAaTfDLC5EcLBZNk
+Message-ID: <CAHC9VhQnB_bsQaezBfAcA0bE7Zoc99QXrvO1qjpHA-J8+_doYg@mail.gmail.com>
+Subject: Re: Re: Re: Re: [PATCH v2] treewide: const qualify ctl_tables where applicable
+To: Joel Granados <joel.granados@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>, Jani Nikula <jani.nikula@intel.com>, 
+	Ard Biesheuvel <ardb@kernel.org>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>, 
+	Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org, 
+	linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	openipmi-developer@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
+	linux-hyperv@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-serial@vger.kernel.org, xen-devel@lists.xenproject.org, 
+	linux-aio@kvack.org, linux-fsdevel@vger.kernel.org, netfs@lists.linux.dev, 
+	codalist@coda.cs.cmu.edu, linux-mm@kvack.org, linux-nfs@vger.kernel.org, 
+	ocfs2-devel@lists.linux.dev, fsverity@lists.linux.dev, 
+	linux-xfs@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org, 
+	kexec@lists.infradead.org, linux-trace-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, apparmor@lists.ubuntu.com, 
+	linux-security-module@vger.kernel.org, keyrings@vger.kernel.org, 
+	Song Liu <song@kernel.org>, "Steven Rostedt (Google)" <rostedt@goodmis.org>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>, 
+	Corey Minyard <cminyard@mvista.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The tape partitions are implemented as fixed number of 8-byte
-units (partition zero 100 000 units and partition one 1000 units).
-The first four bytes of a unit contains the type of the unit (data
-block, filemark or end-of-data mark). If the units is a data block,
-the first four bytes contain the block length and the remaining
-four bytes the first bytes of written data. This allows the user
-to use tags to see that the read block is what it was supposed to be.
+On Tue, Jan 28, 2025 at 6:22=E2=80=AFAM Joel Granados <joel.granados@kernel=
+.org> wrote:
+> On Mon, Jan 27, 2025 at 03:42:39PM +0000, Matthew Wilcox wrote:
+> > On Mon, Jan 27, 2025 at 04:55:58PM +0200, Jani Nikula wrote:
+> > > You could have static const within functions too. You get the rodata
+> > > protection and function local scope, best of both worlds?
+> >
+> > timer_active is on the stack, so it can't be static const.
+> >
+> > Does this really need to be cc'd to such a wide distribution list?
+> That is a very good question. I removed 160 people from the original
+> e-mail and left the ones that where previously involved with this patch
+> and left all the lists for good measure. But it seems I can reduce it
+> even more.
+>
+> How about this: For these treewide efforts I just leave the people that
+> are/were involved in the series and add two lists: linux-kernel and
+> linux-hardening.
+>
+> Unless someone screams, I'll try this out on my next treewide.
 
-This patch adds the WRITE(6) command for tapes and the WRITE FILEMARKS (6)
-command. The REWIND command is updated.
+I'm not screaming about it :) but anything that touches the LSM,
+SELinux, or audit code (or matches the regex in MAINTAINERS) I would
+prefer to see on the associated mailing list.
 
-Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
----
- drivers/scsi/scsi_debug.c | 188 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 184 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 19929625bd36..2f0c73bd37b8 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -71,6 +71,10 @@ static const char *sdebug_version_date = "20210520";
- #define NO_ADDITIONAL_SENSE 0x0
- #define OVERLAP_ATOMIC_COMMAND_ASC 0x0
- #define OVERLAP_ATOMIC_COMMAND_ASCQ 0x23
-+#define FILEMARK_DETECTED_ASCQ 0x1
-+#define EOP_EOM_DETECTED_ASCQ 0x2
-+#define BEGINNING_OF_P_M_DETECTED_ASCQ 0x4
-+#define EOD_DETECTED_ASCQ 0x5
- #define LOGICAL_UNIT_NOT_READY 0x4
- #define LOGICAL_UNIT_COMMUNICATION_FAILURE 0x8
- #define UNRECOVERED_READ_ERR 0x11
-@@ -83,6 +87,7 @@ static const char *sdebug_version_date = "20210520";
- #define UA_READY_ASC 0x28
- #define UA_RESET_ASC 0x29
- #define UA_CHANGED_ASC 0x2a
-+#define TOO_MANY_IN_PARTITION_ASC 0x3b
- #define TARGET_CHANGED_ASC 0x3f
- #define LUNS_CHANGED_ASCQ 0x0e
- #define INSUFF_RES_ASC 0x55
-@@ -180,7 +185,30 @@ static const char *sdebug_version_date = "20210520";
- #define TAPE_DEF_BLKSIZE  0
- #define TAPE_MIN_BLKSIZE  512
- #define TAPE_MAX_BLKSIZE  1048576
-+#define TAPE_EW 20
- #define TAPE_MAX_PARTITIONS 2
-+#define TAPE_PARTITION_0_UNITS 100000
-+#define TAPE_PARTITION_1_UNITS 1000
-+
-+/* The tape block data definitions */
-+#define TAPE_BLOCK_FM_FLAG   ((u32)0x1 << 30)
-+#define TAPE_BLOCK_EOD_FLAG  ((u32)0x2 << 30)
-+#define TAPE_BLOCK_MARK_MASK ((u32)0x3 << 30)
-+#define TAPE_BLOCK_SIZE_MASK (~TAPE_BLOCK_MARK_MASK)
-+#define TAPE_BLOCK_MARK(a) (a & TAPE_BLOCK_MARK_MASK)
-+#define TAPE_BLOCK_SIZE(a) (a & TAPE_BLOCK_SIZE_MASK)
-+#define IS_TAPE_BLOCK_FM(a)   ((a & TAPE_BLOCK_FM_FLAG) != 0)
-+#define IS_TAPE_BLOCK_EOD(a)  ((a & TAPE_BLOCK_EOD_FLAG) != 0)
-+
-+struct tape_block {
-+	u32 fl_size;
-+	unsigned char data[4];
-+};
-+
-+/* Flags for sense data */
-+#define SENSE_FLAG_FILEMARK  0x80
-+#define SENSE_FLAG_EOM 0x40
-+#define SENSE_FLAG_ILI 0x20
- 
- #define SDEBUG_LUN_0_VAL 0
- 
-@@ -378,6 +406,8 @@ struct sdebug_dev_info {
- 	unsigned int tape_density;
- 	unsigned char tape_partition;
- 	unsigned int tape_location[TAPE_MAX_PARTITIONS];
-+	unsigned int tape_eop[TAPE_MAX_PARTITIONS];
-+	struct tape_block *tape_blocks[TAPE_MAX_PARTITIONS];
- 
- 	struct dentry *debugfs_entry;
- 	struct spinlock list_lock;
-@@ -501,7 +531,8 @@ enum sdeb_opcode_index {
- 	SDEB_I_ATOMIC_WRITE_16 = 32,
- 	SDEB_I_READ_BLOCK_LIMITS = 33,
- 	SDEB_I_LOCATE = 34,
--	SDEB_I_LAST_ELEM_P1 = 35,	/* keep this last (previous + 1) */
-+	SDEB_I_WRITE_FILEMARKS = 35,
-+	SDEB_I_LAST_ELEM_P1 = 36,	/* keep this last (previous + 1) */
- };
- 
- 
-@@ -510,8 +541,8 @@ static const unsigned char opcode_ind_arr[256] = {
- 	SDEB_I_TEST_UNIT_READY, SDEB_I_REZERO_UNIT, 0, SDEB_I_REQUEST_SENSE,
- 	    0, SDEB_I_READ_BLOCK_LIMITS, 0, 0,
- 	SDEB_I_READ, 0, SDEB_I_WRITE, 0, 0, 0, 0, 0,
--	0, 0, SDEB_I_INQUIRY, 0, 0, SDEB_I_MODE_SELECT, SDEB_I_RESERVE,
--	    SDEB_I_RELEASE,
-+	SDEB_I_WRITE_FILEMARKS, 0, SDEB_I_INQUIRY, 0, 0,
-+	    SDEB_I_MODE_SELECT, SDEB_I_RESERVE, SDEB_I_RELEASE,
- 	0, 0, SDEB_I_MODE_SENSE, SDEB_I_START_STOP, 0, SDEB_I_SEND_DIAG,
- 	    SDEB_I_ALLOW_REMOVAL, 0,
- /* 0x20; 0x20->0x3f: 10 byte cdbs */
-@@ -593,6 +624,8 @@ static int resp_finish_zone(struct scsi_cmnd *, struct sdebug_dev_info *);
- static int resp_rwp_zone(struct scsi_cmnd *, struct sdebug_dev_info *);
- static int resp_read_blklimits(struct scsi_cmnd *, struct sdebug_dev_info *);
- static int resp_locate(struct scsi_cmnd *, struct sdebug_dev_info *);
-+static int resp_write_filemarks(struct scsi_cmnd *, struct sdebug_dev_info *);
-+static int resp_rewind(struct scsi_cmnd *, struct sdebug_dev_info *);
- 
- static int sdebug_do_add_host(bool mk_new_store);
- static int sdebug_add_host_helper(int per_host_idx);
-@@ -793,7 +826,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
- /* 20 */
- 	{0, 0x1e, 0, 0, NULL, NULL, /* ALLOW REMOVAL */
- 	    {6,  0, 0, 0, 0x3, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
--	{0, 0x1, 0, 0, NULL, NULL, /* REWIND ?? */
-+	{0, 0x1, 0, 0, resp_rewind, NULL,
- 	    {6,  0x1, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
- 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ATA_PT */
- 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-@@ -841,6 +874,8 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
- 	{0, 0x2b, 0, F_D_UNKN, resp_locate, NULL,    /* LOCATE (10) */
- 	    {10,  0x2, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0,
- 	     0, 0, 0, 0} },
-+	{0, 0x10, 0, F_D_IN, resp_write_filemarks, NULL,    /* WRITE FILEMARKS (6) */
-+	    {6,  0x01, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
- 
- /* sentinel */
- 	{0xff, 0, 0, 0, NULL, NULL,		/* terminating element */
-@@ -1358,6 +1393,30 @@ static void mk_sense_buffer(struct scsi_cmnd *scp, int key, int asc, int asq)
- 			    my_name, key, asc, asq);
- }
- 
-+/* Sense data that has information fields for tapes */
-+static void mk_sense_info_tape(struct scsi_cmnd *scp, int key, int asc, int asq,
-+			unsigned int information, unsigned char tape_flags)
-+{
-+	if (!scp->sense_buffer) {
-+		sdev_printk(KERN_ERR, scp->device,
-+			    "%s: sense_buffer is NULL\n", __func__);
-+		return;
-+	}
-+	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-+
-+	scsi_build_sense(scp, /*sdebug_dsense*/ 0, key, asc, asq);
-+	/* only fixed format so far */
-+
-+	scp->sense_buffer[0] |= 0x80; /* valid */
-+	scp->sense_buffer[2] |= tape_flags;
-+	put_unaligned_be32(information, &scp->sense_buffer[3]);
-+
-+	if (sdebug_verbose)
-+		sdev_printk(KERN_INFO, scp->device,
-+			    "%s:  [sense_key,asc,ascq]: [0x%x,0x%x,0x%x]\n",
-+			    my_name, key, asc, asq);
-+}
-+
- static void mk_sense_invalid_opcode(struct scsi_cmnd *scp)
- {
- 	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
-@@ -3253,6 +3312,44 @@ static int resp_locate(struct scsi_cmnd *scp,
- 	return 0;
- }
- 
-+static int resp_write_filemarks(struct scsi_cmnd *scp,
-+		struct sdebug_dev_info *devip)
-+{
-+	unsigned char *cmd = scp->cmnd;
-+	unsigned int i, count, pos;
-+	u32 data;
-+	int partition = devip->tape_partition;
-+
-+	if ((cmd[1] & 0xfe) != 0) { /* probably write setmarks, not in >= SCSI-3 */
-+		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 1);
-+		return check_condition_result;
-+	}
-+	count = get_unaligned_be24(cmd + 2);
-+	data = TAPE_BLOCK_FM_FLAG;
-+	for (i = 0, pos = devip->tape_location[partition]; i < count; i++, pos++) {
-+		if (pos >= devip->tape_eop[partition] - 1) { /* don't overwrite EOD */
-+			devip->tape_location[partition] = devip->tape_eop[partition] - 1;
-+			mk_sense_info_tape(scp, VOLUME_OVERFLOW, NO_ADDITIONAL_SENSE,
-+					EOP_EOM_DETECTED_ASCQ, count, SENSE_FLAG_EOM);
-+			return check_condition_result;
-+		}
-+		(devip->tape_blocks[partition] + pos)->fl_size = data;
-+	}
-+	(devip->tape_blocks[partition] + pos)->fl_size =
-+		TAPE_BLOCK_EOD_FLAG;
-+	devip->tape_location[partition] = pos;
-+
-+	return 0;
-+}
-+
-+static int resp_rewind(struct scsi_cmnd *scp,
-+		struct sdebug_dev_info *devip)
-+{
-+	devip->tape_location[devip->tape_partition] = 0;
-+
-+	return 0;
-+}
-+
- static inline bool sdebug_dev_is_zoned(struct sdebug_dev_info *devip)
- {
- 	return devip->nr_zones != 0;
-@@ -4293,6 +4390,67 @@ static void unmap_region(struct sdeb_store_info *sip, sector_t lba,
- 	}
- }
- 
-+static int resp_write_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-+{
-+	u32 i, num, transfer, size, written = 0;
-+	u8 *cmd = scp->cmnd;
-+	struct scsi_data_buffer *sdb = &scp->sdb;
-+	int partition = devip->tape_partition;
-+	int pos = devip->tape_location[partition];
-+	struct tape_block *blp;
-+	bool fixed, ew;
-+
-+	if (cmd[0] != WRITE_6) { /* Only Write(6) supported */
-+		mk_sense_invalid_opcode(scp);
-+		return illegal_condition_result;
-+	}
-+
-+	fixed = (cmd[1] & 1) != 0;
-+	transfer = get_unaligned_be24(cmd + 2);
-+	if (fixed) {
-+		num = transfer;
-+		size = devip->tape_blksize;
-+	} else {
-+		if (transfer < TAPE_MIN_BLKSIZE ||
-+			transfer > TAPE_MAX_BLKSIZE) {
-+			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
-+			return check_condition_result;
-+		}
-+		num = 1;
-+		size = transfer;
-+	}
-+
-+	scsi_set_resid(scp, num * transfer);
-+	for (i = 0, blp = devip->tape_blocks[partition] + pos, ew = false;
-+	     i < num && pos < devip->tape_eop[partition] - 1; i++, pos++, blp++) {
-+		blp->fl_size = size;
-+		sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
-+			&(blp->data), 4, i * size, true);
-+		written += size;
-+		scsi_set_resid(scp, num * transfer - written);
-+		ew |= (pos == devip->tape_eop[partition] - TAPE_EW);
-+	}
-+
-+	devip->tape_location[partition] = pos;
-+	blp->fl_size = TAPE_BLOCK_EOD_FLAG;
-+	if (pos >= devip->tape_eop[partition] - 1) {
-+		mk_sense_info_tape(scp, VOLUME_OVERFLOW,
-+				NO_ADDITIONAL_SENSE, EOP_EOM_DETECTED_ASCQ,
-+				fixed ? num - i : transfer,
-+				SENSE_FLAG_EOM);
-+		return check_condition_result;
-+	}
-+	if (ew) { /* early warning */
-+		mk_sense_info_tape(scp, NO_SENSE,
-+				NO_ADDITIONAL_SENSE, EOP_EOM_DETECTED_ASCQ,
-+				fixed ? num - i : transfer,
-+				SENSE_FLAG_EOM);
-+		return check_condition_result;
-+	}
-+
-+	return 0;
-+}
-+
- static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- {
- 	bool check_prot;
-@@ -4305,6 +4463,9 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	u8 *cmd = scp->cmnd;
- 	bool meta_data_locked = false;
- 
-+	if (sdebug_ptype == TYPE_TAPE)
-+		return resp_write_tape(scp, devip);
-+
- 	switch (cmd[0]) {
- 	case WRITE_16:
- 		ei_lba = 0;
-@@ -5976,8 +6137,27 @@ static struct sdebug_dev_info *sdebug_device_create(
- 			devip->zoned = false;
- 		}
- 		if (sdebug_ptype == TYPE_TAPE) {
-+			int i;
-+
- 			devip->tape_density = TAPE_DEF_DENSITY;
- 			devip->tape_blksize = TAPE_DEF_BLKSIZE;
-+			for (i = 0; i < TAPE_MAX_PARTITIONS; i++) {
-+				devip->tape_eop[i] = i ? TAPE_PARTITION_1_UNITS :
-+					TAPE_PARTITION_0_UNITS;
-+				devip->tape_blocks[i] =
-+					kcalloc(devip->tape_eop[i],
-+						sizeof(struct tape_block),
-+						GFP_KERNEL);
-+				if (!devip->tape_blocks[i]) {
-+					int j;
-+
-+					for (j = 0; j < i; j++)
-+						kfree(devip->tape_blocks[j]);
-+					kfree(devip);
-+					return NULL;
-+				}
-+				devip->tape_blocks[i]->fl_size = TAPE_BLOCK_EOD_FLAG;
-+			}
- 		}
- 		devip->create_ts = ktime_get_boottime();
- 		atomic_set(&devip->stopped, (sdeb_tur_ms_to_ready > 0 ? 2 : 0));
--- 
-2.43.0
-
+--=20
+paul-moore.com
