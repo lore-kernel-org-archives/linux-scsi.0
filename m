@@ -1,146 +1,120 @@
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F13192D84;
-	Tue, 28 Jan 2025 07:15:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8652F199385;
+	Tue, 28 Jan 2025 09:43:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738048518; cv=none; b=HSDtB6W7issUFQHdTsG7MXk9j7bBMh5jBR0FeOkdkAbf8jLRbkf+dZ7nk+KI0UNtlWCSpbGy2VrHItD44OvmGvyWhHVfqMlMMWr17qkjHXyi9X4RiSCzsugFAE3o5zkNI8y0bQiI9JRhWlIoTYWdw6oMUmSsZ3okNtTNWYt/w/0=
+	t=1738057407; cv=none; b=iEEGMp/j3YzRSiSTKgLYjjvfovmz95fuoUYiU1dsGnzTEUGZtP+MvR9Gf4zS/jSQsYjXBv6f38GBR3TlHnxcSGa4uV8BY5hziiECYopHVYnRY0SRBYXvXBRxV+jK/T5358NTQ3BTtp3txqnWgSGUR87PIcMhefGLj3r7IAXiB3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738048518; c=relaxed/simple;
-	bh=Ef3upsXnnmq9KUQz7WRB+zhN6wdIMrBB6Aeh/3jJQ5Q=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=J3XGft9yZ0ga0VgK5b1aZbE/98ZX9nMoAOYLhKiLCWm865N+YI/XIw5N4j5Lk3sZ1KywYP69jgLmTJsp4dmEpIFQ9Y+rzkARsoSqvVtu7RL5M/FJgSqslCozWVdP26aaCDde0eOTJjs2n2q7TH9/ODaKPBDgxU99GU87Y+JXt9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=c/6eKZi1; arc=none smtp.client-ip=216.71.153.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1738057407; c=relaxed/simple;
+	bh=dENO/oSZL4YN1E2GWU4YlF70onT5q7LmAVAl1FRWQMM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=N6Ky+MmZpUz/Fru1IoatQdDi1CujYA67YwPsosJeUsQuDB4yzWsqNUsSK7SKohxjRnKSCORFCzDUchsjSm6y3mjuDFRq1yF1dje9pbXT2vtoAFgFUG8kpEXOTzAGSYT3FwPFOkio7APOwKF3mlzzHvJl5E2fDWkX+uG59+HHIaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=clip-os.org; spf=pass smtp.mailfrom=clip-os.org; dkim=pass (2048-bit key) header.d=clip-os.org header.i=@clip-os.org header.b=CvwD9NT4; arc=none smtp.client-ip=217.70.183.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=clip-os.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=clip-os.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="c/6eKZi1"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1738048516; x=1769584516;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Ef3upsXnnmq9KUQz7WRB+zhN6wdIMrBB6Aeh/3jJQ5Q=;
-  b=c/6eKZi1rcWnGX0KMW+EBq25la+UvBz27YelITDRuTDC6OWJal7Tp178
-   YyTLGBzgDAJsDoQ32Dgn8NT9L4myYw3sEDdxWHJ8hWiSwUAElfsgnFeaQ
-   dfRo2xOkIi4NNTHIZssWLZr0ZCnkmPuXqSnng7LBeMleWWXgyDs1UM0jG
-   z9hOjoioT2unp5LNyOhN40es6xrG7l2SH3huW9U4d8vF5puC2QiqDwr+d
-   O5k8Iz4h6yNOLOG5Xufl8uR14dLC2cH+wkNkgzYvzJkhWfctud5h0NBCh
-   2xqDGAZPbm+pEK8QeWWHbNzVIu1lPVjJBsfPl9TJOoKmGkkeCYlrC/IgI
-   A==;
-X-CSE-ConnectionGUID: /wOXKjVHQ2miF80SPoPwmA==
-X-CSE-MsgGUID: DEX89FtHQtC2fkC8TfRqGQ==
-X-IronPort-AV: E=Sophos;i="6.13,240,1732550400"; 
-   d="scan'208";a="37987017"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jan 2025 15:15:09 +0800
-IronPort-SDR: 6798765f_SqRKcpFTtjXzpsckS51Wst2DJuwvXYJqiwD5WPop29xNjPP
- 8fI1lBm/M8UcZtZGMXz43pItC3RnLHOssGcaUlw==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jan 2025 22:17:03 -0800
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Jan 2025 23:15:07 -0800
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v4 1/2] scsi: ufs: core: Ensure clk_gating.lock is used only after initialization
-Date: Tue, 28 Jan 2025 09:12:06 +0200
-Message-Id: <20250128071207.75494-2-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250128071207.75494-1-avri.altman@wdc.com>
-References: <20250128071207.75494-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=clip-os.org header.i=@clip-os.org header.b="CvwD9NT4"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id AE34DFF807;
+	Tue, 28 Jan 2025 09:43:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=clip-os.org; s=gm1;
+	t=1738057396;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eaz9YOMv0cC2o84WWZHZqF4Zkm0uRbALe+GHZz7OYhQ=;
+	b=CvwD9NT4j+WIHpH7BHuA5lGxqGUk1QYZ7fTaDY8yoEdZ5mbATIGUxT/1MN9/uP4z/ZMsev
+	hBb4updQGuMtVZ1VUJQY3lwuHaTaAaYFNGLlb6PWP3aIZg9yWN6Jmx6F6nmnkPV8TZVrQO
+	VJvVea89Wgo9XUG/fNJIJEtPT0i0QEGqvkodT1O5+iJ2z4mxL06Vuef40FWoAOHitI2oZl
+	zbSgoHE22Yc8KSp8BxbVtM5sh6I6GQsVLiJXMEc52i4KKMK/d1ILcvKu2aLb8CE157C//5
+	ojysacr84i3YBNB+80BXgABya35ROLupWE9fdr5TPY39V/QUDufiRcm0j3Gpag==
+Message-ID: <3b7a4fb3-9c88-47ca-afc3-a1bb7913fc3d@clip-os.org>
+Date: Tue, 28 Jan 2025 10:43:13 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 0/9] Fixes multiple sysctl bound checks
+To: Joe Damato <jdamato@fastly.com>, linux-kernel@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+ codalist@coda.cs.cmu.edu, linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
+ netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
+ Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>,
+ Joel Granados <j.granados@samsung.com>, Bart Van Assche
+ <bvanassche@acm.org>, Leon Romanovsky <leon@kernel.org>,
+ Zhu Yanjun <yanjun.zhu@linux.dev>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Al Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>
+References: <20250127142014.37834-1-nicolas.bouchinet@clip-os.org>
+ <Z5fK6jnrjMBDrDJg@LQ3V64L9R2>
+Content-Language: en-US
+From: Nicolas Bouchinet <nicolas.bouchinet@clip-os.org>
+In-Reply-To: <Z5fK6jnrjMBDrDJg@LQ3V64L9R2>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-GND-Sasl: nicolas.bouchinet@clip-os.org
 
-This commit addresses a lockdep warning triggered by the use of the
-clk_gating.lock before it is properly initialized. The warning is as
-follows:
+Hi,
 
-[    4.388838] INFO: trying to register non-static key.
-[    4.395673] The code is fine but needs lockdep annotation, or maybe
-[    4.402118] you didn't initialize this object before use?
-[    4.407673] turning off the locking correctness validator.
-[    4.413334] CPU: 5 UID: 0 PID: 58 Comm: kworker/u32:1 Not tainted 6.12-rc1 #185
-[    4.413343] Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
-[    4.413362] Call trace:
-[    4.413364]  show_stack+0x18/0x24 (C)
-[    4.413374]  dump_stack_lvl+0x90/0xd0
-[    4.413384]  dump_stack+0x18/0x24
-[    4.413392]  register_lock_class+0x498/0x4a8
-[    4.413400]  __lock_acquire+0xb4/0x1b90
-[    4.413406]  lock_acquire+0x114/0x310
-[    4.413413]  _raw_spin_lock_irqsave+0x60/0x88
-[    4.413423]  ufshcd_setup_clocks+0x2c0/0x490
-[    4.413433]  ufshcd_init+0x198/0x10ec
-[    4.413437]  ufshcd_pltfrm_init+0x600/0x7c0
-[    4.413444]  ufs_qcom_probe+0x20/0x58
-[    4.413449]  platform_probe+0x68/0xd8
-[    4.413459]  really_probe+0xbc/0x268
-[    4.413466]  __driver_probe_device+0x78/0x12c
-[    4.413473]  driver_probe_device+0x40/0x11c
-[    4.413481]  __device_attach_driver+0xb8/0xf8
-[    4.413489]  bus_for_each_drv+0x84/0xe4
-[    4.413495]  __device_attach+0xfc/0x18c
-[    4.413502]  device_initial_probe+0x14/0x20
-[    4.413510]  bus_probe_device+0xb0/0xb4
-[    4.413517]  deferred_probe_work_func+0x8c/0xc8
-[    4.413524]  process_scheduled_works+0x250/0x658
-[    4.413534]  worker_thread+0x15c/0x2c8
-[    4.413542]  kthread+0x134/0x200
-[    4.413550]  ret_from_fork+0x10/0x20
+Thank's for your reply.
 
-To fix this issue, ensure that the spinlock is only used after it
-has been properly initialized before using it in `ufshcd_setup_clocks`.
-Do that unconditionally as initializing a spinlock is a fast operation.
+On 1/27/25 19:05, Joe Damato wrote:
+> On Mon, Jan 27, 2025 at 03:19:57PM +0100, nicolas.bouchinet@clip-os.org wrote:
+>> From: Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>
+>>
+>> Hi,
+>>
+>> This patchset adds some bound checks to sysctls to avoid negative
+>> value writes.
+>>
+>> The patched sysctls were storing the result of the proc_dointvec
+>> proc_handler into an unsigned int data. proc_dointvec being able to
+>> parse negative value, and it return value being a signed int, this could
+>> lead to undefined behaviors.
+>> This has led to kernel crash in the past as described in commit
+>> 3b3376f222e3 ("sysctl.c: fix underflow value setting risk in vm_table")
+>>
+>> Most of them are now bounded between SYSCTL_ZERO and SYSCTL_INT_MAX.
+>> nf_conntrack_expect_max is bounded between SYSCTL_ONE and SYSCTL_INT_MAX
+>> as defined by its documentation.
+> I noticed that none of the patches have a Fixes tags. Do any of
+> these fix existing crashes or is this just cleanup?
 
-Fixes: 209f4e43b806 ("scsi: ufs: core: Introduce a new clock_gating lock")
-Reported-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufshcd.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+I've just saw that xfrm{4,6}_gc_thresh sysctls where obsolete since 4.14 
+in the documentation...
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f6c38cf10382..b73c87da383d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2120,8 +2120,6 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
- 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
- 
--	spin_lock_init(&hba->clk_gating.lock);
--
- 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(
- 		"ufs_clk_gating_%d", WQ_MEM_RECLAIM | WQ_HIGHPRI,
- 		hba->host->host_no);
-@@ -10412,6 +10410,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	hba->irq = irq;
- 	hba->vps = &ufs_hba_vps;
- 
-+	/*
-+	 * Initialize clk_gating.lock early since it is being used in
-+	 * ufshcd_setup_clocks()
-+	 */
-+	spin_lock_init(&hba->clk_gating.lock);
-+
- 	err = ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
--- 
-2.25.1
+Also, ipv4_dst_ops.gc_thresh is set to `~0` since commit 4ff3885262d0 
+("ipv4: Delete routing cache.").
 
+Wich will be printed as -1 when this syctl is read.
+
+```
+$ cat /proc/sys/net/ipv4/route/gc_thresh
+-1
+```
+
+IIUC, it seems to be used in order to disable the garbage collection, 
+hence, this patch would make it impossible
+to a user to disable it this way.
+It should thus be bounded it between SYSCTL_NEG_ONE and SYSCTL_INT_MAX.
+
+
+Your right, it's only cleanup, I'll push patch 3 separately only on 
+netdev, with extended impact analyses, sorry for that.
+
+
+>
+> I am asking because if this is cleanup then it would be "net-next"
+> material instead of "net" and would need to be resubmit when then
+> merge window has passed [1].
+>
+> FWIW, I submit a similar change some time ago and it was submit to
+> net-next as cleanup [2].
+>
+> [1]: https://lore.kernel.org/netdev/20250117182059.7ce1196f@kernel.org/
+> [2]: https://lore.kernel.org/netdev/CANn89i+=HiffVo9iv2NKMC2LFT15xFLG16h7wN3MCrTiKT3zQQ@mail.gmail.com/T/
+>
