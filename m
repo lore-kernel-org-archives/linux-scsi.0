@@ -1,173 +1,191 @@
-Received: from mail-ot1-f65.google.com (mail-ot1-f65.google.com [209.85.210.65])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92AA21E0489
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2025 19:18:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5B01D61B1;
+	Tue, 28 Jan 2025 19:28:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738091894; cv=none; b=ETkuXSRzPe2/U4lDnzrwDMfN/NeTBFp8LyneJGV2ZX+pLoxWKaK7eMc5sgBk7PFdZPGD5TcXtkFwOjAadEEvh4M1/1bEyX1BJhIesy3s2RsW4MasI6VkO+usvySPNNR3DsdWsuMhzyG4JAPvHEculWJhwZw7NDQOf+6qvnBVsuk=
+	t=1738092507; cv=none; b=l7YZFMKcCjRQvQY81vFJoelnz2e/BEBGbUvtBWEtUaaFD2soJvX2zhoJBVtXtGwivNIxXdrgRS3ii8HygqJsZso31H6WkPfxp+YrpS3JGIvOluSNWDwUSwIxC8MdbtUN+D7aMpC7+N7UtY2FTKjnroXZc2bKPth1PskBr6pHfYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738091894; c=relaxed/simple;
-	bh=lIi5aGFP2IEAzTwIUSiMFRhWVGEd/L/9CRk+XDjd4tw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=CD+iT8907wWbhw+1DNGaxos5aXRBQHNJbdmBeaUwn6SL7sgYz5sCrSAF/s4N+0I30D+pOG4I4jdwnYHC1ZEUfCir0n6nrjFaxdT6rZ/zlVUIAMgjOm17Ewr+QDOngC0MnGJF6v7b8YiuOpfuHQ1A8mKAu/Qri3Ng2VhijXRAv9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com; spf=pass smtp.mailfrom=dubeyko.com; dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b=mBGR69cJ; arc=none smtp.client-ip=209.85.210.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dubeyko.com
+	s=arc-20240116; t=1738092507; c=relaxed/simple;
+	bh=n5k+kdOWFCqZ0uk5hOxAOpLLJkFFgvcFWETQFqM2RQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UUu4eFR40zzSH2EXMOHiwYtJd/SzYn73s+RjzRZ/7+P6AwQam/46t/382j8Dpp7XbJyuFgrx/+aqAUdPd7HtzZKBw/a3V2bUcXQzEGSuYR8aBubgYv8NfhIAD17UD2adLGzFMNQHxk0KX6TiJJXRmqM1GmvqLpmiwE86SIaQVSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=X7DzgIEI; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=gjs0esMU; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=y688SLY7; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=9Rahx42h; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b="mBGR69cJ"
-Received: by mail-ot1-f65.google.com with SMTP id 46e09a7af769-71e17ab806bso3012779a34.2
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2025 11:18:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dubeyko-com.20230601.gappssmtp.com; s=20230601; t=1738091891; x=1738696691; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=lIi5aGFP2IEAzTwIUSiMFRhWVGEd/L/9CRk+XDjd4tw=;
-        b=mBGR69cJAYzDQOCdxwJcXdnwnoSQYTrpDLVASZQJFHP9mM+GQ8vbybf9RvH/QGqonH
-         MXt9hDB/wWgM8d2hBKkWdqTmx+jZCCK5GtKg7R6Qgln9Ttt7zV6P9naVYwzNQmU1xQPT
-         B5EHi2obkjeRkEOCwQRZoaZNeKdFYqVJm7hYwZb34fC/yZztYAeyDjf4EDfnE8DVJHjb
-         BHSHyLFDWFgPS69ZAvX6BGKw8T1Xf2TlKgVjk3H7jKsN1pT55KWodXatl0IN+iAe64GV
-         r56hRmhzhhpM51idYcYQRWZcMGTa3kzCzODzHVXuGzp+PHEFCeXHhjuFFZNa5t29pPpD
-         jC/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738091891; x=1738696691;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lIi5aGFP2IEAzTwIUSiMFRhWVGEd/L/9CRk+XDjd4tw=;
-        b=RnYcJyVnft8yfUnpHb7TtRRPfncgKr/TTrPNfjSmeoUbpA+WMxuEXVGMM6SWRcbaPv
-         CysEdS4J6pskg/+BQbIiCXfiLWMMoZp64HOK+TBkstsQy4JILWmD1GjJED36Txr6Mr/9
-         sv5lu/hGtSBRmEuuqqz3FJQrwltw0u3um5pW6wbVqjtIHGrjzPdJVsFB1PNsfW55iq/1
-         ipIcEzK6y1/oyCmY4M/M4oUr4USY0jnypyGliFO9M8SMQizfvfD0aqC+jNnoBm9Sh8et
-         OD1OK0rVnEQpKWs3UCBJjHuq//SBOqesz6AEuOIfp2A9/qSOacWn7+jZe0QVTINl6sdx
-         PjJA==
-X-Forwarded-Encrypted: i=1; AJvYcCV8zI9XoYKj6zWbApl5bWK9YPloj+HqIJcwAvMhtUHYJu30vxWY9dBPqdMRzOb8QK0yJAzP7OPUw31O@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw+kri+bio+K4XQNVgSsGbwucUzNNHlC59cGiAsG9OdasuKF12s
-	UIdjlaMOWyJjRd/K0mg+jCZoHpwg492Wr1dVDW3sLMqfTFxK8slDxLZZlDr7CWU=
-X-Gm-Gg: ASbGncsPcqeczlgoqWHSX8OQaPoxO0/hpgMOKd6Z1Cvrdv/l1zQsG9MIF46CR3yckf3
-	LbTIeYFWBGgXk26Wj8P6lYx+vdrH/Q94kWNTuV8ToblgAH5ZymRGJdNGg0CiECl9S6hVzSwKp8Y
-	keDP3BRtveXgtl2MIbizNMZAMzrT0SHZU9JVHagk/vULHIHx/GHIeKJITtZgsyO95AnCOn8UhGB
-	TayWZi82HtpHe7Wxw7hzEB68jdcY2Pu3oiEpnWxxuw2DxUmFpG06IRkOJ1GSlSrPx96xAEp0Dri
-	oNhe6Q2bOkcr6YKXVsIZu8IqqwU5NsM1gfQksbc=
-X-Google-Smtp-Source: AGHT+IEjj2rtRUozTb9q5zkBHOg1wyDd4Rrejwp3BNX/ud35ztXOcJmJGsoflwx7Navl7s/qXjvFqg==
-X-Received: by 2002:a05:6830:2785:b0:715:4e38:a181 with SMTP id 46e09a7af769-726568ef39amr124059a34.25.1738091891422;
-        Tue, 28 Jan 2025 11:18:11 -0800 (PST)
-Received: from ssdfs-test-0060.attlocal.net ([2600:1700:6476:1430:8c93:8016:7aa2:be80])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-724ecf9cfaesm3161965a34.63.2025.01.28.11.18.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jan 2025 11:18:10 -0800 (PST)
-Message-ID: <0ede6faff6ede40081047ed0397b9f8b3f5977fc.camel@dubeyko.com>
-Subject: Re: [LSF/MM/BPF Topic] Energy-Efficient I/O
-From: slava@dubeyko.com
-To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org"
-	 <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org"
-	 <linux-scsi@vger.kernel.org>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
-  Jens Axboe <axboe@kernel.dk>, "Martin K . Petersen"
- <martin.petersen@oracle.com>, Christoph Hellwig	 <hch@lst.de>, Qais Yousef
- <qyousef@layalina.io>, Tero Kristo	 <tero.kristo@linux.intel.com>, Can Guo
- <quic_cang@quicinc.com>, Avri Altman	 <avri.altman@wdc.com>, Bean Huo
- <beanhuo@micron.com>, Peter Wang	 <peter.wang@mediatek.com>
-Date: Tue, 28 Jan 2025 11:18:09 -0800
-In-Reply-To: <ad1018b6-7c0b-4d70-b845-c869287d3cf3@acm.org>
-References: <ad1018b6-7c0b-4d70-b845-c869287d3cf3@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.54.3 (by Flathub.org) 
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="X7DzgIEI";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="gjs0esMU";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="y688SLY7";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="9Rahx42h"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 40D7E210F9;
+	Tue, 28 Jan 2025 19:28:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1738092497;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cu5AW9e6LIlMe18vHX/cu2btQmvEuNdVbxSGH23BpgQ=;
+	b=X7DzgIEIos5paB261Thz8Qi51sOVFwb5dSUTRRMycQLt/5T7754KjcgbjT+EPwV5fdLaaa
+	cvSOk6TY2qEeLsUeC5G5KNg4CQMIkX2ooAejwo/XceW1/fc11wYZyhlGSl7Q8n+cEjO9OJ
+	Ii8fxytnZFdNjyQYJ4iJxYMOiaYZluU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1738092497;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cu5AW9e6LIlMe18vHX/cu2btQmvEuNdVbxSGH23BpgQ=;
+	b=gjs0esMUPchB4K4RtIem58fDt+M6QJS4Mh5QJBMLR40KmpfdO9OR+d1oMn3UBKFmkmzEEt
+	+M/96OKGcvLSGHBQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=y688SLY7;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=9Rahx42h
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1738092496;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cu5AW9e6LIlMe18vHX/cu2btQmvEuNdVbxSGH23BpgQ=;
+	b=y688SLY7/DL5p8EccbkUszio2tZbA94boT4rwz+ACMq588fgH+Vf8EqkXANQNYWiQFG7DT
+	anyf2Nx63Z/9IvWw9iThlkRnAXfe4qWQrFOQ8ghtd0mhYInrapGCBP4qDwcTlbxOa+r+Gv
+	qtAW+mLbxCjg/w5prt5Mp5mE0k5zC1A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1738092496;
+	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+	 cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cu5AW9e6LIlMe18vHX/cu2btQmvEuNdVbxSGH23BpgQ=;
+	b=9Rahx42hI6P64ZFl8I0lTTg8Zv21R573Kl+t/8z5GIP+ELkdKbRYFovpEy1CA3oSmAZSUq
+	/XJL5V34JZcxoYCg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B4BB313625;
+	Tue, 28 Jan 2025 19:28:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id MMhrK88vmWf/FgAAD6G6ig
+	(envelope-from <dsterba@suse.cz>); Tue, 28 Jan 2025 19:28:15 +0000
+Date: Tue, 28 Jan 2025 20:28:14 +0100
+From: David Sterba <dsterba@suse.cz>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Yaron Avizrat <yaron.avizrat@intel.com>,
+	Oded Gabbay <ogabbay@kernel.org>,
+	Julia Lawall <Julia.Lawall@inria.fr>,
+	Nicolas Palix <nicolas.palix@imag.fr>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+	David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+	Dongsheng Yang <dongsheng.yang@easystack.cn>,
+	Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	cocci@inria.fr, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-spi@vger.kernel.org, imx@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	platform-driver-x86@vger.kernel.org,
+	ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH 05/16] btrfs: convert timeouts to secs_to_jiffies()
+Message-ID: <20250128192814.GZ5777@suse.cz>
+Reply-To: dsterba@suse.cz
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+ <20250128-converge-secs-to-jiffies-part-two-v1-5-9a6ecf0b2308@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-5-9a6ecf0b2308@linux.microsoft.com>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+X-Rspamd-Queue-Id: 40D7E210F9
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.71 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	HAS_REPLYTO(0.30)[dsterba@suse.cz];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	ARC_NA(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[linux-foundation.org,intel.com,kernel.org,inria.fr,imag.fr,broadcom.com,HansenPartnership.com,oracle.com,perex.cz,suse.com,fb.com,toxicpanda.com,gmail.com,easystack.cn,kernel.dk,redhat.com,lst.de,grimberg.me,nxp.com,pengutronix.de,amd.com,linux.intel.com,hmh.eng.br,ziepe.ca,vger.kernel.org,lists.freedesktop.org,lists.infradead.org,lists.linux.dev,lists.sourceforge.net];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	REPLYTO_ADDR_EQ_FROM(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	REPLYTO_DOM_NEQ_TO_DOM(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[59];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.cz:replyto,suse.cz:dkim,suse.cz:mid,suse.com:email]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -2.71
+X-Spam-Flag: NO
 
-On Mon, 2025-01-27 at 14:34 -0800, Bart Van Assche wrote:
-> Energy efficiency is very important for battery-powered devices like
-> smartphones. In battery-powered devices, CPU cores and peripherals
-> support multiple power states. A lower power state is entered if no
-> work
-> is pending. Typically the more power that is saved, the more time it
-> takes to exit the power saving state.
->=20
-> Switching to a lower power state if no work is pending works well for
-> CPU-intensive tasks but is not optimal for latency-sensitive tasks
-> like
-> block I/O with a low queue depth. If a CPU core transitions to a
-> lower
-> power state after each I/O has been submitted and has to be woken up
-> every time an I/O completes, this can increase I/O latency
-> significantly. The cpu_latency_qos_update_request(..., max_latency)
-> function can be used to specify a maximum wakeup latency and hence
-> can
-> be used to prevent a transition to a lower power state before an I/O
-> completes. However, cpu_latency_qos_update_request() is too expensive
-> to
-> be called from the I/O submission path for every request.
->=20
-> In the UFS driver the cpu_latency_qos_update_request() is called from
-> the devfreq_dev_profile::target() callback. That callback checks the
-> hba->clk_scaling.active_reqs variable, a variable that tracks the
-> number
-> of outstanding commands. Updates of that variable are protected by a
-> spinlock and hence are a contention point. Having to maintain this or
-> a
-> similar infrastructure in every block driver is not ideal.
->=20
-> A possible solution is to tie QoS updates to the runtime-power
-> management (RPM) mechanism. The block layer interacts as follows with
-> the RPM mechanism:
-> * pm_runtime_mark_last_busy(dev) is called by the block layer upon
-> =C2=A0=C2=A0 request completion. This call updates dev->power.last_busy. =
-The
-> RPM
-> =C2=A0=C2=A0 mechanism uses this information to decide when to check whet=
-her a
-> =C2=A0=C2=A0 block device can be suspended.
-> * pm_request_resume() is called by the block layer if a block device
-> has
-> =C2=A0=C2=A0 been runtime suspended and needs to be resumed.
-> * If the RPM timer expires, the block driver .runtime_suspend()
-> callback
-> =C2=A0=C2=A0 is invoked. The .runtime_suspend() callback is expected to c=
-all
-> =C2=A0=C2=A0 blk_pre_runtime_suspend() and blk_post_runtime_suspend().
-> =C2=A0=C2=A0 blk_pre_runtime_suspend() checks whether q->q_usage_counter =
-is
-> zero.
->=20
-> It is not my goal to replace the iowait boost mechanism. This
-> mechanism
-> boosts the CPU frequency when a task that is in the iowait state
-> wakes
-> up after the I/O operation completes.
->=20
-> The purpose of this session is to discuss the following:
-> * A solution that exists in the block layer instead of in block
-> drivers.
-> * A solution that does not cause contention between block layer
-> hardware
-> =C2=A0=C2=A0 queues.
-> * A solution that does not measurable increase the number of CPU
-> cycles
-> =C2=A0=C2=A0 per I/O.
-> * A solution that does not require users to provide I/O latency
-> =C2=A0=C2=A0 estimates.
->=20
-> See also:
-> * https://www.kernel.org/doc/Documentation/power/pm_qos_interface.txt
-> * Tero Kristo, [PATCHv2 0/2] blk-mq: add CPU latency limit control,
-> =C2=A0=C2=A0 2024-10-18=20
-> (
-> https://lore.kernel.org/linux-block/20241018075416.436916-1-tero.kristo@l=
-inux.intel.com
-> /).
-> * The cpu_latency_constraints definition in kernel/power/qos.c.
->=20
+On Tue, Jan 28, 2025 at 06:21:50PM +0000, Easwar Hariharan wrote:
+> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> secs_to_jiffies().  As the value here is a multiple of 1000, use
+> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
+> 
+> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+> the following Coccinelle rules:
+> 
+> @depends on patch@
+> expression E;
+> @@
+> 
+> -msecs_to_jiffies
+> +secs_to_jiffies
+> (E
+> - * \( 1000 \| MSEC_PER_SEC \)
+> )
+> 
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-Sounds like really interesting problem and topic. Thank you for
-suggesting. :) Yeah, we need to do something with power consumption.
-
-Thanks,
-Slava.
-
+Acked-by: David Sterba <dsterba@suse.com>
