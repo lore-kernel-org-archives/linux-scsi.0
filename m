@@ -1,82 +1,153 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 528F91DE4C8
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2025 17:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id F2A411B040E;
+	Tue, 28 Jan 2025 18:21:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738085558; cv=none; b=TFi6TnOFPfSeqHCxwaNVWZRcaQ4gWR/JXMAaGiAv3SB5hVlrcfnOuYsgMunKwArm8ty5YcIx22UdQBSOd/8Qr6l6tXiST6o4/5oSoczOVYFguvbG5jf/0frTor+3W77nZyi2vh1A/HhZWyp0WljPwJ+KBYU+BMQzEhWjfSlCxnw=
+	t=1738088519; cv=none; b=fjXo6ARyHRjpEv5+fwPpoIil7BgOxxmnmi0LnvisazEsrfGTosFyYc69ksQjA5y7V0hCKLNw9n7v1r16ngAb/5vX+1RagV6l+FO0HS3aBw4bWN2TWpLaxtJpiEWwiQf7OGTnWO8aLRvw6LYcXkJUB2U5gUdxfphQKMzTzlDup5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738085558; c=relaxed/simple;
-	bh=nMiVwk5wnsvQfsHooNA4FNzI0woDmK/uFr6Eg+xYjBI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i0LX55nQ8RX0oZBNNBpEoTFRBKXN5BaserbO9Y6qh/QJTHqCLTudAEncOin9zLkTt+nMZcSCSas7mkfe9kj2xd6hAgGgCwFHAB2UWx8jkXMfORwfPgfgVbpvQwGvRbRWrDIGeNvPMNr10rWgROBBZmF9B5zpxbJGOY3yNhho+cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=P1KBDelA; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1738088519; c=relaxed/simple;
+	bh=sHSV1VeTK4GqSPaEADJvEkDZCJZ38hJL0yKDoC4Uqao=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=ONYJFT5ZwSxKjIxoakPd2yH0nFIxQW3+nAnM+XCto6/hjkt+8C9GT12r/2BI89dik1hb8Hny0dQSEO++h0V/oGWpz5rNQSd15V2KqDoKVdo50XdnNqrwQqCFFzMBNNU94RCh04HIPD1mqZU8aOgz3Fy8kR+YeGGDPHdj+a3Js/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=rbsRgRXs; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="P1KBDelA"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4YjC6D4gBlz6CmQwQ;
-	Tue, 28 Jan 2025 17:32:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1738085554; x=1740677555; bh=cX8CvxIF1OwaJw5vUGhkEa3Y
-	XQCgo8wAoUJgSM+rGkw=; b=P1KBDelAhQLrgGTHC9fzNsMDRuS489TAJswyKVX6
-	bwp0GOnX5aBJJkEsgpk1UcFmyHkwfnX1q0jKw1jxOfP/SYYxMnHGB9SxaP8gIr/A
-	RIOKtBh01eldhg90145p0zDjIKbBWf4R3H2Owzf5ZFJltcUGyFxuLkqRL+4DhKS7
-	k76dqpnABO2tVmfqN0R5czs1tCM2pokr2TLItWUXWYqw8CIbpeW/jXSbwirFdnZE
-	PNiVtGsaUVSO18tXpGcD8ZKmcfnFJ+Qundmv5icjNnQ2Ajqo5VpKRzmxD+/YG+AN
-	GYXI20ZEEY22JxGvbv+ct0kCTiW5jtIXQ6LOBmNrCp+xKw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id lQN965phOseI; Tue, 28 Jan 2025 17:32:34 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2e14:8:1e8a:33f3:2626:73d8] (unknown [104.135.204.80])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4YjC692BjLz6CmR09;
-	Tue, 28 Jan 2025 17:32:32 +0000 (UTC)
-Message-ID: <d471315c-2e6a-4f16-8a3b-805379998376@acm.org>
-Date: Tue, 28 Jan 2025 09:32:29 -0800
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="rbsRgRXs"
+Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 5C2E02037175;
+	Tue, 28 Jan 2025 10:21:57 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5C2E02037175
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1738088517;
+	bh=DWnZxqt2SesB4Fck6kqsaU204yIBxTyh+Yo+gWHnxew=;
+	h=From:Subject:Date:To:Cc:From;
+	b=rbsRgRXsDhgQ49qwzz8O9F+b3CIaPu+u/u5bFNXstLiqFfaEZgC1iIU54pEJ4SCC9
+	 qXRUrwxGkFwK11MEhKH4r7I0e/4uhHl3G7yCK3E3A4G+YwxkrF4Z/N40iZHmQckLfV
+	 +mfJ829accGVQ64/iuqsqnpCIMIptrmhiAA8pmnE=
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Subject: [PATCH 00/16] Converge on using secs_to_jiffies() part two
+Date: Tue, 28 Jan 2025 18:21:45 +0000
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 2/6] scsi: scsi_debug: Add READ BLOCK LIMITS and
- modify LOAD for tapes
-To: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
- linux-scsi@vger.kernel.org, dgilbert@interlog.com
-Cc: jmeneghi@redhat.com
-References: <20250128142250.163901-1-Kai.Makisara@kolumbus.fi>
- <20250128142250.163901-3-Kai.Makisara@kolumbus.fi>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250128142250.163901-3-Kai.Makisara@kolumbus.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIADogmWcC/x2NMQrDMAwAvxI0VxAbE0O/UjoYV2qUwQ6SSQshf
+ 6/oeDfcnWCkQgb36QSlQ0x6cwi3Cepa2ptQXs4Q55hCDBlrbwepe6NqODpuwuwF3IsOHJ+OnNI
+ ccikLLxm8syuxfP+Px/O6fgSSOflzAAAA
+X-Change-ID: 20241217-converge-secs-to-jiffies-part-two-f44017aa6f67
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+ Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, 
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+ Hans de Goede <hdegoede@redhat.com>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+ Selvin Xavier <selvin.xavier@broadcom.com>, 
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
+Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+ linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+ ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+ linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+ ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+X-Mailer: b4 0.14.2
 
-On 1/28/25 6:22 AM, Kai M=C3=A4kisara wrote:
-> +#define SDEBUG_READ_BLOCK_LIMITS_ARR_SZ 6
+This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+either use the multiply pattern of either of:
+- msecs_to_jiffies(N*1000) or
+- msecs_to_jiffies(N*MSEC_PER_SEC)
 
-Isn't enum or 'static const' preferred for declaring constants that are=20
-only used inside a single function?
+where N is a constant or an expression, to avoid the multiplication.
 
-> +	unsigned char arr[SDEBUG_READ_BLOCK_LIMITS_ARR_SZ];
-> +
-> +	memset(arr, 0, SDEBUG_READ_BLOCK_LIMITS_ARR_SZ);
+The conversion is made with Coccinelle with the secs_to_jiffies() script
+in scripts/coccinelle/misc. Attention is paid to what the best change
+can be rather than restricting to what the tool provides.
 
-The above two statements can be combined in a single statement:
+Andrew has kindly agreed to take the series through mm.git modulo the
+patches maintainers want to pick through their own trees.
 
-	u8 arr[SDEBUG_READ_BLOCK_LIMITS_ARR_SZ] =3D { };
+This series is based on next-20250128
 
-Thanks,
+Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-Bart.
+* https://lore.kernel.org/all/20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com/
+
+---
+Easwar Hariharan (16):
+      coccinelle: misc: secs_to_jiffies: Patch expressions too
+      scsi: lpfc: convert timeouts to secs_to_jiffies()
+      accel/habanalabs: convert timeouts to secs_to_jiffies()
+      ALSA: ac97: convert timeouts to secs_to_jiffies()
+      btrfs: convert timeouts to secs_to_jiffies()
+      rbd: convert timeouts to secs_to_jiffies()
+      libceph: convert timeouts to secs_to_jiffies()
+      libata: zpodd: convert timeouts to secs_to_jiffies()
+      xfs: convert timeouts to secs_to_jiffies()
+      power: supply: da9030: convert timeouts to secs_to_jiffies()
+      nvme: convert timeouts to secs_to_jiffies()
+      spi: spi-fsl-lpspi: convert timeouts to secs_to_jiffies()
+      spi: spi-imx: convert timeouts to secs_to_jiffies()
+      platform/x86/amd/pmf: convert timeouts to secs_to_jiffies()
+      platform/x86: thinkpad_acpi: convert timeouts to secs_to_jiffies()
+      RDMA/bnxt_re: convert timeouts to secs_to_jiffies()
+
+ .../accel/habanalabs/common/command_submission.c   |  2 +-
+ drivers/accel/habanalabs/common/debugfs.c          |  2 +-
+ drivers/accel/habanalabs/common/device.c           |  2 +-
+ drivers/accel/habanalabs/common/habanalabs_drv.c   |  2 +-
+ drivers/ata/libata-zpodd.c                         |  3 +--
+ drivers/block/rbd.c                                |  6 +++---
+ drivers/infiniband/hw/bnxt_re/qplib_rcfw.c         |  2 +-
+ drivers/nvme/host/core.c                           |  6 ++----
+ drivers/platform/x86/amd/pmf/acpi.c                |  3 ++-
+ drivers/platform/x86/thinkpad_acpi.c               |  2 +-
+ drivers/power/supply/da9030_battery.c              |  3 +--
+ drivers/scsi/lpfc/lpfc_init.c                      |  4 ++--
+ drivers/scsi/lpfc/lpfc_scsi.c                      | 12 +++++------
+ drivers/scsi/lpfc/lpfc_sli.c                       | 24 ++++++++--------------
+ drivers/scsi/lpfc/lpfc_vport.c                     |  2 +-
+ drivers/spi/spi-fsl-lpspi.c                        |  2 +-
+ drivers/spi/spi-imx.c                              |  2 +-
+ fs/btrfs/disk-io.c                                 |  6 +++---
+ fs/xfs/xfs_icache.c                                |  2 +-
+ fs/xfs/xfs_sysfs.c                                 |  7 +++----
+ net/ceph/ceph_common.c                             | 10 ++++-----
+ net/ceph/osd_client.c                              |  3 +--
+ scripts/coccinelle/misc/secs_to_jiffies.cocci      | 22 ++++++++++++++------
+ sound/pci/ac97/ac97_codec.c                        |  3 +--
+ 24 files changed, 63 insertions(+), 69 deletions(-)
+---
+base-commit: 9a87ce288fe30f268b3a598422fe76af9bb2c2d2
+change-id: 20241217-converge-secs-to-jiffies-part-two-f44017aa6f67
+
+Best regards,
+-- 
+Easwar Hariharan <eahariha@linux.microsoft.com>
+
