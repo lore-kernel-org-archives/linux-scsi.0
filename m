@@ -1,76 +1,76 @@
-Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
+Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com [209.85.219.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2C7A1EEA3E;
-	Tue, 28 Jan 2025 16:47:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3BE1C32FF;
+	Tue, 28 Jan 2025 16:47:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738082828; cv=none; b=UgBWnaE9oN4qPrJ5OSod24KI78SO6E/mXvLiTEip0pPEUust413ACcCxUd3qk4wWxUANpOoOIJCOv1DVYe73KBT5HRssxAk2t7AZ1XFHuq7lBuJERXtwT0FMEEbZakwtSzCcd5J3lczuQjO6j2ikpxIJwjFlkie1ML7XAAaZjmM=
+	t=1738082829; cv=none; b=FRdSijxYsDtiE041Mrw4kcgGH8HBVHexEptXwncDquwKIN9xbT95KjGuOWmwgmdcv1+5udlTrXF64FJ0QpprUewmGFF41friQ3STp1//JNHgqDBBCJDhJnHHUQyB4ssMZSh2BuJG9Cf7cInEPQ29CYgbmhE4a3Q/iMM3lN8BY3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738082828; c=relaxed/simple;
-	bh=xwsJBuJWYQvgBSzjTEX0AGU/W3tEznN5MToOHmkEGRM=;
+	s=arc-20240116; t=1738082829; c=relaxed/simple;
+	bh=QqjVeGr1MoVChAKZX8OzkSEy2DnqX3wzs/volw4OQEw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mx+r+0/swqqds08ba6TvlL/Z2LxrhMHFg6JC2smLxhyJJ/sb0g8CBnMXNEMiQeEvi+O4DJhSEkX2Nvgb4GDzKhwF3g7uqTSQun9ogThlfDK2T7INnDsQgqpXHD6/IcNoAs6EWZLQjkdfThbwvxobLI0G6eFlRsaIK9enW4W1ap0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iXbUG6Bq; arc=none smtp.client-ip=209.85.219.175
+	 MIME-Version; b=YZYb2U+d/IvXe6KQ6c409En/QL/wzEHYQM8IxJCXBqHOGvezpchCjdvRg2bAaOZVVhum2HAHw7YotlKpRI6/x947oRU6OmRuera2aVFTYnHk4kGSPPXxfI6vpEzoBjsXq8CmL9irPTUznrKdl5C83f1ePMsB2sH2zrAFjFC9zrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VupFIZfU; arc=none smtp.client-ip=209.85.219.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iXbUG6Bq"
-Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-e46ebe19368so8436276276.0;
-        Tue, 28 Jan 2025 08:47:06 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VupFIZfU"
+Received: by mail-yb1-f170.google.com with SMTP id 3f1490d57ef6-e53c9035003so9554167276.2;
+        Tue, 28 Jan 2025 08:47:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738082826; x=1738687626; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1738082827; x=1738687627; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=nECvGuISJzvWzXqBfzABNhjFV024u8eo2ZzrlCq8YFQ=;
-        b=iXbUG6Bq6p+tKJB+NRPDQ9VgQITE5Zn9Vjo3hT2uwJsTaeRab2mNcYy8HN7Q4FE0lW
-         ANQU8YQv87lwDiaPuS/JyOHmXIjXpjH7bx9lJErEf4DxtFvySQYMwRuiQIj8EtVO5ja4
-         PnsW8j0MDtkodc4Xmr1AXH5HBCTpC3lLFeubk+8dxm3DHj80a56G0CfvZI2Arej8DjEp
-         iL/QqLKt8Qse1mFcVh+juna/E3hmzjlw11Co8dnifw6AF+9hg27I1ZGgJ+sTzyYQcuQC
-         8U8rjLWMTFPPjwf2kUPRSph04CX9w63ZdWgKxAfWZE3bNQer9ddm6hvrPK3Bx7As6e6w
-         fp5g==
+        bh=phT1rR/004GFOSkR2R9bhedH2F13EDnwojW4EsaMgmU=;
+        b=VupFIZfUwMbwFk74wwHf9dyGZhYxFmb3t2fpne8wCvc/GuvdxKA2R07bZ16o8FAzl5
+         zC6GC9qB2eRxeYdsKdcQc28dvOjp1ZgjrTuazFxcW8Q0y7WDbm9t+1C6VcmYwDTe8h9U
+         miMcagI1nT9XV2b32JVb2p5oA5w+vwLT+nOf9wjP0UFbQkuLxMqJFerkO+KBm+p1Sdxr
+         Ovu99BLB+DdfJmGddOhEY13YcezMCxw7poZUACSe+ttr8cXxOsk5aeTaBMNQTNE2XUAU
+         6088aMTx8OLVJvnPnjphV9HS+r9oN9OoL9vCnWO8WmXsbxXI6n8T2yi2rs9HBS/QKXAC
+         C1fA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738082826; x=1738687626;
+        d=1e100.net; s=20230601; t=1738082827; x=1738687627;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=nECvGuISJzvWzXqBfzABNhjFV024u8eo2ZzrlCq8YFQ=;
-        b=G3MZhydzjvNv7sM5ctWz7tSDUoRzf0e+ISeEJUXc9ilGPRQUvoQTzm+dFhlwN96rLv
-         52MIc7IKl9hRkij0tYSxum4SQUewZLe2ax0UTqh2HvoWl81QgE7Ph1kxlAzpek/JW7Gd
-         YbggyCW6zEm8JKrnIglmy6ZHFa6GtT0Vj1YGaaIEGnWM9FZQP1jzeuDYLc3l5mnylKnA
-         Bf7Yj8Mtj8LZE77iHqwVczxtmwID/qj6akoZdVjhoYbdk+kfjheWr0Zz3ljkyf/fvMRQ
-         EoqjGJg0d2dG24BQwpQPQM2q8Kpw78T7w/Dbweoijs3kc9nDFx0PlkrJTGgBvgAIYCSd
-         7ccw==
-X-Forwarded-Encrypted: i=1; AJvYcCUxk14u9bE+x86oSRGmJ9w8fHZxSOGUNMfuao1xdvSlGBPKNDTnj2eupBggyoxzcFbT5d8x96qYsYUe@vger.kernel.org
-X-Gm-Message-State: AOJu0YxG9WgDJMns4fnkGG9GSpm3YvMcHb7+UTFdRL4yQsbj7XkBCuj1
-	IHLa7G7dTwOk77uK9sQv0BGqoRaVAVzYxJMZgzVxsg1CT7LjQss5oMuqYnMW
-X-Gm-Gg: ASbGncveO29DK/JB3Vw2OYBlqVwQiUzTFIrPFMbIjhJpAuvfeJNZYjYJxeQSinVE79W
-	GmEivgJqfPBVJaLHTLIEQMxDTo26e3wCzdC2GiH/g3MHEMKvPe1AhFBfFcjmZqVWJNsoeqtqxX1
-	sp1hrWoRR5ZjL9OuElnkhwPBhusJl7KQW9NjdzNXCIWjMhSPDwPXNUs/CTY/DdQmcBHTmYgN/U6
-	MX6DNq7P1jIjaoBp0nukrWfPx9RmZZdh6bTFd0Xp+VfJEHQBKeyR2RrcucuFUm+OyXBONEQ5iw7
-	PvfBN7vN6nY/MPFkb3BGVNrt3lEb9Z0Bo+o4NKRvVOy9PP6cgkg=
-X-Google-Smtp-Source: AGHT+IEsXoF439CCPEfGileFbbXu5z7dOf++ilKqvwhQ7iCLQYkj0a19LBqsHqxQaxQctf3TXToaFA==
-X-Received: by 2002:a05:690c:f09:b0:6f7:598d:34c2 with SMTP id 00721157ae682-6f7598d3d7dmr133398347b3.24.1738082825856;
-        Tue, 28 Jan 2025 08:47:05 -0800 (PST)
+        bh=phT1rR/004GFOSkR2R9bhedH2F13EDnwojW4EsaMgmU=;
+        b=rRyvT7Dtn4FDjdm1mElUVEaKFPbCD/v3oCu1gGRubFpg8J5i4GY7TIiiBKukS988I1
+         eyJfJtqtVjSjGY5nEXUHoG7F104R0OlFqOi4/zrZydvFzDzzthx//hit3ctUMD0CSwGD
+         QoVV94Mm+UBVESw5SBQ/HwRmzB5gKzeHxamH2q1H+QmxDLyhjd4w7aJZz6/ojzf9nV6Z
+         Xeq6CmHoEKjBqMYg2IWhro3Sa76ZB7AFVDr9u65uPpAragCi7xUpoEnq1JWV+QoR3P3j
+         vXvzvJu9ZLIits1cAnP9yDGFlwmtzxcr3xeeqjFGGbLQJ9q7D4LZ2ybbRUwKKnFKa2Dk
+         prKw==
+X-Forwarded-Encrypted: i=1; AJvYcCWEzP/xbyeQNiaQb5oxMeiWCtHU+3IxhQUJaluMNm2u6tyvsfZHPebuTtxMHM1WiACCcVA0hvZUl/3GR6U=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfQgCz5nRuU9IGdrN2UayF0Yc6dh/lrwJwlL2j1Jn2zKkeORWG
+	BsHUPK4/Tvstyuxv3DicPnenTKgkhyfdw2CjAalgZpYNfT5FQtLUkkiClyzX
+X-Gm-Gg: ASbGnctsuK7Nqfw5dUKg6JT0prjAZyAL9eKTb/QXoVzGoqNTrLG5HGgtQji18Mhe0Va
+	AUGzh8tX5qG7r3IJ5qsjCDeUdVe2ky3vJB3Yqd4jxaaUPwEi/78z+ODlyXX1TKXcW/xO+TU35CE
+	FEesLMx8zn7Vr/9R3g7ZHEr92Y2c1vo9J4ca+KZ5oAJmOePfMF0bA8yFQ6bD/oOT0+lkpju1IZn
+	TJFCYhlbg9bMp+bnuHFuhZ7uXgs4J2SqGWlmdLsoHRm9AQ8JPVeFxq5OyftNSAyrPLY6QNeitwG
+	qy9tiwZ0j3+NQYoY1QClUJMzwnXdRmK5jKfAR5u6yOSQnXbOWjAPXBE5lAHHFg==
+X-Google-Smtp-Source: AGHT+IGMN85pL3nKeabmi2vQlqHPoV7QJEJILQG4CftpyG1sVE3UCGmbhZI7bM70JI8gWQuaVgaTHA==
+X-Received: by 2002:a05:690c:6f8e:b0:6ef:7dde:bdef with SMTP id 00721157ae682-6f6eb9058b0mr348795307b3.23.1738082827162;
+        Tue, 28 Jan 2025 08:47:07 -0800 (PST)
 Received: from localhost (c-73-224-175-84.hsd1.fl.comcast.net. [73.224.175.84])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-6f75787710dsm19357597b3.4.2025.01.28.08.47.05
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-6f757877303sm19392737b3.6.2025.01.28.08.47.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jan 2025 08:47:05 -0800 (PST)
+        Tue, 28 Jan 2025 08:47:06 -0800 (PST)
 From: Yury Norov <yury.norov@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
+To: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	James Smart <james.smart@broadcom.com>,
 	Dick Kennedy <dick.kennedy@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Yury Norov <yury.norov@gmail.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Yury Norov <yury.norov@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Christoph Hellwig <hch@lst.de>,
 	Justin Tee <justin.tee@broadcom.com>
-Subject: 
-Date: Tue, 28 Jan 2025 11:46:39 -0500
-Message-ID: <20250128164646.4009-11-yury.norov@gmail.com>
+Subject: [PATCH v2 11/13] scsi: lpfc: rework lpfc_next_{online,present}_cpu()
+Date: Tue, 28 Jan 2025 11:46:40 -0500
+Message-ID: <20250128164646.4009-12-yury.norov@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250128164646.4009-1-yury.norov@gmail.com>
 References: <20250128164646.4009-1-yury.norov@gmail.com>
@@ -82,33 +82,66 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Subject: [PATCH v2 10/13] scsi: lpfc: switch lpfc_irq_rebalance() to using
- cpumask_next_wrap()
+lpfc_next_online_cpu() opencodes cpumask_next_and_wrap() by using
+a for-loop. Use it and make the lpfc_next_online_cpu() a plain
+one-liner.
 
-Calling cpumask_next_wrap_old() with starting CPU equal to wrapping CPU
-is the same as request to find next CPU, wrapping around if needed.
-
-cpumask_next_wrap() is the proper replacement for that.
+While there, rework lpfc_next_present_cpu() similarly. Notice that
+cpumask_next() followed by cpumask_first() in the worst case of an
+empty mask may traverse the mask twice. Cpumask_next_wrap() takes
+care of that correctly.
 
 Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Yury Norov <yury.norov@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc.h | 23 +++++------------------
+ 1 file changed, 5 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 31622fb0614a..e94a7b8973a7 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12876,7 +12876,7 @@ lpfc_irq_rebalance(struct lpfc_hba *phba, unsigned int cpu, bool offline)
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index e5a9c5a323f8..62438e84e52a 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -1715,18 +1715,12 @@ lpfc_phba_elsring(struct lpfc_hba *phba)
+  * Note: If no valid cpu found, then nr_cpu_ids is returned.
+  *
+  **/
+-static inline unsigned int
++static __always_inline unsigned int
+ lpfc_next_online_cpu(const struct cpumask *mask, unsigned int start)
+ {
+-	unsigned int cpu_it;
+-
+-	for_each_cpu_wrap(cpu_it, mask, start) {
+-		if (cpu_online(cpu_it))
+-			break;
+-	}
+-
+-	return cpu_it;
++	return cpumask_next_and_wrap(start, mask, cpu_online_mask);
+ }
++
+ /**
+  * lpfc_next_present_cpu - Finds next present CPU after n
+  * @n: the cpu prior to search
+@@ -1734,16 +1728,9 @@ lpfc_next_online_cpu(const struct cpumask *mask, unsigned int start)
+  * Note: If no next present cpu, then fallback to first present cpu.
+  *
+  **/
+-static inline unsigned int lpfc_next_present_cpu(int n)
++static __always_inline unsigned int lpfc_next_present_cpu(int n)
+ {
+-	unsigned int cpu;
+-
+-	cpu = cpumask_next(n, cpu_present_mask);
+-
+-	if (cpu >= nr_cpu_ids)
+-		cpu = cpumask_first(cpu_present_mask);
+-
+-	return cpu;
++	return cpumask_next_wrap(n, cpu_present_mask);
+ }
  
- 	if (offline) {
- 		/* Find next online CPU on original mask */
--		cpu_next = cpumask_next_wrap_old(cpu, orig_mask, cpu, true);
-+		cpu_next = cpumask_next_wrap(cpu, orig_mask);
- 		cpu_select = lpfc_next_online_cpu(orig_mask, cpu_next);
- 
- 		/* Found a valid CPU */
+ /**
 -- 
 2.43.0
 
