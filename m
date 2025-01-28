@@ -1,33 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C4CE71DEFE3;
-	Tue, 28 Jan 2025 18:21:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A37E31E1A20;
+	Tue, 28 Jan 2025 18:22:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738088522; cv=none; b=s2TWS+uOeiL2SZpzW/GicEfcAAV2w3yvcMhUWsL1ci2iU8MkQKNwkpJVvOSqFeWFlABRoiix8qbTpWs5o/3ahn6wAzbvHVNp7WDh4WOVw0207hL4+/C6Nijzn0YSqjwXGyYjgxv92/XRLoEJfQcukto5C5s6qJz0fHS794gfaro=
+	t=1738088523; cv=none; b=EqhM6IlY3OJjwFbcgigOBUthHYxPt23HQJWdRR2A9Meus1UoOuoBgqF3G3QBQ3t9HnOWHCuv2Dsc/6IANZKyFyZQF2wWBDjNG9uXdV9X9jEbGWsaRU+70gymcBRa3c7J50TSdnta5BOTnLiRr2B3wrPDQWPyvhA2R6ifM0s9CoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738088522; c=relaxed/simple;
-	bh=UsUwkjA8cNb2PcchDqY2QvKjXirKtHPuHHZCi+z/zFw=;
+	s=arc-20240116; t=1738088523; c=relaxed/simple;
+	bh=hxzBuqSwk2zzOwQjj5kj7Zs58bHYnySoYbzTohNwNyI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=czXQ+lIKwIgcZ4cGFTQqIqrNc+SHhpJN20+bFqvR+0Dq9TtWDufSFmJ3fcT59o+MpaDBplriZo4sV02KhCbx8YvDgifV45OQ7eqWAFK5nUfi8yWtVS6C60YXrdKiCfXNIEAhpt+S1J/L8UM51Do2JU1obA+gxjcXWIaTCAxmFUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=LxxdIayM; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=k+y9hzPceXjvH3+8OOajv+oCtYX+LExJulRqDkRBHepWxK9yvGx95ph7RECSjLMxPhUVho5Xjp0nZlxJVV5lammi032CFfg1cctbeCNVWUwVP2s+dbqCpDZj8WnaQtvL7jdOKu4bf52t03WGj7jreLJwzd/f5sjI2AapX7TgjSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=hgE89/ZE; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="LxxdIayM"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="hgE89/ZE"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 1D482203717B;
+	by linux.microsoft.com (Postfix) with ESMTPSA id 677F3203717D;
 	Tue, 28 Jan 2025 10:21:58 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 1D482203717B
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 677F3203717D
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1738088518;
-	bh=CFb4XrnDSERyLmvQoVXwUxR+JwVzCZvuuqJLbnh8AHY=;
+	bh=HdLPh2PfgYXpuYBC8DOdOZE21MhHNYKQn7qY/vRruJc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=LxxdIayMSyUMAUeZUUnUyY3SQxVmwYY5Yyy03OWU22J18lbSyq7bmmWrhs+09j8qK
-	 AdDxUAv3Opt8Wt6axGPYWRpk6/ENme+ZBSlX8IppgdX/yiYG+JdoRJjp8kHw8DUyuj
-	 x3rFLX3PefulMBej9H+RgFZR+bApgqLL7hw3/Tgc=
+	b=hgE89/ZEGzhCC06fBSy0OuT0sQNDNNusckBiNMFdx8HObLyTLW3siMG94Pr0ZLlsb
+	 fQK9++emxz2f1q1VTPxH2f2GJNOABzUmDv5dw+7qWye+06L0MBnTU4YhBM46fW71JN
+	 PSr2aK+Cp92CEJ/69KbyMUuvjSAK/8CWtJpCo8l8=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 28 Jan 2025 18:21:50 +0000
-Subject: [PATCH 05/16] btrfs: convert timeouts to secs_to_jiffies()
+Date: Tue, 28 Jan 2025 18:21:52 +0000
+Subject: [PATCH 07/16] libceph: convert timeouts to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,7 +36,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-5-9a6ecf0b2308@linux.microsoft.com>
+Message-Id: <20250128-converge-secs-to-jiffies-part-two-v1-7-9a6ecf0b2308@linux.microsoft.com>
 References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -97,34 +97,60 @@ expression E;
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- fs/btrfs/disk-io.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/ceph/ceph_common.c | 10 ++++------
+ net/ceph/osd_client.c  |  3 +--
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index f09db62e61a1b0e2b8b319f9605883fe0c86cf9d..ed2772d2791997b1e1d15e71d01d818b325f5173 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -1568,7 +1568,7 @@ static int transaction_kthread(void *arg)
+diff --git a/net/ceph/ceph_common.c b/net/ceph/ceph_common.c
+index 4c6441536d55b6323f4b9d93b5d4837cd4ec880c..0d1e303c0212cc9f70f7c54ca422b0b3ea01bf32 100644
+--- a/net/ceph/ceph_common.c
++++ b/net/ceph/ceph_common.c
+@@ -529,27 +529,25 @@ int ceph_parse_param(struct fs_parameter *param, struct ceph_options *opt,
+ 		/* 0 isn't well defined right now, reject it */
+ 		if (result.uint_32 < 1 || result.uint_32 > INT_MAX / 1000)
+ 			goto out_of_range;
+-		opt->osd_keepalive_timeout =
+-		    msecs_to_jiffies(result.uint_32 * 1000);
++		opt->osd_keepalive_timeout = secs_to_jiffies(result.uint_32);
+ 		break;
+ 	case Opt_osd_idle_ttl:
+ 		/* 0 isn't well defined right now, reject it */
+ 		if (result.uint_32 < 1 || result.uint_32 > INT_MAX / 1000)
+ 			goto out_of_range;
+-		opt->osd_idle_ttl = msecs_to_jiffies(result.uint_32 * 1000);
++		opt->osd_idle_ttl = secs_to_jiffies(result.uint_32);
+ 		break;
+ 	case Opt_mount_timeout:
+ 		/* 0 is "wait forever" (i.e. infinite timeout) */
+ 		if (result.uint_32 > INT_MAX / 1000)
+ 			goto out_of_range;
+-		opt->mount_timeout = msecs_to_jiffies(result.uint_32 * 1000);
++		opt->mount_timeout = secs_to_jiffies(result.uint_32);
+ 		break;
+ 	case Opt_osd_request_timeout:
+ 		/* 0 is "wait forever" (i.e. infinite timeout) */
+ 		if (result.uint_32 > INT_MAX / 1000)
+ 			goto out_of_range;
+-		opt->osd_request_timeout =
+-		    msecs_to_jiffies(result.uint_32 * 1000);
++		opt->osd_request_timeout = secs_to_jiffies(result.uint_32);
+ 		break;
  
- 	do {
- 		cannot_commit = false;
--		delay = msecs_to_jiffies(fs_info->commit_interval * 1000);
-+		delay = secs_to_jiffies(fs_info->commit_interval);
- 		mutex_lock(&fs_info->transaction_kthread_mutex);
+ 	case Opt_share:
+diff --git a/net/ceph/osd_client.c b/net/ceph/osd_client.c
+index b24afec241382b60d775dd12a6561fa23a7eca45..ba61a48b4388c2eceb5b7a299906e7f90191dd5d 100644
+--- a/net/ceph/osd_client.c
++++ b/net/ceph/osd_client.c
+@@ -4989,8 +4989,7 @@ int ceph_osdc_notify(struct ceph_osd_client *osdc,
+ 	linger_submit(lreq);
+ 	ret = linger_reg_commit_wait(lreq);
+ 	if (!ret)
+-		ret = linger_notify_finish_wait(lreq,
+-				 msecs_to_jiffies(2 * timeout * MSEC_PER_SEC));
++		ret = linger_notify_finish_wait(lreq, secs_to_jiffies(2 * timeout));
+ 	else
+ 		dout("lreq %p failed to initiate notify %d\n", lreq, ret);
  
- 		spin_lock(&fs_info->trans_lock);
-@@ -1583,9 +1583,9 @@ static int transaction_kthread(void *arg)
- 		    cur->state < TRANS_STATE_COMMIT_PREP &&
- 		    delta < fs_info->commit_interval) {
- 			spin_unlock(&fs_info->trans_lock);
--			delay -= msecs_to_jiffies((delta - 1) * 1000);
-+			delay -= secs_to_jiffies(delta - 1);
- 			delay = min(delay,
--				    msecs_to_jiffies(fs_info->commit_interval * 1000));
-+				    secs_to_jiffies(fs_info->commit_interval));
- 			goto sleep;
- 		}
- 		transid = cur->transid;
 
 -- 
 2.43.0
