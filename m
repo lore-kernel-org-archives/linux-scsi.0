@@ -1,136 +1,121 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62F0D154BE4;
-	Wed, 29 Jan 2025 00:22:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7111D1802B;
+	Wed, 29 Jan 2025 00:55:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738110138; cv=none; b=VRtCcN4681SXovtUmMKcXH72FsLSQx5WeZXn0DZmcqDggc0DiVfJLjiGwUsnmKvy3uSDhcNcQVLfGQfcnXsBUo5nJHrBu2cfHXdR6WkBzZiMCYT0S/JLTCZYLImFP0Ej9NEiw5hYLu4w/WlH1D6pHPRkxjcn7SN1XoiuRU81fAE=
+	t=1738112145; cv=none; b=poczDA42pqG3GtBoNzqKMRMSE2y20NfcExG505sRePQeC+Q5Y6oyNL2wpXykRQlHxiFXu7IYSpX+zt1Wt0ghUsWRCZijKYqx3zkdGXDf+Ox4YtHtqVbkvak9Qx7XJUaoqPkcRqvGF+Orc4cExBCSd8KM+Du/YWb38JVeGgBrImE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738110138; c=relaxed/simple;
-	bh=o5hYXLrn2BSP7xY88i6vdkcwT4JSgB+EBSjp35TyIH4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VE8GGwT3cgx6gxW14xDKoQBqmEC/yHMcCpTgutQLF3BgExO9a9R4pIEf3jz3ojsjpJZSx1++g+esK/K2Mc8NoE/pFF5u0MeqHEayb022GHFpuNmCakX+qK+tjpg2kjx7nBGXUN+JHL5y2EVCUgRWim4DfmguBDJDpvM85XEmMnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvaYBX/P; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738112145; c=relaxed/simple;
+	bh=7lLgfsbUvvXkuZ/CHyObEqTqK07OIPpnMi3L8CLFkWY=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=tcURMQ1kJUM89KLMAAj6OEf3EAPGPnoDjhpWS/TXL+Ss1qZswUn8jHlpP+ihclsGe18ra6scr5v9PQ+Ui1Eks8OmjrHU4A5zYqeP+YxTxGE/fNmIKyCkjW7cqgYNlEZXMta8d/aXcl0bKTk2uUkySa+2KCLG8IqpBxHhmSC7GDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a0Tp33LE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvaYBX/P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED094C4CED3;
-	Wed, 29 Jan 2025 00:22:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a0Tp33LE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF0E2C4CED3;
+	Wed, 29 Jan 2025 00:55:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738110137;
-	bh=o5hYXLrn2BSP7xY88i6vdkcwT4JSgB+EBSjp35TyIH4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LvaYBX/PT4FznDpU2Sd7jAjMWT4Zhccvq1G9nSszqh/z9EeEvQMdhKwHFf7ytbKF+
-	 IUR+ABOYF1Zb5ToAxGojoYFF5LcMvZK8Geqv9mvejas0wlawpm2evJ55461lpZ3/I/
-	 zVKKBQPMk2YJIFo/RCbg1PW01H9enhxph87W35ORJ0IbWnkqCyucviUycj1TOFFCX5
-	 tVowcKWyDXFzGw9RnW0kp5cJosqChn0Zj7syPQ+RNy64a4hU0MGfSeqeKrMrafwXVt
-	 ED+vwkcJ1uDpOqa3gcUHNMFHbXgSAwCyOvMlWR1/qOlt8d2jZrQdrJy3iTMJ/IM0sX
-	 QFqOs0rnLo8tg==
-Message-ID: <f39cde78-19de-45fc-9c64-d3656e07d4a7@kernel.org>
-Date: Wed, 29 Jan 2025 09:21:11 +0900
+	s=k20201202; t=1738112144;
+	bh=7lLgfsbUvvXkuZ/CHyObEqTqK07OIPpnMi3L8CLFkWY=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=a0Tp33LEr5mdpx4Jdes8W04nWqwEaLorvXlTwLQeltYmYb4klZ+1dz2ywlTC1b8vX
+	 3+k4ui1fUmLbcFjL5APZZHqXajEfDw8XK18yEtuoVQbYLE2/KJ3OWDxcoyJSsIsYNE
+	 DtQEthCyYqS56sQa1kB1Swn6qPUBhCaLAgWkwja3f55uChLvycrhuijZWm8POhmtni
+	 ykUeyJuvAvFNmoLZJQP4RIXBzVayDzL59pE6M7xHqHJCz+rWiTvl4EPHbNFmFx8Chm
+	 4j7efWWME8OF3uvIkfJk+9cFoNkYjHICLOSesiRjPTBgLZGNKhAvpDasPjs5mHTnv5
+	 F99y903Tt3oVw==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EAE01380AA66;
+	Wed, 29 Jan 2025 00:56:11 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/16] libata: zpodd: convert timeouts to
- secs_to_jiffies()
-To: Easwar Hariharan <eahariha@linux.microsoft.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>,
- Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>,
- James Smart <james.smart@broadcom.com>,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
- David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
- Xiubo Li <xiubli@redhat.com>, Niklas Cassel <cassel@kernel.org>,
- Carlos Maiolino <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
- Sebastian Reichel <sre@kernel.org>, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
- Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
- Hans de Goede <hdegoede@redhat.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
- Selvin Xavier <selvin.xavier@broadcom.com>,
- Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
-Cc: cocci@inria.fr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org,
- linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
- linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
- linux-rdma@vger.kernel.org
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
- <20250128-converge-secs-to-jiffies-part-two-v1-8-9a6ecf0b2308@linux.microsoft.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250128-converge-secs-to-jiffies-part-two-v1-8-9a6ecf0b2308@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: Re: [f2fs-dev] [PATCH v4 00/19] Wire up CRC32 library functions to
+ arch-optimized code
+From: patchwork-bot+f2fs@kernel.org
+Message-Id: 
+ <173811217076.3973351.8137382917166262630.git-patchwork-notify@kernel.org>
+Date: Wed, 29 Jan 2025 00:56:10 +0000
+References: <20241202010844.144356-1-ebiggers@kernel.org>
+In-Reply-To: <20241202010844.144356-1-ebiggers@kernel.org>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org,
+ linux-mips@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+ linux-crypto@vger.kernel.org, loongarch@lists.linux.dev,
+ sparclinux@vger.kernel.org, linux-riscv@lists.infradead.org,
+ linux-ext4@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
 
-On 1/29/25 3:21 AM, Easwar Hariharan wrote:
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies to avoid the multiplication.
+Hello:
+
+This series was applied to jaegeuk/f2fs.git (dev)
+by Eric Biggers <ebiggers@google.com>:
+
+On Sun,  1 Dec 2024 17:08:25 -0800 you wrote:
+> This patchset applies to v6.13-rc1 and is also available in git via:
 > 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
+>     git fetch https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git crc32-lib-v4
 > 
-> @depends on patch@
-> expression E;
-> @@
+> CRC32 is a family of common non-cryptographic integrity check algorithms
+> that are fairly fast with a portable C implementation and become far
+> faster still with the CRC32 or carryless multiplication instructions
+> that most CPUs have.  9 architectures already have optimized code for at
+> least some CRC32 variants; however, except for arm64 this optimized code
+> was only accessible through the crypto API, not the library functions.
 > 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> [...]
 
-The subject line should be:
+Here is the summary with links:
+  - [f2fs-dev,v4,01/19] lib/crc32: drop leading underscores from __crc32c_le_base
+    https://git.kernel.org/jaegeuk/f2fs/c/0a499a7e9819
+  - [f2fs-dev,v4,02/19] lib/crc32: improve support for arch-specific overrides
+    https://git.kernel.org/jaegeuk/f2fs/c/d36cebe03c3a
+  - [f2fs-dev,v4,03/19] lib/crc32: expose whether the lib is really optimized at runtime
+    https://git.kernel.org/jaegeuk/f2fs/c/b5ae12e0ee09
+  - [f2fs-dev,v4,04/19] crypto: crc32 - don't unnecessarily register arch algorithms
+    https://git.kernel.org/jaegeuk/f2fs/c/780acb2543ea
+  - [f2fs-dev,v4,05/19] arm/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/1e1b6dbc3d9c
+  - [f2fs-dev,v4,06/19] loongarch/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/72f51a4f4b07
+  - [f2fs-dev,v4,07/19] mips/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/289c270eab5e
+  - [f2fs-dev,v4,08/19] powerpc/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/372ff60ac4dd
+  - [f2fs-dev,v4,09/19] s390/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/008071917dfc
+  - [f2fs-dev,v4,10/19] sparc/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/0f60a8ace577
+  - [f2fs-dev,v4,11/19] x86/crc32: update prototype for crc_pcl()
+    https://git.kernel.org/jaegeuk/f2fs/c/64e3586c0b61
+  - [f2fs-dev,v4,12/19] x86/crc32: update prototype for crc32_pclmul_le_16()
+    https://git.kernel.org/jaegeuk/f2fs/c/1e6b72e60a5a
+  - [f2fs-dev,v4,13/19] x86/crc32: expose CRC32 functions through lib
+    https://git.kernel.org/jaegeuk/f2fs/c/55d1ecceb8d6
+  - [f2fs-dev,v4,14/19] bcachefs: Explicitly select CRYPTO from BCACHEFS_FS
+    https://git.kernel.org/jaegeuk/f2fs/c/cc354fa7f016
+  - [f2fs-dev,v4,15/19] lib/crc32: make crc32c() go directly to lib
+    https://git.kernel.org/jaegeuk/f2fs/c/38a9a5121c3b
+  - [f2fs-dev,v4,16/19] ext4: switch to using the crc32c library
+    https://git.kernel.org/jaegeuk/f2fs/c/f2b4fa19647e
+  - [f2fs-dev,v4,17/19] jbd2: switch to using the crc32c library
+    https://git.kernel.org/jaegeuk/f2fs/c/dd348f054b24
+  - [f2fs-dev,v4,18/19] f2fs: switch to using the crc32 library
+    https://git.kernel.org/jaegeuk/f2fs/c/3ca4bec40ee2
+  - [f2fs-dev,v4,19/19] scsi: target: iscsi: switch to using the crc32c library
+    https://git.kernel.org/jaegeuk/f2fs/c/31e4cdde4d8b
 
-ata: libata-zpodd: convert timeouts to secs_to_jiffies()
-
-Other than that, looks good to me.
-
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
-
-> ---
->  drivers/ata/libata-zpodd.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-> index 4b83b517caec66c82b126666f6dffd09729bf845..799531218ea2d5cc1b7e693a2b2aff7f376f7d76 100644
-> --- a/drivers/ata/libata-zpodd.c
-> +++ b/drivers/ata/libata-zpodd.c
-> @@ -160,8 +160,7 @@ void zpodd_on_suspend(struct ata_device *dev)
->  		return;
->  	}
->  
-> -	expires = zpodd->last_ready +
-> -		  msecs_to_jiffies(zpodd_poweroff_delay * 1000);
-> +	expires = zpodd->last_ready + secs_to_jiffies(zpodd_poweroff_delay);
->  	if (time_before(jiffies, expires))
->  		return;
->  
-> 
-
-
+You are awesome, thank you!
 -- 
-Damien Le Moal
-Western Digital Research
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
