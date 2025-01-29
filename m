@@ -1,89 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B24A18B499;
-	Wed, 29 Jan 2025 00:55:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 846505672;
+	Wed, 29 Jan 2025 05:05:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738112148; cv=none; b=M2lnQelQWp9acAsssoT+TBgNhL2abq69FkWjMirjCe8c0/xJt+8CG33RuF+ndipYB26DVGqZSrjYZsZc0WRxoVSN/pW2FEAgQakJwV1/uY5YkdG/wzVNTP+6symAbmTdrmKkSuEwwf0LzmyN2oGczvVkxFv3prCtLcg8pGrDhqw=
+	t=1738127161; cv=none; b=Y5pLflYrRA3NM2qEjG3GfyA6LIedtbQL8eco12VrCwDyTdhihIsmh/+YIGxwfAGV+gr7HRrRqwIJMK1HKOicwj2MckoyZjGkDca0c0D5ejnUEeqqysGFng0caVvA5ZVPzh+0T6sGhP9QMu8ASwyi+dTgkr++KC0XzPTFeoP2Y6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738112148; c=relaxed/simple;
-	bh=fHQX4W65GyKIvsAVa0l454mFXY3/JQdzf77DNqOzYQE=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=sqvCtqpnqkxot04S4/egV2v5Xs8u/mdUSbjgECVxAGPTsE8nkMLECi1O5xglwQnzkJZCZJVxwjQF/o0cbSD00tQuEOr/p8v9Ovfm3irF4alMWjdCk3jhOLW7WK3N04QihlTmVRKMBTjkt0zn472Na4SV4nwzkTKQhXP41ADAnUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcPJm0KX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738127161; c=relaxed/simple;
+	bh=1JraPduu2r9pNYm2YHcnK9o4M5+DUcrW3XUMcbdBFTo=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=hhXYqBr5b+8CSNPBwpKTc5ew5B7AKMIfr7449OEQxYNa0daKrpAl45N0WIOEddm1Xl+GovdrglHXnbGD/5UunPmyag5tN+KMP5jLt7VxWE+wEDMtIARQjUziwGmW/5P/cNvzfJBw1bF+NgjNwGpwo2zrgXccjfvY++nsVl/6qb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=AFX9oF9p; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcPJm0KX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91C85C4CEE5;
-	Wed, 29 Jan 2025 00:55:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738112147;
-	bh=fHQX4W65GyKIvsAVa0l454mFXY3/JQdzf77DNqOzYQE=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=WcPJm0KXqHafFE1N+jb6xqiTvr74okKHA28WzssL52oxG/LC1LQO5KR4skEsgOAWN
-	 sKn32sh2JY6iNqf5toA92jV2pp11kNk9cXQELTQqxPieLFLwtHe8b3h2DRZ7OIcTIl
-	 zWiKBHsZKfWSDEnFH79jrsY3EwHWTVH+Bo+KXuBFsMoQmcXRJW14nYoW7HYTec0AO/
-	 i77R6S6DU72BKytNFatgDTvqHIOuvqrMv8TcOeuq6hGPgVYr1GtHiDWlUCb24aPL/D
-	 YsXMhFt21eqwkrFYGxnmofh1sO+IShmJK0mtg1ryUFFLXrSD1GK4cyRANoZjDSF1M6
-	 x2QMIAS3zsBmQ==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id ADC9B380AA66;
-	Wed, 29 Jan 2025 00:56:14 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="AFX9oF9p"
+Received: from [100.65.200.247] (unknown [20.236.11.102])
+	by linux.microsoft.com (Postfix) with ESMTPSA id BF2B7203719A;
+	Tue, 28 Jan 2025 21:05:56 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com BF2B7203719A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1738127158;
+	bh=Wht2thRDahYYxR+tegBEk8fX7Ubl7UHYL3NLzUC8OjY=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=AFX9oF9pTu72L24VZYqKx9K3J6cjX75OWwM6bx5F//N6XwqpIMkYxe0t1yv/1uANn
+	 K7CYPXdux4/ltP2jazP0+UvJCsUaSdS3dhpnc4wskhaa9xzVe+3duJMghpWbik88tx
+	 7xoRplm16e8Caydkk6cw2Nsk6naPDQhd3Kt6qY7Y=
+Message-ID: <2402812d-b818-4d1b-9653-767c9cd89dda@linux.microsoft.com>
+Date: Tue, 28 Jan 2025 21:05:58 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: cocci@inria.fr, eahariha@linux.microsoft.com,
+ LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
+ linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ ceph-devel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
+ imx@lists.linux.dev, kernel@pengutronix.de,
+ linux-arm-kernel@lists.infradead.org,
+ Andrew Morton <akpm@linux-foundation.org>, Carlos Maiolino <cem@kernel.org>,
+ Chris Mason <clm@fb.com>, Christoph Hellwig <hch@lst.de>,
+ Damien Le Moal <dlemoal@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+ David Sterba <dsterba@suse.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>,
+ Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ James Smart <james.smart@broadcom.com>, Jaroslav Kysela <perex@perex.cz>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
+ Josef Bacik <josef@toxicpanda.com>, Julia Lawall <Julia.Lawall@inria.fr>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Ilya Dryomov <idryomov@gmail.com>,
+ Kalesh Anakkur Purayil <kalesh-anakkur.purayil@broadcom.com>,
+ Keith Busch <kbusch@kernel.org>, Leon Romanovsky <leon@kernel.org>,
+ Mark Brown <broonie@kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nicolas Palix <nicolas.palix@imag.fr>, Niklas Cassel <cassel@kernel.org>,
+ Oded Gabbay <ogabbay@kernel.org>, Ricardo Ribalda <ribalda@google.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Sascha Hauer <s.hauer@pengutronix.de>,
+ Sebastian Reichel <sre@kernel.org>,
+ Selvin Xavier <selvin.xavier@broadcom.com>, Shawn Guo <shawnguo@kernel.org>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Takashi Iwai <tiwai@suse.com>,
+ Victor Gambier <victor.gambier@inria.fr>, Xiubo Li <xiubli@redhat.com>,
+ Yaron Avizrat <yaron.avizrat@intel.com>
+Subject: Re: [PATCH 01/16] coccinelle: misc: secs_to_jiffies: Patch
+ expressions too
+To: Markus Elfring <Markus.Elfring@web.de>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
+ <565fb1db-3618-4636-8820-1ca77dad07a2@web.de>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <565fb1db-3618-4636-8820-1ca77dad07a2@web.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH v5 0/5] data placement hints and FDP
-From: patchwork-bot+f2fs@kernel.org
-Message-Id: 
- <173811217323.3973351.17971976914892259618.git-patchwork-notify@kernel.org>
-Date: Wed, 29 Jan 2025 00:56:13 +0000
-References: <20240910150200.6589-1-joshi.k@samsung.com>
-In-Reply-To: <20240910150200.6589-1-joshi.k@samsung.com>
-To: Kanchan Joshi <joshi.k@samsung.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
- martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
- brauner@kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
- jaegeuk@kernel.org, jlayton@kernel.org, chuck.lever@oracle.com,
- bvanassche@acm.org, vishak.g@samsung.com, linux-scsi@vger.kernel.org,
- gost.dev@samsung.com, linux-nvme@lists.infradead.org,
- linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, javier.gonz@samsung.com
 
-Hello:
-
-This series was applied to jaegeuk/f2fs.git (dev)
-by David Sterba <dsterba@suse.com>:
-
-On Tue, 10 Sep 2024 20:31:55 +0530 you wrote:
-> Current write-hint infrastructure supports 6 temperature-based data
-> lifetime hints.
-> The series extends the infrastructure with a new temperature-agnostic
-> placement-type hint. New fcntl codes F_{SET/GET}_RW_HINT_EX allow to
-> send the hint type/value on file. See patch #3 commit description and
-> interface example below [*].
+On 1/28/2025 1:02 PM, Markus Elfring wrote:
+>> Teach the script to suggest conversions for timeout patterns where the
+>> arguments to msecs_to_jiffies() are expressions as well.
 > 
-> [...]
+> I propose to take another look at implementation details for such a script variant
+> according to the semantic patch language.
+> 
+> 
+> …
+>> +++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+>> @@ -11,12 +11,22 @@
+>>
+>>  virtual patch
+> …
+>> -@depends on patch@ constant C; @@
+>> +@depends on patch@
+>> +expression E;
+>> +@@
+>>
+>> -- msecs_to_jiffies(C * MSEC_PER_SEC)
+>> -+ secs_to_jiffies(C)
+>> +-msecs_to_jiffies
+>> ++secs_to_jiffies
+>> + (E
+>> +- * \( 1000 \| MSEC_PER_SEC \)
+>> + )
+> 
+> 1. I do not see a need to keep an SmPL rule for the handling of constants
+>    (or literals) after the suggested extension for expressions.
 
-Here is the summary with links:
-  - [f2fs-dev,v5,1/5] fs, block: refactor enum rw_hint
-    (no matching commit)
-  - [f2fs-dev,v5,2/5] fcntl: rename rw_hint_* to rw_lifetime_hint_*
-    (no matching commit)
-  - [f2fs-dev,v5,3/5] fcntl: add F_{SET/GET}_RW_HINT_EX
-    (no matching commit)
-  - [f2fs-dev,v5,4/5] sd: limit to use write life hints
-    (no matching commit)
-  - [f2fs-dev,v5,5/5] nvme: enable FDP support
-    https://git.kernel.org/jaegeuk/f2fs/c/2fa07d7a0f00
+Can you explain why? Would the expression rule also address the cases
+where it's a constant or literal?
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+> 2. I find it nice that you indicate an attempt to make the shown SmPL code
+>    a bit more succinct.
+>    Unfortunately, further constraints should be taken better into account
+>    for the current handling of isomorphisms (and corresponding SmPL disjunctions).
+>    Thus I would find an SmPL rule (like the following) more appropriate.
+> 
 
+Sorry, I couldn't follow your sentence construction or reasoning here. I
+don't see how my patch is deficient, or different from your suggestion
+below, especially given that it follows your feedback from part 1:
+https://lore.kernel.org/all/9088f9a2-c4ab-4098-a255-25120df5c497@web.de/
 
+Can you point out specifically what SmPL isomorphisms or disjunctions
+are broken with the patch in its current state?
+
+Thanks,
+Easwar
