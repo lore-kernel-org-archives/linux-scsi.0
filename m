@@ -1,49 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F2CE17BB35;
-	Wed, 29 Jan 2025 14:01:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077A8152160;
+	Wed, 29 Jan 2025 14:01:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738159271; cv=none; b=gcly87DWU7T11V46BSbaM6xgFJRuRslRX2qQIBemYoQWK6cYDFVr7aWxxTzQYBdvE2IqxuF4SnG1b5BDEJd+TRMPHX0ujmXLSYbyjFmbE6JR3Y+0r1nYtzsA5qSM6ZYsTCxWuk8ApYpqoPJgr0WBbxQBvJ07cczoqykFyE79IAg=
+	t=1738159284; cv=none; b=HRSOXG4WIJLtJ4LT8Q//ldgux8Ua+l3CdD1t0gDfnvT1TvtTOX9yQ6Vm1Z1HK6MGZtp6ba9WVHyvrp0l5Htio+KnWieDp5apJTa+vUpADy9p3nWGnt7SBuXa2aGthaW3sx0e9FrcVNt0/ItPpe1mtYgpF6iNTlgODQBbd+DTVpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738159271; c=relaxed/simple;
-	bh=tRksBt5RCuWbhAODeY1UkyyqmKlAhy6z3fFvKGEG8Fk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=pd7FIJogonZzFa8G53w3NTPNhsuu0PT6gwr7YAPCTTBcUbpo2tQjFYcKyYadW+oR0Sz/fR/fWFDKwGIZaRFSLUks1p6qixfbXGyJcMULDppqrq6EtZCDWSOJ/9MyRJHJDODdpq00aJ61d/PI3Spz1P//VIkb6tyBos0xG9SeNkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pu4pzm+I; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738159284; c=relaxed/simple;
+	bh=of+qFZwyz1ljoL5PX10TFoOn09zYGwhGgo6csFa5igc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e5qG2KGTeIYI7zuBDNNKfoxotANVmpG55aq+O3E7XyyZWgzN1U07AhGFnbHd0ASeFo4VBDMQ712nTcuRgENoKl462Jg0cqCmaI67o5PMtDDTQcS/f1u8TD414KqD1nmw6zG6oqbzkt0oR0gIiF1FlEbSx2Gxok6NQ7hwl92S3FQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F/x1loR8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pu4pzm+I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F1FAC4CED3;
-	Wed, 29 Jan 2025 14:01:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F/x1loR8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC5E9C4CED1;
+	Wed, 29 Jan 2025 14:01:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738159271;
-	bh=tRksBt5RCuWbhAODeY1UkyyqmKlAhy6z3fFvKGEG8Fk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pu4pzm+IoH2G43LXcB/3AGo/sYu+5gX7l5IVzPrt0mB0XZbZnHF5AH4n1fZmBLUXX
-	 6sQK8dhsRIUJknHc3d0nQmNFwA0z2KSuexmPEeRya5OaqHfuNAy0UpPm/CpRj68qdy
-	 nc9gcYHDWnSbD2BSnQ9CTd6ifKOeW8wi/9gwWfQnydR57ZSfaFZs+BGN9vugSOWAsw
-	 A4BnUfMv+3CAODPJieGbHdKRBI2idxRYSkK5AdbFfp2/oL7a4GoIA7ryQrapr98PJv
-	 LvPtEJrYyCVGs9PFo01TPWIQW1CSk4z+xsbAnuKsE1M2P+ir7gq1LKCMjraE0x6ck5
-	 96pcuGMGYRepw==
+	s=k20201202; t=1738159283;
+	bh=of+qFZwyz1ljoL5PX10TFoOn09zYGwhGgo6csFa5igc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=F/x1loR8qon5Juj/4WYr2kH9hZkvzcQkGFW+XiZM5HYK33MZNqDgUbRKBplvFsDpY
+	 PgbLFAWt8RQbdL+r34hvCcLF45MP+g/ADiPuup+E78lW7RjBsYmU3JJLSRTQHdMphp
+	 dsB0GSyiMlJON4qzu91AwmaJR2TNTlbkNmmooVV9w21N67A1x7HcdPzGbN3ve0NLVm
+	 oBsHrrW3lo9dCOoOJDlzjteU2XJYnQtn6c7OWbIO+SCeaAycIqyO/5ILpOfJOE48+h
+	 PX5tD0K8pTJJvxHy/fDl3Iz0bBrYg4xYweKx/+fVdXt8Yu4pR9H3dq4oB3i9jv133r
+	 1PWTwTeLwqudQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Guixin Liu <kanie@linux.alibaba.com>,
-	Avri Altman <avri.altman@wdc.com>,
+Cc: Easwar Hariharan <eahariha@linux.microsoft.com>,
+	Michael Kelley <mhklinux@outlook.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
 	James.Bottomley@HansenPartnership.com,
-	beanhuo@micron.com,
-	dlemoal@kernel.org,
-	quic_ziqichen@quicinc.com,
+	linux-hyperv@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.13 2/4] scsi: ufs: bsg: Set bsg_queue to NULL after removal
-Date: Wed, 29 Jan 2025 07:57:21 -0500
-Message-Id: <20250129125724.1272534-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 1/4] scsi: storvsc: Ratelimit warning logs to prevent VM denial of service
+Date: Wed, 29 Jan 2025 07:57:38 -0500
+Message-Id: <20250129125741.1272609-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250129125724.1272534-1-sashal@kernel.org>
-References: <20250129125724.1272534-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,38 +51,54 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.13
+X-stable-base: Linux 6.12.11
 Content-Transfer-Encoding: 8bit
 
-From: Guixin Liu <kanie@linux.alibaba.com>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-[ Upstream commit 1e95c798d8a7f70965f0f88d4657b682ff0ec75f ]
+[ Upstream commit d2138eab8cde61e0e6f62d0713e45202e8457d6d ]
 
-Currently, this does not cause any issues, but I believe it is necessary to
-set bsg_queue to NULL after removing it to prevent potential use-after-free
-(UAF) access.
+If there's a persistent error in the hypervisor, the SCSI warning for
+failed I/O can flood the kernel log and max out CPU utilization,
+preventing troubleshooting from the VM side. Ratelimit the warning so
+it doesn't DoS the VM.
 
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-Link: https://lore.kernel.org/r/20241218014214.64533-3-kanie@linux.alibaba.com
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Closes: https://github.com/microsoft/WSL/issues/9173
+Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+Link: https://lore.kernel.org/r/20250107-eahariha-ratelimit-storvsc-v1-1-7fc193d1f2b0@linux.microsoft.com
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufs_bsg.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/storvsc_drv.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 6c09d97ae0065..08579c454a325 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -216,6 +216,7 @@ void ufs_bsg_remove(struct ufs_hba *hba)
- 		return;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index d0b55c1fa908a..b3c588b102d90 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -171,6 +171,12 @@ do {								\
+ 		dev_warn(&(dev)->device, fmt, ##__VA_ARGS__);	\
+ } while (0)
  
- 	bsg_remove_queue(hba->bsg_queue);
-+	hba->bsg_queue = NULL;
++#define storvsc_log_ratelimited(dev, level, fmt, ...)				\
++do {										\
++	if (do_logging(level))							\
++		dev_warn_ratelimited(&(dev)->device, fmt, ##__VA_ARGS__);	\
++} while (0)
++
+ struct vmscsi_request {
+ 	u16 length;
+ 	u8 srb_status;
+@@ -1177,7 +1183,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+ 		int loglevel = (stor_pkt->vm_srb.cdb[0] == TEST_UNIT_READY) ?
+ 			STORVSC_LOGGING_WARN : STORVSC_LOGGING_ERROR;
  
- 	device_del(bsg_dev);
- 	put_device(bsg_dev);
+-		storvsc_log(device, loglevel,
++		storvsc_log_ratelimited(device, loglevel,
+ 			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x hv 0x%x\n",
+ 			scsi_cmd_to_rq(request->cmd)->tag,
+ 			stor_pkt->vm_srb.cdb[0],
 -- 
 2.39.5
 
