@@ -1,32 +1,49 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 620F61DE2DF;
-	Wed, 29 Jan 2025 18:14:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64E571E0E08
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jan 2025 19:30:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738174481; cv=none; b=jPrJqsHa5qkfCuM2ysIpBmWpw0sqkajgsg6rK9Zj5csipyTNvkkEYVQVGK5b9eKCOW03rlztihYANQx8Zy58u0pJxPVZS7rHokqNG7r+WPSfXVfyketJgmP72xcZk+hz5Ecyc+nmzOQHAjeqGTMIaTbqFdw0azUsuH65kNgfLkI=
+	t=1738179007; cv=none; b=L+Nt7XKnUPvM95eqScRpeuj8eaOgVjiqML8Dg3LtmUazmoPChfyuU9qhSXtbzJtjPQNLVJu1ZHDCZ45u9My4DfEpygwn8rb3uHyLgFbyuOg3oPTzT4j6xRs6dKIEKndKgl/BB3mK8ABZ1LdHXCJ8V9Esh7ODjq8Wcqljk4/bhv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738174481; c=relaxed/simple;
-	bh=RUlBLbu2dRvKVCN3bBJhGTTBjAhlfapqs+U8UGJ1e6Q=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=eeVWYFe65Fih8wiNU2SrsWRG+lGtixKgeCxE7Aa589yUcLoUrLF24jZYw73KPDQgdj9llHEGEkDKNwVbVwSA9OSmd3euNib7bfdL5e5K5deoo4mBm8IuyQd/hr6kcc6TtaasMZqjcjUCcCiZtB3g7Gc2U0NrGT1Wmh3YuYbWXlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=aAf9IIr/; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1738179007; c=relaxed/simple;
+	bh=JW0KDorVD+p1DI2EAPiVjSm8WRI15m8ZyYrt81hXKzE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TsMaOzkTNZH9N9clZTsuH8q03Iw3REqruzJhXz89dIAD3z1lk9GW4oAiCQeq6/zI88zqNQRzptwVisBYI+ZNKUBh2G02xjxuYbT+MtH1j6Mmm4GxXYrguFIRJZiFLc6anPH+JqOIyxp+wBm44/DE9+mzDAJy5gWi46Y8qWFrND8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fUgM33Ef; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="aAf9IIr/"
-Received: from [100.65.98.224] (unknown [20.236.10.163])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 28F3F2066C1F;
-	Wed, 29 Jan 2025 10:14:38 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 28F3F2066C1F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1738174479;
-	bh=tZu7Aqdcq4BHW7QoklKujtbGCaxot/XApiLegvlW9Cg=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=aAf9IIr/I90cgqgEBczLilZ7bdtCYRLZiEJHEhBdKJpSoOCumeMDEGeLf0xioaxnU
-	 Cxs0rQCB+cTOuTBJEpsGVDSTUnsyW+Sqnpdni5YRWUzescyOcAANxe89dy6cL7UnK5
-	 9o+lRZL0v3hO8jHtI+YxGsr5kQTHif7tO+OZbuMk=
-Message-ID: <670dbe5b-cf5b-4994-9a47-53b0b52a4b20@linux.microsoft.com>
-Date: Wed, 29 Jan 2025 10:14:40 -0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fUgM33Ef"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738179004;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eJZLPsKcpyeO0atCc3fV6D6lVGa1tiHEEf0KSjOMaTY=;
+	b=fUgM33EfBqwPflW6D6pTKJWtKoWDxji1FrmdaBoxhl+GkPufD+NzVw6xcbdJtC8fwHWz1p
+	3xxM4FwALG5j50+myhAbah3/dxxCHbvTkI31ri7geRmr12II1Bkco+oUh0mxTOMEpplZ2a
+	M6qxoACR+oB40gvYLeVZT3H+gY8V2LU=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-468-yvfftzEyM2esPZuic8tvbA-1; Wed,
+ 29 Jan 2025 14:30:01 -0500
+X-MC-Unique: yvfftzEyM2esPZuic8tvbA-1
+X-Mimecast-MFC-AGG-ID: yvfftzEyM2esPZuic8tvbA
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 560161955DC6;
+	Wed, 29 Jan 2025 19:29:59 +0000 (UTC)
+Received: from [10.22.66.117] (unknown [10.22.66.117])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 321AD30001BE;
+	Wed, 29 Jan 2025 19:29:56 +0000 (UTC)
+Message-ID: <62142991-5dda-4f51-94c5-23db95b27037@redhat.com>
+Date: Wed, 29 Jan 2025 14:29:56 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,70 +51,47 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: eahariha@linux.microsoft.com, Andrew Morton <akpm@linux-foundation.org>,
- Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>,
- Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>,
- James Smart <james.smart@broadcom.com>,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
- David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
- Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
- "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>,
- Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
- Frank Li <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>,
- Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
- Hans de Goede <hdegoede@redhat.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
- Selvin Xavier <selvin.xavier@broadcom.com>,
- Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
- cocci@inria.fr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org,
- linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
- linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
- linux-rdma@vger.kernel.org
-Subject: Re: [PATCH 09/16] xfs: convert timeouts to secs_to_jiffies()
-To: Christoph Hellwig <hch@lst.de>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
- <20250128-converge-secs-to-jiffies-part-two-v1-9-9a6ecf0b2308@linux.microsoft.com>
- <20250129052108.GB28513@lst.de>
- <3e4a8a44-483b-457a-b193-4119e4adfa85@linux.microsoft.com>
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Subject: Re: [PATCH] aacraid: Fix reply queue mapping to CPUs based on IRQ
+ affinity
+To: Sagar Biradar <sagar.biradar@microchip.com>, jejb@linux.vnet.ibm.com,
+ linux-scsi@vger.kernel.org
+Cc: Tomas Henzl <thenzl@redhat.com>, Marco Patalano <mpatalan@redhat.com>,
+ Scott Benesh <Scott.Benesh@microchip.com>,
+ Don Brace <Don.Brace@microchip.com>, Tom White <Tom.White@microchip.com>,
+ Abhinav Kuchibhotla <Abhinav.Kuchibhotla@microchip.com>
+References: <20250127213223.318751-1-sagar.biradar@microchip.com>
 Content-Language: en-US
-In-Reply-To: <3e4a8a44-483b-457a-b193-4119e4adfa85@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
+From: John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <20250127213223.318751-1-sagar.biradar@microchip.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 1/29/2025 9:12 AM, Easwar Hariharan wrote:
-> On 1/28/2025 9:21 PM, Christoph Hellwig wrote:
->> On Tue, Jan 28, 2025 at 06:21:54PM +0000, Easwar Hariharan wrote:
->>>  		else
->>> -			cfg->retry_timeout = msecs_to_jiffies(
->>> -					init[i].retry_timeout * MSEC_PER_SEC);
->>> +			cfg->retry_timeout = secs_to_jiffies(init[i].retry_timeout);
->>
->> This messes up the formatting by introducing an overly long line.
->>
->> Otherwise the change looks fine.
-> 
-> I'll fix this in v2. Thanks for the review!
-> 
-> - Easwar (he/him)
+On 1/27/25 4:32 PM, Sagar Biradar wrote:
+> Fixes: "(c5becf57dd56 Revert "scsi: aacraid: Reply queue mapping to CPUs
+> based on IRQ affinity)"
+> Original patch: "(9dc704dcc09e scsi: aacraid: Reply queue mapping to
+> CPUs based on IRQ affinity)"
 
-Andrew seems to have fixed it up in his copy, so I'll skip this change
-in v2. Thanks Andrew!
+Please add a functional description for the aac_map_queues function here.  All other
+functions in this file include a description.  E.g.: look at aac_slave_configure.
 
-- Easwar
+/**
+  *      aac_slave_configure             -       compute queue depths
+  *      @sdev:  SCSI device we are considering
+  *
+  *      Selects queue depths for each target device based on the host adapter's
+  *      total capacity and the queue depth supported by the target device.
+  *      A queue depth of one automatically disables tagged queueing.
+  */
+
+> +static void aac_map_queues(struct Scsi_Host */**     
+> +{
+> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+> +
+> +	blk_mq_map_hw_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+> +				&aac->pdev->dev, 0);
+> +	aac->use_map_queue = true;
+> +}
+
