@@ -1,262 +1,203 @@
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D504C7C
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 17:34:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.153.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6345B1EBFE2
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 17:58:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738258442; cv=none; b=N1azBwkJla3JlNK+hmru3raUS/9oI4iM6UjKdOiOW0ENOfvhzI7JEjuJ39m6orRW1CiT7U4GE+H9Xkdb2fiNKWDPvr4dJKxcY1539ITrPZ1fh/VO8RXDDN/C1WUMTsRwJweuT24Y5x9u7tbB6eHBAwPczp8EbqsoUiS9+vAIzbM=
+	t=1738259902; cv=none; b=m8nn0Kpz4haR4loxAbAaAK5yRjv/NtspTWOwYxSH6YNIdTSsUcqIXgtNl7Mzv1+R0AXpjojyOc/WZvyzChHLHeCRdLuJCTHZEPPU7TRF1zHuxoTriJNxfc/EEGB2VOJIGVO6+fn/y14Tye3oXDuxRLapev59IhXun60Bz1147ik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738258442; c=relaxed/simple;
-	bh=/PVlMCZbWNwWyxcgwJQ6l+Oz0UVPDjRxgSCIia4wtnQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=LzvqNj8lPIygmFevgjbLgtLeqyYEXcbV2mhpUXs3THe2YpJy2t+gwu6O/Y+RPQrL1xOyxP+MsWjggdPXFC/osF4bPxxfdprBfNpjcdMZo3CzuEI0xlZVIBkLvEP36HHIHYcwH4FNIACb6djoxR5/9vVxPPV3bxnEIp7UqfD/LcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=RoCU2fWQ; arc=none smtp.client-ip=68.232.153.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
+	s=arc-20240116; t=1738259902; c=relaxed/simple;
+	bh=aZXBNsGkgYSUxcQvEhUvArXLIyz+PnfnaUk7aWXSLFE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ELhxIHiE6Mx4AR+uJh4wvOHiVifgghSpo593N/NeTQCZULHFj5yZynP7PFt9+KDbnDpYty82VkYOz579IaodBVaJEsSxRFDJ+M+z+BdV6vAcxFKKcZmRdPCjqD8jAWF1oE0xgvAJtiaLudgc6J5euPmevQJ9XCpMUeCKzGbPYY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fOgE60g6; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="RoCU2fWQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1738258440; x=1769794440;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=/PVlMCZbWNwWyxcgwJQ6l+Oz0UVPDjRxgSCIia4wtnQ=;
-  b=RoCU2fWQYlXTUhI22JfB6yfiyA8mKH25Birci5v1TXP6gbr9XAJsmD0C
-   D88wEKBKXDwQbdYt+4VRQfVxt5/6eQM6L45pkEuscguIVjnBfV04bhoCM
-   b+KOq/WdHlNUYN5FsSTqKPrKJ5dh0HZqcxvc3L8S1jp9aqRMwDl0s8s+1
-   8v8/Mk55A13xp1JdxyRjWMAeqmMc2dz3A5NjasGreMBdxll2oaVbhm4Wm
-   48N5hWN9hgLCsoS29XvDKNDn1fKJpsI21vAuLr6iwkFc8s7I2cK4pNosE
-   q4LwKH18tPvC63NhMZ5402rOSMENYiOS65x3dOUjDYWoOK9Til1T0K4Fj
-   g==;
-X-CSE-ConnectionGUID: 72brTRibSPmPwFNNwaFJDg==
-X-CSE-MsgGUID: wtKSXltGSVCxiPucH/CBLg==
-X-IronPort-AV: E=Sophos;i="6.13,246,1732604400"; 
-   d="scan'208";a="41089965"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2025 10:33:53 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Thu, 30 Jan 2025 10:33:14 -0700
-Received: from SJO-LT-C34249SMCTest.microsemi.net (10.10.85.11) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server id
- 15.1.2507.35 via Frontend Transport; Thu, 30 Jan 2025 10:33:14 -0700
-From: Sagar Biradar <sagar.biradar@microchip.com>
-To: <linux-scsi@vger.kernel.org>, "Martin Petersen --to=James Bottomley
- --cc=John Meneghini"
-	<martin.petersen@oracle.comjames.bottomley@hansenpartnership.comjmeneghi@redhat.com>
-CC: Tomas Henzl <thenzl@redhat.com>, Marco Patalano <mpatalan@redhat.com>,
-	Scott Benesh <Scott.Benesh@microchip.com>, Don Brace
-	<Don.Brace@microchip.com>, Tom White <Tom.White@microchip.com>, "Abhinav
- Kuchibhotla" <Abhinav.Kuchibhotla@microchip.com>
-Subject: [PATCH] [v2]aacraid: Reply queue mapping to CPUs based on IRQ affinity
-Date: Thu, 30 Jan 2025 09:33:14 -0800
-Message-ID: <20250130173314.608836-1-sagar.biradar@microchip.com>
-X-Mailer: git-send-email 2.31.1
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fOgE60g6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738259899;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ydxIK+alm8hF5d8MwnyHoNu64i96oMQA3hvQh4mfaB0=;
+	b=fOgE60g6mxcuktsNSrwfvb1+uWzyJvYj2Ysg3vDyYglWZk2CgGXeZ3SQ5+XIqjW6yBoxDM
+	AhSbjClUJcP5pAuKH2XkAvS4UaL/OgxU5yMkxojxIfsuxqIndNpjFOX4cIOIs+XwrRCF6q
+	7PAphcFuobRFyaqZSNqWOyMA3kv1B/4=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-103-x8JHuTJiNPijJcef-V1JXA-1; Thu,
+ 30 Jan 2025 12:58:14 -0500
+X-MC-Unique: x8JHuTJiNPijJcef-V1JXA-1
+X-Mimecast-MFC-AGG-ID: x8JHuTJiNPijJcef-V1JXA
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5A82319560BD;
+	Thu, 30 Jan 2025 17:58:12 +0000 (UTC)
+Received: from [10.17.16.215] (unknown [10.17.16.215])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 73ED9180035E;
+	Thu, 30 Jan 2025 17:58:11 +0000 (UTC)
+Message-ID: <34dbab52-c3e1-4f12-9cd5-ff3be3baf4b8@redhat.com>
+Date: Thu, 30 Jan 2025 12:58:10 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 1/6] scsi: scsi_debug: First fixes for tapes
+To: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+ linux-scsi@vger.kernel.org, dgilbert@interlog.com
+References: <20250128142250.163901-1-Kai.Makisara@kolumbus.fi>
+ <20250128142250.163901-2-Kai.Makisara@kolumbus.fi>
+Content-Language: en-US
+From: John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <20250128142250.163901-2-Kai.Makisara@kolumbus.fi>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-patch "(9dc704dcc09e scsi: aacraid: Reply queue mapping to
-CPUs based on IRQ affinity)" caused issues starting V6.4.0,
-which was later reverted by
-patch "(c5becf57dd56 Revert "scsi: aacraid: Reply queue mapping to CPUs
-based on IRQ affinity)"
+This is great.  My scsi_debug tests are no longer complaining about failing Mode Sense commands.
 
-Add a new modparam "aac_cpu_offline_feature" to control CPU offlining.
-By default, it's disabled (0), but can be enabled during driver load
-with:
-	insmod ./aacraid.ko aac_cpu_offline_feature=1
-Enabling this feature allows CPU offlining but may cause some IO
-performance drop. It is recommended to enable it during driver load as
-the relevant changes are part of the initialization routine.
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Tested-by: John Meneghini <jmeneghi@redhat.com>
 
-Fixes an I/O hang that arises because of an MSIx vector not having a
-mapped online CPU upon receiving completion.
-
-SCSI cmds use the mq_map to get the vector_no via blk_mq_unique_tag()
-and blk_mq_unique_tag_to_hwq() - which are setup during the blk_mq init.
-
-For reserved cmds, or the ones before the blk_mq init, use the vector_no
-0, which is the norm since don't yet have a proper mapping to the queues.
-
-Reviewed-by: Gilbert Wu <gilbert.wu@microchip.com>
-Reviewed-by:John Meneghini <jmeneghi@redhat.com>
-Reviewed-by:Tomas Henzl <thenzl@redhat.com>
-Tested-by: Marco Patalano <mpatalan@redhat.com>
-Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
----
- drivers/scsi/aacraid/aachba.c  |  6 ++++++
- drivers/scsi/aacraid/aacraid.h |  2 ++
- drivers/scsi/aacraid/commsup.c |  9 ++++++++-
- drivers/scsi/aacraid/linit.c   | 24 ++++++++++++++++++++++++
- drivers/scsi/aacraid/src.c     | 28 ++++++++++++++++++++++++++--
- 5 files changed, 66 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index abf6a82b74af..f325e79a1a01 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -328,6 +328,12 @@ MODULE_PARM_DESC(wwn, "Select a WWN type for the arrays:\n"
- 	"\t1 - Array Meta Data Signature (default)\n"
- 	"\t2 - Adapter Serial Number");
- 
-+int aac_cpu_offline_feature;
-+module_param_named(aac_cpu_offline_feature, aac_cpu_offline_feature, int, 0644);
-+MODULE_PARM_DESC(aac_cpu_offline_feature,
-+	"This enables CPU offline feature and may result in IO performance drop in some cases:\n"
-+	"\t0 - Disable (default)\n"
-+	"\t1 - Enable");
- 
- static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
- 		struct fib *fibptr) {
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 8c384c25dca1..dba7ffc6d543 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1673,6 +1673,7 @@ struct aac_dev
- 	u32			handle_pci_error;
- 	bool			init_reset;
- 	u8			soft_reset_support;
-+	u8			use_map_queue;
- };
- 
- #define aac_adapter_interrupt(dev) \
-@@ -2777,4 +2778,5 @@ extern int update_interval;
- extern int check_interval;
- extern int aac_check_reset;
- extern int aac_fib_dump;
-+extern int aac_cpu_offline_feature;
- #endif
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index ffef61c4aa01..1d62730e5c1b 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -223,8 +223,15 @@ int aac_fib_setup(struct aac_dev * dev)
- struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
- {
- 	struct fib *fibptr;
-+	u32 blk_tag;
-+	int i;
- 
--	fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
-+	if (aac_cpu_offline_feature == 1) {
-+		blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-+		i = blk_mq_unique_tag_to_tag(blk_tag);
-+		fibptr = &dev->fibs[i];
-+	} else
-+		fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
- 	/*
- 	 *	Null out fields that depend on being zero at the start of
- 	 *	each I/O
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 91170a67cc91..fc4d35950ccb 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -506,6 +506,23 @@ static int aac_sdev_configure(struct scsi_device *sdev,
- 	return 0;
- }
- 
-+/**
-+ *	aac_map_queues - Map hardware queues for the SCSI host
-+ *	@shost: SCSI host structure
-+ *
-+ *	Maps the default hardware queue for the given SCSI host to the
-+ *	corresponding PCI device and enables mapped queue usage.
-+ */
-+
-+static void aac_map_queues(struct Scsi_Host *shost)
-+{
-+	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
-+
-+	blk_mq_map_hw_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
-+				&aac->pdev->dev, 0);
-+	aac->use_map_queue = true;
-+}
-+
- /**
-  *	aac_change_queue_depth		-	alter queue depths
-  *	@sdev:	SCSI device we are considering
-@@ -1490,6 +1507,7 @@ static const struct scsi_host_template aac_driver_template = {
- 	.bios_param			= aac_biosparm,
- 	.shost_groups			= aac_host_groups,
- 	.sdev_configure			= aac_sdev_configure,
-+	.map_queues			= aac_map_queues,
- 	.change_queue_depth		= aac_change_queue_depth,
- 	.sdev_groups			= aac_dev_groups,
- 	.eh_abort_handler		= aac_eh_abort,
-@@ -1777,6 +1795,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->max_lun = AAC_MAX_LUN;
- 
- 	pci_set_drvdata(pdev, shost);
-+	if (aac_cpu_offline_feature == 1) {
-+		shost->nr_hw_queues = aac->max_msix;
-+		shost->can_queue    = aac->vector_cap;
-+		shost->host_tagset = 1;
-+	}
- 
- 	error = scsi_add_host(shost, &pdev->dev);
- 	if (error)
-@@ -1908,6 +1931,7 @@ static void aac_remove_one(struct pci_dev *pdev)
- 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
- 
- 	aac_cancel_rescan_worker(aac);
-+	aac->use_map_queue = false;
- 	scsi_remove_host(shost);
- 
- 	__aac_shutdown(aac);
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 28115ed637e8..b9bed3e255c4 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -493,6 +493,10 @@ static int aac_src_deliver_message(struct fib *fib)
- #endif
- 
- 	u16 vector_no;
-+	struct scsi_cmnd *scmd;
-+	u32 blk_tag;
-+	struct Scsi_Host *shost = dev->scsi_host_ptr;
-+	struct blk_mq_queue_map *qmap;
- 
- 	atomic_inc(&q->numpending);
- 
-@@ -505,8 +509,28 @@ static int aac_src_deliver_message(struct fib *fib)
- 		if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE3)
- 			&& dev->sa_firmware)
- 			vector_no = aac_get_vector(dev);
--		else
--			vector_no = fib->vector_no;
-+		else {
-+			if (aac_cpu_offline_feature == 1) {
-+				if (!fib->vector_no || !fib->callback_data) {
-+					if (shost && dev->use_map_queue) {
-+						qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
-+					vector_no = qmap->mq_map[raw_smp_processor_id()];
-+					}
-+					/*
-+					 *	We hardcode the vector_no for
-+					 *	reserved commands as a valid shost is
-+					 *	absent during the init
-+					 */
-+					else
-+						vector_no = 0;
-+				} else {
-+					scmd = (struct scsi_cmnd *)fib->callback_data;
-+					blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-+					vector_no = blk_mq_unique_tag_to_hwq(blk_tag);
-+				}
-+			} else
-+				vector_no = fib->vector_no;
-+		}
- 
- 		if (native_hba) {
- 			if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
--- 
-2.31.1
+On 1/28/25 9:22 AM, Kai Mäkisara wrote:
+> Patch includes the following:
+> - enable MODE SENSE/SELECT without actual page (to read/write only
+>    the Block Descriptor)
+> - store the density code and block size in the Block Descriptor
+> - fix REWIND not to use the wrong page filling function
+> 
+> Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+> ---
+>   drivers/scsi/scsi_debug.c | 38 +++++++++++++++++++++++++++++++++-----
+>   1 file changed, 33 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 680ba180a672..00daa77f636c 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -173,6 +173,10 @@ static const char *sdebug_version_date = "20210520";
+>   #define DEF_ZBC_MAX_OPEN_ZONES	8
+>   #define DEF_ZBC_NR_CONV_ZONES	1
+>   
+> +/* Default parameters for tape drives */
+> +#define TAPE_DEF_DENSITY  0x0
+> +#define TAPE_DEF_BLKSIZE  0
+> +
+>   #define SDEBUG_LUN_0_VAL 0
+>   
+>   /* bit mask values for sdebug_opts */
+> @@ -363,6 +367,10 @@ struct sdebug_dev_info {
+>   	ktime_t create_ts;	/* time since bootup that this device was created */
+>   	struct sdeb_zone_state *zstate;
+>   
+> +	/* For tapes */
+> +	unsigned int tape_blksize;
+> +	unsigned int tape_density;
+> +
+>   	struct dentry *debugfs_entry;
+>   	struct spinlock list_lock;
+>   	struct list_head inject_err_list;
+> @@ -773,7 +781,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
+>   /* 20 */
+>   	{0, 0x1e, 0, 0, NULL, NULL, /* ALLOW REMOVAL */
+>   	    {6,  0, 0, 0, 0x3, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+> -	{0, 0x1, 0, 0, resp_start_stop, NULL, /* REWIND ?? */
+> +	{0, 0x1, 0, 0, NULL, NULL, /* REWIND ?? */
+>   	    {6,  0x1, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+>   	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ATA_PT */
+>   	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+> @@ -2742,7 +2750,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+>   	unsigned char *ap;
+>   	unsigned char *arr __free(kfree);
+>   	unsigned char *cmd = scp->cmnd;
+> -	bool dbd, llbaa, msense_6, is_disk, is_zbc;
+> +	bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
+>   
+>   	arr = kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
+>   	if (!arr)
+> @@ -2755,7 +2763,8 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+>   	llbaa = msense_6 ? false : !!(cmd[1] & 0x10);
+>   	is_disk = (sdebug_ptype == TYPE_DISK);
+>   	is_zbc = devip->zoned;
+> -	if ((is_disk || is_zbc) && !dbd)
+> +	is_tape = (sdebug_ptype == TYPE_TAPE);
+> +	if ((is_disk || is_zbc || is_tape) && !dbd)
+>   		bd_len = llbaa ? 16 : 8;
+>   	else
+>   		bd_len = 0;
+> @@ -2793,7 +2802,11 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+>   			put_unaligned_be32(0xffffffff, ap + 0);
+>   		else
+>   			put_unaligned_be32(sdebug_capacity, ap + 0);
+> -		put_unaligned_be16(sdebug_sector_size, ap + 6);
+> +		if (is_tape) {
+> +			ap[0] = devip->tape_density;
+> +			put_unaligned_be16(devip->tape_blksize, ap + 6);
+> +		} else
+> +			put_unaligned_be16(sdebug_sector_size, ap + 6);
+>   		offset += bd_len;
+>   		ap = arr + offset;
+>   	} else if (16 == bd_len) {
+> @@ -2802,6 +2815,8 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+>   		offset += bd_len;
+>   		ap = arr + offset;
+>   	}
+> +	if (cmd[2] == 0)
+> +		goto only_bd; /* Only block descriptor requested */
+>   
+>   	/*
+>   	 * N.B. If len>0 before resp_*_pg() call, then form of that call should be:
+> @@ -2902,6 +2917,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+>   	default:
+>   		goto bad_pcode;
+>   	}
+> +only_bd:
+>   	if (msense_6)
+>   		arr[0] = offset - 1;
+>   	else
+> @@ -2945,7 +2961,14 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+>   			    __func__, param_len, res);
+>   	md_len = mselect6 ? (arr[0] + 1) : (get_unaligned_be16(arr + 0) + 2);
+>   	bd_len = mselect6 ? arr[3] : get_unaligned_be16(arr + 6);
+> -	off = bd_len + (mselect6 ? 4 : 8);
+> +	off = (mselect6 ? 4 : 8);
+> +	if (sdebug_ptype == TYPE_TAPE) {
+> +		devip->tape_density = arr[off];
+> +		devip->tape_blksize = get_unaligned_be16(arr + off + 6);
+> +	}
+> +	off += bd_len;
+> +	if (res <= off)
+> +		goto only_bd; /* No page written, just descriptors */
+>   	if (md_len > 2 || off >= res) {
+>   		mk_sense_invalid_fld(scp, SDEB_IN_DATA, 0, -1);
+>   		return check_condition_result;
+> @@ -2998,6 +3021,7 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+>   	return check_condition_result;
+>   set_mode_changed_ua:
+>   	set_bit(SDEBUG_UA_MODE_CHANGED, devip->uas_bm);
+> +only_bd:
+>   	return 0;
+>   }
+>   
+> @@ -5835,6 +5859,10 @@ static struct sdebug_dev_info *sdebug_device_create(
+>   		} else {
+>   			devip->zoned = false;
+>   		}
+> +		if (sdebug_ptype == TYPE_TAPE) {
+> +			devip->tape_density = TAPE_DEF_DENSITY;
+> +			devip->tape_blksize = TAPE_DEF_BLKSIZE;
+> +		}
+>   		devip->create_ts = ktime_get_boottime();
+>   		atomic_set(&devip->stopped, (sdeb_tur_ms_to_ready > 0 ? 2 : 0));
+>   		spin_lock_init(&devip->list_lock);
 
