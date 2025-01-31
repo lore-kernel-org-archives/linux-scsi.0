@@ -1,79 +1,131 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BF5145A18;
-	Fri, 31 Jan 2025 20:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E2741F7594;
+	Fri, 31 Jan 2025 21:35:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738355555; cv=none; b=OQiTHxRHutN8eoSqjSHDTjswNf3u+9jX6qdC3ejj4LJBUPUpuVDbxs6GFePhqp8Id1GeTAGUPzTBIpBD5QbukW46H77/NfawmeGoN+OKgAUqn6FZ5V4YBWetQvXqOjpK1vW06TpxcSpT8xLG/Jopt2WU5k5JL6B7v2CsyGxuOgw=
+	t=1738359323; cv=none; b=e3Lqztq1GzaE9eqIjy1m1NHuW9KEn9tb9jLapMyiqJUQxJpVPR3jDG/6yWyg0xnjwb6+cAaWNKLJpooJuy0NhCgtgcIRi9fSz+VdlV/YngOri4V/e7ZZGk1rTWs/4jSltsKQ4KiuQe6s3XTkpmrG6WkmyhIZ346cYfV3UE1sZ8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738355555; c=relaxed/simple;
-	bh=xyOk//pxxE1fGOVh04NQlxO3Cxm4Lxw5uBaQ5Ypn4H4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jR9xNF4zCSVeb2LqiCoKZCf42DbGnI4gbDaRo0rXYwN6jVUuEiVNxJMEuAHQvGiJb+SeT3ijVhZ5KB/peKvwv0XdFNZjd5J21fbBRIPq3Qb/7xm+Jt7fvylmi2LwrbdFy3UAfYpWqT0MQhcnE/ohM8bgDN9Jw0xAaM3T0rYGIvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Z7jtItJB; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1738359323; c=relaxed/simple;
+	bh=bBVz2mktd/H+nNKPXLFsYEno0//0+sbpRYPnwuawf2E=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=PtXO5HWDDT8d2V/zzmzEsJ2GYIjLAaqEIB7/f+56b5Zfup+yTI6kyY5eSEsdA5M6Y7LwK1SGvkv8Z8aDGDTQ5HlaBKDCKzaswtRsigQ/kNkNwKzOb91SpB8IsGRAfExU+P11re0mwRB2o1uUVnxbHMZkoxVgXkeSAc7wR/X7qtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kWTxKp95; arc=none smtp.client-ip=209.85.160.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Z7jtItJB"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Yl6yS5LsvzlgTvy;
-	Fri, 31 Jan 2025 20:32:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1738355547; x=1740947548; bh=Gu3gh5W9nuKZwxt3f2g31Zen
-	S/oOGGL97d861ZCsQlQ=; b=Z7jtItJBQP0kvzVti/07jvIlEVqcNmnVewOmYOYG
-	SroSyfuygVjyxaoDQNt1y9Q9XoJwtlQrLK1RTGOO1N4lBRuHu1qGsWyJ+xXlnE81
-	1mUCJhF2ODtBYNiuxsXAiOig1mngc5u82xaKsr8cbfbyekVs5RYA8VtnP7vV0CyQ
-	FrBybVQQQSkN/xMj33uzjh9TTLnMqD2tKziQ3pclLfPOHsDvNWziQtcKbrkidBbs
-	nI6RVA8hKim+8VOE50sUeKSh/8SrGUIzohQRENhquWN1wTvQmjsZOKMSI/dWOYyg
-	2/6jN77iaLyavHm678TXtlDaxvskA2AXy8sPP+q9Ilnc9g==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id jR3Q4V-Fd0-H; Fri, 31 Jan 2025 20:32:27 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Yl6yJ61JnzlgTvv;
-	Fri, 31 Jan 2025 20:32:24 +0000 (UTC)
-Message-ID: <bbb46821-25dc-4f5d-a6bf-cbef34024afd@acm.org>
-Date: Fri, 31 Jan 2025 12:32:23 -0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kWTxKp95"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-46fd4bf03cbso30614781cf.0;
+        Fri, 31 Jan 2025 13:35:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738359320; x=1738964120; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5uuVHoPqFmkx0KevPB8pPAUb/ZM3PgLpFoEI3AGjNYM=;
+        b=kWTxKp95ubSS5kOzCLIXrmD5ErVM1qoejXkY5y0aD9IAtawqw4JfW2wlbGSnnXJlt4
+         zhMZH40AnmGmPR2Q+3h7Pb8m1d7FNjMnjrlJFFdfUfuWu7sXX+ZyMDpiucxzg+TPc80C
+         QvVvISyDm9UM/+d25l+nWMtlshp2szfTHQfPr7FdPJVlnEKz7XAWeFvEiGQw9mgDVNCL
+         3HsrliabmJw5dKwveygn4iQlY/+Ud2REZPbuMV/duOs6XuL5qUA2uzzCrZ5fjAUjQfsr
+         kfEm6dzjznHmkuA7w2NzTFqIjHW2zJlnow1tFlhWEDtaLXY/eblMlqOPJFWgoDr8LNwG
+         GlOg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738359320; x=1738964120;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5uuVHoPqFmkx0KevPB8pPAUb/ZM3PgLpFoEI3AGjNYM=;
+        b=hETgcOWSKzacm2i4SWUDTPDc9p2NR6WTm2lh+m2XwyF5MwuKkT2GLTQckfqgcJ92fg
+         7t/ckXe6EVgMEQw8pBIO2soV1nRg1iBcXzAiDFj31xZNfme55hR2fwN0Jymkh8kfJNOr
+         x5nj/waH8xDzm5jEVuAyXTd1d2pB591fnHTMqoXzSDXNlBrdX6ScU3/lJPHsIjQ29a/o
+         TRp+dOipmk67CXe0ZmqMmSNlTQtCNgCZd3S4Ke+tIBxCvS9VCBkX9G20XNBBwQkpUR2G
+         /iUi6tAEo3vvThdawxgqgFTnLFxFbh0OkdMedyYhW82TOJTavZ1Wdfo/G9+lObvUDr0g
+         gatg==
+X-Forwarded-Encrypted: i=1; AJvYcCVl4tB08K83Fgmdppoizv4aRiHnyAEM8yAeZkH4VFvE8dvTZ2XjYiBOUn+1X1B1ckqzXme7GKHeRevnXg==@vger.kernel.org, AJvYcCWehzAGGiE7rM0BXb4jQGzzPVy1HfxI4r7DjryJ6tnTCA2OVKU+GHBX5O/uS/1hzNXOg8Uv1ZM40x1GQPA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywgygl5mb53d7Hnxofky8+cLLersYKXTyndqZr8PGoyUw/WqNol
+	parrc+G6AZiLkvHyZZ5tH6ecZ6I+AAEUnOF/vgSSJpKoY4TiTpv2
+X-Gm-Gg: ASbGncvOOppgkkPBHbvzCChv3DkSzBfWdw8QI/zfxTus26KHka5XV4zIue0Jr1nIDKG
+	nsTIlEodibURno7fLdpwNNmfIZYoivdb4PVBptCcU2lJKpuC4IVvJXqrg9Ll+LL/1Ya88GGl6Yf
+	qGS9noDXHICl/YU8XRKqhWQDzlOzgjQ6NihUEZ54Xac+qahUcR2R2/ZjAGdNGXar0DSA7Cusz8I
+	Xu3ikDGy1/XzzsO/Pf5ix2lnGf1vOV9jerUJ+v+i4NUAnVRDegBey6c3Q44By2LwppRe/GJRWEA
+	rirLkNC10DXCTKSJQkF2HEaRt9K3OP+WrHKYVw==
+X-Google-Smtp-Source: AGHT+IEM5W0MiRs5YeYu26Tq0JVAkQ11twu8HO+Q9A6XlstEg1MAZEMGweuygiIxa6ecAoAhFv2dxQ==
+X-Received: by 2002:ac8:7fc8:0:b0:46c:7646:4a1e with SMTP id d75a77b69052e-46fd0a77c67mr240582791cf.13.1738359320155;
+        Fri, 31 Jan 2025 13:35:20 -0800 (PST)
+Received: from newman.cs.purdue.edu ([128.10.127.250])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-46fdf17409csm21547211cf.53.2025.01.31.13.35.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Jan 2025 13:35:19 -0800 (PST)
+From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
+To: bvanassche@acm.org
+Cc: GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	arun.easi@cavium.com,
+	jhasan@marvell.com,
+	jiashengjiangcool@gmail.com,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	manish.rangankar@cavium.com,
+	martin.petersen@oracle.com,
+	nilesh.javali@cavium.com,
+	skashyap@marvell.com
+Subject: [PATCH v2] scsi: qedf: Use kcalloc() and add check for bdt_info
+Date: Fri, 31 Jan 2025 21:35:16 +0000
+Message-Id: <20250131213516.7750-1-jiashengjiangcool@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <bbb46821-25dc-4f5d-a6bf-cbef34024afd@acm.org>
+References: <bbb46821-25dc-4f5d-a6bf-cbef34024afd@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: qedf: Use kzalloc() and add check for bdt_info
-To: Jiasheng Jiang <jiashengjiangcool@gmail.com>, skashyap@marvell.com,
- jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- manish.rangankar@cavium.com, nilesh.javali@cavium.com, arun.easi@cavium.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250131195438.44964-1-jiashengjiangcool@gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250131195438.44964-1-jiashengjiangcool@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 1/31/25 11:54 AM, Jiasheng Jiang wrote:
-> -	cmgr->io_bdt_pool = kmalloc_array(num_ios, sizeof(struct io_bdt *),
-> -	    GFP_KERNEL);
-> +	cmgr->io_bdt_pool = kzalloc(num_ios * sizeof(struct io_bdt *), GFP_KERNEL);
+Replace kmalloc_array() with kcalloc() to avoid old (dirty) data being
+used/freed.
+Moreover, add a check for "bdt_info". Otherwise, if one of the allocations
+for cmgr->io_bdt_pool[i] fails, "bdt_info->bd_tbl" will cause a NULL
+pointer dereference.
 
-Please do not reintroduce the possibility of multiplication overflow. 
-What is wrong with adding __GFP_ZERO to the second kmalloc_array()
-argument or with using kcalloc()? From include/linux/slab.h:
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
+---
+Changelog:
 
-#define kcalloc(n, size, flags) kmalloc_array(n, size, (flags) | __GFP_ZERO)
+v1 -> v2:
 
-Thanks,
+1. Replace kzalloc() with kcalloc().
+---
+ drivers/scsi/qedf/qedf_io.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index fcfc3bed02c6..abb459e87a86 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -125,7 +125,7 @@ void qedf_cmd_mgr_free(struct qedf_cmd_mgr *cmgr)
+ 	bd_tbl_sz = QEDF_MAX_BDS_PER_CMD * sizeof(struct scsi_sge);
+ 	for (i = 0; i < num_ios; i++) {
+ 		bdt_info = cmgr->io_bdt_pool[i];
+-		if (bdt_info->bd_tbl) {
++		if (bdt_info && bdt_info->bd_tbl) {
+ 			dma_free_coherent(&qedf->pdev->dev, bd_tbl_sz,
+ 			    bdt_info->bd_tbl, bdt_info->bd_tbl_dma);
+ 			bdt_info->bd_tbl = NULL;
+@@ -254,9 +254,7 @@ struct qedf_cmd_mgr *qedf_cmd_mgr_alloc(struct qedf_ctx *qedf)
+ 	}
+ 
+ 	/* Allocate pool of io_bdts - one for each qedf_ioreq */
+-	cmgr->io_bdt_pool = kmalloc_array(num_ios, sizeof(struct io_bdt *),
+-	    GFP_KERNEL);
+-
++	cmgr->io_bdt_pool = kcalloc(num_ios, sizeof(struct io_bdt *), GFP_KERNEL);
+ 	if (!cmgr->io_bdt_pool) {
+ 		QEDF_WARN(&(qedf->dbg_ctx), "Failed to alloc io_bdt_pool.\n");
+ 		goto mem_err;
+-- 
+2.25.1
+
