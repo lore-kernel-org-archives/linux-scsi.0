@@ -1,103 +1,103 @@
-Received: from mail-io1-f46.google.com (mail-io1-f46.google.com [209.85.166.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3BD23D66
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Jan 2025 15:13:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB7791EE7C4;
+	Fri, 31 Jan 2025 17:17:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738336427; cv=none; b=SgJgFSbql7qy1y1spGNSWx7q3Uu8F6L8dzq2OXbv1YXlJ8aYmA3yL1xf8eKk3/1JiWXLtrjM+w46H7FVMM5bS0UFwUJiv4L1GG8YHyQvniPgqcklsd6PXvPH24/vs4BmNc8Pzib4SChvAWTvgs/OwbbiG4w7gLROgaeIi9KJWHc=
+	t=1738343866; cv=none; b=SZRVzCQRTKI0XZyhiNsW87jN5Sd08KZrNyySzgCuMGn1zBw0xUt+yjRab1pps5XvzqEJ6GPWSfLYMCLpd5UnMnfr9/wE48Q4f/35lrL+SZlcU6M0N2RU3QP9cCCzkzQy8K0cp4Zwui6nHD5NfhjahA7c5aMCDbG4dtmK/olWckg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738336427; c=relaxed/simple;
-	bh=4gQp82pyQdSv9h4bIaao3v5flWvB/YqaorWgObY4Jfg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=ZuWi8IpWl1bIbDK3w33TQ3iSmJ6bkkc6aR6vVRe8A8gGjEG1m6Zm0hIdvLRJX18TCaI8bfPFifDuu36HyA3OPIMKt9EQeyAIwZteADWnhVPvXb+pBBY0HQy+/yR7BQgT/Voa1tj63lAYJeUpN0ReMzyteZuFMTAzMK4y7TxOGb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=l94an1pd; arc=none smtp.client-ip=209.85.166.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="l94an1pd"
-Received: by mail-io1-f46.google.com with SMTP id ca18e2360f4ac-844e12f702dso54970739f.3
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Jan 2025 07:13:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1738336425; x=1738941225; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=U+9HC8EV1wWIoNgKbafn8wjlhkFnTml5y5fJi9ZNauA=;
-        b=l94an1pdXrSSUOv+7SXgzHI6LXFtjM6M83K9U55R2DEDk59PYNHWQNPLz5Wk0Ib1V5
-         /PzkLns1Q//b9IcukSm11w3f6wZDBXUTjQ1CKOCrIkEUJxxYc3ZQHCnx7+mrlA8p7VzJ
-         erA0MuoiHMczPPZD61c7njpIp7f+MSiNMGcMdb0jpLpYxSrpndebzt4JUdh/NVAd9FnI
-         ViLcv4t90Hi2DSSyziyLI0hLAD5OqF/pKIeutNqmmJfD3ZHlXeJTy0dSKmcD+7Y5IM+R
-         6lKVyTwKgZuB01HbL7rsTJ0ERFQZ0VUCHec/HEBMgL7mbHXJWqYbogp1tyviN3YX3zEE
-         fntQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738336425; x=1738941225;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=U+9HC8EV1wWIoNgKbafn8wjlhkFnTml5y5fJi9ZNauA=;
-        b=YQ3ZWN7cIw7c2rjAGtKG++c5QVNWU6cOugsqvULjewtuzLAtQljWYT3wSVihKvK8nK
-         u1nYPnV8AojWqyWZkDvCxzTUIvILD5n7A8BQtok/E3jv1rYznBvvhr4YinB+joITOo4b
-         OArbv7B+aCOlQmQQQJU+kcWZQMkmDRf9hF0LH/POHQzCXx8hDddSHgYvfrpvswJNiNxt
-         umpmfCG9eP7jsFBW8xx23NReivD8mJ6ghdPB4qxiuZeRLWDgjIa+ouO9M4nScKZnkan7
-         Y0VsKyJE/XscqmWL6EmglUIz4NkFkxmqng7YqEM1pO9+tIlfWJe17uZUhW0HM/0mKdml
-         QQwQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVzwcjspfI/2XFhVlE4Ui6g+Xo17/UaTwnavHVkAYq/x6z6o1Gmwd6+nbtG8W3xuUepPQJKYAb+4zuQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YztY+ds32nggIH0Gf3rQlZ1I2aItp16xsaakL8NPkc1mCwXrBUH
-	A4vWnRhkWnOcZG0uZpb/YgE1bRnwwXwJM20XGVvWXZiNVCPYJ+LGvK8n+IVheX8=
-X-Gm-Gg: ASbGncvVATVGp9nZooIf0qPDNN7XY8CLsjRVlKFLImf4M8gppTc49GDzIPPHLgYzFLU
-	T2HF+pZ6TGArkDuM4tkGDfOPFsrgd5SOsyf8zI7eFw9qVXzm36TNYL9Oi/wezxBXLoN//M9Xb2D
-	3DCd0LVIqP7L9aYrBJYjPh6EQo2J8WbMHIqIB/t9/U6aHrYV9lp9fDm9pUKoLDrG64ss5rsl2PR
-	3ASNu+CTeW1OK/B1vcLi8Y9gRYwAY8Y9bebWKmanM+r+m3kzK56e1/r/tkHkIoF1u313KaRPZL8
-	jhzQhQ==
-X-Google-Smtp-Source: AGHT+IHdBYkV/Lcjpt9Dx2u2hBI2V53NbB2KTd/PWwFq4iCV5vqkwpfG1ZQm3S6I8vweH0IHJRW4Uw==
-X-Received: by 2002:a05:6602:6406:b0:843:ea9a:acc4 with SMTP id ca18e2360f4ac-85427e24fa1mr1154985639f.8.1738336424835;
-        Fri, 31 Jan 2025 07:13:44 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4ec746c920dsm856099173.125.2025.01.31.07.13.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jan 2025 07:13:44 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, 
- nbd@other.debian.org, ceph-devel@vger.kernel.org, 
- virtualization@lists.linux.dev, linux-mtd@lists.infradead.org, 
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20250131120352.1315351-2-hch@lst.de>
-References: <20250131120352.1315351-1-hch@lst.de>
- <20250131120352.1315351-2-hch@lst.de>
-Subject: Re: [PATCH] block: force noio scope in blk_mq_freeze_queue
-Message-Id: <173833642386.354079.3672902422068183900.b4-ty@kernel.dk>
-Date: Fri, 31 Jan 2025 08:13:43 -0700
+	s=arc-20240116; t=1738343866; c=relaxed/simple;
+	bh=r9CRj9uKB4ij1nf+1B29ONBvdTTVyuZzSsFzAtiGXhQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=f+XtHo89D184fcb8Ikq65FHLBX31N5JVVG45Nvgmlu0gneAOjLfXFE2StCGYQua8U3f4qk57gC+ohTlzu8DZ3XDK4qZAB+s+jAPcRsH0YsMVBZVm4YUoNX3riG6AiSRum8xaIj+ZS+RMLJzAl1xHp3RIBRPRVa0r6Qi/+JE1aPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from localhost.localdomain (ip5f5aef17.dynamic.kabel-deutschland.de [95.90.239.23])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 431E761E6479F;
+	Fri, 31 Jan 2025 18:16:55 +0100 (CET)
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Tomas Henzl <thenzl@redhat.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH] scsi: mpt3sas: Reduce log level of `set ignore_delay_remove for handle(0x%04x)` to info
+Date: Fri, 31 Jan 2025 18:16:40 +0100
+Message-ID: <20250131171640.30721-1-pmenzel@molgen.mpg.de>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-14bd6
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+On several systems with Dell HBA controller Linux prints the warning below:
 
-On Fri, 31 Jan 2025 13:03:47 +0100, Christoph Hellwig wrote:
-> When block drivers or the core block code perform allocations with a
-> frozen queue, this could try to recurse into the block device to
-> reclaim memory and deadlock.  Thus all allocations done by a process
-> that froze a queue need to be done without __GFP_IO and __GFP_FS.
-> Instead of tying to track all of them down, force a noio scope as
-> part of freezing the queue.
-> 
-> [...]
+    $ dmesg | grep -e "Linux version" -e "DMI: Dell"  -e "ignore_delay_remove"
+    [    0.000000] Linux version 6.12.11.mx64.479 (root@lucy.molgen.mpg.de) (gcc (GCC) 12.3.0, GNU ld (GNU Binutils) 2.41) #1 SMP PREEMPT_DYNAMIC Fri Jan 24 13:30:47 CET 2025
+    [    0.000000] DMI: Dell Inc. PowerEdge R7625/0M7YXP, BIOS 1.10.6 12/06/2024
+    [    9.386551] scsi 0:0:4:0: set ignore_delay_remove for handle(0x0012)
 
-Applied, thanks!
+A user does not know, what to do about it, and everything seems to work as
+expected. Therefore, remove the log level from warning to info.
 
-[1/1] block: force noio scope in blk_mq_freeze_queue
-      commit: 1e1a9cecfab3f22ebef0a976f849c87be8d03c1c
+Device information:
 
-Best regards,
+    $ dmesg | grep -e 0:4:0 -e '12)'
+    [    8.857606] mpt3sas_cm0: config page(0x00000000db0e4179) - dma(0xfd5f6000): size(512)
+    [    9.133856] scsi 0:0:0:0: SATA: handle(0x0017), sas_addr(0x3c0470e0d40cc20c), phy(12), device_name(0x5000039db8d2284b)
+    [    9.366341] mpt3sas_cm0: handle(0x12) sas_address(0x3c0570e0d40cc208) port_type(0x0)
+    [    9.378867] scsi 0:0:4:0: Enclosure         DP       BP_PSV           7.10 PQ: 0 ANSI: 7
+    [    9.386551] scsi 0:0:4:0: set ignore_delay_remove for handle(0x0012)
+    [    9.387465] scsi 0:0:4:0: SES: handle(0x0012), sas_addr(0x3c0570e0d40cc208), phy(17), device_name(0x3c0570e0d40cc208)
+    [    9.387465] scsi 0:0:4:0: enclosure logical id (0x3c0470e0d4092108), slot(8)
+    [    9.387465] scsi 0:0:4:0: enclosure level(0x0001), connector name( C0  )
+    [    9.390495] scsi 0:0:4:0: qdepth(1), tagged(0), scsi_level(8), cmd_que(0)
+    [    9.401700]  end_device-0:4: add: handle(0x0012), sas_addr(0x3c0570e0d40cc208)
+    [    9.471916] ses 0:0:4:0: Attached Enclosure device
+    [    9.480088] ses 0:0:4:0: Attached scsi generic sg4 type 13
+    $ lspci -nn -k -s 41:
+    41:00.0 Serial Attached SCSI controller [0107]: Broadcom / LSI Fusion-MPT 12GSAS/PCIe Secure SAS38xx [1000:00e6]
+    	DeviceName: SL3 NonRAID
+    	Subsystem: Dell HBA355i Front [1028:200c]
+    	Kernel driver in use: mpt3sas
+
+Fixes: 30158dc9bbc9 ("mpt3sas: Never block the Enclosure device")
+Cc: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
+If a more knowledgable person can also improve the log message to be more
+useful for the user, that’d be much appreciated.
+
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a456e5ec74d8..9c2d3178f384 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2703,7 +2703,7 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+ 		ssp_target = 1;
+ 		if (sas_device->device_info &
+ 				MPI2_SAS_DEVICE_INFO_SEP) {
+-			sdev_printk(KERN_WARNING, sdev,
++			sdev_printk(KERN_INFO, sdev,
+ 			"set ignore_delay_remove for handle(0x%04x)\n",
+ 			sas_device_priv_data->sas_target->handle);
+ 			sas_device_priv_data->ignore_delay_remove = 1;
 -- 
-Jens Axboe
-
-
+2.47.2
 
