@@ -1,70 +1,70 @@
-Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
+Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E011F2369
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 23:45:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC6CE1DDC3A
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 23:45:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738280704; cv=none; b=sp4k7FlC8RPkttxnJGLo44eR3hVFf07Gsbj8yYt5cDny8bmMGJlKTttSdq21vxNnEUfEJBW8sqz90I7X2M1Ypvi8ggDiVbYzWUwmV778b0oc/qHZPuRC9VgVfUVPJAT/KlqKrZAs44D5uF9meMM7BmCVp2j+gO3TuH5fBsg+0pc=
+	t=1738280712; cv=none; b=LB3FknSUYNio6V40rGfARu6I2gvn+nnz1HH71HuO7dIydqi4DX3g1Kt8nOoAgn9G8SHwx08k0dYAaGMMUlUWZdy1ncdU4MeVPQ3oV6mkWtxRW6qk8hJE6p6N42cKd/lAD9pm8qf4DffX6H3P1h5PDzyNjia6L8FMNCKuskpxKQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738280704; c=relaxed/simple;
-	bh=gzJip65xZjec0drMH7dqT5XxsCA78/QTyS7bX/mq3LA=;
+	s=arc-20240116; t=1738280712; c=relaxed/simple;
+	bh=+Vn49Tj1brt4cIAdNU6UVZAET3EJdVGNX0mKf8QA0Sk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=XY5JCopzVYiDd9geDQZcCt0kOxIVrd03JhiftbI5w+NZejTRscB7k15wkKazBic6onm6U+ynaB85wHbEB5moxQBahPYv4br6fQeo8gczxDF9palbzc4od4iwSqs0t6dPDbpT7DsKt/aGXvsCR92qWYbrdO8KsTqKiI4cJI8EN18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aueG52ZW; arc=none smtp.client-ip=209.85.210.49
+	 MIME-Version; b=poeyEzTXcT4jhSekWUMc8ZOkSf1iT6+FTUXt4dsiTbPrmDO2YtUNhDVSrEowEzqkHBdgJW5BiL2sPQXJJEl1bvP9WkhAEg+Hlz8lMbOjB0SW8iiP9D7vhzIwinCkdlvkVAC+KL6kA08hSshCx8cVh1AolzlUZVhVw7Y34Lhlo94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XcIcFDQa; arc=none smtp.client-ip=209.85.161.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aueG52ZW"
-Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-723442fd88aso389926a34.3
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 15:45:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XcIcFDQa"
+Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5f2e370bb3aso391688eaf.0
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 15:45:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738280701; x=1738885501; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1738280710; x=1738885510; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8XmHXyg58/lgk0Dnz/bDC6q6A+46DlmgBOdeNFrLZBc=;
-        b=aueG52ZWDXZrXWsZLHc2syJopoXcxFyWyVdwlQROi93nOZZruFhajne3fQwiBFptA3
-         aC/cU/L7Y78WtcbM0qbDUtNSRsKWNqZqIFIn04ZEw6iwH2jnXhrf2AU5eoH4CSXadwGT
-         UCs6nLJapsm2v6773XHVAFLi4OUf2T/RDgL6UpYjzxZl5pCgcZt7enPzAkp4N4L+ha+4
-         6VzypsfaQIKAJgsLORX828p5gCz0S0I9XZqYL0H7iys3lOyMzmAbvo/jD/q+H7Xk8LwR
-         uQHY1tPzoGfzLGoSxcYCAlj1aZSyyMG+okWv7eTgrkd9kJTMgxZ3qxvxZfxHymkyblJF
-         5zFw==
+        bh=Kp0yN7qFud0xlqpM6S3vYIiayDRxeWsB+4ws/z2F1Zc=;
+        b=XcIcFDQaEs7TXNOU6nus9tnyRnuaEiOxqDXRxOoZqasLcaFgXek9WLyDhfFXK9LZDF
+         KuRKPaGlyW+UPBalSqZdevOctE4TeEJTgRBnKqwPqkwl51ZtB6T+oUFjjBzphNAz+vbY
+         pH+aXq/z5bfdMbWHIgrXJsfjTP8LhvcFEbiwbAiPzLeY6KDfw882qB6+ZghuwRGuV/vW
+         YmIxKpgml4sgS8mrvz7wviakes9XZpYcsopjcx3jUiCdN63YaUVm/1gR1Mx2cEwUfazu
+         b2krOqLSlEgBZfHIEmX5Ohg/LZyyMi21nfdBtebyLqwT5MYlqSYwqSzvF4JWJxm05NoP
+         HB0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738280701; x=1738885501;
+        d=1e100.net; s=20230601; t=1738280710; x=1738885510;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=8XmHXyg58/lgk0Dnz/bDC6q6A+46DlmgBOdeNFrLZBc=;
-        b=jMvh9gk05HlJYZ1KqGzOL6Rc5ZPjGRXL0sIS9PFinSOfEz94sralk28pARWvL/XQ+h
-         vHASSBFHimID8I5517B6HHUrG781n8LXE2RgBrv47XSR5A+zwVMjydN1+BnxlqfF+vm+
-         /d6GGX9UEAjcGA/r387aSqBYVdGs6HHHBK0SFMOAYRDfGYah4h/VokL5Iqk/wCMJ+TV2
-         tnl12EHELusstUzGQ9xYiUY2tbrP8meU8+5hYcjn8a49DQqqZUqzKvPM6ywPIa9wJasA
-         zwGwKv13bQ13ZMJyxCCDFVWCqV2Nu4mwdxN7i7stN1HTLzsHLajtQhJe0Y6dGoYL9BNn
-         yw8g==
-X-Gm-Message-State: AOJu0YxKg9VEnnyqcYIrQRxAql+k4apQLUCj7KO1ZXWGKQRoa/Pdw0+f
-	OA3G8wyHaUQ2yTGVhdETuw/tJ9g3G+F1OgWYajKOLHxImNhdxZuO81zA4w==
-X-Gm-Gg: ASbGncuHsEcOGXVV2+YyZxrDXxjJc4WJdXzqPQ4tPSlHgijiJphe4tQhSXJhgxBUxGq
-	fAsjam6D47JcE68ukBXATjwiMiHeItOB6Qwepuqw004dq23K+0F14cVL6h+A6M2leuRbbxQ16vj
-	zbXYJT1AT8SIoZJT3mOE6UqlETSrvAorNr2QnzK0ltUJegv+ek8QKZToHWxxnoU4FWrhqwYuYtT
-	EzwLlI+5Cl/jckvqQ8pt7MkBrYwdUQFqucEhX2fTLMh3idOfLo/wXzCDuffBST5zTQUFq4/hR0q
-	PqUfN1aQEXQhMBiGS3nJnubE09huIbhjsDe4kdn5wAA3Kl91Ig0KWr7LCIfaAIqu3QMzbZcQCPG
-	Z
-X-Google-Smtp-Source: AGHT+IH2HszCvRrbVtsbpF6c8bNQnEjT+tNDjT1d/6UXU7ZqUt6jtkbRs8mZ5t4UR+GDHR5d7kso4A==
-X-Received: by 2002:a05:6830:6481:b0:721:bede:f369 with SMTP id 46e09a7af769-7265673472amr6398400a34.5.1738280701227;
-        Thu, 30 Jan 2025 15:45:01 -0800 (PST)
+        bh=Kp0yN7qFud0xlqpM6S3vYIiayDRxeWsB+4ws/z2F1Zc=;
+        b=qi3xc+LAJzDeWvMm5iIuTg3Q3BBZq/Bd5tD2BhusMbQ3XRsxYHf7RMy0PKMrWfjoGt
+         J22oiVGeBtCLILG/KPQvHCFWKu/LmxW3whpj2s/ixzqAgrB4HBb8lOzpNlYo2zeZMlKT
+         +hmdSHLL1zzufSv9VxuN+gIFQEg6Vqc/JwwsMXwi5Jz+84kZ7hPWmd//fgPF/9IZDXn8
+         afQvYJt+UWx4kqe+ax/XtmZAhp8WGbmxm8vUz9Rwf0uXbxt6CI+PIT+211odGn+WEHbj
+         1xGkK9Mo05fi1YevEoG9oJAGHdV8IA6g/3VCxvGBsHctz1bEtYj33juwqp9x1TGKczO2
+         /feg==
+X-Gm-Message-State: AOJu0YwU6CHlYm2SlQbMKtIQvVsTXdSuw0LR3PZ/d2hIpxNPDnna5k7m
+	0UNzKGP4ww9CEUds4CEJzowwXfLe+TJRLuMBmBwuhFg6/lAxNhHZ2uuB8w==
+X-Gm-Gg: ASbGnctdq8fNHhlIiwNK8f/cMZYUcG3NJhr5rnIJdqFfSadsM5/jK65M3csBfhPotB4
+	YcxivrmFrCOv+KbFzej3nj0Ni5xYdhdwObb/prnzfSg/PLvk+Zr+zxeICJaf5lJsziAROABfIxJ
+	VnkRcS4ctUBMIgcrmTganbx62hryjFZUthx1WeOTz7K0NYJjSCenE1TFH2N52kAwprRQb5ffmny
+	wTy9WnwMrPY9/9uE41fVRtzpZcjZVSWhWeI3eUcqPbiO//rxGZVia4M8MxCzy9JqKCZZ8oc/KdY
+	G1X2hqdV2TwZFJN4oF0lGA1ACajkYZ8Wfo5dMCmxlqNIrf3q/ocnuDKAKVIDrUBC5f+kLTdLM3Y
+	P
+X-Google-Smtp-Source: AGHT+IF471iU8f94HQ/r20rWrzKMgJIklM6ve9S753jTN1nnP7ik+mw492f+JpeVoKFtpKRK9gZpaw==
+X-Received: by 2002:a05:6820:2685:b0:5fa:23f9:a256 with SMTP id 006d021491bc7-5fc003677f8mr6312139eaf.5.1738280703276;
+        Thu, 30 Jan 2025 15:45:03 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5fc105d8a22sm517609eaf.37.2025.01.30.15.45.00
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5fc105d8a22sm517609eaf.37.2025.01.30.15.45.02
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 30 Jan 2025 15:45:00 -0800 (PST)
+        Thu, 30 Jan 2025 15:45:02 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 1/6] lpfc: Reduce log message generation during ELS ring clean up
-Date: Thu, 30 Jan 2025 16:05:19 -0800
-Message-Id: <20250131000524.163662-2-justintee8345@gmail.com>
+Subject: [PATCH 2/6] lpfc: Free phba irq in lpfc_sli4_enable_msi when pci_irq_vector fails
+Date: Thu, 30 Jan 2025 16:05:20 -0800
+Message-Id: <20250131000524.163662-3-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20250131000524.163662-1-justintee8345@gmail.com>
 References: <20250131000524.163662-1-justintee8345@gmail.com>
@@ -76,43 +76,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A clean up log message is output from lpfc_els_flush_cmd for each
-outstanding ELS I/O and repeated for every NPIV instance.  The log message
-should only be generated for active I/Os matching the NPIV vport.  Thus,
-move the vport check to before logging the message.
+Fix smatch warning regarding missed calls to free_irq.  Free the phba irq
+in the failed pci_irq_vector cases.
+
+lpfc_init.c: lpfc_sli4_enable_msi() warn: 'phba->pcidev->irq' from
+             request_irq() not released.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 1d7db49a8fe4..318dc83e9a2a 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -9569,18 +9569,16 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	mbx_tmo_err = test_bit(MBX_TMO_ERR, &phba->bit_flags);
- 	/* First we need to issue aborts to outstanding cmds on txcmpl */
- 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
-+		if (piocb->vport != vport)
-+			continue;
-+
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 				 "2243 iotag = 0x%x cmd_flag = 0x%x "
--				 "ulp_command = 0x%x this_vport %x "
--				 "sli_flag = 0x%x\n",
-+				 "ulp_command = 0x%x sli_flag = 0x%x\n",
- 				 piocb->iotag, piocb->cmd_flag,
- 				 get_job_cmnd(phba, piocb),
--				 (piocb->vport == vport),
- 				 phba->sli.sli_flag);
- 
--		if (piocb->vport != vport)
--			continue;
--
- 		if ((phba->sli.sli_flag & LPFC_SLI_ACTIVE) && !mbx_tmo_err) {
- 			if (piocb->cmd_flag & LPFC_IO_LIBDFC)
- 				continue;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index b94624789771..07b614bc9a6b 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -13170,6 +13170,7 @@ lpfc_sli4_enable_msi(struct lpfc_hba *phba)
+ 	eqhdl = lpfc_get_eq_hdl(0);
+ 	rc = pci_irq_vector(phba->pcidev, 0);
+ 	if (rc < 0) {
++		free_irq(phba->pcidev->irq, phba);
+ 		pci_free_irq_vectors(phba->pcidev);
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+ 				"0496 MSI pci_irq_vec failed (%d)\n", rc);
+@@ -13250,6 +13251,7 @@ lpfc_sli4_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
+ 			eqhdl = lpfc_get_eq_hdl(0);
+ 			retval = pci_irq_vector(phba->pcidev, 0);
+ 			if (retval < 0) {
++				free_irq(phba->pcidev->irq, phba);
+ 				lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+ 					"0502 INTR pci_irq_vec failed (%d)\n",
+ 					 retval);
 -- 
 2.38.0
 
