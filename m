@@ -1,119 +1,79 @@
-Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B93E18E25;
-	Fri, 31 Jan 2025 19:54:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BF5145A18;
+	Fri, 31 Jan 2025 20:32:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738353284; cv=none; b=TOZ3wI8HxxX4zsmsBB3qEiLiEZxtN09VpzbyaUm6CFTpQlWvu+GGD9WEvM6kgsXzxOmIyWFciUtcHg1sakUfQe/4rtvr+5Dp3AlwD8GfwFaBGIaoxyVbOG8jXCyELfdrVV75vCcVMSy38y1CknQRLJR0lhlJlgQB9eZvkuTnVcs=
+	t=1738355555; cv=none; b=OQiTHxRHutN8eoSqjSHDTjswNf3u+9jX6qdC3ejj4LJBUPUpuVDbxs6GFePhqp8Id1GeTAGUPzTBIpBD5QbukW46H77/NfawmeGoN+OKgAUqn6FZ5V4YBWetQvXqOjpK1vW06TpxcSpT8xLG/Jopt2WU5k5JL6B7v2CsyGxuOgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738353284; c=relaxed/simple;
-	bh=yRgg57v8l6Bf6W7iDdpaDqKUC+hTrmYP1cTKHibmrZk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VMrQhs+1pyt9wEIhxilKaLNaJl7YsdoY0UVKHJivvieH2+bkPgaIGbR+ahU/pPkP1qJPQCQsLmh0IsNqzV1KFugVEezG6TMNKqDHgn/wS9655WUnDr72ABxNfPmYCsjKXozdlRJBH0k0yOG6fmPJ0EY0EsPJc4k/RP0Xn4jcBck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ivoWdRjr; arc=none smtp.client-ip=209.85.222.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738355555; c=relaxed/simple;
+	bh=xyOk//pxxE1fGOVh04NQlxO3Cxm4Lxw5uBaQ5Ypn4H4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jR9xNF4zCSVeb2LqiCoKZCf42DbGnI4gbDaRo0rXYwN6jVUuEiVNxJMEuAHQvGiJb+SeT3ijVhZ5KB/peKvwv0XdFNZjd5J21fbBRIPq3Qb/7xm+Jt7fvylmi2LwrbdFy3UAfYpWqT0MQhcnE/ohM8bgDN9Jw0xAaM3T0rYGIvA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Z7jtItJB; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ivoWdRjr"
-Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-7be49f6b331so223460185a.1;
-        Fri, 31 Jan 2025 11:54:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738353281; x=1738958081; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wQBsWorX0cIsExRPNC9YIpNNziNST6PMZ9AVDEQARfI=;
-        b=ivoWdRjrD+OaUtvDXdUE6rWAAOEnC1zxILU3I280+yDr5ETiHhapHUAL3wBiDFB9g7
-         11jPLbgM8yKI2nuactmYeLxxWXX6n/Y4sSzec8IoRLSSxDQbt4X6vu7/MdAvvAJk3gZS
-         wthsfWn4wsOk0BX2G4UwnMwSf89TbcS/0iyW0lxVupCUwEi39BZxmdOMGj79zZuQol9h
-         b/glhJlsYQtbNFpeqSsTZJmbLIeQL2l9PcLrdjZRVXhoMAWOqtuXvOByD91IsybnTG8Y
-         nZcH9dMk+7B1vTfMEko/VbXiGogl+FygN4ha0C2vCOuIzTj02Izmg01TR+V5SalirYsp
-         H0Sw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738353281; x=1738958081;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wQBsWorX0cIsExRPNC9YIpNNziNST6PMZ9AVDEQARfI=;
-        b=GPmos+YtRm3uzC6BlWxMEVhhqAnI+nXxFTIW2WdSYGAGmdVjRjPxywzMqN5FJ+QYbn
-         EV1xkvd1kKGSHzkUwDthgWDWuAVMpaUPkwxQ8upRHiutxWL1w/4KRfEhMsR4XCxLUp2N
-         ODSO52yMs2EZAFYLu+EZOwrKf8iiD3ZCLauUtZZQKTfqrG/7+HYssCDTGR6JJDBJzxfF
-         IUdOUT3p3zOI8+K/a4CxGkhVthDYSVmnFcm34OQ6RzvFklcH0cy0L0uyEOEMLiZlcp9q
-         WgVUotVeWE4Q5iyP2FsV1Ne0yMa+TBWe4Zm88VLPyrt2VHPEf2nkVVczjkwuQZGhHECQ
-         o7IQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVwQcsLVW6hYVg9Bz7lb03kAS+X6tK9aIeP4+CSMdKfCLetEzfNuLYPru6eZlh3S74bj32GGfUa2e3A+LY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzyqzL2XxNf5gHSecbIS6SWYyEd1mpeAnB6moQMp7gZ/4GN9CC4
-	ev6WPQONhNfeFwShS/hQIzWWskeEJFYPRGKM+D9/1xQAA6pPb4kC9P3xFw==
-X-Gm-Gg: ASbGncvwxDjpjU4SpZ/VV5h+KtsMbGLYYM6ZbwEDi9s2ke6m+HRw/6uxMYAcAk7Q4gQ
-	1GVhPs38mV/H0+0crYGztXbhRMRnP6UZppLkySj3xthIbly61PgKwLW6joRHwwhlLc6FMuY3t55
-	EnyYk7fvhjR4b0GKuhFzEoeeijW5HE6zx5B7wKvWlomabrIgCjud05hFQWmwEfa4IeuFZHV43a/
-	rRqmoNZRSgEkiInK9qk/OQBYbJ/A4n95dZVQeAJrEWv5B0hEyP9EqXrWxXB0GO76dtK3rkUvRw2
-	Ps2f3IxVskM+zwWrkR8jV/2u5p9YKbUR2Ly+ww==
-X-Google-Smtp-Source: AGHT+IGFOZXEoHEo/HtWdhJv1TBReYdVOEpsyJUisgm/UkZu+7swupwpa9xpt1Fqbtj/zToH1/Sldw==
-X-Received: by 2002:a05:620a:2694:b0:7bc:db11:495c with SMTP id af79cd13be357-7bffcd9d416mr1908112085a.51.1738353281334;
-        Fri, 31 Jan 2025 11:54:41 -0800 (PST)
-Received: from newman.cs.purdue.edu ([128.10.127.250])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c00a8bb957sm224423785a.14.2025.01.31.11.54.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jan 2025 11:54:41 -0800 (PST)
-From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-To: skashyap@marvell.com,
-	jhasan@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	manish.rangankar@cavium.com,
-	nilesh.javali@cavium.com,
-	arun.easi@cavium.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jiasheng Jiang <jiashengjiangcool@gmail.com>
-Subject: [PATCH] scsi: qedf: Use kzalloc() and add check for bdt_info
-Date: Fri, 31 Jan 2025 19:54:38 +0000
-Message-Id: <20250131195438.44964-1-jiashengjiangcool@gmail.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Z7jtItJB"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Yl6yS5LsvzlgTvy;
+	Fri, 31 Jan 2025 20:32:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1738355547; x=1740947548; bh=Gu3gh5W9nuKZwxt3f2g31Zen
+	S/oOGGL97d861ZCsQlQ=; b=Z7jtItJBQP0kvzVti/07jvIlEVqcNmnVewOmYOYG
+	SroSyfuygVjyxaoDQNt1y9Q9XoJwtlQrLK1RTGOO1N4lBRuHu1qGsWyJ+xXlnE81
+	1mUCJhF2ODtBYNiuxsXAiOig1mngc5u82xaKsr8cbfbyekVs5RYA8VtnP7vV0CyQ
+	FrBybVQQQSkN/xMj33uzjh9TTLnMqD2tKziQ3pclLfPOHsDvNWziQtcKbrkidBbs
+	nI6RVA8hKim+8VOE50sUeKSh/8SrGUIzohQRENhquWN1wTvQmjsZOKMSI/dWOYyg
+	2/6jN77iaLyavHm678TXtlDaxvskA2AXy8sPP+q9Ilnc9g==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id jR3Q4V-Fd0-H; Fri, 31 Jan 2025 20:32:27 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Yl6yJ61JnzlgTvv;
+	Fri, 31 Jan 2025 20:32:24 +0000 (UTC)
+Message-ID: <bbb46821-25dc-4f5d-a6bf-cbef34024afd@acm.org>
+Date: Fri, 31 Jan 2025 12:32:23 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: qedf: Use kzalloc() and add check for bdt_info
+To: Jiasheng Jiang <jiashengjiangcool@gmail.com>, skashyap@marvell.com,
+ jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ manish.rangankar@cavium.com, nilesh.javali@cavium.com, arun.easi@cavium.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250131195438.44964-1-jiashengjiangcool@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250131195438.44964-1-jiashengjiangcool@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Replace kmalloc_array() with kzalloc() to avoid old (dirty) data being
-used/freed.
-Moreover, add a check for "bdt_info". Otherwise, if one of the allocations
-for cmgr->io_bdt_pool[i] fails, "bdt_info->bd_tbl" will cause a NULL
-pointer dereference.
+On 1/31/25 11:54 AM, Jiasheng Jiang wrote:
+> -	cmgr->io_bdt_pool = kmalloc_array(num_ios, sizeof(struct io_bdt *),
+> -	    GFP_KERNEL);
+> +	cmgr->io_bdt_pool = kzalloc(num_ios * sizeof(struct io_bdt *), GFP_KERNEL);
 
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
----
- drivers/scsi/qedf/qedf_io.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Please do not reintroduce the possibility of multiplication overflow. 
+What is wrong with adding __GFP_ZERO to the second kmalloc_array()
+argument or with using kcalloc()? From include/linux/slab.h:
 
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index fcfc3bed02c6..a5970fee6851 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -125,7 +125,7 @@ void qedf_cmd_mgr_free(struct qedf_cmd_mgr *cmgr)
- 	bd_tbl_sz = QEDF_MAX_BDS_PER_CMD * sizeof(struct scsi_sge);
- 	for (i = 0; i < num_ios; i++) {
- 		bdt_info = cmgr->io_bdt_pool[i];
--		if (bdt_info->bd_tbl) {
-+		if (bdt_info && bdt_info->bd_tbl) {
- 			dma_free_coherent(&qedf->pdev->dev, bd_tbl_sz,
- 			    bdt_info->bd_tbl, bdt_info->bd_tbl_dma);
- 			bdt_info->bd_tbl = NULL;
-@@ -254,8 +254,7 @@ struct qedf_cmd_mgr *qedf_cmd_mgr_alloc(struct qedf_ctx *qedf)
- 	}
- 
- 	/* Allocate pool of io_bdts - one for each qedf_ioreq */
--	cmgr->io_bdt_pool = kmalloc_array(num_ios, sizeof(struct io_bdt *),
--	    GFP_KERNEL);
-+	cmgr->io_bdt_pool = kzalloc(num_ios * sizeof(struct io_bdt *), GFP_KERNEL);
- 
- 	if (!cmgr->io_bdt_pool) {
- 		QEDF_WARN(&(qedf->dbg_ctx), "Failed to alloc io_bdt_pool.\n");
--- 
-2.25.1
+#define kcalloc(n, size, flags) kmalloc_array(n, size, (flags) | __GFP_ZERO)
 
+Thanks,
+
+Bart.
