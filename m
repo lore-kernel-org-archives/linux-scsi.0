@@ -1,72 +1,49 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3451E1BD9DB
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 23:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2304B155A4D;
+	Fri, 31 Jan 2025 07:10:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738280974; cv=none; b=hS27zIk4Yz0dPO8T0LqUHGoGkt12jnrXaXxualleVMjZwO2ThkwBjyy4uxd1H6Dw9mJBUGm87OGGNWb67Od9VKblRal36cuz3dhVh+kza9fD2jdkk/tV8SvojHCISffhZQGDwbsHF0rPkPPgapVBrQ5KUvxGtwwY5zv6Jb55xVg=
+	t=1738307425; cv=none; b=HVZTHea8R4auM7sWoQ2jppUWNVwFVEFF6aG+6LDmcN6LY8CoFZ8NWlgtfkHJ4K2rX7c7usVG9eCkKjcqeoYrRWmM+RBhiq1b09WhNxiyXqpNKUX7vHbDmLUG0B6Shbg+XfqHcmhT/8ZgrpREFxz+eXg1NQiSdssecZoPaWTWIRc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738280974; c=relaxed/simple;
-	bh=TzE9p6vJK+kd/vqvGJmfvujwjKdd4YQm02mAUDjLSdM=;
+	s=arc-20240116; t=1738307425; c=relaxed/simple;
+	bh=zmIWHizyd5SqFJk7tosRNY8vrRUsr30E40gNB+nKDcM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Txp1v7awZeIHN78FxrpmXEtvqT0RcUuT8XFw9QT9/T6TqWM1Q2lrOq/+Kxmb2owSMyx2skatbWnWuDHsoGlQ6PaRZEEBi7et3tsY1lABDWdKWCd7scWtUYjVBZZSjeytMIJdnfKF2h3lHLZVnsRWwZXGMlltSL+aqJ08b2mwa8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=SySEY6CO; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=kjOGLkdv+uoeewlm70xVnU3bWH+QVL5b+4gJeGA9UczhP8Iuz6r5hvdgavv6Eu5CC1bF9sAbLbwXhf4BqD9rknTS8cVWCwNcqBquVkJw1GUnipMfHtRpNCu0pUPnWzaXwjdbq+QPdkIXMbWRRKdhcglYFBnNFYKLwI4GyBHOeSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0CkDKDIU; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="SySEY6CO"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-21625b4f978so49425ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jan 2025 15:49:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1738280972; x=1738885772; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=woR0BNMl78Ng0EToVcH0CgI8K44IMNq5Bk4is7GN/hg=;
-        b=SySEY6COjD4FqJI4tzAbiwElHcf5Xa6PKMgT+6P/AVvXsOrm3ADrThiPXgszAr70Vm
-         e7EqqEIcdSwXwPooX9coOZeEsjaCw7nzcRHsyI5BAvvS3ccctZOSGRHijBjWVO1slvb6
-         z2DNalttMV3LlkDnQbOUvHaEzVchlDvQdFgq8Ta8plL0V5WLKDZjATzxhymy/8dYCEH/
-         /ISZSmf0LAKfbeE7CB2zh5oiGWUS9e3odulhE0GnzKrNvgsAWkjJG3T4aCyinbI6Xr1C
-         qdG6UDdtD8+HvW1QlnBu7dCdPiX9azs/HCazdZry4IYoYg/TYU5OpH4xNa42GDzSfYs7
-         lQvw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738280972; x=1738885772;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=woR0BNMl78Ng0EToVcH0CgI8K44IMNq5Bk4is7GN/hg=;
-        b=reNU3FjvizPkK/BfBbt/NFNMOwfu+BbP4i2s9NZCJ+OGG+VmqZ8+hSu4Yym1esf3XY
-         VK/sOS6IoNrPQgZdWoJ7t66z1lOl0V1joVwJCZCBGGKDTjmnFOYyledAKibS1m4IYZK+
-         XXHfpkwX0dSRVKA8Gb4YFTQSCTpSSRo7FGA0CwB+Xk2s3R8UpiejWILHdeo9N3iYloAX
-         3Vt0xtKQvOj9nukkCRD7ZzeqzjzkGyTgTJwjVmZF3sx21iHwGX3PloYRoFA7J1atZjUn
-         n8Z7XR8BN17rb4JcwGSIb3NNsAyVkZj0LRUqPGuDiqeVhE4aOemrzh7JaTCsLdKK9TDS
-         CjnA==
-X-Forwarded-Encrypted: i=1; AJvYcCWn680ODeRD5A1rEj5SQPNgEK8/fNSmYAhc1duYis3g5wlktpr0vcnBDnmB0TcLMv72duEFuOIreNxW@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5zDqZFEP8xesyQDy1HQzsFn9v2ZRmyd8pMmsrnsf49XLh7U+d
-	MlMy/2TqM5/MkaROQYMclx4uV7cOBFS0OoEb1FmcHEdezboUXnY9nXGLbSffeQ==
-X-Gm-Gg: ASbGncvJGY1H53NX3XWTb0sjQHvKxfd+zIFh67MNrsTrR3+OqrgLyz3v6Oyu7rLKtdx
-	9jfOi5lxj2oLhpSYp1UVIIQr3DlxsjPEZQmjHRNTdBMgW2RH7HxDnkj/y/nNjfoHcbaepnGXnZh
-	2hyV0wba++6xCNss2dmsQdoe9/MAY3ZPQvsgRbZFJdrKWPpilKTpgoTeBXjfS75OXItlTu7mGkT
-	hH5sJDcF7aipzuVORLCumy7Qs78NF44P1mgtVW6kEkbFqTrwqpaM3+Cc0FlKZRE4BZswV3zY7d/
-	bv3a/Ef4gGHATqprFdAMRW7lIaf5m1i3Kt4b5uDsShUtkdA7WoM=
-X-Google-Smtp-Source: AGHT+IHOufC20z0nBQdOAecFf+23+39ZXOhYBxxAPbHAguO9mLeDxQV7tuiyPYnMVpf16VDWJ/sFyQ==
-X-Received: by 2002:a17:902:6908:b0:21d:dba1:dd72 with SMTP id d9443c01a7336-21edf044ffdmr405375ad.15.1738280972066;
-        Thu, 30 Jan 2025 15:49:32 -0800 (PST)
-Received: from google.com (59.50.105.34.bc.googleusercontent.com. [34.105.50.59])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe631bfdasm2070744b3a.16.2025.01.30.15.49.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jan 2025 15:49:31 -0800 (PST)
-Date: Thu, 30 Jan 2025 15:49:27 -0800
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0CkDKDIU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=tBztvNpisgEaCWmNhAOX9TlPmv7xeZkW0DZiLAEZMV4=; b=0CkDKDIUB9NmweU9QR5Q2+v0IR
+	tyfd5IuHOEg4sySo1IVTZeo02OYz12CDs3WFHExtxrqzrZmLCs+xZbgC+BMcq7+3oGfJeAy447FXj
+	UELgqYP/Hw1UKvXJWuv0oaugcz4/UF6n/sFIqBTmBFonLT3HXde8Wizs0JvWP2GtUAKBnjrzyR89Y
+	cRqtjyIeTxtx1OvLNjHN9jmdTqEGH/khTog2gP/ZACqQk3v+bCwG0TA3W281t3hfiO2Fd2hQoTqdg
+	tn9yr6Tfp/aE9Td32KPPliqE83PeqkMk1EHoQX8CK4Qw0jL/gAuDubZBSvAFpL4+7o8MRRSW3u0fE
+	QXr2qQSQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
+	id 1tdlAV-0000000A5bb-2MM5;
+	Fri, 31 Jan 2025 07:10:23 +0000
+Date: Thu, 30 Jan 2025 23:10:23 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Rik van Riel <riel@surriel.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: core: Do not retry I/Os during depopulation
-Message-ID: <Z5wQBzQIYH1iw6gQ@google.com>
-References: <20250130222632.1462218-1-ipylypiv@google.com>
- <00557746-b7c6-4b34-ada7-0b4b8a21d98a@acm.org>
+	Marc =?iso-8859-1?Q?Aur=E8le?= La France <tsi@tuyoix.net>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH v2] scsi: use GFP_NOIO to avoid circular locking
+ dependency
+Message-ID: <Z5x3XwERjbtL6LDE@infradead.org>
+References: <20250128164700.6d8504c1@fangorn>
+ <Z5m-FuU7wJsUoSST@infradead.org>
+ <20250129104525.0ae8421e@fangorn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,34 +52,22 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <00557746-b7c6-4b34-ada7-0b4b8a21d98a@acm.org>
+In-Reply-To: <20250129104525.0ae8421e@fangorn>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jan 30, 2025 at 02:36:35PM -0800, Bart Van Assche wrote:
-> On 1/30/25 2:26 PM, Igor Pylypiv wrote:
-> > Fail I/Os instead of retry to prevent user space processes from being
-> > blocked on the I/O completion for several minutes.
-> > 
-> > Retrying I/Os during "depopulation in progress" or "depopulation restore
-> > in progress" results in a continuous retry loop until the depopulation
-> > completes or until the I/O retry loop is aborted due to a timeout by
-> > the scsi_cmd_runtime_exceeced().
-> > 
-> > Depopulation is slow and can take 24+ hours to complete on 20+ TB HDDs.
-> > Most I/Os in the depopulation retry loop end up taking several minutes
-> > before returning the failure to user space.
+On Wed, Jan 29, 2025 at 10:45:25AM -0500, Rik van Riel wrote:
+> On Tue, 28 Jan 2025 21:35:18 -0800
+> Christoph Hellwig <hch@infradead.org> wrote:
 > 
-> Since this patch is a bug fix, please add Fixes: and Cc: stable tags.
-
-Thank you, Bart. I'll add the following tags to v2:
-
-    Cc: <stable@vger.kernel.org> # 4.18.x: 2bbeb8d scsi: core: Handle depopulation and restoration in progress"
-    Cc: <stable@vger.kernel.org> # 4.18.x
-    Fixes: e37c7d9a0341 ("scsi: core: sanitize++ in progress")
-
-Thanks,
-Igor
-
+> > GFP_NOFS is never the right thing for block layer allocations.
+> > The right thing here is GFP_NOIO which is a superset of GFP_NOFS.
+> > Otherwise you could reproduce the same deadlock when using swap
+> > instead of a file system to reproduce basically the same deadlock.
 > 
-> Thanks,
+> Duh, you are right of course!
 > 
-> Bart.
+> The fixed up patch with GFP_NOIO is below.
+
+Looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
