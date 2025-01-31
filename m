@@ -1,103 +1,118 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB7791EE7C4;
-	Fri, 31 Jan 2025 17:17:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556CE1F0E5E
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Jan 2025 18:44:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738343866; cv=none; b=SZRVzCQRTKI0XZyhiNsW87jN5Sd08KZrNyySzgCuMGn1zBw0xUt+yjRab1pps5XvzqEJ6GPWSfLYMCLpd5UnMnfr9/wE48Q4f/35lrL+SZlcU6M0N2RU3QP9cCCzkzQy8K0cp4Zwui6nHD5NfhjahA7c5aMCDbG4dtmK/olWckg=
+	t=1738349059; cv=none; b=EiniL2hJha98zUhmMj6x/483wPq/NFBdyimgmcgxNVjdx5rnDTH15+ZbnDNrVp90cUCvEQ4y6BOqFEOotN47A/FcX5majkuTREhQ2NBT5vFmmh2EnKX6VSgvg1ruKrcwFjmQD3GNz8mEG8dt9fLEdMN1bhBCWRatDtwXAUfuZkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738343866; c=relaxed/simple;
-	bh=r9CRj9uKB4ij1nf+1B29ONBvdTTVyuZzSsFzAtiGXhQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=f+XtHo89D184fcb8Ikq65FHLBX31N5JVVG45Nvgmlu0gneAOjLfXFE2StCGYQua8U3f4qk57gC+ohTlzu8DZ3XDK4qZAB+s+jAPcRsH0YsMVBZVm4YUoNX3riG6AiSRum8xaIj+ZS+RMLJzAl1xHp3RIBRPRVa0r6Qi/+JE1aPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from localhost.localdomain (ip5f5aef17.dynamic.kabel-deutschland.de [95.90.239.23])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 431E761E6479F;
-	Fri, 31 Jan 2025 18:16:55 +0100 (CET)
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-To: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Tomas Henzl <thenzl@redhat.com>,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: [PATCH] scsi: mpt3sas: Reduce log level of `set ignore_delay_remove for handle(0x%04x)` to info
-Date: Fri, 31 Jan 2025 18:16:40 +0100
-Message-ID: <20250131171640.30721-1-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.47.2
+	s=arc-20240116; t=1738349059; c=relaxed/simple;
+	bh=YSwnjXOnBcp4QJLJEzKW9oTdc+d1XGO2LhWgVtjnxzQ=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=AvSAIv7AEeW1rCP/rBYu2e+5JdRK9sHiuFlKBQx/YlKXuFayqUGWZ7FqBiDPqft6nVuzmdJZ37tn9YqNSCgdwgWcKQztpFBNIj8jbZkV3gTJH9T35nN4uNWStCbX7ZdCoo3NTJ/DbmbJptCvjfAF0lHccByzmBzVcmEk6/J5KFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hHsBg40O; arc=none smtp.client-ip=209.85.216.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hHsBg40O"
+Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-2ef775ec883so4499464a91.1
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Jan 2025 10:44:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1738349056; x=1738953856; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ljqvdoe66PsV0ko9USqCX1cFitPJRiLzefenHrRR1Us=;
+        b=hHsBg40OnBcvhRpw6GmUU2m/tgxZ0AxlMmbxDfH6So23Rd9yAqdXF8M7lCtrqs0ymt
+         ERa21kxdm3SMfgjYrFV3oFtiAAZ4FDJhb/rI+CmPWd0kaYYnT4niR/iapr5fchLipjh2
+         LtwoBqogISIa73Me9LGb0rn/z2AMpdqh6r6HHfSbkyiVXR3dgRUHOKSpPTVAruy1IgpR
+         PLFXDBfrxaMV775N+ZmlWUqCxbbUJrnwbcpRCYuPP74Rzt65W9fojNEl6hUkfcQKRQHS
+         7qhL5ZV4QudWa1jwQWuquO9YFykstGjWL83v25DnuYuwXcG3Uf9alkqaqlyAGT5XmHGH
+         RAww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738349056; x=1738953856;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ljqvdoe66PsV0ko9USqCX1cFitPJRiLzefenHrRR1Us=;
+        b=xGIvIImD2uKzDIriewTx+SxU9QsS5NUx8lsq3U+/KyCYsOt8plthmJhtXjIkRCz2fT
+         ZD7FprHMI8OoAHsGVEBmk/ecnbD6zpvXxpGZTLGKjeot/IFxhnVpQ9jBuYTTDRrEBuQj
+         /TtH8FETdIHWzR8DqSHKFkEXT9xP24A2XsVnYzgFbrv62T27PIaQxMltzbsQSVt6bhBP
+         FYfQW86m2pSZmqjgLvbrfpF8JxQNTU/is1GloOYHFfGGMVqFPchGgGeGcgwLlVv+3I0q
+         g9RTA6AsOb95lZCXraBpPHzBtvyFzHktfXvqmBImVgXch0s/oE1NXwCHGs4cIA6Htk4/
+         +OKw==
+X-Gm-Message-State: AOJu0Yz0X9+Esf/kNijUinrsZmk9nKXjSdy1mB3R+Nx2Mnyu+/pFq2IR
+	9u69ACuAmi0AzxuNb1zwHVZNVfB+xLxZlYSXhagwUTmx94rmTOXSuBGXJHAvaoxOsGPevFeyamg
+	8LdtbRxitiw==
+X-Google-Smtp-Source: AGHT+IF+uYFJf6336pW4NcaKvfIFPem3UA+dJK9i/dockjZWIM7szv9chSDIgoK3n6FFScQsadqVvG+86ZmScw==
+X-Received: from pjbsy8.prod.google.com ([2002:a17:90b:2d08:b0:2f5:5240:4f0f])
+ (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:37ce:b0:2ee:ba0c:1726 with SMTP id 98e67ed59e1d1-2f83acb10e5mr15208961a91.34.1738349056642;
+ Fri, 31 Jan 2025 10:44:16 -0800 (PST)
+Date: Fri, 31 Jan 2025 10:44:07 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.48.1.362.g079036d154-goog
+Message-ID: <20250131184408.859579-1-ipylypiv@google.com>
+Subject: [PATCH v2] scsi: core: Do not retry I/Os during depopulation
+From: Igor Pylypiv <ipylypiv@google.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On several systems with Dell HBA controller Linux prints the warning below:
+Fail I/Os instead of retry to prevent user space processes from being
+blocked on the I/O completion for several minutes.
 
-    $ dmesg | grep -e "Linux version" -e "DMI: Dell"  -e "ignore_delay_remove"
-    [    0.000000] Linux version 6.12.11.mx64.479 (root@lucy.molgen.mpg.de) (gcc (GCC) 12.3.0, GNU ld (GNU Binutils) 2.41) #1 SMP PREEMPT_DYNAMIC Fri Jan 24 13:30:47 CET 2025
-    [    0.000000] DMI: Dell Inc. PowerEdge R7625/0M7YXP, BIOS 1.10.6 12/06/2024
-    [    9.386551] scsi 0:0:4:0: set ignore_delay_remove for handle(0x0012)
+Retrying I/Os during "depopulation in progress" or "depopulation restore
+in progress" results in a continuous retry loop until the depopulation
+completes or until the I/O retry loop is aborted due to a timeout by
+the scsi_cmd_runtime_exceeced().
 
-A user does not know, what to do about it, and everything seems to work as
-expected. Therefore, remove the log level from warning to info.
+Depopulation is slow and can take 24+ hours to complete on 20+ TB HDDs.
+Most I/Os in the depopulation retry loop end up taking several minutes
+before returning the failure to user space.
 
-Device information:
-
-    $ dmesg | grep -e 0:4:0 -e '12)'
-    [    8.857606] mpt3sas_cm0: config page(0x00000000db0e4179) - dma(0xfd5f6000): size(512)
-    [    9.133856] scsi 0:0:0:0: SATA: handle(0x0017), sas_addr(0x3c0470e0d40cc20c), phy(12), device_name(0x5000039db8d2284b)
-    [    9.366341] mpt3sas_cm0: handle(0x12) sas_address(0x3c0570e0d40cc208) port_type(0x0)
-    [    9.378867] scsi 0:0:4:0: Enclosure         DP       BP_PSV           7.10 PQ: 0 ANSI: 7
-    [    9.386551] scsi 0:0:4:0: set ignore_delay_remove for handle(0x0012)
-    [    9.387465] scsi 0:0:4:0: SES: handle(0x0012), sas_addr(0x3c0570e0d40cc208), phy(17), device_name(0x3c0570e0d40cc208)
-    [    9.387465] scsi 0:0:4:0: enclosure logical id (0x3c0470e0d4092108), slot(8)
-    [    9.387465] scsi 0:0:4:0: enclosure level(0x0001), connector name( C0  )
-    [    9.390495] scsi 0:0:4:0: qdepth(1), tagged(0), scsi_level(8), cmd_que(0)
-    [    9.401700]  end_device-0:4: add: handle(0x0012), sas_addr(0x3c0570e0d40cc208)
-    [    9.471916] ses 0:0:4:0: Attached Enclosure device
-    [    9.480088] ses 0:0:4:0: Attached scsi generic sg4 type 13
-    $ lspci -nn -k -s 41:
-    41:00.0 Serial Attached SCSI controller [0107]: Broadcom / LSI Fusion-MPT 12GSAS/PCIe Secure SAS38xx [1000:00e6]
-    	DeviceName: SL3 NonRAID
-    	Subsystem: Dell HBA355i Front [1028:200c]
-    	Kernel driver in use: mpt3sas
-
-Fixes: 30158dc9bbc9 ("mpt3sas: Never block the Enclosure device")
-Cc: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: <stable@vger.kernel.org> # 4.18.x: 2bbeb8d scsi: core: Handle depopulation and restoration in progress
+Cc: <stable@vger.kernel.org> # 4.18.x
+Fixes: e37c7d9a0341 ("scsi: core: sanitize++ in progress")
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 ---
-If a more knowledgable person can also improve the log message to be more
-useful for the user, that’d be much appreciated.
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes in v2:
+- Added Fixes: and Cc: stable tags.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a456e5ec74d8..9c2d3178f384 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2703,7 +2703,7 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
- 		ssp_target = 1;
- 		if (sas_device->device_info &
- 				MPI2_SAS_DEVICE_INFO_SEP) {
--			sdev_printk(KERN_WARNING, sdev,
-+			sdev_printk(KERN_INFO, sdev,
- 			"set ignore_delay_remove for handle(0x%04x)\n",
- 			sas_device_priv_data->sas_target->handle);
- 			sas_device_priv_data->ignore_delay_remove = 1;
+ drivers/scsi/scsi_lib.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e7ea1f04164a..3ab4c958da45 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -872,13 +872,18 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 				case 0x1a: /* start stop unit in progress */
+ 				case 0x1b: /* sanitize in progress */
+ 				case 0x1d: /* configuration in progress */
+-				case 0x24: /* depopulation in progress */
+-				case 0x25: /* depopulation restore in progress */
+ 					action = ACTION_DELAYED_RETRY;
+ 					break;
+ 				case 0x0a: /* ALUA state transition */
+ 					action = ACTION_DELAYED_REPREP;
+ 					break;
++				/*
++				 * Depopulation might take many hours,
++				 * thus it is not worthwhile to retry.
++				 */
++				case 0x24: /* depopulation in progress */
++				case 0x25: /* depopulation restore in progress */
++					fallthrough;
+ 				default:
+ 					action = ACTION_FAIL;
+ 					break;
 -- 
-2.47.2
+2.48.1.362.g079036d154-goog
 
