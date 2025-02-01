@@ -1,115 +1,129 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6958B629;
-	Sat,  1 Feb 2025 00:11:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from fgw22-4.mail.saunalahti.fi (fgw22-4.mail.saunalahti.fi [62.142.5.109])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D90821BBBE0
+	for <linux-scsi@vger.kernel.org>; Sat,  1 Feb 2025 15:11:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.109
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738368706; cv=none; b=EfOr2AueiKCrE6e6bafHX50hGrP0LkZtd+TWaPBNY3T+DdgnGhpIlQ6bQmJPg8/5x8oBHp8pwzYivwK8i4FeDtfKCyN0Mhcq8lhuaQTiO8JJXJsp179qzJwlRBV65oG/w6BYx8TPtDXrY2QP24S4BttdvH9MQcOPvR/CHmUJRRQ=
+	t=1738422688; cv=none; b=n/vQDO08nBt6ydc1Yq63HEDcpaRLHi4NvygCXFY3C0C1XcY4bItS8iGf/tGBZgm8T7YhPbWUf9mQJCbJhkQxna6JKHj8EoXzVpxPS64IfMysX+ZD4uR5TJARmNyR1T12TGNe5AToQGgjiBJl/U8n/cwBAHsmDfTjvlIk5jsV1mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738368706; c=relaxed/simple;
-	bh=MYKomRfEqunKF+5LDSAdQtifzb1Zt5hNQibIdFjJ+s8=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ien2NZeGrw1V2KBJmjzy20S23UL2MD2y8OH1JJCfbdPJimvNplJvMxT3OuOSgxkDub5wrR+Qe9ZUAPheNwCzr2PPh1WeeUh6yEQFcZ+glIwbXsAfgCFs2noD8Zj47Wv5kYd6SXiOFOmCJdM4HBNvYUMfwx1CnrD8PQ/zBgoTLqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=VAieKTRU; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1738422688; c=relaxed/simple;
+	bh=qTQEbJixtpnKS+er6RSuKUaN35yk13YrhgZT57AKMWk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=OvYwOo6q9z/2ysLrwVzRJk/kt4DQDrPRlOEKuTdpbNZEKdXbuQLGH2uoR7tcdb5k30lGFHT5VVStpWmSdsjJYgjebRAZNpn8ay1VkQvLiMSF8Kd3wM4SRLD9Oe5tMrPZjjEbDfOLlMIyg7NuYwTjr1G8aAmYLet68xgW/zb3A80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=BW4bUGgQ; arc=none smtp.client-ip=62.142.5.109
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="VAieKTRU"
-Received: from [100.65.234.206] (unknown [20.236.11.185])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 7E312210C329;
-	Fri, 31 Jan 2025 16:11:36 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7E312210C329
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1738368698;
-	bh=URcW5d1wFUuTsZZ61zIwPjo02bqd3Xwwrj5siI/ejR4=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=VAieKTRUQduuqC4WMWksNFGAWFpl7wH2vcfIqWTtocImegfQz7yg09xx/uVhF84+8
-	 X7djRP48uKGESU6HAg1NDd667oKEWQCkly+4NL3U6jOR2q4YvgMKiwE4cdu5TQF7bE
-	 8JEcr4WkbAHOc5PABGxI8dv7PLkq6NUdzzexdebM=
-Message-ID: <632be2db-78d2-4249-92f0-3f60e0373172@linux.microsoft.com>
-Date: Fri, 31 Jan 2025 16:11:37 -0800
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="BW4bUGgQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
+	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
+	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
+	 content-type:content-transfer-encoding:message-id;
+	bh=vpfjphiWLtO3xDqeS0NGaZnf4ctCqxO2i/pvC0IrGvQ=;
+	b=BW4bUGgQ2X/MpPuv0kKdIP/zabFjmxHo5UPW0rFQyax8pV5ZRsLdT5/gCOjAbpSFvRHcmPePiTZ+z
+	 905mPtsrmadbSrzArsoD/0vTax7erBI1lTe4Ot2n+1oyE1Tu9ktGieV+ctckIsxIUTAtqP4dxQEkqN
+	 5VmVXh3vSCaqd6wneeenHaOEmKwsNRGj0wyTiV0wGYMjwi2D55NFQ9FhwUl2rYQs3r6tOJsymZlzrX
+	 n5cXbbrL9PvxKnB8et4enGtatCm9Al/5Q2iHEjTxpnLo5SaYtBRIeN6o+z+jfos4E8a8r+A5I/WQqZ
+	 BQWA4WIRRiCqaeK13NDjvRnE3ImEzIQ==
+Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
+	id c4bbc84c-e0ae-11ef-a26c-005056bdfda7;
+	Sat, 01 Feb 2025 17:11:15 +0200 (EET)
+From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+To: linux-scsi@vger.kernel.org,
+	jmeneghi@redhat.com
+Cc: martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	loberman@redhat.com,
+	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+Subject: [PATCH v3b 4/4] scsi: st: Add sysfs file position_lost_in_reset
+Date: Sat,  1 Feb 2025 17:11:06 +0200
+Message-ID: <20250201151106.25529-1-Kai.Makisara@kolumbus.fi>
+X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20250120194925.44432-5-Kai.Makisara@kolumbus.fi>
+References: <20250120194925.44432-5-Kai.Makisara@kolumbus.fi>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cocci@inria.fr, kernel-janitors@vger.kernel.org,
- eahariha@linux.microsoft.com, LKML <linux-kernel@vger.kernel.org>,
- linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
- linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org,
- ceph-devel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
- imx@lists.linux.dev, kernel@pengutronix.de,
- linux-arm-kernel@lists.infradead.org,
- Andrew Morton <akpm@linux-foundation.org>, Carlos Maiolino <cem@kernel.org>,
- Chris Mason <clm@fb.com>, Christoph Hellwig <hch@lst.de>,
- Damien Le Moal <dlemoal@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
- David Sterba <dsterba@suse.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>,
- Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>,
- Hans de Goede <hdegoede@redhat.com>,
- Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- James Smart <james.smart@broadcom.com>, Jaroslav Kysela <perex@perex.cz>,
- Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
- Josef Bacik <josef@toxicpanda.com>, Julia Lawall <Julia.Lawall@inria.fr>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Ilya Dryomov <idryomov@gmail.com>,
- Kalesh Anakkur Purayil <kalesh-anakkur.purayil@broadcom.com>,
- Keith Busch <kbusch@kernel.org>, Leon Romanovsky <leon@kernel.org>,
- Mark Brown <broonie@kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nicolas Palix <nicolas.palix@imag.fr>, Niklas Cassel <cassel@kernel.org>,
- Oded Gabbay <ogabbay@kernel.org>, Ricardo Ribalda <ribalda@google.com>,
- Sagi Grimberg <sagi@grimberg.me>, Sascha Hauer <s.hauer@pengutronix.de>,
- Sebastian Reichel <sre@kernel.org>,
- Selvin Xavier <selvin.xavier@broadcom.com>, Shawn Guo <shawnguo@kernel.org>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Takashi Iwai <tiwai@suse.com>,
- Victor Gambier <victor.gambier@inria.fr>, Xiubo Li <xiubli@redhat.com>,
- Yaron Avizrat <yaron.avizrat@intel.com>,
- Ricardo Ribalda <ribalda@chromium.org>
-Subject: Re: [PATCH 01/16] coccinelle: misc: secs_to_jiffies: Patch
- expressions too
-To: Markus Elfring <Markus.Elfring@web.de>
-References: <20250128-converge-secs-to-jiffies-part-two-v1-1-9a6ecf0b2308@linux.microsoft.com>
- <e06cb7f5-7aa3-464c-a8a1-2c7b9b6a29eb@web.de>
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <e06cb7f5-7aa3-464c-a8a1-2c7b9b6a29eb@web.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 1/30/2025 3:01 AM, Markus Elfring wrote:
->> Teach the script to suggest conversions for timeout patterns where the
->> arguments to msecs_to_jiffies() are expressions as well.
-> 
-> Does anything hinder to benefit any more from a source code analysis approach
-> (like the following by the extended means of the semantic patch language)?
-> 
+If the value read from the file is 1, reads and writes from/to the
+device are blocked because the tape position may not match user's
+expectation (tape rewound after device reset).
 
-Thank you, this is much more useful feedback, specifically due to the
-suggested patch below. I did intend to learn about the other modes and
-progressively upgrade secs_to_jiffies.cocci with them in the future once
-the existing instances were resolved, to help with future code
-submissions. The patch below will be super helpful in that.
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Tested-by: John Meneghini <jmeneghi@redhat.com>
+---
 
-As it stands, I'll fix up the current rules in v2 following your
-suggestion to keep the multiplication in each line to allow Coccinelle
-to use the commutativity properties and find more instances.
+Changed in v3b:
+- sysfs file name has been changed to position_lost_in_reset
 
-I'll refrain from implementing the report mode until current instances
-have been fixed because of the issue we have already seen[1] with CI
-builds being broken. I would not want to break a strict CI build that is
-looking for coccicheck REPORT to return 0 results.
+---
+ Documentation/scsi/st.rst |  5 +++++
+ drivers/scsi/st.c         | 19 +++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-[1]:
-https://lore.kernel.org/all/20250129-secs_to_jiffles-v1-1-35a5e16b9f03@chromium.org/
+diff --git a/Documentation/scsi/st.rst b/Documentation/scsi/st.rst
+index d3b28c28d74c..b4a092faa9c8 100644
+--- a/Documentation/scsi/st.rst
++++ b/Documentation/scsi/st.rst
+@@ -157,6 +157,11 @@ enabled driver and mode options. The value in the file is a bit mask where the
+ bit definitions are the same as those used with MTSETDRVBUFFER in setting the
+ options.
+ 
++Each directory contains the entry 'position_lost_in_reset'. If this value is
++one, reading and writing to the device is blocked after device reset. Most
++devices rewind the tape after reset and the writes/read don't access the
++tape position the user expects.
++
+ A link named 'tape' is made from the SCSI device directory to the class
+ directory corresponding to the mode 0 auto-rewind device (e.g., st0).
+ 
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 6ec1cfeb92ff..85867120c8a9 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4703,6 +4703,24 @@ options_show(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ static DEVICE_ATTR_RO(options);
+ 
++/**
++ * position_lost_in_reset_show - Value 1 indicates that reads, writes, etc.
++ * are blocked because a device reset has occurred and no operation positioning
++ * the tape has been issued.
++ * @dev: struct device
++ * @attr: attribute structure
++ * @buf: buffer to return formatted data in
++ */
++static ssize_t position_lost_in_reset_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	struct st_modedef *STm = dev_get_drvdata(dev);
++	struct scsi_tape *STp = STm->tape;
++
++	return sprintf(buf, "%d", STp->pos_unknown);
++}
++static DEVICE_ATTR_RO(position_lost_in_reset);
++
+ /* Support for tape stats */
+ 
+ /**
+@@ -4887,6 +4905,7 @@ static struct attribute *st_dev_attrs[] = {
+ 	&dev_attr_default_density.attr,
+ 	&dev_attr_default_compression.attr,
+ 	&dev_attr_options.attr,
++	&dev_attr_position_lost_in_reset.attr,
+ 	NULL,
+ };
+ 
+-- 
+2.43.0
 
-<snip>
-
-Thanks,
-Easwar (he/him)
