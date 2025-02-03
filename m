@@ -1,81 +1,79 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C355D204590;
-	Mon,  3 Feb 2025 12:55:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6645B204C06;
+	Mon,  3 Feb 2025 13:22:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738587344; cv=none; b=N9oPDzdrp3p8mhucU6TC89rkrNYgqQL3nDToADYf5iCHYqbYl0It77ELdUave8RCTxaI9mqY+X72gLW9o5j0pT9NN5nq9IoCIXCxzOmsc7+FfPS3rFuTTCoVXWNdEYwkRlDn5K1PZC2lMqEnNKYPQ4WZWa25XCQ0/Tk59GXfzTk=
+	t=1738588926; cv=none; b=iEzA9kTLgSyYzMer6f3rt5yL8w6wywvohM3e58HGqAtg8wwnGeL64daVabu7DAOirzb/uwmTkh40VwAJYMjU8qBXriDuHU2+hqjSHrBI69BYtTikWXEVyXcQdiXzHwRXWmEDY9ns2Yg7ZXnuXjz9zn4XSkcuzeSSTdTr488wZLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738587344; c=relaxed/simple;
-	bh=bs8Tqd0CFF96NXsDeU5iUh1wpxnut02IrBS8m9fe34g=;
+	s=arc-20240116; t=1738588926; c=relaxed/simple;
+	bh=NuqqQyHfFGF1hnhhM8hscJiABk2U4z0F25oUREhkTK0=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OKwepnGmmhbhAYSppSVLA0kp+CM4Zd6dNTJmTjoHFiA5Ht4RYyIPOPCwmSogIwRTHZk2gN9u7S2Q7Ik4JvBORLPlxQCZNbwRM2TzwJPXY7TL1EGv95OxlpiWbHkVneVIdFJ9v7EffRkP5eyIU/RI7nGW24oqkjIvPmGuyChIGCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Q1iOGLtS; arc=none smtp.client-ip=209.85.221.48
+	 Content-Type:MIME-Version; b=dOf8+cl7Mf/kgkUC0pzwbwpD/dxe+VKL8rl9an9Ti1WthKiYyyM3WLYJ5FYtQoLUGzehQLzC9ODp8FVcxM8NdIgphu8IWGPVHhZjrfyBIzdBydRfebb0Fdx2jGq6vtJrVHZ8NASc5T107P/MyCKwT08hvxKDp+0DCHhjKRhCBfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OEQDNj5f; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q1iOGLtS"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-38be3bfb045so3583545f8f.0;
-        Mon, 03 Feb 2025 04:55:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OEQDNj5f"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-438a3216fc2so44300885e9.1;
+        Mon, 03 Feb 2025 05:22:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738587341; x=1739192141; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1738588922; x=1739193722; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=bs8Tqd0CFF96NXsDeU5iUh1wpxnut02IrBS8m9fe34g=;
-        b=Q1iOGLtS01vs8TdSmUSndmb1P2/Q9OAZM6IJssJUzE3rZ9gaU3gBzQl/duhWJWvLaL
-         hluAt9XVGUoFfdcLIAfLQewEkncSURMuRw6apjdlDYM+c7OSQoctldSOEIxswvQHJD06
-         UtDgjVfb2sOSLuZJOEKhPCwO0V/boMGVGmp8PL4MQpZWQTb/he7TpyisyCCUDcxP+29Q
-         jrUk1/rR1HyitIqxYete6VpQrw+pRSsrnL6HE88J45mcfSp9AiYUUcb2zo1qmMm5D7FE
-         fNdMnhbRJibhRafU8TCn5jzmgrVkJFkIZb9T3rlXri/LYubSf54xCBrYrLW5ZJM97OSc
-         ep6Q==
+        bh=NuqqQyHfFGF1hnhhM8hscJiABk2U4z0F25oUREhkTK0=;
+        b=OEQDNj5fy159O68qFtk0hxFD+iAWPd5eMPqiDur/7DtzaF2OmfRWboMzs2S7JTz5HE
+         vHWj5YZQXHQBWEGYQsBGSh+c2PAt0YYCrAQLDQgcZrrqtM4O8fooWGxyeeTEzpspmoge
+         G9SIRjOinT7CdanVMrFb+wkvVKWzVwxl3STUNnyjxKyfXkmOuZ1uJFyGOuzBKegpENcx
+         j6pTKPuagTvQKb/WTapV61R9hRwHYQTq5+ueA6mu7lrEMHV3qqZ+eKrNjdLYFxc9pMTH
+         lAt37kGO4iLruylgSB7+gSxQjyP5eS1E5dlgFd/PQ9qkWyqcxEnNglFdvxrq09r8Gnga
+         pbvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738587341; x=1739192141;
+        d=1e100.net; s=20230601; t=1738588922; x=1739193722;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=bs8Tqd0CFF96NXsDeU5iUh1wpxnut02IrBS8m9fe34g=;
-        b=KieC8xV0lX4TdO5xJDSY7Xggu1p/xMVz5dBDw2I0JDP8Urw3mlSXCFm2b3+DV7z2r8
-         jmrFPTCs8p2rUfgPchJ7yMeEZooT47DsucGfEZe8vk+ER/ts3gw8P45GQBJMnokYwwWR
-         2EjItaHDrwnKwsMQmupZZ/Z8A+sC3JGCKIP41wpvVvTJmADr8RA0XlT+PuyKZDk0Q6RE
-         0B0RnR9BJi1m8GbdxsfmTRjF/IANN/1ydgd7sRmhYdzjysZrVK9rXnD6OqK7aNqOEeFz
-         sWEPVT1T4W+B/9EMqcYbYHApeMmdtx29lkgsB2fZFroiye4vF0TiTLeY/TDhI059wAPu
-         3O0A==
-X-Forwarded-Encrypted: i=1; AJvYcCVVI/LX82lNPiaY2dN71wpfqb+S4CCIxJDiJOQK75u8DgJxoMv3RqhSVdnaUfVeugWuV9LOCj2kcFqoxao=@vger.kernel.org, AJvYcCVr1acTjDUz2Aq37DjIDYWuAsmZ+j9wMg2Wc+v9sQmwE69B1eRKVuM8eaTekFGoeczuWZxMiR4rvK98Lw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxwkBDI2Lkm9pJD8kCgWef5EqlDl2zBHIQbxzsIpj3wTM3tZKOV
-	DrM9tKp97z0KHULHnoC2t4nzLIKCQLLGO5GGEwqW5J78OgcjHnZH
-X-Gm-Gg: ASbGncu/ZSm+YvdO9ag2qrTUdUROPvngWqqqAqPtg50dVyn3ZKbVF5AkV6iugWGlaPP
-	hZLuy3zUlLPGxkrqGEBRDLWbQwKkeTwlodg6gL3Exjvc8gd3O1Ttcq1GBLZE48g6w2VRWCdju1+
-	7uL+R/3AiVvuRcoYjchgQxjCxWFjH5Wv5UzIHNL4xl2V8cxvGsj7zzLUtQsoYKf5I0/B+mdwj38
-	3uOf38HEpCo9wtRmAsnnO0BwZOZEzFE/vvD9sVrkpi50S7yg0OPZ53DFfMBo44c0qMHFnI+l75r
-	EUDaaOCt0SLkPLcBVA==
-X-Google-Smtp-Source: AGHT+IEEJalytdX0QUtX6yL5bhNnoqVYfs8Qe+QO+eMTH0COVjkeIsK1vfCC60j4oez4kuL/EbEqwQ==
-X-Received: by 2002:a5d:47c3:0:b0:386:3327:4f21 with SMTP id ffacd0b85a97d-38c5a9bf70dmr15142010f8f.27.1738587340616;
-        Mon, 03 Feb 2025 04:55:40 -0800 (PST)
+        bh=NuqqQyHfFGF1hnhhM8hscJiABk2U4z0F25oUREhkTK0=;
+        b=CskSkOmrgEvOTQ6pggpSg3bV4NbrzBAiMVaShq7+z79NgM56tk6YsrYWRwsym4BQOl
+         skSVt8NBbVZFd7SmHsa49ohfJIE359LzrX9UD9zJlB3A7+QsomIZ0Baub90zLTqCpsJI
+         zEEfK3kJZpw9N3GtInj0wqmdPDqj6ZFMS5+Axsxy51uq1mi/o+EcCI4Ziaq68h4Syh2z
+         j14PdpmyEiWoxW0WeyjC5Bq7ct9ltIwO9fMhj/Uc4W83j3juN39648/wTHQyHjmHuo17
+         CLnlZB3dlwo+GncAoUYWMfF8iW2Nn0DTstllglpc8uf31png4+RxNGkdqGln97Ur4G7/
+         tHUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUbaU26YKluPqdvA0KgxODGyQZ/tbb5GLOQIL+qrr8sxISODYBpXnJ8YyUEyyD5YrvxN2ZBSncdj5MkyvY=@vger.kernel.org, AJvYcCVWkuc9iAbWuPth4V0/z+zIoCn4pmepQEPWuW/cGjoMs5RrbkoQra2OQdVM35+gQn0LQLj0BWB7zVaOYw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsonZioWIF2clPYJPVNb9tjs8IKixusp5qv56GJYlZ4+EQ5eYC
+	zd+/xn6JuSIqzCu9AGQH3Hpu//uiZF1RoIdY1AjEpwgplsCbBAf9
+X-Gm-Gg: ASbGnctF5Sgeb3hECR4M9IURthghiUZoFmjO95p4XpsngI2fJ3H12aKKL/cLrM7/om9
+	aYQTFblp13LnERyAIaBGtC8CyF0c8iAxfwMETuGhangIjoQhxuKDvThG60mSTYG3q9kCk0XJPFG
+	lFoS5dupfZdzgj9aJu1ByFjcv4PnyaDEOiydld3UXlxklLChvykzNBGogBKfWDU6m91IrdiN43d
+	4iFdeWZr9BMcqjPjgSILIogImUAKenjyTOXRD1jj++3jQllbj50RBnDeMyzCmTkeQpDhVmNl6pE
+	evjLz06ShrgDIkAcug==
+X-Google-Smtp-Source: AGHT+IEJPEowxycx9DAnaDaZhWHphmjMmX0zz+Mt0tMvxSHPPfnIEvt8NuHmqHb2F1fxGnRr2wQvQQ==
+X-Received: by 2002:a05:6000:1f88:b0:385:e176:4420 with SMTP id ffacd0b85a97d-38c5194da70mr17191751f8f.10.1738588922422;
+        Mon, 03 Feb 2025 05:22:02 -0800 (PST)
 Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c5c0ec7f1sm12481772f8f.9.2025.02.03.04.55.39
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-438e23d4456sm158215415e9.7.2025.02.03.05.22.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Feb 2025 04:55:40 -0800 (PST)
-Message-ID: <21d0a62a4f7f17304d81449e75c345f1e47948ae.camel@gmail.com>
-Subject: Re: [PATCH v3 3/8] scsi: ufs: core: Add a vop to map clock
- frequency to gear speed
+        Mon, 03 Feb 2025 05:22:01 -0800 (PST)
+Message-ID: <a6e95e276bdb8f2e217281361734cb044311c416.camel@gmail.com>
+Subject: Re: [PATCH v3 4/8] scsi: ufs: qcom: Implement the
+ freq_to_gear_speed() vop
 From: Bean Huo <huobean@gmail.com>
 To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com, 
  bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
  avri.altman@wdc.com,  junwoo80.lee@samsung.com, martin.petersen@oracle.com,
  quic_nguyenb@quicinc.com,  quic_nitirawa@quicinc.com,
  quic_rampraka@quicinc.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Alim Akhtar
- <alim.akhtar@samsung.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, Peter Wang
- <peter.wang@mediatek.com>,  Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, Eric Biggers <ebiggers@google.com>,
- Minwoo Im <minwoo.im@samsung.com>,  open list <linux-kernel@vger.kernel.org>
-Date: Mon, 03 Feb 2025 13:55:38 +0100
-In-Reply-To: <20250203081109.1614395-4-quic_ziqichen@quicinc.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Manivannan
+	Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
+	 <James.Bottomley@HansenPartnership.com>, open list
+	 <linux-kernel@vger.kernel.org>
+Date: Mon, 03 Feb 2025 14:22:00 +0100
+In-Reply-To: <20250203081109.1614395-5-quic_ziqichen@quicinc.com>
 References: <20250203081109.1614395-1-quic_ziqichen@quicinc.com>
-	 <20250203081109.1614395-4-quic_ziqichen@quicinc.com>
+	 <20250203081109.1614395-5-quic_ziqichen@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
@@ -89,21 +87,11 @@ MIME-Version: 1.0
 On Mon, 2025-02-03 at 16:11 +0800, Ziqi Chen wrote:
 > From: Can Guo <quic_cang@quicinc.com>
 >=20
-> Add a vop to map UFS host controller clock frequencies to the maximum
-> supported UFS high speed gear speeds.=20
-
-From the code, seems it is not "maximum" gear, it is corresponding UFS
-Gear.
-
-> During clock scaling, we canmap thetarget clock frequency, demanded
-> by devfreq, to the maximum supported gear
-> speed, so that devfreq can scale the gear to the highest gear speed
-> supported at the target clock frequency, instead of just scaling
-> up/down
-> the gear between the min and max gear speeds.
+> Implement the freq_to_gear_speed() vop to map the unipro core clock
+> frequency to the corresponding maximum supported gear speed.
 >=20
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 > Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 > Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 
-Reveiwed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
