@@ -1,122 +1,314 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40F97201004;
-	Mon,  3 Feb 2025 10:09:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B6B32036FE;
+	Mon,  3 Feb 2025 11:29:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738577385; cv=none; b=H9nBOgIRlgzwu2anYtOaF+ACmmxOhRZ4C6W4V4l0vk4UWaSdScy7AIwvXvVVz/GAyxcAHBzgP1l4DMyYmvbiMRdBtEG/YyFZULm//GnzVrEim0JnXUGrBTH40nQgio1tCEBy1Cc9j+Y+FtRUOrdFt/NYi8pF9nH2yYjwApG5sOk=
+	t=1738582155; cv=none; b=rzgCLfrumu8dDK6i9BrGDy/4HIJQGWTnSuMAN3sOvHLr0EGfj9qmgGuGs/zfDtfXA1qgqmvGstMOYF6c9ZSRQdPBFfA3tzc0efJieaTRN1JgyX/HM7QTAOISwqyfcbq+6ct2Xz/7gAYJiSBzqMO6H9jnnmf/VajKZwtm4bUk8Q4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738577385; c=relaxed/simple;
-	bh=Nd1Ay0Mlr85rYMZcME74NHXWLV9glYt1e9wDGHVrdtw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Sjl6HyWJbtswS7tEuqCZrTYyDZPuMiZVV+YDOBlSk7KBQlCEwevHBY/Bc/25cQ+477Fe2tVbNR//YE37NN0/svCLa2/MZG+Y19ikGZsyVtiH8VwA+ZWLykE12BnO/h+6G36qHuyFYbRk8bUZIo531P6QGXhOgC63t5TvB4uw7LY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Kv9lXAka; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738582155; c=relaxed/simple;
+	bh=SxPtz5dS6FztU9gEPNBQdiJHFjozymyWJ/bzddrTuUk=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MQ5qoJlrHr8LUt80pvGjDqXYkTA/jswb4P7lk4/gZ/91xwSY/0roYmTNDCFZaUO6QTlpkdDTpKDD/Ze0O0hf6pcpxqXepPUQvb+j8jWkprSvQJrKOiKoZUq4k9N9lcTOE7PxVvIaUo4AUvHhyloQvUYWi6TZphJ00M6s+/pzOy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Mq7o8MEY; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kv9lXAka"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4361e89b6daso28451905e9.3;
-        Mon, 03 Feb 2025 02:09:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738577382; x=1739182182; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=0wt7JSKDlV4+ZNNqkz8FD6wvQEU9AEy+YGNZJ8/Nc1Y=;
-        b=Kv9lXAka2+ZA8a6G6J529+AH8nbK0rFr/ReVexgFTUYhrerDJzcgBVcZTxEKsAwznm
-         3mFQ27RT0xCVohR/Z6tY/98kDLzb4GHnNT27GqtiF9kKGtGt/BdUWEqkEtkZzAcFMwQu
-         OAFZI3xp/SBUmFYiHpxzoQiZfbJ+VJAdWfVeyCbk+S3dsNVOAXZ0c+htVTUCH2H1GLKs
-         VIAvBBndrofstQdBo5XNNqv1F00hy5dhB7aKdgKXPLUsCk/dTnK5RUMYWhsEZSCrCtw2
-         EsSXMkGhPajKYuu3A/WV/pMUXboM60pAw2UFoR9S/pec1ls2WtuSQi0ili45yNe5G4S3
-         Acrw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738577382; x=1739182182;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0wt7JSKDlV4+ZNNqkz8FD6wvQEU9AEy+YGNZJ8/Nc1Y=;
-        b=JQpN2qNuZgdsuZ7p2qtZt0iorbuMl1ZGHVyUFP5zvpI/Rz4xXXF/iQkSe17KNpfyCb
-         zJ+bvF2olPA9KoLKaGbfZ/RrgOIhgBFlzab83QxVZVjVjOiYo6DUe4viD86fKlXVIN8/
-         KRJv85YhTMlSN6AffDUbGRP1OKsGpyPRjl5ZUn3/c1OabnMLT87Oyg/Yy5D+07iOM8rQ
-         p5EJHSgd1tKlbYf2ghcHnWQHX2xxiqfhLf8a0GJoDH8IRQj3hh5252W6OkR3+HHyYikT
-         SDjKyDR5v22LchHu/UIa8IlD4YALSdL3Ny1Shp9WYcMWGk3hWctAyz9iH7A5iPMvEgxL
-         JkdQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUBA3b+TW7e9iVAmrS8i06L7Ph+hclQWy1b+Lj2ilG0uQz/fpwM/E+PZodJJDbFBAy+rlqcDlkupgoH1LA=@vger.kernel.org, AJvYcCXayr+LHJDSLGguzlqAo26fB1jHGqC8iuVD0mm3lsJDeLkihe2xcVKe2Q4APnSsobFiNuAuhzxQScu9sQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzaMjK3CHnYq0629/HslbOWYWq3PtG0GUTq4SoFgqfONXmHqedB
-	dTxgvVMDVV7wkmi8CptueaYKzv0CF4fwNDrNX7XRsa2gfxrGxzQt
-X-Gm-Gg: ASbGncsG2DSlz1cgwYepTNIlXPaEy22zxc3lEs25bsxU7jWtses34GX2e208VXk5kNH
-	pAVkd+M+VS4T+la8OEKs9QNxRU3c6RDqzxeAO46BjMtfjHRITILlGbWtIhbp4JS3DWS5dCTmB3v
-	66mjCC3v/ps+UYUXiqL0z1qYWZiZ8JbJWJJ8A8yDrOkjGfcX4xbaSObncJjl+f6/O+lvHaG4+no
-	zMC+5kLE1oytA6COKDv24mJ/gHcgxnBYafPfk/L3vplghvQY2mSgZnZZ2j9Z/MgmzEo6pE1c3a+
-	likpXK8JPuMjYaCT5g==
-X-Google-Smtp-Source: AGHT+IHID4d3u5dDIsuLvGqBj4HlSCpSQbwPU0kn5uIl4ZpOsW2e0R9AvzhgOpWJnHKkJcGEqO+ong==
-X-Received: by 2002:a5d:47a8:0:b0:38b:f3f4:5801 with SMTP id ffacd0b85a97d-38c51932062mr14451528f8f.7.1738577382375;
-        Mon, 03 Feb 2025 02:09:42 -0800 (PST)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38c5c1cf555sm12471800f8f.97.2025.02.03.02.09.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Feb 2025 02:09:41 -0800 (PST)
-Message-ID: <1261f1eea417ea93a9abf4cc0bd8ad285eeebb36.camel@gmail.com>
-Subject: Re: [PATCH v3 2/8] scsi: ufs: qcom: Pass target_freq to clk scale
- pre and post change
-From: Bean Huo <huobean@gmail.com>
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com, 
- bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
- avri.altman@wdc.com,  junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com,  quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Manivannan
-	Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
-	 <James.Bottomley@HansenPartnership.com>, open list
-	 <linux-kernel@vger.kernel.org>
-Date: Mon, 03 Feb 2025 11:09:39 +0100
-In-Reply-To: <20250203081109.1614395-3-quic_ziqichen@quicinc.com>
-References: <20250203081109.1614395-1-quic_ziqichen@quicinc.com>
-	 <20250203081109.1614395-3-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Mq7o8MEY"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5132aoUM016910;
+	Mon, 3 Feb 2025 11:28:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=TrNiDQVh+r2xxoWvM/H8WJ
+	9lb0076116ywLyDgHYp50=; b=Mq7o8MEYxQEnixiPD3ouXha4/1KyUpKc/NCMzi
+	7nds0n6e8kNvAZHCPH6R3QX4vIwT0YCoD0vt6nRbuCuygUB/LL3cN3Y86DfWTINC
+	MsjVNJcCqbzBQxChiNurzMtxY33NEJHJjAiBtllX/GG8CwnUEgB7IJqzXOla8S1M
+	3Ju0lu2mVcB3h5q7s3GE7I8NX7ABc+eJLnd7cbpXfA+3fTKXuH/N2eRfuBtLQGot
+	4Llow68XY0LGaafZ0zDB0Iz1U+lfoK3gSsM4klU4hOui9nZpNjHJGdW6nkogO8PN
+	cDAebkiqlDDmMqp05TY6Yk5PQXEWhbWHSSZcs4htOjfYX2hg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44jn5vgyt1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 03 Feb 2025 11:28:03 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 513BS2NS025088
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 3 Feb 2025 11:28:02 GMT
+Received: from hu-rdwivedi-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Mon, 3 Feb 2025 03:27:59 -0800
+From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+To: <manivannan.sadhasivam@linaro.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <andersson@kernel.org>, <bvanassche@acm.org>, <ebiggers@kernel.org>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Naveen Kumar Goud Arepalli
+	<quic_narepall@quicinc.com>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V12] scsi: ufs: qcom: Enable UFS Shared ICE Feature
+Date: Mon, 3 Feb 2025 16:57:39 +0530
+Message-ID: <20250203112739.11425-1-quic_rdwivedi@quicinc.com>
+X-Mailer: git-send-email 2.48.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: vskpCVmRQ-J1ZO-zb0iplKDyWiraJAy-
+X-Proofpoint-GUID: vskpCVmRQ-J1ZO-zb0iplKDyWiraJAy-
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-03_05,2025-01-31_02,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ malwarescore=0 phishscore=0 spamscore=0 bulkscore=0 suspectscore=0
+ lowpriorityscore=0 impostorscore=0 adultscore=0 clxscore=1015
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2501170000 definitions=main-2502030087
 
-On Mon, 2025-02-03 at 16:11 +0800, Ziqi Chen wrote:
-> From: Can Guo <quic_cang@quicinc.com>
->=20
-> Instead of only two frequencies, if OPP V2 is used, the UFS devfreq
-> clock
-> scaling may scale the clock among multiple frequencies. In the case
-> of
-> scaling up, the devfreq may decide to scale the clock to an
-> intermediate
-> freq base on load,=C2=A0
-=09
-       based on load
+By default, the UFS controller allocates a fixed number of RX
+and TX engines statically. Consequently, when UFS reads are in
+progress, the TX ICE engines remain idle, and vice versa.
+This leads to inefficient utilization of RX and TX engines.
 
+To address this limitation, enable the UFS shared ICE feature for
+Qualcomm UFS V5.0 and above. This feature utilizes a pool of crypto
+cores for both TX streams (UFS Write – Encryption) and RX streams
+(UFS Read – Decryption). With this approach, crypto cores are
+dynamically allocated to either the RX or TX stream as needed.
 
-> but the clock scale up pre change operation uses
-> settings for the max clock freq unconditionally. Fix it by passing
-> the
-> target_freq to clock scale up pre change so that the correct settings
-> for
-> the target_freq can be used.
->=20
-> In the case of scaling down, the clock scale down post change
-> operation
-> is doing fine, because it reads the actual clock rate to tell freq,
-> but to
-> keep symmetry with clock scale up pre change operation, just use the
-> target_freq instead of reading clock rate.
->=20
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 
+---
+Changes from v11:
+1. Addressed Manivannan's comment to drop unnecessary comments.
+2. Added "Reviewed-by" tag by Manivannan.
 
-agaion, no logic change, add my review tag:
+Changes from v10:
+1. Addressed Manivannan's comment to align the shared ICE register
+   definitions with the existing vendor-specific registers.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Changes from v9:
+1. Addressed Manivannan's comment to pair ufs_qcom_config_ice_allocator
+   with ufs_qcom_ice_enable.
+2. Addressed Manivannan's comment to avoid guarding the definitions.
+3. Addressed Manivannan's comment to align bit definitions.
+2. Addressed Manivannan's comment to use enum for register definitions.
+
+Changes from v8:
+1. Addressed Manivannan's comment to call ufs_qcom_config_ice_allocator()
+   from ufs_qcom_ice_enable().
+2. Addressed Manivannan's comment to place UFS_QCOM_CAP_ICE_CONFIG
+   definition outside of the ufs_qcom_host struct.
+3. Addressed Manivannan's comment to align ICE definitions with
+   other definitions.
+
+Changes from v7:
+1. Addressed Eric's comment to perform ice configuration only if
+   UFSHCD_CAP_CRYPTO is enabled.
+ 
+Changes from v6: 
+1. Addressed Eric's comment to replace is_ice_config_supported() helper
+   function with a conditional check for UFS_QCOM_CAP_ICE_CONFIG.
+
+Changes from v5: 
+1. Addressed Bart's comment to declare the "val" variable with
+   the "static" keyword.
+
+Changes from v4:
+1. Addressed Bart's comment to use get_unaligned_le32() instead of
+   bit shifting and to declare val with the const keyword.
+
+Changes from v3:
+1. Addressed Bart's comment to change the data type of "config" to u32
+   and "val" to uint8_t.
+
+Changes from v2:
+1. Refactored the code to have a single algorithm in the code and
+enabled by default.
+2. Revised the commit message to incorporate the refactored change.
+3. Qcom host capabilities are now enabled in a separate function.
+
+Changes from v1:
+1. Addressed Rob's and Krzysztof's comment to fix dt binding compilation
+   issue.
+2. Addressed Rob's comment to enable the nodes in example.
+3. Addressed Eric's comment to rephrase patch commit description.
+   Used terminology as ICE allocator instead of ICE algorithm.
+4. Addressed Christophe's comment to align the comment as per kernel doc.
+---
+ drivers/ufs/host/ufs-qcom.c | 37 +++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h | 39 ++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 75 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 68040b2ab5f8..83bf156eb171 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -15,6 +15,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/reset-controller.h>
+ #include <linux/time.h>
++#include <linux/unaligned.h>
+ 
+ #include <soc/qcom/ice.h>
+ 
+@@ -105,6 +106,26 @@ static struct ufs_qcom_host *rcdev_to_ufs_host(struct reset_controller_dev *rcd)
+ }
+ 
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
++/**
++ * ufs_qcom_config_ice_allocator() - ICE core allocator configuration
++ *
++ * @host: pointer to qcom specific variant structure.
++ */
++static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
++{
++	struct ufs_hba *hba = host->hba;
++	static const uint8_t val[4] = { NUM_RX_R1W0, NUM_TX_R0W1, NUM_RX_R1W1, NUM_TX_R1W1 };
++	u32 config;
++
++	if (!(host->caps & UFS_QCOM_CAP_ICE_CONFIG) ||
++			!(host->hba->caps & UFSHCD_CAP_CRYPTO))
++		return;
++
++	config = get_unaligned_le32(val);
++
++	ufshcd_writel(hba, ICE_ALLOCATOR_TYPE, REG_UFS_MEM_ICE_CONFIG);
++	ufshcd_writel(hba, config, REG_UFS_MEM_ICE_NUM_CORE);
++}
+ 
+ static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
+ {
+@@ -196,6 +217,11 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
+ {
+ 	return 0;
+ }
++
++static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
++{
++}
++
+ #endif
+ 
+ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+@@ -439,6 +465,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+ 		err = ufs_qcom_check_hibern8(hba);
+ 		ufs_qcom_enable_hw_clk_gating(hba);
+ 		ufs_qcom_ice_enable(host);
++		ufs_qcom_config_ice_allocator(host);
+ 		break;
+ 	default:
+ 		dev_err(hba->dev, "%s: invalid status %d\n", __func__, status);
+@@ -932,6 +959,14 @@ static void ufs_qcom_set_host_params(struct ufs_hba *hba)
+ 	host_params->hs_tx_gear = host_params->hs_rx_gear = ufs_qcom_get_hs_gear(hba);
+ }
+ 
++static void ufs_qcom_set_host_caps(struct ufs_hba *hba)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	if (host->hw_ver.major >= 0x5)
++		host->caps |= UFS_QCOM_CAP_ICE_CONFIG;
++}
++
+ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+ {
+ 	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
+@@ -940,6 +975,8 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+ 	hba->caps |= UFSHCD_CAP_WB_EN;
+ 	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
+ 	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
++
++	ufs_qcom_set_host_caps(hba);
+ }
+ 
+ /**
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index b9de170983c9..43a98810a2d6 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -50,6 +50,9 @@ enum {
+ 	 */
+ 	UFS_AH8_CFG				= 0xFC,
+ 
++	REG_UFS_MEM_ICE_CONFIG			= 0x260C,
++	REG_UFS_MEM_ICE_NUM_CORE		= 0x2664,
++
+ 	REG_UFS_CFG3				= 0x271C,
+ 
+ 	REG_UFS_DEBUG_SPARE_CFG			= 0x284C,
+@@ -110,6 +113,9 @@ enum {
+ /* bit definition for UFS_UFS_TEST_BUS_CTRL_n */
+ #define TEST_BUS_SUB_SEL_MASK	GENMASK(4, 0)  /* All XXX_SEL fields are 5 bits wide */
+ 
++/* bit definition for UFS Shared ICE config */
++#define UFS_QCOM_CAP_ICE_CONFIG BIT(0)
++
+ #define REG_UFS_CFG2_CGC_EN_ALL (UAWM_HW_CGC_EN | UARM_HW_CGC_EN |\
+ 				 TXUC_HW_CGC_EN | RXUC_HW_CGC_EN |\
+ 				 DFC_HW_CGC_EN | TRLUT_HW_CGC_EN |\
+@@ -135,6 +141,37 @@ enum {
+ #define UNIPRO_CORE_CLK_FREQ_201_5_MHZ         202
+ #define UNIPRO_CORE_CLK_FREQ_403_MHZ           403
+ 
++/* ICE allocator type to share AES engines among TX stream and RX stream */
++#define ICE_ALLOCATOR_TYPE 2
++
++/*
++ * Number of cores allocated for RX stream when Read data block received and
++ * Write data block is not in progress
++ */
++#define NUM_RX_R1W0 28
++
++/*
++ * Number of cores allocated for TX stream when Device asked to send write
++ * data block and Read data block is not in progress
++ */
++#define NUM_TX_R0W1 28
++
++/*
++ * Number of cores allocated for RX stream when Read data block received and
++ * Write data block is in progress
++ * OR
++ * Device asked to send write data block and Read data block is in progress
++ */
++#define NUM_RX_R1W1 15
++
++/*
++ * Number of cores allocated for TX stream (UFS write) when Read data block
++ * received and Write data block is in progress
++ * OR
++ * Device asked to send write data block and Read data block is in progress
++ */
++#define NUM_TX_R1W1 13
++
+ static inline void
+ ufs_qcom_get_controller_revision(struct ufs_hba *hba,
+ 				 u8 *major, u16 *minor, u16 *step)
+@@ -196,7 +233,7 @@ struct ufs_qcom_host {
+ #ifdef CONFIG_SCSI_UFS_CRYPTO
+ 	struct qcom_ice *ice;
+ #endif
+-
++	u32 caps;
+ 	void __iomem *dev_ref_clk_ctrl_mmio;
+ 	bool is_dev_ref_clk_enabled;
+ 	struct ufs_hw_version hw_ver;
+-- 
+2.48.0
+
