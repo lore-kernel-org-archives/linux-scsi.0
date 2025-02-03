@@ -1,53 +1,53 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 169212046AD;
-	Mon,  3 Feb 2025 08:12:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B241C207E16;
+	Mon,  3 Feb 2025 08:12:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738570374; cv=none; b=pFGRS2QOG3jwbuhVjP4xJ9rnPKJTnb9EPq1Cn1dlItYFcsNTKF00QS6fa8SimhpjuxeirkjK4gu6A/d6wVKsN1q3kz9UvnkRGICNIsGC7xlbzRE/7ikpnp2/8H8RyI1yTxhCdGvnFUWUwt2irSehpWByCykE88stKc87x8HKq08=
+	t=1738570377; cv=none; b=n+EcAPFKqa+W+iwbfUaanqWtYmCFaLPcoIewiJVRbzbBwPpO542Ha7qPBHdmrZyZw6QLjdVp835BsER5j7i5xB2fmQnzcFjqyle3pwocBSusDB/unNHV2WZZDa0M9ccHueJtsEbaBEqfoBl0M7gUorLlC5VfyUHpaR6fTqpWgLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738570374; c=relaxed/simple;
-	bh=k0nXLpL0KlRi688higHRfGJJhg0Z+Qpe6XlGYjfjjj8=;
+	s=arc-20240116; t=1738570377; c=relaxed/simple;
+	bh=oVhQCIO+3PWmLbP7r2A8P/03dvkczsQd3Dbi5fVQxaA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mqzWBN/3BubAknse2PWoSYDrCOr0te0/w7T0kQWlt64UUj9cKBgvx/n2yVKU02/u6BKwHZ5VC2ePeB6WDVUJJd5XISlLTns1JDhE17yzdL4L8b0IRd2TV/fO8eLymM1QrdhSFT9Xn5mNvfzCTWOxaPkyRKaBl6R/TgeE6gBT0Sw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=UR8Lhl9K; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=TOymlThpeLcyW6nwUxxLRrZEyV4m6wF0ulmdG1KMJCCBQ32lHgRqWk2PPlwF6CXdWssRi5P4CjBx8bchQOuthNYrVGDVx38mf88CKIzpZ6AKX/WSCuZk7hVkng9R7HUDlhgdtRV+JNfALInr0hBUzm6x6bDjoDohz4mJ9nk/BxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ep2EpJCx; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="UR8Lhl9K"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51367KdO009748;
-	Mon, 3 Feb 2025 08:11:33 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ep2EpJCx"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5132b7wK017423;
+	Mon, 3 Feb 2025 08:11:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=utfW+gN4zhP
-	c1Z6/nhdbp3JUTTVFHupyeHOWi/BRNeI=; b=UR8Lhl9KCKZ4lqteGvXs9bCEzMT
-	IfDdW0/ud56xGGF+0rsqcG4CuNUoVqG6HI243A7HN8gh4hvgd6EF4Bmsh/j9Lrlw
-	HqRzJur4KCTWBzThdIshjMHYz4LJNFEujBK8aSCDQ6dZOrklJVtQO4IkNwLB5UjA
-	o/ffTMv3lqLphc4wYjf2/LlKIvwUXbk46mV0bLkM7S9ax1obAsLveZqLik6fB6mh
-	kiS/CvWMjQWvtY/K4VB4VrCfgA4cUgP6QRtJSefRlxlhxUrT3E4shNlW5MvhkebO
-	lUvjHgBdmUN/V2mKUNQJmNtPC1tjRntYRq4rrAvwTTlgoyc3rK8UKhYarVw==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=RVGlbzbKUdI
+	W8WNIeRYxCamaAmSOH8/nLE+mX0u43uU=; b=ep2EpJCx3frYJYCzlcjnop6/Itf
+	Ujo93lWhPQBsvuE3lWqPXyMlptCAgfTopdFE7+iD7VWtawLmdK6n8hT/EUeR/27Y
+	oUUmr67vC4KnguoXmamx9v/9u4Ab7yAOztjItUpsz6a+xpIqa3dBpnx8xUcCYx/t
+	WZD2HRb16dJ6Q322RQ8rsesmT4ZNKDMOlZ8y8UXJMwRkNK2jXA1naD/TOtI5c/LP
+	hOnkbuXHvBnOpkSepMlfOS4fOAtg8FZ/AxFiBS/12EwEigdu4MP7/R7XnFAlpM+J
+	i0cLVnkd3XGxgzAi8PFUstLKZjevs79aaMyPR23eMaxZArPVihRsKu2MD6Q==
 Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44jr8888e4-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44jn5vgjjs-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 03 Feb 2025 08:11:33 +0000 (GMT)
+	Mon, 03 Feb 2025 08:11:42 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5138BV9V026176;
-	Mon, 3 Feb 2025 08:11:31 GMT
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5138BejK026413;
+	Mon, 3 Feb 2025 08:11:40 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 44hcpkshk6-1
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 44hcpkshkw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 03 Feb 2025 08:11:31 +0000
+	Mon, 03 Feb 2025 08:11:40 +0000
 Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5138BUcw026171;
-	Mon, 3 Feb 2025 08:11:30 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5138BWDi026222;
+	Mon, 3 Feb 2025 08:11:40 GMT
 Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5138BUlo026168
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5138Bdae026406
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 03 Feb 2025 08:11:30 +0000
+	Mon, 03 Feb 2025 08:11:40 +0000
 Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id 2E22E40BFE; Mon,  3 Feb 2025 16:11:29 +0800 (CST)
+	id 0CE4240BFE; Mon,  3 Feb 2025 16:11:39 +0800 (CST)
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
@@ -55,21 +55,12 @@ To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
         quic_rampraka@quicinc.com
 Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Stanley Jhu <chu.stanley@gmail.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        Andrew Halaney <ahalaney@redhat.com>,
-        Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-mediatek@lists.infradead.org (moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC support:Keyword:mediatek)
-Subject: [PATCH v3 1/8] scsi: ufs: core: Pass target_freq to clk_scale_notify() vop
-Date: Mon,  3 Feb 2025 16:11:02 +0800
-Message-Id: <20250203081109.1614395-2-quic_ziqichen@quicinc.com>
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 4/8] scsi: ufs: qcom: Implement the freq_to_gear_speed() vop
+Date: Mon,  3 Feb 2025 16:11:05 +0800
+Message-Id: <20250203081109.1614395-5-quic_ziqichen@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250203081109.1614395-1-quic_ziqichen@quicinc.com>
 References: <20250203081109.1614395-1-quic_ziqichen@quicinc.com>
@@ -84,26 +75,21 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: v3uXrpDDeY3UVKG0D9PR0_Q8yfQrITc6
-X-Proofpoint-GUID: v3uXrpDDeY3UVKG0D9PR0_Q8yfQrITc6
+X-Proofpoint-ORIG-GUID: IwgNzOcEM5q5F9SXLc-GHU6_iG4zSwml
+X-Proofpoint-GUID: IwgNzOcEM5q5F9SXLc-GHU6_iG4zSwml
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-03_03,2025-01-31_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- impostorscore=0 phishscore=0 mlxscore=0 priorityscore=1501 adultscore=0
- bulkscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0 clxscore=1015
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ malwarescore=0 phishscore=0 spamscore=0 bulkscore=0 suspectscore=0
+ lowpriorityscore=0 impostorscore=0 adultscore=0 clxscore=1015
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2501170000 definitions=main-2502030065
 
 From: Can Guo <quic_cang@quicinc.com>
 
-Instead of only two frequencies, if OPP V2 is used, the UFS devfreq clock
-scaling may scale the clock among multiple frequencies, so just passing
-up/down to vop clk_scale_notify() is not enough to cover the intermediate
-clock freqs between the min and max freqs. Hence pass the target_freq ,
-which will be used in successive commits, to clk_scale_notify() to allow
-the vop to perform corresponding configurations with regard to the clock
-freqs.
+Implement the freq_to_gear_speed() vop to map the unipro core clock
+frequency to the corresponding maximum supported gear speed.
 
 Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
@@ -111,104 +97,66 @@ Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 ---
 
 v1 -> v2:
-Modify commit message to make it more clear.
+Print out freq and gear info as debugging message.
 
 v2 -> v3:
-1. Change 'vops' to 'vop' in commit message.
-2. keep the indentation consistent for clk_scale_notify() definition.
+1. Change "vops" to "vop" in commit message.
+2. Removed variable 'ret' in function ufs_qcom_freq_to_gear_speed().
+3. Removed parameters '*gear' and use gear value as return value for
+   funtion ufs_qcom_freq_to_gear_speed().
 ---
- drivers/ufs/core/ufshcd-priv.h  | 7 ++++---
- drivers/ufs/core/ufshcd.c       | 4 ++--
- drivers/ufs/host/ufs-mediatek.c | 1 +
- drivers/ufs/host/ufs-qcom.c     | 5 +++--
- include/ufs/ufshcd.h            | 4 ++--
- 5 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 9ffd94ddf8c7..0549b65f71ed 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -117,11 +117,12 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
- 	return ufshcd_readl(hba, REG_UFS_VERSION);
- }
- 
--static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
--			bool up, enum ufs_notify_change_status status)
-+static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba, bool up,
-+					       unsigned long target_freq,
-+					       enum ufs_notify_change_status status)
- {
- 	if (hba->vops && hba->vops->clk_scale_notify)
--		return hba->vops->clk_scale_notify(hba, up, status);
-+		return hba->vops->clk_scale_notify(hba, up, target_freq, status);
- 	return 0;
- }
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index acc3607bbd9c..8d295cc827cc 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1157,7 +1157,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
- 	int ret = 0;
- 	ktime_t start = ktime_get();
- 
--	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
-+	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, freq, PRE_CHANGE);
- 	if (ret)
- 		goto out;
- 
-@@ -1168,7 +1168,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
- 	if (ret)
- 		goto out;
- 
--	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
-+	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, freq, POST_CHANGE);
- 	if (ret) {
- 		if (hba->use_pm_opp)
- 			ufshcd_opp_set_rate(hba,
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 135cd78109e2..977dd0caaef6 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1643,6 +1643,7 @@ static void ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- }
- 
- static int ufs_mtk_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
-+				    unsigned long target_freq,
- 				    enum ufs_notify_change_status status)
- {
- 	if (!ufshcd_is_clkscaling_supported(hba))
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 68040b2ab5f8..b6eef975dc46 100644
+index a1eb3cab45e4..47c3077705d9 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1333,8 +1333,9 @@ static int ufs_qcom_clk_scale_down_post_change(struct ufs_hba *hba)
- 	return ufs_qcom_set_core_clk_ctrl(hba, false);
+@@ -1804,6 +1804,36 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+ 	return ret;
  }
  
--static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
--		bool scale_up, enum ufs_notify_change_status status)
-+static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
-+				     unsigned long target_freq,
-+				     enum ufs_notify_change_status status)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	int err;
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index d7aca9e61684..f51d425696e7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -344,8 +344,8 @@ struct ufs_hba_variant_ops {
- 	void    (*exit)(struct ufs_hba *);
- 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
- 	int	(*set_dma_mask)(struct ufs_hba *);
--	int	(*clk_scale_notify)(struct ufs_hba *, bool,
--				    enum ufs_notify_change_status);
-+	int (*clk_scale_notify)(struct ufs_hba *, bool, unsigned long,
-+							enum ufs_notify_change_status);
- 	int	(*setup_clocks)(struct ufs_hba *, bool,
- 				enum ufs_notify_change_status);
- 	int	(*hce_enable_notify)(struct ufs_hba *,
++static int ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq)
++{
++	int gear = 0;
++
++	switch (freq) {
++	case 403000000:
++		gear = UFS_HS_G5;
++		break;
++	case 300000000:
++		gear = UFS_HS_G4;
++		break;
++	case 201500000:
++		gear = UFS_HS_G3;
++		break;
++	case 150000000:
++	case 100000000:
++		gear = UFS_HS_G2;
++		break;
++	case 75000000:
++	case 37500000:
++		gear = UFS_HS_G1;
++		break;
++	default:
++		dev_err(hba->dev, "%s: Unsupported clock freq : %lu\n", __func__, freq);
++		return -EINVAL;
++	}
++
++	return gear;
++}
++
+ /*
+  * struct ufs_hba_qcom_vops - UFS QCOM specific variant operations
+  *
+@@ -1834,6 +1864,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.op_runtime_config	= ufs_qcom_op_runtime_config,
+ 	.get_outstanding_cqs	= ufs_qcom_get_outstanding_cqs,
+ 	.config_esi		= ufs_qcom_config_esi,
++	.freq_to_gear_speed	= ufs_qcom_freq_to_gear_speed,
+ };
+ 
+ /**
 -- 
 2.34.1
 
