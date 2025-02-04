@@ -1,76 +1,64 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D73D16D4E6;
-	Tue,  4 Feb 2025 03:35:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FFFA15689A;
+	Tue,  4 Feb 2025 03:35:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738640116; cv=none; b=IYww34eIH++eP7LHjNlobCOrFVlPEqNp8lHI2O/V34gQuveuiSLnI5cpxR3nUubxOG/FTaaoISgtWkgFqKEuE0WlMfFOxz52XYC5PSyzHGS8jnJH+iXeMd0vFEDypSeCv1b9u4Y/02dmuZ0YfHHa1upCAmPvk+ox80KfE+SE92g=
+	t=1738640130; cv=none; b=XvWmDGSlTMfD4/Q2LzDa8qsZf5ofnZDuWLXmX6KnHv9VGeZbD3ygErm63wAh8uzD1WjU+Q0A0j/4NQdQ2jm8l7j1pqA9c11xKi53NmbiZSyelifQ0/pUOlIdlavVxbcvjphO0/a34424/hF1cR6jQjvAyde+PTyuPvX2tWgqtRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738640116; c=relaxed/simple;
-	bh=LvjcqtCOQasUzHGgpJ3ldZuX5qUSyl44nPnp8M2+sGg=;
+	s=arc-20240116; t=1738640130; c=relaxed/simple;
+	bh=etkXxkIr3zgxbeBq1yYcYuI8y1wCVh04F5Jwz4gyllc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YcvlIcTKCmP7HxR9yYvM1YQBBPG+JA1291MDceAI9+GmQTwz6zsznJf0iunHJV4XCrvvsJsnRK+/LzUleWcrtT5weDT3EtaXhyLIKy+ByswnuQVyNxUGjpkeHu2mJZD40xaA2tAouNzsbWVbaWiVyfOuBFfNvMfbq/zPjViZ6gQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=FFJfIXHj; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=uYdIhKzsvIubkZ23iWvgbWULkkgbSgYavn9oy8xgK9X0wO3veido+CU70yD6ok0mLnSBFVVmciOCt/xcowgK5//wd4Rz/Rk2GmwB1WZB/nplvh3Z25v27VUa8YFBgz5q8Szo8jvEou6YgJUC6ITw8BBH/5UjqJXsSJtpF2iHOKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=j5Kh5xFS; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FFJfIXHj"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5141Mpce008581;
-	Tue, 4 Feb 2025 03:33:56 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j5Kh5xFS"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5141MsMt020492;
+	Tue, 4 Feb 2025 03:34:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=OljqLUza+/baG9lUxsAUE7xPAIhfTiIdxHd6klwyagw=; b=
-	FFJfIXHjRuOGQVijrnCzoA156Qk+NYpQhSg1UlL94wBJ77jYyJv4E/QsaaZEVZvF
-	MzRNI0Ga7MuJutF9QhkpTcPsVgJ57L8l1ftRhMKWNTGsHswN5c5uwnOv7MWwSFYw
-	Aqj+IrOeLwJKeBJ1X9jxBUsVowFlbdLc2I+PcPtXBBpqh1iOwAdzwuR37b8iwYJs
-	CMVDWLn6y4gofR9Cu/VIEB04UoqX1PcR11WebONqF1/fPOC1bj72q1vhYDGSN7Q3
-	wUbfJhLpOsDthRV8CnngZlJty2zAQ8HizjK7nl2gb/PJutdYh7r+wiASEX4mKx4W
-	uXFkHdD25UhN3YuQYM2n8Q==
+	corp-2023-11-20; bh=reXDLEnqVMPPLX1BJU34BSBU13kXVWrcjmGU7TLM9B0=; b=
+	j5Kh5xFSGMsivTeUjtRA1/NhVbzpU63eKNawlfCYCS9Xma+eTEYEnLosbqi5hLsH
+	ewvBsUy49RxIEqouOwwn7FZH/7psdiC0fW6JWis05CkM1WLPOBa3p4wi9r/sUtR/
+	tC6b/XUCJiUnTSfbmMS7MEYT033VgkmacuyB4rXx6+rLq5NYtX2L1Xf20CS8SqG/
+	slUMnzWawcXWFbZ/M4c2oueQwz9/zcfbDlGmu0639gNlj2KWlpkF81mCHxbtWdwO
+	rqEUECuAxTg0jTRyB4HqJBzLHMgLwFyYYKcqCpJu9BBH4ykV+XlkXg1363i3zZRc
+	tSuW2Lb2vqog5SWjWsy5zA==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44hhjtuy2e-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44hfcgv427-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 04 Feb 2025 03:33:56 +0000 (GMT)
+	Tue, 04 Feb 2025 03:34:00 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5140C0vi038928;
-	Tue, 4 Feb 2025 03:33:55 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5140E0mK038932;
+	Tue, 4 Feb 2025 03:34:00 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 44j8e76f08-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 44j8e76f1c-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 04 Feb 2025 03:33:55 +0000
+	Tue, 04 Feb 2025 03:34:00 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5143Xs6k015172;
-	Tue, 4 Feb 2025 03:33:54 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5143Xs6s015172;
+	Tue, 4 Feb 2025 03:33:59 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 44j8e76ex2-1;
-	Tue, 04 Feb 2025 03:33:54 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 44j8e76ex2-5;
+	Tue, 04 Feb 2025 03:33:59 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Griffin <peter.griffin@linaro.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Satya Tangirala <satyat@google.com>,
-        Eric Biggers <ebiggers@google.com>,
-        =?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>
+To: Christoph Hellwig <hch@infradead.org>, Rik van Riel <riel@surriel.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Tudor Ambarus <tudor.ambarus@linaro.org>,
-        Will McVicker <willmcvicker@google.com>, kernel-team@android.com,
+        =?UTF-8?q?Marc=20Aur=20=C3=A8le=20La=20France?= <tsi@tuyoix.net>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v4] scsi: ufs: fix use-after free in init error and remove paths
-Date: Mon,  3 Feb 2025 22:33:04 -0500
-Message-ID: <173863996284.4118719.16500657324570528150.b4-ty@oracle.com>
+        kernel-team@meta.com
+Subject: Re: [PATCH v2] scsi: use GFP_NOIO to avoid circular locking dependency
+Date: Mon,  3 Feb 2025 22:33:08 -0500
+Message-ID: <173863996275.4118719.4750343805511377444.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
-References: <20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org>
+In-Reply-To: <20250129104525.0ae8421e@fangorn>
+References: <20250128164700.6d8504c1@fangorn> <Z5m-FuU7wJsUoSST@infradead.org> <20250129104525.0ae8421e@fangorn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,28 +70,30 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-04_02,2025-01-31_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=888
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=647
  phishscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2501170000 definitions=main-2502040026
-X-Proofpoint-GUID: aWx47z6fFMo2i7ui5DF1-UpbrtUACWdk
-X-Proofpoint-ORIG-GUID: aWx47z6fFMo2i7ui5DF1-UpbrtUACWdk
+X-Proofpoint-GUID: sJMFBtJ4q7v3HiPmOuVCjJ-Fxbu0ZXDt
+X-Proofpoint-ORIG-GUID: sJMFBtJ4q7v3HiPmOuVCjJ-Fxbu0ZXDt
 
-On Fri, 24 Jan 2025 15:09:00 +0000, André Draszik wrote:
+On Wed, 29 Jan 2025 10:45:25 -0500, Rik van Riel wrote:
 
-> devm_blk_crypto_profile_init() registers a cleanup handler to run when
-> the associated (platform-) device is being released. For UFS, the
-> crypto private data and pointers are stored as part of the ufs_hba's
-> data structure 'struct ufs_hba::crypto_profile'. This structure is
-> allocated as part of the underlying ufshcd and therefore Scsi_host
-> allocation.
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
+> 
+> Filesystems can write to disk from page reclaim with __GFP_FS
+> set. Marc found a case where scsi_realloc_sdev_budget_map
+> ends up in page reclaim with GFP_KERNEL, where it could try
+> to take filesystem locks again, leading to a deadlock.
 > 
 > [...]
 
 Applied to 6.14/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: fix use-after free in init error and remove paths
-      https://git.kernel.org/mkp/scsi/c/f8fb2403ddeb
+[1/1] scsi: use GFP_NOIO to avoid circular locking dependency
+      https://git.kernel.org/mkp/scsi/c/5363ee9d110e
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
