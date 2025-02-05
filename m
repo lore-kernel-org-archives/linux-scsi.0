@@ -1,125 +1,104 @@
-Received: from mail-m155115.qiye.163.com (mail-m155115.qiye.163.com [101.71.155.115])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5989422A1EF;
-	Wed,  5 Feb 2025 08:41:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FEE222A4DC;
+	Wed,  5 Feb 2025 09:11:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738744867; cv=none; b=dssUi1/SMtUKGmBWcmdtULimMI43zUYZmfuIzCNOclrmXxmwpAdTN1SpFnJTpwyraYm+KHeAgO2ygScUYWyEGsHGEJICycZEcplIBi3Qdc9c6wQSCYncVmcQQJJLUtDc4rdq6MsB0hMBXio3QI9Q5KfxcoI9ffLzTtrLClyGDvM=
+	t=1738746709; cv=none; b=V3FcyNVEbNx+tk2vPp8klRA0qbxx7vkRNEQXUaGU5jgEjdOrU4435yz6beWuljFB/80cwXvRmBfUoWZofOcVjOYuqTtgP1I987vWbgL0sgeow2lPwZiltUVB41amoCT+/gzlrdJH84H96pmGqfrZDAvd/pxAirOT/5S9bu6/KkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738744867; c=relaxed/simple;
-	bh=bNt3g41MbGOhRUtyPJTnQPZ+/OsEb8ekcvaA54K8B9s=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=aUkZTQli1zFZn8Hlsll7O4ZHq4gRQwyD64xJ/A6m7M3tHigZybaMvo/sl1aN4dXN5hAeTFQUZUTW1bQukuD9LKmtHFEo2KRTNdiEZF++4NRPBYAb4Cpe1bmJ2r4OmBvCFmgTq1WCW1Lzl3Mz+1M6B5yUWmJoSZQcam8fCeSxevc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=U5mFfZr1; arc=none smtp.client-ip=101.71.155.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1738746709; c=relaxed/simple;
+	bh=LbCUSJD0Czpt7W31mvEtgHb9EN6MNFmskiCKC6XcyeU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Opu2OMYROXRZOc0hBldPAGqFqP28tvA2VRaoJD1IW/kH1rcw21PwhpVBCF65XsR7BD/FOEZuUJfnInRj70HMpfbP0hBP84/mcpgxCkE7afnjX5w6Dywvexs2F1qqr2YI0468mSNZR8t9Q8ym3rs/HbUm9Oa61gLZjnjTV7vrSGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Vfz0+Lt7; arc=none smtp.client-ip=209.85.221.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="U5mFfZr1"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id a34e52fb;
-	Wed, 5 Feb 2025 14:18:36 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vfz0+Lt7"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-385dece873cso3036520f8f.0;
+        Wed, 05 Feb 2025 01:11:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738746705; x=1739351505; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=9HHOddGHAWnD6MdP+cfS3QyTNQZ9GK6ZyaYhy+uXayQ=;
+        b=Vfz0+Lt7KHey5NOEiMIPgeXiQqhfCTCN5MraqCxR/NLn3Ghmcd7dkK2uHNkTG9eihs
+         6/DA2OikN2DzDUBsqqyAbY/SipESCUd3HFPr9NUCJ3REVGK0PQcHl4KNRAQm7KEMIlva
+         kY5IZQ6RXbaxexVnOnj+/TqU/2tsa40fJijySmqTbVpbZltIWQlljks9ebN78MlSDvu1
+         x+Z/X5pylV5XB2CkutqisJlq9R4gKyK4HJnG4mL0jhXJCRVK5fw18E5C2VjImln1Wpfm
+         5OCX99EMDxTz8cQhlY8dKiQiYjQpB/mySBMq/6r96Y0y0LjGKtC9xSExgOQDigJbAMuD
+         myVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738746705; x=1739351505;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9HHOddGHAWnD6MdP+cfS3QyTNQZ9GK6ZyaYhy+uXayQ=;
+        b=uIZRtXYdY6Ejmw5O+BpiSetO/RTnLUB6iwROYOcnUZq3QzXI7XvkFzVq7iOZjimXEd
+         TG6V/QlgqoQqFMYk6RqlQ7SvKjsTnuHUi1bL9vZmT3FBmeLaR/rRnPebAwMkNWQSt1CV
+         zxrgEFuGKCGQsC5BVxs3TZjdXbOR5GhqTz6qK2qFS129N43sw1xCP81RbZ/zd9qahT8S
+         AaSxiVptujfilSyeR5WuIcey4vj4OdcR9/aXDp2nlaU2Qd0/2xf4uvcgEl+IefiDF//5
+         2BYnOr/WeeF+9JrmoxRQuVmCyc32UvBMmfcSKmEDMZVZGOQyFVmT/roOR303DE+SfOIl
+         UZFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX4PNZk6pQ6NYRppNjZ98ZaiUen3wtc3pfNwuYuMeHXsh6x+4zJVmH/3+6hRIESnXRuXYXzGXcf2UvYsw==@vger.kernel.org, AJvYcCXcB6+mC9hM46E6Jj2khEXLansM3ivVv9qHkeOVZDAl5Ogo20jbfCkFheJnpsUFeHfJws5AHF9Tb1yXTuw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwmTqsb6Y+9bLEQiuM+onSwX9ddoOh6gnIRbmRxD/QA7xbXKPe3
+	7G+y/rG3HrX7FpzP6mL2YPIRLD7iiw5gPTxHtMaXOTbW5iu8PvHX
+X-Gm-Gg: ASbGncuETOtB7jTMd7RszvQ9a6RxjjWcIyNv/5whQiJdjaJAbA/XBm0NPircqcBU5TN
+	/T88anLnsX2Ufqs1thBE2OGLCR7VYM4ulgt5HlBr+L8dR7ZqUbww+yPymZWxOtIJ4/4BxJUCFwD
+	nLYiYsT8yicX2Y4zOL+2OiGjoMDrRQ6di4bwU7ND4odjvqyd+bPQpQseLIOOZ9ToHDJaczPtmV1
+	DMdGbVq2moqquTRw6uyjjR4sSk9wp1HBGcC0fnCbAyPcadWaOgUCFsgsG1xylL5PR7mFnC5qQIY
+	9pDaqJv6i4mYP0bu
+X-Google-Smtp-Source: AGHT+IGikbPCrNpiUQCL0O4o+XA1l4SRySklGuthhOGhFLhWjoNBOY1lyPsKx/iwMSDMDplQ5VBH3w==
+X-Received: by 2002:a05:6000:2a1:b0:385:f17b:de54 with SMTP id ffacd0b85a97d-38db48a9044mr1345063f8f.5.1738746705342;
+        Wed, 05 Feb 2025 01:11:45 -0800 (PST)
+Received: from localhost ([194.120.133.72])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-38db6320becsm928024f8f.98.2025.02.05.01.11.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Feb 2025 01:11:44 -0800 (PST)
+From: Colin Ian King <colin.i.king@gmail.com>
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 7/7] arm64: dts: rockchip: Add UFS support for RK3576 SoC
-Date: Wed,  5 Feb 2025 14:15:56 +0800
-Message-Id: <1738736156-119203-8-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQk9CSFZNTkNLTkxPGU5NGB1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a94d4c2af6d09cckunma34e52fb
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Nxw6Myo6ETIQEgs#EjcrHBor
-	EwIwCxFVSlVKTEhDTEhNSEpMQ09PVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUpCSEI3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=U5mFfZr1sdZFCWiqy8e46HIrf3ILOWz6zcrZR9gIKDOVFyKDGv9l6sb9Y4BUzQyUBMCa/5Hu29CePBxDLaW2MrUGAyn0cD6yXRuETVSd//zKpxM3HDnMN5T77EtzggDXhfmT0DtyfEpxS+vtowhhug6ZY69/Wh7R+/9/GZOp8rg=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=zXet6/X8S9LRHFBz6ujYL262DrXxbFU9c0/qc0AtD7Q=;
-	h=date:mime-version:subject:message-id:from;
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH][next] scsi: mpi3mr: Fix spelling mistake "skiping" -> "skipping"
+Date: Wed,  5 Feb 2025 09:11:18 +0000
+Message-ID: <20250205091119.715630-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-Add ufshc node to rk3576.dtsi, so the board using UFS could
-enable it.
+There is a spelling mistake in a dprint_bsg_err message. Fix it.
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
 ---
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes in v7:
-- Use 0x0 for consistency
-- Collect Mani's acked-by tag
-
-Changes in v6:
-- remove comments suggested by Mani
-
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- arch/arm64/boot/dts/rockchip/rk3576.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/rockchip/rk3576.dtsi b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-index 4dde954..bd55bd8 100644
---- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
-@@ -1221,6 +1221,30 @@
- 			};
- 		};
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 26582776749f..4ff9a73a7960 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -238,7 +238,7 @@ int mpi3mr_issue_diag_buf_post(struct mpi3mr_ioc *mrioc,
+ 	int retval = 0;
  
-+		ufshc: ufshc@2a2d0000 {
-+			compatible = "rockchip,rk3576-ufshc";
-+			reg = <0x0 0x2a2d0000 0x0 0x10000>,
-+			      <0x0 0x2b040000 0x0 0x10000>,
-+			      <0x0 0x2601f000 0x0 0x1000>,
-+			      <0x0 0x2603c000 0x0 0x1000>,
-+			      <0x0 0x2a2e0000 0x0 0x10000>;
-+			reg-names = "hci", "mphy", "hci_grf", "mphy_grf", "hci_apb";
-+			clocks = <&cru ACLK_UFS_SYS>, <&cru PCLK_USB_ROOT>, <&cru PCLK_MPHY>,
-+				 <&cru CLK_REF_UFS_CLKOUT>;
-+			clock-names = "core", "pclk", "pclk_mphy", "ref_out";
-+			assigned-clocks = <&cru CLK_REF_OSC_MPHY>;
-+			assigned-clock-parents = <&cru CLK_REF_MPHY_26M>;
-+			interrupts = <GIC_SPI 361 IRQ_TYPE_LEVEL_HIGH>;
-+			power-domains = <&power RK3576_PD_USB>;
-+			pinctrl-0 = <&ufs_refclk>;
-+			pinctrl-names = "default";
-+			resets = <&cru SRST_A_UFS_BIU>, <&cru SRST_A_UFS_SYS>,
-+				 <&cru SRST_A_UFS>, <&cru SRST_P_UFS_GRF>;
-+			reset-names = "biu", "sys", "ufs", "grf";
-+			reset-gpios = <&gpio4 RK_PD0 GPIO_ACTIVE_LOW>;
-+			status = "disabled";
-+		};
-+
- 		sdmmc: mmc@2a310000 {
- 			compatible = "rockchip,rk3576-dw-mshc";
- 			reg = <0x0 0x2a310000 0x0 0x4000>;
+ 	if (diag_buffer->disabled_after_reset) {
+-		dprint_bsg_err(mrioc, "%s: skiping diag buffer posting\n"
++		dprint_bsg_err(mrioc, "%s: skipping diag buffer posting\n"
+ 				"as it is disabled after reset\n", __func__);
+ 		return -1;
+ 	}
 -- 
-2.7.4
+2.47.2
 
