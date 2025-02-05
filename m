@@ -1,140 +1,104 @@
-Received: from mail-m49202.qiye.163.com (mail-m49202.qiye.163.com [45.254.49.202])
+Received: from mout.web.de (mout.web.de [212.227.15.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83FA221517A;
-	Wed,  5 Feb 2025 06:53:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706D322A1CB;
+	Wed,  5 Feb 2025 08:26:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738738430; cv=none; b=VpcYmCeesjgBdUORSqfhJCYwgp/xfI4NERZp+hPSDzpSpQRhdSw2ERlF+Ve7k7SM4HI9UuyQcs0X5wITHFpDjuRsedVAENy0xqIhArPxrSzHIgikR0GUDzYoEo0LpGPzFrCjIZZrt/Z6cjKdjfDsUw+csCQR30BdZFN4byjRzrI=
+	t=1738743975; cv=none; b=MuRAYO7tUfQeGzYA4eJdS25OEZr/GqE/gn3rESKIlHG/OIZsqhbqn6u3eUsJmD5hFfYLQ3/b3MxQUCiJ8GnMpP3mVcKYZoU/eHDDPlqz+F7eBKf35VoWuirbGqka9qZQl26cZNXu4VMfP4KmCqvix87NYAiIS52krR/ZTSeHOVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738738430; c=relaxed/simple;
-	bh=yT2vByNZnLKMoecatN+Y+a/G5hoWbJR7ZL8sZCSE3Pc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=pp+xTeio5FiqdEo0T2vlJe35o5uJ1qAl+lqdycPnVDLyvMRoTX1Vxtwl3ImprYEqnodZcOLf62j5EfQToevsyhVI5GQSUZj7XlVE2bNvqBxYJs8yoCW43VU4tcjQuLRZECfyK4Op0VJVXSpMRFiap13+iQtUS1GnsVBdDtcvsYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=OztpeoIQ; arc=none smtp.client-ip=45.254.49.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1738743975; c=relaxed/simple;
+	bh=VOBquAEgmcp5Rh4j1vo1naFqZdkT82CR5wKpqxiC+P0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SU41P6GpDIzHQ1jVRvH5287BfS/ZnfMiOKeNB0np9PUkuAWpLLu4APBugr+atSY5XZ1TYP5hHFh5/IGPe0vfpd3o5t/WnFkSGOZNGLIcOPTbKF5/mhp2E6QsOG+ZQ0u/pqjwpOfreuANA+T30B08RaobseaO2IXmtu/xFcZ/Dz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=czHAWhZa; arc=none smtp.client-ip=212.227.15.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="OztpeoIQ"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id a34e52b8;
-	Wed, 5 Feb 2025 14:18:19 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
-	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 5/7] scsi: ufs: core: Export ufshcd_dme_reset() and ufshcd_dme_enable()
-Date: Wed,  5 Feb 2025 14:15:54 +0800
-Message-Id: <1738736156-119203-6-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ09ITVZOTR9LTx1NHRlMHkNWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a94d4c26db509cckunma34e52b8
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MU06PCo6MjINDgtDODcpHCpJ
-	L08KCglVSlVKTEhDTEhNSEtKS0xDVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUlJQkg3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=OztpeoIQaadXhInVaxSz6SrW4MXIUqpglyw6hyB8h8SQrPlnunzycFFkxFC+wLbo0e58uU+GTGnvT9MlnCUnwTR8mWI8LBz2pURW7hdDWMhrnWMPiUPSwmvNM3Uu9/HJuvKdcYSNQCS8xYrNXbNYzRBjVVxzT0KYqI/ynUkA8kk=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=tQBe00/5+XR3AuyJ7x8v0mQNDVOcfg72dNI5pbcGOVo=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="czHAWhZa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1738743970; x=1739348770; i=markus.elfring@web.de;
+	bh=VOBquAEgmcp5Rh4j1vo1naFqZdkT82CR5wKpqxiC+P0=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=czHAWhZaEj/waPD/Um7MeT0RPScDJesYlIp5k1tzUz1XdBBq/ojwaU5TlrRnnMUb
+	 eL/L0/jEjxc5mF/+8kPhJSguw77USsjsCb1LwuhsBBLQJy2fMZY8cjrc4av3ODq7E
+	 789s+YmpiTPyE9u1rdUBE/NzPedhtGjXZUYFdGdvDQhQqnwst8Ylcqq1XER57kR3+
+	 e6RgXTyVIyF5x07wJOCJ2UrAK3nbG7sLbEBPjsQwu7LydJPL9SH/0QTi/F1X4v7FF
+	 RQKr76t/g+yks+aECyY8CwTXksdhToNR3VLUEB5DPD+Ug9uCEA8DCjKHrqKw247Mh
+	 CEk41k4VG0ZQ8VsOVw==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.93.30]) by smtp.web.de (mrweb005
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1N8mzy-1tKMRS2Aac-00sabI; Wed, 05
+ Feb 2025 09:12:08 +0100
+Message-ID: <d4db5506-6ace-4585-972e-6b7a6fc882a4@web.de>
+Date: Wed, 5 Feb 2025 09:11:42 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [v3?] scsi: qedf: Replace kmalloc_array() with kcalloc()
+To: Jiasheng Jiang <jiashengjiangcool@gmail.com>, linux-scsi@vger.kernel.org
+Cc: GR-QLogic-Storage-Upstream@marvell.com,
+ James Bottomley <James.Bottomley@hansenpartnership.com>,
+ Javed Hasan <jhasan@marvell.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Saurav Kashyap <skashyap@marvell.com>, LKML <linux-kernel@vger.kernel.org>,
+ Arun Easi <arun.easi@cavium.com>, Bart Van Assche <bvanassche@acm.org>,
+ Manish Rangankar <manish.rangankar@cavium.com>,
+ Nilesh Javali <nilesh.javali@cavium.com>
+References: <d5d13945-da84-4886-bdc7-9a3ac182b2be@web.de>
+ <20250202213239.49065-1-jiashengjiangcool@gmail.com>
+ <6221018a-873d-4fd5-bfaa-5c83d09ea2ac@web.de>
+ <CANeGvZX5gcYj+Wjp+t=GLtOePHBjMNmVxiPsk2nruqsbiRaqVQ@mail.gmail.com>
+ <444d6d33-d916-467b-aea8-25c61977713a@web.de>
+ <CANeGvZWWFk4HjFGnzqW9aGc_FPFw_8xx_vizY48AYsP2T7q_WQ@mail.gmail.com>
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <CANeGvZWWFk4HjFGnzqW9aGc_FPFw_8xx_vizY48AYsP2T7q_WQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:nWtUnieaPTES9xWTK5XIZgfoYkluWGBDIpSdrK9M3hape6gaa0L
+ TH/vv0ID/6NdSQFWvDzVPnMKGnnJ4vBuPnoBHm71T+vEmGMquLg0JKIPQkiAXjsWIlk4nQ8
+ r5xpemKHNv+Gj+gWpvmL6H0wCMR1rp1qM28+Gz9tcWL019cabYU0/9Js/hm4XgBO8MJkdxq
+ UvDNWBGI66iSfIyDF16MA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:DOlNUbywRvg=;lbYdz67jSB9WqsnN4neFcGuLZ97
+ ojxouwKAFVCcxtjTUfXbLQCsttNacUVDJOabkbBDNSia4kkdkWlnyvT4ZIIc1a+Og4ph56Wbi
+ v0I+lg7E1/Fc2PxfuntGMtel7FAwsrzqE/8cdi7UvYGZRKvnLUqZI4dKkDZQrPTVl6vytKUS1
+ GlTbZPc4qK/IOieQF5jsaPFFVxnMXw0qDia8IOdE1d8IVzT2ZjJXObFBkqHCK9Z9D99ybQBlR
+ tRKFnu8KBwH5Docb1OpFwKLZ+7RxaLMDuvpqq4Ymhe+S2ik0ZpEb3skbyk2uEADMDdMdniPOn
+ /ayBF/NHSPBQICN/nQ/CybW9grkUUPz9+gSRq11A55U3A70CZIOoNjMhzvCDs5nD3lrmffXJs
+ KdUPWsshFT4RR1GizBh6mWRjIOsoXwUUYfU2YitZzQqD280y/KKhQoq6Nc2GjfgWluPxbi5Pf
+ z7GVwaebQ4wNecSUllqGf2nuTUNiVzeGSdG2+3AqCBqmdXxsB39jndRcEHuQUBQacV/qDqWSP
+ tcGx2vRwRYMeDUwaKNzZCTHUeAPlD34DZ6TVa1tIBGh7LFK2LU03jk61U5zHjJrkBdvz0mGjJ
+ vE0eEYVQQiz2gmZqlq8aX+VNpGeTSTg2uniXX8bIA4Wjig/DDUzadksNd5HoReFTYI2jEJ/tS
+ VNg0381zKowhLUGxL9aH6BatxiqR5/M5bdNAB5MMqiXVGq+XLMoe0U2gQFogs0lzlDZ5NrRFf
+ YQV01KuoraFuazXnhhvHmWqfwoKAzrwzUCdJFT8i90ZCPPI/+o5uveKA9j48tXNNf79twXQzS
+ RhHJDurYcD4q7VHfjwq0g+JYdwU+TfgXPykc6nQbHrPEr4hKHXOUKQMy7ts0q5C9RyeD865tl
+ 3vb26ZiMdRuERsbyGW2wNExKswZyZ/vQM920sf4nf82G9IPTneT8SR+L2V9/K8Cx3MdXqujPK
+ E1PsKNqEcO8jrlBuurJMPQHwZ8RQGj6CNx+k0n2++3jT+Km0UAVljmvouJXwkzpvDeXHScCMh
+ soGdqgIA6slWaAjPYq1BH0pxgujKBvIasx8XP/voPq3Z2KHG2wdDlR99ZNg8RbvvUqKn5MCI2
+ C32QUTReVbeZfg+BO5cbF6Tc29/zv8otVA0UvdjTN3Q+E36KyfCCOutvEt7FZNHsriFli0xlc
+ iLWK1Y8U0h8JYLktzuwzWtGjBSxRXLNeq5ZvYc6eiltpr4F+GFKbHbyr9GvVDav2rJTVBlph6
+ C/28DOu5QcjkLOyBnuOCoQlCHjkz/Sg/Q1dRFuZGQIXtpX4yR2R0W6lfQQjlGA8nDLPxzKBGE
+ uqX6ZdXjl4V+qyegO6sNdL6PGAwLK9BQkJsILp5UJQvna73AIoc/Xfi9/EOFRCBNJF/rdWEir
+ ZapUdWRCQ4qHP8qZRTiTpHzK3+JdBdgQGesBngX9qXJs/fSS3FsHEvauFC7heUJidSJx81/hQ
+ k3RmlLQ==
 
-These two APIs will be used by glue driver if they need a different
-HCE process.
+> Thanks, I have submitted the patch series.
+* Would a cover letter have been helpful?
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+* Why did you find a =E2=80=9CRESEND=E2=80=9D relevant already?
 
-Changes in v7: None
-Changes in v6:
-- replace host drivers with glue drivers suggested by Mani
-- add Main's review tag
+* Is there a need to increase version numbers?
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
 
- drivers/ufs/core/ufshcd.c | 6 ++++--
- include/ufs/ufshcd.h      | 2 ++
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cd404ad..d9cb60d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4002,7 +4002,7 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
-  *
-  * Return: 0 on success, non-zero value on failure.
-  */
--static int ufshcd_dme_reset(struct ufs_hba *hba)
-+int ufshcd_dme_reset(struct ufs_hba *hba)
- {
- 	struct uic_command uic_cmd = {
- 		.command = UIC_CMD_DME_RESET,
-@@ -4016,6 +4016,7 @@ static int ufshcd_dme_reset(struct ufs_hba *hba)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_dme_reset);
- 
- int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
- 			       int agreed_gear,
-@@ -4041,7 +4042,7 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_configure_adapt);
-  *
-  * Return: 0 on success, non-zero value on failure.
-  */
--static int ufshcd_dme_enable(struct ufs_hba *hba)
-+int ufshcd_dme_enable(struct ufs_hba *hba)
- {
- 	struct uic_command uic_cmd = {
- 		.command = UIC_CMD_DME_ENABLE,
-@@ -4055,6 +4056,7 @@ static int ufshcd_dme_enable(struct ufs_hba *hba)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_dme_enable);
- 
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
- {
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 650ff23..31661a4 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1369,6 +1369,8 @@ extern int ufshcd_system_thaw(struct device *dev);
- extern int ufshcd_system_restore(struct device *dev);
- #endif
- 
-+extern int ufshcd_dme_reset(struct ufs_hba *hba);
-+extern int ufshcd_dme_enable(struct ufs_hba *hba);
- extern int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
- 				      int agreed_gear,
- 				      int adapt_val);
--- 
-2.7.4
-
+Regards,
+Markus
