@@ -1,104 +1,125 @@
-Received: from mout.web.de (mout.web.de [212.227.15.3])
+Received: from mail-m155115.qiye.163.com (mail-m155115.qiye.163.com [101.71.155.115])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706D322A1CB;
-	Wed,  5 Feb 2025 08:26:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5989422A1EF;
+	Wed,  5 Feb 2025 08:41:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738743975; cv=none; b=MuRAYO7tUfQeGzYA4eJdS25OEZr/GqE/gn3rESKIlHG/OIZsqhbqn6u3eUsJmD5hFfYLQ3/b3MxQUCiJ8GnMpP3mVcKYZoU/eHDDPlqz+F7eBKf35VoWuirbGqka9qZQl26cZNXu4VMfP4KmCqvix87NYAiIS52krR/ZTSeHOVw=
+	t=1738744867; cv=none; b=dssUi1/SMtUKGmBWcmdtULimMI43zUYZmfuIzCNOclrmXxmwpAdTN1SpFnJTpwyraYm+KHeAgO2ygScUYWyEGsHGEJICycZEcplIBi3Qdc9c6wQSCYncVmcQQJJLUtDc4rdq6MsB0hMBXio3QI9Q5KfxcoI9ffLzTtrLClyGDvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738743975; c=relaxed/simple;
-	bh=VOBquAEgmcp5Rh4j1vo1naFqZdkT82CR5wKpqxiC+P0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SU41P6GpDIzHQ1jVRvH5287BfS/ZnfMiOKeNB0np9PUkuAWpLLu4APBugr+atSY5XZ1TYP5hHFh5/IGPe0vfpd3o5t/WnFkSGOZNGLIcOPTbKF5/mhp2E6QsOG+ZQ0u/pqjwpOfreuANA+T30B08RaobseaO2IXmtu/xFcZ/Dz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=czHAWhZa; arc=none smtp.client-ip=212.227.15.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1738744867; c=relaxed/simple;
+	bh=bNt3g41MbGOhRUtyPJTnQPZ+/OsEb8ekcvaA54K8B9s=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=aUkZTQli1zFZn8Hlsll7O4ZHq4gRQwyD64xJ/A6m7M3tHigZybaMvo/sl1aN4dXN5hAeTFQUZUTW1bQukuD9LKmtHFEo2KRTNdiEZF++4NRPBYAb4Cpe1bmJ2r4OmBvCFmgTq1WCW1Lzl3Mz+1M6B5yUWmJoSZQcam8fCeSxevc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=U5mFfZr1; arc=none smtp.client-ip=101.71.155.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="czHAWhZa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1738743970; x=1739348770; i=markus.elfring@web.de;
-	bh=VOBquAEgmcp5Rh4j1vo1naFqZdkT82CR5wKpqxiC+P0=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=czHAWhZaEj/waPD/Um7MeT0RPScDJesYlIp5k1tzUz1XdBBq/ojwaU5TlrRnnMUb
-	 eL/L0/jEjxc5mF/+8kPhJSguw77USsjsCb1LwuhsBBLQJy2fMZY8cjrc4av3ODq7E
-	 789s+YmpiTPyE9u1rdUBE/NzPedhtGjXZUYFdGdvDQhQqnwst8Ylcqq1XER57kR3+
-	 e6RgXTyVIyF5x07wJOCJ2UrAK3nbG7sLbEBPjsQwu7LydJPL9SH/0QTi/F1X4v7FF
-	 RQKr76t/g+yks+aECyY8CwTXksdhToNR3VLUEB5DPD+Ug9uCEA8DCjKHrqKw247Mh
-	 CEk41k4VG0ZQ8VsOVw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.93.30]) by smtp.web.de (mrweb005
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1N8mzy-1tKMRS2Aac-00sabI; Wed, 05
- Feb 2025 09:12:08 +0100
-Message-ID: <d4db5506-6ace-4585-972e-6b7a6fc882a4@web.de>
-Date: Wed, 5 Feb 2025 09:11:42 +0100
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="U5mFfZr1"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id a34e52fb;
+	Wed, 5 Feb 2025 14:18:36 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v7 7/7] arm64: dts: rockchip: Add UFS support for RK3576 SoC
+Date: Wed,  5 Feb 2025 14:15:56 +0800
+Message-Id: <1738736156-119203-8-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQk9CSFZNTkNLTkxPGU5NGB1WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a94d4c2af6d09cckunma34e52fb
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Nxw6Myo6ETIQEgs#EjcrHBor
+	EwIwCxFVSlVKTEhDTEhNSEpMQ09PVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUpCSEI3Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=U5mFfZr1sdZFCWiqy8e46HIrf3ILOWz6zcrZR9gIKDOVFyKDGv9l6sb9Y4BUzQyUBMCa/5Hu29CePBxDLaW2MrUGAyn0cD6yXRuETVSd//zKpxM3HDnMN5T77EtzggDXhfmT0DtyfEpxS+vtowhhug6ZY69/Wh7R+/9/GZOp8rg=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=zXet6/X8S9LRHFBz6ujYL262DrXxbFU9c0/qc0AtD7Q=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [v3?] scsi: qedf: Replace kmalloc_array() with kcalloc()
-To: Jiasheng Jiang <jiashengjiangcool@gmail.com>, linux-scsi@vger.kernel.org
-Cc: GR-QLogic-Storage-Upstream@marvell.com,
- James Bottomley <James.Bottomley@hansenpartnership.com>,
- Javed Hasan <jhasan@marvell.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Saurav Kashyap <skashyap@marvell.com>, LKML <linux-kernel@vger.kernel.org>,
- Arun Easi <arun.easi@cavium.com>, Bart Van Assche <bvanassche@acm.org>,
- Manish Rangankar <manish.rangankar@cavium.com>,
- Nilesh Javali <nilesh.javali@cavium.com>
-References: <d5d13945-da84-4886-bdc7-9a3ac182b2be@web.de>
- <20250202213239.49065-1-jiashengjiangcool@gmail.com>
- <6221018a-873d-4fd5-bfaa-5c83d09ea2ac@web.de>
- <CANeGvZX5gcYj+Wjp+t=GLtOePHBjMNmVxiPsk2nruqsbiRaqVQ@mail.gmail.com>
- <444d6d33-d916-467b-aea8-25c61977713a@web.de>
- <CANeGvZWWFk4HjFGnzqW9aGc_FPFw_8xx_vizY48AYsP2T7q_WQ@mail.gmail.com>
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <CANeGvZWWFk4HjFGnzqW9aGc_FPFw_8xx_vizY48AYsP2T7q_WQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:nWtUnieaPTES9xWTK5XIZgfoYkluWGBDIpSdrK9M3hape6gaa0L
- TH/vv0ID/6NdSQFWvDzVPnMKGnnJ4vBuPnoBHm71T+vEmGMquLg0JKIPQkiAXjsWIlk4nQ8
- r5xpemKHNv+Gj+gWpvmL6H0wCMR1rp1qM28+Gz9tcWL019cabYU0/9Js/hm4XgBO8MJkdxq
- UvDNWBGI66iSfIyDF16MA==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:DOlNUbywRvg=;lbYdz67jSB9WqsnN4neFcGuLZ97
- ojxouwKAFVCcxtjTUfXbLQCsttNacUVDJOabkbBDNSia4kkdkWlnyvT4ZIIc1a+Og4ph56Wbi
- v0I+lg7E1/Fc2PxfuntGMtel7FAwsrzqE/8cdi7UvYGZRKvnLUqZI4dKkDZQrPTVl6vytKUS1
- GlTbZPc4qK/IOieQF5jsaPFFVxnMXw0qDia8IOdE1d8IVzT2ZjJXObFBkqHCK9Z9D99ybQBlR
- tRKFnu8KBwH5Docb1OpFwKLZ+7RxaLMDuvpqq4Ymhe+S2ik0ZpEb3skbyk2uEADMDdMdniPOn
- /ayBF/NHSPBQICN/nQ/CybW9grkUUPz9+gSRq11A55U3A70CZIOoNjMhzvCDs5nD3lrmffXJs
- KdUPWsshFT4RR1GizBh6mWRjIOsoXwUUYfU2YitZzQqD280y/KKhQoq6Nc2GjfgWluPxbi5Pf
- z7GVwaebQ4wNecSUllqGf2nuTUNiVzeGSdG2+3AqCBqmdXxsB39jndRcEHuQUBQacV/qDqWSP
- tcGx2vRwRYMeDUwaKNzZCTHUeAPlD34DZ6TVa1tIBGh7LFK2LU03jk61U5zHjJrkBdvz0mGjJ
- vE0eEYVQQiz2gmZqlq8aX+VNpGeTSTg2uniXX8bIA4Wjig/DDUzadksNd5HoReFTYI2jEJ/tS
- VNg0381zKowhLUGxL9aH6BatxiqR5/M5bdNAB5MMqiXVGq+XLMoe0U2gQFogs0lzlDZ5NrRFf
- YQV01KuoraFuazXnhhvHmWqfwoKAzrwzUCdJFT8i90ZCPPI/+o5uveKA9j48tXNNf79twXQzS
- RhHJDurYcD4q7VHfjwq0g+JYdwU+TfgXPykc6nQbHrPEr4hKHXOUKQMy7ts0q5C9RyeD865tl
- 3vb26ZiMdRuERsbyGW2wNExKswZyZ/vQM920sf4nf82G9IPTneT8SR+L2V9/K8Cx3MdXqujPK
- E1PsKNqEcO8jrlBuurJMPQHwZ8RQGj6CNx+k0n2++3jT+Km0UAVljmvouJXwkzpvDeXHScCMh
- soGdqgIA6slWaAjPYq1BH0pxgujKBvIasx8XP/voPq3Z2KHG2wdDlR99ZNg8RbvvUqKn5MCI2
- C32QUTReVbeZfg+BO5cbF6Tc29/zv8otVA0UvdjTN3Q+E36KyfCCOutvEt7FZNHsriFli0xlc
- iLWK1Y8U0h8JYLktzuwzWtGjBSxRXLNeq5ZvYc6eiltpr4F+GFKbHbyr9GvVDav2rJTVBlph6
- C/28DOu5QcjkLOyBnuOCoQlCHjkz/Sg/Q1dRFuZGQIXtpX4yR2R0W6lfQQjlGA8nDLPxzKBGE
- uqX6ZdXjl4V+qyegO6sNdL6PGAwLK9BQkJsILp5UJQvna73AIoc/Xfi9/EOFRCBNJF/rdWEir
- ZapUdWRCQ4qHP8qZRTiTpHzK3+JdBdgQGesBngX9qXJs/fSS3FsHEvauFC7heUJidSJx81/hQ
- k3RmlLQ==
 
-> Thanks, I have submitted the patch series.
-* Would a cover letter have been helpful?
+Add ufshc node to rk3576.dtsi, so the board using UFS could
+enable it.
 
-* Why did you find a =E2=80=9CRESEND=E2=80=9D relevant already?
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-* Is there a need to increase version numbers?
+Changes in v7:
+- Use 0x0 for consistency
+- Collect Mani's acked-by tag
 
+Changes in v6:
+- remove comments suggested by Mani
 
-Regards,
-Markus
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ arch/arm64/boot/dts/rockchip/rk3576.dtsi | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3576.dtsi b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
+index 4dde954..bd55bd8 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3576.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3576.dtsi
+@@ -1221,6 +1221,30 @@
+ 			};
+ 		};
+ 
++		ufshc: ufshc@2a2d0000 {
++			compatible = "rockchip,rk3576-ufshc";
++			reg = <0x0 0x2a2d0000 0x0 0x10000>,
++			      <0x0 0x2b040000 0x0 0x10000>,
++			      <0x0 0x2601f000 0x0 0x1000>,
++			      <0x0 0x2603c000 0x0 0x1000>,
++			      <0x0 0x2a2e0000 0x0 0x10000>;
++			reg-names = "hci", "mphy", "hci_grf", "mphy_grf", "hci_apb";
++			clocks = <&cru ACLK_UFS_SYS>, <&cru PCLK_USB_ROOT>, <&cru PCLK_MPHY>,
++				 <&cru CLK_REF_UFS_CLKOUT>;
++			clock-names = "core", "pclk", "pclk_mphy", "ref_out";
++			assigned-clocks = <&cru CLK_REF_OSC_MPHY>;
++			assigned-clock-parents = <&cru CLK_REF_MPHY_26M>;
++			interrupts = <GIC_SPI 361 IRQ_TYPE_LEVEL_HIGH>;
++			power-domains = <&power RK3576_PD_USB>;
++			pinctrl-0 = <&ufs_refclk>;
++			pinctrl-names = "default";
++			resets = <&cru SRST_A_UFS_BIU>, <&cru SRST_A_UFS_SYS>,
++				 <&cru SRST_A_UFS>, <&cru SRST_P_UFS_GRF>;
++			reset-names = "biu", "sys", "ufs", "grf";
++			reset-gpios = <&gpio4 RK_PD0 GPIO_ACTIVE_LOW>;
++			status = "disabled";
++		};
++
+ 		sdmmc: mmc@2a310000 {
+ 			compatible = "rockchip,rk3576-dw-mshc";
+ 			reg = <0x0 0x2a310000 0x0 0x4000>;
+-- 
+2.7.4
+
