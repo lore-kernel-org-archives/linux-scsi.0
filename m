@@ -1,62 +1,78 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F40015854F;
-	Wed,  5 Feb 2025 15:42:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD52193436;
+	Wed,  5 Feb 2025 17:54:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738770141; cv=none; b=aDD5aW+alm8p7PeBNpzl1FEa8zu1ILd5R86OanJNs3DpRx9W/Lrs2UmT4U255BhEpFSMoJH40YdRLEYFgEIDMv/snyzVqNcX0GEsbEg6dJkoS25ty98QT+hadkX2mZm7JnR+pXdrLVz7rqNkqfQXelPpNYw62Rv0iN+guDzO2oU=
+	t=1738778045; cv=none; b=Rx2E1kPm1G4vysBGSgjlCimsVxVN8L945HKu4znMTUdLz8NRMGECZdNe0I1XJHGL5jRq2+JWVwMcKFR0x7dMHdop5VpJOAYm3QJY7LeKXH9Bs/1a0yT3UyOKYzwBA6chC/pF042A/T8Vn8zUc04vRWhaETUxSuZRSb1kxEgZEeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738770141; c=relaxed/simple;
-	bh=m2nOXibL+fGpe0G1tswQJTFHG8wwtAmmoV7YtVSBXtU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XTj6Pfz/PG8pZQNsDgWjgL5QAvZ5mzyyREX6NiMorwiXiMl57b/aTJSymbcqyjtyVYl0K41Oney57+lUmamI4mMAWhF+FCXfnge7kvKHwQkS8eSTOiaFLRB+xPP7t6zVT6y1kRRkgvQQO8QHhabBOkuNE+PaT/2e2B56wTtRAVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 40BFE68BFE; Wed,  5 Feb 2025 16:42:07 +0100 (CET)
-Date: Wed, 5 Feb 2025 16:42:06 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
-	martin.petersen@oracle.com, asml.silence@gmail.com,
-	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
-	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
-	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org,
-	Kanchan Joshi <joshi.k@samsung.com>
-Subject: Re: [PATCH v11 07/10] block: introduce
- BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
-Message-ID: <20250205154206.GA13814@lst.de>
-References: <20241128112240.8867-1-anuj20.g@samsung.com> <CGME20241128113112epcas5p186ef86baaa3054effb7244c54ee2f991@epcas5p1.samsung.com> <20241128112240.8867-8-anuj20.g@samsung.com> <20250203065331.GA16999@lst.de> <20250203143948.GA17571@green245> <20250204053914.GA28919@lst.de> <20250205115134.GA16697@green245>
+	s=arc-20240116; t=1738778045; c=relaxed/simple;
+	bh=cvqD5H/oO6J2BVVuC0kSXIdVI2qnFaNf9DIxDmwmUWg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qVpLx7r3lNavGjMbA4osTisoboDa7fJi3dh6DOPAgnJ4Dgoj6AEiVHv28jWFsSyFVKR6AyEoBKpeGTQ3q1oKfVMHw50JJrXwP3pZUZU3nmx7NFuVuTYK98coLBIIi9g63NyXddZ79UGxMF8FrV6FqJHVhDd/ubHDqpc4UHlVmY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Mp4lri7f; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Mp4lri7f"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Yp7CG5tzYzlgTwJ;
+	Wed,  5 Feb 2025 17:54:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1738778037; x=1741370038; bh=cvqD5H/oO6J2BVVuC0kSXIdV
+	I2qnFaNf9DIxDmwmUWg=; b=Mp4lri7fHOytWVQrYW9s6kNbMSOIaibGsEHPTwNC
+	8LTJbv6ehm45Z3XT596lPYjSUVP7lOfKmqPJ38uI21NualYOzUhSiZePGTw3rCAC
+	IbtRcTg+lig8/19PY+4RNkUcXQW92+OYel5Y0vUfNEUVJVQpQEsXhpMOpl/KwMrX
+	G2QZi0TbOOlwcLwcENsRdjviFUm5K4YWehj7bKvptoJPyLTsOlalbi3g+Zxgfdfu
+	kCFfFf0XhzPc1mPI+cdvsfPwFkgk8wQGbDLkRqkjzev93I1cIEyc8FRq2SJgm89S
+	Ze3A39oywbXkJQgpzAB/viCQd1LEevCYYJxeebU4KoDvsg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id VIrMFUaWq9nU; Wed,  5 Feb 2025 17:53:57 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Yp7C210jVzlgTw2;
+	Wed,  5 Feb 2025 17:53:49 +0000 (UTC)
+Message-ID: <30a766f7-66a1-4ee4-b829-00544ba10824@acm.org>
+Date: Wed, 5 Feb 2025 09:53:47 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250205115134.GA16697@green245>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 5/7] scsi: ufs: core: Export ufshcd_dme_reset() and
+ ufshcd_dme_enable()
+To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Heiko Stuebner <heiko@sntech.de>, "Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+ linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ devicetree@vger.kernel.org, linux-pm@vger.kernel.org
+References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+ <1738736156-119203-6-git-send-email-shawn.lin@rock-chips.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1738736156-119203-6-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 05, 2025 at 05:21:34PM +0530, Anuj Gupta wrote:
-> On Tue, Feb 04, 2025 at 06:39:14AM +0100, Christoph Hellwig wrote:
-> > On Mon, Feb 03, 2025 at 08:09:48PM +0530, Anuj Gupta wrote:
-> > > +	if (bi->csum_type == BLK_INTEGRITY_CSUM_IP)
-> > > +		bip->bip_flags |= BIP_IP_CHECKSUM;
-> > 
-> > We'll also need to set the BIP_CHECK_GUARD flag here I think.
-> 
-> Right, I think this patch should address the problem [*]
-> I couldn't test this patch, as nvme-tcp doesn't support T10-PI and so
-> does rdma_rxe. I don't have rdma h/w to test this.
-> It would be great if someone can give this a run.
+On 2/4/25 10:15 PM, Shawn Lin wrote:
+> These two APIs will be used by glue driver if they need a different
+> HCE process.
 
-I'll add support to nvmet-loop, which should make testing either.
-
-Note that the SCSI target code has the same issues and might be a
-little easier to test.
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
