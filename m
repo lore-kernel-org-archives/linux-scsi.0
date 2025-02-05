@@ -1,102 +1,119 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28669F510;
-	Wed,  5 Feb 2025 20:03:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73C111519B4;
+	Wed,  5 Feb 2025 23:02:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738785791; cv=none; b=tV5SvFfZ6t5J6EzwADDe4LNrQcx3HMOm6kvhwbRTTtenul1Z4JDdqoGK26upPfiosCBIPYuAORb8YlVfBrqulAqcMkx4CDqsxKrW1z1PKh3Vdn3nlqnILBcXOz+UeFRMruOASu6A5NP5dBQuHdzOKjMafHPmovKib4Ec+UKpIvg=
+	t=1738796555; cv=none; b=Zj0AEp366BeiaykG8YzFzjfQFKvUDl2oMK4ADfjkL6cVzgKb75z84DvCNnbMPrAiljndvGVKUdKeZiO05HEf/zxMVvaudni7JeX5D1ExVtO9iGs1R63EgAiwCGVZ8ofskbwj1Z9TSOwEjM0zNY3Qy2LSBLKl4kggEsFtmLhMwK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738785791; c=relaxed/simple;
-	bh=wVsbPjzV6rdMCOh+/jqwKAwstIunHKGQ095pUiYGHjk=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Lb36ENG7YWmb6Crv6SN3lDvhAlruNWm81jV/7JJ+wSoo+aNizSyYJGWc7OLEg1gyf5akTRO3iPIfjICx85qwulfRjxxHLA85HlHOLoeHF/j/4o5nqQGFyzCA3rO3APy5Ez4hp14FW4BYxQJtF+iCJFRukDR8krVhErQgdiE+dGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Db4qn0Ya; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1738796555; c=relaxed/simple;
+	bh=Jt+rzZolBK+NvvX2LTK5Fr2AV6khi2W+IMcie7JoeEA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sYr5YjlEkRToIkCifBRCO6+vfFJyilvDMV76UgxwjAZMH9BY5MPCo3V1H0QdiCGC6uLm7uWFYlD5md28W04ckIKCYi8fEwxKsp/BO1DOMKKlY2Mukcrj5RdNC387Fth0Wp5rjIZv9iKjH2BY+5Yec4ULbdOk7uKTMeYOzitn4Ps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=li0bNL+s; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Db4qn0Ya"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-38dae9a0566so53167f8f.3;
-        Wed, 05 Feb 2025 12:03:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738785788; x=1739390588; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=wVsbPjzV6rdMCOh+/jqwKAwstIunHKGQ095pUiYGHjk=;
-        b=Db4qn0YavtSVGIvfmsZ5tN7WZchm2+iWYjnFQQKZBbxNqVD3LI9zNtlbsZ25w4ABVy
-         gygMHj02f5hnC4c2N5e8a3Q2uKeRUL+wgyyQamOr5iOuXcv+qKj51Z4uw/1n6q35kHMv
-         A5wvQGyHEfPvHXibQpaYU2TzMESUiZEW6d4O6zb8iG22NfpgL8j0zgk4/e14ZmoWq/xM
-         oRzz5ThCJ58hT49UcMJcPlMXV2N3RiZCVKwEI6J0eWqFGSXM31z20lfro3ABfy3iYJ3l
-         SbgY0h1L/eyvVSBFWrAZ8qRnNcPV8evaaIG6tM7/NM8WqS1cagiVHuHSUG5nXpqaqXla
-         qTLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738785788; x=1739390588;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=wVsbPjzV6rdMCOh+/jqwKAwstIunHKGQ095pUiYGHjk=;
-        b=MEiL2Su5vrf0yZ4XUOWKaogLl59iiCBrMOBuUsgM3dZajiHiGvmHJwJkJYfW5Lw3LW
-         2iOapM1k5K1RfUiq1uZxAWFmyWPVMnrQeXP8bYsGejz22Z9IvsiSQaJzPz3cZ2XOSmyS
-         8SWTBd4DX3TiTOUPF7vOyDVuzm2qnwEqvrT+0QHgjSHIPGTqDrzsRZElyKK58V9lp3DG
-         b/Ni/OftAKA4dBaEPnw4RP7E6EvQtcgUqfz24pxv8ouXW8zgQthxYCYV8h5ubrdRrQqV
-         BQ2bWkCk/FIVpyrsiZ03JaL0Bc7+/4ZBX2VywGwPxolnKfpeGOIGPy0Adq6Cyxav/q1q
-         2PCw==
-X-Forwarded-Encrypted: i=1; AJvYcCVBkGniDlRwATziD5o3cvM3MKNzfHjdQgO4k3JYuf6XldNghvCGdK86yM9rFSoC/OzBplrlLCbHd53hu6g=@vger.kernel.org, AJvYcCW1yJEWr2Z8oGqedWJ+a4kA0nIfDABFrYQnZxQZAlVSJyveXcBQtTlqrcGxto6siCJI8gGD0eiQbr//UQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzyCOThBQ2Ljfw26UOtTdmiaJo16TFKVap7aLVbQE1VXNhmJlNk
-	br9BZZ1DZa2mSuyZB2WodbKSCZlnRAKxjVDLqgdSQ7TgjTfoKpKr
-X-Gm-Gg: ASbGncsYaVUu6bJ5pZZ+KBe/PpTdXjMFc6y9CvOvf6GXulwe5WF8FPK6Ngf8XakT6V/
-	wNF51pkSH8NGclZreQCWr70pxlgNQWTrzKxsxjUidG9F1vaQoBSJjTHdo7S3JSToA3lREEN+Iwd
-	fQXiII3wzt4echho/tUe/6LphIQysIdVw91OJUe5GzbENlS/bFYDMdl2pX8LYaQ2DTRL9yzSzZ7
-	K6ngkfumubFoHrLE1AW0cK3eH83IpT4v4ZgVkOiqk8l4GSG7sKCNL+o9VE2olZ7dv4hlbB7H2XV
-	OKwm4aBnnXXFKsmeiw==
-X-Google-Smtp-Source: AGHT+IHxPzC3OWRfQeyfRl+BFKwKx2W9NJBPhGCMgXrYywkQduJXE3rv389ml5v5uL9pAQDVgOrSZQ==
-X-Received: by 2002:a5d:6912:0:b0:38d:ae82:e5ed with SMTP id ffacd0b85a97d-38db4938882mr2717304f8f.51.1738785788239;
-        Wed, 05 Feb 2025 12:03:08 -0800 (PST)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38db0e2f479sm4558397f8f.57.2025.02.05.12.03.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Feb 2025 12:03:07 -0800 (PST)
-Message-ID: <20655da3044d03777d85d97d1ca82b68a4c54056.camel@gmail.com>
-Subject: Re: [PATCH v3 7/8] scsi: ufs: core: Toggle Write Booster during
- clock scaling base on gear speed
-From: Bean Huo <huobean@gmail.com>
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com, 
- bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
- avri.altman@wdc.com,  junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com,  quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Alim Akhtar
- <alim.akhtar@samsung.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, Peter Wang
- <peter.wang@mediatek.com>,  Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, Andrew Halaney <ahalaney@redhat.com>,
- Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>, open
- list <linux-kernel@vger.kernel.org>
-Date: Wed, 05 Feb 2025 21:03:06 +0100
-In-Reply-To: <20250203081109.1614395-8-quic_ziqichen@quicinc.com>
-References: <20250203081109.1614395-1-quic_ziqichen@quicinc.com>
-	 <20250203081109.1614395-8-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="li0bNL+s"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 515N0v5t024998;
+	Wed, 5 Feb 2025 23:02:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=corp-2023-11-20; bh=dRh4nd2xsmFBygPlPAaP36ykzVRSH
+	PMIu0A94nivP+Q=; b=li0bNL+s4L4o40LuK0ygrR5MOgAQsvf5efMxJQx7xQn8S
+	GyepDHgDNWqfiqTI6kKyd9r59Ewt4JXOKax0f49CXOhKgMxrSQp3uK9QR8eiDBLI
+	qmOMJbjm6dEHIRna5+eczEVhAA2Z7TnN/2FQZxOaAPl4e66UfMR4SoASIu12CDK+
+	4O5td1LjYb5DuoBIPMlDAbfUWp7aIEhFqEI/SJkCQhyopgLHr9zWgkv/7r0ri17n
+	PHn5OSWEbDeFf4XQX8wa2weSF+wWZzvIavCvaaZInGyNosUI8hRSh8lE9peWlY0V
+	1SLDHvd2CRzP4HxYSCCTE/7CYOFn3jE/e83P/buMA==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44hhbtgb4a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 05 Feb 2025 23:02:29 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 515Lpdtn022710;
+	Wed, 5 Feb 2025 23:02:28 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 44j8e9r5mq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 05 Feb 2025 23:02:28 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 515N2Rfi040085;
+	Wed, 5 Feb 2025 23:02:27 GMT
+Received: from ca-dev94.us.oracle.com (ca-dev94.us.oracle.com [10.129.136.30])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 44j8e9r5m8-1;
+	Wed, 05 Feb 2025 23:02:27 +0000
+From: Alan Adamson <alan.adamson@oracle.com>
+To: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, alan.adamson@oracle.com,
+        linux-nvme@lists.infradead.org, shinichiro.kawasaki@wdc.com
+Subject: [PATCH v3 blktests 0/2] Add atomic write tests for scsi and nvme
+Date: Wed,  5 Feb 2025 15:10:58 -0800
+Message-ID: <20250205231100.391005-1-alan.adamson@oracle.com>
+X-Mailer: git-send-email 2.43.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-05_08,2025-02-05_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ phishscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2501170000 definitions=main-2502050176
+X-Proofpoint-GUID: CLt3PBuLAk9kAdk4Z09R_UrxRbfkphNI
+X-Proofpoint-ORIG-GUID: CLt3PBuLAk9kAdk4Z09R_UrxRbfkphNI
 
-On Mon, 2025-02-03 at 16:11 +0800, Ziqi Chen wrote:
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!hba->clk_scaling.wb_gea=
-r)
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0hba->clk_scaling.wb_gear =3D UFS_HS_G3;
-> > +
+Changes in v3:
+- Remove _have_xfs_io routine and use _have_program.
+- Comment cleanup in 0001
+- Add SKIP_REASONS when xfs_io -A option is absent.
+- Keep lines <=80 characters.
+- Move device_requires logic in 0001 and 0002 to common/rc.
 
-Hi Ziqi,=20
+Changes in v2:
+- Add additional comments in common/xfs
+- Remove xfs_io and kernel version checking
+- Simplify paths for sysfs attributes
+- Fix failed case output (missing echo) in scsi/009
+- Add local variable that sets Test # and description (test_desc) for scsi/009 and nvme/059
+- Only use scsi_debug device if no scsi test device is provided.
+- nvme testing done with qemu-nvme.
+- scsi testing done with scsi_debug and qemu-scsi (no atomic write support).  No testing on
+  atomic write capable scsi devices was done.
+-------------------------------------------------------------------------------------------
+Add tests for atomic write support.
 
-Initializes wb_gear to UFS_HS_G3, mabye add comments in the commit why.
+Tests will be delivered for scsi (using scsi_debug) and nvme.  NVMe can use the qemu-nvme
+emulated device that supports Controller-based Atomic Parameters (QEMU 9.2).
+
+The xfs_io utility delivered with the xfsprogs-devel package (version 6.12) is required by
+these tests.
+
+The Linux Kernel 6.11 (and greater) supports Atomic Writes and is required by these tests.
 
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Alan Adamson (2):
+  scsi/009: add atomic write tests
+  nvme/059: add atomic write tests
+
+ common/rc          |   8 ++
+ common/xfs         |  58 ++++++++++++
+ tests/nvme/059     | 147 +++++++++++++++++++++++++++++
+ tests/nvme/059.out |  10 ++
+ tests/scsi/009     | 229 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/scsi/009.out |  18 ++++
+ 6 files changed, 470 insertions(+)
+ create mode 100755 tests/nvme/059
+ create mode 100644 tests/nvme/059.out
+ create mode 100755 tests/scsi/009
+ create mode 100644 tests/scsi/009.out
+
+-- 
+2.43.5
+
