@@ -1,23 +1,23 @@
-Received: from mail-m49244.qiye.163.com (mail-m49244.qiye.163.com [45.254.49.244])
+Received: from mail-m1973171.qiye.163.com (mail-m1973171.qiye.163.com [220.197.31.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9A3221D89;
-	Wed,  5 Feb 2025 06:17:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.244
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE78227B96;
+	Wed,  5 Feb 2025 06:22:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738736275; cv=none; b=Ycg6S7oiwJD89bjvcmsbxFv4DzyrASQNCVq7SC5LqZVhZTjai83OCJ2IvjVfitoykqVUxEV2xz+DPm3s4dF9kJ/e+KF6AAPmG39xZ08Qbnhfqw6emhw8sDoctb28lHV+uMeDolXOsefuRSBz9hI7IoxGENNyvzwicmLkbHsh22Q=
+	t=1738736536; cv=none; b=UNHK4oxyXE09BEiXTbrD/WcvYkiOliucnE07fMTSOyXWd8kfNxIG5GL4+ji/I4w0hZ7Cy3Kizls85V5HHpdsw6NKk+v/sMJCtMnWu9JFf9uW0NIxaNuwLgtd7ryzFliNqBH9hDGu38N5E7I6gDbtGty1h3HXcDTUAoUFKZeALKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738736275; c=relaxed/simple;
-	bh=wAaCvR37H72vinsorJDz0hUMgcSgbbz98ze3wwLQIxQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=mQXQyW9jLjskEPHXU27sTl8qjgOyA8V0sxs564dIsFOk+dVBZKOhpwA3K5R3bwPYKMNczxF99k+Sw5EDWdNhWrL2UU48+yV+khgF6fmyWMySac2mxhnu6RB2WGG8+HkrOMGjS8x7fnO/iuFrf7jfSKl0LmcBfyFD+4BPrg++I1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=Am1XpDst; arc=none smtp.client-ip=45.254.49.244
+	s=arc-20240116; t=1738736536; c=relaxed/simple;
+	bh=1WjUIeQxdIVWe3Z8YGm5vuAxb6SrOC1jbiDVQy7pwIs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=eXfKXyMlCJlDkqiFaNR5ZdNMshdKgORl5aTrkmIdA4ikeRfRJzX68JN6wVi9MgXlCtzkqUhW++v1UxJjF/IkKkrKpHQ+3NVG34CbQ7777cZtQzcuS81QdUzuwm8D+nTcfWADr2DiSGJSnU1BJVMI+V6CtYL5AGzvTfJl03OYseo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=jFBvJHT2; arc=none smtp.client-ip=220.197.31.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="Am1XpDst"
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="jFBvJHT2"
 Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id a34e5243;
-	Wed, 5 Feb 2025 14:17:46 +0800 (GMT+08:00)
+	by smtp.qiye.163.com (Hmail) with ESMTP id a34c461c;
+	Wed, 5 Feb 2025 14:16:59 +0800 (GMT+08:00)
 From: Shawn Lin <shawn.lin@rock-chips.com>
 To: Rob Herring <robh+dt@kernel.org>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -38,24 +38,24 @@ Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	devicetree@vger.kernel.org,
 	linux-pm@vger.kernel.org,
 	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 3/7] pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
-Date: Wed,  5 Feb 2025 14:15:52 +0800
-Message-Id: <1738736156-119203-4-git-send-email-shawn.lin@rock-chips.com>
+Subject: [PATCH v7 1/7] dt-bindings: ufs: Document Rockchip UFS host controller
+Date: Wed,  5 Feb 2025 14:15:50 +0800
+Message-Id: <1738736156-119203-2-git-send-email-shawn.lin@rock-chips.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
 References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGhkZTVZKQhhKQh5NGElLGkJWFRQJFh
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkMeTlZOH0NPGElNTkwYTkpWFRQJFh
 	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
 	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a94d4c1eca709cckunma34e5243
+X-HM-Tid: 0a94d4c133d509cckunma34c461c
 X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OjY6Ojo6PzIKGgsoKDlNSiJI
-	D0oaCw5VSlVKTEhDTEhNSU1DS0hOVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhCSk43Bg++
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NDo6Pxw6TDIJEgsQODoTS0NI
+	EAwwCgJVSlVKTEhDTEhNSUlLQklDVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhCQ0s3Bg++
 DKIM-Signature:a=rsa-sha256;
-	b=Am1XpDstoKFFCGV9GGsl4C/vIJLkmJCJPaM9viXIb0BQRxLXcZK9dzaRsVNw6eZMR5BFFUZv3E35YwFDmPsTTnuVhFOmXfeKaACKc/jaTCo3l12/8v78Hlta1XAWrEXocTeO4k5d5Sz8unl9f9P3gAyYuSmNtUW6hc2degajAbM=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=4uyCOO2cgj4O096Syhuq7S1vDCW709XeyqBWS9+6owA=;
+	b=jFBvJHT2/rhr5L8asz6+/gnKunPTKNbCppfECRuLFZ9MgkKuJ/5zfGwfboAINRlaFollg+Om1scIJFODCGGUEJk2I2W5BKKY05PhJhVzUlbIKM+AjnvfUOFDe8H7wHL5kGV2WkXjpkXZccdfiCo7REq+P0UkBN2hY6NVxzN+bOQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=BHEbijEH0aNaPphsBT1odyRXOEOUu8ftse2aZETggD8=;
 	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -63,119 +63,146 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-From: Ulf Hansson <ulf.hansson@linaro.org>
+Document Rockchip UFS host controller for RK3576 SoC.
 
-For some usecases a consumer driver requires its device to remain power-on
-from the PM domain perspective during runtime. Using dev PM qos along with
-the genpd governors, doesn't work for this case as would potentially
-prevent the device from being runtime suspended too.
-
-To support these usecases, let's introduce dev_pm_genpd_rpm_always_on() to
-allow consumers drivers to dynamically control the behaviour in genpd for a
-device that is attached to it.
-
-Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
 
 Changes in v7: None
 Changes in v6:
-- export dev_pm_genpd_rpm_always_on()
+- fix indentation to 4 spaces suggested by Krzysztof
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+Changes in v5:
+- use ufshc for devicetree example suggested by Mani
 
- drivers/pmdomain/core.c   | 35 +++++++++++++++++++++++++++++++++++
- include/linux/pm_domain.h |  7 +++++++
- 2 files changed, 42 insertions(+)
+Changes in v4:
+- properly describe reset-gpios
 
-diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
-index 6c94137..9b2f28b 100644
---- a/drivers/pmdomain/core.c
-+++ b/drivers/pmdomain/core.c
-@@ -697,6 +697,37 @@ bool dev_pm_genpd_get_hwmode(struct device *dev)
- }
- EXPORT_SYMBOL_GPL(dev_pm_genpd_get_hwmode);
- 
-+/**
-+ * dev_pm_genpd_rpm_always_on() - Control if the PM domain can be powered off.
-+ *
-+ * @dev: Device for which the PM domain may need to stay on for.
-+ * @on: Value to set or unset for the condition.
-+ *
-+ * For some usecases a consumer driver requires its device to remain power-on
-+ * from the PM domain perspective during runtime. This function allows the
-+ * behaviour to be dynamically controlled for a device attached to a genpd.
-+ *
-+ * It is assumed that the users guarantee that the genpd wouldn't be detached
-+ * while this routine is getting called.
-+ *
-+ * Return: Returns 0 on success and negative error values on failures.
-+ */
-+int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
-+{
-+	struct generic_pm_domain *genpd;
+Changes in v3:
+- rename the file to rockchip,rk3576-ufshc.yaml
+- add description for reset-gpios
+- use rockchip,rk3576-ufshc as compatible
+
+Changes in v2:
+- rename the file
+- add reset-gpios
+
+ .../bindings/ufs/rockchip,rk3576-ufshc.yaml        | 105 +++++++++++++++++++++
+ 1 file changed, 105 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufshc.yaml
+
+diff --git a/Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufshc.yaml b/Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufshc.yaml
+new file mode 100644
+index 0000000..c7d17cf4
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufshc.yaml
+@@ -0,0 +1,105 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/rockchip,rk3576-ufshc.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	genpd = dev_to_genpd_safe(dev);
-+	if (!genpd)
-+		return -ENODEV;
++title: Rockchip UFS Host Controller
 +
-+	genpd_lock(genpd);
-+	dev_gpd_data(dev)->rpm_always_on = on;
-+	genpd_unlock(genpd);
++maintainers:
++  - Shawn Lin <shawn.lin@rock-chips.com>
 +
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(dev_pm_genpd_rpm_always_on);
++allOf:
++  - $ref: ufs-common.yaml
 +
- static int _genpd_power_on(struct generic_pm_domain *genpd, bool timed)
- {
- 	unsigned int state_idx = genpd->state_idx;
-@@ -868,6 +899,10 @@ static int genpd_power_off(struct generic_pm_domain *genpd, bool one_dev_on,
- 		if (!pm_runtime_suspended(pdd->dev) ||
- 			irq_safe_dev_in_sleep_domain(pdd->dev, genpd))
- 			not_suspended++;
++properties:
++  compatible:
++    const: rockchip,rk3576-ufshc
 +
-+		/* The device may need its PM domain to stay powered on. */
-+		if (to_gpd_data(pdd)->rpm_always_on)
-+			return -EBUSY;
- 	}
- 
- 	if (not_suspended > 1 || (not_suspended == 1 && !one_dev_on))
-diff --git a/include/linux/pm_domain.h b/include/linux/pm_domain.h
-index 1aab313..d56a78a 100644
---- a/include/linux/pm_domain.h
-+++ b/include/linux/pm_domain.h
-@@ -261,6 +261,7 @@ struct generic_pm_domain_data {
- 	unsigned int rpm_pstate;
- 	unsigned int opp_token;
- 	bool hw_mode;
-+	bool rpm_always_on;
- 	void *data;
- };
- 
-@@ -293,6 +294,7 @@ ktime_t dev_pm_genpd_get_next_hrtimer(struct device *dev);
- void dev_pm_genpd_synced_poweroff(struct device *dev);
- int dev_pm_genpd_set_hwmode(struct device *dev, bool enable);
- bool dev_pm_genpd_get_hwmode(struct device *dev);
-+int dev_pm_genpd_rpm_always_on(struct device *dev, bool on);
- 
- extern struct dev_power_governor simple_qos_governor;
- extern struct dev_power_governor pm_domain_always_on_gov;
-@@ -376,6 +378,11 @@ static inline bool dev_pm_genpd_get_hwmode(struct device *dev)
- 	return false;
- }
- 
-+static inline int dev_pm_genpd_rpm_always_on(struct device *dev, bool on)
-+{
-+	return -EOPNOTSUPP;
-+}
++  reg:
++    maxItems: 5
 +
- #define simple_qos_governor		(*(struct dev_power_governor *)(NULL))
- #define pm_domain_always_on_gov		(*(struct dev_power_governor *)(NULL))
- #endif
++  reg-names:
++    items:
++      - const: hci
++      - const: mphy
++      - const: hci_grf
++      - const: mphy_grf
++      - const: hci_apb
++
++  clocks:
++    maxItems: 4
++
++  clock-names:
++    items:
++      - const: core
++      - const: pclk
++      - const: pclk_mphy
++      - const: ref_out
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 4
++
++  reset-names:
++    items:
++      - const: biu
++      - const: sys
++      - const: ufs
++      - const: grf
++
++  reset-gpios:
++    maxItems: 1
++    description: |
++      GPIO specifiers for host to reset the whole UFS device including PHY and
++      memory. This gpio is active low and should choose the one whose high output
++      voltage is lower than 1.5V based on the UFS spec.
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - clocks
++  - clock-names
++  - interrupts
++  - power-domains
++  - resets
++  - reset-names
++  - reset-gpios
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/rockchip,rk3576-cru.h>
++    #include <dt-bindings/reset/rockchip,rk3576-cru.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/rockchip,rk3576-power.h>
++    #include <dt-bindings/pinctrl/rockchip.h>
++    #include <dt-bindings/gpio/gpio.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        ufshc: ufshc@2a2d0000 {
++            compatible = "rockchip,rk3576-ufshc";
++            reg = <0x0 0x2a2d0000 0x0 0x10000>,
++                  <0x0 0x2b040000 0x0 0x10000>,
++                  <0x0 0x2601f000 0x0 0x1000>,
++                  <0x0 0x2603c000 0x0 0x1000>,
++                  <0x0 0x2a2e0000 0x0 0x10000>;
++            reg-names = "hci", "mphy", "hci_grf", "mphy_grf", "hci_apb";
++            clocks = <&cru ACLK_UFS_SYS>, <&cru PCLK_USB_ROOT>, <&cru PCLK_MPHY>,
++                     <&cru CLK_REF_UFS_CLKOUT>;
++            clock-names = "core", "pclk", "pclk_mphy", "ref_out";
++            interrupts = <GIC_SPI 361 IRQ_TYPE_LEVEL_HIGH>;
++            power-domains = <&power RK3576_PD_USB>;
++            resets = <&cru SRST_A_UFS_BIU>, <&cru SRST_A_UFS_SYS>, <&cru SRST_A_UFS>,
++                     <&cru SRST_P_UFS_GRF>;
++            reset-names = "biu", "sys", "ufs", "grf";
++            reset-gpios = <&gpio4 RK_PD0 GPIO_ACTIVE_LOW>;
++        };
++    };
 -- 
 2.7.4
 
