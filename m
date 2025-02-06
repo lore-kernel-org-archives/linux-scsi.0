@@ -1,114 +1,123 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE0CC2248BB;
-	Thu,  6 Feb 2025 07:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAF3E214231;
+	Thu,  6 Feb 2025 08:49:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738828767; cv=none; b=Yx+IQ+0fsDLfl3cjedY42V9msLMl/4reJTlvWEfz/GYm2KkURY/Vb24qy3JejdqHR5XwciZrB5yTmGQC5qC5nwB8IVzZSRz10Gf6tRtDDlx9z6Irs0nwa8/CgqkjNtVdOEo2sV7PRhki04nxubFT2ZJsF1A5rvLkS0YhJXHypVk=
+	t=1738831753; cv=none; b=tRJdea6Te61v77Agw+yQM9oo0Gxs2FbMKSOjwej9NykEZZPsSqFK798jIm+K/VWO+XbMDGIsjbR+YTfWE1lXZgx2OeGeObrsZUuo0As9tlmE6sAUWpeMFdCb6D37C2itrv/msTZjhBgvApT/nAJQgLmU6PYGwJ7AC4LHrqiYp3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738828767; c=relaxed/simple;
-	bh=sXdPlzFdX38bZcgd9vwTBFAPFn3zfKQhgIFjawLSlzs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=c7EBfELkrCJkR+R6xv8lj9yCjuQvD6KlikFynVDgegOQaLB6yAvFDjBRYTI1SBIrOTzKqnPwh6iXYrdOGL/DESh835tOBqsD27+yaHmexVGUqaKNC/M/3jvgPMlz28FaDUT/unAHDu0kPiIl2Y8GPYXQ+tQy1RPa8clPPPJj57o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ipUvpeTp; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1738831753; c=relaxed/simple;
+	bh=djokZNGmgtaz0vzTbL/aVswcGa90JyNblLfQ9EqhcSQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qZOhOHA0XTzw1OJYXgQf/ch7CA8mqSmUbX3C2iYPgmgEC1A6aNAO3UbDivrOmEwU8ck1C4DSUwugOvk3Vebn5V+EOgvPgNd5GHrsTLuE39UlhR58abNfm7QHVv0tEt7tC8bWos3A3GqiMF0JRUFm9E8u+dO0RtduRpbCJiSSCtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ghkMI+Gz; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ipUvpeTp"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5166Vq9q022414;
-	Thu, 6 Feb 2025 07:58:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	MhxgoLBPLa96l70xr1cM+BoHNW/7tBfIP50wGCnf9rg=; b=ipUvpeTpedKQhXMl
-	BCgMBH5PGVQAdtq/SuJ5LdfLrJIMLJS32ZHNz7D+sDCPZkTQB3e/RICaDV1JDIbK
-	9+xhlHi2wwDU+8cx3ZFYR5BM63cvqg1waCGhsfjB2xUAnz8lW1xkSGFHR+1Hk9al
-	BWws+qPSPynn2QgnemowDMOxvCgXL4FKDfqMYeoYrdoqIYUpZfpHgZg5zXDfkhiN
-	ZSJCVKM1Ectu/48hZ4/Ffjfq3Wew1V0mE6rQPHqqIGXat9IduySBUTQViQYA3uNE
-	X8ZDWaLfIoOoRuVGa1l+embVaZoQ/WaWAO6BQ4l18KnQls3R9CpqThWYoZ/bI+OM
-	Z3N5mw==
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44mqvy0675-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 06 Feb 2025 07:58:06 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5167w67O006332
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 6 Feb 2025 07:58:06 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 5 Feb 2025
- 23:58:00 -0800
-Message-ID: <c764a953-0094-4df9-8f4e-2bde89a894a6@quicinc.com>
-Date: Thu, 6 Feb 2025 15:57:58 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ghkMI+Gz"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-aa67ac42819so109686466b.0;
+        Thu, 06 Feb 2025 00:49:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1738831750; x=1739436550; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=SKAx3jydy4wjMbI2a4R9TlCTNosKD1QK8YL3qB51DRk=;
+        b=ghkMI+GzeYiUP7TTU3B4t0xe2EsbWJdyyGwgZXqXmIfMd4nuznAIX3GsukBvXYynVS
+         8dNogQn+o1XCdA/O+Xj6ZidQ/UCurF1PjyWJJ0Ts8efnswdM7AE0t36Pmzl+sjE338p4
+         2Bj8sGH3rBCY60D+/0BGZp6HtmzAQ8vk1Ip2cx2OuOv40PF8q+2VdMOWocWAonmep62U
+         7lhiL3IOqLdgGnH7WWL+u7b1HZnDeTXEO187L0OY/4LtMqbylG8N8s+XM34vRSKH/a/P
+         grVpWbG8pVGQor95bFSdNf+7Zaj9nHPdlR2YqGD0PVgdxPSwH/o8+ZWE1mjgqXIoCx67
+         7l5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738831750; x=1739436550;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SKAx3jydy4wjMbI2a4R9TlCTNosKD1QK8YL3qB51DRk=;
+        b=p3hZqI0ECLd1D5MusVaz1sIQDV5BOX/+tz1KVSo4FcCqM4xbQ0CZZM0xAixQw6e/nd
+         0cmIkTdIklb0mdQw3gAZmGrhOSBQt3XtXXWvovUaHTDmdd3v5BfqHk9CvPzappixkCwz
+         OsjDus1i0FUM9/uE3o7R8Rb4PJN3jjQPdyPLoeIENMvbwRaJh0sHq6Cig3I3OblkNQik
+         oU4FcrzwW8vB02+OAL71OGyrTkXD+/6f+vA/yEFQKTff2ZRLo9lGcdIIeH04dKNG3R8c
+         tdKQLkJcANZnJJtsVNuo0kFo4D515YAlDW3I4nA3yQoa1ptg7sGVpm7ZzHOvWCdO9vna
+         o0Xw==
+X-Forwarded-Encrypted: i=1; AJvYcCUIOUbNPbYUZM7GgDUekslj+sc+lfzTvdXRVjQ2MPF0biq9q1T39IvsHkmgn1GyAANiGkIDTMsdkxLrXvP6VOA=@vger.kernel.org, AJvYcCWrWH2U6Z/gtQZ4OiZbl8i9HFzgaowoYrjqu+2GGr57qAWFdbLRbI3yH2aPNrkbLqlYRRBHHGS0lP+OmwqV@vger.kernel.org, AJvYcCXbSUZv2LXjG3+xCB/QZTB34jPxXgMQxHVHTDG1ux0IwpXp2/qF/4NiEjARQMG6qc4/1OkSVr4c1VBlFdD9@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXYMoWsfXPQ5Sp/QkW8fozVxaNDrqkLeAGMGJ8dRJXmwD4ybCL
+	YdGN4Y4nyeOOCModbiF3N2Lt06PSroPr6E6YM2K6VYzbIWXh0Pw7
+X-Gm-Gg: ASbGnct9EDa8y6pN1RUBvuIalm33o+abZs4tq8aNvN0tVzD94vfwS/cg3RfDfBpPpft
+	lIrdAMmP4UtGdEjkVAsnkm80ltTsjrlXP/9jKj3kuiLY/2711t5CEWk8st4ntYX15vVI7wxVzDk
+	F7Qdp+WFJc2soqRmE/ECNnOioODHoQOXztIlGIyxwniOamdmsxaJCkyiWlZv//GG603zEJ4+4P3
+	p9498IZQCGHgPFkCC7qgne9pznQZ0xvzxNa32mqa7s6/CFsd2QG7hJfjpQz2KmNCwc0w7Jaz03B
+	IhpVQgNPt064/zyk
+X-Google-Smtp-Source: AGHT+IHCL0zJ4Hhe4qIoL2dTmRs+3VCBXGoVXtOtsBgfMa7rYlx7UwqoDmkIrR+uRl7F+mMffmUvqA==
+X-Received: by 2002:a17:907:d88:b0:aa6:9176:61ed with SMTP id a640c23a62f3a-ab75e33cea1mr687924166b.48.1738831749750;
+        Thu, 06 Feb 2025 00:49:09 -0800 (PST)
+Received: from void.cudy.net ([46.210.137.151])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab772f49034sm65065766b.37.2025.02.06.00.49.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Feb 2025 00:49:09 -0800 (PST)
+From: Andrew Kreimer <algonell@gmail.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Eric Biggers <ebiggers@google.com>,
+	Ard Biesheuvel <ardb@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Andrew Kreimer <algonell@gmail.com>
+Subject: [PATCH] scsi: target: iscsi: Fix typos
+Date: Thu,  6 Feb 2025 10:47:03 +0200
+Message-ID: <20250206084905.11327-1-algonell@gmail.com>
+X-Mailer: git-send-email 2.48.1.220.gbc204b7427
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 7/8] scsi: ufs: core: Toggle Write Booster during clock
- scaling base on gear speed
-To: Bean Huo <huobean@gmail.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
-        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        Alim Akhtar
-	<alim.akhtar@samsung.com>,
-        "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>,
-        Peter Wang
-	<peter.wang@mediatek.com>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>,
-        Andrew Halaney <ahalaney@redhat.com>,
-        Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
-        "open
- list" <linux-kernel@vger.kernel.org>
-References: <20250203081109.1614395-1-quic_ziqichen@quicinc.com>
- <20250203081109.1614395-8-quic_ziqichen@quicinc.com>
- <20655da3044d03777d85d97d1ca82b68a4c54056.camel@gmail.com>
-Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <20655da3044d03777d85d97d1ca82b68a4c54056.camel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: tEHbMYINfFQm_0pU2Bq3UWYrxHeyUOLh
-X-Proofpoint-ORIG-GUID: tEHbMYINfFQm_0pU2Bq3UWYrxHeyUOLh
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-06_01,2025-02-05_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
- impostorscore=0 spamscore=0 mlxlogscore=993 lowpriorityscore=0
- clxscore=1015 phishscore=0 mlxscore=0 bulkscore=0 adultscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2501170000 definitions=main-2502060065
 
+There are some typos in comments/messages:
+ - Nin -> Min
+ - occuring -> occurring
 
+Fix them via codespell.
 
-On 2/6/2025 4:03 AM, Bean Huo wrote:
-> On Mon, 2025-02-03 at 16:11 +0800, Ziqi Chen wrote:
->>> +       if (!hba->clk_scaling.wb_gear)
->>> +               hba->clk_scaling.wb_gear = UFS_HS_G3;
->>> +
-> 
-> Hi Ziqi,
-> 
-> Initializes wb_gear to UFS_HS_G3, mabye add comments in the commit why.
-> 
-> 
-Sure , I will add this comment, thank you~
+Signed-off-by: Andrew Kreimer <algonell@gmail.com>
+---
+ drivers/target/iscsi/iscsi_target_nego.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
--Ziqi
-
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index 16e3ded98c32..832588f21f91 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -212,7 +212,7 @@ int iscsi_target_check_login_request(
+ 
+ 	if ((login_req->max_version != login->version_max) ||
+ 	    (login_req->min_version != login->version_min)) {
+-		pr_err("Login request changed Version Max/Nin"
++		pr_err("Login request changed Version Max/Min"
+ 			" unexpectedly to 0x%02x/0x%02x, protocol error\n",
+ 			login_req->max_version, login_req->min_version);
+ 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
+@@ -557,7 +557,7 @@ static void iscsi_target_do_login_rx(struct work_struct *work)
+ 	 * before initial PDU processing in iscsi_target_start_negotiation()
+ 	 * has completed, go ahead and retry until it's cleared.
+ 	 *
+-	 * Otherwise if the TCP connection drops while this is occuring,
++	 * Otherwise if the TCP connection drops while this is occurring,
+ 	 * iscsi_target_start_negotiation() will detect the failure, call
+ 	 * cancel_delayed_work_sync(&conn->login_work), and cleanup the
+ 	 * remaining iscsi connection resources from iscsi_np process context.
+@@ -1050,7 +1050,7 @@ static int iscsi_target_do_login(struct iscsit_conn *conn, struct iscsi_login *l
+ 				/*
+ 				 * Check to make sure the TCP connection has not
+ 				 * dropped asynchronously while session reinstatement
+-				 * was occuring in this kthread context, before
++				 * was occurring in this kthread context, before
+ 				 * transitioning to full feature phase operation.
+ 				 */
+ 				if (iscsi_target_sk_check_close(conn))
+-- 
+2.48.1.220.gbc204b7427
 
