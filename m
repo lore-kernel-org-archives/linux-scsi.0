@@ -1,618 +1,264 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D08F42417CA
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Feb 2025 04:19:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5121ACECF
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Feb 2025 08:52:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738901954; cv=none; b=HAa8tN4W8wyfxNmOI3AtGJ5a7f508ZKei7mEmI0m4iIhhM80WtbAIM3qfaG+GqM46cxMvwAFpjTjn2R1E9bpn/NMY51IaWcoWwRaEU3sB789qBeSkMMxL6uadpqXwEDtU7ZToClt5CoKz6GfocIrG5TYLWMp5OLenRPwR4zLyYE=
+	t=1738918347; cv=none; b=ezZ8wfOGv1hSGOiUjN3AbNGXhwZ9ztqSS91K4wQaRYldzi5Axp6NJr1cgU6ZXjfYk0O0M2nfJncMliixHnboTh3rd7Z4FywdCopQoAHQ05cKoJsZSz4mUAV+ZP8xoS9rn6I/0NrbHohtDSeDW01YbWJAvdbIriJu6c/v8QUdiz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738901954; c=relaxed/simple;
-	bh=pNsCyQsFBjPUJcymqWoFwKfnlAd7BuAI8CZ6dH6Oj3A=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=b0gEWt71w9J4KbA0Pn40gcBHsFfXialjj8nHSIQ2xsMnZBKAAZ4FPbDcZvC2YdGiVj8JZHo/guOqDAXAG9SIHWLLMvvogp6Szu281z9vCIUZhrl5JCIiUUltRvQbV/Nf71uYV/lIbuQG5Rbt7UZhtR/A54VX7sQ8ANYqKgYhwHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OH/RUhRa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738918347; c=relaxed/simple;
+	bh=0Tik/Re9qta3Hm+2UZJiDEh2w4Yk+x+Rs6oi+bPoPXo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EwkOo2DTA/ady+Rp7UpyEQgF3FV2IoNrVeWEHZZ0WUI0rc1voirxU67fVyrM6+4TCiPCN7xvcBujt2vL5UOSxxTjxf4e8UQ2v8abGAP5T5ea4BHw14ztbL2M4wODawQIRgyNczwUDZGVzUmIgamVjs3BMBE/06T49BwX0ozBlaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DqsAqc5h; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OH/RUhRa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C22DC4CED1;
-	Fri,  7 Feb 2025 04:19:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738901954;
-	bh=pNsCyQsFBjPUJcymqWoFwKfnlAd7BuAI8CZ6dH6Oj3A=;
-	h=From:To:Subject:Date:From;
-	b=OH/RUhRaxnSrxt6/wB2gkX1OgrUWwthdYa2h1KMU/OqBwwgwy+PU4I4Cug2F8fpJR
-	 kfmQITChcVV6EAqf9agHjmEhxJPl2Km2xQr41GEtieNbeLOwT7y2CptKZyCVcNC2I7
-	 I9hExwWwZzKLEYsJtQxTxBLktnM5vZvdwa8nTwjIsjUw0OlfvigMoFHAfI42btRV6p
-	 e6VSD7cH3trRIlytN9YrHSVQYKTVa7dcUmG8Qasr7rTVSVAFTJTaDTZWe6ktXr5g0b
-	 q7G57b4l+evyERv/MUWxqwXAoy3QKRYU6w2eg6jTnKXvYYGEhfJ4zm4XYe5AHMH6Ed
-	 X6oIAsmToGnFg==
-From: Eric Biggers <ebiggers@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	open-iscsi@googlegroups.com
-Subject: [PATCH] scsi: iscsi_tcp: switch to using the crc32c library
-Date: Thu,  6 Feb 2025 20:17:24 -0800
-Message-ID: <20250207041724.70733-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.48.1
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DqsAqc5h"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1738918344;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=s1rCOG6P1Gt1O2VVavW0dJMG1YSFwklhplJ4eTKRqnY=;
+	b=DqsAqc5ha1FOyURbHfinvlQUVySc1TwHuYqTrGpLACVLIBD/oHk+ravW8xhtGbclTUCtC/
+	Z1jb7L8wN+5g2f1BAoJEzipgadI4/Rd/4plqBDqNYr1xgOuqux2ge+ou1hQVPJZERfv5kg
+	KIDeKTEQvyG8nsO4ECokp8Cu+Mymvy4=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-39-ceeN-5uSNLSeWOOjE6MaNg-1; Fri,
+ 07 Feb 2025 03:52:20 -0500
+X-MC-Unique: ceeN-5uSNLSeWOOjE6MaNg-1
+X-Mimecast-MFC-AGG-ID: ceeN-5uSNLSeWOOjE6MaNg
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A30061800875;
+	Fri,  7 Feb 2025 08:52:18 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.158])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 37FC318004A7;
+	Fri,  7 Feb 2025 08:52:13 +0000 (UTC)
+Date: Fri, 7 Feb 2025 16:52:08 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"nbd@other.debian.org" <nbd@other.debian.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Subject: Re: blktests failures with v6.14-rc1 kernel
+Message-ID: <Z6XJuIz012XATr7h@fedora>
+References: <uyijd3ufbrfbiyyaajvhyhdyytssubekvymzgyiqjqmkh33cmi@ksqjpewsqlvw>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <uyijd3ufbrfbiyyaajvhyhdyytssubekvymzgyiqjqmkh33cmi@ksqjpewsqlvw>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-From: Eric Biggers <ebiggers@google.com>
+Hi Shinichiro,
 
-Now that the crc32c() library function directly takes advantage of
-architecture-specific optimizations, it is unnecessary to go through the
-crypto API.  Just use crc32c().  This is much simpler, and it improves
-performance due to eliminating the crypto API overhead.
+On Fri, Feb 07, 2025 at 01:24:09AM +0000, Shinichiro Kawasaki wrote:
+> Hi all,
+> 
+> I ran the latest blktests (git hash: 67aff550bd52) with the v6.14-rc1 kernel.
+> I observed 5 failures listed below. Comparing with the previous report with
+> the v6.13 kernel [1], one new failure was observed at zbd/009.
+> 
+> [1] https://lore.kernel.org/linux-nvme/rv3w2zcno7n3bgdy2ghxmedsqf23ptmakvjerbhopgxjsvgzmo@ioece7dyg2og/
+> 
+> List of failures
+> ================
+> #1: block/002
+> #2: nvme/037 (fc transport)
+> #3: nvme/041 (fc transport)
+> #4: nvme/058 (loop transport)
+> #5: zbd/009 (new)
+> 
+> 
+> Two failures observed with the v6.13 kernel are not observed with the v6.14-rc1.
+> 
+> Failures no longer observed
+> ===========================
+> #1: block/001:
+>     It looks resolved by fixes in v6.14-rc1 kernel.
+> 
+> #2: throtl/001 (CKI project, s390 arch)
+>     I was not able to find blktests runs by CKI project with the v6.14-rc1
+>     kernel.
+> 
+> 
+> Failure description
+> ===================
+> 
+> #1: block/002
+> 
+>     This test case fails with a lockdep WARN "possible circular locking
+>     dependency detected". The lockdep splats shows q->q_usage_counter as one
+>     of the involved locks. It was observed with the v6.13-rc2 kernel [2], and
+>     still observed with v6.14-rc1 kernel. It needs further debug.
+> 
+>     [2] https://lore.kernel.org/linux-block/qskveo3it6rqag4xyleobe5azpxu6tekihao4qpdopvk44una2@y4lkoe6y3d6z/
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- drivers/scsi/Kconfig        |  2 +-
- drivers/scsi/iscsi_tcp.c    | 60 ++++--------------------
- drivers/scsi/iscsi_tcp.h    |  4 +-
- drivers/scsi/libiscsi_tcp.c | 91 ++++++++++++++++---------------------
- include/scsi/libiscsi_tcp.h | 16 +++----
- 5 files changed, 57 insertions(+), 116 deletions(-)
+[  342.568086][ T1023] -> #0 (&mm->mmap_lock){++++}-{4:4}:
+[  342.569658][ T1023]        __lock_acquire+0x2e8b/0x6010
+[  342.570577][ T1023]        lock_acquire+0x1b1/0x540
+[  342.571463][ T1023]        __might_fault+0xb9/0x120
+[  342.572338][ T1023]        _copy_from_user+0x34/0xa0
+[  342.573231][ T1023]        __blk_trace_setup+0xa0/0x140
+[  342.574129][ T1023]        blk_trace_ioctl+0x14e/0x270
+[  342.575033][ T1023]        blkdev_ioctl+0x38f/0x5c0
+[  342.575919][ T1023]        __x64_sys_ioctl+0x130/0x190
+[  342.576824][ T1023]        do_syscall_64+0x93/0x180
+[  342.577714][ T1023]        entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 37c24ffea65cc..25e17dd7bba0c 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -301,13 +301,13 @@ menuconfig SCSI_LOWLEVEL
- if SCSI_LOWLEVEL && SCSI
- 
- config ISCSI_TCP
- 	tristate "iSCSI Initiator over TCP/IP"
- 	depends on SCSI && INET
-+	select CRC32
- 	select CRYPTO
- 	select CRYPTO_MD5
--	select CRYPTO_CRC32C
- 	select SCSI_ISCSI_ATTRS
- 	help
- 	 The iSCSI Driver provides a host with the ability to access storage
- 	 through an IP network. The driver uses the iSCSI protocol to transport
- 	 SCSI requests and responses over a TCP/IP network between the host
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index e81f609851931..7b4fe0e6afb2d 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -15,11 +15,10 @@
-  *	FUJITA Tomonori
-  *	Arne Redlich
-  *	Zhenyu Wang
-  */
- 
--#include <crypto/hash.h>
- #include <linux/types.h>
- #include <linux/inet.h>
- #include <linux/slab.h>
- #include <linux/sched/mm.h>
- #include <linux/file.h>
-@@ -466,12 +465,11 @@ static void iscsi_sw_tcp_send_hdr_prep(struct iscsi_conn *conn, void *hdr,
- 	 * place the digest into the same buffer. We make
- 	 * sure that both iscsi_tcp_task and mtask have
- 	 * sufficient room.
- 	 */
- 	if (conn->hdrdgst_en) {
--		iscsi_tcp_dgst_header(tcp_sw_conn->tx_hash, hdr, hdrlen,
--				      hdr + hdrlen);
-+		iscsi_tcp_dgst_header(hdr, hdrlen, hdr + hdrlen);
- 		hdrlen += ISCSI_DIGEST_SIZE;
- 	}
- 
- 	/* Remember header pointer for later, when we need
- 	 * to decide whether there's a payload to go along
-@@ -492,11 +490,11 @@ iscsi_sw_tcp_send_data_prep(struct iscsi_conn *conn, struct scatterlist *sg,
- 			    unsigned int count, unsigned int offset,
- 			    unsigned int len)
- {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
--	struct ahash_request *tx_hash = NULL;
-+	u32 *tx_crcp = NULL;
- 	unsigned int hdr_spec_len;
- 
- 	ISCSI_SW_TCP_DBG(conn, "offset=%d, datalen=%d %s\n", offset, len,
- 			 conn->datadgst_en ?
- 			 "digest enabled" : "digest disabled");
-@@ -505,24 +503,23 @@ iscsi_sw_tcp_send_data_prep(struct iscsi_conn *conn, struct scatterlist *sg,
- 	   said he would send. */
- 	hdr_spec_len = ntoh24(tcp_sw_conn->out.hdr->dlength);
- 	WARN_ON(iscsi_padded(len) != iscsi_padded(hdr_spec_len));
- 
- 	if (conn->datadgst_en)
--		tx_hash = tcp_sw_conn->tx_hash;
-+		tx_crcp = &tcp_sw_conn->tx_crc;
- 
- 	return iscsi_segment_seek_sg(&tcp_sw_conn->out.data_segment,
--				     sg, count, offset, len,
--				     NULL, tx_hash);
-+				     sg, count, offset, len, NULL, tx_crcp);
- }
- 
- static void
- iscsi_sw_tcp_send_linear_data_prep(struct iscsi_conn *conn, void *data,
- 				   size_t len)
- {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
--	struct ahash_request *tx_hash = NULL;
-+	u32 *tx_crcp = NULL;
- 	unsigned int hdr_spec_len;
- 
- 	ISCSI_SW_TCP_DBG(conn, "datalen=%zd %s\n", len, conn->datadgst_en ?
- 			 "digest enabled" : "digest disabled");
- 
-@@ -530,14 +527,14 @@ iscsi_sw_tcp_send_linear_data_prep(struct iscsi_conn *conn, void *data,
- 	   said he would send. */
- 	hdr_spec_len = ntoh24(tcp_sw_conn->out.hdr->dlength);
- 	WARN_ON(iscsi_padded(len) != iscsi_padded(hdr_spec_len));
- 
- 	if (conn->datadgst_en)
--		tx_hash = tcp_sw_conn->tx_hash;
-+		tx_crcp = &tcp_sw_conn->tx_crc;
- 
- 	iscsi_segment_init_linear(&tcp_sw_conn->out.data_segment,
--				data, len, NULL, tx_hash);
-+				  data, len, NULL, tx_crcp);
- }
- 
- static int iscsi_sw_tcp_pdu_init(struct iscsi_task *task,
- 				 unsigned int offset, unsigned int count)
- {
-@@ -581,11 +578,10 @@ iscsi_sw_tcp_conn_create(struct iscsi_cls_session *cls_session,
- {
- 	struct iscsi_conn *conn;
- 	struct iscsi_cls_conn *cls_conn;
- 	struct iscsi_tcp_conn *tcp_conn;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
--	struct crypto_ahash *tfm;
- 
- 	cls_conn = iscsi_tcp_conn_setup(cls_session, sizeof(*tcp_sw_conn),
- 					conn_idx);
- 	if (!cls_conn)
- 		return NULL;
-@@ -594,41 +590,13 @@ iscsi_sw_tcp_conn_create(struct iscsi_cls_session *cls_session,
- 	tcp_sw_conn = tcp_conn->dd_data;
- 	INIT_WORK(&conn->recvwork, iscsi_sw_tcp_recv_data_work);
- 	tcp_sw_conn->queue_recv = iscsi_recv_from_iscsi_q;
- 
- 	mutex_init(&tcp_sw_conn->sock_lock);
--
--	tfm = crypto_alloc_ahash("crc32c", 0, CRYPTO_ALG_ASYNC);
--	if (IS_ERR(tfm))
--		goto free_conn;
--
--	tcp_sw_conn->tx_hash = ahash_request_alloc(tfm, GFP_KERNEL);
--	if (!tcp_sw_conn->tx_hash)
--		goto free_tfm;
--	ahash_request_set_callback(tcp_sw_conn->tx_hash, 0, NULL, NULL);
--
--	tcp_sw_conn->rx_hash = ahash_request_alloc(tfm, GFP_KERNEL);
--	if (!tcp_sw_conn->rx_hash)
--		goto free_tx_hash;
--	ahash_request_set_callback(tcp_sw_conn->rx_hash, 0, NULL, NULL);
--
--	tcp_conn->rx_hash = tcp_sw_conn->rx_hash;
-+	tcp_conn->rx_crcp = &tcp_sw_conn->rx_crc;
- 
- 	return cls_conn;
--
--free_tx_hash:
--	ahash_request_free(tcp_sw_conn->tx_hash);
--free_tfm:
--	crypto_free_ahash(tfm);
--free_conn:
--	iscsi_conn_printk(KERN_ERR, conn,
--			  "Could not create connection due to crc32c "
--			  "loading error. Make sure the crc32c "
--			  "module is built as a module or into the "
--			  "kernel\n");
--	iscsi_tcp_conn_teardown(cls_conn);
--	return NULL;
- }
- 
- static void iscsi_sw_tcp_release_conn(struct iscsi_conn *conn)
- {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-@@ -662,24 +630,12 @@ static void iscsi_sw_tcp_release_conn(struct iscsi_conn *conn)
- }
- 
- static void iscsi_sw_tcp_conn_destroy(struct iscsi_cls_conn *cls_conn)
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
--	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
--	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
- 
- 	iscsi_sw_tcp_release_conn(conn);
--
--	ahash_request_free(tcp_sw_conn->rx_hash);
--	if (tcp_sw_conn->tx_hash) {
--		struct crypto_ahash *tfm;
--
--		tfm = crypto_ahash_reqtfm(tcp_sw_conn->tx_hash);
--		ahash_request_free(tcp_sw_conn->tx_hash);
--		crypto_free_ahash(tfm);
--	}
--
- 	iscsi_tcp_conn_teardown(cls_conn);
- }
- 
- static void iscsi_sw_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
- {
-diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
-index 89a6fc552f0b9..c3e5d9fa6add9 100644
---- a/drivers/scsi/iscsi_tcp.h
-+++ b/drivers/scsi/iscsi_tcp.h
-@@ -39,12 +39,12 @@ struct iscsi_sw_tcp_conn {
- 	void			(*old_data_ready)(struct sock *);
- 	void			(*old_state_change)(struct sock *);
- 	void			(*old_write_space)(struct sock *);
- 
- 	/* data and header digests */
--	struct ahash_request	*tx_hash;	/* CRC32C (Tx) */
--	struct ahash_request	*rx_hash;	/* CRC32C (Rx) */
-+	u32			tx_crc;	/* CRC32C (Tx) */
-+	u32			rx_crc;	/* CRC32C (Rx) */
- 
- 	/* MIB custom statistics */
- 	uint32_t		sendpage_failures_cnt;
- 	uint32_t		discontiguous_hdr_cnt;
- };
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index c182aa83f2c93..e90805ba868fb 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -13,11 +13,11 @@
-  *	FUJITA Tomonori
-  *	Arne Redlich
-  *	Zhenyu Wang
-  */
- 
--#include <crypto/hash.h>
-+#include <linux/crc32c.h>
- #include <linux/types.h>
- #include <linux/list.h>
- #include <linux/inet.h>
- #include <linux/slab.h>
- #include <linux/file.h>
-@@ -166,11 +166,11 @@ iscsi_tcp_segment_splice_digest(struct iscsi_segment *segment, void *digest)
- 	segment->digest_len = ISCSI_DIGEST_SIZE;
- 	segment->total_size += ISCSI_DIGEST_SIZE;
- 	segment->size = ISCSI_DIGEST_SIZE;
- 	segment->copied = 0;
- 	segment->sg = NULL;
--	segment->hash = NULL;
-+	segment->crcp = NULL;
- }
- 
- /**
-  * iscsi_tcp_segment_done - check whether the segment is complete
-  * @tcp_conn: iscsi tcp connection
-@@ -189,33 +189,31 @@ iscsi_tcp_segment_splice_digest(struct iscsi_segment *segment, void *digest)
-  */
- int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
- 			   struct iscsi_segment *segment, int recv,
- 			   unsigned copied)
- {
--	struct scatterlist sg;
- 	unsigned int pad;
- 
- 	ISCSI_DBG_TCP(tcp_conn->iscsi_conn, "copied %u %u size %u %s\n",
- 		      segment->copied, copied, segment->size,
- 		      recv ? "recv" : "xmit");
--	if (segment->hash && copied) {
--		/*
--		 * If a segment is kmapd we must unmap it before sending
--		 * to the crypto layer since that will try to kmap it again.
--		 */
--		iscsi_tcp_segment_unmap(segment);
--
--		if (!segment->data) {
--			sg_init_table(&sg, 1);
--			sg_set_page(&sg, sg_page(segment->sg), copied,
--				    segment->copied + segment->sg_offset +
--							segment->sg->offset);
--		} else
--			sg_init_one(&sg, segment->data + segment->copied,
--				    copied);
--		ahash_request_set_crypt(segment->hash, &sg, NULL, copied);
--		crypto_ahash_update(segment->hash);
-+	if (segment->crcp && copied) {
-+		if (segment->data) {
-+			*segment->crcp = crc32c(*segment->crcp,
-+						segment->data + segment->copied,
-+						copied);
-+		} else {
-+			const void *data;
-+
-+			data = kmap_local_page(sg_page(segment->sg));
-+			*segment->crcp = crc32c(*segment->crcp,
-+						data + segment->copied +
-+						segment->sg_offset +
-+						segment->sg->offset,
-+						copied);
-+			kunmap_local(data);
-+		}
- 	}
- 
- 	segment->copied += copied;
- 	if (segment->copied < segment->size) {
- 		iscsi_tcp_segment_map(segment, recv);
-@@ -256,14 +254,12 @@ int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
- 
- 	/*
- 	 * Set us up for transferring the data digest. hdr digest
- 	 * is completely handled in hdr done function.
- 	 */
--	if (segment->hash) {
--		ahash_request_set_crypt(segment->hash, NULL,
--					segment->digest, 0);
--		crypto_ahash_final(segment->hash);
-+	if (segment->crcp) {
-+		put_unaligned_le32(~*segment->crcp, segment->digest);
- 		iscsi_tcp_segment_splice_digest(segment,
- 				 recv ? segment->recv_digest : segment->digest);
- 		return 0;
- 	}
- 
-@@ -280,12 +276,11 @@ EXPORT_SYMBOL_GPL(iscsi_tcp_segment_done);
-  *
-  * This function copies up to @len bytes to the
-  * given buffer, and returns the number of bytes
-  * consumed, which can actually be less than @len.
-  *
-- * If hash digest is enabled, the function will update the
-- * hash while copying.
-+ * If CRC is enabled, the function will update the CRC while copying.
-  * Combining these two operations doesn't buy us a lot (yet),
-  * but in the future we could implement combined copy+crc,
-  * just way we do for network layer checksums.
-  */
- static int
-@@ -309,18 +304,14 @@ iscsi_tcp_segment_recv(struct iscsi_tcp_conn *tcp_conn,
- 	}
- 	return copied;
- }
- 
- inline void
--iscsi_tcp_dgst_header(struct ahash_request *hash, const void *hdr,
--		      size_t hdrlen, unsigned char digest[ISCSI_DIGEST_SIZE])
-+iscsi_tcp_dgst_header(const void *hdr, size_t hdrlen,
-+		      unsigned char digest[ISCSI_DIGEST_SIZE])
- {
--	struct scatterlist sg;
--
--	sg_init_one(&sg, hdr, hdrlen);
--	ahash_request_set_crypt(hash, &sg, digest, hdrlen);
--	crypto_ahash_digest(hash);
-+	put_unaligned_le32(~crc32c(~0, hdr, hdrlen), digest);
- }
- EXPORT_SYMBOL_GPL(iscsi_tcp_dgst_header);
- 
- static inline int
- iscsi_tcp_dgst_verify(struct iscsi_tcp_conn *tcp_conn,
-@@ -341,44 +332,42 @@ iscsi_tcp_dgst_verify(struct iscsi_tcp_conn *tcp_conn,
- /*
-  * Helper function to set up segment buffer
-  */
- static inline void
- __iscsi_segment_init(struct iscsi_segment *segment, size_t size,
--		     iscsi_segment_done_fn_t *done, struct ahash_request *hash)
-+		     iscsi_segment_done_fn_t *done, u32 *crcp)
- {
- 	memset(segment, 0, sizeof(*segment));
- 	segment->total_size = size;
- 	segment->done = done;
- 
--	if (hash) {
--		segment->hash = hash;
--		crypto_ahash_init(hash);
-+	if (crcp) {
-+		segment->crcp = crcp;
-+		*crcp = ~0;
- 	}
- }
- 
- inline void
- iscsi_segment_init_linear(struct iscsi_segment *segment, void *data,
--			  size_t size, iscsi_segment_done_fn_t *done,
--			  struct ahash_request *hash)
-+			  size_t size, iscsi_segment_done_fn_t *done, u32 *crcp)
- {
--	__iscsi_segment_init(segment, size, done, hash);
-+	__iscsi_segment_init(segment, size, done, crcp);
- 	segment->data = data;
- 	segment->size = size;
- }
- EXPORT_SYMBOL_GPL(iscsi_segment_init_linear);
- 
- inline int
- iscsi_segment_seek_sg(struct iscsi_segment *segment,
- 		      struct scatterlist *sg_list, unsigned int sg_count,
- 		      unsigned int offset, size_t size,
--		      iscsi_segment_done_fn_t *done,
--		      struct ahash_request *hash)
-+		      iscsi_segment_done_fn_t *done, u32 *crcp)
- {
- 	struct scatterlist *sg;
- 	unsigned int i;
- 
--	__iscsi_segment_init(segment, size, done, hash);
-+	__iscsi_segment_init(segment, size, done, crcp);
- 	for_each_sg(sg_list, sg, sg_count, i) {
- 		if (offset < sg->length) {
- 			iscsi_tcp_segment_init_sg(segment, sg, offset);
- 			return 0;
- 		}
-@@ -391,11 +380,11 @@ EXPORT_SYMBOL_GPL(iscsi_segment_seek_sg);
- 
- /**
-  * iscsi_tcp_hdr_recv_prep - prep segment for hdr reception
-  * @tcp_conn: iscsi connection to prep for
-  *
-- * This function always passes NULL for the hash argument, because when this
-+ * This function always passes NULL for the crcp argument, because when this
-  * function is called we do not yet know the final size of the header and want
-  * to delay the digest processing until we know that.
-  */
- void iscsi_tcp_hdr_recv_prep(struct iscsi_tcp_conn *tcp_conn)
- {
-@@ -432,19 +421,19 @@ iscsi_tcp_data_recv_done(struct iscsi_tcp_conn *tcp_conn,
- 
- static void
- iscsi_tcp_data_recv_prep(struct iscsi_tcp_conn *tcp_conn)
- {
- 	struct iscsi_conn *conn = tcp_conn->iscsi_conn;
--	struct ahash_request *rx_hash = NULL;
-+	u32 *rx_crcp = NULL;
- 
- 	if (conn->datadgst_en &&
- 	    !(conn->session->tt->caps & CAP_DIGEST_OFFLOAD))
--		rx_hash = tcp_conn->rx_hash;
-+		rx_crcp = tcp_conn->rx_crcp;
- 
- 	iscsi_segment_init_linear(&tcp_conn->in.segment,
- 				conn->data, tcp_conn->in.datalen,
--				iscsi_tcp_data_recv_done, rx_hash);
-+				iscsi_tcp_data_recv_done, rx_crcp);
- }
- 
- /**
-  * iscsi_tcp_cleanup_task - free tcp_task resources
-  * @task: iscsi task
-@@ -728,11 +717,11 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 			break;
- 		}
- 
- 		if (tcp_conn->in.datalen) {
- 			struct iscsi_tcp_task *tcp_task = task->dd_data;
--			struct ahash_request *rx_hash = NULL;
-+			u32 *rx_crcp = NULL;
- 			struct scsi_data_buffer *sdb = &task->sc->sdb;
- 
- 			/*
- 			 * Setup copy of Data-In into the struct scsi_cmnd
- 			 * Scatterlist case:
-@@ -741,11 +730,11 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 			 * we move on to the next scatterlist entry and
- 			 * update the digest per-entry.
- 			 */
- 			if (conn->datadgst_en &&
- 			    !(conn->session->tt->caps & CAP_DIGEST_OFFLOAD))
--				rx_hash = tcp_conn->rx_hash;
-+				rx_crcp = tcp_conn->rx_crcp;
- 
- 			ISCSI_DBG_TCP(conn, "iscsi_tcp_begin_data_in( "
- 				     "offset=%d, datalen=%d)\n",
- 				      tcp_task->data_offset,
- 				      tcp_conn->in.datalen);
-@@ -754,11 +743,11 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 						   sdb->table.sgl,
- 						   sdb->table.nents,
- 						   tcp_task->data_offset,
- 						   tcp_conn->in.datalen,
- 						   iscsi_tcp_process_data_in,
--						   rx_hash);
-+						   rx_crcp);
- 			spin_unlock(&conn->session->back_lock);
- 			return rc;
- 		}
- 		rc = __iscsi_complete_pdu(conn, hdr, NULL, 0);
- 		spin_unlock(&conn->session->back_lock);
-@@ -876,11 +865,11 @@ iscsi_tcp_hdr_recv_done(struct iscsi_tcp_conn *tcp_conn,
- 			iscsi_tcp_segment_splice_digest(segment,
- 							segment->recv_digest);
- 			return 0;
- 		}
- 
--		iscsi_tcp_dgst_header(tcp_conn->rx_hash, hdr,
-+		iscsi_tcp_dgst_header(hdr,
- 				      segment->total_copied - ISCSI_DIGEST_SIZE,
- 				      segment->digest);
- 
- 		if (!iscsi_tcp_dgst_verify(tcp_conn, segment))
- 			return ISCSI_ERR_HDR_DGST;
-diff --git a/include/scsi/libiscsi_tcp.h b/include/scsi/libiscsi_tcp.h
-index 7c8ba9d7378b6..ef53d4bea28a0 100644
---- a/include/scsi/libiscsi_tcp.h
-+++ b/include/scsi/libiscsi_tcp.h
-@@ -13,11 +13,10 @@
- #include <scsi/libiscsi.h>
- 
- struct iscsi_tcp_conn;
- struct iscsi_segment;
- struct sk_buff;
--struct ahash_request;
- 
- typedef int iscsi_segment_done_fn_t(struct iscsi_tcp_conn *,
- 				    struct iscsi_segment *);
- 
- struct iscsi_segment {
-@@ -25,11 +24,11 @@ struct iscsi_segment {
- 	unsigned int		size;
- 	unsigned int		copied;
- 	unsigned int		total_size;
- 	unsigned int		total_copied;
- 
--	struct ahash_request	*hash;
-+	u32			*crcp;
- 	unsigned char		padbuf[ISCSI_PAD_LEN];
- 	unsigned char		recv_digest[ISCSI_DIGEST_SIZE];
- 	unsigned char		digest[ISCSI_DIGEST_SIZE];
- 	unsigned int		digest_len;
- 
-@@ -59,12 +58,12 @@ struct iscsi_tcp_conn {
- 	int			stop_stage;	/* conn_stop() flag: *
- 						 * stop to recover,  *
- 						 * stop to terminate */
- 	/* control data */
- 	struct iscsi_tcp_recv	in;		/* TCP receive context */
--	/* CRC32C (Rx) LLD should set this is they do not offload */
--	struct ahash_request	*rx_hash;
-+	/* CRC32C (Rx) LLD should set this if they do not offload */
-+	u32			*rx_crcp;
- };
- 
- struct iscsi_tcp_task {
- 	uint32_t		exp_datasn;	/* expected target's R2TSN/DataSN */
- 	int			data_offset;
-@@ -97,22 +96,19 @@ extern int iscsi_tcp_segment_done(struct iscsi_tcp_conn *tcp_conn,
- 				  unsigned copied);
- extern void iscsi_tcp_segment_unmap(struct iscsi_segment *segment);
- 
- extern void iscsi_segment_init_linear(struct iscsi_segment *segment,
- 				      void *data, size_t size,
--				      iscsi_segment_done_fn_t *done,
--				      struct ahash_request *hash);
-+				      iscsi_segment_done_fn_t *done, u32 *crcp);
- extern int
- iscsi_segment_seek_sg(struct iscsi_segment *segment,
- 		      struct scatterlist *sg_list, unsigned int sg_count,
- 		      unsigned int offset, size_t size,
--		      iscsi_segment_done_fn_t *done,
--		      struct ahash_request *hash);
-+		      iscsi_segment_done_fn_t *done, u32 *crcp);
- 
- /* digest helpers */
--extern void iscsi_tcp_dgst_header(struct ahash_request *hash, const void *hdr,
--				  size_t hdrlen,
-+extern void iscsi_tcp_dgst_header(const void *hdr, size_t hdrlen,
- 				  unsigned char digest[ISCSI_DIGEST_SIZE]);
- extern struct iscsi_cls_conn *
- iscsi_tcp_conn_setup(struct iscsi_cls_session *cls_session, int dd_data_size,
- 		     uint32_t conn_idx);
- extern void iscsi_tcp_conn_teardown(struct iscsi_cls_conn *cls_conn);
+The above dependency between ->mmap_lock and ->debugfs_mutex has been cut by
+commit b769a2f409e7 ("blktrace: move copy_[to|from]_user() out of ->debugfs_lock"),
+so I'd suggest to double check this one.
 
-base-commit: 2014c95afecee3e76ca4a56956a936e23283f05b
--- 
-2.48.1
+You mentioned it can be reproduced in v6.14-rc1, but not see such warning
+from v6.14-rc1.
+
+> #5: zbd/009 (new)
+> 
+>     This test case fails with a lockdep WARN "possible circular locking
+>     dependency detected" [5]. The lockdep splats shows q->q_usage_counter as one
+>     of the involved locks. This is common as the block/002 failure. It needs
+>     further debug.
+> 
+> [5] kernel message during zbd/009 run
+> 
+> [  204.099296] [   T1004] run blktests zbd/009 at 2025-02-07 10:01:36
+> [  204.155021] [   T1040] sd 9:0:0:0: [sdd] Synchronizing SCSI cache
+> [  204.553613] [   T1041] scsi_debug:sdebug_driver_probe: scsi_debug: trim poll_queues to 0. poll_q/nr_hw = (0/1)
+> [  204.554438] [   T1041] scsi host9: scsi_debug: version 0191 [20210520]
+>                             dev_size_mb=1024, opts=0x0, submit_queues=1, statistics=0
+> [  204.558331] [   T1041] scsi 9:0:0:0: Direct-Access-ZBC Linux    scsi_debug       0191 PQ: 0 ANSI: 7
+> [  204.560269] [      C2] scsi 9:0:0:0: Power-on or device reset occurred
+> [  204.562871] [   T1041] sd 9:0:0:0: Attached scsi generic sg3 type 20
+> [  204.563013] [    T100] sd 9:0:0:0: [sdd] Host-managed zoned block device
+> [  204.564518] [    T100] sd 9:0:0:0: [sdd] 262144 4096-byte logical blocks: (1.07 GB/1.00 GiB)
+> [  204.565477] [    T100] sd 9:0:0:0: [sdd] Write Protect is off
+> [  204.565948] [    T100] sd 9:0:0:0: [sdd] Mode Sense: 5b 00 10 08
+> [  204.566245] [    T100] sd 9:0:0:0: [sdd] Write cache: enabled, read cache: enabled, supports DPO and FUA
+> [  204.567453] [    T100] sd 9:0:0:0: [sdd] permanent stream count = 5
+> [  204.568276] [    T100] sd 9:0:0:0: [sdd] Preferred minimum I/O size 4096 bytes
+> [  204.569067] [    T100] sd 9:0:0:0: [sdd] Optimal transfer size 4194304 bytes
+> [  204.571080] [    T100] sd 9:0:0:0: [sdd] 256 zones of 1024 logical blocks
+> [  204.593822] [    T100] sd 9:0:0:0: [sdd] Attached SCSI disk
+> [  204.901514] [   T1067] BTRFS: device fsid 15196e63-e303-48ed-9dcb-9ec397479c42 devid 1 transid 8 /dev/sdd (8:48) scanned by mount (1067)
+> [  204.910330] [   T1067] BTRFS info (device sdd): first mount of filesystem 15196e63-e303-48ed-9dcb-9ec397479c42
+> [  204.913129] [   T1067] BTRFS info (device sdd): using crc32c (crc32c-generic) checksum algorithm
+> [  204.914856] [   T1067] BTRFS info (device sdd): using free-space-tree
+> [  204.925816] [   T1067] BTRFS info (device sdd): host-managed zoned block device /dev/sdd, 256 zones of 4194304 bytes
+> [  204.929320] [   T1067] BTRFS info (device sdd): zoned mode enabled with zone size 4194304
+> [  204.935403] [   T1067] BTRFS info (device sdd): checking UUID tree
+> [  215.637712] [   T1103] BTRFS info (device sdd): last unmount of filesystem 15196e63-e303-48ed-9dcb-9ec397479c42
+> 
+> [  215.762293] [   T1110] ======================================================
+> [  215.763636] [   T1110] WARNING: possible circular locking dependency detected
+> [  215.765092] [   T1110] 6.14.0-rc1 #252 Not tainted
+> [  215.766271] [   T1110] ------------------------------------------------------
+> [  215.767615] [   T1110] modprobe/1110 is trying to acquire lock:
+> [  215.768999] [   T1110] ffff888100ac83e0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}, at: __flush_work+0x38f/0xb60
+> [  215.770700] [   T1110] 
+>                           but task is already holding lock:
+> [  215.773077] [   T1110] ffff8881205b6f20 (&q->q_usage_counter(queue)#16){++++}-{0:0}, at: sd_remove+0x85/0x130
+> [  215.774685] [   T1110] 
+>                           which lock already depends on the new lock.
+> 
+> [  215.778184] [   T1110] 
+>                           the existing dependency chain (in reverse order) is:
+> [  215.780532] [   T1110] 
+>                           -> #3 (&q->q_usage_counter(queue)#16){++++}-{0:0}:
+> [  215.782937] [   T1110]        blk_queue_enter+0x3d9/0x500
+> [  215.784175] [   T1110]        blk_mq_alloc_request+0x47d/0x8e0
+> [  215.785434] [   T1110]        scsi_execute_cmd+0x14f/0xb80
+> [  215.786662] [   T1110]        sd_zbc_do_report_zones+0x1c1/0x470
+> [  215.787989] [   T1110]        sd_zbc_report_zones+0x362/0xd60
+> [  215.789222] [   T1110]        blkdev_report_zones+0x1b1/0x2e0
+> [  215.790448] [   T1110]        btrfs_get_dev_zones+0x215/0x7e0 [btrfs]
+> [  215.791887] [   T1110]        btrfs_load_block_group_zone_info+0x6d2/0x2c10 [btrfs]
+> [  215.793342] [   T1110]        btrfs_make_block_group+0x36b/0x870 [btrfs]
+> [  215.794752] [   T1110]        btrfs_create_chunk+0x147d/0x2320 [btrfs]
+> [  215.796150] [   T1110]        btrfs_chunk_alloc+0x2ce/0xcf0 [btrfs]
+> [  215.797474] [   T1110]        start_transaction+0xce6/0x1620 [btrfs]
+> [  215.798858] [   T1110]        btrfs_uuid_scan_kthread+0x4ee/0x5b0 [btrfs]
+> [  215.800334] [   T1110]        kthread+0x39d/0x750
+> [  215.801479] [   T1110]        ret_from_fork+0x30/0x70
+> [  215.802662] [   T1110]        ret_from_fork_asm+0x1a/0x30
+
+Not sure why fs_info->dev_replace is required for reporting zones.
+
+> [  215.803902] [   T1110] 
+>                           -> #2 (&fs_info->dev_replace.rwsem){++++}-{4:4}:
+> [  215.805993] [   T1110]        down_read+0x9b/0x470
+> [  215.807088] [   T1110]        btrfs_map_block+0x2ce/0x2ce0 [btrfs]
+> [  215.808366] [   T1110]        btrfs_submit_chunk+0x2d4/0x16c0 [btrfs]
+> [  215.809687] [   T1110]        btrfs_submit_bbio+0x16/0x30 [btrfs]
+> [  215.810983] [   T1110]        btree_write_cache_pages+0xb5a/0xf90 [btrfs]
+> [  215.812295] [   T1110]        do_writepages+0x17f/0x7b0
+> [  215.813416] [   T1110]        __writeback_single_inode+0x114/0xb00
+> [  215.814575] [   T1110]        writeback_sb_inodes+0x52b/0xe00
+> [  215.815717] [   T1110]        wb_writeback+0x1a7/0x800
+> [  215.816924] [   T1110]        wb_workfn+0x12a/0xbd0
+> [  215.817951] [   T1110]        process_one_work+0x85a/0x1460
+> [  215.818985] [   T1110]        worker_thread+0x5e2/0xfc0
+> [  215.820013] [   T1110]        kthread+0x39d/0x750
+> [  215.821000] [   T1110]        ret_from_fork+0x30/0x70
+> [  215.822010] [   T1110]        ret_from_fork_asm+0x1a/0x30
+> [  215.822988] [   T1110] 
+>                           -> #1 (&fs_info->zoned_meta_io_lock){+.+.}-{4:4}:
+> [  215.824855] [   T1110]        __mutex_lock+0x1aa/0x1360
+> [  215.825856] [   T1110]        btree_write_cache_pages+0x252/0xf90 [btrfs]
+> [  215.827089] [   T1110]        do_writepages+0x17f/0x7b0
+> [  215.828027] [   T1110]        __writeback_single_inode+0x114/0xb00
+> [  215.829141] [   T1110]        writeback_sb_inodes+0x52b/0xe00
+> [  215.830129] [   T1110]        wb_writeback+0x1a7/0x800
+> [  215.831084] [   T1110]        wb_workfn+0x12a/0xbd0
+> [  215.831950] [   T1110]        process_one_work+0x85a/0x1460
+> [  215.832862] [   T1110]        worker_thread+0x5e2/0xfc0
+> [  215.833826] [   T1110]        kthread+0x39d/0x750
+> [  215.834715] [   T1110]        ret_from_fork+0x30/0x70
+> [  215.835669] [   T1110]        ret_from_fork_asm+0x1a/0x30
+> [  215.836594] [   T1110] 
+>                           -> #0 ((work_completion)(&(&wb->dwork)->work)){+.+.}-{0:0}:
+> [  215.838347] [   T1110]        __lock_acquire+0x2f52/0x5ea0
+> [  215.839258] [   T1110]        lock_acquire+0x1b1/0x540
+> [  215.840156] [   T1110]        __flush_work+0x3ac/0xb60
+> [  215.841041] [   T1110]        wb_shutdown+0x15b/0x1f0
+> [  215.841915] [   T1110]        bdi_unregister+0x172/0x5b0
+> [  215.842793] [   T1110]        del_gendisk+0x841/0xa20
+> [  215.843724] [   T1110]        sd_remove+0x85/0x130
+> [  215.844660] [   T1110]        device_release_driver_internal+0x368/0x520
+> [  215.845757] [   T1110]        bus_remove_device+0x1f1/0x3f0
+> [  215.846755] [   T1110]        device_del+0x3bd/0x9c0
+> [  215.847712] [   T1110]        __scsi_remove_device+0x272/0x340
+> [  215.848727] [   T1110]        scsi_forget_host+0xf7/0x170
+> [  215.849710] [   T1110]        scsi_remove_host+0xd2/0x2a0
+> [  215.850682] [   T1110]        sdebug_driver_remove+0x52/0x2f0 [scsi_debug]
+> [  215.851788] [   T1110]        device_release_driver_internal+0x368/0x520
+> [  215.852853] [   T1110]        bus_remove_device+0x1f1/0x3f0
+> [  215.853885] [   T1110]        device_del+0x3bd/0x9c0
+> [  215.854840] [   T1110]        device_unregister+0x13/0xa0
+> [  215.855850] [   T1110]        sdebug_do_remove_host+0x1fb/0x290 [scsi_debug]
+> [  215.856947] [   T1110]        scsi_debug_exit+0x17/0x70 [scsi_debug]
+> [  215.857968] [   T1110]        __do_sys_delete_module.isra.0+0x321/0x520
+> [  215.858999] [   T1110]        do_syscall_64+0x93/0x180
+> [  215.859930] [   T1110]        entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> [  215.860974] [   T1110] 
+>                           other info that might help us debug this:
+
+This warning looks one real issue.
+
+
+Thanks,
+Ming
 
