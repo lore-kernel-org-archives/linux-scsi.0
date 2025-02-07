@@ -1,123 +1,131 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E8B1A705C;
-	Thu,  6 Feb 2025 19:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 231E22417F6;
+	Fri,  7 Feb 2025 01:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738869609; cv=none; b=rKDjliXRchO0PAICObcERsy3+DY3+gsdPxmliXEl8ReQJrQVy/Th9jPygdt3Ff5tdJnDAI8As0syqk/KX/znbP/G3GxfPkWxLtxk+8yK9HZgtFggcklyxwPLqkvOIkcSCUPgFhKUEhUw5eg3eiw50JFG1YVVsdATdeU9LxLsj04=
+	t=1738890023; cv=none; b=hRlcWJsiZAo27QDV70EQERFU76Mw1a58BM9jtv2O6zTeqTTv2h6e7Y1m0rnTC9UzLLGZEo7ZSKeHgZGx/96DwiKNjjf+I2gUCV5yVmDGb6s8/SAl8LxHdS9H/g2VHxLdXB35D3Qoyz+0s93PVw6ZDj2KlpzrUyBi6cIw8rqLr58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738869609; c=relaxed/simple;
-	bh=Iu+nNBkaCoKym9Ycn2G1Dg6dcJHBfMk4YGkMst3AeSo=;
+	s=arc-20240116; t=1738890023; c=relaxed/simple;
+	bh=V/auFlplC4lNkwyu5TsfDCGYYHQ1U9JN/b/NDVqoD00=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OziEHiv/+BDgOEav+9nY2PBThNfV4eNc2uGbYLj8mZFnMW3pAYYnQZttRp3PBX0SXDIGDPOxytQMRAMRq/O3OmPJ6VZDr3S42eRkgtk3rPB6wzHIGuNN04d5V0HNn6NvmmwO0m2zR4HPx9J04Xwo5WFOZIp9cQjybyErWiB7XH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jqkuPzPZ; arc=none smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version; b=rx0Ul4NGq/zHUG03EmD7Wnt2QSfyvlKaqqZNqPtyIr4JIQMme9Wl5SitLq0HERBVZfRS2YHsEPQJ8SU803u27mxkZqyeR18dQ4g9izkjQQ46IAKi2PdORdHtLJz5PRUn/adgU2DFG+AfD9aAONVcB7M+lWr1QV8xvYi20qoISn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K5cIRmNa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jqkuPzPZ"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-4679d366adeso12806631cf.1;
-        Thu, 06 Feb 2025 11:20:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738869606; x=1739474406; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gX2NlSkCyAG7lTgSfLhENbVmwmDFeyF8ds9Vl/soGRA=;
-        b=jqkuPzPZyz018731p2SvI3hj9E/eAZwRoTqcTKmFKzS5Fb2kecCZCRUzBY8PiQHMfW
-         k6myeMSo60/mOOGBwVHvwqwvTBU3BDQN7hijPHVtYtpFVQ2LS9wA4sUkJY+eZrzNG4zm
-         6wou3gLDv6Pkp9qg3w/UZ3bm24K2F/Vlde79FQo+quUPgfyDzB4nUH/bAMRszlQTkQKm
-         jYkmupJez0MqH+tm6qsljonBWmmcBEEULeCA1bWcZsZx3LNaZUAzPEg2wD49mLRLjMiB
-         NUI3V5gIB3VyKlmaSZ78KCcE64F1sW9EjYlR7N6icDKGZqa3dkNKrB8D6xaNX45NlFzf
-         UREA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738869606; x=1739474406;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gX2NlSkCyAG7lTgSfLhENbVmwmDFeyF8ds9Vl/soGRA=;
-        b=ltNVqK6XXOxHky6aV1JxqYo0V4zdPSX52564OQXrUTOiBapqt/z9GzuNB8ZGEnslDh
-         fcXjAuUDe98TjCZbW6OnIMLFTVvA0Cg71BQdA+YW4gxIhdXlY/9zaVezO+QxxsbyrPgc
-         62Vleg5IpJAxnUbhA5DcFxIq9PiiVCjaTFFMkL0t7RuNvc7DA4aM4i9NpC5G5vrBfS33
-         +zm7ip6sGUmIp4BaqO+rIO1GYpPlJ+zxIIDw0PQ4f+iJ+BcYQHS9zWlP9+Z+l+vHWI2F
-         GPNe9WOMbK18WNF3Yw3qdZZki00pEK5iyabhTgVqyHxzWcZ2ZCpW5KK5T8CZ57F8ouTZ
-         QkCg==
-X-Forwarded-Encrypted: i=1; AJvYcCVoHYKwgbmhzIrdIIYOUiAfBHDqze7CrIZ4aK9xw3DmgC6LZ9PqXqIG0WFRkKWvWRONXev8ZSInSFo0H4M=@vger.kernel.org, AJvYcCW2YZEjXxZu1RNM+ZEO3rZvfOD5RzPqv4C8Ji4Nr1yLFnGCrk/oorMqmTV+f1v3IVC7z3uUl32m@vger.kernel.org, AJvYcCXclp90cwITOKkjwjs63hHcEEZQv6axp2DyoQwhe5ZYXU+DFjFEMwik4eugseyyYy9OOXbYIvMY+4/9Gg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCMGQ9MEI1qXGZu+kCJqHE5Q1oz0THDB3iSTaE0EGsIFUgsPHv
-	ugEeW8G9ZFZg4VmWQs0dPJhWp5HTenplub6jFFHV+IrDpF088h5w
-X-Gm-Gg: ASbGncuSNE+yDI4pcZxuMOM4E4y1IQgfwQfI2mk01craDWBovZq0f4FACG0hGP+DWsO
-	hrWT/IHw7URc7FZn8kysacnSqPRrHrnZqAkLBfIxIm2FpsXJsvrMPtZL2HPQHSlRivmgtromza6
-	eYYInOtPbLAKBPNGJOUzNsQHc8iN0b7w0QM3F0tvnBRiQR0BH6KZxPhcBrJGEIWv8vfALicuN6/
-	X2VUmth0P8OMwiQAqjW23B5YOxpq1KNIVMQ4t0z/RFkHzkWwQ5rHl72iyeQITRjLmJ2Egyj8gqv
-	BAbmX9EFgke9b0BVNG/TAqtfHmQolOg1dbiGnA==
-X-Google-Smtp-Source: AGHT+IE9n37ecuVxOtDgXdqYrNVqEhe6Q5Lap1HaYiRxh944wzZQejyr6evb+U4ne1iaVT/YxNMGKg==
-X-Received: by 2002:a05:622a:6204:b0:462:b7c9:10e with SMTP id d75a77b69052e-4703362659fmr64191091cf.13.1738869606595;
-        Thu, 06 Feb 2025 11:20:06 -0800 (PST)
-Received: from newman.cs.purdue.edu ([128.10.127.250])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-471492763ebsm8159161cf.1.2025.02.06.11.20.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Feb 2025 11:20:06 -0800 (PST)
-From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@hansenpartnership.com,
-	arun.easi@cavium.com,
-	bvanassche@acm.org,
-	jhasan@marvell.com,
-	jiashengjiangcool@gmail.com,
-	linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K5cIRmNa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF0EFC4CEE5;
+	Fri,  7 Feb 2025 01:00:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738890022;
+	bh=V/auFlplC4lNkwyu5TsfDCGYYHQ1U9JN/b/NDVqoD00=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=K5cIRmNa5X35xmajVBLOhiGFfSp2lvzvXBoiBeT1Tt2OUX3yuMiFPcc8ddVzZGPpO
+	 yLMO98/Z6MwLIUsL8wFm+A12crw+lebpAagqrT8fz870tdSYW+T4Lpvmlzy0htbl+b
+	 Zv6AZyHSQapUYt1NtQqmsnSGcVIMAyLX8drKpTZbfo15xzkUfOQi0shDVDAeBAsgKV
+	 3ilaKPe93nxFgPMxSZF1IrkURPCPSH7jrbdqSfBcR7lAENV3MHOGoYthWWcxLvpuvf
+	 n3uI786lBewgzRyYljbOTa+zmHOzRHHhIBcD6LBmGV4VsMf4EUaQUEfWuG4qGkxOoN
+	 Pu3QNMjmVr0xg==
+From: Kees Cook <kees@kernel.org>
+To: Andy Shevchenko <andy@kernel.org>
+Cc: Kees Cook <kees@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
-	manish.rangankar@cavium.com,
-	markus.elfring@web.de,
-	martin.petersen@oracle.com,
-	nilesh.javali@cavium.com,
-	skashyap@marvell.com,
-	stable@vger.kernel.org
-Subject: [PATCH v2 2/2] scsi: qedf: Add check for bdt_info
-Date: Thu,  6 Feb 2025 19:20:00 +0000
-Message-Id: <20250206192000.17827-2-jiashengjiangcool@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250206192000.17827-1-jiashengjiangcool@gmail.com>
-References: <2025020658-backlog-riot-5faf@gregkh>
- <20250206192000.17827-1-jiashengjiangcool@gmail.com>
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>,
+	Sven Eckelmann <sven@narfation.org>,
+	Tadeusz Struk <tadeusz.struk@linaro.org>,
+	kernel test robot <lkp@intel.com>,
+	Erick Archer <erick.archer@outlook.com>,
+	Dmitry Antipov <dmantipov@yandex.ru>,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	linux-hardening@vger.kernel.org,
+	x86@kernel.org,
+	linux-coco@lists.linux.dev,
+	linux-nilfs@vger.kernel.org
+Subject: [PATCH 03/10] scsi: mpt3sas: Mark device strings as nonstring
+Date: Thu,  6 Feb 2025 17:00:12 -0800
+Message-Id: <20250207010022.749952-3-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250207005832.work.324-kees@kernel.org>
+References: <20250207005832.work.324-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2295; i=kees@kernel.org; h=from:subject; bh=V/auFlplC4lNkwyu5TsfDCGYYHQ1U9JN/b/NDVqoD00=; b=owGbwMvMwCVmps19z/KJym7G02pJDOlLoxWqNi1nvPp8fmr5YTfTptvFD+s+f215tPHkviT+e UwOZdpOHaUsDGJcDLJiiixBdu5xLh5v28Pd5yrCzGFlAhnCwMUpABORNGb4X3nzaKNp352Lyss+ ODf/tZzZuvmA4GzfOu/W1zm/Fj3J+Q5Ucesn/7by+VG7zwfK1sw5OG2r8qqO/McPnWYwFcx4LWv NCgA=
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-Add a check for "bdt_info". Otherwise, if one of the allocations
-for "cmgr->io_bdt_pool[i]" fails, "bdt_info->bd_tbl" will cause a NULL
-pointer dereference.
+In preparation for memtostr*() checking that its source is marked as
+nonstring, annotate the device strings accordingly.
 
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-Cc: <stable@vger.kernel.org> # v5.10+
-Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
+Signed-off-by: Kees Cook <kees@kernel.org>
 ---
-Changelog:
-
-v1 -> v2:
-
-1. No change.
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/qedf/qedf_io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index d52057b97a4f..1ed0ee4f8dde 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -125,7 +125,7 @@ void qedf_cmd_mgr_free(struct qedf_cmd_mgr *cmgr)
- 	bd_tbl_sz = QEDF_MAX_BDS_PER_CMD * sizeof(struct scsi_sge);
- 	for (i = 0; i < num_ios; i++) {
- 		bdt_info = cmgr->io_bdt_pool[i];
--		if (bdt_info->bd_tbl) {
-+		if (bdt_info && bdt_info->bd_tbl) {
- 			dma_free_coherent(&qedf->pdev->dev, bd_tbl_sz,
- 			    bdt_info->bd_tbl, bdt_info->bd_tbl_dma);
- 			bdt_info->bd_tbl = NULL;
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 587f7d248219..d123d3b740e1 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -606,7 +606,7 @@ typedef struct _MPI2_CONFIG_REPLY {
+ 
+ typedef struct _MPI2_CONFIG_PAGE_MAN_0 {
+ 	MPI2_CONFIG_PAGE_HEADER Header;                     /*0x00 */
+-	U8                      ChipName[16];               /*0x04 */
++	U8                      ChipName[16] __nonstring;   /*0x04 */
+ 	U8                      ChipRevision[8];            /*0x14 */
+ 	U8                      BoardName[16];              /*0x1C */
+ 	U8                      BoardAssembly[16];          /*0x2C */
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index d84413b77d84..dc74ebc6405a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -328,10 +328,10 @@ struct rep_manu_reply {
+ 	u8 reserved0[2];
+ 	u8 sas_format;
+ 	u8 reserved2[3];
+-	u8 vendor_id[SAS_EXPANDER_VENDOR_ID_LEN];
+-	u8 product_id[SAS_EXPANDER_PRODUCT_ID_LEN];
+-	u8 product_rev[SAS_EXPANDER_PRODUCT_REV_LEN];
+-	u8 component_vendor_id[SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN];
++	u8 vendor_id[SAS_EXPANDER_VENDOR_ID_LEN] __nonstring;
++	u8 product_id[SAS_EXPANDER_PRODUCT_ID_LEN] __nonstring;
++	u8 product_rev[SAS_EXPANDER_PRODUCT_REV_LEN] __nonstring;
++	u8 component_vendor_id[SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN] __nonstring;
+ 	u16 component_id;
+ 	u8 component_revision_id;
+ 	u8 reserved3;
 -- 
-2.25.1
+2.34.1
 
