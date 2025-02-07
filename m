@@ -1,191 +1,108 @@
-Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E915282F4
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Feb 2025 10:18:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C3A32417C7;
+	Fri,  7 Feb 2025 12:09:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738923505; cv=none; b=Sned5zG4Wm8b205Zt4+a2+fjo3fdJAMOaKelrUgIeXTTrc3d18L6aQVCbf01YGBNY1n4Vtgv+bB3lO3kaXTAzjz+EUpK0ToPPJH9iS+1HOIqPPepmVTdt5VTEtk7/FH30TZ29zlAcIDNg+41KiGTeQ7eZLn4t/m6Yg69cD+DtYc=
+	t=1738930192; cv=none; b=JWb5tEcTLJ5v0npHYzay1zW+8DzaNPihQSbxW3Lqm41wJdp8uW7dNoKUWGJFQ64t5X7uocXBHsWUeWzooT1TIXEI/z/jMj4ijC5W6A8u2G6cq4glQMW4+MVQRhFfV23bmwoMKxnosCGNNl0Ab0wj0W90MQ4jkQ/sxklQxFXF+O4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738923505; c=relaxed/simple;
-	bh=BYJ+tN1iYPpmV5vZwwLxt3f3U1fpzYNvlj4mO7XwDIM=;
+	s=arc-20240116; t=1738930192; c=relaxed/simple;
+	bh=4pF195jRI8mjpC7aYEb7qPcoCnajxFj1HhZA4jePVNk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nrFjEOQbcF8t4WA+HSTSqU6eKKIspJGQY8kARanR1K/DlOR6e0D9vMHQWPdM/xEx9UAQmnA+dYOJRiLhBElztLD5+dnLJB6WNi31Qt541Q0CFWW1uR/HZB9sukOyTAxVwpjP84eD5jl3yWsDgzyHU62lvYehzFT6iBZjgGon3Hw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=I2JC/M7f; arc=none smtp.client-ip=209.85.219.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	 To:Cc:Content-Type; b=Sglkkh8GmPbwKG01nzDEDRb36iqG8RmpPh8Wb8I4qeYCdgFmekxcHH67TH0LN8LDO1Vkzuz5gZrf/sQHvjQ1I+gH90wbLLgBhJq8OA1woaf57y9mQrYuE/tztCf13945NO1rtIkOQaqRcXbH3kvzuILwadLQGFH7CVmwJ2miOyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bHP+d+9O; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="I2JC/M7f"
-Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-e3978c00a5aso1376186276.1
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Feb 2025 02:18:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bHP+d+9O"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-ab6fb1851d4so403189266b.0;
+        Fri, 07 Feb 2025 04:09:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1738923502; x=1739528302; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=k2O4Pdt3lmbd3SSqpJ+FSdd/ZryfZbPXCdjWvrm1MQ4=;
-        b=I2JC/M7fexWeBsiRzFX/btAFcPJJwisEPsKn+ymldXXfmPzC+QJ60U+3paox5+biTb
-         4rfLeUcvjx9hB2fe5i+qnKb3vwJFr+f0zEK+hZCICr/miMewte1ANxrc1hfGyX6BwouY
-         RNlOmD1E218YL7RkvDaE89Ja7s8BPmQL+yKy1a0RTLsl0SoP6Jv0sfpvidYK8UQIJJyG
-         6MNjeE5EElqB0H/LHaCJMGgN9ltMfElZMIWjy7qYehX5pqKzAS3Z5IklQW8H0KFMj79r
-         GRFWLtZSqLh+gX4kne9iY4P6G0/W5MzA5ySBHEiw+vT0C+QuXNXe+FDSmhjbD3g9Xx8P
-         KrRQ==
+        d=gmail.com; s=20230601; t=1738930189; x=1739534989; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4pF195jRI8mjpC7aYEb7qPcoCnajxFj1HhZA4jePVNk=;
+        b=bHP+d+9OlhLgJzYDcAPWbTl4vYBzYvSSaYJnJaBgeAiieAKYIXN26K4K+ioaOOjAvA
+         PkZJ3BSIEkI7j4IylcEihsFrghUAKFRoabcJn4pKBQC3WTbPEX0kzcapyPEHQZu7e+85
+         FNyae9MDnOo0MVKNRta6uWu0aJ0qzkbffUGz0gAVrpSxlo29nSZct2XUU54qkLHI2lRb
+         cIDXnxTcFKVjLPZ0ne5Z2vwFGdL5JKZqmu+a/mk7FVNUleEggW4k7ZuGUgp5IDcuhOgY
+         0f+F2Rr9dSlivECG2SLwadAngKqZUutZNbumRjLGGPuyovBxCbJyFExvu0G8EbppQFUq
+         jk/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738923502; x=1739528302;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=k2O4Pdt3lmbd3SSqpJ+FSdd/ZryfZbPXCdjWvrm1MQ4=;
-        b=OZZ6SjCbJcm8XhNd7x1LfTrgyeL6ZvSurY1Hg35IYb5ENknAPaZ8fRDYH0o7VvToyD
-         UNbMrhyqGPurhFi/t2adjjuy5fyezXDGyXL6AM1kdABgSAx4gHFjqmq6M0sq/wMjm7pV
-         E47gnsW+NEvLg3XfAiHd6iQQZn1EyU2z/Mhy68xlsWmxE389iGcPdBHfgrgqd7EjmOl/
-         SmdevF6yFrltOEQGiVM2SnwooJnPgHWewwhWZIJSISp2nv6aiq58OE9xpQ8wpKz8WM0z
-         HMINr5p3HMMVJLy9cqQu/SikmgilPF0ylsXHAO2BUmBWNKjMKDh0MeJe2QSfXpBIrreb
-         bpIQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUIl4dAJCVqwGD357xY0U4BTCtB60R/NuLeqUZosZtN3uIJoVnuArbfnf83SS4rxZmkk9zQXyolU6FQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YzzO9BcisX/LfTTkBJGeaUCM74dz8fCAEajD0aGxDtE8Xox+4DB
-	GTyrQtUwPSDx8BzCKQwIpiJG48vfHfGYTCpG1guh1sH51/ht8yB4J3UFHZNrQ8W+CHZPwu2Qa+P
-	iNIxq2S0QpVflChVQl7aX/F+EhrefUpJP035JmA==
-X-Gm-Gg: ASbGncsesi+sTu1kQoB8jDSTvJ0QX3mab+aB42Z8N3V9IYT+1ZKu2p4ybVYObVee0PE
-	2CUM0jI/uAwUaCRRjZmDSzkCbvC+a8NxMDSe6QOGduBd51cy/6+wg5mMBupqYxYJsujAc7J/pJw
-	==
-X-Google-Smtp-Source: AGHT+IEmzZf2075id9cclwyGT9DbXThEdzScuMXDu+oELf+4CgST0QdmLWP6xyTxn4FlyYvfafBj1CcF9N5xwSZznZA=
-X-Received: by 2002:a05:6902:1142:b0:e5b:2352:7875 with SMTP id
- 3f1490d57ef6-e5b461728d5mr1878106276.8.1738923501974; Fri, 07 Feb 2025
- 02:18:21 -0800 (PST)
+        d=1e100.net; s=20230601; t=1738930189; x=1739534989;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4pF195jRI8mjpC7aYEb7qPcoCnajxFj1HhZA4jePVNk=;
+        b=uDWcpYuMcANRmyEnjVdOS60OPzfjxuNM5a77TfkH0/1ZWx0gt8zgBq2TBZLY5kT8oX
+         5YxPplj2U7WCxoI37KeDHH3anjdP2Ba+C8ljlKY9N0sbCMbdnKVeaNQ4q2lNvG5b52hK
+         cu+0mEufxbtkTPAIM1gl6uSBZcATsyDXwpy83E7YbGzPz9S/GuoqXx6ZGAyvSPLwzWKJ
+         i3ldvZV3hVgT+N6PRXVGolW4bME9FZaPQr0oVK4h7vVCIcxw+7cwfQmUfR2lG/tc4jom
+         zF/9jHA4WRvEb9cgWrBkajvyK/fKCFcHzK6QVSRGvQvRqpPpJ5ypMsr5ATnhnuyvxkdP
+         ISxg==
+X-Forwarded-Encrypted: i=1; AJvYcCWNCsH/rflWkClSzplMYl/5HTpelOEADYEaaOj1RRGJIoYp1mePi1H2ICjBuazQQBREWEAe909GtQnD9A==@vger.kernel.org, AJvYcCWwy3gL19u+CM1Xm9v4yA90DdyvSvB5W24oSpoTAkJkAnKfWxqnTUZidBpMvs1FOzSZZNrYjMAGfDh9dOvMbxk=@vger.kernel.org, AJvYcCX3qPyWl9WhtakavAUhBMoQWqh2tvZGEmMe3/iwH1czEOBrCrtY5BCcKZ7ZwLL6iqA5JBWqrKeY7pUAT72M@vger.kernel.org, AJvYcCXLkuwrzhtpDApN/DtgxWpl+zdR8IJ02tS1OiHw1cR4ruCsDixgqdPEBW2MdmQ5FMlDxa+LwNLaPindZyA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxuteSjPyxikm6/KYPZABAWF1eeqGUx1XZ/MwYsWE98ihPRON7
+	uyh7OZNyZL2Afz5TPx2+Zp2Nq+oqeMYo7j/poBepp5dPjeShwFeVZR7upKtz+MH7GiE8xdMt82T
+	NMNNZP6CDZU1Jd6DstMcASEKXXrs=
+X-Gm-Gg: ASbGncu+MlznLE1OJdTV76sxej78DJ2cZvTHEN/SSlP3Xyki4y9pfHsn3x2mKT/YRD9
+	S1bh1wB7rjmG7jhZL43WGq/5Ow3OklGH7ESyaE6VjZFPNZsbMKhQ35l1bav6XFiZJprFcFdoes0
+	U=
+X-Google-Smtp-Source: AGHT+IHrbiWskXPle5ImdwLhrdLRBq1l1ymqvuJ3iK9ve3uv7DBb+2jINGkUj60DkJxJ5t3LfE4k4WUHDMyRSckgp7U=
+X-Received: by 2002:a17:906:7309:b0:ab7:6d48:10a9 with SMTP id
+ a640c23a62f3a-ab76e88d3a0mr822173366b.8.1738930188495; Fri, 07 Feb 2025
+ 04:09:48 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 7 Feb 2025 11:17:46 +0100
-X-Gm-Features: AWEUYZmQZT92aTUfye4lvbLVdLcBAyqbrxP8axB62G9bX6fJamFMemAPNZXrIyo
-Message-ID: <CAPDyKFq+pWXq75xEtfkeCkmkdZtfp9dAFej4M+6rO6EAUULf=w@mail.gmail.com>
-Subject: Re: [PATCH v7 0/7] Initial support for RK3576 UFS controller
-To: "James E . J . Bottomley" <james.bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
-	"Rafael J . Wysocki" <rafael@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org, 
-	linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-pm@vger.kernel.org
+References: <20250207005832.work.324-kees@kernel.org> <20250207010022.749952-6-kees@kernel.org>
+ <b4f08d43-c421-4e8d-9bbb-c954c4472f8a@intel.com> <202502061835.F57547B@keescook>
+In-Reply-To: <202502061835.F57547B@keescook>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 7 Feb 2025 14:09:12 +0200
+X-Gm-Features: AWEUYZnChrRXXIJNdmCjHjynXFGSUufAJmxvP7Q8yY-4-DWvfhOKjUuhnQ7LHUg
+Message-ID: <CAHp75Vf4R73_GMNvsEWd3nyUKM8UEP22=9umArVsHYOA=dycWg@mail.gmail.com>
+Subject: Re: [PATCH 06/10] x86/tdx: Mark message.str as nonstring
+To: Kees Cook <kees@kernel.org>
+Cc: Dave Hansen <dave.hansen@intel.com>, Andy Shevchenko <andy@kernel.org>, 
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, 
+	Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org, 
+	"H. Peter Anvin" <hpa@zytor.com>, linux-coco@lists.linux.dev, 
+	Sathya Prakash <sathya.prakash@broadcom.com>, 
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali <njavali@marvell.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, 
+	Sven Eckelmann <sven@narfation.org>, Tadeusz Struk <tadeusz.struk@linaro.org>, 
+	kernel test robot <lkp@intel.com>, Erick Archer <erick.archer@outlook.com>, 
+	Dmitry Antipov <dmantipov@yandex.ru>, Ryusuke Konishi <konishi.ryusuke@gmail.com>, 
+	Luc Van Oostenryck <luc.vanoostenryck@gmail.com>, linux-kernel@vger.kernel.org, 
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, GR-QLogic-Storage-Upstream@marvell.com, 
+	linux-hardening@vger.kernel.org, linux-nilfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 5 Feb 2025 at 07:16, Shawn Lin <shawn.lin@rock-chips.com> wrote:
->
-> This patchset adds initial UFS controller supprt for RK3576 SoC.
-> Patch 1 is the dt-bindings. Patch 2-4 deal with rpm and spm support
-> in advanced suggested by Ulf. Patch 5 exports two new APIs for host
-> driver. Patch 6 and 7 are the host driver and dtsi support.
+On Fri, Feb 7, 2025 at 4:37=E2=80=AFAM Kees Cook <kees@kernel.org> wrote:
+> On Thu, Feb 06, 2025 at 05:12:11PM -0800, Dave Hansen wrote:
+> > On 2/6/25 17:00, Kees Cook wrote:
 
-Looks like this series is almost ready to be merged?
+...
 
-If so, may I suggest that I pick patch2, patch3 and patch4 via my
-pmdomain tree and share them via an immutable branch, so they can be
-pulled into James/Martin's scsi tree? Or do you prefer another route?
+> > So, the patch itself makes sense. But it does end up looking kinda
+> > funky. We call it a "str"ing and then annotate it as not a string.
+>
+> Yeah, this is true all over the place. It's a string, just not a
+> NUL-terminated string: *sob*
 
-Kind regards
-Uffe
+Maybe call it respectively, e.g., __nontermstr ?
 
->
->
-> Changes in v7:
-> - add definitions for all kinds of hex values if possible
-> - Misc log and comment improvement
-> - use udelay for less than 10us cases
-> - other improvements suggested by Mani
-> - Use 0x0 for consistency
-> - Collect Mani's acked-by tag
->
-> Changes in v6:
-> - fix indentation to 4 spaces suggested by Krzysztof
-> - export dev_pm_genpd_rpm_always_on()
-> - replace host drivers with glue drivers suggested by Mani
-> - add Main's review tag
-> - remove UFS_MAX_CLKS
-> - improve err log
-> - remove hardcoded clocks
-> - remove comment from ufs_rockchip_device_reset()
-> - remove pm_runtime_* from ufs_rockchip_remove()
-> - rebase to scsi/next
-> - move ufs_rockchip_set_pm_lvl to ufs_rockchip_rk3576_init()
-> - add comments about device_set_awake_path()
-> - remove comments suggested by Mani
->
-> Changes in v5:
-> - use ufshc for devicetree example suggested by Mani
-> - fix a compile warning
-> - use device_set_awake_path() and disable ref_out_clk in suspend
-> - remove pd_id from header
-> - reconstruct ufs_rockchip_hce_enable_notify() to workaround hce enable
->   without using new quirk
->
-> Changes in v4:
-> - properly describe reset-gpios
-> - deal with power domain of rpm and spm suggested by Ulf
-> - Fix typo and disable clks in ufs_rockchip_remove
-> - remove clk_disable_unprepare(host->ref_out_clk) from
->   ufs_rockchip_remove
->
-> Changes in v3:
-> - rename the file to rockchip,rk3576-ufshc.yaml
-> - add description for reset-gpios
-> - use rockchip,rk3576-ufshc as compatible
-> - reword Kconfig description
-> - elaborate more about controller in commit msg
-> - use rockchip,rk3576-ufshc for compatible
-> - remove useless header file
-> - remove inline for ufshcd_is_device_present
-> - use usleep_range instead
-> - remove initialization, reverse Xmas order
-> - remove useless varibles
-> - check vops for null
-> - other small fixes for err path
-> - remove pm_runtime_set_active
-> - fix the active and inactive reset-gpios logic
-> - fix rpm_lvl and spm_lvl to 5 and move to end of probe path
-> - remove unnecessary system PM callbacks
-> - use UFSHCI_QUIRK_DME_RESET_ENABLE_AFTER_HCE instead
->   of UFSHCI_QUIRK_BROKEN_HCE
->
-> Changes in v2:
-> - rename the file
-> - add reset-gpios
->
-> Shawn Lin (6):
->   dt-bindings: ufs: Document Rockchip UFS host controller
->   soc: rockchip: add header for suspend mode SIP interface
->   pmdomain: rockchip: Add smc call to inform firmware
->   scsi: ufs: core: Export ufshcd_dme_reset() and ufshcd_dme_enable()
->   scsi: ufs: rockchip: initial support for UFS
->   arm64: dts: rockchip: Add UFS support for RK3576 SoC
->
-> Ulf Hansson (1):
->   pmdomain: core: Introduce dev_pm_genpd_rpm_always_on()
->
->  .../bindings/ufs/rockchip,rk3576-ufshc.yaml        | 105 ++++++
->  arch/arm64/boot/dts/rockchip/rk3576.dtsi           |  24 ++
->  drivers/pmdomain/core.c                            |  35 ++
->  drivers/pmdomain/rockchip/pm-domains.c             |   8 +
->  drivers/ufs/core/ufshcd.c                          |   6 +-
->  drivers/ufs/host/Kconfig                           |  12 +
->  drivers/ufs/host/Makefile                          |   1 +
->  drivers/ufs/host/ufs-rockchip.c                    | 353 +++++++++++++++++++++
->  drivers/ufs/host/ufs-rockchip.h                    |  90 ++++++
->  include/linux/pm_domain.h                          |   7 +
->  include/soc/rockchip/rockchip_sip.h                |   3 +
->  include/ufs/ufshcd.h                               |   2 +
->  12 files changed, 644 insertions(+), 2 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufshc.yaml
->  create mode 100644 drivers/ufs/host/ufs-rockchip.c
->  create mode 100644 drivers/ufs/host/ufs-rockchip.h
->
-> --
-> 2.7.4
->
+--=20
+With Best Regards,
+Andy Shevchenko
