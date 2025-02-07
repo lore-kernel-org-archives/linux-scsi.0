@@ -1,36 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917F38172A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBA013B29F;
 	Fri,  7 Feb 2025 01:00:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738890023; cv=none; b=WgKNUSIcyZ4hqWCsSytWnRYeUD0rkIQlTzIh3/x+9NWApmYchfndo+pl1aEBVG2fg1rq3MV7YvdbOq9lRY3Q1EjeMTBdgGsIz1A/bPA3VJv+5cIk8Jm2E+bMMwUFRn1ota5cTVCANrG5FLB8tnFdb0h7Ztn3wRROKpNNAELNyfk=
+	t=1738890023; cv=none; b=m41yOO/GetYoYJQ9No4M+BBTbSPeQOWjyZfAmCF9Av/KdJbuI1QJSlJOzEWWITIl4p4TUgpydj4qLsYM5spYygdKrMogBn9PIrvFuzuRidjLawQC5tUo9Qm8OKDFz+cdpTY52KFGWaEwYheiOPqEdxuv4YXHS0WyqtM7SrZgoow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738890023; c=relaxed/simple;
-	bh=4KeQJBNPB0Q5KIE870XgtEtrG/Op6CZMA5oc8jFXtQA=;
+	bh=OD080QOcsvmWmkyEpokD8TJxBS24XHP/FqYv3Q/+7eQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mFmcIHLl3RbXy6wAM6usMAlDB/bipu/SN6POtWabMF069njNvorWBriGNATGvlsXC81Dw4P4aeDCxYKFCu7WHFO2Oq9qBJkd2xFg9NpKRzSXBp36VA4AhpZ8AV5/xqzNr/dXeFatVeQBoRTQzNhADEGVSYYu6950NJ7MYnXXij0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sQ5oTJ+7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=OC6Tl+yTKWXIiffr4oknt7nLCbXCz7PmIOv5DelHL2GNJcjWjvMPmQWCasRUE3WwQMFJc4/q7Xc6xSPhT/4ZatCkU5OYRLb+XpQZGUf62fY4YD5/C7e7n+Vwjq5JZex3uxSYCe7zErMRyvXJAamhXUaqFG7aGNqctRWgcoIjOC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p4xkj2HN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sQ5oTJ+7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E5DCC4CEF1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p4xkj2HN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48D03C4CEF3;
 	Fri,  7 Feb 2025 01:00:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1738890023;
-	bh=4KeQJBNPB0Q5KIE870XgtEtrG/Op6CZMA5oc8jFXtQA=;
+	bh=OD080QOcsvmWmkyEpokD8TJxBS24XHP/FqYv3Q/+7eQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=sQ5oTJ+750ycYbVPLnYKkcV403+k86ysv/nxr+d9xcJ51a5DBaRQn0pb758KbKON8
-	 LkRUcPKEjYJLEgBmtFbGbPbXgudrAWjiFB9eTOQFwwyJA58ZtNZSXnLoP2tWhfnUKe
-	 uFTeBUTJCw4gr6Yy28+bizKl0uuZ5bVAPu7sDuohUmSY+FuCaNGtY54DVwMn++yFGC
-	 29FKuwhuv7Bc1UJRlisuHdUDHgnOd3U/H7NjldrSDt564dBbyswlUud1rppIHwi5uj
-	 +SZ3NCwsq35J4ua+TfR3HiswfjPb/4EF0MgnO2qyVYY+FtG7wJc5hcuH5Wc6zE52cv
-	 XfEOK/F0INJkQ==
+	b=p4xkj2HNHL0fP3uLxXElWkqOEMghzdy+9+fMKprTafPGPgA8dQLUGLz6FkHfoS28R
+	 sR418rmGcDPxnomHC7EVpWCfCW+CX8EQBEf17uOXZ6CY/dP5XbGtAvKzFx8joaC6jH
+	 Yz4nK0nLWKP4ObeHKKFDvjNiIBHa+mvTHD0/gD18v8w0IWk9+jTNcaCX2HogJtPpMq
+	 IrsKj3jMLdKe6dxKqE5w7bQKQS0sv+jYLTGEVD4xipjwsPOl9GtU9jFzYyK4monSIE
+	 cBGFuuwO4DNGnO+v8wpUm9H7JssjR/tuOxFns5OFK0kFsIIICot8StIXGThzOU5Ekn
+	 8l0TGUKl+AD7A==
 From: Kees Cook <kees@kernel.org>
 To: Andy Shevchenko <andy@kernel.org>
 Cc: Kees Cook <kees@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-hardening@vger.kernel.org,
 	Sathya Prakash <sathya.prakash@broadcom.com>,
 	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
@@ -39,6 +37,7 @@ Cc: Kees Cook <kees@kernel.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Nilesh Javali <njavali@marvell.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
 	Dave Hansen <dave.hansen@linux.intel.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
@@ -58,12 +57,13 @@ Cc: Kees Cook <kees@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	GR-QLogic-Storage-Upstream@marvell.com,
+	linux-hardening@vger.kernel.org,
 	x86@kernel.org,
 	linux-coco@lists.linux.dev,
 	linux-nilfs@vger.kernel.org
-Subject: [PATCH 05/10] string: kunit: Mark nonstring test strings as __nonstring
-Date: Thu,  6 Feb 2025 17:00:14 -0800
-Message-Id: <20250207010022.749952-5-kees@kernel.org>
+Subject: [PATCH 09/10] compiler.h: Introduce __must_be_noncstr()
+Date: Thu,  6 Feb 2025 17:00:18 -0800
+Message-Id: <20250207010022.749952-9-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250207005832.work.324-kees@kernel.org>
 References: <20250207005832.work.324-kees@kernel.org>
@@ -73,38 +73,51 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1065; i=kees@kernel.org; h=from:subject; bh=4KeQJBNPB0Q5KIE870XgtEtrG/Op6CZMA5oc8jFXtQA=; b=owGbwMvMwCVmps19z/KJym7G02pJDOlLoxWYZijYhtbMvzDjjcShsmCjbHEFgdIezckh0Us/+ pc+m3C7o5SFQYyLQVZMkSXIzj3OxeNte7j7XEWYOaxMIEMYuDgFYCKWpxkZXpo8cyzmTj/luFNM v4b9R6H9/Am8UUeWMDqwxa+7L8fcxshwd6WkPUday48YbddpW1eo3rU7z/R2zdr9ChftK4OklRo YAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1662; i=kees@kernel.org; h=from:subject; bh=OD080QOcsvmWmkyEpokD8TJxBS24XHP/FqYv3Q/+7eQ=; b=owGbwMvMwCVmps19z/KJym7G02pJDOlLo5VM/jrvuzHT8t+U5qBbdwzFMtU1rI7yr439WeE0M eZqjoVGRykLgxgXg6yYIkuQnXuci8fb9nD3uYowc1iZQIYwcHEKwERWSDP893F8yq70KFA4Olrv 1sQXuh/mnj5cefTo2kp/q+2FDz5IvmJkOLNdd/ZkvbDdr6+cypnQ+jZBQH/PjaS9ysffvD06aZK dGAsA
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-In preparation for strtomem*() checking that its destination is a
-__nonstring, annotate "nonstring" and "nonstring_small" variables
-accordingly.
+In preparation for adding more type checking to the memtostr/strtomem*()
+helpers, introduce the ability to check for the "nonstring" attribute.
+This is the reverse of what was added to strscpy*() in commit 559048d156ff
+("string: Check for "nonstring" attribute on strscpy() arguments").
 
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
-Cc: Andy Shevchenko <andy@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-hardening@vger.kernel.org
----
- lib/string_kunit.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/compiler.h | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/lib/string_kunit.c b/lib/string_kunit.c
-index c919e3293da6..0ed7448a26d3 100644
---- a/lib/string_kunit.c
-+++ b/lib/string_kunit.c
-@@ -579,8 +579,8 @@ static void string_test_strtomem(struct kunit *test)
+diff --git a/include/linux/compiler.h b/include/linux/compiler.h
+index 1c0688319435..c89070a2f964 100644
+--- a/include/linux/compiler.h
++++ b/include/linux/compiler.h
+@@ -229,9 +229,25 @@ void ftrace_likely_update(struct ftrace_likely_data *f, int val,
+ #define __must_be_byte_array(a)	__BUILD_BUG_ON_ZERO_MSG(!__is_byte_array(a), \
+ 							"must be byte array")
  
- static void string_test_memtostr(struct kunit *test)
- {
--	char nonstring[7] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g' };
--	char nonstring_small[3] = { 'a', 'b', 'c' };
-+	char nonstring[7] __nonstring = { 'a', 'b', 'c', 'd', 'e', 'f', 'g' };
-+	char nonstring_small[3] __nonstring = { 'a', 'b', 'c' };
- 	char dest[sizeof(nonstring) + 1];
++/*
++ * If the "nonstring" attribute isn't available, we have to return true
++ * so the __must_*() checks pass when "nonstring" isn't supported.
++ */
++#if __has_attribute(__nonstring__)
++#define __is_cstr(a)		(!__annotated(a, nonstring))
++#define __is_noncstr(a)		(__annotated(a, nonstring))
++#else
++#define __is_cstr(a)		(true)
++#define __is_noncstr(a)		(true)
++#endif
++
+ /* Require C Strings (i.e. NUL-terminated) lack the "nonstring" attribute. */
+ #define __must_be_cstr(p) \
+-	__BUILD_BUG_ON_ZERO_MSG(__annotated(p, nonstring), "must be cstr (NUL-terminated)")
++	__BUILD_BUG_ON_ZERO_MSG(!__is_cstr(p), \
++				"must be C-string (NUL-terminated)")
++#define __must_be_noncstr(p) \
++	__BUILD_BUG_ON_ZERO_MSG(!__is_noncstr(p), \
++				"must be non-C-string (not NUL-terminated)")
  
- 	/* Copy in a non-NUL-terminated string into exactly right-sized dest. */
+ #endif /* __KERNEL__ */
+ 
 -- 
 2.34.1
 
