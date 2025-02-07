@@ -1,35 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B1D12C470;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A12C313BAE4;
 	Fri,  7 Feb 2025 01:00:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738890023; cv=none; b=ez9QZ5bo7K5ThoYPbZmo0fPmeMi058iDi7m/8ZLIQNaKcRdSPPX5VzgqwyYzTFo740MYDrvx/gZJVQB9b3iFuKeN4okmkGAs32XEe1nkG+DMzUJBs1TeNyR/Fria6H946zFJkdRgmbaP5VE1ceC1AdCJ6Mv+OK3XRmTGecXXfAU=
+	t=1738890023; cv=none; b=tDyPtcCvzwAwh39QyhJmihn/cNWnnFnGrbZBD7HsnGeW6VAn3sWrrmoMuKa2DRMIsgGE4ePBKPGUGFYlHFGyYh6pMGFL99lWbY3/Ygez1GDFk/TSgrTuIqnJHvOR9S0Z4IyXIVYXgPtxCAAXknq9omdyn8d0S8ysHVLA/HxsEKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738890023; c=relaxed/simple;
-	bh=K/07rfCFA4BfrBoFR8MW3miwLviZUsM4VUjLPRUHQSk=;
+	bh=CbM+GnN2ANWE4Vaa6vW+0UlcVuo8j7mn5KKDXvIqbBE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NDtAwvitC+HKP5V024DxmPI7ubjxa/Ub8Uj/lrWJnj+jeuY+/2tpWCCzmEpm6q1stwwB5AZJhj1MEVne7QGz4Gm87doX7qRVM8CL8IyC1lcCpfvWt/KYAVZ4wgYDaB3mBw2e/v7iUq82h7YlIImD6+QEyAapAbjMjoZ8mnx38L4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DqkdQDHi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IapRX5rFNobvE5Wb95Gn+NCZUGeSbMsywC3zov8yLM9A2foHpIbXmaW5ummKCpRV+BWLvS4z//goCkIQgq2+lgmOu2Rt40Tv2anGM1qi7Owc3VbALBHKviqn8kz8VMLxzd3sJM+AaoxR+a4fRkYpVt0cleuKlLQdtmhuINlNaP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cr6304fw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DqkdQDHi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44699C4CEE6;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cr6304fw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51079C4AF0F;
 	Fri,  7 Feb 2025 01:00:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1738890023;
-	bh=K/07rfCFA4BfrBoFR8MW3miwLviZUsM4VUjLPRUHQSk=;
+	bh=CbM+GnN2ANWE4Vaa6vW+0UlcVuo8j7mn5KKDXvIqbBE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=DqkdQDHi32+fVMBhJIDpDTsAD2KQxIW6emKqDpEwDIeNEsKRSUE3Jdo7K7nnI2L+b
-	 UhJgJLVG9dUctxMfqz8+aA5yZcS6NWu7beIJo6jlapVkpPjfb0vBYzfX/2F3YyFOdU
-	 qL/GbOB4z4wQA69Xp12J7bOE1HQeP6I6iWZbDHJmMQ3WMAYUCtcvUt98ISXzU2ZqL1
-	 TKhfr6HXq2vd296XeXUa2nGaR/oAGU2HWjMS2EMz7a6QRbZ+bc07fqt9Yr1cdiW79d
-	 +pYPhK1tpMPtgB+9SpPJG2+dCuvRM2/zcGg6H8ns4ObNPRxlcDz0By9PjUwZyVCT+3
-	 2WYJpzowanURQ==
+	b=Cr6304fwYeeuZX2bZra7G3/Z6F7SDGU+yPYFysuApvvLQ78eLazkWtxw2rXUBF8Jp
+	 L8cijDC6lpAngQLp6PJKujxEn/Bdf963Ej6mZgNFG1Aawv2z9F3kp/57meY5/9jYg4
+	 i7J7yBE6dZPkn0is1yZmZ4EGPVrAW2H7y+izwbjdRJaKtqsXiFKotZ3wnFjbhq8fKr
+	 8TBKS9/WRC0cpWedQfE9j8jV7Dm5pCM8NB5IiH3hqVn21PPazHdYa5RDTiTfpL4xuk
+	 f0TfUwyBhvDZTBLxKJUFW+pnth3OQaoiIK4m5R+ENtKqWvs5C8v3EhCZx7vpxyWgW7
+	 P+JN0kvDAi58A==
 From: Kees Cook <kees@kernel.org>
 To: Andy Shevchenko <andy@kernel.org>
 Cc: Kees Cook <kees@kernel.org>,
-	linux-hardening@vger.kernel.org,
+	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+	linux-nilfs@vger.kernel.org,
 	Sathya Prakash <sathya.prakash@broadcom.com>,
 	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
@@ -51,19 +52,18 @@ Cc: Kees Cook <kees@kernel.org>,
 	kernel test robot <lkp@intel.com>,
 	Erick Archer <erick.archer@outlook.com>,
 	Dmitry Antipov <dmantipov@yandex.ru>,
-	Ryusuke Konishi <konishi.ryusuke@gmail.com>,
 	Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
 	linux-kernel@vger.kernel.org,
 	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	GR-QLogic-Storage-Upstream@marvell.com,
+	linux-hardening@vger.kernel.org,
 	x86@kernel.org,
-	linux-coco@lists.linux.dev,
-	linux-nilfs@vger.kernel.org
-Subject: [PATCH 10/10] string.h: Validate memtostr*()/strtomem*() arguments more carefully
-Date: Thu,  6 Feb 2025 17:00:19 -0800
-Message-Id: <20250207010022.749952-10-kees@kernel.org>
+	linux-coco@lists.linux.dev
+Subject: [PATCH 08/10] nilfs2: Mark on-disk strings as nonstring
+Date: Thu,  6 Feb 2025 17:00:17 -0800
+Message-Id: <20250207010022.749952-8-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250207005832.work.324-kees@kernel.org>
 References: <20250207005832.work.324-kees@kernel.org>
@@ -73,74 +73,36 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2779; i=kees@kernel.org; h=from:subject; bh=K/07rfCFA4BfrBoFR8MW3miwLviZUsM4VUjLPRUHQSk=; b=owGbwMvMwCVmps19z/KJym7G02pJDOlLo5WkWqvKtx3a+ezM9LfZXLZVF1S28bTHnSzv5Fyfe SC9+ZxHRykLgxgXg6yYIkuQnXuci8fb9nD3uYowc1iZQIYwcHEKwETmXWJk6GU+ymF/TDzEnnUJ z98paYVBW1b09Ci9/W40l/Hq1ZB9qxkZ/grIVM+9nq/nfq96Owvf5erEL48nZzz9es/+TVJKtu0 EDgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1048; i=kees@kernel.org; h=from:subject; bh=CbM+GnN2ANWE4Vaa6vW+0UlcVuo8j7mn5KKDXvIqbBE=; b=owGbwMvMwCVmps19z/KJym7G02pJDOlLoxV3RF3+srip7wUnS9GrT/Uvj0t4nNrjt4nJdFH9/ 6asj6EXOkpZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTACai84rhr9DLb6s795Rcl3v7 za1JXsPfK19jcnJQKu9iQZfXBoknIhkZtruvZYuL/3jdUpdxg2f7eYdDJlfjG6do2U5c/pJnGas cCwA=
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-Since these functions handle moving between C strings and non-C strings,
-they should check for the appropriate presence/lack of the nonstring
-attribute on arguments.
+In preparation for memtostr*() checking that its source is marked as
+nonstring, annotate the device strings accordingly using the new UAPI
+alias for the "nonstring" attribute.
 
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
-Cc: Andy Shevchenko <andy@kernel.org>
-Cc: linux-hardening@vger.kernel.org
+Cc: Ryusuke Konishi <konishi.ryusuke@gmail.com>
+Cc: linux-nilfs@vger.kernel.org
 ---
- include/linux/string.h | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ include/uapi/linux/nilfs2_ondisk.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/string.h b/include/linux/string.h
-index fc5ae145bd78..26491a2f8010 100644
---- a/include/linux/string.h
-+++ b/include/linux/string.h
-@@ -412,8 +412,10 @@ void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count,
-  */
- #define strtomem_pad(dest, src, pad)	do {				\
- 	const size_t _dest_len = __must_be_byte_array(dest) +		\
-+				 __must_be_noncstr(dest) +		\
- 				 ARRAY_SIZE(dest);			\
--	const size_t _src_len = __builtin_object_size(src, 1);		\
-+	const size_t _src_len = __must_be_cstr(src) +			\
-+				__builtin_object_size(src, 1);		\
- 									\
- 	BUILD_BUG_ON(!__builtin_constant_p(_dest_len) ||		\
- 		     _dest_len == (size_t)-1);				\
-@@ -436,8 +438,10 @@ void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count,
-  */
- #define strtomem(dest, src)	do {					\
- 	const size_t _dest_len = __must_be_byte_array(dest) +		\
-+				 __must_be_noncstr(dest) +		\
- 				 ARRAY_SIZE(dest);			\
--	const size_t _src_len = __builtin_object_size(src, 1);		\
-+	const size_t _src_len = __must_be_cstr(src) +			\
-+				__builtin_object_size(src, 1);		\
- 									\
- 	BUILD_BUG_ON(!__builtin_constant_p(_dest_len) ||		\
- 		     _dest_len == (size_t)-1);				\
-@@ -456,8 +460,10 @@ void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count,
-  */
- #define memtostr(dest, src)	do {					\
- 	const size_t _dest_len = __must_be_byte_array(dest) +		\
-+				 __must_be_cstr(dest) +			\
- 				 ARRAY_SIZE(dest);			\
--	const size_t _src_len = __builtin_object_size(src, 1);		\
-+	const size_t _src_len = __must_be_noncstr(src) +		\
-+				__builtin_object_size(src, 1);		\
- 	const size_t _src_chars = strnlen(src, _src_len);		\
- 	const size_t _copy_len = min(_dest_len - 1, _src_chars);	\
- 									\
-@@ -482,8 +488,10 @@ void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count,
-  */
- #define memtostr_pad(dest, src)		do {				\
- 	const size_t _dest_len = __must_be_byte_array(dest) +		\
-+				 __must_be_cstr(dest) +			\
- 				 ARRAY_SIZE(dest);			\
--	const size_t _src_len = __builtin_object_size(src, 1);		\
-+	const size_t _src_len = __must_be_noncstr(src) +		\
-+				__builtin_object_size(src, 1);		\
- 	const size_t _src_chars = strnlen(src, _src_len);		\
- 	const size_t _copy_len = min(_dest_len - 1, _src_chars);	\
- 									\
+diff --git a/include/uapi/linux/nilfs2_ondisk.h b/include/uapi/linux/nilfs2_ondisk.h
+index c23f91ae5fe8..3196cc44a002 100644
+--- a/include/uapi/linux/nilfs2_ondisk.h
++++ b/include/uapi/linux/nilfs2_ondisk.h
+@@ -188,7 +188,8 @@ struct nilfs_super_block {
+ 	__le16	s_segment_usage_size;	/* Size of a segment usage */
+ 
+ /*98*/	__u8	s_uuid[16];		/* 128-bit uuid for volume */
+-/*A8*/	char	s_volume_name[80];	/* volume name */
++/*A8*/	char	s_volume_name[80]	/* volume name */
++			__kernel_nonstring;
+ 
+ /*F8*/	__le32  s_c_interval;           /* Commit interval of segment */
+ 	__le32  s_c_block_max;          /*
 -- 
 2.34.1
 
