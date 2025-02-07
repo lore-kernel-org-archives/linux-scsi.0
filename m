@@ -1,127 +1,100 @@
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC695246324;
-	Fri,  7 Feb 2025 15:45:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D68D240606;
+	Fri,  7 Feb 2025 15:46:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738943113; cv=none; b=q7v0/IU5K0EEm4qUvvQegpGcKy2QdF55dgRrdshg32R4HO7dRjSc3ypo84yPnBWlWpgYWIjXzOg0EViMNNh2rZWCH3Un7lnwTFZdvTDFlNaSbmY8Ji6NAo7jnnbiMUgFV5yElfkxOnsif2ao6D8Wma9d+t7/g1EpGjwmD9r9vlU=
+	t=1738943189; cv=none; b=TZbFBhMzl2GIU3K+uOHvDmcwslK3DfwK9m42RDC+9vWZmta0vcS1CXY2jcboCOnkclanZOhC4PLhoDcwOChOLKJLnzFgAZmyk5+lK/tCLpDKPFRPrIg4DPbEkF8tc/Hi5fwfY6SQ3NjuLKgM65MjhGSeoEQHQYoWr6sq2N0IuIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738943113; c=relaxed/simple;
-	bh=6Dv9u9iMz+DcsLmWTQCbzBZtfz2P+8l8k57NZKBzhGM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=L3Hn7mAqunUNVhth7VDc59T+RaTyee+DkFcyIPaR2W75PeyDAirxQzzR6UBeYi+KWrSetWSR92Xoa3mW7Z9Cr9C31ja+09PDx0dPALqwbkoOwnQdH6oCwcgZzEs3M/KCED06XWc/mZw6lMKWw1PhS1rJfzycE3IYhqjXSvftzNs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nETfRjyi; arc=none smtp.client-ip=209.85.219.50
+	s=arc-20240116; t=1738943189; c=relaxed/simple;
+	bh=m7rdOWHmcb+xPyY4sSux5AD6yPcRJtWDJjxhXuJ0oB4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LQJkDBe9conCo4oVA0X5hu33zGzT9wNNcSwXiyyshPQJ081nkrVsP+X55/pyjPnlkuDAO/HthuQ29aSqaJf77QBMe5BPl2TMQVBJ/w0Tk5UY4kA9SE95/aVh4SbXFaKhoc8uaXXW63aMOXMKgmiaHludtRGL26yVAK1J6uZ3bZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L890SniA; arc=none smtp.client-ip=209.85.160.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nETfRjyi"
-Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-6e41e18137bso19341746d6.1;
-        Fri, 07 Feb 2025 07:45:11 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L890SniA"
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-4678afeb133so30906601cf.0;
+        Fri, 07 Feb 2025 07:46:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1738943111; x=1739547911; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1738943187; x=1739547987; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xvOxm3G/Y/wXWwgs+RUvwCjbDevM4XGRT57WeF3I8uE=;
-        b=nETfRjyi4bJIK59ZgMQNdvF4elCXyyuQ+Hysjz0t72jFSxmUuXu2CsKhKA0QmqyZF7
-         biUKSzXSGbi2g2hkPs5+ZUJBmXgLNfSmLBjpnn4Vh+dSywNz8Cs1BCvD6SMHwcvQ54+L
-         rYG+qoDFvAEfRpyvlRGTumn5WYfo48gs480MBfMac0HPi5LKq1eBGfeP1Sr/yj45qYbd
-         Z9NvGmqANwqd3lPp48tAgn00F5ZnSbUPx3y0JNLanZLpo9heq8vAGD9P7EC9j6t4kSMr
-         CDLZZCk4mHsSQd8tkZgFDlgrwnl3aVmRL1lpt4I2XCKpbGX3O7SHDcThI8R5AZpOMUfb
-         F2Ew==
+        bh=U6WEYNdnx+FiHzsZTOr5pP7gueGwdNGj0QScjPVTFYw=;
+        b=L890SniAfK9mAbMzj36qq8QyA689xgKcqKr8yOIbwGudxE2zhvIRSGsf8cgcx6NthG
+         aJmTe3UOCE+h45mj0gPtlCsZg8cb0ol5vqzuW6zSgkdn1uxBNblXuL8oQfrngzHxFBzl
+         U+KW1AstB9hkKwX49QEXwkH1zaLHr5xkVA3qMH16wR+ceSc5+E9Pg3yq+O5SuyFQXrQM
+         81es0wVP2dxqjpUmNVeIp/WnMt2+1JoNxZGJnPrFA2hXcF/teWJX4emv50RRsBsz7ooh
+         JDOXfIoOSVl5F61374q0WraC8VKHdtddbj7MBrtN8tJufPhaEL8hMsbol8/oNB36kbAj
+         PGgA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738943111; x=1739547911;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1738943187; x=1739547987;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=xvOxm3G/Y/wXWwgs+RUvwCjbDevM4XGRT57WeF3I8uE=;
-        b=qWNvj2OaWaREYsRaBgvMrdylfkk2PcXamQtOXgcBAGxw8qq/8qdUB535nX0uulofJK
-         DZtKF1p+azgRugBJOn9R6MVUZmEM2hmmtF94pwbaXIr5PVVCmo0is31higawbrXJQDxQ
-         Kf/Wpwa4/HZYZsA7n5y2HVofH2QwxAn3F0BgAjW6gW31aXb3QOH5BFpkj7zKb++TBT00
-         Fr+STAs7IF2aBw0XzBpnPy1aE814afeyZfn9a4BGDR14+8QKadE55NGBbkSDfzi1Vo1F
-         W+MUzx1YYwTim6h1BS8X8ChLWYCAopzE4GAQhbiXCmZFix/Cx3S7N1akGigKVfvhvjrV
-         6Wng==
-X-Forwarded-Encrypted: i=1; AJvYcCV5BfB/xXeJq+2mwAzJ3DfqT8Uf7K86N0MdPmWMU0ZbqvnNGRUV2xmeKdLk0eDHjgPJ8EvofPrF@vger.kernel.org, AJvYcCXJH7zdv2tRS4DeOJe4ClZBkGNmcyb2bLjlRjVqv72RoxFDiuTdip6y7kDO8hkiS+wFradDjUMdnVZLOg==@vger.kernel.org, AJvYcCXV5LSeGBcLWuOzKffQ8whjOYHRi9BekAOeYwi0JgxKD96rDknsS5j3I79Enl5tZSon3tsC4K4wKdgqjSc=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxUenR7wXJTTxoDRzVCgNfVu3J8QlByihSJjij7/IrDA8glpGUz
-	eBD35B7oFUXt3H73o60o3u83wc772lbh1quKF3ZFojzPd7TpaoOr
-X-Gm-Gg: ASbGncvzKsl1UI9zNvbugrmH2Kknyi/e2+4JLCQaC3QMpDWSOaDvtK8S8IsB9xCNfE1
-	qhRuAC4Bka0RTsCw/erViMaDQncgrCFDJNwjW2kDxpTfvFUGxiLdHbB6C17eb16uHxIdCbXa8di
-	IQi3RbPHgT9NEaa5zcoFydfjwW/Tdm/vgOC7SN4Epu74kRMKxr2f7KThha6N0p0b8twYUiix35r
-	pLZP2FjoP4D4uX3gmxkAORQhBhATx3kZ75TWHMA9yjB86JZpUmojxS7NlGc3KR+xs6HHQBGbflU
-	WATzx+4KXoeTqAdCJhSs65TY26GeOhFgWrknBg==
-X-Google-Smtp-Source: AGHT+IEh3IqsRiFrek8tlhG6fHu+9WMFlGMLV/pDjWkxT5uqn7EgEaqU55vIUyhc7fcVKGe5qFQQVg==
-X-Received: by 2002:a05:6214:dae:b0:6e4:4331:aae0 with SMTP id 6a1803df08f44-6e4455c465emr36455376d6.1.1738943110627;
-        Fri, 07 Feb 2025 07:45:10 -0800 (PST)
-Received: from newman.cs.purdue.edu ([128.10.127.250])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6e43ba36d5csm18258186d6.26.2025.02.07.07.45.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Feb 2025 07:45:10 -0800 (PST)
-From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@hansenpartnership.com,
-	arun.easi@cavium.com,
-	bvanassche@acm.org,
-	jhasan@marvell.com,
-	jiashengjiangcool@gmail.com,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	manish.rangankar@cavium.com,
-	markus.elfring@web.de,
-	martin.petersen@oracle.com,
-	nilesh.javali@cavium.com,
-	skashyap@marvell.com,
-	stable@vger.kernel.org
-Subject: [PATCH v3 2/2] scsi: qedf: Add check for bdt_info
-Date: Fri,  7 Feb 2025 15:45:05 +0000
-Message-Id: <20250207154505.4819-2-jiashengjiangcool@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250207154505.4819-1-jiashengjiangcool@gmail.com>
-References: <2025020721-silver-uneasy-5565@gregkh>
- <20250207154505.4819-1-jiashengjiangcool@gmail.com>
+        bh=U6WEYNdnx+FiHzsZTOr5pP7gueGwdNGj0QScjPVTFYw=;
+        b=o8/Gz8QU7PADtnfbHTVMtSxhpJhBTKZJFQ2jk1LqhGESBaw7HHJVfoRkron6Hp3U44
+         PUeFQeQYpoPhv1d2LzUOQcbf6nGBvlOemfF5MuQ7Xcxt1PW6Vf9V051iW3mpOvDHaCO2
+         0dvxWMhCAzvnNydoSPDtpJYbrpr4YubU40NP3pLMesq7mhvFPtIBsfhUFUKRY4yJ/lpT
+         k9mUHYfVV9Cs648Zu1wIJLGpuulLrbAV9oUTsnE8hhJkCL/gKKcC7CckvOwZG5+exlVS
+         bCq7ycytOxtY3x7NXN18zLtjK5dD+kt6yJtsFPh0sf+wBDWC5bQmJujGyYVfC/AiL8mG
+         zRsQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUF1pZlYISn7mZ/04cnUVDyEE2duTMfJnW7hmMvVQdYI5gzKnvmPnXDxO3rOa0tqFbLXGgzHfvB/ruk/g0=@vger.kernel.org, AJvYcCX7huGC+3mBzxOJdK5saZ+nzFIDS6wgAhZj9x+c96I0u/ZF6JdQltUNXavoGSLSWCiPiHq6hBjg@vger.kernel.org, AJvYcCXB7ws34R4S/2EypopNWEMG0peNlBdA6WH6wOImxnzxFus44zlaFZOgYbZ68qNn0bQK61QOk47OC0Fj4g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfUDbZeIOTnA2dt1j1MjQzf0DwV+NJDPCojslMr44mtiErXljP
+	6S8+ePJ2YJ7mFhffGwqefpiE3ZPkynhH6TGzzyg4P/DEuEQfHUITT7pkaWWCLTp26RD6RYLXZYt
+	9g63dNLU+Ul6cJ5OA5BJCByR+35T9hg==
+X-Gm-Gg: ASbGncvhie37mnoSBS4fE+yuWrusHpccS5hETTHVpmXHTOShs0tZs49l7EA8MHONpPh
+	0WLjbfy6f3clL3egOc5dIyRPF0aAv6mEiK+tbXpLc9/tL3aks2DqUlh3lABJgyPDKgUt4AM/3
+X-Google-Smtp-Source: AGHT+IElm5my5xTJ2v9nE1Ou6jzXXlg/X/CAyfb4gsv4lvlsqDHo1xjhuzSDFN1RF7YLIoGkd2njQyQDkWiCCwum/zo=
+X-Received: by 2002:ac8:5d0d:0:b0:467:7076:37c7 with SMTP id
+ d75a77b69052e-470337541c2mr113267481cf.22.1738943186829; Fri, 07 Feb 2025
+ 07:46:26 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <2025020658-backlog-riot-5faf@gregkh> <20250206192000.17827-1-jiashengjiangcool@gmail.com>
+ <2025020721-silver-uneasy-5565@gregkh>
+In-Reply-To: <2025020721-silver-uneasy-5565@gregkh>
+From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
+Date: Fri, 7 Feb 2025 10:46:16 -0500
+X-Gm-Features: AWEUYZlnZYiNZLhyAd6W1RYOSMZAjrBQEddA7-XZNq349TO23dSwfJVbvszfXPc
+Message-ID: <CANeGvZX8F-TGn0tfuLqUMFN89aepML6mtAvvSjRJyysvUDzGhg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] scsi: qedf: Replace kmalloc_array() with kcalloc()
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: GR-QLogic-Storage-Upstream@marvell.com, 
+	James.Bottomley@hansenpartnership.com, arun.easi@cavium.com, 
+	bvanassche@acm.org, jhasan@marvell.com, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, manish.rangankar@cavium.com, 
+	markus.elfring@web.de, martin.petersen@oracle.com, nilesh.javali@cavium.com, 
+	skashyap@marvell.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Add a check for "bdt_info". Otherwise, if one of the allocations
-for "cmgr->io_bdt_pool[i]" fails, "bdt_info->bd_tbl" will cause a NULL
-pointer dereference.
+Hi Greg,
 
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
-Cc: <stable@vger.kernel.org> # v5.10+
-Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
----
-Changelog:
+On Fri, Feb 7, 2025 at 10:10=E2=80=AFAM Greg KH <gregkh@linuxfoundation.org=
+> wrote:
+>
+> On Thu, Feb 06, 2025 at 07:19:59PM +0000, Jiasheng Jiang wrote:
+> > Replace kmalloc_array() with kcalloc() to avoid old (dirty) data being
+> > used/freed.
+>
+> "Potentially" being freed.  It will not be used.  And this is only for
+> an error path that obviously no one has hit before.
+>
+> Please explain this much better.
+>
+> thanks,
+>
+> greg k-h
 
-v2 -> v3:
+Thanks, I have submitted a v3 and added "potentially" in the commit message=
+.
 
-1. No change.
-
-v1 -> v2:
-
-1. No change.
----
- drivers/scsi/qedf/qedf_io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index d52057b97a4f..1ed0ee4f8dde 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -125,7 +125,7 @@ void qedf_cmd_mgr_free(struct qedf_cmd_mgr *cmgr)
- 	bd_tbl_sz = QEDF_MAX_BDS_PER_CMD * sizeof(struct scsi_sge);
- 	for (i = 0; i < num_ios; i++) {
- 		bdt_info = cmgr->io_bdt_pool[i];
--		if (bdt_info->bd_tbl) {
-+		if (bdt_info && bdt_info->bd_tbl) {
- 			dma_free_coherent(&qedf->pdev->dev, bd_tbl_sz,
- 			    bdt_info->bd_tbl, bdt_info->bd_tbl_dma);
- 			bdt_info->bd_tbl = NULL;
--- 
-2.25.1
-
+-Jiasheng
