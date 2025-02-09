@@ -1,88 +1,90 @@
-Received: from server-598995.kolorio.com (server-598995.kolorio.com [162.241.152.247])
+Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 557A224394A
-	for <linux-scsi@vger.kernel.org>; Sat,  8 Feb 2025 22:09:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.241.152.247
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2BBB6FBF
+	for <linux-scsi@vger.kernel.org>; Sun,  9 Feb 2025 08:20:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739052564; cv=none; b=qHPbPTcyJSd6oRwqRHQp8l5T2pThA3VFdNfwS8mLHSLZqznnhl52wE4OzFg5VPy92+HM+4+VNawBwWjdfcp+p6XcR62/uBMjm0oMyHwKdih4q+mwQP5ctzzCMvGqamyJPDxlYanDlQyasp772erDNy0CXbdc4NqU9RP/saSFZs0=
+	t=1739089217; cv=none; b=m1NpfPHkAEbvVeldueSPSF8dgXhqb+P7RTXxYoxDVDhR9uPhqxYk+0NNGOhwYKZvVWtbaDYDQqjaon1SzdAgyuH/JtWpsUb8blyNGcyBMIBhVW3E5MZpCVhuFRizHr7ej0iwJKI85NWo/I6fZGrYJBmgMuF90vJHXhFvZ61ZpyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739052564; c=relaxed/simple;
-	bh=gl4+7vNxgV9+JzZtw7EthQ6aGDgi0WVn3wQV/lnKiyo=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EAOXzbj69gLDd8cEfsALnWqh5hMpukMy4tFQeJSa0495r8CQ+Nt3thQb2crmTHT0OTMOLNSpTDCkBKE+2cjgb7SoOOJVSJmwktvDKDakFRNrr6X0Njmnl1ZiNS4DKnB55NnbiIw4NCrNHOxR2CpZUemE4z3OAxFnVXstJS6BVKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=truemaisha.co.tz; spf=pass smtp.mailfrom=truemaisha.co.tz; dkim=pass (2048-bit key) header.d=truemaisha.co.tz header.i=@truemaisha.co.tz header.b=k0I13ye4; arc=none smtp.client-ip=162.241.152.247
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=truemaisha.co.tz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=truemaisha.co.tz
+	s=arc-20240116; t=1739089217; c=relaxed/simple;
+	bh=a4SRuZo+CUWEKo5tuIM5raEfCEuGHpIKNOfpt0vA6/k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Skuw4V5UWGCp5/v6PNZntJOmMKaXDpebHGwznxu2Uh29ImaIxc2lhJ26/pmCMZCEN2F4Q3pSdkud+RjFgk/KuQrIpXidUFXOPxL2dFznD5G0uptlQe3hJ0j7AIEKNvD1Fo9gwBIoVEYP+Ik4iKYK5XXrlu/Qd/q/t7fIt23IeTQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sjrCixX4; arc=none smtp.client-ip=91.218.175.185
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=truemaisha.co.tz header.i=@truemaisha.co.tz header.b="k0I13ye4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=truemaisha.co.tz; s=default; h=Content-Transfer-Encoding:Content-Type:
-	MIME-Version:Message-ID:Date:Subject:To:From:Reply-To:Sender:Cc:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=gl4+7vNxgV9+JzZtw7EthQ6aGDgi0WVn3wQV/lnKiyo=; b=k0I13ye4bUcn8sX89+UeeoTm2e
-	bu2dyPsSfo1tOJhx26RJ2yL83+pVoFq1QRjoYAanz5E5Iqgu0rjk+wYFT2mo7frXbwk+byQQVR/dF
-	Ij5GLP2qWcSsd76yJwg+MuKK3nAvD3cXPgPk9Fz1SM+IeXHouox/f7AOKQVSTJQuMbA3uYTMm0grw
-	sf+MRatarKSThFEAWXG2hdDQXO95SapuOIEBHfLV1A596g+2aeCooWbpYYxFBZyrL2WnjNYacgAMq
-	j3nOJBoEeshVh1mc61VJvEt1SDEsL0+VqkP1y6v3Zm5Z0qQXsJXrocD5RgRDQ3JFJSn2VoFMAqLF/
-	Rucx3WYw==;
-Received: from [74.208.124.33] (port=59611 helo=truemaisha.co.tz)
-	by server-598995.kolorio.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96.2)
-	(envelope-from <chrispinerick@truemaisha.co.tz>)
-	id 1tgt0p-00042C-1m
-	for linux-scsi@vger.kernel.org;
-	Sat, 08 Feb 2025 16:09:20 -0600
-Reply-To: dsong@aa4financialservice.com
-From: David Song <chrispinerick@truemaisha.co.tz>
-To: linux-scsi@vger.kernel.org
-Subject: Re: The business loan- 
-Date: 08 Feb 2025 22:09:21 +0000
-Message-ID: <20250208210542.52BAFB17AAFB8A78@truemaisha.co.tz>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sjrCixX4"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1739089198;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=+/UAtcwdNDbosvRuOX3rbZT3Z7BQiIpDmAOnfimnv2I=;
+	b=sjrCixX4XSpZNuhF47M0iKpTrpvPoj0zFITezNGPRhO070FVrIx5IkL9O2QZMGPLktGSY4
+	nPvtkPH/dsiZx+wwrWiyqVBuMMePEJsfQZNrnKuLOGseD35Kysur3mFcmwQC0ZMem7ZWJc
+	i53WyJEYyyH0xsyzwD2wJWfe7gUs2kk=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH] scsi: aha1740: Use str_enabled_disabled() helper
+Date: Sun,  9 Feb 2025 09:19:28 +0100
+Message-ID: <20250209081928.3096-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - server-598995.kolorio.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - truemaisha.co.tz
-X-Get-Message-Sender-Via: server-598995.kolorio.com: authenticated_id: chrispinerick@truemaisha.co.tz
-X-Authenticated-Sender: server-598995.kolorio.com: chrispinerick@truemaisha.co.tz
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Hello,
+Remove hard-coded strings by using the str_enabled_disabled() helper
+function.
 
-My name is David Song, at AA4 FS, we are a consultancy and
-brokerage Firm specializing in Growth Financial Loan and joint
-partnership venture. We specialize in investments in all Private
-and public sectors in a broad range of areas within our Financial
-Investment Services.
+Use pr_info() instead of printk(KERN_INFO) to silence multiple
+checkpatch warnings.
 
- We are experts in financial and operational management, due
-diligence and capital planning in all markets and industries. Our
-Investors wish to invest in any viable Project presented by your
-Management after reviews on your Business Project Presentation
-Plan.
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+ drivers/scsi/aha1740.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
- We look forward to your Swift response. We also offer commission
-to consultants and brokers for any partnership referrals.
-
- Regards,
-David Song
-Senior Broker
-
-AA4 Financial Services
-13 Wonersh Way, Cheam,
-Sutton, Surrey, SM2 7LX
-Email: dsong@aa4financialservice.com
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index be7ebbbb9ba8..c21286eaa8a1 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -114,9 +114,9 @@ static int aha1740_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
+ {
+ 	struct aha1740_hostdata *host = HOSTDATA(shpnt);
+ 	seq_printf(m, "aha174x at IO:%lx, IRQ %d, SLOT %d.\n"
+-		      "Extended translation %sabled.\n",
++		      "Extended translation %s.\n",
+ 		      shpnt->io_port, shpnt->irq, host->edev->slot,
+-		      host->translation ? "en" : "dis");
++		      str_enabled_disabled(host->translation));
+ 	return 0;
+ }
+ 
+@@ -578,10 +578,10 @@ static int aha1740_probe (struct device *dev)
+ 		outb(G2CNTRL_HRST, G2CNTRL(slotbase));
+ 		outb(0, G2CNTRL(slotbase));
+ 	}
+-	printk(KERN_INFO "Configuring slot %d at IO:%x, IRQ %u (%s)\n",
+-	       edev->slot, slotbase, irq_level, irq_type ? "edge" : "level");
+-	printk(KERN_INFO "aha174x: Extended translation %sabled.\n",
+-	       translation ? "en" : "dis");
++	pr_info("Configuring slot %d at IO:%x, IRQ %u (%s)\n",
++		edev->slot, slotbase, irq_level, irq_type ? "edge" : "level");
++	pr_info("aha174x: Extended translation %s.\n",
++		str_enabled_disabled(translation));
+ 	shpnt = scsi_host_alloc(&aha1740_template,
+ 			      sizeof(struct aha1740_hostdata));
+ 	if(shpnt == NULL)
+-- 
+2.48.1
 
