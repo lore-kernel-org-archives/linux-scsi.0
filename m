@@ -1,150 +1,168 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69ED1C6FE3
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 10:13:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCD4816BE3A;
+	Mon, 10 Feb 2025 11:09:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739182428; cv=none; b=INqaqQnX1LnpxNs9MxjnnoNEEAhw7qVD2QIXDjtQSqPjW+PcjSeiucJQBcG8uo1Pz2A56pIpXEXl1Cde9TBxN+QEGmCmfcdh2Tu/ndh9KB7XVvoLsdd3XKZ9wgCcpRjVAQylJ891ZjC6QnGLO+Dp+qwjBp5OWFdXYqdyS4PP6vo=
+	t=1739185763; cv=none; b=mOYhjnujuu5J7to5uI1rMHIiKf6uLIB/QJVDM6AqONmNocUqTn7XVLMvCv3PawiJ+RY2d6wIbYmPDxXBIDgBCbc0T+um26hkrNweSKeZVdgVhp0jdwKy/BOC2LBvoP16uBlWlrLvWDWVWj4dSxRSWNcXMzwzRRH5s/AnTHCurjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739182428; c=relaxed/simple;
-	bh=yj9rNLDdRjUxGP5fU6NuyeHJVUHXyiKig/1natwetyo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qVgKNhOGA5dlb4ZXtXqfU/Mp3FAAS11X5s2HhqjoVbegq0URNdMZNLD/f3UiDT+If85vOD7VcGupu+TOM/fd0O2/5RHlMnq5+FmxNxFwfLR7/u9vi8+RtasLtE3TgMxG0yQzam9rw3RbzEznjkupTfEpZB95wPeeTOLxC3tP8bw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mj5b6uYH; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1739185763; c=relaxed/simple;
+	bh=fiAmj02tnY4RlOfIc3fnucfwbpXcpZX1q76PPA5gZTA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=YHMqbl/A8p/oKaduqSHfV+Ro60BVNWjINF8tdDDgnxufLlvwaNgr51C39tYBEOJpom1GKvkHP7jf4gTHMYfWwxmoZjJxlCvSKD3HXP9tHZmd/H44SiWVp5/tPdAXxO9dhom5ElCmcPe0W9rxyMPThpS01evUhqnuJzflq25JwoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=LbTsaX1E; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mj5b6uYH"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-21f62cc4088so35675855ad.3
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 02:13:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1739182425; x=1739787225; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=YVno5Sq7zwbs75yBnVZY8GdclIkXa079v3wSCbF6j08=;
-        b=mj5b6uYHOl13szZ59naCjJ0synW1GL5Tae4JBeX43Ddwjmg7kdxrW2GON3IG0bw4iR
-         UMLdf0ef6S/IxmYfxDugx8BThvXDR5LnO0E9njC02HCRLZLr8JqMdws2Nq8T9STbmgo/
-         rLsDDNDmL6WMEebre6TxDHkgoJ78id9L9pqb0akSOtDKRTAyJYNK+xM5+2ArSp752RUS
-         CLF4rrtdGAHv9FXgefNkVb+7tc7up86Wbzsq1KTuUc2Bi1/5VIWJ4GZrR3OOwnSf55DM
-         2IolmAJUUAz/f1L0dsVtVmRO9u//7tS4486HvFHiBNSi2VCDGaz0g0bjPB/W5u5f/1QU
-         V8Lw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739182425; x=1739787225;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YVno5Sq7zwbs75yBnVZY8GdclIkXa079v3wSCbF6j08=;
-        b=InVylDKgCcuhnW0U8WBUnA/Ke741pR/ApmQ0SLZV3pCf9sDXKevY+SZF66ipAcYwS0
-         I74TvK8MVS2fc2giMMAXdnKm+JT7RcpmxMKH3CM22PUGGEZIHkKaWZMdi/Jc2d3XcaHE
-         d3Hv+U7rSjq88+RPnZ3TjQcGbMNdh1Opy5BlF26QI6CO5L70vtyKD1sld1eSR67EPjiy
-         ZZ3sSyh1yUrYoaKzVAUzDy7phliq6/BpPAhSmoDbCJJOLWIdDyoRKuKfATkoIDdT9MFD
-         FBaJ8SjZkZep1Z5xno6iUvgBPGvXpyBtePsRc+1+U9EhlvvumXBAUYFI1HANA4d+AM/8
-         n3Gg==
-X-Forwarded-Encrypted: i=1; AJvYcCUJC/Q00UMClfHGGuP3Y1NaM0uXsVpU7uEhmPwP8l0Xk7osGbxtYDKJ23IQzFNpP1iD0s1KC4DCU+NI@vger.kernel.org
-X-Gm-Message-State: AOJu0YzGQoFYIF5HtjejXUS1vMWwXYZuxYOd6kYKnbRF+2SJWq08TTtW
-	WDXhholh4dI3dWwmvgCxAvvm3GMerMfH0nDH1fCdWroXupo6oj8D8+EhOga+5o5TsLIQSp6qnzk
-	=
-X-Gm-Gg: ASbGncu39ZB6RNYGFNSDagJ0EBYScSFFldtAPkGKkaq/OF+3nc2AK+cm3/oW+bKrh0v
-	hS3A5kSMQBQZNP73tegoFcGsGaWbsODajjtODYPGis4YuBk19+/Rtz0wWYOlphVevbDWOge4KB1
-	9Y3sKdVwZhsQRP8N0aTJhEe7DfOSQhC7ww8fv+wMM7qNqp/iicQbxfhfG1i37poeN7rkxmoioAT
-	uMT/VtFLaXn/o6dGGA35PDfl3gcIa7HK+NtY/p3rK6X/VXSI9sUFDF3CjK+l0MjBZQAcI0qetiE
-	yUuW4BkjmteOznl8yJAd539MICYR
-X-Google-Smtp-Source: AGHT+IGUVt1XLeTQyYh8zx2PixPGHrQEZjH5CD8Qy4yBx4PREyPgzsVLxt7fw++6KdqziWtaewNdvA==
-X-Received: by 2002:a05:6a20:d705:b0:1ed:a72f:dab5 with SMTP id adf61e73a8af0-1ee03b64561mr26246724637.36.1739182425181;
-        Mon, 10 Feb 2025 02:13:45 -0800 (PST)
-Received: from thinkpad ([220.158.156.173])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ad54e4a0049sm2072320a12.63.2025.02.10.02.13.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Feb 2025 02:13:44 -0800 (PST)
-Date: Mon, 10 Feb 2025 15:43:38 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: neil.armstrong@linaro.org, quic_cang@quicinc.com
-Cc: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Melody Olvera <quic_molvera@quicinc.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Andy Gross <agross@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>,
-	Trilok Soni <quic_tsoni@quicinc.com>, linux-arm-msm@vger.kernel.org,
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Manish Pandey <quic_mapa@quicinc.com>
-Subject: Re: [PATCH 0/5] Add UFS support for SM8750
-Message-ID: <20250210101338.boziqlrxl2cei775@thinkpad>
-References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
- <c6352263-8329-4409-b769-a22f98978ac8@oss.qualcomm.com>
- <20250209152140.cyry6g7ltccxcmyj@thinkpad>
- <ae9ba351-53c8-4389-b13b-7b23926a8390@linaro.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="LbTsaX1E"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51AA7axe003521;
+	Mon, 10 Feb 2025 11:09:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ggBUKbTWnZ2Htvo1oilHaJI1DyEA5fb4ePZIIAtLG2w=; b=LbTsaX1Ejs6VpnLq
+	UM1hJK8+3iuKDJKQeKh6AItSyWUKG8CwybY0ku2Y+Jo+WNJJMKBzmLe7CEoDCBCa
+	5RIDoC+Au7JFq344Qbesl3jBxZ8ZnGxk1dmoXR+V1uywbEo68Ps8zBzgWOCJbtlQ
+	Z+4ny81sMgg4v8ur5BvD3U249BUBaoOQmk9qru80jXTgayEjn0N+w0ejKT5JQuo8
+	pAbzlPHPFE/96xLcN2ecfm5isxofO8PvuqeZdOdlkhHPgIB8/DiJUd9E7pUGrMGR
+	w+uzeS5BKLAWGQMn/LQ7tRKPf0Xe1FrRPGW+JJ9swDJhUf130/xOF/j11MGeX58S
+	Y/s+pg==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44p0dym2ne-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 10 Feb 2025 11:09:09 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51AB98Gt022894
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 10 Feb 2025 11:09:08 GMT
+Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 10 Feb
+ 2025 03:09:00 -0800
+Message-ID: <e7381931-aa58-4fe9-b96c-4f4226e02371@quicinc.com>
+Date: Mon, 10 Feb 2025 16:38:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ae9ba351-53c8-4389-b13b-7b23926a8390@linaro.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/5] Add UFS support for SM8750
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        <neil.armstrong@linaro.org>, <quic_cang@quicinc.com>
+CC: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Melody Olvera
+	<quic_molvera@quicinc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        "Kishon Vijay
+ Abraham I" <kishon@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        "Krzysztof
+ Kozlowski" <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        "Alim
+ Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Bart
+ Van Assche" <bvanassche@acm.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        "Andy Gross" <agross@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        "Satya Durga Srinivasu Prabhala" <quic_satyap@quicinc.com>,
+        Trilok Soni
+	<quic_tsoni@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Manish Pandey
+	<quic_mapa@quicinc.com>
+References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
+ <c6352263-8329-4409-b769-a22f98978ac8@oss.qualcomm.com>
+ <20250209152140.cyry6g7ltccxcmyj@thinkpad>
+ <ae9ba351-53c8-4389-b13b-7b23926a8390@linaro.org>
+ <20250210101338.boziqlrxl2cei775@thinkpad>
+Content-Language: en-US
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20250210101338.boziqlrxl2cei775@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: tf5xNFri-tkr3gQKi4kRaPgBcrEAm_IK
+X-Proofpoint-GUID: tf5xNFri-tkr3gQKi4kRaPgBcrEAm_IK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-10_05,2025-02-10_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ clxscore=1011 lowpriorityscore=0 impostorscore=0 mlxlogscore=999
+ mlxscore=0 priorityscore=1501 spamscore=0 adultscore=0 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2501170000 definitions=main-2502100093
 
-+ Can (for the MCQ query)
 
-On Mon, Feb 10, 2025 at 10:39:04AM +0100, neil.armstrong@linaro.org wrote:
-> On 09/02/2025 16:21, Manivannan Sadhasivam wrote:
-> > On Fri, Feb 07, 2025 at 11:47:12PM +0100, Konrad Dybcio wrote:
-> > > On 13.01.2025 10:46 PM, Melody Olvera wrote:
-> > > > Add UFS support for SM8750 SoCs.
-> > > > 
-> > > > Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
-> > > > ---
-> > > > Nitin Rawat (5):
-> > > >        dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Document the SM8750 QMP UFS PHY
-> > > >        phy: qcom-qmp-ufs: Add PHY Configuration support for SM8750
-> > > >        dt-bindings: ufs: qcom: Document the SM8750 UFS Controller
-> > > >        arm64: dts: qcom: sm8750: Add UFS nodes for SM8750 SoC
-> > > >        arm64: dts: qcom: sm8750: Add UFS nodes for SM8750 QRD and MTP boards
-> > > 
-> > > You still need the same workaround 8550/8650 have in the UFS driver
-> > > (UFSHCD_QUIRK_BROKEN_LSDBS_CAP) for it to work reliably, or at least
-> > > that was the case for me on a 8750 QRD.
-> > > 
-> > > Please check whether we can make that quirk apply based on ctrl
-> > > version or so, so that we don't have to keep growing the compatible
-> > > list in the driver.
-> > > 
-> > 
-> > That would be a bizarre. When I added the quirk, I was told that it would affect
-> > only SM8550 and SM8650 (this one I learned later). I'm not against applying the
-> > quirk based on UFSHC version if the bug is carried forward, but that would be an
-> > indication of bad design.
+
+On 2/10/2025 3:43 PM, Manivannan Sadhasivam wrote:
+> + Can (for the MCQ query)
 > 
-> Isn't 8750 capable of using MCQ now ? because this is the whole issue behind
-> this UFSHCD_QUIRK_BROKEN_LSDBS_CAP, it's supposed to use MCQ by default... but
-> we don't.
+> On Mon, Feb 10, 2025 at 10:39:04AM +0100, neil.armstrong@linaro.org wrote:
+>> On 09/02/2025 16:21, Manivannan Sadhasivam wrote:
+>>> On Fri, Feb 07, 2025 at 11:47:12PM +0100, Konrad Dybcio wrote:
+>>>> On 13.01.2025 10:46 PM, Melody Olvera wrote:
+>>>>> Add UFS support for SM8750 SoCs.
+>>>>>
+>>>>> Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
+>>>>> ---
+>>>>> Nitin Rawat (5):
+>>>>>         dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Document the SM8750 QMP UFS PHY
+>>>>>         phy: qcom-qmp-ufs: Add PHY Configuration support for SM8750
+>>>>>         dt-bindings: ufs: qcom: Document the SM8750 UFS Controller
+>>>>>         arm64: dts: qcom: sm8750: Add UFS nodes for SM8750 SoC
+>>>>>         arm64: dts: qcom: sm8750: Add UFS nodes for SM8750 QRD and MTP boards
+>>>>
+>>>> You still need the same workaround 8550/8650 have in the UFS driver
+>>>> (UFSHCD_QUIRK_BROKEN_LSDBS_CAP) for it to work reliably, or at least
+>>>> that was the case for me on a 8750 QRD.
+>>>>
+>>>> Please check whether we can make that quirk apply based on ctrl
+>>>> version or so, so that we don't have to keep growing the compatible
+>>>> list in the driver.
+>>>>
+>>>
+>>> That would be a bizarre. When I added the quirk, I was told that it would affect
+>>> only SM8550 and SM8650 (this one I learned later). I'm not against applying the
+>>> quirk based on UFSHC version if the bug is carried forward, but that would be an
+>>> indication of bad design.
+>>
+>> Isn't 8750 capable of using MCQ now ? because this is the whole issue behind
+>> this UFSHCD_QUIRK_BROKEN_LSDBS_CAP, it's supposed to use MCQ by default... but
+>> we don't.
+>>
+>> Is there any news about that ? It's a clear regression against downstream, not
+>> having MCQ makes the UFS driver struggle to reach high bandwidth when the system
+>> is busy because we can't spread the load over all CPUs and we have only single
+>> queue to submit requests.
+>>
 > 
-> Is there any news about that ? It's a clear regression against downstream, not
-> having MCQ makes the UFS driver struggle to reach high bandwidth when the system
-> is busy because we can't spread the load over all CPUs and we have only single
-> queue to submit requests.
+> There are hardware issues on SM8550 and SM8650(?) for the MCQ feature.
+> Apparently, Qcom carries the workaround in downstream, but I got tired of
+> pushing them to upstream the fix(es).
+> 
+> Maybe Can Guo can share what is the latest update on this.
+> 
+> - Mani
 > 
 
-There are hardware issues on SM8550 and SM8650(?) for the MCQ feature.
-Apparently, Qcom carries the workaround in downstream, but I got tired of
-pushing them to upstream the fix(es).
+Hi Mani,
 
-Maybe Can Guo can share what is the latest update on this.
+I have already replied to konrad mail earlier in this thread.
 
-- Mani
+The LSDBS workaround is only applicable for SM8650 and SM8550.
+SM8750 and onwards doesn't need this WA anymore as it is fixed in HW.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Regards,
+Nitin
+
