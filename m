@@ -1,37 +1,37 @@
-Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
+Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDD225E446
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 19:14:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D161725E446
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 19:14:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739214850; cv=none; b=QFfhmGYTMj3z8yxE3qczWsJ0KeEz1vdLJz+fT/th9XSGOMmezr+AJcF+sKMb8Z2rG1OtBT8b1CDhYZiGVf1ioemlT9qgtD4oSNjLEH9TXqQekVHf6b6Fuu1UZwxFTvRBZ1vpr60v1WZ28qFG+6A96txZBOj+S75BTqLyYFdhsWE=
+	t=1739214856; cv=none; b=CcvxstDUrLIcU+7zivetmX7wVkrXV65ndxLeRuvVCI/rlE4x4KGB8m32Fk/YhuQzMgpGeceOQD+By2ITwie1ncMmWkA5fP00+ihvClWiFfQrwBE/a3MCsF6PcBtXcyxnc2xyknxnHBOoTqQKBTGbs9VKuMO0s3EsXt4kIcPs+rI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739214850; c=relaxed/simple;
-	bh=YnMzgrrGTHFRNSeC9OtOmHTI5f+OPlZ3b9JpXoUOztQ=;
+	s=arc-20240116; t=1739214856; c=relaxed/simple;
+	bh=Sm7IN6OjuyvuCp3zAPq9wKH5coDLhTZ5pP7CVdU9XYs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sjRLyeNlw80r8eJApSGWmzX81OLjlyu7EtFvR2c0XRQtedOLxWP2BIu8IjwtNCqbH5GxY9XlEEtuUEzPKyfHothD3+yXK/jLKi/X0wq5XML9FClCjLwXwz2wN2hCVRYgaaMUKQ6Z/JKHu7YnaYqCoD8wG0MaXi1etjDBhzNZUFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=GxY5bWKk; arc=none smtp.client-ip=62.142.5.107
+	 MIME-Version:Content-Type; b=PYMnLpT/+hcLy6ay8FRK7mjw582oHRt7wzCbEGO0baSCtbnwJ6ocGxINH/f9+qIk4iQsDPBeWVA9meL3X8TpWmkaw/CRiVEuhCC7oCHjjiE6U3k29KROhxKtI6Lnl7CiHmGbmxEJyiT0M+fSIhz860s7qZm/I+BSH4zXDLt0hCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=GvKbXdiw; arc=none smtp.client-ip=62.142.5.108
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="GxY5bWKk"
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="GvKbXdiw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=kolumbus.fi; s=elisa1;
 	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
 	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
 	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
 	 content-type:content-transfer-encoding:message-id;
-	bh=qj0DzGCRqFg1nIu8AxmR96KboRXll30H+CcV3RMRLr4=;
-	b=GxY5bWKkhAHODqMO+7stLKgpDl4q3scyh4UW1M4ohGT4gCKfKNBlX3utiXcUWNnAVZ6Gtw72EwOMs
-	 SwUhnc+WgT5p8NDo1/kGAMrtsXS7++eIBvZhFHMrEq6YksKt7QMEuvvc2QBZsAbjIKK1uiQlrTEtd6
-	 PzxklEGr8URgB7TSx13orZ/xPOXPlA2TGfioZGCX8zwNaQAs1krITGPRkUD3UiL1KJg11fQ+IQ1MnC
-	 ZZmEE4AQrmwYFcyyRbuQVbVJg+mQXjdpKzlShuzeyESKWDGJm04/FbwlG4jBVH76XofDXZDEj7RccZ
-	 Fp+QP7mFQm47SfFeztHvH7duqS0wPlA==
+	bh=6dXcHzi9xaLc+pikCiJ9XeH6FMlzv/5MbU6w97LyEzE=;
+	b=GvKbXdiw+dDSPuL5HE36oWF6skaBRGF0Th4PVb31LRi4uHvKspyiZB9xsbhCIiu2xQfhmW6OUiQpw
+	 LvELcU6WGzSHCqCz3YVsclb6SPZ/gMbNpoiMDxZUxNuG2rot/fXsj+n3GTNdkcNTFwUuMLbeEaSH88
+	 LYczVn5e11Pfef2z2jDRcTD4zaHVBWJf4srZicjru0hyDfvR/Isb8ar6Qq7S13jxS5M9F9SmmeOY4I
+	 prv7HL8ABs2XddPHEAkvJHG0JFj4q0Kp9LjdM0Sa233F6eJQlgblCI11NOJrbg0CALE+tcKsixdQU0
+	 cZNofioJVisOJdWXFRn4brze/PckOhw==
 Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
 	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 09bdeef1-e7e3-11ef-a27d-005056bdfda7;
-	Mon, 10 Feb 2025 21:12:57 +0200 (EET)
+	id 034aa672-e7e3-11ef-a27d-005056bdfda7;
+	Mon, 10 Feb 2025 21:12:47 +0200 (EET)
 From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
 To: linux-scsi@vger.kernel.org,
 	dgilbert@interlog.com
@@ -39,9 +39,9 @@ Cc: martin.petersen@oracle.com,
 	James.Bottomley@HansenPartnership.com,
 	jmeneghi@redhat.com,
 	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH v1 5/7] scsi: scsi_debug: Add compression mode page for tapes
-Date: Mon, 10 Feb 2025 21:12:30 +0200
-Message-ID: <20250210191232.185207-6-Kai.Makisara@kolumbus.fi>
+Subject: [PATCH v1 1/7] scsi: scsi_debug: First fixes for tapes
+Date: Mon, 10 Feb 2025 21:12:26 +0200
+Message-ID: <20250210191232.185207-2-Kai.Makisara@kolumbus.fi>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
 References: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
@@ -54,86 +54,148 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Add support for compression mode page. The compression status
-is saved and returned. No UA is generated.
+Patch includes the following:
+- enable MODE SENSE/SELECT without actual page (to read/write only
+  the Block Descriptor)
+- store the density code and block size in the Block Descriptor
+  (only short version for tapes)
+- fix REWIND not to use the wrong page filling function
 
 Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 ---
- drivers/scsi/scsi_debug.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ drivers/scsi/scsi_debug.c | 55 ++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 49 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 691b573b105b..7b84acebe0fe 100644
+index 5ceaa4665e5d..4da0c259390b 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -405,6 +405,7 @@ struct sdebug_dev_info {
- 	unsigned int tape_density;
- 	unsigned char tape_partition;
- 	unsigned char tape_nbr_partitions;
-+	unsigned char tape_dce;
- 	unsigned int tape_location[TAPE_MAX_PARTITIONS];
- 	unsigned int tape_eop[TAPE_MAX_PARTITIONS];
- 	struct tape_block *tape_blocks[TAPE_MAX_PARTITIONS];
-@@ -2843,6 +2844,20 @@ static int resp_partition_m_pg(unsigned char *p, int pcontrol, int target)
- 	return sizeof(partition_pg);
- }
+@@ -173,6 +173,10 @@ static const char *sdebug_version_date = "20210520";
+ #define DEF_ZBC_MAX_OPEN_ZONES	8
+ #define DEF_ZBC_NR_CONV_ZONES	1
  
-+static int resp_compression_m_pg(unsigned char *p, int pcontrol, int target,
-+	unsigned char dce)
-+{	/* Compression page for mode_sense (tape) */
-+	unsigned char compression_pg[] = {0x0f, 14, 0x40, 0, 0, 0, 0, 0,
-+		0, 0, 0, 0, 00, 00};
++/* Default parameters for tape drives */
++#define TAPE_DEF_DENSITY  0x0
++#define TAPE_DEF_BLKSIZE  0
 +
-+	memcpy(p, compression_pg, sizeof(compression_pg));
-+	if (dce)
-+		p[2] |= 0x80;
-+	if (pcontrol == 1)
-+		memset(p + 2, 0, sizeof(compression_pg) - 2);
-+	return sizeof(compression_pg);
-+}
-+
- /* PAGE_SIZE is more than necessary but provides room for future expansion. */
- #define SDEBUG_MAX_MSENSE_SZ PAGE_SIZE
+ #define SDEBUG_LUN_0_VAL 0
  
-@@ -2983,6 +2998,12 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 		}
- 		offset += len;
- 		break;
-+	case 0xf:	/* Compression Mode Page (tape) */
-+		if (!is_tape)
-+			goto bad_pcode;
-+		len += resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
-+		offset += len;
-+		break;
- 	case 0x11:	/* Partition Mode Page (tape) */
- 		if (!is_tape)
- 			goto bad_pcode;
-@@ -3143,6 +3164,14 @@ static int resp_mode_select(struct scsi_cmnd *scp,
- 			goto set_mode_changed_ua;
- 		}
- 		break;
-+	case 0xf:       /* Compression mode page */
-+		if (sdebug_ptype != TYPE_TAPE)
-+			goto bad_pcode;
-+		if ((arr[off + 2] & 0x40) != 0) {
-+			devip->tape_dce = (arr[off + 2] & 0x80) != 0;
-+			return 0;
+ /* bit mask values for sdebug_opts */
+@@ -363,6 +367,10 @@ struct sdebug_dev_info {
+ 	ktime_t create_ts;	/* time since bootup that this device was created */
+ 	struct sdeb_zone_state *zstate;
+ 
++	/* For tapes */
++	unsigned int tape_blksize;
++	unsigned int tape_density;
++
+ 	struct dentry *debugfs_entry;
+ 	struct spinlock list_lock;
+ 	struct list_head inject_err_list;
+@@ -773,7 +781,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
+ /* 20 */
+ 	{0, 0x1e, 0, 0, NULL, NULL, /* ALLOW REMOVAL */
+ 	    {6,  0, 0, 0, 0x3, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+-	{0, 0x1, 0, 0, resp_start_stop, NULL, /* REWIND ?? */
++	{0, 0x1, 0, 0, NULL, NULL, /* REWIND ?? */
+ 	    {6,  0x1, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* ATA_PT */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+@@ -2742,7 +2750,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 	unsigned char *ap;
+ 	unsigned char *arr __free(kfree);
+ 	unsigned char *cmd = scp->cmnd;
+-	bool dbd, llbaa, msense_6, is_disk, is_zbc;
++	bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
+ 
+ 	arr = kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
+ 	if (!arr)
+@@ -2755,7 +2763,8 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 	llbaa = msense_6 ? false : !!(cmd[1] & 0x10);
+ 	is_disk = (sdebug_ptype == TYPE_DISK);
+ 	is_zbc = devip->zoned;
+-	if ((is_disk || is_zbc) && !dbd)
++	is_tape = (sdebug_ptype == TYPE_TAPE);
++	if ((is_disk || is_zbc || is_tape) && !dbd)
+ 		bd_len = llbaa ? 16 : 8;
+ 	else
+ 		bd_len = 0;
+@@ -2793,15 +2802,25 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 			put_unaligned_be32(0xffffffff, ap + 0);
+ 		else
+ 			put_unaligned_be32(sdebug_capacity, ap + 0);
+-		put_unaligned_be16(sdebug_sector_size, ap + 6);
++		if (is_tape) {
++			ap[0] = devip->tape_density;
++			put_unaligned_be16(devip->tape_blksize, ap + 6);
++		} else
++			put_unaligned_be16(sdebug_sector_size, ap + 6);
+ 		offset += bd_len;
+ 		ap = arr + offset;
+ 	} else if (16 == bd_len) {
++		if (is_tape) {
++			mk_sense_invalid_fld(scp, SDEB_IN_DATA, 1, 4);
++			return check_condition_result;
 +		}
-+		break;
- 	case 0x1c:      /* Informational Exceptions Mode page */
- 		if (iec_m_pg[1] == arr[off + 1]) {
- 			memcpy(iec_m_pg + 2, arr + off + 2,
-@@ -3158,6 +3187,10 @@ static int resp_mode_select(struct scsi_cmnd *scp,
- set_mode_changed_ua:
- 	set_bit(SDEBUG_UA_MODE_CHANGED, devip->uas_bm);
- 	return 0;
-+
-+bad_pcode:
-+	mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 5);
-+	return check_condition_result;
- }
+ 		put_unaligned_be64((u64)sdebug_capacity, ap + 0);
+ 		put_unaligned_be32(sdebug_sector_size, ap + 12);
+ 		offset += bd_len;
+ 		ap = arr + offset;
+ 	}
++	if (cmd[2] == 0)
++		goto only_bd; /* Only block descriptor requested */
  
- static int resp_temp_l_pg(unsigned char *arr)
+ 	/*
+ 	 * N.B. If len>0 before resp_*_pg() call, then form of that call should be:
+@@ -2902,6 +2921,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 	default:
+ 		goto bad_pcode;
+ 	}
++only_bd:
+ 	if (msense_6)
+ 		arr[0] = offset - 1;
+ 	else
+@@ -2945,8 +2965,27 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+ 			    __func__, param_len, res);
+ 	md_len = mselect6 ? (arr[0] + 1) : (get_unaligned_be16(arr + 0) + 2);
+ 	bd_len = mselect6 ? arr[3] : get_unaligned_be16(arr + 6);
+-	off = bd_len + (mselect6 ? 4 : 8);
+-	if (md_len > 2 || off >= res) {
++	off = (mselect6 ? 4 : 8);
++	if (sdebug_ptype == TYPE_TAPE) {
++		int blksize;
++
++		if (bd_len != 8) {
++			mk_sense_invalid_fld(scp, SDEB_IN_DATA,
++					mselect6 ? 3 : 6, -1);
++			return check_condition_result;
++		}
++		blksize = get_unaligned_be16(arr + off + 6);
++		if ((blksize % 4) != 0) {
++			mk_sense_invalid_fld(scp, SDEB_IN_DATA, off + 6, -1);
++			return check_condition_result;
++		}
++		devip->tape_density = arr[off];
++		devip->tape_blksize = blksize;
++	}
++	off += bd_len;
++	if (off >= res)
++		return 0; /* No page written, just descriptors */
++	if (md_len > 2) {
+ 		mk_sense_invalid_fld(scp, SDEB_IN_DATA, 0, -1);
+ 		return check_condition_result;
+ 	}
+@@ -5835,6 +5874,10 @@ static struct sdebug_dev_info *sdebug_device_create(
+ 		} else {
+ 			devip->zoned = false;
+ 		}
++		if (sdebug_ptype == TYPE_TAPE) {
++			devip->tape_density = TAPE_DEF_DENSITY;
++			devip->tape_blksize = TAPE_DEF_BLKSIZE;
++		}
+ 		devip->create_ts = ktime_get_boottime();
+ 		atomic_set(&devip->stopped, (sdeb_tur_ms_to_ready > 0 ? 2 : 0));
+ 		spin_lock_init(&devip->list_lock);
 -- 
 2.43.0
 
