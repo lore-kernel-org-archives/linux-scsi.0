@@ -1,37 +1,37 @@
-Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
+Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9053B25E462
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 19:13:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B49425E462
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 19:13:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739214810; cv=none; b=uJMsJgg/vl1ndqVev1pTubC05OV0y58nS0PdnOFYtfr9/+RU//Vw8kg4bUCixXGRD43ylON7liJqcxDf0cdrzA2bOkTbr6oI6zOgu8lYpukJzqyc7EWQW2aHF8Jzb5yZ/wtQqzXKL31QlO09giM7IQiPfWcOXGnE9a64IR3xp7M=
+	t=1739214814; cv=none; b=ElzMRIjuamuFNnfd8Ow57DCg59urYsln6NKJ4bMLH6GSUM65eLQSpafvhiH8e3Wp6zeFtyjpKxWyQ8fGCphRMat1UbuJ+eDKW1JAHkb7QVDYo8k/zMsuh3kYLM69195mFIR9gSdYuHcKOHsZeeO+1tJ/V9eA0z/T8ZkogF1Cre4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739214810; c=relaxed/simple;
-	bh=Uay3+Ak7kYgYiIXTqpY62DTxR6Fux2vOMtMQnM+m3FI=;
+	s=arc-20240116; t=1739214814; c=relaxed/simple;
+	bh=/uyHflSkAdB1x/fjyR6RgpVK9UVGm5LzaKdkGSyIxvI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n25KuarUBJjsF/6Xyo+vpzbY+vn/RWJlngm2t+bZkgNmgBcb4xQiiCUEVO9OkVz6l1gM50zoVK90k7SZ4B5foRDSo9DURunPJA+BkVnA1ZRlNuZcZGUe7tgDe6NcxxOf6W4y73x1HM/FSs38Zn8ID0nMAi5lcTP/rsRzUFHRtY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=s8Ziri2x; arc=none smtp.client-ip=62.142.5.107
+	 MIME-Version:Content-Type; b=AVyl3k+4fjK03CCc63AMbItE7z6LIuKC988zpRNkwiJqx9i5qpJdes2ARAqwsD9i4wW20mEHPBS0ZKEoU+4BZ06VsNpj1oGkf8+7XwRzj9NkzqxTgGQ7+9JEEsGZf/t0jq54rFsYZtZn+94ey8R+vK4AwIuRDOKHeWZYdL+9FiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=L+lMkQcq; arc=none smtp.client-ip=62.142.5.110
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="s8Ziri2x"
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="L+lMkQcq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=kolumbus.fi; s=elisa1;
 	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
 	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
 	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
 	 content-type:content-transfer-encoding:message-id;
-	bh=x9VIg+82BJC1J0x63yXdLA12JHTnquXBgqt8VFHkAsQ=;
-	b=s8Ziri2xPgIV0ivzzHXSl14DvYcQkSa1IHaKfpTidTYORPBBX1fHDT6qBSZfUiQs8WnM8eAl/rgZw
-	 KSPXT/dF9XhqNYhYf+nvNQ0RUuQQw1S7sjbvlOMBbI36/KO87fadbxTH46wun72SRuVEabf5SqVGKC
-	 aT7dptt2lQfEKbGNm33xHWkTH1BFaqiV1mNORJLIKyZg9jECBY+VbRPYXRJxjFXucsTQuGm3WrXGEp
-	 ETnLnPW8XECunwFR/J2DMm7fVHdtmpSiOyt0QIJUDFVR8gmmSzBYDds5N+buERyxkhprP+5CXyyPf+
-	 j85uyKywjDWvHRe+e/QUJXsfpLn/j6Q==
+	bh=XkL0AyJp5ne+YUqsZ0CecZUiRuLe8YpPgi7l+K0WGGA=;
+	b=L+lMkQcqeZ+zj3Cb9GFknZjAIXbVNg12cJmizMJBlqgWd6atOEINUFPQXKHcgJCEuXZjnstKrG/pH
+	 LvJGR+8IXFA7IZM1Lt+VbXoMCx6QXbHJPLPxoIEWmxrivNPW8eCClimsbVWIOcr6er35SUsjRtI+Ks
+	 Be3LTMkaEfSEIqb/7XX7m9X2/jMbMg/1arIdDGbKMB73i+Fgxd4V/QYLsq1dMkPbYnR5rrFGyiFt5s
+	 6u8VH0XNjSFB/Nz1zwm6K/D5Q7uYvyV1xz+h5EDBOmEMPWEolgnPe/CG2FVSd7pqqYDRpSU4wT8vBw
+	 QeKDnX7b/aucwTjJum5flR03/4dxolw==
 Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
 	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 10f9fa6a-e7e3-11ef-a27d-005056bdfda7;
-	Mon, 10 Feb 2025 21:13:10 +0200 (EET)
+	id 08309fe8-e7e3-11ef-a27d-005056bdfda7;
+	Mon, 10 Feb 2025 21:12:55 +0200 (EET)
 From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
 To: linux-scsi@vger.kernel.org,
 	dgilbert@interlog.com
@@ -39,9 +39,9 @@ Cc: martin.petersen@oracle.com,
 	James.Bottomley@HansenPartnership.com,
 	jmeneghi@redhat.com,
 	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH v1 7/7] scsi: scsi_debug: Add support for partitioning the tape
-Date: Mon, 10 Feb 2025 21:12:32 +0200
-Message-ID: <20250210191232.185207-8-Kai.Makisara@kolumbus.fi>
+Subject: [PATCH v1 4/7] scsi: scsi_debug: Add read support and update locate for tapes
+Date: Mon, 10 Feb 2025 21:12:29 +0200
+Message-ID: <20250210191232.185207-5-Kai.Makisara@kolumbus.fi>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
 References: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
@@ -54,212 +54,325 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This patch adds support for MEDIUM PARTITION PAGE in MODE SELECT and the
-FORMAT MEDIUM command for tapes. After these additions, the virtual tape
-can be partitioned containing either one or two partitions. The POFM
-flag in the mode page is set, meaning that the FORMAT MEDIUM command
-must be used to create the partitioning defined in the mode page.
+Support for the READ (6) and SPACE (6) commands for tapes based on the
+previous write patch is added. The LOCATE (10) command is updated to use
+the written data.
 
 Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 ---
- drivers/scsi/scsi_debug.c | 108 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 104 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_debug.c | 240 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 235 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index b40023dd812b..277385e9b91c 100644
+index 6282f162ed5a..691b573b105b 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -188,6 +188,7 @@ static const char *sdebug_version_date = "20210520";
- #define TAPE_EW 20
- #define TAPE_MAX_PARTITIONS 2
- #define TAPE_UNITS 10000
-+#define TAPE_PARTITION_1_UNITS 1000
- 
- /* The tape block data definitions */
- #define TAPE_BLOCK_FM_FLAG   ((u32)0x1 << 30)
-@@ -405,6 +406,9 @@ struct sdebug_dev_info {
- 	unsigned int tape_density;
- 	unsigned char tape_partition;
- 	unsigned char tape_nbr_partitions;
-+	unsigned char tape_pending_nbr_partitions;
-+	unsigned int tape_pending_part_0_size;
-+	unsigned int tape_pending_part_1_size;
- 	unsigned char tape_dce;
- 	unsigned int tape_location[TAPE_MAX_PARTITIONS];
- 	unsigned int tape_eop[TAPE_MAX_PARTITIONS];
-@@ -534,14 +538,15 @@ enum sdeb_opcode_index {
+@@ -532,7 +532,8 @@ enum sdeb_opcode_index {
+ 	SDEB_I_READ_BLOCK_LIMITS = 33,
  	SDEB_I_LOCATE = 34,
  	SDEB_I_WRITE_FILEMARKS = 35,
- 	SDEB_I_SPACE = 36,
--	SDEB_I_LAST_ELEM_P1 = 37,	/* keep this last (previous + 1) */
-+	SDEB_I_FORMAT_MEDIUM = 37,
-+	SDEB_I_LAST_ELEM_P1 = 38,	/* keep this last (previous + 1) */
+-	SDEB_I_LAST_ELEM_P1 = 36,	/* keep this last (previous + 1) */
++	SDEB_I_SPACE = 36,
++	SDEB_I_LAST_ELEM_P1 = 37,	/* keep this last (previous + 1) */
  };
  
  
- static const unsigned char opcode_ind_arr[256] = {
- /* 0x0; 0x0->0x1f: 6 byte cdbs */
+@@ -541,7 +542,7 @@ static const unsigned char opcode_ind_arr[256] = {
  	SDEB_I_TEST_UNIT_READY, SDEB_I_REZERO_UNIT, 0, SDEB_I_REQUEST_SENSE,
--	    0, SDEB_I_READ_BLOCK_LIMITS, 0, 0,
-+	    SDEB_I_FORMAT_MEDIUM, SDEB_I_READ_BLOCK_LIMITS, 0, 0,
+ 	    0, SDEB_I_READ_BLOCK_LIMITS, 0, 0,
  	SDEB_I_READ, 0, SDEB_I_WRITE, 0, 0, 0, 0, 0,
- 	SDEB_I_WRITE_FILEMARKS, SDEB_I_SPACE, SDEB_I_INQUIRY, 0, 0,
+-	SDEB_I_WRITE_FILEMARKS, 0, SDEB_I_INQUIRY, 0, 0,
++	SDEB_I_WRITE_FILEMARKS, SDEB_I_SPACE, SDEB_I_INQUIRY, 0, 0,
  	    SDEB_I_MODE_SELECT, SDEB_I_RESERVE, SDEB_I_RELEASE,
-@@ -629,6 +634,7 @@ static int resp_locate(struct scsi_cmnd *, struct sdebug_dev_info *);
+ 	0, 0, SDEB_I_MODE_SENSE, SDEB_I_START_STOP, 0, SDEB_I_SEND_DIAG,
+ 	    SDEB_I_ALLOW_REMOVAL, 0,
+@@ -625,6 +626,7 @@ static int resp_rwp_zone(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_read_blklimits(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_locate(struct scsi_cmnd *, struct sdebug_dev_info *);
  static int resp_write_filemarks(struct scsi_cmnd *, struct sdebug_dev_info *);
- static int resp_space(struct scsi_cmnd *, struct sdebug_dev_info *);
++static int resp_space(struct scsi_cmnd *, struct sdebug_dev_info *);
  static int resp_rewind(struct scsi_cmnd *, struct sdebug_dev_info *);
-+static int resp_format_medium(struct scsi_cmnd *, struct sdebug_dev_info *);
  
  static int sdebug_do_add_host(bool mk_new_store);
- static int sdebug_add_host_helper(int per_host_idx);
-@@ -867,7 +873,7 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
- 	    resp_report_zones, zone_in_iarr, /* ZONE_IN(16), REPORT ZONES) */
- 		{16,  0x0 /* SA */, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
- 		 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xbf, 0xc7} },
--/* 31 */
-+/* 32 */
- 	{0, 0x0, 0x0, F_D_OUT | FF_MEDIA_IO,
- 	    resp_atomic_write, NULL, /* ATOMIC WRITE 16 */
- 		{16,  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-@@ -881,7 +887,9 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
+@@ -872,10 +874,12 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
+ 	{0, 0x05, 0, F_D_IN, resp_read_blklimits, NULL,    /* READ BLOCK LIMITS (6) */
+ 	    {6,  0, 0, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 	{0, 0x2b, 0, F_D_UNKN, resp_locate, NULL,    /* LOCATE (10) */
+-	    {10,  0x2, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0,
++	    {10,  0x07, 0, 0xff, 0xff, 0xff, 0xff, 0, 0xff, 0xc7, 0, 0,
+ 	     0, 0, 0, 0} },
+ 	{0, 0x10, 0, F_D_IN, resp_write_filemarks, NULL,    /* WRITE FILEMARKS (6) */
  	    {6,  0x01, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
- 	{0, 0x11, 0, F_D_IN, resp_space, NULL,    /* SPACE (6) */
- 	    {6,  0x07, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
--
-+	{0, 0x4, 0, 0, resp_format_medium, NULL,  /* FORMAT MEDIUM (6) */
-+	    {6,  0x3, 0x7, 0, 0, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-+/* 38 */
++	{0, 0x11, 0, F_D_IN, resp_space, NULL,    /* SPACE (6) */
++	    {6,  0x07, 0xff, 0xff, 0xff, 0xc7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ 
  /* sentinel */
  	{0xff, 0, 0, 0, NULL, NULL,		/* terminating element */
- 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-@@ -2844,6 +2852,51 @@ static int resp_partition_m_pg(unsigned char *p, int pcontrol, int target)
- 	return sizeof(partition_pg);
+@@ -3309,6 +3313,9 @@ static int resp_locate(struct scsi_cmnd *scp,
+ 		struct sdebug_dev_info *devip)
+ {
+ 	unsigned char *cmd = scp->cmnd;
++	unsigned int i, pos;
++	struct tape_block *blp;
++	int partition;
+ 
+ 	if ((cmd[1] & 0x02) != 0) {
+ 		if (cmd[8] >= devip->tape_nbr_partitions) {
+@@ -3317,8 +3324,19 @@ static int resp_locate(struct scsi_cmnd *scp,
+ 		}
+ 		devip->tape_partition = cmd[8];
+ 	}
+-	devip->tape_location[devip->tape_partition] =
+-		get_unaligned_be32(cmd + 3);
++	pos = get_unaligned_be32(cmd + 3);
++	partition = devip->tape_partition;
++
++	for (i = 0, blp = devip->tape_blocks[partition];
++	     i < pos && i < devip->tape_eop[partition]; i++, blp++)
++		if (IS_TAPE_BLOCK_EOD(blp->fl_size))
++			break;
++	if (i < pos) {
++		devip->tape_location[partition] = i;
++		mk_sense_buffer(scp, BLANK_CHECK, 0x05, 0);
++		return check_condition_result;
++	}
++	devip->tape_location[partition] = pos;
+ 
+ 	return 0;
+ }
+@@ -3353,6 +3371,123 @@ static int resp_write_filemarks(struct scsi_cmnd *scp,
+ 	return 0;
  }
  
-+static int process_medium_part_m_pg(struct sdebug_dev_info *devip,
-+				unsigned char *new, int pg_len)
++static int resp_space(struct scsi_cmnd *scp,
++		struct sdebug_dev_info *devip)
 +{
-+	int new_nbr, p0_size, p1_size;
++	unsigned char *cmd = scp->cmnd, code;
++	int i, pos, count;
++	struct tape_block *blp;
++	int partition = devip->tape_partition;
 +
-+	if ((new[4] & 0x80) != 0) { /* FDP */
-+		partition_pg[4] |= 0x80;
-+		devip->tape_pending_nbr_partitions = TAPE_MAX_PARTITIONS;
-+		devip->tape_pending_part_0_size = TAPE_UNITS - TAPE_PARTITION_1_UNITS;
-+		devip->tape_pending_part_1_size = TAPE_PARTITION_1_UNITS;
-+	} else {
-+		new_nbr = new[3] + 1;
-+		if (new_nbr > TAPE_MAX_PARTITIONS)
-+			return 3;
-+		if ((new[4] & 0x40) != 0) { /* SDP */
-+			p1_size = TAPE_PARTITION_1_UNITS;
-+			p0_size = TAPE_UNITS - p1_size;
-+			if (p0_size < 100)
-+				return 4;
-+		} else if ((new[4] & 0x20) != 0) {
-+			if (new_nbr > 1) {
-+				p0_size = get_unaligned_be16(new + 8);
-+				p1_size = get_unaligned_be16(new + 10);
-+				if (p1_size == 0xFFFF)
-+					p1_size = TAPE_UNITS - p0_size;
-+				else if (p0_size == 0xFFFF)
-+					p0_size = TAPE_UNITS - p1_size;
-+				if (p0_size < 100 || p1_size < 100)
-+					return 8;
-+			} else {
-+				p0_size = TAPE_UNITS;
-+				p1_size = 0;
++	count = get_unaligned_be24(cmd + 2);
++	if ((count & 0x800000) != 0) /* extend negative to 32-bit count */
++		count |= 0xff000000;
++	code = cmd[1] & 0x0f;
++
++	pos = devip->tape_location[partition];
++	if (code == 0) { /* blocks */
++		if (count < 0) {
++			count = (-count);
++			pos -= 1;
++			for (i = 0, blp = devip->tape_blocks[partition] + pos; i < count;
++			     i++) {
++				if (pos < 0)
++					goto is_bop;
++				else if (IS_TAPE_BLOCK_FM(blp->fl_size))
++					goto is_fm;
++				if (i > 0) {
++					pos--;
++					blp--;
++				}
 +			}
-+		} else
-+			return 6;
-+		devip->tape_pending_nbr_partitions = new_nbr;
-+		devip->tape_pending_part_0_size = p0_size;
-+		devip->tape_pending_part_1_size = p1_size;
-+		partition_pg[3] = new_nbr;
-+		devip->tape_pending_nbr_partitions = new_nbr;
++		} else if (count > 0) {
++			for (i = 0, blp = devip->tape_blocks[partition] + pos; i < count;
++			     i++, pos++, blp++) {
++				if (IS_TAPE_BLOCK_EOD(blp->fl_size))
++					goto is_eod;
++				if (IS_TAPE_BLOCK_FM(blp->fl_size)) {
++					pos += 1;
++					goto is_fm;
++				}
++				if (pos >= devip->tape_eop[partition])
++					goto is_eop;
++			}
++		}
++	} else if (code == 1) { /* filemarks */
++		if (count < 0) {
++			count = (-count);
++			if (pos == 0)
++				goto is_bop;
++			else {
++				for (i = 0, blp = devip->tape_blocks[partition] + pos;
++				     i < count && pos >= 0; i++, pos--, blp--) {
++					for (pos--, blp-- ; !IS_TAPE_BLOCK_FM(blp->fl_size) &&
++						     pos >= 0; pos--, blp--)
++						; /* empty */
++					if (pos < 0)
++						goto is_bop;
++				}
++			}
++			pos += 1;
++		} else if (count > 0) {
++			for (i = 0, blp = devip->tape_blocks[partition] + pos;
++			     i < count; i++, pos++, blp++) {
++				for ( ; !IS_TAPE_BLOCK_FM(blp->fl_size) &&
++					      !IS_TAPE_BLOCK_EOD(blp->fl_size) &&
++					      pos < devip->tape_eop[partition];
++				      pos++, blp++)
++					; /* empty */
++				if (IS_TAPE_BLOCK_EOD(blp->fl_size))
++					goto is_eod;
++				if (pos >= devip->tape_eop[partition])
++					goto is_eop;
++			}
++		}
++	} else if (code == 3) { /* EOD */
++		for (blp = devip->tape_blocks[partition] + pos;
++		     !IS_TAPE_BLOCK_EOD(blp->fl_size) && pos < devip->tape_eop[partition];
++		     pos++, blp++)
++			; /* empty */
++		if (pos >= devip->tape_eop[partition])
++			goto is_eop;
++	} else {
++		/* sequential filemarks not supported */
++		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 8, -1);
++		return check_condition_result;
 +	}
-+
++	devip->tape_location[partition] = pos;
 +	return 0;
++
++is_fm:
++	devip->tape_location[partition] = pos;
++	mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
++			FILEMARK_DETECTED_ASCQ, count - i,
++			SENSE_FLAG_FILEMARK);
++	return check_condition_result;
++
++is_eod:
++	devip->tape_location[partition] = pos;
++	mk_sense_info_tape(scp, BLANK_CHECK, NO_ADDITIONAL_SENSE,
++			EOD_DETECTED_ASCQ, count - i,
++			0);
++	return check_condition_result;
++
++is_bop:
++	devip->tape_location[partition] = 0;
++	mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
++			BEGINNING_OF_P_M_DETECTED_ASCQ, count - i,
++			SENSE_FLAG_EOM);
++	devip->tape_location[partition] = 0;
++	return check_condition_result;
++
++is_eop:
++	devip->tape_location[partition] = devip->tape_eop[partition] - 1;
++	mk_sense_info_tape(scp, MEDIUM_ERROR, NO_ADDITIONAL_SENSE,
++			EOP_EOM_DETECTED_ASCQ, (unsigned int)i,
++			SENSE_FLAG_EOM);
++	return check_condition_result;
 +}
 +
- static int resp_compression_m_pg(unsigned char *p, int pcontrol, int target,
- 	unsigned char dce)
- {	/* Compression page for mode_sense (tape) */
-@@ -3172,6 +3225,17 @@ static int resp_mode_select(struct scsi_cmnd *scp,
- 			return 0;
- 		}
- 		break;
-+	case 0x11:	/* Medium Partition Mode Page (tape) */
-+		if (sdebug_ptype == TYPE_TAPE) {
-+			int fld;
+ static int resp_rewind(struct scsi_cmnd *scp,
+ 		struct sdebug_dev_info *devip)
+ {
+@@ -4121,6 +4256,98 @@ static int prot_verify_read(struct scsi_cmnd *scp, sector_t start_sec,
+ 	return ret;
+ }
+ 
++static int resp_read_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
++{
++	u32 i, num, transfer, size;
++	u8 *cmd = scp->cmnd;
++	struct scsi_data_buffer *sdb = &scp->sdb;
++	int partition = devip->tape_partition;
++	u32 pos = devip->tape_location[partition];
++	struct tape_block *blp;
++	bool fixed, sili;
 +
-+			fld = process_medium_part_m_pg(devip, &arr[off], pg_len);
-+			if (fld == 0)
-+				return 0;
-+			mk_sense_invalid_fld(scp, SDEB_IN_DATA, fld, -1);
++	if (cmd[0] != READ_6) { /* Only Read(6) supported */
++		mk_sense_invalid_opcode(scp);
++		return illegal_condition_result;
++	}
++	fixed = (cmd[1] & 0x1) != 0;
++	sili = (cmd[1] & 0x2) != 0;
++	if (fixed && sili) {
++		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 1, 1);
++		return check_condition_result;
++	}
++
++	transfer = get_unaligned_be24(cmd + 2);
++	if (fixed) {
++		num = transfer;
++		size = devip->tape_blksize;
++	} else {
++		if (transfer < TAPE_MIN_BLKSIZE ||
++			transfer > TAPE_MAX_BLKSIZE) {
++			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
 +			return check_condition_result;
 +		}
-+		break;
- 	case 0x1c:      /* Informational Exceptions Mode page */
- 		if (iec_m_pg[1] == arr[off + 1]) {
- 			memcpy(iec_m_pg + 2, arr + off + 2,
-@@ -3556,6 +3620,39 @@ static int partition_tape(struct sdebug_dev_info *devip, int nbr_partitions,
- 	return nbr_partitions;
- }
- 
-+static int resp_format_medium(struct scsi_cmnd *scp,
-+			struct sdebug_dev_info *devip)
-+{
-+	int res = 0;
-+	unsigned char *cmd = scp->cmnd;
++		num = 1;
++		size = transfer;
++	}
 +
-+	if (sdebug_ptype != TYPE_TAPE) {
-+		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 0, -1);
++	for (i = 0, blp = devip->tape_blocks[partition] + pos;
++	     i < num && pos < devip->tape_eop[partition];
++	     i++, pos++, blp++) {
++		devip->tape_location[partition] = pos + 1;
++		if (IS_TAPE_BLOCK_FM(blp->fl_size)) {
++			mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
++					FILEMARK_DETECTED_ASCQ, fixed ? num - i : size,
++					SENSE_FLAG_FILEMARK);
++			scsi_set_resid(scp, (num - i) * size);
++			return check_condition_result;
++		}
++		/* Assume no REW */
++		if (IS_TAPE_BLOCK_EOD(blp->fl_size)) {
++			mk_sense_info_tape(scp, BLANK_CHECK, NO_ADDITIONAL_SENSE,
++					EOD_DETECTED_ASCQ, fixed ? num - i : size,
++					0);
++			devip->tape_location[partition] = pos;
++			scsi_set_resid(scp, (num - i) * size);
++			return check_condition_result;
++		}
++		sg_zero_buffer(sdb->table.sgl, sdb->table.nents,
++			size, i * size);
++		sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
++			&(blp->data), 4, i * size, false);
++		if (fixed) {
++			if (blp->fl_size != devip->tape_blksize) {
++				scsi_set_resid(scp, (num - i) * size);
++				mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
++						0, num - i,
++						SENSE_FLAG_ILI);
++				return check_condition_result;
++			}
++		} else {
++			if (blp->fl_size != size) {
++				if (blp->fl_size < size)
++					scsi_set_resid(scp, size - blp->fl_size);
++				if (!sili) {
++					mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
++							0, size - blp->fl_size,
++							SENSE_FLAG_ILI);
++					return check_condition_result;
++				}
++			}
++		}
++	}
++	if (pos >= devip->tape_eop[partition]) {
++		mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
++				EOP_EOM_DETECTED_ASCQ, fixed ? num - i : size,
++				SENSE_FLAG_EOM);
++		devip->tape_location[partition] = pos - 1;
 +		return check_condition_result;
 +	}
-+	if (cmd[2] > 2) {
-+		mk_sense_invalid_fld(scp, SDEB_IN_DATA, 2, -1);
-+		return check_condition_result;
-+	}
-+	if (cmd[2] != 0) {
-+		if (devip->tape_pending_nbr_partitions > 0) {
-+			res = partition_tape(devip,
-+					devip->tape_pending_nbr_partitions,
-+					devip->tape_pending_part_0_size,
-+					devip->tape_pending_part_1_size);
-+		} else
-+			res = partition_tape(devip, devip->tape_nbr_partitions,
-+					devip->tape_eop[0], devip->tape_eop[1]);
-+	} else
-+		res = partition_tape(devip, 1, TAPE_UNITS, 0);
-+	if (res < 0)
-+		return -EINVAL;
-+
-+	devip->tape_pending_nbr_partitions = -1;
++	devip->tape_location[partition] = pos;
 +
 +	return 0;
 +}
 +
- static inline bool sdebug_dev_is_zoned(struct sdebug_dev_info *devip)
+ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
  {
- 	return devip->nr_zones != 0;
-@@ -6522,6 +6619,7 @@ static int scsi_debug_sdev_configure(struct scsi_device *sdp,
- 			if (!devip->tape_blocks[0])
- 				return 1;
- 		}
-+		devip->tape_pending_nbr_partitions = -1;
- 		if (partition_tape(devip, 1, TAPE_UNITS, 0) < 0) {
- 			kfree(devip->tape_blocks[0]);
- 			devip->tape_blocks[0] = NULL;
-@@ -6783,6 +6881,8 @@ static void scsi_tape_reset_clear(struct sdebug_dev_info *devip)
- 		devip->tape_dce = 0;
- 		for (i = 0; i < TAPE_MAX_PARTITIONS; i++)
- 			devip->tape_location[i] = 0;
-+		devip->tape_pending_nbr_partitions = -1;
-+		/* Don't reset partitioning? */
- 	}
- }
+ 	bool check_prot;
+@@ -4132,6 +4359,9 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u8 *cmd = scp->cmnd;
+ 	bool meta_data_locked = false;
  
++	if (sdebug_ptype == TYPE_TAPE)
++		return resp_read_tape(scp, devip);
++
+ 	switch (cmd[0]) {
+ 	case READ_16:
+ 		ei_lba = 0;
 -- 
 2.43.0
 
