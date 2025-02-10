@@ -1,36 +1,37 @@
-Received: from fgw22-4.mail.saunalahti.fi (fgw22-4.mail.saunalahti.fi [62.142.5.109])
+Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 516F525E446
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 19:13:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.109
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDD225E446
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 19:14:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739214837; cv=none; b=aHPEreXc5XtzntHIjcCTQnMpZV7qIThjJE6p/ots4Df77ksHRY22Ypjfjn3FCbQHlckz90yO6Jr4sxzRp5RqR//c7A2IfKK46jEfpbC6Ngb63iiPW4MxfH6kH6/pfEhvtgm9sFmtnLr6vbjXHi+nJ47JgGepWiXDd05BeMLZjJo=
+	t=1739214850; cv=none; b=QFfhmGYTMj3z8yxE3qczWsJ0KeEz1vdLJz+fT/th9XSGOMmezr+AJcF+sKMb8Z2rG1OtBT8b1CDhYZiGVf1ioemlT9qgtD4oSNjLEH9TXqQekVHf6b6Fuu1UZwxFTvRBZ1vpr60v1WZ28qFG+6A96txZBOj+S75BTqLyYFdhsWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739214837; c=relaxed/simple;
-	bh=RdukJlXL3e8iMBMbSLxpEJ2CYU6lcGDm4DJnPHHSmbs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Y0FCxrFWjce9tk8ZSW6nZmHVLp2i/nVg9NcQ9xMeNVhFzsCmqKyxLp8TTqVtnKmJ0/pDUFmwmojD8ebjkhEZvBqfSBol7ejwu47Gs79xwRxJ9pYPQDRFO3lsCnOZFJ5ZM2C6RTmXmRK1YmTR2UuVhufwMfzLywObA/Csr5DGat8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=CmXi+liC; arc=none smtp.client-ip=62.142.5.109
+	s=arc-20240116; t=1739214850; c=relaxed/simple;
+	bh=YnMzgrrGTHFRNSeC9OtOmHTI5f+OPlZ3b9JpXoUOztQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=sjRLyeNlw80r8eJApSGWmzX81OLjlyu7EtFvR2c0XRQtedOLxWP2BIu8IjwtNCqbH5GxY9XlEEtuUEzPKyfHothD3+yXK/jLKi/X0wq5XML9FClCjLwXwz2wN2hCVRYgaaMUKQ6Z/JKHu7YnaYqCoD8wG0MaXi1etjDBhzNZUFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=GxY5bWKk; arc=none smtp.client-ip=62.142.5.107
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="CmXi+liC"
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="GxY5bWKk"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=kolumbus.fi; s=elisa1;
-	h=content-transfer-encoding:content-type:mime-version:message-id:date:subject:
-	 cc:to:from:from:to:cc:reply-to:subject:date:in-reply-to:references:
-	 list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=oAWVpQxTu6bxmENpl9haW4tJqo7K5S8cJqw6MNnlW8M=;
-	b=CmXi+liCle1bBr+XcvzSwZgM2MYaJt0e4JT1tqupX65vD0H50KE1kKnyIlgzK4kQ//VxdGwlcGNPx
-	 G3WspUfP4A1SlZQrxWsQy6nlcQRCbAhZ5gF/CdLp2nA0Xxh3N3avLSN5PBjDanzz1/KovKH4uUvUCz
-	 2FzHSuiGAQBCMr3v6yFJMYW/aRWESNQEY7UezC+xuDAB4BpgbpqVqsm7gx3+LA2hJfN0n45lnoUNRj
-	 vb033iJJXLmwmKUYL9B9tGNS0InCxnx0dh0lzwtJT5JNKHN2D20Tv2ujsi9VRDQPyjsNKDkjqpsi6x
-	 jmIfp6X0XezYiD1prxhqLWlPI/X4c8g==
+	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
+	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
+	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
+	 content-type:content-transfer-encoding:message-id;
+	bh=qj0DzGCRqFg1nIu8AxmR96KboRXll30H+CcV3RMRLr4=;
+	b=GxY5bWKkhAHODqMO+7stLKgpDl4q3scyh4UW1M4ohGT4gCKfKNBlX3utiXcUWNnAVZ6Gtw72EwOMs
+	 SwUhnc+WgT5p8NDo1/kGAMrtsXS7++eIBvZhFHMrEq6YksKt7QMEuvvc2QBZsAbjIKK1uiQlrTEtd6
+	 PzxklEGr8URgB7TSx13orZ/xPOXPlA2TGfioZGCX8zwNaQAs1krITGPRkUD3UiL1KJg11fQ+IQ1MnC
+	 ZZmEE4AQrmwYFcyyRbuQVbVJg+mQXjdpKzlShuzeyESKWDGJm04/FbwlG4jBVH76XofDXZDEj7RccZ
+	 Fp+QP7mFQm47SfFeztHvH7duqS0wPlA==
 Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
 	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 013bfdcc-e7e3-11ef-a27d-005056bdfda7;
-	Mon, 10 Feb 2025 21:12:44 +0200 (EET)
+	id 09bdeef1-e7e3-11ef-a27d-005056bdfda7;
+	Mon, 10 Feb 2025 21:12:57 +0200 (EET)
 From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
 To: linux-scsi@vger.kernel.org,
 	dgilbert@interlog.com
@@ -38,10 +39,12 @@ Cc: martin.petersen@oracle.com,
 	James.Bottomley@HansenPartnership.com,
 	jmeneghi@redhat.com,
 	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH v1 0/7] scsi: scsi_debug: Add more tape support
-Date: Mon, 10 Feb 2025 21:12:25 +0200
-Message-ID: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
+Subject: [PATCH v1 5/7] scsi: scsi_debug: Add compression mode page for tapes
+Date: Mon, 10 Feb 2025 21:12:30 +0200
+Message-ID: <20250210191232.185207-6-Kai.Makisara@kolumbus.fi>
 X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
+References: <20250210191232.185207-1-Kai.Makisara@kolumbus.fi>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,77 +54,86 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Currently, the scsi_debug driver can create tape devices and the st
-driver attaches to those. Nothing much can be done with the tape devices
-because scsi_debug does not have support for the tape-specific commands
-and features. These patches add some more tape support to the scsi_debug
-driver. The end result is simulated drives with a tape having one or two
-partitions (one partition is created initially).
+Add support for compression mode page. The compression status
+is saved and returned. No UA is generated.
 
-The tape is implemented as fixed number (10 000) of 8-byte units.
-The first four bytes of a unit contain the type of the unit (data
-block, filemark or end-of-data mark). If the units is a data block,
-the first four bytes also contain the block length and the remaining
-four bytes the first bytes of written data. This allows the user
-to use tags to see that the read block is what it was supposed to be.
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+---
+ drivers/scsi/scsi_debug.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-The following SCSI operations are added or modified:
-FORMAT MEDIUM
-- added
-LOCATE
-- added
-MODE SELECT
-- modified to allow use without page(s) (just header and block descriptor)
-  - store density and block size
-- partition page added
-MODE SENSE
-- modified to allow use without page(s) (just header and block descriptor)
-  - set density and block size
-- partition page added
-READ BLOCK LIMITS
-- added
-READ POSITION
-- added
-READ
-- added tape support for READ (6)
-REWIND
-- modified to set the tape position
-SPACE
-- added
-START STOP (LOAD)
-- modified to return New Medium Unit Attention if tape loaded (not
-  according to the standard, but enables testing this UA)
-WRITE
-- added tape support for WRITE (6)
-WRITE FILEMARKS
-- added
-
-Changes RFC -> v1:
-- rebased to v6.14-rc1
-- virtual tape initialization is rewritten and the tape is made shorter
-  (10 000 units)
-- only one partition is created initially
-- tape block allocation is moved to sdev_configure()
-- tape blocks are freed in sdev_destroy()
-- block size must be multiple of four (SSC standard)
-- granularity set to four in READ BLOCK LIMITS
-- long LBA not allowed for tapes in MODE SELECT/SENSE
-- READ POSITION checks allocation length
-- new patch 7 adds support for re-partitioning the tape
-
-Kai Mäkisara (7):
-  scsi: scsi_debug: First fixes for tapes
-  scsi: scsi_debug: Add READ BLOCK LIMITS and modify LOAD for tapes
-  scsi: scsi_debug: Add write support with block lengths  and 4 bytes of
-    data
-  scsi: scsi_debug: Add read support and update locate for tapes
-  scsi: scsi_debug: Add compression mode page for tapes
-  scsi: scsi_debug: Reset tape setting at device reset
-  scsi: scsi_debug: Add support for partitioning the tape
-
- drivers/scsi/scsi_debug.c | 775 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 761 insertions(+), 14 deletions(-)
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 691b573b105b..7b84acebe0fe 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -405,6 +405,7 @@ struct sdebug_dev_info {
+ 	unsigned int tape_density;
+ 	unsigned char tape_partition;
+ 	unsigned char tape_nbr_partitions;
++	unsigned char tape_dce;
+ 	unsigned int tape_location[TAPE_MAX_PARTITIONS];
+ 	unsigned int tape_eop[TAPE_MAX_PARTITIONS];
+ 	struct tape_block *tape_blocks[TAPE_MAX_PARTITIONS];
+@@ -2843,6 +2844,20 @@ static int resp_partition_m_pg(unsigned char *p, int pcontrol, int target)
+ 	return sizeof(partition_pg);
+ }
+ 
++static int resp_compression_m_pg(unsigned char *p, int pcontrol, int target,
++	unsigned char dce)
++{	/* Compression page for mode_sense (tape) */
++	unsigned char compression_pg[] = {0x0f, 14, 0x40, 0, 0, 0, 0, 0,
++		0, 0, 0, 0, 00, 00};
++
++	memcpy(p, compression_pg, sizeof(compression_pg));
++	if (dce)
++		p[2] |= 0x80;
++	if (pcontrol == 1)
++		memset(p + 2, 0, sizeof(compression_pg) - 2);
++	return sizeof(compression_pg);
++}
++
+ /* PAGE_SIZE is more than necessary but provides room for future expansion. */
+ #define SDEBUG_MAX_MSENSE_SZ PAGE_SIZE
+ 
+@@ -2983,6 +2998,12 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+ 		}
+ 		offset += len;
+ 		break;
++	case 0xf:	/* Compression Mode Page (tape) */
++		if (!is_tape)
++			goto bad_pcode;
++		len += resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
++		offset += len;
++		break;
+ 	case 0x11:	/* Partition Mode Page (tape) */
+ 		if (!is_tape)
+ 			goto bad_pcode;
+@@ -3143,6 +3164,14 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+ 			goto set_mode_changed_ua;
+ 		}
+ 		break;
++	case 0xf:       /* Compression mode page */
++		if (sdebug_ptype != TYPE_TAPE)
++			goto bad_pcode;
++		if ((arr[off + 2] & 0x40) != 0) {
++			devip->tape_dce = (arr[off + 2] & 0x80) != 0;
++			return 0;
++		}
++		break;
+ 	case 0x1c:      /* Informational Exceptions Mode page */
+ 		if (iec_m_pg[1] == arr[off + 1]) {
+ 			memcpy(iec_m_pg + 2, arr + off + 2,
+@@ -3158,6 +3187,10 @@ static int resp_mode_select(struct scsi_cmnd *scp,
+ set_mode_changed_ua:
+ 	set_bit(SDEBUG_UA_MODE_CHANGED, devip->uas_bm);
+ 	return 0;
++
++bad_pcode:
++	mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 5);
++	return check_condition_result;
+ }
+ 
+ static int resp_temp_l_pg(unsigned char *arr)
 -- 
 2.43.0
 
