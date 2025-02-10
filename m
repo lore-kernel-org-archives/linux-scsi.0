@@ -1,212 +1,164 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0524F155393
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 04:44:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA2451AF0A6
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 09:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739162694; cv=none; b=cHfnIaNJCQzNaJySDfkn5Yi3RxgskungLC+qiu8QR7ymlkURNZMMJ82qJKJCNvi73fUCWqh/fwctJoSrFzIkwCWAJCTlSBR6A/rJ6ycA6YTGG8O3EIqAJhwrt45no4cIBtXUaIXQTV4ggB7EIEJJXAJzGj16D6t4cGJID+0fxS4=
+	t=1739180350; cv=none; b=tei6IMQzTEmj2CrG7eiWlHJ8rk2RGMkvvLFtwsxIlGssh6FeIE8elwHWVQQZ1uJnDaXfA4F8TbVqboysjBZYYYlBHgLbnudkfJdu+hEXba6rM3rWqAY2hB0dmhKrV3EL3DkMVReCV6njgcw173w1Ny/G+TIxAME2pPB+YWmXn6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739162694; c=relaxed/simple;
-	bh=vTanPSj0WJSOQJ6VK+dSr4V6tineoC/hsdguGdxz6Ao=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nSGyc8TIIboFZUJkD1/nVpxP+fHH4WZfeldQkAKtB+Jkjszht4ibggJYVmpc8FBe6+4nAd9X0JBlSrYte1GelpULEWsCzj+qnrfWfxJC23d4FOP5Nstjo9aDBjSmk0widDMd3O4bPHpKmlZrwrX7NNOGb8NoGILvrXBAHjxqiB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XareteWg; arc=none smtp.client-ip=209.85.216.44
+	s=arc-20240116; t=1739180350; c=relaxed/simple;
+	bh=Evggzw1mm78crygEZHz0M0KJuKx/SLpnc9JUY2lUjKA=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=qbyOxiJhKvyX8FPuWqrvaT5vG86awqjATw3ss/Pw33Y0HlT/HH2e00PzPr1iWIY2ZNJhEAmNRcN3vLOEDiKTSWddTW0ztYoGckGx6gQeKSVKgLcwk8Wum5G0CRPcESGF0IjzDAXSNfEZHNJczyGyvY0QM/dW8y9l0fIKMMuZJg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=n1A2PBwc; arc=none smtp.client-ip=209.85.221.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XareteWg"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2fa286ea7e8so3610083a91.2
-        for <linux-scsi@vger.kernel.org>; Sun, 09 Feb 2025 20:44:51 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="n1A2PBwc"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-38dcb97e8a3so2241272f8f.3
+        for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 01:39:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1739162691; x=1739767491; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=nF3QMZZh+uHZ+XUypTIOVnYHXZf3sl/wR22/LqBDNSc=;
-        b=XareteWg22SH0Jwhxaz2ViALmGAbvbFygvDRPm9MZUSIPSIcwOjCM+A0wXeZ8f9t1p
-         gDampvr0OUV8RZ7ZVNLc37aceoCvw+XrI6MfGKKJKwC95v/U3yBHwlDNE9pBxXmjjSEM
-         Aal+FesM1awuKFO5quF8KUzfFZ6eGR7Xs5afXKBpix19GLp4BlnhKLEYzLZ0FlG1OptU
-         FTSujHq6XpN7y/vozITYu4jj+g6zjs5DApAM5/pwRhhnWhhN903cgUJIEDSWJtFoaDlv
-         VANmO6yvc1FSQywTt+3oLAF0dnHZT1ST3NFIWqcUGoy9CYil5++0KG04BSveoISHbWwD
-         NIsw==
+        d=linaro.org; s=google; t=1739180346; x=1739785146; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=srrij2tofXvckDkWsV9cjxYMgt/c8bcDWt6f2Pgk2Ho=;
+        b=n1A2PBwcA8wJwg5EFY1f62SjVUszsaSqFq6hRdrf91Qyi9wBlt3MftA5yEcL2p22JF
+         eTpknOcGBDMQdpoPkLi3kvpIMPfa0c1xyxOiGagUDQ+MTEmVgk96ttBWoMNpnKvZ9pJm
+         QFqtPPXERxHcKuFGUXk55OPGJ0nhIZ6WrPlN8Cs2sYyE8T7nBLpnx0yM0n2XoJicmGeM
+         ppvfqDnnhCi+VKq/n4TMdeYl8c8pRG2Fkd8AHRtc27RY+IvB47cxdXEIErzxhkdindGK
+         FsV4nzoXTmqZMhUk6/EalYUGJ1/gLurr1UWnx8ZU5imKfsD8GR8S2W4PLiTvB9WHb6AM
+         D2Kw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739162691; x=1739767491;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nF3QMZZh+uHZ+XUypTIOVnYHXZf3sl/wR22/LqBDNSc=;
-        b=w4VUk/9VrRBS4///Xvlo35REquvVrmzCdVoD+h1F1N6oo/p1GbLn0Yc72iGkXHDQtT
-         jbtG0pRI/OiKTJpbs1yZHCFE3i8E2qFPULpe46k/AmDUOcXyst1roiVYinsVuj5hUsgH
-         17BLpTe6wYKWdnInfGza4Uv8HGUdxaXMAMAedDQmBfe2Vy/C4XJoAF+JcUqWm9H9TcGF
-         yI02cEuW5d3YeJkR9yO76WmxxGROzTqV41OyrZxeaoLJKjA3ZEO/8DauKtQIEDS3s41B
-         q9ykvskJFV+sGQr+rw4wy7vzTzg/gzoW1QjR+UXfdaUoTYoZW6d7MQ5AVUO7808geR6f
-         PEEw==
-X-Forwarded-Encrypted: i=1; AJvYcCVG0/Cye+PVFyj8oxEPk4xZxi7vRfiLX6r8UsBlnhf+pdtSdgSWpiVz+veVCYFHDwj2+JOPFgySq9v0@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywy8193YORmNQ/4LfFfHlYavdSw7+RVLQ2ZqD/wdjbmc6TAAnv2
-	J0FqVJcVCNi5HYT8H9Zz3BA1sMhavZnWQ7i2zpeU+4rWwXAdMJaYI8VqwFVxNQ==
-X-Gm-Gg: ASbGncs4RBdGZHsPK52107GKt7Udx/Zi8TjIu/o8Wk2oL6Kr899iadAxSaV7TACkJaS
-	0xREzJd20qRTf8kMN/hNKLIPGPc4+Fcp6pHLlzlBhOEd804s0hpyQw+nXP2WehHki4TqVQRD7Xs
-	odWKOfxn2HKTJg3EpniRI+dIxQ+r2wFZfX9NMR77lkHY0k7PPBVP6mCAMTKckgSBs4qVM1v9KGa
-	VcjSz9Vvq2Ov6AViojaax6HnlRYf+SrDQY675TM6uwZMye56T5UtVuSXiWMZ/uy3N6IUGyLKlcb
-	wYzuxwFt94nFwHQdvS1RuWe3V+au
-X-Google-Smtp-Source: AGHT+IEI8FeVLv0rFukXvhLSeUcosU07zHjT/arxCxm962h4GX5fHHBVasy2JjWBqSIvNTOBRXSSKQ==
-X-Received: by 2002:a17:90a:d443:b0:2ee:5111:a54b with SMTP id 98e67ed59e1d1-2fa243eb4dcmr16162251a91.31.1739162691261;
-        Sun, 09 Feb 2025 20:44:51 -0800 (PST)
-Received: from thinkpad ([220.158.156.173])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2fa09b3f803sm7611469a91.32.2025.02.09.20.44.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 Feb 2025 20:44:50 -0800 (PST)
-Date: Mon, 10 Feb 2025 10:14:45 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-	linux-fscrypt@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Subject: Re: [PATCH v11 7/7] ufs: qcom: add support for wrapped keys
-Message-ID: <20250210044445.vmtfhqjibonhi6j2@thinkpad>
-References: <20250204060041.409950-1-ebiggers@kernel.org>
- <20250204060041.409950-8-ebiggers@kernel.org>
+        d=1e100.net; s=20230601; t=1739180346; x=1739785146;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=srrij2tofXvckDkWsV9cjxYMgt/c8bcDWt6f2Pgk2Ho=;
+        b=bGIPe0YP32RWdzBpoZD1vNNvjyT3uc8tn2+AvOANJ2COXzBRM8VUG7z3JjncSLVrp7
+         oaYJZt/AV5LFFhOL5Otvyzgn/mD++eFMDVZN/nFXjvsNF6XfhqFpd1HOA9T8mI43DaOJ
+         dNavbSeTBZgXs6vt3/YIsFGlVPAzSDVaFO1UUbEB5fE1xJ1/lyDkOgk8IZpDss0BQRUW
+         U2XY9j7ZDqtnb4PvjaZBQjd4E22QWHRLFci3dgyJaFoo8xiM8bid/Mbix45kX8d5XuRj
+         x4q4X6TKZFaU/iG2gF2PYRFcSelXXuA5vcu1A/06mTLRm1IGG8DF5CivYLuWxjwDWZhS
+         U6Cw==
+X-Forwarded-Encrypted: i=1; AJvYcCVvLRpVyY2eGcjQafkVluPBfbb2VESeZp1wWlUk6MC95nB+m+ha9HqIWZSiCzXbnCBVkw9yV0/fLEbu@vger.kernel.org
+X-Gm-Message-State: AOJu0YxfcyNpRnaqZJha92wmY95lSTtCm6S2262gupoYxpl6mD5FG96l
+	yu1oS6c2yM1DBtYfFU4eeiQuVxH3AfT3XUrkc0onC+WZMMCc0IGmRES+phtdZ8g=
+X-Gm-Gg: ASbGnctLhNB+ut9ORxrBVTr5/5V1+Jgge4x79BYKZv4hWfN6FhjIdJyWcUVJhcKeHjh
+	pmmNPd80F7ysaI3dPlWgxuwklyh4RCjmhsmOnpSRZBEQcB3GHRTj/zx3mEK8v38+bQ083kW4OE8
+	6OghcUzz0vEuYkCpE14t/Uwum3QbBDsOaa430/fmrwSLaSW21nTA7fwLSImtbXYrEbRfRk92mMU
+	fd4uNPtsyIiXmtQwXoNlUly6H0htvIowWFK7sOfSf0d2LLSLak2Gz2OrWbkeXcCXOeHFHUvpyeL
+	/0jPzSD6j6WbhYLLN8yQBL+ZTMb6uFUI0eAdQ5+2mCDpUGiTd7C2oN9gpPi313xu92U0
+X-Google-Smtp-Source: AGHT+IEHtY/xpnewLZHMrP5i7kiQ+idRtu5NbOM9k48vStwcKa1bF7nM6dGfWD5FqFw16XgafuQ3QA==
+X-Received: by 2002:a05:6000:1448:b0:38d:b2e4:6d97 with SMTP id ffacd0b85a97d-38dc9343d93mr10722664f8f.41.1739180345812;
+        Mon, 10 Feb 2025 01:39:05 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:982:cbb0:8235:1ea0:1a75:c4d5? ([2a01:e0a:982:cbb0:8235:1ea0:1a75:c4d5])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4390d896d70sm174462705e9.0.2025.02.10.01.39.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 10 Feb 2025 01:39:05 -0800 (PST)
+Message-ID: <ae9ba351-53c8-4389-b13b-7b23926a8390@linaro.org>
+Date: Mon, 10 Feb 2025 10:39:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250204060041.409950-8-ebiggers@kernel.org>
+User-Agent: Mozilla Thunderbird
+From: neil.armstrong@linaro.org
+Reply-To: neil.armstrong@linaro.org
+Subject: Re: [PATCH 0/5] Add UFS support for SM8750
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Cc: Melody Olvera <quic_molvera@quicinc.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
+ Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>,
+ Trilok Soni <quic_tsoni@quicinc.com>, linux-arm-msm@vger.kernel.org,
+ linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Nitin Rawat <quic_nitirawa@quicinc.com>,
+ Manish Pandey <quic_mapa@quicinc.com>
+References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
+ <c6352263-8329-4409-b769-a22f98978ac8@oss.qualcomm.com>
+ <20250209152140.cyry6g7ltccxcmyj@thinkpad>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <20250209152140.cyry6g7ltccxcmyj@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Feb 03, 2025 at 10:00:41PM -0800, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
+On 09/02/2025 16:21, Manivannan Sadhasivam wrote:
+> On Fri, Feb 07, 2025 at 11:47:12PM +0100, Konrad Dybcio wrote:
+>> On 13.01.2025 10:46 PM, Melody Olvera wrote:
+>>> Add UFS support for SM8750 SoCs.
+>>>
+>>> Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
+>>> ---
+>>> Nitin Rawat (5):
+>>>        dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Document the SM8750 QMP UFS PHY
+>>>        phy: qcom-qmp-ufs: Add PHY Configuration support for SM8750
+>>>        dt-bindings: ufs: qcom: Document the SM8750 UFS Controller
+>>>        arm64: dts: qcom: sm8750: Add UFS nodes for SM8750 SoC
+>>>        arm64: dts: qcom: sm8750: Add UFS nodes for SM8750 QRD and MTP boards
+>>
+>> You still need the same workaround 8550/8650 have in the UFS driver
+>> (UFSHCD_QUIRK_BROKEN_LSDBS_CAP) for it to work reliably, or at least
+>> that was the case for me on a 8750 QRD.
+>>
+>> Please check whether we can make that quirk apply based on ctrl
+>> version or so, so that we don't have to keep growing the compatible
+>> list in the driver.
+>>
 > 
-> Wire up the wrapped key support for ufs-qcom by implementing the needed
-> methods in struct blk_crypto_ll_ops and setting the appropriate flag in
-> blk_crypto_profile::key_types_supported.
+> That would be a bizarre. When I added the quirk, I was told that it would affect
+> only SM8550 and SM8650 (this one I learned later). I'm not against applying the
+> quirk based on UFSHC version if the bug is carried forward, but that would be an
+> indication of bad design.
+
+Isn't 8750 capable of using MCQ now ? because this is the whole issue behind
+this UFSHCD_QUIRK_BROKEN_LSDBS_CAP, it's supposed to use MCQ by default... but
+we don't.
+
+Is there any news about that ? It's a clear regression against downstream, not
+having MCQ makes the UFS driver struggle to reach high bandwidth when the system
+is busy because we can't spread the load over all CPUs and we have only single
+queue to submit requests.
+
+Neil
+
 > 
-> For more information about this feature and how to use it, refer to
-> the sections about hardware-wrapped keys in
-> Documentation/block/inline-encryption.rst and
-> Documentation/filesystems/fscrypt.rst.
-> 
-> Based on patches by Gaurav Kashyap <quic_gaurkash@quicinc.com>.
-> Reworked to use the custom crypto profile support.
-> 
-
-Instead of mentioning the contribution in description, you should use relevant
-tags IMO.
-
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-- Mani
-
-> ---
->  drivers/ufs/host/ufs-qcom.c | 51 ++++++++++++++++++++++++++++++++-----
->  1 file changed, 45 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index f34527fb02fb2..dc3eb6f29f5b2 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -132,15 +132,10 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
->  	}
->  
->  	if (IS_ERR_OR_NULL(ice))
->  		return PTR_ERR_OR_ZERO(ice);
->  
-> -	if (qcom_ice_get_supported_key_type(ice) != BLK_CRYPTO_KEY_TYPE_RAW) {
-> -		dev_warn(dev, "Wrapped keys not supported. Disabling inline encryption support.\n");
-> -		return 0;
-> -	}
-> -
->  	host->ice = ice;
->  
->  	/* Initialize the blk_crypto_profile */
->  
->  	caps.reg_val = cpu_to_le32(ufshcd_readl(hba, REG_UFS_CCAP));
-> @@ -150,11 +145,11 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
->  	if (err)
->  		return err;
->  
->  	profile->ll_ops = ufs_qcom_crypto_ops;
->  	profile->max_dun_bytes_supported = 8;
-> -	profile->key_types_supported = BLK_CRYPTO_KEY_TYPE_RAW;
-> +	profile->key_types_supported = qcom_ice_get_supported_key_type(ice);
->  	profile->dev = dev;
->  
->  	/*
->  	 * Currently this driver only supports AES-256-XTS.  All known versions
->  	 * of ICE support it, but to be safe make sure it is really declared in
-> @@ -218,13 +213,57 @@ static int ufs_qcom_ice_keyslot_evict(struct blk_crypto_profile *profile,
->  	err = qcom_ice_evict_key(host->ice, slot);
->  	ufshcd_release(hba);
->  	return err;
->  }
->  
-> +static int ufs_qcom_ice_derive_sw_secret(struct blk_crypto_profile *profile,
-> +					 const u8 *eph_key, size_t eph_key_size,
-> +					 u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE])
-> +{
-> +	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +
-> +	return qcom_ice_derive_sw_secret(host->ice, eph_key, eph_key_size,
-> +					 sw_secret);
-> +}
-> +
-> +static int ufs_qcom_ice_import_key(struct blk_crypto_profile *profile,
-> +				   const u8 *raw_key, size_t raw_key_size,
-> +				   u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-> +{
-> +	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +
-> +	return qcom_ice_import_key(host->ice, raw_key, raw_key_size, lt_key);
-> +}
-> +
-> +static int ufs_qcom_ice_generate_key(struct blk_crypto_profile *profile,
-> +				     u8 lt_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-> +{
-> +	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +
-> +	return qcom_ice_generate_key(host->ice, lt_key);
-> +}
-> +
-> +static int ufs_qcom_ice_prepare_key(struct blk_crypto_profile *profile,
-> +				    const u8 *lt_key, size_t lt_key_size,
-> +				    u8 eph_key[BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE])
-> +{
-> +	struct ufs_hba *hba = ufs_hba_from_crypto_profile(profile);
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +
-> +	return qcom_ice_prepare_key(host->ice, lt_key, lt_key_size, eph_key);
-> +}
-> +
->  static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops = {
->  	.keyslot_program	= ufs_qcom_ice_keyslot_program,
->  	.keyslot_evict		= ufs_qcom_ice_keyslot_evict,
-> +	.derive_sw_secret	= ufs_qcom_ice_derive_sw_secret,
-> +	.import_key		= ufs_qcom_ice_import_key,
-> +	.generate_key		= ufs_qcom_ice_generate_key,
-> +	.prepare_key		= ufs_qcom_ice_prepare_key,
->  };
->  
->  #else
->  
->  static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
-> -- 
-> 2.48.1
+> - Mani
 > 
 
--- 
-மணிவண்ணன் சதாசிவம்
