@@ -1,211 +1,342 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D019025C6E2;
-	Mon, 10 Feb 2025 19:58:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739217489; cv=fail; b=XdngjJm99Y5+vvSRy9k5vqf2DvkntiEl4+4BEXnDufzgOHtauBIgx5+ubLXx0qVTRkmBQZttDTZa5FpKQu2dViX9urpVrQWKAPrvVI6aW6AI725xuI0wNgLa8TT1rH/sQlQAR0ImWhTvqsz9k64Sl+wGSoO79vNFWE/3uclmbk4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739217489; c=relaxed/simple;
-	bh=BiYmhgPYg7GWvOIODtEAPe3samL5a7DjUTnkZWpKoPc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=n2yDQLRWI6fHw2qjsnfe1UyXwszR9iL8frgZHFv1ffcRIemeVci1yMZpOkFGZrCJNHsSOrM8VlZDrOziOImvkBi1wSJkJDnUpv4GavPdk4ryVvgMNzgjt2Z0Cp6j/3DJRVY7D4QwWtp7bEiFfJNZa7udJ7rHapWNXAW4Y0YiBwY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com; spf=pass smtp.mailfrom=sandisk.com; dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b=qx5BOaae; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandisk.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12E325C71C
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 20:25:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739219107; cv=none; b=fm0ora0kdE1JlS3swPbrT5+TL/ffB39HmaiaHpTw5wEjnUlvlxKoO+XLML+NqH2Q1EwaMJ9NkTGB7tMg2D6nYOMkF+eaiEhk+zz1Wgb2OD+PqaC324BI1Mcw/PKa79GSgy/a9Dl6ujZwhFFlTvTyEQVsqLLnN/zgcuEwk6tVnAo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739219107; c=relaxed/simple;
+	bh=6imizPB8DTAmx5T0ZnrVTxcjT6yTsbGhyI641hmSrls=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=EGPseHcDXiFCzirPLDJZkFRf76rpmXx72Vt66hWIcMaoK9csnkGT6I+uyDSbEIi3l5fgnENiJkdcT5Wg7tMLQnWjPIci8EW8VYMpD0txKAS9JPhh5yTzj1m/jlmPNZqPuI1iNryZJbKadowTu4KkwZns3GBjL2R2iCGg8bnp1mw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AClVlOhT; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b="qx5BOaae"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=sandisk.com; i=@sandisk.com; q=dns/txt;
-  s=dkim.sandisk.com; t=1739217487; x=1770753487;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=BiYmhgPYg7GWvOIODtEAPe3samL5a7DjUTnkZWpKoPc=;
-  b=qx5BOaae5iiBJFrf66lPzGajf6hiPJPRFkAh9FMFc4ObAlR38h2GyeHn
-   qMb/r7gnsmn0a2O7p3K1D8hpSLMf7jxVbo2bfi/myb2Ti9fyPYEGZttLl
-   2GP4USKGqPB1R27FZ0focA6dvUrywv2x0f6hYTsOl5ivHIdjgRXxfF9fL
-   5bVY0QA8N0SxUyMYICNgjnX0yhbgLoHjBsJcUoMiWBxY1zx3p0gMfC6bl
-   Qfm0uhfxAfwgG2Rqhmv5bD1V8QzrwlUjeslbVtZKkYqTNcCYvn7nloOHc
-   SoqXy6o+2FgmUs2dXrE5vswZGlu68qZrpS9L4cZV6MciM0fB9Lbq91ZwV
-   Q==;
-X-CSE-ConnectionGUID: iSnwGGBfSnyyynesO5Kzhg==
-X-CSE-MsgGUID: w2uFXJxQTga7rwbG1OTd4g==
-X-IronPort-AV: E=Sophos;i="6.13,275,1732550400"; 
-   d="scan'208";a="37863977"
-Received: from mail-mw2nam10lp2043.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.43])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2025 03:58:00 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HDbHBs1abF1jvUMACiJWv1Pq/5rssVRTK7FnRO3cNEPKLlG+ttvFp0cguLkmzf5nZee4eMl2+rl/DV9XQWwSrQz+CwrKM7RUTQK+8c25YZ2a/fNU+nS4hoRhscViVVZBkP3WAzh2c1rdQdOT4x3dMl2jfqX2wSXNnH2VUU9RAeEheDolFskJ/6z1ESahq+MOsMUEyWWNgi26/0Cc109zI2s9Eo+gVkmuh2SZ17NCHY2pzBXqjYMg5Jg9WChveZ/JpqZMICNTc29hPvTJL3BIRivZjCFs3tSXVDfiYtBC2A+3YhrIOLxQ7rPE/XNqhTlhzwAP118dE+0AiMlw9qizWQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BiYmhgPYg7GWvOIODtEAPe3samL5a7DjUTnkZWpKoPc=;
- b=TDLPBdS3jK4CYk5jIV/BfXc/CRRaGCfCKxJ7Pnz2Ejmw8GVNT+YIk6ViS5lEoX7bGo7xN0H1xCbu8CAZ3FS7t+Ed0l9t1PfFDXZaLPEcje7B6g742adms/0J0jwti4Ns+62mqfL3cW1tDlU/SalAbXJWhK2rD8xwXDuFmcTGdnKMonX+z4aIaCX9dW6v7qBf4Aey4N5UQfU9fw/E2eCqN0Te2jmSaMiEbJ8QrNIuAc4JZkZ6mcCtwGJrCBmgCRLvZQP6FZQc0J/E0rCmDblHMZcSl8t59j/LM0MxqkSCc19c+Uqz3CdKF8b2Y/5W8LY9ha0uQvKEZ2Oppt8Cp//Mow==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=sandisk.com; dmarc=pass action=none header.from=sandisk.com;
- dkim=pass header.d=sandisk.com; arc=none
-Received: from PH7PR16MB6196.namprd16.prod.outlook.com (2603:10b6:510:312::5)
- by BLAPR16MB3794.namprd16.prod.outlook.com (2603:10b6:208:254::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8422.19; Mon, 10 Feb
- 2025 19:57:58 +0000
-Received: from PH7PR16MB6196.namprd16.prod.outlook.com
- ([fe80::e087:8329:baea:5808]) by PH7PR16MB6196.namprd16.prod.outlook.com
- ([fe80::e087:8329:baea:5808%7]) with mapi id 15.20.8422.015; Mon, 10 Feb 2025
- 19:57:57 +0000
-From: Avri Altman <Avri.Altman@sandisk.com>
-To: Bart Van Assche <bvanassche@acm.org>, Avri Altman <avri.altman@wdc.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3] scsi: ufs: critical health condition
-Thread-Topic: [PATCH v3] scsi: ufs: critical health condition
-Thread-Index: AQHbe+nnmVPIaAX370GGVv9uGiAu8bNA83UA
-Date: Mon, 10 Feb 2025 19:57:57 +0000
-Message-ID:
- <PH7PR16MB61963D9EB09E61AED31B93B7E5F22@PH7PR16MB6196.namprd16.prod.outlook.com>
-References: <20250210135814.50783-1-avri.altman@wdc.com>
- <01d47263-50a1-4626-ad34-446996ac970e@acm.org>
-In-Reply-To: <01d47263-50a1-4626-ad34-446996ac970e@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=sandisk.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH7PR16MB6196:EE_|BLAPR16MB3794:EE_
-x-ms-office365-filtering-correlation-id: 7dab469e-a04b-46d6-5fb7-08dd4a0d371b
-wdcipoutbound: EOP-TRUE
-wdcip_bypass_spam_filter_specific_domain_inbound: TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|366016|10070799003|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?dkdqMEFGTU4vZnlaNUJvb3ZtRGNvMmpXUXZEQkRpcng5NTl6dS9paCtDcGNV?=
- =?utf-8?B?elFINlE1SDJxY3JWazBGZ1JWNGVhZ0ZLaVlwd1VMaGNlWWNMVTljdnNKZ25h?=
- =?utf-8?B?TVBXaDVNWjdVYWd2VG5JMFI0ZWxvTUVlWk1WOWNFaDM5TEFGSXZkRDhyS2lj?=
- =?utf-8?B?QkhTSTEwelJaVWhMbWpSVklnbXVJM3JPZlIwZ0ZuYVE3ZFZQMEJrQ0MxUnph?=
- =?utf-8?B?QVFFeUNoMGFCeVUvTVhneWpoWDRkMXY5N3ZQM25oNXl4UEtMTGJjMjdkRXhE?=
- =?utf-8?B?bGtGVDRVYW9UM2tjUThnd3FaKzJlbHNleWJCUmp2NnJVL29Ob1JxTkY2ME5s?=
- =?utf-8?B?c2N6WENUT2pxNUxURjF5Y2k5ZUdxekNoQnp4eDlpTnB0cFlySXZiM2pXVmpB?=
- =?utf-8?B?dlhYSEhzaWdTS0Vsd2V3OHZUZk1sQzZhZ3JIbGYxV2RkVTBiakpqcnBEZCtC?=
- =?utf-8?B?TzJ3VDVIL3BnL1pSWTNKSXBKamJXVVlVSjlqTVpxeEIyWWZJV2NVNENxOTRs?=
- =?utf-8?B?em9ZL0o5VGFHcDdrbWNtS3MrSkJHT1FhMU5mcnhoRCtyL25XbUdZWE5xNnJk?=
- =?utf-8?B?YW5oNjN2cVgrNEdSRXB0eVNXOHFBOUk4ZTN6WnN3a1NJbkwyVVFVdDdzK0R2?=
- =?utf-8?B?NkJNNm8wbnlKd1FNcXlNcnNYMWZRVTF0N0FIaVFhL0dDWmt1eWtKZTU2ZUpQ?=
- =?utf-8?B?emdMSWpKblMrWGRZenNKRmhvYk8xSkd6bWdGZjY3UEtLTzdDV1dFM0Y5TG90?=
- =?utf-8?B?c2twdEd6clhpUEJHL2xhcGlyL3JWL1c0K3poT01vQ09sMzdkV1dyZEhpUG0v?=
- =?utf-8?B?eTVCVzRpS1J5VkluVFA2alBMVERzUkR0K2t4M3RBV05ZUGczSFo1WmhwQmZN?=
- =?utf-8?B?MlV0ci9ZUm5QSGFlazVVcUdTTThPYjNWRjJTQnJLWWQrTDFIU0FjdkJVS0o1?=
- =?utf-8?B?NmdiNG4vSkhVWTFJMEQ2a0lwZ25pQ01sR0lQZU5DY1lmeDdvbTdCOFZ3Tm1I?=
- =?utf-8?B?akxyVzRMaHRHb2ljOTlWM1phZVM3YmRYQkJ1SnR3TlJtYkxLZmNGWGN0dDd6?=
- =?utf-8?B?THVMdytvYWpqKytqaEljQnIxbk9pUjIrTW85b1pOVTJRQTBVc054cUtXRDI3?=
- =?utf-8?B?Y3lWUFdpUEpkbEJRcXlPaXNtMXdWNjJPMlNmN1gzSnNQeU81M3JDY0o1K1pH?=
- =?utf-8?B?blZ5NkNFU2ZiMjNYWEthUGNJNXdnNzU1NjdESFZEZm1ucDByOWVDcFBnZEla?=
- =?utf-8?B?cTI3b1VYMms0WUhqY3h3YXEwUEpwdy9UK2NUdTFFc3ZIRUlSanQvblNXamRp?=
- =?utf-8?B?cUo3dlhSM2FHbGM3T3Rab3JtUjFTemJoNXZrS21DazZ5WE9GbUJQN1ZGUkww?=
- =?utf-8?B?NllSNXpKVE5OL0ZOMFE3SzlISHEyQzRwdDcvYkNsanFUUkJUNi9YVU9BbjVi?=
- =?utf-8?B?bWpQa0ttVG1HSWs0d3RKM2x6cGt2VkhYMTIydzZacWdVTjVOTElObU4zekox?=
- =?utf-8?B?bXdoeFArdHY3L1BnVkhZVk5rVER6RVlzMTNWbGZrMXl6Sk9FcDZjVmpsbys4?=
- =?utf-8?B?UG16YTF2Mzg1U0FZbUxwTkhVSGlUUVNzSVI1NEpPRmcyVUZoeENZMnB5azZY?=
- =?utf-8?B?WTZzMHlOajU2bk1TZ2hkeFBRSitSUUVmT2RsR2FJSmN6MHFWNGdhRmlCUGFa?=
- =?utf-8?B?ODE5bDhxMVdtTFpKeDloNVdNa2Y1RTNLcGtnSUtGWTBjc0NLYmV4cUZwaFhH?=
- =?utf-8?B?R3NvYnZHUnhBYXpyWEVORFR2Mm9WZ21JTHNtb1RobVVMU2c2QS9lQ1hwN3RJ?=
- =?utf-8?B?aHRyTzU4UjlHMXF6NnpkcGdhWkF0cFc5cFNwWUxXeGV2NWlwTzBZam1ZWTR5?=
- =?utf-8?B?L1hPM2Q3QTZISEVKSmwwb1ZKS0pIVWtRRFNQSDBRYlNnQTlkMnlkRUcyKzc3?=
- =?utf-8?Q?9mr+w6uN6kMIz1gYCDUw0Cn7PbDtZrud?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR16MB6196.namprd16.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(10070799003)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?TUdTUnBwaEJGRG9TdUg4UnAxRzZFQXNIdDhsYk0zT1REMU5YZGN4VWc0NTdk?=
- =?utf-8?B?MmYxRjY4ZXhDQmE4U2hsbERoQ2E3ajJTMHpOMy9wajF6clRJVEZoY3pydFhL?=
- =?utf-8?B?U1k4ckp2SXhsQXlFZG1PZ0ttc0V5bUF5bVN0ZTZ3NEhpdXJRZk1TQ01QVitE?=
- =?utf-8?B?bEFiTHNtYURGbHV0dGVzR2lYU1FJT202QTgxUjNzY3BTS1ZGYjl4TUZjRGdR?=
- =?utf-8?B?NVFWTTgwRk9waXBvS3RDZmQ3SUZEQXhHRWJndXRKeE9USTJGRks0TFZkb3dW?=
- =?utf-8?B?aTFNY2oydEVIVDhjSVZpbkVWcGIxZ3c4YlE0ek1PbGJqZm5kTWRXOVczdnM3?=
- =?utf-8?B?Q09BZXRhYllJbUlpVlNkdmpIblkwajNxUlZsb0htYXJOS0VTU25vQVRXSFd2?=
- =?utf-8?B?Wk53WVM0ekt0U0Y0NW9wb0RDQTJjY2swbnVPaGErTHRYd1ZWbS9QMkhka0h5?=
- =?utf-8?B?UCtXdVdYZzZXRG1NK1NhODZkdUZxb1kvQjRQWFAyQS8ydUZ1UVplNEZGdi9J?=
- =?utf-8?B?RUZ3OWd6c0FyZjFad2l1VVkxOVB1Yjk4L1ppRThRVlA5RWlvS01kT0JkYzg4?=
- =?utf-8?B?RERqZTNhM3psMmhacGdxb2hINnZiRkI2L0NYWWZwRmYvSEJ6aHQ4WjRwTDVy?=
- =?utf-8?B?czNUQU9qd0hyUWFaTnZPMXBCdjA4dGNLd3UvZVFobW5ERlZCVmttbW9HZjVM?=
- =?utf-8?B?VWFrZENheWVKRElNelZ4STFCZzM3RUtzaGRUQ0UrR0s2eUNKVVRMZUFuc3ZQ?=
- =?utf-8?B?bjNqQUhQS29ONDB3YkcwK3ZvUzg4djE0VWhoNFRHNDVEMklMNHNQRXVsVWZy?=
- =?utf-8?B?VjA2SGRBSDROakZxM0tySWpheHZCWmxRclpjU21NTkdvUGNIU3JRdVRJZnd6?=
- =?utf-8?B?WTAwOTlUWkNTcm5NaFZ6Qkp6ekdqa1dVTWJLVzF6NVZTZVBOZEM1L2twV3hE?=
- =?utf-8?B?NEp1UmI3OFJuVVp1MUJHN1ZLbjR5cjU5MEZONVJyd2gzSERBemc1amFtRHVw?=
- =?utf-8?B?OC9nZmZpb25hZVB3MUtSdUVaOVZKb2IvV2lEVkZKMk1PL2RjR1NoRTQ2L2Ju?=
- =?utf-8?B?V2dDSndISzdyUjdCQ2Z1QXBQNDd0WkMySWVJSUFYc1dWbFlLMHJTOFZuM0wv?=
- =?utf-8?B?S21MUXRjQ095dmUwWHF4aExtdXplRWtCRnQveTY4OEdlSFhuR3hkdTcvdzMr?=
- =?utf-8?B?bkFoSUpId0tDV1FpakRUYVdMMHVZZTdZcmJ3djh1akRjd3lyRzNRQVhhdE9X?=
- =?utf-8?B?bEc3T2htaDREYkZpTVcvdGYrTi82OUtENCtrZStRakV2ZmJEbXpCWG9HT0Fu?=
- =?utf-8?B?L1pSUUowdDZ1N25uRFRIb1VadWptNnVOZXYwcnFBWmtZakZabEY5b0RVdXZN?=
- =?utf-8?B?SEFVdEd4bXYxNjdJOVhmK2lEUlVNY0VXUTNoUnViSHFkOGorMEtFdjNndlQ5?=
- =?utf-8?B?NWQvU0R6U25xeWhTcjdyL0JUTTloSTBaQW1YYW5kcHhCb0toS05TNTdUMzFo?=
- =?utf-8?B?cGtsVGJyaFFmdFhBVktWQ3lFenBibENIVDU4L2lvZVVQR2pkaDhqeUVQQkZ5?=
- =?utf-8?B?S1RTdFRnb0xiSGs5bnNrM1hRU3grSXBaRmQrSnRNMWdVaHprUDBXRmFiMDRN?=
- =?utf-8?B?M1ZZNGdBcnRSQ0dxVW1HTWpRQm0yVlNFaFAyT3JTVnZhYm5SamFOSlZBTzUx?=
- =?utf-8?B?U1NqUGR3SWUxR01MYmdlaWRZK295TnZNdkY2UmY1b2kyQno5QWZYc2ZQM1Nn?=
- =?utf-8?B?MFNHb3lXUkM5WlNpQzJBajdGZWR6cnJEOGRqVmdOOUdWMS9vRkU5YVNhVm9Q?=
- =?utf-8?B?bXROeWM0YktUOFVxWndoVVJFRHhaa0ttNGdDcnVvSm9uQXRDQk9yVTd4QStW?=
- =?utf-8?B?UkdIcmx5YWIyempPamhSa1pTZDk2d3NjYUVmTGhsNi92d05vQjhqOWpTQ0tt?=
- =?utf-8?B?T0ZETzNRK2Z6M0QyTTBJcEpESjFWTlp1S2E4OFk2RFFPVkZCZzE0bTF3dysr?=
- =?utf-8?B?Nnc0aGIrN3FGQnkvRjh2SVI0Vy9wUWFWSk5YcHdqaEF5QVprRTg3NXlGYnBZ?=
- =?utf-8?B?MW5XNm5LK2RqZ3ZDb0hLc045ZVUwUlV2dkNTRGM2bUFoeW8waVpUM0xKUDQv?=
- =?utf-8?B?eDVhalRaWEc2ZmxHMTdCZTZURlpoMklLekV6RUNocWpHV09tdkdkZTFxUWhn?=
- =?utf-8?Q?txk/R4Q9mAatBmdBo5Ij03VUalZtYWoeJC+D+XI2Xrip?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AClVlOhT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1739219103;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=iPOBe+Uwlx3L1+ARNdkzXMkHsDFVFStQPqRJpWJWW1I=;
+	b=AClVlOhTZ/M2GUSoA+4qA9qeyyDjkYc4VdsxJ2q9r8P7bpbm5yS9apELXrualDxfL9aMPl
+	SHwGapvpCPJFZNX987rQvHNqET8iIzYf9mcTbAmABGFYvqDHHWmfmAgZIOSS6WqOpqPfUK
+	c0n6WFbIY4TFKIKplbHtRWWtyovM5NE=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-88-1dCl5-A0NPesm6zhdhwrcA-1; Mon,
+ 10 Feb 2025 15:25:00 -0500
+X-MC-Unique: 1dCl5-A0NPesm6zhdhwrcA-1
+X-Mimecast-MFC-AGG-ID: 1dCl5-A0NPesm6zhdhwrcA
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C6FF01800873;
+	Mon, 10 Feb 2025 20:24:58 +0000 (UTC)
+Received: from [10.22.80.239] (unknown [10.22.80.239])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 757821800352;
+	Mon, 10 Feb 2025 20:24:56 +0000 (UTC)
+Message-ID: <45ccb6f1-e352-4499-aa16-f22c70d0e186@redhat.com>
+Date: Mon, 10 Feb 2025 15:24:55 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	FZ3k7M93bI6CnmtIVE+pRGhjAxXfM/2G9MWItzcOM2z6h1EFN0creZDmEhox+8x9kASlIFR8QfE3X9o/xl6G7f+SDatK3Q7PgRkUxjeO8OZg90ktUdsu5f6VxKlHfwsNlcxqS49w6PtDlOgv01dbswDrsuuSPTV63qIPysZoNsj9dazUIYiobCeBcGAP374n/ADtQK/JCepgiMtt2Wbg2oF11x1vWxtzXhOP4ywcYDLTFyJWHINOY7kfRb/2ySPSIiGGQTu72hY6LUif/1yLwIxcnJui1pL8cfRCUeAt4e71YKmkH/TnLMeTY8Q0DJaZSvPHkXmw8E8TkMtrX3zG0tL+B6tEEcwoCfQzD/x4QWAXM7sLvQRcj+gZ2LotSbUeFOVl6E3All0+sfh+vGkLCnyS7YYgXJFdKdPyACkCraFskPEPjuGbtnfvFL3DU8svCjKBIEerpQSBBmWwbgPYhisQOOh36QWFKl1//aWlf3ujojLygDLOLo3XdycF+POumtwn2rnO+w8MemSQTKoqrE4PPlQYDpFT5MOMbBSKrroWHc5B4SJUDHCAiZHtRFttHXg3LHF0glfdz3vrchIjVkDUcyBpH/dz6PEpL8hYCexx9lILM6QumAzeEap8RtsvIbVXTOk8ymc4ViL6zCDlgA==
-X-OriginatorOrg: sandisk.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR16MB6196.namprd16.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7dab469e-a04b-46d6-5fb7-08dd4a0d371b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Feb 2025 19:57:57.5465
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 7ffe0ff2-35d0-407e-a107-79fc32e84ec4
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: SqfgMTqUt4s9rKpJldxcU4cttKKZqr5k4zv8m+FwfDLkeju4NgWKY051OqucWroS1BPSNbmeRE/YwjlfuT6xYQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR16MB3794
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] [v2]aacraid: Reply queue mapping to CPUs based on IRQ
+ affinity
+From: John Meneghini <jmeneghi@redhat.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tomas Henzl <thenzl@redhat.com>, Marco Patalano <mpatalan@redhat.com>,
+ Scott Benesh <Scott.Benesh@microchip.com>,
+ Don Brace <Don.Brace@microchip.com>, Tom White <Tom.White@microchip.com>,
+ Abhinav Kuchibhotla <Abhinav.Kuchibhotla@microchip.com>,
+ linux-scsi@vger.kernel.org, Sagar Biradar <sagar.biradar@microchip.com>
+References: <20250130173314.608836-1-sagar.biradar@microchip.com>
+ <7f055e1d-fdff-4fe9-a522-dbb22662e810@redhat.com>
+Content-Language: en-US
+Organization: RHEL Core Storge Team
+In-Reply-To: <7f055e1d-fdff-4fe9-a522-dbb22662e810@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-IA0KPiBPbiAyLzEwLzI1IDU6NTggQU0sIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiA+IFRvIGhhbmRs
-ZSB0aGlzIG5ldyBgc3lzZnNgIGVudHJ5LCBlaXRoZXIgYHVkZXZgIHJ1bGVzIG9yIHNvbWUgb3Ro
-ZXINCj4gPiBwb2xsaW5nIGNvZGUgY2FuIGJlIGNvbmZpZ3VyZWQgdG8gbW9uaXRvciBjaGFuZ2Vz
-IGluIHRoZQ0KPiA+IGBjcml0aWNhbF9oZWFsdGhgIGF0dHJpYnV0ZS4NCj4gDQo+IEhtbSAuLi4g
-SSdtIG5vdCBhd2FyZSBvZiBhbnkgc3VwcG9ydCBpbiB1ZGV2ZCB0byBwb2xsIG9uIHN5c2ZzIGF0
-dHJpYnV0ZXM/IEkNCj4gdGhpbmsgdGhhdCBjYWxsaW5nIHNlbGVjdCgpLCBwb2xsKCkgb3IgZXBv
-bGwoKSBpcyByZXF1aXJlZCB0byB3YWl0IGZvciBhIHN5c2ZzX25vdGlmeSgpDQo+IGNhbGwuDQpE
-b25lLg0KSXTigJlzIGEgbGVmdG92ZXIgZnJvbSB0aGUgcHJldmlvdXMgY29tbWl0IGxvZy4NCkJ0
-dyBJIHRlc3RlZCBpdCB3aXRoIGEgdWRldiBydWxlLCBhbmQgaXQgd29ya3MgZmluZSBhcyB3ZWxs
-Lg0KDQo+IA0KPiA+ICtEZXNjcmlwdGlvbjoJUmVwb3J0IHRoZSBudW1iZXIgb2YgdGltZXMgYSBj
-cml0aWNhbCBoZWFsdGggZXZlbnQgaGFzIGJlZW4NCj4gPiArCQlyZXBvcnRlZCBieSBhIFVGUyBk
-ZXZpY2UuIGZ1cnRoZXIgaW5zaWdodCBpbnRvIHRoZSBzcGVjaWZpYw0KPiANCj4gZnVydGhlciAt
-PiBGdXJ0aGVyPw0KRG9uZS4NCg0KPiANCj4gPiArc3RhdGljIHNzaXplX3QgY3JpdGljYWxfaGVh
-bHRoX3Nob3coc3RydWN0IGRldmljZSAqZGV2LA0KPiA+ICsJCQkJICAgIHN0cnVjdCBkZXZpY2Vf
-YXR0cmlidXRlICphdHRyLCBjaGFyICpidWYpIHsNCj4gPiArCXN0cnVjdCB1ZnNfaGJhICpoYmEg
-PSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsNCj4gPiArDQo+ID4gKwlyZXR1cm4gc3lzZnNfZW1pdChi
-dWYsICIlZFxuIiwgaGJhLT5jcml0aWNhbF9oZWFsdGgpOyB9DQo+IA0KPiBOb3cgdGhhdCB0aGUg
-ZGF0YSB0eXBlIG9mIGhiYS0+Y3JpdGljYWxfaGVhbHRoIGhhcyBiZWVuIGNoYW5nZWQgZnJvbQ0K
-PiBib29sZWFuIGludG8gaW50ZWdlciwgc2hvdWxkIGl0cyBuYW1lIHBlcmhhcHMgYmUgY2hhbmdl
-ZCBpbnRvDQo+IGhiYS0+Y3JpdGljYWxfaGVhbHRoX2NvdW50Pw0KRG9uZS4NCg0KPiANCj4gPiBA
-QCAtMTEzMCw2ICsxMTMxLDkgQEAgc3RydWN0IHVmc19oYmEgew0KPiA+ICAgCXN0cnVjdCBkZWxh
-eWVkX3dvcmsgdWZzX3J0Y191cGRhdGVfd29yazsNCj4gPiAgIAlzdHJ1Y3QgcG1fcW9zX3JlcXVl
-c3QgcG1fcW9zX3JlcTsNCj4gPiAgIAlib29sIHBtX3Fvc19lbmFibGVkOw0KPiA+ICsNCj4gPiAr
-CS8qIEhFQUxUSF9DUklUSUNBTCBleGNlcHRpb24gcmVwb3J0ZWQgKi8NCj4gPiArCWludCBjcml0
-aWNhbF9oZWFsdGg7DQo+ID4gICB9Ow0KPiANCj4gUGxlYXNlIGxlYXZlIG91dCB0aGUgaW5saW5l
-IGNvbW1lbnQgc2luY2UgQGNyaXRpY2FsX2hlYWx0aCBhbHJlYWR5IGhhcyBhDQo+IGtlcm5lbC1k
-b2MgY29tbWVudC4NCkRvbmUuDQoNClRoYW5rcywNCkF2cmkNCj4gDQo+IFRoYW5rcywNCj4gDQo+
-IEJhcnQuDQo=
+Someone told me this email was confusing.
+
+To be clear: Red Hat has reviewed and tested multiple versions of this patch internally and
+we are shipping an out of tree version of this patch in RHEL-8.  These changes provide
+a critical fix for one of our customers who is using aacraid in a production environment
+with offline cpu support. We've asked Sagar to submit this private version of his patch
+upstream but he found that it needed some rework because of the recent changes made by patch
+(bd326a5ad6397c scsi: replace blk_mq_pci_map_queues with blk_mq_map_hw_queues)
+
+So after refactoring his patch I asked our Red Hat QA department to retest this latest
+version the patch with an upstream kernel.
+
+What's included below is a description of the origin problem that was seen with
+a RHEL-10 kernel, based on v6.9, with a description of the test that was run.
+
+All tests are passing with this patch based on scsi/6.14/staging.
+
+Martin, can we please merge this into 6.14, or perhaps 6.15?
+
+/John
+
+On 2/10/25 12:20 PM, John Meneghini wrote:
+> This patch has already been Reviewed-by and Tested-by Red Hat.
+> 
+> However, after applying this patch to scsi/6.14/staging I've asked our QA engineer, Marco Patalono,
+> to please re-test this patch and confirm this it fixes the problem.
+> 
+> What were you trying to do that didn't work?
+> 
+> While running the offline CPU automation on my system with an ASR405 storage controller
+> (AACRAID), I hit the following hung_task_timeouts:
+> 
+> [   85.132499] aacraid: Host adapter abort request.
+> [   85.132499] aacraid: Outstanding commands on (0,1,3,0):
+> [  103.569532] aacraid: Host adapter abort request.
+> [  103.569532] aacraid: Outstanding commands on (0,1,3,0):
+> [  106.897528] aacraid: Host adapter abort request.
+> [  106.897528] aacraid: Outstanding commands on (0,1,3,0):
+> [  106.912542] aacraid: Host bus reset request. SCSI hang ?
+> [  106.919612] aacraid 0000:84:00.0: Controller reset type is 3
+> [-- MARK -- Fri Jun 14 16:10:00 2024]
+> [  188.472054] aacraid: Comm Interface type2 enabled
+> [  270.986453] aacraid: Host adapter abort request.
+> [  270.986453] aacraid: Outstanding commands on (0,1,3,0):
+> [  271.006495] aacraid: Host bus reset request. SCSI hang ?
+> [  271.020473] aacraid 0000:84:00.0: Controller reset type is 3
+> [  352.307955] aacraid: Comm Interface type2 enabled
+> [  369.271587] INFO: task kworker/u65:1:130 blocked for more than 122 seconds.
+> [  369.271599]       Not tainted 6.9.0-7.el10.x86_64 #1
+> [  369.271604] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  369.271977] INFO: task kworker/u65:2:132 blocked for more than 122 seconds.
+> [  369.271980]       Not tainted 6.9.0-7.el10.x86_64 #1
+> [  369.271981] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  369.272344] INFO: task xfsaild/dm-0:778 blocked for more than 122 seconds.
+> [  369.272346]       Not tainted 6.9.0-7.el10.x86_64 #1
+> [  369.272348] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  369.273538] INFO: task restraintd:1399 blocked for more than 122 seconds.
+> [  369.273541]       Not tainted 6.9.0-7.el10.x86_64 #1
+> [  369.273542] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  369.273895] INFO: task main.sh:1900 blocked for more than 122 seconds.
+> [  369.273897]       Not tainted 6.9.0-7.el10.x86_64 #1
+> [  369.273898] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  373.404946] sd 0:1:3:0: [sdb] tag#454 timing out command, waited 180s
+> [  424.076623] aacraid: Host adapter abort request.
+> [  424.076623] aacraid: Outstanding commands on (0,1,3,0):
+> 
+> Please provide the package NVR for which bug is seen:
+> RHEL-10.0-20240603.86
+> 
+> kernel-6.9.0-7.el10
+> 
+> How reproducible: Often
+> 
+> Steps to reproduce:
+> Generate I/O to disks controller by the ASR8405
+> Offline all CPUs except 2
+> Online all CPUs
+> 
+> With the patched/upstream kernel provided, I am not seeing any issues when running
+> the offline CPU automation after loading the module parameter as shown below:
+> 
+> # echo 'options aacraid aac_cpu_offline_feature=1' | sudo tee /etc/modprobe.d/aacraid.conf
+> # dracut -f
+> # reboot
+> 
+> Tested-by: Marco Patalano <mpatalan@redhat.com>
+> 
+> On 1/30/25 12:33 PM, Sagar Biradar wrote:
+>> patch "(9dc704dcc09e scsi: aacraid: Reply queue mapping to
+>> CPUs based on IRQ affinity)" caused issues starting V6.4.0,
+>> which was later reverted by
+>> patch "(c5becf57dd56 Revert "scsi: aacraid: Reply queue mapping to CPUs
+>> based on IRQ affinity)"
+>>
+>> Add a new modparam "aac_cpu_offline_feature" to control CPU offlining.
+>> By default, it's disabled (0), but can be enabled during driver load
+>> with:
+>>     insmod ./aacraid.ko aac_cpu_offline_feature=1
+>> Enabling this feature allows CPU offlining but may cause some IO
+>> performance drop. It is recommended to enable it during driver load as
+>> the relevant changes are part of the initialization routine.
+>>
+>> Fixes an I/O hang that arises because of an MSIx vector not having a
+>> mapped online CPU upon receiving completion.
+>>
+>> SCSI cmds use the mq_map to get the vector_no via blk_mq_unique_tag()
+>> and blk_mq_unique_tag_to_hwq() - which are setup during the blk_mq init.
+>>
+>> For reserved cmds, or the ones before the blk_mq init, use the vector_no
+>> 0, which is the norm since don't yet have a proper mapping to the queues.
+>>
+>> Reviewed-by: Gilbert Wu <gilbert.wu@microchip.com>
+>> Reviewed-by:John Meneghini <jmeneghi@redhat.com>
+>> Reviewed-by:Tomas Henzl <thenzl@redhat.com>
+>> Tested-by: Marco Patalano <mpatalan@redhat.com>
+>> Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+>> ---
+>>   drivers/scsi/aacraid/aachba.c  |  6 ++++++
+>>   drivers/scsi/aacraid/aacraid.h |  2 ++
+>>   drivers/scsi/aacraid/commsup.c |  9 ++++++++-
+>>   drivers/scsi/aacraid/linit.c   | 24 ++++++++++++++++++++++++
+>>   drivers/scsi/aacraid/src.c     | 28 ++++++++++++++++++++++++++--
+>>   5 files changed, 66 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+>> index abf6a82b74af..f325e79a1a01 100644
+>> --- a/drivers/scsi/aacraid/aachba.c
+>> +++ b/drivers/scsi/aacraid/aachba.c
+>> @@ -328,6 +328,12 @@ MODULE_PARM_DESC(wwn, "Select a WWN type for the arrays:\n"
+>>       "\t1 - Array Meta Data Signature (default)\n"
+>>       "\t2 - Adapter Serial Number");
+>> +int aac_cpu_offline_feature;
+>> +module_param_named(aac_cpu_offline_feature, aac_cpu_offline_feature, int, 0644);
+>> +MODULE_PARM_DESC(aac_cpu_offline_feature,
+>> +    "This enables CPU offline feature and may result in IO performance drop in some cases:\n"
+>> +    "\t0 - Disable (default)\n"
+>> +    "\t1 - Enable");
+>>   static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
+>>           struct fib *fibptr) {
+>> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+>> index 8c384c25dca1..dba7ffc6d543 100644
+>> --- a/drivers/scsi/aacraid/aacraid.h
+>> +++ b/drivers/scsi/aacraid/aacraid.h
+>> @@ -1673,6 +1673,7 @@ struct aac_dev
+>>       u32            handle_pci_error;
+>>       bool            init_reset;
+>>       u8            soft_reset_support;
+>> +    u8            use_map_queue;
+>>   };
+>>   #define aac_adapter_interrupt(dev) \
+>> @@ -2777,4 +2778,5 @@ extern int update_interval;
+>>   extern int check_interval;
+>>   extern int aac_check_reset;
+>>   extern int aac_fib_dump;
+>> +extern int aac_cpu_offline_feature;
+>>   #endif
+>> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+>> index ffef61c4aa01..1d62730e5c1b 100644
+>> --- a/drivers/scsi/aacraid/commsup.c
+>> +++ b/drivers/scsi/aacraid/commsup.c
+>> @@ -223,8 +223,15 @@ int aac_fib_setup(struct aac_dev * dev)
+>>   struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
+>>   {
+>>       struct fib *fibptr;
+>> +    u32 blk_tag;
+>> +    int i;
+>> -    fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
+>> +    if (aac_cpu_offline_feature == 1) {
+>> +        blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+>> +        i = blk_mq_unique_tag_to_tag(blk_tag);
+>> +        fibptr = &dev->fibs[i];
+>> +    } else
+>> +        fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
+>>       /*
+>>        *    Null out fields that depend on being zero at the start of
+>>        *    each I/O
+>> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+>> index 91170a67cc91..fc4d35950ccb 100644
+>> --- a/drivers/scsi/aacraid/linit.c
+>> +++ b/drivers/scsi/aacraid/linit.c
+>> @@ -506,6 +506,23 @@ static int aac_sdev_configure(struct scsi_device *sdev,
+>>       return 0;
+>>   }
+>> +/**
+>> + *    aac_map_queues - Map hardware queues for the SCSI host
+>> + *    @shost: SCSI host structure
+>> + *
+>> + *    Maps the default hardware queue for the given SCSI host to the
+>> + *    corresponding PCI device and enables mapped queue usage.
+>> + */
+>> +
+>> +static void aac_map_queues(struct Scsi_Host *shost)
+>> +{
+>> +    struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+>> +
+>> +    blk_mq_map_hw_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+>> +                &aac->pdev->dev, 0);
+>> +    aac->use_map_queue = true;
+>> +}
+>> +
+>>   /**
+>>    *    aac_change_queue_depth        -    alter queue depths
+>>    *    @sdev:    SCSI device we are considering
+>> @@ -1490,6 +1507,7 @@ static const struct scsi_host_template aac_driver_template = {
+>>       .bios_param            = aac_biosparm,
+>>       .shost_groups            = aac_host_groups,
+>>       .sdev_configure            = aac_sdev_configure,
+>> +    .map_queues            = aac_map_queues,
+>>       .change_queue_depth        = aac_change_queue_depth,
+>>       .sdev_groups            = aac_dev_groups,
+>>       .eh_abort_handler        = aac_eh_abort,
+>> @@ -1777,6 +1795,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+>>       shost->max_lun = AAC_MAX_LUN;
+>>       pci_set_drvdata(pdev, shost);
+>> +    if (aac_cpu_offline_feature == 1) {
+>> +        shost->nr_hw_queues = aac->max_msix;
+>> +        shost->can_queue    = aac->vector_cap;
+>> +        shost->host_tagset = 1;
+>> +    }
+>>       error = scsi_add_host(shost, &pdev->dev);
+>>       if (error)
+>> @@ -1908,6 +1931,7 @@ static void aac_remove_one(struct pci_dev *pdev)
+>>       struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
+>>       aac_cancel_rescan_worker(aac);
+>> +    aac->use_map_queue = false;
+>>       scsi_remove_host(shost);
+>>       __aac_shutdown(aac);
+>> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+>> index 28115ed637e8..b9bed3e255c4 100644
+>> --- a/drivers/scsi/aacraid/src.c
+>> +++ b/drivers/scsi/aacraid/src.c
+>> @@ -493,6 +493,10 @@ static int aac_src_deliver_message(struct fib *fib)
+>>   #endif
+>>       u16 vector_no;
+>> +    struct scsi_cmnd *scmd;
+>> +    u32 blk_tag;
+>> +    struct Scsi_Host *shost = dev->scsi_host_ptr;
+>> +    struct blk_mq_queue_map *qmap;
+>>       atomic_inc(&q->numpending);
+>> @@ -505,8 +509,28 @@ static int aac_src_deliver_message(struct fib *fib)
+>>           if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE3)
+>>               && dev->sa_firmware)
+>>               vector_no = aac_get_vector(dev);
+>> -        else
+>> -            vector_no = fib->vector_no;
+>> +        else {
+>> +            if (aac_cpu_offline_feature == 1) {
+>> +                if (!fib->vector_no || !fib->callback_data) {
+>> +                    if (shost && dev->use_map_queue) {
+>> +                        qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+>> +                    vector_no = qmap->mq_map[raw_smp_processor_id()];
+>> +                    }
+>> +                    /*
+>> +                     *    We hardcode the vector_no for
+>> +                     *    reserved commands as a valid shost is
+>> +                     *    absent during the init
+>> +                     */
+>> +                    else
+>> +                        vector_no = 0;
+>> +                } else {
+>> +                    scmd = (struct scsi_cmnd *)fib->callback_data;
+>> +                    blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+>> +                    vector_no = blk_mq_unique_tag_to_hwq(blk_tag);
+>> +                }
+>> +            } else
+>> +                vector_no = fib->vector_no;
+>> +        }
+>>           if (native_hba) {
+>>               if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
+> 
+
