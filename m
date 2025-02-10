@@ -1,53 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF6691D54FA;
-	Mon, 10 Feb 2025 10:02:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A3CB1C5F35;
+	Mon, 10 Feb 2025 10:02:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739181774; cv=none; b=KPLxTKW0oZDbHs6es749VZkDO1jxKZ0iEMJipPvrZ4gjNd6d1Xtq+wUpoFBT/8xUAOQhVvFd15uMvC0aoYpqi/bHwGfI0EyK9CsnBPdMgVZQMeZkocXptVDDT2LiUaBeOp+RRy7uQQmLgINh5mwBPNAsDN2LxErn0/huILW9hdQ=
+	t=1739181781; cv=none; b=J6lJhwsvFH22R+4hWQ5vzOYPgVPiAAf7QeG8kr2ylqwwLPBEVz4Nbd2R+PKNBvXlxyoA6NTF3rYpKeF4JNa/mQnBd/yU2BzC3hGlt0gQF2/Nc2ns5i+1Ku6l1xdvQYUt2vBe7bKMZ1kkhzyOnA2kGedJWpfQ8uZ47+KtY3BaGvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739181774; c=relaxed/simple;
-	bh=cTFaOIJniykaGDY/+UyOqHlkVuqEvcqJ/CZUMVFEYQU=;
+	s=arc-20240116; t=1739181781; c=relaxed/simple;
+	bh=4K8Umj66WIqGrvO2Qm2V3+NijhC1gTTK7lwlXUeHsXc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uHtOVeiaEZCeRRLyzPnbQARtJnxuLokIlv4/WtVJgX2XEnxAenUDHyFS7nnjv+ZV6+aLzzUgkSXabuJiQFK2KcIzM8yKb1l95SI5r3PSpRF+gkArSFBqkNpPvM5AVfopSiio/LdRP/qQgwKTyymrgu/t4WWI5RssYzn4qpb5R5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=D0iP4sCb; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=FzIQoFcDFhwUIve9fnmqGgFRldeK+HsDNi9HGkmK1cEr7iDIQTUKqQ5x1T2LDMk2mJ73eXuHAWkv9l2eBl1JJ2mdY/rmi3p2qEamTYebxiI8bWzAjSbwA0bWr7Zdp4kPLKKEQm1z5W79KGIv14N1KAyygTa2odGvk/+NonnKUMM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=SUxKNedX; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="D0iP4sCb"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SUxKNedX"
 Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51A8esDJ006121;
-	Mon, 10 Feb 2025 10:02:35 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51A8esM5006137;
+	Mon, 10 Feb 2025 10:02:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=AzsTl9U1T91
-	j6lhrlPqAzKkmFqMYsFGyOla9k9gsW5E=; b=D0iP4sCb+/zOJfaVJtKHWkxA62+
-	ZksFhMEEZ3ub1h0iReASGlGYJp+I7bhpRkVuHM6SSrJKIx07MD7mm8RZzuh4rvSN
-	Zhe4IkyDcMcGbbNcTzCiWnvAK0SPGMMho7i0f4jCFZws+tm50mbmB8jB7VD1+UU4
-	cSg3or9YAk5uEL6y1hDONDIv1mlydMf/6jX5jQ2gZ4YJtw+5NRuYVt2+qtwzV0A/
-	EN+v6dfwTwA/6qc4GtK+LaP0yfZ4qxe6aCV2jEo6aEvm63YV0aW5cy3NkOcycpnu
-	KBejzmZb1mN/FUxOLZvZklZ0fTNKAm4XuZIxHHjjwk754gqax3IZRy8u8yw==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=ejY83V2KXKv
+	MN9Zev51x2IPEtdlmGrPgu+4rSMl7BK0=; b=SUxKNedXrFCPA/lhE6QoeK8kld5
+	ptMckGJDvrO/oUZg7oHhNoEIR/Jtv54KTSjDLR4IElB0X55x0onsXQF6Eve03ZfS
+	Io5NOYeMQVuG083XJy/InyciNZFY9XMNsgpIXMwZ52p4JpHKJ6K516k8kkDgtJCe
+	j07wRlrOUkImcjuEvdx9nm+q9B0uLNeR9om0+uCwqJgRbkU8blblAj4lcI46LhCU
+	gwLhT2HjveQBl/Us953cxCudagUvheXxrnpzhNLoKBq8v7Il/EvWzOwrHfD89Bhz
+	FsZPe7fhtQWrHbitf4K09ZJhpC5LFLDGOqpuBOSYubVlbgKSDgsbcK5frXw==
 Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44qe5mr8es-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44qe5mr8f0-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Feb 2025 10:02:34 +0000 (GMT)
+	Mon, 10 Feb 2025 10:02:39 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 51AA2VX4011397;
-	Mon, 10 Feb 2025 10:02:31 GMT
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 51AA2Ha5011341;
+	Mon, 10 Feb 2025 10:02:37 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 44p0bkhyjk-1
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 44p0bkhyjw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Feb 2025 10:02:31 +0000
+	Mon, 10 Feb 2025 10:02:37 +0000
 Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 51AA2GhM011330;
-	Mon, 10 Feb 2025 10:02:31 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 51AA2aqP011409;
+	Mon, 10 Feb 2025 10:02:36 GMT
 Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 51AA2U5a011391
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 51AA2a5M011408
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Feb 2025 10:02:31 +0000
+	Mon, 10 Feb 2025 10:02:36 +0000
 Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id E828240BF7; Mon, 10 Feb 2025 18:02:29 +0800 (CST)
+	id 4863740BF7; Mon, 10 Feb 2025 18:02:35 +0800 (CST)
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
@@ -59,12 +59,12 @@ Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         Peter Wang <peter.wang@mediatek.com>,
-        Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Andrew Halaney <ahalaney@redhat.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 3/8] scsi: ufs: core: Add a vop to map clock frequency to gear speed
-Date: Mon, 10 Feb 2025 18:02:06 +0800
-Message-Id: <20250210100212.855127-4-quic_ziqichen@quicinc.com>
+Subject: [PATCH v4 5/8] scsi: ufs: core: Enable multi-level gear scaling
+Date: Mon, 10 Feb 2025 18:02:08 +0800
+Message-Id: <20250210100212.855127-6-quic_ziqichen@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250210100212.855127-1-quic_ziqichen@quicinc.com>
 References: <20250210100212.855127-1-quic_ziqichen@quicinc.com>
@@ -79,8 +79,8 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 4967QLHuataWq97NPQO_uzdjAxAsCPTg
-X-Proofpoint-ORIG-GUID: 4967QLHuataWq97NPQO_uzdjAxAsCPTg
+X-Proofpoint-GUID: 9oxbQ6AMhLxd-yG1kA00tAhJ3_OPaQH3
+X-Proofpoint-ORIG-GUID: 9oxbQ6AMhLxd-yG1kA00tAhJ3_OPaQH3
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-10_05,2025-02-10_01,2024-11-22_01
@@ -92,67 +92,153 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulksco
 
 From: Can Guo <quic_cang@quicinc.com>
 
-Add a vop to map UFS host controller clock frequencies to the corresponding
-maximum supported UFS high speed gear speeds. During clock scaling, we can
-map the target clock frequency, demanded by devfreq, to the maximum
-supported gear speed, so that devfreq can scale the gear to the highest
-gear speed supported at the target clock frequency, instead of just scaling
-up/down the gear between the min and max gear speeds.
+With OPP V2 enabled, devfreq can scale clocks amongst multiple frequency
+plans. However, the gear speed is only toggled between min and max during
+clock scaling. Enable multi-level gear scaling by mapping clock frequencies
+to gear speeds, so that when devfreq scales clock frequencies we can put
+the UFS link at the appropriate gear speeds accordingly.
 
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
-v2 ->v3:
-1. Remove the parameter 'gear' and use it as function return result.
-2. Change "vops" into "vop" in commit message.
----
- drivers/ufs/core/ufshcd-priv.h | 8 ++++++++
- include/ufs/ufshcd.h           | 2 ++
- 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 0549b65f71ed..4da3e65c6735 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -277,6 +277,14 @@ static inline int ufshcd_mcq_vops_config_esi(struct ufs_hba *hba)
- 	return -EOPNOTSUPP;
- }
- 
-+static inline int ufshcd_vops_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq)
-+{
-+	if (hba->vops && hba->vops->freq_to_gear_speed)
-+		return hba->vops->freq_to_gear_speed(hba, freq);
-+
-+	return -EOPNOTSUPP;
-+}
-+
- extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
+v1 -> v2:
+Rename the lable "do_pmc" to "config_pwr_mode".
+
+v2 -> v3:
+Use assignment instead memcpy() in function ufshcd_scale_gear().
+
+v3 -> v4:
+Typo fixed for commit message.
+---
+ drivers/ufs/core/ufshcd.c | 51 +++++++++++++++++++++++++++++++--------
+ 1 file changed, 41 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 8d295cc827cc..ebab897080a6 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1308,16 +1308,26 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
  /**
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index f51d425696e7..cdb853f5b871 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -336,6 +336,7 @@ struct ufs_pwr_mode_info {
-  * @get_outstanding_cqs: called to get outstanding completion queues
-  * @config_esi: called to config Event Specific Interrupt
-  * @config_scsi_dev: called to configure SCSI device parameters
-+ * @freq_to_gear_speed: called to map clock frequency to the max supported gear speed
+  * ufshcd_scale_gear - scale up/down UFS gear
+  * @hba: per adapter instance
++ * @target_gear: target gear to scale to
+  * @scale_up: True for scaling up gear and false for scaling down
+  *
+  * Return: 0 for success; -EBUSY if scaling can't happen at this time;
+  * non-zero for any other errors.
   */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -387,6 +388,7 @@ struct ufs_hba_variant_ops {
- 				       unsigned long *ocqs);
- 	int	(*config_esi)(struct ufs_hba *hba);
- 	void	(*config_scsi_dev)(struct scsi_device *sdev);
-+	int (*freq_to_gear_speed)(struct ufs_hba *hba, unsigned long freq);
- };
+-static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
++static int ufshcd_scale_gear(struct ufs_hba *hba, u32 target_gear, bool scale_up)
+ {
+ 	int ret = 0;
+ 	struct ufs_pa_layer_attr new_pwr_info;
  
- /* clock gating state  */
++	if (target_gear) {
++		new_pwr_info = hba->pwr_info;
++		new_pwr_info.gear_tx = target_gear;
++		new_pwr_info.gear_rx = target_gear;
++
++		goto config_pwr_mode;
++	}
++
++	/* Legacy gear scaling, in case vops_freq_to_gear_speed() is not implemented */
+ 	if (scale_up) {
+ 		memcpy(&new_pwr_info, &hba->clk_scaling.saved_pwr_info,
+ 		       sizeof(struct ufs_pa_layer_attr));
+@@ -1338,6 +1348,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+ 		}
+ 	}
+ 
++config_pwr_mode:
+ 	/* check if the power mode needs to be changed or not? */
+ 	ret = ufshcd_config_pwr_mode(hba, &new_pwr_info);
+ 	if (ret)
+@@ -1408,15 +1419,26 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
+ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
+ 				bool scale_up)
+ {
++	u32 old_gear = hba->pwr_info.gear_rx;
++	int new_gear = 0;
+ 	int ret = 0;
+ 
++	new_gear = ufshcd_vops_freq_to_gear_speed(hba, freq);
++	if (new_gear < 0)
++		/*
++		 * return negative value means that the vops_freq_to_gear_speed() is not
++		 * implemented or didn't find matched gear speed, assign '0' to new_gear
++		 * to switch to legacy gear scaling sequence in ufshcd_scale_gear().
++		 */
++		new_gear = 0;
++
+ 	ret = ufshcd_clock_scaling_prepare(hba, 1 * USEC_PER_SEC);
+ 	if (ret)
+ 		return ret;
+ 
+ 	/* scale down the gear before scaling down clocks */
+ 	if (!scale_up) {
+-		ret = ufshcd_scale_gear(hba, false);
++		ret = ufshcd_scale_gear(hba, (u32)new_gear, false);
+ 		if (ret)
+ 			goto out_unprepare;
+ 	}
+@@ -1424,13 +1446,13 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
+ 	ret = ufshcd_scale_clks(hba, freq, scale_up);
+ 	if (ret) {
+ 		if (!scale_up)
+-			ufshcd_scale_gear(hba, true);
++			ufshcd_scale_gear(hba, old_gear, true);
+ 		goto out_unprepare;
+ 	}
+ 
+ 	/* scale up the gear after scaling up clocks */
+ 	if (scale_up) {
+-		ret = ufshcd_scale_gear(hba, true);
++		ret = ufshcd_scale_gear(hba, (u32)new_gear, true);
+ 		if (ret) {
+ 			ufshcd_scale_clks(hba, hba->devfreq->previous_freq,
+ 					  false);
+@@ -1723,6 +1745,8 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+ 		struct device_attribute *attr, const char *buf, size_t count)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
++	struct ufs_clk_info *clki;
++	unsigned long freq;
+ 	u32 value;
+ 	int err = 0;
+ 
+@@ -1746,14 +1770,21 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+ 
+ 	if (value) {
+ 		ufshcd_resume_clkscaling(hba);
+-	} else {
+-		ufshcd_suspend_clkscaling(hba);
+-		err = ufshcd_devfreq_scale(hba, ULONG_MAX, true);
+-		if (err)
+-			dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
+-					__func__, err);
++		goto out_rel;
+ 	}
+ 
++	clki = list_first_entry(&hba->clk_list_head, struct ufs_clk_info, list);
++	freq = clki->max_freq;
++
++	ufshcd_suspend_clkscaling(hba);
++	err = ufshcd_devfreq_scale(hba, freq, true);
++	if (err)
++		dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
++				__func__, err);
++	else
++		hba->clk_scaling.target_freq = freq;
++
++out_rel:
+ 	ufshcd_release(hba);
+ 	ufshcd_rpm_put_sync(hba);
+ out:
 -- 
 2.34.1
 
