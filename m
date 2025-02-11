@@ -1,48 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407431E47AD;
-	Tue, 11 Feb 2025 01:31:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08BF61FA165;
+	Tue, 11 Feb 2025 01:31:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739237512; cv=none; b=eatXORTCqFhJTe4z/6HuqEwfTbWyAStIbgXLG7zeRQK0SelzFwNftM+yo+G5BLyreu+ImP8F7/15VyZ6vUiaB/QqojzPYEy3XxOFvZOvM58fzpNXLgT+WmtukCSRK170ACxhu9RqXXxm9MujcENCXGPjN+tknGLtizpGViIx26E=
+	t=1739237515; cv=none; b=cMjycNF1Y41x/+jKFc6ysbG+lWCGtZbDn+M1Wa8YwIQyjDz10U+ImYz2UdabLvB28eg1tfy9fEJoqimEEAYLplmdee29Zl2xZiULYP0PUDvqzvQXyqVI3DLG1IeQEogpy1MeMApC3l1QPXDiaVoNC1XkzGTFldw6uy6Qz9kJFI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739237512; c=relaxed/simple;
-	bh=0eBvUKEK82giojtNxyzYI+1xhTf4jVlRIIp8RtZsvl0=;
+	s=arc-20240116; t=1739237515; c=relaxed/simple;
+	bh=v1S3vnQNZOSk1x0SkWdreDmoV9lGTWHxxS+h7Gfo/jE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OJMvd9lPQ+FkDTOaPxX1jxBGUblPPQzWuWFIkFx1CG8DnjQKwcClGG3SLugAh8OJb6HQ4wKzWnt5kgFeKBHp2LPERJXqchh36b+I56jk24PgAzZLkBgaayZWuTcYkDoQv2d4mzwD0nHEtR6M2zWuvPwPucgBAZGhZHZ+M8aPG6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GTXvQUE/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=uYzhDKmrsCErMmNSL+pF+4q0wk136V3wfYpSkyxu4bWMcSQHpV89/sptYX6ruIEVwCvKsIPtcNYl+gFHUd1bH0mTwRSap3IO9z6rO1hSVi7DugS5gHzpAlD4ZpT2t3UPRAKy4sB8TS+DWfFyTJ4KGKbao2tyC6o8WbU/gCCuZ0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WRTSx226; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GTXvQUE/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C10F0C4CEE9;
-	Tue, 11 Feb 2025 01:31:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WRTSx226"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E0F9C4CEE5;
+	Tue, 11 Feb 2025 01:31:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739237512;
-	bh=0eBvUKEK82giojtNxyzYI+1xhTf4jVlRIIp8RtZsvl0=;
+	s=k20201202; t=1739237513;
+	bh=v1S3vnQNZOSk1x0SkWdreDmoV9lGTWHxxS+h7Gfo/jE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GTXvQUE/378ZfDFc/+aJh/ajgPCMq727k7yi1hSdMsnY79V5Dh5ZVfM09ieLune00
-	 VWV2Zoc0U26Xj470Nzs2dzynzEM+uk6Vo2R5s6Yz5nBUsd+ckhtds0UA00ZpZUrzLd
-	 5stAIMaJ8BnWLT2asgAS8OTyfHR6GkyLdw9vM1k5wtaNrkb3XuyppW3YpUa6SQmQis
-	 JgKmd2SxhSlbXTcRQLCvTnTzZO6/TlQj2UDnBxc+1qoan36YvbK2YPQM4f34AIfCF8
-	 JMeXX99JqSsEiO0zBUb0u9aDGjH1Tl0XHeP93xtiEY5E8eTG8oYH9zO0HY2/WY2lor
-	 zqn81Q/5g7uBw==
+	b=WRTSx226Wksvie4nzgv9sRDhoIwhll+kP/US2lPhNhBJ55yzXVR0SqBNsH5FBFoky
+	 YeIdXJVvJ/lcwp9L8yOY5i4Je8QTHP8/vNaN5gLLj8PWY4JiDA0nT9pPw6bZf7IOqS
+	 KKUPxX5XFKyRV4FsM5mj0uXPi7NPkI2Hi3ee7036Hmol3ZrrHQwsh8uXTXn4/KOR/N
+	 mPna6x4QPgTRB1X+Q+5xE0PA6oiU2BncIp+7qSx+xr/GhBpTS3f/JxNUVe9YiLeuRe
+	 9ILMFDRLYmbyo0xQWDpvGSatGCdSH+sswdMNPkL9pPYtVHVq/YLoEr7kDxpofOl+DR
+	 sCnoQPhumXOgg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Seunghui Lee <sh043.lee@samsung.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Bart Van Assche <bvanassche@acm.org>,
+Cc: Magnus Lindholm <linmag7@gmail.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	mdr@sgi.com,
 	James.Bottomley@HansenPartnership.com,
-	avri.altman@wdc.com,
-	peter.wang@mediatek.com,
-	manivannan.sadhasivam@linaro.org,
-	ahalaney@redhat.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 09/15] scsi: ufs: core: Fix error return with query response
-Date: Mon, 10 Feb 2025 20:31:29 -0500
-Message-Id: <20250211013136.4098219-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 10/15] scsi: qla1280: Fix kernel oops when debug level > 2
+Date: Mon, 10 Feb 2025 20:31:30 -0500
+Message-Id: <20250211013136.4098219-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250211013136.4098219-1-sashal@kernel.org>
 References: <20250211013136.4098219-1-sashal@kernel.org>
@@ -57,42 +52,36 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.76
 Content-Transfer-Encoding: 8bit
 
-From: Seunghui Lee <sh043.lee@samsung.com>
+From: Magnus Lindholm <linmag7@gmail.com>
 
-[ Upstream commit 1a78a56ea65252bb089e0daace989167227f2d31 ]
+[ Upstream commit 5233e3235dec3065ccc632729675575dbe3c6b8a ]
 
-There is currently no mechanism to return error from query responses.
-Return the error and print the corresponding error message with it.
+A null dereference or oops exception will eventually occur when qla1280.c
+driver is compiled with DEBUG_QLA1280 enabled and ql_debug_level > 2.  I
+think its clear from the code that the intention here is sg_dma_len(s) not
+length of sg_next(s) when printing the debug info.
 
-Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
-Link: https://lore.kernel.org/r/20250118023808.24726-1-sh043.lee@samsung.com
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Magnus Lindholm <linmag7@gmail.com>
+Link: https://lore.kernel.org/r/20250125095033.26188-1-linmag7@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/qla1280.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0ac0b6aaf9c62..e843f69b8d3a0 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3013,8 +3013,13 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	case UPIU_TRANSACTION_QUERY_RSP: {
- 		u8 response = lrbp->ucd_rsp_ptr->header.response;
- 
--		if (response == 0)
-+		if (response == 0) {
- 			err = ufshcd_copy_query_response(hba, lrbp);
-+		} else {
-+			err = -EINVAL;
-+			dev_err(hba->dev, "%s: unexpected response in Query RSP: %x\n",
-+					__func__, response);
-+		}
- 		break;
- 	}
- 	case UPIU_TRANSACTION_REJECT_UPIU:
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 6e5e89aaa283b..74b23c43af3ea 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -2866,7 +2866,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
+ 			dprintk(3, "S/G Segment phys_addr=%x %x, len=0x%x\n",
+ 				cpu_to_le32(upper_32_bits(dma_handle)),
+ 				cpu_to_le32(lower_32_bits(dma_handle)),
+-				cpu_to_le32(sg_dma_len(sg_next(s))));
++				cpu_to_le32(sg_dma_len(s)));
+ 			remseg--;
+ 		}
+ 		dprintk(5, "qla1280_64bit_start_scsi: Scatter/gather "
 -- 
 2.39.5
 
