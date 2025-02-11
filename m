@@ -1,324 +1,335 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88ED11F37BC;
-	Tue, 11 Feb 2025 10:28:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19E841F891C
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2025 10:41:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739269737; cv=none; b=hbvQ50yE/T/4Od1WiNbX93/cWENREI4ED0+QPsoPA3Qua0DWhhNFsM+if9KjNHp9BN8HHDTXQzNfSp/WWjD8okGYVHUhRLcDbYUta8vlAOo1M0g+qDbc5PgeGJqpRclBneoM0faAr0aqerNsP8tzaMw/DY2FWiNjDa0ajStxTT0=
+	t=1739270520; cv=none; b=hReyPkI8ik+X8+wbWhaJN4lUYjyDjQ/8+G8yEV+va/GkpyEQJyhPubrwoi6ypZgUr4D0lLcD7TPhZtddWBBN3vEov1nTCleVXopk204aUfKYnJ6w9rw+62ye7f+jLoxBicwvkOtr/sXfsgCidSSNDV1Luga5NErzpdEth1j3Lwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739269737; c=relaxed/simple;
-	bh=ynQunNA9DkLEka57Mai3bSUDNP+xpo2IOYyyr3pLzcs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=inLlX4fI4k2OuZHPCS8gn7XBsBESKWn4XzQnqtwgj0YF4L1c3LTy51HXnET4w9QiUvE8yU+I1SInkKABqRNpZToeN/mxR1mwSPOmP8bP5DHEraqvjNydIHmM6QQ30zX4U5WdBqZ7SoIOfvnkbPJMYjR0WUW8NztlLo40KgnDCOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EiwYPo/I; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1739270520; c=relaxed/simple;
+	bh=1g0fWuCfXP4ozG4qrKwBzzQ+ga1nSiXJHNkqR36aCaA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YpJ9W4kUWya6aEyUhB3WCYEb3mdt3Tyz4IyICJmeESQ9GABA1I479R+wT9XtE2OfzpJw2bFxYScFy/A7rR3MDFwuAW+lcsYbhHUJtVhb0R4x2kFBktlLYEYXM6PIpLg5mny4Br0cpNltNsJxLtY+bLvNmOWLov2aglnNADiareg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MSgeahRC; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EiwYPo/I"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51B8wcqK008240;
-	Tue, 11 Feb 2025 10:28:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	3WBZsc18HSHh6XL1jDUTlDZh3I+PuQToecs7ziSZm5Y=; b=EiwYPo/Izi0HnIIv
-	ydtu9V/d150ExyLZXOMNMOGx9IaGcXJgxdg7dppnVJTcNNaIv4mHWnR/RT9UJ4Ab
-	OFNfE0FCH8fEbyQ01zoSnSoKy2NlbhgsHbsQrt7+QJzs4Y1I+u81tejCzi65g1LZ
-	GPwUOMgtI1u7UFWaWeD8ETEvtad01Vf26PH3gXGn0QG7Pq9abkcQs3RMAQCCjR7L
-	A1Hnax4UD5EVXFSNWDLe8jtNVYXXpzN9wn69nzd2m2pS5Q4N1OQFZimgKP2k8rPD
-	wNp5UA75Iy9urCmSaS5HXBnhqan2ghBN7x+rcVOTJsingWIDK9aenDSqmoqpVTMK
-	VgQ2VA==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44qewh3mn8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Feb 2025 10:28:17 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51BASGpK022686
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Feb 2025 10:28:16 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 11 Feb
- 2025 02:28:12 -0800
-Message-ID: <59bf7be9-47bf-43f3-bc45-1af69b05ea91@quicinc.com>
-Date: Tue, 11 Feb 2025 18:28:09 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MSgeahRC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1739270518; x=1770806518;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=1g0fWuCfXP4ozG4qrKwBzzQ+ga1nSiXJHNkqR36aCaA=;
+  b=MSgeahRCI9Rey9lzZ1VfmtL91zaMU90MDD2zKuni/t8u/qGzRKgJR+Z3
+   /wYCCaU0iFHVmZy95z7aXGNY1fRLAKGR8oyb0m/fxS2pMUp2ioSQQPQtA
+   D0HZDJCPzjIllhs5+gKlH7/X5twaGPjManhzpTSDyQCvaidoqCGBnUx1n
+   J2rVSIATeb2ANqVWhZOc25RHerviNR19Hs2Z1QczFMHFtyidbDk2CcRTg
+   fgRVLjCxyBbQqQBVMc3Sy0tYHnIfGEQQru8BaroYdhKkRw4F7zVWSm9LY
+   RlNNTox4QibD9OtRs332ucZ4rHsT4tHTeqB3Xjfl8FQ7oYf+WyiD+7VOk
+   Q==;
+X-CSE-ConnectionGUID: 1mxu2s3WRfqze0KJtC5GgQ==
+X-CSE-MsgGUID: SMt13q+PTMOhCVdHcahKbw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11341"; a="57292571"
+X-IronPort-AV: E=Sophos;i="6.13,277,1732608000"; 
+   d="scan'208";a="57292571"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2025 02:41:55 -0800
+X-CSE-ConnectionGUID: OR7M8NQ/T/GWnNWBzrN5Ew==
+X-CSE-MsgGUID: 6xfvOQM4SFmcoWjYaxKYxA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.13,277,1732608000"; 
+   d="scan'208";a="112989075"
+Received: from lkp-server01.sh.intel.com (HELO d63d4d77d921) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 11 Feb 2025 02:41:53 -0800
+Received: from kbuild by d63d4d77d921 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1thniA-00142X-2q;
+	Tue, 11 Feb 2025 10:41:50 +0000
+Date: Tue, 11 Feb 2025 18:41:00 +0800
+From: kernel test robot <lkp@intel.com>
+To: Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
+	linux-scsi@vger.kernel.org, dgilbert@interlog.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com,
+	jmeneghi@redhat.com,
+	Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH v1 2/7] scsi: scsi_debug: Add READ BLOCK LIMITS and
+ modify LOAD for tapes
+Message-ID: <202502111805.dXd61ARr-lkp@intel.com>
+References: <20250210191232.185207-3-Kai.Makisara@kolumbus.fi>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 5/8] scsi: ufs: core: Enable multi-level gear scaling
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "avri.altman@wdc.com"
-	<avri.altman@wdc.com>,
-        "quic_rampraka@quicinc.com"
-	<quic_rampraka@quicinc.com>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
-        "bvanassche@acm.org"
-	<bvanassche@acm.org>,
-        "junwoo80.lee@samsung.com" <junwoo80.lee@samsung.com>,
-        "mani@kernel.org" <mani@kernel.org>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "ahalaney@redhat.com" <ahalaney@redhat.com>,
-        "neil.armstrong@linaro.org"
-	<neil.armstrong@linaro.org>,
-        "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>,
-        "manivannan.sadhasivam@linaro.org"
-	<manivannan.sadhasivam@linaro.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>,
-        "linux-arm-msm@vger.kernel.org"
-	<linux-arm-msm@vger.kernel.org>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>
-References: <20250210100212.855127-1-quic_ziqichen@quicinc.com>
- <20250210100212.855127-6-quic_ziqichen@quicinc.com>
- <5c2ae6c27ef0679d6664a759959ae604e560f60a.camel@mediatek.com>
-Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <5c2ae6c27ef0679d6664a759959ae604e560f60a.camel@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Aa3z4lOIMtEMPr8Gl3XsdjhiO8I6v7fQ
-X-Proofpoint-GUID: Aa3z4lOIMtEMPr8Gl3XsdjhiO8I6v7fQ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-11_04,2025-02-10_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
- impostorscore=0 mlxlogscore=999 phishscore=0 clxscore=1015 adultscore=0
- lowpriorityscore=0 malwarescore=0 bulkscore=0 suspectscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2501170000 definitions=main-2502110065
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250210191232.185207-3-Kai.Makisara@kolumbus.fi>
+
+Hi Kai,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.14-rc2 next-20250210]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Kai-M-kisara/scsi-scsi_debug-First-fixes-for-tapes/20250211-031623
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20250210191232.185207-3-Kai.Makisara%40kolumbus.fi
+patch subject: [PATCH v1 2/7] scsi: scsi_debug: Add READ BLOCK LIMITS and modify LOAD for tapes
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20250211/202502111805.dXd61ARr-lkp@intel.com/config)
+compiler: clang version 19.1.3 (https://github.com/llvm/llvm-project ab51eccf88f5321e7c60591c5546b254b6afab99)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250211/202502111805.dXd61ARr-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202502111805.dXd61ARr-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In file included from drivers/scsi/scsi_debug.c:31:
+   In file included from include/linux/scatterlist.h:8:
+   In file included from include/linux/mm.h:2224:
+   include/linux/vmstat.h:504:43: warning: arithmetic between different enumeration types ('enum zone_stat_item' and 'enum numa_stat_item') [-Wenum-enum-conversion]
+     504 |         return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~ ^
+     505 |                            item];
+         |                            ~~~~
+   include/linux/vmstat.h:511:43: warning: arithmetic between different enumeration types ('enum zone_stat_item' and 'enum numa_stat_item') [-Wenum-enum-conversion]
+     511 |         return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~ ^
+     512 |                            NR_VM_NUMA_EVENT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/vmstat.h:524:43: warning: arithmetic between different enumeration types ('enum zone_stat_item' and 'enum numa_stat_item') [-Wenum-enum-conversion]
+     524 |         return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~ ^
+     525 |                            NR_VM_NUMA_EVENT_ITEMS +
+         |                            ~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/scsi_debug.c:2926:3: warning: variable 'len' is uninitialized when used here [-Wuninitialized]
+    2926 |                 len += resp_partition_m_pg(ap, pcontrol, target);
+         |                 ^~~
+   drivers/scsi/scsi_debug.c:2791:28: note: initialize the variable 'len' to silence this warning
+    2791 |         u32 alloc_len, offset, len;
+         |                                   ^
+         |                                    = 0
+   4 warnings generated.
 
 
+vim +/len +2926 drivers/scsi/scsi_debug.c
 
-On 2/11/2025 5:28 PM, Peter Wang (王信友) wrote:
-> On Mon, 2025-02-10 at 18:02 +0800, Ziqi Chen wrote:
->>
->> External email : Please do not click links or open attachments until
->> you have verified the sender or the content.
->>
->>
->> From: Can Guo <quic_cang@quicinc.com>
->>
->> With OPP V2 enabled, devfreq can scale clocks amongst multiple
->> frequency
->> plans. However, the gear speed is only toggled between min and max
->> during
->> clock scaling. Enable multi-level gear scaling by mapping clock
->> frequencies
->> to gear speeds, so that when devfreq scales clock frequencies we can
->> put
->> the UFS link at the appropriate gear speeds accordingly.
->>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->> Reviewed-by: Bean Huo <beanhuo@micron.com>
->> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
->> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
->> ---
->>
->> v1 -> v2:
->> Rename the lable "do_pmc" to "config_pwr_mode".
->>
->> v2 -> v3:
->> Use assignment instead memcpy() in function ufshcd_scale_gear().
->>
->> v3 -> v4:
->> Typo fixed for commit message.
->> ---
->>   drivers/ufs/core/ufshcd.c | 51 +++++++++++++++++++++++++++++++------
->> --
->>   1 file changed, 41 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 8d295cc827cc..ebab897080a6 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -1308,16 +1308,26 @@ static int
->> ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
->>   /**
->>    * ufshcd_scale_gear - scale up/down UFS gear
->>    * @hba: per adapter instance
->> + * @target_gear: target gear to scale to
->>    * @scale_up: True for scaling up gear and false for scaling down
->>    *
->>    * Return: 0 for success; -EBUSY if scaling can't happen at this
->> time;
->>    * non-zero for any other errors.
->>    */
->> -static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
->> +static int ufshcd_scale_gear(struct ufs_hba *hba, u32 target_gear,
->> bool scale_up)
->>   {
->>          int ret = 0;
->>          struct ufs_pa_layer_attr new_pwr_info;
->>
->> +       if (target_gear) {
->> +               new_pwr_info = hba->pwr_info;
->> +               new_pwr_info.gear_tx = target_gear;
->> +               new_pwr_info.gear_rx = target_gear;
->> +
->> +               goto config_pwr_mode;
->> +       }
->> +
->> +       /* Legacy gear scaling, in case vops_freq_to_gear_speed() is
->> not implemented */
->>          if (scale_up) {
->>                  memcpy(&new_pwr_info, &hba-
->>> clk_scaling.saved_pwr_info,
->>                         sizeof(struct ufs_pa_layer_attr));
->> @@ -1338,6 +1348,7 @@ static int ufshcd_scale_gear(struct ufs_hba
->> *hba, bool scale_up)
->>                  }
->>          }
->>
->> +config_pwr_mode:
->>          /* check if the power mode needs to be changed or not? */
->>          ret = ufshcd_config_pwr_mode(hba, &new_pwr_info);
->>          if (ret)
->> @@ -1408,15 +1419,26 @@ static void
->> ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
->>   static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long
->> freq,
->>                                  bool scale_up)
->>   {
->> +       u32 old_gear = hba->pwr_info.gear_rx;
->> +       int new_gear = 0;
->>          int ret = 0;
->>
->> +       new_gear = ufshcd_vops_freq_to_gear_speed(hba, freq);
->> +       if (new_gear < 0)
->> +               /*
->> +                * return negative value means that the
->> vops_freq_to_gear_speed() is not
->> +                * implemented or didn't find matched gear speed,
->> assign '0' to new_gear
->> +                * to switch to legacy gear scaling sequence in
->> ufshcd_scale_gear().
->> +                */
->> +               new_gear = 0;
->> +
->>
-> 
-> Hi Ziqi,
-> 
-> I think remove help function is better.
-> No need change new_gear type when use.
-> The readability is higher, and no need add that large amount comments.
-> 
->         u32_new_gear = 0;
->         if (hba->vops && hba->vops->freq_to_gear_speed)
->                 new_gear = hba->vops->freq_to_gear_speed(hba, freq);
-> 
-> 
-> Thanks.
-> Peter
-> 
-> 
-Hi Peter,
+  2785	
+  2786	static int resp_mode_sense(struct scsi_cmnd *scp,
+  2787				   struct sdebug_dev_info *devip)
+  2788	{
+  2789		int pcontrol, pcode, subpcode, bd_len;
+  2790		unsigned char dev_spec;
+  2791		u32 alloc_len, offset, len;
+  2792		int target_dev_id;
+  2793		int target = scp->device->id;
+  2794		unsigned char *ap;
+  2795		unsigned char *arr __free(kfree);
+  2796		unsigned char *cmd = scp->cmnd;
+  2797		bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
+  2798	
+  2799		arr = kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
+  2800		if (!arr)
+  2801			return -ENOMEM;
+  2802		dbd = !!(cmd[1] & 0x8);		/* disable block descriptors */
+  2803		pcontrol = (cmd[2] & 0xc0) >> 6;
+  2804		pcode = cmd[2] & 0x3f;
+  2805		subpcode = cmd[3];
+  2806		msense_6 = (MODE_SENSE == cmd[0]);
+  2807		llbaa = msense_6 ? false : !!(cmd[1] & 0x10);
+  2808		is_disk = (sdebug_ptype == TYPE_DISK);
+  2809		is_zbc = devip->zoned;
+  2810		is_tape = (sdebug_ptype == TYPE_TAPE);
+  2811		if ((is_disk || is_zbc || is_tape) && !dbd)
+  2812			bd_len = llbaa ? 16 : 8;
+  2813		else
+  2814			bd_len = 0;
+  2815		alloc_len = msense_6 ? cmd[4] : get_unaligned_be16(cmd + 7);
+  2816		if (0x3 == pcontrol) {  /* Saving values not supported */
+  2817			mk_sense_buffer(scp, ILLEGAL_REQUEST, SAVING_PARAMS_UNSUP, 0);
+  2818			return check_condition_result;
+  2819		}
+  2820		target_dev_id = ((devip->sdbg_host->shost->host_no + 1) * 2000) +
+  2821				(devip->target * 1000) - 3;
+  2822		/* for disks+zbc set DPOFUA bit and clear write protect (WP) bit */
+  2823		if (is_disk || is_zbc) {
+  2824			dev_spec = 0x10;	/* =0x90 if WP=1 implies read-only */
+  2825			if (sdebug_wp)
+  2826				dev_spec |= 0x80;
+  2827		} else
+  2828			dev_spec = 0x0;
+  2829		if (msense_6) {
+  2830			arr[2] = dev_spec;
+  2831			arr[3] = bd_len;
+  2832			offset = 4;
+  2833		} else {
+  2834			arr[3] = dev_spec;
+  2835			if (16 == bd_len)
+  2836				arr[4] = 0x1;	/* set LONGLBA bit */
+  2837			arr[7] = bd_len;	/* assume 255 or less */
+  2838			offset = 8;
+  2839		}
+  2840		ap = arr + offset;
+  2841		if ((bd_len > 0) && (!sdebug_capacity))
+  2842			sdebug_capacity = get_sdebug_capacity();
+  2843	
+  2844		if (8 == bd_len) {
+  2845			if (sdebug_capacity > 0xfffffffe)
+  2846				put_unaligned_be32(0xffffffff, ap + 0);
+  2847			else
+  2848				put_unaligned_be32(sdebug_capacity, ap + 0);
+  2849			if (is_tape) {
+  2850				ap[0] = devip->tape_density;
+  2851				put_unaligned_be16(devip->tape_blksize, ap + 6);
+  2852			} else
+  2853				put_unaligned_be16(sdebug_sector_size, ap + 6);
+  2854			offset += bd_len;
+  2855			ap = arr + offset;
+  2856		} else if (16 == bd_len) {
+  2857			if (is_tape) {
+  2858				mk_sense_invalid_fld(scp, SDEB_IN_DATA, 1, 4);
+  2859				return check_condition_result;
+  2860			}
+  2861			put_unaligned_be64((u64)sdebug_capacity, ap + 0);
+  2862			put_unaligned_be32(sdebug_sector_size, ap + 12);
+  2863			offset += bd_len;
+  2864			ap = arr + offset;
+  2865		}
+  2866		if (cmd[2] == 0)
+  2867			goto only_bd; /* Only block descriptor requested */
+  2868	
+  2869		/*
+  2870		 * N.B. If len>0 before resp_*_pg() call, then form of that call should be:
+  2871		 *        len += resp_*_pg(ap + len, pcontrol, target);
+  2872		 */
+  2873		switch (pcode) {
+  2874		case 0x1:	/* Read-Write error recovery page, direct access */
+  2875			if (subpcode > 0x0 && subpcode < 0xff)
+  2876				goto bad_subpcode;
+  2877			len = resp_err_recov_pg(ap, pcontrol, target);
+  2878			offset += len;
+  2879			break;
+  2880		case 0x2:	/* Disconnect-Reconnect page, all devices */
+  2881			if (subpcode > 0x0 && subpcode < 0xff)
+  2882				goto bad_subpcode;
+  2883			len = resp_disconnect_pg(ap, pcontrol, target);
+  2884			offset += len;
+  2885			break;
+  2886		case 0x3:       /* Format device page, direct access */
+  2887			if (subpcode > 0x0 && subpcode < 0xff)
+  2888				goto bad_subpcode;
+  2889			if (is_disk) {
+  2890				len = resp_format_pg(ap, pcontrol, target);
+  2891				offset += len;
+  2892			} else {
+  2893				goto bad_pcode;
+  2894			}
+  2895			break;
+  2896		case 0x8:	/* Caching page, direct access */
+  2897			if (subpcode > 0x0 && subpcode < 0xff)
+  2898				goto bad_subpcode;
+  2899			if (is_disk || is_zbc) {
+  2900				len = resp_caching_pg(ap, pcontrol, target);
+  2901				offset += len;
+  2902			} else {
+  2903				goto bad_pcode;
+  2904			}
+  2905			break;
+  2906		case 0xa:	/* Control Mode page, all devices */
+  2907			switch (subpcode) {
+  2908			case 0:
+  2909				len = resp_ctrl_m_pg(ap, pcontrol, target);
+  2910				break;
+  2911			case 0x05:
+  2912				len = resp_grouping_m_pg(ap, pcontrol, target);
+  2913				break;
+  2914			case 0xff:
+  2915				len = resp_ctrl_m_pg(ap, pcontrol, target);
+  2916				len += resp_grouping_m_pg(ap + len, pcontrol, target);
+  2917				break;
+  2918			default:
+  2919				goto bad_subpcode;
+  2920			}
+  2921			offset += len;
+  2922			break;
+  2923		case 0x11:	/* Partition Mode Page (tape) */
+  2924			if (!is_tape)
+  2925				goto bad_pcode;
+> 2926			len += resp_partition_m_pg(ap, pcontrol, target);
+  2927			offset += len;
+  2928			break;
+  2929		case 0x19:	/* if spc==1 then sas phy, control+discover */
+  2930			if (subpcode > 0x2 && subpcode < 0xff)
+  2931				goto bad_subpcode;
+  2932			len = 0;
+  2933			if ((0x0 == subpcode) || (0xff == subpcode))
+  2934				len += resp_sas_sf_m_pg(ap + len, pcontrol, target);
+  2935			if ((0x1 == subpcode) || (0xff == subpcode))
+  2936				len += resp_sas_pcd_m_spg(ap + len, pcontrol, target,
+  2937							  target_dev_id);
+  2938			if ((0x2 == subpcode) || (0xff == subpcode))
+  2939				len += resp_sas_sha_m_spg(ap + len, pcontrol);
+  2940			offset += len;
+  2941			break;
+  2942		case 0x1c:	/* Informational Exceptions Mode page, all devices */
+  2943			if (subpcode > 0x0 && subpcode < 0xff)
+  2944				goto bad_subpcode;
+  2945			len = resp_iec_m_pg(ap, pcontrol, target);
+  2946			offset += len;
+  2947			break;
+  2948		case 0x3f:	/* Read all Mode pages */
+  2949			if (subpcode > 0x0 && subpcode < 0xff)
+  2950				goto bad_subpcode;
+  2951			len = resp_err_recov_pg(ap, pcontrol, target);
+  2952			len += resp_disconnect_pg(ap + len, pcontrol, target);
+  2953			if (is_disk) {
+  2954				len += resp_format_pg(ap + len, pcontrol, target);
+  2955				len += resp_caching_pg(ap + len, pcontrol, target);
+  2956			} else if (is_zbc) {
+  2957				len += resp_caching_pg(ap + len, pcontrol, target);
+  2958			}
+  2959			len += resp_ctrl_m_pg(ap + len, pcontrol, target);
+  2960			if (0xff == subpcode)
+  2961				len += resp_grouping_m_pg(ap + len, pcontrol, target);
+  2962			len += resp_sas_sf_m_pg(ap + len, pcontrol, target);
+  2963			if (0xff == subpcode) {
+  2964				len += resp_sas_pcd_m_spg(ap + len, pcontrol, target,
+  2965							  target_dev_id);
+  2966				len += resp_sas_sha_m_spg(ap + len, pcontrol);
+  2967			}
+  2968			len += resp_iec_m_pg(ap + len, pcontrol, target);
+  2969			offset += len;
+  2970			break;
+  2971		default:
+  2972			goto bad_pcode;
+  2973		}
+  2974	only_bd:
+  2975		if (msense_6)
+  2976			arr[0] = offset - 1;
+  2977		else
+  2978			put_unaligned_be16((offset - 2), arr + 0);
+  2979		return fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, offset));
+  2980	
+  2981	bad_pcode:
+  2982		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 5);
+  2983		return check_condition_result;
+  2984	
+  2985	bad_subpcode:
+  2986		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 3, -1);
+  2987		return check_condition_result;
+  2988	}
+  2989	
 
-Thanks, Peter.
-Frankly, I also think this way has low readability. However, keep the 
-u32 type for new_gear is OK to me. But this vop would lose the ability 
-to indicate the error types. All types of error can only return "0".
-
-However, we don't need to deal with various types of errors up to now, I 
-can submit a new version to change back the new_gear and vop return 
-value type to u32 and make correspondingly change in patch 3/8 and 4/8.
-
--Ziqi
-
-> 
->>          ret = ufshcd_clock_scaling_prepare(hba, 1 * USEC_PER_SEC);
->>          if (ret)
->>                  return ret;
->>
->>          /* scale down the gear before scaling down clocks */
->>          if (!scale_up) {
->> -               ret = ufshcd_scale_gear(hba, false);
->> +               ret = ufshcd_scale_gear(hba, (u32)new_gear, false);
->>                  if (ret)
->>                          goto out_unprepare;
->>          }
->> @@ -1424,13 +1446,13 @@ static int ufshcd_devfreq_scale(struct
->> ufs_hba *hba, unsigned long freq,
->>          ret = ufshcd_scale_clks(hba, freq, scale_up);
->>          if (ret) {
->>                  if (!scale_up)
->> -                       ufshcd_scale_gear(hba, true);
->> +                       ufshcd_scale_gear(hba, old_gear, true);
->>                  goto out_unprepare;
->>          }
->>
->>          /* scale up the gear after scaling up clocks */
->>          if (scale_up) {
->> -               ret = ufshcd_scale_gear(hba, true);
->> +               ret = ufshcd_scale_gear(hba, (u32)new_gear, true);
->>                  if (ret) {
->>                          ufshcd_scale_clks(hba, hba->devfreq-
->>> previous_freq,
->>                                            false);
->> @@ -1723,6 +1745,8 @@ static ssize_t
->> ufshcd_clkscale_enable_store(struct device *dev,
->>                  struct device_attribute *attr, const char *buf,
->> size_t count)
->>   {
->>          struct ufs_hba *hba = dev_get_drvdata(dev);
->> +       struct ufs_clk_info *clki;
->> +       unsigned long freq;
->>          u32 value;
->>          int err = 0;
->>
->> @@ -1746,14 +1770,21 @@ static ssize_t
->> ufshcd_clkscale_enable_store(struct device *dev,
->>
->>          if (value) {
->>                  ufshcd_resume_clkscaling(hba);
->> -       } else {
->> -               ufshcd_suspend_clkscaling(hba);
->> -               err = ufshcd_devfreq_scale(hba, ULONG_MAX, true);
->> -               if (err)
->> -                       dev_err(hba->dev, "%s: failed to scale clocks
->> up %d\n",
->> -                                       __func__, err);
->> +               goto out_rel;
->>          }
->>
->> +       clki = list_first_entry(&hba->clk_list_head, struct
->> ufs_clk_info, list);
->> +       freq = clki->max_freq;
->> +
->> +       ufshcd_suspend_clkscaling(hba);
->> +       err = ufshcd_devfreq_scale(hba, freq, true);
->> +       if (err)
->> +               dev_err(hba->dev, "%s: failed to scale clocks up
->> %d\n",
->> +                               __func__, err);
->> +       else
->> +               hba->clk_scaling.target_freq = freq;
->> +
->> +out_rel:
->>          ufshcd_release(hba);
->>          ufshcd_rpm_put_sync(hba);
->>   out:
->> --
->> 2.34.1
->>
-> 
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
