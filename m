@@ -1,128 +1,107 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF40125335D
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Feb 2025 22:34:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47DDF1D5140;
+	Tue, 11 Feb 2025 01:30:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739226900; cv=none; b=Xdmgj+GH17dYr1s34uFwprl7iuLkn02nDDSelJyvD8zYU1AZXYIvVjbYhNFS3N7jDVUTi0kkIEg7Drm4WRmHDKJYP5U8Xa/DwOsGoodYfESf08N0y9+dFeEW5xLv+hVPeznCGGYH6XLlpEoGXD5L/knrNluwLL444SUZXG9wrjs=
+	t=1739237423; cv=none; b=XQ7ZiLYncY5VixwlBIG4looz1SZ3dl+bTBPNi/9ZLG7QC5Qnv7jt4B3U8nQaCXKnqILtBDEBlRjUHqPSrq2GzXWORVysDEb5vIgvfDWvxhaZlxyRr4FNX0ieBLg9aDt6unafb4MetXLfGhy149Z2N3vaZ/frKQjkPciVJBfJphs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739226900; c=relaxed/simple;
-	bh=2fCX5PStn6c4pFlbyyYdlv5KgQBVPS/Qr6PpU3fb0rY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=G3alECZ+61WcArDYaYL4E6ncrmWFbL0/FS2AQqZjoJIBvlh3QF3uoSoQhUQQGk1b28+iJsTOrUy1/Sa86Nvq2/KFMeKnD7VlHXN01TiXVCMOqH70B6WODoiDxcZz2uESwK/QUeTBnLnCc6HE8hDW1SGGbiltG2RkvY/jgtBLNTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bEAWC1GE; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1739237423; c=relaxed/simple;
+	bh=AvpDWiT8RYU89bwyqqgYdwBmnSzet2y0wzAleiu8oeA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QH22LDzDXTFytrx3pQtZpDv2gKLH5xQtDFtV1xwnihAZm47CUGnmi/QbUG2qV8zp6BO3JyR99IluOIG0niBNFSQ0ltlgJeHpoI7+Eq6IvOEvqcB77tdRqX04Ad59BydX8WshGgYWRITbbVao5V/bq6oMRz2p6F3iXfgDyn8G1Lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DbdBhYpQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bEAWC1GE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739226897;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=c5r8B8FRtWj5F/lOwyJCGOrGALFwc+xhMPApnCgm2s8=;
-	b=bEAWC1GEGBNOLqft5mraUepwY4bdOhXnC7TtDhNoY7h8W+ajwtg6YksEoeDcV/DvDzVp8Z
-	TUEHsuWv9YI/ubUvoaNEFPT1LuHcdaQGx8K3dqRx5swYlTel3CDYEuF5KJ/FMX3VyIlaiF
-	LZ9DI5mFA4Tv15Gy5kJRA22wfqQ6Nqk=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-638-kew8mM_LO_ugytJEgig5uw-1; Mon,
- 10 Feb 2025 17:34:50 -0500
-X-MC-Unique: kew8mM_LO_ugytJEgig5uw-1
-X-Mimecast-MFC-AGG-ID: kew8mM_LO_ugytJEgig5uw
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B81111800264;
-	Mon, 10 Feb 2025 22:34:47 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EEF0D30001AB;
-	Mon, 10 Feb 2025 22:34:45 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 51AMYifL838184
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 10 Feb 2025 17:34:44 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 51AMYg0l838182;
-	Mon, 10 Feb 2025 17:34:42 -0500
-Date: Mon, 10 Feb 2025 17:34:42 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, hch@lst.de, tytso@mit.edu,
-        djwong@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
-        yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [RFC PATCH v2 4/8] dm: add BLK_FEAT_WRITE_ZEROES_UNMAP support
-Message-ID: <Z6p_AsZy41XMCEh5@redhat.com>
-References: <20250115114637.2705887-1-yi.zhang@huaweicloud.com>
- <20250115114637.2705887-5-yi.zhang@huaweicloud.com>
- <Z6aFtJzGWMNhILJW@redhat.com>
- <3b1dcd45-efa6-4aad-9cd4-3302a29eb093@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DbdBhYpQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3B72C4CEDF;
+	Tue, 11 Feb 2025 01:30:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739237422;
+	bh=AvpDWiT8RYU89bwyqqgYdwBmnSzet2y0wzAleiu8oeA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=DbdBhYpQA3Gc9BoIjSvz2CC+yFjn3OYgkDVgVdiMoSLruWMDzs1DyxhOpxJSHBPEB
+	 BDsx9EbjA+psFJtH2omL3O+1kPIJR1CKgDaB6Rldt8mFJBnBbSg706Qad3rh/gsU+Y
+	 J1UETDT/oIzCLjRbPJIPxWbLb+Gh3frOstJO/3AjLXqNORa4tlY3nzEWhAHJHJwl3Y
+	 qHbhY6WYEN5fKZLCYLJgGN3lYLmAxJw8iltbMjQYOLT36O8DDPDYas4PUzoKoolAvX
+	 DwflIubeiAfzhiQxVvrX3V1f0BOHUp0xEWkrwePPgb4DJ459tdVp8BzCZfuGaHUKh1
+	 ZJKn8Vzu1jFoA==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Rik van Riel <riel@surriel.com>,
+	=?UTF-8?q?Marc=20Aur=C3=A8le=20La=20France?= <tsi@tuyoix.net>,
+	Christoph Hellwig <hch@lst.de>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.13 12/21] scsi: core: Use GFP_NOIO to avoid circular locking dependency
+Date: Mon, 10 Feb 2025 20:29:45 -0500
+Message-Id: <20250211012954.4096433-12-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250211012954.4096433-1-sashal@kernel.org>
+References: <20250211012954.4096433-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3b1dcd45-efa6-4aad-9cd4-3302a29eb093@huaweicloud.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.13.2
+Content-Transfer-Encoding: 8bit
 
-On Sat, Feb 08, 2025 at 11:12:57AM +0800, Zhang Yi wrote:
-> On 2025/2/8 6:14, Benjamin Marzinski wrote:
-> > On Wed, Jan 15, 2025 at 07:46:33PM +0800, Zhang Yi wrote:
-> >> From: Zhang Yi <yi.zhang@huawei.com>
-> >>
-> >> Set the BLK_FEAT_WRITE_ZEROES_UNMAP feature on stacking queue limits by
-> >> default. This feature shall be disabled if any underlying device does
-> >> not support it.
-> >>
-> >> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-> >> ---
-> >>  drivers/md/dm-table.c | 3 ++-
-> >>  1 file changed, 2 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> >> index bd8b796ae683..58cce31bcc1e 100644
-> >> --- a/drivers/md/dm-table.c
-> >> +++ b/drivers/md/dm-table.c
-> >> @@ -598,7 +598,8 @@ int dm_split_args(int *argc, char ***argvp, char *input)
-> >>  static void dm_set_stacking_limits(struct queue_limits *limits)
-> >>  {
-> >>  	blk_set_stacking_limits(limits);
-> >> -	limits->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT | BLK_FEAT_POLL;
-> >> +	limits->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT | BLK_FEAT_POLL |
-> >> +			    BLK_FEAT_WRITE_ZEROES_UNMAP;
-> >>  }
-> >>  
-> > 
-> > dm_table_set_restrictions() can set limits->max_write_zeroes_sectors to
-> > 0, and it's called after dm_calculate_queue_limits(), which calls
-> > blk_stack_limits(). Just to avoid having the BLK_FEAT_WRITE_ZEROES_UNMAP
-> > still set while a device's max_write_zeroes_sectors is 0, it seems like
-> > you would want to clear it as well if dm_table_set_restrictions() sets
-> > limits->max_write_zeroes_sectors to 0.
-> > 
-> 
-> Hi, Ben!
-> 
-> Yeah, right. Thanks for pointing this out, and I also checked other
-> instances in dm where max_write_zeroes_sectors is set to 0, and it seems
-> we should also clear BLK_FEAT_WRITE_ZEROES_UNMAP in
-> disable_write_zeroes() as well.
+From: Rik van Riel <riel@surriel.com>
 
-Yep. Makes sense.
+[ Upstream commit 5363ee9d110e139584c2d92a0b640bc210588506 ]
 
-Thanks
--Ben
+Filesystems can write to disk from page reclaim with __GFP_FS
+set. Marc found a case where scsi_realloc_sdev_budget_map() ends up in
+page reclaim with GFP_KERNEL, where it could try to take filesystem
+locks again, leading to a deadlock.
 
-> 
-> Thanks,
-> Yi.
+WARNING: possible circular locking dependency detected
+6.13.0 #1 Not tainted
+------------------------------------------------------
+kswapd0/70 is trying to acquire lock:
+ffff8881025d5d78 (&q->q_usage_counter(io)){++++}-{0:0}, at: blk_mq_submit_bio+0x461/0x6e0
+
+but task is already holding lock:
+ffffffff81ef5f40 (fs_reclaim){+.+.}-{0:0}, at: balance_pgdat+0x9f/0x760
+
+The full lockdep splat can be found in Marc's report:
+
+https://lkml.org/lkml/2025/1/24/1101
+
+Avoid the potential deadlock by doing the allocation with GFP_NOIO, which
+prevents both filesystem and block layer recursion.
+
+Reported-by: Marc Aurèle La France <tsi@tuyoix.net>
+Signed-off-by: Rik van Riel <riel@surriel.com>
+Link: https://lore.kernel.org/r/20250129104525.0ae8421e@fangorn
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/scsi_scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 042329b74c6e6..fe08af4dcb67c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -245,7 +245,7 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+ 	}
+ 	ret = sbitmap_init_node(&sdev->budget_map,
+ 				scsi_device_max_queue_depth(sdev),
+-				new_shift, GFP_KERNEL,
++				new_shift, GFP_NOIO,
+ 				sdev->request_queue->node, false, true);
+ 	if (!ret)
+ 		sbitmap_resize(&sdev->budget_map, depth);
+-- 
+2.39.5
 
