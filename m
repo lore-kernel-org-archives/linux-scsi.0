@@ -1,134 +1,104 @@
-Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E7B61EB186;
-	Tue, 11 Feb 2025 07:36:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85BA71EE7A5
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2025 08:12:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739259375; cv=none; b=TNKNx1/rgbtxo6RppiZwbQI+P0HpYLAev4QiAVA0sQ8Awkq4C9w8iBuQ49Izul7Ywsw3+OtUyaQSCOVjT66nZc266Nq9D7UpGeo2t7yeMJ3dsL1NrYbqXZu3t8vw5Ms9eZ+WCuXEsckyBmZeAyL1G6PLSyk6zqNiYPKdnyHMw1I=
+	t=1739261546; cv=none; b=TS7OPH46iO01slJt09h4ViMYVHepEsU4QfHwt5ssInnCDRnK0nfqhiqFJRABLwx57RhJhP1TTPxqU22XSxbJmGeZ7gGSo1JCvorLjABY3yknk3SBS/SofzOT1VvNPcb1XrZMuKByj1p2/tTIhz8mv+Y68FoeclnHL4Mtg1Vlz8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739259375; c=relaxed/simple;
-	bh=FHABviBCLTQZchnRqmI9Jrk7UuzPN8EYjJLUJQ5Wtys=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mcB03jJubqyFe1IaWgoq7vs8htkZ7kn91ZSuIS6WMM38zYtvWQr5hu+2joqabUi/urHZk0BZ+kVVxCsGBDw1PJq9UmT2OGuhRPBbjT0RWnl7R2jIKwc7ElxD+ZxCKBfbUSFpek2qtgkJi3ZDNUSATek9i+mPxgpFbs84nW9jSyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=sf8OOezD; arc=none smtp.client-ip=185.11.138.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sntech.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
+	s=arc-20240116; t=1739261546; c=relaxed/simple;
+	bh=hDZF76s0+s3nQKWmMd335G35ca1BnoygOxqTHvKFjnU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VhSAyDKRcZAPyxYKOuxs9pBdP3NSmlYwyn04lvaQNQ15TPpnRc6RAQuphPenti8VizGVEPFM7mCVjObZhEk8V+s4sWE3xvwJ5KuIqNhDXtR7KXDVmyO/bIzU4t1kpgZ+oo2dZj/CjXqCOJdzJHLmrOuK4qP+MLXbptw0lHCfdKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=Srii4Zhw; arc=none smtp.client-ip=209.85.208.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="sf8OOezD"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
-	s=gloria202408; h=Content-Type:Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=OYk0p+JMseG7FVlttgOde/7MHMJ97BiQKK6RiBx2sNQ=; b=sf8OOezD7oVeV666W8vv/CGJxC
-	qjpRpwEMd/yyYNm5Uj4tDClgnclKv2bC+kbxrWj/NN30KF8uy1pPScMuhnel1PZdHo0OZZOqnZKJz
-	Bom1SPQSOUhYpRpmb47LUTUOT9g+kvVTKF4kFl8BcgT3jvzl8ZcvhjwTnITYeI8kCMeFnfgaJDZqx
-	RGIhiaMT+cVHb16KykoJ8foZAzgJuiViuzspYy2UnMjbKX615w4s1mqvWYNPxrCiJGscWJW40Kdc8
-	qNtx3577HJWYg9ci/DSsv2Dg9uI2tJHx+W3MyD+2vnvx3xEhpfEB7EwDwH7ENhC4Mi12nZ87+4VhI
-	83tWFyig==;
-Received: from i53875bc0.versanet.de ([83.135.91.192] helo=diego.localnet)
-	by gloria.sntech.de with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <heiko@sntech.de>)
-	id 1thkoJ-0004nq-Qy; Tue, 11 Feb 2025 08:35:59 +0100
-From: Heiko =?UTF-8?B?U3TDvGJuZXI=?= <heiko@sntech.de>
-To: Rob Herring <robh+dt@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- "Rafael J . Wysocki" <rafael@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
- Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
- linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
- linux-pm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject:
- Re: [PATCH v7 4/7] pmdomain: rockchip: Add smc call to inform firmware
-Date: Tue, 11 Feb 2025 08:35:58 +0100
-Message-ID: <14847271.RDIVbhacDa@diego>
-In-Reply-To: <1738736156-119203-5-git-send-email-shawn.lin@rock-chips.com>
-References:
- <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
- <1738736156-119203-5-git-send-email-shawn.lin@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="Srii4Zhw"
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-308f0c39e58so13827571fa.1
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Feb 2025 00:12:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1739261542; x=1739866342; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LZBPv6QOC9HyqG83lsiP8B3hCPsDW+zwfD1sc16aqzQ=;
+        b=Srii4ZhwIpcHAV/jIHfFPmKfWk/E0t2DcWQ5xr3tqSSXwPf0gzdKhZ7P/9NfRSbNqh
+         HNlcWekNIUwhrD5OBkeu5rnRkVPia6JIhzIJag2lx5/N9KNM0ZNp2308kS+guuYQxDZD
+         zC5O2OaiysN+F9WW/VBtPFCNWPLptJel+mYVXpc7MkAQe0S+wdk/q7MV5mmatdLmWi/1
+         mARSweym3rzCGN3ZFZ3002Mc8YKQ86J8SdkogDjk4G6vK838i3rpwJ0+JM2gxAJJ4HwR
+         l16WxqA/jh5S8JnV20UxPB8C0HZmRwhZKMs44P/2T3UKxcWEyRHR/ZCyV+WehMWV9XWo
+         ToEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739261542; x=1739866342;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LZBPv6QOC9HyqG83lsiP8B3hCPsDW+zwfD1sc16aqzQ=;
+        b=n1GC52yTh3CPCaDMd+iBsTkFWwLdgFYUA/sxrll/Pe7GaquUqbruDmis13wBRN0X9S
+         JtP3lk+bC4yAXmQVSfDZKpOLXKSDmli8qH3i+Z3KgcvA5ELDYrMGEPJxYAvgFcSUVZ4+
+         +JnXI5+ykP7mhtPG496TlhDuG/xwa7Khxy9B3Rvub9vAg4capjH+6dY8VX5mIi74MtWc
+         H5ExF7sU7zMuBtdhlbLgOIqCQXiQ/vAWXgYOGjETpn8LNz49vizfdgop9uEdZLqr4CH/
+         XuoWIF5WO+xeV5d4kGkDASkvd+kc14bD1k68KuxBtOwaSC6O3b9B+MdxdQOHqrEwDdAB
+         vEFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXpNZEw4Ndp1NO2M/DFOtQv306vffS3WRbtsm/9aBPTr5Zh9e2n/O0PcwrZ8PF/92opMPvm/RIs0743@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyh44vn0AmGwmph69k6mo9j/Nm3Ufxkig09MC6UJY29QxdWY/2U
+	dx65g8UZ7JRQNL7Z9g5EF7joGAMlOdZBC2g++OSawuk146jezhYwPsWTOEi0idTaMv38llqqHMJ
+	Sr9FEul0JLIIxlknHbrQf6i7s9YgIPcA6ymgiKg==
+X-Gm-Gg: ASbGnctBlKsfOEnNMZndSB9KHxWsdIAm8hKKyYm/G/BpkoaxLxRa5c4AdU05Reb8DhP
+	5dbxamXw9orMmFSlsrQvVpaiFYAwlO51YmvmKrMhESojcKosJTzCGFNosS4CNY4v1Jtht4DxBIu
+	eketpD7x+ajBDsMhtG2mIbHM4psa8=
+X-Google-Smtp-Source: AGHT+IHsnSGZUFQMOoiXCGeHwOhkS4uzUDRmLLENwo/njPODTJnW3qTKSrQ7Ha1UrP2LHvzY0dNeNgevSz0lHNMxLPY=
+X-Received: by 2002:a2e:bea4:0:b0:308:fd11:76eb with SMTP id
+ 38308e7fff4ca-308fd1179e6mr4836001fa.19.1739261542476; Tue, 11 Feb 2025
+ 00:12:22 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+References: <20250210202336.349924-1-ebiggers@kernel.org>
+In-Reply-To: <20250210202336.349924-1-ebiggers@kernel.org>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Tue, 11 Feb 2025 09:12:11 +0100
+X-Gm-Features: AWEUYZkUIVqXHClndXAUtENhhMz-NcIhEeDU_e0vb-Z-ySUsEFA2hwDxIAg98Qo
+Message-ID: <CAMRc=Md0fsB7Yfx9Au1pXi+7Y_5DQf2z430c9R+tyS9e60-y5w@mail.gmail.com>
+Subject: Re: [PATCH v12 0/4] Driver and fscrypt support for HW-wrapped inline
+ encryption keys
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-mmc@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Gaurav Kashyap <quic_gaurkash@quicinc.com>, Bjorn Andersson <andersson@kernel.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, Jens Axboe <axboe@kernel.dk>, 
+	Konrad Dybcio <konradybcio@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Am Mittwoch, 5. Februar 2025, 07:15:53 MEZ schrieb Shawn Lin:
-> Inform firmware to keep the power domain on or off.
-> 
-> Suggested-by: Ulf Hansson <ulf.hansson@linaro.org>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On Mon, Feb 10, 2025 at 9:25=E2=80=AFPM Eric Biggers <ebiggers@kernel.org> =
+wrote:
+>
+> This patchset is based on linux-block/for-next and is also available at:
+>
+>     git fetch https://git.kernel.org/pub/scm/fs/fscrypt/linux.git wrapped=
+-keys-v12
+>
+> Now that the block layer support for hardware-wrapped inline encryption
+> keys has been applied for 6.15
+> (https://lore.kernel.org/r/173920649542.40307.8847368467858129326.b4-ty@k=
+ernel.dk),
+> this series refreshes the remaining patches.  They add the support for
+> hardware-wrapped inline encryption keys to the Qualcomm ICE and UFS
+> drivers and to fscrypt.  All tested on SM8650 with xfstests.
+>
+> TBD whether these will land in 6.15 too, or wait until 6.16 when the
+> block patches that patches 2-4 depend on will have landed.
+>
 
-Acked-by: Heiko Stuebner <heiko@sntech.de>
+Could Jens provide an immutable branch with these patches? I don't
+think there's a reason to delay it for another 3 months TBH.
 
-
-> ---
-> 
-> Changes in v7: None
-> Changes in v6: None
-> Changes in v5:
-> - fix a compile warning
-> 
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  drivers/pmdomain/rockchip/pm-domains.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pmdomain/rockchip/pm-domains.c b/drivers/pmdomain/rockchip/pm-domains.c
-> index cb0f938..49842f1 100644
-> --- a/drivers/pmdomain/rockchip/pm-domains.c
-> +++ b/drivers/pmdomain/rockchip/pm-domains.c
-> @@ -5,6 +5,7 @@
->   * Copyright (c) 2015 ROCKCHIP, Co. Ltd.
->   */
->  
-> +#include <linux/arm-smccc.h>
->  #include <linux/io.h>
->  #include <linux/iopoll.h>
->  #include <linux/err.h>
-> @@ -20,6 +21,7 @@
->  #include <linux/regmap.h>
->  #include <linux/mfd/syscon.h>
->  #include <soc/rockchip/pm_domains.h>
-> +#include <soc/rockchip/rockchip_sip.h>
->  #include <dt-bindings/power/px30-power.h>
->  #include <dt-bindings/power/rockchip,rv1126-power.h>
->  #include <dt-bindings/power/rk3036-power.h>
-> @@ -540,6 +542,7 @@ static void rockchip_do_pmu_set_power_domain(struct rockchip_pm_domain *pd,
->  	struct generic_pm_domain *genpd = &pd->genpd;
->  	u32 pd_pwr_offset = pd->info->pwr_offset;
->  	bool is_on, is_mem_on = false;
-> +	struct arm_smccc_res res;
->  
->  	if (pd->info->pwr_mask == 0)
->  		return;
-> @@ -567,6 +570,11 @@ static void rockchip_do_pmu_set_power_domain(struct rockchip_pm_domain *pd,
->  			genpd->name, is_on);
->  		return;
->  	}
-> +
-> +	/* Inform firmware to keep this pd on or off */
-> +	arm_smccc_smc(ROCKCHIP_SIP_SUSPEND_MODE, ROCKCHIP_SLEEP_PD_CONFIG,
-> +			pmu->info->pwr_offset + pd_pwr_offset,
-> +			pd->info->pwr_mask, on, 0, 0, 0, &res);
->  }
->  
->  static int rockchip_pd_power(struct rockchip_pm_domain *pd, bool power_on)
-> 
-
-
-
-
+Bartosz
