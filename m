@@ -1,301 +1,205 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3391D5143
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Feb 2025 21:39:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739396353; cv=none; b=XSrQ2K/DXnPM7FVZy1ynCcAFriJyQmpbB7nz0Vg3C+EQwA55fjxoQzBQjJgnl7uvFxUgGadHIKxVSlcIjhOJ5MhnjZ7tOmi2GnzzSf1MnJB+76ielk5vJWIdNbgDAaTPxuZrxgq7SZaoaC/d4/B029WFH8WmOlX8yRATzCUio90=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739396353; c=relaxed/simple;
-	bh=Zo1PLJuZQiFe2VwCyJzHj8rMLILUyYwPkxIeX03YOlA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mngreneCbCJFfvWDJj2jsv+YXsVj5q0AX4ZpIFubpRCLItsM7aRJyRDgLvYqrmOo0mKB1Dwij9EHwi7TUczfHArDmH7Gv8a4og5cAugB0RqUU+/8wQI8LUQeF8zKk9Nb1fUfq8BBh/SShBs+nml4HoO9HiRu4pwHHJfAzq9Fsvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BXkPq34I; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A2A1FF1DF;
+	Wed, 12 Feb 2025 21:57:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739397432; cv=fail; b=s17QOct/HOIdKb0oXCXjw6EGh0DYD1nyt54cQ+yAiyy2xb3Dw+73aJNx4VtA3337i6MH1rgPnJflbfGQU9uRDYCpAaPJLsQnMIYnjBX50na6iqDSnoa+6t/b2yShPSOfPZhKzuGfhKPQ1zWhxdtuiIw50WE7MuRqGsa1B36k20w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739397432; c=relaxed/simple;
+	bh=mAX4U0QpSVjg5CqJos1j46XGQH82z+JS9wfvmgHZih0=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=s+G9gg5ZgCnzAWKRcTzMua8xs6OCFAjlcFE2GtoFEjYgPAdMukCWk4LpmdMO8G78MfsdEo4p956tg/Dy4YkrDRyhn8oKmXo1P1YLSmD6R5k7+sjjjRzfDwCnniYXiNB0v9DOD5RFZbO/5fuaT36tIhqE2ULrfd2Aa5CSsdbBlPc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gM6ZPI9s; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=dApYr8xu; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BXkPq34I"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4YtWsn6gS8zlgTwg;
-	Wed, 12 Feb 2025 21:39:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1739396327; x=1741988328; bh=PQqGDT1q2Bk/ezbvIh+SkX0aOLWkMfa/fkh
-	22CmiEoY=; b=BXkPq34I73VgDeLJt4r4g93uV7CSH1gehFbsBW03i9bl4DAtYdr
-	7G30Uu8veY9Cfy94zK7bY4D280wl0dJoKI9ybM4cR8NhgZxBIh4ChWbx+bqOU6CZ
-	qEo/s34mscNY6Kj1xjYSvzl5NGFiioVEZ9srILt7FhdCX+n3xer8i+yZPBU5PPgQ
-	gTXpX7KbPL0Vjs7QMAhH/nOAOYbUP0YjsCNyqOACWPqazxqN1Ub//XbzXMb+SSDK
-	Kges2sMRgARcp1Cs4fvPTkCzzOzjfl4uBt1epqUeqqwAYa0aX6q/WxoEnfvJrAhl
-	n3VSFOm8iwNoXJmuFxFtmdBBjv+mhslua2A==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id bEmgmJFzDMXn; Wed, 12 Feb 2025 21:38:47 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4YtWsG5jqqzlgTwc;
-	Wed, 12 Feb 2025 21:38:42 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Orson Zhai <orsonzhai@gmail.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Ziqi Chen <quic_ziqichen@quicinc.com>,
-	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Philipp Stanner <pstanner@redhat.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Eric Biggers <ebiggers@google.com>
-Subject: [PATCH] scsi: ufs: Constify the third pwr_change_notify() argument
-Date: Wed, 12 Feb 2025 13:38:02 -0800
-Message-ID: <20250212213838.1044917-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.48.1.502.g6dc24dfdaf-goog
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gM6ZPI9s";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="dApYr8xu"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51CLpj2l011035;
+	Wed, 12 Feb 2025 21:56:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2023-11-20; bh=5SorpLuUIlTHKbXirA
+	cM0iEZHv4gp0KJgnJ+NkXwrOE=; b=gM6ZPI9s4XMcQr//j4TZpdnmmvr2dDNd3R
+	UBT+BgDHYZuNqg7/IlyQ3FO2QnxHpodNs6p2bjvBPdmRvQ3JAF8DXxc1Xukz7cKk
+	ovznlCZVLOtvq5n7mVSIWuwJQFh5V09zMJEgQ75rzFdTezPUYPFM0JRL2GSy+ic1
+	ZkaCxu0juuRZaHGW+ZuhjlM6kflRJfoIc3G0uHHnvtn477HzSxE6fscTZRRgyHce
+	rrMlp6D04VBwsNeGlOo7FRD+7kmxePrWJQ16SQKSvTEe/2AgJfNbabXZF9mxSzGm
+	yyxcqLwz++Od7mr4z+SmFtjctkVDC7nJCYE0tLZxvzVFYvJp2mHg==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44p0t48cmh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 12 Feb 2025 21:56:44 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51CLBRRZ002659;
+	Wed, 12 Feb 2025 21:56:43 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2177.outbound.protection.outlook.com [104.47.56.177])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 44nwqaxc3n-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 12 Feb 2025 21:56:42 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=qEyESu0mK5sL40jB3MZwgJrJpJJOUvsGY/keBj/pNHZjoNtcMay5YQZn9CFtqo/tjD/c1mO3kJskq0bMWjAuohhiMIhHTawQJZQKYtRp5zA/3UHzg/S1lSaJLB52CUX7yD+NlkgrNFPHis1up/dHBK0LbeV0YLfh5TyXVpSv1qn1dC6dUvolKjlHuQbURG76896PXFlKM8FxU7dT7solbWKNkVRGPLYwubJaexIwSH3tEDYm+VmHp3BuD+3cGHR8QjuvUfXXZd/YWj+6n7BZOeBmO+h6C55yu2l++Flx6s64eUa5kgzw8z8Ms/gCBAEyAzhV7k879+5TmEoYCp6FvQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5SorpLuUIlTHKbXirAcM0iEZHv4gp0KJgnJ+NkXwrOE=;
+ b=x0CRmXH0I6+lgeibD7MVtX+TS0eR89nf9jnXyGs1fqN5+jKeCedCbl18TY3Vv8bvVji88t5P+irbj+y9hPAg3dvMrvOXIdMwKARn4Lx3Okx8+l0o8JR3YBeJu5A1m/LKgKknbiuqkyxzxFa0jeHcS73kxY8gAQnsE6sNPXVzZ1swbm8RS35NMr1ZBnaIfwVHBdjK02gLp+cfvgkbyNjy+zH+maZBGaxiGD7hAlcmEZ5JAi5qAwqWboqZyR8yLBSjv4ubuU32HzVmflJ1ybrveUcZAa6G5DnTgFtTEzgoTKJPgNedD2NuKChuUg241mS1CwhqXDeA5qNVj2aDO2yRmw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5SorpLuUIlTHKbXirAcM0iEZHv4gp0KJgnJ+NkXwrOE=;
+ b=dApYr8xuoals+d7bZsGm7hz8ZoIt4FGxVoKVb4wXs98IMt0+h7EhT77JOhZTEvp9PdGsOqCOS+CZonja+u1tcon8BTSvWqpNGe+XESbZargsnDaT33JLo+rqmtEUrf3OajejlUGGXhIYGQ3mPYrgRCf3cFF/InPKVOey236jq+c=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by CH2PR10MB4198.namprd10.prod.outlook.com (2603:10b6:610:ab::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8445.13; Wed, 12 Feb
+ 2025 21:56:40 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%4]) with mapi id 15.20.8422.015; Wed, 12 Feb 2025
+ 21:56:40 +0000
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: "James E . J . Bottomley" <james.bottomley@hansenpartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Shawn Lin
+ <shawn.lin@rock-chips.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof
+ Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        "Rafael J . Wysocki"
+ <rafael@kernel.org>,
+        Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar
+ <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van
+ Assche <bvanassche@acm.org>,
+        YiFeng Zhao <zyf@rock-chips.com>, Liang
+ Chen <cl@rock-chips.com>,
+        linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v7 0/7] Initial support for RK3576 UFS controller
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <CAPDyKFq+pWXq75xEtfkeCkmkdZtfp9dAFej4M+6rO6EAUULf=w@mail.gmail.com>
+	(Ulf Hansson's message of "Fri, 7 Feb 2025 11:17:46 +0100")
+Organization: Oracle Corporation
+Message-ID: <yq14j0y25hd.fsf@ca-mkp.ca.oracle.com>
+References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+	<CAPDyKFq+pWXq75xEtfkeCkmkdZtfp9dAFej4M+6rO6EAUULf=w@mail.gmail.com>
+Date: Wed, 12 Feb 2025 16:56:39 -0500
+Content-Type: text/plain
+X-ClientProxiedBy: MN0PR03CA0009.namprd03.prod.outlook.com
+ (2603:10b6:208:52f::14) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|CH2PR10MB4198:EE_
+X-MS-Office365-Filtering-Correlation-Id: 04a71c8e-8bdf-4d2d-1739-08dd4bb02164
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?oMP6dgUkW/Mp6BIIZDkxtXsSBs1J0vy+q/ceqoUMzgvXlIGW2bSQuxu+Ynuq?=
+ =?us-ascii?Q?H7soQ8cAwl4uEIkCJ1Tg3FHl05W8nzdeapbMM1Ne+oBpAYpzcDWIktOLPMLN?=
+ =?us-ascii?Q?6P2y9J1tYZrk7vlUiXxoLvArrPqq1ME+NFFKfil4Re/BTIRXbEnvVUxfEMXO?=
+ =?us-ascii?Q?6irvUas+54p4indPBKtHd8idx9iwy9+Y+wfXRqvBkaWQLUzU3atZhXv4Am08?=
+ =?us-ascii?Q?P9ClYuSpa8BxaJSmUF2smzvmCS/80uDZqM9q2hLvTUKQXU2kHUY9w8m8B0+q?=
+ =?us-ascii?Q?eI88R4Ck/sZKjqyjs3pjqSzr5rJCEp+NBn+0VSE05RJW1gI4+zf9PQoOCLHY?=
+ =?us-ascii?Q?8ln+w8n/9ID0kA89VQsh6tqj75xDude9wIW6nA4v5n++R/19ebkQp4gwUD2i?=
+ =?us-ascii?Q?6EQWOgIYOBTwiUkhuNpvyBZeu6nfx5Cfkf9SXeWKAVTmVBoT/JFkwWmnlG7B?=
+ =?us-ascii?Q?37V+eBEHCn0Sk6920q3Ys9ncCUMnmCu20T5lHeZuUoNzGLp0tXAW+4pFLXMi?=
+ =?us-ascii?Q?1OnuyV+GJIfKBQaEhceliuxuZpm/7tCX8v6GcvJVI4ok8MAfQ8YU4k9x8L9T?=
+ =?us-ascii?Q?Ezk6OJ4QMhDQ59FAKFytONLW5Yw2WAtQBNVTMKDVBZUzzhSgmsYf9XiuyFZn?=
+ =?us-ascii?Q?jy7elpFdDMTkLMpe42K7EJfkzWAwazayl2KvDAUxyjCvcWwMONoXNUZjHDP9?=
+ =?us-ascii?Q?73e5yb1Yeeb74InYV//0b6k6HlFqFzIzeEqg8ZFHOCFr8dYlgpO1yQpeTwO1?=
+ =?us-ascii?Q?r7l7RDdH4qNmaGZPV/xORWMcJ8qw/qulMLO5KL/lDzRL20xVZIwE50J2QJWh?=
+ =?us-ascii?Q?4zF9BcPpMyVeKT4rD6dGZ/X2OJPGXHzUymmG2LmDHnr3vD9U0wfqSsfbOraZ?=
+ =?us-ascii?Q?jXP6sAK1mo+/YdeVebSJC1mmxjfCeMtWm0o5cMQpFQaMphTHgFiJcD116Umy?=
+ =?us-ascii?Q?R28skvJTAMH5hfXghTUlBzdZc/iRWQ9eXbQeQoOe3jcLqvfNYeRZMpf7fbmv?=
+ =?us-ascii?Q?N/xfMUwVK9jfJ3kPJMGCPuqsKGc1exhwyWoOvHERXVrB8lLYdO7hE3G1gvxX?=
+ =?us-ascii?Q?6fs5mPRa3zoUUTZDiDm2Oseq5K1gzNJAvcIMRoeCIqC4BLYj+qbMcpta6UPc?=
+ =?us-ascii?Q?AtQS974pfUx49jD1cr6IwL+BIt2HmYiytu5JUtuuIh2C7Gv4N4VyckCBcpSy?=
+ =?us-ascii?Q?016uQqMlHzuWIrDOqji63uDgbrtwxdCCA3QwuRWUXdcHhHJBFOz4f0d5DC8J?=
+ =?us-ascii?Q?mVhBQUdvi1TVTD/3CUFP6X5VV9stYd3yXVUdtwOVstoLymMfAJIryor58S67?=
+ =?us-ascii?Q?EOt2kIkPYlHp38Q372Y9RSyfs4DtjdZmK04nOgqcYEtmXd83kTev0NhY2RnW?=
+ =?us-ascii?Q?sPPDBpVDkIffBf7b8q8ucOeNTeaE?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?GdEY1Jfa5CFpdXbUPbMwVei6I+jhsF3ylW6f0zsVRAfZm6jWsJSPDXV3hnhS?=
+ =?us-ascii?Q?AmJ2sELZqCZIr3yrR4V+2/4l9kXtyKidDwHW/g3YfgNmk/mc7DdkMu4CfnWA?=
+ =?us-ascii?Q?VNzJoOd8nxuBxtcvP4lQ6rW4ls7kPQRNFG4BKdASiKYfYiIqwlf/7xSRT1Qs?=
+ =?us-ascii?Q?XO1zW/QzP4d9GR89XnsSpB2DPLoVOjPrIEs+3XxAjgDD9F2ZNSNUj9Jh6mU5?=
+ =?us-ascii?Q?IrkP20cZGrtkXsNaNjYBfo3AVtkRQFIqp62CYuhG5WUxNdqsbX7yLhTeleg0?=
+ =?us-ascii?Q?A0xIRKwMi0LZlcyl341/oVuO3hbvlKuVGzLkMB4NpOeiZ+n/clYQAVbpzBqn?=
+ =?us-ascii?Q?jsOH/+2WrIftkVjz9pz1LmFyIOqhsw8KlcAKm9KhDxXD5PBTrnPto5CoTYQn?=
+ =?us-ascii?Q?jG+NI4UbVnLSz7wcrn4ANI/4Rfqhkukc7QZCtdsCO9XbpJY35/2tWO4mSHyN?=
+ =?us-ascii?Q?E2ImIJSgp/ytmP10TZg5fRm1oeW9Dxrsx4MIzq2hNkoUzRYc3JOWZr3T5wkG?=
+ =?us-ascii?Q?JyBarLzYVqMkm/wY/dXBTrkz4IAu6mU62r24irElc8Lny27+lFwpsSaZS6J4?=
+ =?us-ascii?Q?GcbSaWy5iIKbAHnTHzuID/i5jWIuhUomO3VMJeukHAJpTsYQNJ7+hv/cGiW9?=
+ =?us-ascii?Q?tiyiIHcuJowyutOMzXh68wPeu+q9kl6zOy+FO3l29YLsJS1pwhih9LYngPfp?=
+ =?us-ascii?Q?+UpabYNwX9AfRnkuJjtsQwejlIG1nF8zjM7LG1HdsWj3AzpDftFdTHtFMg5m?=
+ =?us-ascii?Q?XnxeWcezdjro568cJFWmqafGqWx+CL42vOOliun1WV3eL7hfL5JSS4dNmeUJ?=
+ =?us-ascii?Q?foKS17lGcmgBMk3h9OshEw817D/+j5k0BiBHorIvZ+dPfxJZleneyqb2ZcyN?=
+ =?us-ascii?Q?0XH+dxDM1aNzSK70rRaFytoismf8tm3DKlBfCytkNkMR00cbJx0IPXWz2Fyy?=
+ =?us-ascii?Q?wfKhOY9s+/7stQFdwuxzZRr5dJlVg14RNhHu7Y7PoSHZnXxy/CCZ0ydsrP8F?=
+ =?us-ascii?Q?T9IwegAr8+RbKYtJJc480UgVPSL/rFrPNFqnCO7GteRmJUgoyaxPB0DRMGhA?=
+ =?us-ascii?Q?KVNScgTBh8AELaRq0taoY15GAMB/uohXFKU+TjBUWnrA3hZ1VOyrEUj/kAxY?=
+ =?us-ascii?Q?Pnq4+QMr6pFpmZDTfK7WpuJBvqqfzENl9fCa0Lg1af4AJ4zcGp/C8v3KPPtz?=
+ =?us-ascii?Q?MDQ3f/rimjw5lR3QLcrCFxuFrQIINX9Mw17Tztgyc1tGYFVCl47HZCNi2ELB?=
+ =?us-ascii?Q?VlDh0rAJhHbsO4Ib8Uy3qoQv18XLPNWlBW0GoB8aW95DW2h6RJY/1UVyGJ1c?=
+ =?us-ascii?Q?ZIxybDu47LGN2pH1AIJp8Ql6k/hghf03SV00qy+G0q1yEjqQKEaQ4dat2ASD?=
+ =?us-ascii?Q?EZRwF569mt+evqvjEZe4VJmMdrzNjOohMwzevTuv2B7iZ8VXQ8Smvk+u82mB?=
+ =?us-ascii?Q?vKmsz5FGRa0BoMtlG0XuyVRSSkjD2FZ/F25nOVSh/ITTYjP+NlnG0LhflFsR?=
+ =?us-ascii?Q?qT42cHU6H3dPnHCtAcwrI4cxQnCunYjpdZgyOZF/xdX8RzwVhDwHHA4//vpy?=
+ =?us-ascii?Q?ZbOe6t0Njbe6/hRIwkzataKRWrvNZx7zaHQWgOKsUjXFL0ZLU1i+7Xqv+KcC?=
+ =?us-ascii?Q?sA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	e47tNOMieIAMAiiTNyp/AA9pl98lkbPMzqxtwcshsZw52mIx3oFojLfQKS2pgIp02ccF29yffB8BtAloTWhqC5FkjcFXRP0K2UsCzOYHXGHoktl/jBogQscdLhTI0wKP+C/FVaVAMwKZudFRK6ayDdZXDR+Mxj9JnuJFcm+XRH6cca5bDjg1XmDR2f9PcaCseL0rkLJ6tCCXQaFOijc8wJKQ/B7d+tiHOOU/DTR1bQHk3sv7Vt7hQyjO0H5PFu3w8D2tLqUmKGz0TPV6Zff/DgCyKUYEc4rm1bsaAWvyHiGnLz4vlQYQNYPITlseWvg7mLJCG7lfJ2swBOtf5VHqYuEmlxq5kM8CL3ekXv0Zfllg4HqFXi7oAVwKNoN/k16u8BdU9yyOMdTJvPt04RqqpfRlEgcfIEcLFrUTgbv5uz8onsoPLxyB4Cq3AHu11L9M+9VyOUHz1h3dmtKwcRkDsku2lWzSHfD4W9rnXLFfoz/2tpA4qCy//r2wcbF4UJ3npcAfqi7JJaSvmLFWvMrYiKJHXHMAhmToLOyOBJpAAJOf58bRzBUp0DcRRwe3tkW2wsUe6Vgw/QNd+CaLiQcVKVRIBOywCFGkDBoTjr/g0Vg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 04a71c8e-8bdf-4d2d-1739-08dd4bb02164
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Feb 2025 21:56:40.4160
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Dq2MeR3Wi+A6DMrgJzP9gQVwfLKgBYAJ8Rrxo+BM5XOCKPNiu0aJhfe32DbOv3exhqHSqNI0VNGslJXma0GrsSu8ajM+zedOfASkwdK2fgw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4198
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-12_06,2025-02-11_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=781
+ phishscore=0 bulkscore=0 malwarescore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2501170000
+ definitions=main-2502120155
+X-Proofpoint-ORIG-GUID: go7tgR2tXVPBYoix-zipx224mCfrr4kK
+X-Proofpoint-GUID: go7tgR2tXVPBYoix-zipx224mCfrr4kK
 
-The third pwr_change_notify() argument is an input parameter. Make this
-explicit by declaring it 'const'.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd-priv.h  |  6 +++---
- drivers/ufs/host/ufs-exynos.c   | 10 +++++-----
- drivers/ufs/host/ufs-exynos.h   |  2 +-
- drivers/ufs/host/ufs-hisi.c     |  6 +++---
- drivers/ufs/host/ufs-mediatek.c | 10 +++++-----
- drivers/ufs/host/ufs-qcom.c     |  2 +-
- drivers/ufs/host/ufs-sprd.c     |  6 +++---
- drivers/ufs/host/ufshcd-pci.c   |  2 +-
- include/ufs/ufshcd.h            |  8 ++++----
- 9 files changed, 26 insertions(+), 26 deletions(-)
+Ulf,
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-index 786f20ef2238..2cf500e74440 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -159,9 +159,9 @@ static inline int ufshcd_vops_link_startup_notify(str=
-uct ufs_hba *hba,
- }
-=20
- static inline int ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
--				  enum ufs_notify_change_status status,
--				  struct ufs_pa_layer_attr *dev_max_params,
--				  struct ufs_pa_layer_attr *dev_req_params)
-+				enum ufs_notify_change_status status,
-+				const struct ufs_pa_layer_attr *dev_max_params,
-+				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	if (hba->vops && hba->vops->pwr_change_notify)
- 		return hba->vops->pwr_change_notify(hba, status,
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.=
-c
-index 13dd5dfc03eb..cab40d0cf1d5 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -321,7 +321,7 @@ static int exynosauto_ufs_pre_pwr_change(struct exyno=
-s_ufs *ufs,
- }
-=20
- static int exynosauto_ufs_post_pwr_change(struct exynos_ufs *ufs,
--					  struct ufs_pa_layer_attr *pwr)
-+					  const struct ufs_pa_layer_attr *pwr)
- {
- 	struct ufs_hba *hba =3D ufs->hba;
- 	u32 enabled_vh;
-@@ -396,7 +396,7 @@ static int exynos7_ufs_pre_pwr_change(struct exynos_u=
-fs *ufs,
- }
-=20
- static int exynos7_ufs_post_pwr_change(struct exynos_ufs *ufs,
--						struct ufs_pa_layer_attr *pwr)
-+				       const struct ufs_pa_layer_attr *pwr)
- {
- 	struct ufs_hba *hba =3D ufs->hba;
- 	int lanes =3D max_t(u32, pwr->lane_rx, pwr->lane_tx);
-@@ -813,7 +813,7 @@ static u32 exynos_ufs_get_hs_gear(struct ufs_hba *hba=
-)
- }
-=20
- static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
--				struct ufs_pa_layer_attr *dev_max_params,
-+				const struct ufs_pa_layer_attr *dev_max_params,
- 				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	struct exynos_ufs *ufs =3D ufshcd_get_variant(hba);
-@@ -865,7 +865,7 @@ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hb=
-a,
-=20
- #define PWR_MODE_STR_LEN	64
- static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
--				struct ufs_pa_layer_attr *pwr_req)
-+				const struct ufs_pa_layer_attr *pwr_req)
- {
- 	struct exynos_ufs *ufs =3D ufshcd_get_variant(hba);
- 	struct phy *generic_phy =3D ufs->phy;
-@@ -1634,7 +1634,7 @@ static int exynos_ufs_link_startup_notify(struct uf=
-s_hba *hba,
-=20
- static int exynos_ufs_pwr_change_notify(struct ufs_hba *hba,
- 				enum ufs_notify_change_status status,
--				struct ufs_pa_layer_attr *dev_max_params,
-+				const struct ufs_pa_layer_attr *dev_max_params,
- 				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	int ret =3D 0;
-diff --git a/drivers/ufs/host/ufs-exynos.h b/drivers/ufs/host/ufs-exynos.=
-h
-index 9670dc138d1e..aac517276189 100644
---- a/drivers/ufs/host/ufs-exynos.h
-+++ b/drivers/ufs/host/ufs-exynos.h
-@@ -188,7 +188,7 @@ struct exynos_ufs_drv_data {
- 	int (*pre_pwr_change)(struct exynos_ufs *ufs,
- 				struct ufs_pa_layer_attr *pwr);
- 	int (*post_pwr_change)(struct exynos_ufs *ufs,
--				struct ufs_pa_layer_attr *pwr);
-+			       const struct ufs_pa_layer_attr *pwr);
- 	int (*pre_hce_enable)(struct exynos_ufs *ufs);
- 	int (*post_hce_enable)(struct exynos_ufs *ufs);
- };
-diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
-index 6e6569de74d8..6f2e6bf31225 100644
---- a/drivers/ufs/host/ufs-hisi.c
-+++ b/drivers/ufs/host/ufs-hisi.c
-@@ -361,9 +361,9 @@ static void ufs_hisi_pwr_change_pre_change(struct ufs=
-_hba *hba)
- }
-=20
- static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
--				       enum ufs_notify_change_status status,
--				       struct ufs_pa_layer_attr *dev_max_params,
--				       struct ufs_pa_layer_attr *dev_req_params)
-+				enum ufs_notify_change_status status,
-+				const struct ufs_pa_layer_attr *dev_max_params,
-+				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	struct ufs_host_params host_params;
- 	int ret =3D 0;
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-index 135cd78109e2..927c0bcdb9a9 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1081,8 +1081,8 @@ static bool ufs_mtk_pmc_via_fastauto(struct ufs_hba=
- *hba,
- }
-=20
- static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
--				  struct ufs_pa_layer_attr *dev_max_params,
--				  struct ufs_pa_layer_attr *dev_req_params)
-+				const struct ufs_pa_layer_attr *dev_max_params,
-+				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
- 	struct ufs_host_params host_params;
-@@ -1134,9 +1134,9 @@ static int ufs_mtk_pre_pwr_change(struct ufs_hba *h=
-ba,
- }
-=20
- static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
--				     enum ufs_notify_change_status stage,
--				     struct ufs_pa_layer_attr *dev_max_params,
--				     struct ufs_pa_layer_attr *dev_req_params)
-+				enum ufs_notify_change_status stage,
-+				const struct ufs_pa_layer_attr *dev_max_params,
-+				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	int ret =3D 0;
-=20
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index e69b792523e6..45eabccdfa31 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -807,7 +807,7 @@ static int ufs_qcom_icc_update_bw(struct ufs_qcom_hos=
-t *host)
-=20
- static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 				enum ufs_notify_change_status status,
--				struct ufs_pa_layer_attr *dev_max_params,
-+				const struct ufs_pa_layer_attr *dev_max_params,
- 				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
-diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
-index b1d532363f9d..65bd8fb96b99 100644
---- a/drivers/ufs/host/ufs-sprd.c
-+++ b/drivers/ufs/host/ufs-sprd.c
-@@ -160,9 +160,9 @@ static int ufs_sprd_common_init(struct ufs_hba *hba)
- }
-=20
- static int sprd_ufs_pwr_change_notify(struct ufs_hba *hba,
--				      enum ufs_notify_change_status status,
--				      struct ufs_pa_layer_attr *dev_max_params,
--				      struct ufs_pa_layer_attr *dev_req_params)
-+				enum ufs_notify_change_status status,
-+				const struct ufs_pa_layer_attr *dev_max_params,
-+				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	struct ufs_sprd_host *host =3D ufshcd_get_variant(hba);
-=20
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.=
-c
-index ea39c5d5b8cf..2245397a9cc2 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -157,7 +157,7 @@ static int ufs_intel_set_lanes(struct ufs_hba *hba, u=
-32 lanes)
-=20
- static int ufs_intel_lkf_pwr_change_notify(struct ufs_hba *hba,
- 				enum ufs_notify_change_status status,
--				struct ufs_pa_layer_attr *dev_max_params,
-+				const struct ufs_pa_layer_attr *dev_max_params,
- 				struct ufs_pa_layer_attr *dev_req_params)
- {
- 	int err =3D 0;
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 1ddc1edf31b1..b9e8cc87c026 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -353,9 +353,9 @@ struct ufs_hba_variant_ops {
- 	int	(*link_startup_notify)(struct ufs_hba *,
- 				       enum ufs_notify_change_status);
- 	int	(*pwr_change_notify)(struct ufs_hba *,
--				enum ufs_notify_change_status status,
--				struct ufs_pa_layer_attr *desired_pwr_mode,
--				struct ufs_pa_layer_attr *final_params);
-+			enum ufs_notify_change_status status,
-+			const struct ufs_pa_layer_attr *desired_pwr_mode,
-+			struct ufs_pa_layer_attr *final_params);
- 	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
- 				  bool is_scsi_cmd);
- 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
-@@ -1422,7 +1422,7 @@ static inline int ufshcd_dme_peer_get(struct ufs_hb=
-a *hba,
- 	return ufshcd_dme_get_attr(hba, attr_sel, mib_val, DME_PEER);
- }
-=20
--static inline bool ufshcd_is_hs_mode(struct ufs_pa_layer_attr *pwr_info)
-+static inline bool ufshcd_is_hs_mode(const struct ufs_pa_layer_attr *pwr=
-_info)
- {
- 	return (pwr_info->pwr_rx =3D=3D FAST_MODE ||
- 		pwr_info->pwr_rx =3D=3D FASTAUTO_MODE) &&
+> If so, may I suggest that I pick patch2, patch3 and patch4 via my
+> pmdomain tree and share them via an immutable branch, so they can be
+> pulled into James/Martin's scsi tree?
+
+Sure, that's fine with me.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
