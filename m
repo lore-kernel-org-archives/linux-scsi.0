@@ -1,48 +1,32 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0999744C7C;
-	Thu, 13 Feb 2025 17:34:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 40ADA2040B7;
+	Thu, 13 Feb 2025 17:45:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739468093; cv=none; b=c4EWrAsRfHRcP5OLf42YaQcTnhE7iVSaC93WpdGkz/gQ5+AXjxwLPkT6/UCCv7RrjilTGGPWzOHMPpS8UwIO4He31p2QooHH8eAk6wD2CGq9Th8QjERKrLFE8PU/JAusTCT5TeYvXWSzj4dPFmT2O+ltq4RcynsmsqhiJP5Pz58=
+	t=1739468744; cv=none; b=aLlTLwJHmY8nKXGKm/AlylExHNrctWj8TBzeVGJBy/8pl14xSdKhaDvVPHx3ceO6t6UkzGCgI+UPTMGBuj022y5G87uaEEaBstv7Tjjfw6umvNHfe25VRrs7Mvk+mvA4xFH6yg9jjcdlsSovncX6mtKmglc5WGcWmfGc8Jf2z7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739468093; c=relaxed/simple;
-	bh=uHxTBVuH8paIM72rg2CMMKIx8nDCXvftXlicGBUe6Sk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nFnVrRivwKo9GE32u5nq9qD2KIu1paGHMscpvZUTq3bCoLoB6onAgVMHeFOlE5CaxrZuxQToTpNxeELRfzKh0EPMhDuLobQpOT9vM37M/QHNTYbeFAiZc5bYvr7ysECCuPfjE2aKSX2UalJnPi4veqgnWtf4X6Zrr1fy5vCXX5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Kc8Tbz8F; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1739468744; c=relaxed/simple;
+	bh=9g9XvpJ4vTHZRdoVn0NNOAe0M9fMrmh7qRY4E5RBo5I=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=JaRg7IidlKAQiBO4hGtq62ejHDNeya3befkWh7RYalf+92TzzDR2PJFtN6D3BKgVriWc/QsnRwtmnQLNK0gKn0wLnbvi/aHzIh+06UuPRUEPj1t96ZRi2b9Xbh6ZWGsb79MRdTILvmmMji50gKfCVYe8c/Ic2c+52AHMy5M/UDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=MqwOKrlM; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Kc8Tbz8F"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Yv2PR24QCz6CkxTP;
-	Thu, 13 Feb 2025 17:34:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1739468086; x=1742060087; bh=SlpGtDtSh+ycsUOXXlFzZCaj
-	dsPxkmXnpGXfrjDn3YY=; b=Kc8Tbz8F8pk/W3NZdm03feS52nsI0RBiW2D6fg69
-	TH8YAMFRuMp8wbemif+/rN2hfACHNqiOM3jHZn/bcGkwhBD63rNZ3IQGT+lUuMVR
-	PHUvJXZfAGBuNSqAnCICbV5JRVDqR7YrUIVyspC95ehKOSOKB8RNlOvM0h1N3DWr
-	byfBGcuRva2xrcY+14wCu4jw9oUkobKsl2QRy6yf96AKyzlEkEgcrLfAYGE3s+ig
-	LF5Awqa1IqB3+jMyiyIG2eaAp689O2WxaRWJkt1ym1dic0oDjnYlJBU8fSe05FJi
-	c/nEU6dABu5/Dd23//HM3nDG13zYqii9v936Bayq3djl8Q==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ynepo0qvne4p; Thu, 13 Feb 2025 17:34:46 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2e14:8:96a2:b866:71ad:f87f] (unknown [104.135.204.83])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Yv2PJ2m7Fz6Cl0jr;
-	Thu, 13 Feb 2025 17:34:43 +0000 (UTC)
-Message-ID: <51c6b704-7dd0-4d2c-acae-8ba427d57070@acm.org>
-Date: Thu, 13 Feb 2025 09:34:38 -0800
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="MqwOKrlM"
+Received: from [100.65.1.94] (unknown [20.236.11.69])
+	by linux.microsoft.com (Postfix) with ESMTPSA id D7186203D61D;
+	Thu, 13 Feb 2025 09:45:40 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D7186203D61D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1739468742;
+	bh=CjdDB9uvZBBF3c03e9VylpCG5WkQPsjk1qSKlO3MQtE=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=MqwOKrlM0wNKTlUgCtpn9gJKIpfGiwVh9dHGNNF4ycPmXa/idcQ30iiksOd4FJJaH
+	 jrqNCD9r00CbzdjGOPFOZ+MnFU6woy29/+YEkOfP14iTKCcgK64o8pGQaLxlVNUpHe
+	 bIb4sXQD9rr6g8CsvFcC34/zgx+kxX5/LItW+SLg=
+Message-ID: <8f80b65e-724c-439c-a094-4bfbb1e296f1@linux.microsoft.com>
+Date: Thu, 13 Feb 2025 09:45:41 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,57 +34,77 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: hpsa: Replace deprecated strncpy() with strscpy()
-To: Thorsten Blum <thorsten.blum@linux.dev>,
- Don Brace <don.brace@microchip.com>,
+Cc: eahariha@linux.microsoft.com, Yaron Avizrat <yaron.avizrat@intel.com>,
+ Oded Gabbay <ogabbay@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>,
+ Nicolas Palix <nicolas.palix@imag.fr>, James Smart
+ <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-hardening@vger.kernel.org, storagedev@microchip.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250212222214.86110-2-thorsten.blum@linux.dev>
- <34BB4FDE-062D-4C1B-B246-86CB55F631B8@linux.dev>
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>,
+ Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
+ Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ cocci@inria.fr, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org,
+ imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
+ linux-rdma@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 00/16] Converge on using secs_to_jiffies() part two
+To: Andrew Morton <akpm@linux-foundation.org>
+References: <20250128-converge-secs-to-jiffies-part-two-v1-0-9a6ecf0b2308@linux.microsoft.com>
+ <20250128161643.289d9fe705ef2fdba0b82a52@linux-foundation.org>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <34BB4FDE-062D-4C1B-B246-86CB55F631B8@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20250128161643.289d9fe705ef2fdba0b82a52@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2/13/25 3:24 AM, Thorsten Blum wrote:
-> This subtle difference between strncpy() and strscpy() regarding the
-> number of bytes copied isn't really documented anywhere, is it? The
-> documentation I came across so far seems to focus mostly on the
-> different return values of the two functions.
+On 1/28/2025 4:16 PM, Andrew Morton wrote:
+> On Tue, 28 Jan 2025 18:21:45 +0000 Easwar Hariharan <eahariha@linux.microsoft.com> wrote:
+> 
+>> This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+>> either use the multiply pattern of either of:
+>> - msecs_to_jiffies(N*1000) or
+>> - msecs_to_jiffies(N*MSEC_PER_SEC)
+>>
+>> where N is a constant or an expression, to avoid the multiplication.
+>>
+>> The conversion is made with Coccinelle with the secs_to_jiffies() script
+>> in scripts/coccinelle/misc. Attention is paid to what the best change
+>> can be rather than restricting to what the tool provides.
+>>
+>> Andrew has kindly agreed to take the series through mm.git modulo the
+>> patches maintainers want to pick through their own trees.
+> 
+> I added patches 2-16 to mm.git.  If any of these later get merged into
+> a subsystem tree, Stephen will tell us and I'll drop the mm.git copy.
 
- From the description of commit 9022ed0e7e65 ("strscpy: write destination
-buffer only once"):
+Hi Andrew, I don't see these in mm-nonmm-unstable. Did these get dropped in the confusion around
+casting secs_to_jiffies() to unsigned long[1]? That has since been merged in 6.14-rc2 via tglx' tree,
+and I have a v2 for just the ceph patches that needed some fixups at [2].
 
-     So strscpy not only guarantees NUL-termination (unlike strncpy), it 
-also
-     doesn't do unnecessary padding at the destination.  But at the same 
-time
-     also avoids byte-at-a-time reads and writes by _allowing_ some 
-extra NUL
-     writes - within the size, of course - so that the whole copy can be 
-done
-     with word operations.
-
-     It is also stable in the face of a mutable source string: it explicitly
-     does not read the source buffer multiple times (so an implementation
-     using "strnlen()+memcpy()" would be wrong), and does not read the 
-source
-     buffer past the size (like the mis-design that is strlcpy does).
-
-     Finally, the return value is designed to be simple and unambiguous: if
-     the string cannot be copied fully, it returns an actual negative error,
-     making error handling clearer and simpler (and the caller already knows
-     the size of the buffer).  Otherwise it returns the string length of the
-     result.
-
-More information is available in the description of commit 30c44659f4a3
-("Merge branch 'strscpy' of 
-git://git.kernel.org/pub/scm/linux/kernel/git/cmetcalf/linux-tile").
+[1] https://lore.kernel.org/all/20250130192701.99626-1-eahariha@linux.microsoft.com/
+[2] https://lore.kernel.org/all/20250203-converge-secs-to-jiffies-part-two-v2-0-d7058a01fd0e@linux.microsoft.com/
 
 Thanks,
-
-Bart.
-
+Easwar (he/him)
