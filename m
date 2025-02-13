@@ -1,99 +1,102 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6ECE245B10
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2025 19:54:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8D624BC1D;
+	Thu, 13 Feb 2025 20:19:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739476473; cv=none; b=dWqyfXo+eu6feIB9f8aEQuxJYPbpz6Pjqrp9b201CERknUp37bHL5JyyamyZMnoHQHqqE2VRwZzvI2zWPDEH1hKLEAPAOfPPpcTD0fBmW83UkuqJ6mtDq4jMkErYWJWxYDggFz3r6T9+y9Af9ZySZpvuWiGO5kh/DZGuVTj6/Is=
+	t=1739477987; cv=none; b=qrDB6IAtJzq8tzKTrQgzp9XEq0PDVELjF1kEdel7XcstFkHH7aAiGOO8rCgclU5PmxUtbHU+05iZ+xhNdmG4NbK+D4LWkEN+C23YbPc0fa3421UFDDFY1gbGHVBs6kd2vIVBLaGs2VHA+qwlNdn2leV9F5/QXlgUk7F85wpXFxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739476473; c=relaxed/simple;
-	bh=DTFVmRKr/sRy0lujQpNPmaprPhJHgvIYAyhefq5wfhs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=V0DiOxlAsj4AVTxi7RVg2nwcifXgpQvcd/G92vucZ0O203Eb1DL2Bvkyr3sxsEOOHeP6g6vvVbiiFCno/KUpQhouV1OZc01um2kIH0sOq2NYzoAlHCSDa9P2Y9arFsCH0S4tQMID+m7UMcRTZgKfnybheMyNkAMrtE9m5cCOkM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MOnFxECN; arc=none smtp.client-ip=95.215.58.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1739477987; c=relaxed/simple;
+	bh=hql0WxxUz5upyphom9gBH+X2zwTnwWPz5bjY0x7Q5SM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=td8rmxPfbYNlYZfVW+wEvZSw+Byax5ssmLUb+TuVQu8AXdpejwkCn8pP9JlgiTIj1jpm2r/TvBg2GrFG+J7W1wdr4ypReO9Yb7sgILrj7DmrJcF+EbpNuTls0tSiOgAMFlleIJbtIZzi5CSfumsFESA/VqW90IIw/l7I8Z7S9HY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KSUb0v8N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MOnFxECN"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1739476468;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=239vtdGQF+N49EPmM+HoBTCJVsqE4ZMPXJ8M+TXlAZE=;
-	b=MOnFxECN+fL3mGdpw0PfKGtjVpIR4qzFZJS7s8hkyHScierwD8RT5IOCC+peRMIAn5bd5H
-	2tdgaamZDqpnENViNDU1Z/nXuJwm+1gc7EAMeh9HYFs8ysNcZQ96oZNIRhq/FTYmwItStz
-	uQI1aqFVR0zrKrSY3aXWuNab62/AcWk=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KSUb0v8N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DDC0C4CED1;
+	Thu, 13 Feb 2025 20:19:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739477987;
+	bh=hql0WxxUz5upyphom9gBH+X2zwTnwWPz5bjY0x7Q5SM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=KSUb0v8NHvyltW8eLeaT3acLr6MXMy8luTSE+qMoS/6v5xox29MOEkB7snYYQRQzh
+	 /tfCx4g+2JVtWoAZ7aGCJzNP17P4BT8VAW2sCup5LVNP0NDWsr5jTFXPnWHKJ0GVKg
+	 YZcic0AHt+0d/yDSlcvGolO77OyMhpGzkZELHte6nzbwMJRDn2fpeZLKLkBK3vaDLW
+	 Dt8r460piQxD+PVyqCleeBiDdJpV903/Yl5TDdDZW5b05D4mPpsm3jKvziZRG0QwDW
+	 4hg2b5qyZMUmK2x0AyQKnysdFKU5ecJmynQAGlKssR3kUnxAfZ4k6q4ZFYQZ64OE5B
+	 +wUYfOssXCL7w==
+Date: Thu, 13 Feb 2025 12:19:46 -0800
+From: Kees Cook <kees@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
 Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	linux-hardening@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: hpsa: Replace deprecated strncpy() with strscpy()
-Date: Thu, 13 Feb 2025 20:53:33 +0100
-Message-ID: <20250213195332.1464-3-thorsten.blum@linux.dev>
+	Don Brace <don.brace@microchip.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-hardening@vger.kernel.org, storagedev@microchip.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: hpsa: Replace deprecated strncpy() with
+ strscpy_pad()
+Message-ID: <202502131218.B53CB1EB@keescook>
+References: <20250213114047.2366-2-thorsten.blum@linux.dev>
+ <2c1fcd13-ffac-4590-a345-c5389d1ccc9f@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2c1fcd13-ffac-4590-a345-c5389d1ccc9f@acm.org>
 
-strncpy() is deprecated for NUL-terminated destination buffers. Use
-strscpy() instead and remove the manual NUL-termination.
+On Thu, Feb 13, 2025 at 10:24:25AM -0800, Bart Van Assche wrote:
+> On 2/13/25 3:40 AM, Thorsten Blum wrote:
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index c7ebae24b09f..968cefb497eb 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -7236,8 +7236,7 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+> >   static void init_driver_version(char *driver_version, int len)
+> >   {
+> > -	memset(driver_version, 0, len);
+> > -	strncpy(driver_version, HPSA " " HPSA_DRIVER_VERSION, len - 1);
+> > +	strscpy_pad(driver_version, HPSA " " HPSA_DRIVER_VERSION, len);
+> >   }
+> >   static int write_driver_ver_to_cfgtable(struct CfgTable __iomem *cfgtable)
+> 
+> Has it been considered to introduce a Coccinelle semantic patch that
+> performs this conversion? See also the scripts/coccinelle directory.
 
-Use min() to simplify the size calculation.
+Using this:
 
-Compile-tested only.
+@pad0 depends on !(file in "tools") && !(file in "samples")@
+expression DEST, SRC;
+expression LENGTH;
+@@
 
-Link: https://github.com/KSPP/linux/issues/90
-Cc: linux-hardening@vger.kernel.org
-Suggested-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
----
-Changes in v2:
-- Adjust len to copy the same number of bytes as with strncpy()
-- Link to v1: https://lore.kernel.org/r/34BB4FDE-062D-4C1B-B246-86CB55F631B8@linux.dev/
----
- drivers/scsi/hpsa.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+-     memset(DEST, 0, LENGTH);
+-     strncpy(DEST, SRC, LENGTH - 1);
++     strscpy_pad(DEST, SRC, LENGTH);
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 84d8de07b7ae..c7ebae24b09f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -460,9 +460,8 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
--	strncpy(tmpbuf, buf, len);
--	tmpbuf[len] = '\0';
-+	len = min(count + 1, sizeof(tmpbuf));
-+	strscpy(tmpbuf, buf, len);
- 	if (sscanf(tmpbuf, "%d", &status) != 1)
- 		return -EINVAL;
- 	h = shost_to_hba(shost);
-@@ -484,9 +483,8 @@ static ssize_t host_store_raid_offload_debug(struct device *dev,
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
--	strncpy(tmpbuf, buf, len);
--	tmpbuf[len] = '\0';
-+	len = min(count + 1, sizeof(tmpbuf));
-+	strscpy(tmpbuf, buf, len);
- 	if (sscanf(tmpbuf, "%d", &debug_level) != 1)
- 		return -EINVAL;
- 	if (debug_level < 0)
+@padNUL depends on !(file in "tools") && !(file in "samples")@
+expression DEST, SRC;
+expression LENGTH;
+@@
+
+-     memset(DEST, '\0', LENGTH);
+-     strncpy(DEST, SRC, LENGTH - 1);
++     strscpy_pad(DEST, SRC, LENGTH);
+
+It turns out this is the only place left in the kernel using that
+pattern. :)
+
+> 
+> Anyway:
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
+Reviewed-by: Kees Cook <kees@kernel.org>
+
 -- 
-2.48.1
-
+Kees Cook
