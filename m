@@ -1,53 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8C6320B7F3;
-	Thu, 13 Feb 2025 08:01:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3332620B7F3;
+	Thu, 13 Feb 2025 08:01:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739433679; cv=none; b=CxiQh03DZjfywMl/eI2uFNy/oKl8eO2D34bERvOiRc+hsobVJOsGOmj+6RlFRchqoV4KXa/RIAm/CLyga9TR2iTHHmOgXfdLrntXJMrBBLtf5Q31e6vZHY7n2YC6EOkG4fiRvfSfbhDrnFYfsJaBf3Xb8Q7FYQ3a5Yipvirrnq4=
+	t=1739433684; cv=none; b=XL6yKxYw9B+Eqra+GvCTU4MJYE20ydWE2PJUNczru8o86pqjfmJ9UL95XZAtN+TBL9eODPSef0H6YqU8jrPjCbQn5+EKGyAGUU1rSpvo5LlSGXmu63F9h0TbrbTrY/5LD7Gzw7hekut0ul4uersXbt+Iw5D6yDkUH0SZVExidgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739433679; c=relaxed/simple;
-	bh=vAF+Y76YyVaOHqmGdn0DwxXrY0yv+BEm3z9bk49zjTs=;
+	s=arc-20240116; t=1739433684; c=relaxed/simple;
+	bh=2HK6VWx6yAUzF3Tt49auVHEajJ0MfgYz8UUqOM9LsWc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JL+iKG5fq0PLE1tWdHWXWGFjWUoNbroBdiodORi6RVDQCdgLUWRR/bPzhBS5720hSRoK6a+xSnEFsYLPh6oF2mu8y7K2IrQOYdb+VW1bpWrjMraWIyC0nnKEy3f8lwjW5d4KIMb1Qw9RzlhCTWghH5EP4XG3ab4mJ+EteebARzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ictuFXSF; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=MJDmOOmkjPBS+sVcJzUC2o/0+bTF6VY63ygTYjsAON22tTNbNPFGapeCUl8FhkaVrj7U6Vy45JLo5Kx+RahTLr3XS+aqT0BRj5g8snQJmdFpOOWt+poasIQYHC7DLefSSoWDy41W9Equ1ksPk9cD4e4Lp2n1k/DUePx82PX4tXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Nmb/QxB+; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ictuFXSF"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51CJdemR001528;
-	Thu, 13 Feb 2025 08:00:55 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Nmb/QxB+"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51D7E0GM012216;
+	Thu, 13 Feb 2025 08:01:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Te/nt0rgj35
-	Gj3QXpfmw/Xvw29eM07yXT69zTDinPhM=; b=ictuFXSFAdfufDXTdt/bvPfU7l9
-	IUavGqJQqnPzjKL1ZWLFzYjglM5TshQLiO8v5V+UMYXGsODgbnFXDXbgW29JyjKI
-	7Wfz4xy26ccWVcAlOTqPoPSSW3Ct7fayAnEGsfflTeLqgTDt+miMlXYHzrcPoomW
-	1PrrzOqLV4RJ5U4L6uqM7ixbyq6jT8H6vGdugvntiUE576rzsEJ0Vh83jG6JfN0s
-	DGPOvy4BAG46rh6KWsUmIA0Ktrmujg9ukeufTve02V4s1ZH9x7RhswNVLdYUpb1v
-	VvETewzWwsYNRVtq5KIjahmyC0Y35I0Td5bw5E3KzG09Wmq5hSJ1BC588XA==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=zeNKoNUXWN7
+	q38WKulb9c2j79Cq4wy2sVXGqubIieEY=; b=Nmb/QxB+pQOpGBRpXD/KTG6H/Dd
+	VLaBIeWXJhuCMwbV+wD9C8YNBaVdBUWVcv5Zlp6M6ulXoZc5cPHXbCazj6gRTJNJ
+	NRY+gzfUJWRyrF6slB0q/Pq8t7EsExyfiN6b9cprmAl7U3ycEsHjz9AhDDN6vfVs
+	XPL9auzZGvJMZwaillzO4UGt1EaBKnJQnQcHnjVUFETdtH+vK0OaBLUwAmFR8TdW
+	SVMyJ53zLAorM5IZ7wcpvqhgYlW2mrzCk72k3q/8a50/yWdL1YTdA7T961Z97K6V
+	H/fbjT7bSWFaUrOkjVRCJ9tee0UNoV50H0BBd4inFVE8LfHXbn6eNQkIQWg==
 Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44rrnfu48d-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44sc5u83g1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Feb 2025 08:00:54 +0000 (GMT)
+	Thu, 13 Feb 2025 08:01:02 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 51D80psx031749;
-	Thu, 13 Feb 2025 08:00:51 GMT
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 51D80mnJ031719;
+	Thu, 13 Feb 2025 08:00:59 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 44p0bkyajn-1
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 44p0bkyak7-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Feb 2025 08:00:51 +0000
+	Thu, 13 Feb 2025 08:00:59 +0000
 Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 51D80mKL031714;
-	Thu, 13 Feb 2025 08:00:51 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 51D80xIq032213;
+	Thu, 13 Feb 2025 08:00:59 GMT
 Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 51D80pPt031743
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 51D80wKI032212
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Feb 2025 08:00:51 +0000
+	Thu, 13 Feb 2025 08:00:59 +0000
 Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id 7067240C04; Thu, 13 Feb 2025 16:00:50 +0800 (CST)
+	id F016840C04; Thu, 13 Feb 2025 16:00:57 +0800 (CST)
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
 To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
@@ -55,19 +55,11 @@ To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
         quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
         peter.wang@mediatek.com, quic_rampraka@quicinc.com
 Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Andrew Halaney <ahalaney@redhat.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC support:Keyword:mediatek),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC support:Keyword:mediatek)
-Subject: [PATCH v5 6/8] scsi: ufs: core: Check if scaling up is required when disable clkscale
-Date: Thu, 13 Feb 2025 16:00:06 +0800
-Message-Id: <20250213080008.2984807-7-quic_ziqichen@quicinc.com>
+        Keoseong Park <keosung.park@samsung.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v5 8/8] ABI: sysfs-driver-ufs: Add missing UFS sysfs attributes
+Date: Thu, 13 Feb 2025 16:00:08 +0800
+Message-Id: <20250213080008.2984807-9-quic_ziqichen@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250213080008.2984807-1-quic_ziqichen@quicinc.com>
 References: <20250213080008.2984807-1-quic_ziqichen@quicinc.com>
@@ -82,47 +74,77 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Ng-XFjBtEhVtIG9dXqBhJ1xpozRW7NZx
-X-Proofpoint-ORIG-GUID: Ng-XFjBtEhVtIG9dXqBhJ1xpozRW7NZx
+X-Proofpoint-GUID: ltfJGUWqJY3Ek81kOMh5sfRhD7Km-p8n
+X-Proofpoint-ORIG-GUID: ltfJGUWqJY3Ek81kOMh5sfRhD7Km-p8n
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-13_02,2025-02-11_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
- bulkscore=0 malwarescore=0 mlxlogscore=999 lowpriorityscore=0
- suspectscore=0 adultscore=0 mlxscore=0 spamscore=0 priorityscore=1501
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2501170000 definitions=main-2502130060
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 suspectscore=0 lowpriorityscore=0 malwarescore=0
+ mlxscore=0 bulkscore=0 mlxlogscore=999 adultscore=0 phishscore=0
+ spamscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2501170000 definitions=main-2502130060
 
-When disabling clkscale via the clkscale_enable sysfs entry, UFS driver
-shall perform scaling up once regardless. Check if scaling up is required
-or not first to avoid repetitive work.
+Add UFS driver sysfs attributes clkscale_enable, clkgate_enable and
+clkgate_delay_ms to this document.
 
 Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/ufs/core/ufshcd.c | 4 ++++
- 1 file changed, 4 insertions(+)
+v1 -> v2:
+It is a new patch be added to this series since v2.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9908c0d6a1e1..727ca930c2ef 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1770,6 +1770,10 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
- 	freq = clki->max_freq;
- 
- 	ufshcd_suspend_clkscaling(hba);
+v2 -> v3:
+1. Typo fixed for commit message.
+2. Improve the grammar of attributes' descriptions.
+
+V3 -> v4:
+The use of words is more standardized.
+---
+ Documentation/ABI/testing/sysfs-driver-ufs | 33 ++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 5fa6655aee84..da8d1437d3f4 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1559,3 +1559,36 @@ Description:
+ 		Symbol - HCMID. This file shows the UFSHCD manufacturer id.
+ 		The Manufacturer ID is defined by JEDEC in JEDEC-JEP106.
+ 		The file is read only.
 +
-+	if (!ufshcd_is_devfreq_scaling_required(hba, freq, true))
-+		goto out_rel;
++What:		/sys/bus/platform/drivers/ufshcd/*/clkscale_enable
++What:		/sys/bus/platform/devices/*.ufs/clkscale_enable
++Date:		January 2025
++Contact:	Ziqi Chen <quic_ziqichen@quicinc.com>
++Description:
++		This attribute shows whether the UFS clock scaling is enabled or not.
++		And it can be used to enable/disable the clock scaling by writing
++		1 or 0 to this attribute.
 +
- 	err = ufshcd_devfreq_scale(hba, freq, true);
- 	if (err)
- 		dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
++		The attribute is read/write.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/clkgate_enable
++What:		/sys/bus/platform/devices/*.ufs/clkgate_enable
++Date:		January 2025
++Contact:	Ziqi Chen <quic_ziqichen@quicinc.com>
++Description:
++		This attribute shows whether the UFS clock gating is enabled or not.
++		And it can be used to enable/disable the clock gating by writing
++		1 or 0 to this attribute.
++
++		The attribute is read/write.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/clkgate_delay_ms
++What:		/sys/bus/platform/devices/*.ufs/clkgate_delay_ms
++Date:		January 2025
++Contact:	Ziqi Chen <quic_ziqichen@quicinc.com>
++Description:
++		This attribute shows and sets the number of milliseconds of idle time
++		before the UFS driver starts to perform clock gating. This can
++		prevent the UFS from frequently performing clock gating/ungating.
++
++		The attribute is read/write.
 -- 
 2.34.1
 
