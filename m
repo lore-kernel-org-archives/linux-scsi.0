@@ -1,159 +1,134 @@
-Received: from air.basealt.ru (air.basealt.ru [193.43.8.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF305266B59;
-	Thu, 13 Feb 2025 22:26:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.43.8.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 511D920E034;
+	Thu, 13 Feb 2025 22:30:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739485596; cv=none; b=ebFN8Fl2fEASy84LsZSY0pdX6OBTzQc2yUMfmjHMM8t4STcb9FyiPSywjVT7tugHxspcpt8mfwVHPwfvBxCyiH5POHreVm+4kzC60Qu6s9KHaEVISQfEC5LSNSLA+Tnvz1Z2UpR0kcRAcqT16+UNnLaeyhayzSP0XVeFeiPwhn0=
+	t=1739485837; cv=none; b=MrwV85K3j5uLjUnDDqXKp4qlHxC08eb6VjDFznoALswE6XR/SdRPjhGTWoIxIqhdey4OiR0B+ZjhV8k63LSfCcoAWIPUCY5/Jg4FNuP7GuULFclkPOgQJvpZpAD+RphpE2pEq7qiW+Al2X/4rGGBfR7D4RULWkZNpbgG61Co04I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739485596; c=relaxed/simple;
-	bh=QRaOrAVF+jzJuGJi5v7WyV3J+V1yrSG2LI/MY7gLhlo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=a18dmWTtY9fnuuCcBqqQdx5/ry27lAI9ChXqrDtIFCP5wFspBzQo7mfaAFCWFopJ3nAA05lYd8Z4pP1ofKC3kigYCSmVQh1psjd/Qi02pWwvOx6FMUm51KPpLe10jYGsM/Vtyb0XohzIb39aEP689m899mP/V0k22lGWp1yRtH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=193.43.8.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
-Received: from altlinux.ipa.basealt.ru (unknown [178.76.204.78])
-	(Authenticated sender: kovalevvv)
-	by air.basealt.ru (Postfix) with ESMTPSA id B9294233AC;
-	Fri, 14 Feb 2025 01:26:29 +0300 (MSK)
-From: Vasiliy Kovalev <kovalev@altlinux.org>
-To: stable@vger.kernel.org
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <jejb@linux.ibm.com>,
-	Damien Le Moal <damien.lemoal@wdc.com>,
-	linux-scsi@vger.kernel.org,
-	kovalev@altlinux.org
-Subject: [PATCH 5.10] scsi: core: Fix scsi_mode_sense() buffer length handling
-Date: Fri, 14 Feb 2025 01:26:29 +0300
-Message-Id: <20250213222629.726226-1-kovalev@altlinux.org>
-X-Mailer: git-send-email 2.33.8
+	s=arc-20240116; t=1739485837; c=relaxed/simple;
+	bh=L7zfqJC4MpmnmDeMNG6teF//B8o8peRzpXrtxlAsFQc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RSTeAWfcJXNeIdUSonSb4MkR7AxrXuXJR40TUfPidIKyFGAkZUJmIujmORdJq9vzDzE8HzEK2G6H/5g+mEQ0kG4+0F7A4M0oLA22SpSHdUngE0d62j7ELZ0X+uy1gsMQXqv6f1GBf8b3NC6dfO971qx0udpxyyieP2KybIIW9Os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i/TXPIke; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i/TXPIke"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4362bae4d7dso9203075e9.1;
+        Thu, 13 Feb 2025 14:30:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739485833; x=1740090633; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=n/iLgtKEagKiKrbu9N5uMGOzCeVNeqgYEIjWrTZEUX8=;
+        b=i/TXPIkeu3AcQspAiexZcolxBqlQpA9d2Jnvkbqqu+SlsE0vscc9U/f1h3n4PPR1Ow
+         HiVLHVLnSK8Ma/JMFjwLwGMykFns5DtWh50nrR+xSklxW0XN4I0WN8Qbuuo5e3b80yOa
+         cpZQ47wfe4wQNcsxgjkhpSpvFw1Rt92+OXWQENrmhJcw4bgp5nRSfJ95KDlG1FAbxoaO
+         bFcneNrkpzWf7VIgzz92c8TLsrc74AbV8HNAQWWt4CV6KrlOFuU0mGj9LB9M+TKoXspP
+         HyVx0DDk/vA74h43QnS+0Lp8YmZJeV+BOZxg68QecNwduhRKJR5FHEOapATR3M47ZSdC
+         38HA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739485833; x=1740090633;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=n/iLgtKEagKiKrbu9N5uMGOzCeVNeqgYEIjWrTZEUX8=;
+        b=DU8Qrpu+spiAz7x/vHopxhgIMpC/M/BV3YSYlvjQSP1WX81X8deP2NvFevbnwctFjz
+         HSvzW4gVbK2uyh4+PsQZsPNMn4eula1YK28EMk7eeogw4x2/emQ7E9huP1eY+73IJ9wl
+         GF0JWCaSrVQZo8F33hf3Zh0M1EhLuXRURpqRvpPc9kJlcnz5m4LXnXm/6oSS0BihHFSD
+         OAcGL1vyV4GMHfCppFA/0FGDkgQGF0T7bKAfg5IFtexD6UZAuV0MqmREjel0B4u+h40z
+         DjNU0Zkp36phItcagPzwZ28L5BYpW2JkktjAOTN9heyd+kn9BUazhtbcZdaeuFi1xRq6
+         ir3g==
+X-Forwarded-Encrypted: i=1; AJvYcCUqW/ZGb/bOO5TwkBmnKIF6hIoz9M/J2g4rBOyeMgYVnjD6cJb+UTuwqtgN9/9Px5OklqFcn4C7WaZhXtZhZ2g=@vger.kernel.org, AJvYcCXjNvJXn2s/biBOCoohavfMWqrsDUpwiyvPjPczm5PruQrrhWA3l7yUxJ9BI1m0wbdErYCA95fJJGNpRg==@vger.kernel.org, AJvYcCXkqFLTXLF2ETRFPafU9CO6Sri8gS1MA0nZXU4s9WfQV+Ypq1pU4dYjIySDGMrG6VHCat3rti4vSCI/OHy5@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzbeb08Ykiyxjhnmfe+LH/0DzPJjUeit3ydJijHKu+DqhVorhsG
+	EpVavYst8aahF95manNjpiJLFGh6URJxsIUqGgVoDSwEyxk8wpVY
+X-Gm-Gg: ASbGncsVNT9xpXb5HXSO0TdJIC+HFOgWZiTksrze3RvqB4vOZM8KEox1VNvXAQkAOrg
+	DWGUpxt5COubcd5b1FUctr4Vi3TC/IcGXV7S+sZ0zx0XJK/ErBNendbIJ7X322xoepNtXBeN5os
+	AcjIfFhXkCFls1ELwKdxxBhxW4OUPF+zDcVwraVP7tzpYsBoVNCfIJwO9yZ42X2GPPoWCJOIzja
+	eXNdFAgyXjSjMtfJMza/4sRy7QsyPXmCGChfTkopPAMjfDnSRFrfh8sHPV3aEB7bt72hNqpmGAH
+	nfRpYHdBeRksgf9U4empf7WgtcSot1oGTI0LkwPzrpRAWpTH2KP4qw==
+X-Google-Smtp-Source: AGHT+IGSJiMq9waWnU3twHfZdxNULB2eXCgTc8OLciDMxrLkg9MtHaBVnOEtNQVIOSUY+JHzU2kSig==
+X-Received: by 2002:a05:600c:1c1c:b0:439:3ef1:fc36 with SMTP id 5b1f17b1804b1-4395818fdfemr104530195e9.18.1739485833325;
+        Thu, 13 Feb 2025 14:30:33 -0800 (PST)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38f259d5d8bsm2959370f8f.70.2025.02.13.14.30.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Feb 2025 14:30:32 -0800 (PST)
+Date: Thu, 13 Feb 2025 22:30:32 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>, Don Brace
+ <don.brace@microchip.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-hardening@vger.kernel.org,
+ storagedev@microchip.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: hpsa: Replace deprecated strncpy() with
+ strscpy()
+Message-ID: <20250213223032.20d64851@pumpkin>
+In-Reply-To: <065b6317-8da8-42ec-8084-1a5058c0798a@acm.org>
+References: <20250213195332.1464-3-thorsten.blum@linux.dev>
+	<065b6317-8da8-42ec-8084-1a5058c0798a@acm.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+On Thu, 13 Feb 2025 12:34:55 -0800
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-commit 17b49bcbf8351d3dbe57204468ac34f033ed60bc upstream.
+> On 2/13/25 11:53 AM, Thorsten Blum wrote:
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index 84d8de07b7ae..c7ebae24b09f 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -460,9 +460,8 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
+> >   
+> >   	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+> >   		return -EACCES;
+> > -	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
+> > -	strncpy(tmpbuf, buf, len);
+> > -	tmpbuf[len] = '\0';
+> > +	len = min(count + 1, sizeof(tmpbuf));
+> > +	strscpy(tmpbuf, buf, len);
+> >   	if (sscanf(tmpbuf, "%d", &status) != 1)
+> >   		return -EINVAL;
+> >   	h = shost_to_hba(shost);
+> > @@ -484,9 +483,8 @@ static ssize_t host_store_raid_offload_debug(struct device *dev,
+> >   
+> >   	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+> >   		return -EACCES;
+> > -	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
+> > -	strncpy(tmpbuf, buf, len);
+> > -	tmpbuf[len] = '\0';
+> > +	len = min(count + 1, sizeof(tmpbuf));
+> > +	strscpy(tmpbuf, buf, len);
+> >   	if (sscanf(tmpbuf, "%d", &debug_level) != 1)
+> >   		return -EINVAL;
+> >   	if (debug_level < 0)  
+> 
+> Something I should have noticed earlier: this code occurs inside sysfs
+> write callbacks. The strings passed to sysfs write callbacks are
+> 0-terminated. Hence, 'buf' can be passed directly to sscanf() and
+> tmpbuf[] can be removed. From kernfs_fop_write_iter() in fs/kernfs.c:
+> 
+> 	buf[len] = '\0';	/* guarantee string termination */
 
-Several problems exist with scsi_mode_sense() buffer length handling:
+You might also want to use one of the stroul() family rather than sscanf().
 
- 1) The allocation length field of the MODE SENSE(10) command is 16-bits,
-    occupying bytes 7 and 8 of the CDB. With this command, access to mode
-    pages larger than 255 bytes is thus possible. However, the CDB
-    allocation length field is set by assigning len to byte 8 only, thus
-    truncating buffer length larger than 255.
+	David.
 
- 2) If scsi_mode_sense() is called with len smaller than 8 with
-    sdev->use_10_for_ms set, or smaller than 4 otherwise, the buffer length
-    is increased to 8 and 4 respectively, and the buffer is zero filled
-    with these increased values, thus corrupting the memory following the
-    buffer.
-
-Fix these 2 problems by using put_unaligned_be16() to set the allocation
-length field of MODE SENSE(10) CDB and by returning an error when len is
-too small.
-
-Furthermore, if len is larger than 255B, always try MODE SENSE(10) first,
-even if the device driver did not set sdev->use_10_for_ms. In case of
-invalid opcode error for MODE SENSE(10), access to mode pages larger than
-255 bytes are not retried using MODE SENSE(6). To avoid buffer length
-overflows for the MODE_SENSE(10) case, check that len is smaller than 65535
-bytes.
-
-While at it, also fix the folowing:
-
- * Use get_unaligned_be16() to retrieve the mode data length and block
-   descriptor length fields of the mode sense reply header instead of using
-   an open coded calculation.
-
- * Fix the kdoc dbd argument explanation: the DBD bit stands for Disable
-   Block Descriptor, which is the opposite of what the dbd argument
-   description was.
-
-Link: https://lore.kernel.org/r/20210820070255.682775-2-damien.lemoal@wdc.com
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Vasiliy Kovalev <kovalev@altlinux.org>
----
-Backport to fix CVE-2021-47182
-Link: https://www.cve.org/CVERecord/?id=CVE-2021-47182
----
- drivers/scsi/scsi_lib.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index fb48d47e9183e..06838cf5300d0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2073,7 +2073,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
- /**
-  *	scsi_mode_sense - issue a mode sense, falling back from 10 to six bytes if necessary.
-  *	@sdev:	SCSI device to be queried
-- *	@dbd:	set if mode sense will allow block descriptors to be returned
-+ *	@dbd:	set to prevent mode sense from returning block descriptors
-  *	@modepage: mode page being requested
-  *	@buffer: request buffer (may not be smaller than eight bytes)
-  *	@len:	length of request buffer.
-@@ -2108,18 +2108,18 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 		sshdr = &my_sshdr;
- 
-  retry:
--	use_10_for_ms = sdev->use_10_for_ms;
-+	use_10_for_ms = sdev->use_10_for_ms || len > 255;
- 
- 	if (use_10_for_ms) {
--		if (len < 8)
--			len = 8;
-+		if (len < 8 || len > 65535)
-+			return -EINVAL;
- 
- 		cmd[0] = MODE_SENSE_10;
--		cmd[8] = len;
-+		put_unaligned_be16(len, &cmd[7]);
- 		header_length = 8;
- 	} else {
- 		if (len < 4)
--			len = 4;
-+			return -EINVAL;
- 
- 		cmd[0] = MODE_SENSE;
- 		cmd[4] = len;
-@@ -2144,8 +2144,14 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			if ((sshdr->sense_key == ILLEGAL_REQUEST) &&
- 			    (sshdr->asc == 0x20) && (sshdr->ascq == 0)) {
- 				/*
--				 * Invalid command operation code
-+				 * Invalid command operation code: retry using
-+				 * MODE SENSE(6) if this was a MODE SENSE(10)
-+				 * request, except if the request mode page is
-+				 * too large for MODE SENSE single byte
-+				 * allocation length field.
- 				 */
-+				if (len > 255)
-+					return -EIO;
- 				sdev->use_10_for_ms = 0;
- 				goto retry;
- 			}
-@@ -2163,12 +2169,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			data->longlba = 0;
- 			data->block_descriptor_length = 0;
- 		} else if (use_10_for_ms) {
--			data->length = buffer[0]*256 + buffer[1] + 2;
-+			data->length = get_unaligned_be16(&buffer[0]) + 2;
- 			data->medium_type = buffer[2];
- 			data->device_specific = buffer[3];
- 			data->longlba = buffer[4] & 0x01;
--			data->block_descriptor_length = buffer[6]*256
--				+ buffer[7];
-+			data->block_descriptor_length = get_unaligned_be16(&buffer[6]);
- 		} else {
- 			data->length = buffer[0] + 1;
- 			data->medium_type = buffer[1];
--- 
-2.42.2
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
