@@ -1,102 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA8D624BC1D;
-	Thu, 13 Feb 2025 20:19:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4635F155326;
+	Thu, 13 Feb 2025 20:35:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739477987; cv=none; b=qrDB6IAtJzq8tzKTrQgzp9XEq0PDVELjF1kEdel7XcstFkHH7aAiGOO8rCgclU5PmxUtbHU+05iZ+xhNdmG4NbK+D4LWkEN+C23YbPc0fa3421UFDDFY1gbGHVBs6kd2vIVBLaGs2VHA+qwlNdn2leV9F5/QXlgUk7F85wpXFxc=
+	t=1739478908; cv=none; b=N7rvCESB/hvgxIQLVrWVBeWaG2hhGHnYE/DQusDqDI7UiOdyAf6whHrnBl5zVQYIGzypXUsX1miNEPy3UDi/CU6hMeJgOYp6ClhRs/DHQR1YliAjv7n5e62PyaUSKY+A559f2dVO4/r8r3Ya+WBrw0TBauUCWaLtVrttTZ+Dvno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739477987; c=relaxed/simple;
-	bh=hql0WxxUz5upyphom9gBH+X2zwTnwWPz5bjY0x7Q5SM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=td8rmxPfbYNlYZfVW+wEvZSw+Byax5ssmLUb+TuVQu8AXdpejwkCn8pP9JlgiTIj1jpm2r/TvBg2GrFG+J7W1wdr4ypReO9Yb7sgILrj7DmrJcF+EbpNuTls0tSiOgAMFlleIJbtIZzi5CSfumsFESA/VqW90IIw/l7I8Z7S9HY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KSUb0v8N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739478908; c=relaxed/simple;
+	bh=kMW0q3OhgSSXCCfHm9nB8oIwCWbTxs3HgyDLSYJzpmE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=chpJxUERWT4p9A+pmI2mDXtxTLWyZtg0fS1LxFHY8QTOGYojjwwBtyoU9H0sOXo1SZz4e5LAssh+z3d/qoDf1bO4YYGnsDaElPtfb78GdYb/HbMx8UhsL+5+HygTMlp5r6Hu4br0uufnJYnTT4l6mwNnrX/lOPgy2+LCh1/q9n0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Ud2tXkYx; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KSUb0v8N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DDC0C4CED1;
-	Thu, 13 Feb 2025 20:19:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739477987;
-	bh=hql0WxxUz5upyphom9gBH+X2zwTnwWPz5bjY0x7Q5SM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KSUb0v8NHvyltW8eLeaT3acLr6MXMy8luTSE+qMoS/6v5xox29MOEkB7snYYQRQzh
-	 /tfCx4g+2JVtWoAZ7aGCJzNP17P4BT8VAW2sCup5LVNP0NDWsr5jTFXPnWHKJ0GVKg
-	 YZcic0AHt+0d/yDSlcvGolO77OyMhpGzkZELHte6nzbwMJRDn2fpeZLKLkBK3vaDLW
-	 Dt8r460piQxD+PVyqCleeBiDdJpV903/Yl5TDdDZW5b05D4mPpsm3jKvziZRG0QwDW
-	 4hg2b5qyZMUmK2x0AyQKnysdFKU5ecJmynQAGlKssR3kUnxAfZ4k6q4ZFYQZ64OE5B
-	 +wUYfOssXCL7w==
-Date: Thu, 13 Feb 2025 12:19:46 -0800
-From: Kees Cook <kees@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-hardening@vger.kernel.org, storagedev@microchip.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: hpsa: Replace deprecated strncpy() with
- strscpy_pad()
-Message-ID: <202502131218.B53CB1EB@keescook>
-References: <20250213114047.2366-2-thorsten.blum@linux.dev>
- <2c1fcd13-ffac-4590-a345-c5389d1ccc9f@acm.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Ud2tXkYx"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Yv6PH6hGZz6ClRMw;
+	Thu, 13 Feb 2025 20:34:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1739478898; x=1742070899; bh=V7S8X9A0Q615GkJ6tApkvTVy
+	C5cAvw5qdKEA6BRL/FM=; b=Ud2tXkYx7jqJ6ZnAvD6HYuQlJrCygmkj3nLfOkL/
+	Iqp8yK9wc0Lohy625a3jcOhcQZ9upgIY25WmAciK1ueT4Qmf62APrsRxX0sf9vM+
+	H978Y9WXJqeJ3PaqZ4vdurPn++LgoincboF23AINew92V23zVEpd9Jb709MhUNCf
+	skrVgMQmof/6ekLCFita5PuWJDEeufGBysih9WospHjU50l6+0450nPXgkJdXhZe
+	T3ONWRv8ZfPoykC4OVrqq/Fnyf5leTIUYt5ahvOFoFPfNlDfs9uaA4ACkrd+NnA9
+	e+q97lmmtDAi+pXPC8uEYjFM1cBIVHy5i/5vMxwI7zD+UA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ZfvtwrqdSM8a; Thu, 13 Feb 2025 20:34:58 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Yv6PD6FFJz6CmR07;
+	Thu, 13 Feb 2025 20:34:56 +0000 (UTC)
+Message-ID: <065b6317-8da8-42ec-8084-1a5058c0798a@acm.org>
+Date: Thu, 13 Feb 2025 12:34:55 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2c1fcd13-ffac-4590-a345-c5389d1ccc9f@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: hpsa: Replace deprecated strncpy() with
+ strscpy()
+To: Thorsten Blum <thorsten.blum@linux.dev>,
+ Don Brace <don.brace@microchip.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-hardening@vger.kernel.org, storagedev@microchip.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250213195332.1464-3-thorsten.blum@linux.dev>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250213195332.1464-3-thorsten.blum@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Feb 13, 2025 at 10:24:25AM -0800, Bart Van Assche wrote:
-> On 2/13/25 3:40 AM, Thorsten Blum wrote:
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index c7ebae24b09f..968cefb497eb 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -7236,8 +7236,7 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
-> >   static void init_driver_version(char *driver_version, int len)
-> >   {
-> > -	memset(driver_version, 0, len);
-> > -	strncpy(driver_version, HPSA " " HPSA_DRIVER_VERSION, len - 1);
-> > +	strscpy_pad(driver_version, HPSA " " HPSA_DRIVER_VERSION, len);
-> >   }
-> >   static int write_driver_ver_to_cfgtable(struct CfgTable __iomem *cfgtable)
-> 
-> Has it been considered to introduce a Coccinelle semantic patch that
-> performs this conversion? See also the scripts/coccinelle directory.
+On 2/13/25 11:53 AM, Thorsten Blum wrote:
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 84d8de07b7ae..c7ebae24b09f 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -460,9 +460,8 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
+>   
+>   	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+>   		return -EACCES;
+> -	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
+> -	strncpy(tmpbuf, buf, len);
+> -	tmpbuf[len] = '\0';
+> +	len = min(count + 1, sizeof(tmpbuf));
+> +	strscpy(tmpbuf, buf, len);
+>   	if (sscanf(tmpbuf, "%d", &status) != 1)
+>   		return -EINVAL;
+>   	h = shost_to_hba(shost);
+> @@ -484,9 +483,8 @@ static ssize_t host_store_raid_offload_debug(struct device *dev,
+>   
+>   	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+>   		return -EACCES;
+> -	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
+> -	strncpy(tmpbuf, buf, len);
+> -	tmpbuf[len] = '\0';
+> +	len = min(count + 1, sizeof(tmpbuf));
+> +	strscpy(tmpbuf, buf, len);
+>   	if (sscanf(tmpbuf, "%d", &debug_level) != 1)
+>   		return -EINVAL;
+>   	if (debug_level < 0)
 
-Using this:
+Something I should have noticed earlier: this code occurs inside sysfs
+write callbacks. The strings passed to sysfs write callbacks are
+0-terminated. Hence, 'buf' can be passed directly to sscanf() and
+tmpbuf[] can be removed. From kernfs_fop_write_iter() in fs/kernfs.c:
 
-@pad0 depends on !(file in "tools") && !(file in "samples")@
-expression DEST, SRC;
-expression LENGTH;
-@@
+	buf[len] = '\0';	/* guarantee string termination */
 
--     memset(DEST, 0, LENGTH);
--     strncpy(DEST, SRC, LENGTH - 1);
-+     strscpy_pad(DEST, SRC, LENGTH);
+Thanks,
 
-@padNUL depends on !(file in "tools") && !(file in "samples")@
-expression DEST, SRC;
-expression LENGTH;
-@@
-
--     memset(DEST, '\0', LENGTH);
--     strncpy(DEST, SRC, LENGTH - 1);
-+     strscpy_pad(DEST, SRC, LENGTH);
-
-It turns out this is the only place left in the kernel using that
-pattern. :)
-
-> 
-> Anyway:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-Reviewed-by: Kees Cook <kees@kernel.org>
-
--- 
-Kees Cook
+Bart.
