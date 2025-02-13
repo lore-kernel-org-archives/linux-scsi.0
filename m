@@ -1,58 +1,58 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2CE780034
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2025 01:40:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D510280034
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2025 01:40:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739410830; cv=none; b=Yp3f8NxW92e9+D1YmdMDGIS2pqPeHvC6Vl349LDH1xUZ0wj/QQs/buFK+K28xhRUGIEtRlLZWxkyiJao581+M9a48kQhc8UrlGL7inFz7orSNyvCpMKSY73dNDD/5D+L3ZcOfLq+ma12JRNmcf+UMrTvj/mxHCWR6a1lAzii2vk=
+	t=1739410833; cv=none; b=rZRzRJd0SQ2+xjyCHCihv0/PTQaTr8tOHzxhY4VV/meZtVJmtyRGV6ycNPCjutx/iwB0Jeh65lm8pt0Kd5lHGDEZuh/BcelaitLcimr9QxVX9px+GrByusfzPcAF/ORCPG1QtuhSy8C7VcVrayriaYqVtF6ZR44PCVbpeb5+Wn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739410830; c=relaxed/simple;
-	bh=bPI36BfzP0kWZuv06S7SuzAwfHPhp3MD1KHJTto7G7k=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=SScnkOQ98cb/hy0tCllgCLWlzAufiuylKIAki/8sQ9rZYVc/JUPa6w/HJVYleFOzoa+QfJv50Jvs0q5bHXyvXcUGOKoTDewDL+xVeMRzJ9BCm+7hUU7XKmhXd1KlVLuLqD8OuuXO/h4w+Ma4qKb/Ki4UuzLM07d4LUwL2bDaOCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=AS5dbepp; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1739410833; c=relaxed/simple;
+	bh=+b+xxworQf8oCW/rqu8wkmimAM5K8AbdPbdbINRs6Aw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=miM2hXJTv9QmQEtJ4uD2sGvhfYdkTYbvSpkzweVSJP9nqAsiwTukljAkj0vSzvGhlH5zAPPKTjQRwv5KGRYTFtWHjMIkD+sZmYYDckcdMtpURGhckno+kpj1NEWcqK6T/Q84GAB7GWxn1vjQ52apmD4fvV5hXwFe0Y8NSTYl9pM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=M+R5lx8w; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AS5dbepp"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-21f818a980cso4095995ad.3
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Feb 2025 17:40:28 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="M+R5lx8w"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-220c2a87378so4147215ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Feb 2025 17:40:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1739410827; x=1740015627; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1739410830; x=1740015630; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=BkoMvZuVdu59HnviV0YgD4bHTFYdW3NaoKkTnzYmcNY=;
-        b=AS5dbepp1jOAOy/sevdE9qK537A2KfprRYdwT0rOsX2IUFx6+eERqLbhnvb9OdETkF
-         CDlZxM9ZsUJbDkLSe48FvtSGXEj/zS5ZVikxQUta8aaUNONZ7cNEcE0mgQ38N/oMsH8h
-         vDVJigF8XIqIUd/UIWzbZTiVr2ynCfUQfOJF0=
+        bh=7McbLFUCln5RZrUsl2n96zgHAF5NfFLqrQ1k2f39Emg=;
+        b=M+R5lx8wXJd0HI0X/bTQowKToJttfwlMy7pr5wAlikM5sFmlZFVljEcCsKAhucYp5q
+         YdA7dNBa3Mr69mIzyp4EdGmKCMDNoL2PgMdP5wMyTnk22V/8X8UYi/gQFm96FA+XJ3Ij
+         CacP1F2dAvQHt/OGyiPZT5u2/xb2zUTaygXlA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739410827; x=1740015627;
+        d=1e100.net; s=20230601; t=1739410830; x=1740015630;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BkoMvZuVdu59HnviV0YgD4bHTFYdW3NaoKkTnzYmcNY=;
-        b=opXo9xJoF0iKnVtJw+DjMfA6Q4h0iOIW/4Y7dpu0C7v/g6QPWofifNvzZVdjpxOudO
-         4OLCJ7FAGRdc80dCphuyiwMz49wpT6mLrH0b0FRNcwgGgj3ycEFHmtMeE93FPGrq9I2H
-         ZI3dIkR15IEwdPWQ3dpxJNk9Eevh2yH48u1tUES8Hs3vjlaFQozTamCSLFvz431lNchI
-         5cx/aSU1eSljSIy/IFMWIjlgUCxi+wi611C1B7ee1Ptau2emKfhKl7wSmPSYiXSW5axI
-         iI7Eh96orXyHNLEkpqW0m5NexXhgLFtaWTLkUFmHa9FAtd0ZzZuZBnEcKNFimoozP+HQ
-         sgSg==
-X-Gm-Message-State: AOJu0YylgL/ThhNfOGMyeFMGe0q2CtiewxTBptTELacmrI4SuoJ6UIka
-	SBtpSmC/9q/MAmlPGEDJeQGubgU3QoXk9OsxYX1eD/CAheN/OAP27dsTfu2nZ+NlYcEerm4/bbJ
-	MDNsSJHtB4TG26bXry6tgaLo6Sf4VNrdF0SROprS5eKY6uVJjej7Ovcrd2lrt0LGzgfdjBkb7TP
-	VX4LYRQtllCU2ouIwxIeC0QaFhuMsnFFFJrzohgMgTJf+OMtCNzxcFDyqZWkbw3hMW
-X-Gm-Gg: ASbGncv8FxgBzlzuw+v1HrNmSXBRJcYo3z+hnScs86JbqbkG+Go5hOrVWafNAAmLCd6
-	G0VTOd6cte4FQZXW/Njoslk9qyu4UrowJVMy70klghCah6/Kz3/AVucGbXZr2pAbhhWuEEcuPFu
-	HdPcOFaJMcbYWdMZ6R0prcRQiBSg1gRZqwcmYLGvcaUu9bOb1nGPhmKis5Wgqj+DDhnFPpFLWGM
-	2C82lctOY8h2rOFEBy/UXdQdxzvB2tltikwewZmxUf9gw60CydPJmWi7+29gMDK92xzD/411U5e
-	v270JzEeQQKUYdyXyw0CY352ftArTQ6Jdx8SeM9/5+iCxTFZDYe2gKMr4dxUsSVrruvKdLks85T
-	pl4XeDSKtZsAf6/LGOl4qDG8=
-X-Google-Smtp-Source: AGHT+IGHRJ402B6G0VJwmkwSoHTLEhp2Mg3kcOoUMhByikB5NaT94rNUDaOdJ+a+S08GiZMzVgE1BA==
-X-Received: by 2002:a05:6a21:2e81:b0:1ee:5cf2:9c04 with SMTP id adf61e73a8af0-1ee5cf29e98mr6936031637.8.1739410827219;
-        Wed, 12 Feb 2025 17:40:27 -0800 (PST)
+        bh=7McbLFUCln5RZrUsl2n96zgHAF5NfFLqrQ1k2f39Emg=;
+        b=xNquoRMeAoRPVesTapB86f8LaQ7s9gBF9iU8DNUytdYwiVL3KGPxJy7IfvhMQNhprr
+         qOT3XOmGzac6MAcf1486svLWM04cWW9Q6qFWq4e8i7JqnyY/ZQSCETiJNwWrbDFIOhrp
+         DuMZzkmFlL8agGSuoZWqwCkZiIdhPJgas/8g+kMWqqLmGGmjQtWa3DTIZ0X+5H7leQtJ
+         Yk0lfxiBtx19BMOU4FrMi6YvwckQi+3H+8wm2/Xpd8x098bkKtqog/P/Q0ILG2R0b1Dh
+         4kdtSQpMAF8Vgm2YS77g8RUBiwjrUiU1bh0/UbVl0NxtU1xIOnofwlYUwQ3nLV/FIX0w
+         XQug==
+X-Gm-Message-State: AOJu0Yy8QQtCHINUbln22+Iz2p9TTmpnLY9kyb8RQ9VeWsBW4iLI3CB4
+	/TNG6U0J7/6tQDUjUGUB/dXS0Zl9EAQT8KSZhjsXf78jOAoSPwwoZD+ciE0lsNVpm4Rjkd8a83B
+	ljL2xz14MBFzexvXqfs/P+ca+99U92kS/+MN6Z8Auh0VMKc1JcL1hghx4HrAMneyEAYvFTPxaR8
+	zPyqxBKmhE5cg7x/FJjrhIbRrv0G3dLU5PLACbNz522oIYNUapabq00XScFKVCuaSv
+X-Gm-Gg: ASbGncvHCjXjs9UvmspPSD9JVBEeedLBDlO/Jra0QhxYtC4MhC4/Nz8O2QF4qcHFrLr
+	B7iZBAmSPGzkY4x25hHM94Ho8XHMB2dq6bmatPUJlHrdoZLTe3bmjUyvptZH+h8SevIFeHuCmnB
+	tQMhwPzODh/wV0NQZtKF5+S99r+QsYOgt+xC5aToAmXObiSP8+Yat2M6jcsxaDN7LC0pAh1T1RW
+	h+DQpYToCTw4cRAHLJtG7v5S9gqygfBwJ/y1EeV/2iXRutvMDa66FhXpANeFjzxUZprEWYASX5V
+	tAPhHDfn1amCR9V6gQyGCOg98h7mXfZZL4K9jPk0O5Js6ieP0O2xEN6vCIJ2XPTdgOh5dy/aXUr
+	fOCWZVGjU9HLOJkXU4LUtddU=
+X-Google-Smtp-Source: AGHT+IGufLInw4O9quXVi1kQmiObioK9E3UvK1CHlILK9ruRYAah5SKaeSj1Z915D0X8gwHhFOL9tg==
+X-Received: by 2002:a05:6a00:1c8d:b0:730:7600:aeab with SMTP id d2e1a72fcca58-7322c39cc21mr8165505b3a.13.1739410830094;
+        Wed, 12 Feb 2025 17:40:30 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73242761714sm106145b3a.133.2025.02.12.17.40.24
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73242761714sm106145b3a.133.2025.02.12.17.40.27
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 12 Feb 2025 17:40:26 -0800 (PST)
+        Wed, 12 Feb 2025 17:40:29 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -61,9 +61,9 @@ Cc: sathya.prakash@broadcom.com,
 	suganath-prabu.subramani@broadcom.com,
 	sumit.saxena@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 3/5] mpt3sas: Report driver capability as part of IOCINFO command
-Date: Wed, 12 Feb 2025 17:26:54 -0800
-Message-Id: <1739410016-27503-4-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 4/5] mpt3sas: Send a diag reset if target reset fails
+Date: Wed, 12 Feb 2025 17:26:55 -0800
+Message-Id: <1739410016-27503-5-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1739410016-27503-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1739410016-27503-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -73,60 +73,55 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Add a new capability field to report the MCTP passthrough support to
-applications.
+When an IOCTL times out and driver issues a target reset, if firmware
+fails the task management elevate the recovery by issuing a diag reset to
+controller.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 ++
- drivers/scsi/mpt3sas/mpt3sas_ctl.h | 7 ++++++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 54a8a9c3ce5f..a731622f2f65 100644
+index a731622f2f65..13ba91d21fbb 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1254,6 +1254,8 @@ _ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+@@ -716,6 +716,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 	size_t data_in_sz = 0;
+ 	long ret;
+ 	u16 device_handle = MPT3SAS_INVALID_DEVICE_HANDLE;
++	int tm_ret;
+ 
+ 	issue_reset = 0;
+ 
+@@ -1174,18 +1175,25 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 			if (pcie_device && (!ioc->tm_custom_handling) &&
+ 			    (!(mpt3sas_scsih_is_pcie_scsi_device(
+ 			    pcie_device->device_info))))
+-				mpt3sas_scsih_issue_locked_tm(ioc,
++				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
+ 				  le16_to_cpu(mpi_request->FunctionDependent1),
+ 				  0, 0, 0,
+ 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
+ 				  0, pcie_device->reset_timeout,
+ 			MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE);
+ 			else
+-				mpt3sas_scsih_issue_locked_tm(ioc,
++				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
+ 				  le16_to_cpu(mpi_request->FunctionDependent1),
+ 				  0, 0, 0,
+ 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
+ 				  0, 30, MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET);
++
++			if (tm_ret != SUCCESS) {
++				ioc_info(ioc,
++					 "target reset failed, issue hard reset: handle (0x%04x)\n",
++					 le16_to_cpu(mpi_request->FunctionDependent1));
++				mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
++			}
+ 		} else
+ 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
  	}
- 	karg.bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
- 
-+	karg.driver_capability |= MPT3_IOCTL_IOCINFO_DRIVER_CAP_MCTP_PASSTHRU;
-+
- 	if (copy_to_user(arg, &karg, sizeof(karg))) {
- 		pr_err("failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.h b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
-index 6bc1fffb7a33..483e0549c02f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
-@@ -160,6 +160,9 @@ struct mpt3_ioctl_pci_info {
- #define MPT3_IOCTL_INTERFACE_SAS35	(0x07)
- #define MPT2_IOCTL_VERSION_LENGTH	(32)
- 
-+/* Bits set for mpt3_ioctl_iocinfo.driver_cap */
-+#define MPT3_IOCTL_IOCINFO_DRIVER_CAP_MCTP_PASSTHRU		0x1
-+
- /**
-  * struct mpt3_ioctl_iocinfo - generic controller info
-  * @hdr - generic header
-@@ -175,6 +178,7 @@ struct mpt3_ioctl_pci_info {
-  * @driver_version - driver version - 32 ASCII characters
-  * @rsvd1 - reserved
-  * @scsi_id - scsi id of adapter 0
-+ * @driver_capability - driver capabilities
-  * @rsvd2 - reserved
-  * @pci_information - pci info (2nd revision)
-  */
-@@ -192,7 +196,8 @@ struct mpt3_ioctl_iocinfo {
- 	uint8_t driver_version[MPT2_IOCTL_VERSION_LENGTH];
- 	uint8_t rsvd1;
- 	uint8_t scsi_id;
--	uint16_t rsvd2;
-+	uint8_t driver_capability;
-+	uint8_t rsvd2;
- 	struct mpt3_ioctl_pci_info pci_information;
- };
- 
 -- 
 2.43.0
 
