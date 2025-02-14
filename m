@@ -1,181 +1,754 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 736BF2046AA
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 06:50:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79C7215776
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 08:30:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739515823; cv=none; b=C18Tsw/Gf6JMqws6MEbqG96GKNl5TAGIk41ZySBBLXFg2tqmJOAifW9/cTuIuK0LUsTEp6aVaSXZK24Bl2DqGYk+B1etwmArdZna3CCZrUU+yjWg64n4TL4VkKj8e7db+Qut5kcdHkM2VUeTMyDMP51B6gMDzaMqgBMQH3BYL9w=
+	t=1739521839; cv=none; b=jlCoGnpded3pALFGrTxehuoSLjiN06gIIBJowhqMtR0Ip0jlkZp7KZ3rT4XqOPhSz1keHfJBbFTtP+wVGhT22ZtdbtJgwAFk+8507RR+B/r0+vpIvzZBtJ783lfRtuniAt66DyHz2e6d8VGA+2RO2y7WGtbRRdhsLed8HR4RjZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739515823; c=relaxed/simple;
-	bh=82IhPvdg6sgV4AQAagdaD2oscL5iIeWGWtD6mhOA0m0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ljwjUvNqo1+9GqP3Wy5dm5vsZTsozKDvWtxoJFfOsfkMNUVKIonF8K0Bo1sl0S7xDlVO8OQgLA1MYjzKTBgKtqwkqtbgxiFl422/b3CaXfM7nAAt6GKBSyQXvwDNFHKhWbWnsq1UbarjBRcEtgX93ztOqi2eJ5juQ8kbixoL2Dc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=kWG7NGIc; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1739521839; c=relaxed/simple;
+	bh=FfX0zbCvWI+NCrSFvgsx9IIY936x8uQgi+9MBjnPnfc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VaBdNaxENETHqU44KcHo5ENNDur0r1Jsb5qYTJ2J7bTZVJ3HRP4PBIojsAtvMt3F+LFWJZnUVM3+z0y5Rj/2TCLiZTh5nnuvHCzOhsppD9kNeYysfi0415RzAr7zqDPhIOQufQ0NzYj+4sMsnpkrwGEalQ6+CBz/2+a/SvoifTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DxTmpZR/; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kWG7NGIc"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2fc291f7ddbso1057287a91.1
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2025 22:50:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1739515820; x=1740120620; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=u/bwpmhibqCSWXsfxMuekBQiCAQCaSoqpsC6Q1WLM/g=;
-        b=kWG7NGIcPob5Ad6qh0RT+apdx+8oxTs+DrubaZT5gSIMdMnnhB+Gsq54f6k94DCqFl
-         boehNSDMt0A3U+uHjXPQyzjfp9ezcexPRa1EcsEzldIqxRZzJWRCxS8Tr3h6ZCkvAh8H
-         F9477cEpDDJC7lPzveHCCjv7BJZCOTKDnKOOnLpztxy1xbnIU3rNF/Gz1fuwDaJjM7/3
-         NoZDr1sISYtgw+NexjScPyTgm7CO7V4pScr3hnQkbSUsgb7CpOWjlDY/BsUHtixYnK2c
-         wPZ+iluTs0Xxy1wJQdcoQbcjik+Eb02xLMQkcAwKK56/I+xm3gF9faaVzSa21cfPhSbh
-         Gq9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739515820; x=1740120620;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=u/bwpmhibqCSWXsfxMuekBQiCAQCaSoqpsC6Q1WLM/g=;
-        b=VBJ3X2Aw6eJoJjglVmoeFKfMFCjpHrlDMRpkJZW04KVBScVckxkLsoqXcI+c/sOYi9
-         dylBs7rnXE2oCbcdE+u0TsNaZ0HE9t97x6afi/ewZu1FNt9ssaxH0RwP5/I8uD6AbJdS
-         ayeEcS+wNxB5wi2xaX84XFJ3Nvvhymi52YNVE56Rc90o0EU6FrhTWK9WlrojU5dDBk6s
-         9+K5W6SXaOmVQNQcvGxiDHnsSp3scBlmB/XXrH0vtuqx34tAiptpOTWRRp6S2XF3Todv
-         gNzAvq+mYBr1oPgAeiQgbwm8NXh9Y+ovS68XRxl9yoX5njXA0BllS6B1i/pfu1/TOZvG
-         jScg==
-X-Forwarded-Encrypted: i=1; AJvYcCWacdk3czs1mi+qAvW0BojUluPxwdh7H0W6Le9/ldbIQpFuXye3YtmykFBtxkqgtJpZSnSauCuOHkgT@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9Lz9sUCzAalVmTWW7qABLKfG035E87qcZ3NnxufghMZFaEocE
-	l46xDitr2eEfODqYYGqAqKn+pOHTBYFP4b5DmwPCLCrV5NXBptzp3EIlSIe0Sg==
-X-Gm-Gg: ASbGncvHg+8b0BaYj0gtI2KKNpsslfcAHFd+YKpdk4JApA9Z7UbAaEYiW9ast87GiUh
-	1nYKSYe/5ayV9q4wYrR9lIjHRh7bVdrN6j+8e/ADzJwNA1oy5UpAfFgXJN+NVPL8KwGaFISNWAV
-	oHjuxruHQRRsXXYXgbFIA+wOdMl/kjaziT3GiEV992VjM6aVbH+6uzKs28EEIEVpNHPddBhwSYp
-	ELGtLlekdtU7cWfgIQXg/693QJ/wPEMn35oux3W0lJaxGcKJ8cqPUV+kjMYQaxiMNRrWEPHwLPg
-	Dx1W6xfpr1p18Ixlk60Tdp/sZMNW/6w=
-X-Google-Smtp-Source: AGHT+IFX6zS1A/v/lAX87GhqlIvEXShQyFVA3goXMvKLoqOPdD6mgLwijiX503q7RrCZ5DU1xqruYQ==
-X-Received: by 2002:a17:90b:4d08:b0:2fa:ba3:5455 with SMTP id 98e67ed59e1d1-2fc0ddd3602mr8941895a91.7.1739515820426;
-        Thu, 13 Feb 2025 22:50:20 -0800 (PST)
-Received: from thinkpad ([2409:40f4:304f:ad8a:8cb7:72db:3a5e:1287])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2fc13ac2984sm2376439a91.20.2025.02.13.22.50.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Feb 2025 22:50:19 -0800 (PST)
-Date: Fri, 14 Feb 2025 12:20:09 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Melody Olvera <quic_molvera@quicinc.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Andy Gross <agross@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>,
-	Trilok Soni <quic_tsoni@quicinc.com>, linux-arm-msm@vger.kernel.org,
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Manish Pandey <quic_mapa@quicinc.com>
-Subject: Re: [PATCH 4/5] arm64: dts: qcom: sm8750: Add UFS nodes for SM8750
- SoC
-Message-ID: <20250214065009.w4rmrbbejnywh6nt@thinkpad>
-References: <20250113-sm8750_ufs_master-v1-0-b3774120eb8c@quicinc.com>
- <20250113-sm8750_ufs_master-v1-4-b3774120eb8c@quicinc.com>
- <vifyx2lcaq3lhani5ovmxxqsknhkx24ggbu7sxnulrxv4gxzsk@bvmk3znm2ivl>
- <be8a4f65-3b36-4740-a4f7-312126cfd547@quicinc.com>
- <ferdaevlfrpf2ewzcct7mqyxltvmt6aaar4fujxfehrmizm3qw@aaroprnpwlxq>
- <354f8710-a5ec-47b5-bcfa-bff75ac3ca71@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DxTmpZR/"
+X-UUID: f3682ef0eaad11efbd192953cf12861f-20250214
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Njrwp1r+zGFeVgzOdnxL9NZg66bIEaAv4Rd5Sy5Yx5k=;
+	b=DxTmpZR/jqXDMvzZh/cIHnUUtc4P1LIHBxtHtMvEEpAwIpPtWQcgHdM6VdbFETH3VPjoNCeXfF82jmcVvhzj3FbZbLgJ3tQsLGVFGEouMopXco6NWTXv1bqmdRFtQLMAEuwG1sG4qrdsV4j7Rc09Nr1CmKhNR1NtKm0sN9Y5nQc=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.46,REQID:956498a1-5647-40d2-ab8c-546b55bb40a5,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:-25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:-30
+X-CID-META: VersionHash:60aa074,CLOUDID:1293bf24-96bd-4ac5-8f2e-15aa1ef9defa,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:1,IP:nil
+	,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:
+	1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: f3682ef0eaad11efbd192953cf12861f-20250214
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 250985278; Fri, 14 Feb 2025 16:30:30 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.28; Fri, 14 Feb 2025 16:30:27 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.28 via Frontend Transport; Fri, 14 Feb 2025 16:30:27 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
+Subject: [PATCH v3] ufs: core: add hba parameter to trace events
+Date: Fri, 14 Feb 2025 16:29:36 +0800
+Message-ID: <20250214083026.1177880-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <354f8710-a5ec-47b5-bcfa-bff75ac3ca71@oss.qualcomm.com>
+Content-Type: text/plain
+X-MTK: N
 
-On Mon, Feb 10, 2025 at 08:20:27PM +0100, Konrad Dybcio wrote:
-> On 8.02.2025 11:06 PM, Dmitry Baryshkov wrote:
-> > On Sun, Feb 09, 2025 at 12:47:56AM +0530, Nitin Rawat wrote:
-> >>
-> >>
-> >> On 1/14/2025 4:22 PM, Dmitry Baryshkov wrote:
-> >>> On Mon, Jan 13, 2025 at 01:46:27PM -0800, Melody Olvera wrote:
-> >>>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
-> >>>>
-> >>>> Add UFS host controller and PHY nodes for SM8750 SoC.
-> >>>>
-> >>>> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
-> >>>> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> >>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> >>>> Signed-off-by: Melody Olvera <quic_molvera@quicinc.com>
-> >>>> ---
-> 
-> [...]
-> 
-> >>> Use OPP table instead
-> >>
-> >> Currently, OPP is not enabled in the device tree for any previous targets. I
-> > 
-> > Excuse me? ufs_opp_table is present on SM8250, SM8550 and SDM845 (and
-> > QCS615). So this is not correct
-> > 
-> >> plan to enable OPP in a separate patch at a later stage. This is because
-> >> there is an ongoing patch in the upstream that aims to enable multiple-level
-> >> clock scaling using OPP, which may introduce changes to the device tree
-> >> entries. To avoid extra efforts, I intend to enable OPP once that patch is
-> >> merged.
-> > 
-> > Whatever changes are introduced, old DT must still continue to work.
-> > There is no reason to use legacy freq-table-hz if you can use OPP table.
-> > 
-> >> Please let me know if you have any concerns.
-> 
-> Go ahead with the OPP table. freq-table-hz is ancient and doesn't describe
-> e.g. the required RPMh levels for core clock frequencies.
-> 
-> You should then drop required-opps from the UFS node.
-> 
-> >>>> +
-> >>>> +			resets = <&gcc GCC_UFS_PHY_BCR>;
-> >>>> +			reset-names = "rst";
-> >>>> +
-> >>>> +
-> >>>> +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-> >>>> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-> >>>> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-> >>>> +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-> >>>
-> >>> Shouldn't cpu-ufs be ACTIVE_ONLY?
-> >>
-> >> As per ufs driver implementation, Icc voting from ufs driver is removed as
-> >> part of low power mode (suspend or clock gating) and voted again in
-> >> resume/ungating path. Hence TAG_ALWAYS will have no power concern.
-> >> All previous targets have the same configuration.
-> > 
-> > arch/arm64/boot/dts/qcom/qcs615.dtsi:                                    &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ACTIVE_ONLY>;
-> > 
-> > It might be a mistake for that target though. Your explanation sounds
-> > fine to me.
-> 
-> Let's use QCOM_ICC_TAG_ACTIVE_ONLY for the CPU path to clear up confusion.
-> 
-> Toggling it from the driver makes sense for UFS-idling-while-CPUs-are-online
-> cases and accidentally also does what RPMh does internally in the other case.
-> 
+From: Peter Wang <peter.wang@mediatek.com>
 
-Shouldn't it be applied to config path of all peripherals then? If
-QCOM_ICC_TAG_ACTIVE_ONLY translates to 'resource getting voted only if the CPUSS
-is active', then the same constraint should apply to all peripherals, isn't it?
+Included the ufs_hba structure as a parameter in various trace events
+to provide more context and improve debugging capabilities.
+Also remove dev_name which can replace by dev_name(hba->dev).
 
-I'm not sure who is accessing the config path other than the CPUs.
+V3:
+ - Remove dev_name entry form TP_STRUCT__entry() to reduce the size.
 
-- Mani
+V2:
+ - Remove dev_name and replace it with dev_name(hba->dev).
 
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+---
+ drivers/ufs/core/ufs_trace.h | 135 ++++++++++++++++++-----------------
+ drivers/ufs/core/ufshcd.c    |  68 +++++++++---------
+ 2 files changed, 103 insertions(+), 100 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs_trace.h b/drivers/ufs/core/ufs_trace.h
+index 84deca2b841d..caa32e23ffa5 100644
+--- a/drivers/ufs/core/ufs_trace.h
++++ b/drivers/ufs/core/ufs_trace.h
+@@ -83,34 +83,34 @@ UFS_CMD_TRACE_TSF_TYPES
+ 
+ TRACE_EVENT(ufshcd_clk_gating,
+ 
+-	TP_PROTO(const char *dev_name, int state),
++	TP_PROTO(struct ufs_hba *hba, int state),
+ 
+-	TP_ARGS(dev_name, state),
++	TP_ARGS(hba, state),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__field(int, state)
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__entry->state = state;
+ 	),
+ 
+ 	TP_printk("%s: gating state changed to %s",
+-		__get_str(dev_name),
++		dev_name(__entry->hba->dev),
+ 		__print_symbolic(__entry->state, UFSCHD_CLK_GATING_STATES))
+ );
+ 
+ TRACE_EVENT(ufshcd_clk_scaling,
+ 
+-	TP_PROTO(const char *dev_name, const char *state, const char *clk,
++	TP_PROTO(struct ufs_hba *hba, const char *state, const char *clk,
+ 		u32 prev_state, u32 curr_state),
+ 
+-	TP_ARGS(dev_name, state, clk, prev_state, curr_state),
++	TP_ARGS(hba, state, clk, prev_state, curr_state),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__string(state, state)
+ 		__string(clk, clk)
+ 		__field(u32, prev_state)
+@@ -118,7 +118,7 @@ TRACE_EVENT(ufshcd_clk_scaling,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__assign_str(state);
+ 		__assign_str(clk);
+ 		__entry->prev_state = prev_state;
+@@ -126,80 +126,80 @@ TRACE_EVENT(ufshcd_clk_scaling,
+ 	),
+ 
+ 	TP_printk("%s: %s %s from %u to %u Hz",
+-		__get_str(dev_name), __get_str(state), __get_str(clk),
++		dev_name(__entry->hba->dev), __get_str(state), __get_str(clk),
+ 		__entry->prev_state, __entry->curr_state)
+ );
+ 
+ TRACE_EVENT(ufshcd_auto_bkops_state,
+ 
+-	TP_PROTO(const char *dev_name, const char *state),
++	TP_PROTO(struct ufs_hba *hba, const char *state),
+ 
+-	TP_ARGS(dev_name, state),
++	TP_ARGS(hba, state),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__string(state, state)
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__assign_str(state);
+ 	),
+ 
+ 	TP_printk("%s: auto bkops - %s",
+-		__get_str(dev_name), __get_str(state))
++		dev_name(__entry->hba->dev), __get_str(state))
+ );
+ 
+ DECLARE_EVENT_CLASS(ufshcd_profiling_template,
+-	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
++	TP_PROTO(struct ufs_hba *hba, const char *profile_info, s64 time_us,
+ 		 int err),
+ 
+-	TP_ARGS(dev_name, profile_info, time_us, err),
++	TP_ARGS(hba, profile_info, time_us, err),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__string(profile_info, profile_info)
+ 		__field(s64, time_us)
+ 		__field(int, err)
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__assign_str(profile_info);
+ 		__entry->time_us = time_us;
+ 		__entry->err = err;
+ 	),
+ 
+ 	TP_printk("%s: %s: took %lld usecs, err %d",
+-		__get_str(dev_name), __get_str(profile_info),
++		dev_name(__entry->hba->dev), __get_str(profile_info),
+ 		__entry->time_us, __entry->err)
+ );
+ 
+ DEFINE_EVENT(ufshcd_profiling_template, ufshcd_profile_hibern8,
+-	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
++	TP_PROTO(struct ufs_hba *hba, const char *profile_info, s64 time_us,
+ 		 int err),
+-	TP_ARGS(dev_name, profile_info, time_us, err));
++	TP_ARGS(hba, profile_info, time_us, err));
+ 
+ DEFINE_EVENT(ufshcd_profiling_template, ufshcd_profile_clk_gating,
+-	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
++	TP_PROTO(struct ufs_hba *hba, const char *profile_info, s64 time_us,
+ 		 int err),
+-	TP_ARGS(dev_name, profile_info, time_us, err));
++	TP_ARGS(hba, profile_info, time_us, err));
+ 
+ DEFINE_EVENT(ufshcd_profiling_template, ufshcd_profile_clk_scaling,
+-	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
++	TP_PROTO(struct ufs_hba *hba, const char *profile_info, s64 time_us,
+ 		 int err),
+-	TP_ARGS(dev_name, profile_info, time_us, err));
++	TP_ARGS(hba, profile_info, time_us, err));
+ 
+ DECLARE_EVENT_CLASS(ufshcd_template,
+-	TP_PROTO(const char *dev_name, int err, s64 usecs,
++	TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		 int dev_state, int link_state),
+ 
+-	TP_ARGS(dev_name, err, usecs, dev_state, link_state),
++	TP_ARGS(hba, err, usecs, dev_state, link_state),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(s64, usecs)
+ 		__field(int, err)
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__field(int, dev_state)
+ 		__field(int, link_state)
+ 	),
+@@ -207,14 +207,14 @@ DECLARE_EVENT_CLASS(ufshcd_template,
+ 	TP_fast_assign(
+ 		__entry->usecs = usecs;
+ 		__entry->err = err;
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__entry->dev_state = dev_state;
+ 		__entry->link_state = link_state;
+ 	),
+ 
+ 	TP_printk(
+ 		"%s: took %lld usecs, dev_state: %s, link_state: %s, err %d",
+-		__get_str(dev_name),
++		dev_name(__entry->hba->dev),
+ 		__entry->usecs,
+ 		__print_symbolic(__entry->dev_state, UFS_PWR_MODES),
+ 		__print_symbolic(__entry->link_state, UFS_LINK_STATES),
+@@ -223,60 +223,62 @@ DECLARE_EVENT_CLASS(ufshcd_template,
+ );
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_system_suspend,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_system_resume,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_runtime_suspend,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_runtime_resume,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_init,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_wl_suspend,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_wl_resume,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_wl_runtime_suspend,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ DEFINE_EVENT(ufshcd_template, ufshcd_wl_runtime_resume,
+-	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++	     TP_PROTO(struct ufs_hba *hba, int err, s64 usecs,
+ 		      int dev_state, int link_state),
+-	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++	     TP_ARGS(hba, err, usecs, dev_state, link_state));
+ 
+ TRACE_EVENT(ufshcd_command,
+-	TP_PROTO(struct scsi_device *sdev, enum ufs_trace_str_t str_t,
++	TP_PROTO(struct scsi_device *sdev, struct ufs_hba *hba,
++		 enum ufs_trace_str_t str_t,
+ 		 unsigned int tag, u32 doorbell, u32 hwq_id, int transfer_len,
+ 		 u32 intr, u64 lba, u8 opcode, u8 group_id),
+ 
+-	TP_ARGS(sdev, str_t, tag, doorbell, hwq_id, transfer_len, intr, lba,
++	TP_ARGS(sdev, hba, str_t, tag, doorbell, hwq_id, transfer_len, intr, lba,
+ 		opcode, group_id),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct scsi_device *, sdev)
++		__field(struct ufs_hba *, hba)
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__field(unsigned int, tag)
+ 		__field(u32, doorbell)
+@@ -290,6 +292,7 @@ TRACE_EVENT(ufshcd_command,
+ 
+ 	TP_fast_assign(
+ 		__entry->sdev = sdev;
++		__entry->hba = hba;
+ 		__entry->str_t = str_t;
+ 		__entry->tag = tag;
+ 		__entry->doorbell = doorbell;
+@@ -312,13 +315,13 @@ TRACE_EVENT(ufshcd_command,
+ );
+ 
+ TRACE_EVENT(ufshcd_uic_command,
+-	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, u32 cmd,
++	TP_PROTO(struct ufs_hba *hba, enum ufs_trace_str_t str_t, u32 cmd,
+ 		 u32 arg1, u32 arg2, u32 arg3),
+ 
+-	TP_ARGS(dev_name, str_t, cmd, arg1, arg2, arg3),
++	TP_ARGS(hba, str_t, cmd, arg1, arg2, arg3),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__field(u32, cmd)
+ 		__field(u32, arg1)
+@@ -327,7 +330,7 @@ TRACE_EVENT(ufshcd_uic_command,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__entry->str_t = str_t;
+ 		__entry->cmd = cmd;
+ 		__entry->arg1 = arg1;
+@@ -337,19 +340,19 @@ TRACE_EVENT(ufshcd_uic_command,
+ 
+ 	TP_printk(
+ 		"%s: %s: cmd: 0x%x, arg1: 0x%x, arg2: 0x%x, arg3: 0x%x",
+-		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
++		show_ufs_cmd_trace_str(__entry->str_t), dev_name(__entry->hba->dev),
+ 		__entry->cmd, __entry->arg1, __entry->arg2, __entry->arg3
+ 	)
+ );
+ 
+ TRACE_EVENT(ufshcd_upiu,
+-	TP_PROTO(const char *dev_name, enum ufs_trace_str_t str_t, void *hdr,
++	TP_PROTO(struct ufs_hba *hba, enum ufs_trace_str_t str_t, void *hdr,
+ 		 void *tsf, enum ufs_trace_tsf_t tsf_t),
+ 
+-	TP_ARGS(dev_name, str_t, hdr, tsf, tsf_t),
++	TP_ARGS(hba, str_t, hdr, tsf, tsf_t),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__array(unsigned char, hdr, 12)
+ 		__array(unsigned char, tsf, 16)
+@@ -357,7 +360,7 @@ TRACE_EVENT(ufshcd_upiu,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__entry->str_t = str_t;
+ 		memcpy(__entry->hdr, hdr, sizeof(__entry->hdr));
+ 		memcpy(__entry->tsf, tsf, sizeof(__entry->tsf));
+@@ -366,7 +369,7 @@ TRACE_EVENT(ufshcd_upiu,
+ 
+ 	TP_printk(
+ 		"%s: %s: HDR:%s, %s:%s",
+-		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
++		show_ufs_cmd_trace_str(__entry->str_t), dev_name(__entry->hba->dev),
+ 		__print_hex(__entry->hdr, sizeof(__entry->hdr)),
+ 		show_ufs_cmd_trace_tsf(__entry->tsf_t),
+ 		__print_hex(__entry->tsf, sizeof(__entry->tsf))
+@@ -375,22 +378,22 @@ TRACE_EVENT(ufshcd_upiu,
+ 
+ TRACE_EVENT(ufshcd_exception_event,
+ 
+-	TP_PROTO(const char *dev_name, u16 status),
++	TP_PROTO(struct ufs_hba *hba, u16 status),
+ 
+-	TP_ARGS(dev_name, status),
++	TP_ARGS(hba, status),
+ 
+ 	TP_STRUCT__entry(
+-		__string(dev_name, dev_name)
++		__field(struct ufs_hba *, hba)
+ 		__field(u16, status)
+ 	),
+ 
+ 	TP_fast_assign(
+-		__assign_str(dev_name);
++		__entry->hba = hba;
+ 		__entry->status = status;
+ 	),
+ 
+ 	TP_printk("%s: status 0x%x",
+-		__get_str(dev_name), __entry->status
++		dev_name(__entry->hba->dev), __entry->status
+ 	)
+ );
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 1893a7ad9531..97c89ac73a54 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -369,7 +369,7 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 	else
+ 		header = &hba->lrb[tag].ucd_rsp_ptr->header;
+ 
+-	trace_ufshcd_upiu(dev_name(hba->dev), str_t, header, &rq->sc.cdb,
++	trace_ufshcd_upiu(hba, str_t, header, &rq->sc.cdb,
+ 			  UFS_TSF_CDB);
+ }
+ 
+@@ -380,7 +380,7 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
+ 	if (!trace_ufshcd_upiu_enabled())
+ 		return;
+ 
+-	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq_rsp->header,
++	trace_ufshcd_upiu(hba, str_t, &rq_rsp->header,
+ 			  &rq_rsp->qr, UFS_TSF_OSF);
+ }
+ 
+@@ -393,12 +393,12 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 		return;
+ 
+ 	if (str_t == UFS_TM_SEND)
+-		trace_ufshcd_upiu(dev_name(hba->dev), str_t,
++		trace_ufshcd_upiu(hba, str_t,
+ 				  &descp->upiu_req.req_header,
+ 				  &descp->upiu_req.input_param1,
+ 				  UFS_TSF_TM_INPUT);
+ 	else
+-		trace_ufshcd_upiu(dev_name(hba->dev), str_t,
++		trace_ufshcd_upiu(hba, str_t,
+ 				  &descp->upiu_rsp.rsp_header,
+ 				  &descp->upiu_rsp.output_param1,
+ 				  UFS_TSF_TM_OUTPUT);
+@@ -418,7 +418,7 @@ static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
+ 	else
+ 		cmd = ufshcd_readl(hba, REG_UIC_COMMAND);
+ 
+-	trace_ufshcd_uic_command(dev_name(hba->dev), str_t, cmd,
++	trace_ufshcd_uic_command(hba, str_t, cmd,
+ 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_1),
+ 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2),
+ 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3));
+@@ -473,7 +473,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 	} else {
+ 		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	}
+-	trace_ufshcd_command(cmd->device, str_t, tag, doorbell, hwq_id,
++	trace_ufshcd_command(cmd->device, hba, str_t, tag, doorbell, hwq_id,
+ 			     transfer_len, intr, lba, opcode, group_id);
+ }
+ 
+@@ -1063,7 +1063,7 @@ static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+ 						clki->max_freq, ret);
+ 					break;
+ 				}
+-				trace_ufshcd_clk_scaling(dev_name(hba->dev),
++				trace_ufshcd_clk_scaling(hba,
+ 						"scaled up", clki->name,
+ 						clki->curr_freq,
+ 						clki->max_freq);
+@@ -1081,7 +1081,7 @@ static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+ 						clki->min_freq, ret);
+ 					break;
+ 				}
+-				trace_ufshcd_clk_scaling(dev_name(hba->dev),
++				trace_ufshcd_clk_scaling(hba,
+ 						"scaled down", clki->name,
+ 						clki->curr_freq,
+ 						clki->min_freq);
+@@ -1122,7 +1122,7 @@ int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
+ 				return ret;
+ 			}
+ 
+-			trace_ufshcd_clk_scaling(dev_name(dev),
++			trace_ufshcd_clk_scaling(hba,
+ 				(scaling_down ? "scaled down" : "scaled up"),
+ 				clki->name, hba->clk_scaling.target_freq, freq);
+ 		}
+@@ -1186,7 +1186,7 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
+ 	ufshcd_pm_qos_update(hba, scale_up);
+ 
+ out:
+-	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
++	trace_ufshcd_profile_clk_scaling(hba,
+ 			(scale_up ? "up" : "down"),
+ 			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 	return ret;
+@@ -1548,7 +1548,7 @@ static int ufshcd_devfreq_target(struct device *dev,
+ 	if (!ret)
+ 		hba->clk_scaling.target_freq = *freq;
+ 
+-	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
++	trace_ufshcd_profile_clk_scaling(hba,
+ 		(scale_up ? "up" : "down"),
+ 		ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 
+@@ -1881,7 +1881,7 @@ void ufshcd_hold(struct ufs_hba *hba)
+ 	case REQ_CLKS_OFF:
+ 		if (cancel_delayed_work(&hba->clk_gating.gate_work)) {
+ 			hba->clk_gating.state = CLKS_ON;
+-			trace_ufshcd_clk_gating(dev_name(hba->dev),
++			trace_ufshcd_clk_gating(hba,
+ 						hba->clk_gating.state);
+ 			break;
+ 		}
+@@ -1893,7 +1893,7 @@ void ufshcd_hold(struct ufs_hba *hba)
+ 		fallthrough;
+ 	case CLKS_OFF:
+ 		hba->clk_gating.state = REQ_CLKS_ON;
+-		trace_ufshcd_clk_gating(dev_name(hba->dev),
++		trace_ufshcd_clk_gating(hba,
+ 					hba->clk_gating.state);
+ 		queue_work(hba->clk_gating.clk_gating_workq,
+ 			   &hba->clk_gating.ungate_work);
+@@ -1933,7 +1933,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 		if (hba->clk_gating.is_suspended ||
+ 		    hba->clk_gating.state != REQ_CLKS_OFF) {
+ 			hba->clk_gating.state = CLKS_ON;
+-			trace_ufshcd_clk_gating(dev_name(hba->dev),
++			trace_ufshcd_clk_gating(hba,
+ 						hba->clk_gating.state);
+ 			return;
+ 		}
+@@ -1955,7 +1955,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 			hba->clk_gating.state = CLKS_ON;
+ 			dev_err(hba->dev, "%s: hibern8 enter failed %d\n",
+ 					__func__, ret);
+-			trace_ufshcd_clk_gating(dev_name(hba->dev),
++			trace_ufshcd_clk_gating(hba,
+ 						hba->clk_gating.state);
+ 			return;
+ 		}
+@@ -1980,7 +1980,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	guard(spinlock_irqsave)(&hba->clk_gating.lock);
+ 	if (hba->clk_gating.state == REQ_CLKS_OFF) {
+ 		hba->clk_gating.state = CLKS_OFF;
+-		trace_ufshcd_clk_gating(dev_name(hba->dev),
++		trace_ufshcd_clk_gating(hba,
+ 					hba->clk_gating.state);
+ 	}
+ }
+@@ -2006,7 +2006,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
+ 	}
+ 
+ 	hba->clk_gating.state = REQ_CLKS_OFF;
+-	trace_ufshcd_clk_gating(dev_name(hba->dev), hba->clk_gating.state);
++	trace_ufshcd_clk_gating(hba, hba->clk_gating.state);
+ 	queue_delayed_work(hba->clk_gating.clk_gating_workq,
+ 			   &hba->clk_gating.gate_work,
+ 			   msecs_to_jiffies(hba->clk_gating.delay_ms));
+@@ -4422,7 +4422,7 @@ int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ 	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER, PRE_CHANGE);
+ 
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+-	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "enter",
++	trace_ufshcd_profile_hibern8(hba, "enter",
+ 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 
+ 	if (ret)
+@@ -4447,7 +4447,7 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT, PRE_CHANGE);
+ 
+ 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+-	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "exit",
++	trace_ufshcd_profile_hibern8(hba, "exit",
+ 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 
+ 	if (ret) {
+@@ -5808,7 +5808,7 @@ static int ufshcd_enable_auto_bkops(struct ufs_hba *hba)
+ 	}
+ 
+ 	hba->auto_bkops_enabled = true;
+-	trace_ufshcd_auto_bkops_state(dev_name(hba->dev), "Enabled");
++	trace_ufshcd_auto_bkops_state(hba, "Enabled");
+ 
+ 	/* No need of URGENT_BKOPS exception from the device */
+ 	err = ufshcd_disable_ee(hba, MASK_EE_URGENT_BKOPS);
+@@ -5859,7 +5859,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+ 	}
+ 
+ 	hba->auto_bkops_enabled = false;
+-	trace_ufshcd_auto_bkops_state(dev_name(hba->dev), "Disabled");
++	trace_ufshcd_auto_bkops_state(hba, "Disabled");
+ 	hba->is_urgent_bkops_lvl_checked = false;
+ out:
+ 	return err;
+@@ -6193,7 +6193,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	trace_ufshcd_exception_event(dev_name(hba->dev), status);
++	trace_ufshcd_exception_event(hba, status);
+ 
+ 	if (status & hba->ee_drv_mask & MASK_EE_URGENT_BKOPS)
+ 		ufshcd_bkops_exception_event_handler(hba);
+@@ -7652,7 +7652,7 @@ static void ufshcd_process_probe_result(struct ufs_hba *hba,
+ 		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+-	trace_ufshcd_init(dev_name(hba->dev), ret,
++	trace_ufshcd_init(hba, ret,
+ 			  ktime_to_us(ktime_sub(ktime_get(), probe_start)),
+ 			  hba->curr_dev_pwr_mode, hba->uic_link_state);
+ }
+@@ -9148,12 +9148,12 @@ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
+ 	} else if (!ret && on && hba->clk_gating.is_initialized) {
+ 		scoped_guard(spinlock_irqsave, &hba->clk_gating.lock)
+ 			hba->clk_gating.state = CLKS_ON;
+-		trace_ufshcd_clk_gating(dev_name(hba->dev),
++		trace_ufshcd_clk_gating(hba,
+ 					hba->clk_gating.state);
+ 	}
+ 
+ 	if (clk_state_changed)
+-		trace_ufshcd_profile_clk_gating(dev_name(hba->dev),
++		trace_ufshcd_profile_clk_gating(hba,
+ 			(on ? "on" : "off"),
+ 			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 	return ret;
+@@ -9853,7 +9853,7 @@ static int ufshcd_wl_runtime_suspend(struct device *dev)
+ 	if (ret)
+ 		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__, ret);
+ 
+-	trace_ufshcd_wl_runtime_suspend(dev_name(dev), ret,
++	trace_ufshcd_wl_runtime_suspend(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 
+@@ -9873,7 +9873,7 @@ static int ufshcd_wl_runtime_resume(struct device *dev)
+ 	if (ret)
+ 		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__, ret);
+ 
+-	trace_ufshcd_wl_runtime_resume(dev_name(dev), ret,
++	trace_ufshcd_wl_runtime_resume(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 
+@@ -9905,7 +9905,7 @@ static int ufshcd_wl_suspend(struct device *dev)
+ out:
+ 	if (!ret)
+ 		hba->is_sys_suspended = true;
+-	trace_ufshcd_wl_suspend(dev_name(dev), ret,
++	trace_ufshcd_wl_suspend(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 
+@@ -9928,7 +9928,7 @@ static int ufshcd_wl_resume(struct device *dev)
+ 	if (ret)
+ 		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__, ret);
+ out:
+-	trace_ufshcd_wl_resume(dev_name(dev), ret,
++	trace_ufshcd_wl_resume(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+@@ -9966,7 +9966,7 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+ 	}
+ 	if (ufshcd_is_clkgating_allowed(hba)) {
+ 		hba->clk_gating.state = CLKS_OFF;
+-		trace_ufshcd_clk_gating(dev_name(hba->dev),
++		trace_ufshcd_clk_gating(hba,
+ 					hba->clk_gating.state);
+ 	}
+ 
+@@ -10039,7 +10039,7 @@ int ufshcd_system_suspend(struct device *dev)
+ 
+ 	ret = ufshcd_suspend(hba);
+ out:
+-	trace_ufshcd_system_suspend(dev_name(hba->dev), ret,
++	trace_ufshcd_system_suspend(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	return ret;
+@@ -10067,7 +10067,7 @@ int ufshcd_system_resume(struct device *dev)
+ 	ret = ufshcd_resume(hba);
+ 
+ out:
+-	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
++	trace_ufshcd_system_resume(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 
+@@ -10093,7 +10093,7 @@ int ufshcd_runtime_suspend(struct device *dev)
+ 
+ 	ret = ufshcd_suspend(hba);
+ 
+-	trace_ufshcd_runtime_suspend(dev_name(hba->dev), ret,
++	trace_ufshcd_runtime_suspend(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	return ret;
+@@ -10120,7 +10120,7 @@ int ufshcd_runtime_resume(struct device *dev)
+ 
+ 	ret = ufshcd_resume(hba);
+ 
+-	trace_ufshcd_runtime_resume(dev_name(hba->dev), ret,
++	trace_ufshcd_runtime_resume(hba, ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	return ret;
 -- 
-மணிவண்ணன் சதாசிவம்
+2.45.2
+
