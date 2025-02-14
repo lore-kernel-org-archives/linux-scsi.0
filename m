@@ -1,169 +1,139 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8532AF16
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 19:24:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658F71C84D9
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 19:58:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739561087; cv=none; b=CZHG7kZvuICxHax5xFjBVsuJWBD9cUNLSaxjZNPwJHC8FiMLvo9IMFcqfFL8rltybFoABxxVcR7cIH0UxDKdFiLDdDGnhWyRH6vTr/I62X014qtWgTIfIxu/bqlraX3rsfURl26XPIRs1JMVpWcfxi0s1/NfYLW7hWfK/NhWlfk=
+	t=1739563107; cv=none; b=UqCfvwl3esKZduYZPncrNWQTBUD2wNPpg3RN/RjPI9C4eO/Zb7eXAr9Gj1fHioyB1y2oDEifrO1qe5ltTh8BYtPcGfdACytQXrq0udz64pli/10pXdG+U3T/CtTwJHB/hbjhRmo6SQSY7S0btfUaBXFAYIdfQd1pz9vK80dRTek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739561087; c=relaxed/simple;
-	bh=d7eLa+l0BgxHNOGpkfo2U7Ib7OXM+0lkMqMNR9qYx4s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ds4DVs4/uaOUPrUo0Gx84DXa64wi9GVBA7foil2+LfMXO13vdQuSUyioB3pm/awWqKsRRZPaozv1pVBEdH3tSPuUEhNNAEleNvqkkuuLKRN8bQixgQNVjvI4je6u+t0Ll6ypPW77lFiAxTKrwQGK4xpebWKcNvckJZU+jIjsvZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CIG/YieS; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CIG/YieS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1739561084;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=uU18PgJHAWxgzCn1GD8uryQE/mKTabOBU2mLmRwwGxI=;
-	b=CIG/YieS7Qd0b8EUv4rAp/eh7DuaemICgR5oDq/aVjYQkLRDJ3ny2ouKz02W1j+KhCdUdy
-	D5qKQMG1ixDE7MC5UAXSfKGZ1nFfwlKWvAbWRlzsFtNQknPs4T170/2n0Sn35OKgbknwXB
-	WkgJRRLmYxYs50Wxi7I9Q7MAb30qjHk=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-77-dfWXpf46OYOZdi8cUPKRNw-1; Fri,
- 14 Feb 2025 14:24:41 -0500
-X-MC-Unique: dfWXpf46OYOZdi8cUPKRNw-1
-X-Mimecast-MFC-AGG-ID: dfWXpf46OYOZdi8cUPKRNw_1739561080
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F129A19039C5;
-	Fri, 14 Feb 2025 19:24:39 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.89.30])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AB8FB1800365;
-	Fri, 14 Feb 2025 19:24:37 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH] scsi: smartpqi: Add lun_reset_key to initialize ctrl_info->lun_reset_mutex
-Date: Fri, 14 Feb 2025 14:23:24 -0500
-Message-ID: <20250214192324.2471148-1-longman@redhat.com>
+	s=arc-20240116; t=1739563107; c=relaxed/simple;
+	bh=An93+tleFgQMT+Nla8JNOYOWFmX9GqrpN51TLo+yq9A=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=DWjO9mmvSTBMY/RT0OF7yVukPalWXbD0B2O7nWPYIKohEdTEuSqQ968/CspDpehBJsS7MEiwq9KwKfG1yKwejtWM6m8tkHN7Ohe4yFw+JnN0H4j2eZsEynZHm5TQJ3wA4/dABbDe/DxKy3CttimUFXDa19Tg4WPcPh0izFQ84/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-3cfba354f79so48080165ab.1
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 11:58:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739563104; x=1740167904;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gnX8N2DEEYYmILHFY2tHj2QH8gdUdw/2zdatoc/JaG8=;
+        b=Qh87WKJsQMk1heWO8dT01wdome9+RnyhVu2sTD7rCiPgg/J7lxkN4XmVX8j0ldyVMX
+         tpaD8arlm3dn+PBY/KzBiRw3m4dsgrKBVTByA6491p+1RyHUR1NeqiHQ+BPDDwsHB7Ws
+         LjEtg04GNPCYWd2ezfwsobYdiILTkfgBfEdR1J2rzE1Ycl1cjFOZAsN+fa335Bueai3H
+         RWE9CNLVUwWZbZqJATDBief6KLya2PcKkXpslOK2/NiNGjj4txWCUUEipWCs1V/kBJ3O
+         EYPZlbb77o4uF7QsB4VB+LKoHb4vxXViZUR3xMg8NvFCMzcXQlYP4rSkzIEYDvja5kjp
+         Rl5g==
+X-Forwarded-Encrypted: i=1; AJvYcCXEYbXgYYLNDIuyodyvtkE6AJBhEfeGwOGca1UtVQp0wER6EC2k8yQnUDqgSK8fDfdp7oKTEgcjv/Qt@vger.kernel.org
+X-Gm-Message-State: AOJu0YyEABRJ0ndmYMISIpodVPG4vZV4vOacCIynp+Y4NqdODFDi7f0q
+	dB6baig5GQfDJRgsrcGn0oEHrVIAVrl42OXVNttjmyZFC4HNxZ8fyrACSoDctH4pY2o+jvpNNnV
+	xRNs2Zko0nFDOEMufhmA3cFxHJvAYzwzryDYEJMElgHxhLc7d0ZgD/3A=
+X-Google-Smtp-Source: AGHT+IFDoFH0lR33XpdUFRtuUBmJT/pGH49QkI9Rr8mJg0K4ANZWwdrVJ/pA3YINgwrIdf8UFM3h6Rbkz70rZ+ddvnvwgIYe8J7U
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+X-Received: by 2002:a05:6e02:12c2:b0:3d1:99b1:153c with SMTP id
+ e9e14a558f8ab-3d2807b0f46mr5893205ab.7.1739563104470; Fri, 14 Feb 2025
+ 11:58:24 -0800 (PST)
+Date: Fri, 14 Feb 2025 11:58:24 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67afa060.050a0220.21dd3.0052.GAE@google.com>
+Subject: [syzbot] [scsi?] UBSAN: shift-out-of-bounds in sg_build_indirect
+From: syzbot <syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com>
+To: James.Bottomley@HansenPartnership.com, dgilbert@interlog.com, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-A lockdep recursive locking splat happens when shutting down a debug kernel
-on some systems.
+Hello,
 
- ============================================
- WARNING: possible recursive locking detected
- --------------------------------------------
- reboot/15103 is trying to acquire lock:
- ffff8881435af8c8 (&ctrl_info->lun_reset_mutex){+.+.}-{3:3}, at: pqi_shutdown+0x112/0x4b0 [smartpqi]
+syzbot found the following issue on:
 
- but task is already holding lock:
- ffff8888929278c8 (&ctrl_info->lun_reset_mutex){+.+.}-{3:3}, at: pqi_shutdown+0x112/0x4b0 [smartpqi]
+HEAD commit:    128c8f96eb86 Merge tag 'drm-fixes-2025-02-14' of https://g..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=15908bf8580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=40c8b8384bc47ab0
+dashboard link: https://syzkaller.appspot.com/bug?extid=270f1c719ee7baab9941
+compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=149a87df980000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=167a8f18580000
 
-  other info that might help us debug this:
-   Possible unsafe locking scenario:
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/da4c858d8649/disk-128c8f96.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/4bd8410dd596/vmlinux-128c8f96.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/038939e96f8b/bzImage-128c8f96.xz
 
-         CPU0
-         ----
-    lock(&ctrl_info->lun_reset_mutex);
-    lock(&ctrl_info->lun_reset_mutex);
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
 
-   *** DEADLOCK ***
+------------[ cut here ]------------
+UBSAN: shift-out-of-bounds in drivers/scsi/sg.c:1897:13
+shift exponent 64 is too large for 32-bit type 'int'
+CPU: 1 UID: 0 PID: 5832 Comm: syz-executor361 Not tainted 6.14.0-rc2-syzkaller-00185-g128c8f96eb86 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x16c/0x1f0 lib/dump_stack.c:120
+ ubsan_epilogue lib/ubsan.c:231 [inline]
+ __ubsan_handle_shift_out_of_bounds+0x24f/0x3f0 lib/ubsan.c:468
+ sg_build_indirect.cold+0x1b/0x20 drivers/scsi/sg.c:1897
+ sg_build_reserve+0xc4/0x180 drivers/scsi/sg.c:2007
+ sg_add_sfp drivers/scsi/sg.c:2189 [inline]
+ sg_open+0xc37/0x1910 drivers/scsi/sg.c:348
+ chrdev_open+0x237/0x6a0 fs/char_dev.c:414
+ do_dentry_open+0x735/0x1c40 fs/open.c:956
+ vfs_open+0x82/0x3f0 fs/open.c:1086
+ do_open fs/namei.c:3830 [inline]
+ path_openat+0x1e88/0x2d80 fs/namei.c:3989
+ do_filp_open+0x20c/0x470 fs/namei.c:4016
+ do_sys_openat2+0x17a/0x1e0 fs/open.c:1428
+ do_sys_open fs/open.c:1443 [inline]
+ __do_sys_openat fs/open.c:1459 [inline]
+ __se_sys_openat fs/open.c:1454 [inline]
+ __x64_sys_openat+0x175/0x210 fs/open.c:1454
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f1dc41ca3e9
+Code: 48 83 c4 28 c3 e8 37 17 00 00 0f 1f 80 00 00 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffeaa93f3d8 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 00007ffeaa93f5a8 RCX: 00007f1dc41ca3e9
+RDX: 000000000008a002 RSI: 00004000000000c0 RDI: ffffffffffffff9c
+RBP: 00007f1dc423d610 R08: 00007ffeaa93f5a8 R09: 00007ffeaa93f5a8
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+R13: 00007ffeaa93f598 R14: 0000000000000001 R15: 0000000000000001
+ </TASK>
+---[ end trace ]---
 
-   May be due to missing lock nesting notation
 
-  4 locks held by reboot/15103:
-   #0: ffffffff8db76f40 (system_transition_mutex){+.+.}-{3:3}, at: __do_sys_reboot+0x12b/0x2f0
-   #1: ffff8888929278c8 (&ctrl_info->lun_reset_mutex){+.+.}-{3:3}, at: pqi_shutdown+0x112/0x4b0 [smartpqi]
-   #2: ffff88810a8921a8 (&dev->mutex){....}-{3:3}, at: device_shutdown+0x1de/0x540
-   #3: ffff88810a9141a8 (&dev->mutex){....}-{3:3}, at: device_shutdown+0x1ec/0x540
-  Call Trace:
-
-   dump_stack_lvl+0x6f/0xb0
-   print_deadlock_bug.cold+0xbd/0xca
-   validate_chain+0x37b/0x570
-   __lock_acquire+0x55b/0xac0
-   lock_acquire.part.0+0xf5/0x2b0
-   mutex_lock_nested+0x4b/0x190
-   pqi_shutdown+0x112/0x4b0 [smartpqi]
-   pci_device_shutdown+0x76/0x110
-   device_shutdown+0x2ea/0x540
-   kernel_restart+0x64/0xa0
-   __do_sys_reboot+0x1d8/0x2f0
-   do_syscall_64+0x92/0x180
-
-The fact that there are two dev->mutex'es acquired in device_shutdown()
-means both a parent and a child devices are being worked on and
-likely that the lun_reset_mutex'es of these two devices are being
-acquired here too. However, the way lun_reset_mutex is initialized in
-pqi_alloc_ctrl_info() will casue all the lun_reset_mutex'es to be treated
-as in the same class leading to this false positive warning. Fix that
-by initializing each instance of lun_reset_mutex with its own unique
-key so that they will be treated as different by lockdep.
-
-Also call mutex_destroy() and lockdep_unregister_key() in
-pqi_free_ctrl_info() before ctrl_info is freed.
-
-With this patch applied, the lockdep splat no longer happens.
-
-Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      | 1 +
- drivers/scsi/smartpqi/smartpqi_init.c | 8 +++++++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index fae6db20a6e9..fb75de53d401 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1359,6 +1359,7 @@ struct pqi_ctrl_info {
- 
- 	struct mutex	scan_mutex;
- 	struct mutex	lun_reset_mutex;
-+	struct lock_class_key lun_reset_key;
- 	bool		controller_online;
- 	bool		block_requests;
- 	bool		scan_blocked;
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 0da7be40c925..5c54dee67e54 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -8789,9 +8789,11 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 		return NULL;
- 
- 	mutex_init(&ctrl_info->scan_mutex);
--	mutex_init(&ctrl_info->lun_reset_mutex);
- 	mutex_init(&ctrl_info->ofa_mutex);
- 
-+	lockdep_register_key(&ctrl_info->lun_reset_key);
-+	mutex_init_with_key(&ctrl_info->lun_reset_mutex, &ctrl_info->lun_reset_key);
-+
- 	INIT_LIST_HEAD(&ctrl_info->scsi_device_list);
- 	spin_lock_init(&ctrl_info->scsi_device_list_lock);
- 
-@@ -8830,6 +8832,10 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 
- static inline void pqi_free_ctrl_info(struct pqi_ctrl_info *ctrl_info)
- {
-+	mutex_destroy(&ctrl_info->scan_mutex);
-+	mutex_destroy(&ctrl_info->ofa_mutex);
-+	mutex_destroy(&ctrl_info->lun_reset_mutex);
-+	lockdep_unregister_key(&ctrl_info->lun_reset_key);
- 	kfree(ctrl_info);
- }
- 
--- 
-2.48.1
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
