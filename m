@@ -1,130 +1,109 @@
-Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DDEF263C7F
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 11:44:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B82204F6E
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 12:20:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739533467; cv=none; b=ukoT5WB69tQWxXuUg4N2EoA8KJU95wZfFEnk8mJsWneeOQZgBMl670oIokN9L0DF82VrNXoBh1PH3yC4U0pbMbVMoa9oeMJvZ780COe7j4K6H0i274UOJCAS7dKtTdR8TWgb1AgTSaWsWVZ6OXuZSn1ivqW4akmvUX5u/TBSfVk=
+	t=1739535607; cv=none; b=U03ZkQGY8A44Ty/eiaGdb5KGV+DGO16fv4abrJy98qn7MxHN2ruswq2+f02DxsHyhjTtoIlFcfoe8gtSLaIPFcyXPkbytuyNzvyLRulUj94fDX77UTc5wYRh83niu6yzNr0XZCYrzVxJOVwT2W51fknu4OO3qG8PApiLUqWyPKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739533467; c=relaxed/simple;
-	bh=rwhe49/5jB2QdiusmRIz9cSf22eUSJf+KuUjfLK0eQo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p1InHIc8a8to8oZHHKF9nL9xeIA6tbHj/N62pNmtg18Dp9iLs5xMnbGJ2OUafdVkBzQhYhCY3aNYZCVuj5T7o3PxXC6K7XlPUmOAKQrO70bZlXfhRrOA9gerY4pAYC6WEcLzv52Ue/Se6awIB4rMGECkw0V4C2nhNEgNJnURutg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pf3hgB0D; arc=none smtp.client-ip=95.215.58.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1739535607; c=relaxed/simple;
+	bh=De+vmjaqnFamTkhuUc13zkI64EmpCP/N52/DQmkKJmk=;
+	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
+	 References; b=sdnW2d01suyYwgyKw45a5g9xnyGiwAG+Vfk2oVignpcBi0aSXFnc+C/u6ciqutpCUHhv5OrwkMSgfbZOOnvlzhs8e7Gn37odSBj/nfzAOECV264Ng063YUfnAbKDiL07esMAa+HKTnVjshaQMKMRi6sCLSCpntyPnBMkcQbjISw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=PARbXb/a; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pf3hgB0D"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1739533452;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=89gFJdlR9qUDNbjkUW82cBr8nzW66/88qgzIThpdpAo=;
-	b=pf3hgB0DH54F1MAtwetbpQhnD8ASG/CUsIHMzSv3DqCZTpyk6o6e8nIcFe5fAsmHEMZf7x
-	QSEXFXilQLJ4mSm7dsciz0AK6PuC0V41qB4cutKiZ4eEqdRuHFk4pvwM/GtTnN8Y4gADxi
-	r0u7RX9ixZEMkSv+VAi1iFEnw/4TKEw=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	linux-hardening@vger.kernel.org,
-	Kees Cook <kees@kernel.org>,
-	David Laight <david.laight.linux@gmail.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3] scsi: hpsa: Remove deprecated and unnecessary strncpy()
-Date: Fri, 14 Feb 2025 12:43:02 +0100
-Message-ID: <20250214114302.86001-2-thorsten.blum@linux.dev>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="PARbXb/a"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250214122003epoutp02d8c0b48a847aaad67195b5b9a8bc6273~kEmocJI5K3213432134epoutp02f
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2025 12:20:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250214122003epoutp02d8c0b48a847aaad67195b5b9a8bc6273~kEmocJI5K3213432134epoutp02f
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1739535603;
+	bh=SE3/PBnj+kUlDZG7aR8PEM/EIX4WzDNA2ccU6mMTP4w=;
+	h=Subject:Reply-To:From:To:CC:Date:References:From;
+	b=PARbXb/aqfU9MnBq5O/mBns7aIDDjr3JdJihljm488RtmtbtCaNZXkI5GBD1LT2Wk
+	 6lb6LOZEVug0PLpiTZcOc9l8cSRcvZCIz0CTXAldSjX158EYw3HHILAt+AJkQHAB71
+	 GTA1k7JUmLApZ4Tk7QNyaKUxIP+Ran1PGoPR03Ns=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+	20250214122002epcas2p4e0d98b01441ebf8a38e0c9f431b2cee5~kEmn6xulS2864328643epcas2p4h;
+	Fri, 14 Feb 2025 12:20:02 +0000 (GMT)
+Received: from epcpadp1new (unknown [182.195.40.141]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4YvWMk32Frz4x9Pv; Fri, 14 Feb
+	2025 12:20:02 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: Fix incorrect bit assignment for temperature
+ notifications
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From: Keoseong Park <keosung.park@samsung.com>
+To: "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"avri.altman@wdc.com" <avri.altman@wdc.com>, "bvanassche@acm.org"
+	<bvanassche@acm.org>, "beanhuo@micron.com" <beanhuo@micron.com>,
+	"linux@roeck-us.net" <linux@roeck-us.net>, Daejun Park
+	<daejun7.park@samsung.com>, Keoseong Park <keosung.park@samsung.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01739535602406.JavaMail.epsvc@epcpadp1new>
+Date: Fri, 14 Feb 2025 19:52:19 +0900
+X-CMS-MailID: 20250214105219epcms2p3a60810a14e6181092cb397924ce36019
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20250214105219epcms2p3a60810a14e6181092cb397924ce36019
+References: <CGME20250214105219epcms2p3a60810a14e6181092cb397924ce36019@epcms2p3>
 
-While replacing strncpy() with strscpy(), Bart Van Assche pointed out
-that the code occurs inside sysfs write callbacks, which already uses
-NUL-terminated strings. This allows the string to be passed directly to
-sscanf() without requiring a temporary copy.
+According to the UFS specification, the bit positions for
+`UFS_DEV_HIGH_TEMP_NOTIF` and `UFS_DEV_LOW_TEMP_NOTIF` were incorrectly
+assigned. This patch corrects the bit assignment to align with the
+specification.
 
-Remove the deprecated and unnecessary strncpy() and the corresponding
-local variables, and pass the buffer buf directly to sscanf().
+If this issue is not fixed, devices that support both high and low
+temperature notifications may function correctly, but devices that
+support only one of them may fail to trigger the corresponding
+exception event.
 
-Replace sscanf() with kstrtoint() to silence checkpatch warnings.
-
-Compile-tested only.
-
-Link: https://github.com/KSPP/linux/issues/90
-Cc: linux-hardening@vger.kernel.org
-Cc: Kees Cook <kees@kernel.org>
-Cc: David Laight <david.laight.linux@gmail.com>
-Suggested-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notification support")
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
 ---
-Changes in v2:
-- Adjust len to copy the same number of bytes as with strncpy()
-- Link to v1: https://lore.kernel.org/r/20250212222214.86110-2-thorsten.blum@linux.dev/
+ include/ufs/ufs.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Changes in v3:
-- Remove strncpy() and tmpbuf et al and use buf directly as suggested by
-  Bart Van Assche and Kees Cook
-- Replace sscanf() with kstrtoint() as suggested by David Laight
-- Link to v2: https://lore.kernel.org/linux-kernel/20250213195332.1464-3-thorsten.blum@linux.dev/
----
- drivers/scsi/hpsa.c | 16 ++++------------
- 1 file changed, 4 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 84d8de07b7ae..bb65954b1b1e 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -453,17 +453,13 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
- 					 struct device_attribute *attr,
- 					 const char *buf, size_t count)
- {
--	int status, len;
-+	int status;
- 	struct ctlr_info *h;
- 	struct Scsi_Host *shost = class_to_shost(dev);
--	char tmpbuf[10];
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index d335bff1a310..8a24ed59ec46 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -385,8 +385,8 @@ enum {
  
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
--	strncpy(tmpbuf, buf, len);
--	tmpbuf[len] = '\0';
--	if (sscanf(tmpbuf, "%d", &status) != 1)
-+	if (kstrtoint(buf, 10, &status))
- 		return -EINVAL;
- 	h = shost_to_hba(shost);
- 	h->acciopath_status = !!status;
-@@ -477,17 +473,13 @@ static ssize_t host_store_raid_offload_debug(struct device *dev,
- 					 struct device_attribute *attr,
- 					 const char *buf, size_t count)
- {
--	int debug_level, len;
-+	int debug_level;
- 	struct ctlr_info *h;
- 	struct Scsi_Host *shost = class_to_shost(dev);
--	char tmpbuf[10];
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	len = count > sizeof(tmpbuf) - 1 ? sizeof(tmpbuf) - 1 : count;
--	strncpy(tmpbuf, buf, len);
--	tmpbuf[len] = '\0';
--	if (sscanf(tmpbuf, "%d", &debug_level) != 1)
-+	if (kstrtoint(buf, 10, &debug_level))
- 		return -EINVAL;
- 	if (debug_level < 0)
- 		debug_level = 0;
+ /* Possible values for dExtendedUFSFeaturesSupport */
+ enum {
+-	UFS_DEV_LOW_TEMP_NOTIF		= BIT(4),
+-	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(5),
++	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(4),
++	UFS_DEV_LOW_TEMP_NOTIF		= BIT(5),
+ 	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+ 	UFS_DEV_HPB_SUPPORT		= BIT(7),
+ 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
 -- 
-2.48.1
+2.25.1
+
 
