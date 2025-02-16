@@ -1,125 +1,110 @@
-Received: from out203-205-221-245.mail.qq.com (out203-205-221-245.mail.qq.com [203.205.221.245])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CB54EAE7;
-	Sun, 16 Feb 2025 03:40:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3F72E64A
+	for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2025 14:15:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739677246; cv=none; b=QDFX1WShaPBIIn7LAwE31pHHDpDlDJi4mhkgJlsf2YGBeX2tkJU6aeIP++147FKyFv9eERG95lr4RlGyfXHEiUmrvSQVUdjyX19hCsLGA3k3ZyNw9YxtXTwgoZhaJ6PiCzbvy8JN/bHdsBgi6LWWVjNuAhc8a9gTqEzEDieIRxI=
+	t=1739715338; cv=none; b=i5lqOH9rw8j79BK9FDn0WE6DB56yV01qmG+fB91h4GfUiCsfcA/08XKfwh6nI52N90FSl4V6RPkpQ9Pvcl7anW4qE9IRb4m/kQNbnBJMxBOfAtNo6aIweo6WYwm1LM6B15J2RjnVphaN0Y7wfMjtL7XF9bCdCaUu4BJaVx2xUtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739677246; c=relaxed/simple;
-	bh=Wcty8pe7B2Tf6I5Y3sOaB5gFDgtEePJPAdjZoMgF+XI=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=WmACFGnOLu7nh0oPGsHLo6V+cDzv8B/vHIkCP7iY+hR9twD0xnolNLSrwfvOkCJt1aKv/XLrvGwpveTO7j9e4IvA7TW+CIzLpZvXSbGq8iyBu+pUPuG/eB5hhq9KDEbWAXT2wQelfpgU6wrf1W5WcMmEobGGyjptXzJTzBDekbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=jCdi2ZfH; arc=none smtp.client-ip=203.205.221.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1739715338; c=relaxed/simple;
+	bh=NjdP+HYW5ufsAoh0in9wXTTB0+zsjbE2DLH49bIuBgI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=kt1w6QFzmdIOx8tFLodmXuCc5AU1FbPhGuo+5nxym9dVogCaSogsyY5j3jPaPxC4Q6gY+QfwCQ4PD4rzf3YAJm/o0wVI7vjkAxS1qQ9yv8SyCOFay6DUeVH929mibIycwC76/wh+49Knd9w/X+rDRE4JupfyvmVbnnjEWHchNfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=levzehrB; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="jCdi2ZfH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1739676926; bh=CWzaiTGgr93I8rHQ/1BWEf+YTpf0/vC+SPn40nWrVxw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=jCdi2ZfHLSoNTw3vuVkmpvUL7YsuMj+SJGlpcT+As8/xlZCIM1RLlN/SuYO2iK7F3
-	 /OwQ8EIZ3Pvxm8JLU3/8s7KKKB0JBcDvRG6QA3SKubORI5E5O4XrP2GViCS2+dIv18
-	 SscDQ52Lwbk66EukTYRELJH79z3aKBAkl3eGW/yI=
-Received: from pek-lxu-l1.wrs.com ([114.244.57.157])
-	by newxmesmtplogicsvrszgpua8-1.qq.com (NewEsmtp) with SMTP
-	id 8D80CA62; Sun, 16 Feb 2025 11:35:24 +0800
-X-QQ-mid: xmsmtpt1739676924trpn3ya0b
-Message-ID: <tencent_E2504B081B1B2582BA8CBBB133399E6E1B08@qq.com>
-X-QQ-XMAILINFO: OZsapEVPoiO6BMQn6N71C0got7T98mlOR8mjSXEiJYdgzBjeJjz/qA8UgHEqhO
-	 UjtDJxPSVfC8SG1iY2fm+A4c9xhDeb/A1Hga7V4HoJUwkM8VORTjaAP1UcgY/ziphG3HzHp7br3f
-	 cUfJ/hfu2PYlOChr+1AinolBQdVnpANYims4GGpFWS0dVzKuHybESCOEQfo77J5WIzg707LHO26F
-	 mIQbt65zpGgFkXphveGOSWSaEwkaGRLaNZtjSsvAQif4PgYPstmM/nt992R21ErLW1M+T+Be9axc
-	 lUSi7hrQ3OgK5qjbCHXe8B3jI27RwEK/emEyUNiD8gbV+3vvUMOnW/H2ulujaWnR4aNS9PmxBs90
-	 INexXEpQ4HriJ+Q/6+Ck/3l5ygXYfyWCr2sniZzmx8HPKMD7Vo+8KHNasNWh3IMiQZVT1OlqZKFP
-	 ECnwh4jbHF5FSuCBcHVOwrJE7cvvNKbASppIODML0ece8/i++DQD7obySgfY2Xf5oyxIeyZqwcn3
-	 XxkJkYCN7ofrLqczBXEq2Tr0DtKaeelfcPdKTD91DLlbH5LchxV9iNC/9w5IKkO9duHuhiZt2xD7
-	 XwfbVbjf1FQ0iyoPHYHBwgudGRFl5ai4VtC0XNc1GExz8hmaw6GBv8gzm7wfEROInCCtHbQhMBdq
-	 JjsoH0/XmvCWlZnw6B8pT1yanJ9b25vL0DzxJGUOQl8KLTX4AaeuXIv99qIMds7PWGnwGuEIfMTS
-	 O+QP2a2ESLIFFd86uj5Unf5MLFxOqbYzWImO9AYGMOV2F+X4HOUVM6vl+lfTqZGAGk/ymYyMgQDe
-	 ESDQ2aiO5Khjw0djTz03DWPE7DgQOlr3X75DXtdiSrTECG3n6Srzr4JmkELdGeHiVZU9T2EsSjC7
-	 4ZlH1c6ulaT0BuzBFH60RpZnLGEPflYrdhRsba5hHz
-X-QQ-XMRINFO: M/715EihBoGSf6IYSX1iLFg=
-From: Edward Adam Davis <eadavis@qq.com>
-To: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-Cc: James.Bottomley@HansenPartnership.com,
-	dgilbert@interlog.com,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com,
-	syzkaller-bugs@googlegroups.com
-Subject: [PATCH] scsi: sg: prevent the use of size 0 to obtain the page order of sg
-Date: Sun, 16 Feb 2025 11:35:24 +0800
-X-OQ-MSGID: <20250216033523.1905699-2-eadavis@qq.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <67afa060.050a0220.21dd3.0052.GAE@google.com>
-References: <67afa060.050a0220.21dd3.0052.GAE@google.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="levzehrB"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-38f2f783e4dso1540383f8f.3
+        for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2025 06:15:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739715335; x=1740320135; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=NjdP+HYW5ufsAoh0in9wXTTB0+zsjbE2DLH49bIuBgI=;
+        b=levzehrBM0JN3E3CDnMh/uzNzfdblD6SEheRyaCREe4xplKanb9ZbJnnFnN9MXGWRS
+         Wk/gL10AGhQ4QQ7RtcmGBJrLl0bMxEHCXlWwr3Wmt+U7aLw5AkT8tfmt03i9LZ6t6dps
+         FjG4OJW+eQ2rxxEZPQwLPpznfmStlQQavL3cwSIq9GB1rEEQ9+UVrUeQVaIT1+j3dIKG
+         YQuD2gm40A8hi05mCF9XjDrPselxIh97HXqYNvwOKFZmI4An1rMNq4lsZ0NHod2iKbXX
+         qKzlMifcAJMbXyaUDNh9WZJ/auEqAmgorDRxACqIz/9YThV8sH3SmBmVchMh3rkOkNI7
+         wh7w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739715335; x=1740320135;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NjdP+HYW5ufsAoh0in9wXTTB0+zsjbE2DLH49bIuBgI=;
+        b=LJ5peCpNiltc676e0w4zd93+2vAb4sOekm+vL8VKp0YVuFEl77UKTD6l8l3M8kcWvR
+         WhY+yqt/PAF7aEt5xTZguolAaeFCJMLXkeX8Wt1KyKHtd5XZiw1By95J0qy4Hdj+/0Qh
+         OeqTZ2w4W3YLlYIA64roHQ8232LNNj+eWctWVOqEmnqgiUhsDrc5bncGK1rG3mgfB3Hc
+         AnpwekeaxWxzx3yZ2w5Iy8BJUg2toduqgulVp9Fy+ABcU1EmtULg+3Su5XVAwQJC1rqw
+         w4IuPiYX3FJKMpr3FV5qXKbb6paVPxhmrNlUsXq9q+DPTvyofJDaiQQovmtJFwQGJG5s
+         YWEw==
+X-Forwarded-Encrypted: i=1; AJvYcCW5uNesFiabpz+Oie+Moq8d+93Mzy2RXEslR0FI/YqvHh5iQOnX+k8fVu/bT8gJlxFDclg4kRDICuVB@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6BZqLtmRsmd1DbsWvaaeEmgFwK5VEPKzXp9+B0PughQcojhkb
+	518ogJZ11+jj6jaQIFbZn192eeKzXJ4ru4vD/Gut0a4nnnk68nzs
+X-Gm-Gg: ASbGncuGvwrpLyztAXyGU/5JEq0oiNxZgueQN6y3R/MvZx6XYLzo9RcbqePS9S/HuYR
+	1xj91YFON40ldhfZZXNCpgwB4nCPEcNih39D3ahI0oz4m5AEHSXL9JR7lK/3NnVA3B6TyEFhDqg
+	4B8w9eGVLwr746wWKtZwp+6HoPsPQKFFz3BoSRUIUz83T+b/tMp2i1o7DLnl1n0x3uBB08meLNy
+	KFj/7uFvOD0keXgYFcgbRcHB8HpX6eDibkqjaLgP3cKKTGdGS5jjf/+HaD+mUaQ9yunF2FJeUDN
+	hbKzeiOvXGbZDvFwKvwlUQ6g1quri+HKnnkvJfEmUNjNJjLOhWlr6z4WAWEpqmRUaPtouE9vyuY
+	tTBraJiXrBt/8HdNASM2udLKwxwh6zV18+Nn1sGxCdCPISEQrbkIIMzw=
+X-Google-Smtp-Source: AGHT+IFU9X7XfDxQRxgRSxeJbVVfPNo+JeJw2CZ0Ntr6HoE6gZ2UyRdopaXlBmPIhV1DCnL70W7p7Q==
+X-Received: by 2002:a5d:598f:0:b0:38c:5cd0:ecd5 with SMTP id ffacd0b85a97d-38f33f4acb2mr6636251f8f.38.1739715335234;
+        Sun, 16 Feb 2025 06:15:35 -0800 (PST)
+Received: from p200300c5870742d85925c84ae79fb582.dip0.t-ipconnect.de (p200300c5870742d85925c84ae79fb582.dip0.t-ipconnect.de. [2003:c5:8707:42d8:5925:c84a:e79f:b582])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38f25914d73sm9880652f8f.54.2025.02.16.06.15.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 Feb 2025 06:15:34 -0800 (PST)
+Message-ID: <2420c932bd2443b3c924c02a1375ae63bed8ab6e.camel@gmail.com>
+Subject: Re: [PATCH v3] ufs: core: add hba parameter to trace events
+From: Bean Huo <huobean@gmail.com>
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, 
+	jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, 
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com, 
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+ yi-fan.peng@mediatek.com,  qilin.tan@mediatek.com, lin.gui@mediatek.com,
+ tun-yu.yu@mediatek.com,  eddie.huang@mediatek.com, naomi.chu@mediatek.com,
+ ed.tsai@mediatek.com,  bvanassche@acm.org
+Date: Sun, 16 Feb 2025 15:15:33 +0100
+In-Reply-To: <20250214083026.1177880-1-peter.wang@mediatek.com>
+References: <20250214083026.1177880-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-syzbot reported a shift-out-of-bounds in sg_build_indirect. [1]
 
-The reproducer changes the value of scatter_elem_sz to 0 before executing
-the open operation to open "/dev/sg0", which leads to [1].
+On Fri, 2025-02-14 at 16:29 +0800, peter.wang@mediatek.com wrote:
+> From: Peter Wang <peter.wang@mediatek.com>
+>=20
+> Included the ufs_hba structure as a parameter in various trace events
+> to provide more context and improve debugging capabilities.
 
-When the value of num is 0, set its value to PAGE_SIZE to avoid this oob.
 
-[1]
-UBSAN: shift-out-of-bounds in drivers/scsi/sg.c:1897:13
-shift exponent 64 is too large for 32-bit type 'int'
-CPU: 1 UID: 0 PID: 5832 Comm: syz-executor361 Not tainted 6.14.0-rc2-syzkaller-00185-g128c8f96eb86 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 12/27/2024
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x16c/0x1f0 lib/dump_stack.c:120
- ubsan_epilogue lib/ubsan.c:231 [inline]
- __ubsan_handle_shift_out_of_bounds+0x24f/0x3f0 lib/ubsan.c:468
- sg_build_indirect.cold+0x1b/0x20 drivers/scsi/sg.c:1897
- sg_build_reserve+0xc4/0x180 drivers/scsi/sg.c:2007
- sg_add_sfp drivers/scsi/sg.c:2189 [inline]
- sg_open+0xc37/0x1910 drivers/scsi/sg.c:348
- chrdev_open+0x237/0x6a0 fs/char_dev.c:414
- do_dentry_open+0x735/0x1c40 fs/open.c:956
- vfs_open+0x82/0x3f0 fs/open.c:1086
- do_open fs/namei.c:3830 [inline]
- path_openat+0x1e88/0x2d80 fs/namei.c:3989
- do_filp_open+0x20c/0x470 fs/namei.c:4016
- do_sys_openat2+0x17a/0x1e0 fs/open.c:1428
- do_sys_open fs/open.c:1443 [inline]
- __do_sys_openat fs/open.c:1459 [inline]
- __se_sys_openat fs/open.c:1454 [inline]
- __x64_sys_openat+0x175/0x210 fs/open.c:1454
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
+From the patch commit message, it is no clear how you can use this
+change to get more infor and debug, since the content of the ftrace
+output is the same after this change. Because the device name
+(dev_name) is still being printed, but now it is derived dynamically
+from hba->dev instead of being stored as a string in the trace event.=20
 
-Reported-by: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=270f1c719ee7baab9941
-Signed-off-by: Edward Adam Davis <eadavis@qq.com>
----
- drivers/scsi/sg.c | 2 ++
- 1 file changed, 2 insertions(+)
+I assume you mean to let bpf get more information from hba:
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index effb7e768165..a9c445b7dab3 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1888,6 +1888,8 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 		if (num < PAGE_SIZE) {
- 			scatter_elem_sz = PAGE_SIZE;
- 			scatter_elem_sz_prev = PAGE_SIZE;
-+			if (!num)
-+				num = PAGE_SIZE;
- 		} else
- 			scatter_elem_sz_prev = num;
- 	}
--- 
-2.43.0
 
+strust ufs hba *hba =3D ctx->hba;
+
+If my assumption is correct, this purpose and intent should be
+prominently highlighted in patch commit message.
+
+
+Kind regards,
+Bean
