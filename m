@@ -1,115 +1,139 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE6923BB
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 02:16:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BBB218872A
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 04:08:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739758603; cv=none; b=ObOUkqxUOKU122zTwzLiDe0hwT6JKeURMpkhIob24WWxWy4mPoHlRT8X4dS8R9Y6kUGjVf0TuZ6ZtFizX77jCCoGrHVqwhvQPApsrPhY7xcapwlcvcQUkWfETpQ5tMZAJpnAAHpYvTDUPgW2Ry/BWMV0nn/68rRzsAmctcgkCD4=
+	t=1739765294; cv=none; b=Hiqn3qGclwol19RVeRtcLSAB1mVMZ19/jiXFW2EMnLBNiT99ml228otRecm078+843C1UrG0JKVf6vYMAwu7lVqDH763bajH4NBDIf2MN0jdRFE16NE4jVHgJhWZ8IDgHjtgD30kcikiwLm7SddQB9X5YomhNlZn8B4SBu/InHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739758603; c=relaxed/simple;
-	bh=YKyr5mYEVI5Yixg09prgbAB1vM48QaYyqL3ryVgo4Sk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EPoBoEupl/ITs5uOPOYSpxqgqV9sHx94Uq3t0k7Sv3cY5KJ0YKIEKbC4DBF/oIUkXKGak0f7tM1q83CehTrafANtA1LFOV7DDlmq/uChNnTj7ZmLnuVUKrGyzuQ+R09+wT+zylX2mQj3Pl1kBfGklvo9I17f9zk4oD19KSaWQeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Yx5qY1xmkz4f3jR6
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 10:16:09 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C42D21A0DEF
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 10:16:30 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.101.107])
-	by APP4 (Coremail) with SMTP id gCh0CgA3m1_8m7JnyUpEEA--.5646S4;
-	Mon, 17 Feb 2025 10:16:30 +0800 (CST)
-From: Ye Bin <yebin@huaweicloud.com>
-To: jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org
-Cc: zhangxiaoxu5@huawei.com
-Subject: [PATCH v3] scsi: core: clear driver private data when retry request
-Date: Mon, 17 Feb 2025 10:16:28 +0800
-Message-Id: <20250217021628.2929248-1-yebin@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1739765294; c=relaxed/simple;
+	bh=i/PwgKMCBCZLfEHQsGsntQ1fEhhQoS94549m2nz6EA4=;
+	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
+	 Content-Type:References; b=ZZwV5uCv2DOz4BAqS3ya5KtW7z7Ps5rEFxE3IIw5mchSlRzPQiB7wzS2Mr07IlmYYbgkCwG34bfai45vbdsE1Wxs1NIY/ASI6Z9rBl5XxZ99BSXvUvyHz5fXc6fBk8lWCl92j/NsxbELQRWkVGyp163DpyzoLEqQ9cfOzHfYGpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=THB3WQuR; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="THB3WQuR"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250217040803epoutp043b8be2793e3c0de79026646ad95923ec~k407aiP2K0407904079epoutp04b
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 04:08:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250217040803epoutp043b8be2793e3c0de79026646ad95923ec~k407aiP2K0407904079epoutp04b
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1739765283;
+	bh=q4FEvnHmy+mB9MbRC/88U70doteoss0rejRbFKfqfQk=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=THB3WQuRNek7ifCXOT8QGTh0l7OeOwTmw2+XSDdbKXaCrq8lZ84tsfB2yJvSy6DTg
+	 P8ZMjqjBSo6UirKm7A4dq2j5a4Af3G7J1uiPpikrn4VOvHWrIrVQIZktiMZZZQKAOs
+	 aKC+tWmXQVvi9g0QK5oL40QsKuiAxWcgrHPmybV0=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+	20250217040803epcas2p4bf4912fef65c350a72e533852c54683c~k4060pky53087230872epcas2p4G;
+	Mon, 17 Feb 2025 04:08:03 +0000 (GMT)
+Received: from epcpadp2new (unknown [182.195.40.142]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4Yx8Jg1dbtz4x9Pv; Mon, 17 Feb
+	2025 04:08:03 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3m1_8m7JnyUpEEA--.5646S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7KF15GFyrWr48uF1xJw4rGrg_yoW8tw45pF
-	W5X34qkr1rGFWrAws7XryUXFy5Ka93AryUWa43W3sxWF1vk3yvyr1UJFy5Xa4fXr1Iywn8
-	tF4qqr9rWFy7ZF7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI
-	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
-	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
-	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
-	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1ZmRUUUUUU==
-X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
+Mime-Version: 1.0
+Subject: RE:(2) [PATCH] scsi: ufs: Fix incorrect bit assignment for
+ temperature notifications
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From: Keoseong Park <keosung.park@samsung.com>
+To: Avri Altman <Avri.Altman@sandisk.com>, Keoseong Park
+	<keosung.park@samsung.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>,
+	"bvanassche@acm.org" <bvanassche@acm.org>, "beanhuo@micron.com"
+	<beanhuo@micron.com>, "linux@roeck-us.net" <linux@roeck-us.net>, Daejun Park
+	<daejun7.park@samsung.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Bao D .
+ Nguyen" <quic_nguyenb@quicinc.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <PH7PR16MB61965AFF2D91331975BBD24EE5FE2@PH7PR16MB6196.namprd16.prod.outlook.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01739765283208.JavaMail.epsvc@epcpadp2new>
+Date: Mon, 17 Feb 2025 11:39:00 +0900
+X-CMS-MailID: 20250217023900epcms2p6d07e63f7ede68a88b53daf7a17f4062a
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20250214105219epcms2p3a60810a14e6181092cb397924ce36019
+References: <PH7PR16MB61965AFF2D91331975BBD24EE5FE2@PH7PR16MB6196.namprd16.prod.outlook.com>
+	<1891546521.01739535602406.JavaMail.epsvc@epcpadp1new>
+	<CGME20250214105219epcms2p3a60810a14e6181092cb397924ce36019@epcms2p6>
 
-From: Ye Bin <yebin10@huawei.com>
+> + Bao
+>
+>> According to the UFS specification, the bit positions for
+>> `UFS_DEV_HIGH_TEMP_NOTIF` and `UFS_DEV_LOW_TEMP_NOTIF` were
+>> incorrectly assigned. This patch corrects the bit assignment to align wi=
+th the
+>> specification.
+>>=20
+>> If this issue is not fixed, devices that support both high and low tempe=
+rature
+>> notifications may function correctly, but devices that support only one =
+of
+>> them may fail to trigger the corresponding exception event.
+>>=20
+>> Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notificatio=
+n
+>> support")
+>> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+> Already noticed by Bao D. Nguyen - see https://protect2.fireeye.com/v1/ur=
+l?k=3D81dbf2a5-e050e79f-81da79ea-74fe4860008a-0424961c73a03c70&q=3D1&e=3Dfc=
+fc99c7-cb2b-4f68-8ef4-e2760c685fec&u=3Dhttps%3A%2F%2Fwww.spinics.net%2Flist=
+s%2Flinux-scsi%2Fmsg202162.html
+>
+> Thanks,
+> Avri
+>
 
-After commit 1bad6c4a57ef
-("scsi: zero per-cmd private driver data for each MQ I/O"),
-xen-scsifront/virtio_scsi/snic driver remove code that zeroes
-driver-private command data. If request do retry will lead to
-driver-private command data remains. Before commit 464a00c9e0ad
-("scsi: core: Kill DRIVER_SENSE") if virtio_scsi do capacity
-expansion, first request may return UA then request will do retry,
-as driver-private command data remains, request will return UA
-again. As a result, the request keeps retrying, and the request
-times out and fails.
-So zeroes driver-private command data when request do retry.
+Hi Avri,
 
-Fixes: f7de50da1479 ("scsi: xen-scsifront: Remove code that zeroes driver-private command data")
-Fixes: c2bb87318baa ("scsi: virtio_scsi: Remove code that zeroes driver-private command data")
-Fixes: c3006a926468 ("scsi: snic: Remove code that zeroes driver-private command data")
-Signed-off-by: Ye Bin <yebin10@huawei.com>
----
- drivers/scsi/scsi_lib.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Thank you for the update. I wasn=E2=80=99t aware that Bao D. Nguyen=E2=80=
+=99s patch had already been applied. =20
+I appreciate the heads-up, and I=E2=80=99ll make sure to check the latest p=
+atches more carefully next time. =20
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index be0890e4e706..f1cfe0bb89b2 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1669,13 +1669,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
- 	if (in_flight)
- 		__set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
- 
--	/*
--	 * Only clear the driver-private command data if the LLD does not supply
--	 * a function to initialize that data.
--	 */
--	if (!shost->hostt->init_cmd_priv)
--		memset(cmd + 1, 0, shost->hostt->cmd_size);
--
- 	cmd->prot_op = SCSI_PROT_NORMAL;
- 	if (blk_rq_bytes(req))
- 		cmd->sc_data_direction = rq_dma_dir(req);
-@@ -1842,6 +1835,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
- 		goto out_dec_target_busy;
- 
-+	/*
-+	 * Only clear the driver-private command data if the LLD does not supply
-+	 * a function to initialize that data.
-+	 */
-+	if (shost->hostt->cmd_size && !shost->hostt->init_cmd_priv)
-+		memset(cmd + 1, 0, shost->hostt->cmd_size);
-+
- 	if (!(req->rq_flags & RQF_DONTPREP)) {
- 		ret = scsi_prepare_cmd(req);
- 		if (ret != BLK_STS_OK)
--- 
-2.34.1
+Best Regards,
+Keoseong
 
+>> ---
+>>  include/ufs/ufs.h | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>=20
+>> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h index
+>> d335bff1a310..8a24ed59ec46 100644
+>> --- a/include/ufs/ufs.h
+>> +++ b/include/ufs/ufs.h
+>> @@ -385,8 +385,8 @@ enum {
+>>=20
+>>  /* Possible values for dExtendedUFSFeaturesSupport */  enum {
+>> -=09UFS_DEV_LOW_TEMP_NOTIF=09=09=3D BIT(4),
+>> -=09UFS_DEV_HIGH_TEMP_NOTIF=09=09=3D BIT(5),
+>> +=09UFS_DEV_HIGH_TEMP_NOTIF=09=09=3D BIT(4),
+>> +=09UFS_DEV_LOW_TEMP_NOTIF=09=09=3D BIT(5),
+>>  =09UFS_DEV_EXT_TEMP_NOTIF=09=09=3D BIT(6),
+>>  =09UFS_DEV_HPB_SUPPORT=09=09=3D BIT(7),
+>>  =09UFS_DEV_WRITE_BOOSTER_SUP=09=3D BIT(8),
+>> --
+>> 2.25.1
+>>=20
+>>=20
+>
