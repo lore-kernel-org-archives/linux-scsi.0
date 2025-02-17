@@ -1,130 +1,98 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3CC92248B2;
-	Mon, 17 Feb 2025 16:43:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8B7E321A421;
+	Mon, 17 Feb 2025 17:10:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739810626; cv=none; b=t0KQBTCwhPJXN1T91QQv3CnXJDfKUDe8mU6NlyLqV/h1z5X8Ro0Co/OIgOKZL8Ivp1XELVruYSeHGxbbnc2PpVMvgTjEg2sMmjyX8Yw8H+D51Jt2LFe4Vsf4pxj3ECcy0fPdJf9svDvvRStVLUZdQnf9SJCVCzw1bwp760R2RCM=
+	t=1739812241; cv=none; b=esmCWSnU4syrhf5bpNCFNgTFtZG0fi4v4UMcX5ZauC1nIjepV2iJGUGyxqpi/PD+M9NtlPFR1x48YPaHcrlIFUfZCeUSaBZ32hvo9lYiP7G00F8puOO8thP40BP19hqUfdie2el1TFDftteBf3x5vl8qoFmzM24DsWjgt/WxEgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739810626; c=relaxed/simple;
-	bh=X6jCN9VHkiQx5aMy7VM6jbvlCKbvGBTk7wzTebMXwMw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UCjCV2YhyYZCDbHdHhG7TninTNZHVSTf8AOHteeVVoeIGt1yjvciP6ahZnxDhAY0TkvInEPuV+ACUhzAfYCpA603J5Het3SR5bfMvmayjD4XSGiLFEx7lVabhhdOdoaarNwfBzl4FmYR1doza4lCexu4Z/mXzBy3OJbNh5Z9HWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com; spf=pass smtp.mailfrom=sandisk.com; dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b=Xf5BEqZ/; arc=none smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandisk.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b="Xf5BEqZ/"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=sandisk.com; i=@sandisk.com; q=dns/txt;
-  s=dkim.sandisk.com; t=1739810625; x=1771346625;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=X6jCN9VHkiQx5aMy7VM6jbvlCKbvGBTk7wzTebMXwMw=;
-  b=Xf5BEqZ/6gos9vs74LEx6NJxUBHLmUW2wVharguzr9WL7aElSWEm+xCX
-   FEJ14YQvGFfNPhhNfEmPmZUAkTs/SsFBmdAfxtc49p1oWpvAusmoF/m+F
-   mHm2uKinSYHVjBA0FUKh8FFSv01fmC30MaoOYWw3HAM1M+HV9M+qAF8dY
-   74JfxgIWvOAj++oc2Ws19q+JM/r5+o7shxLkdg55Crrij4lLfSQNtptIv
-   N3yjxBiRfdKGYrY/kbSF0yMOaJkLJ3bCkbfsWhAxAB0iNq09in29veYQa
-   nlOOZGSNU9tvSWGZt0jvtqWGrxdX0RICQw2eqt3WfcvuSCtvchhYUn7MO
-   w==;
-X-CSE-ConnectionGUID: dnzcMm8cTjerrGUU/CeufA==
-X-CSE-MsgGUID: L2sUUXg0RQSo8Oeq29npUQ==
-X-IronPort-AV: E=Sophos;i="6.13,293,1732550400"; 
-   d="scan'208";a="38130450"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Feb 2025 00:43:37 +0800
-IronPort-SDR: 67b35980_Pv+/pjUeakjavJ+iTjvWoW9FW3+YP/nWIbTuJx9UKSqeAEl
- w55DhdCkbwzk8uuYuzjZaLVDQGWogJrxPDpAKJQ==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Feb 2025 07:45:04 -0800
-WDCIronportException: Internal
-Received: from unknown (HELO WDAP-ez2C89klLd.corp.sandisk.com) ([10.112.13.179])
-  by uls-op-cesaip02.wdc.com with ESMTP; 17 Feb 2025 08:43:35 -0800
-From: Arthur Simchaev <arthur.simchaev@sandisk.com>
-To: martin.petersen@oracle.com
-Cc: avri.altman@sandisk.com,
-	Avi.Shchislowski@sandisk.com,
-	beanhuo@micron.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	bvanassche@acm.org,
-	Arthur Simchaev <arthur.simchaev@sandisk.com>
-Subject: [PATCH] scsi: ufs: core: Fix memory crash in case arpmb command failed
-Date: Mon, 17 Feb 2025 18:43:30 +0200
-Message-Id: <20250217164330.245612-1-arthur.simchaev@sandisk.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1739812241; c=relaxed/simple;
+	bh=0+01KA7K2Nk/glEH3Wbcih7aJcSpkuWTCeB52iqLzPo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=f+h3oBOyNVD+PounkwIdqqRiKBRdidcgrAv1DQjL3/9LbadGGNHGs+TkiYONrNlQi4IaOwQuvMArniczoOoeKg+xTqlxxOovonzecRvOYt5UlbzhhnhRnykBwwjn3Sc0joMrWAWSD64Do5y2Aw97cVX2Qxq8cF6ntdCnrt5sP8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 820E0152B;
+	Mon, 17 Feb 2025 09:10:57 -0800 (PST)
+Received: from [10.1.27.38] (e122027.cambridge.arm.com [10.1.27.38])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A530C3F5A1;
+	Mon, 17 Feb 2025 09:10:34 -0800 (PST)
+Message-ID: <321804ef-f852-47cf-afd7-723666ec8f62@arm.com>
+Date: Mon, 17 Feb 2025 17:10:32 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 4/7] pmdomain: rockchip: Add smc call to inform
+ firmware
+To: =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
+ Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-pm@vger.kernel.org
+References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+ <1738736156-119203-5-git-send-email-shawn.lin@rock-chips.com>
+ <d543a0a7-8e14-483a-bc2b-783dc3aa33e2@arm.com> <2579724.BzM5BlMlMQ@diego>
+From: Steven Price <steven.price@arm.com>
+Content-Language: en-GB
+In-Reply-To: <2579724.BzM5BlMlMQ@diego>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-In case the device doesn't support arpmb, the kernel get memory crash
-due to copy user data in bsg_transport_sg_io_fn level. So in case
-ufshcd_send_bsg_uic_cmd returned error, do not change the job's reply_len.
+On 17/02/2025 15:16, Heiko Stübner wrote:
+> Hi Steven,
+> 
+> Am Montag, 17. Februar 2025, 15:47:21 MEZ schrieb Steven Price:
+>> On 05/02/2025 06:15, Shawn Lin wrote:
+>>> Inform firmware to keep the power domain on or off.
+>>>
+>>> Suggested-by: Ulf Hansson <ulf.hansson@linaro.org>
+>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>> ---
+>>
+>> This patch is causing my Firefly RK3288 to fail to boot, it hangs 
+>> shortly after reaching user space, but the bootup messages include the 
+>> suspicious line "Bad mode in prefetch abort handler detected".
+>> I suspect the firmware on this board doesn't support this new SMC 
+>> correctly. Reverting this patch on top of linux-next gets everything 
+>> working again.
+> 
+> Is your board actually running some trusted firmware?
 
-Memory crash backtrace:
-3,1290,531166405,-;ufshcd 0000:00:12.5: ARPMB OP failed: error code -22
+Not as far as I know.
 
-4,1308,531166555,-;Call Trace:
+> Stock rk3288 never had tf-a / psci [0], I did work on that for a while,
+> but don't think that ever took off.
+> 
+> I'm wondering who the smcc call is calling, but don't know about
+> about smcc stuff.
 
-4,1309,531166559,-; <TASK>
+Good question - it's quite possible things are blowing up just because
+there's nothing there to handle the SMC. My DTB is as upstream:
 
-4,1310,531166565,-; ? show_regs+0x6d/0x80
+        cpus {
+                #address-cells = <0x01>;
+                #size-cells = <0x00>;
+                enable-method = "rockchip,rk3066-smp";
+                rockchip,pmu = <0x06>;
 
-4,1311,531166575,-; ? die+0x37/0xa0
+I haven't investigated why this code is attempting to call an SMC on
+this board.
 
-4,1312,531166583,-; ? do_trap+0xd4/0xf0
+Steve
 
-4,1313,531166593,-; ? do_error_trap+0x71/0xb0
-
-4,1314,531166601,-; ? usercopy_abort+0x6c/0x80
-
-4,1315,531166610,-; ? exc_invalid_op+0x52/0x80
-
-4,1316,531166622,-; ? usercopy_abort+0x6c/0x80
-
-4,1317,531166630,-; ? asm_exc_invalid_op+0x1b/0x20
-
-4,1318,531166643,-; ? usercopy_abort+0x6c/0x80
-
-4,1319,531166652,-; __check_heap_object+0xe3/0x120
-
-4,1320,531166661,-; check_heap_object+0x185/0x1d0
-
-4,1321,531166670,-; __check_object_size.part.0+0x72/0x150
-
-4,1322,531166679,-; __check_object_size+0x23/0x30
-
-4,1323,531166688,-; bsg_transport_sg_io_fn+0x314/0x3b0
-
-Signed-off-by: Arthur Simchaev <arthur.simchaev@sandisk.com>
----
- drivers/ufs/core/ufs_bsg.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 8d4ad0a3f2cf..a8ed9bc6e4f1 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -194,10 +194,12 @@ static int ufs_bsg_request(struct bsg_job *job)
- 	ufshcd_rpm_put_sync(hba);
- 	kfree(buff);
- 	bsg_reply->result = ret;
--	job->reply_len = !rpmb ? sizeof(struct ufs_bsg_reply) : sizeof(struct ufs_rpmb_reply);
- 	/* complete the job here only if no error */
--	if (ret == 0)
-+	if (ret == 0) {
-+		job->reply_len = !rpmb ? sizeof(struct ufs_bsg_reply) :
-+					 sizeof(struct ufs_rpmb_reply);
- 		bsg_job_done(job, ret, bsg_reply->reply_payload_rcv_len);
-+	}
- 
- 	return ret;
- }
--- 
-2.34.1
-
+> [0] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm/boot/dts/rockchip/rk3288.dtsi#n63
+> 
+> 
