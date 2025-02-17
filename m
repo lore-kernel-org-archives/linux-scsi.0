@@ -1,110 +1,115 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3F72E64A
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2025 14:15:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE6923BB
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 02:16:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739715338; cv=none; b=i5lqOH9rw8j79BK9FDn0WE6DB56yV01qmG+fB91h4GfUiCsfcA/08XKfwh6nI52N90FSl4V6RPkpQ9Pvcl7anW4qE9IRb4m/kQNbnBJMxBOfAtNo6aIweo6WYwm1LM6B15J2RjnVphaN0Y7wfMjtL7XF9bCdCaUu4BJaVx2xUtM=
+	t=1739758603; cv=none; b=ObOUkqxUOKU122zTwzLiDe0hwT6JKeURMpkhIob24WWxWy4mPoHlRT8X4dS8R9Y6kUGjVf0TuZ6ZtFizX77jCCoGrHVqwhvQPApsrPhY7xcapwlcvcQUkWfETpQ5tMZAJpnAAHpYvTDUPgW2Ry/BWMV0nn/68rRzsAmctcgkCD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739715338; c=relaxed/simple;
-	bh=NjdP+HYW5ufsAoh0in9wXTTB0+zsjbE2DLH49bIuBgI=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=kt1w6QFzmdIOx8tFLodmXuCc5AU1FbPhGuo+5nxym9dVogCaSogsyY5j3jPaPxC4Q6gY+QfwCQ4PD4rzf3YAJm/o0wVI7vjkAxS1qQ9yv8SyCOFay6DUeVH929mibIycwC76/wh+49Knd9w/X+rDRE4JupfyvmVbnnjEWHchNfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=levzehrB; arc=none smtp.client-ip=209.85.221.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="levzehrB"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-38f2f783e4dso1540383f8f.3
-        for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2025 06:15:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1739715335; x=1740320135; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=NjdP+HYW5ufsAoh0in9wXTTB0+zsjbE2DLH49bIuBgI=;
-        b=levzehrBM0JN3E3CDnMh/uzNzfdblD6SEheRyaCREe4xplKanb9ZbJnnFnN9MXGWRS
-         Wk/gL10AGhQ4QQ7RtcmGBJrLl0bMxEHCXlWwr3Wmt+U7aLw5AkT8tfmt03i9LZ6t6dps
-         FjG4OJW+eQ2rxxEZPQwLPpznfmStlQQavL3cwSIq9GB1rEEQ9+UVrUeQVaIT1+j3dIKG
-         YQuD2gm40A8hi05mCF9XjDrPselxIh97HXqYNvwOKFZmI4An1rMNq4lsZ0NHod2iKbXX
-         qKzlMifcAJMbXyaUDNh9WZJ/auEqAmgorDRxACqIz/9YThV8sH3SmBmVchMh3rkOkNI7
-         wh7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739715335; x=1740320135;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NjdP+HYW5ufsAoh0in9wXTTB0+zsjbE2DLH49bIuBgI=;
-        b=LJ5peCpNiltc676e0w4zd93+2vAb4sOekm+vL8VKp0YVuFEl77UKTD6l8l3M8kcWvR
-         WhY+yqt/PAF7aEt5xTZguolAaeFCJMLXkeX8Wt1KyKHtd5XZiw1By95J0qy4Hdj+/0Qh
-         OeqTZ2w4W3YLlYIA64roHQ8232LNNj+eWctWVOqEmnqgiUhsDrc5bncGK1rG3mgfB3Hc
-         AnpwekeaxWxzx3yZ2w5Iy8BJUg2toduqgulVp9Fy+ABcU1EmtULg+3Su5XVAwQJC1rqw
-         w4IuPiYX3FJKMpr3FV5qXKbb6paVPxhmrNlUsXq9q+DPTvyofJDaiQQovmtJFwQGJG5s
-         YWEw==
-X-Forwarded-Encrypted: i=1; AJvYcCW5uNesFiabpz+Oie+Moq8d+93Mzy2RXEslR0FI/YqvHh5iQOnX+k8fVu/bT8gJlxFDclg4kRDICuVB@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6BZqLtmRsmd1DbsWvaaeEmgFwK5VEPKzXp9+B0PughQcojhkb
-	518ogJZ11+jj6jaQIFbZn192eeKzXJ4ru4vD/Gut0a4nnnk68nzs
-X-Gm-Gg: ASbGncuGvwrpLyztAXyGU/5JEq0oiNxZgueQN6y3R/MvZx6XYLzo9RcbqePS9S/HuYR
-	1xj91YFON40ldhfZZXNCpgwB4nCPEcNih39D3ahI0oz4m5AEHSXL9JR7lK/3NnVA3B6TyEFhDqg
-	4B8w9eGVLwr746wWKtZwp+6HoPsPQKFFz3BoSRUIUz83T+b/tMp2i1o7DLnl1n0x3uBB08meLNy
-	KFj/7uFvOD0keXgYFcgbRcHB8HpX6eDibkqjaLgP3cKKTGdGS5jjf/+HaD+mUaQ9yunF2FJeUDN
-	hbKzeiOvXGbZDvFwKvwlUQ6g1quri+HKnnkvJfEmUNjNJjLOhWlr6z4WAWEpqmRUaPtouE9vyuY
-	tTBraJiXrBt/8HdNASM2udLKwxwh6zV18+Nn1sGxCdCPISEQrbkIIMzw=
-X-Google-Smtp-Source: AGHT+IFU9X7XfDxQRxgRSxeJbVVfPNo+JeJw2CZ0Ntr6HoE6gZ2UyRdopaXlBmPIhV1DCnL70W7p7Q==
-X-Received: by 2002:a5d:598f:0:b0:38c:5cd0:ecd5 with SMTP id ffacd0b85a97d-38f33f4acb2mr6636251f8f.38.1739715335234;
-        Sun, 16 Feb 2025 06:15:35 -0800 (PST)
-Received: from p200300c5870742d85925c84ae79fb582.dip0.t-ipconnect.de (p200300c5870742d85925c84ae79fb582.dip0.t-ipconnect.de. [2003:c5:8707:42d8:5925:c84a:e79f:b582])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38f25914d73sm9880652f8f.54.2025.02.16.06.15.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Feb 2025 06:15:34 -0800 (PST)
-Message-ID: <2420c932bd2443b3c924c02a1375ae63bed8ab6e.camel@gmail.com>
-Subject: Re: [PATCH v3] ufs: core: add hba parameter to trace events
-From: Bean Huo <huobean@gmail.com>
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org, 
-	martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, 
-	jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, 
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com, 
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
- yi-fan.peng@mediatek.com,  qilin.tan@mediatek.com, lin.gui@mediatek.com,
- tun-yu.yu@mediatek.com,  eddie.huang@mediatek.com, naomi.chu@mediatek.com,
- ed.tsai@mediatek.com,  bvanassche@acm.org
-Date: Sun, 16 Feb 2025 15:15:33 +0100
-In-Reply-To: <20250214083026.1177880-1-peter.wang@mediatek.com>
-References: <20250214083026.1177880-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	s=arc-20240116; t=1739758603; c=relaxed/simple;
+	bh=YKyr5mYEVI5Yixg09prgbAB1vM48QaYyqL3ryVgo4Sk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EPoBoEupl/ITs5uOPOYSpxqgqV9sHx94Uq3t0k7Sv3cY5KJ0YKIEKbC4DBF/oIUkXKGak0f7tM1q83CehTrafANtA1LFOV7DDlmq/uChNnTj7ZmLnuVUKrGyzuQ+R09+wT+zylX2mQj3Pl1kBfGklvo9I17f9zk4oD19KSaWQeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Yx5qY1xmkz4f3jR6
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 10:16:09 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id C42D21A0DEF
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Feb 2025 10:16:30 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.101.107])
+	by APP4 (Coremail) with SMTP id gCh0CgA3m1_8m7JnyUpEEA--.5646S4;
+	Mon, 17 Feb 2025 10:16:30 +0800 (CST)
+From: Ye Bin <yebin@huaweicloud.com>
+To: jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org
+Cc: zhangxiaoxu5@huawei.com
+Subject: [PATCH v3] scsi: core: clear driver private data when retry request
+Date: Mon, 17 Feb 2025 10:16:28 +0800
+Message-Id: <20250217021628.2929248-1-yebin@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgA3m1_8m7JnyUpEEA--.5646S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7KF15GFyrWr48uF1xJw4rGrg_yoW8tw45pF
+	W5X34qkr1rGFWrAws7XryUXFy5Ka93AryUWa43W3sxWF1vk3yvyr1UJFy5Xa4fXr1Iywn8
+	tF4qqr9rWFy7ZF7anT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1ZmRUUUUUU==
+X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
 
+From: Ye Bin <yebin10@huawei.com>
 
-On Fri, 2025-02-14 at 16:29 +0800, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
->=20
-> Included the ufs_hba structure as a parameter in various trace events
-> to provide more context and improve debugging capabilities.
+After commit 1bad6c4a57ef
+("scsi: zero per-cmd private driver data for each MQ I/O"),
+xen-scsifront/virtio_scsi/snic driver remove code that zeroes
+driver-private command data. If request do retry will lead to
+driver-private command data remains. Before commit 464a00c9e0ad
+("scsi: core: Kill DRIVER_SENSE") if virtio_scsi do capacity
+expansion, first request may return UA then request will do retry,
+as driver-private command data remains, request will return UA
+again. As a result, the request keeps retrying, and the request
+times out and fails.
+So zeroes driver-private command data when request do retry.
 
+Fixes: f7de50da1479 ("scsi: xen-scsifront: Remove code that zeroes driver-private command data")
+Fixes: c2bb87318baa ("scsi: virtio_scsi: Remove code that zeroes driver-private command data")
+Fixes: c3006a926468 ("scsi: snic: Remove code that zeroes driver-private command data")
+Signed-off-by: Ye Bin <yebin10@huawei.com>
+---
+ drivers/scsi/scsi_lib.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-From the patch commit message, it is no clear how you can use this
-change to get more infor and debug, since the content of the ftrace
-output is the same after this change. Because the device name
-(dev_name) is still being printed, but now it is derived dynamically
-from hba->dev instead of being stored as a string in the trace event.=20
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index be0890e4e706..f1cfe0bb89b2 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1669,13 +1669,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
+ 	if (in_flight)
+ 		__set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+ 
+-	/*
+-	 * Only clear the driver-private command data if the LLD does not supply
+-	 * a function to initialize that data.
+-	 */
+-	if (!shost->hostt->init_cmd_priv)
+-		memset(cmd + 1, 0, shost->hostt->cmd_size);
+-
+ 	cmd->prot_op = SCSI_PROT_NORMAL;
+ 	if (blk_rq_bytes(req))
+ 		cmd->sc_data_direction = rq_dma_dir(req);
+@@ -1842,6 +1835,13 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
+ 		goto out_dec_target_busy;
+ 
++	/*
++	 * Only clear the driver-private command data if the LLD does not supply
++	 * a function to initialize that data.
++	 */
++	if (shost->hostt->cmd_size && !shost->hostt->init_cmd_priv)
++		memset(cmd + 1, 0, shost->hostt->cmd_size);
++
+ 	if (!(req->rq_flags & RQF_DONTPREP)) {
+ 		ret = scsi_prepare_cmd(req);
+ 		if (ret != BLK_STS_OK)
+-- 
+2.34.1
 
-I assume you mean to let bpf get more information from hba:
-
-
-strust ufs hba *hba =3D ctx->hba;
-
-If my assumption is correct, this purpose and intent should be
-prominently highlighted in patch commit message.
-
-
-Kind regards,
-Bean
