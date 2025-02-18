@@ -1,286 +1,204 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E1D1B0103
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2025 12:18:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739881111; cv=fail; b=anxA70ICdfceVoPPs0qvQ6fz4tlOZRRPWQoXonCErpdJlngRY7oSVyOhKJBXA9Jyk2bY/6XOAvij1GITifqPCLtPUxXeS8An4Bu+8cvUt+ape2QVq5VYyFTqOYjrjF5xtliQd/W6rNIIA/WlR9ZMHu009lWllz6/ni1F3cbhyz0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739881111; c=relaxed/simple;
-	bh=hVF5/Ju2l2dGob7tAljY8uCHq2rygykiuiWwaw2u6xE=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=m/+jD2Xl9ZlZ7LPscpr2qsKlFPeQ0VaSZ2lkA49aaoHPc4CuTq93U0QXxuMqNv+hqotPYQlTeztqZcB+XL2b/6JIuURPwOgCrHkdIHOmTb9kKX8AAO5Wa1snOcxAYHlfzLpxBXQmuDN+yZT3k/vZ3gJrlwqxJLfloLW9A7CVmW0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=LD9tcmco; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=yQ/W8XX3; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82541243368;
+	Tue, 18 Feb 2025 12:31:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739881890; cv=none; b=Y7jvrW1zqdytr4WS7E+IUBCfv4PGddN9AQZEwWGSUx5C95nA6ph39dIgOzDuqcPYM9oO5NtFLlKoUOxAk9XDtrZBdGf6kaR/DIqvQiKWZVRMgKWH3ZBfDEUfwJXKNTPrFSNv+rF91ZodguGSl6OVOurH9o3bVp0yiavZYtkfIPY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739881890; c=relaxed/simple;
+	bh=UA8BgaNnyRCw9xFtLSS5bxjRr4IV+xOTkb3Z8/jS98Q=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=dS/cGZdsVkx3uRrXPZjBbHJe3IzJUBey4XF5Efvxu71rep5ych+xfb4zgU2JN4XcQ+p6JCG4ANuBXWvS7rKkOgVdCJE+ncL/PtHDntTiZPnsau0tZ27ju2cbxGG8Gkpcwb+2IE0sVf3AHlPOKIXR+k4+zeraa1Eg+/3LaC9WFS4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nqLtlBiN; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LD9tcmco";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="yQ/W8XX3"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51IBqBMY027742;
-	Tue, 18 Feb 2025 12:13:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=4qd2PgvYdMUQP4X3/7cOW51TfgvymAZzctxzF85NutQ=; b=
-	LD9tcmcoNdW5UaARFa4GYsx31klDuOOAL6LCvT1abMAloMxs9/zGoa8JsRBjf3a8
-	LBYD/acHFiyc3JrRh8k3CxfrysKqdMFu5GC8CgflSbo7vCyJNZdWuqtsOJxAST8F
-	fzh0kyzTTWXecIjj7b8J6JtoT+uzbKPV7V4c1KCiqE00B9iYX4tUo5YumnoXiYZ6
-	QsgxeLdGDidVUDfHapjFxlHFKCUhVX4TmmgGvSX8swfAJ031g2vz9i6pdMyF9guf
-	yDvf0PGHQJY4y+JNT4XsRel4aV6gtDz4cSsZQLy9Om+dnseBglh4QoJKxbBtVHbC
-	q07YzWTGRzNNwFe7ZtQIZg==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44thh06c46-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 18 Feb 2025 12:13:15 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51IA6lOC004196;
-	Tue, 18 Feb 2025 12:13:14 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2045.outbound.protection.outlook.com [104.47.70.45])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 44thcf84nu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 18 Feb 2025 12:13:14 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yP7tNQ4xmV+m5CIzs1Lk1enyUz8tgX1dUbC1yZwyLwT+sBPmAeTDKLNZL4N0bS213xF0wtwIjcSoc+nHmm2XvWfWUjTA3o9UnLMp61jiv06QsGjJ7Q7V3UZyGtxgQtRwqYU95LgtKV5cWNffH9QB59lqUdVlms5/+78VGaMpHL7fxoyXpfxnFMMxjOA1UL4eSU+8caoYRswLm7+uX97fKuzQyW3dv0BJY2G+aX0vL47kXTYlFF90tQvhV8uvjhtWbeiV8kZ84Lxq237AHyH8Mhz6NypggceVcgc9fe9fLAmxsYDOe2XoEInc4Sb9jNl0lSCNtN6Y1IkvSxHjdWc3Aw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4qd2PgvYdMUQP4X3/7cOW51TfgvymAZzctxzF85NutQ=;
- b=E/DBt3w0Ys23vMdHZNuSKls3PFeV9FEma7VzMjsyMi/XYBA4H6kNPp7x1C1wt+ke11+ihhLF3tutJPWZYnBFITfIS6GdnYgQlkYjSkJBzYZ9t9dNhnntf9P/G8aiYQHD1uxoJMDvAUZ500lbpgGH2zcIhcFHG3dzlwHTluIM9OiMC9uoq5Dbmk1F6L+5l4w1mf7fvyLqw5Tn9KPNW3LXznYY72im2h1Ke5Mvy9VlpzhSmMBTiKoglG6Bm0CjFlMjarlzDp9axLjpRK5WNZxPBxbBNg/cnnW7lfqgZp+WqukcWFqUA+5xlIAF9pYCi57KyROYtq+iIkpq0T+CBlKhNg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nqLtlBiN"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-43989226283so11678665e9.1;
+        Tue, 18 Feb 2025 04:31:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4qd2PgvYdMUQP4X3/7cOW51TfgvymAZzctxzF85NutQ=;
- b=yQ/W8XX3zzuKc79UStiJhu6jklW4krHP/AiRHleqMeyHw7e62tjO4R0NISgUKd7ZZzv+1cSLHNcodGzFlGA9rXgmCd23Nn2GRuS+HOdaZWBPnk/5DNtyVyBsHtzDQRoGrzDP1S9oWhkgzjz8diOmCEOB8X1Wf5yuBujHCfvmVGY=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by IA0PR10MB6748.namprd10.prod.outlook.com (2603:10b6:208:43c::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8445.18; Tue, 18 Feb
- 2025 12:13:12 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.8466.013; Tue, 18 Feb 2025
- 12:13:12 +0000
-Message-ID: <11a36fb5-2644-405f-b368-e9a23a6e92c7@oracle.com>
-Date: Tue, 18 Feb 2025 12:13:09 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: core: clear driver private data when retry
- request
-To: yebin <yebin@huaweicloud.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: zhangxiaoxu5@huawei.com
-References: <20250217021628.2929248-1-yebin@huaweicloud.com>
- <4fe6b94e-41ae-48b4-aa9d-a0712a4ef16e@oracle.com>
- <67B46DBD.7060805@huaweicloud.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <67B46DBD.7060805@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: LO4P123CA0357.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18d::20) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=gmail.com; s=20230601; t=1739881887; x=1740486687; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=i1EiuFrOZAAO8BlNap0r2h1PwkpkjTMEHOOdrLbjwQw=;
+        b=nqLtlBiNlAZBA06X0j0ZUBxPm/33ztcOa/kmENREwj2B91m1puNYm0WuU1zNocPu6E
+         ykY/vRPL3jyXBcVQrw3Q/hb8hpCRmSL3zCvzTDp31g9nNCW49WAo0k5kEoX4lXLP1N2P
+         +bTp31AS6O9ZMBypDk/YA6AbAq716L3q5mi/w8jqs5cIj0Gm0yF98p7drkzq9hc1kpax
+         kqmlp3Bqv1IvaUd8SR2tBK9Uwav/aVyHByWEYAM9OQFCkMkuzRnvrAGrzUdiIa6Yvwo3
+         A+i6eXiQExWXYd7ck7s7IhemzBLtOwQwcZKYsb3w8WXqbO6tQhX+Hl01oVs4jMcWXqsS
+         HiMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739881887; x=1740486687;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=i1EiuFrOZAAO8BlNap0r2h1PwkpkjTMEHOOdrLbjwQw=;
+        b=T17a7z7AIIOfFsgOX3PU0BdRDemZPXZ5GXkjz2rDez0CsJeZONrDv/pV2glFvbSvTD
+         RpxmjT5kZOjL133ngWtu3Zt3YFC9T9T5+xeK4JbLw60fgAdCiUE3Z5JlJXqcf2y7wg7P
+         UMPWKNAp16pd/ZbkmuthPMSR0bDTZt/79Cj6+so6LsnwMzwQcZvNpGM5QjLHsH9QaqMm
+         nYAMCzCzbv4hUlnjHev39s8vhNWA5goMLzhQJ0BUntmxINWjfR7gopsLX6ulqaUub5qx
+         4aGDR2kH225SQXhe4+scAsKRasjOXAlJ/jVLNMZvXCbImBM4u55G4YbJdJeNg05NKl7T
+         MdnQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWAMixuZ322ZoffopR1dNet+tUmuveA5sYPdRTtH8gehb9bf7b1UVr4wN52Uq80aGb33cKlB46Gy5z45NM=@vger.kernel.org, AJvYcCWycFTc7gMXWQssQNXYnvUj78ug93A9ZqZjx6fPTdV/nSWONy8T2FVShVJB7qof/tuS2wNrpwz8@vger.kernel.org, AJvYcCXEJjnFjAVmzJzFHg7AWDZiNnayxd6jeq8GomAs7EHKST0B+gR+RwzqFBqNe3jeU1Qj0PI6C82f/tv8uw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxILDrO1yNHSIlArjYohlAT2FygvvMDP5vjI9P9jP+fUdtlhiJq
+	eNl5zmJdjVpnS+v7nSyEfXKvJ+a2GEjC3Q7xUEvepK9w+brO/FrX
+X-Gm-Gg: ASbGnct+CGT2WQF1V/oIAsrQX0VN2TotQkf4ClHKOHfcdj1Xp4E9cNy9vS4+lnL+eUA
+	Me6I7rukQqnGZkmdz39feeT4RH256Mafrc+O+q79rQ8SjECSaylG2UlXyrPbcLzdNl/8nqkgN92
+	CyXyUDDjt6TYgd7j7het9wCN0CyNBzeqD0Z5xIymLDdKejUgffpSArfi1NOt85ykC4fsUOWenCh
+	S7123oZffNjxsv934OckbRbd10lLyDTNpty6vOSuKHSaJdivW+eubAjKuCSNO8kaCn5ktaIRi5X
+	jtfjnLeAJUcDqb8aWQ==
+X-Google-Smtp-Source: AGHT+IHKpJVuCvnYRsmz4RpDTMOseTWydDN8ScsZSlwC/tzSRIKYd5jXEevc0CQS+qOpeSRpTQ0pbg==
+X-Received: by 2002:a05:600c:474f:b0:439:9828:c450 with SMTP id 5b1f17b1804b1-4399828c663mr7030715e9.15.1739881886433;
+        Tue, 18 Feb 2025 04:31:26 -0800 (PST)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43984dd042fsm56277745e9.12.2025.02.18.04.31.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Feb 2025 04:31:25 -0800 (PST)
+Message-ID: <8be8c9c45d627e40e4ce3dc87c1ac83f32717e2b.camel@gmail.com>
+Subject: Re: [PATCH v2] ufs: core: bsg: Fix memory crash in case arpmb
+ command failed
+From: Bean Huo <huobean@gmail.com>
+To: Arthur Simchaev <arthur.simchaev@sandisk.com>, martin.petersen@oracle.com
+Cc: avri.altman@sandisk.com, Avi.Shchislowski@sandisk.com,
+ beanhuo@micron.com,  linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bvanassche@acm.org,  stable@vger.kernel.org
+Date: Tue, 18 Feb 2025 13:31:23 +0100
+In-Reply-To: <20250218111527.246506-1-arthur.simchaev@sandisk.com>
+References: <20250218111527.246506-1-arthur.simchaev@sandisk.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|IA0PR10MB6748:EE_
-X-MS-Office365-Filtering-Correlation-Id: abd90fd9-27b4-432d-208c-08dd50159d3f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?NWRYWGJKQW1PUkpjNjIrQUdadXNHSUlaOG9WY2drbWVHZThkREpvSEVJNmY4?=
- =?utf-8?B?RHY2UlZoK1ZydnFtTzhSQ2RWUVQ4dTZCcHVPbFdUbVV4OU9NSjc1eE1haFdz?=
- =?utf-8?B?Unc4NFR4ZkpWWnV5Sms3UnBGM1JGM3NTZVFtc1pGY2IrazZtM3ZBVlBqUDd6?=
- =?utf-8?B?Z3dqV3BFK2drV1hEaWpWTWsvQ09uVkoyRW5VREVIYmpZQjRKeGFRaVZIMFlk?=
- =?utf-8?B?TDMzWnRZOE41WUFpeTNQdEF1SmRyUUtmaGRNSGhYWkFsMUVPOTkvc3M5bDQr?=
- =?utf-8?B?K3NzUUwwUW9yK0ZGdzJieE5vK0ZNM2Y2eG9CQWhzNmw0RTFPZFhHR0FGNjZW?=
- =?utf-8?B?akZ5T2JMK1R0RUhKMXBXdkRpUHNsMFh5azlrOWFuei83emlJOUFLc3prdGtp?=
- =?utf-8?B?RE8ycitnWlV4eXUrcGxKOE5QWjhDbUVEKzB0WC9DMFVTdTB1enY3bHVacUsy?=
- =?utf-8?B?Mk1US2dHZjVZcE9MYTZqV0FtNzgyd1hmM2tqaTNYeDlERjk3dEpOc1BHaDcw?=
- =?utf-8?B?Vk15K0tvdlRDaUsxYjVBSUVUWm5mZU80Z2QvL2dudDNRaFUxN21Za0k1N0FK?=
- =?utf-8?B?REVXL0VtNWdsdlpSYXZrSU1acmR0NTVSekNON0EvMEpZSFEzNW1tTGZ1WEEw?=
- =?utf-8?B?TDlMYXllRjltcE84SVYraEc1Z2w1L1FhSXhuajhtencwaUJWVEpFaTRqL0Yz?=
- =?utf-8?B?THpLTU0xZjNORytieGg3QnNFSTIwNlV4ckdqSmRzT1NTSy8zN29WNU9yUHVU?=
- =?utf-8?B?VExtYU0zZG8vVXIvUHRVVzlPL1hWYjQ5R215TWtTTkxRYXNpUWZKSWJZdG1V?=
- =?utf-8?B?MENXZkhuTnB5dktKYmxJUGx2QjVBVE4wa2MrVEZMckVwY01ZblJ2UzFQTGxz?=
- =?utf-8?B?OWw5QWRnOVIrd1VuT3VwMjZYRE5TUUxQN2tFUERsNm5JYXJDTmpMVWVkeVBv?=
- =?utf-8?B?bHA5RzlQTnlIOHFRVnZVVm5YeUt1akMvNG9Fa055Ykk1NzBESExYSjFxMHZZ?=
- =?utf-8?B?VVNkUlQyelZMSFlVc0w5UzZ3TnBzWlpIR2l2UWN6ck1jTkdIeWEvNHFaQjYx?=
- =?utf-8?B?VjhsQXJ2ako3MEVXR0FYeHFHMTBaNU9zWEcyNlpPdFhNbm9jeDg1czh4SUhW?=
- =?utf-8?B?cGJMUHpUY2ptdWlzcGhyRUR0UGJWTXZCZmQzNEZYVkVhYlFkUFF0OTBCWVdK?=
- =?utf-8?B?d0RxdEQreGdLdGhCTHBQQWhqdlhjbnZVWXUxTVBEZTJ5dzBnY000NUtCOWV1?=
- =?utf-8?B?d3dUOGcvZlN1S0h5WmszNWd5NGJSYmRRdVdGQ09IVTlIQk5BczVGcUJ0dnkz?=
- =?utf-8?B?Zno5cjA0RkVacVJyM0pNVnZTeTlZeVQrT2FsNVVpR1kyNU5sVWhXRG1WNG9z?=
- =?utf-8?B?UWRnWlBncU55ck5RREUrTzVJZG9NVi9lbzIrSUNvK2w4bDNGdXZEOExMV0tT?=
- =?utf-8?B?M2xnelFsUmcxQkZaVlhYQ3BFcXhSelorOWM4ZEVTcWVVd1hWWWRvT250NTg1?=
- =?utf-8?B?UmVNYnBqTUptblVQVFlodyt3cEVzQ0N1N1NPeWV3enc5QWF2N0RLeFEycFRm?=
- =?utf-8?B?VU1WSnh2UWF2NU5LYmgycHlLR3NxYWVYR1FIUW1maEVQZUpMSzhPRmp6SDZV?=
- =?utf-8?B?QWVsUkxqZVYxMUpudnRiaTdnYTN5cEozRFJ2bGhqSmVwY3hGMnFxK0l3cEpP?=
- =?utf-8?B?b1ZNU2dXOENsbUlWbTlYakJDMHdQVjdlckVFNnhUTjYyc3oxb3V1aVZiVGha?=
- =?utf-8?B?TnVBcGV6M1FjM0VKK3BtMGpzTUxQWEs4bmNwN2t4UzAxbzJCT0FIV1MySFBV?=
- =?utf-8?B?aTlTYVlXNU80b3lRbjZaanZTTlFrdEZJVUxBQnNtNVFRQXlxbFRMWlVPL3Nt?=
- =?utf-8?Q?RFmlby1M0JB3l?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N1NhbVdQTGhqVG1rY1grakJzK1oycG44VktKOUcyN2RoazVyNlhWZWNZY1Za?=
- =?utf-8?B?NFpkTE80M2MwL2owRElXQU5hbHA5VlJlcXpmSVMzbHhSZEZ1T0s4MGl0R04y?=
- =?utf-8?B?Qm5JeXIvcU1QcDlEQ2ZFU1QrSFBQSGY1T2pvVGJ1L2xWRFFJTzhUcDhUOWti?=
- =?utf-8?B?YnZNYndtMnQ3dWNRWWpScmhJdkZLcHg2OUVZdTdxTzAxODNzU2RwaGZ0eEQw?=
- =?utf-8?B?Ky92ckg5SENLelQxU2puWXlwNXZ1c0E0WGpvdHo4K2p5eHcxbVdGZitsYVVo?=
- =?utf-8?B?emNWeWpvbFBvTHhTRmRUWk1mOGdaQk9HZEhHT1g0WnZEbVh3N2FaeWxqQTN2?=
- =?utf-8?B?b3JEbEYwbCtQMW1Nd01wNm9sTzNEMGpHTEQ3OXRPKzRYbVoyN1BMNE1WUHB0?=
- =?utf-8?B?SGpzSlA5eEhxY3NmV3E3TW9jVHJZU1lJTFQydFlDM0tyaFdqMWhhTXVjQnNr?=
- =?utf-8?B?SmU3ZFdlYU54SHhnVnVwTzNwUmVDTU9YQVBEYmJhV2VVeDcyaTFaajdUNlcy?=
- =?utf-8?B?V0M4ckgreGh3RjhLbmw2VzNLcXpJeG10bVZJeThZUEhmSm9OOUk4SldCVTFv?=
- =?utf-8?B?VUtiMlBRMndMV2VjckJSVC9zYkliR3pWeThqOG11T29sNitaU3BGdGRyaEFk?=
- =?utf-8?B?ZzJ0ZjIxM3MwR2YwUENocHE0L0JsSUdaZVArYno3WXZNaW15dm1xbC95eVBV?=
- =?utf-8?B?WENlR1FIU2VkYUJpd09HSFB6Y2FGaGxjQUQwL0t4bmZ1NkxaODlvWGtGQ25Q?=
- =?utf-8?B?U3VjcnBVa1hpd09LSUNsVnI0L0orb011SmxpeTAzUTdOejkxdVZLMFFoL0dr?=
- =?utf-8?B?RnRRcjlzUjM2WWZNQWtySVRtUWp5WlpJMTZnc2d5ZEV3eHFCQ281allNemlv?=
- =?utf-8?B?ZWRia29DaGgrSzV3amZpM0F4RkViaytsNWhKYVlmSzdkMlM5OTVhUSs4NUdu?=
- =?utf-8?B?Z1NZZExMbzVEN3ZwcThmWjNyczBmZHhoWGZHbVROZy9tMHlwbUFGNEkwUnN6?=
- =?utf-8?B?RERUblAvS3I2OWlkSE5saFN3b0lMcFJZUEtyNEtiSndtYTB1UlBucTRhY056?=
- =?utf-8?B?ZzJTSC9ENXBKN2ZmK0t4S0F6ZEYrZVNNdDlzQkFQMk1BU2VLb3EwQlU5YmxP?=
- =?utf-8?B?NkxUS3djcGY5ejZORzJlVktNNW1tSUNFanJyZzN2UXpQSE9zUjZaS2lGT2tG?=
- =?utf-8?B?RnhibFRzZHYxTDZhZjVMbUNldThOcVV5dEdLejh6MldhZE1Gc0tDSlZXbzVT?=
- =?utf-8?B?a2Z2NlQ2SUFhNnZtNHZPL3V4clhMbG0zREZxZ0l1MVZYeXRKZkMyUU9lVWJM?=
- =?utf-8?B?NjlDa3ZMRzI5OWJGcnRHSDFrWVBHWFpuallTRDQyZ1hvRnJQV3NUcVlKMk00?=
- =?utf-8?B?ZXZaKzR4OXd5c3U2MlAxWlZjVGh4cDJ5OVBFaUVkaG9NdStCM081NUJBc2Uy?=
- =?utf-8?B?Y3V3KzhkNzdEUjZwSkdOSTNwK0FjenBYWCtUdEw2a0daSSs3SzhiZ0syM1lQ?=
- =?utf-8?B?R3BTcy9WREpGVnBTSERjUU1WOTU1dkhlVGtGcUxNbk54QXpiNnRCK1I2cFRS?=
- =?utf-8?B?b2JoOTBFNnUyWTRhUlRqMFpRM1hnT05Nb2RWVWRicndFSC8zSDMyZTVpcmpi?=
- =?utf-8?B?azNaMnVMQWRhR0xPNmdkT1JyVjNBcER5Z1FzZ2doYTJiNks5VmJqVmZOYVRW?=
- =?utf-8?B?QjZ4Mm5ZY2J2eFBaR011UW1adE9HY2RYWGtHRFZ0bURkUHN2WFhxMXJLdWZW?=
- =?utf-8?B?OHZUM2FudHVubHA1ZmkyWC9vblJ4QWljYWFFY0xWZ3NVcEVTUyt0cnhYYmJv?=
- =?utf-8?B?ZUVmclJlMlVPSjV6ZFVjMGV0TUJ6eWI3VXFqY1h2N2FUS3NtdUpPZDRJS05F?=
- =?utf-8?B?VDIzLzRHdjFJQlpPZ0U1bXVja2laMFVtQzhWZXRNWVJwQ3d2RWZtalJuSm9a?=
- =?utf-8?B?STQ1RTdJbUkvd2grSGs3Zk9tRXNWbUZPQnZNQWlGbFcvem5mQmlFK2VKdmVE?=
- =?utf-8?B?bm42NG5hZDg4bHlTd2FZdGVxMmpsaEZJRmpSUlhIR2FiUWtRZlcwaUc0VEpJ?=
- =?utf-8?B?ckkvZ3lSamFxdTdjeTkrSGtSVkR0bDlDQjZwV1A3VlB4MnV3aXBlZlltWGF0?=
- =?utf-8?B?OUxjaStKMmFzU3BPcmlaQkNGd3JKdjJIVVJSRjY3Z3VkTXhTRjhnaDVDR2t4?=
- =?utf-8?B?Nmc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	YFwc4XPF9c4EVupzYNl0cclT81Ql42Xu69If4yARWeUlSmhbhrhJ8cOiBvR2MX/gqvFXZpafzAQ1r2aTB7NA32/PZJRRHYJJ70aHl94/An2V0Pt7b70sfJc1i8tR/OSWOoCau3unYo84duCsPBkwKNEs2AD5B49LpjCZ9HlfqdU+Dj3Lm8hTxL1qpqVlsRXxT2/8ysFKDaXaNWZoPKYiQNbi63wnaV+UQ+a+mFpMZKRJPDcMjKezfU7QP7pNAOjXZQYsRA3+DZ4yLFVYK/9lbdQlJxgTFdfDrWlRap/ImhzGKirfd96BVEO71sTKqWqroW28Le3wl8RgpjqG3Xclc1R4zBjsxvcfWlHOdQjDDmGNNtQnSwvU15Q9LW6s7q4xPSk6tZz4HTuDbZEk1xSQC1bnJD7wDLlbh6RxXHViD8TtfA+/4GDTTic1d1mjfK8JvDFdj7E2FbQWvhZzc6s+ESFIkiVtiYUwDK8epLWQfir9evedta/Yy/R7WkondEnl1QcCXlrbATA+eMwaR48e0leHcIQoQCW1MsaKbBzosbz2tmQybT8I6B6hDSt1NI4drpZe/6prbPIv9LyrRQd9C+VMULP/mt1Sc9Oz7BIGKQU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: abd90fd9-27b4-432d-208c-08dd50159d3f
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2025 12:13:12.1453
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5tfmv8i6Gw7V3Rrfz21uP5VLQAfrwhtQ2TDpdqA7ITOLsH70hQfuFgv42MLiJO59eh0FYY9zPUK50KWlt61hQg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR10MB6748
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-18_04,2025-02-18_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- phishscore=0 spamscore=0 suspectscore=0 mlxscore=0 bulkscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2501170000 definitions=main-2502180094
-X-Proofpoint-ORIG-GUID: yWeA7hZYANDEjlN9cSOTE8X9m9R98kTQ
-X-Proofpoint-GUID: yWeA7hZYANDEjlN9cSOTE8X9m9R98kTQ
 
-On 18/02/2025 11:23, yebin wrote:
-> 
-> 
-> On 2025/2/17 17:44, John Garry wrote:
->> On 17/02/2025 02:16, Ye Bin wrote:
->>> From: Ye Bin <yebin10@huawei.com>
->>>
->>> After commit 1bad6c4a57ef
->>> ("scsi: zero per-cmd private driver data for each MQ I/O"),
->>> xen-scsifront/virtio_scsi/snic driver remove code that zeroes
->>> driver-private command data. If request do retry will lead to
->>> driver-private command data remains. Before commit 464a00c9e0ad
->>> ("scsi: core: Kill DRIVER_SENSE") if virtio_scsi do capacity
->>> expansion, first request may return UA then request will do retry,
->>> as driver-private command data remains, request will return UA
->>> again.
->>
->> So are there any drivers which expect this sort of behavior, i.e. keep
->> private data between retries?
-> 
-> No driver that depends on the last state is found. If yes, the driver
-> should provide the init_cmd_priv function to manage private data. In
-> this way, the SCSI middle layer ignores the private data of the driver.
-> 
+On Tue, 2025-02-18 at 13:15 +0200, Arthur Simchaev wrote:
+> In case the device doesn't support arpmb, the kernel get memory crash
+> due to copy user data in bsg_transport_sg_io_fn level. So in case
+> ufs_bsg_exec_advanced_rpmb_req returned error, do not set the job's
+> reply_len.
+>=20
+> Memory crash backtrace:
+> 3,1290,531166405,-;ufshcd 0000:00:12.5: ARPMB OP failed: error code -
+> 22
+>=20
+> 4,1308,531166555,-;Call Trace:
+>=20
+> 4,1309,531166559,-; <TASK>
+>=20
+> 4,1310,531166565,-; ? show_regs+0x6d/0x80
+>=20
+> 4,1311,531166575,-; ? die+0x37/0xa0
+>=20
+> 4,1312,531166583,-; ? do_trap+0xd4/0xf0
+>=20
+> 4,1313,531166593,-; ? do_error_trap+0x71/0xb0
+>=20
+> 4,1314,531166601,-; ? usercopy_abort+0x6c/0x80
+>=20
+> 4,1315,531166610,-; ? exc_invalid_op+0x52/0x80
+>=20
+> 4,1316,531166622,-; ? usercopy_abort+0x6c/0x80
+>=20
+> 4,1317,531166630,-; ? asm_exc_invalid_op+0x1b/0x20
+>=20
+> 4,1318,531166643,-; ? usercopy_abort+0x6c/0x80
+>=20
+> 4,1319,531166652,-; __check_heap_object+0xe3/0x120
+>=20
+> 4,1320,531166661,-; check_heap_object+0x185/0x1d0
+>=20
+> 4,1321,531166670,-; __check_object_size.part.0+0x72/0x150
+>=20
+> 4,1322,531166679,-; __check_object_size+0x23/0x30
+>=20
+> 4,1323,531166688,-; bsg_transport_sg_io_fn+0x314/0x3b0
+>=20
+> Fixes: 6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support
+> in ufs_bsg")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Arthur Simchaev <arthur.simchaev@sandisk.com>
+>=20
+> ---
+> Changes in v2:
+> =C2=A0 - Add Fixes tag
+> =C2=A0 - Elaborate commit log
+>=20
+> Signed-off-by: Arthur Simchaev <arthur.simchaev@sandisk.com>
+> ---
+> =C2=A0drivers/ufs/core/ufs_bsg.c | 6 ++++--
+> =C2=A01 file changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+> index 8d4ad0a3f2cf..a8ed9bc6e4f1 100644
+> --- a/drivers/ufs/core/ufs_bsg.c
+> +++ b/drivers/ufs/core/ufs_bsg.c
+> @@ -194,10 +194,12 @@ static int ufs_bsg_request(struct bsg_job *job)
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_rpm_put_sync(hba);
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0kfree(buff);
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0bsg_reply->result =3D ret=
+;
+> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0job->reply_len =3D !rpmb ? siz=
+eof(struct ufs_bsg_reply) :
+> sizeof(struct ufs_rpmb_reply);
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* complete the job here =
+only if no error */
+> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ret =3D=3D 0)
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ret =3D=3D 0) {
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0job->reply_len =3D !rpmb ? sizeof(struct ufs_bsg_reply)
+> :
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 sizeof(struct
+> ufs_rpmb_reply);
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0bsg_job_done(job, ret, bsg_reply-
+> >reply_payload_rcv_len);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
+> =C2=A0
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return ret;
+> =C2=A0}
 
-TBH, I am not sure on the history here. Maybe Bart or Christoph knows, 
-but my impression is still that the priv data is only cleared once in 
-the lifetime of the request (from 1bad6c4a) - at prep time - and some 
-drivers may rely on that (not be cleared again). Unlikely, though.
 
->>
->>> As a result, the request keeps retrying, and the request
->>> times out and fails.
->>> So zeroes driver-private command data when request do retry.
->>>
->>> Fixes: f7de50da1479 ("scsi: xen-scsifront: Remove code that zeroes
->>> driver-private command data")
->>> Fixes: c2bb87318baa ("scsi: virtio_scsi: Remove code that zeroes
->>> driver-private command data")
->>> Fixes: c3006a926468 ("scsi: snic: Remove code that zeroes
->>> driver-private command data")
->>> Signed-off-by: Ye Bin <yebin10@huawei.com>
->>
->>> ---
->>
->> Ps: in future, please list the changes per version here
->>
-> Thanks for the heads-up.
->>>   drivers/scsi/scsi_lib.c | 14 +++++++-------
->>>   1 file changed, 7 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->>> index be0890e4e706..f1cfe0bb89b2 100644
->>> --- a/drivers/scsi/scsi_lib.c
->>> +++ b/drivers/scsi/scsi_lib.c
->>> @@ -1669,13 +1669,6 @@ static blk_status_t scsi_prepare_cmd(struct
->>> request *req)
->>>       if (in_flight)
->>>           __set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
->>> -    /*
->>> -     * Only clear the driver-private command data if the LLD does not
->>> supply
->>> -     * a function to initialize that data.
->>> -     */
->>> -    if (!shost->hostt->init_cmd_priv)
->>> -        memset(cmd + 1, 0, shost->hostt->cmd_size);
->>> -
->>>       cmd->prot_op = SCSI_PROT_NORMAL;
->>>       if (blk_rq_bytes(req))
->>>           cmd->sc_data_direction = rq_dma_dir(req);
->>> @@ -1842,6 +1835,13 @@ static blk_status_t scsi_queue_rq(struct
->>> blk_mq_hw_ctx *hctx,
->>>       if (!scsi_host_queue_ready(q, shost, sdev, cmd))
->>>           goto out_dec_target_busy;
->>> +    /*
->>> +     * Only clear the driver-private command data if the LLD does not
->>> supply
->>> +     * a function to initialize that data.
->>> +     */
->>> +    if (shost->hostt->cmd_size && !shost->hostt->init_cmd_priv)
->>> +        memset(cmd + 1, 0, shost->hostt->cmd_size);
->>> +
->>>       if (!(req->rq_flags & RQF_DONTPREP)) {
->>>           ret = scsi_prepare_cmd(req);
->>>           if (ret != BLK_STS_OK)
->>
-> 
-> 
+Arthur,
+
+thanks for your update.=20
+
+I tried to repoduce the issue as your steps, I didn't get this issue,
+The kernel will only print this as expected:=20
+
+Err: ARPMB OP failed 0 :-22
+
+
+
+I don't think your patch can fix your issue, becase if ufs_bsg returns=C2=
+=A0
+
+-EINVAL(-22).  then,=20
+
+
+bsg_reply->result =3D ret(-22);
+
+after that,  then in bsg_transport_sg_io_fn:
+
+if (job->result < 0) {
+	job->reply_len =3D sizeof(u32);  //overwrite the length.
+
+
+
+Could you please provide more information how you can get this issue?
+My understanding is that it is not because this job->reply_len, it is
+your buffer initiated by your application?
+
+
+Kind regards,
+Bean
 
