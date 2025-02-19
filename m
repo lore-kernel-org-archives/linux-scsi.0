@@ -1,147 +1,111 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B02146593
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2025 10:50:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5D51DED70
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2025 11:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739962255; cv=none; b=HgrEtcirrOhgIOYIH3bNEFExAWDWtELzGw5qwvW+nmC6sx/RdzAAMBMvLYozjWLH2W3npJsvtH88vBLwZ6uoxEnqx2/f1S7qrYFXRATlFLfhfVX8aXMTI6M+MdX0TFNUq6b0qAs6L1qFvxOAze9YoRiijdYY8cd/0peX6hMhyIE=
+	t=1739966263; cv=none; b=YW5rbXvkbAYVyhGnQwBhig973eo+IQ4GefH/Kq40Ffdg1C/om+lWe67FEZAQbIUQ071OJ/iSO+qc30pO2uSc37yyy+62//m73a2KaBseMBIJdCkeSzeuMahKvlepUmJhm7u2et/nO2Os6KKkCGudzehYAvqFJCoXYGleTWMZ5Mc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739962255; c=relaxed/simple;
-	bh=RLMi5EmXrqGI3oC41Ek3Du7qdXadTYc150g8u9oSVhg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uAsfyx6+SQF0pA9btC+xqLRQYTId/OvaQtPGlcjXV3b5U8pVtMuZqdqzVmMoixln/KCrq9tBspf95UvocwQZlUlQxXpJqwIGqL3BTmMxjfAEtresLXCswyQOZ6ko01o+4WUOANd5qemzd9frP6cOqxsfrf9yG1TGN+eKTNgPP2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=wQbQeYsK; arc=none smtp.client-ip=209.85.216.47
+	s=arc-20240116; t=1739966263; c=relaxed/simple;
+	bh=mKPuqkaO5/tQYVpdTMpg9OTc7P54WtoXIuwWQ6pX94g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oQrQMWYkZYvGibQcPNQlI7+8rgfZPiqnfk17AbnsaKQcUtD4N86QDRDn4N6PrcBhFAq8RKBkiG3T9WIkNxQ0lpQuHUVecTlhmZNKzb5GmLC8xUg89YftS6PmyEG8Ahd8RW2vomOB/0c76WxI4FBiOL94VgVxzqsWtOBvAtYjnnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=gIkp8IRK; arc=none smtp.client-ip=209.85.219.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wQbQeYsK"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-2fa48404207so13104019a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2025 02:50:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gIkp8IRK"
+Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-e589c258663so7109335276.1
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2025 03:57:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1739962253; x=1740567053; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=NxBZ1UjPnsXI4oRFjcU23i2GjzUnsRvFJSGcGiMisqQ=;
-        b=wQbQeYsKD+m1lbeV377UiEF0YkqLE4a+vp5JwGd2L4n9BTUbLsFZX1jAEO8TUtMVh5
-         DuBJShf+eevCrGCRZh4ixZowUSMy512hbwVEaoKrKGUDaz/KFqsLKFBT47yGZcndXF9Q
-         iPtjZyD1F6e108vQDPf+W35yJSHKzYMleRxik9FxpE5wNHkChiWul1bQclUH3rFE9vbw
-         H6T7NH+fczDtdU4jLghRLj9OEtwf73Zja5h14Li7Wz6PDd1dOQAyAQ4GUnqA+XgNFPqB
-         d4pgvier9QxUybuzZXYreH1JNlc3NBaSJoHaGxchpea6OUfeyn2B1MN/93a5Rb/zeHjJ
-         xjlA==
+        d=linaro.org; s=google; t=1739966260; x=1740571060; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=mKPuqkaO5/tQYVpdTMpg9OTc7P54WtoXIuwWQ6pX94g=;
+        b=gIkp8IRKJvgifB+QHtNUPsXi+sJP3TWPAXop0Z8xNea0lMDpyVyYQgGyx9/O35fxad
+         sZBwD0Jj4qyyuFj0X5RFitM6o76ynm/wnBSL0aNKjRahAgrP6Suq44IMyyO+Y/tSwqLv
+         KaavDcj1TQkMWmdZtS6VUX+Byn1pdfwYEIhdS8iQF5wpprFLdHB/Nv6JRd12HaiFzMU4
+         iJpJo0WOOES+8gz3pdSbeQ+na1UvdxnyaLfOkIxo/Vm6y15zlzwQTFUQXGtVP8l7xB80
+         K7+WM2r6WkfdsiOCmXFMeTgieczVAUtlfx0wtZm16zb5PWgAOglN9BU2qKHU/QOZnvrJ
+         c/dw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739962253; x=1740567053;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1739966260; x=1740571060;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=NxBZ1UjPnsXI4oRFjcU23i2GjzUnsRvFJSGcGiMisqQ=;
-        b=heqKC5Hq82GSSorbMa5uMXKLvvLvdeTQAPgUyfIyxaYNoNJbYHvzjSMfFX0DwaEH4I
-         laupEQTEh9Lb0vC1XnKrv+3LdTQfb+MKjWO5c5nPwd3pQ/RAKHmihxhEu+AQUYcA0Yht
-         KIznkET2XVpYmNMki0Se4eJNl6mYIGmSaMUDlAZr95LytJEJYxDV6ORd5jkGaoBwALHH
-         HOPARw+7EBrohfEFq0suaXox5Cj/4F6QyNY92fY2gu2iZ9eHWlmlWaknsnhomF7FN2JV
-         hY8mmI3QvBcjb7wjVzWuA+CvFYqRhiOd9lEshIWWsLNcLDHHJG9Z+uA7iMwyHpND9b/e
-         RiAQ==
-X-Gm-Message-State: AOJu0Yx/EAsSfVTc7hPrl40PIoy3v2yk04k9SCkeYsHurSDSGM0RGZb5
-	Vs6JIn0tJJDvBu5e+q/JnD0X/PdSiI5xJKSdz4c9kHVRketk4RDF1v49+uMqUQ==
-X-Gm-Gg: ASbGnctVigSOGxroD+FsTeMWMe+0mcl1cTptjCqbO9eIZ9U6oPIBuYUWLM/DvUlntsV
-	4yFlacx/hDVhy7+UguM1+u8uP05xK+aftZw1vzg/n8f6jVz9lFAe5o8hOEBf5Eo6xL8p1w5PiyQ
-	lzT7wSySBA6+PoP8mD1gAVjioZ1It92dXd5jUizCbwNidCs4HFRYpgtvlUKB1qeGPWlzXON1pyN
-	hCodkpvNaKi12jweyK69S6i11k3Q7RXQ6IYP4CXieyygp1TFeV6AVStoKrXt4SKnpumRr2/8nw+
-	AE1ocE00ry1VnoX9ZKAc42OwZUKXxpmr3Tn3NH3wFHBc
-X-Google-Smtp-Source: AGHT+IG/XtQGsadm1QjJPU7kl8+l/LuD/XOzE5rYqdDYyrESjHrhtCdtkSR0VBQcG92BdOSf4eQA7A==
-X-Received: by 2002:a17:90b:4b91:b0:2f9:9e64:37b1 with SMTP id 98e67ed59e1d1-2fc41040fd9mr26036322a91.28.1739962253298;
-        Wed, 19 Feb 2025 02:50:53 -0800 (PST)
-Received: from localhost.localdomain ([120.56.197.245])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2fc13ad4391sm11755451a91.27.2025.02.19.02.50.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Feb 2025 02:50:52 -0800 (PST)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"Bao D . Nguyen" <quic_nguyenb@quicinc.com>
-Subject: [PATCH] scsi: ufs: core: Set default runtime/system PM levels before ufshcd_hba_init()
-Date: Wed, 19 Feb 2025 16:20:47 +0530
-Message-Id: <20250219105047.49932-1-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
+        bh=mKPuqkaO5/tQYVpdTMpg9OTc7P54WtoXIuwWQ6pX94g=;
+        b=ng1RsJaXVYTeOMOHMNDlUg1InbtBHgCUzz9r4HwWgXSc06jdpBwMUeckK8RyobvL5q
+         I044AOwJ9Xp8xlX/HQpRQeHTeA2PaB2pd7YoEBFVlSpsJJImnS18ekjmYJFhiXHc9YTj
+         /npJWrqB3ISw4rMChSKsnl/ABqYAV7hfdJAowxHjjHTITAKyUTtR7tWiJW+25gzm9xWs
+         8oUHYQIPv+uc3xwj8IaE3lbO3WcH+pbct13WAREVG+7AvWq4tWXfscjrKWnbjiPc3Dtx
+         IbiDTGLXzIc1YihGg0nIoBH9v8k7jcTomwl4C1XA+w1Ur74hyXC5zDT+2MLyzqvqR/lB
+         hO3g==
+X-Forwarded-Encrypted: i=1; AJvYcCXjfy/S0/dnil1Uvidqd89RH304G6yALwsV8lqHbRs3zcGXZjNwRb/1mnr9n4MPuZp66mI0jGmT/W1F@vger.kernel.org
+X-Gm-Message-State: AOJu0YzgP9mZl7avigyrYf0SpijcPJ2FGmWGx5RpgRorIHd9N6ly/aqI
+	1ssX7vCKi9ljH6t/fPnnQ4Q3x+sNM7C7rfHa7aoWe8kzts/8vwsFiu4aFntN6rP9AnXhGNb6k2s
+	0UvAx7PEGfPW/MVIEiwX6iJ7esOjUZujR59xqig==
+X-Gm-Gg: ASbGncvT+0FvVc3MHLzpdkoewg6ZQeUW5kHyUuFfSR4WR+FiKhnlAo1K/G8w0cU0g8Q
+	kg6/3xR8a3DNOIno1QTQkgktE91LLoUxU1CNk/WCPWcTj68ZPAwfguI7Wdw0j2QijFsIzIi7+Ww
+	==
+X-Google-Smtp-Source: AGHT+IHmLjRjhz37Ix+o6XyPakdzY6Uu3F+3kxUa8H2huII1zroZajXD9MVDQwO7EqR3XOK/hrhvfu283vamhduicEA=
+X-Received: by 2002:a05:6902:d49:b0:e5e:1062:bcf7 with SMTP id
+ 3f1490d57ef6-e5e1062c055mr980483276.13.1739966260274; Wed, 19 Feb 2025
+ 03:57:40 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+ <CAPDyKFq+pWXq75xEtfkeCkmkdZtfp9dAFej4M+6rO6EAUULf=w@mail.gmail.com>
+ <yq14j0y25hd.fsf@ca-mkp.ca.oracle.com> <CAPDyKFqsiBaSV--a_SvJ1n0733XXjSoONztf0e=jsGTZhKxQJw@mail.gmail.com>
+In-Reply-To: <CAPDyKFqsiBaSV--a_SvJ1n0733XXjSoONztf0e=jsGTZhKxQJw@mail.gmail.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Wed, 19 Feb 2025 12:57:04 +0100
+X-Gm-Features: AWEUYZm5qq0kCFH5BGU-KOAykNEjhYZd727rd8VcRiDAXDF4w-LfbABoCwlPr4U
+Message-ID: <CAPDyKFqMJRXRYymhijyWD-e=ScvEc_qbAmJBi--WsJd+zkQu6A@mail.gmail.com>
+Subject: Re: [PATCH v7 0/7] Initial support for RK3576 UFS controller
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, 
+	"James E . J . Bottomley" <james.bottomley@hansenpartnership.com>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Heiko Stuebner <heiko@sntech.de>, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org, 
+	linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Commit bb9850704c04 ("scsi: ufs: core: Honor runtime/system PM levels if
-set by host controller drivers") introduced the check for setting default
-PM levels only if the levels are uninitialized by the host controller
-drivers. But it missed the fact that the levels could initialized to 0
-(UFS_PM_LVL_0) on purpose by the controller drivers. Even though none of
-the drivers are doing so now, the logic should be fixed irrespectively.
+On Thu, 13 Feb 2025 at 16:20, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+>
+> On Wed, 12 Feb 2025 at 22:56, Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+> >
+> >
+> > Ulf,
+> >
+> > > If so, may I suggest that I pick patch2, patch3 and patch4 via my
+> > > pmdomain tree and share them via an immutable branch, so they can be
+> > > pulled into James/Martin's scsi tree?
+> >
+> > Sure, that's fine with me.
+>
+> Okay, great! I have picked up the patches and pushed them to the below
+> immutable branch, which is based upon rc2.
+>
+> git.kernel.org/pub/scm/linux/kernel/git/ulfh/linux-pm.git rockchip
 
-So set the default levels unconditionally before calling ufshcd_hba_init()
-API which initializes the controller drivers. It ensures that the
-controller drivers could override the default levels if required.
+Hi Martin,
 
-Fixes: bb9850704c04 ("scsi: ufs: core: Honor runtime/system PM levels if set by host controller drivers")
-Reported-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/ufs/core/ufshcd.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+We got a report about an issue in the branch above a couple of days
+ago. The problem has been fixed and I have just published it to the
+branch above.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cd404ade48dc..9a724ed860a6 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10429,6 +10429,21 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	hba->irq = irq;
- 	hba->vps = &ufs_hba_vps;
- 
-+	/*
-+	 * Set the default power management level for runtime and system PM.
-+	 * Host controller drivers can override them in their
-+	 * 'ufs_hba_variant_ops::init' callback.
-+	 *
-+	 * Default power saving mode is to keep UFS link in Hibern8 state
-+	 * and UFS device in sleep state.
-+	 */
-+	hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-+						UFS_SLEEP_PWR_MODE,
-+						UIC_LINK_HIBERN8_STATE);
-+	hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-+						UFS_SLEEP_PWR_MODE,
-+						UIC_LINK_HIBERN8_STATE);
-+
- 	err = ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
-@@ -10542,21 +10557,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		goto out_disable;
- 	}
- 
--	/*
--	 * Set the default power management level for runtime and system PM if
--	 * not set by the host controller drivers.
--	 * Default power saving mode is to keep UFS link in Hibern8 state
--	 * and UFS device in sleep state.
--	 */
--	if (!hba->rpm_lvl)
--		hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
--						UFS_SLEEP_PWR_MODE,
--						UIC_LINK_HIBERN8_STATE);
--	if (!hba->spm_lvl)
--		hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
--						UFS_SLEEP_PWR_MODE,
--						UIC_LINK_HIBERN8_STATE);
--
- 	INIT_DELAYED_WORK(&hba->rpm_dev_flush_recheck_work, ufshcd_rpm_dev_flush_recheck_work);
- 	INIT_DELAYED_WORK(&hba->ufs_rtc_update_work, ufshcd_rtc_work);
- 
--- 
-2.25.1
+If you already pulled-in the branch to your tree, please pull again to
+get the fix too.
 
+Kind regards
+Uffe
