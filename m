@@ -1,40 +1,37 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0438DDF42;
-	Wed, 19 Feb 2025 07:37:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 838921C54BE;
+	Wed, 19 Feb 2025 08:11:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739950625; cv=none; b=cUKLrZADvO8p3GY6kkpIW8kE5II+alBiZ6S7MMo2AWP8MQwiYlBLh3fv1bmmlVPLV3rdELpRviRc902FCTxJ0cXLm2LwEO0Iu/vy2WVmxiZsGf6FKiQJA82WhL10g1LQV7H3pJzLHf4w5iwHi+wlcAm1ybdESavFQUGS+6K0RUg=
+	t=1739952708; cv=none; b=hEFcJUoaXQXgGNAz6S4CWOTq+3vPnJbQ2Qq4JGgGQsNEqhy8qK52vQlWYt/LJRN7PF0nD9j5KO5V23dXIdxRAIVjqcnuoFzUJkp03tCgRedxmqgxEoO3EKiHt3Ao9My80Y/Ho+d8sqoUBOvvL5yY6uJJHeP7hJEWZrrthHojXj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739950625; c=relaxed/simple;
-	bh=Zelml0koJq2/JmuMepQyucU39402Cnj9yWoggcBMct8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=elfza7wGXPG56ImhUWembuKRV/yqlam5nQAOYjZwHzLUfXFF/7SMZtgDXSBJwujY6LPOeDXvtAw/wptqQ4TrkZ4MmrS5MCKNvhA4+7Soao9fUAH6lQUlDdseblCvq7DOgP7F0MVQvlH0t53i2lWafqbhYTqBWN8yxzSrssWrHFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=b8qPXQjA; arc=none smtp.client-ip=220.197.31.3
+	s=arc-20240116; t=1739952708; c=relaxed/simple;
+	bh=elTfSUpJus9Dh01GMc0HZ/JUEutfoMK622ZRG8wXE/I=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nC0s8D82ognkC+1xOdFo25Z82giKA4W2DwTAv6q/MB9ZQQL5s37hlQR7pSfq8B0877Ck4vydAhmqmws7fVht2kZRiygewh+Zm8dcoMRCuZQSfk4LkyYi8vu+80dRmpKTc6hPVwNdeqwVj+18N//CS3H22Puz6osja1h2Uq6mUWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=eA12FOcn; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="b8qPXQjA"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="eA12FOcn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=xdkDq
-	LjR5Z+dYInLH0e7CH51P78c+EQ+kVf0T1lavAM=; b=b8qPXQjAKYNztz1Sy6Eq4
-	/PLDwCZB7Equy/HvYSD/E9OkK1lILtEnYlTOl2M1q6DQKRQwJ46R6TG96kXHpNlN
-	EkxOl+8hnO2C2kF7gJ4tPwDFXVPAK+aF8SP345oTED0EJOm0jpvKccYQ17OPcnsN
-	EV7NSbBggBf8GH5HEt2sls=
-Received: from icess-ProLiant-DL380-Gen10.. (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wDnj8oDirVnUyGpMg--.50010S4;
-	Wed, 19 Feb 2025 15:36:36 +0800 (CST)
-From: Haoxiang Li <haoxiang_li2024@163.com>
-To: linuxdrivers@attotech.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	bvanassche@acm.org
-Cc: linux-scsi@vger.kernel.org,
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=pIf9b
+	39a574X2F7JDmFa9sO7taNTVX9ScalIAYOkPeA=; b=eA12FOcnM6eKw6cUarc1H
+	PJwxMDweb5TS0nk0TMPsWFhF/sIRtPrlHNL8fFL5+JfiKgzi6Hv8ekaZ2VawjwT/
+	ZZfbHGP+KlkExh69yB26OMNL9w1lmIAPpCOjNrBQ/U3SUrxDooRZnQ47Ly9/2+rG
+	XLQgQR06cZ5YpQk9UgZxMc=
+Received: from wdhh6.sugon.cn (unknown [60.29.3.194])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgB3I7Q1krVnIyHBOQ--.44615S2;
+	Wed, 19 Feb 2025 16:11:34 +0800 (CST)
+From: Chaohai Chen <wdhh66@163.com>
+To: martin.petersen@oracle.com
+Cc: James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Haoxiang Li <haoxiang_li2024@163.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: esas2r: Add check for alloc_ordered_workqueue()
-Date: Wed, 19 Feb 2025 15:36:33 +0800
-Message-Id: <20250219073633.2604697-1-haoxiang_li2024@163.com>
-X-Mailer: git-send-email 2.25.1
+	Chaohai Chen <wdhh66@163.com>
+Subject: [PATCH] scsi: fix missing lock protection
+Date: Wed, 19 Feb 2025 16:11:19 +0800
+Message-Id: <20250219081119.203295-1-wdhh66@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,39 +39,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnj8oDirVnUyGpMg--.50010S4
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Jr18GF13Gw1fJr1xCFyUWrg_yoWkGwc_ur
-	ZFvr12yrsrCF48K348JFyavrWvvr48Zr4F9F4Yyas3A3yfWr1Yqrs3ZrnxZwsrC34UuFWD
-	Cw4YqrW8Ar17ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRGXdbUUUUUU==
-X-CM-SenderInfo: xkdr5xpdqjszblsqjki6rwjhhfrp/xtbB0h34bme1hDXAswAAsJ
+X-CM-TRANSID:QCgvCgB3I7Q1krVnIyHBOQ--.44615S2
+X-Coremail-Antispam: 1Uf129KBjvdXoW7Jry7Gr48tr4fGw48Xr1rtFb_yoWfXFX_ur
+	Zaqr97Jr4jkr43tws5tay3Gr9F9r4rXr1v9F1fta43Z3yrX3Wktas3tr43Z3y3CrWkCw15
+	Aw1DZryFyr1DGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xR_L0ePUUUUU==
+X-CM-SenderInfo: hzgkxlqw6rljoofrz/1tbiKAz41me1j+ZBLQAAsd
 
-Add check for the return value of alloc_ordered_workqueue()
-in esas2r_init_adapter() to catch potential exception.
+async_scan_lock is designed to protect the scanning_hosts list,
+but there is no protection here.
 
-Fixes: 4cb1b41a5ee4 ("scsi: esas2r: Simplify an alloc_ordered_workqueue() invocation")
-Cc: stable@vger.kernel.org
-Signed-off-by: Haoxiang Li <haoxiang_li2024@163.com>
+Signed-off-by: Chaohai Chen <wdhh66@163.com>
 ---
- drivers/scsi/esas2r/esas2r_init.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/scsi_scan.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 0cea5f3d1a08..48bb8aaf9df4 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -314,6 +314,11 @@ int esas2r_init_adapter(struct Scsi_Host *host, struct pci_dev *pcid,
- 	a->fw_event_q =
- 		alloc_ordered_workqueue("esas2r/%d", WQ_MEM_RECLAIM, a->index);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 087fcbfc9aaa..9a90e6ba5603 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -151,8 +151,12 @@ int scsi_complete_async_scans(void)
+ 	struct async_scan_data *data;
  
-+	if (!a->fw_event_q) {
-+		esas2r_log(ESAS2R_LOG_CRIT, "failed to create work queue\n");
-+		esas2r_kill_adapter(index);
-+		return 0;
-+	}
- 	init_waitqueue_head(&a->buffered_ioctl_waiter);
- 	init_waitqueue_head(&a->nvram_waiter);
- 	init_waitqueue_head(&a->fm_api_waiter);
+ 	do {
+-		if (list_empty(&scanning_hosts))
++		spin_lock(&async_scan_lock);
++		if (list_empty(&scanning_hosts)) {
++			spin_unlock(&async_scan_lock);
+ 			return 0;
++		}
++		spin_unlock(&async_scan_lock);
+ 		/* If we can't get memory immediately, that's OK.  Just
+ 		 * sleep a little.  Even if we never get memory, the async
+ 		 * scans will finish eventually.
 -- 
-2.25.1
+2.34.1
 
