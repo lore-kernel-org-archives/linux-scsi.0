@@ -1,29 +1,29 @@
 Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75A771F584A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75AD31F7076;
 	Thu, 20 Feb 2025 13:06:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740056781; cv=none; b=VyXH5uS8gzsCCB2AeJ3+PZ6wesly1/3i1xywibPeFNPkEsrD85WA7RSG8QlqXDSke9uW5Tpzbvv924OX+nYaD3tvbHviQddgblz9CxBB0ugff5RLsQrkKOCwYUiEnUec+6UCKy6irQCxnqszVix28z1Dm93oyZSaLu51Ubhnl0o=
+	t=1740056781; cv=none; b=lCKb14zhbbYjIHGPmrqj8T7SawBy4327O/bgS/RhC5nZB0UOxGuMT2nSwwoLWp4362Tu1sHjFHxhpHn5WU2AnPN2Fwk5KEqmJRcGkSyswyQza02vAvqsrC2P8Gos3I7s4HgA22UOjr7IBsuSQg0bAKHXj2b2r16JYdyHFLxxn44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740056781; c=relaxed/simple;
-	bh=cwrEDWn9gOz8N1o79meswT+NNyq8vNgg6/i34OwYYY0=;
+	bh=YlKsGiWBMwmia8TAqqEUMOD7B8myAjpdvDWgClaHJZc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y81XKwmhqwZymDTpLJquj2HUa763PffYSsu38YLBdHzFT1OhhDn4JQ4/V1tZa3ng+8KI8dS2xXdSCVxSmI/wrBcx1X4NEACnentQaOS5k/E4Qp4sF30E1mr7Gn1jRStwnQ+WYttfcIapKdHrB8hf6GGcODt5mDQcd6b1Eqkydes=
+	 MIME-Version:Content-Type; b=Vw9XzM2xOYrDh0Ei9tE2iXwFuCdS7TYXhL5g3+kfbP7hkDNIiHXpscyAI+kw8/NlQBGWbVStqKOOBGNFolXWFfRmzgu5OY7FIm7LVdXLA+aX9VxB4I2qqUqzZfBpfxdIaSw0BVg8FxnRcO1ErJZIEZseIAy/k385ob5TLKDyRYk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4YzD402VqtzWn23;
-	Thu, 20 Feb 2025 21:04:16 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4YzD3z1vFSzWn1x;
+	Thu, 20 Feb 2025 21:04:15 +0800 (CST)
 Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
-	by mail.maildlp.com (Postfix) with ESMTPS id 86298180113;
-	Thu, 20 Feb 2025 21:05:49 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 713FA1802D0;
+	Thu, 20 Feb 2025 21:05:48 +0800 (CST)
 Received: from localhost.huawei.com (10.90.30.45) by
  kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 20 Feb 2025 21:05:48 +0800
+ 15.2.1544.11; Thu, 20 Feb 2025 21:05:47 +0800
 From: Xingui Yang <yangxingui@huawei.com>
 To: <john.garry@huawei.com>, <liyihang9@huawei.com>, <yanaijie@huawei.com>
 CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
@@ -32,9 +32,9 @@ CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>,
 	<liyangyang20@huawei.com>, <f.fangjian@huawei.com>,
 	<xiabing14@h-partners.com>
-Subject: [PATCH v3 3/3] scsi: hisi_sas: Fixed IO error caused by port id not updated
-Date: Thu, 20 Feb 2025 21:05:46 +0800
-Message-ID: <20250220130546.2289555-4-yangxingui@huawei.com>
+Subject: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk directly connected
+Date: Thu, 20 Feb 2025 21:05:44 +0800
+Message-ID: <20250220130546.2289555-2-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20250220130546.2289555-1-yangxingui@huawei.com>
 References: <20250220130546.2289555-1-yangxingui@huawei.com>
@@ -49,85 +49,93 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  kwepemg100017.china.huawei.com (7.202.181.58)
 
-After phy up and its asd_sas_port is not null, the hisi_sas_port
-information will not be updated although its hardware port id changes,
-then the old port id will cause IO exception. Therefore, update the port
-id and itct information when the phy's hw port id changes.
+the SAS controller determines the disk to which I/Os are delivered based
+on the port id in the DQ entry when SATA disk directly connected.
 
+When many phys were disconnected immediately and connected again during
+I/O sending and port id of phys were changed and used by other link, I/O
+may be sent to incorrect disk and data inconsistency on the SATA disk may
+occur during I/O retry with the old port id. So enable force phy, then
+force the command to be executed in a certain phy, and if the actual phy
+id of the port does not match the phy configured in the command, the chip
+will stop delivering the I/O to disk.
+
+Fixes: ce60689e12dd ("scsi: hisi_sas: add v3 code to send ATA frame")
 Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Reviewed-by: Yihang Li <liyihang9@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 51 +++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  9 +++++++--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 14 ++++++++++++--
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 3596414d970b..26d60d21779f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -176,6 +176,56 @@ void hisi_sas_stop_phys(struct hisi_hba *hisi_hba)
- }
- EXPORT_SYMBOL_GPL(hisi_sas_stop_phys);
- 
-+static void hisi_sas_update_itct(void *data, async_cookie_t cookie)
-+{
-+	struct domain_device *device = data;
-+	struct hisi_sas_device *sas_dev = device->lldd_dev;
-+	struct hisi_hba *hisi_hba = sas_dev->hisi_hba;
-+
-+	hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
-+	hisi_hba->hw->setup_itct(hisi_hba, sas_dev);
-+	sas_put_device(device);
-+}
-+
-+static void hisi_sas_update_port_id(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct device *dev = hisi_hba->dev;
-+	struct asd_sas_port *sas_port;
-+	struct domain_device *device;
-+	struct hisi_sas_port *port;
-+	ASYNC_DOMAIN_EXCLUSIVE(async);
-+
-+	if (test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags) ||
-+	    !sas_phy->port)
-+		return;
-+
-+	sas_port = sas_phy->port;
-+	port = to_hisi_sas_port(sas_port);
-+	if (phy->port_id == port->id)
-+		return;
-+
-+	dev_info(dev, "phy%d's hw port id changed from %d to %llu\n",
-+		 phy_no, port->id, phy->port_id);
-+	port->id = phy->port_id;
-+	spin_lock(&sas_port->dev_list_lock);
-+	list_for_each_entry(device, &sas_port->dev_list, dev_list_node) {
-+		if (!device->parent)
-+			device->linkrate = phy->sas_phy.linkrate;
-+
-+		/*
-+		 * Update itct may trigger scheduling, it cannot be within
-+		 * an atomic context, so use asynchronous scheduling and
-+		 * hold a reference to avoid racing with final remove.
-+		 */
-+		kref_get(&device->kref);
-+		async_schedule_domain(hisi_sas_update_itct, device, &async);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 6e7f99fcc824..3af991cad07e 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -2501,6 +2501,7 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
+ 	struct sas_ata_task *ata_task = &task->ata_task;
+ 	struct sas_tmf_task *tmf = slot->tmf;
++	int phy_id;
+ 	u8 *buf_cmd;
+ 	int has_data = 0, hdr_tag = 0;
+ 	u32 dw0, dw1 = 0, dw2 = 0;
+@@ -2508,10 +2509,14 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+ 	/* create header */
+ 	/* dw0 */
+ 	dw0 = port->id << CMD_HDR_PORT_OFF;
+-	if (parent_dev && dev_is_expander(parent_dev->dev_type))
++	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+ 		dw0 |= 3 << CMD_HDR_CMD_OFF;
+-	else
++	} else {
++		phy_id = device->phy->identify.phy_identifier;
++		dw0 |= (1U << phy_id) << CMD_HDR_PHY_ID_OFF;
++		dw0 |= CMD_HDR_FORCE_PHY_MSK;
+ 		dw0 |= 4 << CMD_HDR_CMD_OFF;
 +	}
-+	spin_unlock(&sas_port->dev_list_lock);
-+	async_synchronize_full_domain(&async);
-+}
-+
- static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
- {
- 	void *bitmap = hisi_hba->slot_index_tags;
-@@ -937,6 +987,7 @@ static void hisi_sas_phyup_work_common(struct work_struct *work,
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 	int phy_no = sas_phy->id;
  
-+	hisi_sas_update_port_id(hisi_hba, phy_no);
- 	phy->wait_phyup_cnt = 0;
- 	if (phy->identify.target_port_protocols == SAS_PROTOCOL_SSP)
- 		hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
+ 	if (tmf && ata_task->force_phy) {
+ 		dw0 |= CMD_HDR_FORCE_PHY_MSK;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 095bbf80c34e..6a0656f3b596 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -359,6 +359,10 @@
+ #define CMD_HDR_RESP_REPORT_MSK		(0x1 << CMD_HDR_RESP_REPORT_OFF)
+ #define CMD_HDR_TLR_CTRL_OFF		6
+ #define CMD_HDR_TLR_CTRL_MSK		(0x3 << CMD_HDR_TLR_CTRL_OFF)
++#define CMD_HDR_PHY_ID_OFF		8
++#define CMD_HDR_PHY_ID_MSK		(0x1ff << CMD_HDR_PHY_ID_OFF)
++#define CMD_HDR_FORCE_PHY_OFF		17
++#define CMD_HDR_FORCE_PHY_MSK		(0x1U << CMD_HDR_FORCE_PHY_OFF)
+ #define CMD_HDR_PORT_OFF		18
+ #define CMD_HDR_PORT_MSK		(0xf << CMD_HDR_PORT_OFF)
+ #define CMD_HDR_PRIORITY_OFF		27
+@@ -1429,15 +1433,21 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 	struct hisi_sas_cmd_hdr *hdr = slot->cmd_hdr;
+ 	struct asd_sas_port *sas_port = device->port;
+ 	struct hisi_sas_port *port = to_hisi_sas_port(sas_port);
++	int phy_id;
+ 	u8 *buf_cmd;
+ 	int has_data = 0, hdr_tag = 0;
+ 	u32 dw1 = 0, dw2 = 0;
+ 
+ 	hdr->dw0 = cpu_to_le32(port->id << CMD_HDR_PORT_OFF);
+-	if (parent_dev && dev_is_expander(parent_dev->dev_type))
++	if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+ 		hdr->dw0 |= cpu_to_le32(3 << CMD_HDR_CMD_OFF);
+-	else
++	} else {
++		phy_id = device->phy->identify.phy_identifier;
++		hdr->dw0 |= cpu_to_le32((1U << phy_id)
++				<< CMD_HDR_PHY_ID_OFF);
++		hdr->dw0 |= CMD_HDR_FORCE_PHY_MSK;
+ 		hdr->dw0 |= cpu_to_le32(4U << CMD_HDR_CMD_OFF);
++	}
+ 
+ 	switch (task->data_dir) {
+ 	case DMA_TO_DEVICE:
 -- 
 2.33.0
 
