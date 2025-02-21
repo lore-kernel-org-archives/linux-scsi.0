@@ -1,96 +1,112 @@
-Received: from 001.mia.mailroute.net (001.mia.mailroute.net [199.89.3.4])
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CBDD1CEADB;
-	Thu, 20 Feb 2025 18:30:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 501CE70807;
+	Fri, 21 Feb 2025 01:59:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740076218; cv=none; b=o8Qzh1abLl7e5llK3f2MTn/w5lgAFayJOE3Kev6r6C1D68U/1slP9cwOtavqjlpXV8RrP1VfPeOEmayQtbL2UOhy3iJpaIAkLKzUexY7AUvawdMNEDxNC1icY9mLjg5MlX5V8xSb4/Uf+QlR2UusQDMnetlXto5CW7j+gQmqcoI=
+	t=1740103178; cv=none; b=uiSRieuLFVasLsNtmLy5MZfGaUi+AOGwm8c4fO0e95euzIV+rpfXqNJ0KqZRCGBWUy7m9o4CbST3VgSWtSEHlKsWdDByGZvJhx2WTnO4Ikb+ZWRiJ53tN6NHoPrLGuA6H3JREijaYswmS4zHoeIBcFpdQOrNLAB7G2ryuo3fE2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740076218; c=relaxed/simple;
-	bh=UtW3BbYcHewIriI87i7aJj+75+ue5txW9A63FG5qeNs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jCqN9WAIKrSyJHv2Xtw2DpDk+X7CRQDgMe/evEtjAMehldd4M+22+I1lB2UhmbLP+PvuK0xSxUEUT6MC9ZOikvkFayAgzjQ9WauG+yZj/7h+Sg1v6nIg9W8PGXtSd/tJzBHO84PwZquuYGTqApTpRBT9ahtVMllUiTrUmNtbpIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=aAM/MZ02; arc=none smtp.client-ip=199.89.3.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="aAM/MZ02"
-Received: from localhost (localhost [127.0.0.1])
-	by 001.mia.mailroute.net (Postfix) with ESMTP id 4YzMJ068Fpz1Xb87R;
-	Thu, 20 Feb 2025 18:30:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1740076206; x=1742668207; bh=Co9r2t88YTUANtBpkO3mV3lh
-	1eJwPtplBuWUuGhsPwg=; b=aAM/MZ02V8aK90aDtdiFxJr29a7PAhly0O++Juw9
-	46fDsyB9oBSh0nxWqq3ZXYZJHNV6Gor1BJSb7GeflBU9sdZSUsBy6OX14LY0K1Jd
-	6sFbBh1uLU1O2f01H5hawR2ibKm9pbAHwofoZwpIcy0PwiXYq69p0T4Qpt0nGcmV
-	6Nzjovh7DZK1KWswsFWqcQrRyWyj8i6JfQSfgBtQIIqHD7yBUGkNL6RgcGRROMok
-	VRiPmN1FYHN7d9fNVQts2uKPkQ2ucoDQIdZORjINc51m/C6NwWf6ki+yWayfg28r
-	OweDQZXL8PQ+bp9JAS7do58hiqgXYKpaA+/VCuqNW2I0Bw==
-X-Virus-Scanned: by MailRoute
-Received: from 001.mia.mailroute.net ([127.0.0.1])
- by localhost (001.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 23RpagGbZVNW; Thu, 20 Feb 2025 18:30:06 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 001.mia.mailroute.net (Postfix) with ESMTPSA id 4YzMHg72Brz1Xb87P;
-	Thu, 20 Feb 2025 18:29:50 +0000 (UTC)
-Message-ID: <f4ad0222-d08b-4a57-8c8c-569fbe50f63a@acm.org>
-Date: Thu, 20 Feb 2025 10:29:48 -0800
+	s=arc-20240116; t=1740103178; c=relaxed/simple;
+	bh=dFajwVWivDjvHsLqhntYusRXxIFFRKr1iWNeckgkFks=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=l7j4sG/p7gfduLCEEZmSlp1J74ZfzayPB70yGXaZIJyWI8CbMkeD/kioBUCJH0aqEe5qBNVvOPXtjB+0B8A0/DFmSzWZkDbnduKNYUenj15ALVVhYwYNehj5nw6gl/KjrL8g8evzxGIGU36ur1FlciZ9c9uBCYSvMVlGNIMQ81I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4YzY960HQTz1GC0f;
+	Fri, 21 Feb 2025 09:54:50 +0800 (CST)
+Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2B053140158;
+	Fri, 21 Feb 2025 09:59:28 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 21 Feb 2025 09:59:27 +0800
+Message-ID: <5a4384dc-4edb-9e29-d1dd-190d69b9e313@huawei.com>
+Date: Fri, 21 Feb 2025 09:59:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC v1 1/1] scsi: ufs: core: Add device level exeption support
-To: Avri Altman <Avri.Altman@sandisk.com>,
- "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
- "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
- "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
- "minwoo.im@samsung.com" <minwoo.im@samsung.com>,
- "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Keoseong Park <keosung.park@samsung.com>, Bean Huo <beanhuo@micron.com>,
- Al Viro <viro@zeniv.linux.org.uk>, Gwendal Grignou <gwendal@chromium.org>,
- Andrew Halaney <ahalaney@redhat.com>, Eric Biggers <ebiggers@google.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <fdebf652abb4734d37f957062a2b4568754db374.1740016268.git.quic_nguyenb@quicinc.com>
- <PH7PR16MB61967197DC9C471F95536229E5C42@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <PH7PR16MB61967197DC9C471F95536229E5C42@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk
+ directly connected
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <liyihang9@huawei.com>,
+	<yanaijie@huawei.com>
+CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>, <liyangyang20@huawei.com>,
+	<f.fangjian@huawei.com>, <xiabing14@h-partners.com>
+References: <20250220130546.2289555-1-yangxingui@huawei.com>
+ <20250220130546.2289555-2-yangxingui@huawei.com>
+ <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepemh200017.china.huawei.com (7.202.181.126) To
+ kwepemg100017.china.huawei.com (7.202.181.58)
 
-On 2/20/25 2:01 AM, Avri Altman wrote:
->> @@ -419,6 +421,7 @@ enum {
->>   	MASK_EE_TOO_LOW_TEMP		= BIT(4),
->>   	MASK_EE_WRITEBOOSTER_EVENT	= BIT(5),
->>   	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
->> +	MASK_EE_DEV_LVL_EXCEPTION	= BIT(7),
->>   };
- >
-> I think you need to rebase your work - most probably for-next is best.
+Hi, John
 
-Hmm ... I think that Martin expects this kernel branch to be used as
-basis for SCSI kernel patches intended for the next merge window:
+On 2025/2/21 1:35, John Garry wrote:
+> On 20/02/2025 13:05, Xingui Yang wrote:
+> 
+> -john.garry@huawei.com (this has not worked in over 2 years ...)
+Sorry, I used the wrong one.
+> 
+>> the SAS controller determines the disk to which I/Os are delivered based
+>> on the port id in the DQ entry when SATA disk directly connected.
+>>
+>> When many phys were disconnected immediately and connected again during
+>> I/O sending and port id of phys were changed and used by other link, I/O
+>> may be sent to incorrect disk and data inconsistency on the SATA disk may
+> 
+> 
+> So is the disk reported gone (from libsas point-of-view) after you 
+> unplug? If not, why not?
 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=staging
+The problem may occur in a scenario where multiple SATA disks are 
+inserted almost at the same time. When phy reset is executed in error 
+processing, other phys are also up, which may cause the hw port id 
+corresponding to the phy to change. The log is as follows:
 
-Thanks,
+[ 4588.608924] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy2 link_rate=10(sata)
+[ 4588.609039] sas: phy-8:2 added to port-8:4, phy_mask:0x4 
+(5000000000000802)
+[ 4588.609267] sas: DOING DISCOVERY on port 4, pid:69294
+[ 4588.609276] hisi_sas_v3_hw 0000:b4:02.0: dev[13:5] found
+[ 4588.671362] sas: ata40: end_device-8:4: dev error handler
+[ 4588.846387] hisi_sas_v3_hw 0000:b4:02.0: phydown: phy2 phy_state=0xc3 
+// phy2's hw port id assign by chip is released
+[ 4588.846393] hisi_sas_v3_hw 0000:b4:02.0: ignore flutter phy2 down
+[ 4588.919837] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy3 
+link_rate=10(sata) // phy3 is assigned the hw port id previously used by 
+phy2
+[ 4589.029656] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy2 
+link_rate=10(sata) // phy2's hw port id is assigned a new one
+[ 4589.220662] ata40.00: ATA-9: HUH721010ALE600, T3C0, max UDMA/133
+[ 4589.220666] ata40.00: 19532873728 sectors, multi 0: LBA48 NCQ (depth 
+32), AA
+[ 4589.233022] ata40.00: configured for UDMA/133
 
-Bart.
+In view of the situation corresponding to the above log, the 
+hisi_sas_port.id corresponding to phy2 has not been updated, and the old 
+port id is still used, which will cause the IO delivered to phy2 to be 
+abnormally delivered to the disk of phy3.
+
+After force phy, the chip will check whether the phy information matches 
+the port id and intercept this abnormal IO.
+
+Thanks.
+Xingui
+
+
+
