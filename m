@@ -1,90 +1,118 @@
-Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD5D261591
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2025 09:41:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E59261591
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2025 09:43:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740476502; cv=none; b=mx8Lw5p+MtTozBjsPqf1vCqd5fPKHDMnZGPE8/tuK+T1/hbeCnsif1369JXVqYSfqjBQv3anhdc4ptINjy86+b3k1q63edPArJka7fl3rd7aXLejUAKZQGb5cgupY30woLttB7xGPj+clQ1plJ/Nf2otDBOS8Uipi4cPfrUGhp4=
+	t=1740476604; cv=none; b=rX/tiN7Vgne9NgXclHSZ8QnkIMd8Z0rWNTdhxVXElqpKTR431AcJgjNAr6KpS2B5SarFfnE/X9z5yfHgkOpXtBDpUKMwTJsEs2kS8pXweWJOZuurqTtH3Ix23RfULwrm+mV0Hux7lqKdsrhXIzrb/TZwlbmqyBdpxFS5mgxzIdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740476502; c=relaxed/simple;
-	bh=umBuQl2QuBFeO9IxtwbPuUMLEtLD5ox0Hz4hVd/Q4JE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=scq3/Usod79WghbCEEitFINNZ0kdx3zZroZ2OK8Tf4NZ8qGNcxBS0oC9UtjeHDJpPVwjMb1d5uEtFVxZ8fxwI3fMovHGQkIVocCVVz+YmRu2BXH7gjUfHHir5/HjwI2NGkCqTtvHBaPi4zXoMRqUegwuMOwvrTK1RYtTC9EQ9F8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=g80bBMzR; arc=none smtp.client-ip=91.218.175.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1740476604; c=relaxed/simple;
+	bh=6B0qB5/pvSZ5jcD/a3OGepgdBy2JO4/9bJDqujJ6z1g=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=K4BNXXOPP82nZBN2WRDtlF5YMMbhR56XMAGvX1MAN/u0m75PG6NwK2RUzfj5VJnsGFR32+LIHSme5KGmSmgaCUFfgkCv0JCtWr1z+uLnCb1NoBNi7gcExZ2C+10jKsu1e2Xp1U+3T89wjoplhlESrpt5pUfKvoEivwhqMpym4oU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=AdLPzF3U; arc=none smtp.client-ip=62.142.5.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="g80bBMzR"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1740476488;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=FSnRdmhAXCNG5wX/lQk1babI2j58rDjAV131IDGWdyI=;
-	b=g80bBMzRzAMxcAYS974A5/dRA0qkOeAEES2zpvFW3TWPKX2tuTB/O01ifs7pzhaVMsJM0L
-	+x9/N3ZwZI/rgXAbH8007GRDKmq/oVmWyJn3dyrMnZhpU8t3ggnf6iaxV+2YJCkpy1IeZi
-	262j01ErZq73lXdNqbGprfCvTZdZUkI=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH RESEND] scsi: hpsa: Use str_enabled_disabled() helper function
-Date: Tue, 25 Feb 2025 10:41:08 +0100
-Message-ID: <20250211102643.614133-1-thorsten.blum@linux.dev>
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="AdLPzF3U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=4HJGFwO7iJWP35BGN8gS4/yzq08A26mPEUXcqi1UmOs=;
+	b=AdLPzF3UGEceEUAr5vBH/Juw35neeJ0zqnAhX2lBVUoAdWis+ncEWSrEWRvD47rmpE+YA6pjeGoTF
+	 M4RxdvpHUWhXU/FBXOSWK8jE/zrFfx139HlyI6BlLeJWS8YZaDOUZIMotBk7c0KfUkp5HUD3gu+seE
+	 YQrnOWRi4t4wk5dRTBmxjnreWspY5fIK5guuIDQpuozHjvObPS+YrwvuITnGS2hDG6fhEpV0VCmQBR
+	 G8RJfIsoy95nvogDclZacgoBEG5KJveq25wJzGNmFeEcMbe+Ns9rDkC3drVhmQ81JoYQ8ySB6X7V2f
+	 ItggHSqa/aLT5UYNPcpAQAavqiL9New==
+Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
+	id f03b8702-f35c-11ef-9d7a-005056bd6ce9;
+	Tue, 25 Feb 2025 11:43:17 +0200 (EET)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <20250225094108.yqDeWUIAi5BR5vW08rCu7S4nGFGWkdZA_m_ykgwgJgk@z>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.400.131.1.6\))
+Subject: Re: [PATCH] scsi: scsi_debug: fix uninitialized variable use
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20250225085644.456498-1-arnd@kernel.org>
+Date: Tue, 25 Feb 2025 11:43:06 +0200
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ John Meneghini <jmeneghi@redhat.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bart Van Assche <bvanassche@acm.org>,
+ John Garry <john.g.garry@oracle.com>,
+ linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <367BED6D-3187-473C-BBF4-EB71A0E1677A@kolumbus.fi>
+References: <20250225085644.456498-1-arnd@kernel.org>
+To: Arnd Bergmann <arnd@kernel.org>
+X-Mailer: Apple Mail (2.3826.400.131.1.6)
 
-Remove hard-coded strings by using the str_enabled_disabled() helper
-function.
 
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
----
- drivers/scsi/hpsa.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> On 25. Feb 2025, at 10.56, Arnd Bergmann <arnd@kernel.org> wrote:
+>=20
+> From: Arnd Bergmann <arnd@arndb.de>
+>=20
+> It appears that a typo has made it into the newly added code
+>=20
+> drivers/scsi/scsi_debug.c:3035:3: error: variable 'len' is =
+uninitialized when used here [-Werror,-Wuninitialized]
+> 3035 |                 len +=3D resp_compression_m_pg(ap, pcontrol, =
+target, devip->tape_dce);
+>      |                 ^~~
+>=20
+> Replace the '+=3D' with the intended '=3D' here.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 84d8de07b7ae..ff49e93df4ed 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -36,6 +36,7 @@
- #include <linux/dma-mapping.h>
- #include <linux/completion.h>
- #include <linux/moduleparam.h>
-+#include <linux/string_choices.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-@@ -469,7 +470,7 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
- 	h->acciopath_status = !!status;
- 	dev_warn(&h->pdev->dev,
- 		"hpsa: HP SSD Smart Path %s via sysfs update.\n",
--		h->acciopath_status ? "enabled" : "disabled");
-+		str_enabled_disabled(h->acciopath_status));
- 	return count;
- }
- 
-@@ -560,7 +561,7 @@ static ssize_t host_show_hp_ssd_smart_path_status(struct device *dev,
- 
- 	h = shost_to_hba(shost);
- 	return snprintf(buf, 30, "HP SSD Smart Path %s\n",
--		(h->acciopath_status == 1) ?  "enabled" : "disabled");
-+		str_enabled_disabled(h->acciopath_status == 1));
- }
- 
- /* List of controllers which cannot be hard reset on kexec with reset_devices */
--- 
-2.48.1
+One more of these ;) The fix is correct. (And now I checked with grep =
+that v2 does not have any more of these.)
+
+>=20
+> Fixes: e7795366c41d ("scsi: scsi_debug: Add READ BLOCK LIMITS and =
+modify LOAD for tapes")
+
+The bug was actually in 568354b24c7d "scsi: scsi_debug: Add compression =
+mode page for tapes"
+
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+Acked-by: Kai M=C3=A4kisara <kai.makisara@kolumbus.fi =
+<mailto:kai.makisara@kolumbus.fi>>
+
+> ---
+> drivers/scsi/scsi_debug.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 722ee8c067ae..f3e9a63bbf02 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -3032,7 +3032,7 @@ static int resp_mode_sense(struct scsi_cmnd =
+*scp,
+> case 0xf: /* Compression Mode Page (tape) */
+> if (!is_tape)
+> goto bad_pcode;
+> - len +=3D resp_compression_m_pg(ap, pcontrol, target, =
+devip->tape_dce);
+> + len =3D resp_compression_m_pg(ap, pcontrol, target, =
+devip->tape_dce);
+> offset +=3D len;
+> break;
+> case 0x11: /* Partition Mode Page (tape) */
+> --=20
+> 2.39.5
+>=20
+>=20
+
+Thanks,
+Kai
 
