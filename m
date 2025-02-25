@@ -1,81 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A5221F95C;
-	Tue, 25 Feb 2025 08:56:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87B112641C7;
+	Tue, 25 Feb 2025 09:35:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740473809; cv=none; b=KrGAcrrl7N2P1Cq6LhEDSd0XPC6Fnw1Fl/e8/3HwmmBBP/TwnamENK5nOLtnMGT0+ujjBZzNYt4YuB5q7w+s62LUSGbZ/5WdBksf3WU99PNnbYaZj0SirBQ1iHbNxMngSpKSxZyTYZuM+Ju7v/+tGNpkkkZjvthLYVajKqCYqAg=
+	t=1740476140; cv=none; b=YJu+1jZaw+OsIrENHgZlwk9YWiYZrqgI6p2rJkpBGP8ZZ1DBtJW7PAgi4J3ZjmXMPvWEXBnkMxIrW4+plc2NDT10PRO1j/1HB6ExzRk6G1E7Vd0AHs6rc66BlnWzX3HOoNQUAOW2hhBoDyugm2up07zrPJaGY7TDGL9urfkoRXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740473809; c=relaxed/simple;
-	bh=Pg6cPWVXZ9yBArlBveUYY9leBBr7mVzrxcIz8ti190k=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Cy9HxrQK+BLNicZjO8yB9UkF/yAWUPos1PP+KXcBAEWx00od09Twz5/hFSxo/UlbMOMpKh5AxAcxn3Q3lv2aOgJwcCxwz7ovCZie9XNPD5lf8MA3o8rMC8UU83up5JJqkpWMVFCsi06y7anOstBu3umNohqMQ9xbHQRVUxPnuq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D3yxmafT; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D3yxmafT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FE02C4CEDD;
-	Tue, 25 Feb 2025 08:56:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740473808;
-	bh=Pg6cPWVXZ9yBArlBveUYY9leBBr7mVzrxcIz8ti190k=;
-	h=From:To:Cc:Subject:Date:From;
-	b=D3yxmafTn7Z6+nftxsxV6MjQX6aSXleIPiAupCp6UOInhpuSjupLoeBSIr9mt/RDk
-	 xJkrkP2PbzFpxEQTMyfMgUoIsaN0DSGIMpX6UaAwuNX5ZlEiPNBIhkET5Wh+sZ7MAv
-	 2mdSLUOFTWmjsPdpwnXhGdRfptr84Un/UpJMrSHs/61vwNHMXIvkWZCZwacnAIHnaO
-	 XOm9/PhgXDH1ulEnNE2uTvTCFEVBuJHuTV18x/eaFkYlfOTGyYDhqf26cQwcAlfcL0
-	 bDM/5XiQ45Fc57b0foORRa4bnYMQhujj17eg/VKTRoEgVD6nQvQb1+57kSAZ5TWRLI
-	 YooziSQX/6q1g==
-From: Arnd Bergmann <arnd@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
-	John Meneghini <jmeneghi@redhat.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Bart Van Assche <bvanassche@acm.org>,
-	John Garry <john.g.garry@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: scsi_debug: fix uninitialized variable use
-Date: Tue, 25 Feb 2025 09:56:39 +0100
-Message-Id: <20250225085644.456498-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.5
+	s=arc-20240116; t=1740476140; c=relaxed/simple;
+	bh=VzmHHAJ4lfXuHw0Z6bdVgeMX5QBu24Qi/C6qVXpxxRw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=p1WbUr5A2lzRyR0iwsrNIevdyoK7ppJQURZ3opU8/iiUrh2KvW2Jsvgobmm/PmI79pizpphSbR/rs+MX0hGnaEZJhF0VeenfbeZjjRlw56o1aP1x+TdBss+mjA9jSWP2B0J/AfA3e81P9dpt6oftK4dI43cGgIeDUucvYxFFmXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Z2C6C2pwnz2CpdL;
+	Tue, 25 Feb 2025 17:31:31 +0800 (CST)
+Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
+	by mail.maildlp.com (Postfix) with ESMTPS id BFCA3140203;
+	Tue, 25 Feb 2025 17:35:33 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 25 Feb 2025 17:35:33 +0800
+Message-ID: <d4b7ae14-5b60-883a-c4f8-be11fc51a4f7@huawei.com>
+Date: Tue, 25 Feb 2025 17:35:22 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk
+ directly connected
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <liyihang9@huawei.com>,
+	<yanaijie@huawei.com>
+CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>, <liyangyang20@huawei.com>,
+	<f.fangjian@huawei.com>, <xiabing14@h-partners.com>
+References: <20250220130546.2289555-1-yangxingui@huawei.com>
+ <20250220130546.2289555-2-yangxingui@huawei.com>
+ <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
+ <5a4384dc-4edb-9e29-d1dd-190d69b9e313@huawei.com>
+ <1e98a1eb-a763-4190-94c5-a867cdf0e09b@oracle.com>
+ <235e7ad8-1e19-4b7b-c64b-b6703851ca65@huawei.com>
+ <d233a108-a46e-47dd-86ad-756c60c8665e@oracle.com>
+ <cc9ba6f8-1efb-4910-8952-9ca07c707658@huawei.com>
+ <5d34595f-ff57-4679-b263-fa3fea006ce3@oracle.com>
+ <25552c7d-858d-ea1e-0987-55f71642a503@huawei.com>
+ <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepemh200004.china.huawei.com (7.202.181.111) To
+ kwepemg100017.china.huawei.com (7.202.181.58)
 
-From: Arnd Bergmann <arnd@arndb.de>
+Hi, John
 
-It appears that a typo has made it into the newly added code
+On 2025/2/25 16:19, John Garry wrote:
+> On 25/02/2025 01:48, yangxingui wrote:
+>>>
+>>>
+>>> pm8001 sends sas_notify_port_event(sas_phy, PORTE_LINK_RESET_ERR,) 
+>>> link reset errors - can you consider doing that in 
+>>> hisi_sas_update_port_id() when you find an inconstant port id?
+>> Currently during phyup, the hw port id may change, and the 
+>> corresponding hisi_sas_port.id and the port id in itct are not updated 
+>> synchronously. The problem caused is not a link error, so we don't 
+>> need deform port, just update the port id when phyup.
+> 
+> Sure, but I am just trying to keep this simple. If you deform and reform 
+> the port - and so lose and find the disk (which does the itct config) - 
+> will that solve the problem?
 
-drivers/scsi/scsi_debug.c:3035:3: error: variable 'len' is uninitialized when used here [-Werror,-Wuninitialized]
- 3035 |                 len += resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
-      |                 ^~~
+1、phyup ->form port -> eh -> ata reset -> found hw port change -> 
+deform port -> let dev gone -> refound
 
-Replace the '+=' with the intended '=' here.
+2、controller reset -> phyup -> finish controller reset -> found hw port 
+change -> deform port -> let dev gone -> refound
 
-Fixes: e7795366c41d ("scsi: scsi_debug: Add READ BLOCK LIMITS and modify LOAD for tapes")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I also thought about the plan you mentioned in the early days. The above 
+will make the process more complicated and retriggering phyup may result 
+in a new round of port id changes. Lose and find the disk will cause the 
+upper layer IO to report error when controller reset. It seems that it 
+is better to make the upper layer unaware of the hw port id change when 
+phyup in reset, like ata reset or controller reset. ^_^
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 722ee8c067ae..f3e9a63bbf02 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3032,7 +3032,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 	case 0xf:	/* Compression Mode Page (tape) */
- 		if (!is_tape)
- 			goto bad_pcode;
--		len += resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
-+		len = resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
- 		offset += len;
- 		break;
- 	case 0x11:	/* Partition Mode Page (tape) */
--- 
-2.39.5
+Thanks,
+Xingui
 
