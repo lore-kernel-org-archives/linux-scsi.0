@@ -1,105 +1,94 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C9218C930;
-	Tue, 25 Feb 2025 16:14:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE1F175D5D;
+	Tue, 25 Feb 2025 16:36:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740500042; cv=none; b=NNq8kJzzZT74K+T35O/FLEtSNtOhKNJIwwxJEOKaC4nDFnXHeJmVV9VfZlKca+IctXTwAcDdsPhxya+ogBbNH3iHTTxCKtrUdMwwZYEBSh4KHj+ezTWkpyVSHy251FzfPRE51SHoSTh+wpd7/PrLc8pvNwoE78uCCdwKqyvqLDM=
+	t=1740501402; cv=none; b=X4hGI+TtMZrQ8vofxnBQlh6edbxCLoApSSkud6jKHJ9B3gkpy660VRs6YqDKEClltyNUsuyOXdXCEK+HwC1A7IG6hfdQHEOZShQfIQgQO7YmwBxabdgbb9yRXbWXHQ3RQCyXpk5JDcWuOCFJ+fANKXgayHktQWRScnl7N5ZU7D8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740500042; c=relaxed/simple;
-	bh=QFTbxmMTthkctu4tV0CojyuOfRzetFKnNh9ri6aKSLY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=YwO2RXngaKUsM6tHb23ryCFiE1R+tVu5YrNjAzJD0mzDtAEVaxwFyZo+3Ze7UPjNEnr7m/zNEesECe+7v/t090b3vJGRMSCVbW3dBy47gwHU/vttUNEhaMG+IOLYPWq46D9d6e73J9kc4laN1l1FWjucACXvD+6uKIXaQEDVIIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k79C2Q8S; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1740501402; c=relaxed/simple;
+	bh=CDe7JbnlugO1bzQW+Xtm0wMRorwKjf487Z/g8QdakFc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cQ8OBMBOLS4SKqBIB30KJ/j+jpZSRoEsX3MqOw/UWHFdLUyxyoKKw3V22yGukpHmLkGGoR/99Kz4CYRWi9wFrJPX1r6d7W+hf954mhFmfl7lwgFV1JQkvijTY27+tWj9d7i3+HRNqWI4fVrd9GOl0ohqLNHY7cR/RZekyzCWc5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=szV/O/Zx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k79C2Q8S"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4399a1eada3so50798495e9.2;
-        Tue, 25 Feb 2025 08:14:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1740500039; x=1741104839; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=YVqC1KYj3QeFyojAXvM68gVfAafK5PNiYMunoZclccA=;
-        b=k79C2Q8Sz+4acTO6HyIOR+PCGa/R1169vPvkskAlTS6KeNEf7NVhjrbcA8a7MnsC1J
-         rgDSUhs10q+XSf4I+4ucq/iT0uTxh6D9Pvi4zDoUNhIRUPXTJuggNIxzMveE9coflp2n
-         agAcMnNJejyZHDGm2gLqWzSQKPAkqQ6PeV5hN7ysYqnRiFUdVL+6c6TF6eGQsBnxx0Vc
-         TJVX4U5SvFLW1z/gsWS0mHe5gr6oKZaBTQWgCg5qVAQ8h5XhdXjEW3u6BtZw3pf1+vCy
-         XFd8RgYCYJPeMidps4B2LY6pc29kYWC6q9pWDJ6GFPnqdnym2ZLWKapbtLwP7Kez36I8
-         GlNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740500039; x=1741104839;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=YVqC1KYj3QeFyojAXvM68gVfAafK5PNiYMunoZclccA=;
-        b=iGaL5TEV+wsWAxB97h5jNhcddArBx71x7NxyxwkJGw+zKtZhRF6ziYBJLU9V7ZfodY
-         KNJipGGahLq1yFkTU8HXCjhLw2myGIIIIkodg3ObozUz8kDaZ36PLhJCgs2CoB6VKptH
-         fq0szww36RU27780iAeBMfO0vSriCYNSzC7Oyjivdb7ihlPIIWzQY82muaPpsr3jPCee
-         iTJtTOsxeHBwg2vlw8Rk+Gq3RmAxGbOtg6UCUZn4e+T3j1FDDEiEqSx+1mN+YIDSHhrV
-         0bE7t0f/gW7YfiJ7q29ZlqDqaYf6+/t8HbF94xmPj0XqFawYb1V1hnVoqk/D90bNCEh1
-         huYw==
-X-Forwarded-Encrypted: i=1; AJvYcCUk8RT4oVCl0uZSlavEh0NjtEz7BTR8YCGZLsp34OBIMdX61qs2b3ZIK0UAA8fHTacECvJG5O+otI41PXU=@vger.kernel.org, AJvYcCWHzZOi3fM329tmEWL5fzliVmo3Cvm1S0IYPOtfuwHLU51c8o2ju2MuJafNyKAPs1D6BP8Ln0KzrGkpgA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzqcRHYtpqf+jrui8AlFw/fWD9491gbz2BGomU1/VX00B3r8VXq
-	4wDL5POVMOP1U0P1ugyKV3fFFG7e5DNA6ZFvnWhqouvkYHrTBH2u
-X-Gm-Gg: ASbGnctDkovPMD2/GATnDw+KZzs7Sv5y3s/o7EcWXOHDhrLQASeOPRDJjyanCjuQ9kx
-	TdEH33tvj+gZ7LjXyZsbHY0G8nSrodWbqvoSENMmm+dE3iY5V6NH6QXK13IUqFzm0s2sHO9bXeo
-	gAaLt+H+EKjywsWPpLcU43q/GVbpB4f2GKapBfsUgDApuQQxsvMtr1LMmY9PZRyhsi4L6yG3bdp
-	JR3CPe1N7AgLfGgHfio5GDowryocSF2F8PWVqe+WON8QsjK9BH3S6r45D/3AbWknRwzAXwGyNjy
-	zTwh73H2KNWRVSFjqev9VGTyF6I=
-X-Google-Smtp-Source: AGHT+IHy4xy6/HN4dy/+/6JzfHC644RceilHrzVGqkVL0BnSOX0fmHA+U1810SLzdXoTSnHtfBg5cg==
-X-Received: by 2002:a05:600c:a05:b0:439:30bd:7df9 with SMTP id 5b1f17b1804b1-43ab8fd7947mr1252705e9.9.1740500039281;
-        Tue, 25 Feb 2025 08:13:59 -0800 (PST)
-Received: from localhost ([194.120.133.72])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-43ab60c68b9sm18126425e9.29.2025.02.25.08.13.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Feb 2025 08:13:58 -0800 (PST)
-From: Colin Ian King <colin.i.king@gmail.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
-	John Meneghini <jmeneghi@redhat.com>,
-	linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="szV/O/Zx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5998C4CEDD;
+	Tue, 25 Feb 2025 16:36:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740501402;
+	bh=CDe7JbnlugO1bzQW+Xtm0wMRorwKjf487Z/g8QdakFc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=szV/O/Zx/iKdYqpV/A94Tuo4+IwE39EKL/BII5M3YU0reotOKon71pu6oLFXc/VXA
+	 4zWOgEtUbeaR1KnOa4y3W9Qp1vi45ioN87AYwcyA2ntqGaEkFzcKP5Aiko7pEUARAI
+	 uPJJqVzmQXiJvQL2sTEwxwqyUmhFj0tN/Mzrz/oWNoGunzRjEi1VdHPd9hY2WKLTA7
+	 n3ZSw9lUntHnzbQXdwABwNf6FksCTVZfgOlmqoUTk2/P+YavDnQs5Tp9lk/dRTMDUj
+	 nrXisFn1WzoF7Q/cI6ZktnNGJcmI/e0VNCOSMgAAcmc3kI1dUO4bZ2rwCmsquth3RL
+	 Hk2RQ1RG6i9sA==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Yihang Li <liyihang9@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	Igor Pylypiv <ipylypiv@google.com>,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH][next] scsi: scsi_debug: Fix addition of uninitialized variable len
-Date: Tue, 25 Feb 2025 16:13:24 +0000
-Message-ID: <20250225161324.184873-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.47.2
+Subject: [PATCH] scsi: hisi: remove incorrect ACPI_PTR annotations
+Date: Tue, 25 Feb 2025 17:36:27 +0100
+Message-Id: <20250225163637.4169300-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-There is an addition on a previously uninitialized variable len that
-results in an undefined result. Fix this by making the addition an
-assignment. Issue detected with static analysis.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Fixes: 568354b24c7d ("scsi: scsi_debug: Add compression mode page for tapes")
+Building with W=1 shows a warning about sas_v2_acpi_match being unused when
+CONFIG_OF is disabled:
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+    drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:3635:36: error: unused variable 'sas_v2_acpi_match' [-Werror,-Wunused-const-variable]
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 722ee8c067ae..f3e9a63bbf02 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3032,7 +3032,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 	case 0xf:	/* Compression Mode Page (tape) */
- 		if (!is_tape)
- 			goto bad_pcode;
--		len += resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
-+		len = resp_compression_m_pg(ap, pcontrol, target, devip->tape_dce);
- 		offset += len;
- 		break;
- 	case 0x11:	/* Partition Mode Page (tape) */
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index bb78e53c66e2..6621d633b2cc 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1806,7 +1806,7 @@ static struct platform_driver hisi_sas_v1_driver = {
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = sas_v1_of_match,
+-		.acpi_match_table = ACPI_PTR(sas_v1_acpi_match),
++		.acpi_match_table = sas_v1_acpi_match,
+ 	},
+ };
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 71cd5b4450c2..3cc4cddcb655 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3653,7 +3653,7 @@ static struct platform_driver hisi_sas_v2_driver = {
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = sas_v2_of_match,
+-		.acpi_match_table = ACPI_PTR(sas_v2_acpi_match),
++		.acpi_match_table = sas_v2_acpi_match,
+ 	},
+ };
+ 
 -- 
-2.47.2
+2.39.5
 
