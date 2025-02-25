@@ -1,61 +1,67 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F8C184
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2025 00:33:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD11D299;
+	Tue, 25 Feb 2025 00:33:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740443608; cv=none; b=BkZCzeofHStroddODDWeh0w7rUPXdmnk0wij3JvzDP0F+fXdIzpY/KcMwwG4r+GgLhdfI/zbOfLyJGrFc4ofx11/pIsrEuLeccvYgyfshVFUc6uLsA42r9oHeKQXLLvJpcoLAa+KbEKt6gvFhUm64nPy3vTYY+SCDWLn90qIuZ0=
+	t=1740443624; cv=none; b=OdmYVG9QMPSDr/5PH+1sFQjMXRaBVJd3iTIl/1oTMfybBeafnbPIchFlHtfNYPUR/U64RIcdhghX1cpsUT4kjWSsX/5tKwDggTEawt8Li9KGsljdbHfRH4JPlXz8dfMok0hzMMOrxV6JiW6XKpmQsttkNrk336ZMQ/Ei7TPgbXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740443608; c=relaxed/simple;
-	bh=YbyK4ZRzk/zCZSj+scVFsU1emYDrF8L3yU7G0riCDpE=;
+	s=arc-20240116; t=1740443624; c=relaxed/simple;
+	bh=1VZfkv08qP83/ubSw+2Xn3dDZD1+KM2HyPhVAJ2GWHs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=un06Mg7Rjyc0T8VKeVzqlhjAMnCnPY0WsoyCPN5/wSW2LZ7s/AQccfAUUi6svmRcWOSoT1L/gHTyPfnFVgjQ4NTwq15gvVB+Jf2i5d4AL38XAvA/IcMfGazXCP+NI6ZNuJ7XsxbGRYn/TQlhoTPNukNYSPANgIxlITkPb3qunbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ow2V++xr; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=DB2chxbeI+WTqJJBBSrorcnBHWQm5TgWuIXIpHWptgPzi8R75EFwpQVXSMXgZ7mP/PgHXmrxsZU8yyd+4MYRVAHOBclJW9/ylKUPcxsYQQgSrO6YhquU/C7HPM/MgB138edMYhOHCgCQ7ge4vPiH6OqRH4nPEEx3nXCuGIRS2rw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=CUi7gvqw; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ow2V++xr"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51OMK2sT002411;
-	Tue, 25 Feb 2025 00:33:20 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CUi7gvqw"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51OMKO7Y031497;
+	Tue, 25 Feb 2025 00:33:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=2aTRB0mneJl0MMi8mPOiKku7SwXF00gvp3cxqSBkNKc=; b=
-	ow2V++xrGjuf+UAiB/YqMnybPeUIQblevx6uNh8kN6CWecUvmlqT3SqQYRw7E6HW
-	f6CuEZo/pvOffcttYQxuM28c7XQjVug9M3KUolNJxMxVvLGkRHjvInc0K5T0CUJk
-	+2NAtffwx1KZIHUx9gIyLROVD5pb5W/ZkxMyveJpuKmyiWYSQ6rql5YBZfKg+pr/
-	28gbrtE9Ih8cxHcZcRINTRzQJJJ90S+f7j8slzInR4FitYQFhZZpvBVbIPkpdbNv
-	Ymx0Mwmxynm5y28eaQeR6pmoiO9EkJcx087WwYpNI9Yu5Y2ttiB0DGVLMAUXUtdB
-	PaI1nUHTP5n0LoMxIA5J9Q==
+	corp-2023-11-20; bh=pSv1Wdf/Hm6RiItBgUnQHgACZrKqn9XK140tk2kZmxk=; b=
+	CUi7gvqwVOiWGx2ziEN00FPzhmGWs77EBZ6GOvfFDro6RLJ3LIzPeY2zAlBcze9m
+	gvGMcd5EFGiPUEyaCYRdgVTk1tEdFes5SscytomiBeGslAsSFkojHLl1YB8BWO58
+	wGnL27FokaDTlMeXYm5F3TgjKfVL5yR30+Z219qlL+epwZMCBCQNbQMaHL+UeuO3
+	+sQW/+sNp4TvoWt0I8H8Wnj/ioUmfaTHQL74NckiacP/dnrzbZ3VkJYhTRAUf6Bc
+	/1/K+EBh5iAQfCk5L17th8OYAnTpc8O3okAxufSScOlxsZIaQg7Geen3fLjmhdc+
+	TeqvxnpOwQ/XL3rblieHcg==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44y5603x5g-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 44y74t3vw9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Feb 2025 00:33:20 +0000 (GMT)
+	Tue, 25 Feb 2025 00:33:21 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51P01923025293;
-	Tue, 25 Feb 2025 00:33:19 GMT
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 51OMhW81025357;
+	Tue, 25 Feb 2025 00:33:20 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 44y51f0q8f-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 44y51f0q8y-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Feb 2025 00:33:19 +0000
+	Tue, 25 Feb 2025 00:33:20 +0000
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 51P0XI1r025171;
-	Tue, 25 Feb 2025 00:33:18 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 51P0XI1v025171;
+	Tue, 25 Feb 2025 00:33:19 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 44y51f0q87-1;
-	Tue, 25 Feb 2025 00:33:18 +0000
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 44y51f0q87-3;
+	Tue, 25 Feb 2025 00:33:19 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Bart Van Assche <bvanassche@acm.org>
+To: quic_cang@quicinc.com, quic_nitirawa@quicinc.com, bvanassche@acm.org,
+        avri.altman@wdc.com, peter.wang@mediatek.com,
+        manivannan.sadhasivam@linaro.org, minwoo.im@samsung.com,
+        adrian.hunter@intel.com, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/2] Fix locking bugs in error paths
-Date: Mon, 24 Feb 2025 19:32:46 -0500
-Message-ID: <174044345131.2973737.8766575932057369065.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/1] scsi: ufs: qcom: Remove dead code in ufs_qcom_cfg_timers()
+Date: Mon, 24 Feb 2025 19:32:48 -0500
+Message-ID: <174044345136.2973737.17206426967568925750.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250210203936.2946494-1-bvanassche@acm.org>
-References: <20250210203936.2946494-1-bvanassche@acm.org>
+In-Reply-To: <547c484ce80fe3624ee746954b84cae28bd38a09.1739985266.git.quic_nguyenb@quicinc.com>
+References: <547c484ce80fe3624ee746954b84cae28bd38a09.1739985266.git.quic_nguyenb@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,30 +73,28 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-24_11,2025-02-24_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=500
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
  phishscore=0 mlxscore=0 suspectscore=0 adultscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502100000
  definitions=main-2502250001
-X-Proofpoint-GUID: hJ-eIzV5p7Gzh5OsZ1A4HAWKsR_jyrlw
-X-Proofpoint-ORIG-GUID: hJ-eIzV5p7Gzh5OsZ1A4HAWKsR_jyrlw
+X-Proofpoint-GUID: 1kP9L8xxV7pD0caR5q3YQ0zO5OJRMPLJ
+X-Proofpoint-ORIG-GUID: 1kP9L8xxV7pD0caR5q3YQ0zO5OJRMPLJ
 
-On Mon, 10 Feb 2025 12:39:34 -0800, Bart Van Assche wrote:
+On Wed, 19 Feb 2025 09:16:06 -0800, Bao D. Nguyen wrote:
 
-> Annotating struct mutex and the mutex_*() functions with Clang thread-safety
-> attributes led to the discovery of two locking bugs in error paths of SCSI
-> drivers. This patch series fixes these locking bugs. Please consider this
-> patch series for the next merge window.
+> Since 'commit 104cd58d9af8 ("scsi: ufs: qcom:
+> Remove support for host controllers older than v2.0")',
+> some of the parameters passed into the ufs_qcom_cfg_timers()
+> function have become dead code. Clean up ufs_qcom_cfg_timers()
+> function to improve the readability.
 > 
-> Thanks,
 > 
 > [...]
 
 Applied to 6.15/scsi-queue, thanks!
 
-[1/2] scsi: mpi3mr: Fix locking in an error path
-      https://git.kernel.org/mkp/scsi/c/c733741ae1c3
-[2/2] scsi: mpt3sas: Fix a locking bug in an error path
-      https://git.kernel.org/mkp/scsi/c/38afcf0660f5
+[1/1] scsi: ufs: qcom: Remove dead code in ufs_qcom_cfg_timers()
+      https://git.kernel.org/mkp/scsi/c/476cda194903
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
