@@ -1,26 +1,40 @@
-Received: from mail-m49236.qiye.163.com (mail-m49236.qiye.163.com [45.254.49.236])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-65.smtpout.orange.fr [80.12.242.65])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5E2258CCB;
-	Wed, 26 Feb 2025 08:04:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.236
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C91EF1E1DF8;
+	Wed, 26 Feb 2025 08:11:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740557091; cv=none; b=u2iinM3ewDtgUSX/bEmBUjkfdE5mCBaxYHw+xSXXdrXOakTEGbpvHkGCF6qxRSdtIqNo9R42IVUD3mwLyArpJGdaMe82volLu7Rznh3Z6E2iRHPUJ2gwToVnAbvPvXcCqxz2v688Es5FWwbd5BZ2Gf4J7zD3hz4t6yQIOaf8w3k=
+	t=1740557496; cv=none; b=gQQwKZqBkZcBk/KDWg9OuaWXa6uejj8HSbP9sr1fBFpY87RPl04EIf3XYq0lKwXWQK2X4hEkxOewzCIAJlTN780ruVw8O33PoEQqbrHAfbnhLXHacKdHG+dBQEHazdgeVgGYNNVD//VIyhCJnwYlPsOBm6KpniG56wRtD72pAQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740557091; c=relaxed/simple;
-	bh=l8E5RKP2L+w9L35Iyf+g+FiycmYARSKEIs/aumVhbF8=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=HzT+vILxpjNC0TvE5yK7DqRtZLehQwW9RCk0tLTZhu+eh/WxOoqv1t8yig2WJzaLXnzSvjOaEjSHPDTOm2LGjD6w1FiRwsU3HkYrejKgQdAL7kWatBm3HN/dFOVIibnFl+wgnsNrAzxJzt8gREXAhvC+YKXCRS/ZbB3OISZLRF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=M1sany9x; arc=none smtp.client-ip=45.254.49.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1740557496; c=relaxed/simple;
+	bh=awSOf5Uptv5ylK84gNxEQtXQbjceSW4sC06B5EGXwTo=;
+	h=Message-ID:Date:MIME-Version:Subject:References:From:Cc:To:
+	 In-Reply-To:Content-Type; b=UARJ0LvEX9I2lRuv9JPsmI0Pz0FR1j2BbDtjUsvZI+zxm3JIxy1WmYxBA7xL8TK39G5ecAxv6W8vkoD2GvKWNnhtAXmxka+Y4lhm8r43OKbLlv2G8tAUao2Xkc4kqU0HI4KCuMdWKWTEEOI7VGf+JjGC7F1jRRPnVsUvtbGh4EE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=eN5Aq4eo; arc=none smtp.client-ip=80.12.242.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="M1sany9x"
-Received: from [172.16.12.45] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id c3c2a2d3;
-	Wed, 26 Feb 2025 14:48:58 +0800 (GMT+08:00)
-Message-ID: <a4f43d3e-2e41-4163-8938-5aa1592db371@rock-chips.com>
-Date: Wed, 26 Feb 2025 14:48:59 +0800
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="eN5Aq4eo"
+Received: from [192.168.1.37] ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id nCUZttGc7xgLFnCUctj4sa; Wed, 26 Feb 2025 09:10:22 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1740557422;
+	bh=ZqGB3dHEkHXDAW5t23ZRy/tk7CvQyYHBVX5yXFeysoI=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To;
+	b=eN5Aq4eovmdL2fTfqQhqmyNlSDtRmJIyRo9BV90ujHdViAKnbjtHr7qbLtUGcLRlZ
+	 sm6a7gFroiFb3USkdQ363fe5J2nBAhWrC7vKq9Gr98LlhArejaCxQtmS/g1lQfI49r
+	 0aIAOKfoRo4tNDooG9At7xMG826jfO8nyaZlknhJmJI7Jeype1X6hRb1E9umLPEZG2
+	 XbWU654Orv/crOsdG/XuK2GvaB+YBDki8U4i31RNmbRUpE2c+df/ckkinYznub6VnQ
+	 yhVMeiNx7yCwm+qgQ83RKYb4GoAOEUYS84Jpg4YkW7VlX71dQkYv0MO6jlmI4MTa2U
+	 +sFJCwiWciqJQ==
+X-ME-Helo: [192.168.1.37]
+X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
+X-ME-Date: Wed, 26 Feb 2025 09:10:22 +0100
+X-ME-IP: 90.11.132.44
+Message-ID: <7b8346a1-8a7d-4fcf-a026-119d77f2ca85@wanadoo.fr>
+Date: Wed, 26 Feb 2025 09:10:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -28,60 +42,170 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, kernel-janitors@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: ufs: rockchip: Fix spelling mistake "susped"
- -> "suspend"
-To: Colin Ian King <colin.i.king@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Heiko Stuebner <heiko@sntech.de>, linux-scsi@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org
-References: <20250225101142.161474-1-colin.i.king@gmail.com>
-Content-Language: en-GB
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <20250225101142.161474-1-colin.i.king@gmail.com>
+Subject: Re: [PATCH v3 06/16] rbd: convert timeouts to secs_to_jiffies()
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+ <20250225-converge-secs-to-jiffies-part-two-v3-6-a43967e36c88@linux.microsoft.com>
+ <e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr>
+ <CAPjX3Fcr+BoMRgZGbqqgpF+w-sHU+SqGT8QJ3QCp8uvJbnaFsQ@mail.gmail.com>
+Content-Language: en-US, fr-FR
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Frank.Li@nxp.com, James.Bottomley@hansenpartnership.com,
+ Julia.Lawall@inria.fr, Shyam-sundar.S-k@amd.com, akpm@linux-foundation.org,
+ axboe@kernel.dk, broonie@kernel.org, cassel@kernel.org, cem@kernel.org,
+ ceph-devel@vger.kernel.org, christophe.jaillet@wanadoo.fr, clm@fb.com,
+ cocci@inria.fr, dick.kennedy@broadcom.com, djwong@kernel.org,
+ dlemoal@kernel.org, dongsheng.yang@easystack.cn,
+ dri-devel@lists.freedesktop.org, dsterba@suse.com,
+ eahariha@linux.microsoft.com, festevam@gmail.com, hch@lst.de,
+ hdegoede@redhat.com, hmh@hmh.eng.br, ibm-acpi-devel@lists.sourceforge.net,
+ idryomov@gmail.com, ilpo.jarvinen@linux.intel.com, imx@lists.linux.dev,
+ james.smart@broadcom.com, jgg@ziepe.ca, josef@toxicpanda.com,
+ kalesh-anakkur.purayil@broadcom.com, kbusch@kernel.org,
+ kernel@pengutronix.de, leon@kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
+ linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ martin.petersen@oracle.com, nicolas.palix@imag.fr, ogabbay@kernel.org,
+ perex@perex.cz, platform-driver-x86@vger.kernel.org, s.hauer@pengutronix.de,
+ sagi@grimberg.me, selvin.xavier@broadcom.com, shawnguo@kernel.org,
+ sre@kernel.org, tiwai@suse.com, xiubli@redhat.com, yaron.avizrat@intel.com
+To: neelx@suse.com
+In-Reply-To: <CAPjX3Fcr+BoMRgZGbqqgpF+w-sHU+SqGT8QJ3QCp8uvJbnaFsQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQkNCHlYdTBlJHhodGBpOSENWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a9541040a1509cckunmc3c2a2d3
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ngg6PBw4UTILHQsaTh4TMzIq
-	VhkKCSNVSlVKTE9LTk5JTkhCTEpJVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUNNTjcG
-DKIM-Signature:a=rsa-sha256;
-	b=M1sany9xNBK7VREkWV+9K9oI/K7EOJWY8i/mkHFni5If+uuFp4nTfsfWo9NCBVfDJdv9SDXXVnASaacyLeGHJB5rIQt9n3k0cBugM1hAYPP0B+QlPaT6e/DmwYoHFTvU8BUo6xe397yo4rW3fLRhW2Du3oV/FRStof5aetgnBqQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=vU92AfkXpo1upHQPW1E57oSrBRV5YkhXMeN9wMA5lys=;
-	h=date:mime-version:subject:message-id:from;
 
-在 2025/2/25 18:11, Colin Ian King 写道:
-> There is a spelling mistake in a dev_err message. Fix it.
+Le 26/02/2025 à 08:28, Daniel Vacek a écrit :
+> On Tue, 25 Feb 2025 at 22:10, Christophe JAILLET
+> <christophe.jaillet-39ZsbGIQGT5GWvitb5QawA@public.gmane.org> wrote:
+>>
+>> Le 25/02/2025 à 21:17, Easwar Hariharan a écrit :
+>>> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+>>> secs_to_jiffies().  As the value here is a multiple of 1000, use
+>>> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
+>>>
+>>> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+>>> the following Coccinelle rules:
+>>>
+>>> @depends on patch@ expression E; @@
+>>>
+>>> -msecs_to_jiffies(E * 1000)
+>>> +secs_to_jiffies(E)
+>>>
+>>> @depends on patch@ expression E; @@
+>>>
+>>> -msecs_to_jiffies(E * MSEC_PER_SEC)
+>>> +secs_to_jiffies(E)
+>>>
+>>> While here, remove the no-longer necessary check for range since there's
+>>> no multiplication involved.
+>>
+>> I'm not sure this is correct.
+>> Now you multiply by HZ and things can still overflow.
 > 
-
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Thanks Colin.
-
-
-> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
-> ---
->   drivers/ufs/host/ufs-rockchip.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> This does not deal with any additional multiplications. If there is an
+> overflow, it was already there before to begin with, IMO.
 > 
-> diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
-> index 5b0ea9820767..dddff5f538b9 100644
-> --- a/drivers/ufs/host/ufs-rockchip.c
-> +++ b/drivers/ufs/host/ufs-rockchip.c
-> @@ -307,7 +307,7 @@ static int ufs_rockchip_system_suspend(struct device *dev)
->   
->   	err = ufshcd_system_suspend(dev);
->   	if (err) {
-> -		dev_err(hba->dev, "UFSHCD system susped failed %d\n", err);
-> +		dev_err(hba->dev, "UFSHCD system suspend failed %d\n", err);
->   		return err;
->   	}
->   
+>> Hoping I got casting right:
+> 
+> Maybe not exactly? See below...
+> 
+>> #define MSEC_PER_SEC    1000L
+>> #define HZ 100
+>>
+>>
+>> #define secs_to_jiffies(_secs) (unsigned long)((_secs) * HZ)
+>>
+>> static inline unsigned long _msecs_to_jiffies(const unsigned int m)
+>> {
+>>          return (m + (MSEC_PER_SEC / HZ) - 1) / (MSEC_PER_SEC / HZ);
+>> }
+>>
+>> int main() {
+>>
+>>          int n = INT_MAX - 5;
+>>
+>>          printf("res  = %ld\n", secs_to_jiffies(n));
+>>          printf("res  = %ld\n", _msecs_to_jiffies(1000 * n));
+> 
+> I think the format should actually be %lu giving the below results:
+> 
+> res  = 18446744073709551016
+> res  = 429496130
+> 
+> Which is still wrong nonetheless. But here, *both* results are wrong
+> as the expected output should be 214748364200 which you'll get with
+> the correct helper/macro.
+> 
+> But note another thing, the 1000 * (INT_MAX - 5) already overflows
+> even before calling _msecs_to_jiffies(). See?
 
+Agreed and intentional in my test C code.
+
+That is the point.
+
+The "if (result.uint_32 > INT_MAX / 1000)" in the original code was 
+handling such values.
+
+> 
+> Now, you'll get that mentioned correct result with:
+> 
+> #define secs_to_jiffies(_secs) ((unsigned long)(_secs) * HZ)
+
+Not looked in details, but I think I would second on you on this, in 
+this specific example. Not sure if it would handle all possible uses of 
+secs_to_jiffies().
+
+But it is not how secs_to_jiffies() is defined up to now. See [1].
+
+[1]: 
+https://elixir.bootlin.com/linux/v6.14-rc4/source/include/linux/jiffies.h#L540
+
+> 
+> Still, why unsigned? What if you wanted to convert -5 seconds to jiffies?
+
+See commit bb2784d9ab495 which added the cast.
+
+> 
+>>          return 0;
+>> }
+>>
+>>
+>> gives :
+>>
+>> res  = -600
+>> res  = 429496130
+>>
+>> with msec, the previous code would catch the overflow, now it overflows
+>> silently.
+> 
+> What compiler options are you using? I'm not getting any warnings.
+
+I mean, with:
+	if (result.uint_32 > INT_MAX / 1000)
+		goto out_of_range;
+the overflow would be handled *at runtime*.
+
+Without such a check, an unexpected value could be stored in 
+opt->lock_timeout.
+
+I think that a test is needed and with secs_to_jiffies(), I tentatively 
+proposed:
+	if (result.uint_32 > INT_MAX / HZ)
+		goto out_of_range;
+
+CJ
+
+> 
+>> untested, but maybe:
+>>          if (result.uint_32 > INT_MAX / HZ)
+>>                  goto out_of_range;
+>>
+>> ?
+>>
+>> CJ
+>>
+
+...
