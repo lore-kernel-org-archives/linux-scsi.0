@@ -1,150 +1,148 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mout.web.de (mout.web.de [212.227.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0FD2144DB
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2025 11:35:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D68A20FA9B;
+	Wed, 26 Feb 2025 11:55:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740569747; cv=none; b=pC6B0EOw1t9w5Tpyt0gA1LSLS82AsuG1Pq6UYn+D9+CfZ6QNhsPOVJZX48Y/fpusq/Pd40/iOTgRfRLmWTztiCkaYhpy4VRcQYLWD9L5MU/iwBpjtef0FhI/k4BGQLLh74gcR7L5S6JBzHoQM8jn9VG0HmrSikdmuUUo1h6MZq4=
+	t=1740570951; cv=none; b=djoU+Ez3jXe53heNODomC8SP4TxyZeG97U29DdVBHDA/wHexMs0r/UHmtmhefMKOkmta7p4nV5UNChXQnS2C8JConPe150MmhI4VH6Fo3kGzMTqivoZqLsWhDrYlkzVzkNf5LoT/qiBShHrpeWdrmcbPMAzr5mZyoajHugejlEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740569747; c=relaxed/simple;
-	bh=hC/0H+XPSDfmqpmp9/y2/J88WF/Us5XWrjHxl/QyHg4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=MhivOgBRwt+zaE2yM86DCnXikd9rX8n/+b7/pWqBxQdJI9MK6xO2rasnKlcc3XKgEDtAcKxbLl3Sc6neu7GgkLtcDDN9FcJ12f4gwkXo0LKBQPeVE2W9AV4bIWOvL77KNNpJ/wdPLJ2P5yGtvCKtgE+MgLjPkB/Bhkc5SCEWkaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=CxNE4A4A; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1740570951; c=relaxed/simple;
+	bh=sTX8xi6LRWxYofvmbcRQIPwzk4BhNjim5Kc1TZCgi5I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:Cc:
+	 In-Reply-To:Content-Type; b=oa2f+uIviei+UOpW+FvaORTW8H79sCtzIO5I5byYm/xMmFhRB06NmNmIMpFHLZ5g7SYpxD20t5wzXBUmB5WX3Wki+KWapLdJ7T0ElsFMCIBwu28Tr5V7FAO4ed1Qb7ErD0b4Ge8+HchhElsDbUJnKLtKc21GyT3ZujrMLYjlJKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=FgF5BQbo; arc=none smtp.client-ip=212.227.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="CxNE4A4A"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250226112927epoutp04f4055c08420228145e2ad4f8d246598c~nvp4ymd2C0099700997epoutp04f
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2025 11:29:27 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250226112927epoutp04f4055c08420228145e2ad4f8d246598c~nvp4ymd2C0099700997epoutp04f
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1740569367;
-	bh=5vbI71yMujXYkEGW8ngeGEGRX6ABcmrOjyoSmpUJRr8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CxNE4A4AbWUqx7fZ5ADxF8TGOhv0yjk8TjPU6AIB9u276UbsLzJvHAW1EjJKK84w3
-	 eWDaHXb88YmTIyLmrSD1l+pYVne/xRzFiVBrKB2Wajv2M4c8k+qVq+aJyxCZ/8TNuc
-	 MO0g+hqn+bT3T8Vv+FVGUd+ig2wh/ctpYxoVdSqw=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20250226112924epcas5p1d17df23d087611e70d97ed813c5773be~nvp1sxt_i2155121551epcas5p14;
-	Wed, 26 Feb 2025 11:29:24 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.183]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4Z2sgk49zyz4x9Q1; Wed, 26 Feb
-	2025 11:29:22 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	1E.E8.19956.21BFEB76; Wed, 26 Feb 2025 20:29:22 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250226112857epcas5p1654e62b5fff4551926622f19269c6ff4~nvpcXpYku0435004350epcas5p1d;
-	Wed, 26 Feb 2025 11:28:57 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250226112857epsmtrp2791aed2b8ed4aaff9f58ff0f891162c4~nvpcW06o30959209592epsmtrp2W;
-	Wed, 26 Feb 2025 11:28:57 +0000 (GMT)
-X-AuditID: b6c32a4b-fe9f470000004df4-33-67befb126755
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	AE.60.18949.8FAFEB76; Wed, 26 Feb 2025 20:28:57 +0900 (KST)
-Received: from localhost.localdomain (unknown [107.99.41.245]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250226112855epsmtip26ae1a3ed89ddfba8811322b56fea514d~nvparzCXT1116211162epsmtip2a;
-	Wed, 26 Feb 2025 11:28:55 +0000 (GMT)
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com
-Cc: anuj1072538@gmail.com, nikh1092@linux.ibm.com,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev, Anuj Gupta
-	<anuj20.g@samsung.com>, M Nikhil <nikhilm@linux.ibm.com>
-Subject: [PATCH v2 1/2] block: ensure correct integrity capability
- propagation in stacked devices
-Date: Wed, 26 Feb 2025 16:50:34 +0530
-Message-Id: <20250226112035.2571-2-anuj20.g@samsung.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250226112035.2571-1-anuj20.g@samsung.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="FgF5BQbo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1740570931; x=1741175731; i=markus.elfring@web.de;
+	bh=sTX8xi6LRWxYofvmbcRQIPwzk4BhNjim5Kc1TZCgi5I=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:
+	 References:From:Cc:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=FgF5BQbol86RnWL2Sk24p7qdL5tQLOeT6f07Kvxk4P0VuErz4WgTRL7pn6j/9HBZ
+	 z+cak2KgFRXeyXt7h/+BTqXGvv0hTXqqct+9+hLjPcNj3botKQ3pCtj1zGcH4ifEh
+	 yFa3sBuphYKHeZZwVQaSV3wyFrLsvWanJ3Z6ukLmBSFQ8+HjJKTN807sEt43aEoUg
+	 HbB2HsK30RgebgKAq9z+FLUxZ7GFREklxLf4JkReYQU8HhTTePiNS5BpbM3Q4Iq3/
+	 /8xzXq7fVNqYLas56fa9vFIZ5anQ0OIXKnqjBE+M5zkQbuCHIU124L0CnFIHiM9E2
+	 ngho7wBag929Q1fQLw==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.70.43]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1M604f-1tfrLt2zXv-00E5Ph; Wed, 26
+ Feb 2025 12:55:30 +0100
+Message-ID: <5495665a-774b-4bc5-8eb2-a9680d09b0be@web.de>
+Date: Wed, 26 Feb 2025 12:55:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrMJsWRmVeSWpSXmKPExsWy7bCmhq7Q733pBq+WKFh8/PqbxaJpwl9m
-	i9V3+9ksFiyay2KxcvVRJou9t7Qt5i97ym7RfX0Hm8Xy4/+YLO5efMpssbP9GKMDt8fOWXfZ
-	PS6fLfWYsOgAo8fmJfUeLzbPZPTYfbOBzePj01ssHn1bVjF6fN4kF8AZlW2TkZqYklqkkJqX
-	nJ+SmZduq+QdHO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3SrkkJZYk4pUCggsbhYSd/O
-	pii/tCRVISO/uMRWKbUgJafApECvODG3uDQvXS8vtcTK0MDAyBSoMCE749qdz2wFl7kqZjzu
-	YWlgbOXsYuTkkBAwkbi7eBdTFyMXh5DAbkaJHb93MIEkhAQ+MUo0LROBSHxjlLjQ380G03F4
-	128WiMReRolVT05AOZ8ZJe5sOwfWziagLnHkeStjFyMHh4iAtcT71+IgNcwC7xklXvd3gU0S
-	FkiW2L50LRNIDYuAqsTJ1c4gYV4BC4ntkxqglslLzLz0nR3E5hSwlOhYuIIRokZQ4uTMJywg
-	NjNQTfPW2cwg8yUEFnJIzH98gBmi2UVi+9T1LBC2sMSr41vYIWwpic/v9kItSJf4cfkpE4Rd
-	INF8bB8jhG0v0XqqnxnkNmYBTYn1u/QhwrISU0+tY4LYyyfR+/sJVCuvxI55MLaSRPvKOVC2
-	hMTecw1QtofEk1mnWCCh28MoMXG73gRGhVlI3pmF5J1ZCJsXMDKvYpRMLSjOTU8tNi0wzkst
-	h8dxcn7uJkZw6tXy3sH46MEHvUOMTByMhxglOJiVRHg5M/ekC/GmJFZWpRblxxeV5qQWH2I0
-	BQb3RGYp0eR8YPLPK4k3NLE0MDEzMzOxNDYzVBLnbd7Zki4kkJ5YkpqdmlqQWgTTx8TBKdXA
-	xM5/IMppcn3D3zcd/00X9By49sjT5qzdhMLCCruCBStl/13YNPfaRAuuBSFpH4VMc+Z9v7t7
-	ksQRvlD3m3Vz5+y50fRPXofBbnJvfFF7150tjZ31+Xvf1i4RMAycExhz+MjstMDs2bN3H8mx
-	bwhjYmmVSppzxauMQTQr3F777PWYv+0ei1mmv4/XNKiriwvTPhooxTxJLF3AK/KxoE6GmsCF
-	ndu8WzWFVKL9WuM8Y7JNvj6pYnm3euYp/yrOwz2VE87+rPy13i+vQtojjctptSVbjUtH0ZHE
-	L1/kKs9VqJ+Y4BDLm9Uqejoo6CiHx7/GWIUj/5uNJ8mKbDZPfDhzYlpoiCl/3efaDz/i8pVY
-	ijMSDbWYi4oTASZKnehGBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrFLMWRmVeSWpSXmKPExsWy7bCSvO7PX/vSDZo6mCw+fv3NYtE04S+z
-	xeq7/WwWCxbNZbFYufook8XeW9oW85c9Zbfovr6DzWL58X9MFncvPmW22Nl+jNGB22PnrLvs
-	HpfPlnpMWHSA0WPzknqPF5tnMnrsvtnA5vHx6S0Wj74tqxg9Pm+SC+CM4rJJSc3JLEst0rdL
-	4Mq4duczW8FlrooZj3tYGhhbObsYOTkkBEwkDu/6zdLFyMUhJLCbUaL54xRGiISExKmXy6Bs
-	YYmV/56zg9hCAh8ZJWZsDgax2QTUJY48bwWq4eAQEbCXuPejAmQOs8B3RokTLdfZQGqEBRIl
-	NuxsYgGpYRFQlTi52hkkzCtgIbF9UgMbxHh5iZmXvoON5xSwlOhYuIIRYpWFxM49W5gg6gUl
-	Ts58wgJiMwPVN2+dzTyBUWAWktQsJKkFjEyrGCVTC4pz03OLDQuM8lLL9YoTc4tL89L1kvNz
-	NzGCo0NLawfjnlUf9A4xMnEwHmKU4GBWEuHlzNyTLsSbklhZlVqUH19UmpNafIhRmoNFSZz3
-	2+veFCGB9MSS1OzU1ILUIpgsEwenVANTvlrxnQPqmow8/grWvs8UWqSLVrR4TrnwYK10x9Xp
-	CQ+2qZXPPWr2TUMq5mhC7S7RD5ffGjCalV8xW1NikG9gcKv8e0/4kvUJrzIajhTH/cy5fMJ4
-	7etqTx+vf1mZaz35PWWNF60NydmczZ4vP2O1anRoyHe2fWZn/ywufpW5T/hk+p21fvcL3+5f
-	pZmbd8G/bq7NsaJZG37Jp0qV8JU/vyriKhB0SOPuFJfEGO0HP/ZufzllcXjT4et6B00e7hBw
-	te8M8ihbE2n7/s5XQe7Q71JB9qGzth/faSztdUHQQcDX3opXglnh+r134s9SeDjc7Xo/rPhi
-	KMIjNS9ccMvF9xdnpec2O2xyCvc+s0CJpTgj0VCLuag4EQB3vle1/QIAAA==
-X-CMS-MailID: 20250226112857epcas5p1654e62b5fff4551926622f19269c6ff4
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250226112857epcas5p1654e62b5fff4551926622f19269c6ff4
-References: <20250226112035.2571-1-anuj20.g@samsung.com>
-	<CGME20250226112857epcas5p1654e62b5fff4551926622f19269c6ff4@epcas5p1.samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [cocci] [PATCH v3 04/16] ALSA: ac97: convert timeouts to
+ secs_to_jiffies()
+To: Easwar Hariharan <eahariha@linux.microsoft.com>, cocci@inria.fr,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix <nicolas.palix@imag.fr>,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+ David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>,
+ Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>,
+ "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>,
+ Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
+ Sascha Hauer <s.hauer@pengutronix.de>, Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+ <20250225-converge-secs-to-jiffies-part-two-v3-4-a43967e36c88@linux.microsoft.com>
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org,
+ imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
+ linux-rdma@vger.kernel.org, kernel@pengutronix.de,
+ Takashi Iwai <tiwai@suse.de>
+In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-4-a43967e36c88@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:ucYXuYgBQVTEWaObV/mFjtsvpzQ/KO5i5l5ZjdohfyGQ4hlxvcY
+ sTVdlsTl9fld7Rgr2WyDph9nJLEmgybCGSVtuMLyhQK485ALORk88bsJZJIOfByFUNZedr7
+ Tig7GhQucLbNWxtaLBapV3p7oWArgHdIII/eRzvvtip6IPoz+StdW8P4rzipPjdrxqJNq7V
+ w9kH46OLKD2fAu1DJ4I4g==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:NqOsrw7wXz4=;wwgFpUfWgrNKqonaHrxuK0zBMVo
+ mDjqDBwUTGC2TEakQ0FQpQb+jPeq8+VUsHA9FysNiUMcu9jvRYzUnVW/cePngei1HuxUi+9jB
+ gzwpaGWWDjDgiqloN8NkKw7fK1k9aiq9WO2QV+FahFVJxKCiEOht1QwMKGQlNmk9KSfqrx+xY
+ /ZLupqHBoI8IrXEf4BLPHHel92dIDpHQKboSzjjYqqe+D17jNVvkdG6fNPyA61KaW3VNs4cNO
+ VvTz7objQwY3sXV9VVKfi5xn57PHN9mTjtQuIqd+Fkmo2WDIvSm1qZXwIHn3nMByQ+tt7svzC
+ Q8spwoR/tPpS2RHogJczvjm/AJwifCv3M4zmOA7P6thgwODVRmcvR/4vF01uKQLuK9qMgFlyc
+ bcgjRUxbqZme7tOe+3/skv2xiRyQEbhJKJtGN5D+YuDiSWxugE0waVrKszeAKPmktude+e3Wm
+ hb6pdZnYZCt8B9GbDEP5Vb/mlwKymujzJht1qssYcn8d3Ml1SMkSc3vuwSRHDX6T7apEaslxL
+ H1ldZBfcHAqqxfpa5LbXdHASW4m4p3H0K1hJHORXZqCUnOEcZxDWNffnSEspRVYifgrFqGv4y
+ Kj26KhRIVUoBKuigt9Q2mdl8jTmWXytY3VzlUIiR7tUQHVdIIbUdCyTnywoOmuD6VO0yepr5x
+ bLQ4dW/TIsHMfmgenog//zbU7q2CO3bneqDQJPNt+SnDmx59ilBfNjed2YgZwvn4cQlSdaI0L
+ F6NIFthjhreE3/Mi2NLvYEGxVUZoOMS2U7r5bxeagKeTc2gxxXa1GQVKaGa4DKQrDpFctrZO+
+ VgS1EfusE5lk8m0igJwjGV8T5jJ4yK8zBmXHUgf2B7xsqbzIVsymf73VTGRYna5d8fpSlwFol
+ Z7qd+KqzL47eifD09GmZjoE4UJBGc7zuzHDS6dRLZAuI/Zl84ps/Ym32YxhbN/YAsutAmmp+v
+ TOkjv6MdafHxETdnQKdh/rPigxuHdcazx7XB6EEgDKbDg3iSQfzRgSR4xQ4NJ8AZ2iLg0mWum
+ 0vXgI8wXv34gMt9O2p3er2RQWDsVcZ08cX04PIZdsztxTjwu0CPkBaXXuUyTd+ZnGMu5xuqJ6
+ NVigR36nr3N2Z8mQFMK5WqrimZH+EH+M90+yC79G0/T7t0PPocKOZnJL41HJTo+LovTIveleV
+ HWrp9ctFsgjPDj6UJNJTykjtt8NgQ82/CLAEHggdCeEf/T9E6KPlLG59U+DvbDeDV1a/KcYk6
+ oIKY/n0w1wj9RkAu6PcR+vZ6tUptSyjIto4BLBRON4Vu2xjOkAgT2n2QCgRNb4wktwpFOdB2t
+ dil/Pn0qWsKxuLlEMj/YzfiGEHQVObo/J888IPK+k+5H0DLKihuIJZ57xoknHewbhE68lpmcV
+ rG+nfMuo4dycdcDOCDQ3IWqIkBsiusNZFDRDG0JStERTtnEkvLAd8i/CYVJdEg4hKBw+fpLvN
+ wNpIdlENtYji5zVvncyHslb0goYM=
 
-queue_limits_stack_integrity() incorrectly sets
-BLK_INTEGRITY_DEVICE_CAPABLE for a DM device even when none of its
-underlying devices support integrity. This happens because the flag is
-inherited from the first base device, even if it lacks integrity support.
-This patch ensures that BLK_INTEGRITY_DEVICE_CAPABLE is only inherited if
-the first device actually supports integrity.
+=E2=80=A6
+> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci wi=
+th
+> the following Coccinelle rules:
 
-Reported-by: M Nikhil <nikhilm@linux.ibm.com>
-Link: https://lore.kernel.org/linux-block/f6130475-3ccd-45d2-abde-3ccceada0f0a@linux.ibm.com/
-Fixes: c6e56cf6b2e7 ("block: move integrity information into queue_limits")
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
----
- block/blk-settings.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Is only a single SmPL script rule relevant here?
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index c44dadc35e1e..8bd0d0f1479c 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -861,7 +861,8 @@ bool queue_limits_stack_integrity(struct queue_limits *t,
- 
- 	if (!ti->tuple_size) {
- 		/* inherit the settings from the first underlying device */
--		if (!(ti->flags & BLK_INTEGRITY_STACKED)) {
-+		if (!(ti->flags & BLK_INTEGRITY_STACKED) &&
-+		    (bi->flags & BLK_INTEGRITY_DEVICE_CAPABLE)) {
- 			ti->flags = BLK_INTEGRITY_DEVICE_CAPABLE |
- 				(bi->flags & BLK_INTEGRITY_REF_TAG);
- 			ti->csum_type = bi->csum_type;
--- 
-2.25.1
 
+> @depends on patch@
+> expression E;
+> @@
+>
+> -msecs_to_jiffies
+> +secs_to_jiffies
+> (E
+> - * \( 1000 \| MSEC_PER_SEC \)
+> )
+
+I would miss two space characters in the first text column.
+Please avoid typos also in such SmPL code.
+Would you like to compare your contributions with a previous change sugges=
+tion
+like =E2=80=9C[PATCH v3 03/16] accel/habanalabs: convert timeouts to secs_=
+to_jiffies()=E2=80=9D
+once more?
+https://lore.kernel.org/cocci/20250225-converge-secs-to-jiffies-part-two-v=
+3-3-a43967e36c88@linux.microsoft.com/
+
+Regards,
+Markus
