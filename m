@@ -1,109 +1,95 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428BF2222CF;
-	Wed, 26 Feb 2025 18:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67CAB236449
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2025 18:56:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740595260; cv=none; b=nMzXkUS8a7okGoWm/TcJUDahBVzaPobaFN6p3g5sUOzwAWD9iJtUdRbPWA5aQqoIoB2xgs9aGKSObZA6It2vEpEswbIzKH7i/FgZyFJTchB0i7JduR8BU1rPP4SQxeyPF4zo3l6nikqlja+U72WYN2JU66iJvgGAKZyNBZ3Vl7c=
+	t=1740596166; cv=none; b=KEVuThFcIBaAenhTqjceKit/PtqyMHhOQkyGxgPGQxEnLC5EaMWT544K9HIZ55+DZTMB2fPoXx5/A65t80sj6DBEvZvm4kljvcJ5fHAxy5q1oDQJ1d8dzeCZV+8WQuBTq2vBjNbY5riA80MYbprHGWsJvTeYi8vVym9+KmrkXKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740595260; c=relaxed/simple;
-	bh=XDo3dXB3ZepMkRvo5YjK5g4NfObnn16Macr8zt68RMQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=udL108SLbOTPt97c7khlakddzLJQRcqrm0iH1LuoSTkVey8mcX0miEVIG2gVZUrleSzeFm/YUdb++OvsPIGNgbTpBi/VcTY5xa+SIneX5fR9+PFgoLd4zyDLGC18H28Zy7BWNSVYcah53Gks3wrYigTYS4/EiYokQGkV9sRr504=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ZQkU8DK9; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1740596166; c=relaxed/simple;
+	bh=GJLG6HT2p/F44pvEf+vdQir4GFIdOm/KN9Mpn40nQZ4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sJVOI+iICAqRxtQJCLZwRy8Bzwg9PTvQvFibZkE/ObDsWkvTDnWfqwKDlrPANxEMf6tYfwOZ3DhQZCgqbzC9Oxuxf0E1AmiVnnF+vPA+CN0VUEnHA4BTceeYYgsdtz7w4wyQIuhazM+ZntuhlbQUUoj4bA+poP5XKro/7H+XEgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KGSqJ6pY; arc=none smtp.client-ip=91.218.175.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ZQkU8DK9"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Z33Fj4mxNzlm4Yd;
-	Wed, 26 Feb 2025 18:40:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1740595256; x=1743187257; bh=egOgaD1Wy/xQmlMQKt5dzZhV
-	EvaTAscpf2ST+vETF70=; b=ZQkU8DK9G2NgT6E4oJk9OcmTtOTG71QBNvuYIR32
-	/5kftq6h+AfSPcR2P0tOxsCqVaUKhWTSLON7vpCRDwJAcS4yLtCoRMc1oq/jnWod
-	H/YXaw6GTqVpzts5ozwnH0I9lu54owIEeADPa/kQdDGPr6TdI0EOpgry+Q4lXrmM
-	EsgtLjhUaTfGAZxF3YtGrbAYJ2WqOVlbnZSFR+VoQo3kEwzKzNCjywCcUN3hjZ7Q
-	L+EcNv+cKNznPAPKpqxT7HUt61bY8HNJt2VQA/K4RuYsobmKsX7EhQ1w3M0oE6+v
-	CJxWmd+7fJXbXmovqseRF2H42h+sG+ziEeAR/1m7GfV4gA==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id EQd11jh3aRYl; Wed, 26 Feb 2025 18:40:56 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Z33Fd6S6Hzlsfvx;
-	Wed, 26 Feb 2025 18:40:53 +0000 (UTC)
-Message-ID: <6eb9ec05-96f1-41d2-b055-56e34d5722ae@acm.org>
-Date: Wed, 26 Feb 2025 10:40:51 -0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KGSqJ6pY"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1740596161;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=R4cAkbTSz/JJdoqp8OKkTxMEEUgI6W1GWFWWM9AMUuk=;
+	b=KGSqJ6pY9pcbZNl3CC3YM9Y/0xKyMoZuIZo4rAAadNchrEPFIKCH9PHH0jDCmdKmSTPMDv
+	bQoWFQeRk95IUq2IyGsw8qkvfSgSiq/+vasAtDvAcM4TpQkKurSyL0gHRaXf4PRkbeP33u
+	SJMJVQnn1OCqBRvbSkzs1m91kNDLiJw=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: James Smart <james.smart@broadcom.com>,
+	Ram Vegesna <ram.vegesna@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	linux-hardening@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: elx: sli4: Replace deprecated strncpy() with strscpy()
+Date: Wed, 26 Feb 2025 19:55:26 +0100
+Message-ID: <20250226185531.1092-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
- Testbus Registers
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
- Manish Pandey <quic_mapa@quicinc.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
-References: <20241025055054.23170-1-quic_mapa@quicinc.com>
- <20241112075000.vausf7ulr2t5svmg@thinkpad>
- <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
- <20241209040355.kc4ab6nfp6syw37q@thinkpad>
- <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
- <20250226053019.y6tdukcqpijkug4m@thinkpad>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250226053019.y6tdukcqpijkug4m@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 2/25/25 9:30 PM, Manivannan Sadhasivam wrote:
-> On Mon, Dec 09, 2024 at 10:35:39AM -0800, Bart Van Assche wrote:
->> On 12/8/24 12:03 PM, Manivannan Sadhasivam wrote:
->>> On Tue, Nov 12, 2024 at 10:10:02AM -0800, Bart Van Assche wrote:
->>>> On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
->>>>> On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
->>>>>> Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
->>>>>> of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
->>>>>> aid in diagnosing and resolving issues related to hardware and software operations.
->>>>>>
->>>>>
->>>>> TBH, the current state of dumping UFSHC registers itself is just annoying as it
->>>>> pollutes the kernel ring buffer. I don't think any peripheral driver in the
->>>>> kernel does this. Please dump only relevant registers, not everything that you
->>>>> feel like dumping.
->>>>
->>>> I wouldn't mind if the code for dumping  UFSHC registers would be removed.
->>>
->>> Instead of removing, I'm planning to move the dump to dev_coredump framework.
->>> But should we move all the error prints also? Like all ufshcd_print_*()
->>> functions?
->>
->> Hmm ... we may be better off to check which of these functions can be
->> removed rather than moving all of them to another framework.
-> 
-> devcoredump turned out to be not a good fit for storage drivers. And I can't
-> figure out another way. And Qcom is telling me that these debug prints are
-> necessary for them to debug the issues going forward.
-> 
-> Your thoughts?
+strncpy() is deprecated for NUL-terminated destination buffers; use
+strscpy() instead.
 
-Does this mean that printk() is the best alternative we have available?
+Compile-tested only.
 
-Thanks,
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+ drivers/scsi/elx/libefc_sli/sli4.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+index 5e7fb110bc3f..d9a231fc0e0d 100644
+--- a/drivers/scsi/elx/libefc_sli/sli4.c
++++ b/drivers/scsi/elx/libefc_sli/sli4.c
+@@ -3804,7 +3804,7 @@ sli_cmd_common_write_object(struct sli4 *sli4, void *buf, u16 noc,
+ 	wr_obj->desired_write_len_dword = cpu_to_le32(dwflags);
+ 
+ 	wr_obj->write_offset = cpu_to_le32(offset);
+-	strncpy(wr_obj->object_name, obj_name, sizeof(wr_obj->object_name) - 1);
++	strscpy(wr_obj->object_name, obj_name);
+ 	wr_obj->host_buffer_descriptor_count = cpu_to_le32(1);
+ 
+ 	bde = (struct sli4_bde *)wr_obj->host_buffer_descriptor;
+@@ -3833,7 +3833,7 @@ sli_cmd_common_delete_object(struct sli4 *sli4, void *buf, char *obj_name)
+ 			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
+ 			 SLI4_RQST_PYLD_LEN(cmn_delete_object));
+ 
+-	strncpy(req->object_name, obj_name, sizeof(req->object_name) - 1);
++	strscpy(req->object_name, obj_name);
+ 	return 0;
+ }
+ 
+@@ -3856,7 +3856,7 @@ sli_cmd_common_read_object(struct sli4 *sli4, void *buf, u32 desired_read_len,
+ 		cpu_to_le32(desired_read_len & SLI4_REQ_DESIRE_READLEN);
+ 
+ 	rd_obj->read_offset = cpu_to_le32(offset);
+-	strncpy(rd_obj->object_name, obj_name, sizeof(rd_obj->object_name) - 1);
++	strscpy(rd_obj->object_name, obj_name);
+ 	rd_obj->host_buffer_descriptor_count = cpu_to_le32(1);
+ 
+ 	bde = (struct sli4_bde *)rd_obj->host_buffer_descriptor;
+-- 
+2.48.1
+
