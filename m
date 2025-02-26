@@ -1,101 +1,86 @@
-Received: from out30-65.freemail.mail.aliyun.com (out30-65.freemail.mail.aliyun.com [115.124.30.65])
+Received: from mail-m1973183.qiye.163.com (mail-m1973183.qiye.163.com [220.197.31.83])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27A0E5028C;
-	Wed, 26 Feb 2025 06:58:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E643325D537;
+	Wed, 26 Feb 2025 07:05:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.83
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740553090; cv=none; b=CMKhuRNeWoy8Yx9H9UoOpam3uS1lYoOjiQfAeEqJLQ69FNyap58oKedrd76TKsxlFLfxbzVSRNOvJtStJct4QY/YBplg1hUXEPfbD34plrU1tcASrGLuwFFrcyeXYWSj3VPRxeDsYVGgSc7yxT6DPbAnnBeGP5wOe0Uti7e6MgA=
+	t=1740553505; cv=none; b=fXGwLIYkzlqw0BnliZyL8bL70j2rCK1ghPcr6CFDaQjjlhJXr/dZezVU7I/e/N+rQv9UtlvIRj8uxAsz4He9aetMRaH7Kss0CsY/h2GnHRFMWvtIrbrk5AW1MXhdDip4UchFbDiQitkC9fMcW136iUctamSqkepvgviNqxXKKk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740553090; c=relaxed/simple;
-	bh=ZsjxukEOVO5ffJ4Zs95qYyTWGKODiQNlo9YbGYFgp5c=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jPunHAosB+374UCzXYUR50whuaKEZkqhEVA8fywZcmeLpy5D9jKEXUmMcYCJn2lvZK4IgMJfDDBnfXj+w8fB1Skvkza11P40jg7cMG5XN4E3gqTrnS/qdlhX1KYkq3CiVEj6jeXcL9IvEnPTGyn7Jo0Ua7aBZa5WRB2WPmZdPh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=aliyun.com; spf=pass smtp.mailfrom=aliyun.com; dkim=pass (1024-bit key) header.d=aliyun.com header.i=@aliyun.com header.b=QI5nX0oX; arc=none smtp.client-ip=115.124.30.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=aliyun.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliyun.com
+	s=arc-20240116; t=1740553505; c=relaxed/simple;
+	bh=WLYZ9EBuwNXnwCUWsdQ1Ij0Qo8E9Crm4xrtth2ViDFE=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=i+9cqqGB9QEp3z5AoKNABJeNwUelt2y5teLyRpmmdOSYltVqiNkUFGlcWCv2mAga4On/Zrj9jIWSU9v/6Th28MERZ1tzoziFMivMRO52cF9av+1+K2KYwRU1rGFsXagOAHfqPDK6+uJGF5LkXE8Z4rC4aMLkKrZv68ENUyxJ75g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=GDaQiCWD; arc=none smtp.client-ip=220.197.31.83
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=aliyun.com header.i=@aliyun.com header.b="QI5nX0oX"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=aliyun.com; s=s1024;
-	t=1740553085; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=OxTo/iZCIK2ZpxP5h1M2T78BxTicPNxmRSp03rqcnX8=;
-	b=QI5nX0oXvc9YuStyjWUKIbPG4KO3kXgPkN+TNV7L/Vi1OBo4bnLsW+lof0cBzonu/cZ7njkW2q56OG2JFnogNf69bmyKw4kr80/D0UvhSh7CNWYJWDTqCfLaQPxgOkXU3wkq32QMDOSfi6P9/QgeAdgah8ZmVxr/fmc3qg1lPro=
-Received: from wdhh6.sugon.cn(mailfrom:wdhh6@aliyun.com fp:SMTPD_---0WQHDN2c_1740553084 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 26 Feb 2025 14:58:05 +0800
-From: Chaohai Chen <wdhh6@aliyun.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chaohai Chen <wdhh6@aliyun.com>
-Subject: [PATCH] scsi: stop judging after finding a VPD page expected to be processed.
-Date: Wed, 26 Feb 2025 14:58:02 +0800
-Message-Id: <20250226065802.234144-1-wdhh6@aliyun.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="GDaQiCWD"
+Received: from [172.16.12.45] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id c3c47c7b;
+	Wed, 26 Feb 2025 14:49:41 +0800 (GMT+08:00)
+Message-ID: <a18fb035-3e7f-443a-8b24-9a51cba5604a@rock-chips.com>
+Date: Wed, 26 Feb 2025 14:49:42 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: shawn.lin@rock-chips.com, martin.petersen@oracle.com, heiko@sntech.de,
+ linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+ Abaci Robot <abaci@linux.alibaba.com>, James.Bottomley@HansenPartnership.com
+Subject: Re: [PATCH -next] scsi: ufs: rockchip: Simplify bool conversion
+To: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+References: <20250226021157.77934-1-jiapeng.chong@linux.alibaba.com>
+Content-Language: en-GB
+From: Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20250226021157.77934-1-jiapeng.chong@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0NNT1ZKH0hOS0NKHx8ZHkhWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpOTE
+	5VSktLVUpCS0tZBg++
+X-HM-Tid: 0a954104b35509cckunmc3c47c7b
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Kz46Fjo*GDIKMwsDTh4qMxwW
+	VktPCRxVSlVKTE9LTk5JTkNISEtJVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUpKSU03Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=GDaQiCWDoYocllNU6WqKHl5m9xRxpcznUkUedTxHBomfvOO/UfsHDYxKuNmU/5Vl7SAtbkmy79QcfIew8C3GU5v5i1+sB1KHMHcsG7KO2GgLXUbCoUht9ILjVM/mZW3hwIRmTlkOljc6BudXvicBkuIWTqQ54c2maLyOufFlvqQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=cvkxqloIlTXo9JLh9EsUKKF24vwSjOiMeRjag/XPRuc=;
+	h=date:mime-version:subject:message-id:from;
 
-When the vpd_buf->data[i] is expected to be processed, stop other
-judgments.
+在 2025/2/26 10:11, Jiapeng Chong 写道:
+> ./drivers/ufs/host/ufs-rockchip.c:268:70-75: WARNING: conversion to bool not needed here.
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=19055
+> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 
-Signed-off-by: Chaohai Chen <wdhh6@aliyun.com>
----
- drivers/scsi/scsi.c | 28 ++++++++++++++++++++--------
- 1 file changed, 20 insertions(+), 8 deletions(-)
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a77e0499b738..53daf923ad8e 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -510,22 +510,34 @@ void scsi_attach_vpd(struct scsi_device *sdev)
- 		return;
- 
- 	for (i = 4; i < vpd_buf->len; i++) {
--		if (vpd_buf->data[i] == 0x0)
-+		switch (vpd_buf->data[i]) {
-+		case 0x0:
- 			scsi_update_vpd_page(sdev, 0x0, &sdev->vpd_pg0);
--		if (vpd_buf->data[i] == 0x80)
-+			break;
-+		case 0x80:
- 			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
--		if (vpd_buf->data[i] == 0x83)
-+			break;
-+		case 0x83:
- 			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
--		if (vpd_buf->data[i] == 0x89)
-+			break;
-+		case 0x89:
- 			scsi_update_vpd_page(sdev, 0x89, &sdev->vpd_pg89);
--		if (vpd_buf->data[i] == 0xb0)
-+			break;
-+		case 0xb0:
- 			scsi_update_vpd_page(sdev, 0xb0, &sdev->vpd_pgb0);
--		if (vpd_buf->data[i] == 0xb1)
-+			break;
-+		case 0xb1:
- 			scsi_update_vpd_page(sdev, 0xb1, &sdev->vpd_pgb1);
--		if (vpd_buf->data[i] == 0xb2)
-+			break;
-+		case 0xb2:
- 			scsi_update_vpd_page(sdev, 0xb2, &sdev->vpd_pgb2);
--		if (vpd_buf->data[i] == 0xb7)
-+			break;
-+		case 0xb7:
- 			scsi_update_vpd_page(sdev, 0xb7, &sdev->vpd_pgb7);
-+			break;
-+		default:
-+			break;
-+		}
- 	}
- 	kfree(vpd_buf);
- }
--- 
-2.34.1
+Thanks Jiapeng.
+
+
+> ---
+>   drivers/ufs/host/ufs-rockchip.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
+> index 5b0ea9820767..350cb0f8d0c2 100644
+> --- a/drivers/ufs/host/ufs-rockchip.c
+> +++ b/drivers/ufs/host/ufs-rockchip.c
+> @@ -265,7 +265,7 @@ static int ufs_rockchip_runtime_suspend(struct device *dev)
+>   	clk_disable_unprepare(host->ref_out_clk);
+>   
+>   	/* Do not power down the genpd if rpm_lvl is less than level 5 */
+> -	dev_pm_genpd_rpm_always_on(dev, hba->rpm_lvl < UFS_PM_LVL_5 ? true : false);
+> +	dev_pm_genpd_rpm_always_on(dev, hba->rpm_lvl < UFS_PM_LVL_5);
+>   
+>   	return ufshcd_runtime_suspend(dev);
+>   }
 
