@@ -1,65 +1,68 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from out30-85.freemail.mail.aliyun.com (out30-85.freemail.mail.aliyun.com [115.124.30.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 857C7254857;
-	Wed, 26 Feb 2025 03:23:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708D825A33D;
+	Wed, 26 Feb 2025 03:38:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.85
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740540204; cv=none; b=ZKAHuyJp3xcoGL1u0l07XUGKgUML/I5Kf2/B8utvqEDlBQsT+6r+qLap2w0BohdrgK4PpOE0gOq0+0+75PqbXTrRlQ6gC5XWGH1TpE8Lfl6QBsLKP2JA2sJbTNxaLwWH+KxTFiUm4Iguqr0chjNFAAIAhkzQyad4ZcOcZMp7XSU=
+	t=1740541091; cv=none; b=FRWpBO86coPseEjBJorpE/xG8n1PYYsyt9Q2LvL2VbxvOa35UZEzIlZEmk+2RM5VxU9kz7Vmz/mrDvuIiwgePJBHXyUDGiS26OoQWSHcm/ujAu4x0igQ7FckBwJKRFn7p+AsD7MtaZjq7O2AwOIke8JQY3WeJQEO7wVblxDNSRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740540204; c=relaxed/simple;
-	bh=E6VSR6K728OMUlzwLKUHKnCA1Yaf4YvBW3bW1m6CoXk=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=Q9qPpUEE7WUgqEg4ziGl/Uwaupg0W45dlWTtSGRWalvcajtzjK1g3v4YLIYU7fgOdfld/JEI3PWUCUCs0ayOav8rJh7t7SsPSl2o1MSCwGCWqRQ0iT6eQoc9Nc80Z1ZIaLiEOv31ixGgnrcs+9G9lpa7h9xOwh6k+jSkduTXXIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Z2fs73mdRzTmys;
-	Wed, 26 Feb 2025 11:21:47 +0800 (CST)
-Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 98C0A14034E;
-	Wed, 26 Feb 2025 11:23:19 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
- dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 26 Feb 2025 11:23:19 +0800
-Subject: Re: [PATCH] scsi: hisi: remove incorrect ACPI_PTR annotations
-To: Arnd Bergmann <arnd@kernel.org>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>
-References: <20250225163637.4169300-1-arnd@kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>, John
- Garry <john.g.garry@oracle.com>, Bart Van Assche <bvanassche@acm.org>,
-	=?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@baylibre.com>, Jason Yan
-	<yanaijie@huawei.com>, Igor Pylypiv <ipylypiv@google.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<liyihang9@huawei.com>
-From: Yihang Li <liyihang9@huawei.com>
-Message-ID: <49419ea6-5535-3612-c1c4-5ac58f2bc012@huawei.com>
-Date: Wed, 26 Feb 2025 11:23:18 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	s=arc-20240116; t=1740541091; c=relaxed/simple;
+	bh=tl+hIViqGcJN9EAhpBn2DhDk/dQx1zV1lpZjUUKNoM4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AaP94zFmwhG4NC+wX2TRU9WnOTU5pgw1isnnorSzsQkSNdBXckpW+fX0xn7DRMpTUVnkG3IgtRHiyux8Aa9JyYNS3ZZjXhP57AVevlRp5o3QB1Vsrl0TGry7Q06jwjNbZ5hJaC8aHdUeUHfHybc052wRz/DMlYB3szcSV/1bjx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=aliyun.com; spf=pass smtp.mailfrom=aliyun.com; dkim=pass (1024-bit key) header.d=aliyun.com header.i=@aliyun.com header.b=xBRrq+7H; arc=none smtp.client-ip=115.124.30.85
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=aliyun.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliyun.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=aliyun.com header.i=@aliyun.com header.b="xBRrq+7H"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=aliyun.com; s=s1024;
+	t=1740541086; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=OsKNsNmNLVMbVkhyVLShvvRjQAaJ25qqPxT54PpSMw4=;
+	b=xBRrq+7HrdUdUuLLHVgKmOBermnbpIubERCA0ySM25KUAV8ap7iHVz1A9rR/Hkif9rg+zQN6yylRIJ67HdO2Ix3Gjyb9S7sgFljdexSdbeFs7cKODh3/jO+Xd8/zjlggJfQx/hYZ4sNMgGkPC5dt0NZF6Tnw65PFQYiROMHSQK8=
+Received: from wdhh6.sugon.cn(mailfrom:wdhh6@aliyun.com fp:SMTPD_---0WQGbC7D_1740541085 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 26 Feb 2025 11:38:05 +0800
+From: Chaohai Chen <wdhh6@aliyun.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chaohai Chen <wdhh6@aliyun.com>
+Subject: [PATCH] scsi: fix schedule_work in spin_lock_irqsave in sdev_evt_send
+Date: Wed, 26 Feb 2025 11:38:02 +0800
+Message-Id: <20250226033802.233509-1-wdhh6@aliyun.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250225163637.4169300-1-arnd@kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemf100013.china.huawei.com (7.185.36.179)
+Content-Transfer-Encoding: 8bit
 
-On 2025/2/26 0:36, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> Building with W=1 shows a warning about sas_v2_acpi_match being unused when
-> CONFIG_OF is disabled:
-> 
->     drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:3635:36: error: unused variable 'sas_v2_acpi_match' [-Werror,-Wunused-const-variable]
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+sdev->list_lock is designed to protect the sdev->event_list, the action
+should be single(add, delete, traverse) in the lock.
 
-Looks good. So Reviewed-by: Yihang Li <liyihang9@huawei.com>
+Signed-off-by: Chaohai Chen <wdhh6@aliyun.com>
+---
+ drivers/scsi/scsi_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index be0890e4e706..ca1bbd5e38c0 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2661,8 +2661,8 @@ void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt)
+ 
+ 	spin_lock_irqsave(&sdev->list_lock, flags);
+ 	list_add_tail(&evt->node, &sdev->event_list);
+-	schedule_work(&sdev->event_work);
+ 	spin_unlock_irqrestore(&sdev->list_lock, flags);
++	schedule_work(&sdev->event_work);
+ }
+ EXPORT_SYMBOL_GPL(sdev_evt_send);
+ 
+-- 
+2.34.1
+
