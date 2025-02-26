@@ -1,242 +1,138 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDAE326A1D7
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2025 07:29:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D90C158DD4
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Feb 2025 07:32:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740554943; cv=none; b=HqSWF4i/vz1ag/0KCqV79CohDqV2a8mzSUgcjJWCkM+rppBUUtTirmNL7Lq1FyQRXIt9sn2tgJRvlEzOllj1GjiJZjPtihJCnnrJH3yFWQOtbNNsPxtgAo54eq7RQ/O0wb0ocIOWbn4j/FC/hGOv3/Zea378JXZ0NXGP45stqng=
+	t=1740555133; cv=none; b=rbusj+utkWTDd4tNicSGRf3qwl/PgmGxfD+JVRaIE3cnlmF59l3AwTnC0uU0OsE7F1RQFV2gER8pM2PnVY/5Q8I6NRXy8EXPmNAFQocwkeoNR5jxU1GSFXebrc7ZMC57H9yWdGkMWkBd7tDia5ud8jD3SiJ6unFrJxi7zvc8F4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740554943; c=relaxed/simple;
-	bh=6zbN5jOaaksOEj+lbfcyYF58FVbBR2uEiZ1U9Xm0Q7A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=MKtw7E30jVvebcV3AEZTQS9lWypdu075VOwLJLeMjV+8LCnebNupyuaGEegmr6xBE1po0MkQB8BAcsOUgvSOqdEPRvuIpjnH+dHqf6jfFO8cJE2ZScq6L3cf9y8rkroxBoHb1ZROyfw/sGKvZLKc8ldgy/FVnOY+Q+CNtAUpSPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=DPnzDNfL; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1740555133; c=relaxed/simple;
+	bh=2d7ZYo/J6xNOpi6uaMp2ccWOTHvJMpT+pl0WNwgOe4U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=REJ+pEfUHl/OiA4TI+bmTrHlGE/iVwcQ9nxQG1NNc0XFA/TmYQoRl4WsbEKuA1OwGxiDJg9geo5MjIISnliFFkLTa2NDqMIIjWwx9VCuCIiQQJOoiDv4q6xsxwIu48xSGxwWrPk0GJsGa8e/Ck+jAd1s+O3vrjMt/zmXkSwbuRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bf/wJYKa; arc=none smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="DPnzDNfL"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5ded69e6134so10593649a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2025 23:29:00 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bf/wJYKa"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5e02eba02e8so8719485a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Feb 2025 23:32:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1740554939; x=1741159739; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Jy5UzyKzocsSx5cSXomfjfFL//CTemBkcuebkephmC0=;
-        b=DPnzDNfLR7XZTTtbDw+DuW1lx1StRSsipS09fizN5cRrJGW7tcTHqO5NSG7xYdoHX2
-         o6tzx9bfAow0wJAO8wvFqoZHbs4mPyUkYNJ6p4x4X2XVpneFKc09+/l/Yb7I0rXWNvZf
-         59PADbwRVs1Z2Ld7EANg+3GvujiSVL9sTJFNAfRUgh+fg6qGE9wORi/b9D6BsDA1wVBw
-         nERAEUIHLAgGAaFUFnLURjg/tr13IDXYc82dy/A6pzvk+xS3FFlJBWRs/jLhn1DVfYvd
-         oBGL2zkNNM7XMhVb58ZA7Zr8kDt7ripM7lDqQoP5adxc4THLPzMH4Ps/LDy2jBnSEDqQ
-         ZvWg==
+        d=linaro.org; s=google; t=1740555130; x=1741159930; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=fV/8UPNYlCCgRVHTwtkpq+W+pfg36jdrdbg5juiRqX0=;
+        b=bf/wJYKaBz5PcBGldDLGM5AhUG8EVBoUB2WB4W1J4hyei3TSuWbSYDc61yJEK0yGOH
+         MzqAUmpb7Lve4O0eDzYcz0GXEdVf0D/YZLovYwtNg3uGIrqHCMZYEVAFqQd2HkPVvvqC
+         eZgi6TflAkFmx7GZXo1aumGXr3CQGIZrOcib22MRwQ7MqQ77fymUGGsTVlMLOznzKfY5
+         IQR9CdIEc256f7Ma/9cuw9eSLpsVUmC5gSCh+ljfatIoXdO4YiDLFJGLgQHobjsVygYS
+         +kRkOecAkD2t1fDcsFo2AnOIyAQIuLRisS6EhUFz2o9kZ9kpOjorFjCF6a5aooxjSHpq
+         yXkw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740554939; x=1741159739;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Jy5UzyKzocsSx5cSXomfjfFL//CTemBkcuebkephmC0=;
-        b=Kf08nxma4OGCWF3T/lpkBdlL2wmW37/77W37GhvRdWgUfO8Q1xgGo+PmXGwWVgTO9f
-         zvhHcZ/DRWa//l/frTAEltx8zXeRRvZpoQ6X9ibLAvaE9dIsGq5+heMP1pIfBv7A2tx+
-         OeXOIEXS85SzIryIu0IAw7JVFgJ/4YivG3pdzj5DBpW1M2tx1dNT+jbZU26icjASlNXm
-         JJgrYA/zQjIbXExWjz457xmJivLXp/9fhupLTOieEPftI10qlnJOXh3sSvAD7qLzAXr5
-         mrGU+K490tQ9PImGpQgaZBB5dkhUKKyNi2o0X9uepZPLQXK3/aHawvQMDiqgo1pLvhLV
-         7gUA==
-X-Forwarded-Encrypted: i=1; AJvYcCX78KtdR+kAT1u5MmSKc0rx2LrKl1QiZyahyEP3nBGlEKw6YJmorkpI7CCyLadduNsv5S/2B4xbxLM1@vger.kernel.org
-X-Gm-Message-State: AOJu0YzF/NI1Aal79WDawZF4dnuOOhxhKgvvZy6+Ly2MFSdPHFu7No6v
-	VBR2azbl7yKSgS6z5dsD/hLMnfiQANyp1gr0YPpmWHY0ccFKaBSuf7dR+fWXaINlj43dEnKPhJ3
-	tCejaRArZ1AfAq8ZC4++RrIGw1r4dYVNxntRKYA==
-X-Gm-Gg: ASbGnctJB45Dg5HDeh6zbHmau67W5GZK5ipnChhsUHzeqKef0X1fPCKQ1W03vP93Yq/
-	LVLfNBA4GjAFp/NHLwcoJwRxgVmleSfv/qQdu7nnwZVcT11m0kCydNyJEjj06OO+1NDMDR+NvXU
-	uwqVomdA==
-X-Google-Smtp-Source: AGHT+IFYP8Tba+z3P6zhrfLVohTtXs/BwRHQBKKRVXu59ZSzqEPbWtjoPmnK2n59Ee5Tugvqu0RIdPnu12lt6iEjWaU=
-X-Received: by 2002:a17:906:18b1:b0:ab6:ed8a:601f with SMTP id
- a640c23a62f3a-abeeed1123amr202024966b.12.1740554939189; Tue, 25 Feb 2025
- 23:28:59 -0800 (PST)
+        d=1e100.net; s=20230601; t=1740555130; x=1741159930;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fV/8UPNYlCCgRVHTwtkpq+W+pfg36jdrdbg5juiRqX0=;
+        b=sHRdk38aFSC+v8kn0I6gGOY4HfDrt7bwcJZQeGM/onq5lJYz/gX9QnUrsIiQpg0rIn
+         EuFwCSynnXbxrMM3LzLcnfmQA5XT1Tng4OrYepQJ9z1PussY+agrQreq3yTe8hHPIJLP
+         lUfPH91U/+M5pfuWNLViKCZ+b5eB8wdOoR3G7eRgYp1lWBimLMjdfkoiEqgN51mf3IRM
+         4hoxRW3QupcOP3I8D77w3gaZMGKqUJaf+4YK2DQaD0TwBhIKeoWyl2dqwIztE46oBWLM
+         o1oqnbHXHESTIdJDMTBrztysJ7uj+Af7asrIXyzorSMkUtvI5kL4DJBd0TFmMJPfE/mv
+         EDjA==
+X-Forwarded-Encrypted: i=1; AJvYcCWBzrQONawpebKLXGnfPL/Aug5O4KEsrRRIW2y9QiZEibZvZdyWr1KJfxSwu2wx2Onyyd4BQgQfbHU6@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2SdZYMhf9CAFXhKpOqKK+sfxH+FnMriBBYa9+Wjf+918qUHyD
+	VGdF9BCRx108kAamhkWZBZ7ZLQopjjJs/4zwuWoU3bgFGepIJDNh5ofdVNRBXd4=
+X-Gm-Gg: ASbGncsw2Pa8JU/fmkbYvqOtFA3JwFou4BBJkxLeysqhnW5gM9o8RXMDH9v811NOEZa
+	y55YZ+NghN5Bm9QXFUl/zmA0sba8470dXIVFOfxEYFEjDG2lKyWvp/D8sWc6h4Ct2voXYz62xzf
+	2+XHTv7nik+NUhgzdzFcXxiFMxS1kCfQnHtKNoDJuksRjs2rC0p80uBmQrLn4cYfSRfQxeTTmsz
+	5l4UY9om3pgV1s7GdyZbcU2diPuGxF4wZOVBmiqg/SSwVQqhNkBDDeY3JvnwyJZQpmMJ+gnx2RD
+	gANQgPoEzbndytZK8atjLWLaGkKyTXE=
+X-Google-Smtp-Source: AGHT+IEn3LearM21K5U7hoqi12X3IHtk0Y4SVgsVZwZq95cg2z1JvH53DBpCfb50hAH/YxGjgv13xg==
+X-Received: by 2002:a05:6402:51d0:b0:5e0:818a:5f43 with SMTP id 4fb4d7f45d1cf-5e4a0e29a82mr2240541a12.30.1740555129678;
+        Tue, 25 Feb 2025 23:32:09 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id 4fb4d7f45d1cf-5e4a6353eb6sm572296a12.48.2025.02.25.23.32.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Feb 2025 23:32:08 -0800 (PST)
+Date: Wed, 26 Feb 2025 10:32:04 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
+	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
+	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] scsi: fnic: Remove unnecessary spinlock locking and
+ unlocking
+Message-ID: <80809232-9490-4a0d-8159-af53228b612b@stanley.mountain>
+References: <20250225215146.4937-1-kartilak@cisco.com>
+ <20250225215146.4937-2-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
- <20250225-converge-secs-to-jiffies-part-two-v3-6-a43967e36c88@linux.microsoft.com>
- <e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr>
-In-Reply-To: <e53d7586-b278-4338-95a2-fa768d5d8b5e@wanadoo.fr>
-From: Daniel Vacek <neelx@suse.com>
-Date: Wed, 26 Feb 2025 08:28:48 +0100
-X-Gm-Features: AQ5f1JpekOKemtGu2BHsnbGs6fr563e7jHjxxRB5HZ2bESNce9YNZRbPCIKk9Cc
-Message-ID: <CAPjX3Fcr+BoMRgZGbqqgpF+w-sHU+SqGT8QJ3QCp8uvJbnaFsQ@mail.gmail.com>
-Subject: Re: [PATCH v3 06/16] rbd: convert timeouts to secs_to_jiffies()
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: Easwar Hariharan <eahariha@linux.microsoft.com>, Frank.Li@nxp.com, 
-	James.Bottomley@hansenpartnership.com, Julia.Lawall@inria.fr, 
-	Shyam-sundar.S-k@amd.com, akpm@linux-foundation.org, axboe@kernel.dk, 
-	broonie@kernel.org, cassel@kernel.org, cem@kernel.org, 
-	ceph-devel@vger.kernel.org, clm@fb.com, cocci@inria.fr, 
-	dick.kennedy@broadcom.com, djwong@kernel.org, dlemoal@kernel.org, 
-	dongsheng.yang@easystack.cn, dri-devel@lists.freedesktop.org, 
-	dsterba@suse.com, festevam@gmail.com, hch@lst.de, hdegoede@redhat.com, 
-	hmh@hmh.eng.br, ibm-acpi-devel@lists.sourceforge.net, idryomov@gmail.com, 
-	ilpo.jarvinen@linux.intel.com, imx@lists.linux.dev, james.smart@broadcom.com, 
-	jgg@ziepe.ca, josef@toxicpanda.com, kalesh-anakkur.purayil@broadcom.com, 
-	kbusch@kernel.org, kernel@pengutronix.de, leon@kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org, 
-	linux-spi@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	martin.petersen@oracle.com, nicolas.palix@imag.fr, ogabbay@kernel.org, 
-	perex@perex.cz, platform-driver-x86@vger.kernel.org, s.hauer@pengutronix.de, 
-	sagi@grimberg.me, selvin.xavier@broadcom.com, shawnguo@kernel.org, 
-	sre@kernel.org, tiwai@suse.com, xiubli@redhat.com, yaron.avizrat@intel.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250225215146.4937-2-kartilak@cisco.com>
 
-On Tue, 25 Feb 2025 at 22:10, Christophe JAILLET
-<christophe.jaillet@wanadoo.fr> wrote:
->
-> Le 25/02/2025 =C3=A0 21:17, Easwar Hariharan a =C3=A9crit :
-> > Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> > secs_to_jiffies().  As the value here is a multiple of 1000, use
-> > secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplica=
-tion
-> >
-> > This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci w=
-ith
-> > the following Coccinelle rules:
-> >
-> > @depends on patch@ expression E; @@
-> >
-> > -msecs_to_jiffies(E * 1000)
-> > +secs_to_jiffies(E)
-> >
-> > @depends on patch@ expression E; @@
-> >
-> > -msecs_to_jiffies(E * MSEC_PER_SEC)
-> > +secs_to_jiffies(E)
-> >
-> > While here, remove the no-longer necessary check for range since there'=
-s
-> > no multiplication involved.
->
-> I'm not sure this is correct.
-> Now you multiply by HZ and things can still overflow.
+On Tue, Feb 25, 2025 at 01:51:46PM -0800, Karan Tilak Kumar wrote:
+> diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+> index 8843d9486dbb..6530298733f0 100644
+> --- a/drivers/scsi/fnic/fdls_disc.c
+> +++ b/drivers/scsi/fnic/fdls_disc.c
+> @@ -311,36 +311,30 @@ void fdls_schedule_oxid_free_retry_work(struct work_struct *work)
+>  	unsigned long flags;
+>  	int idx;
+>  
+> -	spin_lock_irqsave(&fnic->fnic_lock, flags);
+> -
+>  	for_each_set_bit(idx, oxid_pool->pending_schedule_free, FNIC_OXID_POOL_SZ) {
+>  
+>  		FNIC_FCS_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
+>  			"Schedule oxid free. oxid idx: %d\n", idx);
+>  
+> -		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  		reclaim_entry = kzalloc(sizeof(*reclaim_entry), GFP_KERNEL);
+> -		spin_lock_irqsave(&fnic->fnic_lock, flags);
+> -
+>  		if (!reclaim_entry) {
+>  			schedule_delayed_work(&oxid_pool->schedule_oxid_free_retry,
+>  				msecs_to_jiffies(SCHEDULE_OXID_FREE_RETRY_TIME));
+> -			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  			return;
+>  		}
+>  
+>  		if (test_and_clear_bit(idx, oxid_pool->pending_schedule_free)) {
 
-This does not deal with any additional multiplications. If there is an
-overflow, it was already there before to begin with, IMO.
+We discussed this earlier and I really should have brought it up then,
+but what is this check about?  We "know" (scare quotes) that it is true
+because we're inside a for_each_set_bit() loop.  I had assumed it was to
+test for race conditions so that's why I put it under the lock.  If the
+locking doesn't matter then we could just do a clear_bit() without doing
+a second test.
 
-> Hoping I got casting right:
+regards,
+dan carpenter
 
-Maybe not exactly? See below...
+>  			reclaim_entry->oxid_idx = idx;
+>  			reclaim_entry->expires = round_jiffies(jiffies + delay_j);
+> +			spin_lock_irqsave(&fnic->fnic_lock, flags);
+>  			list_add_tail(&reclaim_entry->links, &oxid_pool->oxid_reclaim_list);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  			schedule_delayed_work(&oxid_pool->oxid_reclaim_work, delay_j);
+>  		} else {
+>  			/* unlikely scenario, free the allocated memory and continue */
+>  			kfree(reclaim_entry);
+>  		}
+>  	}
 
-> #define MSEC_PER_SEC    1000L
-> #define HZ 100
->
->
-> #define secs_to_jiffies(_secs) (unsigned long)((_secs) * HZ)
->
-> static inline unsigned long _msecs_to_jiffies(const unsigned int m)
-> {
->         return (m + (MSEC_PER_SEC / HZ) - 1) / (MSEC_PER_SEC / HZ);
-> }
->
-> int main() {
->
->         int n =3D INT_MAX - 5;
->
->         printf("res  =3D %ld\n", secs_to_jiffies(n));
->         printf("res  =3D %ld\n", _msecs_to_jiffies(1000 * n));
-
-I think the format should actually be %lu giving the below results:
-
-res  =3D 18446744073709551016
-res  =3D 429496130
-
-Which is still wrong nonetheless. But here, *both* results are wrong
-as the expected output should be 214748364200 which you'll get with
-the correct helper/macro.
-
-But note another thing, the 1000 * (INT_MAX - 5) already overflows
-even before calling _msecs_to_jiffies(). See?
-
-Now, you'll get that mentioned correct result with:
-
-#define secs_to_jiffies(_secs) ((unsigned long)(_secs) * HZ)
-
-Still, why unsigned? What if you wanted to convert -5 seconds to jiffies?
-
->         return 0;
-> }
->
->
-> gives :
->
-> res  =3D -600
-> res  =3D 429496130
->
-> with msec, the previous code would catch the overflow, now it overflows
-> silently.
-
-What compiler options are you using? I'm not getting any warnings.
-
-> untested, but maybe:
->         if (result.uint_32 > INT_MAX / HZ)
->                 goto out_of_range;
->
-> ?
->
-> CJ
->
->
-> >
-> > Acked-by: Ilya Dryomov <idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.or=
-g>
-> > Signed-off-by: Easwar Hariharan <eahariha-1pm0nblsJy7Jp67UH1NAhkEOCMrvL=
-tNR@public.gmane.org>
-> > ---
-> >   drivers/block/rbd.c | 8 +++-----
-> >   1 file changed, 3 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-> > index faafd7ff43d6ef53110ab3663cc7ac322214cc8c..41207133e21e9203192adf3=
-b92390818e8fa5a58 100644
-> > --- a/drivers/block/rbd.c
-> > +++ b/drivers/block/rbd.c
-> > @@ -108,7 +108,7 @@ static int atomic_dec_return_safe(atomic_t *v)
-> >   #define RBD_OBJ_PREFIX_LEN_MAX      64
-> >
-> >   #define RBD_NOTIFY_TIMEOUT  5       /* seconds */
-> > -#define RBD_RETRY_DELAY              msecs_to_jiffies(1000)
-> > +#define RBD_RETRY_DELAY              secs_to_jiffies(1)
-> >
-> >   /* Feature bits */
-> >
-> > @@ -4162,7 +4162,7 @@ static void rbd_acquire_lock(struct work_struct *=
-work)
-> >               dout("%s rbd_dev %p requeuing lock_dwork\n", __func__,
-> >                    rbd_dev);
-> >               mod_delayed_work(rbd_dev->task_wq, &rbd_dev->lock_dwork,
-> > -                 msecs_to_jiffies(2 * RBD_NOTIFY_TIMEOUT * MSEC_PER_SE=
-C));
-> > +                 secs_to_jiffies(2 * RBD_NOTIFY_TIMEOUT));
-> >       }
-> >   }
-> >
-> > @@ -6283,9 +6283,7 @@ static int rbd_parse_param(struct fs_parameter *p=
-aram,
-> >               break;
-> >       case Opt_lock_timeout:
-> >               /* 0 is "wait forever" (i.e. infinite timeout) */
-> > -             if (result.uint_32 > INT_MAX / 1000)
-> > -                     goto out_of_range;
-> > -             opt->lock_timeout =3D msecs_to_jiffies(result.uint_32 * 1=
-000);
-> > +             opt->lock_timeout =3D secs_to_jiffies(result.uint_32);
-> >               break;
-> >       case Opt_pool_ns:
-> >               kfree(pctx->spec->pool_ns);
-> >
->
->
+> -
+> -	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  }
+>  
+>  static bool fdls_is_oxid_fabric_req(uint16_t oxid)
+> -- 
+> 2.47.1
