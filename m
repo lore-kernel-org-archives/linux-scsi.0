@@ -1,48 +1,48 @@
-Received: from 002.mia.mailroute.net (002.mia.mailroute.net [199.89.3.5])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA77E21C19E;
-	Wed, 26 Feb 2025 18:28:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428BF2222CF;
+	Wed, 26 Feb 2025 18:40:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740594528; cv=none; b=lH1JGskk06AcbqXilsRFuJkoToCKeccD7Yk7zb3l/x+u4rFE732OtjcVsHb1Y19vo04PKpJGXlNOPUqXi8W+apcJOUeTdBkZiyZWierEWLoEH1QtmathsPfF0QTVxjI6lugUOx9pFHgHEda6RIrknRye0M5RD/3OybJMFJFdxKs=
+	t=1740595260; cv=none; b=nMzXkUS8a7okGoWm/TcJUDahBVzaPobaFN6p3g5sUOzwAWD9iJtUdRbPWA5aQqoIoB2xgs9aGKSObZA6It2vEpEswbIzKH7i/FgZyFJTchB0i7JduR8BU1rPP4SQxeyPF4zo3l6nikqlja+U72WYN2JU66iJvgGAKZyNBZ3Vl7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740594528; c=relaxed/simple;
-	bh=xgLlMELhRjjgX4wSWhoOtD6ZOngS4uqiYbGhlQQhuy0=;
+	s=arc-20240116; t=1740595260; c=relaxed/simple;
+	bh=XDo3dXB3ZepMkRvo5YjK5g4NfObnn16Macr8zt68RMQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=t70J9t4m+ry06AuSkN05pFdW3D1vcyhZJ44UryZ1J6TVt7bIERtIVZ7TcdOAly7b/qSbXpmb6tzuAtGSBkOk+BHLaK9nx8FfqA2fzLPLVS9Do4ZKH+EQAIOVcJ/wFMP53cVvY769h8u8pUAZhHdO3hCtr2wUjWYvr9RBYDDEgNs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FbMWb8kA; arc=none smtp.client-ip=199.89.3.5
+	 In-Reply-To:Content-Type; b=udL108SLbOTPt97c7khlakddzLJQRcqrm0iH1LuoSTkVey8mcX0miEVIG2gVZUrleSzeFm/YUdb++OvsPIGNgbTpBi/VcTY5xa+SIneX5fR9+PFgoLd4zyDLGC18H28Zy7BWNSVYcah53Gks3wrYigTYS4/EiYokQGkV9sRr504=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ZQkU8DK9; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FbMWb8kA"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ZQkU8DK9"
 Received: from localhost (localhost [127.0.0.1])
-	by 002.mia.mailroute.net (Postfix) with ESMTP id 4Z32zc6Vf6zmB6xx;
-	Wed, 26 Feb 2025 18:28:44 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Z33Fj4mxNzlm4Yd;
+	Wed, 26 Feb 2025 18:40:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1740594523; x=1743186524; bh=KyPmYbL6zItehixQFi6Llkvh
-	GEJE3rfZhaDk8EUQkxc=; b=FbMWb8kAwfE3DveSTfkaX0bTjbcAPF6jJwaG2vqa
-	o96YiC65ASo2GWw08BDKdO1ZG5Yk2vzbMp/AbhTCu6BwAJ32RucT98AiqNS+ZpfL
-	CGcheOl5wUWIjium7kPq0OlvPcpGazTZgbzk30zwpX6/f2chNlG6lNXHx3v5wteM
-	WGip9CAXkDU/5V0gfNZBljZY5AAvp9YfCPJmZETqNhXAKuTX3onRADo2FgdyRtrp
-	avS+1CKwiv1Few0k5AJqxpRowSZ7u8ZoAVk27Kv5Okv2J/nhyE4EaR7AWs2xsZno
-	jcWeF33yfqBZ1VON0y0oKMS+q59V5AoehkCLdGmM/vXnCQ==
+	 s=mr01; t=1740595256; x=1743187257; bh=egOgaD1Wy/xQmlMQKt5dzZhV
+	EvaTAscpf2ST+vETF70=; b=ZQkU8DK9G2NgT6E4oJk9OcmTtOTG71QBNvuYIR32
+	/5kftq6h+AfSPcR2P0tOxsCqVaUKhWTSLON7vpCRDwJAcS4yLtCoRMc1oq/jnWod
+	H/YXaw6GTqVpzts5ozwnH0I9lu54owIEeADPa/kQdDGPr6TdI0EOpgry+Q4lXrmM
+	EsgtLjhUaTfGAZxF3YtGrbAYJ2WqOVlbnZSFR+VoQo3kEwzKzNCjywCcUN3hjZ7Q
+	L+EcNv+cKNznPAPKpqxT7HUt61bY8HNJt2VQA/K4RuYsobmKsX7EhQ1w3M0oE6+v
+	CJxWmd+7fJXbXmovqseRF2H42h+sG+ziEeAR/1m7GfV4gA==
 X-Virus-Scanned: by MailRoute
-Received: from 002.mia.mailroute.net ([127.0.0.1])
- by localhost (002.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id wp3WPZv53FQq; Wed, 26 Feb 2025 18:28:43 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id EQd11jh3aRYl; Wed, 26 Feb 2025 18:40:56 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 002.mia.mailroute.net (Postfix) with ESMTPSA id 4Z32zZ5Pf2znSXxj;
-	Wed, 26 Feb 2025 18:28:42 +0000 (UTC)
-Message-ID: <125e3b04-a614-4d9d-aba4-8e08684374a8@acm.org>
-Date: Wed, 26 Feb 2025 10:28:41 -0800
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Z33Fd6S6Hzlsfvx;
+	Wed, 26 Feb 2025 18:40:53 +0000 (UTC)
+Message-ID: <6eb9ec05-96f1-41d2-b055-56e34d5722ae@acm.org>
+Date: Wed, 26 Feb 2025 10:40:51 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,158 +50,60 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: stop judging after finding a VPD page expected to
- be processed.
-To: Chaohai Chen <wdhh6@aliyun.com>, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250226065802.234144-1-wdhh6@aliyun.com>
+Subject: Re: [PATCH 0/3] scsi: ufs-qcom: Enable Dumping of Hibern8, MCQ, and
+ Testbus Registers
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+ Manish Pandey <quic_mapa@quicinc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
+References: <20241025055054.23170-1-quic_mapa@quicinc.com>
+ <20241112075000.vausf7ulr2t5svmg@thinkpad>
+ <cb3b0c9c-4589-4b58-90a1-998743803c5a@acm.org>
+ <20241209040355.kc4ab6nfp6syw37q@thinkpad>
+ <3a850d86-5974-4b2d-95be-e79dad33636f@acm.org>
+ <20250226053019.y6tdukcqpijkug4m@thinkpad>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250226065802.234144-1-wdhh6@aliyun.com>
+In-Reply-To: <20250226053019.y6tdukcqpijkug4m@thinkpad>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 2/25/25 10:58 PM, Chaohai Chen wrote:
-> When the vpd_buf->data[i] is expected to be processed, stop other
-> judgments.
+On 2/25/25 9:30 PM, Manivannan Sadhasivam wrote:
+> On Mon, Dec 09, 2024 at 10:35:39AM -0800, Bart Van Assche wrote:
+>> On 12/8/24 12:03 PM, Manivannan Sadhasivam wrote:
+>>> On Tue, Nov 12, 2024 at 10:10:02AM -0800, Bart Van Assche wrote:
+>>>> On 11/11/24 11:50 PM, Manivannan Sadhasivam wrote:
+>>>>> On Fri, Oct 25, 2024 at 11:20:51AM +0530, Manish Pandey wrote:
+>>>>>> Submitting a series of patches aimed at enhancing the debugging and monitoring capabilities
+>>>>>> of the UFS-QCOM driver. These patches introduce new functionalities that will significantly
+>>>>>> aid in diagnosing and resolving issues related to hardware and software operations.
+>>>>>>
+>>>>>
+>>>>> TBH, the current state of dumping UFSHC registers itself is just annoying as it
+>>>>> pollutes the kernel ring buffer. I don't think any peripheral driver in the
+>>>>> kernel does this. Please dump only relevant registers, not everything that you
+>>>>> feel like dumping.
+>>>>
+>>>> I wouldn't mind if the code for dumping  UFSHC registers would be removed.
+>>>
+>>> Instead of removing, I'm planning to move the dump to dev_coredump framework.
+>>> But should we move all the error prints also? Like all ufshcd_print_*()
+>>> functions?
+>>
+>> Hmm ... we may be better off to check which of these functions can be
+>> removed rather than moving all of them to another framework.
 > 
-> Signed-off-by: Chaohai Chen <wdhh6@aliyun.com>
-> ---
->   drivers/scsi/scsi.c | 28 ++++++++++++++++++++--------
->   1 file changed, 20 insertions(+), 8 deletions(-)
+> devcoredump turned out to be not a good fit for storage drivers. And I can't
+> figure out another way. And Qcom is telling me that these debug prints are
+> necessary for them to debug the issues going forward.
 > 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index a77e0499b738..53daf923ad8e 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -510,22 +510,34 @@ void scsi_attach_vpd(struct scsi_device *sdev)
->   		return;
->   
->   	for (i = 4; i < vpd_buf->len; i++) {
-> -		if (vpd_buf->data[i] == 0x0)
-> +		switch (vpd_buf->data[i]) {
-> +		case 0x0:
->   			scsi_update_vpd_page(sdev, 0x0, &sdev->vpd_pg0);
-> -		if (vpd_buf->data[i] == 0x80)
-> +			break;
-> +		case 0x80:
->   			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
-> -		if (vpd_buf->data[i] == 0x83)
-> +			break;
-> +		case 0x83:
->   			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
-> -		if (vpd_buf->data[i] == 0x89)
-> +			break;
-> +		case 0x89:
->   			scsi_update_vpd_page(sdev, 0x89, &sdev->vpd_pg89);
-> -		if (vpd_buf->data[i] == 0xb0)
-> +			break;
-> +		case 0xb0:
->   			scsi_update_vpd_page(sdev, 0xb0, &sdev->vpd_pgb0);
-> -		if (vpd_buf->data[i] == 0xb1)
-> +			break;
-> +		case 0xb1:
->   			scsi_update_vpd_page(sdev, 0xb1, &sdev->vpd_pgb1);
-> -		if (vpd_buf->data[i] == 0xb2)
-> +			break;
-> +		case 0xb2:
->   			scsi_update_vpd_page(sdev, 0xb2, &sdev->vpd_pgb2);
-> -		if (vpd_buf->data[i] == 0xb7)
-> +			break;
-> +		case 0xb7:
->   			scsi_update_vpd_page(sdev, 0xb7, &sdev->vpd_pgb7);
-> +			break;
-> +		default:
-> +			break;
-> +		}
->   	}
->   	kfree(vpd_buf);
->   }
+> Your thoughts?
 
-Instead of preserving the code duplication, please change this function
-such that no code is duplicated. This will make it easier to cache more
-VPD pages in the future. Here is an example of how this could be done
-(entirely untested):
+Does this mean that printk() is the best alternative we have available?
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a77e0499b738..1365168941ed 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -487,6 +487,19 @@ static void scsi_update_vpd_page(struct scsi_device 
-*sdev, u8 page,
-  		kfree_rcu(vpd_buf, rcu);
-  }
+Thanks,
 
-+struct vpd_page_info {
-+	u8 page_code;
-+	u16 offset; /* offset in struct scsi_device of vpd_pg... member */
-+};
-+
-+#define SCSI_BUILD_BUG_ON(cond) (sizeof(char[1 - 2 * !!(cond)]) - 
-sizeof(char))
-+
-+#define VPD_PAGE_INFO(vpd_page)						\
-+	{ 0x##vpd_page, offsetof(struct scsi_device, vpd_pg##vpd_page) +\
-+		SCSI_BUILD_BUG_ON(					\
-+		!__same_type(&((struct scsi_device *)NULL)->vpd_pg##vpd_page, \
-+			     struct scsi_vpd __rcu **))}
-+
-  /**
-   * scsi_attach_vpd - Attach Vital Product Data to a SCSI device structure
-   * @sdev: The device to ask
-@@ -498,7 +511,17 @@ static void scsi_update_vpd_page(struct scsi_device 
-*sdev, u8 page,
-   */
-  void scsi_attach_vpd(struct scsi_device *sdev)
-  {
--	int i;
-+	static const struct vpd_page_info cached_page[] = {
-+		VPD_PAGE_INFO(0),
-+		VPD_PAGE_INFO(80),
-+		VPD_PAGE_INFO(83),
-+		VPD_PAGE_INFO(89),
-+		VPD_PAGE_INFO(b0),
-+		VPD_PAGE_INFO(b1),
-+		VPD_PAGE_INFO(b2),
-+		VPD_PAGE_INFO(b7),
-+	};
-+	int i, j;
-  	struct scsi_vpd *vpd_buf;
-
-  	if (!scsi_device_supports_vpd(sdev))
-@@ -510,22 +533,17 @@ void scsi_attach_vpd(struct scsi_device *sdev)
-  		return;
-
-  	for (i = 4; i < vpd_buf->len; i++) {
--		if (vpd_buf->data[i] == 0x0)
--			scsi_update_vpd_page(sdev, 0x0, &sdev->vpd_pg0);
--		if (vpd_buf->data[i] == 0x80)
--			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
--		if (vpd_buf->data[i] == 0x83)
--			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
--		if (vpd_buf->data[i] == 0x89)
--			scsi_update_vpd_page(sdev, 0x89, &sdev->vpd_pg89);
--		if (vpd_buf->data[i] == 0xb0)
--			scsi_update_vpd_page(sdev, 0xb0, &sdev->vpd_pgb0);
--		if (vpd_buf->data[i] == 0xb1)
--			scsi_update_vpd_page(sdev, 0xb1, &sdev->vpd_pgb1);
--		if (vpd_buf->data[i] == 0xb2)
--			scsi_update_vpd_page(sdev, 0xb2, &sdev->vpd_pgb2);
--		if (vpd_buf->data[i] == 0xb7)
--			scsi_update_vpd_page(sdev, 0xb7, &sdev->vpd_pgb7);
-+		for (j = 0; j < ARRAY_SIZE(cached_page); j++) {
-+			const u8 page_code = cached_page[j].page_code;
-+			const u16 offset = cached_page[j].offset;
-+			struct scsi_vpd __rcu **vpd_data =
-+				(void *)&sdev + offset;
-+
-+			if (vpd_buf->data[i] == page_code) {
-+				scsi_update_vpd_page(sdev, page_code, vpd_data);
-+				break;
-+			}
-+		}
-  	}
-  	kfree(vpd_buf);
-  }
-
+Bart.
