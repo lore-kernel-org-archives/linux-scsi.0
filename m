@@ -1,99 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5D9251791;
-	Fri, 28 Feb 2025 20:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6FD4923F362;
+	Fri, 28 Feb 2025 20:22:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740773447; cv=none; b=KtxOd+OJDnKdQmX919a3hq8Qf44YqtB3QqzCkh6IbGSbENCOGBxe83cPdQOcY0Ib/FY865cuGDutkdgY8hUqqiKScT5xMWjrysG/SSekqZqvU6gFLyVmTFEbqhOlyspwEI+xA3teT2O7pSrZnCl3nhzv5cvRWOk31puAHS0GGno=
+	t=1740774125; cv=none; b=Dl/n+VByiPEAJnIScmuDTKLTSPIK87+Aap3UqafcE9HBGmnOyBqSr6XkuzkzwTtngQASA0+4Yw8dIvJ7x0wo+o5AUbUVgQsCpkDbrPi4nhbXsYIJeYmRRawjXoTda5w8+U+Ifz2fv3RTvT0SeR9bZGkYa1T8o09Nc+9xra7Lztw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740773447; c=relaxed/simple;
-	bh=u1o2k0KyDpnY3J5fmKctnRTEq8YkFZnm9gmNrKfBZI8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VNBj8qhY7aPji+TSmkpqwVkW+aAYC0FP/Oxw3qpAxR+KYyPD1ovntcKDxZ+VapsC4eyDqimtF3qhCijVbZ8ZpsAcZN+iSxnEK8bRxznlFP2AxUF6BHeLGbFOkmnKDjQ5g/wNhFenJVzSOnOJNoGxEmoFWmr4+lP68CYIVvQnIF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CeJwB4Qr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740774125; c=relaxed/simple;
+	bh=o/l2bMwVBB38YORUnkTP9+moISfTV7Mu1AD98nT7SF4=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=niZZzXtJP8UyZgij+CA3/zFtA2R+eArqBabumYIofOEELtKA7M3VIFRWYKB/CGI0/Ahb0dMKNKzcU4tm3QLZmOYwY9VC6WHswluaIMYBBsHm/xRYhxKvR2ap9Of6+Cbol1ZFEpQmOILX1thCAR4zxX66SZ/+1OcLszDXIdTzuII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=H/PvLRLQ; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CeJwB4Qr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1F58C4CED6;
-	Fri, 28 Feb 2025 20:10:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740773446;
-	bh=u1o2k0KyDpnY3J5fmKctnRTEq8YkFZnm9gmNrKfBZI8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CeJwB4QrObCemiMdp0wAypHUn/FzoYrvKRijMa4WYunzEHVac1fyNegGOHZ85a2vO
-	 eF9OXljGFTeHBNSsxDCJOzXDmDtD4o8/0qSVfQaQe0QpSs5vJUg1jTvcgvzinjX6nq
-	 Ovy9FVk7einGFzHi+gc804nCNbISUWHWW3GAQEIZNVmLch+F7fGzdzSaBd9+K6gHny
-	 S3+8TaQyHsJQkCdwoYfIktRIgp9B040YErUA9M+nWhFewHi/g4gbE0HsjPI3MnhgjJ
-	 KHB5ksQ7a8Ss3lF53+c3fqLee1FnitCZew6vl5q5iPCwOhPqepzixkGGu8sf5gaBp2
-	 gGLvqNQqfyjHw==
-Date: Fri, 28 Feb 2025 12:10:43 -0800
-From: Kees Cook <kees@kernel.org>
-To: Thorsten Blum <thorsten.blum@linux.dev>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: Replace deprecated strncpy() with strscpy()
-Message-ID: <202502281204.CE15A6BA35@keescook>
-References: <20250226121003.359876-1-thorsten.blum@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="H/PvLRLQ"
+Received: from [192.168.35.166] (c-24-22-154-137.hsd1.wa.comcast.net [24.22.154.137])
+	by linux.microsoft.com (Postfix) with ESMTPSA id AA472210D0DB;
+	Fri, 28 Feb 2025 12:21:57 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com AA472210D0DB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1740774118;
+	bh=slzyIXqsJX8WxAkijLeHQaPM9dg81dMIPBdv/9p2VAQ=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=H/PvLRLQx++2lkUSwbWPLJGhMTIxPkHKQYd2hKUzIAwub7NBj6N9tXs5JCNFelUPr
+	 afAZUQJvCZiWCAQ7H0WhJz11EHyk/1H/PMPB4rB7D09BgHxR16A6xnYladbn8FaPL0
+	 uwOysYCSPoNw96W3VYB3JUvQHIUhI1SKJTkWcBtQ=
+Message-ID: <40d016eb-e701-4872-b0bc-f5ba34093a53@linux.microsoft.com>
+Date: Fri, 28 Feb 2025 12:21:57 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250226121003.359876-1-thorsten.blum@linux.dev>
+User-Agent: Mozilla Thunderbird
+Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+ decui@microsoft.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-hyperv@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ eahariha@linux.microsoft.com, apais@microsoft.com, benhill@microsoft.com,
+ sunilmut@microsoft.com
+Subject: Re: [PATCH hyperv-next] scsi: storvsc: Don't call the packet status
+ the hypercall status
+To: Roman Kisel <romank@linux.microsoft.com>
+References: <20250227233110.36596-1-romank@linux.microsoft.com>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <20250227233110.36596-1-romank@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 26, 2025 at 01:10:03PM +0100, Thorsten Blum wrote:
-> Since strncpy() is deprecated for NUL-terminated destination buffers,
-> use strscpy() instead.
+On 2/27/2025 3:31 PM, Roman Kisel wrote:
+> The log statement reports the packet status code as the hypercall
+> status code which causes confusion when debugging.
 > 
-> Compile-tested only.
+> Fix the name of the datum being logged.
 > 
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+> Signed-off-by: Roman Kisel <romank@linux.microsoft.com>
 > ---
->  drivers/target/target_core_configfs.c | 2 +-
+>  drivers/scsi/storvsc_drv.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> index c40217f44b1b..446682f900e4 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -143,7 +143,7 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
->  	}
->  	filp_close(fp, NULL);
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index a8614e54544e..d7ec79536d9a 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1183,7 +1183,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+>  			STORVSC_LOGGING_WARN : STORVSC_LOGGING_ERROR;
 >  
-> -	strncpy(db_root, db_root_stage, read_bytes);
-> +	strscpy(db_root, db_root_stage, read_bytes);
->  	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
->  
->  	r = read_bytes;
+>  		storvsc_log_ratelimited(device, loglevel,
+> -			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x hv 0x%x\n",
+> +			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x sts 0x%x\n",
 
-When doing strncpy() to strscpy() conversions, please include details
-of your analysis for several things:
+I'd suggest using "host" than the opaque "sts", since this is already part of the different
+levels of status (scsi, srb...) being printed out. With "host", for e.g. the print would be seen
+as the following and clearly point out the offending part of the stack.
 
-- why is it safe to be NUL-terminated?
-- why is NUL padding needed/not needed?
-- why is the maximum length argument correct?
+hv_storvsc fd1d2cbd-ce7c-535c-966b-eb5f811c95f0: tag#599 cmd 0x28 status: scsi 0x2 srb 0x4 host 0xc0000001
 
-In this case, db_root is used with "%s" format strings, so we know it is
-expected to be NUL-terminated. Additionally, it is _only_ ever used with
-"5s" format strings, so padding is not needed.
-
-As for length, read_bytes will always be less than DB_ROOT_LEN because
-it is explicitly tested for against "count" which, enforced by the
-SETATTR API, will always be the number of valid bytes in "page", and
-snprintf() will be limited to DB_ROOT_LEN. (snprintf may return more
-than its length argument, but because of the "count" check, this should
-be impossible.)
-
-While you're in this file, though, can you replace the other strncpy
-that is used in target_init_dbroot() also?
-
--Kees
-
--- 
-Kees Cook
+Thanks,
+Easwar (he/him)
