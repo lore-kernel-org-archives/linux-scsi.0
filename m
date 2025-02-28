@@ -1,107 +1,91 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D90A2561D6
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Feb 2025 09:37:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E58FB4C79
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Feb 2025 12:46:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740735456; cv=none; b=dKN8eqLZ4pMvaSKWe+xENnUMBBFjWHXiYK1HpB4AsaV5IoH0w7plmmGv4NRWrgSd5hwr/SU+iphywEDYCOiSdVOlYWPwBzPD62jSxtq9y5OPxworvpQwUb94GLGgqcaJV09aMXNtcV2TDVTgs3cOrvLgOuFPClpPCzZ0B89zwmU=
+	t=1740746811; cv=none; b=e3jGjb8jXFFcS7WAH/3b3q3c2eKIpndOb5Sa8yljC5/ed7fz/NE1ZwNaZg1Sy8+9J5UHwsPAevva6x62f10JX6BqHiHDq3m+8jHtao72MoQwm654d6WMqRmiyRsgGNxK79gou1plh1wZ7HjZwn8M61ZnD7aUpbxJJ7YQidregvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740735456; c=relaxed/simple;
-	bh=mXhku7IHghHzgD5uOXEgBnRnYCvInJFCk9RjXNz+DvU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=pei0LhaUNs4CtNjqh4HmHRlYXIzl6B3JAr+UQbIZ7TTJ5m43GOT0SAjUopmrsbebH6zpo4FEiLU/rcI6YLMFjcgjy/q0Hug+jy1jtjhgjWMxQB/LqVcRkI3m7AFWW/lnCOha5vU0ICakjQZCZG3afC28AzfuTTwa/UB4dYV+2jw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RShMBrKZ; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1740746811; c=relaxed/simple;
+	bh=a845YfJ39bOuKl4deN7tFGJ4Zer/8Dh2wiyMxv2jdR0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VJzWFFa+JbLfx3zhBbtphHiLHeBO9koJ1X3P7n9+VuDaelkZ1dxD+uUHO+DjQ9+ygjL3zUbaejNah2u0u5O8kujdoSLHvn1829sa38BDqCHUxpdASv4T8xU40mb+L6dMKtgBosm36qaqwooyrzN8RNNDAqnljmo/EyjVd+I/cS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=w5KTY1Hj; arc=none smtp.client-ip=62.142.5.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RShMBrKZ"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-5e4b410e48bso2859078a12.0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Feb 2025 01:37:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="w5KTY1Hj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1740735453; x=1741340253; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AF5nsT/tqJ0sa2KfZr17M52RbC0HR9O1oH21NA6kGQc=;
-        b=RShMBrKZa4frQH1WfVRbDnLv0oUQPpVhAi4h8RWZTs9uX2YvDH9G5WQeTpu4aMTAYF
-         LO/H34ljYqumzEW39GOSL/mnyekQiCtaMgHPygeub9nbXEE44OHDu9eBqTG0KEmUSEVC
-         huMMPzwhi/sbG6V1TxocxBfZuY1iFRVOFSthB4o0GKKWUAuXJq+h6CgJViLcxwsNOFJl
-         JYnCuZYbJh0V6NIfQS+IjsOYRqC+4skk6h+fny+vaaGwtWX3D3sbKgfTyH2jVmuYZJHM
-         JJBEWwvtYDDFShhwc1FTiB+rYl2Cou2aqkEn/MxWzC2athtDFbD9zDn80tdrKsiqANpJ
-         c0ug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740735453; x=1741340253;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AF5nsT/tqJ0sa2KfZr17M52RbC0HR9O1oH21NA6kGQc=;
-        b=BpaVABQ+ZwoznlLusJyxHONv30jPKx8PNGFZ1Rq2FFx7XMggGs0pSvtpVBLzwdtrnQ
-         ZKDHUF/5s/1lu2fnceILVXGnldNEBT8qYKfJM9PpI1nRW8SKnuyXCTjFr7Fz8wc82CCs
-         N2H+BfDadDQlFlQjc/lJyP/ox1peY7TdZDw+jw8+Txs27SSbTBpTxGfqvAqMEDsQL7gH
-         CXmGbQAtZIUPCSLz51/AYPp1x6rQb/J7PUV29gWFLo4iXctRaNhjbuJAggXtJuNGamPA
-         u9oNS7XvIzh+g7O51hbWjrNyBA8HjpIunZEy8VDkpzyxHx+130teLa7/bcYQniSRqhFn
-         DsdA==
-X-Forwarded-Encrypted: i=1; AJvYcCWZNLS0tIRzt2eh7slHvOP3zZwY0jrD3Sn+yudC+GzvwXKI3usYg1+w30l3UJOQz8d9p/z97ibJjPET@vger.kernel.org
-X-Gm-Message-State: AOJu0YwwqFtnwCr9QTMtp4TX2NyTbBKcsexpvLdR0NMkFyXjYIXDRWgw
-	rMo70XyXb7CdjPdRtUaLvRyfrugiXzJBsv/kXhPMfcEo44OTnDRJNb9jqG3tKWo=
-X-Gm-Gg: ASbGncvCpkv7JzZ2AzqsG4VALdTPxQMojBUnPm45Gur0nrZi2cSlz5gyHfSz7hO7MRC
-	wFltVg+h/eVSgXuQ3jpa3cExy6pmkzNc+uolkLbpOPr/sZ0n43pWjn9cF7GMmQ1LDgbqRj/QjSX
-	vH88ONh6q2ZGHv3PTeuHCzAykEcb5jJUb7A59+lGhfCQVGy3gEcu1CgBme9/hvhCjd1iA+dvBko
-	G4CizhOHY2M0lT6gvhhdRlT+Brh3hz9sZ9MBHJCnNWUJcpIPrj1cXBY+i9Chv1oG9SRxRz8tTgz
-	faIuemPWyuz8seJr8YWOLFmkP5iVNjA=
-X-Google-Smtp-Source: AGHT+IH0rbUhLFGAEfY+tGINt28wIT6ZI81UIlrbwU1hKXYL7titFBMGZMuaFvwZupi/juouiULxXw==
-X-Received: by 2002:a05:6402:2813:b0:5e4:9348:72c3 with SMTP id 4fb4d7f45d1cf-5e4d6af105cmr2172188a12.10.1740735452591;
-        Fri, 28 Feb 2025 01:37:32 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id 4fb4d7f45d1cf-5e4c43a4e26sm2229958a12.66.2025.02.28.01.37.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Feb 2025 01:37:31 -0800 (PST)
-Date: Fri, 28 Feb 2025 12:37:28 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH next] scsi: mpt3sas: Fix buffer overflow in
- mpt3sas_send_mctp_passthru_req()
-Message-ID: <02b0d4ff-961c-49ae-921a-5cc469edf93c@stanley.mountain>
+	d=kolumbus.fi; s=elisa1;
+	h=content-transfer-encoding:content-type:mime-version:message-id:date:subject:
+	 cc:to:from:from:to:cc:reply-to:subject:date:in-reply-to:references:
+	 list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=QV/j6JYikyUIfYNrSDPeCXYNXEQqIwLdPq6BpFlwhLM=;
+	b=w5KTY1HjpQus6ObzY/vZngmN5PA2V2R+U+LSDFUbWrc2DdIM0M2DQQkEZ4SNNe1vwlqf1PdsbQsg4
+	 hwobyMu2DJZk578g1b+2LqBQrjC6VSC0yxUS+91tdJw4b8iTZYVwTkLOc9GFTND++TRkIPZZhY4p3o
+	 92N/aW/abqK15qGNLlB0jOrXIjZveOBL6dHXhPN8BR9RYJ/tD/w1jPrtQU5J5qQNqbBPQkNgkl9kID
+	 lapEZlg3ze5nGSs0iK9N08aN4Shaou/v9WL+FyS2AFLM5lj8s9HaloqwUuV0hSuttremvLlnvikmjE
+	 gSs3ayiDMtSja3qsTo9GG085E0t8hBA==
+Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
+	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
+	id 0bfb94af-f5d2-11ef-a2a5-005056bdfda7;
+	Fri, 28 Feb 2025 14:46:38 +0200 (EET)
+From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+To: linux-scsi@vger.kernel.org,
+	dgilbert@interlog.com
+Cc: martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+Subject: [PATCH 0/4] scsi: scsi_debug: Changes to improve support for device types
+Date: Fri, 28 Feb 2025 14:46:22 +0200
+Message-ID: <20250228124627.177873-1-Kai.Makisara@kolumbus.fi>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-The "sz" argument in mpt3sas_check_cmd_timeout() is the number of u32,
-not the number of bytes.  We dump that many u32 values to dmesg.  Passing
-the number of bytes will lead to a read overflow.  Divide by 4 to get the
-correct value.
+The patch set includes changes to better support different device types.
 
-Fixes: c72be4b5bb7c ("scsi: mpt3sas: Add support for MCTP Passthrough commands")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The first patch fixes two obvious typos in the existing definitions.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index ff8fedf5f20e..063b10dd8251 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3017,7 +3017,7 @@ int mpt3sas_send_mctp_passthru_req(struct mpt3_passthru_command *command)
- 	if (!(ioc->ctl_cmds.status & MPT3_CMD_COMPLETE)) {
- 		mpt3sas_check_cmd_timeout(ioc,
- 		    ioc->ctl_cmds.status, mpi_request,
--		    sizeof(Mpi26MctpPassthroughRequest_t), issue_reset);
-+		    sizeof(Mpi26MctpPassthroughRequest_t) / 4, issue_reset);
- 		goto issue_host_reset;
- 	}
- 
+The second patch adds a device type mask to the command definitions (struct
+opcode_info_t). This makes possible for different command definitions for
+different device types and makes easy to add opcodes specific to certain
+device types. The mask is 32 bits wide and the bit positions are derived
+from the Peripheral Device Type field returned from INQUIRY and used in
+the struct scsi_device.
+
+In addition to the mask, the second patch adds command filtering based on
+device type to command queuing and building of the response in Report
+Supported Opcodes.
+
+The third patch splits definitions of READ(6), WRITE(6) and PRE-FETCH/READ
+POSITION to versions for tapes and for other devices.
+
+The fourth patch changes obtaining device type from sdebug_ptype to
+struct scsi_device->type whenever it is set correctly. This improves
+support for using different device types in the same debug host.
+
+The patch set applies to 6.15/scsi-staging
+
+Kai Mäkisara (4):
+  scsi: scsi_debug: Fix two typos in command definitions
+  scsi: scsi_debug: Enable different command definitions for different
+    device types
+  scsi: scsi_debug: Move some tape-specific commands to separate
+    definitions
+  scsi: scsi_debug: Use scsi_device->type instead os sdebug_ptype where
+    possible
+
+ drivers/scsi/scsi_debug.c | 338 +++++++++++++++++++++-----------------
+ 1 file changed, 186 insertions(+), 152 deletions(-)
+
 -- 
-2.47.2
+2.43.0
 
