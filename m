@@ -1,88 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 213FE1C5D50;
-	Sun,  2 Mar 2025 22:23:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D288C13AF2
+	for <linux-scsi@vger.kernel.org>; Sun,  2 Mar 2025 22:58:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740954225; cv=none; b=AB4RjSuSXcpMmfno2KIujMyzXjBNdEiISqr5sVwNuyB6Tm3ObnjQE1itqNQmWoGltEv2AJbXSApBeBSu934BIR+wp3yMoPX3zm9ZV/ZmE8KnNqkZIX8piCoeB30m/Z6vXlsChSlvtJz9Gec+ALOaa1zIS1/x3dc4ckPhnAeiJgw=
+	t=1740956299; cv=none; b=P+LSoXTCGU5qnQslT9ZI32W0KuwD8vtLi3T1HBYIucQhF7cNQxfgRgd1AJEzh0RiOOcVETjYkJcNHjA1DSFTACZ4NHWnTXEqAoZl7ze8YfGyO2OH5VsdidlyhfJZ+MzLRv9eYHdpnNLDZc1Sxi+Qax3Uaos3ydwTNO5ctMJ6sJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740954225; c=relaxed/simple;
-	bh=nLV+62Qa713WIu46HAPLlFz0UlZWvoKKx2UAgpOocIc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EGsRGc7EDQTto5g9LY1JaEYYqmmo895+fLrBuILudLnzD680X2zh29LUVFnP/la6WVKbbWZPCI0ZyrugYSXztsTCgi/pmf/h7hGZQyeRvtbiEoSlnoQ82kg7QsvYr50F+nZwdGQcMcS9jK6lBjMTXyxtwg4st8tR7plURkV4n0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opq66txW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740956299; c=relaxed/simple;
+	bh=tYFixfIY3u81D/Jr0PjpNV7f2Q8NfNfO3Pr54h2gbS8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hbkxTpxG8pnfc45xREmOT2Q3CQ1rX9pIA3NT9SuH0n/sy3QXY7ehsKd2e58y4/o/Ww2r206x0L+JHW06vZbtGj9glsnJk6nE32sHLlS56Wnl0KmMrudFVGhDNc+xp6oEjU4By3bcxflvSCsOU9HoE2kN8oVIQHXR4vB6IkN4aNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=q3ju93UX; arc=none smtp.client-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opq66txW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A623C4CED6;
-	Sun,  2 Mar 2025 22:23:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740954224;
-	bh=nLV+62Qa713WIu46HAPLlFz0UlZWvoKKx2UAgpOocIc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=opq66txWaieBNphh77G4K/3QDIyPz5IYBhi8JsbxISX2zX0H8iOSu3crjwnMb0B27
-	 9a/USK+8NUXXnoV/sCf6UC1FCBuvqF3mIlc0j+CA3nHa1mwMpwXl1FzluTotcnxugx
-	 e/meZQGd6sJ4S7GdR4vLeBh1Hx5bo5NM0OnzZU8TCASpTvakVoxbdyDqJkPI4eE4kz
-	 SZBVDP9lICT47poXWmkH+JoqEiEU2tND1jYPEhEWDNYzLT9jHuDQOWkOK0xhCLVxas
-	 YWPE/a+SgSa/bpdb6GbXNKg3llv4p74PJ1NzDnZ4zPr74mScLcZh8IwSPvUrVHZe0t
-	 L3/RXhdgtFIdA==
-Date: Sun, 2 Mar 2025 14:23:36 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: Bartosz Golaszewski <brgl@bgdev.pl>,
-	Bjorn Andersson <andersson@kernel.org>
-Cc: linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Gaurav Kashyap <quic_gaurkash@quicinc.com>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: Re: [PATCH v12 0/4] Driver and fscrypt support for HW-wrapped inline
- encryption keys
-Message-ID: <20250302222336.GD2079@quark.localdomain>
-References: <20250210202336.349924-1-ebiggers@kernel.org>
- <CAMRc=Md0fsB7Yfx9Au1pXi+7Y_5DQf2z430c9R+tyS9e60-y5w@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="q3ju93UX"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1740956293;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=jtykvtmmT4SBJVkNfvIH1V/KR8RNUn2kl39LnxHTA7o=;
+	b=q3ju93UXezxv/lLOF7wlqHfY97Ijzc1rKEmJ+cmwRSouAAZmrtJyrWTBCaOmHHxtpo6Vlc
+	OtYeTYBnFaV6K9fwttSa9jbF6WvWG3cCYUJnl70CIOxHkn1TpC9Ko2aisHjOx4nJbhR8Pl
+	RDdRFouZ5t5CrIgxz6DHxBpwyzbivtQ=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	linux-hardening@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: target: Replace deprecated strncpy() with strscpy()
+Date: Sun,  2 Mar 2025 23:56:41 +0100
+Message-ID: <20250302225641.245127-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMRc=Md0fsB7Yfx9Au1pXi+7Y_5DQf2z430c9R+tyS9e60-y5w@mail.gmail.com>
+X-Migadu-Flow: FLOW_OUT
 
-On Tue, Feb 11, 2025 at 09:12:11AM +0100, Bartosz Golaszewski wrote:
-> On Mon, Feb 10, 2025 at 9:25 PM Eric Biggers <ebiggers@kernel.org> wrote:
-> >
-> > This patchset is based on linux-block/for-next and is also available at:
-> >
-> >     git fetch https://git.kernel.org/pub/scm/fs/fscrypt/linux.git wrapped-keys-v12
-> >
-> > Now that the block layer support for hardware-wrapped inline encryption
-> > keys has been applied for 6.15
-> > (https://lore.kernel.org/r/173920649542.40307.8847368467858129326.b4-ty@kernel.dk),
-> > this series refreshes the remaining patches.  They add the support for
-> > hardware-wrapped inline encryption keys to the Qualcomm ICE and UFS
-> > drivers and to fscrypt.  All tested on SM8650 with xfstests.
-> >
-> > TBD whether these will land in 6.15 too, or wait until 6.16 when the
-> > block patches that patches 2-4 depend on will have landed.
-> >
-> 
-> Could Jens provide an immutable branch with these patches? I don't
-> think there's a reason to delay it for another 3 months TBH.
+strncpy() is deprecated for NUL-terminated destination buffers; use
+strscpy() instead. The destination buffer db_root is only used with "%s"
+format strings and must therefore be NUL-terminated, but not NUL-padded.
 
-They don't seem to be on an immutable branch, so I'll just wait until the next
-cycle, rather than trying to do something weird where I rebase the fscrypt tree
-onto the block tree and also include driver patches.  TBH, I've already been
-waiting 5 years to land this, so an extra 9 weeks is not a big deal :-)
+Use scnprintf() because snprintf() could return a value >= DB_ROOT_LEN
+and lead to an out-of-bounds access. This doesn't happen because count
+is explicitly checked against DB_ROOT_LEN before. However, scnprintf()
+always returns the number of characters actually written to the string
+buffer, which is always within the bounds of db_root_stage, and should
+be preferred over snprintf().
 
-The first patch "soc: qcom: ice: make qcom_ice_program_key() take struct
-blk_crypto_key" does not depend on the block ones though, and it could land in
-6.15.  Bjorn, would you like to take that patch through your tree to get it out
-of the way?
+The size parameter of strscpy() is optional and since DB_ROOT_LEN is the
+size of the destination buffer, it can be removed. Remove it to simplify
+the code.
 
-- Eric
+Compile-tested only.
+
+Link: https://github.com/KSPP/linux/issues/90
+Link: https://github.com/KSPP/linux/issues/105
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+Changes in v2:
+- Improve the commit message and replace another strncpy() as suggested
+  by Kees Cook
+- Replace snprintf() with scnprintf()
+- Link to v1: https://lore.kernel.org/r/20250226121003.359876-1-thorsten.blum@linux.dev/
+---
+ drivers/target/target_core_configfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index c40217f44b1b..66804bf1ee32 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -123,7 +123,7 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+ 		goto unlock;
+ 	}
+ 
+-	read_bytes = snprintf(db_root_stage, DB_ROOT_LEN, "%s", page);
++	read_bytes = scnprintf(db_root_stage, DB_ROOT_LEN, "%s", page);
+ 	if (!read_bytes)
+ 		goto unlock;
+ 
+@@ -143,7 +143,7 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+ 	}
+ 	filp_close(fp, NULL);
+ 
+-	strncpy(db_root, db_root_stage, read_bytes);
++	strscpy(db_root, db_root_stage);
+ 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+ 
+ 	r = read_bytes;
+@@ -3664,7 +3664,7 @@ static void target_init_dbroot(void)
+ 	}
+ 	filp_close(fp, NULL);
+ 
+-	strncpy(db_root, db_root_stage, DB_ROOT_LEN);
++	strscpy(db_root, db_root_stage);
+ 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+ }
+ 
+-- 
+2.48.1
+
