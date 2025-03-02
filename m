@@ -1,82 +1,88 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C06A61DED40
-	for <linux-scsi@vger.kernel.org>; Sun,  2 Mar 2025 11:41:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 213FE1C5D50;
+	Sun,  2 Mar 2025 22:23:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740915679; cv=none; b=kAQs7S2GVUgXR9MFRHjohYDm3qS1pWnGgnB21TtPVCKiVua8f+Ihv+VoM3+EuPIbYwv1djKdZhaE8OrFk0azgDVCAPvKIbmCp+1mJquHQW8JZes/qxnjt7z+MpfiX65rZbLLokxn1s3N+07K5kSbI2YPDUFtk/Z9QfQwbelReFM=
+	t=1740954225; cv=none; b=AB4RjSuSXcpMmfno2KIujMyzXjBNdEiISqr5sVwNuyB6Tm3ObnjQE1itqNQmWoGltEv2AJbXSApBeBSu934BIR+wp3yMoPX3zm9ZV/ZmE8KnNqkZIX8piCoeB30m/Z6vXlsChSlvtJz9Gec+ALOaa1zIS1/x3dc4ckPhnAeiJgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740915679; c=relaxed/simple;
-	bh=wSUAd1s5N/iBgL7Y88NB1XG8kmSc3Kb2oAAksWO4TZc=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=WEgNhY/Px6SbhA+bi9tX4noit6o/UHFBqPVJ9oK7nJjoYOCgJ9WzYNerBOH75RbBCYAuzJbP54B1mL0r4xbsENiMVGOQOJ7RHa/8p77aDM3+x33xVq7Y0+zK7vIFm8AOKsfhwfkNWe7Kq9B21h1kiRM94lEoLxWtNNMF1z7vyUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vEtO+1eV; arc=none smtp.client-ip=91.218.175.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1740954225; c=relaxed/simple;
+	bh=nLV+62Qa713WIu46HAPLlFz0UlZWvoKKx2UAgpOocIc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EGsRGc7EDQTto5g9LY1JaEYYqmmo895+fLrBuILudLnzD680X2zh29LUVFnP/la6WVKbbWZPCI0ZyrugYSXztsTCgi/pmf/h7hGZQyeRvtbiEoSlnoQ82kg7QsvYr50F+nZwdGQcMcS9jK6lBjMTXyxtwg4st8tR7plURkV4n0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opq66txW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vEtO+1eV"
-Content-Type: text/plain;
-	charset=us-ascii
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1740915675;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BbvANEeq16huInpU2rpT53ULjM49+1Zj7aN8rbxK8DQ=;
-	b=vEtO+1eVBJHoNfFGPyDf7AdTJfX2FBOD41jzdE8k4CudOHfjx6BSoy49uR22NAZfWmvBTR
-	V2GRkHcGcEdbKp4DTLxNK93vIfGev3cL6TPeqJY6ZUN2HfO7ocWPDCSFZGwv/0feA7/zm5
-	fkGMkGlCtkomki3WghLohFR2su8eoo0=
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opq66txW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A623C4CED6;
+	Sun,  2 Mar 2025 22:23:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740954224;
+	bh=nLV+62Qa713WIu46HAPLlFz0UlZWvoKKx2UAgpOocIc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=opq66txWaieBNphh77G4K/3QDIyPz5IYBhi8JsbxISX2zX0H8iOSu3crjwnMb0B27
+	 9a/USK+8NUXXnoV/sCf6UC1FCBuvqF3mIlc0j+CA3nHa1mwMpwXl1FzluTotcnxugx
+	 e/meZQGd6sJ4S7GdR4vLeBh1Hx5bo5NM0OnzZU8TCASpTvakVoxbdyDqJkPI4eE4kz
+	 SZBVDP9lICT47poXWmkH+JoqEiEU2tND1jYPEhEWDNYzLT9jHuDQOWkOK0xhCLVxas
+	 YWPE/a+SgSa/bpdb6GbXNKg3llv4p74PJ1NzDnZ4zPr74mScLcZh8IwSPvUrVHZe0t
+	 L3/RXhdgtFIdA==
+Date: Sun, 2 Mar 2025 14:23:36 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: Bartosz Golaszewski <brgl@bgdev.pl>,
+	Bjorn Andersson <andersson@kernel.org>
+Cc: linux-fscrypt@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Gaurav Kashyap <quic_gaurkash@quicinc.com>,
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: Re: [PATCH v12 0/4] Driver and fscrypt support for HW-wrapped inline
+ encryption keys
+Message-ID: <20250302222336.GD2079@quark.localdomain>
+References: <20250210202336.349924-1-ebiggers@kernel.org>
+ <CAMRc=Md0fsB7Yfx9Au1pXi+7Y_5DQf2z430c9R+tyS9e60-y5w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51.11.1\))
-Subject: Re: [PATCH] scsi: target: Replace deprecated strncpy() with strscpy()
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Thorsten Blum <thorsten.blum@linux.dev>
-In-Reply-To: <202502281204.CE15A6BA35@keescook>
-Date: Sun, 2 Mar 2025 12:41:04 +0100
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-hardening@vger.kernel.org,
- linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: 7bit
-Message-Id: <FB0D4471-9413-4E7D-BFC0-246AD3F54C60@linux.dev>
-References: <20250226121003.359876-1-thorsten.blum@linux.dev>
- <202502281204.CE15A6BA35@keescook>
-To: Kees Cook <kees@kernel.org>
-X-Migadu-Flow: FLOW_OUT
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMRc=Md0fsB7Yfx9Au1pXi+7Y_5DQf2z430c9R+tyS9e60-y5w@mail.gmail.com>
 
-On 28. Feb 2025, at 21:10, Kees Cook wrote:
-> On Wed, Feb 26, 2025 at 01:10:03PM +0100, Thorsten Blum wrote:
->> Since strncpy() is deprecated for NUL-terminated destination buffers,
->> use strscpy() instead.
->> 
->> Compile-tested only.
->> 
->> Link: https://github.com/KSPP/linux/issues/90
->> Cc: linux-hardening@vger.kernel.org
->> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
->> ---
+On Tue, Feb 11, 2025 at 09:12:11AM +0100, Bartosz Golaszewski wrote:
+> On Mon, Feb 10, 2025 at 9:25 PM Eric Biggers <ebiggers@kernel.org> wrote:
+> >
+> > This patchset is based on linux-block/for-next and is also available at:
+> >
+> >     git fetch https://git.kernel.org/pub/scm/fs/fscrypt/linux.git wrapped-keys-v12
+> >
+> > Now that the block layer support for hardware-wrapped inline encryption
+> > keys has been applied for 6.15
+> > (https://lore.kernel.org/r/173920649542.40307.8847368467858129326.b4-ty@kernel.dk),
+> > this series refreshes the remaining patches.  They add the support for
+> > hardware-wrapped inline encryption keys to the Qualcomm ICE and UFS
+> > drivers and to fscrypt.  All tested on SM8650 with xfstests.
+> >
+> > TBD whether these will land in 6.15 too, or wait until 6.16 when the
+> > block patches that patches 2-4 depend on will have landed.
+> >
 > 
-> When doing strncpy() to strscpy() conversions, please include details
-> of your analysis for several things:
-> 
-> - why is it safe to be NUL-terminated?
-> - why is NUL padding needed/not needed?
-> - why is the maximum length argument correct?
+> Could Jens provide an immutable branch with these patches? I don't
+> think there's a reason to delay it for another 3 months TBH.
 
-Yes, I'll try to describe it better.
+They don't seem to be on an immutable branch, so I'll just wait until the next
+cycle, rather than trying to do something weird where I rebase the fscrypt tree
+onto the block tree and also include driver patches.  TBH, I've already been
+waiting 5 years to land this, so an extra 9 weeks is not a big deal :-)
 
-> While you're in this file, though, can you replace the other strncpy
-> that is used in target_init_dbroot() also?
+The first patch "soc: qcom: ice: make qcom_ice_program_key() take struct
+blk_crypto_key" does not depend on the block ones though, and it could land in
+6.15.  Bjorn, would you like to take that patch through your tree to get it out
+of the way?
 
-Ah, I missed this one and will submit a v2 soon.
-
-Thanks,
-Thorsten
-
+- Eric
