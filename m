@@ -1,107 +1,82 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1DDD1E49F
-	for <linux-scsi@vger.kernel.org>; Sat,  1 Mar 2025 11:29:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C06A61DED40
+	for <linux-scsi@vger.kernel.org>; Sun,  2 Mar 2025 11:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740828546; cv=none; b=rB7La1KV74XjsfNr3vLKHufM0hGj3VOFOg8SeCSaiBE+z/teGSx8zBOCRlvtPhrIm4G+lI9eBEdEwxx4U91prwBzuDXwiT/UEJRYO7/vgsVlXmsqn8lhK974snic6Tpd1wsplIqUFJd39hpZuuKx2rybspLt1LbQnpdNSubYIQg=
+	t=1740915679; cv=none; b=kAQs7S2GVUgXR9MFRHjohYDm3qS1pWnGgnB21TtPVCKiVua8f+Ihv+VoM3+EuPIbYwv1djKdZhaE8OrFk0azgDVCAPvKIbmCp+1mJquHQW8JZes/qxnjt7z+MpfiX65rZbLLokxn1s3N+07K5kSbI2YPDUFtk/Z9QfQwbelReFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740828546; c=relaxed/simple;
-	bh=E9DujR3IizOT6sbv3rY7g2iXJ9du8KJP7l9vYi2xhUs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Hi+x/MI3OBekdRJao/iuJSBcCYagCy9jEUHfp2Ccix7fhbNd3HjSGpZvOZRN9CaRhHGm2+dvL172YzEbLracVP0d551sdJJsHsxWELmtf/G6ZDjdtFxF1WfPZJfnw0/tjffn6GlQ5kUVn8Eaumgk4biusj3rGn7lXJcAKQz1Vrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=prGAcD6k; arc=none smtp.client-ip=209.85.218.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1740915679; c=relaxed/simple;
+	bh=wSUAd1s5N/iBgL7Y88NB1XG8kmSc3Kb2oAAksWO4TZc=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=WEgNhY/Px6SbhA+bi9tX4noit6o/UHFBqPVJ9oK7nJjoYOCgJ9WzYNerBOH75RbBCYAuzJbP54B1mL0r4xbsENiMVGOQOJ7RHa/8p77aDM3+x33xVq7Y0+zK7vIFm8AOKsfhwfkNWe7Kq9B21h1kiRM94lEoLxWtNNMF1z7vyUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vEtO+1eV; arc=none smtp.client-ip=91.218.175.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="prGAcD6k"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-abec925a135so392464066b.0
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Mar 2025 03:29:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1740828543; x=1741433343; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HhzJnfdycFMueoTPI5BXB8D50gcLoAdCXXuIai65Q+Q=;
-        b=prGAcD6kwhreyqaQAREmdznrao895DvpGog1nY/0aYIX0iGVF+8mKpYPvATUfeNffu
-         NZbfMM5GEOlCu/QhXQUhBB6diLIcblSsx8vXDtY3861Likecw9nahxy+e0IRnMR2QfsB
-         pfuRtMaAICBt2Bksgav748AUNeQ4FCbA4fulY5a8AVMku3VjGPL0L/lNvRexHJVwrIMU
-         viBM0/iomcD50VD9qj+QJ3TQCXCprotVe3GCoyUIWSIglJLgeU0e0o12OFcn1bT0kpeD
-         r8xEgszUTztQcAOiV+HSEPu5S/+B0evNMtA2JF3suyJvlW0O8vqsNlgEnbbplExkhpJI
-         iIdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740828543; x=1741433343;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HhzJnfdycFMueoTPI5BXB8D50gcLoAdCXXuIai65Q+Q=;
-        b=WJI4WElZXeEsrERhfu2TZhysQzA1B25tZR1J+4scgtX9oTz6xvvydeYnGcyg8/MXNG
-         UeVIxut5PoDztDJoE4aVZYESmJR+3wUpFz4B3o4l5aK55b6c5HrtI/Q1MqoQA8cKdrvm
-         G+ldu/ORyl2K/R9OoOgPDHSZoqyulY/sa/p8oDa4yOOM0TSNXucAo23l4TYLXrSxUuhW
-         lasvvun/lWajomQ/FuuLjOqsBrUUCCufsPRGuj49b06UAC7ovaZC+4BVz/lXRDqRevVp
-         az4nqmXUCuSv9JWaKBFPbTycnZyXJpkjjSebjAV186pQfgzGX9Q/MtY5ylO6HvcKmaja
-         PzgA==
-X-Forwarded-Encrypted: i=1; AJvYcCXz5xHUMIqQqmsnTfhQxGPFRNVdgz7Hw+cqbeK3wj4fF/AYgePTMSvGsqLpNE2fwKzy23FMTKQ8nQKb@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNRfu8BjtumvKC0rCBozGh825lrEZ4pB7g+7P2zUFxErlyl7VN
-	e5q4FEJgq7VimkapPPTu/cG9F7zLP2+q1IFnfR3axn6z3pw3+vEtKLxyubiPqOo=
-X-Gm-Gg: ASbGnctrEJZhViXNGVIImVHSdTxBvsGGh/r1ftGhDkymgGWqIb5HKwCQzzgI5IaLADg
-	+TAYPUaMys1fEp17TxJ8Axkc7aux1k/M7vEagqWC9o75yYeKm8WBMsdtRK+w4PWloWw6LeiyZNr
-	lxWKz4GIRl39jXRwaDydC2IjKlYwF6DS8Zf8+k4ZEV+IwHg8wfln5Bae40HWo2lCRiaHOG15p1g
-	ICHsy1sAARRRVnY7Ue3NvOFPrvTBNrKE6BFKSgQS8fgAGy7ri91SwQTHvUz43gg/bmIlIXVjwqN
-	BY8I6/9Gy1zEVdf8yq3b5TU+/4r/hBsb/IpEpr50mwWJPnFw6Q==
-X-Google-Smtp-Source: AGHT+IEmtT5UDlv6mGlToR9LRcWyhK4Zao/oqUAxcObLaZwH1AUk9XBYd76/u37kZ+ts9n5DOSxrLQ==
-X-Received: by 2002:a17:906:26d2:b0:abf:40a2:40ce with SMTP id a640c23a62f3a-abf40a24533mr409191666b.31.1740828543140;
-        Sat, 01 Mar 2025 03:29:03 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-abf0c0b9cbfsm462821866b.14.2025.03.01.03.29.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Mar 2025 03:29:02 -0800 (PST)
-Date: Sat, 1 Mar 2025 14:28:58 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
-	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
-	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: fnic: Remove unnecessary spinlock locking
- and unlocking
-Message-ID: <95135f06-cd1f-47a3-8253-c4275e7a5c3a@stanley.mountain>
-References: <20250301013712.3115-1-kartilak@cisco.com>
- <20250301013712.3115-2-kartilak@cisco.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vEtO+1eV"
+Content-Type: text/plain;
+	charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1740915675;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BbvANEeq16huInpU2rpT53ULjM49+1Zj7aN8rbxK8DQ=;
+	b=vEtO+1eVBJHoNfFGPyDf7AdTJfX2FBOD41jzdE8k4CudOHfjx6BSoy49uR22NAZfWmvBTR
+	V2GRkHcGcEdbKp4DTLxNK93vIfGev3cL6TPeqJY6ZUN2HfO7ocWPDCSFZGwv/0feA7/zm5
+	fkGMkGlCtkomki3WghLohFR2su8eoo0=
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250301013712.3115-2-kartilak@cisco.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51.11.1\))
+Subject: Re: [PATCH] scsi: target: Replace deprecated strncpy() with strscpy()
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Thorsten Blum <thorsten.blum@linux.dev>
+In-Reply-To: <202502281204.CE15A6BA35@keescook>
+Date: Sun, 2 Mar 2025 12:41:04 +0100
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-hardening@vger.kernel.org,
+ linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Message-Id: <FB0D4471-9413-4E7D-BFC0-246AD3F54C60@linux.dev>
+References: <20250226121003.359876-1-thorsten.blum@linux.dev>
+ <202502281204.CE15A6BA35@keescook>
+To: Kees Cook <kees@kernel.org>
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, Feb 28, 2025 at 05:37:12PM -0800, Karan Tilak Kumar wrote:
-> Remove unnecessary locking and unlocking of spinlock in
-> fdls_schedule_oxid_free_retry_work.
-> This will shorten the time in the critical section.
+On 28. Feb 2025, at 21:10, Kees Cook wrote:
+> On Wed, Feb 26, 2025 at 01:10:03PM +0100, Thorsten Blum wrote:
+>> Since strncpy() is deprecated for NUL-terminated destination buffers,
+>> use strscpy() instead.
+>> 
+>> Compile-tested only.
+>> 
+>> Link: https://github.com/KSPP/linux/issues/90
+>> Cc: linux-hardening@vger.kernel.org
+>> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+>> ---
 > 
-> Suggested-by: Dan Carpenter <dan.carpenter@linaro.org>
-> Fixes: a63e78eb2b0f ("scsi: fnic: Add support for fabric based solicited requests and responses")
-> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-> Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-> Reviewed-by: Arun Easi <aeasi@cisco.com>
-> Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-> Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
-> ---
-> Changes between v1 and v2:
->     Incorporate review comments by Dan:
-> 	Replace test and clear bit with clear bit.
-> ---
+> When doing strncpy() to strscpy() conversions, please include details
+> of your analysis for several things:
+> 
+> - why is it safe to be NUL-terminated?
+> - why is NUL padding needed/not needed?
+> - why is the maximum length argument correct?
 
-Thanks!
+Yes, I'll try to describe it better.
 
-I'm not really qualified to give a reviewed-by tag to this, but it looks
-okay to me.
+> While you're in this file, though, can you replace the other strncpy
+> that is used in target_init_dbroot() also?
 
-regards,
-dan carpenter
+Ah, I missed this one and will submit a v2 soon.
+
+Thanks,
+Thorsten
 
