@@ -1,33 +1,51 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4944620E03C;
-	Mon,  3 Mar 2025 14:12:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8BF1F4183;
+	Mon,  3 Mar 2025 14:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741011162; cv=none; b=P3/QSHMzWL9DBYtWgwsza74Rf2DqHFFdRHlPDBrlBrnN/nl5RxQrAPmTbrp1h4/niCKnibBwljMMjdy5uu9HHT+IPdWSpN6PR6Xh94nOsjSJ1BPL1gUeqMxJBaRp4NXxxPg6RBHXp9kn6Tqb9FFs0PrPE3VsFlYVb28cmU1IDR0=
+	t=1741011182; cv=none; b=PfTVTHhgfCyZXBPen9v3a7wJd4H1QQlx5mdjkfLIkAMcxtOxd9cZNn1krmTx/tqRPAtANj33gZ8EmBtTq2KYULl23xqB6dyDh4+7d/4NziwIARonMu2zz75/J+ynkVQbD06IaM4SfeiALnt4cegqGqiUWoUHz+rwrYAbe+CMrOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741011162; c=relaxed/simple;
-	bh=qQNrRd43JGK5k8mEPTU990AE8TuK5KRKLOf8ppbTrwc=;
+	s=arc-20240116; t=1741011182; c=relaxed/simple;
+	bh=NIkjVShdKRa5sGBLlP+sLIy3qEWBWoHE4n488XDvYok=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=j+fEmfjmk0wY95OSIrYkCtUk6m72xe6w2W0atOdQFHw0njXcN6dAJjhrEpej3CrUI5zDbsbYAgr+PIHeR4hB3EcaDFXdpdF6ex2uRFDNGws0MH1bwtmJAUfzQhDZzVddMYTCPVk8V10L3+WwV52GVyIRdlj2d660SXfxCvNURjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C891568CFE; Mon,  3 Mar 2025 15:12:36 +0100 (CET)
-Date: Mon, 3 Mar 2025 15:12:36 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: axboe@kernel.dk, hch@lst.de, martin.petersen@oracle.com,
-	anuj1072538@gmail.com, nikh1092@linux.ibm.com,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev,
-	M Nikhil <nikhilm@linux.ibm.com>
-Subject: Re: [PATCH v2 1/2] block: ensure correct integrity capability
- propagation in stacked devices
-Message-ID: <20250303141236.GB16268@lst.de>
-References: <20250226112035.2571-1-anuj20.g@samsung.com> <CGME20250226112857epcas5p1654e62b5fff4551926622f19269c6ff4@epcas5p1.samsung.com> <20250226112035.2571-2-anuj20.g@samsung.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=d6rx5m5lLMJRoiAyG/8MMqkZcQ1w4K95/tzmh6WTjIlR672xWuCMh1i6hN1I6b2UDRadIZRTmRBsLz5bLRYNkF+hs3I+oAjtZYkhJDIAl8PVInZCvSiiOHAUnsiT2MZIcqh22jpgG4kD+D0zc3pFG9mzayst8x1wkahlpWkTDw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l8Ncmeal; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l8Ncmeal"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC87EC4CEE8;
+	Mon,  3 Mar 2025 14:13:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741011182;
+	bh=NIkjVShdKRa5sGBLlP+sLIy3qEWBWoHE4n488XDvYok=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=l8NcmealtKOCjMDYfhdGZsoBwszh/QDHSXXyO9AkgtlA0A7pTR7/xFaGW34rZnnaz
+	 YHS0EwxYVDs1NFXN+N2tSljRNN13wZmGh6sFsfuk0zt3imQMkQesFDN2Lqx+2b2NeD
+	 o+omZ99N4G9TItj/1aVbVqOJjMPEX5em5uEm2F2rrL0aPFH1m7ScVFAyKghAtBCOFP
+	 XWRW5JwHnscbK0tsgpyf5q+RHj8aOk+pSlm6/pKcYUJWhFECMznnK4DWOzq7ABL6k2
+	 zI2//1NZ2NEPGWYm67q76imjrJSJRgiJLYR2HsOEilvxHei1l7N4qtTuJH3LllhEjS
+	 aPRRlbXzLvdyg==
+Date: Mon, 3 Mar 2025 15:12:57 +0100
+From: Joel Granados <joel.granados@kernel.org>
+To: Chuck Lever <chuck.lever@oracle.com>
+Cc: nicolas.bouchinet@clip-os.org, linux-kernel@vger.kernel.org, 
+	linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, 
+	linux-nfs@vger.kernel.org, Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>, 
+	Joel Granados <j.granados@samsung.com>, Clemens Ladisch <clemens@ladisch.de>, 
+	Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Jan Harkes <jaharkes@cs.cmu.edu>, Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>, 
+	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
+	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
+	Bart Van Assche <bvanassche@acm.org>, Zhu Yanjun <yanjun.zhu@linux.dev>, 
+	Al Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v2 2/6] sysctl: Fixes nsm_local_state bounds
+Message-ID: <42t2lpwwwihg4heu4ogudt4fe5uz7trg3y2lsoqvmjnzmhnjmy@pebnborzqodv>
+References: <20250224095826.16458-1-nicolas.bouchinet@clip-os.org>
+ <20250224095826.16458-3-nicolas.bouchinet@clip-os.org>
+ <da418443-a98b-4b08-ad44-7d45d89b4173@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,27 +54,70 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250226112035.2571-2-anuj20.g@samsung.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <da418443-a98b-4b08-ad44-7d45d89b4173@oracle.com>
 
-On Wed, Feb 26, 2025 at 04:50:34PM +0530, Anuj Gupta wrote:
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index c44dadc35e1e..8bd0d0f1479c 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -861,7 +861,8 @@ bool queue_limits_stack_integrity(struct queue_limits *t,
->  
->  	if (!ti->tuple_size) {
->  		/* inherit the settings from the first underlying device */
-> -		if (!(ti->flags & BLK_INTEGRITY_STACKED)) {
-> +		if (!(ti->flags & BLK_INTEGRITY_STACKED) &&
-> +		    (bi->flags & BLK_INTEGRITY_DEVICE_CAPABLE)) {
->  			ti->flags = BLK_INTEGRITY_DEVICE_CAPABLE |
->  				(bi->flags & BLK_INTEGRITY_REF_TAG);
->  			ti->csum_type = bi->csum_type;
+On Mon, Feb 24, 2025 at 09:38:17AM -0500, Chuck Lever wrote:
+> On 2/24/25 4:58 AM, nicolas.bouchinet@clip-os.org wrote:
+> > From: Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>
+> > 
+> > Bound nsm_local_state sysctl writings between SYSCTL_ZERO
+> > and SYSCTL_INT_MAX.
+> > 
+> > The proc_handler has thus been updated to proc_dointvec_minmax.
+> > 
+> > Signed-off-by: Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>
+> > ---
+> >  fs/lockd/svc.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/lockd/svc.c b/fs/lockd/svc.c
+> > index 2c8eedc6c2cc9..984ab233af8b6 100644
+> > --- a/fs/lockd/svc.c
+> > +++ b/fs/lockd/svc.c
+> > @@ -461,7 +461,9 @@ static const struct ctl_table nlm_sysctls[] = {
+> >  		.data		= &nsm_local_state,
+> >  		.maxlen		= sizeof(int),
+> >  		.mode		= 0644,
+> > -		.proc_handler	= proc_dointvec,
+> > +		.proc_handler	= proc_dointvec_minmax,
+> > +		.extra1		= SYSCTL_ZERO,
+> > +		.extra2		= SYSCTL_INT_MAX,
+> >  	},
+> >  };
+> >  
+> 
+> Hi Nicolas -
+> 
+> nsm_local_state is an unsigned 32-bit integer. The type of that value is
+> defined by spec, because this value is exchanged between peers on the
+> network.
+> 
+> Perhaps this patch should replace proc_dointvec with proc_douintvec
+> instead.
+As Nicolas stated, that is completely up to how you used the variable.
 
-As mentioned last round this still does the wrong thing if the first
-device(s) is/are not PI-capable but the next one(s) is/are.  Please
-look into the pseudocode I posted in reply to the previous iteration
-on how to fix it.
+Things to notice:
+1. If you want the full range of a unsigned long, then you should stop
+   using proc_dointvec as it will upper limit the value to INT_MAX.
+2. If you want to keep using nsm_local_state as unsigned int, then
+   please add SYSCTL_ZERO as a lower bound to avoid assigning negative
+   values
+3. Having SYSCTL_INT_MAX is not necessary as it is already capped by
+   proc_dointvec{_minmax,}, but it is nice to have as it makes explicit
+   what is happening.
 
+Let me know if you take this through your trees so I can remove it from
+sysctl.
+
+Reviewed-by: Joel Granados <joel.granados@kernel.org>
+
+Best
+
+> 
+> 
+> -- 
+> Chuck Lever
+
+-- 
+
+Joel Granados
