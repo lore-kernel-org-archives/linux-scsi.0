@@ -1,119 +1,94 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ECA2189BB1;
-	Tue,  4 Mar 2025 03:20:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 530B8BA38;
+	Tue,  4 Mar 2025 04:06:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741058424; cv=none; b=TyvwtXUpnUE8DtVI+uQNnByFSwssO9108HdxYBxDxyXKimW7zFC0m4/wIFeuSPj/U579Q+vt6em1VfPpeIQO4CF4nceRgFXOdTGeVgOpo0Wl2WTUKPWvimpyI5I3Hz6oxJl6JL2v/SHhO0kYGIv7flzQcjC3fQh7hZwr/Ce2/ks=
+	t=1741061212; cv=none; b=pyqZsuE3YqwIc8hqJiP4u+HFGn03G017+AJg3iCPGmU4PaOzrqilPHlPMiPNpVGh7BYZPSPnjtHNgeee6doXGTd0+AYcOk8J8aeMDiRuEqjUJPaseqKL5MD8Vt3Kb6RHxGmr5A7W5BcmphEIN1lE4wk9UOeVXsQGgTZ09VLB/ZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741058424; c=relaxed/simple;
-	bh=NosbJcn4/Ws+MpSEvLnF6akvk2THj94x8/JVaixVLBQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qeBHga0qm7aNaiNQM1Jxyx952f9LoIHOoaLM5WYqf6r7AMn/SlHg8HwELa9HTLwoYl6JNmQT/0JZl6UpnvfGlxw8HtzX2SkmP3u49//uo2Wxkeyxn32Jfb5wlscoGCDYID+ZTrfUfJ5gVHafXgDpDQ4UIy2pRlztyegHPmwFvAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=iUCFwkmy; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1741061212; c=relaxed/simple;
+	bh=UMa6kWI8fJ13n4g6a7z63hvdadSJ6Teei4kSz0xsxuo=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=nZPwPvw+qTOxTvNKEHP/sOxXncgaxY0IE0LPM9ilrZpJ2SoI54Jxl/cjiscPFMY+uVUuaBLTcfJRQ932nlA/xf7VFFnFDmNWhCZ4sNVcStVxNtR95bwRFn73LkRtd8u39x5OUDa11hUjmIkLgm3QGLo7/wb3upSWdwg9+RsvITE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=ZcqUaMT+; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iUCFwkmy"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5241NEDX008950;
-	Tue, 4 Mar 2025 03:19:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=TxB1xa4wdylg1sPVhopm7CNcqBs13nJKorqkaF3QfsI=; b=
-	iUCFwkmy8HGQcyr+qijHtt+Z9p8MdghPPX5LGrtupntI+UlHbmL3xOpzxT6rbYVK
-	fdqGez12MtGXq17nsAtkiaW01ooK4zNBXvzen1igPA2gfR7taVZ7Dhg31C5sA6US
-	MSJ6Qa5Mc03FejUEY4pMUm4CKio4ai1/Lf2L1+zdElqESOnFraj5LT9fZZyFBYTN
-	v8c9hM77ePlQySfvwlOeI0vWb+mp4/ipR7LFa3ZGj7sJgPzMXQDFKWyh0JR7aIPW
-	lbG+mpnW4V6Y/BqFaOhRnyynD3/BFYQzLtwDfT9vriWipAvmhqwCKikIt03MbC5F
-	E1bqxKvB13R0JM4g7+VH+Q==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4541r43vkx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 04 Mar 2025 03:19:53 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 52420Tf2039093;
-	Tue, 4 Mar 2025 03:19:53 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 453rp92sh6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 04 Mar 2025 03:19:52 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5243Jl4i029873;
-	Tue, 4 Mar 2025 03:19:52 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 453rp92set-4;
-	Tue, 04 Mar 2025 03:19:52 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Rob Herring <robh+dt@kernel.org>,
-        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>, Heiko Stuebner <heiko@sntech.de>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
-        Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH v7 0/7] Initial support for RK3576 UFS controller
-Date: Mon,  3 Mar 2025 22:19:18 -0500
-Message-ID: <174105384015.3860046.6697292356592676911.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="ZcqUaMT+"
+Received: from [192.168.35.166] (c-24-22-154-137.hsd1.wa.comcast.net [24.22.154.137])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 690EE210EAD6;
+	Mon,  3 Mar 2025 20:06:50 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 690EE210EAD6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1741061210;
+	bh=7pce9h2xpZ33Aa1h16Y8PwGQ7BepmFEpWmVz0TiSisc=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=ZcqUaMT+vKLe5YzAdj/i57N58IpZc+6hg1dd8RWHxvwdFl8YkhiQ6m9Rx3ah0ZA9t
+	 k3Sh+DNKLrpy5Xtds8TOHCszWhEZ7pEviSq27KnjkVSlUxhTmehWFtB3TDFkJ8Eqvn
+	 H40aMGRfyOQ/BBQHVsZlpSkWE1QcCciJl2oiY/rk=
+Message-ID: <223fceb2-927b-4b2e-ae35-30b7810a797f@linux.microsoft.com>
+Date: Mon, 3 Mar 2025 20:06:54 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-04_02,2025-03-03_04,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
- mlxscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502100000
- definitions=main-2503040026
-X-Proofpoint-ORIG-GUID: 6Y4eSYXQkMMJQvQlHsmfaECW638UuGXV
-X-Proofpoint-GUID: 6Y4eSYXQkMMJQvQlHsmfaECW638UuGXV
+User-Agent: Mozilla Thunderbird
+Cc: mhklinux@outlook.com, kys@microsoft.com, haiyangz@microsoft.com,
+ wei.liu@kernel.org, decui@microsoft.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, eahariha@linux.microsoft.com,
+ apais@microsoft.com, benhill@microsoft.com, sunilmut@microsoft.com
+Subject: Re: [PATCH hyperv-next v2 1/1] scsi: storvsc: Don't report the host
+ packet status as the hv status
+To: Roman Kisel <romank@linux.microsoft.com>
+References: <20250304000940.9557-1-romank@linux.microsoft.com>
+ <20250304000940.9557-2-romank@linux.microsoft.com>
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <20250304000940.9557-2-romank@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, 05 Feb 2025 14:15:49 +0800, Shawn Lin wrote:
-
-> This patchset adds initial UFS controller supprt for RK3576 SoC.
-> Patch 1 is the dt-bindings. Patch 2-4 deal with rpm and spm support
-> in advanced suggested by Ulf. Patch 5 exports two new APIs for host
-> driver. Patch 6 and 7 are the host driver and dtsi support.
+On 3/3/2025 4:09 PM, Roman Kisel wrote:
+> The log statement reports the packet status code as the hv
+> status code which causes confusion when debugging as "hv"
+> might refer to a hypervisor, and sometimes to the host part
+> of the Hyper-V virtualization stack.
 > 
+> Fix the name of the datum being logged to clearly indicate
+> the component reporting the error. Also log it in hexadecimal
+> everywhere for consistency.
 > 
-> Changes in v7:
-> - add definitions for all kinds of hex values if possible
-> - Misc log and comment improvement
-> - use udelay for less than 10us cases
-> - other improvements suggested by Mani
-> - Use 0x0 for consistency
-> - Collect Mani's acked-by tag
+> Signed-off-by: Roman Kisel <romank@linux.microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> [...]
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index a8614e54544e..35db061ae3ec 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -776,7 +776,7 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+>  
+>  	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
+>  	    vstor_packet->status != 0) {
+> -		dev_err(dev, "Failed to create sub-channel: op=%d, sts=%d\n",
+> +		dev_err(dev, "Failed to create sub-channel: op=%d, host=0x%x\n",
+>  			vstor_packet->operation, vstor_packet->status);
+>  		return;
+>  	}
+> @@ -1183,7 +1183,7 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
+>  			STORVSC_LOGGING_WARN : STORVSC_LOGGING_ERROR;
+>  
+>  		storvsc_log_ratelimited(device, loglevel,
+> -			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x hv 0x%x\n",
+> +			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x host 0x%x\n",
+>  			scsi_cmd_to_rq(request->cmd)->tag,
+>  			stor_pkt->vm_srb.cdb[0],
+>  			vstor_packet->vm_srb.scsi_status,
 
-Applied to 6.15/scsi-queue, thanks!
+Looks good to me.
 
-[1/7] dt-bindings: ufs: Document Rockchip UFS host controller
-      https://git.kernel.org/mkp/scsi/c/d90e92023771
-[5/7] scsi: ufs: core: Export ufshcd_dme_reset() and ufshcd_dme_enable()
-      https://git.kernel.org/mkp/scsi/c/6b070711b702
-[6/7] scsi: ufs: rockchip: initial support for UFS
-      https://git.kernel.org/mkp/scsi/c/d3cbe455d6eb
-[7/7] arm64: dts: rockchip: Add UFS support for RK3576 SoC
-      https://git.kernel.org/mkp/scsi/c/c75e5e010fef
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Reviewed-by: Easwar Hariharan <eahariha@linux.microsoft.com>
