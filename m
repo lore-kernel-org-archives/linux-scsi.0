@@ -1,62 +1,73 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE351EEA51
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Mar 2025 03:19:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ECA2189BB1;
+	Tue,  4 Mar 2025 03:20:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741058401; cv=none; b=ib4aCC+V9aaovy0R5Mz/PAEdxUoUtBdrH2v2eW6kOuQvwc6d5xz8ghrLMrytGDqksbhz8usvtfUEaNXYWmVrHV/ebsar6q1AtWzacOmvphlWtwQhnU3l4fTEvRyyFhDojtqfFc3iQcl0e9k8HpFQjDj0ykbJHj5OHo1pQXVXpDw=
+	t=1741058424; cv=none; b=TyvwtXUpnUE8DtVI+uQNnByFSwssO9108HdxYBxDxyXKimW7zFC0m4/wIFeuSPj/U579Q+vt6em1VfPpeIQO4CF4nceRgFXOdTGeVgOpo0Wl2WTUKPWvimpyI5I3Hz6oxJl6JL2v/SHhO0kYGIv7flzQcjC3fQh7hZwr/Ce2/ks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741058401; c=relaxed/simple;
-	bh=eezJ0dUjlmd6iM3ecqjv48USRGKS4nfPbSK7jdyPeMc=;
+	s=arc-20240116; t=1741058424; c=relaxed/simple;
+	bh=NosbJcn4/Ws+MpSEvLnF6akvk2THj94x8/JVaixVLBQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Mx+cC4d728NBdV9aYFtirEvWDiPoCR3VwhLlh5dnBpKlAtcRGuOxkARjsCRR2P5ca/TZ+zG45T7y2mdvdXlQaMb/9ip685S+qL9ut/OmIDIQllQFU5uwhEDItoV9PQjsc0xfXip7UFV4y1Sd3XE0DENeqPqzuZMuxVFCBSKtB6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Qop5lX2M; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=qeBHga0qm7aNaiNQM1Jxyx952f9LoIHOoaLM5WYqf6r7AMn/SlHg8HwELa9HTLwoYl6JNmQT/0JZl6UpnvfGlxw8HtzX2SkmP3u49//uo2Wxkeyxn32Jfb5wlscoGCDYID+ZTrfUfJ5gVHafXgDpDQ4UIy2pRlztyegHPmwFvAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=iUCFwkmy; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Qop5lX2M"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5241Mou1019223;
-	Tue, 4 Mar 2025 03:19:50 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iUCFwkmy"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5241NEDX008950;
+	Tue, 4 Mar 2025 03:19:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=iR3JqEZrwpc1/R5l/vl9NF/whxqdJ8FQz4JIlWkBDHc=; b=
-	Qop5lX2MwtqskysmV0ZsR68mLvDdQ2OHQ7HyFazlmMnaacevgr84Co4toyXt5hSh
-	76uZNdkLIPiNVq18jz53/B6DiWfWFnQC5/4yEfJUcWt+lnKavSQMp2OT+ZmLSP7l
-	iRRnWJvarR+kFDP/WQ+Mx+lOOJr5wtyRw+AX6Jf9kbyOCZh8RPmmkmg6fNcs3rKN
-	7qRY/cnR5HdRclLkPMQ5hvsIeDpa0w/ixqDgIFNCAh+U9psooRBZEPqWzfuq75nn
-	rd6V6vUhpgSjMT9FVXGmj+SwnldcjKGQmVL7og+/HE2STbpGMfjM1ySGARAyCtSG
-	7yF6SsM89kmbhjt+qDaKuw==
+	corp-2023-11-20; bh=TxB1xa4wdylg1sPVhopm7CNcqBs13nJKorqkaF3QfsI=; b=
+	iUCFwkmy8HGQcyr+qijHtt+Z9p8MdghPPX5LGrtupntI+UlHbmL3xOpzxT6rbYVK
+	fdqGez12MtGXq17nsAtkiaW01ooK4zNBXvzen1igPA2gfR7taVZ7Dhg31C5sA6US
+	MSJ6Qa5Mc03FejUEY4pMUm4CKio4ai1/Lf2L1+zdElqESOnFraj5LT9fZZyFBYTN
+	v8c9hM77ePlQySfvwlOeI0vWb+mp4/ipR7LFa3ZGj7sJgPzMXQDFKWyh0JR7aIPW
+	lbG+mpnW4V6Y/BqFaOhRnyynD3/BFYQzLtwDfT9vriWipAvmhqwCKikIt03MbC5F
+	E1bqxKvB13R0JM4g7+VH+Q==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 453uavv2tm-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4541r43vkx-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 04 Mar 2025 03:19:50 +0000 (GMT)
+	Tue, 04 Mar 2025 03:19:53 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5242u2kP039768;
-	Tue, 4 Mar 2025 03:19:49 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 52420Tf2039093;
+	Tue, 4 Mar 2025 03:19:53 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 453rp92sfw-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 453rp92sh6-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 04 Mar 2025 03:19:49 +0000
+	Tue, 04 Mar 2025 03:19:52 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5243Jl4e029873;
-	Tue, 4 Mar 2025 03:19:48 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5243Jl4i029873;
+	Tue, 4 Mar 2025 03:19:52 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 453rp92set-2;
-	Tue, 04 Mar 2025 03:19:48 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 453rp92set-4;
+	Tue, 04 Mar 2025 03:19:52 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, dgilbert@interlog.com,
-        =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+To: Rob Herring <robh+dt@kernel.org>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>, Heiko Stuebner <heiko@sntech.de>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James.Bottomley@HansenPartnership.com, jmeneghi@redhat.com
-Subject: Re: [PATCH v2 0/7] scsi: scsi_debug: Add more tape support
-Date: Mon,  3 Mar 2025 22:19:16 -0500
-Message-ID: <174105384018.3860046.14722073801589472586.b4-ty@oracle.com>
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, YiFeng Zhao <zyf@rock-chips.com>,
+        Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH v7 0/7] Initial support for RK3576 UFS controller
+Date: Mon,  3 Mar 2025 22:19:18 -0500
+Message-ID: <174105384015.3860046.6697292356592676911.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250213092636.2510-1-Kai.Makisara@kolumbus.fi>
-References: <20250213092636.2510-1-Kai.Makisara@kolumbus.fi>
+In-Reply-To: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1738736156-119203-1-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,36 +83,37 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 susp
  mlxscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502100000
  definitions=main-2503040026
-X-Proofpoint-GUID: AX6bxGPXSkUQII8mf7hMaoPIyzDRpTa1
-X-Proofpoint-ORIG-GUID: AX6bxGPXSkUQII8mf7hMaoPIyzDRpTa1
+X-Proofpoint-ORIG-GUID: 6Y4eSYXQkMMJQvQlHsmfaECW638UuGXV
+X-Proofpoint-GUID: 6Y4eSYXQkMMJQvQlHsmfaECW638UuGXV
 
-On Thu, 13 Feb 2025 11:26:29 +0200, Kai Mäkisara wrote:
+On Wed, 05 Feb 2025 14:15:49 +0800, Shawn Lin wrote:
 
-> Currently, the scsi_debug driver can create tape devices and the st
-> driver attaches to those. Nothing much can be done with the tape devices
-> because scsi_debug does not have support for the tape-specific commands
-> and features. These patches add some more tape support to the scsi_debug
-> driver. The end result is simulated drives with a tape having one or two
-> partitions (one partition is created initially).
+> This patchset adds initial UFS controller supprt for RK3576 SoC.
+> Patch 1 is the dt-bindings. Patch 2-4 deal with rpm and spm support
+> in advanced suggested by Ulf. Patch 5 exports two new APIs for host
+> driver. Patch 6 and 7 are the host driver and dtsi support.
+> 
+> 
+> Changes in v7:
+> - add definitions for all kinds of hex values if possible
+> - Misc log and comment improvement
+> - use udelay for less than 10us cases
+> - other improvements suggested by Mani
+> - Use 0x0 for consistency
+> - Collect Mani's acked-by tag
 > 
 > [...]
 
 Applied to 6.15/scsi-queue, thanks!
 
-[1/7] scsi: scsi_debug: First fixes for tapes
-      https://git.kernel.org/mkp/scsi/c/f69da85d5d5c
-[2/7] scsi: scsi_debug: Add READ BLOCK LIMITS and modify LOAD for tapes
-      https://git.kernel.org/mkp/scsi/c/e7795366c41d
-[3/7] scsi: scsi_debug: Add write support with block lengths and 4 bytes of data
-      https://git.kernel.org/mkp/scsi/c/e1ac21310aaa
-[4/7] scsi: scsi_debug: Add read support and update locate for tapes
-      https://git.kernel.org/mkp/scsi/c/0744d3114c60
-[5/7] scsi: scsi_debug: Add compression mode page for tapes
-      https://git.kernel.org/mkp/scsi/c/568354b24c7d
-[6/7] scsi: scsi_debug: Reset tape setting at device reset
-      https://git.kernel.org/mkp/scsi/c/862a5556b1a4
-[7/7] scsi: scsi_debug: Add support for partitioning the tape
-      https://git.kernel.org/mkp/scsi/c/23f4e82bb9eb
+[1/7] dt-bindings: ufs: Document Rockchip UFS host controller
+      https://git.kernel.org/mkp/scsi/c/d90e92023771
+[5/7] scsi: ufs: core: Export ufshcd_dme_reset() and ufshcd_dme_enable()
+      https://git.kernel.org/mkp/scsi/c/6b070711b702
+[6/7] scsi: ufs: rockchip: initial support for UFS
+      https://git.kernel.org/mkp/scsi/c/d3cbe455d6eb
+[7/7] arm64: dts: rockchip: Add UFS support for RK3576 SoC
+      https://git.kernel.org/mkp/scsi/c/c75e5e010fef
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
