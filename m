@@ -1,33 +1,33 @@
-Received: from weierstrass.telenet-ops.be (weierstrass.telenet-ops.be [195.130.137.81])
+Received: from cantor.telenet-ops.be (cantor.telenet-ops.be [195.130.132.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BD7D24A04C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DE9224888C
 	for <linux-scsi@vger.kernel.org>; Wed,  5 Mar 2025 13:34:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.137.81
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.132.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741181674; cv=none; b=TaalbDBjH3IuyB1wtPAuSG6LR2PkPKCbOYs73sYt6crSmQ2rEcx8egzhgOH8T4xRiDS9wWNeTFUBY1TwopAg9+YdqwmQMQADkjC0w+3v+unBykkD67r2FKRRS6oX6pF8HAW0DAYH3PNYDEqwy68bBNxdABhvRNE4c21iWQjdCSA=
+	t=1741181675; cv=none; b=FURRhmjgZGVyfcbiH4ZY6m0ouECGEzUTrUxRkSQ/QWx5jPej5wiIvv/H4Xp8trRBCoe6Ui3BPJdkdXkYCBlbKfvMU9u+rnJCKhPxoqWOIQO27GqvmYhkRPJ1JMDaACDFZTECiUm4GRZwE3iorKxOTJylsU03hCLoOvlJPsj3Uog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741181674; c=relaxed/simple;
-	bh=wz1HQ7GM4i2c7SWDxVrPVyTWP1jdw3wfSe5xi7b6EC0=;
+	s=arc-20240116; t=1741181675; c=relaxed/simple;
+	bh=imVH2Wne9UX6v58rw6Wb8RgWDaX4qSg52ZAvFuprd3E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uas97gseVfuk1QDt6bVGlhvgAJdMGHyA1OGWmKzbBwzbk92H9C4Gk/PK7lavlamGi0QaMPG1MZ3KkFqSCcr5CzLuFd88zQi1iMBqqHRzL67Dg7IZdwHwLByPrOwzovJSkeyB6l+zpkfk6sSN5QuGiga5FuYN1EbDKhmC5zXkP8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.137.81
+	 MIME-Version; b=HBShgbcS2sT6nmyNFMuarKZG5mb7vxkH5uALiAjUNfYsG5zvD8MkKdtZxgKFZ4OU6BZWI07xCNm0+K9sLb43uDwfx7wKiFpHkC/Dlo2Jcl5iXUDBMHBeuPta0/Zv0iz4GMApV6jhEW1IFTT+lyOEHAvV2+TzVxfKtfURonUwjFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.132.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
-	by weierstrass.telenet-ops.be (Postfix) with ESMTPS id 4Z7D6t3fs3z4x051
+	by cantor.telenet-ops.be (Postfix) with ESMTPS id 4Z7D6t3xKHz4wwyC
 	for <linux-scsi@vger.kernel.org>; Wed, 05 Mar 2025 14:34:30 +0100 (CET)
 Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed80:fba:8cad:3d23:9db3])
 	by xavier.telenet-ops.be with cmsmtp
-	id M1aJ2E00K0exi8p011aJlo; Wed, 05 Mar 2025 14:34:22 +0100
+	id M1aJ2E00F0exi8p011aJll; Wed, 05 Mar 2025 14:34:22 +0100
 Received: from rox.of.borg ([192.168.97.57])
 	by ramsan.of.borg with esmtp (Exim 4.97)
 	(envelope-from <geert@linux-m68k.org>)
-	id 1tposn-0000000Cv48-1XDH;
+	id 1tposn-0000000Cv3q-0yNA;
 	Wed, 05 Mar 2025 14:34:18 +0100
 Received: from geert by rox.of.borg with local (Exim 4.97)
 	(envelope-from <geert@linux-m68k.org>)
-	id 1tpot8-00000008woe-1w1Y;
+	id 1tpot8-00000008woN-1Iwi;
 	Wed, 05 Mar 2025 14:34:18 +0100
 From: Geert Uytterhoeven <geert+renesas@glider.be>
 To: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
@@ -43,9 +43,9 @@ Cc: linux-scsi@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v3 5/7] scsi: ufs: renesas: Refactor 0x10ad/0x10af PHY settings
-Date: Wed,  5 Mar 2025 14:34:13 +0100
-Message-ID: <110eafd1ee24f9db0285a5e2bca224e35962268a.1741179611.git.geert+renesas@glider.be>
+Subject: [PATCH v3 1/7] dt-bindings: ufs: renesas,ufs: Add calibration data
+Date: Wed,  5 Mar 2025 14:34:09 +0100
+Message-ID: <2f337169f8183d48b7d94ee13565fea804aade84.1741179611.git.geert+renesas@glider.be>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1741179611.git.geert+renesas@glider.be>
 References: <cover.1741179611.git.geert+renesas@glider.be>
@@ -57,78 +57,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+On R-Car S4-8 ES1.2, the E-FUSE block contains PLL and AFE tuning
+parameters for the Universal Flash Storage controller.  Document the
+related NVMEM properties, and update the example.
 
-Extract specific PHY setting of the 0x10a[df] registers into a new
-function.
-
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
 v3:
-  - No changes,
-
-v2:
-  - Reword.
+  - New.
 ---
- drivers/ufs/host/ufs-renesas.c | 37 +++++++++++++---------------------
- 1 file changed, 14 insertions(+), 23 deletions(-)
+ .../devicetree/bindings/ufs/renesas,ufs.yaml         | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
-index 59e35ec4955f19af..e4510e9b1a2cb195 100644
---- a/drivers/ufs/host/ufs-renesas.c
-+++ b/drivers/ufs/host/ufs-renesas.c
-@@ -135,6 +135,16 @@ static void ufs_renesas_indirect_poll(struct ufs_hba *hba, u32 gpio, u32 addr,
- 	ufs_renesas_write(hba, 0xf0, 0);
- }
+diff --git a/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml b/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+index 1949a15e73d25849..ac11ac7d1d12f6c9 100644
+--- a/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/renesas,ufs.yaml
+@@ -33,6 +33,16 @@ properties:
+   resets:
+     maxItems: 1
  
-+static void ufs_renesas_write_phy_10ad_10af(struct ufs_hba *hba,
-+					    u32 data_10ad, u32 data_10af)
-+{
-+	ufs_renesas_write_phy(hba, 0x10ae, 0x0001);
-+	ufs_renesas_write_phy(hba, 0x10ad, data_10ad);
-+	ufs_renesas_write_phy(hba, 0x10af, data_10af);
-+	ufs_renesas_write_phy(hba, 0x10b6, 0x0001);
-+	ufs_renesas_write_phy(hba, 0x10ae, 0x0000);
-+}
++  nvmem-cells:
++    maxItems: 1
 +
- static void ufs_renesas_pre_init(struct ufs_hba *hba)
- {
- 	u32 timer_val;
-@@ -209,29 +219,10 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
- 	ufs_renesas_write_phy(hba, 0x4000, 0x0000);
- 	ufs_renesas_write_phy(hba, 0x4001, 0x0000);
- 
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ad, 0x0000);
--	ufs_renesas_write_phy(hba, 0x10af, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10b6, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0000);
--
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ad, 0x0000);
--	ufs_renesas_write_phy(hba, 0x10af, 0x0002);
--	ufs_renesas_write_phy(hba, 0x10b6, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0000);
--
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ad, 0x0080);
--	ufs_renesas_write_phy(hba, 0x10af, 0x0000);
--	ufs_renesas_write_phy(hba, 0x10b6, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0000);
--
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ad, 0x0080);
--	ufs_renesas_write_phy(hba, 0x10af, 0x001a);
--	ufs_renesas_write_phy(hba, 0x10b6, 0x0001);
--	ufs_renesas_write_phy(hba, 0x10ae, 0x0000);
-+	ufs_renesas_write_phy_10ad_10af(hba, 0x0000, 0x0001);
-+	ufs_renesas_write_phy_10ad_10af(hba, 0x0000, 0x0002);
-+	ufs_renesas_write_phy_10ad_10af(hba, 0x0080, 0x0000);
-+	ufs_renesas_write_phy_10ad_10af(hba, 0x0080, 0x001a);
- 
- 	ufs_renesas_indirect_write(hba, 7, 0x70, 0x0016);
- 	ufs_renesas_indirect_write(hba, 7, 0x71, 0x0016);
++  nvmem-cell-names:
++    items:
++      - const: calibration
++
++dependencies:
++  nvmem-cells: [ nvmem-cell-names ]
++
+ required:
+   - compatible
+   - reg
+@@ -58,4 +68,6 @@ examples:
+         freq-table-hz = <200000000 200000000>, <38400000 38400000>;
+         power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
+         resets = <&cpg 1514>;
++        nvmem-cells = <&ufs_tune>;
++        nvmem-cell-names = "calibration";
+     };
 -- 
 2.43.0
 
