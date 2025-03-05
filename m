@@ -1,33 +1,30 @@
-Received: from gauss.telenet-ops.be (gauss.telenet-ops.be [195.130.132.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from michel.telenet-ops.be (michel.telenet-ops.be [195.130.137.88])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77AFF24888C
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Mar 2025 13:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.132.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77086245038
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Mar 2025 13:34:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.137.88
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741181668; cv=none; b=SECkghi/USy6A613x5XDRU7mYTRVuOMqyahfGXu0ZF11Dm4pidbdjqoJtQ61y0KXqLapVHzTQiDE/L7hsluhFcGbEdJEBWDaWxIKdH7+6qtek6rZS+7q7Qm7Uh06TdSvVyyhdvPhzaV+j306twZywFXvJJzrZCpwixRDggu1J8Y=
+	t=1741181668; cv=none; b=Hd5GnCjXt5O/cglcNbFM1gvWrImrBA2Rge9evne/x+q/9JVuclBrPPQGHthDEYY8/b9Zt8k+vJXCGsXHo9AkeVXI5h6LBm2+d7d85AQzJVNsN8lKL+FY6KGo7MysaTS0GzXae4NZ4mSPCH3mIE9kdLFD1VAAFpV8CGHaVjnNTfQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1741181668; c=relaxed/simple;
-	bh=qgagCWP0AByktZ7QKcVCUOvAmGy3T+619wWJGYwW6v8=;
+	bh=R0TpDo0YORm6VbpEJvV2CmjrvHgSpTI8rK2PRPb1rVo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XCuGjgX8OlLzQxH76JAYjXmChn16pGnSu8iCPdhPwwGphy/GqLtIbaZK8cgPxDd8xGLrHToUwXS5FUkS5j5sbmYhP7ggj6/x4qVMGr/HbrQhksd4lHfaMh6U3TFT+PxKpgo5kganxoWKGzIbc1l2LBRkKGXjr8oRXfE4kWvxXxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.132.49
+	 MIME-Version; b=FwcHz5dLMdgJVp3Mnh98qCClA1G+w08DvQbz86K3EWSP7dQEqNYwYD8AFMsrcod3aLLhOM3XYU/rW150Cg7T+7y3mDiYkSJNOBQAuL28LZdIKEeq8FoaAz1h+tA+iR3TIVMLPugq5OybDvgtNMB3e771ofj1lvdgABj6xDcyygY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.137.88
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
-Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
-	by gauss.telenet-ops.be (Postfix) with ESMTPS id 4Z7D6l0r7nz4wx6H
-	for <linux-scsi@vger.kernel.org>; Wed, 05 Mar 2025 14:34:23 +0100 (CET)
 Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed80:fba:8cad:3d23:9db3])
-	by xavier.telenet-ops.be with cmsmtp
-	id M1aJ2E00L0exi8p011aJlp; Wed, 05 Mar 2025 14:34:22 +0100
+	by michel.telenet-ops.be with cmsmtp
+	id M1aJ2E0070exi8p061aJJC; Wed, 05 Mar 2025 14:34:22 +0100
 Received: from rox.of.borg ([192.168.97.57])
 	by ramsan.of.borg with esmtp (Exim 4.97)
 	(envelope-from <geert@linux-m68k.org>)
-	id 1tposn-0000000Cv4F-1kOZ;
+	id 1tposn-0000000Cv3w-1CoI;
 	Wed, 05 Mar 2025 14:34:18 +0100
 Received: from geert by rox.of.borg with local (Exim 4.97)
 	(envelope-from <geert@linux-m68k.org>)
-	id 1tpot8-00000008woo-2Ewn;
+	id 1tpot8-00000008woV-1gwa;
 	Wed, 05 Mar 2025 14:34:18 +0100
 From: Geert Uytterhoeven <geert+renesas@glider.be>
 To: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
@@ -43,9 +40,9 @@ Cc: linux-scsi@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v3 7/7] scsi: ufs: renesas: Add initialization code for R-Car S4-8 ES1.2
-Date: Wed,  5 Mar 2025 14:34:15 +0100
-Message-ID: <97d83709495c764b2456d4d25846f5f48197cad0.1741179611.git.geert+renesas@glider.be>
+Subject: [PATCH v3 3/7] scsi: ufs: renesas: Add register read to remove save/set/restore
+Date: Wed,  5 Mar 2025 14:34:11 +0100
+Message-ID: <9fa240a9dc0308d6675138f8434eccb77f051650.1741179611.git.geert+renesas@glider.be>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1741179611.git.geert+renesas@glider.be>
 References: <cover.1741179611.git.geert+renesas@glider.be>
@@ -59,319 +56,228 @@ Content-Transfer-Encoding: 8bit
 
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 
-Add initialization code for R-Car S4-8 ES1.2 to improve transfer
-stability.  Using the new code requires downloading firmware and reading
-calibration data from E-FUSE.  If either fails, the driver falls back to
-the old initialization code.
+Add support for returning read register values from
+ufs_renesas_reg_control(), so ufs_renesas_set_phy() can use the existing
+ufs_renesas_write_phy() helper.
+Remove the now unused code to save to, set, and restore from a static
+array inside ufs_renesas_reg_control().
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Co-developed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
 v3:
-  - New.
+  - Reword,
+
+v2:
+  - Remove *_INDEX* enums only in this patch,
+  - Move MODE_READ handling after MODE_POLL handling,
+  - Move ufs_renesas_read() after ufs_renesas_poll(),
 ---
- drivers/ufs/host/ufs-renesas.c | 199 ++++++++++++++++++++++++++++++++-
- 1 file changed, 194 insertions(+), 5 deletions(-)
+ drivers/ufs/host/ufs-renesas.c | 99 ++++++++--------------------------
+ 1 file changed, 23 insertions(+), 76 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
-index d9ba766dcd2f4de7..5bf7d0e77ad857c6 100644
+index ac096d013287b187..100186a2e1807445 100644
 --- a/drivers/ufs/host/ufs-renesas.c
 +++ b/drivers/ufs/host/ufs-renesas.c
-@@ -9,20 +9,31 @@
- #include <linux/delay.h>
- #include <linux/dma-mapping.h>
- #include <linux/err.h>
-+#include <linux/firmware.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/nvmem-consumer.h>
- #include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/sys_soc.h>
- #include <ufs/ufshcd.h>
- 
- #include "ufshcd-pltfrm.h"
- 
-+#define EFUSE_CALIB_SIZE	8
-+
- struct ufs_renesas_priv {
-+	const struct firmware *fw;
-+	void (*pre_init)(struct ufs_hba *hba);
+@@ -23,18 +23,9 @@ struct ufs_renesas_priv {
  	bool initialized;	/* The hardware needs initialization once */
-+	u8 calib[EFUSE_CALIB_SIZE];
  };
  
-+#define UFS_RENESAS_FIRMWARE_NAME "r8a779f0_ufs.bin"
-+MODULE_FIRMWARE(UFS_RENESAS_FIRMWARE_NAME);
-+
- static void ufs_renesas_dbg_register_dump(struct ufs_hba *hba)
- {
+-enum {
+-	SET_PHY_INDEX_LO = 0,
+-	SET_PHY_INDEX_HI,
+-	TIMER_INDEX,
+-	MAX_INDEX
+-};
+-
+ enum ufs_renesas_init_param_mode {
+-	MODE_RESTORE,
+-	MODE_SET,
+-	MODE_SAVE,
+ 	MODE_POLL,
++	MODE_READ,
+ 	MODE_WAIT,
+ 	MODE_WRITE,
+ };
+@@ -45,7 +36,6 @@ struct ufs_renesas_init_param {
+ 	union {
+ 		u32 expected;
+ 		u32 delay_us;
+-		u32 set;
+ 		u32 val;
+ 	} u;
+ 	u32 mask;
+@@ -57,25 +47,13 @@ static void ufs_renesas_dbg_register_dump(struct ufs_hba *hba)
  	ufshcd_dump_regs(hba, 0xc0, 0x40, "regs: 0xc0 + ");
-@@ -116,6 +127,22 @@ static void ufs_renesas_set_phy(struct ufs_hba *hba, u32 addr16, u32 data16)
- 	ufs_renesas_write_phy(hba, addr16, data16);
  }
  
-+static void ufs_renesas_reset_indirect_write(struct ufs_hba *hba, int gpio,
-+					     u32 addr, u32 data)
-+{
-+	ufs_renesas_write(hba, 0xf0, gpio);
-+	ufs_renesas_write_800_80c_poll(hba, addr, data);
-+}
-+
-+static void ufs_renesas_reset_indirect_update(struct ufs_hba *hba)
-+{
-+	ufs_renesas_write_d0_d4(hba, 0x0000082c, 0x0f000000);
-+	ufs_renesas_write_d0_d4(hba, 0x00000828, 0x0f000000);
-+	ufs_renesas_write(hba, 0xd0, 0x0000082c);
-+	ufs_renesas_poll(hba, 0xd4, BIT(27) | BIT(26) | BIT(24), BIT(27) | BIT(26) | BIT(24));
-+	ufs_renesas_write(hba, 0xf0, 0);
-+}
-+
- static void ufs_renesas_indirect_write(struct ufs_hba *hba, u32 gpio, u32 addr,
- 				       u32 data_800)
+-static void ufs_renesas_reg_control(struct ufs_hba *hba,
+-				    const struct ufs_renesas_init_param *p)
++static u32 ufs_renesas_reg_control(struct ufs_hba *hba,
++				   const struct ufs_renesas_init_param *p)
  {
-@@ -135,15 +162,19 @@ static void ufs_renesas_indirect_poll(struct ufs_hba *hba, u32 gpio, u32 addr,
+-	static u32 save[MAX_INDEX];
++	u32 val = 0;
+ 	int ret;
+-	u32 val;
+-
+-	WARN_ON(p->index >= MAX_INDEX);
+ 
+ 	switch (p->mode) {
+-	case MODE_RESTORE:
+-		ufshcd_writel(hba, save[p->index], p->reg);
+-		break;
+-	case MODE_SET:
+-		save[p->index] |= p->u.set;
+-		break;
+-	case MODE_SAVE:
+-		save[p->index] = ufshcd_readl(hba, p->reg) & p->mask;
+-		break;
+ 	case MODE_POLL:
+ 		ret = readl_poll_timeout_atomic(hba->mmio_base + p->reg,
+ 						val,
+@@ -85,6 +63,9 @@ static void ufs_renesas_reg_control(struct ufs_hba *hba,
+ 			dev_err(hba->dev, "%s: poll failed %d (%08x, %08x, %08x)\n",
+ 				__func__, ret, val, p->mask, p->u.expected);
+ 		break;
++	case MODE_READ:
++		val = ufshcd_readl(hba, p->reg);
++		break;
+ 	case MODE_WAIT:
+ 		if (p->u.delay_us > 1000)
+ 			mdelay(DIV_ROUND_UP(p->u.delay_us, 1000));
+@@ -97,6 +78,8 @@ static void ufs_renesas_reg_control(struct ufs_hba *hba,
+ 	default:
+ 		break;
+ 	}
++
++	return val;
+ }
+ 
+ static void ufs_renesas_poll(struct ufs_hba *hba, u32 reg, u32 expected, u32 mask)
+@@ -111,38 +94,14 @@ static void ufs_renesas_poll(struct ufs_hba *hba, u32 reg, u32 expected, u32 mas
+ 	ufs_renesas_reg_control(hba, &param);
+ }
+ 
+-static void ufs_renesas_restore(struct ufs_hba *hba, u32 reg, u32 index)
+-{
+-	struct ufs_renesas_init_param param = {
+-		.mode = MODE_RESTORE,
+-		.reg = reg,
+-		.index = index,
+-	};
+-
+-	ufs_renesas_reg_control(hba, &param);
+-}
+-
+-static void ufs_renesas_save(struct ufs_hba *hba, u32 reg, u32 mask, u32 index)
++static u32 ufs_renesas_read(struct ufs_hba *hba, u32 reg)
+ {
+ 	struct ufs_renesas_init_param param = {
+-		.mode = MODE_SAVE,
++		.mode = MODE_READ,
+ 		.reg = reg,
+-		.mask = mask,
+-		.index = index,
+-	};
+-
+-	ufs_renesas_reg_control(hba, &param);
+-}
+-
+-static void ufs_renesas_set(struct ufs_hba *hba, u32 index, u32 set)
+-{
+-	struct ufs_renesas_init_param param = {
+-		.mode = MODE_SAVE,
+-		.index = index,
+-		.u.set = set,
+ 	};
+ 
+-	ufs_renesas_reg_control(hba, &param);
++	return ufs_renesas_reg_control(hba, &param);
+ }
+ 
+ static void ufs_renesas_wait(struct ufs_hba *hba, u32 delay_us)
+@@ -181,15 +140,6 @@ static void ufs_renesas_write_800_80c_poll(struct ufs_hba *hba, u32 addr,
+ 	ufs_renesas_poll(hba, 0xd4, BIT(8), BIT(8));
+ }
+ 
+-static void ufs_renesas_restore_800_80c_poll(struct ufs_hba *hba, u32 index)
+-{
+-	ufs_renesas_write_d0_d4(hba, 0x0000080c, 0x00000100);
+-	ufs_renesas_write(hba, 0xd0, 0x00000800);
+-	ufs_renesas_restore(hba, 0xd4, index);
+-	ufs_renesas_write(hba, 0xd0, 0x0000080c);
+-	ufs_renesas_poll(hba, 0xd4, BIT(8), BIT(8));
+-}
+-
+ static void ufs_renesas_write_804_80c_poll(struct ufs_hba *hba, u32 addr, u32 data_804)
+ {
+ 	ufs_renesas_write_d0_d4(hba, 0x0000080c, 0x00000100);
+@@ -220,6 +170,8 @@ static void ufs_renesas_write_phy(struct ufs_hba *hba, u32 addr16, u32 data16)
+ 
+ static void ufs_renesas_set_phy(struct ufs_hba *hba, u32 addr16, u32 data16)
+ {
++	u32 low, high;
++
+ 	ufs_renesas_write(hba, 0xf0, 1);
+ 	ufs_renesas_write_800_80c_poll(hba, 0x16, addr16 & 0xff);
+ 	ufs_renesas_write_800_80c_poll(hba, 0x17, (addr16 >> 8) & 0xff);
+@@ -227,22 +179,15 @@ static void ufs_renesas_set_phy(struct ufs_hba *hba, u32 addr16, u32 data16)
+ 	ufs_renesas_write_828_82c_poll(hba, 0x0f000000);
+ 	ufs_renesas_write_804_80c_poll(hba, 0x1a, 0);
+ 	ufs_renesas_write(hba, 0xd0, 0x00000808);
+-	ufs_renesas_save(hba, 0xd4, 0xff, SET_PHY_INDEX_LO);
++	low = ufs_renesas_read(hba, 0xd4) & 0xff;
+ 	ufs_renesas_write_804_80c_poll(hba, 0x1b, 0);
+ 	ufs_renesas_write(hba, 0xd0, 0x00000808);
+-	ufs_renesas_save(hba, 0xd4, 0xff, SET_PHY_INDEX_HI);
+-	ufs_renesas_write_828_82c_poll(hba, 0x0f000000);
+-	ufs_renesas_write(hba, 0xf0, 0);
+-	ufs_renesas_write(hba, 0xf0, 1);
+-	ufs_renesas_write_800_80c_poll(hba, 0x16, addr16 & 0xff);
+-	ufs_renesas_write_800_80c_poll(hba, 0x17, (addr16 >> 8) & 0xff);
+-	ufs_renesas_set(hba, SET_PHY_INDEX_LO, ((data16 & 0xff) << 16) | BIT(8) | 0x18);
+-	ufs_renesas_restore_800_80c_poll(hba, SET_PHY_INDEX_LO);
+-	ufs_renesas_set(hba, SET_PHY_INDEX_HI, (((data16 >> 8) & 0xff) << 16) | BIT(8) | 0x19);
+-	ufs_renesas_restore_800_80c_poll(hba, SET_PHY_INDEX_HI);
+-	ufs_renesas_write_800_80c_poll(hba, 0x1c, 0x01);
++	high = ufs_renesas_read(hba, 0xd4) & 0xff;
+ 	ufs_renesas_write_828_82c_poll(hba, 0x0f000000);
  	ufs_renesas_write(hba, 0xf0, 0);
++
++	data16 |= (high << 8) | low;
++	ufs_renesas_write_phy(hba, addr16, data16);
  }
  
--static void ufs_renesas_init_step1_to_3(struct ufs_hba *hba)
-+static void ufs_renesas_init_step1_to_3(struct ufs_hba *hba, bool init108)
+ static void ufs_renesas_indirect_write(struct ufs_hba *hba, u32 gpio, u32 addr,
+@@ -266,6 +211,8 @@ static void ufs_renesas_indirect_poll(struct ufs_hba *hba, u32 gpio, u32 addr,
+ 
+ static void ufs_renesas_pre_init(struct ufs_hba *hba)
  {
++	u32 timer_val;
++
+ 	/* This setting is for SERIES B */
  	ufs_renesas_write(hba, 0xc0, 0x49425308);
  	ufs_renesas_write_d0_d4(hba, 0x00000104, 0x00000002);
-+	if (init108)
-+		ufs_renesas_write_d0_d4(hba, 0x00000108, 0x00000002);
- 	udelay(1);
- 	ufs_renesas_write_d0_d4(hba, 0x00000828, 0x00000200);
- 	udelay(1);
- 	ufs_renesas_write_d0_d4(hba, 0x00000828, 0x00000000);
- 	ufs_renesas_write_d0_d4(hba, 0x00000104, 0x00000001);
-+	if (init108)
-+		ufs_renesas_write_d0_d4(hba, 0x00000108, 0x00000001);
- 	ufs_renesas_write_d0_d4(hba, 0x00000940, 0x00000001);
- 	udelay(1);
- 	ufs_renesas_write_d0_d4(hba, 0x00000940, 0x00000000);
-@@ -207,12 +238,12 @@ static void ufs_renesas_init_compensation_and_slicers(struct ufs_hba *hba)
- 	ufs_renesas_write_phy_10ad_10af(hba, 0x0080, 0x001a);
+@@ -292,7 +239,7 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
+ 	ufs_renesas_poll(hba, 0xd4, BIT(8) | BIT(6) | BIT(0), BIT(8) | BIT(6) | BIT(0));
+ 
+ 	ufs_renesas_write(hba, 0xd0, 0x00000d00);
+-	ufs_renesas_save(hba, 0xd4, 0x0000ffff, TIMER_INDEX);
++	timer_val = ufs_renesas_read(hba, 0xd4) & 0x0000ffff;
+ 	ufs_renesas_write(hba, 0xd4, 0x00000000);
+ 	ufs_renesas_write_d0_d4(hba, 0x0000082c, 0x0f000000);
+ 	ufs_renesas_write_d0_d4(hba, 0x00000828, 0x08000000);
+@@ -387,7 +334,7 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
+ 
+ 	ufs_renesas_write(hba, 0xf0, 0);
+ 	ufs_renesas_write(hba, 0xd0, 0x00000d00);
+-	ufs_renesas_restore(hba, 0xd4, TIMER_INDEX);
++	ufs_renesas_write(hba, 0xd4, timer_val);
  }
  
--static void ufs_renesas_pre_init(struct ufs_hba *hba)
-+static void ufs_renesas_r8a779f0_es10_pre_init(struct ufs_hba *hba)
- {
- 	u32 timer_val;
- 
- 	/* This setting is for SERIES B */
--	ufs_renesas_init_step1_to_3(hba);
-+	ufs_renesas_init_step1_to_3(hba, false);
- 
- 	ufs_renesas_init_step4_to_6(hba);
- 
-@@ -283,6 +314,105 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
- 	ufs_renesas_init_enable_timer(hba, timer_val);
- }
- 
-+static void ufs_renesas_r8a779f0_init_step3_add(struct ufs_hba *hba, bool assert)
-+{
-+	u32 val_2x = 0, val_3x = 0, val_4x = 0;
-+
-+	if (assert) {
-+		val_2x = 0x0001;
-+		val_3x = 0x0003;
-+		val_4x = 0x0001;
-+	}
-+
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x20, val_2x);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x4a, val_4x);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x35, val_3x);
-+	ufs_renesas_reset_indirect_update(hba);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x21, val_2x);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x4b, val_4x);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x36, val_3x);
-+	ufs_renesas_reset_indirect_update(hba);
-+}
-+
-+static void ufs_renesas_r8a779f0_pre_init(struct ufs_hba *hba)
-+{
-+	struct ufs_renesas_priv *priv = ufshcd_get_variant(hba);
-+	u32 timer_val;
-+	u32 data;
-+	int i;
-+
-+	/* This setting is for SERIES B */
-+	ufs_renesas_init_step1_to_3(hba, true);
-+
-+	ufs_renesas_r8a779f0_init_step3_add(hba, true);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x5f, 0x0063);
-+	ufs_renesas_reset_indirect_update(hba);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x60, 0x0003);
-+	ufs_renesas_reset_indirect_update(hba);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x5b, 0x00a6);
-+	ufs_renesas_reset_indirect_update(hba);
-+	ufs_renesas_reset_indirect_write(hba, 7, 0x5c, 0x0003);
-+	ufs_renesas_reset_indirect_update(hba);
-+	ufs_renesas_r8a779f0_init_step3_add(hba, false);
-+
-+	ufs_renesas_init_step4_to_6(hba);
-+
-+	timer_val = ufs_renesas_init_disable_timer(hba);
-+
-+	ufs_renesas_indirect_write(hba, 1, 0x01, 0x001f);
-+	ufs_renesas_indirect_write(hba, 7, 0x5d, 0x0014);
-+	ufs_renesas_indirect_write(hba, 7, 0x5e, 0x0014);
-+	ufs_renesas_indirect_write(hba, 7, 0x0d, 0x0007);
-+	ufs_renesas_indirect_write(hba, 7, 0x0e, 0x0007);
-+
-+	ufs_renesas_indirect_poll(hba, 7, 0x3c, 0, BIT(7));
-+	ufs_renesas_indirect_poll(hba, 7, 0x4c, 0, BIT(4));
-+
-+	ufs_renesas_indirect_write(hba, 1, 0x32, 0x0080);
-+	ufs_renesas_indirect_write(hba, 1, 0x1f, 0x0001);
-+	ufs_renesas_indirect_write(hba, 1, 0x2c, 0x0001);
-+	ufs_renesas_indirect_write(hba, 1, 0x32, 0x0087);
-+
-+	ufs_renesas_indirect_write(hba, 1, 0x4d, priv->calib[2]);
-+	ufs_renesas_indirect_write(hba, 1, 0x4e, priv->calib[3]);
-+	ufs_renesas_indirect_write(hba, 1, 0x0d, 0x0006);
-+	ufs_renesas_indirect_write(hba, 1, 0x0e, 0x0007);
-+	ufs_renesas_write_phy(hba, 0x0028, priv->calib[3]);
-+	ufs_renesas_write_phy(hba, 0x4014, priv->calib[3]);
-+
-+	ufs_renesas_set_phy(hba, 0x401c, BIT(2));
-+
-+	ufs_renesas_write_phy(hba, 0x4000, priv->calib[6]);
-+	ufs_renesas_write_phy(hba, 0x4001, priv->calib[7]);
-+
-+	ufs_renesas_indirect_write(hba, 1, 0x14, 0x0001);
-+
-+	ufs_renesas_init_compensation_and_slicers(hba);
-+
-+	ufs_renesas_indirect_write(hba, 7, 0x79, 0x0000);
-+	ufs_renesas_indirect_write(hba, 7, 0x24, 0x000c);
-+	ufs_renesas_indirect_write(hba, 7, 0x25, 0x000c);
-+	ufs_renesas_indirect_write(hba, 7, 0x62, 0x00c0);
-+	ufs_renesas_indirect_write(hba, 7, 0x63, 0x0001);
-+
-+	for (i = 0; i < priv->fw->size / 2; i++) {
-+		data = (priv->fw->data[i * 2 + 1] << 8) | priv->fw->data[i * 2];
-+		ufs_renesas_write_phy(hba, 0xc000 + i, data);
-+	}
-+
-+	ufs_renesas_indirect_write(hba, 7, 0x0d, 0x0002);
-+	ufs_renesas_indirect_write(hba, 7, 0x0e, 0x0007);
-+
-+	ufs_renesas_indirect_write(hba, 7, 0x5d, 0x0014);
-+	ufs_renesas_indirect_write(hba, 7, 0x5e, 0x0017);
-+	ufs_renesas_indirect_write(hba, 7, 0x5d, 0x0004);
-+	ufs_renesas_indirect_write(hba, 7, 0x5e, 0x0017);
-+	ufs_renesas_indirect_poll(hba, 7, 0x55, 0, BIT(6));
-+	ufs_renesas_indirect_poll(hba, 7, 0x41, 0, BIT(7));
-+
-+	ufs_renesas_init_enable_timer(hba, timer_val);
-+}
-+
  static int ufs_renesas_hce_enable_notify(struct ufs_hba *hba,
- 					 enum ufs_notify_change_status status)
- {
-@@ -292,7 +422,7 @@ static int ufs_renesas_hce_enable_notify(struct ufs_hba *hba,
- 		return 0;
- 
- 	if (status == PRE_CHANGE)
--		ufs_renesas_pre_init(hba);
-+		priv->pre_init(hba);
- 
- 	priv->initialized = true;
- 
-@@ -310,20 +440,78 @@ static int ufs_renesas_setup_clocks(struct ufs_hba *hba, bool on,
- 	return 0;
- }
- 
-+static const struct soc_device_attribute ufs_fallback[] = {
-+	{ .soc_id = "r8a779f0", .revision = "ES1.[01]" },
-+	{ /* Sentinel */ }
-+};
-+
- static int ufs_renesas_init(struct ufs_hba *hba)
- {
-+	const struct soc_device_attribute *attr;
-+	struct nvmem_cell *cell = NULL;
-+	struct device *dev = hba->dev;
- 	struct ufs_renesas_priv *priv;
-+	u8 *data = NULL;
-+	size_t len;
-+	int ret;
- 
--	priv = devm_kzalloc(hba->dev, sizeof(*priv), GFP_KERNEL);
-+	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
- 	if (!priv)
- 		return -ENOMEM;
- 	ufshcd_set_variant(hba, priv);
- 
- 	hba->quirks |= UFSHCD_QUIRK_HIBERN_FASTAUTO;
- 
-+	attr = soc_device_match(ufs_fallback);
-+	if (attr)
-+		goto fallback;
-+
-+	ret = request_firmware(&priv->fw, UFS_RENESAS_FIRMWARE_NAME, dev);
-+	if (ret) {
-+		dev_warn(dev, "Failed to load firmware\n");
-+		goto fallback;
-+	}
-+
-+	cell = nvmem_cell_get(dev, "calibration");
-+	if (IS_ERR(cell)) {
-+		dev_warn(dev, "No calibration data specified\n");
-+		goto fallback;
-+	}
-+
-+	data = nvmem_cell_read(cell, &len);
-+	if (IS_ERR(data)) {
-+		dev_warn(dev, "Failed to read calibration data: %pe\n", data);
-+		goto fallback;
-+	}
-+
-+	if (len != EFUSE_CALIB_SIZE) {
-+		dev_warn(dev, "Invalid calibration data size %zu\n", len);
-+		goto fallback;
-+	}
-+
-+	memcpy(priv->calib, data, EFUSE_CALIB_SIZE);
-+	priv->pre_init = ufs_renesas_r8a779f0_pre_init;
-+	goto out;
-+
-+fallback:
-+	dev_info(dev, "Using ES1.0 init code\n");
-+	priv->pre_init = ufs_renesas_r8a779f0_es10_pre_init;
-+
-+out:
-+	kfree(data);
-+	if (!IS_ERR_OR_NULL(cell))
-+		nvmem_cell_put(cell);
-+
- 	return 0;
- }
- 
-+static void ufs_renesas_exit(struct ufs_hba *hba)
-+{
-+	struct ufs_renesas_priv *priv = ufshcd_get_variant(hba);
-+
-+	release_firmware(priv->fw);
-+}
-+
- static int ufs_renesas_set_dma_mask(struct ufs_hba *hba)
- {
- 	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
-@@ -332,6 +520,7 @@ static int ufs_renesas_set_dma_mask(struct ufs_hba *hba)
- static const struct ufs_hba_variant_ops ufs_renesas_vops = {
- 	.name		= "renesas",
- 	.init		= ufs_renesas_init,
-+	.exit		= ufs_renesas_exit,
- 	.set_dma_mask	= ufs_renesas_set_dma_mask,
- 	.setup_clocks	= ufs_renesas_setup_clocks,
- 	.hce_enable_notify = ufs_renesas_hce_enable_notify,
 -- 
 2.43.0
 
