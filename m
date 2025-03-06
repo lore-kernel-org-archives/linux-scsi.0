@@ -1,132 +1,95 @@
-Received: from mail-il1-f170.google.com (mail-il1-f170.google.com [209.85.166.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0533F1DA53
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Mar 2025 21:03:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 256C128F1;
+	Thu,  6 Mar 2025 01:44:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741208605; cv=none; b=KGvQ+RQirz9EApQSL/3feregtH/sSFSBEyxugudjgz9Nun1jBGh2HwmIoiR/iJ4a2vT3jbieI7VCmWUb5toy0pAp+yn1iIBHfssmFV/N1u0IyRHIfO7hMdPSwshJdABDgQn9eQZ1R3nL6eahrHZi8ZVQmpNHgPQpkdbWyIh3ZlU=
+	t=1741225471; cv=none; b=Z9gUxguVgWbxp2WMFT5T+2fZal27jsKiBvVLZpjGLJ2bBvOinxoay7YhNTxiqZdTgvWKeIuplh3XPp+3ortpxYq9ZBFLJsYlIL72hQ8b6yX2JsAGNvEBl6ZuvZn/GmB9LnaYt/oBTuFSshckCJT3mIMD39cxo6T33YfROal2nuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741208605; c=relaxed/simple;
-	bh=cQv+lyduL43rY08xOji9UZfFXE3NnNlvr+mMnQc8fGk=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=lEEkImMfb5plrI3+QzaIq+queL2BgcS5bEXenjbh2Jyl61sdX20u+yo9LTjwFdDE01kwv+MCpIfuRX8h45Fz347ZDxcEtjj46jKstDA5bXMqhHtfdzw29ZBTib5dfEqVDtuuhK29qw4sz/rYDPx/n1RRmrhRE2NFIBQkiPnynCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=odXs3DYe; arc=none smtp.client-ip=209.85.166.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="odXs3DYe"
-Received: by mail-il1-f170.google.com with SMTP id e9e14a558f8ab-3cfc8772469so27130355ab.3
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Mar 2025 13:03:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1741208601; x=1741813401; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=XIwiIj98skyy07bH2eLQbYMiaQkekGbv6xFJBSSdfSQ=;
-        b=odXs3DYe+hqPtExba26XCH+nvZrYYt/FaXGczsYgmcoLLVrGoA/kxztGJDkNR+Ing3
-         Vk5p/ONcNCx0mslfs4GSp8TPp2tm2Gsk9Ct1jywPVrl0QRwYkpbocbzFIQRPZIM7OmAR
-         i/m6r27W2SycN1PKjS0sKVPw6hLrK3BxNnQcrLjeAJ4aDXBckhgAGuU78AuwKDSMUghB
-         fDaxE8cDNOfSfOoM7fMxzwEH+ZccJDf5WjIbRdkg21HK5F526iiBFfJBF9QAKNKGg8fr
-         7sRjtBJmgd2teFRnGmEKyKtKQkOZ94pQustybqExakSG4hNNdBq30LFtrwoVB41TyO3R
-         E0QQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741208601; x=1741813401;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XIwiIj98skyy07bH2eLQbYMiaQkekGbv6xFJBSSdfSQ=;
-        b=Z59fLVK7QSmELKaLp+mZIUbGaAvdpHPb6RfofabZ9dmBp9YUlo/5fnnbvi0VuTOCIf
-         b5SkR1daD76rzrgmAPtTwnZK3zDUw0olZ8kvF+oAWNkO1opoSkGW5Q6QOoQWGErjIyCk
-         54fvheLSarzthJmVdhylIu51hWB4xXPAqBmIF3V0aasfEBfA5NC/A0w4uX9N/lf9cvMu
-         ycCEeHCzfevdwJGa3UTVQj/w16N6nm6n/6cv5RapHgZ7IZW+HGrtWTbHjyP/op/A7b99
-         SsfEGKu9yWrcR0n6RUwbGbonkGBSIO0Pbw4LLDtAKDOhbRybHe52qsG6m7YIgf09vqEm
-         WuEQ==
-X-Gm-Message-State: AOJu0YzIStL+wGAZsBm8FZMBIR1RIjtCnpITYYZcgYExG37XhTMgFs9D
-	6E82Ovz6J8mi38oiyuH70S4TWiAVLU3tqH6EgPNU/l8n7f3CMmCTJDuQr+TKylTeI8O4BHNuIsf
-	z
-X-Gm-Gg: ASbGnctubY4KOQyBjL8f68ybXcq24vx1ARVi5wXaLwLy+u3I5Ph+4aBYoVh3/OLwT+y
-	0IsJ8xBVwx0MW0PG6xeJ3kscTw4J5apaBhOnpF3n3jH1Hva8CCXPK2K4MbVpNnarFf72i9iJMNZ
-	VS06jjehWnlKmnuNQbcf3bENiV1OiTcT2vbbPjaVJX54eZH/UTpl/+QzgnBe6YMzotTBJ2oNp+S
-	dUKHZciRdpOiD3Ofq8UtwK/XwylWKj68VJvSu+rO6DMJD2hqq3Oil/SbHeRdBbAg3CmJbcn8oc8
-	YqIWTPG5eyvLP0hJGO6rhLJeyuORV1gb+9rIqGC6
-X-Google-Smtp-Source: AGHT+IG/v2u21EGDnLSGquubBj9oAAhnw+TsxY8TSdXfeyiOJ+baorjX3aSDbwR9HZPEfWd9sSNDig==
-X-Received: by 2002:a05:6e02:170c:b0:3d4:2306:6d0 with SMTP id e9e14a558f8ab-3d42b97ba4dmr51865365ab.14.1741208600910;
-        Wed, 05 Mar 2025 13:03:20 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3d3dee7101dsm37071395ab.39.2025.03.05.13.03.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Mar 2025 13:03:20 -0800 (PST)
-Message-ID: <b972fe33-c671-4ec2-8123-d8d9410b8c3a@kernel.dk>
-Date: Wed, 5 Mar 2025 14:03:19 -0700
+	s=arc-20240116; t=1741225471; c=relaxed/simple;
+	bh=xQ2zZpRbA3gl1OjUxsFggiHGH1qyq3+0l3RZ2SaaDwc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=D5Bne0F9bJMHppjc7ZZNSIJfMyCRAkeBQhYck+CV0hf/wWPCE82M+DUzAVcCT/32r3pslbRzC28pF3QWXpCyQYeeAL+9/XmIx9hB2HW7ylkYmUqzj9mx5spDtJ8+7YEMryR0iTLPqwjrg5V9KqnKoGHjfKnHbs0dG4thQ5JzSn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Z7XFS5q9Dz21nyg;
+	Thu,  6 Mar 2025 09:41:16 +0800 (CST)
+Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
+	by mail.maildlp.com (Postfix) with ESMTPS id CA4D7180042;
+	Thu,  6 Mar 2025 09:44:24 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 6 Mar 2025 09:44:23 +0800
+Message-ID: <8d769d82-e429-6e25-8bb5-97ef5c2e7a62@huawei.com>
+Date: Thu, 6 Mar 2025 09:44:23 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/3] io_uring/rw: handle -EAGAIN retry at IO completion
- time
-From: Jens Axboe <axboe@kernel.dk>
-To: John Garry <john.g.garry@oracle.com>, io-uring@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-References: <20250109181940.552635-1-axboe@kernel.dk>
- <20250109181940.552635-3-axboe@kernel.dk>
- <2b43ccfa-644d-4a09-8f8f-39ad71810f41@oracle.com>
- <c64a86d1-36cd-46b1-82fa-4ac4a4cf9cd2@oracle.com>
- <c5e6b923-69b1-47d8-b313-ba339eac9501@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <c5e6b923-69b1-47d8-b313-ba339eac9501@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk
+ directly connected
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <liyihang9@huawei.com>,
+	<yanaijie@huawei.com>
+CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>, <liyangyang20@huawei.com>,
+	<f.fangjian@huawei.com>, <xiabing14@h-partners.com>
+References: <20250220130546.2289555-1-yangxingui@huawei.com>
+ <20250220130546.2289555-2-yangxingui@huawei.com>
+ <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
+ <5a4384dc-4edb-9e29-d1dd-190d69b9e313@huawei.com>
+ <1e98a1eb-a763-4190-94c5-a867cdf0e09b@oracle.com>
+ <235e7ad8-1e19-4b7b-c64b-b6703851ca65@huawei.com>
+ <d233a108-a46e-47dd-86ad-756c60c8665e@oracle.com>
+ <cc9ba6f8-1efb-4910-8952-9ca07c707658@huawei.com>
+ <5d34595f-ff57-4679-b263-fa3fea006ce3@oracle.com>
+ <25552c7d-858d-ea1e-0987-55f71642a503@huawei.com>
+ <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
+ <d4b7ae14-5b60-883a-c4f8-be11fc51a4f7@huawei.com>
+ <4f287a32-d24f-47dc-bec5-a4b94895e135@oracle.com>
+ <9765d9c7-959f-3611-4093-89f7e941e2ba@huawei.com>
+ <4279fe21-6db8-4deb-b5f7-663720637cf0@oracle.com>
+ <2a59bb5c-797c-3745-384e-791a74858930@huawei.com>
+ <cfef9d7d-adf9-43d8-9244-66f4eda081d2@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <cfef9d7d-adf9-43d8-9244-66f4eda081d2@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepemh500008.china.huawei.com (7.202.181.139) To
+ kwepemg100017.china.huawei.com (7.202.181.58)
 
-On 3/5/25 10:03 AM, Jens Axboe wrote:
-> On 3/5/25 9:57 AM, John Garry wrote:
->> On 04/03/2025 18:10, John Garry wrote:
->>
->> +
->>
->>> On 09/01/2025 18:15, Jens Axboe wrote:
->>>> Rather than try and have io_read/io_write turn REQ_F_REISSUE into
->>>> -EAGAIN, catch the REQ_F_REISSUE when the request is otherwise
->>>> considered as done. This is saner as we know this isn't happening
->>>> during an actual submission, and it removes the need to randomly
->>>> check REQ_F_REISSUE after read/write submission.
->>>>
->>>> If REQ_F_REISSUE is set, __io_submit_flush_completions() will skip over
->>>> this request in terms of posting a CQE, and the regular request
->>>> cleaning will ensure that it gets reissued via io-wq.
->>>>
->>>> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+
+Hi, John
+
+On 2025/3/6 0:15, John Garry wrote:
+> On 05/03/2025 08:16, yangxingui wrote:
 >>>
+>>> Sure, something like that - you just need to get libsas to trigger 
+>>> the proper hw port id assignment for the device. As for specific 
+>>> implementation in the LLDD, that up to you guys.
 >>
->> Further info, I can easily recreate this on latest block/io_uring-6.14 on real NVMe HW:
+>> Thank you for your suggestions. The disk was finally restored to 
+>> normal, but the error handling took a long time. Since the error 
+>> handling would set the host to the recovery state, other disks on the 
+>> same host would be blocked for a long time.
 > 
-> Thanks, I'll take a look!
+> But that because you have IO inflight for the disk which was unplugged?
 
-Can you give this a spin?
+No, these are all ATA_CMD_ID_ATA commands newly issued by 
+ata_eh_revalidate_and_attach() during error handling, and will be 
+retried three times. The reason is that after the hw port id is changed, 
+we set it to invalid, and these ATA_CMD_ID_ATA cmds will fail to execute.
 
+Thanks,
+Xingui
 
-diff --git a/io_uring/rw.c b/io_uring/rw.c
-index 9edc6baebd01..e5528cebcd06 100644
---- a/io_uring/rw.c
-+++ b/io_uring/rw.c
-@@ -560,11 +560,10 @@ static void io_complete_rw_iopoll(struct kiocb *kiocb, long res)
- 	if (kiocb->ki_flags & IOCB_WRITE)
- 		io_req_end_write(req);
- 	if (unlikely(res != req->cqe.res)) {
--		if (res == -EAGAIN && io_rw_should_reissue(req)) {
-+		if (res == -EAGAIN && io_rw_should_reissue(req))
- 			req->flags |= REQ_F_REISSUE | REQ_F_BL_NO_RECYCLE;
--			return;
--		}
--		req->cqe.res = res;
-+		else
-+			req->cqe.res = res;
- 	}
- 
- 	/* order with io_iopoll_complete() checking ->iopoll_completed */
-
--- 
-Jens Axboe
