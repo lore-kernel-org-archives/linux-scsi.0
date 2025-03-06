@@ -1,107 +1,108 @@
-Received: from mail-il1-f172.google.com (mail-il1-f172.google.com [209.85.166.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15BF2146A63
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Mar 2025 15:02:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AA025B69E;
+	Thu,  6 Mar 2025 17:01:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741273339; cv=none; b=V5E/GVceJhj9sblp1/o0fcegy0SyiClQVD6iI7/EoxfdNEFwGO9NKRJhHay25Pr1saW/1FzKkqocyF1Xy2WAbPrf3CZlb2ayYCC0wvNzozacVGs+AavaqmcHu58N7LIl41q9AwlI7bMOJ1jr3oEVR5ynoLIV7OGh8NBAZoNGpso=
+	t=1741280491; cv=none; b=bbr1utrSlN72C09l3ellh4xq6gG2uQnAMZBEBVdKoYryqYAfSOm6WSOt5AXqy89hrqpyqVhozpAnbZP7rQ8TPHYWum01PvCWcEuo0rDrbXCZHVwBI8xeR9TcqwMh7Z9sq67cJnpGh6grXVFNnJ/SX5hqqZZLF6KTgAyxt+4ctLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741273339; c=relaxed/simple;
-	bh=TNHYt9OrG7z20k4JSs77FE0a0Uuxd1mThM9cNp/g3qw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=lO0Dk+2xGejBLJeP4zJnzGDalmqWeUonPj8jHvUSQKIjJeSVR6glp8v/N9qIVhxDlY6Mwraxsh3Up6nrZvAts7NS7bFlNoRKHI6cZkgUmIWx3VENpPGJNwLCggYzEFf2bvLSV/WOq5sVhyEBUr87z6LxkVXor9X6tzUcLG7v8Zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=axjCXDg0; arc=none smtp.client-ip=209.85.166.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1741280491; c=relaxed/simple;
+	bh=0bG+xsvVA43Tj04NjYI8l6dTopg/wLEDMHxrsSVIdBQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=S0YmWoCNyZJVNZPn/wDeMQPGYZTJjZTuTywaY7RIXWfQSv76Zl74HAFP3jAu3MVvMK9KG1fXIsNQ7CkmPnrwf+Lz9grbK3/poVd3abHt44Py2iGb8nBEYEmH2bClTVXU2PCoLTXqokBL2hrDYACePOYtnuyvYel9UcimBOr8cpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=CVZB7ph+; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="axjCXDg0"
-Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-3d3e25323cfso6307575ab.3
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Mar 2025 07:02:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1741273336; x=1741878136; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=85jq1Q6VP5GwImlSpp7X1r/ay/vqE02iBEhuFPnO6PI=;
-        b=axjCXDg0hfRlXe9OQhPPPI6BBGSflFi9vI/4gF7FbrKEOWLGUnBs9/Q5yKsG4Lp4Of
-         g5KpvfUtsCN0wu72WiIaFc6KalEqI7T9RwJbpCtCu3ivCEewAYEChUQdyrSG4ukwKFcf
-         ZDxmhbqZTnAUs/f+VyKrS0zVDPv5OebVbbaIFuhZQZ2bR4pQERFCUZo1SNjAJYUlT/L0
-         Ch7zv35rCo20R5rgjvk4ewapIQyGWILC89uxWEpMbsFTOmKyotoyP+tQEV1UlNJASevj
-         D15q4sh4YgZfqfJLzVQueJHuoFQaLwMrHn1Dd3adkx8CWtgTgfQL2MaowirUE67c+rrj
-         R5dA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741273336; x=1741878136;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=85jq1Q6VP5GwImlSpp7X1r/ay/vqE02iBEhuFPnO6PI=;
-        b=TfzvoRFNEKENKt+o7Jh6MvknVVFZiQ+P60l/nCNfqVtYT3sxxq59yTkYv2LSjhHcTw
-         s5WHUg46DgnXzK9qglXMcIb3avnm+ID7ug76lVTIl4ephTLiINL8maf+YjQYJXVQ6U+H
-         ekPjXUvdi/A731rGsqNH0Vjze5saXC46u4ZEA9E7T/beOHIr7R1TVPS5kB8X34tsTQkl
-         vh5aYvGn3FNQwl1n/ewsvWKg/XgFrA1hh6RTWY2s5ExOTW/DlyS2Qnh126umRAr3BGi2
-         30Tu3LWEnVTUx2hMVCV2D0y58ToltM/6oo8uqxTxGAP0iUqq/hB20wST8XWYRQ9fDY86
-         nSBA==
-X-Forwarded-Encrypted: i=1; AJvYcCXcTM/hjrhCZBMjFaCOx3zsXxpwhmhr7f/xb4cUPApoZHcN1FP4dxd5sxn5HtgN+3KqP8MuhAJ14D8m@vger.kernel.org
-X-Gm-Message-State: AOJu0YzqRWuINqGACbLD9mhG0yGBK7t/8HIqVWIyQx1UrNz0Cm/8+yGV
-	UUUcVMhtE7AcL1yHdFsFoHeV9pQTeL0IEVtoWOlQmqc0KWdacYcv7UA3mzEA8JK5vXksLwELdEl
-	v
-X-Gm-Gg: ASbGncsc0Xlz+3sYuc0fb7DtnucneZWpa2RySZeaA3m0ndCbmvsG6NmUHqY8o+Xa3MG
-	fDgUXHRNQbvc3hJVwIsc5i2+EJdwLtGohaFulMrL41jrzVzdD8y6LOGglRXcWJi+OZif9WfmjDb
-	LJ3nQLkcJvYJqeAY5qwXSuBX7JI9/Pu3p9gzVKVjfrlztbsCthKoWV2AlBro0VZ/olBDtX2e+2s
-	U36TrnSdQUy5NTwTVXcqHvvD75EVcH0Tsp+UPFxtgSYc4OiSPHQ+7KqP7LjNDfqp55ci8T5IAu4
-	b3VixFqnTJ032yq9bepycMUOvQKGxO0fcRdJ
-X-Google-Smtp-Source: AGHT+IFLAobN1y/JaLFeXk9mcMrXNaETTC2QGpW5wyvCdzhLBlyXi27OPaIuZlvogV6xlSSS4u8ADg==
-X-Received: by 2002:a05:6e02:1985:b0:3cf:bb6e:3065 with SMTP id e9e14a558f8ab-3d42b75767bmr95773635ab.0.1741273335734;
-        Thu, 06 Mar 2025 07:02:15 -0800 (PST)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f20a06a6a7sm375874173.134.2025.03.06.07.02.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Mar 2025 07:02:14 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: hch@lst.de, martin.petersen@oracle.com, 
- Anuj Gupta <anuj20.g@samsung.com>
-Cc: anuj1072538@gmail.com, nikh1092@linux.ibm.com, 
- linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, 
- linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev
-In-Reply-To: <20250305063033.1813-1-anuj20.g@samsung.com>
-References: <CGME20250305063900epcas5p38bb20587ccf4310cfb0f3307180eb536@epcas5p3.samsung.com>
- <20250305063033.1813-1-anuj20.g@samsung.com>
-Subject: Re: [PATCH v3 0/2] Fix integrity sysfs reporting inconsistencies
-Message-Id: <174127333427.62743.13850185317855218553.b4-ty@kernel.dk>
-Date: Thu, 06 Mar 2025 08:02:14 -0700
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="CVZB7ph+"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4Z7wg668C9zlgrtp;
+	Thu,  6 Mar 2025 17:01:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1741280480; x=1743872481; bh=9/EC2f3UG/oS/+8VXzx/tS1v
+	HUYjgPed0E+QLpjuj9o=; b=CVZB7ph+QCcWq+r/qJMWPnFmDjolmS+ML+SCq5Ie
+	fd2rzDR/JjK5IabvsFiQsWQQ8hms9nFOPc1iwIv6hOtuFCwrihrDxaBio+ZvLxvA
+	biWgyC8zwmR+umf/a7f/z61VAUGqOGdzpJYG5wKWFiMM8Q5qV7SqKZxSNo7G6r4i
+	g5hogrKsq0joAU8d7+jrlbUxfXcB02T2VcUl+ccsPjNuX7JvuKY3HzxKPb7kxdbb
+	SR5rW/cOMZL7gSr7R2h4pRQkMLlz4eMBKUUgk0Q/WnheWfKcNd/FcXgSQHUXt/DR
+	JYxdT5Ua+aYmFniGJIfvJOhM3oxZ8v9n+x/k6UeoNzv4DQ==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id zrJYGK11rEh9; Thu,  6 Mar 2025 17:01:20 +0000 (UTC)
+Received: from [172.20.25.222] (unknown [192.80.0.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4Z7wfw6l4nzlgrtN;
+	Thu,  6 Mar 2025 17:01:12 +0000 (UTC)
+Message-ID: <7ff50e9c-8556-4b55-9457-03ee45ee07c0@acm.org>
+Date: Thu, 6 Mar 2025 09:01:11 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2 2/3] scsi: ufs-qcom: Add support for dumping MCQ
+ registers
+To: Manish Pandey <quic_mapa@quicinc.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
+ quic_cang@quicinc.com, quic_nguyenb@quicinc.com
+References: <20250305120355.16834-1-quic_mapa@quicinc.com>
+ <20250305120355.16834-3-quic_mapa@quicinc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250305120355.16834-3-quic_mapa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-7b9b9
 
+On 3/5/25 4:03 AM, Manish Pandey wrote:
+> +static void ufs_qcom_dump_mcq_hci_regs(struct ufs_hba *hba)
+> +{
+> +	/* RES_MCQ_1 */
+> +	ufshcd_dump_regs(hba, 0x0, 256 * 4, "MCQ HCI 1da0000-1da03f0 ");
+> +	usleep_range(1000, 1100);
 
-On Wed, 05 Mar 2025 12:00:31 +0530, Anuj Gupta wrote:
-> Patch 1: Ensures DM devices correctly propagate
-> device_is_integrity_capable
-> Patch 2: initialize nogenerate and noverify correctly
-> 
-> Changes since v2:
-> Ensure that integrity capability gets propogated correctly for all cases
-> in DM (hch)
-> 
-> [...]
+Please add a comment that explains why the usleep_range() calls are
+present.
 
-Applied, thanks!
+> @@ -1624,6 +1670,19 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+>   
+>   	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_TMRLUT);
+>   	ufshcd_dump_regs(hba, reg, 9 * 4, "UFS_DBG_RD_REG_TMRLUT ");
+> +
+> +	if (hba->mcq_enabled) {
+> +		reg = ufs_qcom_get_debug_reg_offset(host, UFS_RD_REG_MCQ);
+> +		ufshcd_dump_regs(hba, reg, 64 * 4, "HCI MCQ Debug Registers ");
+> +	}
+> +
+> +	if (in_task()) {
+> +		/* Dump MCQ Host Vendor Specific Registers */
+> +		if (hba->mcq_enabled) {
+> +			ufs_qcom_dump_mcq_hci_regs(hba);
+> +			usleep_range(1000, 1100);
+> +		}
+> +	}
+>   }
 
-[1/2] block: ensure correct integrity capability propagation in stacked devices
-      commit: 677e332e4885a17def5efa4788b6e725a737b63c
-[2/2] block: Correctly initialize BLK_INTEGRITY_NOGENERATE and BLK_INTEGRITY_NOVERIFY
-      commit: 85f72925000e924291a0ebf63d2234994a4f22bd
+Please either combine the two "if (hba->mcq_enabled)" tests or combine
+the "in_task()" and "hba->mcq_enabled" tests.
 
-Best regards,
--- 
-Jens Axboe
+Please also add a comment that explains why the in_task() call is
+present and a comment that explains why the usleep_range() call is
+present.
 
+Thanks,
 
-
+Bart.
