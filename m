@@ -1,158 +1,107 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f172.google.com (mail-il1-f172.google.com [209.85.166.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD061C7017;
-	Thu,  6 Mar 2025 13:05:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15BF2146A63
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Mar 2025 15:02:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741266330; cv=none; b=uEKA53Vsus7rYKY4ceNhgR8XZWTd1tEaKEo8Qpo1ZbBzLrGOp/NGStIy54amacZmc46C1pkHS5GPuDfU2U818zghXSm+o5Evhn3UOkjwtMSvdkIZqCdTNw9fEYQkoJjyPi5tn5F3zUnFuZ2S398wvHmPkpASv3xllWyS6Qp0i/Y=
+	t=1741273339; cv=none; b=V5E/GVceJhj9sblp1/o0fcegy0SyiClQVD6iI7/EoxfdNEFwGO9NKRJhHay25Pr1saW/1FzKkqocyF1Xy2WAbPrf3CZlb2ayYCC0wvNzozacVGs+AavaqmcHu58N7LIl41q9AwlI7bMOJ1jr3oEVR5ynoLIV7OGh8NBAZoNGpso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741266330; c=relaxed/simple;
-	bh=oit9iCVAzl6xEfiY9pN3rkfZVdyzGi35uF91jaISyAQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=KjCVXXo6TgU5sjd9FmWMwFQdyT+76JrnK7Yp3EAedPLPq7qbiDB3XEdcSFshtmjJ/EnviemyfULZuZdutW05IK1ra3GAzvQSTvaT/NWK3W8C2bWnj1nXpoSP4bh6XPzQzSuEHMCVYl7ZVSVAT9xi2RKSETmmVW4fMRnyZLFF9LY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=S2JvZ7Zx; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1741273339; c=relaxed/simple;
+	bh=TNHYt9OrG7z20k4JSs77FE0a0Uuxd1mThM9cNp/g3qw=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=lO0Dk+2xGejBLJeP4zJnzGDalmqWeUonPj8jHvUSQKIjJeSVR6glp8v/N9qIVhxDlY6Mwraxsh3Up6nrZvAts7NS7bFlNoRKHI6cZkgUmIWx3VENpPGJNwLCggYzEFf2bvLSV/WOq5sVhyEBUr87z6LxkVXor9X6tzUcLG7v8Zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=axjCXDg0; arc=none smtp.client-ip=209.85.166.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="S2JvZ7Zx"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 526B3jOd032047;
-	Thu, 6 Mar 2025 13:05:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	WBCgeeBjBpJkcmcOMtnpiqIKOmDFRnl5pP0rLltg67E=; b=S2JvZ7ZxxqDLZZpq
-	QTSuaFoOrZ1CPMnvcTXrPl3TvRIXcN3hnVsCOjxn163+g0d2X2QZ3sWzE66+0lX7
-	Cx5aVVovS96ZTkKKIll4DqJd/jWixDNSpaMH1qXgiLeH2+nORzlK3msphISKdju3
-	Jd5Sf2RtcOK4lYXRaXSh91pup9t1aO5xjN5FXSSsAsvqkqQDUWJ4GRfhGQDjUgwM
-	r63+WeNdbENT+RaF56Wqy2p+WWk8bJ3RKgRaLxstK1ONC04m7yXcdnW5xtB+1d4u
-	6TO+SV9IaVnyMF0bvRaPpWuovLViMEkbF98b/U5PyJ6igTIAmTZAsefXmX1Y1de7
-	Y+3GMQ==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 457aghgcp9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 06 Mar 2025 13:05:12 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 526D5BeQ020402
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 6 Mar 2025 13:05:12 GMT
-Received: from [10.253.35.155] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 6 Mar 2025
- 05:05:08 -0800
-Message-ID: <c3f0d284-07d8-42a2-85d0-f4023b9b6bbc@quicinc.com>
-Date: Thu, 6 Mar 2025 21:04:41 +0800
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="axjCXDg0"
+Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-3d3e25323cfso6307575ab.3
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Mar 2025 07:02:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1741273336; x=1741878136; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=85jq1Q6VP5GwImlSpp7X1r/ay/vqE02iBEhuFPnO6PI=;
+        b=axjCXDg0hfRlXe9OQhPPPI6BBGSflFi9vI/4gF7FbrKEOWLGUnBs9/Q5yKsG4Lp4Of
+         g5KpvfUtsCN0wu72WiIaFc6KalEqI7T9RwJbpCtCu3ivCEewAYEChUQdyrSG4ukwKFcf
+         ZDxmhbqZTnAUs/f+VyKrS0zVDPv5OebVbbaIFuhZQZ2bR4pQERFCUZo1SNjAJYUlT/L0
+         Ch7zv35rCo20R5rgjvk4ewapIQyGWILC89uxWEpMbsFTOmKyotoyP+tQEV1UlNJASevj
+         D15q4sh4YgZfqfJLzVQueJHuoFQaLwMrHn1Dd3adkx8CWtgTgfQL2MaowirUE67c+rrj
+         R5dA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1741273336; x=1741878136;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=85jq1Q6VP5GwImlSpp7X1r/ay/vqE02iBEhuFPnO6PI=;
+        b=TfzvoRFNEKENKt+o7Jh6MvknVVFZiQ+P60l/nCNfqVtYT3sxxq59yTkYv2LSjhHcTw
+         s5WHUg46DgnXzK9qglXMcIb3avnm+ID7ug76lVTIl4ephTLiINL8maf+YjQYJXVQ6U+H
+         ekPjXUvdi/A731rGsqNH0Vjze5saXC46u4ZEA9E7T/beOHIr7R1TVPS5kB8X34tsTQkl
+         vh5aYvGn3FNQwl1n/ewsvWKg/XgFrA1hh6RTWY2s5ExOTW/DlyS2Qnh126umRAr3BGi2
+         30Tu3LWEnVTUx2hMVCV2D0y58ToltM/6oo8uqxTxGAP0iUqq/hB20wST8XWYRQ9fDY86
+         nSBA==
+X-Forwarded-Encrypted: i=1; AJvYcCXcTM/hjrhCZBMjFaCOx3zsXxpwhmhr7f/xb4cUPApoZHcN1FP4dxd5sxn5HtgN+3KqP8MuhAJ14D8m@vger.kernel.org
+X-Gm-Message-State: AOJu0YzqRWuINqGACbLD9mhG0yGBK7t/8HIqVWIyQx1UrNz0Cm/8+yGV
+	UUUcVMhtE7AcL1yHdFsFoHeV9pQTeL0IEVtoWOlQmqc0KWdacYcv7UA3mzEA8JK5vXksLwELdEl
+	v
+X-Gm-Gg: ASbGncsc0Xlz+3sYuc0fb7DtnucneZWpa2RySZeaA3m0ndCbmvsG6NmUHqY8o+Xa3MG
+	fDgUXHRNQbvc3hJVwIsc5i2+EJdwLtGohaFulMrL41jrzVzdD8y6LOGglRXcWJi+OZif9WfmjDb
+	LJ3nQLkcJvYJqeAY5qwXSuBX7JI9/Pu3p9gzVKVjfrlztbsCthKoWV2AlBro0VZ/olBDtX2e+2s
+	U36TrnSdQUy5NTwTVXcqHvvD75EVcH0Tsp+UPFxtgSYc4OiSPHQ+7KqP7LjNDfqp55ci8T5IAu4
+	b3VixFqnTJ032yq9bepycMUOvQKGxO0fcRdJ
+X-Google-Smtp-Source: AGHT+IFLAobN1y/JaLFeXk9mcMrXNaETTC2QGpW5wyvCdzhLBlyXi27OPaIuZlvogV6xlSSS4u8ADg==
+X-Received: by 2002:a05:6e02:1985:b0:3cf:bb6e:3065 with SMTP id e9e14a558f8ab-3d42b75767bmr95773635ab.0.1741273335734;
+        Thu, 06 Mar 2025 07:02:15 -0800 (PST)
+Received: from [127.0.0.1] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4f20a06a6a7sm375874173.134.2025.03.06.07.02.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Mar 2025 07:02:14 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: hch@lst.de, martin.petersen@oracle.com, 
+ Anuj Gupta <anuj20.g@samsung.com>
+Cc: anuj1072538@gmail.com, nikh1092@linux.ibm.com, 
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev
+In-Reply-To: <20250305063033.1813-1-anuj20.g@samsung.com>
+References: <CGME20250305063900epcas5p38bb20587ccf4310cfb0f3307180eb536@epcas5p3.samsung.com>
+ <20250305063033.1813-1-anuj20.g@samsung.com>
+Subject: Re: [PATCH v3 0/2] Fix integrity sysfs reporting inconsistencies
+Message-Id: <174127333427.62743.13850185317855218553.b4-ty@kernel.dk>
+Date: Thu, 06 Mar 2025 08:02:14 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ufs: core: bsg: Add hibern8 enter/exit to
- ufshcd_send_bsg_uic_cmd
-To: Bean Huo <huobean@gmail.com>,
-        Arthur Simchaev
-	<arthur.simchaev@sandisk.com>,
-        <martin.petersen@oracle.com>, <quic_mapa@quicinc.com>
-CC: <avri.altman@sandisk.com>, <Avi.Shchislowski@sandisk.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <bvanassche@acm.org>
-References: <20250304114652.210395-1-arthur.simchaev@sandisk.com>
- <bd2e01d8b33413655a4215221c910eaf2cdf6461.camel@gmail.com>
-Content-Language: en-US
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <bd2e01d8b33413655a4215221c910eaf2cdf6461.camel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: IA1v9K4Lx4Uzjc5inQvHoUOa9fUoyOUO
-X-Authority-Analysis: v=2.4 cv=R5D5GcRX c=1 sm=1 tr=0 ts=67c99d88 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8 a=askNAfbZAAAA:8
- a=InJrZTXqAAAA:8 a=0k5qN4xF1ULUk8dre8gA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=7Vq0anFIkUTOnIa2TtOZ:22 a=WwJ7OKCui7YMbFU4sWpb:22
-X-Proofpoint-GUID: IA1v9K4Lx4Uzjc5inQvHoUOa9fUoyOUO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-06_05,2025-03-06_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- suspectscore=0 phishscore=0 mlxscore=0 priorityscore=1501 clxscore=1011
- spamscore=0 mlxlogscore=999 malwarescore=0 bulkscore=0 lowpriorityscore=0
- classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502100000
- definitions=main-2503060099
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3-dev-7b9b9
 
-Hi Arthur,
 
-On 3/6/2025 8:50 PM, Bean Huo wrote:
-> Arthur,
->
-> At present, we lack a user-space tool to initiate eye monitor
-> measurements. Additionally, opening a channel for users in user land to
-> send MP commands seems unsafe.
->
->
-> Kind regards,
-> Bean
->
-> On Tue, 2025-03-04 at 13:46 +0200, Arthur Simchaev wrote:
->> Eye monitor measurement functionality was added to the M-PHY v5
->> specification. The measurement of the eye monitor signal for the UFS
->> device begins when the link enters the hibernate state.
->> Hence, allow user-layer applications the capability to send the
->> hibern8
->> enter command through the BSG framework. For completion, allow the
->> sibling functionality of hibern8 exit as well.
->>
->> Signed-off-by: Arthur Simchaev <arthur.simchaev@sandisk.com>
->> ---
->>   drivers/ufs/core/ufshcd.c | 10 ++++++++++
->>   1 file changed, 10 insertions(+)
->>
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 4e1e214fc5a2..546ab557a77c 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -4366,6 +4366,16 @@ int ufshcd_send_bsg_uic_cmd(struct ufs_hba
->> *hba, struct uic_command *uic_cmd)
->>                  goto out;
->>          }
->>   
->> +       if (uic_cmd->command == UIC_CMD_DME_HIBER_ENTER) {
->> +               ret = ufshcd_uic_hibern8_enter(hba);
->> +               goto out;
->> +       }
->> +
->> +       if (uic_cmd->command == UIC_CMD_DME_HIBER_EXIT) {
->> +               ret = ufshcd_uic_hibern8_exit(hba);
->> +               goto out;
->> +       }
->> +
->>          mutex_lock(&hba->uic_cmd_mutex);
->>          ufshcd_add_delay_before_dme_cmd(hba);
->>   
->> --
->> 2.34.1
-I can understand that you want to use hibern8 enter&exit to trigger a 
-RCT to kick start the EOM,
-however there is a better/simpler way to do so: you can trigger a power 
-mode change to the
-same power mode (e.g., from HS-G5 to HS-G5) to trigger a RCT (without 
-invoking hibern8 enter&exit)
-from user layer by dme_set(PA_PWRMODE).
+On Wed, 05 Mar 2025 12:00:31 +0530, Anuj Gupta wrote:
+> Patch 1: Ensures DM devices correctly propagate
+> device_is_integrity_capable
+> Patch 2: initialize nogenerate and noverify correctly
+> 
+> Changes since v2:
+> Ensure that integrity capability gets propogated correctly for all cases
+> in DM (hch)
+> 
+> [...]
 
-FYI, we have open-sourced Qcom's EOM tool in GitHub and validated the 
-EOM function on most
-UFS4.x devices from UFS vendors, you can find the code for your reference:
-https://github.com/quic/ufs-tools/blob/main/ufs-cli/ufs_eom.c#L266
+Applied, thanks!
 
-The recent change from Ziqi Chen is to serve the power mode change 
-purpose I mentioned above:
-https://lore.kernel.org/all/20241212144248.990103107@linuxfoudation.org/
+[1/2] block: ensure correct integrity capability propagation in stacked devices
+      commit: 677e332e4885a17def5efa4788b6e725a737b63c
+[2/2] block: Correctly initialize BLK_INTEGRITY_NOGENERATE and BLK_INTEGRITY_NOVERIFY
+      commit: 85f72925000e924291a0ebf63d2234994a4f22bd
 
-Hope above info can help you.
+Best regards,
+-- 
+Jens Axboe
 
-Thanks,
-Can Guo.
+
+
