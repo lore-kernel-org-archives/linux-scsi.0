@@ -1,95 +1,118 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 256C128F1;
-	Thu,  6 Mar 2025 01:44:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12562036E3;
+	Thu,  6 Mar 2025 10:40:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741225471; cv=none; b=Z9gUxguVgWbxp2WMFT5T+2fZal27jsKiBvVLZpjGLJ2bBvOinxoay7YhNTxiqZdTgvWKeIuplh3XPp+3ortpxYq9ZBFLJsYlIL72hQ8b6yX2JsAGNvEBl6ZuvZn/GmB9LnaYt/oBTuFSshckCJT3mIMD39cxo6T33YfROal2nuM=
+	t=1741257613; cv=none; b=qROeI+n0SaezLc+H4RJ0Jo8N05i0IGQRSmHKw8uXIBxLZhJJVPT8P1aovD9GAmnaXgSWQVvXfzAu/Haw0IXb+dgVZCG+bT2iQLg9WWhYrKMlSnU8ObBId/fokuKvsRNpKuw3FlhKFIBclqKvQlCAqOXE3akCQd+6Pq9Nc/eWx6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741225471; c=relaxed/simple;
-	bh=xQ2zZpRbA3gl1OjUxsFggiHGH1qyq3+0l3RZ2SaaDwc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=D5Bne0F9bJMHppjc7ZZNSIJfMyCRAkeBQhYck+CV0hf/wWPCE82M+DUzAVcCT/32r3pslbRzC28pF3QWXpCyQYeeAL+9/XmIx9hB2HW7ylkYmUqzj9mx5spDtJ8+7YEMryR0iTLPqwjrg5V9KqnKoGHjfKnHbs0dG4thQ5JzSn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Z7XFS5q9Dz21nyg;
-	Thu,  6 Mar 2025 09:41:16 +0800 (CST)
-Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
-	by mail.maildlp.com (Postfix) with ESMTPS id CA4D7180042;
-	Thu,  6 Mar 2025 09:44:24 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 6 Mar 2025 09:44:23 +0800
-Message-ID: <8d769d82-e429-6e25-8bb5-97ef5c2e7a62@huawei.com>
-Date: Thu, 6 Mar 2025 09:44:23 +0800
+	s=arc-20240116; t=1741257613; c=relaxed/simple;
+	bh=3JBdFCiYrIC+RNOrHoqq7a8iUKdN0ZQ9gy4GJ7lxkLk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sWbEXu4tBVvZV9ZefJtmxIgSu9Kme2NaI9kjYR2wrKTX4M8krl1D0XwjTjLhswWRrcqmaHVhf8f2gwUBdzVFDxaeTt1GYl6qrBygV4XIndz9aRlAL+TPpzG33c1eZyLa9Ul0mZ8UJ7vfkAFP3lgZCKLEF9GmSnlXWP2Xj5TLgSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=clip-os.org; spf=pass smtp.mailfrom=clip-os.org; dkim=pass (2048-bit key) header.d=clip-os.org header.i=@clip-os.org header.b=lOUD7UmF; arc=none smtp.client-ip=217.70.183.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=clip-os.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=clip-os.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=clip-os.org header.i=@clip-os.org header.b="lOUD7UmF"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 8AD7944298;
+	Thu,  6 Mar 2025 10:40:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=clip-os.org; s=gm1;
+	t=1741257607;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6wbUiKVMo+ilWlUo2t+dlVeBduqmoy102Za6yfVmUbI=;
+	b=lOUD7UmFH4D9eg9UusCKx4HU1ChMUUVggiAkzFpMX8L4ZgWA87DKsA2dHER5Q2yZZ9gMHg
+	y2Pu6kRs7grKmmqZHpCHdVKU5DMQMlXqY5Lv1yxr4y9+N32bH5ULpu75Xx+c+tAiKk0Job
+	m/ImXuBLgnK3iw4KFI7b2jD8CC+JojaEzmNO/54eiJPeCmqHSQswd2kgbNQDaWNhF+hFDK
+	WdQjtHMWWPHosx5Q10ChVDX00jxZbJzCZ2IflhfEDSlD9N+D55o0THw/IbYq9ijVZeUAgr
+	JDpUYIsMlqiwfy4zmLub5df+eACBJWPBoJ4/8OFs3r/HvcTeWG1WzzrGGYfMBw==
+Message-ID: <dd7946d8-edc7-4ee6-a5da-75d15654bc42@clip-os.org>
+Date: Thu, 6 Mar 2025 11:40:03 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk
- directly connected
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>, <liyihang9@huawei.com>,
-	<yanaijie@huawei.com>
-CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>, <liyangyang20@huawei.com>,
-	<f.fangjian@huawei.com>, <xiabing14@h-partners.com>
-References: <20250220130546.2289555-1-yangxingui@huawei.com>
- <20250220130546.2289555-2-yangxingui@huawei.com>
- <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
- <5a4384dc-4edb-9e29-d1dd-190d69b9e313@huawei.com>
- <1e98a1eb-a763-4190-94c5-a867cdf0e09b@oracle.com>
- <235e7ad8-1e19-4b7b-c64b-b6703851ca65@huawei.com>
- <d233a108-a46e-47dd-86ad-756c60c8665e@oracle.com>
- <cc9ba6f8-1efb-4910-8952-9ca07c707658@huawei.com>
- <5d34595f-ff57-4679-b263-fa3fea006ce3@oracle.com>
- <25552c7d-858d-ea1e-0987-55f71642a503@huawei.com>
- <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
- <d4b7ae14-5b60-883a-c4f8-be11fc51a4f7@huawei.com>
- <4f287a32-d24f-47dc-bec5-a4b94895e135@oracle.com>
- <9765d9c7-959f-3611-4093-89f7e941e2ba@huawei.com>
- <4279fe21-6db8-4deb-b5f7-663720637cf0@oracle.com>
- <2a59bb5c-797c-3745-384e-791a74858930@huawei.com>
- <cfef9d7d-adf9-43d8-9244-66f4eda081d2@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <cfef9d7d-adf9-43d8-9244-66f4eda081d2@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/6] sysctl/coda: Fixes timeout bounds
+To: Joel Granados <joel.granados@kernel.org>, Jan Harkes <jaharkes@cs.cmu.edu>
+Cc: linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org,
+ Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>,
+ Joel Granados <j.granados@samsung.com>, Clemens Ladisch
+ <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>,
+ Neil Brown <neilb@suse.de>, Olga Kornievskaia <okorniev@redhat.com>,
+ Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+ Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
+ Bart Van Assche <bvanassche@acm.org>, Zhu Yanjun <yanjun.zhu@linux.dev>,
+ Al Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>
+References: <20250224095826.16458-1-nicolas.bouchinet@clip-os.org>
+ <20250224095826.16458-4-nicolas.bouchinet@clip-os.org>
+ <u7q5rpzw6mohtnnhpa2j3u4photckmgllsl3noafnyfttepbui@rzmndu533xcv>
+ <20250303143937.etzv7idjbenugsgw@cs.cmu.edu>
+ <ukkrk6tcf4peempwyutpruupqjkyrbeizrqz2ymjsjpmj6tds5@zb5vp5rh7qoe>
+Content-Language: en-US
+From: Nicolas Bouchinet <nicolas.bouchinet@clip-os.org>
+In-Reply-To: <ukkrk6tcf4peempwyutpruupqjkyrbeizrqz2ymjsjpmj6tds5@zb5vp5rh7qoe>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepemh500008.china.huawei.com (7.202.181.139) To
- kwepemg100017.china.huawei.com (7.202.181.58)
+X-GND-State: clean
+X-GND-Score: -100
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddutdejheefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuifetpfffkfdpucggtfgfnhhsuhgsshgtrhhisggvnecuuegrihhlohhuthemuceftddunecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefkffggfgfuvfevfhfhjggtgfesthejredttddvjeenucfhrhhomheppfhitgholhgrshcuuehouhgthhhinhgvthcuoehnihgtohhlrghsrdgsohhutghhihhnvghtsegtlhhiphdqohhsrdhorhhgqeenucggtffrrghtthgvrhhnpedtgfegjeejhfelueffteeukeethfeludekgeevgfetueeguefhkeduffelhefgteenucfkphepledtrdeifedrvdegiedrudekjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeeltddrieefrddvgeeirddukeejpdhhvghloheplgduledvrdduieekrdeffedrieehngdpmhgrihhlfhhrohhmpehnihgtohhlrghsrdgsohhutghhihhnvghtsegtlhhiphdqohhsrdhorhhgpdhnsggprhgtphhtthhopedvjedprhgtphhtthhopehjohgvlhdrghhrrghnrgguohhssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjrghhrghrkhgvshestghsrdgtmhhurdgvughupdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqrhgumhgrsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrt
+ ghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqnhhfshesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehnihgtohhlrghsrdgsohhutghhihhnvghtsehsshhirdhgohhuvhdrfhhrpdhrtghpthhtohepjhdrghhrrghnrgguohhssehsrghmshhunhhgrdgtohhm
+X-GND-Sasl: nicolas.bouchinet@clip-os.org
 
+Hi Jan and Joel,
 
-Hi, John
+Thanks for your review,
 
-On 2025/3/6 0:15, John Garry wrote:
-> On 05/03/2025 08:16, yangxingui wrote:
->>>
->>> Sure, something like that - you just need to get libsas to trigger 
->>> the proper hw port id assignment for the device. As for specific 
->>> implementation in the LLDD, that up to you guys.
+I'll update coda_timeout type to an unsigned int and push back the patchset
+without patches that has moved in their subsystems.
+
+Best regards,
+
+Nicolas
+
+On 3/5/25 15:47, Joel Granados wrote:
+> On Mon, Mar 03, 2025 at 09:39:37AM -0500, Jan Harkes wrote:
+>> On Mon, Mar 03, 2025 at 09:16:10AM -0500, Joel Granados wrote:
+>>> On Mon, Feb 24, 2025 at 10:58:18AM +0100, nicolas.bouchinet@clip-os.org wrote:
+>>>> From: Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>
+>>>>
+>>>> Bound coda timeout sysctl writings between SYSCTL_ZERO
+>>>> and SYSCTL_INT_MAX.
+>>>>
+>>>> The proc_handler has thus been updated to proc_dointvec_minmax.
+>>>>
+>>>> Signed-off-by: Nicolas Bouchinet <nicolas.bouchinet@ssi.gouv.fr>
+>>>> ---
+>>>>   fs/coda/sysctl.c | 4 +++-
+>>>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/fs/coda/sysctl.c b/fs/coda/sysctl.c
+>>>> index 0df46f09b6cc5..d6f8206c51575 100644
+>>>> --- a/fs/coda/sysctl.c
+>>>> +++ b/fs/coda/sysctl.c
+>>>> @@ -20,7 +20,9 @@ static const struct ctl_table coda_table[] = {
+>>>>   		.data		= &coda_timeout,
+>>> I noticed that coda_timeout is an unsigned long. With that in mind I
+>>> would change it to unsigned int. It seems to be a value that can be
+>>> ranged within [0,INT_MAX]
+>> That seems fine by me.
 >>
->> Thank you for your suggestions. The disk was finally restored to 
->> normal, but the error handling took a long time. Since the error 
->> handling would set the host to the recovery state, other disks on the 
->> same host would be blocked for a long time.
-> 
-> But that because you have IO inflight for the disk which was unplugged?
-
-No, these are all ATA_CMD_ID_ATA commands newly issued by 
-ata_eh_revalidate_and_attach() during error handling, and will be 
-retried three times. The reason is that after the hw port id is changed, 
-we set it to invalid, and these ATA_CMD_ID_ATA cmds will fail to execute.
-
-Thanks,
-Xingui
-
+>> It is a timeout in seconds and it is typically set to some value well
+>> under a minute.
+>>
+> Thx for the confirmation. I'll let nicolas take care of the change
+> Best
+>
