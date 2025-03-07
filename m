@@ -1,130 +1,115 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 220441A239E;
-	Fri,  7 Mar 2025 10:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFF1221554
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Mar 2025 15:10:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741343937; cv=none; b=AIB56nXcLBKSAkOjaTRHGKFvo0pF71R5kub6wkL35p17GbNZIqKoW5p2yzRC9xcSmErUmj3mrxix+SDuEWjaVZOuZnSacg8swmvE0Hio91Leti0XxVDL3WD+JGMJvjadEK4YqVjb4CRzBtPlRp2Jpm3wVIRPT/Y6CgVIj0QDxB8=
+	t=1741360248; cv=none; b=kwUHytyIWwr8BsIqx4qmAm6fV1Upz0wE33aaiH6TvZ7EWXPzTjUqDBMsDUpeIW23y2zbYdsfgqc6yyLz5zwLh1LM5SEURjxdDxJsJJNGu9kwSPRJTa8Co1mvezpBcDvRGynpK1XguhBVW1VOnbWDqM2TZmH8II6uwjvb2QqGpaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741343937; c=relaxed/simple;
-	bh=KBjfkwRvGCUyvFil1J8pzURsrNfhG9wF/ffzDqhupJA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=i4BrrGamlHs1a4v1xxdafwgIpsQmEEs0MvCmDpa00JNPLu1h1VogIAcUv0cM29hMXIGLWTt6dXPjmXJCAYmymgzCvQd1xxjWV+HMd4g+dtR1j24TgomI96++/M8akgPuZ6ZR9VXCiLABW4MAtZJDKsp8MUudM+4SFuBvJN4dDAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iq+fSDAs; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1741360248; c=relaxed/simple;
+	bh=7vPM66wrqA8ItOal1m7QS909J6dZMJbGOzOQwE8gVyc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=YjJ4gHwFEY8uQYEDv5h0tLGzKLl2oXsZ6C0JjMlnQpZHFTpKBjRCixf3X+SE/3695zC+0BbH+0CFwOAcK+1NQTm8Fbrj0o5AA90HbJI5CCD5wQW8hM9KLMw1jzZDbMO9bcKWSC88Ef+t3TlK74HiiAZgkKVG2KXq1+VdviiFqxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=uWjUvTN6; arc=none smtp.client-ip=209.85.161.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iq+fSDAs"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43bc6a6aaf7so13054565e9.2;
-        Fri, 07 Mar 2025 02:38:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uWjUvTN6"
+Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-5f89aa7a101so660859eaf.2
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Mar 2025 07:10:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1741343934; x=1741948734; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=KBjfkwRvGCUyvFil1J8pzURsrNfhG9wF/ffzDqhupJA=;
-        b=Iq+fSDAs6F0LtZnFNme30f+57EjZXJRwxOrjGWyWbTpkzw2ysl4G5IR8mWyvSnJZQe
-         TDHfGhj7Bj5Asttf87cWLzE8CXEP4/KzJiu9B2j7pAWpMzyjUS03n+dZTjtEsszIMPTB
-         IecUHqZnrdl9DuARvhErSRtIlFz/KKMaP1LIM1Aiba1JUTfyWvhQEU5EiWq5BYc6YfRR
-         9CHBoCFFSPmS+eADmaUkkSM/8Gjkc7KPvmG7GoJonOm85Del5/fWW1Sf8xnW9KjVSOWs
-         UtIrr7k5nbnJlcleksuMUAhMw6vM8kO+R58K+eia4LM6szJSNZD29kDCc0SGwVl5RZM3
-         QV5Q==
+        d=linaro.org; s=google; t=1741360246; x=1741965046; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=GaMH1NOSXXEyX+4I+PnYIXnBgRaLQ5ST8GTB4hff2uQ=;
+        b=uWjUvTN6EX4c+P6aUMdpQ43KsDrmqLeNu4sCncwPyem00Z1g+HI/xWEBkr4dFJdHpK
+         TNH0hXx0f3UoH43rXHSDalHKIXhUHAC3ENvuawUDmEus0ME5Xub6k9ZGTHGYrCIXPhrX
+         89wAD6qQsx0sS9L3mwOHeQg0PE0ZPNktI0SWmt9BZek3zMTGVFdUDs9V5PPKsPDP8Lt5
+         0Q3CtQlbPPa7a9N2dFgnArlZ/85+krAiwR6eFfidcqh8KJScz3g9hkivLPdwGkye3LTE
+         lYYnUm45dF+wNyEBujgUNWIXn8AjDMak/HwScGunaYFpyrOsRWcJN/VPoYycb2cZ2MlD
+         x27A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741343934; x=1741948734;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=KBjfkwRvGCUyvFil1J8pzURsrNfhG9wF/ffzDqhupJA=;
-        b=YdjyfgZWy2V10uQGwXti58psKF1ArR2IH117sWffFk8aGTtU0geo5/vGXgbhtQ/il9
-         a4uWEB8zgHjS7x0QPkebja+vceKjMyEsgo3AIetXVUTj9K2cpp5RU4YER7z4DLSNf/gr
-         9yLpRZp4Azd4OqcvO4vEnTTDtXsU3q9V+ontU7LO5BkdgDNElKG9mJBS/DTKjJ+kEtGp
-         gd5qq0HLr/lFPl7G/3y4d0AwiTqqndL+/TF1K95Bmbg1Ph37qqqEUsMffUiju5mdEiCP
-         hyBEHe4AW86Zn0VRYMMRk5z1Mb+dG8fHE3vYGH2wpVwUt+GtlwhDi9E3FFcA0IOh0CGU
-         C+WQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW0zdTw7Pk4PHiRBu1JwIobk/mLD9/A+Gdxpw/EfaALSiCE6wgIZGz+aDllRuOGFbH4v254n8ktmsJP0A==@vger.kernel.org, AJvYcCWoKNkxtbVdX4Ejv5Fqr+k06XxJrT/cUfR6xhzyAzC06ehJiPboh4zztqNZvOf+/N1lRbax0EDZb/09ZL0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyra+Fppc3bbUMPtbyEyHINh/rJE+6x5zgwtIPiySSJ79gPeDSy
-	ElsGAQzPVcv2/YhKeJrxeYrY78+TG0LpCT65M5Wr8QaQeLp/Ke8J
-X-Gm-Gg: ASbGncudqToUSbQQkZ5WrC5Oy0InGgqQVVl+4TI0Lzbp2xiJgurH0pw7MVDMzY1VjFw
-	iAarJZJ4Wid/Pb3kd65LxP6wxKfjuimqGM6hlhBuih0ARRzr5QDJjyPumnVh9vJJBtz2fZswC4j
-	L8X7n1rjMI7hukBKjjQ1lVaXnDodpu+lhuiE++l0aGsFlHsT7qcMSsfpmv3j+Nqx7qM3n577Jlq
-	M3hGPeh0ZRg/TJmGiX2GC21Xc6y62SSeoTejf8wUexR54A4PhNQHgp4PBbRrJRPNn3TGuXQxPoh
-	iZpmfQvCHGU1LV33d1zLK9cc7jtjCtQcRZRenUQ1uhjZ4lU=
-X-Google-Smtp-Source: AGHT+IEorkdXayPImRPZQsK1R9xIBDq7GWAblWS2lMHO3O/4fE4WLPdorUwZSgvvZskGaZ02RyApBg==
-X-Received: by 2002:a05:600c:3546:b0:43b:cc73:2528 with SMTP id 5b1f17b1804b1-43c5a62a5f8mr17687435e9.20.1741343933990;
-        Fri, 07 Mar 2025 02:38:53 -0800 (PST)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43bd4352e29sm76442125e9.32.2025.03.07.02.38.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Mar 2025 02:38:53 -0800 (PST)
-Message-ID: <7c6042974071699f9e5a85a4592d75a6a8c5ce4f.camel@gmail.com>
-Subject: Re: [PATCH] ufs: core: bsg: Add hibern8 enter/exit to
- ufshcd_send_bsg_uic_cmd
-From: Bean Huo <huobean@gmail.com>
-To: Arthur Simchaev <Arthur.Simchaev@sandisk.com>, 
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "quic_mapa@quicinc.com" <quic_mapa@quicinc.com>,  "quic_cang@quicinc.com"
- <quic_cang@quicinc.com>
-Cc: Avri Altman <Avri.Altman@sandisk.com>, Avi Shchislowski
-	 <Avi.Shchislowski@sandisk.com>, "linux-scsi@vger.kernel.org"
-	 <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>
-Date: Fri, 07 Mar 2025 11:38:52 +0100
-In-Reply-To: <SA2PR16MB42515681881747A6B5C83352F4D52@SA2PR16MB4251.namprd16.prod.outlook.com>
-References: <20250304114652.210395-1-arthur.simchaev@sandisk.com>
-	 <bd2e01d8b33413655a4215221c910eaf2cdf6461.camel@gmail.com>
-	 <SA2PR16MB42515681881747A6B5C83352F4D52@SA2PR16MB4251.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+        d=1e100.net; s=20230601; t=1741360246; x=1741965046;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GaMH1NOSXXEyX+4I+PnYIXnBgRaLQ5ST8GTB4hff2uQ=;
+        b=GRYM4XuamPrF8iyuS/Sb9wMc/QFNMbk+ax7a6A/Y+wQFn40fEHPJ5OGRuFEk6JI4Id
+         gXdnPsVBZban65XTuylSN67iG3bnUjx8gRQaJUOJdJ7ZASuV+twzLzcWJB1eX7BgJKla
+         36RV2+c8ptl6GjBs9zOL6FOVt5MnwDslkj95CYnPZWRrv5VgwutElH8dlwMotJ06iGya
+         vxpaReqFRSHHSWh6WmeoNJzWFQIwbd2npQa4lrHiWWXys5vPuMjyUKXMosU/LHKYUMlx
+         VJu4q2end4LCePXgONVQvpwy9Swl8d4IvD1ybKzmv0Qz08jGRJxJ3SVmuszKpZzHP0ft
+         2YqA==
+X-Forwarded-Encrypted: i=1; AJvYcCXnugWATfxA27yMoWJjvrZ2R+BQurfkQpcBDegk9qPlTg44Y6Qa2re86vHfFsxPQ8UJQKkj1o1t49ZF@vger.kernel.org
+X-Gm-Message-State: AOJu0YyUQG/NJt5oQod5ybDhsgxVIvc0sd2w7J6L5ciP7kVtSaIIhAqA
+	rKhipZfnLppzdTSOVCmgZsMn9puSsTbYLe1eEeCFscaEQZrQgYjM1Kq/KDFYkwO0gkvHWbYQ+Xm
+	DPOvEaTEn5mM6kKzlZzfiqFZ+g0npcfB/xg47Ug==
+X-Gm-Gg: ASbGncuoJhx86S4tlKhqOPFQZUjxtZOw2n9lKJ525rTt5wSTLhoEdvYrqMNSkqCA7gz
+	0/YNw9gV9ZY9r8Bpw5lyKLgoYJZ8FpjbffKAPoJqNjoNCM9mwMDzqzo66y4CRqF0IABmDkN4IEf
+	pDdE6ZxgwWgouFEKvAch8RHld6ZJg=
+X-Google-Smtp-Source: AGHT+IGmSI6uKhyqp0Lz6umulak1/qdCrknOZ1BwGtVXVr7Hw1ALnj7JKNyxJ8z0WKOu5JKZrR6BgmZGuCc1usZ1pxU=
+X-Received: by 2002:a4a:ec46:0:b0:5fc:f3b8:78c2 with SMTP id
+ 006d021491bc7-6004aaf90aemr2063696eaf.3.1741360244995; Fri, 07 Mar 2025
+ 07:10:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20250226220414.343659-1-peter.griffin@linaro.org>
+ <20250226220414.343659-5-peter.griffin@linaro.org> <20250305024020.GC20133@sol.localdomain>
+In-Reply-To: <20250305024020.GC20133@sol.localdomain>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Fri, 7 Mar 2025 15:10:33 +0000
+X-Gm-Features: AQ5f1JrG484DP9qv6Qb4pGd14bkBMzxvaPSxEwh5c_p71wnvCQXfRvFkoiXZo_U
+Message-ID: <CADrjBPpju3MmZbNy1uaPzAWTWrmNHx0nT+03DmkM3p5qFEUHdA@mail.gmail.com>
+Subject: Re: [PATCH 4/6] scsi: ufs: exynos: Enable PRDT pre-fetching with UFSHCD_CAP_CRYPTO
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: alim.akhtar@samsung.com, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, krzk@kernel.org, linux-scsi@vger.kernel.org, 
+	linux-samsung-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, willmcvicker@google.com, 
+	tudor.ambarus@linaro.org, andre.draszik@linaro.org, bvanassche@acm.org, 
+	kernel-team@android.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, 2025-03-07 at 09:18 +0000, Arthur Simchaev wrote:
->=20
->=20
-> > -----Original Message-----
-> > From: Bean Huo <huobean@gmail.com>
-> > Sent: Thursday, March 6, 2025 2:50 PM
-> > To: Arthur Simchaev <Arthur.Simchaev@sandisk.com>;
-> > martin.petersen@oracle.com; quic_mapa@quicinc.com;
-> > quic_cang@quicinc.com
-> > Cc: Avri Altman <Avri.Altman@sandisk.com>; Avi Shchislowski
-> > <Avi.Shchislowski@sandisk.com>; linux-scsi@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; bvanassche@acm.org
-> > Subject: Re: [PATCH] ufs: core: bsg: Add hibern8 enter/exit to
-> > ufshcd_send_bsg_uic_cmd
-> >=20
-> >=20
-> > Arthur,
-> >=20
-> > At present, we lack a user-space tool to initiate eye monitor
-> > measurements.
-> > Additionally, opening a channel for users in user land to send MP
-> > commands
-> > seems unsafe.
-> >=20
-> >=20
-> > Kind regards,
-> > Bean
-> >=20
->=20
-> Hi Bean.
->=20
-> Actually,=C2=A0 the EOM tool was published two months ago
-> See the mail from Can Guo. The patch simply extends the UIC debugging
-> functionality from user space.
-> I think it is quite safe to use hibern8 functionality for debugging
-> purposes.
->=20
-> Regards
-> Arthur
+Hi Eric,
 
-Great, we will work on that.
+Thanks for your review feedback.
 
-Kind regards,
-Bean
+On Wed, 5 Mar 2025 at 02:40, Eric Biggers <ebiggers@kernel.org> wrote:
+>
+> On Wed, Feb 26, 2025 at 10:04:12PM +0000, Peter Griffin wrote:
+> > PRDT_PREFETCH_ENABLE[31] bit should be set when desctype field of
+> > fmpsecurity0 register is type2 (double file encryption) or type3
+> > (file and disk excryption). Setting this bit enables PRDT
+> > pre-fetching on both TXPRDT and RXPRDT.
+> >
+> > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+>
+> I assume you mean that desctype 3 provides "support for file and disk
+> encryption"?
+
+Yes, the PRDT_PREFETCH_ENABLE description in the commit message I
+copied from the datasheet. But I can re-word it like you suggest if
+you think that it's clearer? I notice now there is also a typo with
+the word 'encryption' which I can also fix.
+
+This patch came about whilst comparing UFS SFR register dumps of
+upstream and downstream drivers. I noticed that PRDT_PREFETCH_ENABLE
+is enabled downstream but not upstream, and after checking the
+datasheet description it seemed like we should set this if
+exynos_ufs_fmp_init() completed and set CFG_DESCTYPE_3.
+
+> The driver does use desctype 3, but it only uses the "file
+> encryption".  So this confused me a bit.  (BTW, in FMP terminology, "file
+> encryption" seems to mean "use the key provided in the I/O request", and "disk
+> encryption" seems to mean "use some key the firmware provided somehow".  They
+> can be cascaded, and the intended use cases are clearly file and disk encryption
+> respectively, but they don't necessarily have to be used that way.)
+
+Thanks for the additional context :)
+
+Peter
