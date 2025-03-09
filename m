@@ -1,110 +1,138 @@
-Received: from mail.zytor.com (terminus.zytor.com [198.137.202.136])
+Received: from kurisu.lahfa.xyz (kurisu.lahfa.xyz [163.172.69.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDCAF1CCEDB;
-	Sun,  9 Mar 2025 08:49:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A755A18DB35
+	for <linux-scsi@vger.kernel.org>; Sun,  9 Mar 2025 14:07:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=163.172.69.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741510165; cv=none; b=SxoZ1dkvru6VAcRB3lR6LbsQF0p0IiRPIJthzla7Gj6fLsDPXX+uBpiZGwKmqQDJw3B0GoWvI5l3L+Z1KuDd2PZshlWnsW86RGSodvtjfl3YtGdtaUItMMYwMrJvQ3Leq3f6dmgXUz4rM0eIa+RMCAxFgNij5o69LKm5e4eIkE4=
+	t=1741529265; cv=none; b=JmOi4bRBrE14tHaxgJP46yq0an7rGsME4ldLvHYu7vIcSNnAUn9iqi50X4fJwnT7pDVwtqVsfOeYUcgq95GS0YYpwaD5CE02Qg1GCA95rsInUAs6+5Wyaih744xVgi6hUR8VK/4G4WYq9IbeLcUneIM7EgfuaM5sI6bXP7l6/kk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741510165; c=relaxed/simple;
-	bh=RUCPboe+6lfJtirH1K8uAhzo6gw3HZr7nmQhzjr3ht8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UPBX9FNaWuQZKIc6Y60WlJu6YnCup6AUgz5t8+PxcAMNYUJUZtOY13epsNCyXvpYuMw3uFfTDSipOff0VSlTgCRkkewrbGeo+PkZmHlI7QWpxHRz0X4q3LghjlGIX1Na2eWegRei1+aKY6lvcNbfAj4vlxVzCM2/zvToQHXEAEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com; spf=pass smtp.mailfrom=zytor.com; dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b=lH1Rx1Jg; arc=none smtp.client-ip=198.137.202.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zytor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zytor.com
+	s=arc-20240116; t=1741529265; c=relaxed/simple;
+	bh=c82KHWNRf1iUmfQhiMk9Cqn+oWsqAgxHyn+njvcfGBg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NL90D++N5iTAeEj/LZFby7qKEsvKWmE5Jr3cMDCZiqoaPj59nimnIlZnPAtm/2Kux6jJbCkCiRsobq28EbFLRA64vn5Tt+1S3rZOX2zh6V0lEX1MY+JN0Cko5U1x8LaXAMlJzGA4IJ/s7piMox8Bcsr595YNKe9Oa1rUjANL5I8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lahfa.xyz; spf=pass smtp.mailfrom=lahfa.xyz; dkim=pass (1024-bit key) header.d=lahfa.xyz header.i=@lahfa.xyz header.b=OrIsAFI8; arc=none smtp.client-ip=163.172.69.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=lahfa.xyz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lahfa.xyz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zytor.com header.i=@zytor.com header.b="lH1Rx1Jg"
-Received: from [192.168.7.202] ([71.202.166.45])
-	(authenticated bits=0)
-	by mail.zytor.com (8.18.1/8.17.1) with ESMTPSA id 5298mfTL1148052
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NO);
-	Sun, 9 Mar 2025 00:48:43 -0800
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.zytor.com 5298mfTL1148052
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zytor.com;
-	s=2025021701; t=1741510126;
-	bh=ca6GgLdO8OoWtemvLVSBiiNB7z0cTo/JHp6RHQhEHOY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lH1Rx1Jg49E3b2ThwJhHgG4q/p1uvZAjo/cAAOQbQpMox7LeQFufYEl3sVgMeCumJ
-	 E+dvQk2IdFiyQZOvnk9WLsFk9bRHQdxhCOnQq/PJJhg8h7aorfS/i9yZTekQ8dlpLT
-	 cQ7+uZGiXE5IJCZHxcax5mQ0vMN9GPKaGPt3vAXI3IKdzIlxWvE11Ot8tvg2yzOT3c
-	 PK1YVp5nWI0SOY9GpYH8JWwObEX2ll8PWtitBx+CF/p7H2vJA1iqTE3uYe8bAcgN3O
-	 zDJ6KjPMseCKXBhMR5fqZt3QUU1qD3lRZtwlJwZIsIoHZCKCbuuqQY2Xx0JW2+MfOd
-	 ChmCRe1dIl/rw==
-Message-ID: <dfbbffde-d11a-4431-bf14-3377e14ace29@zytor.com>
-Date: Sun, 9 Mar 2025 00:48:39 -0800
+	dkim=pass (1024-bit key) header.d=lahfa.xyz header.i=@lahfa.xyz header.b="OrIsAFI8"
+From: Samy Lahfa <samy+kernel@lahfa.xyz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lahfa.xyz; s=kurisu;
+	t=1741528703; bh=dKxaUQbi4jA6Kay/yyTdaP5y13gre17UREL9EtTFPQ0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=OrIsAFI8R8DHtQdsOoSU2+X7kC7bD8F/4hmSy7UcLTN1YXTcsFwafMYUtDP5NZ/eL
+	 vyspsK8mMj0AdHlBqJolN1/EciZAP+KUpbRgzHnulJS1mD7ZemcEtufCHDiyK1Mzmd
+	 mi75jy95aFkk2y92+nSQ17HzrtXJs88NMmjDac7w=
+To: vt@altlinux.org
+Cc: chandrakanth.patil@broadcom.com,
+	kashyap.desai@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com,
+	megaraidlinux.pdl@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
+	sumit.saxena@broadcom.com,
+	Samy Lahfa <samy+kernel@lahfa.xyz>
+Subject: Re: megaraid_sas: multiple FALLOC_FL_ZERO_RANGE causes timeouts and resets on MegaRAID 9560-8i 4GB since 5.19
+Date: Sun,  9 Mar 2025 14:55:31 +0100
+Message-ID: <20250309135728.3140904-1-samy+kernel@lahfa.xyz>
+In-Reply-To: <20240216100844.aabjlexbwq6ggzs2@altlinux.org>
+References: <20240216100844.aabjlexbwq6ggzs2@altlinux.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [patch 10/10] genirq/msi: Rename msi_[un]lock_descs()
-To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>, Nishanth Menon <nm@ti.com>,
-        Tero Kristo <kristo@kernel.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
-        ntb@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Wei Huang <wei.huang2@amd.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20250309083453.900516105@linutronix.de>
- <20250309084110.776899075@linutronix.de>
-Content-Language: en-US
-From: Xin Li <xin@zytor.com>
-Autocrypt: addr=xin@zytor.com; keydata=
- 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
- l75w1xInsg==
-In-Reply-To: <20250309084110.776899075@linutronix.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/9/2025 12:41 AM, Thomas Gleixner wrote:
-> Now that all abuse is gone and the legit users are converted to
-> guard(msi_descs_lock), rename the lock functions and document them as
-> internal.
-> 
-> No functional chance.
+Hello all,
 
-s/chance/change?
+I have just ran into this issue, controller resets and timeouts (running mkfs.ext4 or mkfs.xfs to reproduce) and bisected it to the same commit : 
 
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+commit c92a6b5d63359dd6d2ce6ea88ecd8e31dd769f6b
+Author:     Martin K. Petersen <martin.petersen@oracle.com>
+AuthorDate: Wed Mar 2 00:35:47 2022 -0500
+
+  scsi: core: Query VPD size before getting full page
+
+Reverting this commit and building 6.6.80 kernel with the revert patch solved the issue.
+
+Is it possible to receive the patch that was referenced by Bart (I wasn't able to find it) so I can give it a try please ?
+
+Also sharing the output that was asked, not sure if this may help.
+
+sg_readcap -l /dev/sdb : 
+Read Capacity results:
+   Protection: prot_en=0, p_type=0, p_i_exponent=0
+   Logical block provisioning: lbpme=1, lbprz=1
+   Last LBA=390721967 (0x1749f1af), Number of logical blocks=390721968
+   Logical block length=512 bytes
+   Logical blocks per physical block exponent=3 [so physical block length=4096 bytes]
+   Lowest aligned LBA=0
+Hence:
+   Device size: 200049647616 bytes, 190782.2 MiB, 200.05 GB
+
+sg_vpd -l /dev/sdb :
+Supported VPD pages VPD page:
+   [PQual=0  Peripheral device type: disk]
+  0x00  Supported VPD pages [sv]
+  0x80  Unit serial number [sn]
+  0x83  Device identification [di]
+  0x87  Mode page policy [mpp]
+  0x89  ATA information (SAT) [ai]
+  0xb0  Block limits (SBC) [bl]
+  0xb1  Block device characteristics (SBC) [bdc]
+  0xb2  Logical block provisioning (SBC) [lbpv]
+
+sg_vpd -p 0xb0 /dev/sdb : 
+Block limits VPD page (SBC):
+  Write same non-zero (WSNZ): 0
+  Maximum compare and write length: 0 blocks [Command not implemented]
+  Optimal transfer length granularity: 0 blocks [not reported]
+  Maximum transfer length: 0 blocks [not reported]
+  Optimal transfer length: 0 blocks [not reported]
+  Maximum prefetch transfer length: 0 blocks [ignored]
+  Maximum unmap LBA count: 262143
+  Maximum unmap block descriptor count: 32
+  Optimal unmap granularity: 1 blocks
+  Unmap granularity alignment valid: false
+  Unmap granularity alignment: 0 [invalid]
+  Maximum write same length: 0 blocks [not reported]
+  Maximum atomic transfer length: 0 blocks [not reported]
+  Atomic alignment: 0 [unaligned atomic writes permitted]
+  Atomic transfer length granularity: 0 [no granularity requirement
+  Maximum atomic transfer length with atomic boundary: 0 blocks [not reported]
+  Maximum atomic boundary size: 0 blocks [can only write atomic 1 block]
+
+sg_vpd -p 0xb1 /dev/sdb :
+Block device characteristics VPD page (SBC):
+  Non-rotating medium (e.g. solid state)
+  Product type: Not specified
+  WABEREQ=0
+  WACEREQ=0
+  Nominal form factor: 2.5 inch
+  MACT=0
+  ZONED=0
+  RBWZ=0
+  BOCS=0
+  FUAB=0
+  VBULS=0
+  DEPOPULATION_TIME=0 (seconds)
+
+sg_vpd -p 0xb2 /dev/sdb : 
+Logical block provisioning VPD page (SBC):
+  Unmap command supported (LBPU): 1
+  Write same (16) with unmap bit supported (LBPWS): 1
+  Write same (10) with unmap bit supported (LBPWS10): 0
+  Logical block provisioning read zeros (LBPRZ): 0
+  Anchored LBAs supported (ANC_SUP): 1
+  Threshold exponent: 0 [threshold sets not supported]
+  Descriptor present (DP): 0
+  Minimum percentage: 0 [not reported]
+  Provisioning type: 0 (not known or fully provisioned)
+  Threshold percentage: 0 [percentages not supported]
+
+Thanks for any help!
+
+Kind regards,
+Lahfa Samy
