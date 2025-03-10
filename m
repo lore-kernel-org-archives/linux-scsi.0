@@ -1,86 +1,72 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3397A22FDE2;
-	Mon, 10 Mar 2025 17:15:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CF5723370F;
+	Mon, 10 Mar 2025 17:31:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741626947; cv=none; b=ahlYWE0OMXNumNDrFUomXt48Pj+rTe1CSP+CcgexgQBwruwG3osisqQcEqrOZhD7KCZSWtWiWwl6A5moqx54MN5p2jchqM25w/OTa/cDVzjFYE5OXqCyspbTdS1r2UBH8hIeEgEZnG9iBvCdF7ODrJ/7KuVE65oISxWf73aMOIs=
+	t=1741627872; cv=none; b=qNTfa9bsJa8DUcOUH7W/ceQVy1NBgThwmf8NPE+sQMthfHRomBCObTkpQ0yD+zPPgpfc86IMgCN2kQynlG0RHauX0K81oUJzwo36kk6cFuCOg+HF+2RGVzztHsPUrWavwoWvV5FmYSxJKmNtqg/L+jRJPbwzn+8RlhaO06v2qnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741626947; c=relaxed/simple;
-	bh=0OCVYF/UAGmF/bg0cdYT6l4Xx+OUMgdepEGS07Yb3NA=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=jpO7aMtdWfu/6BLVxkgn7VvF+G9bgu7eekPNGCc9z6+ncZax242S2jsLV/TACINnH1lpEwmk+//DBA85yqxzRHYM5VSTaZi0nYiWhrJE/Mg/thXyKmGro/CbcM3jsY+i/uXrzAuv68v/sA37vM3Z7u4usSxML73S4gLgUKjWX7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=dWjxD4eQ; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1741627872; c=relaxed/simple;
+	bh=K5a/n3k2IMqq05srX3keh8AHLyS8gdBd7xrkRpohd/k=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=m6VUXn4oKaJjfAvKEYFiELEhZHL0xxGyhMM4wRTOkHPe41KxbmhGvc7qQjEpzxKox9lCyOXQF43O5UuangqmqS8V1rK9qNUIRvu+b3cKrULbzbaEgTFTPctwJcTs9bCk4avnKqKUjuS1ck2ct3xcqMpCJJfUTZNzWztba2bbjtM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=ul565pyZ; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=+1cZvXlr; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="dWjxD4eQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=/rk8STxE+umsrTdOZizpHycgtQykDpsqh9BmTH896vM=; b=dWjxD4eQWjlXrG8ZX77eNYor4l
-	JjJhbLJwZThFv/nCP5TmvkSmlYzVDAMxIN2FLDzwrrpaUWalU1HjUsb1cbj0odt8hX32qHjSHmrot
-	THhXfivyU2MifCS1j4ExAwzbL/IwqyIxvcJX8TAlWQ7oeELyngz4wzmIkBD6DaDosI2CpMY6rH3Uw
-	piKRWJTyLaVWqR9nQ+Zd8Bwme2g+birN0r+XRFLvPzS+PMNSuM34ijj7JO+GStMbe9r6aHfQ0l23a
-	l9mHTMzqUCOuOmMxB0Z+vsNwj5n8zNCqILspF7q2BSzNvDmsrGT3e4T02NOzF0NwLWaFmelCgDPJQ
-	drHrl30Q==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1trg5B-00G6mD-0b;
-	Mon, 10 Mar 2025 10:34:25 -0600
-Message-ID: <b419ea3f-50b8-481e-abc6-6eac7ce43021@deltatee.com>
-Date: Mon, 10 Mar 2025 10:34:12 -0600
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ul565pyZ";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="+1cZvXlr"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1741627869;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=K5a/n3k2IMqq05srX3keh8AHLyS8gdBd7xrkRpohd/k=;
+	b=ul565pyZF89oi4JPI3tSen6XWAClieQ3+K2Jw0ulUf9HsyzlA9tTrswXT1P+mYPUizhFlZ
+	UfFMAsBZuk9tbR+Zx4PuGnwQ7vtqL40FjUsEblDTCwDdSI9iRd1DnOCbVBzd5o83YP6vPZ
+	fyaDNG9XrU+RmIJ6mtn1zC+WwTwVuEj9dH35opr9agmxNva/49B47aXTx2exzj2sfdowEb
+	tAUCvnesb6/+q96pvKa5OaQxsTDU7WgGXu6e1GGThxpHayqYCE+O5Mk+Fb7wxlPTqsLo+T
+	PiQ1MCddzDQht5fvF1dyFxGL+0bv+wHBIcURKLd3nq5v3bOiP8yxY87OjP0KsA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1741627869;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=K5a/n3k2IMqq05srX3keh8AHLyS8gdBd7xrkRpohd/k=;
+	b=+1cZvXlrO7xL17nKz0wAoF3KK5YeFS9Q7mzVtMeDAU1hO4zhZyymaYoKjN/77vVzbho1hb
+	zzTSCVhRPHG6TNAg==
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
+ Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh
+ Shilimkar <ssantosh@kernel.org>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+ ntb@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu
+ <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org, Wei Huang
+ <wei.huang2@amd.com>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
+ <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Subject: Re: [patch 00/10] genirq/msi: Spring cleaning
+In-Reply-To: <20250310165146.GA553858@bhelgaas>
+References: <20250310165146.GA553858@bhelgaas>
+Date: Mon, 10 Mar 2025 18:31:08 +0100
+Message-ID: <87r03423oj.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>, Jon Mason <jdmason@kudzu.us>,
- Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
- ntb@lists.linux.dev, Nishanth Menon <nm@ti.com>,
- Tero Kristo <kristo@kernel.org>, Santosh Shilimkar <ssantosh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- linux-hyperv@vger.kernel.org, Wei Huang <wei.huang2@amd.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-References: <20250309083453.900516105@linutronix.de>
- <20250309084110.394142327@linutronix.de>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20250309084110.394142327@linutronix.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: tglx@linutronix.de, linux-kernel@vger.kernel.org, maz@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, ntb@lists.linux.dev, nm@ti.com, kristo@kernel.org, ssantosh@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org, haiyangz@microsoft.com, wei.liu@kernel.org, linux-hyperv@vger.kernel.org, wei.huang2@amd.com, manivannan.sadhasivam@linaro.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [patch 04/10] NTB/msi: Switch MSI descriptor locking to lock
- guard()
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain
 
+On Mon, Mar 10 2025 at 11:51, Bjorn Helgaas wrote:
+> For the drivers/pci/ parts:
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> I assume you'll merge this somewhere, let me know if otherwise.
 
-
-On 2025-03-09 01:41, Thomas Gleixner wrote:
-> Convert the code to use the new guard(msi_descs_lock).
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Jon Mason <jdmason@kudzu.us>
-> Cc: Dave Jiang <dave.jiang@intel.com>
-> Cc: Allen Hubbe <allenbh@gmail.com>
-> Cc: ntb@lists.linux.dev
-
-Looks really nice to me, thanks.
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-
+Yes. I intend to get it through tip.
