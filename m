@@ -1,96 +1,143 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B04229B01;
-	Mon, 10 Mar 2025 13:09:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC0522DF8F;
+	Mon, 10 Mar 2025 15:18:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741612163; cv=none; b=N/YSm94v+9Tad7Esusc0PK4+psBYz0qvfu4wuotWq9CN3euWbcOqNso1rFx2vykkfwJVr0/+wp/ju/f2+TqaR4JmGsdsBiZuQhKf8AxEKCMeeyTh1cKzzUFMwbcW4nc41PxDlunZLX0VYlImU+5JXCAzc9Xb+KMQ3Mb9qRxUh5w=
+	t=1741619887; cv=none; b=Si9n0iQY8q5inRQhSmBvSDSXb47Fr9ehbcI79zj3EmbyViiYVdMeNRB0W11dNw7TPPkkiQbC0/uluoRd2XJU2FCUPxVeGf6SzFdcnd6iALcB0I5zWS4+Ix8y1bM2H1RMyjkomeUq0tb3D9jwj0ROMPUV31Ri9J1w9FAp+zC9bSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741612163; c=relaxed/simple;
-	bh=tlca46uB4gXZyiSoLwdM6jMebWtzZXX1UAB5ei9AbZw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Pjs2QVhYpTuk1vuWVHFEtpzWO4Ah7NfQaMMFG6ys3oEoCU58RkJWqQ7nt2L73/S0t3fA3xV2Se/g4eapL9T03cYkF93xVzrKA2jhlu9FmGMsV4VLLiN90cSmiQw3DwiQYRPFEDM110rnHi8bs+/998o2EyO7mmC+RB7rUTgYmnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4ZBHDV6Kwsz2RTL8;
-	Mon, 10 Mar 2025 21:04:58 +0800 (CST)
-Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
-	by mail.maildlp.com (Postfix) with ESMTPS id 078BC1401F0;
-	Mon, 10 Mar 2025 21:09:18 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 10 Mar 2025 21:09:17 +0800
-Message-ID: <d0a6b502-328b-2f83-3cdf-55c1effd80c1@huawei.com>
-Date: Mon, 10 Mar 2025 21:09:16 +0800
+	s=arc-20240116; t=1741619887; c=relaxed/simple;
+	bh=cCr6swPrHejV21H7pFXmqC8XKvmp4WhdXKPELwIzMOM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UUfzE1ueZ9xcWERay9TdbYh+ml5cyCV085OVf6TLk2smuhf+Ccqp6fHiQWE7EQX3yo2aLZwVlPPaRkzNQNJngMCVg23B2Zh0zvSaeifb6PeWihaVEBx0i2CFLronVEd5/98eYrWEV2r0Ap/4ZsdIeic4TNNgmlHhjMmyupr2WY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=K618IVTM; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="K618IVTM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1741619886; x=1773155886;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=cCr6swPrHejV21H7pFXmqC8XKvmp4WhdXKPELwIzMOM=;
+  b=K618IVTMZyGOO4KLiKRzfSZCJrrG980YnJgI/wlOY+0i44cfTE0Px3m+
+   2trab2k8742IAeqtETEBO9MEx5bu72h4X+51H7eNShEedxk94EZ8c689F
+   w5503A+t21kgJVrxiTvgdTVCFe153e1056NOsUTMv70jSrk+Y+KXmLP/7
+   f/gkLL/lsvvJ17B6xWK4SXvSNKXPjO5TR8OVw5Gx+Gup1bhj8vycLzE5l
+   rkVJOqePHPwEw4Vl3zXPR5UwzFXvVxWwedBiRfJJSCxzueXYzB+hVXZy0
+   LE3SJsT9AaVJlWGo5IFKLX+cJ4wxT/H3COf8t47qNchCtu8Yqz8vI6GcC
+   w==;
+X-CSE-ConnectionGUID: UJCdwBgfSee/DLy5EnCIYA==
+X-CSE-MsgGUID: nPHq1KpaSBqKKjYhmf2wMQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11369"; a="42656858"
+X-IronPort-AV: E=Sophos;i="6.14,236,1736841600"; 
+   d="scan'208";a="42656858"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2025 08:18:05 -0700
+X-CSE-ConnectionGUID: SMzo5GZDR3iRv+uNIbIeuA==
+X-CSE-MsgGUID: BmWdffciSh2Xpkpqi0attg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,236,1736841600"; 
+   d="scan'208";a="120539239"
+Received: from dnelso2-mobl.amr.corp.intel.com (HELO [10.125.111.63]) ([10.125.111.63])
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2025 08:18:04 -0700
+Message-ID: <1fe5dc6e-3fa9-41a0-a38e-367fa2cc9475@intel.com>
+Date: Mon, 10 Mar 2025 08:18:03 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk
- directly connected
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>, <liyihang9@huawei.com>,
-	<yanaijie@huawei.com>
-CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>, <liyangyang20@huawei.com>,
-	<f.fangjian@huawei.com>, <xiabing14@h-partners.com>
-References: <20250220130546.2289555-1-yangxingui@huawei.com>
- <20250220130546.2289555-2-yangxingui@huawei.com>
- <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
- <5a4384dc-4edb-9e29-d1dd-190d69b9e313@huawei.com>
- <1e98a1eb-a763-4190-94c5-a867cdf0e09b@oracle.com>
- <235e7ad8-1e19-4b7b-c64b-b6703851ca65@huawei.com>
- <d233a108-a46e-47dd-86ad-756c60c8665e@oracle.com>
- <cc9ba6f8-1efb-4910-8952-9ca07c707658@huawei.com>
- <5d34595f-ff57-4679-b263-fa3fea006ce3@oracle.com>
- <25552c7d-858d-ea1e-0987-55f71642a503@huawei.com>
- <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [patch 04/10] NTB/msi: Switch MSI descriptor locking to lock
+ guard()
+To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
+Cc: Marc Zyngier <maz@kernel.org>, Jon Mason <jdmason@kudzu.us>,
+ Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
+ Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+ Santosh Shilimkar <ssantosh@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ linux-hyperv@vger.kernel.org, Wei Huang <wei.huang2@amd.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+References: <20250309083453.900516105@linutronix.de>
+ <20250309084110.394142327@linutronix.de>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20250309084110.394142327@linutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepemh200008.china.huawei.com (7.202.181.115) To
- kwepemg100017.china.huawei.com (7.202.181.58)
 
-Hi, John
 
-On 2025/2/25 16:19, John Garry wrote:
-> On 25/02/2025 01:48, yangxingui wrote:
->>>
->>>
->>> pm8001 sends sas_notify_port_event(sas_phy, PORTE_LINK_RESET_ERR,) 
->>> link reset errors - can you consider doing that in 
->>> hisi_sas_update_port_id() when you find an inconstant port id?
->> Currently during phyup, the hw port id may change, and the 
->> corresponding hisi_sas_port.id and the port id in itct are not updated 
->> synchronously. The problem caused is not a link error, so we don't 
->> need deform port, just update the port id when phyup.
+
+On 3/9/25 1:41 AM, Thomas Gleixner wrote:
+> Convert the code to use the new guard(msi_descs_lock).
 > 
-> Sure, but I am just trying to keep this simple. If you deform and reform 
-> the port - and so lose and find the disk (which does the itct config) - 
-> will that solve the problem?
+> No functional change intended.
 > 
-We found that we need to perform lose and find for all devices on the 
-port including the local phy and the remote phy. This process still 
-requires traversing the phy information corresponding to all devices to 
-reset and it is also necessary to consider that there is a race between 
-device removal and the current process.  it looks similar to solution of 
-update port id directly. And there will be the problem mentioned above. 
-e.g, during error handling, the recovery state will last for more than 
-15 seconds, affecting the performance of other disks on the same host.
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Jon Mason <jdmason@kudzu.us>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: Allen Hubbe <allenbh@gmail.com>
+> Cc: ntb@lists.linux.dev
 
+Acked-by: Dave Jiang <dave.jiang@intel.com>
 
-Thanks,
-Xingui
-
+> ---
+>  drivers/ntb/msi.c |   22 ++++++++--------------
+>  1 file changed, 8 insertions(+), 14 deletions(-)
+> 
+> --- a/drivers/ntb/msi.c
+> +++ b/drivers/ntb/msi.c
+> @@ -106,10 +106,10 @@ int ntb_msi_setup_mws(struct ntb_dev *nt
+>  	if (!ntb->msi)
+>  		return -EINVAL;
+>  
+> -	msi_lock_descs(&ntb->pdev->dev);
+> -	desc = msi_first_desc(&ntb->pdev->dev, MSI_DESC_ASSOCIATED);
+> -	addr = desc->msg.address_lo + ((uint64_t)desc->msg.address_hi << 32);
+> -	msi_unlock_descs(&ntb->pdev->dev);
+> +	scoped_guard (msi_descs_lock, &ntb->pdev->dev) {
+> +		desc = msi_first_desc(&ntb->pdev->dev, MSI_DESC_ASSOCIATED);
+> +		addr = desc->msg.address_lo + ((uint64_t)desc->msg.address_hi << 32);
+> +	}
+>  
+>  	for (peer = 0; peer < ntb_peer_port_count(ntb); peer++) {
+>  		peer_widx = ntb_peer_highest_mw_idx(ntb, peer);
+> @@ -289,7 +289,7 @@ int ntbm_msi_request_threaded_irq(struct
+>  	if (!ntb->msi)
+>  		return -EINVAL;
+>  
+> -	msi_lock_descs(dev);
+> +	guard(msi_descs_lock)(dev);
+>  	msi_for_each_desc(entry, dev, MSI_DESC_ASSOCIATED) {
+>  		if (irq_has_action(entry->irq))
+>  			continue;
+> @@ -307,17 +307,11 @@ int ntbm_msi_request_threaded_irq(struct
+>  		ret = ntbm_msi_setup_callback(ntb, entry, msi_desc);
+>  		if (ret) {
+>  			devm_free_irq(&ntb->dev, entry->irq, dev_id);
+> -			goto unlock;
+> +			return ret;
+>  		}
+> -
+> -		ret = entry->irq;
+> -		goto unlock;
+> +		return entry->irq;
+>  	}
+> -	ret = -ENODEV;
+> -
+> -unlock:
+> -	msi_unlock_descs(dev);
+> -	return ret;
+> +	return -ENODEV;
+>  }
+>  EXPORT_SYMBOL(ntbm_msi_request_threaded_irq);
+>  
+> 
 
