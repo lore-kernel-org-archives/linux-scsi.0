@@ -1,108 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5196722D7AD;
-	Mon, 10 Mar 2025 16:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3397A22FDE2;
+	Mon, 10 Mar 2025 17:15:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741625550; cv=none; b=L2iup7cyF93by3VtgNliI369FdNDBUFSy06f9Tagl1t3rXsaD6/BA03nqwadxOIqEw7ml82kASg3gjHqaqn4pXQ5wmuAMm897J0afXntZPUL8GZwcXPODqKkJiv0/vO3KA788zBPcoewLTvU0/oesF4DrRGAuRli729GrtsqemU=
+	t=1741626947; cv=none; b=ahlYWE0OMXNumNDrFUomXt48Pj+rTe1CSP+CcgexgQBwruwG3osisqQcEqrOZhD7KCZSWtWiWwl6A5moqx54MN5p2jchqM25w/OTa/cDVzjFYE5OXqCyspbTdS1r2UBH8hIeEgEZnG9iBvCdF7ODrJ/7KuVE65oISxWf73aMOIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741625550; c=relaxed/simple;
-	bh=Ini8lQDyPC8JPG4dO+yrpQyA25GtxLXS4fazV766qdw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c/Kg1TsmLOOuIeqip3zuAMQ8SNfDBAfpXa/o9Qs8yaOqpujyH3ldO9B+zytM83irGMgYPrYoD0+gT4ijwdNjpFmG7fsi/nh9RlhwqfHuDfgz1mFfTAn8vWEVQEAlTgCGOEu9tGuTODW7tcv+82B8Ii1ZqLJUt1HvWO2F1hLG+M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mg06BHTG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1741626947; c=relaxed/simple;
+	bh=0OCVYF/UAGmF/bg0cdYT6l4Xx+OUMgdepEGS07Yb3NA=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=jpO7aMtdWfu/6BLVxkgn7VvF+G9bgu7eekPNGCc9z6+ncZax242S2jsLV/TACINnH1lpEwmk+//DBA85yqxzRHYM5VSTaZi0nYiWhrJE/Mg/thXyKmGro/CbcM3jsY+i/uXrzAuv68v/sA37vM3Z7u4usSxML73S4gLgUKjWX7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=dWjxD4eQ; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mg06BHTG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76D61C4CEF0;
-	Mon, 10 Mar 2025 16:52:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741625549;
-	bh=Ini8lQDyPC8JPG4dO+yrpQyA25GtxLXS4fazV766qdw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mg06BHTG+uVv8Oefui2vMxpiSJ3F1CUPo8LCNY1l1/5zhHx+3I1lBgNNNJSTYIF9s
-	 0xs25Dyblmlv1ZYN0PFtKgshGCKNbpdGEhXFmY4yHHMm65CBMjfMD3yvHch+rFgJqb
-	 VQmghi0rFRZtY6mLe+vexgSz6KjBt6XvNOob0dXlq2q/+yJ0PSsAvO3NFq0WJy1EnD
-	 J6Wq9FSAPVcizZMZfE4zCxz9+YOM+712AoZPqY4o+k0CdJDb3mqx+QAZdTI6iNeb8d
-	 qHxnnfH+IgiCP89peOUwSlDEU6opuKRURVw6XCyqBjT4BAh7o6c4gSzp/yAjfHfDLX
-	 kY2tj8JFSXiRA==
-Date: Mon, 10 Mar 2025 16:52:28 +0000
-From: Wei Liu <wei.liu@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-	Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
-	Wei Huang <wei.huang2@amd.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [patch 06/10] PCI: hv: Switch MSI descriptor locking to guard()
-Message-ID: <Z88YzDAf-qvi7cyH@liuwe-devbox-ubuntu-v2.lamzopl0uupeniq2etz1fddiyg.xx.internal.cloudapp.net>
-References: <20250309083453.900516105@linutronix.de>
- <20250309084110.521468021@linutronix.de>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="dWjxD4eQ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=/rk8STxE+umsrTdOZizpHycgtQykDpsqh9BmTH896vM=; b=dWjxD4eQWjlXrG8ZX77eNYor4l
+	JjJhbLJwZThFv/nCP5TmvkSmlYzVDAMxIN2FLDzwrrpaUWalU1HjUsb1cbj0odt8hX32qHjSHmrot
+	THhXfivyU2MifCS1j4ExAwzbL/IwqyIxvcJX8TAlWQ7oeELyngz4wzmIkBD6DaDosI2CpMY6rH3Uw
+	piKRWJTyLaVWqR9nQ+Zd8Bwme2g+birN0r+XRFLvPzS+PMNSuM34ijj7JO+GStMbe9r6aHfQ0l23a
+	l9mHTMzqUCOuOmMxB0Z+vsNwj5n8zNCqILspF7q2BSzNvDmsrGT3e4T02NOzF0NwLWaFmelCgDPJQ
+	drHrl30Q==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <logang@deltatee.com>)
+	id 1trg5B-00G6mD-0b;
+	Mon, 10 Mar 2025 10:34:25 -0600
+Message-ID: <b419ea3f-50b8-481e-abc6-6eac7ce43021@deltatee.com>
+Date: Mon, 10 Mar 2025 10:34:12 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250309084110.521468021@linutronix.de>
+User-Agent: Mozilla Thunderbird
+To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
+Cc: Marc Zyngier <maz@kernel.org>, Jon Mason <jdmason@kudzu.us>,
+ Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+ ntb@lists.linux.dev, Nishanth Menon <nm@ti.com>,
+ Tero Kristo <kristo@kernel.org>, Santosh Shilimkar <ssantosh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ linux-hyperv@vger.kernel.org, Wei Huang <wei.huang2@amd.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+References: <20250309083453.900516105@linutronix.de>
+ <20250309084110.394142327@linutronix.de>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20250309084110.394142327@linutronix.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: tglx@linutronix.de, linux-kernel@vger.kernel.org, maz@kernel.org, jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com, ntb@lists.linux.dev, nm@ti.com, kristo@kernel.org, ssantosh@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org, haiyangz@microsoft.com, wei.liu@kernel.org, linux-hyperv@vger.kernel.org, wei.huang2@amd.com, manivannan.sadhasivam@linaro.org, James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [patch 04/10] NTB/msi: Switch MSI descriptor locking to lock
+ guard()
+X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Sun, Mar 09, 2025 at 09:41:51AM +0100, Thomas Gleixner wrote:
+
+
+On 2025-03-09 01:41, Thomas Gleixner wrote:
 > Convert the code to use the new guard(msi_descs_lock).
 > 
 > No functional change intended.
 > 
 > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Haiyang Zhang <haiyangz@microsoft.com>
-> Cc: Wei Liu <wei.liu@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-hyperv@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+> Cc: Jon Mason <jdmason@kudzu.us>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: Allen Hubbe <allenbh@gmail.com>
+> Cc: ntb@lists.linux.dev
 
-Acked-by: Wei Liu <wei.liu@kernel.org>
+Looks really nice to me, thanks.
 
-> ---
->  drivers/pci/controller/pci-hyperv.c |   14 ++++----------
->  1 file changed, 4 insertions(+), 10 deletions(-)
-> 
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -3976,24 +3976,18 @@ static int hv_pci_restore_msi_msg(struct
->  {
->  	struct irq_data *irq_data;
->  	struct msi_desc *entry;
-> -	int ret = 0;
->  
->  	if (!pdev->msi_enabled && !pdev->msix_enabled)
->  		return 0;
->  
-> -	msi_lock_descs(&pdev->dev);
-> +	guard(msi_descs_lock)(&pdev->dev);
->  	msi_for_each_desc(entry, &pdev->dev, MSI_DESC_ASSOCIATED) {
->  		irq_data = irq_get_irq_data(entry->irq);
-> -		if (WARN_ON_ONCE(!irq_data)) {
-> -			ret = -EINVAL;
-> -			break;
-> -		}
-> -
-> +		if (WARN_ON_ONCE(!irq_data))
-> +			return -EINVAL;
->  		hv_compose_msi_msg(irq_data, &entry->msg);
->  	}
-> -	msi_unlock_descs(&pdev->dev);
-> -
-> -	return ret;
-> +	return 0;
->  }
->  
->  /*
-> 
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
