@@ -1,86 +1,80 @@
-Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E20221F11
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Mar 2025 11:35:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE7961D514E;
+	Tue, 11 Mar 2025 11:47:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741692923; cv=none; b=YhdeeGNFV86/O7LIEwJ1PiLX4nbJIPnoNQI7bK0mo2vrJSBYoT+XAhbHMMY6QcWvoJommxNXuB2xTmOdXCnIrDkKZvh3KIWP3ObYKn7jHBWlcEjLgZrhl+n4aFNIPKaNsOieHurhSFlXePuKDPNLPL0WhMMXB+10x5arOYeG/vM=
+	t=1741693628; cv=none; b=kJiDDwVN0vBi/9Mh3nLssos46+VbhefOmcaJrrYpnF2uCke88p4mNBBo8UkT7V+XVKRxvhHALm5kPNLlVwPKSBmjcb4MorafrFkZ7CkkME1QNw57BR1gsdvTqu5KVqFe4z+bPgg/4gxQN7VZ/Ha4x0WASB3aMVsyG5te6SEl8fE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741692923; c=relaxed/simple;
-	bh=Uhn507R8K/kps72rHsNEWrDzj3Jw8mZmyak4Q3dWwck=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L37f1nq0dYBTEGC4II32PDsoIPZlt9dbd0pnNJqh3w6heQePmIIpqvbf9sVqskSpE44tX4u77/aA2f0qp+msQOuy1pq3rAuxMIdvtt0hazyoPDZnJsQKazi6reNfwBjljHkAcaGWMD52Kc1ZrbKT3lcmsy1XvBaMhOq9u3dPg7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CgaJMNd6; arc=none smtp.client-ip=91.218.175.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1741693628; c=relaxed/simple;
+	bh=yRXYXZ9rV06lyaY2T1O8v8n5tymGv/7bHYuzwvkdyUM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=lDUQmaWu89XEv6x6Vd9oNoXnc0ap1xrm+c8+RqmXePxcrOwcg0cQIl4c9ssG4S0ofgTGnq4j4x9ZKDtuar3MfMnI3MpMLEuABErNOEw+L/AXZfL6K1DDKsraofhiy9hPtkQWARCX9TjsLL7t0msakL4pAUq7HMqOj4R/Ne+2hvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UPU7SL2Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CgaJMNd6"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1741692919;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=0Gj4AI+bThVGyYDQmC4PfVFErBgnDlOQcTWIIrTFHvs=;
-	b=CgaJMNd6096l3ZhphIfcoI9NOMfyzrSYKAfKcZpx+RoU26i/cN9YOarTjfyylA5xfBZLAt
-	QMUFtMObysMaHc8f2l63CnPu+X6gKdBS4StL/C8ufzeNVWcho+E6KJbSxomueoLrtH+4Tp
-	U8lU06O85ttKJA2uIvhT6tX+3uUjLxw=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Vishal Bhakta <vishal.bhakta@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RESEND PATCH] scsi: vmw_pvscsi: Use str_enabled_disabled() helper in pvscsi_probe()
-Date: Tue, 11 Mar 2025 12:34:29 +0100
-Message-ID: <20250311113428.496646-2-thorsten.blum@linux.dev>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UPU7SL2Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79ADFC4CEED;
+	Tue, 11 Mar 2025 11:47:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741693627;
+	bh=yRXYXZ9rV06lyaY2T1O8v8n5tymGv/7bHYuzwvkdyUM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=UPU7SL2YxU2IXg0KW0RA96lOpuGU2yP7b9nBu990Wtx7QV1nktI6c9jkCjx8VII/y
+	 q0Feq0mpHXEgcnbsr2Aef8DasQSJuZZoKNNZh+HZFk/14QJgRr3BxDg/MAqh1lc8n7
+	 Ap46k9a6tsPn1458AnKmZhJEOdiUU499KHrtMRTllw/zIM7V6WD0/VxzwOBgpvoMl2
+	 SUSWkhoD6lMZO0DhR44V6ty4MXIg/FcWfrnLHWsO6XQ2Q5WYZPc/WBCctb/7WttMX/
+	 Pd5wIBZaxYWr4OW1RyzEAZcSe2pfb6TFJ7FHtMn7Qi8cEu6mxZKSFSDjpi9LoTxbw/
+	 IymDnNrxvAuqA==
+From: Vinod Koul <vkoul@kernel.org>
+To: Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+ Bart Van Assche <bvanassche@acm.org>, 
+ Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>, 
+ Trilok Soni <quic_tsoni@quicinc.com>, 
+ Melody Olvera <quic_molvera@quicinc.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Manish Pandey <quic_mapa@quicinc.com>, 
+ Krzysztof Kozlowski <krzk@kernel.org>, 
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20250310-sm8750_ufs_master-v2-0-0dfdd6823161@quicinc.com>
+References: <20250310-sm8750_ufs_master-v2-0-0dfdd6823161@quicinc.com>
+Subject: Re: (subset) [PATCH v2 0/6] Add UFS support for SM8750
+Message-Id: <174169362014.507381.5528834930288014855.b4-ty@kernel.org>
+Date: Tue, 11 Mar 2025 12:47:00 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-Remove hard-coded strings by using the str_enabled_disabled() helper
-function.
 
-Use pr_debug() instead of printk(KERN_DEBUG) to silence a checkpatch
-warning.
+On Mon, 10 Mar 2025 14:12:28 -0700, Melody Olvera wrote:
+> Add UFS support for SM8750 SoCs.
+> 
 
-Suggested-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
----
- drivers/scsi/vmw_pvscsi.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 32242d86cf5b..4927c6a33bd8 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -25,6 +25,7 @@
- #include <linux/slab.h>
- #include <linux/workqueue.h>
- #include <linux/pci.h>
-+#include <linux/string_choices.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -1508,8 +1509,8 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto out_reset_adapter;
- 
- 	adapter->use_req_threshold = pvscsi_setup_req_threshold(adapter, true);
--	printk(KERN_DEBUG "vmw_pvscsi: driver-based request coalescing %sabled\n",
--	       adapter->use_req_threshold ? "en" : "dis");
-+	pr_debug("vmw_pvscsi: driver-based request coalescing %s\n",
-+		 str_enabled_disabled(adapter->use_req_threshold));
- 
- 	if (adapter->dev->msix_enabled || adapter->dev->msi_enabled) {
- 		printk(KERN_INFO "vmw_pvscsi: using MSI%s\n",
+[1/6] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: document the SM8750 QMP UFS PHY
+      commit: 12185bc38f7667b1d895b2165a8a47335a4cf31b
+[2/6] phy: qcom-qmp-ufs: Add PHY Configuration support for sm8750
+      commit: b02cc9a176793b207e959701af1ec26222093b05
+
+Best regards,
 -- 
-2.48.1
+~Vinod
+
 
