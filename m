@@ -1,117 +1,126 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F12521DE2DF;
-	Tue, 11 Mar 2025 01:53:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCFF11DED47;
+	Tue, 11 Mar 2025 02:08:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741658003; cv=none; b=PvJWqs8UbXQ/IW7rrDQkl/51Ywscu3L0lDR0U96JawrLni7nuyH+VBKS12l6AHRvQSq1swTpvys0AsFEygYUEC73nK2mIpxfhAKTUP9mY9ea8ST2V+38i8iDEVmr5JVMRrk9wwhFgNm/3ffj4bPeNmvu7J6X+rGTEHvvHSn0g4k=
+	t=1741658887; cv=none; b=jM0DOXn1GqnLLpb1evWbpUIhFU+j66daX0D7uuiaDKwJBlGoXIl89RbPHAtmsXWZVJOvfLWPeXMEyBHK8LqeqDJMW59ytROmD0eisc9judOyJsnkwaRRHwv7khqH0dzGQ/9qcSQF7kFKQI4uLQjTPOPQRUqzDeaNW/X7EamW4Lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741658003; c=relaxed/simple;
-	bh=szEY0YYmkbxUjsGeecngthEIAEf8kRWWKy2Mav+yNv8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=NT27jnfPQ1pPHgDEjC3DW5D43babuCIsHwPiU+3P373Z7sqT1UqDV6habtjfvEuLPQwJ2FtO/qJ3n/W0nexm0c+bYPYPUexfwbE/1FUKVFnStW4BXyhyD0M3gDNdbxzj42bFie0l4hLQv3mI/bnQsvtHuETqQTfRrGj376qiBew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4ZBcBZ72n0zvWpL;
-	Tue, 11 Mar 2025 09:49:26 +0800 (CST)
-Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
-	by mail.maildlp.com (Postfix) with ESMTPS id EB73E1402CB;
-	Tue, 11 Mar 2025 09:53:16 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 11 Mar 2025 09:53:16 +0800
-Message-ID: <b6dcc1e5-7f43-ec10-fbd9-48def2f6517f@huawei.com>
-Date: Tue, 11 Mar 2025 09:53:15 +0800
+	s=arc-20240116; t=1741658887; c=relaxed/simple;
+	bh=EO2y2EASnimfmC0To8IgjADGLB03IrpBXSrBRgvMOXc=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=MyAQ9PpvHk0UfRBxXL881HgKnFSOb8nyIUas40a6jqHjVvi88sZnO9rGyiWWH98xIYSlpX3AeMEUJZLdoeeJY/ZkK0ArYkRF0JCoad6fLoqYfyGughvYk5tVouV6sR2H6LHKtMbrHUUFzKyJuJkaZyOL4oYjF7osh98JVTajZqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=wQfQZG6I; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="wQfQZG6I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 872A9C4CEE5;
+	Tue, 11 Mar 2025 02:08:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1741658886;
+	bh=EO2y2EASnimfmC0To8IgjADGLB03IrpBXSrBRgvMOXc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=wQfQZG6IKVV4Tew+S+0o+lnw12y0URQfWSPems1i8x5dKQTaPMYHdQMJDIg/0LCcq
+	 9ysqdCzIccJgUTy5+1XImjyPHewrVrCASW3U/ThAkRtkSNX1mJCMOLQBPQJNwR3UZE
+	 sXCoysWhDTs3Eikr7+eLtWHhOyIiad0yrUckBntM=
+Date: Mon, 10 Mar 2025 19:08:03 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay
+ <ogabbay@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>, Nicolas Palix
+ <nicolas.palix@imag.fr>, James Smart <james.smart@broadcom.com>, Dick
+ Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Chris Mason <clm@fb.com>, Josef Bacik
+ <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, Ilya Dryomov
+ <idryomov@gmail.com>, Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens
+ Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>, Damien Le Moal
+ <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Carlos Maiolino
+ <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel
+ <sre@kernel.org>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig
+ <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Frank Li
+ <Frank.Li@nxp.com>, Mark Brown <broonie@kernel.org>, Shawn Guo
+ <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix
+ Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>,
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Hans de Goede
+ <hdegoede@redhat.com>, Ilpo =?ISO-8859-1?Q?J=E4rvinen?=
+ <ilpo.jarvinen@linux.intel.com>, Henrique de Moraes Holschuh
+ <hmh@hmh.eng.br>, Selvin Xavier <selvin.xavier@broadcom.com>, Kalesh AP
+ <kalesh-anakkur.purayil@broadcom.com>, Jason Gunthorpe <jgg@ziepe.ca>, Leon
+ Romanovsky <leon@kernel.org>, Easwar Hariharan
+ <eahariha@linux.microsoft.com>, cocci@inria.fr,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-sound@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-spi@vger.kernel.org,
+ imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+ platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
+ linux-rdma@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, Carlos Maiolino
+ <cmaiolino@redhat.com>
+Subject: Re: (subset) [PATCH v3 00/16] Converge on using secs_to_jiffies()
+ part two
+Message-Id: <20250310190803.aaf868760781c9ae3fbe6df1@linux-foundation.org>
+In-Reply-To: <174165504986.528513.3575505677065987375.b4-ty@oracle.com>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com>
+	<174165504986.528513.3575505677065987375.b4-ty@oracle.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v3 1/3] scsi: hisi_sas: Enable force phy when SATA disk
- directly connected
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>, <liyihang9@huawei.com>,
-	<yanaijie@huawei.com>
-CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>, <liyangyang20@huawei.com>,
-	<f.fangjian@huawei.com>, <xiabing14@h-partners.com>
-References: <20250220130546.2289555-1-yangxingui@huawei.com>
- <20250220130546.2289555-2-yangxingui@huawei.com>
- <4bf89b6c-8730-4ae8-8b26-770b2aab2c13@oracle.com>
- <5a4384dc-4edb-9e29-d1dd-190d69b9e313@huawei.com>
- <1e98a1eb-a763-4190-94c5-a867cdf0e09b@oracle.com>
- <235e7ad8-1e19-4b7b-c64b-b6703851ca65@huawei.com>
- <d233a108-a46e-47dd-86ad-756c60c8665e@oracle.com>
- <cc9ba6f8-1efb-4910-8952-9ca07c707658@huawei.com>
- <5d34595f-ff57-4679-b263-fa3fea006ce3@oracle.com>
- <25552c7d-858d-ea1e-0987-55f71642a503@huawei.com>
- <420fde94-28ec-4321-943b-5cb84cf14f0e@oracle.com>
- <d0a6b502-328b-2f83-3cdf-55c1effd80c1@huawei.com>
- <1fe3bb6b-1f7a-4188-83a3-f4c62e2a963d@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <1fe3bb6b-1f7a-4188-83a3-f4c62e2a963d@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh500009.china.huawei.com (7.202.181.140) To
- kwepemg100017.china.huawei.com (7.202.181.58)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+On Mon, 10 Mar 2025 21:19:03 -0400 "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
 
-
-On 2025/3/11 1:45, John Garry wrote:
->>> Sure, but I am just trying to keep this simple. If you deform and 
->>> reform the port - and so lose and find the disk (which does the itct 
->>> config) - will that solve the problem?
->>>
->> We found that we need to perform lose and find for all devices on the 
->> port including the local phy and the remote phy. This process still 
->> requires traversing the phy information corresponding to all devices 
->> to reset and it is also necessary to consider that there is a race 
->> between device removal and the current process.  it looks similar to 
->> solution of update port id directly. And there will be the problem 
->> mentioned above. e.g, during error handling, the recovery state will 
->> last for more than 15 seconds, affecting the performance of other 
->> disks on the same host.
+> On Tue, 25 Feb 2025 20:17:14 +0000, Easwar Hariharan wrote:
 > 
-> How do you even detect the port id inconsistency for the device attached 
-> at the remote phy? For this series, you could detect it at the phy 
-> up/down handler for the directly attached device - how would it be 
-> triggered for the remote phy?
+> > This is the second series (part 1*) that converts users of msecs_to_jiffies() that
+> > either use the multiply pattern of either of:
+> > - msecs_to_jiffies(N*1000) or
+> > - msecs_to_jiffies(N*MSEC_PER_SEC)
+> > 
+> > where N is a constant or an expression, to avoid the multiplication.
+> > 
+> > [...]
+> 
+> Applied to 6.15/scsi-queue, thanks!
+> 
+> [02/16] scsi: lpfc: convert timeouts to secs_to_jiffies()
+>         https://git.kernel.org/mkp/scsi/c/a131f20804d6
 
-When the hardware port ID of the EXP is detected to have changed, the 
-link reset is performed on the local phy of EXP in sequence, which will 
-not trigger the lose and find process of the EXP device, and it will not 
-trigger the lose and find process of the disks connected to the remote 
-phy. Therefore, it is necessary to lose and found all devices separately 
-to update the device's port id in itct.
+Really, an acked-by would have been much easier all around, but whatever.
 
-local phy0 --------------------------- disk0
+Did you get my fix?
 
-local phy1 --------------------------- disk1
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: scsi-lpfc-convert-timeouts-to-secs_to_jiffies-fix
+Date: Tue Feb 25 07:32:03 PM PST 2025
 
-local phy2 --------------------------- disk2
+fix build
 
-local phy3 --------------------------- disk3
-                     _________
-local phy4 --------|         |-------- disk4
-                    |         |
-local phy5 --------|         |-------- disk5
-                    |         |
-local phy6 --------|   EXP   |-------- disk6
-                    |         |
-local phy7 --------|         |-------- disk7
-                    |_________|
+Cc: Easwar Hariharan <eahariha@linux.microsoft.com>
+Cc: James Bottomley <james.bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
+ drivers/scsi/lpfc/lpfc_sli.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Xingui
-.
+--- a/drivers/scsi/lpfc/lpfc_sli.c~scsi-lpfc-convert-timeouts-to-secs_to_jiffies-fix
++++ a/drivers/scsi/lpfc/lpfc_sli.c
+@@ -3954,7 +3954,7 @@ void lpfc_poll_eratt(struct timer_list *
+ 	else
+ 		/* Restart the timer for next eratt poll */
+ 		mod_timer(&phba->eratt_poll,
+-			  jiffies + secs_to_jiffies(phba->eratt_poll_interval);
++			  jiffies + secs_to_jiffies(phba->eratt_poll_interval));
+ 	return;
+ }
+ 
+_
 
