@@ -1,87 +1,86 @@
-Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
+Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC09253F05
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Mar 2025 11:26:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E20221F11
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Mar 2025 11:35:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741692380; cv=none; b=X4WkaPiFRA/ijr7to6e/6tOMAq8r+8Xn6BjWHhV1M1aiSAka8xWWQnB70WfG19PD5tOerrbAqtpEtPpKvBROjYwN0Uue5tXTEOikDASW6ieA4w95bs4dLqiFcN7GHK9viEkeejtBSwpoAME5VW3ym+RQUTP/FutTNEWZg5F/KMI=
+	t=1741692923; cv=none; b=YhdeeGNFV86/O7LIEwJ1PiLX4nbJIPnoNQI7bK0mo2vrJSBYoT+XAhbHMMY6QcWvoJommxNXuB2xTmOdXCnIrDkKZvh3KIWP3ObYKn7jHBWlcEjLgZrhl+n4aFNIPKaNsOieHurhSFlXePuKDPNLPL0WhMMXB+10x5arOYeG/vM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741692380; c=relaxed/simple;
-	bh=nNNInvU5LCaGyKmG/XrX/dfSKu3Ro8XXVW0J3ZgDLKY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=u9hmBEBu4lyO07vPGbw34QDVlYGvAApl4rJiUmF+lC+uy3o6aCz6SidQJXO1QtRdQDdU5fLbXuEMvctIifncZjR9HGhqVDkO8cYj089aVl3mJ1DRyTNey/v/QMqxdeurrUnEbPeIYoaJ1fN/CxRg3ElChS2pRvrhQP6kt08xD7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=NO/vasxU; arc=none smtp.client-ip=62.142.5.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1741692923; c=relaxed/simple;
+	bh=Uhn507R8K/kps72rHsNEWrDzj3Jw8mZmyak4Q3dWwck=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L37f1nq0dYBTEGC4II32PDsoIPZlt9dbd0pnNJqh3w6heQePmIIpqvbf9sVqskSpE44tX4u77/aA2f0qp+msQOuy1pq3rAuxMIdvtt0hazyoPDZnJsQKazi6reNfwBjljHkAcaGWMD52Kc1ZrbKT3lcmsy1XvBaMhOq9u3dPg7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CgaJMNd6; arc=none smtp.client-ip=91.218.175.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="NO/vasxU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=content-transfer-encoding:content-type:mime-version:references:in-reply-to:
-	 message-id:date:subject:cc:to:from:from:to:cc:reply-to:subject:date:
-	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
-	 content-type:content-transfer-encoding:message-id;
-	bh=IxOVwi1rbMMGKQgPAkLY6jhtz1sGP+SiE6L7UrVIer8=;
-	b=NO/vasxUEL3Dy/UTOOrpXAxiMNKFHs+VfYinMruYVeM1yxHqgtcjkrpQDV2WM42KsIYftmJW8X5tC
-	 L4QYnhVkdvUuPtiwjmr5AkLYO/7JuqEXWTE09eHmer6T6yjGo0+/9+45NTG0bWIRu0eLLxiW+eD4P9
-	 pk8Qj95k41HubL0QoNVvxYVomsdOPrG72/YM7wkrA2HiLRw9SOsXAjTTErHZz5n5K/U8oqPqkVrlV7
-	 q/oXWbkir95lqk6NdXB3ICZuF4yZZ1lvt8wvZEfP3yUeCbjz+BinoQUuyRpwgubQYtaoRmOITpQzxz
-	 +Xw3/S80syXKcWmlhhYsAFv1iYrtVMw==
-Received: from kaipn1.makisara.private (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
-	id a3ccd664-fe6b-11ef-83bd-005056bdf889;
-	Tue, 11 Mar 2025 13:26:13 +0200 (EET)
-From: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	jmeneghi@redhat.com,
-	=?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH 3/3] scsi: st: Tighten the page format heuristics with MODE SELECT
-Date: Tue, 11 Mar 2025 13:25:16 +0200
-Message-ID: <20250311112516.5548-4-Kai.Makisara@kolumbus.fi>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250311112516.5548-1-Kai.Makisara@kolumbus.fi>
-References: <20250311112516.5548-1-Kai.Makisara@kolumbus.fi>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CgaJMNd6"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1741692919;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=0Gj4AI+bThVGyYDQmC4PfVFErBgnDlOQcTWIIrTFHvs=;
+	b=CgaJMNd6096l3ZhphIfcoI9NOMfyzrSYKAfKcZpx+RoU26i/cN9YOarTjfyylA5xfBZLAt
+	QMUFtMObysMaHc8f2l63CnPu+X6gKdBS4StL/C8ufzeNVWcho+E6KJbSxomueoLrtH+4Tp
+	U8lU06O85ttKJA2uIvhT6tX+3uUjLxw=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: Vishal Bhakta <vishal.bhakta@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH] scsi: vmw_pvscsi: Use str_enabled_disabled() helper in pvscsi_probe()
+Date: Tue, 11 Mar 2025 12:34:29 +0100
+Message-ID: <20250311113428.496646-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-In the days when SCSI-2 was emerging, some drives did claim SCSI-2
-but did not correctly implement it. The st driver first tries MODE
-SELECT with the page format bit set to set the block descriptor.
-If not successful, the non-page format is tried.
+Remove hard-coded strings by using the str_enabled_disabled() helper
+function.
 
-The test only tests the sense code and this triggers also from
-illegal parameter in the parameter list. The test is limited to
-"old" devices and made more strict to remove false alarms.
+Use pr_debug() instead of printk(KERN_DEBUG) to silence a checkpatch
+warning.
 
-Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Suggested-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
 ---
- drivers/scsi/st.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/vmw_pvscsi.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 55809f8a62d3..c33c0f2045b7 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3104,7 +3104,9 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 			   cmd_in == MTSETDRVBUFFER ||
- 			   cmd_in == SET_DENS_AND_BLK) {
- 			if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
--			    !(STp->use_pf & PF_TESTED)) {
-+				cmdstatp->sense_hdr.asc == 0x24 &&
-+				(STp->device)->scsi_level <= SCSI_2 &&
-+				!(STp->use_pf & PF_TESTED)) {
- 				/* Try the other possible state of Page Format if not
- 				   already tried */
- 				STp->use_pf = (STp->use_pf ^ USE_PF) | PF_TESTED;
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 32242d86cf5b..4927c6a33bd8 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -25,6 +25,7 @@
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ #include <linux/pci.h>
++#include <linux/string_choices.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -1508,8 +1509,8 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_reset_adapter;
+ 
+ 	adapter->use_req_threshold = pvscsi_setup_req_threshold(adapter, true);
+-	printk(KERN_DEBUG "vmw_pvscsi: driver-based request coalescing %sabled\n",
+-	       adapter->use_req_threshold ? "en" : "dis");
++	pr_debug("vmw_pvscsi: driver-based request coalescing %s\n",
++		 str_enabled_disabled(adapter->use_req_threshold));
+ 
+ 	if (adapter->dev->msix_enabled || adapter->dev->msi_enabled) {
+ 		printk(KERN_INFO "vmw_pvscsi: using MSI%s\n",
 -- 
-2.43.0
+2.48.1
 
