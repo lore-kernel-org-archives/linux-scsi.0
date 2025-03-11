@@ -1,283 +1,101 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FFEF22A1CD;
-	Tue, 11 Mar 2025 21:45:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A37211E7C2B;
+	Tue, 11 Mar 2025 22:30:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741729548; cv=none; b=ptO2D8blygTjAzjHsvEI/r9BoD5gzlF+K4YT7AJgt9vGAzIEuj1kpRLFGoaDyHpQ5f24CSnIdWA3yhP3hkkxo3G+bH8QSwxblBJIyI1ZSaJ6PF/hn73APg9FC0QXvcKfAyjs0qmDdA/Z18kAdXQ6Ay91QJ48VhpxsH8zyZl8Wok=
+	t=1741732211; cv=none; b=t0lteMztZZ1w6liDouJ/Arlm9Z2X9ClBBVP+zTUsHUJPLSImv33FwFptIb1Nqkaf4T5n9dg4k8sYU4GNd0dx6rRr1Dx7L0n+8NEbKVuJ/zGDPRVDBDd89EJCxz2aEzyfqmTrVhw5FWJ/b29kcToCh5GPSv7LnQtMP9TZrvjFwps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741729548; c=relaxed/simple;
-	bh=KdwnFgazTOlEUUpfswtvuAmPmqCiafpW6cQd/XfAcsI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=RCLrSqUARDeUou5VyVAHWNS8CzsTCYn/8lc3zgMIEOveQkD/kHizo4489ut7HtULm22+RnoBDu3YjFYegrDsaaPi7pquv0SzebmTl1C0kG+R+4dyOp5D34H2spdV0KtvLt1oFYNoG19nJKhzykk+4LyAzVL46XfCbaMhccebdUs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=ZCM5RdD6; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=0tn05P+/; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1741732211; c=relaxed/simple;
+	bh=D/ejxuliKp47/6IzAc6WRsye4a+L+qynFv35lbKIaLc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EWKNRcc7hKd3x9zqr8LqaTkiKj4pm3WDFSjTgTLI2dGlSwRT3blE/2rkNdr6iZ2Kc/MHsuGluYtY1n0xayePh7nNb0ogr3eu9jkMdCKmiPkmZZSMJpKUlSyM2rGhoAkim088vn7vc/IlvohChaHqOjCdHx0WcadiYfyr2BKe3Uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BiHPJ+nw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ZCM5RdD6";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="0tn05P+/"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1741729545;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GbLxnYEkh+uuZQU6ekQIoI6Bdh306BbbZFiZNHD5ix0=;
-	b=ZCM5RdD6C5Mwv3W05htRYbcC8103FrHDDF+55t9hhAL7UpCj8pzCXk+kMhpQO/Vom9X91J
-	huw7GuM0H/yn4Ir6PTddThNXe1oNFoPFs/EM7A1RGoCt6DZKwD7dO0IAc7kNOA/0/oZAxp
-	s/wchwubHYIi+y4C0AVERN4xzwZpkhalqYgnC0VxlAZjWYeycPUKyLWQgkYKKhXYUHGqu5
-	Dz/DoPxqJkcuwhh9/G6fBRMr3JTAqZ+96cAYrmlcDveuL41veJYJDhTrnOJIL0wWvRahpd
-	Y/L0oHHMVJF+JX/YgkMZ3e2qHOHVwvY5/uo/tI9DFP3e7dnzuBs9StLDsjDjfA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1741729545;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GbLxnYEkh+uuZQU6ekQIoI6Bdh306BbbZFiZNHD5ix0=;
-	b=0tn05P+/99JbK5GPkWo9nBabKzsQZ7WtennjSeYOGTRbXvEgKPAKfq+6ez6IaefY/Pjmyv
-	IKjKiKrJqioRAtDQ==
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Nishanth Menon
- <nm@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh Shilimkar
- <ssantosh@kernel.org>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
- <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
- ntb@lists.linux.dev, Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu
- <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org, Wei Huang
- <wei.huang2@amd.com>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Subject: Re: [patch 05/10] PCI/MSI: Switch to MSI descriptor locking to guard()
-In-Reply-To: <20250311181018.0000477f@huawei.com>
-References: <20250309083453.900516105@linutronix.de>
- <20250309084110.458224773@linutronix.de>
- <20250311181018.0000477f@huawei.com>
-Date: Tue, 11 Mar 2025 22:45:44 +0100
-Message-ID: <87plinz1fb.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BiHPJ+nw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 184DEC4CEE9;
+	Tue, 11 Mar 2025 22:30:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741732211;
+	bh=D/ejxuliKp47/6IzAc6WRsye4a+L+qynFv35lbKIaLc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BiHPJ+nwPHlDdP4oXGhcORfHsgcM4ttc+mb2rBRh9CEOhFHvfUmTjedK8SwgymQYZ
+	 VXr1mo/6dJmpfC/SS0yu8oGrfspuKU2JoWJtf7EyjQlIJO0/rx6ZfoZNpDtVRoIfB+
+	 oa0dmgJsTxfJppmd3CrGnagsijeotxf2wVZkocApISLbvIrdmWPf9O7PogNI8EXBlc
+	 CSFaokKeoGkJTff4kus1apfzx+ay5JfinNkLd/VtICfuf64gg+Nyx69btjpKMHWniM
+	 u8JDqy50+SPaO7hv6QqeI6gRzALAuH5PJTdjtTJd+Hj/13RNAaxCCJO72eZ+BeJ/0r
+	 jluTKlrfvKbtQ==
+Date: Tue, 11 Mar 2025 15:30:07 -0700
+From: Kees Cook <kees@kernel.org>
+To: Jakub Kicinski <kuba@kernel.org>
+Cc: "Jason A . Donenfeld" <Jason@zx2c4.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>,
+	wireguard@lists.zx2c4.com, netdev@vger.kernel.org,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] wireguard: noise: Add __nonstring annotations for
+ unterminated strings
+Message-ID: <202503111520.CF7527A@keescook>
+References: <20250310222249.work.154-kees@kernel.org>
+ <20250311111927.06120773@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250311111927.06120773@kernel.org>
 
-On Tue, Mar 11 2025 at 18:10, Jonathan Cameron wrote:
-> On Sun,  9 Mar 2025 09:41:49 +0100 (CET)
-> Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> This one runs into some of the stuff that the docs say
-> to not do.  I don't there there are bugs in here as such
-> but it gets harder to reason about and fragile in the long
-> run.  Easy enough to avoid though - see inline.
+On Tue, Mar 11, 2025 at 11:19:27AM +0100, Jakub Kicinski wrote:
+> On Mon, 10 Mar 2025 15:22:50 -0700 Kees Cook wrote:
+> > When a character array without a terminating NUL character has a static
+> > initializer, GCC 15's -Wunterminated-string-initialization will only
+> > warn if the array lacks the "nonstring" attribute[1]. Mark the arrays
+> > with __nonstring to and correctly identify the char array as "not a C
+> > string" and thereby eliminate the warning.
+> 
+> Hi! Would marking all of u8 as non-string not be an option? How many 
+> of such warnings do we have in the tree? Feel free to point me to a
+> previous conversation.
 
-Right. Updated variant below.
+*thread merge*
 
-Thanks,
+On Mon, Mar 10, 2025 at 06:38:01PM -0400, James Bottomley wrote[1]:
+> This looks a bit suboptimal ... is there anywhere in the kernel u8[] is
+> actually used for real strings?  In which case it would seem the better
+> place to put the annotation is in the typedef for u8 arrays.
 
-        tglx
----
---- a/drivers/pci/msi/api.c
-+++ b/drivers/pci/msi/api.c
-@@ -53,10 +53,9 @@ void pci_disable_msi(struct pci_dev *dev
- 	if (!pci_msi_enabled() || !dev || !dev->msi_enabled)
- 		return;
- 
--	msi_lock_descs(&dev->dev);
-+	guard(msi_descs_lock)(&dev->dev);
- 	pci_msi_shutdown(dev);
- 	pci_free_msi_irqs(dev);
--	msi_unlock_descs(&dev->dev);
- }
- EXPORT_SYMBOL(pci_disable_msi);
- 
-@@ -196,10 +195,9 @@ void pci_disable_msix(struct pci_dev *de
- 	if (!pci_msi_enabled() || !dev || !dev->msix_enabled)
- 		return;
- 
--	msi_lock_descs(&dev->dev);
-+	guard(msi_descs_lock)(&dev->dev);
- 	pci_msix_shutdown(dev);
- 	pci_free_msi_irqs(dev);
--	msi_unlock_descs(&dev->dev);
- }
- EXPORT_SYMBOL(pci_disable_msix);
- 
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -336,41 +336,11 @@ static int msi_verify_entries(struct pci
- 	return !entry ? 0 : -EIO;
- }
- 
--/**
-- * msi_capability_init - configure device's MSI capability structure
-- * @dev: pointer to the pci_dev data structure of MSI device function
-- * @nvec: number of interrupts to allocate
-- * @affd: description of automatic IRQ affinity assignments (may be %NULL)
-- *
-- * Setup the MSI capability structure of the device with the requested
-- * number of interrupts.  A return value of zero indicates the successful
-- * setup of an entry with the new MSI IRQ.  A negative return value indicates
-- * an error, and a positive return value indicates the number of interrupts
-- * which could have been allocated.
-- */
--static int msi_capability_init(struct pci_dev *dev, int nvec,
--			       struct irq_affinity *affd)
-+static int __msi_capability_init(struct pci_dev *dev, int nvec, struct irq_affinity_desc *masks)
- {
--	struct irq_affinity_desc *masks = NULL;
-+	int ret = msi_setup_msi_desc(dev, nvec, masks);
- 	struct msi_desc *entry, desc;
--	int ret;
--
--	/* Reject multi-MSI early on irq domain enabled architectures */
--	if (nvec > 1 && !pci_msi_domain_supports(dev, MSI_FLAG_MULTI_PCI_MSI, ALLOW_LEGACY))
--		return 1;
--
--	/*
--	 * Disable MSI during setup in the hardware, but mark it enabled
--	 * so that setup code can evaluate it.
--	 */
--	pci_msi_set_enable(dev, 0);
--	dev->msi_enabled = 1;
--
--	if (affd)
--		masks = irq_create_affinity_masks(nvec, affd);
- 
--	msi_lock_descs(&dev->dev);
--	ret = msi_setup_msi_desc(dev, nvec, masks);
- 	if (ret)
- 		goto fail;
- 
-@@ -399,19 +369,48 @@ static int msi_capability_init(struct pc
- 
- 	pcibios_free_irq(dev);
- 	dev->irq = entry->irq;
--	goto unlock;
--
-+	return 0;
- err:
- 	pci_msi_unmask(&desc, msi_multi_mask(&desc));
- 	pci_free_msi_irqs(dev);
- fail:
- 	dev->msi_enabled = 0;
--unlock:
--	msi_unlock_descs(&dev->dev);
--	kfree(masks);
- 	return ret;
- }
- 
-+/**
-+ * msi_capability_init - configure device's MSI capability structure
-+ * @dev: pointer to the pci_dev data structure of MSI device function
-+ * @nvec: number of interrupts to allocate
-+ * @affd: description of automatic IRQ affinity assignments (may be %NULL)
-+ *
-+ * Setup the MSI capability structure of the device with the requested
-+ * number of interrupts.  A return value of zero indicates the successful
-+ * setup of an entry with the new MSI IRQ.  A negative return value indicates
-+ * an error, and a positive return value indicates the number of interrupts
-+ * which could have been allocated.
-+ */
-+static int msi_capability_init(struct pci_dev *dev, int nvec,
-+			       struct irq_affinity *affd)
-+{
-+	/* Reject multi-MSI early on irq domain enabled architectures */
-+	if (nvec > 1 && !pci_msi_domain_supports(dev, MSI_FLAG_MULTI_PCI_MSI, ALLOW_LEGACY))
-+		return 1;
-+
-+	/*
-+	 * Disable MSI during setup in the hardware, but mark it enabled
-+	 * so that setup code can evaluate it.
-+	 */
-+	pci_msi_set_enable(dev, 0);
-+	dev->msi_enabled = 1;
-+
-+	struct irq_affinity_desc *masks __free(kfree) =
-+		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
-+
-+	guard(msi_descs_lock)(&dev->dev);
-+	return __msi_capability_init(dev, nvec, masks);
-+}
-+
- int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 			   struct irq_affinity *affd)
- {
-@@ -666,37 +665,37 @@ static void msix_mask_all(void __iomem *
- 		writel(ctrl, base + PCI_MSIX_ENTRY_VECTOR_CTRL);
- }
- 
--static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
--				 int nvec, struct irq_affinity *affd)
-+static int __msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
-+				   int nvec, struct irq_affinity_desc *masks)
- {
--	struct irq_affinity_desc *masks = NULL;
--	int ret;
-+	int ret = msix_setup_msi_descs(dev, entries, nvec, masks);
- 
--	if (affd)
--		masks = irq_create_affinity_masks(nvec, affd);
--
--	msi_lock_descs(&dev->dev);
--	ret = msix_setup_msi_descs(dev, entries, nvec, masks);
- 	if (ret)
--		goto out_free;
-+		return ret;
- 
- 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
- 	if (ret)
--		goto out_free;
-+		return ret;
- 
- 	/* Check if all MSI entries honor device restrictions */
- 	ret = msi_verify_entries(dev);
- 	if (ret)
--		goto out_free;
-+		return ret;
- 
- 	msix_update_entries(dev, entries);
--	goto out_unlock;
-+	return 0;
-+}
- 
--out_free:
--	pci_free_msi_irqs(dev);
--out_unlock:
--	msi_unlock_descs(&dev->dev);
--	kfree(masks);
-+static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
-+				 int nvec, struct irq_affinity *affd)
-+{
-+	struct irq_affinity_desc *masks __free(kfree) =
-+		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
-+
-+	guard(msi_descs_lock)(&dev->dev);
-+	int ret = __msix_setup_interrupts(dev, entries, nvec, masks);
-+	if (ret)
-+		pci_free_msi_irqs(dev);
- 	return ret;
- }
- 
-@@ -871,13 +870,13 @@ void __pci_restore_msix_state(struct pci
- 
- 	write_msg = arch_restore_msi_irqs(dev);
- 
--	msi_lock_descs(&dev->dev);
--	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
--		if (write_msg)
--			__pci_write_msi_msg(entry, &entry->msg);
--		pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
-+	scoped_guard (msi_descs_lock, &dev->dev) {
-+		msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
-+			if (write_msg)
-+				__pci_write_msi_msg(entry, &entry->msg);
-+			pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
-+		}
- 	}
--	msi_unlock_descs(&dev->dev);
- 
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- }
+So both of you asked basically same question, and I think the simple answer
+is "no we can't mark u8 as nonstring". The use of u8 has become
+synonymous with "char" for a long while now, and it's gotten even more
+common after we made char unsigned by default.
+
+The number of warning sources is pretty small. I think I have identified
+and proposed fixes most of them already[2]. ACPICA needs an upstream
+change, which I've submitted[3]. And ACPI needed multidimensional
+nonstring annotation support, which had the last needed bit added to GCC
+today[4], and I've proposed support for it in the kernel[5]. With 4 and 5
+ready, I can send the final patch, which is basically just this (and
+actually accounts for the vast majority of warnings emitted):
+
+-static const char table_sigs[][ACPI_NAMESEG_SIZE] __initconst = {
++static const char table_sigs[][ACPI_NAMESEG_SIZE] __nonstring_array __initconst = {
+
+-Kees
+
+[1] https://lore.kernel.org/lkml/98ca3727d65a418e403b03f6b17341dbcb192764.camel@HansenPartnership.com/
+[2] https://lore.kernel.org/lkml/?q=f%3AKees+%22-Wunterminated-string-initialization%22
+[3] https://github.com/acpica/acpica/pull/1006
+[4] https://github.com/gcc-mirror/gcc/commit/afb46540d3921e96c4cd7ba8fa2c8b0901759455
+[5] https://lore.kernel.org/lkml/20250310214244.work.194-kees@kernel.org/
+
+-- 
+Kees Cook
