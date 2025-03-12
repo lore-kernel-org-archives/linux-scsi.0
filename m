@@ -1,86 +1,86 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3E3C1C84CE
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Mar 2025 16:17:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 896C0155A4E;
+	Wed, 12 Mar 2025 17:46:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741796250; cv=none; b=MdF6LfMwIsUbWZdsYUhhhjaMskG+ST/15FmVsf6LBtq2Zt/XxcU8L1Ungm7Ga7sjqPdUek7ksPkepYHVdiJjMNaVYqB9iddvaEo3a4erloOmufRRoZQa4OIX/S3TILe6gA0mumrctSyrtKi1NVSYmBovVFCJzPGkP7PGw3mAneQ=
+	t=1741801611; cv=none; b=Rln6bgZIn1+CdsAERpOcF51BCqCukhal1XMdX1yxzW5WwKkIwYEt1L9NlniROqCbsthty9lm1Cd3MgCq65z4W4RCD2zjtsL14OAbvrgJkbVveieUIcyoyP2L4c8AswgWsMnRK84fR2Hpm6J/q7lHEuT4u+eTasOwj8SpDLmG+Vo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741796250; c=relaxed/simple;
-	bh=dmiP2rAilSbTNwe68LXM67XERG8A5OqoRovQ2XAicwc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r2N0qBg/QgrktTIP3wKsKAqXu0qMYb+2/iiBwLoFl/y01RbmWkONVqiloLWk0SwwouPRijlaj9QSPbHKQTTUPXCwiQ4fmtAXViKXrOgZwpzrx/kWRqR44mqZ7vTuGUSbxTNxv1oIlrJ8QeZzk4fZLk545e/cvaTN5mQIuXwhG1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jGOrRnsq; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1741801611; c=relaxed/simple;
+	bh=NKCxgHuPZ4uFj78qPOvbD5XkJF4OK5o+IevOA1kfUSw=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=ekALh8ehhUj4Im1tDTTpPvYi8Vx1DePAa3BtOWPaMH12Hm+UTjrgws1QDigusNzAWXdIpZOMeQn6tIiqP8+8YzaHoVfcTUfXEyASf0NFXXb4QEPSfcRSdOnaPT3m7BjFPnJ8fZb+tzHZR4Ry+qTvocu56vreplHzz9U+ckMG9LE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=NY2EZKCL; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=y52XRB6j; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jGOrRnsq"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZCbPg5Jj6zm1Hbc;
-	Wed, 12 Mar 2025 16:17:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1741796245; x=1744388246; bh=dmiP2rAilSbTNwe68LXM67XE
-	RG8A5OqoRovQ2XAicwc=; b=jGOrRnsqNQvq8PM9apNFWKF3JABiB4K8MvzZn82k
-	5dhS8s1AuTGPFmy/o+vWwYmt59F/bHf32bReOvNuaWOhmrpmzexGYMc+YVkHzHYe
-	0/+cmOwaAtHzWn2Mf8TAeHpfH7Du4J5fvmyEaesoLsbEiOwG7pb2WP7xhkeYbMT/
-	IUwq13ZbLXDrhhUlB9VOcsyj4pkv/WM1g3iDBCm+61SBzGOwB67RjGFq1R5+VWpn
-	XhmvZaezqbmQfgmmA5KcJllqdBnjutc5l498kb2s2xdMMrkVuJu+anR/qNJw9adI
-	oIak9oC4yS/eLpjzeEqRNM67Ug9bYVZ6DIcICqIOtRbAMw==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id j30dirGpofba; Wed, 12 Mar 2025 16:17:25 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZCbPV4gP2zm0XC2;
-	Wed, 12 Mar 2025 16:17:17 +0000 (UTC)
-Message-ID: <1a320729-bca0-44e2-9061-c4c9b9b5e57f@acm.org>
-Date: Wed, 12 Mar 2025 09:17:16 -0700
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="NY2EZKCL";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="y52XRB6j"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1741801608;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tPfbVqo+JayHch2aOVHEH7XB7D8qrWAXL1NgHAeSYLA=;
+	b=NY2EZKCLiZU2Y4wQcE4LOXg/1j2pRcNxi3Ho9trmOgRgRaS2UqHnTCqJHHgmOdKQd3DKhR
+	W13TQfShCDsPCuLdCQJ8YG+y6Lzhr4Eyrla/Q60ETGo6+l+oU1s8Z5fo7ERxR7qOsNTFtI
+	LcW1D/ooIcXosUCzQ9/PUPVjd+QVYfbI8yLKMam6tDgKjSp+UJZ4xrquLPnsA3ZA+xfgva
+	mrlLK2cbgO/sosvRIvKJZHJx/c6yQmEo9t5nFdwg/V3a7Cinll+uwJtJDrTMyE1NGHccMj
+	bg7owk+w1KV3941nd8Q40YU8cB5Huduy8d3y0eXiq8r0FuyVf7TjT1WKK5xEZw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1741801608;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tPfbVqo+JayHch2aOVHEH7XB7D8qrWAXL1NgHAeSYLA=;
+	b=y52XRB6jA0wammvGAVfdCKbqX8TE1dpTb4rvqoeLv+K5axv4dqlXpHmS+o1HhcnKxmzg9+
+	XQbw0Erqc2PC/pBA==
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
+ Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh
+ Shilimkar <ssantosh@kernel.org>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+ ntb@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu
+ <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org, Wei Huang
+ <wei.huang2@amd.com>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Dan Williams
+ <dan.j.williams@intel.com>
+Subject: Re: [patch 02/10] genirq/msi: Use lock guards for MSI descriptor
+ locking
+In-Reply-To: <20250312150835.00001851@huawei.com>
+References: <20250309083453.900516105@linutronix.de>
+ <20250309084110.267883135@linutronix.de>
+ <20250311180017.00003fcc@huawei.com> <87senjz2ar.ffs@tglx>
+ <20250312150835.00001851@huawei.com>
+Date: Wed, 12 Mar 2025 18:46:47 +0100
+Message-ID: <8734fiywe0.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Fix a race condition related to device
- commands
-To: Avri Altman <Avri.Altman@sandisk.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Avri Altman <avri.altman@wdc.com>, Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
- Can Guo <quic_cang@quicinc.com>, Santosh Y <santoshsy@gmail.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20250311195340.2358368-1-bvanassche@acm.org>
- <PH7PR16MB6196B6AD43F68C7BE8128332E5D02@PH7PR16MB6196.namprd16.prod.outlook.com>
- <088fdfb9-00c7-43a9-acb9-e5300923d129@acm.org>
- <PH7PR16MB6196CC179C5F5E0F69F2FA77E5D02@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <PH7PR16MB6196CC179C5F5E0F69F2FA77E5D02@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On 3/12/25 7:25 AM, Avri Altman wrote:
-> I was hoping for a root-cause analysis explaining why hba-
-> >dev_cmd.complete is sometimes set and sometimes NULL.
+On Wed, Mar 12 2025 at 15:08, Jonathan Cameron wrote:
+> On Tue, 11 Mar 2025 22:26:52 +0100
+> Thomas Gleixner <tglx@linutronix.de> wrote:
+>>  
+>>  #define return_ptr(p)	return no_free_ptr(p)
+>>  
+>> +#define retain_ptr(p)				\
+>> +	__get_and_null(p, NULL)
+> Single line?
+>
+> This sort of thing got discussed in the past though I doubt I can find
+> the thread. There was some push back but maybe now is it's time!
+>
+> Probably worth shouting about it a bit to attract attention. Maybe
+> a separate patch.
 
-Hi Avri,
-
-Hasn't that already been explained in the patch description?
-It's not clear what additional information you need other than
-what has already been mentioned in the patch description.
-
-Thanks,
-
-Bart.
+Yes of course.
