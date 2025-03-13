@@ -1,79 +1,136 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB871E3762;
-	Thu, 13 Mar 2025 17:51:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5356615DBC1;
+	Thu, 13 Mar 2025 17:55:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741888275; cv=none; b=kgxMUELDb32WhRQFOGM4DanseRiofjLRtUoHI2waGsQnKoS+UcjkI2SYuMTe5fEkuszvs0O/hxaawpDELffozY9PV4vwkytX/gFBZHG60ww1fmMTYWUNw8B/Lzpfp2Go88L/Hi4lab0if2vKSMRzZ7SBQPF2VmQDQbBFqYaDzig=
+	t=1741888516; cv=none; b=AOVUsziZpvXmp0D9MrXWXPX2cM40Dln6vf/ycTmC4xXMLkPVfrYbPqohkgrfA8a56ojSERvTwML9u9L4lxsoJQs1dm+MrcglcwUGdQPWvGgIpTAY27aPIw4d2C/N5I4tlDGEL6uzniQ5zEcy7YF0/K7UgmJD4KuSQtQeAQzmEv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741888275; c=relaxed/simple;
-	bh=b1ncFgJE+Q11VK9Q5kCYHXIewMDxWiAi9A4kfUnXZxc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mgi6rkNwAuAsAglGJgTQ1dAEt3cYpAU5FCPG+g1OOBIxsZ5JLvmYbCELdGx7MlnmN6yHVuuiUMCwEWc3d01HKEYlW/JuDWrgYZxgx4PLKemK2t8y77U6REHJejYT+MX75ozvC9K75KvxHgJzj34EPklz+Ct2b3S4racaU+gG7DE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1GAOOj8p; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1741888516; c=relaxed/simple;
+	bh=Tt71LYU6EhXq+PF34rquse8y+1HkrL6YTObHYDTEgC4=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=j7BiZ3nLGQkcK1PPOPZgGbhh70fZUK5S0NwiZ/xzK9Q58bByvXyFegdhCJL6yNOV0rMwBONYzsPo/X8oppKcIxA4DbB6vfP1eqtj6zKjyeJodeF+KrSwghw7G4zLXBjfKDvAQiIH4gNHKV24bMzKynPUvxNSJ31uGr0i6HrIKJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=uFZ1UBSP; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=DaZ5+jSl; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1GAOOj8p"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZDFRN29sHzm0yVD;
-	Thu, 13 Mar 2025 17:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1741888271; x=1744480272; bh=Pkp4vIP/zdg7auq8Q6zaiu6R
-	2VVT1oIEMcUH/wxUMZY=; b=1GAOOj8pFD1MKpx/ewj0xP/Of0Mdrbi1nAesCzud
-	J2nuMM4CCiHGqY7YvvNCTSvnzf67akJSVpdtltUY1g9mkyCLZMAGCcOt9XBoLyrY
-	MrrUn6RgzOGhzNq3EG2MLuxz+WCuQKBUbnQgza855D79ZHdW0jHWoCVBkBhz1F6z
-	oW83hGzGLXYqMoxR7bs6sHhWTyF8cZIq41R7bM6WrqBfETyXahjzSrYwtESF34Zg
-	BEC1I1sEg/pss714ZDqZ2CQyX7gdsioFfiy9380VohxfivXXxk9AbsbjnJi+ZeUY
-	UIWxUVcr5s4e5Vu1scTsv9X3S1XQni0nBdD9kzaOYgJiUg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id VA7nIBrfjrQy; Thu, 13 Mar 2025 17:51:11 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZDFRJ1TMmzm2XgY;
-	Thu, 13 Mar 2025 17:51:07 +0000 (UTC)
-Message-ID: <729e2906-d3a7-426a-90cc-15e98657141f@acm.org>
-Date: Thu, 13 Mar 2025 10:51:06 -0700
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="uFZ1UBSP";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DaZ5+jSl"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1741888513;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+PI1SXUEUlOflpG5mqedjH0tAMTUnOBBlzLm30n5Uuc=;
+	b=uFZ1UBSPIOZgTqTqDPp+hhu/m7GcOkIt1v3H07rmD4Ul7VL35J6jWDvJIA+deMFrBrOnbr
+	8ynwe7rivWoT25DDOIcKFqTlsUHbHlBmYIb1TLN91juJY9FmyXTCXZr5OEP4FJWRQJRcrF
+	OoZQaJr9kQvLeLhWezSO18uv67r3WIgHGxe4u4mh4hNj0o3F3bh+1vYNFz22NcT7tkTOIl
+	og+qd1C2OI0B6igXtHcKG2JJlrAQdE2Arpkbd1UkgQDpUVePa9LPRdlZs+NCkvxTQmUet3
+	UhOf8ztb+kp+188qw6+Z+WIKy9JFx+dvkdWZgF0blzeIBmRdkZxk5ukei3qmuA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1741888513;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=+PI1SXUEUlOflpG5mqedjH0tAMTUnOBBlzLm30n5Uuc=;
+	b=DaZ5+jSlfrg02yOuP/NlnEIu8fr+/VfyCADOXZFaNyu2YS2F1MFQ+giIy2PvmK5hrryHIc
+	SNt0bHYWB8QiwtCw==
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Peter Zijlstra
+ <peterz@infradead.org>, Nishanth Menon <nm@ti.com>, Dhruva Gole
+ <d-gole@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh Shilimkar
+ <ssantosh@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Dave Jiang
+ <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>, Allen Hubbe
+ <allenbh@gmail.com>, ntb@lists.linux.dev, Michael Kelley
+ <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>, Haiyang Zhang
+ <haiyangz@microsoft.com>, linux-hyperv@vger.kernel.org, Wei Huang
+ <wei.huang2@amd.com>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Jonathan Cameron
+ <Jonathan.Cameron@huwei.com>
+Subject: Re: [patch V2 05/10] PCI/MSI: Switch to MSI descriptor locking to
+ guard()
+In-Reply-To: <20250313155015.000037f5@huawei.com>
+References: <20250313130212.450198939@linutronix.de>
+ <20250313130321.695027112@linutronix.de>
+ <20250313155015.000037f5@huawei.com>
+Date: Thu, 13 Mar 2025 18:55:12 +0100
+Message-ID: <87ldt86cjj.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RESEND PATCH] scsi: sd: Use str_on_off() helper in
- sd_read_write_protect_flag()
-To: Thorsten Blum <thorsten.blum@linux.dev>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250313142557.36936-2-thorsten.blum@linux.dev>
- <3c32eb12-6879-48cf-9ef6-bd04e759025f@acm.org>
- <9EE4EEC5-52D9-4159-A3B4-4865DA11C6FF@linux.dev>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9EE4EEC5-52D9-4159-A3B4-4865DA11C6FF@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On 3/13/25 10:05 AM, Thorsten Blum wrote:
->   *  3) Deduping by the linker, which results in a smaller binary file.
+On Thu, Mar 13 2025 at 15:50, Jonathan Cameron wrote:
+>> +	guard(msi_descs_lock)(&dev->dev);
+>> +	int ret = __msix_setup_interrupts(dev, entries, nvec, masks);
+>> +	if (ret)
+>> +		pci_free_msi_irqs(dev);
+>
+> It's not immediately obvious what this is undoing (i.e. where the alloc
+> is).  I think it is at least mostly the pci_msi_setup_msi_irqs in
+> __msix_setup_interrupts
 
-Hmm ... I'm not sure that using functions like str_on_off() will result
-in a smaller binary file since the str_on_off() function (and other
-similar helper functions) have been declared inline. Additionally, isn't
-a linker supposed to deduplicate literal strings even if str_on_off()
-is not used? Isn't the compiler assumed to merge identical literal
-strings if -fmerge-constants has been specified? From the GCC
-documentation about that option: "Enabled at levels -O1, -O2, -O3, -Os."
+It's a universal cleanup for all possible error cases.
 
-Bart.
+> Why not handle the error in __msix_setup_interrupts and make that function
+> side effect free.  Does require gotos but in a function that isn't
+> doing any cleanup magic so should be fine.
+
+I had the gotos first and then hated them. But you are right, it's better
+to have them than having the magic clean up at the call site.
+
+I'll fold the delta patch below.
+
+Thanks,
+
+        tglx
+---
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -671,19 +671,23 @@ static int __msix_setup_interrupts(struc
+ 	int ret = msix_setup_msi_descs(dev, entries, nvec, masks);
+ 
+ 	if (ret)
+-		return ret;
++		goto fail;
+ 
+ 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+-		return ret;
++		goto fail;
+ 
+ 	/* Check if all MSI entries honor device restrictions */
+ 	ret = msi_verify_entries(dev);
+ 	if (ret)
+-		return ret;
++		goto fail;
+ 
+ 	msix_update_entries(dev, entries);
+ 	return 0;
++
++fail:
++	pci_free_msi_irqs(dev);
++	return ret;
+ }
+ 
+ static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
+@@ -693,10 +697,7 @@ static int msix_setup_interrupts(struct
+ 		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
+ 
+ 	guard(msi_descs_lock)(&dev->dev);
+-	int ret = __msix_setup_interrupts(dev, entries, nvec, masks);
+-	if (ret)
+-		pci_free_msi_irqs(dev);
+-	return ret;
++	return __msix_setup_interrupts(dev, entries, nvec, masks);
+ }
+ 
+ /**
