@@ -1,101 +1,162 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A5BA1DE3AF;
-	Wed, 12 Mar 2025 20:05:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02DD3BA53
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2025 01:08:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741809941; cv=none; b=b6kijFbs0niKb9/pgqMP6aJzLYFFJpGFaQQvbiJVVjHRmCa8XdMCePQYtsT4I3s/x14J7jTnaOJMk8bltciYfV/6fYW6QmtcK97pEMDaIl/hXOHADef9hOI1WlvU8oUJVhjlCTKHFRaGFSMx41S+zK44PPWGgRA9LvsHdSqMTKw=
+	t=1741828136; cv=none; b=PY9yO32whVjLYBiyqy1ri1GmWiKOf35oMZPB4AB7RLXGAeBxpoF+45i/qEmnWWWpogQyYcjCcm9NksEb1NJdKN2Rej8l8l0jmZpHAPIffQaTzANfmMVcYJYLMiVcEhXJS/1lm0d1Mdey5rF8YW0WvPhkh81nYw6rhXJlCZE049Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741809941; c=relaxed/simple;
-	bh=x0rT9NEiiYRX5MkFRJvYMmCV2JTVEDgBLYkWCR5UE2s=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=h5nYpX1g5uwi2ds+3zUcBHa5AxGDKaKyieo6uMpDd41yKdx+UDD3ArBCOw3sguWB6oPWDRqg2C3CZ7t7nffnR6ygH53wynFskGvbHlRvO8oKzsimyrf2GS7o/VNtuA1I/Rd9NSKLnxVIdL9JTLpEW2kqCvroCzCo+e07yOl/G4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XsrwRrCm; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XsrwRrCm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86B00C4CEEA;
-	Wed, 12 Mar 2025 20:05:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741809940;
-	bh=x0rT9NEiiYRX5MkFRJvYMmCV2JTVEDgBLYkWCR5UE2s=;
-	h=From:To:Cc:Subject:Date:From;
-	b=XsrwRrCmBEHVV+lbD5wu78PeeixNX1nwJYlhdReSR5Ww3cDVenlhpv3LJkfHNW1sL
-	 LUE58nPEkPadhdyACVgsijRCjjSvxXMr+xW+BGxM8VF9RX0ANbPYHfAthhcsYTUPPY
-	 F0mujDm+LK67IzYL0cAPP4QYyk96qGe7rIDQ606QzDV2Tqk/LVa7G50UX5oBRmTmay
-	 RFqmjMWemfszgozOoavFt1/isxUNE2k5zFWADN0KH6Ha81iswWTA5q2OtwreNPv+9S
-	 XwTtguZBiq0D4KTFYZRMeANzSE1hPnf3cHdkpLdI64BCX/+dmdBjHJGt7fgRzMcOh9
-	 XcJlqCc6heKrQ==
-From: Kees Cook <kees@kernel.org>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc: Kees Cook <kees@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v2] scsi: pm80xx: Use C String API for string comparisons
-Date: Wed, 12 Mar 2025 13:05:36 -0700
-Message-Id: <20250312200532.it.808-kees@kernel.org>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1741828136; c=relaxed/simple;
+	bh=wPCb7zqh2qbnINpM1a+ctJzIh31xymENDi998Jjsq+E=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=RCYiotB3qp5CqPxztq8nq4Yr5Wqm19sLT5fmelchd+I6BIW2JV+w6/2LwltMFzzDlYf6A4UsVmLfJVc590YCymc6+DnclJGuLiJ4htinuE0RqyVelm5ET9yhb5cPg2uQsNuSx1CUPthgshh8SRIXGRUKh/i4q5Xg1jcOghq75Bo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4ZCq714M4gzDt0C;
+	Thu, 13 Mar 2025 09:05:33 +0800 (CST)
+Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id E8DEA18006C;
+	Thu, 13 Mar 2025 09:08:44 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 13 Mar 2025 09:08:44 +0800
+Subject: Re: [PATCH] scsi: hisi_sas: Fixed failure to issue vendor specific
+ commands
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+References: <20250220090011.313848-1-liyihang9@huawei.com>
+CC: <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+	<liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <d56071d0-44b8-9572-753f-6db23709cf20@huawei.com>
+Date: Thu, 13 Mar 2025 09:08:44 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2142; i=kees@kernel.org; h=from:subject:message-id; bh=x0rT9NEiiYRX5MkFRJvYMmCV2JTVEDgBLYkWCR5UE2s=; b=owGbwMvMwCVmps19z/KJym7G02pJDOkXXwp4zXjT+XJrvd0CZW7zC3LBV2/pHfsXrWj7K/7aU UcvkY2HO0pZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTAC5SyPDftZeLK6VsR4Dksl3d zIH8r0Ob+nPvi9vonCi+F3iyRl+PkWH5gTkSKoYtLx8uM/x1+cbvH+7l91hb9j7a9tF1iydj8jZ WAA==
-X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250220090011.313848-1-liyihang9@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemf100013.china.huawei.com (7.185.36.179)
 
-When a character array without a terminating NUL character has a static
-initializer, GCC 15's -Wunterminated-string-initialization will only
-warn if the array lacks the "nonstring" attribute[1]. There is no reason
-for the command lookup logic to not use strcmp(), so grow the string
-length and update the check to eliminate the warning:
+Gentle ping...
 
-../drivers/scsi/pm8001/pm8001_ctl.c:652:7: warning: initializer-string for array of 'unsigned char' truncates NUL terminator but destination lacks 'nonstring' attribute (9 chars into 8 available) [-Wunterminated-string-initialization]
-  652 |      {"set_nvmd",    FLASH_CMD_SET_NVMD},
-      |       ^~~~~~~~~~
-
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=117178 [1]
-Signed-off-by: Kees Cook <kees@kernel.org>
----
-In taking another look at this, I realize that actually strcmp() should be used,
-so just grow the size of this character array and use strcmp().
- v1: https://lore.kernel.org/lkml/20250310222553.work.437-kees@kernel.org/
- v2: Use strcmp()
----
-Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/pm8001/pm8001_ctl.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 85ff95c6543a..bb8fd5f0f441 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -644,7 +644,7 @@ static DEVICE_ATTR(gsm_log, S_IRUGO, pm8001_ctl_gsm_log_show, NULL);
- #define FLASH_CMD_SET_NVMD    0x02
- 
- struct flash_command {
--     u8      command[8];
-+     u8      command[9];
-      int     code;
- };
- 
-@@ -825,8 +825,7 @@ static ssize_t pm8001_store_update_fw(struct device *cdev,
- 	}
- 
- 	for (i = 0; flash_command_table[i].code != FLASH_CMD_NONE; i++) {
--		if (!memcmp(flash_command_table[i].command,
--				 cmd_ptr, strlen(cmd_ptr))) {
-+		if (!strcmp(flash_command_table[i].command, cmd_ptr)) {
- 			flash_command = flash_command_table[i].code;
- 			break;
- 		}
--- 
-2.34.1
-
+On 2025/2/20 17:00, Yihang Li wrote:
+> From: Xingui Yang <yangxingui@huawei.com>
+> 
+> At present, we determine the protocol through the cmd type, but other
+> cmd types, such as vendor-specific commands, default to the pio protocol.
+> This strategy often causes the execution of different vendor-specific
+> commands to fail. In fact, for these commands, a better way is to use the
+> protocol configured by the command's tf to determine its protocol.
+> 
+> Fixes: 6f2ff1a1311e ("hisi_sas: add v2 path to send ATA command")
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> Reviewed-by: Yihang Li <liyihang9@huawei.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas.h       |  3 +--
+>  drivers/scsi/hisi_sas/hisi_sas_main.c  | 28 ++++++++++++++++++++++++--
+>  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  4 +---
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  4 +---
+>  4 files changed, 29 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+> index 2d438d722d0b..e17f5d8226bf 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas.h
+> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
+> @@ -633,8 +633,7 @@ extern struct dentry *hisi_sas_debugfs_dir;
+>  extern void hisi_sas_stop_phys(struct hisi_hba *hisi_hba);
+>  extern int hisi_sas_alloc(struct hisi_hba *hisi_hba);
+>  extern void hisi_sas_free(struct hisi_hba *hisi_hba);
+> -extern u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis,
+> -				int direction);
+> +extern u8 hisi_sas_get_ata_protocol(struct sas_task *task);
+>  extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
+>  extern void hisi_sas_sata_done(struct sas_task *task,
+>  			    struct hisi_sas_slot *slot);
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index da4a2ed8ee86..3596414d970b 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -21,8 +21,32 @@ struct hisi_sas_internal_abort_data {
+>  	bool rst_ha_timeout; /* reset the HA for timeout */
+>  };
+>  
+> -u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis, int direction)
+> +static u8 hisi_sas_get_ata_protocol_from_tf(struct ata_queued_cmd *qc)
+>  {
+> +	if (!qc)
+> +		return HISI_SAS_SATA_PROTOCOL_PIO;
+> +
+> +	switch (qc->tf.protocol) {
+> +	case ATA_PROT_NODATA:
+> +		return HISI_SAS_SATA_PROTOCOL_NONDATA;
+> +	case ATA_PROT_PIO:
+> +		return HISI_SAS_SATA_PROTOCOL_PIO;
+> +	case ATA_PROT_DMA:
+> +		return HISI_SAS_SATA_PROTOCOL_DMA;
+> +	case ATA_PROT_NCQ_NODATA:
+> +	case ATA_PROT_NCQ:
+> +		return HISI_SAS_SATA_PROTOCOL_FPDMA;
+> +	default:
+> +		return HISI_SAS_SATA_PROTOCOL_PIO;
+> +	}
+> +}
+> +
+> +u8 hisi_sas_get_ata_protocol(struct sas_task *task)
+> +{
+> +	struct host_to_dev_fis *fis = &task->ata_task.fis;
+> +	struct ata_queued_cmd *qc = task->uldd_task;
+> +	int direction = task->data_dir;
+> +
+>  	switch (fis->command) {
+>  	case ATA_CMD_FPDMA_WRITE:
+>  	case ATA_CMD_FPDMA_READ:
+> @@ -93,7 +117,7 @@ u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis, int direction)
+>  	{
+>  		if (direction == DMA_NONE)
+>  			return HISI_SAS_SATA_PROTOCOL_NONDATA;
+> -		return HISI_SAS_SATA_PROTOCOL_PIO;
+> +		return hisi_sas_get_ata_protocol_from_tf(qc);
+>  	}
+>  	}
+>  }
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> index 71cd5b4450c2..6e7f99fcc824 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> @@ -2538,9 +2538,7 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
+>  			(task->ata_task.fis.control & ATA_SRST))
+>  		dw1 |= 1 << CMD_HDR_RESET_OFF;
+>  
+> -	dw1 |= (hisi_sas_get_ata_protocol(
+> -		&task->ata_task.fis, task->data_dir))
+> -		<< CMD_HDR_FRAME_TYPE_OFF;
+> +	dw1 |= (hisi_sas_get_ata_protocol(task)) << CMD_HDR_FRAME_TYPE_OFF;
+>  	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
+>  	hdr->dw1 = cpu_to_le32(dw1);
+>  
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index 48b95d9a7927..095bbf80c34e 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -1456,9 +1456,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+>  			(task->ata_task.fis.control & ATA_SRST))
+>  		dw1 |= 1 << CMD_HDR_RESET_OFF;
+>  
+> -	dw1 |= (hisi_sas_get_ata_protocol(
+> -		&task->ata_task.fis, task->data_dir))
+> -		<< CMD_HDR_FRAME_TYPE_OFF;
+> +	dw1 |= (hisi_sas_get_ata_protocol(task)) << CMD_HDR_FRAME_TYPE_OFF;
+>  	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
+>  
+>  	if (FIS_CMD_IS_UNCONSTRAINED(task->ata_task.fis))
+> 
