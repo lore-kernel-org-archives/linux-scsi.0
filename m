@@ -1,136 +1,88 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5356615DBC1;
-	Thu, 13 Mar 2025 17:55:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B6F1EB9F4;
+	Thu, 13 Mar 2025 18:14:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741888516; cv=none; b=AOVUsziZpvXmp0D9MrXWXPX2cM40Dln6vf/ycTmC4xXMLkPVfrYbPqohkgrfA8a56ojSERvTwML9u9L4lxsoJQs1dm+MrcglcwUGdQPWvGgIpTAY27aPIw4d2C/N5I4tlDGEL6uzniQ5zEcy7YF0/K7UgmJD4KuSQtQeAQzmEv4=
+	t=1741889645; cv=none; b=cLTjjdqKMM0gml8o72dFZAFCEcga1B4z8yaZWQTFifZLm3A1XFqj3TWZMOvrLQ9IQuM6bk55izutoS54jTWI3jCK9JypPcKc2IRFKBHH9HXMyhGxHL5LSEgRDu0Fin/y/GWTqoyyRsb2BPzcM6ZCnUjKs5kkrmgiendzu5r4pR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741888516; c=relaxed/simple;
-	bh=Tt71LYU6EhXq+PF34rquse8y+1HkrL6YTObHYDTEgC4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=j7BiZ3nLGQkcK1PPOPZgGbhh70fZUK5S0NwiZ/xzK9Q58bByvXyFegdhCJL6yNOV0rMwBONYzsPo/X8oppKcIxA4DbB6vfP1eqtj6zKjyeJodeF+KrSwghw7G4zLXBjfKDvAQiIH4gNHKV24bMzKynPUvxNSJ31uGr0i6HrIKJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=uFZ1UBSP; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=DaZ5+jSl; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1741889645; c=relaxed/simple;
+	bh=JsqIMTl34/LNDaxfujHWoB1Q0STvD4LO4oUmAcSG0D8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=akVH2LCbvY7s80IzYDVOgp3RaxaxYmjbXqMMEoLqblZwSEff+gMZAMnfinaKP8VTR455YUYcq5nNvTpSrUrfmPaoQrq7t7Mh3+FNs54A8RotEDY6tjwo3zXiJCXkcBm2SVhfvmRqHvdynS2FWzOK1QrKTtxvxjIsuMSNx0KkFPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HPofS2JS; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="uFZ1UBSP";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DaZ5+jSl"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1741888513;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+PI1SXUEUlOflpG5mqedjH0tAMTUnOBBlzLm30n5Uuc=;
-	b=uFZ1UBSPIOZgTqTqDPp+hhu/m7GcOkIt1v3H07rmD4Ul7VL35J6jWDvJIA+deMFrBrOnbr
-	8ynwe7rivWoT25DDOIcKFqTlsUHbHlBmYIb1TLN91juJY9FmyXTCXZr5OEP4FJWRQJRcrF
-	OoZQaJr9kQvLeLhWezSO18uv67r3WIgHGxe4u4mh4hNj0o3F3bh+1vYNFz22NcT7tkTOIl
-	og+qd1C2OI0B6igXtHcKG2JJlrAQdE2Arpkbd1UkgQDpUVePa9LPRdlZs+NCkvxTQmUet3
-	UhOf8ztb+kp+188qw6+Z+WIKy9JFx+dvkdWZgF0blzeIBmRdkZxk5ukei3qmuA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1741888513;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+PI1SXUEUlOflpG5mqedjH0tAMTUnOBBlzLm30n5Uuc=;
-	b=DaZ5+jSlfrg02yOuP/NlnEIu8fr+/VfyCADOXZFaNyu2YS2F1MFQ+giIy2PvmK5hrryHIc
-	SNt0bHYWB8QiwtCw==
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Peter Zijlstra
- <peterz@infradead.org>, Nishanth Menon <nm@ti.com>, Dhruva Gole
- <d-gole@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh Shilimkar
- <ssantosh@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Dave Jiang
- <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>, Allen Hubbe
- <allenbh@gmail.com>, ntb@lists.linux.dev, Michael Kelley
- <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>, Haiyang Zhang
- <haiyangz@microsoft.com>, linux-hyperv@vger.kernel.org, Wei Huang
- <wei.huang2@amd.com>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Jonathan Cameron
- <Jonathan.Cameron@huwei.com>
-Subject: Re: [patch V2 05/10] PCI/MSI: Switch to MSI descriptor locking to
- guard()
-In-Reply-To: <20250313155015.000037f5@huawei.com>
-References: <20250313130212.450198939@linutronix.de>
- <20250313130321.695027112@linutronix.de>
- <20250313155015.000037f5@huawei.com>
-Date: Thu, 13 Mar 2025 18:55:12 +0100
-Message-ID: <87ldt86cjj.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HPofS2JS"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZDFxd30YSzltJQ0;
+	Thu, 13 Mar 2025 18:13:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1741889636; x=1744481637; bh=1rmpn+TtVY3mB9S4HUrhZhDm
+	5b5BiUejJjJzbebaXm0=; b=HPofS2JSXmF1ID+Nw6PGeIvfpB8ylNosure7a2+y
+	REUbdGwNwZ5ECldiQSv6ORBHC/01z2cYM7GXFRHZtiqDBtqs05pVdXxfkq4kN+pY
+	RCP6T8HmA3+8IWJFTgix29t5W7XpbaiUFVWg4WyRd83JD8AlQ+9tWYlX0JtGETvt
+	yczo2jttNbUaWKUV2Zp7WueU1BOnumOVl32KgQAi1K+xV4UCsWz8yRQDLwbQnU1T
+	sJfbqZCID/Su2BsBCWdzQfmezmxKxAocw52MPgQKfPG8zxboPpQLQWud6sNQf+ZN
+	PmGTlHrcqeBYxpCv7DJhxoZRb7+f1xZRRgIN1fsmi0xeNg==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id UHCUQAf4DRtP; Thu, 13 Mar 2025 18:13:56 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZDFxY6vnszltBCt;
+	Thu, 13 Mar 2025 18:13:52 +0000 (UTC)
+Message-ID: <0991bf65-aa76-46b1-b353-2a19069426d1@acm.org>
+Date: Thu, 13 Mar 2025 11:13:51 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] scsi: ufs: critical health condition
+To: Avri Altman <avri.altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250211065813.58091-1-avri.altman@wdc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250211065813.58091-1-avri.altman@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Mar 13 2025 at 15:50, Jonathan Cameron wrote:
->> +	guard(msi_descs_lock)(&dev->dev);
->> +	int ret = __msix_setup_interrupts(dev, entries, nvec, masks);
->> +	if (ret)
->> +		pci_free_msi_irqs(dev);
->
-> It's not immediately obvious what this is undoing (i.e. where the alloc
-> is).  I think it is at least mostly the pci_msi_setup_msi_irqs in
-> __msix_setup_interrupts
+On 2/10/25 10:58 PM, Avri Altman wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index cd404ade48dc..ef56a5eb52dc 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -6216,6 +6216,11 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+>   	if (status & hba->ee_drv_mask & MASK_EE_URGENT_TEMP)
+>   		ufshcd_temp_exception_event_handler(hba, status);
+>   
+> +	if (status & hba->ee_drv_mask & MASK_EE_HEALTH_CRITICAL) {
+> +		hba->critical_health_count++;
+> +		sysfs_notify(&hba->dev->kobj, NULL, "critical_health");
+> +	}
+> +
+>   	ufs_debugfs_exception_event(hba, status);
+>   }
 
-It's a universal cleanup for all possible error cases.
+Hi Avri,
 
-> Why not handle the error in __msix_setup_interrupts and make that function
-> side effect free.  Does require gotos but in a function that isn't
-> doing any cleanup magic so should be fine.
-
-I had the gotos first and then hated them. But you are right, it's better
-to have them than having the magic clean up at the call site.
-
-I'll fold the delta patch below.
+sysfs_notify() may sleep and hence must not be called from an interrupt
+handler. Please fix.
 
 Thanks,
 
-        tglx
----
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -671,19 +671,23 @@ static int __msix_setup_interrupts(struc
- 	int ret = msix_setup_msi_descs(dev, entries, nvec, masks);
- 
- 	if (ret)
--		return ret;
-+		goto fail;
- 
- 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
- 	if (ret)
--		return ret;
-+		goto fail;
- 
- 	/* Check if all MSI entries honor device restrictions */
- 	ret = msi_verify_entries(dev);
- 	if (ret)
--		return ret;
-+		goto fail;
- 
- 	msix_update_entries(dev, entries);
- 	return 0;
-+
-+fail:
-+	pci_free_msi_irqs(dev);
-+	return ret;
- }
- 
- static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
-@@ -693,10 +697,7 @@ static int msix_setup_interrupts(struct
- 		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
- 
- 	guard(msi_descs_lock)(&dev->dev);
--	int ret = __msix_setup_interrupts(dev, entries, nvec, masks);
--	if (ret)
--		pci_free_msi_irqs(dev);
--	return ret;
-+	return __msix_setup_interrupts(dev, entries, nvec, masks);
- }
- 
- /**
+Bart.
