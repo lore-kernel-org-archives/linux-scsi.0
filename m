@@ -1,37 +1,40 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB81C1754B;
-	Thu, 13 Mar 2025 13:03:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9568C26770C;
+	Thu, 13 Mar 2025 13:03:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741871020; cv=none; b=tjhpvw3M12+WS2LdYCkfL0As8LWFGIHaIdUpvNZJhxfwQPAgsGj3ZkZqFCkOpMRMp8yJ7XGr+KFdNG2swk16Bw+/2kHs9HLUomO2qzv7JeSTXBAKpd/40zmd0Ehau378KoX70hzwpJDZWncW1FCxbOrDSoLJVA/PxZ0Zdo6Ttg8=
+	t=1741871022; cv=none; b=geSS9zuo4cCw8L4Ba9aOW3RXTFSAg6f9UEPz93mG5ZxJv4XJkrBj0Wr41h3N8ykYwohCp7smNtrRf4zWuPIqhscpUhi30ykXBIvdVA7dT6dCN6ku+suKQK2vd3KgyElwYe4XLDwt9NBm/HmOIei8nFOYZrFSJGHCH1ugrYCIVUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741871020; c=relaxed/simple;
-	bh=itf7yPjVu4MDdvOWYPG+ta0dwjJEz7i5UcsuklyablM=;
-	h=Message-ID:From:To:Cc:Subject:Date; b=hgAOza3XL5qUC48687S9ggWi3gKkxVFCnpTOu+NxhHtUQ2iUxi04fQ2kHBvazg7hQDp8LW5Jy0nP+pdP8vaxjrys73HKNsafbVbFkwQL4Ylq1fSVlnZUNQKE/sced/i4gIrgYFYyFIktUO4fmeF1xglOOsADTEt3SnT4ZJqXUYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xu9B6jX0; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=dmm9pipc; arc=none smtp.client-ip=193.142.43.55
+	s=arc-20240116; t=1741871022; c=relaxed/simple;
+	bh=98KRXcGEbIO50H7NCISaJsrQv87mCIk32utux6MRmis=;
+	h=Message-ID:From:To:Cc:Subject:References:MIME-Version:
+	 Content-Type:Date; b=Y0hoa9Ylj53X1ckX8OQwvfAkakh1v4fsfhynxrLGX61IAg5pRnBDvXjLPcGLZHdixUsmTrdpISusVpqZk1vwNesfXcQNgFOlGQeHdd4AMnh7/krYsaMgKB4SoaHKdGARys0KiSUM5xx8ZR+YPEJJoY/U0F1gNaqLCd8gGcj2Gnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=shj5CAde; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=byiMxgR9; arc=none smtp.client-ip=193.142.43.55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xu9B6jX0";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="dmm9pipc"
-Message-ID: <20250313130212.450198939@linutronix.de>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="shj5CAde";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="byiMxgR9"
+Message-ID: <20250313130321.442025758@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1741871016;
+	s=2020; t=1741871018;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc; bh=xPY90hzZgcytKWwY72qh7D+Sw/TVwHNJaHMkC6cM7Tk=;
-	b=xu9B6jX0BitUNzaISeFeThEJnp7Seq4R6IOnTZdLDeCbyqddtCIJZ6mZF4NEFznX8REBDg
-	klHluoz+jf3dHBAG1uhG6aU1xKomYyz4oznZnY8I/ppEYJBo4NqALgVg8LtqAzLV53VJ6m
-	Rbbg5wwxU1049pFZfESGAGzaI5EPCw6fWFMSvi9RqCNUVBCodu+oI7icNaRj59Oas8V8rs
-	of/HpIIjdzWftq62usw2x2Pzuj0K7pwMXMgVHcJ6LzHHx4Nrp/93CrD8ytIDMk+J/78weE
-	cR7oJxhjgfWWugEG96AiyfW6JhgPNDJCZzfw+Y2ehCb/uyscj1TAHAe6/7xIBg==
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 references:references; bh=VeVnnwSReah5wOC9Iz7ded+zOeZPkraBXHsDPNXcIs4=;
+	b=shj5CAdewFdh89n7ia0O9o8wc9yKPHi/tldIDoAodBKxyF+cFmiDEmEjtYyMAPgZjYScMI
+	l5cNO6lvwa+TmWNrr+Qsyrf630p24vGKBMnTExIq2Y/T92SWfvXg2xzGgBY+1cGMYLsivY
+	DlZcq4AVeT0feSydUHjIczYk9QZ3X5zE4vfK9Fc2VnZDWzQ2PAj1t8nKypbEiszDEQ356a
+	Fe/V+/OEHJ3wLYHJYTPJt4V2zXoTF1HxXwB2K00o21Dx48t5thojcjBdb3jNb/QVAjuF7P
+	eCUrGrSsp+EBC75dRo/DClUSWmDbo4FXhDbtHGiZi+lTpQjoyUqfqDb3bN1ErQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1741871016;
+	s=2020e; t=1741871018;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc; bh=xPY90hzZgcytKWwY72qh7D+Sw/TVwHNJaHMkC6cM7Tk=;
-	b=dmm9pipcXb6n8F9sdeZ6O1motxtWkyA4tc/Ln7g9jEpLmDYQUomQgAPMieHs1PDkordDEK
-	LtZ/GMy3hhl6RtCw==
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 references:references; bh=VeVnnwSReah5wOC9Iz7ded+zOeZPkraBXHsDPNXcIs4=;
+	b=byiMxgR9qFLezNWz2uxirZ2d+2cD07D0KcxtSE0jlqbSKJ+lcH/sx6VeqWfua+hDn1Tu7X
+	4A/2eBhQq0y7SIAg==
 From: Thomas Gleixner <tglx@linutronix.de>
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Marc Zyngier <maz@kernel.org>,
@@ -58,63 +61,80 @@ Cc: Marc Zyngier <maz@kernel.org>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
  linux-scsi@vger.kernel.org,
  Jonathan Cameron <Jonathan.Cameron@huwei.com>
-Subject: [patch V2 00/10] genirq/msi: Spring cleaning
-Date: Thu, 13 Mar 2025 14:03:36 +0100 (CET)
+Subject: [patch V2 01/10] cleanup: Provide retain_ptr()
+References: <20250313130212.450198939@linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 13 Mar 2025 14:03:38 +0100 (CET)
 
-This is version 2 of the cleanup work. The previous version can be found
-here:
+In cases where an allocation is consumed by another function, the
+allocation needs to be retained on success or freed on failure. The code
+pattern is usually:
 
-   https://lore.kernel.org/all/20250309083453.900516105@linutronix.de
+	struct foo *f = kzalloc(sizeof(*f), GFP_KERNEL);
+	struct bar *b;
 
-While converting the MSI descriptor locking to a lock guard() I stumbled
-over various abuse of MSI descriptors (again).
+	,,,
+	// Initialize f
+	...
+	if (ret)
+		goto free;
+        ...
+	bar = bar_create(f);
+	if (!bar) {
+		ret = -ENOMEM;
+	   	goto free;
+	}
+	...
+	return 0;
+free:
+	kfree(f);
+	return ret;
 
-The following series cleans up the offending code and converts the MSI
-descriptor locking over to lock guards.
+This prevents using __free(kfree) on @f because there is no canonical way
+to tell the cleanup code that the allocation should not be freed.
 
-Changes vs. V1:
+Abusing no_free_ptr() by force ignoring the return value is not really a
+sensible option either.
 
-   - Introduce retain_ptr() to allow using __free() when the allocation is
-     consumed by a called function (on success) and therefore no_free_ptr()
-     can't be used.
+Provide an explicit macro retain_ptr(), which NULLs the cleanup
+pointer. That makes it easy to analyze and reason about.
 
-   - Rework the PCI/MSI changes to avoid gotos in guard sections
-
-   - Drop patch 1 as it's already applied
-
-   - Collect Reviewed/Tested/Acked-by tags where appropriate
-
-Patches 3,4,6-10 are unmodifed.
-
-The series applies on:
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git irq/msi
-
-and is available from git:
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git irq/msi
-
-Thanks,
-
-	tglx
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Peter Zijlstra <peterz@infradead.org>
 ---
- drivers/ntb/msi.c                   |   22 +---
- drivers/pci/controller/pci-hyperv.c |   14 ---
- drivers/pci/msi/api.c               |    6 -
- drivers/pci/msi/msi.c               |  168 ++++++++++++++++++++++--------------
- drivers/pci/pci.h                   |    9 +
- drivers/pci/tph.c                   |   44 ---------
- drivers/soc/ti/ti_sci_inta_msi.c    |   10 --
- drivers/ufs/host/ufs-qcom.c         |   75 ++++++++--------
- include/linux/cleanup.h             |   17 +++
- include/linux/irqdomain.h           |    2 
- include/linux/msi.h                 |    7 +
- kernel/irq/msi.c                    |  125 ++++++++++----------------
- 12 files changed, 247 insertions(+), 252 deletions(-)
+ include/linux/cleanup.h |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
+--- a/include/linux/cleanup.h
++++ b/include/linux/cleanup.h
+@@ -216,6 +216,23 @@ const volatile void * __must_check_fn(co
+ 
+ #define return_ptr(p)	return no_free_ptr(p)
+ 
++/*
++ * Only for situations where an allocation is handed in to another function
++ * and consumed by that function on success.
++ *
++ *	struct foo *f __free(kfree) = kzalloc(sizeof(*f), GFP_KERNEL);
++ *
++ *	setup(f);
++ *	if (some_condition)
++ *		return -EINVAL;
++ *	....
++ *	ret = bar(f);
++ *	if (!ret)
++ *		retain_ptr(f);
++ *	return ret;
++ */
++#define retain_ptr(p)				\
++	__get_and_null(p, NULL)
+ 
+ /*
+  * DEFINE_CLASS(name, type, exit, init, init_args...):
 
