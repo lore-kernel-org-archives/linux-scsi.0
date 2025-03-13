@@ -1,121 +1,88 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DEB523A;
-	Thu, 13 Mar 2025 15:50:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA326EB7C;
+	Thu, 13 Mar 2025 16:26:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741881023; cv=none; b=EId1+mUz7rivyWrCXMJmQcVfd+0dGdLLMssQ+eqx2EznzC9TSXRx50iLuFcL/cQDKzeM8CrAeOyoguVqoBpcZeirakLa2FcKcHZHMEjq5yh+KuABoUePMemF5AdDTSbxp5LaVbVa3R3LA+2jbREnv8MEtT1ZbEqlQpXzHs57KDE=
+	t=1741883171; cv=none; b=sZawzQtfEqVmJ+fSWDs3nlO+5DGl3bOLEitlCs3G74bTkRuCgQ6p9GU2oZnyI1qo1Kg53DudxUvVnJCr/1leO8QzKQ+tB3s0oHJ4hjTGyhGjcA1oliIe4/39W+poSWRjPGuCraC2gmWiSdfySfI0UQFWv+SSDUvymx63ZVQ6/Zg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741881023; c=relaxed/simple;
-	bh=0e4Lg37IEBkCL1+ibNYCc8zaO1GLTw8DLiQ36F9M068=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VYGDh8QREGkparpFyn1tuDsHGCnszz+ID1Q5zpIxegzxASUkyy6ypHopQMQCZLTWgLKvS5VFR8mv9EEU+5cQt9kscfSdsNimkGqSALNsz6bDXNTpINxLqzQUttgxq0rhsyLpJrFYdP8yM+8IjHsomHhToUVvRKlTG1J4zSLA/Qo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.231])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4ZDBhC5Z6vz6H8mQ;
-	Thu, 13 Mar 2025 23:47:07 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id AC32B1400CA;
-	Thu, 13 Mar 2025 23:50:17 +0800 (CST)
-Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Thu, 13 Mar
- 2025 16:50:16 +0100
-Date: Thu, 13 Mar 2025 15:50:15 +0000
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, "Peter Zijlstra"
-	<peterz@infradead.org>, Nishanth Menon <nm@ti.com>, Dhruva Gole
-	<d-gole@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh Shilimkar
-	<ssantosh@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Dave Jiang
-	<dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>, Allen Hubbe
-	<allenbh@gmail.com>, <ntb@lists.linux.dev>, Michael Kelley
-	<mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>, Haiyang Zhang
-	<haiyangz@microsoft.com>, <linux-hyperv@vger.kernel.org>, Wei Huang
-	<wei.huang2@amd.com>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>, Jonathan Cameron
-	<Jonathan.Cameron@huwei.com>
-Subject: Re: [patch V2 05/10] PCI/MSI: Switch to MSI descriptor locking to
- guard()
-Message-ID: <20250313155015.000037f5@huawei.com>
-In-Reply-To: <20250313130321.695027112@linutronix.de>
-References: <20250313130212.450198939@linutronix.de>
-	<20250313130321.695027112@linutronix.de>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1741883171; c=relaxed/simple;
+	bh=Em0Ui5F8PigPtoLnGoEikbRI2LK/Ufx47iv1gTsb/y4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HjVd2Ta0FpGY8JHU9Q+cenwg+5R6LTl7ISgMPR9v85a6sBt/0cR6eIkl9vLQPrG4IUEM72DnHl0UqjMI3upO0wkcDHe3SGDNjWxCMTqkUaWv6wRDqFtoOHwlLPct63Xu7hMuOs4eA2/GFrW+NJVwuGMcn5Jj4wSgT93P6LhAitI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Bcwj2BdS; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Bcwj2BdS"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZDCY62kH5zm0yQ3;
+	Thu, 13 Mar 2025 16:26:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1741883161; x=1744475162; bh=aloQSshe1s4DovGaYGE8z8w8
+	FVdmU5aZgsOdkm3NNI0=; b=Bcwj2BdSgsFagXaTwYduhlTi+94tuwL2yBBJO3MW
+	rcwag972om/wGL0K7XmuYtrwixuREsMqnVDlNzpF5roZQEbr95299xZHTnwnBT3T
+	9UXeUBYf/A+FwZ4/iFsjQA9SlCL8bs5WP62/2AU3KacHBsdwWmeWZnT3a+rw8PIF
+	eKNsrQPeSABOb4YLUbEPkVhQSs2Y+tXg6kTM64+aO2NkiAa14dYWt5eQrMg6nG+K
+	Is/s2makgU+QmoboFd6qE5+yNTeTYFWiHi1m5y6PuZRd+FY5JT84zVw/rgivpucY
+	g1mc007CJM5cYXR2+rWH/akg6KK9Oc67V68B8EoJegHKhQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ZHJII6V09ldW; Thu, 13 Mar 2025 16:26:01 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZDCY23XbNzm1vbV;
+	Thu, 13 Mar 2025 16:25:57 +0000 (UTC)
+Message-ID: <3c32eb12-6879-48cf-9ef6-bd04e759025f@acm.org>
+Date: Thu, 13 Mar 2025 09:25:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RESEND PATCH] scsi: sd: Use str_on_off() helper in
+ sd_read_write_protect_flag()
+To: Thorsten Blum <thorsten.blum@linux.dev>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250313142557.36936-2-thorsten.blum@linux.dev>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250313142557.36936-2-thorsten.blum@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500010.china.huawei.com (7.191.174.240) To
- frapeml500008.china.huawei.com (7.182.85.71)
 
-On Thu, 13 Mar 2025 14:03:44 +0100 (CET)
-Thomas Gleixner <tglx@linutronix.de> wrote:
+On 3/13/25 7:25 AM, Thorsten Blum wrote:
+> Remove hard-coded strings by using the str_on_off() helper function.
 
-> Convert the code to use the new guard(msi_descs_lock).
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
-> V2: Remove the gotos - Jonathan
-Hi Thomas,
+Shouldn't a patch description explain two things: what has been changed
+and also why a change has been made? I don't see an explanation of why
+this change has been made.
 
+> @@ -3004,7 +3005,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+>   		set_disk_ro(sdkp->disk, sdkp->write_prot);
+>   		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
+>   			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
+> -				  sdkp->write_prot ? "on" : "off");
+> +				  str_on_off(sdkp->write_prot));
+>   			sd_printk(KERN_DEBUG, sdkp, "Mode Sense: %4ph\n", buffer);
+>   		}
+>   	}
 
-There is a bit of the original code that is carried forwards here
-that superficially seemed overly complex.  However as far as I can tell
-this is functionally the same as you intended.  So with that in mind
-if my question isn't complete garbage, maybe a readability issue for
-another day.
+I prefer the current code (without this patch). Others may have another
+opinion.
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Thanks,
 
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-
-
-
-> +static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
-> +				 int nvec, struct irq_affinity *affd)
-> +{
-> +	struct irq_affinity_desc *masks __free(kfree) =
-> +		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
-> +
-> +	guard(msi_descs_lock)(&dev->dev);
-> +	int ret = __msix_setup_interrupts(dev, entries, nvec, masks);
-> +	if (ret)
-> +		pci_free_msi_irqs(dev);
-
-It's not immediately obvious what this is undoing (i.e. where the alloc
-is).  I think it is at least mostly the pci_msi_setup_msi_irqs in
-__msix_setup_interrupts
-
-Why not handle the error in __msix_setup_interrupts and make that function
-side effect free.  Does require gotos but in a function that isn't
-doing any cleanup magic so should be fine.
-
-Mind you I'm not following the logic in msix_setup_interrupts()
-before this series either. i.e. why doesn't msix_setup_msi_descs()
-clean up after itself on failure (i.e. undo loop iterations that
-weren't failures) as that at least superficially looks like it
-would give more readable code.
-
-So this is the same as current and as such the patch is fine I think.
-
->  	return ret;
->  }
->  
-
-
+Bart.
