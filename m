@@ -1,162 +1,79 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from out30-118.freemail.mail.aliyun.com (out30-118.freemail.mail.aliyun.com [115.124.30.118])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02DD3BA53
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Mar 2025 01:08:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E5E227713;
+	Thu, 13 Mar 2025 01:47:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.118
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741828136; cv=none; b=PY9yO32whVjLYBiyqy1ri1GmWiKOf35oMZPB4AB7RLXGAeBxpoF+45i/qEmnWWWpogQyYcjCcm9NksEb1NJdKN2Rej8l8l0jmZpHAPIffQaTzANfmMVcYJYLMiVcEhXJS/1lm0d1Mdey5rF8YW0WvPhkh81nYw6rhXJlCZE049Y=
+	t=1741830465; cv=none; b=Pxy4zXe6zhO52pI0IczcsKuKSuds/ZR85Nb3jK2T8nODegKjQED6zKbR3w1hSam+TTd8CTgqP55m8cmYmjLp1Y+Uhvyg7KUhk9VD8pBV8/xZeyK//nJP6RscUAbPMPnP20SLZZc2S3OJQmvKbcxAQvUXiGS3G5yUQ256pc/+OQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741828136; c=relaxed/simple;
-	bh=wPCb7zqh2qbnINpM1a+ctJzIh31xymENDi998Jjsq+E=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=RCYiotB3qp5CqPxztq8nq4Yr5Wqm19sLT5fmelchd+I6BIW2JV+w6/2LwltMFzzDlYf6A4UsVmLfJVc590YCymc6+DnclJGuLiJ4htinuE0RqyVelm5ET9yhb5cPg2uQsNuSx1CUPthgshh8SRIXGRUKh/i4q5Xg1jcOghq75Bo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4ZCq714M4gzDt0C;
-	Thu, 13 Mar 2025 09:05:33 +0800 (CST)
-Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id E8DEA18006C;
-	Thu, 13 Mar 2025 09:08:44 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
- dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 13 Mar 2025 09:08:44 +0800
-Subject: Re: [PATCH] scsi: hisi_sas: Fixed failure to issue vendor specific
- commands
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-References: <20250220090011.313848-1-liyihang9@huawei.com>
-CC: <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-	<liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>
-From: Yihang Li <liyihang9@huawei.com>
-Message-ID: <d56071d0-44b8-9572-753f-6db23709cf20@huawei.com>
-Date: Thu, 13 Mar 2025 09:08:44 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	s=arc-20240116; t=1741830465; c=relaxed/simple;
+	bh=mxiyGagTYx3oxb2DQeCRcATKzegNBuElrgI9KqfVNvA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h+HUu6SZ10rNCykPu5CXAJudz3cK/bkdLaoULjGwwOa9cn6CTiXQff+KeXiOpxgf+h5iV6aOBGZUfg2u7J18yJKMwwor/kZDrC/C/afFEtfLScL5QB9hoq6zfx+Fd/XSHiYmzccVDE8b9qNF6AJqgrBvg6ojKp39ixHqv6J+vUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=aucU6+6c; arc=none smtp.client-ip=115.124.30.118
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="aucU6+6c"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1741830453; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=GZUhXpt0pv+o4mjZJENtHqFui2vF5F/TjzpAuhFsWOE=;
+	b=aucU6+6cn36L8cjFUtYJg76ef6QT22AtWF3nswhX4dQ9ysX4AGCPQZsI4XL4Nrk1A8yORI6Rc0iX5djlJk4CKuE3M5hf8BPxny7h/77yP6Hv4+6/rjmFkYal8QOF5DZXaz6tmeh9zN7NaFjt+AlA+CzazmvWpgNnzinZAb76yug=
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0WREb3bM_1741830448 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 13 Mar 2025 09:47:32 +0800
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH] scsi: target: tcm_loop: fix wrong abort tag
+Date: Thu, 13 Mar 2025 09:47:27 +0800
+Message-ID: <20250313014728.105849-1-kanie@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20250220090011.313848-1-liyihang9@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemf100013.china.huawei.com (7.185.36.179)
+Content-Transfer-Encoding: 8bit
 
-Gentle ping...
+When the tcm_loop_nr_hw_queues is set to a value greater than 1, the
+tags of requests in the block layer are no longer unique. This may lead
+to erroneous aborting of commands with the same tag. The issue can be
+resolved by using blk_mq_unique_tag to generate globally unique
+identifiers by combining the hardware queue index and per-queue tags.
 
-On 2025/2/20 17:00, Yihang Li wrote:
-> From: Xingui Yang <yangxingui@huawei.com>
-> 
-> At present, we determine the protocol through the cmd type, but other
-> cmd types, such as vendor-specific commands, default to the pio protocol.
-> This strategy often causes the execution of different vendor-specific
-> commands to fail. In fact, for these commands, a better way is to use the
-> protocol configured by the command's tf to determine its protocol.
-> 
-> Fixes: 6f2ff1a1311e ("hisi_sas: add v2 path to send ATA command")
-> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-> Reviewed-by: Yihang Li <liyihang9@huawei.com>
-> ---
->  drivers/scsi/hisi_sas/hisi_sas.h       |  3 +--
->  drivers/scsi/hisi_sas/hisi_sas_main.c  | 28 ++++++++++++++++++++++++--
->  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  4 +---
->  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  4 +---
->  4 files changed, 29 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-> index 2d438d722d0b..e17f5d8226bf 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas.h
-> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-> @@ -633,8 +633,7 @@ extern struct dentry *hisi_sas_debugfs_dir;
->  extern void hisi_sas_stop_phys(struct hisi_hba *hisi_hba);
->  extern int hisi_sas_alloc(struct hisi_hba *hisi_hba);
->  extern void hisi_sas_free(struct hisi_hba *hisi_hba);
-> -extern u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis,
-> -				int direction);
-> +extern u8 hisi_sas_get_ata_protocol(struct sas_task *task);
->  extern struct hisi_sas_port *to_hisi_sas_port(struct asd_sas_port *sas_port);
->  extern void hisi_sas_sata_done(struct sas_task *task,
->  			    struct hisi_sas_slot *slot);
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> index da4a2ed8ee86..3596414d970b 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -21,8 +21,32 @@ struct hisi_sas_internal_abort_data {
->  	bool rst_ha_timeout; /* reset the HA for timeout */
->  };
->  
-> -u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis, int direction)
-> +static u8 hisi_sas_get_ata_protocol_from_tf(struct ata_queued_cmd *qc)
->  {
-> +	if (!qc)
-> +		return HISI_SAS_SATA_PROTOCOL_PIO;
-> +
-> +	switch (qc->tf.protocol) {
-> +	case ATA_PROT_NODATA:
-> +		return HISI_SAS_SATA_PROTOCOL_NONDATA;
-> +	case ATA_PROT_PIO:
-> +		return HISI_SAS_SATA_PROTOCOL_PIO;
-> +	case ATA_PROT_DMA:
-> +		return HISI_SAS_SATA_PROTOCOL_DMA;
-> +	case ATA_PROT_NCQ_NODATA:
-> +	case ATA_PROT_NCQ:
-> +		return HISI_SAS_SATA_PROTOCOL_FPDMA;
-> +	default:
-> +		return HISI_SAS_SATA_PROTOCOL_PIO;
-> +	}
-> +}
-> +
-> +u8 hisi_sas_get_ata_protocol(struct sas_task *task)
-> +{
-> +	struct host_to_dev_fis *fis = &task->ata_task.fis;
-> +	struct ata_queued_cmd *qc = task->uldd_task;
-> +	int direction = task->data_dir;
-> +
->  	switch (fis->command) {
->  	case ATA_CMD_FPDMA_WRITE:
->  	case ATA_CMD_FPDMA_READ:
-> @@ -93,7 +117,7 @@ u8 hisi_sas_get_ata_protocol(struct host_to_dev_fis *fis, int direction)
->  	{
->  		if (direction == DMA_NONE)
->  			return HISI_SAS_SATA_PROTOCOL_NONDATA;
-> -		return HISI_SAS_SATA_PROTOCOL_PIO;
-> +		return hisi_sas_get_ata_protocol_from_tf(qc);
->  	}
->  	}
->  }
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> index 71cd5b4450c2..6e7f99fcc824 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> @@ -2538,9 +2538,7 @@ static void prep_ata_v2_hw(struct hisi_hba *hisi_hba,
->  			(task->ata_task.fis.control & ATA_SRST))
->  		dw1 |= 1 << CMD_HDR_RESET_OFF;
->  
-> -	dw1 |= (hisi_sas_get_ata_protocol(
-> -		&task->ata_task.fis, task->data_dir))
-> -		<< CMD_HDR_FRAME_TYPE_OFF;
-> +	dw1 |= (hisi_sas_get_ata_protocol(task)) << CMD_HDR_FRAME_TYPE_OFF;
->  	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
->  	hdr->dw1 = cpu_to_le32(dw1);
->  
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> index 48b95d9a7927..095bbf80c34e 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -1456,9 +1456,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
->  			(task->ata_task.fis.control & ATA_SRST))
->  		dw1 |= 1 << CMD_HDR_RESET_OFF;
->  
-> -	dw1 |= (hisi_sas_get_ata_protocol(
-> -		&task->ata_task.fis, task->data_dir))
-> -		<< CMD_HDR_FRAME_TYPE_OFF;
-> +	dw1 |= (hisi_sas_get_ata_protocol(task)) << CMD_HDR_FRAME_TYPE_OFF;
->  	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
->  
->  	if (FIS_CMD_IS_UNCONSTRAINED(task->ata_task.fis))
-> 
+Fixes: 6375f8908255 ("tcm_loop: Fixup tag handling")
+Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+---
+ drivers/target/loopback/tcm_loop.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 761c511aea07..c7b7da629741 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -176,7 +176,7 @@ static int tcm_loop_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
+ 
+ 	memset(tl_cmd, 0, sizeof(*tl_cmd));
+ 	tl_cmd->sc = sc;
+-	tl_cmd->sc_cmd_tag = scsi_cmd_to_rq(sc)->tag;
++	tl_cmd->sc_cmd_tag = blk_mq_unique_tag(scsi_cmd_to_rq(sc));
+ 
+ 	tcm_loop_target_queue_cmd(tl_cmd);
+ 	return 0;
+@@ -242,7 +242,8 @@ static int tcm_loop_abort_task(struct scsi_cmnd *sc)
+ 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
+ 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
+ 	ret = tcm_loop_issue_tmr(tl_tpg, sc->device->lun,
+-				 scsi_cmd_to_rq(sc)->tag, TMR_ABORT_TASK);
++				 blk_mq_unique_tag(scsi_cmd_to_rq(sc)),
++				 TMR_ABORT_TASK);
+ 	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
+ }
+ 
+-- 
+2.43.0
+
