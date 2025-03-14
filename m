@@ -1,41 +1,38 @@
 Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 257ED2E3374;
-	Fri, 14 Mar 2025 01:10:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E01B19BBA;
+	Fri, 14 Mar 2025 01:10:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741914619; cv=none; b=jYA1o8yT6KpOUFM4uEG0kNo5AshCbTOqyk3Hv4VcHwOFKiWaCcKe4s6TbRLsod+TLRn5g7SejhpfQvlKZLxlFomoBmd3RNNWvH2SYinkR5sMyxm0hKXBKdbibjWYjnqToHIbtb7P/ggwfmOaCOi8u6ZF3g6onER7ByKJac8brwc=
+	t=1741914619; cv=none; b=nmygd7G5pEihcM4HxrydnZC2Sj+oItsRt680rxyOY24/Zh+CUsqA+ZwQHzlOqP9X8V6fqujX1i19n4m+H4gDl/A79xH/CrurXSbMegFuUCQuMB4bpb/MdZpFDOKEJl8Iy172hSmZ6NcynKMCgaTyf9zZRafSk7yIBkF/eApzzy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1741914619; c=relaxed/simple;
-	bh=FiroMEstMQXRMTvsiFyhVjQwh2yTBGDEo2CByl4FbFQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m9997mkAhchuENyEUKoeUZIajem9eeR6FpEw+H3kWZ82LUMuEUjW5Fd8JZFmO9WiNsUuncHEc9lwhQ1w2pDaKq523nSRu3O4iKBjMZc7tUlquElAQ10byApM2jkhOL7w1EG3scMLny3q9UgAWE6cEvapepRudJedGr3kINIy/YA=
+	bh=U9b17+vrHZAlxaSRneFeoxRMFEIhQuHvTEtE6ILow4M=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qDn5URMf6l1hzpNQGo54qJqCrz1HTYwklgNa5nYR6wjR6JfkARfl/jzPRkzhkMzWdpz0AQbBnhusIrWYBRIfVW90+5Npy8hqBl60kx0Y7r75Ue7HAKjlDnX47c/s/QuwYGvVH0FOL/NC8ny6dTNJriuuRJ53Pa8aTtr89f+wq54=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4ZDR8069nFz1R6bW;
-	Fri, 14 Mar 2025 09:08:32 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.44])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4ZDR7x67yYz1R6jj;
+	Fri, 14 Mar 2025 09:08:29 +0800 (CST)
 Received: from dggpemf500016.china.huawei.com (unknown [7.185.36.197])
-	by mail.maildlp.com (Postfix) with ESMTPS id B7BF31A0171;
-	Fri, 14 Mar 2025 09:10:14 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id B61BC14011D;
+	Fri, 14 Mar 2025 09:10:11 +0800 (CST)
 Received: from localhost.localdomain (10.175.101.6) by
  dggpemf500016.china.huawei.com (7.185.36.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 14 Mar 2025 09:10:14 +0800
+ 15.2.1544.11; Fri, 14 Mar 2025 09:10:11 +0800
 From: JiangJianJun <jiangjianjun3@huawei.com>
 To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 	<linux-scsi@vger.kernel.org>
 CC: <hare@suse.de>, <linux-kernel@vger.kernel.org>, <lixiaokeng@huawei.com>,
 	<jiangjianjun3@huawei.com>, <hewenliang4@huawei.com>,
 	<yangkunlin7@huawei.com>
-Subject: [RFC PATCH v3 05/19] scsi: scsi_error: Add helper scsi_eh_sdev_reset to do lun reset
-Date: Fri, 14 Mar 2025 09:29:13 +0800
-Message-ID: <20250314012927.150860-6-jiangjianjun3@huawei.com>
+Subject: [RFC PATCH v3 00/19] scsi: scsi_error: Introduce new error handle mechanism
+Date: Fri, 14 Mar 2025 09:29:08 +0800
+Message-ID: <20250314012927.150860-1-jiangjianjun3@huawei.com>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20250314012927.150860-1-jiangjianjun3@huawei.com>
-References: <20250314012927.150860-1-jiangjianjun3@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,99 +44,187 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
  dggpemf500016.china.huawei.com (7.185.36.197)
 
-From: Wenchao Hao <haowenchao2@huawei.com>
+It's unbearable for systems with large scale scsi devices share HBAs to
+block all devices' IOs when handle error commands, we need a new error
+handle mechanism to address this issue.
 
-Add helper function scsi_eh_sdev_reset() to perform lun reset and check
-if to finish some error commands.
+I consulted about this issue a year ago, the discuss link can be found in
+refenence. Hannes replied about why we have to block the SCSI host
+then perform error recovery kindly. I think it's unnecessary to block
+SCSI host for all drivers and can try a small level recovery(LUN based for
+example) first to avoid block the SCSI host.
 
-This is preparation for a genernal LUN/target based error handle
-strategy and did not change original logic.
+The new error handle mechanism introduced in this patchset has been
+developed and tested with out self developed hardware since one year
+ago, now we want this mechanism can be used by more drivers.
 
-Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
----
- drivers/scsi/scsi_error.c | 54 +++++++++++++++++++++++----------------
- 1 file changed, 32 insertions(+), 22 deletions(-)
+Drivers can decide if using the new error handle mechanism and how to
+handle error commands when scsi_device are scanned,the new mechanism
+makes SCSI error handle more flexible.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 3b55642fb585..80e5787055d3 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1638,6 +1638,34 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 	return list_empty(work_q);
- }
- 
-+static int scsi_eh_sdev_reset(struct scsi_cmnd *scmd,
-+			      struct list_head *work_q,
-+			      struct list_head *done_q)
-+{
-+	struct scsi_cmnd *next;
-+	struct scsi_device *sdev = scmd->device;
-+	enum scsi_disposition rtn;
-+
-+	SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
-+			     "%s: Sending BDR\n", current->comm));
-+
-+	rtn = scsi_try_bus_device_reset(scmd);
-+	if (rtn != SUCCESS && rtn != FAST_IO_FAIL) {
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			sdev_printk(KERN_INFO, sdev,
-+				    "%s: BDR failed\n", current->comm));
-+		return 0;
-+	}
-+
-+	if (!scsi_device_online(sdev) || rtn == FAST_IO_FAIL ||
-+	    !scsi_eh_tur(scmd))
-+		list_for_each_entry_safe(scmd, next, work_q, eh_entry)
-+			if (scmd->device == sdev &&
-+			    scsi_eh_action(scmd, rtn) != FAILED)
-+				scsi_eh_finish_cmd(scmd, done_q);
-+
-+	return list_empty(work_q);
-+}
- 
- /**
-  * scsi_eh_bus_device_reset - send bdr if needed
-@@ -1655,9 +1683,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 				    struct list_head *work_q,
- 				    struct list_head *done_q)
- {
--	struct scsi_cmnd *scmd, *bdr_scmd, *next;
-+	struct scsi_cmnd *scmd, *bdr_scmd;
- 	struct scsi_device *sdev;
--	enum scsi_disposition rtn;
- 
- 	shost_for_each_device(sdev, shost) {
- 		if (scsi_host_eh_past_deadline(shost)) {
-@@ -1678,26 +1705,9 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 		if (!bdr_scmd)
- 			continue;
- 
--		SCSI_LOG_ERROR_RECOVERY(3,
--			sdev_printk(KERN_INFO, sdev,
--				     "%s: Sending BDR\n", current->comm));
--		rtn = scsi_try_bus_device_reset(bdr_scmd);
--		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
--			if (!scsi_device_online(sdev) ||
--			    rtn == FAST_IO_FAIL ||
--			    !scsi_eh_tur(bdr_scmd)) {
--				list_for_each_entry_safe(scmd, next,
--							 work_q, eh_entry) {
--					if (scmd->device == sdev &&
--					    scsi_eh_action(scmd, rtn) != FAILED)
--						scsi_eh_finish_cmd(scmd,
--								   done_q);
--				}
--			}
--		} else {
--			SCSI_LOG_ERROR_RECOVERY(3,
--				sdev_printk(KERN_INFO, sdev,
--					    "%s: BDR failed\n", current->comm));
-+		if (scsi_eh_sdev_reset(bdr_scmd, work_q, done_q)) {
-+			scsi_device_put(sdev);
-+			break;
- 		}
- 	}
- 
+SCSI error recovery strategy after blocking host's IO is mainly
+following steps:
+
+- LUN reset
+- Target reset
+- Bus reset
+- Host reset
+
+Some drivers did not implement callbacks for host reset, it's unnecessary
+to block host's IO for these drivers. For example, smartpqi only registered
+device reset, if device reset failed, it's meaningless to fallback to target
+reset, bus reset or host reset any more, because these steps would also
+failed.
+
+Here are some drivers we concerned:(there are too many kinds of drivers
+to figure out, so here I just list some drivers I am familiar with)
+
++-------------+--------------+--------------+-----------+------------+
+|  drivers    | device_reset | target_reset | bus_reset | host_reset |
++-------------+--------------+--------------+-----------+------------+
+| mpt3sas     |     Y        |     Y        |    N      |    Y       |
++-------------+--------------+--------------+-----------+------------+
+| smartpqi    |     Y        |     N        |    N      |    N       |
++-------------+--------------+--------------+-----------+------------+
+| megaraidsas |     N        |     Y        |    N      |    Y       |
++-------------+--------------+--------------+-----------+------------+
+| virtioscsi  |     Y        |     N        |    N      |    N       |
++-------------+--------------+--------------+-----------+------------+
+| iscsi_tcp   |     Y        |     Y        |    N      |    N       |
++-------------+--------------+--------------+-----------+------------+
+| hisisas     |     Y        |     Y        |    N      |    N       |
++-------------+--------------+--------------+-----------+------------+
+
+For LUN based error handle, when scsi command is classified as error,
+we would block the scsi device's IO and try to recover this scsi
+device, if still can not recover all error commands, it might
+fallback to target or host level recovery.
+
+It's same for target based error handle, but target based error handle
+would block the scsi target's IO then try to recover the error commands
+of this target.
+
+The first patch defines basic framework to support LUN/target based error
+handle mechanism, three key operations are abstracted which are:
+ - add error command
+ - wake up error handle
+ - block IOs when error command is added and recoverying.
+
+Drivers can implement these three function callbacks and setup to SCSI
+middle level; I also add a general LUN/target based error handle strategy
+which can be called directly from drivers to implement LUN/tartget based
+error handle.
+
+The changes of SCSI middle level's error handle are tested with scsi_debug
+which support single LUN error injection, the scsi_debug patches can be
+found in reference, following scenarios are tested.
+
+Scenario1: LUN based error handle is enabled:
++-----------+---------+-------------------------------------------------------+
+| lun reset | TUR     | Desired result                                        |
++ --------- + ------- + ------------------------------------------------------+
+| success   | success | retry or finish with  EIO(may offline disk)           |
++ --------- + ------- + ------------------------------------------------------+
+| success   | fail    | fallback to host  recovery, retry or finish with      |
+|           |         | EIO(may offline disk)                                 |
++ --------- + ------- + ------------------------------------------------------+
+| fail      | NA      | fallback to host  recovery, retry or finish with      |
+|           |         | EIO(may offline disk)                                 |
++ --------- + ------- + ------------------------------------------------------+
+
+Scenario2: target based error handle is enabled:
++-----------+---------+--------------+---------+------------------------------+
+| lun reset | TUR     | target reset | TUR     | Desired result               |
++-----------+---------+--------------+---------+------------------------------+
+| success   | success | NA           | NA      | retry or finish with         |
+|           |         |              |         | EIO(may offline disk)        |
++-----------+---------+--------------+---------+------------------------------+
+| success   | fail    | success      | success | retry or finish with         |
+|           |         |              |         | EIO(may offline disk)        |
++-----------+---------+--------------+---------+------------------------------+
+| fail      | NA      | success      | success | retry or finish with         |
+|           |         |              |         | EIO(may offline disk)        |
++-----------+---------+--------------+---------+------------------------------+
+| fail      | NA      | success      | fail    | fallback to host recovery,   |
+|           |         |              |         | retry or finish with EIO(may |
+|           |         |              |         | offline disk)                |
++-----------+---------+--------------+---------+------------------------------+
+| fail      | NA      | fail         | NA      | fallback to host  recovery,  |
+|           |         |              |         | retry or finish with EIO(may |
+|           |         |              |         | offline disk)                |
++-----------+---------+--------------+---------+------------------------------+
+
+Scenario3: both LUN and target based error handle are enabled:
++-----------+---------+--------------+---------+------------------------------+
+| lun reset | TUR     | target reset | TUR     | Desired result               |
++-----------+---------+--------------+---------+------------------------------+
+| success   | success | NA           | NA      | retry or finish with         |
+|           |         |              |         | EIO(may offline disk)        |
++-----------+---------+--------------+---------+------------------------------+
+| success   | fail    | success      | success | lun recovery fallback to     |
+|           |         |              |         | target recovery, retry or    |
+|           |         |              |         | finish with EIO(may offline  |
+|           |         |              |         | disk                         |
++-----------+---------+--------------+---------+------------------------------+
+| fail      | NA      | success      | success | lun recovery fallback to     |
+|           |         |              |         | target recovery, retry or    |
+|           |         |              |         | finish with EIO(may offline  |
+|           |         |              |         | disk                         |
++-----------+---------+--------------+---------+------------------------------+
+| fail      | NA      | success      | fail    | lun recovery fallback to     |
+|           |         |              |         | target recovery, then fall   |
+|           |         |              |         | back to host recovery, retry |
+|           |         |              |         | or fhinsi with EIO(may       |
+|           |         |              |         | offline disk)                |
++-----------+---------+--------------+---------+------------------------------+
+| fail      | NA      | fail         | NA      | lun recovery fallback to     |
+|           |         |              |         | target recovery, then fall   |
+|           |         |              |         | back to host recovery, retry |
+|           |         |              |         | or fhinsi with EIO(may       |
+|           |         |              |         | offline disk)                |
++-----------+---------+--------------+---------+------------------------------+
+
+References: https://lore.kernel.org/linux-scsi/20230815122316.4129333-1-haowenchao2@huawei.com/
+References: https://lore.kernel.org/linux-scsi/71e09bb4-ff0a-23fe-38b4-fe6425670efa@huawei.com/
+
+Wenchao Hao (19):
+  scsi: scsi_error: Define framework for LUN/target based error handle
+  scsi: scsi_error: Move complete variable eh_action from shost to
+    sdevice
+  scsi: scsi_error: Check if to do reset in scsi_try_xxx_reset
+  scsi: scsi_error: Add helper scsi_eh_sdev_stu to do START_UNIT
+  scsi: scsi_error: Add helper scsi_eh_sdev_reset to do lun reset
+  scsi: scsi_error: Add flags to mark error handle steps has done
+  scsi: scsi_error: Add helper to handle scsi device's error command
+    list
+  scsi: scsi_error: Add a general LUN based error handler
+  scsi: core: increase/decrease target_busy without check can_queue
+  scsi: scsi_error: Add helper to handle scsi target's error command
+    list
+  scsi: scsi_error: Add a general target based error handler
+  scsi: scsi_debug: Add param to control LUN bassed error handler
+  scsi: scsi_debug: Add param to control target based error handle
+  scsi: mpt3sas: Add param to control LUN based error handle
+  scsi: mpt3sas: Add param to control target based error handle
+  scsi: smartpqi: Add param to control LUN based error handle
+  scsi: megaraid_sas: Add param to control target based error handle
+  scsi: virtio_scsi: Add param to control LUN based error handle
+  scsi: iscsi_tcp: Add param to control LUN based error handle
+
+ drivers/scsi/iscsi_tcp.c                  |  20 +
+ drivers/scsi/megaraid/megaraid_sas_base.c |  20 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  28 +
+ drivers/scsi/scsi_debug.c                 |  24 +
+ drivers/scsi/scsi_error.c                 | 756 ++++++++++++++++++++--
+ drivers/scsi/scsi_lib.c                   |  23 +-
+ drivers/scsi/scsi_priv.h                  |  18 +
+ drivers/scsi/smartpqi/smartpqi_init.c     |  14 +
+ drivers/scsi/virtio_scsi.c                |  16 +-
+ include/scsi/scsi_device.h                |  97 +++
+ include/scsi/scsi_eh.h                    |   8 +
+ include/scsi/scsi_host.h                  |   2 -
+ 12 files changed, 963 insertions(+), 63 deletions(-)
+
 -- 
 2.33.0
 
