@@ -1,207 +1,326 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 634851F4C83;
-	Thu, 13 Mar 2025 21:36:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742FF1A29A;
+	Fri, 14 Mar 2025 01:10:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741901805; cv=none; b=c9aDN1t3Q1J9wBY3pm9TpyBPYX0VQzA2CEqXVXyMACPoIBk7/7AmPNGSmvuhSe0AG75UscVuOeIj+OyO22vfWMNVRufBon/gCrWgiaBqI2WwTieqV7OIGRL0MGw2Mb+4LC4bNYPjJe04SNgNeTk0Hi4Ws9/q0ZA17f4toX7uj/U=
+	t=1741914618; cv=none; b=ms39lTlHctwr7nIqV8iN/T9adcyn4+meoYASks8ikNCSz7hKLORyHBc304kvM0QmiXdstr1VUIoV0GXxoweGhmMi5wj03+Q7FbdxgOH0gSQlVgC4qqkAtP68AKhA13kHWx81fHBUtLt46J0WdGJplL3Lr9AfU5HihQWntMFtdlg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741901805; c=relaxed/simple;
-	bh=Eqs8bJGp0lv40lbgYhiTihiy4TfvnfAjF88TY/Ar27w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=BInFkyqC0OGHbGmjidmb7v7UYYP+okeZDr/xYmFqxfMKz6zSRqk6EFep1ObdtOFH9FMFBqSoMXOzPZBu3q6nQ9tMkallR+nhPbpVVrB28NGZigZD/mVqXfZ0yzUq1hcBqgvAHp/EdN2bYOkblJDePXCsVhq/ug0FNhMu/Y1OYSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=fGn7IIyi; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fGn7IIyi"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52DH6THf019717;
-	Thu, 13 Mar 2025 21:36:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	vKC2yzbG9UebsJ1VbEFgVRutkTrHq8RK6afAmCBtcMs=; b=fGn7IIyicUiVyiUr
-	av9A8XC/1OI+OddxR1ryC3iXOVQOOK8Q6XdZlYb5Lwz7aCMmwBwXX/6cCIPgVlsw
-	kGHg0ynn4vxD/cyw67i3E9OBFTb2WyVHdoSADkW4PT04yvSML5SEbuabWC8JvRA0
-	u8zTupEUcdK1OrieAbu83Ke/hE79UO4GLKbl9vC9e7yJU2H9xzT9Z9O/4ldKvJLa
-	Fjrm4g1tXYL8Fjtyfidj3tBXs+ZL+923mxQ0/DhGPoeJA+zzmHL1ArfR8aaw9MZz
-	HNH85ZlOeFYcVdzOPeKjwX9cvtn3S7I4x29qgri78yaoHVuE85K000NQ7Gkuc2+e
-	vgyjXg==
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45bts0j9er-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Mar 2025 21:36:16 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52DLaF6Q009365
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Mar 2025 21:36:15 GMT
-Received: from [10.46.162.103] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 13 Mar
- 2025 14:36:14 -0700
-Message-ID: <4c83f8c3-6cfd-81a0-afeb-3e8854fa1efc@quicinc.com>
-Date: Thu, 13 Mar 2025 14:36:14 -0700
+	s=arc-20240116; t=1741914618; c=relaxed/simple;
+	bh=3FHW5eEqXzBmOUVv02+YImEYpFZuDeUJ3fjJpUMrVZg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=IInym485Blgx4YRB6M235N9zWHYfycjn/qjrlQarwVETvXrImJcY6HcQdMCGDZNClGay//FtmUI5cEVZhVvT1lcS2KmCa01YPLZQjtjWowfPjVOPQTw39wy0D+JPMcEsJd2XxaBEVaENW7AEVZH5qmj/KGOG1wOmp8M5faME4TM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4ZDR8C5b2GztQbZ;
+	Fri, 14 Mar 2025 09:08:43 +0800 (CST)
+Received: from dggpemf500016.china.huawei.com (unknown [7.185.36.197])
+	by mail.maildlp.com (Postfix) with ESMTPS id BBEDE1800E4;
+	Fri, 14 Mar 2025 09:10:12 +0800 (CST)
+Received: from localhost.localdomain (10.175.101.6) by
+ dggpemf500016.china.huawei.com (7.185.36.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 14 Mar 2025 09:10:11 +0800
+From: JiangJianJun <jiangjianjun3@huawei.com>
+To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>
+CC: <hare@suse.de>, <linux-kernel@vger.kernel.org>, <lixiaokeng@huawei.com>,
+	<jiangjianjun3@huawei.com>, <hewenliang4@huawei.com>,
+	<yangkunlin7@huawei.com>
+Subject: [RFC PATCH v3 01/19] scsi: scsi_error: Define framework for LUN/target based error handle
+Date: Fri, 14 Mar 2025 09:29:09 +0800
+Message-ID: <20250314012927.150860-2-jiangjianjun3@huawei.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20250314012927.150860-1-jiangjianjun3@huawei.com>
+References: <20250314012927.150860-1-jiangjianjun3@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v1 1/1] scsi: ufs: core: add device level exception
- support
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, <quic_cang@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <avri.altman@wdc.com>,
-        <peter.wang@mediatek.com>, <manivannan.sadhasivam@linaro.org>,
-        <minwoo.im@samsung.com>, <adrian.hunter@intel.com>,
-        <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Bean Huo
-	<beanhuo@micron.com>, Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Keoseong Park
-	<keosung.park@samsung.com>,
-        Gwendal Grignou <gwendal@chromium.org>,
-        Al Viro
-	<viro@zeniv.linux.org.uk>, Eric Biggers <ebiggers@google.com>,
-        open list
-	<linux-kernel@vger.kernel.org>
-References: <772730b9a036a33bebc27cb854576a012e76ca91.1741282081.git.quic_nguyenb@quicinc.com>
- <41678800-470f-4ea2-802c-f9f4d21817f6@acm.org>
-From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <41678800-470f-4ea2-802c-f9f4d21817f6@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Q0afexFiAYp-Gn5hVVujUtAR5GRi8940
-X-Authority-Analysis: v=2.4 cv=DNSP4zNb c=1 sm=1 tr=0 ts=67d34fd0 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=ChCBPZhDfTThoWy9I0sA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: Q0afexFiAYp-Gn5hVVujUtAR5GRi8940
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-13_10,2025-03-13_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- clxscore=1015 phishscore=0 malwarescore=0 mlxlogscore=999
- priorityscore=1501 mlxscore=0 spamscore=0 bulkscore=0 impostorscore=0
- suspectscore=0 adultscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2503130166
+Content-Type: text/plain
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf500016.china.huawei.com (7.185.36.197)
 
-On 3/13/2025 11:14 AM, Bart Van Assche wrote:
-> On 3/6/25 9:31 AM, Bao D. Nguyen wrote:
->> +What:        /sys/bus/platform/drivers/ufshcd/*/device_lvl_exception
->> +What:        /sys/bus/platform/devices/*.ufs/device_lvl_exception
->> +Date:        March 2025
->> +Contact:    Bao D. Nguyen <quic_nguyenb@quicinc.com>
->> +Description:
->> +        The device_lvl_exception is a counter indicating the number
->> +        of times the device level exceptions have occurred since the
->> +        last time this variable is reset. Read the 
->> device_lvl_exception_id
->> +        sysfs node to know more information about the exception.
->> +        The file is read only.
-> 
-> Shouldn't this sysfs attribute have a "_count" suffix to make it clear
-> that it represents a count?
-Thank you, Bart. I agree. Will make the change.
+From: Wenchao Hao <haowenchao2@huawei.com>
 
-> 
-> Additionally, here and below, please change "file" into "attribute".
-> 
->> +What:        /sys/bus/platform/drivers/ufshcd/*/device_lvl_exception_id
->> +What:        /sys/bus/platform/devices/*.ufs/device_lvl_exception_id
->> +Date:        March 2025
->> +Contact:    Bao D. Nguyen <quic_nguyenb@quicinc.com>
->> +Description:
->> +        Reading the device_lvl_exception_id returns the device JEDEC
->> +        standard's qDeviceLevelExceptionID attribute. The definition 
->> of the
->> +        qDeviceLevelExceptionID is the ufs device vendor specific 
->> design.
->> +        Refer to the device manufacturer datasheet for more information
->> +        on the meaning of the qDeviceLevelExceptionID attribute value.
->> +        The file is read only.
-> 
-> I'm not sure it is useful to export vendor-specific information to
-> sysfs.
-Because each ufs vendor defines the data differently according to the 
-device spec, we probably can't have a defined handling on this event in 
-the kernel. For some applications such as automobile, the information is 
-useful. If you have suggestions for the user applications to access this 
-data, I am all ears.
+The old scsi error handle logic is based on host, once a scsi command
+in one LUN of this host is classfied as failed, SCSI mid-level would
+set the whole host to recovery state, and no IO can be submitted to
+all LUNs of this host any more before recovery finished, while the
+recovery process might take a long time to finish.
+It's unreasonable when there are a lot of LUNs in one host.
 
-> 
->> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
->> index 90b5ab6..0248288a 100644
->> --- a/drivers/ufs/core/ufs-sysfs.c
->> +++ b/drivers/ufs/core/ufs-sysfs.c
->> @@ -466,6 +466,56 @@ static ssize_t critical_health_show(struct device 
->> *dev,
->>       return sysfs_emit(buf, "%d\n", hba->critical_health_count);
->>   }
->> +static ssize_t device_lvl_exception_show(struct device *dev,
->> +                     struct device_attribute *attr,
->> +                     char *buf)
->> +{
->> +    struct ufs_hba *hba = dev_get_drvdata(dev);
->> +
->> +    if (hba->dev_info.wspecversion < 0x410)
->> +        return -EOPNOTSUPP;
->> +
->> +    return sysfs_emit(buf, "%u\n", hba->dev_lvl_exception_count);
->> +}
-> 
-> The preferred approach for sysfs attributes that are not supported is to 
-> make these invisible rather than returning an error code.I was thinking it would be useful for the user application to know the 
-ufs device does not support this feature, so that it would not keep 
-trying to read the data.
+This change introduce a way for driver to implement its own
+error handle logic which can be based on scsi LUN or scsi target
+as minimum unit.
 
-> 
->> +static ssize_t device_lvl_exception_id_show(struct device *dev,
->> +                        struct device_attribute *attr,
->> +                        char *buf)
->> +{
->> +    struct ufs_hba *hba = dev_get_drvdata(dev);
->> +    u64 exception_id;
->> +    int err;
->> +
->> +    ufshcd_rpm_get_sync(hba);
->> +    err = ufshcd_read_device_lvl_exception_id(hba, &exception_id);
->> +    ufshcd_rpm_put_sync(hba);
->> +
->> +    if (err)
->> +        return err;
->> +
->> +    hba->dev_lvl_exception_id = exception_id;
->> +    return sysfs_emit(buf, "%llu\n", exception_id);
->> +}
-> 
-> Just like device_lvl_exception, this attribute shouldn't be visible if
-> device level exceptions are not supported.
-Same reasoning, to inform the user application the feature is not 
-supported so that it does not keep trying.
+scsi_device_eh is defined for error handle based on scsi LUN, and
+pointer struct scsi_device_eh "eh" is added in scsi_device, which
+is NULL by default.
+LLDs can initialize the sdev->eh in hostt->slave_alloc to implement an
+scsi LUN based error handle. If this member is not NULL, SCSI mid-level
+would branch to drivers' error handler rather than the old one which
+block whole host's IO.
 
-> 
->> +    if (status & hba->ee_drv_mask & MASK_EE_DEV_LVL_EXCEPTION) {
->> +        hba->dev_lvl_exception_count++;
->> +        sysfs_notify(&hba->dev->kobj, NULL, "device_lvl_exception");
->> +    }
-> 
-> sysfs_notify() may sleep and hence must not be called from an interrupt
-> handler.
-I will look into this.
+scsi_target_eh is defined for error handle based on scsi target, and
+pointer struct scsi_target_eh "eh" is added in scsi_target, which is NULL
+by default.
+LLDs can initialize the starget->eh in hostt->target_alloc to implement
+an scsi target based error handle. If this member is not NULL, SCSI
+mid-level would branch to drivers' error handler rather than the
+old one which block whole host's IO.
 
-Thanks, Bao
+Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+---
+ drivers/scsi/scsi_error.c  | 57 +++++++++++++++++++++++++++++++-
+ drivers/scsi/scsi_lib.c    | 12 +++++++
+ drivers/scsi/scsi_priv.h   | 18 ++++++++++
+ include/scsi/scsi_device.h | 67 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 153 insertions(+), 1 deletion(-)
 
-> 
-> Thanks,
-> 
-> Bart.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 815e7d63f3e2..f89de23a6807 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -291,11 +291,48 @@ static void scsi_eh_inc_host_failed(struct rcu_head *head)
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
++#define SCSI_EH_NO_HANDLER 1
++
++static int __scsi_eh_scmd_add_sdev(struct scsi_cmnd *scmd)
++{
++	struct scsi_device *sdev = scmd->device;
++	struct scsi_device_eh *eh = sdev->eh;
++
++	if (!eh || !eh->add_cmnd)
++		return SCSI_EH_NO_HANDLER;
++
++	scsi_eh_reset(scmd);
++	eh->add_cmnd(scmd);
++
++	if (eh->wakeup)
++		eh->wakeup(sdev);
++
++	return 0;
++}
++
++static int __scsi_eh_scmd_add_starget(struct scsi_cmnd *scmd)
++{
++	struct scsi_device *sdev = scmd->device;
++	struct scsi_target *starget = scsi_target(sdev);
++	struct scsi_target_eh *eh = starget->eh;
++
++	if (!eh || !eh->add_cmnd)
++		return SCSI_EH_NO_HANDLER;
++
++	scsi_eh_reset(scmd);
++	eh->add_cmnd(scmd);
++
++	if (eh->wakeup)
++		eh->wakeup(starget);
++
++	return 0;
++}
++
+ /**
+  * scsi_eh_scmd_add - add scsi cmd to error handling.
+  * @scmd:	scmd to run eh on.
+  */
+-void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
++static void __scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+ {
+ 	struct Scsi_Host *shost = scmd->device->host;
+ 	unsigned long flags;
+@@ -322,6 +359,24 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+ 	call_rcu_hurry(&scmd->rcu, scsi_eh_inc_host_failed);
+ }
+ 
++void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
++{
++	struct scsi_device *sdev = scmd->device;
++	struct scsi_target *starget = scsi_target(sdev);
++	struct Scsi_Host *shost = sdev->host;
++
++	if (unlikely(scsi_host_in_recovery(shost)))
++		__scsi_eh_scmd_add(scmd);
++
++	if (unlikely(scsi_target_in_recovery(starget)))
++		if (__scsi_eh_scmd_add_starget(scmd))
++			__scsi_eh_scmd_add(scmd);
++
++	if (__scsi_eh_scmd_add_sdev(scmd))
++		if (__scsi_eh_scmd_add_starget(scmd))
++			__scsi_eh_scmd_add(scmd);
++}
++
+ /**
+  * scsi_timeout - Timeout function for normal scsi commands.
+  * @req:	request that is timing out.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f1cfe0bb89b2..8cdab7ac5980 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -399,6 +399,12 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+ 
+ 	sbitmap_put(&sdev->budget_map, cmd->budget_token);
+ 	cmd->budget_token = -1;
++
++	if (sdev->eh && sdev->eh->wakeup)
++		sdev->eh->wakeup(sdev);
++
++	if (starget->eh && starget->eh->wakeup)
++		starget->eh->wakeup(starget);
+ }
+ 
+ /*
+@@ -1357,6 +1363,9 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ {
+ 	int token;
+ 
++	if (scsi_device_in_recovery(sdev))
++		return -1;
++
+ 	token = sbitmap_get(&sdev->budget_map);
+ 	if (token < 0)
+ 		return -1;
+@@ -1390,6 +1399,9 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+ 	struct scsi_target *starget = scsi_target(sdev);
+ 	unsigned int busy;
+ 
++	if (scsi_target_in_recovery(starget))
++		return 0;
++
+ 	if (starget->single_lun) {
+ 		spin_lock_irq(shost->host_lock);
+ 		if (starget->starget_sdev_user &&
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 9fc397a9ce7a..90e1e6d80265 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -193,6 +193,24 @@ static inline void scsi_dh_add_device(struct scsi_device *sdev) { }
+ static inline void scsi_dh_release_device(struct scsi_device *sdev) { }
+ #endif
+ 
++static inline int scsi_device_in_recovery(struct scsi_device *sdev)
++{
++	struct scsi_device_eh *eh = sdev->eh;
++
++	if (eh && eh->is_busy)
++		return eh->is_busy(sdev);
++	return 0;
++}
++
++static inline int scsi_target_in_recovery(struct scsi_target *starget)
++{
++	struct scsi_target_eh *eh = starget->eh;
++
++	if (eh && eh->is_busy)
++		return eh->is_busy(starget);
++	return 0;
++}
++
+ struct bsg_device *scsi_bsg_register_queue(struct scsi_device *sdev);
+ 
+ extern int scsi_device_max_queue_depth(struct scsi_device *sdev);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 7acd0ec82bb0..5911c82ca435 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -100,6 +100,71 @@ struct scsi_vpd {
+ 	unsigned char	data[];
+ };
+ 
++struct scsi_device;
++struct scsi_target;
++
++struct scsi_device_eh {
++	/*
++	 * add scsi command to error handler so it would be handuled by
++	 * driver's error handle strategy
++	 */
++	void (*add_cmnd)(struct scsi_cmnd *scmd);
++
++	/*
++	 * to judge if the device is busy handling errors, called before
++	 * dispatch scsi cmnd
++	 *
++	 * return 0 if it's ready to accepy scsi cmnd
++	 * return 0 if it's in error handle, command's would not be dispatched
++	 */
++	int (*is_busy)(struct scsi_device *sdev);
++
++	/*
++	 * wakeup device's error handle
++	 *
++	 * usually the error handler strategy would not run at once when
++	 * error command is added. This function would be called when any
++	 * scsi cmnd is finished or when scsi cmnd is added.
++	 */
++	int (*wakeup)(struct scsi_device *sdev);
++
++	/*
++	 * data entity for device specific error handler
++	 */
++	unsigned long driver_data[];
++};
++
++struct scsi_target_eh {
++	/*
++	 * add scsi command to error handler so it would be handuled by
++	 * driver's error handle strategy
++	 */
++	void (*add_cmnd)(struct scsi_cmnd *scmd);
++
++	/*
++	 * to judge if the device is busy handling errors, called before
++	 * dispatch scsi cmnd
++	 *
++	 * return 0 if it's ready to accepy scsi cmnd
++	 * return 0 if it's in error handle, command's would not be dispatched
++	 */
++	int (*is_busy)(struct scsi_target *starget);
++
++	/*
++	 * wakeup device's error handle
++	 *
++	 * usually the error handler strategy would not run at once when
++	 * error command is added. This function would be called when any
++	 * scsi cmnd is finished or when scsi cmnd is added.
++	 */
++	int (*wakeup)(struct scsi_target *starget);
++
++	/*
++	 * data entity for device specific error handler
++	 */
++	unsigned long driver_data[];
++};
++
+ struct scsi_device {
+ 	struct Scsi_Host *host;
+ 	struct request_queue *request_queue;
+@@ -281,6 +346,7 @@ struct scsi_device {
+ 	struct mutex		state_mutex;
+ 	enum scsi_device_state sdev_state;
+ 	struct task_struct	*quiesced_by;
++	struct scsi_device_eh	*eh;
+ 	unsigned long		sdev_data[];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
+@@ -367,6 +433,7 @@ struct scsi_target {
+ 	char			scsi_level;
+ 	enum scsi_target_state	state;
+ 	void 			*hostdata; /* available to low-level driver */
++	struct scsi_target_eh	*eh;
+ 	unsigned long		starget_data[]; /* for the transport */
+ 	/* starget_data must be the last element!!!! */
+ } __attribute__((aligned(sizeof(unsigned long))));
+-- 
+2.33.0
 
