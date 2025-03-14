@@ -1,25 +1,25 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8355715D5C4;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24EB816F0FE;
 	Fri, 14 Mar 2025 01:10:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741914626; cv=none; b=Fw96Y4bP/PhnohVb+QcvvEjuXVW1Zc8KGj/ByCmWAM8b/fVbz5TRsi902x+rw+x9w6uUYEwMX5witx+KNczueGumptAcavszTnZ7KSHd11fjJFkwnZcF+3vHTPFeXKC0j9EYRKTGSLrh71joDBpSoHJbze9xWUiaFZ9NQjUl1Fs=
+	t=1741914627; cv=none; b=qTDZK5lOQFrdTnGXi5Xv8/b53+DKuV254C+C+LbqkKA3iV+GY9WT0qK4hwrmCLwyXpZ3m8SoxBPf5oqRvV3coFRnk6T5X028+53NxNF5KNNtRvp25wXSRWb+Dm2kk80fPwjG6mhNSNKBDJ/ONwY18rkDM2Mv77iDZ2CEYpNY9XE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741914626; c=relaxed/simple;
-	bh=WlDROKFimy2M3ERNPkejUxJFEzrcYWTkIFsDT4inJcA=;
+	s=arc-20240116; t=1741914627; c=relaxed/simple;
+	bh=GyJuYWKI/YW8xAyJzIpy80EXHqTTzIovG+xm9SLaNbQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eBb8FBbW+HxQLSIKebmWiF78eUcDBfRH10H3HVrMcJTMLbZ8u3kwhxcMdVv7tCmt6dCYvPJdPozQF+Il3DmpI2hpA0shX8621myODuONONoLGXt6aX0Dp/lDapVt1dGGdX/T7dlhhhgcw2Et85kgPm/gFUADaPo4hTbwM5+MYXw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+	 MIME-Version:Content-Type; b=bdg+EaSMJ9QRUFIYTUiNid1gccA2wxIZdbH3Wv7J0LUi3sd4ZKuV7bEO7l8mBe1QgPkwJYd4nsz4w6W/RsSZvYI1Ark1nKyJsPL8HQcVW0w7dG5qUL+K+5pjGGfmaURACZBjVV+k3TWSL4i3TdalCF3Uc/fsyF871kgu2ZEMXa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4ZDR5Y2tFJzvWqN;
-	Fri, 14 Mar 2025 09:06:25 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4ZDR6K4jklzph0L;
+	Fri, 14 Mar 2025 09:07:05 +0800 (CST)
 Received: from dggpemf500016.china.huawei.com (unknown [7.185.36.197])
-	by mail.maildlp.com (Postfix) with ESMTPS id B4828180102;
-	Fri, 14 Mar 2025 09:10:16 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 324DA1A016C;
+	Fri, 14 Mar 2025 09:10:17 +0800 (CST)
 Received: from localhost.localdomain (10.175.101.6) by
  dggpemf500016.china.huawei.com (7.185.36.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -30,9 +30,9 @@ To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 CC: <hare@suse.de>, <linux-kernel@vger.kernel.org>, <lixiaokeng@huawei.com>,
 	<jiangjianjun3@huawei.com>, <hewenliang4@huawei.com>,
 	<yangkunlin7@huawei.com>
-Subject: [RFC PATCH v3 09/19] scsi: core: increase/decrease target_busy without check can_queue
-Date: Fri, 14 Mar 2025 09:29:17 +0800
-Message-ID: <20250314012927.150860-10-jiangjianjun3@huawei.com>
+Subject: [RFC PATCH v3 10/19] scsi: scsi_error: Add helper to handle scsi target's error command list
+Date: Fri, 14 Mar 2025 09:29:18 +0800
+Message-ID: <20250314012927.150860-11-jiangjianjun3@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20250314012927.150860-1-jiangjianjun3@huawei.com>
 References: <20250314012927.150860-1-jiangjianjun3@huawei.com>
@@ -49,60 +49,169 @@ X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
 
 From: Wenchao Hao <haowenchao2@huawei.com>
 
-This is preparation for a genernal target based error handle strategy
-to check if to wake up actual error handler.
+Add helper scsi_starget_eh() to handle scsi target's error command list,
+it would perform some steps which can be done with target's IO blocked,
+including check sense, start unit, reset lun and reset target.
 
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 ---
- drivers/scsi/scsi_lib.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_error.c | 129 ++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_eh.h    |   2 +
+ 2 files changed, 131 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8cdab7ac5980..e477c5d3c393 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -394,8 +394,7 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
- 
- 	scsi_dec_host_busy(shost, cmd);
- 
--	if (starget->can_queue > 0)
--		atomic_dec(&starget->target_busy);
-+	atomic_dec(&starget->target_busy);
- 
- 	sbitmap_put(&sdev->budget_map, cmd->budget_token);
- 	cmd->budget_token = -1;
-@@ -1413,10 +1412,10 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 		spin_unlock_irq(shost->host_lock);
- 	}
- 
-+	busy = atomic_inc_return(&starget->target_busy) - 1;
- 	if (starget->can_queue <= 0)
- 		return 1;
- 
--	busy = atomic_inc_return(&starget->target_busy) - 1;
- 	if (atomic_read(&starget->target_blocked) > 0) {
- 		if (busy)
- 			goto starved;
-@@ -1441,8 +1440,7 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
- 	list_move_tail(&sdev->starved_entry, &shost->starved_list);
- 	spin_unlock_irq(shost->host_lock);
- out_dec:
--	if (starget->can_queue > 0)
--		atomic_dec(&starget->target_busy);
-+	atomic_dec(&starget->target_busy);
- 	return 0;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 7302536ba62a..46415db951ed 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2553,6 +2553,135 @@ int scsi_sdev_eh(struct scsi_device *sdev,
  }
+ EXPORT_SYMBOL_GPL(scsi_sdev_eh);
  
-@@ -1886,8 +1884,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- out_dec_host_busy:
- 	scsi_dec_host_busy(shost, cmd);
- out_dec_target_busy:
--	if (scsi_target(sdev)->can_queue > 0)
--		atomic_dec(&scsi_target(sdev)->target_busy);
-+	atomic_dec(&scsi_target(sdev)->target_busy);
- out_put_budget:
- 	scsi_mq_put_budget(q, cmd->budget_token);
- 	cmd->budget_token = -1;
++static int starget_eh_stu(struct scsi_target *starget,
++			  struct list_head *work_q,
++			  struct list_head *done_q)
++{
++	struct scsi_device *sdev;
++	struct scsi_cmnd *scmd, *stu_scmd;
++
++	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
++		if (sdev_stu_done(sdev))
++			continue;
++
++		stu_scmd = NULL;
++		list_for_each_entry(scmd, work_q, eh_entry)
++			if (scmd->device == sdev && SCSI_SENSE_VALID(scmd) &&
++			    scsi_check_sense(scmd) == FAILED) {
++				stu_scmd = scmd;
++				break;
++			}
++		if (!stu_scmd)
++			continue;
++
++		if (scsi_eh_sdev_stu(stu_scmd, work_q, done_q))
++			return 1;
++	}
++
++	return 0;
++}
++
++static int starget_eh_reset_lun(struct scsi_target *starget,
++				struct list_head *work_q,
++				struct list_head *done_q)
++{
++	struct scsi_device *sdev;
++	struct scsi_cmnd *scmd, *bdr_scmd;
++
++	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
++		if (sdev_reset_done(sdev))
++			continue;
++
++		bdr_scmd = NULL;
++		list_for_each_entry(scmd, work_q, eh_entry)
++			if (scmd->device) {
++				bdr_scmd = scmd;
++				break;
++			}
++		if (!bdr_scmd)
++			continue;
++
++		if (scsi_eh_sdev_reset(bdr_scmd, work_q, done_q))
++			return 1;
++	}
++
++	return 0;
++}
++
++static int starget_eh_reset_target(struct scsi_target *starget,
++				    struct list_head *work_q,
++				    struct list_head *done_q)
++{
++	enum scsi_disposition rtn;
++	struct scsi_cmnd *scmd, *next;
++	LIST_HEAD(check_list);
++
++	scmd = list_first_entry(work_q, struct scsi_cmnd, eh_entry);
++
++	SCSI_LOG_ERROR_RECOVERY(3, starget_printk(KERN_INFO, starget,
++			     "%s: Sending target reset\n", current->comm));
++
++	rtn = scsi_try_target_reset(scmd);
++	if (rtn != SUCCESS && rtn != FAST_IO_FAIL) {
++		SCSI_LOG_ERROR_RECOVERY(3, starget_printk(KERN_INFO, starget,
++				     "%s: Target reset failed\n",
++				     current->comm));
++		return 0;
++	}
++
++	SCSI_LOG_ERROR_RECOVERY(3, starget_printk(KERN_INFO, starget,
++			     "%s: Target reset success\n", current->comm));
++
++	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
++		if (rtn == SUCCESS)
++			list_move_tail(&scmd->eh_entry, &check_list);
++		else if (rtn == FAST_IO_FAIL)
++			scsi_eh_finish_cmd(scmd, done_q);
++	}
++
++	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
++}
++
++/*
++ * Target based error handle
++ *
++ * @work_q: list of scsi commands need to recovery
++ * @done_q: list of scsi commands handled
++ *
++ * return: return 1 if all commands in work_q is recoveryed, else 0 is returned
++ */
++int scsi_starget_eh(struct scsi_target *starget,
++		    struct list_head *work_q,
++		    struct list_head *done_q)
++{
++	int ret = 0;
++
++	SCSI_LOG_ERROR_RECOVERY(2, starget_printk(KERN_INFO, starget,
++		"%s:targeteh: checking sense\n", current->comm));
++	ret = scsi_eh_get_sense(work_q, done_q);
++	if (ret)
++		return ret;
++
++	SCSI_LOG_ERROR_RECOVERY(2, starget_printk(KERN_INFO, starget,
++		"%s:targeteh: start unit\n", current->comm));
++	ret = starget_eh_stu(starget, work_q, done_q);
++	if (ret)
++		return ret;
++
++	SCSI_LOG_ERROR_RECOVERY(2, starget_printk(KERN_INFO, starget,
++		"%s:targeteh reset LUN\n", current->comm));
++	ret = starget_eh_reset_lun(starget, work_q, done_q);
++	if (ret)
++		return ret;
++
++	SCSI_LOG_ERROR_RECOVERY(2, starget_printk(KERN_INFO, starget,
++		"%s:targeteh reset target\n", current->comm));
++	ret = starget_eh_reset_target(starget, work_q, done_q);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(scsi_starget_eh);
++
+ /**
+  * scsi_report_bus_reset() - report bus reset observed
+  *
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 89b471aa484f..80e2f130e884 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -20,6 +20,8 @@ extern bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
+ extern enum scsi_disposition scsi_check_sense(struct scsi_cmnd *);
+ extern int scsi_sdev_eh(struct scsi_device *sdev, struct list_head *workq,
+ 			struct list_head *doneq);
++extern int scsi_starget_eh(struct scsi_target *starget,
++			struct list_head *workq, struct list_head *doneq);
+ extern int scsi_device_setup_eh(struct scsi_device *sdev, int fallback);
+ extern void scsi_device_clear_eh(struct scsi_device *sdev);
+ 
 -- 
 2.33.0
 
