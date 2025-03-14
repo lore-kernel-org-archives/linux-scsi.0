@@ -1,89 +1,206 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019A37083D
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Mar 2025 22:17:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053731922DE
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Mar 2025 22:53:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741990653; cv=none; b=CGJxG2ttQ5KRmKmNJOiu2pk6YGgW8ebb+VRKQCLKisXyg/GoIvBOg58eCk/aJRq5OZFVh2I4w/mvLv6Nh+PoZ/a04Ro/xdII8rpfHJgU2PkZ5IcXC2zKwvJF1uBgYbHwcNi+/NR0ph8C4h697mCR7I3kKd4Mn1Lx0uo0U4uNx8A=
+	t=1741992783; cv=none; b=ukq+ny4Fug5webhWiwwOdkk4E5Rls/HZmBKZ0ITZ0Nu+R3QeGA889ErzsQk5ehh2Unf0gHRyqIBs+j6VhKsNB8CE6myzk86yUVFQbHIO+hQMjVEhVYSoutExFyd7EvtpKab9Uji4sn+NMuAPAXN2nCoHSzBLMOJOnsL6uVdxwo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741990653; c=relaxed/simple;
-	bh=MCa0vkcQsABiNsiBneufPykvB8LMRiVfF0XBRX4jBKE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qx2eMbGsKU1pRFiQnIt/Th8ozkvJgVle0NCkApX8haGb6AnA5IYLJAaUsP+QOmH+H0ZrfRNGNlAeXJ/Lwrs6+ndc22V5HTDnJQiPGnWVFR5JQZ5VgHcHxudSd/JLF6C1OlD60RyoGNdYC7dzJ0I8iG+FG9fhZ+Sn8bed+5KOUTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=G/k4c3PV; arc=none smtp.client-ip=91.218.175.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1741992783; c=relaxed/simple;
+	bh=dDhqGplvCwABME2IFBsudphfiFSr/iuadJGFk1R2sGU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pvsEiKXBmFm1s54zJ9+VPyy4YqR/LL+jqoqCZ5mQdkYYtqHEUAY1jkhCV71dX58ZXCZ2oTLVLrJ70Fz86zYNny8fVeDJtHx+DIbgNfrjJbCc8pLE6sis72m356O/i0Y22xcib+yvAbXaUAqddufa6QADlmYAgaHhHpjxp3wUnlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=A8cSfu+8; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="G/k4c3PV"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1741990638;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=8HlGgSem6D58B/bo6nzktQDox6aIVXarAjOGoDX+TIM=;
-	b=G/k4c3PVyqfyZ6Mrqs/U03IIgxT0LRxq/dfHXWbxRJNEVstAjMA0jPIJWldHdOZgeeJKeL
-	fTKEo/ZsJt6GyE8fcwRaAX69qT0khj7pVDT0RZrtZOBqPc96v2rwMbW259DOGlLs0G8UF0
-	dHOx+eW6KNTg80ysTnj+tLCBJ6LZysw=
-From: Thorsten Blum <thorsten.blum@linux.dev>
-To: Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="A8cSfu+8"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZF051759VzlxdcZ;
+	Fri, 14 Mar 2025 22:52:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1741992771; x=1744584772; bh=vkN9fBLe6IJ/6D3KpSZwpQS0GRjn1Xif4Vp
+	vegS3fjI=; b=A8cSfu+8C/mf6RaURpRbr4LyMT5JP8oF5z6J9DhmiZ5ffEH6xr2
+	TlkPzx+VgB5j2vJR56aC86suefR9YDDqLdiEB+Q7XC9S8PFC9AVsYvTZEj9fY6Dr
+	OL1Wy7YmQH+augt0S84TUtX80Nui+Ikw/yFyAAL793utkAryYPFrMpjxCXt8Yv2r
+	r6ni/sTrN3Fub/VwS8NJs3/mEzHMSMw1nGBGLbOj/yep3pY+WJBrzNtT/8wKG7B4
+	K/Ee7d6AXw4uvY7SQJAjLEZc1bTTRinE31FDO8DFNavA3Tilq8oOnNJdGuwCzNJ1
+	b39KPMxSYeeTj5JOaStEep0HwZu+ZhoK0Ig==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id K8jFJkRaBAWD; Fri, 14 Mar 2025 22:52:51 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZF04q5GDWzltP0W;
+	Fri, 14 Mar 2025 22:52:42 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thorsten Blum <thorsten.blum@linux.dev>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: fnic: Remove unnecessary NUL-terminations
-Date: Fri, 14 Mar 2025 23:16:26 +0100
-Message-ID: <20250314221626.43174-2-thorsten.blum@linux.dev>
+	Avri Altman <avri.altman@wdc.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Eric Biggers <ebiggers@google.com>,
+	Minwoo Im <minwoo.im@samsung.com>,
+	Can Guo <quic_cang@quicinc.com>,
+	Santosh Y <santoshsy@gmail.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v2] scsi: ufs: core: Fix a race condition related to device commands
+Date: Fri, 14 Mar 2025 15:51:50 -0700
+Message-ID: <20250314225206.1487838-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.49.0.rc1.451.g8f38331e32-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: quoted-printable
 
-strscpy_pad() already NUL-terminates 'data' at the corresponding
-indexes. Remove any unnecessary NUL-terminations.
+There is a TOCTOU race in ufshcd_compl_one_cqe(): hba->dev_cmd.complete
+may be cleared from another thread after it has been checked and before
+it is used. Fix this race by moving the device command completion from
+the stack of the device command submitter into struct ufs_hba. This
+patch fixes the following kernel crash:
 
-No functional changes intended.
+Unable to handle kernel NULL pointer dereference at virtual address 00000=
+00000000008
+Call trace:
+ _raw_spin_lock_irqsave+0x34/0x80
+ complete+0x24/0xb8
+ ufshcd_compl_one_cqe+0x13c/0x4f0
+ ufshcd_mcq_poll_cqe_lock+0xb4/0x108
+ ufshcd_intr+0x2f4/0x444
+ __handle_irq_event_percpu+0xbc/0x250
+ handle_irq_event+0x48/0xb0
 
-Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+Fixes: 5a0b0cb9bee7 ("[SCSI] ufs: Add support for sending NOP OUT UPIU")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/fnic/fdls_disc.c | 3 ---
- 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index 11211c469583..7294645ed6d2 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -1898,7 +1898,6 @@ static void fdls_fdmi_register_hba(struct fnic_iport_s *iport)
- 	if (fnic->subsys_desc_len >= FNIC_FDMI_MODEL_LEN)
- 		fnic->subsys_desc_len = FNIC_FDMI_MODEL_LEN - 1;
- 	strscpy_pad(data, fnic->subsys_desc, FNIC_FDMI_MODEL_LEN);
--	data[FNIC_FDMI_MODEL_LEN - 1] = 0;
- 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_MODEL, FNIC_FDMI_MODEL_LEN,
- 		data, &attr_off_bytes);
- 
-@@ -2061,7 +2060,6 @@ static void fdls_fdmi_register_pa(struct fnic_iport_s *iport)
- 	snprintf(tmp_data, FNIC_FDMI_OS_NAME_LEN - 1, "host%d",
- 		 fnic->host->host_no);
- 	strscpy_pad(data, tmp_data, FNIC_FDMI_OS_NAME_LEN);
--	data[FNIC_FDMI_OS_NAME_LEN - 1] = 0;
- 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_OS_NAME,
- 		FNIC_FDMI_OS_NAME_LEN, data, &attr_off_bytes);
- 
-@@ -2071,7 +2069,6 @@ static void fdls_fdmi_register_pa(struct fnic_iport_s *iport)
- 	sprintf(fc_host_system_hostname(fnic->host), "%s", utsname()->nodename);
- 	strscpy_pad(data, fc_host_system_hostname(fnic->host),
- 					FNIC_FDMI_HN_LEN);
--	data[FNIC_FDMI_HN_LEN - 1] = 0;
- 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_HOST_NAME,
- 		FNIC_FDMI_HN_LEN, data, &attr_off_bytes);
- 
--- 
-2.48.1
+Changes compared to v1:
+ - Call init_completion() once instead of every time a device management
+   command is submitted.
 
+ drivers/ufs/core/ufshcd.c | 25 ++++++-------------------
+ include/ufs/ufshcd.h      |  2 +-
+ 2 files changed, 7 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 4e1e214fc5a2..3288a7da73dc 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3176,16 +3176,10 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba=
+ *hba,
+ 	int err;
+=20
+ retry:
+-	time_left =3D wait_for_completion_timeout(hba->dev_cmd.complete,
++	time_left =3D wait_for_completion_timeout(&hba->dev_cmd.complete,
+ 						time_left);
+=20
+ 	if (likely(time_left)) {
+-		/*
+-		 * The completion handler called complete() and the caller of
+-		 * this function still owns the @lrbp tag so the code below does
+-		 * not trigger any race conditions.
+-		 */
+-		hba->dev_cmd.complete =3D NULL;
+ 		err =3D ufshcd_get_tr_ocs(lrbp, NULL);
+ 		if (!err)
+ 			err =3D ufshcd_dev_cmd_completion(hba, lrbp);
+@@ -3199,7 +3193,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *=
+hba,
+ 			/* successfully cleared the command, retry if needed */
+ 			if (ufshcd_clear_cmd(hba, lrbp->task_tag) =3D=3D 0)
+ 				err =3D -EAGAIN;
+-			hba->dev_cmd.complete =3D NULL;
+ 			return err;
+ 		}
+=20
+@@ -3215,11 +3208,9 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba =
+*hba,
+ 			spin_lock_irqsave(&hba->outstanding_lock, flags);
+ 			pending =3D test_bit(lrbp->task_tag,
+ 					   &hba->outstanding_reqs);
+-			if (pending) {
+-				hba->dev_cmd.complete =3D NULL;
++			if (pending)
+ 				__clear_bit(lrbp->task_tag,
+ 					    &hba->outstanding_reqs);
+-			}
+ 			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+=20
+ 			if (!pending) {
+@@ -3237,8 +3228,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *=
+hba,
+ 			spin_lock_irqsave(&hba->outstanding_lock, flags);
+ 			pending =3D test_bit(lrbp->task_tag,
+ 					   &hba->outstanding_reqs);
+-			if (pending)
+-				hba->dev_cmd.complete =3D NULL;
+ 			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+=20
+ 			if (!pending) {
+@@ -3272,13 +3261,9 @@ static void ufshcd_dev_man_unlock(struct ufs_hba *=
+hba)
+ static int ufshcd_issue_dev_cmd(struct ufs_hba *hba, struct ufshcd_lrb *=
+lrbp,
+ 			  const u32 tag, int timeout)
+ {
+-	DECLARE_COMPLETION_ONSTACK(wait);
+ 	int err;
+=20
+-	hba->dev_cmd.complete =3D &wait;
+-
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+-
+ 	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
+ 	err =3D ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+=20
+@@ -5585,12 +5570,12 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, in=
+t task_tag,
+ 		ufshcd_release_scsi_cmd(hba, lrbp);
+ 		/* Do not touch lrbp after scsi done */
+ 		scsi_done(cmd);
+-	} else if (hba->dev_cmd.complete) {
++	} else {
+ 		if (cqe) {
+ 			ocs =3D le32_to_cpu(cqe->status) & MASK_OCS;
+ 			lrbp->utr_descriptor_ptr->header.ocs =3D ocs;
+ 		}
+-		complete(hba->dev_cmd.complete);
++		complete(&hba->dev_cmd.complete);
+ 	}
+ }
+=20
+@@ -10475,6 +10460,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
+ 	 */
+ 	spin_lock_init(&hba->clk_gating.lock);
+=20
++	init_completion(&hba->dev_cmd.complete);
++
+ 	err =3D ufshcd_hba_init(hba);
+ 	if (err)
+ 		goto out_error;
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index e3909cc691b2..f56050ce9445 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -246,7 +246,7 @@ struct ufs_query {
+ struct ufs_dev_cmd {
+ 	enum dev_cmd_type type;
+ 	struct mutex lock;
+-	struct completion *complete;
++	struct completion complete;
+ 	struct ufs_query query;
+ };
+=20
