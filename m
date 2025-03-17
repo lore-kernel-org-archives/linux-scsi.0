@@ -1,364 +1,105 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20B4198E60;
-	Mon, 17 Mar 2025 16:26:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CF11ADC8F
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2025 16:37:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742228794; cv=none; b=vDxiwDLyq+l7Y4+p9w54u6CaMyNHf48m49EnxaZjfRAY3LGB/dVrp6KrOznK2zWuXhIyKipXHSV41lY8vCjxcJD3PCBN/58oM5kXUy7T63kStf9cK8tioE1bmRUESmzhq8rd8S4C0yobvqJf2tOOCcxXw7+3QUs6P7LH7KPp6qo=
+	t=1742229461; cv=none; b=C8gJWPYaigjDXG5N1Unn04cjEXWfNDGK2F3rFAXJ3vSISQ0SH7iM8zR/2H6s1dd5dKNvf+v5BPVkxOKnuUUQYcLAOKvGkVf4qZZetyq7MSqipYvxORVz/O+SoA6U0zqkuCrFQ9HjSSDTr+gDXaoH5mHR2G9w5VW5PTyAQEo5NEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742228794; c=relaxed/simple;
-	bh=+Ndjy4xmcEbXyhbj74b5WBRBd0mqSMQV+7NKaMwfF0w=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=JWe9iYrWD8VWROwab7WlXSnwx+mPR7062J7VVmo4xQp3nA1x6XAXb1cJ2AKjBnNUBoUcD/pnkK23CoM2htZbUjcm1++yIIo+91JstmJox5yXiibyWHMaBgZX/HkCr/j9UgPVOObFCpsKb3RRpFxq4Fg7StM3tbf1Vm8UayAixhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=Zb/b0736; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1742229461; c=relaxed/simple;
+	bh=+zjMRwtnJoFYsTIrrOH49WYcLsdZmb34DFcwG8oz95I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FspUdkWVw8vO+7M6MyaIJDjlDcYZ1XDCSz8/kChQrzbN9ieTTt9fauml91XCQ1UTqw3XAAuSTJ/HhKyY0xPiboJJAGgUol1mabt7bK1hqz/9oUaIxElIrMm7LtQpUDf29m6QBY8ontNTSu6JNJyrXdJFZn4uFBYkgvy7n68BDxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ey4Jp5uB; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Zb/b0736"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1742228790;
-	bh=+Ndjy4xmcEbXyhbj74b5WBRBd0mqSMQV+7NKaMwfF0w=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=Zb/b0736daXymZaWap1l3aurwmc/9FF73bbGMNHV9DFCCB5Jch9TlatrPBsTcmAxi
-	 C1srhA4D8T6OAx6K3bNyEQlA++AhjiFPFLKi1OZJKi0phx1X/gNmO4BOiMxfIumFxx
-	 XVuEkLWLXWf3aNnBbAf800il9shIJMoGK9hmGfis=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ey4Jp5uB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742229457;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=JgCKR/jWI6a2eg3LR/tYG4alryPu/oPMyg/iDPvlsM4=;
+	b=Ey4Jp5uBgKK6XckYW32ixsiLedqrubz8qJ/f7mQZLz7tEhoNHk+hPOaGpFHCJQ4C5GTq2C
+	bj6DiZ86Q2IKiy9oMAeGQzaDzKDrH1GVHaTfGi+tSnw/2hBQnw/cPB78f+BhgMxsqaLduY
+	F753B63/HqH3qUSydRsfjY3jCzNAffc=
+Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-323-95lC8Bv-N0-Z2tdZk-mMWQ-1; Mon,
+ 17 Mar 2025 12:37:34 -0400
+X-MC-Unique: 95lC8Bv-N0-Z2tdZk-mMWQ-1
+X-Mimecast-MFC-AGG-ID: 95lC8Bv-N0-Z2tdZk-mMWQ_1742229453
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 0F8421C01F4;
-	Mon, 17 Mar 2025 12:26:30 -0400 (EDT)
-Message-ID: <609eeb873fdef6171c71f3beda289d799cb7172c.camel@HansenPartnership.com>
-Subject: Re: [patch V3 09/10] scsi: ufs: qcom: Remove the MSI descriptor
- abuse
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>, Peter Zijlstra <peterz@infradead.org>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, "Martin K.
- Petersen" <martin.petersen@oracle.com>,  linux-scsi@vger.kernel.org,
- Jonathan Cameron <Jonathan.Cameron@huawei.com>,  Nishanth Menon
- <nm@ti.com>, Dhruva Gole <d-gole@ti.com>, Tero Kristo <kristo@kernel.org>, 
- Santosh Shilimkar <ssantosh@kernel.org>, Logan Gunthorpe
- <logang@deltatee.com>, Dave Jiang <dave.jiang@intel.com>,  Jon Mason
- <jdmason@kudzu.us>, Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Michael
- Kelley <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>, Haiyang Zhang
- <haiyangz@microsoft.com>, linux-hyperv@vger.kernel.org, Wei Huang
- <wei.huang2@amd.com>, Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Date: Mon, 17 Mar 2025 12:26:29 -0400
-In-Reply-To: <20250317092946.265146293@linutronix.de>
-References: <20250317092919.008573387@linutronix.de>
-	 <20250317092946.265146293@linutronix.de>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 967701955E98;
+	Mon, 17 Mar 2025 16:37:33 +0000 (UTC)
+Received: from emilne-na.westford.csb (unknown [10.17.16.209])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AEA1619560AD;
+	Mon, 17 Mar 2025 16:37:32 +0000 (UTC)
+From: "Ewan D. Milne" <emilne@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: dick.kennedy@broadcom.com,
+	james.smart@broadcom.com,
+	justin.tee@broadcom.com
+Subject: [PATCH] scsi: lpfc: restore clearing of NLP_UNREG_INP in ndlp->nlp_flag
+Date: Mon, 17 Mar 2025 12:37:31 -0400
+Message-ID: <20250317163731.356873-1-emilne@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Mon, 2025-03-17 at 14:29 +0100, Thomas Gleixner wrote:
-> The driver abuses the MSI descriptors for internal purposes. Aside of
-> core code and MSI providers nothing has to care about their
-> existence. They have been encapsulated with a lot of effort because
-> this kind of abuse caused all sorts of issues including a
-> maintainability nightmare.
->=20
-> Rewrite the code so it uses dedicated storage to hand the required
-> information to the interrupt handler.
->=20
-> No functional change intended.
->=20
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
->=20
->=20
-> ---
-> =C2=A0drivers/ufs/host/ufs-qcom.c |=C2=A0=C2=A0 77 ++++++++++++++++++++++=
------------
-> -----------
-> =C2=A01 file changed, 40 insertions(+), 37 deletions(-)
->=20
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1782,15 +1782,19 @@ static void ufs_qcom_write_msi_msg(struc
-> =C2=A0	ufshcd_mcq_config_esi(hba, msg);
-> =C2=A0}
-> =C2=A0
-> +struct ufs_qcom_irq {
-> +	unsigned int		irq;
-> +	unsigned int		idx;
-> +	struct ufs_hba		*hba;
-> +};
-> +
-> =C2=A0static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
-> =C2=A0{
-> -	struct msi_desc *desc =3D data;
-> -	struct device *dev =3D msi_desc_to_dev(desc);
-> -	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	u32 id =3D desc->msi_index;
-> -	struct ufs_hw_queue *hwq =3D &hba->uhq[id];
-> +	struct ufs_qcom_irq *qi =3D data;
-> +	struct ufs_hba *hba =3D qi->hba;
-> +	struct ufs_hw_queue *hwq =3D &hba->uhq[qi->idx];
-> =C2=A0
-> -	ufshcd_mcq_write_cqis(hba, 0x1, id);
-> +	ufshcd_mcq_write_cqis(hba, 0x1, qi->idx);
-> =C2=A0	ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> =C2=A0
-> =C2=A0	return IRQ_HANDLED;
-> @@ -1799,8 +1803,7 @@ static irqreturn_t ufs_qcom_mcq_esi_hand
-> =C2=A0static int ufs_qcom_config_esi(struct ufs_hba *hba)
-> =C2=A0{
-> =C2=A0	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
-> -	struct msi_desc *desc;
-> -	struct msi_desc *failed_desc =3D NULL;
-> +	struct ufs_qcom_irq *qi;
-> =C2=A0	int nr_irqs, ret;
-> =C2=A0
-> =C2=A0	if (host->esi_enabled)
-> @@ -1811,47 +1814,47 @@ static int ufs_qcom_config_esi(struct uf
-> =C2=A0	 * 2. Poll queues do not need ESI.
-> =C2=A0	 */
-> =C2=A0	nr_irqs =3D hba->nr_hw_queues - hba-
-> >nr_queues[HCTX_TYPE_POLL];
-> +	qi =3D devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi),
-> GFP_KERNEL);
-> +	if (qi)
+Commit "scsi: lpfc: Remove NLP_RELEASE_RPI flag from nodelist structure"
+introduced a regression with SLI-3 adapters (e.g. LPe12000 8Gb) where
+a Link Down / Link Up such as caused by disabling an host FC switch port
+would result in the devices remaining in the transport-offline state
+and multipath reporting them as failed.  This problem was not seen with
+newer SLI-4 adapters.
 
-Typo causing logic inversion: should be !qi here (you need a more
-responsive ! key).
+The problem was caused by portions of the patch which removed the functions
+__lpfc_sli_rpi_release() and lpfc_sli_rpi_release() and all their callers.
+This was presumably because with the removal of the NLP_RELEASE_RPI flag
+there was no need to free the rpi.
 
-> +		return -ENOMEM;
-> +
-> =C2=A0	ret =3D platform_device_msi_init_and_alloc_irqs(hba->dev,
-> nr_irqs,
-> =C2=A0						=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0
-> ufs_qcom_write_msi_msg);
-> =C2=A0	if (ret) {
-> =C2=A0		dev_err(hba->dev, "Failed to request Platform MSI
-> %d\n", ret);
-> -		return ret;
-> +		goto cleanup;
-> =C2=A0	}
-> =C2=A0
-> -	msi_lock_descs(hba->dev);
-> -	msi_for_each_desc(desc, hba->dev, MSI_DESC_ALL) {
-> -		ret =3D devm_request_irq(hba->dev, desc->irq,
-> -				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufs_qcom_mcq_esi_handler,
-> -				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 IRQF_SHARED, "qcom-mcq-esi",
-> desc);
-> +	for (int idx =3D 0; idx < nr_irqs; idx++) {
-> +		qi[idx].irq =3D msi_get_virq(hba->dev, idx);
-> +		qi[idx].idx =3D idx;
-> +		qi[idx].hba =3D hba;
-> +
-> +		ret =3D devm_request_irq(hba->dev, qi[idx].irq,
-> ufs_qcom_mcq_esi_handler,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 IRQF_SHARED, "qcom-mcq-esi",
-> qi + idx);
-> =C2=A0		if (ret) {
-> =C2=A0			dev_err(hba->dev, "%s: Fail to request IRQ
-> for %d, err =3D %d\n",
-> -				__func__, desc->irq, ret);
-> -			failed_desc =3D desc;
-> -			break;
-> +				__func__, qi[idx].irq, ret);
-> +			qi[idx].irq =3D 0;
-> +			goto cleanup;
-> =C2=A0		}
-> =C2=A0	}
-> -	msi_unlock_descs(hba->dev);
-> =C2=A0
-> -	if (ret) {
-> -		/* Rewind */
-> -		msi_lock_descs(hba->dev);
-> -		msi_for_each_desc(desc, hba->dev, MSI_DESC_ALL) {
-> -			if (desc =3D=3D failed_desc)
-> -				break;
-> -			devm_free_irq(hba->dev, desc->irq, hba);
-> -		}
-> -		msi_unlock_descs(hba->dev);
-> -		platform_device_msi_free_irqs_all(hba->dev);
-> -	} else {
-> -		if (host->hw_ver.major =3D=3D 6 && host->hw_ver.minor =3D=3D
-> 0 &&
-> -		=C2=A0=C2=A0=C2=A0 host->hw_ver.step =3D=3D 0)
-> -			ufshcd_rmwl(hba, ESI_VEC_MASK,
-> -				=C2=A0=C2=A0=C2=A0 FIELD_PREP(ESI_VEC_MASK,
-> MAX_ESI_VEC - 1),
-> -				=C2=A0=C2=A0=C2=A0 REG_UFS_CFG3);
-> -		ufshcd_mcq_enable_esi(hba);
-> -		host->esi_enabled =3D true;
-> +	if (host->hw_ver.major =3D=3D 6 && host->hw_ver.minor =3D=3D 0 &&
-> +	=C2=A0=C2=A0=C2=A0 host->hw_ver.step =3D=3D 0) {
-> +		ufshcd_rmwl(hba, ESI_VEC_MASK,
-> +			=C2=A0=C2=A0=C2=A0 FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC -
-> 1),
-> +			=C2=A0=C2=A0=C2=A0 REG_UFS_CFG3);
-> =C2=A0	}
-> -
-> +	ufshcd_mcq_enable_esi(hba);
-> +	host->esi_enabled =3D true;
-> +	return 0;
-> +
-> +cleanup:
-> +	for (int idx =3D 0; qi[idx].irq; idx++)
-> +		devm_free_irq(hba->dev, qi[idx].irq, hba);
-> +	platform_device_msi_free_irqs_all(hba->dev);
-> +	devm_kfree(hba->dev, qi);
-> =C2=A0	return ret;
-> =C2=A0}
+However, __lpfc_sli_rpi_release() and lpfc_sli_rpi_release() which calls it
+reset the NLP_UNREG_INP flag. And, lpfc_sli_def_mbox_cmpl() has a path
+where __lpfc_sli_rpi_release() was called in a particular case where
+NLP_UNREG_INP was not otherwise cleared because of other conditions.
 
-This does seem to be exactly the pattern you describe in 1/10, although
-I'm not entirely convinced that something like the below is more
-readable and safe.
+Restoring the else clause of this conditional and simply clearing the
+NLP_UNREG_INP flag appears to resolve the problem with SLI-3 adapters.
+It should be noted that the code path in question is not specific to SLI-3,
+but there are other SLI-4 code paths which may have masked the issue.
 
-Regards,
-
-James
-
+Fixes: 32566a6f1ae5 ("scsi: lpfc: Remove NLP_RELEASE_RPI flag from nodelist structure")
+Cc: stable@vger.kernel.org
+Tested-by: Marco Patalano <mpatalan@redhat.com>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 23b9f6efa047..26b0c665c3b7 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1782,25 +1782,37 @@ static void ufs_qcom_write_msi_msg(struct msi_desc =
-*desc, struct msi_msg *msg)
- 	ufshcd_mcq_config_esi(hba, msg);
- }
-=20
-+struct ufs_qcom_irq {
-+	unsigned int		irq;
-+	unsigned int		idx;
-+	struct ufs_hba		*hba;
-+};
-+
- static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
- {
--	struct msi_desc *desc =3D data;
--	struct device *dev =3D msi_desc_to_dev(desc);
--	struct ufs_hba *hba =3D dev_get_drvdata(dev);
--	u32 id =3D desc->msi_index;
--	struct ufs_hw_queue *hwq =3D &hba->uhq[id];
-+	struct ufs_qcom_irq *qi =3D data;
-+	struct ufs_hba *hba =3D qi->hba;
-+	struct ufs_hw_queue *hwq =3D &hba->uhq[qi->idx];
-=20
--	ufshcd_mcq_write_cqis(hba, 0x1, id);
-+	ufshcd_mcq_write_cqis(hba, 0x1, qi->idx);
- 	ufshcd_mcq_poll_cqe_lock(hba, hwq);
-=20
- 	return IRQ_HANDLED;
- }
-=20
-+DEFINE_FREE(ufs_qcom_irq, struct ufs_qcom_irq *,
-+	    if (_T) {							\
-+		    for (int idx =3D 0; _T[idx].irq; idx++)		\
-+			    devm_free_irq(_T[idx].hba->dev, _T[idx].irq, \
-+					  _T[idx].hba);			\
-+		    platform_device_msi_free_irqs_all(_T[0].hba->dev);	\
-+		    devm_kfree(_T[0].hba->dev, _T);			\
-+	    })
-+
- static int ufs_qcom_config_esi(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
--	struct msi_desc *desc;
--	struct msi_desc *failed_desc =3D NULL;
-+	struct ufs_qcom_irq *qi __free(ufs_qcom_irq);
- 	int nr_irqs, ret;
-=20
- 	if (host->esi_enabled)
-@@ -1811,6 +1823,11 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 	 * 2. Poll queues do not need ESI.
- 	 */
- 	nr_irqs =3D hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
-+	qi =3D devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
-+	if (!qi)
-+		return -ENOMEM;
-+	qi[0].hba =3D hba;	/* required by __free() */
-+
- 	ret =3D platform_device_msi_init_and_alloc_irqs(hba->dev, nr_irqs,
- 						      ufs_qcom_write_msi_msg);
- 	if (ret) {
-@@ -1818,41 +1835,31 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 		return ret;
- 	}
-=20
--	msi_lock_descs(hba->dev);
--	msi_for_each_desc(desc, hba->dev, MSI_DESC_ALL) {
--		ret =3D devm_request_irq(hba->dev, desc->irq,
--				       ufs_qcom_mcq_esi_handler,
--				       IRQF_SHARED, "qcom-mcq-esi", desc);
-+	for (int idx =3D 0; idx < nr_irqs; idx++) {
-+		qi[idx].irq =3D msi_get_virq(hba->dev, idx);
-+		qi[idx].idx =3D idx;
-+		qi[idx].hba =3D hba;
-+
-+		ret =3D devm_request_irq(hba->dev, qi[idx].irq, ufs_qcom_mcq_esi_handler=
-,
-+				       IRQF_SHARED, "qcom-mcq-esi", qi + idx);
- 		if (ret) {
- 			dev_err(hba->dev, "%s: Fail to request IRQ for %d, err =3D %d\n",
--				__func__, desc->irq, ret);
--			failed_desc =3D desc;
--			break;
-+				__func__, qi[idx].irq, ret);
-+			qi[idx].irq =3D 0;
-+			return ret;
- 		}
- 	}
--	msi_unlock_descs(hba->dev);
-+	retain_ptr(qi);
-=20
--	if (ret) {
--		/* Rewind */
--		msi_lock_descs(hba->dev);
--		msi_for_each_desc(desc, hba->dev, MSI_DESC_ALL) {
--			if (desc =3D=3D failed_desc)
--				break;
--			devm_free_irq(hba->dev, desc->irq, hba);
--		}
--		msi_unlock_descs(hba->dev);
--		platform_device_msi_free_irqs_all(hba->dev);
--	} else {
--		if (host->hw_ver.major =3D=3D 6 && host->hw_ver.minor =3D=3D 0 &&
--		    host->hw_ver.step =3D=3D 0)
--			ufshcd_rmwl(hba, ESI_VEC_MASK,
--				    FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC - 1),
--				    REG_UFS_CFG3);
--		ufshcd_mcq_enable_esi(hba);
--		host->esi_enabled =3D true;
-+	if (host->hw_ver.major =3D=3D 6 && host->hw_ver.minor =3D=3D 0 &&
-+	    host->hw_ver.step =3D=3D 0) {
-+		ufshcd_rmwl(hba, ESI_VEC_MASK,
-+			    FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC - 1),
-+			    REG_UFS_CFG3);
- 	}
--
--	return ret;
-+	ufshcd_mcq_enable_esi(hba);
-+	host->esi_enabled =3D true;
-+	return 0;
- }
-=20
- /*
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 3fd9723cd271..92f3d4423729 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2923,6 +2923,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 				clear_bit(NLP_UNREG_INP, &ndlp->nlp_flag);
+ 				ndlp->nlp_defer_did = NLP_EVT_NOTHING_PENDING;
+ 				lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
++			} else {
++				clear_bit(NLP_UNREG_INP, &ndlp->nlp_flag);
+ 			}
+ 
+ 			/* The unreg_login mailbox is complete and had a
+-- 
+2.45.2
 
