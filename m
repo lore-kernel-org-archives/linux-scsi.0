@@ -1,75 +1,73 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBE9D203716;
-	Tue, 18 Mar 2025 09:43:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F8B41E51F9;
+	Tue, 18 Mar 2025 10:17:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742291036; cv=none; b=ScCg6idAEmatNJ95z4ON1YewoLF0QtCMk//Fe6TF4McVACSpQ3thvTVCBjGmkfPOg3x2Z+Ki1TQwdNYaE6fe+NEbzkc5VfTamTiIoHWc5HKP8SUGE96GQZGHpnZtdRDXZ6HcBxTz3+Ga8OAHCrIrtxPWw6r2fpiVdIIv26GpyA0=
+	t=1742293054; cv=none; b=c8i3UA/ThZo+kUCk90qcjP0ilb3jhSizcT0UzwlEQi5Ui6tiAemRtdNeeMNUXTnh6cx4ZxiybKhSG7uWeY8GNCnnU+Fm90o1UAYevBiWw1CwoRqR5TjWQtXFIvi+zPLW1eldfH0aNSPwkc0EWeFnkPmKRES6CoWQzRjltVjY0fw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742291036; c=relaxed/simple;
-	bh=XaCMPcxZPpx3RjmzjLh33LTCkrAMEaVOGoAlykO+ERk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hxLnoiv86PnCpXrkvQ3lTkC0cw1RM1psvz7G+8F6FkrSx7rJRPEDxPNCXD86SYWLBblZu12IY2KQO76seeQmoMY95GX3dTYT7YaXs3EXM6M1NFGW2IzChHx8Ma89MVAxgA0NQUGiMy0Kj+dzEGSV07V+FYaMyyd0rIx21+HLk+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=livyB0fx; arc=none smtp.client-ip=209.85.214.180
+	s=arc-20240116; t=1742293054; c=relaxed/simple;
+	bh=v8ZgNuyaGMugV+F8ZVKn5a8JZk8CKi/1tSd5iT2jCoo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gZtW1xd2ZtO8BZi1HMgOL/HSvYLFc1DH8dmnGSu0Mw3g959iN3dQaLeiKq1RjyMQ7FcaK0DO0JtITZD6fI6N8g+j7iWxG1LXNAa31Byg9k97QbzNCz30QInFpaoKRDptiPdGGkXrngcKhdV143qQ7pAgzVx6wSf1m0E6z5mWAmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yyjv6L96; arc=none smtp.client-ip=209.85.214.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="livyB0fx"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-22403cbb47fso98240885ad.0;
-        Tue, 18 Mar 2025 02:43:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yyjv6L96"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-22548a28d0cso146908665ad.3;
+        Tue, 18 Mar 2025 03:17:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742291034; x=1742895834; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1742293048; x=1742897848; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=hJbWkSZND/K3t/quPIPTfxuwMu7Us16mwzx5pshvALk=;
-        b=livyB0fxNLh4TV7fDAuXqNYD4fRpMU+Xbtpt4eMCDmExKEvtI4G6RnyYNhY8VPPjsw
-         BnE2dxfZ9b1KPaWqiFtXijS7vrudJ6OTazW8G3fiLB8jtapuxZkhqaLmcpYGumVR0puf
-         j/7BUjJfvaAIvylfsHo+qy1XzPa22bmY3lYaYTFAAwZeRMjiGMePRvMvKB5XJ8gHy9cX
-         k0rUU2jpCR1cGdq6bboO/0C1MVqToaN97ntSqSGNGjGZhC/MZoOi2psfZ0xSG4Pa1JSx
-         uPYdeAps7k7/vTt/A6Sc8hbuE3qWeX3MBRqlsPb+Pu9V4kkyEr6yv7Co1hdx6gRhd3km
-         /ytQ==
+        bh=2FgtaU11zF0pRhnrSxlGHFWtRYpu795XLnDbFY7Zyq8=;
+        b=Yyjv6L96/UclVaj+in1iVAt7VjK2CToFt0Bj4ItyXb/SGEQiKPZ0fzT1oCWrUeSmhv
+         qCIyC0whR6HesEgNrhUb+s/fYh3nR6qXX+TdwmwBoaGuNdAHqgKY0RTZ5RVAAa/mXaKl
+         6OxInzMdn2/2EbhgYreAoCZbvyAny/aYRtC1E9nTAtJJAHzmptxKmTT6JutoB44twf1/
+         +OGJKS778qvz2PzgFOXqNnqjg9E4gytnUl5gahili7dsav0xFMP0qSNhVXuXTMMTxGtI
+         dmFgExiS2EH/C5PgZjnxh+pGQ/2qnaXaZTnXGzEwJjhsE/9mzUlWDKXfpv/KEBYnTtlE
+         wCRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742291034; x=1742895834;
+        d=1e100.net; s=20230601; t=1742293048; x=1742897848;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=hJbWkSZND/K3t/quPIPTfxuwMu7Us16mwzx5pshvALk=;
-        b=TumfS9QAW2uYTzTGgyA4IRDchqtRSbsH2C1NOlZ2Ro6vVc8ICZIoAuBrQgB9SH+xQx
-         4cW08sMN1y+XwCGTr/zMkhKsF8jt81eRtPvsWj6e3o5/t2NI4gQ7xvb7TJK/4hyj5IQq
-         7/95DsYpjxKAEpwWCbgy5PSU8OXn4zcO+j6HvtFOKA9XKVh5Lzi9HfS+lMqj1OujCVgA
-         q/nnb/Ke4ubs9KG6kwU/Ytut6UcFTzazrA0jl43a9q1n4WyTl6GBH9aIkX2psi4PVLVF
-         I99ehItzyLiePGgZWzl0nV1JAVvzKRrkrE+HPgqt+X0GPnuz9eHuDMLYxZoVC1p6EftY
-         hElQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVypRh6iJIf3tl4z7fa1/pRup6+lliDGTP1Bas3ZtOe0v+tS7Mck9ouvC8ZjpAzF2eGjTOyHE0fh8lwfD0=@vger.kernel.org, AJvYcCWDfWmuRBg49oap8pQ2ahuUuFELeELbPEZajT5KQC2kCeHqd3kMwM41RDu0p/L25wGUIAUiWTCWuzVAuA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFxHIAG90dnzBskBgvpAyZTuo1wXly8TGYBWSjjMFWUgMoacSY
-	JEx0wwBPQ+UflVwMqHQSiK621RXTRAwIPJAYp/jYooNzGplzHl01
-X-Gm-Gg: ASbGncsTZOEgsZ/RQ8/WApH9LPZ2m0S+ltd7goNvIWVgGHYt4+ngMaIAzrhurH2E6k8
-	uzwTV90KIOTQ67m2kXoyivVYrnEwBA4uvBufebydnhg4hj6lO2beJ99NSFA8uVFHZUCruLye7hc
-	zZ68s4Gv4oi7wBNpmcXMUU/UZ2Xt+4XV3mP4MsyFuaGdXOZWUHTrQYoTu5VTzJjlW7I+rXI+sVz
-	yi6+ZxWf5T+b/RNwsHmCZMbMAXlQvlIf7ViKYfjcprrvojkTQv9ldlnusue3I1iNDSQBZ5v2wh0
-	W7Kh9mw5GyZW0QGpQJvxY2ug6ZL3NNM1WG35s/EajikXxLkwXxylyMQwjPJM8l5QgUS2jd/dyUW
-	B7XY=
-X-Google-Smtp-Source: AGHT+IH2ALjYAcNZFxFSk+UFw+JaT6R9liUb9JM6KsyABh3Uh+bIRYXRzCmoq6U09VGIyXm4x+WI+Q==
-X-Received: by 2002:a17:903:18e:b0:223:325c:89de with SMTP id d9443c01a7336-225e0a5282bmr189640685ad.1.1742291033856;
-        Tue, 18 Mar 2025 02:43:53 -0700 (PDT)
+        bh=2FgtaU11zF0pRhnrSxlGHFWtRYpu795XLnDbFY7Zyq8=;
+        b=A4hF+GDfGtjWjyBToD5r0HIGVhvJgFPciz4sYWEUgyR//Lw39TKHvKwRrP45bYdxKw
+         CfZMbwHPdPfL6hYGdLL3VOrSnP/kZGcDH0mC+WMc9rEwVN7/NyjC6HLCZqDXTNS/St5F
+         lplsqY6/B1DitnIJQ/PJt2a5ic9BLKAq5ftLAtOgPFi0iiGzpdTPNif9B8JL7en+nkyZ
+         YE1RoJqmn28Ecd/VHzbNLz2SHymt4wxRiUd3rxE+vGC4g5dWxBLxsUCiKLQom5oCN1tg
+         TVyUes4ZX3AzKyCsBFwsd6sgmGwWOPy23frjdhW6q5MFIaFL5/T7u0SMKLoRQEhVeKo8
+         8ckg==
+X-Forwarded-Encrypted: i=1; AJvYcCWUeh3nD2cZbA7LyCarugO8RV8qXxWNyr3F5cBMkgQ1vOFs3CkQI2m3yfUwwd3NMOIZojPXcCN/64YuHQ==@vger.kernel.org, AJvYcCXxlp3LSA8seo3fcPNO3hnB2HvjhFmD9kQo628aYnwRzTqvLqLKmm7r+yNGRAj2mbc4yOUTyyylKIWcwEI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsdxJQIp1O0a+ADzb0OZBGgSx7iO/BiTyeNsD+FJgKlVfULEOG
+	rBnfnCcOhQAclqnjicwjSQ8WQSXL+aj44tK1GlQNhEcrDQyy59/x
+X-Gm-Gg: ASbGncur5/HZv4Px1cAtX72/Zh5yY5R7dIgIdfRACIrTMy1tDUAUFXu8Rc/CFCf8Qfm
+	od+6vyhYjNlEN9FOnrBzQMrm47C996ioPpRmpKTYpTPafIzb3YziZfwgFBb6oTEfzQvXj+G8sg5
+	Oyo/wda7gZWyJlretila28Q6WmjW4GVfuzplHzXeRk1AXWy7MGfI8BSHPaGTqTUvNm5ayCYJKPr
+	tPcwiaFuTjxKvmFapoAGJR1uvC/XfZLKQpZ/xiXNfrZC1yXYHx3Vl5S/NN0cnq655kElLnwygcp
+	/hgXhoWVhxmrJJUFHmeSiSbIjEk4FTajQBoZLERwLXt+F2gqYMHEcs9m6jUu/KhJ2SM9
+X-Google-Smtp-Source: AGHT+IGNpKVhF1MmjriDdQeiRkhRxstftLV1dEUJfkWqqAoBXpzEMIzh8Q/RdGeRtk63yqBNxbzoWA==
+X-Received: by 2002:a17:903:3c48:b0:223:f408:c3f7 with SMTP id d9443c01a7336-225e0a363cemr215795695ad.16.1742293048229;
+        Tue, 18 Mar 2025 03:17:28 -0700 (PDT)
 Received: from localhost.localdomain ([114.246.238.36])
-        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-225c6bd3c59sm89848815ad.218.2025.03.18.02.43.49
+        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-225c68883c3sm90548725ad.20.2025.03.18.03.17.21
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 18 Mar 2025 02:43:53 -0700 (PDT)
-From: linmq006@gmail.com
-To: Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Lin Ma <linma@zju.edu.cn>,
-	open-iscsi@googlegroups.com,
+        Tue, 18 Mar 2025 03:17:26 -0700 (PDT)
+From: Miaoqian Lin <linmq006@gmail.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Kashyap, Desai" <kashyap.desai@lsi.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: linmq006@gmail.com
-Subject: [PATCH] scsi: iscsi: Fix missing scsi_host_put in error path
-Date: Tue, 18 Mar 2025 17:43:43 +0800
-Message-Id: <20250318094344.91776-1-linmq006@gmail.com>
+Subject: [PATCH] scsi: mptspi: Fix reference count leak in mptspi_write_spi_device_pg1
+Date: Tue, 18 Mar 2025 18:17:15 +0800
+Message-Id: <20250318101715.96586-1-linmq006@gmail.com>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -79,39 +77,41 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Miaoqian Lin <linmq006@gmail.com>
+scsi_device_lookup_by_target() returns a reference that needs to be
+released with scsi_device_put(). Add missing scsi_device_put() before
+continue.
 
-Add goto to ensure scsi_host_put is called in all error paths of
-iscsi_set_host_param function. This fixes a potential memory leak when
-strlen check fails.
-
-Fixes: ce51c8170084 ("scsi: iscsi: Add strlen() check in iscsi_if_set{_host}_param()")
+Fixes: 19fff154e7ee ("[SCSI] mptfusion: Adding inline data padding support for TAPE drive.")
 Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/message/fusion/mptspi.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 9c347c64c315..0b8c91bf793f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -3182,11 +3182,14 @@ iscsi_set_host_param(struct iscsi_transport *transport,
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index a3901fbfac4f..14b7c1d841a4 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -908,14 +908,19 @@ static int mptspi_write_spi_device_pg1(struct scsi_target *starget,
+ 		/* Turn on inline data padding for TAPE when running U320 */
+ 		for (i = 0 ; i < 16; i++) {
+ 			sdev = scsi_device_lookup_by_target(starget, i);
+-			if (sdev && sdev->type == TYPE_TAPE) {
++			if (!sdev)
++				continue;
++
++			if (sdev->type == TYPE_TAPE) {
+ 				sdev_printk(KERN_DEBUG, sdev, MYIOC_s_FMT
+ 					    "IDP:ON\n", ioc->name);
+ 				nego_parms |= MPI_SCSIDEVPAGE1_RP_IDP;
+ 				pg1->RequestedParameters =
+ 				    cpu_to_le32(nego_parms);
++				scsi_device_put(sdev);
+ 				break;
+ 			}
++			scsi_device_put(sdev);
+ 		}
  	}
  
- 	/* see similar check in iscsi_if_set_param() */
--	if (strlen(data) > ev->u.set_host_param.len)
--		return -EINVAL;
-+	if (strlen(data) > ev->u.set_host_param.len) {
-+		err = -EINVAL;
-+		goto out;
-+	}
- 
- 	err = transport->set_host_param(shost, ev->u.set_host_param.param,
- 					data, ev->u.set_host_param.len);
-+out:
- 	scsi_host_put(shost);
- 	return err;
- }
 -- 
 2.39.5 (Apple Git-154)
 
