@@ -1,205 +1,172 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CE0F1DF75C
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 07:05:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12C028F3;
+	Tue, 18 Mar 2025 07:31:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742281522; cv=none; b=mAEjwvRzQcROHu+eC2ZCcEgXBl8nktPesYdk1BsAucsDlICwVWwDolBhi/XBstMPJZCyh6FT6+/4UGQFAJpb8GKbuwGXa/tukYQN7SazXQ5WDOcc57PrHSVMrjwgQ2vi3BxbeDsIDTVthy/4cUdfT0YEUJ67CQWjGwgtSr3AGPM=
+	t=1742283106; cv=none; b=FMKo4XDum+88met3smlUyNC9KkmsijMURgZHyba9bvBQ+rp5YBKHo2Y4wANiCsSE2N+eDHz1kwtdwXdNt26QnHVFrgjxSMGNav+BGClcigOKHFsLG/0/liXGvFp3aEVxrY4mtnRX2I6v9GYwc7uBUrxP0+H6egXwj1lqdQRLmYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742281522; c=relaxed/simple;
-	bh=qCITQPsy2GwiPIzdSarHb8VqhI6wNrVYai8jeIXLBy4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PhwvWWHcSZ6G41Qsla1/Lcrkr9Dcxsk6KlNTlVoyA+G2oeVCkU21dGWt7qU/6yCPhLbfXQDLGtr0hT0bb/IJdjHuJAXoSIShPaYpqC7atxz+Kx6sMhwix7ejH6Pp7UhVaBTMQHTkpnmafsdfeRK+Ss2cF2qv8pxR5DbT3wVOiR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bc7ovjbU; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bc7ovjbU"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-223fb0f619dso86768865ad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 00:05:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1742281519; x=1742886319; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=QXrW4KZykPW/TaRaUNi4OeOrIqggNnusl7chmQ738FU=;
-        b=bc7ovjbULADqDVRybCDAqUjiTgCs3RSyvnUpbOt6AAUfPy1fV8kBtpTuMr2iYl05Kc
-         HxAcs8F1lI7kbpQSjv2QjkrLr+116wIveG5gmOQ1toQp49aVAQJ2Fce6noFDyrFSO1hg
-         5PAUteT0F8bHwTBNUuExQWcvs4EhLbN6GG99KPfWxZNlMwTV1gMLte3VJ7l8fMyyHgzV
-         842kkvY864eY24Ymu1Q7F8VwS/annjMHfeSdrdMDbcX97LjmR5Zm3KdZsVjZHIwg5nB1
-         Bul3vQpiyjfLAnCFMz7m4jJBbTfaPEVBK/XyY+GA7+rudEl71jebrkc1prJcI1wLRo1a
-         Umbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742281519; x=1742886319;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QXrW4KZykPW/TaRaUNi4OeOrIqggNnusl7chmQ738FU=;
-        b=tCWpxMFHns3WOYLJuTDaKsvf/NSyGP9shlj5VOe+eRGnpvfYlM4cFairOeuEGmG2Ke
-         FSeKbRpQXOxaKkiWWHMQQ56YzAzEbCIJCLHPSiUcBM2hEj/qhKDW423aL5CoAA6pw55F
-         p0wPnkNjoEqKf3yo+mwbs4L1+y+mYTdWWoWrpsp8xx8qtlqno3g6Ol4qYXHKPliIYJlt
-         +6W7TtYgmlQZwSc7y/DsZYKE2MH7hqZqvxyGWxqw+IhKlh7gQll2PCAaYML1ktn+4+aQ
-         rTjJhx3cp6OYGpKqSCbVAPx1qW8t+U53HZm8ORMX4pp7ejGMQqbNx0rbq60VY2WNKFfZ
-         Rgcg==
-X-Forwarded-Encrypted: i=1; AJvYcCVvZJ1VB5+cr7NVedzX2rkRI3Y2plU+XTE9e3icTx00577BdPBzSfIv9ap8CN6MtOcN7bpeZp01gWDP@vger.kernel.org
-X-Gm-Message-State: AOJu0YyUKCv9/PnHV2JWbY/sKnr8ZfuUe0OvjOMhNQiE1H6YBwkEu7yZ
-	0YuVT0NrDgr7Ay6PQqCTZtI7ylUs4xAgz2S66RZAxa+xhHZznubwI+OAtZoE5g==
-X-Gm-Gg: ASbGncuzYTgFa+a4+e0QBwWdipjhddXPOdWGj2rD43mnB4N2A6pkD04X7pMR7R9GSxI
-	6rTHSYqJrNM6dcaQ1yl9LvFNfVHitEeVxGBjugaPtzM6IpIWZ8G3kqa0VWYsrGo5jEeXaBbMA/X
-	lM81aGFibH9ZFCW6lW+kdxScOW7zcCGE+qDhEecZQTWR1HCOsRvT/Szzg3oldrL/w4bp8IQCuF+
-	srn5QSKQdviRlnLfb073hS7XyS+36D+UD6F/4zsRH2A8i1PiPqrsa6LtnDnHrwP4DLj6tMiplY2
-	QVVLXcqob0IgPm7qvakkNGdIZRXG3u27njJA/qVuP4bnXbN/Q3II2uKkImdsHH0OQkk=
-X-Google-Smtp-Source: AGHT+IFELZZGoPfT6STXRlYgerVWlkmXVkLlEhm+ubQe4itMsy4v3K90wtNq7bLioIFZ/Q1rMqJxyw==
-X-Received: by 2002:a17:902:f686:b0:221:7eae:163b with SMTP id d9443c01a7336-225e0b09706mr189606415ad.46.1742281518851;
-        Tue, 18 Mar 2025 00:05:18 -0700 (PDT)
-Received: from thinkpad ([120.56.195.170])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-301536320e1sm7394697a91.36.2025.03.18.00.05.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Mar 2025 00:05:18 -0700 (PDT)
-Date: Tue, 18 Mar 2025 12:35:13 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Manish Pandey <quic_mapa@quicinc.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
-	quic_cang@quicinc.com, quic_nguyenb@quicinc.com
-Subject: Re: [PATCH V3 3/3] scsi: ufs-qcom: Add support for testbus registers
-Message-ID: <20250318070513.rhl5lfwdu7mo7xv6@thinkpad>
-References: <20250313051635.22073-1-quic_mapa@quicinc.com>
- <20250313051635.22073-4-quic_mapa@quicinc.com>
+	s=arc-20240116; t=1742283106; c=relaxed/simple;
+	bh=Sk1a5Oy8HLiP2ms3VTLUQbUCiRdGdpnjUvo7jpbYXJY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mgs/AEt2OEClASJpk2WsSyWVKoyALzaL4o7lWZVlqxX7yMs2xf/htgLAFSnHFLWw/goabB8frd1o0SLiRMlbo4DrBZ79c2stCNRmHvVj7YhufWFAMUCHFPEeO4Iaf/OHvKRLGLVcwISzfztM5p8ZcHzy1Cs6EhqsWuU8mSUa0c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZH3Rm4ZJ0z4f3khW;
+	Tue, 18 Mar 2025 15:31:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 387571A1ABC;
+	Tue, 18 Mar 2025 15:31:39 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.112.188])
+	by APP4 (Coremail) with SMTP id gCh0CgCnC2BTIdln3gNYGw--.59040S4;
+	Tue, 18 Mar 2025 15:31:38 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	hch@lst.de,
+	tytso@mit.edu,
+	djwong@kernel.org,
+	john.g.garry@oracle.com,
+	bmarzins@redhat.com,
+	chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH xfsprogs] xfs_io: add FALLOC_FL_WRITE_ZEROES support
+Date: Tue, 18 Mar 2025 15:23:18 +0800
+Message-ID: <20250318072318.3502037-1-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.46.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250313051635.22073-4-quic_mapa@quicinc.com>
+X-CM-TRANSID:gCh0CgCnC2BTIdln3gNYGw--.59040S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kw17Zr4DCr4kGrW5uw1kuFg_yoW5Jr18p3
+	srXF15Ka45Xry7WFWfGws7Wrn8Xw4fKF1fJr4xWw1jv3W5AFyxKF1DG3ZYv3s7WFW8Ga18
+	JFnIgFy5G3WSyw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjTRRBT5DUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Thu, Mar 13, 2025 at 10:46:35AM +0530, Manish Pandey wrote:
-> This patch introduces support for dumping testbus registers,
-> enhancing the debugging capabilities for UFS-QCOM drivers.
-> 
+From: Zhang Yi <yi.zhang@huawei.com>
 
-Same comment as patch 1.
+The Linux kernel is planning to support FALLOC_FL_WRITE_ZEROES in
+fallocate(2). Add FALLOC_FL_ZERO_RANGE support to fallocate utility by
+introducing a new 'fwzero' command to xfs_io.
 
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> ---
-> Changes in v3:
-> - Annotated the 'testbus' declaration with __free.
-> - Converted the switch-statements into an array lookup.
-> - Introduced struct testbus_info{} for handling testbus switch-statements to an array lookup.
-> Changes in v2:
-> - Rebased patchsets.
-> - Link to v1: https://lore.kernel.org/linux-arm-msm/20241025055054.23170-1-quic_mapa@quicinc.com/
-> 
-> ---
->  drivers/ufs/host/ufs-qcom.c | 53 ++++++++++++++++++++++++++++++++++++-
->  1 file changed, 52 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index fb9da04c0d35..c32b1268d299 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -17,6 +17,7 @@
->  #include <linux/time.h>
->  #include <linux/unaligned.h>
->  #include <linux/units.h>
-> +#include <linux/cleanup.h>
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+ io/prealloc.c     | 36 ++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |  5 +++++
+ 2 files changed, 41 insertions(+)
 
-Sort includes alphabetically.
-
->  
->  #include <soc/qcom/ice.h>
->  
-> @@ -98,6 +99,24 @@ static const struct __ufs_qcom_bw_table {
->  	[MODE_MAX][0][0]		    = { 7643136,	819200 },
->  };
->  
-> +static const struct {
-> +	int nminor;
-> +	char *prefix;
-> +} testbus_info[TSTBUS_MAX] = {
-> +	[TSTBUS_UAWM]     = {32, "TSTBUS_UAWM "},
-> +	[TSTBUS_UARM]     = {32, "TSTBUS_UARM "},
-> +	[TSTBUS_TXUC]     = {32, "TSTBUS_TXUC "},
-> +	[TSTBUS_RXUC]     = {32, "TSTBUS_RXUC "},
-> +	[TSTBUS_DFC]      = {32, "TSTBUS_DFC "},
-> +	[TSTBUS_TRLUT]    = {32, "TSTBUS_TRLUT "},
-> +	[TSTBUS_TMRLUT]   = {32, "TSTBUS_TMRLUT "},
-> +	[TSTBUS_OCSC]     = {32, "TSTBUS_OCSC "},
-> +	[TSTBUS_UTP_HCI]  = {32, "TSTBUS_UTP_HCI "},
-> +	[TSTBUS_COMBINED] = {32, "TSTBUS_COMBINED "},
-> +	[TSTBUS_WRAPPER]  = {32, "TSTBUS_WRAPPER "},
-> +	[TSTBUS_UNIPRO]   = {256, "TSTBUS_UNIPRO "}
-> +};
-> +
->  static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
->  static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, unsigned long freq);
->  
-> @@ -1566,6 +1585,33 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
->  	return 0;
->  }
->  
-> +static void ufs_qcom_dump_testbus(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	int i, j, nminor = 0, testbus_len = 0;
-> +	u32 *testbus __free(kfree) = NULL;
-> +	char *prefix;
-> +
-> +	testbus = kmalloc(256 * sizeof(u32), GFP_KERNEL);
-
-Use kmalloc_array().
-
-> +	if (!testbus)
-> +		return;
-> +
-> +	for (j = 0; j < TSTBUS_MAX; j++) {
-> +		nminor = testbus_info[j].nminor;
-> +		prefix = testbus_info[j].prefix;
-> +		host->testbus.select_major = j;
-> +		testbus_len = nminor * sizeof(u32);
-> +		for (i = 0; i < nminor; i++) {
-> +			host->testbus.select_minor = i;
-> +			ufs_qcom_testbus_config(host);
-> +			testbus[i] = ufshcd_readl(hba, UFS_TEST_BUS);
-> +			usleep_range(100, 200);
-
-Why this delay is required?
-
-> +		}
-> +		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET,
-> +				16, 4, testbus, testbus_len, false);
-> +	}
-> +}
-> +
->  static void ufs_qcom_dump_mcq_hci_regs(struct ufs_hba *hba)
->  {
->  	/* sleep intermittently to prevent CPU hog during data dumps. */
-> @@ -1680,9 +1726,14 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
->  
->  	/* ensure below dumps occur only in task context due to blocking calls. */
->  	if (in_task()) {
-> -		/* Dump MCQ Host Vendor Specific Registers */
-> +		/* dump MCQ Host Vendor Specific Registers */
-
-Spurious change.
-
->  		if (hba->mcq_enabled)
->  			ufs_qcom_dump_mcq_hci_regs(hba);
-> +
-> +		/* sleep a bit intermittently as we are dumping too much data */
-> +		ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
-> +		usleep_range(1000, 1100);
-
-Same comment as previous patch. Use cond_resched().
-
-- Mani
-
+diff --git a/io/prealloc.c b/io/prealloc.c
+index 8e968c9f..9d126229 100644
+--- a/io/prealloc.c
++++ b/io/prealloc.c
+@@ -30,6 +30,10 @@
+ #define FALLOC_FL_UNSHARE_RANGE 0x40
+ #endif
+ 
++#ifndef FALLOC_FL_WRITE_ZEROES
++#define FALLOC_FL_WRITE_ZEROES 0x80
++#endif
++
+ static cmdinfo_t allocsp_cmd;
+ static cmdinfo_t freesp_cmd;
+ static cmdinfo_t resvsp_cmd;
+@@ -41,6 +45,7 @@ static cmdinfo_t fcollapse_cmd;
+ static cmdinfo_t finsert_cmd;
+ static cmdinfo_t fzero_cmd;
+ static cmdinfo_t funshare_cmd;
++static cmdinfo_t fwzero_cmd;
+ 
+ static int
+ offset_length(
+@@ -377,6 +382,27 @@ funshare_f(
+ 	return 0;
+ }
+ 
++static int
++fwzero_f(
++	int		argc,
++	char		**argv)
++{
++	xfs_flock64_t	segment;
++	int		mode = FALLOC_FL_WRITE_ZEROES;
++
++	if (!offset_length(argv[1], argv[2], &segment)) {
++		exitcode = 1;
++		return 0;
++	}
++
++	if (fallocate(file->fd, mode, segment.l_start, segment.l_len)) {
++		perror("fallocate");
++		exitcode = 1;
++		return 0;
++	}
++	return 0;
++}
++
+ void
+ prealloc_init(void)
+ {
+@@ -489,4 +515,14 @@ prealloc_init(void)
+ 	funshare_cmd.oneline =
+ 	_("unshares shared blocks within the range");
+ 	add_command(&funshare_cmd);
++
++	fwzero_cmd.name = "fwzero";
++	fwzero_cmd.cfunc = fwzero_f;
++	fwzero_cmd.argmin = 2;
++	fwzero_cmd.argmax = 2;
++	fwzero_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	fwzero_cmd.args = _("off len");
++	fwzero_cmd.oneline =
++	_("zeroes space and eliminates holes by allocating and writing zeroes");
++	add_command(&fwzero_cmd);
+ }
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 59d5ddc5..718f018c 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -538,6 +538,11 @@ With the
+ .B -k
+ option, use the FALLOC_FL_KEEP_SIZE flag as well.
+ .TP
++.BI fwzero " offset length"
++Call fallocate with FALLOC_FL_WRITE_ZEROES flag as described in the
++.BR fallocate (2)
++manual page to allocate and zero blocks within the range by writing zeroes.
++.TP
+ .BI zero " offset length"
+ Call xfsctl with
+ .B XFS_IOC_ZERO_RANGE
 -- 
-மணிவண்ணன் சதாசிவம்
+2.46.1
+
