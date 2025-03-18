@@ -1,43 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50B5D20322;
-	Tue, 18 Mar 2025 19:50:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4F017A30D;
+	Tue, 18 Mar 2025 20:24:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742327424; cv=none; b=ne944MXc8R+GJ46edrrcyjaezF1XHRQ1iF5a7NdopfZIXHJbNCcGdlH/9jKX4FgQaURrnu5IhJer3iOHo40FNK6Hq4B6y5AxL8GF4Ws62lEMAvSlCMKLC5b4JRf3I6va/amYZsgn1gmaHDOTXfmCLRDXD+t/69hrQm7aLD6gni8=
+	t=1742329459; cv=none; b=SQh1KrTCzHJQw14lzvEyRRKuEXOJTpeH+gPVtkjhFMiPhmHwHoU0VYwUqRpqrcbb4Z3YwAT7h35XBW5xdI2blEAflXxImvHllC2Mr4PgC+ExaFvlISMyoaUKaU6N9Hzkigo1rKxlrtSGfl6H/fjIHc6db2UXLVj4negVa/FZujk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742327424; c=relaxed/simple;
-	bh=6hdO58MKH0BNWV5qZxIKRDwcvWh3JUfmzbEUrW588jQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ShdG2QBNf+0bvGNrN1tV4TXkKtSCHd/B5JX49KWxSCsQx8CL19Ljq8FQ1Ufaw+ZECGynkkwh5KxfNu0isqNgPfUJmqhwSWfZZgzUTMyE3Z0y3qxJNY2AWsq+GwLJx7w/2NiQcE9AcQ6grxTZzzt7fEXfkRWuBVbqF3SWGrWC8WM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M/uwAorb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742329459; c=relaxed/simple;
+	bh=gDD5uj92n/KTWCwpkdaHT9ddiDTZCOIsEGMAyb98bik=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dQ3QsIxHUNrwAXb1Dy2PkjNS9T9XZaJpWJw1YxJhUgXSgT5EcaONr94DKXneqlTidusipOm2siMyLBBIFpYy6KtyoRhumnZl+E16GibCL2UONpr+aN5glcdFii99trZrBVEWJFh0gBlt7eFzaO9MfHi03zgLqSGGQC5l1ERMOno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lEZ+jD05; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M/uwAorb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 286C5C4CEDD;
-	Tue, 18 Mar 2025 19:50:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lEZ+jD05"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE192C4CEDD;
+	Tue, 18 Mar 2025 20:24:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742327424;
-	bh=6hdO58MKH0BNWV5qZxIKRDwcvWh3JUfmzbEUrW588jQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=M/uwAorbadYZhvpOulGkbKMAZnuLmRS39MAamq2u0wcbPOnOFChWEhfrO7qr3g4gz
-	 31ztOikGwpRqeHy2VKAJvE17FZZV4uhsndRrdO1UWWzIe5QN5L3Sf2buNAAQTjlSuk
-	 TPn/0QPLSEyfMBQlUy3ittCYTqhtnH1oypNE600II4ZWmFkolrotXsuepAju3t1+ad
-	 j8YO6bXrshN9yM7Et4FaZ8S/piffKOn0VX6DMF04iWyryXNei/4+HlinblDYWFRfA6
-	 Gz5CrcNmYp2ez7RHwn3Edv2SE4eus0CKyhcAaoaJaRH+IAPuXtcDRQoA+3nO6rsFN/
-	 zL+BWGrp0kS3w==
-Date: Tue, 18 Mar 2025 14:50:21 -0500
-From: Bjorn Andersson <andersson@kernel.org>
-To: Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, konrad.dybcio@oss.qualcomm.com, 
-	quic_rdwivedi@quicinc.com, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Can Guo <quic_cang@quicinc.com>
-Subject: Re: [PATCH V2 6/6] scsi: ufs: host : Introduce phy_power_on/off
- wrapper function
-Message-ID: <jx6t2745x3swbfiqwsii5xdumhpanc435ooucrg2nlyl22llho@epleg24suedr>
-References: <20250318144944.19749-1-quic_nitirawa@quicinc.com>
- <20250318144944.19749-7-quic_nitirawa@quicinc.com>
+	s=k20201202; t=1742329458;
+	bh=gDD5uj92n/KTWCwpkdaHT9ddiDTZCOIsEGMAyb98bik=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=lEZ+jD0581UoR31Vg2kaNKEsmWfBiZ4sE3jwW+tiDbk6mmsVWJmKfUPkfSIwZ5dgV
+	 jSCEd5hmr9W6XS7AJ8Iyu6pT084nxk6kklmMMBT7LvewZH/IEPmZSA1tXZwHKkamxJ
+	 BR1yjSjS15EgkwzN4J6fRghD96oHtlNoiagI2fqBJPtqDslnvyqnrpP/Z7B2t1+nkA
+	 kc6RpLLx1H5xyhah/sU7DSmWAmzlFA3cidbdc/YNYOiSSnePx1TEROjnKZrU/Yl452
+	 +ue3WpkN9xbqLjfpUYpgDna8Pw6yHHMOCHO19DgXOUNcc0Ascmeb4y93dXOgNrcLvu
+	 Hxoy7ywAmGxFQ==
+Date: Tue, 18 Mar 2025 15:24:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Nishanth Menon <nm@ti.com>, Dhruva Gole <d-gole@ti.com>,
+	Tero Kristo <kristo@kernel.org>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Dave Jiang <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>,
+	Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
+	Michael Kelley <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	linux-hyperv@vger.kernel.org, Wei Huang <wei.huang2@amd.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Jonathan Cameron <Jonathan.Cameron@huwei.com>
+Subject: Re: [patch V3 05/10] PCI/MSI: Switch to MSI descriptor locking to
+ guard()
+Message-ID: <20250318202416.GA1012281@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,146 +58,244 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250318144944.19749-7-quic_nitirawa@quicinc.com>
+In-Reply-To: <20250317092946.014189955@linutronix.de>
 
-On Tue, Mar 18, 2025 at 08:19:44PM +0530, Nitin Rawat wrote:
-> Introduce ufs_qcom_phy_power_on and ufs_qcom_phy_power_off wrapper
-> functions with mutex protection to ensure safe usage of is_phy_pwr_on
-> and prevent possible race conditions.
+On Mon, Mar 17, 2025 at 02:29:27PM +0100, Thomas Gleixner wrote:
+> Convert the code to use the new guard(msi_descs_lock).
 > 
+> No functional change intended.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
 
-Please describe the problem properly here. Are you introducing the mutex
-because there is a problem, or because you want to be "safe"?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Why is it "refcounted", is the calling code paths no longer in sync? How
-long has the current implementation been broken?
+To help connect these together, I might mention "msi_descs_lock"
+specifically in the subject line of the earlier patch:
 
-Regards,
-Bjorn
+  genirq/msi: Use lock guards for MSI descriptor locking
 
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+The msi_capability_init() -> __msi_capability_init() rework is a big
+chunk compared to the rest of this patch.  Same for
+msix_setup_interrupts() -> __msix_setup_interrupts().
+
+I think I see the point (basically move the body to the new "__"
+functions and put the guard() in the original functions before calling
+the new ones).
+
 > ---
->  drivers/ufs/host/ufs-qcom.c | 44 +++++++++++++++++++++++++++++++------
->  drivers/ufs/host/ufs-qcom.h |  4 ++++
->  2 files changed, 41 insertions(+), 7 deletions(-)
+> V3: Use__free in __msix_setup_interrupts() - PeterZ
+> V2: Remove the gotos - Jonathan
+> ---
+>  drivers/pci/msi/api.c |    6 --
+>  drivers/pci/msi/msi.c |  124 +++++++++++++++++++++++++-------------------------
+>  2 files changed, 64 insertions(+), 66 deletions(-)
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 5c7b6c75d669..8f80724e64b9 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -421,6 +421,38 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
->  	return UFS_HS_G3;
+> --- a/drivers/pci/msi/api.c
+> +++ b/drivers/pci/msi/api.c
+> @@ -53,10 +53,9 @@ void pci_disable_msi(struct pci_dev *dev
+>  	if (!pci_msi_enabled() || !dev || !dev->msi_enabled)
+>  		return;
+>  
+> -	msi_lock_descs(&dev->dev);
+> +	guard(msi_descs_lock)(&dev->dev);
+>  	pci_msi_shutdown(dev);
+>  	pci_free_msi_irqs(dev);
+> -	msi_unlock_descs(&dev->dev);
 >  }
-> 
-> +static int ufs_qcom_phy_power_on(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct phy *phy = host->generic_phy;
-> +	int ret = 0;
-> +
-> +	guard(mutex)(&host->phy_mutex);
-> +	if (!host->is_phy_pwr_on) {
-> +		ret = phy_power_on(phy);
-> +		if (!ret)
-> +			host->is_phy_pwr_on = true;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static int ufs_qcom_phy_power_off(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct phy *phy = host->generic_phy;
-> +	int ret = 0;
-> +
-> +	guard(mutex)(&host->phy_mutex);
-> +	if (host->is_phy_pwr_on) {
-> +		ret = phy_power_off(phy);
-> +		if (!ret)
-> +			host->is_phy_pwr_on = false;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
->  static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  EXPORT_SYMBOL(pci_disable_msi);
+>  
+> @@ -196,10 +195,9 @@ void pci_disable_msix(struct pci_dev *de
+>  	if (!pci_msi_enabled() || !dev || !dev->msix_enabled)
+>  		return;
+>  
+> -	msi_lock_descs(&dev->dev);
+> +	guard(msi_descs_lock)(&dev->dev);
+>  	pci_msix_shutdown(dev);
+>  	pci_free_msi_irqs(dev);
+> -	msi_unlock_descs(&dev->dev);
+>  }
+>  EXPORT_SYMBOL(pci_disable_msix);
+>  
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -336,41 +336,11 @@ static int msi_verify_entries(struct pci
+>  	return !entry ? 0 : -EIO;
+>  }
+>  
+> -/**
+> - * msi_capability_init - configure device's MSI capability structure
+> - * @dev: pointer to the pci_dev data structure of MSI device function
+> - * @nvec: number of interrupts to allocate
+> - * @affd: description of automatic IRQ affinity assignments (may be %NULL)
+> - *
+> - * Setup the MSI capability structure of the device with the requested
+> - * number of interrupts.  A return value of zero indicates the successful
+> - * setup of an entry with the new MSI IRQ.  A negative return value indicates
+> - * an error, and a positive return value indicates the number of interrupts
+> - * which could have been allocated.
+> - */
+> -static int msi_capability_init(struct pci_dev *dev, int nvec,
+> -			       struct irq_affinity *affd)
+> +static int __msi_capability_init(struct pci_dev *dev, int nvec, struct irq_affinity_desc *masks)
 >  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> @@ -449,7 +481,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  		return ret;
-> 
->  	if (phy->power_count) {
-> -		phy_power_off(phy);
-> +		ufs_qcom_phy_power_off(hba);
->  		phy_exit(phy);
+> -	struct irq_affinity_desc *masks = NULL;
+> +	int ret = msi_setup_msi_desc(dev, nvec, masks);
+>  	struct msi_desc *entry, desc;
+> -	int ret;
+> -
+> -	/* Reject multi-MSI early on irq domain enabled architectures */
+> -	if (nvec > 1 && !pci_msi_domain_supports(dev, MSI_FLAG_MULTI_PCI_MSI, ALLOW_LEGACY))
+> -		return 1;
+> -
+> -	/*
+> -	 * Disable MSI during setup in the hardware, but mark it enabled
+> -	 * so that setup code can evaluate it.
+> -	 */
+> -	pci_msi_set_enable(dev, 0);
+> -	dev->msi_enabled = 1;
+> -
+> -	if (affd)
+> -		masks = irq_create_affinity_masks(nvec, affd);
+>  
+> -	msi_lock_descs(&dev->dev);
+> -	ret = msi_setup_msi_desc(dev, nvec, masks);
+>  	if (ret)
+>  		goto fail;
+>  
+> @@ -399,19 +369,48 @@ static int msi_capability_init(struct pc
+>  
+>  	pcibios_free_irq(dev);
+>  	dev->irq = entry->irq;
+> -	goto unlock;
+> -
+> +	return 0;
+>  err:
+>  	pci_msi_unmask(&desc, msi_multi_mask(&desc));
+>  	pci_free_msi_irqs(dev);
+>  fail:
+>  	dev->msi_enabled = 0;
+> -unlock:
+> -	msi_unlock_descs(&dev->dev);
+> -	kfree(masks);
+>  	return ret;
+>  }
+>  
+> +/**
+> + * msi_capability_init - configure device's MSI capability structure
+> + * @dev: pointer to the pci_dev data structure of MSI device function
+> + * @nvec: number of interrupts to allocate
+> + * @affd: description of automatic IRQ affinity assignments (may be %NULL)
+> + *
+> + * Setup the MSI capability structure of the device with the requested
+> + * number of interrupts.  A return value of zero indicates the successful
+> + * setup of an entry with the new MSI IRQ.  A negative return value indicates
+> + * an error, and a positive return value indicates the number of interrupts
+> + * which could have been allocated.
+> + */
+> +static int msi_capability_init(struct pci_dev *dev, int nvec,
+> +			       struct irq_affinity *affd)
+> +{
+> +	/* Reject multi-MSI early on irq domain enabled architectures */
+> +	if (nvec > 1 && !pci_msi_domain_supports(dev, MSI_FLAG_MULTI_PCI_MSI, ALLOW_LEGACY))
+> +		return 1;
+> +
+> +	/*
+> +	 * Disable MSI during setup in the hardware, but mark it enabled
+> +	 * so that setup code can evaluate it.
+> +	 */
+> +	pci_msi_set_enable(dev, 0);
+> +	dev->msi_enabled = 1;
+> +
+> +	struct irq_affinity_desc *masks __free(kfree) =
+> +		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
+> +
+> +	guard(msi_descs_lock)(&dev->dev);
+> +	return __msi_capability_init(dev, nvec, masks);
+> +}
+> +
+>  int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  			   struct irq_affinity *affd)
+>  {
+> @@ -666,38 +665,39 @@ static void msix_mask_all(void __iomem *
+>  		writel(ctrl, base + PCI_MSIX_ENTRY_VECTOR_CTRL);
+>  }
+>  
+> -static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
+> -				 int nvec, struct irq_affinity *affd)
+> -{
+> -	struct irq_affinity_desc *masks = NULL;
+> -	int ret;
+> +DEFINE_FREE(free_msi_irqs, struct pci_dev *, if (_T) pci_free_msi_irqs(_T));
+>  
+> -	if (affd)
+> -		masks = irq_create_affinity_masks(nvec, affd);
+> +static int __msix_setup_interrupts(struct pci_dev *__dev, struct msix_entry *entries,
+> +				   int nvec, struct irq_affinity_desc *masks)
+> +{
+> +	struct pci_dev *dev __free(free_msi_irqs) = __dev;
+>  
+> -	msi_lock_descs(&dev->dev);
+> -	ret = msix_setup_msi_descs(dev, entries, nvec, masks);
+> +	int ret = msix_setup_msi_descs(dev, entries, nvec, masks);
+>  	if (ret)
+> -		goto out_free;
+> +		return ret;
+>  
+>  	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+>  	if (ret)
+> -		goto out_free;
+> +		return ret;
+>  
+>  	/* Check if all MSI entries honor device restrictions */
+>  	ret = msi_verify_entries(dev);
+>  	if (ret)
+> -		goto out_free;
+> +		return ret;
+>  
+> +	retain_ptr(dev);
+>  	msix_update_entries(dev, entries);
+> -	goto out_unlock;
+> +	return 0;
+> +}
+>  
+> -out_free:
+> -	pci_free_msi_irqs(dev);
+> -out_unlock:
+> -	msi_unlock_descs(&dev->dev);
+> -	kfree(masks);
+> -	return ret;
+> +static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
+> +				 int nvec, struct irq_affinity *affd)
+> +{
+> +	struct irq_affinity_desc *masks __free(kfree) =
+> +		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
+> +
+> +	guard(msi_descs_lock)(&dev->dev);
+> +	return __msix_setup_interrupts(dev, entries, nvec, masks);
+>  }
+>  
+>  /**
+> @@ -871,13 +871,13 @@ void __pci_restore_msix_state(struct pci
+>  
+>  	write_msg = arch_restore_msi_irqs(dev);
+>  
+> -	msi_lock_descs(&dev->dev);
+> -	msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+> -		if (write_msg)
+> -			__pci_write_msi_msg(entry, &entry->msg);
+> -		pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
+> +	scoped_guard (msi_descs_lock, &dev->dev) {
+> +		msi_for_each_desc(entry, &dev->dev, MSI_DESC_ALL) {
+> +			if (write_msg)
+> +				__pci_write_msi_msg(entry, &entry->msg);
+> +			pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
+> +		}
 >  	}
-> 
-> @@ -466,7 +498,7 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  		goto out_disable_phy;
-> 
->  	/* power on phy - start serdes and phy's power and clocks */
-> -	ret = phy_power_on(phy);
-> +	ret = ufs_qcom_phy_power_on(hba);
->  	if (ret) {
->  		dev_err(hba->dev, "%s: phy power on failed, ret = %d\n",
->  			__func__, ret);
-> @@ -1017,7 +1049,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  				 enum ufs_notify_change_status status)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> -	struct phy *phy = host->generic_phy;
->  	int err;
-> 
->  	/*
-> @@ -1037,7 +1068,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  				/* disable device ref_clk */
->  				ufs_qcom_dev_ref_clk_ctrl(host, false);
->  			}
-> -			err = phy_power_off(phy);
-> +			err = ufs_qcom_phy_power_off(hba);
->  			if (err) {
->  				dev_err(hba->dev, "phy power off failed, ret=%d\n", err);
->  					return err;
-> @@ -1046,7 +1077,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  		break;
->  	case POST_CHANGE:
->  		if (on) {
-> -			err = phy_power_on(phy);
-> +			err = ufs_qcom_phy_power_on(hba);
->  			if (err) {
->  				dev_err(hba->dev, "phy power on failed, ret = %d\n", err);
->  				return err;
-> @@ -1233,10 +1264,9 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  static void ufs_qcom_exit(struct ufs_hba *hba)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> -	struct phy *phy = host->generic_phy;
-> 
->  	ufs_qcom_disable_lane_clks(host);
-> -	phy_power_off(phy);
-> +	ufs_qcom_phy_power_off(hba);
->  	phy_exit(host->generic_phy);
+> -	msi_unlock_descs(&dev->dev);
+>  
+>  	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
 >  }
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index d0e6ec9128e7..3db29fbcd40b 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -252,6 +252,10 @@ struct ufs_qcom_host {
->  	u32 phy_gear;
-> 
->  	bool esi_enabled;
-> +	/* flag to check if phy is powered on */
-> +	bool is_phy_pwr_on;
-> +	/* Protect the usage of is_phy_pwr_on against racing */
-> +	struct mutex phy_mutex;
->  };
-> 
->  struct ufs_qcom_drvdata {
-> --
-> 2.48.1
-> 
 > 
