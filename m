@@ -1,77 +1,90 @@
-Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 477FF182
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 00:04:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E363817E0;
+	Tue, 18 Mar 2025 00:55:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742256250; cv=none; b=NFv1hpSm0761HgXv0An1HMsN8QTfM1FS79J1YIN3ryeu3Nbvdw3Ah6g7FePiOs9Urpyslb8VZdiCjoLv7KPFEX6T/JtZmBRn5z/qOOnm6Swej/nz7JrkcUfi+bjoLMGe0RhLd+awZ1Am9TqbTOKwEq7FXpP0ykpqKI3x6jR+BDU=
+	t=1742259320; cv=none; b=qnt5F3+avXGSQBWigHLisdIyGSc1Iwi25BYbDxC5Ng97TYnlQ84zFxpdrOxH0S5j8TpWC7OnaBdUPzAo/bzdCJzcVhbXgiqmRphvXIHpxt4oPcfKEi+ZeQBK+I+NzZUm8JXuGuWam6eUXzax6ogANrUesVx7QMQoS3KQSTBZDMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742256250; c=relaxed/simple;
-	bh=0UtYWkT13wtYvAr8lsedc2YPxGGT85wLQrjGwPQXQ4w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AN8VE48obIVdAe2L7T0/1CnmoTLKE5bgWWNFUrFvMD6us6apffrCeu8K13AcEv41fKdZ28f3OSKlZsDxMKdNHCbLH5Gw0zwN6Cyit8oMtx94TXL2/45PqcCw1efI/ly8PhInNYLsFnJ+84V5pVlTyaA0J3pp96o3Q3CLpgYxrRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NBTdzW2r; arc=none smtp.client-ip=209.85.128.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1742259320; c=relaxed/simple;
+	bh=Lz1n9ZMgP0m4bKXK0ehoY9GQiCJchKrBzsOqtq2O1Wo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=t9iPcPOvZEEBLRyr2gEx63D81tP4l+6jAiuQn5xYGoFd5HCP4+TpKkUzd8uNLARmxzlwlTmnqfxI7+ihQlOcXEAqHL9J/uk6roCT18YLaKCLg+oQotIAQDxp5wcB+RFu/MtNzsm/ZRg64DEuuP18Eg/Hjaplcm2k36bYrCRx1g8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gnR30Xj/; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NBTdzW2r"
-Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6feb229b716so46649987b3.3
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2025 17:04:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742256248; x=1742861048; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=0UtYWkT13wtYvAr8lsedc2YPxGGT85wLQrjGwPQXQ4w=;
-        b=NBTdzW2rAAcG2+E32BuS57Ngw+sIw1gNE6rfqtdnAKzh76C5bbbYa0XCpKczwQtqSb
-         8tDX5jar4LrT88K96kVd8B+hf5P47AG6rv3qewustqUQUzSGnRca9tBpqVy1Eym0cdsX
-         SbfLS2CCMGsw5Mx1hivL0ejZIcO0OYxqfZkPWizX95QT08aHqZ1sOSc6zz6kXTjZIweP
-         N5AzxvIcr3RWlA7iU/ZxG1XGuxDK1W1/YA9e4Qq023pd8ZoHC8dtH0vytZQkcCmq6LjX
-         OM2NGKrjp5/kAjTkOT34ainJba5ZdDOPsFWKxuODoj0Cx9O55J5qy6qacDidbpNobfUh
-         T64A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742256248; x=1742861048;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=0UtYWkT13wtYvAr8lsedc2YPxGGT85wLQrjGwPQXQ4w=;
-        b=tZQgwk5p2n0uOJkUdUQ7Aye7aQg99T1J1jYa2wV0J6qZMgskT2ru7SqgbPz7qpL1Wa
-         7RjWad6c1u4nRvlw2luXQ1KUUSUDl6AS+FFJMM9sSBL6bY1po86ArLcarn9neyTY4zC+
-         zd4a55ZAGBwej/o+xr78vy/bhoxPgbjZLxJr9b0DBzXY4ZrvE/+TiYuahuDs62N61kSV
-         yJumo2vvTlZT0m4ZebNUv0Dye+TIwVYyGZkiwKu0r4+oVk6b8IAxu/Wn4g8LujkdMTO+
-         6eaZQ4ZGFLj4N35SVVBEcaQu/4N9uWpfnh1N6gG5IZMXuqVmxo1b4avJn04to/A4bZHq
-         3Hbg==
-X-Gm-Message-State: AOJu0YyBSYJwUKRS4JYtLQ1NtRGeVG7ZCYP6+QzBFuLiYQ4o/H3XGpEd
-	RaDYeoyvun7sdMiXZ4hmrahgQAwRDac/DHKxo6faJgV5Q+3544vYNnEz+8s5VcNa+MYy04+ctKe
-	ahfum4C+ERNlHlHhSkA/2wn7qMUI=
-X-Gm-Gg: ASbGnct69sqm/7oyixFEpeuqT6vk86zfnq8DYOy0/ZBXfnU35w9mOO5N37RhsoYcA/K
-	Wab46msU+vu6g/bKKQ3fyM28hVkyeay+ewA8EeknWF1Emxw/NL854EbHj7XDuPOxdeuJjuM2gSZ
-	u1Rk6taWSNWJ89xNIVR/ZQ4X/WFjOv84Sn/FByzw==
-X-Google-Smtp-Source: AGHT+IGvDZLePdWqEiFKpfNVdP9U5124FddHys5UTvFAKddKuMwqPU2fTes/DGXIj35B2NPIeFU+5YQTCWNX1/0vl+A=
-X-Received: by 2002:a05:690c:620c:b0:6fb:9663:a5f with SMTP id
- 00721157ae682-6ff460fc31emr193569877b3.38.1742256248129; Mon, 17 Mar 2025
- 17:04:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gnR30Xj/"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52HLtrNU005446;
+	Tue, 18 Mar 2025 00:55:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2023-11-20; bh=4IoRSNY42BjvYZEXEZ/k8Hqn9CitPYFP4jIOsSFyvJI=; b=
+	gnR30Xj/Ve4DHFn9wj115hcVGP/hF6Y7EUb/TXjJTDSAHuOreCLDkMVzm1QdD7Nl
+	2VKnfRR5s8dSo1ePp3JlTAql6B43tuUCbsxiDsZphsMAbDcqM6qrFSss9oQP4Spv
+	rcU4cCkjWO+A7vi5jcqON4eoHsIrs6shYHXT2EqBhVknVUtUey2PODeuKay85H9U
+	nkc3DNthuuAyqSJeIdGNStWRdvXSgiGXfl0Grj2H2dMX4JHUsS2+j/wUBYOi5qsB
+	OpCXfJiNiiR3fhq0fHmfg3NZg874wOx6cg1j0612ew5nb+VRU9msIgWghCtkbbcQ
+	3btEOyx08MHhgi9jMHKKFw==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 45d1kb47eq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 18 Mar 2025 00:55:14 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 52HNR52S022435;
+	Tue, 18 Mar 2025 00:55:13 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 45dxeen35k-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 18 Mar 2025 00:55:13 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 52I0tCZA013983;
+	Tue, 18 Mar 2025 00:55:13 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 45dxeen34c-2;
+	Tue, 18 Mar 2025 00:55:13 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James.Bottomley@HansenPartnership.com, linux@treblig.org
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: isci: static most module parameters
+Date: Mon, 17 Mar 2025 20:54:42 -0400
+Message-ID: <174225924957.1094535.10992045643620590568.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250309145044.38586-1-linux@treblig.org>
+References: <20250309145044.38586-1-linux@treblig.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250317163731.356873-1-emilne@redhat.com>
-In-Reply-To: <20250317163731.356873-1-emilne@redhat.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Mon, 17 Mar 2025 17:02:49 -0700
-X-Gm-Features: AQ5f1Jq7QN_hHolH0v0w4apdLVpA61pds67Jv6KcAdDbdDDZcsBRvNAt1nzw2gE
-Message-ID: <CABPRKS-7sbG=XW1pt4aXqMfHO5T-jPfT86tfJAD3fHz=U1RHbw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: restore clearing of NLP_UNREG_INP in ndlp->nlp_flag
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org, dick.kennedy@broadcom.com, 
-	james.smart@broadcom.com, justin.tee@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-03-17_10,2025-03-17_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 mlxscore=0
+ adultscore=0 mlxlogscore=902 spamscore=0 malwarescore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502280000
+ definitions=main-2503180004
+X-Proofpoint-GUID: wRfJCAek9_kHzFoM9et6NzRyzNy5moXe
+X-Proofpoint-ORIG-GUID: wRfJCAek9_kHzFoM9et6NzRyzNy5moXe
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+On Sun, 09 Mar 2025 14:50:44 +0000, linux@treblig.org wrote:
 
-Thanks for fixing, looks good.
+> Most of the module parameters are only used locally in the same
+> C file; so static them.
+> 
+> 
 
-Regards,
-Justin
+Applied to 6.15/scsi-queue, thanks!
+
+[1/1] scsi: isci: static most module parameters
+      https://git.kernel.org/mkp/scsi/c/11c79df94b98
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
