@@ -1,63 +1,63 @@
 Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A501A08A8
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 06:35:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C101DD0C7
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 06:44:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742279715; cv=none; b=mfOBxFoZFHraHAAJUMZJgG3WvlpKOLNQOzFCbMpY/zKa5WToTWEicWrwF9EDUHwpVXKOFyHyH/yNNuduWd1CgqnW7e0LhlLWVEw9JBYdr6J/6UHgYetZ2/goZB97H5+s5xYk/yokVuuQsSQTnTA74vm74XFzpt2MtDhTVrawErc=
+	t=1742280268; cv=none; b=CBnDqCQ9BsdJxnVHQxtuR6W+i7ijd/7ng7dwWRIuiez5RsUnRhnD1J8RAI4+f85TtSKFhlxkTwdfJAI2LcryDDJoLsJschvh7bwIFqRezrdjMKLCyHbXY3c4qA6kzIO5zGn/kkzQBqh3V3V404frjAkxNrrHlqXmjWEex+9SL2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742279715; c=relaxed/simple;
-	bh=PryEXhcXzXzoSLQ+jG9MOOOhQkkDY7IE0CkRSj18qSo=;
+	s=arc-20240116; t=1742280268; c=relaxed/simple;
+	bh=SV9DG6e6mgA/lOSmt6NefQ8XUMo16/bUKqUU1uGTEag=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=chk898RpBvdJr8iOyLf6xSc+v1EjNDRFQAeRMElbGWgbjwFXpHnp7/NvHccD/CTdmtHT6WMmkGPW5AQxLllZL2lws3z9IL07O/qLq+G02vTtB3KPnIxzSCx8BWJtBnKDI/0yvixPJ9RK6oxQ0RltmDvuDbhR3eftOBpLH/h7E64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=vbFoi6uv; arc=none smtp.client-ip=209.85.214.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=epb1J/Uhmiif0xHEmp7k67hybmn123Y4dNiACiQaCaYK46OELDaBSTCyPzIzp8QfDN3GWCPzRyXOAjniXSnX4pwMdnDIB+1vUCIcKbVZaNQvbeyTjkX6MPqJ4X9RXyU0vRzlfnny1sKXv1QWDDvnvp659+HyHRk0w3Kx2TNYyc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=aPvUm0i9; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vbFoi6uv"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2255003f4c6so90608985ad.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2025 23:35:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aPvUm0i9"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-22403cbb47fso95543335ad.0
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2025 23:44:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1742279713; x=1742884513; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1742280266; x=1742885066; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=U6F27MGkl6WcOKIJ4ECnYu/HOFV7Uz3She2p4aXiUWw=;
-        b=vbFoi6uvanuqNU+e3irnqgpyWhyo4pngagj0m938yePxHWczYQAcJYYKxVxGFDdaBs
-         7ca0mvYX17QhnMLNeWFEGsyp9zxoW8tbHIubjEIlJ5tcm2R53/KRZu8czaZcr0huLDWq
-         nUwTe4kmrEk86cU2knNLzHHqW3cDLTv3VwLzmh2DS2To/zky61+/kQoy+wZOAEXk/cFF
-         psM9p7ZywQypam7o3lAGIdx6RCzdtlqsGeWT1OiavYUe9pgxBKjHfpf9O6H20zHqYCnJ
-         Bde7bTMSPM2WsWNpUw7DEqfT0efduEkOLp44Co6mOzcnjo5FtHI70uunFCWzCuG37KEA
-         tljg==
+        bh=AXbeE+q9B8uny1O22+JXIAcL6hxd+XvgftLgch9dqZ4=;
+        b=aPvUm0i9qEkd4ObL0B9xJC1M6DGa8vxK2pAqRj41rHCnSiv+XCqIs2HJsQPrhoue22
+         KHMPOGwrqJC9oYP1liNOrukg0txEZV2nmbe8tgsyyLLKDcc4wzCBbjHTu+ABQM/XuAkF
+         RiQDYV5ouBcsGxUVXKLIh44RJK3bbnhUPSOI1ayeia5YhLHxLvSuaPfP4T4PokFIfsNs
+         Nvjczk3yLsNZxpsBC22a1Nq0LyytLX5f4Q1B5zVf25v3zDcESUxTAUy8FZMTubGraEnN
+         Np4x0X/UudeauO6H6EtOqErJagNTutlI4gd7g9mrfp65BDdz+Wm20bn5OD8PMjmhOPjd
+         gegg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742279713; x=1742884513;
+        d=1e100.net; s=20230601; t=1742280266; x=1742885066;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=U6F27MGkl6WcOKIJ4ECnYu/HOFV7Uz3She2p4aXiUWw=;
-        b=KkMUoouu+Irt1BhzVtRsQ8xfRYhYbLsphgkMlEqy5rjswDCUSBSZdLbELqThE1UZY6
-         /qHwLCrStrUgrTWZV1eEPetmVg9vmZ+sXwpqZfTWBXSZDWD60vlvcYDDRUJB//oZtRIr
-         QT0xPz2N2FSomq/aw0GxY7FB7VZHouzI3LlZ9K2aBg4TSYxoMRdmVVkZt8nOH9VmPDaD
-         QrJlBqvaej8qKjsDfP5XEWtaLv29EIL8mF2tKAdNq9WMI/Dqe8o2fsxuNTkSam3oUKcB
-         +VTcLAyQ6QYzS89NNvEcvAMKdsQuRGjrUmpD8lNNlUQPwGDfYlSryilDO41KnzKuLwze
-         E/fA==
-X-Forwarded-Encrypted: i=1; AJvYcCXTBtBcJbzqDoZDBR7N7RAc1JndoNOd45rxQMkf1VALbEmmYn1qR+YSWN1YkMK8mZ4UJxXzncEJKGoq@vger.kernel.org
-X-Gm-Message-State: AOJu0YzWpAuFFVVrBblLlRjduD7gx2WbLts2iWYRV8P6z+gGZ69M4aUZ
-	sb6Zy6apT+o/YY7vBOPemM7gh2t6g0+rb12dQ9kwibjt15ZMfCDoiniaH0iqIQ==
-X-Gm-Gg: ASbGncsAHmL96jecQsW1MIAN4yyJDqiAeII6MfNVcw6ALUrOqsZqmJ/JCGFtrj1Wwso
-	KkwYciaHzlHFeAYxRDWErACtYDNtuCWXzuSivRItcEPRWRS5KnxuUBJ9jichGd+nukOqJQhQX9I
-	RHUIN+dcQiux/6o6NMPIBezPKb2CSXbDLZSV+s2GqwpKfcbf/SusbTIvtGWh7/5DrmUMCVMhB/I
-	fbOCHwKxjxT1xKk3NcsUkAolbJAv7Q/0bPOTW2i+doYTJ2o38ksuiIUpispq2kgusYwlgjUjOGJ
-	Og+Y7/cbVfmI5Vsy30g/hO8hklGg81yGXGidfzDgH06/4l83adNAbCW7
-X-Google-Smtp-Source: AGHT+IHCqFm9csE2qkE4bmWGh9NkZBAUBiZ2j02yr8s8ij2xHhs7et8fWqAp4EPwKF4QP8r/SzWwdQ==
-X-Received: by 2002:a05:6a21:918c:b0:1f5:6a1a:329b with SMTP id adf61e73a8af0-1f5c12cd543mr23504218637.32.1742279712736;
-        Mon, 17 Mar 2025 23:35:12 -0700 (PDT)
+        bh=AXbeE+q9B8uny1O22+JXIAcL6hxd+XvgftLgch9dqZ4=;
+        b=YiuLVOQqO30cDP6w1UQWyiOe6hGwzvOuPCObRcfQ+cOxSiBMsOSPNQ5SNlW6XaKNg2
+         Vz8yL8iETiG4U6l6IZ+kQTK5gnvyScTjttdP6yz7+PiyICCAQrugKMkAXB6/iG85p3wv
+         dz6OsYwzELh8aozqKn7wVOO3x56bmriNz/1OaoyH9tLDO4bFEMRdyChYwrYAJhmvNj/Z
+         lbezffZn8MfddBaoAYJ4avkHyz5B/D8qX3z/esGYhv3zxP27NreexXwHKEAjZLLE3TzY
+         j4V/KdBeeGXw1Bm61iuCiipQYvkAQzrtJL8FBhFjYKyeSkLBbrHb1eda/4u7i4outlhZ
+         wXTQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVB7Hzk7YhOfDFoCKM7ROF0gRsPD8wqAuzsbK3R9NI/xpa08hL1t4DOwzHuVk94CoVjRw3dEnYnKt0g@vger.kernel.org
+X-Gm-Message-State: AOJu0YypVNDll4U6l9jARyzGoGeYVUbYmRtXuzOdDFmjDMCkyn/4Lhia
+	HBn34JTHtKJboFu4BtZEaTW7QZA53wxogCgb66so3cjhHc1YuuEzJsINLzbDkg==
+X-Gm-Gg: ASbGncsTqCVySEcCVZAXWQpRligSZs74M9ZV08IG1HFs5+ul4wNdOV5uAlzifT5ZZKn
+	a7ashqP3epSDkAiSS666lBglV3OdHcs45NzTe/1c6vUPH5NRITyGuMHzNGrrK4pli3uLFgpxYJY
+	tzl/8hbMN1nbcDNa+S197ANsLdVrLbzrhjWdVriERQuCFA7czhwXYGfSILwdjDKMKvuLQt1pzUc
+	sgOw/+GdVO3HdsQKSUwAB4fEVJivpjkxcne8/prbxZLxH6zObgtA7GbEA6nxre8q+jBSaKKL2nz
+	NyTtXZHmxMn5p37192dJ2fsQlTK8iMKhuS2skbiWq9ucktrlBs87EIKP
+X-Google-Smtp-Source: AGHT+IGUoUDJ5vTYdSQ2RELO/IbV2/iGzzF3b1wNuHTa0nhz/p/MbaSJgXtRU6hyx2Anrag4ph7yJw==
+X-Received: by 2002:a17:902:f545:b0:223:635d:3e2a with SMTP id d9443c01a7336-225e0a8f4a7mr180304005ad.23.1742280266436;
+        Mon, 17 Mar 2025 23:44:26 -0700 (PDT)
 Received: from thinkpad ([120.56.195.170])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-737113d71fbsm8711029b3a.0.2025.03.17.23.35.09
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-225c6bbebebsm86560405ad.201.2025.03.17.23.44.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Mar 2025 23:35:12 -0700 (PDT)
-Date: Tue, 18 Mar 2025 12:05:08 +0530
+        Mon, 17 Mar 2025 23:44:26 -0700 (PDT)
+Date: Tue, 18 Mar 2025 12:14:21 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Manish Pandey <quic_mapa@quicinc.com>
 Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -65,11 +65,11 @@ Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
 	quic_cang@quicinc.com, quic_nguyenb@quicinc.com
-Subject: Re: [PATCH V3 1/3] scsi: ufs-qcom: Add support for dumping HW and SW
- hibern8 count
-Message-ID: <20250318063508.4iz4olthqq2rhjce@thinkpad>
+Subject: Re: [PATCH V3 2/3] scsi: ufs-qcom: Add support for dumping MCQ
+ registers
+Message-ID: <20250318064421.bvlv2xz7libxikk5@thinkpad>
 References: <20250313051635.22073-1-quic_mapa@quicinc.com>
- <20250313051635.22073-2-quic_mapa@quicinc.com>
+ <20250313051635.22073-3-quic_mapa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,58 +79,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250313051635.22073-2-quic_mapa@quicinc.com>
+In-Reply-To: <20250313051635.22073-3-quic_mapa@quicinc.com>
 
-On Thu, Mar 13, 2025 at 10:46:33AM +0530, Manish Pandey wrote:
-> This patch adds functionality to dump both hardware and software
-
-No 'patch' in description. Once the patch is merged, it will become as 'commit'.
-
-Also, please use imperative mood to describe the change. I don't know why this
-is not followed since I believe, I've given this comment before also (if you
-didn't read the process documentation).
-
-> hibern8 enter counts. This enhancement will aid in monitoring and
-> debugging hibern8 state transitions by providing detailed count
-> information.
+On Thu, Mar 13, 2025 at 10:46:34AM +0530, Manish Pandey wrote:
+> This patch adds functionality to dump MCQ registers.
+> This will help in diagnosing issues related to MCQ
+> operations by providing detailed register dumps.
 > 
+
+Same comment as previous patch. Also, make use of 75 column width.
+
 > Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
 > ---
->  drivers/ufs/host/ufs-qcom.c | 9 +++++++++
->  drivers/ufs/host/ufs-qcom.h | 9 +++++++++
->  2 files changed, 18 insertions(+)
+> 
+> Changes in v3:
+> - Addressed Bart's review comments by adding explanations for the
+>   in_task() and usleep_range() calls.
+> Changes in v2:
+> - Rebased patchsets.
+> - Link to v1: https://lore.kernel.org/linux-arm-msm/20241025055054.23170-1-quic_mapa@quicinc.com/
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 60 +++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.h |  2 ++
+>  2 files changed, 62 insertions(+)
 > 
 > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 1b37449fbffc..f5181773c0e5 100644
+> index f5181773c0e5..fb9da04c0d35 100644
 > --- a/drivers/ufs/host/ufs-qcom.c
 > +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1573,6 +1573,15 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+> @@ -1566,6 +1566,54 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+>  	return 0;
+>  }
 >  
->  	host = ufshcd_get_variant(hba);
->  
-> +	dev_err(hba->dev, "HW_H8_ENTER_CNT=%d\n", ufshcd_readl(hba, REG_UFS_HW_H8_ENTER_CNT));
-> +	dev_err(hba->dev, "HW_H8_EXIT_CNT=%d\n", ufshcd_readl(hba, REG_UFS_HW_H8_EXIT_CNT));
-> +
-> +	dev_err(hba->dev, "SW_H8_ENTER_CNT=%d\n", ufshcd_readl(hba, REG_UFS_SW_H8_ENTER_CNT));
-> +	dev_err(hba->dev, "SW_H8_EXIT_CNT=%d\n", ufshcd_readl(hba, REG_UFS_SW_H8_EXIT_CNT));
-> +
-> +	dev_err(hba->dev, "SW_AFTER_HW_H8_ENTER_CNT=%d\n",
-> +			ufshcd_readl(hba, REG_UFS_SW_AFTER_HW_H8_ENTER_CNT));
-> +
->  	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
->  			 "HCI Vendor Specific Registers ");
->  
-> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-> index d0e6ec9128e7..a41db017009f 100644
-> --- a/drivers/ufs/host/ufs-qcom.h
-> +++ b/drivers/ufs/host/ufs-qcom.h
-> @@ -75,6 +75,15 @@ enum {
->  	UFS_UFS_DBG_RD_EDTL_RAM			= 0x1900,
->  };
->  
-> +/* Vendor-specific Hibern8 count registers for the QCOM UFS host controller. */
+> +static void ufs_qcom_dump_mcq_hci_regs(struct ufs_hba *hba)
+> +{
+> +	/* sleep intermittently to prevent CPU hog during data dumps. */
+> +	/* RES_MCQ_1 */
+> +	ufshcd_dump_regs(hba, 0x0, 256 * 4, "MCQ HCI 1da0000-1da03f0 ");
+> +	usleep_range(1000, 1100);
 
-Get rid of 'for the QCOM UFS host controller'.
+If your motivation is just to not hog the CPU, use cond_resched().
 
 - Mani
 
