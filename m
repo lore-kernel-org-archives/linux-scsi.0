@@ -1,89 +1,74 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECAA11BD9C5
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 05:31:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DBBF1A8F63
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 05:55:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742275868; cv=none; b=Lhf8te9JLJ0+Zkdqc1eYE0RVeyClaw5bt1Ru9V7ORxTi3PEQhAjEqJTtHO9wYsnsBI+8IgTCE4CzdwZFNZBv1oHyH/gCf1+eYy2pM5DchaH21nASo2UwlvuAjccZsRDTANPlsZICh1xNemFOXDKdD7LtSewgTv28Pl13zWJeJsI=
+	t=1742277314; cv=none; b=gMqo1o8JyWmNrHRgVBonrGjS3fPSFSW2Uu62esLqEh1jTbzSa93wK65K4v6L5qz8C2QqAvAqPntmgvMvEkx4bV+Y3qgsV1OsGDN8Wq1w+BwgdpwUyB4aKIXzCcT1BmwMvglpeLpiaqx6sdjlB/bVxFmF6QVe0/vOvHNk4E3ZC6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742275868; c=relaxed/simple;
-	bh=uc0nqUy8n6Lwy/VSv9TAgXJgTNY7busrfcgDDejJjrE=;
+	s=arc-20240116; t=1742277314; c=relaxed/simple;
+	bh=rTC0hy1npeusD+pHEhc1NJOVNFWA0AEtSORX8wWQI+Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eZ3d60HEAmYnAHMv36A0Wz82+5qIfPiDkafXFgjQ5BnDZvDur/X2h4rJ6ZK08E5IvNKRZFJRF8l7jumWrAGeRAZFu1PJQLi8a5f93POaIGras9jqpvhL2fLQuDZ5ywtWmiHhMoEgBIY7acEObaodJzLmnX+48WC5kyZD7acS1q0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=C4x5QfnQ; arc=none smtp.client-ip=209.85.214.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=XuhvXsCY63s4k6/EIUaxsDx5rgCTEGO1VzbStm7MNhpJwCQif91du17xSDHtTawPPiePttEJL1FZv8q2Xi5sWtDWsL1/Gf7XraluvRHFr+xGkeaDsR2Bl7k77ZUG36SpBo8tpl34Lo9gzfAKf5YgytvkLiC4ra5JruJxnoc/N+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=FdOUXVQB; arc=none smtp.client-ip=209.85.216.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="C4x5QfnQ"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-225b5448519so96457665ad.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2025 22:31:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FdOUXVQB"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-300f92661fcso4470961a91.3
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Mar 2025 22:55:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1742275866; x=1742880666; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1742277311; x=1742882111; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=WZOO6fXLUM5QQ6l+FSRSueHWGfAmK/qcP1DtlCjY8Js=;
-        b=C4x5QfnQHvohKSaOJtlIvFHlPp/GGUhkytSkRerthYH9tDzm4NUFRTiSqZxngKOMTs
-         ErT/dlUGXy2fuZbBQh+EFlC/2myqdIgNRQ/Mea7o7VzBdgFzxSXUMU4K9xTUO6RSb6BY
-         PfBFJFpjSbtoYEeyD0o5cIzuSOfLbWpTZotxRAvkBhBhemdZu38Fn6jk3v5Q5ftMumwg
-         i+kf/xcy6LRJ/VgPtYIAdKy1hZil6Omr1JXsHbb4CqW79jT+BWZc6gqAiZd5EtF7PDD0
-         /qoJ9UJMJ3LIAKUQWzpnOja5b+MeFtC/9NpfSrAmMBLVD7pEVpULirTViEehTHMtkYxs
-         heFQ==
+        bh=D+BZ3c/ejBcztfBOuDhdrgt/dZHwQO7qmRn37C3opVM=;
+        b=FdOUXVQB3QDIPAO+F7mmQNvJ+bvF2PSC7ro9x55GTF/ykLB+VnOOcatxq+XZ2O/Dvg
+         G0V8DxaWOthJVIbcWolIPQVAIc4hIS7HzAhSLqZsaRPatTJUK3WwLMzfMByMDII4cU6M
+         ebojUoBU356nKzbFK15dgNXvuEZejjj7ucAGscQLoGJi+MCR2iiYrCv90tIrDymjaqAn
+         fWWAgPxf2zLXJW2Qo/csiwOORZ6HvprlesF3kHDnRsnp7UYvkf48P6yO0rXqBhkenX75
+         wv/APQ/JJurSBTpOi+iN2PDOtFBM8a1BMOE9NDQ833f0RKKG2gqTqE/jsckZQvYQCkAk
+         WyyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742275866; x=1742880666;
+        d=1e100.net; s=20230601; t=1742277311; x=1742882111;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=WZOO6fXLUM5QQ6l+FSRSueHWGfAmK/qcP1DtlCjY8Js=;
-        b=cBo1MYEFwcmdzqjPhjR7maIUzpkd1l3jqoMEqEZ9eEAqNJpesn7JzHf9EOetW/g91E
-         zREU2+YE054E6RaT52GMEtYL6MbXyox+N5wYs5QZXfk6V0TcNSJvDG5E+xKyMOXaXWKp
-         4fd5VF/lE7cqp3fqhlmnY6/FVIMcX3MeD8/pmJAsAx8vf0zJiQlYMinIsUAXZtMKJASX
-         Lvb8p6m4fg8BCkxrpSqkMZDiGE9dyHiR1nzlF4en/dh0IznL5L9GTeQsGcwXGUfB6Zd7
-         Pp2BkiMIsrbxWM1lo2QnGluTgy8ZClQVXuYyydrJTPT8Ix5VoNAEoUpK1oXdqrv0GEjX
-         mcVw==
-X-Forwarded-Encrypted: i=1; AJvYcCWo8rvLJXLkYt5Ftm3k300vsnoDtHhiN6pcXnSKx49E9AIpQ+CHU5Nep/AJNNcvSQiroxqWi027GnNs@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNah/+RVEs6E7BajOEUGw0IuRNuNckwRTHqLbJvZWjmGcUqVX8
-	6XfGA+g5eY3a58sENZU/XMZXfkfL33vvFD1F1xhL+OeH9f5SClz+UV2VmV4xKA==
-X-Gm-Gg: ASbGncsDDBzQ8KjYVfTkg3qWCmwClNsgV9cR3mIxDWgZGEhdL5umOCffLmA3jKsheVh
-	pN77TkahrZNvnI092z1bEQmzYW4OORMrbzPKIyNS6lUw3wsIZdhNFDYwVa8wq9gVGBPFZTYFGxI
-	yZI7qwr/DHrW1ZpYlMhWdMcBGAsKOFcoK70a/wqThFAt7Om4y4g0goPKPJZF22zV/BKj9K/PDbN
-	3EF9fKBoHexn9Y1/p9iIm8VrbLBMYAwV5tdBGGnRW7CWg+K34UOLdTV/Ctxz+BXg+T3oSuKIKSX
-	l6BO5R1NzuMZWVv8bqXYhwBr4vBfBQsj/ifuCR5GyJspFfOfHqun+9Il
-X-Google-Smtp-Source: AGHT+IHLYD5fTKzDENoVI+mnh+1/mTxdSkdiF0on8Wov7vEkkGeSNfMXP1QSWphdwBuAx/8LoGtLHg==
-X-Received: by 2002:a17:902:ce84:b0:220:ca08:8986 with SMTP id d9443c01a7336-225e0a6c2ddmr176694025ad.22.1742275866087;
-        Mon, 17 Mar 2025 22:31:06 -0700 (PDT)
+        bh=D+BZ3c/ejBcztfBOuDhdrgt/dZHwQO7qmRn37C3opVM=;
+        b=XFdoKTSPnbERmR5bNNQr/ITQJ9wGhQI7ZFNCZV8gKE1q6LSRWzTK82f290dTeVC0hS
+         shJr+gcA6l85fhKGSg4mJ+1nt2rr7yWOhn2hBd2AxEIIgk/07BaOKXDjjLPZnIYczw/Z
+         iCrJBBjsY8TAZJ9bwjQVLEBOeuREDo6jsfickJuz1rrZOjYyGSnM0O73b5rjnp0nyrJq
+         QCCZu66DB9Dey2bsFHkmbuYUdEzpDoqjCFUJhKJYQ+RrwezA0uR1OBNJN8t8lUSPjoCS
+         owPW3nlIVWXgYA3IPEVK0aI/bkDTjlMVOs30R5/GEffO379DhRKDLbxzszxNlTq1B2VR
+         gE5A==
+X-Forwarded-Encrypted: i=1; AJvYcCUvuT3YLWnoyufKk4H2AdSy617w78R3ch3OerO0BLCF7qS7BkxDiW+itFUup2X4HUwomL010HIOSxIQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIId1f+p3WmrHJipk/w4KZdeg5YRjFY5QVaPFEaoGxKs0bnr8j
+	6uwtnKIctmv5nP9bPh713OK5syZ4vWgN94aPgDXuygABEviqWRZFtulVTak52w==
+X-Gm-Gg: ASbGncvNZ65hL4uzRwep4KCCSKA3tC86sPhbiQJ9NocE5H7oZdVU/slGkPps1PO0cpo
+	flIoi2l30gC3s0O/NOXsZu4DH98b8sWNiGz6lFj3VfAx0VZt8Iilsz+uoipmZLsZ1KpWqIU2MMv
+	KFeq8fRwpw9IB2mmzu9alE8Nr0DjjxrA/14DtX1KmPsXA+DQ0rHPMAqIpgYnCWxXif7GyXFyWMf
+	jNe9vkXUAYUoKW9XOCPwpWfUl/YuIG0J3+cPwI+M6HrLMzqmyyoKsjTnAUnOhOc3YyfyIt4PY74
+	MpwUvA/Ukhb7/Ydl8sflFa/vyjRiZpuvnNvwJd8K+iI2pKiBB/jwiXoe
+X-Google-Smtp-Source: AGHT+IGUNLtROl66V0K63WPG8RGa89qgTgQjbzVFC/wAuXSmhpqfSId3mOtA9sk5t/PXh0pRfE5qWA==
+X-Received: by 2002:a17:90b:3dc3:b0:2ee:db8a:2a01 with SMTP id 98e67ed59e1d1-301a5bc0dbamr1673620a91.30.1742277311434;
+        Mon, 17 Mar 2025 22:55:11 -0700 (PDT)
 Received: from thinkpad ([120.56.195.170])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-225c6bbe5a2sm85314025ad.196.2025.03.17.22.31.00
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-301534f49efsm7196943a91.7.2025.03.17.22.55.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Mar 2025 22:31:05 -0700 (PDT)
-Date: Tue, 18 Mar 2025 11:00:58 +0530
+        Mon, 17 Mar 2025 22:55:10 -0700 (PDT)
+Date: Tue, 18 Mar 2025 11:25:05 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Melody Olvera <quic_molvera@quicinc.com>
-Cc: Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Andy Gross <agross@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Satya Durga Srinivasu Prabhala <quic_satyap@quicinc.com>,
-	Trilok Soni <quic_tsoni@quicinc.com>, linux-arm-msm@vger.kernel.org,
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Manish Pandey <quic_mapa@quicinc.com>
-Subject: Re: [PATCH v2 6/6] arm64: dts: qcom: sm8750: Add UFS nodes for
- SM8750 QRD board
-Message-ID: <20250318053058.ddhzbilbtenglfy4@thinkpad>
-References: <20250310-sm8750_ufs_master-v2-0-0dfdd6823161@quicinc.com>
- <20250310-sm8750_ufs_master-v2-6-0dfdd6823161@quicinc.com>
+To: "qiwu.chen" <qiwuchen55@gmail.com>
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.com,
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, beanhuo@micron.com, ahalaney@redhat.com,
+	ebiggers@google.com, minwoo.im@samsung.com,
+	linux-scsi@vger.kernel.org, "qiwu.chen" <qiwu.chen@transsion.com>
+Subject: Re: [PATCH] ufs: fix deadlock for the case of pm shutdown during
+ suspend transition to resume
+Message-ID: <20250318055505.zihbxmheku43zolv@thinkpad>
+References: <20250311084257.8989-1-qiwu.chen@transsion.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -93,57 +78,143 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250310-sm8750_ufs_master-v2-6-0dfdd6823161@quicinc.com>
+In-Reply-To: <20250311084257.8989-1-qiwu.chen@transsion.com>
 
-On Mon, Mar 10, 2025 at 02:12:34PM -0700, Melody Olvera wrote:
-> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+On Tue, Mar 11, 2025 at 04:42:57PM +0800, qiwu.chen wrote:
+> There is a deadlock when triggers pm shutdown during suspend-to-idle state transition
+> to resume. Here are the issue reproduce steps:
+> 1. System enter suspend-to-idle transition and execute suspend callbacks for given devices
+> in dpm_suspend(). The suspend callback of ufshcd_wl device - ufshcd_wl_suspend() will down
+> hba->host_sem which is supposed to up in ufshcd_wl_resume(). Here is main call trace:
+> enter_state
+>     suspend_devices_and_enter
+>         dpm_suspend_start
+> 	    dpm_suspend
+> 		device_suspend
+> 		    ufshcd_wl_suspend
+> 			down(&hba->host_sem) //hold host_sem
 > 
-> Add UFS host controller and PHY nodes for SM8750 QRD board.
+> 2. Someone triggers shutdown due to low battery during suspend transition.
+> The shutdown flow will hold device lock and execute shutdown callback for given devices
+> in device_shutdown(). The shutdown callback of ufshcd_wl device - ufshcd_wl_shutdown()
+> will hold ufshcd_wl's device lock and blocked to down hba->host_sem unfortunately.
+> Here is the blocked trace of shutdown thread:
+> __switch_to+0x174/0x338
+> __schedule+0x608/0x9f0
+> schedule+0x7c/0xe8
+> schedule_timeout+0x44/0x1c8
+> __down_common+0xbc/0x238
+> __down+0x18/0x28
+> down+0x50/0x54
+> ufshcd_wl_shutdown+0x28/0xb4   //blocked to down host_sem
+> device_shutdown+0x1a0/0x254    //get device lock
+> kernel_power_off+0x3c/0xf0
+> power_misc_routine_thread+0x814/0x970
+> kthread+0x104/0x1d4
+> ret_from_fork+0x10/0x20
 > 
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
-> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> 3. Meanwhile, the suspend-to-idle transition is aborted by a wakeup source and go to handle
+> resume works, the resume work will be blocked in holding ufshcd_wl device lock forever.
+> Here is the blocked trace of resume work:
+> __switch_to+0x174/0x338
+> __schedule+0x608/0x9f0
+> schedule+0x7c/0xe8
+> schedule_preempt_disabled+0x24/0x40
+> __mutex_lock+0x408/0xdac
+> __mutex_lock_slowpath+0x14/0x24
+> mutex_lock+0x40/0xec
+> __device_resume+0x50/0x360    //blocked in holding device lock, deadlock!
+> async_resume+0x24/0x3c
+> async_run_entry_fn+0x44/0x118
+> process_one_work+0x1e4/0x43c
+> worker_thread+0x25c/0x430
+> kthread+0x104/0x1d4
+> ret_from_fork+0x10/0x20
+> 
+> Fix the deadlock issue by using atomic operation instead of sleep lock for shutting_down state check.
+> 
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Using atomic_t for a boolean variable is fundamentally wrong. atomic_t is only
+meant for RMW operations. If you care about preventing compiler
+optimization/reordering, just use {READ/WRITE}_ONCE.
+
+> Signed-off-by: qiwu.chen <qiwu.chen@transsion.com>
+> ---
+>  drivers/ufs/core/ufshcd-priv.h |  2 +-
+>  drivers/ufs/core/ufshcd.c      | 21 +++++++++------------
+>  include/ufs/ufshcd.h           |  2 +-
+>  3 files changed, 11 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+> index 786f20ef2238..76d323de42f9 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -8,7 +8,7 @@
+>  
+>  static inline bool ufshcd_is_user_access_allowed(struct ufs_hba *hba)
+>  {
+> -	return !hba->shutting_down;
+> +	return !atomic_read(&hba->shutting_down);
+>  }
+>  
+>  void ufshcd_schedule_eh_work(struct ufs_hba *hba);
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 3094f3c89e82..b0f5152e5b04 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -1729,12 +1729,10 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+>  	if (kstrtou32(buf, 0, &value))
+>  		return -EINVAL;
+>  
+> -	down(&hba->host_sem);
+> -	if (!ufshcd_is_user_access_allowed(hba)) {
+> -		err = -EBUSY;
+> -		goto out;
+> -	}
+> +	if (!ufshcd_is_user_access_allowed(hba))
+> +		return -EBUSY;
+>  
+> +	down(&hba->host_sem);
+>  	value = !!value;
+>  	if (value == hba->clk_scaling.is_enabled)
+>  		goto out;
+> @@ -6416,8 +6414,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>  
+>  static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
+>  {
+> -	return (!hba->is_powered || hba->shutting_down ||
+> -		!hba->ufs_device_wlun ||
+> +	return (!hba->is_powered || !hba->ufs_device_wlun ||
+>  		hba->ufshcd_state == UFSHCD_STATE_ERROR ||
+>  		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
+>  		   ufshcd_is_link_broken(hba))));
+> @@ -6541,10 +6538,13 @@ static void ufshcd_err_handler(struct work_struct *work)
+>  	dev_info(hba->dev,
+>  		 "%s started; HBA state %s; powered %d; shutting down %d; saved_err = %d; saved_uic_err = %d; force_reset = %d%s\n",
+>  		 __func__, ufshcd_state_name[hba->ufshcd_state],
+> -		 hba->is_powered, hba->shutting_down, hba->saved_err,
+> +		 hba->is_powered, atomic_read(&hba->shutting_down), hba->saved_err,
+>  		 hba->saved_uic_err, hba->force_reset,
+>  		 ufshcd_is_link_broken(hba) ? "; link is broken" : "");
+>  
+> +	if (!ufshcd_is_user_access_allowed(hba))
+> +		return;
+> +
+>  	down(&hba->host_sem);
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	if (ufshcd_err_handling_should_stop(hba)) {
+> @@ -10194,10 +10194,7 @@ static void ufshcd_wl_shutdown(struct device *dev)
+>  	struct scsi_device *sdev = to_scsi_device(dev);
+>  	struct ufs_hba *hba = shost_priv(sdev->host);
+>  
+> -	down(&hba->host_sem);
+> -	hba->shutting_down = true;
+> -	up(&hba->host_sem);
+
+No locking needed just for 'hba::shutting_down', unless the variable it tied to
+any block of code.
 
 - Mani
-
-> ---
->  arch/arm64/boot/dts/qcom/sm8750-qrd.dts | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sm8750-qrd.dts b/arch/arm64/boot/dts/qcom/sm8750-qrd.dts
-> index f77efab0aef9bab751a947173bcdcc27df7295a8..8dd82494ba5aea6e6b5ddafc9299ec68dfb84bcd 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8750-qrd.dts
-> +++ b/arch/arm64/boot/dts/qcom/sm8750-qrd.dts
-> @@ -790,3 +790,21 @@ &tlmm {
->  &uart7 {
->  	status = "okay";
->  };
-> +
-> +&ufs_mem_phy {
-> +	vdda-phy-supply = <&vreg_l1j_0p91>;
-> +	vdda-pll-supply = <&vreg_l3g_1p2>;
-> +
-> +	status = "okay";
-> +};
-> +
-> +&ufs_mem_hc {
-> +	reset-gpios = <&tlmm 215 GPIO_ACTIVE_LOW>;
-> +
-> +	vcc-supply = <&vreg_l17b_2p5>;
-> +	vcc-max-microamp = <1300000>;
-> +	vccq-supply = <&vreg_l1d_1p2>;
-> +	vccq-max-microamp = <1200000>;
-> +
-> +	status = "okay";
-> +};
-> 
-> -- 
-> 2.46.1
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
