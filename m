@@ -1,208 +1,229 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from alt2.a-painless.mh.aa.net.uk (alt2.a-painless.mh.aa.net.uk [81.187.30.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F63D20E013
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 15:15:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E317204C2A;
+	Tue, 18 Mar 2025 15:57:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.187.30.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742310948; cv=none; b=g2Q37iiXekO1wXJ6SQwLELYvxd5YontWqJ7VUg5Mo5cJ1Pnz0cplb6B5FflEv/f7TJGg0x0gkOjAL4ovxtE3FjSF1mx0FgiItEDKRmeKIR3UvduxIcCD4eAZRfX3c0HgnGrGGfj6w+tkRFC5rJrm56ZghTPFqFMqvJLDtylJOGg=
+	t=1742313431; cv=none; b=J00c6uNEwxrzFrmZP5Dpmj3A8J4O4KKc79DvqYfR7VY8Q7/ogAjZt4J/dRbxGV9erLXjxQRTFArVsNnys+ytCNbh1vwNDxh1sY8mfgQSsAnm5lkTx3Qx04uCPOotytwjHFjmjGUgaIrrlpRKhZd1CMrSEDCHpRxQjwzF7NIRYc0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742310948; c=relaxed/simple;
-	bh=fgXbCRcr4nJjHuNPsXc54RP+jPfsRrPjWrKCJPX6Xas=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=nwv9Z/xOOv8liwKvGR3lVXntaJ4qX+NnLCbtJJ+QqaCbLGhrvOsuxSdtj7DGrRM0igFmGhdDKM9EpyX2Jwgd0WkBvll31L3RjGLcel4MPGpRL7rMgjnH5c8Xcas6yy5Pi/ThWORApwvICU9VQeR49Gos5BB9IRnbmLHyusq2+Hw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hn6/kt0p; arc=none smtp.client-ip=209.85.221.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hn6/kt0p"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3913fdd003bso2901374f8f.1
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 08:15:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1742310944; x=1742915744; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nMAu6MQINuflXuKN4gs2ELPnPkzz6J51pp9nuweT/JU=;
-        b=hn6/kt0pEXG2rkl2eswfJkeq+AAGVwB954CHegzZ6eSMOnAaAASDe5k0HwNCeAgzAM
-         y4+y1zG80oD5mo5PaJvObdHAzcoiXcInT0NSnvhpYC402+i53gzZR5rzN9FQxNkO3Y+T
-         rIeuPX0z2l1lFVttNZt+9VkoBCm2CCo5H/4He8/AlLhjtKQvUtjvNJu3DPnQWXTfczn8
-         3UGxF0PIT+oJ1HELbS8vb7BkDfXvPHvI+ws6rgzPl5SaHldi3bY/3uox/RYqj0P+LlM1
-         yG+JO1c1BrH8RHg/Hd/gQCk4T0iWVoJDzZ6ROAGmx1roRQ2b8xBbb4lUzpr+HWI0UBde
-         ozXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742310944; x=1742915744;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=nMAu6MQINuflXuKN4gs2ELPnPkzz6J51pp9nuweT/JU=;
-        b=l2iftFakH/8iArrQ72qyoFZ2Agx8kVTaLViYD4B6KoX0vkTV3Bp8mwpJlasJHW51RD
-         I7lNUuq1WfBzUdU3f4sBaLPbvZasudI/whSI2QwWf+NMMBbYNpMdPn4lH0ZxSt9mPEPM
-         JLouf/BReSnuRiREPArf3gi5Bv/sq02GRSA/jg+kQCXK/txffU3wXbMfmGsJzCGWvMoY
-         cFG6SNkQ6p1CbPP4sVxLAJnWUPaDQN+UejNbufNbANwb+N/ZA/f07gmR8dxdgpRbMULr
-         0BxkYsEC03QUMScAIe4jMeSX5Fy6W8TXtM6C09PsRzYGe3wo1JeXLx7a383svB8tGGhU
-         JT3w==
-X-Forwarded-Encrypted: i=1; AJvYcCXuG7jWNXLM2TkgAva/BWyk4LlIltoiF0MV8kLO7DEsZ1vbl40G6BXQQwKyY82ARnDU4k6qMf2KunPM@vger.kernel.org
-X-Gm-Message-State: AOJu0YySqhHy+/gOA7fobcYKKdYlUScxs+XTsEXsFuA11SbB/40AV4Dp
-	jLrIM4cvU2xZw3Xo3oJW94nO/CgbIZM6BjmuvbrnNJeWk2925V9BqRT/MfB27TIQdXGXZCGGjV6
-	d
-X-Gm-Gg: ASbGnctsH8iyPhwrwJ5Fvqpo9LHWBqqGiKQcc686D4GNnNVd9ky331JuBLNTLY8x9Z4
-	fvLlkxpkMV+L0mlY+o/50SR1EolHw9f52ccsE5YEOzWwvOcwHNsrK86B5TR1PrDKtVmV3hp1pnm
-	9okdpAfn0x0o2dmeCrjydzX8+uaZFXZbLnNDwQFvoNS9nXY27TYssY3wzICn7+qIG+TRS6q5gWD
-	Q6AS6LXTKgM32Gl/xDQ9CHYHeNCivD+a2/YqrsLrvqc14WBJz9ZgrGIwXPVSh/OZZI6Iu3keXnu
-	rhlKTkHxC4Jua1rDlmu+7bniZovsJLx5ivGGHAnhpwtiUttHayagAgU1KF4LzuL7cWmytuH8TpE
-	fAXF4VrapvHpO/JueCLm0cQ==
-X-Google-Smtp-Source: AGHT+IEdAuoBBa6rqdfXyXVPdfsyoNBKCU13VR5rdKO1AHzkVgoZcyHxlV5xdWf54kCgyzIi1YY4cg==
-X-Received: by 2002:a5d:5f93:0:b0:390:ec6e:43ea with SMTP id ffacd0b85a97d-3996bb51f57mr3474100f8f.15.1742310943702;
-        Tue, 18 Mar 2025 08:15:43 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:3d9:2080:eac1:f2d4:84a8:c5ff? ([2a01:e0a:3d9:2080:eac1:f2d4:84a8:c5ff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-395cb318a96sm18690639f8f.69.2025.03.18.08.15.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Mar 2025 08:15:43 -0700 (PDT)
-Message-ID: <73dd1253-1b73-436f-af1b-94c724b2069e@linaro.org>
-Date: Tue, 18 Mar 2025 16:15:42 +0100
+	s=arc-20240116; t=1742313431; c=relaxed/simple;
+	bh=i0dvlcEXvSCIALEo0mBL09rkA17hEMVdBBxTR5ldyQ4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R1Ygnd3w1MzIFOMhZk6TGcOWtX1oSVQTn9kCgIDYssZkXdYycgrw0pCTrjB0QYcq9/p7Yjg8tMBnl44L83bGhe5t4jpcKjox6OqNzIGwjTH+UYf+1OQxM/8ZrXVxli6W9ucStfutvB9kBgi0Fq/cz5x+wvYL0xU0+5CnO6fFXvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pileofstuff.org; spf=pass smtp.mailfrom=pileofstuff.org; arc=none smtp.client-ip=81.187.30.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pileofstuff.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pileofstuff.org
+Received: from 6.1.e.8.1.c.e.a.2.2.4.2.8.e.4.a.0.5.8.0.9.1.8.0.0.b.8.0.1.0.0.2.ip6.arpa ([2001:8b0:819:850:a4e8:2422:aec1:8e16] helo=andrews-2024-laptop.lan)
+	by painless-a.thn.aa.net.uk with esmtp (Exim 4.96)
+	(envelope-from <kernel.org@pileofstuff.org>)
+	id 1tuZJR-00EYj0-2C;
+	Tue, 18 Mar 2025 15:57:05 +0000
+From: Andrew Sayers <kernel.org@pileofstuff.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Andrew Sayers <kernel.org@pileofstuff.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: Change log level of progress messages to INFO
+Date: Tue, 18 Mar 2025 15:56:45 +0000
+Message-ID: <20250318155647.1078829-1-kernel.org@pileofstuff.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: neil.armstrong@linaro.org
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH V2 4/6] phy: qcom-qmp-ufs: Refactor qmp_ufs_exit callback.
-To: Nitin Rawat <quic_nitirawa@quicinc.com>, vkoul@kernel.org,
- kishon@kernel.org, manivannan.sadhasivam@linaro.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- konrad.dybcio@oss.qualcomm.com
-Cc: quic_rdwivedi@quicinc.com, linux-arm-msm@vger.kernel.org,
- linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <20250318144944.19749-1-quic_nitirawa@quicinc.com>
- <20250318144944.19749-5-quic_nitirawa@quicinc.com>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <20250318144944.19749-5-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 18/03/2025 15:49, Nitin Rawat wrote:
-> Rename qmp_ufs_disable to qmp_ufs_power_off and refactor
-> the code to move all the power off sequence to qmp_ufs_power_off.
-> 
-> Co-developed-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 41 ++-----------------------
->   1 file changed, 3 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> index 3a80c2c110d2..675fef106d3b 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> @@ -1757,19 +1757,6 @@ static void qmp_ufs_init_registers(struct qmp_ufs *qmp, const struct qmp_phy_cfg
->   	qmp_ufs_init_all(qmp, &cfg->tbls_hs_b);
->   }
-> 
-> -static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
-> -{
-> -	const struct qmp_phy_cfg *cfg = qmp->cfg;
-> -
-> -	reset_control_assert(qmp->ufs_reset);
-> -
-> -	clk_bulk_disable_unprepare(qmp->num_clks, qmp->clks);
-> -
-> -	regulator_bulk_disable(cfg->num_vregs, qmp->vregs);
-> -
-> -	return 0;
-> -}
-> -
->   static int qmp_ufs_power_on(struct phy *phy)
->   {
->   	struct qmp_ufs *qmp = phy_get_drvdata(phy);
-> @@ -1839,39 +1826,17 @@ static int qmp_ufs_power_off(struct phy *phy)
->   	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->   	const struct qmp_phy_cfg *cfg = qmp->cfg;
-> 
-> -	/* PHY reset */
-> -	if (!cfg->no_pcs_sw_reset)
-> -		qphy_setbits(qmp->pcs, cfg->regs[QPHY_SW_RESET], SW_RESET);
-> -
-> -	/* stop SerDes */
-> -	qphy_clrbits(qmp->pcs, cfg->regs[QPHY_START_CTRL], SERDES_START);
-> -
->   	/* Put PHY into POWER DOWN state: active low */
->   	qphy_clrbits(qmp->pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL],
->   			SW_PWRDN);
+These are normal progress messages that don't indicate anything unusual.
+Reducing the level of these messages frees up user attention for when
+we need them to do something.
 
-So where goes this code ? I think it should go in a new exit PHY op.
+Signed-off-by: Andrew Sayers <kernel.org@pileofstuff.org>
+---
+ drivers/scsi/scsi_scan.c |  2 +-
+ drivers/scsi/sd.c        | 40 ++++++++++++++++++++--------------------
+ 2 files changed, 21 insertions(+), 21 deletions(-)
 
-> 
-> -	return 0;
-> -}
-> -
-> -static int qmp_ufs_exit(struct phy *phy)
-> -{
-> -	struct qmp_ufs *qmp = phy_get_drvdata(phy);
-> +	clk_bulk_disable_unprepare(qmp->num_clks, qmp->clks);
-> 
-> -	qmp_ufs_com_exit(qmp);
-> +	regulator_bulk_disable(cfg->num_vregs, qmp->vregs);
-> 
->   	return 0;
->   }
-> 
-> -static int qmp_ufs_disable(struct phy *phy)
-> -{
-> -	int ret;
-> -
-> -	ret = qmp_ufs_power_off(phy);
-> -	if (ret)
-> -		return ret;
-> -	return qmp_ufs_exit(phy);
-> -}
-> -
->   static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
->   {
->   	struct qmp_ufs *qmp = phy_get_drvdata(phy);
-> @@ -1890,7 +1855,7 @@ static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
-> 
->   static const struct phy_ops qcom_qmp_ufs_phy_ops = {
->   	.power_on	= qmp_ufs_power_on,
-> -	.power_off	= qmp_ufs_disable,
-> +	.power_off	= qmp_ufs_power_off,
->   	.calibrate	= qmp_ufs_phy_calibrate,
->   	.set_mode	= qmp_ufs_set_mode,
->   	.owner		= THIS_MODULE,
-> --
-> 2.48.1
-> 
-> 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 4833b8fe251b..9580982c5700 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -977,7 +977,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (inq_result[7] & 0x10)
+ 		sdev->sdtr = 1;
+ 
+-	sdev_printk(KERN_NOTICE, sdev, "%s %.8s %.16s %.4s PQ: %d "
++	sdev_printk(KERN_INFO, sdev, "%s %.8s %.16s %.4s PQ: %d "
+ 			"ANSI: %d%s\n", scsi_device_type(sdev->type),
+ 			sdev->vendor, sdev->model, sdev->rev,
+ 			sdev->inq_periph_qual, inq_result[2] & 0x07,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 950d8c9fb884..ad7d931bbbc9 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2447,7 +2447,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 			 */
+ 			if (media_not_present(sdkp, &sshdr)) {
+ 				if (media_was_present)
+-					sd_printk(KERN_NOTICE, sdkp,
++					sd_printk(KERN_INFO, sdkp,
+ 						  "Media removed, stopped polling\n");
+ 				return;
+ 			}
+@@ -2495,7 +2495,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 						0x11 : 1,
+ 				};
+ 
+-				sd_printk(KERN_NOTICE, sdkp, "Spinning up disk...");
++				sd_printk(KERN_INFO, sdkp, "Spinning up disk...");
+ 				scsi_execute_cmd(sdkp->device, start_cmd,
+ 						 REQ_OP_DRV_IN, NULL, 0,
+ 						 SD_TIMEOUT, sdkp->max_retries,
+@@ -2700,7 +2700,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
+ 	lim->alignment_offset = alignment;
+ 	if (alignment && sdkp->first_scan)
+-		sd_printk(KERN_NOTICE, sdkp,
++		sd_printk(KERN_INFO, sdkp,
+ 			  "physical block alignment offset: %u\n", alignment);
+ 
+ 	if (buffer[14] & 0x80) { /* LBPME */
+@@ -2835,7 +2835,7 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
+ 		if ((sizeof(sdkp->capacity) > 4) &&
+ 		    (sdkp->capacity > 0xffffffffULL)) {
+ 			int old_sector_size = sector_size;
+-			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
++			sd_printk(KERN_INFO, sdkp, "Very big device. "
+ 					"Trying to use READ CAPACITY(16).\n");
+ 			sector_size = read_capacity_16(sdkp, sdp, lim, buffer);
+ 			if (sector_size < 0) {
+@@ -2923,13 +2923,13 @@ sd_print_capacity(struct scsi_disk *sdkp,
+ 	string_get_size(sdkp->capacity, sector_size,
+ 			STRING_UNITS_10, cap_str_10, sizeof(cap_str_10));
+ 
+-	sd_printk(KERN_NOTICE, sdkp,
++	sd_printk(KERN_INFO, sdkp,
+ 		  "%llu %d-byte logical blocks: (%s/%s)\n",
+ 		  (unsigned long long)sdkp->capacity,
+ 		  sector_size, cap_str_10, cap_str_2);
+ 
+ 	if (sdkp->physical_block_size != sector_size)
+-		sd_printk(KERN_NOTICE, sdkp,
++		sd_printk(KERN_INFO, sdkp,
+ 			  "%u-byte physical blocks\n",
+ 			  sdkp->physical_block_size);
+ }
+@@ -3003,7 +3003,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
+ 		set_disk_ro(sdkp->disk, sdkp->write_prot);
+ 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
+-			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
++			sd_printk(KERN_INFO, sdkp, "Write Protect is %s\n",
+ 				  sdkp->write_prot ? "on" : "off");
+ 			sd_printk(KERN_DEBUG, sdkp, "Mode Sense: %4ph\n", buffer);
+ 		}
+@@ -3154,7 +3154,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
+ 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
+-			sd_printk(KERN_NOTICE, sdkp,
++			sd_printk(KERN_INFO, sdkp,
+ 				  "Write cache: %s, read cache: %s, %s\n",
+ 				  sdkp->WCE ? "enabled" : "disabled",
+ 				  sdkp->RCD ? "disabled" : "enabled",
+@@ -3415,11 +3415,11 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp,
+ 		return;
+ 
+ 	if (sdkp->device->type == TYPE_ZBC)
+-		sd_printk(KERN_NOTICE, sdkp, "Host-managed zoned block device\n");
++		sd_printk(KERN_INFO, sdkp, "Host-managed zoned block device\n");
+ 	else if (sdkp->zoned == 1)
+-		sd_printk(KERN_NOTICE, sdkp, "Host-aware SMR disk used as regular disk\n");
++		sd_printk(KERN_INFO, sdkp, "Host-aware SMR disk used as regular disk\n");
+ 	else if (sdkp->zoned == 2)
+-		sd_printk(KERN_NOTICE, sdkp, "Drive-managed SMR disk\n");
++		sd_printk(KERN_INFO, sdkp, "Drive-managed SMR disk\n");
+ }
+ 
+ /**
+@@ -3567,7 +3567,7 @@ static void sd_read_cpr(struct scsi_disk *sdkp)
+ out:
+ 	disk_set_independent_access_ranges(sdkp->disk, iars);
+ 	if (nr_cpr && sdkp->nr_actuators != nr_cpr) {
+-		sd_printk(KERN_NOTICE, sdkp,
++		sd_printk(KERN_INFO, sdkp,
+ 			  "%u concurrent positioning ranges\n", nr_cpr);
+ 		sdkp->nr_actuators = nr_cpr;
+ 	}
+@@ -4025,10 +4025,10 @@ static int sd_probe(struct device *dev)
+ 	if (sdkp->security) {
+ 		sdkp->opal_dev = init_opal_dev(sdkp, &sd_sec_submit);
+ 		if (sdkp->opal_dev)
+-			sd_printk(KERN_NOTICE, sdkp, "supports TCG Opal\n");
++			sd_printk(KERN_INFO, sdkp, "supports TCG Opal\n");
+ 	}
+ 
+-	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
++	sd_printk(KERN_INFO, sdkp, "Attached SCSI %sdisk\n",
+ 		  sdp->removable ? "removable " : "");
+ 	scsi_autopm_put_device(sdp);
+ 
+@@ -4166,7 +4166,7 @@ static void sd_shutdown(struct device *dev)
+ 		return;
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
+-		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
++		sd_printk(KERN_INFO, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp);
+ 	}
+ 
+@@ -4174,7 +4174,7 @@ static void sd_shutdown(struct device *dev)
+ 	     sdkp->device->manage_system_start_stop) ||
+ 	    (system_state == SYSTEM_POWER_OFF &&
+ 	     sdkp->device->manage_shutdown)) {
+-		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
++		sd_printk(KERN_INFO, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+ }
+@@ -4195,7 +4195,7 @@ static int sd_suspend_common(struct device *dev, bool runtime)
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
+ 		if (!sdkp->device->silence_suspend)
+-			sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
++			sd_printk(KERN_INFO, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp);
+ 		/* ignore OFFLINE device */
+ 		if (ret == -ENODEV)
+@@ -4207,7 +4207,7 @@ static int sd_suspend_common(struct device *dev, bool runtime)
+ 
+ 	if (sd_do_start_stop(sdkp->device, runtime)) {
+ 		if (!sdkp->device->silence_suspend)
+-			sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
++			sd_printk(KERN_INFO, sdkp, "Stopping disk\n");
+ 		/* an error is not worth aborting a system sleep */
+ 		ret = sd_start_stop_device(sdkp, 0);
+ 		if (!runtime)
+@@ -4237,7 +4237,7 @@ static int sd_resume(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 
+-	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++	sd_printk(KERN_INFO, sdkp, "Starting disk\n");
+ 
+ 	if (opal_unlock_from_suspend(sdkp->opal_dev)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "OPAL unlock failed\n");
+@@ -4260,7 +4260,7 @@ static int sd_resume_common(struct device *dev, bool runtime)
+ 		return 0;
+ 	}
+ 
+-	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++	sd_printk(KERN_INFO, sdkp, "Starting disk\n");
+ 	ret = sd_start_stop_device(sdkp, 1);
+ 	if (!ret) {
+ 		sd_resume(dev);
+-- 
+2.49.0
 
