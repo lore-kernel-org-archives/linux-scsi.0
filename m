@@ -1,229 +1,99 @@
-Received: from alt2.a-painless.mh.aa.net.uk (alt2.a-painless.mh.aa.net.uk [81.187.30.51])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E317204C2A;
-	Tue, 18 Mar 2025 15:57:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.187.30.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E13A2211A07;
+	Tue, 18 Mar 2025 17:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742313431; cv=none; b=J00c6uNEwxrzFrmZP5Dpmj3A8J4O4KKc79DvqYfR7VY8Q7/ogAjZt4J/dRbxGV9erLXjxQRTFArVsNnys+ytCNbh1vwNDxh1sY8mfgQSsAnm5lkTx3Qx04uCPOotytwjHFjmjGUgaIrrlpRKhZd1CMrSEDCHpRxQjwzF7NIRYc0=
+	t=1742320014; cv=none; b=dVyLL2rRdqb5GS7SDBPNCQssOyK6AX7Du97gT4iv+TnKGDt8xm/KocezPWA8PNTnlk6UqwoGbDXyWqcCIuV8/rURxdov/+DLV7V3FUfwRCD6tEiFFMv+d6OZL3o/D1r+DoSQ2fX6OpZ/2qdNMvBmGq3DGElRZKgBc0w7HH1kxCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742313431; c=relaxed/simple;
-	bh=i0dvlcEXvSCIALEo0mBL09rkA17hEMVdBBxTR5ldyQ4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R1Ygnd3w1MzIFOMhZk6TGcOWtX1oSVQTn9kCgIDYssZkXdYycgrw0pCTrjB0QYcq9/p7Yjg8tMBnl44L83bGhe5t4jpcKjox6OqNzIGwjTH+UYf+1OQxM/8ZrXVxli6W9ucStfutvB9kBgi0Fq/cz5x+wvYL0xU0+5CnO6fFXvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pileofstuff.org; spf=pass smtp.mailfrom=pileofstuff.org; arc=none smtp.client-ip=81.187.30.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pileofstuff.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pileofstuff.org
-Received: from 6.1.e.8.1.c.e.a.2.2.4.2.8.e.4.a.0.5.8.0.9.1.8.0.0.b.8.0.1.0.0.2.ip6.arpa ([2001:8b0:819:850:a4e8:2422:aec1:8e16] helo=andrews-2024-laptop.lan)
-	by painless-a.thn.aa.net.uk with esmtp (Exim 4.96)
-	(envelope-from <kernel.org@pileofstuff.org>)
-	id 1tuZJR-00EYj0-2C;
-	Tue, 18 Mar 2025 15:57:05 +0000
-From: Andrew Sayers <kernel.org@pileofstuff.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Andrew Sayers <kernel.org@pileofstuff.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: Change log level of progress messages to INFO
-Date: Tue, 18 Mar 2025 15:56:45 +0000
-Message-ID: <20250318155647.1078829-1-kernel.org@pileofstuff.org>
-X-Mailer: git-send-email 2.49.0
+	s=arc-20240116; t=1742320014; c=relaxed/simple;
+	bh=RT7MNTyreFUKvAnS7dr7bcWoq7i3nz8ReBWFi7q959g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YM+1xUcjSAb7viOxHhUWzA9ZmRcbuPKvfUcbTfZR05Tb79NMr8+fKsqK5A6RqVxubVjSvdqS/g7jgRzpMhLEbY3hzd086kqzc/LwlefDsg6LPJDLzRrqJtqGNLvM9apzLUhFt7yHbWfJC/kA1EWPHYohHFZCgW/wunRzs1jwhw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=yEa4G9e8; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="yEa4G9e8"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZHK5x5JfQzm1Hbd;
+	Tue, 18 Mar 2025 17:46:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1742320003; x=1744912004; bh=IfsXZoAxPbyHlHWYzXvSpS4j
+	nPi0L2iXINNY123rmho=; b=yEa4G9e8L/okwvGV6oZf0OTrnJAV8E2D71CDSwjz
+	9lRjH4aYHZiicR+R0heDD2RY2xqDtcgo1gWCx25vMe+5Y+ApwugqkfNkntNf8sU0
+	e5RrFAWI+ZoyubJbV5J+HtzaS5h1jZruQS+fkue1VHhnff1dwkTsgXK9UkHyzjGF
+	jxdqb+9mPy/fT5fyL4Apk5ALpmHjfF3bth3kC38nC9GJcpwC96+FI8/Afqq9+EWm
+	KC9ZkFrNJyFXYs+Vi8X5Em2x3lQj5oPgBt9PPXpR+FT0Y0lu7mQ0lJlXljtDbaoE
+	STObvvpjE9vxjt8lV6FnC/soNNW5EvlPFmhu8rnJY2H+Mw==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ekEOqjzEKUDY; Tue, 18 Mar 2025 17:46:43 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZHK5k6bHpzm1HcC;
+	Tue, 18 Mar 2025 17:46:33 +0000 (UTC)
+Message-ID: <adb6f7cb-36b1-47d8-8fa1-00fcf5242699@acm.org>
+Date: Tue, 18 Mar 2025 10:46:32 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2 6/6] scsi: ufs: host : Introduce phy_power_on/off
+ wrapper function
+To: Nitin Rawat <quic_nitirawa@quicinc.com>, vkoul@kernel.org,
+ kishon@kernel.org, manivannan.sadhasivam@linaro.org,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ konrad.dybcio@oss.qualcomm.com
+Cc: quic_rdwivedi@quicinc.com, linux-arm-msm@vger.kernel.org,
+ linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, Can Guo <quic_cang@quicinc.com>
+References: <20250318144944.19749-1-quic_nitirawa@quicinc.com>
+ <20250318144944.19749-7-quic_nitirawa@quicinc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250318144944.19749-7-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-These are normal progress messages that don't indicate anything unusual.
-Reducing the level of these messages frees up user attention for when
-we need them to do something.
+On 3/18/25 7:49 AM, Nitin Rawat wrote:
 
-Signed-off-by: Andrew Sayers <kernel.org@pileofstuff.org>
----
- drivers/scsi/scsi_scan.c |  2 +-
- drivers/scsi/sd.c        | 40 ++++++++++++++++++++--------------------
- 2 files changed, 21 insertions(+), 21 deletions(-)
+Just like the other patches in this series, the subject of this patch
+should have the prefix "scsi: ufs: qcom:" instead of "scsi: ufs: host:"
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 4833b8fe251b..9580982c5700 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -977,7 +977,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 	if (inq_result[7] & 0x10)
- 		sdev->sdtr = 1;
- 
--	sdev_printk(KERN_NOTICE, sdev, "%s %.8s %.16s %.4s PQ: %d "
-+	sdev_printk(KERN_INFO, sdev, "%s %.8s %.16s %.4s PQ: %d "
- 			"ANSI: %d%s\n", scsi_device_type(sdev->type),
- 			sdev->vendor, sdev->model, sdev->rev,
- 			sdev->inq_periph_qual, inq_result[2] & 0x07,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 950d8c9fb884..ad7d931bbbc9 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2447,7 +2447,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			 */
- 			if (media_not_present(sdkp, &sshdr)) {
- 				if (media_was_present)
--					sd_printk(KERN_NOTICE, sdkp,
-+					sd_printk(KERN_INFO, sdkp,
- 						  "Media removed, stopped polling\n");
- 				return;
- 			}
-@@ -2495,7 +2495,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 						0x11 : 1,
- 				};
- 
--				sd_printk(KERN_NOTICE, sdkp, "Spinning up disk...");
-+				sd_printk(KERN_INFO, sdkp, "Spinning up disk...");
- 				scsi_execute_cmd(sdkp->device, start_cmd,
- 						 REQ_OP_DRV_IN, NULL, 0,
- 						 SD_TIMEOUT, sdkp->max_retries,
-@@ -2700,7 +2700,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
- 	lim->alignment_offset = alignment;
- 	if (alignment && sdkp->first_scan)
--		sd_printk(KERN_NOTICE, sdkp,
-+		sd_printk(KERN_INFO, sdkp,
- 			  "physical block alignment offset: %u\n", alignment);
- 
- 	if (buffer[14] & 0x80) { /* LBPME */
-@@ -2835,7 +2835,7 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
- 		if ((sizeof(sdkp->capacity) > 4) &&
- 		    (sdkp->capacity > 0xffffffffULL)) {
- 			int old_sector_size = sector_size;
--			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
-+			sd_printk(KERN_INFO, sdkp, "Very big device. "
- 					"Trying to use READ CAPACITY(16).\n");
- 			sector_size = read_capacity_16(sdkp, sdp, lim, buffer);
- 			if (sector_size < 0) {
-@@ -2923,13 +2923,13 @@ sd_print_capacity(struct scsi_disk *sdkp,
- 	string_get_size(sdkp->capacity, sector_size,
- 			STRING_UNITS_10, cap_str_10, sizeof(cap_str_10));
- 
--	sd_printk(KERN_NOTICE, sdkp,
-+	sd_printk(KERN_INFO, sdkp,
- 		  "%llu %d-byte logical blocks: (%s/%s)\n",
- 		  (unsigned long long)sdkp->capacity,
- 		  sector_size, cap_str_10, cap_str_2);
- 
- 	if (sdkp->physical_block_size != sector_size)
--		sd_printk(KERN_NOTICE, sdkp,
-+		sd_printk(KERN_INFO, sdkp,
- 			  "%u-byte physical blocks\n",
- 			  sdkp->physical_block_size);
- }
-@@ -3003,7 +3003,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
- 		set_disk_ro(sdkp->disk, sdkp->write_prot);
- 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
--			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
-+			sd_printk(KERN_INFO, sdkp, "Write Protect is %s\n",
- 				  sdkp->write_prot ? "on" : "off");
- 			sd_printk(KERN_DEBUG, sdkp, "Mode Sense: %4ph\n", buffer);
- 		}
-@@ -3154,7 +3154,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 
- 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
- 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
--			sd_printk(KERN_NOTICE, sdkp,
-+			sd_printk(KERN_INFO, sdkp,
- 				  "Write cache: %s, read cache: %s, %s\n",
- 				  sdkp->WCE ? "enabled" : "disabled",
- 				  sdkp->RCD ? "disabled" : "enabled",
-@@ -3415,11 +3415,11 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp,
- 		return;
- 
- 	if (sdkp->device->type == TYPE_ZBC)
--		sd_printk(KERN_NOTICE, sdkp, "Host-managed zoned block device\n");
-+		sd_printk(KERN_INFO, sdkp, "Host-managed zoned block device\n");
- 	else if (sdkp->zoned == 1)
--		sd_printk(KERN_NOTICE, sdkp, "Host-aware SMR disk used as regular disk\n");
-+		sd_printk(KERN_INFO, sdkp, "Host-aware SMR disk used as regular disk\n");
- 	else if (sdkp->zoned == 2)
--		sd_printk(KERN_NOTICE, sdkp, "Drive-managed SMR disk\n");
-+		sd_printk(KERN_INFO, sdkp, "Drive-managed SMR disk\n");
- }
- 
- /**
-@@ -3567,7 +3567,7 @@ static void sd_read_cpr(struct scsi_disk *sdkp)
- out:
- 	disk_set_independent_access_ranges(sdkp->disk, iars);
- 	if (nr_cpr && sdkp->nr_actuators != nr_cpr) {
--		sd_printk(KERN_NOTICE, sdkp,
-+		sd_printk(KERN_INFO, sdkp,
- 			  "%u concurrent positioning ranges\n", nr_cpr);
- 		sdkp->nr_actuators = nr_cpr;
- 	}
-@@ -4025,10 +4025,10 @@ static int sd_probe(struct device *dev)
- 	if (sdkp->security) {
- 		sdkp->opal_dev = init_opal_dev(sdkp, &sd_sec_submit);
- 		if (sdkp->opal_dev)
--			sd_printk(KERN_NOTICE, sdkp, "supports TCG Opal\n");
-+			sd_printk(KERN_INFO, sdkp, "supports TCG Opal\n");
- 	}
- 
--	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
-+	sd_printk(KERN_INFO, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
- 	scsi_autopm_put_device(sdp);
- 
-@@ -4166,7 +4166,7 @@ static void sd_shutdown(struct device *dev)
- 		return;
- 
- 	if (sdkp->WCE && sdkp->media_present) {
--		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-+		sd_printk(KERN_INFO, sdkp, "Synchronizing SCSI cache\n");
- 		sd_sync_cache(sdkp);
- 	}
- 
-@@ -4174,7 +4174,7 @@ static void sd_shutdown(struct device *dev)
- 	     sdkp->device->manage_system_start_stop) ||
- 	    (system_state == SYSTEM_POWER_OFF &&
- 	     sdkp->device->manage_shutdown)) {
--		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
-+		sd_printk(KERN_INFO, sdkp, "Stopping disk\n");
- 		sd_start_stop_device(sdkp, 0);
- 	}
- }
-@@ -4195,7 +4195,7 @@ static int sd_suspend_common(struct device *dev, bool runtime)
- 
- 	if (sdkp->WCE && sdkp->media_present) {
- 		if (!sdkp->device->silence_suspend)
--			sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-+			sd_printk(KERN_INFO, sdkp, "Synchronizing SCSI cache\n");
- 		ret = sd_sync_cache(sdkp);
- 		/* ignore OFFLINE device */
- 		if (ret == -ENODEV)
-@@ -4207,7 +4207,7 @@ static int sd_suspend_common(struct device *dev, bool runtime)
- 
- 	if (sd_do_start_stop(sdkp->device, runtime)) {
- 		if (!sdkp->device->silence_suspend)
--			sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
-+			sd_printk(KERN_INFO, sdkp, "Stopping disk\n");
- 		/* an error is not worth aborting a system sleep */
- 		ret = sd_start_stop_device(sdkp, 0);
- 		if (!runtime)
-@@ -4237,7 +4237,7 @@ static int sd_resume(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
- 
--	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+	sd_printk(KERN_INFO, sdkp, "Starting disk\n");
- 
- 	if (opal_unlock_from_suspend(sdkp->opal_dev)) {
- 		sd_printk(KERN_NOTICE, sdkp, "OPAL unlock failed\n");
-@@ -4260,7 +4260,7 @@ static int sd_resume_common(struct device *dev, bool runtime)
- 		return 0;
- 	}
- 
--	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+	sd_printk(KERN_INFO, sdkp, "Starting disk\n");
- 	ret = sd_start_stop_device(sdkp, 1);
- 	if (!ret) {
- 		sd_resume(dev);
--- 
-2.49.0
+> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+> index d0e6ec9128e7..3db29fbcd40b 100644
+> --- a/drivers/ufs/host/ufs-qcom.h
+> +++ b/drivers/ufs/host/ufs-qcom.h
+> @@ -252,6 +252,10 @@ struct ufs_qcom_host {
+>   	u32 phy_gear;
+> 
+>   	bool esi_enabled;
+> +	/* flag to check if phy is powered on */
+> +	bool is_phy_pwr_on;
+> +	/* Protect the usage of is_phy_pwr_on against racing */
+> +	struct mutex phy_mutex;
+>   };
 
+Please reorder the above two structure members. Synchronization objects
+should occur before the data members protected by these synchronization
+objects in structure definitions.
+
+It seems to me that phy_mutex not only serializes is_phy_pwr_on accesses
+but that it also serializes phy_power_on() / phy_power_off() calls. If
+this is the case, please mention this.
+
+Thanks,
+
+Bart.
