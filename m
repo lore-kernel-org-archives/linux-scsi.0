@@ -1,82 +1,240 @@
-Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com [209.85.219.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF6C1DEFD0
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 20:39:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19E5DDC5;
+	Tue, 18 Mar 2025 20:45:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742330365; cv=none; b=MlXW7UxF56V1foU4GblFr46QOc0WT/a6l/tO0hbTS/9AEFrl5ln1oKZ8ZMPQ1psXXBkRx7dl+JmT7iwTEF56p6TbPBB82Ubqn7tpS8GPPASSjSIhR6x0gAlJdJyPfYKSeCk/mHQ3TnuVPDfSBsIMID+3lCc6BGwiZlf1DKGEEWQ=
+	t=1742330759; cv=none; b=sVPlJ1fngkYuMO1iFIv3XCd5by/yLCav/ahw1fTtPHGRxDTf9kcO8vYl59lFRNktuZ/OGDlKgyzN3VeraxJqVRq8sSpLhNOLkJE6NRf2mLGgNvN0vGLPo16OYN34rGL7nouG4p0Q0/dDNi2FyqPkI+my4e91Qs7xajOty2OsZ4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742330365; c=relaxed/simple;
-	bh=e9MfqshB78R0AVrqHzfH6QpuNfge/9xRRaYBxtQgCiY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PwsQKOHku1Q/Cu9Hjga32yu9jCJdEhM0oGHrRqsDNrSZeBgw89W3W6LZmkjs80O2nI/a+keTDiUOZnetwICBvB2ZviGoY2exBW/OzrsVZmuU3L6vfq+zh1htH84rEB4wku2jBlCLXZ3eyUo0a3mYeL17pV7+rncsbytLUQtSor0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RAcoGf+f; arc=none smtp.client-ip=209.85.219.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1742330759; c=relaxed/simple;
+	bh=Ww/CmrPaLUPl0pU8wVGr/0Vf5lblXEcIb1B/7SlZ0CY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Eyyk3Jj5I7fEY1b7DhPOki+8zyy/5XUwDmH6VTENopnbRLESuJ7yLZg/V0hDZ13UamACwceXH0Pq9+fHJPwQA3YS9jqIcsyUG8TFVjpaLWpXr4YyCmJdIKuERUOD7r+UGNjtJzvEj9d1qWlmLoQTUvKpzo5zLJfHT4Dkrm9VcXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Ys/qtZN+; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RAcoGf+f"
-Received: by mail-yb1-f170.google.com with SMTP id 3f1490d57ef6-e46ebe19489so5087449276.2
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Mar 2025 13:39:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742330362; x=1742935162; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eEr2RMZoGjmZ0MhdLMunyiJMNVUsI9BD8xK0F1nmCVY=;
-        b=RAcoGf+fOxNWJdEyS95aMJ65CKmipJuwBNeEiOnLWicLLkW6q/Ch/99FUEaMI620VE
-         5eVDpjnTSB7wwEBE2nU42JconsbBYl7uix/I10GOEeAAAvduDlECicS+1I8Pkv3GbB82
-         8KF+1qIj+BtzwchMorJ9ZLrYzsSNGL7mVoccGNQ/WeVzJtEQap0GHu/h+hEBBKAIRPtD
-         mYOM6EqY1DehDg3FLfSpcC2iCcfI3R2FfoN5JRPCAoOI5nEllaxrclM6Ho9PxlWsJzrs
-         opLIDq1KLiGSvRKk9fkrtTN15U6jkjA3Rr7+5RAV9+rsymXlLoINI7pQ1uXDciIG7XNV
-         Iq3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742330362; x=1742935162;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eEr2RMZoGjmZ0MhdLMunyiJMNVUsI9BD8xK0F1nmCVY=;
-        b=WTnJrpUnd7cZF5NjAk+unksMLalWaeyEBWMXox1nNFSSx/CuSR1tMAME+dOy/JlfnX
-         fcUqI0l4tUsi6GriJMp/sBekCNcvqCzCK6+5Ss8LkR/0xaEsaKCohfpSv1lrADwylNtM
-         RQ1QKtv8H+wB0GWriMwaIfGpp1dC+AgOMboWkxrRjzQTc65rTimR2m7diHkTQEh45atV
-         xwTcbOW8lV5sB2OBIu0FLwInS8atQ8IQ/OmxmNBzkcVRXNlCZjbvaDtV8RCHeRRTkOw7
-         4+ctSwnayfbZbve5FdO+yFjVFqwXCtlu4IOQ6WpQYs/3m/DMzqTiekmMa1mGxKnjUzIW
-         4qIw==
-X-Forwarded-Encrypted: i=1; AJvYcCVjl45wXR2HGHJAdLkCnJfRSh/vQ59zwaZekt3UoGPtzeYagHo9X0A/qrLsa9LvLu8IzSAhIxANoLXI@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqptlFa2Zz7OQn3PUx0WHE91jQ8/vhs6Nmx3CX88eQFOm/TNfo
-	bEkhBpZGSANkt8zjw60ZlPsc/jHcjPGN+/PwGlxFqqMWXQlnHeRehA1SXnz2P+tTyT9b/2RU4s8
-	pmWRq7f5lieCQfBD0YATWLzwNjkX5H0MM
-X-Gm-Gg: ASbGncvsHORyGJAHfbVm5QxtweANGTplbhV6BuocJa15Hv0EKXmcqlUx2hl4YxH6OAb
-	x5UGgv7RbuAVls8pECn+FJ1SbO3PbGb5gP/SG1l46nv91XnzpdOLpUU1IR7WGCgYkK6h5JWrtnl
-	LWuIohAC1QvZ7odKv+sgub3U/k2UY=
-X-Google-Smtp-Source: AGHT+IEYiJV+HVAaZ2Xt3SjyQ9RbXv1AjwgwSnzF7os8tHmapOkzmNwc1V58OnL+N8NUMa+VJmmbQ4i4RGXfkfm/zus=
-X-Received: by 2002:a05:690c:fd0:b0:6ff:1fac:c4f7 with SMTP id
- 00721157ae682-7009bf4ca51mr3732607b3.7.1742330362444; Tue, 18 Mar 2025
- 13:39:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ys/qtZN+"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52ICeCUP029922;
+	Tue, 18 Mar 2025 20:45:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	+JCvgkzNThz1hf8hNzsnQUDSkHaYz3SwncuZ+rmg82o=; b=Ys/qtZN+5Rbs0ohA
+	OU5D2VvcZpc3Lwe+fuA+Ur2sECpS19A/lHipmtAWzWahYwKeal+T0RPWvaUAbqeb
+	ruoJxGE2E+Ht6tNU/+KWLGPD/EAG4roN7KqsITowKZpJryeDLnCnsFgojMylLNTe
+	5rMls8VGJC2VxBKajOacKaTsx/in11+b5JVN01fU2M7f/hfulIEaKmxOPbDyRBiv
+	nNRs0zVtu4gCGEv0hg9z6BehwHeiuW8yy2UimnOXNusoqnXa1KwXOBWrURe+GNbD
+	48mMQ8MXHbyPZEFu9gsoNS3VhxJJuMcahBFE2ZI4pw19zwrw62jHwnlRXk8WKPC3
+	vLlsPw==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45f91t1a3r-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 18 Mar 2025 20:45:36 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52IKjZt1027943
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 18 Mar 2025 20:45:35 GMT
+Received: from [10.110.120.126] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 18 Mar
+ 2025 13:45:35 -0700
+Message-ID: <2448dd34-25e6-4d4f-8c13-d98debc0753e@quicinc.com>
+Date: Tue, 18 Mar 2025 13:45:34 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <41c1d855-9eb5-416f-ac12-8b61929201a3@stanley.mountain>
-In-Reply-To: <41c1d855-9eb5-416f-ac12-8b61929201a3@stanley.mountain>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Tue, 18 Mar 2025 13:38:04 -0700
-X-Gm-Features: AQ5f1JooXVhTpGIVAoxnp3P2lO-Zb7eqk42_OjJedxBjMMqsrDCH7MFFsGvgI4s
-Message-ID: <CABPRKS9NkGWrUs4fM7Kxj08yyQXZUJ26zqkoyZeNT7tkjNMybw@mail.gmail.com>
-Subject: Re: [bug report] scsi: lpfc: Prevent NDLP reference count underflow
- in dev_loss_tmo callback
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Justin Tee <justin.tee@broadcom.com>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/6] arm64: dts: qcom: sm8750: Add UFS nodes for SM8750
+ SoC
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Satya Durga Srinivasu Prabhala
+	<quic_satyap@quicinc.com>,
+        Trilok Soni <quic_tsoni@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        "Manish Pandey" <quic_mapa@quicinc.com>
+References: <20250310-sm8750_ufs_master-v2-0-0dfdd6823161@quicinc.com>
+ <20250310-sm8750_ufs_master-v2-4-0dfdd6823161@quicinc.com>
+ <20250318052841.bdiqbzxrpzwqf7h7@thinkpad>
+Content-Language: en-US
+From: Melody Olvera <quic_molvera@quicinc.com>
+In-Reply-To: <20250318052841.bdiqbzxrpzwqf7h7@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: J5jzGRzhnljgSotgqMER08QiY3fZwYfh
+X-Authority-Analysis: v=2.4 cv=Xrz6OUF9 c=1 sm=1 tr=0 ts=67d9db70 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=4sn12QoEtl80kFXXyQYA:9 a=QEXdDO2ut3YA:10
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: J5jzGRzhnljgSotgqMER08QiY3fZwYfh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-03-18_09,2025-03-17_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ bulkscore=0 impostorscore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
+ priorityscore=1501 phishscore=0 suspectscore=0 adultscore=0 spamscore=0
+ malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2503180150
 
-Hi Dan,
 
-Thanks for bringing this to attention.  We=E2=80=99ll have a look at this b=
-ug
-report and get back.
 
-Regards,
-Justin Tee
+On 3/17/2025 10:28 PM, Manivannan Sadhasivam wrote:
+> On Mon, Mar 10, 2025 at 02:12:32PM -0700, Melody Olvera wrote:
+>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>
+>> Add UFS host controller and PHY nodes for SM8750 SoC.
+>>
+>> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
+>> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>> ---
+>>   arch/arm64/boot/dts/qcom/sm8750.dtsi | 106 +++++++++++++++++++++++++++++++++++
+>>   1 file changed, 106 insertions(+)
+>>
+>> diff --git a/arch/arm64/boot/dts/qcom/sm8750.dtsi b/arch/arm64/boot/dts/qcom/sm8750.dtsi
+>> index 529e4e4e1d0ea9e99e89c12d072e27c45091f29e..72f69e717ce049bb0c524aa389d837ecd1459535 100644
+>> --- a/arch/arm64/boot/dts/qcom/sm8750.dtsi
+>> +++ b/arch/arm64/boot/dts/qcom/sm8750.dtsi
+>> @@ -13,6 +13,7 @@
+>>   #include <dt-bindings/power/qcom,rpmhpd.h>
+>>   #include <dt-bindings/power/qcom-rpmpd.h>
+>>   #include <dt-bindings/soc/qcom,rpmh-rsc.h>
+>> +#include <dt-bindings/gpio/gpio.h>
+> Sort includes alphabetically.
+
+Ack.
+
+>
+>>   
+>>   / {
+>>   	interrupt-parent = <&intc>;
+>> @@ -2675,6 +2676,111 @@ gic_its: msi-controller@16040000 {
+>>   			};
+>>   		};
+>>   
+>> +		ufs_mem_phy: phy@1d80000 {
+>> +			compatible = "qcom,sm8750-qmp-ufs-phy";
+>> +			reg = <0 0x01d80000 0 0x2000>;
+> Use 0x0 for consistency.
+
+Ack.
+
+>
+>> +
+>> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
+>> +				<&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+>> +				 <&tcsrcc TCSR_UFS_CLKREF_EN>;
+> Please align the clocks.
+
+Ack.
+
+>
+>> +
+>> +			clock-names = "ref",
+>> +				      "ref_aux",
+>> +				      "qref";
+>> +
+>> +			resets = <&ufs_mem_hc 0>;
+>> +			reset-names = "ufsphy";
+>> +
+>> +			power-domains = <&gcc GCC_UFS_MEM_PHY_GDSC>;
+>> +
+>> +			#clock-cells = <1>;
+>> +			#phy-cells = <0>;
+>> +
+>> +			status = "disabled";
+>> +			};
+> Here too.
+
+I'm assuming you mean the curly brace; ack.
+
+>
+>> +
+>> +		ufs_mem_hc: ufs@1d84000 {
+>> +			compatible = "qcom,sm8750-ufshc",
+>> +				     "qcom,ufshc",
+>> +				     "jedec,ufs-2.0";
+> Compatibles can be ordered in the same line.
+
+Ack.
+
+>
+>> +			reg = <0 0x01d84000 0 0x3000>;
+> 0x0
+
+Ack.
+
+>
+>> +
+>> +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+>> +
+>> +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+>> +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+>> +				 <&rpmhcc RPMH_LN_BB_CLK3>,
+>> +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+>> +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+>> +			clock-names = "core_clk",
+>> +				      "bus_aggr_clk",
+>> +				      "iface_clk",
+>> +				      "core_clk_unipro",
+>> +				      "ref_clk",
+>> +				      "tx_lane0_sync_clk",
+>> +				      "rx_lane0_sync_clk",
+>> +				      "rx_lane1_sync_clk";
+>> +
+>> +			operating-points-v2 = <&ufs_opp_table>;
+>> +
+>> +			resets = <&gcc GCC_UFS_PHY_BCR>;
+>> +			reset-names = "rst";
+>> +
+>> +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+>> +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>> +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
+>> +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ACTIVE_ONLY>;
+>> +			interconnect-names = "ufs-ddr",
+>> +					     "cpu-ufs";
+>> +
+>> +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
+>> +			required-opps = <&rpmhpd_opp_nom>;
+>> +
+>> +			iommus = <&apps_smmu 0x60 0>;
+>> +			dma-coherent;
+>> +
+>> +			lanes-per-direction = <2>;
+>> +
+>> +			phys = <&ufs_mem_phy>;
+>> +			phy-names = "ufsphy";
+>> +
+>> +			#reset-cells = <1>;
+>> +
+>> +			status = "disabled";
+>> +
+> Extra newline
+
+Will remove.
+
+Thanks,
+Melody
+
