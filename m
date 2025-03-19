@@ -1,105 +1,133 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EC81E5B8A;
-	Wed, 19 Mar 2025 17:45:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051242139CE
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2025 19:50:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742406343; cv=none; b=R1f/m3dfEVJblpCZM2n8kZLwNbnazsSm0K4z1jipp8dYRSW8j6FmC2HdkfmqgFLyllNbRi4CZllD138diA6f6UbYO1DAZtP8CxVtPX40w2LdS1utAP634M2qNBDEAzBhhVyVisVez/exb5lPyBoBieGES8y/3fUgosSY5O6ZxDk=
+	t=1742413847; cv=none; b=bWrYgex874y29ShBD9XdErQ1mjOGHMk5eqsFr+RY+l7wSy+V9E6KWGefNpwvesZE8CB4o1f/549Hd4H7TFDFvT0A9Oy6+MqGBx3M9WkggGCLy8koq4SBQ89j4FV/6854kEA8HQqfyUP5Cqh2vkbFqcylnWzP5yfXAQMzWwbZp/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742406343; c=relaxed/simple;
-	bh=vnKqjR9JwiMkcJdLBO0YQ2PXhwRkyodQC5yK8DhOnu0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=E6LkBS+eicHvQapv7X/f+Oli5G+24nbRv5hABEJ1bL2vuY2PirnFhb1blljJ/XLWe4pD7SofCiGjUEDEvq7IzqWxMRU7Nv1FRuRLvKw5kpo6s9K9QUW6hFOv9Jk+WIUEoTAIGRmCnmEYh0ul6AowBBNwkwUbn/rB8gadrixWmsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pSw89Jlp; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1742413847; c=relaxed/simple;
+	bh=sExoy8pqp0ariENfKfzxL5q5xGicuuhF34RlyGSM2pc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sf42aMMkDHRLATE5fdRE3ebMuKFR7WF80Lx8yMHK8lOz6Vdwr5tc+p3x+9bBBh8/adZ2EirbFT2Rfctk22UucE5BbawDgXZiGvDnOKXHfP0xb/PhWnyTMZcT2jG3m1PW1J1GIbsQNn4nQeXAYSfpvHnW3yIouYLEBgapNDajuQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NHDX1cKI; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pSw89Jlp"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZHx2D5z5Zzm1HcY;
-	Wed, 19 Mar 2025 17:45:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1742406337; x=1744998338; bh=vnKqjR9JwiMkcJdLBO0YQ2PX
-	hwRkyodQC5yK8DhOnu0=; b=pSw89JlpU9tpPTNFBo2dWkCShpP7Kdkv0x2OlbXg
-	HRGpQDEdMhkapBtR1Pqszi2sh5urUanYLjBfU7U+IYyGr8jBPdnMM4HOEo5D5KRZ
-	qFECApPjBmKD2Lg4JsAx+ZSv4NO7WUNNwKKrckRlbPhpcnGeDgBqYeOuuWtJKsQ7
-	uBQ2/OOVoDK4/NixKNeZqAEgNd1C4iiKzncuNFrxajLHSkd3mYxRcnswnyaZUOe9
-	oEA2FjDBsWrDoD6s4IiFKWa8Za9ErwqNlG81dRNQtl7zgIeT/cCaTwwWmTLw/r6c
-	u1l4BcVnlHJ5J6rXZc3UtfH7zArz2tDs0dHRtCHMk+91KQ==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id kLNnn_BtxJA1; Wed, 19 Mar 2025 17:45:37 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NHDX1cKI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742413845;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UoMsJz6uQ9Xsq6hoAcbPVlQz7ODTaS5nZ9IsZpDthKQ=;
+	b=NHDX1cKIbm7j5kNaRHMMsBWuS24rPLW94Re6JybzkThBBz2+31vgedxPP/yQqfNWvsuOr2
+	2iLChSgYgrJ3xdIzO2gJEXOxnZ+DStXBpf+VwL3DFn/O1puAQShuFApbkCvog2c9mxU5WJ
+	B8o6WrfRBWM5IP+dq0o74+nJ1Mfgad8=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-550-pc5hPzSgOM-Mh3OFUt2lmQ-1; Wed,
+ 19 Mar 2025 15:50:38 -0400
+X-MC-Unique: pc5hPzSgOM-Mh3OFUt2lmQ-1
+X-Mimecast-MFC-AGG-ID: pc5hPzSgOM-Mh3OFUt2lmQ_1742413836
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZHx1t3WPMzm0XCB;
-	Wed, 19 Mar 2025 17:45:21 +0000 (UTC)
-Message-ID: <d82ce6c4-ae17-4ac6-9bb9-59759f8a185d@acm.org>
-Date: Wed, 19 Mar 2025 10:45:20 -0700
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7B028180AB19;
+	Wed, 19 Mar 2025 19:50:33 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4E6C11956095;
+	Wed, 19 Mar 2025 19:50:31 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 52JJoUdr2309780
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 19 Mar 2025 15:50:30 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 52JJoRRp2309779;
+	Wed, 19 Mar 2025 15:50:27 -0400
+Date: Wed, 19 Mar 2025 15:50:27 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+        tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com,
+        chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+        yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+        yangerkun@huawei.com
+Subject: Re: [RFC PATCH -next v3 06/10] dm: add BLK_FEAT_WRITE_ZEROES_UNMAP
+ support
+Message-ID: <Z9sgAxM-hZZJtZu9@redhat.com>
+References: <20250318073545.3518707-1-yi.zhang@huaweicloud.com>
+ <20250318073545.3518707-7-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/1] scsi: ufs: core: add device level exception
- support
-To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
- =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
- "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
- "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
- "minwoo.im@samsung.com" <minwoo.im@samsung.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "beanhuo@micron.com" <beanhuo@micron.com>,
- "ebiggers@google.com" <ebiggers@google.com>,
- "gwendal@chromium.org" <gwendal@chromium.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "keosung.park@samsung.com" <keosung.park@samsung.com>,
- "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-References: <6109425449ac4d18249ce7254e4fa1252138a94a.1742369183.git.quic_nguyenb@quicinc.com>
- <61570104d58cef22716fefe459c0c45670108aad.camel@mediatek.com>
- <9cf88cda-cf9c-9dbd-d586-5463ce2a0cfc@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9cf88cda-cf9c-9dbd-d586-5463ce2a0cfc@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250318073545.3518707-7-yi.zhang@huaweicloud.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 3/19/25 2:01 AM, Bao D. Nguyen wrote:
-> On 3/19/2025 12:56 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
->> Could use atomic_t for counter protect?
->
-> Are you suggesting to convert the dev_lvl_exception_count type from u32=
-=20
-> to atomic_t type? Because the value of dev_lvl_exception_count is=20
-> returned to the user space via the device_lvl_exception_count_show()=20
-> using the sysfs_emit() function, keeping the dev_lvl_exception_count as=
-=20
-> u32 data type probably works better in terms of the format.
+On Tue, Mar 18, 2025 at 03:35:41PM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> Set the BLK_FEAT_WRITE_ZEROES_UNMAP feature on stacking queue limits by
+> default. This feature shall be disabled if any underlying device does
+> not support it.
+> 
+Reviewed-by: Benjamin Marzinski <bmarzins@redhat.com>
 
-I like the suggestion to use atomic_t. atomic_read() can be used in the
-sysfs show method.
+> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> ---
+>  drivers/md/dm-table.c | 7 +++++--
+>  drivers/md/dm.c       | 1 +
+>  2 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index 453803f1edf5..d4a483287e26 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -598,7 +598,8 @@ int dm_split_args(int *argc, char ***argvp, char *input)
+>  static void dm_set_stacking_limits(struct queue_limits *limits)
+>  {
+>  	blk_set_stacking_limits(limits);
+> -	limits->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT | BLK_FEAT_POLL;
+> +	limits->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT | BLK_FEAT_POLL |
+> +			    BLK_FEAT_WRITE_ZEROES_UNMAP;
+>  }
+>  
+>  /*
+> @@ -1848,8 +1849,10 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+>  		limits->discard_alignment = 0;
+>  	}
+>  
+> -	if (!dm_table_supports_write_zeroes(t))
+> +	if (!dm_table_supports_write_zeroes(t)) {
+>  		limits->max_write_zeroes_sectors = 0;
+> +		limits->features &= ~BLK_FEAT_WRITE_ZEROES_UNMAP;
+> +	}
+>  
+>  	if (!dm_table_supports_secure_erase(t))
+>  		limits->max_secure_erase_sectors = 0;
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 5ab7574c0c76..b59c3dbeaaf1 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -1096,6 +1096,7 @@ void disable_write_zeroes(struct mapped_device *md)
+>  
+>  	/* device doesn't really support WRITE ZEROES, disable it */
+>  	limits->max_write_zeroes_sectors = 0;
+> +	limits->features &= ~BLK_FEAT_WRITE_ZEROES_UNMAP;
+>  }
+>  
+>  static bool swap_bios_limit(struct dm_target *ti, struct bio *bio)
+> -- 
+> 2.46.1
 
-Thanks,
-
-Bart.
