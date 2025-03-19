@@ -1,142 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77D7C257D;
-	Wed, 19 Mar 2025 17:09:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EC81E5B8A;
+	Wed, 19 Mar 2025 17:45:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742404176; cv=none; b=J1Swn5yfTMXzlmPoDFqjJO5dtvQx9HLcV8kMTwhuPYpCDOjXj9K1eQmJ3KdcvYUODg0U3vR0t26EYcrlwFn2en5KwgQk2frd+Lg8LlXthR2UYqal7kWSSeWpyPM9cccuKcypQad6skRYXrxn/5vhH8eqcIs/qCAZ29XkpgTpIU0=
+	t=1742406343; cv=none; b=R1f/m3dfEVJblpCZM2n8kZLwNbnazsSm0K4z1jipp8dYRSW8j6FmC2HdkfmqgFLyllNbRi4CZllD138diA6f6UbYO1DAZtP8CxVtPX40w2LdS1utAP634M2qNBDEAzBhhVyVisVez/exb5lPyBoBieGES8y/3fUgosSY5O6ZxDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742404176; c=relaxed/simple;
-	bh=iKCIiHI9Se7fL/4P3PMyQSCP9PrppXcJWRXpCMClUpE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=JRv9rMvjtqZZnkovHXLQ49CCHE+FgKvjlJ1Ihzz55pZUAFBuiDmIB0p2i+VjStfzV5lTLwf7no31ckC3yGy9anuTIu1IZmFO115MbJFxG5t0WVYlKqDfYIHqDlA7hOi54gzhp3szQqkRo1Z8fm4KGRljXmCVT03NHjlfKTxpnzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eVMIdqIB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742406343; c=relaxed/simple;
+	bh=vnKqjR9JwiMkcJdLBO0YQ2PXhwRkyodQC5yK8DhOnu0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=E6LkBS+eicHvQapv7X/f+Oli5G+24nbRv5hABEJ1bL2vuY2PirnFhb1blljJ/XLWe4pD7SofCiGjUEDEvq7IzqWxMRU7Nv1FRuRLvKw5kpo6s9K9QUW6hFOv9Jk+WIUEoTAIGRmCnmEYh0ul6AowBBNwkwUbn/rB8gadrixWmsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pSw89Jlp; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eVMIdqIB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1911C4CEE4;
-	Wed, 19 Mar 2025 17:09:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742404175;
-	bh=iKCIiHI9Se7fL/4P3PMyQSCP9PrppXcJWRXpCMClUpE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=eVMIdqIB9UuKhiW0pG8us2LpVUwratI0xxa0yomDDHx41i3mnIX+qZcRuxb6tf+0W
-	 KKNrUnPfUlrateIDY1Hxzk/9q0/3NfikIJGzUZ9fg4gl2sd0BjZeKYd2013vflRrUT
-	 vgjeC/Cj7Euckh3MoZG3D5bLA05/ymgGsaN4Te0lQykVqz6Ng0Yw4rXwFFvFMTikh3
-	 L4kEZhj59cGSUyagtiRiKiNLFtjDPvuG59poj0DM5FCfJ3Wu+aH0lcMlk25syDoBQ5
-	 vFfM9c3CqVvjY4js5dOBoahAOx2IFp3uCxR3GGkD7fLeBlDx7Qg9N1RP8q3upwUiPc
-	 VWTOlwKzEhuuw==
-Date: Wed, 19 Mar 2025 12:09:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Nishanth Menon <nm@ti.com>, Dhruva Gole <d-gole@ti.com>,
-	Tero Kristo <kristo@kernel.org>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Dave Jiang <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>,
-	Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
-	Michael Kelley <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-	Wei Huang <wei.huang2@amd.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Jonathan Cameron <Jonathan.Cameron@huwei.com>
-Subject: Re: [patch V4 09/14] PCI/MSI: Switch msix_capability_init() to
- guard(msi_desc_lock)
-Message-ID: <20250319170932.GA1046398@bhelgaas>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pSw89Jlp"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZHx2D5z5Zzm1HcY;
+	Wed, 19 Mar 2025 17:45:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1742406337; x=1744998338; bh=vnKqjR9JwiMkcJdLBO0YQ2PX
+	hwRkyodQC5yK8DhOnu0=; b=pSw89JlpU9tpPTNFBo2dWkCShpP7Kdkv0x2OlbXg
+	HRGpQDEdMhkapBtR1Pqszi2sh5urUanYLjBfU7U+IYyGr8jBPdnMM4HOEo5D5KRZ
+	qFECApPjBmKD2Lg4JsAx+ZSv4NO7WUNNwKKrckRlbPhpcnGeDgBqYeOuuWtJKsQ7
+	uBQ2/OOVoDK4/NixKNeZqAEgNd1C4iiKzncuNFrxajLHSkd3mYxRcnswnyaZUOe9
+	oEA2FjDBsWrDoD6s4IiFKWa8Za9ErwqNlG81dRNQtl7zgIeT/cCaTwwWmTLw/r6c
+	u1l4BcVnlHJ5J6rXZc3UtfH7zArz2tDs0dHRtCHMk+91KQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id kLNnn_BtxJA1; Wed, 19 Mar 2025 17:45:37 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZHx1t3WPMzm0XCB;
+	Wed, 19 Mar 2025 17:45:21 +0000 (UTC)
+Message-ID: <d82ce6c4-ae17-4ac6-9bb9-59759f8a185d@acm.org>
+Date: Wed, 19 Mar 2025 10:45:20 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250319105506.564105011@linutronix.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/1] scsi: ufs: core: add device level exception
+ support
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+ "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+ "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+ "minwoo.im@samsung.com" <minwoo.im@samsung.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "beanhuo@micron.com" <beanhuo@micron.com>,
+ "ebiggers@google.com" <ebiggers@google.com>,
+ "gwendal@chromium.org" <gwendal@chromium.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "keosung.park@samsung.com" <keosung.park@samsung.com>,
+ "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+References: <6109425449ac4d18249ce7254e4fa1252138a94a.1742369183.git.quic_nguyenb@quicinc.com>
+ <61570104d58cef22716fefe459c0c45670108aad.camel@mediatek.com>
+ <9cf88cda-cf9c-9dbd-d586-5463ce2a0cfc@quicinc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <9cf88cda-cf9c-9dbd-d586-5463ce2a0cfc@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 19, 2025 at 11:56:54AM +0100, Thomas Gleixner wrote:
-> Split the lock protected functionality of msix_capability_init() out into a
-> helper function and use guard(msi_desc_lock) to replace the lock/unlock
-> pair.
-> 
-> Simplify the error path in the helper function by utilizing a custom
-> cleanup to get rid of the remaining gotos.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+On 3/19/25 2:01 AM, Bao D. Nguyen wrote:
+> On 3/19/2025 12:56 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+>> Could use atomic_t for counter protect?
+>
+> Are you suggesting to convert the dev_lvl_exception_count type from u32=
+=20
+> to atomic_t type? Because the value of dev_lvl_exception_count is=20
+> returned to the user space via the device_lvl_exception_count_show()=20
+> using the sysfs_emit() function, keeping the dev_lvl_exception_count as=
+=20
+> u32 data type probably works better in terms of the format.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I like the suggestion to use atomic_t. atomic_read() can be used in the
+sysfs show method.
 
-> ---
-> V4: Split out from the previous combo patch
-> ---
->  drivers/pci/msi/msi.c |   36 ++++++++++++++++++++----------------
->  1 file changed, 20 insertions(+), 16 deletions(-)
-> 
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-> @@ -663,35 +663,39 @@ static void msix_mask_all(void __iomem *
->  		writel(ctrl, base + PCI_MSIX_ENTRY_VECTOR_CTRL);
->  }
->  
-> -static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
-> -				 int nvec, struct irq_affinity *affd)
-> +DEFINE_FREE(free_msi_irqs, struct pci_dev *, if (_T) pci_free_msi_irqs(_T));
-> +
-> +static int __msix_setup_interrupts(struct pci_dev *__dev, struct msix_entry *entries,
-> +				   int nvec, struct irq_affinity_desc *masks)
->  {
-> -	struct irq_affinity_desc *masks __free(kfree) =
-> -		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
-> -	int ret;
-> +	struct pci_dev *dev __free(free_msi_irqs) = __dev;
->  
-> -	msi_lock_descs(&dev->dev);
-> -	ret = msix_setup_msi_descs(dev, entries, nvec, masks);
-> +	int ret = msix_setup_msi_descs(dev, entries, nvec, masks);
->  	if (ret)
-> -		goto out_free;
-> +		return ret;
->  
->  	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
->  	if (ret)
-> -		goto out_free;
-> +		return ret;
->  
->  	/* Check if all MSI entries honor device restrictions */
->  	ret = msi_verify_entries(dev);
->  	if (ret)
-> -		goto out_free;
-> +		return ret;
->  
-> +	retain_ptr(dev);
->  	msix_update_entries(dev, entries);
-> -	goto out_unlock;
-> +	return 0;
-> +}
-> +
-> +static int msix_setup_interrupts(struct pci_dev *dev, struct msix_entry *entries,
-> +				 int nvec, struct irq_affinity *affd)
-> +{
-> +	struct irq_affinity_desc *masks __free(kfree) =
-> +		affd ? irq_create_affinity_masks(nvec, affd) : NULL;
->  
-> -out_free:
-> -	pci_free_msi_irqs(dev);
-> -out_unlock:
-> -	msi_unlock_descs(&dev->dev);
-> -	return ret;
-> +	guard(msi_descs_lock)(&dev->dev);
-> +	return __msix_setup_interrupts(dev, entries, nvec, masks);
->  }
->  
->  /**
-> 
+Thanks,
+
+Bart.
