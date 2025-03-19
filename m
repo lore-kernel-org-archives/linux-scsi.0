@@ -1,55 +1,55 @@
 Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E091B0F20;
-	Wed, 19 Mar 2025 20:15:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 175D61E0DB5;
+	Wed, 19 Mar 2025 20:40:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742415340; cv=none; b=Ea5ICer41+5djZFrKGt7uLiCF7/tROl8+INv94INAwMw983a4vc8AiKFOGesn6wkQJ2/AdpYqznKoOnUPtcF983iGjaxG93rg4zFhVEaSYvqbtgO3mRYWLXXu2wML1l8ucVhp5X/ABdMbJyFX14owg8sWXlBgEQKniut1jYRqZk=
+	t=1742416826; cv=none; b=EXAYNDmjxJM9d1+mudtBne9juyBKxbB1gwlnzbdNYFPbeuUR2HoFIYm2qNNrq2Gc3U5Itq6jmZQL4Sx23wokiur0d+Ivg8Bk2Snxcv3FdnZBU9b11nT+BsHJlRba4QTXb/+LJAgTuikqXmVtJcfXMX/BIQVvRWquAk5/UOdFOF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742415340; c=relaxed/simple;
-	bh=Ff2AWx/3jVcvCQM+6gHB93LpPg3bFfpbSPA+YJEU7E0=;
+	s=arc-20240116; t=1742416826; c=relaxed/simple;
+	bh=E17QJcJcom4/xLJmjdLQU7RbyuFYz2UgVQOxpPLwGPM=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nqXnisN90RR/TBBFClcjypu9ksbDB+mjT0KNpVsibqqwFXJ85LwJDr2ifd6AmtonGyBSbLzhgpms47eFgOKvkYU5HbmewoccvW5KJUeAhq1YhsH6zmi4W7yoXJp/KQfHav2GdX885ToPYNAfFGLev8ULKUEiT2Zp4s9uZcXrA3Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=wxz40ldE; arc=none smtp.client-ip=198.37.111.173
+	 Content-Type:MIME-Version; b=BiKTQxlB35U2DsZ6OnZkSteOCWwj5cAUcunoKQBEl3hKElhA1V2/5zwTy35W00GRaT1yWosTdPNENYKxXCOKVx7o9+u+gBLgk9efs0J8W5hzthiXaUlmq4k3cvp0onvx4fwFcVmj/E4FWO4jA23f1B6puuFSSXEAcY5IzIqoWAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=J7Cbjijt; arc=none smtp.client-ip=198.37.111.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="wxz40ldE"
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="J7Cbjijt"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1742415336;
-	bh=Ff2AWx/3jVcvCQM+6gHB93LpPg3bFfpbSPA+YJEU7E0=;
+	d=hansenpartnership.com; s=20151216; t=1742416823;
+	bh=E17QJcJcom4/xLJmjdLQU7RbyuFYz2UgVQOxpPLwGPM=;
 	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=wxz40ldE3tl7NkRg1TGqIiYwmG0GqYNUT4ragzzfXeswaZveWrgAVmszgf16Qi/k+
-	 ZO7scjFvi/vXshaamOj6EEnEJs8xwsHo522obkeISQ+78i/WZkRHAqI2DW3V1qriFS
-	 1S7rFHh60yqh1qfRF1MCjtKiZ6td/suXEGPLuSGQ=
+	b=J7Cbjijt386zshMPZGdBIEPswXh0KPgzISNVtv5VJ5v4JGqXLTFMEuHKyQLOFRuiZ
+	 SGourFCjlS33ZUhZPbWp63QnshG6W05knhFlJs9+sMDu82gKpNNB7r279BDwe+4o8n
+	 OZiPO70oZEeHhPm4/TLRDn6hf+VDNEJ/2/0ifPOg=
 Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 4BAEC1C02BA;
-	Wed, 19 Mar 2025 16:15:35 -0400 (EDT)
-Message-ID: <5d5acba098bda3bbc8aebb5e86b9c53f986f1a72.camel@HansenPartnership.com>
-Subject: Re: [patch V4 01/14] cleanup: Provide retain_ptr()
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id F05361C00DA;
+	Wed, 19 Mar 2025 16:40:22 -0400 (EDT)
+Message-ID: <b64fc052da27c0e77afae1db40c8d3b05277cc86.camel@HansenPartnership.com>
+Subject: Re: [patch V4 13/14] scsi: ufs: qcom: Remove the MSI descriptor
+ abuse
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
 To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
 Cc: Marc Zyngier <maz@kernel.org>, Peter Zijlstra <peterz@infradead.org>, 
- Jonathan Cameron <Jonathan.Cameron@huawei.com>, Nishanth Menon <nm@ti.com>,
- Dhruva Gole <d-gole@ti.com>, Tero Kristo <kristo@kernel.org>, Santosh
- Shilimkar <ssantosh@kernel.org>, Logan Gunthorpe <logang@deltatee.com>,
- Dave Jiang <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>, Allen
- Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,  Michael Kelley
- <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>,  Haiyang Zhang <haiyangz@microsoft.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>,  linux-scsi@vger.kernel.org,
+ Jonathan Cameron <Jonathan.Cameron@huawei.com>,  Nishanth Menon
+ <nm@ti.com>, Dhruva Gole <d-gole@ti.com>, Tero Kristo <kristo@kernel.org>, 
+ Santosh Shilimkar <ssantosh@kernel.org>, Logan Gunthorpe
+ <logang@deltatee.com>, Dave Jiang <dave.jiang@intel.com>,  Jon Mason
+ <jdmason@kudzu.us>, Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
+ Michael Kelley <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, Haiyang Zhang <haiyangz@microsoft.com>, 
  linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, Wei Huang
- <wei.huang2@amd.com>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>,  "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Jonathan Cameron
- <Jonathan.Cameron@huwei.com>
-Date: Wed, 19 Mar 2025 16:15:34 -0400
-In-Reply-To: <20250319105506.083538907@linutronix.de>
+ <wei.huang2@amd.com>, Jonathan Cameron <Jonathan.Cameron@huwei.com>
+Date: Wed, 19 Mar 2025 16:40:22 -0400
+In-Reply-To: <20250319105506.805529593@linutronix.de>
 References: <20250319104921.201434198@linutronix.de>
-	 <20250319105506.083538907@linutronix.de>
+	 <20250319105506.805529593@linutronix.de>
 Autocrypt: addr=James.Bottomley@HansenPartnership.com;
  prefer-encrypt=mutual;
  keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmBLmY0FCRs1hL0ACgkQgUrkfCFIVNaEiQgAg18F4G7PGWQ68xqnIrccke7Reh5thjUz6kQIii6Dh64BDW6/UvXn20UxK2uSs/0TBLO81k1mV4c6rNE+H8b7IEjieGR9frBsp/+Q01JpToJfzzMUY7ZTDV1IXQZ+AY9L7vRzyimnJHx0Ba4JTlAyHB+Ly5i4Ab2+uZcnNfBXquWrG3oPWz+qPK88LJLya5Jxse1m1QT6R/isDuPivBzntLOooxPk+Cwf5sFAAJND+idTAzWzslexr9j7rtQ1UW6FjO4CvK9yVNz7dgG6FvEZl6J/HOr1rivtGgpCZTBzKNF8jg034n49zGfKkkzWLuXbPUOp3/oGfsKv8pnEu1c2GbQpSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT6JAVYEEwEIAEACGwMHCwkIBwMCAQYVC
@@ -70,46 +70,86 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Wed, 2025-03-19 at 11:56 +0100, Thomas Gleixner wrote:
-> In cases where an allocation is consumed by another function, the
-> allocation needs to be retained on success or freed on failure. The
-> code
-> pattern is usually:
+On Wed, 2025-03-19 at 11:57 +0100, Thomas Gleixner wrote:
+> The driver abuses the MSI descriptors for internal purposes. Aside of
+> core code and MSI providers nothing has to care about their
+> existence. They have been encapsulated with a lot of effort because
+> this kind of abuse caused all sorts of issues including a
+> maintainability nightmare.
 >=20
-> 	struct foo *f =3D kzalloc(sizeof(*f), GFP_KERNEL);
-> 	struct bar *b;
+> Rewrite the code so it uses dedicated storage to hand the required
+> information to the interrupt handler and use a custom cleanup
+> function to simplify the error path.
 >=20
-> 	,,,
-> 	// Initialize f
-> 	...
-> 	if (ret)
-> 		goto free;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ...
-> 	bar =3D bar_create(f);
-> 	if (!bar) {
-> 		ret =3D -ENOMEM;
-> 	=C2=A0=C2=A0=C2=A0	goto free;
-> 	}
-> 	...
-> 	return 0;
-> free:
-> 	kfree(f);
-> 	return ret;
->=20
-> This prevents using __free(kfree) on @f because there is no canonical
-> way to tell the cleanup code that the allocation should not be freed.
->=20
-> Abusing no_free_ptr() by force ignoring the return value is not
-> really a sensible option either.
->=20
-> Provide an explicit macro retain_ptr(), which NULLs the cleanup
-> pointer. That makes it easy to analyze and reason about.
+> No functional change intended.
 >=20
 > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> Cc: Peter Zijlstra <peterz@infradead.org>
+> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
 > ---
-> V4: Cast to void so can't be used as return_ptr() replacement - James
+> V4: Fix inverse NULL pointer check and use __free() for error paths -
+> James
+> ---
+> =C2=A0drivers/ufs/host/ufs-qcom.c |=C2=A0=C2=A0 85 ++++++++++++++++++++++=
+++---------
+> -----------
+> =C2=A01 file changed, 48 insertions(+), 37 deletions(-)
+>=20
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1782,25 +1782,38 @@ static void ufs_qcom_write_msi_msg(struc
+> =C2=A0	ufshcd_mcq_config_esi(hba, msg);
+> =C2=A0}
+> =C2=A0
+> +struct ufs_qcom_irq {
+> +	unsigned int		irq;
+> +	unsigned int		idx;
+> +	struct ufs_hba		*hba;
+> +};
+> +
+> =C2=A0static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
+> =C2=A0{
+> -	struct msi_desc *desc =3D data;
+> -	struct device *dev =3D msi_desc_to_dev(desc);
+> -	struct ufs_hba *hba =3D dev_get_drvdata(dev);
+> -	u32 id =3D desc->msi_index;
+> -	struct ufs_hw_queue *hwq =3D &hba->uhq[id];
+> +	struct ufs_qcom_irq *qi =3D data;
+> +	struct ufs_hba *hba =3D qi->hba;
+> +	struct ufs_hw_queue *hwq =3D &hba->uhq[qi->idx];
+> =C2=A0
+> -	ufshcd_mcq_write_cqis(hba, 0x1, id);
+> +	ufshcd_mcq_write_cqis(hba, 0x1, qi->idx);
+> =C2=A0	ufshcd_mcq_poll_cqe_lock(hba, hwq);
+> =C2=A0
+> =C2=A0	return IRQ_HANDLED;
+> =C2=A0}
+> =C2=A0
+> +static void ufs_qcom_irq_free(struct ufs_qcom_irq *uqi)
+> +{
+> +	for (struct ufs_qcom_irq *q =3D uqi; q->irq; q++)
+> +		devm_free_irq(q->hba->dev, q->irq, q->hba);
+> +
+> +	platform_device_msi_free_irqs_all(uqi->hba->dev);
+> +	devm_kfree(uqi->hba->dev, uqi);
+> +}
+> +
+> +DEFINE_FREE(ufs_qcom_irq, struct ufs_qcom_irq *, if (_T)
+> ufs_qcom_irq_free(_T))
+
+So if every __free body basically has a condition check and an external
+call, it would be a lot nicer if the macro were coded as something like
+
+#define DEFINE_FREE(_name, _type, _cond, _free) \
+	static inline void __free_##_name(void *p) { _type _T =3D
+*(_type *)p; if (_cond(_T)) _free(_T); }
+
+to avoid having to splash the strange _T across the kernel.
+
+Other than that (which isn't your problem, so you can ignore it), the
+code looks fine but I can't test it.
 
 Reviewed-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
