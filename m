@@ -1,64 +1,66 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C826158DAC
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2025 15:30:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA5C1D54D6
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2025 15:30:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742398233; cv=none; b=jIXwP7JNXICGv5CAxWfJwVCo55jykV0LBFsnp5vb88EjyiX8fWK792qrGoz6NQtjTS3KrSbGkGjMtFhodKDm+P2SRRwQG2KkZI7c6gZkc6ZcG72e2/iJpmFRDh9KA8Wxs+5kC9GFBz8xPohsCQpPnLIfNkRM3uL9NT577UiySuc=
+	t=1742398234; cv=none; b=Kur+BVKKbEyMFhj9vsWgPpQCjQvOzVyy3Hxbl3DqRdWgZUIAsWokuBOqTh7cvwtgB260NuJxaXB73bit4T0fU5Uc+06D+uNfpYL9uzy73kLsuY/8zzMfaLPlsRMTdKwVUmieKZ+j/gvUgC0evxgfVWj6U4Fp9a8XAeSrgPbL99g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742398233; c=relaxed/simple;
-	bh=/wdQQT8Uza3QQ8DxhowYsgtSCAG+eJfAgNfJhMqT56E=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=XKDHHG45DGlHUNJ08eNoz9ohtKt76KTMxrqlxOJ8/t/dV6xId64bw/hQGPolRbisO8osdxP7aokvpJVtnX1xPsW3vQM6iVlpwlN18VLrLC+nbGq6vyLhajesSWiPP7O1rU5az04bVWCZ5x2L1fzv1QQRlamdqnqaTgGzMU28Uuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=o7Z6D9mv; arc=none smtp.client-ip=209.85.128.45
+	s=arc-20240116; t=1742398234; c=relaxed/simple;
+	bh=03nXe96Gz68DXY2H0Ujds8952wDZmWtW9nwe7BZ34Ws=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=PuTu/PGGAvzlN9YqdqKf9VpiEVNhSKO6gbEbLXQJZNiNMXNubI3Uax/1AcV3x63XB6fm+q+NNgtCrrMKQzu81tWm8/0T0SqJ6AdjOAokKDKOuxUccQvnvHI49IcEW1nFdW0SRperM3XbggiF7M4QQ3UYi9tV18Z93f9MtH70UuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=b9hbaBie; arc=none smtp.client-ip=209.85.128.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="o7Z6D9mv"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-43d0618746bso36572765e9.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2025 08:30:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="b9hbaBie"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-43cfa7e7f54so6249365e9.1
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Mar 2025 08:30:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1742398228; x=1743003028; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=qEZeyPH3DN6EY3kRLphvmTruJ5WHhFKumGbsm0McfOM=;
-        b=o7Z6D9mvwWUc4ik5kMr0HVes3KqDqxi/izaFuSV6KFk0Jz3eOCZ97XGRtH6ovusEQB
-         ZQKjDocnTrZ16Mth0FSAbNIbBavwaBePvlntrAJhMKxjKQ5/cpbf3W7Kr6CdS6bbWyco
-         WhaE9fGwXxe89H+YUM3jke5gPrPiL1chiEbPdBu8RYLU/f9PsW0QLz+5nPKLMG1aduPg
-         F7YUqnyUgX4CfihEnzVrn0TtSpoyHKqHF3opBM/DgFB7kowHfQ4QC7fHYX1twTXowVzD
-         04sWdBLP1WZYpSlowIFfGuCWVHL1Da84uOUoBCxN9OFuLTbcDh5fJqQ4YJy5udr3i+at
-         4jcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742398228; x=1743003028;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=linaro.org; s=google; t=1742398230; x=1743003030; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=qEZeyPH3DN6EY3kRLphvmTruJ5WHhFKumGbsm0McfOM=;
-        b=BHA6BX0AMOPswomilxrmDuJwVNN8AyXi34hUt9y954sQ4wB/oiSgRirPJjTv9uT8W/
-         JNZXjNRjRdexQimbbOq4o8QbQQugt20MkWCvwet69r1ubdXZc14r9y+moUrYJiInmtwk
-         x7yPDz4PXxyw3Ydzy+dyUXmSHk7JTGsTWpDddcajCjQQ9ISfZoKaCJFBKyo/UoHentM1
-         AltQ7mVWSPIHuazl/CZcaLrl5S2Lcfb5vQuwKohNhEYJ6BYrOii1Bc5l4t0WjrYFxOvP
-         KkhXIo7LwPUsa4ouw23kkRb3deVY65xbxdpBz4H2UEHB0t+9tTKpmgVvKA42EUrBjalS
-         +nGA==
-X-Gm-Message-State: AOJu0YyfV9wHjnnpi0HVyVPp0l1AZOY1vLYamgISC00/Ga0Jo7Z4g5tJ
-	RM5ZHln4NOPS/Xszu5ngVZDuRf0DiQRFGiPMa1ji/F8TF7mOFZLyMg4EsBGqoB0=
-X-Gm-Gg: ASbGncsTd/VDF9vZrzibD4p6RRdibhX1o2dLBHTsoo4FOsyponGeUsXCrT95V4cR1Rz
-	ILRYFXcS6N2jGlHrKK7YAQAUZAh/KtmD1qjrYOH92L7Ul7fi9GTGH18HjqofOJKdTal7VVO2hJx
-	y5Mzfx5K3XG7LSj4Hl8kDXvtTAj3vv9l4v3Ld/4MBvhI4tjfvzy69iTkmv4BwufhOj17XOsu56U
-	Dglg7qpqUCWlYgHcL/bw8XXE8h2s3iV4pI+Qop2RgbuFieoRu5BXKanQFErZK0uG7YszNQK1L4o
-	13/3XPSuVpqidFLsrf1IKooU+CKrh4U9At9JjgFQMg1iX1JxOc+FZQ+Hhbyk/n0RuRNYlfpuzVw
-	e
-X-Google-Smtp-Source: AGHT+IGjnNjwq+MehcbC/hNwNMnENA+yaAifRw6JfmAvbNb+L/5ZJ5fX1A2xaTQSRDS1Im7e3lx1xA==
-X-Received: by 2002:a5d:6d8e:0:b0:391:1222:b444 with SMTP id ffacd0b85a97d-399739bedaamr3628438f8f.20.1742398228350;
-        Wed, 19 Mar 2025 08:30:28 -0700 (PDT)
+        bh=kwjbmevRcW4yMfkA4dX1AKUxaSG8vNc+QBgPKteOh5Q=;
+        b=b9hbaBieY6xkd24eowA06DhvK10O67DQdqezVgbHDd+/Kj1B5+9tBgw9jK5mN179F9
+         kx7MLSV0TS87JFRaaNAWdBEn9DxzjB5rrMMplxKKCTX7F7f6Uh6kd/ky1Iwr+5KTwspo
+         jBmjuFm48pYN7xfgaz5e6+emtoVepUWesYYrFKtSQwVTI7blnXQ1xHpEtxja8sHOajNg
+         eogcGTgkNeUX00hyf6X10yF6Qxj8NBosoHTZ1fuEnd+LRI8tVuKD7zh3vf7S6DAe1kyc
+         9w2+2wSYHiseokhx36iiCmicFKjshzGkRVJeSm8M0cWNgax45YqBjZ1M0Detes+SEhD2
+         tg1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742398230; x=1743003030;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=kwjbmevRcW4yMfkA4dX1AKUxaSG8vNc+QBgPKteOh5Q=;
+        b=o1wfrWuIKAquMT42Ns5AAKRVZfRnMiFoiXymTD4zaXVaSX6tqpx05jJZy9tAmFIQsd
+         gkUfPT9uFmGLAV6THRPJFa3XwzrZkHTl5JcqSo6ekpGnT0ymongkbiK4qETKQFdtGljY
+         OJ6i+WAtcM0ef7iCUeREFLraxwTGc2rf1lu7k7t69DBnzY0gfOoQdV+ual5y7+zz+MN4
+         MbfVRD/jZUHMvvg/c2+Hb9ncQgcFhfWVy/NqzNoq5KJMo5nPNcAqIntr2vC7JB2aEpKh
+         v70COQ5WlC0O9Zr24YFWP1b5UEflkudyvyw5Of0zHZ3mQ92GgZ/s7StH3cAHdighDLsJ
+         un7A==
+X-Gm-Message-State: AOJu0Yxvu/edssHf8bLxB90kILEE6FbkYeTIgjBB7y0/5tuM4l43ye1K
+	yESp8IrJSBNOzOYeCmSVx7b8mS8tQRst+UG59xGuP8AyUJiC85ibc8Tt7qTAFMQ=
+X-Gm-Gg: ASbGncvzzYIdMipN98GhhaesFLAapW1+6W4vOPJ5jeHjCDI3nPyWm8p/f2DBKM5wzS3
+	O0gdZf8wFj8GUjFsZ7MVwH8F22Zcn8HSNznIRSSxtklCaKdj9CW5JmKNG0v72zFKAHAqH0Lfzw8
+	m/uzoe9i6UjhFVA+5U1hsa15JLasw8kk875v7iAYRRLMy3X93dpZCNFGjPyC1IVRgEbCKu9fUfR
+	3cjZWsCo8DK1poRePH/gH2/0+gRVi9/OsHxNw06LZ9F4k4fm0MrZd4mLBQ/TMK6DURrO/RFY/Bt
+	9Rwz5Cd9aQmZRO0ig74Lyj7TpEEaaCQglLfC5K6BthmaqtOEC4Vh0wQx2wHgNBL/vV01p7ju36W
+	+L0Yn9vWbbRo=
+X-Google-Smtp-Source: AGHT+IGMbhvAoKZ5MZTSGuKQwWBy+XHvI6tDwhUHbcw9eJrBgGY8SFOMgUHG77gsUcqyh9kE5lpXWA==
+X-Received: by 2002:a05:600c:5856:b0:43b:bfa7:c7d with SMTP id 5b1f17b1804b1-43d3b95f76fmr61386045e9.2.1742398229831;
+        Wed, 19 Mar 2025 08:30:29 -0700 (PDT)
 Received: from gpeter-l.roam.corp.google.com ([212.105.145.136])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d43fdaca8sm22590635e9.28.2025.03.19.08.30.26
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d43fdaca8sm22590635e9.28.2025.03.19.08.30.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Mar 2025 08:30:27 -0700 (PDT)
+        Wed, 19 Mar 2025 08:30:29 -0700 (PDT)
 From: Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH v2 0/7] ufs-exynos stability fixes for gs101
-Date: Wed, 19 Mar 2025 15:30:17 +0000
-Message-Id: <20250319-exynos-ufs-stability-fixes-v2-0-96722cc2ba1b@linaro.org>
+Date: Wed, 19 Mar 2025 15:30:18 +0000
+Subject: [PATCH v2 1/7] scsi: ufs: exynos: ensure pre_link() executes
+ before exynos_ufs_phy_init()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,10 +69,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAnj2mcC/x2M0QpGQBQGX0Xn2ilWhFeRi2U/nNLSHv8fybvbX
- E7TzE2KIFBqk5sC/qKy+QgmTWhcrJ/B4iKTyUyZFXnDOC+/Kf8mZT3sIKscF09yQhm1s01dGRR
- upDjYAz4R+65/nhfznIBRbAAAAA==
-X-Change-ID: 20250319-exynos-ufs-stability-fixes-e8da9862e3dc
+Message-Id: <20250319-exynos-ufs-stability-fixes-v2-1-96722cc2ba1b@linaro.org>
+References: <20250319-exynos-ufs-stability-fixes-v2-0-96722cc2ba1b@linaro.org>
+In-Reply-To: <20250319-exynos-ufs-stability-fixes-v2-0-96722cc2ba1b@linaro.org>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
  "Martin K. Petersen" <martin.petersen@oracle.com>, 
@@ -81,75 +82,68 @@ Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
  Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
  Eric Biggers <ebiggers@kernel.org>, Bart Van Assche <bvanassche@acm.org>, 
  willmcvicker@google.com, kernel-team@android.com, tudor.ambarus@linaro.org, 
- andre.draszik@linaro.org, Peter Griffin <peter.griffin@linaro.org>, 
- stable@vger.kernel.org
+ andre.draszik@linaro.org, Peter Griffin <peter.griffin@linaro.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2074;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1417;
  i=peter.griffin@linaro.org; h=from:subject:message-id;
- bh=/wdQQT8Uza3QQ8DxhowYsgtSCAG+eJfAgNfJhMqT56E=;
- b=owEBbQKS/ZANAwAKAc7ouNYCNHK6AcsmYgBn2uMPIIUjvTrJwB/bf6NJvAEfmLtzYJjS2lH1T
- 7BfK9xyJDKJAjMEAAEKAB0WIQQO/I5vVXh1DVa1SfzO6LjWAjRyugUCZ9rjDwAKCRDO6LjWAjRy
- unajD/9Cn7tx2QPnMfbWKfUHujf8hPZa1cu0fDAlEehSOmtXXbYACAJh5RMKun3s4cmXI1SLDV1
- NDgRqHDRg7+OfgTquDBmQBnRltEdbiw5hMN0u6W0+SxUc+7d8cdPvTqml4b3PQY4Hofg77kYdqW
- zDVjS+FgJLNTPm1jAgKGVydFbUxn6uovbzmpPPOJfosNwhRlOqreukBWwmGKVuCjs1/KGv/O4v2
- dzj1Mo+GYACOZPMqttC4X7VB6mFkyb5QnsokohAIhQ11/G8Kom7x0NITrwU7d/B/3ZioHJ4T42t
- uRQ0jqf10+jt3lFQ0fgiLV052oMwmFjEdRA9vMlcAGprcKr2kEvbR3hJxQR/VdRgULSs5LJfPx1
- JX9vgQ4LtCK8b2FlxMNcDCi0RSnIrkAM0Husi1ATJTpelimGuB3TnuT4xN7WouTrCy/UhnhRhrE
- tiym0DZ+nj26EBNIPz9eSmEZc5DrL06IWb4BfEQ9HoTzq7glC/+W36RbVgvG1wic4OovGYK6C2G
- /aGtXnyrs/KBTZDX6rw/1J2piiasyKTZ9/JYcGS5UnCfb//OXZhZcL9teaQCwLUJ0ThNnPykKPw
- oBwHDzjnJvThNpzL/J0fPTOciSwv/SNhaDqxsxRPsge01ie9OD9hS/O9C7z2y2ZBIzpUQok0BWj
- 8Fe9IXbmzfPYBtg==
+ bh=03nXe96Gz68DXY2H0Ujds8952wDZmWtW9nwe7BZ34Ws=;
+ b=owEBbQKS/ZANAwAKAc7ouNYCNHK6AcsmYgBn2uMQZlA3NYaC9iaL3h/pGHUSlEutMRvCD5thM
+ 9WKscPfzzGJAjMEAAEKAB0WIQQO/I5vVXh1DVa1SfzO6LjWAjRyugUCZ9rjEAAKCRDO6LjWAjRy
+ ugjPD/97aGZqjPkj2/fwPbyQRgsv1vpdcmhpXOfwtWmb1QyfOW6/ACBPRX1BjM4Fb32yZ7mz8hW
+ qS5ca003v2iZhlO/pxyOsaJswTIzUNpY+/X51cAEjIOA3eizjndOKzl5Sa/+pmuXvoW0MU2D64Z
+ 0fDE2rkK6C63xBtMv9vSyeGWP0xMGtjrXH28QjH7O7OUgpBpAlQIlDY2W+3ywbWDpvBLPObLiki
+ f4RVMFgRf1mT43lig0UDqf4IKyDyAQClKCXMF7Ml7QKnYjorn0i5eFd/MjJGhXkOyxRcsBqsw8v
+ UlR92f8uBwlQDtgiV2odpELxZUNQyspLFbzlzx1nXCS3J7tBuwmnyfipWMKB5d1UwL4Ccaj4yMa
+ PsVfbR33+4w6vVl0q/0GCouG4KaeM9Ps6fgUpUh5t/C0RHhKTDQeru7yf2LKcTLOoy1L2mrvsLA
+ XKBSjaQkfMctqQlBP6o8k9iViVBtn0ulX9Ug4dGcjyXzpOZl2QAuIAKvLFTK55Vem54BuYf+mL0
+ 1O00+Y3F/x6U3qLelrsYoQtxfVD/X7Tmh4nxSPO5iMorpfIwCHe+aIrkjFL/VJWRDvzZP8nmkjv
+ fgC4v4xpypP3/70b6R/Pii7WMujV8WGTIpmoTrbE9XvBnkcEwQdB3o0Iu8VZouSWkgm2P5J/9cl
+ LX5cV3J9ueEAxVw==
 X-Developer-Key: i=peter.griffin@linaro.org; a=openpgp;
  fpr=0EFC8E6F5578750D56B549FCCEE8B8D6023472BA
 
-Hi folks,
-
-This series fixes several stability issues with the upstream ufs-exynos
-driver, specifically for the gs101 SoC found in Pixel 6.
-
-The main fix is regarding the IO cache coherency setting and ensuring
-that it is correctly applied depending on if the dma-coherent property
-is specified in device tree. This fixes the UFS stability issues on gs101
-and I would imagine will also fix issues on exynosauto platform that
-seems to have similar iocc shareability bits.
-
-Additionally the phy reference counting is fixed which allows module
-load/unload to work reliably and keeps the phy state machine in sync
-with the controller glue driver.
-
-regards,
-
-Peter
-
-Changes since v1:
- * Added patch for correct handling of iocc depedent on dma-coherent property
- * Rebased onto next-20250319
- * Add a gs101 specific suspend hook (Bart)
- * Drop asserting GPIO_OUT in .exit() (Peter)
- * Remove superfluous blank line (Bart)
- * Update PRDT_PREFECT_EN to PRDT_PREFETCH_EN (Bart)
- * Update commit description for desctype type 3 (Eric)
- * https://lore.kernel.org/lkml/20250226220414.343659-1-peter.griffin@linaro.org/
+Ensure clocks are enabled before configuring unipro. Additionally move the
+pre_link() hook before the exynos_ufs_phy_init() calls. This means the
+register write sequence  more closely resembles the ordering of the
+downstream driver.
 
 Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 ---
-Peter Griffin (7):
-      scsi: ufs: exynos: ensure pre_link() executes before exynos_ufs_phy_init()
-      scsi: ufs: exynos: move ufs shareability value to drvdata
-      scsi: ufs: exynos: disable iocc if dma-coherent property isn't set
-      scsi: ufs: exynos: ensure consistent phy reference counts
-      scsi: ufs: exynos: Enable PRDT pre-fetching with UFSHCD_CAP_CRYPTO
-      scsi: ufs: exynos: Move phy calls to .exit() callback
-      scsi: ufs: exynos: gs101: put ufs device in reset on .suspend()
+ drivers/ufs/host/ufs-exynos.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- drivers/ufs/host/ufs-exynos.c | 85 ++++++++++++++++++++++++++++++++-----------
- drivers/ufs/host/ufs-exynos.h |  6 ++-
- 2 files changed, 68 insertions(+), 23 deletions(-)
----
-base-commit: 433ccb6f2e879866b8601fcb1de14e316cdb0d39
-change-id: 20250319-exynos-ufs-stability-fixes-e8da9862e3dc
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index d7539cda97da5023ec8a2852ff3f5191642ffd37..0c8c2e41e851cdbefc80a66d87273b7e8fcf9d4d 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1049,9 +1049,14 @@ static int exynos_ufs_pre_link(struct ufs_hba *hba)
+ 	exynos_ufs_config_intr(ufs, DFES_DEF_L4_ERRS, UNIPRO_L4);
+ 	exynos_ufs_set_unipro_pclk_div(ufs);
+ 
++	exynos_ufs_setup_clocks(hba, true, PRE_CHANGE);
++
+ 	/* unipro */
+ 	exynos_ufs_config_unipro(ufs);
+ 
++	if (ufs->drv_data->pre_link)
++		ufs->drv_data->pre_link(ufs);
++
+ 	/* m-phy */
+ 	exynos_ufs_phy_init(ufs);
+ 	if (!(ufs->opts & EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR)) {
+@@ -1059,11 +1064,6 @@ static int exynos_ufs_pre_link(struct ufs_hba *hba)
+ 		exynos_ufs_config_phy_cap_attr(ufs);
+ 	}
+ 
+-	exynos_ufs_setup_clocks(hba, true, PRE_CHANGE);
+-
+-	if (ufs->drv_data->pre_link)
+-		ufs->drv_data->pre_link(ufs);
+-
+ 	return 0;
+ }
+ 
 
-Best regards,
 -- 
-Peter Griffin <peter.griffin@linaro.org>
+2.49.0.rc1.451.g8f38331e32-goog
 
