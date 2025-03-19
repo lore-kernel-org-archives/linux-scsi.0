@@ -1,445 +1,231 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC0F2F41;
-	Wed, 19 Mar 2025 07:30:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742369430; cv=none; b=a5eUD3VtcyRrr4eo3iXmOcgodiBRNTdhuFTN3C61yXR9q2OcCV4LxBIjzmPFU5vVINAp8eN3IfN2caDgrFunBaA8kQPZoZUrMC5atn45VApm541tXukQjAe2qnOT8oQxStS78NFnXcxk0L0F91XR6tBQ+L/yUUgdH3S5V/vvalA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742369430; c=relaxed/simple;
-	bh=R5HQdJm1cg5NqsZsmdjbUV46i0fbjgzV9O5qjlej0Ak=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Xv95y9AWB2KXNDvWtVcHgxl7PkUyLhuL+nhD+wskzlpKZ6aBT/xVJARAqr6kIgv2eKmciCFqxwVB15lKAVHrC3ClHlaZ/lZKgQDtw+O7q+fMHqPxzAQcRAibBaZ6aBiL3suGsV/hSF6ktQtcy4CYn3iViRE6agI+FQ2ONa9ZNig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Cdt2DdFt; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5B011E1E1F;
+	Wed, 19 Mar 2025 07:56:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1742371005; cv=fail; b=Xu5lkUj8HvbYJenNdoNxRibiHv4IsXSZ5OAF+8g4dmwOV2pZXNtPs+1jCpg5hQTGFePfzsPMrEhqbXp9qL0cOqURjdtjNG8NF+RW2J4K9HkNtADPhqi0WiVgNHJIUg2jK6QUAShHXKmTIdAEC6zmEZB3fhHsHquk4RgZLJCXaA4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1742371005; c=relaxed/simple;
+	bh=REIO5lmSmLEU26iAidA1FVLvrRRN+FnROnLV6GmFq0E=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=PObNBeb3U/vrViZP2OfP6L+8NPPLioPuxyM4QWVbKbQpx0tEzKnFZixzXdJe3UZMD2scrblqAp6XYSMGidiU29no1f2ahCH1fNxnXvBrkHO2CQpGHNoHzvKGKNE+D72pamawzBw+TgiGAYneHJrGPN1xX4GGTPq4uQnPPaInrcU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=M+7qYktI; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=IXhlncW3; arc=fail smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Cdt2DdFt"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52J4lmKD001868;
-	Wed, 19 Mar 2025 07:29:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-type:date:from:message-id:mime-version:subject:to; s=
-	qcppdkim1; bh=XDjpxOJZM1EOF9vpn7+ybNe5SgMoSN9gTtg0XUDzI9s=; b=Cd
-	t2DdFt7i6gkXU+FmmH0QJclljLtJoPYKODv1jCiXW9n2lL0OnKb8sfG6FfpOQwt4
-	SsNgOTIqYnPkcF/mZjDrL+NiHby6fQ24n6GnyZA2t7dRnBPV0QW2DlwMhHofzbwS
-	d4Oev4cJpgxFOGI/pDhZR+aiFQbQsQPHMQVhvGfVyidFvpZPLKSEvwaVGPHNnAgh
-	FfA6OtT6pVJGGWO5QT4+zadLR4CYXXcM1YGGjr4cNF1RMTYhjLeg0jlvEFLj5Jdc
-	2B8ZfBQvisUXJKODzPdhUZJdOlan71KUJgj+qFbkavNur8Aoajx725gb1incDuOm
-	sFUPfSqxWLxxf+zMVbSQ==
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45etmbw20k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 19 Mar 2025 07:29:55 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52J7Ts1T011972
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 19 Mar 2025 07:29:54 GMT
-Received: from stor-berry.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="M+7qYktI";
+	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="IXhlncW3"
+X-UUID: ade9475c049711f08eb9c36241bbb6fb-20250319
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=REIO5lmSmLEU26iAidA1FVLvrRRN+FnROnLV6GmFq0E=;
+	b=M+7qYktIIZ/YvX7xXeqRpmq5bYp739cb6eBWWIr0/rcvPXfEx2+8gGsc0pybhisq7WPpzzBWu1Z3Of9XgkiMqF+yDalzsSW/jhAoGzPj7BJjSYqp/0HM4R95ZEJZBMV8hhZYbfk/OLfLBuvkaqd58LSiUV87nRlP5lXmaaot9Ns=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.2.1,REQID:8381a214-4228-4b93-ad56-7220af9cc397,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:0ef645f,CLOUDID:4bea908c-f5b8-47d5-8cf3-b68fe7530c9a,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102,TC:nil,Content:0|50,
+	EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
+	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: ade9475c049711f08eb9c36241bbb6fb-20250319
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 2024805610; Wed, 19 Mar 2025 15:56:35 +0800
+Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 19 Mar 2025 00:29:53 -0700
-From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-To: <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>, <bvanassche@acm.org>,
-        <avri.altman@wdc.com>, <peter.wang@mediatek.com>,
-        <manivannan.sadhasivam@linaro.org>, <minwoo.im@samsung.com>,
-        <adrian.hunter@intel.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>,
-        Matthias Brugger
-	<matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>,
-        Bean Huo <beanhuo@micron.com>, Ziqi Chen <quic_ziqichen@quicinc.com>,
-        Keoseong Park
-	<keosung.park@samsung.com>,
-        Gwendal Grignou <gwendal@chromium.org>,
-        Al Viro
-	<viro@zeniv.linux.org.uk>, Eric Biggers <ebiggers@google.com>,
-        open list
-	<linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC
- support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>,
-        "moderated
- list:ARM/Mediatek SoC support:Keyword:mediatek"
-	<linux-mediatek@lists.infradead.org>
-Subject: [PATCH v3 1/1] scsi: ufs: core: add device level exception support
-Date: Wed, 19 Mar 2025 00:29:30 -0700
-Message-ID: <6109425449ac4d18249ce7254e4fa1252138a94a.1742369183.git.quic_nguyenb@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+ 15.2.1258.39; Wed, 19 Mar 2025 15:56:34 +0800
+Received: from APC01-SG2-obe.outbound.protection.outlook.com (172.21.101.237)
+ by mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Wed, 19 Mar 2025 15:56:33 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=p/DyQ1gt6GHQcq7rJYkNNcCOQm18k/WwuF9dyzOjTCpV8g5XcBv73saN+ANOTBuOVnGMZddEeL/HxPqL2fit8orhh5iYT62ScvF/n5SpeA1ci03dCu44yyHb3Q+ZDa4Fk6A5a9jGWnzNDWHevmXNa+o9wG7khpwsl4GPF9sZdSAlU9UmY+r+2yudcmwVxjlYGc0gKzqxMfg8+34jijn9wPsnoIHZL1GJTY48EYoy/daz0t2XUHG46Oxd14eANmIZVPTupcNKhXuhUrpad486MoRvRxH7ygeTVqANFzSTAm6oDKuyIHJWhNYP5n4bhKT6+fI5H6vzRxvxZAWAaBHv+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=REIO5lmSmLEU26iAidA1FVLvrRRN+FnROnLV6GmFq0E=;
+ b=LUjRCNONQdsTFiIIURPngyqL3JKyUuQIBHcFAlXDhdWAk3plxoagh0UC3KcJyluLZtd4beYYD4y4FFDuBSNI4EQrBepzBGFqeyS08j2KRghTlEAEn8Wq77j4khtcMINx5tukOr/IY/8Z2ZkK8sYVdOYEJNLEMAY9Fx5tb0IeXuQzQFTuBmzD2G4ETeGUwtaoNb8w6KNAEFBjwWzKjbY29UjgzVEYhh6n2/knEzDTCz4/ySGoMYaQfcEEQrH4GoqMG+qK1sNzqrBDKc28lblR5pdeh2zcLr1W0S0NId+1udXZnF2lwftKnPLh1xyVbLbobLBlVtZy3fnl73UG84ODMQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
+ dkim=pass header.d=mediatek.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=REIO5lmSmLEU26iAidA1FVLvrRRN+FnROnLV6GmFq0E=;
+ b=IXhlncW3jAvdCAHg2CbmWFm4nwmvtQ+LehAZp5Pi4+yUhvOLpkYSPc4NrI3dj0N9LnzgBtCkeWpRyvYVZOXRRAsSVTcwA/LVwgD4YGZVpZ8tk1Ne9HDlhbzm0PnaFLN/y9EQGV3CSAMX6R9xPy4oF6sk5tq+WVtpbECycPIulO0=
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
+ by TYZPR03MB8690.apcprd03.prod.outlook.com (2603:1096:405:a9::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.34; Wed, 19 Mar
+ 2025 07:56:32 +0000
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c%7]) with mapi id 15.20.8534.034; Wed, 19 Mar 2025
+ 07:56:31 +0000
+From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+To: "avri.altman@wdc.com" <avri.altman@wdc.com>, "quic_cang@quicinc.com"
+	<quic_cang@quicinc.com>, "quic_nitirawa@quicinc.com"
+	<quic_nitirawa@quicinc.com>, "quic_nguyenb@quicinc.com"
+	<quic_nguyenb@quicinc.com>, "manivannan.sadhasivam@linaro.org"
+	<manivannan.sadhasivam@linaro.org>, "bvanassche@acm.org"
+	<bvanassche@acm.org>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+	"minwoo.im@samsung.com" <minwoo.im@samsung.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "beanhuo@micron.com" <beanhuo@micron.com>, "ebiggers@google.com"
+	<ebiggers@google.com>, "gwendal@chromium.org" <gwendal@chromium.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "AngeloGioacchino
+ Del Regno" <angelogioacchino.delregno@collabora.com>,
+	"quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+	"keosung.park@samsung.com" <keosung.park@samsung.com>,
+	"viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "matthias.bgg@gmail.com"
+	<matthias.bgg@gmail.com>, "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-mediatek@lists.infradead.org"
+	<linux-mediatek@lists.infradead.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v3 1/1] scsi: ufs: core: add device level exception
+ support
+Thread-Topic: [PATCH v3 1/1] scsi: ufs: core: add device level exception
+ support
+Thread-Index: AQHbmKDWD55Hgm4oDkCkysxiHSOSWrN6F5cA
+Date: Wed, 19 Mar 2025 07:56:31 +0000
+Message-ID: <61570104d58cef22716fefe459c0c45670108aad.camel@mediatek.com>
+References: <6109425449ac4d18249ce7254e4fa1252138a94a.1742369183.git.quic_nguyenb@quicinc.com>
+In-Reply-To: <6109425449ac4d18249ce7254e4fa1252138a94a.1742369183.git.quic_nguyenb@quicinc.com>
+Accept-Language: zh-TW, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=mediatek.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|TYZPR03MB8690:EE_
+x-ms-office365-filtering-correlation-id: e2416087-dfa9-4161-a644-08dd66bb8fc6
+x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|376014|7416014|366016|1800799024|38070700018;
+x-microsoft-antispam-message-info: =?utf-8?B?SU9yT2ZaakQvSzNCWkQrZUM3VEt2VW90MENwZS93T0xaY00rVEJNanFaWW9I?=
+ =?utf-8?B?MSt0Qi8wZlc5bkRUUVdLWVhHYXczeDVrTlU0amVlSDQ1ekRTNml5b2psSkNz?=
+ =?utf-8?B?YTloU00vemN6MDA5bFgrYWNHSVB6ZEdUbmlwQmhKZHFXZGp2NHB0aHpoOVJF?=
+ =?utf-8?B?U0tEZ1ZraUdTaTcvK2hua29id3hMTXorbE5wOVNHeXVac3duTWlYVkZTVUc0?=
+ =?utf-8?B?b1ViRDJoclFiL1cwUXZsRlJiWkF5eFo5R2VOQVJTTU10QTJ2WFBtZFBFV09s?=
+ =?utf-8?B?Z0pPblpuWk9xUU1UQnNxTTJzQWxSelNRcW5zQ2FwcFdKNHJZNFRadXY5dzNF?=
+ =?utf-8?B?UzUxVkhQVjJHa2dXR0ZiYlNFRkVJa2pzY1dzbjRVcG1adWZQU1pZK3VYNERl?=
+ =?utf-8?B?YWM0dDB0a0p1Y3hqYklpR1NoV2IyQURHMk1xSlVGRHZrb3IyVFUvNmxFYmFT?=
+ =?utf-8?B?VW56b1F6OXJCLytxcUtJTTFFVEd2Yy9yTnZJa2JSaXNyUmtJeWR0WlU5WUJp?=
+ =?utf-8?B?UGU0MGJLMjA2YzZEU1JGOHpMNjMxWWFKU3ZmMm9ndm9oajFJbis0KzVlOXRV?=
+ =?utf-8?B?RjZFUTlxQ0pPU0kwSHZSMkd4aTg4dWpjQU5QalNjbVRMWmpndU9GZGlYK1RD?=
+ =?utf-8?B?SWtCNEpWQ0F4RFY4ZDZTaUtTMGt3bTlEMDBLQ2pESkUrdUZKeGxvUnVrYTFI?=
+ =?utf-8?B?b21hS2RDL08yV2YvQjlhcGYvVjQ1R2kvaTJMMGl1T3h5ODZMdlpRdytLRW85?=
+ =?utf-8?B?WFEzalBiSkhGMDQvWUJLNHhHem9FSThuQTh3WnUvZ21sUVN0ZnlpNmZNaGFy?=
+ =?utf-8?B?K1lVOXZCaDZzRzBtOGVUTnJzckJ3em9TRU9XL2h2NkI5UHgzZmFPanp3R01I?=
+ =?utf-8?B?R1ZyTFRwTW9xTlBxNDM0OGJFUGltVUdWVkdadjRtYXZoaTFLQUtybFlDSlJX?=
+ =?utf-8?B?SlI5c0NzU1QrNFlYaVhjejg5L1FYRy9jZGFvbmxDZFNNbFFoMWNJV3g0K0Mx?=
+ =?utf-8?B?dVJwM3RKY21rVHVoOHJpdEN4K0hnSXBmMGZlUG1TQTh5MnlQUVVOSDZhZ2Ja?=
+ =?utf-8?B?Uzl3cWQ1WUFCVEtIa0pmajYwZlJIUHR1QnQzZUlOb20yczhYV3RWYklPQUl4?=
+ =?utf-8?B?RHlYc1NyK2lNK1hnYk9PeEtFeGhZcEt6Tm5BQk9HbGtOUFlZZmpadjNadjRX?=
+ =?utf-8?B?STlCUDhCZlRXbXNpSVRQY1RRaDBzb05Mc21ZSUVPYnBjL2thaS9hR0hKZ1dN?=
+ =?utf-8?B?UVluVW9JaFAyTVhCOERjdDQ5c0w4WTNjTFJHVmp6Qy9Da1JSMm4wTWpGKzg1?=
+ =?utf-8?B?V0ErR3Q5b1RlZTBMUVRHdXJPQk5rS0YwTmpxME15a21HYzBSaExWYTdyZ2l2?=
+ =?utf-8?B?ZFpBT1ZwbzRJVTNDckJjT0xLZ3NLU3NMMmRZUHFmYkxYU3gzSjJLMSs4TFM5?=
+ =?utf-8?B?NVkxaXJ0U1EwQVAvS3VWM0wwZTM2RlNseTljMGxmYW1jSXlWeVkxanFNZkRY?=
+ =?utf-8?B?UVJ6am95NW1YTTd3WmwvSXJ3Ym1NWnBJWTJCZk9BWjNMQWV2aktEc05rN2dw?=
+ =?utf-8?B?aXVLNHVWdTk3eFowcEVGeEg4RDh0SC9CRHY1YzVITktseWhBN2FscGFPVDRC?=
+ =?utf-8?B?bUFXU2dpQXU2dlFoQXZHMDRuRUFoaXYxRWVzOU90M1ByYW03R3gwc1p1ZVZI?=
+ =?utf-8?B?Z0hWQ2lPS2UvMGZldFRURkNSRWJMb3dUTndiaUdPWWxKaSsrRlRCZnpUejdM?=
+ =?utf-8?B?SUEvRDFHdU53U24vbmtXZ3NUbWdDOURib1p3Mng2VFp6dS9CRkIyS1BrcEIr?=
+ =?utf-8?B?aTQrdnhiUEV2clE1S3ZZVGJwWWx4V2l2ZjFvcGplQTByVm5jMGpzVDVMQXZQ?=
+ =?utf-8?B?TmUzNWI2aUhuVzJxRnJJKzR5cHJINThjM2NjUmFaYzNDYTdtSFdXMHNXVFMw?=
+ =?utf-8?Q?kYhHtAcJTvFGUqnOLXAMFZnCihyxT9Yl?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?OStsNnM3SzgzaTNJbmVJVS8zWUIrakZrd0k3enBQRHFPNU1JMzYwQzF3cnFo?=
+ =?utf-8?B?blRreU1QdWNGZkNieENTQUdBWGdKR1FOU0JGeUlWUThCOU5uR213WTE0UVEx?=
+ =?utf-8?B?MDhkUmg0T3U2bytRSXNGUEdtZTFZOThQazJHTWcxT2l1YnllSUZ1U2lBb2h2?=
+ =?utf-8?B?QzBoK3ZoSlFvb0ZjUURzeFlnOFdiNFJaMEpQNVFpVXhRdnlUUXpWRURIL1k0?=
+ =?utf-8?B?YjI3RVg4ZW5DZVAzTndIOG9HR0x5VUUrSzQwMmtnZGh5WkUwTTJlMmlQRTZs?=
+ =?utf-8?B?L1dQWUwwRS9WdThkMDBaNWdGWTNFNm16QXphQmt5djBKcndPWjlnYXVsMGxX?=
+ =?utf-8?B?L2hWcndSUWJJOWtuRXdEOUNyc29DKzFwVmZyV1hIeVdHbGs2QjErUFo5OUxh?=
+ =?utf-8?B?cnJ5SWpsdmQ0Tk83enFBOGNEaVJoQXVFRzAwZzU5RHNFelpUNWRxakxUVmEz?=
+ =?utf-8?B?SE9NUjF1RGxrdzZwaUloZDBnb0R2Zy9CM2oxTWo1SEZzTW9EbkxxbG9YYnMw?=
+ =?utf-8?B?bjJCQlRTWm54ZlFHVEl5OXlNVDFTbk9WcVB0bHpqYTNTNk01M3hiQ011VDh5?=
+ =?utf-8?B?UHEvcHNsaSs5bytNK2QzYWpoeDFQK3ZEVVRrRzhKUkdZU0o2a1FWU3g4TUZW?=
+ =?utf-8?B?c2RjSmRCclovWDhzdXVVMHZYR2FlSUlCKzhBR21MRXkxWXRHUUlXVmxWKy9B?=
+ =?utf-8?B?WFlzbENwL0VhMGxPczdBOEtTcCtHblhzT0ltbjZ6RXQya1RCYVpKT0paUnk0?=
+ =?utf-8?B?QlNuZGhtZVRZTFhQaXhCTFBVRU14SDZVSDZ5Yk83L0djS3FqRUx2b2RyS3VN?=
+ =?utf-8?B?Rkg4VHZqWXlUNUU2NEc2ZXdtaFhtRHduKzlwb3FIRGpLL3llWHNYN293QlRk?=
+ =?utf-8?B?b0duajFSRlVXRHpjUkVocDZwQTVreTI5RXZwaVcwLzdlZVh4NU9VQThqK2c0?=
+ =?utf-8?B?QzZXek95eVJmOHhaQTIxa0V4RXZHUlRhU2RyLzZxN0hNQnordlN2ckpiWGdz?=
+ =?utf-8?B?WjRLSEFQY1NFaERFeU9tZ3VSdStOM1hrVkJFZklGL1BnOXUzVitwU3NuVXlS?=
+ =?utf-8?B?OXluUWxkYnkzSWpNOEZLWlJvY25ORjR2WHU2ejNncnFMbWhqSld6Vmg2aGpn?=
+ =?utf-8?B?RWx3cy9CdmZOcDRLNVBTQ1VMbnEzdjlYbWNGa1NKVVdnYjN2cUZzbW16WS84?=
+ =?utf-8?B?Mno1eDN3amhVaTlTLzB1a0VUdXpZNldoWWV6VWMvd0F6L3pJWHJxVTVjMjF5?=
+ =?utf-8?B?b25QQzFydjlYaEg1a0gwaU1ucXZZZy94dE5ZNmNTREE5UDJKMmhSRnVKZ2l6?=
+ =?utf-8?B?c1BFUXFvb3MxMHdMVFdPMmxBS05wb0dUWkRQaG9ZeUdnbEJwd254blYvNXho?=
+ =?utf-8?B?SnIwTm9zLy9kajVrZXVucG5FRHVuSG5lSXFKRHk4aUpQV0F3UTltU1FzMUJZ?=
+ =?utf-8?B?Q2NFWUNLaVV2T01NdkhJVXZWVGZLVXhxejlqeE4va1VETE9xUllNdVliTllq?=
+ =?utf-8?B?dDU0eWpGTGVCWk85OGVraUw1b25oejNpa2U5QWl3N2RiT1dYd0NZRTdBL3dp?=
+ =?utf-8?B?K1d0dHRncDk1SmxsRStCandJZXJZTjc5eGFsUzdmTVdpdC9tMTU3QUxISHFZ?=
+ =?utf-8?B?SFpCam1FM1VYV0xrcE5yZjlaYjRUdFgzRCtOUUI1eFJxNUdsWFhSZUZrWlpj?=
+ =?utf-8?B?VDFFZThzMEtEdjlGUGozMDV6WEtQWXZ1NzNjTHlPUVVONWh6S29xSUNRcVFY?=
+ =?utf-8?B?QVJScDdsanAxMG9iekw4MHlsZXQycXBORWltZDJFRndmVEUvM296TU5ESDVw?=
+ =?utf-8?B?THA4bW9vWmxTeGt4Rng5WUNxbXJjVTNxcDF5QXE0aG9vVlljTnY5NVo3cXpY?=
+ =?utf-8?B?QlltR0k5N1MzU1pnTk16TEk1RDJHUTg2UEZTZ1JOMzRkUUVjajFDTUIrWmQ5?=
+ =?utf-8?B?Q1VZdXV5RWNLZHBhVU9HK3c1VlFOTzU0Qlc2ZHloaytvMFA4SVZpWjhiOGdi?=
+ =?utf-8?B?MkhreUJjelVCUW5veFZzcnlCREJ1L0NzbmxLSjUzOXdzTmsxZk1Od09vWjlU?=
+ =?utf-8?B?bTFkWW0rNXpsTE16bjBrTzZPcnRXRmp6YW1mRXlYMFpUV2oxM3ZhRG9taWhw?=
+ =?utf-8?B?cWpWbXB1TjdZT0FtdjRpOEd4VC82Qkh5MWdLVldVclB4dVNzZzBjNy9BSDRz?=
+ =?utf-8?B?WGc9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <7DB0B982E0399C4BB8C95D2CEE0A2287@apcprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: AdW9AjD1xapFs3n7P1qc-1QpXizhRUKk
-X-Proofpoint-GUID: AdW9AjD1xapFs3n7P1qc-1QpXizhRUKk
-X-Authority-Analysis: v=2.4 cv=aMLwqa9m c=1 sm=1 tr=0 ts=67da7273 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=mpaa-ttXAAAA:8 a=_c5fG4JWzXF7GHI2WLAA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-19_02,2025-03-17_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- priorityscore=1501 spamscore=0 clxscore=1011 phishscore=0 mlxscore=0
- suspectscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 adultscore=0
- lowpriorityscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2503190050
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e2416087-dfa9-4161-a644-08dd66bb8fc6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Mar 2025 07:56:31.3196
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RUof51M5RKnu4Fyx4/zAlrhxb+5fkPJUXPvg1AYkeMDPaAHfEtIP7anQ+WIPC2qQxN4znfmFicFqIxaeiUNwMw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR03MB8690
 
-The ufs device JEDEC specification version 4.1 adds support for the
-device level exception events. To support this new device level
-exception feature, expose two new sysfs nodes below to provide
-the user space access to the device level exception information.
-/sys/bus/platform/drivers/ufshcd/*/device_lvl_exception_count
-/sys/bus/platform/drivers/ufshcd/*/device_lvl_exception_id
-
-The device_lvl_exception_count sysfs node reports the number of
-device level exceptions that have occurred since the last time
-this variable is reset. Writing a value of 0 will reset it.
-The device_lvl_exception_id reports the exception ID which is the
-qDeviceLevelExceptionID attribute of the device JEDEC specifications
-version 4.1 and later. The user space application can query these
-sysfs nodes to get more information about the device level exception.
-
-Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
----
-Changes in v3:
-1. Add protection for hba->dev_lvl_exception_count accesses in different
-contexts (Bart's comment).
-
-Changes in v2:
-1. Addressed Mani's comments:
-   - Update the documentation of dev_lvl_exception_count to read/write.
-   - Rephrase the description of the Documentation and commit text.
-   - Remove the export of ufshcd_read_device_lvl_exception_id().
-2. Addressed Bart's comments:
-   - Rename dev_lvl_exception sysfs node to dev_lvl_exception_count.
-   - Update the documentation of the sysfs nodes.
-   - Skip comment about sysfs_notify() being used in interrupt
-     context because Avri already addressed it.
----
- Documentation/ABI/testing/sysfs-driver-ufs | 27 +++++++++++++
- drivers/ufs/core/ufs-sysfs.c               | 57 +++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h             |  1 +
- drivers/ufs/core/ufshcd.c                  | 63 ++++++++++++++++++++++++++++++
- include/uapi/scsi/scsi_bsg_ufs.h           |  9 +++++
- include/ufs/ufs.h                          |  5 ++-
- include/ufs/ufshcd.h                       |  5 +++
- 7 files changed, 166 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index ae01912..6a6c35a 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1604,3 +1604,30 @@ Description:
- 		prevent the UFS from frequently performing clock gating/ungating.
- 
- 		The attribute is read/write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_lvl_exception_count
-+What:		/sys/bus/platform/devices/*.ufs/device_lvl_exception_count
-+Date:		March 2025
-+Contact:	Bao D. Nguyen <quic_nguyenb@quicinc.com>
-+Description:
-+		This attribute is applicable to ufs devices compliant to the JEDEC
-+		specifications version 4.1 or later. The device_lvl_exception_count
-+		is a counter indicating the number of times the device level exceptions
-+		have occurred since the last time this variable is reset.
-+		Writing a 0 value to this attribute will reset the device_lvl_exception_count.
-+		If the device_lvl_exception_count reads a positive value, the user
-+		application should read the device_lvl_exception_id attribute to know more
-+		information about the exception.
-+		This attribute is read/write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_lvl_exception_id
-+What:		/sys/bus/platform/devices/*.ufs/device_lvl_exception_id
-+Date:		March 2025
-+Contact:	Bao D. Nguyen <quic_nguyenb@quicinc.com>
-+Description:
-+		Reading the device_lvl_exception_id returns the qDeviceLevelExceptionID
-+		attribute of the ufs device JEDEC specification version 4.1. The definition
-+		of the qDeviceLevelExceptionID is the ufs device vendor specific implementation.
-+		Refer to the device manufacturer datasheet for more information
-+		on the meaning of the qDeviceLevelExceptionID attribute value.
-+		The attribute is read only.
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 90b5ab6..4cd2e0b 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -466,6 +466,59 @@ static ssize_t critical_health_show(struct device *dev,
- 	return sysfs_emit(buf, "%d\n", hba->critical_health_count);
- }
- 
-+static ssize_t device_lvl_exception_count_show(struct device *dev,
-+					       struct device_attribute *attr,
-+					       char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	if (hba->dev_info.wspecversion < 0x410)
-+		return -EOPNOTSUPP;
-+
-+	return sysfs_emit(buf, "%u\n", hba->dev_lvl_exception_count);
-+}
-+
-+static ssize_t device_lvl_exception_count_store(struct device *dev,
-+						struct device_attribute *attr,
-+						const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned long flags;
-+	unsigned int value;
-+
-+	if (kstrtouint(buf, 0, &value))
-+		return -EINVAL;
-+
-+	/* the only supported usecase is to reset the dev_lvl_exception_count */
-+	if (value)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->dev_lvl_exception_count = 0;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	return count;
-+}
-+
-+static ssize_t device_lvl_exception_id_show(struct device *dev,
-+					    struct device_attribute *attr,
-+					    char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u64 exception_id;
-+	int err;
-+
-+	ufshcd_rpm_get_sync(hba);
-+	err = ufshcd_read_device_lvl_exception_id(hba, &exception_id);
-+	ufshcd_rpm_put_sync(hba);
-+
-+	if (err)
-+		return err;
-+
-+	hba->dev_lvl_exception_id = exception_id;
-+	return sysfs_emit(buf, "%llu\n", exception_id);
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -479,6 +532,8 @@ static DEVICE_ATTR_RW(wb_flush_threshold);
- static DEVICE_ATTR_RW(rtc_update_ms);
- static DEVICE_ATTR_RW(pm_qos_enable);
- static DEVICE_ATTR_RO(critical_health);
-+static DEVICE_ATTR_RW(device_lvl_exception_count);
-+static DEVICE_ATTR_RO(device_lvl_exception_id);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -494,6 +549,8 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rtc_update_ms.attr,
- 	&dev_attr_pm_qos_enable.attr,
- 	&dev_attr_critical_health.attr,
-+	&dev_attr_device_lvl_exception_count.attr,
-+	&dev_attr_device_lvl_exception_id.attr,
- 	NULL
- };
- 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 10b4a19..d0a2c96 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -94,6 +94,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     enum query_opcode desc_op);
- 
- int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
-+int ufshcd_read_device_lvl_exception_id(struct ufs_hba *hba, u64 *exception_id);
- 
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 4e1e214..5674f4a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6013,6 +6013,43 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
- 				__func__, err);
- }
- 
-+int ufshcd_read_device_lvl_exception_id(struct ufs_hba *hba, u64 *exception_id)
-+{
-+	struct utp_upiu_query_response_v4_0 *upiu_resp;
-+	struct ufs_query_req *request = NULL;
-+	struct ufs_query_res *response = NULL;
-+	int err;
-+
-+	if (hba->dev_info.wspecversion < 0x410)
-+		return -EOPNOTSUPP;
-+
-+	ufshcd_hold(hba);
-+	mutex_lock(&hba->dev_cmd.lock);
-+
-+	ufshcd_init_query(hba, &request, &response,
-+			  UPIU_QUERY_OPCODE_READ_ATTR,
-+			  QUERY_ATTR_IDN_DEV_LVL_EXCEPTION_ID, 0, 0);
-+
-+	request->query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
-+
-+	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
-+
-+	if (err) {
-+		dev_err(hba->dev, "%s: failed to read device level exception %d\n",
-+			__func__, err);
-+		goto out;
-+	}
-+
-+	upiu_resp = (struct utp_upiu_query_response_v4_0 *)response;
-+	*exception_id = get_unaligned_be64(&upiu_resp->value);
-+
-+out:
-+	mutex_unlock(&hba->dev_cmd.lock);
-+	ufshcd_release(hba);
-+
-+	return err;
-+}
-+
- static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
- {
- 	u8 index;
-@@ -6215,6 +6252,7 @@ static void ufshcd_rpm_dev_flush_recheck_work(struct work_struct *work)
-  */
- static void ufshcd_exception_event_handler(struct work_struct *work)
- {
-+	unsigned long flags;
- 	struct ufs_hba *hba;
- 	int err;
- 	u32 status = 0;
-@@ -6240,6 +6278,13 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 		sysfs_notify(&hba->dev->kobj, NULL, "critical_health");
- 	}
- 
-+	if (status & hba->ee_drv_mask & MASK_EE_DEV_LVL_EXCEPTION) {
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		hba->dev_lvl_exception_count++;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		sysfs_notify(&hba->dev->kobj, NULL, "device_lvl_exception_count");
-+	}
-+
- 	ufs_debugfs_exception_event(hba, status);
- }
- 
-@@ -8139,6 +8184,22 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- 	}
- }
- 
-+static void ufshcd_device_lvl_exception_probe(struct ufs_hba *hba, u8 *desc_buf)
-+{
-+	u32 ext_ufs_feature;
-+
-+	if (hba->dev_info.wspecversion < 0x410)
-+		return;
-+
-+	ext_ufs_feature = get_unaligned_be32(desc_buf +
-+				DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
-+	if (!(ext_ufs_feature & UFS_DEV_LVL_EXCEPTION_SUP))
-+		return;
-+
-+	hba->dev_lvl_exception_count = 0;
-+	ufshcd_enable_ee(hba, MASK_EE_DEV_LVL_EXCEPTION);
-+}
-+
- static void ufshcd_set_rtt(struct ufs_hba *hba)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
-@@ -8339,6 +8400,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 
- 	ufs_init_rtc(hba, desc_buf);
- 
-+	ufshcd_device_lvl_exception_probe(hba, desc_buf);
-+
- 	/*
- 	 * ufshcd_read_string_desc returns size of the string
- 	 * reset the error value
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index 8c29e49..8b61dff 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -143,6 +143,15 @@ struct utp_upiu_query_v4_0 {
- 	__be32 reserved;
- };
- 
-+struct utp_upiu_query_response_v4_0 {
-+	__u8 opcode;
-+	__u8 idn;
-+	__u8 index;
-+	__u8 selector;
-+	__be64 value;
-+	__be32 reserved;
-+} __attribute__((__packed__));
-+
- /**
-  * struct utp_upiu_cmd - Command UPIU structure
-  * @exp_data_transfer_len: Data Transfer Length DW-3
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 8a24ed5..1c47136 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -180,7 +180,8 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
- 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
- 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
--	QUERY_ATTR_IDN_TIMESTAMP		= 0x30
-+	QUERY_ATTR_IDN_TIMESTAMP		= 0x30,
-+	QUERY_ATTR_IDN_DEV_LVL_EXCEPTION_ID     = 0x34,
- };
- 
- /* Descriptor idn for Query requests */
-@@ -390,6 +391,7 @@ enum {
- 	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
- 	UFS_DEV_HPB_SUPPORT		= BIT(7),
- 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
-+	UFS_DEV_LVL_EXCEPTION_SUP       = BIT(12),
- };
- #define UFS_DEV_HPB_SUPPORT_VERSION		0x310
- 
-@@ -419,6 +421,7 @@ enum {
- 	MASK_EE_TOO_LOW_TEMP		= BIT(4),
- 	MASK_EE_WRITEBOOSTER_EVENT	= BIT(5),
- 	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
-+	MASK_EE_DEV_LVL_EXCEPTION       = BIT(7),
- 	MASK_EE_HEALTH_CRITICAL		= BIT(9),
- };
- #define MASK_EE_URGENT_TEMP (MASK_EE_TOO_HIGH_TEMP | MASK_EE_TOO_LOW_TEMP)
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index e3909cc..ad90a43 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -968,6 +968,9 @@ enum ufshcd_mcq_opr {
-  * @pm_qos_req: PM QoS request handle
-  * @pm_qos_enabled: flag to check if pm qos is enabled
-  * @critical_health_count: count of critical health exceptions
-+ * @dev_lvl_exception_count: count of device level exceptions since last reset
-+ * @dev_lvl_exception_id: vendor specific information about the
-+ * device level exception event.
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -1138,6 +1141,8 @@ struct ufs_hba {
- 	bool pm_qos_enabled;
- 
- 	int critical_health_count;
-+	u32 dev_lvl_exception_count;
-+	u64 dev_lvl_exception_id;
- };
- 
- /**
--- 
-2.7.4
-
+T24gV2VkLCAyMDI1LTAzLTE5IGF0IDAwOjI5IC0wNzAwLCBCYW8gRC4gTmd1eWVuIHdyb3RlOg0K
+PiANCj4gRXh0ZXJuYWwgZW1haWwgOiBQbGVhc2UgZG8gbm90IGNsaWNrIGxpbmtzIG9yIG9wZW4g
+YXR0YWNobWVudHMgdW50aWwNCj4geW91IGhhdmUgdmVyaWZpZWQgdGhlIHNlbmRlciBvciB0aGUg
+Y29udGVudC4NCj4gDQo+IA0KPiBUaGUgdWZzIGRldmljZSBKRURFQyBzcGVjaWZpY2F0aW9uIHZl
+cnNpb24gNC4xIGFkZHMgc3VwcG9ydCBmb3IgdGhlDQo+IGRldmljZSBsZXZlbCBleGNlcHRpb24g
+ZXZlbnRzLiBUbyBzdXBwb3J0IHRoaXMgbmV3IGRldmljZSBsZXZlbA0KPiBleGNlcHRpb24gZmVh
+dHVyZSwgZXhwb3NlIHR3byBuZXcgc3lzZnMgbm9kZXMgYmVsb3cgdG8gcHJvdmlkZQ0KPiB0aGUg
+dXNlciBzcGFjZSBhY2Nlc3MgdG8gdGhlIGRldmljZSBsZXZlbCBleGNlcHRpb24gaW5mb3JtYXRp
+b24uDQo+IC9zeXMvYnVzL3BsYXRmb3JtL2RyaXZlcnMvdWZzaGNkLyovZGV2aWNlX2x2bF9leGNl
+cHRpb25fY291bnQNCj4gL3N5cy9idXMvcGxhdGZvcm0vZHJpdmVycy91ZnNoY2QvKi9kZXZpY2Vf
+bHZsX2V4Y2VwdGlvbl9pZA0KPiANCj4gVGhlIGRldmljZV9sdmxfZXhjZXB0aW9uX2NvdW50IHN5
+c2ZzIG5vZGUgcmVwb3J0cyB0aGUgbnVtYmVyIG9mDQo+IGRldmljZSBsZXZlbCBleGNlcHRpb25z
+IHRoYXQgaGF2ZSBvY2N1cnJlZCBzaW5jZSB0aGUgbGFzdCB0aW1lDQo+IHRoaXMgdmFyaWFibGUg
+aXMgcmVzZXQuIFdyaXRpbmcgYSB2YWx1ZSBvZiAwIHdpbGwgcmVzZXQgaXQuDQo+IFRoZSBkZXZp
+Y2VfbHZsX2V4Y2VwdGlvbl9pZCByZXBvcnRzIHRoZSBleGNlcHRpb24gSUQgd2hpY2ggaXMgdGhl
+DQo+IHFEZXZpY2VMZXZlbEV4Y2VwdGlvbklEIGF0dHJpYnV0ZSBvZiB0aGUgZGV2aWNlIEpFREVD
+IHNwZWNpZmljYXRpb25zDQo+IHZlcnNpb24gNC4xIGFuZCBsYXRlci4gVGhlIHVzZXIgc3BhY2Ug
+YXBwbGljYXRpb24gY2FuIHF1ZXJ5IHRoZXNlDQo+IHN5c2ZzIG5vZGVzIHRvIGdldCBtb3JlIGlu
+Zm9ybWF0aW9uIGFib3V0IHRoZSBkZXZpY2UgbGV2ZWwgZXhjZXB0aW9uLg0KPiANCj4gU2lnbmVk
+LW9mZi1ieTogQmFvIEQuIE5ndXllbiA8cXVpY19uZ3V5ZW5iQHF1aWNpbmMuY29tPg0KPiBSZXZp
+ZXdlZC1ieTogUGV0ZXIgV2FuZyA8cGV0ZXIud2FuZ0BtZWRpYXRlay5jb20+DQo+IC0tLQ0KPiBD
+aGFuZ2VzIGluIHYzOg0KPiAxLiBBZGQgcHJvdGVjdGlvbiBmb3IgaGJhLT5kZXZfbHZsX2V4Y2Vw
+dGlvbl9jb3VudCBhY2Nlc3NlcyBpbg0KPiBkaWZmZXJlbnQNCj4gY29udGV4dHMgKEJhcnQncyBj
+b21tZW50KS4NCg0KSGkgQmFvLA0KDQpDb3VsZCB1c2UgYXRvbWljX3QgZm9yIGNvdW50ZXIgcHJv
+dGVjdD8NCg0KVGhhbmtzLg0KUGV0ZXINCg0K
