@@ -1,77 +1,141 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [118.143.206.90])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 18FEA18B46E;
-	Fri, 21 Mar 2025 07:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.143.206.90
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 331401DE4C2;
+	Fri, 21 Mar 2025 16:06:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742543140; cv=none; b=V1fekF6xuYdsh9zkXJcFqKj3ON/F9GRZ1uw3QmTvS5HLq/atNRGleeOCY7Y8wMdwZ9PC0/BWAtAIF/PIRoYU+sg3pMyZx0K7pwMxuxyEDX/bb8QbuTZyUZOuX17v/r3BLeaZMXnNx7y/Gov3lGB+PUGM4JyfIu1vEobjTHOmJqI=
+	t=1742573186; cv=none; b=gEnUNae3wa4xi6f2ces2Q61CkdgJfoBVGrp8eaJ07S9AmZeEBlffta5pnP0YnUfio8TVYtzenehObOREp8JWk5GUcKuTjDKXnD83sslP/EeCBK4EX2Rmf88aT1oerMHfb4iF92GOJrhOW3i49wsrgjSeZLFY69ddisAKj+nIN4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742543140; c=relaxed/simple;
-	bh=88Exi2HZ9Cc6huUhql+Ovz5rbiT40NweTdFXZoOdqEM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qBp4A3TpgWtdl9kbOHdToTvdM7zOAnHK3mSl/M+W67wWw8ASqdiEGAZH6OaHapUFv5tTTRBThk3bjMSEqzheeeu9X1xTQGeoduwrHhTnHBIZfo1HukNOdO+8gpZXn1Hi2ONgY6kVd96WYzBxiaHuGWOMW4y1qxXjV3t24eHfQiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=118.143.206.90
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: FBRpd6qkS9acFf+w/ToNGQ==
-X-CSE-MsgGUID: 5biK3S1MQNKhmprzYLRN5g==
-X-IronPort-AV: E=Sophos;i="6.14,264,1736784000"; 
-   d="scan'208";a="109466495"
-From: ZhangHui <zhanghui31@xiaomi.com>
-To: <ebiggers@kernel.org>
-CC: <James.Bottomley@hansenpartnership.com>, <alim.akhtar@samsung.com>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>, <linux-kernel@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<peter.griffin@linaro.org>, <zhanghui31@xiaomi.com>
-Subject: Re: [PATCH] ufs: crypto: add host_sem lock in ufshcd_program_key
-Date: Fri, 21 Mar 2025 15:45:23 +0800
-Message-ID: <20250321074524.126338-1-zhanghui31@xiaomi.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250321044455.GB98513@sol.localdomain>
-References: <20250321044455.GB98513@sol.localdomain>
+	s=arc-20240116; t=1742573186; c=relaxed/simple;
+	bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=fJoKGR3W3Q57YTby4gOkViWWAZYQGgRP4WXCGkwxoW+qEM2Rmq1yRYL39BRFUe+ENF1cwAmveTDwcwGla6fcZOfrUPwSbuLA/z+sBYL/NW8AAS4AMucvLZ8iG6BOUJPwdcwyUMywYtLi/9JPlxZNX7EHjQT8Mq/1ejneVX5+MJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NvGalA/i; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NvGalA/i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1742573184; x=1774109184;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
+  b=NvGalA/ikOrL5oPJYs+QnTxjGygBeYWWOIvfFHc3OkbJX2AwHpopTwqS
+   OrJ7JGqvsLvcwKeP1prZM7mVJTOfER54Pu75l/Fxr9j8e/jK3wFjwN7qC
+   SK/5ji+VMYsX0/5AhSQhmE9n8DiGMEF7b+LjyblXx5blGM0B6v0DiKpB9
+   7qQZ9t3oQhCYinN742ZwcgN+X4JUGCey/94l/s0aWmz+DeK3rMLdvIdAr
+   VOz0V9xhnp8gPVoJI15e8EZBeavaDkLOepeFPGKjHBbFPdNQ3UOf5upEx
+   k4Kt0Ju3dJwZMJUlGC8aC6kaTxjBeWUEXBcxhuhtx35JSY0kXfzmt0vxz
+   A==;
+X-CSE-ConnectionGUID: uCVdhp/3So2cYbOJXCtPug==
+X-CSE-MsgGUID: onEv0mKKQBKLcJNtxbhz7A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="43726622"
+X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
+   d="scan'208";a="43726622"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:23 -0700
+X-CSE-ConnectionGUID: g7UgcbV4QTih6n+cWYD8tQ==
+X-CSE-MsgGUID: 1EcrVXRMQNGo+fC3Vk/4zw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
+   d="scan'208";a="123417648"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:06 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Fri, 21 Mar 2025 18:06:02 +0200 (EET)
+To: Easwar Hariharan <eahariha@linux.microsoft.com>, 
+    Andrew Morton <akpm@linux-foundation.org>
+cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
+    Julia Lawall <Julia.Lawall@inria.fr>, 
+    Nicolas Palix <nicolas.palix@imag.fr>, 
+    James Smart <james.smart@broadcom.com>, 
+    Dick Kennedy <dick.kennedy@broadcom.com>, 
+    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
+    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
+    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
+    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
+    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
+    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
+    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
+    Sascha Hauer <s.hauer@pengutronix.de>, 
+    Pengutronix Kernel Team <kernel@pengutronix.de>, 
+    Fabio Estevam <festevam@gmail.com>, 
+    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+    Hans de Goede <hdegoede@redhat.com>, 
+    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
+    Selvin Xavier <selvin.xavier@broadcom.com>, 
+    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
+    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
+    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
+    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
+    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
+    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
+    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
+    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
+Subject: Re: [PATCH v3 15/16] platform/x86: thinkpad_acpi: convert timeouts
+ to secs_to_jiffies()
+In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
+Message-ID: <9e761e10-eb4d-0a34-79b5-ef4507f002c5@linux.intel.com>
+References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com> <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BJ-MBX03.mioffice.cn (10.237.8.123) To YZ-MBX07.mioffice.cn
- (10.237.88.127)
+Content-Type: text/plain; charset=US-ASCII
 
-On Thu, Mar 20, 2025 at 09:44:55PM -0700, Eric Biggers wrote:
-> It seems broken that the filesystem doesn't get unmounted until after the UFS is
-> shut down.  It would be helpful to get a clearer picture of exactly why things
-> are happening in that order.
+On Tue, 25 Feb 2025, Easwar Hariharan wrote:
+
+> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
+> secs_to_jiffies().  As the value here is a multiple of 1000, use
+> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
 > 
-> But disregarding that, it's indeed logical for blk_crypto_evict_key() to return
-> an error if it cannot fulfill the request.
+> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
+> the following Coccinelle rules:
 > 
-> But I'm wondering if this needs to be solved in the UFS driver itself or whether
-> the blk-crypto framework should handle this (so that it also gets fixed for
-> other drivers that may have the same problem).  In block/blk-crypto-profile.c,
-> pm_runtime_get_sync() is already called before ->keyslot_evict.  So
-> ->keyslot_evict is supposed to be called only when the device is resumed.
+> @depends on patch@
+> expression E;
+> @@
 > 
-> The blk-crypto code (in blk_crypto_hw_enter()) doesn't check the return value of
-> pm_runtime_get_sync(), though.  That seems like a bug.  Is it possible this
-> issue would be fixed if it checked the return value?
+> -msecs_to_jiffies
+> +secs_to_jiffies
+> (E
+> - * \( 1000 \| MSEC_PER_SEC \)
+> )
 > 
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 
-hi Eric,
+Applied to the review-ilpo-next branch.
 
-I have checked the device_shutdown process and it seems only wait for the resume
-that has not been processed to be completed, and then continue. It does not seem
-to cause pm_runtime_get_sync to return an error.
+> ---
+>  drivers/platform/x86/thinkpad_acpi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
+> index ab1cade5ef231e9a9a520bc0cca82384c911a331..d269e791f7fbc2a8ccf96f28cb476beccb57c9a7 100644
+> --- a/drivers/platform/x86/thinkpad_acpi.c
+> +++ b/drivers/platform/x86/thinkpad_acpi.c
+> @@ -8512,7 +8512,7 @@ static void fan_watchdog_reset(void)
+>  	if (fan_watchdog_maxinterval > 0 &&
+>  	    tpacpi_lifecycle != TPACPI_LIFE_EXITING)
+>  		mod_delayed_work(tpacpi_wq, &fan_watchdog_task,
+> -			msecs_to_jiffies(fan_watchdog_maxinterval * 1000));
+> +			secs_to_jiffies(fan_watchdog_maxinterval));
+>  	else
+>  		cancel_delayed_work(&fan_watchdog_task);
+>  }
 
-> Or does the UFS driver still need to check ufshcd_is_user_access_allowed() too?
-> If that's the case, I'm also wondering whether it's okay to nest host_sem inside
-> pm_runtime_get_sync().  Elsewhere in the UFS driver they are called in the
-> opposite order.
-
-I found that ufshcd_is_user_access_allowed is used in many places in the ufs driver
-code. What is the historical reason for this?
-
-thanks
-zhanghui
+-- 
+ i.
 
