@@ -1,144 +1,225 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E185422A4EA;
-	Fri, 21 Mar 2025 16:09:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD8F91DEFC5;
+	Fri, 21 Mar 2025 16:20:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742573390; cv=none; b=I9StbMDukHYd/6DrdUlGnxZwARh3RFDXz2RxzLsCbj/3YfqpZAIkOrkmaku/a7h2fbMLoGk6mcmSSZPttiSXCGBO4ntOmNVnRLa+54r60clDj6oG32UQsuJcABSj5iGllhhChx7fHjrWKL4dETdQ2wOeLDgUCu7j22VcnlRid8s=
+	t=1742574026; cv=none; b=nEspUjzhewhcSd+R6OrCPf/eEJSaVH5OcMzTI2NaZVjwz6zZL8LrCpa85uFjXv4wzCxN6JE8wkkpHMojcUGXqM5AX74QJFb2tD1ZxdH4ZjJoTFdiEGIs2NEQaKd1B4vUgr/NEAk+DSfnYczdfwkCJ1CIa9P96VAv4nIe2PrUC7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742573390; c=relaxed/simple;
-	bh=aDAlamYyZ4jkLWyWBaRa75vEGUzN9zvUrX/xuDuvQhE=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=W8GSzjFGkTawitgT+C3LIx/prfaouzw2I9HtJAEFRJyYUrydiAVX2KPqMpw614wRo92tIm444HvTqEltO+7sutpTrjx09TjNHUw3jCp6B+2NIxiE0zc8qHyguky0+Oo1UZuVLSvxPWP/jmhrrNfbnvcuhES4QMUis+qMGb9xcRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KD1uX7gP; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1742574026; c=relaxed/simple;
+	bh=pw+m5se+pQEuMCaFj9AWsSaNGo1mpEzijJ6omJch4sk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pZw8xYc77qLugaTKKbjo0LkF5GzmMjfpHIYLvl+GdbTG+fHw6VcaKgRoOSpkHYG4Q448rBo/9ncAxGR9F5tuBNg+7goZ+BcqYo0pzDpvfdeekMK68sF/R/6R5vfw8q7nWe56eZw/tNnILN5cxKT//4bSuvLZ0hlK95vlLuEUd60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OJLKm1cE; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KD1uX7gP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1742573390; x=1774109390;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=aDAlamYyZ4jkLWyWBaRa75vEGUzN9zvUrX/xuDuvQhE=;
-  b=KD1uX7gP/LojJ727AwyAAyD0Nif/BSbN6jJiNHdeu/UGg7KOcOSrIayc
-   zib/pyedUdNPJ4gkTR8fD+esqiAblSHVsozPQfuaLHTdPbRxCF5v7uaWS
-   yMtSEWBAwysHpJPOtpgiKebJjf20UbffOFIPsV5FpUflgzXTFxqWy7l7r
-   H8ubMuMdMU6XS2ACvFM1Kamh45nczZD2ix4bS85icbG+Xtyz2+MqMEftg
-   nJcEJyaCFejn3YlHhic51frQvzNhQ2fHxP+fIu8ir8UDtRroTGy+VNX6W
-   AkZ8ajr1b+0kxXohXJ2Ncd607RBSDXS2ns4ll1OnKQA/AKzLpYk5Xl3ir
-   g==;
-X-CSE-ConnectionGUID: 1QYfAh+lSPyiBhy4jKntNg==
-X-CSE-MsgGUID: D0Sr5P9LT/CIeSc9ezn13w==
-X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="61366675"
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="61366675"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:08:47 -0700
-X-CSE-ConnectionGUID: s+SzOXF7TAiwIAcfG0mbgQ==
-X-CSE-MsgGUID: 6hxEBaxKRL6vcWoyAx4wig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="124388577"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:08:30 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 21 Mar 2025 18:08:26 +0200 (EET)
-To: Easwar Hariharan <eahariha@linux.microsoft.com>, 
-    Andrew Morton <akpm@linux-foundation.org>
-cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-    Julia Lawall <Julia.Lawall@inria.fr>, 
-    Nicolas Palix <nicolas.palix@imag.fr>, 
-    James Smart <james.smart@broadcom.com>, 
-    Dick Kennedy <dick.kennedy@broadcom.com>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
-    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
-    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
-    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
-    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-    Sascha Hauer <s.hauer@pengutronix.de>, 
-    Pengutronix Kernel Team <kernel@pengutronix.de>, 
-    Fabio Estevam <festevam@gmail.com>, 
-    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
-    Hans de Goede <hdegoede@redhat.com>, 
-    =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-    Selvin Xavier <selvin.xavier@broadcom.com>, 
-    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
-    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
-    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
-    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
-    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
-    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
-    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v3 14/16] platform/x86/amd/pmf: convert timeouts to
- secs_to_jiffies()
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-14-a43967e36c88@linux.microsoft.com>
-Message-ID: <1252f601-97fd-f199-c339-5bd4ea8060dc@linux.intel.com>
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com> <20250225-converge-secs-to-jiffies-part-two-v3-14-a43967e36c88@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OJLKm1cE"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZK72p0r5hzltM4s;
+	Fri, 21 Mar 2025 16:20:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1742574016; x=1745166017; bh=9dyI6yv0FfobA2AHnFPAlTAe
+	x+wUcJGo91eWOYIZ7lo=; b=OJLKm1cENVXpFRHwXA6qt/2+2Kb/cQQIz7Lc4ZQD
+	5cvdfGq4C2wei0I7AY3lc2HgvODlhZ6bsMGL1mUpQGseJI46FLpx6nLaHUPH9ojw
+	hJa8OnC+MVaHQyTn1cgmzHHs6QcarLwyPT7dXYC+digMu0+cEvcD8b0Ub3I7Oo13
+	buLUy+NPtASuGkwZlwwKzleSh3I/Y775FuZRGaAM8qBhudSN1chrnmkBH9namIKS
+	4wTYvsX9c0WUpjufKPwLIyHuXnLciCIy24oWGgDjGpob+1yGohVJ6RnfXXP7pQoY
+	upB/iDOvS4R6PfBk+yHR0HBrGEF2Lx4Eeiq039J/lBoe5A==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id GnBwmSn9tA2a; Fri, 21 Mar 2025 16:20:16 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZK72c26gLzlschZ;
+	Fri, 21 Mar 2025 16:20:06 +0000 (UTC)
+Message-ID: <31b46812-72d5-4f9d-b55d-16a6e10afe7d@acm.org>
+Date: Fri, 21 Mar 2025 09:20:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC] ufs: delegate the interrupt service routine to a
+ threaded irq handler
+To: Neil Armstrong <neil.armstrong@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20250321-topic-ufs-use-threaded-irq-v1-1-7a55816a4b1d@linaro.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250321-topic-ufs-use-threaded-irq-v1-1-7a55816a4b1d@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, 25 Feb 2025, Easwar Hariharan wrote:
-
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
+On 3/21/25 9:08 AM, Neil Armstrong wrote:
+> On systems with a large number request slots and unavailable MCQ,
+> the current design of the interrupt handler can delay handling of
+> other subsystems interrupts causing display artifacts, GPU stalls
+> or system firmware requests timeouts.
 > 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
+> Since the interrupt routine can take quite some time, it's
+> preferable to move it to a threaded handler and leave the
+> hard interrupt handler save the status and disable the irq
+> until processing is finished in the thread.
 > 
-> @depends on patch@
-> expression E;
-> @@
+> This fixes all encountered issued when running FIO tests
+> on the Qualcomm SM8650 platform.
 > 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
+> Example of errors reported on a loaded system:
+>   [drm:dpu_encoder_frame_done_timeout:2706] [dpu error]enc32 frame done timeout
+>   msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1: hangcheck detected gpu lockup rb 2!
+>   msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     completed fence: 74285
+>   msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     submitted fence: 74286
+>   Error sending AMC RPMH requests (-110)
 > 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
-
-Applied to the review-ilpo-next branch.
-
+> Reported bandwidth is not affected on various tests.
+> 
+> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 > ---
->  drivers/platform/x86/amd/pmf/acpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/ufs/core/ufshcd.c | 43 ++++++++++++++++++++++++++++++++++++-------
+>   include/ufs/ufshcd.h      |  2 ++
+>   2 files changed, 38 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/platform/x86/amd/pmf/acpi.c b/drivers/platform/x86/amd/pmf/acpi.c
-> index dd5780a1d06e1dc979fcff5bafd6729bc4937eab..f75f7ecd8cd91c9d55abc38ce6e46eed7fe69fc0 100644
-> --- a/drivers/platform/x86/amd/pmf/acpi.c
-> +++ b/drivers/platform/x86/amd/pmf/acpi.c
-> @@ -220,7 +220,7 @@ static void apmf_sbios_heartbeat_notify(struct work_struct *work)
->  	if (!info)
->  		return;
->  
-> -	schedule_delayed_work(&dev->heart_beat, msecs_to_jiffies(dev->hb_interval * 1000));
-> +	schedule_delayed_work(&dev->heart_beat, secs_to_jiffies(dev->hb_interval));
->  	kfree(info);
->  }
->  
-> 
-> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 0534390c2a35d0671156d79a4b1981a257d2fbfa..0fa3cb48ce0e39439afb0f6d334b835d9e496387 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -6974,7 +6974,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+>   }
+>   
+>   /**
+> - * ufshcd_intr - Main interrupt service routine
+> + * ufshcd_intr - Threaded interrupt service routine
+>    * @irq: irq number
+>    * @__hba: pointer to adapter instance
+>    *
+> @@ -6982,7 +6982,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+>    *  IRQ_HANDLED - If interrupt is valid
+>    *  IRQ_NONE    - If invalid interrupt
+>    */
+> -static irqreturn_t ufshcd_intr(int irq, void *__hba)
+> +static irqreturn_t ufshcd_threaded_intr(int irq, void *__hba)
+>   {
+>   	u32 intr_status, enabled_intr_status = 0;
+>   	irqreturn_t retval = IRQ_NONE;
+> @@ -6990,8 +6990,6 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>   	int retries = hba->nutrs;
+>   
+>   	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> -	hba->ufs_stats.last_intr_status = intr_status;
+> -	hba->ufs_stats.last_intr_ts = local_clock();
+>   
+>   	/*
+>   	 * There could be max of hba->nutrs reqs in flight and in worst case
+> @@ -7000,8 +6998,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>   	 * again in a loop until we process all of the reqs before returning.
+>   	 */
+>   	while (intr_status && retries--) {
+> -		enabled_intr_status =
+> -			intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+> +		enabled_intr_status = intr_status & hba->intr_en;
+>   		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+>   		if (enabled_intr_status)
+>   			retval |= ufshcd_sl_intr(hba, enabled_intr_status);
+> @@ -7020,9 +7017,40 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>   		ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+>   	}
+>   
+> +	ufshcd_writel(hba, hba->intr_en, REG_INTERRUPT_ENABLE);
+> +
+>   	return retval;
+>   }
+>   
+> +/**
+> + * ufshcd_intr - Main interrupt service routine
+> + * @irq: irq number
+> + * @__hba: pointer to adapter instance
+> + *
+> + * Return:
+> + *  IRQ_WAKE_THREAD - If interrupt is valid
+> + *  IRQ_NONE	    - If invalid interrupt
+> + */
+> +static irqreturn_t ufshcd_intr(int irq, void *__hba)
+> +{
+> +	u32 intr_status, enabled_intr_status = 0;
+> +	irqreturn_t retval = IRQ_NONE;
+> +	struct ufs_hba *hba = __hba;
+> +	int retries = hba->nutrs;
+> +
+> +	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> +	hba->ufs_stats.last_intr_status = intr_status;
+> +	hba->ufs_stats.last_intr_ts = local_clock();
+> +
+> +	if (unlikely(!intr_status))
+> +		return IRQ_NONE;
+> +
+> +	hba->intr_en = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+> +	ufshcd_writel(hba, 0, REG_INTERRUPT_ENABLE);
+> +
+> +	return IRQ_WAKE_THREAD;
+> +}
+> +
+>   static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+>   {
+>   	int err = 0;
+> @@ -10581,7 +10609,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>   	ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>   
+>   	/* IRQ registration */
+> -	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
+> +	err = devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_threaded_intr,
+> +					IRQF_SHARED, UFSHCD, hba);
+>   	if (err) {
+>   		dev_err(hba->dev, "request irq failed\n");
+>   		goto out_disable;
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index e3909cc691b2a854a270279901edacaa5c5120d6..03a7216b89fd63c297479422d1213e497ce85d8e 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -893,6 +893,7 @@ enum ufshcd_mcq_opr {
+>    * @ufshcd_state: UFSHCD state
+>    * @eh_flags: Error handling flags
+>    * @intr_mask: Interrupt Mask Bits
+> + * @intr_en: Saved Interrupt Enable Bits
+>    * @ee_ctrl_mask: Exception event control mask
+>    * @ee_drv_mask: Exception event mask for driver
+>    * @ee_usr_mask: Exception event mask for user (set via debugfs)
+> @@ -1040,6 +1041,7 @@ struct ufs_hba {
+>   	enum ufshcd_state ufshcd_state;
+>   	u32 eh_flags;
+>   	u32 intr_mask;
+> +	u32 intr_en;
+>   	u16 ee_ctrl_mask;
+>   	u16 ee_drv_mask;
+>   	u16 ee_usr_mask;
 
--- 
- i.
+I don't like this patch because:
+- It reduces performance (IOPS) for systems on which MCQ is supported
+   and enabled. Please only use threaded interrupts if MCQ is not used.
+- It introduces race conditions on the REG_INTERRUPT_ENABLE register.
+   There are plenty of ufshcd_(enable|disable)_intr() calls in the UFS
+   driver. Please remove all code that modifies REG_INTERRUPT_ENABLE
+   from this patch.
+- Instead of retaining hba->ufs_stats.last_intr_status and
+   hba->ufs_stats.last_intr_ts, please remove both members and also
+   the debug code that reports the values of these member variables.
+   Please also remove hba->intr_en.
 
+Thanks,
+
+Bart.
