@@ -1,62 +1,62 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 656CB2CCDB;
-	Fri, 21 Mar 2025 00:37:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA693595E
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2025 00:37:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742517449; cv=none; b=SzFKN0UtTvu49yNCL0N1VNK4pmh4idt/fXKXOCdpDiK1oaq0Ebrqvs4c5xgw0k1hy7fAbEffLIfLhcNRP1D+/qZN3Vrqz7TnWRd2kvz2HWFZYFuTPADYrdwiumRsTAMkHPAHImHcXb7XzLjCHV+j30hFb0DxQRt1xhC4YE/AwPg=
+	t=1742517451; cv=none; b=QTCDAPGaK7qW+T7uNga+FnLE0dLlr+v+oll0wDT8GTWk/xQW6lKmyEY5ZYK69BY9sVRxT5R8+bhFd1/YW4NLTNolZkBai61u0g9eeOpIJ+uNrG2GsegoMq1bIKudQzkUqhrSOY72XAcvlPiJRDpAnYAeK33yuzbncHt0g73FKbM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742517449; c=relaxed/simple;
-	bh=46roC/Ycs6wPPeW/WUrD74GeQD35/HD9JpUT70E3zrk=;
+	s=arc-20240116; t=1742517451; c=relaxed/simple;
+	bh=ztWF9t6MFRxq3gqQiubfSUl0lLPX4P07xpbbqxtGDSU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GRXVOnRs44wyNwblb8rwljEGAIQKLLTYOQsxyqel8b1YmzJODVmcb295/sG4gqvDKKDFWdgPrWlnAX5bhYfpzWVmnrW90TEoNjZPxGDzK34DDbRzLMw2lTwIpbMRmUu1+C8OVMRm80zfWdl/nvvSbBeu5STG8ItTdypHJPJLKe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=U1vFUeod; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=PQmAvgC4tp29+SK51wWGP0S24JggTgLrPdbFXvuV7avAwMBJR2EvAL84A3DpKU28+L+I9jCwhpHO6qsQbfw9Yw7zf7EYxzEjLiT+izG7VZUH8K4K9CRlfXwrGLQarBLgUb1kiWJu14ad80vasYr3V337ldbOxyBrrJgKBZtyNgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=L+IOlu83; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U1vFUeod"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52KLBTAs020677;
-	Fri, 21 Mar 2025 00:37:20 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="L+IOlu83"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52KLBkpH001294;
+	Fri, 21 Mar 2025 00:37:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=gCBhP/ziZNo5beYM1BWeO3F3w4kU5X8d7uMOH6wKQyM=; b=
-	U1vFUeodj8C4qTuV5W4FhDoqNosAewuXcBTIW84vT1U7qkHeILc+AmP2RCTSL6nZ
-	XKJLnyEaP+r7/5jDNaCuzHN7hL8mnMyPG7jogBdQd1xth+5ehasQ56pH0awutoWI
-	l9RW0qN5HMf1+rWxRueL8V1MkkVbrZEq9uz0f29mbxrv7pil2cAfg7ofrf3i00Ug
-	bs/t2ehlF39AMKkq7RGq2rxf1mwbhUU+RZgRX9dO8+d+lnhbb1ygbWs6MljSEmDn
-	7NZFXtTMqjE1W7lJsHqYHZmtcZVvte7cuC7aDllvOlCjQw4ckSSPc4K7uJkJAlc2
-	osqxnmSN81AWHuXd4wfWfA==
+	corp-2023-11-20; bh=VpLd2Lbmyzkvwo4PAIFHKqiacpjklczyB5kxlb5KMsY=; b=
+	L+IOlu83aiqlhHS60TT44291f/zt9IDXTaTsdhWNDe+kGYvaan656Lok4CmpUIfs
+	6nqic1dtm6fT9xAmJxVEVSk47yd3tC2unc3O3jKsFsaBH0oxjbYGpC3HBkPlL6vG
+	BFppUL1pSdA3FW1n1tnz+uCyIuNSTCj1t4yks5HtQs08P+ElHEvwLybQBGkF6rT5
+	ENAKXapzSnJlmMXpGaVZIzAHbxibQBWRLTaepwfiU5MYu9Ppd5KL+E6vIvgr0T3H
+	yDXkz3Kbaos57ipLIrHKDgO4kJM4toM5h0DCM56Ur6FDBns+o9SB6JCC7MCcXNNd
+	KsFGvgPfX7j65UrKngLvfQ==
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 45d1n8q8d2-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 45d1hg7gd8-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Mar 2025 00:37:20 +0000 (GMT)
+	Fri, 21 Mar 2025 00:37:19 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 52KNYNax004848;
-	Fri, 21 Mar 2025 00:37:19 GMT
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 52KNe7fH005542;
+	Fri, 21 Mar 2025 00:37:18 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 45ftmxt6us-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 45ftmxt6uc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Mar 2025 00:37:19 +0000
+	Fri, 21 Mar 2025 00:37:18 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 52L0bHsg024893;
-	Fri, 21 Mar 2025 00:37:19 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 52L0bHsa024893;
+	Fri, 21 Mar 2025 00:37:18 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 45ftmxt6tx-5;
-	Fri, 21 Mar 2025 00:37:19 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 45ftmxt6tx-2;
+	Fri, 21 Mar 2025 00:37:18 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com,
-        James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Chen Ni <nichen@iscas.ac.cn>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fnic: Remove redundant 'flush_workqueue()' calls
-Date: Thu, 20 Mar 2025 20:36:53 -0400
-Message-ID: <174251737515.2240574.11609887080073706550.b4-ty@oracle.com>
+To: linux-scsi@vger.kernel.org,
+        =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James.Bottomley@HansenPartnership.com, jmeneghi@redhat.com
+Subject: Re: [PATCH 0/3] scsi: st: Small fixes
+Date: Thu, 20 Mar 2025 20:36:50 -0400
+Message-ID: <174251737529.2240574.14048234652007772220.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250312074320.1430175-1-nichen@iscas.ac.cn>
-References: <20250312074320.1430175-1-nichen@iscas.ac.cn>
+In-Reply-To: <20250311112516.5548-1-Kai.Makisara@kolumbus.fi>
+References: <20250311112516.5548-1-Kai.Makisara@kolumbus.fi>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -69,27 +69,33 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-03-20_09,2025-03-20_01,2024-11-22_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- mlxlogscore=706 suspectscore=0 spamscore=0 bulkscore=0 mlxscore=0
+ mlxlogscore=866 suspectscore=0 spamscore=0 bulkscore=0 mlxscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2502280000 definitions=main-2503210002
-X-Proofpoint-ORIG-GUID: 9pza1RW5cgi6l14kgkProE22teJxGs98
-X-Proofpoint-GUID: 9pza1RW5cgi6l14kgkProE22teJxGs98
+X-Proofpoint-GUID: -sSj_bwICdOQFoMVBn_2GXscJzPo59-M
+X-Proofpoint-ORIG-GUID: -sSj_bwICdOQFoMVBn_2GXscJzPo59-M
 
-On Wed, 12 Mar 2025 15:43:20 +0800, Chen Ni wrote:
+On Tue, 11 Mar 2025 13:25:13 +0200, Kai Mäkisara wrote:
 
-> 'destroy_workqueue()' already drains the queue before destroying it, so
-> there is no need to flush it explicitly.
+> Fix some small things in the st driver.
 > 
-> Remove the redundant 'flush_workqueue()' calls.
+> Applies to 6.15/scsi-staging
 > 
-> This was generated with coccinelle:
+> Kai Mäkisara (3):
+>   scsi: st: Fix array overflow in st_setup()
+>   scsi: st: ERASE does not change tape location
+>   scsi: st: Tighten the page format heuristics with MODE SELECT
 > 
 > [...]
 
 Applied to 6.15/scsi-queue, thanks!
 
-[1/1] scsi: fnic: Remove redundant 'flush_workqueue()' calls
-      https://git.kernel.org/mkp/scsi/c/160d6ec69f40
+[1/3] scsi: st: Fix array overflow in st_setup()
+      https://git.kernel.org/mkp/scsi/c/a018d1cf990d
+[2/3] scsi: st: ERASE does not change tape location
+      https://git.kernel.org/mkp/scsi/c/ad77cebf97bd
+[3/3] scsi: st: Tighten the page format heuristics with MODE SELECT
+      https://git.kernel.org/mkp/scsi/c/8db816c6f176
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
