@@ -1,141 +1,248 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 331401DE4C2;
-	Fri, 21 Mar 2025 16:06:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262361C5F14
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2025 16:08:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742573186; cv=none; b=gEnUNae3wa4xi6f2ces2Q61CkdgJfoBVGrp8eaJ07S9AmZeEBlffta5pnP0YnUfio8TVYtzenehObOREp8JWk5GUcKuTjDKXnD83sslP/EeCBK4EX2Rmf88aT1oerMHfb4iF92GOJrhOW3i49wsrgjSeZLFY69ddisAKj+nIN4E=
+	t=1742573303; cv=none; b=DFRdAWyNy5u9imVteuX2ZWs+tEhmNYpG6FF5DPXzp+beCiEqXbvk0ilFGaW3dOHVWlYh0zgvuaNZgOqhLlplwlFN+FJurhiqqsfVujYKVk0lg2M8aC+u7PG1B26+KD6qj/v5kILmTp8pTbft3WbN3yw2dG/mw8quMHTcB1FctMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742573186; c=relaxed/simple;
-	bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=fJoKGR3W3Q57YTby4gOkViWWAZYQGgRP4WXCGkwxoW+qEM2Rmq1yRYL39BRFUe+ENF1cwAmveTDwcwGla6fcZOfrUPwSbuLA/z+sBYL/NW8AAS4AMucvLZ8iG6BOUJPwdcwyUMywYtLi/9JPlxZNX7EHjQT8Mq/1ejneVX5+MJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NvGalA/i; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1742573303; c=relaxed/simple;
+	bh=qqKZrfLDUAgL2szCwHv4faYCd/UR/f9PAk9LptxdbMY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=LtWrGx0yFxPJq9It3lUuEl2CJIxxr7YKWm0f23pa6vOzl38eO6jPMyBtza1juN26lhZbdgtOt3jfhqeYaHJngbeYowNUwkswr7/SSd9kSm3UwYQ7CxTRCbkcu5oJruKoR/WHG1eVKcKfaL4IZot9IZVWcvYd5WgDHUsHMa3K/dg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=q/SK1iO3; arc=none smtp.client-ip=209.85.221.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NvGalA/i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1742573184; x=1774109184;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=WgBVYTr0URRl3zJspKTAryBSC/YiYErKzgv7WS4Rg/s=;
-  b=NvGalA/ikOrL5oPJYs+QnTxjGygBeYWWOIvfFHc3OkbJX2AwHpopTwqS
-   OrJ7JGqvsLvcwKeP1prZM7mVJTOfER54Pu75l/Fxr9j8e/jK3wFjwN7qC
-   SK/5ji+VMYsX0/5AhSQhmE9n8DiGMEF7b+LjyblXx5blGM0B6v0DiKpB9
-   7qQZ9t3oQhCYinN742ZwcgN+X4JUGCey/94l/s0aWmz+DeK3rMLdvIdAr
-   VOz0V9xhnp8gPVoJI15e8EZBeavaDkLOepeFPGKjHBbFPdNQ3UOf5upEx
-   k4Kt0Ju3dJwZMJUlGC8aC6kaTxjBeWUEXBcxhuhtx35JSY0kXfzmt0vxz
-   A==;
-X-CSE-ConnectionGUID: uCVdhp/3So2cYbOJXCtPug==
-X-CSE-MsgGUID: onEv0mKKQBKLcJNtxbhz7A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="43726622"
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="43726622"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:23 -0700
-X-CSE-ConnectionGUID: g7UgcbV4QTih6n+cWYD8tQ==
-X-CSE-MsgGUID: 1EcrVXRMQNGo+fC3Vk/4zw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.14,264,1736841600"; 
-   d="scan'208";a="123417648"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 09:06:06 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 21 Mar 2025 18:06:02 +0200 (EET)
-To: Easwar Hariharan <eahariha@linux.microsoft.com>, 
-    Andrew Morton <akpm@linux-foundation.org>
-cc: Yaron Avizrat <yaron.avizrat@intel.com>, Oded Gabbay <ogabbay@kernel.org>, 
-    Julia Lawall <Julia.Lawall@inria.fr>, 
-    Nicolas Palix <nicolas.palix@imag.fr>, 
-    James Smart <james.smart@broadcom.com>, 
-    Dick Kennedy <dick.kennedy@broadcom.com>, 
-    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-    Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, 
-    David Sterba <dsterba@suse.com>, Ilya Dryomov <idryomov@gmail.com>, 
-    Dongsheng Yang <dongsheng.yang@easystack.cn>, Jens Axboe <axboe@kernel.dk>, 
-    Xiubo Li <xiubli@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
-    Niklas Cassel <cassel@kernel.org>, Carlos Maiolino <cem@kernel.org>, 
-    "Darrick J. Wong" <djwong@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-    Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-    Sagi Grimberg <sagi@grimberg.me>, Frank Li <Frank.Li@nxp.com>, 
-    Mark Brown <broonie@kernel.org>, Shawn Guo <shawnguo@kernel.org>, 
-    Sascha Hauer <s.hauer@pengutronix.de>, 
-    Pengutronix Kernel Team <kernel@pengutronix.de>, 
-    Fabio Estevam <festevam@gmail.com>, 
-    Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
-    Hans de Goede <hdegoede@redhat.com>, 
-    Henrique de Moraes Holschuh <hmh@hmh.eng.br>, 
-    Selvin Xavier <selvin.xavier@broadcom.com>, 
-    Kalesh AP <kalesh-anakkur.purayil@broadcom.com>, 
-    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-    cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>, 
-    linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-    linux-sound@vger.kernel.org, linux-btrfs@vger.kernel.org, 
-    ceph-devel@vger.kernel.org, linux-block@vger.kernel.org, 
-    linux-ide@vger.kernel.org, linux-xfs@vger.kernel.org, 
-    linux-pm@vger.kernel.org, linux-nvme@lists.infradead.org, 
-    linux-spi@vger.kernel.org, imx@lists.linux.dev, 
-    linux-arm-kernel@lists.infradead.org, platform-driver-x86@vger.kernel.org, 
-    ibm-acpi-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org
-Subject: Re: [PATCH v3 15/16] platform/x86: thinkpad_acpi: convert timeouts
- to secs_to_jiffies()
-In-Reply-To: <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
-Message-ID: <9e761e10-eb4d-0a34-79b5-ef4507f002c5@linux.intel.com>
-References: <20250225-converge-secs-to-jiffies-part-two-v3-0-a43967e36c88@linux.microsoft.com> <20250225-converge-secs-to-jiffies-part-two-v3-15-a43967e36c88@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="q/SK1iO3"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-3913d129c1aso1596360f8f.0
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2025 09:08:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1742573299; x=1743178099; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=HJlE21NtQ+/WCeWlPhYZ2EkXPcDlOOCnP5PIfiKki4o=;
+        b=q/SK1iO3IgSfkYaumaXXdK0f0If/lnFGG1Vhb/1XEWAyzkBzaNilcKE/HYyTPeA8ii
+         U7eWsyIBE3R27R0pAP6MMl/qigVE9URohJJudIjZ8CIcuHHgbxyxU2qldnzKtdFg2cuX
+         yX9s6erfg9mxqghwicfvmKiVUZfUBdD77g5ftWXy0EEFZmNcg2AxUFUU90ScFG0c2WKX
+         iXs9GOpiWln1uGNM1pAs5aS036M+RtiZxxLciaTIRdSNnWaeJnkuMomH4SlRBa2ibzih
+         7Ib+J9fO9FcBSW8IqVe76cVkVYOkz57wkz1OwxcNlMB0KJ/35nNN+p2kMOEIxzT00L+F
+         7MXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742573299; x=1743178099;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=HJlE21NtQ+/WCeWlPhYZ2EkXPcDlOOCnP5PIfiKki4o=;
+        b=jzL/VmKSSXsUtAPFNaZVG0QfL7VulbTDjolC/qYjA8mL/S0BleHtMZmOLtji6f9uIz
+         FPvbE1rTgSOl7N+rCBCotubnQl12yORI7J0pPE3Fv9dpiyZJE2XCkrPBRCbxN4oM8xmN
+         mN9zUR3YaMprjviQGtvpn36Z3AgxvceCWCxvfBun46h5hkrg4lUlrFN+Fyiu3zghPnuL
+         KsKsQm+NLNh46RD5+/0DrKWBOHDEm9NNiXy3rtNPBKdi6oi9Cla7QXj2w8iN55RQS6BP
+         f1IhVYqakJL2yJZ9F53DZGld7dRhdn4zFsxbgp5FcNPvq+kpVHifUwBDXJRGJTmx9QNM
+         fsOA==
+X-Forwarded-Encrypted: i=1; AJvYcCWHuRbc6xJV1w+TV1O7acu0Dggw07CsAcEekLPRs6STeNiNV2C8KGcYHCL9vusY0JvCXPqDOTmhSHpC@vger.kernel.org
+X-Gm-Message-State: AOJu0YxaOnqSn9PPxhX7+cF6NHRjMpzl9RbwOPdi8v+X2EuivmUgDSlC
+	+goItr9C7vsPMRcDV/NjPT9aIuMjU9f9iLkr6DK+5CtFKrbvzNvFKImSmjCWiHU=
+X-Gm-Gg: ASbGncuqiTAtBE5zOGzLXu8mA73Th1G+Vr38/hJw/1K++wiSwxC4sdmUF63Oo9SWmWQ
+	3M3OeKmbot+cL5ZbCbeAQHbnav1Pn9Q0rwy3JHP1nwO6yWIFVfLspK1Lavg4vuhF7Xsagi9omJt
+	lyahRME0/9QokgI8UZgxo54pG40btT+H1teeRhFuSfdRlUpExCU9IDlw4UrMyzvjsqUxkRVqZyR
+	pFGRPWpRlqbNjDHeekAqv+GkuyH1FCASJa1G9V3L6PlKQAV/c7b6vYL2UqDxdljUU3pj4SziXX9
+	bvVYdyaF/M/rysdmu0cVqZcY9ttnFsibVVOygP6YKFbs2iDMnO1elfj0E1C2ujaYPA==
+X-Google-Smtp-Source: AGHT+IFTq0YgELZyXjjN1VrdTEC3jyzyKHj/fkxB9o1IAbxsWzgbxUBKrT4kCbrIivdgEUdfIERyng==
+X-Received: by 2002:a05:6000:1565:b0:38d:b028:d906 with SMTP id ffacd0b85a97d-3997f933816mr3890433f8f.21.1742573299284;
+        Fri, 21 Mar 2025 09:08:19 -0700 (PDT)
+Received: from arrakeen.starnux.net ([2a01:e0a:3d9:2080:52eb:f6ff:feb3:451a])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f99540bsm2705610f8f.2.2025.03.21.09.08.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Mar 2025 09:08:18 -0700 (PDT)
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Date: Fri, 21 Mar 2025 17:08:15 +0100
+Subject: [PATCH RFC] ufs: delegate the interrupt service routine to a
+ threaded irq handler
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250321-topic-ufs-use-threaded-irq-v1-1-7a55816a4b1d@linaro.org>
+X-B4-Tracking: v=1; b=H4sIAO6O3WcC/x3MsQqDQAwA0F+RzA2cOW6wq+AHdC0dDi+pWdQmW
+ griv/dwfMs7wNmUHe7NAcZfdV3mivbWwDjl+c2opRooUAqRWtyWVUfcxXF3xm0yzoULqn0wxSw
+ xCCXqBGqwGov+rvwJj6GH13n+Ae4AWX9xAAAA
+X-Change-ID: 20250321-topic-ufs-use-threaded-irq-53af30f2529f
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Neil Armstrong <neil.armstrong@linaro.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5604;
+ i=neil.armstrong@linaro.org; h=from:subject:message-id;
+ bh=qqKZrfLDUAgL2szCwHv4faYCd/UR/f9PAk9LptxdbMY=;
+ b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBn3Y7yUu0Foc45zNxh92lwMOcLsLY8ldvYzNdErqF/
+ IFXhR2uJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCZ92O8gAKCRB33NvayMhJ0d4TD/
+ 46nLVEVNe72rd7ntxKZk8prswc2LeIoLBC7j1Y/BjcC9smsnHoqTmhT32gz80EoNNyqEfxHaY90M6v
+ CUYrn/2oVD6MlRTj1dpNdCvvliWfiuoLX+Fxy++l8GrC296Ke/+MYBJ1zLFn9jgIxEeVr+Yi8mFU0q
+ G3D/ooDq0HH6B4r3aXezNJ8YSvBX/qjvs26eNYj1M5a9wYQgMnzhsJ6C92arDv/dS3pOw6IpRGtgjJ
+ g3Z1M/LJkPjKldyevmEaezAIbHNfChpV8NwSnrbBjWpgt2KHyKgrJE2GPfD31VbpY30mp3Zg1Jl0Pd
+ 0m7xkiHz+LWB9kmws/09JgDFka4+Ffr7oXEo/ZRpyrpDZQLrIZxjqFe15U48kvxzoQfTnMxS6VI/ep
+ n58VkjGIG5+46mbF4swurp5qif6Vgt3DmiBmQBa3p2yhcbqEb2jg9C6CdUz3A99OB4sPawEmUO1x8q
+ z8k9ghj9g1f+66q6WNFoJ7XelsSyeO/fTtUA1tPm3Fm7JMb5TW5P0fcjAgu4m+QraBbiCMy/3H67my
+ yl3lTRYMFXO9Cq3e3nWIVbwaKm2hWBvVkGS9Npb6Fy78+y2avXC3emMwbEX5dMe4cubXaKml2waohs
+ JxSpuLrPxofeObKFH5DtnWi9wFZSBHRRVGtr4VQxIDK2RYbXlr483jj//LVA==
+X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
+ fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
 
-On Tue, 25 Feb 2025, Easwar Hariharan wrote:
+On systems with a large number request slots and unavailable MCQ,
+the current design of the interrupt handler can delay handling of
+other subsystems interrupts causing display artifacts, GPU stalls
+or system firmware requests timeouts.
 
-> Commit b35108a51cf7 ("jiffies: Define secs_to_jiffies()") introduced
-> secs_to_jiffies().  As the value here is a multiple of 1000, use
-> secs_to_jiffies() instead of msecs_to_jiffies() to avoid the multiplication
-> 
-> This is converted using scripts/coccinelle/misc/secs_to_jiffies.cocci with
-> the following Coccinelle rules:
-> 
-> @depends on patch@
-> expression E;
-> @@
-> 
-> -msecs_to_jiffies
-> +secs_to_jiffies
-> (E
-> - * \( 1000 \| MSEC_PER_SEC \)
-> )
-> 
-> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+Since the interrupt routine can take quite some time, it's
+preferable to move it to a threaded handler and leave the
+hard interrupt handler save the status and disable the irq
+until processing is finished in the thread.
 
-Applied to the review-ilpo-next branch.
+This fixes all encountered issued when running FIO tests
+on the Qualcomm SM8650 platform.
 
-> ---
->  drivers/platform/x86/thinkpad_acpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
-> index ab1cade5ef231e9a9a520bc0cca82384c911a331..d269e791f7fbc2a8ccf96f28cb476beccb57c9a7 100644
-> --- a/drivers/platform/x86/thinkpad_acpi.c
-> +++ b/drivers/platform/x86/thinkpad_acpi.c
-> @@ -8512,7 +8512,7 @@ static void fan_watchdog_reset(void)
->  	if (fan_watchdog_maxinterval > 0 &&
->  	    tpacpi_lifecycle != TPACPI_LIFE_EXITING)
->  		mod_delayed_work(tpacpi_wq, &fan_watchdog_task,
-> -			msecs_to_jiffies(fan_watchdog_maxinterval * 1000));
-> +			secs_to_jiffies(fan_watchdog_maxinterval));
->  	else
->  		cancel_delayed_work(&fan_watchdog_task);
->  }
+Example of errors reported on a loaded system:
+ [drm:dpu_encoder_frame_done_timeout:2706] [dpu error]enc32 frame done timeout
+ msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1: hangcheck detected gpu lockup rb 2!
+ msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     completed fence: 74285
+ msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     submitted fence: 74286
+ Error sending AMC RPMH requests (-110)
 
+Reported bandwidth is not affected on various tests.
+
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+---
+ drivers/ufs/core/ufshcd.c | 43 ++++++++++++++++++++++++++++++++++++-------
+ include/ufs/ufshcd.h      |  2 ++
+ 2 files changed, 38 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0534390c2a35d0671156d79a4b1981a257d2fbfa..0fa3cb48ce0e39439afb0f6d334b835d9e496387 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6974,7 +6974,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+ }
+ 
+ /**
+- * ufshcd_intr - Main interrupt service routine
++ * ufshcd_intr - Threaded interrupt service routine
+  * @irq: irq number
+  * @__hba: pointer to adapter instance
+  *
+@@ -6982,7 +6982,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+  *  IRQ_HANDLED - If interrupt is valid
+  *  IRQ_NONE    - If invalid interrupt
+  */
+-static irqreturn_t ufshcd_intr(int irq, void *__hba)
++static irqreturn_t ufshcd_threaded_intr(int irq, void *__hba)
+ {
+ 	u32 intr_status, enabled_intr_status = 0;
+ 	irqreturn_t retval = IRQ_NONE;
+@@ -6990,8 +6990,6 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 	int retries = hba->nutrs;
+ 
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+-	hba->ufs_stats.last_intr_status = intr_status;
+-	hba->ufs_stats.last_intr_ts = local_clock();
+ 
+ 	/*
+ 	 * There could be max of hba->nutrs reqs in flight and in worst case
+@@ -7000,8 +6998,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 	 * again in a loop until we process all of the reqs before returning.
+ 	 */
+ 	while (intr_status && retries--) {
+-		enabled_intr_status =
+-			intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
++		enabled_intr_status = intr_status & hba->intr_en;
+ 		ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+ 		if (enabled_intr_status)
+ 			retval |= ufshcd_sl_intr(hba, enabled_intr_status);
+@@ -7020,9 +7017,40 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 		ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+ 	}
+ 
++	ufshcd_writel(hba, hba->intr_en, REG_INTERRUPT_ENABLE);
++
+ 	return retval;
+ }
+ 
++/**
++ * ufshcd_intr - Main interrupt service routine
++ * @irq: irq number
++ * @__hba: pointer to adapter instance
++ *
++ * Return:
++ *  IRQ_WAKE_THREAD - If interrupt is valid
++ *  IRQ_NONE	    - If invalid interrupt
++ */
++static irqreturn_t ufshcd_intr(int irq, void *__hba)
++{
++	u32 intr_status, enabled_intr_status = 0;
++	irqreturn_t retval = IRQ_NONE;
++	struct ufs_hba *hba = __hba;
++	int retries = hba->nutrs;
++
++	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
++	hba->ufs_stats.last_intr_status = intr_status;
++	hba->ufs_stats.last_intr_ts = local_clock();
++
++	if (unlikely(!intr_status))
++		return IRQ_NONE;
++
++	hba->intr_en = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
++	ufshcd_writel(hba, 0, REG_INTERRUPT_ENABLE);
++
++	return IRQ_WAKE_THREAD;
++}
++
+ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+ {
+ 	int err = 0;
+@@ -10581,7 +10609,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+ 
+ 	/* IRQ registration */
+-	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
++	err = devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_threaded_intr,
++					IRQF_SHARED, UFSHCD, hba);
+ 	if (err) {
+ 		dev_err(hba->dev, "request irq failed\n");
+ 		goto out_disable;
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index e3909cc691b2a854a270279901edacaa5c5120d6..03a7216b89fd63c297479422d1213e497ce85d8e 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -893,6 +893,7 @@ enum ufshcd_mcq_opr {
+  * @ufshcd_state: UFSHCD state
+  * @eh_flags: Error handling flags
+  * @intr_mask: Interrupt Mask Bits
++ * @intr_en: Saved Interrupt Enable Bits
+  * @ee_ctrl_mask: Exception event control mask
+  * @ee_drv_mask: Exception event mask for driver
+  * @ee_usr_mask: Exception event mask for user (set via debugfs)
+@@ -1040,6 +1041,7 @@ struct ufs_hba {
+ 	enum ufshcd_state ufshcd_state;
+ 	u32 eh_flags;
+ 	u32 intr_mask;
++	u32 intr_en;
+ 	u16 ee_ctrl_mask;
+ 	u16 ee_drv_mask;
+ 	u16 ee_usr_mask;
+
+---
+base-commit: ff7f9b199e3f4cc7d61df5a9a26a7cbb5c1492e6
+change-id: 20250321-topic-ufs-use-threaded-irq-53af30f2529f
+
+Best regards,
 -- 
- i.
+Neil Armstrong <neil.armstrong@linaro.org>
 
