@@ -1,117 +1,285 @@
-Received: from mta-03.yadro.com (mta-03.yadro.com [89.207.88.253])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 011041EA7C7;
-	Mon, 24 Mar 2025 08:51:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.253
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E8B25D216
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2025 09:31:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742806302; cv=none; b=g+5e/5l6/zFDIU/pTi0jHM4FrRjj6bfH7Loa/BlfceheaZMncxTJgDTM7YAY0GOwkeGgCNL5SBrb4Z7qM5igrs6SVe7sZyRErq867+HGY0HGnJzq8w/ErWzdCl3W8XPV1Z0iDEU/yq4FR2+hfAqyXR7ZfXhaRIQyujNyVYdRoR0=
+	t=1742808697; cv=none; b=kNeJT9iLcVXOnJeeOvf9+qX8SJZ+8ivzqZUglIdp61H+ppSX8lFWSPCr9Lp68C2WGI0eroM5DPYjVyVPZGFgJ3rzvrbyNCJCAi4bGgCi+auArc1cPQjq8f8Uo+2scm5p5xT+BWuzCE5aPBfHITbrjipKbYe54/5siZ7DQH32fB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742806302; c=relaxed/simple;
-	bh=to3IjdK/aZxIDidItr1Z1X98BJCv5/doq2FXz5bxzxc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EzZ4jltLFejEpBRJAgoc63Oseiob5UGAW9OCxvuzI+UwxmDVeM7GMYc1XAqJK7U5iEwL9B4u5aDjm5T+Jj+nZHLBPn+mEvhzAEsYQ8Tq7MB/IOQ5Zk0nJwgyh0S+vI+c6DqfBuLcTkB+NkWkQMQP4aMT8I3a7dG4Q/WXJdW5oN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=C0XZuoT9; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=v8/6KfCN; arc=none smtp.client-ip=89.207.88.253
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
+	s=arc-20240116; t=1742808697; c=relaxed/simple;
+	bh=90jmh23c8RVKqEXMFx69946NB/TEnNJmko57MWPSbTQ=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=WCxySdUCjEWdvCRgiInak3FfPe/fToa4+iB7+7nKLOpaOEcpL+iamnv/GPo0crR6sGGId2AxGDJHmMauh2aP5yfaMw49XFx6tw0SP8Z4BXQq6elZwB4cYacw0YnNG/TpQF+AALZ5GQ1RKBG530KLNJ/MZFri7g8h+6oXlAihr+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=g20bVKp+; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="C0XZuoT9";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="v8/6KfCN"
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-03.yadro.com 5BF36E0002
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1742806284; bh=b/coSPRwVAO18LknwNn+NW81MVSEIOnW/h0dRACfRRA=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=C0XZuoT9XWn+86QpBSRvmf/ZO9tF9D6XL+2Ja7DcZDA3JBoXGAIF2FpqCySk5JKs/
-	 YjSM6TnfuKNxdBUE+3c7MOB0Qj7EKCj0oZ08lBC+jatN6JJfl6gMJrV8bmjQ1mF9WG
-	 Q7/IFBmrL8xvh4dDLRaZdplN5cz0oBsCopS9hXdrsDGobgckOdR0YasGfsKCJhFF43
-	 Up/UHVyQUFdgNgy8/b7r+yfjY4xE744Gl2MUEiZ7iyvat8GAVcgDWRryByLIh2bySC
-	 5SoSnNRAYKITQAe3iIm4VRLIV3m3XjxWVvYkAPlBasVSHHKPwTL0ehVl4EMp8phkss
-	 /T+E5NLN4ZDZw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1742806284; bh=b/coSPRwVAO18LknwNn+NW81MVSEIOnW/h0dRACfRRA=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=v8/6KfCNj0CyebnwGEt0dKxEE2tPbgEXvAp1nPfl6gBhiYEQacUtPSK7NSXLroACI
-	 M2hkl2qKEdgnZHPgXT7Hziehc7cC3E84QPleLS33vOwCZbnUn9qc5hdGFNyhGzJAqp
-	 RY8/fEPmkfVXEBcSj9zLbBL1pvjKU7HAHzBJUo/YVzZvCa5No1/kSkGqhxh7Rqtirb
-	 W07owI7FlS26iJobRELimMS3h2D+boLyDFh4z9QKMgaMR//FVS+sp/z/Z7h51ZZ50k
-	 7DoQ91EcvhThLJal/FoyzSKVGHx1V+Kr8Qg6NGoAdVhxm+p8y7JxXrtvJc8TbwqtEU
-	 xWa4WPPPygAMQ==
-From: Anastasia Kovaleva <a.kovaleva@yadro.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<hare@suse.de>, <axboe@kernel.dk>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux@yadro.com>
-Subject: [PATCH 0/1] Fix not fully initialized SCSI commands
-Date: Mon, 24 Mar 2025 11:49:32 +0300
-Message-ID: <20250324084933.15932-1-a.kovaleva@yadro.com>
-X-Mailer: git-send-email 2.40.3
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="g20bVKp+"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-43d04ea9d9aso18158195e9.3
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2025 02:31:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1742808694; x=1743413494; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AdB9oocdn4EqS1s91Sc4Yv79gAOsQK5rmcyHpJyIQbU=;
+        b=g20bVKp+krwBGJ+rIqVzh4pf0zoBh+IojQjjki3/1KRhaUEI3sF/cQhdx4j+o+5yR0
+         zb3qDCzf4MNAO73sbppVKmKnjrUBhmMjVepbT724Jqvn4jZVNuISWMEgbiQYJT0RpScr
+         5tvV8VHxDJHns6FzBnmNODlyX0zZfQyRyrVATtBWNWYzgYzWuGEl8aoPjfhGweY12Uhf
+         3OlTKp5SXtmFTh90gDTG3U4kNTensKWo4izN8HL2OXk5GsZtgYBhRDI5nwqGpklxrxIg
+         zu3Qg6Ln184j000IBcgZ5wnviVo4an2DNMGzNk+O12N5CNmbsuI4QgWJIjCX4sOpEjLK
+         qhqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1742808694; x=1743413494;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=AdB9oocdn4EqS1s91Sc4Yv79gAOsQK5rmcyHpJyIQbU=;
+        b=trOsxIwVR9QcweHBLbupI3KT6hJ8UYcG5+Dsi23Rf5EwtHcYbpImxTcGpCk4M0zJnK
+         TbCQkJg91DkQgklBydd3IXv49u8cj4n2+8XLSjWJtqgzjWgHTxVjr1FRqm3bnFaAdb2+
+         0mgXgTkGHq9/XanVB4EkJGJ7+vi4nMkpaSq2N7IzkLx5bc6ChEqNDDjRkEEcqut9+qGc
+         CIRfftosIejNE3wU8sMCyd+KfX+1ge77CUGxMcClWDUMmvSsNzazzvefywWIDEP044Bh
+         j7WexvPz0adp3AEiqLss5L9ntTZ4uAspjjIASYPejEhQ+hiSkw5urlBp7Fn1NOIAgB2V
+         KAGg==
+X-Forwarded-Encrypted: i=1; AJvYcCXxenxyfc3VrkaDSPNq9xtY4lA8ZqADLHeqT7crqMM7znBWDDvDDFtXwIuldhSCkL97dRGqx0Nj0LLe@vger.kernel.org
+X-Gm-Message-State: AOJu0YwW8Xz4shdfmJ9TvM7Gk0MBjyDmjbyn+44EkF+2buGqFPQgsr2e
+	A/PnAx229J1xIEg8hSvfQazeIA07O2VZYmqwPEjkXpjgROB2WQdN9OVFQjjG3d8=
+X-Gm-Gg: ASbGncvkwvmYDHSInIH0ZnXRDyj9+j5Oed5ibL0zMo5ETXLVZaGO5KlLl/dW2jzHi1s
+	ztTy5bqx6NIQs6J9v2F75ijgkrHFW7k8aM4ASLwvd53ho6iYUdbS63Lsan7olR7L7iB7NI8kcZc
+	P94QbElJkt2H2kg5rQniBJssYOf3pj1qM/ePmieM9ElMzj8uMr7Dzb47Zy67gWFifw3aJPKBZiI
+	Ih0YPbpch6qVKYDL6MCZzx/6CIQHvHCMe7qKj3FGmu2dELuCpXK7JE9g/Y+jRjWYCCuneour859
+	lkZlj6oXk8avaITstUTZM99Nk3tLYho/JhJ6Hoa5UPTS7TyoOwMNKKgYbNqLMOgW9h4u5mqqRDH
+	18dekuHSiftRdm9Q7
+X-Google-Smtp-Source: AGHT+IGWXRS4st8oEz+RLMUHxOe45IpuyGIqv5uTKOMT1b8e0ep8y3VBa8Huy2yXCe6Dz9XT41VaRw==
+X-Received: by 2002:a05:6000:1788:b0:38f:4d40:358 with SMTP id ffacd0b85a97d-3997f900d5fmr11612140f8f.9.1742808693965;
+        Mon, 24 Mar 2025 02:31:33 -0700 (PDT)
+Received: from ?IPV6:2a01:e0a:3d9:2080:a356:8d0:d4d:bb5f? ([2a01:e0a:3d9:2080:a356:8d0:d4d:bb5f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f9eef37sm10210605f8f.85.2025.03.24.02.31.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 24 Mar 2025 02:31:33 -0700 (PDT)
+Message-ID: <d084e50e-8b2b-4820-a5e7-25ec440d128e@linaro.org>
+Date: Mon, 24 Mar 2025 10:31:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTM-EXCH-04.corp.yadro.com (10.34.9.204) To
- T-EXCH-09.corp.yadro.com (172.17.11.59)
+User-Agent: Mozilla Thunderbird
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: neil.armstrong@linaro.org
+Subject: Re: [PATCH RFC] ufs: delegate the interrupt service routine to a
+ threaded irq handler
+To: Bart Van Assche <bvanassche@acm.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20250321-topic-ufs-use-threaded-irq-v1-1-7a55816a4b1d@linaro.org>
+ <31b46812-72d5-4f9d-b55d-16a6e10afe7d@acm.org>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <31b46812-72d5-4f9d-b55d-16a6e10afe7d@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-We have encountered the following type of logs on initiators:
+Hi,
 
-kernel: sd 16:0:1:84: [sdts] tag#405 timing out command, waited 720s
-kernel: sd 16:0:1:84: [sdts] tag#405 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=66636s
+On 21/03/2025 17:20, Bart Van Assche wrote:
+> On 3/21/25 9:08 AM, Neil Armstrong wrote:
+>> On systems with a large number request slots and unavailable MCQ,
+>> the current design of the interrupt handler can delay handling of
+>> other subsystems interrupts causing display artifacts, GPU stalls
+>> or system firmware requests timeouts.
+>>
+>> Since the interrupt routine can take quite some time, it's
+>> preferable to move it to a threaded handler and leave the
+>> hard interrupt handler save the status and disable the irq
+>> until processing is finished in the thread.
+>>
+>> This fixes all encountered issued when running FIO tests
+>> on the Qualcomm SM8650 platform.
+>>
+>> Example of errors reported on a loaded system:
+>>   [drm:dpu_encoder_frame_done_timeout:2706] [dpu error]enc32 frame done timeout
+>>   msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1: hangcheck detected gpu lockup rb 2!
+>>   msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     completed fence: 74285
+>>   msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     submitted fence: 74286
+>>   Error sending AMC RPMH requests (-110)
+>>
+>> Reported bandwidth is not affected on various tests.
+>>
+>> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+>> ---
+>>   drivers/ufs/core/ufshcd.c | 43 ++++++++++++++++++++++++++++++++++++-------
+>>   include/ufs/ufshcd.h      |  2 ++
+>>   2 files changed, 38 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 0534390c2a35d0671156d79a4b1981a257d2fbfa..0fa3cb48ce0e39439afb0f6d334b835d9e496387 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -6974,7 +6974,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+>>   }
+>>   /**
+>> - * ufshcd_intr - Main interrupt service routine
+>> + * ufshcd_intr - Threaded interrupt service routine
+>>    * @irq: irq number
+>>    * @__hba: pointer to adapter instance
+>>    *
+>> @@ -6982,7 +6982,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+>>    *  IRQ_HANDLED - If interrupt is valid
+>>    *  IRQ_NONE    - If invalid interrupt
+>>    */
+>> -static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>> +static irqreturn_t ufshcd_threaded_intr(int irq, void *__hba)
+>>   {
+>>       u32 intr_status, enabled_intr_status = 0;
+>>       irqreturn_t retval = IRQ_NONE;
+>> @@ -6990,8 +6990,6 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>>       int retries = hba->nutrs;
+>>       intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>> -    hba->ufs_stats.last_intr_status = intr_status;
+>> -    hba->ufs_stats.last_intr_ts = local_clock();
+>>       /*
+>>        * There could be max of hba->nutrs reqs in flight and in worst case
+>> @@ -7000,8 +6998,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>>        * again in a loop until we process all of the reqs before returning.
+>>        */
+>>       while (intr_status && retries--) {
+>> -        enabled_intr_status =
+>> -            intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>> +        enabled_intr_status = intr_status & hba->intr_en;
+>>           ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+>>           if (enabled_intr_status)
+>>               retval |= ufshcd_sl_intr(hba, enabled_intr_status);
+>> @@ -7020,9 +7017,40 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>>           ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+>>       }
+>> +    ufshcd_writel(hba, hba->intr_en, REG_INTERRUPT_ENABLE);
+>> +
+>>       return retval;
+>>   }
+>> +/**
+>> + * ufshcd_intr - Main interrupt service routine
+>> + * @irq: irq number
+>> + * @__hba: pointer to adapter instance
+>> + *
+>> + * Return:
+>> + *  IRQ_WAKE_THREAD - If interrupt is valid
+>> + *  IRQ_NONE        - If invalid interrupt
+>> + */
+>> +static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>> +{
+>> +    u32 intr_status, enabled_intr_status = 0;
+>> +    irqreturn_t retval = IRQ_NONE;
+>> +    struct ufs_hba *hba = __hba;
+>> +    int retries = hba->nutrs;
+>> +
+>> +    intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>> +    hba->ufs_stats.last_intr_status = intr_status;
+>> +    hba->ufs_stats.last_intr_ts = local_clock();
+>> +
+>> +    if (unlikely(!intr_status))
+>> +        return IRQ_NONE;
+>> +
+>> +    hba->intr_en = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>> +    ufshcd_writel(hba, 0, REG_INTERRUPT_ENABLE);
+>> +
+>> +    return IRQ_WAKE_THREAD;
+>> +}
+>> +
+>>   static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+>>   {
+>>       int err = 0;
+>> @@ -10581,7 +10609,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>>       ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>>       /* IRQ registration */
+>> -    err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
+>> +    err = devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_threaded_intr,
+>> +                    IRQF_SHARED, UFSHCD, hba);
+>>       if (err) {
+>>           dev_err(hba->dev, "request irq failed\n");
+>>           goto out_disable;
+>> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+>> index e3909cc691b2a854a270279901edacaa5c5120d6..03a7216b89fd63c297479422d1213e497ce85d8e 100644
+>> --- a/include/ufs/ufshcd.h
+>> +++ b/include/ufs/ufshcd.h
+>> @@ -893,6 +893,7 @@ enum ufshcd_mcq_opr {
+>>    * @ufshcd_state: UFSHCD state
+>>    * @eh_flags: Error handling flags
+>>    * @intr_mask: Interrupt Mask Bits
+>> + * @intr_en: Saved Interrupt Enable Bits
+>>    * @ee_ctrl_mask: Exception event control mask
+>>    * @ee_drv_mask: Exception event mask for driver
+>>    * @ee_usr_mask: Exception event mask for user (set via debugfs)
+>> @@ -1040,6 +1041,7 @@ struct ufs_hba {
+>>       enum ufshcd_state ufshcd_state;
+>>       u32 eh_flags;
+>>       u32 intr_mask;
+>> +    u32 intr_en;
+>>       u16 ee_ctrl_mask;
+>>       u16 ee_drv_mask;
+>>       u16 ee_usr_mask;
+> 
+> I don't like this patch because:
+> - It reduces performance (IOPS) for systems on which MCQ is supported
+>    and enabled. Please only use threaded interrupts if MCQ is not used.
 
-The initiator uses dm-mpath for multipathing, the SCSI mid layer, and
-the QLogic FC HBA driver (qla2xxx). After debugging, the following call
-stack was identified:
+OK I guess in the MCQ case only some interrupts should be handled
+in the primary handler then, because in PREEMPT_RT it will be forced
+to be fully threaded, but it's another subject.
 
-blk_mq_sched_dispatch_requests()
-  blk_mq_dispatch_rq_list()
-    dm_mq_queue_rq()
-      map_request()
-        ti->type->clone_and_map_rq()    // New cloned request with tag 405
-        blk_insert_cloned_request()
-          scsi_queue_rq()
-            qla2xxx_mqueuecommand()
-              qla2xxx_dif_start_scsi_mq()
+> - It introduces race conditions on the REG_INTERRUPT_ENABLE register.
+>    There are plenty of ufshcd_(enable|disable)_intr() calls in the UFS
+>    driver. Please remove all code that modifies REG_INTERRUPT_ENABLE
+>    from this patch.
 
-If qla2xxx_dif_start_scsi_mq() returns an error for any reason (e.g.,
-due to extremely heavy traffic causing the driver to exhaust its
-handles), scsi_done() -> scsi_end_request() is not called within
-qla2xxx_mqueuecommand(). As a result, the SCMD_INITIALIZED flag
-remains set. Next, map_request() releases the cloned request and
-requeues the original request. While the cloned request is released, the
-associated SCSI command retains stale data from the previous command.
+Ack, I'll switch to use the default irq_default_primary_handler() and
+stop touching the REG_INTERRUPT_ENABLE register.
 
-If all I/O traffic stops for some extended period of time, and later
-resumes, the following scenario may occur:
+> - Instead of retaining hba->ufs_stats.last_intr_status and
+>    hba->ufs_stats.last_intr_ts, please remove both members and also
+>    the debug code that reports the values of these member variables.
+>    Please also remove hba->intr_en.
 
-blk_mq_sched_dispatch_requests()
-  blk_mq_dispatch_rq_list()
-    dm_mq_queue_rq()
-      map_request()
-        ti->type->clone_and_map_rq()    // New cloned request uses tag 405 again
-        blk_insert_cloned_request()
-          scsi_queue_rq()
+Hmm ok so no need for the IRQ debug code anymore ? I guess this should
+be in a separate cleanup patch.
 
+Thanks,
+Neil
 
-Within scsi_queue_rq(), the scsi_init_command() function does not call
-scsi_initialize_rq() because the SCMD_INITIALIZED flag is already set.
-Because of that, when the command completes in scsi_complete(), the
-scsi_cmd_runtime_exceeded() check returns true, causing the command to
-fail.
-
-This issue appears after the commit 4abafdc4360d ("block: remove the
-initialize_rq_fn blk_mq_ops method"). Before this change, the
-initialize_rq_fn method forcibly initialized the SCSI command in
-blk_get_request(). There may be other places where a command is queued
-in scsi_queue_rq() but scsi_done() is not called.
-
-Anastasia Kovaleva (1):
-  scsi: uninit not completed scsi cmd
-
- drivers/scsi/scsi_lib.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
---
-2.40.3
+> 
+> Thanks,
+> 
+> Bart.
 
