@@ -1,70 +1,86 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A564522A;
-	Sat, 22 Mar 2025 20:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0581E433B3
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2025 07:21:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742676575; cv=none; b=WlZof364K6pLsR76MKkyRhFK3iKLJKtRB1777SRQvOel1ViyVMsFCeehJejxFRWa0NEM68sw8+PtuWGsODPCUO55y8eXIP+s4/aGI+enpdyGkescutqGFkAS9/+GkFpP9GyLSAxEN2Sxx82vXZAW9tEgxIiZrEUaAC1DRdp3FVY=
+	t=1742800872; cv=none; b=ub92l+M5dKZLyqQQyfcEVkLSZiiTJM8nlcIGxx+b+L3kLvOk30UL7yHmQ44gIzfvA9TxnR0f846HbeRRHqBA0cwYh3lkoye70Mq7FPXeRHo6mih7d8Yv3gCrxQGSArUT/CRIL08veVcHVJVhPEY+2+t6NZjmZUgcRwKNmEaEW1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742676575; c=relaxed/simple;
-	bh=Dpt+Qi5HL/LChEojVIg8fKxr9rwU5ToF2s3T9oZbW4g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h8nOtC1MNWNusQ2hSTy0D1KkXDUjmOhMfZ4R8k7TC78Tc85xVryFNmxN+h6pNJ3LIpPEKspRI1bXT/oSR0NklEYycXgEy9Zy+AJI28oBzCi9gPAu+YZUun5H6CayQaq3nead41ua+1hJL6dS66gXay5EPqlNpP4uhLLmaHhiw4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=roVYuGKG; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="roVYuGKG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=49++YOCyQWNmUfGfaJCXgmwoTlehQ0ChbOtbRtnavLU=; b=roVYuGKGAaveFhl9FahKGqzjb5
-	h0kjrdCPRxnKe3RFeqW97s5/xsj85NS93PYA+escS/2VOUFpxsw7VQEL0zYFjOKerpijkbt11CoF1
-	JREIwNfyfObEovtcRhtzVBWf0ft4BpGT7xJ+PpAeyCvrOXfjfh4d8B0ryDsmIM5r0y1d86tNKNfH5
-	h1qQm3LKwYrsoQtJ4bc6aR5yn7YSSK0bSQtAJ4p5AfWL9Spq996yI74QVuMPM+yLbvhT+/LF8ilGV
-	qKpse/gjnUMhbFO3p/sePHkonIS7aAxQv57XJysvbu0xbR/5ynGsyQlWNM2230XeECLg2Km4VTjTV
-	TuQe/M5Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1tw5mV-00000005pJc-2fN2;
-	Sat, 22 Mar 2025 20:49:23 +0000
-Date: Sat, 22 Mar 2025 20:49:23 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Michal Hocko <mhocko@suse.com>
-Cc: lsf-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org, bpf@vger.kernel.org
-Subject: Re: REMINDER - LSF/MM/BPF: 2025: Call for Proposals
-Message-ID: <Z98iU2mcZhuV_1Cv@casper.infradead.org>
-References: <Z4pwZkf3px21OVJm@tiehlicka>
+	s=arc-20240116; t=1742800872; c=relaxed/simple;
+	bh=SPhQSTflEW79AKbumYb7LdBCzhtq8AW5D/qQjjhVUrU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=B9P2csocmO1kor7qcIN86XShzHCm5BStcz/k/5T8IiYN9hlTNanJf6YUc02UVjBhASA2WfU6fzahmiEIO25VN+pAyGfAAS24DCZBTDopFp6JMfcLf3R5BVm3UlRt+b9mjo0HzacNbPBhCQ1ypGILGiliTMYLRk5OgVPWXwbSmEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4ZLkwl1r6kz1d09W;
+	Mon, 24 Mar 2025 15:20:39 +0800 (CST)
+Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1E32E1800E2;
+	Mon, 24 Mar 2025 15:20:59 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 24 Mar 2025 15:20:58 +0800
+Message-ID: <12b119ca-8618-d75a-41be-84a6fd754472@huawei.com>
+Date: Mon, 24 Mar 2025 15:20:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Z4pwZkf3px21OVJm@tiehlicka>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v4 0/2] scsi: hisi_sas: Fix IO errors caused by hardware
+ port ID changes
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>
+CC: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>, <prime.zeng@huawei.com>,
+	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>,
+	<liyangyang20@huawei.com>, <f.fangjian@huawei.com>,
+	<xiabing14@h-partners.com>, <zhonghaoquan@hisilicon.com>
+References: <20250312095135.3048379-1-yangxingui@huawei.com>
+ <d7c30f0a-0a68-4f36-8d89-d0d082cb2473@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <d7c30f0a-0a68-4f36-8d89-d0d082cb2473@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepemh100006.china.huawei.com (7.202.181.89) To
+ kwepemg100017.china.huawei.com (7.202.181.58)
 
-I've had a quick look around the hotel.
 
-All four conference rooms we're using are on the Mezzanine level.  You can
-take the elevator to that floor, or if you're coming in from the outside,
-there's a staircase to get to the mezzanine.  The doors that lead from
-City Councillors St to the mezzanine level were locked when I tried to
-open them today, but maybe they'll be open on Monday.  Also the courtyard
-door from Sherbrooke is locked.
+On 2025/3/20 23:37, John Garry wrote:
+> On 12/03/2025 09:51, Xingui Yang wrote:
+>> This series of patches is used to solve the problem that IO may be 
+>> sent to
+>> the incorrect disk after the HW port ID of the directly connected device
+>> is changed.
+>>
+>> Changes from v3:
+>> - Lose and find the disk when hw port id changes based on John's 
+>> suggestion
+>>
+>> Changes from v2:
+>> - Use asynchronous scheduling
+>>
+>> Changes from v1:
+>> - Fix "BUG: Atomic scheduling in clear_itct_v3_hw()"
+>>
+>> Xingui Yang (2):
+>>    scsi: hisi_sas: Enable force phy when SATA disk directly connected
+>>    scsi: hisi_sas: Fix IO errors caused by hardware port ID changes
+> 
+> So this is all solved in the LLDD, then this is good
 
-Concerto (the MM track room) is separate from all the others.  It's a
-little hidden; you start going towards the Milton brasserie, and then
-turn right just before you enter it.  It was set up with dining today,
-so maybe we get special MM snacks?  ;-)
+Yes, thank you for your advice.
 
-The Opus, Tchaikovsky and Beethoven rooms are all near each other towards
-the north end of the hotel.  If you take the elevator, turn right towards
-these three rooms (and left to go to Concerto).  There's also a Vivaldi
-room that I don't think we're using.
+Thanks,
+Xingui
+
+
+
+
