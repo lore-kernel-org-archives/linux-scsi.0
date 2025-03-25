@@ -1,233 +1,204 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A123242A96;
-	Tue, 25 Mar 2025 03:03:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742871814; cv=fail; b=KmWViHHD+gnV4tOt1ji63voLE6ZfgQG0g0YimTva6TGZC+X6MfnS/gd7dBK80/RPt31aWlNBRhZeAhXmx6Vka8LV/qYXuYm5uhbuh4vNb5lNqu1QKQR7JMn9jk3ZByEMU913ImnHnOduD1lWO3NR6HVhnk+5W3GJzsERp58+qfQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742871814; c=relaxed/simple;
-	bh=muITXWMGuTojU1jCx7iHX66uaQzhFlu8Ef6zrcd74x0=;
-	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=AtEDsffLqSQKBhjwnO/U0tSp1BgYuuqB9jefjZACkzDfyQJ2MOM3FiReU26mMu4BRo2o11vrT9iOEEq7WWwJOwpw4YYZ2yLmDUu7S3Yvegxpr1VQuaQ7GvpqjY0qYJvQQJr0s/6efFPLUE7c+aj6F5QlL47F2PUg7WoOI+61e/8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=UawYpWz7; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=r+Aklprt; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D4B51A072C;
+	Tue, 25 Mar 2025 03:13:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1742872401; cv=none; b=EkLUi0F+t4qmj+/UQMOM/6Zf97E0zwTi5AK6ht860Zb2NNzOkNjn63GpLVN+sutheMjh+/mHBvqp3tWeACquesQ7wqs261KyPk6FVlUkhwdbkF7v5qTu81WM7QQ4u+DP+yDYkPM6jS0yUcfEUeTzp+UPgk6LthGVkbwaRpzABFs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1742872401; c=relaxed/simple;
+	bh=E5E+SasWAzmDnR3MDJcTIVlbgU8JQ/HWkUH11MrnKDw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=C/qwENCTyMMtc8LmXE4or3MDyGwBzezIwupj307Ub2OUEBkSFrooqU0nDLea0ozaCQr7mf7xjRh0suKl8eeA1bvK/W27MSAiUIptkYeRCamLFcenZlcWELs8MX7htLOOaO2rxB2cuaV2jRXjMY0/7zZsJa7Yu5L7R/UJtfzYjpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=MC4e9bUx; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UawYpWz7";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="r+Aklprt"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52P2twIf002168;
-	Tue, 25 Mar 2025 03:03:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=mg6tt4xjPuYc2sYSXZa2Y8pRnMYroW/Bpd0mylDztms=; b=
-	UawYpWz7BTzom8z45uWrbj5Xa9DrxV7h0MYu/DgdPH7m4aQ2qbiQuHWEljhtt4Rj
-	0fYcdGY0PTjhYd0vDz5x1dtPDQzXNA0jH/XClhXzP8H05dqV/QFtCS4XE2xQctuQ
-	rx7BBj8yl+YzKwqqHRmk8qI8fc9mNEJKDU5l5+0OE0Vn2EiLIb37eokapD7ol0Du
-	UwIoszLzXNdOWMYi9P6q70LL1bOt6YB2Ie2Z0Ch8dKd3h5M+XHq3Wk91FkKchSFB
-	pW0P4ueqjEb918FTCUbmk0fVf7L4TX++yMxn51z1zKD33NRVqPnucnD0u6hkYUEN
-	k0f9ZoqgSSpu1U5OOD4s4g==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 45hnd66076-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Mar 2025 03:03:27 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 52P2bqMo015130;
-	Tue, 25 Mar 2025 03:03:27 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2173.outbound.protection.outlook.com [104.47.55.173])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 45jj917ept-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Mar 2025 03:03:27 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Zj2GpXTyWZusursuhsYoVMQsIsgfo3Yrbdh85ZmtFDx5cQHvOKLCpdXQaPT1nAcE9Mi0a+/rijDYYXN+UP4AlyoANe3ffOsmPBe2kUGpgHrMOcE6Ds4kW8WX5awDxcIFnUVnVXq/tBk8LeZrapQR7tPsEqPNO58e2NhT/Yn+VcnXncsWixl/wpbC0RAuN3n+Uz/d+whLz99p1DKc8CMFyuLzZSw08Mv8Id2oRRqEXJgesHclfPddhOCUmXepcTcPDs/PinECk0ZuFWnwp3gl76TMzpvbd8/iUB8V8ljfI+hdslE/KRCS+SyLvs8XUyhUscz1tCO/GTh7edFZ8rkA3Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mg6tt4xjPuYc2sYSXZa2Y8pRnMYroW/Bpd0mylDztms=;
- b=m/JKMV0IN2c1D0tp6vsMKrBX0BawFJ6nPAafSSztAM8EnmfU57FJwZEfwQxQqgozuRtlQmpDPz6czRptL76OiL+ZtZmJ/LM3lfY/Px9jGUYRlGjWi8/foQydxsouGTBh3/vyeSc3RyVY9qMUKHFxnxCNzgQfkOFsc3ErfqbsRLfrGzIIEBjj2TZwD6T419nrgMeo1znPB+bjD3GEj1Qj8hh4PgFMPpmgCFWBRgyBMTmJgVQPBCu2GHmKWacUh1ycF13CB9emAPMJFHU7Df5+3lmBBr69NygeE5VqdwGMA1aN9wfb0cJK34tFeQdR9bbKSr9mtEQkku2i4khpTm9ugA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mg6tt4xjPuYc2sYSXZa2Y8pRnMYroW/Bpd0mylDztms=;
- b=r+AklprtMoG8V+KDAPPzwUrqGSUDFXfX0lFZ7c1Mt6MheRKPtvC9wd23yTjSt8P1IG63Pl5fSO24KyLKAM22G72XDwPsRWf856WQglVJMEzjTaW9D3v5//SglhVcVkAvXFbxGLaekvog0mCEgvcv1J2mMjbfOMq+6rWtXPqOxzI=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by LV3PR10MB8177.namprd10.prod.outlook.com (2603:10b6:408:289::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.42; Tue, 25 Mar
- 2025 03:03:25 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0%4]) with mapi id 15.20.8534.040; Tue, 25 Mar 2025
- 03:03:25 +0000
-Message-ID: <9dfb46b3-3dfe-40ea-9eae-c6a2533ad950@oracle.com>
-Date: Mon, 24 Mar 2025 22:03:24 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: iscsi: Fix missing scsi_host_put in error path
-To: linmq006@gmail.com, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Lin Ma
- <linma@zju.edu.cn>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250318094344.91776-1-linmq006@gmail.com>
-Content-Language: en-US
-From: Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20250318094344.91776-1-linmq006@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7PR03CA0314.namprd03.prod.outlook.com
- (2603:10b6:8:2b::26) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MC4e9bUx"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52OIlWkq025925;
+	Tue, 25 Mar 2025 03:12:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	rQ7cgtzuqO4DhE1RlYh2UYPnVaMrrglIVihyRrbs1zA=; b=MC4e9bUxUv+eNk8l
+	bcxILeTNQ81165jcKPnncsZ6FhWnU9g2hsomTd622n1/h6L7c5jKjggwCDctqWBL
+	ct5H8vM9UTjM9kFI4IXJIGsZq0RR+cHDrtzVMR8QiNSXypdkooZzZR0I5jD+QnTE
+	tUO5SYhiU1Sa8jsdnMbUNj+a5qR1Wd/0zo+MQAUG3thYP6/swpn1qN/HRryaVvoS
+	Mmbv8HIisu2jYCo3pLhUISfV41w4JAY/BLh3Pgzzx9VjBiH6h8pN89xF9jsdONAG
+	n1geKYSUyhuN8tVC3FvzbZ68wG0aKziuMZjMC12bDQWVq37jw7o6pVW67D6POTBm
+	kqt8WQ==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45hjjnphqt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 25 Mar 2025 03:12:53 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52P3Cquu016163
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 25 Mar 2025 03:12:52 GMT
+Received: from [10.216.37.30] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 24 Mar
+ 2025 20:12:45 -0700
+Message-ID: <430ed11c-0490-45be-897b-27cad9682371@quicinc.com>
+Date: Tue, 25 Mar 2025 08:42:42 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|LV3PR10MB8177:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5dfd085d-d9c2-469a-0003-08dd6b499c1b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7053199007;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?enZ4YUxuU3k2K1ROajkrNFlzQnRDakNWek9kKzRlRTZpMCtoWTZRcFFxQjhD?=
- =?utf-8?B?eVlkTVVFQ0Q2enRjSGNSanRKMHBDQms3NDdDbzNxL0NvZFRTYUo5dUdlTFQ2?=
- =?utf-8?B?S2tYbUFXK2hiTitYbkNJUzZ6bzdzOFltaXBlUytMQXBrWnFTUEVkWjcvWitw?=
- =?utf-8?B?REZQQnVqOXN1cUFQdGNVMlAxTGxWbkcvUGhhRnQwS0NidW9XOXJZT0I5cjhK?=
- =?utf-8?B?RDhiY1ZPekY3M0RHRUcwTEZkMDYrdlhEUzdmelhmemorNFh5YTdhRjVyK3NU?=
- =?utf-8?B?ZUVrV0FDaFN3M2Mrb0lNaHFVUG9wRm00OW9FN3JENTNjeGpHRUVybDlCNmdj?=
- =?utf-8?B?QTBHeVZwUm1IVEU5TytiSVdpYjkvSFlVRThuU254TVVRbU84OGZTQlFCNjdL?=
- =?utf-8?B?bHNCdHJ3OGQ1U2hITUFYTlVUL3NvbkJYZW5XM21ZL3NpSjRYRHJ2b1pNTEZF?=
- =?utf-8?B?M3AvWElDaFFLV3hkMEo5NVkvWk9EV05uRkoza1cxV3BDWjU3ZG5icDN4MEZn?=
- =?utf-8?B?WkxWNTlZa0drTE5HVngvaXhmSHAxcENoWHZUMFdKNktXanRQUzBPWUxXbm5i?=
- =?utf-8?B?TVdkRU0wMng2bStGaEw1OGRNdlNFMmdBMGhTSGs3SnNiS01yYWVaeDY4Mys3?=
- =?utf-8?B?OUFGdURRekdUb0dXdStKZ3JyMWM4WUswZlF3RVFPQmY3bWpNcnBGSDV3RFlt?=
- =?utf-8?B?MG5Ba2ltbmxDb29RbUVZbnYrYUxGN0wxamJrZm1aUC9GSC9tUExWTG50cHdJ?=
- =?utf-8?B?SEdFVXkwQWFEZ2ZtakZjcXhialFXSGxVQTNSSGFMeTVCMzNHa1J0NnJlTjh4?=
- =?utf-8?B?aC8rNDRNaTNkZXpWUUwrUGZ6L0xrVnF4MnpocUw5VDR0YlE4Y1luYXhsbW5L?=
- =?utf-8?B?YmRFYlZMRXFjaVNHbW93MVdVa1A3cXFSS2hMNWVONHNLR2ltNXM2Ri9lelZz?=
- =?utf-8?B?YzhJek5abjMycWtqMzd6N1dWRzRhMUlINFZMTDZYcUhjVUpsb1BUc1NlelpT?=
- =?utf-8?B?RnlGQlo3QmlKSUFwL0tnczBMSnhvWnc5OVNHSDhwYXdTcSs2R05FeGdqOUg1?=
- =?utf-8?B?dFN1NVBTcWd4MWdrbmEyakxWK2E0YW52MUFKWjBpNFZpSVBEVzFLd0xqenVw?=
- =?utf-8?B?QldIWVEzaFI3UkR1TSs0TDBqV2RPZWVoNXRXczRXVHU2TGF0OHBqNWdrcVlE?=
- =?utf-8?B?VXpwQTJzbUl2bitaeWVwbTYyTnNmanNwNzJObjNodXBXbmRyUUVieGVqL3dG?=
- =?utf-8?B?WG92aG1Yay9Sb3lJOVUwQ0VPb2ZpQ2RvQTZlUGJaUDRIUWVvdjZMOVlNQm5u?=
- =?utf-8?B?a1JZeFNtNTk2SlVaS3BnNWZFUUp3dkc5ZExTVG5BNk5Damh5VDFrOWEzcWlP?=
- =?utf-8?B?WmZneE13WWxidXdxTEZwVHcrQ0pMNFpEdkFVbTN1YzU1TjcyTG9kckJ3cUE0?=
- =?utf-8?B?RjVsdXRnNE03aWZtdm5EWkIxZnZZRU9XdmU1QnprOXE1UVJhckJmNEJuamFl?=
- =?utf-8?B?ZGhkVlByV0VqUnV1UUtQOEFQSHhwbkkzQjNNMUFMbDhEMkNkREJhVzA3MDRG?=
- =?utf-8?B?OW8yRzRMWVJhMmY4Vk1vUFhNZEk4RzJzTDBxVHE5NkN4N2VCOU54K1lBZmFm?=
- =?utf-8?B?RmZINE1zdEFjeGVaaytkcUo5d1RZQlVLZmVMY2lINC96bWVHdUE1NlpGLzQr?=
- =?utf-8?B?NTdGT1lMZzl6NEVueDJ6WDJiVUZvcFM2UkN0V0VvTm1UR2s2YWxqVnVRWFlE?=
- =?utf-8?B?VnorQWZvc1grQ3p0NmRsWEZjZzBkZldzRDNHNUxWMlI4UGtKelo4UWRGMUp5?=
- =?utf-8?B?VGZ0QTdxdUk1UU5PblhxSGtub2hjWUlURnc1Y3F2SXJiQVRrRnEzRmxPS05l?=
- =?utf-8?Q?Sw5LooOsF+DGw?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7053199007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WkVqOWpoa3dYcGNzY3Z4THpJMmhFNU4yTnRuWVJFVm1FMURVM05rbmZ1T1lT?=
- =?utf-8?B?VlA5bmd2RkZRNnpSTS9tb1k1MEZyTE90UU5JYlZ0SmUzM05nZkJsdXFJRmlN?=
- =?utf-8?B?ZXZQL1hJTW1BTFdFbk51dStDR1JnQVJqdTNuMlRYRnpzeE1kZHRxZTlxTVBP?=
- =?utf-8?B?MkZiOVdybG5sM2Y5a3FvL0pLb1d0aWhrZk9hM1poTWVrd3hJcENqZFdidng5?=
- =?utf-8?B?ZmltL0xBN3JKLzVOaGRyNEVxUHozeWd1UmQ4dFFsbFhZVERJWUxkZm9aaXpr?=
- =?utf-8?B?K2xQVHUxRldLbVhvei9SaGh2NWpZQ2xOS2tRcDVQY0xNLzlMRXpVZFFOMzFY?=
- =?utf-8?B?MnQrbmdWajNCRGJSL1pScWh4bSt3MVc3SEFmMDBielpxeklQejdldVdSa0t3?=
- =?utf-8?B?aHBWdmh5N0VzSzZpcGQ5VWliRTZZZW56akFGRUhTa0FjQ09SRlU3Y2xOTGdw?=
- =?utf-8?B?RzFWYjhvRmxKd1ZiWGxFaTlPMUJqWVRmcjVWRjI1dWczak1ZN3RTR1pvbjI3?=
- =?utf-8?B?QVhTb09MNVJwNFl5eTlRdmlEY2tqaFk0SjkwRHM4SExuLzZldmxPN3QwQmZt?=
- =?utf-8?B?alFXZDNTUzJrWldEUVRKQXdSSnk0MlljUkNnajBCeVpnQTU2MWhBV0hlWVl4?=
- =?utf-8?B?UEFVdUtNc2ZjaXpYa2hSMlAxZFQwQm0yT3BKdlp3YkRUY25zWEV4OEp1Wk8v?=
- =?utf-8?B?cTlqR2c5Y2tVbSthaXB1MS9VcUdDSlNWSHZHa0NoaFliOVJ6Nldlb0VGWnlX?=
- =?utf-8?B?ZkcwSEV3U3k4akVlYlZ5enJwL3dtQ3RnbS85SFh6WnFQT2E3RW1UamMvV2wv?=
- =?utf-8?B?RDJaYWJybnJUTlJkQjlXTnpwbWp4SmRrUXFPQlpSeXFaNXZLWTQ1L0cwd1pz?=
- =?utf-8?B?OHhub2c1SjF4a1d1RGxJb002S3JaNk1pOFpyZEZXdnhLSG9wTU1IYkpUOHZI?=
- =?utf-8?B?d3VyRTRIelN2ZStmZVFOR2JaeFA4Y1VHbTNhYUV2bWtZNEtKVko5blo2ZFJ6?=
- =?utf-8?B?b2QrYUdJTkI0NmpzUFE0citZdzVqQW1BL2RLOHY1UHdrNXlkRXdrd2swWnRh?=
- =?utf-8?B?RUJicUg3SFRNTlZ6OHBtZE90RWIwTlpIMW9objByZnpscGU2dDlFMWtrRk4w?=
- =?utf-8?B?WmNmR3lGUWpLMUNKS1ArYVZjUHZ2MTROQzBwdVF0SnNqdUtaWXhXenV6ODVv?=
- =?utf-8?B?V0JLSjBpbW1scFgwaTVHZG5ma21pa29hcjlHU1BTQU05L0ovemE0OXZXTzF0?=
- =?utf-8?B?NzlIa0VHcmtnc1JNTEk1TDNQSG5tUEQ2TTRtc2M3dUp3eTRuMVFFejNsRXJa?=
- =?utf-8?B?K0JLWFYwUHlmempjRDJkMWVBRnpwdlJnQmJncmlnTFcxSlR1TmRFdFR4NHZM?=
- =?utf-8?B?TXNqaEZmUlBTS0Q2WWVpbFhTQVFPVUR1K2l4TlMvNndrUTVrb2tCS0ViQ3k1?=
- =?utf-8?B?UG45NDZtcEpmU0dhZ252WGV5UWxYTEtSZWc0cWpxM2xyalJBQWh0WUpXTWxJ?=
- =?utf-8?B?WFJTK00vUzVFR2s3Z0ZLMGtuVVo3VmNXVEthckpja3hnK1ZON2NTSHd1VlAv?=
- =?utf-8?B?L25RTTdPRDQ3UkZtcmdvU0pVSmRPekRPeWtqS3JaUDJuQmE4ZWtZV2ZrSXd5?=
- =?utf-8?B?ZVlNbUJOaFBvWVVLK2FjMGhyUHBQRGhheGJpTGdidXFQR1BmMGR4Mmg5Rjlo?=
- =?utf-8?B?aDNuMVQxRzFGaHlkamV0NTVNb2VUOGJyQUJBMmRmNUs1aVZiK0owYjdITS9Q?=
- =?utf-8?B?azJzSzlQTlVnWHQzNUlUVC9pOEczcHZpV2ljVmlySm15Uk9MOHNja0NGb0NC?=
- =?utf-8?B?VTJkUVJOdXNZbHJJSkFvcEt2NjNkamd2bHFTcXdrWjFGOFVCVGtxRlZZekQ5?=
- =?utf-8?B?S3djY3I3QlBZd25FWHNLMnlhaEdHVjMyK1BpV29FNlVEdHVIeFgvem9NaHV5?=
- =?utf-8?B?NlI1YUVSMjhVOVlZbHNiZ3ZWUi9SY0FOd1FZYmd1cHBjczlmT0NKRmViQ2Jq?=
- =?utf-8?B?R2pBUzVsN1V6UjBGcEFHWExoTUxYV1N4Uk1hVitFcEJGYU45ZzQ3WW5CSDZQ?=
- =?utf-8?B?eHRoSVJxcDBaQmxLdTZsWXdVM0h2djlMMHE3RDNIL01Rc1B5aXVQZlZwbEdH?=
- =?utf-8?B?Z2Q1L2JTa2V3NjByU2xOWGhEcWRSbmJvdytZTTk3RjUvZ05RMTBmc29tRjhp?=
- =?utf-8?B?OFE9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	8veM4gI19o/3LmyJAadILFmdTtZp5jeERl2wt1cp7NMudySzHXvSNHa3KBIkUdCjsEA/f7JpAcJ/yLMpHD3dBE5QhVFDiIVjETk4caepO+edSK7+NE19JbJBfdEdQihIK0mRo1aFpRkl3bgS0NGPRQnWRUQ3LMwWWn19uLQ2N1QLGDhGpGrudeorhwBtCwkkecyZw4HeLQfD3wZvbiQyYULr6rYJwo2+T8ptYyjKGHgp91q8Acf1tIKsttnOwAYFFagL6wf+LaZUj1f5s/R94ZUilihmDRmwRVKkYoeoVHyUCWRPp8PCvmwgbDXMFbmlOEqMa+C2CVjDrfvIsJkTWpBvCDu9yzeSbnhfhl+NZGJxMRaGVh4GRPT04uDxw6YUwr+gYIlUlr0wqoXGwGpxlSy/4pvjwd2KnjtK6qfQie51tPvgMrhiCgEV8k/1BU/O29NfWEZoETxVnRHewAwbncTRhIgw4xODZqYLNUSuupdKHQWDrOIqfKZ0c7xMXIw2ONzJjbkBcecnCfO/3nQ0Qq0prXiymwehh6Z+JiFPzfeCAvMNg9aQCy9IooizlTehUih2MzbVrJMlqWIFXrE04uDuqJNWp4q6Ho8ROiPCcf4=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5dfd085d-d9c2-469a-0003-08dd6b499c1b
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2025 03:03:25.3403
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pfsU/JWiJn8408Wphxsxc2iUWPG9emjuV3ogNPWWl1RMfXrA6i3Dwux3YFQRHdMNu5xAT6RIRpewYX/K6wj1vdWX90JigyHWeZA8I+RioFs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR10MB8177
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/6] phy: qcom-qmp-ufs: Add PHY Configuration support
+ for sm8750
+To: <neil.armstrong@linaro.org>, Melody Olvera <quic_molvera@quicinc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Satya Durga Srinivasu Prabhala
+	<quic_satyap@quicinc.com>,
+        Trilok Soni <quic_tsoni@quicinc.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, Manish Pandey <quic_mapa@quicinc.com>,
+        "Linux
+ regressions mailing list" <regressions@lists.linux.dev>
+References: <20250310-sm8750_ufs_master-v2-0-0dfdd6823161@quicinc.com>
+ <20250310-sm8750_ufs_master-v2-2-0dfdd6823161@quicinc.com>
+ <1526d8a4-9606-4fb3-bb86-79bd8eb8a789@linaro.org>
+Content-Language: en-US
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <1526d8a4-9606-4fb3-bb86-79bd8eb8a789@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=fNc53Yae c=1 sm=1 tr=0 ts=67e21f35 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=qC_FGOx9AAAA:8 a=COk6AnOGAAAA:8 a=KKAkSRfTAAAA:8
+ a=vcR0Wi4gQSUtL0Q4ZNYA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=fsdK_YakeE02zTmptMdW:22 a=TjNXssC_j7lpFel5tvFf:22 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-ORIG-GUID: RKjLOZTbSq54X9vtTLN_7PzxMYE2-NJY
+X-Proofpoint-GUID: RKjLOZTbSq54X9vtTLN_7PzxMYE2-NJY
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-03-25_01,2025-03-21_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 adultscore=0
- mlxlogscore=999 mlxscore=0 phishscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2502280000
- definitions=main-2503250020
-X-Proofpoint-ORIG-GUID: ihCelEMjo0gIu-kDoacCZZIJdjxWPKQ3
-X-Proofpoint-GUID: ihCelEMjo0gIu-kDoacCZZIJdjxWPKQ3
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 impostorscore=0
+ lowpriorityscore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0
+ adultscore=0 spamscore=0 bulkscore=0 suspectscore=0 phishscore=0
+ malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2503250021
 
-On 3/18/25 4:43 AM, linmq006@gmail.com wrote:
-> From: Miaoqian Lin <linmq006@gmail.com>
-> 
-> Add goto to ensure scsi_host_put is called in all error paths of
-> iscsi_set_host_param function. This fixes a potential memory leak when
-> strlen check fails.
-> 
-> Fixes: ce51c8170084 ("scsi: iscsi: Add strlen() check in iscsi_if_set{_host}_param()")
-> Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 9c347c64c315..0b8c91bf793f 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -3182,11 +3182,14 @@ iscsi_set_host_param(struct iscsi_transport *transport,
->  	}
->  
->  	/* see similar check in iscsi_if_set_param() */
-> -	if (strlen(data) > ev->u.set_host_param.len)
-> -		return -EINVAL;
-> +	if (strlen(data) > ev->u.set_host_param.len) {
-> +		err = -EINVAL;
-> +		goto out;
-> +	}
->  
->  	err = transport->set_host_param(shost, ev->u.set_host_param.param,
->  					data, ev->u.set_host_param.len);
-> +out:
->  	scsi_host_put(shost);
->  	return err;
->  }
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+
+On 3/24/2025 11:40 PM, Neil Armstrong wrote:
+> Hi,
+> 
+> On 10/03/2025 22:12, Melody Olvera wrote:
+>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>
+>> Add SM8750 specific register layout and table configs. The serdes
+>> TX RX register offset has changed for SM8750 and hence keep UFS
+>> specific serdes offsets in a dedicated header file.
+>>
+>> Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+>> Co-developed-by: Manish Pandey <quic_mapa@quicinc.com>
+>> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>> ---
+>>   drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v6.h |   7 +
+>>   .../qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v7.h    |  67 ++++++++
+>>   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c            | 180 +++++++++++ 
+>> +++++++++-
+>>   3 files changed, 246 insertions(+), 8 deletions(-)
+>>
+> 
+> <snip>
+> 
+> This change breaks UFS on the SM8550-HDK:
+> 
+> [    7.418161] qcom-qmp-ufs-phy 1d80000.phy: phy initialization timed-out
+> [    7.427021] phy phy-1d80000.phy.0: phy poweron failed --> -110
+> [    7.493514] ufshcd-qcom 1d84000.ufshc: Enabling the controller failed
+> ...
+
+Hi Neil,
+
+Thanks for testing and reporting.
+I did tested this patch on SM8750 MTP, SM8750 QRD, SM8650 MTP, SM8550 
+MTP and SM8850 QRD all of these have rate B and hence no issue.
+
+Unfortunately only SM8550 HDK platform which UFS4.0 and RateA couldn't 
+get tested. As we know SM8550 with gear 5 only support rate A.
+
+I was applying rate B setting without checking for mode type. Since
+SM8550 is only platform which support only rate A with UFS4.0 . Hence
+this could be the issue.
+
+Meanwhile can you help test at your end with below change and let me if 
+it resolves for you. I will also try at my end to test as well.
+
+=============================================================================
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c 
+b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+index 45b3b792696e..b33e2e2b5014 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+@@ -1754,7 +1754,8 @@ static void qmp_ufs_init_registers(struct qmp_ufs 
+*qmp, const struct qmp_phy_cfg
+                 qmp_ufs_init_all(qmp, &cfg->tbls_hs_overlay[i]);
+         }
+
+-       qmp_ufs_init_all(qmp, &cfg->tbls_hs_b);
++       if (qmp->mode == PHY_MODE_UFS_HS_B)
++               qmp_ufs_init_all(qmp, &cfg->tbls_hs_b);
+  }
+
+=================================================================================
+
+
+Thanks,
+Nitin
+
+> 
+> GIT bisect points to:
+> b02cc9a176793b207e959701af1ec26222093b05 is the first bad commit
+> Author: Nitin Rawat <quic_nitirawa@quicinc.com>
+> Date:   Mon Mar 10 14:12:30 2025 -0700
+> 
+>      phy: qcom-qmp-ufs: Add PHY Configuration support for sm8750
+> 
+> bisect log:
+> git bisect start 'ff7f9b199e3f' 'v6.14-rc1'
+> git bisect good 36c18c562846300d4e59f1a65008800b787f4fe4
+> git bisect good 85cf0293c3a75726e7bc54d3efdc5dc783debc07
+> git bisect good b2cd73e18cec75f917d14b9188f82a2fdef64ebe
+> git bisect bad b247639d33ad16ea76797268fd0eef08d8027dfd
+> git bisect good 9b3f2dfdad1cc0ab90a0fa371c8cbee08b2446e3
+> git bisect bad 8dc30c3e4cf8c4e370cf08bd09eb87b0deccd3de
+> git bisect bad 100aeb03a437f30300894091627e4406605ee3cb
+> git bisect bad b2a1a2ae7818c9d8da12bf7b1983c8b9f5fb712b
+> git bisect good 8f831f272b4c89aa13b45bd010c2c18ad97a3f1b
+> git bisect good e45cc62c23428eefbae18a9b4d88d10749741bdd
+> git bisect bad ebf198f17b5ac967db6256f4083bbcbdcc2a3100
+> git bisect good 12185bc38f7667b1d895b2165a8a47335a4cf31b
+> git bisect bad e46e59b77a9e6f322ef1ad08a8874211f389cf47
+> git bisect bad b02cc9a176793b207e959701af1ec26222093b05
+> 
+> CI run: https://git.codelinaro.org/linaro/qcomlt/ci/staging/cdba- 
+> tester/-/jobs/229880#L1281
+> 
+> #regzbot introduced: b02cc9a17679
+> 
+> Neil
+
