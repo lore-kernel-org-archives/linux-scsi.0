@@ -1,48 +1,48 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A0F12F3B;
-	Tue, 25 Mar 2025 09:03:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 035FD2561C6;
+	Tue, 25 Mar 2025 11:43:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742893395; cv=none; b=Mz8bIl3AVKKmChmyEjpR9S6oDwQPO8EvJZkD9miPc4fvlpV/Mv0FSKfLeUVrqi7JkMRSX7dF/Y3DQlK1SBER3KwO8Byn2kGWHJZmOD4mkFrIqHFo9SjwDux6MxaHJ60glihUrr6hWaOpHQrdIcAA8ZiNY/ycdOYPaAAtBX8sQ0o=
+	t=1742902994; cv=none; b=LPBASq1g9TZQ4BXIFu1Qmdbu7odDe6NNWWQ0vtMEQ2+0I+jnqJ2Y+kVzKwb5JmOX0sYGeoi5xHa//Rx/1iM3kF1pj5/ffG6r3EbVnaeSEgAaH50qQqQvm/zjwAfokQ87ktwd1Pmkq81EHwwzVmO3V4wEpOpJM+8tsxMvwx78YvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742893395; c=relaxed/simple;
-	bh=cBsrhRBS+DWfi0cH22u/P2LpI2D5VhhvLbPkAevAy4g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=DpOGKE3ZzKCtcDLuRI9jfh/9FFq7AwMlCGK8Wh9bReBbMuJOLSN3I7xKH+X/R4MX4YYX8c9gDW8HRrbm0NyilTfQxfOEc0i7ox809bZdOoPEVkbI9PAmIrklYWpoaO32l6HJFOBWof4WZNEjfhFmWqgiQrhk0oY+Y2fmix91KAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=VSYgpHtC; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1742902994; c=relaxed/simple;
+	bh=FT1Qqx606bhJGVCZ1XZfe4LWb4KNQw3rn1mJv9tejME=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QeRB3cKgIBrPEs6ewf6IOXv7O+T0H2CNVB7lP0Q+8v2HQAg1V4m3t6/kuhFv70P/JKHUynI67Es6CA+6DCp8Z1WaeRiCRKE0mEExAqxIQrABUmc8lwEwrdU/DPXHU7wNaqodbXmiZVv4G3uZleglkMBZG2At5iiAOyDdJGHa3Wk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sQFE3dpm; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="VSYgpHtC"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52P5vdgi017053;
-	Tue, 25 Mar 2025 09:03:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	+3UzLSyUtXHxMizmFuAu4gH2M3uLKcvTZzt0VqrRGlo=; b=VSYgpHtCiRnaRI+R
-	5G0qbpEo6Fzr4d/RKiXKmdzHIj4w0imQJEkNTsPtf5MHTmtNVXwpkeJ5x3tho1py
-	wfa7Q/Vuyj6Dsg3UNATwCglq+ecAIPuWHbUhkZ0fQOwHfqW7GcGRgAQy5wahuUM+
-	bQYLs19e/2tKK5iCnjAjdwkEhyCFU31MVSYoXru2IX4n74aXRr5qpNTQ22324ItT
-	IxcL2ZU71+untvgqOpvxqaU5vQoSKhzLauPyO30cOslFtAsyUqV3iWWi0qKJKP/s
-	4unpm7roV5WCH6IAQlvjV5Mla9vGDxEPM451whXzSHBrGGwwR6qfGM15pknbsgCg
-	YtA+LQ==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45kmcy8vfw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Mar 2025 09:03:09 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52P93972029731
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Mar 2025 09:03:09 GMT
-Received: from [10.217.217.240] (10.80.80.8) by nasanex01c.na.qualcomm.com
- (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 25 Mar
- 2025 02:03:06 -0700
-Message-ID: <6fcefb33-a488-45a2-b34d-08a85ae7a0ef@quicinc.com>
-Date: Tue, 25 Mar 2025 14:32:58 +0530
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sQFE3dpm"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZMSj56QLjzlnfZK;
+	Tue, 25 Mar 2025 11:43:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1742902984; x=1745494985; bh=BNiUdiP+epirUViNMTGnDH+f
+	CGTBkwR40/2dF4B+vp0=; b=sQFE3dpm8Ou4O4sOZdBxEM2VOFMIBFO06eo9B38v
+	Eq551y+s9H0KPKmcjr9ckifpyupoIIBAQZQnb8Hg8Smj4sqJbbdHgYOAcw1cPJrJ
+	qy9THuVtMYkZPd0oTp7W+R4s0UDUTNAEeikULQfGU3Z51HcaPGmeABXI6gwxDy+m
+	MCaf+crRaq3t0LKfxj85G/oKTWvby+U+4xO3itft4hbMXgVqMN9JBRDdEcwV5ZUi
+	hQFa0nYN6OCeRRWVeapNiHMuKK0GltTyR2+vpDbfopV4wa294JDR7UFtSC9nhcOD
+	5yRnwVyULb11ZZbOgUKUuaemWkoPmi/GwB50QI50EIYVgQ==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8QgvwYss6EyF; Tue, 25 Mar 2025 11:43:04 +0000 (UTC)
+Received: from [172.22.32.156] (unknown [99.209.85.25])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZMShv4yWrzlrwfT;
+	Tue, 25 Mar 2025 11:42:54 +0000 (UTC)
+Message-ID: <c0691392-1523-4863-a722-d4f4640e4e28@acm.org>
+Date: Tue, 25 Mar 2025 07:42:53 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,114 +50,36 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 2/3] scsi: ufs-qcom: Add support for dumping MCQ
- registers
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K.
- Petersen" <martin.petersen@oracle.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
-References: <20250313051635.22073-1-quic_mapa@quicinc.com>
- <20250313051635.22073-3-quic_mapa@quicinc.com>
- <20250318064421.bvlv2xz7libxikk5@thinkpad>
- <12753be6-c69b-448d-a258-79221f4dbc7c@quicinc.com>
- <awc2ql2x5amiahf7l47xqhgl7ugi4zpk5wz7qycgbqb52gh4yb@24za7q2rqqob>
+Subject: Re: [PATCH] ufs: qcom: Add quirks for Samsung UFS devices
+To: Manish Pandey <quic_mapa@quicinc.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
+ quic_bhaskarv@quicinc.com, quic_rampraka@quicinc.com, quic_cang@quicinc.com,
+ quic_nguyenb@quicinc.com
+References: <20250325083857.23653-1-quic_mapa@quicinc.com>
 Content-Language: en-US
-From: MANISH PANDEY <quic_mapa@quicinc.com>
-In-Reply-To: <awc2ql2x5amiahf7l47xqhgl7ugi4zpk5wz7qycgbqb52gh4yb@24za7q2rqqob>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250325083857.23653-1-quic_mapa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=EZ3IQOmC c=1 sm=1 tr=0 ts=67e2714d cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=VwQbUJbxAAAA:8 a=COk6AnOGAAAA:8 a=vDryth-CmtdcD-kvv_8A:9
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: CvBCXMXlc5vx7cguv5wpI3F2kUAoEa8c
-X-Proofpoint-GUID: CvBCXMXlc5vx7cguv5wpI3F2kUAoEa8c
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-25_03,2025-03-25_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- impostorscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=807
- spamscore=0 lowpriorityscore=0 clxscore=1015 bulkscore=0 phishscore=0
- adultscore=0 mlxscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2503250063
 
+On 3/25/25 4:38 AM, Manish Pandey wrote:
+> Introduce quirks for Samsung UFS devices to override PA hibern8 time,
+> PA TX HSG1 sync length, and TX_HS_EQUALIZER for the Qualcomm UFS Host
+> controller. These adjustments are essential to maintain the proper
+> functionality of Samsung UFS devices for Qualcomm UFS Host controller.
 
+Which of these quirks are required for all host controllers and which of
+these quirks are only required for Qualcomm host controllers?
 
-On 3/24/2025 1:09 PM, Manivannan Sadhasivam wrote:
-> On Wed, Mar 19, 2025 at 11:51:07AM +0530, MANISH PANDEY wrote:
->>
->>
->> On 3/18/2025 12:14 PM, Manivannan Sadhasivam wrote:
->>> On Thu, Mar 13, 2025 at 10:46:34AM +0530, Manish Pandey wrote:
->>>> This patch adds functionality to dump MCQ registers.
->>>> This will help in diagnosing issues related to MCQ
->>>> operations by providing detailed register dumps.
->>>>
->>>
->>> Same comment as previous patch. Also, make use of 75 column width.
->>>
->> will Update in next patch set.>> Signed-off-by: Manish Pandey
->> <quic_mapa@quicinc.com>
->>>> ---
->>>>
->>>> Changes in v3:
->>>> - Addressed Bart's review comments by adding explanations for the
->>>>     in_task() and usleep_range() calls.
->>>> Changes in v2:
->>>> - Rebased patchsets.
->>>> - Link to v1: https://lore.kernel.org/linux-arm-msm/20241025055054.23170-1-quic_mapa@quicinc.com/
->>>> ---
->>>>    drivers/ufs/host/ufs-qcom.c | 60 +++++++++++++++++++++++++++++++++++++
->>>>    drivers/ufs/host/ufs-qcom.h |  2 ++
->>>>    2 files changed, 62 insertions(+)
->>>>
->>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>>> index f5181773c0e5..fb9da04c0d35 100644
->>>> --- a/drivers/ufs/host/ufs-qcom.c
->>>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>> @@ -1566,6 +1566,54 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
->>>>    	return 0;
->>>>    }
->>>> +static void ufs_qcom_dump_mcq_hci_regs(struct ufs_hba *hba)
->>>> +{
->>>> +	/* sleep intermittently to prevent CPU hog during data dumps. */
->>>> +	/* RES_MCQ_1 */
->>>> +	ufshcd_dump_regs(hba, 0x0, 256 * 4, "MCQ HCI 1da0000-1da03f0 ");
->>>> +	usleep_range(1000, 1100);
->>>
->>> If your motivation is just to not hog the CPU, use cond_resched().
->>>
->>> - Mani
->>>
->> The intention here is to introduce a specific delay between each dump.
-> 
-> What is the reason for that?
-> 
->> Therefore, i would like to use usleep_range() instead of cond_resched().
->> Please let me know if i am getting it wrong..
->>
-> 
-> Without knowing the reason, I cannot judge. Your comment said that you do not
-> want to hog the CPU during dump. But now you are saying that you wanted to have
-> a delay. Both are contradictions.
-> 
-> - Mani
-> 
-Hi Mani, Could you please clarify what you meant by delay? Did you mean 
-udelay? That's not the case here, as we are using usleep(), which is 
-similar to cond_resched(). I believe both serve the same purpose in this 
-case. Therefore, I chose usleep() to provide a fixed delay between dumps 
-since we are dumping a large amount of data. Additionally, I wanted to 
-avoid any extra scheduling latency associated with cond_resched().
+> +	equalizer_val = (gear == 5) ? DEEMPHASIS_3_5_dB : NO_DEEMPHASIS;
 
-How ever i am open to change it to cond_resched() if needed.
-Please suggest.
+I think that the parenthesis can be removed from the above statement
+without reducing readability of the code.
 
-Regards
-Manish
+Thanks,
+
+Bart.
