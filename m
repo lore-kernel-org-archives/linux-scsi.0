@@ -1,48 +1,47 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 035FD2561C6;
-	Tue, 25 Mar 2025 11:43:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE80D25A335
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Mar 2025 14:25:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742902994; cv=none; b=LPBASq1g9TZQ4BXIFu1Qmdbu7odDe6NNWWQ0vtMEQ2+0I+jnqJ2Y+kVzKwb5JmOX0sYGeoi5xHa//Rx/1iM3kF1pj5/ffG6r3EbVnaeSEgAaH50qQqQvm/zjwAfokQ87ktwd1Pmkq81EHwwzVmO3V4wEpOpJM+8tsxMvwx78YvE=
+	t=1742912725; cv=none; b=Sm2LhydC3wrdmh4ZnBQe32P0TYGAke5cc5WfXkaVy/NAsGC5ZKsPlSky0brRlKDqWQ986ORukBHaV05WpVyUeXQvZm9no7uM01HO8zMy0wTMZUt8GsDA6eHLpQ9rbJVKt9F/duYR/yR5dR5NEYrsLyKApr/08jofMvffz3DB76A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742902994; c=relaxed/simple;
-	bh=FT1Qqx606bhJGVCZ1XZfe4LWb4KNQw3rn1mJv9tejME=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QeRB3cKgIBrPEs6ewf6IOXv7O+T0H2CNVB7lP0Q+8v2HQAg1V4m3t6/kuhFv70P/JKHUynI67Es6CA+6DCp8Z1WaeRiCRKE0mEExAqxIQrABUmc8lwEwrdU/DPXHU7wNaqodbXmiZVv4G3uZleglkMBZG2At5iiAOyDdJGHa3Wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sQFE3dpm; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1742912725; c=relaxed/simple;
+	bh=7R6JgDEPzrvW/21WVk0bEN9ZAcsm2QkH+g0sRtv+rpQ=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=JKjHoY9fyAlTgMH5ucxjLQ1GF8JzArCwpwdoAE7JVHc8Z+B3Y1Xznd52jI5ClqGxlKpidC2h4yohfQlyf3SZMGj0OvoheB9DjwJdB8WI+ixv/X89DmCueLjqmF8pW2Obg6SG441k8qu83DR+gaSvHKGTMK47U32HxcLdx9OdAto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ExWOn5jS; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sQFE3dpm"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZMSj56QLjzlnfZK;
-	Tue, 25 Mar 2025 11:43:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1742902984; x=1745494985; bh=BNiUdiP+epirUViNMTGnDH+f
-	CGTBkwR40/2dF4B+vp0=; b=sQFE3dpm8Ou4O4sOZdBxEM2VOFMIBFO06eo9B38v
-	Eq551y+s9H0KPKmcjr9ckifpyupoIIBAQZQnb8Hg8Smj4sqJbbdHgYOAcw1cPJrJ
-	qy9THuVtMYkZPd0oTp7W+R4s0UDUTNAEeikULQfGU3Z51HcaPGmeABXI6gwxDy+m
-	MCaf+crRaq3t0LKfxj85G/oKTWvby+U+4xO3itft4hbMXgVqMN9JBRDdEcwV5ZUi
-	hQFa0nYN6OCeRRWVeapNiHMuKK0GltTyR2+vpDbfopV4wa294JDR7UFtSC9nhcOD
-	5yRnwVyULb11ZZbOgUKUuaemWkoPmi/GwB50QI50EIYVgQ==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8QgvwYss6EyF; Tue, 25 Mar 2025 11:43:04 +0000 (UTC)
-Received: from [172.22.32.156] (unknown [99.209.85.25])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ExWOn5jS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1742912722;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=GZlZzYP9GDfFqVDq8IX+yF5ihmOBChNNAERHJt/I6Wk=;
+	b=ExWOn5jSlAkNjTJdiCcpl/XOJuAga/fLgwutak1fOWJfW02iUDqYb9bYBRuHOY2vAmh6r6
+	RXAhCfuWeaH+JY3TDysTaeAV3uZypoCMxABXMJyS1mhEoFMnhRrHbVGTLA/M1CDGdEdKm6
+	X7O19p+KdI749PfueOGoWNwUaYxHnW0=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-677-Gu5ONsEWMAi6R5AJ7Oe48Q-1; Tue,
+ 25 Mar 2025 10:25:19 -0400
+X-MC-Unique: Gu5ONsEWMAi6R5AJ7Oe48Q-1
+X-Mimecast-MFC-AGG-ID: Gu5ONsEWMAi6R5AJ7Oe48Q_1742912718
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZMShv4yWrzlrwfT;
-	Tue, 25 Mar 2025 11:42:54 +0000 (UTC)
-Message-ID: <c0691392-1523-4863-a722-d4f4640e4e28@acm.org>
-Date: Tue, 25 Mar 2025 07:42:53 -0400
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8DF2F1800259;
+	Tue, 25 Mar 2025 14:25:17 +0000 (UTC)
+Received: from [10.22.88.188] (unknown [10.22.88.188])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 274B71800944;
+	Tue, 25 Mar 2025 14:25:15 +0000 (UTC)
+Message-ID: <1d664208-7388-4b31-b939-c46e87184206@redhat.com>
+Date: Tue, 25 Mar 2025 10:25:14 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,36 +49,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ufs: qcom: Add quirks for Samsung UFS devices
-To: Manish Pandey <quic_mapa@quicinc.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
- quic_bhaskarv@quicinc.com, quic_rampraka@quicinc.com, quic_cang@quicinc.com,
- quic_nguyenb@quicinc.com
-References: <20250325083857.23653-1-quic_mapa@quicinc.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250325083857.23653-1-quic_mapa@quicinc.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: Sagar Biradar <Sagar.Biradar@microchip.com>,
+ John Meneghini <jmeneghi@redhat.com>, Hannes Reinecke <hare@suse.de>
+From: John Meneghini <jmeneghi@redhat.com>
+Subject: [LSF/MM/BPF TOPIC] aacraid IRQ affinity
+Organization: RHEL Core Storge Team
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 3/25/25 4:38 AM, Manish Pandey wrote:
-> Introduce quirks for Samsung UFS devices to override PA hibern8 time,
-> PA TX HSG1 sync length, and TX_HS_EQUALIZER for the Qualcomm UFS Host
-> controller. These adjustments are essential to maintain the proper
-> functionality of Samsung UFS devices for Qualcomm UFS Host controller.
+While at LSF/MM/BPF this week I'd like to talk about the recent aacraid driver patches at:
 
-Which of these quirks are required for all host controllers and which of
-these quirks are only required for Qualcomm host controllers?
+https://lore.kernel.org/linux-scsi/20250130173314.608836-1-sagar.biradar@microchip.com/
 
-> +	equalizer_val = (gear == 5) ? DEEMPHASIS_3_5_dB : NO_DEEMPHASIS;
+In this email thread Hannes asks:
 
-I think that the parenthesis can be removed from the above statement
-without reducing readability of the code.
+Do we have an idea what these 'specific use-cases' are?
 
-Thanks,
+And how much performance impact we have?
 
-Bart.
+I could imagine a single-threaded workload driving just one blk-mq queue would benefit from spreading out onto several interrupts.
+
+But then, this would be true for most of the multiqueue drivers; and indeed quite some drivers (eg megaraid_sas & mpt3sas 'smp_affinity_enable')
+have the very same module option. Wouldn't it be an idea to check if we can make this a generic / blk-mq queue option instead of having each
+driver to implement the same functionality on it's own?
+
+Topic for LSF?
+
+-- 
+John A. Meneghini
+Senior Principal Platform Storage Engineer
+RHEL SST - Platform Storage Group
+jmeneghi@redhat.com
+
