@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390151C6FF5;
-	Wed, 26 Mar 2025 10:40:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2036D4A29;
+	Wed, 26 Mar 2025 10:50:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742985609; cv=none; b=gCIX7EyxWPwNdJKapZNLMQc5RlcLMKFAX0XkQf9053Aux1o2IbeA2WRgUZaemQr3r96lgLc06WPXipHphhYCw6Xb6TdW48HpqoYDUMpNNQm/tRTpe2X/kg0trDAlik0rwqi4gY4crMpTR/xEaczsKUf33eTTAqJY5F8OP06x5og=
+	t=1742986206; cv=none; b=XJTX2WzlVUOi/O+NPhsdKVaytMyaTxtMtjV6xK6o8aDYJ45plHcsk3bbkONHCeMx77bEpcJ1EhJxWvzY01k3Sl+ICQtxmKwuyCxYYjR6VlD7TDWiRg8fzBmm8ficuitfgsaU3nPIfWDzw8inA9nAXfUyDuQL8F1Vpf544KLxiuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742985609; c=relaxed/simple;
-	bh=RYG3GvKpPm0CCjt7UlMCORi74Y9C4BgsN1oxmH9nSXQ=;
+	s=arc-20240116; t=1742986206; c=relaxed/simple;
+	bh=5+5GHuIzTPyTZ2uB1s3xkoFmmaBjSze2gDJ2FB0UHFE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GtwOKCNay/3CPMaEewLFZT/X/P6+giIL4tObeY4QIgQLLDlq4GJw+XqE89u031T7Dhl1su28dvP63e/de5YQ/BNwWWUFgLPFtv6LQlizS8Lv//iNjkRaahIjSGTJIfDzUYIoPrLy2pPtw8jY/24E53KhPZ0KWehj1ZcZeFWzK6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jKoNWX/3; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=Em1C839f0I2HZ9QmPeQwl0hO+tPs1fEtCm14KZueVHqfXCEUs23kuuxuO+6hbt/SVqh6g1JYXl7XOcyliECRrH7ZKi5UyKFmiYuMCVloCKdPPzjurQnhQGumNuc5/n8GXgrJTY+z3oMamY76vL/oFf4Hn5vI1FEy9IaXiLJznMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HievZawn; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jKoNWX/3"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HievZawn"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZN3Fs0mb1zm0yQB;
-	Wed, 26 Mar 2025 10:40:01 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZN3TR5RTnzm1Hcf;
+	Wed, 26 Mar 2025 10:50:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1742985599; x=1745577600; bh=u+WrZRiDxBHkaSi9rgxzaHuw
-	fSAuRnMVMR5t3aCZTWA=; b=jKoNWX/33oTD9bFaDCMkQEr5ARI18RCAybsb3n3A
-	8oI3SQeA3aXTaax3AaSSVyh54Gh4F9ae0c/zJ47b+wNvNNLYa5PoeLeadsQUnCqD
-	Sw6uQdV6eiiZwT6xN0GzVPqefWME1d8lLSydlGYjsfGdzcpjMNllPdDYKUy5wIdp
-	qFiX4i9MZDvR2Y1i5uUJ+8Is1Hdue9rovDgVm8CZncSBD0SZZ4ectC0xUx8Guubq
-	Efn0rwXN61sa9RAkF0tSxsnZlCxm74PXY/anfYiiggkdb1JMRUoNuGEBGlxPt+ZI
-	/wg0WKJE7UaddB68Efo6ztlW8HIPEwQmrGKFx/mxPnuUag==
+	 s=mr01; t=1742986200; x=1745578201; bh=5+5GHuIzTPyTZ2uB1s3xkoFm
+	maBjSze2gDJ2FB0UHFE=; b=HievZawn2d6jsnrVOsia7WD6sGZyUjHmr8S4WY6Z
+	TwsnilVL6ShQXcK7AgonBwUePRPKn+LWasFjh6Hp3M4nWoNsw0NSyGP/jld+GKXp
+	eHa/q6Bj/ky6J5scjMn1U7cRelzxrOPARMgqARwG/q/8dwjGj2CBIvfD2YuONKv6
+	zVzxFUwPm3RJJ9cPhJ3wkDS0YsE3VHC2s+fjS1PBiDul2knJL07CM4m4PgvqkZRt
+	TAdBWfPSfoP/u3BfHpx6aegF7hwOf0Hi8yema1WKprKalWts0fHVuynWfYWF3CKj
+	QPVb7FQUFcVP28LFJeuSdBJ6YKMK0mflJv924VYFjryoTQ==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id SdE-fRP6IFbp; Wed, 26 Mar 2025 10:39:59 +0000 (UTC)
+ id kw46iLVboy79; Wed, 26 Mar 2025 10:50:00 +0000 (UTC)
 Received: from [172.22.32.156] (unknown [99.209.85.25])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZN3Fg6WY5zm1Hbr;
-	Wed, 26 Mar 2025 10:39:50 +0000 (UTC)
-Message-ID: <e5c5ea82-2103-4616-8bcf-e21be5952f4c@acm.org>
-Date: Wed, 26 Mar 2025 06:39:39 -0400
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZN3T5620nzm1Hc8;
+	Wed, 26 Mar 2025 10:49:44 +0000 (UTC)
+Message-ID: <0a68d437-5d6a-42aa-ae4e-6f5d89cfcaf3@acm.org>
+Date: Wed, 26 Mar 2025 06:49:43 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,37 +50,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ufs: qcom: Add quirks for Samsung UFS devices
-To: MANISH PANDEY <quic_mapa@quicinc.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+Subject: Re: [PATCH v4 1/1] scsi: ufs: core: add device level exception
+ support
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Arthur Simchaev <Arthur.Simchaev@sandisk.com>,
+ "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+ "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+ "minwoo.im@samsung.com" <minwoo.im@samsung.com>,
+ "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
- quic_bhaskarv@quicinc.com, quic_rampraka@quicinc.com, quic_cang@quicinc.com,
- quic_nguyenb@quicinc.com
-References: <20250325083857.23653-1-quic_mapa@quicinc.com>
- <c0691392-1523-4863-a722-d4f4640e4e28@acm.org>
- <33c03e94-5e8b-44cf-be32-fb571ca73a17@quicinc.com>
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Bean Huo <beanhuo@micron.com>, Keoseong Park <keosung.park@samsung.com>,
+ Ziqi Chen <quic_ziqichen@quicinc.com>, Al Viro <viro@zeniv.linux.org.uk>,
+ Gwendal Grignou <gwendal@chromium.org>, Eric Biggers <ebiggers@google.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-arm-kernel@lists.infradead.org>,
+ "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-mediatek@lists.infradead.org>
+References: <4370b3a3b5a5675bb3e75aaa48a273674c159339.1742526978.git.quic_nguyenb@quicinc.com>
+ <SA2PR16MB4251229744D717821D3D8353F4A72@SA2PR16MB4251.namprd16.prod.outlook.com>
+ <c5ab13ec-f650-ea10-5cb8-d6a2ddf1e825@quicinc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <33c03e94-5e8b-44cf-be32-fb571ca73a17@quicinc.com>
+In-Reply-To: <c5ab13ec-f650-ea10-5cb8-d6a2ddf1e825@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 3/26/25 5:53 AM, MANISH PANDEY wrote:
-> The QUIRK_PA_HIBER8TIME may also be necessary for other SoC vendors host 
-> controllers. For instance, the ufs-exynos.c file implements a similar 
-> approach in the fsd_ufs_post_link() function:
-> 
-> ufshcd_dme_set(hba, UIC_ARG_MIB(0x15A7), max_rx_hibern8_time_cap + 1);
-> 
-> https://lore.kernel.org/lkml/001101d874c1$3d850eb0$b88f2c10$@samsung.com/
-> 
-> Should we consider moving the QUIRK_PA_HIBER8TIME quirk to the ufshcd 
-> driver? Please advise.
+On 3/25/25 6:15 PM, Bao D. Nguyen wrote:
+> The existing "struct utp_upiu_query_v4_0" probably has a bug in it. It=20
+> does not use the=C2=A0 __attribute__((__packed__)) attribute. The compi=
+ler is=20
+> free to add padding in this structure, resulting in the read attribute=20
+> value being incorrect. I plan to provide a separate patch to fix this=20
+> issue.
 
-That would be appreciated.
+Adding __attribute__((__packed__)) or __packed to data structures that
+don't need it is not an improvement but is a change that makes
+processing slower on architectures that do not support unaligned
+accesses. Instead of adding __packed to data structures in their
+entirety, only add it to those members that need it and check the
+structure size as follows:
+
+static_assert(sizeof(...) =3D=3D ...);
 
 Thanks,
 
