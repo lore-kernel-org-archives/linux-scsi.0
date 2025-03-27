@@ -1,189 +1,173 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7130A2144C5
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2025 12:47:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B61F1165F16
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2025 16:36:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743079672; cv=none; b=C2IFsMKohU6lH7cSJpSZgXhICkrGfoziYvw15fh4gGIYb7IaXVlPg4i8ATLWrMwyx/UTn6Qq6RgDaUtht8Kmoj8SX6T4bwbKEdJ3oRrxUvU8kQO6Er1oeHT5zSVNA7hiHvz3sKGvy8BEFjb8h9Ddb2oNRRp35c15AosmLRvf4oU=
+	t=1743093382; cv=none; b=oVc+fPUtqgl7+49KqYEizvBFc4TbFm74BQOs6D6wtvMfrYrzLN641Z3xlqgfeyHBL0T2Ue9v3pmfbmWNhqN8PNIXtxu/f0Xxc5nyFV/unyT4esNW0j8qGSdfd55cMrAohl46wHX1hwSgbHvsXgggcZhymrz/nk6fAEEblOGSMuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743079672; c=relaxed/simple;
-	bh=tycgOQWwWJbi7HTyc6T2xiJuVmwbFijiHW6hOcGcs3c=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=Bp9QptajJRaDtv0QCHr2v3JCdz9kzPKCSml6feGjbrABaqt/lUAR/eF4ZVTgY9eaeWuCcLIyKsVBtOn0auiLife7mag8trvuwqNdRdBPw89FWQ2c17fAZpjSkgHDmoZG2CqwH0UKotz4QU5UK4q4BftUKABXaYVKV8qRbBxzpQE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ZsitrB2t; arc=none smtp.client-ip=209.85.221.54
+	s=arc-20240116; t=1743093382; c=relaxed/simple;
+	bh=r74tUNBWnS54DNQaW+6dGohKu7XZ7LEJUlyCmBwJkiE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZKV6FWxTsfKx2PapfC1/nveLMoWaLMGzLgaGz2xEIogguHnrikd9uXZLrazMYJJ9pjtjmgVqiO39+S8K6JjIg0WHH0wbzvfuuSN16BIC8VklbQdUlloAG2o4pAw62mAslWi7rQiplBfXDL/kvWptP+DujM4/r5ObomFyRqGI/nY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=gTCyRS7e; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ZsitrB2t"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3996af42857so1327141f8f.0
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2025 05:47:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gTCyRS7e"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2264aefc45dso34555415ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Mar 2025 09:36:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1743079669; x=1743684469; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nrhZhK2vDq2GLpC5AXkPOJNIZAgprokk9oQOGjga9nQ=;
-        b=ZsitrB2tocBSgyIgY9s/XNEs3xztFn5hc40l6x8pkyOsGnJ/lJAZy/g1iQqgHiruQ2
-         kVCWUSTCiggSLgmhC+iRvMNZPlp+1xzF4bi9S+a2unAMo/Ls2jWdDOuRpNJ0MCWrVMpP
-         +d4OUhCONbVuMKina4HIIp8CqTexa3RRJHv2JA/DuWFCrp88fIIzPs8w+OGRxJXZlvbT
-         xAt1yOCd1lmQNQG8vLgP9jfDZtNMNkJbsBKAgaixhxo6iUFSz6266kU2TPnuM8EqRPfr
-         GLoyLX75M649yqhe1lnvkSLs+8SK7IETs/mr6g2cx/Hjb6vcgRQP/Ku/mkZGR77lIUel
-         4w6g==
+        d=linaro.org; s=google; t=1743093380; x=1743698180; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=GTm3yeZQu7nnkYYIrtIiav2KcYikzBu4G9HTZHFQyuU=;
+        b=gTCyRS7ei7JQ2OjIkmdhNcnIfSwhlY9ox9rCZkYY5WZDBpk8Lq0lfeJjaExRQpWT55
+         uV5aaYUM9tM5uaAAByVbopL9naUB1Gt3mvqghvxLdQ0ea/sTDPyoeUMsY9j732oJUBDH
+         AKSP3zEzQPbXHkQDwz3Pw2yI/UhBgCi2Qk1/SWJl6SvM+sjTpBlT7BZA+0XuuVxSaL+U
+         ar/9cQB6qzNJ/yIwhkoo7ON+zf2t9Ksynn6v2RxgZ7tP9WxDBRG55pqRAGITyQfW6u/8
+         VYyzqS3iQuN8cM38Z80eLpwhHZMhEway4NNe05+yZ2cz0gE7fO7jn1+tEFbvc9nUTOzA
+         WdPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743079669; x=1743684469;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=nrhZhK2vDq2GLpC5AXkPOJNIZAgprokk9oQOGjga9nQ=;
-        b=IOX4wSojMSS/4MVJQQiTJaZ/+6cDTyMhYWHfFP4y2R3dF4C3YrsstP7vOw9gVgy0tN
-         TcdblI1PVN46TRY/7bqDX8LR2zRM2RHoxfeM69k382EbI9b56cCt5pVDYM3iYThrWcGI
-         QRMWTm0UWiwtddjaa6CH97yxsrKzSE4/BBhm0lEd3+N6QcnqAprNwSqbgLZVBHbIB31z
-         wRvuae9Qry/GoQ/+9ck8T/hWCPTEAaVVG1EHlYyZorkfm5lr4QVXE5J9hGSrKoqFgUVI
-         HYyc0GceCw25ylT5G7Im5ES0cMrwViJJ7fIqcNvprohVAEm9rFL/oFDrMpN/vMe/2YcO
-         s7Zg==
-X-Forwarded-Encrypted: i=1; AJvYcCWL9Fcro6SLcF7J0KwInfBAiAlNhHULwCeYHzXt25zikBh6UHktUytQPfwI3nzOGvgsCRREsmkqWNgZ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxo2ii81POe2i0qQ6OGefxlrIE9k1m2Wm+M0/wEWPEyjyfAAMqf
-	vqJqNIoPKdK4CZ7YMjmPDCOALrZzXXa92h1gZ6DZbMhJVnTPIF40ndVJqf4CSYw=
-X-Gm-Gg: ASbGncvHy06zmxe8U4+oQQgxnhLmo8ouZrmIEiI6AJ4QgNmBq11hYse3GrWOiwU5X4A
-	HhT1FiY3XTtwwJDNft72Kz3PViRhKUclBg+xlcpOF8BypY3ZLWSQ//DtreRfF6QF2rYR0eGyas3
-	Wj/BW2Sc7g+qrz0PqkqQU0q7N716FfqTujhbJ4yL4Y4P0MMXZEaaGBliskcdqI0eWLC9NOISRsj
-	XfYoyZ10LFQBEV2CSR1+V7ebt29MlFo2si45FXTJ075Phvsy8PKP4R2L0BaHgZdWsalbd2Qxrp0
-	KxzBNWiF+wXtbkhseQOQUBhZAcedJhyOIiM7CrdtXZHhS4FnHEE8iaylpvNt0LfpNspTgZJL7iD
-	l5jSvQajuOTYjD/ANf4V09Q==
-X-Google-Smtp-Source: AGHT+IH7vTkD1EpvQ1pnTdIXyT11ZQroNe1bXfZ6Z2W1J3NovHK5NVozVnLU1L6ojpmVJC3grA6ZVw==
-X-Received: by 2002:a05:6000:23c9:b0:390:f9e0:f0d0 with SMTP id ffacd0b85a97d-39c099b5d7dmr97829f8f.6.1743079668789;
-        Thu, 27 Mar 2025 05:47:48 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:3d9:2080:f1b8:272a:1fa5:f554? ([2a01:e0a:3d9:2080:f1b8:272a:1fa5:f554])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3997f9a6326sm19380815f8f.29.2025.03.27.05.47.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Mar 2025 05:47:48 -0700 (PDT)
-Message-ID: <5be7a006-054d-4275-9c83-2687461028ef@linaro.org>
-Date: Thu, 27 Mar 2025 13:47:47 +0100
+        d=1e100.net; s=20230601; t=1743093380; x=1743698180;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=GTm3yeZQu7nnkYYIrtIiav2KcYikzBu4G9HTZHFQyuU=;
+        b=nHwrvdVmmtdex6CHVGe27Jzv1J5ErMGR6HcmPnvAl6qQwwFO72nEujhsi0hLBD0T1f
+         Gev1IJCRzXgSAB0rN63HrGVOWCEE5T4rKgujWJd13DlkCa4Rxmt8os9v8V/U5JVXbJcp
+         lutsuLOZ/IeZvm/zwGhnXTfHvsULbVarS9Ne/DoiugjiduNEDAzZ/FZSaVIoSLH+XQJ0
+         OGDcbXRKZb57+aI9pAxg6CZNh7y0LKqa9yWJCGHtL9fgBnKB2qgnbjOr6Stf2IZlOR0U
+         1LHL8SJzcm4qJkniaXNdy0xmFAWzQnBYKPLJ9C9QTRbhMGLYrlhaDkvniFeIctB6pmGb
+         B3Iw==
+X-Forwarded-Encrypted: i=1; AJvYcCU8ZXnXe0L9su+B0aiJfiT5zxFs4KKrhQBF//Sg3kue3cxoseTHLlpyKKVxIvrG3eu+Gldp3GQS4ZLs@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzke8oCHB1Cvn4N+O9pd8tyAhJ127PHnYzjm7/Xgin+mMvcF8sP
+	ZVfvL9H0GbixbPh+rBDR2CPkiKz3MHWyAb52UgdAC8pgqhv9NS3h/NiYrdQHkQ==
+X-Gm-Gg: ASbGncuBC3lKg9CfC3mWY85MAEm0v1TiQf7hlLFAv+W3xoE3XeI0QSMsDSj+TmfrDXz
+	Oswqf1sqeTrBqb/0vUNNeBaxI62MTXySei4V9TPcVPO8G4JL+sfrK56RIxuRdQmgtH1+iP+3a44
+	3F92kY3MzAoiKJBvHdwP2fWYgKuNFvtEcgKOKwtwA7Fg5WGHKORTIGhzjfizG0ng/yKPxXnTp62
+	v6soBPbfTXedBKB43rYEtKEUsh5bk4oiCAAuEgHBCQsl437zAnRvsXv1ylRNuqFd5xpkRQaWVT/
+	93bt+PYsXaY+F87uF0FuNAbvqShdJzDzTTDC4xlI0kjz8GM5hFkNN8c=
+X-Google-Smtp-Source: AGHT+IEQCE5jfk4erv9qH3E6newI4gRsYwZh/PGLh7gYIR8Yt8v0Ie/q6zezMo/vtBrKuenQovT8cA==
+X-Received: by 2002:a17:90b:2dd2:b0:2ff:6fc3:79c3 with SMTP id 98e67ed59e1d1-303a7d6f7efmr6842321a91.9.1743093379744;
+        Thu, 27 Mar 2025 09:36:19 -0700 (PDT)
+Received: from thinkpad ([120.60.71.118])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3039f6b6bcbsm2654960a91.45.2025.03.27.09.36.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Mar 2025 09:36:19 -0700 (PDT)
+Date: Thu, 27 Mar 2025 22:06:12 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: MANISH PANDEY <quic_mapa@quicinc.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com, quic_cang@quicinc.com, 
+	quic_nguyenb@quicinc.com
+Subject: Re: [PATCH V3 2/3] scsi: ufs-qcom: Add support for dumping MCQ
+ registers
+Message-ID: <zvh4v7am3exq3r3osmlxzak64rqs6uayjxscvhkuh4zezd3rsq@5og7cpvezvpb>
+References: <20250313051635.22073-1-quic_mapa@quicinc.com>
+ <20250313051635.22073-3-quic_mapa@quicinc.com>
+ <20250318064421.bvlv2xz7libxikk5@thinkpad>
+ <12753be6-c69b-448d-a258-79221f4dbc7c@quicinc.com>
+ <awc2ql2x5amiahf7l47xqhgl7ugi4zpk5wz7qycgbqb52gh4yb@24za7q2rqqob>
+ <6fcefb33-a488-45a2-b34d-08a85ae7a0ef@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [PATCH RFC v2 2/2] ufs: core: delegate the interrupt service
- routine to a threaded irq handler
-To: Bart Van Assche <bvanassche@acm.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250326-topic-ufs-use-threaded-irq-v2-0-7b3e8a5037e6@linaro.org>
- <20250326-topic-ufs-use-threaded-irq-v2-2-7b3e8a5037e6@linaro.org>
- <4a5efc8e-ec61-40c8-9b36-59e185b0fdd5@acm.org>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <4a5efc8e-ec61-40c8-9b36-59e185b0fdd5@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <6fcefb33-a488-45a2-b34d-08a85ae7a0ef@quicinc.com>
 
-Hi,
-
-On 27/03/2025 12:56, Bart Van Assche wrote:
-> On 3/26/25 4:36 AM, Neil Armstrong wrote:
->  > When MCQ & Interrupt Aggregation are supported, the interrupt
->  > are directly handled in the "hard" interrupt routine to
->  > keep IOPs high since queues handling is done in separate
->  > per-queue interrupt routines.
+On Tue, Mar 25, 2025 at 02:32:58PM +0530, MANISH PANDEY wrote:
 > 
-> The above explanation suggests that I/O completions are handled by the
-> modified interrupt handler. This is not necessarily the case. With MCQ,
-> I/O completions are either handled by dedicated interrupts or by the
-> legacy interrupt handler.
-
-Will update the sentence with that
-
 > 
->> Reported bandwidth is not affected on various tests.
+> On 3/24/2025 1:09 PM, Manivannan Sadhasivam wrote:
+> > On Wed, Mar 19, 2025 at 11:51:07AM +0530, MANISH PANDEY wrote:
+> > > 
+> > > 
+> > > On 3/18/2025 12:14 PM, Manivannan Sadhasivam wrote:
+> > > > On Thu, Mar 13, 2025 at 10:46:34AM +0530, Manish Pandey wrote:
+> > > > > This patch adds functionality to dump MCQ registers.
+> > > > > This will help in diagnosing issues related to MCQ
+> > > > > operations by providing detailed register dumps.
+> > > > > 
+> > > > 
+> > > > Same comment as previous patch. Also, make use of 75 column width.
+> > > > 
+> > > will Update in next patch set.>> Signed-off-by: Manish Pandey
+> > > <quic_mapa@quicinc.com>
+> > > > > ---
+> > > > > 
+> > > > > Changes in v3:
+> > > > > - Addressed Bart's review comments by adding explanations for the
+> > > > >     in_task() and usleep_range() calls.
+> > > > > Changes in v2:
+> > > > > - Rebased patchsets.
+> > > > > - Link to v1: https://lore.kernel.org/linux-arm-msm/20241025055054.23170-1-quic_mapa@quicinc.com/
+> > > > > ---
+> > > > >    drivers/ufs/host/ufs-qcom.c | 60 +++++++++++++++++++++++++++++++++++++
+> > > > >    drivers/ufs/host/ufs-qcom.h |  2 ++
+> > > > >    2 files changed, 62 insertions(+)
+> > > > > 
+> > > > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > > > > index f5181773c0e5..fb9da04c0d35 100644
+> > > > > --- a/drivers/ufs/host/ufs-qcom.c
+> > > > > +++ b/drivers/ufs/host/ufs-qcom.c
+> > > > > @@ -1566,6 +1566,54 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+> > > > >    	return 0;
+> > > > >    }
+> > > > > +static void ufs_qcom_dump_mcq_hci_regs(struct ufs_hba *hba)
+> > > > > +{
+> > > > > +	/* sleep intermittently to prevent CPU hog during data dumps. */
+> > > > > +	/* RES_MCQ_1 */
+> > > > > +	ufshcd_dump_regs(hba, 0x0, 256 * 4, "MCQ HCI 1da0000-1da03f0 ");
+> > > > > +	usleep_range(1000, 1100);
+> > > > 
+> > > > If your motivation is just to not hog the CPU, use cond_resched().
+> > > > 
+> > > > - Mani
+> > > > 
+> > > The intention here is to introduce a specific delay between each dump.
+> > 
+> > What is the reason for that?
+> > 
+> > > Therefore, i would like to use usleep_range() instead of cond_resched().
+> > > Please let me know if i am getting it wrong..
+> > > 
+> > 
+> > Without knowing the reason, I cannot judge. Your comment said that you do not
+> > want to hog the CPU during dump. But now you are saying that you wanted to have
+> > a delay. Both are contradictions.
+> > 
+> > - Mani
+> > 
+> Hi Mani, Could you please clarify what you meant by delay? Did you mean
+> udelay? That's not the case here, as we are using usleep(), which is similar
+> to cond_resched(). I believe both serve the same purpose in this case.
+
+Even though usleep() allows the scheduler to reschedule other tasks, both are
+not the same. usleep() puts the thread to sleep until the elapsed time and other
+tasks may be scheduled in the meantime. But cond_resched() will allow the
+scheduler to schedule other tasks *only* if necessary. So the scheduler may
+decide to continue executing the current thread if it is well within its
+timeslice.
+
+> Therefore, I chose usleep() to provide a fixed delay between dumps since we
+> are dumping a large amount of data. Additionally, I wanted to avoid any
+> extra scheduling latency associated with cond_resched().
 > 
-> This kind of patch can only affect command completion latency but not
-> the bandwidth, isn't it?
 
-Yes, but on a fully loaded system, it will enhance bandwidth
-but with a greater latency, but without eating irq handling time
-for other routines.
+This doesn't make sense to me. Why do you want to provide a fixed delay? Will
+that delay affect the UFS controller by any means? If not (afaik), you should
+use cond_resched() as that will allow for faster dumps and also not hog the CPU.
 
-> 
->> +/**
->> + * ufshcd_intr - Main interrupt service routine
->> + * @irq: irq number
->> + * @__hba: pointer to adapter instance
->> + *
->> + * Return:
->> + *  IRQ_HANDLED     - If interrupt is valid
->> + *  IRQ_WAKE_THREAD - If handling is moved to threaded handled
->> + *  IRQ_NONE        - If invalid interrupt
->> + */
->> +static irqreturn_t ufshcd_intr(int irq, void *__hba)
->> +{
->> +    struct ufs_hba *hba = __hba;
->> +
->> +    /*
->> +     * Move interrupt handling to thread when MCQ is not supported
->> +     * or when Interrupt Aggregation is not supported, leading to
->> +     * potentially longer interrupt handling.
->> +     */
->> +    if (!is_mcq_supported(hba) || !ufshcd_is_intr_aggr_allowed(hba))
->> +        return IRQ_WAKE_THREAD;
->> +
->> +    /* Directly handle interrupts since MCQ handlers does the hard job */
->> +    return ufshcd_sl_intr(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS) &
->> +                   ufshcd_readl(hba, REG_INTERRUPT_ENABLE));
->> +}
-> 
-> Where has ufshcd_is_intr_aggr_allowed() been defined? I can't find this
-> function.
+- Mani
 
-It's in include/ufs/ufshcd.h
-
-> 
-> For the MCQ case, this patch removes the loop from around
-> ufshcd_sl_intr() without explaining in the patch description why this change has been made. Please explain all changes in the patch
-> description.
-
-Ack will update explaining this change.
-
-Thanks,
-Neil
-
-> 
-> Thanks,
-> 
-> Bart.
-
+-- 
+மணிவண்ணன் சதாசிவம்
