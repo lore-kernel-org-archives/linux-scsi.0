@@ -1,91 +1,95 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 078AF188596;
-	Fri, 28 Mar 2025 14:05:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F7851DB131;
+	Fri, 28 Mar 2025 17:15:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743170719; cv=none; b=mmVor3o3HiZaqac6U+pltuZ/UJqJ2rzDbvgChgZWIg1SpDhGCtcEq9AeshmnWOjEJXPk4SfbF8/elk1ewnhmnhHJg+rnSbm7isqBvKEbYPS1MIBu9pNFzj6etrG6tCu1Q2XwxB6ZuJSRt+dAmzA7BNYDdKpj0cyX1Yp8sMjsA4g=
+	t=1743182111; cv=none; b=HULMEUOuEycEl6wfxyrCOF00poUseuipVsg2FrdnscccB/rz1cBLGW5xyckjsOb/x7YBekPoQLkmp6tlG42kTrfAe/AdeEO7d6ItPJapLi9TmKzOOKCCjABxm8rDx6XicBrkH5zfiC+5ZTjONhM1+dePcXC+jDnpy0LfS7BHl6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743170719; c=relaxed/simple;
-	bh=5cWOUCJIB4lTLougmiAzw9dNcnD4w2lCeNgwbw7TZlo=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=YQYQj+RM8/D3iLSdvVbL17dwI5fFuW1vu4YpKrmy/SjwTd8K2o/kPFU6U80wn4xH4kpvKPB2fSJxlNTua9hx4oSL29Ky0rkRUWFojp/YQZfB74lWYeaT5dQYt7i0laomxPNEKoS0hF/P6NXxG/4mPoA5tYsfgbqVWBlxIHSHbE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=cuElf3qy; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xDRiVtjh; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1743182111; c=relaxed/simple;
+	bh=da7sHPFNtbq2W4cYMJ0iJEuTAgjeSMbHDG0WJspHRso=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iAzqZc2W6aQGNN3ivA/CSfNbawLkN01m+qYzt4ryV1KJV8nAY/9flYWyjTycB1xYZXVb5s45Nvrh+0k6LlyohewtmSLhZzClXHSOuhyuQxA7O0K+6RY7CDTn6MhnBOqCiPe/92hpiPyvaIEMqLJg5rYIIOM8Hi+qhnyiOCiZd+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=j9jUbA+Y; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cuElf3qy";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xDRiVtjh"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1743170716;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I6YPLumZITzzLekUQIrMxuZMrWTUi05abn63fn/MC7I=;
-	b=cuElf3qyttvW4wTy4V6qJdF5j5h+TM5XurS3EXAepHolGiOyFnpWcic30E36tT4Z/+Gqjd
-	kLXpq9Q3DotesvCWbw/tjgTxdDR+XYIKga+cWXwhQ8G2ZNLWU1e2O25yt4cl1eIl8Gos0i
-	231Oaao887seYBxeYMLMRFpkGDsHl7HVtWVHhzdAEAGkJFfyazP52KCNxcWSHbOcZ/C4lw
-	RZdqMZDdoDd/9/hraP0cCAU/WQBqaiFwC4hiz7Cfj3fllvnAEdqgvoitLrOg9yJvfEVH3Q
-	3g3dB6oB6Rz0VbE6+zQOYqNKZ3NjyBrQVTdrSsEUu80VLNxzl22jTV043eZWpg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1743170716;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I6YPLumZITzzLekUQIrMxuZMrWTUi05abn63fn/MC7I=;
-	b=xDRiVtjhHlcJcTl1CHzPR82ZJR7hGxj3A1wnsDyEc1fjIarLfVZHyZxJ13IgBYnEhnGD6b
-	IhVV1V4MUT/mmWAQ==
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J.
- Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Peter Zijlstra
- <peterz@infradead.org>, Nishanth Menon <nm@ti.com>, Jonathan Cameron
- <Jonathan.Cameron@huawei.com>, Dhruva Gole <d-gole@ti.com>, Tero Kristo
- <kristo@kernel.org>, Santosh Shilimkar <ssantosh@kernel.org>, Logan
- Gunthorpe <logang@deltatee.com>, Dave Jiang <dave.jiang@intel.com>, Jon
- Mason <jdmason@kudzu.us>, Allen Hubbe <allenbh@gmail.com>,
- ntb@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, Michael Kelley <mhklinux@outlook.com>, Wei Liu
- <wei.liu@kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>,
- linux-hyperv@vger.kernel.org, Wei Huang <wei.huang2@amd.com>, Jonathan
- Cameron <Jonathan.Cameron@huwei.com>
-Subject: Re: [patch V2 09/10] scsi: ufs: qcom: Remove the MSI descriptor abuse
-In-Reply-To: <f0df759f-42b2-450c-90c6-25953093e244@stanley.mountain>
-References: <20250313130212.450198939@linutronix.de>
- <20250313130321.963504017@linutronix.de>
- <f0df759f-42b2-450c-90c6-25953093e244@stanley.mountain>
-Date: Fri, 28 Mar 2025 15:05:15 +0100
-Message-ID: <87tt7dw8ro.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="j9jUbA+Y"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZPRwk4ttvzlmm8f;
+	Fri, 28 Mar 2025 17:15:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1743182101; x=1745774102; bh=+EK6tmoFiYgHeuEyYxLkyu/8
+	1AguotCIY7k04YXofmY=; b=j9jUbA+Y5cBItNjvfQ+hyeUC2A02jumLj99vu9Ep
+	QoIt9B0pGDaEXn3Eb4C7JI157palYsortj0m/1bHm0df6yx4Z9p98StjSZ7AN8UP
+	OpfdWX7smPS95pZ0DGo0aKD0qc0PcwQ+VfM2ddlusFp6Oa0NFz7EauHnzZowFipv
+	gSiztiM1f2lE2yD4gzixI5WBTs1+I4Tyr/aqGOg4Zt4vugPDb6ab1ecFYiB1xtf2
+	grgmz+nykuAAjJy36yBnxETKZnHETu5yylDQMXZvxq35/bowSUCYW9tBflsK06Zi
+	rFgyjVEFeHBrz3ALs7xayo7LCpf4GILzWbE/tjPd/+lT4A==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id fvm9X_Lqj2Gh; Fri, 28 Mar 2025 17:15:01 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZPRwb0J4fzlv768;
+	Fri, 28 Mar 2025 17:14:53 +0000 (UTC)
+Message-ID: <2ef77956-3e09-4315-8e3d-2046830f9227@acm.org>
+Date: Fri, 28 Mar 2025 10:14:52 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC v2 2/2] ufs: core: delegate the interrupt service
+ routine to a threaded irq handler
+To: Neil Armstrong <neil.armstrong@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20250326-topic-ufs-use-threaded-irq-v2-0-7b3e8a5037e6@linaro.org>
+ <20250326-topic-ufs-use-threaded-irq-v2-2-7b3e8a5037e6@linaro.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250326-topic-ufs-use-threaded-irq-v2-2-7b3e8a5037e6@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Mar 28 2025 at 13:00, Dan Carpenter wrote:
-> On Thu, Mar 13, 2025 at 02:03:51PM +0100, Thomas Gleixner wrote:
->> @@ -1799,8 +1803,7 @@ static irqreturn_t ufs_qcom_mcq_esi_hand
->>  static int ufs_qcom_config_esi(struct ufs_hba *hba)
->>  {
->>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> -	struct msi_desc *desc;
->> -	struct msi_desc *failed_desc = NULL;
->> +	struct ufs_qcom_irq *qi;
->>  	int nr_irqs, ret;
->>  
->>  	if (host->esi_enabled)
->> @@ -1811,47 +1814,47 @@ static int ufs_qcom_config_esi(struct uf
->>  	 * 2. Poll queues do not need ESI.
->>  	 */
->>  	nr_irqs = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
->> +	qi = devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
->> +	if (qi)
->
-> This NULL check is reversed.  Missing !.
+On 3/26/25 1:36 AM, Neil Armstrong wrote:
+> +static irqreturn_t ufshcd_intr(int irq, void *__hba)
+> +{
+> +	struct ufs_hba *hba = __hba;
+> +
+> +	/*
+> +	 * Move interrupt handling to thread when MCQ is not supported
+> +	 * or when Interrupt Aggregation is not supported, leading to
+> +	 * potentially longer interrupt handling.
+> +	 */
+> +	if (!is_mcq_supported(hba) || !ufshcd_is_intr_aggr_allowed(hba))
+> +		return IRQ_WAKE_THREAD;
+> +
+> +	/* Directly handle interrupts since MCQ handlers does the hard job */
+> +	return ufshcd_sl_intr(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS) &
+> +				   ufshcd_readl(hba, REG_INTERRUPT_ENABLE));
+> +}
 
-Duh. I'm sure I've fixed that before.
+Calling ufshcd_is_intr_aggr_allowed() from the above interrupt handler
+seems wrong to me. I think you want to check whether or not ESI has been
+disabled since only if ESI is disabled all I/O completions are handled
+by a single interrupt if MCQ is enabled.
+
+Thanks,
+
+Bart.
