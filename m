@@ -1,279 +1,137 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11013057.outbound.protection.outlook.com [52.101.67.57])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760321D7E21
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Mar 2025 10:23:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.67.57
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743157387; cv=fail; b=DRNvj503a8HvxSxd19Pz2QCUdpcKaJsFOJn0tcoXzFixsCnIThD1p/xJP/zOlittOrzRH9HZndd0Z37OIMdHkUEebrLHOFChSrYiI9d4O/G4s7u5MaEw8evprxI2I/MZjpMguxDsRZn/xpPe02NnG8qlUjcwyWoDfsCl+HUx1RY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743157387; c=relaxed/simple;
-	bh=z2WrTzp9G6DmwQ5bO1HZVh9P3VYdhC3lSbNHtFrAWxU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=G87V80i/Tv5wcFKEqROqBYtFkefrA8Yj38uRiEY0fF7FHREAle9gVP5oQadyR+bglf+jjynx1DhYG5RK44bGfffr7e2xwGGnB2txlKG/vRckjjRavYl3ifGDOhepH4KtYSTH4zl84y0pCnLBBJ6HwNyXbCjY3kN8NeGZyuqlhCg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=in.bosch.com; spf=pass smtp.mailfrom=in.bosch.com; dkim=pass (2048-bit key) header.d=in.bosch.com header.i=@in.bosch.com header.b=hx2EKzl5; arc=fail smtp.client-ip=52.101.67.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=in.bosch.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=in.bosch.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5B1145B27;
+	Fri, 28 Mar 2025 11:27:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1743161241; cv=none; b=EQU0MBVrLBG9rsAn5QgAGlq+cBe8olhWAmSMxcZxU9/aU9wEm/EOSLElARrcNBwBqtlB28oP3ESJkVQPzO4U2rV1zS+bPMCBw3/iStDhN1stkHjU4NrPjHH1hs1VNZ6+lifjmCwwhZ6P0F0LSjV61f20MMqe5jnd/rtdXRdrAs0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1743161241; c=relaxed/simple;
+	bh=2kPJpnTzcGC0XDddPxH/fxFkaBQl1BQPYqmHSzE7kQs=;
+	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:MIME-Version:
+	 Content-Type; b=dwfrY9ukmFP6h0fJLDJ3Us8KR9bt8CkTHPQQqj8wxkDNPjyStOgPwakN8FjpOi6kOOVetXn9x5O/EC5yJoYCP9+3H1B5hZJn+5hrL+ZLeNfwN/U7mo+vigRggB0DOrz+8XFDZEnLWDz4ccbRuNe2iKV/iYaZ4JnBTf+OFAt35G8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=3J/oMR+p; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=swosjZEx; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=in.bosch.com header.i=@in.bosch.com header.b="hx2EKzl5"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=T2HgLeLsoy5b88yJn8c59P6L3vJCgBbCrJfU3grbTk3mcfBHk6Bj4G93D9EL4tckWglr7i8ubw/slh0UXpLyo6VqXBBfF/XTg4BcgjQ4D+PC+AuMplLvE67yK617zoPYsrwrZYB25A+I7IguDhi29TV41V64Amka1mQ6xX/YsQcDxDCRsYTt29VEq6mu4A305zDWcUUnRn5k3/0Ni+stXLzn11v18KKnExYnROp3Grem2kCKZBrL2V19+rdPV9/izRJ1l4btkYU6EfI4hrQ9u9SJ1mw9kwqfosl0My+zXgBSNqKGfwvccbC7ga9QcH67gY1fTYy+KMIAuOVbMX/Dhw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AGaG+xV5gB12H+oee2oTmfV1EFGpNaSdMzV5b3dahfs=;
- b=VdIBqD8qn8c656pKJzt8MgCtOmhOhykkFFk7wH7maSLjtBc44UdhV8Sull5QN9wuFWAUQ/dOr9ZS8uWfK3oWjMlJgSg/pBqKItrzT42T33I8l4RAUpY/AJguVjn/wFq0a+JPRYEs3dm0dwG/DvdVUxIbZeht/2NJPc+9Wql6pXjqHhZmxATZfkGpOsdTGSHO+9S8VhlNNylH9aRoRTZw6oxTvNUj3a5WvGIV1JZrMxC0Qie7qLyudGHUuhhJhPufMGBQpUhWpaor3bNksMubraUQqMGV+W4Aqm+JTjP+1WRyUu9lNeLDM3AxzFoVBNSAa65yqlzmUO1hHMjXYUyymg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=in.bosch.com; dmarc=pass action=none header.from=in.bosch.com;
- dkim=pass header.d=in.bosch.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=in.bosch.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AGaG+xV5gB12H+oee2oTmfV1EFGpNaSdMzV5b3dahfs=;
- b=hx2EKzl5sqvp3OqFzhbNO+YSYyeXdP1Ab3SC98/gNeDukYI0s/kh+IbwI2HgHbs5fM/ymhOnJVvhytxSA3/MBlN8PLbHRGs3uk3Esn/hxAme4VhKccT+VFOlq+a/cR6taaM0+rICqRAgVexxHUFunYLhMlP6IQRftzlGcSEX0XEpsbH7WTdjK8f+KdzyOpI6x32i32ZlrMGrzRnHgk3XzN22Uu76LR8Fq1jYUhofteoxr46S4L4lyuR2Mf9iL/jPYis91mL8erw+XbrNzVhQfubtpBANsWObjXnlYPaqyC1/U3rmMaO5Vt+ZCmz5KlVQEYnS2TMh6MmmZd63HxDYnw==
-Received: from VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:800:16a::10)
- by GV1PR10MB8419.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:150:1d0::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.48; Fri, 28 Mar
- 2025 10:22:59 +0000
-Received: from VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::67b6:6edb:8a95:c33b]) by VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::67b6:6edb:8a95:c33b%7]) with mapi id 15.20.8534.043; Fri, 28 Mar 2025
- 10:22:59 +0000
-From: "Selvakumar Kalimuthu (MS/ECC-CF3-XC)"
-	<selvakumar.kalimuthu@in.bosch.com>
-To: Avri Altman <Avri.Altman@sandisk.com>, Bart Van Assche
-	<bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
-	<avri.altman@wdc.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin
- K. Petersen" <martin.petersen@oracle.com>, Peter Wang
-	<peter.wang@mediatek.com>, Manjunatha Madana <quic_c_mamanj@quicinc.com>
-CC: "Antony A (MS/ECC-CF-EP2-XC)" <Antony.Ambrose@in.bosch.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH v1 1/1] ufs: core: Export interface for sending raw UPIU
- commands
-Thread-Topic: [PATCH v1 1/1] ufs: core: Export interface for sending raw UPIU
- commands
-Thread-Index: AQHbnw3tp8bUIs282ke9V8AWlRtforOG4MIAgAAAnQCAAUA3gIAANbLg
-Date: Fri, 28 Mar 2025 10:22:59 +0000
-Message-ID:
- <VE1PR10MB3936F035CE799C994E16188DB4A02@VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM>
-References: <20250327114604.118030-1-selvakumar.kalimuthu@in.bosch.com>
- <20250327114604.118030-2-selvakumar.kalimuthu@in.bosch.com>
- <9c791cf0-1853-415f-a037-0578d6573e45@acm.org>
- <VE1PR10MB39363AD29DCDDD5CAFD3B6FAB4A12@VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM>
- <PH7PR16MB61962ECD8A529648422CFC82E5A02@PH7PR16MB6196.namprd16.prod.outlook.com>
-In-Reply-To:
- <PH7PR16MB61962ECD8A529648422CFC82E5A02@PH7PR16MB6196.namprd16.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=in.bosch.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: VE1PR10MB3936:EE_|GV1PR10MB8419:EE_
-x-ms-office365-filtering-correlation-id: 172ad096-0371-4879-b4a6-08dd6de2839d
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|376014|1800799024|13003099007|38070700018;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?63I4uOXBke14qR4kNM6mcdNptu0gYCtwoN32XoIYD0T/B65XVXARxbKbbp?=
- =?iso-8859-1?Q?us8cAMCYsErlO8lxR7iMBA2o7I0Zh2nhg8bkb/ByUJQ3kJhkBA8zSlq6y5?=
- =?iso-8859-1?Q?JBqcjKTgV7k9IhuUmyRtuUrdLXUzWO4vuUIpV4o7b50tJFY2Oqj1PdKGYb?=
- =?iso-8859-1?Q?vEQQnt3AoTPqS+rizrywvE0KUla8TVHkKZ9aOOOU3hu31Z9bLSjzcZDHF7?=
- =?iso-8859-1?Q?j5a+kenk5uaKdbXebQIFo/kkDCzF8oIBTEJ+PPFd7XATtEd17XWrqONmjO?=
- =?iso-8859-1?Q?x7hyWIV0IAlQsHWIblvMUqJuyAQsA4hfK9ciSlM2XUK4O2kwtPOuNxXAxC?=
- =?iso-8859-1?Q?xbBCZ9cdOuxJCl6Jm4yYvh3hKOq3Lj++woEYwJu8yKKhXT4HlwDwzE4sSC?=
- =?iso-8859-1?Q?1YlnD8v3LgLDAbg4VmxE9L35WtVum3d4BGTMVHBhG6RfXbVW0NBWv7SG1o?=
- =?iso-8859-1?Q?28jpY79FIGxiTA3pHHQPUnHS6MYs7sy7cvLHGsrusXGpRgId64xxOPb8vF?=
- =?iso-8859-1?Q?IW4MO4pRtVcHzIPGwtiJ/DfUINxyeWvfuiHlaME5rTEG94FZvsyWMYEj2h?=
- =?iso-8859-1?Q?K+bOm7itNnF2ZCcOXUUyHTEMDu3zfUbxfZ5dsus7VNwlGoMOspSHwW2Rql?=
- =?iso-8859-1?Q?HVtH3xDb3kJE3iH2a7Xnxf7daLHG7NYYbTq9O94sAPC8GovqnX3+LLpcWr?=
- =?iso-8859-1?Q?HO7h/0KwJRhP2zvGHdsL8pKpGRFaqkjUQ3zzqFXQrl7rqQ1AwOJ7Pv91n8?=
- =?iso-8859-1?Q?5A1IUzhsO5q6a9zwPSixyGByVxyvtB4erJyhRjEl2hEumJFuscHykTai9J?=
- =?iso-8859-1?Q?viPlR6398QpPxmvmVKkY+JEya/vypOOnIbnYirAs4eKU9O12+Z7Fi3VHCr?=
- =?iso-8859-1?Q?QpEOz8Dk64t2HxCyTm365WJ2zWpZseaEyA9DbOAbJlBN3NdgDewGAx/1ZA?=
- =?iso-8859-1?Q?+rZECVtItis2/g2WsNh+wiVjZ/HcwHZBp4Jdwq6n1xYe3w/s+kjSYKVrf9?=
- =?iso-8859-1?Q?DILAr49LFRzLMokHMxk/39p3qCS16lv0G7pPjBsIP5B+zLa0Q+h74q3Szq?=
- =?iso-8859-1?Q?pCuI2M7HRit6u5PPIL8NCZKJOEf+BI5CHTuZF6WQdnUVpyr//LdO20eEK9?=
- =?iso-8859-1?Q?vRlPqPg2rBrHVX2QuhYcuNC3AIkL2i2vRzcScXKGX7k8HbfcoOW5i/Uko2?=
- =?iso-8859-1?Q?I0BOYuuXBHBtRWMyF1H+NbQbhGyr5xuf7NB5ORhL/6DJabmFLtftm/KSDS?=
- =?iso-8859-1?Q?Q5l8oox0VJhlk6WHCbcMU5jzpppkAae1iCX78MniUsM7dLffqKeyb8mGVS?=
- =?iso-8859-1?Q?Qdm0E66Rz6I29C3Pmst30QQ4FecaC5QtIqLAwKh3dGrZxhkeikfSxe/SLu?=
- =?iso-8859-1?Q?mt1++AgGwok0PS44QsCcoXKpM1X24YEJ8qtiDglncwUIGk3rkDN9mycU7E?=
- =?iso-8859-1?Q?MM30XgVmsOkvw/KV81kh7ZmcupePijXApoeBnw=3D=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(13003099007)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?QxVTQqTKgPcXbrNqyhXlaaNDjAhpfERx6ieVTI7V+TLPscU/5H35UHFYEO?=
- =?iso-8859-1?Q?mCYL9u3XlXEFoTTzV0DOMKkWOo8ewbqrDQ/kCd+L2Rw7hGg//BZUSTCgq2?=
- =?iso-8859-1?Q?iGZ4nGgStdcDjkliqJXDf+aQanBEWfKIPVXGgbOW5fEfpYlT7mRKDQ8zpk?=
- =?iso-8859-1?Q?ilwvJid6f1Goeaik8EVab6+urAWFrVjVKajAlZlD8oxLT2AZ4rav3a1ZWT?=
- =?iso-8859-1?Q?vXlufsTtweh6yC/1h885L2/4sd3x3MpI1OYm4yI+DnSL3JOyQ6482vJ7VQ?=
- =?iso-8859-1?Q?JLcY6k0jr6aHi/PUIYK+AmVYEBnb21wvIMa30DWlWsmf/uCqlXNEB8FxNi?=
- =?iso-8859-1?Q?rqxJLJyplfgeul9jMQz9FKuY8SUq0vwbSx3vq6KodkebjEfwcUaL1A+mEC?=
- =?iso-8859-1?Q?tlo9MjFyMhv365rjJZ4CaOxPB7hw9xHW6kFL46VhvtmEKvCgMNp2C9Z1ED?=
- =?iso-8859-1?Q?cB2Do+p1BNkxdq9yDGer9WsB75TNx/P6Muzj/G+keGDXGzipI+cWVXp+Y2?=
- =?iso-8859-1?Q?Q4kqQ/+EX/NaraboOUPWhiq4ohGrFCep9PNCpIXjYOwG2kzzCIx0DdPTRh?=
- =?iso-8859-1?Q?warqhSBy/owdBiZuDi3PK8EoYeCbN5rmeOglFKZDI9CZ3wfezfdfv94MuH?=
- =?iso-8859-1?Q?nWSq8qV67r0n/syNKB+Bbj0FhNXIzVznHUpc48oNbWOCzTDa5344iFmZkn?=
- =?iso-8859-1?Q?OO1/zwCcoPzscjkxb0qfqc1l+fhV5AMqUmQ84Ps4PX4/Fkb3E0+2z3qDDX?=
- =?iso-8859-1?Q?O+VvX3qmTbsfSqoq+ACwHrTneHnbLGFVrAIFgkXEBcEJ1hAXbzhdL7dOZG?=
- =?iso-8859-1?Q?0hIeERgka4cvekXgTMbaWCHZqsJOtpntzheIdj6UHssV94RMRCNXFoeUwY?=
- =?iso-8859-1?Q?rjiNx0vINyScy1+h5kuuSYFD0rAqaW75UWPdCApDoVuEQfMSXzC1kC/EdQ?=
- =?iso-8859-1?Q?D3icFXk565X/oiUn2scWW2xeFBUlWqP9uBLrXOrgXi5S03o3CL/7D4Ju8U?=
- =?iso-8859-1?Q?xkuB/gEJ+mhpLTgtmjPTrCJ0TXjSJcAoPgvYBmZY1xOQrc1NtFpC4Ry7K2?=
- =?iso-8859-1?Q?QlfiChdIf2umnqAEdyvTnsqiY0UdRAV0c1Sjha+cgR1KViQgH7Bf4ozssT?=
- =?iso-8859-1?Q?M1GB/NraWWBMIqyHDSunNTn+KnREMHHCFlsiM0k8CFibKT+1cUc+aM7acN?=
- =?iso-8859-1?Q?seqfouuvV+aWH2Nd7EABSY4tEu2lOhA//LezX0j52pf6dQ+kyfQERPVF5t?=
- =?iso-8859-1?Q?TYgCelzAbvkNYze6FnbvroBlJzM9V66atuSz5AfdGoV/w34lOXbbfp5LX9?=
- =?iso-8859-1?Q?P/3yneJjkEvzHqsxa/2vV7NOeVzYar9WZMyG8BU3CUOeU4wtYwMNGGPpmK?=
- =?iso-8859-1?Q?R2fu6K1P/DdEvh+LRi0M8LQ42wZ0KC5AQ0QthoKLqkVbBmlGlbY6XflHne?=
- =?iso-8859-1?Q?dm5/rILs9yEOKL8lbWks9qQRFy9qwyIl9F4+C9k704HTuywarj96g6vOO3?=
- =?iso-8859-1?Q?QZGLiFQPLUrXi15n3MvuaRaXe9RlHmrUOgpAZw1XQKyHSXQqiBTunXSJmh?=
- =?iso-8859-1?Q?kXkNIKq5StvftX5p9lUjMI+JsjlW80AHeCw18gt8269zQl25YyWn8DULI1?=
- =?iso-8859-1?Q?ZtSaeJWMdooR0=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="3J/oMR+p";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="swosjZEx"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1743161237;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:  in-reply-to:in-reply-to;
+	bh=UCv2LYhy+qHjJvbQ43Z92CZSDEUuxtS324OMj+L46D4=;
+	b=3J/oMR+pa/YX7X2Qz3PNt44PyVWqbK5lWB9HfpmmTLuLocDtMccTGw1ZnuxEgNrhTwktHI
+	P1JA0pr0SbVtxtnJMdC6+HmjjFAVjKsrNbKXwMG6HydCUeXQ64+dhacJW1RgkOBY6AvRmL
+	VzSo54F/BOigHn8Zu5It1jtb9R58IXaYn1G5T7TG4vIW1ier5coOgl4Y5Kqn8S9tKlBadb
+	EYHH9r8EUJ/xK48DdbJoHa4/MLma2+/wfcQDsqwLwVSDZhauboQ5szRwktE/QQ3ZocMCu2
+	ASJ7XwtEopb42Hq2aNRfIIm4ZwAuzQ2o8lLlJ6TTaqd1xUlt7dJ5tzTfpT22qw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1743161237;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:  in-reply-to:in-reply-to;
+	bh=UCv2LYhy+qHjJvbQ43Z92CZSDEUuxtS324OMj+L46D4=;
+	b=swosjZExrNPYITaGElmQZNNGiyJ01CKqxxnGbV8/w6rYwyx4VSUJNpCxE5UpXpgHYxcDnE
+	mn+asDlrPU7lkACQ==
+To: Wen Xiong <wenxiong@linux.ibm.com>
+Cc: linux-kernel@vger.kernel.org, gjoyce@linux.ibm.com,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/1] genirq/msi: Dynamic remove/add stroage adapter hits
+ EEH
+In-Reply-To: <8383b17f160bb75dd6ca6b47cd1a0d32@linux.ibm.com>
+Date: Fri, 28 Mar 2025 12:27:16 +0100
+Message-ID: <87wmc9wg2z.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: in.bosch.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: VE1PR10MB3936.EURPRD10.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 172ad096-0371-4879-b4a6-08dd6de2839d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Mar 2025 10:22:59.4516
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 0ae51e19-07c8-4e4b-bb6d-648ee58410f4
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: arJpo9f5mWIvMbYRn7mS2P/jLT1ohmJZ2pM/Aw52NKkSSTOajcJWhDA0O+dVsYKzKDq6YTK7DTqnTnGtRHKuxA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR10MB8419
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Avri,
+On Thu, Mar 27 2025 at 16:36, Wen Xiong wrote:
+> When secondary adapter doing a reset, we use the same code path as=20
+> removing operation. We can=E2=80=99t free irqs for Secondary adapter sinc=
+e=20
+> kernel has assigned the irqs for Secondary adapter.
+>
+> Actually we discussed about "calling pci_free_irq_vectors()" before=20
+> doing bist reset when we trying to fix in device driver.
+> That might cause other problems. It is also not what a user would=20
+> expect. For example, if they disabled irq balance and manually setup irq=
+=20
+> binding and affinity, if we go and free and reallocate the interrupts=20
+> across a reset, this would wipe out those changes, which would not be=20
+> expected.
 
-Thank you for your insights.
+You are completely missing the point. This is not a problem restricted
+to PCI/MSI interrupts.
 
-We understand that vendor-specific query commands can be sent using the ufs=
--bsg module. However, there are a couple of challenges:
+You have interrupts, work, queues and whatever in fully operational
+state. Then you tell the firmware to reset the adapter and swap the
+secondary adapter in. This reset operation brings the hardware temporary
+into an undefined state as you have observed. How is any part of the
+kernel, which can access and operate on this adapter, supposed to deal
+with that correctly?=20
 
-* Some vendor-specific commands use unique msgcode values that may not be h=
-andled efficiently through the existing ufs-bsg framework.
-* In the Android system, access to ufs-bsg is restricted, and not all proce=
-sses can communicate with it, making it difficult to use for vendor-specifi=
-c extensions.
+You are now focussing solely on papering over the symptom in PCI/MSI
+because that's where you actually observed the fallout.
 
-Given these constraints, exporting ufshcd_exec_raw_upiu_cmd provides a more=
- flexible solution for vendor modules to execute necessary commands without=
- modifying the mainline kernel.
+But as you know curing the symptom is not fixing anything because the
+underlying root cause still persists and will roar its ugly head at some
+other place sooner than later.
 
-Looking forward to your thoughts.
+So no, instead of sprinkling horrible band-aids all over the place, you
+have to sit down and think about a properly orchestrated mechanism for
+this failover scenario.
 
-Mit freundlichen Gr=FC=DFen / Best regards
+I understand that you want to preserve the state of the secondary
+adapter including interrupt numbers and related settings, but for that
+you have to properly freeze _all_ related kernel resources first, then
+let the firmware do the swap and once that's complete unfreeze
+everything again.
 
- Selvakumar Kalimuthu
+That will need support in other subsystems, like the interrupt layer,
+but that needs to be properly designed and integrated so that it works
+with all possible PCI/MSI backend implementations and under all
+circumstances. Setting affinity is not the only way to make this go
+wrong, there are other operations which access the underlying hardware
+and config space. You just haven't triggered them yet, but they exist.
 
-responsible for Platform 1 projects (MS/ECF1-XC)
-Robert Bosch GmbH | Postfach 10 60 50 | 70049 Stuttgart | GERMANY | www.bos=
-ch.com
-Fax +91 422 667-1208 | Selvakumar.Kalimuthu@in.bosch.com
+And it's not a problem restricted to the pSeries MSI backend
+implementation either. That's just one way to expose it.
 
-Registered Office: Stuttgart, Registration Court: Amtsgericht Stuttgart, HR=
-B 14000;
-Chairman of the Supervisory Board: Prof. Dr. Stefan Asenkerschbaumer;=20
-Managing Directors: Dr. Stefan Hartung, Dr. Christian Fischer, Dr. Markus F=
-orschner,=20
-Stefan Grosch, Dr. Markus Heyn, Dr. Frank Meyer, Katja von Raven, Dr. Tanja=
- R=FCckert
+Even if I put the secondary swap problem aside and just look at a single
+instance, __ipr_remove() is already broken in itself. As I pointed out
+to you before:
 
------Original Message-----
-From: Avri Altman <Avri.Altman@sandisk.com>=20
-Sent: Friday, March 28, 2025 12:36 PM
-To: Selvakumar Kalimuthu (MS/ECC-CF3-XC) <selvakumar.kalimuthu@in.bosch.com=
->; Bart Van Assche <bvanassche@acm.org>; Alim Akhtar <alim.akhtar@samsung.c=
-om>; Avri Altman <avri.altman@wdc.com>; James E.J. Bottomley <jejb@linux.ib=
-m.com>; Martin K. Petersen <martin.petersen@oracle.com>; Peter Wang <peter.=
-wang@mediatek.com>; Manjunatha Madana <quic_c_mamanj@quicinc.com>
-Cc: Antony A (MS/ECC-CF-EP2-XC) <Antony.Ambrose@in.bosch.com>; linux-scsi@v=
-ger.kernel.org
-Subject: RE: [PATCH v1 1/1] ufs: core: Export interface for sending raw UPI=
-U commands
+    __ipr_remove()
+      ipr_initiate_ioa_bringdown()=20
+	// resets device -> undefined state
+	restore_config_space()
+      ....
+      ipr_free_all_resources()
+	free_irqs()
 
-> Hi Bart,
->=20
-> Thanks for your feedback.
->=20
-> The caller for this exported function resides in an=20
-> OEM/vendor-specific module, which is not part of the standard Linux=20
-> kernel. The intent of this patch is to provide an interface that=20
-> allows vendors to send raw UPIU commands from their external modules=20
-> to retrieve device-specific information or execute proprietary commands.
-The ufs spec defines a wide range of vendor specific query commands: 0x40-0=
-x7F, and 0xC0-0xFF.
-For those you can use the current caller, e.g. ufs-bsg module?
+Up to the point where interrupts are freed, they are fully operational
+and exposed to user space. The related functionality can hit the
+undefined state not only via set_affinity() independent of the swap
+problem.
+
+The adapter swap is just a worse variant of the above because it affects
+the secondary side behind its back.
+
+This needs quite some work to resolve properly, but that's the only way
+to fix it once and forever. Proliferating the 'Plug and Pray' approach
+with a lot of handwaving is just helping you to close your ticket, but
+it's not a solution.
 
 Thanks,
-Avri
 
-> Since vendor modules cannot modify the UFS core driver directly,=20
-> exporting ufshcd_exec_raw_upiu_cmd is necessary to enable controlled=20
-> access without modifying the mainline kernel further.
->=20
-> Would you prefer that we also provide an example of a vendor module=20
-> using this export, even though it won't be part of the upstream=20
-> kernel? Or is there a preferred approach to enable vendor-specific=20
-> extensions without modifying the standard kernel UFS driver?
->=20
-> Looking forward to your guidance.
->=20
-> Mit freundlichen Gr=FC=DFen / Best regards
->=20
-> Selvakumar  Kalimuthu
->=20
-> responsible for Platform 1 projects (MS/ECF1-XC) Robert Bosch GmbH |=20
-> Postfach 10 60 50 | 70049 Stuttgart | GERMANY | www.bosch.com Fax +91
-> 422 667-1208 | Selvakumar.Kalimuthu@in.bosch.com
->=20
-> Registered Office: Stuttgart, Registration Court: Amtsgericht=20
-> Stuttgart, HRB 14000; Chairman of the Supervisory Board: Prof. Dr.=20
-> Stefan Asenkerschbaumer; Managing Directors: Dr. Stefan Hartung, Dr.=20
-> Christian Fischer, Dr. Markus Forschner, Stefan Grosch, Dr. Markus=20
-> Heyn, Dr. Frank Meyer, Katja von Raven, Dr. Tanja R=FCckert
->=20
-> -----Original Message-----
-> From: Bart Van Assche <bvanassche@acm.org>
-> Sent: Thursday, March 27, 2025 5:28 PM
-> To: Selvakumar Kalimuthu (MS/ECC-CF3-XC)=20
-> <selvakumar.kalimuthu@in.bosch.com>; Alim Akhtar=20
-> <alim.akhtar@samsung.com>; Avri Altman <avri.altman@wdc.com>; James=20
-> E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen=20
-> <martin.petersen@oracle.com>; Peter Wang <peter.wang@mediatek.com>;=20
-> Manjunatha Madana <quic_c_mamanj@quicinc.com>
-> Cc: Antony A (MS/ECC-CF-EP2-XC) <Antony.Ambrose@in.bosch.com>; linux-=20
-> scsi@vger.kernel.org
-> Subject: Re: [PATCH v1 1/1] ufs: core: Export interface for sending=20
-> raw UPIU commands
->=20
-> On 3/27/25 7:46 AM, Selvakumar Kalimuthu wrote:
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c=20
-> > index 78b57e946cdf..226cc90c74b0 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -7360,6 +7360,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba=20
-> > *hba,
-> >
-> >   	return err;
-> >   }
-> > +EXPORT_SYMBOL_GPL(ufshcd_exec_raw_upiu_cmd);
->=20
-> As I already mentioned off-list, please do not export functions=20
-> without adding a caller that needs the export.
->=20
-> Thanks,
->=20
-> Bart.
+        tglx
