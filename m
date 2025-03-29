@@ -1,25 +1,25 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E3C7487BE;
-	Sat, 29 Mar 2025 07:32:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0711155393;
+	Sat, 29 Mar 2025 07:32:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743233564; cv=none; b=ulBQ3JRdPCpmi33fQrLeflHSOnzkiXKkCsVhIWWosNnStyQYql2QWJLfQuNmTz6uOZvvhvC3QC0TAPoeHe6p3d5knWnogclBi3iKJzFs5C1DsHUp0eecB3EdNvdVIgMplGaK0zjtO1TKG70XoYQjE4IkQCDDufmcmCmjoHvf5vw=
+	t=1743233565; cv=none; b=rLhxkndE4SmqB4WzkPiqjDtM7fmdgMhbKMEobmFk6gP82pVBuhRjusemYgI0UXSzk3NBam8KhnqjrP/0SUtcUp1lx6oUwK+virwl5WXoIWaenmv1jxItkNrGx5ZPtbYoo1mGasU+ewm559gGkNOCPASLx+oM+cCmmOR0fJDV7EM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743233564; c=relaxed/simple;
-	bh=BhZftnQ1wswi/4j8ZPgQfJ4TchpivtJRWgTHyO3MqPc=;
+	s=arc-20240116; t=1743233565; c=relaxed/simple;
+	bh=TJL2OAfEs+5rh709hDuiPVirBaK5VdFEHVaEO/ozbXs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RbiXyS3UU+qSgz4+PydZ6xT6NNMM4elbwKezbyJDmJrB0tqzq9KdwKNv1u0MJzFFZy1bIj+iw0Q2gtpQB/AXS0Yp1MKRZAMue5TREoSoUVAlqqpNjc0A8SblgmID6wk6KeVCtNvq+LknEIGrnb9SoTRcmB8ufKixca9IkF8cFpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+	 MIME-Version:Content-Type; b=aShWHDjwtKGEq0Lj6UyP6Jkc9Ibu+qqSzfP0zPQ4Xg13A42EIzJ7mtUSTh4BegHYu0N/kkJ2on9Al1So+qgYiulB+nKs7WpjSz92PrnwVS1Sfu14sDmzBGEDQj1Qh1O+1747legHDoasNhkiywLkYtTggAmLLpMwyQ/NkxIH1KA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4ZPptQ2ZcYzHrF0;
-	Sat, 29 Mar 2025 15:29:18 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4ZPpt35YVMzCsJ9;
+	Sat, 29 Mar 2025 15:28:59 +0800 (CST)
 Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id DA2E614033B;
-	Sat, 29 Mar 2025 15:32:36 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 0CAE31800B1;
+	Sat, 29 Mar 2025 15:32:40 +0800 (CST)
 Received: from localhost.huawei.com (10.50.165.33) by
  dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -29,9 +29,9 @@ To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linuxarm@huawei.com>, <liyihang9@huawei.com>, <liuyonglong@huawei.com>,
 	<prime.zeng@hisilicon.com>
-Subject: [PATCH 1/5] scsi: hisi_sas: Add host_tagset_enable module param for v3 hw
-Date: Sat, 29 Mar 2025 15:32:32 +0800
-Message-ID: <20250329073236.2300582-2-liyihang9@huawei.com>
+Subject: [PATCH 3/5] scsi: hisi_sas: Code style cleanup
+Date: Sat, 29 Mar 2025 15:32:34 +0800
+Message-ID: <20250329073236.2300582-4-liyihang9@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20250329073236.2300582-1-liyihang9@huawei.com>
 References: <20250329073236.2300582-1-liyihang9@huawei.com>
@@ -46,142 +46,208 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  dggpemf100013.china.huawei.com (7.185.36.179)
 
-From: Xingui Yang <yangxingui@huawei.com>
+Here are some useless blank lines and symbols, remove them and add spaces
+around operators.
 
-After driver exposes all HW queues and application submits IO to multiple
-queues in parallel, if NCQ and non-NCQ commands are mixed to sata disk,
-ata_qc_defer() causes non-NCQ commands to be requeued and possibly repeated
-forever. Add host_tagset_enable module parameter to expose multiple queues
-for v3 hw.
-
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 Signed-off-by: Yihang Li <liyihang9@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 10 +++++----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 30 ++++++++++++++++++++++++--
- 3 files changed, 35 insertions(+), 6 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  8 ++++----
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 11 +++--------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  6 +++---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 15 ++++++---------
+ 5 files changed, 17 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index e17f5d8226bf..f93eefe68ccb 100644
+index 0f1bc6445aca..ace97934d563 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -456,6 +456,7 @@ struct hisi_hba {
- 	u32 intr_coal_count;	/* Interrupt count to coalesce */
+@@ -358,7 +358,7 @@ struct hisi_sas_hw {
+ 	const struct scsi_host_template *sht;
+ };
+ 
+-#define HISI_SAS_MAX_DEBUGFS_DUMP (50)
++#define HISI_SAS_MAX_DEBUGFS_DUMP 50
+ #define HISI_SAS_DEFAULT_DEBUGFS_DUMP 1
+ 
+ struct hisi_sas_debugfs_cq {
+@@ -459,12 +459,12 @@ struct hisi_hba {
+ 	dma_addr_t sata_breakpoint_dma;
+ 	struct hisi_sas_slot	*slot_info;
+ 	unsigned long flags;
+-	const struct hisi_sas_hw *hw;	/* Low level hw interface */
++	const struct hisi_sas_hw *hw; /* Low level hw interface */
+ 	unsigned long sata_dev_bitmap[BITS_TO_LONGS(HISI_SAS_MAX_DEVICES)];
+ 	struct work_struct rst_work;
+ 	u32 phy_state;
+-	u32 intr_coal_ticks;	/* Time of interrupt coalesce in us */
+-	u32 intr_coal_count;	/* Interrupt count to coalesce */
++	u32 intr_coal_ticks; /* Time of interrupt coalesce in us */
++	u32 intr_coal_count; /* Interrupt count to coalesce */
  
  	int cq_nvecs;
-+	unsigned int *reply_map;
- 
- 	/* bist */
- 	enum sas_linkrate debugfs_bist_linkrate;
+ 	unsigned int *reply_map;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 7a484ad0f9ab..3d2e8ec7f110 100644
+index 9f36037ed1cb..9e6ee32aa56e 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -489,11 +489,12 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	struct asd_sas_port *sas_port = device->port;
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	bool internal_abort = sas_is_internal_abort(task);
-+	struct request *rq = sas_task_find_rq(task);
- 	struct hisi_sas_dq *dq = NULL;
- 	struct hisi_sas_port *port;
- 	struct hisi_hba *hisi_hba;
- 	struct hisi_sas_slot *slot;
--	struct request *rq = NULL;
-+	unsigned int dq_index;
- 	struct device *dev;
- 	int rc;
- 
-@@ -548,9 +549,10 @@ static int hisi_sas_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 				return -ECOMM;
+@@ -124,12 +124,10 @@ u8 hisi_sas_get_ata_protocol(struct sas_task *task)
  		}
  
--		rq = sas_task_find_rq(task);
--		if (rq) {
--			unsigned int dq_index;
-+		if (hisi_hba->reply_map) {
-+			dq_index = hisi_hba->reply_map[raw_smp_processor_id()];
-+			dq = &hisi_hba->dq[dq_index];
-+		} else if (rq) {
- 			u32 blk_tag;
+ 	default:
+-	{
+ 		if (direction == DMA_NONE)
+ 			return HISI_SAS_SATA_PROTOCOL_NONDATA;
+ 		return hisi_sas_get_ata_protocol_from_tf(qc);
+ 	}
+-	}
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_get_ata_protocol);
  
- 			blk_tag = blk_mq_unique_tag(rq);
+@@ -141,7 +139,7 @@ void hisi_sas_sata_done(struct sas_task *task,
+ 	struct hisi_sas_status_buffer *status_buf =
+ 			hisi_sas_status_buf_addr_mem(slot);
+ 	u8 *iu = &status_buf->iu[0];
+-	struct dev_to_host_fis *d2h =  (struct dev_to_host_fis *)iu;
++	struct dev_to_host_fis *d2h = (struct dev_to_host_fis *)iu;
+ 
+ 	resp->frame_len = sizeof(struct dev_to_host_fis);
+ 	memcpy(&resp->ending_fis[0], d2h, sizeof(struct dev_to_host_fis));
+@@ -1948,12 +1946,9 @@ static int hisi_sas_lu_reset(struct domain_device *device, u8 *lun)
+ 	hisi_sas_dereg_device(hisi_hba, device);
+ 
+ 	if (dev_is_sata(device)) {
+-		struct sas_phy *phy;
+-
+-		phy = sas_get_local_phy(device);
++		struct sas_phy *phy = sas_get_local_phy(device);
+ 
+ 		rc = sas_phy_reset(phy, true);
+-
+ 		if (rc == 0)
+ 			hisi_sas_release_task(hisi_hba, device);
+ 		sas_put_local_phy(phy);
+@@ -2137,7 +2132,7 @@ void hisi_sas_phy_down(struct hisi_hba *hisi_hba, int phy_no, int rdy,
+ 		hisi_sas_bytes_dmaed(hisi_hba, phy_no, gfp_flags);
+ 		hisi_sas_port_notify_formed(sas_phy);
+ 	} else {
+-		struct hisi_sas_port *port  = phy->port;
++		struct hisi_sas_port *port = phy->port;
+ 
+ 		if (test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags) ||
+ 		    phy->in_reset) {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 6621d633b2cc..6d97339371fb 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1759,7 +1759,7 @@ static const struct scsi_host_template sht_v1_hw = {
+ 	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
+ 	.sdev_init		= hisi_sas_sdev_init,
+ 	.shost_groups		= host_v1_hw_groups,
+-	.host_reset             = hisi_sas_host_reset,
++	.host_reset		= hisi_sas_host_reset,
+ };
+ 
+ static const struct hisi_sas_hw hisi_sas_v1_hw = {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index be2c0b628595..bdd28ce45cd8 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -2771,7 +2771,7 @@ static irqreturn_t int_phy_updown_v2_hw(int irq_no, void *p)
+ 	irq_msk = (hisi_sas_read32(hisi_hba, HGC_INVLD_DQE_INFO)
+ 		   >> HGC_INVLD_DQE_INFO_FB_CH0_OFF) & 0x1ff;
+ 	while (irq_msk) {
+-		if (irq_msk  & 1) {
++		if (irq_msk & 1) {
+ 			u32 reg_value = hisi_sas_phy_read32(hisi_hba, phy_no,
+ 					    CHL_INT0);
+ 
+@@ -3111,7 +3111,7 @@ static irqreturn_t fatal_axi_int_v2_hw(int irq_no, void *p)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static irqreturn_t  cq_thread_v2_hw(int irq_no, void *p)
++static irqreturn_t cq_thread_v2_hw(int irq_no, void *p)
+ {
+ 	struct hisi_sas_cq *cq = p;
+ 	struct hisi_hba *hisi_hba = cq->hisi_hba;
+@@ -3499,7 +3499,7 @@ static int write_gpio_v2_hw(struct hisi_hba *hisi_hba, u8 reg_type,
+ 			 * numbered drive in the fourth byte.
+ 			 * See SFF-8485 Rev. 0.7 Table 24.
+ 			 */
+-			void __iomem  *reg_addr = hisi_hba->sgpio_regs +
++			void __iomem *reg_addr = hisi_hba->sgpio_regs +
+ 					reg_index * 4 + phy_no;
+ 			int data_idx = phy_no + 3 - (phy_no % 4) * 2;
+ 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 6a0656f3b596..a1f0a59a8c8d 100644
+index e739b09aea9a..c3cbeb556440 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -561,7 +561,12 @@ MODULE_PARM_DESC(prot_mask, " host protection capabilities mask, def=0x0 ");
- /* the index of iopoll queues are bigger than interrupt queues' */
- static int experimental_iopoll_q_cnt;
- module_param(experimental_iopoll_q_cnt, int, 0444);
--MODULE_PARM_DESC(experimental_iopoll_q_cnt, "number of queues to be used as poll mode, def=0");
-+MODULE_PARM_DESC(experimental_iopoll_q_cnt, "number of queues to be used as poll mode, def=0 &\n\t\t"
-+		"this parameter is effective only if host_tagset_enable=1");
-+
-+static bool host_tagset_enable = true;
-+module_param(host_tagset_enable, bool, 0444);
-+MODULE_PARM_DESC(host_tagset_enable, "shared host tagset enable (0-1), def=1");
+@@ -1351,8 +1351,8 @@ static void prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
+ 	/* map itct entry */
+ 	dw1 |= sas_dev->device_id << CMD_HDR_DEV_ID_OFF;
  
- static int debugfs_snapshot_regs_v3_hw(struct hisi_hba *hisi_hba);
+-	dw2 = (((sizeof(struct ssp_command_iu) + sizeof(struct ssp_frame_hdr)
+-	      + 3) / BYTE_TO_DW) << CMD_HDR_CFL_OFF) |
++	dw2 = (((sizeof(struct ssp_command_iu) + sizeof(struct ssp_frame_hdr) +
++	         3) / BYTE_TO_DW) << CMD_HDR_CFL_OFF) |
+ 	      ((HISI_SAS_MAX_SSP_RESP_SZ / BYTE_TO_DW) << CMD_HDR_MRFL_OFF) |
+ 	      (HDR_SG_MOD << CMD_HDR_SG_MOD_OFF);
+ 	hdr->dw2 = cpu_to_le32(dw2);
+@@ -1749,7 +1749,7 @@ static irqreturn_t int_phy_up_down_bcast_v3_hw(int irq_no, void *p)
+ 	irq_msk = hisi_sas_read32(hisi_hba, CHNL_INT_STATUS)
+ 				& 0x11111111;
+ 	while (irq_msk) {
+-		if (irq_msk  & 1) {
++		if (irq_msk & 1) {
+ 			u32 irq_value = hisi_sas_phy_read32(hisi_hba, phy_no,
+ 							    CHL_INT0);
+ 			u32 phy_state = hisi_sas_read32(hisi_hba, PHY_STATE);
+@@ -1972,8 +1972,7 @@ static irqreturn_t int_chnl_int_v3_hw(int irq_no, void *p)
+ 	u32 irq_msk;
+ 	int phy_no = 0;
  
-@@ -2574,6 +2579,18 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+-	irq_msk = hisi_sas_read32(hisi_hba, CHNL_INT_STATUS)
+-		  & CHNL_INT_STS_MSK;
++	irq_msk = hisi_sas_read32(hisi_hba, CHNL_INT_STATUS) & CHNL_INT_STS_MSK;
+ 
+ 	while (irq_msk) {
+ 		if (irq_msk & (CHNL_INT_STS_INT0_MSK << (phy_no * CHNL_WIDTH)))
+@@ -2618,7 +2617,6 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ 	if (vectors < 0)
+ 		return -ENOENT;
+ 
+-
  	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW - hisi_hba->iopoll_q_cnt;
  	shost->nr_hw_queues = hisi_hba->cq_nvecs + hisi_hba->iopoll_q_cnt;
  
-+	if (!host_tagset_enable) {
-+		shost->host_tagset = 0;
-+		shost->nr_hw_queues = 1;
-+		hisi_hba->reply_map = devm_kcalloc(&pdev->dev, nr_cpu_ids,
-+				sizeof(unsigned int),
-+				GFP_KERNEL);
-+		if (!hisi_hba->reply_map) {
-+			hisi_sas_v3_free_vectors(hisi_hba);
-+			return -ENOMEM;
-+		}
-+	}
-+
- 	return devm_add_action(&pdev->dev, hisi_sas_v3_free_vectors, pdev);
- }
+@@ -3325,7 +3323,7 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
+ 		/* some preparations before bist test */
+ 		hisi_sas_bist_test_prep_v3_hw(hisi_hba);
  
-@@ -2615,6 +2632,7 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- 		int nr = hisi_sas_intr_conv ? 16 : 16 + i;
- 		unsigned long irqflags = hisi_sas_intr_conv ? IRQF_SHARED :
- 							      IRQF_ONESHOT;
-+		int cpu;
+-		/* set linkrate of bit test*/
++		/* set linkrate of bit test */
+ 		reg_val = hisi_sas_phy_read32(hisi_hba, phy_no,
+ 					      PROG_PHY_LINK_RATE);
+ 		reg_val &= ~CFG_PROG_OOB_PHY_LINK_RATE_MSK;
+@@ -3426,7 +3424,7 @@ static const struct scsi_host_template sht_v3_hw = {
+ 	.shost_groups		= host_v3_hw_groups,
+ 	.sdev_groups		= sdev_groups_v3_hw,
+ 	.tag_alloc_policy_rr	= true,
+-	.host_reset             = hisi_sas_host_reset,
++	.host_reset		= hisi_sas_host_reset,
+ 	.host_tagset		= 1,
+ 	.mq_poll		= queue_complete_v3_hw,
+ };
+@@ -3679,7 +3677,6 @@ static void debugfs_print_reg_v3_hw(u32 *regs_val, struct seq_file *s,
  
- 		cq->irq_no = pci_irq_vector(pdev, nr);
- 		rc = devm_request_threaded_irq(dev, cq->irq_no,
-@@ -2632,6 +2650,9 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- 			dev_err(dev, "could not get cq%d irq affinity!\n", i);
- 			return -ENOENT;
- 		}
-+		if (!host_tagset_enable)
-+			for_each_cpu(cpu, cq->irq_mask)
-+				hisi_hba->reply_map[cpu] = i;
- 	}
- 
- 	return 0;
-@@ -3318,6 +3339,9 @@ static void hisi_sas_map_queues(struct Scsi_Host *shost)
- 	struct blk_mq_queue_map *qmap;
- 	int i, qoff;
- 
-+	if (shost->nr_hw_queues == 1)
-+		return;
-+
- 	for (i = 0, qoff = 0; i < shost->nr_maps; i++) {
- 		qmap = &shost->tag_set.map[i];
- 		if (i == HCTX_TYPE_DEFAULT) {
-@@ -3435,7 +3459,9 @@ hisi_sas_shost_alloc_pci(struct pci_dev *pdev)
- 	if (check_fw_info_v3_hw(hisi_hba) < 0)
- 		goto err_out;
- 
--	if (experimental_iopoll_q_cnt < 0 ||
-+	if (!host_tagset_enable)
-+		dev_info(dev, "Shared host tag set disabled, iopoll queue cnt uses default 0\n");
-+	else if (experimental_iopoll_q_cnt < 0 ||
- 		experimental_iopoll_q_cnt >= hisi_hba->queue_count)
- 		dev_err(dev, "iopoll queue count %d cannot exceed or equal 16, using default 0\n",
- 			experimental_iopoll_q_cnt);
+ 		name = debugfs_to_reg_name_v3_hw(off, reg->base_off,
+ 						 reg->lu);
+-
+ 		if (name)
+ 			seq_printf(s, "0x%08x 0x%08x %s\n", off,
+ 				   regs_val[i], name);
 -- 
 2.33.0
 
