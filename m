@@ -1,94 +1,110 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E8F20CCD9;
-	Tue,  1 Apr 2025 16:00:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1B923234;
+	Tue,  1 Apr 2025 20:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743523213; cv=none; b=pMz8Js99KwkJYCGh7BkhnrP1FADm6B7LDD/XEzjnOFPgpJPAyYVx0DCWrokhsAuFjpaYUqeSND+rpUlD7RAO86sl6bQShhaW4ZIKPyoLNmBp/Tq/klXOxDcWdAVr5zwxJtcyGcWi7S5AXfDb/BG9e7u07zbhGvozYhWQQ+kJsJ8=
+	t=1743538508; cv=none; b=e/VjJvDCjC6OFIOTQ8QdZDJAS5WxX/aSNM4+9EVIrR3moRlRM4Yj8teMF+pwfad3z6TXWQkhtvcxrrswdxFurLZA4/dGrmCcjL/XjPeYdR8vha4g5lxkkllrru8ovYxFWHxBO4aPsOuIt7tP2xcyPS1691RB1QwVF/CJyul33S8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743523213; c=relaxed/simple;
-	bh=lc6jSF/+ZIEk/mYgKrG6A83DJ0xS4vT6C5P13lbv1R8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fNE0pBQj+ISQafjwdievohRTD7VnC8Vd0GUHsmvwZApbknThcv+7Pn26mzLv2BvwItSFD+OkVCVSnfMnPrt4nA4fgVZ3XSydpJG8E2hERsUCAAw/WoBoylG6i6gvLnDIQHVEFbfUqfEWp82JpcvLNXtHDHccKpbZUAhohika5LA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=D8FypTYp; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1743538508; c=relaxed/simple;
+	bh=Pq01BnmtIB0SRbfwFrvg4kMEEs+bl4tSxJrZiEgI3DM=;
+	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Message-ID:Content-Type; b=XTtyZI4CfVXWVpVJ0+V1CTUjNXZjq4MYEB3Z1qxJQ07rBDQhmvlF2w/GHVdtVnSymwAmz+BVBw2Wrz8iXrfgC1hmFNEPBalDpXmcbpeywWfH5yA3nWAtffwkvlNVflMv9Dt2VQMdqxfLYM3l+SNqtFsJIrh5PvS6Y26So9mhpQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=UoUO6NTH; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="D8FypTYp"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZRt4M6J2Zzm1vc5;
-	Tue,  1 Apr 2025 16:00:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1743523202; x=1746115203; bh=tWRoujeYC9/c2Ji8LnKtFcJY
-	2iV/XlepEshuTed+HgQ=; b=D8FypTYpJfiLLwAPMurg+zgX6qvC8FQk+CI8Y5XT
-	2liRCYdImHPRxtVll7yDtaHqby6gM+AvPFzjM3ywWAlFCK6quFmevEven0tHTmpc
-	6CuGv6Lby9cDFhirV136SHdUfss1IdPHvTagVzt+AQW8mwLuzaoiinU5TC7xdHe4
-	r/FfYivcu5N+EXJGl6QKOIY/iaukFZQglj45INmXPj35J9hTCv0Mupeb7MakjBix
-	7JGRV6pvCamYyVcvAXhwi4ZNm4ho1fH8J0wEZIWLfjN3hdTDZ20miuRaARb9t/M9
-	cKPa7K5crcXwczLDf85Q5o98x3zSN1AuJ/xFsAKM2DLh3w==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id mipLsTmRhWb4; Tue,  1 Apr 2025 16:00:02 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZRt4B0LLSzm0yVQ;
-	Tue,  1 Apr 2025 15:59:52 +0000 (UTC)
-Message-ID: <93e62d17-81df-454f-9e35-7cede36bc162@acm.org>
-Date: Tue, 1 Apr 2025 08:59:51 -0700
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="UoUO6NTH"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 531Gf6wq026021;
+	Tue, 1 Apr 2025 20:14:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=tIGOSl
+	v8z58Q+wkjqybI3RqRtNeKMb+3FoycqEDPy7c=; b=UoUO6NTHWVb5zMc+jEi1wQ
+	Z8sB3FnMIjlbysZHqcOp/Na1Y4R0BUW+Qi4hqi7OWy+T/hxKjTfOej9YUd3iD5X/
+	2jS3X0WTKAsvrFyU8ImmV0rnd9ZUctNCeA3+yCNoZ9K5wxgsuvNvxdBoBvx4NxRM
+	/sJJZLHQWCi58o0qf7GFHkxE/s22agFRlxDD41J/ua3rHgEFLCK8NWmvxvIEss7X
+	vcPbW7u+XA9G5fCftdITrVeKz3vmnGNxVaWLim3xhNo9zS26doUjoxtJbnu+Pgjf
+	4seoX3qiMaGR3dekXaIhVkWZVBLK9+Sbv13yGu9YDkr8MkrXjrIMwhG/lb3C3d3g
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 45r27q608w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 01 Apr 2025 20:14:52 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 531KASgX010272;
+	Tue, 1 Apr 2025 20:14:51 GMT
+Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 45pv6nv9su-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 01 Apr 2025 20:14:51 +0000
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 531KEoeR31457894
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 1 Apr 2025 20:14:51 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A6EBA5805C;
+	Tue,  1 Apr 2025 20:14:50 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1E43858054;
+	Tue,  1 Apr 2025 20:14:50 +0000 (GMT)
+Received: from ltc.linux.ibm.com (unknown [9.5.196.140])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Tue,  1 Apr 2025 20:14:50 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: scsi_transport_srp: replace min/max nesting with
- clamp()
-To: shao.mingyin@zte.com.cn, james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, yang.yang29@zte.com.cn, xu.xin16@zte.com.cn,
- ye.xingchen@zte.com.cn, li.haoran7@zte.com.cn
-References: <202503311555115618U8Md16mKpRYOIy2TOmB6@zte.com.cn>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <202503311555115618U8Md16mKpRYOIy2TOmB6@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Tue, 01 Apr 2025 15:14:49 -0500
+From: Wen Xiong <wenxiong@linux.ibm.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, gjoyce@linux.ibm.com,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/1] genirq/msi: Dynamic remove/add stroage adapter hits
+ EEH
+In-Reply-To: <87wmc9wg2z.ffs@tglx>
+References: <87wmc9wg2z.ffs@tglx>
+Message-ID: <e83622773199665d39db5f724537d9dd@linux.ibm.com>
+X-Sender: wenxiong@linux.ibm.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 97ggxYno2G7sRr-B88pD6kEeaU540Xda
+X-Proofpoint-GUID: 97ggxYno2G7sRr-B88pD6kEeaU540Xda
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-01_08,2025-04-01_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=995
+ impostorscore=0 malwarescore=0 mlxscore=0 lowpriorityscore=0
+ suspectscore=0 clxscore=1015 phishscore=0 bulkscore=0 spamscore=0
+ priorityscore=1501 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2502280000 definitions=main-2504010122
 
-On 3/31/25 12:55 AM, shao.mingyin@zte.com.cn wrote:
-> From: Li Haoran <li.haoran7@zte.com.cn>
-> 
-> This patch replaces min(a, max(b, c)) by clamp(val, lo, hi) in the SRP
-> transport layer. The clamp() macro explicitly expresses the intent of
-> constraining a value within bounds, improving code readability.
-> 
-> Signed-off-by: Li Haoran <li.haoran7@zte.com.cn>
-> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
-> ---
->   drivers/scsi/scsi_transport_srp.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-> index 64f6b22e8cc0..aeb58a9e6b7f 100644
-> --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -388,7 +388,7 @@ static void srp_reconnect_work(struct work_struct *work)
->   			     "reconnect attempt %d failed (%d)\n",
->   			     ++rport->failed_reconnects, res);
->   		delay = rport->reconnect_delay *
-> -			min(100, max(1, rport->failed_reconnects - 10));
-> +			clamp(rport->failed_reconnects - 10, 1, 100);
->   		if (delay > 0)
->   			queue_delayed_work(system_long_wq,
->   					   &rport->reconnect_work, delay * HZ);
+On 2025-03-28 06:27, Thomas Gleixner wrote:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> You are completely missing the point. This is not a problem restricted
+> to PCI/MSI interrupts.
+> 
+Thanks for all suggestions! I will investigate more and check if we can 
+fix it in device driver.
+
+Looks several device drivers in kernel use two kernel APIs to set/clean 
+IRQ_NO_BALACING status for a given irq.
+
+irq_set_status_flags(irq, IRQ_NO_BALANCING);
+irq_clear_status_flags(irq, IRQ_NO_BALANCING);
+
+With these two APIs, device driver can decide if using kernel irq 
+balance or setting irq affinity by driver itself?
+
+So we can set/clear IRQ_NO_BALANCING during reset.
+
+Thanks,
+Wendy
 
