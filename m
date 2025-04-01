@@ -1,108 +1,96 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 602C22E3384;
-	Tue,  1 Apr 2025 01:18:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01599AD2D;
+	Tue,  1 Apr 2025 03:32:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743470330; cv=none; b=Jh55gP7PC/IurP07wz2ZOyjXU7XIkP8vK//OmbQtQ1KhQZo+39huDrkKxOA7uIHp1B2qUzLOxRSkriw8zWF7nCY7DJ05o0kbXu2ggjgfiotxvnLKVLBPijQ+nG6LY/g4jwczQC+ZEg9ss9A+73oOpYAWNoDmjBUcIyA3StyMBro=
+	t=1743478344; cv=none; b=l8sGZRpS7azjPC8/Ff4CNc0F/E0XBzZT2LbgU2L248S8OvdJkiWjmMqZ38G01DeYF8b8e4ewyCvnmZZAr2fJ/gxWHRzjhxEzdhSUYa0ccdOR265BeruS2S/WoIyV7Hm2HaabSr7kSkmIiEJskDVIBNSdwB9vfKlcfrOsRXlFX08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743470330; c=relaxed/simple;
-	bh=mbNr9YD8iEA76ncaVf/NyHRgt9tSCOM7MMjGEKN6/QY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=GZMZDeh7RMhsbqHGX1+kxeN+C/AqAmEz22GAR4+h5aQ0xzl1aAKA7UOjN0DA3dui9Z1DmORGVoLuv8qQ1U6EvW1SdxFjDkQyE9C8AeE7tEcet1wrsteuL+bwoNLGMnMpxN9RBCRubBFSmxOlGH7QBkqS7YYxczwt1XPHkeptSMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+	s=arc-20240116; t=1743478344; c=relaxed/simple;
+	bh=0SpQ7LEAcrFiz5h9E6eJe0iEGUTS9H3xU0FK0F2A5/8=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=s6jJg0/kCnNInn5Qc4ck0lPTh+9Q5OWkJVTf4HJsBq4d5Yr55xSF7X1SBLIWSwVQyVavPN1Jryn7AitJkqavUPvaBjdRgXZ/6Ax0ohBVNtLfhBZHr9DWa6NxSbY00RWEHPPphHJ4tX+PrpDr2N6UZH78z5TLBXDzpx7ChEDHxpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4ZRVTr0X5bztRK9;
-	Tue,  1 Apr 2025 09:17:20 +0800 (CST)
-Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7B1C61800B1;
-	Tue,  1 Apr 2025 09:18:45 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4ZRYMx4wq4z1k0WJ;
+	Tue,  1 Apr 2025 11:27:25 +0800 (CST)
+Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 357CE1A0188;
+	Tue,  1 Apr 2025 11:32:12 +0800 (CST)
+Received: from dggpemf500016.china.huawei.com (7.185.36.197) by
+ dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 1 Apr 2025 09:18:44 +0800
-Message-ID: <11061634-c35f-02fc-ec2d-04f55e9d1e33@huawei.com>
-Date: Tue, 1 Apr 2025 09:18:44 +0800
+ 15.2.1544.11; Tue, 1 Apr 2025 11:32:11 +0800
+Received: from dggpemf500016.china.huawei.com ([7.185.36.197]) by
+ dggpemf500016.china.huawei.com ([7.185.36.197]) with mapi id 15.02.1544.011;
+ Tue, 1 Apr 2025 11:32:11 +0800
+From: Jiangjianjun <jiangjianjun3@huawei.com>
+To: John Garry <john.g.garry@oracle.com>
+CC: "jejb@linux.ibm.com" <jejb@linux.ibm.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, lixiaokeng <lixiaokeng@huawei.com>,
+	"hewenliang (C)" <hewenliang4@huawei.com>, "Yangkunlin(Poincare)"
+	<yangkunlin7@huawei.com>, yangxingui <yangxingui@huawei.com>, "liyihang (C)"
+	<liyihang9@huawei.com>
+Subject: reply: reply: [RFC PATCH v3 00/19] scsi: scsi_error: Introduce new
+ error handle mechanism
+Thread-Topic: reply: reply: [RFC PATCH v3 00/19] scsi: scsi_error: Introduce
+ new error handle mechanism
+Thread-Index: AduithEq+m5LtS6wQaGgJklvwSH4ng==
+Date: Tue, 1 Apr 2025 03:32:11 +0000
+Message-ID: <598173fee9844be9ba19bfed35be2f5c@huawei.com>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH 1/5] scsi: hisi_sas: Add host_tagset_enable module param
- for v3 hw
-Content-Language: en-CA
-To: Niklas Cassel <cassel@kernel.org>
-CC: John Garry <john.g.garry@oracle.com>, Yihang Li <liyihang9@huawei.com>,
-	<martin.petersen@oracle.com>, <James.Bottomley@hansenpartnership.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>,
-	<dlemoal@kernel.org>
-References: <20250329073236.2300582-1-liyihang9@huawei.com>
- <20250329073236.2300582-2-liyihang9@huawei.com>
- <f53505e6-9bfa-4553-91cc-497512a6977f@oracle.com>
- <e5ab4e5a-33d0-6102-1c5c-f1f83a752346@huawei.com> <Z-pVGyZ1vMBhUfYH@ryzen>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <Z-pVGyZ1vMBhUfYH@ryzen>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh500017.china.huawei.com (7.202.181.151) To
- kwepemg100017.china.huawei.com (7.202.181.58)
 
-
-
-On 2025/3/31 16:40, Niklas Cassel wrote:
-> Hello Xingui,
-> 
-> On Sat, Mar 29, 2025 at 05:49:47PM +0800, yangxingui wrote:
->> Hi，John
->>
->> On 2025/3/29 16:50, John Garry wrote:
->>> On 29/03/2025 07:32, Yihang Li wrote:
->>>
->>> +
->>>
->>>> From: Xingui Yang<yangxingui@huawei.com>
->>>>
->>>> After driver exposes all HW queues and application submits IO to multiple
->>>> queues in parallel, if NCQ and non-NCQ commands are mixed to sata disk,
->>>> ata_qc_defer() causes non-NCQ commands to be requeued and possibly
->>>> repeated
->>>> forever.
->>>
->>> I don't think that it is a good idea to mask out bugs with module
->>> parameters.
->>>
->>> Was this the same libata/libsas issue reported some time ago?
->>
->> Yeah，related to this issue: https://lore.kernel.org/linux-block/eef1e927-c9b2-c61d-7f48-92e65d8b0418@huawei.com/
->>
->> And, Niklas tried to help fix this problem:
->> https://lore.kernel.org/linux-scsi/ZynmfyDA9R-lrW71@ryzen/
->>
->> Considering that there is no formal solution yet. And our users rarely use
->> SATA disks and SAS disks together on a single machine. For this reason, they
->> can flexibly turn off the exposure of multiple queues in the scenario of
->> using only SATA disks. In addition, it is also convenient to conduct
->> performance comparison tests to expose multiple hardware queues and single
->> queues.
-> 
-> The solution I sent is not good since it relies on EH.
-> 
-> One would need to come up with a better solution to fix libsas drivers,
-> possibly a workqueue.
-> 
-> I think Damien is planning to add a workqueue submit path to libata,
-> if so, perhaps we could base a better solution on top of that.
-
-Thank you for your solution. As you said, we may need a better solution.
-
-Thanks,
-Xingui
-.
-
+DQpPbiAzMS8wMy8yMDI1IDA0OjEwLCBKaWFuZ2ppYW5qdW4gd3JvdGU6DQo+IFNvcnJ5IGZvciBs
+YXRlIG1lc3NhZ2UhIEknbSB3b3JraW5nIG9uIGZpeGluZyBhbmQgdGVzdGluZyB0aGVzZSBpc3N1
+ZXMgYmVmb3JlIHJlLWVtYWlsaW5nLg0KDQpXaGF0IGFyZSB5b3UgYWN0dWFsbHkgd29ya2luZyBv
+bj8NCg0KSXQgc2VlbXMgdGhhdCBIYW5uZXMnICJzY3NpOiBFSCByZXdvcmssIG1haW4gcGFydCIg
+c2VyaWVzIGFuZCBtYXliZSB0aGlzIG9uZSBjYW4gaGVscCByZXNvbHZlIHRoaXMgZm9sbG93aW5n
+IGlzc3VlOg0KDQpodHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC1ibG9jay9lZWYxZTkyNy1j
+OWIyLWM2MWQtN2Y0OC05MmU2NWQ4YjA0MThAaHVhd2VpLmNvbS8NCg0Kd2l0aCBmaXggYXR0ZW1w
+dGVkIGluOg0KDQpodHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC1pZGUvMjAyNDEwMzExNDA3
+MzEuMjI0NTg5LTQtY2Fzc2VsQGtlcm5lbC5vcmcvDQoNCnNvIHRoYXQgd2UgZG9uJ3Qgc2VlICJm
+aXhlcyIgbGlrZToNCmh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LXNjc2kvMjAyNTAzMjkw
+NzMyMzYuMjMwMDU4Mi0xLWxpeWloYW5nOUBodWF3ZWkuY29tL1QvI204MGJjYjNmNTdmZDE3NmI3
+Y2U0MWIxZjI2ZTg1NjBkZTZhZDUyYzlkDQoNCj4gDQo+IC0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0N
+Cj4g5Y+R5Lu25Lq6OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+DQo+IOWP
+kemAgeaXtumXtDogMjAyNeW5tDPmnIgyMOaXpSAxNDowNg0KPiDmlLbku7bkuro6IEhhbm5lcyBS
+ZWluZWNrZSA8aGFyZUBzdXNlLmRlPg0KPiDmioTpgIE6IEppYW5namlhbmp1biA8amlhbmdqaWFu
+anVuM0BodWF3ZWkuY29tPjsgamVqYkBsaW51eC5pYm0uY29tOyANCj4gbWFydGluLnBldGVyc2Vu
+QG9yYWNsZS5jb207IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyANCj4gbGludXgta2VybmVs
+QHZnZXIua2VybmVsLm9yZzsgbGl4aWFva2VuZyA8bGl4aWFva2VuZ0BodWF3ZWkuY29tPjsgDQo+
+IGhld2VubGlhbmcgKEMpIDxoZXdlbmxpYW5nNEBodWF3ZWkuY29tPjsgWWFuZ2t1bmxpbihQb2lu
+Y2FyZSkgDQo+IDx5YW5na3VubGluN0BodWF3ZWkuY29tPg0KPiDkuLvpopg6IFJlOiBbUkZDIFBB
+VENIIHYzIDAwLzE5XSBzY3NpOiBzY3NpX2Vycm9yOiBJbnRyb2R1Y2UgbmV3IGVycm9yIA0KPiBo
+YW5kbGUgbWVjaGFuaXNtDQo+IA0KPiBPbiBGcmksIE1hciAxNCwgMjAyNSBhdCAxMDowMTo0MEFN
+ICswMTAwLCBIYW5uZXMgUmVpbmVja2Ugd3JvdGU6DQo+PiAzLiBUaGUgY3VycmVudCBFSCBmcmFt
+ZXdvcmsgaXMgZGVzaWduZWQgYXJvdW5kICdzdHJ1Y3Qgc2NzaV9jbW5kJy4NCj4+IFdoaWNoIG1l
+YW5zIHRoYXQgdGhlIGNvbW1hbmQgX2luaXRpYXRpbmdfIHRoZSBlcnJvciBoYW5kbGluZyBjYW4g
+b25seSANCj4+IGJlIHJldHVybmVkIG9uY2UgdGhlIF9lbnRpcmVfIGVycm9yIGhhbmRsaW5nICh3
+aXRoIGFsbA0KPj4gZXNjYWxhdGlvbnMpIGlzIGZpbmlzaGVkLiBBbmQgbW9yZSBvZnRlbiB0aGFu
+IG5vdCwgdGhlIGFwcGxpY2F0aW9uIGlzIA0KPj4gd2FpdGluZyBvbiB0aGF0IGNvbW1hbmQgdG8g
+YmUgY29tcGxldGVkIGJlZm9yZSB0aGUgbmV4dCBJL08gaXMgc2VudC4NCj4+IEFuZCB0aGF0IHJl
+YWxseSBsaW1pdHMgdGhlIGVmZmVjdGl2ZW5lc3Mgb2YgYW55IGltcHJvdmVkIGVycm9yIA0KPj4g
+aGFuZGxlcjsgdGhlIGFwcGxpY2F0aW9uIHVsdGltYXRpdmVseSBoYXMgdG8gd2FpdCBmb3IgYSBo
+b3N0IHJlc2V0IA0KPj4gYmVmb3JlIGl0IGNhbiBjb250aW5lLg0KPiANCj4gQW5kIHNvbWVvbmUg
+bmVlZHMgdG8gZ2V0IHlvdXIgb2xkIHNlcmllcyB0byBmaXggdGhhdCBtZXJnZWQgYmVmb3JlIHdl
+IGV2ZW4gc3RhcnQgdGFsa2luZyBhYm91dCBhbnkgbWFqb3IgRUggY2hhbmdlLg0KPiANCg0KU29y
+cnksIHRoZSBwcmV2aW91cyBlbmdpbmVlciBXZW4gQ2hhbydzIHdvcmsgaGFzIGNoYW5nZWQuIE5v
+dyBJIHdpbGwgY29udGludWUgdG8gY29tcGxldGUgdGhpcyB3b3JrLiBJbiB0aGUgZnV0dXJlLg0K
+SSB3aWxsIGFuYWx5emUgdGhlIGRldGFpbHMgb2YgdGhlIHNvbHV0aW9uLCBpbXByb3ZlIGFuZCBy
+ZWZpbmUgdGhlIGFib3ZlIHN1Z2dlc3Rpb25zLCBhbmQgY2FyZWZ1bGx5IHN1Ym1pdCB0aGUgZW1h
+aWwuDQoNCg==
