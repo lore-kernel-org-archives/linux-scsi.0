@@ -1,110 +1,145 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAF82205ABA;
-	Wed,  2 Apr 2025 17:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE60BA42;
+	Wed,  2 Apr 2025 19:01:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743615804; cv=none; b=Bf7fxA+2qADiu23aKVT2LLr2JpwsgvG1undL7i84aCxF1LMqf4P74gN3zAbI8VQxY2rLnlS2gWhrNrt49ASxFICTr1cUAEAcHF8bCsJwPOkArc0TvDLzidG2/Db2ijJoi/QuvT4fe6yNLDMfVVfau4s5WZ/Vk5jMi7OgbmxUQjg=
+	t=1743620465; cv=none; b=hsXztMSvGTUdceVioBjkPuEEv2o7Yyf2VdpjYuJHl6jx1ZapJ83lA0nPHgx+1f4LFwRf2U6UHY+NWjS7NObuFN5oi3ZB6KcUq2hmLXI7+FOIO0+aFwQzN/6S4JApfCEtdpokR+rHYSYB1CcMIa8v25HyLBIXKuy2UJwdaKP4uvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743615804; c=relaxed/simple;
-	bh=EdEVmmkX+S4GMM0uG7YW19UqaiTt/5KBZ0AUymRBHvo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IPPIecklp6BNWSu9OKf7p5Q9rcnWdi125Vz02FXYvZxcaQiGpIZb3skGcsJWz4LyBnnPFbcV5T4PSItkGApORDsttWHTPZE53qM0JxmjkQ8PcjMj+Oj+xR+wMIS1qnGhfhgzHbgpI675vDerRqDuXhEu5JPgJByK1rW78Gf8aVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RN14Bfu8; arc=none smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1743620465; c=relaxed/simple;
+	bh=iVRswX5P/3WFcdk+pZHZMsYppdWUO4nmDl4ZBIPTkEY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=sXVug5fDlbJjzD5iTL2uQK/djw1tbCbG+SJX/ZZyA1jBwHd8s2A4ErNt62DlIc29BM95JOfz5hJJ6AKlUzJCdLN6Ccl0WCRCveLxn/ehpxBmM7Su0K30DU2szQKGqlJn9M1dg0UgSkD3S/OkmTRyHmcNvFk4biV1zG6pkFBt6wQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=hYhD7pVN; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RN14Bfu8"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-39c1efc4577so49134f8f.0;
-        Wed, 02 Apr 2025 10:43:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743615801; x=1744220601; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=85BXoAka61PsKzqS2du3Xktdbs8BPrJV0lx84vuPwX0=;
-        b=RN14Bfu8q8sCldYFZok/gsGQiybnsymLWZ8xe8bms1OQwUPcUbuWjz3uV8ouhf/f8T
-         hM1MQ5vEXgsba0seob5UsqRKRrP/axdlyyBfkui6gGN7W0GpDQyyGqmoJzA/qmR/vgZV
-         vRuUNgQrkyJs28x4tVN5OOUeGIRFLsxuVjCXv9+sxubrk5NO2/LaF1e8iA3Pwq35UjEM
-         a2sDkkZi76l0R5cGJ+v0HezrQ0TtPpGOGwQsAPDyPgQeeA2YOxFjNGYL6KBfhLS/6Ua1
-         JcSF9Yi62lDgkC8ML6MVBBkfUNyVjO4qigwqN9YqkX1IjlNPpAw5Bi7by7wjIDQRXWeD
-         UBaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743615801; x=1744220601;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=85BXoAka61PsKzqS2du3Xktdbs8BPrJV0lx84vuPwX0=;
-        b=onyaYkabyD+MkheRKOc+ELO0Bh6r1GdE4AOIwXVneBoVkIeCSnMpExyVOxIifQwG2J
-         6+qBcVwxBpOo3mdd0jdgpa4h/f/y1vqoKsFeAD1+guWCHlmwgqTXejSoj1cvpMK1/DoX
-         xv7dPx3uOXQ2P6cgc9VHAUks5GRivKxohT7z7ZjwlgA/qvn0rpJj4Rpn4Ej8jm2tsAXA
-         C/W5CuSADENfZLcCrZnZFAV3NctK3ODSGPqiMDoPGmatbrWMD3J/pCsScxgJJBnKLcKH
-         aMa6JBWLsanHdEUrvJSgPoWqUuKvT3S7DcXGujosLzMNYG1AwbeACgduNmlLLy0U35qK
-         UPVA==
-X-Forwarded-Encrypted: i=1; AJvYcCVYtMLcXhF/xNBuN1jvVgT371aEp84VTGmc7pqAFRj/0XOHqxodDbuvOwFaJkXh9WnHgMw6JXY8RaXpCo9d@vger.kernel.org, AJvYcCWbs+9ZBLrzBXTN/QGiZKUaqTz9I6i0Tt3BHQWuoV2bDQsU8Z0Dy0d2jnFE09YqjXP/BFWF82wefg4HIU4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwP78kANpVavePOwDD3FSf2Xqaw39iWoLTHY7TRJl074VN5F8tc
-	2kTqGSeXnJOB5zT4xFGLKhJR8sV1DsZarOEmNzX0RvYJummLWX+y
-X-Gm-Gg: ASbGncvTwO/doLm20dIW2lEUQ3hgbviQ7K1d9bvyynVMLrZl+lvi+Uh58nnGpKKLlJ8
-	IQn2uNK5lUgnuNvXd4D6mx85NVPF5iaj5WwtppidSaEwYqYEg8+VRW18aeUFku9CauBeN5AiPHD
-	C2bb8mTVaguIigV2Gcg+ZX9FJtjGjyfklfS66NqibuZZkFeR9pNShkZYg70zHHPvtU1ER3/92gE
-	lMdvE7Vnc8QMq0SZ6lglL8jplzzYCMvCrTd77/VeKHxebXzmHgS3vNm1aCq+4x6hWq9yunmQHyL
-	ClxpuHpISCz9orOTIx7yIZ8F45JBicehYIyMGWk6wx67oei6qUY4aZFokqo=
-X-Google-Smtp-Source: AGHT+IG9DUifRlG9+hsS76jvaP6M4UBq35TMncCzYo6w9ipzl12h0GydswQHYbtTi42HbfpSVPpG/Q==
-X-Received: by 2002:a05:6000:4387:b0:394:d0c3:da5e with SMTP id ffacd0b85a97d-39c2366aeaemr6560810f8f.47.1743615800796;
-        Wed, 02 Apr 2025 10:43:20 -0700 (PDT)
-Received: from localhost.localdomain ([78.170.183.130])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39c266c132fsm4819700f8f.13.2025.04.02.10.43.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Apr 2025 10:43:20 -0700 (PDT)
-From: goralbaris <goralbaris@gmail.com>
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linux.dev,
-	goralbaris <goralbaris@gmail.com>
-Subject: [PATCH] change strncpy to strscpy strncpy is now depricated. It may not NUL-terminate the destination string, resulting in potential memory content exposures, unbounded reads, or crashes. Link: https://github.com/KSPP/linux/issues/90
-Date: Wed,  2 Apr 2025 20:33:09 +0300
-Message-Id: <20250402173308.102487-1-goralbaris@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="hYhD7pVN"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 532C1hZx024534;
+	Wed, 2 Apr 2025 19:00:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ij6oVdOz4GhS0vGrhbityqjcv93TkR0sIrqUodkZMFk=; b=hYhD7pVNIeDwDBrW
+	RdO5PrMwS8sO1ippIQSGUyIYQ2aHb7qJuvA8S/CTVfe+wl3fGVcBkK+tVHJeC/Fq
+	hL0quAhjsZgdxh4KYOc6r2i6Gy0K17YxXYIvcN3aAPcOVgVQfvxnN1L1QRwh3B/f
+	iNw133fc//aUQBjMULW74HoUe6hVoYaUgy9HMacMC7MaMwE5l9UNz5swOuqq8Os5
+	wu3dTwbUcX100OEvJokqUmtO2Ui7Bihi+ChA5Cq0uSXw6qzZZsLnr5JqmT6CIlBj
+	jsmAF8BSmVLuxw7LwpPsMxs6waa4SBRHV0VIQ6IaNJwJBe63uNd47fsw3lzvLxqP
+	V7jENg==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45rbpywh5x-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 02 Apr 2025 19:00:28 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 532J0RBJ002057
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 2 Apr 2025 19:00:27 GMT
+Received: from [10.46.162.103] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 2 Apr 2025
+ 12:00:26 -0700
+Message-ID: <1b87152e-ff0f-9c45-020d-4927ff3dbef8@quicinc.com>
+Date: Wed, 2 Apr 2025 12:00:26 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v4 1/1] scsi: ufs: core: add device level exception
+ support
+Content-Language: en-US
+To: "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>
+CC: Arthur Simchaev <Arthur.Simchaev@sandisk.com>,
+        "quic_cang@quicinc.com"
+	<quic_cang@quicinc.com>,
+        "quic_nitirawa@quicinc.com"
+	<quic_nitirawa@quicinc.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "minwoo.im@samsung.com"
+	<minwoo.im@samsung.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Alim Akhtar
+	<alim.akhtar@samsung.com>,
+        "James E.J. Bottomley"
+	<James.Bottomley@hansenpartnership.com>,
+        Matthias Brugger
+	<matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Ziqi Chen
+	<quic_ziqichen@quicinc.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        "Gwendal
+ Grignou" <gwendal@chromium.org>,
+        Eric Biggers <ebiggers@google.com>,
+        open
+ list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC
+ support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>,
+        "moderated
+ list:ARM/Mediatek SoC support:Keyword:mediatek"
+	<linux-mediatek@lists.infradead.org>
+References: <4370b3a3b5a5675bb3e75aaa48a273674c159339.1742526978.git.quic_nguyenb@quicinc.com>
+ <SA2PR16MB4251229744D717821D3D8353F4A72@SA2PR16MB4251.namprd16.prod.outlook.com>
+ <c5ab13ec-f650-ea10-5cb8-d6a2ddf1e825@quicinc.com>
+ <0a68d437-5d6a-42aa-ae4e-6f5d89cfcaf3@acm.org>
+ <ad246ef4-7429-63bb-0279-90738736f6e3@quicinc.com>
+ <3d7b543c-1165-42e0-8471-25b04c7572ac@acm.org>
+ <4cb20c80-9bb0-e147-e3c0-467f4c8828ba@quicinc.com>
+ <989e695e-e6a4-4427-9041-e39ecf5b5674@acm.org>
+ <yzy7oad77h744vf2bdylkm4fronemjwvrmlstnj6x5lzjxg672@zya6toqv4aeg>
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <yzy7oad77h744vf2bdylkm4fronemjwvrmlstnj6x5lzjxg672@zya6toqv4aeg>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: nuJyCFbkUJbHjGlJ8RMkEV0OQHadcz5I
+X-Proofpoint-ORIG-GUID: nuJyCFbkUJbHjGlJ8RMkEV0OQHadcz5I
+X-Authority-Analysis: v=2.4 cv=ZNLXmW7b c=1 sm=1 tr=0 ts=67ed894c cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=KKAkSRfTAAAA:8 a=Si26H9tSdrSrRDVtBSgA:9 a=QEXdDO2ut3YA:10
+ a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-02_08,2025-04-02_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 clxscore=1015 mlxscore=0 adultscore=0 mlxlogscore=999
+ priorityscore=1501 bulkscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ impostorscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2504020121
 
-The strncpy is depricated. 
-It may not NUL-terminate the destination string, resulting in potential memory
-content exposures, unbounded reads, or crashes. Link: https://github.com/KSPP/linux/issues/90
-Signed-off-by: goralbaris <goralbaris@gmail.com>
----
- drivers/target/target_core_configfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 4/2/2025 12:49 AM, manivannan.sadhasivam@linaro.org wrote:
+> Yeah, we should be cautious in changing the uAPI header as it can break the
+> userspace applications. Annotating the members that need packed attribute seems
+> like the way forward to me.
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index c40217f44b1b..5c0b74e76be2 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -143,7 +143,7 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
- 	}
- 	filp_close(fp, NULL);
- 
--	strncpy(db_root, db_root_stage, read_bytes);
-+	strscpy(db_root, db_root_stage, read_bytes);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
- 
- 	r = read_bytes;
-@@ -3664,7 +3664,7 @@ static void target_init_dbroot(void)
- 	}
- 	filp_close(fp, NULL);
- 
--	strncpy(db_root, db_root_stage, DB_ROOT_LEN);
-+	strscpy(db_root, db_root_stage, DB_ROOT_LEN);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
- }
- 
--- 
-2.34.1
+Yes, I realized potential issue when Bart raised a concern.
 
+> 
+> Though, I'd like to understand which architecture has the alignment constraint
+> in this structure. Only if an architecture requires 8 byte alignment for __be32
+> would be a problem. That too only for osf7 and reserved. But I'm not aware of
+> such architectures in use.
+When using "__u64 value;" in place of osf3-6, I saw the compiler padded 
+4 bytes, so __packed was needed for me to get correct __u64 value. I 
+thought even the existing structure utp_upiu_query_v4_0 may need 
+__packed on some fields where the driver reads the returned data in 
+order to be safe across all architectures. However, without evidence of 
+an actual failure, I didn't touch the existing structure. Only raised 
+potential issue for discussion.
+
+Thanks, Bao
