@@ -1,106 +1,140 @@
-Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB0D1ACED1;
-	Wed,  2 Apr 2025 19:16:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 810611EE7CB
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Apr 2025 19:42:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743621374; cv=none; b=mfpy+VLPZOEZhEX//PQeO/xHfhcJ70+xM84DcKgYJaoLLBACOYIlVtr38bzJr2H3I6JfVgd899TlEHiyrcrCW4BB9UW2L3cpXqHu7pD30pYLO/3DQ6R90On9afXtK/hi2OYDQsBSQdjgfjFKD1o//cjtxztvZLn2//hqPeznbD4=
+	t=1743622936; cv=none; b=YFWeRfQIMS5Lx55alH0lj3GnGRMm3ngOzsUQ4hMoafFIVXVqbpzY4SDbaWRa6JFzr5QfKKzeqthQstIcgVMnBBHrPVRbkAJrMKAJfHvanOAf+VPPa/Keit3cIWlkBJg46h4EihYqq+K5f8dSJsR+joMiB1fkt92r+U8fsB1xjz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743621374; c=relaxed/simple;
-	bh=0WH1sGWtFYZtIVHWq6dERmJQ3aaewZqD4RXfkPSUVwU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JM2awkidhYdpL0LK69f6JNMgg1AKU35kU9HV8dPmodPYp7OdangyNC+5Q8B69o0juUzGwIrdVx8051NL5eLbLBtMa22IFmQfu1/nJ/LRSiIbh6F3yxDixNYQbJ38ujSJlg9I2fiFymxRfjP/SJDAtB9Jj8cmlAMSsai/WBzgYwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com; spf=pass smtp.mailfrom=kroah.com; dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b=e5B4MHAJ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=JzTYmOoZ; arc=none smtp.client-ip=202.12.124.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
+	s=arc-20240116; t=1743622936; c=relaxed/simple;
+	bh=0B1varXF3zRREs2WTDB9tiKYpA6KG4nGKtDXZE75VzM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lojUWSQ36d7+oPX+TOm03nVf12xTUDiNVX6KHgvWNuCsfDvcft9EqsHokTSugZ82KaB2ByCYGJPq14edjA9voUf0yotLU0FclqyxxxQx8XALaqGHEl2B0NxgsWnvgIuvvXs0R/+KpSCh1gi9ztA2/cN7Aox3gOCRa4023FUqV8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=BU5aV4nI; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="e5B4MHAJ";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="JzTYmOoZ"
-Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
-	by mailfout.stl.internal (Postfix) with ESMTP id BBB5611400F4;
-	Wed,  2 Apr 2025 15:15:37 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Wed, 02 Apr 2025 15:15:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm2; t=1743621337; x=1743707737; bh=0WH1sGWtFY
-	ZtIVHWq6dERmJQ3aaewZqD4RXfkPSUVwU=; b=e5B4MHAJgYkrv1yYQXHRdsq0K5
-	dIj2GWoH6v4eZP9M3wJES3FQWLIvg6nNfxgmCzNe/fyWm0LVFWwGr93gJ3MWAqO0
-	6y0j0v4Lzz01a8FfAk7LGx5OX65JoaPTp5InvOgpVmcllduUQQRc12URTj7rWjIj
-	qKlAf6kSaJKqjo6IAqZ9CS0JCuERM+hOtl12qGXCGuU6QI4JDq4R1pt19JmWRoGK
-	V9R5sKhY9BZftQ3Kmp6ADQVa/6gowrOAX672B3CirrB8errvvUxJONCPimihEKJW
-	Erl46D4aAhM2d6mWg8VGYv8O6ALAl0fYhJPet8n2CKQoJ702P3YGUeQ5XKug==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1743621337; x=1743707737; bh=0WH1sGWtFYZtIVHWq6dERmJQ3aaewZqD4RX
-	fkPSUVwU=; b=JzTYmOoZkUbUc/j5PQNdimyZWySdNdwHs38pwBAz+I2lKneGCfr
-	/s9HCta1QtmKbunM/NSoXYcLqLch33En7AKXdpVpGsM07PN/WC6vTbXdY8bAD8b6
-	xW/7pkorsaxUyz8D3Vt3fXXOWtMS3DGbcSXPGvhHOj57GklOhtF41SdYGIBh+C1p
-	wD2VNtroczLlKdqzyFG4a7yfZb17I+YFow54u8ANRoGRjbEbf+5oxzevOBXVM/pa
-	Qw7ksSQ9lt52IvdlE8OpF6FBvGzdoIQTFTYTrwAYr/S1G1jNUjxG4Tdnw6vgGF1S
-	g/g8vVoKX21gwR3fexWdrRLLYWpn/+hmmyA==
-X-ME-Sender: <xms:2YztZwsHUXGev0I_oUl9ZJi9QAiuz3jI4bVkuqCgBtakPXSohgUanA>
-    <xme:2YztZ9f97Vte9PZfY4Fc0xOupKaTGCVQEm141WRL86rgDYVucJz4X6YTEzTGjsXBL
-    yuxI3vH5uUxCg>
-X-ME-Received: <xmr:2YztZ7yW-GG4UfGEacZq97iZwnafYnbOhT2jZIyGFyFmVWpDmQW1ZACHutSd>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddukeeigeejucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpeffhf
-    fvvefukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpefirhgvghcumffjuceoghhr
-    vghgsehkrhhorghhrdgtohhmqeenucggtffrrghtthgvrhhnpedvjefhvefhjeejfeefle
-    ejteegtedvgeeghfeuveevgfffueelhffhhedugffhkeenucffohhmrghinhepghhithhh
-    uhgsrdgtohhmnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrh
-    homhepghhrvghgsehkrhhorghhrdgtohhmpdhnsggprhgtphhtthhopedugedpmhhouggv
-    pehsmhhtphhouhhtpdhrtghpthhtohepghhorhgrlhgsrghrihhssehgmhgrihhlrdgtoh
-    hmpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvghrshgvnhesohhrrggtlhgvrdgtohhm
-    pdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtohepthgrrhhgvghtqdguvghvvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-    pdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorh
-    hgpdhrtghpthhtohepshhkhhgrnheslhhinhhugihfohhunhgurghtihhonhdrohhrghdp
-    rhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhdqmhgvnhhtvggvsheslhhishhtshdrlh
-    hinhhugidruggvvh
-X-ME-Proxy: <xmx:2YztZzOCeFAxSuIaiWb8IMCWa8x9PaM54bFkCOSgSZr2oG8iLOA_Hg>
-    <xmx:2YztZw8GkQWjFBFWcwv8Oi_suR38H1AquawY4UicLI8YB9q2gKmRcg>
-    <xmx:2YztZ7Wq68LGcHt_f3fpVmrvT3uw8FlGQmSQ3M8YzoW28anqlOkuBw>
-    <xmx:2YztZ5feL4HPdDJV7uoQp1sI9714JCRw3SnqtW5sgYXw7JPIGMmv8Q>
-    <xmx:2YztZ0HM9n_NvRHVTqIif6dinptlCwb5zQ2akYWAmLcdWdahze89sehz>
-Feedback-ID: i787e41f1:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 2 Apr 2025 15:15:36 -0400 (EDT)
-Date: Wed, 2 Apr 2025 20:14:10 +0100
-From: Greg KH <greg@kroah.com>
-To: goralbaris <goralbaris@gmail.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	skhan@linuxfoundation.org, linux-kernel-mentees@lists.linux.dev
-Subject: Re: [PATCH] change strncpy to strscpy strncpy is now depricated. It
- may not NUL-terminate the destination string, resulting in potential memory
- content exposures, unbounded reads, or crashes. Link:
- https://github.com/KSPP/linux/issues/90
-Message-ID: <2025040244-onward-attain-8e91@gregkh>
-References: <20250402172504.101576-1-goralbaris@gmail.com>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BU5aV4nI"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-227b650504fso2003595ad.0
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Apr 2025 12:42:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1743622933; x=1744227733; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wVsMm8NEl4VBpbG4Kvoxkxy1A+UQLlEf3tQEh4oFQV0=;
+        b=BU5aV4nI67GwltXaAve4MLFbQAli3Av4yXQUo5yNYgnGbU6DX/ABqmYKOLOj9xPq1B
+         RcSe/gd4wKyeEpxefAXSMDI1KNh21MVbEengKOtnPJfVupzWISFQt4rX19OOWijYaaHg
+         INCIE6g1JILqYt+Ve869Gcl0zTA3rKOLhB75A=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1743622933; x=1744227733;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wVsMm8NEl4VBpbG4Kvoxkxy1A+UQLlEf3tQEh4oFQV0=;
+        b=Syb74aPsQMv3+huvsaS4pQm/zMRVUlXblFukaPq8bsuCocjtvcp7xYtYuSqxoRp0wY
+         4BCznlilTGfLFK+8TUPjy0sT5hJkap7Vl0ONdnkecMiDdD8zYbDcavSoxSxPn6LTS+0W
+         fiQ4UxSIVKrUZwzMscKa+mLxJ8FYIIUdFM9jkF/TAtbOU89IBVKVrFeOC2ilXxkqeVTf
+         yAVZjqKoR00kiDrHJ1+Z22z4WEIacgnrGuECNc1t81xo+tfloAelSHpFMYMAPYtlO6bJ
+         7U8franAM0sy9o/bvqc0xPPNlQnbGGA5zPNKltrQv1FBMBDLPsUc+dzWjkZAe8585uFY
+         JZkA==
+X-Gm-Message-State: AOJu0YwKzMq5SZ/q1EyTAqfNQOgF0BdINEZAFH9+usQITQzSZqMDOBxk
+	ndjFxGXj/TtIPhSHqs53Dx3lExAUqdPdVweS1Jo5S2dV+gWJxAVlZRFpQNkM9WH8NmFxUfocY6O
+	9ew86J7JrH3EjzJkQHIqY/wY+1tUncT2lOsGFHnP5La4Mvyph7/G8g89uzxxda9WJyDnqxLfDyP
+	gOPUqurAAMy9n1BXyI5SMSoAi9RnGQhRz3WoB59J1p9X/ONg==
+X-Gm-Gg: ASbGncvziGSSZmnyLaTEjROiZhHCBO6DWe7Yk0w1HrvK+pKr2TSJfKr2ZZU3g31ZLIo
+	bd4c0BS4sd8JzOOzqFyYoUzeKINasUOGRqo2GQU4nBvIXiOwy7c63EdDX9iLLkHTxphfq9E3yqo
+	djfWZCcRRwaIFOyjWvyyWJKwgERukf0ETaMWZN+TmXhZONXaDrx9h3Y8hUglWKT3xNqIS0T7vk5
+	qfq0s/yF4VfyRganSWh3qiDYL0pl/OGFAtVRaTI8TorJKpOw3Me3uD8o9CgCdzmVJeWZIWJPwMJ
+	yL0XJyY9UhHcux06SVAS8zWpmAuRuOwEy7lFza0uYFhJ89pjAaBhseXB0txMYMaVozbexNnI9B1
+	Gt6dcZbvcYoQE9gQMs7mxJFMSV4dc2Gs=
+X-Google-Smtp-Source: AGHT+IHTfhbUoDeQBYlLRzs+K8M+V+hRCvhjI6pXcEwUzqz50YqReOb7nAuMOKMre8cNtG7RITwL3A==
+X-Received: by 2002:a17:903:94c:b0:224:abb:92c with SMTP id d9443c01a7336-22977e08336mr56185ad.50.1743622933079;
+        Wed, 02 Apr 2025 12:42:13 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739710d97cbsm11797396b3a.173.2025.04.02.12.42.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Apr 2025 12:42:12 -0700 (PDT)
+From: Chandrakanth Patil <ranjan.kumar@broadcom.com>
+X-Google-Original-From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	prayas.patel@broadcom.com,
+	rajsekhar.chundru@broadcom.com,
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH 1/2] megaraid_sas: Block zero-length ATA VPD inquiry due to firmware bug
+Date: Thu,  3 Apr 2025 01:07:34 +0530
+Message-Id: <20250402193735.5098-1-chandrakanth.patil@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250402172504.101576-1-goralbaris@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Apr 02, 2025 at 08:25:04PM +0300, goralbaris wrote:
-> Signed-off-by: goralbaris <goralbaris@gmail.com>
+There is a firmware bug where ATA VPD inquiry commands with zero data
+length are not handled and fail with a non-standard return status code
+0xf0.
 
-I think something went wrong with your subject line :(
+Hence, the driver blocks zero-length ATA VPD inquiry commands by setting
+the device no_vpd_size flag to 1. Additionally, if the firmware still
+returns status code 0xf0 in other failure scenarios, the driver converts
+it to a SCSI 'check condition' for proper OS handling.
 
-Also, don't use your email alias for signed-off-by please.
+Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 9 +++++++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 5 ++++-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-thanks,
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 28c75865967a..d793924547f8 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -2103,6 +2103,9 @@ static int megasas_sdev_configure(struct scsi_device *sdev,
+ 	/* This sdev property may change post OCR */
+ 	megasas_set_dynamic_target_properties(sdev, lim, is_target_prop);
+ 
++	if (!MEGASAS_IS_LOGICAL(sdev))
++		sdev->no_vpd_size = 1;
++
+ 	mutex_unlock(&instance->reset_mutex);
+ 
+ 	return 0;
+@@ -3662,8 +3665,10 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 
+ 		case MFI_STAT_SCSI_IO_FAILED:
+ 		case MFI_STAT_LD_INIT_IN_PROGRESS:
+-			cmd->scmd->result =
+-			    (DID_ERROR << 16) | hdr->scsi_status;
++			if (hdr->scsi_status == 0xf0)
++				cmd->scmd->result = (DID_ERROR << 16) | SAM_STAT_CHECK_CONDITION;
++			else
++				cmd->scmd->result = (DID_ERROR << 16) | hdr->scsi_status;
+ 			break;
+ 
+ 		case MFI_STAT_SCSI_DONE_WITH_ERROR:
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 1eec23da28e2..1eea4df9e47d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2043,7 +2043,10 @@ map_cmd_status(struct fusion_context *fusion,
+ 
+ 	case MFI_STAT_SCSI_IO_FAILED:
+ 	case MFI_STAT_LD_INIT_IN_PROGRESS:
+-		scmd->result = (DID_ERROR << 16) | ext_status;
++		if (ext_status == 0xf0)
++			scmd->result = (DID_ERROR << 16) | SAM_STAT_CHECK_CONDITION;
++		else
++			scmd->result = (DID_ERROR << 16) | ext_status;
+ 		break;
+ 
+ 	case MFI_STAT_SCSI_DONE_WITH_ERROR:
+-- 
+2.39.1
 
-greg k-h
