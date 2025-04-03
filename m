@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE783253B54;
-	Thu,  3 Apr 2025 19:02:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BD32254B1D;
+	Thu,  3 Apr 2025 19:02:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743706950; cv=none; b=XoHMRe8sFUOGBG5O/24TjF/asaBSLhSQOzI75VskXH4PItEeN0WCw0wIqXHImW3xlLx3mExFPHWyvimFMFhCjEnjgIOvKs+OoBJl0X5Q7xvVLwfrUaTySnWW3Hw9IVVvJ8yNJCGh2WYvAoRTVf7SJJ+dz+CqTUmdBqRJevQsR+8=
+	t=1743706953; cv=none; b=raXhr2LXlBr7JvzCoJ+z0TqpMjiHHfuNuouAl8pXN1942XsOVCc3ddrQccv4HiV3caIxZbEo5sIVEcb7ncKGJ7h5jsgaPDT9CF2typK7LTCIk1riKlP9DSMQXTQjuO2CRpOAhFX8EfFLGh+npm3i3pM4vu9ZRBlkikF0dyEJ2WI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743706950; c=relaxed/simple;
-	bh=ca16cQkSyeilTAdn7iFEs+E/NtDxDyBwl20EsVXKn1I=;
+	s=arc-20240116; t=1743706953; c=relaxed/simple;
+	bh=ANyJFrkm+OVwX/IWxdsijPhBdbPS2r7Vaow+ic82ysA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=T/TitmsSN1cZCsaSJux/ztyBa8OMkclr0TWxXW2CKZShryvcq4DQa8iBzAG+cUXqWDU+P9SEOcceGWsB2NOHi69YAadpy/3hpAoMsM47PUmfK2RQkN0PiUsiEj8H2WRME08OhTMJDyp2D37Vkyn38VdbYwNJjU+OHu5wjpI0iTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DdSAHvGr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=PYCqKeLU1zv+Xyswm6JQiEmPgmnLZMB1P065nktAabCEHDtMArcVrfn+txXy4T75mJBjZhGnuUWeQryTvmK3yk03IDbVssVfTc9eMqK9YR1Qd/o2Ii5+x078/tTfAQaS9PFWIik3tfZpm7VmbT7xA5u/YvUC+sF6uZU5iFWHKHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cc7chtWs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DdSAHvGr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDC06C4CEE3;
-	Thu,  3 Apr 2025 19:02:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cc7chtWs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2A38C4CEE8;
+	Thu,  3 Apr 2025 19:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743706950;
-	bh=ca16cQkSyeilTAdn7iFEs+E/NtDxDyBwl20EsVXKn1I=;
+	s=k20201202; t=1743706952;
+	bh=ANyJFrkm+OVwX/IWxdsijPhBdbPS2r7Vaow+ic82ysA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=DdSAHvGrSzc488kUdJPM04cYZxdCfHKnt4UIVn2dN+U30i3hy/0Q0CDugzrMkwk1J
-	 hS4ZknfAjTR/z40c13Cx+q4P1ZUFuQyQ9jOJGaeODPFYvk4lXoOHeV6mqXYHoq8xOR
-	 xB/ZRDSlENVJl5oJriXuEWH4d50khIjqUYoSIddwq0e5cNZmFcfSJXSq2kEEpDVMHz
-	 7uF+jsppIUAsWjV28ZrAIHWn5zrVM+JCRqdLFAl/XYme3Sagr6SDu8sJ3vMxxZlaXe
-	 ui4F+9XOWSGD1dIahMWRNGg+5qhBM1/HKlCf6GYPhr0wAWvZkOFzkGOmcKlyFFPWWH
-	 YCvK5GBlItn5g==
+	b=Cc7chtWskbmdvAq7jivnsmpxoDrloxCx2mw4fkjAiPDKUIKXjYQpcFpYuiMT0blWL
+	 eEFx1hamnIr96jMnug3/glvHSPDZaQeGSC1iMajUZBjor1iDe+8Cjsh3ZIQpvZQhPZ
+	 yaaz8eRK2wbS8W+hQpLxF08JVvCPs15m3SCJ93FnACFdveDKO2cN9Q6kA9jG1TApt0
+	 qnM7epR6JBG735W3Ej1CPFojjMTXDaaryMcWUY6BUww3x4yvOfzB3pH9pU2aJQnkUC
+	 E8DQ6vwufcp5EWrFWOXIEF+tqbLQ1A9Fg459Gg3ntXFul1MJnRLsu53hxPY5CpAMVu
+	 4UQIUXrDgswhQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -39,9 +39,9 @@ Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	James.Bottomley@HansenPartnership.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 08/54] scsi: mpi3mr: Avoid reply queue full condition
-Date: Thu,  3 Apr 2025 15:01:23 -0400
-Message-Id: <20250403190209.2675485-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.14 09/54] scsi: mpi3mr: Synchronous access b/w reset and tm thread for reply queue
+Date: Thu,  3 Apr 2025 15:01:24 -0400
+Message-Id: <20250403190209.2675485-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250403190209.2675485-1-sashal@kernel.org>
 References: <20250403190209.2675485-1-sashal@kernel.org>
@@ -58,219 +58,169 @@ Content-Transfer-Encoding: 8bit
 
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit f08b24d82749117ce779cc66689e8594341130d3 ]
+[ Upstream commit f195fc060c738d303a21fae146dbf85e1595fb4c ]
 
-To avoid reply queue full condition, update the driver to check IOCFacts
-capabilities for qfull.
+When the task management thread processes reply queues while the reset
+thread resets them, the task management thread accesses an invalid queue ID
+(0xFFFF), set by the reset thread, which points to unallocated memory,
+causing a crash.
 
-Update the operational reply queue's Consumer Index after processing 100
-replies. If pending I/Os on a reply queue exceeds a threshold
-(reply_queue_depth - 200), then return I/O back to OS to retry.
-
-Also increase default admin reply queue size to 2K.
+Add flag 'io_admin_reset_sync' to synchronize access between the reset,
+I/O, and admin threads. Before a reset, the reset handler sets this flag to
+block I/O and admin processing threads. If any thread bypasses the initial
+check, the reset thread waits up to 10 seconds for processing to finish. If
+the wait exceeds 10 seconds, the controller is marked as unrecoverable.
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Link: https://lore.kernel.org/r/20250129100850.25430-2-ranjan.kumar@broadcom.com
+Link: https://lore.kernel.org/r/20250129100850.25430-4-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h     | 12 +++++++++++-
- drivers/scsi/mpi3mr/mpi3mr_app.c | 24 ++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_fw.c  | 32 ++++++++++++++++++++++++++++----
- 3 files changed, 63 insertions(+), 5 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  2 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 67 +++++++++++++++++++++++++++++++--
+ 2 files changed, 66 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 0d72b5f1b69df..9ed20ed581be6 100644
+index 9ed20ed581be6..6e3f337ace9f8 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -80,13 +80,14 @@ extern atomic64_t event_counter;
- 
- /* Admin queue management definitions */
- #define MPI3MR_ADMIN_REQ_Q_SIZE		(2 * MPI3MR_PAGE_SIZE_4K)
--#define MPI3MR_ADMIN_REPLY_Q_SIZE	(4 * MPI3MR_PAGE_SIZE_4K)
-+#define MPI3MR_ADMIN_REPLY_Q_SIZE	(8 * MPI3MR_PAGE_SIZE_4K)
- #define MPI3MR_ADMIN_REQ_FRAME_SZ	128
- #define MPI3MR_ADMIN_REPLY_FRAME_SZ	16
- 
- /* Operational queue management definitions */
- #define MPI3MR_OP_REQ_Q_QD		512
- #define MPI3MR_OP_REP_Q_QD		1024
-+#define MPI3MR_OP_REP_Q_QD2K		2048
- #define MPI3MR_OP_REP_Q_QD4K		4096
- #define MPI3MR_OP_REQ_Q_SEG_SIZE	4096
- #define MPI3MR_OP_REP_Q_SEG_SIZE	4096
-@@ -328,6 +329,7 @@ enum mpi3mr_reset_reason {
- #define MPI3MR_RESET_REASON_OSTYPE_SHIFT	28
- #define MPI3MR_RESET_REASON_IOCNUM_SHIFT	20
- 
-+
- /* Queue type definitions */
- enum queue_type {
- 	MPI3MR_DEFAULT_QUEUE = 0,
-@@ -387,6 +389,7 @@ struct mpi3mr_ioc_facts {
- 	u16 max_msix_vectors;
- 	u8 personality;
- 	u8 dma_mask;
-+	bool max_req_limit;
- 	u8 protocol_flags;
- 	u8 sge_mod_mask;
- 	u8 sge_mod_value;
-@@ -456,6 +459,8 @@ struct op_req_qinfo {
-  * @enable_irq_poll: Flag to indicate polling is enabled
-  * @in_use: Queue is handled by poll/ISR
-  * @qtype: Type of queue (types defined in enum queue_type)
-+ * @qfull_watermark: Watermark defined in reply queue to avoid
-+ *                    reply queue full
-  */
- struct op_reply_qinfo {
- 	u16 ci;
-@@ -471,6 +476,7 @@ struct op_reply_qinfo {
- 	bool enable_irq_poll;
- 	atomic_t in_use;
- 	enum queue_type qtype;
-+	u16 qfull_watermark;
- };
- 
- /**
-@@ -1153,6 +1159,8 @@ struct scmd_priv {
-  * @snapdump_trigger_active: Snapdump trigger active flag
-  * @pci_err_recovery: PCI error recovery in progress
-  * @block_on_pci_err: Block IO during PCI error recovery
-+ * @reply_qfull_count: Occurences of reply queue full avoidance kicking-in
-+ * @prevent_reply_qfull: Enable reply queue prevention
-  */
- struct mpi3mr_ioc {
- 	struct list_head list;
-@@ -1351,6 +1359,8 @@ struct mpi3mr_ioc {
- 	bool fw_release_trigger_active;
- 	bool pci_err_recovery;
- 	bool block_on_pci_err;
-+	atomic_t reply_qfull_count;
-+	bool prevent_reply_qfull;
- };
- 
- /**
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 7589f48aebc80..1532436f0f3af 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -3060,6 +3060,29 @@ reply_queue_count_show(struct device *dev, struct device_attribute *attr,
- 
- static DEVICE_ATTR_RO(reply_queue_count);
- 
-+/**
-+ * reply_qfull_count_show - Show reply qfull count
-+ * @dev: class device
-+ * @attr: Device attributes
-+ * @buf: Buffer to copy
-+ *
-+ * Retrieves the current value of the reply_qfull_count from the mrioc structure and
-+ * formats it as a string for display.
-+ *
-+ * Return: sysfs_emit() return
-+ */
-+static ssize_t
-+reply_qfull_count_show(struct device *dev, struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct mpi3mr_ioc *mrioc = shost_priv(shost);
-+
-+	return sysfs_emit(buf, "%u\n", atomic_read(&mrioc->reply_qfull_count));
-+}
-+
-+static DEVICE_ATTR_RO(reply_qfull_count);
-+
- /**
-  * logging_level_show - Show controller debug level
-  * @dev: class device
-@@ -3152,6 +3175,7 @@ static struct attribute *mpi3mr_host_attrs[] = {
- 	&dev_attr_fw_queue_depth.attr,
- 	&dev_attr_op_req_q_count.attr,
- 	&dev_attr_reply_queue_count.attr,
-+	&dev_attr_reply_qfull_count.attr,
- 	&dev_attr_logging_level.attr,
- 	&dev_attr_adp_state.attr,
- 	NULL,
+@@ -1096,6 +1096,7 @@ struct scmd_priv {
+  * @ts_update_interval: Timestamp update interval
+  * @reset_in_progress: Reset in progress flag
+  * @unrecoverable: Controller unrecoverable flag
++ * @io_admin_reset_sync: Manage state of I/O ops during an admin reset process
+  * @prev_reset_result: Result of previous reset
+  * @reset_mutex: Controller reset mutex
+  * @reset_waitq: Controller reset  wait queue
+@@ -1284,6 +1285,7 @@ struct mpi3mr_ioc {
+ 	u16 ts_update_interval;
+ 	u8 reset_in_progress;
+ 	u8 unrecoverable;
++	u8 io_admin_reset_sync;
+ 	int prev_reset_result;
+ 	struct mutex reset_mutex;
+ 	wait_queue_head_t reset_waitq;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 5ed31fe57474a..656108dd2ee30 100644
+index 656108dd2ee30..ec5b1ab287177 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2104,15 +2104,22 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
+@@ -17,7 +17,7 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3_ioc_facts_data *facts_data);
+ static void mpi3mr_pel_wait_complete(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_drv_cmd *drv_cmd);
+-
++static int mpi3mr_check_op_admin_proc(struct mpi3mr_ioc *mrioc);
+ static int poll_queues;
+ module_param(poll_queues, int, 0444);
+ MODULE_PARM_DESC(poll_queues, "Number of queues for io_uring poll mode. (Range 1 - 126)");
+@@ -459,7 +459,7 @@ int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
  	}
  
- 	reply_qid = qidx + 1;
--	op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
--	if ((mrioc->pdev->device == MPI3_MFGPAGE_DEVID_SAS4116) &&
--		!mrioc->pdev->revision)
--		op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD4K;
+ 	do {
+-		if (mrioc->unrecoverable)
++		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
+ 			break;
+ 
+ 		mrioc->admin_req_ci = le16_to_cpu(reply_desc->request_queue_ci);
+@@ -554,7 +554,7 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+ 	}
+ 
+ 	do {
+-		if (mrioc->unrecoverable)
++		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
+ 			break;
+ 
+ 		req_q_idx = le16_to_cpu(reply_desc->request_queue_id) - 1;
+@@ -4394,6 +4394,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		goto out_failed_noretry;
+ 	}
+ 
++	mrioc->io_admin_reset_sync = 0;
+ 	if (is_resume || mrioc->block_on_pci_err) {
+ 		dprint_reset(mrioc, "setting up single ISR\n");
+ 		retval = mpi3mr_setup_isr(mrioc, 1);
+@@ -5252,6 +5253,55 @@ void mpi3mr_pel_get_seqnum_complete(struct mpi3mr_ioc *mrioc,
+ 	drv_cmd->retry_count = 0;
+ }
+ 
++/**
++ * mpi3mr_check_op_admin_proc -
++ * @mrioc: Adapter instance reference
++ *
++ * Check if any of the operation reply queues
++ * or the admin reply queue are currently in use.
++ * If any queue is in use, this function waits for
++ * a maximum of 10 seconds for them to become available.
++ *
++ * Return: 0 on success, non-zero on failure.
++ */
++static int mpi3mr_check_op_admin_proc(struct mpi3mr_ioc *mrioc)
++{
 +
-+	if (mrioc->pdev->device == MPI3_MFGPAGE_DEVID_SAS4116) {
-+		if (mrioc->pdev->revision)
-+			op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
-+		else
-+			op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD4K;
-+	} else
-+		op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD2K;
++	u16 timeout = 10 * 10;
++	u16 elapsed_time = 0;
++	bool op_admin_in_use = false;
 +
- 	op_reply_q->ci = 0;
- 	op_reply_q->ephase = 1;
- 	atomic_set(&op_reply_q->pend_ios, 0);
- 	atomic_set(&op_reply_q->in_use, 0);
- 	op_reply_q->enable_irq_poll = false;
-+	op_reply_q->qfull_watermark =
-+		op_reply_q->num_replies - (MPI3MR_THRESHOLD_REPLY_COUNT * 2);
++	do {
++		op_admin_in_use = false;
++
++		/* Check admin_reply queue first to exit early */
++		if (atomic_read(&mrioc->admin_reply_q_in_use) == 1)
++			op_admin_in_use = true;
++		else {
++			/* Check op_reply queues */
++			int i;
++
++			for (i = 0; i < mrioc->num_queues; i++) {
++				if (atomic_read(&mrioc->op_reply_qinfo[i].in_use) == 1) {
++					op_admin_in_use = true;
++					break;
++				}
++			}
++		}
++
++		if (!op_admin_in_use)
++			break;
++
++		msleep(100);
++
++	} while (++elapsed_time < timeout);
++
++	if (op_admin_in_use)
++		return 1;
++
++	return 0;
++}
++
+ /**
+  * mpi3mr_soft_reset_handler - Reset the controller
+  * @mrioc: Adapter instance reference
+@@ -5332,6 +5382,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_wait_for_host_io(mrioc, MPI3MR_RESET_HOST_IOWAIT_TIMEOUT);
  
- 	if (!op_reply_q->q_segments) {
- 		retval = mpi3mr_alloc_op_reply_q_segments(mrioc, qidx);
-@@ -2416,8 +2423,10 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
- 	void *segment_base_addr;
- 	u16 req_sz = mrioc->facts.op_req_sz;
- 	struct segments *segments = op_req_q->q_segments;
-+	struct op_reply_qinfo *op_reply_q = NULL;
+ 	mpi3mr_ioc_disable_intr(mrioc);
++	mrioc->io_admin_reset_sync = 1;
  
- 	reply_qidx = op_req_q->reply_qid - 1;
-+	op_reply_q = mrioc->op_reply_qinfo + reply_qidx;
- 
- 	if (mrioc->unrecoverable)
- 		return -EFAULT;
-@@ -2448,6 +2457,15 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
+ 	if (snapdump) {
+ 		mpi3mr_set_diagsave(mrioc);
+@@ -5359,6 +5410,16 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 		ioc_err(mrioc, "Failed to issue soft reset to the ioc\n");
  		goto out;
  	}
- 
-+	/* Reply queue is nearing to get full, push back IOs to SML */
-+	if ((mrioc->prevent_reply_qfull == true) &&
-+		(atomic_read(&op_reply_q->pend_ios) >
-+	     (op_reply_q->qfull_watermark))) {
-+		atomic_inc(&mrioc->reply_qfull_count);
-+		retval = -EAGAIN;
++
++	retval = mpi3mr_check_op_admin_proc(mrioc);
++	if (retval) {
++		ioc_err(mrioc, "Soft reset failed due to an Admin or I/O queue polling\n"
++				"thread still processing replies even after a 10 second\n"
++				"timeout. Marking the controller as unrecoverable!\n");
++
 +		goto out;
 +	}
 +
- 	segment_base_addr = segments[pi / op_req_q->segment_qd].segment;
- 	req_entry = (u8 *)segment_base_addr +
- 	    ((pi % op_req_q->segment_qd) * req_sz);
-@@ -3091,6 +3109,9 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
- 	mrioc->facts.dma_mask = (facts_flags &
- 	    MPI3_IOCFACTS_FLAGS_DMA_ADDRESS_WIDTH_MASK) >>
- 	    MPI3_IOCFACTS_FLAGS_DMA_ADDRESS_WIDTH_SHIFT;
-+	mrioc->facts.dma_mask = (facts_flags &
-+	    MPI3_IOCFACTS_FLAGS_DMA_ADDRESS_WIDTH_MASK) >>
-+	    MPI3_IOCFACTS_FLAGS_DMA_ADDRESS_WIDTH_SHIFT;
- 	mrioc->facts.protocol_flags = facts_data->protocol_flags;
- 	mrioc->facts.mpi_version = le32_to_cpu(facts_data->mpi_version.word);
- 	mrioc->facts.max_reqs = le16_to_cpu(facts_data->max_outstanding_requests);
-@@ -4214,6 +4235,9 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		mrioc->shost->transportt = mpi3mr_transport_template;
- 	}
- 
-+	if (mrioc->facts.max_req_limit)
-+		mrioc->prevent_reply_qfull = true;
-+
- 	mrioc->reply_sz = mrioc->facts.reply_sz;
- 
- 	retval = mpi3mr_check_reset_dma_mask(mrioc);
+ 	if (mrioc->num_io_throttle_group !=
+ 	    mrioc->facts.max_io_throttle_group) {
+ 		ioc_err(mrioc,
 -- 
 2.39.5
 
