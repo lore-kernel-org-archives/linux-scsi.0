@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23F4029DB91;
-	Thu,  3 Apr 2025 19:09:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8192D3A7E;
+	Thu,  3 Apr 2025 19:10:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743707394; cv=none; b=GWVlwy455jaRqqMbKtPMt9OQIWMbpWQHanjFnEDwqSoQomarihyM9lLYYNb59D9wswNDaJ1rbBkgXy2A561Otj6WfKF0BScO9H9D1MtIuHI0F01njNvLuvCvmePuTgevKbOMlgFLEa5/FW9x5W+I8FKVZ4wLv7GrRYWJ/KDMojM=
+	t=1743707427; cv=none; b=ZQirQ6j6Ei6SAO7RDzzqIYFOgHx8ZiuRQkvRoLQuhKVRLgdFD2aosoiDkSasOKhJhLkNPHfJG1gAVa4vbiIC7APcb8VZLsJTE8HPqTIyHqddwvVvZ0Nbcpc3IrsDZhPkS16igO5PCWXVPUKDJbBlqmxRBgKcCv371cLJ8gP7RRc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743707394; c=relaxed/simple;
-	bh=IBfMB9cJ5OXUmoCp0wVcbbAfq2SiLFxAFew3z0+FGbs=;
+	s=arc-20240116; t=1743707427; c=relaxed/simple;
+	bh=OYDNwu6lqiEdgQdVLiOOiEffqD+K+SGc18Ou35qwRkk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fs6j4nAd9V8b17Br0QD4dAJSul5uf7kTw0jyLD1cyMbLjz2ACOCztWtji4NxGxg8S3vBAWZLhkviL7rt329vSYD7giRM+hlOWddRg7CNt44/VKvsEE5syGq2kys2L1CNo1nubWOSu7tukQIeQw0tL8z4FntZ3Yb9a/7191cFZD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n+RpAYE5; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ZtPJ0JSsTpgE5iUAfElvsGXi+PvgyRGEajqmkwLFajrciMPelIe0zASbZ8ZLlE2MuFPjJQRdbFtkW1/QXTlAId55s3gQRBDryFCMhJmwjveFMu52LGKCT689krqrL+uRq6TTcmvvmn7vsOpzHhvPn5KQ2ExdaVunQWUc5xhjydE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9KFwTc/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n+RpAYE5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADE00C4CEE9;
-	Thu,  3 Apr 2025 19:09:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9KFwTc/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4644CC4CEE8;
+	Thu,  3 Apr 2025 19:10:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743707392;
-	bh=IBfMB9cJ5OXUmoCp0wVcbbAfq2SiLFxAFew3z0+FGbs=;
+	s=k20201202; t=1743707427;
+	bh=OYDNwu6lqiEdgQdVLiOOiEffqD+K+SGc18Ou35qwRkk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=n+RpAYE5g0BkDlAR4r7M9Nc5MWMJrAz7vSEDtCuFvUUlD0/eGXJkI/fRoAtVZI9w5
-	 AO/GQyrAvawrUgP+xHe3WRvYzjK9EZ+MxbB62v3alDJXdKDofc4XyFHFdXPTN1wQ1I
-	 RFY16vr3ewOJUJYaFCdoWBfO1+KsjMCpRYAJSWFpQ6vJwTvFypxffiwQRmh3qBhZ84
-	 RfY1lhHdFYMLkkoEtHmhiCKTsqNajrVk1v6uF6YELEOqu2LjgfqtGIMOK3lVWsHKTn
-	 mgEDw/B+iRQzy8w4x+gOo6OiUppkn/OtLWj+pizELJlXKGkAYv5+FfrVKKatkHqWf5
-	 ab/PAOiACpM4Q==
+	b=c9KFwTc/GHARIkDzsRXiUPEKClSVHak7SzdRJ5krD/kkRxyvXjfBXjv84MIqnv6ti
+	 XqhacH4FBtYCAr6UauHTWDWDdBwqRtUwrbRv5c6PRGW/BnMTkT4ADP330CWIbiNlOV
+	 c0Tbrq+iCclai3vVr7Qh1yODantffOgmcG3CXes8gD9KJTO6r+/We1ZQJmdxYnN+1W
+	 61hkYUx3AMSZoJbuKUjjJgLO/oIc4KbIIHYMCRBpmrIgL2OzhFsTYcUatYhQE38txY
+	 QECxIcGtk7YbJ1SVQ34EoBm3YfiENhlT3KbK5eENX3HfQCEyeLpRLUB+h4McVRyR5y
+	 2l+WX/E/yUBtA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -35,12 +35,12 @@ Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 12/16] scsi: st: Fix array overflow in st_setup()
-Date: Thu,  3 Apr 2025 15:09:20 -0400
-Message-Id: <20250403190924.2678291-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 11/15] scsi: st: Fix array overflow in st_setup()
+Date: Thu,  3 Apr 2025 15:09:58 -0400
+Message-Id: <20250403191002.2678588-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250403190924.2678291-1-sashal@kernel.org>
-References: <20250403190924.2678291-1-sashal@kernel.org>
+In-Reply-To: <20250403191002.2678588-1-sashal@kernel.org>
+References: <20250403191002.2678588-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.179
+X-stable-base: Linux 5.10.235
 Content-Transfer-Encoding: 8bit
 
 From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 1551d533c7196..956b3b9c5aad5 100644
+index 3b819c6b15a56..465fe83b49e98 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -4109,7 +4109,7 @@ static void validate_options(void)
+@@ -4144,7 +4144,7 @@ static void validate_options(void)
   */
  static int __init st_setup(char *str)
  {
