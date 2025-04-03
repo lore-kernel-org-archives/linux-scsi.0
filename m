@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA2392561DD;
-	Thu,  3 Apr 2025 19:02:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C8225BAA1;
+	Thu,  3 Apr 2025 19:03:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743706960; cv=none; b=BriuiSA+rCfZWvioXoYqRLGc43EfNJW0UiQSRGOeIi/8u2ObzKB4dVacc88ijuigrHf2PCtffRN9ng/ikoOgZXS+i04D3iRb6tdmOkHwh03QxjJA3xbHwLoKgobGiJdbDSNLf47SPE6jhp3t52i64bIYcQ/W0x7U7j8x2kEZy5s=
+	t=1743707019; cv=none; b=b6k9FmOixN81dVTyp7Abcwzlm8vIIgAYqTIzjhl17e5ELdSjsFcMkPJCuo84mkvSy2bX1KOBPZuQ0x8/iIgw2VGiOJeMs2Kg9vTGtwJjoOKpK2ZpxbkgAP4uUufrNXwEgyTKU8Hqg145Xp8Y9Gqclrkj6vKDBajiUWrd7bs+DOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743706960; c=relaxed/simple;
-	bh=g0zBLxavqYSYO0LoA1sa/2C1ksx9MMtJvA8PF7M0r7c=;
+	s=arc-20240116; t=1743707019; c=relaxed/simple;
+	bh=iO/N8IMTr9+uTFA5oEozU7wKO/TCzO4fowmKmdEbPqM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=qZ4vYFP8a9X+SUP6Gr6PyYfgQ79Dl2J+V7gV1K/N6X6hj6FGQSR0QQAp3Lqh4twKtSCRgYBEPgNqum+gOdWb9B9uyqyUk64LJKsXNryFreCBJcbL9+XilhEMtAty9OR19XOEYhqkJUZ0rAamQn+msqOf78Ax6HpxTl8GrBEq4DQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lyjz3nDr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YzvdhSsUSXrvwYjY9WcPNCQwHzxQDDYgnHihJI84CrurrwIs6IpESW0r2sHwV3tLx8KNlkwQf559OLM1RZwygr75oYPXwxyok3wWwVOkypb1837lSrYAmdICNHQLvOaet2r2JFl6LSXh69hQG3q6ek1GRNmF49LFu2CiGk0gI4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K8P7hVOy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lyjz3nDr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7AB6C4CEE8;
-	Thu,  3 Apr 2025 19:02:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K8P7hVOy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6691AC4CEE8;
+	Thu,  3 Apr 2025 19:03:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743706960;
-	bh=g0zBLxavqYSYO0LoA1sa/2C1ksx9MMtJvA8PF7M0r7c=;
+	s=k20201202; t=1743707019;
+	bh=iO/N8IMTr9+uTFA5oEozU7wKO/TCzO4fowmKmdEbPqM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lyjz3nDrpStKa+qltVje8D+qOkteIa20l6VnlobwHDqkLwBdBesMrdg4dFmZhzIln
-	 mHLUYaYHJ0rtTh603lPW70oAUxppYMESEk+HHKtqwJ3eyI7ccWrns3veUUPD8oino4
-	 QheN7DYlmtJ/vT+LsDvP+TdW99xtBsPZBsF17oYhlls2zXW8BbsAEqTMqECfDboKtM
-	 qt5a+6H1lhu11pRn9ctpQH6kONfP99CF52Ox+mArERMhAxUtIqTKJrQHamxpWQVugn
-	 cZqZsTnmkk1h0h5M8BiOPgRdIhXjz5GoqtJzKptWia7faURQa9jK22gMUMOh9B+8yq
-	 Am9HHTOLImp8g==
+	b=K8P7hVOyiiVf/Jvf/HMpJPbo0g9QT33GciZFs6BZ5J19gFOxnly1C3xztyGc1d5y3
+	 UWkNL8HzoBxz9OPvzexqt26/0KXOzujxZElyP6RYEyFsdMSiLnEaLuLGfUdoWYc/v5
+	 1ceyxbf/4zOfZmEm3l664kh/z/9KdSMgNg0oP2HTEFqtKE3q7rEtSGIuRQKJla8v1a
+	 26pLXddL9x6DzQ4h3GuLQ9HS8n4zeGdqQ0YUwKrT7uQRQzN1qhJSZxR4U1uJ2tRtcW
+	 gEdcs6iOYkUT94qqYH9wbG5P3D/qQU5OM3mzcwY2hgtYqS/HJVsscDXjgIHO5kBBdZ
+	 FZequc6vPS5KA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Chaohai Chen <wdhh66@163.com>,
-	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+	Chenyuan Yang <chenyuan0y@gmail.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 14/54] scsi: target: spc: Fix RSOC parameter data header size
-Date: Thu,  3 Apr 2025 15:01:29 -0400
-Message-Id: <20250403190209.2675485-14-sashal@kernel.org>
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.14 38/54] scsi: st: Fix array overflow in st_setup()
+Date: Thu,  3 Apr 2025 15:01:53 -0400
+Message-Id: <20250403190209.2675485-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250403190209.2675485-1-sashal@kernel.org>
 References: <20250403190209.2675485-1-sashal@kernel.org>
@@ -47,43 +47,41 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.14
 Content-Transfer-Encoding: 8bit
 
-From: Chaohai Chen <wdhh66@163.com>
+From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 
-[ Upstream commit b50532318793d28a7628c1ffc129a2226e83e495 ]
+[ Upstream commit a018d1cf990d0c339fe0e29b762ea5dc10567d67 ]
 
-The SPC document states that "The COMMAND DATA LENGTH field indicates the
-length in bytes of the command descriptor list".
+Change the array size to follow parms size instead of a fixed value.
 
-The length should be subtracted by 4 to represent the length of the
-description list, not 3.
-
-Signed-off-by: Chaohai Chen <wdhh66@163.com>
-Link: https://lore.kernel.org/r/20250115070739.216154-1-wdhh66@163.com
-Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Reported-by: Chenyuan Yang <chenyuan0y@gmail.com>
+Closes: https://lore.kernel.org/linux-scsi/CALGdzuoubbra4xKOJcsyThdk5Y1BrAmZs==wbqjbkAgmKS39Aw@mail.gmail.com/
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Link: https://lore.kernel.org/r/20250311112516.5548-2-Kai.Makisara@kolumbus.fi
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_spc.c | 2 +-
+ drivers/scsi/st.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index ea14a38356814..61c065702350e 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -2243,7 +2243,7 @@ spc_emulate_report_supp_op_codes(struct se_cmd *cmd)
- 			response_length += spc_rsoc_encode_command_descriptor(
- 					&buf[response_length], rctd, descr);
- 		}
--		put_unaligned_be32(response_length - 3, buf);
-+		put_unaligned_be32(response_length - 4, buf);
- 	} else {
- 		response_length = spc_rsoc_encode_one_command_descriptor(
- 				&buf[response_length], rctd, descr,
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index ebbd50ec0cda5..344e4da336bb5 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4122,7 +4122,7 @@ static void validate_options(void)
+  */
+ static int __init st_setup(char *str)
+ {
+-	int i, len, ints[5];
++	int i, len, ints[ARRAY_SIZE(parms) + 1];
+ 	char *stp;
+ 
+ 	stp = get_options(str, ARRAY_SIZE(ints), ints);
 -- 
 2.39.5
 
