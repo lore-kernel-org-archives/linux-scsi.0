@@ -1,172 +1,155 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1BDE22155D;
-	Fri,  4 Apr 2025 17:46:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40F31917D0;
+	Fri,  4 Apr 2025 21:35:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743788811; cv=none; b=QXXcuKFqkhEAawl2HFkkHdyGVk3cUHP0JswJxD91pLeyK0SO1N1xXmO9itNL9YGMEy6dMqegi8koLZ57V4Sj5BTl06I7K/fnINmT4i4AuVSzTAvD5HhGEBx9Y0MUTZX+TZsqvAT2goHkAjVt5SeTsrwawO37AsN8YgHLN+q1Wm8=
+	t=1743802516; cv=none; b=qPlblEvk0O5qEcUcNFRqaMhpGD9FgjTex9J+GjYK5uJ73CSeznKE4Csv1ZMcteYPAoYfX7NLHPC0Ar98A6fwxoBEtWMWhraMhaRXezs/TCygPiYLEv9Ybn2HPiuzqIwHXLne1Yy/gxQJmzZDKPQgnElTKr9cMTDX8jvK+GKK3pA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743788811; c=relaxed/simple;
-	bh=QYDEzDBtrWi2feklS2uF0gUBH19bEMM1+rsd4MrUQxE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AzImTnUs/WbESO9ukAYmjNfe7xC4o+ZPCe35qDmxBiqoYvNKavHfS/X8ZzwSVDMf8LWGBxe1AgdAHXDfgOIHGCB/BQ/qJxQ3exdVaCAK9MjbSKt+ORrRCmVNFVRJ/WGV7LPz2+iSvDAHP43QvUYmUqX5FQ6LzIIlwFBGxlqWePo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=S5T7dJt/; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1743802516; c=relaxed/simple;
+	bh=7aAsYXJn76BOH5AizQYQy2rtX193wdJ2VfE0aGa8tlY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ba16IUdbkhshxGn9PgbM/k27RQsR3pnoG4OyuPiPMgz93UftehW2lFTu45g09VFHC5hTQ1oETg0+u9HwA1VzirPlIba54vVcIxwtZw5wChpCyFzOQxkuFxo0BfD1je7B7bBvTVWBEH5uxEvGEi6HVwZgIoh7/JOUuF+Ql24ZBfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l6VClVHr; arc=none smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="S5T7dJt/"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 534Es507021505;
-	Fri, 4 Apr 2025 17:46:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	KO6u1yUjnNIwAaKQNunUyW3rJFQ08B0KZ+1JsBFWzhc=; b=S5T7dJt/Xm7wUAOc
-	XqtuPbjf4fwjvRM4MY1XxyLiUDtVqPp7uzJ3jOsS43kVEXKuAWBfecdFwRopdMcl
-	eaH4DJ5QKSUCcz3D6LoHOZKVy3VbKGM/hBjMnyfM9L5ivegk3ILaBDYKYpOsm2X1
-	Z/XVV6O1OMdpCxnsTld2IglsgJlFi80yU/qj7Cn28Ge7pWYv4hGBTn4kJhzIz/IV
-	NmDw6LUtGu0ifouMI8ikXB922gBlxeddQKnE2NGDAMhImD7vxujmfylALcZ7GWZq
-	ui351IUQrODzzRMP5U8r2GfIvC+AuxkO8Xzu+ORoSPb2n3miPiiNn/yrluu2QVHh
-	5R//zw==
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45t2d42j72-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 04 Apr 2025 17:46:29 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 534HkSs0007716
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 4 Apr 2025 17:46:28 GMT
-Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
- nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Fri, 4 Apr 2025 10:46:24 -0700
-From: Manish Pandey <quic_mapa@quicinc.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K.
- Petersen" <martin.petersen@oracle.com>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>
-CC: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <quic_nitirawa@quicinc.com>, <quic_bhaskarv@quicinc.com>,
-        <quic_rampraka@quicinc.com>, <quic_mapa@quicinc.com>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
-Subject: [PATCH V2 2/2] scsi: ufs: introduce quirk to extend PA_HIBERN8TIME for UFS devices
-Date: Fri, 4 Apr 2025 23:15:39 +0530
-Message-ID: <20250404174539.28707-3-quic_mapa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20250404174539.28707-1-quic_mapa@quicinc.com>
-References: <20250404174539.28707-1-quic_mapa@quicinc.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l6VClVHr"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5efe8d9eb1eso4360458a12.0;
+        Fri, 04 Apr 2025 14:35:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1743802513; x=1744407313; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=CKFyjkTSCgU7gYrqc5tPBVD9dvVp2tHpU5G+1BA5V3s=;
+        b=l6VClVHrl1Nj6ChTh2Gu3UnpdF6h1TSNUf/Grr/yhRumM7hUx8ZAxB6HccfkDj9nh0
+         +OirLUWH79IdQtU9yfm3HNQzhMF/IeA7Rw9sQnrbjuSRGrkvd3zRYmBoaW0b927gsiJe
+         ROdWaqqGCKwFWUrALXv744irwxYZs1GCOi/bKj5fljTNxu7PaZCWEgQgZ2h3TCm3xkLv
+         ZlcSfzc61l0JFvwJNrHP6JmYvhlXZu2KRbxOprefO+K+5rwa6CY50+JrdMOD+jzT+tg8
+         JjIJaRUq6RpFv19YNcuTMqJj6PD4sMKXPw3d2gy/JuNJvCUYRZuyk/cvc8INKPoIT0Mw
+         d3TQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1743802513; x=1744407313;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CKFyjkTSCgU7gYrqc5tPBVD9dvVp2tHpU5G+1BA5V3s=;
+        b=Rhlk9pKIG1xfRLCG2zaA/yxu81817oHTX2FEck8Q/vJjXjNfybPqGk5/FuPzUTQ+Fa
+         T9QBD52WhDfhIoVOubHCYM3PH5AvvOwpNQgedRweBQwl2GbaM5ASjyeJMkGyHpSaeb58
+         sY+gFcSF36CmPt6Txbg5lo8fqjYjinqzNR1AbIzkJwV8ONG16+txfzKkHTwO/cumDzd+
+         pwprpMsjK6u/zTPy8G4j6Vh0f2q9wAmqqwT6nDrapG0H+4K5C9dbQ4exYs+37HLqmXVW
+         IhEQqVE7VlQbzdgZICBHteVcUpUvJPpiX6+p2kIBFQyjQyrB1tvLZIaGKRuZ3wmpaCKi
+         cH7w==
+X-Forwarded-Encrypted: i=1; AJvYcCWc3zuVTZaAY1l7pE1I2AR6Y4jXtuDxZIASvvrmu3Enh10pEjVT2jmhrDSW4zqaU5yZLEY3QL8NBFo/@vger.kernel.org
+X-Gm-Message-State: AOJu0YwImaZRhZC1vBXJQnIP4Mx+j4CASMVHiW2HQInLmF3yMoBeHaIS
+	U8+fkdU0DmsUeBAlm7i4JZDWe93BtF8lRZg+I8iVs2ZkPV4EThDnaXRLtjJprkZB+npgKYfXfgA
+	TWQ5zTSrkv5CWlToug1/CUtyyDlGvyw==
+X-Gm-Gg: ASbGncvqLsz+0ApdmeXHlx8cLYCkBhKQlsIlwEmdXB52rLKaRTjjeMpx5Wkg2yeYsGs
+	ZnzV2c7L3FxcJ9Ll1WWPgYzgZWRUvYI2pnBlRnWWeYUtxm1tXN4kyc/v/VHY+Qyxd7fTezuWWmI
+	Wui74pAwCAF39fqj3QFNJaiIMzFzk=
+X-Google-Smtp-Source: AGHT+IEUiYXXXVz3M/wk2rF4Ak40nYDdgka6ADaYEMyFRRSMWvX01xeoA8ZynVIdzt1eYUjZzz1WfMkFkj5VAPEvfm0=
+X-Received: by 2002:a05:6402:4021:b0:5ee:498:7898 with SMTP id
+ 4fb4d7f45d1cf-5f0b2b2b92dmr4555000a12.17.1743802512441; Fri, 04 Apr 2025
+ 14:35:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <CA+=Fv5TdeQhdrf_L0D89f6+Q0y8TT3NZy0eQzPPjJfj6fqO=oQ@mail.gmail.com>
+ <alpine.DEB.2.21.2410300046400.40463@angie.orcam.me.uk> <CA+=Fv5SXrc+esaKmJOC9+vtoxfEo1vOhgfQ739CBzmVcArWT8g@mail.gmail.com>
+ <20241030102549.572751ec@samweis> <CA+=Fv5RX-u_X9UgpMg6xzwc_FwLZus7ddJJY8rHMMyUUGc3pxA@mail.gmail.com>
+ <alpine.DEB.2.21.2410310517330.40463@angie.orcam.me.uk> <CA+=Fv5Q=eS1O4nwiHkJQRpvZ+JiDncnEZtqCUAyBPf1ZOtkzzA@mail.gmail.com>
+ <alpine.DEB.2.21.2410311656400.40463@angie.orcam.me.uk> <Zyh6tP-eWlABiBG7@infradead.org>
+ <CA+=Fv5Q_4GLdezetYYySVntE7KBB2d-zhNGR3rXawsvOh_PHAw@mail.gmail.com>
+ <alpine.DEB.2.21.2411042136280.9262@angie.orcam.me.uk> <yq15xp25ulu.fsf@ca-mkp.ca.oracle.com>
+ <20241105093416.773fb59e@samweis> <alpine.DEB.2.21.2411051226030.9262@angie.orcam.me.uk>
+ <CA+=Fv5Q5Q1BUscm2Tua9y1b=2f33+3SkULNwe0gKQpJFL1PLig@mail.gmail.com>
+ <20241112145253.7aa5c2ab@samweis> <CA+=Fv5QF7yUQd=CnrrDSwrFVbBC7wGdzXffJV__AjP9TDxqw=A@mail.gmail.com>
+ <alpine.DEB.2.21.2411251925410.44939@angie.orcam.me.uk> <CA+=Fv5TVZ7v43EQ8jx7g4RV0n6F6Wb1N83oEbeWnMAQbNQvT5g@mail.gmail.com>
+ <CA+=Fv5Sq89wYF3a16omtDUTnbjb23sUY-9ef8KjiEtNp4bv0Hg@mail.gmail.com>
+In-Reply-To: <CA+=Fv5Sq89wYF3a16omtDUTnbjb23sUY-9ef8KjiEtNp4bv0Hg@mail.gmail.com>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Fri, 4 Apr 2025 23:35:00 +0200
+X-Gm-Features: ATxdqUF5OcoxySdgKQB55QrWcbEkOCqDs4YKIJxOktbR7voQGgjIplmrIWbxQ7E
+Message-ID: <CA+=Fv5SsnnZK2-CTXnjsn8b-Hk2_-H0+i3iPNixQhC-7MR1B-A@mail.gmail.com>
+Subject: Re: qla1280 driver for qlogic-1040 on alpha
+To: linux-alpha@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 2SVCOrIdHG8KyIeRN-u9reIUIaWkuJp1
-X-Authority-Analysis: v=2.4 cv=HrJ2G1TS c=1 sm=1 tr=0 ts=67f01af5 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=m2_RP3qr77pTVs8TglMA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: 2SVCOrIdHG8KyIeRN-u9reIUIaWkuJp1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-04_07,2025-04-03_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- bulkscore=0 impostorscore=0 lowpriorityscore=0 priorityscore=1501
- suspectscore=0 spamscore=0 clxscore=1015 mlxscore=0 phishscore=0
- mlxlogscore=999 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504040123
 
-Some UFS devices need additional time in hibern8 mode before exiting,
-beyond the negotiated handshaking phase between the host and device.
-Introduce a quirk to increase the PA_HIBERN8TIME parameter by 100 µs
-to ensure proper hibernation process.
+Hi again,
 
-Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+Here are some updates on my continued experiments with the qla1280 driver
+This is what I've concluded so far:
+
+*The ISP1040B 32-bitcard works with 64-bit DMA_MASK on a 21164 Rawhide
+machine, hence the card supports DAC, even though the papers on the chip
+don't officially claim support until rev C (just as Thomas Bogendoerfer
+pointed out earlier).
+
+*The ISP1080 (64-bit pci slot/card) works with 64-bit DMA_MASK  on a
+21224 Tsunami machine, hence the monster window works fine on Tsunami.
+
+I've made some tests my ES40 (Tsunami) by first filling the drive attached
+to the IPS1040 with letter 'A' by just dd:ing a file containing about 40mb
+data, that is "dd if=A.txt of=/dev/sdc bs=1M". Then rebooting and loading
+the qla1280 driver with 64-bit DMA_MASK and reading back from 20mb from
+/dev/sdc using "dd oflag=direct if=/dev/sdc of=dump.img bs=1M count=20"
+I expect to get only the letter A in dump.img.
+
+To put some load on the system I have two processes running in background,
+unpacking some tar files. These files are unpacked on another drive
+attached to a different controller.
+
+When first running this test I just got some random data in one or more
+corrupted blocks but after repeating this a few times I started to
+recognize the data in the corrupt blocks. It is as if data from the disk
+attached to the ISP1040 controller is interleaved with data coming from
+another drive attached to another controller. In this case the text is
+from stuff belonging to gcc (which was in the tar file being unpacked on
+the other drive/controller at the same time).
+
+Data from one test run:
+
+A total of 57 hits on the monster window, 64kb each, during the test a total
+of 20mb was transferred from the disk and a total of about 3600kb was
+transferred using DAC/DMA mappings to the monster window. Only 64 bytes were
+corrupted. This suggests that DAC works on tsunami with the ISP1040 card
+but something else is going on that corrupts data along the way?
+
+The text is part of gcc-stuff that was being written to another disk
+on another controller simultaneously (that is, a tar.xz file was expanded)
+
+diff between expected output (AAAA) and actual output:
+
+< 012b4c80: 6325 3e00 253c 616e 6425 3e20 6f66 206d  c%>.%<and%> of m
+< 012b4c90: 7574 7561 6c6c 7920 6578 636c 7573 6976  utually exclusiv
+< 012b4ca0: 6520 6571 7561 6c2d 7465 7374 7320 6973  e equal-tests is
+< 012b4cb0: 2061 6c77 6179 7320 3000 253c 6173 6d25   always 0.%<asm%
 ---
- drivers/ufs/core/ufshcd.c | 31 +++++++++++++++++++++++++++++++
- include/ufs/ufs_quirks.h  |  6 ++++++
- 2 files changed, 37 insertions(+)
+> 012b4c80: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+> 012b4c90: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+> 012b4ca0: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+> 012b4cb0: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 464f13da259a..2b8203fe7b8c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -278,6 +278,7 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
- 	  .model = UFS_ANY_MODEL,
- 	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
- 		   UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE |
-+		   UFS_DEVICE_QUIRK_PA_HIBER8TIME |
- 		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS },
- 	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
- 	  .model = UFS_ANY_MODEL,
-@@ -8384,6 +8385,33 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	return ret;
- }
- 
-+/**
-+ * ufshcd_quirk_override_pa_h8time - Ensures proper adjustment of PA_HIBERN8TIME.
-+ * @hba: per-adapter instance
-+ *
-+ * Some UFS devices require specific adjustments to the PA_HIBERN8TIME parameter
-+ * to ensure proper hibernation timing. This function retrieves the current
-+ * PA_HIBERN8TIME value and increments it by 100us.
-+ */
-+static void ufshcd_quirk_override_pa_h8time(struct ufs_hba *hba)
-+{
-+	u32 pa_h8time = 0;
-+	int ret;
-+
-+	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
-+			&pa_h8time);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to get PA_HIBERN8TIME: %d\n", ret);
-+		return;
-+	}
-+
-+	/* Increment by 1 to increase hibernation time by 100 µs */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
-+			pa_h8time + 1);
-+	if (ret)
-+		dev_err(hba->dev, "Failed updating PA_HIBERN8TIME: %d\n", ret);
-+}
-+
- static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
- {
- 	ufshcd_vops_apply_dev_quirks(hba);
-@@ -8394,6 +8422,9 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
- 
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE)
- 		ufshcd_quirk_tune_host_pa_tactivate(hba);
-+
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_HIBER8TIME)
-+		ufshcd_quirk_override_pa_h8time(hba);
- }
- 
- static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
-diff --git a/include/ufs/ufs_quirks.h b/include/ufs/ufs_quirks.h
-index 41ff44dfa1db..f52de5ed1b3b 100644
---- a/include/ufs/ufs_quirks.h
-+++ b/include/ufs/ufs_quirks.h
-@@ -107,4 +107,10 @@ struct ufs_dev_quirk {
-  */
- #define UFS_DEVICE_QUIRK_DELAY_AFTER_LPM        (1 << 11)
- 
-+/*
-+ * Some ufs devices may need more time to be in hibern8 before exiting.
-+ * Enable this quirk to give it an additional 100us.
-+ */
-+#define UFS_DEVICE_QUIRK_PA_HIBER8TIME          (1 << 12)
-+
- #endif /* UFS_QUIRKS_H_ */
--- 
-2.17.1
+The amount of data being corrupted each run varies a lot, from no data
+corruption at all to several kilobytes. When data is corrupted it is
+always in chunks of 64-bytes, which coincides with the cache block size
+on the 21264 processor. It's as if every now and then, there is a cache
+block that holds stale data and the data written to memory by the dma
+controller is not seen by the cpu? this only happens when DAC DMA is
+done to 32-bit cards in a 64-bit slot and DMA_MASK is 64 bit.
 
+I've noticed that most of the DAC DMA requests hitting the "monster window"
+are allocated as entries in scatter/gather lists. I'm not sure if I
+understand this correctly but according to the "Tsunami/Typhoon 21272
+Chipset Hardware Reference Manual" the monster window only supports direct
+mapping, and if DAC is to be used in S/G mappings, DMA window-3 should be
+used instead. This is not the case in how this is implemented in linux for
+the tsunami platform. (see section 10.1.2.1,  10.1.4 and table 10-6).
+
+
+/Magnus
