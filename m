@@ -1,121 +1,157 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 312B36FC3;
-	Sat,  5 Apr 2025 14:37:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45D8A71747;
+	Sat,  5 Apr 2025 15:25:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743863839; cv=none; b=gaBI0ysq1mosEbImdz3BlRXEn97lIyjbfL9d35ebpG8V8Sk/ZOrnL+E0mFnwPKAkQJKEDa1hkXFpVMyDp/NkO6T+uvgUDYHrku4IiZNvrS4RoIrShzUdF/8P8EuXSdbjWmvB6vsd5C0zi/myFtgXLf01xrjIhOZiff7TjBety4k=
+	t=1743866754; cv=none; b=Cv34a+TG1UkrlVf50GHHbqNAQi/2JYguRWA6z9b4WInpEJQns2pcts9nF2yCqyEGGFGRdg3P48ukygQbbg3rYuWZTUe2Lhc3Wzmp7KOKPrjVKhVexJfxLstDL2BF59vhUqQJsswyk4CrLXjJQekMCvWST3Gw3F7dWaS1Avu3ZVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743863839; c=relaxed/simple;
-	bh=63F5xTkitsYyHm/pyJpFkBLkPS4nsTIzUTBp3RDPaz4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fu3jwB+MLklkr9ZsJ4jsN+Mk39JggcHAYJO6nke8qe8U6LlZFhIol8Tnb1H+HPbDHjIq0+XNjZbKAy6gsJedCJeRajeKlhXx138f4cIjim7NKdb6bVMH7mGQPF0ZaHiRkKh//uP8BWhyu7mysba/CBaxAmprdF6oFK9H0tpytkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LKLKaFu2; arc=none smtp.client-ip=209.85.128.50
+	s=arc-20240116; t=1743866754; c=relaxed/simple;
+	bh=h3GhfBIiVRF/Pd3aAJkjlB+5zHbq5qv4N3L5/N+zLiM=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BvvafGH5T9JtKAdlqkmpkPUiEJyALvmDp0vepsWwfcDmrfnrll9aCtmeCVhUr9PuH+f63plUxGZqJ/lepQ89sALvCP5NNcqcj2tZlb8INyLG2bRNmJrEmh8KLJ2N2fH/LcXNbFkeUBeBf5dpWxdfJmPHU6Cvtb4wUBrsW/u7eHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BUb/gVZn; arc=none smtp.client-ip=209.85.128.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LKLKaFu2"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4394a0c65fcso27363255e9.1;
-        Sat, 05 Apr 2025 07:37:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BUb/gVZn"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-43d07ca6a80so15409535e9.1;
+        Sat, 05 Apr 2025 08:25:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743863836; x=1744468636; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1743866750; x=1744471550; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=87i242gNmmnQ0/JIgcQs2sxcKZ2HnRDUKllGCKseh+0=;
-        b=LKLKaFu2cjIH+fPmUKzuD2iKy+Rtn9w9v8hUrhO7wfjwluBWy7OLswGpKymvFCKkzr
-         bHJNohNjzM+XMkBpiiMqrK7ONeAPUcLKWmfpP5TJtaIe2uiXIjPGNeR0GK2fstX0wLpa
-         u5uQ71Z+aeTIK0eu9bXwXWJ2H/SyCuDlitC0cjxwW/oEdeLr5ij/uXvqmWnn1MkluMMX
-         6bdNZ8GUPK0LJYHlxAMGR0W5pvlLPiMaf9UA2uXZkY9QaU7bDF/ymwGX2tEk2nur0YG5
-         UE9F+Sz/vULdmcVpYwQhkUTPb37zUVsH+rSObJNPk3KAJ7HyyzxGwR1qNqC8jkKjRyY9
-         TE1g==
+        bh=4rYQcQMBl9xOlGSmouhghPZmgfZgiwJh9mi25o4o0Nw=;
+        b=BUb/gVZnYPLhA5OyXM7YsnAU0KmjS726XXtBnD5UKj25w7yJvptuZV1WG7SX88EpaW
+         EqGY0LTVEn341Atj6+UJycIZFdNTuZFOEWSLMVeQyZHWewsi1QAwNJVOl4WYtsm1nSJ3
+         5ua48qjviu0WMZjbKVnLpfAFJSfWmOVxSHWBhwWCFebkmfbAv/EA1T5fWSzWHDQOMS8T
+         /ieugtAMFoMj1H2gt3d+lHgEjH9irN8CHwPm5N9fRJFk8lvSV1L2V+tgcyyOCdZ/mJqh
+         RDAfd35aIX6GNtqMVHz2qI0kydiH7MByFjcnZljlz8E8Gt/2xZkjWQ/4jsu6nbRXk5sy
+         BfvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743863836; x=1744468636;
+        d=1e100.net; s=20230601; t=1743866750; x=1744471550;
         h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=87i242gNmmnQ0/JIgcQs2sxcKZ2HnRDUKllGCKseh+0=;
-        b=THuQsSvO1jGi0B6/au8SntxZtYYW+91jOH/f48G4lcPDsK/Xd4XirZ64NRrOo35bLo
-         9EDivRF9zYX4uQbBp72AOke8f8OyZns+j1oO+2WyaB+/ZLKh2ZbV/KijBGU+dNH7jXYi
-         wxMOrJs/livgIAP1jJXudlS+vTY1VHrjCtANsx0sejBpLI99hbZ9jjFeWx1HQGhaBQpZ
-         u5+/lgHamaayQpDnaPBpQ2IeBTbEuRoDTpm51HVUxiT4OvK99IUfy7Fp6cy1nbFQjQXd
-         ZHzwF9CmlqQI8JFvs9IhYdBXa3CPJMEhIy/cjT8EoRVgKN46aNC4QD+rPhVOKB9/VUhC
-         4c/w==
-X-Forwarded-Encrypted: i=1; AJvYcCUkAtmCgS/XvPjNpHitedechDxkMgYvnSpU54oTJ+QNxtv2L83K2KHgVvGesOgITAY8mpN8VsAdKyi24LrC@vger.kernel.org, AJvYcCX0eD9+0XDcSQ5088Xd43xRPtiuePp/Wnhc7rUuaYKUgMI5U2VfhQEmhroCqHOv0Rsar+RUN1KOrqGxVSI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvlKqNBpc8HksIawyu+JkdWMKVR36+u99bGCnZ9aZCJoS7T7DY
-	tRkHonPjIeMzuEklutcX43hB3kPWxKTK7tE+k5U23ri6Jk18l4/5
-X-Gm-Gg: ASbGnctazEHKpXqrRT2x5P1ZqhJrK2/JGbQJn8aInfk8Rf4hKLEdrh+Ef7tZ/Pi2aKY
-	s+3Ly5SDKmU5A9qdPH7Ijpsb5vu+QZXNBWh/XSXcsJkzfQuotKU1nsFz6m8IpqQ2fZeuTYBYSfn
-	COK0o5v8LFKNq7KxINFB6J45xZkPc5TGqOflXgh3EA6vOq0dGNuq56KEt5itjSfAr7lGIdtvtfB
-	sja4CNqXbF5QlrWAUABKFd6TonMUNDU5piR4kXx+VCuM/65BPopaQ2FuUAXfB5x6ZGJUQeV28Iy
-	Gb4JoLx0w/KLIxIMIpdLBGZYLf2/16YKsbQOPpNrdeefLiIWQf5oRrok51U=
-X-Google-Smtp-Source: AGHT+IG/l4yCRNfI7DOPZyV8ReShUgrZ6Qt3TdLxndrrMT9p3qU8mq+mnkWp4ubxVT/SvOshXTzAcQ==
-X-Received: by 2002:a05:600c:a07:b0:43c:fb95:c752 with SMTP id 5b1f17b1804b1-43ecf843e91mr75410255e9.3.1743863836147;
-        Sat, 05 Apr 2025 07:37:16 -0700 (PDT)
-Received: from localhost.localdomain ([78.170.183.130])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39c3009644dsm6964693f8f.6.2025.04.05.07.37.14
+        bh=4rYQcQMBl9xOlGSmouhghPZmgfZgiwJh9mi25o4o0Nw=;
+        b=plKUeNma/9Hk5hh7yZe5ikMuzjAKhn5LiDiLWSzMKDy1k5yAYMaL09x40B1Y1aFcys
+         jMu6XQvhyCnVoObsBCBJyvvooOhRqoSsC+BIjkf1S0fiPXc1xN8Ic6yiUyLWmVrjkBrc
+         OtQaju9qr1p71PxXFsQLkmtEl87P+RreM1VPQEaMiWyzCjvmA0oHktF0ZkyCzWm25igE
+         0S+T/PDfdjpOGHmH9+tet9ufBtFty9r1IXvZ9gPvM253B6VLnjYMQRqrFwNWenE1EkCK
+         v4/pHuroohNFF4cFDTMMP+/UgMhl7WiJCNGp7fF0XebrkdhaCa6JqH1Vz7/YhUoONLR7
+         ctBA==
+X-Forwarded-Encrypted: i=1; AJvYcCVPBugbQ4+TAlSMitSBRHGFXIJe445+VFaKGb+vxa7Jg6cAIJ/9ToOogsueD0HFfqDSTAiJFThQX8Q84mtc@vger.kernel.org, AJvYcCVfNfdHi4sx1wb40uENI0mDdGK9U9UX4FSgy5cXHhNb1ZilUl+bpNxydkeJx3nJl+LcvEyc7oT+2pDQ3A0=@vger.kernel.org, AJvYcCWT/lckKlSUuX2gFBMEw29Mu+Fe4AY4UDyKIFZpjwwx5H/qXSaLztR0IMz/wR2pWe102NyRH9PCKwfRng==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5wUabVYAJAeLZ3mAGArdFHlt0q3R5nNHDVTqYeVDRPgECZfaF
+	tgaTVng96UPX8HvOWoVQrWWgl2lXLD0dFKtO2d2lrr+/Xcf41AWA
+X-Gm-Gg: ASbGncvcbVUcceRTL/YF8m8IYrXVROmfjKmeCi6bYU2p1uKPOSQfFH67ROtcF+Ch+TB
+	jqSof5i07bp5Hux+SjITIPakrrhsU/fv9A90NkGoeIezM1Mle9mqYKUWk1AmIgCp6dTv3FqG+zj
+	3D6jd2OSpHEtXAFh0yIE9w0Q30CrFpb7g6j7uTal2QH/WeICnq8+QsRDwffdwVi/fYTFvRu1svq
+	R6GRld5kCQxJR7v2Mvk64Ov7SblW0Fpe3ipKsb/n5venD3sSYXmu6iKQIPl5oxctAFxmsiZWfxt
+	eZPkHyPikRomAM/ZmJqzamCltj1iV6IgIradK1s2p78VrS+CHPMqwNfLV9W51J5ab77Fffq6TJS
+	TuXrNanM=
+X-Google-Smtp-Source: AGHT+IHP3tRbXf7i8RI1670OlH08T8lHDdFW9fMLv8Xn/kEmEaNz4d/F/FiflXkACwCWZkgl8ZM6+Q==
+X-Received: by 2002:a05:600c:8719:b0:43c:f85d:1245 with SMTP id 5b1f17b1804b1-43ecf8e7321mr76664845e9.17.1743866750233;
+        Sat, 05 Apr 2025 08:25:50 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43ec364c959sm75438015e9.25.2025.04.05.08.25.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Apr 2025 07:37:15 -0700 (PDT)
-From: Baris Can Goral <goralbaris@gmail.com>
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linux.dev,
-	Baris Can Goral <goralbaris@gmail.com>
-Subject: [PATCH v4] scsi: target: transform strncpy into strscpy
-Date: Sat,  5 Apr 2025 17:36:47 +0300
-Message-Id: <20250405143646.10722-1-goralbaris@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250402204554.205560-1-goralbaris@gmail.com>
+        Sat, 05 Apr 2025 08:25:49 -0700 (PDT)
+Date: Sat, 5 Apr 2025 16:25:48 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Baris Can Goral <goralbaris@gmail.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+ skhan@linuxfoundation.org, linux-kernel-mentees@lists.linux.dev
+Subject: Re: [PATCH v4] scsi: target: transform strncpy into strscpy
+Message-ID: <20250405162548.310dea37@pumpkin>
+In-Reply-To: <20250405143646.10722-1-goralbaris@gmail.com>
 References: <20250402204554.205560-1-goralbaris@gmail.com>
+	<20250405143646.10722-1-goralbaris@gmail.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-The strncpy() function is actively dangerous to use since it may not
-NULL-terminate the destination string,resulting in potential memory
-content exposures, unbounded reads, or crashes.
+On Sat,  5 Apr 2025 17:36:47 +0300
+Baris Can Goral <goralbaris@gmail.com> wrote:
 
-Link:https://github.com/KSPP/linux/issues/90
-Signed-off-by: Baris Can Goral <goralbaris@gmail.com>
----
-Changes from v4:
-	-Description added
-	-User name corrected
-	-formatting issues.
-	-commit name changed
- drivers/target/target_core_configfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> The strncpy() function is actively dangerous to use since it may not
+> NULL-terminate the destination string,resulting in potential memory
+> content exposures, unbounded reads, or crashes.
+> 
+> Link:https://github.com/KSPP/linux/issues/90
+> Signed-off-by: Baris Can Goral <goralbaris@gmail.com>
+> ---
+> Changes from v4:
+> 	-Description added
+> 	-User name corrected
+> 	-formatting issues.
+> 	-commit name changed
+>  drivers/target/target_core_configfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> index c40217f44b1b..5c0b74e76be2 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -143,7 +143,7 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+>  	}
+>  	filp_close(fp, NULL);
+>  
+> -	strncpy(db_root, db_root_stage, read_bytes);
+> +	strscpy(db_root, db_root_stage, read_bytes);
+>  	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index c40217f44b1b..5c0b74e76be2 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -143,7 +143,7 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
- 	}
- 	filp_close(fp, NULL);
- 
--	strncpy(db_root, db_root_stage, read_bytes);
-+	strscpy(db_root, db_root_stage, read_bytes);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
- 
- 	r = read_bytes;
-@@ -3664,7 +3664,7 @@ static void target_init_dbroot(void)
- 	}
- 	filp_close(fp, NULL);
- 
--	strncpy(db_root, db_root_stage, DB_ROOT_LEN);
-+	strscpy(db_root, db_root_stage, DB_ROOT_LEN);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
- }
- 
--- 
-2.34.1
+That code is broken, it reads:
+	read_bytes = snprintf(db_root_stage, DB_ROOT_LEN, "%s", page);
+	if (!read_bytes)
+		goto unlock;
+
+	if (db_root_stage[read_bytes - 1] == '\n')
+		db_root_stage[read_bytes - 1] = '\0';
+
+	/* validate new db root before accepting it */
+	fp = filp_open(db_root_stage, O_RDONLY, 0);
+	if (IS_ERR(fp)) {
+		pr_err("db_root: cannot open: %s\n", db_root_stage);
+		goto unlock;
+	}
+	if (!S_ISDIR(file_inode(fp)->i_mode)) {
+		filp_close(fp, NULL);
+		pr_err("db_root: not a directory: %s\n", db_root_stage);
+		goto unlock;
+	}
+	filp_close(fp, NULL);
+
+	strncpy(db_root, db_root_stage, read_bytes);
+	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+
+	r = read_bytes;
+
+unlock:
+	mutex_unlock(&target_devices_lock);
+	return r;
+
+'Really nasty (tm)' things happen if 'page' is too long.
+
+	David
+
+>  
+>  	r = read_bytes;
+> @@ -3664,7 +3664,7 @@ static void target_init_dbroot(void)
+>  	}
+>  	filp_close(fp, NULL);
+>  
+> -	strncpy(db_root, db_root_stage, DB_ROOT_LEN);
+> +	strscpy(db_root, db_root_stage, DB_ROOT_LEN);
+>  	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+>  }
+>  
 
