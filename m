@@ -1,198 +1,129 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1706E160783;
-	Sat,  5 Apr 2025 20:07:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B474B130E58
+	for <linux-scsi@vger.kernel.org>; Sun,  6 Apr 2025 18:23:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743883635; cv=none; b=hzm5cjT82poOZ8d3uwow61qNGBGUMClrsx0izX76W/53WYM8rBhN+9Pi7xXJ78HkuOCZX157t9TwdG3F2Bx2ed5S2wvUEcydE2+PY7vL+GYZvtN+UdJ97HGApENNlkRUBbHUPhCGgPW+ib91m2XrzAUw5eyT60+1hXM40tYT1F8=
+	t=1743963832; cv=none; b=RpIF2EFz8QG6JCv4csNF+BdfPQ6kNszvDr28Y6N292Wb7/z5wl07Ci4Qjt5jubxpa8aa+K7a8XVPth33UEobEH2GY05s12HTOHBwUTKQx0z8GcUx9ImJVIZnz2kTnx49/9F7JOMQK5Xn2YRzxEm2V9MKLXmRfy2z0TuxVMNz3Ao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743883635; c=relaxed/simple;
-	bh=s+1xl9zZIPyMcvQv6/4pFdGe03l0dIhLHCNrlLurVYg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sgkNCzP7dI5o4SXbL4lFy39Si6Ee9Rf9ofTCeWZ2MNJ0bmUjz5E380kYeC0pcnkiZ3R4WkcSRKyTjz7VlbtuHlj/1NeXwuKAvHIeKXQV9ozaIDB4f05xgCm6B8Gygll+6DHQu1ITI+0jBpGlSEWiy+3HEs5OT07zVZKEi2/n7Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MMp1vtEn; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1743963832; c=relaxed/simple;
+	bh=IAzy0fh8K5Ij9hbamh80vAnFaq8nFygBt8h0leYVIkA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jzsFyPwaHh76ej7Kk7y8Nc3hV+wnHjjtF3U44aZ3RkPB9lexAzeV2n/7yvM9YBpMAPuWYJb3np0kUrZzFEEvCYg/TIH7kSS8KtRNuICXOhKEJ7L0mpjMpFzD9GLx9YDieH5CDQreNFgqBzGWtbQD28l8QuuKKZZSeNpVb3FRmj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=cEJxc9ln; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MMp1vtEn"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-43cfb6e9031so28843045e9.0;
-        Sat, 05 Apr 2025 13:07:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cEJxc9ln"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-223f4c06e9fso31332865ad.1
+        for <linux-scsi@vger.kernel.org>; Sun, 06 Apr 2025 11:23:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1743883632; x=1744488432; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FkhRHjIp0Jk3pbrjZYxlvTBw6U6EDhWF+U5runkFqfg=;
-        b=MMp1vtEn7yaZqzEAmOEEVDWi7QyDOI4trsjwYPYedm+PmXKmELgDDRNVZxpfKP8Jr9
-         l2oXIn3dR1DMxNKkZ4pq3I3nn7f2sjV1spF2+vEbKULfaX2Lqjhw1K5ruo0rLLsjnf/h
-         fJTtDyTI/IgcEN5N5h+T7jp3m1HI5pIRaRCaMi4URoLNWiTmjQ2oHsIwljjCXCWBPu7q
-         u/DngnLFKDB5HcRnAsWmJ5+Ll+fzvOfsSlr04W/bjW9qp1u34XaTGLYmSZCaXsX6oPZM
-         chaH2dPs4rGM1r1c4BhOwTs4km6HiZj0imI/3f/n05FASUOevgdW/YZx34o65g/yFdXO
-         cstQ==
+        d=linaro.org; s=google; t=1743963830; x=1744568630; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=+3W5JbOyIE71HVwKTUQkHyqilZi+aSbwXv3gNCNt8vU=;
+        b=cEJxc9lntGpyYbhlbgqgFWq9NRq/slvr98jMZ/veQwWwnBEJA/p8UvxfGeapC/VMuq
+         V+ZV9pevy47AvxA84ZiVLX5NLBS03ujz8iKysxiPcoqEk3CDvt//6wd8R2CpvY67jAam
+         ZyYyfmRNvbviYDpuoBjRIaIvrUgq/jAbRPxaYxenOEMiXgxrO5VPJcCNEWsi1FofKmhd
+         RHVm82lcl6vm8seK/REtKcNxW1YEp3geuWNgGF7Rzc7tjpP+rv7FocAr2fDSgjzZQuXn
+         QAlGQUP51cDwIpyGhDvtrJcAF2q2sQN7y2EOOPyWOTVvUrYXweoKhDCZN6xUMYdKH7Pd
+         Y2nw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743883632; x=1744488432;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FkhRHjIp0Jk3pbrjZYxlvTBw6U6EDhWF+U5runkFqfg=;
-        b=Yga6CA1Gc3IcUxgFD4lHTlcddei6BXx959fj9qdigTHSEJuDF6WstY/P2d2I+ARQYb
-         9gHOnmB4YbkUveH2V74nI8qm6rY//bFsCCMSivdAa1xDxKmHTccDhJTrbg8V/Az1DYMh
-         owm9ABz5KF8j3ly35um6nWxHIDwp4VilHD3OWnjYsVVFRgNToazl0OW/4om0hh94RXs6
-         gZN2QQ2vf4s0Sf0hI5zi5pjxkxYZkNj1x8UI8IrU86Ve28irtPKj+5f1pkcXuxMKsly+
-         yqcsN4MxUd8D7R4Odm5Ym7l+K+zPgvq7sDXXG25HCnDwxg3zdks7TmAZHTBnuyz4kRR1
-         w1fA==
-X-Forwarded-Encrypted: i=1; AJvYcCVrbcKbQYk6KDTV65dqbtlAZrV/Q2vXFOjAp10QvsbV8fk05KznSU4Zl/PdcqK+A1Fn/k2tMw9EmBsz/5eZ@vger.kernel.org, AJvYcCWvI2sIiw51rav7B/YVDdGDLRA5xS049Wn9ZzKDv8NRWVF1sRUyclagJdKuM73LMtU4HezAgKFFNmQvMw==@vger.kernel.org, AJvYcCX/C+OJol67VGPXUHhhLsZX9Js50XwBj+HeUgLNO/NBh1fulLChygcQoREkInbTGqR9vkQbhoZePDB5bvo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwQGaifTfQrOfnkvgzuy+HA88/J0jHCEy4kT4Mux/MkZbhfZJWp
-	gz8ID8XiAgntBfsUJLtqkWaamx+b4FDyKZSzZ4DxpG5rO/Q6vUgm
-X-Gm-Gg: ASbGncvfyB0lsllNjEYFMAWm/KPUAQRSmRhd/QFHMp0RLckKJAHg716q/om3pW8cnJb
-	S6D7Ia3GIEct2GPANFh3MqG5HYBgtnBGhUTGpGQyJmnwZSd7d+dGXe+3IKMnVSExnsW+1k4fYIH
-	cQrU731FsUYq0R4K3244oU8NIlaEtlY2KsxOihVH8f/4yURosdYQolt/zNIZK2ZJFGtpfy2MlHd
-	ShjV4CTK9kFoWOc6O04iXWomGsV7MAsiMMU/Pe6alHg8HoI1znjh36hT1RtrtbFI87t43R/+RbO
-	oOJuC6mhiONOwCLZHeQU2RYbDRr6CFhEQ/A8gkRZrRbQIgQL2DsOLjMUquDeHmFnWyc6O4iZMvw
-	l2R4Rq7Az2yfBI9BKvw==
-X-Google-Smtp-Source: AGHT+IF4nfvge+ucrCiitotjfMWNu0lp42u6AmcvfVrGTbCSyC9Virf9RRKHitdcFSlJnBqkmsImbg==
-X-Received: by 2002:a05:600c:4449:b0:43c:fe9f:ab90 with SMTP id 5b1f17b1804b1-43ecfa18d6amr51264995e9.28.1743883632150;
-        Sat, 05 Apr 2025 13:07:12 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43ec16f1a73sm85075035e9.24.2025.04.05.13.07.11
+        d=1e100.net; s=20230601; t=1743963830; x=1744568630;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+3W5JbOyIE71HVwKTUQkHyqilZi+aSbwXv3gNCNt8vU=;
+        b=jmWNSMoRWFV8p5rwapXsV0KIFQ5OCQ2IJS3KtwbUmSKdHb6kgoj0HbHZu9tGcpslma
+         1wohTF2awdLcV/2rEPbybYFNOvvb0ZGLve5kRGIIsNzrGO5d1EC57qRSrpXpzaWXmkQ2
+         fxh491k2cHlXAvywaz6i3gwb6eEQGuuCPhlrBBz7LV/jdX0GhLEzIzk4txqBIyM1mJI9
+         TU2lZXpe7adQDewuQ84Qxh7nF7gBx0rnSaz8FoJTZ83glTFGjhTw+XlavBwwoSBJ3n/q
+         XcolyS+VLoWNlLq3a5PS3HRbosbOZ3ah6m3+5DkTT+aUaU9HPohbt24hrPzMZ/TXt8RR
+         mbBw==
+X-Forwarded-Encrypted: i=1; AJvYcCU0mnqEaavZKHyo+9A2+3xFx/k/rvoCA69aMZXKW0BqJF2KW3Jer/v0Vjhw3nNpw6bkq8fZ70BRpszF@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJ2aQseMXIXKsntMGIp6G+lfp6ZqNseb1zr9ANbGDvM2CYYPk1
+	/b4OFFrOEAeuCUmWTtCCyIvvZPicZpXq72ugrgD60uEF6z+CVpCG0guhcLaQjw==
+X-Gm-Gg: ASbGnctswmeLcyfTES/dU6R8LaGy8YSnKxMlmR7SdLafHdWoXP9AxznIdUsO6IZ9sMO
+	HRx8/w+7WipsnNHFKWwId1ROl/Okx2hjr8hFXzuwnUOC2XUlAW5dxhqcAv3BmWTUzePw4+wFGBZ
+	Dr8eGW8kUbiwwT9Bwcya3YEMBBCebTV/u7nEYcsIUO74YjX74UkfA4gGmmqyHfm/nZWxWj5wB+h
+	pjYBdttpKJtUANGurLQ/l5nEle6VKvT61Jq/JiI8jkZXpCbiKfnx+jqnIwj74FCu0aTClJTHaJj
+	30bm4fxNkIhzolWt+qh3aqBz90laRZncXjxJSg6cYtS7B74yLNv8deg=
+X-Google-Smtp-Source: AGHT+IFdT0XFI03UAIeiotZXeIYigu0aV7BLlfFTU0OW0vocyL0gj4gwxcJDUVb4tfjT4ZP6NIWT6w==
+X-Received: by 2002:a17:903:41c7:b0:223:607c:1d99 with SMTP id d9443c01a7336-22a89992b46mr153666815ad.0.1743963829885;
+        Sun, 06 Apr 2025 11:23:49 -0700 (PDT)
+Received: from thinkpad ([120.60.71.192])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2297866e161sm65969765ad.171.2025.04.06.11.23.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Apr 2025 13:07:11 -0700 (PDT)
-Date: Sat, 5 Apr 2025 21:07:10 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: baris goral <goralbaris@gmail.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
- skhan@linuxfoundation.org, linux-kernel-mentees@lists.linux.dev
-Subject: Re: [PATCH v4] scsi: target: transform strncpy into strscpy
-Message-ID: <20250405210710.309ed5d6@pumpkin>
-In-Reply-To: <CAJOJxizEDm_th4G=BvejM4_jGcF6+QYT=LjD_J_FTbsNFVTjCQ@mail.gmail.com>
-References: <20250402204554.205560-1-goralbaris@gmail.com>
-	<20250405143646.10722-1-goralbaris@gmail.com>
-	<20250405162548.310dea37@pumpkin>
-	<CAJOJxizEDm_th4G=BvejM4_jGcF6+QYT=LjD_J_FTbsNFVTjCQ@mail.gmail.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+        Sun, 06 Apr 2025 11:23:49 -0700 (PDT)
+Date: Sun, 6 Apr 2025 23:53:41 +0530
+From: 
+	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, 
+	Arthur Simchaev <Arthur.Simchaev@sandisk.com>, "quic_cang@quicinc.com" <quic_cang@quicinc.com>, 
+	"quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>, 
+	"peter.wang@mediatek.com" <peter.wang@mediatek.com>, "minwoo.im@samsung.com" <minwoo.im@samsung.com>, 
+	"adrian.hunter@intel.com" <adrian.hunter@intel.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Bean Huo <beanhuo@micron.com>, 
+	Keoseong Park <keosung.park@samsung.com>, Ziqi Chen <quic_ziqichen@quicinc.com>, 
+	Al Viro <viro@zeniv.linux.org.uk>, Gwendal Grignou <gwendal@chromium.org>, 
+	Eric Biggers <ebiggers@google.com>, open list <linux-kernel@vger.kernel.org>, 
+	"moderated list:ARM/Mediatek SoC support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>, 
+	"moderated list:ARM/Mediatek SoC support:Keyword:mediatek" <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v4 1/1] scsi: ufs: core: add device level exception
+ support
+Message-ID: <ouxmroni4miwrzd24gvcvo3v5hqthodhhx3ohk4i37qryn4k2w@47s2a6nvxby6>
+References: <4370b3a3b5a5675bb3e75aaa48a273674c159339.1742526978.git.quic_nguyenb@quicinc.com>
+ <SA2PR16MB4251229744D717821D3D8353F4A72@SA2PR16MB4251.namprd16.prod.outlook.com>
+ <c5ab13ec-f650-ea10-5cb8-d6a2ddf1e825@quicinc.com>
+ <0a68d437-5d6a-42aa-ae4e-6f5d89cfcaf3@acm.org>
+ <ad246ef4-7429-63bb-0279-90738736f6e3@quicinc.com>
+ <3d7b543c-1165-42e0-8471-25b04c7572ac@acm.org>
+ <4cb20c80-9bb0-e147-e3c0-467f4c8828ba@quicinc.com>
+ <989e695e-e6a4-4427-9041-e39ecf5b5674@acm.org>
+ <yzy7oad77h744vf2bdylkm4fronemjwvrmlstnj6x5lzjxg672@zya6toqv4aeg>
+ <1b87152e-ff0f-9c45-020d-4927ff3dbef8@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1b87152e-ff0f-9c45-020d-4927ff3dbef8@quicinc.com>
 
-On Sat, 5 Apr 2025 19:35:01 +0300
-baris goral <goralbaris@gmail.com> wrote:
+On Wed, Apr 02, 2025 at 12:00:26PM -0700, Bao D. Nguyen wrote:
+> On 4/2/2025 12:49 AM, manivannan.sadhasivam@linaro.org wrote:
+> > Yeah, we should be cautious in changing the uAPI header as it can break the
+> > userspace applications. Annotating the members that need packed attribute seems
+> > like the way forward to me.
+> 
+> Yes, I realized potential issue when Bart raised a concern.
+> 
+> > 
+> > Though, I'd like to understand which architecture has the alignment constraint
+> > in this structure. Only if an architecture requires 8 byte alignment for __be32
+> > would be a problem. That too only for osf7 and reserved. But I'm not aware of
+> > such architectures in use.
+> When using "__u64 value;" in place of osf3-6, I saw the compiler padded 4
+> bytes, so __packed was needed for me to get correct __u64 value. I thought
+> even the existing structure utp_upiu_query_v4_0 may need __packed on some
+> fields where the driver reads the returned data in order to be safe across
+> all architectures. However, without evidence of an actual failure, I didn't
+> touch the existing structure. Only raised potential issue for discussion.
+> 
 
-> Hi,
-> Trying to understand, it has if check a few lines above:
->=20
-> if (count > (DB_ROOT_LEN - 1))
->=20
-> Does not it met our expectations?
+If you change members to be 64bit, then for sure compiler will add padding to
+avoid holes. But I don't see any issue with the unchanged utp_upiu_query_v4_0
+structure.
 
-Don't top post on mailing lists.
+- Mani
 
-The first issue is that the return value of snprintf() is the number
-of characters that would be written into the buffer were it long enough.
-The kernel's scnprintf() will return the number of characters written.
-
-But why is it using snprintf() just to copy a string?
-Why is truncation at all safe here?
-Why is a '\n' being removed without the length being changed.
-The length argument to strscpy() should be the length of the destination
-(to stop overruns), not the number of characters.
-In this case it is the number of characters - so will delete another
-character (unless a '\n' was removed).
-The return value is just garbage.
-
-You may have opened a bag of worms, but you've also made it worse.
-
-	David
-
->=20
-> David Laight <david.laight.linux@gmail.com>, 5 Nis 2025 Cmt, 18:25
-> tarihinde =C5=9Funu yazd=C4=B1:
->=20
-> > On Sat,  5 Apr 2025 17:36:47 +0300
-> > Baris Can Goral <goralbaris@gmail.com> wrote:
-> > =20
-> > > The strncpy() function is actively dangerous to use since it may not
-> > > NULL-terminate the destination string,resulting in potential memory
-> > > content exposures, unbounded reads, or crashes.
-> > >
-> > > Link:https://github.com/KSPP/linux/issues/90
-> > > Signed-off-by: Baris Can Goral <goralbaris@gmail.com>
-> > > ---
-> > > Changes from v4:
-> > >       -Description added
-> > >       -User name corrected
-> > >       -formatting issues.
-> > >       -commit name changed
-> > >  drivers/target/target_core_configfs.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/drivers/target/target_core_configfs.c =20
-> > b/drivers/target/target_core_configfs.c =20
-> > > index c40217f44b1b..5c0b74e76be2 100644
-> > > --- a/drivers/target/target_core_configfs.c
-> > > +++ b/drivers/target/target_core_configfs.c
-> > > @@ -143,7 +143,7 @@ static ssize_t target_core_item_dbroot_store(stru=
-ct =20
-> > config_item *item, =20
-> > >       }
-> > >       filp_close(fp, NULL);
-> > >
-> > > -     strncpy(db_root, db_root_stage, read_bytes);
-> > > +     strscpy(db_root, db_root_stage, read_bytes);
-> > >       pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);=
- =20
-> >
-> > That code is broken, it reads:
-> >         read_bytes =3D snprintf(db_root_stage, DB_ROOT_LEN, "%s", page);
-> >         if (!read_bytes)
-> >                 goto unlock;
-> >
-> >         if (db_root_stage[read_bytes - 1] =3D=3D '\n')
-> >                 db_root_stage[read_bytes - 1] =3D '\0';
-> >
-> >         /* validate new db root before accepting it */
-> >         fp =3D filp_open(db_root_stage, O_RDONLY, 0);
-> >         if (IS_ERR(fp)) {
-> >                 pr_err("db_root: cannot open: %s\n", db_root_stage);
-> >                 goto unlock;
-> >         }
-> >         if (!S_ISDIR(file_inode(fp)->i_mode)) {
-> >                 filp_close(fp, NULL);
-> >                 pr_err("db_root: not a directory: %s\n", db_root_stage);
-> >                 goto unlock;
-> >         }
-> >         filp_close(fp, NULL);
-> >
-> >         strncpy(db_root, db_root_stage, read_bytes);
-> >         pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
-> >
-> >         r =3D read_bytes;
-> >
-> > unlock:
-> >         mutex_unlock(&target_devices_lock);
-> >         return r;
-> >
-> > 'Really nasty (tm)' things happen if 'page' is too long.
-> >
-> >         David
-> > =20
-> > >
-> > >       r =3D read_bytes;
-> > > @@ -3664,7 +3664,7 @@ static void target_init_dbroot(void)
-> > >       }
-> > >       filp_close(fp, NULL);
-> > >
-> > > -     strncpy(db_root, db_root_stage, DB_ROOT_LEN);
-> > > +     strscpy(db_root, db_root_stage, DB_ROOT_LEN);
-> > >       pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
-> > >  }
-> > > =20
-> >
-> > =20
-
+-- 
+மணிவண்ணன் சதாசிவம்
