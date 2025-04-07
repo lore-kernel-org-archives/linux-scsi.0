@@ -1,78 +1,86 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15AB326AEC
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Apr 2025 16:59:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E81812135D1;
+	Mon,  7 Apr 2025 17:48:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744045169; cv=none; b=Qd7MMwQbLM++8F1hi9Zj2Ytlzm2Az2g5vgHh7m1vJlZKfn+QwEeAoCh8y8GNR4BSjEOUmQAYtR6Ma2c2cNx0oEbUoZ/ak/vMlyIs2smQmzfb4pnxBgEZwT+2Yzkmjl9aX1LNJGdDgIbyp0ce8t5cl6G/hlo8VXjMX2has+3aSfo=
+	t=1744048140; cv=none; b=XGtB8HZFe6NGxiFQzv/yAJX0onKelz08/6sW3pq+cVzHawWZGhDanOab4YXZSHekw0RgHimaak85IfKOXn6svW634nUAxzJ+jkbpVulHeDn8Wf6K6h9qrjJ5QC4fIjM103eW0BFUNoM2CvCkCm98TimDBR1yWBoNcION0uENCVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744045169; c=relaxed/simple;
-	bh=rSalkazrhEvGJKsjdKX4wFA+OHmIHL/EzHzgzkHMrIo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bDwrYDYCSUDyl/NFR0ykYPHNrsJB6WnisJIgRlQe2Qwu7Mr2yf6idRPGpAGmHdzhGdKtIhzVg2lqw4Kc8G/hEdhrGA2F60N/u7adQW05ZeJvvZKmoki4dszxd5pzUltK80ZqMcVSavf3c7FXox3+7Zex7++ChglWIaF3N7FDYik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=yToq1TGY; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1744048140; c=relaxed/simple;
+	bh=1gV5wKAYIhcXsVsHpfR7Ix1lNB5pYJFNOM8j3/zUsXk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=hL5ouuYnwR4BQrLzbLpfY7l5B16PnPZ+oXId9/T64nFcoS6Wx6RDEoED2A1QHvwtWWH3YqnltfHSK2SNelQNATCrRp+JrJXUyfryHxL5p/7JXceV5wJBXf+kuN+9kqxZUFPZCOL89xEt6wBUNsJbS0b8w19j3wcec+w4oeWT62Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DLpZCkf3; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="yToq1TGY"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZWb612W31zlvyBJ;
-	Mon,  7 Apr 2025 16:59:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1744045160; x=1746637161; bh=rSalkazrhEvGJKsjdKX4wFA+
-	OHmIHL/EzHzgzkHMrIo=; b=yToq1TGYgD9h1sozuOafTDte9S3XJjQiuKfJeRmT
-	mXPgF5IwyriZo7cCcfVCMIGWDkc8kQglpq7thuXlM/x9RgPOL03ayynSiRlVmMG4
-	XjbMR0+X6zWpYfsWapVdj5j06Psf2gv41iV5azELJNX6RKiqQu1VOjANr1zobAzz
-	QJ9SOYhj/FFhZnBeihXT+GwOs3qe4HvSSvuCL/s5zPiHI/KyGql2bHwwN6T8z21j
-	NVdXNXGKjSrweBWzB4IrfUUJl8BBkBilqPWhCESIzhfytuEPIre6TOjBYC9LBrDh
-	FM5Dtg087qp1VQJd6kKM0gk6fM1Qtm/1v0bkLNXOy4Svgw==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id G7C8oP5qtzTC; Mon,  7 Apr 2025 16:59:20 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZWb5y5Nmzzlwf7m;
-	Mon,  7 Apr 2025 16:59:17 +0000 (UTC)
-Message-ID: <1c08cc57-60dc-4efc-870d-6b9688c85b2d@acm.org>
-Date: Mon, 7 Apr 2025 09:59:16 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DLpZCkf3"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-39c1efc457bso2669678f8f.2;
+        Mon, 07 Apr 2025 10:48:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1744048137; x=1744652937; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1gV5wKAYIhcXsVsHpfR7Ix1lNB5pYJFNOM8j3/zUsXk=;
+        b=DLpZCkf3ZPZk1EbbhXQHbhsuVC8abPGTzjEqmHzOxLSa5kLS0dsado5fTl6WPvIzT1
+         F46S08Z55sH+l7wFrSjCL3czz+FrUDM7mnfFUNc6meO/8YvYQQf4cPnJUUAoo/AYxmUI
+         qqFbuJxZG4wW9bX2iHo8KB952WJbaL4eRQsiBEJtStIGWOOQB4c/9KVWSIqJorFOnAng
+         jxvnkDShSPzjfk4eRSeGHP0erySIKR1Upo9ID7TnIKambe5JSATCWvkXoiAa/k31PhgZ
+         Dczwgh5zb6kn9tlZkkQYHCnGebznXa9vra5ViL8iGM7HorknAVgJmyUEt2xenOoe01Wv
+         KLag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744048137; x=1744652937;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1gV5wKAYIhcXsVsHpfR7Ix1lNB5pYJFNOM8j3/zUsXk=;
+        b=Y/2PME8B6VluPq76dl39VHbvUEJYofNSiWyc4IJuRCUbVKAc6jwh6hcEDUYMGiI5vO
+         uhI8ixJNrK9I5eqjywcl1sFK8WCXtg+Z9SLuUnfJePCxKPMVBQX1tUe30PPrdA2N4IdT
+         JHkJI7yaf6Wdp1TigsRh8NphKloeUoVlhW4j8XHayyeRStM/dCra6DMrsETzALrhicgg
+         v0ItPoHTA9UMDWfYFV115MjqsapqXVBjuaLTIxjQKoTZ2tFstB3EuTjDLn38AT9Kjpfj
+         eOJCulZbJubsUVC8SbiBtrLM6mG713gGaqprDxwg6HBiKPLEoKtk8Vz34euEbsD0KVh/
+         1PYg==
+X-Forwarded-Encrypted: i=1; AJvYcCVPCEhsEK1CviSDcfyeC9qWQ4l2QM2q97n4kRPs8gK1FiFsc9pICyI9uyEkA4Fb2etxUE07q4rGMWm5ihWW@vger.kernel.org, AJvYcCWUuMbKW1mmbdXf0TscQ5AdnZm+wFLwPl771tVdrXkim1Xr3JWAttOTCKQl+NBA8unv+KzWfS8ZtDZXfEc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxk+7efyXrMb0iFZ5RnwZ/N37dMInRKoqMBI8Jgsz+x+l7uFXVS
+	/A/OQl+U6KjTo8xKlsQVqcScHIld0fCcC2ZjroN86cpZB28wrSX2qlyBhnXql27wAQ==
+X-Gm-Gg: ASbGncuaNwsQ73D6oFIiL13YA/8D5IbgBTBa+bxGDj+ULzQoXQrvhGuFENvtqlfjHIs
+	y7m9hCwhtaKxggjhKiPPj4f5kMUvEi3MwHhvgADcT+sh60cRxnUyZaOozPG9puk42UEetQlZR2v
+	qnbAm76JugkvzmUro8w8FOJFs1YoCyLTKGTBjDzhRBAxnjbRyGcxSSdfMQVP+t5ZD+J/DE5sukJ
+	AE5eA5EhbF9kgY+XUWr3CR1C4hV9G8ey+qOs7sv1Ah+pjjblP8qnZVxDxoMVRe1cgZqavYglLzu
+	EsbyOug6T6jdof2JiR0Pqv33RPCWPIxJZAoF7Xx4szCJNMeulIL/hCmIzqI=
+X-Google-Smtp-Source: AGHT+IHvm5xHEyrihlXKOKxJKWZo3yYxmHfFKcTTI7HwXFFbKp/rPsqF3MudML2SiUaXd4RfJJ7FRg==
+X-Received: by 2002:a05:6000:2512:b0:39a:d20b:5c25 with SMTP id ffacd0b85a97d-39cb35a73b2mr12028385f8f.26.1744048137095;
+        Mon, 07 Apr 2025 10:48:57 -0700 (PDT)
+Received: from localhost.localdomain ([78.170.183.130])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39c301a6ae5sm12888149f8f.32.2025.04.07.10.48.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Apr 2025 10:48:56 -0700 (PDT)
+From: Baris Can Goral <goralbaris@gmail.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	skhan@linuxfoundation.org,
+	linux-kernel-mentees@lists.linux.dev
+Subject: Re: [PATCH v4] scsi: target: transform strncpy into strscpy
+Date: Mon,  7 Apr 2025 20:48:54 +0300
+Message-Id: <20250407174854.10132-1-goralbaris@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <D908SSFL0E9D.24WXC0I3O6AQB@bsdbackstore.eu>
+References: <D908SSFL0E9D.24WXC0I3O6AQB@bsdbackstore.eu>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: ufs: core: Fix a race condition related to
- device commands
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250314225206.1487838-1-bvanassche@acm.org>
- <yq1cyeb9pjp.fsf@ca-mkp.ca.oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <yq1cyeb9pjp.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/20/25 5:48 PM, Martin K. Petersen wrote:
-> Applied to 6.15/scsi-staging, thanks!
+Hi Maurizio,
 
-Hi Martin,
+Unfourtunately, in version 6.14-rc2 (and also v6.14) strncpy is still there.
 
-Has a pull request already been sent to Linus for the changes on the
-6.15/scsi-staging branch?
-
-Thanks,
-
-Bart.
-
-
+Best Regards,
+Baris
