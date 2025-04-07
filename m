@@ -1,195 +1,434 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A55A231A3B
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Apr 2025 10:17:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A749A7DA7F;
+	Mon,  7 Apr 2025 10:40:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744021033; cv=none; b=I9OjogiBuyghZnB45KcQUJPz7LadbgZkmqiB+QsXZiIEw3SyeLVH3NB62NSgZent2KGvgLcXaT1359uZ6aFaJnzypyaK8GOxTWx+XQsqGZiPNnyfZCrSrCFPVfruFfo465m27YGXOOKtwKm4A8mn8G2AZPpd/UBcZeCCS4Vjdbo=
+	t=1744022443; cv=none; b=nrzP2h5REaXG32zD6x+ehClP4zTHudcTEY0q7UjsnI52Kq3wDgQdB0CmsqEJyrUEsHaiZPEA4OZLayMnH4s2jhvq4OZ3aQonmRysjKIEvc2u61hROkXYT4vRhOI3FJZf0GCL//nUJ5+wOwV/M4leiufoGnxehsXlF5nBiX55XBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744021033; c=relaxed/simple;
-	bh=GJ/3LoYhjreXCmlje4HGApIZSD0dopghOnCCoRTD310=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=DJig4buamc4CgQ78xzR/p32QIyDZpZyzmbdud0bo4vq4NfrHSjP+Ga/ENB4YnX6izorKj4WP17l1IIElT5dTUHqyepqYZ+oMgyQSssvTXxxCsSjCW+i8U54E24vTxSQEs/hi4sviVackyBNFuTx97ZPYCfP4DAZ3LjCJnNtJtYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JexIb2gj; arc=none smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1744022443; c=relaxed/simple;
+	bh=BYjYcWf1Fwu1NDLwGvJl+jn1B5UgPV0rzCyGrbDLcAE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qIK/z1U1JtH94mZJ0clUVbCuu9h3Mcj/ceeAgEF7ZtYhpKMgpA2SNy4LO1ydwB312Oe9HpWckNpbcbVPEpvqjIDpPgzO8peuh/D4lKlRG95QfOiItRsKEGuyynXTDSxkFfsF9sZsEZ/lwTfVnBgLELwccm6iqXqSGB+uDKFVaDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LKRetri4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JexIb2gj"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-39c31e4c3e5so2531216f8f.0
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Apr 2025 03:17:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1744021028; x=1744625828; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PxuAzzqTN8Esy+3wBd10qAHGJHFzExg1oERBNtTrUmM=;
-        b=JexIb2gjNt3Gy/0s2IiYAJmZpxFMHlk8DtcWbR7rtyvXNqYfH8Hl+Byo5o47fypklG
-         tQnm8mHpZ/MSG/9yObjvvSjQmv9tFsh+Y7VzULy7ZpOkc+w5PQzZFxkcSb7LUXDX2Git
-         5ca/Sz0R4mmXboyU3kA+/PK0rCyH6nJs/5Kt4c90/gE/tOCaP7KZ+7aL0RMLt1QJdkpi
-         3FW/qt0sJx2Sv41pXbYN49/eloQoDgA7j0EhAYixmItwtUKd/R61WLx8tEW61VoB5rZT
-         70+RXV4cNuB/TimQGcMdu+7Eai4Amo7f2tqL1XAyXHO8uUfZ9eZ8ZjCU5VtXtgf++2fI
-         ZXsw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744021028; x=1744625828;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PxuAzzqTN8Esy+3wBd10qAHGJHFzExg1oERBNtTrUmM=;
-        b=o4zJ0hTSf5WE2yp70kbEYpLCZhewcZ99SeECT3KgXAB++28G/01/qZaypm5jWWnvCe
-         rkGKHkCEZAdzX/hDih9tzg6qaQlFQKwayaeKGE1K/+oKtaenibZRNEmf1QQF9LAG69v3
-         by00v6MiBXj40fKFlqZ1sD+gjnAdV7kt4paz4YOAGQdhfy+6eikjwCA3HxSvhjTKkagq
-         P+H0JNpD5DjzXI4TdzxMSItWjNmBs2KpaSf9VYEMx2MMC1+rY3BnC/XjTFvggAXxktG4
-         1nbog+WvVnjXoQsH5cwEjvOPI69deV7FhzSNWES8wXCXzKVa3d0Xie1Ej1monBtZ4bXA
-         Aebg==
-X-Forwarded-Encrypted: i=1; AJvYcCXWnskyBjAodOkLPEN92DFab4vxqF0uaioHgz/QiE/+Y9+tJcLQFOgoj1D3cu1JZ09uKFH+97fZZJJV@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEMRrKdMAamEBAk+WejVFTccei34QBpWN11ADAuB0i4/FtZXVe
-	r+4LJJ1yoYJ6hPx8I545Px17OA+w8p760JXnQKpK7HOHH3UBm8eUsUSqGS1M1y0=
-X-Gm-Gg: ASbGnct/q9y9o9RRMRZ9xbGgVVBd6gYmPq7IHzkrnZTO7cNGiFBoFwfF27B8Qq56nLx
-	tQHr0ketflPg0s6pEMvt6cG8ipbK/rGWELOmfDxmaeF9CGy01NKnUbdPmW0CY0iGUrEU/1bzTRI
-	Q8qUeXb6+YM7R/plTGLAc8JSjTK+ASAdvlNVslEMGGptp3huefcfL1CDRyLSeXYzfrfNX8E8WxZ
-	AXtGFtCKelLoRr2sVxxtMPyPev73X0FK//mv2Wwi7ewu0W/Hwb4KQNj1lg70EcZzz/UVCoazaF8
-	V+17HQ4HPIlukkVXIGRorQKk5CrMhWnfUi90enCdqSKODkozfTRNXVceEyMGKw4STQ==
-X-Google-Smtp-Source: AGHT+IHh+6UGrJ/XHf2b1137nkPVPeuW5PoXq2uwhIcmz71829sHC5RKQ4MEcbte47SAnkiXo4gpRg==
-X-Received: by 2002:a05:6000:188f:b0:391:3915:cfea with SMTP id ffacd0b85a97d-39cba93329amr9862933f8f.38.1744021028483;
-        Mon, 07 Apr 2025 03:17:08 -0700 (PDT)
-Received: from arrakeen.starnux.net ([2a01:e0a:3d9:2080:52eb:f6ff:feb3:451a])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-39c301a67a1sm11476831f8f.24.2025.04.07.03.17.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Apr 2025 03:17:08 -0700 (PDT)
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Date: Mon, 07 Apr 2025 12:17:05 +0200
-Subject: [PATCH RFT v3 3/3] ufs: core: delegate the interrupt service
- routine to a threaded irq handler
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LKRetri4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DD93C4CEDD;
+	Mon,  7 Apr 2025 10:40:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744022442;
+	bh=BYjYcWf1Fwu1NDLwGvJl+jn1B5UgPV0rzCyGrbDLcAE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=LKRetri4hSGmLUKA5I/tzu/0D6DE5Bm3a1NKfGfMR4fPbE/VTcfsHpe430PssNYts
+	 JYQkPZxBkthyxX2QC5ccS4qlP9CSzaZWBbIJ1PS/GcT1gRvG2FKSw9DxntCGXnV95J
+	 R0Da3pX6hgIh8VgHVsNRZVc4QVTHzMZV8YGmhUbv0LjOENBn6yhDifkeib7twfqdca
+	 F/EKN5aTk3UmM1iEEVZTkJYTkDJkCdYTvzel7wSJnobx4vNFlE4WhGFOXoM1Gmdeqw
+	 KW81ah3yRxSjcA1idP4S8FhW4UhMZ921U6ET3Rn1BsTZUODghOHDijZ4PAxhQE1YoY
+	 iCyi2FI+cj4zQ==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
+	Carl Vanderlip <quic_carlv@quicinc.com>,
+	Oded Gabbay <ogabbay@kernel.org>,
+	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Jocelyn Falempe <jfalempe@redhat.com>,
+	Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+	Xinliang Liu <xinliang.liu@linaro.org>,
+	Tian Tao <tiantao6@hisilicon.com>,
+	Xinwei Kong <kong.kongxinwei@hisilicon.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Yongqin Liu <yongqin.liu@linaro.org>,
+	John Stultz <jstultz@google.com>,
+	Sui Jingfeng <suijingfeng@loongson.cn>,
+	Lyude Paul <lyude@redhat.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Gerd Hoffmann <kraxel@redhat.com>,
+	Zack Rusin <zack.rusin@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Lucas De Marchi <lucas.demarchi@intel.com>,
+	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Jani Nikula <jani.nikula@intel.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	Lijo Lazar <lijo.lazar@amd.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	linux-arm-msm@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	linux1394-devel@lists.sourceforge.net,
+	amd-gfx@lists.freedesktop.org,
+	nouveau@lists.freedesktop.org,
+	virtualization@lists.linux.dev,
+	spice-devel@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org,
+	netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	kvm@vger.kernel.org
+Subject: [RFC] PCI: add CONFIG_MMU dependency
+Date: Mon,  7 Apr 2025 12:38:14 +0200
+Message-Id: <20250407104025.3421624-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250407-topic-ufs-use-threaded-irq-v3-3-08bee980f71e@linaro.org>
-References: <20250407-topic-ufs-use-threaded-irq-v3-0-08bee980f71e@linaro.org>
-In-Reply-To: <20250407-topic-ufs-use-threaded-irq-v3-0-08bee980f71e@linaro.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Neil Armstrong <neil.armstrong@linaro.org>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3901;
- i=neil.armstrong@linaro.org; h=from:subject:message-id;
- bh=GJ/3LoYhjreXCmlje4HGApIZSD0dopghOnCCoRTD310=;
- b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBn86Yh9gJ5axoT/EQbGWoqm1NFW5vkB2viScmVj9lv
- 3zyu8NeJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCZ/OmIQAKCRB33NvayMhJ0faSEA
- Cda9fOHkeTmvfwyg0O+9OkwVmMxfblxX9lpBagC/2+wG542TmQ/IznGMbYXZn/h3UmpJQgAcpKt1Dk
- DXIzZRFBxs17dffzTsGbFmp+EKhVmBoQPCDqH0YPHBcMM8R8I/yQT33v3ygS6PkvQQO9/nFyXmnokE
- Llrr+gCJW6jG5FXPjEVLJ6aKTcOtOj3mMp5p1FsxbOTI+TtOhM5pOomdZrVuUzyHLqrQ+R8xMr6BGo
- 3+6zc5klY7QEsJv4LIFzklaGh1pDbEqeYgT2WS+rJtJkGkxXEqD8At5DrbjU2fDLrJgJWxc2ZvN74I
- 2rz2//vS7H6zmXsbo73NOPVuMvL1Zu+eWseoUs1qkGaLI1BSyLeGjUSNGF7PUPV011hAC0KHAPTQ7v
- cJJLItL/eDavPoRw1Hpf9C5ORd4EuY48CibS9VveKTMd4HLDqhwDszEPCz/2L07pfVgrM/nmHAGxGv
- qSWiw2NzS1HE2kKuH3chhPNgiQDCsxZM1LGI7W9hniNBXFuV8/67myXyc1osPrwsuNgMEVcxFn1hxh
- GmdKebccIDYdWwiJGM72YAhh1UXfwcKtAepsOFO4yoAS7gVPKlzeOzvQm/qTN9OYPJAlK2Koj25Ug1
- fPqAWLx6u4daaV/0A3bWBo1es/VvlfKMopdmwBilSYgBRA56C4eqYGkpl9FA==
-X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
- fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
+Content-Transfer-Encoding: 8bit
 
-On systems with a large number request slots and unavailable MCQ ESI,
-the current design of the interrupt handler can delay handling of
-other subsystems interrupts causing display artifacts, GPU stalls
-or system firmware requests timeouts.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Since the interrupt routine can take quite some time, it's
-preferable to move it to a threaded handler and leave the
-hard interrupt handler wake up the threaded interrupt routine,
-the interrupt line would be masked until the processing is
-finished in the thread thanks to the IRQS_ONESHOT flag.
+It turns out that there are no platforms that have PCI but don't have an MMU,
+so adding a Kconfig dependency on CONFIG_PCI simplifies build testing kernels
+for those platforms a lot, and avoids a lot of inadvertent build regressions.
 
-When MCQ & ESI interrupts are enabled the I/O completions are now
-directly handled in the "hard" interrupt routine to keep IOPs high
-since queues handling is done in separate per-queue interrupt routines.
+Add a dependency for CONFIG_PCI and remove all the ones for PCI specific
+device drivers that are currently marked not having it.
 
-This fixes all encountered issued when running FIO tests
-on the Qualcomm SM8650 platform.
-
-Example of errors reported on a loaded system:
- [drm:dpu_encoder_frame_done_timeout:2706] [dpu error]enc32 frame done timeout
- msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1: hangcheck detected gpu lockup rb 2!
- msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     completed fence: 74285
- msm_dpu ae01000.display-controller: [drm:hangcheck_handler [msm]] *ERROR* 67.5.20.1:     submitted fence: 74286
- Error sending AMC RPMH requests (-110)
-
-Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
+Link: https://lore.kernel.org/lkml/a41f1b20-a76c-43d8-8c36-f12744327a54@app.fastmail.com/
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/ufs/core/ufshcd.c | 30 +++++++++++++++++++++++++++---
- 1 file changed, 27 insertions(+), 3 deletions(-)
+ drivers/accel/qaic/Kconfig              | 1 -
+ drivers/firewire/Kconfig                | 2 +-
+ drivers/gpu/drm/Kconfig                 | 2 +-
+ drivers/gpu/drm/amd/amdgpu/Kconfig      | 3 +--
+ drivers/gpu/drm/ast/Kconfig             | 2 +-
+ drivers/gpu/drm/gma500/Kconfig          | 2 +-
+ drivers/gpu/drm/hisilicon/hibmc/Kconfig | 1 -
+ drivers/gpu/drm/loongson/Kconfig        | 2 +-
+ drivers/gpu/drm/mgag200/Kconfig         | 2 +-
+ drivers/gpu/drm/nouveau/Kconfig         | 3 +--
+ drivers/gpu/drm/qxl/Kconfig             | 2 +-
+ drivers/gpu/drm/radeon/Kconfig          | 2 +-
+ drivers/gpu/drm/tiny/Kconfig            | 2 +-
+ drivers/gpu/drm/vmwgfx/Kconfig          | 2 +-
+ drivers/gpu/drm/xe/Kconfig              | 2 +-
+ drivers/net/ethernet/broadcom/Kconfig   | 1 -
+ drivers/pci/Kconfig                     | 1 +
+ drivers/pci/pci.c                       | 4 ++--
+ drivers/scsi/bnx2fc/Kconfig             | 1 -
+ drivers/scsi/bnx2i/Kconfig              | 1 -
+ drivers/vfio/pci/Kconfig                | 2 +-
+ 21 files changed, 17 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7f256f77b8ba9853569157db7785d177b6cd6dee..b40660ca2fa6b3488645bd26121752554a8d6a08 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6971,7 +6971,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- }
+diff --git a/drivers/accel/qaic/Kconfig b/drivers/accel/qaic/Kconfig
+index a9f866230058..5e405a19c157 100644
+--- a/drivers/accel/qaic/Kconfig
++++ b/drivers/accel/qaic/Kconfig
+@@ -8,7 +8,6 @@ config DRM_ACCEL_QAIC
+ 	depends on DRM_ACCEL
+ 	depends on PCI && HAS_IOMEM
+ 	depends on MHI_BUS
+-	depends on MMU
+ 	select CRC32
+ 	help
+ 	  Enables driver for Qualcomm's Cloud AI accelerator PCIe cards that are
+diff --git a/drivers/firewire/Kconfig b/drivers/firewire/Kconfig
+index 905c82e26ce7..a5f5e250223a 100644
+--- a/drivers/firewire/Kconfig
++++ b/drivers/firewire/Kconfig
+@@ -83,7 +83,7 @@ config FIREWIRE_KUNIT_SELF_ID_SEQUENCE_HELPER_TEST
  
- /**
-- * ufshcd_intr - Main interrupt service routine
-+ * ufshcd_threaded_intr - Threaded interrupt service routine
-  * @irq: irq number
-  * @__hba: pointer to adapter instance
-  *
-@@ -6979,7 +6979,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-  *  IRQ_HANDLED - If interrupt is valid
-  *  IRQ_NONE    - If invalid interrupt
+ config FIREWIRE_OHCI
+ 	tristate "OHCI-1394 controllers"
+-	depends on PCI && FIREWIRE && MMU
++	depends on PCI && FIREWIRE
+ 	help
+ 	  Enable this driver if you have a FireWire controller based
+ 	  on the OHCI specification.  For all practical purposes, this
+diff --git a/drivers/gpu/drm/Kconfig b/drivers/gpu/drm/Kconfig
+index 2cba2b6ebe1c..6e95d204597e 100644
+--- a/drivers/gpu/drm/Kconfig
++++ b/drivers/gpu/drm/Kconfig
+@@ -462,7 +462,7 @@ source "drivers/gpu/drm/imagination/Kconfig"
+ 
+ config DRM_HYPERV
+ 	tristate "DRM Support for Hyper-V synthetic video device"
+-	depends on DRM && PCI && MMU && HYPERV
++	depends on DRM && PCI && HYPERV
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_KMS_HELPER
+ 	select DRM_GEM_SHMEM_HELPER
+diff --git a/drivers/gpu/drm/amd/amdgpu/Kconfig b/drivers/gpu/drm/amd/amdgpu/Kconfig
+index 1a11cab741ac..058e3b3ad520 100644
+--- a/drivers/gpu/drm/amd/amdgpu/Kconfig
++++ b/drivers/gpu/drm/amd/amdgpu/Kconfig
+@@ -2,7 +2,7 @@
+ 
+ config DRM_AMDGPU
+ 	tristate "AMD GPU"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	depends on !UML
+ 	select FW_LOADER
+ 	select DRM_CLIENT
+@@ -68,7 +68,6 @@ config DRM_AMDGPU_CIK
+ config DRM_AMDGPU_USERPTR
+ 	bool "Always enable userptr write support"
+ 	depends on DRM_AMDGPU
+-	depends on MMU
+ 	select HMM_MIRROR
+ 	select MMU_NOTIFIER
+ 	help
+diff --git a/drivers/gpu/drm/ast/Kconfig b/drivers/gpu/drm/ast/Kconfig
+index da0663542e8a..242fbccdf844 100644
+--- a/drivers/gpu/drm/ast/Kconfig
++++ b/drivers/gpu/drm/ast/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config DRM_AST
+ 	tristate "AST server chips"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_GEM_SHMEM_HELPER
+ 	select DRM_KMS_HELPER
+diff --git a/drivers/gpu/drm/gma500/Kconfig b/drivers/gpu/drm/gma500/Kconfig
+index aa2ea128aa2f..a2acaa699dd5 100644
+--- a/drivers/gpu/drm/gma500/Kconfig
++++ b/drivers/gpu/drm/gma500/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config DRM_GMA500
+ 	tristate "Intel GMA500/600/3600/3650 KMS Framebuffer"
+-	depends on DRM && PCI && X86 && MMU && HAS_IOPORT
++	depends on DRM && PCI && X86 && HAS_IOPORT
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_KMS_HELPER
+ 	select FB_IOMEM_HELPERS if DRM_FBDEV_EMULATION
+diff --git a/drivers/gpu/drm/hisilicon/hibmc/Kconfig b/drivers/gpu/drm/hisilicon/hibmc/Kconfig
+index 98d77d74999d..d1f3f5793f34 100644
+--- a/drivers/gpu/drm/hisilicon/hibmc/Kconfig
++++ b/drivers/gpu/drm/hisilicon/hibmc/Kconfig
+@@ -2,7 +2,6 @@
+ config DRM_HISI_HIBMC
+ 	tristate "DRM Support for Hisilicon Hibmc"
+ 	depends on DRM && PCI
+-	depends on MMU
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_DISPLAY_HELPER
+ 	select DRM_DISPLAY_DP_HELPER
+diff --git a/drivers/gpu/drm/loongson/Kconfig b/drivers/gpu/drm/loongson/Kconfig
+index 552edfec7afb..d739d51cf54c 100644
+--- a/drivers/gpu/drm/loongson/Kconfig
++++ b/drivers/gpu/drm/loongson/Kconfig
+@@ -2,7 +2,7 @@
+ 
+ config DRM_LOONGSON
+ 	tristate "DRM support for Loongson Graphics"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	depends on LOONGARCH || MIPS || COMPILE_TEST
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_KMS_HELPER
+diff --git a/drivers/gpu/drm/mgag200/Kconfig b/drivers/gpu/drm/mgag200/Kconfig
+index 412dcbea0e2d..a962ae564a75 100644
+--- a/drivers/gpu/drm/mgag200/Kconfig
++++ b/drivers/gpu/drm/mgag200/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config DRM_MGAG200
+ 	tristate "Matrox G200"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_GEM_SHMEM_HELPER
+ 	select DRM_KMS_HELPER
+diff --git a/drivers/gpu/drm/nouveau/Kconfig b/drivers/gpu/drm/nouveau/Kconfig
+index 7b3e979c51ec..d1587639ebb0 100644
+--- a/drivers/gpu/drm/nouveau/Kconfig
++++ b/drivers/gpu/drm/nouveau/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config DRM_NOUVEAU
+ 	tristate "Nouveau (NVIDIA) cards"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	select IOMMU_API
+ 	select FW_LOADER
+ 	select FW_CACHE if PM_SLEEP
+@@ -94,7 +94,6 @@ config DRM_NOUVEAU_SVM
+ 	bool "(EXPERIMENTAL) Enable SVM (Shared Virtual Memory) support"
+ 	depends on DEVICE_PRIVATE
+ 	depends on DRM_NOUVEAU
+-	depends on MMU
+ 	depends on STAGING
+ 	select HMM_MIRROR
+ 	select MMU_NOTIFIER
+diff --git a/drivers/gpu/drm/qxl/Kconfig b/drivers/gpu/drm/qxl/Kconfig
+index 69427eb8bed2..d8f24bcae34b 100644
+--- a/drivers/gpu/drm/qxl/Kconfig
++++ b/drivers/gpu/drm/qxl/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config DRM_QXL
+ 	tristate "QXL virtual GPU"
+-	depends on DRM && PCI && MMU && HAS_IOPORT
++	depends on DRM && PCI && HAS_IOPORT
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_KMS_HELPER
+ 	select DRM_TTM
+diff --git a/drivers/gpu/drm/radeon/Kconfig b/drivers/gpu/drm/radeon/Kconfig
+index f51bace9555d..c479f0c0dd5c 100644
+--- a/drivers/gpu/drm/radeon/Kconfig
++++ b/drivers/gpu/drm/radeon/Kconfig
+@@ -2,7 +2,7 @@
+ 
+ config DRM_RADEON
+ 	tristate "ATI Radeon"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	depends on AGP || !AGP
+ 	select FW_LOADER
+ 	select DRM_CLIENT_SELECTION
+diff --git a/drivers/gpu/drm/tiny/Kconfig b/drivers/gpu/drm/tiny/Kconfig
+index 54c84c9801c1..6ca12fe7f57a 100644
+--- a/drivers/gpu/drm/tiny/Kconfig
++++ b/drivers/gpu/drm/tiny/Kconfig
+@@ -37,7 +37,7 @@ config DRM_BOCHS
+ 
+ config DRM_CIRRUS_QEMU
+ 	tristate "Cirrus driver for QEMU emulated device"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_KMS_HELPER
+ 	select DRM_GEM_SHMEM_HELPER
+diff --git a/drivers/gpu/drm/vmwgfx/Kconfig b/drivers/gpu/drm/vmwgfx/Kconfig
+index 6c3c2922ae8b..aab646b91ca9 100644
+--- a/drivers/gpu/drm/vmwgfx/Kconfig
++++ b/drivers/gpu/drm/vmwgfx/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ config DRM_VMWGFX
+ 	tristate "DRM driver for VMware Virtual GPU"
+-	depends on DRM && PCI && MMU
++	depends on DRM && PCI
+ 	depends on (X86 && HYPERVISOR_GUEST) || ARM64
+ 	select DRM_CLIENT_SELECTION
+ 	select DRM_TTM
+diff --git a/drivers/gpu/drm/xe/Kconfig b/drivers/gpu/drm/xe/Kconfig
+index 5c2f459a2925..2dec62737ff6 100644
+--- a/drivers/gpu/drm/xe/Kconfig
++++ b/drivers/gpu/drm/xe/Kconfig
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ config DRM_XE
+ 	tristate "Intel Xe Graphics"
+-	depends on DRM && PCI && MMU && (m || (y && KUNIT=y))
++	depends on DRM && PCI && (m || (y && KUNIT=y))
+ 	select INTERVAL_TREE
+ 	# we need shmfs for the swappable backing store, and in particular
+ 	# the shmem_readpage() which depends upon tmpfs
+diff --git a/drivers/net/ethernet/broadcom/Kconfig b/drivers/net/ethernet/broadcom/Kconfig
+index eeec8bf17cf4..aa43984a05cf 100644
+--- a/drivers/net/ethernet/broadcom/Kconfig
++++ b/drivers/net/ethernet/broadcom/Kconfig
+@@ -96,7 +96,6 @@ config BNX2
+ config CNIC
+ 	tristate "QLogic CNIC support"
+ 	depends on PCI && (IPV6 || IPV6=n)
+-	depends on MMU
+ 	select BNX2
+ 	select UIO
+ 	help
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index da28295b4aac..9c0e4aaf4e8c 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -21,6 +21,7 @@ config GENERIC_PCI_IOMAP
+ menuconfig PCI
+ 	bool "PCI support"
+ 	depends on HAVE_PCI
++	depends on MMU
+ 	help
+ 	  This option enables support for the PCI local bus, including
+ 	  support for PCI-X and the foundations for PCI Express support.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4d7c9f64ea24..60a20a0ac41f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4257,7 +4257,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ #ifndef pci_remap_iospace
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ {
+-#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
++#if defined(PCI_IOBASE)
+ 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+ 
+ 	if (!(res->flags & IORESOURCE_IO))
+@@ -4290,7 +4290,7 @@ EXPORT_SYMBOL(pci_remap_iospace);
   */
--static irqreturn_t ufshcd_intr(int irq, void *__hba)
-+static irqreturn_t ufshcd_threaded_intr(int irq, void *__hba)
+ void pci_unmap_iospace(struct resource *res)
  {
- 	u32 last_intr_status, intr_status, enabled_intr_status = 0;
- 	irqreturn_t retval = IRQ_NONE;
-@@ -7018,6 +7018,29 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 	return retval;
- }
+-#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
++#if defined(PCI_IOBASE)
+ 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
  
-+/**
-+ * ufshcd_intr - Main interrupt service routine
-+ * @irq: irq number
-+ * @__hba: pointer to adapter instance
-+ *
-+ * Return:
-+ *  IRQ_HANDLED     - If interrupt is valid
-+ *  IRQ_WAKE_THREAD - If handling is moved to threaded handled
-+ *  IRQ_NONE        - If invalid interrupt
-+ */
-+static irqreturn_t ufshcd_intr(int irq, void *__hba)
-+{
-+	struct ufs_hba *hba = __hba;
-+
-+	/* Move interrupt handling to thread when MCQ & ESI are not enabled */
-+	if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
-+		return IRQ_WAKE_THREAD;
-+
-+	/* Directly handle interrupts since MCQ ESI handlers does the hard job */
-+	return ufshcd_sl_intr(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS) &
-+				   ufshcd_readl(hba, REG_INTERRUPT_ENABLE));
-+}
-+
- static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- {
- 	int err = 0;
-@@ -10577,7 +10600,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+ 	vunmap_range(vaddr, vaddr + resource_size(res));
+diff --git a/drivers/scsi/bnx2fc/Kconfig b/drivers/scsi/bnx2fc/Kconfig
+index ecdc0f0f4f4e..3cf7e08df809 100644
+--- a/drivers/scsi/bnx2fc/Kconfig
++++ b/drivers/scsi/bnx2fc/Kconfig
+@@ -5,7 +5,6 @@ config SCSI_BNX2X_FCOE
+ 	depends on (IPV6 || IPV6=n)
+ 	depends on LIBFC
+ 	depends on LIBFCOE
+-	depends on MMU
+ 	select NETDEVICES
+ 	select ETHERNET
+ 	select NET_VENDOR_BROADCOM
+diff --git a/drivers/scsi/bnx2i/Kconfig b/drivers/scsi/bnx2i/Kconfig
+index 0cc06c2ce0b8..75ace2302fed 100644
+--- a/drivers/scsi/bnx2i/Kconfig
++++ b/drivers/scsi/bnx2i/Kconfig
+@@ -4,7 +4,6 @@ config SCSI_BNX2_ISCSI
+ 	depends on NET
+ 	depends on PCI
+ 	depends on (IPV6 || IPV6=n)
+-	depends on MMU
+ 	select SCSI_ISCSI_ATTRS
+ 	select NETDEVICES
+ 	select ETHERNET
+diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+index c3bcb6911c53..2b0172f54665 100644
+--- a/drivers/vfio/pci/Kconfig
++++ b/drivers/vfio/pci/Kconfig
+@@ -1,6 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ menu "VFIO support for PCI devices"
+-	depends on PCI && MMU
++	depends on PCI
  
- 	/* IRQ registration */
--	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
-+	err = devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_threaded_intr,
-+					IRQF_ONESHOT | IRQF_SHARED, UFSHCD, hba);
- 	if (err) {
- 		dev_err(hba->dev, "request irq failed\n");
- 		goto out_disable;
-
+ config VFIO_PCI_CORE
+ 	tristate
 -- 
-2.34.1
+2.39.5
 
