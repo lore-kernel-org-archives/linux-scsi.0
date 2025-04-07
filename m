@@ -1,109 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8391625D903;
-	Mon,  7 Apr 2025 18:28:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01DBF20898C;
+	Mon,  7 Apr 2025 18:37:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744050515; cv=none; b=XyuFP3cvfosS+YVsmG9KCxyksTmEP/AMEy9WDisG9g6N/zFi9zuYOWy+I2ryCQyyVMm+wr5RB8KkJ/1Zh9vAykspj987sjHhFQQSnH/LcsQ6PAVMKRetBj+3QraqC92hdBQxlpCdOprwlPhB0MifrTacDNZnm9MYcE9Ja2OTg10=
+	t=1744051079; cv=none; b=DZSh3YySGx6A9jhvkfbeFIRExZlziBB11HZgSJ5GBL/g2+2Ahq/ItZgZi3AgqYQZmJ2uGNfKxQ5wlKhOT2RFL0a7U7/x08fuIU7Q9uumMzqtF1o2vuu7hsLGLiQN3T1hUeHrB2ckakJSoKUAmlq9K+CyK+Fxh2BxrCcBnlO293Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744050515; c=relaxed/simple;
-	bh=t9TUQsEt5Q9gIOtHF38LsFjD/8E4Sfx5Y8wLVTNcThA=;
+	s=arc-20240116; t=1744051079; c=relaxed/simple;
+	bh=q8KGRHuOSc7xz+NvnDVSZTtg4Ny5rvebOBGvxJwpKoA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dYHH3m0LzDkh8oR2Q2uF1EptJmFRijT9zh/2tWOHQw87+26eT7tzHXGtCIPoSIJOtBem6NzxGmQMUgLxUbeAyvvIIT3u6oIdRpTg/t/3/q6khQKtES+RsLaKt69mVVLsj15/vnA8iifHLuZ+4Dj8hpsXZJH7hGd4aGZ8+hrJ57U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V9OFDeBF; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LRPQgSO/AfgQzbw1yfsOdIdeLGb82nwIF66J7AX6MGICVe/ebU5blPYU7FM57f5YCfrK/nUdgbDd9d4O+hk4b4QYbvcOrD5atPhZwu4n9KVPKDeVRCVfHW8O4Hi/m9LCfl0RDtD8RbnzxnHOMjHhPbycp9qzvdwA0Orx2AF6Md4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ioosVxHw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V9OFDeBF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F100CC4CEDD;
-	Mon,  7 Apr 2025 18:28:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ioosVxHw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C4FFC4CEE7;
+	Mon,  7 Apr 2025 18:37:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744050515;
-	bh=t9TUQsEt5Q9gIOtHF38LsFjD/8E4Sfx5Y8wLVTNcThA=;
+	s=k20201202; t=1744051078;
+	bh=q8KGRHuOSc7xz+NvnDVSZTtg4Ny5rvebOBGvxJwpKoA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=V9OFDeBFLFfhzZFtHLwRrBF+XIHuHUCJNloCXOSafflkYLjxTNErR3QE7PpyAY8G0
-	 oM2oUFEtOllLn1NmB94n+hwstzCt2bOjDdX4VoiNKrddcnGmpdic4Cz/yRHmZz7QFc
-	 nCV3LLR4sNHud4N5meQyEh4q/sqCRWb0MfYBfQJfGpCIUWfMxn5bwk4SXtJd6J3JUw
-	 aR/ehGVeCa9HHrNClCq/RiWWv0uF8aWPxcQHFcevsDGPoj6uDyrPXI6snymjBf6Iqy
-	 gZQbkx+HkYWYDZVHi4aCERl+bUd3HyzdPdHZGznnlN+O7pikgis3pUDMtrdLddifCU
-	 mObCa+3aPlJLQ==
-Date: Mon, 7 Apr 2025 11:28:32 -0700
+	b=ioosVxHwp9x00u08Cn5gP67i2I2QTE8nn/V7eABcJLZ208uAciSoGlHpwjko8caex
+	 9p6E/gi7PUgZGMFYH7dJ7SGVQLhSdnEITtI6yA0jqH9Fd72aqK3kdjKRyFMqIp8wGz
+	 /PP5c7HJ40hsljDWrK141AexKB1W6P5r9z3KIiuGJYzYL1Updn1tfea1Aw/WcyUV/y
+	 4axj+EPV37kPDwxM0VdSiBjbyF6rBiLsiKh7lhbRJbHAoC9XnI1MyXQ1H1sknPM4wn
+	 W3p2dL9xp4RhHizRXFE6JV908quBesbaOhGhOztsbdSZ7aav4M/t/EQ9avsAplPOAP
+	 OE4AjbwEpMd2w==
+Date: Mon, 7 Apr 2025 11:37:54 -0700
 From: Kees Cook <kees@kernel.org>
-To: Thorsten Blum <thorsten.blum@linux.dev>
-Cc: James Smart <james.smart@broadcom.com>,
-	Ram Vegesna <ram.vegesna@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: sli4: Replace deprecated strncpy() with
- strscpy()
-Message-ID: <202504071126.37117C5D@keescook>
-References: <20250226185531.1092-2-thorsten.blum@linux.dev>
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: pm80xx: Add __nonstring annotations for
+ unterminated strings
+Message-ID: <202504071136.73E5C22D0B@keescook>
+References: <20250310222553.work.437-kees@kernel.org>
+ <98ca3727d65a418e403b03f6b17341dbcb192764.camel@HansenPartnership.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20250226185531.1092-2-thorsten.blum@linux.dev>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <98ca3727d65a418e403b03f6b17341dbcb192764.camel@HansenPartnership.com>
 
-On Wed, Feb 26, 2025 at 07:55:26PM +0100, Thorsten Blum wrote:
-> strncpy() is deprecated for NUL-terminated destination buffers; use
-> strscpy() instead.
+On Mon, Mar 10, 2025 at 06:38:01PM -0400, James Bottomley wrote:
+> On Mon, 2025-03-10 at 15:25 -0700, Kees Cook wrote:
+> > When a character array without a terminating NUL character has a
+> > static
+> > initializer, GCC 15's -Wunterminated-string-initialization will only
+> > warn if the array lacks the "nonstring" attribute[1]. Mark the arrays
+> > with __nonstring to and correctly identify the char array as "not a C
+> > string" and thereby eliminate the warning.
+> > 
+> > Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=117178 [1]
+> > Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
+> > Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> > Cc: linux-scsi@vger.kernel.org
+> > Signed-off-by: Kees Cook <kees@kernel.org>
+> > ---
+> >  drivers/scsi/pm8001/pm8001_ctl.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/pm8001/pm8001_ctl.c
+> > b/drivers/scsi/pm8001/pm8001_ctl.c
+> > index 85ff95c6543a..7618f9cc9986 100644
+> > --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> > +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> > @@ -644,7 +644,7 @@ static DEVICE_ATTR(gsm_log, S_IRUGO,
+> > pm8001_ctl_gsm_log_show, NULL);
+> >  #define FLASH_CMD_SET_NVMD    0x02
+> >  
+> >  struct flash_command {
+> > -     u8      command[8];
+> > +     u8      command[8] __nonstring;
 > 
-> Compile-tested only.
-> 
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
-> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
-> ---
->  drivers/scsi/elx/libefc_sli/sli4.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
-> index 5e7fb110bc3f..d9a231fc0e0d 100644
-> --- a/drivers/scsi/elx/libefc_sli/sli4.c
-> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
-> @@ -3804,7 +3804,7 @@ sli_cmd_common_write_object(struct sli4 *sli4, void *buf, u16 noc,
->  	wr_obj->desired_write_len_dword = cpu_to_le32(dwflags);
->  
->  	wr_obj->write_offset = cpu_to_le32(offset);
-> -	strncpy(wr_obj->object_name, obj_name, sizeof(wr_obj->object_name) - 1);
-> +	strscpy(wr_obj->object_name, obj_name);
+> This looks a bit suboptimal ... is there anywhere in the kernel u8[] is
+> actually used for real strings?  In which case it would seem the better
+> place to put the annotation is in the typedef for u8 arrays.
 
-Standard question for these kinds of conversions: Why is it safe that
-this is not NUL padded? I haven't found where this buffer is being
-zeroed out, but it probably is (given the "- 1" on the length), but
-without run-time testing, this needs much more careful analysis.
+I answered this in a merged thread[1]. Can this get picked up?
+
+Thanks!
 
 -Kees
 
->  	wr_obj->host_buffer_descriptor_count = cpu_to_le32(1);
->  
->  	bde = (struct sli4_bde *)wr_obj->host_buffer_descriptor;
-> @@ -3833,7 +3833,7 @@ sli_cmd_common_delete_object(struct sli4 *sli4, void *buf, char *obj_name)
->  			 SLI4_SUBSYSTEM_COMMON, CMD_V0,
->  			 SLI4_RQST_PYLD_LEN(cmn_delete_object));
->  
-> -	strncpy(req->object_name, obj_name, sizeof(req->object_name) - 1);
-> +	strscpy(req->object_name, obj_name);
->  	return 0;
->  }
->  
-> @@ -3856,7 +3856,7 @@ sli_cmd_common_read_object(struct sli4 *sli4, void *buf, u32 desired_read_len,
->  		cpu_to_le32(desired_read_len & SLI4_REQ_DESIRE_READLEN);
->  
->  	rd_obj->read_offset = cpu_to_le32(offset);
-> -	strncpy(rd_obj->object_name, obj_name, sizeof(rd_obj->object_name) - 1);
-> +	strscpy(rd_obj->object_name, obj_name);
->  	rd_obj->host_buffer_descriptor_count = cpu_to_le32(1);
->  
->  	bde = (struct sli4_bde *)rd_obj->host_buffer_descriptor;
-> -- 
-> 2.48.1
-> 
+[1] https://lore.kernel.org/lkml/202503111520.CF7527A@keescook/
 
 -- 
 Kees Cook
