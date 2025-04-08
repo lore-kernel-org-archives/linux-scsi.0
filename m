@@ -1,108 +1,76 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DD0413CFB6;
-	Tue,  8 Apr 2025 20:46:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 409152566FC;
+	Tue,  8 Apr 2025 23:42:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744145177; cv=none; b=pqcbAqyltqqYpeS54oLV6MSN2SetRZHoSjTR0pa7HvWNSttnXmRYiqj+xveY3sc3E7pswBOozb96rObjVeKxKjw1JJqrV5rQuipCOs6AGbh888Aq3Fe0isV0GRvuaKwtPj39wCToi8jPSWjv+4gpfBldHp3pi248r4rc6iWJipM=
+	t=1744155767; cv=none; b=AlWIx/8sa6FhX3JOPPKMh7rUYR37tfclo7lNQc1VndCjO3yxilufZ5xBTTxWvPmIscIIJqNOZb2w5DgDrt0qF0xP0Ecp0F1W7D+PwnqTVPs8JTavF9+Kyt85yvAKy9Mx8yFQartZs+nBvuxifRP7haE982nWfw5qs5bC5+57uRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744145177; c=relaxed/simple;
-	bh=u39T35B34fYXsBnCwvMFidu0oqxlNOBHbamzZN8WIpY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=BLRK5mPct3TX0+Nuspbz+brjwp96SB9rEVf5fycHmGBfEOC4r7fSveK+J23LVGeXkpZTt1G0Wbs9zkRZgzcIrrL97e6OWTHOK25uIs9VoZbUZOEoMJLuCNITa9YkmtML2s1MRV5c8D/VxahrAm04UzKCWqAb0Z0DGXNDhjeflOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=N3Lf5SWX; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=8KIlSZQZ; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1744155767; c=relaxed/simple;
+	bh=wSqMvhAGTeafnDX9pFLvgcwuEtdegr7pOcXNA+niwH8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RNNUJ3yAI/si1+qoK84bacO8KiUIMDouqO1Ba0EMuaUN3Qx5B9zbxzZUFBqjM6lmzFXHN24oDvbX5wsD99DJTdnm4eRBcGC2MlkSUMYacwGiX2zW7bmRnjW1Vv+HenToDkdyMl2SFnPlw9tv9ibtTGLZClLM6MPZJ/qqetOvb+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TwPQLMj3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="N3Lf5SWX";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="8KIlSZQZ"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1744145172;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LHO1UWAx+rQVZhZ6xiO8xRwG9UO76flaCcgfv2XvOAw=;
-	b=N3Lf5SWXqan5qexbq5HkKtyCja0aTFOm5S58qHEzNYUeMbm2sikAKQqIJ4bpzVCLN+3n33
-	Q7B1hJ5ER2NuFwPOkbu6odJLxj3gcjd4zGEAuG+dcvlyxd6l8wrsZTdhnUXq+MtA38Ibie
-	1KwAtdVFa1QP0PlTH5TLVbyxZnbd/QXeZaPTYlrZC4bNWn5fZ46HcZW9Mjqbnw8PBYxYVh
-	Gk/VMeg6knYgowR5cgbOUilosA8zwX4AzvzEQ7e14h5iiqnFkh2vj73PeYDxfuS5jl+YTk
-	Cshcj1DRBmP9jBeor+N5BuIxfQDOve4RIM4KiSFr7iCO4yk633Tv0gocDtYSrg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1744145172;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LHO1UWAx+rQVZhZ6xiO8xRwG9UO76flaCcgfv2XvOAw=;
-	b=8KIlSZQZy1zxpwG55jbCCbtoV6tIGVFf8OSjMqluR9YwqbSREVUDUY5uVZl1UjsFZAl5Fk
-	rczOqaqWKfGersBQ==
-To: Bert Karwatzki <spasswolf@web.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- James.Bottomley@HansenPartnership.com, Jonathan.Cameron@huawei.com,
- allenbh@gmail.com, d-gole@ti.com, dave.jiang@intel.com,
- haiyangz@microsoft.com, jdmason@kudzu.us, kristo@kernel.org,
- linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-scsi@vger.kernel.org, logang@deltatee.com,
- manivannan.sadhasivam@linaro.org, martin.petersen@oracle.com,
- maz@kernel.org, mhklinux@outlook.com, nm@ti.com, ntb@lists.linux.dev,
- peterz@infradead.org, ssantosh@kernel.org, wei.huang2@amd.com,
- wei.liu@kernel.org, spasswolf@web.de
-Subject: Re: commit 7b025f3f85ed causes NULL pointer dereference
-In-Reply-To: <f303b266172050f2ec0dc5168b23e0cea9138b01.camel@web.de>
-References: <20250408120446.3128-1-spasswolf@web.de> <87iknevgfb.ffs@tglx>
- <87friivfht.ffs@tglx>
- <f303b266172050f2ec0dc5168b23e0cea9138b01.camel@web.de>
-Date: Tue, 08 Apr 2025 22:46:12 +0200
-Message-ID: <87a58qv0tn.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TwPQLMj3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7147C4CEE5;
+	Tue,  8 Apr 2025 23:42:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744155765;
+	bh=wSqMvhAGTeafnDX9pFLvgcwuEtdegr7pOcXNA+niwH8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TwPQLMj3oNqdTdsHAY57cATCM9d0oR+E7mFU3kEW+TVKpHoYaL7vlOxeh08T7df4X
+	 9hv1+CkSjoH+CqUTFRiNATcJfEeuLQn0g/+70kJKSu2SAGKzfkmPnD6GOhNfZ5Ux7F
+	 g2J7B5zOfbMqeywRDKlymoLdaa2A9VRDB7HcY4W6XQ9tJgYUtAZeTOAysZdja4gIzB
+	 ZWPLRV7fYykP8IQyt276EIoCY8zLIJfVBudXU00YDdCfKJBJxwyw3s1gFUjG8XHqiL
+	 9/S95jhfeGqyQOlCxC5wGV4VlOkuQzNVR0J9OZzaTY3CjZflYBNG4P+VrG7x5Q6Qph
+	 5Osj+uGTHX4cQ==
+Date: Tue, 8 Apr 2025 16:42:42 -0700
+From: Kees Cook <kees@kernel.org>
+To: Thorsten Blum <thorsten.blum@linux.dev>
+Cc: James Smart <james.smart@broadcom.com>,
+	Ram Vegesna <ram.vegesna@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: elx: sli4: Replace deprecated strncpy() with
+ strscpy()
+Message-ID: <202504081642.6A3104D@keescook>
+References: <20250408102843.804083-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250408102843.804083-2-thorsten.blum@linux.dev>
 
-On Tue, Apr 08 2025 at 18:20, Bert Karwatzki wrote:
-> Am Dienstag, dem 08.04.2025 um 17:29 +0200 schrieb Thomas Gleixner:
->> > Can you please decode the lines please via:
->> >
->> >     scripts/faddr2line vmlinux msi_domain_first_desc+0x4/0x30
->> >     scripts/faddr2line vmlinux msix_setup_interrupts+0x23b/0x280
->>
->
-> I had to recompile with CONFIG_DEBUG_INFO=Y, and reran the test, the calltrace
-> is identical.
->
-> $ scripts/faddr2line vmlinux msi_domain_first_desc+0x4/0x30
-> msi_domain_first_desc+0x4/0x30:
-> msi_domain_first_desc at kernel/irq/msi.c:400
->
-> So it seems msi_domain_first_desc() is called with dev = NULL.
+On Tue, Apr 08, 2025 at 12:28:40PM +0200, Thorsten Blum wrote:
+> strncpy() is deprecated for NUL-terminated destination buffers; use
+> strscpy() instead.
+> 
+> Since sli_config_cmd_init() already zeroes out the destination buffers,
+> the potential NUL-padding by strncpy() is unnecessary. strscpy() copies
+> only the required characters and guarantees NUL-termination.
+> 
+> And since all three destination buffers have a fixed length, strscpy()
+> automatically determines their size using sizeof() when the argument is
+> omitted. This makes any explicit sizeof() calls unnecessary.
+> 
+> The source strings are also NUL-terminated and meet the __must_be_cstr()
+> requirement of strscpy().
+> 
+> No functional changes intended.
+> 
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
 
-Yup
+Reviewed-by: Kees Cook <kees@kernel.org>
 
-> $ scripts/faddr2line vmlinux msix_setup_interrupts+0x23b/0x280
-> msix_setup_interrupts+0x23b/0x280:
-> msix_update_entries at drivers/pci/msi/msi.c:647 (discriminator 1)
-
-Aaarg. The patch below should fix that.
-
-Thanks,
-
-        tglx
----
-diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-index 4027abcafe7a..77cc27e45b66 100644
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -680,8 +680,8 @@ static int __msix_setup_interrupts(struct pci_dev *__dev, struct msix_entry *ent
- 	if (ret)
- 		return ret;
- 
--	retain_ptr(dev);
- 	msix_update_entries(dev, entries);
-+	retain_ptr(dev);
- 	return 0;
- }
- 
+-- 
+Kees Cook
