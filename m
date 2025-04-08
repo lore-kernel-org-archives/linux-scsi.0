@@ -1,186 +1,150 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f171.google.com (mail-vk1-f171.google.com [209.85.221.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41B41FF5F7;
-	Tue,  8 Apr 2025 07:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD9126773D;
+	Tue,  8 Apr 2025 10:22:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744098319; cv=none; b=HOZ7Potn1kM12STDtWqf5T09wu3YesdPIZbX0h2VRND0qg39AZziDj7RJOFPc9Z2xR/fmkqxy7/tXH3FdscOGH0g95TqarUOZDr9kl+HxK+dNkl9Zp07Ka+jTsTbgQ9+EpgRDkXWiWieXcfY6ZO0lUvTTWdxJa8F4iVsI63VLEA=
+	t=1744107761; cv=none; b=HK2iIvXsSKjV3MOIxxIExOo5NOOZgj80yfVxy5sTIxsg9uUGUMdinyy340eqaEgfdbrsRJPfrPOsVpLvkYlI/m7kttEQx7MU9jCtZt8HIrG0vbQBarEjPYORFqdg+XQsNZd5Bulj6iA/qgZo7kmLJUQXcVH6VuYirHAdyiBkh5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744098319; c=relaxed/simple;
-	bh=Mizm5uEJO5H1qNNgLNdW5F3xHw77CVaEhFDifRlvlgA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=umRg9zg43gIGsI7cH2z65QVrIZ5vkQ7O56WsDDutlhejvMhQYnwZIDlM/2pQBhymHKGPhcnqrt8rT7hUkjsqYdCku97PbY3pwUxXPcp4Rndfgz4FXQ0rUo+8o+PqvvGc7wMr8m8NPe3qhsEP4o4x02Zco8vRRQvoJr3RhZkt9pI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ECEgXtqe; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ECEgXtqe"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5382GN4N032610;
-	Tue, 8 Apr 2025 07:44:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	FoXvxYlgeT51Ldmi420joSo5f8c07apE7nK99oXSsQU=; b=ECEgXtqeh8uhhY5e
-	E+1uESUPlp4Jsj+Xvfg/fnT+GPLrAfUv1AkO7F5QVqkJeIFSl0qlNpcPEBB54wBN
-	9KFhweGxagHG095/7e3vcLoPqnjDIoxJsNZhZutnlIVcT7tQZq9FaudheraJmTzB
-	0nk8pcibF/5ly7aJzlIp135SU6FU+w7WCAKMw4LhnXtZ6j8CJVF9VLqfMfA5Zrg6
-	ip10Zg6k5QhEV3BXMhax+n2p2Q7L5hkYUvkP6JKukHLGyiP6Ztq+yuDY0ORQ5cLh
-	CeN/f7ORMyIAg77ILfQIjUYTF85PYTVNLyeVU/sBWCoulJltU31yxbASh7djfL4M
-	6oCTtA==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45twfketp8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 08 Apr 2025 07:44:57 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5387iu31001417
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 8 Apr 2025 07:44:56 GMT
-Received: from [10.217.217.240] (10.80.80.8) by nasanex01c.na.qualcomm.com
- (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 8 Apr 2025
- 00:44:52 -0700
-Message-ID: <25d8a781-14ea-4b97-b6b4-f9d472c1b692@quicinc.com>
-Date: Tue, 8 Apr 2025 13:14:50 +0530
+	s=arc-20240116; t=1744107761; c=relaxed/simple;
+	bh=/m6+Ua66NFMhg2vNP8D7cOPQD3B82lw7pQYHz/7iMJ8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HSiD01YNpH6X2SE1D/G+Y3Q9bcIQ5r/ZTouGz0OcCaDdw5o7UXL2iHJD91nnZMUQBO+uZLdUxfqOrt0/MSKNPl5+TDlDEp9z07KBe55yF0fhfq5ijsjjw6lW2/HJ5/+tIXIHz7+L3pU/IpggU5OrL3JEN0BQSw/wUV9lkbaLRyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f171.google.com with SMTP id 71dfb90a1353d-5262475372eso2472016e0c.2;
+        Tue, 08 Apr 2025 03:22:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744107756; x=1744712556;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SsrLZDcWMMgz5qw73ZarBN4RUT9hrtTKFIK6rblk8+Q=;
+        b=tNPbBNVTJmxqGy0jBa5sryPPvZLd0AjZOY0EW6x4j9gRJqFYclTVMaO8LW8gQVB/bM
+         bCdh58TuAH+1hrn/ISO5odB4hHO61djPWuWoWENQIC0LIXX6BlqjygiitdYA1EDMOZUR
+         9RpFqxi415LWTHGgFYyDB3NP1jF0Y8izKd/2K6fiEnQzspzY4mNvlLUgDvaVJHxpBiKZ
+         nI+EDZ4LdXMQh3WuHBxZcABhkbCWON8e9oIm32B3Qwgw8A0QjfQ4WojfovjD1VkpP1PU
+         pV2hvo680JDC9QbJGvzj8k9U0qS3J4+gOZtAdR3/b91yjqgzdVcBh2GhA448a+TF04Lk
+         BKmw==
+X-Forwarded-Encrypted: i=1; AJvYcCVEA7qZAB3B0+kezkpOZpgk0SjQS40gZIxIESzH6D96qXVuMsUdgj6PHG88X971uVF5Rt8=@vger.kernel.org, AJvYcCVRBPWT8uBLQ2pIieSkrrdi36CASGl8wCATxc6NI5iOk2qS/IYbUIGn6hDRHxEmnKi2ocaf5/3VC2zk@vger.kernel.org, AJvYcCW4xIx1cdV944/IAeq2vpuEttUCkcpuBoBB5o+t0Xew1hIBPH/HlPJtcDjT76BPj1/KlmjTrYHP@vger.kernel.org, AJvYcCXOCCN05UNs0iOndHkTYX+x4JXPpo2PLSCzgfTpwcOi3bL/S8S5j0kF0nPxO5zDKvu87YQsDDCNLBr1TI5g/A==@vger.kernel.org, AJvYcCXPev8CqdRxG+Xu7jPmhtJRUOXcaZgCQ0a0mYGFYyaw/3tkMlw1a1lqY2iL/mCg1YX8AQMxnK5oqfvudA==@vger.kernel.org, AJvYcCXt+8xciHm8SAu+5DzuIYLk8qwPUHogEMjh6Ttay/FPrxE5evCGYor+AchUy94/KXPgc8YyRGu7YqZynbui@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBAB2zPTiiZS6jqcTOuZf7APe9hr8vImIqU+EMuNMm2hkugeCU
+	gd4x1r+J7db561RAyE3/W/Rbq4rrTlC0IVrh6YJ2KBfWyMmEtVER10rWdlBG
+X-Gm-Gg: ASbGncvjQ73/IidO/NQ91NS5qtSO59m6IlrsKIyjjtFcRJibIbPVoiENieSRxpNp+lh
+	uRbwUG1185gFeP3POHRwcsvZ7d0q+f0rUUCtbU0ljkiA5HO78C4ESWTSmjCtOBRt0bVlGd+f/7V
+	RQbRr4aHtdzeEUozREP4Gft8OiAZMjfQd0Y3eQ3eqbyQY+TslQQ0NiaZEW+RgY/HOyalBydLZ16
+	ps38/LX6b2C4E0oFLy6APwz8Z+K5nV6qebkIUY2J2wCnvusCGUuwpz2anup3cSnE6//DzZMHfc/
+	KWX33HFL457WVh4Dw2K292QuOQvAMbO8pB8LMJ8Eiw5R2q21IROSNRkyq0sgcyLrh3Rl9xTbOuS
+	92F89+JU=
+X-Google-Smtp-Source: AGHT+IFDb9okRj1xGl+mVbJRxzLLI3huCAhu6Vj0/hapZGGpzzktInrb/NA1bjOvWmUDk4T9v4AhDg==
+X-Received: by 2002:a05:6122:30a0:b0:520:64ea:c479 with SMTP id 71dfb90a1353d-52765db445cmr10786694e0c.10.1744107756603;
+        Tue, 08 Apr 2025 03:22:36 -0700 (PDT)
+Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com. [209.85.222.43])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5279b58aa78sm312255e0c.14.2025.04.08.03.22.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 08 Apr 2025 03:22:35 -0700 (PDT)
+Received: by mail-ua1-f43.google.com with SMTP id a1e0cc1a2514c-86fbb48fc7fso2206333241.2;
+        Tue, 08 Apr 2025 03:22:35 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCU26zpE9mOwfcgFM6aU88kNEV5kwikJtj5z06kE2m/+57CVUHgY2V3uGPlYiGvtoyaVg7Jdo2WN+xQ2AHxK@vger.kernel.org, AJvYcCULmQuRAkXtLcIQO9HqD147pHXbhjEapTsJJUzpHy/kQYYr2Qm9Gh+sVVwAhgGmrSQ3EKBbjB3Y@vger.kernel.org, AJvYcCUM6Ee5Vc6o+EkKdsHAYGqA/Kefeyg55IhkJDIDmmb9iZtTa2z9F2cnfZBjzIyb30NlpMY=@vger.kernel.org, AJvYcCVpbCYx6DzQfXfmR1XhJxQBheurbgqdyuVMGzAyeoePydwz5AIwmy9UX7arvVrPnzEq2XLxiqX1VTlz//9HIA==@vger.kernel.org, AJvYcCXIHfyUViYpbZ0KEhCmcG0S90hiMl8oL/txVZ/G+HRfdTa3+OZR/DqYCL6f79RwtUA6uGTNIpIg43d0aA==@vger.kernel.org, AJvYcCXqgXc0+D7YC4+PSbm+1wmQWFqVWmNbZ0Ics+DQRTK5MNh2TQaDeZdzv0NUneaO61AzUF59TMa0xrCZ@vger.kernel.org
+X-Received: by 2002:a05:6102:2b91:b0:4c4:e415:6737 with SMTP id
+ ada2fe7eead31-4c856a8cf46mr12241766137.23.1744107755579; Tue, 08 Apr 2025
+ 03:22:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 2/2] scsi: ufs: introduce quirk to extend
- PA_HIBERN8TIME for UFS devices
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K.
- Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar
-	<alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche
-	<bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <quic_nitirawa@quicinc.com>, <quic_bhaskarv@quicinc.com>,
-        <quic_rampraka@quicinc.com>, <quic_cang@quicinc.com>,
-        <quic_nguyenb@quicinc.com>
-References: <20250404174539.28707-1-quic_mapa@quicinc.com>
- <20250404174539.28707-3-quic_mapa@quicinc.com>
- <hcguawgzuqgi2cyw3nf7uiilahjsvrm37f6zgfqlnfkck3jatv@xgaca3zgts2u>
- <d09641c7-c266-4f0a-a0e3-56f63d8c9ce3@quicinc.com>
- <l6xao2ubcvv3ho56dv6qfr3b62ve3olfbhvywg2is2xdhod27r@2nyjfwinrxzm>
-Content-Language: en-US
-From: MANISH PANDEY <quic_mapa@quicinc.com>
-In-Reply-To: <l6xao2ubcvv3ho56dv6qfr3b62ve3olfbhvywg2is2xdhod27r@2nyjfwinrxzm>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: rY7H1816cawbAfHLhS5hb4L8SE4s1iw9
-X-Proofpoint-ORIG-GUID: rY7H1816cawbAfHLhS5hb4L8SE4s1iw9
-X-Authority-Analysis: v=2.4 cv=b7Oy4sGx c=1 sm=1 tr=0 ts=67f4d3f9 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=PcgxfyDzYYffGdZ7QdYA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-08_02,2025-04-07_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
- priorityscore=1501 suspectscore=0 mlxscore=0 impostorscore=0 phishscore=0
- clxscore=1015 spamscore=0 mlxlogscore=999 bulkscore=0 lowpriorityscore=0
- classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504080054
+References: <20250407104025.3421624-1-arnd@kernel.org>
+In-Reply-To: <20250407104025.3421624-1-arnd@kernel.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 8 Apr 2025 12:22:23 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdWN=wurw7qz0t2ovMkUNu0BJRAMv_0U63Lqs2MGxkVnHw@mail.gmail.com>
+X-Gm-Features: ATxdqUE9l7FjkqlZMDiGBpUM7CUSkyfcARh2bgkw-zOenNlQ3qLl0OOY1x_PRRI
+Message-ID: <CAMuHMdWN=wurw7qz0t2ovMkUNu0BJRAMv_0U63Lqs2MGxkVnHw@mail.gmail.com>
+Subject: Re: [RFC] PCI: add CONFIG_MMU dependency
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Jeff Hugo <jeff.hugo@oss.qualcomm.com>, Carl Vanderlip <quic_carlv@quicinc.com>, 
+	Oded Gabbay <ogabbay@kernel.org>, Takashi Sakamoto <o-takashi@sakamocchi.jp>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Alex Deucher <alexander.deucher@amd.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	Dave Airlie <airlied@redhat.com>, Jocelyn Falempe <jfalempe@redhat.com>, 
+	Patrik Jakobsson <patrik.r.jakobsson@gmail.com>, Xinliang Liu <xinliang.liu@linaro.org>, 
+	Tian Tao <tiantao6@hisilicon.com>, Xinwei Kong <kong.kongxinwei@hisilicon.com>, 
+	Sumit Semwal <sumit.semwal@linaro.org>, Yongqin Liu <yongqin.liu@linaro.org>, 
+	John Stultz <jstultz@google.com>, Sui Jingfeng <suijingfeng@loongson.cn>, 
+	Lyude Paul <lyude@redhat.com>, Danilo Krummrich <dakr@kernel.org>, Gerd Hoffmann <kraxel@redhat.com>, 
+	Zack Rusin <zack.rusin@broadcom.com>, 
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+	Lucas De Marchi <lucas.demarchi@intel.com>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>, 
+	GR-QLogic-Storage-Upstream@marvell.com, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali <njavali@marvell.com>, 
+	Manish Rangankar <mrangankar@marvell.com>, Alex Williamson <alex.williamson@redhat.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Javier Martinez Canillas <javierm@redhat.com>, 
+	Jani Nikula <jani.nikula@intel.com>, Mario Limonciello <mario.limonciello@amd.com>, 
+	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>, 
+	Lijo Lazar <lijo.lazar@amd.com>, Niklas Schnelle <schnelle@linux.ibm.com>, 
+	Dmitry Baryshkov <lumag@kernel.org>, linux-arm-msm@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, 
+	linux1394-devel@lists.sourceforge.net, amd-gfx@lists.freedesktop.org, 
+	nouveau@lists.freedesktop.org, virtualization@lists.linux.dev, 
+	spice-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	kvm@vger.kernel.org, Greg Ungerer <gerg@linux-m68k.org>
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Arnd,
+
+CC Gerg
+
+On Mon, 7 Apr 2025 at 12:40, Arnd Bergmann <arnd@kernel.org> wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> It turns out that there are no platforms that have PCI but don't have an MMU,
+> so adding a Kconfig dependency on CONFIG_PCI simplifies build testing kernels
+> for those platforms a lot, and avoids a lot of inadvertent build regressions.
+>
+> Add a dependency for CONFIG_PCI and remove all the ones for PCI specific
+> device drivers that are currently marked not having it.
+>
+> Link: https://lore.kernel.org/lkml/a41f1b20-a76c-43d8-8c36-f12744327a54@app.fastmail.com/
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+Thanks for your patch!
+
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -21,6 +21,7 @@ config GENERIC_PCI_IOMAP
+>  menuconfig PCI
+>         bool "PCI support"
+>         depends on HAVE_PCI
+> +       depends on MMU
+>         help
+>           This option enables support for the PCI local bus, including
+>           support for PCI-X and the foundations for PCI Express support.
+
+While having an MMU is a hardware feature, I consider disabling MMU
+support software configuration.  So this change prevents people from
+disabling MMU support on a system that has both a PCI bus and an MMU.
+But other people may not agree, or care?
+
+Gr{oetje,eeting}s,
+
+                        Geert
 
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-On 4/8/2025 12:53 PM, Manivannan Sadhasivam wrote:
-> On Tue, Apr 08, 2025 at 11:07:58AM +0530, MANISH PANDEY wrote:
->>
->>
->> On 4/7/2025 12:05 AM, Manivannan Sadhasivam wrote:
->>> On Fri, Apr 04, 2025 at 11:15:39PM +0530, Manish Pandey wrote:
->>>> Some UFS devices need additional time in hibern8 mode before exiting,
->>>> beyond the negotiated handshaking phase between the host and device.
->>>> Introduce a quirk to increase the PA_HIBERN8TIME parameter by 100 µs
->>>> to ensure proper hibernation process.
->>>>
->>>
->>> This commit message didn't mention the UFS device for which this quirk is being
->>> applied.
->>>
->> Since it's a quirk and may be applicable to other vendors also in future, so
->> i thought to keep it general.
->>
-> 
-> You cannot make commit message generic. It should precisely describe the change.
-> 
->> Will update in next patch set if required.
->>   >> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
->>>> ---
->>>>    drivers/ufs/core/ufshcd.c | 31 +++++++++++++++++++++++++++++++
->>>>    include/ufs/ufs_quirks.h  |  6 ++++++
->>>>    2 files changed, 37 insertions(+)
->>>>
->>>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->>>> index 464f13da259a..2b8203fe7b8c 100644
->>>> --- a/drivers/ufs/core/ufshcd.c
->>>> +++ b/drivers/ufs/core/ufshcd.c
->>>> @@ -278,6 +278,7 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
->>>>    	  .model = UFS_ANY_MODEL,
->>>>    	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
->>>>    		   UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE |
->>>> +		   UFS_DEVICE_QUIRK_PA_HIBER8TIME |
->>>>    		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS },
->>>>    	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
->>>>    	  .model = UFS_ANY_MODEL,
->>>> @@ -8384,6 +8385,33 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
->>>>    	return ret;
->>>>    }
->>>> +/**
->>>> + * ufshcd_quirk_override_pa_h8time - Ensures proper adjustment of PA_HIBERN8TIME.
->>>> + * @hba: per-adapter instance
->>>> + *
->>>> + * Some UFS devices require specific adjustments to the PA_HIBERN8TIME parameter
->>>> + * to ensure proper hibernation timing. This function retrieves the current
->>>> + * PA_HIBERN8TIME value and increments it by 100us.
->>>> + */
->>>> +static void ufshcd_quirk_override_pa_h8time(struct ufs_hba *hba)
->>>> +{
->>>> +	u32 pa_h8time = 0;
->>>
->>> Why do you need to initialize it?
->>>
->> Agree.. Not needed, will update.>> +	int ret;
->>>> +
->>>> +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
->>>> +			&pa_h8time);
->>>> +	if (ret) {
->>>> +		dev_err(hba->dev, "Failed to get PA_HIBERN8TIME: %d\n", ret);
->>>> +		return;
->>>> +	}
->>>> +
->>>> +	/* Increment by 1 to increase hibernation time by 100 µs */
->>>
->>>   From where the value of 100us adjustment is coming from?
->>>
->>> - Mani
->>>
->> These values are derived from experiments on Qualcomm SoCs.
->> However this is also matching with ufs-exynos.c
->>
-> 
-> Okay. In that case, you should mention that the 100us value is derived from
-> experiments on Qcom and Samsung SoCs. Otherwise, it gives an assumption that
-> this value is universal.
-> 
-> - Mani
-> 
-  << Otherwise, it gives an assumption that this value is universal. >>
-So with this, should i add this quirk for Qcom only, or should add in 
-ufshcd.c and make it common for all SoC vendors?
-
-Regards
-Manish
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
