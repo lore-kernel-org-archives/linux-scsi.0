@@ -1,123 +1,97 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD68269AE4
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2025 12:54:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C13DC1E8348;
+	Tue,  8 Apr 2025 15:09:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744116901; cv=none; b=Tl/IU/ITTs0epkWB7WMCv5rWNezpTuand9bDvRbrtYp3byRb9KIU53FJRGS2yg1HDWZ3Q13N0OvKTAWWZkYhM831q7yKiQ6cur5j8Kvo3cw1Kk0G5Umrz5laZYXT17q4IRm+tBbd6U9dn8j6jhaxCzUzBQ2/NeEfCTpn0ih9XLU=
+	t=1744124962; cv=none; b=iCM7pBfIbdQc6+9sDGxlYTuPEm49DUbuTW1bnhObRqcqqlcYXbsI175hQL6b8FpBOZv+TC0OvT7KvRew3cOj6RZp0PGERW09KhEbdnocSZfYQhaKu8frNkHwJ/5jUEsy5Nd007LdxwZ0+czjQR8oVOz6ZyENCy/qye+qYPgOB6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744116901; c=relaxed/simple;
-	bh=r4MPn5KxjvOr4Rq45HUgATPOr8OD0EgPiS0EyQ/17RI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=B4DRYb+ZscKGrmUFkyuzKReNiqifAqcbWX9EijYwjnxqi6/v5EklWb7Q4Udik6j8dXWZ+pFXVAy0fp0FFm5RJ/O8WTXxSQxPfTLB08Mg7vLpeFzOD/l3KhJ3D7DCDmvDDaJ0g1Gn4c/eWjrdcN2xudTxeK9lNthinPw1+YScrwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XlmfdtPt; arc=none smtp.client-ip=209.85.128.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1744124962; c=relaxed/simple;
+	bh=KfZp5sOMLhUjS958RvECX1/aPL/JVAyn8rQO3+gzo4g=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=nPDdgUCFqaXebx2kWPJ85S0b9l+mAoJwlmjI4OLH5Vjuy5yCJTYoqC80bAjYJkmsv3wEiOp+NWYIkOtbgAevdwLruikLrZDdIVNih99PH8xuGe7ub0vYNdEtCjv6qOi1WVeMNRP27khdakNvjYLBP4gW8YnEX+wyQWnEXebSlho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=vQ0SxnBR; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=A7yhWpVz; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XlmfdtPt"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-7042ac0f4d6so13045877b3.1
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Apr 2025 05:54:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1744116898; x=1744721698; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=yk0jmNlqMc02tYB39edyin8JE2b7A3WmTNlfw1td2zw=;
-        b=XlmfdtPteNtmxLSaAFDZCgyC0gXBE4Q6LOV+ivJ5FKCJZuURNljXMOOq26YNmJliFy
-         Rszwth1hXnyLQx4yb9DhsErl4BweF5LI0V2BFbMpZTFiNjt2uY7YoxLfubbn9Wbpt+zg
-         hI1KGrIWi6VqA739abL87CzgvsNKJ1nDbOTMC9E2k7uKW41zkimJCDDHCodwP+zxROi2
-         hmg5lobOjZCjRQxMxGHD0qthbkQLznjRwWR1aIzkuNsCXygex5jezvYjQb5fDcuibkAF
-         uwPJVU5v0TafnLjbSk/C9IGm0JVbGdidheF3z6TF27NeuNNqHqdLQN1Bx1+kbi/gKOCY
-         L8lg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744116898; x=1744721698;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=yk0jmNlqMc02tYB39edyin8JE2b7A3WmTNlfw1td2zw=;
-        b=WYKaf+pplrYZDu68ax6KOOGjhJrWr3nwzJORmhGL2chCrnCwDGaigmVmMz9y9GO62g
-         6dbF2wG1eMIHGzdnszowT63xu8y9z2BtXGUFlGKEj+qJze2gS/uZy08JDEvXR7B4UAXT
-         5hJDezA/fDvHP2yTI9cpIskRt+3xqXmtrB+j0jGkQ3MB1OZO8CRkKZMnnfECM28RPYHc
-         6CUpIj9QkSgy6a2fMOczETarhgOFeYaqJyEMy8dGhdBq3wy1iYELVt39ul1t1bn3+aHf
-         rdkqOJnIRxYBWR2RWf26y1OUHA9wPkq7RbOF2cARm42YoMT4yii1IZld3hEgakYxfe95
-         3dmw==
-X-Gm-Message-State: AOJu0Yzd8S02OdGL0SNAxNEUmVxOdOmNge1zz9xuahO62tajtBzGkGB3
-	wHNhj3M9IXCNJTS/fzHP48bE1406dLC5VI4IJaENdvRk4PyXhGqzsSh/E94q2hlW1jJUeRYWkQr
-	qFly3KTZH+mnFRtRWvJcg2qp/wrCaMnbCGVtB9Q==
-X-Gm-Gg: ASbGncu/Kg14C4MpkQVn61rC0d1Mmeikm4mjmuD9R85ibu1yAKyg0KR8q+CJxSfKA+Y
-	K3EZ9KUtFUpshKWBMBL8YCO3mwcoyhxYbTyiRoyUB6MHwOsyWKI7yfF6NxSU9E9WAHaxdHkdF91
-	qa7boSLsc5E7SmtFefW7vyGpgHh5c=
-X-Google-Smtp-Source: AGHT+IHTxHBd425yatfvjSy7aWzx/QfcCVYH5495z1ua7eNtDp8zPmcN+TAK9mP9YSF4OzEsmd0vPSFHANuJwlrpgWw=
-X-Received: by 2002:a05:690c:a84:b0:6f9:9d40:35cb with SMTP id
- 00721157ae682-703f41267b0mr224639557b3.6.1744116898053; Tue, 08 Apr 2025
- 05:54:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vQ0SxnBR";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="A7yhWpVz"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1744124953;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CLZRLH/712vh97T+Cj7EHgs1xlJmlFXKT4+PuzmWYVE=;
+	b=vQ0SxnBRBFif4SBTr1JHxo86wY2TiqcahO4BLbwviSFg+TxUs/TqpUAzI+A9H+qrecT47n
+	uaAZLehOFtO2cS0aMrwyMratDAIFf3LRdXSs8D5ksrr1jao2lYsSHb4HkT/JHgrJcIkGdQ
+	P4c0n5scFjUFKChtVVKksGBoSDjOw4zExsifB73w509bnSCEGJK3cAQ021jvWZwKP9rKuM
+	uUEFOakfJB5C21bGfOEMv883Bh0RTGrbDbr/6m2kmycVI1NK0Z/n7OlVCPHgEbYyQMTg1X
+	ZurYgDqxO0tkBqaMG3AavucoBcutqttybAB/qrhs+ZKPM59FkSxfm/pE1rzflw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1744124953;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CLZRLH/712vh97T+Cj7EHgs1xlJmlFXKT4+PuzmWYVE=;
+	b=A7yhWpVzxzZ7h8xWz+gWEdgrzFDb3axJw4JoyUoRRn5JJG4ybMGxSjrN/VqG3a6AE6v1FQ
+	3r2s0FKn/eRUvAAA==
+To: Bert Karwatzki <spasswolf@web.de>
+Cc: Bert Karwatzki <spasswolf@web.de>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com,
+ Jonathan.Cameron@huawei.com, allenbh@gmail.com, d-gole@ti.com,
+ dave.jiang@intel.com, haiyangz@microsoft.com, jdmason@kudzu.us,
+ kristo@kernel.org, linux-hyperv@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+ logang@deltatee.com, manivannan.sadhasivam@linaro.org,
+ martin.petersen@oracle.com, maz@kernel.org, mhklinux@outlook.com,
+ nm@ti.com, ntb@lists.linux.dev, peterz@infradead.org, ssantosh@kernel.org,
+ wei.huang2@amd.com, wei.liu@kernel.org
+Subject: Re: commit 7b025f3f85ed causes NULL pointer dereference
+In-Reply-To: <20250408120446.3128-1-spasswolf@web.de>
+References: <20250408120446.3128-1-spasswolf@web.de>
+Date: Tue, 08 Apr 2025 17:09:12 +0200
+Message-ID: <87iknevgfb.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250404231533.174419-1-ebiggers@kernel.org>
-In-Reply-To: <20250404231533.174419-1-ebiggers@kernel.org>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 8 Apr 2025 14:54:21 +0200
-X-Gm-Features: ATxdqUF-OlOdEIxCE1qPuhQhC_jv3bjWDPwF3BCWGXm2DWhZIQfUgr8SjCy-Un8
-Message-ID: <CAPDyKFqmgUUWOmH-r20VSfNZW7KC4RX4BTobGHf5F3uuLZtj0A@mail.gmail.com>
-Subject: Re: [PATCH v13 0/3] Support for wrapped inline encryption keys on
- Qualcomm SoCs
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Gaurav Kashyap <quic_gaurkash@quicinc.com>, 
-	Bjorn Andersson <andersson@kernel.org>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	Jens Axboe <axboe@kernel.dk>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 
-On Sat, 5 Apr 2025 at 01:16, Eric Biggers <ebiggers@kernel.org> wrote:
+On Tue, Apr 08 2025 at 14:04, Bert Karwatzki wrote:
+> Since linux-next-20250408 I get a NULL pointer dereference when booting:
 >
-> Add support for hardware-wrapped inline encryption keys to the Qualcomm
-> ICE (Inline Crypto Engine) and UFS (Universal Flash Storage) drivers.
->
-> I'd like these patches to be taken through the scsi tree for 6.16.
-> But the Qualcomm / msm tree would be okay too if that is preferred.
->
-> The block layer framework for this feature was merged in 6.15; refer to
-> the "Hardware-wrapped keys" section of
-> Documentation/block/inline-encryption.rst.  This patchset wires it up
-> for the newer Qualcomm SoCs, such as SM8650, which have a HWKM (Hardware
-> Key Manager) and support the SCM calls needed to easily use it.
->
-> Tested on the SM8650 HDK with xfstests, specifically generic/368 and
-> generic/369, in combination with the required fscrypt patch
-> https://lore.kernel.org/r/20250404225859.172344-1-ebiggers@kernel.org
-> which I plan to apply separately.
->
-> Changed in v13:
->    - Rebased onto latest upstream
->    - Resent just the remaining driver patches
->
-> For changes in v12 and earlier, see
-> https://lore.kernel.org/r/20250210202336.349924-1-ebiggers@kernel.org
->
-> Eric Biggers (2):
->   soc: qcom: ice: make qcom_ice_program_key() take struct blk_crypto_key
->   ufs: qcom: add support for wrapped keys
->
-> Gaurav Kashyap (1):
->   soc: qcom: ice: add HWKM support to the ICE driver
->
->  drivers/mmc/host/sdhci-msm.c |  16 +-
->  drivers/soc/qcom/ice.c       | 350 ++++++++++++++++++++++++++++++++---
->  drivers/ufs/host/ufs-qcom.c  |  57 ++++--
->  include/soc/qcom/ice.h       |  34 ++--
->  4 files changed, 396 insertions(+), 61 deletions(-)
->
+> [  T669] BUG: kernel NULL pointer dereference, address: 0000000000000330
+> [  T669] #PF: supervisor read access in kernel mode
+> [  T669] #PF: error_code(0x0000) - not-present page
+> [  T669] PGD 0 P4D 0
+> [  T669] Oops: Oops: 0000 [#1] SMP NOPTI
+> [  T669] CPU: 2 UID: 0 PID: 669 Comm: (udev-worker) Not tainted 6.15.0-rc1-next-20250408-master #788 PREEMPT_{RT,(lazy)}
+> [  T669] Hardware name: Micro-Star International Co., Ltd. Alpha 15 B5EEK/MS-158L, BIOS E158LAMS.107 11/10/2021
+> [  T669] RIP: 0010:msi_domain_first_desc+0x4/0x30
+> [  T669] Code: e9 21 ff ff ff 0f 0b 31 c0 e9 f3 8c da ff 0f 1f 84 00 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa <48> 8b bf 68 02 00 00 48 85 ff 74 13 85 f6 75 0f 48 c7 47 60 00 00
+> [  T669] RSP: 0018:ffffcec6c25cfa78 EFLAGS: 00010246
+> [  T669] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000008
+> [  T669] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 00000000000000c8
+> [  T669] RBP: ffff8d26cb419aec R08: 0000000000000228 R09: 0000000000000000
+> [  T669] R10: ffff8d26c516fdc0 R11: ffff8d26ca5a4aa0 R12: ffff8d26c1aed0c8
+> [  T669] R13: 0000000000000002 R14: ffffcec6c25cfa90 R15: ffff8d26c1aed000
+> [  T669] FS:  00007f690f71a980(0000) GS:ffff8d35e83fa000(0000) knlGS:0000000000000000
+> [  T669] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  T669] CR2: 0000000000000330 CR3: 0000000121b64000 CR4: 0000000000750ef0
+> [  T669] PKRU: 55555554
+> [  T669] Call Trace:
+> [  T669]  <TASK>
+> [  T669]  msix_setup_interrupts+0x23b/0x280
 
-For the series and MMC parts:
+Can you please decode the lines please via:
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
+    scripts/faddr2line vmlinux msi_domain_first_desc+0x4/0x30
+    scripts/faddr2line vmlinux msix_setup_interrupts+0x23b/0x280
 
-Kind regards
-Uffe
+Thanks,
+
+        tglx
