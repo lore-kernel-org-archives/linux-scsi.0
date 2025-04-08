@@ -1,217 +1,163 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B972192E9
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Apr 2025 18:00:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D13C244195;
+	Tue,  8 Apr 2025 20:22:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744135235; cv=none; b=SC7Vibo/TMNEfiyjX0jf8Pl6LVLq3omU23MJfGmnSrkQKuGudSg1cOWnKfcQLMXk4fBtIO7+4Q4sIs2wdfHQ7KlwYGcIX18ZPtna/n6aotWJMkmF1Z0DGngkFw1YG2gANGaAkSr+zXS/k9SW8oax3pbWqUYJZ9gt2Jn6fe3gBYU=
+	t=1744143760; cv=none; b=IqsVK5KrjKV4LUvyHwii6Ds3LJiGrALE/ItGxRMojrz8Cn9M+AshCb1dB2c1cJc7SLO6uKhifpw4oSjBzQYcXm5weh/Z3Q0nULEablfL7eVQDsgYitKKRdC/962rN4qSgdq9jqCD3XrLwfwK/DE+ZtAwEfkEi0uaoRCtjFA7fBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744135235; c=relaxed/simple;
-	bh=IKRxW8iOvOnceIWgj2+pn9aFnGfhMnhGEcl6HM1Y/2k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UWEDqkEwZL/GQu4Y1PvjpJoeRqEIwMQR6SMYfHqGRsarHKCQcvQvkiTro8uyv16ULSWEo+nt+IDEEOYqxU/tOj7s/y9+TLIpzjpioQFuVD+SoamnzyBC9lvoAoyQkkdZHoptZsIQpv69RynLGRKQiibb9J418fRyQx5/xTK+a2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bG+1as5e; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1744143760; c=relaxed/simple;
+	bh=8XyuXKtTL6e+f4N6ue5PUIlJOF4lFS/2wcpnxprhIXk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=sKUi1V7sbFZ5TgsDeFNk0Hyt0gm2xKx0aP2z3f9bocpSVyvAMwCaPfT4uP8zbNB4W2aBM1g26hp9Vz+yWUYWELl+tF154WqV+5XzB1oOD2NAiugGZIPmVer7e8+FpX4GYbXUBg5aEFbdccZ999LKrkXQ3+OTsY0JXZ9iBO11OXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iFNRROFq; arc=none smtp.client-ip=209.85.167.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bG+1as5e"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-739b3fe7ce8so5232056b3a.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Apr 2025 11:00:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iFNRROFq"
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-54afb5fcebaso6688805e87.3;
+        Tue, 08 Apr 2025 13:22:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1744135232; x=1744740032; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+        d=gmail.com; s=20230601; t=1744143757; x=1744748557; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=S+0LerDyV9VF61DFjpKkcTVQ+Gx5OvKrFKicvV3UQ60=;
-        b=bG+1as5e0Hgqw3O3kXf4NvDmKaHfQmHce0DHomVUkrawe7kNRqNR5rewL7mj6wF0FH
-         17MEJqa/DTA5N9hauXqWDovekXVka+R/ddH1kROYQp35o6MvrYhFnLI2TyTlg31m+h0r
-         RJ0MxUh9Pr2N7NhMX7q73qhiXbbI6mr5aMBOg6RqXAN2wB07WMqN0YmcwJwh8qsj+Nre
-         cSy2BTgsCkyvA1324+zMCSPK0Rxx7zVffdm+yJoa3NnanNi/YOlvtaZJj4jN/TvHtY/j
-         ETM/46+EmJFss+YxoxtM7S9irjxmUOwkh785Ka+sd7nn6cfME2xkf/NyrsubUmuNfGSm
-         6tTw==
+        bh=YIezlD6Bly08fXTPTVgGJejItaXAl+hctJG/vGdTjvA=;
+        b=iFNRROFqu6nye0IhErWO2yfI4yV2XFCX9U++KRKxle88IKL6A23MSytlx117VnUr+s
+         dCH0vjFlCTrCfSlFVcRYNyvul+BGtGfT6xgc11W89ScxDIRIwVzya3JQBa6nGk2/Oo01
+         FV2djF5sue3cBJsUtCMHRDNToTfP1dEuRNmkHBx9k7ttqM20Z9tdFjAepjZVEcWPicUC
+         llTjfSY6y32oacHG4kVbd4DoE0qIn1cMjqO5ar6uj6Q6P1Xzg0SWfc2fq0IguA6GCFuA
+         VlbvCS8VyyHmCT2y/rKUWNJwiI6gVTobHR+JkxKkBlcfRsCX06n1rhIvkyIYVvgbanmu
+         DcbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744135232; x=1744740032;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
+        d=1e100.net; s=20230601; t=1744143757; x=1744748557;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=S+0LerDyV9VF61DFjpKkcTVQ+Gx5OvKrFKicvV3UQ60=;
-        b=wT4X2b9LppJKgkQEz1SqYb1FbYElcZCNFhHIx1SndNAz/LI4hap5U9yp5Pqhe+lFPu
-         w4RKldK8PmZOhAlPdfJOLU05pXpVg7zXg4b/O929k5qZA2v2312J44ara0saLEiSBEWR
-         XQDGvOPm+3cd28LqmUZOLFRswhnXiQPfztSfgOeXwNg63wJgM2W+b/DMNCO7yaumRivr
-         qzvvwAmLJcXCXC83O1YVAQH8pj43frWX7sassV+a2QEiEeMGk/tPG6vnHqEHhdpqLCW6
-         TX5qS94saWwmzwv+B2YNOQ28yhASgMFpFVv126XzdVqkAwlCeISP7XWPIVERUkpA6SgT
-         FEnw==
-X-Forwarded-Encrypted: i=1; AJvYcCUmL/Td3/X6DZ+eVk6dnIelMOrY3QADl6qg30a+32/DkO/pQHFV26jnZI6BxlF25i3yKsDS7b90qAdH@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCuJr8l2q4IkLUzynV/p180vqHXKqjDLJnzij6n3spBRs5FSC/
-	l1AYw4WLzDSv+wxBttG5ZDj/FkWUc1NImaYpXWaaMAnwoNcTwvhR8X1fhKx+XQ==
-X-Gm-Gg: ASbGncuMGDChtvSnowT/OmOndYcuq2fKDV7Mx72to89SP+BM1ef6BquCwoHxtDnjz9X
-	9Aj5U/kQ3YiSKEUo41nmGVK90zAWOKTX+X4oDvN9W4/hyt7b/NIQ2+yAdY0IdsPMKsPvbKvLOY7
-	kh3uYtUu5Guk24rjlqMhznxOU1qOln8ZSLoSsvkLy5oBjFNSctoUaITnblwPJ2VCO90XH9QYVYE
-	OC0yDZiJTUM1muKMxVzEV0u/iya0ZuKmV05r+74aQgqYvA8sCnEtgvQLylKVP7crBEHL4RbtS5l
-	lfAODNeDVNN5ooRlWW3Fh7m5fsV8jt0avepPTzi6ltmMU5gosNE9rO4D
-X-Google-Smtp-Source: AGHT+IGbXmuvDasWqfR5DUW+LETiZrUs5vidBCFKPfHYN49uKTRWvJsciqfcQbQm8F14O/bxFXbYZw==
-X-Received: by 2002:a05:6a00:14d4:b0:736:476b:fcd3 with SMTP id d2e1a72fcca58-73b6b8fd296mr21570487b3a.24.1744135231604;
-        Tue, 08 Apr 2025 11:00:31 -0700 (PDT)
-Received: from thinkpad ([120.60.134.231])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-739d9ea0946sm11181427b3a.103.2025.04.08.11.00.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Apr 2025 11:00:31 -0700 (PDT)
-Date: Tue, 8 Apr 2025 23:30:24 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: MANISH PANDEY <quic_mapa@quicinc.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, quic_nitirawa@quicinc.com, 
-	quic_bhaskarv@quicinc.com, quic_rampraka@quicinc.com, quic_cang@quicinc.com, 
-	quic_nguyenb@quicinc.com
-Subject: Re: [PATCH V2 2/2] scsi: ufs: introduce quirk to extend
- PA_HIBERN8TIME for UFS devices
-Message-ID: <fboo23erbvvhjg7hwkamudlopjeeg4tkwfjjcnor7ck2m4v3t4@redldauhvfhr>
-References: <20250404174539.28707-1-quic_mapa@quicinc.com>
- <20250404174539.28707-3-quic_mapa@quicinc.com>
- <hcguawgzuqgi2cyw3nf7uiilahjsvrm37f6zgfqlnfkck3jatv@xgaca3zgts2u>
- <d09641c7-c266-4f0a-a0e3-56f63d8c9ce3@quicinc.com>
- <l6xao2ubcvv3ho56dv6qfr3b62ve3olfbhvywg2is2xdhod27r@2nyjfwinrxzm>
- <25d8a781-14ea-4b97-b6b4-f9d472c1b692@quicinc.com>
- <cwwf4z2lrdhyv3nsj7do6ycn4tmdaii3wsr37vehgqpvvkgkwv@iugp4vu5srdm>
- <cf81fc11-f47b-422c-9c7d-860e6f93d930@quicinc.com>
+        bh=YIezlD6Bly08fXTPTVgGJejItaXAl+hctJG/vGdTjvA=;
+        b=J1qPYDdS5S3JXGokFAQg4X1858GKiOOp3HF37+8+AkDpzVOqIk/kNFHOvfUSAFzD2A
+         JSkxa+Gd3U4c8mpzj8lNq8A+CQVHaNWEAV8W1KGAFQO8vH2erYdQ7L5C+Cg1I6WpgOXS
+         SfYTA49MQKjm0b/B7LuhhrKXao/u+WaeIPR/o/dc5sKIXrmm3wsnEo0FtqGeaekadfB+
+         +LMFk63E2y/0qDy11P4UGDeW6xil2U0Td9hRhDdPPQasKGrQnuHBMU/IAGQQEt0dvK39
+         Cv+iM7gw25lJjJUrMRDFYw61i7pt9f/FvnsngecEwINoxrmND1jlvE4FN9AHfpvBiUnt
+         7ZiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUF0m01SfzrYdRolw0ducp43s1CQgHvGQHUXmqiFFKqhMz57/lME4W6VHl2t0qphJ0EXuxw3IHRcPS8tmuP@vger.kernel.org, AJvYcCVh9AEKKiHFxfhJdEpeNgXcsDdmQrY2ighe8S4WSErQdJm4i+0Hg50LMg4SXrGseslrUXAh09g8uSFXkw==@vger.kernel.org, AJvYcCWUZFrvLzi35vu1nSnlW/BOr3+FyBDHGM6Hl16SH4BXydyskRmy/sO0youtCfSPFPNz5iOqs0YL89bc@vger.kernel.org, AJvYcCWa6LTCeq1HaZrpjK0bK0EOYmpnRE/l4Mt8+dsbAWbrGKJ0XFJTh9pGMblWx0RwYD6RAkWT7qACCtZK1mw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YydaUshBNPhvU9b/jtHdKq/iv7kCmuq6o1EmtVEsquXyZ7uo4+0
+	xo+YzfyyroDazr5xvPyc0glxK9vFXlU9KvKeU0Lh90P7AHws/I7s
+X-Gm-Gg: ASbGncuFMsq2ES6Ds3uFd/NFo3/7GJGQU/j30blzjnudYHgmdXudxAemOpmtVjsvTRc
+	kyOpxfKAnEAx0Hq6wGYEIMuoKqqnjYYNIWq+fjvaDQmz/vDVu7fpLf/XgcdisXaGwF/km48+F9l
+	N8GKWpphrpDRncAuVxlazZ0KhxtAaWCYNifoeIV9df6Nn3Ayg8NtouDMYP24+50VwQed2EK3D8c
+	W4/WVzfPsS73ymXIQUfa+oOAn3MJzyfYmwpAEH9Y4fEgk6auKjDolA2Te1M6Kic/2OH6hbMXPfT
+	8UNgsfpI2gIf+aQpoZRgEhUxWo2ct6NtYSx2AvPSfKf/dal8iOJLP93LPRMwwU5t2TbDMyipCjw
+	AkkTNvk4qMezUs4nhNLc5r9mla+bIXw==
+X-Google-Smtp-Source: AGHT+IHuOB8gUCAj1gNimuKP3q1rxTb6SSeldgO0iZOm51nl8thKhMqs2ptuSNY/uXaP2AiCZuPn5w==
+X-Received: by 2002:a05:6512:3b9f:b0:54b:117b:952f with SMTP id 2adb3069b0e04-54c437de1femr77204e87.56.1744143756421;
+        Tue, 08 Apr 2025 13:22:36 -0700 (PDT)
+Received: from ?IPV6:2001:678:a5c:1202:4fb5:f16a:579c:6dcb? (soda.int.kasm.eu. [2001:678:a5c:1202:4fb5:f16a:579c:6dcb])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-54c1e672218sm1587431e87.238.2025.04.08.13.22.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 08 Apr 2025 13:22:36 -0700 (PDT)
+Message-ID: <3fb1b40e-a768-4a44-8c43-e522282cd417@gmail.com>
+Date: Tue, 8 Apr 2025 22:22:34 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cf81fc11-f47b-422c-9c7d-860e6f93d930@quicinc.com>
+User-Agent: Mozilla Thunderbird
+From: Klara Modin <klarasmodin@gmail.com>
+Subject: Re: commit 7b025f3f85ed causes NULL pointer dereference
+To: Bert Karwatzki <spasswolf@web.de>, Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ James.Bottomley@HansenPartnership.com, Jonathan.Cameron@huawei.com,
+ allenbh@gmail.com, d-gole@ti.com, dave.jiang@intel.com,
+ haiyangz@microsoft.com, jdmason@kudzu.us, kristo@kernel.org,
+ linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-scsi@vger.kernel.org, logang@deltatee.com,
+ manivannan.sadhasivam@linaro.org, martin.petersen@oracle.com,
+ maz@kernel.org, mhklinux@outlook.com, nm@ti.com, ntb@lists.linux.dev,
+ peterz@infradead.org, ssantosh@kernel.org, wei.huang2@amd.com,
+ wei.liu@kernel.org
+References: <20250408120446.3128-1-spasswolf@web.de> <87iknevgfb.ffs@tglx>
+ <87friivfht.ffs@tglx> <f303b266172050f2ec0dc5168b23e0cea9138b01.camel@web.de>
+Content-Language: en-US, sv-SE
+In-Reply-To: <f303b266172050f2ec0dc5168b23e0cea9138b01.camel@web.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Apr 08, 2025 at 10:58:10PM +0530, MANISH PANDEY wrote:
+Hi,
+
+
+On 2025-04-08 18:20, Bert Karwatzki wrote:
+> Am Dienstag, dem 08.04.2025 um 17:29 +0200 schrieb Thomas Gleixner:
+>> On Tue, Apr 08 2025 at 17:09, Thomas Gleixner wrote:
+>>> On Tue, Apr 08 2025 at 14:04, Bert Karwatzki wrote:
+>>>> Since linux-next-20250408 I get a NULL pointer dereference when booting:
+>>>>
+>>>> [  T669] BUG: kernel NULL pointer dereference, address: 0000000000000330
+>>>> [  T669] #PF: supervisor read access in kernel mode
+>>>> [  T669] #PF: error_code(0x0000) - not-present page
+>>>> [  T669] PGD 0 P4D 0
+>>>> [  T669] Oops: Oops: 0000 [#1] SMP NOPTI
+>>>> [  T669] CPU: 2 UID: 0 PID: 669 Comm: (udev-worker) Not tainted 6.15.0-rc1-next-20250408-master #788 PREEMPT_{RT,(lazy)}
+>>>> [  T669] Hardware name: Micro-Star International Co., Ltd. Alpha 15 B5EEK/MS-158L, BIOS E158LAMS.107 11/10/2021
+>>>> [  T669] RIP: 0010:msi_domain_first_desc+0x4/0x30
+>>>> [  T669] Code: e9 21 ff ff ff 0f 0b 31 c0 e9 f3 8c da ff 0f 1f 84 00 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa <48> 8b bf 68 02 00 00 48 85 ff 74 13 85 f6 75 0f 48 c7 47 60 00 00
+>>>> [  T669] RSP: 0018:ffffcec6c25cfa78 EFLAGS: 00010246
+>>>> [  T669] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000008
+>>>> [  T669] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 00000000000000c8
+>>>> [  T669] RBP: ffff8d26cb419aec R08: 0000000000000228 R09: 0000000000000000
+>>>> [  T669] R10: ffff8d26c516fdc0 R11: ffff8d26ca5a4aa0 R12: ffff8d26c1aed0c8
+>>>> [  T669] R13: 0000000000000002 R14: ffffcec6c25cfa90 R15: ffff8d26c1aed000
+>>>> [  T669] FS:  00007f690f71a980(0000) GS:ffff8d35e83fa000(0000) knlGS:0000000000000000
+>>>> [  T669] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>>> [  T669] CR2: 0000000000000330 CR3: 0000000121b64000 CR4: 0000000000750ef0
+>>>> [  T669] PKRU: 55555554
+>>>> [  T669] Call Trace:
+>>>> [  T669]  <TASK>
+>>>> [  T669]  msix_setup_interrupts+0x23b/0x280
+>>>
+>>> Can you please decode the lines please via:
+>>>
+>>>      scripts/faddr2line vmlinux msi_domain_first_desc+0x4/0x30
+>>>      scripts/faddr2line vmlinux msix_setup_interrupts+0x23b/0x280
+>>
 > 
+> I had to recompile with CONFIG_DEBUG_INFO=Y, and reran the test, the calltrace
+> is identical.
 > 
-> On 4/8/2025 10:01 PM, Manivannan Sadhasivam wrote:
-> > On Tue, Apr 08, 2025 at 01:14:50PM +0530, MANISH PANDEY wrote:
-> > > 
-> > > 
-> > > On 4/8/2025 12:53 PM, Manivannan Sadhasivam wrote:
-> > > > On Tue, Apr 08, 2025 at 11:07:58AM +0530, MANISH PANDEY wrote:
-> > > > > 
-> > > > > 
-> > > > > On 4/7/2025 12:05 AM, Manivannan Sadhasivam wrote:
-> > > > > > On Fri, Apr 04, 2025 at 11:15:39PM +0530, Manish Pandey wrote:
-> > > > > > > Some UFS devices need additional time in hibern8 mode before exiting,
-> > > > > > > beyond the negotiated handshaking phase between the host and device.
-> > > > > > > Introduce a quirk to increase the PA_HIBERN8TIME parameter by 100 µs
-> > > > > > > to ensure proper hibernation process.
-> > > > > > > 
-> > > > > > 
-> > > > > > This commit message didn't mention the UFS device for which this quirk is being
-> > > > > > applied.
-> > > > > > 
-> > > > > Since it's a quirk and may be applicable to other vendors also in future, so
-> > > > > i thought to keep it general.
-> > > > > 
-> > > > 
-> > > > You cannot make commit message generic. It should precisely describe the change.
-> > > > 
-> > > > > Will update in next patch set if required.
-> > > > >    >> Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-> > > > > > > ---
-> > > > > > >     drivers/ufs/core/ufshcd.c | 31 +++++++++++++++++++++++++++++++
-> > > > > > >     include/ufs/ufs_quirks.h  |  6 ++++++
-> > > > > > >     2 files changed, 37 insertions(+)
-> > > > > > > 
-> > > > > > > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > > > > > > index 464f13da259a..2b8203fe7b8c 100644
-> > > > > > > --- a/drivers/ufs/core/ufshcd.c
-> > > > > > > +++ b/drivers/ufs/core/ufshcd.c
-> > > > > > > @@ -278,6 +278,7 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
-> > > > > > >     	  .model = UFS_ANY_MODEL,
-> > > > > > >     	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
-> > > > > > >     		   UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE |
-> > > > > > > +		   UFS_DEVICE_QUIRK_PA_HIBER8TIME |
-> > > > > > >     		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS },
-> > > > > > >     	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
-> > > > > > >     	  .model = UFS_ANY_MODEL,
-> > > > > > > @@ -8384,6 +8385,33 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
-> > > > > > >     	return ret;
-> > > > > > >     }
-> > > > > > > +/**
-> > > > > > > + * ufshcd_quirk_override_pa_h8time - Ensures proper adjustment of PA_HIBERN8TIME.
-> > > > > > > + * @hba: per-adapter instance
-> > > > > > > + *
-> > > > > > > + * Some UFS devices require specific adjustments to the PA_HIBERN8TIME parameter
-> > > > > > > + * to ensure proper hibernation timing. This function retrieves the current
-> > > > > > > + * PA_HIBERN8TIME value and increments it by 100us.
-> > > > > > > + */
-> > > > > > > +static void ufshcd_quirk_override_pa_h8time(struct ufs_hba *hba)
-> > > > > > > +{
-> > > > > > > +	u32 pa_h8time = 0;
-> > > > > > 
-> > > > > > Why do you need to initialize it?
-> > > > > > 
-> > > > > Agree.. Not needed, will update.>> +	int ret;
-> > > > > > > +
-> > > > > > > +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
-> > > > > > > +			&pa_h8time);
-> > > > > > > +	if (ret) {
-> > > > > > > +		dev_err(hba->dev, "Failed to get PA_HIBERN8TIME: %d\n", ret);
-> > > > > > > +		return;
-> > > > > > > +	}
-> > > > > > > +
-> > > > > > > +	/* Increment by 1 to increase hibernation time by 100 µs */
-> > > > > > 
-> > > > > >    From where the value of 100us adjustment is coming from?
-> > > > > > 
-> > > > > > - Mani
-> > > > > > 
-> > > > > These values are derived from experiments on Qualcomm SoCs.
-> > > > > However this is also matching with ufs-exynos.c
-> > > > > 
-> > > > 
-> > > > Okay. In that case, you should mention that the 100us value is derived from
-> > > > experiments on Qcom and Samsung SoCs. Otherwise, it gives an assumption that
-> > > > this value is universal.
-> > > > 
-> > > > - Mani
-> > > > 
-> > >   << Otherwise, it gives an assumption that this value is universal. >>
-> > > So with this, should i add this quirk for Qcom only, or should add in
-> > > ufshcd.c and make it common for all SoC vendors?
-> > > 
-> > 
-> > You can add the quirk for both Qcom and Samsung. My comment was about clarifying
-> > it in the kernel doc comments.
-> > 
-> > - Mani
-> > 
-> Just for conclusion, why i moved this quirk from ufs-qcom to ufshcd.c is as
-> per Bart's suggestion in patchset
-> https://lore.kernel.org/lkml/c0691392-1523-4863-a722-d4f4640e4e28@acm.org/
+> $ scripts/faddr2line vmlinux msi_domain_first_desc+0x4/0x30
+> msi_domain_first_desc+0x4/0x30:
+> msi_domain_first_desc at kernel/irq/msi.c:400
 > 
-> << Which of these quirks are required for all host controllers and which of
-> these quirks are only required for Qualcomm host controllers?
+> So it seems msi_domain_first_desc() is called with dev = NULL.
 > 
-> > Should we consider moving the QUIRK_PA_HIBER8TIME quirk to the ufshcd
-> > driver? Please advise.
-> 
-> That would be appreciated. >>
-> 
-> Just to brief, QUIRK_PA_HIBER8TIME is required for Samsung UFS devices and
-> may be applicable to all SoC vendors with Samsung ufs device.
-> 
-> If you suggest to move it to ufs-qcom.c, i don't have any concern.
-> BTW Samsung UFS driver already has this implemented in their driver,
-> So i need not have to add this quirk to Samsung driver (ufs-exynos.c).
+> $ scripts/faddr2line vmlinux msix_setup_interrupts+0x23b/0x280
+> msix_setup_interrupts+0x23b/0x280:
+> msix_update_entries at drivers/pci/msi/msi.c:647 (discriminator 1)
+> (inlined by) __msix_setup_interrupts at drivers/pci/msi/msi.c:684 (discriminator
+> 1)
+> (inlined by) msix_setup_interrupts at drivers/pci/msi/msi.c:695 (discriminator
+> 1)
 > 
 
-No. I think there was a miscommunication. You can add the quirk in ufshcd.c, but
-I just want you to mention that the quirk is currently applicable to Samsung UFS
-devices and the value of 100us is derived from experiments.
+I was also hit by this issue. If I understand it correctly, retain_ptr 
+inhibits the free to be inserted when the scope ends, but it also NULLs 
+dev in the process. If I switch the order of retain_ptr and 
+msix_update_entries in __msix_setup_interrupts I don't get the oops 
+anymore, though I don't know if this is the correct fix.
 
-- Mani
+> 
+>> Can you please also provide kernel configuration and compiler version?
+>>
+>> Thanks,
+>>
+>>          tglx
+> 
+> Bert Karwatzki
+> 
 
--- 
-மணிவண்ணன் சதாசிவம்
+Regards,
+Klara Modin.
