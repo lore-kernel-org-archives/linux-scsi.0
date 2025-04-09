@@ -1,125 +1,114 @@
-Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93CE121481E;
-	Wed,  9 Apr 2025 20:45:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7A5F21148F;
+	Wed,  9 Apr 2025 21:00:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744231543; cv=none; b=U1+HZw7xF/5eEqoP8coISf3Js5hqcpgnkn4PpjePP9qpRR3BTgS4cB52ee4oT6EKMOv7Be/iHBkhhzpbf2bmPKcnFJPzUL/hznV39vPJMRoQofdTLiZLCTg9QX8bZQ0+lMvO2Kd5WYgTNWZCDm7f62agSx8JWaZjub/3c4EPcbA=
+	t=1744232413; cv=none; b=ZKZaPnvqvUaKtqo2g6nuv4HmXWykUFDOSgVjRja6Wmz/VZDoybPsslWiJ0CDJBSZ5XouNPkWPO2fCq82Vn5XD+/e1j54U86mWKsVbrRMJI+xBHXnLlHVrtxSQnM4YAarv209m4uFBuDyq/Skt1IjmA6aTqnDlK0h6VhPhXdfHVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744231543; c=relaxed/simple;
-	bh=cUenJzwspzcZC4iAhVtPGZ5Qjcu2yzhoR4F6Li2MW38=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=H7wowL1jPtXKdk3E2esW7QAktZQEsYhrQQ4rT5kpKhS3yNmgnG2a778dqHfb+GPW2/WdUogvNRaHJJaQOdDhzVx+vgp4KuDp0swoxhIBjLf7LA2uk9NjOcFNGHyaj8n/AMWJZ3ZfQEfmySB8cpXmfRv1jl3dF7o6fJaJu5QACuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O+aWfhdD; arc=none smtp.client-ip=209.85.219.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1744232413; c=relaxed/simple;
+	bh=u9y+3WWgJyQXBNeDtdGlxMTb4ab/g/8Jj2VBJvdZcxo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZYGhAlm6bL7LiyG/bMZOywPK76A82gkO6gKFKxl4U6P8dwsg55iXet1vn2YbBugo1WnKYpXFW/WMBsYvkeuBnwRY3ZXjf4OckWSeimlu7/n2xXOq8B+efr/rUtCAH76hZb3E4yYPsyKVmvaDkgtRs0slFIewtNZ30/xCdsON+x4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Tu9YuzZS; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O+aWfhdD"
-Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-6ef0537741dso41226d6.2;
-        Wed, 09 Apr 2025 13:45:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744231540; x=1744836340; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3gPzZ56otu+n0Q0EQ494VJkh4lNvsg4X22Kcyvv+XGE=;
-        b=O+aWfhdD+yA2JFh04G+/UnIUvTab0ccJQNc7kA5UFWCYCTOPaNloI+O1twsdusv6Tf
-         9LNnK7Q0MvQgs4cnmol343xQTECAnJ9nEp+XmSf5b1BPqWD0l5IZsYFgWCHGkzVbfCpT
-         nJ/qxoIXigLfvAyGFg0V29w45xF+FoFXtBhkY6MLct3PgwjOoH/oizCC4bK61Zp4Xv4W
-         Vme8EKgc0HNq9hlYmWMwx5yPHocahb5OHJcctikl3o7WGI5HoPHxuiWWZK286pQYWQRR
-         zK9qGUXEgGYAKYyjml0LwibaJ/nJuImEtsZnYOkMhMy8SEsKx0ltssrBUUAWXbRgkugB
-         6CHw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744231540; x=1744836340;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3gPzZ56otu+n0Q0EQ494VJkh4lNvsg4X22Kcyvv+XGE=;
-        b=otdlq4nbeEdiZs9fLi93IxyVIT6PS4Kbevj2lqBTu7TY1cnfgiWBN+s9c3iPuMhCeD
-         J4zogRu8/biz0nzsbokB67SFdx4NLvKMTYj5leNVnum7aQqpHZrGKZa8781DcuU0WGXl
-         GQKSYzFX2YqHS3dP46zlklASjJXaTqxq7GzJ/lngw7B+HwHJkNPLxwP7cd7TrgAgSG1l
-         1tXEDWmlm9+4xXbIrUb54wiSMj+f7vFlVQ0930xyGp5WF97FLvHq3sqCCqjXHQttyjp5
-         5mIpep3NfHjNSydM8IoW1Fx0aIg4vXHXirDwfxBcYlT+fLdVNDzKt4j+BaPfVjC7ESUM
-         zVxw==
-X-Forwarded-Encrypted: i=1; AJvYcCVl8FGQL/YUQGfm+78i6v0bYgOsT7S76jZxwlJTWJjRw7ewN6u3f/qKiRh4CmHP4rWmemNGiXEWIGeWtQE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgGISxNM8Tj1GbOlie+YqcP/tGDh2sSQw2C//MC0Gv3bOeVSzw
-	DVBRc+aDQtsGocrTaVi2BGWnJYo+mWS4CsTsxjgk/rbleg/GFV8=
-X-Gm-Gg: ASbGncsfYq52P/H52fW/eUkix2LDReOyukps4z1ozhoJSh1967G9BHadmZwQJiDEU+I
-	+Eh9xdlMXl/n6GpXHXBVJsZ5cQcF9WnAOEK8O52c4jkSnySo+9FHC2snn22DaWiC9usEGRzPbZA
-	vvw47aSoVH4UL9yeyyy2ezGTzwS2flaqHkY1MRX1/i27ajopbwhfZ9uAQikCfCVxThi2eJgU9Tx
-	qt68nMSJsVkKU6lSwoh9SZ0/TzDPmW07x7mm0T7zYbDzwfMFmj2wrN07UukLt6s3SX/UC5AOqar
-	zUWUdhmvKk+tCRh/5qqDi5Ce5a3EIk0TQIj2Pw==
-X-Google-Smtp-Source: AGHT+IGjE+VUOBEomw6CWFpbs+MXDUxnnAMARCBc5reoVD4E6+JG/HZ5PAKx4OvSTQtZPDMy9pGM1w==
-X-Received: by 2002:a05:6214:2486:b0:6e8:f4f9:40e1 with SMTP id 6a1803df08f44-6f0dba2463amr27327886d6.0.1744231540275;
-        Wed, 09 Apr 2025 13:45:40 -0700 (PDT)
-Received: from ise-alpha.. ([2620:0:e00:550a:642:1aff:fee8:511b])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6f0de95fdfbsm11499706d6.1.2025.04.09.13.45.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Apr 2025 13:45:39 -0700 (PDT)
-From: Chenyuan Yang <chenyuan0y@gmail.com>
-To: alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	peter.wang@mediatek.com,
-	minwoo.im@samsung.com,
-	manivannan.sadhasivam@linaro.org,
-	viro@zeniv.linux.org.uk,
-	cw9316.lee@samsung.com,
-	quic_nguyenb@quicinc.com,
-	quic_cang@quicinc.com,
-	stanley.chu@mediatek.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chenyuan Yang <chenyuan0y@gmail.com>
-Subject: [PATCH] scsi: ufs: mcq: Add NULL check in ufshcd_mcq_abort()
-Date: Wed,  9 Apr 2025 15:45:37 -0500
-Message-Id: <20250409204537.3566793-1-chenyuan0y@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Tu9YuzZS"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZXwLq65xqzm22HC;
+	Wed,  9 Apr 2025 21:00:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1744232401; x=1746824402; bh=4qpDFoC7jRxlhD7xqwhzQhGg
+	yvb+J8AtlP8vjZ317ng=; b=Tu9YuzZSu7T2UHbDvRpWrtn4uRosQ3C0b6s7XEYA
+	B0ab7ir4m4iKX7BJ1bSeSH1o8JdiJIpRBo/DdQlhrUiisho8j8IzYAJWHSGFX3dg
+	rVpooRaJGjgvnAk/klH9Z/i+wzOthYUh1i1UsTLUBiwQWpVUfR5MBOPGImQ2tTw+
+	wgiiRHJZMUvNL2pL1PC1EMqQTawBLauXcyk/4PyOr3dgXdYtgyEXbOWiI1IUaH5D
+	chDNTuLcjOaR8X5Kdm5RC3dA+x6FxhHhkYpHHDlJllZYy1W3/tGtpDxkbIRc8y1U
+	ASRwg261OTtr5f02QwQbfa8wE4STj1j/SPO8wyHBjDSM9A==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id lxL8XKZCaJb9; Wed,  9 Apr 2025 21:00:01 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZXwLc2rFzzm0pKY;
+	Wed,  9 Apr 2025 20:59:51 +0000 (UTC)
+Message-ID: <2e19c458-4136-4860-b853-1314c4ab5952@acm.org>
+Date: Wed, 9 Apr 2025 13:59:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: mcq: Add NULL check in ufshcd_mcq_abort()
+To: Chenyuan Yang <chenyuan0y@gmail.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, peter.wang@mediatek.com, minwoo.im@samsung.com,
+ manivannan.sadhasivam@linaro.org, viro@zeniv.linux.org.uk,
+ cw9316.lee@samsung.com, quic_nguyenb@quicinc.com, quic_cang@quicinc.com,
+ stanley.chu@mediatek.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250409204537.3566793-1-chenyuan0y@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250409204537.3566793-1-chenyuan0y@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-A race can occur between the MCQ completion path and the abort handler:
-once a request completes, __blk_mq_free_request() sets rq->mq_hctx to
-NULL, meaning the subsequent ufshcd_mcq_req_to_hwq() call in
-ufshcd_mcq_abort() can return a NULL pointer. If this NULL pointer is
-dereferenced, the kernel will crash.
+On 4/9/25 1:45 PM, Chenyuan Yang wrote:
+> A race can occur between the MCQ completion path and the abort handler:
+> once a request completes, __blk_mq_free_request() sets rq->mq_hctx to
+> NULL, meaning the subsequent ufshcd_mcq_req_to_hwq() call in
+> ufshcd_mcq_abort() can return a NULL pointer. If this NULL pointer is
+> dereferenced, the kernel will crash.
+> 
+> Add a NULL check for the returned hwq pointer. If hwq is NULL, log an
+> error and return FAILED, preventing a potential NULL-pointer dereference.
+> 
+> This is similar to the fix in commit 74736103fb41
+> ("scsi: ufs: core: Fix ufshcd_abort_one racing issue").
+> 
+> This is found by our static analysis tool KNighter.
+> 
+> Signed-off-by: Chenyuan Yang <chenyuan0y@gmail.com>
+> Fixes: f1304d442077 ("scsi: ufs: mcq: Added ufshcd_mcq_abort()")
+> ---
+>   drivers/ufs/core/ufs-mcq.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 240ce135bbfb..2c8792911616 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -692,6 +692,11 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
+>   	}
+>   
+>   	hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+> +	if (!hwq) {
+> +		dev_err(hba->dev, "%s: failed to get hwq for tag %d\n",
+> +			__func__, tag);
+> +		return FAILED;
+> +	}
+>   
+>   	if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
+>   		/*
 
-Add a NULL check for the returned hwq pointer. If hwq is NULL, log an
-error and return FAILED, preventing a potential NULL-pointer dereference.
+This patch makes the ufshcd_cmd_inflight() check just above the
+modified code superfluous. Please remove it.
 
-This is similar to the fix in commit 74736103fb41
-("scsi: ufs: core: Fix ufshcd_abort_one racing issue").
+Additionally, please change the error message such that it reports
+that the command has already completed.
 
-This is found by our static analysis tool KNighter.
+Thanks,
 
-Signed-off-by: Chenyuan Yang <chenyuan0y@gmail.com>
-Fixes: f1304d442077 ("scsi: ufs: mcq: Added ufshcd_mcq_abort()")
----
- drivers/ufs/core/ufs-mcq.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 240ce135bbfb..2c8792911616 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -692,6 +692,11 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
- 	}
- 
- 	hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+	if (!hwq) {
-+		dev_err(hba->dev, "%s: failed to get hwq for tag %d\n",
-+			__func__, tag);
-+		return FAILED;
-+	}
- 
- 	if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
- 		/*
--- 
-2.34.1
-
+Bart.
