@@ -1,30 +1,30 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0D1851C32;
-	Wed,  9 Apr 2025 00:08:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C3FBB258A;
+	Wed,  9 Apr 2025 00:08:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744157326; cv=none; b=upVM4jy8GBeQxOwxQTwH6Bv8WTDbFUJR9D6uXj+UGRYCciUF4UjjZ4OcFV16lJiCs6+CdqSk/Y2DngKwPbA9jJDxyCvWTvUt5lgmNVGcSZcG9pt/ekWvg962CD7IPcZu62AE5dRd7xUeNW0gs45NeEpXyBDl9kq9KKPXCSGirk4=
+	t=1744157327; cv=none; b=r6kc5AJOI0ch2yIzU+k32+ZYBvf7V89nbpRmtmlJUyesGqj9kIufCgezKp8ILLB6Le3l6d7E9nTcsqec8JozvUpJ5VM6EKxToIK4xUuMRm3K0n1bQUw7Q3Jjfz1DiYL6jHbyWT69O6i0Xg8gW0bdgyaNXDwOYrIy520YPCsU0tA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744157326; c=relaxed/simple;
-	bh=FeY7FUjVyZnX86xAQafH+ENKHx7xrhl+RJwwvbDtetA=;
+	s=arc-20240116; t=1744157327; c=relaxed/simple;
+	bh=TzegTHBmX8xpxC1koWbRZZ7J4AlrlbwynYjvHGR+LTg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GQhozN1r3+7IGYG+gc9vDSwvbEhLDCAz2LPEDOL7xp3RBc7Yo/GyQJnX2NbXf1rC2gaxeECMyINQhPsAw9zpdkyTq4QX7MlWZkpMLk+p3tqofe3hfVbpizHec0Q29MwKOtq8XWSvzVeUBulaMM/wP1Cx/GtXfcgCS7FzItB33oA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=fQm9USqT; arc=none smtp.client-ip=13.77.154.182
+	 MIME-Version; b=dEj6/BB6qOslQClsJJUtVmoza/JtSEe633DUNO1IYOkNAtCZp+keRIe6Rlyf/2RVCU2AxvudIaUwaJG+piZpjFj7CXMk/l/WWFCEDQtitV7Z3h1deWbnrjzx4WKUvCbAE2qGDg1zrEi2SS+b+MAvIADMhkdkQuRZe/KkJ2rI4SA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=iDjCyAcd; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="fQm9USqT"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="iDjCyAcd"
 Received: from romank-3650.corp.microsoft.com (unknown [131.107.160.188])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 278202113E98;
+	by linux.microsoft.com (Postfix) with ESMTPSA id DB55B2113E9A;
 	Tue,  8 Apr 2025 17:08:38 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 278202113E98
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com DB55B2113E9A
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1744157318;
-	bh=ASGce+NyaGbEoSjdawfaStxr+cxlfQcFzJFI1lv07Aw=;
+	s=default; t=1744157319;
+	bh=Sg3mxreQaraq/1ciAx/jhCP/Bmu4VLiaIgfdf0GaDc8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fQm9USqTIK36LAB4mqAvsqseTTmnZCrw+zHCmm9m+yyGhhqzi6bXCY9O+iMchHVrc
-	 W/4PTasl5/WaavJ0SoPdl1fdv1jRtRpnQKf1WJexVHnoVXObTXQQ81K3Kvi5IlTmoC
-	 YH2yCK8gsKTJc/v1dacCQvG3lBGHWH/xZ2RaG9j0=
+	b=iDjCyAcdNbtLj7uwkih4ucfZviBCOPhMRJni3A2gBEGdAzqiBG9+Z045qKKz4haZo
+	 M+wg8LJ1F/RcW9TIpph1TemnfMJKPAVhHFbRUPRWMeSznV+HOQqS5bCe10gHFqiNLq
+	 kWbG3kEoYK/oYBnSVN3185sYekG5BnB01Osmt+sg=
 From: Roman Kisel <romank@linux.microsoft.com>
 To: aleksander.lobakin@intel.com,
 	andriy.shevchenko@linux.intel.com,
@@ -67,9 +67,9 @@ Cc: apais@microsoft.com,
 	benhill@microsoft.com,
 	bperkins@microsoft.com,
 	sunilmut@microsoft.com
-Subject: [PATCH hyperv-next 1/6] Documentation: hyperv: Confidential VMBus
-Date: Tue,  8 Apr 2025 17:08:30 -0700
-Message-ID: <20250409000835.285105-2-romank@linux.microsoft.com>
+Subject: [PATCH hyperv-next 3/6] arch: hyperv: Get/set SynIC synth.registers via paravisor
+Date: Tue,  8 Apr 2025 17:08:32 -0700
+Message-ID: <20250409000835.285105-4-romank@linux.microsoft.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250409000835.285105-1-romank@linux.microsoft.com>
 References: <20250409000835.285105-1-romank@linux.microsoft.com>
@@ -81,63 +81,114 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Define what the confidential VMBus is and describe what advantages
-it offers on the capable hardware.
+The confidential VMBus is built on the guest talking to the
+paravisor only.
+
+Provide functions that allow manipulating the SynIC registers
+via paravisor.
 
 Signed-off-by: Roman Kisel <romank@linux.microsoft.com>
 ---
- Documentation/virt/hyperv/vmbus.rst | 41 +++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+ arch/arm64/hyperv/mshyperv.c      | 19 +++++++++++++++++++
+ arch/arm64/include/asm/mshyperv.h |  3 +++
+ arch/x86/include/asm/mshyperv.h   |  3 +++
+ arch/x86/kernel/cpu/mshyperv.c    | 28 ++++++++++++++++++++++++++++
+ 4 files changed, 53 insertions(+)
 
-diff --git a/Documentation/virt/hyperv/vmbus.rst b/Documentation/virt/hyperv/vmbus.rst
-index 1dcef6a7fda3..f600e3d09800 100644
---- a/Documentation/virt/hyperv/vmbus.rst
-+++ b/Documentation/virt/hyperv/vmbus.rst
-@@ -324,3 +324,44 @@ rescinded, neither Hyper-V nor Linux retains any state about
- its previous existence. Such a device might be re-added later,
- in which case it is treated as an entirely new device. See
- vmbus_onoffer_rescind().
+diff --git a/arch/arm64/hyperv/mshyperv.c b/arch/arm64/hyperv/mshyperv.c
+index 4e27cc29c79e..1647a57a3379 100644
+--- a/arch/arm64/hyperv/mshyperv.c
++++ b/arch/arm64/hyperv/mshyperv.c
+@@ -91,3 +91,22 @@ bool hv_is_hyperv_initialized(void)
+ 	return hyperv_initialized;
+ }
+ EXPORT_SYMBOL_GPL(hv_is_hyperv_initialized);
 +
-+Confidential VMBus
-+------------------
++/*
++ * Not supported yet.
++ */
++u64 hv_pv_get_synic_register(unsigned int reg, int *err)
++{
++	*err = -ENODEV;
++	return !0ULL;
++}
++EXPORT_SYMBOL_GPL(hv_pv_get_synic_register);
 +
-+The confidential VMBus provides the control and data planes where
-+the guest doesn't talk to either the hypervisor or the host. Instead,
-+it relies on the trusted paravisor. The hardware (SNP or TDX) encrypts
-+the guest memory and the register state also measuring the paravisor
-+image via using the platform security processor to ensure trsuted and
-+confidential computing.
++/*
++ * Not supported yet.
++ */
++int hv_pv_set_synic_register(unsigned int reg, u64 val)
++{
++	return -ENODEV;
++}
++EXPORT_SYMBOL_GPL(hv_pv_set_synic_register);
+diff --git a/arch/arm64/include/asm/mshyperv.h b/arch/arm64/include/asm/mshyperv.h
+index b721d3134ab6..bce37a58dff0 100644
+--- a/arch/arm64/include/asm/mshyperv.h
++++ b/arch/arm64/include/asm/mshyperv.h
+@@ -53,6 +53,9 @@ static inline u64 hv_get_non_nested_msr(unsigned int reg)
+ 	return hv_get_msr(reg);
+ }
+ 
++u64 hv_pv_get_synic_register(unsigned int reg, int *err);
++int hv_pv_set_synic_register(unsigned int reg, u64 val);
 +
-+To support confidential communication with the paravisor, a VmBus client
-+will first attempt to use regular, non-isolated mechanisms for communication.
-+To do this, it must:
+ /* SMCCC hypercall parameters */
+ #define HV_SMCCC_FUNC_NUMBER	1
+ #define HV_FUNC_ID	ARM_SMCCC_CALL_VAL(			\
+diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+index 07aadf0e839f..5650a16cc5e8 100644
+--- a/arch/x86/include/asm/mshyperv.h
++++ b/arch/x86/include/asm/mshyperv.h
+@@ -307,6 +307,9 @@ static __always_inline u64 hv_raw_get_msr(unsigned int reg)
+ 	return __rdmsr(reg);
+ }
+ 
++u64 hv_pv_get_synic_register(unsigned int reg, int *err);
++int hv_pv_set_synic_register(unsigned int reg, u64 val);
 +
-+* Configure the paravisor SIMP with an encrypted page. The paravisor SIMP is
-+  configured by setting the relevant MSR directly, without using GHCB or tdcall.
+ #else /* CONFIG_HYPERV */
+ static inline void hyperv_init(void) {}
+ static inline void hyperv_setup_mmu_ops(void) {}
+diff --git a/arch/x86/kernel/cpu/mshyperv.c b/arch/x86/kernel/cpu/mshyperv.c
+index 3e2533954675..4f6e3d02f730 100644
+--- a/arch/x86/kernel/cpu/mshyperv.c
++++ b/arch/x86/kernel/cpu/mshyperv.c
+@@ -89,6 +89,34 @@ void hv_set_non_nested_msr(unsigned int reg, u64 value)
+ }
+ EXPORT_SYMBOL_GPL(hv_set_non_nested_msr);
+ 
++/*
++ * Not every paravisor supports getting SynIC registers, and
++ * this function may fail. The caller has to make sure that this function
++ * runs on the CPU of interest.
++ */
++u64 hv_pv_get_synic_register(unsigned int reg, int *err)
++{
++	if (!hv_is_synic_msr(reg)) {
++		*err = -ENODEV;
++		return !0ULL;
++	}
++	return native_read_msr_safe(reg, err);
++}
++EXPORT_SYMBOL_GPL(hv_pv_get_synic_register);
 +
-+* Enable SINT 2 on both the paravisor and hypervisor, without setting the proxy
-+  flag on the paravisor SINT. Enable interrupts on the paravisor SynIC.
++/*
++ * Not every paravisor supports setting SynIC registers, and
++ * this function may fail. The caller has to make sure that this function
++ * runs on the CPU of interest.
++ */
++int hv_pv_set_synic_register(unsigned int reg, u64 val)
++{
++	if (!hv_is_synic_msr(reg))
++		return -ENODEV;
++	return wrmsrl_safe(reg, val);
++}
++EXPORT_SYMBOL_GPL(hv_pv_set_synic_register);
 +
-+* Configure both the paravisor and hypervisor event flags page.
-+  Both pages will need to be scanned when VmBus receives a channel interrupt.
-+
-+* Send messages to the paravisor by calling HvPostMessage directly, without using
-+  GHCB or tdcall.
-+
-+* Set the EOM MSR directly in the paravisor, without using GHCB or tdcall.
-+
-+If sending the InitiateContact message using non-isolated HvPostMessage fails,
-+the client must fall back to using the hypervisor synic, by using the GHCB/tdcall
-+as appropriate.
-+
-+To fall back, the client will have to reconfigure the following:
-+
-+* Configure the hypervisor SIMP with a host-visible page.
-+  Since the hypervisor SIMP is not used when in confidential mode,
-+  this can be done up front, or only when needed, whichever makes sense for
-+  the particular implementation.
-+
-+* Set the proxy flag on SINT 2 for the paravisor.
+ u64 hv_get_msr(unsigned int reg)
+ {
+ 	if (hv_nested)
 -- 
 2.43.0
 
