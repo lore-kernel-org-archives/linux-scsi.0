@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7A5F21148F;
-	Wed,  9 Apr 2025 21:00:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 003D81C07C3;
+	Wed,  9 Apr 2025 21:08:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744232413; cv=none; b=ZKZaPnvqvUaKtqo2g6nuv4HmXWykUFDOSgVjRja6Wmz/VZDoybPsslWiJ0CDJBSZ5XouNPkWPO2fCq82Vn5XD+/e1j54U86mWKsVbrRMJI+xBHXnLlHVrtxSQnM4YAarv209m4uFBuDyq/Skt1IjmA6aTqnDlK0h6VhPhXdfHVw=
+	t=1744232921; cv=none; b=JAl20rCczZdxfcVi5+83UyzjY7fbFCx0M2YgC19nJWV029TpD51+X3DqDTevXlmo0ft54AO0L6EOAo1AeswsdocsdcpaWLJ1rXDs1V93S3WkBsEQE89AQo6AJ11xP3tI29K+ihP2QjT8DABd/3nxXYRqkpXSpvpcaz+2/9Io/Mg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744232413; c=relaxed/simple;
-	bh=u9y+3WWgJyQXBNeDtdGlxMTb4ab/g/8Jj2VBJvdZcxo=;
+	s=arc-20240116; t=1744232921; c=relaxed/simple;
+	bh=+856jdLoLLEWWyhtLMynN+pZtUSFemOl6XgY4gF3HzI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZYGhAlm6bL7LiyG/bMZOywPK76A82gkO6gKFKxl4U6P8dwsg55iXet1vn2YbBugo1WnKYpXFW/WMBsYvkeuBnwRY3ZXjf4OckWSeimlu7/n2xXOq8B+efr/rUtCAH76hZb3E4yYPsyKVmvaDkgtRs0slFIewtNZ30/xCdsON+x4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Tu9YuzZS; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=MTuQSDwYZP3aX2ljQt3Sc4B4RM2xIayn74imiMo5XrV0qs8GvWqkXY8XvQTSoHHzO6G6jWAwT+KtObAUUxuSRPRcGUOLRhqGnk/N1RSUIC6Cdga18KOV3ivturcncQjj3g1vXEt3bLpdwsoaww5vmtnb2xYGhXh5KWn2Zwf7N5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ssY7+9Wr; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Tu9YuzZS"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ssY7+9Wr"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZXwLq65xqzm22HC;
-	Wed,  9 Apr 2025 21:00:03 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZXwXk6Gy2zm0yTh;
+	Wed,  9 Apr 2025 21:08:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1744232401; x=1746824402; bh=4qpDFoC7jRxlhD7xqwhzQhGg
-	yvb+J8AtlP8vjZ317ng=; b=Tu9YuzZSu7T2UHbDvRpWrtn4uRosQ3C0b6s7XEYA
-	B0ab7ir4m4iKX7BJ1bSeSH1o8JdiJIpRBo/DdQlhrUiisho8j8IzYAJWHSGFX3dg
-	rVpooRaJGjgvnAk/klH9Z/i+wzOthYUh1i1UsTLUBiwQWpVUfR5MBOPGImQ2tTw+
-	wgiiRHJZMUvNL2pL1PC1EMqQTawBLauXcyk/4PyOr3dgXdYtgyEXbOWiI1IUaH5D
-	chDNTuLcjOaR8X5Kdm5RC3dA+x6FxhHhkYpHHDlJllZYy1W3/tGtpDxkbIRc8y1U
-	ASRwg261OTtr5f02QwQbfa8wE4STj1j/SPO8wyHBjDSM9A==
+	 s=mr01; t=1744232916; x=1746824917; bh=BhvBwC5z/9Md8oVXDSlpI8ae
+	/9CWhxuq5tuzJzRJjFg=; b=ssY7+9WrKDiMCS7FMwgSBpVMfMv77FB29qiKeYYJ
+	/c0uVOXUtIMQwxCw8O9aoDU3slZR3TDewugWoSfW+O7ujkXMX5mx5uZEqJDfV+w0
+	oNEIeiACxNBHltzCsTtRC/6TNObLNdw7tjO5NpcBfAIuqEVWavn9q4Z8nDM+JPSX
+	ng3TljFWV3W3E55cWplWfzAVwPEcc8ekM+fi68omXFvMNaDHvMb5Pdx+lcYIsgU1
+	taI5GpVckB2yro5vZEu/yvSWVAJEw9nn6SJTl4pQu5LzxekyR4eBiZ7zzgJDN7Kl
+	dyuTa9iPZjj3yWvjhu4S8Ty8DWhfTmONETMgdEZfJ3znGg==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id lxL8XKZCaJb9; Wed,  9 Apr 2025 21:00:01 +0000 (UTC)
+ id AYpURVZjfLjP; Wed,  9 Apr 2025 21:08:36 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZXwLc2rFzzm0pKY;
-	Wed,  9 Apr 2025 20:59:51 +0000 (UTC)
-Message-ID: <2e19c458-4136-4860-b853-1314c4ab5952@acm.org>
-Date: Wed, 9 Apr 2025 13:59:50 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZXwXY5bd8zm0ySJ;
+	Wed,  9 Apr 2025 21:08:28 +0000 (UTC)
+Message-ID: <15df00e9-d5d9-4d16-b334-e1b8cb96f654@acm.org>
+Date: Wed, 9 Apr 2025 14:08:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,64 +50,105 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: mcq: Add NULL check in ufshcd_mcq_abort()
-To: Chenyuan Yang <chenyuan0y@gmail.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, peter.wang@mediatek.com, minwoo.im@samsung.com,
- manivannan.sadhasivam@linaro.org, viro@zeniv.linux.org.uk,
- cw9316.lee@samsung.com, quic_nguyenb@quicinc.com, quic_cang@quicinc.com,
- stanley.chu@mediatek.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250409204537.3566793-1-chenyuan0y@gmail.com>
+Subject: Re: [PATCH V6 2/3] scsi: ufs-qcom: Add support to dump MCQ registers
+To: Manish Pandey <quic_mapa@quicinc.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com,
+ quic_bhaskarv@quicinc.com, quic_rampraka@quicinc.com, quic_cang@quicinc.com,
+ quic_nguyenb@quicinc.com
+References: <20250407142110.16925-1-quic_mapa@quicinc.com>
+ <20250407142110.16925-3-quic_mapa@quicinc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250409204537.3566793-1-chenyuan0y@gmail.com>
+In-Reply-To: <20250407142110.16925-3-quic_mapa@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 4/9/25 1:45 PM, Chenyuan Yang wrote:
-> A race can occur between the MCQ completion path and the abort handler:
-> once a request completes, __blk_mq_free_request() sets rq->mq_hctx to
-> NULL, meaning the subsequent ufshcd_mcq_req_to_hwq() call in
-> ufshcd_mcq_abort() can return a NULL pointer. If this NULL pointer is
-> dereferenced, the kernel will crash.
-> 
-> Add a NULL check for the returned hwq pointer. If hwq is NULL, log an
-> error and return FAILED, preventing a potential NULL-pointer dereference.
-> 
-> This is similar to the fix in commit 74736103fb41
-> ("scsi: ufs: core: Fix ufshcd_abort_one racing issue").
-> 
-> This is found by our static analysis tool KNighter.
-> 
-> Signed-off-by: Chenyuan Yang <chenyuan0y@gmail.com>
-> Fixes: f1304d442077 ("scsi: ufs: mcq: Added ufshcd_mcq_abort()")
-> ---
->   drivers/ufs/core/ufs-mcq.c | 5 +++++
->   1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 240ce135bbfb..2c8792911616 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -692,6 +692,11 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
->   	}
->   
->   	hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-> +	if (!hwq) {
-> +		dev_err(hba->dev, "%s: failed to get hwq for tag %d\n",
-> +			__func__, tag);
-> +		return FAILED;
-> +	}
->   
->   	if (ufshcd_mcq_sqe_search(hba, hwq, tag)) {
->   		/*
+On 4/7/25 7:21 AM, Manish Pandey wrote:
+> +int ufs_qcom_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+> +		     const char *prefix, enum ufshcd_res id)
+> +{
+> +	u32 *regs __free(kfree) = NULL;
+> +	size_t pos;
+> +
+> +	if (offset % 4 != 0 || len % 4 != 0)
+> +		return -EINVAL;
+> +
+> +	regs = kzalloc(len, GFP_ATOMIC);
+> +	if (!regs)
+> +		return -ENOMEM;
+> +
+> +	for (pos = 0; pos < len; pos += 4)
+> +		regs[pos / 4] = readl(hba->res[id].base + offset + pos);
+> +
+> +	print_hex_dump(KERN_ERR, prefix,
+> +			len > 4 ? DUMP_PREFIX_OFFSET : DUMP_PREFIX_NONE,
+> +				16, 4, regs, len, false);
 
-This patch makes the ufshcd_cmd_inflight() check just above the
-modified code superfluous. Please remove it.
+The indentation of the print_hex_dump() arguments is not compliant with
+the Linux kernel coding style.
 
-Additionally, please change the error message such that it reports
-that the command has already completed.
+> +	return 0;
+> +}
+> +
+> +static void ufs_qcom_dump_mcq_hci_regs(struct ufs_hba *hba)
+> +{
+> +	/* voluntarily yield the CPU to prevent CPU hog during data dumps */
+> +	/* RES_MCQ_1 */
+> +	ufs_qcom_dump_regs(hba, 0x0, 256 * 4, "MCQ HCI 1da0000-1da03f0", RES_MCQ);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_2 */
+> +	ufs_qcom_dump_regs(hba, 0x400, 256 * 4, "MCQ HCI 1da0400-1da07f0", RES_MCQ);
+> +	cond_resched();
+> +
+> +	/*RES_MCQ_VS */
+> +	ufs_qcom_dump_regs(hba, 0x0, 5 * 4, "MCQ VS 1da4000-1da4010", RES_MCQ_VS);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_1 */
+> +	ufs_qcom_dump_regs(hba, 0x0, 256 * 4, "MCQ SQD 1da5000-1da53f0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_2 */
+> +	ufs_qcom_dump_regs(hba, 0x400, 256 * 4, "MCQ SQD 1da5400-1da57f0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_3 */
+> +	ufs_qcom_dump_regs(hba, 0x800, 256 * 4, "MCQ SQD 1da5800-1da5bf0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_4 */
+> +	ufs_qcom_dump_regs(hba, 0xc00, 256 * 4, "MCQ SQD 1da5c00-1da5ff0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_5 */
+> +	ufs_qcom_dump_regs(hba, 0x1000, 256 * 4, "MCQ SQD 1da6000-1da63f0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_6 */
+> +	ufs_qcom_dump_regs(hba, 0x1400, 256 * 4, "MCQ SQD 1da6400-1da67f0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_7 */
+> +	ufs_qcom_dump_regs(hba, 0x1800, 256 * 4, "MCQ SQD 1da6800-1da6bf0", RES_MCQ_SQD);
+> +	cond_resched();
+> +
+> +	/* RES_MCQ_SQD_8 */
+> +	ufs_qcom_dump_regs(hba, 0x1c00, 256 * 4, "MCQ SQD 1da6c00-1da6ff0", RES_MCQ_SQD);
+> +	cond_resched();
+> +}
+
+There is a lot of repetition in the ufs_qcom_dump_mcq_hci_regs()
+function. Has it been considered to move the cond_resched() call into
+ufs_qcom_dump_regs() such that it occurs only once in this patch?
+
+For the ufs_qcom_dump_mcq_hci_regs() function, a table-based approach
+may be appropriate since what that function does is to call
+ufs_qcom_dump_regs() repeatedly but each time with different arguments.
 
 Thanks,
 
