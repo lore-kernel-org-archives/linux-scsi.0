@@ -1,81 +1,63 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE2B202F93;
-	Thu, 10 Apr 2025 07:16:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C31A520AF6C;
+	Thu, 10 Apr 2025 07:21:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744269369; cv=none; b=n974/K1Zwv65fIz9Wu5aZXSoMEp4oZfbt5fwmCTXbGxqe5zhEAS500IGP5d8f7iE3NSKWoV8tftrx95+WlFIvJ+m9ghNa+Rp19y6qBOgZQcY6ceqDy7qlLdMC5NgombrSErhtGe8U6f+ZKz0DZfG2b474nzLyRo1DkB2Rku81Xs=
+	t=1744269719; cv=none; b=ftLa43k+GLi1A5Hs2EBNm/FrD62Jzvu515dz3EjQDPxOmyk0ejvQNknuLANX5a/dTis39T6AVws+1mIKcC38DRy0d5o9t8pPF4fc4Qv+5ik3xcTDJGaAgFz88lNo9UtRmQ69N0WYiUZFUxp2LOM9mb/H5lWqoxcul+193E2etWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744269369; c=relaxed/simple;
-	bh=Gtx8aCqVpDE0uKrhP9w1sLMJ31H86CXXHuAhM3qPh5E=;
+	s=arc-20240116; t=1744269719; c=relaxed/simple;
+	bh=dorXJXTWIWIP6/iW2KT5hpaWe+xzufigP/RnUc3Y5bs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RhnFsHIWo8my4aHdz1A2V+rFQsV0rgQj4fNLEG3aJKW2NkJZKdjW+j9Eqj6XwWczBYlNw1eIh4vfjW9m08FWzLFxjvXGkirngYa/83iv97o9Xr6gL1oCUI0IzAGouqoCR2Tnyurl7zPGBm4+fgdlNV6y/5KS6SyOfChPrHrntlo=
+	 Content-Type:Content-Disposition:In-Reply-To; b=t+E5m+9xU+0T2jKYhJ2bDqHKJ3dVLULoUR483oSY8RK99pHggATmstprlsh9FI2Squ9lvcfbjcRIlC+1gaXpOArtKPYfOVNBxjP00dFVYJMG9aiEeebMEjYDitSN2laGiieoLD2vIBkna5K9yEJU+07crakpVJh6OxAw2bYIZow=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 4668E68BFE; Thu, 10 Apr 2025 09:16:00 +0200 (CEST)
-Date: Thu, 10 Apr 2025 09:15:59 +0200
+	id BD93D68BFE; Thu, 10 Apr 2025 09:21:50 +0200 (CEST)
+Date: Thu, 10 Apr 2025 09:21:50 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, tytso@mit.edu, djwong@kernel.org,
-	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
-	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com,
-	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [RFC PATCH -next v3 01/10] block: introduce
- BLK_FEAT_WRITE_ZEROES_UNMAP to queue limits features
-Message-ID: <20250410071559.GA32420@lst.de>
-References: <20250318073545.3518707-1-yi.zhang@huaweicloud.com> <20250318073545.3518707-2-yi.zhang@huaweicloud.com> <20250409103148.GA4950@lst.de> <43a34aa8-3f2f-4d86-be53-8a832be8532f@huaweicloud.com>
+To: Roman Kisel <romank@linux.microsoft.com>
+Cc: Robin Murphy <robin.murphy@arm.com>, aleksander.lobakin@intel.com,
+	andriy.shevchenko@linux.intel.com, arnd@arndb.de, bp@alien8.de,
+	catalin.marinas@arm.com, corbet@lwn.net, dakr@kernel.org,
+	dan.j.williams@intel.com, dave.hansen@linux.intel.com,
+	decui@microsoft.com, gregkh@linuxfoundation.org,
+	haiyangz@microsoft.com, hch@lst.de, hpa@zytor.com,
+	James.Bottomley@HansenPartnership.com, Jonathan.Cameron@huawei.com,
+	kys@microsoft.com, leon@kernel.org, lukas@wunner.de,
+	luto@kernel.org, m.szyprowski@samsung.com,
+	martin.petersen@oracle.com, mingo@redhat.com, peterz@infradead.org,
+	quic_zijuhu@quicinc.com, tglx@linutronix.de, wei.liu@kernel.org,
+	will@kernel.org, iommu@lists.linux.dev, linux-arch@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org, apais@microsoft.com,
+	benhill@microsoft.com, bperkins@microsoft.com,
+	sunilmut@microsoft.com, Suzuki K Poulose <suzuki.poulose@arm.com>
+Subject: Re: [PATCH hyperv-next 5/6] arch, drivers: Add device struct
+ bitfield to not bounce-buffer
+Message-ID: <20250410072150.GA32563@lst.de>
+References: <20250409000835.285105-1-romank@linux.microsoft.com> <20250409000835.285105-6-romank@linux.microsoft.com> <0eb87302-fae8-4708-aaf8-d16e836e727f@arm.com> <0ab2849a-5c03-4a8c-891e-3cb89b20b0e4@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <43a34aa8-3f2f-4d86-be53-8a832be8532f@huaweicloud.com>
+In-Reply-To: <0ab2849a-5c03-4a8c-891e-3cb89b20b0e4@linux.microsoft.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Apr 10, 2025 at 11:52:17AM +0800, Zhang Yi wrote:
-> 
-> Thank you for your review and comments. However, I'm not sure I fully
-> understand your points. Could you please provide more details?
-> 
-> AFAIK, the NVMe protocol has the following description in the latest
-> NVM Command Set Specification Figure 82 and Figure 114:
-> 
-> ===
-> Deallocate (DEAC): If this bit is set to ‘1’, then the host is
-> requesting that the controller deallocate the specified logical blocks.
-> If this bit is cleared to ‘0’, then the host is not requesting that
-> the controller deallocate the specified logical blocks...
-> 
-> DLFEAT:
-> Write Zeroes Deallocation Support (WZDS): If this bit is set to ‘1’,
-> then the controller supports the Deallocate bit in the Write Zeroes
-> command for this namespace...
+On Wed, Apr 09, 2025 at 09:44:03AM -0700, Roman Kisel wrote:
+> Do you feel this is shoehorned in `struct device`? I couldn't find an
+> appropriate private (== opaque pointer) part in the structure to store
+> that bit (`struct device_private` wouldn't fit the bill) and looked like
+> adding it to the struct itself would do no harm. However, my read of the
+> room is that folks see that as dubious :)
 
-Yes.  The host is requesting, not the controller shall.  It's not
-guaranteed behavior and the controller might as well actually write
-zeroes to the media.  That is rather stupid, but still.
-
-Also note that some write zeroes implementations in consumer devices
-are really slow even when deallocation is requested so that we had
-to blacklist them.
-
-> Were you saying that what is described in this protocol is not a
-> mandatory requirement? Which means the disks that claiming to support
-> the UNMAP write zeroes command(WZDS=1,DRB=1), but in fact, they still
-> write actual zeroes data to the storage media? Or were you referring
-> to some irregular disks that do not obey the protocol and mislead
-> users?
-
-The are at least allowed to.
+We'll need per-device information.  But it is much higher level than a
+need bounce buffer flag.
 
