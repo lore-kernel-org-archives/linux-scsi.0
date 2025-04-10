@@ -1,101 +1,85 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ED9B28150E
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Apr 2025 14:06:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DCBA115B135;
+	Thu, 10 Apr 2025 15:16:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744293994; cv=none; b=IBotmFEoCLLLQ9I4cRNQApkogUgFhtUv7AVZfl2ElRMJTDMZUeRg18ajFGaQf/bUd8ia7hIlviSkmru8zh3usM6f3gBQTBj8+QKyMXEEw4kMcX70kKw+8WDjPdk7hrUMZKxrTHTp9HZbq0Cd3l34obNSzhANq/oeow6OtqH/rBM=
+	t=1744298163; cv=none; b=b/9O2qFhQlunX27UxmWAGstWOTmhtc13LHhV2yyDhDfpMz7BOA9YLnr+we8ZqY9hO2SyqIK7wXg3Y/fC0eeGxJ30dKBr3xoq8R/kwqEuObpBNRU1AOIXZ+Z5fjdCqv95dccKOeZ46GJHiT/hoGI3tmrXhXwhQSgT9fJMerAJhpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744293994; c=relaxed/simple;
-	bh=N89AIc1FJHEdN6qfDj076QgHE1yg1O9HYZPYLzwIJn4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IO6LF+SFVPid8HVZujNBXIW+pg22/iojJKhMhlnazSLtpgpAqvvM+lopC6xZoO8OWUanjrAxhmqjcjGOOZAKrmhosMptkC6S/IPxvX6M4grhJOi1eb23ti8Fxe6SZ+H5D5vcBN/CfbdCnx3+suQk4AJYFYnXdiWdX5k8ZoeLgcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iie.ac.cn; spf=pass smtp.mailfrom=iie.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iie.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iie.ac.cn
-Received: from localhost.localdomain (unknown [159.226.95.28])
-	by APP-05 (Coremail) with SMTP id zQCowADn5w9P0PdnXmD_Bw--.12137S2;
-	Thu, 10 Apr 2025 22:06:08 +0800 (CST)
-From: Chen Yufeng <chenyufeng@iie.ac.cn>
-To: bootc@bootc.net
-Cc: martin.petersen@oracle.com,
-	gregkh@linuxfoundation.org,
-	Thinh.Nguyen@synopsys.com,
-	linux-scsi@vger.kernel.org,
-	Chen Yufeng <chenyufeng@iie.ac.cn>
-Subject: [PATCH] drivers: Two potential integer overflow in sbp_make_tpg() and usbg_make_tpg()
-Date: Thu, 10 Apr 2025 22:05:49 +0800
-Message-ID: <20250410140550.1647-1-chenyufeng@iie.ac.cn>
-X-Mailer: git-send-email 2.43.0.windows.1
+	s=arc-20240116; t=1744298163; c=relaxed/simple;
+	bh=FJiKHY0yXYvYpnwTi6b4QY4wSVLzbkccdNokb8K2uZM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=snCZJ9I/aHDcMjrS7VsTzv98j0ny5jfJj0i26N9kmJzfQOTX3vs0RBK7vAN/rqsVeWlH7254WoREOhcNPovxqsiYdmAq5s/mXQGwIgx552W8zHrd7rEGV+cRMUC5MKLOpFG6y9+Yqux9+cF+z1byt3BBSpCZ7yW/Scyh8KaYSo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=pPUwqlOB; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="pPUwqlOB"
+Received: from [10.137.184.60] (unknown [131.107.159.188])
+	by linux.microsoft.com (Postfix) with ESMTPSA id EA497203B86C;
+	Thu, 10 Apr 2025 08:16:00 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com EA497203B86C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1744298161;
+	bh=b/USx7FyrAAP0KVFJIR3S9nGQoNXd7rpnvG6sRwEcjk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=pPUwqlOBrIErhRnMenQuuETY6McFAU1X0L10gqqB+/k7VCThivMB270N9MVPVqKZv
+	 OKxIXSvIKMZxOqZulERNSc4wZJRTLL80Ml0pDUeMCwWwOhmkq4niN8+MWNU6gCLoNP
+	 iRC71M6wjwxVnS1zZO8WpZAJaxORmPm0mctceOLU=
+Message-ID: <e169cb52-8f2d-4ac5-b667-87c3357c11a7@linux.microsoft.com>
+Date: Thu, 10 Apr 2025 08:16:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowADn5w9P0PdnXmD_Bw--.12137S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar17Xw4UWF4UCF45XrWUArb_yoW8Aw1kpa
-	n7Xr90yrySy3ykX3yxJan8XFyru3WkKFyUtrWxt39YvF4fJFWrZrnrtayIgF13XFy8Cw4a
-	ga1qvFyrC3y8ArJanT9S1TB71UUUUUJqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9I14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAaw2AFwI0_Jrv_JF1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
-	5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
-	CFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l
-	c7CjxVAaw2AFwI0_Jw0_GFylc2xSY4AK67AK6ry5MxAIw28IcxkI7VAKI48JMxC20s026x
-	CaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_
-	JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r
-	1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_
-	Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8Jb
-	IYCTnIWIevJa73UjIFyTuYvjfUnBMKDUUUU
-X-CM-SenderInfo: xfkh05xxih0wo6llvhldfou0/1tbiCQ4IEmf3zWQLaQAAsG
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH hyperv-next 5/6] arch, drivers: Add device struct bitfield
+ to not bounce-buffer
+To: Christoph Hellwig <hch@lst.de>
+Cc: Robin Murphy <robin.murphy@arm.com>, aleksander.lobakin@intel.com,
+ andriy.shevchenko@linux.intel.com, arnd@arndb.de, bp@alien8.de,
+ catalin.marinas@arm.com, corbet@lwn.net, dakr@kernel.org,
+ dan.j.williams@intel.com, dave.hansen@linux.intel.com, decui@microsoft.com,
+ gregkh@linuxfoundation.org, haiyangz@microsoft.com, hpa@zytor.com,
+ James.Bottomley@HansenPartnership.com, Jonathan.Cameron@huawei.com,
+ kys@microsoft.com, leon@kernel.org, lukas@wunner.de, luto@kernel.org,
+ m.szyprowski@samsung.com, martin.petersen@oracle.com, mingo@redhat.com,
+ peterz@infradead.org, quic_zijuhu@quicinc.com, tglx@linutronix.de,
+ wei.liu@kernel.org, will@kernel.org, iommu@lists.linux.dev,
+ linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, x86@kernel.org,
+ apais@microsoft.com, benhill@microsoft.com, bperkins@microsoft.com,
+ sunilmut@microsoft.com, Suzuki K Poulose <suzuki.poulose@arm.com>
+References: <20250409000835.285105-1-romank@linux.microsoft.com>
+ <20250409000835.285105-6-romank@linux.microsoft.com>
+ <0eb87302-fae8-4708-aaf8-d16e836e727f@arm.com>
+ <0ab2849a-5c03-4a8c-891e-3cb89b20b0e4@linux.microsoft.com>
+ <20250410072150.GA32563@lst.de>
+Content-Language: en-US
+From: Roman Kisel <romank@linux.microsoft.com>
+In-Reply-To: <20250410072150.GA32563@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The variable tpgt in sbp_make_tpg() and usbg_make_tpg() is defined as
-unsigned long and is assigned to tpgt->tport_tpgt, which is defined as u16.
-This may cause an integer overflow when tpgt is greater than USHRT_MAX
-(65535). 
 
-My fix is based on the implementation of tcm_qla2xxx_make_tpg() in 
-drivers/scsi/qla2xxx/tcm_qla2xxx.c which limits tpgt to USHRT_MAX.
 
-This patch is similar to
-commit 59c816c1f24d ("vhost/scsi: potential memory corruption").
+On 4/10/2025 12:21 AM, Christoph Hellwig wrote:
+> On Wed, Apr 09, 2025 at 09:44:03AM -0700, Roman Kisel wrote:
+>> Do you feel this is shoehorned in `struct device`? I couldn't find an
+>> appropriate private (== opaque pointer) part in the structure to store
+>> that bit (`struct device_private` wouldn't fit the bill) and looked like
+>> adding it to the struct itself would do no harm. However, my read of the
+>> room is that folks see that as dubious :)
+> 
+> We'll need per-device information.  But it is much higher level than a
+> need bounce buffer flag.
+> 
 
-Signed-off-by: Chen Yufeng <chenyufeng@iie.ac.cn>
----
- drivers/target/sbp/sbp_target.c     | 2 +-
- drivers/usb/gadget/function/f_tcm.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I see, thanks for the explanation!
 
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index 3b89b5a70331..525d978ce41f 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -1966,7 +1966,7 @@ static struct se_portal_group *sbp_make_tpg(struct se_wwn *wwn,
- 
- 	if (strstr(name, "tpgt_") != name)
- 		return ERR_PTR(-EINVAL);
--	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
-+	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > USHRT_MAX)
- 		return ERR_PTR(-EINVAL);
- 
- 	if (tport->tpg) {
-diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index 5a2e1237f85c..5c570d4c87b5 100644
---- a/drivers/usb/gadget/function/f_tcm.c
-+++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -1648,7 +1648,7 @@ static struct se_portal_group *usbg_make_tpg(struct se_wwn *wwn,
- 
- 	if (strstr(name, "tpgt_") != name)
- 		return ERR_PTR(-EINVAL);
--	if (kstrtoul(name + 5, 0, &tpgt) || tpgt > UINT_MAX)
-+	if (kstrtoul(name + 5, 0, &tpgt) || tpgt > USHRT_MAX)
- 		return ERR_PTR(-EINVAL);
- 	ret = -ENODEV;
- 	mutex_lock(&tpg_instances_lock);
 -- 
-2.34.1
+Thank you,
+Roman
 
