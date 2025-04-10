@@ -1,51 +1,51 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E87211A0D;
-	Thu, 10 Apr 2025 09:01:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A6B82135D0;
+	Thu, 10 Apr 2025 09:01:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744275698; cv=none; b=BuHep38q5RodqcS32STGVTRfqFQN4rkHAxxhdJDp3g4wWte5csub3/2BNBNIdrJyjImAwFD0HLYZAMs8P9C6/TiDG1L2MLKc5tqdn4KY3rG3K4nmgN1qxgxHfs3UcIWZhoeTDbM/ihEQtdhngc6nQb3yF+ygoXvLGI4b+lYurmU=
+	t=1744275698; cv=none; b=LOhispOJaiLt3mA+3JCUu27yWDN5ZxyVISYT1tjzsW3DSNy2c5hcd3B/30wHohUloLw7kvmprWDZyp4kTFWmIKZCrHrBP7ZlkuvYhVMFhUgy9oTdCfOQEGGuPEJphOdpeWq2F1ttDGCrqxsOx6hVMxtqOGxCPAA6eg2xnhenRPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1744275698; c=relaxed/simple;
-	bh=yoNJ6YjR4CzOKQTANgJYOLQdX4wlIuAO/cD9twcx2P8=;
+	bh=rLJT7PMYdDfrhBYoIO5yc6Lk35exnlExZd2ILrN7gh8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TYjGG/wHVqwahHs3l+ZSetfjuqAaKRE/3XlXzCJ7lJAOIJXlSZ2Qg1RDYIaOE8TZ7js80A+OU+9D52K+8oSDY6hFkZzxpB0b29+UWvYsEbyEin0FiiOoQ7PETECwQMHdjJNRMPOSwYH5vUMTvSJG70Ycqr6pHkEXWfxom6LqqZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=fwlXfFPy; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=UIidZlRXtCVMdUZyXZiSnmiZhrn0eC+1QLjv03X0/5dLPreJEgJxM6lKTKOCD8uHuRRyDXFdDnQsX+Lp6/pjsRwePamHoGyp9vYddZwX2cn6yJK/+tQq4ic+XibY/6XLJOhZjEEVQgCvrvJ11+P4IxZ0Wmfd+Y/mOZ5QcbbkLVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ceo8Y/Ps; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fwlXfFPy"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53A75LU2016309;
-	Thu, 10 Apr 2025 09:01:16 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ceo8Y/Ps"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53A75Nal008265;
+	Thu, 10 Apr 2025 09:01:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=/s9Nkh9PQuR
-	M5JM/l8uM9oJ5PkLge/ZJsCgyTk9qLCg=; b=fwlXfFPy/Rz5YoJlbR3LFOypVFC
-	KZQtND/PwhZNdrOHlv7QfzxdZN2tZIl1Mv4/Yz3E1D1xJjJEnNp4W0TKz5ZVAbvb
-	ovIfFnmjXCkzt+0ryf7jShH8yuSP07wTv7Oa8cXB5hZRUaFM5mNdb1i2FLSePQLI
-	BOZ6d5ZJIhfFPd544cUfMOLJ9zEr0lSkS1Wa7nMJB7rfFOgVNXbzYQ01csizt7bL
-	eQKqmlfxzlBxDfrgX4sJp90tl/uF6bFU7Ub4d9wbE5iDvhoDbTZZB1FZQbvPpgpu
-	Z4JFivSWfdBSm7e6SXrFrm99WYsRMwUdLmSgUM1IifsQ8uShUG7IsSGiStg==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=MLKXj7C9l9i
+	fyhcdI8gARUUb6UfQFfE2X/Tjg91ybeg=; b=ceo8Y/PsREPXkLIw4gVwBz38a3U
+	KYq7luvcU853ISx1/DDXrBZPI5MRIjFi1V9QnrELmtATHheOmDS9Q8HoxsEpE/VR
+	Ndj2z0KB21lrVvXzBA2d2X9orjtyO7dYrJM4y722m/TAKL5N4Gp7wF4hRFQtHpJV
+	6tw3bXI94gp1eoJg8z/RXBlZK5An/RmuX0PoW3AxodYX6uWBCzSkNKoRPF7gugAU
+	WmGv9ez/l/xAt/eldt5FHOHMCb5YalI522fWTm2nXDmIOH59KSpW/HKGApQsPtw9
+	1TPYd65IPCaZ4lDk1Aw5YRkr7aQu8YNhP/59quGukz7Xh8PRfd4H4W8Sncg==
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45twc1p4g4-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45twd06crt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 10 Apr 2025 09:01:16 +0000 (GMT)
+	Thu, 10 Apr 2025 09:01:13 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 53A916sh008758;
-	Thu, 10 Apr 2025 09:01:13 GMT
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 53A91ABM008791;
+	Thu, 10 Apr 2025 09:01:10 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 45ue7g3rcj-1;
-	Thu, 10 Apr 2025 09:01:13 +0000
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 45ue7g3rbu-1;
+	Thu, 10 Apr 2025 09:01:10 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 53A91CFw008825;
-	Thu, 10 Apr 2025 09:01:12 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 53A91A2f008783;
+	Thu, 10 Apr 2025 09:01:10 GMT
 Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 53A91CU9008820;
-	Thu, 10 Apr 2025 09:01:12 +0000
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 53A91AgM008782;
+	Thu, 10 Apr 2025 09:01:10 +0000
 Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 0DA7650158F; Thu, 10 Apr 2025 14:31:12 +0530 (+0530)
+	id A1F2750158F; Thu, 10 Apr 2025 14:31:09 +0530 (+0530)
 From: Nitin Rawat <quic_nitirawa@quicinc.com>
 To: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
         James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
@@ -53,10 +53,11 @@ To: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
         konrad.dybcio@oss.qualcomm.com
 Cc: quic_rdwivedi@quicinc.com, linux-arm-msm@vger.kernel.org,
         linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V3 5/9] phy: qcom-qmp-ufs: Remove qmp_ufs_com_init()
-Date: Thu, 10 Apr 2025 14:30:58 +0530
-Message-ID: <20250410090102.20781-6-quic_nitirawa@quicinc.com>
+        linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Can Guo <quic_cang@quicinc.com>
+Subject: [PATCH V3 3/9] phy: qcom-qmp-ufs: Refactor phy_power_on and phy_calibrate callbacks
+Date: Thu, 10 Apr 2025 14:30:56 +0530
+Message-ID: <20250410090102.20781-4-quic_nitirawa@quicinc.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250410090102.20781-1-quic_nitirawa@quicinc.com>
 References: <20250410090102.20781-1-quic_nitirawa@quicinc.com>
@@ -71,94 +72,110 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: RFc2YbN_WLqtMZPJa55idkGBW2rRYhSm
-X-Authority-Analysis: v=2.4 cv=KtdN2XWN c=1 sm=1 tr=0 ts=67f788dc cx=c_pps a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=ty0ZZmSY4y3EBAM-PDAA:9 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: RFc2YbN_WLqtMZPJa55idkGBW2rRYhSm
+X-Proofpoint-ORIG-GUID: Soz8U48azUBrE3xYJVW0OfFX7MPrugiK
+X-Authority-Analysis: v=2.4 cv=Q4vS452a c=1 sm=1 tr=0 ts=67f788da cx=c_pps a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=ZEhkBkkNTqPGxlI-GDwA:9 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: Soz8U48azUBrE3xYJVW0OfFX7MPrugiK
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-10_01,2025-04-08_04,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 adultscore=0
- priorityscore=1501 phishscore=0 bulkscore=0 suspectscore=0 spamscore=0
- malwarescore=0 lowpriorityscore=0 mlxscore=0 impostorscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 lowpriorityscore=0 spamscore=0 clxscore=1015 phishscore=0
+ bulkscore=0 adultscore=0 malwarescore=0 mlxscore=0 suspectscore=0
  mlxlogscore=999 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504100067
+ definitions=main-2504100066
 
-Simplify the qcom ufs phy driver by inlining qmp_ufs_com_init() into
-qmp_ufs_power_on(). This change removes unnecessary function calls and
-ensures that the initialization logic is directly within the power-on
-routine, maintaining the same functionality.
+Commit 052553af6a31 ("ufs/phy: qcom: Refactor to use phy_init call")
+puts enabling regulators & clks, calibrating UFS PHY, starting serdes
+and polling PCS ready status into phy_power_on.
 
+In Current code regulators enable, clks enable, calibrating UFS PHY,
+start_serdes and polling PCS_ready_status are part of phy_power_on.
+
+UFS PHY registers are retained after power collapse, meaning calibrating
+UFS PHY, start_serdes and polling PCS_ready_status can be done only when
+hba is powered_on, and not needed every time when phy_power_on is called
+during resume. Hence keep the code which enables PHY's regulators & clks
+in phy_power_on and move the rest steps into phy_calibrate function.
+
+Refactor the code to retain PHY regulators & clks in phy_power_on and
+move out rest of the code to new phy_calibrate function.
+
+Also move reset_control_assert to qmp_ufs_phy_calibrate to align
+with Hardware programming guide.
+
+Co-developed-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
 Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 44 ++++++++++---------------
- 1 file changed, 18 insertions(+), 26 deletions(-)
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 26 ++++++-------------------
+ 1 file changed, 6 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-index 12dad28cc1bd..2cc819089d71 100644
+index bb836bc0f736..636dc3dc3ea8 100644
 --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
 +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-@@ -1757,31 +1757,6 @@ static void qmp_ufs_init_registers(struct qmp_ufs *qmp, const struct qmp_phy_cfg
- 	qmp_ufs_init_all(qmp, &cfg->tbls_hs_b);
+@@ -1796,7 +1796,7 @@ static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
+ 	return 0;
  }
 
--static int qmp_ufs_com_init(struct qmp_ufs *qmp)
+-static int qmp_ufs_init(struct phy *phy)
++static int qmp_ufs_power_on(struct phy *phy)
+ {
+ 	struct qmp_ufs *qmp = phy_get_drvdata(phy);
+ 	const struct qmp_phy_cfg *cfg = qmp->cfg;
+@@ -1824,10 +1824,6 @@ static int qmp_ufs_init(struct phy *phy)
+ 				return ret;
+ 			}
+ 		}
+-
+-		ret = reset_control_assert(qmp->ufs_reset);
+-		if (ret)
+-			return ret;
+ 	}
+
+ 	ret = qmp_ufs_com_init(qmp);
+@@ -1846,6 +1842,10 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
+ 	unsigned int val;
+ 	int ret;
+
++	ret = reset_control_assert(qmp->ufs_reset);
++	if (ret)
++		return ret;
++
+ 	qmp_ufs_init_registers(qmp, cfg);
+
+ 	ret = reset_control_deassert(qmp->ufs_reset);
+@@ -1898,21 +1898,6 @@ static int qmp_ufs_exit(struct phy *phy)
+ 	return 0;
+ }
+
+-static int qmp_ufs_power_on(struct phy *phy)
 -{
--	const struct qmp_phy_cfg *cfg = qmp->cfg;
--	void __iomem *pcs = qmp->pcs;
 -	int ret;
 -
--	ret = regulator_bulk_enable(cfg->num_vregs, qmp->vregs);
--	if (ret) {
--		dev_err(qmp->dev, "failed to enable regulators, err=%d\n", ret);
--		return ret;
--	}
--
--	ret = clk_bulk_prepare_enable(qmp->num_clks, qmp->clks);
+-	ret = qmp_ufs_init(phy);
 -	if (ret)
--		goto err_disable_regulators;
+-		return ret;
 -
--	qphy_setbits(pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL], SW_PWRDN);
--
--	return 0;
--
--err_disable_regulators:
--	regulator_bulk_disable(cfg->num_vregs, qmp->vregs);
+-	ret = qmp_ufs_phy_calibrate(phy);
+-	if (ret)
+-		qmp_ufs_exit(phy);
 -
 -	return ret;
 -}
-
- static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
+-
+ static int qmp_ufs_disable(struct phy *phy)
  {
-@@ -1799,10 +1774,27 @@ static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
- static int qmp_ufs_power_on(struct phy *phy)
- {
- 	struct qmp_ufs *qmp = phy_get_drvdata(phy);
-+	const struct qmp_phy_cfg *cfg = qmp->cfg;
-+	void __iomem *pcs = qmp->pcs;
  	int ret;
-+
- 	dev_vdbg(qmp->dev, "Initializing QMP phy\n");
-
--	ret = qmp_ufs_com_init(qmp);
-+	ret = regulator_bulk_enable(cfg->num_vregs, qmp->vregs);
-+	if (ret) {
-+		dev_err(qmp->dev, "failed to enable regulators, err=%d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = clk_bulk_prepare_enable(qmp->num_clks, qmp->clks);
-+	if (ret)
-+		goto err_disable_regulators;
-+
-+	qphy_setbits(pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL], SW_PWRDN);
-+	return 0;
-+
-+err_disable_regulators:
-+	regulator_bulk_disable(cfg->num_vregs, qmp->vregs);
- 	return ret;
- }
-
+@@ -1942,6 +1927,7 @@ static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
+ static const struct phy_ops qcom_qmp_ufs_phy_ops = {
+ 	.power_on	= qmp_ufs_power_on,
+ 	.power_off	= qmp_ufs_disable,
++	.calibrate	= qmp_ufs_phy_calibrate,
+ 	.set_mode	= qmp_ufs_set_mode,
+ 	.owner		= THIS_MODULE,
+ };
 --
 2.48.1
 
