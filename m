@@ -1,69 +1,88 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79F85205AA5;
-	Thu, 10 Apr 2025 07:24:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5AA1E5B97;
+	Thu, 10 Apr 2025 08:20:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744269843; cv=none; b=NhHkaeejZwTYTJeBQtZu27BIdkQEdyVs+DLGqd9LLTh/yAcNXFDwLxQ50BgPvJV2pKnsIaffg33ev6hjZWULSM+OsTjrq8KNSul4EhWHoqj5uvY6dIsy5e2mCpt9C7M4NM031wGrxwkYb6gYLhoBhyOU6oGlapQ4Wl0UxSW1aTc=
+	t=1744273243; cv=none; b=e/30LSeMjdvHTOKpSuuuc7QKZXHqa4GsW33JleqNWYs12sz9IyTx1ghzVQxgK1Y3LFrG/DCrGERShr2Fb2aoyjMR+9m7/U88lsyTsnUvT39WtErjdRhz0sBlWal/jLFaxU6B4rDbvAH+ZoHk2H72y8bSnZh2N8f2HtXIVxhBal0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744269843; c=relaxed/simple;
-	bh=7sEd3Ffa5a1RVgJPuCxl22V8hW6GtHda8gxp+9Ug0ag=;
+	s=arc-20240116; t=1744273243; c=relaxed/simple;
+	bh=YgQZI2+bS0r3KyGq34MBVFDhX4BUm2eJmrGkw/kgVT8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fE9WkfmXjm/rX/uOobNndroCgjJzaZgyyJCACxgntUlaqPN1nI0/XVqI4QWu2iG/qpACuH6/yh3UtItQ3yBLK1KBtEkmLTVwfl7H+m5py+ejPYzwTeE9Us8KpbZWiluzMkvIP4kBrj0MWL1LJp3fjmrH+1c5uyLEc0FvEfS+OKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7F56568C4E; Thu, 10 Apr 2025 09:23:54 +0200 (CEST)
-Date: Thu, 10 Apr 2025 09:23:54 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Roman Kisel <romank@linux.microsoft.com>,
-	Robin Murphy <robin.murphy@arm.com>, aleksander.lobakin@intel.com,
-	andriy.shevchenko@linux.intel.com, arnd@arndb.de, bp@alien8.de,
-	catalin.marinas@arm.com, corbet@lwn.net, dakr@kernel.org,
-	dave.hansen@linux.intel.com, decui@microsoft.com,
-	gregkh@linuxfoundation.org, haiyangz@microsoft.com, hch@lst.de,
-	hpa@zytor.com, James.Bottomley@hansenpartnership.com,
-	Jonathan.Cameron@huawei.com, kys@microsoft.com, leon@kernel.org,
-	lukas@wunner.de, luto@kernel.org, m.szyprowski@samsung.com,
-	martin.petersen@oracle.com, mingo@redhat.com, peterz@infradead.org,
-	quic_zijuhu@quicinc.com, tglx@linutronix.de, wei.liu@kernel.org,
-	will@kernel.org, iommu@lists.linux.dev, linux-arch@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org, apais@microsoft.com,
-	benhill@microsoft.com, bperkins@microsoft.com,
-	sunilmut@microsoft.com, Suzuki K Poulose <suzuki.poulose@arm.com>,
-	linux-coco@lists.linux.dev
-Subject: Re: [PATCH hyperv-next 5/6] arch, drivers: Add device struct
- bitfield to not bounce-buffer
-Message-ID: <20250410072354.GB32563@lst.de>
-References: <20250409000835.285105-1-romank@linux.microsoft.com> <20250409000835.285105-6-romank@linux.microsoft.com> <0eb87302-fae8-4708-aaf8-d16e836e727f@arm.com> <0ab2849a-5c03-4a8c-891e-3cb89b20b0e4@linux.microsoft.com> <67f703099f124_71fe2949e@dwillia2-xfh.jf.intel.com.notmuch>
+	 Content-Type:Content-Disposition:In-Reply-To; b=rVqO4kuXpWS9HOREq0Yi4BpSe0ESUxS9gwFG2aRHuBxIuZhuDuhADOB9JWtH8Rh20Db8w5YCaBU/qTPaSRM3Czj7gb7WSmFxyU/GDgl9k5EPNogeplLiBnrL5u6aMTkRKKusL34JWZ7S+afjDktDS1j7gMMG54bucsTyhpFaWL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RpWvJqaK; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RpWvJqaK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50ECCC4CEE3;
+	Thu, 10 Apr 2025 08:20:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744273243;
+	bh=YgQZI2+bS0r3KyGq34MBVFDhX4BUm2eJmrGkw/kgVT8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RpWvJqaKvTE/btMBJezY0+TzIVZFo6iMd3QE9E3IGJVCDFd2F76GVsz57hOknfpE5
+	 jZxllrJ3N3DbH3+uv9ZHHYrrfFgyRcK7QqSakVZiTg5lJs+o+nwwllB2G2g2ivYJ0f
+	 XZdHUzjN71la1YQ85wZ+ULJsoBZKXmxNkFFfI7zZILynyLL+8H34GHTgc8exE4YpLM
+	 Wv85WSPJn19pxfUXpjS18ukegqDYAleOgGZ/39ODRJvzIgCsFk2LqnmO6ok1NfZjTh
+	 p23jjdXQODTYtCQ9mESNPxKIFf4ZQAK9pzJunWbJgfcyy6XJVURM9aoh5Ev+5mz0DX
+	 Fm0HaSUcp0csw==
+Date: Thu, 10 Apr 2025 09:20:36 +0100
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tytso@mit.edu, djwong@kernel.org,
+	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [RFC PATCH -next v3 01/10] block: introduce
+ BLK_FEAT_WRITE_ZEROES_UNMAP to queue limits features
+Message-ID: <Z_d_VDvgBkgt4UhS@kbusch-mbp>
+References: <20250318073545.3518707-1-yi.zhang@huaweicloud.com>
+ <20250318073545.3518707-2-yi.zhang@huaweicloud.com>
+ <20250409103148.GA4950@lst.de>
+ <43a34aa8-3f2f-4d86-be53-8a832be8532f@huaweicloud.com>
+ <20250410071559.GA32420@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <67f703099f124_71fe2949e@dwillia2-xfh.jf.intel.com.notmuch>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250410071559.GA32420@lst.de>
 
-On Wed, Apr 09, 2025 at 04:30:17PM -0700, Dan Williams wrote:
-> > Thanks, I should've highlighted that facet most certainly!
+On Thu, Apr 10, 2025 at 09:15:59AM +0200, Christoph Hellwig wrote:
+> On Thu, Apr 10, 2025 at 11:52:17AM +0800, Zhang Yi wrote:
+> > 
+> > Thank you for your review and comments. However, I'm not sure I fully
+> > understand your points. Could you please provide more details?
+> > 
+> > AFAIK, the NVMe protocol has the following description in the latest
+> > NVM Command Set Specification Figure 82 and Figure 114:
+> > 
+> > ===
+> > Deallocate (DEAC): If this bit is set to `1´, then the host is
+> > requesting that the controller deallocate the specified logical blocks.
+> > If this bit is cleared to `0´, then the host is not requesting that
+> > the controller deallocate the specified logical blocks...
+> > 
+> > DLFEAT:
+> > Write Zeroes Deallocation Support (WZDS): If this bit is set to `1´,
+> > then the controller supports the Deallocate bit in the Write Zeroes
+> > command for this namespace...
 > 
-> One would hope that no one is building a modern device with trusted I/O
-> capability, *and* with a swiotlb addressing dependency. However, I agree
-> that a non-shared swiotlb would be needed in such a scenario.
+> Yes.  The host is requesting, not the controller shall.  It's not
+> guaranteed behavior and the controller might as well actually write
+> zeroes to the media.  That is rather stupid, but still.
 
-Hope is never a good idea when dealing with hardware :(  PCIe already
-requires no addressing limitations, and programming interface specs
-like NVMe double down on that.  But at least one big hyperscaler still
-managed to build such a device.
-
-Also even if the periphal device is not addressing limited, the root
-port or interconnect might still be, we've seen quite a lot of that.
-
+I guess some controllers _really_ want specific alignments to
+successfully do a proper discard. While still not guaranteed in spec, I
+think it is safe to assume a proper deallocation will occur if you align
+to NPDA and NPDG. Otherwise, the controller may do a read-modify-write
+to ensure zeroes are returned for the requested LBA range on anything
+that straddles an implementation specific boundary.
