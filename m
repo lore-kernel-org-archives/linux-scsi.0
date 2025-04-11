@@ -1,64 +1,65 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C43C1DFE8;
-	Fri, 11 Apr 2025 15:33:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BD12AD14;
+	Fri, 11 Apr 2025 15:42:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744385606; cv=none; b=l4PbGWaygdTHgU3r7g/CnsJWtBRRWJlNvsDxw/IE/PH2cLMewqMq4kUyL7UMp/y2pMfOFd+jxLXxJ4CcWmHAY2l+rMQQhQsdoKI98dM2kSnkq5PnoMqq3utcYV4xg1hrKDUegJlr6DmzOBKlxYj2vTGVxBI8p4chbg2pWyORTzw=
+	t=1744386143; cv=none; b=ighlB7Ri/kTHIF0QO2cbVcJuvbimMNt+uzZ0YjXSoOO/ha4K0fHrcOUZC3QqMmzeJgznRpIeu0eGb2wK4xc6EdqfVlXsNOe+zp6seHxVBrwJyDvywcSRxr7Cj75dRg0JB+8OEc6Q65/zvLF8xGN+V3Pa6afN5rLY/ziez3zJzdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744385606; c=relaxed/simple;
-	bh=kg3VXemwiKmKd4G0Z2R0124+RUSjZF/WWLbtBHb58c0=;
+	s=arc-20240116; t=1744386143; c=relaxed/simple;
+	bh=It2VnWFeoAs2/AO81MkBMka6daEY9+eiPuA3+Nx/GX0=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=K8gToATqUGFmiUBFN4V2FThhN5XoCOz5ht0OVSIEKuLRRrXd1Np4B3BL3vxAmVDOcBff4r7L54wtwpDfXBzYV/XvWQI37gSemWYdEpa2Xzia9Pi8qdDUjQELQJSe+MBtTfncmHyiAzgKJ9tYT0o5s09BoKU1klnKgEh/OKoQ2Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eaVrzHSO; arc=none smtp.client-ip=209.85.208.54
+	 Content-Type:MIME-Version; b=WXCQUY/4Pb+fUjNW0hsU1bDoMsizkJK05l0ZCEGjFAv1lLt+5o7337AoXH4r2wR9j16f4/aqSoot3Aajis2YoggCss7p7xNxifaBMe09gVC/pnBSVRqgX/bbz70g79NZ8dNN8l3R+GAzxgfapLQkbM++GeVxJjwtIlgxTlE4998=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MxId31xc; arc=none smtp.client-ip=209.85.208.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eaVrzHSO"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-5e5cded3e2eso3361820a12.0;
-        Fri, 11 Apr 2025 08:33:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MxId31xc"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-5e5e34f4e89so4348651a12.1;
+        Fri, 11 Apr 2025 08:42:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744385603; x=1744990403; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1744386140; x=1744990940; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=kg3VXemwiKmKd4G0Z2R0124+RUSjZF/WWLbtBHb58c0=;
-        b=eaVrzHSODiVs/ta75uBPW6PUOUmrZ2k+mxgdSdU1sxfDZK4Grcgn6Y/RMFV2FYoopX
-         DubR1uyp+IYU5UbCT3aBfO7m+QKs4VC3wKUq9LJjZnedA+WfuDiFn44C4dMaIlYbByz1
-         XWmkivksg2dGtB1BOg/PS6lVNDufK3Fa0/DblD79S0xgpX+hMCsP9zA42jsmVAjN7nxE
-         AK+aB/2j6fjFBrgNIbab7HUdnq+v0Hw2l8dfAsfwU//B5HVv4OwdWKXo96yMDiI/qs1i
-         VGJIv4pPF5lcV6NTTn28NZj5gkJOsLaIRyTgYT0qjD8ki3ZjvQZwo14HRyx5bt6G0JMA
-         HeTg==
+        bh=It2VnWFeoAs2/AO81MkBMka6daEY9+eiPuA3+Nx/GX0=;
+        b=MxId31xcG0nNt8Oys25Ykt0MDpra0f1aO9oT1Uz1oKyfrU5xDroiKxkqP4eAS+ncWO
+         KV28v08+R/PHe+Be+qWFn9wg9byjtaO72z5fTXs87acZvHm0NRl5sVomM+c6k70i2kp/
+         woyNsDDTOA5AEvg7c7vLVsbi30TWJhPtfTC/EziYR0vj7GIExbuofcByAXvmAEk751x9
+         T3RH+YgimOpsxWtyZsZ3cPVMyCsRZbCB1sfcKPY8Y2QPTaqxoRnfIJyTPzMcAlksjPr7
+         6dnpO8lUPC8r6LuRV9eRrkNFYOPYyGeBJ6OZxG4jTn+mLVgviIxSRUbzpCA32TTYd+/I
+         W8Kw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744385603; x=1744990403;
+        d=1e100.net; s=20230601; t=1744386140; x=1744990940;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=kg3VXemwiKmKd4G0Z2R0124+RUSjZF/WWLbtBHb58c0=;
-        b=qY6o5IdPBGKQqqAd5pLg6eqReb6UW2i6K7Q0wmRca04CEzyikqDGEWKugMvIfuz2Il
-         PygoKVaqnYMXLZ66g4RJX2szK+anXukiWA0cWc/GBiA6mXuV/H7DMoWK0KgZAVpSrNfq
-         4KVgdftoeuELk0Dm7uVMpH+thS4G8yIdNNl8xWOkqtlVobqpcMPv1R0BT53xQ++pYtt8
-         pThz25mcUbApliH7rMCdnl/iFPM2fVsDLmdmP+vJ8mCviq70psGmdopIQPRpk00Lp3ux
-         DH0iqYgM6smpfPZrxDbm9paBdktVtqSWKsfU3EzYXR7Ul3nmMj6xL4xoIV2RUX5M+dbF
-         b8Eg==
-X-Forwarded-Encrypted: i=1; AJvYcCVZSaFjctppFo0vLkiPPqsQrJtD9Wnzmj2/OIlqjFrwSmUQOI85mwmn6ZpSnj8hNcI6B1NMe6XyogNGlCGV@vger.kernel.org, AJvYcCVfvGIx4IpueKoowtRiEyEt/zKgMlCViF0OJg/VF4pHgQWYe42yas6QPfgSMwoVvnUQJ1MpQ0iAiqMWLw==@vger.kernel.org, AJvYcCXhogMpGccu2hf9x62ZuzoMWPbrYPN04EvTcDOjgQud+BbhGndQwzIPJcCGcaQ+CaZNq1UdwqMOSlCIYERl@vger.kernel.org
-X-Gm-Message-State: AOJu0YzYSRe0Z5IawtlGEgIyoRZ2+NdbDqoGpbJkqaX3Eog8c5upRgQO
-	KnVCTH+drXYNMwmY3f+lT8wmuQCwioGgL8gWtUqO1WwX8qW8xp2u
-X-Gm-Gg: ASbGncst3CH/tLfdsNQHGCICCJ+paj/OQSJfst9Vq1Rgxso6WjlIYnvlN2g4df+2Ru8
-	Gp29jXUIRIlWikztXjz3yuE011MSsRFOhUVj+Opj8fukKQTMMfAmrObZDHWbcPQKBuaiu4K0Ck0
-	fnnNosth3IpL3VbOsnqlWeluDm5xX7omSMC3POhvbZxqwhqTeCUCT8Drpt+03aAvXfK0bAJp2vR
-	kU8P8O8iwAgoOTOwHjeD2OULWU4wEktnhVjUQCP0b4T+Fz3zQ5ISMkUuHHVC5v+2yGIV3Th3pyk
-	eNmgD4FuxlS3NLPv2GYrQrnZqAwG2y8sW56R5ce8ii0KZoneBS/5gA==
-X-Google-Smtp-Source: AGHT+IFolPfgBh4MqDlhl5CFTWgay9WZHGjuX99wTZEKev4h2CnxJ5Ib471SmxyPwOcN/aFAO+58zw==
-X-Received: by 2002:a17:906:f58c:b0:ac3:8988:deda with SMTP id a640c23a62f3a-acad36a5de5mr300024066b.40.1744385603057;
-        Fri, 11 Apr 2025 08:33:23 -0700 (PDT)
+        bh=It2VnWFeoAs2/AO81MkBMka6daEY9+eiPuA3+Nx/GX0=;
+        b=WP+QZe5V+uj3KUAvBnJMB+7cZmJFGMZ+63WENbD6V6toF5gGxZdhWTnQljOb2y3FYe
+         +lHZv7qeYr+rMa4pJdSDMigI5mmbjC8qA8G3vozwreLqOyrwMK+gQWh0LnWs63+arlu5
+         XRsfIrje1BLlPBS6QOGgXLD3LRPct22t3F4kYaEjx/9xX8frNLSAfS53vdLiYr4QdFGv
+         E6190ZTLUImNWij3lfasmK3yCXguIWTsP/vakTL5IB8ikIVsGxDrUSLO8Iqt/b6+QXEt
+         gJeV3voG4eEW1IZsQkGm9Al2AAu+V0EmD0EZ2pvw5yM8VvaNTW2JsIWr3NQpwP+XiLX+
+         VG8w==
+X-Forwarded-Encrypted: i=1; AJvYcCUemsTugXoJ58B3zrq1dhk50VdJk1zc8lLlD5MFdjP4Geat5OcBkAUvRLnUwec48mGJhMBSwF3ChATAsOuk@vger.kernel.org, AJvYcCWOy4RgrwdVaybF/kZcnnkGPA596+o23cohMthl4ThEit7doIvvbDiTe2NxZepEP+3jJ0L9GILp6HGMANUX@vger.kernel.org, AJvYcCXTgjbO06ie7MYC6SltNZZeSdow/5xHHu7PnvXo5dJ2hnFIDvSJgwMUrtHQtfclUxiPucZASeU9+burNg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxiCCIMaPC74yEMR4UinVT3Gj+YMb8tds47qS2EJ88h42nIbfyA
+	HwvcXTx/BC/4Pz6IWCe6Tquu/d84CTdMIxNx8B3SdW29PeaJJUej
+X-Gm-Gg: ASbGncvbPd1DL7sS4ZXzCwFMfEPS9xDzLuPjEXwsmlFf9Pn9BwaGKjT0TtOGQYjf4qa
+	ci3u366eX2dum772XOW/fInFdRAzCkgGP9f8/VAqNaoUWJmnGGlAEwp+OONtOdSDeJfViwzI3D+
+	3pOwS/oj+elOWgA+7M1ysciddfDOSA9z50UsjufJbOjoGvARJcZM+ZIHX6WgDXjpjKL/+FINwIx
+	V/0VPK9r0Fh2d5eSC/CpUST0NVrUuge0uiBg3nnppBZFWogkOwr90XeYqMtnUdQCsCoOOJiwvqt
+	6CM8RAasZVFaF2x+V7wfMgyHF2L3Z78PJPuk6vrkWLY=
+X-Google-Smtp-Source: AGHT+IEtSIaJ3H+ZraLLFCodD6/LDQvZtvBke+gPK1x5t3vsMCHDWRB4OCz2umhxenATOBcALBtRxA==
+X-Received: by 2002:a17:907:1b03:b0:ac4:493:403 with SMTP id a640c23a62f3a-acad36a5b29mr264461366b.37.1744386140056;
+        Fri, 11 Apr 2025 08:42:20 -0700 (PDT)
 Received: from [10.176.234.34] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-acaa1ccd69asm456861266b.159.2025.04.11.08.33.21
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-acaa1cb3d8fsm464863166b.106.2025.04.11.08.42.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Apr 2025 08:33:22 -0700 (PDT)
-Message-ID: <3939a945088f4b43bf4e69c05a5718b31bc151b7.camel@gmail.com>
-Subject: Re: [PATCH V3 1/2] ufs: qcom: Add quirks for Samsung UFS devices
+        Fri, 11 Apr 2025 08:42:19 -0700 (PDT)
+Message-ID: <995f5cd137d0b0b82a1d253cc081fe9e145738c5.camel@gmail.com>
+Subject: Re: [PATCH V3 2/2] scsi: ufs: introduce quirk to extend
+ PA_HIBERN8TIME for UFS devices
 From: Bean Huo <huobean@gmail.com>
 To: Manish Pandey <quic_mapa@quicinc.com>, "James E.J. Bottomley"
 	 <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
@@ -70,10 +71,10 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
  linux-arm-msm@vger.kernel.org, quic_nitirawa@quicinc.com, 
  quic_bhaskarv@quicinc.com, quic_rampraka@quicinc.com,
  quic_cang@quicinc.com,  quic_nguyenb@quicinc.com
-Date: Fri, 11 Apr 2025 17:33:20 +0200
-In-Reply-To: <20250411121630.21330-2-quic_mapa@quicinc.com>
+Date: Fri, 11 Apr 2025 17:42:17 +0200
+In-Reply-To: <20250411121630.21330-3-quic_mapa@quicinc.com>
 References: <20250411121630.21330-1-quic_mapa@quicinc.com>
-	 <20250411121630.21330-2-quic_mapa@quicinc.com>
+	 <20250411121630.21330-3-quic_mapa@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
@@ -85,13 +86,15 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 On Fri, 2025-04-11 at 17:46 +0530, Manish Pandey wrote:
-> Introduce quirks for Samsung UFS devices to adjust PA TX HSG1 sync
-> length
-> and TX_HS_EQUALIZER settings on the Qualcomm UFS Host controller.
-> This
-> ensures proper functionality of Samsung UFS devices with the Qualcomm
-> UFS Host controller.
+> Samsung UFS devices require additional time in hibern8 mode before
+> exiting,
+> beyond the negotiated handshaking phase between the host and device.
+> Introduce a quirk to increase the PA_HIBERN8TIME parameter by 100 =C2=B5s=
+,
+> a value derived from experiments, to ensure a properhibernation
+> process.
 >=20
 > Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+
 
 Reviewed-by: Bean Huo <beanhuo@micron.com>
