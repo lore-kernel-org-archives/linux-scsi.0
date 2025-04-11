@@ -1,175 +1,110 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F04ED29DB9C;
-	Fri, 11 Apr 2025 12:14:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0A20215171;
+	Fri, 11 Apr 2025 12:17:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744373665; cv=none; b=fHWMFB1sHx5aGBuKUdUV4T1Lfy+QhY9uq7zX2+u9/3E7XLDsht9Gfs8py9PmkVbUj5XBm6Akfp7dlYDjTQzkiHZitNjO+eqRtMs+OujRPZ1qVCpPZv2H9P7NvgfAyezoMfAxwPNraVYy9Jvr/IZ2whnsOx3+AbXfyDJ5TCMTQGI=
+	t=1744373826; cv=none; b=aKVK9DiCiYJu3i8S/hw7VKcsMr3aNF6RHhoMQ1fSBfaeFon0Zfcc70VPsLKAZxfm5kUGOgjBSmViZdjSVfLO+N0ay43AH90m9Fs3EAOlDwYWcGgPUTInMPKO0M52lPIzThaQ7dA2KxxRxZhIGL5txoLcry41UtkpotTgJnvxBRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744373665; c=relaxed/simple;
-	bh=V8IEbrrIKcRvYY5Xac9swmexAXB2Rf4t8KhLPJnZEcQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=glyBWdt6xzaXHdBTrQA3CrwY+LQgY7P7MJKbMOIhEj8/iQVH5WPduoHchYsBREA584Hk1Z17rThjaxhSxo0F0q0ruP+6BwCZAUwXsRon7XHdDqdvGGV093j3UyEIbhDwRfN1/LTbGDbf/JaTe1MXXhiNyyJCL4g5buMmyAsPevA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Iu7WX7+0; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1744373826; c=relaxed/simple;
+	bh=z9ZhKpMpicsOiTKk0wwvbvhR3LRnsWQ7cb0GED2/lLQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BOAsQ0E+yfKLvf344FDat5VHDR3rt96rYkQq6J205ezNL++6ZZGyI+QfCdLEdOa2yiBkT5TvvQUV+mVWXdjugdMukuHXHtLMTN7kRz9EOGb2u1aD59J8Nf6mJwnht+j2Xp2hH7GjUOQ2ZWe+X0QgkTzkbBHmUSpUc5sb3ZolGVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EIt7fq91; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Iu7WX7+0"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53B5eCpD000333;
-	Fri, 11 Apr 2025 12:14:19 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EIt7fq91"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53B5o5Ok016303;
+	Fri, 11 Apr 2025 12:16:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=3tSblUWUAqbLhb/ax47oFkaQ
-	Hzs6gm5u/BMBh8vwrvo=; b=Iu7WX7+0rVMcbB/9R7KIfgHiQxjluEAw3DYxk7sf
-	J8708DZR0JReRMm2gcmNFkXtwZPjCvmEZZpzpD020jJKyFo9ZwgC67tTlGn0PHKs
-	okFd4jc9xf4bKGokJ3w6X654dbDKgW+bXbdXrRaQmrS7yH57USWHy+cRXXkioJ3u
-	1RV3XmynuNiUg1tGEVIriMYjpkXbglYUUEDiY9cYAMJtRFhsa6iOVPfEZ4sY2W+z
-	57sdbUCTXyFt9V9DVBSTlR9KHriFnrBk9iBiPiM/XOHR7EqSgpbraB9MIWoQd4E2
-	rUlfs6YkNfMZLW7AOAlXmx6cE88XOoX+h5QDRm1hxnyf6g==
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=IjHvVeg/jAKojs1i6T7ne4
+	P4dNowktNVDMTOyyqocPY=; b=EIt7fq91Mr7nSRew64GcqmKEEE9J3jdVGM4id/
+	trLDguYs8ehpzvR/51jNi+sZhTBmBXboRB5upjJcJFKmVWKknnK+HcPfDErZ/0SV
+	qqssgjwfwwkGdaAMgJWOkOd17ZU4i8h6ZUrhwV6Z42jSlV+bzG49KISY0wwjkdt4
+	IMF0GOfIni/T1r1CJeNCONdakKJUrwFsAA9icKo0UxMSsQJ7RMyfD8QcIpxScKiO
+	RpMHThZqU1qqAw3voz9/lRrZu+0J11gRBxrHNlwhY3k2/BSsqHpxh7gS9gC8guve
+	EW5GNyaLIzycXBtMy1iCcEWg5+4dsc2+fjLJJTeIjq1vDFIA==
 Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45twfkt3w6-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45twc1t4yq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 11 Apr 2025 12:14:19 +0000 (GMT)
+	Fri, 11 Apr 2025 12:16:44 +0000 (GMT)
 Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53BCEIVO022063
+	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53BCGhqH026623
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 11 Apr 2025 12:14:18 GMT
+	Fri, 11 Apr 2025 12:16:43 GMT
 Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
  nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Fri, 11 Apr 2025 05:14:15 -0700
+ 15.2.1544.9; Fri, 11 Apr 2025 05:16:39 -0700
 From: Manish Pandey <quic_mapa@quicinc.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
-        <quic_bhaskarv@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
-Subject: [PATCH V7 3/3] scsi: ufs-qcom: Add support to dump testbus registers
-Date: Fri, 11 Apr 2025 17:43:45 +0530
-Message-ID: <20250411121345.16859-4-quic_mapa@quicinc.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K.
+ Petersen" <martin.petersen@oracle.com>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>
+CC: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        <quic_nitirawa@quicinc.com>, <quic_bhaskarv@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <quic_cang@quicinc.com>,
+        <quic_nguyenb@quicinc.com>
+Subject: [PATCH V3 0/2] scsi: ufs: Implement Quirks for Samsung UFS Devices
+Date: Fri, 11 Apr 2025 17:46:28 +0530
+Message-ID: <20250411121630.21330-1-quic_mapa@quicinc.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20250411121345.16859-1-quic_mapa@quicinc.com>
-References: <20250411121345.16859-1-quic_mapa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01c.na.qualcomm.com (10.45.79.139)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: JnrVdh8EWZQqvokpsjyIJGHu7H7G2f_m
-X-Proofpoint-ORIG-GUID: JnrVdh8EWZQqvokpsjyIJGHu7H7G2f_m
-X-Authority-Analysis: v=2.4 cv=b7Oy4sGx c=1 sm=1 tr=0 ts=67f9079b cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=oU32yFmJg_HV1qE5Ry8A:9 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: FCFUee6RYJJLi1cvy38MBeAXQgj8eKQ4
+X-Authority-Analysis: v=2.4 cv=KtdN2XWN c=1 sm=1 tr=0 ts=67f9082c cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=EGDPvhNCz0rwfrFvPGUA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: FCFUee6RYJJLi1cvy38MBeAXQgj8eKQ4
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-11_04,2025-04-10_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
- priorityscore=1501 suspectscore=0 mlxscore=0 impostorscore=0 phishscore=0
- clxscore=1015 spamscore=0 mlxlogscore=939 bulkscore=0 lowpriorityscore=0
- classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502280000
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 adultscore=0
+ priorityscore=1501 phishscore=0 bulkscore=0 suspectscore=0 spamscore=0
+ malwarescore=0 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=934 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
  definitions=main-2504110078
 
-Add support to dump testbus registers to enhance debugging
-capabilities for the Qualcomm UFS Host Controller.
+Introduce quirks for Samsung UFS devices to modify the PA TX HSG1 sync
+length and TX_HS_EQUALIZER settings on the Qualcomm UFS Host controller.
 
-Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
+Additionally, Samsung UFS devices require extra time in hibern8 mode
+before exiting, beyond the standard handshaking phase between the host
+and device. Introduce a quirk to increase the PA_HIBERN8TIME parameter
+by 100 µs to ensure a proper hibernation process.
 ---
- drivers/ufs/host/ufs-qcom.c | 50 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
+Changes in V3
+- Addressed Mani's comment and updated commit message.
+- used BIT macro in ufs-qcom.h to define quirks.
+Changes in V2
+- Split patches to add PA_HIBERN8TIME quirk in ufshcd.c
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 4c0fe80f65f9..d879f1290046 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/acpi.h>
- #include <linux/clk.h>
-+#include <linux/cleanup.h>
- #include <linux/delay.h>
- #include <linux/devfreq.h>
- #include <linux/gpio/consumer.h>
-@@ -98,6 +99,24 @@ static const struct __ufs_qcom_bw_table {
- 	[MODE_MAX][0][0]		    = { 7643136,	819200 },
- };
- 
-+static const struct {
-+	int nminor;
-+	char *prefix;
-+} testbus_info[TSTBUS_MAX] = {
-+	[TSTBUS_UAWM]     = {32, "TSTBUS_UAWM"},
-+	[TSTBUS_UARM]     = {32, "TSTBUS_UARM"},
-+	[TSTBUS_TXUC]     = {32, "TSTBUS_TXUC"},
-+	[TSTBUS_RXUC]     = {32, "TSTBUS_RXUC"},
-+	[TSTBUS_DFC]      = {32, "TSTBUS_DFC"},
-+	[TSTBUS_TRLUT]    = {32, "TSTBUS_TRLUT"},
-+	[TSTBUS_TMRLUT]   = {32, "TSTBUS_TMRLUT"},
-+	[TSTBUS_OCSC]     = {32, "TSTBUS_OCSC"},
-+	[TSTBUS_UTP_HCI]  = {32, "TSTBUS_UTP_HCI"},
-+	[TSTBUS_COMBINED] = {32, "TSTBUS_COMBINED"},
-+	[TSTBUS_WRAPPER]  = {32, "TSTBUS_WRAPPER"},
-+	[TSTBUS_UNIPRO]   = {256, "TSTBUS_UNIPRO"},
-+};
-+
- static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
- static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, unsigned long freq);
- 
-@@ -1566,6 +1585,32 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	return 0;
- }
- 
-+static void ufs_qcom_dump_testbus(struct ufs_hba *hba)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	int i, j, nminor = 0, testbus_len = 0;
-+	u32 *testbus __free(kfree) = NULL;
-+	char *prefix;
-+
-+	testbus = kmalloc_array(256, sizeof(u32), GFP_KERNEL);
-+	if (!testbus)
-+		return;
-+
-+	for (j = 0; j < TSTBUS_MAX; j++) {
-+		nminor = testbus_info[j].nminor;
-+		prefix = testbus_info[j].prefix;
-+		host->testbus.select_major = j;
-+		testbus_len = nminor * sizeof(u32);
-+		for (i = 0; i < nminor; i++) {
-+			host->testbus.select_minor = i;
-+			ufs_qcom_testbus_config(host);
-+			testbus[i] = ufshcd_readl(hba, UFS_TEST_BUS);
-+		}
-+		print_hex_dump(KERN_ERR, prefix, DUMP_PREFIX_OFFSET,
-+			       16, 4, testbus, testbus_len, false);
-+	}
-+}
-+
- static int ufs_qcom_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 			      const char *prefix, enum ufshcd_res id)
- {
-@@ -1688,6 +1733,11 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
- 		/* Dump MCQ Host Vendor Specific Registers */
- 		if (hba->mcq_enabled)
- 			ufs_qcom_dump_mcq_hci_regs(hba);
-+
-+		/* voluntarily yield the CPU as we are dumping too much data */
-+		ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
-+		cond_resched();
-+		ufs_qcom_dump_testbus(hba);
- 	}
- }
- 
+---
+Manish Pandey (2):
+  ufs: qcom: Add quirks for Samsung UFS devices
+  scsi: ufs: introduce quirk to extend PA_HIBERN8TIME for UFS devices
+
+ drivers/ufs/core/ufshcd.c   | 29 +++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.c | 43 +++++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h | 18 ++++++++++++++++
+ include/ufs/ufs_quirks.h    |  6 ++++++
+ 4 files changed, 96 insertions(+)
+
 -- 
 2.17.1
 
