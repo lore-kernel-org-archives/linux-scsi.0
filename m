@@ -1,127 +1,117 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 696B9278E71
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2025 11:19:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A87929AB14;
+	Fri, 11 Apr 2025 12:14:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744370363; cv=none; b=btqVlK30DUiiVlGcBPS6Un/9cS11sk5TM1TcvsR1/NyO5VvhcaP1xFzjc1VCvI/87USjqidQ7ZC2CNlvI33JfuWEoJXxwv+r5RW9RrOI6xQiSkz2rq+CmN1mz9ol49F3dQqpKEvy3NseUbINCAdv1CvuHCzoEXzVdfdqCUM353M=
+	t=1744373655; cv=none; b=O9mNJcEnRpIwiufSarb+uKuYS4VXRmmT+ATkPTEqAmw+LpAGa7mXTnoTzKlx4zEvdOCDL7iBOPHBqgqqw3lfuM8kBIWzrUYn/mvRiKt1a8I7FEOlJ/T2PFmmlYdi/hNfK3d4y8dGXAE/ltC+2uxNn1qsc57KmWU80pwRCxAMDaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744370363; c=relaxed/simple;
-	bh=ZN6/Z5nSCfpz8ee+8Vf/JI1w39/NLe6Ltjd7nMki7tE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=genmA2wKZIIEpf+oIaPqTOLrUZ9N+G7mNXMo/0lpyerAGahIJWc6amuxcKvvWa+FBWAJIL3KVlOOOObof4hEmknKy6HRUCP9wEgPixu63HM5EPflQRMEPLKaGfRYqX7onMCaJsVZmR4v35plo1wxaYPRnHO0ku1R4UlE/7qPpzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=S0ZcFy77; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1744373655; c=relaxed/simple;
+	bh=1Qojd4VrIH22QCV6yTzM5lRwwuuzjVfepwBQ5m07vD0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Tu77Z3mZpkkxkEizzZA3HuCUkIPvNff3Icez8gyGbmo2vCxBO17YOk0DSmE84uvRsTjDdCAHdt9fT75GWn5rgSXxFAJj6fpmnR3YrfCyvaw3PKYDgNYD9516lAzPsP4x3GdJ9oO1zEZu/dbOPdbVsi2ZnlAn5GIbH4tvLgLP1GA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=j5NsmEMM; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="S0ZcFy77"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-7390d21bb1cso1801912b3a.2
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Apr 2025 04:19:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1744370361; x=1744975161; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=X2grBUE+ByEyrq24CTT/4/1EgXXaYZslkW9YGFS6AGM=;
-        b=S0ZcFy77f13AHXg6BsqkdnYiNGBxiQsEReXdokNnBSdDrwssSPwR3fUX9a6M1Sees7
-         hv9QBYCklI9+lSUvByMWojB4QlLF5JWztZH2f0RtTbqEg1ESyIHxIFhcvwq8y1roOllO
-         gfE5mdqbU3QWDUCQEe7zaaqp5C4rNMnodfUDg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744370361; x=1744975161;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=X2grBUE+ByEyrq24CTT/4/1EgXXaYZslkW9YGFS6AGM=;
-        b=VCr0Om1+B9XoC/J6aASIkDoSGVAK5kZGBq/qQcR90GLOZNDDbwL5zP/FK+5wLDXbMH
-         7qXcZgZOFuhHgCmk3IIVfRXFBz6i0ktxamvJ8si+Tla5tgQat6ZqB1vM5XTNXoWHp0cm
-         4gF5WC4za0HzIWpX2WqLti4D7SKqZvfeOMwEUX5elKoAUcUE4z9wHF6hE9mFOqDf6kkN
-         nSZvyLZBQHc9fdNZptollCPwuRv61QBSew7+rPSdCclM3EOxZRhVi35GZHnrM9P6gROw
-         Db047+hqqESnWmD77ETFP1IZ+a/6FFbo82VqaWNNNrAiGy7Jh5macS5xBmF7v79alfzp
-         lUyw==
-X-Gm-Message-State: AOJu0YwtmaXjThckIRl4lugj35bghe7ltED7cSpxk1oZnnmHqZBKozcG
-	QgFND9iKooXbY+1gA8h0eVQp8E1SI5vUWyF+TompPp/kADZSvdNZRTcJYlC8r5Oy03Vb4dUj5Rm
-	gHhDo2eDtHZ22kTaxzv1BFhgd3PSV7gxSr9ES/Y1MpVizyVf1EINRrB9HwuFpk3VCRLQ1Ihsxf2
-	ORflKktPkmK4hoaZHZVWP5e+qxyMFLrn61NbjYjEaWiPK6BQ==
-X-Gm-Gg: ASbGncthKisRjMKeG1XtkC98LPTa64zuQP2LjbkhODY1VpxdZ5wQk0La+Z4LE4O1Jvs
-	/R0R4BW7/RkkqNVTvcgWImlmYvpM8rgfXo16jK1BjD8BrZ7jIg5cAWqwJLAtkSW4/ZvXiGE+smJ
-	AzURFIVJB8uEbk8BHxfCjBsMu7XCXtpH5D2/I97vtPgWHejrEVVZtapdcGWyfTzNFgB8ezkVwO/
-	z3m7T9UvMMCChdI7mGhAK/3XsnE1bH+DXEMM6V9GZnrVqfeCUCgnnbxGJNpKGzmLfBeJOoHod1a
-	TXMF+dHiCmJ1FFBWVPAppTobG+lZO8nuUNx72PH9xdCddlLgRSpWlIMeotaHMDNREU6jlYwM2xP
-	lo0z6bMgQ
-X-Google-Smtp-Source: AGHT+IGprhVvqVGaozZMc8xBNscavP2bL0ESOlMdW8m8pbBaONLhNIwuFHxK+ZsceFIKpApgsfp20Q==
-X-Received: by 2002:a05:6a00:21c4:b0:736:ba49:97bb with SMTP id d2e1a72fcca58-73bd11a8470mr3102242b3a.5.1744370360568;
-        Fri, 11 Apr 2025 04:19:20 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73bd21c65c9sm1266920b3a.61.2025.04.11.04.19.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Apr 2025 04:19:20 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: rajsekhar.chundru@broadcom.com,
-	sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	prayas.patel@broadcom.com,
-	tadamsjr@google.com,
-	vishakhavc@google.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v1 2/2] mpi3mr: resets the pending interrupt flag
-Date: Fri, 11 Apr 2025 16:44:19 +0530
-Message-Id: <20250411111419.135485-3-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20250411111419.135485-1-ranjan.kumar@broadcom.com>
-References: <20250411111419.135485-1-ranjan.kumar@broadcom.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="j5NsmEMM"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53B6TXKq030616;
+	Fri, 11 Apr 2025 12:14:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=0fm06JT9bdlgENB+cHgfv+ZfN/fahku6OrdO25SPrtI=; b=j5
+	NsmEMMmG8gDsyKexq9oWI/4boTHfiICrsABX1ct9w9IlwFGbUJ/V4GCe9pxZBSPl
+	592wVbGHbWrnQCYk9VCuhpg3pbJ/letbbfL5Fd17b0NQV25bOfo0pevrooAGB0G/
+	PALt2Hd/PyJsryCwLqHbNx76nWsF0+XToJqobUtgzJ7fMmMeO4Dho5v+GUqCUK7R
+	NqQVH2VXbJTTPrgxmcWuSl/1EU0Q40a2YI80STQrzmpA0gpb2byvUvBWhiyFVBsH
+	3nbBftr+Rl0Yvfne5Tg5BDSBoOjwMy1DmhWEp/CaCkEULn8eLaFANH7E8bK9juZE
+	Ozw1etJ7/0pbK9LKs4tg==
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45twftt3up-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 11 Apr 2025 12:14:08 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53BCE7cu020147
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 11 Apr 2025 12:14:07 GMT
+Received: from hu-mapa-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Fri, 11 Apr 2025 05:14:04 -0700
+From: Manish Pandey <quic_mapa@quicinc.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
+        <quic_bhaskarv@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>
+Subject: [PATCH V7 0/3] scsi: ufs-qcom: Enable Hibern8, MCQ, and Testbus registers Dump
+Date: Fri, 11 Apr 2025 17:43:42 +0530
+Message-ID: <20250411121345.16859-1-quic_mapa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=B5+50PtM c=1 sm=1 tr=0 ts=67f90790 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=XR8D0OoHHMoA:10 a=VwQbUJbxAAAA:8 a=COk6AnOGAAAA:8 a=pyQEGUW01KN_hzJh80EA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: 6e4zPkR2dzcHPl2BlT2YlZyUcHYon81B
+X-Proofpoint-ORIG-GUID: 6e4zPkR2dzcHPl2BlT2YlZyUcHYon81B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-11_04,2025-04-10_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=298
+ suspectscore=0 malwarescore=0 bulkscore=0 phishscore=0 spamscore=0
+ priorityscore=1501 adultscore=0 impostorscore=0 lowpriorityscore=0
+ mlxscore=0 clxscore=1015 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2504110078
 
-If an admin interrupt is missed, admin_pend_isr may stay set and
-trigger admin reply processing even when no admin IOs are pending.
-Clearing/Resetting it in the admin completion path prevents this.
-
-Fixes: ca41929b2ed5 ("scsi: mpi3mr: Check admin reply queue from Watchdog")
-Cc: stable@vger.kernel.org
-Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Adding support to enhance the debugging capabilities of the Qualcomm UFS
+Host Controller, including HW and SW Hibern8 counts, MCQ registers, and
+testbus registers dump.
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
- 1 file changed, 3 insertions(+)
+Changes in v7:
+- Addressed Bart's comment and used table-based approach to for ufs_qcom_dump_regs().
+Changes in v6:
+- Added ufs_qcom_dump_regs() API for MCQ dump due, as SoC vendors explicitly
+  allocate MCQ resource.
+Changes in v5:
+- Addressed Mani's comment and used cond_resched() instead of usleep().
+Changes in v4:
+- Addressed Mani's comment and used kmalloc_array() for testbus mem allocation.
+- Removed usleep_range from ufs_qcom_dump_testbus.
+- Updated commit text.
+Changes in v3:
+- Addressed Bart's comment and Annotated the 'testbus' declaration with __free.
+- Converted the switch-statements into an array lookup.
+- Introduced struct testbus_info{} for handling testbus switch-statements to an array lookup.
+Changes in v2:
+- Rebased patchsets.
+- Link to v1: https://lore.kernel.org/linux-arm-msm/20241025055054.23170-1-quic_mapa@quicinc.com/
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index d6e402aacb2a..003e1f7005c4 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -451,6 +451,7 @@ int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 		return 0;
- 	}
- 
-+	atomic_set(&mrioc->admin_pend_isr, 0);
- 	reply_desc = (struct mpi3_default_reply_descriptor *)mrioc->admin_reply_base +
- 	    admin_reply_ci;
- 
-@@ -2925,6 +2926,7 @@ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc)
- 	mrioc->admin_reply_ci = 0;
- 	mrioc->admin_reply_ephase = 1;
- 	atomic_set(&mrioc->admin_reply_q_in_use, 0);
-+	atomic_set(&mrioc->admin_pend_isr, 0);
- 
- 	if (!mrioc->admin_req_base) {
- 		mrioc->admin_req_base = dma_alloc_coherent(&mrioc->pdev->dev,
-@@ -4653,6 +4655,7 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 	if (mrioc->admin_reply_base)
- 		memset(mrioc->admin_reply_base, 0, mrioc->admin_reply_q_sz);
- 	atomic_set(&mrioc->admin_reply_q_in_use, 0);
-+	atomic_set(&mrioc->admin_pend_isr, 0);
- 
- 	if (mrioc->init_cmds.reply) {
- 		memset(mrioc->init_cmds.reply, 0, sizeof(*mrioc->init_cmds.reply));
+---
+
+Manish Pandey (3):
+  scsi: ufs-qcom: Add support for dumping HW and SW hibern8 count
+  scsi: ufs-qcom: Add support to dump MCQ registers
+  scsi: ufs-qcom: Add support to dump testbus registers
+
+ drivers/ufs/host/ufs-qcom.c | 124 ++++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h |  11 ++++
+ 2 files changed, 135 insertions(+)
+
 -- 
-2.31.1
+2.17.1
 
