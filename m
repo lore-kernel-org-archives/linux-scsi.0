@@ -1,128 +1,127 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79C4CEC4;
-	Sun, 13 Apr 2025 18:02:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CEDB33FD;
+	Mon, 14 Apr 2025 01:10:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744567370; cv=none; b=a/Tsm1Ml4ui+X+AOMblsHnH+gqrFoeVGViw1TJn5iRh6/EfhCuPV1AhFkmhUBtV6bCHMaEUpJHOuFeODySA00PQmaPShDuXCbu8dNslBQMuP5GSV2hn2f2rXRJtn1yL1AqRsZOfQjOY0XwvxVn/NcHuB0Y0prbTLyS5dikw/wr4=
+	t=1744593063; cv=none; b=a7bpyynEHJ3KLj63Pkg+OFmxyif5yVAGTWrPUcxNtsl1BqDWVSj2nNAVewaUTl3KETurnmaCxi0DmSihFKN0PhGSiwjn+BdQgA//tnMYqBxQ0M4m9z8iVl2a/ojWMnMKMpWe0EZ5DJBjt9FYk7ProNuYXvvNx1k/D5/MvvPTHZg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744567370; c=relaxed/simple;
-	bh=qo9Xk4ysQBUC66seaPO18axTR54cTNx3OAqCD0UiS3M=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sxn8ajujjGOAU/Mbjl5SxAMW2uwJvod54H5DhinaPpZFUe34Ir7TcI94kF0fzNaiIlNqM/VgKPIvrfSbNmT8MUnC0kOCIReQsBF6kLM2x64Xtv7mpLFq5vChCqGtwqMXajKSAJrxznaGdNHgzw5Z3gT/UK/7OwaJ6J9ig1JUE4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WFgUwgAc; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WFgUwgAc"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43cf3192f3bso37797995e9.1;
-        Sun, 13 Apr 2025 11:02:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744567367; x=1745172167; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=erGj3PFoA4vOPhXfNNzZpH7MlehLUD6YVpNUM/wB/mM=;
-        b=WFgUwgAca/u+iVeFuYO7KwbeEpUQTyztKQsFrXIJHUYINA9DYpv+ef6gZ9IyElF/dB
-         IWPd46BmHYBQacF2sX+/h28zCMY/uAGM9c78rDIbE8WeAm6/6r3h6j16dGhmGpL08I78
-         MYCtpcubAVHavnE641AdIGgmAB7lw0oFwSgDaXtrfiY+/yIXFvX1eB0yVeivVsDzW7D+
-         tjpj1l6Za3sF2dh7n3UhKO/HBFVcum/dN6w6SOa21BRzQlPSXpYeRDPd32xrzvw5Tikp
-         QKQ1Iv3gkIihRSqVSa6yBOqAlDA2f1mtYUyZovKZNpjqNaJQ4PI4cbBWtre0QlVZvk6j
-         SQoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744567367; x=1745172167;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=erGj3PFoA4vOPhXfNNzZpH7MlehLUD6YVpNUM/wB/mM=;
-        b=eKfLAhRqgjGrEwToHRpx+pw98yebO8XPkKHvDSdOQqD8niJAYUKSmW2iF9v2PVFAxx
-         YpSOW3MjC5XxBTX/0WK71CCaq9qCYPa9hCAeMAqbC/8Lj/IjHnGVkiEp7E8EpXsSbqdo
-         fsj/N+30fyAy1NtLEAyvOjucvxXbOFIUeM5JChcsdsSMtdE4vr+/9vbgjHlX7gQTpZCJ
-         T3HvxvXCj/51t7/PUkB5hYt+0RAeHPw9egb4azh7wzla4DgxO8J5PfhjfhtB0QYIkwAb
-         AtJvhmF6biPKGRUh8YfY1J82R4SoRLChuCALA3vHxw1Af/yHqZFbSGdDsY9DVuFQJDZL
-         Xhtw==
-X-Forwarded-Encrypted: i=1; AJvYcCUhp/8OOJXAOHN1MAEQ/jzEoJdQdrqvoW5u+0WNxPnGZqtEbJQiHdROmjqSQbpAytDezo1bTkSR++aqn/g=@vger.kernel.org, AJvYcCUqC4tLTcgxWFwvzC9MIeqy2pm+4KXsapA67o++eoDPDgYx8hV0yN+OjTl5h3TFnGCSLwCvF+Wt+Dfo3A==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzecBdx6dTcy7VY4Cs84kP42Sor2kWreW6iupqvBlyr+dl+h/Wm
-	3pBRf8FRD57+eOTTLx85X3QMcjVCkoaatEA0puwvE12YTFzZlZZs
-X-Gm-Gg: ASbGncvw7szJSOwK2ZYyu3eQL8U03pjanv0BeOCOsnMa5I/om6O/a6rF0ZNC4BR1AP3
-	uqctNDhtUBHnJx+/K66LROLgZNzgIL7jIH4trbo+kh7J4InBvTRr3CjLt51KCS9t0yxzXDZZtsB
-	nTsgO7pRdTdC2h9KD7SWmNf86T826Wpy3GO5KhD4gHr9ZFaHWuQ9YAHxLVnGCCnlmYTUAnXA83W
-	zdvnM8l0AeP9ZnIrDS36v12P+pT3OmHmG1uN+H7EZAnGZGjfwKndR1wJ6b59U8Rn/OFfy8aKEsY
-	wMIQLxmGfqSfmmDYfMKCUZ0eSgfph/t+tGoRiJpMTXOxHfQO8XCRF9giY2e6dYEKM7T4isDi0gL
-	uBQk=
-X-Google-Smtp-Source: AGHT+IEUqvKPr3XsDz0Qe9lrQLQYb4cT2YFIpXkECUZXBJi0GDieo+9ZayZyWIEdWvstS2ydWn8eBg==
-X-Received: by 2002:a05:6000:2907:b0:391:38a5:efa with SMTP id ffacd0b85a97d-39ea5201ea1mr8077035f8f.23.1744567366341;
-        Sun, 13 Apr 2025 11:02:46 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43f23572c43sm155115235e9.25.2025.04.13.11.02.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 13 Apr 2025 11:02:45 -0700 (PDT)
-Date: Sun, 13 Apr 2025 19:02:38 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy
- <dick.kennedy@broadcom.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] lpfc: use memcpy for bios version
-Message-ID: <20250413190238.2cb8ec64@pumpkin>
-In-Reply-To: <20250409-fix-lpfc-bios-str-v1-1-05dac9e51e13@kernel.org>
-References: <20250409-fix-lpfc-bios-str-v1-1-05dac9e51e13@kernel.org>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	s=arc-20240116; t=1744593063; c=relaxed/simple;
+	bh=LLOPkKaUy010hhQ5OjuyZsdP/LSm65ij9oOIUl6ATjQ=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=AkJiZz8vR0JTbqxY6jBEpNt5WwqG0nT5WI4wAAd0Fx6b9/QqeBw2/By9YtCQOYFmDXEeqkTDjNwv1AsiNoh13R1pN3BK2b0okpIXPzP1ng8DemaR4KFbZtJMgRfiZKBJGH490L5JDc1ZEsWNcu7Ylx80sf//eSqbdTrylrxcFfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4ZbTfQ1nlgz2CdJZ;
+	Mon, 14 Apr 2025 09:07:26 +0800 (CST)
+Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7A7991400CB;
+	Mon, 14 Apr 2025 09:10:51 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 14 Apr 2025 09:10:51 +0800
+Subject: Re: [PATCH v2 0/4] hisi_sas: Misc patches and cleanups
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20250331123349.99591-1-liyihang9@huawei.com>
+ <yq1jz7qjjtw.fsf@ca-mkp.ca.oracle.com>
+CC: <James.Bottomley@HansenPartnership.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+	<liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <9171e7d0-46d9-f9aa-aa30-e95424a1456e@huawei.com>
+Date: Mon, 14 Apr 2025 09:10:50 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <yq1jz7qjjtw.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemf100013.china.huawei.com (7.185.36.179)
 
-On Wed, 09 Apr 2025 13:34:22 +0200
-Daniel Wagner <wagi@kernel.org> wrote:
+I will check and fix, thanks for reminder.
 
-> The strlcat with FORTIFY support is triggering a panic because it thinks
-> the target buffer will overflow although the correct target buffer
-> size is passed in.
-> 
-> Anyway, instead memset with 0 followed by a strlcat, just use memcpy and
-> ensure that the resulting buffer is NULL terminated.
-> 
-> BIOSVersion is only used for the lpfc_printf_log which expects a
-> properly terminated string.
-> 
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> ---
->  drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 6574f9e744766d49e245bd648667cc3ffc45289e..a335d34070d3c5fa4778bb1cb0eef797c7194f3b 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -6003,9 +6003,9 @@ lpfc_sli4_get_ctl_attr(struct lpfc_hba *phba)
->  	phba->sli4_hba.flash_id = bf_get(lpfc_cntl_attr_flash_id, cntl_attr);
->  	phba->sli4_hba.asic_rev = bf_get(lpfc_cntl_attr_asic_rev, cntl_attr);
->  
-> -	memset(phba->BIOSVersion, 0, sizeof(phba->BIOSVersion));
-> -	strlcat(phba->BIOSVersion, (char *)cntl_attr->bios_ver_str,
-> +	memcpy(phba->BIOSVersion, cntl_attr->bios_ver_str,
->  		sizeof(phba->BIOSVersion));
-> +	phba->BIOSVersion[sizeof(phba->BIOSVersion) - 1] = '\0';
+Thanks,
+Yihang
 
-Isn't that just strscpy() ?
-
-	David
-
->  
->  	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
->  			"3086 lnk_type:%d, lnk_numb:%d, bios_ver:%s, "
+On 2025/4/12 8:45, Martin K. Petersen wrote:
 > 
-> ---
-> base-commit: 0af2f6be1b4281385b618cb86ad946eded089ac8
-> change-id: 20250409-fix-lpfc-bios-str-330f6a9d892f
+> Hi Yihang!
 > 
-> Best regards,
-
+>> This series contains some minor bugfix and general tidying:
+>> - Ignore the soft reset result by calling I_T_nexus after the SATA disk
+>>   is soft reset
+>> - General minor tidying
+> 
+> v3_hw won't compile after applying this series:
+> 
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_show_row_64_v3_hw’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3718:27: error: ‘TWO_PARA_PER_LINE’ undeclared (first use in this function)
+>  3718 |                 if (!(i % TWO_PARA_PER_LINE))
+>       |                           ^~~~~~~~~~~~~~~~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3718:27: note: each undeclared identifier is reported only once for each function it appears in
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_show_row_32_v3_hw’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3734:27: error: ‘FOUR_PARA_PER_LINE’ undeclared (first use in this function)
+>  3734 |                 if (!(i % FOUR_PARA_PER_LINE))
+>       |                           ^~~~~~~~~~~~~~~~~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_create_files_v3_hw’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3896:19: error: ‘NAME_BUF_SIZE’ undeclared (first use in this function); did you mean ‘PROT_BUF_SIZE’?
+>  3896 |         char name[NAME_BUF_SIZE];
+>       |                   ^~~~~~~~~~~~~
+>       |                   PROT_BUF_SIZE
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3896:14: error: unused variable ‘name’ [-Werror=unused-variable]
+>  3896 |         char name[NAME_BUF_SIZE];
+>       |              ^~~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_trigger_dump_v3_hw_write’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3974:18: error: ‘DUMP_BUF_SIZE’ undeclared (first use in this function); did you mean ‘DUMMY_BUF_SIZE’?
+>  3974 |         char buf[DUMP_BUF_SIZE];
+>       |                  ^~~~~~~~~~~~~
+>       |                  DUMMY_BUF_SIZE
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:3974:14: error: unused variable ‘buf’ [-Werror=unused-variable]
+>  3974 |         char buf[DUMP_BUF_SIZE];
+>       |              ^~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_bist_linkrate_v3_hw_write’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4040:19: error: ‘BIST_BUF_SIZE’ undeclared (first use in this function); did you mean ‘PROT_BUF_SIZE’?
+>  4040 |         char kbuf[BIST_BUF_SIZE] = {}, *pkbuf;
+>       |                   ^~~~~~~~~~~~~
+>       |                   PROT_BUF_SIZE
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4040:14: error: unused variable ‘kbuf’ [-Werror=unused-variable]
+>  4040 |         char kbuf[BIST_BUF_SIZE] = {}, *pkbuf;
+>       |              ^~~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_bist_code_mode_v3_hw_write’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4115:19: error: ‘BIST_BUF_SIZE’ undeclared (first use in this function); did you mean ‘PROT_BUF_SIZE’?
+>  4115 |         char kbuf[BIST_BUF_SIZE] = {}, *pkbuf;
+>       |                   ^~~~~~~~~~~~~
+>       |                   PROT_BUF_SIZE
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4115:14: error: unused variable ‘kbuf’ [-Werror=unused-variable]
+>  4115 |         char kbuf[BIST_BUF_SIZE] = {}, *pkbuf;
+>       |              ^~~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_bist_mode_v3_hw_write’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4247:19: error: ‘BIST_BUF_SIZE’ undeclared (first use in this function); did you mean ‘PROT_BUF_SIZE’?
+>  4247 |         char kbuf[BIST_BUF_SIZE] = {}, *pkbuf;
+>       |                   ^~~~~~~~~~~~~
+>       |                   PROT_BUF_SIZE
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4247:14: error: unused variable ‘kbuf’ [-Werror=unused-variable]
+>  4247 |         char kbuf[BIST_BUF_SIZE] = {}, *pkbuf;
+>       |              ^~~~
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: In function ‘debugfs_phy_down_cnt_init_v3_hw’:
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4794:19: error: ‘NAME_BUF_SIZE’ undeclared (first use in this function); did you mean ‘PROT_BUF_SIZE’?
+>  4794 |         char name[NAME_BUF_SIZE];
+>       |                   ^~~~~~~~~~~~~
+>       |                   PROT_BUF_SIZE
+> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:4794:14: error: unused variable ‘name’ [-Werror=unused-variable]
+>  4794 |         char name[NAME_BUF_SIZE];
+>       |              ^~~~
+> cc1: all warnings being treated as errors
+> 
+> Please fix, thanks!
+> 
