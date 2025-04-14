@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FAB2581;
-	Mon, 14 Apr 2025 16:16:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E582DFA3D;
+	Mon, 14 Apr 2025 16:27:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744647389; cv=none; b=WQwY6fwHbZqcd2CQrsFqH9I2vgocTSvzY2bv/4i+EqGdufv+cPSqz7RseDWxSNyQCpDvS5jlZNd4nwJEsA2/IUAf9PEne2THzww7b4cPGHZ/QriTnCEIC/DcmhPHc8nEEYS5UfoihD/5ievO4x2K77Dc7vV4s0j0ttIUTPgg4Ms=
+	t=1744648073; cv=none; b=oI0+6BFa+O5ukGrsUQ8+vsmvXtlKBkGM8Dsh3UziElUlpQXcjt0WalSt6ExrgpU/KpyHoYodrWUPIOkcFiLVGKOfCEK7gbgpsv5LmzFvfzth7kETu4T7hy2qDAJwsTdSB/FI1RdH4SH/ecieZsA/a5gZvtzMdL2n1uwxRfOm3G0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744647389; c=relaxed/simple;
-	bh=JW3DZlESxFpH/J8R2XOqvNVZDI3osLBTkD5mXT4x/Tw=;
+	s=arc-20240116; t=1744648073; c=relaxed/simple;
+	bh=GN6bGCm7c5dXhkkB/e5awNbM6ayXDhFIsgWWcafbMsk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fVwsLM+Aqj84q/ccvAXj4geY4KMzdFnFhy8vtoEQKu6Y4kubrANGsbk5aPpM3iy4GNoG/P3xInu1xRsvGxHSkvCSFc7lLZhlyemQFoizlBJolMcD716OXUEdUHiMXyeAj6D7XzjBkYdRetLamKTz2gjTPp1cUR01cgLgZ2vV+Gs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2HDvSMa3; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=KsUiSXqEbRoEjJOF8JOsJtTWwxmLs7R2aN87fJ19NZIzHhOcIWUSR3OykffK2ebn8pEHOyGLzskqSQdVJtKBcC3AzG8dv4itCYGGKV1S5/SrkMqqrojspOuKqzB2N8Y7/ggAykNx38k3mvz84wVYii671Zw/mO20K1xicNlKoXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=h8AiMeby; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2HDvSMa3"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="h8AiMeby"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4Zbsq83ZpFzm0ySN;
-	Mon, 14 Apr 2025 16:16:20 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4Zbt4Q4T4Zzm0djJ;
+	Mon, 14 Apr 2025 16:27:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1744647378; x=1747239379; bh=rSsUk9uG/IxXmmElRZckPLD1
-	w7rzdsFKjqCbyTaMZB0=; b=2HDvSMa3UebxqOen6fHTfLBvpMkgZK15rrKZv+i0
-	Aw4fDtYsy2jc63wl8bNWmwOzN2FFpGsV2fPqCFdJdL65KJ1l9xE/j9V5sv+2568D
-	dnACiNlri/5B0O2q6a+X/q1Th8jWcOFPQPSKZ8eAXNPNwT72eQokvV3/r5QF1dZ1
-	3ly080uzmkWmNq3jRH1kMpAtRtiseGaRMkIpB42GB8waPUCdN0kN5oMTbpcHH+vd
-	rZe30hI6lRltjTV/5XLulS8ZE4S8YovoTLDp4+8e+FUwm1bB4BkQ/Mu/md6AZfqz
-	7zIh3zoMCAlY+dwP5UlJbE5YgjDNXf8oxtghTQ+kos8c8g==
+	 s=mr01; t=1744648067; x=1747240068; bh=eNupomQxpwde+WQEUUu1iZPF
+	xc7hWF7E5h8lfr3oqq0=; b=h8AiMebya6nfhoA4vE5/mZP+oR4Xx3LGMGKZ79GZ
+	hX4Wvi2ZyE4kPy2Lnv+4sjJnzXCvbJk/yFQ6ALyZ2T6Svd0ZCoXpg2OugSZdm9x9
+	1pgEuoyXzXmOV190cMcvzVC+53bN7mZuf8oXz2fMFMN8QHTPwi9UZxoAC2y3hNO9
+	pIsplrV7c6/wLRVj8IAR6kCr22rk0b/jvCmD+lT/+38seIOg/S/425sDXgpXCwUk
+	Jjya4wDciU3XL2lDgCpBgma3n1POaYlEKTLftMPnClKMTnz49Pzg86BNXexpmMT5
+	7oN9rKourfGx3ZTx2SuGFxfX5aGq/edljYyrGEXEXZNWYw==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7unPeglGk_UE; Mon, 14 Apr 2025 16:16:18 +0000 (UTC)
+ id 3so8gtFosdKX; Mon, 14 Apr 2025 16:27:47 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4Zbsq30mf0zm0pKn;
-	Mon, 14 Apr 2025 16:16:13 +0000 (UTC)
-Message-ID: <e038e519-c301-4928-a246-ebd25f16bb32@acm.org>
-Date: Mon, 14 Apr 2025 09:16:12 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4Zbt4D0g7fzm0ySq;
+	Mon, 14 Apr 2025 16:27:39 +0000 (UTC)
+Message-ID: <68dea32f-e1c9-4e17-902a-aadc0a8489f7@acm.org>
+Date: Mon, 14 Apr 2025 09:27:38 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,59 +50,46 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ufs: bsg: Add hibern8 enter/exit to
- ufshcd_send_bsg_uic_cmd
-To: Arthur Simchaev <arthur.simchaev@sandisk.com>
-Cc: avri.altman@sandisk.com, Avi.Shchislowski@sandisk.com,
- beanhuo@micron.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250414120257.247858-1-arthur.simchaev@sandisk.com>
+Subject: Re: [PATCH] scsi: ufs: core: Add NULL check in
+ ufshcd_mcq_compl_pending_transfer()
+To: Chenyuan Yang <chenyuan0y@gmail.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, peter.wang@mediatek.com,
+ manivannan.sadhasivam@linaro.org, stanley.chu@mediatek.com,
+ quic_cang@quicinc.com, quic_nguyenb@quicinc.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250412195909.315418-1-chenyuan0y@gmail.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250414120257.247858-1-arthur.simchaev@sandisk.com>
+In-Reply-To: <20250412195909.315418-1-chenyuan0y@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 4/14/25 5:02 AM, Arthur Simchaev wrote:
-> This patch adds functionality to allow user-level applications to send
-> the Hibern8 Enter command via the BSG framework. With this feature,
-> applications can perform H8 stress tests. Also can be used as one
-> of the triggers for the Eye monitor measurement feature added to the
-> M-PHY v5 specification.
-> For completion, allow the sibling functionality of hibern8 exit as well.
+On 4/12/25 12:59 PM, Chenyuan Yang wrote:
+> Add a NULL check for the returned hwq pointer by ufshcd_mcq_req_to_hwq().
 > 
-> Signed-off-by: Arthur Simchaev <arthur.simchaev@sandisk.com>
+> This is similar to the fix in commit 74736103fb41
+> ("scsi: ufs: core: Fix ufshcd_abort_one racing issue").
 > 
+> Signed-off-by: Chenyuan Yang <chenyuan0y@gmail.com>
+> Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
 > ---
-> Changed since v1:
->   - elaborate commit log
-> ---
->   drivers/ufs/core/ufshcd.c | 10 ++++++++++
->   1 file changed, 10 insertions(+)
+>   drivers/ufs/core/ufshcd.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index be65fc4b5ccd..536b54ccc860 100644
+> index 0534390c2a35..fd39e10c2043 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4363,6 +4363,16 @@ int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
->   		goto out;
->   	}
+> @@ -5692,6 +5692,8 @@ static void ufshcd_mcq_compl_pending_transfer(struct ufs_hba *hba,
+>   			continue;
 >   
-> +	if (uic_cmd->command == UIC_CMD_DME_HIBER_ENTER) {
-> +		ret = ufshcd_uic_hibern8_enter(hba);
-> +		goto out;
-> +	}
-> +
-> +	if (uic_cmd->command == UIC_CMD_DME_HIBER_EXIT) {
-> +		ret = ufshcd_uic_hibern8_exit(hba, uic_cmd);
-> +		goto out;
-> +	}
-> +
->   	mutex_lock(&hba->uic_cmd_mutex);
->   	ufshcd_add_delay_before_dme_cmd(hba);
+>   		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+> +		if (!hwq)
+> +			continue;
+>   
+>   		if (force_compl) {
+>   			ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
 
-This is wrong. The BSG interface shouldn't alter the power state without
-informing the SCSI core about these power state changes. Please use
-existing sysfs attributes to modify the power state or add new sysfs
-attributes if necessary.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Bart.
