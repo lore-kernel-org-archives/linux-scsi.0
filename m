@@ -1,286 +1,317 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1F6186295
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 08:01:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744704073; cv=fail; b=o2XrWS31ZblXWFcMBGfQ4cLApc8fUGp82L29ktHwOS+scsh1p1s+jfX0jwkB7Uov4ZDfntANnFBTP4qIWnQnGlX2CXC+yoLuVqdf1QDQ9TcAbivr3pX6zyF9x7EtKM7cGI92JadNtGW3Hb7xuLe8E9rnf6GM6sp7j7qYQC1hC7c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744704073; c=relaxed/simple;
-	bh=7CG/0Cv6So9kiL22lj06aEkXXYRpggCMUAqWUShBNws=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KfL9LQAAMzdafnPL/w0PxnzTcdsDJeYHdzO4yFanUheotmDJ1Uz3voF8l7ElSrl6yRiZG2a7J1TenVemsrc7eSJtN3ogbPqvHVnhS4+ELC8oCMk6Pdr9W6cJiZtLxJGnDgU51FMGiM7k4KcbnSchwYSJVqRoXgQvcx6TlZQEtV4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=TegAlY/7; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=oCZz9GVV; arc=fail smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C71E284660
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 09:29:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1744709371; cv=none; b=j76qbBa6WSZPSYjo9XohJN8QKnsnrHad+gJzWGyqzKFyUi6Texodivbw9O4/I/1BwC3ri6yWANTAHnGRWxShq72G7aQ5EdiCIkCNhIo3FgdcIMxa2wNZRB+86jqvo6Tkd3+cQGmE6ja7n/ZPg7ccYlrvwJF4bwT4ze5ABWXoCFE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1744709371; c=relaxed/simple;
+	bh=NC5DCaREdjauFdpQNc0ev1qolVFUfP5OhphwHgwEVKc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Po0EccKCZ6wawWyom+mhD5Dkm7sR/6I1WyqSmXyblgpiGsXh5plXg31L8/r1xD4btnO0YbGi8YzYGTy0V2rXdE41zvgzV04AJVJYjlgiScDZIvJZsUJ0ONCASz8ncnNXUw5PJwh9SMUmuey2xNBTU46gshJmViuic3aHEcLbmUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HaJ9E2iI; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="TegAlY/7";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="oCZz9GVV"
-X-UUID: c62ebeee19cf11f0aae1fd9735fae912-20250415
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=7CG/0Cv6So9kiL22lj06aEkXXYRpggCMUAqWUShBNws=;
-	b=TegAlY/7qRVUblYMkut5mXrqvagpvgGzXxovBR0IyczMPAEqF4tGwkj4whftQBnG+yF5U+07OK30WHoDq1y1raLdp8ygYBaK05BzDOUzZl5zepDgpCHdLWA+ImanBA1fgTlpfKQdD7lMaMozuaQtHkT+MgR9yrdaOEPxva6sRs0=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:570937e0-89a5-440a-9345-490410894714,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:0ef645f,CLOUDID:312e448b-0afe-4897-949e-8174746b1932,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111,TC:nil,Conte
-	nt:0|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
-	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: c62ebeee19cf11f0aae1fd9735fae912-20250415
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1654007756; Tue, 15 Apr 2025 16:01:02 +0800
-Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Tue, 15 Apr 2025 16:01:01 +0800
-Received: from HK3PR03CU002.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Tue, 15 Apr 2025 16:01:01 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ag9M4VXqNShJ2r+AjejFntK6hCFBSJB+4xmTV1RZRl1zWjSpQ/pfVfSjERkMKi4Vo1q+YVx0akxIEya+o1NuayEqYpL3Z53p8vyQLu83tWj+dWx26sEBeo+cGQe2exAvJC+3Q1yzBdH2GxV5Bxb/v56RgSQU/MlSAuHniX9D0EuTWdF/48zBPKcKoKQec/plInc43NGvtbF/gdDnFcYwyrI3Hm3evC5DZESYTKRNO/63I/gHMInBJVT2z3s4+7qAuE84KxqC9QlnEYk9fiexmxbMGgWMBMW5fF/TNxdVPe71uKxL+gyZ8uDkY+LMsHGJ0MDNtL5Myd5PMfIO4Achng==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7CG/0Cv6So9kiL22lj06aEkXXYRpggCMUAqWUShBNws=;
- b=cb5TEtKK7BrhWSxUH8U1IyG6rEuikldJ+WySCX+jxSe+UFFoD49/0+PNt8KnVayoIGXemuqXcKw0qhR5sWXana/XHBYEVjQW9WXEZTi5Ep/tvZeZJaqJNlM80s6NFzGJwl4W8rVooFqnG65sVMgH5I0xl9Q1fj0uwyAMiAAryFZe75v0v3osyV1Vwk+ZCqyjxItdodDzJ01NBCu2tl5VJXYVP/W290FcwGTV4eUjoFLrCW2C1Rn26EILA9eq/y9qHbBHcZG1dVjUbvMre0y9LTPBmMWckhqHxeyBv5+8CPx/vgtddYWNMNou1xl3NP3UVUxsNkOwTmD7bN7wMiQjIg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7CG/0Cv6So9kiL22lj06aEkXXYRpggCMUAqWUShBNws=;
- b=oCZz9GVV96rn91ihN8FJjyfz2CwoV6uypBiSereCNWikYkNT5SrM+IFZq6l4ACfIU+Y3kvCvlriuJpO0fqViDLEgYc5+RJRDhq5fFKnpjEp/zYbIZHIrVxsFq06iWXzAB3aJ84mu26VMZCtRsy+cqlD7tnEDIbSZd9AsAlRscUQ=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by KL1PR03MB7902.apcprd03.prod.outlook.com (2603:1096:820:fa::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8632.32; Tue, 15 Apr
- 2025 08:00:58 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c%6]) with mapi id 15.20.8632.036; Tue, 15 Apr 2025
- 08:00:57 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "bvanassche@acm.org" <bvanassche@acm.org>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "avri.altman@wdc.com"
-	<avri.altman@wdc.com>, "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>
-Subject: Re: [PATCH 12/24] scsi: ufs: core: Rework
- ufshcd_mcq_compl_pending_transfer()
-Thread-Topic: [PATCH 12/24] scsi: ufs: core: Rework
- ufshcd_mcq_compl_pending_transfer()
-Thread-Index: AQHbpN56xYfiOTSZp0K/37ODiF6R37Okb0yA
-Date: Tue, 15 Apr 2025 08:00:57 +0000
-Message-ID: <0390adb9d0ebed4ba4b386453d20175b1f3a0709.camel@mediatek.com>
-References: <20250403211937.2225615-1-bvanassche@acm.org>
-	 <20250403211937.2225615-13-bvanassche@acm.org>
-In-Reply-To: <20250403211937.2225615-13-bvanassche@acm.org>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|KL1PR03MB7902:EE_
-x-ms-office365-filtering-correlation-id: c3f68a9a-f57e-458d-2090-08dd7bf3a7d0
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700018;
-x-microsoft-antispam-message-info: =?utf-8?B?V20xSjNGTHZaTU5YRWlnN1dPNE5NbFBUWGI2dmdDbzBBcWI3cmtHTWVnT2lt?=
- =?utf-8?B?VzBoeVIxV0pLMjhaUWtMUXBNODZCWXMxeW9yVkpXdmZxRFBNK2kwcmNwb3RM?=
- =?utf-8?B?TDk3MmUvUlFuWG4yK1hVelROaEFYeXh3QUxuVG4rd2FEd21ZaVBjVjVqUllj?=
- =?utf-8?B?Z05LaWltTWU2ZEprTmJnai9XN1puK0tIbmtWMmxZMFJCY2tYZ2JENVdZcmtq?=
- =?utf-8?B?NzZvK0x3UVV2Y2NPdm5vVHdLd0lFRHVpQWNJbUJKa2VhNFB0RUMrNGJvN2Y2?=
- =?utf-8?B?WjkrVVlnUjd3ZmNsTEkzc3R3Y3UraXJ3M2RTbHRIN0hVU1U1LzVSTlBvanNV?=
- =?utf-8?B?MXdiaXg5WFRCVkZ4NHRScmRtM1NSdUpteEtTT296MWY4c0pCVlR0SFJENHNY?=
- =?utf-8?B?ZVRSMmo3N1g5N2lNQzhnU1F5cmFtRW84UzBhSmk0N1liWXd4bFNhS3dyZ3Qz?=
- =?utf-8?B?eDNWNTh0dXVzMDRtY3U0THBZL21LTEFRbWdjWi9ZMzNDYUZIb0F6eDJza0Ey?=
- =?utf-8?B?OFhNUE03WVNsM2hVK1BDbCs1SDlxQ01PSnluWU8xN3k4MjFyVDFOMnVHazhP?=
- =?utf-8?B?OWEvYjY1aENENEVMTWRKQS9waVgyVWp6ckpvL0ZaOVF0MGY3NHdHVnBEcnpp?=
- =?utf-8?B?MUFld1JKRW90R0FtWEcyWWZpVENkU05LVVFjTGdaQWFDa1BDMGRIc3BRZkwy?=
- =?utf-8?B?ZGc3TjZ6YURzQjlaczFMcXRjbUQwWEU4L09FYlpZRHFMblA2ODVmSU9UVXl6?=
- =?utf-8?B?Yy9pV0drbEdscDFGeThsaXlyUnFqdjZkNWZFMS9jTlMwaDQyc2Nha20yNlFS?=
- =?utf-8?B?Vm9kMGdKZHoyS0lKbUpBTnF3Z1orQ3BQUWZJcys1NjFZNHN0WlZ1N2xaTHlx?=
- =?utf-8?B?ZHBSNDcxL2pxSC9vK2hmSlNFZCt0OS9hZTFvNWU3TFZabmU5NUR4eFBGb0ly?=
- =?utf-8?B?aGJQYkpMeUdIdkVSQjBMYjIxSWZxRXRPUkQxSjR3ODNYSU9ZRFpiaDJjVS9w?=
- =?utf-8?B?emtENksxaENQcEFDekhobm5GdzR0bDJCRUd6OWhBR3JUcTdJYzYyNzJyY0Y2?=
- =?utf-8?B?bjBSd1Z4cU5CQi94SDEyQWtINGovVk40YTRtR0dmdmV1L00waEh2K2k4K0p5?=
- =?utf-8?B?dXBDVnFFVXRzUDZjK28wKytSa2JRVXc4SWZGT1JZenNqMGltaldUa0lDNTZj?=
- =?utf-8?B?WWdqblZrQ1EvV3AzaXFvNVJtaGd2VlFnU0JBeStwUmZUSEkzZTRKRGF6M0l4?=
- =?utf-8?B?SmJkQS9YREZlK3F4REx1ZU1iblRWRk45M05IK3AxQTJzbjdwWHRackhyY0lF?=
- =?utf-8?B?WUZVSHRvbVZNcTM4SFRWVXpLaGthTTl6RU5SS3NNS3dnYUNaUk1mMUtsUjFh?=
- =?utf-8?B?cExwdDdZMUFYVzd4emFwWk1Oak1GdkZTZ1RyRGhFMjA5WnlwUm40b0hhMVJF?=
- =?utf-8?B?U3VDNGhNMVBlZzNFeGpQYUptQ0ZKaVpDaEhPNVI2SVhqREdEbHRqUnhjK2sv?=
- =?utf-8?B?d3dWQ3VaUEcxeE0rRTZjbnJaUVZPdFJOSDBrU0dpd0p6VUR5OHBPdUw4TXFp?=
- =?utf-8?B?NGZ1UnZMZzVoMUN3SGx6WDRlVkN0QlNoejExTjdzTXFBa3JOSStHMEVIZ2FR?=
- =?utf-8?B?UFc1bHhCTFdwYjc5bEFYVHo3Z3lzakR6clBMQ090Yld2WlpTZE95N2ZPYVoz?=
- =?utf-8?B?VDVUUlNoRXdubXRKNUVQWnVjbFBFMzhham8waW9sMzJIOE9YcFl4dFRHSUJ6?=
- =?utf-8?B?dURmczVPNlRST3dJaTVsOVpqdXkzRit2eDkzY3phMzN5MmgyOFFIc3l1a2dI?=
- =?utf-8?B?RlM1b0xRdkZEM1pENGd5ck81RWM1WUEvUTNIemE3Sk5qZnNCTFA3bXViaXdr?=
- =?utf-8?B?bW9sSy9ya1Z2ZThEaHJBYWp6WmdySk82aUZhWmY2cFpUc3JBYzQ3NEZCWWlT?=
- =?utf-8?B?enJXTHlCWGFLbWZ4MnlIOWd3KzJwclNzRm1ML3l6RjU4V0FTSGhSVERmaDlw?=
- =?utf-8?B?bVFSQml2WFlnPT0=?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?SFNxOHhYQ0k3TFRNcm5hMUZqVmhBUmdqOHIvNkZ5TzBvU29jSktPYnJZckp3?=
- =?utf-8?B?M002N2pLcjkzaDVEZ2szUTBjSUhYRzlaQ0t2Q2FHNjNNT2EzMllmQXpKaFZ4?=
- =?utf-8?B?L3JoeUZaRWIrYjRFSFRwR2ZucWhyaXpJL3p1VFpid21tUW1sTTgva0xyT3U0?=
- =?utf-8?B?QmNUbThmcVdJR01sUmRiYVNZTHVhcXdWQW84NTRiVVB1RXVTQ3RaZXlXQTN4?=
- =?utf-8?B?bVd3RE5Tc083RkY0Rk9mb2FjZVRkckR0Tyt5b0k4WXJEWElORDVqbGhjYUVw?=
- =?utf-8?B?RXdsM2hLTyszSkF5OUdGY1ZDbFRkcGVsSEJ2QkVzY2ZMZFR6MnB2RGE3ZDBG?=
- =?utf-8?B?dVRjYkJVaXQvc1lZN3BuV2lWQ0tTcElXdUJKcFZhL2o0dDRQWElXK1ZyUi93?=
- =?utf-8?B?b3F3Vzc3MmNuTzFZSUM0WmhlMlhBUFBRblBmVngrL2dBQ01VbVd2b1lTUm16?=
- =?utf-8?B?Uk41bEE5eW40ZnBFZkt6OTZzaGVpRVlsSUpPMUNuV0NaS0JVanpZL3FZUkpT?=
- =?utf-8?B?RlV5dnA0QUlpUXRraFNGcFozb2RuaVVnVDJvcGlVQU4vZmNIYWVrMTd3bFRB?=
- =?utf-8?B?aXhKa0gzUkNnTlZxMlJBM2J2VmIrQ0MwRXZKZ0VSMkV0VkRFbTZWL1hsWURm?=
- =?utf-8?B?d0VqOTR6cWRNck5WUHlxOHU5eXJYMk12ai9sb3k4cWV0MFhSTEQ3bjN6RDlJ?=
- =?utf-8?B?NllOcnNjWi9nV0RrMFhXczZOSGJ2QnhQTkVwUTRNamFHRGN5UlJzYlFPc1RH?=
- =?utf-8?B?aW51VXdyK3huWGJsRDlnWi9saFMvcTNqMzdKdjZCbWZhd1B6cEJ1M3JGTW11?=
- =?utf-8?B?MjJjZzk4RmlmQ2F2a1EvckRBa2YzMVpVdmFLWndacEVRWE1VN0N2VkhBd00v?=
- =?utf-8?B?Q1BBempwdDllTDFoV0JWTXhVd1ZLUXcyK2cxSCsySEpXNXpCblAwRlVmSGVU?=
- =?utf-8?B?ZC9sLzZQZldZVmZZNXlqZlQvN05WeldPU1UwQlI0Mk1ocFA4TWlMMXI4RDV4?=
- =?utf-8?B?dWlVKzFVVFEwb3ZQOUl0b1FiWnJtTGF0TVB3cS95azhYdmVGRGMyaVMwSTl2?=
- =?utf-8?B?dzN5eWYrcitsM3RZSm1VTE9JdUFqd3NtQTlDWjB6Sm5ncEdCQW5EdWJxMStm?=
- =?utf-8?B?MW02b1A1TUFBZmJBOG5YZ0hDTHdxd3pvTUdzb1VBejY2VGRqeFlGYndpdzV1?=
- =?utf-8?B?cnR0NU1OLzFSemhqaDVnK1pncmVDdUdZQnh0LzVDS3dYSlBhazFoRTh5Vit6?=
- =?utf-8?B?V1laeE1zM0JVeUh1NTRKYmk4NnJnbFZOTW9mMXdjNXVPcEtpZFJRZURCSTJC?=
- =?utf-8?B?QW9VWSs0aXRnMjBhUVlvbXY2aUlMaDVsNlV2MllySmZUNXNFWEl1QUhVanhs?=
- =?utf-8?B?ZTd0SFd6REgxVVZMazFPU0sxVEF0NmJhQVJVVnFUQkIrZkxRenhuWmtMdWs3?=
- =?utf-8?B?TFNOQU8rQlZaTSt5NjV0akRFVUVCUko1dG5SQUh5T0lMWWpPS3VIcGVHVDRY?=
- =?utf-8?B?Z0YySnhyWGVjSkRSZ2hsZnQ5eE5hWkFCSlhMR3RncDNzNGg1Z28yRnRJK1Fw?=
- =?utf-8?B?ZVBPZlY3U3ZrVWQvMStWbjBka2ZvZFlKZ2lRUm0zenFxVURwSVY5OEswdjlu?=
- =?utf-8?B?REdQc205bFcrWTZBaWhtWnJWYVZOWnE0YVJTTTZrSk5kYW5Pbkl3WDRtSW1W?=
- =?utf-8?B?NTVjSTFSTlJnYmp3OTlLOG51Qm5iYUFHMWc3UEFxbUVBK2RMSklEeDZ3bnNt?=
- =?utf-8?B?cnkwRUlhREhzV2ZPR2JVMGVrK295KzRMREdLR3dpVmFsV0xXVVF2bFZPREJa?=
- =?utf-8?B?TWhRSGdYU1lJZ2I4Tmpka2tBdWlRTC9uNTEvaGNpdEh6aE5FNmdNNmNnU1NP?=
- =?utf-8?B?enFadHNRbnpJemc2ZjgxM1JIcWlmV2p6a2ZqL3ltNjIrbENxRWxiVHNnY0xQ?=
- =?utf-8?B?MnVpQXdsanhwSTM4YWNSWkhwQWN0dHB1TGxNUVdnbFNLRUdmeHpwV3BIbXdv?=
- =?utf-8?B?R2pORm5LYzBCd0t0YUx4WDN6VjZralJid2dvOFdzcms1WkIwcU0xNEczbElE?=
- =?utf-8?B?aHQ4NWJwc1B4R2JkNmx5T2NaeE1xQ1ZrVDlNbEN0Ylp5QW04b2FtbldtVk1r?=
- =?utf-8?B?V2N0K25YOUgwTXcvSE1tcG5BTjU0MDF4K0NMMkUvU1NjeHN5Y3pGVmdpVjFn?=
- =?utf-8?B?RkE9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1F79305467747D4C93A6CCB95D155B2F@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HaJ9E2iI"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53F8tIpK025021
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 09:29:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	+DQx+6nDYoMWkFAXLYdIlJNZxYtgpOoe+Wc439AsM1s=; b=HaJ9E2iItwmtVZb7
+	hnM/qvXYEnujd45SmZ55VlJ4IF81QQcrspbgH4yuSz7tZoBe9u6y948xZr7vjbZx
+	sUP7SNptYAW2RAsIRDuDR6S5wrQhyqbjWoUn9WyCqK82CZcYyl9YYEo5aCO7por3
+	N0uBfw0ARjEIlrZox9D1//df7jBQP4VzViZ1NgZ8/+vauZJmvahTTaaSI2Qa5ZcJ
+	1KXpeMc9o1b2ITDJ+JPfbAy7JmEZ3dHPJDWKVzNjoecfRz8JJtpBgBj5GpAYG+/0
+	ynGW17OczbIwxYwualJ/8ljarFfi+xblNcVlKQ3FDYDWXLLpm5A0OTI03Dp4w0NE
+	XK0OYg==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yf69qhp7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 09:29:27 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-7c548e16909so477848385a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 02:29:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744709367; x=1745314167;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+DQx+6nDYoMWkFAXLYdIlJNZxYtgpOoe+Wc439AsM1s=;
+        b=twhCsDcLS9SePowDGxSwqFl3DknaFcUMNYtBzvMVSPHV9jdRc1W6NLc6Ytx9SbPjC5
+         I7YYXc8ohO0qtim8xiRpGCdyohYd5e28SIics2QDiW3730o5ZDb+LHZ6LQh7v8fNEc8c
+         7AExzn6W3xMAC3HcWS0/05dULaFf70KH6sJ/31/FvywSIxKHVM9FJJru+Ol2QiFRh5tP
+         +L1wjolqNviYZmdWy1vxySTe7NwQsbWT64ugADiEMVwXLc03wS4I5pdLHseJrL9/tYd0
+         bEsR+wvHJwpHtK67wf/8QWHvXc97O1y3s6IRcEOLYmQnDM4Tg4lFimI1lK5+PUw7gvv/
+         RPdg==
+X-Forwarded-Encrypted: i=1; AJvYcCUb0kPja0IAuGHdq5VXH1QBQWElrddOixB14LV+xkDcSlSLG24UVRefoiAfmhgAcYtGAdZgGNKiVFs9@vger.kernel.org
+X-Gm-Message-State: AOJu0YxcYEftGwzYsOiJUU5oO2jHLUfFBB730QhIii/u5aHg6n4WCtjg
+	nzl9iAkEHmP6gt+E6SaeUiDohnwLMHC0Esag3H/6+BRwEmUtAXDLsus4pZiKoQ8LbVxgUu7gdwM
+	dwH3yxCy9ng0sovRyQM/cue2rkDeeAhPblwjDFWRQo6FoaiRkjbVGOmDXQQQi
+X-Gm-Gg: ASbGnctnZjYkGqPcQUxs3c/58DWY8YAKhKdL5WnwnDJ6myrmWj32sgzgEreLpcNA+h0
+	27ROtTc8SrnTOd01YEcP5WfJa5l0XWVwnUjobddcQsSCXXyZKd0wB0ANeS4D5A592xNsUJf4ixk
+	i5S2R+Fd/OmCvyld+GMGbpZMV6e8UnnplQT3XKHwsT904UhnSZuj/tzNqtOUOMeh7TSlaXGV7/L
+	ZBv3+Eqm8DmTw+OlzothVi1Ot4RbuvkRIFqA3806REmCwyvIMFgGocqjR/azb2VNfNDmiwZPbNS
+	61X7Up5TTVNiT7EcwlcuQuLeRI6VZ9M0aYeYY4u0r0KjOM2XIN7zmoR3TyBsq7kgul2VKug2vuB
+	QmWC2XquqBL+EXGR5rd8vysIp7Dz9NLqcSV1u6wFLwIunbtQvLieHcaXJKnqa
+X-Received: by 2002:a05:620a:4316:b0:7c5:60c7:346 with SMTP id af79cd13be357-7c7af0b97c3mr2006009785a.10.1744709367189;
+        Tue, 15 Apr 2025 02:29:27 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFujg27qdYNPJcN55cZ+HIN0mfrHoNU47hlImWynWN+yTG5SH9uM9PPLNNq6/CYxgOEVjDfag==
+X-Received: by 2002:a05:620a:4316:b0:7c5:60c7:346 with SMTP id af79cd13be357-7c7af0b97c3mr2006006985a.10.1744709366781;
+        Tue, 15 Apr 2025 02:29:26 -0700 (PDT)
+Received: from ?IPV6:2001:14bb:aa:77bc:64e0:30e4:f6ff:5bd? (2001-14bb-aa-77bc-64e0-30e4-f6ff-5bd.rev.dnainternet.fi. [2001:14bb:aa:77bc:64e0:30e4:f6ff:5bd])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-54d3d50270csm1387967e87.114.2025.04.15.02.29.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Apr 2025 02:29:25 -0700 (PDT)
+Message-ID: <c2ec6b7c-421d-43c3-8c0a-de4f7bdd867c@oss.qualcomm.com>
+Date: Tue, 15 Apr 2025 12:29:23 +0300
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c3f68a9a-f57e-458d-2090-08dd7bf3a7d0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Apr 2025 08:00:57.8962
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: shjMWXHaY1Ya2c0TI2FGidIc2EGe7uMVBdH9aNBXN7587FLHAQ7ESPCFvSuXAcCLK+OvubA8sBPVX6eTSYGrHQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR03MB7902
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 4/9] phy: qcom-qmp-ufs: Refactor UFS PHY reset
+To: Nitin Rawat <quic_nitirawa@quicinc.com>
+Cc: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
+        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        bvanassche@acm.org, bjorande@quicinc.com, neil.armstrong@linaro.org,
+        konrad.dybcio@oss.qualcomm.com, quic_rdwivedi@quicinc.com,
+        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20250410090102.20781-1-quic_nitirawa@quicinc.com>
+ <20250410090102.20781-5-quic_nitirawa@quicinc.com>
+ <pur4y63xhfmqlyymg4pehk37ry4gg22h24zceoqjbsxp3hj4yf@4kptase3c4qp>
+ <317faeaa-3130-4e28-8c5d-441a76aa79b4@quicinc.com>
+ <CAO9ioeXnnbNzriVOYPUeBiWdrPfYUcMk+pVWYv0vZpJbFeByoQ@mail.gmail.com>
+ <2820908b-4548-4e0a-94b2-6065cb5ff1f3@quicinc.com>
+Content-Language: en-US
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+In-Reply-To: <2820908b-4548-4e0a-94b2-6065cb5ff1f3@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: PTC6UpRdijd1UOn-arqdP8_UJTbJsfT2
+X-Authority-Analysis: v=2.4 cv=JNc7s9Kb c=1 sm=1 tr=0 ts=67fe26f8 cx=c_pps a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=BcQP8Xzm53tihf4Fw6EA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=bTQJ7kPSJx9SKPbeHEYW:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: PTC6UpRdijd1UOn-arqdP8_UJTbJsfT2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-15_04,2025-04-10_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=999 lowpriorityscore=0 bulkscore=0
+ impostorscore=0 clxscore=1015 phishscore=0 adultscore=0 priorityscore=1501
+ spamscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2504150065
 
-T24gVGh1LCAyMDI1LTA0LTAzIGF0IDE0OjE3IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-Cj4gCj4gRXh0ZXJuYWwgZW1haWwgOiBQbGVhc2UgZG8gbm90IGNsaWNrIGxpbmtzIG9yIG9wZW4g
-YXR0YWNobWVudHMgdW50aWwKPiB5b3UgaGF2ZSB2ZXJpZmllZCB0aGUgc2VuZGVyIG9yIHRoZSBj
-b250ZW50Lgo+IAo+IAo+IFJlcGxhY2UgYSB0YWcgbG9vcCB3aXRoIGJsa19tcV90YWdzZXRfYnVz
-eV9pdGVyKCkuIFRoaXMgcGF0Y2gKPiBwcmVwYXJlcwo+IGZvciByZW1vdmluZyB0aGUgaGJhLT5s
-cmJbXSBhcnJheS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJ2YW5hc3Nj
-aGVAYWNtLm9yZz4KPiAtLS0KPiDCoGRyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMgfCA3NCArKysr
-KysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tCj4gLS0KPiDCoDEgZmlsZSBjaGFuZ2Vk
-LCA0MiBpbnNlcnRpb25zKCspLCAzMiBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy91ZnMvY29yZS91ZnNoY2QuYyBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMKPiBpbmRl
-eCA0YjU3MzRiYmIxMmIuLmE1ZmFmNWFmNDYyZSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Vmcy9j
-b3JlL3Vmc2hjZC5jCj4gKysrIGIvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYwo+IEBAIC01NjUx
-LDYgKzU2NTEsNDQgQEAgc3RhdGljIGludCB1ZnNoY2RfcG9sbChzdHJ1Y3QgU2NzaV9Ib3N0Cj4g
-KnNob3N0LCB1bnNpZ25lZCBpbnQgcXVldWVfbnVtKQo+IMKgwqDCoMKgwqDCoMKgIHJldHVybiBj
-b21wbGV0ZWRfcmVxcyAhPSAwOwo+IMKgfQo+IAo+ICtzdGF0aWMgYm9vbCB1ZnNoY2RfbWNxX2Zv
-cmNlX2NvbXBsX29uZShzdHJ1Y3QgcmVxdWVzdCAqcnEsIHZvaWQKPiAqcHJpdikKPiArewo+ICvC
-oMKgwqDCoMKgwqAgc3RydWN0IHNjc2lfY21uZCAqY21kID0gYmxrX21xX3JxX3RvX3BkdShycSk7
-Cj4gK8KgwqDCoMKgwqDCoCBzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYgPSBycS0+cS0+cXVldWVk
-YXRhOwo+ICvCoMKgwqDCoMKgwqAgc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QgPSBzZGV2LT5ob3N0
-Owo+ICvCoMKgwqDCoMKgwqAgc3RydWN0IHVmc19oYmEgKmhiYSA9IHNob3N0X3ByaXYoc2hvc3Qp
-Owo+ICvCoMKgwqDCoMKgwqAgc3RydWN0IHVmc2hjZF9scmIgKmxyYnAgPSAmaGJhLT5scmJbcnEt
-PnRhZ107Cj4gK8KgwqDCoMKgwqDCoCBzdHJ1Y3QgdWZzX2h3X3F1ZXVlICpod3EgPSB1ZnNoY2Rf
-bWNxX3JlcV90b19od3EoaGJhLCBycSk7Cj4gK8KgwqDCoMKgwqDCoCB1bnNpZ25lZCBsb25nIGZs
-YWdzOwo+ICsKPiArwqDCoMKgwqDCoMKgIHVmc2hjZF9tY3FfY29tcGxfYWxsX2NxZXNfbG9jayho
-YmEsIGh3cSk7Cj4gK8KgwqDCoMKgwqDCoCAvKgo+ICvCoMKgwqDCoMKgwqDCoCAqIEZvciB0aG9z
-ZSBjbWRzIG9mIHdoaWNoIHRoZSBjcWVzIGFyZSBub3QgcHJlc2VudAo+ICvCoMKgwqDCoMKgwqDC
-oCAqIGluIHRoZSBjcSwgY29tcGxldGUgdGhlbSBleHBsaWNpdGx5Lgo+ICvCoMKgwqDCoMKgwqDC
-oCAqLwo+ICvCoMKgwqDCoMKgwqAgc3Bpbl9sb2NrX2lycXNhdmUoJmh3cS0+Y3FfbG9jaywgZmxh
-Z3MpOwo+ICvCoMKgwqDCoMKgwqAgaWYgKGNtZCAmJiAhdGVzdF9iaXQoU0NNRF9TVEFURV9DT01Q
-TEVURSwgJmNtZC0+c3RhdGUpKSB7Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgc2V0
-X2hvc3RfYnl0ZShjbWQsIERJRF9SRVFVRVVFKTsKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoCB1ZnNoY2RfcmVsZWFzZV9zY3NpX2NtZChoYmEsIGxyYnApOwo+ICvCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgIHNjc2lfZG9uZShjbWQpOwo+ICvCoMKgwqDCoMKgwqAgfQo+ICvCoMKg
-wqDCoMKgwqAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaHdxLT5jcV9sb2NrLCBmbGFncyk7Cj4g
-Kwo+ICvCoMKgwqDCoMKgwqAgcmV0dXJuIHRydWU7Cj4gK30KPiArCj4gK3N0YXRpYyBib29sIHVm
-c2hjZF9tY3FfY29tcGxfb25lKHN0cnVjdCByZXF1ZXN0ICpycSwgdm9pZCAqcHJpdikKPiArewo+
-ICvCoMKgwqDCoMKgwqAgc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2ID0gcnEtPnEtPnF1ZXVlZGF0
-YTsKPiArwqDCoMKgwqDCoMKgIHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0ID0gc2Rldi0+aG9zdDsK
-PiArwqDCoMKgwqDCoMKgIHN0cnVjdCB1ZnNfaGJhICpoYmEgPSBzaG9zdF9wcml2KHNob3N0KTsK
-PiArwqDCoMKgwqDCoMKgIHN0cnVjdCB1ZnNfaHdfcXVldWUgKmh3cSA9IHVmc2hjZF9tY3FfcmVx
-X3RvX2h3cShoYmEsIHJxKTsKPiArCj4gK8KgwqDCoMKgwqDCoCB1ZnNoY2RfbWNxX3BvbGxfY3Fl
-X2xvY2soaGJhLCBod3EpOwo+ICsKPiArwqDCoMKgwqDCoMKgIHJldHVybiB0cnVlOwo+ICt9Cj4g
-Kwo+IMKgLyoqCj4gwqAgKiB1ZnNoY2RfbWNxX2NvbXBsX3BlbmRpbmdfdHJhbnNmZXIgLSBNQ1Eg
-bW9kZSBmdW5jdGlvbi4gSXQgaXMKPiDCoCAqIGludm9rZWQgZnJvbSB0aGUgZXJyb3IgaGFuZGxl
-ciBjb250ZXh0IG9yCj4gdWZzaGNkX2hvc3RfcmVzZXRfYW5kX3Jlc3RvcmUoKQo+IEBAIC01NjY1
-LDM4ICs1NzAzLDEwIEBAIHN0YXRpYyBpbnQgdWZzaGNkX3BvbGwoc3RydWN0IFNjc2lfSG9zdAo+
-ICpzaG9zdCwgdW5zaWduZWQgaW50IHF1ZXVlX251bSkKPiDCoHN0YXRpYyB2b2lkIHVmc2hjZF9t
-Y3FfY29tcGxfcGVuZGluZ190cmFuc2ZlcihzdHJ1Y3QgdWZzX2hiYSAqaGJhLAo+IMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBib29sIGZvcmNlX2NvbXBsKQo+IMKgewo+IC3CoMKg
-wqDCoMKgwqAgc3RydWN0IHVmc19od19xdWV1ZSAqaHdxOwo+IC3CoMKgwqDCoMKgwqAgc3RydWN0
-IHVmc2hjZF9scmIgKmxyYnA7Cj4gLcKgwqDCoMKgwqDCoCBzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQ7
-Cj4gLcKgwqDCoMKgwqDCoCB1bnNpZ25lZCBsb25nIGZsYWdzOwo+IC3CoMKgwqDCoMKgwqAgaW50
-IHRhZzsKPiAtCj4gLcKgwqDCoMKgwqDCoCBmb3IgKHRhZyA9IDA7IHRhZyA8IGhiYS0+bnV0cnM7
-IHRhZysrKSB7Cj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgbHJicCA9ICZoYmEtPmxy
-Ylt0YWddOwo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGNtZCA9IGxyYnAtPmNtZDsK
-PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoIXVmc2hjZF9jbWRfaW5mbGlnaHQo
-Y21kKSB8fAo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgdGVzdF9iaXQo
-U0NNRF9TVEFURV9DT01QTEVURSwgJmNtZC0+c3RhdGUpKQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb250aW51ZTsKPiAKCkhpIEJhcnQsCgpSZW1vdmlu
-ZyB0aGlzIGNoZWNrIG1pZ2h0IGNhdXNlIHJhY2luZyBpc3N1ZXM/wqAKTGVhZGluZyB0byB0aGUg
-cG9zc2liaWxpdHkgdGhhdCB0aGUgaHdxIGluIHRoZSBzdWJzZXF1ZW50IGZ1bmN0aW9uCmNvdWxk
-IGJlIG51bGw/CgpUaGFua3MuClBldGVyCgoKCj4gLQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgIGh3cSA9IHVmc2hjZF9tY3FfcmVxX3RvX2h3cShoYmEsCj4gc2NzaV9jbWRfdG9fcnEo
-Y21kKSk7Cj4gLQo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlmIChmb3JjZV9jb21w
-bCkgewo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB1ZnNo
-Y2RfbWNxX2NvbXBsX2FsbF9jcWVzX2xvY2soaGJhLCBod3EpOwo+IC3CoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAvKgo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICogRm9yIHRob3NlIGNtZHMgb2Ygd2hpY2ggdGhlIGNx
-ZXMgYXJlIG5vdAo+IHByZXNlbnQKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoCAqIGluIHRoZSBjcSwgY29tcGxldGUgdGhlbSBleHBsaWNpdGx5Lgo+IC3C
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICovCj4gLcKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHNwaW5fbG9ja19pcnFzYXZl
-KCZod3EtPmNxX2xvY2ssIGZsYWdzKTsKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAgaWYgKGNtZCAmJiAhdGVzdF9iaXQoU0NNRF9TVEFURV9DT01QTEVURSwK
-PiAmY21kLT5zdGF0ZSkpIHsKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHNldF9ob3N0X2J5dGUoY21kLCBESURfUkVRVUVVRSk7
-Cj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoCB1ZnNoY2RfcmVsZWFzZV9zY3NpX2NtZChoYmEsIGxyYnApOwo+IC3CoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgc2NzaV9k
-b25lKGNtZCk7Cj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-IH0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgc3Bpbl91
-bmxvY2tfaXJxcmVzdG9yZSgmaHdxLT5jcV9sb2NrLCBmbGFncyk7Cj4gLcKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAgfSBlbHNlIHsKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAgdWZzaGNkX21jcV9wb2xsX2NxZV9sb2NrKGhiYSwgaHdxKTsKPiAtwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB9Cj4gLcKgwqDCoMKgwqDCoCB9Cj4gK8KgwqDCoMKg
-wqDCoCBibGtfbXFfdGFnc2V0X2J1c3lfaXRlcigmaGJhLT5ob3N0LT50YWdfc2V0LAo+ICvCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
-Zm9yY2VfY29tcGwgPwo+IHVmc2hjZF9tY3FfZm9yY2VfY29tcGxfb25lIDoKPiArwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB1ZnNoY2RfbWNxX2NvbXBsX29uZSwKPiArwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIE5VTEwp
-Owo+IMKgfQo+IAo+IMKgLyoqCgo=
+On 14/04/2025 23:34, Nitin Rawat wrote:
+> 
+> 
+> On 4/11/2025 4:38 PM, Dmitry Baryshkov wrote:
+>> On Fri, 11 Apr 2025 at 13:50, Nitin Rawat <quic_nitirawa@quicinc.com> 
+>> wrote:
+>>>
+>>>
+>>>
+>>> On 4/11/2025 1:38 AM, Dmitry Baryshkov wrote:
+>>>> On Thu, Apr 10, 2025 at 02:30:57PM +0530, Nitin Rawat wrote:
+>>>>> Refactor the UFS PHY reset handling to parse the reset logic only once
+>>>>> during probe, instead of every resume.
+>>>>>
+>>>>> Move the UFS PHY reset parsing logic from qmp_phy_power_on to
+>>>>> qmp_ufs_probe to avoid unnecessary parsing during resume.
+>>>>
+>>>> How did you solve the circular dependency issue being noted below?
+>>>
+>>> Hi Dmitry,
+>>> As part of my patch, I moved the parsing logic from qmp_phy_power_on to
+>>> qmp_ufs_probe to avoid unnecessary parsing during resume. I'm uncertain
+>>> about the circular dependency issue and whether if it still exists.
+>>
+>> It surely does. The reset controller is registered in the beginning of
+>> ufs_qcom_init() and the PHY is acquired only a few lines below. It
+>> creates a very small window for PHY driver to probe.
+>> Which means, NAK, this patch doesn't look acceptable.
+> 
+> Hi Dmitry,
+> 
+> Thanks for pointing this out. I agree that it leaves very little time 
+> for the PHY to probe, which may cause issues with targets where 
+> no_pcs_sw_reset is set to true.
+> 
+> As an experiment, I kept no_pcs_sw_reset set to true for the SM8750, and 
+> it caused bootup probe issues in some of the iterations I ran.
+> 
+> To address this, I propose updating the patch to move the 
+> qmp_ufs_get_phy_reset call to phy_calibrate, just before the 
+> reset_control_assert call.
+
+Will it cause an issue if we move it to phy_init() instead of 
+phy_calibrate()?
+
+> 
+> This change will delay the UFS PHY reset as much as possible in the 
+> code. Additionally, moving it from phy_power_on to calibrate will ensure 
+> that qmp_ufs_get_phy_reset is called only once during boot, rather than 
+> during each phy_power_on call.
+> 
+> Please let me know your thoughts.
+> =====================================================================================================
+>   static int qmp_ufs_phy_calibrate(struct phy *phy)
+>   {
+>          struct qmp_ufs *qmp = phy_get_drvdata(phy);
+> @@ -1793,6 +1826,12 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
+>          unsigned int val;
+>          int ret;
+> 
+> +       pr_err("%s %d\n", __func__, __LINE__);
+> +
+> +       ret = qmp_ufs_get_phy_reset(qmp);
+> +        if (ret)
+> +                return ret;
+> +
+>          ret = reset_control_assert(qmp->ufs_reset);
+>          if (ret)
+>                  return ret;
+> @@ -1817,7 +1856,7 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
+>                  dev_err(qmp->dev, "phy initialization timed-out\n");
+>                  return ret;
+> =====================================================================================================
+> 
+> 
+> Regards.
+> Nitin
+>>
+>>>
+>>> Regards,
+>>> Nitin
+>>>
+>>>
+>>>>
+>>>>>
+>>>>> Co-developed-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>>>>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>>>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>>>> ---
+>>>>>    drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 61 ++++++++++++ 
+>>>>> +------------
+>>>>>    1 file changed, 33 insertions(+), 28 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/ 
+>>>>> qualcomm/phy-qcom-qmp-ufs.c
+>>>>> index 636dc3dc3ea8..12dad28cc1bd 100644
+>>>>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>>>>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+>>>>> @@ -1799,38 +1799,11 @@ static int qmp_ufs_com_exit(struct qmp_ufs 
+>>>>> *qmp)
+>>>>>    static int qmp_ufs_power_on(struct phy *phy)
+>>>>>    {
+>>>>>       struct qmp_ufs *qmp = phy_get_drvdata(phy);
+>>>>> -    const struct qmp_phy_cfg *cfg = qmp->cfg;
+>>>>>       int ret;
+>>>>>       dev_vdbg(qmp->dev, "Initializing QMP phy\n");
+>>>>>
+>>>>> -    if (cfg->no_pcs_sw_reset) {
+>>>>> -            /*
+>>>>> -             * Get UFS reset, which is delayed until now to avoid a
+>>>>> -             * circular dependency where UFS needs its PHY, but 
+>>>>> the PHY
+>>>>> -             * needs this UFS reset.
+>>>>> -             */
+>>>>> -            if (!qmp->ufs_reset) {
+>>>>> -                    qmp->ufs_reset =
+>>>>> -                            devm_reset_control_get_exclusive(qmp- 
+>>>>> >dev,
+>>>>> -                                                             
+>>>>> "ufsphy");
+>>>>> -
+>>>>> -                    if (IS_ERR(qmp->ufs_reset)) {
+>>>>> -                            ret = PTR_ERR(qmp->ufs_reset);
+>>>>> -                            dev_err(qmp->dev,
+>>>>> -                                    "failed to get UFS reset: %d\n",
+>>>>> -                                    ret);
+>>>>> -
+>>>>> -                            qmp->ufs_reset = NULL;
+>>>>> -                            return ret;
+>>>>> -                    }
+>>>>> -            }
+>>>>> -    }
+>>>>> -
+>>>>>       ret = qmp_ufs_com_init(qmp);
+>>>>> -    if (ret)
+>>>>> -            return ret;
+>>>>> -
+>>>>> -    return 0;
+>>>>> +    return ret;
+>>>>>    }
+>>>>>
+>>>>>    static int qmp_ufs_phy_calibrate(struct phy *phy)
+>>>>> @@ -2088,6 +2061,34 @@ static int qmp_ufs_parse_dt(struct qmp_ufs 
+>>>>> *qmp)
+>>>>>       return 0;
+>>>>>    }
+>>>>>
+>>>>> +static int qmp_ufs_get_phy_reset(struct qmp_ufs *qmp)
+>>>>> +{
+>>>>> +    const struct qmp_phy_cfg *cfg = qmp->cfg;
+>>>>> +    int ret;
+>>>>> +
+>>>>> +    if (!cfg->no_pcs_sw_reset)
+>>>>> +            return 0;
+>>>>> +
+>>>>> +    /*
+>>>>> +     * Get UFS reset, which is delayed until now to avoid a
+>>>>> +     * circular dependency where UFS needs its PHY, but the PHY
+>>>>> +     * needs this UFS reset.
+>>>>> +     */
+>>>>> +    if (!qmp->ufs_reset) {
+>>>>> +            qmp->ufs_reset =
+>>>>> +            devm_reset_control_get_exclusive(qmp->dev, "ufsphy");
+>>>>
+>>>> Strange indentation.
+>>>>
+>>>>> +
+>>>>> +            if (IS_ERR(qmp->ufs_reset)) {
+>>>>> +                    ret = PTR_ERR(qmp->ufs_reset);
+>>>>> +                    dev_err(qmp->dev, "failed to get PHY reset: 
+>>>>> %d\n", ret);
+>>>>> +                    qmp->ufs_reset = NULL;
+>>>>> +                    return ret;
+>>>>> +            }
+>>>>> +    }
+>>>>> +
+>>>>> +    return 0;
+>>>>> +}
+>>>>> +
+>>>>>    static int qmp_ufs_probe(struct platform_device *pdev)
+>>>>>    {
+>>>>>       struct device *dev = &pdev->dev;
+>>>>> @@ -2114,6 +2115,10 @@ static int qmp_ufs_probe(struct 
+>>>>> platform_device *pdev)
+>>>>>       if (ret)
+>>>>>               return ret;
+>>>>>
+>>>>> +    ret = qmp_ufs_get_phy_reset(qmp);
+>>>>> +    if (ret)
+>>>>> +            return ret;
+>>>>> +
+>>>>>       /* Check for legacy binding with child node. */
+>>>>>       np = of_get_next_available_child(dev->of_node, NULL);
+>>>>>       if (np) {
+>>>>> -- 
+>>>>> 2.48.1
+>>>>>
+>>>>
+>>>
+>>
+>>
+> 
+
+
+-- 
+With best wishes
+Dmitry
