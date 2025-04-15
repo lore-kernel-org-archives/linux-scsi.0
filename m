@@ -1,168 +1,103 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E287242922;
-	Tue, 15 Apr 2025 09:47:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ED861CDA2E
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 10:20:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744710474; cv=none; b=X3vH9/I0ZXaiTB91UgAuahsiweIIsn9YKYVBJlSnVoVwcERIapUOaS9ifmxpydMEiMDnTIJaaSv+kVLk0Ho24RcnjUn+btK5YTTrylNxtkcHDR3oEoEKGyvXzZspyU774su8vExs2sj4mDiZev7GOsfRxPySFKlGtN6vwWda8GU=
+	t=1744712443; cv=none; b=WnaPKmv45NtOEu5MkJ6v2NJblPE+pMqFCzbxqTN34gJzMlhVzdr4Esq39W6wGnTXp9i/CYMKznug/7A3wsv6j9tQiiHSSidWV3ABl/cK0QVyal6iLRbOtn59qAZTpJOuXQwNJrRSj2j86GKXRXppCTiQF+FWxZU2oxCpnRGIOr8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744710474; c=relaxed/simple;
-	bh=jS/+2OJPyZ3oKIEjOakuHXM2rsqbRqWQE4x118sJ64g=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version; b=H1I0ttI2HTlMTFLyYduF5oGqYOUSoS8fUG/XpR0CFiItR2stAR1AgObprEqlX2k7FYN1pxF7RX56UdaAhxwn+97GUZUGKq3hoT3d15coBGrb4JX6xU2A249YKRqkgBb1Siem24kuhwXSVUU2DwA6JT8dcmMNjhWZ4Y9kLdZjSEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: ac4c985219de11f0a216b1d71e6e1362-20250415
-X-CID-CACHE: Type:Local,Time:202504151727+08,HitQuantity:1
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.45,REQID:3b51f057-3b06-44d4-9b2a-22a6424bd06e,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:0
-X-CID-META: VersionHash:6493067,CLOUDID:91d667a05389e8de83db14486b642671,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:5,IP:nil,URL
-	:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SP
-	R:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: ac4c985219de11f0a216b1d71e6e1362-20250415
-Received: from mail.kylinos.cn [(10.44.16.175)] by mailgw.kylinos.cn
-	(envelope-from <liujiajia@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 992271736; Tue, 15 Apr 2025 17:47:41 +0800
-Received: from mail.kylinos.cn (localhost [127.0.0.1])
-	by mail.kylinos.cn (NSMail) with SMTP id 6CBB3E000081;
-	Tue, 15 Apr 2025 17:47:40 +0800 (CST)
-X-ns-mid: postfix-67FE2B3B-868366657
-Received: from kylin.lan (unknown [172.25.120.81])
-	by mail.kylinos.cn (NSMail) with ESMTPA id 1BD9EE000F3B;
-	Tue, 15 Apr 2025 17:47:37 +0800 (CST)
-From: Jiajia Liu <liujiajia@kylinos.cn>
-To: Jens Axboe <axboe@kernel.dk>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: fix potential USB flash loss after reboot
-Date: Tue, 15 Apr 2025 17:47:37 +0800
-Message-Id: <20250415094737.1394310-1-liujiajia@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1744712443; c=relaxed/simple;
+	bh=iiYkVxD4JL9wUZUquUsN8qjosgWXJDze2vb4U0CIuk8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=achyb31HqrS0JwaZ0RBahQdlqKcrcbd33llu4FKNq1yFEMrRjynElxHebWEHITMM7nVpEddPi1pZxfnETKVjiyB/9kWCGQBUdHwonAwYe6aoEAYKPmZFdILWlI4WKekKkSSYIxEv9IeHJQqwQnaN2q5h45ihg49ec8iPOMxKb5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Ahh01ogE; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ahh01ogE"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-af19b9f4c8cso3767011a12.2
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 03:20:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1744712440; x=1745317240; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=tovrct2dYWO1eA4wVmENwRP5nytzGa4ONf3qrODrNx4=;
+        b=Ahh01ogEoNTro1vAY0Et7lTBLbi0eOhrUxeR2OWL3eqiwZswmuc3dOf3vxajaD/G0B
+         yLxTHmAW/JBvOO+KJiW/5spvzxW/WYQYveMx6Iq9oifoDebiotA2mNsNyg++wMYt2Yqp
+         KpoPlhVmUcG2Ew/eAv1XDEbLEqIdJEvMp6Kck=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744712440; x=1745317240;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tovrct2dYWO1eA4wVmENwRP5nytzGa4ONf3qrODrNx4=;
+        b=Dr20y/1BR1AYkgDd6d54Z+X/a5LbUXCnt34wREnDNN5s0NIix3fkOSVGCRERExOooD
+         cZoaY2yLTl09+oh1QzjkiNCpEK3WTm1Y5xwwGtgo9S5s/o3XCMKpD4UzVgm2y7rsCttP
+         Spvs/h350zoo0IgbonfAQi7n20EZRAzSDypbbMocCYvT+I/O7v7uP8ke4qQfF9Tl4XKc
+         kedLz+nCC+5JphNNJfYKpZGYzNky0QdbDDvhLprUfwvSRHSf9uCuIiPITje1e3zyvaPd
+         HoIN2BkK8wUB1cNgVK93W/chk4O7m42uKh+NolQmLM55xdAzFuaokPWHmenr/PL74ekX
+         TGuw==
+X-Gm-Message-State: AOJu0YzEBIJo1xdebwd8Aj/6BMK2UDuKO9fbVYWdmQeRuV5UdFbYh1aL
+	NZ1pQsY3LnPVVCBOqQIJYSOYiBcVCW2DJvDVQ0PQePn+mbg4ZFv3C7K5aKGzjedb2rd7nwDjQ1E
+	ApTODswM6kZf5lUBiZJtWynm3dmx+y0PH5LcnNojqXgHEwbALYUJm/2nH41MFDqwjKTh1cBXbX1
+	7tc38NCSeptgWojPpKJcAOdzh9fFN9vnr21iQmViaOY+Bdtg==
+X-Gm-Gg: ASbGncsTE9B7yJP+wj9/+jFHl5aP3WKW6Y4arGCAk+LWTh2iJyNqLce1+APi7SWogpY
+	c8peXUgo5Q09C8CmBL1v1nVPhpwLjLrsvpTpsXK3TYQonA4usCwbAjxObUKfDGC8MphvOk/BIOq
+	2KiQRoZpLCh+zP5Hd4RGQ3PMrLGgXRgnVhR+Awb/tXcyRLsCL2NvF4Eq1WLws4pK17GeHx4wsG9
+	ksDh2J/Z2hJcZdH3div/NJU9Mk3fAKlQVFqplyAyDw4mD4iLo6OMCOYaK6mZ+0JqEaJM0D8C1/R
+	Nfm8wmbnQis6qtCoT4VBNyf91vW5UsunZWHGPNW78Jn0dhem5PNA1BWPBs/GPFZbvfGIrzwQFZz
+	Zdv9tZMGN
+X-Google-Smtp-Source: AGHT+IE8V2q14u2ZpqErd69vCCj/kwOCpglu/5/SEhBSnupVr+hZtX9byUbytgnJH5GLUC1XCIpTlg==
+X-Received: by 2002:a17:90b:4d06:b0:2fe:dd2c:f8e7 with SMTP id 98e67ed59e1d1-308236343c4mr22492483a91.10.1744712439747;
+        Tue, 15 Apr 2025 03:20:39 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-306dd12b599sm12878607a91.23.2025.04.15.03.20.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Apr 2025 03:20:39 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1] mpi3mr: Add logging level check to control event logging
+Date: Tue, 15 Apr 2025 15:45:46 +0530
+Message-Id: <20250415101546.204018-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-If device shutdown is blocking for a few seconds after xhci_pci_shutdown,
-disk_check_events will get scheduled becase block.events_dfl_poll_msecs
-is set to 2000 by user space. usb-storage can get USB access error and
-then call usb_reset_device.
+The check ensure event logs are only generated when
+the debug logging level "MPI3_DEBUG_EVENT" is enabled.
+It prevents unnecessary logging.
 
-Some SanDisk USB flashes, 0781:5567 and 0781:5581, are lost after reboot.
-
-This can be simulated by injecting mdelay(5000) at the end of
-i915_driver_shutdown. Add event block in sd_shutdown to prevent
-disk_check_events scheduled during the potential blocking.
-
-[   27.324042][    T1] shutdown[1]: Rebooting.
-[   27.548410][    T1] sd 1:0:0:0: [sda] Synchronizing SCSI cache
-[   30.060554][  T225] usb 4-4: device not accepting address 2, error -10=
-8
-[   32.838110][    T1] ACPI: PM: Preparing to enter system sleep state S5
-[   32.851746][    T1] reboot: Restarting system
-[   32.856127][    T1] reboot: machine restart
-
-Before bd738d859e71 ("drm/i915: Prevent modesets during driver init/ shut=
-down"),
-plymouthd can commit modeset during i915 shutdown process, this brings
-ten seconds delay.
-
-[   36.519606][    T1] shutdown[1]: Rebooting.
-[   36.763427][    T1] sd 1:0:0:0: [sda] Synchronizing SCSI cache
-[   37.229513][ T7030] i915 0000:00:02.0: drm_WARN_ON(!intel_irqs_enabled=
-(dev_priv))
-...
-[   39.008748][ T4356] usb 4-4: device not accepting address 2, error -10=
-8
-[   43.116781][ T4356] usb usb4-port4: Cannot enable. Maybe the USB cable=
- is bad?
-[   47.196768][  T185] usb usb4-port4: Cannot enable. Maybe the USB cable=
- is bad?
-[   47.204511][  T185] usb 4-4: USB disconnect, device number 2
-[   48.438385][    T1] i915 0000:00:02.0: i915 raw-wakerefs=3D6 wakelocks=
-=3D6 on cleanup
-
-Signed-off-by: Jiajia Liu <liujiajia@kylinos.cn>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- block/disk-events.c    | 1 +
- drivers/scsi/sd.c      | 4 ++++
- drivers/scsi/sd.h      | 1 +
- include/linux/blkdev.h | 1 +
- 4 files changed, 7 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/disk-events.c b/block/disk-events.c
-index 2f697224386a..2c998fb360a5 100644
---- a/block/disk-events.c
-+++ b/block/disk-events.c
-@@ -94,6 +94,7 @@ void disk_block_events(struct gendisk *disk)
-=20
- 	mutex_unlock(&ev->block_mutex);
- }
-+EXPORT_SYMBOL_GPL(disk_block_events);
-=20
- static void __disk_unblock_events(struct gendisk *disk, bool check_now)
- {
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 950d8c9fb884..86199991f2e3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -4064,6 +4064,7 @@ static int sd_remove(struct device *dev)
-=20
- 	device_del(&sdkp->disk_dev);
- 	del_gendisk(sdkp->disk);
-+	sdkp->remove =3D 1;
- 	if (!sdkp->suspended)
- 		sd_shutdown(dev);
-=20
-@@ -4162,6 +4163,9 @@ static void sd_shutdown(struct device *dev)
- 	if (!sdkp)
- 		return;         /* this can happen */
-=20
-+	if (sdkp->device->removable && !sdkp->remove)
-+		disk_block_events(sdkp->disk);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 003e1f7005c4..1d7901a8f0e4 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -174,6 +174,9 @@ static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
+ 	char *desc = NULL;
+ 	u16 event;
+ 
++	if (!(mrioc->logging_level & MPI3_DEBUG_EVENT))
++		return;
 +
- 	if (pm_runtime_suspended(dev))
- 		return;
-=20
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 36382eca941c..ff7004681267 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -156,6 +156,7 @@ struct scsi_disk {
- 	unsigned	ignore_medium_access_errors : 1;
- 	unsigned	rscs : 1; /* reduced stream control support */
- 	unsigned	use_atomic_write_boundary : 1;
-+	unsigned	remove : 1;
- };
- #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
-=20
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index e39c45bc0a97..7739713c5202 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -879,6 +879,7 @@ int __register_blkdev(unsigned int major, const char =
-*name,
- void unregister_blkdev(unsigned int major, const char *name);
-=20
- bool disk_check_media_change(struct gendisk *disk);
-+void disk_block_events(struct gendisk *disk);
- void set_capacity(struct gendisk *disk, sector_t size);
-=20
- #ifdef CONFIG_BLOCK_HOLDER_DEPRECATED
---=20
-2.25.1
+ 	event = event_reply->event;
+ 
+ 	switch (event) {
+-- 
+2.31.1
 
