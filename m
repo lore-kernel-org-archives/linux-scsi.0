@@ -1,317 +1,168 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C71E284660
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 09:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E287242922;
+	Tue, 15 Apr 2025 09:47:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744709371; cv=none; b=j76qbBa6WSZPSYjo9XohJN8QKnsnrHad+gJzWGyqzKFyUi6Texodivbw9O4/I/1BwC3ri6yWANTAHnGRWxShq72G7aQ5EdiCIkCNhIo3FgdcIMxa2wNZRB+86jqvo6Tkd3+cQGmE6ja7n/ZPg7ccYlrvwJF4bwT4ze5ABWXoCFE=
+	t=1744710474; cv=none; b=X3vH9/I0ZXaiTB91UgAuahsiweIIsn9YKYVBJlSnVoVwcERIapUOaS9ifmxpydMEiMDnTIJaaSv+kVLk0Ho24RcnjUn+btK5YTTrylNxtkcHDR3oEoEKGyvXzZspyU774su8vExs2sj4mDiZev7GOsfRxPySFKlGtN6vwWda8GU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744709371; c=relaxed/simple;
-	bh=NC5DCaREdjauFdpQNc0ev1qolVFUfP5OhphwHgwEVKc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Po0EccKCZ6wawWyom+mhD5Dkm7sR/6I1WyqSmXyblgpiGsXh5plXg31L8/r1xD4btnO0YbGi8YzYGTy0V2rXdE41zvgzV04AJVJYjlgiScDZIvJZsUJ0ONCASz8ncnNXUw5PJwh9SMUmuey2xNBTU46gshJmViuic3aHEcLbmUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HaJ9E2iI; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HaJ9E2iI"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53F8tIpK025021
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 09:29:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	+DQx+6nDYoMWkFAXLYdIlJNZxYtgpOoe+Wc439AsM1s=; b=HaJ9E2iItwmtVZb7
-	hnM/qvXYEnujd45SmZ55VlJ4IF81QQcrspbgH4yuSz7tZoBe9u6y948xZr7vjbZx
-	sUP7SNptYAW2RAsIRDuDR6S5wrQhyqbjWoUn9WyCqK82CZcYyl9YYEo5aCO7por3
-	N0uBfw0ARjEIlrZox9D1//df7jBQP4VzViZ1NgZ8/+vauZJmvahTTaaSI2Qa5ZcJ
-	1KXpeMc9o1b2ITDJ+JPfbAy7JmEZ3dHPJDWKVzNjoecfRz8JJtpBgBj5GpAYG+/0
-	ynGW17OczbIwxYwualJ/8ljarFfi+xblNcVlKQ3FDYDWXLLpm5A0OTI03Dp4w0NE
-	XK0OYg==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yf69qhp7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 09:29:27 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-7c548e16909so477848385a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 02:29:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744709367; x=1745314167;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+DQx+6nDYoMWkFAXLYdIlJNZxYtgpOoe+Wc439AsM1s=;
-        b=twhCsDcLS9SePowDGxSwqFl3DknaFcUMNYtBzvMVSPHV9jdRc1W6NLc6Ytx9SbPjC5
-         I7YYXc8ohO0qtim8xiRpGCdyohYd5e28SIics2QDiW3730o5ZDb+LHZ6LQh7v8fNEc8c
-         7AExzn6W3xMAC3HcWS0/05dULaFf70KH6sJ/31/FvywSIxKHVM9FJJru+Ol2QiFRh5tP
-         +L1wjolqNviYZmdWy1vxySTe7NwQsbWT64ugADiEMVwXLc03wS4I5pdLHseJrL9/tYd0
-         bEsR+wvHJwpHtK67wf/8QWHvXc97O1y3s6IRcEOLYmQnDM4Tg4lFimI1lK5+PUw7gvv/
-         RPdg==
-X-Forwarded-Encrypted: i=1; AJvYcCUb0kPja0IAuGHdq5VXH1QBQWElrddOixB14LV+xkDcSlSLG24UVRefoiAfmhgAcYtGAdZgGNKiVFs9@vger.kernel.org
-X-Gm-Message-State: AOJu0YxcYEftGwzYsOiJUU5oO2jHLUfFBB730QhIii/u5aHg6n4WCtjg
-	nzl9iAkEHmP6gt+E6SaeUiDohnwLMHC0Esag3H/6+BRwEmUtAXDLsus4pZiKoQ8LbVxgUu7gdwM
-	dwH3yxCy9ng0sovRyQM/cue2rkDeeAhPblwjDFWRQo6FoaiRkjbVGOmDXQQQi
-X-Gm-Gg: ASbGnctnZjYkGqPcQUxs3c/58DWY8YAKhKdL5WnwnDJ6myrmWj32sgzgEreLpcNA+h0
-	27ROtTc8SrnTOd01YEcP5WfJa5l0XWVwnUjobddcQsSCXXyZKd0wB0ANeS4D5A592xNsUJf4ixk
-	i5S2R+Fd/OmCvyld+GMGbpZMV6e8UnnplQT3XKHwsT904UhnSZuj/tzNqtOUOMeh7TSlaXGV7/L
-	ZBv3+Eqm8DmTw+OlzothVi1Ot4RbuvkRIFqA3806REmCwyvIMFgGocqjR/azb2VNfNDmiwZPbNS
-	61X7Up5TTVNiT7EcwlcuQuLeRI6VZ9M0aYeYY4u0r0KjOM2XIN7zmoR3TyBsq7kgul2VKug2vuB
-	QmWC2XquqBL+EXGR5rd8vysIp7Dz9NLqcSV1u6wFLwIunbtQvLieHcaXJKnqa
-X-Received: by 2002:a05:620a:4316:b0:7c5:60c7:346 with SMTP id af79cd13be357-7c7af0b97c3mr2006009785a.10.1744709367189;
-        Tue, 15 Apr 2025 02:29:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFujg27qdYNPJcN55cZ+HIN0mfrHoNU47hlImWynWN+yTG5SH9uM9PPLNNq6/CYxgOEVjDfag==
-X-Received: by 2002:a05:620a:4316:b0:7c5:60c7:346 with SMTP id af79cd13be357-7c7af0b97c3mr2006006985a.10.1744709366781;
-        Tue, 15 Apr 2025 02:29:26 -0700 (PDT)
-Received: from ?IPV6:2001:14bb:aa:77bc:64e0:30e4:f6ff:5bd? (2001-14bb-aa-77bc-64e0-30e4-f6ff-5bd.rev.dnainternet.fi. [2001:14bb:aa:77bc:64e0:30e4:f6ff:5bd])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-54d3d50270csm1387967e87.114.2025.04.15.02.29.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Apr 2025 02:29:25 -0700 (PDT)
-Message-ID: <c2ec6b7c-421d-43c3-8c0a-de4f7bdd867c@oss.qualcomm.com>
-Date: Tue, 15 Apr 2025 12:29:23 +0300
+	s=arc-20240116; t=1744710474; c=relaxed/simple;
+	bh=jS/+2OJPyZ3oKIEjOakuHXM2rsqbRqWQE4x118sJ64g=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version; b=H1I0ttI2HTlMTFLyYduF5oGqYOUSoS8fUG/XpR0CFiItR2stAR1AgObprEqlX2k7FYN1pxF7RX56UdaAhxwn+97GUZUGKq3hoT3d15coBGrb4JX6xU2A249YKRqkgBb1Siem24kuhwXSVUU2DwA6JT8dcmMNjhWZ4Y9kLdZjSEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: ac4c985219de11f0a216b1d71e6e1362-20250415
+X-CID-CACHE: Type:Local,Time:202504151727+08,HitQuantity:1
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.45,REQID:3b51f057-3b06-44d4-9b2a-22a6424bd06e,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:0
+X-CID-META: VersionHash:6493067,CLOUDID:91d667a05389e8de83db14486b642671,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:5,IP:nil,URL
+	:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SP
+	R:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: ac4c985219de11f0a216b1d71e6e1362-20250415
+Received: from mail.kylinos.cn [(10.44.16.175)] by mailgw.kylinos.cn
+	(envelope-from <liujiajia@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 992271736; Tue, 15 Apr 2025 17:47:41 +0800
+Received: from mail.kylinos.cn (localhost [127.0.0.1])
+	by mail.kylinos.cn (NSMail) with SMTP id 6CBB3E000081;
+	Tue, 15 Apr 2025 17:47:40 +0800 (CST)
+X-ns-mid: postfix-67FE2B3B-868366657
+Received: from kylin.lan (unknown [172.25.120.81])
+	by mail.kylinos.cn (NSMail) with ESMTPA id 1BD9EE000F3B;
+	Tue, 15 Apr 2025 17:47:37 +0800 (CST)
+From: Jiajia Liu <liujiajia@kylinos.cn>
+To: Jens Axboe <axboe@kernel.dk>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: fix potential USB flash loss after reboot
+Date: Tue, 15 Apr 2025 17:47:37 +0800
+Message-Id: <20250415094737.1394310-1-liujiajia@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 4/9] phy: qcom-qmp-ufs: Refactor UFS PHY reset
-To: Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
-        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        bvanassche@acm.org, bjorande@quicinc.com, neil.armstrong@linaro.org,
-        konrad.dybcio@oss.qualcomm.com, quic_rdwivedi@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20250410090102.20781-1-quic_nitirawa@quicinc.com>
- <20250410090102.20781-5-quic_nitirawa@quicinc.com>
- <pur4y63xhfmqlyymg4pehk37ry4gg22h24zceoqjbsxp3hj4yf@4kptase3c4qp>
- <317faeaa-3130-4e28-8c5d-441a76aa79b4@quicinc.com>
- <CAO9ioeXnnbNzriVOYPUeBiWdrPfYUcMk+pVWYv0vZpJbFeByoQ@mail.gmail.com>
- <2820908b-4548-4e0a-94b2-6065cb5ff1f3@quicinc.com>
-Content-Language: en-US
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-In-Reply-To: <2820908b-4548-4e0a-94b2-6065cb5ff1f3@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: PTC6UpRdijd1UOn-arqdP8_UJTbJsfT2
-X-Authority-Analysis: v=2.4 cv=JNc7s9Kb c=1 sm=1 tr=0 ts=67fe26f8 cx=c_pps a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=BcQP8Xzm53tihf4Fw6EA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=bTQJ7kPSJx9SKPbeHEYW:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: PTC6UpRdijd1UOn-arqdP8_UJTbJsfT2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-15_04,2025-04-10_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 lowpriorityscore=0 bulkscore=0
- impostorscore=0 clxscore=1015 phishscore=0 adultscore=0 priorityscore=1501
- spamscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504150065
+Content-Transfer-Encoding: quoted-printable
 
-On 14/04/2025 23:34, Nitin Rawat wrote:
-> 
-> 
-> On 4/11/2025 4:38 PM, Dmitry Baryshkov wrote:
->> On Fri, 11 Apr 2025 at 13:50, Nitin Rawat <quic_nitirawa@quicinc.com> 
->> wrote:
->>>
->>>
->>>
->>> On 4/11/2025 1:38 AM, Dmitry Baryshkov wrote:
->>>> On Thu, Apr 10, 2025 at 02:30:57PM +0530, Nitin Rawat wrote:
->>>>> Refactor the UFS PHY reset handling to parse the reset logic only once
->>>>> during probe, instead of every resume.
->>>>>
->>>>> Move the UFS PHY reset parsing logic from qmp_phy_power_on to
->>>>> qmp_ufs_probe to avoid unnecessary parsing during resume.
->>>>
->>>> How did you solve the circular dependency issue being noted below?
->>>
->>> Hi Dmitry,
->>> As part of my patch, I moved the parsing logic from qmp_phy_power_on to
->>> qmp_ufs_probe to avoid unnecessary parsing during resume. I'm uncertain
->>> about the circular dependency issue and whether if it still exists.
->>
->> It surely does. The reset controller is registered in the beginning of
->> ufs_qcom_init() and the PHY is acquired only a few lines below. It
->> creates a very small window for PHY driver to probe.
->> Which means, NAK, this patch doesn't look acceptable.
-> 
-> Hi Dmitry,
-> 
-> Thanks for pointing this out. I agree that it leaves very little time 
-> for the PHY to probe, which may cause issues with targets where 
-> no_pcs_sw_reset is set to true.
-> 
-> As an experiment, I kept no_pcs_sw_reset set to true for the SM8750, and 
-> it caused bootup probe issues in some of the iterations I ran.
-> 
-> To address this, I propose updating the patch to move the 
-> qmp_ufs_get_phy_reset call to phy_calibrate, just before the 
-> reset_control_assert call.
+If device shutdown is blocking for a few seconds after xhci_pci_shutdown,
+disk_check_events will get scheduled becase block.events_dfl_poll_msecs
+is set to 2000 by user space. usb-storage can get USB access error and
+then call usb_reset_device.
 
-Will it cause an issue if we move it to phy_init() instead of 
-phy_calibrate()?
+Some SanDisk USB flashes, 0781:5567 and 0781:5581, are lost after reboot.
 
-> 
-> This change will delay the UFS PHY reset as much as possible in the 
-> code. Additionally, moving it from phy_power_on to calibrate will ensure 
-> that qmp_ufs_get_phy_reset is called only once during boot, rather than 
-> during each phy_power_on call.
-> 
-> Please let me know your thoughts.
-> =====================================================================================================
->   static int qmp_ufs_phy_calibrate(struct phy *phy)
->   {
->          struct qmp_ufs *qmp = phy_get_drvdata(phy);
-> @@ -1793,6 +1826,12 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
->          unsigned int val;
->          int ret;
-> 
-> +       pr_err("%s %d\n", __func__, __LINE__);
-> +
-> +       ret = qmp_ufs_get_phy_reset(qmp);
-> +        if (ret)
-> +                return ret;
-> +
->          ret = reset_control_assert(qmp->ufs_reset);
->          if (ret)
->                  return ret;
-> @@ -1817,7 +1856,7 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
->                  dev_err(qmp->dev, "phy initialization timed-out\n");
->                  return ret;
-> =====================================================================================================
-> 
-> 
-> Regards.
-> Nitin
->>
->>>
->>> Regards,
->>> Nitin
->>>
->>>
->>>>
->>>>>
->>>>> Co-developed-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
->>>>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
->>>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->>>>> ---
->>>>>    drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 61 ++++++++++++ 
->>>>> +------------
->>>>>    1 file changed, 33 insertions(+), 28 deletions(-)
->>>>>
->>>>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/ 
->>>>> qualcomm/phy-qcom-qmp-ufs.c
->>>>> index 636dc3dc3ea8..12dad28cc1bd 100644
->>>>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>>> @@ -1799,38 +1799,11 @@ static int qmp_ufs_com_exit(struct qmp_ufs 
->>>>> *qmp)
->>>>>    static int qmp_ufs_power_on(struct phy *phy)
->>>>>    {
->>>>>       struct qmp_ufs *qmp = phy_get_drvdata(phy);
->>>>> -    const struct qmp_phy_cfg *cfg = qmp->cfg;
->>>>>       int ret;
->>>>>       dev_vdbg(qmp->dev, "Initializing QMP phy\n");
->>>>>
->>>>> -    if (cfg->no_pcs_sw_reset) {
->>>>> -            /*
->>>>> -             * Get UFS reset, which is delayed until now to avoid a
->>>>> -             * circular dependency where UFS needs its PHY, but 
->>>>> the PHY
->>>>> -             * needs this UFS reset.
->>>>> -             */
->>>>> -            if (!qmp->ufs_reset) {
->>>>> -                    qmp->ufs_reset =
->>>>> -                            devm_reset_control_get_exclusive(qmp- 
->>>>> >dev,
->>>>> -                                                             
->>>>> "ufsphy");
->>>>> -
->>>>> -                    if (IS_ERR(qmp->ufs_reset)) {
->>>>> -                            ret = PTR_ERR(qmp->ufs_reset);
->>>>> -                            dev_err(qmp->dev,
->>>>> -                                    "failed to get UFS reset: %d\n",
->>>>> -                                    ret);
->>>>> -
->>>>> -                            qmp->ufs_reset = NULL;
->>>>> -                            return ret;
->>>>> -                    }
->>>>> -            }
->>>>> -    }
->>>>> -
->>>>>       ret = qmp_ufs_com_init(qmp);
->>>>> -    if (ret)
->>>>> -            return ret;
->>>>> -
->>>>> -    return 0;
->>>>> +    return ret;
->>>>>    }
->>>>>
->>>>>    static int qmp_ufs_phy_calibrate(struct phy *phy)
->>>>> @@ -2088,6 +2061,34 @@ static int qmp_ufs_parse_dt(struct qmp_ufs 
->>>>> *qmp)
->>>>>       return 0;
->>>>>    }
->>>>>
->>>>> +static int qmp_ufs_get_phy_reset(struct qmp_ufs *qmp)
->>>>> +{
->>>>> +    const struct qmp_phy_cfg *cfg = qmp->cfg;
->>>>> +    int ret;
->>>>> +
->>>>> +    if (!cfg->no_pcs_sw_reset)
->>>>> +            return 0;
->>>>> +
->>>>> +    /*
->>>>> +     * Get UFS reset, which is delayed until now to avoid a
->>>>> +     * circular dependency where UFS needs its PHY, but the PHY
->>>>> +     * needs this UFS reset.
->>>>> +     */
->>>>> +    if (!qmp->ufs_reset) {
->>>>> +            qmp->ufs_reset =
->>>>> +            devm_reset_control_get_exclusive(qmp->dev, "ufsphy");
->>>>
->>>> Strange indentation.
->>>>
->>>>> +
->>>>> +            if (IS_ERR(qmp->ufs_reset)) {
->>>>> +                    ret = PTR_ERR(qmp->ufs_reset);
->>>>> +                    dev_err(qmp->dev, "failed to get PHY reset: 
->>>>> %d\n", ret);
->>>>> +                    qmp->ufs_reset = NULL;
->>>>> +                    return ret;
->>>>> +            }
->>>>> +    }
->>>>> +
->>>>> +    return 0;
->>>>> +}
->>>>> +
->>>>>    static int qmp_ufs_probe(struct platform_device *pdev)
->>>>>    {
->>>>>       struct device *dev = &pdev->dev;
->>>>> @@ -2114,6 +2115,10 @@ static int qmp_ufs_probe(struct 
->>>>> platform_device *pdev)
->>>>>       if (ret)
->>>>>               return ret;
->>>>>
->>>>> +    ret = qmp_ufs_get_phy_reset(qmp);
->>>>> +    if (ret)
->>>>> +            return ret;
->>>>> +
->>>>>       /* Check for legacy binding with child node. */
->>>>>       np = of_get_next_available_child(dev->of_node, NULL);
->>>>>       if (np) {
->>>>> -- 
->>>>> 2.48.1
->>>>>
->>>>
->>>
->>
->>
-> 
+This can be simulated by injecting mdelay(5000) at the end of
+i915_driver_shutdown. Add event block in sd_shutdown to prevent
+disk_check_events scheduled during the potential blocking.
 
+[   27.324042][    T1] shutdown[1]: Rebooting.
+[   27.548410][    T1] sd 1:0:0:0: [sda] Synchronizing SCSI cache
+[   30.060554][  T225] usb 4-4: device not accepting address 2, error -10=
+8
+[   32.838110][    T1] ACPI: PM: Preparing to enter system sleep state S5
+[   32.851746][    T1] reboot: Restarting system
+[   32.856127][    T1] reboot: machine restart
 
--- 
-With best wishes
-Dmitry
+Before bd738d859e71 ("drm/i915: Prevent modesets during driver init/ shut=
+down"),
+plymouthd can commit modeset during i915 shutdown process, this brings
+ten seconds delay.
+
+[   36.519606][    T1] shutdown[1]: Rebooting.
+[   36.763427][    T1] sd 1:0:0:0: [sda] Synchronizing SCSI cache
+[   37.229513][ T7030] i915 0000:00:02.0: drm_WARN_ON(!intel_irqs_enabled=
+(dev_priv))
+...
+[   39.008748][ T4356] usb 4-4: device not accepting address 2, error -10=
+8
+[   43.116781][ T4356] usb usb4-port4: Cannot enable. Maybe the USB cable=
+ is bad?
+[   47.196768][  T185] usb usb4-port4: Cannot enable. Maybe the USB cable=
+ is bad?
+[   47.204511][  T185] usb 4-4: USB disconnect, device number 2
+[   48.438385][    T1] i915 0000:00:02.0: i915 raw-wakerefs=3D6 wakelocks=
+=3D6 on cleanup
+
+Signed-off-by: Jiajia Liu <liujiajia@kylinos.cn>
+---
+ block/disk-events.c    | 1 +
+ drivers/scsi/sd.c      | 4 ++++
+ drivers/scsi/sd.h      | 1 +
+ include/linux/blkdev.h | 1 +
+ 4 files changed, 7 insertions(+)
+
+diff --git a/block/disk-events.c b/block/disk-events.c
+index 2f697224386a..2c998fb360a5 100644
+--- a/block/disk-events.c
++++ b/block/disk-events.c
+@@ -94,6 +94,7 @@ void disk_block_events(struct gendisk *disk)
+=20
+ 	mutex_unlock(&ev->block_mutex);
+ }
++EXPORT_SYMBOL_GPL(disk_block_events);
+=20
+ static void __disk_unblock_events(struct gendisk *disk, bool check_now)
+ {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 950d8c9fb884..86199991f2e3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4064,6 +4064,7 @@ static int sd_remove(struct device *dev)
+=20
+ 	device_del(&sdkp->disk_dev);
+ 	del_gendisk(sdkp->disk);
++	sdkp->remove =3D 1;
+ 	if (!sdkp->suspended)
+ 		sd_shutdown(dev);
+=20
+@@ -4162,6 +4163,9 @@ static void sd_shutdown(struct device *dev)
+ 	if (!sdkp)
+ 		return;         /* this can happen */
+=20
++	if (sdkp->device->removable && !sdkp->remove)
++		disk_block_events(sdkp->disk);
++
+ 	if (pm_runtime_suspended(dev))
+ 		return;
+=20
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 36382eca941c..ff7004681267 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -156,6 +156,7 @@ struct scsi_disk {
+ 	unsigned	ignore_medium_access_errors : 1;
+ 	unsigned	rscs : 1; /* reduced stream control support */
+ 	unsigned	use_atomic_write_boundary : 1;
++	unsigned	remove : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
+=20
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e39c45bc0a97..7739713c5202 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -879,6 +879,7 @@ int __register_blkdev(unsigned int major, const char =
+*name,
+ void unregister_blkdev(unsigned int major, const char *name);
+=20
+ bool disk_check_media_change(struct gendisk *disk);
++void disk_block_events(struct gendisk *disk);
+ void set_capacity(struct gendisk *disk, sector_t size);
+=20
+ #ifdef CONFIG_BLOCK_HOLDER_DEPRECATED
+--=20
+2.25.1
+
