@@ -1,103 +1,163 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ED861CDA2E
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 10:20:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49D119F422;
+	Tue, 15 Apr 2025 13:45:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744712443; cv=none; b=WnaPKmv45NtOEu5MkJ6v2NJblPE+pMqFCzbxqTN34gJzMlhVzdr4Esq39W6wGnTXp9i/CYMKznug/7A3wsv6j9tQiiHSSidWV3ABl/cK0QVyal6iLRbOtn59qAZTpJOuXQwNJrRSj2j86GKXRXppCTiQF+FWxZU2oxCpnRGIOr8=
+	t=1744724710; cv=none; b=ptqfojCL9c/y6qpSVpDWcclc3Dk+XUCrs4vHaajGYWSwiG0XU7ewWD1UhGUdNEvUtQzpWohLuziVzAbfLArCVFysSkc7+gbPqOsuDdthbGtZHBVYEuBczt0ifIUM6A3sgIK/7pmYmZugUzK+gdkkm0RB1RMu0QZzKvjjrqL2scc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744712443; c=relaxed/simple;
-	bh=iiYkVxD4JL9wUZUquUsN8qjosgWXJDze2vb4U0CIuk8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=achyb31HqrS0JwaZ0RBahQdlqKcrcbd33llu4FKNq1yFEMrRjynElxHebWEHITMM7nVpEddPi1pZxfnETKVjiyB/9kWCGQBUdHwonAwYe6aoEAYKPmZFdILWlI4WKekKkSSYIxEv9IeHJQqwQnaN2q5h45ihg49ec8iPOMxKb5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Ahh01ogE; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1744724710; c=relaxed/simple;
+	bh=HYnPp9jHyi+2/ewnjYN1T/Y1OTx4xyzm9rXfzeGvPtI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s85b1mcZ8hku44DYWnlw/7Z/UqMDl4EiNikWVxSaBF6L4R3CbicKwUe6vwtAvGTcIN2HvFE+h1MX2rpZSNMLH/dyXWwbu9wfJHypQjVVE2BfEq01+l8vACp5Ryu9bl+zB/s/GggcWTf2/L+DSzZCtipof+sbKCxh7uYENe16INY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nbhlPhsf; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ahh01ogE"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-af19b9f4c8cso3767011a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 03:20:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1744712440; x=1745317240; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=tovrct2dYWO1eA4wVmENwRP5nytzGa4ONf3qrODrNx4=;
-        b=Ahh01ogEoNTro1vAY0Et7lTBLbi0eOhrUxeR2OWL3eqiwZswmuc3dOf3vxajaD/G0B
-         yLxTHmAW/JBvOO+KJiW/5spvzxW/WYQYveMx6Iq9oifoDebiotA2mNsNyg++wMYt2Yqp
-         KpoPlhVmUcG2Ew/eAv1XDEbLEqIdJEvMp6Kck=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744712440; x=1745317240;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tovrct2dYWO1eA4wVmENwRP5nytzGa4ONf3qrODrNx4=;
-        b=Dr20y/1BR1AYkgDd6d54Z+X/a5LbUXCnt34wREnDNN5s0NIix3fkOSVGCRERExOooD
-         cZoaY2yLTl09+oh1QzjkiNCpEK3WTm1Y5xwwGtgo9S5s/o3XCMKpD4UzVgm2y7rsCttP
-         Spvs/h350zoo0IgbonfAQi7n20EZRAzSDypbbMocCYvT+I/O7v7uP8ke4qQfF9Tl4XKc
-         kedLz+nCC+5JphNNJfYKpZGYzNky0QdbDDvhLprUfwvSRHSf9uCuIiPITje1e3zyvaPd
-         HoIN2BkK8wUB1cNgVK93W/chk4O7m42uKh+NolQmLM55xdAzFuaokPWHmenr/PL74ekX
-         TGuw==
-X-Gm-Message-State: AOJu0YzEBIJo1xdebwd8Aj/6BMK2UDuKO9fbVYWdmQeRuV5UdFbYh1aL
-	NZ1pQsY3LnPVVCBOqQIJYSOYiBcVCW2DJvDVQ0PQePn+mbg4ZFv3C7K5aKGzjedb2rd7nwDjQ1E
-	ApTODswM6kZf5lUBiZJtWynm3dmx+y0PH5LcnNojqXgHEwbALYUJm/2nH41MFDqwjKTh1cBXbX1
-	7tc38NCSeptgWojPpKJcAOdzh9fFN9vnr21iQmViaOY+Bdtg==
-X-Gm-Gg: ASbGncsTE9B7yJP+wj9/+jFHl5aP3WKW6Y4arGCAk+LWTh2iJyNqLce1+APi7SWogpY
-	c8peXUgo5Q09C8CmBL1v1nVPhpwLjLrsvpTpsXK3TYQonA4usCwbAjxObUKfDGC8MphvOk/BIOq
-	2KiQRoZpLCh+zP5Hd4RGQ3PMrLGgXRgnVhR+Awb/tXcyRLsCL2NvF4Eq1WLws4pK17GeHx4wsG9
-	ksDh2J/Z2hJcZdH3div/NJU9Mk3fAKlQVFqplyAyDw4mD4iLo6OMCOYaK6mZ+0JqEaJM0D8C1/R
-	Nfm8wmbnQis6qtCoT4VBNyf91vW5UsunZWHGPNW78Jn0dhem5PNA1BWPBs/GPFZbvfGIrzwQFZz
-	Zdv9tZMGN
-X-Google-Smtp-Source: AGHT+IE8V2q14u2ZpqErd69vCCj/kwOCpglu/5/SEhBSnupVr+hZtX9byUbytgnJH5GLUC1XCIpTlg==
-X-Received: by 2002:a17:90b:4d06:b0:2fe:dd2c:f8e7 with SMTP id 98e67ed59e1d1-308236343c4mr22492483a91.10.1744712439747;
-        Tue, 15 Apr 2025 03:20:39 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-306dd12b599sm12878607a91.23.2025.04.15.03.20.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Apr 2025 03:20:39 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: rajsekhar.chundru@broadcom.com,
-	sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1] mpi3mr: Add logging level check to control event logging
-Date: Tue, 15 Apr 2025 15:45:46 +0530
-Message-Id: <20250415101546.204018-1-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nbhlPhsf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1744724709; x=1776260709;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=HYnPp9jHyi+2/ewnjYN1T/Y1OTx4xyzm9rXfzeGvPtI=;
+  b=nbhlPhsfz0EvEiNa0muvngZOH6D4VekI2owWukYlBTHZIIMo4O/wZiHx
+   G/K9CvJE3PV3ZNeS8o05Q80DS33aoNelR0Fo/wjPaG7ZRkfJsfzgnsCvR
+   q75agY5qWXrKosSrK+fVsZBUqTk9b1B/i3wxwboiUItkhTQ1EhVnR3jCq
+   PLb8ciurrhY2ytPZpI3BFM0Ah8DxWfYdp2l0mUMEqTauYiWr+DYlxeEp/
+   2CYCr11gqXN5EUtBC9JoZZJ1x00lHUV73mMY2K4Apj19c1yJ1P0e5tpfH
+   GUJqrRhmWyoYFyZnBPHEPcZF61qxzJQTBYYV38+MIWj53PkbvV7sIJ78G
+   A==;
+X-CSE-ConnectionGUID: H/CrkQhSS7qez6BONQFr+w==
+X-CSE-MsgGUID: ESHOoTrcReq4usu44j5FaQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11404"; a="46322448"
+X-IronPort-AV: E=Sophos;i="6.15,213,1739865600"; 
+   d="scan'208";a="46322448"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2025 06:45:08 -0700
+X-CSE-ConnectionGUID: /8g+SDTdSl+uUaIFfQ+6yw==
+X-CSE-MsgGUID: Lzu676qCSDaZGLuzYhhL2w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,213,1739865600"; 
+   d="scan'208";a="130659369"
+Received: from lkp-server01.sh.intel.com (HELO b207828170a5) ([10.239.97.150])
+  by orviesa007.jf.intel.com with ESMTP; 15 Apr 2025 06:45:06 -0700
+Received: from kbuild by b207828170a5 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1u4gb1-000GEA-26;
+	Tue, 15 Apr 2025 13:45:03 +0000
+Date: Tue, 15 Apr 2025 21:44:06 +0800
+From: kernel test robot <lkp@intel.com>
+To: Arthur Simchaev <arthur.simchaev@sandisk.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	avri.altman@sandisk.com, Avi.Shchislowski@sandisk.com,
+	beanhuo@micron.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bvanassche@acm.org
+Subject: Re: [PATCH v2] ufs: bsg: Add hibern8 enter/exit to
+ ufshcd_send_bsg_uic_cmd
+Message-ID: <202504152109.JOmreWGE-lkp@intel.com>
+References: <20250414120257.247858-1-arthur.simchaev@sandisk.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250414120257.247858-1-arthur.simchaev@sandisk.com>
 
-The check ensure event logs are only generated when
-the debug logging level "MPI3_DEBUG_EVENT" is enabled.
-It prevents unnecessary logging.
+Hi Arthur,
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
- 1 file changed, 3 insertions(+)
+kernel test robot noticed the following build errors:
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 003e1f7005c4..1d7901a8f0e4 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -174,6 +174,9 @@ static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
- 	char *desc = NULL;
- 	u16 event;
- 
-+	if (!(mrioc->logging_level & MPI3_DEBUG_EVENT))
-+		return;
-+
- 	event = event_reply->event;
- 
- 	switch (event) {
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next linus/master v6.15-rc2 next-20250415]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Arthur-Simchaev/ufs-bsg-Add-hibern8-enter-exit-to-ufshcd_send_bsg_uic_cmd/20250414-200404
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20250414120257.247858-1-arthur.simchaev%40sandisk.com
+patch subject: [PATCH v2] ufs: bsg: Add hibern8 enter/exit to ufshcd_send_bsg_uic_cmd
+config: i386-buildonly-randconfig-004-20250415 (https://download.01.org/0day-ci/archive/20250415/202504152109.JOmreWGE-lkp@intel.com/config)
+compiler: clang version 20.1.2 (https://github.com/llvm/llvm-project 58df0ef89dd64126512e4ee27b4ac3fd8ddf6247)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250415/202504152109.JOmreWGE-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202504152109.JOmreWGE-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/ufs/core/ufshcd.c:4360:38: error: too many arguments to function call, expected single argument 'hba', have 2 arguments
+    4360 |                 ret = ufshcd_uic_hibern8_exit(hba, uic_cmd);
+         |                       ~~~~~~~~~~~~~~~~~~~~~~~      ^~~~~~~
+   include/ufs/ufshcd.h:1331:5: note: 'ufshcd_uic_hibern8_exit' declared here
+    1331 | int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+         |     ^                       ~~~~~~~~~~~~~~~~~~~
+   drivers/ufs/core/ufshcd.c:10342:44: warning: shift count >= width of type [-Wshift-count-overflow]
+    10342 |                 if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+          |                                                          ^~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:73:54: note: expanded from macro 'DMA_BIT_MASK'
+      73 | #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+         |                                                      ^ ~~~
+   1 warning and 1 error generated.
+
+
+vim +/hba +4360 drivers/ufs/core/ufshcd.c
+
+  4331	
+  4332	/**
+  4333	 * ufshcd_send_bsg_uic_cmd - Send UIC commands requested via BSG layer and retrieve the result
+  4334	 * @hba: per adapter instance
+  4335	 * @uic_cmd: UIC command
+  4336	 *
+  4337	 * Return: 0 only if success.
+  4338	 */
+  4339	int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  4340	{
+  4341		int ret;
+  4342	
+  4343		if (hba->quirks & UFSHCD_QUIRK_BROKEN_UIC_CMD)
+  4344			return 0;
+  4345	
+  4346		ufshcd_hold(hba);
+  4347	
+  4348		if (uic_cmd->argument1 == UIC_ARG_MIB(PA_PWRMODE) &&
+  4349		    uic_cmd->command == UIC_CMD_DME_SET) {
+  4350			ret = ufshcd_uic_pwr_ctrl(hba, uic_cmd);
+  4351			goto out;
+  4352		}
+  4353	
+  4354		if (uic_cmd->command == UIC_CMD_DME_HIBER_ENTER) {
+  4355			ret = ufshcd_uic_hibern8_enter(hba);
+  4356			goto out;
+  4357		}
+  4358	
+  4359		if (uic_cmd->command == UIC_CMD_DME_HIBER_EXIT) {
+> 4360			ret = ufshcd_uic_hibern8_exit(hba, uic_cmd);
+  4361			goto out;
+  4362		}
+  4363	
+  4364		mutex_lock(&hba->uic_cmd_mutex);
+  4365		ufshcd_add_delay_before_dme_cmd(hba);
+  4366	
+  4367		ret = __ufshcd_send_uic_cmd(hba, uic_cmd);
+  4368		if (!ret)
+  4369			ret = ufshcd_wait_for_uic_cmd(hba, uic_cmd);
+  4370	
+  4371		mutex_unlock(&hba->uic_cmd_mutex);
+  4372	
+  4373	out:
+  4374		ufshcd_release(hba);
+  4375		return ret;
+  4376	}
+  4377	
+
 -- 
-2.31.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
