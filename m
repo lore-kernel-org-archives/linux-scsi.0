@@ -1,169 +1,104 @@
-Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1B5283CC7;
-	Tue, 15 Apr 2025 00:28:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F11CF209F56
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 03:19:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744676935; cv=none; b=IZKhaI4Jvhf3jaGlf2q2soSx24iSRtTNbLHVG2trwg9Jb2I3WLKcs8uJy04rJBjuyVEAmVcOPFOytZ1XspoPbZpEVqqB2buYT5XBXGhPhVbzl4dMxhYokRZ3Ta/k8PjBTgB+/KjoG2TwQk9ipc4hnzuB+rufkNtI3D+6yuUcGRM=
+	t=1744687178; cv=none; b=arVhkQqJRPv0grQdt/ka9XjMMBfbEjgQVW0+61NTlf9nWja7PSfndwTZMrltQ3Tw/TNrv90/cwhZyqq0yTMoWJwOkLfQpqxrNVYVhQAkFD9fU1N+ZS+xfjm+DvieVSGiYURcSNB+CWBYPThaWOBj1LXayfXCX8KEgLC5b/1BISo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744676935; c=relaxed/simple;
-	bh=Uttts7JdIDrS240v6la2tV+Xo9cNQsrjszR7r06AUcI=;
+	s=arc-20240116; t=1744687178; c=relaxed/simple;
+	bh=0BjICqzVc+w7m22nLm/uANpHZbJCTJzdUiwNMCa7JCk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mDDEFQUFT0hrFx+VqQ5y7o+SskVSP2t0sqtCBiVVSvOH+YjMPyhmbBSefuDqAO6Wu6caotgf1UkJclpK2BYJuSXA1Hs9noz0LGBqH9/QXMsvmSxLTDWMAYxsnLBy03tYzzJh3sOCpeclV/8NwC4LXokFPs1KGygWauidjeIHZBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=MLlRtVRl; arc=none smtp.client-ip=46.235.229.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="MLlRtVRl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=PJJjmrX1+5lAxe602v8oNDShkEnAk+8W379Gwb8stBI=; b=MLlRtVRlFHDggqcX
-	YmnLzvN/jpEnkHqVH1qtlrlyXPHT3CXuJRvJDM8kZzlnahA/7FlVFjOuw+UB4tG6Jk/uqpMJzNoR0
-	eQHsz0BSXve6Tz01TFZ4wnJDsNh0YoaHNxcAxqTa6xJlOfRKz7pvpFO6ZhFmrYOI4u6RZHczrDFev
-	HV1QOGm0Qv/KO0L6io0ssU8Bhb6fGeXuPAgbOUtELJVgQuJ38Nrm1gtHuCvpyHMyaR77pC79amJPH
-	PruqSrgwtVWVgwjKEGk/yq8RkG9kR3a3G7bLAO0cR2+5bBdrUrBol6G5KBlq2eJnayPTyJ++YusyL
-	dNiAY32opTPAMPVHuw==;
-Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
-	by mx.treblig.org with esmtp (Exim 4.96)
-	(envelope-from <linux@treblig.org>)
-	id 1u4U9l-00BSPG-0p;
-	Tue, 15 Apr 2025 00:28:05 +0000
-From: linux@treblig.org
-To: njavali@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
+	 MIME-Version; b=PH+d78OqhsYTWlEqSxJ8ahdsxvvJ2iCr/hJlvPKz9GRJqsGcLDJIgOZCD5cwu4l8e5/zF7FbpT7eVuxiaywjAxw0jA2ckAOHIFurv+P76WZcDXRi91uVCROhH813Wtnf5SfBBjJM/qsuv2jHzI+ysjuhRDYjcGSraMwKRQOEnnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iie.ac.cn; spf=pass smtp.mailfrom=iie.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iie.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iie.ac.cn
+Received: from localhost.localdomain (unknown [159.226.95.28])
+	by APP-03 (Coremail) with SMTP id rQCowAAHtEA50P1nPe_vCA--.15558S2;
+	Tue, 15 Apr 2025 11:19:23 +0800 (CST)
+From: Chen Yufeng <chenyufeng@iie.ac.cn>
+To: gregkh@linuxfoundation.org
+Cc: Thinh.Nguyen@synopsys.com,
+	bootc@bootc.net,
+	chenyufeng@iie.ac.cn,
+	linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH 1/8] scsi: qla2xxx: Remove unused qlt_free_qfull_cmds
-Date: Tue, 15 Apr 2025 01:27:56 +0100
-Message-ID: <20250415002803.135909-2-linux@treblig.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250415002803.135909-1-linux@treblig.org>
-References: <20250415002803.135909-1-linux@treblig.org>
+Subject: Re: Re: [PATCH] drivers: Two potential integer overflow in sbp_make_tpg() and usbg_make_tpg()
+Date: Tue, 15 Apr 2025 11:19:11 +0800
+Message-ID: <20250415031912.1626-1-chenyufeng@iie.ac.cn>
+X-Mailer: git-send-email 2.43.0.windows.1
+In-Reply-To: <2025041025-cozy-pug-fa22@gregkh>
+References: <2025041025-cozy-pug-fa22@gregkh>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+X-CM-TRANSID:rQCowAAHtEA50P1nPe_vCA--.15558S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF18Xr15uw4UJw1fCF13twb_yoW8Gw1kpF
+	4xt3Z8KFyjyw48Gr1xZws8Jr18Grn2vr95tr4ft345W345GaySkF97KrWUZF47AryrWa12
+	qayYv3sYy3WDZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvl14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
+	6r126r1DMxkIecxEwVAFwVW8GwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJV
+	W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
+	1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
+	IIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvE
+	x4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvj
+	DU0xZFpf9x0JUoKZXUUUUU=
+X-CM-SenderInfo: xfkh05xxih0wo6llvhldfou0/1tbiBwoNEmf9owK-yQAAsf
 
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
-
-qlt_free_qfull_cmds() was added in 2014 as part of
-commit 33e799775593 ("qla2xxx: Add support for QFull throttling and Term
-Exchange retry")
-but has remained unused.
-
-Remove it.
-
-Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
----
- drivers/scsi/qla2xxx/qla_target.c | 75 -------------------------------
- drivers/scsi/qla2xxx/qla_target.h |  1 -
- 2 files changed, 76 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 11eadb3bd36e..8a892ac95417 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5539,81 +5539,6 @@ qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
- 	spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
- }
- 
--int
--qlt_free_qfull_cmds(struct qla_qpair *qpair)
--{
--	struct scsi_qla_host *vha = qpair->vha;
--	struct qla_hw_data *ha = vha->hw;
--	unsigned long flags;
--	struct qla_tgt_cmd *cmd, *tcmd;
--	struct list_head free_list, q_full_list;
--	int rc = 0;
--
--	if (list_empty(&ha->tgt.q_full_list))
--		return 0;
--
--	INIT_LIST_HEAD(&free_list);
--	INIT_LIST_HEAD(&q_full_list);
--
--	spin_lock_irqsave(&vha->hw->tgt.q_full_lock, flags);
--	if (list_empty(&ha->tgt.q_full_list)) {
--		spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
--		return 0;
--	}
--
--	list_splice_init(&vha->hw->tgt.q_full_list, &q_full_list);
--	spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
--
--	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
--	list_for_each_entry_safe(cmd, tcmd, &q_full_list, cmd_list) {
--		if (cmd->q_full)
--			/* cmd->state is a borrowed field to hold status */
--			rc = __qlt_send_busy(qpair, &cmd->atio, cmd->state);
--		else if (cmd->term_exchg)
--			rc = __qlt_send_term_exchange(qpair, NULL, &cmd->atio);
--
--		if (rc == -ENOMEM)
--			break;
--
--		if (cmd->q_full)
--			ql_dbg(ql_dbg_io, vha, 0x3006,
--			    "%s: busy sent for ox_id[%04x]\n", __func__,
--			    be16_to_cpu(cmd->atio.u.isp24.fcp_hdr.ox_id));
--		else if (cmd->term_exchg)
--			ql_dbg(ql_dbg_io, vha, 0x3007,
--			    "%s: Term exchg sent for ox_id[%04x]\n", __func__,
--			    be16_to_cpu(cmd->atio.u.isp24.fcp_hdr.ox_id));
--		else
--			ql_dbg(ql_dbg_io, vha, 0x3008,
--			    "%s: Unexpected cmd in QFull list %p\n", __func__,
--			    cmd);
--
--		list_move_tail(&cmd->cmd_list, &free_list);
--
--		/* piggy back on hardware_lock for protection */
--		vha->hw->tgt.num_qfull_cmds_alloc--;
--	}
--	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
--
--	cmd = NULL;
--
--	list_for_each_entry_safe(cmd, tcmd, &free_list, cmd_list) {
--		list_del(&cmd->cmd_list);
--		/* This cmd was never sent to TCM.  There is no need
--		 * to schedule free or call free_cmd
--		 */
--		qlt_free_cmd(cmd);
--	}
--
--	if (!list_empty(&q_full_list)) {
--		spin_lock_irqsave(&vha->hw->tgt.q_full_lock, flags);
--		list_splice(&q_full_list, &vha->hw->tgt.q_full_list);
--		spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
--	}
--
--	return rc;
--}
--
- static void
- qlt_send_busy(struct qla_qpair *qpair, struct atio_from_isp *atio,
-     uint16_t status)
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 354fca2e7feb..71cf0236ea7d 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -1083,7 +1083,6 @@ extern int qlt_stop_phase1(struct qla_tgt *);
- extern void qlt_stop_phase2(struct qla_tgt *);
- extern irqreturn_t qla83xx_msix_atio_q(int, void *);
- extern void qlt_83xx_iospace_config(struct qla_hw_data *);
--extern int qlt_free_qfull_cmds(struct qla_qpair *);
- extern void qlt_logo_completion_handler(fc_port_t *, int);
- extern void qlt_do_generation_tick(struct scsi_qla_host *, int *);
- 
--- 
-2.49.0
+> On Thu, Apr 10, 2025 at 10:05:49PM +0800, Chen Yufeng wrote:=0D
+> > The variable tpgt in sbp_make_tpg() and usbg_make_tpg() is defined as=0D
+> > unsigned long and is assigned to tpgt->tport_tpgt, which is defined as =
+u16.=0D
+> > This may cause an integer overflow when tpgt is greater than USHRT_MAX=
+=0D
+> > (65535). =0D
+> =0D
+> Can that actually ever happen?=0D
+=0D
+I'm sorry, but I haven't tried to trigger this vulnerability myself.=0D
+=0D
+> If so, why not just fix up "tpgt" to be u16?=0D
+=0D
+It's certainly possible to change "tpgt" to u16, but even with that =0D
+modification, UINT_MAX should still be removed, as this limit =0D
+would become meaningless.=0D
+=0D
+> > My fix is based on the implementation of tcm_qla2xxx_make_tpg() in =0D
+> > drivers/scsi/qla2xxx/tcm_qla2xxx.c which limits tpgt to USHRT_MAX.=0D
+> =0D
+> Again, why not restrict the size of the variable to start with?=0D
+=0D
+You are right. directly restricting the type of "tpgt" will be a better =0D
+approach.I will take your suggestion into account in the two upcoming =0D
+separate patches.=0D
+=0D
+> > This patch is similar to=0D
+> > commit 59c816c1f24d ("vhost/scsi: potential memory corruption").=0D
+> > =0D
+> > Signed-off-by: Chen Yufeng <chenyufeng@iie.ac.cn>=0D
+> > ---=0D
+> >  drivers/target/sbp/sbp_target.c     | 2 +-=0D
+> >  drivers/usb/gadget/function/f_tcm.c | 2 +-=0D
+> =0D
+> You have to split this into two different patches as it goes through two=
+=0D
+> different trees before we could take it.=0D
+=0D
+Thanks four your reply. I will split this patch later.=0D
+=0D
+--=0D
+Thanks, =0D
+=0D
+Chen Yufeng=
 
