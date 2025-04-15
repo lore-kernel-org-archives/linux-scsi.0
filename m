@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1066C253935
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 20:10:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3532C23F296
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Apr 2025 20:22:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744747825; cv=none; b=GcRc7H8krQjJAaf0imvUoEPX2vv3J247y4ajTIh/hfnx9DXeImEn5+7B0blHVr+URBjI+sattXX1WTmRaYj5hP8WvVO0Mh2y1Di6DF36JwQnDvthzHq9UwEy/RBH4twzUg7u2PZcO2T/SzHiLJpz5z/sJde+qlqa/Z0m0Kee6DU=
+	t=1744748540; cv=none; b=AxnVBgIkQ80wHRALap12FWQz75wKLdvv9PY+80YNjEnD1NIAZnSpaefYTZyQ9UKpYKYJz682IPhuLtOsL2TpijoOzbI2BEkrW+DZpVofOC/8amXfvTn8QPMT2R4uTt5sH2hsFfV8+W2fWLNkYk5AgXwlzX1KMg6Vf72f0ccAnOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744747825; c=relaxed/simple;
-	bh=oGCMT0kqUKQJofuc9A6mgcTpya2lWuYD6gpLHNvIf/o=;
+	s=arc-20240116; t=1744748540; c=relaxed/simple;
+	bh=R215ExsQbOy431UdApoQyvlg5GmopXIoWDZMHf21mWw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=c0ZcgPYZ8J3Y7GAwM7mv43LYDepjfTUGDaTaBmkhyKV3xAXXKEGlMEQBdyVNqc+p0Q1fUWPL7xMIXHU/FQteyZDqb4I3j/y3GSJO4tdMRaAJdRb0YnEdBQSXkeA579+IOl0bdaikAldv/hcof/u0sBVJhk7vrc2GVrJEJ9Hl6dQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sLI8y4O2; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=P/gbjMpoQPQge1McurMiY7Ew8QndtfpNnVh4NcEDmV38kGK65CrXSj2Gbkd8XRw3GnTNsYv3ybDOUIYdLo37y04zDKImNEw9T1fmt5nz+t99HsbZzvDJV+R0Q7fKxg85Oui1R4+GI5EeD8tuha5HhxPC9h56P4Msu/GC1ZoCHXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=B1KOvMI3; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sLI8y4O2"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="B1KOvMI3"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZcZyj5f7vzlvm7k;
-	Tue, 15 Apr 2025 20:10:21 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZcbDV09Y5zm0yTm;
+	Tue, 15 Apr 2025 20:22:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1744747820; x=1747339821; bh=oGCMT0kqUKQJofuc9A6mgcTp
-	ya2lWuYD6gpLHNvIf/o=; b=sLI8y4O2rBVCYnc2+oADNK40mh6uoadoG8z1/eam
-	8t3V0n5k/Z3MlG7MTQ2TAsnq3Jxx0YejhJnp4/n1qHhOoOnjBQGc6po/4wl+k36r
-	2UtEgwcC3b/iHgIO0N3uc6VWP0U2PGUzyGB/f1dZGI9znhyhXhDZ8wMbpYe+sr+2
-	BeK8y3BBxL1lMdxPlnzI0/iHUuD2GjMTVpeF7SFledVC2aaTz3UfzlyUFOA1+5dy
-	N424X8FAk9opY/QoK0bX1t3jhP/mID4k+kmvVRfcSdK/TtQUWB2CfAqX0tIi7XW+
-	lf+rCcT1x9g9lz+tpb8Ct8JB4EbutzLNkJonV7RZyJJ73g==
+	 s=mr01; t=1744748536; x=1747340537; bh=ekUE/fBviJM1rxdGoDEzm0qA
+	r+Ezno7DYQ56TPGZvHw=; b=B1KOvMI3npE9tSqPyxHrOTUKa80jSXNKxOnWlTPk
+	1rZN2QkYiPgchhI3sFTyXPuK1DEI8YJ9uDpfZ/4xEI4WwBcbB5uwtvx4s1BS/k0t
+	ydzR0b6ZZ9MBg65XBJhsQ1DDE99/W1/orfaf41w0qAgRZoYqTdyEiD41KynxZTqu
+	k8fW5tY3qLoHcjC9I9B0OZW3lzX0yeyosMx1Ub4BvZDSREBQoC25Jw/LuqokYSQp
+	rsYGUarJRZLUNmjXH2RWs9k7yGKw0YoBUCs5L1mlbIHr/XeSZkLM3++lj170SdKR
+	DsjR2PwF8dt2q9XCFC12mdqTlZ+cOwo9atzrYLJXXEnmtQ==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id w3q9WyJ90Kaj; Tue, 15 Apr 2025 20:10:20 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id C5PlzN_iNVEk; Tue, 15 Apr 2025 20:22:16 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZcZyb6qqWzlvfn8;
-	Tue, 15 Apr 2025 20:10:14 +0000 (UTC)
-Message-ID: <7081331c-82e8-4026-bda8-be6bb7ccba57@acm.org>
-Date: Tue, 15 Apr 2025 13:10:13 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZcbDM6rmJzm0yTN;
+	Tue, 15 Apr 2025 20:22:10 +0000 (UTC)
+Message-ID: <84d20bdc-fcd9-42e4-939f-a3ec0422e646@acm.org>
+Date: Tue, 15 Apr 2025 13:22:09 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,8 +50,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 11/24] scsi: ufs: core: Change the monitor function
- argument types
+Subject: Re: [PATCH 12/24] scsi: ufs: core: Rework
+ ufshcd_mcq_compl_pending_transfer()
 To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
  "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
@@ -61,42 +61,82 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
  "avri.altman@wdc.com" <avri.altman@wdc.com>,
  "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>
 References: <20250403211937.2225615-1-bvanassche@acm.org>
- <20250403211937.2225615-12-bvanassche@acm.org>
- <41a87716bb67cc0360108ea86fd380f0bde01273.camel@mediatek.com>
+ <20250403211937.2225615-13-bvanassche@acm.org>
+ <0390adb9d0ebed4ba4b386453d20175b1f3a0709.camel@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <41a87716bb67cc0360108ea86fd380f0bde01273.camel@mediatek.com>
+In-Reply-To: <0390adb9d0ebed4ba4b386453d20175b1f3a0709.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On 4/15/25 12:37 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> On Thu, 2025-04-03 at 14:17 -0700, Bart Van Assche wrote:
->>=20
->>=20
->> @@ -5562,8 +5565,8 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba,
->> int task_tag,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lrbp->compl_time_stamp_loca=
-l_clock =3D local_clock();
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 cmd =3D lrbp->cmd;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (cmd) {
+On 4/15/25 1:00 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+>>  =C2=A0/**
+>>  =C2=A0 * ufshcd_mcq_compl_pending_transfer - MCQ mode function. It is
+>>  =C2=A0 * invoked from the error handler context or
+>> ufshcd_host_reset_and_restore()
+>> @@ -5665,38 +5703,10 @@ static int ufshcd_poll(struct Scsi_Host
+>> *shost, unsigned int queue_num)
+>>  =C2=A0static void ufshcd_mcq_compl_pending_transfer(struct ufs_hba *h=
+ba,
+>>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool force_compl)
+>>  =C2=A0{
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ufs_hw_queue *hwq;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ufshcd_lrb *lrbp;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct scsi_cmnd *cmd;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long flags;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int tag;
+>> -
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 for (tag =3D 0; tag < hba->nutrs=
+; tag++) {
 >> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 if (unlikely(ufshcd_should_inform_monitor(hba,
->> lrbp)))
+=A0=C2=A0=C2=A0 lrbp =3D &hba->lrb[tag];
 >> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_up=
-date_monitor(hba, lrbp);
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 if (unlikely(ufshcd_should_inform_monitor(hba, lrbp-
->> >cmd)))
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_up=
-date_monitor(hba, lrbp->cmd);
+=A0=C2=A0=C2=A0 cmd =3D lrbp->cmd;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 if (!ufshcd_cmd_inflight(cmd) ||
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 test_bit(SCMD_STATE_COMPLETE, &cm=
+d->state))
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 continue;
+>>
 >=20
-> Here could use "cmd" instead "lrbp->cmd"?
+> Removing this check might cause racing issues?
+> Leading to the possibility that the hwq in the subsequent function
+> could be null?
+
 Hi Peter,
 
-Sure, I will include these changes in this patch.
+The ufshcd_cmd_inflight() check has not been removed.
+blk_mq_tagset_busy_iter() only calls the callback function that is=20
+passed as second argument for requests that have been started. The
+definition of ufshcd_cmd_inflight() is as follows:
 
-Thanks,
+bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
+{
+	return cmd &&
+	       blk_mq_rq_state(scsi_cmd_to_rq(cmd)) =3D=3D MQ_RQ_IN_FLIGHT;
+}
+
+ From the blk_mq_tagset_busy_iter() implementation:
+
+	if (!(iter_data->flags & BT_TAG_ITER_STARTED) ||
+	    blk_mq_request_started(rq))
+		ret =3D iter_data->fn(rq, iter_data->data);
+
+ From blk-mq.h:
+
+static inline int blk_mq_request_started(struct request *rq)
+{
+	return blk_mq_rq_state(rq) !=3D MQ_RQ_IDLE;
+}
+
+In other words, if flag BT_TAG_ITER_STARTED has not been set,
+blk_mq_tagset_busy_iter() only calls its callback function for requests
+for which blk_mq_start_request() has been called and that have not yet
+been freed.
 
 Bart.
