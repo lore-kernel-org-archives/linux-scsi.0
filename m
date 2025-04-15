@@ -1,34 +1,34 @@
 Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23E84199947;
-	Tue, 15 Apr 2025 00:28:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA94D14A0B7;
+	Tue, 15 Apr 2025 00:28:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744676902; cv=none; b=Evs0FJ0dNYkahM4Hpsmibh254AH/H90vnI2bzKtsgTY4q67O+cBkbFdoOWFVHu1eaHPDq6auRDVggq5SmbXs79oIBL+754GYUh/e1kinduPF0HDin0kno0eILLAemdYU3S2YS5FDgVLelfAypZOObM+16BeF4AK4GugGqBKMG9g=
+	t=1744676903; cv=none; b=pgxMKY+BbO83j0kiWPsM4zcL5xv7+nXYjV2ahq8e4CnIZS7Wk0j2uctM0IhR2IzBwOeww7VdjtdapyPGtkAEdrOAxsjKQjooHKNEIhVO2OVOObJlS+F7KUZzJJMn42ECdPzjBrZQEULrG7APcJ0EpFF4jM5+RU9GCjM4yvUMKDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744676902; c=relaxed/simple;
-	bh=LSGfBItVUsOl4mKKrLJfO5mRhDJ5Ta0Er/mWO0L1HdA=;
+	s=arc-20240116; t=1744676903; c=relaxed/simple;
+	bh=S9WqlAPk15FLu4y+RDpz3a2PdBz0FRyegL/qDVKFPeA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=d/6HjTYQErbNSL+yMia1BgSubqMvbGW6DCSrVOY79T3sAlt4gLOE7O/nMrrXweQUNVVBlthchaHdq2wlpzEGrI1FruKyAWeAvLG6/K4KBZfAIuc8IsRhMJiGr1ePaZN2R+bgp8k5zdZdDVpgOVBZQ7F6lRJrCrVhS3+i0KVTAjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=Pprjfvtw; arc=none smtp.client-ip=46.235.229.95
+	 MIME-Version; b=L5QAf5jV6UCQnnrxjMDaI7uPSDxjNRGWJQ0O0l6oUXwxuxdBj5c6lP6Ht/Ut9FhAMbMa/5FliakakXFJh+rgOJw/wXIUb7NmwAx10Esx5YmVGmXR5SmNV6hB82B77+i3HICsngzQ/U2HT+1e2P0tdiSSc+uGvQQqTe+4o/J2QCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=JTayQbEM; arc=none smtp.client-ip=46.235.229.95
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="Pprjfvtw"
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="JTayQbEM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
 	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=FvtDWiii0omRy58Xa7RJOR4M+Fmc8WqjWn2efxe+CUY=; b=PprjfvtwMOk/co1w
-	FXCFNOhT1A1y4EF/dw/wbITRtN9lq2WElmPH5bJd9g4qPHHb8XXbzn6CVucO0qB19T5NDx+EtaViQ
-	vdKE3SJhN0I9nADdyGvVvDeuS8wVMWtfIEXCHk7CJF0J7xUDGqWvOyWavxUq5XumK3bCh/VfYjxoQ
-	PmKruQDQ2/HvCt5OrvGhuHi+puSp/yLmR8QBaAXI0mCgRMIqtxEinW3uzhAwxrywDaRQEUjKrSEpm
-	tKFqykNc63uCnMEn++WLm4i6oyzKzj6fyZnARXyKoCIt5IYjGXVkXUJsB95HLxYBoXhsxmrQ5sWVi
-	pjGtGIpU39JsdejqBg==;
+	:Subject; bh=SL0phU/G9T3j0VI5/RLTYm6D8TJuMcZGybgtCw8AavE=; b=JTayQbEMskaTOjng
+	MYlOpUDrlwNHWw5aMB9hSUwsrnE/ioanYzB5ckZE1Q0n6HDz1+gg3jBzeqC+6OmkBok0vRWJNwpi2
+	ZhZcvNeLsguRJ2P6/Wi/KTlBfPNydVRsorPiBC/m5ssQNwWTHEg7RNACIZPfldYsvRa82/Ii4Q0EM
+	KN9dQdCKDmXkU3mPr7rHM3jRq7dDQl2r7NobQ3aVqrkUbhPezZA+wF+2xj5Dl5vlYQcfvzxpVYdwt
+	Qyp9le0v9PJxZu9t6Qpa/OcyIJyExgL8bhiadovxcjNv8r6qBNDOB+3sTyjOknYnJSNN6Fe6opB5r
+	EM57eDxe3KWMnZoUHA==;
 Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
 	by mx.treblig.org with esmtp (Exim 4.96)
 	(envelope-from <linux@treblig.org>)
-	id 1u4U9l-00BSPG-2V;
-	Tue, 15 Apr 2025 00:28:05 +0000
+	id 1u4U9o-00BSPG-0K;
+	Tue, 15 Apr 2025 00:28:08 +0000
 From: linux@treblig.org
 To: njavali@marvell.com,
 	GR-QLogic-Storage-Upstream@marvell.com,
@@ -37,9 +37,9 @@ To: njavali@marvell.com,
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH 2/8] scsi: qla2xxx: Remove unused qlt_fc_port_deleted
-Date: Tue, 15 Apr 2025 01:27:57 +0100
-Message-ID: <20250415002803.135909-3-linux@treblig.org>
+Subject: [PATCH 7/8] scsi: qla2xxx: Remove unused qla2x00_gpsc
+Date: Tue, 15 Apr 2025 01:28:02 +0100
+Message-ID: <20250415002803.135909-8-linux@treblig.org>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250415002803.135909-1-linux@treblig.org>
 References: <20250415002803.135909-1-linux@treblig.org>
@@ -53,85 +53,131 @@ Content-Transfer-Encoding: 8bit
 
 From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-qlt_fc_port_deleted() has been unused since the last use was removed
-by 2017's
+qla2x00_gpsc() was added in 2017 as part of
 commit 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
+but has remained unused.
 
 Remove it.
 
 Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 44 -------------------------------
- drivers/scsi/qla2xxx/qla_target.h |  1 -
- 2 files changed, 45 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h |  1 -
+ drivers/scsi/qla2xxx/qla_gs.c  | 90 ----------------------------------
+ 2 files changed, 91 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 8a892ac95417..15c6d95cc4f2 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1454,50 +1454,6 @@ static struct fc_port *qlt_create_sess(
- 	return sess;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 73bccd514791..a8c3a4f7862b 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -720,7 +720,6 @@ extern void *qla2x00_prep_ms_fdmi_iocb(scsi_qla_host_t *, uint32_t, uint32_t);
+ extern void *qla24xx_prep_ms_fdmi_iocb(scsi_qla_host_t *, uint32_t, uint32_t);
+ extern int qla2x00_fdmi_register(scsi_qla_host_t *);
+ extern int qla2x00_gfpn_id(scsi_qla_host_t *, sw_info_t *);
+-extern int qla2x00_gpsc(scsi_qla_host_t *, sw_info_t *);
+ extern size_t qla2x00_get_sym_node_name(scsi_qla_host_t *, uint8_t *, size_t);
+ extern int qla2x00_chk_ms_status(scsi_qla_host_t *, ms_iocb_entry_t *,
+ 	struct ct_sns_rsp *, const char *);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index d2bddca7045a..51c7cea71f90 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -2625,96 +2625,6 @@ qla2x00_port_speed_capability(uint16_t speed)
+ 	}
  }
  
--/*
-- * max_gen - specifies maximum session generation
-- * at which this deletion requestion is still valid
+-/**
+- * qla2x00_gpsc() - FCS Get Port Speed Capabilities (GPSC) query.
+- * @vha: HA context
+- * @list: switch info entries to populate
+- *
+- * Returns 0 on success.
 - */
--void
--qlt_fc_port_deleted(struct scsi_qla_host *vha, fc_port_t *fcport, int max_gen)
+-int
+-qla2x00_gpsc(scsi_qla_host_t *vha, sw_info_t *list)
 -{
--	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
--	struct fc_port *sess = fcport;
--	unsigned long flags;
+-	int		rval;
+-	uint16_t	i;
+-	struct qla_hw_data *ha = vha->hw;
+-	ms_iocb_entry_t *ms_pkt;
+-	struct ct_sns_req	*ct_req;
+-	struct ct_sns_rsp	*ct_rsp;
+-	struct ct_arg arg;
 -
--	if (!vha->hw->tgt.tgt_ops)
--		return;
+-	if (!IS_IIDMA_CAPABLE(ha))
+-		return QLA_FUNCTION_FAILED;
+-	if (!ha->flags.gpsc_supported)
+-		return QLA_FUNCTION_FAILED;
 -
--	if (!tgt)
--		return;
+-	rval = qla2x00_mgmt_svr_login(vha);
+-	if (rval)
+-		return rval;
 -
--	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
--	if (tgt->tgt_stop) {
--		spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
--		return;
+-	arg.iocb = ha->ms_iocb;
+-	arg.req_dma = ha->ct_sns_dma;
+-	arg.rsp_dma = ha->ct_sns_dma;
+-	arg.req_size = GPSC_REQ_SIZE;
+-	arg.rsp_size = GPSC_RSP_SIZE;
+-	arg.nport_handle = vha->mgmt_svr_loop_id;
+-
+-	for (i = 0; i < ha->max_fibre_devices; i++) {
+-		/* Issue GFPN_ID */
+-		/* Prepare common MS IOCB */
+-		ms_pkt = qla24xx_prep_ms_iocb(vha, &arg);
+-
+-		/* Prepare CT request */
+-		ct_req = qla24xx_prep_ct_fm_req(ha->ct_sns, GPSC_CMD,
+-		    GPSC_RSP_SIZE);
+-		ct_rsp = &ha->ct_sns->p.rsp;
+-
+-		/* Prepare CT arguments -- port_name */
+-		memcpy(ct_req->req.gpsc.port_name, list[i].fabric_port_name,
+-		    WWN_SIZE);
+-
+-		/* Execute MS IOCB */
+-		rval = qla2x00_issue_iocb(vha, ha->ms_iocb, ha->ms_iocb_dma,
+-		    sizeof(ms_iocb_entry_t));
+-		if (rval != QLA_SUCCESS) {
+-			/*EMPTY*/
+-			ql_dbg(ql_dbg_disc, vha, 0x2059,
+-			    "GPSC issue IOCB failed (%d).\n", rval);
+-		} else if ((rval = qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
+-		    "GPSC")) != QLA_SUCCESS) {
+-			/* FM command unsupported? */
+-			if (rval == QLA_INVALID_COMMAND &&
+-			    (ct_rsp->header.reason_code ==
+-				CT_REASON_INVALID_COMMAND_CODE ||
+-			     ct_rsp->header.reason_code ==
+-				CT_REASON_COMMAND_UNSUPPORTED)) {
+-				ql_dbg(ql_dbg_disc, vha, 0x205a,
+-				    "GPSC command unsupported, disabling "
+-				    "query.\n");
+-				ha->flags.gpsc_supported = 0;
+-				rval = QLA_FUNCTION_FAILED;
+-				break;
+-			}
+-			rval = QLA_FUNCTION_FAILED;
+-		} else {
+-			list->fp_speed = qla2x00_port_speed_capability(
+-			    be16_to_cpu(ct_rsp->rsp.gpsc.speed));
+-			ql_dbg(ql_dbg_disc, vha, 0x205b,
+-			    "GPSC ext entry - fpn "
+-			    "%8phN speeds=%04x speed=%04x.\n",
+-			    list[i].fabric_port_name,
+-			    be16_to_cpu(ct_rsp->rsp.gpsc.speeds),
+-			    be16_to_cpu(ct_rsp->rsp.gpsc.speed));
+-		}
+-
+-		/* Last device exit. */
+-		if (list[i].d_id.b.rsvd_1 != 0)
+-			break;
 -	}
--	if (!sess->se_sess) {
--		spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
--		return;
--	}
 -
--	if (max_gen - sess->generation < 0) {
--		spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
--		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf092,
--		    "Ignoring stale deletion request for se_sess %p / sess %p"
--		    " for port %8phC, req_gen %d, sess_gen %d\n",
--		    sess->se_sess, sess, sess->port_name, max_gen,
--		    sess->generation);
--		return;
--	}
--
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf008, "qla_tgt_fc_port_deleted %p", sess);
--
--	sess->local = 1;
--	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
--	qlt_schedule_sess_for_deletion(sess);
+-	return (rval);
 -}
 -
- static inline int test_tgt_sess_count(struct qla_tgt *tgt)
- {
- 	struct qla_hw_data *ha = tgt->ha;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 71cf0236ea7d..453eb2f6a7c9 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -1014,7 +1014,6 @@ extern int qlt_lport_register(void *, u64, u64, u64,
- extern void qlt_lport_deregister(struct scsi_qla_host *);
- extern void qlt_unreg_sess(struct fc_port *);
- extern void qlt_fc_port_added(struct scsi_qla_host *, fc_port_t *);
--extern void qlt_fc_port_deleted(struct scsi_qla_host *, fc_port_t *, int);
- extern int __init qlt_init(void);
- extern void qlt_exit(void);
- extern void qlt_free_session_done(struct work_struct *);
+ /**
+  * qla2x00_gff_id() - SNS Get FC-4 Features (GFF_ID) query.
+  *
 -- 
 2.49.0
 
