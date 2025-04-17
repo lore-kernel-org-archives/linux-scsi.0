@@ -1,182 +1,138 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD472472B0;
-	Wed, 16 Apr 2025 12:27:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74C5F19DF60
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2025 02:34:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744806435; cv=none; b=ErK6dpF7RfcRBxHHNt39yVSeg0yzZMz8DW7MvEsGfIZDOLcmqSNVqXMDBrcZ+zjvdccKwNYT/QGJLtERbIbiJNpKiQEOJUv8/LrecosHKu54a7ultaEd0eA8P31yWe0Pv5VXD8ZWmrn7YnilYz8+O+ZwcMKywHkU5LSY7+Mf4EI=
+	t=1744857262; cv=none; b=ArC2ClABpvUd6ZKy6dHTTPmpGQ0Ip0SwrgiLdDWrzj1R4UN3T/EdMUwcJwW3Ien+QeEtY+x9O6Xw+Jrox+OP5VLCfx+UIyetX9RnWWy+JFn84P2yEA3E5VpA7LUz8ljOf5hbJ/8iJK+1QKABpyHUt3qM29iuR3g53dAMaYaATH8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744806435; c=relaxed/simple;
-	bh=Rx1zPJva/XQEFNW8ubo+VVgOpGBu8ywM7+A5vB0tNzw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=G/EqIxkyB9TVFRYDF02HoRImqIadmAus7u2PB285pluWkCCSumTp/RI8KtlvsxIU1KKOYaM2QkrBNN2YyqmXS3SAFC0NX5knc/SkwgGn0MtJQUnOLCpcbXFlAHsNXGLb5xlt67yHMeyB0uOHPgZDYXWV45aBGwTS+QdJoJJD6NA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=b9cfPWqj; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1744857262; c=relaxed/simple;
+	bh=lzu4RHdidFF3IvAP3ntWf+o5vVtP3s2YPbz4MELxehE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 References; b=pXur1xGfIaBJ+lwkjinNFFKaKYdbUbIilIiGAOIrlj5unmUwRgvG9tHrFKOBHEU1Am3+U6rCFzy0BpuUezgi7rcz/5LcIaRRWabhQ2j1jxeT+ybxtqDDHgEfhdcXcOqBoH/1KWEiI7UW082wvy0XCBJdIiYMGtwtNvqq5wh5ohg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=u97qMqdH; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="b9cfPWqj"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53G9mDWb020542;
-	Wed, 16 Apr 2025 12:26:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	IswbPGGAP13igDj4nUq3J/kuUfd/m5Ej3KjQNHq8od4=; b=b9cfPWqjX1XKpoPg
-	kPoUli2LAAhrjtwAo0V7+4+k9cd/ir+khsqSP4dTm6HK/iMDQv5hJsPjtpIa3fwy
-	vTcUEIU/oMF/uSP5vZR39NbYsZbD8OQPXIALW2bI4DVGC+nur8uzx9QFn4GYdPTI
-	Do25HCgfY/Io/mz9jslE7JDnLJ3gAFBqV+0TFE7Nn4lgCiQWHv4Zhm9wDJocK1ah
-	z8aO+7aQVQVWTkQpOA3Ppuf9tLJdvGRQgAWAlw2rYDTHDtk9JT0FPvPIPyCQ3H7/
-	7/r78H2wXMFDFa3MGQWvTvOUcuOxu5aGtxbltfFLH9dfaQlXowEPEpZukywexPjH
-	TRBxlg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yg8wkfue-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 16 Apr 2025 12:26:52 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53GCQpdw000371
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 16 Apr 2025 12:26:51 GMT
-Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 16 Apr
- 2025 05:26:47 -0700
-Message-ID: <1a623099-40bb-4884-8d93-132138a4150b@quicinc.com>
-Date: Wed, 16 Apr 2025 17:56:44 +0530
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="u97qMqdH"
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250417023416epoutp03888d75daaf9dadc8aacedca4b2c9f308~2_m4xCOPT0300303003epoutp03L
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2025 02:34:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250417023416epoutp03888d75daaf9dadc8aacedca4b2c9f308~2_m4xCOPT0300303003epoutp03L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1744857256;
+	bh=wjeE/pXfIQFwZScu66ols+meQfxXWKJ+jO8uL41b120=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=u97qMqdHEOsVqViHF15lO573hh3LmrXb+TFeXNs6qajpDsSXAl7v9wCa1riPcaZ1P
+	 NrUj1OcmL3ogs0nDyHgPp4PtAxRDnPQmKeNO47wkt+kTock9HkbnBwbscGA+1X0AiD
+	 sL82E5l4UW9Y4KCXRVpmsIbb1Qufdd2uqt8nBoVw=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
+	20250417023416epcas1p3bd3f3e95f989c02eeba3064f378b8064~2_m4ISfKy1017310173epcas1p3c;
+	Thu, 17 Apr 2025 02:34:16 +0000 (GMT)
+Received: from epsmgec1p1.samsung.com (unknown [182.195.38.240]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4ZdMRC4Mwvz6B9m7; Thu, 17 Apr
+	2025 02:34:15 +0000 (GMT)
+Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
+	epsmgec1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	F9.E3.10210.7A860086; Thu, 17 Apr 2025 11:34:15 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
+	20250417023415epcas1p47da6d269afcb5d1807004c9b708675a5~2_m3J2FBp1437214372epcas1p4E;
+	Thu, 17 Apr 2025 02:34:15 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250417023415epsmtrp1c2c84d0460a4e8829fde31c34d6783b9~2_m3I2DoX2422224222epsmtrp1A;
+	Thu, 17 Apr 2025 02:34:15 +0000 (GMT)
+X-AuditID: b6c32a33-145fd700000027e2-75-680068a75d27
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	83.03.19478.6A860086; Thu, 17 Apr 2025 11:34:14 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.101.61]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250417023414epsmtip21504e7ff7f309e1bf7acdf3388b2de9e~2_m24HDzL2769027690epsmtip2M;
+	Thu, 17 Apr 2025 02:34:14 +0000 (GMT)
+From: DooHyun Hwang <dh0421.hwang@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
+	quic_mnaresh@quicinc.com
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
+	jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
+	sh8267.baek@samsung.com, wkon.kim@samsung.com, DooHyun Hwang
+	<dh0421.hwang@samsung.com>
+Subject: [PATCH 0/2] scsi: ufs: Add an enum for ufs_trace_str_t to check uic
+ cmd error
+Date: Thu, 17 Apr 2025 11:34:02 +0900
+Message-ID: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 4/9] phy: qcom-qmp-ufs: Refactor UFS PHY reset
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-CC: <vkoul@kernel.org>, <kishon@kernel.org>,
-        <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <bvanassche@acm.org>, <bjorande@quicinc.com>,
-        <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>,
-        <quic_rdwivedi@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
-        <linux-phy@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-References: <20250410090102.20781-1-quic_nitirawa@quicinc.com>
- <20250410090102.20781-5-quic_nitirawa@quicinc.com>
- <pur4y63xhfmqlyymg4pehk37ry4gg22h24zceoqjbsxp3hj4yf@4kptase3c4qp>
- <317faeaa-3130-4e28-8c5d-441a76aa79b4@quicinc.com>
- <CAO9ioeXnnbNzriVOYPUeBiWdrPfYUcMk+pVWYv0vZpJbFeByoQ@mail.gmail.com>
- <2820908b-4548-4e0a-94b2-6065cb5ff1f3@quicinc.com>
- <c2ec6b7c-421d-43c3-8c0a-de4f7bdd867c@oss.qualcomm.com>
- <a24ff510-2afd-4aa7-a026-199fb6d87287@quicinc.com>
- <CAO9ioeUDzYLMvqmsOQ-VfgLQLavHqn=QVYxyHzetjSfmhjKFjw@mail.gmail.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <CAO9ioeUDzYLMvqmsOQ-VfgLQLavHqn=QVYxyHzetjSfmhjKFjw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=E9TNpbdl c=1 sm=1 tr=0 ts=67ffa20d cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=bthNQ_mdbZiY202X5xgA:9 a=QEXdDO2ut3YA:10
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: uf2_nzWwdmzDjmWmCrk70h3bkkY1PG-C
-X-Proofpoint-GUID: uf2_nzWwdmzDjmWmCrk70h3bkkY1PG-C
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-16_04,2025-04-15_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- mlxscore=0 bulkscore=0 clxscore=1015 phishscore=0 lowpriorityscore=0
- suspectscore=0 mlxlogscore=999 spamscore=0 priorityscore=1501
- impostorscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504160102
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHJsWRmVeSWpSXmKPExsWy7bCmnu7yDIYMg9fLFCwezNvGZvHy51U2
+	i2kffjJbzDjVxmqx79pJdotff9ezW2zs57Do2DqZyWLH8zPsFrv+NjNZXN41h82i+/oONou7
+	LZ2sFsuP/2Oy2PrpN6vFt74n7BZNf/axWFw7c4LVYvOlbywOwh6Xr3h7TJt0is3jzrU9bB4t
+	J/ezeHx8eovFY+KeOo++LasYPT5vkvNoP9DNFMAZlW2TkZqYklqkkJqXnJ+SmZduq+QdHO8c
+	b2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA/STkkJZYk4pUCggsbhYSd/Opii/tCRVISO/uMRW
+	KbUgJafArECvODG3uDQvXS8vtcTK0MDAyBSoMCE74/nLtUwF3SwVf1t5Ghh7mLsYOTkkBEwk
+	jk2eC2YLCexglDj5VK+LkQvI/sQocXfWJFaIBJAzaXo9TMPHW9OZIYp2Mkp0L93JCOF8ZpRY
+	s2E72Cg2AT2JPb2rWEESIgLzmCQ6Ly1hAXGYBT4ySiy89ZoNpEpYIEKif/5+sA4WAVWJjS9W
+	M4HYvAI2EuuezmSE2CcvcamrjR0iLihxcuYTFhCbGSjevHU22B0SAgc4JFa8PwfV4CLR0/yA
+	HcIWlnh1fAuULSXxsr8Nyi6WuHLuLBuE3cIo8agjA8K2l2hubQaKcwAt0JRYv0sfYhefxLuv
+	PawgYQkBXomONiGIajWJxf++A21lB7JlJBq5IaIeEpf7OhghARcrMW3yY9YJjHKzkNw/C8n9
+	sxBWLWBkXsUollpQnJuemmxYYAiPxuT83E2M4ISsZbyD8fL8f3qHGJk4GA8xSnAwK4nwnjP/
+	ly7Em5JYWZValB9fVJqTWnyI0RQYohOZpUST84E5Ia8k3tDE0sDEzMjEwtjS2ExJnHf3x6fp
+	QgLpiSWp2ampBalFMH1MHJxSDUyuFU1dvT9Sg1UrrFXe/Zq54Oi6t6ozs64zaS8q2vPIyz74
+	juUc3Ypz1ZJuhbk7KioUpBkZrJ9vP1XJvuKG/7vN5/L/ed73X2i27Of+11I+Tga+H5fvk5oU
+	e+jcUcvL6cG9lW7MIn8fiR2RVHFrLY1iP7Pquu/KVTVSOj/WnXfT3XPyuM8Gf551a6ZMY3oe
+	Pyfid1YQv/y0/xzWrP7qp+qYQ4yeljBXS4afF12/4EPkeZfAPtli5Sz/pPlJv641fT8oc1i+
+	NN513g217qxTX2w1rPXskliXaLHtXr7oX7Tv+bNBgZ/65n06dujixdwWHrfVSl6GUx5rp/VY
+	eTnocwUp+nC7PWmcOvNzN2vnCyWW4oxEQy3mouJEAKx8G1ZRBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrBLMWRmVeSWpSXmKPExsWy7bCSvO6yDIYMgzs3rS0ezNvGZvHy51U2
+	i2kffjJbzDjVxmqx79pJdotff9ezW2zs57Do2DqZyWLH8zPsFrv+NjNZXN41h82i+/oONou7
+	LZ2sFsuP/2Oy2PrpN6vFt74n7BZNf/axWFw7c4LVYvOlbywOwh6Xr3h7TJt0is3jzrU9bB4t
+	J/ezeHx8eovFY+KeOo++LasYPT5vkvNoP9DNFMAZxWWTkpqTWZZapG+XwJXx/OVapoJuloq/
+	rTwNjD3MXYycHBICJhIfb00Hsrk4hAS2M0rMWXeAESIhI9F9fy97FyMHkC0scfhwMUTNR0aJ
+	j+cfMoHUsAnoSezpXcUKkhARWMEkMf/WR3YQh1ngN6PEpB/N7CBVwgJhElNWLmADsVkEVCU2
+	vlgN1s0rYCOx7ulMqG3yEpe62tgh4oISJ2c+YQGxmYHizVtnM09g5JuFJDULSWoBI9MqRtHU
+	guLc9NzkAkO94sTc4tK8dL3k/NxNjODI0Qrawbhs/V+9Q4xMHIyHGCU4mJVEeM+Z/0sX4k1J
+	rKxKLcqPLyrNSS0+xCjNwaIkzquc05kiJJCeWJKanZpakFoEk2Xi4JRqYOLQ5k7N8xNUZr+4
+	81VmVciXfUq5uzkz+LX8vpcv77ERTM4+52YQx7Cztu/+1hWeiodrpebM0Nzm1fY1/9fN0KAH
+	P3cLyxjOOxa7a7rbzw+pfF4Tjz9Q+z1r2a9vth6x/46pnVbUX3RIxecr665XaUpWuq0OJx2u
+	XbxT1XEpe6b+o3yG9+VXzFZKFQlmXL8t5S0113f6TK7MaenCsUdvbjlw+q2119XiM8rLq3f9
+	nPtOwGhqudDXhtLsDTvnlvQm2M7XOh3n9+25ncO/HNn7GnlsHr1ZZVanhWfs33fxcsqM5F2+
+	8ioL0tq3pWTsP5wy5/D0JZ43pP114q3uPzx1Sk854/yBA9z7Np4/frDz1SElluKMREMt5qLi
+	RABKDV6vCwMAAA==
+X-CMS-MailID: 20250417023415epcas1p47da6d269afcb5d1807004c9b708675a5
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250417023415epcas1p47da6d269afcb5d1807004c9b708675a5
+References: <CGME20250417023415epcas1p47da6d269afcb5d1807004c9b708675a5@epcas1p4.samsung.com>
 
+There is no trace when a ufs uic command error occurs.
 
+So, add "UFS_CMD_ERR" enum to ufs_trace_str_t and add trace function calls when a uic
+command error happens.
 
-On 4/16/2025 5:43 PM, Dmitry Baryshkov wrote:
-> On Wed, 16 Apr 2025 at 12:08, Nitin Rawat <quic_nitirawa@quicinc.com> wrote:
->>
->>
->>
->> On 4/15/2025 2:59 PM, Dmitry Baryshkov wrote:
->>> On 14/04/2025 23:34, Nitin Rawat wrote:
->>>>
->>>>
->>>> On 4/11/2025 4:38 PM, Dmitry Baryshkov wrote:
->>>>> On Fri, 11 Apr 2025 at 13:50, Nitin Rawat <quic_nitirawa@quicinc.com>
->>>>> wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> On 4/11/2025 1:38 AM, Dmitry Baryshkov wrote:
->>>>>>> On Thu, Apr 10, 2025 at 02:30:57PM +0530, Nitin Rawat wrote:
->>>>>>>> Refactor the UFS PHY reset handling to parse the reset logic only
->>>>>>>> once
->>>>>>>> during probe, instead of every resume.
->>>>>>>>
->>>>>>>> Move the UFS PHY reset parsing logic from qmp_phy_power_on to
->>>>>>>> qmp_ufs_probe to avoid unnecessary parsing during resume.
->>>>>>>
->>>>>>> How did you solve the circular dependency issue being noted below?
->>>>>>
->>>>>> Hi Dmitry,
->>>>>> As part of my patch, I moved the parsing logic from qmp_phy_power_on to
->>>>>> qmp_ufs_probe to avoid unnecessary parsing during resume. I'm uncertain
->>>>>> about the circular dependency issue and whether if it still exists.
->>>>>
->>>>> It surely does. The reset controller is registered in the beginning of
->>>>> ufs_qcom_init() and the PHY is acquired only a few lines below. It
->>>>> creates a very small window for PHY driver to probe.
->>>>> Which means, NAK, this patch doesn't look acceptable.
->>>>
->>>> Hi Dmitry,
->>>>
->>>> Thanks for pointing this out. I agree that it leaves very little time
->>>> for the PHY to probe, which may cause issues with targets where
->>>> no_pcs_sw_reset is set to true.
->>>>
->>>> As an experiment, I kept no_pcs_sw_reset set to true for the SM8750,
->>>> and it caused bootup probe issues in some of the iterations I ran.
->>>>
->>>> To address this, I propose updating the patch to move the
->>>> qmp_ufs_get_phy_reset call to phy_calibrate, just before the
->>>> reset_control_assert call.
->>>
->>> Will it cause an issue if we move it to phy_init() instead of
->>> phy_calibrate()?
->>
->> Hi Dmitry,
->>
->> Thanks for suggestion.
->> Phy_init is invoked before phy_set_mode_ext and ufs_qcom_phy_power_on,
->> whereas calibrate is called after ufs_qcom_phy_power_on. Keeping the UFS
->> PHY reset in phy_calibrate introduces relatively more delay, providing
->> more buffer time for the PHY driver probe, ensuring the UFS PHY reset is
->> handled correctly the first time.
-> 
-> We are requesting the PHY anyway, so the PHY driver should have probed
-> well before phy_init() call. I don't get this comment.
-> 
->>
->> Moving the calibration to phy_init shouldn't cause any issues. However,
->> since we currently don't have an initialization operations registered
->> for init, we would need to add a new PHY initialization ops if we decide
->> to move it to phy_init.
-> 
-> Yes. I don't see it as a problem. Is there any kind of an issue there?
+DooHyun Hwang (2):
+  scsi: ufs: Add an enum for ufs_trace to check ufs cmd error
+  scsi: ufs: core: Add a trace function calling when uic command error
+    occurs
 
-No issues. In my next patchset, I would add a new init ops registered 
-for qcom phy and move get ufs phy reset handler to it.
+ drivers/ufs/core/ufs_trace.h | 1 +
+ drivers/ufs/core/ufshcd.c    | 5 +++++
+ include/ufs/ufs.h            | 2 +-
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
-Regards,
-Nitin
-
-> 
->>
->> Please let me know if this looks fine to you, or if you have any
->> suggestions. I am open to your suggestions.
-> 
-> phy_init() callback
-> 
+-- 
+2.48.1
 
