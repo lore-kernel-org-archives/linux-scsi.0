@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4641F15ADB4
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2025 21:34:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 050EE15ADB4;
+	Thu, 17 Apr 2025 21:35:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744925648; cv=none; b=nXLSUB65ONfLk/i37FNtoK/FeeiVDp0g39A3e3snTFU6Yw3MB/2amSDVoFK4Wu3y2izvDJwOjIlCi6p9SvXzWuoJbZ16eiN6kjY321QbulSyK1kq8ELANm6xIZRmg00zRuieZj+4n4c9aXkBUO8cmxi8vsYRpa/ragifotZEVS0=
+	t=1744925759; cv=none; b=jyjFRp9UHnP8UWDCesX8Ck4QA0Thtv6FltWIATvggZUZLyGxSq5Me9pkS/ozMs5p73ZJFHxjPKGBotnLLz3psyfaxDDdl6tT/AzVPHEbml9/DTDU53Cn/0Atdwu+A7+NLwmWgif/7INsLgUEGn7eidPOBUBXj5owUywctuSLu4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744925648; c=relaxed/simple;
-	bh=yCg46XR5Wm1jw0b5Ne63DAmCD8xHv8YNveWPm+uWqFQ=;
+	s=arc-20240116; t=1744925759; c=relaxed/simple;
+	bh=MyiQkslkXnkL/9CWbGJIC+jcYPU7Z1g6zBpSblxDa28=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZLK8mZxj/R4syy/J0sF0tx03gItjm12H3J903WGoeDOg62OL4lB1Aq5bIBGAS35a66qgBtAHlvs/sivC8qFuqevtTiJ30GLFLf04aALYfmSsAuPhy9PFY3qUKhr/zxlcWNdmivMkB+LvAwa9PXvVdflX3lF7aNjzWLMUs3UGMOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3svWLGWt; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=Ur5qwAXAuAS4vml7jw+ZrDJEr2Z3kN4qUhx101N6WaY2tuvivAmG+XSC+tZyoq+z3saE10HkXvY6BtqLrHoaopovSpg0R/4S9VPFc3d/BJi+vrTBPQDOyAY10V6kemhzqXHO84h3pSUMpDkLA8n+JpWzOMbrGO+VCu6ZtnGndrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nvcKf8VD; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3svWLGWt"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nvcKf8VD"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZdrkP0lcZzm0jvc;
-	Thu, 17 Apr 2025 21:34:05 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZdrmQ6CnVzlgqyG;
+	Thu, 17 Apr 2025 21:35:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1744925643; x=1747517644; bh=yCg46XR5Wm1jw0b5Ne63DAmC
-	D8xHv8YNveWPm+uWqFQ=; b=3svWLGWtoRe+M6EqkR63FV3zyndyNlHhLOCnX8Td
-	2gOp3c09h0WC8Qz1R6NTbrhjEopVuy+qwFld9Rkl4oy5yMC755S/gF+3OP/NVwfl
-	Z/qUpxKGOKPcig6KUp24yZ77rC3E7eta5F+yXRuRkr6I8xXwlbIzsKz0RIerleSy
-	7lUkJz+wavLqXOl1os6CyIgbbcVaDVTlqb3ave8jAcABMj89236Bl7syGvgeXA1t
-	G7JLk9+UxLpx5+4BUsMsI2I5VW+nMOJcQ6bgvT5jiJbHvkuaL9KXzwjZ1/5DpL9G
-	16mGcP0AIvDx0/4CRcD2CiTCsBZPNLMRyFewzTTmPiYtqA==
+	 s=mr01; t=1744925747; x=1747517748; bh=JDCrab6QUmlWvGRIySBTmurE
+	y7/IxjOZr4B2PNlCkC0=; b=nvcKf8VDAHmRMNQdFvXN/jtQUI4SCE9o+ZEFFEPg
+	nRrKG0veG254TV7A9K2rBi4UZNFtIPXnccYO01vTXjPudbxuoQp643avEl9CMrdc
+	vnx1qthIrtVc1tg9c1eMPSJohfeW4joceuNa7/zLgWt+I5rDP+t25kZWBpnwYvq3
+	wic9SC0km3Lhi/k8lc1D/EKM5tM8eeae+yDk38caWcKEPjbFJDY1k+DU5oYti2sT
+	xAcUN50ybEIvhYK5wDYxL4eIgJyG1+dVGAPNzgi61wFwbokOu7W75J1AqO/6dRtX
+	iNVJr9LKZ1jNZ4ZeyI90Bj1hEcrSAVAIuADxGFmHdXlrNw==
 X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ISbZV3UT_bvt; Thu, 17 Apr 2025 21:34:03 +0000 (UTC)
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id r-wPwt3aOQC1; Thu, 17 Apr 2025 21:35:47 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZdrkG5tvyzm0jw7;
-	Thu, 17 Apr 2025 21:33:58 +0000 (UTC)
-Message-ID: <e739732d-bc04-4c8f-a129-b974434ce4b2@acm.org>
-Date: Thu, 17 Apr 2025 14:33:57 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4Zdrm74Jsjzlgqxf;
+	Thu, 17 Apr 2025 21:35:34 +0000 (UTC)
+Message-ID: <17781804-d36f-41c2-a858-1edf905ca8ac@acm.org>
+Date: Thu, 17 Apr 2025 14:35:33 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,41 +50,59 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/24] scsi: ufs: core: Rework
- ufshcd_mcq_compl_pending_transfer()
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>
-References: <20250403211937.2225615-1-bvanassche@acm.org>
- <20250403211937.2225615-13-bvanassche@acm.org>
- <0390adb9d0ebed4ba4b386453d20175b1f3a0709.camel@mediatek.com>
- <84d20bdc-fcd9-42e4-939f-a3ec0422e646@acm.org>
- <41c2d72bb792a9fab243e2586696db91205c63bb.camel@mediatek.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Add a trace function calling when
+ uic command error occurs
+To: DooHyun Hwang <dh0421.hwang@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
+ quic_mnaresh@quicinc.com
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
+ jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
+ sh8267.baek@samsung.com, wkon.kim@samsung.com
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+ <CGME20250417023419epcas1p343060855c4470f8056116a207a584956@epcas1p3.samsung.com>
+ <20250417023405.6954-3-dh0421.hwang@samsung.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <41c2d72bb792a9fab243e2586696db91205c63bb.camel@mediatek.com>
+In-Reply-To: <20250417023405.6954-3-dh0421.hwang@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On 4/17/25 5:39 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> If blk_mq_rq_state(rq) state is MQ_RQ_COMPLETE, the code
-> before modification would skip this tag.
-> But the code after modification will execute the function(fn).
-> This should cause issues, right?
+On 4/16/25 7:34 PM, DooHyun Hwang wrote:
+> When a uic command error occurs, there is no trace function calling.
+> Therefore, trace function calls are added when a uic command error happens.
+> 
+> Signed-off-by: DooHyun Hwang <dh0421.hwang@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ab98acd982b5..baac1ae94efc 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2534,6 +2534,9 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+>   	hba->active_uic_cmd = NULL;
+>   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>   
+> +	if (ret)
+> +		ufshcd_add_uic_command_trace(hba, uic_cmd, UFS_CMD_ERR);
+> +
+>   	return ret;
+>   }
+>   
+> @@ -4306,6 +4309,8 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+>   	}
+>   out:
+>   	if (ret) {
+> +		ufshcd_add_uic_command_trace(hba, hba->active_uic_cmd,
+> +					     UFS_CMD_ERR);
+>   		ufshcd_print_host_state(hba);
+>   		ufshcd_print_pwr_info(hba);
+>   		ufshcd_print_evt_hist(hba);
 
-Hi Peter,
-
-My understanding is that the function modified by patch 12/24,
-ufshcd_mcq_compl_pending_transfer(), is only called by the UFS error
-handler. The UFS error handler is only activated after all pending
-requests have completed (MQ_RQ_IDLE) or timed out (MQ_RQ_STARTED).
-No requests should have the state MQ_RQ_COMPLETE when the error handler
-is activated.
+Shouldn't the value of 'ret' be included in the UFS_CMD_ERR trace output?
 
 Thanks,
 
