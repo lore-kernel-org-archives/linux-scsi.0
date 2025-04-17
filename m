@@ -1,57 +1,72 @@
 Received: from mx2.usergate.com (unknown [46.229.79.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76A051DE889;
-	Thu, 17 Apr 2025 04:57:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C2F41DF972;
+	Thu, 17 Apr 2025 04:58:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.229.79.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744865883; cv=none; b=RlCH+wr68eCYrfbQrw3DRpbjlYa7gTHl/MMZ1I54uOkcZRzf6LDmQYm4DhJXXb6oWAO2g4u1Nems91wOOI18waVAnjtVn4w61QLz1E0zwmKHxiSWfRBgSVkWQCgaT8aKCMyY/K0VP58yC2cEoLWfJ4sbB37ZZbpVUxNjbIeJc+c=
+	t=1744865889; cv=none; b=K6AYJxvvm8KHSNdCM1wUANW11/G1EjWWV7Zb27YgUnSj466Tt7Le9dmw3LawhjETQZU0lV4jZkWDGegox/bU4GLwC6J/hfiRHXrjI0iUrMTdRP6TknaPwwKQ5c9fiKZgoRNh0B7DJHqM13WxKxVARzXIUtC5etik8x33f6WIdNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744865883; c=relaxed/simple;
-	bh=QUCSGN8Amri6gWsa/LlkBd+tPzIdUsEmXusdXXyHkxM=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=CgE+KJQ6DWT+bDtxrRNCqS/TGCsP2qYE+SxX7bhFpMFnTTWiFDAPLcDiFFLgrJB/O0DyhjT2JChR+V27tWzXEZyhZ1F1B6uldsp/GSXvTPP5q1oT3iVjpVtVWKwnvQoRjHxZu7EitrwKHg1qSGmLBExDhnkgVCylohcQHu2CuAo=
+	s=arc-20240116; t=1744865889; c=relaxed/simple;
+	bh=Od0yWLlZbKBUa36Zzz8mWeVChx1sO/abmn2CfT7dci0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Y++HZVV93VqooYB331JtMsUPCVpSrewXou5jrtKspkhLZ4qUx/VXlxYpYBDuPDz9FkSYiRmPHMYc4xmt9ythbQR86gxc9Zyeuv2UFv0M9vKWWV/ovjlmSKIkfV3Hu58F6l11Rp4PaYHgZVEKn5zO6T8TNDvRTz/ND/F7NuxLhCM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com; spf=pass smtp.mailfrom=usergate.com; arc=none smtp.client-ip=46.229.79.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=usergate.com
 Received: from mail.usergate.com[192.168.90.36] by mx2.usergate.com with ESMTP id
-	 A3B53BB2C54F469F8E995EE847D2F249; Thu, 17 Apr 2025 11:22:27 +0700
+	 6C2D10B8719048AC9B342C1F91B4F3E6; Thu, 17 Apr 2025 11:22:28 +0700
 From: Boris Belyavtsev <bbelyavtsev@usergate.com>
 To: <hare@suse.com>
 CC: <linux-scsi@vger.kernel.org>,<linux-kernel@vger.kernel.org>,"Boris
  Belyavtsev" <bbelyavtsev@usergate.com>
-Subject: [PATCH 0/3] aic79xx: Add some non-NULL checks
-Date: Thu, 17 Apr 2025 11:22:17 +0700
-Message-ID: <20250417042220.782230-1-bbelyavtsev@usergate.com>
+Subject: [PATCH 3/3] scsi: aic79xx: check for non-NULL scb in
+	 ahd_linux_queue_abort_cmd
+Date: Thu, 17 Apr 2025 11:22:20 +0700
+Message-ID: <20250417042220.782230-4-bbelyavtsev@usergate.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250417042220.782230-1-bbelyavtsev@usergate.com>
+References: <20250417042220.782230-1-bbelyavtsev@usergate.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset="utf-8"
 X-ClientProxiedBy: ESLSRV-EXCH-01.esafeline.com (192.168.90.36) To
  nsk02-mbx01.esafeline.com (10.10.1.35)
-X-Message-Id: 3D6BE4F57BEA488C8529B28B12F87014
-X-MailFileId: A2EA105D036349AB9667BB5F567F5B1C
+X-Message-Id: 35772813839640AFB2B07F5FF5F13D01
+X-MailFileId: 52CED540A56D494C8055DFF53352ED72
 
-Add non-NULL checks for ahd_lookup_scb return value.
-scb could be NULL if an attacker has special equipment to return
-certain values to the driver.
+possible NULL pointer dereference in case hardware returns invalid scb
+index
 
-Belyavtsev Boris (1):
-  scsi: aic79xx: check for non-NULL scb in ahd_handle_seqint
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Boris Belyavtsev (2):
-  scsi: aic79xx: check for non-NULL scb in ahd_handle_pkt_busfree
-  scsi: aic79xx: check for non-NULL scb in ahd_linux_queue_abort_cmd
+Signed-off-by: Boris Belyavtsev <bbelyavtsev@usergate.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- drivers/scsi/aic7xxx/aic79xx_core.c | 15 +++++++++------
- drivers/scsi/aic7xxx/aic79xx_osm.c  |  3 ++-
- 2 files changed, 11 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic7=
+9xx_osm.c
+index 17dfc3c72110..7d40c7d80411 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -2265,7 +2265,8 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd *cmd)
+                 * and hope that the target responds.
+                 */
+                pending_scb =3D ahd_lookup_scb(ahd, active_scbptr);
+-               pending_scb->flags |=3D SCB_RECOVERY_SCB|SCB_ABORT;
++               if (pending_scb =3D=3D NULL)
++                       pending_scb->flags |=3D SCB_RECOVERY_SCB|SCB_ABORT;
+                ahd_outb(ahd, MSG_OUT, HOST_MSG);
+                ahd_outb(ahd, SCSISIGO, last_phase|ATNO);
+                scmd_printk(KERN_INFO, cmd, "Device is active, asserting AT=
+N\n");
 --
 2.43.0
 
