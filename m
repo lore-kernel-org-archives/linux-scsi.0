@@ -1,28 +1,28 @@
 Received: from mx2.usergate.com (unknown [46.229.79.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A6E31E9B15;
-	Thu, 17 Apr 2025 05:54:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A816F1E1DEB;
+	Thu, 17 Apr 2025 05:55:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.229.79.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744869301; cv=none; b=Ywb1buex5yj/kVfA4KhqnmsYC/Elv8cCfnN2R+WqbB2W9NC/RghB96Q08QaOjsk1+2q4muA4Msp+pSiF6YqUv6Kk/hRu8be1CGpOzutzn4f0ZQ6JGYvza/bFhnC75ibFMSn9z+OrauwnOaEoWzcbYYisqAPdcKoEoxlWpaHgYxs=
+	t=1744869304; cv=none; b=meL2RgrN3fEtni2Rom5refpOWTRn9Az/5Djs+inh5ZEDR8gKcUhOh9hsIfIQxQTbAydT6E9fGHPziUDHW4F+VK2TC0FHf09N80m6Jl7INhb+Uw4k4f3P5wuHFVH03J1xcwstPWcOFoKjZFffKIRDhCeZwU7e1ICXSdfDoXmoyy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744869301; c=relaxed/simple;
-	bh=VYH/7Wow5L4HyEpvwlReBHdPmPzxrGo6yuuSH/jknT4=;
+	s=arc-20240116; t=1744869304; c=relaxed/simple;
+	bh=QolKNjhVzMoUZI6l4ywmFBMt62EtnAuW+iC8PalOFIk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BqLPKXimpyoU6A1uRaxf1tgs9N2ZtME6KOoEMaRhfzFt8sFRPWyQ7KLm4sl1Mm7J9sOA2qeHcoh3hsXlpSGl1Oj+Zu1rI6l48twMPtpk3o40FPF35WUuWr5Suvw/kVB5D7bJmmyOUvmnv7Af6HdxTKaKa6I+FGHgMiPUHDdRx6o=
+	 MIME-Version:Content-Type; b=HRcW2G8L6cmwV8k5NdVohCh0I+VqyE9Yz6XnTZZkSwafR+7jVnStJ3r0txCTxJ6l8EOq0tQCZbF2j4qmLyzBtuEU622CaH6MTy6FZSWnk1znlpLEROwUYMKu3Qt5+2P4PLSvqbg6YoLwvfz3cFRO4tS1JzEV159gHM5YEpZHOpg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com; spf=pass smtp.mailfrom=usergate.com; arc=none smtp.client-ip=46.229.79.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=usergate.com
 Received: from mail.usergate.com[192.168.90.36] by mx2.usergate.com with ESMTP id
-	 8ADCAE0D5E6249BF9108FBF3A593FD90; Thu, 17 Apr 2025 11:20:36 +0700
+	 1EA52C4FE87A475F88E770CC6BBE1020; Thu, 17 Apr 2025 11:20:39 +0700
 From: Boris Belyavtsev <bbelyavtsev@usergate.com>
 To: <hare@suse.org>
 CC: <linux-scsi@vger.kernel.org>,<linux-kernel@vger.kernel.org>,"Boris
  Belyavtsev" <bbelyavtsev@usergate.com>
-Subject: [PATCH 1/3] scsi: aic79xx: check for non-NULL scb in ahd_handle_seqint
-Date: Thu, 17 Apr 2025 11:20:13 +0700
-Message-ID: <20250417042015.780823-2-bbelyavtsev@usergate.com>
+Subject: [PATCH 2/3] scsi: aic79xx: check for non-NULL scb in ahd_handle_pkt_busfree
+Date: Thu, 17 Apr 2025 11:20:14 +0700
+Message-ID: <20250417042015.780823-3-bbelyavtsev@usergate.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250417042015.780823-1-bbelyavtsev@usergate.com>
 References: <20250417042015.780823-1-bbelyavtsev@usergate.com>
@@ -32,54 +32,43 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset="utf-8"
 X-ClientProxiedBy: ESLSRV-EXCH-01.esafeline.com (192.168.90.36) To
  nsk02-mbx01.esafeline.com (10.10.1.35)
-X-Message-Id: AB0E7E0DA70B4CE0BA00814BD03958CA
-X-MailFileId: BF22AFAA632E4CA2B454FDD57F9F88FA
+X-Message-Id: 9D225A5F3469407A9B34E96E4624CC77
+X-MailFileId: D35C4025561B44B7AB63E0C5CC12AA03
 
-NULL pointer dereference is possible when compiled with AHD_DEBUG and
-AHD_SHOW_RECOVERY is set if data in SCBPTR =D0=B8 SCBPTR+1 ports is incorre=
-ct
+If hardware returns invalid scbid scb could be NULL
 
 Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
 Signed-off-by: Boris Belyavtsev <bbelyavtsev@usergate.com>
 ---
- drivers/scsi/aic7xxx/aic79xx_core.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic=
 79xx_core.c
-index f9372a81cd4e..ff9ae0f8e153 100644
+index ff9ae0f8e153..27ec31457e7d 100644
 --- a/drivers/scsi/aic7xxx/aic79xx_core.c
 +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -2205,14 +2205,16 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int ints=
-tat)
-                        ahd_print_path(ahd, scb);
-                        printk("data overrun detected %s.  Tag =3D=3D 0x%x.=
-\n",
-                               ahd_lookup_phase_entry(lastphase)->phasemsg,
--                              SCB_GET_TAG(scb));
-+                              scb !=3D NULL ? SCB_GET_TAG(scb) : 0);
-                        ahd_print_path(ahd, scb);
-                        printk("%s seen Data Phase.  Length =3D %ld.  "
-                               "NumSGs =3D %d.\n",
-                               ahd_inb(ahd, SEQ_FLAGS) & DPHASE
-                               ? "Have" : "Haven't",
--                              ahd_get_transfer_length(scb), scb->sg_count)=
-;
--                       ahd_dump_sglist(scb);
-+                              scb !=3D NULL ? ahd_get_transfer_length(scb)=
- : -1,
-+                              scb !=3D NULL ? scb->sg_count : -1);
-+                       if (scb !=3D NULL)
-+                               ahd_dump_sglist(scb);
-                }
- #endif
+@@ -2997,9 +2997,10 @@ ahd_handle_pkt_busfree(struct ahd_softc *ahd, u_int =
+busfreetime)
+                ahd_print_path(ahd, scb);
+                printk("Unexpected PKT busfree condition\n");
+                ahd_dump_card_state(ahd);
+-               ahd_abort_scbs(ahd, SCB_GET_TARGET(ahd, scb), 'A',
+-                              SCB_GET_LUN(scb), SCB_GET_TAG(scb),
+-                              ROLE_INITIATOR, CAM_UNEXP_BUSFREE);
++               if (scb !=3D NULL)
++                       ahd_abort_scbs(ahd, SCB_GET_TARGET(ahd, scb), 'A',
++                                      SCB_GET_LUN(scb), SCB_GET_TAG(scb),
++                                      ROLE_INITIATOR, CAM_UNEXP_BUSFREE);
 
+                /* Return restarting the sequencer. */
+                return (1);
 --
 2.43.0
 
