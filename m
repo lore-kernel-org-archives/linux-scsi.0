@@ -1,161 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDE551ADC83;
-	Fri, 18 Apr 2025 11:45:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59FB22405F8;
+	Fri, 18 Apr 2025 21:29:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744976758; cv=none; b=P+iWccP2ZRfx3DqTBhwBNl8BJyhSgUBfmKTXzAGaiwyso5xKlO8XrTEvJucFjfSGR3AcItR7z6snf9dsiXDl8BQYMNVzO/2ekVTm+Tg4HmtAVLY7W/ZHPZAu5VGoP8kgdhgu+ZXfSU9d9qiwpyWoNY0rcCXNHbaSiV1khfjkHTM=
+	t=1745011762; cv=none; b=Z5OOrhzU01Zpru8Txm0DT+7nq/yO7UU6ha3Q/nZs5hQr4lFconGh0PXSRMYefK9mCi5Biutj9qVuD71v/tXekvFF/iGT5SuXA4BJ6UYPl7irtye5x2U0IKX7atl2Phu2pNxoiticAyT5h3FdbMjhS8lxGFpUMo8DcJgONABHt3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744976758; c=relaxed/simple;
-	bh=8sWcMKjQ6OT0tOeRZS/baZJCKkaENqyhduVFXdYqwvg=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=dA9NECuFUsAh4+4z6vt5iDD12IGG87nhJJIqeQ9bhaxH7ZxaxEiRtYOijXI7E3j8O/ZHGf/1GF7xnaOqwkh1QunmII5mFU0yUQrXOmK3j8K+8qHRdql2bpUslUF9Bo+JHHnRTVzaqsTnMi/rIK8uYtuingOAhO/lc4z4xATh2D8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WRAdi/2W; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745011762; c=relaxed/simple;
+	bh=02K1TDhrRJCLo86IW3OtYhpy9D7KIuQr59mXQAg0Ti4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nqdFbqB5A24vptA/o//H5Zbo49AUf7y1qqNaG9dKQvn4ATVjLRVwsCMOAthnyTKGjXbct5ryKNWh3BiX7A5F1VVxs+5bcuUckclqck2rHfI31GWZuH3GVubeLmJsUY+LEclh1K942K8f21VyiFy34O6hTACrDFthk8AlN+yEiYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NcpWPQTt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WRAdi/2W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E220FC4CEE2;
-	Fri, 18 Apr 2025 11:45:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NcpWPQTt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B66DCC4CEE7;
+	Fri, 18 Apr 2025 21:29:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744976757;
-	bh=8sWcMKjQ6OT0tOeRZS/baZJCKkaENqyhduVFXdYqwvg=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=WRAdi/2WrQfahZ7+3VX//BZ5sKlZhjvyigm06fWPaaul2I+APGgVTFJp81yI7XBRi
-	 7tJrvHd8QAVcLhJOmydcUsfPEgaStUgjEYbKfGSDLY1blniGfuBNp6fWF24Fun35UK
-	 8Dvg6pxtX9gx1ZZI06u4BRsDya4JSSO6NJn8CGKQRdWBJAt62bihDkLM5zIpXOleTK
-	 Hk2WgoiSD7pg43+9dSXmzQQJI/A7vY+ojHrOgCwruTv/JQBds2WeA7qBtj+OrK2Dk3
-	 e24a5RG5+TJP3m9MB6zoP7od1+vufeXB4wevc02WLPGta8wX8c9BO72ekdFjO1ZzP7
-	 Pw+1UwXT8r94A==
-Date: Fri, 18 Apr 2025 13:45:55 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-CC: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v2_2/5=5D_ata=3A_libata-scsi=3A_Fai?=
- =?US-ASCII?Q?l_MODE_SELECT_for_unsupported_mode_pages?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <5cf44067-4e3d-49c5-93e0-721337b0302d@kernel.org>
-References: <20250418075517.369098-1-dlemoal@kernel.org> <20250418075517.369098-3-dlemoal@kernel.org> <aAIQG2PpFMZeRwUx@ryzen> <5cf44067-4e3d-49c5-93e0-721337b0302d@kernel.org>
-Message-ID: <DC50C6CE-E3FF-494C-8167-4B662B03A48F@kernel.org>
+	s=k20201202; t=1745011761;
+	bh=02K1TDhrRJCLo86IW3OtYhpy9D7KIuQr59mXQAg0Ti4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=NcpWPQTtaQHQALpouJZo8DT6Tg7wTRi8Q+zX4sCbF+IjMpJgi2sc0ZHXuOTda7SLH
+	 BAfLY8UUK4OY8RCPTprI5pY4GRRZ6lUhvYn15o8CqJ9mMNFM4Thn1SJeNEKcPTNpYk
+	 vaKQT/CfCSHf1wjoKXXAguQFnkfe+bxRKPsZZfiVEcfDTv7twlyBKsE9hpcdDNezik
+	 WUDcGwoRueJZypiejw3nkueR0lxz4RlKSpVtgQU34ZshKLw226Yai8hEhJpf5iE+5r
+	 fuASnFhuwa1d+CMYNRBAdaBCk49w4ryG0ctwIv5UK52Yk6I42NyNdaG4LN83aHxwtp
+	 bE2eq0RsdUvOg==
+Message-ID: <8454a55d-bfcc-441a-837e-157123e881fe@kernel.org>
+Date: Sat, 19 Apr 2025 06:29:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sd_zbc: Limit the report zones buffer size to
+ UIO_MAXIOV
+To: SSiwinski@atto.com, Christoph Hellwig <hch@infradead.org>
+Cc: bgrove@atto.com, James.Bottomley@hansenpartnership.com,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, Steve Siwinski <stevensiwinski@gmail.com>
+References: <20250411203600.84477-1-ssiwinski@atto.com>
+ <Z_yinytV0e_BbNrF@infradead.org>
+ <OFA5AB0241.ED5C089D-ON85258C70.0068BDE0-85258C70.00721A7A@atto.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <OFA5AB0241.ED5C089D-ON85258C70.0068BDE0-85258C70.00721A7A@atto.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 4/19/25 05:46, SSiwinski@atto.com wrote:
+> 
+> "Christoph Hellwig" <hch@infradead.org> wrote on 04/14/2025 01:52:31 AM:
+> 
+>> On Fri, Apr 11, 2025 at 04:36:00PM -0400, Steve Siwinski wrote:
+>>> The report zones buffer size is currently limited by the HBA's
+>>> maximum segment count to ensure the buffer can be mapped. However,
+>>> the user-space SG_IO interface further limits the number of iovec
+>>> entries to UIO_MAXIOV when allocating a bio.
+>>
+>> Why does the userspace SG_IO interface matter here?
+>> sd_zbc_alloc_report_buffer is only used for the in-kernel
+>> ->report_zones call.
+> 
+> I was referring to the userspace SG_IO limitation (UIO_MAXIOV) in
+> bio_kmalloc(), which gets called when the report zones command is
+> executed and the buffer mapped in bio_map_kern().
+> 
+> Perhaps my wording here was poor and this is really a limitation of bio?
 
+sd_zbc_alloc_report_buffer() is called only from sd_zbc_report_zones() which is
+the disk ->report_zones() operations, which is NOT called for passthrough
+commands. So modifying sd_zbc_alloc_report_buffer() will not help in any way
+solving your issue with an SG_IO passthrough report zones command issued by the
+user.
 
-On 18 April 2025 11:30:35 CEST, Damien Le Moal <dlemoal@kernel=2Eorg> wrot=
-e:
->On 4/18/25 17:40, Niklas Cassel wrote:
->> On Fri, Apr 18, 2025 at 04:55:14PM +0900, Damien Le Moal wrote:
->>> For devices that do not support CDL, the subpage F2h of the control mo=
-de
->>> page 0Ah should not be supported=2E However, the function
->>> ata_mselect_control_ata_feature() does not fail for a device that does
->>> not have the ATA_DFLAG_CDL device flag set, which can lead to an inval=
-id
->>> SET FEATURES command (which will be failed by the device) to be issued=
-=2E
->>>
->>> Modify ata_mselect_control_ata_feature() to return -EOPNOTSUPP if it i=
-s
->>> executed for a device without CDL support=2E This error code is checke=
-d by
->>> ata_scsi_mode_select_xlat() (through ata_mselect_control()) to fail th=
-e
->>> MODE SELECT command immediately with an ILLEGAL REQUEST / INVALID FIEL=
-D
->>> IN CDB asc/ascq as mandated by the SPC specifications for unsupported
->>> mode pages=2E
->>>
->>> Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-p=
-age translation")
->>> Cc: stable@vger=2Ekernel=2Eorg
->>> Signed-off-by: Damien Le Moal <dlemoal@kernel=2Eorg>
->>> ---
->>>  drivers/ata/libata-scsi=2Ec | 11 +++++++++++
->>>  1 file changed, 11 insertions(+)
->>>
->>> diff --git a/drivers/ata/libata-scsi=2Ec b/drivers/ata/libata-scsi=2Ec
->>> index 24e662c837e3=2E=2E15661b05cb48 100644
->>> --- a/drivers/ata/libata-scsi=2Ec
->>> +++ b/drivers/ata/libata-scsi=2Ec
->>> @@ -3896,6 +3896,15 @@ static int ata_mselect_control_ata_feature(stru=
-ct ata_queued_cmd *qc,
->>>  	struct ata_taskfile *tf =3D &qc->tf;
->>>  	u8 cdl_action;
->>> =20
->>> +	/*
->>> +	 * The sub-page f2h should only be supported for devices that suppor=
-t
->>> +	 * the T2A and T2B command duration limits mode pages (note here the
->>> +	 * "should" which is what SAT-6 defines)=2E So fail this command if =
-the
->>> +	 * device does not support CDL=2E
->>> +	 */
->>> +	if (!(dev->flags & ATA_DFLAG_CDL))
->>> +		return -EOPNOTSUPP;
->>> +
->>>  	/*
->>>  	 * The first four bytes of ATA Feature Control mode page are a heade=
-r,
->>>  	 * so offsets in mpage are off by 4 compared to buf=2E  Same for len=
-=2E
->>> @@ -4101,6 +4110,8 @@ static unsigned int ata_scsi_mode_select_xlat(st=
-ruct ata_queued_cmd *qc)
->>>  	case CONTROL_MPAGE:
->>>  		ret =3D ata_mselect_control(qc, spg, p, pg_len, &fp);
->>>  		if (ret < 0) {
->>> +			if (ret =3D=3D -EOPNOTSUPP)
->>> +				goto invalid_fld;
->>>  			fp +=3D hdr_len + bd_len;
->>>  			goto invalid_param;
->>>  		}
->>> --=20
->>=20
->> I would prefer if we did not merge this patch, as it is already handled=
- in
->> higher up in the (only) calling function:
->> https://github=2Ecom/torvalds/linux/blob/v6=2E15-rc2/drivers/ata/libata=
--scsi=2Ec#L2582-L2589
->
->This code you point to is for mode sense=2E This patch deals with mode se=
-lect,
->where we are not checking for the subpage support, which is wrong=2E
->
+For reference, libzbc uses ioctl(SG_GET_SG_TABLESIZE) * sysconf(_SC_PAGESIZE) as
+the max buffer size and allocates page aligned buffers to avoid these SG_IO
+buffer mapping limitations.
 
-I linked to the wrong line=2E
-
-https://github=2Ecom/torvalds/linux/blob/v6=2E15-rc2/drivers/ata/libata-sc=
-si=2Ec#L4081
-
-The rest of the comment is still valid=2E
-
-This case that this patch tries to fix can already not happen=2E
-
-
-Kind regards,
-Niklas
-
-
-
->>=20
->> We only break if "dev->flags & ATA_DFLAG_CDL && pg =3D=3D CONTROL_MPAGE=
-"
->>=20
->> if this expression is false, we do a fallthrough,
->> which means fp =3D 3; goto invalid_fld;
->>=20
->>=20
->> Kind regards,
->> Niklas
->
->
->--=20
->Damien Le Moal
->Western Digital Research
+-- 
+Damien Le Moal
+Western Digital Research
