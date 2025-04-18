@@ -1,39 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A04C1FFC62;
-	Fri, 18 Apr 2025 23:07:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F7851FFC62;
+	Fri, 18 Apr 2025 23:07:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745017632; cv=none; b=g77D/PqQybsFQGs9X9cNV4WVhE4odkHIKJPDJ3GqhvDn6Hw9rFVYEfbgwtFkxMtv5YVlMmWrENF/8BD7K/eXDoVAaYBFHBhUKcgvt593yXj0d57tuu8q935MHHNXwPopXulRUSRe56qk1Nn4fv0K8ufHK5jHGb4x5ydgjh2P4ig=
+	t=1745017633; cv=none; b=ULhgzHUDshnrzV8hXmM8leQrLaINmbq+u6lblMREo+E90KqyPFZu5/rO4wHt+GoZr5SpG3XT48Y+3xSptX/KHxa3cp97PLjKSpOOqb7STYrJuOYGjSVIO9YG8capDgqas1CC0zIpI9sD2cLjsu9t4GSkBdPVQRnkkN+HP2ADBro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745017632; c=relaxed/simple;
-	bh=1Gp4ot/XTjOPevCzzt7O1tNdI+AWukDOLWkFWoGRCJ0=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=R7Ht4KwghwREVuvflT6oBZT8Fd4LrGNoHkAHdTnnHZ5+DsjZzGlg56x5wJfqW7XObIAzWrCNRl889vC6uuZvvJtShYW9IhRgdRiSlWO2e/gEWGGXb2jmnSHb59KiwxVrFfpBnPyUqNyMuIT85002evHDkkZQmNPj8QlQAOsvJ24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nGEsByan; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745017633; c=relaxed/simple;
+	bh=PAUBIgCu2UKGy9eddUYp7x38K4GGCEnZYI5Q2ay85ts=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Vh8fRS4ai71xpSk9HkLwVJdupSlF9jh+nd2j7TQNNSCy5KeGM/Q9qVzUv9DKtOcGn/HbvjSpO89VH0t+cPovSuh4y5Z4NCQflh+DucMvwPLtQL7/xd5XHcyVm4XaFjzysQfXm5Styq2dintx6Vz1nqvUu97hYEAa1P5TdsbTOuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FGgaEyos; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nGEsByan"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA800C4CEE2;
-	Fri, 18 Apr 2025 23:07:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FGgaEyos"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2A6BC4CEEC;
+	Fri, 18 Apr 2025 23:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745017631;
-	bh=1Gp4ot/XTjOPevCzzt7O1tNdI+AWukDOLWkFWoGRCJ0=;
-	h=From:To:Subject:Date:From;
-	b=nGEsByannoXwj40owZJQ5lRguHo+Vtf1ujYs6wW2ogxRSb98OZcsIWr9a0bSSqSk3
-	 cZU82OkO38jSDDW+pouZnyqSlx4tpD4YeuIxPHjwRR69QTDKVxbPRgpq0Bn5e0BbYB
-	 q3somjyTSLr56UBnjYFpND3N1Z2MMwjWQ6ssZFyLACnPZy9pmvl8qKjNZhIXYrGpG9
-	 XMpw4l/SOb5hwQnF+roLZ/XLL1zwpvSzozQVqVw+Kg1kCqWyV0XhGBhy48Cu2IjrZ4
-	 ISreQTDjKu7w9VyhYrIN+B6o4ZO//rnTS8TSixH+gFEFvU2/gIRPEzLukO6dVeZJkN
-	 MUS4ZKy6nPHsA==
+	s=k20201202; t=1745017632;
+	bh=PAUBIgCu2UKGy9eddUYp7x38K4GGCEnZYI5Q2ay85ts=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=FGgaEyosTaf9mjA48PhPr/VWnosIt4+magB1tcZnredsTOgWwcPBqH4UfBaGdKGED
+	 R5zRbBs4ILy09W9AsRpyIRsX9TUjPmwV0f1YblYpsVZlmDipP4aelvIniNwD9ZAlXw
+	 MO7eaRtMZ6khhZCL1EMnG4o2nYHwweiZEfQjHBsbeO2RX4C0Humrj+8SnEJEh/esj2
+	 paBEcLcSOL/EkjuWeaNpwLrjxIWEG6Jr+LVnha/l+lHQoo0G2knCHRLVGeq3d4aQ4P
+	 7f2F3k0fnhNzlJXNgmmrgGOZ8Zkj3lek3iggyYs++DYhKdyKHX1fuHV7Fzii/wdXgS
+	 Y3QTkDQiV/X3g==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v3 0/4] CDL Feature control improvements
-Date: Sat, 19 Apr 2025 08:06:19 +0900
-Message-ID: <20250418230623.375686-1-dlemoal@kernel.org>
+Subject: [PATCH v3 1/4] ata: libata-scsi: Fix ata_mselect_control_ata_feature() return type
+Date: Sat, 19 Apr 2025 08:06:20 +0900
+Message-ID: <20250418230623.375686-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250418230623.375686-1-dlemoal@kernel.org>
+References: <20250418230623.375686-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,44 +45,43 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Control of the enable/disable state of an ATA device Command Duration
-Limits (CDL) features has issues:
-1) Incorrect checks of the feature support for translating a MODE SELECT
-   command
-2) Incorrect feature state report translation in libata-scsi
-3) The state reported when enabling the feature was being ignored, which
-   caused needless SET FEATURES commands to be issued to the device,
-   thus causing an unwanted reset of the CDL statistics log page (which
-   is implied by any CDL activation action).
+The function ata_mselect_control_ata_feature() has a return type defined
+as unsigned int but this function may return negative error codes, which
+are correctly propagated up the call chain as integers.
 
-Patches 2 to 5 patches address these issues. In addition to these, patch
-1 corrects an incorrect function return type.
+Fix ata_mselect_control_ata_feature() to have the correct int return
+type.
 
-Martin,
+While at it, also fix a typo in this function description comment.
 
-I can take the scsi patch if you are OK with it. Or the reverse, you can
-take all patches through the scsi tree if you prefer. Please let me
-know.
+Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libata-scsi.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Changes from v2:
- - Dropped the patch "ata: libata-scsi: Fail MODE SELECT for unsupported
-   mode pages" (former patch 3) as it wasnot necessary
- - Added review tag to patch 1
-
-Changes from v1:
- - Added Patch 1 and 2
- - Added review tags to patches 3, 4 and 5
-
-Damien Le Moal (4):
-  ata: libata-scsi: Fix ata_mselect_control_ata_feature() return type
-  ata: libata-scsi: Fix ata_msense_control_ata_feature()
-  ata: libata-scsi: Improve CDL control
-  scsi: Improve CDL control
-
- drivers/ata/libata-scsi.c | 25 +++++++++++++++++--------
- drivers/scsi/scsi.c       | 36 ++++++++++++++++++++++++------------
- 2 files changed, 41 insertions(+), 20 deletions(-)
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2796c0da8257..24e662c837e3 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3886,12 +3886,11 @@ static int ata_mselect_control_spg0(struct ata_queued_cmd *qc,
+ }
+ 
+ /*
+- * Translate MODE SELECT control mode page, sub-pages f2h (ATA feature mode
++ * Translate MODE SELECT control mode page, sub-page f2h (ATA feature mode
+  * page) into a SET FEATURES command.
+  */
+-static unsigned int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
+-						    const u8 *buf, int len,
+-						    u16 *fp)
++static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
++					   const u8 *buf, int len, u16 *fp)
+ {
+ 	struct ata_device *dev = qc->dev;
+ 	struct ata_taskfile *tf = &qc->tf;
 -- 
 2.49.0
 
