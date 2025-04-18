@@ -1,127 +1,109 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC7E8C0E
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2025 00:09:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F0922DFA7;
+	Fri, 18 Apr 2025 04:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744934965; cv=none; b=X4WIFMoz15uBexO10Ua4XDHeZdjezDui48yXJYms7S/RQBXgNfZz4fvv4PQeYdpHSPIQCDnpNq7kcO/fXXmjV0QUuk2xo2sIUvE4kKzhkaudbC1qNTAlF6OXTuHtvBTdXg/deIYeSLqRx8QVJkTXFggUHZQSKj8ySsLlpDV0kdo=
+	t=1744951463; cv=none; b=FRJshpsdHmNEa/0D5AaJkvCKDOn0JSFUnSz4FX0/SsN8nJQt47GAcPR87ZDC76UOuX/ejQphIDp8pxR8o1s61OuwGZFmJVnwj9CLJTgtptWNf+R64bqT8uq0Rqb9sqZkp6OWf5AkdA6yVtp3QVJ4I1+ngqSWhVzXtTwG7wnC53M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744934965; c=relaxed/simple;
-	bh=1iz9cSuAyLptqR95CHj47SCbPvg7Ohoe4JgNu+5U5qQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RZl6rTY1AD/x2Q6ytcrPniy9pOgDggDHCAkuCwhdzOp7R4v/ukTMDnG4Ykkkf49LaTlrWzfuF4FhyvPN/iJ+R0kIao+okQFcl+WeeP7MdZvyrwE4GwAHotKb4PIAh67477lXfpbAFIiP6pTKuo9pjauqjczmW1JO4DMMOiiRfMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=4nBXufVf; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1744951463; c=relaxed/simple;
+	bh=HvpDoFmE8C8Lfh7/meePgZTyKzQrDFh5ry62b5Wy9M4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=EZzr1PO4eZRAGqUHo6LFOByQiwv/t8UUYqBRRYwKLYWDcUSM2/Bu/ohrbkQsSecUalWJGAwXFJ8KKmEwRtn5+Euq0xiAhMcQGKS2U541bfFUQwrzqBq0Uv0aXc/DjzoKZM2H22XWINCeRBPjFG35bHHN74m/v7oncXnD32C3Z3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=M1mz5CpV; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="4nBXufVf"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2263428c8baso92515ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Apr 2025 17:09:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1744934964; x=1745539764; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jRMQb6QKHkmqTIiBM1Dt1HJPQdB2qTTEuCJ+2vuCv5Q=;
-        b=4nBXufVf16edin5u70QmZSswWZ1rgDhrUDhZGk019WxD0uvUoGpsYxZCjShvxvvZ8Z
-         wRrS6Ko7VwGi7BwfSWhPDAE3VqFqDCiuOgDWPTwXGIc+QqEJdPw5wo1HQ7+1AELo8oeK
-         5Q2fDOn+uSa2w+Mc9xkDLEsGza2upiyMQ4u9lScELHegeCMZlHP3lZiW12f3hjdFx9+D
-         ubatEaYfG03qO+Ayfg7IalyI+bvxA7AAFzC3j6r6Epjp8XhHJWC5pFzk/2RTjRN5LCJT
-         c9lF+CK3LW+amvrweyONSkeFNIi6nabWIHEIf2DWXph4jtixkvDQs1rcjAnNTgw4hx2b
-         9Fnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744934964; x=1745539764;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jRMQb6QKHkmqTIiBM1Dt1HJPQdB2qTTEuCJ+2vuCv5Q=;
-        b=pRup/XeHyOJV3sdINjCCQh/DPUVpOT5FHuQ+CLHRrHPqAJ+6v3xrHfKB+f0p8M+lJg
-         6BKt239+oGuH1nf4mgZLHTMOcUOWhd/Sqndvr87vIY4SCoFw7G3MDvir/5ptdlYG7G/O
-         ofH4+AY6bJfJlFyXtxKlhtrlTzlSjYjUQ7OjSCkLy/qXKMZAF57S0uSM0dU3Amzn/CG6
-         tXcsy4btJtr4sw0GrY+r4iSRmAo7gYLAt9L11ggZSw8wOETHzcVkdLB+6acHWG+g8XJA
-         adtv8SnT11PavylBPdOKuu7RFznU0gtZVclRkUP61KfYnMTh9CoJFGk3bBCfI/y55ABV
-         FQIQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVdwo1kCkDKotMeKojhppD+h3DmW6WNQKWfuLB3U/ljtAbd6qCk0uTmI+R+Bp9x+vfnmmQ1ni+33Eq9@vger.kernel.org
-X-Gm-Message-State: AOJu0YxsQwkLrsYulIDyUYc0dYbNZhIfTdqeAvfa9QRK5/gIJRCsrRoS
-	ei7npwIIps/cpTXbbdKBrhoIJqCKHKNtR6cYmkMUC7urW9E/AjdKp72B0I6ApQ==
-X-Gm-Gg: ASbGncsPwCM9+gMHt9bZNfePvu27VW3zchF0SyhkHm5DzrQ7bZPnSE3flqmcswhvgyi
-	h7M8UjHoX7yV8cyG+Y6KEscicVwMjFwMSVa4QJ6j7ssiGrPUvVI+nqcTVpQ1oCC4gAEaTvj+2Vu
-	va2BLnnVXDYsOxTOX+uWOCEGmJGrZ4zj7Yivr2725jXlxvYw3C63lNeXiDCsRm8RqJaNaRolmAx
-	FxSi39VTCmWa4xSBUtemPdgMeAWM8rAsEhBv4TkqWl73LYjBB0Agtb1OLIewGnhfE8g7D2v+0gU
-	Lut67zjW/i2xIs0QKT6B/puVi+PJKtKq3O/npUnU1qKI35duAojD+S7W8fUccXxu8MqThwbomSQ
-	u
-X-Google-Smtp-Source: AGHT+IH/FUWHONJ58qRBe5zN9276vPde2PtlCDbwdodDOO1MF6EJkjcY5EVoILQbbQDQgKGBVq1tRw==
-X-Received: by 2002:a17:902:f603:b0:229:1de5:e8c9 with SMTP id d9443c01a7336-22c54560238mr794325ad.13.1744934963329;
-        Thu, 17 Apr 2025 17:09:23 -0700 (PDT)
-Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50bf5230sm6236225ad.73.2025.04.17.17.09.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Apr 2025 17:09:22 -0700 (PDT)
-Date: Thu, 17 Apr 2025 17:09:18 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] scsi: Improve CDL control
-Message-ID: <aAGYLkwoeMJI1s1Q@google.com>
-References: <20250416084238.258169-1-dlemoal@kernel.org>
- <20250416084238.258169-4-dlemoal@kernel.org>
- <aAB3iU7ZuQo5cH9z@google.com>
- <3c8f7e2a-ba73-4943-8372-0f322aaa3935@kernel.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="M1mz5CpV"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53I20ITf013014;
+	Fri, 18 Apr 2025 04:43:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	DhTVCz7oFnQ85dTd3BSO8mwUPp42l8g6+QUPGTRqihY=; b=M1mz5CpVusGX7VBe
+	6GWKq2xSphuPCPg8/UzX/KKrqQGcKGaaXT6tdXluG0AIwnykw9eGNX7cXoDOpvGm
+	SMA0dEV8S9sdhJxdV0CoAcD4JsjXLyBCrH1aNvM//tkoOa67//jGM/4oMPjoif0W
+	aVJsqFrfSzuF3A1uCFfqI00990lkbFsrLwJ3JqeMok9NKXrsnpKGoPlqqT0IHQfy
+	+Z8wGbBwtf4Sydy4KsToNrIBPsK0e3xMXcWsqmehbHNLecJQf3OXMiHMApn41bLB
+	Bzl30f58CwLwTWXFwProdFYYR8EnSj8Wbs4EbS9SByr0o3zD/WqBUORVlEi+D3p6
+	2naHMw==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yfgjrvs8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 18 Apr 2025 04:43:54 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53I4hrIH031764
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 18 Apr 2025 04:43:53 GMT
+Received: from [10.217.219.207] (10.80.80.8) by nasanex01c.na.qualcomm.com
+ (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 17 Apr
+ 2025 21:43:49 -0700
+Message-ID: <0a121c0f-edcb-4d5d-8427-f1eddddcb9bc@quicinc.com>
+Date: Fri, 18 Apr 2025 10:13:46 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3c8f7e2a-ba73-4943-8372-0f322aaa3935@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1 2/3] scsi: ufs: pltfrm: Add parsing support for disable
+ LPM property
+To: Nitin Rawat <quic_nitirawa@quicinc.com>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>, <krzk+dt@kernel.org>,
+        <robh@kernel.org>, <mani@kernel.org>, <conor+dt@kernel.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <peter.wang@mediatek.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+References: <20250417124645.24456-1-quic_nitirawa@quicinc.com>
+ <20250417124645.24456-3-quic_nitirawa@quicinc.com>
+Content-Language: en-US
+From: Mukesh Kumar Savaliya <quic_msavaliy@quicinc.com>
+In-Reply-To: <20250417124645.24456-3-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: V377Z0ZTJKasj_fyz_2PIJy5GvNWe9xW
+X-Proofpoint-ORIG-GUID: V377Z0ZTJKasj_fyz_2PIJy5GvNWe9xW
+X-Authority-Analysis: v=2.4 cv=Cve/cm4D c=1 sm=1 tr=0 ts=6801d88a cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=c46ZkW_Sk1zESUiFrnIA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-18_01,2025-04-17_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1011
+ malwarescore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 phishscore=0
+ suspectscore=0 impostorscore=0 mlxlogscore=999 mlxscore=0
+ priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2504180032
 
-On Thu, Apr 17, 2025 at 08:08:00PM +0900, Damien Le Moal wrote:
-> On 4/17/25 12:37, Igor Pylypiv wrote:
-> > On Wed, Apr 16, 2025 at 05:42:38PM +0900, Damien Le Moal wrote:
-> >> With ATA devices supporting the CDL feature, using CDL requires that the
-> >> feature be enabled with a SET FEATURES command. This command is issued
-> >> as the translated command for the MODE SELECT command issued by
-> >> scsi_cdl_enable() when the user enables CDL through the device
-> >> cdl_enable sysfs attribute.
-> >>
-> >> However, the implementation of scsi_cdl_enable() always issues a MODE
-> >> SELECT command for ATA devices when the enable argument is true, even if
-> >> CDL is already enabled on the device. While this does not cause any
-> >> issue with using CDL descriptors with read/write commands (the CDL
-> >> feature will be enabled on the drive), issuing the MODE SELECT command
-> >> even when the device CDL feature is already enabled will cause a reset
-> >> of the ATA device CDL statistics log page (as defined in ACS, any CDL
-> >> enable action must reset the device statistics).
-> >>
-> >> Avoid this needless actions (and the implied statistics log page reset)
-> >> by modifying scsi_cdl_enable() to issue the MODE SELECT command to
-> >> enable CDL if and only if CDL is not reported as already enabled on the
-> >> device.
-> > 
-> > Hi Damien,
-> > 
-> > What happens when a drive spins up with CDL enabled? Last year you sent
-> > a patch to make sure that CDL gets disabled by default. Is that still
-> > the case?
+
+
+On 4/17/2025 6:16 PM, Nitin Rawat wrote:
+[...]
+> +/**
+> + * ufshcd_parse_lpm_support - read from DT whether LPM modes should be disabled.
+> + * @hba: host controller instance
+> + */
+> +static void ufshcd_parse_lpm_support(struct ufs_hba *hba)
+> +{
+> +	struct device *dev = hba->dev;
+> +
+> +	hba->disable_lpm = of_property_read_bool(dev->of_node, "disable-lpm");
+> +	if (hba->disable_lpm)
+> +		dev_info(hba->dev, "UFS LPM is disabled\n");
+How about keeping as debug ?
+> +}
+> +
+[...]
+> --
+> 2.48.1
 > 
-> Yes, that is unchanged so that we keep being consistent with the fact that the
-> scsi layer starts with the sysfs cdl_enabled attribute set to false. So if an
-> ATA device starts with CDL enabled, it will be disabled.
-> 
-> That does not cause any issue with the CDL statistics log page because that page
-> is not persistent and cleared) on power-on-reset events and this change has no
-> effect on that. The CDL statistics log page will always be cleared on boot/reboot.
 > 
 
-Sounds good. Thank you for confirming, Damien!
-
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
