@@ -1,109 +1,162 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90F0922DFA7;
-	Fri, 18 Apr 2025 04:44:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B6F1DA21
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2025 04:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744951463; cv=none; b=FRJshpsdHmNEa/0D5AaJkvCKDOn0JSFUnSz4FX0/SsN8nJQt47GAcPR87ZDC76UOuX/ejQphIDp8pxR8o1s61OuwGZFmJVnwj9CLJTgtptWNf+R64bqT8uq0Rqb9sqZkp6OWf5AkdA6yVtp3QVJ4I1+ngqSWhVzXtTwG7wnC53M=
+	t=1744951739; cv=none; b=Tipu9fHLIrU+GwRcFHmNnKBouAbTdkn42+zWW6dy4jAm/3RnTL8q7+3j1Hl9j7aokB+P7vyb5zHaVJeUxJVZLCIMtvS1yyX1LAGO31YtVLDfGTB8C1PnDe3P42UcZ1PBSggVVkoO2DBUiZFF8ny6cPGtv4Xnb53P/rnKUtavG+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744951463; c=relaxed/simple;
-	bh=HvpDoFmE8C8Lfh7/meePgZTyKzQrDFh5ry62b5Wy9M4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=EZzr1PO4eZRAGqUHo6LFOByQiwv/t8UUYqBRRYwKLYWDcUSM2/Bu/ohrbkQsSecUalWJGAwXFJ8KKmEwRtn5+Euq0xiAhMcQGKS2U541bfFUQwrzqBq0Uv0aXc/DjzoKZM2H22XWINCeRBPjFG35bHHN74m/v7oncXnD32C3Z3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=M1mz5CpV; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1744951739; c=relaxed/simple;
+	bh=Vx9jz1zUWuMVqiOGM+dVKc3TQBEl7E+SyT+EDrvlm1Q=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=l7Vhr2HYnplFQRYTjtMVqNfAp5gfvyPwJP4SPm7pUQVZD5Jjp8fp2W4KBhkCUGtu8K4wdnekjejfRydJDHb4t6XLeFvmpRFOkpk9mOfW94fgXJyIunAnjYqFc+A63NUeMVBTWqswqgI7h3vQ4HDbEnEejiQo4pZcPFcucczc6tI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=bCJqCyWe; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="M1mz5CpV"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53I20ITf013014;
-	Fri, 18 Apr 2025 04:43:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	DhTVCz7oFnQ85dTd3BSO8mwUPp42l8g6+QUPGTRqihY=; b=M1mz5CpVusGX7VBe
-	6GWKq2xSphuPCPg8/UzX/KKrqQGcKGaaXT6tdXluG0AIwnykw9eGNX7cXoDOpvGm
-	SMA0dEV8S9sdhJxdV0CoAcD4JsjXLyBCrH1aNvM//tkoOa67//jGM/4oMPjoif0W
-	aVJsqFrfSzuF3A1uCFfqI00990lkbFsrLwJ3JqeMok9NKXrsnpKGoPlqqT0IHQfy
-	+Z8wGbBwtf4Sydy4KsToNrIBPsK0e3xMXcWsqmehbHNLecJQf3OXMiHMApn41bLB
-	Bzl30f58CwLwTWXFwProdFYYR8EnSj8Wbs4EbS9SByr0o3zD/WqBUORVlEi+D3p6
-	2naHMw==
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yfgjrvs8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Apr 2025 04:43:54 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53I4hrIH031764
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Apr 2025 04:43:53 GMT
-Received: from [10.217.219.207] (10.80.80.8) by nasanex01c.na.qualcomm.com
- (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 17 Apr
- 2025 21:43:49 -0700
-Message-ID: <0a121c0f-edcb-4d5d-8427-f1eddddcb9bc@quicinc.com>
-Date: Fri, 18 Apr 2025 10:13:46 +0530
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="bCJqCyWe"
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250418044855epoutp0277e58d93d222a66b2cd939023a512746~3UFu1TNd52158321583epoutp023
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2025 04:48:55 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250418044855epoutp0277e58d93d222a66b2cd939023a512746~3UFu1TNd52158321583epoutp023
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1744951735;
+	bh=obxaqcfMZ8QlNe2fgyNBHlsHe9cW48zZiyv7HWZT0Cw=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=bCJqCyWeNWmyXWNe8VMzhd/21h632z3lRfHIvQgtDWD3OG3a59rZ5JGbNs3pDabYz
+	 s2TzqBNF5ovzMO+Qm6Dp9X+7Y5kYjTsvCZKQSA5lgw2IrsU7YkPBB/lgtIFj0/+8vq
+	 /H/egyzspSz41N2IDdgfsjJpjMfYfNcCk/pBBR2U=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
+	20250418044854epcas1p16697f303759a9be299445aa8e613a837~3UFuFye8_0986609866epcas1p1y;
+	Fri, 18 Apr 2025 04:48:54 +0000 (GMT)
+Received: from epcas1p3.samsung.com (unknown [182.195.36.224]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4Zf2N608Nyz6B9mN; Fri, 18 Apr
+	2025 04:48:54 +0000 (GMT)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250418044853epcas1p38ded689388f26c3df5930550db0a13a7~3UFs30Pc41069610696epcas1p3k;
+	Fri, 18 Apr 2025 04:48:53 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20250418044853epsmtrp264fcd61e25c0523ab81021e7ed57d519~3UFs24oqq2067220672epsmtrp2G;
+	Fri, 18 Apr 2025 04:48:53 +0000 (GMT)
+X-AuditID: b6c32a29-55afd7000000223e-33-6801d9b524aa
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	9D.A0.08766.5B9D1086; Fri, 18 Apr 2025 13:48:53 +0900 (KST)
+Received: from dh0421hwang02 (unknown [10.253.101.58]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20250418044853epsmtip1b93fcc5ebf99d6186af71c304403aa4a~3UFsloUUW1455314553epsmtip1M;
+	Fri, 18 Apr 2025 04:48:53 +0000 (GMT)
+From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
+	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
+Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
+	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
+	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
+	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
+In-Reply-To: <17781804-d36f-41c2-a858-1edf905ca8ac@acm.org>
+Subject: RE: [PATCH 2/2] scsi: ufs: core: Add a trace function calling when
+ uic command error occurs
+Date: Fri, 18 Apr 2025 13:48:52 +0900
+Message-ID: <0ed401dbb01d$2f487720$8dd96560$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 2/3] scsi: ufs: pltfrm: Add parsing support for disable
- LPM property
-To: Nitin Rawat <quic_nitirawa@quicinc.com>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <bvanassche@acm.org>, <krzk+dt@kernel.org>,
-        <robh@kernel.org>, <mani@kernel.org>, <conor+dt@kernel.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <peter.wang@mediatek.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20250417124645.24456-1-quic_nitirawa@quicinc.com>
- <20250417124645.24456-3-quic_nitirawa@quicinc.com>
-Content-Language: en-US
-From: Mukesh Kumar Savaliya <quic_msavaliy@quicinc.com>
-In-Reply-To: <20250417124645.24456-3-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: V377Z0ZTJKasj_fyz_2PIJy5GvNWe9xW
-X-Proofpoint-ORIG-GUID: V377Z0ZTJKasj_fyz_2PIJy5GvNWe9xW
-X-Authority-Analysis: v=2.4 cv=Cve/cm4D c=1 sm=1 tr=0 ts=6801d88a cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=c46ZkW_Sk1zESUiFrnIA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-18_01,2025-04-17_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1011
- malwarescore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 phishscore=0
- suspectscore=0 impostorscore=0 mlxlogscore=999 mlxscore=0
- priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504180032
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwLekswsAdKaXvgB7EVFwrTeiuPg
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrDIsWRmVeSWpSXmKPExsWy7bCSnO7Wm4wZBtsX8Fk8mLeNzeLlz6ts
+	FtM+/GS2mHGqjdXi19/17BYb+zksOrZOZrLY8fwMu8Wuv81MFpd3zWGz6L6+g83ibksnq8Xy
+	4/+YLLZ++s1q8a3vCbtF0599LBbXzpxgtdh86RuLg5DH5SveHtMmnWLzuHNtD5tHy8n9LB4f
+	n95i8Zi4p86jb8sqRo/Pm+Q82g90MwVwRnHZpKTmZJalFunbJXBlNPU/Yy5YxVdx/cJSlgbG
+	PdxdjJwcEgImEhs/nmTpYuTiEBLYzShx/8QVVoiEjET3/b3sXYwcQLawxOHDxRA1Lxklpk2Z
+	C1bDJmAgMfnYGzYQW0TgApPE11ZLkCJmgfuMEou2TWWH6HgH5Dy6wAxSxSlgLTHv6guwbmGB
+	FInZUz6wg9gsAqoSV45vB5vEK2Apsb7zOzOELShxcuYTFhCbWUBb4unNp3D2soWvmSEuVZD4
+	+XQZK8QVbhKb1vUwQdSISMzubGOewCg8C8moWUhGzUIyahaSlgWMLKsYJVMLinPTc4sNCwzz
+	Usv1ihNzi0vz0vWS83M3MYIjXEtzB+P2VR/0DjEycTAeYpTgYFYS4T1n/i9diDclsbIqtSg/
+	vqg0J7X4EKM0B4uSOK/4i94UIYH0xJLU7NTUgtQimCwTB6dUA1OdnaPv42c6143/8l0NVDil
+	FOYQWFVZp9Cy5I9+ZWWdi0ajx9/NT1axPN0m9VPPcpk4/7rlxVn+71+ZpPPGCuZPMpTxfFX9
+	VZRR/8Odsv/+j3j1pE+ylbE9vHvOdJuDS2J6SFyxuEJSVatj7+GYq9/z5mS9uBm+YM0h0aXX
+	JL6v87AzV3CK55gjlWw/+f+82LqnzOKG9tJNt0Q4l3DtS+Vl+BGeP+vzzk0TzFtuHGX9GmGl
+	75cp8/GzlgT3UbF/cl7J+46v3/JWtPnfgfzNjtdWRwV9N3+006/jkHeWXRnf1CsXM98vn8Pj
+	6ra7ZeKm4Ll3+mT2zp25sGMmt9VliW/HEoqvG6+9N8lxjcJkPyWW4oxEQy3mouJEAK+K2IRf
+	AwAA
+X-CMS-MailID: 20250418044853epcas1p38ded689388f26c3df5930550db0a13a7
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250417023419epcas1p343060855c4470f8056116a207a584956
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+	<CGME20250417023419epcas1p343060855c4470f8056116a207a584956@epcas1p3.samsung.com>
+	<20250417023405.6954-3-dh0421.hwang@samsung.com>
+	<17781804-d36f-41c2-a858-1edf905ca8ac@acm.org>
 
+> On 4/16/25 7:34 PM, DooHyun Hwang wrote:
+> > When a uic command error occurs, there is no trace function calling.
+> > Therefore, trace function calls are added when a uic command error
+> happens.
+> >
+> > Signed-off-by: DooHyun Hwang <dh0421.hwang=40samsung.com>
+> > ---
+> >   drivers/ufs/core/ufshcd.c =7C 5 +++++
+> >   1 file changed, 5 insertions(+)
+> >
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index ab98acd982b5..baac1ae94efc 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > =40=40 -2534,6 +2534,9 =40=40 ufshcd_wait_for_uic_cmd(struct ufs_hba *h=
+ba,
+> struct uic_command *uic_cmd)
+> >   	hba->active_uic_cmd =3D NULL;
+> >   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> >
+> > +	if (ret)
+> > +		ufshcd_add_uic_command_trace(hba, uic_cmd, UFS_CMD_ERR);
+> > +
+> >   	return ret;
+> >   =7D
+> >
+> > =40=40 -4306,6 +4309,8 =40=40 static int ufshcd_uic_pwr_ctrl(struct ufs=
+_hba *hba,
+> struct uic_command *cmd)
+> >   	=7D
+> >   out:
+> >   	if (ret) =7B
+> > +		ufshcd_add_uic_command_trace(hba, hba->active_uic_cmd,
+> > +					     UFS_CMD_ERR);
+> >   		ufshcd_print_host_state(hba);
+> >   		ufshcd_print_pwr_info(hba);
+> >   		ufshcd_print_evt_hist(hba);
+>=20
+> Shouldn't the value of 'ret' be included in the UFS_CMD_ERR trace output?
+>=20
+> Thanks,
+>=20
+> Bart.
+Thank you for your insightful feedback.
 
+Upon further consideration, it seems that the existing trace, which capture=
+s detailed information through the UICCMDARG1 to UICCMDARG3 fields.
+That already provides sufficient context for analyzing command-related issu=
+es.
+The UFS_CMD_ERR trace output, combined with UICCMDARG* values, should be ad=
+equate for diagnosing errors and understanding the command's execution stat=
+us.
 
-On 4/17/2025 6:16 PM, Nitin Rawat wrote:
-[...]
-> +/**
-> + * ufshcd_parse_lpm_support - read from DT whether LPM modes should be disabled.
-> + * @hba: host controller instance
-> + */
-> +static void ufshcd_parse_lpm_support(struct ufs_hba *hba)
-> +{
-> +	struct device *dev = hba->dev;
-> +
-> +	hba->disable_lpm = of_property_read_bool(dev->of_node, "disable-lpm");
-> +	if (hba->disable_lpm)
-> +		dev_info(hba->dev, "UFS LPM is disabled\n");
-How about keeping as debug ?
-> +}
-> +
-[...]
-> --
-> 2.48.1
-> 
-> 
+BR,
+Thank you.
+DooHyun Hwang.
 
