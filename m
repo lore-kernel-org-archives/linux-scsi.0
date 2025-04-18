@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F081FFC62;
-	Fri, 18 Apr 2025 23:07:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E9D254AEE;
+	Fri, 18 Apr 2025 23:07:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745017635; cv=none; b=u1fVW1obKpdTpD7TE897RpTGAqveOCj+3l01Y9ta54uULsd90bMMjxLSO0aD0LU0I/pi0VeHTF2y+qhWlFnf0IulnK558FyxPPjV/gp0B++mVNdSBOLCqKTFNTkYMeHP10/pT6ufPPVRY0dmt1tKDE0c0w7VVYfBlBuTp6MUYWE=
+	t=1745017636; cv=none; b=o0ffSzEZrqsld/19D3Cg2k3jtJIFyBesGEB4IpEJFhP62IjagwG2HZbv+p/L61I4q0OcVnERXJs9S4u8Xdpn7Hk/vbZYHBNCbWA15JGSYekl14fuG/r3lKkPsq+0CJkguKYFUC9cqR3k99EF1L88iytM/TUm5+YyEPupwkAGBpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745017635; c=relaxed/simple;
-	bh=ySLUjTOMThNWUBCNKEwE8WqbZBkpBliSRmMskmkk+yc=;
+	s=arc-20240116; t=1745017636; c=relaxed/simple;
+	bh=CrRCKqz/JA5HsPhH6mB3lb5rhNmWhPIYyZNe/G7Iz0Y=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BlIqS0XbloSQTvPZVsLmsG5M7Ajot8MhRtQXnX3yxh/HdZcP2RHSGmlhglpF/g8+9/wF2g5nTxbaVPlGni2vcS29kP7S5dI8qv6yXrex3zsuXaKuGmPsrxab3OzR2KZYJ4bW3USezrIx5EyWa3ZWVj/Jz2Dh2UzYkJFLPz/22NA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=old/7Zj0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ZBcfh9TLygN89CULxTdZZ+GH56yb4LBP0iJ8LvyA56cV3fhNqPxrBNWqA5HedPHOc7oBoJ0i2ILTb3j4ns8sMP1cR2YJv9YeyePcIi/fO7p1IRKRhBblx2xo/G+NrmvzOfDVnZYbD3VCztDgGrmsf8AXW32GkFVKPL8wHTA1tdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i+Lzr9M3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="old/7Zj0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06D80C4CEED;
-	Fri, 18 Apr 2025 23:07:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i+Lzr9M3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B744C4CEEB;
+	Fri, 18 Apr 2025 23:07:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745017634;
-	bh=ySLUjTOMThNWUBCNKEwE8WqbZBkpBliSRmMskmkk+yc=;
+	s=k20201202; t=1745017635;
+	bh=CrRCKqz/JA5HsPhH6mB3lb5rhNmWhPIYyZNe/G7Iz0Y=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=old/7Zj0kvVZ131b7D94JeobLuGA3mUIbiQLeHiVxgeSd/pyFgF9ayHqr2deaKrcq
-	 4LjK/tKahhGra8LBvpF2eoUBTTKsJLDM5KUHkl2U/JMmsqr2qjI0fdW/bGOQLR7wm9
-	 Km01bUZ+PqqFbYtKuobt+/SxZopZrtySTDQPcI39mjkSMNgpSDllOc94Q4wymMYgPP
-	 F8IGJJVsV5wupRx/ZndQwSq3ZiSZJbb1PqVQ8yur+x2XwFDr2OTT5jI1SN284PTlab
-	 5JjR6Pv7GUWCMYYZklE6BnnmZAg4hJGBRcYMnxTlmFqGCdGFP2IAopn4qdCcYKEWrQ
-	 xWrIGxzAQ5HRw==
+	b=i+Lzr9M3TjMPwlLerRbFt/AFgJVfJRrWlMQyB84WMxY3gTPvzNWpLMM/k96zcIk8p
+	 0HfeE/1xLHpF6wtw1WWwZROX9TuAIpIUalMBV/FAsthKabj2lfXiGlUzR/i8mE35vU
+	 uDLsMnDjzAfuPwKJ9Zwmc4JSawxJ9nnUhISGlIBBqA+oQe3y95PVfk3+LeglTjahQY
+	 61yvT3erHfAYkdX9JKqKUKfv1x6HAeTECud4/jjQwuLZIY+YPr27R6tt3Fg1eOo0da
+	 vR+4ZkvdKgeZu9B6MsgwOpSb/TIyM4kU6EGNWuSWooZExQBObsTOxWGbSGAH+befGg
+	 +2bijV33rGTtw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v3 3/4] ata: libata-scsi: Improve CDL control
-Date: Sat, 19 Apr 2025 08:06:22 +0900
-Message-ID: <20250418230623.375686-4-dlemoal@kernel.org>
+Subject: [PATCH v3 4/4] scsi: Improve CDL control
+Date: Sat, 19 Apr 2025 08:06:23 +0900
+Message-ID: <20250418230623.375686-5-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250418230623.375686-1-dlemoal@kernel.org>
 References: <20250418230623.375686-1-dlemoal@kernel.org>
@@ -51,66 +51,112 @@ as the translated command for the MODE SELECT command issued by
 scsi_cdl_enable() when the user enables CDL through the device
 cdl_enable sysfs attribute.
 
-Currently, ata_mselect_control_ata_feature() always translates a MODE
-SELECT command for the ATA features subpage of the control mode page to
-a SET FEATURES command to enable or disable CDL based on the cdl_ctrl
-field. However, there is no need to issue the SET FEATURES command if:
-1) The MODE SELECT command requests disabling CDL and CDL is already
-   disabled.
-2) The MODE SELECT command requests enabling CDL and CDL is already
-   enabled.
+However, the implementation of scsi_cdl_enable() always issues a MODE
+SELECT command for ATA devices when the enable argument is true, even if
+CDL is already enabled on the device. While this does not cause any
+issue with using CDL descriptors with read/write commands (the CDL
+feature will be enabled on the drive), issuing the MODE SELECT command
+even when the device CDL feature is already enabled will cause a reset
+of the ATA device CDL statistics log page (as defined in ACS, any CDL
+enable action must reset the device statistics).
 
-Fix ata_mselect_control_ata_feature() to issue the SET FEATURES command
-only when necessary. Since enabling CDL also implies a reset of the CDL
-statistics log page, avoiding useless CDL enable operations also avoids
-clearing the CDL statistics log.
+Avoid this needless actions (and the implied statistics log page reset)
+by modifying scsi_cdl_enable() to issue the MODE SELECT command to
+enable CDL if and only if CDL is not reported as already enabled on the
+device.
 
-Also add debug messages to clearly signal when CDL is being enabled or
-disabled using a SET FEATURES command.
+And while at it, simplify the initialization of the is_ata boolean
+variable and move the declaration of the scsi mode data and sense header
+variables to within the scope of ATA device handling.
 
-Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
+Fixes: 1b22cfb14142 ("scsi: core: Allow enabling and disabling command duration limits")
 Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Niklas Cassel <cassel@kernel.org>
 Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 ---
- drivers/ata/libata-scsi.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi.c | 36 ++++++++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a41046cb062c..c0eb8c67a9ff 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3908,17 +3908,27 @@ static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
- 	/* Check cdl_ctrl */
- 	switch (buf[0] & 0x03) {
- 	case 0:
--		/* Disable CDL */
-+		/* Disable CDL if it is enabled */
-+		if (!(dev->flags & ATA_DFLAG_CDL_ENABLED))
-+			return 0;
-+		ata_dev_dbg(dev, "Disabling CDL\n");
- 		cdl_action = 0;
- 		dev->flags &= ~ATA_DFLAG_CDL_ENABLED;
- 		break;
- 	case 0x02:
--		/* Enable CDL T2A/T2B: NCQ priority must be disabled */
-+		/*
-+		 * Enable CDL if not already enabled. Since this is mutually
-+		 * exclusive with NCQ priority, allow this only if NCQ priority
-+		 * is disabled.
-+		 */
-+		if (dev->flags & ATA_DFLAG_CDL_ENABLED)
-+			return 0;
- 		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED) {
- 			ata_dev_err(dev,
- 				"NCQ priority must be disabled to enable CDL\n");
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 53daf923ad8e..518a252eb6aa 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -707,26 +707,23 @@ void scsi_cdl_check(struct scsi_device *sdev)
+  */
+ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
+ {
+-	struct scsi_mode_data data;
+-	struct scsi_sense_hdr sshdr;
+-	struct scsi_vpd *vpd;
+-	bool is_ata = false;
+ 	char buf[64];
++	bool is_ata;
+ 	int ret;
+ 
+ 	if (!sdev->cdl_supported)
+ 		return -EOPNOTSUPP;
+ 
+ 	rcu_read_lock();
+-	vpd = rcu_dereference(sdev->vpd_pg89);
+-	if (vpd)
+-		is_ata = true;
++	is_ata = rcu_dereference(sdev->vpd_pg89);
+ 	rcu_read_unlock();
+ 
+ 	/*
+ 	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
+ 	 */
+ 	if (is_ata) {
++		struct scsi_mode_data data;
++		struct scsi_sense_hdr sshdr;
+ 		char *buf_data;
+ 		int len;
+ 
+@@ -735,16 +732,30 @@ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
+ 		if (ret)
  			return -EINVAL;
+ 
+-		/* Enable CDL using the ATA feature page */
++		/* Enable or disable CDL using the ATA feature page */
+ 		len = min_t(size_t, sizeof(buf),
+ 			    data.length - data.header_length -
+ 			    data.block_descriptor_length);
+ 		buf_data = buf + data.header_length +
+ 			data.block_descriptor_length;
+-		if (enable)
+-			buf_data[4] = 0x02;
+-		else
+-			buf_data[4] = 0;
++
++		/*
++		 * If we want to enable CDL and CDL is already enabled on the
++		 * device, do nothing. This avoids needlessly resetting the CDL
++		 * statistics on the device as that is implied by the CDL enable
++		 * action. Similar to this, there is no need to do anything if
++		 * we want to disable CDL and CDL is already disabled.
++		 */
++		if (enable) {
++			if ((buf_data[4] & 0x03) == 0x02)
++				goto out;
++			buf_data[4] &= ~0x03;
++			buf_data[4] |= 0x02;
++		} else {
++			if ((buf_data[4] & 0x03) == 0x00)
++				goto out;
++			buf_data[4] &= ~0x03;
++		}
+ 
+ 		ret = scsi_mode_select(sdev, 1, 0, buf_data, len, 5 * HZ, 3,
+ 				       &data, &sshdr);
+@@ -756,6 +767,7 @@ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
  		}
-+		ata_dev_dbg(dev, "Enabling CDL\n");
- 		cdl_action = 1;
- 		dev->flags |= ATA_DFLAG_CDL_ENABLED;
- 		break;
+ 	}
+ 
++out:
+ 	sdev->cdl_enable = enable;
+ 
+ 	return 0;
 -- 
 2.49.0
 
