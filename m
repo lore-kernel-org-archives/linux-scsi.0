@@ -1,128 +1,124 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F314524418F
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2025 23:14:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E0D259C;
+	Sat, 19 Apr 2025 12:10:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745018096; cv=none; b=jEz6pNOd0dr0EQj+Cb4j+sUzscFOOBX+Pu+0cjjXk7vgUut4Zu+EtzMpv4yj0sQh4j0EzghLaMupHxOXOxuc2DBQWqpTeShYgOioJXeCqjc4+hsHK5Gnj1mgaDgi+Mb45n4u2/SQV2g1wTzEZs8uQxNh0BptoJVqP2fZQcEasz8=
+	t=1745064645; cv=none; b=DMWoqelOGGw4BCF1+yAcSABPJ+1A7g27vzCFKwUz6gDppbRF5QrfHZBhT8fM4jUNEfbNQyFzkvmGmcslt0e8DeViuKH+bNPf6GaWe7+1aUGEo63Y0hFzMkByDKYtrwAV3tUvS5fdms/fH1VjnCsX5+3HQdaA5LsFWrWVnbldveU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745018096; c=relaxed/simple;
-	bh=M+yFcxgA5UoT4y3zPDlOIb+luoJpCnpooQU1OrR5U2k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ccmXy7Iv7PLO2te9jgJdxMXTK8S+YkYso7RRFvUthLRYSNahLuAXDg4bC8TZflWDOOQXHeTW+QxbFdbQMqaJbWdItQcnhKmn7T7FJWH11MltoJX1e8u7AQrENX/uGBY5egi6rI2xpoybZWmPNBDw9BP+DFFhhvfIEMHyUPfsVHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=xHZBoIHr; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1745064645; c=relaxed/simple;
+	bh=gG/4R9vVgxIB+SpaZL4mesqyGcRxPvmepmQ5ibM9WKM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kx0gwcq0rfVx8AkiH7iNKXxs7pJ78OqCJlugIBqW/Od7JJzA7xPATNQQpOG8fNcH5ac6bOTQ5pn6LrA1Zcdf92q2suRiy8OgpwkNrlQgbvx1flLrrjExLq1Iz03y6S9EFrQ8iV5nX7smb4+sDwNQUyrvyaw3rKysdrOS1tLeaU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Iq6W9Jgc; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="xHZBoIHr"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2240aad70f2so315245ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Apr 2025 16:14:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1745018094; x=1745622894; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=G8up+br7TxL1MAZrYi3mnJnaia6kOAmbO1PhE75M/CI=;
-        b=xHZBoIHrmt0oe4r7Bia7uQmJjMAtpR2UtZVlFqA5gIyJ0aHdfo8sst2mZDdhj2z9jp
-         0RTlZLgCTSAeRBsdnFnPUhJwKoh3m+bDDLEa/okC/oUZRx8nSwC2wyWOXDr/I23EYTFy
-         R0Px6WgZh55Sq25xsOi7RRGTudC5AwP12DcVHElseM2/Bf2vb21cAcQFdPfQaTYeDgKj
-         GIGATI9esizBqVR/pPAq8eKtGixZt4rz1PRt1Vr9Ay0oT9xTibSp3TuQ7H7VBOXCX4R3
-         sKYRR/xvh9+UNrWapGtAvfVMheko55QXENhAPUxHZ+v2vliflSqp9Xzy/AUQIcNCIA1z
-         QLjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745018094; x=1745622894;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=G8up+br7TxL1MAZrYi3mnJnaia6kOAmbO1PhE75M/CI=;
-        b=ml+HBXv42upapOCmCTjZkmH/keyZwv70SA4HLM3KbRaJB9efxESck1UYoM7npqqY/s
-         +BxBtWZURjodpob4oz4hxu4anqPcTPhTYT23ow2uqhFtgQoIVODjxyz8ojNc6Zg5y7Qy
-         1rJCORDJhWwi/Lsx50NQvGhORuer9nKXCqdgCJJEOwtvSFmButOWh+PHzWKig0nR/4eV
-         m9vU3akVKFcdd12xkDkuf7IhGTuea2duFCjOIOulghiTYeDELy/B6xSs2OXuSmzcRb0U
-         0Pml+VAPOPtA0YPpzEbjrtMqpj2O6pT8lg9zSMSoU4xE4eg9uBWm8lyoe0FJdFhkAeup
-         oodw==
-X-Forwarded-Encrypted: i=1; AJvYcCUSi+glVJdLc6nQXVyM2Knxkyg6eEpxtlk41GXBLdvPh1VJ17bIe5sAWPocRSzob8KWPyp4c2yN+SWy@vger.kernel.org
-X-Gm-Message-State: AOJu0YyDcV/iK6xYa4/ZHpu37cEvGuwGN5NKNLYDFBJidRYrI1hy8GFm
-	LePkSxlAfA/ApfqEUDToqWzQ0ydJmrXj/AHeNMq4qBMehIbkqqsbB7dTYmx1hRcnr1yZ4JCFWXe
-	aCw==
-X-Gm-Gg: ASbGncs0sm5+edyoUEjpp32C8UZuVlXyujXd5GI96AsDPzqRudYYp6GQoJ2hI1lOzcf
-	7tASKLSF7j+yPE0LCufnWP6s9Eb4VQRtvfLiIG8BxzmYy31GMlQ4Q44oz0rTJh72EGFUmRI44qv
-	5njHN/T1nUqszFgofwhmKRxGL4NnJswyNYRJQiO7cUBKBCZxooL58QJNyzTCTgeUWxhzN11H+E/
-	5Mf6Nh+9u/YGAGpH1hZ/LgXDEf5RktHjpoC2TY+21zpz6+IP4b7tUY0F9Dgk8CUOBdbmCMveSY2
-	q/739TcSGmFbn644fF1dfB9LF6wYrPMb25uiUwjQz9SQNJG7a4hPMQgrCgV897RfH5LfsUKh3bs
-	c
-X-Google-Smtp-Source: AGHT+IGN4I/AGkBiqM6+mhRGskQgTUObnsjlgT9lAu72b7p03Ut83zAPXBy09Axdev+dLWLIfPzmAw==
-X-Received: by 2002:a17:902:ccc6:b0:20c:f40e:6ec3 with SMTP id d9443c01a7336-22c52a93c7emr3910775ad.22.1745018093899;
-        Fri, 18 Apr 2025 16:14:53 -0700 (PDT)
-Received: from google.com (24.21.230.35.bc.googleusercontent.com. [35.230.21.24])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50ed0ed8sm22070875ad.200.2025.04.18.16.14.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Apr 2025 16:14:53 -0700 (PDT)
-Date: Fri, 18 Apr 2025 16:14:48 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 1/4] ata: libata-scsi: Fix
- ata_mselect_control_ata_feature() return type
-Message-ID: <aALc6EzizWjKRduw@google.com>
-References: <20250418230623.375686-1-dlemoal@kernel.org>
- <20250418230623.375686-2-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Iq6W9Jgc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1745064643; x=1776600643;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=gG/4R9vVgxIB+SpaZL4mesqyGcRxPvmepmQ5ibM9WKM=;
+  b=Iq6W9Jgc3FTpEfUg/kMJjCgWiA7B9QjCPTgkrcJHcFPdMTQZalmJQlZp
+   Yf2lD4QVovRwbw0ZpmFiHR/FdIPTSdUZNA0Nc01CmGrq4RX6C3WTdxnaW
+   m4sYqvUWnAt2Dn9wao1xhU3DXKQa3rGuHcWcaHh4ZmaztEtK4XisxohKz
+   1meHLhImHMrWgQrZRFuG8aRaO4tHdMS82VHgIsLb4kaU6NqRVdgzL2tRq
+   FWmGrVaqtCC9/pQVXTVeP48CRgG1EwJFwzPHGKdz6mFgJwnzvaA/7UewO
+   zkD/H+Qpyys/bHAk2lzt9J45reULoiJOtgLTlypRWj4Njw3JxWL3nN+hf
+   A==;
+X-CSE-ConnectionGUID: xjXX/yhLQciTWwODF/KhPA==
+X-CSE-MsgGUID: n2efEOEHTPSe4q5s86Zr3A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11407"; a="46563603"
+X-IronPort-AV: E=Sophos;i="6.15,224,1739865600"; 
+   d="scan'208";a="46563603"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Apr 2025 05:10:43 -0700
+X-CSE-ConnectionGUID: X0sworbNSn+KiMNBIcpTtg==
+X-CSE-MsgGUID: uSa4u75VS9OiCUPzVzqAYg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,224,1739865600"; 
+   d="scan'208";a="131298979"
+Received: from chenyu-dev.sh.intel.com ([10.239.62.107])
+  by orviesa006.jf.intel.com with ESMTP; 19 Apr 2025 05:10:41 -0700
+From: Chen Yu <yu.c.chen@intel.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chen Yu <yu.chen.surf@foxmail.com>,
+	Chen Yu <yu.c.chen@intel.com>
+Subject: [PATCH 1/6] scsi: megaraid_sas: Fix invalid Node index
+Date: Sat, 19 Apr 2025 20:04:54 +0800
+Message-Id: <20250419120454.1840662-1-yu.c.chen@intel.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250418230623.375686-2-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Sat, Apr 19, 2025 at 08:06:20AM +0900, Damien Le Moal wrote:
-> The function ata_mselect_control_ata_feature() has a return type defined
-> as unsigned int but this function may return negative error codes, which
-> are correctly propagated up the call chain as integers.
-> 
-> Fix ata_mselect_control_ata_feature() to have the correct int return
-> type.
-> 
-> While at it, also fix a typo in this function description comment.
-> 
-> Fixes: df60f9c64576 ("scsi: ata: libata: Add ATA feature control sub-page translation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Niklas Cassel <cassel@kernel.org>
+On a system with DRAM interleave enabled, out-of-bound access
+is detected:
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+megaraid_sas 0000:3f:00.0: requested/available msix 128/128 poll_queue 0
+------------[ cut here ]------------
+UBSAN: array-index-out-of-bounds in ./arch/x86/include/asm/topology.h:72:28
+index -1 is out of range for type 'cpumask *[1024]'
+dump_stack_lvl+0x5d/0x80
+ubsan_epilogue+0x5/0x2b
+__ubsan_handle_out_of_bounds.cold+0x46/0x4b
+megasas_alloc_irq_vectors+0x149/0x190 [megaraid_sas]
+megasas_probe_one.cold+0xa4d/0x189c [megaraid_sas]
+local_pci_probe+0x42/0x90
+pci_device_probe+0xdc/0x290
+really_probe+0xdb/0x340
+__driver_probe_device+0x78/0x110
+driver_probe_device+0x1f/0xa0
+__driver_attach+0xba/0x1c0
+bus_for_each_dev+0x8b/0xe0
+bus_add_driver+0x142/0x220
+driver_register+0x72/0xd0
+megasas_init+0xdf/0xff0 [megaraid_sas]
+do_one_initcall+0x57/0x310
+do_init_module+0x90/0x250
+init_module_from_file+0x85/0xc0
+idempotent_init_module+0x114/0x310
+__x64_sys_finit_module+0x65/0xc0
+do_syscall_64+0x82/0x170
+entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-Nice catch!
+Fix it accordingly.
 
-> ---
->  drivers/ata/libata-scsi.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 2796c0da8257..24e662c837e3 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3886,12 +3886,11 @@ static int ata_mselect_control_spg0(struct ata_queued_cmd *qc,
->  }
->  
->  /*
-> - * Translate MODE SELECT control mode page, sub-pages f2h (ATA feature mode
-> + * Translate MODE SELECT control mode page, sub-page f2h (ATA feature mode
->   * page) into a SET FEATURES command.
->   */
-> -static unsigned int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
-> -						    const u8 *buf, int len,
-> -						    u16 *fp)
-> +static int ata_mselect_control_ata_feature(struct ata_queued_cmd *qc,
-> +					   const u8 *buf, int len, u16 *fp)
->  {
->  	struct ata_device *dev = qc->dev;
->  	struct ata_taskfile *tf = &qc->tf;
-> -- 
-> 2.49.0
-> 
-> 
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 28c75865967a..7a2e35a35193 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5905,7 +5905,11 @@ megasas_set_high_iops_queue_affinity_and_hint(struct megasas_instance *instance)
+ 	const struct cpumask *mask;
+ 
+ 	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
+-		mask = cpumask_of_node(dev_to_node(&instance->pdev->dev));
++		int nid = dev_to_node(&instance->pdev->dev);
++
++		if (nid == NUMA_NO_NODE)
++			nid = 0;
++		mask = cpumask_of_node(nid);
+ 
+ 		for (i = 0; i < instance->low_latency_index_start; i++) {
+ 			irq = pci_irq_vector(instance->pdev, i);
+-- 
+2.25.1
+
