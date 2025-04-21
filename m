@@ -1,69 +1,107 @@
-Received: from mx2.usergate.com (mx2.usergate.com [46.229.79.1])
+Received: from mail.crpt.ru (mail1.crpt.ru [91.236.205.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17364213E7B;
-	Mon, 21 Apr 2025 08:46:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.229.79.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68E0819ADA4;
+	Mon, 21 Apr 2025 11:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.236.205.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745225217; cv=none; b=J1q7B3AKGxMFmKcLQbDfmeKb9E11u47+lZ2bgEi1aXzJNULtGQ2bfkG8/pw9khLSmRZKUz3FIaBeNAsKmqtaVpHSYpgespHznVJ6QihpzqGaxJ35On+IJhO9Y9LQL49O1Q7jIVwMMm00a2VvIxc+v6bIqJOn2rF5xb1dXGWL838=
+	t=1745234794; cv=none; b=UaLZHRR87X+jVgbAvyEak2dQkoJe8eNxlwu0rOqTwfMVQhL/42yARBKugbykexpKsQ5g/RRjtptc7CqzP3r75aPgcLs8MOSp49xF+8T83RpGtpBj4KWQEzR7MmSMvrrFCe3H4eGZkn+eczHBOdBlhZvwYy3T7SsyE9vpz7M56TE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745225217; c=relaxed/simple;
-	bh=SoJeIQUy1n6bUnB19h8yR/7XX7MWJlNMbKKm5fg8pIk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GiU17ZVNr5O87R4jmnFxFC4HKijoBJ9bNuV2OM4K7muChsez6FeMg8k4fV0usNG25rhfOGUA807mv3JOBdZOxIvamDRNc5jv7yXyMCj7NlwUu9ai1R3WP6JzY7t09LMflh7uUvTM0tbKWLllnMHuH+EDCE27AU59UWYF7nqtEsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com; spf=pass smtp.mailfrom=usergate.com; arc=none smtp.client-ip=46.229.79.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=usergate.com
-Received: from mail.usergate.com[192.168.90.36] by mx2.usergate.com with ESMTP id
-	 A1860D7338844D3D93CD65BC0D89C5A1; Mon, 21 Apr 2025 15:16:12 +0700
-From: Boris Belyavtsev <bbelyavtsev@usergate.com>
-To: <hare@suse.com>
-CC: <linux-scsi@vger.kernel.org>,<linux-kernel@vger.kernel.org>,<lvc-project@linuxtesting.org>,Boris Belyavtsev <bbelyavtsev@usergate.com>
-Subject: [PATCH 6.1 v2 3/3] scsi: aic79xx: check for non-NULL scb in
-	 ahd_linux_queue_abort_cmd
-Date: Mon, 21 Apr 2025 15:16:04 +0700
-Message-ID: <20250421081604.655282-4-bbelyavtsev@usergate.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250421081604.655282-1-bbelyavtsev@usergate.com>
-References: <20250421081604.655282-1-bbelyavtsev@usergate.com>
+	s=arc-20240116; t=1745234794; c=relaxed/simple;
+	bh=S1Qr1gUL5Ck5kLLsTAgil/EFoYS6KR0lLR9WWXA4Jh4=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=pIU4Opw9KvDii/1sheHVRMAsoeyLtZfm8kT34wK6LBUBo5lLPp/QveKNTsUdor7+Cy734jq159BxAsM6+xNiKsKspbjKMedvCJBUYwlVEF8jPa0ECOD0orMXS6q/zNyVSPNFkBxGQtASTRt7bRvrWuUoRCyolFJBt0tLJ/k/S/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=crpt.ru; spf=pass smtp.mailfrom=crpt.ru; dkim=pass (2048-bit key) header.d=crpt.ru header.i=@crpt.ru header.b=ZDOdYN8V; arc=none smtp.client-ip=91.236.205.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=crpt.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=crpt.ru
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=crpt.ru header.i=@crpt.ru header.b="ZDOdYN8V"
+Received: from mail.crpt.ru ([192.168.60.4])
+	by mail.crpt.ru  with ESMTP id 53LBQCGS005968-53LBQCGU005968
+	(version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=OK);
+	Mon, 21 Apr 2025 14:26:12 +0300
+Received: from EX2.crpt.local (192.168.60.4) by ex2.crpt.local (192.168.60.4)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.44; Mon, 21 Apr
+ 2025 14:26:12 +0300
+Received: from EX2.crpt.local ([192.168.60.4]) by EX2.crpt.local
+ ([192.168.60.4]) with mapi id 15.01.2507.044; Mon, 21 Apr 2025 14:26:12 +0300
+From: =?koi8-r?B?98HUz9LP0MnOIOHOxNLFyg==?= <a.vatoropin@crpt.ru>
+To: Sathya Prakash <sathya.prakash@broadcom.com>
+CC: =?koi8-r?B?98HUz9LP0MnOIOHOxNLFyg==?= <a.vatoropin@crpt.ru>, "Sreekanth
+ Reddy" <sreekanth.reddy@broadcom.com>, Suganath Prabu Subramani
+	<suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, "MPT-FusionLinux.pdl@broadcom.com"
+	<MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "lvc-project@linuxtesting.org"
+	<lvc-project@linuxtesting.org>
+Subject: [PATCH] mpt3sas: Check if the variable 'nr_msix' is equal to zero
+Thread-Topic: [PATCH] mpt3sas: Check if the variable 'nr_msix' is equal to
+ zero
+Thread-Index: AQHbsrAvDsbOz89l6UeuBq57+fZEBA==
+Date: Mon, 21 Apr 2025 11:26:12 +0000
+Message-ID: <20250421112605.97897-1-a.vatoropin@crpt.ru>
+Accept-Language: ru-RU, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-kse-serverinfo: EX2.crpt.local, 9
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: Clean, bases: 4/20/2025 10:00:00 PM
+x-kse-attachment-filter-triggered-rules: Clean
+x-kse-attachment-filter-triggered-filters: Clean
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="koi8-r"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: ESLSRV-EXCH-01.esafeline.com (192.168.90.36) To
- nsk02-mbx01.esafeline.com (10.10.1.35)
-X-Message-Id: C194A9C2D7CC43F79E41C138F3D97A56
-X-MailFileId: D495EA50165E4907B18C65B67EF3FA0D
+X-FEAS-Client-IP: 192.168.60.4
+X-FE-Policy-ID: 2:4:0:SYSTEM
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; d=crpt.ru; s=crpt.ru; c=relaxed/relaxed;
+ h=from:to:cc:subject:date:message-id:content-type:mime-version;
+ bh=chiOBI0NFnnFyHL+6QC07jGgZAG31p2S9fL2p3s5gJA=;
+ b=ZDOdYN8V3cxXoTMVVjCd612smaX9GrTi+F3tbkIRgh+R2lM5mJV9skg2sdO6QwlLJDTNtQBbWDwZ
+	8meM5qkAVjCHFVvjkfM6RaWHBVKuBvJ4InImUEIQWm+EbYos0w5HZwyav7iqw/ogF3P1SUdQXQoN
+	Ys914/Fbm3YcmRCoiIfFS4HXJsjm2A+3llPtGMNKvkf/1opo4hpCO9hx8Ua45rGqjOTH6xdYEc4u
+	xL/0uSwAHYkQF0gEXUFGhjQRDs/v/M4OQKWiJfFKVB8O9fjCYMsqMqDtY0c2neQpLryuOqXNDmvw
+	qVXoufiyc1UQd2h8k5l4QQx1I+JlGCNCTcj8wg==
 
-possible NULL pointer dereference in case hardware returns invalid scb
-index.
+From: Andrey Vatoropin <a.vatoropin@crpt.ru>
+
+The 'nr_msix' variable is checked for a zero after it is assigned a value.
+However, this variable is assigned a value one more time later. After the
+second assignment, the check for a zero value does not exist.
+
+Add a check for this variable to ensure it is not zero in order to avoid
+division by zero.
 
 Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Fixes: 73a254621007 ("[SCSI] aic79xx: update to use scsi_transport_spi")
-Signed-off-by: Boris Belyavtsev <bbelyavtsev@usergate.com>
+      =20
+Fixes: 91b265bf0b57 ("mpt3sas: Rework the MSI-X grouping code")
+Signed-off-by: Andrey Vatoropin <a.vatoropin@crpt.ru>
 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 17dfc3c72110..f2ae202d2641 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -2265,7 +2265,8 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd *cmd)
- 		 * and hope that the target responds.
- 		 */
- 		pending_scb = ahd_lookup_scb(ahd, active_scbptr);
--		pending_scb->flags |= SCB_RECOVERY_SCB|SCB_ABORT;
-+		if (pending_scb != NULL)
-+			pending_scb->flags |= SCB_RECOVERY_SCB|SCB_ABORT;
- 		ahd_outb(ahd, MSG_OUT, HOST_MSG);
- 		ahd_outb(ahd, SCSISIGO, last_phase|ATNO);
- 		scmd_printk(KERN_INFO, cmd, "Device is active, asserting ATN\n");
--- 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt=
+3sas_base.c
+index bd3efa5b46c7..f9d5c3bfba53 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3267,6 +3267,8 @@ _base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc=
+)
+ fall_back:
+ 	cpu =3D cpumask_first(cpu_online_mask);
+ 	nr_msix -=3D (ioc->high_iops_queues - iopoll_q_count);
++	if (!nr_msix)
++		return;
+ 	index =3D 0;
+=20
+ 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+--=20
 2.43.0
-
