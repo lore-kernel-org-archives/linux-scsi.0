@@ -1,43 +1,50 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C934B25F970;
-	Tue, 22 Apr 2025 02:18:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1816925F98B;
+	Tue, 22 Apr 2025 02:18:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745288282; cv=none; b=LR3tl3FwoPzwp0fa+JMwTG5KmmEG/SDhzm5rmhAiHls5R9U2fOFTLR3PB3Wqo92Y1H9ZNacNHEzP2chbEW3QfuIzOoUG8QQ6c4qS+rZNnQfl2mDKITxgATxHPhUWN82rOoKSnrIQJ/sp/2r3CqOR+3qLfGYaMPA9XCkAvQBfDC0=
+	t=1745288284; cv=none; b=kiko6bQ4qzg0G+Cs2mvehk87wcHUwreliUO+a9AZTR8xuptg/uF6sDFh0bY1s64Gcx/ipSj/khTdkmnyvpNfdKJUHjLtP5ZCZ+F3WAN4Q3tmq0Cqf3D2l9oK5Mb1qF0tCMFb5ISBftyyrynp/g4OTKomVvAiLSwJFpj9XxziZGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745288282; c=relaxed/simple;
-	bh=ZCCyIm/fUNr9c1x5le0DTvZgHotQPLwHXcmL7UKeOZ4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tcCquhVIMMapdCpBUq1/2D/3FwrStuzPSvMjxAniQY93zMA+MlTZ5Sn0GmNO96ar82znsDrjyAiNAXplXDYWu369bVaFpz3PTJxaaP/XOBbgmJSIUUHWSZCZfrWoJDdKQN3TKKl52aWKkZX4fb6UdAyhnBzAFIY7VVMTV4Oqrd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CwzJ282/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745288284; c=relaxed/simple;
+	bh=L3/HcG6wXKyGIPN+AAPEjXN6F2jJXbxSsfwJd+Pgyqo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=VBVT8PXY7TzgSuZwhxyOsBtzBvIlOaTR1zWUfwFPrn1wQIccOipJ0EVsVAxcj3HLwyoCsqrKEpD5kli1aOOF+KtP8yFWlE5m7tCvvOBtJvqqsZnoIFMIitbEVxFgwG8f4XkMHgRJnTj22Y5fsWC/09yEuBfYrKIAlf5tGOYrTQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tAFN661f; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CwzJ282/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51040C4CEE4;
-	Tue, 22 Apr 2025 02:18:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tAFN661f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4D79C4CEEE;
+	Tue, 22 Apr 2025 02:18:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745288282;
-	bh=ZCCyIm/fUNr9c1x5le0DTvZgHotQPLwHXcmL7UKeOZ4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=CwzJ282/bJpRb/lLegJ6ZHa3cVaCihyQ4LL92mELMK/toZFjx6d7OqTEUrtfLnE0B
-	 PIQ82/JZo8HKKdaq2lkwEpX0VIy7cVH6tUOT0XPMS/itGoF8HEj6hbGuK9vU4Zy+o1
-	 xctpuwVj5M54dKDDSXdBXvRHk9Fi9CN8XFlWx+soF43eJqN566AwDPRvohOBV2sHde
-	 1Bna0bCMBJMorF5RnLtocSxuN+iZOsDxNe06fl61WjReMVZe1gj3ne2zq2+m2IvlSI
-	 P9+25djI3ey4pd2eCC6X0SnZ45bTTCHXWLWuNvBXKc9SU6uSaN3iKvUJCSHu/pY6Hf
-	 8zlUtQdHOEn4Q==
+	s=k20201202; t=1745288284;
+	bh=L3/HcG6wXKyGIPN+AAPEjXN6F2jJXbxSsfwJd+Pgyqo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=tAFN661fW85LmZDdDVS/o4M9xgnFv7g5hka301AZeVwAxK+KWMwSHNKMyJ4t9nAUb
+	 5Ix6OMqlNLAkaR/aN8zLBFd+HVj0lHhX4h5L6dICIeSdqLeZ658SZkE/JgO7Pu3g/e
+	 Pf20PdYkczu9Cly1QhgfZbfGh7VyQ+dyCWAKM+WrKh0V5R4qsWu45cSI3YgBZop++r
+	 StIM/o8X3yhSeAZVag5AyHaNj2Si9B16KJ49qYYgL0+z8eXcmLmAR2/TwHdunXPZ08
+	 IIUywN9OWph5e4DHvruP+3JOjZyPsw20I2HfN5mTtpzn0Ocv+pNwg0NShRy45WXhvf
+	 mzgUKFpglSTFA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Xingui Yang <yangxingui@huawei.com>,
+Cc: Peter Griffin <peter.griffin@linaro.org>,
+	Bart Van Assche <bvanassche@acm.org>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	liyihang9@huawei.com,
+	alim.akhtar@samsung.com,
 	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 01/15] scsi: hisi_sas: Fix I/O errors caused by hardware port ID changes
-Date: Mon, 21 Apr 2025 22:17:45 -0400
-Message-Id: <20250422021759.1941570-1-sashal@kernel.org>
+	krzk@kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.6 02/15] scsi: ufs: exynos: Ensure pre_link() executes before exynos_ufs_phy_init()
+Date: Mon, 21 Apr 2025 22:17:46 -0400
+Message-Id: <20250422021759.1941570-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250422021759.1941570-1-sashal@kernel.org>
+References: <20250422021759.1941570-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,57 +56,55 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.87
 Content-Transfer-Encoding: 8bit
 
-From: Xingui Yang <yangxingui@huawei.com>
+From: Peter Griffin <peter.griffin@linaro.org>
 
-[ Upstream commit daff37f00c7506ca322ccfce95d342022f06ec58 ]
+[ Upstream commit 3d101165e72316775947d71321d97194f03dfef3 ]
 
-The hw port ID of phy may change when inserting disks in batches, causing
-the port ID in hisi_sas_port and itct to be inconsistent with the hardware,
-resulting in I/O errors. The solution is to set the device state to gone to
-intercept I/O sent to the device, and then execute linkreset to discard and
-find the disk to re-update its information.
+Ensure clocks are enabled before configuring unipro. Additionally move
+the pre_link() hook before the exynos_ufs_phy_init() calls. This means
+the register write sequence more closely resembles the ordering of the
+downstream driver.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Link: https://lore.kernel.org/r/20250312095135.3048379-3-yangxingui@huawei.com
+Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+Link: https://lore.kernel.org/r/20250319-exynos-ufs-stability-fixes-v2-1-96722cc2ba1b@linaro.org
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/ufs/host/ufs-exynos.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index f78c5f8a49ffa..7e64661d215bd 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -911,8 +911,28 @@ static void hisi_sas_phyup_work_common(struct work_struct *work,
- 		container_of(work, typeof(*phy), works[event]);
- 	struct hisi_hba *hisi_hba = phy->hisi_hba;
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	struct asd_sas_port *sas_port = sas_phy->port;
-+	struct hisi_sas_port *port = phy->port;
-+	struct device *dev = hisi_hba->dev;
-+	struct domain_device *port_dev;
- 	int phy_no = sas_phy->id;
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 268189f01e15b..76703a7fa5717 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -984,9 +984,14 @@ static int exynos_ufs_pre_link(struct ufs_hba *hba)
+ 	exynos_ufs_config_intr(ufs, DFES_DEF_L4_ERRS, UNIPRO_L4);
+ 	exynos_ufs_set_unipro_pclk_div(ufs);
  
-+	if (!test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags) &&
-+	    sas_port && port && (port->id != phy->port_id)) {
-+		dev_info(dev, "phy%d's hw port id changed from %d to %llu\n",
-+				phy_no, port->id, phy->port_id);
-+		port_dev = sas_port->port_dev;
-+		if (port_dev && !dev_is_expander(port_dev->dev_type)) {
-+			/*
-+			 * Set the device state to gone to block
-+			 * sending IO to the device.
-+			 */
-+			set_bit(SAS_DEV_GONE, &port_dev->state);
-+			hisi_sas_notify_phy_event(phy, HISI_PHYE_LINK_RESET);
-+			return;
-+		}
-+	}
++	exynos_ufs_setup_clocks(hba, true, PRE_CHANGE);
 +
- 	phy->wait_phyup_cnt = 0;
- 	if (phy->identify.target_port_protocols == SAS_PROTOCOL_SSP)
- 		hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
+ 	/* unipro */
+ 	exynos_ufs_config_unipro(ufs);
+ 
++	if (ufs->drv_data->pre_link)
++		ufs->drv_data->pre_link(ufs);
++
+ 	/* m-phy */
+ 	exynos_ufs_phy_init(ufs);
+ 	if (!(ufs->opts & EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR)) {
+@@ -994,11 +999,6 @@ static int exynos_ufs_pre_link(struct ufs_hba *hba)
+ 		exynos_ufs_config_phy_cap_attr(ufs);
+ 	}
+ 
+-	exynos_ufs_setup_clocks(hba, true, PRE_CHANGE);
+-
+-	if (ufs->drv_data->pre_link)
+-		ufs->drv_data->pre_link(ufs);
+-
+ 	return 0;
+ }
+ 
 -- 
 2.39.5
 
