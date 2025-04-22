@@ -1,47 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A902E1DB125;
-	Tue, 22 Apr 2025 02:16:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3D7225742A;
+	Tue, 22 Apr 2025 02:17:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745288161; cv=none; b=aLAC2aIbW8zDuadVU+3ipvA3+jlzPQUp0Axj/qBhyxgbMbzaZBRKz6BF9tF6y2K21bN8GwYK8dKDBrpt8RKHjDTOMB7/mTAV5+bvM6Blo5x1gXaeA/g1YwwG5J/9Tj7RsuSNGgk3Mfel96dzAqd8SYX0q5ZTVwB/orbcIsVFK5g=
+	t=1745288226; cv=none; b=El1z/3bvtz2Ll/tI+wSb/CaQANjwE3m6XJ5YaRWLFJxiWFsUr0Fm1lBb8KOqiq7p7QtTVDygswtPNBj1XnS+QDyQrKwAMO72OJRUOeTQO4ETJJIbomjR5pbKj9zwyPuTlIuLMUxevqFWtRbisAmGtXLu9bcdSCIW4EaZr28wrfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745288161; c=relaxed/simple;
-	bh=bQOjSAW7SYIGi/5TTcAq4EqSQ6Pr9z1kYC+TgLuh1dQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=aO49xCY+gV7SCMKhRxkh132yrh90UrY27E9AOClGweSM/FyLW5ssnBwGdycTu2b6h40bpSMHHibgzKKMO9V0TO5OPLQ+7MPdZKhUMoeLWjfvl7W3qNeB2iyRPurmM42XbShglezr7PKVUlIsZTbDLIXLAyDamDsMbokJf6wD8W4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bFgmPgjB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745288226; c=relaxed/simple;
+	bh=j+fUGnv7YKkcUuUQxnLrSZ1qoD7jE5j9nuPiWGELX7s=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sUzwYxVNupdqZU3DSnb81vdqIi5AWgcPwJq+1kFao4NaIV5UeRsEgyhyz27l1nH5rgAE/1nVYjvg6WZtJn9pnksN3jFlkPU5C+h8Su6bNy4lN2Rk44xzZvyx+Na7Q4cc6XMzjp4Sph+H7IycI2uN+JS0pH/yacSB4Oz6t+3xY7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ukHARs1C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bFgmPgjB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA95C4CEED;
-	Tue, 22 Apr 2025 02:15:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ukHARs1C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D31F5C4CEEC;
+	Tue, 22 Apr 2025 02:17:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745288161;
-	bh=bQOjSAW7SYIGi/5TTcAq4EqSQ6Pr9z1kYC+TgLuh1dQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=bFgmPgjBl4COsvNB2jG/lXwzab47rVCkDgH8AagZn5xvd+0fG9WzTVa16KdJmQFhw
-	 PEIf6HHXZ28nP/YrlswBv4/e5+Y5fkddeZ/tHQAqY4B/soTAYotjYdudQT2+Ypr9y6
-	 dRHDO1W95ZcleD/0RZhFSp9YQKVb6p7kNN8FhafODbVuruFZrObJelPiNDllhX/OC7
-	 ArdvxHwNfhL6G/9WelWtcvXxKVP16DsSea2xfrQ+jrXrKQsu3GbVbQZCrtmK8lCzUi
-	 CKEXN7jRhSgo6DyPKWA4mYJ+hngjiuzoD4hXIT1nF9+J6Gi+qcnDQidzGhACYwP6VH
-	 NmkIX0soOnZ7Q==
+	s=k20201202; t=1745288225;
+	bh=j+fUGnv7YKkcUuUQxnLrSZ1qoD7jE5j9nuPiWGELX7s=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ukHARs1CkTx3296tuXGcnLq5UGy9cSvRTw9MJtI4dm9fhdQSg1EIO/6jgevs9yIy3
+	 iWdOWVs0CGEdQW40ecNQnL8bCjaUb5xDn4Nfvq6ddHBT+9WimX+lh7I4ZfFpy6VjTd
+	 xUeQMokQ9kp/SrUbz2IsJn93igrzeYHNts3WOqLJc+k1Aw7FIGDc6VMavmanPbhi+e
+	 sCNWaKr+UEK2fkZfD2zCnMC3ghh5E2kXolK2tbTSijpKAsSqsVRfk/TtXbwlvUG+PC
+	 MBZAceCDh8WMLNT1o1flItFriAx8KMhzhjduFohztX5EC78ovIKalfjtCA+ttd0NPJ
+	 m7F2eyPBUzYWw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Igor Pylypiv <ipylypiv@google.com>,
-	Salomon Dushimirimana <salomondush@google.com>,
+Cc: Xingui Yang <yangxingui@huawei.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	jinpu.wang@cloud.ionos.com,
+	liyihang9@huawei.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 06/30] scsi: pm80xx: Set phy_attached to zero when device is gone
-Date: Mon, 21 Apr 2025 22:15:26 -0400
-Message-Id: <20250422021550.1940809-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 01/23] scsi: hisi_sas: Fix I/O errors caused by hardware port ID changes
+Date: Mon, 21 Apr 2025 22:16:41 -0400
+Message-Id: <20250422021703.1941244-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250422021550.1940809-1-sashal@kernel.org>
-References: <20250422021550.1940809-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,37 +46,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.14.3
+X-stable-base: Linux 6.12.24
 Content-Transfer-Encoding: 8bit
 
-From: Igor Pylypiv <ipylypiv@google.com>
+From: Xingui Yang <yangxingui@huawei.com>
 
-[ Upstream commit f7b705c238d1483f0a766e2b20010f176e5c0fb7 ]
+[ Upstream commit daff37f00c7506ca322ccfce95d342022f06ec58 ]
 
-When a fatal error occurs, a phy down event may not be received to set
-phy->phy_attached to zero.
+The hw port ID of phy may change when inserting disks in batches, causing
+the port ID in hisi_sas_port and itct to be inconsistent with the hardware,
+resulting in I/O errors. The solution is to set the device state to gone to
+intercept I/O sent to the device, and then execute linkreset to discard and
+find the disk to re-update its information.
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
-Link: https://lore.kernel.org/r/20250319230305.3172920-1-salomondush@google.com
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Link: https://lore.kernel.org/r/20250312095135.3048379-3-yangxingui@huawei.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 183ce00aa671e..f7067878b34f3 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -766,6 +766,7 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
- 			spin_lock_irqsave(&pm8001_ha->lock, flags);
- 		}
- 		PM8001_CHIP_DISP->dereg_dev_req(pm8001_ha, device_id);
-+		pm8001_ha->phy[pm8001_dev->attached_phy].phy_attached = 0;
- 		pm8001_free_dev(pm8001_dev);
- 	} else {
- 		pm8001_dbg(pm8001_ha, DISC, "Found dev has gone.\n");
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index ffd15fa4f9e59..e98e6b2b9f570 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -912,8 +912,28 @@ static void hisi_sas_phyup_work_common(struct work_struct *work,
+ 		container_of(work, typeof(*phy), works[event]);
+ 	struct hisi_hba *hisi_hba = phy->hisi_hba;
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	struct asd_sas_port *sas_port = sas_phy->port;
++	struct hisi_sas_port *port = phy->port;
++	struct device *dev = hisi_hba->dev;
++	struct domain_device *port_dev;
+ 	int phy_no = sas_phy->id;
+ 
++	if (!test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags) &&
++	    sas_port && port && (port->id != phy->port_id)) {
++		dev_info(dev, "phy%d's hw port id changed from %d to %llu\n",
++				phy_no, port->id, phy->port_id);
++		port_dev = sas_port->port_dev;
++		if (port_dev && !dev_is_expander(port_dev->dev_type)) {
++			/*
++			 * Set the device state to gone to block
++			 * sending IO to the device.
++			 */
++			set_bit(SAS_DEV_GONE, &port_dev->state);
++			hisi_sas_notify_phy_event(phy, HISI_PHYE_LINK_RESET);
++			return;
++		}
++	}
++
+ 	phy->wait_phyup_cnt = 0;
+ 	if (phy->identify.target_port_protocols == SAS_PROTOCOL_SSP)
+ 		hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
 -- 
 2.39.5
 
