@@ -1,81 +1,48 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 206B0265619
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 05:56:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA179253F35;
+	Wed, 23 Apr 2025 06:25:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745387771; cv=none; b=ea2yb9TOrwHhuXISua+2tTJ+bEJMz3R0Liw7e+C7rk8SA6rg4d4CPyHah3nrk6MrV/Z+r0z04G4aJ5kMCX+z10hgESjy+co+ixY4T2UxDBXucgxZLLMKrNwam43R5gG8WXk7PkmnPQ3h6CS+K06jo//COjuJKOhVgQSTGOyQ7g8=
+	t=1745389522; cv=none; b=W+cDpeF+GsrQahtUqdsYXKjLXyIt1k4I5Bi9KwyMwbU2m3OB59ajZrKhbFcJz2xO1atiEoQ+U5xdhdyrDGiXIvaFbcGG09fFn232Tkctdxzushy+9UPE1VznQkgOcNJ+ZTzJC7VWUQF93EtYW/rkP4Q9oF9+XMYmfhmT8dTwLYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745387771; c=relaxed/simple;
-	bh=CwsjHLp40WMCn2pllL1JWToDP1Nfsaq7vVa1z+87gLs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RybAA4rvwc0HOKhCipdAXWrVbiThfaPNn/5S+BTStiy4rOVaKMJ3lN6Q46ro0Id8FumNsjX/1/umnwWUI02HBst4eAR1F4SYaz2pRtgtsV0ERZCWnsGorltpkmkaHcUeR3khp6B9nnnHlLrvIpXgQS0FNqyI2CPhPXMTSJa9p7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qDG12nR+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=r1oSZ/O9; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=2WOuir4O; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ZVj95zZs; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1745389522; c=relaxed/simple;
+	bh=6qnxKc0f9rvCcfHiQkorFfqk2KNxYLg7OSH1dxyGexA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=iGe+hW9bAYNTdw5s7YcWQXa227DwMOg7QQqf7ZaTz+DfAZVKoi5HK4r6p31gAIPfbgYASOXvRk1oXxnj5v8x1h2dytSU2WqSJCjo6yEykeRPumeLj1UuuYdejHCtrPXom4++lKVbRHHEZEb06N8S+0BfWML0lbb5AbUgVSnEbHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=D/ggPlTa; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qDG12nR+";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="r1oSZ/O9";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="2WOuir4O";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ZVj95zZs"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 0A53B2117C;
-	Wed, 23 Apr 2025 05:56:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1745387766; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vgqjYWUdsyZaGGyXyBVY+TCf8yP0QS0ScuyA35xcb80=;
-	b=qDG12nR+6bdYHkl9gx45xv4LlUJZfYiaJu5njsaBfl8frzWad6/LFkcPhsgynLBV9nY8Aq
-	+qva2tt9saP2d9POwB3I8gkH33xXYc0AcjHrureE68O92PZaBLnAnfRj+0cV1c5tBkuM2Q
-	P6ATHbLy+fCSDWizz/BBAWzjRVfua3Q=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1745387766;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vgqjYWUdsyZaGGyXyBVY+TCf8yP0QS0ScuyA35xcb80=;
-	b=r1oSZ/O9XKojbC9HI02gIsauxSN3F7d8hxMLlzZu5QUHNdhQx/e9vmBOmieSdN2fSdeMtg
-	AgyIqDo6fYTcJNAQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=2WOuir4O;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=ZVj95zZs
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1745387765; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vgqjYWUdsyZaGGyXyBVY+TCf8yP0QS0ScuyA35xcb80=;
-	b=2WOuir4OiJDloO4o60gG1mDZ7gPcsF65GTWDFKk2h5wiPj0ga8ChX/DLtmXEeKv6pkzWEy
-	6BjhF2+KqEAlPZiYTJnUO2As7w6CcdLNXKujhxnhDvROOd0cXCBXChirtimA/OIbJKqnrU
-	SZeybphMxy8iVqlLu0+TeYwZsGdkSiA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1745387765;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vgqjYWUdsyZaGGyXyBVY+TCf8yP0QS0ScuyA35xcb80=;
-	b=ZVj95zZsMTr2LL58xgtYb7pzQ6yJ1P+ErfXOuUAwGKcEggC+HG3KrICDG2T7KPtGDF4B5R
-	NBszMi99hNhqk/CA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B1C9A13691;
-	Wed, 23 Apr 2025 05:56:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id CqtDKfSACGgnSQAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 23 Apr 2025 05:56:04 +0000
-Message-ID: <a615ed0a-3e9d-49fb-9773-6a19fe4934af@suse.de>
-Date: Wed, 23 Apr 2025 07:56:04 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="D/ggPlTa"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N0iAbp016181;
+	Wed, 23 Apr 2025 06:24:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	c0h6gBE7xHeyNQK25TtzLbx21KR/zAHGHaZbS28nq3k=; b=D/ggPlTawwKCL/d/
+	rGp2zjTrNVlLWqhuogssAKtRWfLzUo2TcKo636nkR3vWE1K2eC/Cx90Dg4Rwmzp1
+	VD06+yb48PudFD1rh8gRLAbjeZc9+qQToO1WR675/3pcKV6IrNGzBRH9xkG7/uXR
+	B21Wi5vcKQxYqcMGVKFTFE9Ip094rnZ2zvmfUFS8lYve149bpuJB8OUYHYD7uTy5
+	+m5QjqYhNqYi9iQS186fHQCiqb4OrKBpCNsjzFWevvQhnTt+rA0kfNtzsj5leM1h
+	7byVWxGebwa1SH90FSNxbP4aL9GximqnNfoDzPFeRY/bcyLBuSR+uDiRxGmIwef2
+	C2kEZg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 466jh3h2pt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 23 Apr 2025 06:24:51 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53N6OoCR023755
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 23 Apr 2025 06:24:50 GMT
+Received: from [10.216.16.5] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 22 Apr
+ 2025 23:24:45 -0700
+Message-ID: <e7717264-a975-475b-8db3-be360e0edd6f@quicinc.com>
+Date: Wed, 23 Apr 2025 11:54:42 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,85 +50,136 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH][next] scsi: myrb: Fix spelling mistake "statux" ->
- "status"
-To: Colin Ian King <colin.i.king@gmail.com>, Hannes Reinecke
- <hare@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250422170347.66792-1-colin.i.king@gmail.com>
+Subject: Re: [PATCH V1 3/3] scsi: ufs: qcom: Add support to disable UFS LPM
+ Feature
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "beanhuo@micron.com"
+	<beanhuo@micron.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>,
+        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+        "conor+dt@kernel.org" <conor+dt@kernel.org>,
+        "mani@kernel.org"
+	<mani@kernel.org>,
+        "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20250417124645.24456-1-quic_nitirawa@quicinc.com>
+ <20250417124645.24456-4-quic_nitirawa@quicinc.com>
+ <070f15425ba2535a0bb165d61243dc3e3f63d672.camel@mediatek.com>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250422170347.66792-1-colin.i.king@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <070f15425ba2535a0bb165d61243dc3e3f63d672.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 0A53B2117C
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FREEMAIL_TO(0.00)[gmail.com,kernel.org,HansenPartnership.com,oracle.com,vger.kernel.org];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -3.01
-X-Spam-Flag: NO
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: Vzsk_YJ29Xg95rd4mOVhZvLW7ll_ib7K
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDIzMDA0MSBTYWx0ZWRfXw+qCni5+e+1f LtdozlQo/cEe50VzU9D46YqZV5J275eGkDi6REMc7hSwwTi2AdLokQNHIwUHEpMxZP8Rb0Z13de rIgTlnF2QojfB6NbwtMRHi9xeZ6FuwvNbssy2rMKsgeuiTfRzqIz+Dyap4X3nliVrcGLO65Tpwd
+ c+4cM8oBQ933onL70xv+J2yfQdQXqzMaBYIXGvZxHTjyMaBrbgTR5Sw4dbsmYydPUjoezDnsfJh updt9t2Gmhju+74kb4hhR4akvxcjjMo5LAG4g6Rjx0k4EgJbiHspCDFFKic4YGHwDzNP7IeIE57 LlfWPck0zIFbsVNmd/Z5HsYqucKOpBLTYXJFoaLcLh4kek032h4HlK3N4ClUKb2XeaM5TGLaZLl
+ xaJldH1MRAGUZpGvh3fSI/XVALoZJs7Ru5qQSztyshIMIEskuJont5Hu4MaqDDezWUEzBuU4
+X-Authority-Analysis: v=2.4 cv=ELgG00ZC c=1 sm=1 tr=0 ts=680887b3 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=DBNj-jGEmPe37kIgScQA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: Vzsk_YJ29Xg95rd4mOVhZvLW7ll_ib7K
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-23_03,2025-04-22_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 bulkscore=0 phishscore=0 spamscore=0
+ mlxscore=0 lowpriorityscore=0 priorityscore=1501 suspectscore=0
+ mlxlogscore=848 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
+ definitions=main-2504230041
 
-On 4/22/25 19:03, Colin Ian King wrote:
-> There is a spelling mistake in a dev_err message. Fix it.
+
+
+On 4/23/2025 10:30 AM, Peter Wang (王信友) wrote:
+> On Thu, 2025-04-17 at 18:16 +0530, Nitin Rawat wrote:
+>>
+>> External email : Please do not click links or open attachments until
+>> you have verified the sender or the content.
+>>
+>>
+>> There are emulation FPGA platforms or other platforms where UFS low
+>> power mode is either unsupported or power efficiency is not a
+>> critical
+>> requirement.
+>>
+>> Disable all low power mode UFS feature based on the "disable-lpm"
+>> device
+>> tree property parsed in platform driver.
+>>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 15 ++++++++-------
+>>   1 file changed, 8 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-
+>> qcom.c
+>> index 1b37449fbffc..1024edf36b68 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -1014,13 +1014,14 @@ static void ufs_qcom_set_host_caps(struct
+>> ufs_hba *hba)
+>>
+>>   static void ufs_qcom_set_caps(struct ufs_hba *hba)
+>>   {
+>> -       hba->caps |= UFSHCD_CAP_CLK_GATING |
+>> UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
+>> -       hba->caps |= UFSHCD_CAP_CLK_SCALING |
+>> UFSHCD_CAP_WB_WITH_CLK_SCALING;
+>> -       hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+>> -       hba->caps |= UFSHCD_CAP_WB_EN;
+>> -       hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
+>> -       hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
+>> -
+>> +       if (!hba->disable_lpm) {
+>> +               hba->caps |= UFSHCD_CAP_CLK_GATING |
+>> UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
+>> +               hba->caps |= UFSHCD_CAP_CLK_SCALING |
+>> UFSHCD_CAP_WB_WITH_CLK_SCALING;
+>> +               hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+>> +               hba->caps |= UFSHCD_CAP_WB_EN;
+>>
 > 
-> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
-> ---
->   drivers/scsi/myrb.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi, Nitin,
 > 
-> diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-> index dc4bd422b601..486db5b2f05d 100644
-> --- a/drivers/scsi/myrb.c
-> +++ b/drivers/scsi/myrb.c
-> @@ -891,7 +891,7 @@ static bool myrb_enable_mmio(struct myrb_hba *cb, mbox_mmio_init_t mmio_init_fn)
->   		status = mmio_init_fn(pdev, base, &mbox);
->   		if (status != MYRB_STATUS_SUCCESS) {
->   			dev_err(&pdev->dev,
-> -				"Failed to enable mailbox, statux %02X\n",
-> +				"Failed to enable mailbox, status %02X\n",
->   				status);
->   			return false;
->   		}
-Tsk. I should've known better.
+> If hba->disable_lpm is true, WB should enable?
+> Normally, you don't care about low power, so why wouldn't you enable
+> WB?
+> 
+Hi Peter,
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Thanks for review. Agree with you.
+I will update this in next patchset.
 
-Cheers,
+Regards,
+Nitin
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
+> Thanks.
+> Peter
+> 
+> 
+> 
+>> +               hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
+>> +               hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
+>> +       }
+>>          ufs_qcom_set_host_caps(hba);
+>>   }
+>>
+>> --
+>> 2.48.1
+>>
+> 
+
