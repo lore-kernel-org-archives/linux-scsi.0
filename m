@@ -1,185 +1,193 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA179253F35;
-	Wed, 23 Apr 2025 06:25:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B211267386
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 06:45:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745389522; cv=none; b=W+cDpeF+GsrQahtUqdsYXKjLXyIt1k4I5Bi9KwyMwbU2m3OB59ajZrKhbFcJz2xO1atiEoQ+U5xdhdyrDGiXIvaFbcGG09fFn232Tkctdxzushy+9UPE1VznQkgOcNJ+ZTzJC7VWUQF93EtYW/rkP4Q9oF9+XMYmfhmT8dTwLYw=
+	t=1745390710; cv=none; b=nMCJ3aC9UxLWje/W5tEyI/nL6GMuEKLc8b6pZdcpk5o2waGOOIkKy6UTOs2GvM1QfwaCjPgzUZR57oDnbzFfDw1H7iwMxm9xwLemS2n31GUQBExaLq59aKwaK3QvlkApWvM0tT+S7yOrDd7bqsOzb/0Gy2mao+FuIQghsPm7+f4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745389522; c=relaxed/simple;
-	bh=6qnxKc0f9rvCcfHiQkorFfqk2KNxYLg7OSH1dxyGexA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=iGe+hW9bAYNTdw5s7YcWQXa227DwMOg7QQqf7ZaTz+DfAZVKoi5HK4r6p31gAIPfbgYASOXvRk1oXxnj5v8x1h2dytSU2WqSJCjo6yEykeRPumeLj1UuuYdejHCtrPXom4++lKVbRHHEZEb06N8S+0BfWML0lbb5AbUgVSnEbHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=D/ggPlTa; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1745390710; c=relaxed/simple;
+	bh=3SqWo4ulTzFqzs780nKr+GWWXoyKc3CsqRlgn0TlszU=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=CowX9XkQ7eKW4pUcb3Slrqy2p9yr3QMc+Xd0fzpGgetL+Wj64KDTupcVIi4feIbagow6ZvEGsqxpj5bVZj+e2TOTW/6bGnyho31nEftLNOlKbZC2/Umk20tDHwyx36Kjp15xx1xHY7wJHbdM9aK11SooHy6bVA84Dno1kxSKPHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YlwEzTgp; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="D/ggPlTa"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N0iAbp016181;
-	Wed, 23 Apr 2025 06:24:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	c0h6gBE7xHeyNQK25TtzLbx21KR/zAHGHaZbS28nq3k=; b=D/ggPlTawwKCL/d/
-	rGp2zjTrNVlLWqhuogssAKtRWfLzUo2TcKo636nkR3vWE1K2eC/Cx90Dg4Rwmzp1
-	VD06+yb48PudFD1rh8gRLAbjeZc9+qQToO1WR675/3pcKV6IrNGzBRH9xkG7/uXR
-	B21Wi5vcKQxYqcMGVKFTFE9Ip094rnZ2zvmfUFS8lYve149bpuJB8OUYHYD7uTy5
-	+m5QjqYhNqYi9iQS186fHQCiqb4OrKBpCNsjzFWevvQhnTt+rA0kfNtzsj5leM1h
-	7byVWxGebwa1SH90FSNxbP4aL9GximqnNfoDzPFeRY/bcyLBuSR+uDiRxGmIwef2
-	C2kEZg==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 466jh3h2pt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Apr 2025 06:24:51 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53N6OoCR023755
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Apr 2025 06:24:50 GMT
-Received: from [10.216.16.5] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 22 Apr
- 2025 23:24:45 -0700
-Message-ID: <e7717264-a975-475b-8db3-be360e0edd6f@quicinc.com>
-Date: Wed, 23 Apr 2025 11:54:42 +0530
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YlwEzTgp"
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250423064504epoutp01520bcdfbda587bcce09562f70cf540a4~435kKg0ci3247132471epoutp01c
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 06:45:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250423064504epoutp01520bcdfbda587bcce09562f70cf540a4~435kKg0ci3247132471epoutp01c
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1745390704;
+	bh=72Psgkn+jG8bccz9lqfdGIztHlVpKbwkw3e+s4Gh1hs=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=YlwEzTgpMpZjs///FsdX8fYN8BP5T9Fi97BMxTh7KCgQcIVVF6PB/F8hLv7g2tJyK
+	 dRLBcJwhcoVFqkwHibghV7aj8uIzTtCaTjeTBkSPvvy7UNZCKXDhP3V72FRVpejbh7
+	 qvx2v5q5/f8rb2wFxNNA+Ni9Extv2Cev1CXNjXlM=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
+	20250423064503epcas1p3d6b28a5118bc49104a8d5e997b579474~435jXdHAK1657316573epcas1p3M;
+	Wed, 23 Apr 2025 06:45:03 +0000 (GMT)
+Received: from epcas1p1.samsung.com (unknown [182.195.38.248]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4Zj8jp2dwdz6B9m6; Wed, 23 Apr
+	2025 06:45:02 +0000 (GMT)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250423064501epcas1p2f5ee0585feea01613ca82118a3241d40~435hnRXYg2862928629epcas1p2V;
+	Wed, 23 Apr 2025 06:45:01 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250423064501epsmtrp1fe7e0b792b4fc098e8dc39303e55cadd~435hl4yo53246032460epsmtrp1i;
+	Wed, 23 Apr 2025 06:45:01 +0000 (GMT)
+X-AuditID: b6c32a29-fda1d2400000223e-77-68088c6db7d6
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	91.2A.08766.D6C88086; Wed, 23 Apr 2025 15:45:01 +0900 (KST)
+Received: from dh0421hwang02 (unknown [10.253.101.58]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20250423064501epsmtip1dd824c9339839168ea88ffae03456c03~435hXsEvJ2704327043epsmtip1X;
+	Wed, 23 Apr 2025 06:45:00 +0000 (GMT)
+From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
+To: =?UTF-8?Q?'Peter_Wang_=28=E7=8E=8B=E4=BF=A1=E5=8F=8B=29'?=
+	<peter.wang@mediatek.com>, <avri.altman@wdc.com>,
+	<quic_mnaresh@quicinc.com>, <linux-scsi@vger.kernel.org>,
+	<bvanassche@acm.org>, <linux-kernel@vger.kernel.org>,
+	<alim.akhtar@samsung.com>, <manivannan.sadhasivam@linaro.org>,
+	<martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
+Cc: <sh043.lee@samsung.com>, <wkon.kim@samsung.com>,
+	<cw9316.lee@samsung.com>, <grant.jung@samsung.com>,
+	<sh8267.baek@samsung.com>, <jt77.jang@samsung.com>,
+	<jangsub.yi@samsung.com>, <junwoo80.lee@samsung.com>
+In-Reply-To: <039d433e9931e4999e4011cebc2844ffacd2ec0c.camel@mediatek.com>
+Subject: RE: [PATCH 2/2] scsi: ufs: core: Add a trace function calling when
+ uic command error occurs
+Date: Wed, 23 Apr 2025 15:45:00 +0900
+Message-ID: <001001dbb41b$3c947300$b5bd5900$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 3/3] scsi: ufs: qcom: Add support to disable UFS LPM
- Feature
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "beanhuo@micron.com"
-	<beanhuo@micron.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>,
-        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-        "conor+dt@kernel.org" <conor+dt@kernel.org>,
-        "mani@kernel.org"
-	<mani@kernel.org>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20250417124645.24456-1-quic_nitirawa@quicinc.com>
- <20250417124645.24456-4-quic_nitirawa@quicinc.com>
- <070f15425ba2535a0bb165d61243dc3e3f63d672.camel@mediatek.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <070f15425ba2535a0bb165d61243dc3e3f63d672.camel@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Vzsk_YJ29Xg95rd4mOVhZvLW7ll_ib7K
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDIzMDA0MSBTYWx0ZWRfXw+qCni5+e+1f LtdozlQo/cEe50VzU9D46YqZV5J275eGkDi6REMc7hSwwTi2AdLokQNHIwUHEpMxZP8Rb0Z13de rIgTlnF2QojfB6NbwtMRHi9xeZ6FuwvNbssy2rMKsgeuiTfRzqIz+Dyap4X3nliVrcGLO65Tpwd
- c+4cM8oBQ933onL70xv+J2yfQdQXqzMaBYIXGvZxHTjyMaBrbgTR5Sw4dbsmYydPUjoezDnsfJh updt9t2Gmhju+74kb4hhR4akvxcjjMo5LAG4g6Rjx0k4EgJbiHspCDFFKic4YGHwDzNP7IeIE57 LlfWPck0zIFbsVNmd/Z5HsYqucKOpBLTYXJFoaLcLh4kek032h4HlK3N4ClUKb2XeaM5TGLaZLl
- xaJldH1MRAGUZpGvh3fSI/XVALoZJs7Ru5qQSztyshIMIEskuJont5Hu4MaqDDezWUEzBuU4
-X-Authority-Analysis: v=2.4 cv=ELgG00ZC c=1 sm=1 tr=0 ts=680887b3 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=DBNj-jGEmPe37kIgScQA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: Vzsk_YJ29Xg95rd4mOVhZvLW7ll_ib7K
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-23_03,2025-04-22_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- malwarescore=0 clxscore=1015 bulkscore=0 phishscore=0 spamscore=0
- mlxscore=0 lowpriorityscore=0 priorityscore=1501 suspectscore=0
- mlxlogscore=848 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
- definitions=main-2504230041
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: ko
+Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwLekswsAdKaXvgCNaz4WLTkHcVg
+X-Brightmail-Tracker: H4sIAAAAAAAAA02ReUiTYRzHed5r75bDt23gk0XEQExLUzJ4OjAjlLcZlIQa0TXz1Vnbmls3
+	FWWeM/OqqbPMDiz3R6I1HWpZW3lVmGVqZmlS2Do1y1jNrG0E/vfhe/GDH42LHhO+dIp6H6dV
+	y5VSSkDU26Tzg1SnaUXIhZ8CNFxRTyG74zmFDGMOHJV2ZpLo11QND9Xm0yjbXIwhy+gjHmqc
+	OoWhZ43nKZTbZ6HQq/QcEl1r+4Mh87ffJJo885aH0px3CNT7qJ1EN59OEhEi9llPNGso6qTY
+	wd5mik3vaCHY8XcDBFvYfJw9c8sE2Im6+WzW3VxsI3+LYFUip0w5wGmXhO8UKCb60wmNzfeQ
+	/UYGdgI0SvSAT0MmDBZlZmN6IKBFTBOAlc1NwGPMg7lDt3l6QP9jMbTZdJ6MHcAyezHpylBM
+	CCxu/US5DAnzE4N6vcW9hDNDAJb0pJOeyhSA9oES3FXhMzI4fe4q5WIxkwjLz47xXEwwfrCg
+	w+TOCJnl8GXOF8LDs2FH2Vs348wimPcmA/znqksfcc+pC6DjXRXp0SWwPCfTrUuYKDj44iRW
+	AMTGGVPGGVPGGVPGGfVKQJjAHE6jUyWrdKGaUDV3MFgnV+n2q5ODd+1V1QH3xwMDLKDBNBZs
+	BRgNrADSuFQi/BXFU4iEifLDRzjt3h3a/UpOZwVzaULqI/R5n5coYpLl+7g9HKfhtP9djOb7
+	nsD4xyJLlNbqvAnnwaqItZ9jzAFOfzM5u2t3FEs72q/tzPDa1lxQkDQ0OnGFXFEVPr3luH4g
+	tf6wE24dS355ISHg+wPlnZpon68PT6+eXq3Ir2gwTGevg8KemCDB0dq4x7xjC+55K28yH9bH
+	lW7wkRnCVc7A/rPx2MXubP+a808/p1wtvC5dSuGbJxu9B7q+XmrzX2WJMITUDW4Yvu/VZx8n
+	K8WxXpGX/VJHhjuDFmdtylKvTCv0xh3j8phu63bHdVlhySuZrCL2SWySeDDYb2QhuebusqWL
+	w0x+r9e2jJbGR2bMe841va84km9beQDMItN+dC6phq0JviNqDaDNQ5ulhE4hDw3EtTr5Xwkg
+	fxNgAwAA
+X-CMS-MailID: 20250423064501epcas1p2f5ee0585feea01613ca82118a3241d40
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250417023419epcas1p343060855c4470f8056116a207a584956
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+	<CGME20250417023419epcas1p343060855c4470f8056116a207a584956@epcas1p3.samsung.com>
+	<20250417023405.6954-3-dh0421.hwang@samsung.com>
+	<039d433e9931e4999e4011cebc2844ffacd2ec0c.camel@mediatek.com>
 
-
-
-On 4/23/2025 10:30 AM, Peter Wang (王信友) wrote:
-> On Thu, 2025-04-17 at 18:16 +0530, Nitin Rawat wrote:
->>
->> External email : Please do not click links or open attachments until
->> you have verified the sender or the content.
->>
->>
->> There are emulation FPGA platforms or other platforms where UFS low
->> power mode is either unsupported or power efficiency is not a
->> critical
->> requirement.
->>
->> Disable all low power mode UFS feature based on the "disable-lpm"
->> device
->> tree property parsed in platform driver.
->>
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> ---
->>   drivers/ufs/host/ufs-qcom.c | 15 ++++++++-------
->>   1 file changed, 8 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-
->> qcom.c
->> index 1b37449fbffc..1024edf36b68 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -1014,13 +1014,14 @@ static void ufs_qcom_set_host_caps(struct
->> ufs_hba *hba)
->>
->>   static void ufs_qcom_set_caps(struct ufs_hba *hba)
->>   {
->> -       hba->caps |= UFSHCD_CAP_CLK_GATING |
->> UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
->> -       hba->caps |= UFSHCD_CAP_CLK_SCALING |
->> UFSHCD_CAP_WB_WITH_CLK_SCALING;
->> -       hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
->> -       hba->caps |= UFSHCD_CAP_WB_EN;
->> -       hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->> -       hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
->> -
->> +       if (!hba->disable_lpm) {
->> +               hba->caps |= UFSHCD_CAP_CLK_GATING |
->> UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
->> +               hba->caps |= UFSHCD_CAP_CLK_SCALING |
->> UFSHCD_CAP_WB_WITH_CLK_SCALING;
->> +               hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
->> +               hba->caps |= UFSHCD_CAP_WB_EN;
->>
-> 
-> Hi, Nitin,
-> 
-> If hba->disable_lpm is true, WB should enable?
-> Normally, you don't care about low power, so why wouldn't you enable
-> WB?
-> 
-Hi Peter,
-
-Thanks for review. Agree with you.
-I will update this in next patchset.
-
-Regards,
-Nitin
-
-
-> Thanks.
+> On Thu, 2025-04-17 at 11:34 +0900, DooHyun Hwang wrote:
+> >
+> > External email : Please do not click links or open attachments until
+> > you have verified the sender or the content.
+> >
+> >
+> > When a uic command error occurs, there is no trace function calling.
+> > Therefore, trace function calls are added when a uic command error
+> > happens.
+> >
+> > Signed-off-by: DooHyun Hwang <dh0421.hwang=40samsung.com>
+> > ---
+> >  drivers/ufs/core/ufshcd.c =7C 5 +++++
+> >  1 file changed, 5 insertions(+)
+> >
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index ab98acd982b5..baac1ae94efc 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > =40=40 -2534,6 +2534,9 =40=40 ufshcd_wait_for_uic_cmd(struct ufs_hba *h=
+ba,
+> > struct uic_command *uic_cmd)
+> >         hba->active_uic_cmd =3D NULL;
+> >         spin_unlock_irqrestore(hba->host->host_lock, flags);
+> >
+> > +       if (ret)
+> > +               ufshcd_add_uic_command_trace(hba, uic_cmd,
+> > UFS_CMD_ERR);
+> > +
+> >         return ret;
+> >  =7D
+> >
+> > =40=40 -4306,6 +4309,8 =40=40 static int ufshcd_uic_pwr_ctrl(struct ufs=
+_hba
+> > *hba, struct uic_command *cmd)
+> >         =7D
+> >  out:
+> >         if (ret) =7B
+> > +               ufshcd_add_uic_command_trace(hba, hba-
+> > >active_uic_cmd,
+> > +                                            UFS_CMD_ERR);
+> >                 ufshcd_print_host_state(hba);
+> >                 ufshcd_print_pwr_info(hba);
+> >                 ufshcd_print_evt_hist(hba);
+> > --
+> > 2.48.1
+> >
+>=20
+>=20
+> Hi DooHyun,
+>=20
+> Is it possible to receive UFS_CMD_COMP and UFS_CMD_ERR at the same time?
+> Wouldn't it be a bit strange for a command to receive two completions?
+> Additionally, should we also add tracing for general SCSI commands that
+> receive errors?
+>=20
+> Thanks
 > Peter
-> 
-> 
-> 
->> +               hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->> +               hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
->> +       }
->>          ufs_qcom_set_host_caps(hba);
->>   }
->>
->> --
->> 2.48.1
->>
-> 
+>=20
+Thank you for your review.
 
+Yes, that=E2=80=99s=20correct.=20There=20is=20a=20case=20where=20both=20UFS=
+_CMD_COMP=20and=20UFS_CMD_ERR=20are=20logged=20simultaneously.=0D=0A=0D=0AI=
+n=20the=20typical=20case=20of=20a=20UIC=20command=20timeout,=20only=20UFS_C=
+MD_ERR=20would=20be=20recorded.=0D=0A=0D=0AHowever,=20the=20scenario=20you=
+=20described=20earlier,=20where=20both=20UFS_CMD_COMP=20and=20UFS_CMD_ERR=
+=20are=20received=20in=20the=20same=20UIC=20command,=20is=20distinct=20from=
+=20a=20timeout=20situation.=0D=0AIn=20this=20case,=20the=20command=20comple=
+tes=20in=20time,=20and=20UFS_CMD_COMP=20is=20received=20when=20handling=20t=
+he=20UIC=20command=20completion=20interrupt=20in=20ufshcd_uic_cmd_compl().=
+=0D=0AHowever,=20the=20UPMCRS=20status=20indicates=20an=20error=20because=
+=20PWR_LOCAL=20is=20not=20in=20its=20expected=20state=20(when=20checking=20=
+upmcrs=20in=20the=20=22check_upmcrs:=22=20section=20of=20the=20ufshcd_uic_p=
+wr_ctrl()=20function).=0D=0A=0D=0AUFS_CMD_COMP=20is=20generated=20when=20th=
+e=20system=20recognizes=20through=20interrupt=20status=20that=20the=20comma=
+nd=20has=20completed=20its=20execution,=20while=20UFS_CMD_ERR=20is=20record=
+ed=20when=20an=20error=20associated=20with=20the=20command=20is=20detected.=
+=0D=0A=0D=0AWhile=20it=20may=20be=20cumbersome,=20it=20is=20possible=20to=
+=20trace=20the=20timeout=20case=20and=20this=20case=20separately.=0D=0A=0D=
+=0ARegarding=20tracing=20general=20SCSI=20command=20errors=20directly=20thr=
+ough=20UFS_CMD_ERR,=20it=20might=20be=20challenging=20because=20SCSI=20comm=
+and=20errors=20are=20typically=20handled=20through=20various=20mechanisms=
+=20such=20as=20timeout=20detection,=20scsi_status=20value=20checks,=20sense=
+=20error=20checks,=20and=20OCS=20(Overall=20Command=20Status)=20value=20ver=
+ification.=0D=0AAdditionally,=20tracing=20SCSI=20command=20errors=20does=20=
+not=20align=20with=20the=20purpose=20of=20this=20commit.=0D=0A=0D=0ABR,=0D=
+=0AThank=20you.=0D=0ADooHyun=20Hwang=0D=0A=0D=0A
