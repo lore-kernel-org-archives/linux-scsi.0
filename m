@@ -1,159 +1,248 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012002.outbound.protection.outlook.com [52.101.126.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 829842749FD
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 08:27:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.2
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396829; cv=fail; b=oC2EXZxEY/67DApPu4zNT/q6fIcB3WeWEB7iOoo06HRBqGef6thqCnLEvg0IbvI2OphC9r0oKrpQ/v46bOZA4ehWn94yUzr3xEg19db6Bh2E/MQsDUnTSqVQ9GavRg2FekTg+cWpydjQ6TMjJDLlOEfio4ZmjvQIY5ACgRua00I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745396829; c=relaxed/simple;
-	bh=C4GKWdfJr+7XG4Xw9kfsKs88EApb2OnX2SvlHaMxroY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=UZfCkuct4Srg+Wt35rUYlbGeql5y08H7h7B6jWfvnbWtnnEIHUiMIfxEn+k56znAXv3airWQZURQpH8VM6tuGagJQUsi2rBakblNROvlxTKN4WPGxe6q9p5AhxvS1yMcf2R4c3xKJbxraQzLiMMzIU2qcidWgNj1SP/p6EZW4AY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=bh9TtT/l; arc=fail smtp.client-ip=52.101.126.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0866D221544
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 09:26:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1745400395; cv=none; b=i6If93+WAlOV0Qk5ne7x9ecNKKFLTF2y1OKdL16W+7yBVCfB0A+KXhpFTj/S38iaQt8DQBriDLMUaLAujralAGl3sXzbq1XsB9HZnF0fIoIxiGBTejEG6MB0T0d92+sq9t1JU0pVOAL5i8e5n37twNERhcknSb86aM2AwKj9lio=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1745400395; c=relaxed/simple;
+	bh=Zt85IUojNv29QXX6TBNPBOibxwAfhcBZueNz1bTkvv8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Hh6W2jIopW7QLouV2T2BVNUgKvxw60K5Z+2SxHKFSdoZJn6RxUGYACcsXOep/f03JSnLObLR6q2wJeZiktPOafUIqnkSGWMORuROSsHeZGwlG+F4USgtuY+COQFCrJyQTnsA/eo+pMGlPp/tlPknQS+wXOzX8ZMgrVYWkaExSw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=RUQNm9U/; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="bh9TtT/l"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=QQ7bkX2ElD+5jYKKRLuIccYFDSsmRTB2rhu81VUlORimO0X8kDDIhUVrPhVIvnvW2fs7OhVtqpRKaH5CStBJyIrS9afrmWQiTTZtOYXisGnSTMJDwCZ1ki8Zv/vI8l1jZNVtJIeLYULsoF+QuaEHHcpYUrMJSmwlmGAysrxqzTtFH3Gp+SCszNJQbguDufyfrnO6ImRwFaCMkjs+xGOjr6GaIQBzC7oKGCY3ddwr/w2c8uVCQvIGZo4aBTtmuqum86SN6kFEhPH5u4mlNgmzGW4RCzF+3hfWHpJIlEn6lNBGi2u5zMwFkC8jVxJLPJP6tZ7wPWQaq+fzhjvcyRQKiA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=C4GKWdfJr+7XG4Xw9kfsKs88EApb2OnX2SvlHaMxroY=;
- b=V0UrrCrgKboOaFz0kBwtXM4mv0R2fn1lt1k2MVDynY9yJ+lDcV6otfi9rWgS+cvaks7aP/ZFWypbQqWmitqmts+g0hB+7YjAu1HI9qm8+e9vcLBu6rdRkxdb2nm7c6Ou+QipBVjJwb/Li5ymxuY2HvEHgDHdzKYpgEsuQ0UD5HgvtstodQq8ax1eq00TemwPcErQ7RiLwfjDl7Gku6oSKOq35PhvMJWg8gZI8Rr2G/p/W7JpwrQuZB8wS0Fdeed5LPp44IrMjomOi9gn1Lxg70iCkpB2I/3Q/PLCeiU3hkQS1GDhoV+lu1kWIW9APjYNqlN9898zQTy4BZxelP6PxA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=C4GKWdfJr+7XG4Xw9kfsKs88EApb2OnX2SvlHaMxroY=;
- b=bh9TtT/lLnqLZ4j4p5FWtVUo9oNvHNc9+t4jYeReF3nSZbNKEAUwHhON7YvIl8YKgOB2kxaQRR2GDvDvzpPVKL+fznn1KZvQCKHn9gCRHev5WlhpIOUMMEFh9HlZHwL7F7Q1ywdpBcxHfpOzLikgwTXEonHmUgFqQSsnSX2EKmBcZa8mdKOkFUIrJlwIBCeFU5iX09MNelecGmYBfxMoUtHmVbwXSmN5AUBNAtdtTGOaeI94gWXTbtngYa6zo2mDmgatY0k3F8EDaPgfTJK0/1nLkloVhO1Rbesli9VTb3ighJpV5r4NwO41wEcQEfN6LibLMVRRX1r5HGFf+tBezQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from KL1PR06MB6273.apcprd06.prod.outlook.com (2603:1096:820:ec::10)
- by SE1PPFFDBC8F9D9.apcprd06.prod.outlook.com (2603:1096:108:1::433) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8655.33; Wed, 23 Apr
- 2025 08:27:00 +0000
-Received: from KL1PR06MB6273.apcprd06.prod.outlook.com
- ([fe80::9d21:d819:94e4:d09]) by KL1PR06MB6273.apcprd06.prod.outlook.com
- ([fe80::9d21:d819:94e4:d09%3]) with mapi id 15.20.8632.030; Wed, 23 Apr 2025
- 08:26:59 +0000
-From: Huan Tang <tanghuan@vivo.com>
-To: peter.wang@mediatek.com
-Cc: bvanassche@acm.org,
-	cang@qti.qualcomm.com,
-	huobean@gmail.com,
-	linux-scsi@vger.kernel.org,
-	luhongfei@vivo.com,
-	opensource.kernel@vivo.com,
-	richardp@quicinc.com,
-	tanghuan@vivo.com
-Subject: Re: Re: [PATCH v11] ufs: core: Add WB buffer resize support
-Date: Wed, 23 Apr 2025 16:26:52 +0800
-Message-Id: <20250423082652.966-1-tanghuan@vivo.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <7ce05b28f5d4b4b4973244310010c1487bdf4124.camel@mediatek.com>
-References: <7ce05b28f5d4b4b4973244310010c1487bdf4124.camel@mediatek.com>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: SI2PR04CA0018.apcprd04.prod.outlook.com
- (2603:1096:4:197::9) To KL1PR06MB6273.apcprd06.prod.outlook.com
- (2603:1096:820:ec::10)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RUQNm9U/"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-736a72220edso6307769b3a.3
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 02:26:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1745400392; x=1746005192; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=RYCjDMpy7r6NsAezWYp5ZKkj4cLt+F9Y8BHsyfKapiw=;
+        b=RUQNm9U/LZEKyQ2gsZ60BlRgYI0AciqOVFLG6okucp0UPOVmSuH70TLhf0GTnc5MZ9
+         31AU2csosp4SAMXyvjOMG5cvgv40/CESc2IIofUS49gu6xUbPBQXhNYhbpeOr1zVPAsz
+         da5fp5XkxvyKHjCv/mknLt6qGJpIgUOo+/fPQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745400392; x=1746005192;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=RYCjDMpy7r6NsAezWYp5ZKkj4cLt+F9Y8BHsyfKapiw=;
+        b=JbwgU+Vt5CaA37A8OZM1hbviWJePx19MWG6ps0jCjlUhd7/bY6RfBhAZwslOeo6tsm
+         8mUtZNNpMAqe7T6nZnm0+a78JhtJCA4cqzkNSgZ6ILZwp8IJyOf2pa2OY29UP09S08rF
+         kt+afxfAYcxsoQ4nhGuxA4abYsjyC8+yvWThxXD6q0netFKfJccPTTnCdMbX5nQ/MTVl
+         8d6Mnwl7h5d3NRbvtTPEXDXquiHUoGIhu/yRKT3yOoapvcqQmQfufsqik24qm8WrSLTP
+         PR+I7xFAblu8ioYboVDmO6z7XKoLB0du1MWvGLmBcXe46oJNZ/bVd0hGVC+jys11mkZs
+         8+6g==
+X-Gm-Message-State: AOJu0Ywp8cZ0SXtVB0RXSepzRLqMjvzX02uMKgV/sTZb4hSiRwkMiZvQ
+	TmGdIVTRGG8bSOIneqyFPFrpo6BsKyUsPSMgCP8XUoNB2R98WTEU8JB8IEy9J5XVV2KZ+ViC1SC
+	39R2PBF97CGFOwkzfbqBR972IqsiJL611Z3yp7VnaKx9VZOhlWo9JIXgfM14NLT2ZnrkQiMQlli
+	uQQtxjVuvY+VF1U44a1ehVGyXgmBL9hU8McAo5grsi+W6W2Q==
+X-Gm-Gg: ASbGncvtBF4k0Tt//wW8lxSnpILmjdogKp5iOwWjnmm9bON6AnPOI8cyufQp87zLAI2
+	PNLtagOoDhN6zu+slD8BZXlwBqXCmCN/+3YjwWdEvna6KuBMU9cmZryUZTY+A2415eFGNkhg8pc
+	RbUQTYjW3Jl8i8s/8HfS6gIlBlGEZ1lMGh5LpETxNUEC1iz0emHl1x5+OAzEeReeiCN6JFjjx4U
+	ufSwmmxfZTA3vE87IsH3zBpVkN7or/FJggoeslkeVVc5hHN2KR0Y1TkpoIyrDdZtGpULsI0VNtE
+	vDKCmiwjfJxur7T/+B2y+R9KneedVdcVkEHNT4rW9H5TNoe+3GHCOORAr0/4mRwJ2/BHcMrpf/M
+	G9lqLtijo
+X-Google-Smtp-Source: AGHT+IG9+FiD7HiywLkTj7yf4CXhmMI4ay9ZK7HeKsol2zEBDuxyn72I1TOPpLfUaaRAUqYX2Q49JQ==
+X-Received: by 2002:a05:6a21:9987:b0:1ee:efa5:6573 with SMTP id adf61e73a8af0-203cbbee8a9mr28597896637.8.1745400392282;
+        Wed, 23 Apr 2025 02:26:32 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b0db127447bsm8680559a12.2.2025.04.23.02.26.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Apr 2025 02:26:31 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1] mpi3mr: Event processing debug improvement
+Date: Wed, 23 Apr 2025 14:51:39 +0530
+Message-Id: <20250423092139.110206-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: KL1PR06MB6273:EE_|SE1PPFFDBC8F9D9:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9a153c0a-7f29-40eb-b3dc-08dd82409dee
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|52116014|1800799024|376014|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?nXoECwF8gccP7hSsY5yskSiovZlixdsns+zBowYaGPzTfiSnUSiYTOlEHWJM?=
- =?us-ascii?Q?a0bxDhVDrFO93TJBTcvQNYHAZXE47SrqMGdc8TD5kRWLHsd2t154N21+MYIS?=
- =?us-ascii?Q?ATC33qItrsthCOlkZde2yTozIV2rMEXFZh3iV3dyOgcis9FyXOsERPWVNkTe?=
- =?us-ascii?Q?7RdTN5k+iNwhOK7QANWlDejFLojINB/6uoJuR7zvLopqCa2rxzz9iMZrZwPh?=
- =?us-ascii?Q?oPBeJVYtVE9pVMwLUfnTlTg9fPkehXKmGwZd61hR+deOsZWHQWJp6iMdPv2+?=
- =?us-ascii?Q?Ltygr7MHz9XlMbyYOItZKSVbxtcZ9vxCrsvu3ymq3F01UPhaikz+BqjT0cpX?=
- =?us-ascii?Q?U1MZm+eFjdQJExhlxifYLpmRcyKkqXIlItKxAMd08Ap9cmuxUDtPV4T6hF2Z?=
- =?us-ascii?Q?mcRokX4YtGRp7ICWGPoMMDqXCKzPL26xKhTlY9llnJPjRNIvFHMFV3dOl1Ie?=
- =?us-ascii?Q?zmh7IQ8YyC/0k80XDlKBw0NVf2JyJ3v21uWgxKV2weBnxid/c+ZOH9Dm7rzB?=
- =?us-ascii?Q?Aw2vfZU1EcqSBjDppxVy2bwwNk38akXZD4TRURnnU6dFoGtbIQBh0U9pLDcA?=
- =?us-ascii?Q?YgzxqCGK8BKaUcxovyyKXBpuW+K3WQfz0xD72YTe2OvutnKPJ1PxyvaptQfX?=
- =?us-ascii?Q?olpDXzPpZ4ErffvwI+BfAmxkj6ljA7nDby+t7q9+X/MH4efopB24qRrwfxZE?=
- =?us-ascii?Q?ufAfYyBGRKyJNRrBcKdqK7AWm3X0dezmD2Kkpz5FQDvph6WZ417PhWLSB8aP?=
- =?us-ascii?Q?mgeJee6IteByQ07aDork26lHanHRglOei/MC0HwgIfMYVEV5S8Ai1JiBzj7f?=
- =?us-ascii?Q?ytDDZ30a9kCXgQoADRRtgLfBHGl3Im83hvfGyqB0iWQeplX1Y208X1rIlhSR?=
- =?us-ascii?Q?z9MguVJYuKo1Fnt3wR04UYejCYKovHF5Lbs54jkdI+TrFicfjbq8Kd5r/OJ6?=
- =?us-ascii?Q?p2nk3Subx2aqTCIpP/Q87pi6Lxa5G5QEP//mFbCzUgnipd2NDCLc33d1/LbX?=
- =?us-ascii?Q?KFmfc6s3vE5eQeexgMhbgWtuZEPBMpVrD2nRhuOfJ/cm+AJMUkSHntbnJ+Pt?=
- =?us-ascii?Q?R93N6BkU+M8NHeRKSeSfOmFeTW9teqr/ttlHwzgiwlihqtyEzt4iLhK2UzH5?=
- =?us-ascii?Q?bkoG+cT7XImqihhnvsq/xZ+BzXiKBADRcvR21EWX1IZnx3FAbukPoRSvtrhF?=
- =?us-ascii?Q?Cm3nta7/yx+JaTqclfZsa/KCFHX8EF9q7OEHFNalVFbDz9wkxm2Ll0ApMLvK?=
- =?us-ascii?Q?c/kTHz8AhQtHPEZ4ByEho67vzfdKEKKelyBT9BERTA+yU+ASBFzqKc1F0+XL?=
- =?us-ascii?Q?CWc3U6tc/qOz8gHkfLPXGVqvEQE6/wPHCAYEdMhXPKzXVghK1AY+eXlWHzp6?=
- =?us-ascii?Q?yYGOdiOdFCuTIdoS5qc40XR6Attw0u9Efk8qKKGWOjg3r2B1bS3fFlL64ULO?=
- =?us-ascii?Q?IEBNQZa6L2Iv4l4Bj+6Uy/xQR2J5wHlWYswSlCZLyM2WchvGIQ44BQ=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6273.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(52116014)(1800799024)(376014)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?uqBywfZjV4lZrB3JGcf7LaxSqEiLWbfXacQX7Xjd2BwmqyiSn3IatoNxDFwG?=
- =?us-ascii?Q?sFk3u5kc4pvHsR9D4ConeQPU8SeIt2i0NI5FEMjE5vlKCGSq/Mdpl5ynwK/0?=
- =?us-ascii?Q?UA1PEUHOJNtXA3qNa0ryNsLyp3/qWxAubAgQ5gL/hFCXg3ijJ5nkCLybfjO5?=
- =?us-ascii?Q?p/VZtltSYaoEGsUnms3Ox4Xc5MJ7qepzZL8SSvYHVgXyfrVXSzwatZKgI0+B?=
- =?us-ascii?Q?2AnMfOH3twJaGvbYzuCLrreJfSRx5mjz3TnUukBaXK7o68rpxNc67fgXvE9y?=
- =?us-ascii?Q?33KOPqus4yvVVXnmN/WsQf0nPWQmbFfU8fyYfjKR69QHm7CS42Kv1QE79PDn?=
- =?us-ascii?Q?j1YM4KYHOWkNuj9eArUEa6XJwLuGGHn6dLlfBXL1Ozy7zOM2UD6Gyo25xNup?=
- =?us-ascii?Q?lGHU4fiUuk3KMaVheFRZVSVMXH6rVrPOhd3lI9q3aXzFNidOmZF7UxfKa01e?=
- =?us-ascii?Q?pZZEoF6+Ah67jKAefXVS7EZK4pUaBXCbTxqy9DogE5sZvozn4Bv5tz/cOXvK?=
- =?us-ascii?Q?+qatdlNXydPPcDNlbyTeF2WdEoeKxPVye5IX/V3MnFBWi0CKVMynkdJwCoD0?=
- =?us-ascii?Q?58nn4TR4OYP6ob6Elg0bchycYOH9bPSeyvugt6g/GglntQTSINqlTLaJRMI1?=
- =?us-ascii?Q?P5899s6C7eCKwwiaZgCsPXYLozgVOmFY2uetXhXCh20q4ib83Um9XKbMKmKj?=
- =?us-ascii?Q?+/WV5GURUEKdy7LnZRt6B+y29+/4dNDdNs4YMXC7JWzKjiVeSXJEPx1EOFRQ?=
- =?us-ascii?Q?/m4ubxm7mASf9jDzuq3nER8UhoB33yKJgpP7njvoDYf8ba2iiVqFivu0LcDB?=
- =?us-ascii?Q?C/DiuL4GGKdOTQftovHGXdX4D3ecCp1QjjItlfOO8i8RdsU85cOtyEIzasLr?=
- =?us-ascii?Q?Wnh42874DpGH2KYtm0E8KuiD7X3FDTgwnoOEmvBaJIA1Fzh0HjRRWk2nEgsv?=
- =?us-ascii?Q?aD237iijfguB2+mV2AOVyU0UzSkojScHnbrB2x9We8kzeJWmicenmX7bpa5Z?=
- =?us-ascii?Q?n2Mo/L8DGBj20680pBRtxdQ3PmwlWyonSav9D7TWYN9F0MBwdeiaReSj1W8X?=
- =?us-ascii?Q?7hQyZectlIwrQxUbMcE8dfyeGR4soTARyLx6B+90y0zVK3rI+Rfe9J5iw65e?=
- =?us-ascii?Q?EzfNYglsQbkZi1jxTU94tzBrO1bvgsHUG8gtCRmSFKJuAh/B0pAiwp4P7asJ?=
- =?us-ascii?Q?JL4+a/k8KCDYIvyUBcSwG6Oi3i0TnDjKcL9hDSBtktJV90ZuUfSU8OtnHlm6?=
- =?us-ascii?Q?BJqqPVAMV+OowxKWRlAROfLisB2bE9YYQdbGG5vsUP1Niy8VI8JfPDUxz6TY?=
- =?us-ascii?Q?41U4k5KAVPeF5A+yNSsac8oRwDabB1oW2U+U6IKmEt2yu84vosCk136VYxgA?=
- =?us-ascii?Q?nqAP2eoZDgLkOrNz8xldHI0sJvwzMRtmBfmbo/zJuw5CoHj1C+FJt4UXQpou?=
- =?us-ascii?Q?j2Vlw1D2OZKQO04mEUou27Z46wpLHABuacuzET9lXPjY41diDREE6/cYLp7G?=
- =?us-ascii?Q?YG5/vzjSl15Ko3XPj9x+lR15aEYB5vwNks7YsnvJt+ite1LRraplNndGv3fj?=
- =?us-ascii?Q?IDyaI8QkPXZ+qyyVCfZ7xjc+LCoFByGhFflLSTc/?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9a153c0a-7f29-40eb-b3dc-08dd82409dee
-X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6273.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Apr 2025 08:26:59.8594
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Gy+ed74yd2TZSfMVV5FJZ2DsTVc3vVPigmANnVAPl13z71QR5blp9cxRsw1ID3+Qg5Gt4/710/Sf2JfbbIsBZA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SE1PPFFDBC8F9D9
+Content-Transfer-Encoding: 8bit
 
-> DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP seems to be incorrect. =0D
-> It should be DEVICE_DESC_PARAM_EXT_WB_SUP=0D
-=0D
-=0D
-Hi peter sir,=0D
-=0D
-Thanks for your reply and advice! =0D
-I'll fix it right away=0D
-=0D
-Best wishes to you !=0D
-=0D
-Thanks=0D
-Huan=
+Improvising event process debugging.
+
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 67 ++++++++++++++++++++++++---------
+ 1 file changed, 50 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index c186b892150f..1c139cca9099 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -985,6 +985,10 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+ 				goto out;
+ 			}
+ 		}
++		dprint_event_bh(mrioc,
++		    "exposed target device with handle(0x%04x), perst_id(%d)\n",
++		    tgtdev->dev_handle, perst_id);
++		goto out;
+ 	} else
+ 		mpi3mr_report_tgtdev_to_sas_transport(mrioc, tgtdev);
+ out:
+@@ -1344,9 +1348,9 @@ static void mpi3mr_devstatuschg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	    (struct mpi3_event_data_device_status_change *)fwevt->event_data;
+ 
+ 	dev_handle = le16_to_cpu(evtdata->dev_handle);
+-	ioc_info(mrioc,
+-	    "%s :device status change: handle(0x%04x): reason code(0x%x)\n",
+-	    __func__, dev_handle, evtdata->reason_code);
++	dprint_event_bh(mrioc,
++	    "processing device status change event bottom half for handle(0x%04x), rc(0x%02x)\n",
++	    dev_handle, evtdata->reason_code);
+ 	switch (evtdata->reason_code) {
+ 	case MPI3_EVENT_DEV_STAT_RC_HIDDEN:
+ 		delete = 1;
+@@ -1365,8 +1369,13 @@ static void mpi3mr_devstatuschg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 	}
+ 
+ 	tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
+-	if (!tgtdev)
++	if (!tgtdev) {
++		dprint_event_bh(mrioc,
++		    "processing device status change event bottom half,\n"
++		    "cannot identify target device for handle(0x%04x), rc(0x%02x)\n",
++		    dev_handle, evtdata->reason_code);
+ 		goto out;
++	}
+ 	if (uhide) {
+ 		tgtdev->is_hidden = 0;
+ 		if (!tgtdev->host_exposed)
+@@ -1406,12 +1415,17 @@ static void mpi3mr_devinfochg_evt_bh(struct mpi3mr_ioc *mrioc,
+ 
+ 	perst_id = le16_to_cpu(dev_pg0->persistent_id);
+ 	dev_handle = le16_to_cpu(dev_pg0->dev_handle);
+-	ioc_info(mrioc,
+-	    "%s :Device info change: handle(0x%04x): persist_id(0x%x)\n",
+-	    __func__, dev_handle, perst_id);
++	dprint_event_bh(mrioc,
++	    "processing device info change event bottom half for handle(0x%04x), perst_id(%d)\n",
++	    dev_handle, perst_id);
+ 	tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
+-	if (!tgtdev)
++	if (!tgtdev) {
++		dprint_event_bh(mrioc,
++		    "cannot identify target device for  device info\n"
++		    "change event handle(0x%04x), perst_id(%d)\n",
++		    dev_handle, perst_id);
+ 		goto out;
++	}
+ 	mpi3mr_update_tgtdev(mrioc, tgtdev, dev_pg0, false);
+ 	if (!tgtdev->is_hidden && !tgtdev->host_exposed)
+ 		mpi3mr_report_tgtdev_to_host(mrioc, perst_id);
+@@ -2012,8 +2026,11 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
+ 	mrioc->current_event = fwevt;
+ 
+-	if (mrioc->stop_drv_processing)
++	if (mrioc->stop_drv_processing) {
++		dprint_event_bh(mrioc, "ignoring event(0x%02x) in the bottom half handler\n"
++				"due to stop_drv_processing\n", fwevt->event_id);
+ 		goto out;
++	}
+ 
+ 	if (mrioc->unrecoverable) {
+ 		dprint_event_bh(mrioc,
+@@ -2025,6 +2042,9 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	if (!fwevt->process_evt)
+ 		goto evt_ack;
+ 
++	dprint_event_bh(mrioc, "processing event(0x%02x) in the bottom half handler\n",
++	    fwevt->event_id);
++
+ 	switch (fwevt->event_id) {
+ 	case MPI3_EVENT_DEVICE_ADDED:
+ 	{
+@@ -2763,6 +2783,9 @@ static void mpi3mr_devstatuschg_evt_th(struct mpi3mr_ioc *mrioc,
+ 		goto out;
+ 
+ 	dev_handle = le16_to_cpu(evtdata->dev_handle);
++	dprint_event_th(mrioc,
++	    "device status change event top half with rc(0x%02x) for handle(0x%04x)\n",
++	    evtdata->reason_code, dev_handle);
+ 
+ 	switch (evtdata->reason_code) {
+ 	case MPI3_EVENT_DEV_STAT_RC_INT_DEVICE_RESET_STRT:
+@@ -2786,8 +2809,12 @@ static void mpi3mr_devstatuschg_evt_th(struct mpi3mr_ioc *mrioc,
+ 	}
+ 
+ 	tgtdev = mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
+-	if (!tgtdev)
++	if (!tgtdev) {
++		dprint_event_th(mrioc,
++		    "processing device status change event could not identify device for handle(0x%04x)\n",
++		    dev_handle);
+ 		goto out;
++	}
+ 	if (hide)
+ 		tgtdev->is_hidden = hide;
+ 	if (tgtdev->starget && tgtdev->starget->hostdata) {
+@@ -2863,13 +2890,13 @@ static void mpi3mr_energypackchg_evt_th(struct mpi3mr_ioc *mrioc,
+ 	u16 shutdown_timeout = le16_to_cpu(evtdata->shutdown_timeout);
+ 
+ 	if (shutdown_timeout <= 0) {
+-		ioc_warn(mrioc,
++		dprint_event_th(mrioc,
+ 		    "%s :Invalid Shutdown Timeout received = %d\n",
+ 		    __func__, shutdown_timeout);
+ 		return;
+ 	}
+ 
+-	ioc_info(mrioc,
++	dprint_event_th(mrioc,
+ 	    "%s :Previous Shutdown Timeout Value = %d New Shutdown Timeout Value = %d\n",
+ 	    __func__, mrioc->facts.shutdown_timeout, shutdown_timeout);
+ 	mrioc->facts.shutdown_timeout = shutdown_timeout;
+@@ -2974,9 +3001,11 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 		struct mpi3_device_page0 *dev_pg0 =
+ 		    (struct mpi3_device_page0 *)event_reply->event_data;
+ 		if (mpi3mr_create_tgtdev(mrioc, dev_pg0))
+-			ioc_err(mrioc,
+-			    "%s :Failed to add device in the device add event\n",
+-			    __func__);
++			dprint_event_th(mrioc,
++				"failed to process device added event for handle(0x%04x),\n"
++				"perst_id(%d) in the event top half handler\n",
++				le16_to_cpu(dev_pg0->dev_handle),
++				le16_to_cpu(dev_pg0->persistent_id));
+ 		else
+ 			process_evt_bh = 1;
+ 		break;
+@@ -3039,11 +3068,15 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 		break;
+ 	}
+ 	if (process_evt_bh || ack_req) {
++		dprint_event_th(mrioc,
++			"scheduling bottom half handler for event(0x%02x),ack_required=%d\n",
++			evt_type, ack_req);
+ 		sz = event_reply->event_data_length * 4;
+ 		fwevt = mpi3mr_alloc_fwevt(sz);
+ 		if (!fwevt) {
+-			ioc_info(mrioc, "%s :failure at %s:%d/%s()!\n",
+-			    __func__, __FILE__, __LINE__, __func__);
++			dprint_event_th(mrioc,
++				"failed to schedule bottom half handler for\n"
++				"event(0x%02x), ack_required=%d\n", evt_type, ack_req);
+ 			return;
+ 		}
+ 
+-- 
+2.31.1
+
