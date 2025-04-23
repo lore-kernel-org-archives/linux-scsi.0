@@ -1,107 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECAC81A3161;
-	Wed, 23 Apr 2025 13:56:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B417479F5
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 18:32:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745416580; cv=none; b=NWjheYi6WmQg394E3WLrBSNPHAqY7g+SdKVNvAkEvazx2PcimLzPQWJqX2ONLp24OycwnlE3CvtkwOq7GJANV2D1Ahz7ruAvnBTfdpROkpS9705evE6jl6s3EbuxGN3GuNfoosm3Zx5RelqaGnBXEDo79PmAsp+dEkvzhVlJSeI=
+	t=1745433161; cv=none; b=goiZF8diwPo6x73EJwWytrWh6i9Z6K5IfWZ50+sfDheWdzSXS56bLDPVZ+OewfXPFa10v69ltlWiNJlscWnLFALkfSQAOgp0FWCmsgsMmkZY1RyWBZ1bpRmTgtzPJ079Aax3Byup/mO6HZF9NoIk0HIcvAiyaF8AXgg95Jl/yqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745416580; c=relaxed/simple;
-	bh=TLNo+cEr9a5ZaMfW1syRuCKSQsHU8Gj546QRb+xgVrQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GRSCABhg3Tc0rHlg8nkI4cwnQtphYzNUGF7bbamaEY3F1ldsLFuc3DLEK2EOt3+sGvJho0KFUHajIWvr5f7J15uT0idchyK6dRx4CDr5hkdyVVJv9wSRAUxtmY8hVNNJGKg/yB2uGPfwtBk1aRw2Fon2xgiwx71tXfqZ9p97+nU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fo+4qxsF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745433161; c=relaxed/simple;
+	bh=kKzhfxanVbNKZFHGAIo+Gl7flgds0DkIag9I8116Nn8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nbVn3ElfiT0egBJTNhPNZ0u6/XdwWFaxtiobLWjmDsTgc4PIuh0Fe/H1jsT3a87lKx8k1jDW6jR2zracGQOnWIgP6nxxFiYTKSX1e7jMJ15yK5zFJTKVOXs3bz6LxIY6aF9sVrqhI/K4cxXU3vagsCOWrFY5on8EnK7r/SgnKsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=K4Za8k3I; arc=none smtp.client-ip=68.232.154.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fo+4qxsF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B1D6C4CEE2;
-	Wed, 23 Apr 2025 13:56:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745416579;
-	bh=TLNo+cEr9a5ZaMfW1syRuCKSQsHU8Gj546QRb+xgVrQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fo+4qxsF6nP7HbesDNMloUvlp5AnUsCJmOmU5XTAJxhlZgTUXLnI+nR2n81HBU0cd
-	 EsKhcl0iyzecjZHxg1PSe/cRyIRE9BCrILh9wYu9X7b62e5+qB2x9C9p5p9Xw31spt
-	 JR7i+DGelkQMFpo7vAjjVTkbhJF30g5km5k1IjvC7FHz5p8f9j8jEduo6cO2RV9nk+
-	 MB422YGaYHw6tu4h1sAcLQnh0Uk/pk6pGGiUzQKvU91wPLxYT7WDOVdSOfU2vrzJeT
-	 A2nfMox06SpE2u3i5dUR5wMM92CvtwN/Gy5sK5WmPgAV/28DdFPuT9gcWXGQ8OvbuZ
-	 enxzzqqRc8A7w==
-Date: Wed, 23 Apr 2025 08:56:17 -0500
-From: Rob Herring <robh@kernel.org>
-To: Nitin Rawat <quic_nitirawa@quicinc.com>
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	krzk+dt@kernel.org, mani@kernel.org, conor+dt@kernel.org,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	beanhuo@micron.com, peter.wang@mediatek.com,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH V1 3/3] scsi: ufs: qcom: Add support to disable UFS LPM
- Feature
-Message-ID: <20250423135617.GA227946-robh@kernel.org>
-References: <20250417124645.24456-1-quic_nitirawa@quicinc.com>
- <20250417124645.24456-4-quic_nitirawa@quicinc.com>
- <20250422124546.GB896279-robh@kernel.org>
- <06c6c892-c597-4d1f-9d28-52455d6471f9@quicinc.com>
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="K4Za8k3I"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1745433159; x=1776969159;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=kKzhfxanVbNKZFHGAIo+Gl7flgds0DkIag9I8116Nn8=;
+  b=K4Za8k3I3bHHg2Zy1LSD776uF/hwlB0uwot4uBnTU+wFRKjqFTHXc6qu
+   TGoQLHjnESHJSiroUYr6tMJx0oDxRR7ZR9DaT7gNO0tbTx452LOJUudbH
+   4VBDu54Fr7nUIydkVP/vafmbini2sVwYqoo5Uav6/hb9CDZB4nBLEsVfi
+   MN7G+kdVtx7XJX6RadPGtjgTRjG+hV6fTQdI57RAt/lCxQLuQa6GU/9e9
+   E4oxulGxqqIfeTnN54hIt+bda2n9DYHlEphGyik5gaU5zLy8EskteNFhn
+   3vT+qxfRUB8tS6JzsBNg4shdWgmnQzwBQUdBieGuYzunENjk+LTHy1deo
+   Q==;
+X-CSE-ConnectionGUID: Vsy3DPLGRV+QHyOkpBwADA==
+X-CSE-MsgGUID: 2FNY+nCHR+24OUKj9Eww5A==
+X-IronPort-AV: E=Sophos;i="6.15,233,1739862000"; 
+   d="scan'208";a="208323914"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa6.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Apr 2025 11:32:33 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.44; Wed, 23 Apr 2025 11:32:31 -0700
+Received: from brunhilda.pdev.net (10.10.85.11) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2507.44 via Frontend
+ Transport; Wed, 23 Apr 2025 11:32:31 -0700
+From: Don Brace <don.brace@microchip.com>
+To: <don.brace@microchip.com>, <scott.teel@microchip.com>,
+	<scott.benesh@microchip.com>, <gerry.morong@microchip.com>,
+	<mahesh.rajashekhara@microchip.com>, <mike.mcgowen@microchip.com>,
+	<murthy.bhat@microchip.com>, <kumar.meiyappan@microchip.com>,
+	<jeremy.reeves@microchip.com>, <hch@infradead.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<joseph.szczypek@hpe.com>, <POSWALD@suse.com>, <cameron.cumberland@suse.com>,
+	Yi Zhang <yi.zhang@redhat.com>
+CC: <linux-scsi@vger.kernel.org>
+Subject: [PATCH 1/5] smartpqi: take drives offline when controller is offline
+Date: Wed, 23 Apr 2025 13:32:25 -0500
+Message-ID: <20250423183229.538572-2-don.brace@microchip.com>
+X-Mailer: git-send-email 2.49.0.391.g4bbb303af6
+In-Reply-To: <20250423183229.538572-1-don.brace@microchip.com>
+References: <20250423183229.538572-1-don.brace@microchip.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <06c6c892-c597-4d1f-9d28-52455d6471f9@quicinc.com>
+Organization: Microchip Technology Inc.
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-On Wed, Apr 23, 2025 at 01:14:27AM +0530, Nitin Rawat wrote:
-> 
-> 
-> On 4/22/2025 6:15 PM, Rob Herring wrote:
-> > On Thu, Apr 17, 2025 at 06:16:45PM +0530, Nitin Rawat wrote:
-> > > There are emulation FPGA platforms or other platforms where UFS low
-> > > power mode is either unsupported or power efficiency is not a critical
-> > > requirement.
-> > > 
-> > > Disable all low power mode UFS feature based on the "disable-lpm" device
-> > > tree property parsed in platform driver.
-> > > 
-> > > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> > > ---
-> > >   drivers/ufs/host/ufs-qcom.c | 15 ++++++++-------
-> > >   1 file changed, 8 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> > > index 1b37449fbffc..1024edf36b68 100644
-> > > --- a/drivers/ufs/host/ufs-qcom.c
-> > > +++ b/drivers/ufs/host/ufs-qcom.c
-> > > @@ -1014,13 +1014,14 @@ static void ufs_qcom_set_host_caps(struct ufs_hba *hba)
-> > > 
-> > >   static void ufs_qcom_set_caps(struct ufs_hba *hba)
-> > >   {
-> > > -	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
-> > > -	hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
-> > > -	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
-> > > -	hba->caps |= UFSHCD_CAP_WB_EN;
-> > > -	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
-> > > -	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-> > > -
-> > > +	if (!hba->disable_lpm) {
-> > > +		hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
-> > > +		hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
-> > > +		hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
-> > > +		hba->caps |= UFSHCD_CAP_WB_EN;
-> > > +		hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
-> > > +		hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-> > > +	}
-> > 
-> > Doesn't RuntimePM already have userspace controls? And that's a Linux
-> > feature that shouldn't really be controlled by DT. I think this property
-> > should still to things defined by the UFS spec.
-> 
-> Hi Rob,
-> Yes userspace has runtime PM control but by the time UFS driver probes
-> completes and userspace is up, there are chances runtime PM may get kicked
-> in.
+From: David Strahan <david.strahan@microchip.com>
 
-That sounds like a problem more than 1 device would have...
+When the controller is unexpectedly taken offline, show its drives
+as offline.
 
-Rob
+During a controller lockup, the physical and logical drives under the
+locked up controller are still listed at the OS level.
+
+I.E.
+The controller is offline but the status of each drive is 'running'.
+
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: David Strahan <david.strahan@microchip.com>
+Co-developed-by: Don Brace <don.brace@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 88135fdb8bd1..73f576ccf511 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -67,6 +67,7 @@ static struct pqi_cmd_priv *pqi_cmd_priv(struct scsi_cmnd *cmd)
+ static void pqi_verify_structures(void);
+ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
+ 	enum pqi_ctrl_shutdown_reason ctrl_shutdown_reason);
++static void pqi_take_ctrl_devices_offline(struct pqi_ctrl_info *ctrl_info);
+ static void pqi_ctrl_offline_worker(struct work_struct *work);
+ static int pqi_scan_scsi_devices(struct pqi_ctrl_info *ctrl_info);
+ static void pqi_scan_start(struct Scsi_Host *shost);
+@@ -9128,6 +9129,7 @@ static void pqi_take_ctrl_offline_deferred(struct pqi_ctrl_info *ctrl_info)
+ 	pqi_ctrl_wait_until_quiesced(ctrl_info);
+ 	pqi_fail_all_outstanding_requests(ctrl_info);
+ 	pqi_ctrl_unblock_requests(ctrl_info);
++	pqi_take_ctrl_devices_offline(ctrl_info);
+ }
+ 
+ static void pqi_ctrl_offline_worker(struct work_struct *work)
+@@ -9202,6 +9204,27 @@ static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
+ 	schedule_work(&ctrl_info->ctrl_offline_work);
+ }
+ 
++static void pqi_take_ctrl_devices_offline(struct pqi_ctrl_info *ctrl_info)
++{
++	int rc;
++	unsigned long flags;
++	struct pqi_scsi_dev *device;
++
++	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
++	list_for_each_entry(device, &ctrl_info->scsi_device_list, scsi_device_list_entry) {
++		rc = list_is_last(&device->scsi_device_list_entry, &ctrl_info->scsi_device_list);
++		if (rc)
++			continue;
++
++		/*
++		 * Is the sdev pointer NULL?
++		 */
++		if (device->sdev)
++			scsi_device_set_state(device->sdev, SDEV_OFFLINE);
++	}
++	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
++}
++
+ static void pqi_print_ctrl_info(struct pci_dev *pci_dev,
+ 	const struct pci_device_id *id)
+ {
+-- 
+2.49.0.391.g4bbb303af6
+
