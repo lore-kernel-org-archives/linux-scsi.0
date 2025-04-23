@@ -1,193 +1,136 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B211267386
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 06:45:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2AF4266B61
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 07:26:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745390710; cv=none; b=nMCJ3aC9UxLWje/W5tEyI/nL6GMuEKLc8b6pZdcpk5o2waGOOIkKy6UTOs2GvM1QfwaCjPgzUZR57oDnbzFfDw1H7iwMxm9xwLemS2n31GUQBExaLq59aKwaK3QvlkApWvM0tT+S7yOrDd7bqsOzb/0Gy2mao+FuIQghsPm7+f4=
+	t=1745393223; cv=none; b=JoXHDNUmFbjRavKVZUJhOBaLtvcH7tSVigeJi9TY9EhkuUyQWGfQlLwhpetAs5/7R15Qp8moTNkgpuv5qp2j3NXFqpXqxK2CGid7tJZB5poekmflOPvVYjW6Ovqe5jZE4FWjJdfcpJpYW5oPM7/ZcTv6+MzcZeoExJCk/gpcERU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745390710; c=relaxed/simple;
-	bh=3SqWo4ulTzFqzs780nKr+GWWXoyKc3CsqRlgn0TlszU=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=CowX9XkQ7eKW4pUcb3Slrqy2p9yr3QMc+Xd0fzpGgetL+Wj64KDTupcVIi4feIbagow6ZvEGsqxpj5bVZj+e2TOTW/6bGnyho31nEftLNOlKbZC2/Umk20tDHwyx36Kjp15xx1xHY7wJHbdM9aK11SooHy6bVA84Dno1kxSKPHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YlwEzTgp; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1745393223; c=relaxed/simple;
+	bh=Jrbw0OKpQbJ1dFid4p4N4XtPsI8/qSLnEpsHW9bCCKg=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=JhZawhuxbsFYyaRCfWCy6ty9/YmQ1TkKl1AaB1GCifoQLlj8DBM6d3AER0qW4h/EL3I/6hDJxkuUbgy/ilPTUGHXMUSK+/gpk6tVfygaXKOOyt9NuhsPtDTMj26unuHtuzZIK2dBb/6IOQlmTeK5f8nbvE+cImGql1y+iwHbQXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WJsYG4G5; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YlwEzTgp"
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250423064504epoutp01520bcdfbda587bcce09562f70cf540a4~435kKg0ci3247132471epoutp01c
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 06:45:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250423064504epoutp01520bcdfbda587bcce09562f70cf540a4~435kKg0ci3247132471epoutp01c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1745390704;
-	bh=72Psgkn+jG8bccz9lqfdGIztHlVpKbwkw3e+s4Gh1hs=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=YlwEzTgpMpZjs///FsdX8fYN8BP5T9Fi97BMxTh7KCgQcIVVF6PB/F8hLv7g2tJyK
-	 dRLBcJwhcoVFqkwHibghV7aj8uIzTtCaTjeTBkSPvvy7UNZCKXDhP3V72FRVpejbh7
-	 qvx2v5q5/f8rb2wFxNNA+Ni9Extv2Cev1CXNjXlM=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
-	20250423064503epcas1p3d6b28a5118bc49104a8d5e997b579474~435jXdHAK1657316573epcas1p3M;
-	Wed, 23 Apr 2025 06:45:03 +0000 (GMT)
-Received: from epcas1p1.samsung.com (unknown [182.195.38.248]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4Zj8jp2dwdz6B9m6; Wed, 23 Apr
-	2025 06:45:02 +0000 (GMT)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250423064501epcas1p2f5ee0585feea01613ca82118a3241d40~435hnRXYg2862928629epcas1p2V;
-	Wed, 23 Apr 2025 06:45:01 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20250423064501epsmtrp1fe7e0b792b4fc098e8dc39303e55cadd~435hl4yo53246032460epsmtrp1i;
-	Wed, 23 Apr 2025 06:45:01 +0000 (GMT)
-X-AuditID: b6c32a29-fda1d2400000223e-77-68088c6db7d6
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	91.2A.08766.D6C88086; Wed, 23 Apr 2025 15:45:01 +0900 (KST)
-Received: from dh0421hwang02 (unknown [10.253.101.58]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250423064501epsmtip1dd824c9339839168ea88ffae03456c03~435hXsEvJ2704327043epsmtip1X;
-	Wed, 23 Apr 2025 06:45:00 +0000 (GMT)
-From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
-To: =?UTF-8?Q?'Peter_Wang_=28=E7=8E=8B=E4=BF=A1=E5=8F=8B=29'?=
-	<peter.wang@mediatek.com>, <avri.altman@wdc.com>,
-	<quic_mnaresh@quicinc.com>, <linux-scsi@vger.kernel.org>,
-	<bvanassche@acm.org>, <linux-kernel@vger.kernel.org>,
-	<alim.akhtar@samsung.com>, <manivannan.sadhasivam@linaro.org>,
-	<martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
-Cc: <sh043.lee@samsung.com>, <wkon.kim@samsung.com>,
-	<cw9316.lee@samsung.com>, <grant.jung@samsung.com>,
-	<sh8267.baek@samsung.com>, <jt77.jang@samsung.com>,
-	<jangsub.yi@samsung.com>, <junwoo80.lee@samsung.com>
-In-Reply-To: <039d433e9931e4999e4011cebc2844ffacd2ec0c.camel@mediatek.com>
-Subject: RE: [PATCH 2/2] scsi: ufs: core: Add a trace function calling when
- uic command error occurs
-Date: Wed, 23 Apr 2025 15:45:00 +0900
-Message-ID: <001001dbb41b$3c947300$b5bd5900$@samsung.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WJsYG4G5"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43ed8d32a95so52500865e9.3
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Apr 2025 00:26:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1745393218; x=1745998018; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kn/kdeC0hIJ6fPjKrtocu5NnRgujubxfAbJ5Urbgh9w=;
+        b=WJsYG4G5Le7NxcMduHBEdH1Cuadj5L7FAZjqaEd5mYiMF/Qi6ppXkTUuDDk22WovVY
+         O7B5DQAXeTfnr8i6cS+KbgmElCDTMFYIy2ECwPXpJaB3JeoMNYQZ/2ll4krvLhDrl0ry
+         XWWTUjEF+7PJnsDC+7ryWRsgboKsQww8oCHwjnyrsKXY0gIeOF3zFgeZ4kyZGKIkcSA/
+         8PxE1bS7/EyDFy8xpBfc+BpcJI9Cro2kEeAw/dG8GeFSA4Ky0taUyAn5Rs/tCD4hcZAp
+         J/CUYtr3Rlwo+y9zOka/9al+MhVV66wL+2jOPfBCVsxlMCkn7Y45wIQSBrCGS1BpJrx8
+         qsYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745393218; x=1745998018;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=kn/kdeC0hIJ6fPjKrtocu5NnRgujubxfAbJ5Urbgh9w=;
+        b=GbRshfN8VDWbMW6B8oOLwVDjW9Fv9rSsQ0qC2zcZ5hmQ3Aswo/FGWKi30KpfmqVMxD
+         55/PiPibjS7S1apgumhNkTyw2233ISopALusT0R+RPL7KNZB4XCciqloOEwM54m4YbYo
+         qOES0k01iD3tENkBOaKV0cEWYBVwfZd9S0rMFRiacNjeg5rPrH+3OapCspnUhPwkImyz
+         Iwg2bo5HzEGnKoWB85SwklRdEh7E1Q7omTOQlnPrtmQB9c9yVBB3b1L0b6eVin+Q98Ac
+         0xBl2zfL3u7F9W5BW3TRHPM2YG+GF+VT5axdEMvSIkXSJX/GbIzRaP7Y3SSLA8T8PhBx
+         X/TQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUNSQiVvLy/2zsxWl/uCgUg8+wKu8QrmOg7i6M13bmJ6uLvTr3sTITpFzCWWueC7jbbE1BTegFJIZTG@vger.kernel.org
+X-Gm-Message-State: AOJu0YxM1BPTIUmYOicKgRfEbBFmGFfigrIKfXwNlaJnXNAy7Af/Q3oU
+	TCWGxJUeeE316PBm1JHZbbfni5bBvMSvQPctxX3bD/+Gz0eZzwHhUh0yzAts+TY=
+X-Gm-Gg: ASbGnctHkAJr2pJmk7O8FRD1dJTv9wECfnUucggcBEjs/CKqrQhhy8wEdKYac6/NSHv
+	HcdaT/gwp0QUu5VI0RQ6eHhqDoyvGAD6v5sEihNJoDNk1DB3cTzBier/tzb+GBPznUX506ky+C5
+	Eb1ByUr0RNipWo6ppukhDXwOQUc/kbmG7vdJhFaQYlqAs7XP0fwAeeVFV+UjHJ8NPAw5Y7y3kp/
+	gm2phea5fgfeegfPi3zpBVf7r01i7LQvU5O03NDPUEJOFwtmfDDS3SBN0SuMzxuzFZwJUWDgpfd
+	rLTpNAKEx1pXL72aMPmDBeZx/TEAaSzhC7iwChqfGv7wkOQJ5ae42X6F6sVeTIFZxsMXmUJi1jV
+	UuGUrpCpeMN6XCP1kdA==
+X-Google-Smtp-Source: AGHT+IGQjZAyp9xHW8ASlQKrR9fCiGMeMbCakgAb3SkKNca/+Rt6CnnTlRW63K73V1hHmlOCRLIMvA==
+X-Received: by 2002:a05:600c:1c8f:b0:43c:fe5e:f040 with SMTP id 5b1f17b1804b1-4406abffc5emr134620725e9.23.1745393218300;
+        Wed, 23 Apr 2025 00:26:58 -0700 (PDT)
+Received: from ?IPV6:2a01:e0a:3d9:2080:2835:c2f4:c226:77dd? ([2a01:e0a:3d9:2080:2835:c2f4:c226:77dd])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-44092db2bd5sm15015645e9.26.2025.04.23.00.26.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Apr 2025 00:26:57 -0700 (PDT)
+Message-ID: <283096ad-ae1b-42b8-8312-b192f735fc80@linaro.org>
+Date: Wed, 23 Apr 2025 09:26:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Content-Language: ko
-Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwLekswsAdKaXvgCNaz4WLTkHcVg
-X-Brightmail-Tracker: H4sIAAAAAAAAA02ReUiTYRzHed5r75bDt23gk0XEQExLUzJ4OjAjlLcZlIQa0TXz1Vnbmls3
-	FWWeM/OqqbPMDiz3R6I1HWpZW3lVmGVqZmlS2Do1y1jNrG0E/vfhe/GDH42LHhO+dIp6H6dV
-	y5VSSkDU26Tzg1SnaUXIhZ8CNFxRTyG74zmFDGMOHJV2ZpLo11QND9Xm0yjbXIwhy+gjHmqc
-	OoWhZ43nKZTbZ6HQq/QcEl1r+4Mh87ffJJo885aH0px3CNT7qJ1EN59OEhEi9llPNGso6qTY
-	wd5mik3vaCHY8XcDBFvYfJw9c8sE2Im6+WzW3VxsI3+LYFUip0w5wGmXhO8UKCb60wmNzfeQ
-	/UYGdgI0SvSAT0MmDBZlZmN6IKBFTBOAlc1NwGPMg7lDt3l6QP9jMbTZdJ6MHcAyezHpylBM
-	CCxu/US5DAnzE4N6vcW9hDNDAJb0pJOeyhSA9oES3FXhMzI4fe4q5WIxkwjLz47xXEwwfrCg
-	w+TOCJnl8GXOF8LDs2FH2Vs348wimPcmA/znqksfcc+pC6DjXRXp0SWwPCfTrUuYKDj44iRW
-	AMTGGVPGGVPGGVPGGfVKQJjAHE6jUyWrdKGaUDV3MFgnV+n2q5ODd+1V1QH3xwMDLKDBNBZs
-	BRgNrADSuFQi/BXFU4iEifLDRzjt3h3a/UpOZwVzaULqI/R5n5coYpLl+7g9HKfhtP9djOb7
-	nsD4xyJLlNbqvAnnwaqItZ9jzAFOfzM5u2t3FEs72q/tzPDa1lxQkDQ0OnGFXFEVPr3luH4g
-	tf6wE24dS355ISHg+wPlnZpon68PT6+eXq3Ir2gwTGevg8KemCDB0dq4x7xjC+55K28yH9bH
-	lW7wkRnCVc7A/rPx2MXubP+a808/p1wtvC5dSuGbJxu9B7q+XmrzX2WJMITUDW4Yvu/VZx8n
-	K8WxXpGX/VJHhjuDFmdtylKvTCv0xh3j8phu63bHdVlhySuZrCL2SWySeDDYb2QhuebusqWL
-	w0x+r9e2jJbGR2bMe841va84km9beQDMItN+dC6phq0JviNqDaDNQ5ulhE4hDw3EtTr5Xwkg
-	fxNgAwAA
-X-CMS-MailID: 20250423064501epcas1p2f5ee0585feea01613ca82118a3241d40
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250417023419epcas1p343060855c4470f8056116a207a584956
-References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
-	<CGME20250417023419epcas1p343060855c4470f8056116a207a584956@epcas1p3.samsung.com>
-	<20250417023405.6954-3-dh0421.hwang@samsung.com>
-	<039d433e9931e4999e4011cebc2844ffacd2ec0c.camel@mediatek.com>
+User-Agent: Mozilla Thunderbird
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: neil.armstrong@linaro.org
+Subject: Re: [PATCH 00/33] Add support for Qualcomm Snapdragon SM7150 SoC and
+ Google Pixel 4a
+To: Jens Reidel <adrian@mainlining.org>, Danila Tikhonov <danila@jiaxyga.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-phy@lists.infradead.org, linux-mmc@vger.kernel.org,
+ netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+ dmaengine@vger.kernel.org, linux-crypto@vger.kernel.org,
+ linux-i2c@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-hardening@vger.kernel.org, linux@mainlining.org,
+ ~postmarketos/upstreaming@lists.sr.ht, Connor Mitchell <c.dog29@hotmail.com>
+References: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com>
+ <2ca2b774-fd7f-4612-b38d-f60e32ff6f9a@mainlining.org>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <2ca2b774-fd7f-4612-b38d-f60e32ff6f9a@mainlining.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> On Thu, 2025-04-17 at 11:34 +0900, DooHyun Hwang wrote:
-> >
-> > External email : Please do not click links or open attachments until
-> > you have verified the sender or the content.
-> >
-> >
-> > When a uic command error occurs, there is no trace function calling.
-> > Therefore, trace function calls are added when a uic command error
-> > happens.
-> >
-> > Signed-off-by: DooHyun Hwang <dh0421.hwang=40samsung.com>
-> > ---
-> >  drivers/ufs/core/ufshcd.c =7C 5 +++++
-> >  1 file changed, 5 insertions(+)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index ab98acd982b5..baac1ae94efc 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > =40=40 -2534,6 +2534,9 =40=40 ufshcd_wait_for_uic_cmd(struct ufs_hba *h=
-ba,
-> > struct uic_command *uic_cmd)
-> >         hba->active_uic_cmd =3D NULL;
-> >         spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >
-> > +       if (ret)
-> > +               ufshcd_add_uic_command_trace(hba, uic_cmd,
-> > UFS_CMD_ERR);
-> > +
-> >         return ret;
-> >  =7D
-> >
-> > =40=40 -4306,6 +4309,8 =40=40 static int ufshcd_uic_pwr_ctrl(struct ufs=
-_hba
-> > *hba, struct uic_command *cmd)
-> >         =7D
-> >  out:
-> >         if (ret) =7B
-> > +               ufshcd_add_uic_command_trace(hba, hba-
-> > >active_uic_cmd,
-> > +                                            UFS_CMD_ERR);
-> >                 ufshcd_print_host_state(hba);
-> >                 ufshcd_print_pwr_info(hba);
-> >                 ufshcd_print_evt_hist(hba);
-> > --
-> > 2.48.1
-> >
->=20
->=20
-> Hi DooHyun,
->=20
-> Is it possible to receive UFS_CMD_COMP and UFS_CMD_ERR at the same time?
-> Wouldn't it be a bit strange for a command to receive two completions?
-> Additionally, should we also add tracing for general SCSI commands that
-> receive errors?
->=20
-> Thanks
-> Peter
->=20
-Thank you for your review.
+Hi,
 
-Yes, that=E2=80=99s=20correct.=20There=20is=20a=20case=20where=20both=20UFS=
-_CMD_COMP=20and=20UFS_CMD_ERR=20are=20logged=20simultaneously.=0D=0A=0D=0AI=
-n=20the=20typical=20case=20of=20a=20UIC=20command=20timeout,=20only=20UFS_C=
-MD_ERR=20would=20be=20recorded.=0D=0A=0D=0AHowever,=20the=20scenario=20you=
-=20described=20earlier,=20where=20both=20UFS_CMD_COMP=20and=20UFS_CMD_ERR=
-=20are=20received=20in=20the=20same=20UIC=20command,=20is=20distinct=20from=
-=20a=20timeout=20situation.=0D=0AIn=20this=20case,=20the=20command=20comple=
-tes=20in=20time,=20and=20UFS_CMD_COMP=20is=20received=20when=20handling=20t=
-he=20UIC=20command=20completion=20interrupt=20in=20ufshcd_uic_cmd_compl().=
-=0D=0AHowever,=20the=20UPMCRS=20status=20indicates=20an=20error=20because=
-=20PWR_LOCAL=20is=20not=20in=20its=20expected=20state=20(when=20checking=20=
-upmcrs=20in=20the=20=22check_upmcrs:=22=20section=20of=20the=20ufshcd_uic_p=
-wr_ctrl()=20function).=0D=0A=0D=0AUFS_CMD_COMP=20is=20generated=20when=20th=
-e=20system=20recognizes=20through=20interrupt=20status=20that=20the=20comma=
-nd=20has=20completed=20its=20execution,=20while=20UFS_CMD_ERR=20is=20record=
-ed=20when=20an=20error=20associated=20with=20the=20command=20is=20detected.=
-=0D=0A=0D=0AWhile=20it=20may=20be=20cumbersome,=20it=20is=20possible=20to=
-=20trace=20the=20timeout=20case=20and=20this=20case=20separately.=0D=0A=0D=
-=0ARegarding=20tracing=20general=20SCSI=20command=20errors=20directly=20thr=
-ough=20UFS_CMD_ERR,=20it=20might=20be=20challenging=20because=20SCSI=20comm=
-and=20errors=20are=20typically=20handled=20through=20various=20mechanisms=
-=20such=20as=20timeout=20detection,=20scsi_status=20value=20checks,=20sense=
-=20error=20checks,=20and=20OCS=20(Overall=20Command=20Status)=20value=20ver=
-ification.=0D=0AAdditionally,=20tracing=20SCSI=20command=20errors=20does=20=
-not=20align=20with=20the=20purpose=20of=20this=20commit.=0D=0A=0D=0ABR,=0D=
-=0AThank=20you.=0D=0ADooHyun=20Hwang=0D=0A=0D=0A
+On 23/04/2025 00:07, Jens Reidel wrote:
+> Hi everyone,
+> 
+> apologies for the mess this created. Danila's mail provider ratelimited him halfway through sending the series and the attempt to re-try sending the second half an hour later ended up with a new message ID (I think due to not using --in-reply-to).
+> He asked me to let you know that this will be resolved later and the whole series will be re-sent once the problems are resolved.
+
+The b4 web submission is a great alternative when the mail provider is rate limited:
+https://b4.docs.kernel.org/en/latest/contributor/send.html#web-endpoint
+
+Neil
+
+> 
+> Best regards,
+> Jens
+
