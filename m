@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D65FC28F924;
-	Thu, 24 Apr 2025 18:19:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30D342900AB;
+	Thu, 24 Apr 2025 18:19:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745518789; cv=none; b=aL7DIueIGb+mMQhKBQFP3etaVmCdM3K9AZJtJAqnod11KmrYLSm3Hz8kSruPwZ0qeZ/P+ZPrxkKgZyy2nANbOcxweiFsU/WhoclmLZsCX66Ob/y1YoC203aQ+f6RD9I/Xl8CA8vSIPNGTE/cucWqKyTewjQaktoqzviKcvdMK+M=
+	t=1745518792; cv=none; b=gjOnOZx62mT1X1OFcn1wkRa1LlL0Yg1mYyanwISQ/84LRRjL+9QgpQ1/R2GwnlmJB/1jnSSCo4JjwFQO3G6Y1tSxmzkSvcdE80Nje/LNjIf/CYTvt7/G9/l6CVsr5Xrnf9kDSc2ofZ09oqzYD2djQY+1S0436EQYX3R6meBQAZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745518789; c=relaxed/simple;
-	bh=p70xZ9qUBuN2+D/7bMS3cfL1TjJS82LHpJ46TrUBRPE=;
+	s=arc-20240116; t=1745518792; c=relaxed/simple;
+	bh=f6sLhWLNagZY9XRHD4d7BNg+tMcaz2lFqt2rqAjJjGg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=DuNTeOEqS006I75YBP7LxhQONqSEZ2jlMtESCZ7jqmx9K1erKCuf78fF1TVL3LSHbpc42wNzoFAweHSwjOrjN/jKCDXpfez2Wk/1tCaV5nUx9zgxhe290sUWfC/3n7enF5DLvuMHYZBN1xAufvCdvssgLSAQQIJ8GWxGdo/r97A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mekwy8uI; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=kZqhr6OH7wiVTr6QmGgmYu7zNfuETtasy1xZjUgz28EPWKyti/u2gLPZe9iuZjXP87f/vvE0oUM6US3pORumZMXcHsa/9bhctPTIQ/Hpn7pvMtzxrns3jM1w11pfSHNMKglNsUA3TAIX2nAvGTtEFRJKzeIrEDblVieHwpIQh84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fbdMUKeG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mekwy8uI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EB51C4CEE3;
-	Thu, 24 Apr 2025 18:19:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbdMUKeG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1490DC4CEE3;
+	Thu, 24 Apr 2025 18:19:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745518788;
-	bh=p70xZ9qUBuN2+D/7bMS3cfL1TjJS82LHpJ46TrUBRPE=;
+	s=k20201202; t=1745518791;
+	bh=f6sLhWLNagZY9XRHD4d7BNg+tMcaz2lFqt2rqAjJjGg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=mekwy8uIEzYOk5n29dEvX2S/0t/QuDV9f4W9rwM2gf8YJezsAV6Jd/3WUGG3EToQg
-	 JEzwlzVF8baYWN71AHvMaO442PMH2opaeEbAOXBzzxSRd2L68kL+s52lJTLu9/nxEr
-	 KQuDU8V9iTVq/7DBr8q96WqPgI+fn4EH4dNaqKQEAIbETtftI/iLW2fpwpUjX9f2VY
-	 Qk9N+Ny8MiHCY8a0O7RlgEr0SRTCwGlrHeiALfx2JnppGG58dIM3rv4FarGyiW2l+a
-	 5J2zrvXuJdXLc1+1HRb/jxCD5ty5Gw1MmpgZv+eby/sQYMTTufFKkmomD9jcID6PUm
-	 6+FC5xXADXIXg==
+	b=fbdMUKeGWwMjJERfSlSZeWEmQeMLGEdo6klkJmeyyVtR0QbTpM5JQWYx2vNqp69gG
+	 HpXez2i1UI1CuXGApm8LQccBssU6R09hJqnHdbm0QeqO1cggMHntVkDLKyjU9ZPSqD
+	 lj4+8RBDKymttnR6MDAFL7MQX/Yv+bYL7S0owsdIlfewG75LOjfjFbF7h3y+g/NtAV
+	 859MrTH4dTHjMkfBadxWfKIMcf2zL8Z3blE/P8FvZvK0Mw4gd1EPwNwSlx24T/5Fj6
+	 Xr+/tPIGTAnYwBQ8t1hqp6NWV2dFP6d8UqvrBCVvPe20YwegfX+DAUOxehUehE9cyW
+	 ki0ZEVdusQOjA==
 From: Daniel Wagner <wagi@kernel.org>
-Date: Thu, 24 Apr 2025 20:19:40 +0200
-Subject: [PATCH v6 1/9] lib/group_cpus: let group_cpu_evenly return number
- initialized masks
+Date: Thu, 24 Apr 2025 20:19:41 +0200
+Subject: [PATCH v6 2/9] blk-mq: add number of queue calc helper
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250424-isolcpus-io-queues-v6-1-9a53a870ca1f@kernel.org>
+Message-Id: <20250424-isolcpus-io-queues-v6-2-9a53a870ca1f@kernel.org>
 References: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
 In-Reply-To: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
@@ -58,209 +57,96 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
  Daniel Wagner <wagi@kernel.org>
 X-Mailer: b4 0.14.2
 
-group_cpu_evenly might allocated less groups then the requested:
+Multiqueue devices should only allocate queues for the housekeeping CPUs
+when isolcpus=io_queue is set. This avoids that the isolated CPUs get
+disturbed with OS workload.
 
-group_cpu_evenly
-  __group_cpus_evenly
-    alloc_nodes_groups
-      # allocated total groups may be less than numgrps when
-      # active total CPU number is less then numgrps
+Add two variants of helpers which calculates the correct number of
+queues which should be used. The need for two variants is necessary
+because some drivers calculate their max number of queues based on the
+possible CPU mask, others based on the online CPU mask.
 
-In this case, the caller will do an out of bound access because the
-caller assumes the masks returned has numgrps.
-
-Return the number of groups created so the caller can limit the access
-range accordingly.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
- block/blk-mq-cpumap.c        |  6 +++---
- drivers/virtio/virtio_vdpa.c |  9 +++++----
- fs/fuse/virtio_fs.c          |  6 +++---
- include/linux/group_cpus.h   |  3 ++-
- kernel/irq/affinity.c        |  9 +++++----
- lib/group_cpus.c             | 12 +++++++++---
- 6 files changed, 27 insertions(+), 18 deletions(-)
+ block/blk-mq-cpumap.c  | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blk-mq.h |  2 ++
+ 2 files changed, 47 insertions(+)
 
 diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-index 444798c5374f48088b661b519f2638bda8556cf2..269161252add756897fce1b65cae5b2e6aebd647 100644
+index 269161252add756897fce1b65cae5b2e6aebd647..6e6b3e989a5676186b5a31296a1b94b7602f1542 100644
 --- a/block/blk-mq-cpumap.c
 +++ b/block/blk-mq-cpumap.c
-@@ -19,9 +19,9 @@
+@@ -12,10 +12,55 @@
+ #include <linux/cpu.h>
+ #include <linux/group_cpus.h>
+ #include <linux/device/bus.h>
++#include <linux/sched/isolation.h>
+ 
+ #include "blk.h"
+ #include "blk-mq.h"
+ 
++static unsigned int blk_mq_num_queues(const struct cpumask *mask,
++				      unsigned int max_queues)
++{
++	unsigned int num;
++
++	if (housekeeping_enabled(HK_TYPE_MANAGED_IRQ))
++		mask = housekeeping_cpumask(HK_TYPE_MANAGED_IRQ);
++
++	num = cpumask_weight(mask);
++	return min_not_zero(num, max_queues);
++}
++
++/**
++ * blk_mq_num_possible_queues - Calc nr of queues for multiqueue devices
++ * @max_queues:	The maximal number of queues the hardware/driver
++ *		supports. If max_queues is 0, the argument is
++ *		ignored.
++ *
++ * Calculate the number of queues which should be used for a multiqueue
++ * device based on the number of possible cpu. The helper is considering
++ * isolcpus settings.
++ */
++unsigned int blk_mq_num_possible_queues(unsigned int max_queues)
++{
++	return blk_mq_num_queues(cpu_possible_mask, max_queues);
++}
++EXPORT_SYMBOL_GPL(blk_mq_num_possible_queues);
++
++/**
++ * blk_mq_num_online_queues - Calc nr of queues for multiqueue devices
++ * @max_queues:	The maximal number of queues the hardware/driver
++ *		supports. If max_queues is 0, the argument is
++ *		ignored.
++ *
++ * Calculate the number of queues which should be used for a multiqueue
++ * device based on the number of online cpus. The helper is considering
++ * isolcpus settings.
++ */
++unsigned int blk_mq_num_online_queues(unsigned int max_queues)
++{
++	return blk_mq_num_queues(cpu_online_mask, max_queues);
++}
++EXPORT_SYMBOL_GPL(blk_mq_num_online_queues);
++
  void blk_mq_map_queues(struct blk_mq_queue_map *qmap)
  {
  	const struct cpumask *masks;
--	unsigned int queue, cpu;
-+	unsigned int queue, cpu, nr_masks;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 8eb9b3310167c36f8a67ee8756a97d1274f8e73b..feed1dcaeef51c8db49d3fe667c64ecc824ce655 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -941,6 +941,8 @@ int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
+ void blk_mq_unfreeze_queue_non_owner(struct request_queue *q);
+ void blk_freeze_queue_start_non_owner(struct request_queue *q);
  
--	masks = group_cpus_evenly(qmap->nr_queues);
-+	masks = group_cpus_evenly(qmap->nr_queues, &nr_masks);
- 	if (!masks) {
- 		for_each_possible_cpu(cpu)
- 			qmap->mq_map[cpu] = qmap->queue_offset;
-@@ -29,7 +29,7 @@ void blk_mq_map_queues(struct blk_mq_queue_map *qmap)
- 	}
- 
- 	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		for_each_cpu(cpu, &masks[queue])
-+		for_each_cpu(cpu, &masks[queue % nr_masks])
- 			qmap->mq_map[cpu] = qmap->queue_offset + queue;
- 	}
- 	kfree(masks);
-diff --git a/drivers/virtio/virtio_vdpa.c b/drivers/virtio/virtio_vdpa.c
-index 1f60c9d5cb1810a6f208c24bb2ac640d537391a0..a7b297dae4890c9d6002744b90fc133bbedb7b44 100644
---- a/drivers/virtio/virtio_vdpa.c
-+++ b/drivers/virtio/virtio_vdpa.c
-@@ -329,20 +329,21 @@ create_affinity_masks(unsigned int nvecs, struct irq_affinity *affd)
- 
- 	for (i = 0, usedvecs = 0; i < affd->nr_sets; i++) {
- 		unsigned int this_vecs = affd->set_size[i];
-+		unsigned int nr_masks;
- 		int j;
--		struct cpumask *result = group_cpus_evenly(this_vecs);
-+		struct cpumask *result = group_cpus_evenly(this_vecs, &nr_masks);
- 
- 		if (!result) {
- 			kfree(masks);
- 			return NULL;
- 		}
- 
--		for (j = 0; j < this_vecs; j++)
-+		for (j = 0; j < nr_masks; j++)
- 			cpumask_copy(&masks[curvec + j], &result[j]);
- 		kfree(result);
- 
--		curvec += this_vecs;
--		usedvecs += this_vecs;
-+		curvec += nr_masks;
-+		usedvecs += nr_masks;
- 	}
- 
- 	/* Fill out vectors at the end that don't need affinity */
-diff --git a/fs/fuse/virtio_fs.c b/fs/fuse/virtio_fs.c
-index 2c7b24cb67adb2cb329ed545f56f04700aca8b81..7ed43b9ea4f3f8b108f1e0d7050c27267b9941c9 100644
---- a/fs/fuse/virtio_fs.c
-+++ b/fs/fuse/virtio_fs.c
-@@ -862,7 +862,7 @@ static void virtio_fs_requests_done_work(struct work_struct *work)
- static void virtio_fs_map_queues(struct virtio_device *vdev, struct virtio_fs *fs)
- {
- 	const struct cpumask *mask, *masks;
--	unsigned int q, cpu;
-+	unsigned int q, cpu, nr_masks;
- 
- 	/* First attempt to map using existing transport layer affinities
- 	 * e.g. PCIe MSI-X
-@@ -882,7 +882,7 @@ static void virtio_fs_map_queues(struct virtio_device *vdev, struct virtio_fs *f
- 	return;
- fallback:
- 	/* Attempt to map evenly in groups over the CPUs */
--	masks = group_cpus_evenly(fs->num_request_queues);
-+	masks = group_cpus_evenly(fs->num_request_queues, &nr_masks);
- 	/* If even this fails we default to all CPUs use first request queue */
- 	if (!masks) {
- 		for_each_possible_cpu(cpu)
-@@ -891,7 +891,7 @@ static void virtio_fs_map_queues(struct virtio_device *vdev, struct virtio_fs *f
- 	}
- 
- 	for (q = 0; q < fs->num_request_queues; q++) {
--		for_each_cpu(cpu, &masks[q])
-+		for_each_cpu(cpu, &masks[q % nr_masks])
- 			fs->mq_map[cpu] = q + VQ_REQUEST;
- 	}
- 	kfree(masks);
-diff --git a/include/linux/group_cpus.h b/include/linux/group_cpus.h
-index e42807ec61f6e8cf3787af7daa0d8686edfef0a3..bd5dada6e8606fa6cf8f7babf939e39fd7475c8d 100644
---- a/include/linux/group_cpus.h
-+++ b/include/linux/group_cpus.h
-@@ -9,6 +9,7 @@
- #include <linux/kernel.h>
- #include <linux/cpu.h>
- 
--struct cpumask *group_cpus_evenly(unsigned int numgrps);
-+struct cpumask *group_cpus_evenly(unsigned int numgrps,
-+				  unsigned int *nummasks);
- 
- #endif
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index 44a4eba80315cc098ecfa366ca1d88483641b12a..d2aefab5eb2b929877ced43f48b6268098484bd7 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -70,20 +70,21 @@ irq_create_affinity_masks(unsigned int nvecs, struct irq_affinity *affd)
- 	 */
- 	for (i = 0, usedvecs = 0; i < affd->nr_sets; i++) {
- 		unsigned int this_vecs = affd->set_size[i];
-+		unsigned int nr_masks;
- 		int j;
--		struct cpumask *result = group_cpus_evenly(this_vecs);
-+		struct cpumask *result = group_cpus_evenly(this_vecs, &nr_masks);
- 
- 		if (!result) {
- 			kfree(masks);
- 			return NULL;
- 		}
- 
--		for (j = 0; j < this_vecs; j++)
-+		for (j = 0; j < nr_masks; j++)
- 			cpumask_copy(&masks[curvec + j].mask, &result[j]);
- 		kfree(result);
- 
--		curvec += this_vecs;
--		usedvecs += this_vecs;
-+		curvec += nr_masks;
-+		usedvecs += nr_masks;
- 	}
- 
- 	/* Fill out vectors at the end that don't need affinity */
-diff --git a/lib/group_cpus.c b/lib/group_cpus.c
-index ee272c4cefcc13907ce9f211f479615d2e3c9154..016c6578a07616959470b47121459a16a1bc99e5 100644
---- a/lib/group_cpus.c
-+++ b/lib/group_cpus.c
-@@ -332,9 +332,11 @@ static int __group_cpus_evenly(unsigned int startgrp, unsigned int numgrps,
- /**
-  * group_cpus_evenly - Group all CPUs evenly per NUMA/CPU locality
-  * @numgrps: number of groups
-+ * @nummasks: number of initialized cpumasks
-  *
-  * Return: cpumask array if successful, NULL otherwise. And each element
-- * includes CPUs assigned to this group
-+ * includes CPUs assigned to this group. nummasks contains the number
-+ * of initialized masks which can be less than numgrps.
-  *
-  * Try to put close CPUs from viewpoint of CPU and NUMA locality into
-  * same group, and run two-stage grouping:
-@@ -344,7 +346,8 @@ static int __group_cpus_evenly(unsigned int startgrp, unsigned int numgrps,
-  * We guarantee in the resulted grouping that all CPUs are covered, and
-  * no same CPU is assigned to multiple groups
-  */
--struct cpumask *group_cpus_evenly(unsigned int numgrps)
-+struct cpumask *group_cpus_evenly(unsigned int numgrps,
-+				  unsigned int *nummasks)
- {
- 	unsigned int curgrp = 0, nr_present = 0, nr_others = 0;
- 	cpumask_var_t *node_to_cpumask;
-@@ -421,10 +424,12 @@ struct cpumask *group_cpus_evenly(unsigned int numgrps)
- 		kfree(masks);
- 		return NULL;
- 	}
-+	*nummasks = nr_present + nr_others;
- 	return masks;
- }
- #else /* CONFIG_SMP */
--struct cpumask *group_cpus_evenly(unsigned int numgrps)
-+struct cpumask *group_cpus_evenly(unsigned int numgrps,
-+				  unsigned int *nummasks)
- {
- 	struct cpumask *masks = kcalloc(numgrps, sizeof(*masks), GFP_KERNEL);
- 
-@@ -433,6 +438,7 @@ struct cpumask *group_cpus_evenly(unsigned int numgrps)
- 
- 	/* assign all CPUs(cpu 0) to the 1st group only */
- 	cpumask_copy(&masks[0], cpu_possible_mask);
-+	*nummasks = 1;
- 	return masks;
- }
- #endif /* CONFIG_SMP */
++unsigned int blk_mq_num_possible_queues(unsigned int max_queues);
++unsigned int blk_mq_num_online_queues(unsigned int max_queues);
+ void blk_mq_map_queues(struct blk_mq_queue_map *qmap);
+ void blk_mq_map_hw_queues(struct blk_mq_queue_map *qmap,
+ 			  struct device *dev, unsigned int offset);
 
 -- 
 2.49.0
