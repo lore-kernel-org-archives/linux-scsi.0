@@ -1,84 +1,84 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AB251A3BC0;
-	Thu, 24 Apr 2025 03:27:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855DD19D884;
+	Thu, 24 Apr 2025 03:27:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745465272; cv=fail; b=hKTx/4NtAYbdZK4KBW579AhEMPKxDQw+cIfAWXPEV+AszbMnXUBCzMt+ZAPjaKUf1ZQgId33HZGtxc+S5JhRNOAljpmdiu2CvdDKxmNfhve1MJCqKcwLGRyl/pqLN1Bbw4Wz6K5g8PhSVO8BYOiPs7H9vsCccX9kf+LmFGBP0cQ=
+	t=1745465274; cv=fail; b=nJvQi5pWrSZmY8vvDklHR9WIxZ39Y1UmqNThVAJsH56081kJkqP8AGO2cDrSSdko8lSRhLUsvcEV7Qjx13yFTp6ENPV7BUpBNjpA8phgUiVppwnw0Djk4bT30sCEe21HrzBNdrYGFDGbXxHsKWwJdV8Txz8MMLPO4ofre8eThGI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745465272; c=relaxed/simple;
-	bh=1TOmqCrSEPMqzEBZ0Zlo3ezHbzyWYWUqdBI33N8Bdl0=;
+	s=arc-20240116; t=1745465274; c=relaxed/simple;
+	bh=cEM9THy/dBPpdAoieruMKECja4Dcn5Ai4D2kTrH64r0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=r8K1KEG+g/djfFY3cbF/UHVpOym0/UwlmgxVLAR9T7e8mbB6NX/Kh1G2oQ1l4P6f5uEZgtUZUVKrn0uTIE3JuPdQSc3qCjvMtYoGN/AVorkFRAsTSesiBFI8oj8pXy+f6iJ0AeE/5gX6tNy6vpqppfpwBMMeRtgLRwvAPNSYr3c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ky72WWZb; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=RD4AMdz8; arc=fail smtp.client-ip=205.220.177.32
+	 Content-Type:MIME-Version; b=R1kxbyVZt+5WxMGvdpCn6KLhlNUsgorypJVu6yFLw0jiAkAzuNko2Qo9zKHt0BT3hYIVDSR5QLgpNwmwHo2KuSHQOKeypKCCfAyuWyofB+MXqIPFaIZg1OnQIgHBQATe9XwOTAeUezDlYU94zf9f0rDQD4z8FxISvQy1Q1siY6o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Nw1AmlSf; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=U8Y/4nJb; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ky72WWZb";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="RD4AMdz8"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53NLNQYN019703;
-	Thu, 24 Apr 2025 03:27:48 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Nw1AmlSf";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="U8Y/4nJb"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53NLNpbu010581;
+	Thu, 24 Apr 2025 03:27:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2023-11-20; bh=5b4tdMAVquoN/qlhMEEcfh9ozlSCxbDh7WHRgQ9i8Nc=; b=
-	ky72WWZbe8DnuoCizobpout9wzweUcsJ2ZBo8bs3ZUDTr+dyy3MisjE+Si7FLqiC
-	Z4P5ep3cCDpmhVb7EBeEPm1SF4lfkNc6GDWIITjVgLu6VIGs62T0ok4pwzU8+qu4
-	0QC3woV9/dFNVW3w9ndan9JF6GCsy1VdSKrLlmFQmKXtKHoaBPyul0YooHmThVnK
-	Vzzr5m8GkYG2x0yOPKdQ0nSRGmZ+K3Lfzra+f/rBfcjhlYmWxsXZXvfrM19Br6lj
-	cCiXKDzjmob56fRBzINRvR965z5oT3HT/8hzsYv2wBodvlHoh703+BXBwfarqCAQ
-	0oO/fjhLBerexUPpYNLpmA==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 466jhe2upq-1
+	corp-2023-11-20; bh=E9jyaLDe0ooLKdpsFHWbN5qGuKBgu5qmLS2I0Z4GmOk=; b=
+	Nw1AmlSf1ksBvNhGX7mGx2EKF9TIEG6ppAngoxBCFeiQTjHToJg+pJT5391viI9F
+	JdPn2fgoyVq8Zagrj7OYQig9BGSZkrbQZbJ7x9SPLtooOeCCd2Fu7pbShAoEPlf8
+	1sV3i1RFEuUhK5GJ/K6BFSrSYDhUGYtTwyqts7wwlqjATPIEgfMQC77zVZ36NriA
+	5aQd4eiEjTi9LaxFMPYsTl/tehmeDB80s908V6mXl1sVcgACM6TeT13tRhuQP52G
+	yC+8xCUZ6niIkN9ezpTtH8QcffC6wwyGKyNx6uMq2xQhjVOLUsl3Jf6mBcn6NECG
+	x/pS3M2gEaHmDClMo+DAsg==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 466jhe2x6j-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 24 Apr 2025 03:27:48 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 53O0K1Ef039365;
-	Thu, 24 Apr 2025 03:27:47 GMT
-Received: from sn4pr2101cu001.outbound.protection.outlook.com (mail-southcentralusazlp17012010.outbound.protection.outlook.com [40.93.14.10])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 466jkggcjx-1
+	Thu, 24 Apr 2025 03:27:49 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 53O0YnTI013805;
+	Thu, 24 Apr 2025 03:27:49 GMT
+Received: from sn4pr2101cu001.outbound.protection.outlook.com (mail-southcentralusazlp17012015.outbound.protection.outlook.com [40.93.14.15])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 466jxpqee6-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 24 Apr 2025 03:27:47 +0000
+	Thu, 24 Apr 2025 03:27:48 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PVzFEuVRC5OsxBlgJX4IxePt2uOxIrHHBWu83sS6YhIfYtYVX48Yfr8qBHHCo7jHYPmnnRbtC20u4rFRopOMrE9ZY5gsIpjGJdcSFd1RxhyyZXWECz/pH2vHIFJ+ZFHYS3LwR+5Wtv34qPRZfBZcbynad4xB2diz6+Drc8SMH5sZ586vaNgabHPaxYPSOIFsvkYUZ3pHv7MbFTWUNbBU/jo/ZzrabLPcQx5VbmHLHuEaj2NzRKxFjAyk1PhBnPlToCXHEdEttUPx9jFYC9KLrVlYSXdrAB9AqHmC2d9AfYyQkgPFn69kWklwb/XLLsShPL0FtSaD92ynzopEWT5eAw==
+ b=X/bUr3zpHaCH4O8RnluAO1b7a9vagOAi0opxbzEUX/tfDhF8g/+ITjIpBCyKZVJ4gwSMWUqlKvEKqjYbD62rTDP5FEYZC2iRbV4MSXI4kgTGbPxkNbsk69+4xtOYBNg8LTRTjZfC70F3iE6eq4pN7Q/c/JmUb+u1PmqPMfgAo7A6arA1X516QF9wj1g/lsjkucOjxjZmG3irTY+d6ybdpHBChyr6v7cnfnK5Z/wDKe2OR/ls+wICZlek4yIGHt0MZlsaqolh3wdSIx+q7s3/xVgF4OgHxgvsd0GgKXhLyVdIrp9C1lnaWg/D0WkIi8mTft8ljPr/18ro5OPom/X1IQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5b4tdMAVquoN/qlhMEEcfh9ozlSCxbDh7WHRgQ9i8Nc=;
- b=y0jhUuel4nZAHOHpS+1j7Rr//5MJHu7Q7kYU5khqVnTwWJmhQXL+VIJmGggwi6HPWaMA9iq2Pd6GmPUCBMO4q9WKNexbyLwLRu9MYTG5XuDTZBqHTRteaYYIfijX4RxwUpcvf75ZEl6+iyc3Z9G8iWFobOSIX0UwnGuubsL4rJTVOjtbUDXdupUpLQhATicaxVTC2nCIOYBIUIAYDwBEh2Lg0+oJPFbOjKzwNNeKEPw462PrQZ76TmAQqUUNVGBVoSI3b6ikx+D554+3u0dJuiV+MBLeefXRSihhTxKi5C8jEHUHMGPLivgshbwxTD9vN0qnnC4yzvcvwK4OSoGVFA==
+ bh=E9jyaLDe0ooLKdpsFHWbN5qGuKBgu5qmLS2I0Z4GmOk=;
+ b=KmIPWbSj4yRHbndBMmzbr9LSgeBhB4xm4wDC8x/vlS4geVm3AB4OO9gH0TjfOMmyaI7wK0r3F761bstIrys6aXcGSvbZcjsyHMrqSRulFUbIBKbVKmOKU/t3gF2Hqee70p3StmCr5gWK3HzBWi73sGaaSFlt/keR8ACaTi6El6KgMar0DUcAWChu/p1gRe4/AKjlZ57ihtL2HduwBknpTRvSZxGil7nl/FbmZuRzZRa74zRrBQJOF2/3wKyPJL91HBfHdK36Z09jsQrRaixZCAG7EQcKobpmkslwVhVsPkFvA/DEXAxY/9MY/re3U0HeSS7NJGaH2PfChJ5ncEmIWg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5b4tdMAVquoN/qlhMEEcfh9ozlSCxbDh7WHRgQ9i8Nc=;
- b=RD4AMdz8aYLyL+FNCbSiEzjo0akfbYEMvzVQx1y5wPBnc7PP6xyNpCERQCOpOdUuETx9PpwH6hyd5dHpdBSqXMrtbsewEAnFOyBmAsqBnwZQt6cYnIEdft4JBm6aqtIAPeS2UHmKlI8wxCIpL9CPdKMGXURF1sYgXobe+xhuRmY=
+ bh=E9jyaLDe0ooLKdpsFHWbN5qGuKBgu5qmLS2I0Z4GmOk=;
+ b=U8Y/4nJb5dBUTgODVNj6o/LiBbmle0OAFQzlbHOCJ9lsIqoe3SZUe7TXj6JY5m65wGMM7TIBizekBrQvgSxJnRsIZkE6fm7DVPW89EWp871wl+7x1K/NQHoLqooddaVRVx9CzkzOLkLjhKixzskOO1i9cTGZcWhf4suCR+EOoYw=
 Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
  by CH4PR10MB8172.namprd10.prod.outlook.com (2603:10b6:610:239::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8655.36; Thu, 24 Apr
- 2025 03:27:45 +0000
+ 2025 03:27:47 +0000
 Received: from CY8PR10MB7243.namprd10.prod.outlook.com
  ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
  ([fe80::b779:d0be:9e3a:34f0%5]) with mapi id 15.20.8655.033; Thu, 24 Apr 2025
- 03:27:45 +0000
+ 03:27:47 +0000
 From: Mike Christie <michael.christie@oracle.com>
 To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v2 1/2] target: Move IO path stats to per cpu
-Date: Wed, 23 Apr 2025 22:26:32 -0500
-Message-ID: <20250424032741.16216-2-michael.christie@oracle.com>
+Subject: [PATCH v2 2/2] target: Move delayed/ordered tracking to per cpu
+Date: Wed, 23 Apr 2025 22:26:33 -0500
+Message-ID: <20250424032741.16216-3-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250424032741.16216-1-michael.christie@oracle.com>
 References: <20250424032741.16216-1-michael.christie@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: DSZP220CA0009.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:5:280::16) To CY8PR10MB7243.namprd10.prod.outlook.com
+X-ClientProxiedBy: DS7PR07CA0012.namprd07.prod.outlook.com
+ (2603:10b6:5:3af::20) To CY8PR10MB7243.namprd10.prod.outlook.com
  (2603:10b6:930:7c::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -88,470 +88,371 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|CH4PR10MB8172:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1cfbdab5-54dd-4ab2-2335-08dd82dffaa5
+X-MS-Office365-Filtering-Correlation-Id: 59d7f13c-39a3-4fc7-7d06-08dd82dffbc9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?a5IhbfUI+GJG2QLkdE5ynHzogd5+yQOE3P+ylAB1EmdnliN2UrDVUKpfWnIv?=
- =?us-ascii?Q?AXN6LviUJHADfqYJoYsgLp6yLQilxahzR+U44asub8XYNv0QQGJf5wtSJ9Mq?=
- =?us-ascii?Q?4YcIylQk/ZEGm2Uf4EPQ+L/PRcDWrlqrdYfBfF3Vj2yqKgmh7LCmwDQSuhsi?=
- =?us-ascii?Q?Gp5RVHgsTq/La1Pk7YV0RlJ5avLuv524RyZiU0omacmeLniViY4NwFwIOmbj?=
- =?us-ascii?Q?5dAt6A5P6KRjt0pM/Zo1Gp5cER0cAXEyHu0GE1C4HbBD0MajM8f2G8BLM+lc?=
- =?us-ascii?Q?uLZRQN1vQGLXf0DhMqJErfYNtOFq6kxZgN1bAL+8vTTXZEyKvTSeh25xrDYf?=
- =?us-ascii?Q?sY6+kkb8A8BcUQk3sqZrS8kJmz2HMrSMOzSi7G9MOeuok5X69L7mTkAS7N1w?=
- =?us-ascii?Q?/jhfDkMbcjEuqZn3XGSRupj/+pfkjY1jiMbWVeJhTGIIznVfHQhShcNbBjOY?=
- =?us-ascii?Q?3wAE3OBKOZGXLq+Yiqj32y6Of4CV+OSNTtlOtotgqKmH5VrNgmTrGJKBI2ko?=
- =?us-ascii?Q?8hno32/fs15BJY7reGB+qcsXCt7LB7geALyeWmC1RtREds7iw/MpoIOJkaPH?=
- =?us-ascii?Q?fOruNfDE+HzWNnlz+80u2OkSNV4Jx/oC0aTIVYUwMVKvUEWH4Q08pAxr+J5I?=
- =?us-ascii?Q?vxd1TkZLAc6+dufDYImd0jo5CENd1zYQaYk03pvGj8M9Q8yPO67gRR1Cbneo?=
- =?us-ascii?Q?7ZYIQofKG3rr0piWuxvli3cxArLYQiInOAv1WMq5x3Ekwg2GupVSa0o0iDoP?=
- =?us-ascii?Q?/lkBN2ZMG5nqDXxkV2HagKVyEqIUcZNCW9QDcyc+C+2x9ETrFnwmhsExvO4m?=
- =?us-ascii?Q?GsHZY5qQePOpObVXgg5R11AKstzuwVm+jrKNnvmNGgRmI+tzyiHsRT8vpfje?=
- =?us-ascii?Q?itZHbfyWgP7LFRc93I7FuTXQE67CzRUPEo0PFmHsGX5abAfM6RhQVvs2ZsGu?=
- =?us-ascii?Q?BK2bKpl2671o6rbMA5UE/YqRD5Xwk2DteXv/xbAwl12ed3iI311oLN/oARAP?=
- =?us-ascii?Q?8wGuajl/lzKjd2rEyX7KVrzBL/PwY8mF+XPPCBtOE4YsXR1BAqEd+RTXEMv/?=
- =?us-ascii?Q?InGhKJWEUaj9GM70b4UiWYfCXX8kNZ7hNVG4r1Xl+IBpb93s15tWZBDdHF1H?=
- =?us-ascii?Q?IKBgVty/s/kotSHq5LUMIeLMBcKbHvAzPpmL8XhImQtRjCBSZJNqEb7F4jtK?=
- =?us-ascii?Q?xO7lDatAThvSOBSM/0omp6Fb/OVO/FtSqqS/l9s2be7moBAr0YV49t03Iyj2?=
- =?us-ascii?Q?+3QDIGoKf09SQVD+VHrJqXI72FFSal1s0xUN3S6q6rz1TzDkEjAsqU4Lu5HY?=
- =?us-ascii?Q?BilXp/TGSENg/ZLx9qcoVuZlU4NVnjsojiOGXBmKReAETfu/70w+76V3GlXz?=
- =?us-ascii?Q?3UzEF9Y5qisBEka77TcP+GaS67Ew78s/QeiQuTrHGW/4kYilzg=3D=3D?=
+	=?us-ascii?Q?72s9r+tha2Lx+iYxG2Dgar+J0skCsTMW7qJJZWiVOlDL58isCbjVGEu9PxZ0?=
+ =?us-ascii?Q?pJi89/KaAG0t7URMJJt4vTwoNmNPKSOgApaRpxjFw4iX2sgMqsm6DHVI2ZlN?=
+ =?us-ascii?Q?zhwLrZjB05GnSx8GpQlTE1ld8DJqYqrCPZ1F44n+LbHa8kRWN8e6GXUFb+wf?=
+ =?us-ascii?Q?0xi7FZz7V9xBXWZdqNGNe/kK2SBwJQYPDMSI9YOfmdF8Jlh0z9RnGS1z/CL3?=
+ =?us-ascii?Q?qwHhjN1+rJX1+yymZap0ULfa4Bfxxd2m2ushqyVaO7A0j1qUQy/J5e4wqBA6?=
+ =?us-ascii?Q?kxhwRF7aGuOwT3+cnr2op3tW5Yq2856kGMCn1tzAbqlwXNy1d4Irx3VBVew3?=
+ =?us-ascii?Q?5RPK9DWs7+VSu0SZXzipJFY6ymhM6ZTSx27HbFaauJ58KgxOKc68OxfOFkp/?=
+ =?us-ascii?Q?VR9ZQSGNOvSZXGhKnlnQ2FinWO6LezJs43923MiFNSmKFgbGc6bodEonwnr9?=
+ =?us-ascii?Q?852NZclGK9zrh1IwNwrImmlpNxI4czX0YlvSRw/EqMzyZ36G1ZW5ZuZ7h9Wf?=
+ =?us-ascii?Q?Ix2qYhDbR+6MR0lImULApWB1yqw/3+32YZFvQE0Hxxy5Z7HY/9Sqxe/SwzF+?=
+ =?us-ascii?Q?RTbdbiF8j/ZmiKfdlq+Tj6566zj/argCM08SNFljyZsONp73vUTG3kxW426r?=
+ =?us-ascii?Q?1b7TuEghwVZZbuYauD51VbXnSIaXAZoPp43O82Y5A1Aa4DNU8xHa/AOWxMtV?=
+ =?us-ascii?Q?f66+0XupHp9BL536zs9mk2MJAYs9WDCVJCNnBPumsgwcgWz2Vhms+4kQSAGb?=
+ =?us-ascii?Q?VJ0stj49BL0KvwCUNbWTs4eXvR+PYtzNgrfT8BT3PzXXkyV0/pEk1QOh2XUW?=
+ =?us-ascii?Q?+O02FS+1pwu8WATBoF7ngFsoqKlI7iMq14FAtQl2xo74LbAVKEiRSzKF6kAo?=
+ =?us-ascii?Q?QiEcwlnqiaLJzO3wI3bO8AIS7VD8aitK6ma1meTgWYF8y8Vd2sZjF15Cl4lp?=
+ =?us-ascii?Q?Ef9MffBqujLfuZ6ClP9XkP9DswV+dyJcrzQywujTUN/Qk8EH7FafoGl/lwF2?=
+ =?us-ascii?Q?I90s7ztfjb9NQueRFO+5G8ktxyamsZrpee2BZMtDXZPHwK1BXLyevwkK5Yj6?=
+ =?us-ascii?Q?bxjWHgnELj4YBeEiA2Szc+us5+V8+Joumn6Omn1DwrKdpEBt09m9uzXRC5/F?=
+ =?us-ascii?Q?Zvf8fe5HYwZSuF23hH97PLCHu6NmeT59cstfZ2wwepN7yrjtx9U1WGwtk3Y0?=
+ =?us-ascii?Q?tgGFoyryenPPRyUCm4HQU7vLdrWgFDXNhXZazCLQAi5T2guwEYWnDJDeRbah?=
+ =?us-ascii?Q?+6nK44hrLInKznxo30+iqdZgkYbjdsTwS+rbNBuxIuyLy8zg4V2TWeBJ9FvJ?=
+ =?us-ascii?Q?+KGs7Nw8+0hlrtM6kXB3NXk9fUhSPh+w3+eddw/QyoIws0l3enke9ePkSXAu?=
+ =?us-ascii?Q?w2nk/9L8ge9ErTvlXx2ne4PPJdn0Uh6X3xBYF1kwWdQCRWVx/hm+dzG88s7O?=
+ =?us-ascii?Q?Xs/b92TB/ZU=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?EHY2gXd+LKrIMz8Cij0qPJcF24N/JDZDI2/QvQb5PknNWZ30cqwclY1Y6LRW?=
- =?us-ascii?Q?DsKxC1ElvAwXHONt4VLwQ2QFDFy+ml3kZVTwyhNrU1SXb3bgGlUlektSI4N7?=
- =?us-ascii?Q?ssjJKxRJvt53RufxyFmVC42GkMDavxF3FBD3mY0Dw61cvSS8WcCmMtRw4c3y?=
- =?us-ascii?Q?D8kjwV774mfbn923wHTH3f8KNbeDYjU9quGxHFxLKs5/hxnthRYFUAtZH011?=
- =?us-ascii?Q?zeoINNlmSAcuCsX4DafuV97j5TlG1nCtjr1d1qQH+24RYL+ecPu0dn2+VoV0?=
- =?us-ascii?Q?glpwwiVHG6vQMR/2a9wv0rdsUFO+qBxn6mMxPvhBQhaScZKqTezc8qB58gVJ?=
- =?us-ascii?Q?08HltPxX83ly4Qkyg7VZTwggyQzZl+oR5C5ja63DuxJpZRDhse6uyhAvizzX?=
- =?us-ascii?Q?9guDOJ6fePwZ6uQq4RZRgKrC7Xlx3qRLELcNedxiU5AvDDQVOJUxuCvxX8z9?=
- =?us-ascii?Q?xUcZkHTpjulbVqlFUHJrA1Ib70cX6tQzlnXyCLyCMwUvOrpwwFKqarx9hmPR?=
- =?us-ascii?Q?aJ11ZaWKTOaEevK3+Kc/A987FHmwBccSGMzuPCmYaRwM45y1Rb50YoXjJkec?=
- =?us-ascii?Q?J3aJUXwh9W/W+FoSJU+bFyPqpsmUYSv+t/GYdD5vP7HNAeamh+20+iYQG2qR?=
- =?us-ascii?Q?ktOPG8S4MGW+ybfDS4kzUp+s3DpckfB2fzc2nZN4K2kCZy4TZwU6yMlfL5kZ?=
- =?us-ascii?Q?LBsc0Ncyeyc26U6fZQwpmfdGrA/VUk7DOiq0VvzlPpKpgego8yl57geY2a1f?=
- =?us-ascii?Q?HfIM+5uBPYFz1mhCq/khwzLTpZTUUaQ/HEd6pIJlgHQh1ZWqYS6Cf9PQoucb?=
- =?us-ascii?Q?DkBBbQon39w6yK2GsnWnMw61jdmpnRx2IaZtGn+IM1/P3ipDEg/xX3thcLlI?=
- =?us-ascii?Q?Fsrw1T4Nr4OHQc2dCSmEAALfFDwQTNIU8TcTmQOyV2shMcveuNNUdGa4cJs2?=
- =?us-ascii?Q?yM36c/MQdDWQc2u2EEL6C2fPhKmZ0P4Kh3fc3pyv/zQpicdm6rlLtL3vafjV?=
- =?us-ascii?Q?YTSvqTBrOYQL72OQAzFKCDhcbjDatQFNPc3PauUsJ32MMuhD9ojKEAeT9bL3?=
- =?us-ascii?Q?215ZJzqDFSrcSpICWtUT9EEzakHLB+dP74E4NLO37kvBhWOKbNkzYISACG2w?=
- =?us-ascii?Q?KjbwEaferQ1bg/IvuaQ5H4intCpRcGcpU+1kflBmXakD8cii9EcqJ4dPP3Zf?=
- =?us-ascii?Q?uLzcP6sfNJZgyrMtg0e/C/XU5/eZQZs4sgibXI7gSnqrI900y1Z35xrT/SBi?=
- =?us-ascii?Q?6kPM4pADUrYOvBgwSq5gNutQaOIhPQiPooHNP9R4OlToRRJDVuN5WgozSYKb?=
- =?us-ascii?Q?4QLMTpep3bBwV0lAlHpQAkHhw9q5nUhCM1emr4blZo8BDEXrKa8EQpbgdLJC?=
- =?us-ascii?Q?yaLGmvlrzgQIXByTipmetI/omUwaz2j2MG8QuQmhSfhY8pZe9ar7p4bQgP80?=
- =?us-ascii?Q?cC9l4k8see9z8kOXoaMvQuIUc2yoj27yGZrbpM3LTdR/gKUdPQJ3GTvlKQwU?=
- =?us-ascii?Q?TaVubXZJ+KJB6SbS3+ldR/lmXxLP0fYmQMIj6+5gLAwZ39wc7W/Hp0smUc/d?=
- =?us-ascii?Q?bs1YSnM9Rrnbvd3zRqUuc9qMTqcHIRO3JbmlADYn9H/TmTYlZ5S6sOkBmlpg?=
- =?us-ascii?Q?VQ=3D=3D?=
+	=?us-ascii?Q?bNkJmvwTsChNS47pskOBGsYUlcGjfNckLor+mONIkowlz3onk6KBeoRxhfqi?=
+ =?us-ascii?Q?TQAhACqtC0iITzaeMIELrVid3+JrTT/ncQKccLZW60U284EB5Ka9gLUSA+Fs?=
+ =?us-ascii?Q?MGRkpmkAxZmF6EDRcmIN6X8267aIppRRkzpQ0idzoeN60HUzYXXf/BwhXwAI?=
+ =?us-ascii?Q?uuvCOCMfMF4RTLWmwunkvG60Ytkg0Er77UpqJbsxens3bkvggS45e+CcZzXp?=
+ =?us-ascii?Q?FJ686t3jx3yPpqK69hUdftlcpPmzRXUzsYWGucJWVAddqsQ0lL8LVKuOwT+I?=
+ =?us-ascii?Q?2aq2DV5SZMCN3CXwyRuSQ2E0jbYYVZFEGDgijuUWWxFOU5ewSSppwbVj8moV?=
+ =?us-ascii?Q?uvbWh3/gTUuw94UJ1pQw5vmuyreK4VfDz+WPC2TWh74qql0cmh8MGZ3lU96Z?=
+ =?us-ascii?Q?dw7qsOfRpfoH71zPURDq13F5NVPF+lJs/w5XuFV9O6K/QpL0iyKCYPacbr3h?=
+ =?us-ascii?Q?lOz/hlV7JY6m7gBlb9GRz8ErsSIFNhcN3eto4714KP1LfmEXvJJg3cbnEvtq?=
+ =?us-ascii?Q?koEfrQBF91NKLOZRFKpjarpVPygEsuJV7GivFYRAYVyUd5FeU8ZlGn5QR9mR?=
+ =?us-ascii?Q?0tkPxLBvMdvsJfzCmVZX1F1Jyh9HnXl8s6d43n7MsVc4vrbmTd+PP4oA8eH7?=
+ =?us-ascii?Q?RHtPLrPru29Ve0ucpm71u0kKnsUpZ5VjtNmUH0cTyMSaWdfMW6OUpa9mWkhM?=
+ =?us-ascii?Q?wgdbwYzxB1RpDHR0t9y0HIWXzQdGHctB8Q7ZXXIj1PKHxaLBl5G1tzDLrGXi?=
+ =?us-ascii?Q?dQNyNEDSEALXBGq9LkFWLKN5B1V5noPqhThdqNYqtlIWIG/Iqjsp3nI8UwEo?=
+ =?us-ascii?Q?1RAQ5IOEaVwCvITxDczmcoilN50SiA1goSYDcrgnp3qGfS6ytjz9Ox3WWN+U?=
+ =?us-ascii?Q?xPA8n79QAYb89eRew3Ce3TFjiWYHm+M8GyLsinNGipWDUXaRwow7ZS7P0wz1?=
+ =?us-ascii?Q?2wC0L3H05ypc9kEVSdRGxPFE+JuaQUzHgXkRCvin+PpW8lHuNcKKIf3Ful0u?=
+ =?us-ascii?Q?B0E+QjIi62SeBw+bRRUk9F1H4ecL0NUSIMrCshEwFsvjkR+su0Lb7WlTFZhR?=
+ =?us-ascii?Q?CntL/rLBBSP2m4qsp+M/cUc8TpwtEaMnoZl8ZJBqR6utzbJR+jMnzM6UQ+ae?=
+ =?us-ascii?Q?/grfuWEja20jD/DlSvqq5SP+wncORkRz8/Hx7VlMwZLTJ7bywGLDNOqTdmjj?=
+ =?us-ascii?Q?d7VEe7isQLk5glysWvsPiHBTC2oDm2lmQuUfqa/L1nX0JjDk8eiYZcG73HYY?=
+ =?us-ascii?Q?A5tQE/xCi49zZGiomNQAWifPLKKAnDq9kFBjTBGF3nE2F9wgACru9GsJIr+1?=
+ =?us-ascii?Q?R0Pojy6H+kBNYutg0R+JkLQzIJgM8NNlnc/R41qNmtl7WXKNoYoOfYoWxM8C?=
+ =?us-ascii?Q?k10qgky7OV4SQ1EZcxYJKDXmcrBxFLUpO5Nwxx3+jM+HMhQihWZMUGZzjqUI?=
+ =?us-ascii?Q?n3OdwwRbdX9FW+E20gUrkCWDfpWls7rC+qDl5jB/9MJ3Y1zMddlz3+McRIxX?=
+ =?us-ascii?Q?J5rBJnauZ9ohY2kvNqJ7bGaeBbK1asY7x3/pr0wpJ/V+80ABDUOXnAwFfYER?=
+ =?us-ascii?Q?Ele5tICDy8krWs4+v2hchw26pMv+F87kzyZTzSWw1cZj1VsFLiZnW2BP78Ep?=
+ =?us-ascii?Q?3g=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	Uy6eWOxfmcOg/SVwX5Lnhi8AZRvU3Br8l8FszY6SiEb3GwIOz87UxDML+1gKrv5xbbRv/hCG+AZu7/cHYyGt5bMITHtLY6J449A4gmxQ+Y5QQrRvpvr2JDr9mEn8EfHEd4/wWZekLJn84JH2dahIrj7PWuVw/6YDOeBvg+BXJZ6dVb7wFYBad6jBdEm47ZD3rveu4560vId4isJiWxJCHYB80LOswxi40plTAvPVmGBByJK0zd2DUI/EzJtreqaWShbGtm8eb1w7MY34/x4EBvMVrpiz3ss0MvOeg+1UeKI4Qd4uwm3cJ7qIzF9/HAXD6EotFglzNfeLzyhop8lmuKIkBfK/03EyEfxqJYnWkBLi8k7aJvOi2hwfm54soyrjHb1Iunu8jFn5KP42YXTtEuMpP752Hew/tc4RB+eihmRuxqxGRswc6f/sQQa7MhIfNioOsGcdkt/uD1XPgKMvvgrGQQZBkX34vGyZCwif1cKk7WPrl4khfUVqb8llVROlb3ZhgrdzsYXv25fUNEUPvOAmqIPxwsHyhqKoo5USDsVyDfa6jcpw5G+tp4+Iow8l6N1ykgr/1KZjzTCmEhKu+6JC+NAkngf98pEAIJBM7yc=
+	VOarf0/84NcVFe4U6HIPERMK/lhVMy6OA6rQMiRqyTtTG0+lqNhoJVaYXAP8+QvVO0qj9LF+FnSMi1y/osxpiRCIinYjpuKADhVu6EN6AFl8VqyPgziWLPfQHKdNaqbqwkhp9ON5rL+ZW/PgWsra/4Xpxj7G3GWGGJtE3JExTXPPC7+v1a157rJs2nKfSNCC3mexI+FbOqu9K3j2uxRz5+zpLYGhSWbe4RIuX+RgW22qWmun/t7nvN1/Ub0YsDSlWnF0Kz7G+gClm8RHJKEvniV0TzeZEw4EH9B5nBp8TXNlh4bxb73TpubmHiZ5nLNt7OsFsVwpglf4KKUGpKUpy+fneUWCAQmSEp384XujQUjXestF2DpIvtl6QnAeucObT96NEBptSccX9AZkbAuf+MrlZhJgfFtjp4hS9T2H4jR+qlChiSnZwSgOdIap3zY/pr8I7FnPYEIp9kz+EbcsGqwatMPCHRoCcKF41aJ2I1vjjty6dElhfm8q6jvJNzhdzY3zL/yOxoUnOKyGNhhXJNq2VCvwGfPxh9Axjaj6Zs/3z5LCHNWY9mbyo3chd/5czGDDgg4LaH4ixNVFK2y1MARetf6aIussZdP74AVCBzU=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1cfbdab5-54dd-4ab2-2335-08dd82dffaa5
+X-MS-Exchange-CrossTenant-Network-Message-Id: 59d7f13c-39a3-4fc7-7d06-08dd82dffbc9
 X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Apr 2025 03:27:45.2823
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Apr 2025 03:27:47.1563
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IecvHlyFOw109GHxiJt7wwud2bWZ4Mc0qMwFKPpFGjMNhzzLMat+UN0WCFANHOyin0C3Ec8rBMvkI26fvpvm88ZyFUvnxp3zMAsz7+yLUvk=
+X-MS-Exchange-CrossTenant-UserPrincipalName: /VUQedUQum7aUcyrwLdKdGlaYDneMaBZWtLmlXG5wJRNJLW8UXjvrB72I80ddioYkBdx95JCW960UrLOd0R7RJstkYrYN2jX7ub7p67Q5/s=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH4PR10MB8172
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.80.40
  definitions=2025-04-24_01,2025-04-22_01,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 malwarescore=0
- spamscore=0 phishscore=0 suspectscore=0 mlxlogscore=999 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 adultscore=0
+ phishscore=0 mlxlogscore=999 bulkscore=0 malwarescore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2504070000
  definitions=main-2504240019
-X-Proofpoint-ORIG-GUID: klicehkY0jR0CG1OIpuWFYUAxf-oUgpF
-X-Proofpoint-GUID: klicehkY0jR0CG1OIpuWFYUAxf-oUgpF
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDI0MDAxOSBTYWx0ZWRfX5zOBtY5f45Tk LliY0XSRSUSoWk5TVvkpCBXxuZz90tQXjeECU1Asm/mfA4275TMxSMKkLshdbqeAee8mJnpt8df BrfPt/QSjKpPT0IOWEyKFWnTNT6ee8CkbXmVpDDfBYtNTFHfNu69Bb3n0SnrZvg+KIB39dw7sXZ
- IBpXL/Jn6NNs5Am+mNiUpHHfTZiw1LJy46Ki77Zx92Lpozlp72dZ457UPLeNNWXg1lHGB0Fp3/S xnrDFgCgaB7zPNeoezilO3LVknUNXMDVUZZdJYdE3bdw7F6S3DvohnEQfl4VsLwq+JOsHYOoNtT CAcftBNetE1sQxCzD4VqaGtvjLDybljvBr4sRPsFrYg5+H6eKBGOflVbo5oIYyPeBbJv15sIJUA bToW/5UX
+X-Proofpoint-GUID: j253v0IRVkUxyhMl_saWmsDGs2g9vQg7
+X-Proofpoint-ORIG-GUID: j253v0IRVkUxyhMl_saWmsDGs2g9vQg7
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDI0MDAxOSBTYWx0ZWRfX7JTUABz82Cgw SHLxUxnAUkk4tiXnbCg4S/EtFcpsHqb8+Gtc5dYjLFqdK2hAXQwZNmfiUZVtLXxF2BPoDnrhDrt Ks1k/Dp56KKxI3Y1N6J1HzAvXkxqAeb31Q3mMriONFnvplDLGyo6artNFnBEq6eZrk4WIn8kUb0
+ ObQC47F8HGBmBg5oRC3oLnf5cE841B5xMmr+POgWlnYAXB2NzU6DYGyc9j8diBuxIhHlgaUVXdQ oFENq0uA5aANF72A6WiBkYU1Hy6T5KP7aCRsGvVzS+MR8sxtdOU531LFDI27SLRUEhenB+L/nDj N+NKvwwX1njvic544YWzNZe0kX/8jW99TidhpFmpE122GpM2dVm/W5PvWuIE2gZZ39Y1Qkmfwvi JOvX0Eet
 
-The atomic use in the main IO path is causing perf issues when using
-higher performance backend devices and multiple queues. This moves the
-stats to per cpu. Combined with the next patch that moves the
-non_ordered/delayed_cmd_count to per cpu, IOPS by up to 33% for 8K
-IOS when using 4 or more queues.
+The atomic use from the delayed/ordered tracking is causing perf
+issues when using higher perf backend devices and multiple queues.
+This moves the values to a per cpu counter. Combined with the per cpu
+stats patch, this improves IOPS by up to 33% for 8K IOS when using 4
+or more queues from the initiator.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/target/target_core_device.c | 69 +++++++++++++++++++++--------
- drivers/target/target_core_stat.c   | 69 ++++++++++++++++++++++++-----
- include/target/target_core_base.h   | 20 ++++++---
- 3 files changed, 121 insertions(+), 37 deletions(-)
+ drivers/target/target_core_device.c    |  20 +++++
+ drivers/target/target_core_transport.c | 119 +++++++++++++------------
+ include/target/target_core_base.h      |   4 +-
+ 3 files changed, 83 insertions(+), 60 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index cc2da086f96e..39aad464c0bf 100644
+index 39aad464c0bf..7bb711b24c0d 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -55,14 +55,14 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd)
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, se_cmd->orig_fe_lun);
- 	if (deve) {
--		atomic_long_inc(&deve->total_cmds);
-+		this_cpu_inc(deve->stats->total_cmds);
- 
- 		if (se_cmd->data_direction == DMA_TO_DEVICE)
--			atomic_long_add(se_cmd->data_length,
--					&deve->write_bytes);
-+			this_cpu_add(deve->stats->write_bytes,
-+				     se_cmd->data_length);
- 		else if (se_cmd->data_direction == DMA_FROM_DEVICE)
--			atomic_long_add(se_cmd->data_length,
--					&deve->read_bytes);
-+			this_cpu_add(deve->stats->read_bytes,
-+				     se_cmd->data_length);
- 
- 		if ((se_cmd->data_direction == DMA_TO_DEVICE) &&
- 		    deve->lun_access_ro) {
-@@ -126,14 +126,14 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd)
- 	 * target_core_fabric_configfs.c:target_fabric_port_release
- 	 */
- 	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
--	atomic_long_inc(&se_cmd->se_dev->num_cmds);
-+	this_cpu_inc(se_cmd->se_dev->stats->total_cmds);
- 
- 	if (se_cmd->data_direction == DMA_TO_DEVICE)
--		atomic_long_add(se_cmd->data_length,
--				&se_cmd->se_dev->write_bytes);
-+		this_cpu_add(se_cmd->se_dev->stats->write_bytes,
-+			     se_cmd->data_length);
- 	else if (se_cmd->data_direction == DMA_FROM_DEVICE)
--		atomic_long_add(se_cmd->data_length,
--				&se_cmd->se_dev->read_bytes);
-+		this_cpu_add(se_cmd->se_dev->stats->read_bytes,
-+			     se_cmd->data_length);
- 
- 	return ret;
+@@ -700,6 +700,18 @@ static void scsi_dump_inquiry(struct se_device *dev)
+ 	pr_debug("  Type:   %s ", scsi_device_type(device_type));
  }
-@@ -322,6 +322,7 @@ int core_enable_device_list_for_node(
- 	struct se_portal_group *tpg)
- {
- 	struct se_dev_entry *orig, *new;
-+	int ret = 0;
  
- 	new = kzalloc(sizeof(*new), GFP_KERNEL);
- 	if (!new) {
-@@ -329,6 +330,12 @@ int core_enable_device_list_for_node(
- 		return -ENOMEM;
- 	}
- 
-+	new->stats = alloc_percpu(struct se_dev_entry_io_stats);
-+	if (!new->stats) {
-+		ret = -ENOMEM;
-+		goto free_deve;
-+	}
++static void target_non_ordered_release(struct percpu_ref *ref)
++{
++	struct se_device *dev = container_of(ref, struct se_device,
++					     non_ordered);
++	unsigned long flags;
 +
- 	spin_lock_init(&new->ua_lock);
- 	INIT_LIST_HEAD(&new->ua_list);
- 	INIT_LIST_HEAD(&new->lun_link);
-@@ -351,8 +358,8 @@ int core_enable_device_list_for_node(
- 			       " for dynamic -> explicit NodeACL conversion:"
- 				" %s\n", nacl->initiatorname);
- 			mutex_unlock(&nacl->lun_entry_mutex);
--			kfree(new);
--			return -EINVAL;
-+			ret = -EINVAL;
-+			goto free_stats;
- 		}
- 		if (orig->se_lun_acl != NULL) {
- 			pr_warn_ratelimited("Detected existing explicit"
-@@ -360,8 +367,8 @@ int core_enable_device_list_for_node(
- 				" mapped_lun: %llu, failing\n",
- 				 nacl->initiatorname, mapped_lun);
- 			mutex_unlock(&nacl->lun_entry_mutex);
--			kfree(new);
--			return -EINVAL;
-+			ret = -EINVAL;
-+			goto free_stats;
- 		}
- 
- 		new->se_lun = lun;
-@@ -394,6 +401,20 @@ int core_enable_device_list_for_node(
- 
- 	target_luns_data_has_changed(nacl, new, true);
- 	return 0;
-+
-+free_stats:
-+	free_percpu(new->stats);
-+free_deve:
-+	kfree(new);
-+	return ret;
++	spin_lock_irqsave(&dev->delayed_cmd_lock, flags);
++	if (!list_empty(&dev->delayed_cmd_list))
++		schedule_work(&dev->delayed_cmd_work);
++	spin_unlock_irqrestore(&dev->delayed_cmd_lock, flags);
 +}
 +
-+static void target_free_dev_entry(struct rcu_head *head)
-+{
-+	struct se_dev_entry *deve = container_of(head, struct se_dev_entry,
-+						 rcu_head);
-+	free_percpu(deve->stats);
-+	kfree(deve);
- }
- 
- void core_disable_device_list_for_node(
-@@ -443,7 +464,7 @@ void core_disable_device_list_for_node(
- 	kref_put(&orig->pr_kref, target_pr_kref_release);
- 	wait_for_completion(&orig->pr_comp);
- 
--	kfree_rcu(orig, rcu_head);
-+	call_rcu(&orig->rcu_head, target_free_dev_entry);
- 
- 	core_scsi3_free_pr_reg_from_nacl(dev, nacl);
- 	target_luns_data_has_changed(nacl, NULL, false);
-@@ -689,11 +710,13 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 	if (!dev)
- 		return NULL;
- 
-+	dev->stats = alloc_percpu(struct se_dev_io_stats);
-+	if (!dev->stats)
-+		goto free_device;
-+
- 	dev->queues = kcalloc(nr_cpu_ids, sizeof(*dev->queues), GFP_KERNEL);
--	if (!dev->queues) {
--		hba->backend->ops->free_device(dev);
--		return NULL;
--	}
-+	if (!dev->queues)
-+		goto free_stats;
- 
- 	dev->queue_cnt = nr_cpu_ids;
- 	for (i = 0; i < dev->queue_cnt; i++) {
-@@ -707,6 +730,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ {
+ 	struct se_device *dev;
+@@ -730,6 +742,9 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
  		INIT_WORK(&q->sq.work, target_queued_submit_work);
  	}
  
-+
++	if (percpu_ref_init(&dev->non_ordered, target_non_ordered_release,
++			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL))
++		goto free_queues;
+ 
  	dev->se_hba = hba;
  	dev->transport = hba->backend->ops;
- 	dev->transport_flags = dev->transport->transport_flags_default;
-@@ -791,6 +815,12 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
- 		sizeof(dev->t10_wwn.revision));
+@@ -816,6 +831,8 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
  
  	return dev;
+ 
++free_queues:
++	kfree(dev->queues);
+ free_stats:
+ 	free_percpu(dev->stats);
+ free_device:
+@@ -1010,6 +1027,9 @@ void target_free_device(struct se_device *dev)
+ 
+ 	WARN_ON(!list_empty(&dev->dev_sep_list));
+ 
++	percpu_ref_exit(&dev->non_ordered);
++	cancel_work_sync(&dev->delayed_cmd_work);
 +
-+free_stats:
-+	free_percpu(dev->stats);
-+free_device:
-+	hba->backend->ops->free_device(dev);
-+	return NULL;
+ 	if (target_dev_configured(dev)) {
+ 		dev->transport->destroy_device(dev);
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 05d29201b730..0a76bdfe5528 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2213,6 +2213,7 @@ static int target_write_prot_action(struct se_cmd *cmd)
+ static bool target_handle_task_attr(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
++	unsigned long flags;
+ 
+ 	if (dev->transport_flags & TRANSPORT_FLAG_PASSTHROUGH)
+ 		return false;
+@@ -2225,13 +2226,10 @@ static bool target_handle_task_attr(struct se_cmd *cmd)
+ 	 */
+ 	switch (cmd->sam_task_attr) {
+ 	case TCM_HEAD_TAG:
+-		atomic_inc_mb(&dev->non_ordered);
+ 		pr_debug("Added HEAD_OF_QUEUE for CDB: 0x%02x\n",
+ 			 cmd->t_task_cdb[0]);
+ 		return false;
+ 	case TCM_ORDERED_TAG:
+-		atomic_inc_mb(&dev->delayed_cmd_count);
+-
+ 		pr_debug("Added ORDERED for CDB: 0x%02x to ordered list\n",
+ 			 cmd->t_task_cdb[0]);
+ 		break;
+@@ -2239,29 +2237,29 @@ static bool target_handle_task_attr(struct se_cmd *cmd)
+ 		/*
+ 		 * For SIMPLE and UNTAGGED Task Attribute commands
+ 		 */
+-		atomic_inc_mb(&dev->non_ordered);
+-
+-		if (atomic_read(&dev->delayed_cmd_count) == 0)
++retry:
++		if (percpu_ref_tryget_live(&dev->non_ordered))
+ 			return false;
++
+ 		break;
+ 	}
+ 
+-	if (cmd->sam_task_attr != TCM_ORDERED_TAG) {
+-		atomic_inc_mb(&dev->delayed_cmd_count);
+-		/*
+-		 * We will account for this when we dequeue from the delayed
+-		 * list.
+-		 */
+-		atomic_dec_mb(&dev->non_ordered);
++	spin_lock_irqsave(&dev->delayed_cmd_lock, flags);
++	if (cmd->sam_task_attr == TCM_SIMPLE_TAG &&
++	    !percpu_ref_is_dying(&dev->non_ordered)) {
++		spin_unlock_irqrestore(&dev->delayed_cmd_lock, flags);
++		/* We raced with the last ordered completion so retry. */
++		goto retry;
++	} else if (!percpu_ref_is_dying(&dev->non_ordered)) {
++		percpu_ref_kill(&dev->non_ordered);
+ 	}
+ 
+-	spin_lock_irq(&cmd->t_state_lock);
++	spin_lock(&cmd->t_state_lock);
+ 	cmd->transport_state &= ~CMD_T_SENT;
+-	spin_unlock_irq(&cmd->t_state_lock);
++	spin_unlock(&cmd->t_state_lock);
+ 
+-	spin_lock(&dev->delayed_cmd_lock);
+ 	list_add_tail(&cmd->se_delayed_node, &dev->delayed_cmd_list);
+-	spin_unlock(&dev->delayed_cmd_lock);
++	spin_unlock_irqrestore(&dev->delayed_cmd_lock, flags);
+ 
+ 	pr_debug("Added CDB: 0x%02x Task Attr: 0x%02x to delayed CMD listn",
+ 		cmd->t_task_cdb[0], cmd->sam_task_attr);
+@@ -2313,41 +2311,52 @@ void target_do_delayed_work(struct work_struct *work)
+ 	while (!dev->ordered_sync_in_progress) {
+ 		struct se_cmd *cmd;
+ 
+-		if (list_empty(&dev->delayed_cmd_list))
++		/*
++		 * We can be woken up early/late due to races or the
++		 * extra wake up we do when adding commands to the list.
++		 * We check for both cases here.
++		 */
++		if (list_empty(&dev->delayed_cmd_list) ||
++		    !percpu_ref_is_zero(&dev->non_ordered))
+ 			break;
+ 
+ 		cmd = list_entry(dev->delayed_cmd_list.next,
+ 				 struct se_cmd, se_delayed_node);
++		cmd->se_cmd_flags |= SCF_TASK_ORDERED_SYNC;
++		cmd->transport_state |= CMD_T_SENT;
+ 
+-		if (cmd->sam_task_attr == TCM_ORDERED_TAG) {
+-			/*
+-			 * Check if we started with:
+-			 * [ordered] [simple] [ordered]
+-			 * and we are now at the last ordered so we have to wait
+-			 * for the simple cmd.
+-			 */
+-			if (atomic_read(&dev->non_ordered) > 0)
+-				break;
+-
+-			dev->ordered_sync_in_progress = true;
+-		}
++		dev->ordered_sync_in_progress = true;
+ 
+ 		list_del(&cmd->se_delayed_node);
+-		atomic_dec_mb(&dev->delayed_cmd_count);
+ 		spin_unlock(&dev->delayed_cmd_lock);
+ 
+-		if (cmd->sam_task_attr != TCM_ORDERED_TAG)
+-			atomic_inc_mb(&dev->non_ordered);
+-
+-		cmd->transport_state |= CMD_T_SENT;
+-
+ 		__target_execute_cmd(cmd, true);
+-
+ 		spin_lock(&dev->delayed_cmd_lock);
+ 	}
+ 	spin_unlock(&dev->delayed_cmd_lock);
  }
  
++static void transport_complete_ordered_sync(struct se_cmd *cmd)
++{
++	struct se_device *dev = cmd->se_dev;
++	unsigned long flags;
++
++	spin_lock_irqsave(&dev->delayed_cmd_lock, flags);
++	dev->dev_cur_ordered_id++;
++
++	pr_debug("Incremented dev_cur_ordered_id: %u for type %d\n",
++		 dev->dev_cur_ordered_id, cmd->sam_task_attr);
++
++	dev->ordered_sync_in_progress = false;
++
++	if (list_empty(&dev->delayed_cmd_list))
++		percpu_ref_resurrect(&dev->non_ordered);
++	else
++		schedule_work(&dev->delayed_cmd_work);
++
++	spin_unlock_irqrestore(&dev->delayed_cmd_lock, flags);
++}
++
  /*
-@@ -1001,6 +1031,7 @@ void target_free_device(struct se_device *dev)
- 		dev->transport->free_prot(dev);
+  * Called from I/O completion to determine which dormant/delayed
+  * and ordered cmds need to have their tasks added to the execution queue.
+@@ -2360,30 +2369,24 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
+ 		return;
  
- 	kfree(dev->queues);
-+	free_percpu(dev->stats);
- 	dev->transport->free_device(dev);
- }
+ 	if (!(cmd->se_cmd_flags & SCF_TASK_ATTR_SET))
+-		goto restart;
+-
+-	if (cmd->sam_task_attr == TCM_SIMPLE_TAG) {
+-		atomic_dec_mb(&dev->non_ordered);
+-		dev->dev_cur_ordered_id++;
+-	} else if (cmd->sam_task_attr == TCM_HEAD_TAG) {
+-		atomic_dec_mb(&dev->non_ordered);
+-		dev->dev_cur_ordered_id++;
+-		pr_debug("Incremented dev_cur_ordered_id: %u for HEAD_OF_QUEUE\n",
+-			 dev->dev_cur_ordered_id);
+-	} else if (cmd->sam_task_attr == TCM_ORDERED_TAG) {
+-		spin_lock(&dev->delayed_cmd_lock);
+-		dev->ordered_sync_in_progress = false;
+-		spin_unlock(&dev->delayed_cmd_lock);
++		return;
  
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index 210648a0092e..6bdf2d8bd694 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -280,30 +280,51 @@ static ssize_t target_stat_lu_num_cmds_show(struct config_item *item,
- 		char *page)
- {
- 	struct se_device *dev = to_stat_lu_dev(item);
-+	struct se_dev_io_stats *stats;
-+	unsigned int cpu;
-+	u32 cmds = 0;
-+
-+	for_each_possible_cpu(cpu) {
-+		stats = per_cpu_ptr(dev->stats, cpu);
-+		cmds += stats->total_cmds;
-+	}
+-		dev->dev_cur_ordered_id++;
+-		pr_debug("Incremented dev_cur_ordered_id: %u for ORDERED\n",
+-			 dev->dev_cur_ordered_id);
+-	}
+ 	cmd->se_cmd_flags &= ~SCF_TASK_ATTR_SET;
  
- 	/* scsiLuNumCommands */
--	return snprintf(page, PAGE_SIZE, "%lu\n",
--			atomic_long_read(&dev->num_cmds));
-+	return snprintf(page, PAGE_SIZE, "%u\n", cmds);
- }
- 
- static ssize_t target_stat_lu_read_mbytes_show(struct config_item *item,
- 		char *page)
- {
- 	struct se_device *dev = to_stat_lu_dev(item);
-+	struct se_dev_io_stats *stats;
-+	unsigned int cpu;
-+	u32 bytes = 0;
-+
-+	for_each_possible_cpu(cpu) {
-+		stats = per_cpu_ptr(dev->stats, cpu);
-+		bytes += stats->read_bytes;
-+	}
- 
- 	/* scsiLuReadMegaBytes */
--	return snprintf(page, PAGE_SIZE, "%lu\n",
--			atomic_long_read(&dev->read_bytes) >> 20);
-+	return snprintf(page, PAGE_SIZE, "%u\n", bytes >> 20);
- }
- 
- static ssize_t target_stat_lu_write_mbytes_show(struct config_item *item,
- 		char *page)
- {
- 	struct se_device *dev = to_stat_lu_dev(item);
-+	struct se_dev_io_stats *stats;
-+	unsigned int cpu;
-+	u32 bytes = 0;
-+
-+	for_each_possible_cpu(cpu) {
-+		stats = per_cpu_ptr(dev->stats, cpu);
-+		bytes += stats->write_bytes;
-+	}
- 
- 	/* scsiLuWrittenMegaBytes */
--	return snprintf(page, PAGE_SIZE, "%lu\n",
--			atomic_long_read(&dev->write_bytes) >> 20);
-+	return snprintf(page, PAGE_SIZE, "%u\n", bytes >> 20);
- }
- 
- static ssize_t target_stat_lu_resets_show(struct config_item *item, char *page)
-@@ -1019,8 +1040,11 @@ static ssize_t target_stat_auth_num_cmds_show(struct config_item *item,
- {
- 	struct se_lun_acl *lacl = auth_to_lacl(item);
- 	struct se_node_acl *nacl = lacl->se_lun_nacl;
-+	struct se_dev_entry_io_stats *stats;
- 	struct se_dev_entry *deve;
-+	unsigned int cpu;
- 	ssize_t ret;
-+	u32 cmds = 0;
- 
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
-@@ -1028,9 +1052,14 @@ static ssize_t target_stat_auth_num_cmds_show(struct config_item *item,
- 		rcu_read_unlock();
- 		return -ENODEV;
- 	}
-+
-+	for_each_possible_cpu(cpu) {
-+		stats = per_cpu_ptr(deve->stats, cpu);
-+		cmds += stats->total_cmds;
+-restart:
+-	if (atomic_read(&dev->delayed_cmd_count) > 0)
+-		schedule_work(&dev->delayed_cmd_work);
++	if (cmd->se_cmd_flags & SCF_TASK_ORDERED_SYNC) {
++		transport_complete_ordered_sync(cmd);
++		return;
 +	}
 +
- 	/* scsiAuthIntrOutCommands */
--	ret = snprintf(page, PAGE_SIZE, "%lu\n",
--		       atomic_long_read(&deve->total_cmds));
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", cmds);
- 	rcu_read_unlock();
- 	return ret;
- }
-@@ -1040,8 +1069,11 @@ static ssize_t target_stat_auth_read_mbytes_show(struct config_item *item,
- {
- 	struct se_lun_acl *lacl = auth_to_lacl(item);
- 	struct se_node_acl *nacl = lacl->se_lun_nacl;
-+	struct se_dev_entry_io_stats *stats;
- 	struct se_dev_entry *deve;
-+	unsigned int cpu;
- 	ssize_t ret;
-+	u32 bytes = 0;
- 
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
-@@ -1049,9 +1081,14 @@ static ssize_t target_stat_auth_read_mbytes_show(struct config_item *item,
- 		rcu_read_unlock();
- 		return -ENODEV;
- 	}
-+
-+	for_each_possible_cpu(cpu) {
-+		stats = per_cpu_ptr(deve->stats, cpu);
-+		bytes += stats->read_bytes;
++	switch (cmd->sam_task_attr) {
++	case TCM_SIMPLE_TAG:
++		percpu_ref_put(&dev->non_ordered);
++		break;
++	case TCM_ORDERED_TAG:
++		/* All ordered should have been executed as sync */
++		WARN_ON(1);
++		break;
 +	}
-+
- 	/* scsiAuthIntrReadMegaBytes */
--	ret = snprintf(page, PAGE_SIZE, "%u\n",
--		      (u32)(atomic_long_read(&deve->read_bytes) >> 20));
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", bytes >> 20);
- 	rcu_read_unlock();
- 	return ret;
  }
-@@ -1061,8 +1098,11 @@ static ssize_t target_stat_auth_write_mbytes_show(struct config_item *item,
- {
- 	struct se_lun_acl *lacl = auth_to_lacl(item);
- 	struct se_node_acl *nacl = lacl->se_lun_nacl;
-+	struct se_dev_entry_io_stats *stats;
- 	struct se_dev_entry *deve;
-+	unsigned int cpu;
- 	ssize_t ret;
-+	u32 bytes = 0;
  
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
-@@ -1070,9 +1110,14 @@ static ssize_t target_stat_auth_write_mbytes_show(struct config_item *item,
- 		rcu_read_unlock();
- 		return -ENODEV;
- 	}
-+
-+	for_each_possible_cpu(cpu) {
-+		stats = per_cpu_ptr(deve->stats, cpu);
-+		bytes += stats->write_bytes;
-+	}
-+
- 	/* scsiAuthIntrWrittenMegaBytes */
--	ret = snprintf(page, PAGE_SIZE, "%u\n",
--		      (u32)(atomic_long_read(&deve->write_bytes) >> 20));
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", bytes >> 20);
- 	rcu_read_unlock();
- 	return ret;
- }
+ static void transport_complete_qf(struct se_cmd *cmd)
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 97099a5e3f6c..05e3673607b8 100644
+index 05e3673607b8..a52d4967c0d3 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -669,15 +669,19 @@ struct se_lun_acl {
- 	struct se_ml_stat_grps	ml_stat_grps;
+@@ -157,6 +157,7 @@ enum se_cmd_flags_table {
+ 	SCF_USE_CPUID				= (1 << 16),
+ 	SCF_TASK_ATTR_SET			= (1 << 17),
+ 	SCF_TREAT_READ_AS_NORMAL		= (1 << 18),
++	SCF_TASK_ORDERED_SYNC			= (1 << 19),
  };
  
-+struct se_dev_entry_io_stats {
-+	u32			total_cmds;
-+	u32			read_bytes;
-+	u32			write_bytes;
-+};
-+
- struct se_dev_entry {
- 	u64			mapped_lun;
- 	u64			pr_res_key;
- 	u64			creation_time;
- 	bool			lun_access_ro;
- 	u32			attach_count;
--	atomic_long_t		total_cmds;
--	atomic_long_t		read_bytes;
--	atomic_long_t		write_bytes;
-+	struct se_dev_entry_io_stats __percpu	*stats;
- 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
- 	struct kref		pr_kref;
- 	struct completion	pr_comp;
-@@ -800,6 +804,12 @@ struct se_device_queue {
- 	struct se_cmd_queue	sq;
- };
- 
-+struct se_dev_io_stats {
-+	u32			total_cmds;
-+	u32			read_bytes;
-+	u32			write_bytes;
-+};
-+
- struct se_device {
- 	/* Used for SAM Task Attribute ordering */
- 	u32			dev_cur_ordered_id;
-@@ -821,9 +831,7 @@ struct se_device {
- 	atomic_long_t		num_resets;
- 	atomic_long_t		aborts_complete;
+ /*
+@@ -833,9 +834,8 @@ struct se_device {
  	atomic_long_t		aborts_no_task;
--	atomic_long_t		num_cmds;
--	atomic_long_t		read_bytes;
--	atomic_long_t		write_bytes;
-+	struct se_dev_io_stats __percpu	*stats;
+ 	struct se_dev_io_stats __percpu	*stats;
  	/* Active commands on this virtual SE device */
- 	atomic_t		non_ordered;
+-	atomic_t		non_ordered;
++	struct percpu_ref	non_ordered;
  	bool			ordered_sync_in_progress;
+-	atomic_t		delayed_cmd_count;
+ 	atomic_t		dev_qf_count;
+ 	u32			export_count;
+ 	spinlock_t		delayed_cmd_lock;
 -- 
 2.43.5
 
