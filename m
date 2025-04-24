@@ -1,36 +1,67 @@
-Received: from NOTESERV1.attotech.com (sw.attotech.com [208.69.85.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBCA81B0437;
-	Thu, 24 Apr 2025 15:33:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=208.69.85.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D17A22AE48
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2025 15:35:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745508816; cv=none; b=kQL7a8/yHAWp5McZVtURhjdmsjWSEGO3qN4iAlWQuvwyi7+8SCj/RMbyiLrYqc9TZtNPa8hApc0QDJGJKVZWY7TtW7hSSUkltyKgzYtCDJ4/+FMhrZoM4WJ+Qmkn0yY6xn7lHHf8VDJdq/C1/fp1z7XQR4bC5ixpS5jZCEu8CLA=
+	t=1745508927; cv=none; b=YrLVDdUxxs1b//0D6DxEG5MhF+CnO3549gL2bHxU7NpoOPlBdQl0sZwTMED1lYCwRlKb3/vh7/lcPH5m2Y4Fj8/q1G80rqdtHj1BUJplN0zE+LHxS6wLuz+KTZPX0s6s6YrNYaCFgr/gk/7NB76l65URNlhAM4z5HmdfdRcyubY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745508816; c=relaxed/simple;
-	bh=Xfc8GKtKubTRv/XopZVJMagIqooOj7Vc/rTv+DHGaME=;
-	h=Message-ID:Date:Subject:To:Cc:From:In-Reply-To:Content-Type:
-	 MIME-Version:References; b=s5lg5FEgDHujFAN5Eqf3e+B4FNn9Opl2RtTKKVtO8aFA2tyZOjgwpyfZOXSCBzclYYFwKdinSM5+X1t1zGqkK2s5oueeSj/FU1TvWyH7N+9OfglOb49Ur9hOj6kLWONKCnIXRuXCtkj1lkHTtromQsQJFbs11FLVAMuhgB0kWrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=atto.com; spf=pass smtp.mailfrom=atto.com; arc=none smtp.client-ip=208.69.85.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=atto.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atto.com
-Received: from [10.20.0.14] ([10.20.0.14])
-          by NOTESERV1.attotech.com (HCL Domino Release 12.0.2FP3 HF86)
-          with ESMTP id 2025042411332402-909 ;
-          Thu, 24 Apr 2025 11:33:24 -0400 
-Message-ID: <05faf356-0bc7-4fdf-8a74-f738365fad20@atto.com>
-Date: Thu, 24 Apr 2025 11:33:23 -0400
-Subject: Re: [PATCH] scsi: sd_zbc: Limit the report zones buffer size to
- UIO_MAXIOV
-To: Damien Le Moal <dlemoal@kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: bgrove@atto.com, James.Bottomley@hansenpartnership.com,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, Steve Siwinski <stevensiwinski@gmail.com>
-From: "Siwinski, Steve" <ssiwinski@atto.com>
-In-Reply-To: <8454a55d-bfcc-441a-837e-157123e881fe@kernel.org>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Language: en-US
+	s=arc-20240116; t=1745508927; c=relaxed/simple;
+	bh=uulvpoNlf0v9TkT+QqAhQUPMpAvCv5DHfTKEnGdy3Xk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=oFnFay788TI1KIPRa3s+Ie8nRMZbxKAzYsDu9qa3dSI6ZkoNwzreJD5d0sjOD1g+egERnM7rEvH1UIRB7DlKURrSPjCBE6BuYCAOsVgEBNyD92YHkh7q9+2v6vpAgOQg0Z9ZHLkq3qCtKZlBZIB6aafxTVRBqvmC3PAP7qMX5q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nyO9uZeT; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nyO9uZeT"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43d2d952eb1so8499915e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Apr 2025 08:35:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1745508923; x=1746113723; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=90J0ZmCW6/hQg6wXxjTUSHJn5hh8V/UVJ5EmPQBXgjk=;
+        b=nyO9uZeT1fMNSZXHYB+9r/+zALrzN90bowsjaarRRUTy41DuFZS+BW0B4Z9NtF4kM1
+         cWVeXKvR2+mI75l5Kcht8YusBx/VGB5AiRoPSWOqwNkAfZ7IWLTQYuzw78LInbBiYJMP
+         Lh0VMrG1pVw5LjhpOgbnt7WaO1AxXPu5MHU4OgeAhmSPuMVzSXwSkxVTgvSGQRFHbwHU
+         xv6Qu1PAKmzgRwb1hF0W3tUkP4EPsP8nfY5E0YPfrXbg8Cuyn7TRTP2qj+57RPTHf+Uq
+         gFSRtIgBVe/KZcrVcfsrt/6q66vB7CB417APG17asVot1C51BD25qEaqaadY6OxWYrNp
+         wgQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745508923; x=1746113723;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=90J0ZmCW6/hQg6wXxjTUSHJn5hh8V/UVJ5EmPQBXgjk=;
+        b=irgC66Ar5iJ3R+WdwwESBJGow6Bhbr4JRTsk+cgx4MePNbqrUFs7JtALWYQLvR9igU
+         0GGfyzAFpbtwQgz3TOYXMjYywCeFaPwph8J8Z5FisNX0sdUnBc5biVeF12c4jXdrp5Cz
+         oCaX+04Dpe+fj7xUxbo33xA4NKBNlhQX7/ag3V3b9MotPqWzuC9ix6SlDllFkr+0DXxS
+         U2sv8Dku8joGQEH9vbu43Ix7DXPjzi78kCDy2ygrVKNiPvgJ0ZFHTO8Bszl2I+2ayN6Y
+         2SdFsfF21Ao38zJQyTCw7E5E+uBU1wq9NKN9c1i467AjdcF5JldfiI2G1frIkBKTPcSl
+         xI9w==
+X-Forwarded-Encrypted: i=1; AJvYcCVqnImwF4Eh93izxUf2NCXzNAfdMYX42gcf+nolTKotzUlFR+2QzTEHJjn55YpnuEXHwF11NrfjvwTs@vger.kernel.org
+X-Gm-Message-State: AOJu0YzM+7LfI+sqEhxYDhtvUsY4EC8Bx3pvvbqtN0VEDxsKhaEM3Kkd
+	iI5sX7cldsbkHwTYYYyhrA+hYVIsv+rrQPxnspFO458PEodnzCazIC2+HO6B8MM=
+X-Gm-Gg: ASbGnctM9cwAmXHayEqb+ingmv7+1qtazRp9L9fVlgM2gwCG/FgtMV78gkJWz50ZmKX
+	Qv2i0w0slTiwrwYMCnEFDNy7g/bWNUuxCKpZyH79nlAZ1g0CNEgNnMGX1wfJKNtYAJaCMfxZ6KG
+	EFcGBGvweI2qDjLqy857Y+AXPcvYhmbQG+gF47rhRbZRasjE1yBvksf2Xay4/9mb2El5FMiVibn
+	4AElnnYButA0PCTw8kD02N+Lz7oVJtk0XMTxYY51Dsmlib2+19BvnI88UyB+jXemA0eo5gWQU7O
+	3HOAfKT5UhDN2+zGPnxOW6P7g23z7qqV3dF3vAbNI3YsZQzgW3IVdwlKzZ+hdgXS0p8XINyGEbA
+	i+3ZyHQkJ3cIkbra1Hg==
+X-Google-Smtp-Source: AGHT+IGTwz+l2hU3W5oB/SMKYK5pobundB5Y5e3EUt8oWYelt7IXQZcpTS1d1RGvuuIScs225N7JYQ==
+X-Received: by 2002:a05:600c:4e14:b0:43c:fe15:41d4 with SMTP id 5b1f17b1804b1-4409bd324ffmr33081305e9.18.1745508923253;
+        Thu, 24 Apr 2025 08:35:23 -0700 (PDT)
+Received: from ?IPV6:2a01:e0a:3d9:2080:a24a:bfda:f031:720d? ([2a01:e0a:3d9:2080:a24a:bfda:f031:720d])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4409d29b990sm27036615e9.4.2025.04.24.08.35.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Apr 2025 08:35:22 -0700 (PDT)
+Message-ID: <c7f2476a-943a-4d73-ad80-802c91e5f880@linaro.org>
+Date: Thu, 24 Apr 2025 17:35:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,64 +69,255 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-References: <20250411203600.84477-1-ssiwinski@atto.com>
- <Z_yinytV0e_BbNrF@infradead.org>
- <OFA5AB0241.ED5C089D-ON85258C70.0068BDE0-85258C70.00721A7A@atto.com>
- <8454a55d-bfcc-441a-837e-157123e881fe@kernel.org>
-X-MIMETrack: Itemize by SMTP Server on NOTESERV1/SERV/ATTO(Release 12.0.2FP3 HF86|December
- 17, 2024) at 04/24/2025 11:33:24 AM
-X-TNEFEvaluated: 1
-X-Disclaimed: 41067
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: neil.armstrong@linaro.org
+Subject: Re: [PATCH v5 5/8] scsi: ufs: core: Enable multi-level gear scaling
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
+ bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
+ avri.altman@wdc.com, junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+ peter.wang@mediatek.com, quic_rampraka@quicinc.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Andrew Halaney <ahalaney@redhat.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ Linux regressions mailing list <regressions@lists.linux.dev>
+References: <20250213080008.2984807-1-quic_ziqichen@quicinc.com>
+ <20250213080008.2984807-6-quic_ziqichen@quicinc.com>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <20250213080008.2984807-6-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 4/18/2025 5:29 PM, Damien Le Moal wrote:
-> On 4/19/25 05:46, SSiwinski@atto.com wrote:
->>
->> "Christoph Hellwig" <hch@infradead.org> wrote on 04/14/2025 01:52:31 AM:
->>
->>> On Fri, Apr 11, 2025 at 04:36:00PM -0400, Steve Siwinski wrote:
->>>> The report zones buffer size is currently limited by the HBA's
->>>> maximum segment count to ensure the buffer can be mapped. However,
->>>> the user-space SG_IO interface further limits the number of iovec
->>>> entries to UIO_MAXIOV when allocating a bio.
->>>
->>> Why does the userspace SG_IO interface matter here?
->>> sd_zbc_alloc_report_buffer is only used for the in-kernel
->>> ->report_zones call.
->>
->> I was referring to the userspace SG_IO limitation (UIO_MAXIOV) in
->> bio_kmalloc(), which gets called when the report zones command is
->> executed and the buffer mapped in bio_map_kern().
->>
->> Perhaps my wording here was poor and this is really a limitation of bio?
+Hi,
+
+On 13/02/2025 09:00, Ziqi Chen wrote:
+> From: Can Guo <quic_cang@quicinc.com>
 > 
-> sd_zbc_alloc_report_buffer() is called only from sd_zbc_report_zones() which is
-> the disk ->report_zones() operations, which is NOT called for passthrough
-> commands. So modifying sd_zbc_alloc_report_buffer() will not help in any way
-> solving your issue with an SG_IO passthrough report zones command issued by the
-> user.
+> With OPP V2 enabled, devfreq can scale clocks amongst multiple frequency
+> plans. However, the gear speed is only toggled between min and max during
+> clock scaling. Enable multi-level gear scaling by mapping clock frequencies
+> to gear speeds, so that when devfreq scales clock frequencies we can put
+> the UFS link at the appropriate gear speeds accordingly.
 > 
-> For reference, libzbc uses ioctl(SG_GET_SG_TABLESIZE) * sysconf(_SC_PAGESIZE) as
-> the max buffer size and allocates page aligned buffers to avoid these SG_IO
-> buffer mapping limitations.
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+> ---
 > 
+> v1 -> v2:
+> Rename the lable "do_pmc" to "config_pwr_mode".
+> 
+> v2 -> v3:
+> Use assignment instead memcpy() in function ufshcd_scale_gear().
+> 
+> v3 -> v4:
+> Typo fixed for commit message.
+> 
+> v4 -> v5:
+> Change the data type of "new_gear" from 'int' to 'u32'.
+> ---
+>   drivers/ufs/core/ufshcd.c | 44 ++++++++++++++++++++++++++++++---------
+>   1 file changed, 34 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 8d295cc827cc..9908c0d6a1e1 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -1308,16 +1308,26 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+>   /**
+>    * ufshcd_scale_gear - scale up/down UFS gear
+>    * @hba: per adapter instance
+> + * @target_gear: target gear to scale to
+>    * @scale_up: True for scaling up gear and false for scaling down
+>    *
+>    * Return: 0 for success; -EBUSY if scaling can't happen at this time;
+>    * non-zero for any other errors.
+>    */
+> -static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+> +static int ufshcd_scale_gear(struct ufs_hba *hba, u32 target_gear, bool scale_up)
+>   {
+>   	int ret = 0;
+>   	struct ufs_pa_layer_attr new_pwr_info;
+>   
+> +	if (target_gear) {
+> +		new_pwr_info = hba->pwr_info;
+> +		new_pwr_info.gear_tx = target_gear;
+> +		new_pwr_info.gear_rx = target_gear;
+> +
+> +		goto config_pwr_mode;
+> +	}
+> +
+> +	/* Legacy gear scaling, in case vops_freq_to_gear_speed() is not implemented */
+>   	if (scale_up) {
+>   		memcpy(&new_pwr_info, &hba->clk_scaling.saved_pwr_info,
+>   		       sizeof(struct ufs_pa_layer_attr));
+> @@ -1338,6 +1348,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+>   		}
+>   	}
+>   
+> +config_pwr_mode:
+>   	/* check if the power mode needs to be changed or not? */
+>   	ret = ufshcd_config_pwr_mode(hba, &new_pwr_info);
+>   	if (ret)
+> @@ -1408,15 +1419,19 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
+>   static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
+>   				bool scale_up)
+>   {
+> +	u32 old_gear = hba->pwr_info.gear_rx;
+> +	u32 new_gear = 0;
+>   	int ret = 0;
+>   
+> +	new_gear = ufshcd_vops_freq_to_gear_speed(hba, freq);
+> +
+>   	ret = ufshcd_clock_scaling_prepare(hba, 1 * USEC_PER_SEC);
+>   	if (ret)
+>   		return ret;
+>   
+>   	/* scale down the gear before scaling down clocks */
+>   	if (!scale_up) {
+> -		ret = ufshcd_scale_gear(hba, false);
+> +		ret = ufshcd_scale_gear(hba, new_gear, false);
+>   		if (ret)
+>   			goto out_unprepare;
+>   	}
+> @@ -1424,13 +1439,13 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
+>   	ret = ufshcd_scale_clks(hba, freq, scale_up);
+>   	if (ret) {
+>   		if (!scale_up)
+> -			ufshcd_scale_gear(hba, true);
+> +			ufshcd_scale_gear(hba, old_gear, true);
+>   		goto out_unprepare;
+>   	}
+>   
+>   	/* scale up the gear after scaling up clocks */
+>   	if (scale_up) {
+> -		ret = ufshcd_scale_gear(hba, true);
+> +		ret = ufshcd_scale_gear(hba, new_gear, true);
+>   		if (ret) {
+>   			ufshcd_scale_clks(hba, hba->devfreq->previous_freq,
+>   					  false);
+> @@ -1723,6 +1738,8 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+>   		struct device_attribute *attr, const char *buf, size_t count)
+>   {
+>   	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +	struct ufs_clk_info *clki;
+> +	unsigned long freq;
+>   	u32 value;
+>   	int err = 0;
+>   
+> @@ -1746,14 +1763,21 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
+>   
+>   	if (value) {
+>   		ufshcd_resume_clkscaling(hba);
+> -	} else {
+> -		ufshcd_suspend_clkscaling(hba);
+> -		err = ufshcd_devfreq_scale(hba, ULONG_MAX, true);
+> -		if (err)
+> -			dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
+> -					__func__, err);
+> +		goto out_rel;
+>   	}
+>   
+> +	clki = list_first_entry(&hba->clk_list_head, struct ufs_clk_info, list);
+> +	freq = clki->max_freq;
+> +
+> +	ufshcd_suspend_clkscaling(hba);
+> +	err = ufshcd_devfreq_scale(hba, freq, true);
+> +	if (err)
+> +		dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
+> +				__func__, err);
+> +	else
+> +		hba->clk_scaling.target_freq = freq;
+> +
+> +out_rel:
+>   	ufshcd_release(hba);
+>   	ufshcd_rpm_put_sync(hba);
+>   out:
 
-My issue is not with passthough report zones.
+This change causes UFS crash on the RB3gen2, after UFS successfully probe and scan:
 
-The report zones command is failing on driver load and causing the drive 
-to fail to appear as a block device. If queue_max_segments is set to a 
-value over 1024, then nr_vecs in bio_alloc() will be greater than 
-UIO_MAXIOV and bio_alloc() will return NULL.
+[    9.383728] ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x2 with mode 0x11 completion timeout
+[    9.393272] ufshcd-qcom 1d84000.ufshc: UFS Host state=1
+[    9.403126] msm_dpu ae01000.display-controller: [drm:adreno_request_fw [msm]] *ERROR* failed to load a660_sqe.fw
+[    9.408484] ufshcd-qcom 1d84000.ufshc: 0 outstanding reqs, tasks=0x0
+[    9.425577] ufshcd-qcom 1d84000.ufshc: saved_err=0x0, saved_uic_err=0x0
+[    9.432433] ufshcd-qcom 1d84000.ufshc: Device power mode=1, UIC link state=1
+[    9.439716] ufshcd-qcom 1d84000.ufshc: PM in progress=0, sys. suspended=0
+[    9.446742] ufshcd-qcom 1d84000.ufshc: Auto BKOPS=0, Host self-block=0
+[    9.453468] ufshcd-qcom 1d84000.ufshc: Clk gate=1
+...
+[   10.529259] ufshcd-qcom 1d84000.ufshc: ufshcd_change_power_mode: power mode change failed -110
+[   10.538102] ufshcd-qcom 1d84000.ufshc: ufshcd_scale_gear: failed err -110, old gear: (tx 1 rx 1), new gear: (tx 4 rx 4)
+[   10.542841] WARNING: CPU: 0 PID: 274 at drivers/ufs/core/ufshcd.c:5504 ufshcd_sl_intr+0x64c/0x6a4
+...
 
-This causes the error.
-```
-sd 8:0:0:0: [sdb] REPORT ZONES start lba 0 failed
-sd 8:0:0:0: [sdb] REPORT ZONES: Result: hostbyte=0xff driverbyte=DRIVER_OK
-sdb: failed to revalidate zones
-```
+CI Run sample: https://git.codelinaro.org/linaro/qcomlt/ci/staging/cdba-tester/-/jobs/233352#L1479
 
-You can reproduce this by setting the max_sgl_entries parameter to 2k or 
-greater in the mpt3sas driver. Other drivers can also reproduce this 
-behavior.
+Bisect run log:
+# bad: [0af2f6be1b4281385b618cb86ad946eded089ac8] Linux 6.15-rc1
+# good: [38fec10eb60d687e30c8c6b5420d86e8149f7557] Linux 6.14
+git bisect start 'v6.15-rc1' 'v6.14'
+# bad: [fd71def6d9abc5ae362fb9995d46049b7b0ed391] Merge tag 'for-6.15-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/kdave/linux
+git bisect bad fd71def6d9abc5ae362fb9995d46049b7b0ed391
+# good: [fb1ceb29b27cda91af35851ebab01f298d82162e] Merge tag 'platform-drivers-x86-v6.15-1' of git://git.kernel.org/pub/scm/linux/kernel/git/pdx86/platform-drivers-x86
+git bisect good fb1ceb29b27cda91af35851ebab01f298d82162e
+# good: [1952e19c02ae8ea0c663d30b19be14344b543068] Merge tag 'wireless-next-2025-03-20' of https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next
+git bisect good 1952e19c02ae8ea0c663d30b19be14344b543068
+# bad: [1a9239bb4253f9076b5b4b2a1a4e8d7defd77a95] Merge tag 'net-next-6.15' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next
+git bisect bad 1a9239bb4253f9076b5b4b2a1a4e8d7defd77a95
+# good: [22093997ac9220d3c606313efbf4ce564962d095] Merge tag 'ata-6.15-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux
+git bisect good 22093997ac9220d3c606313efbf4ce564962d095
+# bad: [336b4dae6dfecc9aa53a3a68c71b9c1c1d466388] Merge tag 'iommu-updates-v6.15' of git://git.kernel.org/pub/scm/linux/kernel/git/iommu/linux
+git bisect bad 336b4dae6dfecc9aa53a3a68c71b9c1c1d466388
+# bad: [0711f1966a523d77d4c5f00776a7bd073d56251a] scsi: mpt3sas: Fix buffer overflow in mpt3sas_send_mctp_passthru_req()
+git bisect bad 0711f1966a523d77d4c5f00776a7bd073d56251a
+# good: [369552fd03f296261023872b8fc983d1fc55c8e9] Merge patch series "mpt3sas driver udpates"
+git bisect good 369552fd03f296261023872b8fc983d1fc55c8e9
+# bad: [42273e893157501ae119ea5459f3a7d2420c56d6] Merge patch series "scsi: scsi_debug: Add more tape support"
+git bisect bad 42273e893157501ae119ea5459f3a7d2420c56d6
+# bad: [7e72900272b61c11f2fd4020d4f186124d0d171b] Merge patch series "Support Multi-frequency scale for UFS"
+git bisect bad 7e72900272b61c11f2fd4020d4f186124d0d171b
+# good: [c02fe9e222d16bed8c270608c42f77bc62562ac3] scsi: ufs: qcom: Implement the freq_to_gear_speed() vop
+git bisect good c02fe9e222d16bed8c270608c42f77bc62562ac3
+# bad: [eff26ad4c34fc78303c14be749e10ca61c4d211f] scsi: ufs: core: Check if scaling up is required when disable clkscale
+git bisect bad eff26ad4c34fc78303c14be749e10ca61c4d211f
+# bad: [129b44c27c8a51cb74b2f68fde57f2a2e7f5696b] scsi: ufs: core: Enable multi-level gear scaling
+git bisect bad 129b44c27c8a51cb74b2f68fde57f2a2e7f5696b
+# first bad commit: [129b44c27c8a51cb74b2f68fde57f2a2e7f5696b] scsi: ufs: core: Enable multi-level gear scaling
 
+#regzbot introduced 129b44c27c8a51cb74b2f68fde57f2a2e7f5696b
 
-This electronic transmission and any attachments hereto are intended only for the use of the individual or entity to which it is addressed and may contain confidential information belonging to ATTO Technology, Inc. If you have reason to believe that you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or the taking of any action in reliance on the contents of this electronic transmission is strictly prohibited. If you have reason to believe that you have received this transmission in error, please notify ATTO immediately by return e-mail and delete and destroy this communication.   
+Thanks,
+Neil
+
