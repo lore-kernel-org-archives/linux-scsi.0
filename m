@@ -1,109 +1,121 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 347D9C2EF
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2025 01:06:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF02DA29;
+	Fri, 25 Apr 2025 01:42:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745543179; cv=none; b=aAxSWDJzVCBcW+6nOUCBiKLmFQ6lrrLaiq7I7uuUol9TJgdZ2qOChQAxsCEagQUC6kXyOispq1zSpOKfMQAc5cvbk/f8Fg1N45AUx5zYipaG4k2JN6UFWpUqbI4w8qNZ4LgRA2G4WyMGCSWo0N9+VU28edma3kApsLHvZo2hh6M=
+	t=1745545368; cv=none; b=Q0pVcsS2oe4nj8vUISfqE4H6gykq2w4uJ9hswte+9uUiIPXS6zqrkED4FzW6f3KBlvQ8IdBSHQXWlBUx8fNgMvL5lPudjqf2nzDDgM5LXu3djakapl0Dfm/kmUtA2v7ww/6yvmi8kk5JqhLY9eNRx46FEo1RhvQeHeyXydPVKWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745543179; c=relaxed/simple;
-	bh=OwoSkp3cQViO8bEa4eppnRCl8L2XA21diihzW7HL4XI=;
-	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
-	 References; b=dGDIUq4+xNc5bARQ23mPtYb20zSfTS/1aSV/6w0UMNBxFSv8jYEK8C4FKAIcIHUEq0GPkHfEJtomoRw53OLDNKHU+Bzue7vKrQHFq96nA5IEXPDFokx0HVx6JhBsFLkk2+UDUL8j1ln2OEgHg6mf2Z0vp19eWkwhGXNK7cjnD6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=qrLSJ0wY; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1745545368; c=relaxed/simple;
+	bh=0sf7RbNI11kGFaqtAzN6Qtqmzsf5nd2hTi/RJ907nHU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ichz6CmHLvy1RYh/hIxpGiPsn9VGs6dN2smiRWMhBv7spTNR8JShsHTlTP8v8wXMlq/mNuVvoApJmiyw2n7IQoKB/uakaunfDkrJWE6wVRCZ8LWZZPAvUBnHMkS/2NVNLVCfA8DoXcAnae2+80BZn1uEaUsgizHf0E8W0CWVco8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i0bYvJCo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qrLSJ0wY"
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250425010607epoutp0317e58b7ad8082ef7ffaa975b2ef0db62~5akM29g9s0475904759epoutp03i
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2025 01:06:07 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250425010607epoutp0317e58b7ad8082ef7ffaa975b2ef0db62~5akM29g9s0475904759epoutp03i
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1745543167;
-	bh=HFUhzdTXjPIZ5aALh7iKZ0gjHn3kYbyo2kbfpkNH+tE=;
-	h=Subject:Reply-To:From:To:CC:Date:References:From;
-	b=qrLSJ0wYvBAfaqG2G+HAiQ+gKEZREUW3141brLNEj7E07wb8fZVsL7QbU/yj/W0BA
-	 6SrOcysLolIM7TayNHkyrBZgky1dBidgywW1PIWh7nDecwpGvg9vQMRam4GRBpPnMJ
-	 I4z1qftq8NpQzNIBF0W1gliOxcYD5ucr5VEQRqXM=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250425010606epcas2p19bc454ddf344efb0760d1fefd3c4852f~5akML9xY52441524415epcas2p1m;
-	Fri, 25 Apr 2025 01:06:06 +0000 (GMT)
-Received: from epcas2p3.samsung.com (unknown [182.195.36.91]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4ZkF5p34Pcz6B9mC; Fri, 25 Apr
-	2025 01:06:06 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i0bYvJCo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B4FC4CEE3;
+	Fri, 25 Apr 2025 01:42:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745545368;
+	bh=0sf7RbNI11kGFaqtAzN6Qtqmzsf5nd2hTi/RJ907nHU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=i0bYvJCoHPXvm7Ls19ntQEpIG0+ZnCz/E0WmE8x83YRjFnsA9PA7VCmNUevj4MYZA
+	 43+8B+bTTaZ2F2CWl72MHfx5KeQngYEzMPvnAuNqWI6+Y+8fVXE5/3WSidoXOwBYnN
+	 l1Ov4swcvxY8RT0ZLrOzhTWA0aspyIgjctxmbHtDaf9+aoYH3ur6zqwqssGqAqdBDd
+	 htzforAIcxEtC72ZEwZ1P9Lf/G1FNQ5q9v7/P1hNKWREHR/B92zGvdCZ53Sjb1pskf
+	 1Ex/AtaloR1qc/d5PqdWDBSHzX/XpL2la8L6HVeFHL0sHxzPoSN1hQ6+SXpVw85bsR
+	 H1BCweJPgdPfQ==
+Message-ID: <ff2ba1e1-a7bd-49b7-a1f2-e51f5cfed27a@kernel.org>
+Date: Fri, 25 Apr 2025 10:42:46 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: [PATCH] ufs: core: Remove redundant query_complete trace
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From: Keoseong Park <keosung.park@samsung.com>
-To: ALIM AKHTAR <alim.akhtar@samsung.com>, "avri.altman@wdc.com"
-	<avri.altman@wdc.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "peter.wang@mediatek.com"
-	<peter.wang@mediatek.com>, "manivannan.sadhasivam@linaro.org"
-	<manivannan.sadhasivam@linaro.org>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20250425010605epcms2p67e89b351398832fe0fd547404d3afc65@epcms2p6>
-Date: Fri, 25 Apr 2025 10:06:05 +0900
-X-CMS-MailID: 20250425010605epcms2p67e89b351398832fe0fd547404d3afc65
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sd_zbc: Limit the report zones buffer size to
+ UIO_MAXIOV
+To: "Siwinski, Steve" <ssiwinski@atto.com>,
+ Christoph Hellwig <hch@infradead.org>
+Cc: bgrove@atto.com, James.Bottomley@hansenpartnership.com,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, Steve Siwinski <stevensiwinski@gmail.com>
+References: <20250411203600.84477-1-ssiwinski@atto.com>
+ <Z_yinytV0e_BbNrF@infradead.org>
+ <OFA5AB0241.ED5C089D-ON85258C70.0068BDE0-85258C70.00721A7A@atto.com>
+ <8454a55d-bfcc-441a-837e-157123e881fe@kernel.org>
+ <05faf356-0bc7-4fdf-8a74-f738365fad20@atto.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <05faf356-0bc7-4fdf-8a74-f738365fad20@atto.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250425010605epcms2p67e89b351398832fe0fd547404d3afc65
-References: <CGME20250425010605epcms2p67e89b351398832fe0fd547404d3afc65@epcms2p6>
 
-The query_complete trace was not removed after ufshcd_issue_dev_cmd()
-was called from the bsg path, resulting in duplicate output.
+On 4/25/25 00:33, Siwinski, Steve wrote:
+> My issue is not with passthough report zones.
+> 
+> The report zones command is failing on driver load and causing the drive 
+> to fail to appear as a block device. If queue_max_segments is set to a 
+> value over 1024, then nr_vecs in bio_alloc() will be greater than 
+> UIO_MAXIOV and bio_alloc() will return NULL.
 
-Below is an example of the trace:
+OK... A remainder about the path:
 
- ufs-utils-773     [000] .....   218.176933: ufshcd_upiu: query_send: 0000:00:04.0: HDR:16 00 00 1f 00 01 00 00 00 00 00 00, OSF:03 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- ufs-utils-773     [000] .....   218.177145: ufshcd_upiu: query_complete: 0000:00:04.0: HDR:36 00 00 1f 00 01 00 00 00 00 00 00, OSF:03 07 00 00 00 00 00 00 00 00 00 08 00 00 00 00
- ufs-utils-773     [000] .....   218.177146: ufshcd_upiu: query_complete: 0000:00:04.0: HDR:36 00 00 1f 00 01 00 00 00 00 00 00, OSF:03 07 00 00 00 00 00 00 00 00 00 08 00 00 00 00
+sd_zbc_do_report_zones() -> scsi_execute_cmd() -> blk_rq_map_kern() ->
+bio_map_kern() -> bio_kmalloc()
 
-This commit removes the redundant trace call in the bsg path, preventing
-duplication.
+and the fact that bio_kmalloc() does not allow more than UIO_MAXIOV segments
+would have made things clear from the beginning. I had to look it up again to
+understand why UIO_MAXIOV matters.
 
-Signed-off-by: Keoseong Park <keosung.park@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 2 --
- 1 file changed, 2 deletions(-)
+> This causes the error.
+> ```
+> sd 8:0:0:0: [sdb] REPORT ZONES start lba 0 failed
+> sd 8:0:0:0: [sdb] REPORT ZONES: Result: hostbyte=0xff driverbyte=DRIVER_OK
+> sdb: failed to revalidate zones
+> ```
+> 
+> You can reproduce this by setting the max_sgl_entries parameter to 2k or 
+> greater in the mpt3sas driver. Other drivers can also reproduce this 
+> behavior.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index be65fc4b5ccd..c78c7ad4e393 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7271,8 +7271,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 			err = -EINVAL;
- 		}
- 	}
--	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
--				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
- 
- 	return err;
- }
+Well, I think that the problem you uncovered here is a lot more fundamental than
+just ZBC report zones. If the drive has a queue_max_segments() value larger than
+UIO_MAXIOV, any attempt to map a large buffer for any command (e.g. a read) will
+also fail. So this limit inconsistency seems wrong...
+
+Christoph ? Since you were touching the vmalloc-ed BIO mapping code, do you have
+any idea about this ? The quick and dirty fix would be to do:
+
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 7a447ff600d2..3cb897b25878 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -169,6 +169,7 @@ static void *sd_zbc_alloc_report_buffer(struct scsi_disk *sdkp,
+                                        unsigned int nr_zones, size_t *buflen)
+ {
+        struct request_queue *q = sdkp->disk->queue;
++       size_t max_segs;
+        size_t bufsize;
+        void *buf;
+
+@@ -185,7 +186,8 @@ static void *sd_zbc_alloc_report_buffer(struct scsi_disk *sdkp,
+        bufsize = roundup((nr_zones + 1) * 64, SECTOR_SIZE);
+        bufsize = min_t(size_t, bufsize,
+                        queue_max_hw_sectors(q) << SECTOR_SHIFT);
+-       bufsize = min_t(size_t, bufsize, queue_max_segments(q) << PAGE_SHIFT);
++       max_segs = min(queue_max_segments(q), UIO_MAXIOV);
++       bufsize = min_t(size_t, bufsize, max_segs << PAGE_SHIFT);
+
+        while (bufsize >= SECTOR_SIZE) {
+                buf = kvzalloc(bufsize, GFP_KERNEL | __GFP_NORETRY);
+
+
+But that feels wrong...
+
 -- 
-2.25.1
-
+Damien Le Moal
+Western Digital Research
