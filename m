@@ -1,70 +1,70 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1870B2D78A
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2025 19:24:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6842321ABA3
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2025 19:24:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745609082; cv=none; b=ET0MJMDJppoNt1aqkZhMop6oeEDAcpPY9KEnrOw8oHFtF7mL5oSinPDcTSMuQgcxMxedBpLjGuGZivPpJC7rCqut5Ca40j3VN3DchaBbvhup3Mg3jmPSWKoOh96KEcFFFru30tpATY0g2pp6kF/mjyGMS4vt6HAnBTMgSfy3GZo=
+	t=1745609083; cv=none; b=GQtcj/oYKUTfjhbWSF47i3QHSTzk0WMuuE7sYbySOH0taTRMSQCxmWVXeBko6esmfLJbSBLeb1Nwxe7M5uMh+NOcCeJMj912th8aM1eaq//VA7vZbCi6i9jjWAw0t3AMmnDPu0t0oD8VId89SsvzWRDjA5xvrxo1JUbCrZc/H1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745609082; c=relaxed/simple;
-	bh=1vvf2itwTJXKaPDj70/eseYsNtW02QwEwRvoVRybkv4=;
+	s=arc-20240116; t=1745609083; c=relaxed/simple;
+	bh=qvhsYakX6JgB2wOaL3mli39KS2gONNnAWfe0LGCNydM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tXJAKszYzjWuB3afl9hsOqT+Q7YyPFK4QHUr1zgG7OMQyxNAa9ECUT8bUxqwZCqeM7wkyNTWDaGq4q8ACyXv/MB3XcPEUHaiZkI+A5YcPc0sHcJNIqljp0ENPOoOUvzh8fZPPMGQA1Domy1PSthAoohy0olqmaEB+uvPDRrt6NA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Di8P4aPS; arc=none smtp.client-ip=209.85.210.174
+	 MIME-Version; b=QZ71sDQmxGXKzSa402MwbIKm1vt5IArE5OR/qvaBAMYuvFDCBCd07ztUUBsYqk92ttjL+RLjL46/sAnE1KZZTkKBneVXXKeOgH4zBKGM7sLcRjLvcRDdUiQG/o7nUCdp7eyfIHvSVoGm2kDaPCtMArHfWA9dinCCYLxODvkRzOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KMb6C3Ym; arc=none smtp.client-ip=209.85.215.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Di8P4aPS"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-736ab1c43c4so2632152b3a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2025 12:24:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KMb6C3Ym"
+Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-af28bc68846so2711699a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Apr 2025 12:24:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745609080; x=1746213880; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1745609081; x=1746213881; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2zdwHaMdXdc0coCr5oJlzKBFV+fIyFUUnEZCNnt/3dQ=;
-        b=Di8P4aPSAlkJcCI8yGii2zqV6yy+MFF1qSOma56f/0E9dXg1puMGMJ0X8E4YEETVOZ
-         /r1YGQDlyDiNj3vJ9WMW95p3VrYxw1l1X103Isp6EieQfXUDlAPRYQK8TkPOLy3XCOTa
-         dOQWbjSrrZoIs7Bhd8PlxOq8r6D46Uuth+rNl5J4f4KEZ8CX5KP2XdEi20OLccC70SKE
-         vYGIJdaQYxnaLdOH3r5luaIyNOG0NzZyIm5WfUeZeJaVCCo1zUOlyIKy/3AFKfdLblzX
-         UyfsI15+4iOG52B3w+GcfDsv5MedQRjXGVUyPDgyf0UMilN6RkR15qUNwPgcX5avMn7T
-         8ADg==
+        bh=lwLKbuH1u4DOJ4WgIiHlObhAF3vMim37u5MBOFqmh9E=;
+        b=KMb6C3Ymk+HUdz/02uDMj0DWiwcLBjn/If4wr2Unb7E/uFA5bM+hBGqrtSkwMPt2og
+         mwEHP3W4n6fLT4y8JAsn7A5jB6/fjfWkCCKDkH/YVtKb2GGxXF1hn+cTJzcJ1XmdlDpG
+         pNE8Tn06/61jKaJGqvfQzKSpcfkgZ6ztCP1RNBXzsD7xSKerp8y/qfFb/2vBragCvURt
+         ol4Z7s4seHaEeo9hMh8Uq9pHb46m+Y9v0pcy4m+lN1EbBOme7A4mjKKTtPzuP2/0Huv2
+         +buPiHJJ60TsBaapGCUOkGTiADkB2jhOsmt0oDZMzmmE4XEgwl8sWo8z/69pgBvMfl0S
+         grlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745609080; x=1746213880;
+        d=1e100.net; s=20230601; t=1745609081; x=1746213881;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2zdwHaMdXdc0coCr5oJlzKBFV+fIyFUUnEZCNnt/3dQ=;
-        b=a9KoZ17sNmR7cR2M90xbB8fHO04dmbPjmV/8dc/th+k6Bv+0726x1bSq1C3cbh1Ozm
-         16cjEBhvJJC/q1RcEsTB/FQJDRW5Z1ns++HEVkFIUCXvxdF1kuZt/1kzuxWwul/5nb47
-         B6AZd4tzC1PnKIDlcGuCFKk7/R7FSrXP3Bh1Oou/PhDCUrUBbmBBTgks1wGZlQMEtYxZ
-         CXVT9fpycLhExte6HbCldyLT3kdrt7QOdGfNg2alZmI2TUo+NKge4my91nA07WpD7qje
-         FGvj6Zo5OVG+0hAyxxuErNtUC4OZ0ceO2+YfpPWhOzuysPHlCg2tZTSKyY9uskBAxB/4
-         3vxQ==
-X-Gm-Message-State: AOJu0Yx1tlPPsLi2lPhfT7UPhpqpJq8FoT4nlZLn8EihnxnhHJzKa22Y
-	pDec3XtR7TxypiCQCWKNP61wBAE98QvoZZEAUU9L0Obl/k7n0RPVT9e5/w==
-X-Gm-Gg: ASbGncs/v/PwLoaqb4+HDW/pKoFy+QHKIT92+uN5zisZfQQLe9qEdQT/O+NdOrsHUpe
-	fA+qADTHyJwYG5M01f6cTdHBQih7X9rVgn9ArMA8F+i3TMAdeVEk/c/pecLPPtbVe5CW9XU0+su
-	xir1yQPOS7VnfKc0GJQIhavcXTqvIwVOQbsIEhlBB0AKmleo4Q62OEABKJl59OedznQ8RK/fM7U
-	/qbFnuUUun/t8t51P6TrdDdipkuRrtCIkVlF77RBbtm5hmIIry6w3GneuDNJDqoxzWvUZF2K8DZ
-	cL7OqHERjYbwG0jm2Y3eEV0OPIa1cXSeKlCdf+xwZDYzzdElPFs0x7affM2IZ9vSWhxSlg271Ip
-	yAtyGlh/zvN0fiXm4iFq78dpVhg==
-X-Google-Smtp-Source: AGHT+IHO9bVmoIiuuHpGwkzXw2KQf41cMoti7Va/NWvMAJsyYPhmlzu88WkTsjswHCnmkFW49KIqBQ==
-X-Received: by 2002:a05:6a00:b8a:b0:730:9752:d02a with SMTP id d2e1a72fcca58-73ff7255affmr867828b3a.4.1745609080166;
-        Fri, 25 Apr 2025 12:24:40 -0700 (PDT)
+        bh=lwLKbuH1u4DOJ4WgIiHlObhAF3vMim37u5MBOFqmh9E=;
+        b=GkO0+cP0aH2KND5ZWuFadOUvnxwNb9eixyp50Q1OXzQdwiR2Mod4SXM9WmywpKX3N9
+         AZ9mZZS8gRQV+XrykqVFd/2GRZhkg8MkfK2dv1aaDy12djMmnAkXtpnZBJZFgAEaN1HF
+         FmW8YtsYu4LkaedXhEFaIRNrlTvGdiFpif8Jz65iIdVOwn+OmpvT2c9i8BA3VfduZeG+
+         4Kk9ZPDGl4aYmQRg8tr0DLLyraqQlt8CEWRntSJCN8QthDzGM7L60FRUypLfE9n8lv9D
+         Tkdt4qioI9Wj8KmtMyXFvg+lz99+z4J7G0UhzugTePKUlTwb2jfueF61/wP6hUrkIU8E
+         ztAw==
+X-Gm-Message-State: AOJu0YwriRl27fkXioZO4JZMmCKcpkOL5kPilTJ5VgNdc4w5bfatE98e
+	urWfevyVyaFgdyaq21Lue4LNc9aGYXNkYnROimx3oMGIZ7VpcIWIkt8JOA==
+X-Gm-Gg: ASbGncsOV0p1/IdXx7YxVz5oGd+LOjNejISwZ9oGI7JvWiJ1zq13Sk165Z0rywG9bmP
+	F+Wh16O3MIst8+fCr43X3NV1oJFLP5zNPrivbNsdF20kCKBxBhs1ogrVPZLwLfGNE9Wrk99ysdm
+	Mxv6Jp97nz37jtPeqLQXA+b7xddzvlGUB/xcgYjbhiRCjNvl56AOpfjKF8g2DgH87xhxjzFuZUH
+	0hvz/W6cyollkwn1UWERNVFDydULixCrgnvwK94Rv11E0n5VFmzm0a8FsEW+8VYUKemCvtLl8dv
+	XXLkZvGJJb+SG+40DUcH/zgMn9u114ALCqa0WSMTSh7QmS7x62TLh/1Uas8APUVf+BHqG1t26kI
+	/9Eoxm+8Nj2GTAMfOvmzc/C3VUw==
+X-Google-Smtp-Source: AGHT+IFD/JTewTY6S2RStQw3A/FsuJI9bqCf0p0S9M2cW4MMZtV2k3DG6EgAYKIQhaesYqriuF6hmQ==
+X-Received: by 2002:a05:6a21:62c2:b0:1f5:8de8:3b27 with SMTP id adf61e73a8af0-2045b6f203amr5696040637.14.1745609081523;
+        Fri, 25 Apr 2025 12:24:41 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73e25a6a649sm3667513b3a.109.2025.04.25.12.24.39
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73e25a6a649sm3667513b3a.109.2025.04.25.12.24.40
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 25 Apr 2025 12:24:39 -0700 (PDT)
+        Fri, 25 Apr 2025 12:24:41 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 3/8] lpfc: Restart eratt_poll timer if HBA_SETUP flag still unset
-Date: Fri, 25 Apr 2025 12:48:01 -0700
-Message-Id: <20250425194806.3585-4-justintee8345@gmail.com>
+Subject: [PATCH 4/8] lpfc: Prevent failure to reregister with NVME transport after PRLI retry
+Date: Fri, 25 Apr 2025 12:48:02 -0700
+Message-Id: <20250425194806.3585-5-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20250425194806.3585-1-justintee8345@gmail.com>
 References: <20250425194806.3585-1-justintee8345@gmail.com>
@@ -74,67 +74,63 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Reschedule the eratt_poll timer if the HBA_SETUP flag isn’t set yet.  The
-eratt_poll timer should only be cancelled if FC_UNLOADING flag is set or if
-lpfc_stop_hba_timers is called as part of error, reset, or offline
-handling.
+A failure to unregister with the NVMe transport may occur when a PRLI is
+retried.
+
+Remove duplicate testing of NLP_NVME_TARGET flag. Add a secondary check of
+the registered state based on the nrport information.  Further qualify the
+ndlp reference count modification when nvme_fc_register_remoteport returns
+an error.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 24 +++++++++++++++++-------
- 1 file changed, 17 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 4 +---
+ drivers/scsi/lpfc/lpfc_nvme.c    | 8 ++++++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a335d34070d3..b582728d9e48 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3926,12 +3926,19 @@ void lpfc_poll_eratt(struct timer_list *t)
- 	uint64_t sli_intr, cnt;
- 
- 	phba = from_timer(phba, t, eratt_poll);
--	if (!test_bit(HBA_SETUP, &phba->hba_flag))
--		return;
- 
- 	if (test_bit(FC_UNLOADING, &phba->pport->load_flag))
- 		return;
- 
-+	if (phba->sli_rev == LPFC_SLI_REV4 &&
-+	    !test_bit(HBA_SETUP, &phba->hba_flag)) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+				"0663 HBA still initializing 0x%lx, restart "
-+				"timer\n",
-+				phba->hba_flag);
-+		goto restart_timer;
-+	}
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index b5273cb1adbd..9e585af05bec 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -4695,9 +4695,7 @@ lpfc_nlp_unreg_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	if (ndlp->fc4_xpt_flags & NVME_XPT_REGD) {
+ 		vport->phba->nport_event_cnt++;
+ 		if (vport->phba->nvmet_support == 0) {
+-			/* Start devloss if target. */
+-			if (ndlp->nlp_type & NLP_NVME_TARGET)
+-				lpfc_nvme_unregister_port(vport, ndlp);
++			lpfc_nvme_unregister_port(vport, ndlp);
+ 		} else {
+ 			/* NVMET has no upcall. */
+ 			lpfc_nlp_put(ndlp);
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index b1adb9f59097..9d61e1251a2f 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -2508,7 +2508,10 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 				 "6031 RemotePort Registration failed "
+ 				 "err: %d, DID x%06x ref %u\n",
+ 				 ret, ndlp->nlp_DID, kref_read(&ndlp->kref));
+-		lpfc_nlp_put(ndlp);
 +
- 	/* Here we will also keep track of interrupts per sec of the hba */
- 	sli_intr = phba->sli.slistat.sli_intr;
++		/* Only release reference if one was taken for this request */
++		if (!oldrport)
++			lpfc_nlp_put(ndlp);
+ 	}
  
-@@ -3950,13 +3957,16 @@ void lpfc_poll_eratt(struct timer_list *t)
- 	/* Check chip HA register for error event */
- 	eratt = lpfc_sli_check_eratt(phba);
+ 	return ret;
+@@ -2614,7 +2617,8 @@ lpfc_nvme_unregister_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	 * clear any rport state until the transport calls back.
+ 	 */
  
--	if (eratt)
-+	if (eratt) {
- 		/* Tell the worker thread there is work to do */
- 		lpfc_worker_wake_up(phba);
--	else
--		/* Restart the timer for next eratt poll */
--		mod_timer(&phba->eratt_poll,
--			  jiffies + secs_to_jiffies(phba->eratt_poll_interval));
-+		return;
-+	}
-+
-+restart_timer:
-+	/* Restart the timer for next eratt poll */
-+	mod_timer(&phba->eratt_poll,
-+		  jiffies + secs_to_jiffies(phba->eratt_poll_interval));
- 	return;
- }
- 
+-	if (ndlp->nlp_type & NLP_NVME_TARGET) {
++	if ((ndlp->nlp_type & NLP_NVME_TARGET) ||
++	    (remoteport->port_role & FC_PORT_ROLE_NVME_TARGET)) {
+ 		/* No concern about the role change on the nvme remoteport.
+ 		 * The transport will update it.
+ 		 */
 -- 
 2.38.0
 
