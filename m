@@ -1,163 +1,124 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F6D022068B;
-	Fri, 25 Apr 2025 20:23:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E9F195FE8;
+	Sat, 26 Apr 2025 00:28:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745612635; cv=none; b=kg/vk3SL3nZfvQmSrjNXyjLP3sblcs+5QNDkE5LgYE0M06Leu0SmGfFtO5IsGSme7I0H63MinDcssjcj4ul5yJz9WYm5UZZWfKl5aBdIZZWVdK1Uai2dkZmLOcdJd86L1cylUhEZfsE3Hh2ymVVcBk9JGbVFGVHSQV/lqoyGm5s=
+	t=1745627325; cv=none; b=VedUD6CmC0h1BR/z8NvSB+5cS8rzSEPRKSJ9qqZATPXx4H8Cx1tikUS+oUjnHDZsnk1TV5OBQegvEEbYcQioNTwts+xIwNqa7TKG9LW9vPc9kSMDJ3+MoQd7fYntor6P6l6hX2P9Jw4bI9bPiUQUEtx/s7qvV5EgeemrPkDBVr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745612635; c=relaxed/simple;
-	bh=fFcoNC3wwJ0Lu5h30CTNGVUIXvy6TKiZTNXR8Bhuzls=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=d8a4Na6sCC691goh0ULUQ3hweN0tcRFUjYoqfxjUkJjEsvU1K7v3f51V2qCceYPgIjCpau9gCFs6ZL4H5W9Hn7SDIzIfYlUj4gMgiq9RhdOf0hvPi+7cpM6O5MeOVjThErlbfyHW9QUtcbYBm41iANk/AjF2uBfjDBB8hBDGULc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=QgoWR/5G; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1745627325; c=relaxed/simple;
+	bh=qVL6+OeT+QqtZBPwSfTpScoMcCLCzuOUEEkiIXS1aXE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=GVm7X01pnZQ+gfoOcXVvnOUbR3tVtrO8PiYj0D9ypjNrSM354SaEzZSeXERIAwk/4EbA/h3ebPYO6kazwc1CT/no1ELfoTRuzODo3tgyaTltcTLPOpINXqoJryekpw5DHEJUlaZgozVWlUCvsa9Y7cMZQDGXYJETuAR77fNW4Tw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Af5qnEuf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="QgoWR/5G"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53PGJuSZ024795;
-	Fri, 25 Apr 2025 20:23:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/KDwDEpdnUNXRKrqruKzxT8foB1gE1Od/isNWuMdQt4=; b=QgoWR/5Gsg3wamjI
-	c5bhzpaYD4wbByWq7WwPw3I6Nd2Kk8MsXRZ7/CB4+Mix1peWzRUo/TV2KraFyx5t
-	gJ7C3wH4t3OPBJIsTzC2kUpfvlmlxqhI+/ElSbt7PdwW3D8BtUDdPgU5sHh8h1Sm
-	abafLHHf9O2zmRtXQZVz60qN1Mb6mcYxkKbenqBKqQ7Ht6ud4WIyOcdJVhKV0967
-	XO7l8fGCHnxtKeMHvIwS8QqtBp2kcbqjfECXb2FxzHuTFNscKr7YNaibbt3p64JI
-	oP4lXMoklvz6fKIjzENY6NihJPrZFbwBHnb14rTut3r4sHmnbo5zKvP/RISCWi5f
-	0jtFWA==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 466jh0t35f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Apr 2025 20:23:03 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53PKN2P8007707
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Apr 2025 20:23:02 GMT
-Received: from [10.216.35.110] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 25 Apr
- 2025 13:22:56 -0700
-Message-ID: <c95c2750-0431-42de-b881-d139d8697d0e@quicinc.com>
-Date: Sat, 26 Apr 2025 01:52:51 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Af5qnEuf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F016C4CEE4;
+	Sat, 26 Apr 2025 00:28:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745627324;
+	bh=qVL6+OeT+QqtZBPwSfTpScoMcCLCzuOUEEkiIXS1aXE=;
+	h=Date:From:To:Cc:Subject:From;
+	b=Af5qnEuftPrIBkc6UH1ws6Es/6AfLRvupANuHQkVnYbF7i+Sg8FdhiwkcT+CMNJFy
+	 AxsoIR8zc8SHZyWUIHih1BchHGuBMl2RXyCuS4hFZlUIqvgnsJyAYjjj97cLLYDHjv
+	 6SpYH7q7fzwBIdKa4uxp6Mn3RIDC8+U1plnYz188keGJdLImO/+F331azTwwKxD7Xw
+	 mLuMsDgA6u1vcXJislbno+g4GUSYl4lAjZnoIyTqOrRaV4EWqqdwx8O6cZd6D/CSHx
+	 vMIReQ0pBV8SGyBQLSU9wp7n9PrIYfpQ+OSyfaxEaJVAHbn9bI1o7vwDbKLz00Jox9
+	 4absD56v1ErhQ==
+Date: Fri, 25 Apr 2025 18:28:35 -0600
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH][next] scsi: sd: Avoid -Wflex-array-member-not-at-end warning
+Message-ID: <aAwos0mLxneG9R_t@kspp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 3/3] scsi: ufs: qcom: Add support to disable UFS LPM
- Feature
-To: Rob Herring <robh@kernel.org>
-CC: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-        <krzk+dt@kernel.org>, <mani@kernel.org>, <conor+dt@kernel.org>,
-        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <peter.wang@mediatek.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-References: <20250417124645.24456-1-quic_nitirawa@quicinc.com>
- <20250417124645.24456-4-quic_nitirawa@quicinc.com>
- <20250422124546.GB896279-robh@kernel.org>
- <06c6c892-c597-4d1f-9d28-52455d6471f9@quicinc.com>
- <20250423135617.GA227946-robh@kernel.org>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20250423135617.GA227946-robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: pWmrqGJDax6wB5I_8t4HiPwV4eeTKIF6
-X-Authority-Analysis: v=2.4 cv=ftfcZE4f c=1 sm=1 tr=0 ts=680bef27 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=JAHMj9Iui1wunJY2B10A:9 a=QEXdDO2ut3YA:10
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: pWmrqGJDax6wB5I_8t4HiPwV4eeTKIF6
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDI1MDE0NiBTYWx0ZWRfX23ofCbnAqL4N WQdHyWamX3ZiYeon8PkiwjHc7p62GDOXrDmyFU6hwKpsz9uCnae3ikSA0pRNYZlwj6lecF56wGV p+vk2HA9diGZ0hYldU3wsuzcQ5uHeaYT0HzepTX7DVdxnaw//UAhh0rWB9nadUTXD47GpkH/ZyX
- ecw6qWBG5gt4C8EWAc0v9o0aOs/PPQDcKcGAFM0jA/oN03QMPW1u7qy3ZDNsp7i4LNcrw7e28z7 pjIB1VYwQ4k+ArPnzZPaHQfr6nZbDv8ozSFgsBZ74jtYgie+IVDTnkxHcffApFccrz2BLjwWJTJ 12N5cTpcTpYAq1aOZMYOf2QMwH2qUvFg9aiATZamnS601DybHHDAyYD+dHMBVjjuRpfrUCp17rB
- jKrRVsZg7SG5Lq4Bf3nL/CsHNbLCI75rHLhq56cn/Rs9npL2g+2B7RhFZFImsVTrVkTGhMYt
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-04-25_06,2025-04-24_02,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxscore=0
- suspectscore=0 mlxlogscore=999 lowpriorityscore=0 phishscore=0
- malwarescore=0 impostorscore=0 adultscore=0 spamscore=0 clxscore=1015
- priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
- definitions=main-2504250146
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+-Wflex-array-member-not-at-end was introduced in GCC-14, and we are
+getting ready to enable it, globally.
 
+Use the `DEFINE_RAW_FLEX()` helper for on-stack definitions of
+a flexible structure where the size of the flexible-array member
+is known at compile-time, and refactor the rest of the code,
+accordingly.
 
-On 4/23/2025 7:26 PM, Rob Herring wrote:
-> On Wed, Apr 23, 2025 at 01:14:27AM +0530, Nitin Rawat wrote:
->>
->>
->> On 4/22/2025 6:15 PM, Rob Herring wrote:
->>> On Thu, Apr 17, 2025 at 06:16:45PM +0530, Nitin Rawat wrote:
->>>> There are emulation FPGA platforms or other platforms where UFS low
->>>> power mode is either unsupported or power efficiency is not a critical
->>>> requirement.
->>>>
->>>> Disable all low power mode UFS feature based on the "disable-lpm" device
->>>> tree property parsed in platform driver.
->>>>
->>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->>>> ---
->>>>    drivers/ufs/host/ufs-qcom.c | 15 ++++++++-------
->>>>    1 file changed, 8 insertions(+), 7 deletions(-)
->>>>
->>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>>> index 1b37449fbffc..1024edf36b68 100644
->>>> --- a/drivers/ufs/host/ufs-qcom.c
->>>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>> @@ -1014,13 +1014,14 @@ static void ufs_qcom_set_host_caps(struct ufs_hba *hba)
->>>>
->>>>    static void ufs_qcom_set_caps(struct ufs_hba *hba)
->>>>    {
->>>> -	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
->>>> -	hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
->>>> -	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
->>>> -	hba->caps |= UFSHCD_CAP_WB_EN;
->>>> -	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->>>> -	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
->>>> -
->>>> +	if (!hba->disable_lpm) {
->>>> +		hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
->>>> +		hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
->>>> +		hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
->>>> +		hba->caps |= UFSHCD_CAP_WB_EN;
->>>> +		hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
->>>> +		hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
->>>> +	}
->>>
->>> Doesn't RuntimePM already have userspace controls? And that's a Linux
->>> feature that shouldn't really be controlled by DT. I think this property
->>> should still to things defined by the UFS spec.
->>
->> Hi Rob,
->> Yes userspace has runtime PM control but by the time UFS driver probes
->> completes and userspace is up, there are chances runtime PM may get kicked
->> in.
-> 
-> That sounds like a problem more than 1 device would have...
+Also, there is no need to use the DECLARE_FLEX_ARRAY() helper.
+Replace it with a regular flexible-array member declaration
+instead.
 
-Yes, Rob, since there's a possibility that runtime suspend might be 
-triggered for some devices before probe completes and userspace is up, 
-IMO it's better to disable the runtime PM capability during 
-initialization based on the device tree for specific FPGA platforms that 
-don't support LPM.
+So, with these changes, fix the following warning:
 
-What's your opinion on this?"
+drivers/scsi/sd.c:3195:50: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
 
-Regards,
-Nitin
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/scsi/sd.c         | 13 +++++--------
+ include/scsi/scsi_proto.h |  2 +-
+ 2 files changed, 6 insertions(+), 9 deletions(-)
 
-
-
-> 
-> Rob
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 950d8c9fb884..aa15b1085235 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3191,10 +3191,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
+ {
+ 	u8 cdb[16] = { SERVICE_ACTION_IN_16, SAI_GET_STREAM_STATUS };
+-	struct {
+-		struct scsi_stream_status_header h;
+-		struct scsi_stream_status s;
+-	} buf;
++	DEFINE_RAW_FLEX(struct scsi_stream_status_header, buf, stream_status, 1);
+ 	struct scsi_device *sdev = sdkp->device;
+ 	struct scsi_sense_hdr sshdr;
+ 	const struct scsi_exec_args exec_args = {
+@@ -3203,9 +3200,9 @@ static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
+ 	int res;
+ 
+ 	put_unaligned_be16(stream_id, &cdb[4]);
+-	put_unaligned_be32(sizeof(buf), &cdb[10]);
++	put_unaligned_be32(__struct_size(buf), &cdb[10]);
+ 
+-	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, &buf, sizeof(buf),
++	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, buf, __struct_size(buf),
+ 			       SD_TIMEOUT, sdkp->max_retries, &exec_args);
+ 	if (res < 0)
+ 		return false;
+@@ -3213,9 +3210,9 @@ static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
+ 		sd_print_sense_hdr(sdkp, &sshdr);
+ 	if (res)
+ 		return false;
+-	if (get_unaligned_be32(&buf.h.len) < sizeof(struct scsi_stream_status))
++	if (get_unaligned_be32(&buf->len) < sizeof(struct scsi_stream_status))
+ 		return false;
+-	return buf.h.stream_status[0].perm;
++	return buf->stream_status[0].perm;
+ }
+ 
+ static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index aeca37816506..0ae7adc8a5db 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -349,7 +349,7 @@ struct scsi_stream_status_header {
+ 	__be32 len;	/* length in bytes of stream_status[] array. */
+ 	u16 reserved;
+ 	__be16 number_of_open_streams;
+-	DECLARE_FLEX_ARRAY(struct scsi_stream_status, stream_status);
++	struct scsi_stream_status stream_status[];
+ };
+ 
+ static_assert(sizeof(struct scsi_stream_status_header) == 8);
+-- 
+2.43.0
 
