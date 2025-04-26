@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E93F6FC3;
-	Sat, 26 Apr 2025 06:19:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A469712E1CD;
+	Sat, 26 Apr 2025 06:20:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745648396; cv=none; b=OmacnC9pdn3OUXJwi1NzvK102j6YdANPj+tOP3pn35DfrYCqMJNfBasB2uF22x9kV1smD+x+8tTN+M1EkRIn5/tYWM7TZbPbyiwQVN+bFNwA+7zwUBimWxbPVwJb4JGB7aT/8Q2pmh35pcvjEzKrKFrTJgUbBZD4giBUKv+Gp3U=
+	t=1745648415; cv=none; b=kVucguOjcdc3huU0rLgENTmnexYlQ4e2Wz0tuulCbFAhKDVL65sBMHBvM6K4N+Djk5bXcq0GquER8cQI/hPiD2nDnNRr9cZDPoSXetqeWIZUjBkRKD0tdKW56mZ7t1nOqVo1xpWH1ac5n5xWisMk4CAtrfphc+u3XmlSxJDYuIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745648396; c=relaxed/simple;
-	bh=x+wjGCxq6CdZEfzj11+IBzAkoE449GT6JMAUDrUw0OU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oE4hKkZlk+4HPavs/bb2ekbwxbhOsD4o68WgcAMUdl0VGwWadoZT/sWwKvysvi/703A4ANEaovSk1yyGHCitRu5b93w+W1VaI5YySMsIu0YrWlZ0euH9tjvXaW96e8jieV+3FaWpuACJrtR8ZseYk/UYzNuPkfHUV5WDwnYD7Jo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=np/IU0g7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745648415; c=relaxed/simple;
+	bh=mTSjaJNevtGX41DDFhx2Fl+zfoCRVGyVKVL44QAREPE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mwnH+Vd+Huv43TfxQqSXXtDxlwxSKGKFFXi+avm2M1sjAOB3cVAdEi/xgGX81YCZDyhlHOhu/+W/279auMthlpCVAuTLY1Qsz/qqtknA3fD1WgtZxdLZubayYYrdj4fDlH/vDm58QA32UIro2zRLve701K651zPzYCfmBwKcXeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BIC9Y3ns; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="np/IU0g7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00781C4CEE2;
-	Sat, 26 Apr 2025 06:19:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BIC9Y3ns"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A257C4CEE2;
+	Sat, 26 Apr 2025 06:20:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745648396;
-	bh=x+wjGCxq6CdZEfzj11+IBzAkoE449GT6JMAUDrUw0OU=;
+	s=k20201202; t=1745648415;
+	bh=mTSjaJNevtGX41DDFhx2Fl+zfoCRVGyVKVL44QAREPE=;
 	h=From:To:Cc:Subject:Date:From;
-	b=np/IU0g7FT3imZCnYT5lawGi45+ka2Uay8DuA+dvxERUE9O7gkCYbQxEGkUpAQb9t
-	 w3HUORylDb3DyFi2BoYHTPt2vJpmC9PC3Hwe1I8mb0PF6vqEF9ZH/K6hpPTXAhMyFm
-	 0XvPEg1yLtWZRWIYuLnDDvZxgqWPbvi8668p9K29aojMo9PujgsMZePyB3u7aI7ztz
-	 xG4hyDU+YYAU2bCCOUtSkotZQEXRxqnJfV7WoBec7aYWF2hEXCrERM7JX7cKFYeu3w
-	 tfcZAJW6MhVqvP8d4pU8GOl/5paUA4fiHXvqFYS4IpFIVO/bb8mWm1oeXBpU+a6OEd
-	 rZ/QjRmhsYAOA==
+	b=BIC9Y3ns9rbQL+kMzXgUkqlqXCYRHPB6t++NHCTsRYVlYTL/9/zemAh3QawGlIemo
+	 qedi8Ne1uPlwuR8YGLRwoygSG0gY9LR9tQ2Wk6ioLKcsum3mt3oxfxfgzeBdfcz/9a
+	 Z88MioaW/JVBBQu3CX/wDZPpPS2Gx4cqO544sC4AEfVz8rC8pjVIF9kvKg/eWQBcFs
+	 0H0GzB1eXRGF5pMSNMV5N9Za6Y5B3srpN8+QM9N6yvurUcqvjwekWQpz/mvnFNDmd5
+	 ZeMWFihYrJBQ6wcvq+eLJccBNh/Zf42AZwBOkfU58vItSFJgqjPoh4wzEHs+UKengy
+	 JKDhBXRc/fIeg==
 From: Kees Cook <kees@kernel.org>
 To: Nilesh Javali <njavali@marvell.com>
 Cc: Kees Cook <kees@kernel.org>,
+	Manish Rangankar <mrangankar@marvell.com>,
 	GR-QLogic-Storage-Upstream@marvell.com,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH] scsi: qla2xxx: Remove duplicate struct crb_addr_pair
-Date: Fri, 25 Apr 2025 23:19:52 -0700
-Message-Id: <20250426061951.work.272-kees@kernel.org>
+Subject: [PATCH] scsi: qla4xxx: Remove duplicate struct crb_addr_pair
+Date: Fri, 25 Apr 2025 23:20:11 -0700
+Message-Id: <20250426062010.work.878-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -44,7 +45,7 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1373; i=kees@kernel.org; h=from:subject:message-id; bh=x+wjGCxq6CdZEfzj11+IBzAkoE449GT6JMAUDrUw0OU=; b=owGbwMvMwCVmps19z/KJym7G02pJDBk81eyal94sbD/Hv2iPyusPfkKNT6fm1Nk+Spwml3LUc cEmdiWnjlIWBjEuBlkxRZYgO/c4F4+37eHucxVh5rAygQxh4OIUgIkwaDMybPNTZFzL+1ZAfEEr Q/36vImHYq98TzONbcs72NkYfv3iTUaGqWnFdrevnV6yaX1mnMA1LTUTWXnuc0Es7kzdFuYem/x YAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1423; i=kees@kernel.org; h=from:subject:message-id; bh=mTSjaJNevtGX41DDFhx2Fl+zfoCRVGyVKVL44QAREPE=; b=owGbwMvMwCVmps19z/KJym7G02pJDBk81dKW71XbX+2fe2nKGiWP9+sECvPta/b06HXL7vv7O V5e0FCso5SFQYyLQVZMkSXIzj3OxeNte7j7XEWYOaxMIEMYuDgFYCJ/lzH8j+ntFZjd8PaZ/A2/ i8v+1sTU9bG8nnr5lkZQbOvqT0+CHzMyPEi4VrSyqfnWSv8dL6xLpG0+HX538XyC8cnd+s91FoQ HMAEA
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
@@ -60,29 +61,30 @@ stumped me for a bit. :) Drop the redundant declaration.
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
 Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Manish Rangankar <mrangankar@marvell.com>
 Cc: <GR-QLogic-Storage-Upstream@marvell.com>
 Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: <linux-scsi@vger.kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_nx.c | 5 -----
+ drivers/scsi/qla4xxx/ql4_nx.c | 5 -----
  1 file changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 6dfb70edb9a6..470fe1d38973 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -1099,11 +1099,6 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 47adff9f0506..da2fc66ffedd 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -973,11 +973,6 @@ qla4_82xx_pinit_from_rom(struct scsi_qla_host *ha, int verbose)
+ 	unsigned long off;
  	unsigned offset, n;
- 	struct qla_hw_data *ha = vha->hw;
  
 -	struct crb_addr_pair {
 -		long addr;
 -		long data;
 -	};
 -
- 	/* Halt all the individual PEGs and other blocks of the ISP */
- 	qla82xx_rom_lock(ha);
+ 	/* Halt all the indiviual PEGs and other blocks of the ISP */
+ 	qla4_82xx_rom_lock(ha);
  
 -- 
 2.34.1
