@@ -1,124 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E9F195FE8;
-	Sat, 26 Apr 2025 00:28:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E93F6FC3;
+	Sat, 26 Apr 2025 06:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745627325; cv=none; b=VedUD6CmC0h1BR/z8NvSB+5cS8rzSEPRKSJ9qqZATPXx4H8Cx1tikUS+oUjnHDZsnk1TV5OBQegvEEbYcQioNTwts+xIwNqa7TKG9LW9vPc9kSMDJ3+MoQd7fYntor6P6l6hX2P9Jw4bI9bPiUQUEtx/s7qvV5EgeemrPkDBVr4=
+	t=1745648396; cv=none; b=OmacnC9pdn3OUXJwi1NzvK102j6YdANPj+tOP3pn35DfrYCqMJNfBasB2uF22x9kV1smD+x+8tTN+M1EkRIn5/tYWM7TZbPbyiwQVN+bFNwA+7zwUBimWxbPVwJb4JGB7aT/8Q2pmh35pcvjEzKrKFrTJgUbBZD4giBUKv+Gp3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745627325; c=relaxed/simple;
-	bh=qVL6+OeT+QqtZBPwSfTpScoMcCLCzuOUEEkiIXS1aXE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=GVm7X01pnZQ+gfoOcXVvnOUbR3tVtrO8PiYj0D9ypjNrSM354SaEzZSeXERIAwk/4EbA/h3ebPYO6kazwc1CT/no1ELfoTRuzODo3tgyaTltcTLPOpINXqoJryekpw5DHEJUlaZgozVWlUCvsa9Y7cMZQDGXYJETuAR77fNW4Tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Af5qnEuf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745648396; c=relaxed/simple;
+	bh=x+wjGCxq6CdZEfzj11+IBzAkoE449GT6JMAUDrUw0OU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oE4hKkZlk+4HPavs/bb2ekbwxbhOsD4o68WgcAMUdl0VGwWadoZT/sWwKvysvi/703A4ANEaovSk1yyGHCitRu5b93w+W1VaI5YySMsIu0YrWlZ0euH9tjvXaW96e8jieV+3FaWpuACJrtR8ZseYk/UYzNuPkfHUV5WDwnYD7Jo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=np/IU0g7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Af5qnEuf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F016C4CEE4;
-	Sat, 26 Apr 2025 00:28:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="np/IU0g7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00781C4CEE2;
+	Sat, 26 Apr 2025 06:19:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745627324;
-	bh=qVL6+OeT+QqtZBPwSfTpScoMcCLCzuOUEEkiIXS1aXE=;
-	h=Date:From:To:Cc:Subject:From;
-	b=Af5qnEuftPrIBkc6UH1ws6Es/6AfLRvupANuHQkVnYbF7i+Sg8FdhiwkcT+CMNJFy
-	 AxsoIR8zc8SHZyWUIHih1BchHGuBMl2RXyCuS4hFZlUIqvgnsJyAYjjj97cLLYDHjv
-	 6SpYH7q7fzwBIdKa4uxp6Mn3RIDC8+U1plnYz188keGJdLImO/+F331azTwwKxD7Xw
-	 mLuMsDgA6u1vcXJislbno+g4GUSYl4lAjZnoIyTqOrRaV4EWqqdwx8O6cZd6D/CSHx
-	 vMIReQ0pBV8SGyBQLSU9wp7n9PrIYfpQ+OSyfaxEaJVAHbn9bI1o7vwDbKLz00Jox9
-	 4absD56v1ErhQ==
-Date: Fri, 25 Apr 2025 18:28:35 -0600
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	s=k20201202; t=1745648396;
+	bh=x+wjGCxq6CdZEfzj11+IBzAkoE449GT6JMAUDrUw0OU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=np/IU0g7FT3imZCnYT5lawGi45+ka2Uay8DuA+dvxERUE9O7gkCYbQxEGkUpAQb9t
+	 w3HUORylDb3DyFi2BoYHTPt2vJpmC9PC3Hwe1I8mb0PF6vqEF9ZH/K6hpPTXAhMyFm
+	 0XvPEg1yLtWZRWIYuLnDDvZxgqWPbvi8668p9K29aojMo9PujgsMZePyB3u7aI7ztz
+	 xG4hyDU+YYAU2bCCOUtSkotZQEXRxqnJfV7WoBec7aYWF2hEXCrERM7JX7cKFYeu3w
+	 tfcZAJW6MhVqvP8d4pU8GOl/5paUA4fiHXvqFYS4IpFIVO/bb8mWm1oeXBpU+a6OEd
+	 rZ/QjRmhsYAOA==
+From: Kees Cook <kees@kernel.org>
+To: Nilesh Javali <njavali@marvell.com>
+Cc: Kees Cook <kees@kernel.org>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: sd: Avoid -Wflex-array-member-not-at-end warning
-Message-ID: <aAwos0mLxneG9R_t@kspp>
+Subject: [PATCH] scsi: qla2xxx: Remove duplicate struct crb_addr_pair
+Date: Fri, 25 Apr 2025 23:19:52 -0700
+Message-Id: <20250426061951.work.272-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1373; i=kees@kernel.org; h=from:subject:message-id; bh=x+wjGCxq6CdZEfzj11+IBzAkoE449GT6JMAUDrUw0OU=; b=owGbwMvMwCVmps19z/KJym7G02pJDBk81eyal94sbD/Hv2iPyusPfkKNT6fm1Nk+Spwml3LUc cEmdiWnjlIWBjEuBlkxRZYgO/c4F4+37eHucxVh5rAygQxh4OIUgIkwaDMybPNTZFzL+1ZAfEEr Q/36vImHYq98TzONbcs72NkYfv3iTUaGqWnFdrevnV6yaX1mnMA1LTUTWXnuc0Es7kzdFuYem/x YAA==
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
--Wflex-array-member-not-at-end was introduced in GCC-14, and we are
-getting ready to enable it, globally.
+In preparation for making the kmalloc family of allocators type aware,
+we need to make sure that the returned type from the allocation matches
+the type of the variable being assigned. (Before, the allocator would
+always return "void *", which can be implicitly cast to any pointer type.)
 
-Use the `DEFINE_RAW_FLEX()` helper for on-stack definitions of
-a flexible structure where the size of the flexible-array member
-is known at compile-time, and refactor the rest of the code,
-accordingly.
+The assigned type is "struct crb_addr_pair *" and the returned type will
+be a _different_ "struct crb_addr_pair *", causing a warning. This really
+stumped me for a bit. :) Drop the redundant declaration.
 
-Also, there is no need to use the DECLARE_FLEX_ARRAY() helper.
-Replace it with a regular flexible-array member declaration
-instead.
-
-So, with these changes, fix the following warning:
-
-drivers/scsi/sd.c:3195:50: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Signed-off-by: Kees Cook <kees@kernel.org>
 ---
- drivers/scsi/sd.c         | 13 +++++--------
- include/scsi/scsi_proto.h |  2 +-
- 2 files changed, 6 insertions(+), 9 deletions(-)
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: <GR-QLogic-Storage-Upstream@marvell.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_nx.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 950d8c9fb884..aa15b1085235 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3191,10 +3191,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
- {
- 	u8 cdb[16] = { SERVICE_ACTION_IN_16, SAI_GET_STREAM_STATUS };
--	struct {
--		struct scsi_stream_status_header h;
--		struct scsi_stream_status s;
--	} buf;
-+	DEFINE_RAW_FLEX(struct scsi_stream_status_header, buf, stream_status, 1);
- 	struct scsi_device *sdev = sdkp->device;
- 	struct scsi_sense_hdr sshdr;
- 	const struct scsi_exec_args exec_args = {
-@@ -3203,9 +3200,9 @@ static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
- 	int res;
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 6dfb70edb9a6..470fe1d38973 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1099,11 +1099,6 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
+ 	unsigned offset, n;
+ 	struct qla_hw_data *ha = vha->hw;
  
- 	put_unaligned_be16(stream_id, &cdb[4]);
--	put_unaligned_be32(sizeof(buf), &cdb[10]);
-+	put_unaligned_be32(__struct_size(buf), &cdb[10]);
+-	struct crb_addr_pair {
+-		long addr;
+-		long data;
+-	};
+-
+ 	/* Halt all the individual PEGs and other blocks of the ISP */
+ 	qla82xx_rom_lock(ha);
  
--	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, &buf, sizeof(buf),
-+	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, buf, __struct_size(buf),
- 			       SD_TIMEOUT, sdkp->max_retries, &exec_args);
- 	if (res < 0)
- 		return false;
-@@ -3213,9 +3210,9 @@ static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
- 		sd_print_sense_hdr(sdkp, &sshdr);
- 	if (res)
- 		return false;
--	if (get_unaligned_be32(&buf.h.len) < sizeof(struct scsi_stream_status))
-+	if (get_unaligned_be32(&buf->len) < sizeof(struct scsi_stream_status))
- 		return false;
--	return buf.h.stream_status[0].perm;
-+	return buf->stream_status[0].perm;
- }
- 
- static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index aeca37816506..0ae7adc8a5db 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -349,7 +349,7 @@ struct scsi_stream_status_header {
- 	__be32 len;	/* length in bytes of stream_status[] array. */
- 	u16 reserved;
- 	__be16 number_of_open_streams;
--	DECLARE_FLEX_ARRAY(struct scsi_stream_status, stream_status);
-+	struct scsi_stream_status stream_status[];
- };
- 
- static_assert(sizeof(struct scsi_stream_status_header) == 8);
 -- 
-2.43.0
+2.34.1
 
